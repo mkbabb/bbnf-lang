@@ -56,6 +56,12 @@ Those checks showed 82 samply captures: 34 `parse`, 34 `direct`, and 14
 `json_probes_*` capture under `/tmp/skv12-p1`, and no structural-scan capture
 under `/tmp/skv12-p1`.
 
+The V1 hardening fold records this as an explicit boundary in
+`skv12-p1-capture-manifest.md`: Mode III throughput and structural-scan values
+are W0 raw Criterion diagnostic nonproducer evidence only. S-P2/S-P3 may not
+use Mode III call-stack symbols as fresh SK-V12 hot-leaf authority unless a
+later capture supplies those call stacks explicitly.
+
 The W0 Mode III table was recomputed from raw Criterion JSON with:
 
 ```sh
@@ -257,6 +263,8 @@ residuals only after the REDRESS 119/120 reopen burden is met.
   `/tmp/skv11-open-criterion-3ce75df`.
 - Fresh SK-V12 P1 capture root:
   `/tmp/skv12-p1`.
+- SK-V12 P1 capture manifest:
+  `restart/skinny/tranches/sk-v12/research/p1/skv12-p1-capture-manifest.md`.
 - Fresh PMU rows:
   `/tmp/skv12-p1/pmu/parse_pmu_rows.tsv`,
   `/tmp/skv12-p1/pmu/product_pmu_rows.tsv`,

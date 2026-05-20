@@ -112,14 +112,20 @@ Method caveats:
   `skinny/crates/bbnf-bench/src/bin/profile_direct.rs:95`; the rows below are
   product hot-loop evidence, not cold Criterion admissions.
 - The samply profile JSONs record `symbolicated=false`; same-prefix
-  `.json.syms.json` sidecars exist for every direct and typed row. The fresh
-  xctrace inputs are raw `.trace` bundles, and no fresh
-  `/tmp/skv12-p1/direct-xctrace/exports/summary.json` self-time export exists
-  in the capture root. Therefore inlined leaf percentages are not extracted
-  directly in this file. The fresh samply/xctrace bundles are the artifact
-  authority for coverage and symbol material, while the hot-family
-  interpretation below is the SK-V11 behavior-equivalent primitive bridge
-  carried onto the unchanged SK-V12-open source.
+  `.json.syms.json` sidecars exist for every direct and typed row. The original
+  product Time Profiler exports were shallow for several rows because the target
+  app exited before collecting a useful hot-loop table. The V1 hardening fold
+  recaptured all 48 product Time Profiler rows under
+  `/tmp/skv12-p1/direct-xctrace/time-profiler-v2` with 20,000 iterations and a
+  2s xctrace limit, exported them to
+  `/tmp/skv12-p1/direct-xctrace/exports-v2`, and parsed top leaves into
+  `/tmp/skv12-p1/time_profile_hot_leaf_{summary,details}.tsv`.
+- Product v2 export coverage is 48/48 PASS, 23,383,417 XML bytes, minimum row
+  export 284,543 bytes. Target-sample coverage is 64,541/64,593 selected
+  direct samples and 25,692/25,713 selected typed samples. The two direct
+  `update_center` rows were replayed with the required `update-center` launch
+  alias; the correction is recorded in
+  `/tmp/skv12-p1/product_time_profile_v2_alias_fixes.tsv`.
 - PMU numbers come from `/tmp/skv12-p1/pmu/product_pmu_rows.tsv`. P1-D owns the
   full cycles-per-byte ledger; P1-B uses the product rows only to bind this
   product-plane profile.
@@ -199,11 +205,10 @@ Typed synthesis:
 
 ### Accepted Product Hot Families
 
-Because fresh inlined leaf percentages were not exported into a self-time
-summary, this section names accepted product hot families without fresh
-percentage claims. Evidence paths are the fresh samply/xctrace bundles plus
-the current source lines below; the primitive interpretation is the SK-V11
-behavior-equivalent bridge for the same product code.
+This section names accepted product hot families from the fresh product-v2
+xctrace self-time export. Exact top leaf symbol, percent, and file:line for
+every direct and typed row are in
+`/tmp/skv12-p1/time_profile_hot_leaf_details.tsv`.
 
 | Canonical product family | Evidence members and source anchors |
 |---|---|
@@ -224,9 +229,16 @@ The product hot families accepted for S-P2 consideration are therefore:
 - unicode escape validation and scalar hex decode;
 - number span/digit scanning and numeric materialization;
 - whitespace skip;
-- container dispatch and sequence/object value dispatch;
+- container dispatch and sequence/value dispatch;
 - digest folding and typed projection plumbing;
 - serde_json oracle read/parse costs as an independence comparator only.
+
+Leading product self-time family distribution by row:
+
+| Plane | Leading families |
+|---|---|
+| direct | `output_digest_hash` 18 rows; `container_dispatch` 10; `string_escape_decode` 4; `bounded_plain_string_scan` 1; `number_digit_span` 1 |
+| typed guards | `serde_json_oracle_read_parse` 7 rows; `typed_direct_projection` 5; `number_digit_span` 2 |
 
 ## Section 3 - Delta vs SK-V11
 
@@ -249,13 +261,13 @@ The profile confirms the SK-V12 opening distinction:
 
 ## Section 4 - Anomalies And Masking Signals
 
-- Fresh direct/typed xctrace bundles exist, but no exported self-time
-  `summary.json` exists under `/tmp/skv12-p1/direct-xctrace`. The raw bundles
-  are citable artifacts; this file does not invent leaf percentages.
+- Fresh direct/typed xctrace bundles and product-v2 exports exist. The
+  product-v2 exports are the self-time authority; the original product exports
+  are retained only as the shallow-capture caveat.
 - Fresh samply direct/typed profiles are present with `.json.syms.json`
   sidecars, but the raw profile metadata records `symbolicated=false`.
-  Symbol material is present, but inlined leaf percentages were not extracted
-  directly from these raw captures.
+  Symbol material is present; leaf percentages in this artifact come from the
+  exported xctrace Time Profiler XML, not from samply JSON.
 - `profile_direct` is a hot-loop product profiler with 16 pre-loop sanity
   parses. It is not a cold Criterion gate and does not move result rows.
 - The fresh PMU direct rows can differ materially from the Criterion Mbps in
@@ -278,8 +290,14 @@ The profile confirms the SK-V12 opening distinction:
 - `/tmp/skv12-p1/samply/typed/*.json.syms.json`
 - `/tmp/skv12-p1/samply/done.txt`
 - `/tmp/skv12-p1/direct-xctrace/time-profiler/*.trace`
+- `/tmp/skv12-p1/direct-xctrace/time-profiler-v2/*.trace`
+- `/tmp/skv12-p1/direct-xctrace/exports-v2/*.time-profile.xml`
 - `/tmp/skv12-p1/direct-xctrace/cpu-counters/*.trace`
+- `/tmp/skv12-p1/product_time_profile_v2_status.tsv`
+- `/tmp/skv12-p1/time_profile_hot_leaf_summary.tsv`
+- `/tmp/skv12-p1/time_profile_hot_leaf_details.tsv`
 - `/tmp/skv12-p1/xctrace_done.txt`
+- `restart/skinny/tranches/sk-v12/research/p1/skv12-p1-capture-manifest.md`
 - `/tmp/skv12-profile-target-50bd1648/.rustc_info.json`
 - `/tmp/skv12-profile-target-50bd1648/release/profile_direct`
 - `/tmp/skv12-profile-target-50bd1648/release/xctrace_probe`

@@ -3,8 +3,7 @@
 Pass: S-P1 Profile. Cycle: V12.
 Date: 2026-05-20.
 Scope: synthesize SK-V12-open hot-family attribution from fresh
-`/tmp/skv12-p1` measurement facts plus behavior-equivalent SK-V11 accepted
-source maps.
+`/tmp/skv12-p1` PMU rows and xctrace Time Profiler self-time exports.
 Output: this file.
 Baseline: SK-V12-open (`50bd1648`).
 Host triple: `aarch64-apple-darwin;arch=aarch64;cpu=Apple M5 Max`.
@@ -67,17 +66,18 @@ SK-V11 P1-E/hardening source maps.
 | PMU TSVs | `/tmp/skv12-p1/pmu/parse_pmu_rows.tsv`, `/tmp/skv12-p1/pmu/product_pmu_rows.tsv` | fresh cycles, instructions, c/B, CPI, and probe Mbps shape |
 | Capture status | `/tmp/skv12-p1/pmu/capture_status.tsv` | artifact coverage and return-code shape |
 | Samply profiles | `/tmp/skv12-p1/samply/{parse,direct,typed}/*.json.gz` plus `.syms.json` | retained sample/profile artifacts and source symbol maps |
-| Xctrace traces | `/tmp/skv12-p1/{parse-xctrace,direct-xctrace}/{time-profiler,cpu-counters}/*.trace` | retained trace bundles, not exported inline percentage tables |
-| Source attribution | SK-V11 P1-E and hardening, verified against current source paths | grammar-neutral primitive family attribution for behavior-equivalent JSON code |
+| Xctrace traces | `/tmp/skv12-p1/{parse-xctrace,direct-xctrace}/{time-profiler,cpu-counters}/*.trace` plus XML exports | retained trace bundles and fresh Time Profiler self-time tables |
+| Source attribution | SK-V12 xctrace leaf exports, with SK-V11 P1-E/hardening source vocabulary used only for canonical family names | grammar-neutral primitive family attribution plus exact top-leaf `% self-time` |
 
-Critical caveat: the retained SK-V12 samply profiles report
-`symbolicated=false`, and there are no `/tmp/skv12-p1/.../exports/summary.json`
-files equivalent to the SK-V11 xctrace summaries. The companion `.syms.json`
-files resolve symbol maps, but this P1-E has no exact per-inlined-frame
-self-time percentages. Therefore the row tables below do not fabricate
-percentages. Hardening must either accept this as a source-map attribution fold
-or require a fresh symbolicated summary export before demanding exact inline
-percentages.
+The V1 hardening fold exported the retained parse Time Profiler bundles and
+recaptured product Time Profiler rows under
+`/tmp/skv12-p1/direct-xctrace/time-profiler-v2` because the original product
+exports were shallow launch/setup captures. The derived self-time authorities
+are `/tmp/skv12-p1/time_profile_hot_leaf_summary.tsv` and
+`/tmp/skv12-p1/time_profile_hot_leaf_details.tsv`; percentages below are over
+selected target-binary running samples after filtering dyld/startup frames.
+Replay details and the `update_center` / `update-center` alias correction are
+recorded in `restart/skinny/tranches/sk-v12/research/p1/skv12-p1-capture-manifest.md`.
 
 ## Section 2 - Fresh Measurement Facts
 
@@ -113,13 +113,29 @@ PMU aggregate shape:
 
 | Plane | Rows | Aggregate c/B | Aggregate CPI |
 |---|---:|---:|---:|
-| parse | 34 | 2.938593 | 0.204887 |
-| direct | 34 | 4.331411 | 0.183717 |
-| typed guards | 14 | 3.123173 | 0.185056 |
+| parse | 34 | 2.920217 | 0.204887 |
+| direct | 34 | 4.290305 | 0.183717 |
+| typed guards | 14 | 3.123172 | 0.185056 |
 
 The PMU TSV schema exposes cycles, instructions, c/B, CPI, user ns, system ns,
 and checksums. It does not expose branch-miss, L1, or LLC columns. This P1-E
 does not infer missing counter classes.
+
+### Fresh Self-Time Export Coverage
+
+| Plane | Rows | Sample rows | Selected rows | Selected target time |
+|---|---:|---:|---:|---:|
+| parse | 34 | 34,129 | 34,080 | 99.86% |
+| direct | 34 | 64,593 | 64,541 | 99.92% |
+| typed guards | 14 | 25,713 | 25,692 | 99.92% |
+
+Leading self-time family distribution by row:
+
+| Plane | Leading families |
+|---|---|
+| parse | `bounded_plain_string_scan` 14 rows; `container_dispatch` 11; `unicode_escape_hex_decode` 4; `number_digit_span` 2; `simd_movemask` 2; `string_escape_decode` 1 |
+| direct | `output_digest_hash` 18 rows; `container_dispatch` 10; `string_escape_decode` 4; `bounded_plain_string_scan` 1; `number_digit_span` 1 |
+| typed guards | `serde_json_oracle_read_parse` 7 rows; `typed_direct_projection` 5; `number_digit_span` 2 |
 
 ### Fresh c/B Tables
 
@@ -181,9 +197,10 @@ Typed c/B:
 
 ## Section 3 - Grammar-Neutral Primitive Map
 
-These names are the behavior-equivalent SK-V11 accepted source-level
-attribution vocabulary, verified against current source paths. They are not
-fresh SK-V12 inline percentage claims.
+These names are the canonical, grammar-neutral family labels used to group the
+fresh xctrace leaf symbols. The source loci below are current SK-V12 paths; the
+row-level percentages and top leaf symbols live in
+`/tmp/skv12-p1/time_profile_hot_leaf_details.tsv`.
 
 | Canonical primitive | Evidence members and current source loci |
 |---|---|
@@ -195,6 +212,7 @@ fresh SK-V12 inline percentage claims.
 | `container_dispatch` | generated `dispatch_value`, `parse_value_at`, `consume_structural`, `consume_container_next`, `consume_array_next`, `parse_object_value_at_direct`, and `parse_array_element_at_direct` at `skinny/crates/runtime/src/grammars/json/generated.rs:47`, `:37`, `:292`, `:310`, `:348`, `:468`, and `:508`; Track 2 `parse_value_at`, `parse_key_colon`, and `consume_container_next` at `skinny/crates/bbnf-bench/src/track2/json.rs:53`, `:97`, and `:271` |
 | `simd_movemask` | `bbnf_simd::aarch64::movemask::movemask_u8x16` at `skinny/crates/bbnf-simd/src/aarch64/movemask.rs:4`; trailing-zero helpers remain core support evidence, not separate behavior authority |
 | `output_digest_hash` | `JsonDirectDigest::fold_string_scalar`, `hash_bytes`, and `mix`/`wrapping_add` support at `skinny/crates/bbnf-bench/src/direct_struct.rs:123`, `:717`, and `:739`; typed hash support `fold_opt_str`, `hash_str`, and `mix` at `skinny/crates/bbnf-bench/src/real_typed_struct.rs:687`, `:734`, and `:742` |
+| `memory_copy` / `runtime_support` | core copy, allocation, option, and arithmetic leaves when xctrace samples the generic leaf and the caller stack does not resolve to a narrower primitive family |
 
 ## Section 4 - Row Attribution
 
@@ -202,9 +220,11 @@ fresh SK-V12 inline percentage claims.
 
 All parse rows remain diagnostic only: 16 `S / NO-GO` and `canada` as
 `L / NO-GO`. No parse-only row can admit SK-V12 or reopen W3/parse-only
-routes.
+routes. The table names the leading fresh self-time families; exact top leaf
+symbol, percent, and file:line for every parse row and track are in
+`/tmp/skv12-p1/time_profile_hot_leaf_details.tsv`.
 
-| Corpus | Fresh parse c/B T1/T2 | Behavior-equivalent primitive family | SK-V12 treatment |
+| Corpus | Fresh parse c/B T1/T2 | Leading primitive family | SK-V12 treatment |
 |---|---:|---|---|
 | `twitter` | 2.214 / 2.845 | `bounded_plain_string_scan`, `ascii_whitespace_skip`, `simd_movemask` | diagnostic string row |
 | `citm_catalog` | 1.123 / 1.653 | `ascii_whitespace_skip`, `bounded_plain_string_scan`, `container_dispatch` | diagnostic whitespace/string row |
@@ -228,9 +248,11 @@ routes.
 
 Direct rows retain the SK-V11 close state. Four rows are admitted guards;
 thirteen are residual/pre-blocked `N-direct / NO-GO` rows. The fresh SK-V12 PMU
-shape does not itself satisfy the REDRESS 114-119 reopen rule.
+and self-time shape does not itself satisfy the REDRESS 114-119 reopen rule.
+Exact top leaf symbol, percent, and file:line for every direct row and track
+are in `/tmp/skv12-p1/time_profile_hot_leaf_details.tsv`.
 
-| Corpus | SK-V12 state | Fresh direct c/B T1/T2 | Behavior-equivalent primitive family | SK-V12 treatment |
+| Corpus | SK-V12 state | Fresh direct c/B T1/T2 | Leading primitive family | SK-V12 treatment |
 |---|---|---:|---|---|
 | `twitter` | residual | 2.950 / 3.200 | `bounded_plain_string_scan`, `ascii_whitespace_skip`, `simd_movemask` | pre-blocked by W5/W7/W8 fixpoint |
 | `citm_catalog` | guard | 1.612 / 1.717 | `ascii_whitespace_skip`, `bounded_plain_string_scan`, `container_dispatch` | preserve direct guard |
@@ -260,9 +282,11 @@ unicode/string residual route before the non-JSON priority resolves.
 
 All typed rows remain guard rows. Track 1 is generated typed product evidence;
 Track 2 is independent oracle/comparator evidence and must not be folded into
-generated product attribution.
+generated product attribution. Exact top leaf symbol, percent, and file:line
+for every typed guard row and track are in
+`/tmp/skv12-p1/time_profile_hot_leaf_details.tsv`.
 
-| Corpus | Fresh typed c/B T1/T2 | Behavior-equivalent primitive family | SK-V12 treatment |
+| Corpus | Fresh typed c/B T1/T2 | Leading primitive family | SK-V12 treatment |
 |---|---:|---|---|
 | `twitter` | 1.881 / 2.124 | `bounded_plain_string_scan`, `ascii_whitespace_skip`, typed state/hash support | preserve typed guard |
 | `citm_catalog` | 0.964 / 1.815 | `ascii_whitespace_skip`, `bounded_plain_string_scan`, typed skip-value support | preserve typed guard |
@@ -324,22 +348,21 @@ SK-V12 seed result surface remains:
 | generated non-JSON parser | no admitted generated baseline | primary SK-V12 blocker and planning target |
 | overall | `N-direct / NoGo` | unchanged seed outcome |
 
-Fresh SK-V12 PMU rows are materially useful for cost shape, but they do not
-create new source-level material evidence against REDRESS 114-119. The
-behavior-equivalent primitive families remain the SK-V11 accepted families:
+Fresh SK-V12 PMU and self-time rows are materially useful for cost shape, but
+they do not create new source-level material evidence against REDRESS 114-119.
+The fresh leaf exports resolve to the canonical primitive families:
 `bounded_plain_string_scan`, `string_escape_decode`,
 `unicode_escape_hex_decode`, `number_digit_span`, `ascii_whitespace_skip`,
 `container_dispatch`, `simd_movemask`, and `output_digest_hash`.
 
 ## Section 8 - Anomalies And Hardening Caveats
 
-1. Exact SK-V12 per-inlined-frame self-time percentages are absent from the
-   retained artifacts inspected here. The profiles and traces exist, and
-   companion `.syms.json` files resolve symbol maps, but this artifact does not
-   fabricate inline percentages from unsymbolicated sample profiles.
-2. Hardening should decide whether to accept source-level attribution plus
-   fresh PMU/capture facts for V1, or require a regenerated xctrace/samply
-   summary export with exact inline percentages.
+1. The original product Time Profiler exports were shallow launch/setup
+   captures for several rows. The authoritative product self-time lane is the
+   V1 fold recapture under `/tmp/skv12-p1/direct-xctrace/time-profiler-v2`.
+2. The top-leaf percentages are xctrace Time Profiler leaf samples, not PMU
+   counters. They name self-time attribution; row admission still belongs to
+   Criterion/`skinny/RESULTS.md`.
 3. Xctrace rows are retained trace bundles with mostly `rc=54` time-limit
    return codes. P1-E treats them as artifacts, not as clean-exit percentage
    exports.
@@ -355,9 +378,8 @@ behavior-equivalent primitive families remain the SK-V11 accepted families:
    non-JSON baseline priority succeeds or honestly blocks.
 8. Current non-JSON codegen/runtime inventory still matches REDRESS 112:
    `json_provider` is JSON-only and no generated CSS L4 runtime exists.
-9. Exact SK-V12 capture build flags are not embedded in `/tmp/skv12-p1`;
-   hardening should either accept the inherited SK-V11 release/profile
-   discipline or require a regenerated capture manifest.
+9. The capture manifest records the exact build flags, host/tool versions,
+   export commands, CWD policy, and product alias correction for replay.
 
 ## Section 9 - Sources
 
@@ -378,6 +400,13 @@ behavior-equivalent primitive families remain the SK-V11 accepted families:
   and companion `.json.syms.json` files.
 - Xctrace artifacts:
   `/tmp/skv12-p1/{parse-xctrace,direct-xctrace}/{time-profiler,cpu-counters}/*.trace`.
+- Xctrace self-time exports:
+  `/tmp/skv12-p1/parse-xctrace/exports/*.time-profile.xml`,
+  `/tmp/skv12-p1/direct-xctrace/exports-v2/*.time-profile.xml`,
+  `/tmp/skv12-p1/time_profile_hot_leaf_summary.tsv`, and
+  `/tmp/skv12-p1/time_profile_hot_leaf_details.tsv`.
+- Capture manifest:
+  `restart/skinny/tranches/sk-v12/research/p1/skv12-p1-capture-manifest.md`.
 - Codegen blocker: `skinny/crates/codegen/src/json_provider.rs` and
   `skinny/crates/codegen/src/lib.rs`.
 - Runtime grammar inventory: `skinny/crates/runtime/src/grammars/`.

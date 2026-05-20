@@ -144,6 +144,10 @@ awk -F '\t' 'NR>1 && $5 !~ /^(track1|track2|real_typed_track1|real_typed_track2)
   END{print bad+0}' restart/skinny/tranches/sk-v12/research/p1/skv12-p1-pin-replay.tsv
 # 0
 
+awk -F '\t' 'NR>1 && $4=="update-center" {bad++}
+  END{print bad+0}' restart/skinny/tranches/sk-v12/research/p1/skv12-p1-pin-replay.tsv
+# 0
+
 awk -F '\t' 'NR>1{total++; if($7!="PASS") bad++}
   END{print total, bad+0}' /tmp/skv12-pin-p1/pmu/capture_status.tsv
 # 82 0

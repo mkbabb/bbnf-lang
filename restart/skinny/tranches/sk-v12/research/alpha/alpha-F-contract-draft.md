@@ -75,11 +75,20 @@ measured intervention before any JSON-only micro-wave:
    strict output equality, finite same-run throughput, run/build/host/sample
    telemetry, gate/report consumption, and no JSON policy leak into generic
    crates or runtime outside generated per-grammar modules.
+   Before redress, the selected grammar must also pass an executable baseline
+   pre-gate: named generated-emission seam or generated per-grammar runtime
+   path, runtime module build, fixture corpus, same-plane independent oracle,
+   compile/equality smoke, and REDRESS 111 non-JSON gate consumption. If the
+   path still relies on JSON-only `json_provider::ensure_runtime_profile` as
+   proof, the wave returns REVISE.
 2. Grammar-generalized measured intervention second. The first admitted
    intervention must consume that baseline and improve the same generated
    non-JSON output plane by at least `ceil(baseline_mbps * 1.01)` unless S-P3
    sets a stricter threshold. It must preserve oracle independence, strict
-   equality, and the typed/direct JSON guard floors.
+   equality, and the typed/direct JSON guard floors. The intervention candidate
+   is selected from the admitted baseline grammar: CSS L4, Sheets, or
+   BBNF-self. CSS is preferred, but Sheets and BBNF-self are valid fallback
+   intervention variants once their baseline row admits.
 3. JSON direct residuals are pre-blocked, not scheduled. A JSON direct row may
    re-enter only if S-P1/S-P2 name fresh material evidence beyond REDRESS
    114-119: a new hot-leaf antecedent, a source delta not equivalent to W3-W7,
@@ -127,7 +136,11 @@ passes the reopen rule:
 | `distinct_values/direct_to_struct` | 1750 | 1625 | 2923 | 2658 | pre-blocked by W5/W7/W8 fixpoint |
 | `y_string_unicode/direct_to_struct` | 1983 | 1029 | 4344 | 3950 | pre-blocked by W5/W6/W8 fixpoint |
 
-Seed guard floors from SK-V11 remain active until S-P1/S-P3 refresh them:
+Seed guard floors from SK-V11 remain active until S-P1/S-P3 refresh them. The
+direct formula is SK-V11 SPEC Section 0.5:
+`max(ceil(sonic direct / 1.10), floor(SK-V11-open track Mbps * 0.98))` per
+track. The typed formula is the analogous typed Track 1 floor with Track 2
+oracle guard (`restart/skinny/tranches/sk-v11/SPEC.md:149-172`):
 
 | Guard row | Track 1 maintain | Track 2 maintain/oracle |
 |---|---:|---:|
@@ -172,6 +185,23 @@ baseline row it consumes and the exact threshold
 proof, PMU-only signal, structural-scan fact, or sidecar freshness cannot
 admit the intervention.
 
+## 5.1 Alpha Cost, Cap, And Revert Seed
+
+S-P3 owns the detailed wave plan, but the Alpha packet seeds the maximum
+candidate budget G-Alpha presents:
+
+| Candidate | Wave slot | LOC budget | Risk | Plan cap | Redress cap | Split trigger | Revert protocol |
+|---|---|---:|---|---:|---:|---|---|
+| E1 CSS baseline | W1 preferred | <=520 | high | 30 min | 75 min | preflight cannot prove emission seam, runtime target, oracle, fixture corpus, compile/equality smoke, and gate consumption | revert codegen/runtime/bench/report/gate/RESULTS; save `/tmp/skv12-waveW1-rejected.patch`; REDRESS blocks E4 until baseline admits |
+| E2 Sheets baseline | W1 fallback | <=480 | medium-high | 30 min | 75 min | same preflight, after CSS block/reject | revert selected Sheets slice; save rejected patch; dependent intervention must use Sheets only after admit |
+| E3 BBNF-self baseline | W1 fallback | <=460 | medium-high | 30 min | 75 min | same preflight, after CSS/Sheets block/reject unless S-P1 proves smaller path | revert selected BBNF-self slice; save rejected patch; dependent intervention must use BBNF-self only after admit |
+| E4 selected-baseline intervention | W2 after baseline | <=430 | high | 30 min | 75 min | no admitted baseline row id or baseline Mbps | revert intervention slice; save rejected patch; preserve baseline evidence |
+| E5 JSON direct companion | W3+ conditional | <=300 | high | 30 min | 75 min | scheduled before E4 admits or blocks non-JSON priority, or more than one JSON row without microbench proof | revert JSON source/generated/bench/report/gate/RESULTS; save rejected patch |
+
+Any S-P3 wave exceeding either the LOC budget or the 75-minute redress cap
+returns REVISE before behavior dispatch unless the user explicitly grants an
+extension after CHALLENGE.
+
 ## 6. Refusal Conditions
 
 Refuse any SK-V12 dispatch that:
@@ -205,3 +235,20 @@ non-JSON codegen/runtime blocker exposed by REDRESS 112, audit the accepted
 W1a report lane, profile admitted direct/typed guards, and treat JSON direct
 residuals as diagnostic/pre-blocked unless it discovers material evidence that
 passes the REDRESS 114-119 reopen rule. Alpha-F authorizes no source work.
+
+## 8. G-Alpha Presentation Seed
+
+Predicted SK-V12 close state:
+
+- preferred success: one generated non-JSON baseline admits and one
+  selected-baseline intervention improves the same output plane by at least 1%;
+- honest block: the selected generated non-JSON baseline pre-gate or redress
+  proves no baseline can be created inside the accepted owner surface;
+- JSON direct rows remain pre-blocked unless the non-JSON priority is satisfied
+  or explicitly blocked and S-P1/S-P2 produce fresh material evidence beyond
+  REDRESS 114-119.
+
+Rows targeted: the first selected non-JSON row
+(`css_l4/declaration_values/direct/main`, `sheets/formula/direct/main`, or
+`bbnf_self/grammar/direct/main`) and the same row's intervention delta. The 13
+JSON direct residual rows are carried as a reopen ledger, not the first target.

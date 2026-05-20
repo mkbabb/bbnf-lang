@@ -19,6 +19,12 @@ behavior source, generated runtime, benchmark body, gate semantic, or
 `skinny/RESULTS.md` change. The final measured surface is therefore the
 unchanged SK-V11-open result surface:
 
+Source anchors: `skinny/RESULTS.md:5-45` for the human table,
+`skinny/RESULTS.md:46-91` for the gate-consumed row metadata,
+`skinny/RESULTS.md:143-146` for the overall advisory notes, and
+`skinny/REDRESS.md:3497-3553` for REDRESS 119/120 fixpoint and close
+authority.
+
 | Workload family | Current surface | Close role |
 |---|---:|---|
 | `parse_only` | 16 `S / NO-GO`, 1 `L / NO-GO` | Diagnostic only; not SOTA admission |
@@ -60,7 +66,9 @@ There are no current `path_lookup`, `unicode_string_float`, `memory`, or
 
 Common plane: `deferred` strictness, `view-boundary` UTF-8, borrowed view over
 offset tape vs DOM. All rows are `NO-GO` diagnostic rows and had no SK-V11 row
-movement.
+movement. Table source: `skinny/RESULTS.md:5`, `:8`, `:11`, `:13`, `:16`,
+`:19`, `:22`, `:25`, `:27`, `:29`, `:32`, `:34`, `:36`, `:38`, `:40`,
+`:43`, `:45`.
 
 | Corpus | Outcome | Track 1 / Track 2 Mbps | Comparator anchors, Mbps | Delta vs anchors | Signal |
 |---|---:|---:|---|---|---|
@@ -87,7 +95,10 @@ movement.
 Common plane: generated Track 1 SinkOnly digest vs independent hand Track 2
 SinkOnly digest. The 13 residual rows below are exhausted in SK-V11 by REDRESS
 119 unless a future pass names a material differential beyond REDRESS 114-119
-with fresh profile and micro-proof evidence.
+with fresh profile and micro-proof evidence. Table source:
+`skinny/RESULTS.md:6`, `:9`, `:12`, `:14`, `:17`, `:20`, `:23`, `:26`,
+`:28`, `:30`, `:33`, `:35`, `:37`, `:39`, `:41`, `:44`, `:46`; fixpoint
+source: `skinny/REDRESS.md:3508-3524`.
 
 | Corpus | Outcome / verdict | Strictness / output | Track 1 / Track 2 Mbps | sonic / serde Mbps | Delta vs sonic | SK-V11 delta or fixpoint note |
 |---|---|---|---:|---:|---:|---|
@@ -113,7 +124,8 @@ with fresh profile and micro-proof evidence.
 
 Common plane: generated Track 1 typed product vs independent Track 2 structural
 or serde oracle. All seven rows are guarded product-plane `A / GO`; they do not
-convert the overall surface out of `N-direct / NoGo`.
+convert the overall surface out of `N-direct / NoGo`. Table source:
+`skinny/RESULTS.md:7`, `:10`, `:15`, `:18`, `:21`, `:24`, `:31`.
 
 | Corpus | Outcome / verdict | Strictness / output | Track 1 / Track 2 Mbps | sonic / serde Mbps | Delta vs sonic | Signal |
 |---|---|---|---:|---:|---:|---|

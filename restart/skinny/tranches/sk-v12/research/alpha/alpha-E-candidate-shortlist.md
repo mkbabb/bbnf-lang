@@ -32,6 +32,41 @@ after a generated non-JSON baseline/proof has landed and only with fresh
 post-REDRESS-119 material evidence that is not the rejected REDRESS 114-118
 route family under a new name.
 
+## Alpha-Level Cost, Cap, And Revert Matrix
+
+This matrix is a Pass Alpha seed for S-P3; it does not create `SPEC.md`.
+S-P3 may tighten these caps, but widening them requires CHALLENGE and user
+escalation before behavior redress.
+
+| Candidate | Intended wave slot | LOC budget | Risk | Plan cap | Redress cap | Same-wave consumer | Split-before-dispatch rule | Revert protocol |
+|---|---|---:|---|---:|---:|---|---|---|
+| E1 CSS L4 baseline | W1 preferred baseline | <=520 handwritten + selected generated output | high | 30 min | 75 min | generated CSS row + non-JSON gate report | split if selected-grammar preflight cannot prove generated emission seam, runtime target, oracle, fixture corpus, compile/equality smoke, and gate consumption | revert codegen/runtime/bench/report/gate/RESULTS as one slice; save `/tmp/skv12-waveW1-rejected.patch`; REDRESS blocks E4 until a baseline admits |
+| E2 Sheets baseline | W1 fallback baseline | <=480 handwritten + selected generated output | medium-high | 30 min | 75 min | generated Sheets row + non-JSON gate report | same preflight; dispatch only if CSS is blocked or rejected with evidence | revert selected Sheets codegen/runtime/bench/report/gate/RESULTS as one slice; save rejected patch; dependent intervention uses Sheets variant only after admit |
+| E3 BBNF-self baseline | W1 fallback baseline | <=460 handwritten + selected generated output | medium-high | 30 min | 75 min | generated BBNF-self row + non-JSON gate report | same preflight; dispatch only if CSS and Sheets are blocked or rejected, or S-P1 proves smaller runnable path | revert selected BBNF-self codegen/runtime/bench/report/gate/RESULTS as one slice; save rejected patch; dependent intervention uses BBNF-self variant only after admit |
+| E4 selected-baseline intervention | W2 after E1/E2/E3 admit | <=430 handwritten + selected generated output | high | 30 min | 75 min | same generated non-JSON row + non-JSON gate report | reject before redress if no admitted baseline row id and baseline Mbps exist | revert intervention codegen/runtime/bench/report/gate/RESULTS as one slice; save rejected patch; preserve baseline REDRESS evidence |
+| E5 JSON direct companion | W3+ conditional companion | <=300 handwritten + selected generated JSON output | high | 30 min | 75 min | selected JSON direct Track 1 + independent Track 2 + `gate-json` | hard REJECT if scheduled before E4 admits or blocks the non-JSON priority; split if more than one JSON row is selected without pre-dispatch microbench proof | revert JSON source/generated/bench/report/gate/RESULTS as one slice; save rejected patch; never demote non-JSON evidence |
+
+Every failed behavior wave records a numbered REDRESS entry and preserves the
+rejected patch. Any candidate that exceeds its LOC budget or 75-minute redress
+cap returns REVISE before behavior dispatch.
+
+## Baseline Entry Preflight
+
+Before S-P3 may dispatch E1, E2, or E3 as a behavior redress wave, the selected
+grammar must pass a read-only or proof-only preflight:
+
+- a named generated-emission seam or generated per-grammar runtime path exists
+  for exactly one selected grammar;
+- the path does not route through JSON-only
+  `json_provider::ensure_runtime_profile` as generality proof;
+- one fixture corpus and independent same-plane oracle are runnable;
+- compile/equality smoke can pass without behavior source edits;
+- the REDRESS 111 non-JSON report lane can consume the row evidence without
+  producer-only telemetry.
+
+If this preflight fails, S-P3 must split into a generator/runtime unblock wave
+followed by a baseline-report wave, or record a measured `BLOCKED` route.
+
 ## Shortlist
 
 ### E1: CSS L4 Generated Baseline And Oracle Lane
@@ -68,16 +103,17 @@ route family under a new name.
 
   | Row | Threshold |
   |---|---:|
-  | `css_l4/declaration_values/direct/main` generated Track 1 | >= 1 Mbps, finite |
-  | `css_l4/declaration_values/direct/main` independent oracle/Track 2 | >= 1 Mbps, finite |
+  | `css_l4/declaration_values/direct/main` generated Track 1 | finite positive Mbps |
+  | `css_l4/declaration_values/direct/main` independent oracle/Track 2 | finite positive Mbps |
   | `css_l4/declaration_values/direct/main` strict equality | 100% fixture equality |
-  | `css_l4/declaration_values/direct/main` sample count | >= 100 |
+  | `css_l4/declaration_values/direct/main` sample count | recorded from bench artifact |
 
   Additional gate conditions: the report records run id, host, flags, feature
   mask, output plane, oracle source, and source provenance; JSON `skinny/RESULTS.md`
   rows do not move; `gate-json --with-cost-facts --check-results` remains green.
 - **LOC budget:** <= 520 handwritten source/test/gate LOC, plus regenerated
   output only for the selected CSS L4 runtime module.
+- **Hard cap / revert:** see Alpha-Level Cost, Cap, And Revert Matrix.
 - **Risk:** high. This is first-of-class runtime/codegen proof and directly
   crosses the REDRESS 112 blocker.
 - **Pre-blocked route adjacency:** REDRESS 111 may be reused only as schema
@@ -119,15 +155,16 @@ route family under a new name.
 
   | Row | Threshold |
   |---|---:|
-  | `sheets/formula/direct/main` generated Track 1 | >= 1 Mbps, finite |
-  | `sheets/formula/direct/main` independent oracle/Track 2 | >= 1 Mbps, finite |
+  | `sheets/formula/direct/main` generated Track 1 | finite positive Mbps |
+  | `sheets/formula/direct/main` independent oracle/Track 2 | finite positive Mbps |
   | `sheets/formula/direct/main` strict equality | 100% fixture equality |
-  | `sheets/formula/direct/main` sample count | >= 100 |
+  | `sheets/formula/direct/main` sample count | recorded from bench artifact |
 
   The row must validate under the non-JSON gate with `grammar_id=sheets` and
   `domain=sheets_bench`; JSON rows remain unchanged.
 - **LOC budget:** <= 480 handwritten source/test/gate LOC, plus regenerated
   output only for the selected Sheets formula module.
+- **Hard cap / revert:** see Alpha-Level Cost, Cap, And Revert Matrix.
 - **Risk:** medium-high. It avoids the CSS-specific blocker but still has the
   same generated runtime/codegen boundary risk as REDRESS 112.
 - **Pre-blocked route adjacency:** REDRESS 112 blocks `sheets_witness` or
@@ -165,28 +202,30 @@ route family under a new name.
 
   | Row | Threshold |
   |---|---:|
-  | `bbnf_self/grammar/direct/main` generated Track 1 | >= 1 Mbps, finite |
-  | `bbnf_self/grammar/direct/main` independent oracle/Track 2 | >= 1 Mbps, finite |
+  | `bbnf_self/grammar/direct/main` generated Track 1 | finite positive Mbps |
+  | `bbnf_self/grammar/direct/main` independent oracle/Track 2 | finite positive Mbps |
   | `bbnf_self/grammar/direct/main` strict equality | 100% fixture equality |
-  | `bbnf_self/grammar/direct/main` sample count | >= 100 |
+  | `bbnf_self/grammar/direct/main` sample count | recorded from bench artifact |
 
   The row must validate under the non-JSON gate with
   `grammar_id=bbnf_self` and `domain=bbnf_self_bench`; JSON rows remain
   unchanged.
 - **LOC budget:** <= 460 handwritten source/test/gate LOC, plus regenerated
   output only for the selected BBNF-self module.
-- **Risk:** medium. Smaller grammar surface may lower runtime risk, but oracle
-  independence is more sensitive because the project grammar and generator are
-  close together.
+- **Hard cap / revert:** see Alpha-Level Cost, Cap, And Revert Matrix.
+- **Risk:** medium-high. Smaller grammar surface may lower runtime work only if
+  S-P1 proves a materially smaller runnable generated Track 1 and independent
+  oracle path; otherwise it crosses the same REDRESS 112 codegen/runtime
+  boundary as E1/E2.
 - **Pre-blocked route adjacency:** REDRESS 112 blocks treating inventory or
   grammar parser internals as generated Track 1; REDRESS 113 blocks baseline
   creation inside an intervention wave; Lock 1 blocks hidden sidecar/parser
   substrate; Lock 14 blocks generic JSON policy.
 
-### E4: CSS L4 Generated FIRST/Prefix Intervention
+### E4: Selected Generated FIRST/Prefix Intervention
 
-- **Priority:** 4, only after E1 admits a concrete CSS L4 baseline row and
-  records `W1_css_baseline_mbps`.
+- **Priority:** 4, only after E1, E2, or E3 admits a concrete generated
+  non-JSON baseline row and records `W1_selected_baseline_mbps`.
 - **Purpose:** convert the first generated non-JSON baseline into an admitted
   generated non-JSON intervention using grammar metadata rather than JSON role
   policy.
@@ -195,35 +234,47 @@ route family under a new name.
   - `skinny/crates/codegen/src/lower/schema_direct.rs`
   - `skinny/crates/codegen/src/direct_schema.rs`
   - `skinny/crates/runtime/src/grammars/css_l4_declaration_values/`
+  - `skinny/crates/runtime/src/grammars/sheets_formula/`
+  - `skinny/crates/runtime/src/grammars/bbnf_self/`
   - `skinny/crates/bbnf-bench/src/bin/gate.rs`
   - `skinny/crates/bbnf-bench/src/report.rs`
   - `skinny/crates/bbnf-bench/benches/`
   - `grammar/css/l4/values.bbnf`
   - `grammar/css/l4/value-unit.bbnf`
   - `grammar/css/l4/color.bbnf`
-  - `restart/skinny/tranches/sk-v12/research/w2-css-intervention/`
-- **Scalar/oracle status:** depends on E1. E1's generated baseline plus
-  independent oracle become the scalar/product reference. E4 may add FIRST-set,
-  prefix-trie, or lookahead dispatch only from grammar metadata.
+  - `grammar/google-sheets/google-sheets.bbnf`
+  - `grammar/bbnf/bbnf.bbnf`
+  - `restart/skinny/tranches/sk-v12/research/w2-selected-intervention/`
+- **Scalar/oracle status:** depends on the admitted baseline. The selected
+  baseline's generated Track 1 plus independent oracle become the
+  scalar/product reference. E4 may add FIRST-set, prefix-trie, or lookahead
+  dispatch only from grammar metadata.
 - **Checkasm/parity status:** N/A for scalar generated dispatch. If E4 consumes
   byte-set or movemask support, strict scalar differential/checkasm is required
   for the exact same-wave consumer before benchmark evidence counts.
-- **Same-wave consumer:** generated CSS L4 direct or typed parser row and the
-  non-JSON gate/report consumer. The intervention cannot be a helper-only
-  change.
+- **Same-wave consumer:** the selected generated non-JSON direct or typed
+  parser row and the non-JSON gate/report consumer. The intervention cannot be
+  a helper-only change.
+- **Variants:**
+  - CSS L4 declaration values: preferred if E1 admitted.
+  - Sheets formula: fallback if E2 admitted; threshold uses
+    `W1_sheets_baseline_mbps`.
+  - BBNF-self grammar: fallback if E3 admitted; threshold uses
+    `W1_bbnf_self_baseline_mbps`.
 - **Falsifiability gate:**
 
   | Row | Threshold |
   |---|---:|
-  | `css_l4/declaration_values/direct/main` generated Track 1 | >= `ceil(W1_css_baseline_mbps * 1.01)` |
-  | `css_l4/declaration_values/direct/main` independent oracle/Track 2 | >= 1 Mbps, finite |
-  | `css_l4/declaration_values/direct/main` strict equality | 100% fixture equality |
+  | selected generated non-JSON row Track 1 | >= `ceil(W1_selected_baseline_mbps * 1.01)` |
+  | selected generated non-JSON row independent oracle/Track 2 | finite positive Mbps |
+  | selected generated non-JSON row strict equality | 100% fixture equality |
 
   If JSON reports are refreshed as companions, all direct guard floors from
   SK-V11 SPEC Section 0.5 hold and no JSON residual row is admitted by
   analogy.
 - **LOC budget:** <= 430 handwritten source/test/gate LOC, plus regenerated
-  output only for the selected CSS L4 module.
+  output only for the selected non-JSON module.
+- **Hard cap / revert:** see Alpha-Level Cost, Cap, And Revert Matrix.
 - **Risk:** high. It is the first actual non-JSON generated intervention and
   must avoid folding W1 baseline creation and W2 intervention into one paper
   close.
@@ -286,6 +337,7 @@ route family under a new name.
   SK-V11 SPEC Section 0.5 hold.
 - **LOC budget:** <= 300 handwritten source/test/gate LOC, plus regenerated
   JSON output only for selected generated callers.
+- **Hard cap / revert:** see Alpha-Level Cost, Cap, And Revert Matrix.
 - **Risk:** high. It is adjacent to every SK-V11 direct rejection and should
   be rejected at plan time if the fresh evidence is missing.
 - **Pre-blocked route adjacency:** REDRESS 114 blocks numeric slot retries;

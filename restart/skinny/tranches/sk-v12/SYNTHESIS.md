@@ -39,13 +39,18 @@ SK-V12 closes only when all of these are true:
    or oracle, strict output equality, finite same-run throughput, generated
    input provenance, run/build/host/sample telemetry, gate/report consumption,
    and no JSON policy leak into generic crates or runtime outside generated
-   per-grammar modules.
+   per-grammar modules. Before behavior redress, the selected grammar must pass
+   an executable baseline pre-gate: named generated-emission seam or generated
+   per-grammar runtime path, runtime module build, fixture corpus,
+   same-plane independent oracle, compile/equality smoke, and REDRESS 111
+   non-JSON gate consumption.
 4. Grammar-generalized measured intervention comes second. At least one
    generated non-JSON direct or typed parser intervention must consume the
    baseline row and clear `ceil(baseline_mbps * 1.01)` on the same output plane,
    unless S-P3 sets a stricter threshold. The independent oracle must remain
    independent, strict equality must pass, and the gate must consume the
-   baseline-to-intervention delta.
+   baseline-to-intervention delta. The intervention may target CSS L4, Sheets,
+   or BBNF-self, whichever baseline row admits first.
 5. Existing admitted JSON product rows are guarded. The 4
    `direct_to_struct A / GO` rows and 7 `real_typed_struct A / GO` rows remain
    admitted unless a same-wave gate records a measured maintain, lift, or
@@ -77,7 +82,9 @@ SK-V12 owner surface. It may not spend another JSON-only cycle first.
 
 ### 0.1 Current Result Surface
 
-The current seed result surface is SK-V11 close:
+The current seed result surface is SK-V11 close. Source anchors:
+`skinny/RESULTS.md:5-45`, `skinny/RESULTS.md:143-146`, and
+`skinny/REDRESS.md:3497-3553`.
 
 | Family | SK-V11 close state | SK-V12 role |
 |---|---|---|
@@ -90,7 +97,7 @@ The current seed result surface is SK-V11 close:
 ### 0.2 Direct Residual Pre-Block Surface
 
 The table below is carried from REDRESS 119. It is not the SK-V12 first target;
-it is the reopen ledger.
+it is the reopen ledger (`skinny/REDRESS.md:3508-3524`).
 
 | Row | Track 1 | Track 2 | sonic direct | floor | SK-V12 state |
 |---|---:|---:|---:|---:|---|
@@ -110,7 +117,9 @@ it is the reopen ledger.
 
 ### 0.3 Guard Rows
 
-Seed direct guard floors:
+Seed direct guard floors. Formula source: SK-V11 SPEC Section 0.5, direct
+guards are `max(ceil(sonic direct / 1.10), floor(SK-V11-open track Mbps *
+0.98))` per track (`restart/skinny/tranches/sk-v11/SPEC.md:149-154`).
 
 | Row | Track 1 maintain | Track 2 maintain |
 |---|---:|---:|
@@ -119,7 +128,10 @@ Seed direct guard floors:
 | `marine_ik/direct_to_struct` | 8759 | 9248 |
 | `unicode_basic/direct_to_struct` | 2253 | 2182 |
 
-Seed typed guard floors:
+Seed typed guard floors. Formula source: SK-V11 SPEC Section 0.5, typed Track 1
+uses `max(ceil(sonic typed / 1.10), floor(SK-V11-open Track 1 * 0.98))`; Track
+2 is the oracle guard from the same section
+(`restart/skinny/tranches/sk-v11/SPEC.md:156-172`).
 
 | Row | Track 1 maintain | Track 2 oracle guard |
 |---|---:|---:|
@@ -162,9 +174,26 @@ and S-P2 must ground:
 | Generated CSS L4 declaration-value baseline | Generated Track 1 direct/typed parser, independent oracle, strict equality, gate-consumed finite Mbps, no JSON policy leak |
 | Generated Sheets baseline | Same proof surface if CSS L4 remains blocked by owner or harness absence |
 | Generated BBNF-self baseline | Same proof surface if it is the smallest authoritative generated grammar |
-| Grammar-generalized intervention | Consumes the generated baseline and clears at least `ceil(baseline_mbps * 1.01)` with the same oracle and output plane |
+| Grammar-generalized intervention | Consumes the selected generated baseline, whether CSS L4, Sheets, or BBNF-self, and clears at least `ceil(baseline_mbps * 1.01)` with the same oracle and output plane |
 | JSON direct residual reopen | Only after fresh material evidence beyond REDRESS 114-119 and only after the non-JSON baseline/intervention priority is satisfied or explicitly blocked |
 | Aarch64 SIMD/helper support | Only if tied to the generated non-JSON row or a reopened JSON row, with scalar/oracle proof, same-host microbench, feature/fallback, and same-wave consumer |
+
+### 2.1 Alpha Cost, Cap, And Revert Seed
+
+S-P3 owns exact wave sequencing, but may not exceed this Alpha budget without
+CHALLENGE and user escalation:
+
+| Candidate | Wave slot | LOC budget | Risk | Plan cap | Redress cap | Split trigger | Revert protocol |
+|---|---|---:|---|---:|---:|---|---|
+| E1 CSS baseline | W1 preferred | <=520 | high | 30 min | 75 min | selected-grammar preflight fails | revert codegen/runtime/bench/report/gate/RESULTS; save `/tmp/skv12-waveW1-rejected.patch`; dependent intervention blocked |
+| E2 Sheets baseline | W1 fallback | <=480 | medium-high | 30 min | 75 min | selected-grammar preflight fails | revert selected Sheets slice; save rejected patch; dependent intervention blocked |
+| E3 BBNF-self baseline | W1 fallback | <=460 | medium-high | 30 min | 75 min | selected-grammar preflight fails | revert selected BBNF-self slice; save rejected patch; dependent intervention blocked |
+| E4 selected-baseline intervention | W2 after baseline | <=430 | high | 30 min | 75 min | no admitted baseline row id or baseline Mbps | revert intervention slice; save rejected patch; preserve baseline evidence |
+| E5 JSON direct companion | W3+ conditional | <=300 | high | 30 min | 75 min | scheduled before non-JSON priority resolves | revert JSON source/generated/bench/report/gate/RESULTS; save rejected patch |
+
+Any wave exceeding its LOC budget or redress cap returns REVISE before behavior
+dispatch. Baseline work splits into a generator/runtime unblock wave and a
+later baseline-report wave if the selected-grammar preflight cannot pass.
 
 ## Section 3 - Telemetry Binding
 
@@ -257,6 +286,24 @@ SK-V11 explanations:
 - record JSON direct hot-leaf data only as diagnostic unless a row passes the
   REDRESS 114-119 material-reopen rule;
 - separate microbench inventory from dispatch authority.
+
+## Section 7 - G-Alpha Summary
+
+Rows targeted: one selected non-JSON generated row
+(`css_l4/declaration_values/direct/main`, `sheets/formula/direct/main`, or
+`bbnf_self/grammar/direct/main`) and that same row's selected-baseline
+intervention delta. JSON direct residual rows remain a reopen ledger, not the
+first target.
+
+Predicted close state:
+
+- success: one generated non-JSON baseline admits, one selected-baseline
+  intervention clears `ceil(baseline_mbps * 1.01)`, and JSON guards hold;
+- honest block: the selected baseline pre-gate or redress proves no generated
+  non-JSON baseline can be created inside the accepted owner surface;
+- JSON direct companion work occurs only after the non-JSON priority succeeds
+  or explicitly blocks, and only with fresh material evidence beyond REDRESS
+  114-119.
 
 ## Section 7 - Dispatch Boundary
 

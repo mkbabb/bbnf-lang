@@ -1,6 +1,6 @@
 # SK-V12 P3-C: Falsifiability Gates
 
-Pass: S-P3 Synthesis-Plan. Cycle: PIN-V3.
+Pass: S-P3 Synthesis-Plan. Cycle: PIN-V4.
 Date: 2026-05-20.
 Scope: per-wave measurable gates for the SK-V12 USER-PIN CSS L4 admission,
 Lock 14/Lock 16 prerequisites, union-substrate attempt, ASM-gen attempt, guard

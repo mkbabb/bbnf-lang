@@ -1,6 +1,6 @@
 # SK-V12 P3-E: Pre-Blocked Route Ledger
 
-Pass: S-P3 Synthesis-Plan. Cycle: PIN-V3.
+Pass: S-P3 Synthesis-Plan. Cycle: PIN-V4.
 Date: 2026-05-20.
 Scope: pin-aware per-wave REDRESS pre-block and category-unblock ledger for the SK-V12 synthesis-plan packet.
 Output: this file.
@@ -47,7 +47,7 @@ precondition for CSS emission, not an optimization.
 
 ### Global Route Disposition
 
-| Route family | Binding authority | PIN-V3 disposition |
+| Route family | Binding authority | PIN-V4 disposition |
 |---|---|---|
 | CSS L4 generated parser and comparator | USER PIN D1/D2; `SYNTHESIS.md` §0.1; `HANDOFF.md` §3/§7 | Required first target. Must use generated Track 1, independent oracle/Track 2, same-plane lightningcss comparator, strict equality, and gate-consumed provenance. |
 | Sheets / BBNF-self baseline | USER PIN D1; `HARDENING-S-P2-CONVERGED.md` load-bearing facts | Still blocked before measured CSS L4 redress. They are fallbacks only after CSS records measured BLOCKED/REJECTED evidence. |
@@ -81,7 +81,7 @@ pre-blocks.
 
 ### Candidate-Family Ledger
 
-| S-P2 family | REDRESS adjacency | PIN-V3 admissible framing |
+| S-P2 family | REDRESS adjacency | PIN-V4 admissible framing |
 |---|---|---|
 | `GrammarConfig` / generated metadata | REDRESS 111-113; Lock 14 leaks | Required legality precondition. Must extract structural alphabet, dispatch, string/escape, number, key/pair, flag, sink/view/kind policy into generated metadata/templates. Not a throughput admission alone. |
 | CSS fact stream / output plane | REDRESS 111 report-lane boundary; REDRESS 118 digest/host-sink block | Canonical row output shared by generated Track 1, independent oracle/Track 2, and lightningcss. Digest alone is not parser proof. |
@@ -91,7 +91,7 @@ pre-blocks.
 | Hex quartet / escape decode (`C5`) | REDRESS 82 single-quartet reject; REDRESS 107 proof-only x4; REDRESS 108 existing-consumer production reject; REDRESS 117 escaped-segment block | Fixed-width hex mechanics only. CSS escape width/context, JSON surrogate policy, Sheets/BBNF policy stay caller-owned. Same-wave generated CSS escape/color/string consumer required. |
 | Bitmap prefix / next-bit / bulk emit (`C7/C8` support) | REDRESS 88/89/90 | Category unblocked only for narrow consumer. No default PMULL/CTZ hot body, no retained cursor/side table, no canary row-movement claim. Must consume or demote/remove orphan. |
 | Byte context / movemask support (`C10` support) | REDRESS 83/106 adjacency; orphan audit | Support only inside C1/C4/C6-style scanner with scalar boundary oracle and same-wave consumer. Standalone row movement is pre-blocked. |
-| LD4 interleaved / SHA3 EOR3 / PRFM-STNP / BF16 / SVE2 inventory | P2-C inventory/drop; SIMD audit | Not selected in the PIN-V3 opening manifest. Future admissibility requires fresh profile naming the exact stream/expression/writer, scalar oracle, checkasm where semantic, and same-wave generated consumer. BF16/SVE2 are out of current tranche scope. |
+| LD4 interleaved / SHA3 EOR3 / PRFM-STNP / BF16 / SVE2 inventory | P2-C inventory/drop; SIMD audit | Not selected in the PIN-V4 opening manifest. Future admissibility requires fresh profile naming the exact stream/expression/writer, scalar oracle, checkasm where semantic, and same-wave generated consumer. BF16/SVE2 are out of current tranche scope. |
 | JSON direct residual companion | REDRESS 114-120 | Guard-only until CSS priority is resolved. Reopen requires fresh profile, material source delta beyond W3-W7, scalar/oracle proof, independent Track 2, strict same-run sonic direct floor, and same-wave gate consumption. |
 
 ## §3 — Falsifiability Binding
@@ -116,7 +116,7 @@ SOTA claims, or direct digest as typed/CSS proof fail closed.
 
 ## §4 — Pre-Blocked Routes
 
-Hard pre-blocks no SK-V12 PIN-V3 wave may reopen under current authority:
+Hard pre-blocks no SK-V12 PIN-V4 wave may reopen under current authority:
 
 1. CSS admission using `ceil(baseline_mbps * 1.01)` or any bar weaker than
    strict `Track 1 > lightningcss_mbps + 1`.

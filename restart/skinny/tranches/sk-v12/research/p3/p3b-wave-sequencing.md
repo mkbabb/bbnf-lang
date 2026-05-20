@@ -1,6 +1,6 @@
 # SK-V12 P3-B: Wave Sequencing
 
-Pass: S-P3 Synthesis-Plan. Cycle: PIN-V3.
+Pass: S-P3 Synthesis-Plan. Cycle: PIN-V4.
 Date: 2026-05-20.
 Scope: topologically sequence the pin-aware SK-V12 S-P2 survivor pool into a W0..Wn wave manifest.
 Output: this file.
@@ -123,7 +123,7 @@ inside CSS redress.
 | Digit-run/UDOT numeric span (`C3`) | W4 | Needs CSS number/dimension/percentage consumer and full digit-run checkasm beyond the smoke proof. |
 | PMULL prefix-XOR or CSSC CTZ narrow support (`C7`, `C8` support-only) | W4 only after CHALLENGE | Category-unblocked, but REDRESS 88/89 default-body routes remain historical rejects; only a narrow named consumer is eligible. |
 | Output-plane digest/fact reporting | W1b-1/W1b-2/W5 as oracle/report support only | Parser-candidate-ineligible by itself; cannot close without generated parser/equality/comparator evidence. |
-| Tape capacity, sparse flag lookup, retained cursor skip diagnostics | Not in the PIN-V3 manifest unless a wave profile makes them hot | P2-D marks them diagnostic-only today. |
+| Tape capacity, sparse flag lookup, retained cursor skip diagnostics | Not in the PIN-V4 manifest unless a wave profile makes them hot | P2-D marks them diagnostic-only today. |
 
 ## §3 - Falsifiability Binding
 

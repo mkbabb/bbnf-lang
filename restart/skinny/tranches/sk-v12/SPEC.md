@@ -1,7 +1,7 @@
 # SK-V12 SPEC - Pin-Aware S-P3 Wave Plan
 
 Date: 2026-05-20.
-Status: PIN-V3 DRAFT. This packet supersedes the pre-pin V5 SPEC wherever it
+Status: PIN-V4 DRAFT. This packet supersedes the pre-pin V5 SPEC wherever it
 conflicts with `USER-PIN-W1-CSS-L4-SOTA.md`.
 
 Authority:

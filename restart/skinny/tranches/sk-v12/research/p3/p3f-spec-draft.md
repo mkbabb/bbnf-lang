@@ -1,6 +1,6 @@
 # SK-V12 P3-F: SPEC + Dispatch Draft
 
-Pass: S-P3 Synthesis-Plan. Cycle: PIN-V3.
+Pass: S-P3 Synthesis-Plan. Cycle: PIN-V4.
 Date: 2026-05-20.
 Scope: regenerate the SK-V12 wave SPEC and per-wave dispatch prompt under the
 2026-05-20 USER PIN, superseding the stale pre-pin V5 packet.

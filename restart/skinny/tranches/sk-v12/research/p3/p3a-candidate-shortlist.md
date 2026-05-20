@@ -1,6 +1,6 @@
 # SK-V12 P3-A: Candidate Shortlist
 
-Pass: S-P3 Synthesis-Plan. Cycle: PIN-V3.
+Pass: S-P3 Synthesis-Plan. Cycle: PIN-V4.
 Date: 2026-05-20.
 Scope: regenerate the pin-aware candidate shortlist from the converged S-P2
 cohort, superseding the stale pre-pin V5 packet.
@@ -371,7 +371,7 @@ Category-unblocked but still REDRESS-bound:
   of PMULL, CSSC CTZ, or adjacent bitmap support must cite REDRESS 88/89/90
   and name the local-consumer material differential.
 
-Dropped from the PIN-V3 shortlist:
+Dropped from the PIN-V4 shortlist:
 
 - LD4 interleaved classifier: no canonical interleaved stream, no scalar
   deinterleave oracle, and side-stream manufacturing would violate Lock 1.

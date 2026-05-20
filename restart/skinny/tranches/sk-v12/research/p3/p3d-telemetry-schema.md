@@ -1,6 +1,6 @@
 # SK-V12 P3-D: Telemetry Schema Binding
 
-Pass: S-P3 Synthesis-Plan. Cycle: PIN-V3.
+Pass: S-P3 Synthesis-Plan. Cycle: PIN-V4.
 Date: 2026-05-20.
 Scope: bind the pin-aware SK-V12 telemetry schema and fail-closed gate rules for CSS L4 > lightningcss admission, JSON guard maintenance, Lock 14, Lock 16, union, ASM-gen, and aarch64 orphan disposition.
 Output: this file.

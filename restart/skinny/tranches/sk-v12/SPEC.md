@@ -1,7 +1,7 @@
 # SK-V12 SPEC - Pin-Aware S-P3 Wave Plan
 
 Date: 2026-05-20.
-Status: PIN-V2 DRAFT. This packet supersedes the pre-pin V5 SPEC wherever it
+Status: PIN-V3 DRAFT. This packet supersedes the pre-pin V5 SPEC wherever it
 conflicts with `USER-PIN-W1-CSS-L4-SOTA.md`.
 
 Authority:
@@ -435,9 +435,11 @@ Exit gate `G-W1b-1-CSS-L4-ORACLE`:
 - PASS: generated Track 1 and independent Track 2/oracle compile, execute,
   produce strict-equal `css_l4_declaration_value_fact_stream` output, and emit
   finite Mbps plus generated-size telemetry.
-- BLOCKED/FAIL: CSS cannot be generated/measured inside the owner surface;
-  record REDRESS. Sheets/BBNF fallback requires a subsequent S-P3 or wave plan
-  revision after this measured CSS redress attempt.
+- BLOCKED/FAIL: CSS cannot be generated/measured inside the W1b-1 scaffold
+  surface; record REDRESS and return to plan. This scaffold failure does not
+  satisfy the post-CSS-redress fallback condition. Sheets/BBNF fallback remains
+  blocked until W1b-2 records measured CSS lightningcss comparator/admission
+  redress, unless the user re-pins or S-P3 explicitly revises the topology.
 
 Revert protocol: revert CSS generated/runtime/bench/gate/report changes and
 save `/tmp/skv12-waveW1b-1-rejected.patch` when a patch was attempted.

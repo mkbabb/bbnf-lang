@@ -1,10 +1,15 @@
 # SK-V11 P2-B: DAV1D/FFmpeg ASM Process
-Pass: S-P2 Research. Cycle: V2.
-Date: 2026-05-19.
+Pass: S-P2 Research. Cycle: V3.
+Date: 2026-05-20.
 Scope: scalar-oracle and checkasm admission process for SK-V11 SIMD/ASM primitives.
 Output: this file.
 P1 hot-leaf antecedents: bounded_plain_string_scan; string_escape_decode; unicode_escape_hex_decode; number_digit_span; ascii_whitespace_skip; container_dispatch; simd_movemask; output_digest_hash.
 Lock surface: Lock 1 + Lock 14.
+
+V3 fold note: V2 CH consolidation accepted the admission tuples, so the
+candidate pool is unchanged. Proof-only SIMD rows remain proof-only;
+`HEX_QUARTET_X4_PROOF` and `OUTPUT_DIGEST_HASH_ORACLE` stay outside parser
+row-mover admission as proof/support/oracle surfaces.
 
 ## §1 — Findings (concrete; file:line on bbnf claims, citation on external claims)
 

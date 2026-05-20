@@ -1,11 +1,20 @@
 # SK-V11 P2-F: Grammar-Neutral Abstraction
 
-Pass: S-P2 Research. Cycle: V2.
-Date: 2026-05-19.
+Pass: S-P2 Research. Cycle: V3.
+Date: 2026-05-20.
 Scope: Lock-14 grammar-neutral abstraction for SK-V11 primitive candidates.
 Output: this file.
 P1 hot-leaf antecedents: bounded_plain_string_scan; string_escape_decode; unicode_escape_hex_decode; number_digit_span; ascii_whitespace_skip; container_dispatch; simd_movemask; output_digest_hash.
 Lock surface: Lock 1 + Lock 14.
+
+V3 stability fold note: V2 hardening accepted the candidate pool with no
+critical defect (`restart/skinny/tranches/sk-v11/research/p2/hardening/HARDENING-S-P2-V2-CONSOLIDATED.md:24-44`;
+`restart/skinny/tranches/sk-v11/research/p2/hardening/V2/CH2.md:83-90`).
+This V3 fold preserves C1-C7 as the parser primitive pool, keeps C8 as
+benchmark/oracle or per-product host sink only, keeps C9 as Lock-1/output-plane
+accounting only, and carries the live `json_provider` codegen path as an S-P3
+Lock 14 gate before any CSS/Sheets/BBNF-self generated-parser generality claim
+(`skinny/crates/codegen/src/lib.rs:102-167`).
 
 ## §1 — Findings (concrete; file:line on bbnf claims, citation on external claims)
 

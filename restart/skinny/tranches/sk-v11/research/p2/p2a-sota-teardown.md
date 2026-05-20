@@ -1,7 +1,7 @@
 # SK-V11 P2-A: SOTA Comparator Teardown
 
-Pass: S-P2 Research. Cycle: V2.
-Date: 2026-05-19.
+Pass: S-P2 Research. Cycle: V3.
+Date: 2026-05-20.
 Scope: strict comparator architecture teardown keyed to SK-V11 S-P1 hot leaves.
 Output: this file.
 P1 hot-leaf antecedents: bounded_plain_string_scan, string_escape_decode,
@@ -16,6 +16,18 @@ same-output proof shape, and must state its reject boundary. Parse-only rows are
 diagnostic only. REDRESS 96/97/98/102 keep W3, retained structural class lanes,
 structural-position vectors, streaming cursors, parser-owned projections, and
 parse-only movement blocked.
+
+V3 stability fold note: V2 accepted P2-A without substantive redress, so the
+candidate pool is unchanged. Carry-forward facts relevant to P2-A are: C1-C5
+remain the parser candidate pool and C8 remains a non-parser output-plane
+surface; `HEX_QUARTET_X4_PROOF` / `hex_escape_quad_decode` remain proof/support
+only until a new source delta, scalar x4 oracle, strict parity, and same-wave
+direct/typed or non-JSON consumer exist; `output_digest_hash` remains benchmark
+oracle or per-product host sink only and cannot enter generic parser crates; W3,
+retained class columns, structural-position vectors, streaming cursors,
+parser-owned projections, sidecars, and parse-only row movement remain blocked;
+and current JSON-provider codegen remains a Lock 14 gate for any claimed
+non-JSON generated parser wave.
 
 ## §1 — Findings (concrete; file:line on bbnf claims, citation on external claims)
 

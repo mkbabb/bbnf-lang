@@ -1,12 +1,13 @@
 # SK-V11 P2-D: Substrate And Tape Design
 
-Pass: S-P2 Research. Cycle: V2.
-Date: 2026-05-19.
+Pass: S-P2 Research. Cycle: V3.
+Date: 2026-05-20.
 Scope: Lock-1 substrate/tape audit for direct and typed product consumers.
 Output: this file.
 P1 hot-leaf antecedents: bounded_plain_string_scan; string_escape_decode; unicode_escape_hex_decode; number_digit_span; ascii_whitespace_skip; container_dispatch; simd_movemask; output_digest_hash.
 Lock surface: Lock 1 + Lock 14.
 V2 fold note: "substrate union holds" means only the existing source-offset tape plus the direct/typed output-consumer union. It does not reopen W3, `UnionTape`, retained class lanes, structural cursors, parser-owned projections, structural vectors, or parse-only structural-scan admission.
+V3 fold note: V2 ACCEPT facts are carried unchanged. P2-D remains the existing offset tape plus direct/typed consumer union only; W3, retained class columns, and streaming cursors stay REDRESS-closed; D5 remains internal/accounting tape encoding and needs an actual retained-view or typed consumer that observes `flags_at(cursor)`.
 
 ## §1 — Findings (concrete; file:line on bbnf claims, citation on external claims)
 
@@ -75,9 +76,14 @@ Every S-P3 packet derived from D1-D5 must name the generated Track 1 path, indep
 - `restart/locks/LOCKS.md:52`, `78`.
 - `restart/skinny/tranches/sk-v11/HANDOFF.md:32`-`45`, `67`-`84`, `96`-`118`.
 - `restart/skinny/tranches/sk-v11/research/p2/hardening/HARDENING-S-P2-V1-CONSOLIDATED.md:25`-`67`.
+- `restart/skinny/tranches/sk-v11/research/p2/hardening/HARDENING-S-P2-V2-CONSOLIDATED.md:14`-`56`.
 - `restart/skinny/tranches/sk-v11/research/p2/hardening/V1/CH3.md:37`-`76`, `89`-`109`.
 - `restart/skinny/tranches/sk-v11/research/p2/hardening/V1/CH4.md:16`-`30`.
 - `restart/skinny/tranches/sk-v11/research/p2/hardening/V1/CH5.md:11`-`19`, `23`-`33`.
+- `restart/skinny/tranches/sk-v11/research/p2/hardening/V2/CH3.md:42`-`67`.
+- `restart/skinny/tranches/sk-v11/research/p2/hardening/V2/CH4.md:17`-`19`, `30`-`34`.
+- `restart/skinny/tranches/sk-v11/research/p2/hardening/V2/CH5.md:14`-`18`, `28`-`35`, `63`-`72`, `113`-`119`.
+- `restart/skinny/tranches/sk-v11/research/p2/hardening/V2/CH6.md:68`-`79`, `93`-`100`.
 - `restart/skinny/tranches/sk-v11/research/p1/p1b-samply-mode-2.md:116`-`125`, `171`-`207`, `233`-`247`, `312`-`317`.
 - `restart/skinny/tranches/sk-v11/research/p1/p1c-samply-mode-3.md:67`-`77`, `89`-`138`, `156`-`170`, `196`-`203`.
 - `restart/skinny/tranches/sk-v11/research/p1/p1d-pmu-cycles.md:89`-`93`, `138`-`171`, `224`-`240`, `261`-`263`.

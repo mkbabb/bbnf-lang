@@ -1,7 +1,7 @@
 # SK-V11 P2-E: Parse-That Primitive Gaps
 
-Pass: S-P2 Research. Cycle: V2.
-Date: 2026-05-19.
+Pass: S-P2 Research. Cycle: V3.
+Date: 2026-05-20.
 Scope: parse-that primitive gaps tied to direct/typed/non-JSON product consumers.
 Output: this file.
 P1 hot-leaf antecedents: bounded_plain_string_scan; string_escape_decode; unicode_escape_hex_decode; number_digit_span; ascii_whitespace_skip.
@@ -10,15 +10,17 @@ Lock surface: Lock 1 + Lock 14.
 
 ## §1 — Findings (concrete; file:line on bbnf claims, citation on external claims)
 
-S-P1 accepts the direct hot-leaf vocabulary as `bounded_plain_string_scan`, `string_escape_decode`, `unicode_escape_hex_decode`, `number_digit_span`, `ascii_whitespace_skip`, `container_dispatch`, `simd_movemask`, and `output_digest_hash` (`restart/skinny/tranches/sk-v11/research/p1/p1e-hot-leaf-attribution.md:98-119`). P2-E V2 keeps only the parse-that candidate gaps with a concrete scalar reference and a same-wave product consumer: `ascii_whitespace_skip`, `bounded_plain_string_scan`, `number_digit_span`, and escaped-string/hex decode from `string_escape_decode` plus `unicode_escape_hex_decode`.
+S-P1 accepts the direct hot-leaf vocabulary as `bounded_plain_string_scan`, `string_escape_decode`, `unicode_escape_hex_decode`, `number_digit_span`, `ascii_whitespace_skip`, `container_dispatch`, `simd_movemask`, and `output_digest_hash` (`restart/skinny/tranches/sk-v11/research/p1/p1e-hot-leaf-attribution.md:98-119`). P2-E V3 keeps the V2 ACCEPT candidate pool unchanged: only the parse-that candidate gaps with a concrete scalar reference and a same-wave product consumer remain live: `ascii_whitespace_skip`, `bounded_plain_string_scan`, `number_digit_span`, and escaped-string/hex decode from `string_escape_decode` plus `unicode_escape_hex_decode`.
+
+V3 stability fold note: no critical defect appears in the V2 ACCEPT facts, so the four parse-that gaps are retained unchanged; `container_dispatch`, `simd_movemask`, and `output_digest_hash` remain support-only or oracle-only; retained parse callers remain guards and micro-proof surfaces only.
 
 The retained parse call sites in generated JSON are no longer admission surfaces. They are guards and micro-proof harnesses only: a candidate may use retained generated parse rows to prove semantics and non-regression, but S-P3 admission must come from a generated direct, typed, or non-JSON product-plane consumer with strict output parity. This folds the V1 CH3 warning that parse-only movement, retained structural class lanes, W3 cursors, and substrate sidecars do not close SK-V11 (`restart/skinny/tranches/sk-v11/research/p2/hardening/V1/CH3.md:82-93`).
 
 Lock 1 matters because parse-that helpers must return only the scalar result needed by the caller or transient visitor events. They must not retain whitespace cursors, string segment side tables, decoded scratch, structural masks, or parser-owned projections (`restart/locks/LOCKS.md:52`). Lock 14 matters because the generic crates may expose byte-set, digit-run, bounded special-byte, and hex/escape segment kernels, but not JSON-specific grammar policy (`restart/locks/LOCKS.md:78`).
 
-V2 candidate-pool hygiene:
+V3 candidate-pool hygiene, preserving V2 ACCEPT facts:
 
-| Hot leaf | V2 disposition | Reason |
+| Hot leaf | V3 disposition (V2 ACCEPT carried forward) | Reason |
 | --- | --- | --- |
 | `ascii_whitespace_skip` | Retained candidate: `pt_byte_set_run_skip`. | The scalar reference exists as JSON whitespace/space-only loops, but the generic primitive must be byte-set run skip, not comment-aware layout trivia (`skinny/crates/parse-that-regex/src/lib.rs:112-147`). |
 | `bounded_plain_string_scan` | Retained candidate: `pt_bounded_plain_string_end`. | Local scalar loops exist in generated/direct/typed code; the first admitted parse-that shape is scalar factoring with full parser fallback (`skinny/crates/runtime/src/grammars/json/generated.rs:161-185`, `skinny/crates/bbnf-bench/src/direct_struct.rs:564-576`, `skinny/crates/bbnf-bench/src/generated_real_typed.rs:1811-1835`). |
@@ -99,6 +101,8 @@ No external sources were used. Local sources:
 
 - S-P2 hardening V1 consolidated: `restart/skinny/tranches/sk-v11/research/p2/hardening/HARDENING-S-P2-V1-CONSOLIDATED.md`
 - S-P2 hardening V1 CH2, CH3, CH4, CH6: `restart/skinny/tranches/sk-v11/research/p2/hardening/V1/CH2.md`, `restart/skinny/tranches/sk-v11/research/p2/hardening/V1/CH3.md`, `restart/skinny/tranches/sk-v11/research/p2/hardening/V1/CH4.md`, `restart/skinny/tranches/sk-v11/research/p2/hardening/V1/CH6.md`
+- S-P2 hardening V2 consolidated: `restart/skinny/tranches/sk-v11/research/p2/hardening/HARDENING-S-P2-V2-CONSOLIDATED.md`
+- S-P2 hardening V2 CH lenses: `restart/skinny/tranches/sk-v11/research/p2/hardening/V2/CH1.md`, `restart/skinny/tranches/sk-v11/research/p2/hardening/V2/CH2.md`, `restart/skinny/tranches/sk-v11/research/p2/hardening/V2/CH3.md`, `restart/skinny/tranches/sk-v11/research/p2/hardening/V2/CH4.md`, `restart/skinny/tranches/sk-v11/research/p2/hardening/V2/CH5.md`, `restart/skinny/tranches/sk-v11/research/p2/hardening/V2/CH6.md`
 - P2-F grammar-neutral abstraction: `restart/skinny/tranches/sk-v11/research/p2/p2f-grammar-neutral.md`
 - P1 hot-leaf attribution: `restart/skinny/tranches/sk-v11/research/p1/p1e-hot-leaf-attribution.md`
 - P1 hardening convergence: `restart/skinny/tranches/sk-v11/research/p1/hardening/HARDENING-S-P1-CONVERGED.md`

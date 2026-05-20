@@ -118,6 +118,9 @@ The new S-P3 plan must:
   floor; equality at `+1` is a miss;
 - land `GrammarConfig` or equivalent generated metadata before CSS L4 emission
   can legally leave JSON-only templates;
+- record generated CSS runtime size before redress, including generated LOC,
+  module byte size, regen/check command, and an O(N) grammar-size guard;
+  overflow blocks W1b until the growth source is traced;
 - verify and resolve the `escape_mask_64` NEON correctness bug before any new
   SIMD admission;
 - carry Sheets and BBNF-self only as post-CSS-redress fallbacks;
@@ -143,8 +146,9 @@ plane, strictness, generated source/runtime paths, grammar/input checksums,
 oracle path, lightningcss comparator artifact and Mbps, strict equality,
 Track 1 Mbps, oracle Mbps, sample count, sample cost, run id, host triple,
 feature mask, build flags, profile artifact, benchmark artifact, Lock 14
-status, Lock 16 status where applicable, same-wave consumer class, JSON guard
-state, gate status, wave id, and REDRESS id.
+status, Lock 16 status where applicable, generated LOC, generated module byte
+size, O(N) grammar-size status, same-wave consumer class, JSON guard state,
+gate status, wave id, and REDRESS id.
 
 Producer-only fields, stale run ids, oracle coupling, grammar-name branches in
 generic crates, missing lightningcss evidence, parse-only admission, and orphan

@@ -183,9 +183,10 @@ oracle in the current files.
 - Codegen still exposes the historical blocker named by REDRESS 112:
   direct and typed emission routes call `json_provider::ensure_runtime_profile`,
   and the provider is still the named JSON-runtime boundary.
-- Main-table hot leaves remain Criterion slope artifact bindings, not resolved
-  samply symbols with `% self-time` and source file:line. P1-E must resolve
-  symbols from the parent capture before profile completeness.
+- Main-table hot leaves remain Criterion slope artifact bindings. Separate
+  pin-era xctrace hot-leaf tables now resolve `% self-time` and source
+  file:line under `/tmp/skv12-pin-p1`; those profile symbols do not mutate
+  `skinny/RESULTS.md`.
 - Run identity is stale by SK-V12 name: every manifest row still carries
   `sk-v9-open:criterion-fnv64-c8d7e0468358f98c`; no `SK-V12-open` run id is
   rendered.

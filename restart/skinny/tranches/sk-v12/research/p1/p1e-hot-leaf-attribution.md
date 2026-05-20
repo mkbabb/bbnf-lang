@@ -16,8 +16,7 @@ guard rows; CSS L4 0/0 because no generated skinny CSS L4 parser exists.
 
 ## Final Orchestrator Fold - 2026-05-20
 
-This fold supersedes the partial-capture blocker ledger below. Final hot-leaf
-authority:
+This fold records final pin-era hot-leaf authority:
 
 | Artifact | Coverage |
 |---|---:|
@@ -30,13 +29,20 @@ authority:
 Validation: summary 82/82 and details 410/410 have no `:0`, `unknown`, or
 `none` source anchors in the load-bearing symbol/source fields.
 
-Top-family distribution:
+Top-family distribution, split by mode so Track 2/oracle work is not folded
+into generated Track 1 antecedents:
 
-| Plane | Leading families |
+| Plane/mode | Leading families |
 |---|---|
-| `parse` | `container_dispatch` 18 rows; `bounded_plain_string_scan` 12; `unicode_escape_hex_decode` 2; `number_digit_span` 1; `simd_movemask` 1 |
-| `direct` | `output_digest_hash` 17 rows; `runtime_support` 14; `string_escape_decode` 2; `allocation_support` 1 |
-| `typed` | `serde_json_oracle_read_parse` 7 rows; `typed_direct_projection` 6; `string_full_scan` 1 |
+| `parse/track1` | `bounded_plain_string_scan` 7; `container_dispatch` 7; `number_digit_span` 1; `simd_movemask` 1; `unicode_escape_hex_decode` 1 |
+| `parse/track2` | `container_dispatch` 11; `bounded_plain_string_scan` 5; `unicode_escape_hex_decode` 1 |
+| `direct/track1` | `output_digest_hash` 17 |
+| `direct/track2` | `runtime_support` 14; `string_escape_decode` 2; `allocation_support` 1 |
+| `typed/real_typed_track1` | `typed_direct_projection` 6; `string_full_scan` 1 |
+| `typed/real_typed_track2` | `serde_json_oracle_read_parse` 7 |
+
+Track 2 and oracle-only families are guard/comparator context. They are not
+generated Track 1 optimization antecedents.
 
 CSS L4 remains intentionally absent from the hot-leaf ledger: the skinny
 runtime has no generated CSS L4 Track 1 parser or lightningcss comparator row
@@ -63,9 +69,8 @@ pgrep -fl 'cargo|rustc|xctrace|samply|profile_direct|xctrace_probe'
 ```
 
 P1-E did not run cargo, xctrace, samply, Criterion, or any benchmark binary.
-The parent owns capture. This artifact records the hot-leaf evidence boundary
-at P1-E inspection time and gives the patch-ready fold method for the next
-cycle once parent self-time exports exist.
+The parent owns capture. This artifact records the final hot-leaf evidence
+boundary after the parent replay completed under `/tmp/skv12-pin-p1`.
 
 The pre-pin P1-E at baseline `50bd1648` and capture root `/tmp/skv12-p1` is a
 format reference only. None of its hot-leaf rows are carried as fresh pin-era
@@ -74,52 +79,45 @@ forbids anchoring on prior tranche prose.
 
 ## Section 2 - Fresh Artifact Inventory
 
-Observed fresh pin-root files at `/tmp/skv12-pin-p1`:
+Observed final pin-root files at `/tmp/skv12-pin-p1`:
 
 | Artifact class | Observed state | P1-E consequence |
 |---|---|---|
-| PMU status | `/tmp/skv12-pin-p1/pmu/capture_status.tsv` existed with 26 direct rows plus header at inspection. | Useful for P1-D/cost only; not a hot-leaf source. |
-| PMU commands | `/tmp/skv12-pin-p1/pmu/pmu-commands.sh` existed and enumerated JSON parse, direct, and typed PMU commands. | Replay surface only; not self-time attribution. |
-| Direct PMU logs | `/tmp/skv12-pin-p1/logs/pmu-direct-*.rerun.log.{out,err}` existed for the observed rows. | No symbol, percent, or source line. |
-| samply artifacts | No `/tmp/skv12-pin-p1/samply/` artifacts observed. | Hot-leaf claims unavailable. |
-| xctrace Time Profiler traces | No `/tmp/skv12-pin-p1/*time-profiler*` traces observed. | Hot-leaf claims unavailable. |
-| xctrace Time Profiler XML exports | No `*.time-profile.xml` exports observed. | Hot-leaf claims unavailable. |
-| derived self-time summary | No `/tmp/skv12-pin-p1/time_profile_hot_leaf_summary.tsv` observed. | Hot-leaf claims unavailable. |
-| derived self-time details | No `/tmp/skv12-pin-p1/time_profile_hot_leaf_details.tsv` observed. | Hot-leaf claims unavailable. |
-| CSS L4 target row | No CSS L4/lightningcss artifacts observed under `/tmp/skv12-pin-p1`. | P1-E cannot satisfy the pin-era grammar-generalization hot-leaf requirement. |
+| PMU status | 82/82 rows PASS in `/tmp/skv12-pin-p1/pmu/capture_status.tsv`. | Replay/cost companion; not self-time authority. |
+| samply artifacts | 82/82 rows PASS in `/tmp/skv12-pin-p1/samply/capture_status.tsv`. | Retained companion artifacts, symbolized sidecars present. |
+| xctrace capture | 212/212 rows PASS in `/tmp/skv12-pin-p1/xctrace/capture_status.tsv`. | Time Profiler and CPU Counter capture authority. |
+| xctrace XML exports | 82 XML files present and nonzero; `/tmp/skv12-pin-p1/time_profile_export_status.tsv` records `SKIP` because exports already existed. | Valid self-time input; do not relabel status as PASS. |
+| derived self-time summary | 82 rows in `/tmp/skv12-pin-p1/time_profile_hot_leaf_summary.tsv`. | Hot-leaf summary authority. |
+| derived self-time details | 410 rows in `/tmp/skv12-pin-p1/time_profile_hot_leaf_details.tsv`. | Raw top-leaf detail authority. |
+| CSS L4 target row | No CSS L4/lightningcss artifacts under `/tmp/skv12-pin-p1`. | CSS L4 remains an S-P2/S-P3 bring-up prerequisite. |
 
-Process reconciliation at inspection found an active parent-owned
-`profile_direct` process for a JSON direct PMU row. P1-E therefore treats the
-pin capture as in progress, not failed.
+No profiler process remains load-bearing for this artifact; the pin capture is
+complete for JSON parse/direct/typed rows.
 
-## Section 3 - Blocker List
+## Section 3 - Validation Checks
 
-P1-E cannot make any fresh hot-leaf attribution until the parent capture lands
-these artifacts:
+The final hot-leaf fold satisfies the JSON source-attribution prerequisites:
 
-1. `time_profile_hot_leaf_details.tsv` with one row per selected top leaf and
-   columns equivalent to: `plane`, `corpus`, `mode`, `rank`, `symbol`,
-   `percent_self`, `source`, `family`, `artifact`.
-2. `time_profile_hot_leaf_summary.tsv` with one summary row per corpus x
-   workload x track and columns equivalent to: `plane`, `corpus`, `mode`,
-   `top_leaf`, `top_leaf_percent`, `top_leaf_source`, `family`.
-3. Fresh xctrace Time Profiler XML exports or an equivalent symbolized
-   self-time source for all 17 JSON corpora across parse/direct/typed lanes.
-4. A CSS L4 target corpus self-time lane with the same symbol, percent, and
-   source-line contract as the JSON rows.
-5. A manifest update recording host triple, tool versions, build flags, run
-   ids, and any accepted xctrace return-code policy for the pin-root capture.
-6. Source-line normalization proof: no `:0` source anchors, no unresolved
-   frames, and no `UNRESOLVED_LINE_ZERO` markers in either derived table.
+```sh
+test -s /tmp/skv12-pin-p1/time_profile_hot_leaf_summary.tsv
+test -s /tmp/skv12-pin-p1/time_profile_hot_leaf_details.tsv
 
-Until those exist, every hot-leaf cell below is explicitly unavailable. No
-S-P2 primitive or S-P3 wave should cite this P1-E as hot-leaf antecedent for a
-kernel, union route, ASM-gen route, JSON guard route, or CSS L4 admission
-route.
+awk -F '\t' 'NR>1 {n++; if($16 ~ /:0([^0-9]|$)/ || $16 ~ /unknown/ || $15=="none") bad++}
+  END{print n, bad+0}' /tmp/skv12-pin-p1/time_profile_hot_leaf_summary.tsv
+# 82 0
 
-## Section 4 - Patch-Ready Fold Method
+awk -F '\t' 'NR>1 {n++; if($9 ~ /:0([^0-9]|$)/ || $9 ~ /unknown/ || $8=="none") bad++}
+  END{print n, bad+0}' /tmp/skv12-pin-p1/time_profile_hot_leaf_details.tsv
+# 410 0
+```
 
-Once the parent supplies Time Profiler traces, export and derive self-time in
+The admitted JSON hot-leaf tables are profile antecedents only. CSS L4 remains
+unprofiled because the skinny runtime has no generated CSS L4 Track 1 parser,
+lightningcss same-plane comparator, or strict equality oracle row.
+
+## Section 4 - Derivation Method
+
+The parent supplied Time Profiler traces, exported XML, and derived self-time in
 this shape:
 
 ```sh
@@ -159,34 +157,21 @@ rg -n ':0|UNRESOLVED_LINE_ZERO|unavailable|n/a' \
 ```
 
 The final `rg` must return no unresolved source anchors in admitted hot-leaf
-tables. If a lane is legitimately absent, document it in this file as an
-explicit blocker rather than leaving a silent blank.
+tables. It does so for the JSON parse/direct/typed rows. CSS L4 is the one
+legitimately absent lane and is recorded as a hard bring-up prerequisite.
 
 ## Section 5 - Hot-Leaf Claim Ledger
 
-No fresh hot-leaf claims are available in the pin root. Each row is marked
-unavailable because P1-E found no fresh self-time artifact with all three
-required fields: symbol, percent self-time, and file:line.
+Fresh JSON hot-leaf claims are available in the pin root:
 
-| Corpus | parse hot leaf | direct hot leaf | typed hot leaf |
-|---|---|---|---|
-| `twitter` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact |
-| `citm_catalog` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact |
-| `canada` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no typed row in RESULT surface |
-| `apache_builds` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact |
-| `github_events` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact |
-| `update_center` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact |
-| `mesh` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact |
-| `random` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no typed row in RESULT surface |
-| `gsoc-2018` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no typed row in RESULT surface |
-| `marine_ik` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact |
-| `instruments` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no typed row in RESULT surface |
-| `numbers` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no typed row in RESULT surface |
-| `unicode_mixed` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no typed row in RESULT surface |
-| `unicode_escapes` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no typed row in RESULT surface |
-| `unicode_basic` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no typed row in RESULT surface |
-| `distinct_values` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no typed row in RESULT surface |
-| `y_string_unicode` | unavailable: no fresh self-time artifact | unavailable: no fresh self-time artifact | unavailable: no typed row in RESULT surface |
+| Surface | Rows | Authority | Notes |
+|---|---:|---|---|
+| `parse/track1` | 17 | `/tmp/skv12-pin-p1/time_profile_hot_leaf_summary.tsv` | Diagnostic only; not SOTA admission. |
+| `parse/track2` | 17 | `/tmp/skv12-pin-p1/time_profile_hot_leaf_summary.tsv` | Independent parse comparator/context. |
+| `direct/track1` | 17 | `/tmp/skv12-pin-p1/time_profile_hot_leaf_summary.tsv` | Generated JSON direct guard/diagnostic rows. |
+| `direct/track2` | 17 | `/tmp/skv12-pin-p1/time_profile_hot_leaf_summary.tsv` | Oracle/hand context; not generated Track 1 antecedent. |
+| `typed/real_typed_track1` | 7 | `/tmp/skv12-pin-p1/time_profile_hot_leaf_summary.tsv` | Generated JSON typed guard rows. |
+| `typed/real_typed_track2` | 7 | `/tmp/skv12-pin-p1/time_profile_hot_leaf_summary.tsv` | Serde/oracle context. |
 
 | Non-JSON row | generated Track 1 hot leaf | comparator/oracle hot leaf |
 |---|---|---|
@@ -194,9 +179,9 @@ required fields: symbol, percent self-time, and file:line.
 
 ## Section 6 - REDRESS And Pin Boundaries
 
-This artifact proposes no intervention. It only records that P1-E lacks fresh
-self-time evidence. The following route boundaries remain load-bearing for any
-later P1-E fold:
+This artifact proposes no intervention. It records fresh JSON self-time
+evidence and the still-missing CSS L4 lane. The following route boundaries
+remain load-bearing for any later S-P2/S-P3 fold:
 
 | Boundary | Treatment |
 |---|---|
@@ -209,10 +194,11 @@ later P1-E fold:
 
 ## Section 7 - Delta vs SK-V11
 
-Unavailable for hot-leaf purposes in this P1-E cycle. The current
-`skinny/RESULTS.md` surface still records JSON parse/direct/typed rows, but
-the pin-era P1-E delta cannot be computed from PMU logs alone. It requires the
-fresh self-time tables named in Section 3 plus the CSS L4 target lane.
+The current `skinny/RESULTS.md` surface still records JSON parse/direct/typed
+rows only. Pin-era JSON hot-leaf deltas are now computable from the fresh
+self-time tables named above, but CSS L4 deltas remain unavailable until W1
+creates a generated Track 1 CSS parser, lightningcss comparator, equality
+oracle, and row telemetry.
 
 ## Section 8 - Sources
 
@@ -230,3 +216,5 @@ fresh self-time tables named in Section 3 plus the CSS L4 target lane.
   `/tmp/skv12-pin-p1/pmu/capture_status.tsv`.
 - Fresh pin-root PMU command ledger:
   `/tmp/skv12-pin-p1/pmu/pmu-commands.sh`.
+- Tracked pin replay ledger:
+  `restart/skinny/tranches/sk-v12/research/p1/skv12-p1-pin-replay.tsv`.

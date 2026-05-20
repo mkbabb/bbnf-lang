@@ -1,47 +1,28 @@
 # SK-V12 P1 Capture Manifest
 
-Pass: S-P1 Profile. Cycle: V12.
+Pass: S-P1 Profile. Cycle: V12 user-pin rerun.
 Date: 2026-05-20.
-Scope: replayable manifest for the SK-V12-open profile capture and the V1
-hardening self-time export fold.
+Scope: replayable manifest for the pin-aware SK-V12-open profile capture.
 Output: this file.
 
-## Pin-Aware Rerun Addendum
+## Pin Run Identity
 
-The user-pin rerun at current head `cf7848b2` uses:
-
+- Capture source commit: `cf7848b2` (`docs(sk-v12-alpha-hardening): converge
+  pin-aware G-Alpha V4`).
+- Initial committed S-P1 fold: `b1043383` (`docs(sk-v12-p1-profile): fold
+  pin-aware profile capture`).
 - Capture root: `/tmp/skv12-pin-p1`.
 - Build root: `/tmp/skv12-pin-profile-target-cf7848b2`.
-- PMU authority: `/tmp/skv12-pin-p1/pmu/{parse_pmu_rows.tsv,product_pmu_rows.tsv,capture_status.tsv}`.
-- Samply authority: `/tmp/skv12-pin-p1/samply/capture_status.tsv`.
-- xctrace authority: `/tmp/skv12-pin-p1/xctrace/capture_status.tsv`.
-- Derived hot-leaf authority:
-  `/tmp/skv12-pin-p1/time_profile_hot_leaf_summary.tsv` and
-  `/tmp/skv12-pin-p1/time_profile_hot_leaf_details.tsv`.
-
-Final coverage:
-
-| Lane | Rows | Status |
-|---|---:|---|
-| PMU parse/direct/typed | 82 | PASS |
-| samply parse/direct/typed | 82 | PASS |
-| xctrace primary Time Profiler | 82 | PASS |
-| xctrace CPU Counters | 82 | PASS |
-| xctrace product-v2 Time Profiler | 48 | PASS |
-| Time Profiler XML exports | 82 | PASS |
-| hot-leaf summary/details | 82 / 410 data rows | PASS, no unresolved source anchors |
-
-CSS L4 remains unprofiled in the pin root because `skinny/` does not yet have
-a generated CSS L4 Track 1 runtime or lightningcss same-plane comparator row.
-Mode III remains absent; the pin root captures parse, direct, and typed JSON
-lanes only.
-
-## Run Identity
-
-- Source baseline: `50bd1648` (`docs(sk-v12-g-alpha): present converged alpha
-  contract`).
-- Capture root: `/tmp/skv12-p1`.
-- Build root: `/tmp/skv12-profile-target-50bd1648`.
+- Binaries:
+  `/tmp/skv12-pin-profile-target-cf7848b2/release/xctrace_probe` and
+  `/tmp/skv12-pin-profile-target-cf7848b2/release/profile_direct`.
+- Completion stamps:
+  - PMU: `/tmp/skv12-pin-p1/pmu/done.txt` =
+    `done 2026-05-20T18:05:34Z`.
+  - samply: `/tmp/skv12-pin-p1/samply/done.txt` =
+    `done 2026-05-20T18:15:35Z`.
+  - xctrace: `/tmp/skv12-pin-p1/xctrace/done.txt` =
+    `done 2026-05-20T18:40:17Z`.
 - Result authority remains `skinny/RESULTS.md`; this manifest records profile
   evidence only and moves no rows.
 
@@ -60,172 +41,159 @@ Build command:
 
 ```bash
 cd /Users/mkbabb/Programming/bbnf-lang/skinny
-CARGO_TARGET_DIR=/tmp/skv12-profile-target-50bd1648 \
+CARGO_TARGET_DIR=/tmp/skv12-pin-profile-target-cf7848b2 \
 RUSTFLAGS="-C target-cpu=native" \
   cargo build --release -p bbnf-bench --bin xctrace_probe --bin profile_direct
 ```
 
-## Exact Replay Surface
+The pre-pin manifest/replay surface at `/tmp/skv12-p1`,
+`/tmp/skv12-profile-target-50bd1648`, and `skv12-p1-replay.tsv` is historical
+only. It is not pin-era replay authority.
 
-The repo-tracked replay ledger is
-`restart/skinny/tranches/sk-v12/research/p1/skv12-p1-replay.tsv`. It is the
-authoritative command surface for independent replay; command blocks below are
-readable recipes only.
+## Replay Surface
 
-Replay rows:
+Pin-era replay authority is split by profiler because each tool records a
+different artifact contract:
 
-| Lane | Rows |
-|---|---:|
-| `pmu` | 82 |
-| `samply` | 82 |
-| `xctrace-cpu-counters` | 82 |
-| `xctrace-time-profiler-primary` | 82 |
-| `xctrace-time-profiler-export` | 34 |
-| `xctrace-time-profiler-export-primary` | 48 |
-| `xctrace-time-profiler-product-v2` | 48 |
-| `xctrace-time-profiler-product-v2-export` | 48 |
-
-Every row records lane, family, plane, corpus, mode, launch alias, iteration
-count, cwd, binary path, expected return-code policy, output artifact, status
-artifact, full command, and notes. The samply rows are retained artifact-only
-evidence because they use `--save-only`; self-time percentages are sourced from
-exported xctrace Time Profiler XML.
-
-## Primary Capture
-
-Primary PMU/samply/xctrace status is
-`/tmp/skv12-p1/pmu/capture_status.tsv`.
-
-| Family | Rows | Status |
+| Lane | Rows | Pin replay authority |
 |---|---:|---|
-| `pmu-parse` | 34 | PASS `rc=0` |
-| `pmu-direct` | 34 | PASS `rc=0` |
-| `pmu-typed` | 14 | PASS `rc=0` |
-| `samply-parse` | 34 | PASS `rc=0` |
-| `samply-direct` | 34 | PASS `rc=0` |
-| `samply-typed` | 14 | PASS `rc=0` |
-| `xctrace-time-profiler-parse` | 34 | PASS `rc=54` |
-| `xctrace-time-profiler-direct` | 34 | PASS `rc=54` |
-| `xctrace-time-profiler-typed` | 14 | PASS `rc=54` |
-| `xctrace-cpu-counters-parse` | 34 | PASS `rc=54` |
-| `xctrace-cpu-counters-direct` | 34 | PASS, 32 `rc=54`, 2 `rc=0` |
-| `xctrace-cpu-counters-typed` | 14 | PASS `rc=54` |
+| PMU parse/direct/typed | 82 | `/tmp/skv12-pin-p1/pmu/pmu-commands.sh` plus `/tmp/skv12-pin-p1/pmu/capture_status.tsv` |
+| samply parse/direct/typed | 82 | `/tmp/skv12-pin-p1/samply/samply-commands.sh` plus `/tmp/skv12-pin-p1/samply/capture_status.tsv` |
+| xctrace primary Time Profiler | 82 | `/tmp/skv12-pin-p1/xctrace/capture_status.tsv`; command shape below |
+| xctrace CPU Counters | 82 | `/tmp/skv12-pin-p1/xctrace/capture_status.tsv`; command shape below |
+| xctrace product-v2 Time Profiler | 48 | `/tmp/skv12-pin-p1/xctrace/capture_status.tsv`; command shape below |
+| Time Profiler XML exports | 82 | `/tmp/skv12-pin-p1/time_profile_export_status.tsv` records `SKIP` for already-existing nonzero XML files |
+| Derived hot-leaf tables | 82 summary / 410 detail rows | `/tmp/skv12-pin-p1/time_profile_hot_leaf_summary.tsv` and `/tmp/skv12-pin-p1/time_profile_hot_leaf_details.tsv` |
 
-`rc=54` is accepted when the xctrace log records "Reached specified time
-limit" or "Target app exited" followed by "Output file saved as". The final
-product PMU run is from `skinny/`; the initial product run from the repository
-root failed fixture lookup and is preserved separately at
-`/tmp/skv12-p1/pmu/capture_status.initial-product-cwd-fail.tsv`.
+The tracked replay ledger
+`restart/skinny/tranches/sk-v12/research/p1/skv12-p1-pin-replay.tsv` contains
+458 pin-era command rows: 82 PMU, 82 samply, 212 xctrace capture, and 82
+xctrace export rows.
 
-Product fixture alias rule: the PMU TSV row key is `update_center`, but
-`profile_direct` direct modes require the launch argument `update-center`.
-Typed modes locate the same fixture through the typed locator. The V1 fold
-replayed the direct `update_center` Time Profiler rows with the alias and
-records the correction in `/tmp/skv12-p1/product_time_profile_v2_alias_fixes.tsv`.
-
-## Self-Time Export
-
-Parse Time Profiler export command shape:
-
-```bash
-for trace in /tmp/skv12-p1/parse-xctrace/time-profiler/*.trace; do
-  base=$(basename "$trace" .trace)
-  xctrace export \
-    --input "$trace" \
-    --xpath '/trace-toc/run[@number="1"]/data/table[@schema="time-profile"]' \
-    > "/tmp/skv12-p1/parse-xctrace/exports/${base}.time-profile.xml"
-done
-```
-
-The original product Time Profiler exports under
-`/tmp/skv12-p1/direct-xctrace/exports/` are retained but are shallow for many
-rows because the target process exited before the sampler collected a useful
-hot-loop table. The V1 fold therefore recaptured product Time Profiler rows
-with a 2s time limit and 20,000 product iterations. Exact per-row commands and
-the `update_center` launch alias are enumerated in `skv12-p1-replay.tsv`:
+Representative xctrace command shapes:
 
 ```bash
 cd /Users/mkbabb/Programming/bbnf-lang/skinny
 xctrace record \
   --template "Time Profiler" \
-  --output /tmp/skv12-p1/direct-xctrace/time-profiler-v2/<corpus>__<mode>.trace \
+  --output /tmp/skv12-pin-p1/parse-xctrace/time-profiler/<corpus>__<mode>.trace \
   --no-prompt \
   --time-limit 2000ms \
   --launch -- \
-  /tmp/skv12-profile-target-50bd1648/release/profile_direct \
-  20000 <corpus-or-update-center-alias> <mode>
+  /tmp/skv12-pin-profile-target-cf7848b2/release/xctrace_probe \
+  /Users/mkbabb/Programming/bbnf-lang/skinny/test_data/<corpus>.json \
+  <mode> <iters>
 
-xctrace export \
-  --input /tmp/skv12-p1/direct-xctrace/time-profiler-v2/<corpus>__<mode>.trace \
-  --xpath '/trace-toc/run[@number="1"]/data/table[@schema="time-profile"]' \
-  > /tmp/skv12-p1/direct-xctrace/exports-v2/<corpus>__<mode>.time-profile.xml
+xctrace record \
+  --template "CPU Counters" \
+  --output /tmp/skv12-pin-p1/parse-xctrace/cpu-counters/<corpus>__<mode>.trace \
+  --no-prompt \
+  --time-limit 2000ms \
+  --launch -- \
+  /tmp/skv12-pin-profile-target-cf7848b2/release/xctrace_probe \
+  /Users/mkbabb/Programming/bbnf-lang/skinny/test_data/<corpus>.json \
+  <mode> <iters>
+
+xctrace record \
+  --template "Time Profiler" \
+  --output /tmp/skv12-pin-p1/direct-xctrace/time-profiler-v2/<corpus>__<mode>.trace \
+  --no-prompt \
+  --time-limit 2000ms \
+  --launch -- \
+  /tmp/skv12-pin-profile-target-cf7848b2/release/profile_direct \
+  20000 <corpus-or-update-center-alias> <mode>
 ```
 
-Export status:
+The exact per-row corpus, mode, artifact, stdout, stderr, return code, and
+accepted status are in `/tmp/skv12-pin-p1/xctrace/capture_status.tsv`.
+`rc=54` is accepted only when the xctrace stderr records an accepted stop
+condition and "Output file saved as".
 
-| Export lane | Rows | Status | Bytes |
-|---|---:|---|---:|
-| original Time Profiler export | 82 | 82 PASS | 9,327,356 |
-| product Time Profiler v2 | 48 | 48 PASS | 23,383,417 |
+## Coverage
 
-The original all-row export status is
-`/tmp/skv12-p1/time_profile_export_status.tsv`. The product v2 status is
-`/tmp/skv12-p1/product_time_profile_v2_status.tsv`.
+| Lane | Rows | Status |
+|---|---:|---|
+| PMU parse/direct/typed | 82 | PASS |
+| samply parse/direct/typed | 82 | PASS |
+| xctrace primary Time Profiler | 82 | PASS |
+| xctrace CPU Counters | 82 | PASS |
+| xctrace product-v2 Time Profiler | 48 | PASS |
+| Time Profiler XML exports | 82 | present and nonzero; status TSV `SKIP` because exports already existed |
+| hot-leaf summary/details | 82 / 410 data rows | PASS, no unresolved source anchors |
+
+Validation:
+
+```bash
+awk -F '\t' 'NR>1{total++; if($7!="PASS") bad++}
+  END{print total, bad+0}' /tmp/skv12-pin-p1/xctrace/capture_status.tsv
+# 212 0
+
+awk -F '\t' 'NR>1{total++; if($7!="PASS") bad++}
+  END{print total, bad+0}' /tmp/skv12-pin-p1/pmu/capture_status.tsv
+# 82 0
+
+awk -F '\t' 'NR>1{total++; if($7!="PASS") bad++}
+  END{print total, bad+0}' /tmp/skv12-pin-p1/samply/capture_status.tsv
+# 82 0
+
+awk -F '\t' 'NR>1{total++; if($4!="SKIP") bad++}
+  END{print total, bad+0}' /tmp/skv12-pin-p1/time_profile_export_status.tsv
+# 82 0
+
+awk -F '\t' 'NR>1 {n++; if($16 ~ /:0([^0-9]|$)/ || $16 ~ /unknown/ || $15=="none") bad++}
+  END{print n, bad+0}' /tmp/skv12-pin-p1/time_profile_hot_leaf_summary.tsv
+# 82 0
+
+awk -F '\t' 'NR>1 {n++; if($9 ~ /:0([^0-9]|$)/ || $9 ~ /unknown/ || $8=="none") bad++}
+  END{print n, bad+0}' /tmp/skv12-pin-p1/time_profile_hot_leaf_details.tsv
+# 410 0
+```
+
+Mode III remains absent; the pin root captures parse, direct, and typed JSON
+lanes only.
+
+CSS L4 remains unprofiled in the pin root because `skinny/` does not yet have
+a generated CSS L4 Track 1 runtime, lightningcss same-plane comparator row, or
+strict equality oracle row.
 
 ## Derived Self-Time Tables
 
-The V1 fold parsed xctrace Time Profiler XML into target-binary leaf self-time
-tables. Percentages are over selected target-binary running samples after
-filtering dyld/startup frames; the summary keeps total sample coverage too.
-
-| Plane | Rows | Sample rows | Selected rows | Selected target time |
-|---|---:|---:|---:|---:|
-| parse | 34 | 34,129 | 34,080 | 99.86% |
-| direct | 34 | 64,593 | 64,541 | 99.92% |
-| typed | 14 | 25,713 | 25,692 | 99.92% |
+The pin fold parsed xctrace Time Profiler XML into target-binary leaf
+self-time tables. Percentages are over selected target-binary running samples
+after filtering dyld/startup frames; the summary keeps total sample coverage.
 
 Derived artifacts:
 
-- `/tmp/skv12-p1/time_profile_hot_leaf_summary.tsv`
-- `/tmp/skv12-p1/time_profile_hot_leaf_details.tsv`
-- `/tmp/skv12-p1/time_profile_parse_table.md`
-- `/tmp/skv12-p1/time_profile_direct_table.md`
-- `/tmp/skv12-p1/time_profile_typed_table.md`
+- `/tmp/skv12-pin-p1/time_profile_hot_leaf_summary.tsv`
+- `/tmp/skv12-pin-p1/time_profile_hot_leaf_details.tsv`
+- `/tmp/skv12-pin-p1/time_profile_parse_table.md`
+- `/tmp/skv12-pin-p1/time_profile_direct_table.md`
+- `/tmp/skv12-pin-p1/time_profile_typed_table.md`
 
-The V2/V3 hardening folds normalized xctrace line-zero frames to concrete
-current source anchors and resolved symbol labels in those derived TSVs. The
-summary table has 82/82 rows with no `:0` in `top_leaf` or
-`top_leaf_source`; the detail table has 410/410 rows with no `:0` in `symbol`
-or `source`. Neither table contains `UNRESOLVED_LINE_ZERO` markers.
+Top-family distribution by row, split by mode:
 
-Top-family distribution by row:
-
-| Plane | Leading families |
+| Plane/mode | Leading families |
 |---|---|
-| parse | `bounded_plain_string_scan` 14 rows; `container_dispatch` 11; `unicode_escape_hex_decode` 4; `number_digit_span` 2; `simd_movemask` 2; `string_escape_decode` 1 |
-| direct | `output_digest_hash` 18 rows; `container_dispatch` 10; `string_escape_decode` 4; `bounded_plain_string_scan` 1; `number_digit_span` 1 |
-| typed | `serde_json_oracle_read_parse` 7 rows; `typed_direct_projection` 5; `number_digit_span` 2 |
+| `parse/track1` | `bounded_plain_string_scan` 7; `container_dispatch` 7; `number_digit_span` 1; `simd_movemask` 1; `unicode_escape_hex_decode` 1 |
+| `parse/track2` | `container_dispatch` 11; `bounded_plain_string_scan` 5; `unicode_escape_hex_decode` 1 |
+| `direct/track1` | `output_digest_hash` 17 |
+| `direct/track2` | `runtime_support` 14; `string_escape_decode` 2; `allocation_support` 1 |
+| `typed/real_typed_track1` | `typed_direct_projection` 6; `string_full_scan` 1 |
+| `typed/real_typed_track2` | `serde_json_oracle_read_parse` 7 |
+
+Track 2/oracle-only families are guard/comparator context. They are not
+generated Track 1 optimization antecedents.
 
 ## PMU Aggregates
 
-Weighted PMU aggregates from the primary TSVs:
+Weighted PMU aggregates from the pin TSVs:
 
-| Plane | Rows | Aggregate c/B | Aggregate CPI |
-|---|---:|---:|---:|
-| parse | 34 | 2.920217 | 0.204887 |
-| direct | 34 | 4.290305 | 0.183717 |
-| typed guards | 14 | 3.123172 | 0.185056 |
+| Plane | Rows | Aggregate Mbps | Aggregate c/B | Aggregate CPI |
+|---|---:|---:|---:|---:|
+| parse | 34 | 8669.019 | 2.971206 | 0.208405 |
+| direct | 34 | 5773.975 | 4.411311 | 0.188854 |
+| typed guards | 14 | 8959.011 | 3.137378 | 0.185866 |
 
 The TSVs expose cycles, instructions, c/B, CPI, user ns, system ns, and
 checksums. Branch-miss, L1, and LLC columns are not present and are not
 inferred.
-
-## Mode III Boundary
-
-The SK-V12-open `/tmp/skv12-p1` primary capture contains parse, direct, and
-typed lanes. It does not contain fresh samply call stacks for
-`host_call_eager_decode`, `alternate_scalar_plan`, `cold_first_parse`, or a
-fresh structural-scan-only xctrace lane. P1-C carries the W0 raw Criterion Mode
-III throughput and structural-scan matrix as diagnostic nonproducer evidence.
-No S-P2 or S-P3 wave may use Mode III symbols as fresh SK-V12 hot-leaf
-authority unless a later capture supplies those call stacks explicitly.

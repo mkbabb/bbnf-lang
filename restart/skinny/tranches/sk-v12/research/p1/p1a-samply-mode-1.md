@@ -22,9 +22,7 @@ unprofiled until W1 creates generated Track 1.
 
 ## Final Orchestrator Fold - 2026-05-20
 
-This fold supersedes the partial-capture blocker text that remains below from
-the lane agent's inspection window. The final pin-era profile root is
-`/tmp/skv12-pin-p1`:
+This fold records the final pin-era profile root, `/tmp/skv12-pin-p1`:
 
 | Artifact | Coverage | Authority |
 |---|---:|---|
@@ -32,7 +30,7 @@ the lane agent's inspection window. The final pin-era profile root is
 | samply parse captures | 34/34 PASS | `/tmp/skv12-pin-p1/samply/capture_status.tsv` |
 | xctrace parse Time Profiler | 34/34 PASS | `/tmp/skv12-pin-p1/xctrace/capture_status.tsv` |
 | xctrace parse CPU Counters | 34/34 PASS | `/tmp/skv12-pin-p1/xctrace/capture_status.tsv` |
-| Time Profiler XML exports | 34/34 parse, 48/48 product | `/tmp/skv12-pin-p1/time_profile_export_status.tsv` |
+| Time Profiler XML exports | 34/34 parse, 48/48 product present; status TSV records `SKIP` for already-existing XML | `/tmp/skv12-pin-p1/time_profile_export_status.tsv` |
 | Derived hot-leaf summary | 82 data rows | `/tmp/skv12-pin-p1/time_profile_hot_leaf_summary.tsv` |
 | Derived hot-leaf details | 410 data rows | `/tmp/skv12-pin-p1/time_profile_hot_leaf_details.tsv` |
 
@@ -77,16 +75,12 @@ find /tmp/skv12-pin-p1/parse-xctrace -maxdepth 3 -type f
 find skinny/crates/runtime/src/grammars -maxdepth 3 -type f | sort
 ```
 
-The parent replay command is a PMU-only projection of
-`restart/skinny/tranches/sk-v12/research/p1/skv12-p1-replay.tsv` with
-`/tmp/skv12-p1` rewritten to `/tmp/skv12-pin-p1` and
-`/tmp/skv12-profile-target-50bd1648` rewritten to
-`/tmp/skv12-pin-profile-target-cf7848b2`. The completed PMU replay supplies
-fresh parse rows in `/tmp/skv12-pin-p1/pmu/parse_pmu_rows.tsv`. It does not
-create `/tmp/skv12-pin-p1/samply/parse/`,
-`/tmp/skv12-pin-p1/parse-xctrace/time-profiler/`,
-`/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/`, or
-`/tmp/skv12-pin-p1/parse-xctrace/exports/`.
+The completed pin replay supplies PMU, samply, xctrace Time Profiler, xctrace
+CPU Counters, and derived hot-leaf evidence under `/tmp/skv12-pin-p1`. The
+pre-pin `skv12-p1-replay.tsv` remains historical only; pin replay authority is
+the pin command ledgers under `/tmp/skv12-pin-p1/{pmu,samply}/`, the
+`/tmp/skv12-pin-p1/xctrace/capture_status.tsv` status rows, the tracked
+`skv12-p1-pin-replay.tsv` ledger, and the pin replay manifest addendum.
 
 ## §2 - Findings
 
@@ -134,14 +128,19 @@ themselves.
 | `y_string_unicode` | `track1` | 4934.259 | 5.623887 | 0.236395 | 0 |
 | `y_string_unicode` | `track2` | 4391.643 | 5.935089 | 0.251973 | 0 |
 
-No fresh parse hot-leaf table is admissible from the current artifact set:
+Fresh parse hot-leaf attribution is admissible for JSON diagnostic/profile
+purposes. The `plane=parse` subset of
+`/tmp/skv12-pin-p1/time_profile_hot_leaf_summary.tsv` has 34 rows and the
+detail table has 170 parse rows, with concrete source anchors in every
+load-bearing symbol/source field. Split by mode, the leading parse families are:
 
-- `find /tmp/skv12-pin-p1/samply/parse -maxdepth 1 -type f` found no parse
-  samply directory or parse samply files.
-- `find /tmp/skv12-pin-p1/parse-xctrace -maxdepth 3 -type f` found no parse
-  xctrace directory, Time Profiler traces, CPU Counters traces, or exports.
-- `/tmp/skv12-pin-p1/time_profile_hot_leaf_summary.tsv` is absent.
-- `/tmp/skv12-pin-p1/time_profile_hot_leaf_details.tsv` is absent.
+| Mode | Leading families |
+|---|---|
+| `track1` | `bounded_plain_string_scan` 7; `container_dispatch` 7; `number_digit_span` 1; `simd_movemask` 1; `unicode_escape_hex_decode` 1 |
+| `track2` | `container_dispatch` 11; `bounded_plain_string_scan` 5; `unicode_escape_hex_decode` 1 |
+
+These are parse-only diagnostics under the user pin, not CSS L4 admission
+evidence.
 
 CSS L4 target treatment under the user pin:
 
@@ -161,8 +160,9 @@ CSS L4 target treatment under the user pin:
 ## §3 - Delta vs SK-V11
 
 No row-level delta is claimed here. P1-F owns RESULTS extraction and delta
-classification. P1-A only records that fresh parse PMU at `cf7848b2` exists,
-while the required fresh self-time evidence is absent.
+classification. P1-A records that fresh parse PMU and parse self-time evidence
+exist at `cf7848b2`, while CSS L4 remains absent until generated Track 1 and
+lightningcss same-plane comparator rows exist.
 
 Parse-only remains diagnostic under the user pin. `skinny/RESULTS.md` records
 JSON parse rows as `S`/`L` NO-GO diagnostic rows, not SK-V12 admission targets.
@@ -172,18 +172,18 @@ equality.
 
 ## §4 - Anomalies + Masking Signals
 
-- This artifact is intentionally a blocker, not a degraded profile. P1-A cannot
-  satisfy PASS-1 §2.2 or CH1/CH6 without fresh symbol-bearing samply and/or
-  xctrace Time Profiler exports for all 34 JSON parse rows.
+- This artifact is not a profile blocker for JSON parse diagnostics: the final
+  pin root contains PMU, samply, xctrace, XML export artifacts, and derived
+  parse hot-leaf tables for all 34 JSON parse rows.
 - The fresh PMU replay proves the current-head parse workload is runnable and
-  produces checksummed Track 1/Track 2 outputs, but PMU logs alone do not name
-  top self-time symbols, source file:line anchors, or top-20 per-corpus stacks.
+  produces checksummed Track 1/Track 2 outputs. Source hot-leaf attribution is
+  supplied separately by the xctrace-derived summary and detail tables.
 - The CSS L4 row required by the pin is not profileable yet because the skinny
   runtime has no generated CSS L4 parser. This is an S-P1 finding; it does not
   authorize falling back to Sheets or BBNF-self before a CSS L4 redress attempt.
 - No intervention is proposed. Union-substrate and ASM-gen categories remain
-  campaign-unblocked by the pin, but P1-A supplies no fresh hot-leaf authority
-  for scoping those routes.
+  campaign-unblocked by the pin, but P1-A supplies profile evidence only; any
+  route still needs S-P2 material differential and micro-proof before scoping.
 
 ## §5 - Sources
 
@@ -191,6 +191,8 @@ equality.
 - `restart/skinny/tranches/sk-v12/USER-PIN-W1-CSS-L4-SOTA.md`
 - `restart/skinny/tranches/sk-v12/research/p1/skv12-p1-capture-manifest.md`
 - `restart/skinny/tranches/sk-v12/research/p1/skv12-p1-replay.tsv`
+  (historical pre-pin replay reference only)
+- `restart/skinny/tranches/sk-v12/research/p1/skv12-p1-pin-replay.tsv`
 - `skinny/RESULTS.md`
 - `skinny/REDRESS.md`
 - `/tmp/skv12-pin-profile-target-cf7848b2/release/xctrace_probe`
@@ -200,157 +202,3 @@ equality.
 - `/tmp/skv12-pin-p1/pmu/product_pmu_rows.tsv` (final replay companion; product
   rows are outside P1-A's parse-only ownership)
 - `/tmp/skv12-pin-p1/logs/pmu-parse-*.log.out`
-
-## §6 - Exact Missing Fresh Parse Artifacts
-
-The replay ledger expects the following fresh parse paths after rewriting the
-old root to `/tmp/skv12-pin-p1`. Each path below remained absent when this
-P1-A artifact was updated after PMU replay completion.
-
-Missing samply parse captures:
-
-- `/tmp/skv12-pin-p1/samply/parse/apache_builds__track1.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/apache_builds__track2.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/canada__track1.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/canada__track2.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/citm_catalog__track1.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/citm_catalog__track2.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/distinct_values__track1.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/distinct_values__track2.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/github_events__track1.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/github_events__track2.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/gsoc-2018__track1.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/gsoc-2018__track2.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/instruments__track1.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/instruments__track2.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/marine_ik__track1.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/marine_ik__track2.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/mesh__track1.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/mesh__track2.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/numbers__track1.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/numbers__track2.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/random__track1.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/random__track2.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/twitter__track1.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/twitter__track2.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/unicode_basic__track1.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/unicode_basic__track2.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/unicode_escapes__track1.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/unicode_escapes__track2.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/unicode_mixed__track1.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/unicode_mixed__track2.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/update_center__track1.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/update_center__track2.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/y_string_unicode__track1.json.gz`
-- `/tmp/skv12-pin-p1/samply/parse/y_string_unicode__track2.json.gz`
-
-Missing xctrace Time Profiler parse traces:
-
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/apache_builds__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/apache_builds__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/canada__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/canada__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/citm_catalog__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/citm_catalog__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/distinct_values__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/distinct_values__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/github_events__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/github_events__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/gsoc-2018__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/gsoc-2018__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/instruments__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/instruments__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/marine_ik__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/marine_ik__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/mesh__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/mesh__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/numbers__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/numbers__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/random__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/random__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/twitter__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/twitter__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/unicode_basic__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/unicode_basic__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/unicode_escapes__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/unicode_escapes__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/unicode_mixed__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/unicode_mixed__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/update_center__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/update_center__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/y_string_unicode__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/time-profiler/y_string_unicode__track2.trace`
-
-Missing xctrace CPU Counters parse traces:
-
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/apache_builds__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/apache_builds__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/canada__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/canada__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/citm_catalog__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/citm_catalog__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/distinct_values__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/distinct_values__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/github_events__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/github_events__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/gsoc-2018__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/gsoc-2018__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/instruments__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/instruments__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/marine_ik__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/marine_ik__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/mesh__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/mesh__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/numbers__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/numbers__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/random__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/random__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/twitter__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/twitter__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/unicode_basic__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/unicode_basic__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/unicode_escapes__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/unicode_escapes__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/unicode_mixed__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/unicode_mixed__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/update_center__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/update_center__track2.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/y_string_unicode__track1.trace`
-- `/tmp/skv12-pin-p1/parse-xctrace/cpu-counters/y_string_unicode__track2.trace`
-
-Missing xctrace Time Profiler parse exports:
-
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/apache_builds__track1.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/apache_builds__track2.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/canada__track1.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/canada__track2.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/citm_catalog__track1.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/citm_catalog__track2.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/distinct_values__track1.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/distinct_values__track2.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/github_events__track1.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/github_events__track2.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/gsoc-2018__track1.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/gsoc-2018__track2.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/instruments__track1.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/instruments__track2.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/marine_ik__track1.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/marine_ik__track2.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/mesh__track1.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/mesh__track2.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/numbers__track1.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/numbers__track2.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/random__track1.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/random__track2.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/twitter__track1.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/twitter__track2.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/unicode_basic__track1.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/unicode_basic__track2.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/unicode_escapes__track1.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/unicode_escapes__track2.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/unicode_mixed__track1.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/unicode_mixed__track2.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/update_center__track1.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/update_center__track2.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/y_string_unicode__track1.time-profile.xml`
-- `/tmp/skv12-pin-p1/parse-xctrace/exports/y_string_unicode__track2.time-profile.xml`

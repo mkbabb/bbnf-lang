@@ -17,8 +17,8 @@ samply/xctrace hot-leaf coverage is 48/48 rows.
 
 ## Final Orchestrator Fold - 2026-05-20
 
-This fold supersedes the partial-capture "hot-leaf unavailable" notes below.
-The final pin-era product profile root is `/tmp/skv12-pin-p1`:
+This fold records the final pin-era product profile root,
+`/tmp/skv12-pin-p1`:
 
 | Artifact | Coverage | Authority |
 |---|---:|---|
@@ -26,18 +26,24 @@ The final pin-era product profile root is `/tmp/skv12-pin-p1`:
 | PMU typed rows | 14/14 PASS | `/tmp/skv12-pin-p1/pmu/product_pmu_rows.tsv` |
 | samply product captures | 48/48 PASS | `/tmp/skv12-pin-p1/samply/capture_status.tsv` |
 | xctrace product-v2 Time Profiler | 48/48 PASS | `/tmp/skv12-pin-p1/xctrace/capture_status.tsv` |
-| product-v2 XML exports | 48/48 PASS | `/tmp/skv12-pin-p1/time_profile_export_status.tsv` |
+| product-v2 XML exports | 48/48 present; export status TSV records `SKIP` for already-existing XML | `/tmp/skv12-pin-p1/time_profile_export_status.tsv` |
 | derived product hot leaves | 48 summary rows, 240 detail rows | `/tmp/skv12-pin-p1/time_profile_hot_leaf_{summary,details}.tsv` |
 
 Product hot-leaf authority is the `plane=direct` and `plane=typed` subsets of
 `/tmp/skv12-pin-p1/time_profile_hot_leaf_summary.tsv`, plus the readable
 tables `/tmp/skv12-pin-p1/time_profile_direct_table.md` and
-`/tmp/skv12-pin-p1/time_profile_typed_table.md`. Leading final families:
+`/tmp/skv12-pin-p1/time_profile_typed_table.md`. Leading final families are
+split by mode so oracle work is not folded into generated Track 1 antecedents:
 
-| Plane | Leading families |
+| Plane/mode | Leading families |
 |---|---|
-| `direct` | `output_digest_hash` 17 rows; `runtime_support` 14; `string_escape_decode` 2; `allocation_support` 1 |
-| `typed` | `serde_json_oracle_read_parse` 7 rows; `typed_direct_projection` 6; `string_full_scan` 1 |
+| `direct/track1` | `output_digest_hash` 17 |
+| `direct/track2` | `runtime_support` 14; `string_escape_decode` 2; `allocation_support` 1 |
+| `typed/real_typed_track1` | `typed_direct_projection` 6; `string_full_scan` 1 |
+| `typed/real_typed_track2` | `serde_json_oracle_read_parse` 7 |
+
+Track 2/oracle-only families are guard and comparator context; they are not
+generated Track 1 optimization antecedents.
 
 JSON product rows are guard and diagnostic evidence under the user pin. They
 do not satisfy the CSS L4 `> lightningcss_mbps + 1` admission target.
@@ -162,32 +168,15 @@ Typed synthesis:
 
 ### Hot-Leaf Attribution
 
-Unavailable for the pin capture.
+Available for JSON product-plane diagnostics and guard interpretation.
 
-Fresh samply capture began after the PMU replay, but it was partial while this
-PMU artifact was written and samply alone is not the product self-time
-authority. There are no fresh xctrace Time Profiler traces, no fresh Time
-Profiler XML exports, and no derived product hot-leaf TSVs under
-`/tmp/skv12-pin-p1`. Therefore this P1-B artifact intentionally does not carry
-per-symbol self-time percentages, top-20 call stacks, or file:line hot-leaf
-claims for the pin baseline.
-
-Missing or unaccepted fresh product-plane attribution paths:
-
-- `/tmp/skv12-pin-p1/samply/done.txt`
-- `/tmp/skv12-pin-p1/samply/capture_status.tsv` with complete 48/48 product
-  PASS rows.
-- `/tmp/skv12-pin-p1/direct-xctrace/time-profiler/*.trace`
-- `/tmp/skv12-pin-p1/direct-xctrace/exports/*.time-profile.xml`
-- `/tmp/skv12-pin-p1/direct-xctrace/time-profiler-v2/*.trace`
-- `/tmp/skv12-pin-p1/direct-xctrace/exports-v2/*.time-profile.xml`
-- `/tmp/skv12-pin-p1/time_profile_hot_leaf_summary.tsv`
-- `/tmp/skv12-pin-p1/time_profile_hot_leaf_details.tsv`
-
-Patch-ready delta when parent supplies those paths: replace this subsection
-with the product self-time table, one row per direct/typed corpus and track,
-including symbol, percent self-time, and source file:line. Until then, P1-E
-and S-P2 must not use P1-B as hot-leaf authority.
+The final pin root contains complete product samply and xctrace captures, 48
+product-v2 Time Profiler traces, 48 product XML exports under
+`/tmp/skv12-pin-p1/direct-xctrace/exports-v2`, and the derived summary/detail
+tables. The direct/typed product subset contributes 48 summary rows and 240
+detail rows with source file:line anchors. P1-E owns cross-plane hot-leaf
+synthesis; P1-B records the product-plane split and preserves the Track 1 /
+Track 2 boundary.
 
 ## Section 3 - Delta vs SK-V11
 
@@ -196,7 +185,7 @@ profile implications:
 
 | Surface | SK-V11 close | SK-V12 pin PMU replay at `cf7848b2` |
 |---|---|---|
-| `direct_to_struct` | 4 `A / GO`, 13 `N-direct / NO-GO`; direct residuals closed by REDRESS 119 | 17/17 direct corpora profiled x T1/T2 with fresh PMU. No row admission and no hot-leaf attribution. |
+| `direct_to_struct` | 4 `A / GO`, 13 `N-direct / NO-GO`; direct residuals closed by REDRESS 119 | 17/17 direct corpora profiled x T1/T2 with fresh PMU and xctrace-derived product hot leaves. No row admission. |
 | `real_typed_struct` | 7 `A / GO` typed guard rows | 7/7 typed guard corpora profiled x T1/T2 with fresh PMU. No demotion evidence in this artifact. |
 | CSS L4 generated parser | no admitted generated CSS L4 row | no CSS L4 product row, no lightningcss comparator, no strict equality oracle, and no CSS output-plane evidence in P1-B. |
 
@@ -209,7 +198,7 @@ that beats `lightningcss_mbps + 1` on the same corpus and same output plane.
 - Fresh product PMU replay exists and is complete for P1-B's JSON direct and
   typed guard surfaces.
 - Fresh accepted product samply/xctrace Time Profiler attribution evidence is
-  absent. This is a CH6-visible gap for hot-leaf claims, not a PMU coverage gap.
+  present for JSON direct and typed guard surfaces. CSS L4 remains absent.
 - `profile_direct` is a hot-loop profiler. The PMU rows can differ materially
   from Criterion Mbps in `skinny/RESULTS.md`; `skinny/RESULTS.md` remains the
   row-admission authority.
@@ -229,6 +218,7 @@ that beats `lightningcss_mbps + 1` on the same corpus and same output plane.
 - `/tmp/skv12-pin-p1/pmu/capture_status.tsv`
 - `/tmp/skv12-pin-p1/pmu/pmu-commands.sh`
 - `/tmp/skv12-pin-p1/pmu/done.txt`
+- `restart/skinny/tranches/sk-v12/research/p1/skv12-p1-pin-replay.tsv`
 - `/tmp/skv12-pin-p1/logs/pmu-direct-*.rerun.log.out`
 - `/tmp/skv12-pin-p1/logs/pmu-direct-*.rerun.log.err`
 - `/tmp/skv12-pin-p1/logs/pmu-typed-*.rerun.log.out`

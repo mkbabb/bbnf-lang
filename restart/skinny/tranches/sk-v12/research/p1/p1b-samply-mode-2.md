@@ -3,9 +3,10 @@
 Pass: S-P1 Profile. Cycle: V12 pin re-bracket.
 Date: 2026-05-20.
 Scope: product-plane profiling for JSON `direct_to_struct` Track 1/Track 2
-and JSON `real_typed_struct` Track 1/Track 2 guard rows at current HEAD.
+and JSON `real_typed_struct` Track 1/Track 2 guard rows at capture source
+commit `cf7848b2`.
 Output: this file.
-Baseline: SK-V12 pin-aware G-Alpha current HEAD `cf7848b2`.
+Baseline: SK-V12 pin-aware G-Alpha capture source commit `cf7848b2`.
 Host triple: `aarch64-apple-darwin`; Apple Silicon only per USER PIN.
 Build flags: release profile, `RUSTFLAGS=-C target-cpu=native`, profile target
 `/tmp/skv12-pin-profile-target-cf7848b2`.

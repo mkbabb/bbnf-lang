@@ -2,9 +2,11 @@
 
 Pass: S-P1 Profile. Cycle: V12 pin reprofile.
 Date: 2026-05-20.
-Scope: fresh PMU counters, Mbps, CPI, and cycles-per-byte for current HEAD JSON parse, direct, and typed guard lanes; CSS L4 target coverage is explicitly missing.
+Scope: fresh PMU counters, Mbps, CPI, and cycles-per-byte for capture source
+commit `cf7848b2` JSON parse, direct, and typed guard lanes; CSS L4 target
+coverage is explicitly missing.
 Output: this file.
-Baseline: SK-V12 pin-aware G-Alpha HEAD `cf7848b2`.
+Baseline: SK-V12 pin-aware G-Alpha capture source commit `cf7848b2`.
 Host triple: `aarch64-apple-darwin; arch=arm64; cpu=Apple M5 Max`.
 Build flags: `RUSTFLAGS=-C target-cpu=native`, release profile, debug symbols inherited from parent replay target.
 Profile tool: PMU TSVs emitted from parent-owned `xctrace_probe` and `profile_direct` replays using `proc_pid_rusage(RUSAGE_INFO_V5)` cycles/instructions.
@@ -213,9 +215,9 @@ Track split summary:
 ## Section 3 - Delta vs Prior PMU Surface
 
 The prior pre-pin SK-V12 P1-D artifact was captured at commit `50bd1648`
-under `/tmp/skv12-p1`. Current HEAD `cf7848b2` was reprofiled under the
-user pin. The fresh aggregate c/B is slightly higher on all three JSON families;
-this is profile drift, not row movement.
+under `/tmp/skv12-p1`. Capture source commit `cf7848b2` was reprofiled under
+the user pin. The fresh aggregate c/B is slightly higher on all three JSON
+families; this is profile drift, not row movement.
 
 | Family | Fresh c/B | Prior pre-pin c/B | c/B delta | Fresh CPI | Prior pre-pin CPI | CPI delta |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -224,9 +226,9 @@ this is profile drift, not row movement.
 | typed guards | 3.137378 | 3.123172 | +0.5% | 0.185866 | 0.185056 | +0.4% |
 
 SK-V11 row-disposition state remains governed by `skinny/RESULTS.md` and
-`skinny/REDRESS.md` through REDRESS 120. This P1-D pass records current-head
-cycles/instructions only; it does not reopen parse-only SOTA and does not claim
-CSS L4 coverage.
+`skinny/REDRESS.md` through REDRESS 120. This P1-D pass records
+capture-source cycles/instructions only; it does not reopen parse-only SOTA and
+does not claim CSS L4 coverage.
 
 ## Section 4 - Anomalies And Masking Signals
 

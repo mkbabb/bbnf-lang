@@ -11,6 +11,8 @@ Output: this file.
   pin-aware G-Alpha V4`).
 - Initial committed S-P1 fold: `b1043383` (`docs(sk-v12-p1-profile): fold
   pin-aware profile capture`).
+- PIN-V2 review base: `d4ef80b2` (`docs(sk-v12-p1-hardening): fold pin replay
+  challenge PIN-V1`).
 - Capture root: `/tmp/skv12-pin-p1`.
 - Build root: `/tmp/skv12-pin-profile-target-cf7848b2`.
 - Binaries:
@@ -106,8 +108,9 @@ xctrace record \
 
 The exact per-row corpus, mode, artifact, stdout, stderr, return code, and
 accepted status are in `/tmp/skv12-pin-p1/xctrace/capture_status.tsv`.
-`rc=54` is accepted only when the xctrace stderr records an accepted stop
-condition and "Output file saved as".
+`rc=54` is accepted only when the captured xctrace log stream records an
+accepted stop condition and "Output file saved as"; in the pin root those
+strings are in the stdout path recorded by `capture_status.tsv`.
 
 ## Coverage
 
@@ -127,6 +130,19 @@ Validation:
 awk -F '\t' 'NR>1{total++; if($7!="PASS") bad++}
   END{print total, bad+0}' /tmp/skv12-pin-p1/xctrace/capture_status.tsv
 # 212 0
+
+awk -F '\t' 'NR>1 && $6==54 {print $9}' /tmp/skv12-pin-p1/xctrace/capture_status.tsv \
+  | while IFS= read -r f; do
+      if rg -q 'Output file saved as' "$f" &&
+         rg -q 'Reached specified time limit|Target app exited' "$f"; then
+        echo ok
+      fi
+    done | wc -l
+# 185
+
+awk -F '\t' 'NR>1 && $5 !~ /^(track1|track2|real_typed_track1|real_typed_track2)$/ {bad++}
+  END{print bad+0}' restart/skinny/tranches/sk-v12/research/p1/skv12-p1-pin-replay.tsv
+# 0
 
 awk -F '\t' 'NR>1{total++; if($7!="PASS") bad++}
   END{print total, bad+0}' /tmp/skv12-pin-p1/pmu/capture_status.tsv

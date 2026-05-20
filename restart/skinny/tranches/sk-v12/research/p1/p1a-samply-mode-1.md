@@ -2,7 +2,7 @@
 
 Pass: S-P1 Profile. Cycle: V12 user-pin rerun.
 Date: 2026-05-20.
-Scope: pin-aware parse-only profile for current HEAD `cf7848b2`, JSON
+Scope: pin-aware parse-only profile for capture source commit `cf7848b2`, JSON
 17-corpus Track 1/Track 2 parse workload, with CSS L4 target treatment.
 Output: this file.
 Baseline: SK-V12 pin-aware G-Alpha head `cf7848b2`.
@@ -175,7 +175,7 @@ equality.
 - This artifact is not a profile blocker for JSON parse diagnostics: the final
   pin root contains PMU, samply, xctrace, XML export artifacts, and derived
   parse hot-leaf tables for all 34 JSON parse rows.
-- The fresh PMU replay proves the current-head parse workload is runnable and
+- The fresh PMU replay proves the capture-source parse workload is runnable and
   produces checksummed Track 1/Track 2 outputs. Source hot-leaf attribution is
   supplied separately by the xctrace-derived summary and detail tables.
 - The CSS L4 row required by the pin is not profileable yet because the skinny

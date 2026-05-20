@@ -2,7 +2,7 @@
 
 Pass: S-P1 Profile. Cycle: V12.
 Date: 2026-05-20.
-Scope: extract the live `skinny/RESULTS.md` surface at current HEAD
+Scope: extract the live `skinny/RESULTS.md` surface at capture source commit
 `cf7848b227ebd2d4b7401d1441833a09c2e45c16`, compare the pin-aware
 SK-V12-open surface to SK-V11 close, classify outcomes, and flag stale or
 absent telemetry honestly.
@@ -171,7 +171,7 @@ oracle in the current files.
 ## Section 5 - Telemetry Freshness And Absence
 
 - SK-V12-open vs SK-V11 close: no `skinny/RESULTS.md` or
-  `skinny/REDRESS.md` diff from `db2c999b` to current HEAD.
+  `skinny/REDRESS.md` diff from `db2c999b` to the capture source commit.
 - Main-table extraction found 41 JSON rows: 11 `A / GO`, 16 `S / NO-GO`,
   13 `N-direct / NO-GO`, and 1 `L / NO-GO`.
 - `rg` found no `lightningcss`, `css_l4`, or `CSS L4` entry in

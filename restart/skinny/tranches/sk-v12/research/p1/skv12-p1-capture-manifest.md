@@ -162,10 +162,11 @@ Derived artifacts:
 - `/tmp/skv12-p1/time_profile_direct_table.md`
 - `/tmp/skv12-p1/time_profile_typed_table.md`
 
-The V2 hardening fold normalized xctrace line-zero frames to concrete current
-source anchors in those derived TSVs. The summary table has 82/82 rows with no
-`top_leaf_source` ending in `:0`; the detail table has 410/410 rows with no
-`source` ending in `:0` and no `UNRESOLVED_LINE_ZERO` markers.
+The V2/V3 hardening folds normalized xctrace line-zero frames to concrete
+current source anchors and resolved symbol labels in those derived TSVs. The
+summary table has 82/82 rows with no `:0` in `top_leaf` or
+`top_leaf_source`; the detail table has 410/410 rows with no `:0` in `symbol`
+or `source`. Neither table contains `UNRESOLVED_LINE_ZERO` markers.
 
 Top-family distribution by row:
 

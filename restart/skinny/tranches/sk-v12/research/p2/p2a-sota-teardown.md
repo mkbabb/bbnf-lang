@@ -1,6 +1,6 @@
 # SK-V12 P2-A: SOTA Comparator Teardown
 
-Pass: S-P2 Research. Cycle: V2.
+Pass: S-P2 Research. Cycle: V3.
 Date: 2026-05-20.
 Scope: architecture teardown of asmjson, sonic-rs, simdjson, and yyjson keyed to SK-V12 P1 hot leaves and the CSS L4 lightningcss pin.
 Output: this file.

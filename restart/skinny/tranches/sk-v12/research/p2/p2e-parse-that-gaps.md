@@ -1,6 +1,6 @@
 # SK-V12 P2-E: Parse-That Primitive Gaps
 
-Pass: S-P2 Research. Cycle: V2.
+Pass: S-P2 Research. Cycle: V3.
 Date: 2026-05-20.
 Scope: parse-that and bbnf-simd primitive vocabulary gaps demanded by pin S-P1 hot leaves and the CSS L4 > lightningcss target.
 Output: this file.

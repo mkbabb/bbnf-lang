@@ -1,6 +1,6 @@
 # SK-V12 P2-C: Host-Arch ASM/SIMD Esoterica
 
-Pass: S-P2 Research. Cycle: V2.
+Pass: S-P2 Research. Cycle: V3.
 Date: 2026-05-20.
 Scope: aarch64/Apple Silicon only; inventory ARMv9.2-A/NEON/ASM candidates against the pin-era S-P1 hot leaves. x86 is out of scope.
 Output: this file.

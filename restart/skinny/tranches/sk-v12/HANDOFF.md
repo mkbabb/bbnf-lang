@@ -134,13 +134,45 @@ Refuse any dispatch that:
 - adds a directive, BIR variant, public substrate, parser-owned sidecar, second
   retained substrate, generic-crate JSON policy, or x86 implementation target.
 
+## 6.5 USER PIN — 2026-05-20
+
+`restart/skinny/tranches/sk-v12/USER-PIN-W1-CSS-L4-SOTA.md` is in force.
+Verbatim user directive:
+
+> We MUST push all numbers to be >SOTA. CSS is the authoritative, not
+> sheets — whatever that takes for semantic parity with lightningcss —
+> we've trivially beaten this before, we can again. In short, SIMD
+> utilization must be perfected, Parse time / >SOTA is an absolute top
+> priority, and the ASM gen + Rust union facilities unblocked.
+
+Effect on this handoff:
+
+- §3 priority 1 rebinds: CSS L4 generated baseline is W1's authoritative
+  target; Sheets/BBNF-self are post-redress-attempt fallbacks only.
+- §3 priority 2 rebinds: admission floor on the CSS L4 row is
+  `lightningcss_mbps + 1`, not `ceil(baseline_mbps * 1.01)`.
+- §5.1 candidate ordering: E1 (CSS) is locked first; E2 (Sheets) and E3
+  (BBNF-self) are no longer preflight-equivalent.
+- SPEC §1, §6, §8 pre-blocks on the Rust union substrate category and on
+  REDRESS 88/89/90 ASM-gen routes are RESCINDED at the architectural-
+  category level (specific measured-rejected implementations remain
+  historical; new implementations must cite the prior REDRESS and pass
+  CHALLENGE).
+- The W1 V2 plan (commit `e24a7e01`, Sheets) is OBSOLETED. The in-flight
+  CHALLENGE V2 is evaluating an obsoleted plan; its disposition is
+  historical only.
+
 ## 7. Next Move
 
-Next move: ready-for-wave-W0.
+Next move: S-P3 re-derives W1 plan V3 under the pin (CSS L4 target;
+lightningcss-beating bar; union + ASM-gen waves admissible). The
+`GrammarConfig` trait + per-grammar config extraction (per
+`skv12-value-api-audit.md` §5) lands inside W1 redress so CSS L4
+emission is legal. The `escape_mask_64` NEON correctness bug (xorshift
+falsifier `0xCAFEF00DBAADF00D`, per `skv12-totality-fold-scout.md` §2)
+must be verified and resolved before any new SIMD admission.
 
-Dispatch SK-V12 W0 per `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`
-and `restart/skinny/tranches/sk-v12/SPEC.md` Section 3. W0 locks the
-SK-V12-open telemetry/report/gate surface before any behavior wave dispatches.
+W0 telemetry/gate lock (commit `f788eb97`) remains valid.
 
 G-Alpha presentation seed: target one generated non-JSON baseline plus the
 same row's intervention delta; carry JSON direct residuals as pre-blocked

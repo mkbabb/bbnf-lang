@@ -60,3 +60,8 @@ Folded V3 surface:
 The next required action is PIN-V3 CHALLENGE over the folded V3 research
 packet. S-P2 is not converged under the user pin until §3Z records two
 consecutive clean challenge cycles after the last REVISE reset.
+
+PIN-V3 update: PIN-V3 accepted six of six and is recorded as the first clean
+cycle after the PIN-V2 reset. The next required action is PIN-V4 over the
+unchanged Cycle V3 packet. S-P2 remains not converged until PIN-V4 also accepts
+without REVISE/REJECT.

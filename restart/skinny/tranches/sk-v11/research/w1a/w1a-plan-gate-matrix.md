@@ -77,6 +77,7 @@ the same failure class remains obvious in test output.
 | `non_json_rejects_missing_track1` | Missing or non-finite Track 1 Mbps. | FAIL | Future baseline shape must carry Track 1 throughput, fixture-only in W1a. |
 | `non_json_rejects_missing_track2_or_oracle` | Missing Track 2/oracle Mbps or status. | FAIL | A Track 1-only report cannot pass the gate. |
 | `non_json_rejects_track2_coupling` | `track2_independence_status=coupled_to_track1` or source calls Track 1. | FAIL | Track 2/oracle independence is mandatory. |
+| `non_json_rejects_track2_shared_source` | `track2_independence_status=independent_verified` but source names generated Track 1, `generated_json`, SinkOnly/typed helper reuse, benchmark-private parser reuse, runtime witness tests, JSON providers, stale sidecars, old hand-runtime non-JSON proof, or prose-only oracle evidence. | FAIL | Independence status must be proven by source provenance, not self-attestation. |
 | `non_json_rejects_missing_run_id` | Empty or malformed `run_id`. | FAIL | Every accepted report needs a validator-known run id. |
 | `non_json_rejects_mixed_run_id` | Two rows in one report use different run ids. | FAIL | One report cannot splice runs. |
 | `non_json_rejects_missing_profile_artifact` | Empty profile/source path. | FAIL | W1a requires structured provenance even for schema-only fixtures. |
@@ -108,23 +109,23 @@ below has a validator predicate and at least one mutation fixture that fails.
 | Output plane | Validator checks row plane, comparator/oracle plane, and strict plane equality. | missing plane, mismatch, direct-as-typed failures |
 | Track 1 | Validator reads finite positive `track1_mbps` but does not treat it as baseline authority. | missing Track 1 and baseline-claim failures |
 | Track 2/oracle | Validator reads Track 2/oracle value, source, freshness, and independence. | missing oracle, stale oracle, coupling failures |
-| Comparator/oracle source | Validator reads id, strictness, freshness, value, plane, and source artifact. | missing id/source and stale freshness failures |
+| Comparator/oracle source | Validator reads id, strictness, freshness, value, plane, source artifact, and source-provenance class. It accepts only W1a schema-owned `oracle:w1a:` sentinels and rejects generated/runtime/shared parser evidence even when the status string claims independence. | missing id/source, stale freshness, shared-source failures |
 | Run and provenance | Validator checks uniform run id, profile artifact, sample cost, and sample count. | missing/mixed run and profile/sample failures |
 | Host and features | Validator checks build flags, host triple, and feature mask. | missing host/build/feature failures |
 | Consumer class | Validator checks that W1a fixtures are schema-only and any behavior-shaped claim is not `gate_only`. | gate-only behavior and unknown consumer failures |
 | Diagnostic nonproducer status | Validator keeps PMU/cycles/scan/probe/slope facts non-producing unless a same-wave SPEC/gate change consumes them. | unknown extra field and diagnostic producer failures |
 
-The named proof command should be one of these shapes:
+The named proof command is the `bbnf-bench` gate path because W1a does not own
+`skinny/xtask/src/main.rs`:
 
 ```sh
-cargo run -p xtask -- gate-non-json --manifest ../restart/skinny/tranches/sk-v11/research/w1a/fixtures/nonjson-pass.json
-cargo run -p xtask -- gate-json --non-json-report ../restart/skinny/tranches/sk-v11/research/w1a/fixtures/nonjson-pass.json --check-results
+cargo run -p bbnf-bench --bin gate -- --w1a-non-json-report ../restart/skinny/tranches/sk-v11/research/w1a/fixtures/nonjson-pass-css-l4.json
 ```
 
-The implementation may choose either command shape, but the gate name, manifest
-path, strict parser, unknown-field rejection, and JSON preservation command must
-all be present in the same wave. If neither command exists, W1a cannot claim
-report consumption.
+The gate name, manifest path, strict parser, unknown-field rejection, shared
+source rejection, and JSON preservation command must all be present in the same
+wave. If the direct `bbnf-bench` command does not exist, W1a cannot claim report
+consumption.
 
 ## Row Movement Prohibition
 
@@ -190,16 +191,17 @@ cargo test -p runtime --features proof event_grammar -- --nocapture
 Required W1a implementation commands, once the gate exists:
 
 ```sh
-cargo test -p bbnf-bench non_json_gate -- --nocapture
-cargo run -p xtask -- gate-non-json --manifest ../restart/skinny/tranches/sk-v11/research/w1a/fixtures/nonjson-pass.json
-cargo run -p xtask -- gate-non-json --manifest ../restart/skinny/tranches/sk-v11/research/w1a/fixtures/nonjson-producer-only.json
-cargo run -p xtask -- gate-non-json --manifest ../restart/skinny/tranches/sk-v11/research/w1a/fixtures/nonjson-generated-baseline-claim.json
+cargo test -p bbnf-bench report::tests::w1a -- --nocapture
+cargo test -p bbnf-bench --bin gate w1a -- --nocapture
+cargo run -p bbnf-bench --bin gate -- --w1a-non-json-report ../restart/skinny/tranches/sk-v11/research/w1a/fixtures/nonjson-pass-css-l4.json
+cargo run -p bbnf-bench --bin gate -- --w1a-non-json-report ../restart/skinny/tranches/sk-v11/research/w1a/fixtures/nonjson-producer-only-extra-field.json
+cargo run -p bbnf-bench --bin gate -- --w1a-non-json-report ../restart/skinny/tranches/sk-v11/research/w1a/fixtures/nonjson-track2-coupled.json
+cargo run -p bbnf-bench --bin gate -- --w1a-non-json-report ../restart/skinny/tranches/sk-v11/research/w1a/fixtures/nonjson-track2-shared-source.json
+cargo run -p bbnf-bench --bin gate -- --w1a-non-json-report ../restart/skinny/tranches/sk-v11/research/w1a/fixtures/nonjson-admission-claim.json
 ```
 
-The first W1a gate command must pass. The producer-only and generated-baseline
-commands must fail. If the implementation uses `gate-json --non-json-report`
-instead of `gate-non-json`, substitute that command shape consistently and keep
-the same pass/fail obligations.
+The pass fixture command must pass. The producer-only, coupled-status,
+shared-source, and admission-claim commands must fail.
 
 Optional full W0 rerun is not required for W1a. If a later approved redress
 refreshes Criterion data, use an isolated target and criterion root:

@@ -89,6 +89,7 @@ In `skinny/crates/bbnf-bench/src/report.rs`:
   - `parse_w1a_non_json_row_id`
   - `w1a_domain_for_grammar`
   - `validate_w1a_oracle`
+  - `validate_w1a_oracle_source`
   - `validate_w1a_structured_context`
 
 Required accepted fixture values:
@@ -106,6 +107,9 @@ Required accepted fixture values:
 - oracle id `internal_oracle`, same output plane, strictness `strict`,
   freshness `same-run-oracle`, sidecar `n/a`, finite positive Mbps, nonempty
   source artifact
+- oracle/source artifact provenance must be a gate-owned W1a schema-only source
+  sentinel such as
+  `oracle:w1a:<grammar_id>:<corpus>:<workload>:<output_plane>`
 
 Required rejections:
 
@@ -116,6 +120,11 @@ Required rejections:
 - oracle plane mismatch
 - missing oracle/source artifact
 - Track 2/oracle coupling
+- source artifact hidden coupling: reject generated Track 1, `generated_json`,
+  generated SinkOnly/typed helper reuse, benchmark-private parser reuse,
+  runtime witness tests, JSON providers, stale sidecars, old hand-runtime
+  non-JSON proof, or prose-only oracle evidence even when
+  `track2_independence_status = "independent_verified"`
 - missing, malformed, or mixed run id
 - missing host, build flags, sample count, sample cost, or feature mask
 - `gate_only` consumer on non-JSON evidence
@@ -154,6 +163,7 @@ Named fixtures to add:
 - `restart/skinny/tranches/sk-v11/research/w1a/fixtures/nonjson-pass-css-l4.json`
 - `restart/skinny/tranches/sk-v11/research/w1a/fixtures/nonjson-producer-only-extra-field.json`
 - `restart/skinny/tranches/sk-v11/research/w1a/fixtures/nonjson-track2-coupled.json`
+- `restart/skinny/tranches/sk-v11/research/w1a/fixtures/nonjson-track2-shared-source.json`
 - `restart/skinny/tranches/sk-v11/research/w1a/fixtures/nonjson-admission-claim.json`
 
 Focused `report.rs` tests to add:
@@ -210,6 +220,7 @@ W1a required failing fixtures:
 ```sh
 if cargo run -p bbnf-bench --bin gate -- --w1a-non-json-report ../restart/skinny/tranches/sk-v11/research/w1a/fixtures/nonjson-producer-only-extra-field.json; then exit 1; fi
 if cargo run -p bbnf-bench --bin gate -- --w1a-non-json-report ../restart/skinny/tranches/sk-v11/research/w1a/fixtures/nonjson-track2-coupled.json; then exit 1; fi
+if cargo run -p bbnf-bench --bin gate -- --w1a-non-json-report ../restart/skinny/tranches/sk-v11/research/w1a/fixtures/nonjson-track2-shared-source.json; then exit 1; fi
 if cargo run -p bbnf-bench --bin gate -- --w1a-non-json-report ../restart/skinny/tranches/sk-v11/research/w1a/fixtures/nonjson-admission-claim.json; then exit 1; fi
 ```
 

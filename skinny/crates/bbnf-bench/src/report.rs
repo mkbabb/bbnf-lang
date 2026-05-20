@@ -109,6 +109,7 @@ pub struct ProbeReportRow {
 
 pub const W1A_NON_JSON_REPORT_SCHEMA: &str = "sk-v11-w1a-nonjson-v1";
 const W1A_RUN_ID_PREFIX: &str = "sk-v11-w1a:fixture-fnv64-";
+pub const SKV12_NON_JSON_REPORT_SCHEMA: &str = "sk-v12-nonjson-generated-v1";
 pub type NonJsonEvidenceRow = TelemetryRow;
 pub type NonJsonOracleEvidence = SkV8ComparatorEvidence;
 
@@ -151,6 +152,82 @@ impl NonJsonEvidenceReport {
                 return Err(format!("duplicate W1a row {}", row.sk_v8.row_id));
             }
             validate_w1a_non_json_row(row)?;
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct SkV12NonJsonReport {
+    pub schema_id: String,
+    pub wave_id: String,
+    pub run_id: String,
+    pub rows: Vec<SkV12NonJsonRow>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct SkV12NonJsonRow {
+    pub row_id: String,
+    pub grammar_id: String,
+    pub domain: String,
+    pub corpus_or_workload: String,
+    pub workload: String,
+    pub workload_class: String,
+    pub output_plane: String,
+    pub outcome_id: String,
+    pub verdict: String,
+    pub generated_track1_source_path: String,
+    pub generated_runtime_path: String,
+    pub generated_input_provenance: String,
+    pub track1_mbps: f64,
+    pub track1_artifact: String,
+    pub track2_or_oracle_source_path: String,
+    pub track2_independence_status: String,
+    pub track2_or_oracle_mbps: Option<f64>,
+    pub strict_output_equality: String,
+    pub oracle_status: String,
+    pub baseline_row_id: String,
+    pub baseline_mbps: Option<f64>,
+    pub threshold_mbps: Option<f64>,
+    pub host_triple: String,
+    pub feature_mask: String,
+    pub build_flags: String,
+    pub sample_count: u64,
+    pub sample_cost: String,
+    pub benchmark_artifact_path: String,
+    pub json_guard_state: String,
+    pub redress_entry: String,
+    pub same_wave_consumer_class: String,
+    pub gate_status: String,
+}
+
+impl SkV12NonJsonReport {
+    pub fn from_json_str(text: &str) -> Result<Self, String> {
+        serde_json::from_str(text)
+            .map_err(|error| format!("invalid SK-V12 non-JSON report: {error}"))
+    }
+
+    pub fn validate_gate(&self) -> Result<(), String> {
+        if self.schema_id != SKV12_NON_JSON_REPORT_SCHEMA {
+            return Err(format!(
+                "unsupported SK-V12 non-JSON schema {}",
+                self.schema_id
+            ));
+        }
+        if !self.wave_id.starts_with("SK-V12-W") || !is_skv12_run_id(&self.run_id) {
+            return Err("invalid SK-V12 non-JSON report identity".to_string());
+        }
+        if self.rows.is_empty() {
+            return Err("SK-V12 non-JSON report has no rows".to_string());
+        }
+        let mut seen = BTreeSet::new();
+        for row in &self.rows {
+            if !seen.insert(row.row_id.as_str()) {
+                return Err(format!("duplicate SK-V12 non-JSON row {}", row.row_id));
+            }
+            validate_skv12_non_json_row(row, &self.run_id)?;
         }
         Ok(())
     }
@@ -1749,6 +1826,16 @@ fn is_w1a_run_id(run_id: &str) -> bool {
             .all(|byte| matches!(byte, b'0'..=b'9' | b'a'..=b'f'))
 }
 
+fn is_skv12_run_id(run_id: &str) -> bool {
+    let Some(rest) = run_id
+        .strip_prefix("sk-v12-")
+        .or_else(|| run_id.strip_prefix("sk-v12:"))
+    else {
+        return false;
+    };
+    !rest.is_empty() && !rest.contains("sk-v11")
+}
+
 macro_rules! require_w1a_text {
     ($id:expr; $($name:literal = $value:expr),+ $(,)?) => {
         $(
@@ -1757,6 +1844,186 @@ macro_rules! require_w1a_text {
             }
         )+
     };
+}
+
+fn validate_skv12_non_json_row(row: &SkV12NonJsonRow, run_id: &str) -> Result<(), String> {
+    require_w1a_text!(
+        row.row_id;
+        "grammar_id" = row.grammar_id,
+        "domain" = row.domain,
+        "corpus_or_workload" = row.corpus_or_workload,
+        "workload" = row.workload,
+        "workload_class" = row.workload_class,
+        "output_plane" = row.output_plane,
+        "outcome_id" = row.outcome_id,
+        "verdict" = row.verdict,
+        "generated_track1_source_path" = row.generated_track1_source_path,
+        "generated_runtime_path" = row.generated_runtime_path,
+        "generated_input_provenance" = row.generated_input_provenance,
+        "track1_artifact" = row.track1_artifact,
+        "track2_or_oracle_source_path" = row.track2_or_oracle_source_path,
+        "track2_independence_status" = row.track2_independence_status,
+        "strict_output_equality" = row.strict_output_equality,
+        "oracle_status" = row.oracle_status,
+        "baseline_row_id" = row.baseline_row_id,
+        "host_triple" = row.host_triple,
+        "feature_mask" = row.feature_mask,
+        "build_flags" = row.build_flags,
+        "sample_cost" = row.sample_cost,
+        "benchmark_artifact_path" = row.benchmark_artifact_path,
+        "json_guard_state" = row.json_guard_state,
+        "redress_entry" = row.redress_entry,
+        "same_wave_consumer_class" = row.same_wave_consumer_class,
+        "gate_status" = row.gate_status,
+    );
+    let (grammar, corpus, workload) = parse_skv12_non_json_row_id(&row.row_id)?;
+    if grammar != row.grammar_id || corpus != row.corpus_or_workload || workload != row.workload {
+        return Err(format!("{} does not match row identity fields", row.row_id));
+    }
+    if row.grammar_id == "json"
+        || !matches!(row.grammar_id.as_str(), "css_l4" | "sheets" | "bbnf_self")
+    {
+        return Err(format!(
+            "{} has unsupported grammar {}",
+            row.row_id, row.grammar_id
+        ));
+    }
+    if !row.domain.starts_with("non_json_generated:") || !row.domain.contains(&row.grammar_id) {
+        return Err(format!(
+            "{} has unsupported domain {}",
+            row.row_id, row.domain
+        ));
+    }
+    let expected_plane = match row.workload.as_str() {
+        "direct_to_struct" => "direct_sink",
+        "real_typed_struct" => "typed_direct",
+        "parse_only" => return Err(format!("{} attempts parse_only admission", row.row_id)),
+        _ => return Err(format!("{} has unsupported workload", row.row_id)),
+    };
+    if row.output_plane != expected_plane {
+        return Err(format!("{} has output-plane mismatch", row.row_id));
+    }
+    gate::parse_outcome_id(&row.outcome_id)
+        .ok_or_else(|| format!("{} has unsupported outcome {}", row.row_id, row.outcome_id))?;
+    validate_skv12_generated_source(row)?;
+    validate_skv12_oracle(row, run_id)?;
+    validate_skv12_measurement(row)?;
+    validate_skv12_gate_context(row)
+}
+
+fn parse_skv12_non_json_row_id(row_id: &str) -> Result<(&str, &str, &str), String> {
+    let mut parts = row_id.split('/');
+    let grammar = parts.next();
+    let corpus = parts.next();
+    let workload = parts.next();
+    let suffix = parts.next();
+    if parts.next().is_some() || corpus.is_none() || workload.is_none() || suffix != Some("main") {
+        return Err(format!("{row_id} is not a valid SK-V12 non-JSON row id"));
+    }
+    Ok((
+        grammar.unwrap_or_default(),
+        corpus.unwrap(),
+        workload.unwrap(),
+    ))
+}
+
+fn validate_skv12_generated_source(row: &SkV12NonJsonRow) -> Result<(), String> {
+    let forbidden = ["json", "sheets_witness", "w1a", "hand_only"];
+    for value in [
+        &row.generated_track1_source_path,
+        &row.generated_runtime_path,
+        &row.generated_input_provenance,
+    ] {
+        if forbidden.iter().any(|needle| value.contains(needle)) || !value.contains(&row.grammar_id)
+        {
+            return Err(format!(
+                "{} has stale or mismatched generated Track 1 evidence",
+                row.row_id
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn validate_skv12_oracle(row: &SkV12NonJsonRow, run_id: &str) -> Result<(), String> {
+    if row.track2_independence_status != "independent_verified"
+        || row.track2_or_oracle_source_path == row.generated_track1_source_path
+        || row.track2_or_oracle_source_path == row.generated_runtime_path
+        || row
+            .track2_or_oracle_source_path
+            .contains("runtime::generated_json::parse")
+        || row.track2_or_oracle_source_path.contains("track1")
+        || !row.oracle_status.contains("same-plane")
+        || !row.oracle_status.contains("strict")
+        || !row.oracle_status.contains("independent")
+        || !row.oracle_status.contains("fresh")
+        || !row.track1_artifact.contains(run_id)
+        || !row.benchmark_artifact_path.contains(run_id)
+    {
+        return Err(format!(
+            "{} has coupled or stale oracle evidence",
+            row.row_id
+        ));
+    }
+    Ok(())
+}
+
+fn validate_skv12_measurement(row: &SkV12NonJsonRow) -> Result<(), String> {
+    if row.track1_mbps < 1.0
+        || !positive_finite(row.track1_mbps)
+        || !row
+            .track2_or_oracle_mbps
+            .is_some_and(|value| value >= 1.0 && positive_finite(value))
+        || row.sample_count < 30
+        || row.strict_output_equality != "pass"
+        || row.gate_status != "pass"
+        || row.verdict != "GO"
+    {
+        return Err(format!(
+            "{} missing admissible SK-V12 measurement",
+            row.row_id
+        ));
+    }
+    if row.workload_class == "baseline" {
+        if row.baseline_row_id != "none"
+            || row.baseline_mbps.is_some()
+            || row.threshold_mbps.is_some()
+        {
+            return Err(format!("{} has invalid baseline linkage", row.row_id));
+        }
+    } else if row.workload_class == "intervention" {
+        let (Some(baseline), Some(threshold)) = (row.baseline_mbps, row.threshold_mbps) else {
+            return Err(format!("{} missing intervention threshold", row.row_id));
+        };
+        if row.baseline_row_id == "none" || threshold < (baseline * 1.01).ceil() {
+            return Err(format!("{} has invalid intervention threshold", row.row_id));
+        }
+    } else {
+        return Err(format!("{} has unsupported workload class", row.row_id));
+    }
+    Ok(())
+}
+
+fn validate_skv12_gate_context(row: &SkV12NonJsonRow) -> Result<(), String> {
+    let expected_consumer = match row.workload_class.as_str() {
+        "baseline" => "companion_gate_generated_baseline",
+        "intervention" => "companion_gate_generated_intervention",
+        _ => unreachable!("workload class already validated"),
+    };
+    if row.same_wave_consumer_class != expected_consumer
+        || !(row.json_guard_state == "not_refreshed:no_behavior_drift"
+            || row.json_guard_state.starts_with("refreshed:"))
+        || !row.host_triple.contains("arch=")
+        || !row.feature_mask.contains("target_cpu=native")
+        || !row.build_flags.contains("target-cpu=native")
+        || !row.sample_cost.contains("ns_per_byte=")
+    {
+        return Err(format!(
+            "{} has producer-only or incomplete gate context",
+            row.row_id
+        ));
+    }
+    Ok(())
 }
 
 fn validate_w1a_non_json_row(row: &NonJsonEvidenceRow) -> Result<(), String> {
@@ -2176,6 +2443,59 @@ mod tests {
         assert!(report.validate_w1a_non_json_gate().is_err());
     }
 
+    fn skv12_non_json_report() -> SkV12NonJsonReport {
+        SkV12NonJsonReport {
+            schema_id: SKV12_NON_JSON_REPORT_SCHEMA.into(),
+            wave_id: "SK-V12-W0".into(),
+            run_id: "sk-v12-w0:fixture-fnv64-0000000000000001".into(),
+            rows: vec![SkV12NonJsonRow {
+                row_id: "css_l4/declaration_values/direct_to_struct/main".into(),
+                grammar_id: "css_l4".into(),
+                domain: "non_json_generated:css_l4".into(),
+                corpus_or_workload: "declaration_values".into(),
+                workload: "direct_to_struct".into(),
+                workload_class: "baseline".into(),
+                output_plane: "direct_sink".into(),
+                outcome_id: "A".into(),
+                verdict: "GO".into(),
+                generated_track1_source_path: "crates/runtime/src/grammars/css_l4/generated.rs"
+                    .into(),
+                generated_runtime_path: "bbnf::runtime::grammars::css_l4::generated::parse".into(),
+                generated_input_provenance:
+                    "fixture:css_l4:declaration_values:sha256=0123456789abcdef".into(),
+                track1_mbps: 12.0,
+                track1_artifact: "criterion:sk-v12-w0:fixture-fnv64-0000000000000001:css_l4/direct"
+                    .into(),
+                track2_or_oracle_source_path:
+                    "oracle:css_l4:declaration_values:direct_sink:same-run".into(),
+                track2_independence_status: "independent_verified".into(),
+                track2_or_oracle_mbps: Some(10.0),
+                strict_output_equality: "pass".into(),
+                oracle_status: "same-plane:strict:independent:fresh".into(),
+                baseline_row_id: "none".into(),
+                baseline_mbps: None,
+                threshold_mbps: None,
+                host_triple: "arch=aarch64;cpu=apple-m5-max".into(),
+                feature_mask: "arch=aarch64;os=macos;simd=neon;target_cpu=native".into(),
+                build_flags: "profile=bench;rustflags=-C target-cpu=native".into(),
+                sample_count: 30,
+                sample_cost: "ns_per_byte=0.83".into(),
+                benchmark_artifact_path:
+                    "criterion:sk-v12-w0:fixture-fnv64-0000000000000001:css_l4/direct".into(),
+                json_guard_state: "not_refreshed:no_behavior_drift".into(),
+                redress_entry: "none".into(),
+                same_wave_consumer_class: "companion_gate_generated_baseline".into(),
+                gate_status: "pass".into(),
+            }],
+        }
+    }
+
+    fn skv12_reject(mut mutate: impl FnMut(&mut SkV12NonJsonReport)) {
+        let mut report = skv12_non_json_report();
+        mutate(&mut report);
+        assert!(report.validate_gate().is_err());
+    }
+
     fn opening_report() -> Report {
         let mut report = Report::new("Skinny JSON Bench");
         for baseline in SK_V8_OPEN_BASELINE {
@@ -2333,6 +2653,38 @@ mod tests {
             "../../../../restart/skinny/tranches/sk-v11/research/w1a/fixtures/nonjson-producer-only-extra-field.json"
         ))
         .is_err());
+    }
+
+    #[test]
+    fn skv12_non_json_report_accepts_generated_baseline() {
+        assert!(skv12_non_json_report().validate_gate().is_ok());
+    }
+
+    #[test]
+    fn skv12_non_json_report_rejects_required_w0_failure_classes() {
+        skv12_reject(|report| report.schema_id = W1A_NON_JSON_REPORT_SCHEMA.into());
+        skv12_reject(|report| report.run_id = "sk-v11-w1a:fixture-fnv64-0000000000000001".into());
+        skv12_reject(|report| report.rows[0].grammar_id = "json".into());
+        skv12_reject(|report| report.rows[0].domain = "json_bench".into());
+        skv12_reject(|report| report.rows[0].generated_track1_source_path = "".into());
+        skv12_reject(|report| {
+            report.rows[0].generated_runtime_path =
+                "bbnf::runtime::grammars::sheets_witness::parse".into()
+        });
+        skv12_reject(|report| {
+            report.rows[0].track2_or_oracle_source_path =
+                report.rows[0].generated_track1_source_path.clone()
+        });
+        skv12_reject(|report| report.rows[0].same_wave_consumer_class = "gate_only".into());
+        skv12_reject(|report| report.rows[0].gate_status = "".into());
+        skv12_reject(|report| report.rows[0].track1_mbps = 0.5);
+    }
+
+    #[test]
+    fn skv12_non_json_report_rejects_unknown_producer_fields() {
+        let mut value = serde_json::to_value(skv12_non_json_report()).unwrap();
+        value["rows"][0]["producer_only_field"] = serde_json::json!("not consumed");
+        assert!(SkV12NonJsonReport::from_json_str(&value.to_string()).is_err());
     }
 
     #[test]

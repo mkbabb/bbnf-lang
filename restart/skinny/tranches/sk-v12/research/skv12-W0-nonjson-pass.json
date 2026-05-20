@@ -1,0 +1,41 @@
+{
+  "schema_id": "sk-v12-nonjson-generated-v1",
+  "wave_id": "SK-V12-W0",
+  "run_id": "sk-v12-w0:fixture-fnv64-0000000000000001",
+  "rows": [
+    {
+      "row_id": "css_l4/declaration_values/direct_to_struct/main",
+      "grammar_id": "css_l4",
+      "domain": "non_json_generated:css_l4",
+      "corpus_or_workload": "declaration_values",
+      "workload": "direct_to_struct",
+      "workload_class": "baseline",
+      "output_plane": "direct_sink",
+      "outcome_id": "A",
+      "verdict": "GO",
+      "generated_track1_source_path": "crates/runtime/src/grammars/css_l4/generated.rs",
+      "generated_runtime_path": "bbnf::runtime::grammars::css_l4::generated::parse",
+      "generated_input_provenance": "fixture:css_l4:declaration_values:sha256=0123456789abcdef",
+      "track1_mbps": 12.0,
+      "track1_artifact": "criterion:sk-v12-w0:fixture-fnv64-0000000000000001:css_l4/direct",
+      "track2_or_oracle_source_path": "oracle:css_l4:declaration_values:direct_sink:same-run",
+      "track2_independence_status": "independent_verified",
+      "track2_or_oracle_mbps": 10.0,
+      "strict_output_equality": "pass",
+      "oracle_status": "same-plane:strict:independent:fresh",
+      "baseline_row_id": "none",
+      "baseline_mbps": null,
+      "threshold_mbps": null,
+      "host_triple": "arch=aarch64;cpu=apple-m5-max",
+      "feature_mask": "arch=aarch64;os=macos;simd=neon;target_cpu=native",
+      "build_flags": "profile=bench;rustflags=-C target-cpu=native",
+      "sample_count": 30,
+      "sample_cost": "ns_per_byte=0.83",
+      "benchmark_artifact_path": "criterion:sk-v12-w0:fixture-fnv64-0000000000000001:css_l4/direct",
+      "json_guard_state": "not_refreshed:no_behavior_drift",
+      "redress_entry": "none",
+      "same_wave_consumer_class": "companion_gate_generated_baseline",
+      "gate_status": "pass"
+    }
+  ]
+}

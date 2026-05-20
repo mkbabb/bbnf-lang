@@ -243,22 +243,7 @@ fn gate_json(root: &Path, passthrough: Vec<String>) -> Result<()> {
     if passthrough.iter().any(|arg| arg == "--with-cost-facts") {
         return gate_json_cost_facts(root, passthrough);
     }
-    let unexpected = passthrough
-        .iter()
-        .filter(|arg| {
-            !matches!(
-                arg.as_str(),
-                "--advisory"
-                    | "--check-results"
-                    | "--update-results"
-                    | "--write-results"
-                    | "--include-volatile-probes"
-            )
-        })
-        .collect::<Vec<_>>();
-    if !unexpected.is_empty() {
-        bail!("gate-json got unsupported arguments {unexpected:?}");
-    }
+    validate_gate_json_passthrough(&passthrough)?;
     let mut command = Command::new("cargo");
     command
         .current_dir(root)
@@ -272,6 +257,27 @@ fn gate_json(root: &Path, passthrough: Vec<String>) -> Result<()> {
     } else {
         bail!("bench gate failed with status {status}")
     }
+}
+
+fn validate_gate_json_passthrough(args: &[String]) -> Result<()> {
+    let mut index = 0;
+    while index < args.len() {
+        match args[index].as_str() {
+            "--advisory"
+            | "--check-results"
+            | "--update-results"
+            | "--write-results"
+            | "--include-volatile-probes" => index += 1,
+            "--w1a-non-json-report" | "--skv12-non-json-report" => {
+                if index + 1 >= args.len() {
+                    bail!("{} expects one path argument", args[index]);
+                }
+                index += 2;
+            }
+            other => bail!("gate-json got unsupported argument {other}"),
+        }
+    }
+    Ok(())
 }
 
 fn apply_bench_output_env(command: &mut Command, root: &Path) {
@@ -641,6 +647,17 @@ mod tests {
     fn report() -> serde_json::Value {
         let snapshot = codegen::cost_facts_from_source("json", JSON_GRAMMAR).unwrap();
         cost_facts_gate_report(&snapshot).unwrap()
+    }
+
+    #[test]
+    fn gate_json_passthrough_accepts_skv12_non_json_report_flag() {
+        validate_gate_json_passthrough(&[
+            "--skv12-non-json-report".into(),
+            "skv12-nonjson-pass.json".into(),
+        ])
+        .unwrap();
+        assert!(validate_gate_json_passthrough(&["--skv12-non-json-report".into()]).is_err());
+        assert!(validate_gate_json_passthrough(&["--unknown".into()]).is_err());
     }
 
     #[test]

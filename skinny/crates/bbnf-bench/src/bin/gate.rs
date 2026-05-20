@@ -3,8 +3,8 @@ use bbnf_bench::lock14_baseline;
 use bbnf_bench::materialization::track_stats;
 use bbnf_bench::metadata::{current_peak_rss_bytes, RowMetadata, TrackTag};
 use bbnf_bench::report::{
-    sk_v8_open_baseline, ComparatorSet, NonJsonEvidenceReport, Report, SkV8ComparatorEvidence,
-    SkV8Telemetry, TelemetryRow,
+    sk_v8_open_baseline, ComparatorSet, NonJsonEvidenceReport, Report, SkV12NonJsonReport,
+    SkV8ComparatorEvidence, SkV8Telemetry, TelemetryRow,
 };
 use serde_json::Value;
 use std::collections::BTreeSet;
@@ -34,6 +34,10 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .into(),
         );
     }
+    let workspace = workspace_root();
+    if let Err(error) = lock14_baseline::validate(&workspace) {
+        return Err(format!("Lock 14 baseline validation failed: {error}").into());
+    }
     if let Some(path) = w1a_non_json_report_path(&args[1..])? {
         let text = fs::read_to_string(&path)?;
         let report = NonJsonEvidenceReport::from_json_str(&text)
@@ -43,12 +47,18 @@ fn main() -> Result<(), Box<dyn Error>> {
         drop(report);
         return Ok(());
     }
+    if let Some(path) = skv12_non_json_report_path(&args[1..])? {
+        let text = fs::read_to_string(&path)?;
+        let report = SkV12NonJsonReport::from_json_str(&text)
+            .and_then(|report| report.validate_gate().map(|_| report))
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        println!("G-W0-SK-V12-NONJSON-GATE PASS {}", path.display());
+        drop(report);
+        return Ok(());
+    }
 
     let criterion_root = criterion_root();
-    let results_path = workspace_root().join("RESULTS.md");
-    if let Err(error) = lock14_baseline::validate(&workspace_root()) {
-        return Err(format!("Lock 14 baseline validation failed: {error}").into());
-    }
+    let results_path = workspace.join("RESULTS.md");
     let fixtures = test_fixtures::load_available_bench_fixtures()?;
     let fixture_names = fixtures
         .iter()
@@ -402,7 +412,15 @@ fn exit_code_for_verdict(verdict: Verdict) -> i32 {
 }
 
 fn w1a_non_json_report_path(args: &[String]) -> Result<Option<PathBuf>, Box<dyn Error>> {
-    let Some(flag_index) = args.iter().position(|arg| arg == "--w1a-non-json-report") else {
+    companion_report_path(args, "--w1a-non-json-report")
+}
+
+fn skv12_non_json_report_path(args: &[String]) -> Result<Option<PathBuf>, Box<dyn Error>> {
+    companion_report_path(args, "--skv12-non-json-report")
+}
+
+fn companion_report_path(args: &[String], flag: &str) -> Result<Option<PathBuf>, Box<dyn Error>> {
+    let Some(flag_index) = args.iter().position(|arg| arg == flag) else {
         return Ok(None);
     };
     if args.iter().any(|arg| {
@@ -412,18 +430,20 @@ fn w1a_non_json_report_path(args: &[String]) -> Result<Option<PathBuf>, Box<dyn 
         )
     }) {
         return Err(
-            "--w1a-non-json-report cannot be combined with JSON result update/probe flags".into(),
+            format!("{flag} cannot be combined with JSON result update/probe flags").into(),
         );
     }
-    if args
+    let companion_flags = args
         .iter()
-        .filter(|arg| *arg == "--w1a-non-json-report")
-        .count()
-        != 1
-        || args.len() != flag_index + 2
-        || flag_index != 0
-    {
-        return Err("--w1a-non-json-report expects exactly one path argument".into());
+        .filter(|arg| {
+            matches!(
+                arg.as_str(),
+                "--w1a-non-json-report" | "--skv12-non-json-report"
+            )
+        })
+        .count();
+    if companion_flags != 1 || args.len() != flag_index + 2 || flag_index != 0 {
+        return Err(format!("{flag} expects exactly one path argument").into());
     }
     Ok(Some(PathBuf::from(&args[flag_index + 1])))
 }
@@ -2065,6 +2085,25 @@ mod tests {
             "--update-results".to_string(),
         ];
         assert!(w1a_non_json_report_path(&args).is_err());
+    }
+
+    #[test]
+    fn skv12_non_json_report_arg_extracts_single_path_and_rejects_mixed_flags() {
+        let args = vec![
+            "--skv12-non-json-report".to_string(),
+            "skv12-nonjson-pass.json".to_string(),
+        ];
+        assert_eq!(
+            skv12_non_json_report_path(&args).unwrap(),
+            Some(PathBuf::from("skv12-nonjson-pass.json"))
+        );
+        let mixed = vec![
+            "--w1a-non-json-report".to_string(),
+            "w1a.json".to_string(),
+            "--skv12-non-json-report".to_string(),
+            "skv12.json".to_string(),
+        ];
+        assert!(skv12_non_json_report_path(&mixed).is_err());
     }
 
     #[test]

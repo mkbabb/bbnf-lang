@@ -3379,3 +3379,31 @@ perturbation.
 - No `skinny/RESULTS.md` row moves. W3 is rejected with measurement. W4 may
   dispatch under SPEC Section 8 with REDRESS 113's non-JSON axis block carried
   forward.
+
+## SK-V11 Wave 4 Container-Tail Direct Dispatch Rejection
+
+- Item 115 rejects W4 under `G-W4-DISPATCH-BYTESET-DIRECT`. The accepted plan
+  attempted the scalar `container_tail_next` route: generated Track 1 factored
+  post-value object/array tail handling into a JSON-local helper, hand Track 2
+  mirrored it independently, and gate/report learned a W4-only
+  `random/direct_to_struct` provenance marker at the 7878 Mbps floor.
+- The rejected patch touched only W4 owner paths and is saved at
+  `/tmp/skv11-waveW4-rejected.patch` (944 patch lines). The source tree was
+  restored after saving the artifact; no W4 source change remains dirty.
+- Pre-measurement evidence passed:
+  `RUSTFLAGS="-C target-cpu=native" cargo run -p xtask -- regen-json`,
+  `RUSTFLAGS="-C target-cpu=native" cargo run -p xtask -- check-json`,
+  `RUSTFLAGS="-C target-cpu=native" cargo test -p bbnf-bench w4 -- --nocapture`,
+  `RUSTFLAGS="-C target-cpu=native" cargo test -p bbnf-bench direct_contract -- --nocapture`,
+  `RUSTFLAGS="-C target-cpu=native" cargo test -p bbnf-bench --bin gate -- --nocapture`,
+  `RUSTFLAGS="-C target-cpu=native" cargo check -p codegen -p runtime -p bbnf-bench`,
+  and
+  `RUSTFLAGS="-C target-cpu=native" cargo build --release -p bbnf-bench --bin profile_direct`.
+- Probe evidence falsified the selected `random/direct_to_struct` floor before
+  Criterion: Track 1 measured 3518 Mbps across 20000 iterations and Track 2
+  measured 3498 Mbps across 5000 iterations, both against the 7878 Mbps W4
+  floor. The accepted plan was probe-first, so Criterion and `RESULTS.md`
+  movement were intentionally skipped.
+- No row moves. W4 is rejected with measurement. W5 may dispatch under SPEC
+  Section 9 with the REDRESS 113 non-JSON block, REDRESS 114 numeric reject,
+  and REDRESS 115 container-tail reject carried forward.

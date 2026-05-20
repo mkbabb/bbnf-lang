@@ -1,6 +1,6 @@
 # SK-V11 P3-E: Pre-Blocked Route Ledger
 
-Pass: S-P3 Synthesis-Plan. Cycle: V2.
+Pass: S-P3 Synthesis-Plan. Cycle: V3.
 Date: 2026-05-20.
 Scope: enumerate SK-V11 per-wave pre-blocked routes from REDRESS, S-P2 V3, and the SK-V11 goalset.
 Output: this file.

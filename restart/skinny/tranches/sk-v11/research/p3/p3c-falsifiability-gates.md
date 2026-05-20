@@ -1,6 +1,6 @@
 # SK-V11 P3-C: Falsifiability Gates
 
-Pass: S-P3 Synthesis-Plan. Cycle: V2.
+Pass: S-P3 Synthesis-Plan. Cycle: V3.
 Date: 2026-05-20.
 Scope: measurable wave gates for SK-V11 direct closure, guard preservation, non-JSON proof, and SIMD/ASM micro-prove-first.
 Output: this file.

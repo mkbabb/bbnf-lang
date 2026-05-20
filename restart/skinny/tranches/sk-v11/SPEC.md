@@ -1,7 +1,7 @@
 # SK-V11 SPEC
 
 Pass: S-P3 Synthesis-Plan.
-Cycle: V2 draft.
+Cycle: V3 draft.
 Date: 2026-05-20.
 Status: DRAFT. S-P3 CHALLENGE must converge before this file becomes wave
 dispatch authority.
@@ -563,7 +563,8 @@ Tasks:
 - Add scalar span oracle returning offsets and decode-needed status.
 - Wire one generated direct/typed string/key consumer.
 - Add strict parity and caller microbench if a block SIMD body is used.
-- Run Unicode rows as guards when the target is plain-string rows.
+- Monitor Unicode residual rows when the target is plain-string; they remain
+  floor-bearing residuals for W6/W8 unless selected in W5.
 
 Exit gate `G-W5-STRING-SPAN-DIRECT`:
 
@@ -802,7 +803,7 @@ before CHALLENGE. A narrower name is not a material differential.
 
 ## 14. G-Alpha And Dispatch Scope
 
-G-Alpha SK-V10 -> SK-V11 is presented by the SK-V11 opening packet. This V2
+G-Alpha SK-V10 -> SK-V11 is presented by the SK-V11 opening packet. This V3
 SPEC is a draft until S-P3 converges. After convergence, dispatch scope is:
 
 - W0 is closed unless the orchestrator explicitly invalidates the opening

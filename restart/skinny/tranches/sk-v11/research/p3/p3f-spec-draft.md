@@ -1,6 +1,6 @@
 # SK-V11 P3-F: SPEC And Dispatch Draft
 
-Pass: S-P3 Synthesis-Plan. Cycle: V2.
+Pass: S-P3 Synthesis-Plan. Cycle: V3.
 Date: 2026-05-20.
 Scope: compose the SK-V11 SPEC and dispatch prompt from the converged S-P1/S-P2 packet.
 Output: this file + `restart/skinny/tranches/sk-v11/SPEC.md` + `restart/skinny/tranches/sk-v11/DISPATCH-PROMPT.md`.
@@ -26,7 +26,7 @@ admissible pool for S-P3:
   parser vocabulary and cannot enter generic parser crates as semantics.
 - C9 is Lock-1/output-plane accounting only. It is not a row-moving primitive.
 
-The V2 SPEC therefore sequences waves around product-plane consumers, not
+The V3 SPEC therefore sequences waves around product-plane consumers, not
 parse-only substrate repair. W3 union/event/class-column/streaming-cursor
 routes are REDRESS 96/97/98-falsified and REDRESS 102-firewalled. Any route
 that re-derives W3 under another name fails the SPEC entry gate.

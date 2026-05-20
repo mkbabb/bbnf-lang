@@ -5,7 +5,7 @@ SK-V11. It binds to the SK-V11 packet at
 `restart/skinny/tranches/sk-v11/` and to the wave plan in
 `restart/skinny/tranches/sk-v11/SPEC.md`.
 
-Status: DRAFT. S-P3 V2 has not yet converged; no behavior source work is
+Status: DRAFT. S-P3 V3 has not yet converged; no behavior source work is
 authorized from this prompt until S-P3 CHALLENGE accepts the packet.
 
 SK-V11 is not a W3 retry. REDRESS 96/97/98 retired the union/event/class-column

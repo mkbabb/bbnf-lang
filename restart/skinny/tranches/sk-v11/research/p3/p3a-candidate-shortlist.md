@@ -1,6 +1,6 @@
 # SK-V11 P3-A: Candidate Shortlist
 
-Pass: S-P3 Synthesis-Plan. Cycle: V2.
+Pass: S-P3 Synthesis-Plan. Cycle: V3.
 Date: 2026-05-20.
 Scope: distil the converged S-P2 candidate pool into row-gated SK-V11 candidate interventions.
 Output: this file.
@@ -261,7 +261,8 @@ Dropped as standalone candidates:
 - **Falsifiability gate:** selected numeric rows must meet both-track direct
   floors: `canada >= 10637`, `mesh >= 8675`, `numbers >= 2425`,
   `instruments >= 8969`. If typed numeric guards are refreshed, typed Track 1
-  maintain floors include `mesh >= 9308` and `marine_ik >= 11670`.
+  maintain floors include `mesh >= 9214` and `marine_ik >= 11552`; Track 2
+  oracle guards follow §1 when measured.
 - **Reject boundary:** reject if number conversion semantics change, f64
   fallback or mantissa widening reopens REDRESS 80, Track 2/oracle output
   diverges, DotProd lacks scalar fallback, or no selected row reaches its
@@ -350,7 +351,7 @@ Dropped as standalone candidates:
 - **Falsifiability gate:** JSON companion rows, if selected, must meet the
   direct floors `github_events >= 13403`, `update_center >= 10059`,
   `random >= 7878`, or `instruments >= 8969`. The non-JSON row is named
-  `css_l4/declaration_values/{direct,typed}` in V2, with fallback
+  `css_l4/declaration_values/{direct,typed}` in V3, with fallback
   `google_sheets/formula/{direct,typed}`. W1a creates the gate/report lane and
   W1b creates the baseline row; W2 admits only if the intervention reaches
   `ceil(W1b_css_baseline_mbps * 1.01)` with strict oracle equality.
@@ -386,11 +387,12 @@ Dropped as standalone candidates:
 - **Output plane:** JSON typed product and optional non-JSON typed parser. It is
   not a direct digest candidate.
 - **Falsifiability gate:** typed guards must maintain Track 1 floors:
-  `twitter >= 17562`, `citm_catalog >= 30233`,
-  `apache_builds >= 8393`, `github_events >= 11752`,
-  `update_center >= 11732`, `mesh >= 9308`, `marine_ik >= 11670`.
-  If this candidate admits a new typed row, P3-C must assign that row's strict
-  typed floor from same-run sonic typed evidence before redress.
+  `twitter >= 17385`, `citm_catalog >= 29928`,
+  `apache_builds >= 8308`, `github_events >= 11633`,
+  `update_center >= 11613`, `mesh >= 9214`, `marine_ik >= 11552`.
+  Track 2 oracle guards from §1 hold when measured. If this candidate admits a
+  new typed row, P3-C must assign that row's strict typed floor from same-run
+  sonic typed evidence before redress.
 - **Reject boundary:** reject on direct-digest-as-typed-proof, missing
   independent typed oracle, no typed row/guard movement, hidden schema source,
   or JSON-only generic policy.
@@ -406,8 +408,8 @@ All JSON direct admissions use the same concrete target floors:
 | P3A-C3 `escaped_string_segments_hex_run` | `unicode_escapes`, `unicode_mixed`, `y_string_unicode`, optional `gsoc-2018` | Both tracks meet 3441 / 2588 / 3950 / 3737 respectively. |
 | P3A-C4 `digit_run_span_accumulate_and_number_slot` | `canada`, `mesh`, `numbers`, `instruments` | Both tracks meet 10637 / 8675 / 2425 / 8969 respectively. |
 | P3A-C5 `byte_set_layout_skip_with_transient_masks` | `twitter`, `random`, `distinct_values`, `instruments`, optional `update_center` | Both tracks meet 13740 / 7878 / 2658 / 8969 / 10059 respectively. |
-| P3A-C6 `generated_first_prefix_non_json_dispatch` | JSON companions `github_events`, `update_center`, `random`, `instruments`; non-JSON `css_l4/declaration_values/{direct,typed}` or fallback `google_sheets/formula/{direct,typed}` | JSON companions meet 13403 / 10059 / 7878 / 8969 respectively. Non-JSON floor is currently unbound in `skinny/RESULTS.md`; W0/P3-D must create the concrete Mbps floor before behavior dispatch, or this candidate is unmeasurable and must be revised. |
-| P3A-C7 `typed_direct_guard_extension` | Existing typed guards, plus any P3-C selected new typed row | Existing typed guards maintain 17562 / 30233 / 8393 / 11752 / 11732 / 9308 / 11670. New typed row floor must be computed from same-run sonic typed strict before redress. |
+| P3A-C6 `generated_first_prefix_non_json_dispatch` | JSON companions `github_events`, `update_center`, `random`, `instruments`; non-JSON `css_l4/declaration_values/{direct,typed}` or fallback `google_sheets/formula/{direct,typed}` | JSON companions meet 13403 / 10059 / 7878 / 8969 respectively. W1b creates the concrete non-JSON baseline Mbps and independent oracle; W2 admits only at `ceil(W1b_css_baseline_mbps * 1.01)` with strict equality. P3-D binds fields but does not own the performance floor. |
+| P3A-C7 `typed_direct_guard_extension` | Existing typed guards, plus any P3-C selected new typed row | Existing typed guards maintain 17385 / 29928 / 8308 / 11633 / 11613 / 9214 / 11552 on Track 1, with §1 Track 2 oracle guards when measured. New typed row floor must be computed from same-run sonic typed strict before redress. |
 
 Full-table maintain is inherited by every candidate. At minimum, a direct-output
 refresh preserves the direct guard Track 1/Track 2 maintain floors in §1, and a

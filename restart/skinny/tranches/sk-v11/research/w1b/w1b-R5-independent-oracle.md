@@ -19,11 +19,12 @@ Selected oracle path after Phase 2: `css_l4/declaration_values/direct/main`
 with a same-run independent `css_l4_decl_value_fact_oracle` fact-byte stream.
 
 The row should compare byte-identical canonical fact streams, not parser ASTs and
-not pretty-printed full stylesheets. Track 1 is the generated CSS L4 typed parser
-row. The oracle parses the same selected CSS corpus with `lightningcss`, walks its
-own AST, emits the same small fact schema, serializes that schema with a stable
-non-lossy encoder, and compares bytes with Track 1's separately produced fact
-stream. The oracle implementation must live outside generated Track 1 and must
+not pretty-printed full stylesheets. Track 1 is the generated CSS L4 direct
+baseline row. The oracle parses the same selected CSS corpus through an
+independent W1b module, emits the same small fact schema, serializes that schema
+with a stable non-lossy encoder, and compares bytes with Track 1's separately
+produced fact stream. The oracle implementation must live outside generated
+Track 1 and must
 not call `CssL4Parser::parse`, `CssL4Parser::stylesheet_prettify`,
 `runtime::css_l4::parse_with`, generated SinkOnly helpers, generated typed
 helpers, or old hand-only non-JSON runtime code.
@@ -222,8 +223,8 @@ Create a W1b-specific oracle/report path, not a broad relaxation of JSON
   stream, not hash equality alone.
 - Gate consumer: extend the W1a companion non-JSON report validator for W1b
   baseline semantics, changing `measured_validation_path` from `schema-only` to
-  `measured-row` and `same_wave_consumer_class` to a generated CSS L4 typed
-  parser consumer. Keep JSON W0 validation unchanged.
+  `measured-row` and `same_wave_consumer_class` to
+  `generated_non_json_direct_baseline`. Keep JSON W0 validation unchanged.
 - Throughput: benchmark Track 1 and oracle under the same run id, host, flags,
   feature mask, and sample count. W1b records baseline Mbps only; no intervention
   admits until W2.

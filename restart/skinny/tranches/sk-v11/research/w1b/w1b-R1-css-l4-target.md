@@ -183,7 +183,6 @@ files up front:
 - one new or changed file under `skinny/crates/codegen/src/lower/` for the
   selected non-JSON direct metadata/lowering path, if the baseline uses BIR
   lowering rather than a generated target harness
-- `skinny/crates/runtime/src/lib.rs`
 - generated output under
   `skinny/crates/runtime/src/grammars/css_l4_declaration_values/`
 - `skinny/crates/bbnf-bench/benches/nonjson_baseline.rs`

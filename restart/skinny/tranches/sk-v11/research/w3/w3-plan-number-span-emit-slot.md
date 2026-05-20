@@ -22,6 +22,9 @@ semantics, materialization policy, or output digest semantics.
 Redress may touch only:
 
 - `skinny/crates/runtime/src/grammars/json/generated.rs`
+- `skinny/crates/codegen/src/sink_direct.rs` only if the source change must
+  preserve the generated JSON direct template; no generic number policy or
+  non-JSON codegen route may move
 - `skinny/crates/parse-that-regex/src/number/mod.rs` only for parity tests or
   a semantic-preserving scalar helper; no policy edits
 - `skinny/crates/bbnf-bench/src/direct_struct.rs` only for exact number-class
@@ -30,6 +33,10 @@ Redress may touch only:
   measurement or exact parity tests if needed
 - `skinny/crates/bbnf-bench/benches/json_parity.rs` only for named W3
   measurement support if needed
+- `skinny/crates/bbnf-bench/src/bin/gate.rs` for W3 direct-row gate
+  consumption, provenance marking, and tests
+- `skinny/crates/bbnf-bench/src/report.rs` only if gate/report schema
+  consumption needs W3 provenance metadata
 - `skinny/RESULTS.md`
 - `skinny/REDRESS.md`
 
@@ -62,6 +69,23 @@ The implementation is rejected if no selected target gains `>= 1.0%` in the
 same-host caller or if either selected target misses its §0.4 floor in the
 Criterion gate. A W0-clamped row cannot admit from a probe alone.
 
+The `>= 1.0%` caller-movement check is calculated from native
+`profile_direct` probes against the same executable mode and corpus before and
+after the patch:
+
+- `mesh track1` and `mesh track2` are mandatory.
+- `numbers track1` and `numbers track2` are mandatory only if `numbers` is
+  claimed.
+- A selected row passes this sub-gate if at least one of its two modes improves
+  by `>= 1.0%` Mbps and the other mode does not regress by more than `0.5%`.
+- Probe movement is not row admission; Criterion plus `gate-json` still decide
+  the row.
+
+Gate consumption is part of W3. `gate-json --with-cost-facts --check-results`
+must classify an admitted W3 direct row with strict measured-row provenance,
+W3 wave id, REDRESS provenance, non-`gate_only` same-wave consumer metadata,
+and no W0 no-admission clamp.
+
 ## Micro-Prove-First Record
 
 Native probe build:
@@ -88,6 +112,8 @@ Probe interpretation:
   is measurable and needs only a small Track 2 floor lift in the SK-V11-open
   table, but it still requires W3 Criterion provenance.
 - These probes do not authorize UDOT or all-four-row selection.
+- These probes do not authorize row movement without the post-redress
+  Criterion gate and W3 `gate-json` consumption.
 
 ## Same-Wave Consumer
 
@@ -99,7 +125,10 @@ The same-wave consumer is generated JSON direct `parse_direct`:
 
 The hot caller is `bbnf_bench::direct_struct::track1_digest`, which invokes
 `runtime::generated_json::parse_direct`. Track 2 and serde/sonic remain output
-parity and strict comparator backstops.
+parity and strict comparator backstops. Track 2 is an independent caller, but
+not an independent numeric scanner/materializer oracle: it shares
+`parse_that_regex::match_number_span_from_first` and the parse-that numeric
+materializers. REDRESS must record this coupling honestly.
 
 ## Implementation Shape
 
@@ -109,15 +138,36 @@ parity and strict comparator backstops.
    scalar slot helper or equivalent zero-policy refactor.
 3. Preserve exact `-0.0`, i64/u64/f64 class dispatch, cursor advancement, and
    `ParseErrorKind::InvalidNumber` behavior.
-4. Add or extend exact number-class tests only if the refactor changes local
-   call structure.
-5. Do not edit generated codegen templates unless CHALLENGE revises this plan;
-   this W3 slice is limited to the already-generated JSON runtime caller.
+4. Add mandatory generated `parse_direct` root/object/array numeric-slot tests
+   comparing exact digest behavior against serde for `-0`, `-0.0`, i64 max,
+   i64 min, u64 max, u64 overflow-to-f64, subnormal, exponent forms, and
+   representative invalid suffix ownership. These tests must cover class
+   dispatch to `i64`, `u64`, and `f64` sink slots in root, object, and array
+   placement.
+5. If the generated runtime body changes, either preserve the generated source
+   template in `sink_direct.rs` in the same wave or record a no-regeneration
+   proof. Do not edit broader codegen templates or non-JSON routes without
+   same-wave CSS/Sheets proof.
+6. Add W3 gate tests proving `mesh` can admit at floor `8675`, optional
+   `numbers` can admit at floor `2425` only with W3 provenance, and unrelated
+   SK-V8-open `N-direct` rows remain clamped.
 
 ## Hard Cap
 
 Redress cap: 90 min wall, with 60 min implementation and 30 min parity plus
 selected Criterion measurement.
+
+## Required Verification Commands
+
+- `RUSTFLAGS="-C target-cpu=native" cargo build --release -p bbnf-bench --bin profile_direct`.
+- `target/release/profile_direct 2000 mesh track1`.
+- `target/release/profile_direct 2000 mesh track2`.
+- Post-redress repeat of the two mesh probes above, plus `numbers` probes if
+  `numbers` is claimed.
+- `cargo test -p bbnf-bench --bin gate w3 -- --nocapture`.
+- `cargo test -p bbnf-bench direct_struct::tests::generated_direct_number_slots_match_serde -- --nocapture`.
+- `CRITERION_HOME=/tmp/skv11-w3-criterion RUSTFLAGS="-C target-cpu=native" cargo bench -p bbnf-bench --bench json_parity -- 'json_(mesh|numbers)/(track1_direct_to_struct|track2_direct_to_struct|sonic_rs_direct_to_struct|serde_json_direct_to_struct)'`.
+- `CRITERION_HOME=/tmp/skv11-w3-criterion RUSTFLAGS="-C target-cpu=native" cargo run -p xtask -- gate-json --with-cost-facts --check-results`.
 
 ## Revert Protocol
 

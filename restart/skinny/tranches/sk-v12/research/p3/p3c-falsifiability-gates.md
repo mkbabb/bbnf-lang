@@ -1,6 +1,6 @@
 # SK-V12 P3-C: Falsifiability Gates
 
-Pass: S-P3 Synthesis-Plan. Cycle: V1.
+Pass: S-P3 Synthesis-Plan. Cycle: V2.
 Date: 2026-05-20.
 Scope: per-wave measurable gates for the SK-V12 generated non-JSON baseline, intervention, guard, and conditional JSON companion surface.
 Output: this file.
@@ -50,9 +50,9 @@ facts.
 | Likely wave | Gate | Measurable target | Required threshold |
 |---|---|---|---|
 | W0 telemetry lock | `G-W0-SK-V12-OPEN` | JSON table, schema, run freshness, guard rows | full gate pass plus guard floors below |
-| W1 generated non-JSON baseline | `G-W1-GENERATED-NONJSON-BASELINE` | exactly one selected non-JSON direct or typed baseline row | Track 1 >= 1 Mbps and independent Track 2/oracle >= 1 Mbps |
-| W2 selected-baseline intervention | `G-W2-GENERALIZED-INTERVENTION` | same grammar/workload/output plane as W1 | Track 1 >= `ceil(W1_baseline_track1_mbps * 1.01)` |
-| W3 JSON direct companion, conditional | `G-W3-JSON-DIRECT-COMPANION` | one named JSON direct residual row only after non-JSON priority resolves | selected residual row floor below, both Track 1 and Track 2 |
+| W1 generated non-JSON baseline | `G-W1-GENERATED-NONJSON-BASELINE` | exactly one selected non-JSON direct or typed baseline row | Track 1 >= 1 Mbps, independent Track 2/oracle >= 1 Mbps, sample count >= 30 |
+| W2 selected-baseline intervention | `G-W2-SELECTED-NONJSON-INTERVENTION` | same grammar/workload/output plane as W1 | Track 1 >= `ceil(W1_baseline_track1_mbps * 1.01)` |
+| W3 JSON direct companion, conditional | `G-W3-CONDITIONAL-JSON-COMPANION` | one named JSON direct residual row only after non-JSON priority resolves | selected residual row floor below, both Track 1 and Track 2 |
 | W4 close | `G-W4-CLOSE` | close packet agreement | W1+W2 admitted, or generated-baseline BLOCKED with measurement; guards preserved |
 
 If W1 preflight cannot fit in a single redress, the legal split is:
@@ -161,7 +161,7 @@ Revert protocol: revert the selected codegen/runtime/bench/report/gate/RESULTS
 slice, preserve the failed proof in REDRESS, save
 `/tmp/skv12-waveW1-rejected.patch`, and block W2 until a baseline row admits.
 
-### 2.5 W2 Gate: `G-W2-GENERALIZED-INTERVENTION`
+### 2.5 W2 Gate: `G-W2-SELECTED-NONJSON-INTERVENTION`
 
 Entry: W1 admitted one baseline row and recorded
 `W1_baseline_track1_mbps`, output plane, fixture corpus, oracle path, and row
@@ -195,7 +195,7 @@ strict equality failure, guard regression, checkasm failure, stale run id, or
 Lock 14 leak; preserve W1 baseline evidence; save
 `/tmp/skv12-waveW2-rejected.patch`.
 
-### 2.6 Conditional W3 Gate: `G-W3-JSON-DIRECT-COMPANION`
+### 2.6 Conditional W3 Gate: `G-W3-CONDITIONAL-JSON-COMPANION`
 
 Entry: W1 and W2 have admitted, or the generated non-JSON baseline priority is
 recorded as measured `BLOCKED`. CHALLENGE must also name fresh material

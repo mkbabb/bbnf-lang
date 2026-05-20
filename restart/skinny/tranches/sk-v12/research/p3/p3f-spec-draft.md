@@ -1,6 +1,6 @@
 # SK-V12 P3-F: SPEC + Dispatch Draft
 
-Pass: S-P3 Synthesis-Plan. Cycle: V1.
+Pass: S-P3 Synthesis-Plan. Cycle: V2.
 Date: 2026-05-20.
 Scope: draft the SK-V12 wave SPEC and per-wave dispatch prompt from the
 converged S-P1/S-P2 evidence.
@@ -76,13 +76,13 @@ gate, one section per wave, pre-blocked routes, and G-Alpha/dispatch scope.
 
 The draft wave manifest is:
 
-| Wave | SPEC section | Title | Status | LOC cap | Redress cap |
-|---|---|---|---|---:|---:|
-| W0 | Section 3 | Baseline Profile And Telemetry Lock | Dispatchable after S-P3 convergence | <=180 report/gate/test/doc LOC, 0 behavior LOC | <=90 min |
-| W1 | Section 4 | Generated Non-JSON Baseline | Conditional on W0 | <=520 CSS, <=480 Sheets, <=460 BBNF-self | <=75 min |
-| W2 | Section 5 | Selected-Baseline Measured Intervention | Conditional on W1 admit | <=430 | <=75 min |
-| W3 | Section 6 | Conditional JSON Direct Companion | Conditional on W1/W2 disposition plus material reopen gate | <=300 | <=75 min |
-| W4 | Section 7 | Close And Alpha Feedback | Conditional on W0-W3 disposition | <=120 docs/gate/report LOC, 0 behavior LOC | <=90 min |
+| Wave | SPEC section | Title | Status | LOC cap | Risk | Wall cap | Redress cap |
+|---|---|---|---|---:|---|---:|---:|
+| W0 | Section 3 | Baseline Profile And Telemetry Lock | Dispatchable after S-P3 convergence | <=180 report/gate/test/doc LOC, 0 behavior LOC | low-medium | <=90 min | <=75 min |
+| W1 | Section 4 | Generated Non-JSON Baseline | Conditional on W0 | <=520 CSS, <=480 Sheets, <=460 BBNF-self | high | <=90 min | <=75 min |
+| W2 | Section 5 | Selected-Baseline Measured Intervention | Conditional on W1 admit | <=430 | high | <=90 min | <=75 min |
+| W3 | Section 6 | Conditional JSON Direct Companion | Conditional on W1/W2 disposition plus material reopen gate | <=300 | high | <=90 min | <=75 min |
+| W4 | Section 7 | Close And Alpha Feedback | Conditional on W0-W3 disposition | <=120 docs/gate/report LOC, 0 behavior LOC | medium | <=90 min | <=75 min |
 
 ## §3 - Falsifiability binding
 
@@ -94,11 +94,12 @@ benchmark bodies must not change.
 
 W1 gate `G-W1-GENERATED-NONJSON-BASELINE` admits exactly one selected generated
 non-JSON baseline row. The row id is one of
-`css_l4/declaration_values/direct/main`, `sheets/formula/direct/main`, or
-`bbnf_self/grammar/direct/main`, or the corresponding typed row if the W1 plan
-proves typed is the smaller generated product. Track 1 and oracle/Track 2 must
-be finite and positive, strict output equality must pass, generated source and
-runtime provenance must be gate-consumed, and JSON guard floors must hold.
+`css_l4/declaration_values/{direct_to_struct|real_typed_struct}/main`,
+`sheets/formula/{direct_to_struct|real_typed_struct}/main`, or
+`bbnf_self/grammar/{direct_to_struct|real_typed_struct}/main`. Track 1 must be
+>= 1 Mbps, oracle/Track 2 must be >= 1 Mbps, sample count must be >= 30, strict
+output equality must pass, generated source and runtime provenance must be
+gate-consumed, and JSON guard floors must hold.
 
 W2 gate `G-W2-SELECTED-NONJSON-INTERVENTION` admits one measured intervention
 on the W1 row. Track 1 must be >= `ceil(W1_baseline_track1_mbps * 1.01)`;
@@ -148,12 +149,24 @@ The SPEC carries these binding blocks:
   REDRESS 114-119.
 - REDRESS 111 report-lane evidence as a generated baseline.
 - REDRESS 112/113 CSS/non-JSON baseline blocker as a future-phase promise.
+- REDRESS 70/71 typed-output boundary: no hand-authored typed sink, direct
+  digest proof, hidden directive/BIR extension, hidden host schema, or
+  benchmark-private Track 1 parser; typed baselines require generated
+  DirectBuild/schema-source facts, independent oracle equality, and gate
+  consumption.
+- REDRESS 28/33 active TBL/NEON tiny-string dispatch and proof-only
+  `match_tiny_plain_string` routes; REDRESS 72 scalar cap widening is not
+  authority to wire the rejected active-dispatch kernel.
 - Number slot, container-tail, bounded string span, escaped segment, and output
   digest host-sink replays from REDRESS 114-118.
 - Sidecars, second retained substrates, new directives, new BIR variants,
   new `BackendShape` variants, public substrate APIs, parser-owned scratch,
-  generic-crate JSON policy, x86 implementation work, stale sidecars, and
-  strict admission from permissive/flaw-probe comparators.
+  parser-owned structural projection, retained structural cursor or cursor
+  list, aux density table, aux projection column, event side vector, whitespace
+  bitmap, retained class lane, structural-position vector, decoded-byte
+  sidecar, renamed retained scanner, generic-crate JSON policy, x86
+  implementation work, stale sidecars, and strict admission from
+  permissive/flaw-probe comparators.
 
 ## §5 - Sources
 

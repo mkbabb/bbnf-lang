@@ -5,7 +5,7 @@ SK-V12. It binds to the SK-V12 packet at
 `restart/skinny/tranches/sk-v12/`. Each wave of the SK-V12 SPEC is executed by
 one triumvirate per `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`.
 
-Status: S-P3 V1 draft. Do not dispatch behavior waves until S-P3 CHALLENGE
+Status: S-P3 V2 draft. Do not dispatch behavior waves until S-P3 CHALLENGE
 converges and the orchestrator promotes this packet.
 
 ## Required Reading
@@ -36,13 +36,13 @@ Read in order:
 
 ## Wave Manifest
 
-| Wave | SPEC section | Title | Dispatch status | Hard cap |
-|---|---|---|---|---:|
-| W0 | Section 3 | Baseline Profile And Telemetry Lock | First after S-P3 convergence | <=90 min |
-| W1 | Section 4 | Generated Non-JSON Baseline | Conditional on W0 close | <=75 min redress |
-| W2 | Section 5 | Selected-Baseline Measured Intervention | Conditional on W1 admit | <=75 min redress |
-| W3 | Section 6 | Conditional JSON Direct Companion | Conditional on W1/W2 disposition plus material reopen gate | <=75 min redress |
-| W4 | Section 7 | Close And Alpha Feedback | Conditional on W0-W3 dispositions | <=90 min |
+| Wave | SPEC section | Title | Dispatch status | LOC / risk | Wall cap | Redress cap |
+|---|---|---|---|---:|---:|---:|
+| W0 | Section 3 | Baseline Profile And Telemetry Lock | First after S-P3 convergence | <=180 report/gate/test/doc LOC; low-medium | <=90 min | <=75 min |
+| W1 | Section 4 | Generated Non-JSON Baseline | Conditional on W0 close | <=520 CSS / <=480 Sheets / <=460 BBNF-self; high | <=90 min | <=75 min |
+| W2 | Section 5 | Selected-Baseline Measured Intervention | Conditional on W1 admit | <=430 source/test/gate LOC; high | <=90 min | <=75 min |
+| W3 | Section 6 | Conditional JSON Direct Companion | Conditional on W1/W2 disposition plus material reopen gate | <=300 source/test/gate LOC or 0 if entry blocks; high | <=90 min | <=75 min |
+| W4 | Section 7 | Close And Alpha Feedback | Conditional on W0-W3 dispositions | <=120 docs/report/gate LOC; medium | <=90 min | <=75 min |
 
 The order is firm. W1 is the first material behavior wave and admits exactly
 one generated non-JSON baseline in this preference order: CSS L4 declaration
@@ -67,8 +67,12 @@ optional/mandatory CHALLENGE, and redress in distinct commits.
 - One or two plan agents; 30 min cap.
 - The plan selects one SPEC intervention and names owner paths, entry gate,
   exit gate, scalar-reference state, parity/checkasm state, micro-proof,
-  same-wave consumer, LOC budget, hard cap, revert protocol, guard rows, and
+  same-wave consumer, LOC budget, risk class, wall cap, redress cap, revert
+  protocol, guard rows, and
   pre-blocked routes.
+- A W2 plan also includes the SPEC Section 5 five-part cost table: scalar
+  reference LOC, parity/checkasm LOC, microbench LOC, generated consumer LOC,
+  and report/gate LOC.
 - Plan agents edit no source.
 - Commit: `docs(sk-v12-wave{W}-plan): select {intervention}`.
 
@@ -82,7 +86,8 @@ close. A REJECT or unresolved REVISE routes the wave back to plan.
 ### Phase 3 - Redress
 
 - One redress agent; single implementation thread.
-- W1-W3 redress cap is 75 min. W0/W4 cap is 90 min.
+- Every wave has a <=75 min redress cap. W0 and W4 may carry a separate <=90
+  min wall cap for gate/docs overhead outside redress.
 - The redress agent implements only the SPEC owner paths. Any other source path
   returns REVISE before editing.
 - Every primitive or generated path must include its same-wave consumer and
@@ -106,8 +111,8 @@ Load-bearing gate facts:
 
 - W1 admits one generated non-JSON baseline only. The selected row must have
   generated Track 1, independent oracle or Track 2, strict output equality,
-  finite positive Mbps, provenance, run/build/host/sample telemetry, and gate
-  consumption.
+  Track 1 >= 1 Mbps, oracle/Track 2 >= 1 Mbps, sample count >= 30, provenance,
+  run/build/host/sample telemetry, and gate consumption.
 - W2 admits one measured intervention only on the W1 row. Track 1 must be >=
   `ceil(W1_baseline_track1_mbps * 1.01)`.
 - W3 has no default behavior authority. It dispatches only with fresh material
@@ -122,6 +127,11 @@ The full ledger is SPEC Section 8. Load-bearing blocks:
 
 - REDRESS 96/97/98 W3 union/event/class-column/streaming-cursor/class-lane and
   sidecar-substrate family.
+- REDRESS 28/33 active TBL/NEON tiny-string dispatch, with REDRESS 72 scalar
+  cap widening not authorizing that rejected active-dispatch path.
+- REDRESS 70/71 typed-output boundary: no hand-authored typed sink, direct
+  digest proof, hidden directive/BIR extension, hidden host schema, or
+  benchmark-private Track 1 parser.
 - REDRESS 111 report-lane evidence as a generated baseline.
 - REDRESS 112/113 non-JSON baseline blocker and intervention entry block as a
   future-phase promise.
@@ -130,8 +140,12 @@ The full ledger is SPEC Section 8. Load-bearing blocks:
   fixpoint.
 - REDRESS 120 close authority: SK-V12 solves generated non-JSON baseline first.
 - New directive, BIR variant, `BackendShape`, public substrate API, retained
-  sidecar, parser-owned scratch/facts, generic JSON policy, x86 target, stale
-  sidecar strictness, and parse_only SOTA admission.
+  sidecar, parser-owned scratch/facts, parser-owned structural projection,
+  retained structural cursor or cursor list, aux density table, aux projection
+  column, event side vector, whitespace bitmap, retained class lane,
+  structural-position vector, decoded-byte sidecar, renamed scanners retaining
+  facts outside the single tape/direct sink contract, generic JSON policy, x86
+  target, stale sidecar strictness, and parse_only SOTA admission.
 
 Any wave adjacent to a pre-block must cite the REDRESS entry, state the
 material differential, and pass CHALLENGE before redress.
@@ -148,7 +162,8 @@ material differential, and pass CHALLENGE before redress.
   gate.
 - No new outcome enum value.
 - No generic-crate JSON policy.
-- No W3 substrate route.
+- No W3 substrate route, retained cursor/list, aux projection, or decoded-byte
+  sidecar route.
 - No parse_only admission.
 - No x86 implementation work.
 - Research, plan, CHALLENGE, redress, and close remain separate commits.

@@ -1,6 +1,6 @@
 # SK-V12 P3-E: Pre-Blocked Route Ledger
 
-Pass: S-P3 Synthesis-Plan. Cycle: V1.
+Pass: S-P3 Synthesis-Plan. Cycle: V2.
 Date: 2026-05-20.
 Scope: per-wave REDRESS pre-block ledger for the SK-V12 synthesis-plan packet.
 Output: this file.
@@ -12,8 +12,8 @@ Candidate pool: research/p2/ post-CHALLENGE survivors.
 SK-V12's pre-block ledger has one load-bearing ordering rule: the generated
 non-JSON baseline comes first. `SYNTHESIS.md` requires a generated Track 1
 non-JSON direct or typed parser, independent Track 2 or oracle, strict equality,
-finite same-run throughput, provenance, run/build telemetry, and gate/report
-consumption before any JSON-only micro-wave dispatches
+W1-thresholded same-run throughput, provenance, run/build telemetry, and
+gate/report consumption before any JSON-only micro-wave dispatches
 (`restart/skinny/tranches/sk-v12/SYNTHESIS.md:38`-`:49`). `HANDOFF.md` says the
 same priority is binding and names CSS L4 declaration values, Sheets, then
 BBNF-self as the preferred fallback order
@@ -66,7 +66,7 @@ touches. Otherwise the route is a pre-blocked retry.
 | Docs-only direct admission and W0-clamped rows | REDRESS 119 marks `instruments`, `numbers`, and `unicode_mixed` as W0-clamped/no-provenance cases, and says W8 admits no direct or W0-clamped row (`skinny/REDRESS.md:3517`-`:3525`). | Hard pre-block. No row admits from table arithmetic, stale W0 numbers, or documentation-only reclamation. |
 | Direct-as-typed proof or direct digest as typed product proof | SYNTHESIS gate rules reject direct digest as typed proof (`restart/skinny/tranches/sk-v12/SYNTHESIS.md:222`-`:226`); P2-F marks output digest/oracle sink parser-candidate-ineligible and blocked by REDRESS 118 (`restart/skinny/tranches/sk-v12/research/p2/p2f-grammar-neutral.md:39`, `:62`). | Hard pre-block. Typed admission needs a typed output plane, independent oracle, provenance, and gate consumption. |
 | Generic JSON policy leaks | SYNTHESIS rejects JSON policy in generic crates or runtime outside generated per-grammar modules (`restart/skinny/tranches/sk-v12/SYNTHESIS.md:73`-`:75`, `:222`-`:226`); P2-F identifies `json_provider::ensure_runtime_profile` as the current blocker (`restart/skinny/tranches/sk-v12/research/p2/p2f-grammar-neutral.md:16`-`:18`). | Hard pre-block. Generic helpers may expose grammar-neutral byte/string/digit/hex mechanics only; grammar policy lives in generated per-grammar modules. |
-| New directive, BIR variant, `BackendShape`, public substrate API, sidecar/fact slot, or second retained substrate | ORCHESTRATOR non-negotiables forbid new directives, BIR variants, and substrates (`restart/prompts/ORCHESTRATOR.md:197`-`:207`); SYNTHESIS refusal repeats the ban (`restart/skinny/tranches/sk-v12/SYNTHESIS.md:260`-`:269`). | Hard pre-block. S-P3 may not route around codegen limits by adding surface area. |
+| New directive, BIR variant, `BackendShape`, public substrate API, sidecar/fact slot, or second retained substrate | ORCHESTRATOR non-negotiables forbid new directives, BIR variants, and substrates (`restart/prompts/ORCHESTRATOR.md:197`-`:207`); SYNTHESIS refusal repeats the ban (`restart/skinny/tranches/sk-v12/SYNTHESIS.md:260`-`:269`). | Hard pre-block. S-P3 may not route around codegen limits by adding surface area. This also blocks parser-owned structural projection, retained structural cursor or cursor list, aux density table, aux projection column, event side vector, whitespace bitmap, retained class lane, structural-position vector, decoded-byte sidecar, or renamed scanner that retains facts outside the single tape/direct sink contract. |
 | PMU, cycles, structural-scan, masking probes, Criterion slope, profile row, or sidecar freshness as behavior producer | P1-E pre-blocks these as nonproducer evidence (`restart/skinny/tranches/sk-v12/research/p1/p1e-hot-leaf-attribution.md:328`-`:335`); P2-F keeps PMU/profile diagnostic unless tied to legal source movement and generated non-JSON parity (`restart/skinny/tranches/sk-v12/research/p2/p2f-grammar-neutral.md:64`). | Hard pre-block. These can nominate candidates, not move rows. |
 | x86 implementation target | Handoff refusal excludes x86 implementation target (`restart/skinny/tranches/sk-v12/HANDOFF.md:131`-`:132`); P2-C keeps x86 context-only (`restart/skinny/tranches/sk-v12/research/p2/p2c-arch-esoterica.md:34`). | Hard pre-block for SK-V12. Existing x86 code may remain, but no SK-V12 wave targets x86. |
 
@@ -78,7 +78,7 @@ without reopening the route analysis.
 | Wave class | Candidate surface | Must not reopen | Routes that may admit only under different framing with fresh P1 evidence |
 |---|---|---|---|
 | W0 telemetry / baseline lock | SK-V12-open result and telemetry lock. | No behavior source change, no `RESULTS.md` row movement, no docs-only direct admission, no parse-only SOTA movement, no W0-clamped row reclamation, no PMU/probe/structural-scan producer. | None. W0 only freezes and validates telemetry. |
-| W1 generated non-JSON baseline | CSS L4 declaration-values preferred, Sheets fallback, BBNF-self fallback. | REDRESS 111 report lane as baseline; REDRESS 112 JSON-profiled codegen/runtime blocker hidden by hand fixtures; REDRESS 113 intervention-before-baseline; generic JSON policy leaks; directives/BIR/public substrate additions; stale witness modules as proof. | If CSS L4 preflight cannot name a generated emission seam, runtime module build, fixture corpus, independent oracle, compile/equality smoke, and REDRESS 111 gate consumption, W1 may switch to Sheets or BBNF-self under the same proof surface. That is different framing, not a JSON retry. |
+| W1 generated non-JSON baseline | CSS L4 declaration-values preferred, Sheets fallback, BBNF-self fallback. | REDRESS 111 report lane as baseline; REDRESS 112 JSON-profiled codegen/runtime blocker hidden by hand fixtures; REDRESS 113 intervention-before-baseline; REDRESS 70 hand-authored typed sink / measurement-surface proof; REDRESS 71 generated typed DirectBuild boundary; generic JSON policy leaks; directives/BIR/public substrate additions; stale witness modules as proof. | If CSS L4 preflight cannot name a generated emission seam, runtime module build, fixture corpus, independent oracle, compile/equality smoke, and REDRESS 111 gate consumption, W1 may switch to Sheets or BBNF-self under the same proof surface. Typed-equivalent baselines may admit only through generated DirectBuild/schema-source facts with independent oracle equality and gate consumption. That is different framing, not a JSON retry. |
 | W2 selected-baseline intervention | One grammar-generalized primitive consumed by the W1 baseline row. | Primitive-only SIMD/checkasm; orphan kernel; parser-support proof without generated consumer; JSON-only direct residual work; direct-as-typed proof; output digest as parser primitive; generic JSON policy. | Byte-set/classifier, bounded-string, escape/hex, digit-span, layout, or FIRST-set work may admit only when attached to the selected generated non-JSON parser with scalar/oracle reference, parity/equality, strict output equality, `ceil(baseline_mbps * 1.01)` or stricter gate, and same-wave consumer. |
 | W3+ conditional JSON companion | Optional only after W1/W2 succeed or generated non-JSON route records measured `BLOCKED`. | All 13 REDRESS 119 residual rows by default; `number_span_emit_slot`, `container_tail_next`, bounded string span, decoded-byte source fold, output digest host-sink, W0-clamped/docs-only rows, parse-only, W3 substrate. | A residual direct row may reopen only with fresh SK-V12 P1/S-P2 evidence beyond REDRESS 114-119: new hot-leaf evidence, source delta materially different from W3-W7, scalar/oracle proof, same-host microbench, independent Track 2, strict same-run sonic-rs direct floor, same-wave gate consumption, and non-JSON priority already resolved. |
 | Close / Alpha feedback | Documentation and route reconciliation. | Row admission from prose, stale run ids, telemetry-only fields, unconsumed reports, mismatched close docs, parse-only/direct residual paper-close. | None as behavior work. It may route unresolved items to Pass Alpha only with measured admit/reject/BLOCKED evidence. |
@@ -88,7 +88,7 @@ without reopening the route analysis.
 | S-P2 family | Pre-blocked REDRESS adjacency | SK-V12 admissible framing |
 |---|---|---|
 | Byte-set/classifier/movemask (`class_mask64_transient`, `BYTE_CLASS_*`, F1/F5/F6) | REDRESS 50/51/53 side tables/cursors; REDRESS 96/97/98 W3 substrate; REDRESS 88/89/90 bitmap/CTZ/PMULL body-fill; REDRESS 119/120 direct residual fixpoint. | Transient masks only, grammar-emitted sets/tables, scalar reference, strict checkasm if SIMD, same-wave generated layout/delimiter/string/FIRST-set consumer. |
-| Bounded string span / special-byte scan (C2, C4, F2, `pt_bounded_plain_string_end`) | REDRESS 54/55 decoded stats/hash; REDRESS 60-69 string/materialization family; REDRESS 72 tiny-string cap split; REDRESS 83 StringBlock16; REDRESS 116 W5 entry block; REDRESS 119 fixpoint. | Grammar-owned terminator/escape/control policy, scalar reference, strict parity for AArch64 support, and selected-baseline generated string/literal/key consumer. |
+| Bounded string span / special-byte scan (C2, C4, F2, `pt_bounded_plain_string_end`) | REDRESS 28/33 active TBL/NEON `match_tiny_plain_string` dispatch; REDRESS 54/55 decoded stats/hash; REDRESS 60-69 string/materialization family; REDRESS 72 tiny-string cap split without NEON active-dispatch authority; REDRESS 83 StringBlock16; REDRESS 116 W5 entry block; REDRESS 119 fixpoint. | Grammar-owned terminator/escape/control policy, scalar reference, strict parity for AArch64 support, and selected-baseline generated string/literal/key consumer. REDRESS 72 scalar cap widening does not authorize wiring the REDRESS 28/33 NEON/TBL route. |
 | Escape segment / hex decode (C3, C5, F3, `pt_hex_quad_decode`, `pt_escaped_string_segments`) | REDRESS 82 single-quartet route; REDRESS 106/107/108 proof-only string/unescape routes; REDRESS 117 escaped-segment block; REDRESS 54/55/66/69 decoded-source/hash adjacency. | Hex/segment mechanics only; caller owns JSON/CSS/Sheets/BBNF policy; no decoded sidecar or eager materialization; same-wave generated escape consumer. |
 | Digit span / numeric accumulation (C4, `DIGIT_SPAN_*`, F4, `pt_digit_run_span_accumulate`) | REDRESS 80 numeric fallback/mantissa route; REDRESS 114 `number_span_emit_slot` measured reject; REDRESS 119 fixpoint. | Grammar-neutral digit-run primitive with generated number policy and selected-baseline consumer. No JSON numeric slot reuse. |
 | Separator pair / FIRST-set dispatch / container control (C5, C7, F6) | REDRESS 63/65 object carry; REDRESS 84 value-byte compaction; REDRESS 115 `container_tail_next` measured reject; sidecar/cursor routes. | Generated FIRST/follow tables in per-grammar modules; scalar branch parity; no object-carry state, hidden side table, or JSON container-tail retry. |
@@ -107,7 +107,7 @@ that matter to the ledger are:
 | Direct residual reopen burden | REDRESS 119 table: `twitter` floor 13740, `canada` 10637, `github_events` 13403, `update_center` 10059, `mesh` 8675, `random` 7878, `gsoc-2018` 3737, `instruments` 8969, `numbers` 2425, `unicode_mixed` 2588, `unicode_escapes` 3441, `distinct_values` 2658, `y_string_unicode` 3950 (`skinny/REDRESS.md:3508`-`:3522`; mirrored in `restart/skinny/tranches/sk-v12/SYNTHESIS.md:105`-`:119`). | No JSON direct row reopens unless a later wave satisfies all REDRESS 114-119 material-differential requirements and gates both Track 1 and independent Track 2 against the strict sonic direct floor. |
 | Direct guard rows | `citm_catalog/direct_to_struct` maintain 18191 / 17431, `apache_builds` 11028 / 9996, `marine_ik` 8759 / 9248, `unicode_basic` 2253 / 2182 (`restart/skinny/tranches/sk-v12/SYNTHESIS.md:127`-`:132`). | Any wave touching direct output/runtime/bench/gate surfaces must maintain or explicitly demote with measurement; docs-only movement is pre-blocked. |
 | Typed guard rows | `twitter/real_typed_struct` 17385 / 15593, `citm_catalog` 29928 / 17321, `apache_builds` 8308 / 6754, `github_events` 11633 / 12029, `update_center` 11613 / 10150, `mesh` 9214 / 7739, `marine_ik` 11552 / 9894 (`restart/skinny/tranches/sk-v12/SYNTHESIS.md:139`-`:147`). | Typed rows remain guards; direct digest or direct Track 1 numbers cannot prove typed admission. |
-| Generated non-JSON baseline | The selected baseline must produce generated Track 1, independent Track 2 or oracle, strict equality, finite same-run throughput, generated input provenance, run/build/host/sample telemetry, and gate/report consumption (`restart/skinny/tranches/sk-v12/SYNTHESIS.md:38`-`:49`). | REDRESS 111 report-lane data alone falsifies the wave as a baseline. |
+| Generated non-JSON baseline | The selected baseline must produce generated Track 1 >= 1 Mbps, independent Track 2 or oracle >= 1 Mbps, strict equality, sample count >= 30, generated input provenance, run/build/host/sample telemetry, and gate/report consumption (`restart/skinny/tranches/sk-v12/SYNTHESIS.md:38`-`:49`). | REDRESS 111 report-lane data alone falsifies the wave as a baseline. |
 | Selected-baseline intervention | Same row as the admitted baseline must clear at least `ceil(baseline_mbps * 1.01)` unless S-P3 tightens it (`restart/skinny/tranches/sk-v12/SYNTHESIS.md:50`-`:56`). | Primitive-only/checkasm-only/source-only integration without a row Mbps delta is a paper-close and must be rejected. |
 
 Any wave that emits a telemetry field or report used for these decisions must
@@ -146,7 +146,10 @@ Hard pre-blocks no SK-V12 wave may reopen under the current contract:
     freshness, or parser inventory as behavior producers.
 11. JSON policy in generic crates or runtime outside generated per-grammar code.
 12. New directive, BIR variant, `BackendShape`, public substrate API,
-    parser-owned sidecar/fact slot, retained cursor list, decoded-byte sidecar,
+    parser-owned sidecar/fact slot, parser-owned structural projection,
+    retained structural cursor or cursor list, aux density table, aux projection
+    column, event side vector, whitespace bitmap, retained class lane,
+    structural-position vector, decoded-byte sidecar, renamed retained scanner,
     or second retained substrate.
 13. x86 implementation work.
 
@@ -167,6 +170,13 @@ Routes that may admit only under different framing with fresh P1 evidence:
   (`restart/skinny/tranches/sk-v12/research/p2/p2c-arch-esoterica.md:122`-`:133`).
 - A JSON direct companion may enter only after non-JSON priority resolves and
   the wave clears the full REDRESS 114-119 reopen burden.
+
+Typed-output boundary: REDRESS 70/71 stay binding for W1 typed-equivalent
+baselines. A typed baseline may not use a hand-authored typed sink, direct
+digest proof, hidden directive/BIR extension, hidden host schema, or
+benchmark-private Track 1 parser. It admits only through generated DirectBuild
+or schema-source facts, independent oracle equality, provenance, and same-wave
+gate consumption.
 
 ## §5 — Sources
 

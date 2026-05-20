@@ -1,6 +1,6 @@
 # SK-V12 P3-D: Telemetry Schema Binding
 
-Pass: S-P3 Synthesis-Plan. Cycle: V1.
+Pass: S-P3 Synthesis-Plan. Cycle: V2.
 Date: 2026-05-20.
 Scope: bind the SK-V12 telemetry schema, non-JSON companion report, and fail-closed gate rules before any SK-V12 wave dispatch.
 Output: this file.
@@ -34,8 +34,8 @@ Track 2 is the independent hand-coded parser that never calls generated Track 1
 
 SK-V12's first material target is not another JSON row. The opening synthesis
 requires a generated non-JSON baseline with generated Track 1, independent
-Track 2 or oracle, strict output equality, finite same-run throughput, input
-provenance, run/build/host/sample telemetry, and gate/report consumption
+Track 2 or oracle, strict output equality, W1 thresholded same-run throughput,
+input provenance, run/build/host/sample telemetry, and gate/report consumption
 before any JSON-only micro-wave (`restart/skinny/tranches/sk-v12/SYNTHESIS.md:38`,
 `restart/skinny/tranches/sk-v12/SYNTHESIS.md:41`,
 `restart/skinny/tranches/sk-v12/SYNTHESIS.md:43`). It then requires a
@@ -130,19 +130,19 @@ Required report fields:
 | `generated_track1_source_path` | Generated runtime/parser source path | Must be generated or per-grammar runtime code, not stale hand witness code. |
 | `generated_runtime_path` | Runtime module path loaded by the benchmark | Must build and match the selected grammar id. |
 | `generated_input_provenance` | Fixture/source path plus generator command or checksum | Reject unknown or JSON-derived fixture provenance. |
-| `track1_mbps` | finite positive Mbps | Required for baseline and intervention rows. |
+| `track1_mbps` | measured Mbps; W1 baseline gate requires >= 1 Mbps | Required for baseline and intervention rows. |
 | `track1_artifact` | Criterion or equivalent benchmark artifact path | Must match the row/run id. |
 | `track2_or_oracle_source_path` | Independent Track 2 or oracle source | Must not call generated Track 1, generated SinkOnly helpers, generated runtime internals, or `runtime::generated_json::parse`. |
 | `track2_independence_status` | `independent_verified` or fail-closed reason | Reject coupled, shared-source, or self-attested-only independence. |
-| `track2_or_oracle_mbps` | finite positive Mbps, or `n/a` only for a pure equality oracle admitted by SPEC | Required when the gate compares throughput on both tracks. |
+| `track2_or_oracle_mbps` | measured Mbps; W1 baseline gate requires >= 1 Mbps, or `n/a` only for a pure equality oracle admitted by SPEC | Required when the gate compares throughput on both tracks. |
 | `strict_output_equality` | `pass` or structured failure | Baseline/intervention cannot admit without `pass`. |
 | `oracle_status` | same-plane, strict, independent, freshness marker | Reject comparator/oracle plane mismatch and stale or permissive anchors. |
 | `baseline_row_id` | `none` for baseline; row id for intervention | Intervention rows must reference an admitted baseline from the same SK-V12 bracket. |
-| `baseline_mbps` | finite positive Mbps for intervention | Required to compute the delta floor. |
+| `baseline_mbps` | measured W1 baseline Mbps for intervention | Required to compute the delta floor. |
 | `threshold_mbps` | `ceil(baseline_mbps * 1.01)` or stricter SPEC floor | Reject unmeasurable thresholds. |
 | `run_id` | stable SK-V12 run id | All Track 1, Track 2/oracle, guard, and comparator values consumed together must be same-run or explicitly fail. |
 | `host_triple` / `feature_mask` / `build_flags` | host/build/ISA provenance | Required for aarch64/SIMD and strict comparator claims. |
-| `sample_count` / `sample_cost` | positive sample count and c/B, ns/B, or equivalent tuple | Reject zero/missing sample evidence. |
+| `sample_count` / `sample_cost` | positive sample count and c/B, ns/B, or equivalent tuple; W1 baseline gate requires sample count >= 30 | Reject zero/missing sample evidence. |
 | `benchmark_artifact_path` | concrete artifact path | Must resolve under the wave capture root or named external artifact root. |
 | `json_guard_state` | `not_refreshed` or a table of refreshed guard rows/floors/results | If JSON reports are refreshed, all 4 direct and 7 typed guards must carry measured maintain/lift/demotion status. |
 | `wave_id` / `redress_entry` | wave id and `none`, `pending`, or `REDRESS-<id>` | Failed waves must record REDRESS evidence. |

@@ -2,10 +2,11 @@
 
 Date: 2026-05-20.
 
-Status: S-P3 V1 planning draft. This file is not implementation dispatch
+Status: S-P3 V2 planning draft. This file is not implementation dispatch
 authority until S-P3 CHALLENGE converges and the orchestrator promotes the
 packet. It folds the SK-V12 Pass Alpha goalset, converged S-P1 profile,
-converged S-P2 research, and this P3-F draft into a W0-W4 wave plan.
+converged S-P2 research, the P3-F draft, and the S-P3 V1 CHALLENGE hardening
+disposition into a W0-W4 wave plan.
 
 Authority:
 
@@ -28,7 +29,7 @@ Authority:
 
 Dispatch lock:
 
-- No SK-V12 implementation wave dispatches from this S-P3 V1 draft.
+- No SK-V12 implementation wave dispatches from this S-P3 V2 draft.
 - W0-W4 become dispatchable only after S-P3 convergence under
   `restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md`.
 - Every behavior wave still requires its own wave-triumvirate research, plan,
@@ -107,14 +108,17 @@ records strict non-JSON equality, provenance, and row-owned evidence.
 ### Section 0.4 - Required Telemetry
 
 SK-V12 inherits the schema-v3 discipline already rendered in
-`skinny/RESULTS.md` and may also use a companion gate-consumed report for
-non-JSON rows. Required evidence for any new or refreshed row:
+`skinny/RESULTS.md` and may also use the P3-D
+`sk-v12-nonjson-generated-v1` companion report for non-JSON rows. Required
+evidence for any new or refreshed row:
 
 ```text
+schema_id
 row_id
 grammar_id
 domain
 corpus_or_workload
+workload
 output_plane
 workload_class
 outcome_id
@@ -123,10 +127,12 @@ strictness
 measured_validation_path
 track1_mbps
 track2_or_oracle_mbps
-track1_source_path
+generated_track1_source_path
+track1_artifact
 track2_or_oracle_source_path
 track2_independence_status
 strict_output_equality
+oracle_status
 generated_input_provenance
 generated_runtime_path
 run_id
@@ -135,10 +141,10 @@ feature_mask
 build_flags
 sample_count
 sample_cost
-benchmark_artifact
+benchmark_artifact_path
 baseline_row_id
-baseline_track1_mbps
-intervention_threshold_mbps
+baseline_mbps
+threshold_mbps
 profile_artifact
 wave_id
 redress_entry
@@ -146,15 +152,15 @@ same_wave_consumer_class
 scalar_reference_status
 checkasm_or_parity_status
 json_guard_state
-fail_closed_gate_status
+gate_status
 comparator_set
 ```
 
 Every emitted field must be consumed by `gate-json` or the named non-JSON gate
-in the same wave. Missing required fields, unsupported outcomes, stale run ids,
-oracle coupling, Track 1/Track 2 dishonesty, parse-only SOTA claims, W3
-reopen claims, direct digest as typed proof, generic JSON policy leakage, or
-producer-only telemetry rejects the wave.
+in the same wave. Unknown companion schema ids, missing required fields,
+unsupported outcomes, stale run ids, oracle coupling, Track 1/Track 2
+dishonesty, parse-only SOTA claims, W3 reopen claims, direct digest as typed
+proof, generic JSON policy leakage, or producer-only telemetry rejects the wave.
 
 ### Section 0.5 - Opening Row Goalset
 
@@ -172,9 +178,9 @@ W1 target candidates, in selection order:
 
 | Selection | Candidate row | Baseline gate |
 |---|---|---|
-| 1 | `css_l4/declaration_values/direct/main` or typed equivalent | generated Track 1, independent oracle/Track 2, strict equality, finite positive Mbps |
-| 2 | `sheets/formula/direct/main` or typed equivalent | same gate if CSS preflight cannot fit/pass |
-| 3 | `bbnf_self/grammar/direct/main` or typed equivalent | same gate if CSS and Sheets cannot fit/pass |
+| 1 | `css_l4/declaration_values/{direct_to_struct|real_typed_struct}/main` | generated Track 1, independent oracle/Track 2, strict equality, Track 1 >= 1 Mbps, oracle/Track 2 >= 1 Mbps, sample count >= 30 |
+| 2 | `sheets/formula/{direct_to_struct|real_typed_struct}/main` | same gate if CSS preflight cannot fit/pass |
+| 3 | `bbnf_self/grammar/{direct_to_struct|real_typed_struct}/main` | same gate if CSS and Sheets cannot fit/pass |
 
 W2 target is the exact W1 selected row, with Track 1 >=
 `ceil(W1_baseline_track1_mbps * 1.01)`.
@@ -225,7 +231,11 @@ JSON direct residual reopen floors, only if W3 entry gate passes:
   rejects, or blocks with measurement.
 - No parse_only SOTA admission.
 - No W3 union, class column, streaming cursor, retained structural vector,
-  `UnionTape`, sidecar substrate, or W4-through-W3 cascade.
+  `UnionTape`, sidecar substrate, W4-through-W3 cascade, parser-owned
+  structural projection, retained structural cursor or cursor list, aux density
+  table, aux projection column, event side vector, whitespace bitmap, retained
+  class lane, structural-position vector, decoded-byte sidecar, or renamed
+  scanner retaining facts outside the single tape/direct sink contract.
 - No new BBNF directive, BIR variant, `BackendShape`, public substrate API, or
   parser-owned fact/scratch slot.
 - No JSON policy in generic crates or shared runtime outside generated
@@ -245,13 +255,13 @@ JSON direct residual reopen floors, only if W3 entry gate passes:
 
 ## Section 2 - Wave Manifest, Caps, And Reruns
 
-| Wave | Section | Name | Initial dispatch status | Source/edit LOC budget | Implementation/redress cap |
-|---|---|---|---|---:|---:|
-| W0 | Section 3 | Baseline Profile And Telemetry Lock | Dispatchable after S-P3 convergence | <=180 report/gate/test/doc LOC; 0 behavior LOC | <=90 min |
-| W1 | Section 4 | Generated Non-JSON Baseline | Conditional on W0 close | <=520 CSS, <=480 Sheets, <=460 BBNF-self; generated output named separately | <=75 min |
-| W2 | Section 5 | Selected-Baseline Measured Intervention | Conditional on W1 admit | <=430 source/test/gate LOC; generated output named separately | <=75 min |
-| W3 | Section 6 | Conditional JSON Direct Companion | Conditional on W1/W2 disposition plus material reopen gate | <=300 source/test/gate LOC; 0 LOC if entry gate blocks | <=75 min |
-| W4 | Section 7 | Close And Alpha Feedback | Conditional on W0-W3 dispositions | <=120 docs/report/gate reconciliation LOC; 0 behavior LOC | <=90 min |
+| Wave | Section | Name | Initial dispatch status | Source/edit LOC budget | Risk | Wall cap | Redress cap |
+|---|---|---|---|---:|---|---:|---:|
+| W0 | Section 3 | Baseline Profile And Telemetry Lock | Dispatchable after S-P3 convergence | <=180 report/gate/test/doc LOC; 0 behavior LOC | low-medium | <=90 min | <=75 min |
+| W1 | Section 4 | Generated Non-JSON Baseline | Conditional on W0 close | <=520 CSS, <=480 Sheets, <=460 BBNF-self; generated output named separately | high | <=90 min | <=75 min |
+| W2 | Section 5 | Selected-Baseline Measured Intervention | Conditional on W1 admit | <=430 source/test/gate LOC; generated output named separately | high | <=90 min | <=75 min |
+| W3 | Section 6 | Conditional JSON Direct Companion | Conditional on W1/W2 disposition plus material reopen gate | <=300 source/test/gate LOC; 0 LOC if entry gate blocks | high | <=90 min | <=75 min |
+| W4 | Section 7 | Close And Alpha Feedback | Conditional on W0-W3 dispositions | <=120 docs/report/gate reconciliation LOC; 0 behavior LOC | medium | <=90 min | <=75 min |
 
 Phase caps:
 
@@ -260,7 +270,7 @@ Phase caps:
 | Research | 30 min per agent, max 6 agents |
 | Plan | 30 min |
 | CHALLENGE | 90 min when first-of-class, primitive, generic-crate, or high-risk |
-| Redress | 75 min for W1-W3 behavior; 90 min for W0/W4 gate/docs |
+| Redress | 75 min for every wave; W0/W4 may carry separate 90-min wall cap for gate/docs overhead outside redress |
 
 Rerun ceilings:
 
@@ -288,10 +298,14 @@ edited:
   compiles, runs, and passes strict oracle equality for any generic codegen,
   runtime, parse-that, or bbnf-simd edit.
 
-Allowed grammar-specific surfaces are grammar input files, generated
-per-grammar output, per-grammar providers/templates, tests, fixtures, and
-host/API schema facts. Generic code consumes grammar-derived facts, not
-hard-coded JSON policy under neutral names.
+Allowed grammar-specific inputs are grammar source, workspace metadata, tests,
+fixtures, independent oracle code, and optional per-grammar declaration-crate
+host functions explicitly named by the W1 plan and gate-consumed. Templates are
+shared grammar-neutral generator code; per-grammar providers/templates must not
+carry handwritten parser policy. Host/API schema facts must be listed in the
+companion report with source path/checksum and cannot supply parser control,
+generated Track 1 output, or an admission shortcut. Generic code consumes
+grammar-derived facts, not hard-coded JSON policy under neutral names.
 
 ### Section 2.2 - Micro-Prove, Scalar Reference, And Checkasm Gate
 
@@ -380,6 +394,10 @@ Entry gate:
   Sheets formula, BBNF-self grammar.
 - If the plan skips an earlier target, it cites a concrete preflight failure
   inside the W1 owner surface.
+- The plan-time preflight may evaluate fallback targets, but redress attempts
+  exactly one selected target. A selected-target failure records REDRESS
+  BLOCKED or REJECTED and cannot fall through to the next grammar inside the
+  same redress.
 - The plan names generated Track 1 path, runtime module path, fixture corpus,
   independent oracle/Track 2 path, strict equality command, gate command, and
   rollback slice.
@@ -392,7 +410,7 @@ Tasks:
 3. Build the generated runtime module for the selected grammar.
 4. Add a fixture corpus and independent oracle/Track 2 for the same output
    plane.
-5. Measure finite positive Track 1 and oracle/Track 2 Mbps.
+5. Measure Track 1 >= 1 Mbps, oracle/Track 2 >= 1 Mbps, and sample count >= 30.
 6. Gate-consume generated provenance, equality, run/build/host/sample telemetry,
    and JSON guard state.
 
@@ -400,7 +418,8 @@ Exit gate `G-W1-GENERATED-NONJSON-BASELINE`:
 
 - Exactly one selected non-JSON row is admitted with generated Track 1 and
   independent oracle/Track 2 evidence.
-- Track 1 Mbps > 0 and oracle/Track 2 Mbps > 0.
+- Track 1 Mbps >= 1 and oracle/Track 2 Mbps >= 1.
+- Sample count >= 30.
 - Strict output equality passes.
 - The non-JSON gate consumes every required Section 0.4 field.
 - The selected generated runtime compiles from grammar facts.
@@ -413,7 +432,8 @@ consumer.
 Pre-blocked routes: REDRESS 111 report fixture as baseline, REDRESS 112/113
 future-phase promise, hand-only non-JSON parser, stale `sheets_witness`, JSON
 provider cloning under a neutral name, generic JSON policy, directive/BIR
-additions, and source-only baseline claims without measured Mbps.
+additions, REDRESS 70/71 typed-output shortcuts, and source-only baseline
+claims without measured Mbps.
 
 Revert protocol: revert codegen/runtime/bench/report/gate/RESULTS changes and
 generated files for the selected grammar as one slice, save
@@ -447,6 +467,11 @@ Entry gate:
 - The plan includes scalar reference, microbench, parity/checkasm where
   applicable, same-wave generated consumer, strict oracle equality, and guard
   floors.
+- The plan includes a five-part cost table: scalar reference LOC,
+  parity/checkasm LOC, microbench LOC, generated consumer LOC, and report/gate
+  LOC. If the selected family cannot fit within <=430 non-generated LOC and
+  <=75 min redress, the plan returns REVISE before source work or S-P3 must
+  split a new wave under the <=12 bracket ceiling.
 - Mandatory CHALLENGE accepts the plan.
 
 Tasks:
@@ -474,9 +499,10 @@ Same-wave consumer: the selected generated parser/direct/typed row consuming
 the intervention.
 
 Pre-blocked routes: orphan kernels, proof-only string/hex/digit/mask helpers,
-JSON-only direct residual patches, decoded-byte sidecars, numeric slot reuse,
-container-tail replay, output digest host-sink replay, retained masks, and x86
-implementation work.
+REDRESS 28/33 active TBL/NEON tiny-string dispatch, JSON-only direct residual
+patches, decoded-byte sidecars, numeric slot reuse, container-tail replay,
+output digest host-sink replay, retained masks, parser-owned structural
+projection/cursor/list sidecars, and x86 implementation work.
 
 Revert protocol: revert the intervention, generated output, tests, gate/report,
 RESULTS, and REDRESS changes as one slice, save
@@ -587,8 +613,12 @@ acceptance.
 Global blocks:
 
 - New directive, BIR variant, `BackendShape`, substrate surface, `UnionTape`,
-  public substrate API, parser-owned cursor/facts, sidecar substrate, and
-  parallel substrate.
+  public substrate API, parser-owned cursor/facts, sidecar substrate, parallel
+  substrate, parser-owned structural projection, retained structural cursor or
+  cursor list, aux density table, aux projection column, event side vector,
+  whitespace bitmap, retained class lane, structural-position vector,
+  decoded-byte sidecar, and renamed scanners retaining facts outside the single
+  tape/direct sink contract.
 - Generic JSON policy in generic crates, including renamed helper policy.
 - Sidecar/permissive/lossy/stale comparator evidence as strict admission.
 - `parse_only` or telemetry rows as production row movement.
@@ -600,7 +630,13 @@ Global blocks:
 Specific REDRESS blocks:
 
 - REDRESS 28/33/72: TBL/tiny-string correctness and cap-16 routes as retained
-  parse/direct closes.
+  parse/direct closes; REDRESS 72 scalar cap widening is not authority to wire
+  the REDRESS 28/33 active NEON/TBL dispatch path.
+- REDRESS 70/71: hand-authored typed sink, direct digest proof, hidden
+  directive/BIR extension, hidden host schema, and benchmark-private Track 1
+  parser as typed-equivalent proof. Typed baselines require generated
+  DirectBuild or schema-source facts, independent oracle equality, provenance,
+  and same-wave gate consumption.
 - REDRESS 36-38 and 85-86: Lock 14 residue, old JSON helpers, generic JSON
   branches, and renamed JSON policy.
 - REDRESS 50/51/53: side tables, byte-class whitespace/event cursors, and

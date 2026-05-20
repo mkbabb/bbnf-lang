@@ -1,6 +1,6 @@
 # SK-V12 P3-B: Wave Sequencing
 
-Pass: S-P3 Synthesis-Plan. Cycle: V1.
+Pass: S-P3 Synthesis-Plan. Cycle: V2.
 Date: 2026-05-20.
 Scope: sequence the converged SK-V12 S-P2 survivor pool into a topological W0..Wn wave manifest.
 Output: this file.
@@ -67,8 +67,8 @@ the digest and tape/accounting families are not parser wave candidates
 | Wave | Title | Entry gate | Owner-path family | Dispatch status | Hard cap | LOC / risk | Same-wave consumer requirement | Dependency |
 |---|---|---|---|---|---:|---:|---|---|
 | W0 | SK-V12-open telemetry and guard-floor lock | S-P3 converged; clean SK-V12 packet; `skinny/RESULTS.md` and gate/report lanes readable | `skinny/RESULTS.md`; `skinny/crates/bbnf-bench/src/report.rs`; `skinny/crates/bbnf-bench/src/bin/gate.rs`; SK-V12 research/w0 artifacts | First, unconditional | <=90 min wall, redress <=75 min | <=160 LOC / low-medium | `gate-json`/report consumer must consume every required SK-V12 field; no producer-only telemetry | none |
-| W1 | Generated non-JSON baseline | W0 PASS; selected grammar pre-gate passes for CSS L4 declaration values, else Sheets, else BBNF-self; generated emission seam or per-grammar runtime path named; independent oracle and fixtures named | `skinny/crates/codegen/src/lib.rs`; `skinny/crates/codegen/src/json_provider.rs` or successor profile provider; `skinny/crates/runtime/src/grammars/{css_l4,sheets,bbnf_self}/`; selected grammar fixture/bench/report/gate owner paths; `skinny/RESULTS.md` or companion gate report | Dispatchable only after W0 | <=90 min wall, redress <=75 min | <=520 LOC / high | Generated Track 1 direct or typed parser must be consumed by the same-wave benchmark/report gate with independent Track 2 or oracle and strict output equality | W0 |
-| W2 | Selected-baseline measured grammar-generalized intervention | W1 admits a finite baseline row and records `baseline_mbps`; P3-A/P3-C select one S-P2 survivor matching that row; scalar reference and parity status named | Selected slice from `parse-that-regex`, `bbnf-simd`, `codegen`, generated runtime, fixture/bench/report/gate, and result/report output; exact files narrowed by W2 plan | Conditional on W1 admit | <=90 min wall, redress <=75 min | <=430 LOC / high | Same generated row from W1 must consume the intervention in the same commit; threshold is at least `ceil(W1_baseline_mbps * 1.01)` on the same output plane | W1 |
+| W1 | Generated non-JSON baseline | W0 PASS; selected grammar pre-gate passes for CSS L4 declaration values, else Sheets, else BBNF-self; generated emission seam or per-grammar runtime path named; independent oracle and fixtures named | `skinny/crates/codegen/src/lib.rs`; `skinny/crates/codegen/src/json_provider.rs` only to remove the JSON-only gate, or a grammar-neutral profile provider fed solely by grammar source/workspace metadata; `skinny/crates/runtime/src/grammars/{css_l4,sheets,bbnf_self}/`; selected grammar fixture/bench/report/gate owner paths; `skinny/RESULTS.md` or companion gate report | Dispatchable only after W0 | <=90 min wall, redress <=75 min | <=520 LOC / high | Generated Track 1 direct or typed parser must be consumed by the same-wave benchmark/report gate with independent Track 2 or oracle and strict output equality | W0 |
+| W2 | Selected-baseline measured grammar-generalized intervention | W1 admits a baseline row with Track 1 >= 1 Mbps, oracle/Track 2 >= 1 Mbps, sample count >= 30, and recorded `baseline_mbps`; P3-A/P3-C select one S-P2 survivor matching that row; scalar reference and parity status named | Selected slice from `parse-that-regex`, `bbnf-simd`, `codegen`, generated runtime, fixture/bench/report/gate, and result/report output; exact files narrowed by W2 plan | Conditional on W1 admit | <=90 min wall, redress <=75 min | <=430 LOC / high | Same generated row from W1 must consume the intervention in the same commit; threshold is at least `ceil(W1_baseline_mbps * 1.01)` on the same output plane | W1 |
 | W3 | Conditional JSON direct companion or residual fixpoint | W1+W2 priority admitted, or W1/W2 records a measured BLOCKED route; fresh material evidence beyond REDRESS 114-119 named for any JSON direct row reopen | JSON direct owner slice only if the entry gate names a legal row; otherwise `skinny/RESULTS.md`, `skinny/REDRESS.md`, and close/research accounting | Conditional; reject before non-JSON priority resolves | <=90 min wall, redress <=75 min | <=300 LOC / high | A reopened JSON row needs generated Track 1, independent Track 2, strict same-run sonic direct comparator, and gate/report consumption in the same wave; no docs-only admission | W1/W2 disposition |
 | W4 | Close and Alpha feedback | W0-W3 have admitted, rejected, or blocked with measurement; guard rows reconciled; close docs agree | `restart/skinny/tranches/sk-v12/{SYNTHESIS,HANDOFF,SPEC,DISPATCH-PROMPT}.md`; `skinny/RESULTS.md`; `skinny/REDRESS.md`; close research artifact | Final | <=90 min wall, redress <=75 min | <=220 LOC / medium | Close report/gate must consume W1/W2 result or measured BLOCKED route and guard-row disposition | W0-W3 |
 
@@ -83,12 +83,14 @@ after the generated priority blocks. W4 closes the bracket and routes Alpha
 feedback. The bracket is five waves, below the <=12 skinny ceiling
 (`restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md:130`).
 
-The W1 fallback order is inside the wave, not three independent behavior
-waves. The wave tries CSS L4 declaration values first; if its executable
-pre-gate cannot be made measurable inside the accepted owner surface, it falls
-back to Sheets, then BBNF-self. If all three fail, W1 records a measured
-generated-baseline BLOCKED route and W2 does not dispatch. This preserves the
-goalset order without spending the bracket on JSON work
+The W1 fallback order is plan-time only, not three redress attempts hidden
+inside one wave. The W1 plan may evaluate CSS L4 declaration values first,
+then Sheets, then BBNF-self, and must cite a concrete executable pre-gate
+failure before selecting the next target. Redress attempts exactly one selected
+target. If that selected target fails, W1 records a measured generated-baseline
+BLOCKED or REJECTED route and does not fall through to the next grammar inside
+the same redress. This preserves the goalset order without spending the bracket
+on JSON work
 (`restart/skinny/tranches/sk-v12/SYNTHESIS.md:80`,
 `restart/skinny/tranches/sk-v12/SYNTHESIS.md:184`).
 
@@ -113,15 +115,15 @@ current result family counts coherent: 16 parse-only `S / NO-GO`, 1 parse-only
 
 W1's measurable rows are one of:
 
-- `css_l4/declaration_values/direct/main` or a typed equivalent;
-- `sheets/formula/direct/main` or a typed equivalent;
-- `bbnf_self/grammar/direct/main` or a typed equivalent.
+- `css_l4/declaration_values/{direct_to_struct|real_typed_struct}/main`;
+- `sheets/formula/{direct_to_struct|real_typed_struct}/main`;
+- `bbnf_self/grammar/{direct_to_struct|real_typed_struct}/main`.
 
 W1 must record generated Track 1 Mbps, independent Track 2 or oracle Mbps,
-strict output equality, finite sample count, run/build/host context, and gate
-consumption. No numeric SOTA floor exists before W1; the W1 floor is finite
-generated baseline throughput plus strict equality and independent oracle
-acceptance, because the row does not exist before this wave
+strict output equality, sample count >= 30, run/build/host context, and gate
+consumption. No numeric SOTA floor exists before W1; the W1 floor is Track 1 >=
+1 Mbps, oracle/Track 2 >= 1 Mbps, sample count >= 30, strict equality, and
+independent oracle acceptance, because the row does not exist before this wave
 (`restart/skinny/tranches/sk-v12/SYNTHESIS.md:38`,
 `restart/skinny/tranches/sk-v12/SYNTHESIS.md:73`).
 
@@ -204,8 +206,8 @@ Per-wave pre-block map:
 | Wave | Pre-blocked routes |
 |---|---|
 | W0 | No row movement by telemetry/accounting alone; no W0-clamped direct admission; no producer-only telemetry. REDRESS 119 and 120 keep the unchanged `N-direct / NoGo` surface authoritative (`skinny/REDRESS.md:3497`, `skinny/REDRESS.md:3531`). |
-| W1 | REDRESS 111 report lane cannot be treated as generated baseline; REDRESS 112 rejected generated CSS L4 baseline under JSON-only runtime emission; REDRESS 113 blocks an intervention without a baseline (`skinny/REDRESS.md:3284`, `skinny/REDRESS.md:3313`, `skinny/REDRESS.md:3342`). |
-| W2 | No primitive without scalar reference, parity where applicable, and same-wave generated consumer. Do not reopen REDRESS 54/55/60-69/72/82/83 string-materialization routes, REDRESS 80/114 numeric routes, REDRESS 88/89/90 bitmap routes, REDRESS 106-108 proof-only SIMD/string routes, REDRESS 116/117 blocked string/escape plans, or REDRESS 118 digest host-sink (`restart/skinny/tranches/sk-v12/research/p2/p2e-parse-that-gaps.md:376`, `restart/skinny/tranches/sk-v12/research/p2/p2f-grammar-neutral.md:57`). |
+| W1 | REDRESS 111 report lane cannot be treated as generated baseline; REDRESS 112 rejected generated CSS L4 baseline under JSON-only runtime emission; REDRESS 113 blocks an intervention without a baseline; REDRESS 70/71 bind typed-equivalent baselines to generated DirectBuild/schema-source facts with independent oracle equality and no hand-authored typed sink (`skinny/REDRESS.md:3284`, `skinny/REDRESS.md:3313`, `skinny/REDRESS.md:3342`). |
+| W2 | No primitive without scalar reference, parity where applicable, and same-wave generated consumer. Do not reopen REDRESS 28/33 active TBL/NEON tiny-string dispatch, REDRESS 54/55/60-69/72/82/83 string-materialization routes, REDRESS 80/114 numeric routes, REDRESS 88/89/90 bitmap routes, REDRESS 106-108 proof-only SIMD/string routes, REDRESS 116/117 blocked string/escape plans, or REDRESS 118 digest host-sink (`restart/skinny/tranches/sk-v12/research/p2/p2e-parse-that-gaps.md:376`, `restart/skinny/tranches/sk-v12/research/p2/p2f-grammar-neutral.md:57`). |
 | W3 | REDRESS 114 numeric, 115 container-tail, 116 bounded string, 117 escaped segment, 118 digest host-sink, and 119 direct fixpoint all remain closed unless the entry packet names fresh material evidence beyond those records (`skinny/REDRESS.md:3359`, `skinny/REDRESS.md:3385`, `skinny/REDRESS.md:3413`, `skinny/REDRESS.md:3436`, `skinny/REDRESS.md:3464`, `skinny/REDRESS.md:3497`). |
 | W4 | No close on future-phase promises. W4 must reconcile W1/W2 evidence or measured BLOCKED route with `RESULTS.md`, `REDRESS.md`, `SYNTHESIS.md`, `HANDOFF.md`, `SPEC.md`, and `DISPATCH-PROMPT.md`; otherwise close is a paper-close. |
 

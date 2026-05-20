@@ -1,6 +1,6 @@
 # SK-V12 P3-A: Candidate Shortlist
 
-Pass: S-P3 Synthesis-Plan. Cycle: V1.
+Pass: S-P3 Synthesis-Plan. Cycle: V2.
 Date: 2026-05-20.
 Scope: distil the converged S-P2 survivor pool into the SK-V12 implementation-candidate shortlist.
 Output: this file.
@@ -72,12 +72,12 @@ Mbps used by the intervention gate.
   is compile/equality smoke against an independent same-plane CSS oracle plus
   gate consumption. Any SIMD helper used inside the baseline inherits its own
   scalar/checkasm requirement.
-- Same-wave consumer: `css_l4/declaration_values/direct/main` or
-  `css_l4/declaration_values/typed/main` generated Track 1, consumed by the
-  non-JSON report/gate in the same wave.
+- Same-wave consumer:
+  `css_l4/declaration_values/{direct_to_struct|real_typed_struct}/main`
+  generated Track 1, consumed by the non-JSON report/gate in the same wave.
 - Falsifiability gate: selected CSS row generated Track 1 >= 1 Mbps, independent
-  oracle/Track 2 >= 1 Mbps, strict output equality PASS, run/build/sample
-  telemetry present, and the gate consumes the row. Maintain the direct guards
+  oracle/Track 2 >= 1 Mbps, strict output equality PASS, sample count >= 30,
+  run/build/sample telemetry present, and the gate consumes the row. Maintain the direct guards
   `citm_catalog` >= 18191/17431, `apache_builds` >= 11028/9996,
   `marine_ik` >= 8759/9248, `unicode_basic` >= 2253/2182, and typed guards
   `twitter` >= 17385/15593, `citm_catalog` >= 29928/17321,
@@ -106,13 +106,13 @@ Mbps used by the intervention gate.
 - Checkasm/parity status: checkasm N/A for the baseline itself; required parity
   is compile/equality smoke against an independent same-plane Sheets oracle plus
   gate consumption.
-- Same-wave consumer: `sheets/formula/direct/main` or
-  `sheets/formula/typed/main` generated Track 1, consumed by the non-JSON
-  report/gate in the same wave.
+- Same-wave consumer:
+  `sheets/formula/{direct_to_struct|real_typed_struct}/main` generated Track 1,
+  consumed by the non-JSON report/gate in the same wave.
 - Falsifiability gate: selected Sheets row generated Track 1 >= 1 Mbps,
-  independent oracle/Track 2 >= 1 Mbps, strict output equality PASS, required
-  telemetry present, and the same JSON direct/typed guard floors from C1
-  maintain.
+  independent oracle/Track 2 >= 1 Mbps, strict output equality PASS, sample
+  count >= 30, required telemetry present, and the same JSON direct/typed guard
+  floors from C1 maintain.
 - Grammar-neutral verdict: direct proof if Sheets grammar metadata owns doubled
   quote strings, numbers, operators, functions, and array delimiters; generic
   crates may expose templates only (`restart/skinny/tranches/sk-v12/research/p2/p2f-grammar-neutral.md:19`).
@@ -132,13 +132,13 @@ Mbps used by the intervention gate.
 - Checkasm/parity status: checkasm N/A for the baseline itself; required parity
   is compile/equality smoke against an independent same-plane BBNF oracle plus
   gate consumption.
-- Same-wave consumer: `bbnf_self/grammar/direct/main` or
-  `bbnf_self/grammar/typed/main` generated Track 1, consumed by the non-JSON
-  report/gate in the same wave.
+- Same-wave consumer:
+  `bbnf_self/grammar/{direct_to_struct|real_typed_struct}/main` generated Track
+  1, consumed by the non-JSON report/gate in the same wave.
 - Falsifiability gate: selected BBNF-self row generated Track 1 >= 1 Mbps,
-  independent oracle/Track 2 >= 1 Mbps, strict output equality PASS, required
-  telemetry present, and the same JSON direct/typed guard floors from C1
-  maintain.
+  independent oracle/Track 2 >= 1 Mbps, strict output equality PASS, sample
+  count >= 30, required telemetry present, and the same JSON direct/typed guard
+  floors from C1 maintain.
 - Grammar-neutral verdict: direct proof if identifiers, literals, regex spans,
   comments, directives, and value-expression policy remain generated metadata or
   host declarations (`restart/skinny/tranches/sk-v12/research/p2/p2f-grammar-neutral.md:19`).
@@ -292,11 +292,11 @@ Mbps used by the intervention gate.
 Baseline candidates C1-C3 use concrete finite-throughput gates because no
 generated non-JSON row currently exists. The admitted baseline row must report
 generated Track 1 >= 1 Mbps, independent oracle/Track 2 >= 1 Mbps, strict
-output equality PASS, and same-wave gate consumption on exactly one row:
-`css_l4/declaration_values/direct/main` or
-`css_l4/declaration_values/typed/main` for C1;
-`sheets/formula/direct/main` or `sheets/formula/typed/main` for C2;
-`bbnf_self/grammar/direct/main` or `bbnf_self/grammar/typed/main` for C3.
+output equality PASS, sample count >= 30, and same-wave gate consumption on
+exactly one row:
+`css_l4/declaration_values/{direct_to_struct|real_typed_struct}/main` for C1;
+`sheets/formula/{direct_to_struct|real_typed_struct}/main` for C2;
+`bbnf_self/grammar/{direct_to_struct|real_typed_struct}/main` for C3.
 
 Intervention candidates C4-C8 use the admitted baseline row as their named
 target. Their threshold is `ceil(baseline_track1_mbps * 1.01)` on the same row,

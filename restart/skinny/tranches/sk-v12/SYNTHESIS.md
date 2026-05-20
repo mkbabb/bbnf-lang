@@ -5,8 +5,10 @@ Date: 2026-05-20.
 Status: Pass Alpha SK-V11 -> SK-V12 is re-bracketed under
 `USER-PIN-W1-CSS-L4-SOTA.md`. This file is the pin-aware SK-V12 opening
 synthesis and goalset. It is not behavior implementation authority and does
-not create or edit `SPEC.md` or `DISPATCH-PROMPT.md`; S-P3 must re-derive the
-wave plan under this contract.
+not create or edit `SPEC.md` or `DISPATCH-PROMPT.md`. After G-Alpha
+authorization, SK-V12 runs S-P1 Profile, S-P2 Research, and S-P3
+Synthesis-Plan under the user pin; only the downstream S-P3 packet may
+materialize replacement implementation authority.
 
 ## Authority
 
@@ -34,11 +36,15 @@ SK-V12 closes by ADMIT or FIXPOINT. No other close shape is valid.
 
 ADMIT requires all of the following:
 
-1. S-P3 re-derives W1 under the user pin, with CSS L4 as the authoritative
-   first generated grammar target.
+1. G-Alpha authorizes the pin-aware contract, then SK-V12 S-P1, S-P2, and S-P3
+   reconverge under the user pin with CSS L4 as the authoritative first
+   generated grammar target.
 2. A generated CSS L4 row admits with generated Track 1 throughput strictly
    greater than `lightningcss_mbps + 1` on the same corpus, same output plane,
    same host, and strict equality semantics.
+   The selected plane is represented by one canonical CSS fact stream shared
+   symmetrically by generated Track 1, independent Track 2/oracle, and
+   lightningcss.
 3. Strict equality passes against an independent oracle or Track 2, and the
    gate consumes provenance for the generated source, generated runtime,
    grammar/input checksums, oracle path, lightningcss comparator artifact, run
@@ -52,10 +58,15 @@ ADMIT requires all of the following:
    correctness bug identified by `skv12-totality-fold-scout.md` is verified
    and resolved before a new SIMD row admission. Every admitted primitive has
    scalar reference, checkasm/parity, micro-proof, and same-wave consumer.
-6. JSON guard floors hold or any miss is recorded as a measured disposition in
+6. The carried aarch64 orphan set named by
+   `skv12-aarch64-simd-coverage-audit.md` is zero by admission, removal, or
+   inventory demotion with evidence. The set is `bitmap_prefix_xor_64`,
+   `bitmap_next_set_bit`, `bulk_emit_positions_64`, `byte_context`, and
+   `cache_hints`.
+7. JSON guard floors hold or any miss is recorded as a measured disposition in
    REDRESS. `parse_only` remains diagnostic-only and cannot supply SOTA
    admission.
-7. Close docs agree: `skinny/RESULTS.md`, `skinny/REDRESS.md`, `SYNTHESIS.md`,
+8. Close docs agree: `skinny/RESULTS.md`, `skinny/REDRESS.md`, `SYNTHESIS.md`,
    `HANDOFF.md`, and the later S-P3-authored packet carry the same close state.
 
 ### 0.2 FIXPOINT
@@ -96,6 +107,11 @@ The current seed result surface is SK-V11 close, carried in
 | Sheets / BBNF-self | no admitted row | post-CSS-redress fallback only |
 | Overall | `N-direct / NoGo` | seed outcome |
 
+Local citations: the live JSON rows are rendered in `skinny/RESULTS.md:5-45`,
+the unchanged overall outcome and Track 2 independence notes are at
+`skinny/RESULTS.md:143-146`, and REDRESS 120 records the SK-V11 close/fixpoint
+surface at `skinny/REDRESS.md:3531-3553`.
+
 ### 0.4 Guard Rows
 
 Seed direct guard floors remain active until S-P3 refreshes them under the pin:
@@ -118,6 +134,18 @@ Seed typed guard floors:
 | `update_center/real_typed_struct` | 11613 | 10150 |
 | `mesh/real_typed_struct` | 9214 | 7739 |
 | `marine_ik/real_typed_struct` | 11552 | 9894 |
+
+Guard citations: admitted direct/typed Mbps are sourced from
+`skinny/RESULTS.md:6-45`; the direct residual fixpoint table is REDRESS 119 at
+`skinny/REDRESS.md:3495-3527`; the pre-pin SPEC seed posture appears in
+`restart/skinny/tranches/sk-v12/SPEC.md:169-180` and is retained only where it
+does not conflict with the user pin.
+
+Guard refresh rule: if a wave changes generic runtime, codegen,
+generated-output, benchmark, report, or gate paths that can produce JSON, it
+must refresh the JSON guard run or record a measured REDRESS demotion. The
+no-refresh shortcut is legal only when no JSON-producing path moved and
+`skinny/RESULTS.md` is proven unchanged.
 
 ## Section 1 - Corrected Diagnosis
 
@@ -204,9 +232,13 @@ must treat W0 as live unless the revalidation command proves drift in the
 gate/report surface, source baseline, or JSON result surface. A revalidation
 miss returns to S-P3; it does not authorize rewriting W0 inside Alpha-F.
 
-## Section 6 - S-P3 Dispatch Requirements
+## Section 6 - Pass Dispatch Requirements
 
-Next move: S-P3 re-derives W1 under the pin.
+Next move after this Alpha re-bracket converges: present G-Alpha, then run
+SK-V12 S-P1 Profile, S-P2 Research, and S-P3 Synthesis-Plan under the user pin.
+Pre-pin S-P1/S-P2 evidence may be referenced only after measured revalidation;
+fresh TSV/profile and research convergence remain required before any wave
+scope is dispatch authority.
 
 S-P3 must:
 
@@ -223,12 +255,25 @@ S-P3 must:
 
 ## Section 7 - G-Alpha Summary
 
-Pin-aware G-Alpha target:
+Pin-aware G-Alpha asks for this pass sequence and wave seed:
 
-- ADMIT: generated CSS L4 Track 1 > `lightningcss_mbps + 1`.
-- FIXPOINT: CSS L4 measured uncloseable, plus at least one new measured
-  union-substrate attempt and one new measured ASM-gen attempt in the closing
-  tranche, with zero orphan production primitives.
+| Seed | Target row / role | Hand LOC cap | Minute caps | REDRESS adjacency | Close contribution | Failure action |
+|---|---|---:|---|---|---|---|
+| S-P1 | Fresh JSON 17-corpus plus CSS L4 target profile | docs/profiling | pass prompt | profile-truth audit | establishes open baseline | rerun until §3Z or BLOCKED |
+| S-P2 | CSS/lightningcss, Lock 14/16, union, ASM-gen research | docs | pass prompt | REDRESS 88/89/90, 96/97/98, 112/113, 119/120 | names legal routes | rerun until §3Z or BLOCKED |
+| S-P3 | SPEC + DISPATCH-PROMPT under pin | docs | pass prompt | all carried | materializes wave authority | REVISE on stale pre-pin gate |
+| W0 | Revalidate `f788eb97` telemetry/gate lock | docs-only | 20/15/30 | W0 lock | preserves open surface | return to S-P3 on drift |
+| W1a | `GrammarConfig` legality / JSON parity | <=360 | 20/15/30 | Lock 14 leaks | legalizes CSS emission | save `/tmp/skv12-waveW1a-rejected.patch` |
+| W1b | CSS L4 generated baseline + lightningcss comparator | <=620 | 20/15/30 | REDRESS 112/113 | possible ADMIT | save `/tmp/skv12-waveW1b-rejected.patch` |
+| W2 | `escape_mask_64` correctness | <=180 | 20/15/30 | Lock 16 bug | unblocks SIMD | save `/tmp/skv12-waveW2-rejected.patch` |
+| W3 | CSS-local same-tape union attempt | <=420 | 20/15/30 | REDRESS 96/97/98 | ADMIT lift or FIXPOINT union evidence | save `/tmp/skv12-waveW3-rejected.patch` |
+| W4 | ARMv9.2 TBL/TBX or selected ASM-gen consumer | <=430 | 20/15/30 | REDRESS 88/89/90 | ADMIT lift or FIXPOINT ASM evidence, zero-orphan disposition | save `/tmp/skv12-waveW4-rejected.patch` |
+| W5 | Close / G-Alpha feedback | docs-only | 20/15/30 | REDRESS close | ADMIT or measured FIXPOINT | synthesize SK-V13 if close unmet |
+
+ADMIT remains generated CSS L4 Track 1 strictly
+`> lightningcss_mbps + 1`. FIXPOINT requires CSS L4 measured uncloseable, plus
+new measured union-substrate and ASM-gen attempts in the closing tranche, with
+the carried orphan set admitted, removed, or inventory-demoted.
 
 This file authorizes no behavior source work. It replaces only the Alpha
 contract surface owned by this lane.

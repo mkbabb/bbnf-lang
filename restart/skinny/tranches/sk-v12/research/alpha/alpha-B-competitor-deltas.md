@@ -35,7 +35,7 @@ The SK-V12 close comparator is now CSS L4 versus lightningcss, not JSON versus
 sonic-rs. The binding admission floor is:
 
 ```text
-css_l4_track1_mbps >= lightningcss_mbps + 1
+css_l4_track1_mbps > lightningcss_mbps + 1
 ```
 
 The rescinded formula is:
@@ -51,6 +51,11 @@ as historical context.
 JSON comparator rows remain guard and freshness facts. They do not define the
 campaign close bar unless a JSON guard demotion must be measured and routed.
 `parse_only` remains diagnostic-only.
+
+Rounding rule: `lightningcss_mbps` and `css_l4_track1_mbps` are the integer
+Mbps values emitted by the same-run gate/report row. The comparator passes only
+when the generated integer Track 1 Mbps is strictly greater than
+`lightningcss_mbps + 1`; equality at `+1` is a miss, not slack.
 
 ## CSS L4 Comparator Authority
 
@@ -98,6 +103,14 @@ Until those fields exist, the CSS L4 competitor delta is `UNMEASURED`, not
 zero and not a pass. The W1 gate may use the W0 companion schema seed
 `sk-v12-nonjson-generated-v1`, but the W0 fixture is only a schema smoke row;
 it is not measured CSS L4 performance authority.
+
+The output plane is one canonical CSS L4 declaration-value fact stream for all
+three parties: generated Track 1, independent Track 2/oracle, and lightningcss.
+The symmetric equality adapter must derive the same declaration-value facts
+from both generated bbnf and lightningcss parses; it may not be a bbnf-only
+bridge or a lightningcss-only normalization path. If S-P3 selects a full
+stylesheet row instead, the row id, fixture, oracle, and lightningcss
+comparator must all move to the full-stylesheet plane together.
 
 ## CSS Reference Deltas: Historical Only
 
@@ -176,7 +189,8 @@ direct or parse-only comparators.
 1. SK-V12 must create a fresh CSS L4 comparator row before any close claim:
    `css_l4_track1_mbps`, `lightningcss_mbps`, strict equality, same output
    plane, and provenance must be gate-consumed.
-2. The only valid CSS admission floor is `lightningcss_mbps + 1`.
+2. The only valid CSS admission floor is strict
+   `css_l4_track1_mbps > lightningcss_mbps + 1`.
 3. JSON sonic/serde deltas remain guard facts. A JSON guard regression must be
    measured and routed, but JSON wins cannot substitute for the CSS L4 pin.
 4. Historical CSS docs and root-workspace benches guide candidate selection but

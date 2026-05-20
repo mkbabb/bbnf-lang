@@ -89,6 +89,10 @@ unchanged SK-V11 close surface:
 Delta vs SK-V11 close: zero row movement. `skinny/RESULTS.md` remains the JSON
 measurement authority, while the SK-V12 profile audit supplies the current
 SK-V12-open c/B and hot-leaf attribution from `/tmp/skv12-p1`.
+Local citations: the row surface is rendered in `skinny/RESULTS.md:5-45`, the
+overall outcome and Track 2 independence notes are at `skinny/RESULTS.md:143-146`,
+and the SK-V11 close/fixpoint statement is REDRESS 120 at
+`skinny/REDRESS.md:3531-3553`.
 
 ## Parse-Only Rows
 
@@ -164,6 +168,10 @@ the CSS L4 pin.
 These floors are binding whenever a wave refreshes JSON results or touches a
 JSON-producing path. A wave that does not touch JSON-producing paths may instead
 prove `skinny/RESULTS.md` unchanged.
+Local citations: the opening family posture is inherited from
+`restart/skinny/tranches/sk-v12/SPEC.md:169-180`; direct residual proof rows
+are REDRESS 119 at `skinny/REDRESS.md:3495-3527`; admitted guard row Mbps live
+in `skinny/RESULTS.md:6-45`.
 
 Direct guard floors:
 

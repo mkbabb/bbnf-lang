@@ -41,6 +41,10 @@ SK-V11 close remains the seed result surface:
 The direct residual rows remain recorded by REDRESS 119/120, but the pin moves
 the campaign target to generated CSS L4 > lightningcss and reopens union plus
 ASM-gen categories where a new material-differential plan can pass CHALLENGE.
+Local citations: `skinny/RESULTS.md:5-45` is the live row table,
+`skinny/RESULTS.md:143-146` records the unchanged overall outcome and Track 2
+independence notes, REDRESS 119 is `skinny/REDRESS.md:3495-3527`, and REDRESS
+120 is `skinny/REDRESS.md:3531-3553`.
 
 ## 3. SK-V12 Goalset
 
@@ -49,8 +53,13 @@ SK-V12 priority order is binding:
 1. Admit a generated CSS L4 row with Track 1 throughput greater than
    `lightningcss_mbps + 1` on the same corpus, same output plane, same host,
    and strict equality semantics.
+   The selected output plane is one canonical CSS fact stream shared by
+   generated Track 1, independent Track 2/oracle, and lightningcss.
 2. Preserve JSON direct and typed guard rows, or record measured demotions in
    REDRESS. JSON guards are second priority after CSS L4 >SOTA.
+   Any generic runtime, codegen, generated-output, benchmark, report, or gate
+   change that can produce JSON requires a refreshed JSON guard run unless
+   `skinny/RESULTS.md` is proven unchanged.
 3. Keep `parse_only` diagnostic. No parse-only row can count as SOTA admission.
 4. Treat Sheets and BBNF-self as fallbacks only after a CSS L4 redress attempt
    records measured BLOCKED or REJECTED evidence.
@@ -70,6 +79,9 @@ ADMIT:
 - Lock 14 clean after resolving the generic JSON leaks needed for CSS L4
   emission;
 - Lock 16 clean for any SIMD admission;
+- the carried orphan set is zero by admission, removal, or inventory demotion
+  with evidence: `bitmap_prefix_xor_64`, `bitmap_next_set_bit`,
+  `bulk_emit_positions_64`, `byte_context`, and `cache_hints`;
 - JSON guards held or measured-disposition demoted.
 
 FIXPOINT:
@@ -88,18 +100,22 @@ W0 telemetry/gate lock at commit `f788eb97` is revalidated, not redone. Treat
 it as valid unless revalidation shows drift in the gate/report surface, source
 baseline, or JSON result surface. Alpha-F does not authorize a W0 rewrite.
 
-## 6. Required W1 Re-Derivation
+## 6. Required Pass Re-Derivation
 
-Next move: S-P3 re-derives W1 under the pin.
+Next move after Alpha hardening converges: present G-Alpha, then run SK-V12
+S-P1 Profile, S-P2 Research, and S-P3 Synthesis-Plan under the user pin. The
+pre-pin S-P1/S-P2 artifacts may be cited only after fresh measured
+revalidation; they are not substitute pass convergence.
 
-The new W1 plan must:
+The new S-P3 plan must:
 
 - select CSS L4 first;
 - name the exact CSS L4 row, output plane, generated Track 1 path, runtime
   module, fixture/input source, independent oracle/Track 2, lightningcss
   comparator, equality command, benchmark command, gate command, and rollback
   slice;
-- use `lightningcss_mbps + 1` as the admission floor;
+- use strict `generated_track1_mbps > lightningcss_mbps + 1` as the admission
+  floor; equality at `+1` is a miss;
 - land `GrammarConfig` or equivalent generated metadata before CSS L4 emission
   can legally leave JSON-only templates;
 - verify and resolve the `escape_mask_64` NEON correctness bug before any new
@@ -107,6 +123,18 @@ The new W1 plan must:
 - carry Sheets and BBNF-self only as post-CSS-redress fallbacks;
 - re-evaluate union and ASM-gen routes under the user pin, with REDRESS
   citation and material differential.
+
+Seed wave split for S-P3 to adjudicate:
+
+| Seed | Role | Cap | Failure path |
+|---|---|---|---|
+| W0 | revalidate `f788eb97` telemetry/gate lock | docs-only, 20/15/30 | return to S-P3 on drift |
+| W1a | `GrammarConfig` legality / JSON parity | <=360 hand LOC | `/tmp/skv12-waveW1a-rejected.patch` |
+| W1b | CSS L4 generated baseline + lightningcss comparator | <=620 hand LOC | `/tmp/skv12-waveW1b-rejected.patch` |
+| W2 | `escape_mask_64` correctness | <=180 hand LOC | `/tmp/skv12-waveW2-rejected.patch`; SIMD remains blocked |
+| W3 | CSS-local same-tape union attempt | <=420 hand LOC | `/tmp/skv12-waveW3-rejected.patch` |
+| W4 | ARMv9.2 ASM-gen consumer + orphan disposition | <=430 hand LOC | `/tmp/skv12-waveW4-rejected.patch` |
+| W5 | close / Alpha feedback | docs-only | synthesize SK-V13 if close unmet |
 
 ## 7. Telemetry Binding
 
@@ -139,6 +167,7 @@ Refuse or return REVISE for any dispatch that:
 
 ## 9. Dispatch Boundary
 
-This handoff authorizes no source work. It authorizes the next planning move:
-S-P3 re-derives W1 under the user pin, then downstream packet text may update
-`SPEC.md` and `DISPATCH-PROMPT.md` in its own lane.
+This handoff authorizes no source work. It authorizes G-Alpha presentation and
+then the pin-aware S-P1 -> S-P2 -> S-P3 pass sequence. Downstream S-P3 packet
+text may update `SPEC.md` and `DISPATCH-PROMPT.md` in its own lane only after
+those passes converge.

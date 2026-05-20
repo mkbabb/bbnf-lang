@@ -33,8 +33,10 @@ The user pin changes the Alpha-E routing surface:
 - CSS L4 declaration values are authoritative. Sheets and BBNF-self are
   fallbacks only after a CSS L4 redress attempt fails, not after a preflight
   skip.
-- The CSS admission floor is `lightningcss_mbps + 1` on the same corpus, same
-  output plane, strict equality, same-host run.
+- The CSS admission floor is strict `generated_track1_mbps >
+  lightningcss_mbps + 1` on the same corpus, same output plane, strict
+  equality, same-host run. The integer Mbps values emitted by the gate/report
+  row are compared directly; equality at `+1` is a miss.
 - The seven Lock 14 leaks in `json_templates/generated.rs` must be extracted
   through a `GrammarConfig`/generated-metadata surface before CSS emission is
   legal.
@@ -51,24 +53,35 @@ The user pin changes the Alpha-E routing surface:
 
 ## Shortlist
 
-| ID | Candidate | Primary role | LOC | Risk |
-|---|---|---|---:|---|
-| E1 | CSS L4 generated baseline plus lightningcss comparator | mandatory first admission target | <=620 | high |
-| E2 | `GrammarConfig` / Lock 14 leak extraction | legalizes CSS emission | <=360 | high |
-| E3 | `escape_mask_64` correctness closure | required before SIMD admission | <=180 | high |
-| E4 | CSS-local same-tape event union | union-substrate category attempt | <=420 | high |
-| E5 | ARMv9.2 TBL/TBX CSS byte-class consumer | ASM-gen/SIMD category attempt | <=430 | high |
+| ID | Candidate | Primary role | Wave seed | Hand LOC cap | Generated LOC ceiling | Risk |
+|---|---|---|---|---:|---:|---|
+| E2 | `GrammarConfig` / Lock 14 leak extraction | legalizes CSS emission | W1a | <=360 | <=1200 smoke/regenerated LOC | high |
+| E1 | CSS L4 generated baseline plus lightningcss comparator | mandatory first admission target | W1b | <=620 | <=12000 CSS declaration-value generated LOC unless S-P3 proves a tighter/full-stylesheet ceiling | high |
+| E3 | `escape_mask_64` correctness closure | required before SIMD admission | W2 | <=180 | 0 | high |
+| E4 | CSS-local same-tape event union | union-substrate category attempt | W3 | <=420 | <=4000 generated delta LOC over E1 baseline | high |
+| E5 | ARMv9.2 TBL/TBX CSS byte-class consumer | ASM-gen/SIMD category attempt | W4 | <=430 | <=2500 generated delta LOC over current CSS runtime | high |
+| Close | G-Alpha close/fixpoint docs | reconcile campaign close state | W5 | docs-only | 0 | medium |
 
-E1 and E2 are coupled for W1 planning: E2 is the generic-crate prerequisite
-without which E1 is not legal. E3 must close before E5 or any other new SIMD
-admission. E4 and E5 are eligible later-wave candidates after the CSS row and
-lightningcss comparator lane are measurable.
+E2 and E1 are sequential, not one redress slice. E2 is the generic-crate
+prerequisite without which E1 is not legal; E1 is the first row-moving CSS
+admission attempt. E3 must close before E5 or any other new SIMD admission.
+E4 and E5 are eligible later-wave candidates after the CSS row and lightningcss
+comparator lane are measurable, unless S-P3 records a measured reason to
+attempt the required union/ASM-gen categories as rejected FIXPOINT evidence.
+All wave seeds inherit the campaign caps: 20 min research, 15 min plan, and
+30 min redress. At S-P3, each generated output slice must report pre/post
+generated LOC and return REVISE on an unexplained O(N) increase.
 
 ### E1 - CSS L4 Generated Baseline Plus Lightningcss Comparator
 
 - Purpose: admit `css_l4/declaration_values/direct_to_struct/main` as a
   generated CSS L4 row and compare it against lightningcss on the same fixture,
   output plane, host, flags, and strict equality path.
+  The shared output representation is a canonical CSS declaration-value fact
+  stream used symmetrically by generated Track 1, independent Track 2/oracle,
+  and lightningcss. S-P3 may select a full-stylesheet row only if the row id,
+  fixture, equality adapter, and lightningcss comparator all move to the same
+  full-stylesheet output plane.
 - Owner paths:
   - `grammar/css/l4/values.bbnf`
   - `grammar/css/l4/tokens.bbnf`
@@ -98,17 +111,19 @@ lightningcss comparator lane are measurable.
 - Same-wave consumer: Criterion row
   `nonjson/css_l4/declaration_values/direct_to_struct`, equality artifact, and
   non-JSON gate report. Producer-only telemetry rejects.
-- Gate: `G-W1-CSS-L4-LIGHTNINGCSS-BASELINE`.
-  - generated Track 1 Mbps >= `lightningcss_mbps + 1`
+- Gate: `G-W1b-CSS-L4-LIGHTNINGCSS-BASELINE`.
+  - generated Track 1 Mbps > `lightningcss_mbps + 1`
   - lightningcss comparator Mbps measured same-run and same corpus
   - strict equality PASS for every fixture item
   - sample count >= 30
-  - output plane `direct_sink`
+  - output plane is the selected CSS declaration-value fact stream over the
+    generated direct sink, with symmetric lightningcss fact extraction
   - report schema `sk-v12-nonjson-generated-v1` consumed by gate
   - Lock 14 Section 2.1 clean
-  - JSON direct/typed guard floors either hold in a refreshed run or
-    `skinny/RESULTS.md` is proven unchanged because no JSON-producing path
-    moved
+  - if any generic runtime, codegen, generated-output, benchmark, report, or
+    gate path that can produce JSON moves, JSON direct/typed guards are
+    refreshed; the no-refresh shortcut is legal only when no JSON-producing
+    path moved and `skinny/RESULTS.md` is proven unchanged
 - LOC budget: <=620 handwritten source/test/gate LOC plus generated CSS output
   outside the hand LOC budget. This deliberately widens the pre-pin 520 CSS
   estimate because the pin makes lightningcss parity and comparator wiring
@@ -116,8 +131,9 @@ lightningcss comparator lane are measurable.
 - Risk: high. This crosses REDRESS 112/113 and establishes the campaign close
   row.
 - Revert: revert codegen/runtime/bench/report/gate/RESULTS and generated CSS
-  files as one slice; save `/tmp/skv12-waveW1-rejected.patch`; REDRESS records
-  exact blocker or measured miss.
+  files as one slice; save `/tmp/skv12-waveW1b-rejected.patch`; REDRESS records
+  exact blocker or measured miss. E1 failure blocks CSS emission until S-P3
+  replans the row, comparator, and equality adapter.
 
 ### E2 - `GrammarConfig` And Lock 14 Leak Extraction
 
@@ -130,7 +146,9 @@ lightningcss comparator lane are measurable.
   - `skinny/crates/runtime/src/tape/assembler.rs`
   - `skinny/crates/runtime/src/lib.rs`
   - `skinny/crates/codegen/src/lib.rs`
-  - `skinny/crates/codegen/src/json_templates/generated.rs`
+  - `skinny/crates/codegen/src/json_templates/generated.rs` only to preserve
+    or extract existing JSON parity; it may not become the polymorphic CSS
+    provider and may not branch on CSS/JSON grammar names
   - new grammar-neutral codegen template/provider files, for example
     `skinny/crates/codegen/src/nonjson_profile.rs` and
     `skinny/crates/codegen/src/generated_config.rs`
@@ -142,12 +160,13 @@ lightningcss comparator lane are measurable.
   byte-for-byte equivalence for existing JSON generated output and a compiling
   CSS generated module whose grammar policies come from generated metadata.
 - Checkasm/parity status: checkasm N/A unless E2 changes SIMD contact points.
-  Required parity is JSON regen parity plus CSS compile/equality smoke through
-  E1's gate.
-- Same-wave consumer: E1 CSS generated runtime and non-JSON gate consume the
-  new `GrammarConfig` surface in the same wave. A generic API addition with no
-  CSS-generated consumer is a paper close.
-- Gate: `G-W1-GRAMMARCONFIG-LOCK14`.
+  Required parity is JSON regen parity plus a CSS generated-config compile
+  smoke consumed by the W1a gate.
+- Same-wave consumer: a generated CSS declaration-value config smoke module
+  plus JSON regen parity consume the new `GrammarConfig` surface in W1a. E1
+  then consumes the same surface for the row-moving baseline in W1b. A generic
+  API addition with no generated CSS consumer is a paper close.
+- Gate: `G-W1a-GRAMMARCONFIG-LOCK14`.
   - no new public JSON-named API in generic crates
   - no generic branch on grammar name, corpus name, object/array role, field
     name, string role, or layout role
@@ -155,12 +174,15 @@ lightningcss comparator lane are measurable.
     key/member policy, flag interpretation, and sink trait are supplied by
     generated grammar metadata or per-grammar generated modules
   - JSON generated output remains parity-green
-  - E1 CSS row compiles, runs, and is gate-consumed
+  - CSS generated-config smoke module compiles and is gate-consumed; W1b must
+    later consume the same surface in the row-moving CSS baseline
 - LOC budget: <=360 handwritten LOC.
 - Risk: high. This touches generic codegen/runtime substrate and is the main
   Lock 14 failure surface.
-- Revert: revert generic API/template/runtime changes together with generated
-  CSS output if E1 fails for a Lock 14 reason.
+- Revert: revert generic API/template/runtime changes and smoke generated CSS
+  output together; save `/tmp/skv12-waveW1a-rejected.patch`. If E1 later fails
+  for a Lock 14 reason, W1b records the dependency and blocks further CSS
+  emission until W1a is replanned.
 
 ### E3 - `escape_mask_64` Correctness Closure Before SIMD
 
@@ -188,7 +210,7 @@ lightningcss comparator lane are measurable.
 - Same-wave consumer: Lock 16/checkasm gate and corpus parity harness. If a
   source fix is needed, the harness is the same-wave consumer; no performance
   row moves from E3 alone.
-- Gate: `G-W1-ESCAPE-MASK64-CORRECTNESS`.
+- Gate: `G-W2-ESCAPE-MASK64-CORRECTNESS`.
   - scalar differential PASS for adversarial seed and boundary cases
   - corpus parity PASS on expanded skinny corpus
   - CHECKASM report updated with the resolved failure signature
@@ -197,7 +219,8 @@ lightningcss comparator lane are measurable.
 - Risk: high because it gates all later SIMD claims. Scope is intentionally
   narrow and correctness-only.
 - Revert: revert SIMD source/test/report edits; record REDRESS if the bug
-  cannot be resolved inside cap. Later SIMD waves stay blocked.
+  cannot be resolved inside cap; save `/tmp/skv12-waveW2-rejected.patch`.
+  Later SIMD waves stay blocked.
 
 ### E4 - CSS-Local Same-Tape Event Union
 
@@ -220,9 +243,10 @@ lightningcss comparator lane are measurable.
   - `skinny/crates/codegen/src/direct_schema.rs`
   - selected generated CSS runtime under
     `skinny/crates/runtime/src/grammars/css_l4_declaration_values/`
-  - `skinny/crates/runtime/src/tape/event_grammar.rs`
+  - `skinny/crates/runtime/src/tape/event_grammar.rs` only to consume existing
+    sealed/internal bounds; no exported public substrate item may be added
   - `skinny/crates/runtime/src/tape/mod.rs` only if an existing generic
-    `EventGrammar` bound must be consumed
+    `EventGrammar` bound must be consumed without public API expansion
   - `skinny/crates/bbnf-bench/benches/nonjson_baseline.rs`
   - `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs`
   - `skinny/crates/bbnf-bench/src/report.rs`
@@ -233,22 +257,25 @@ lightningcss comparator lane are measurable.
   SIMD. Product parity against E1/lightningcss is mandatory.
 - Same-wave consumer: CSS L4 generated direct parser consumes the union route
   in the row measured by the non-JSON gate. No helper-only event model lands.
-- Gate: `G-W2-CSS-SAME-TAPE-UNION`.
+- Gate: `G-W3-CSS-SAME-TAPE-UNION`.
   - E1 baseline admitted first
   - microbench shows positive same-host movement on CSS declaration-value
     dispatch before source redress continues
-  - generated CSS Track 1 >= `lightningcss_mbps + 1`
+  - generated CSS Track 1 > `lightningcss_mbps + 1`
   - generated CSS Track 1 is faster than E1 baseline or records a measured
     REDRESS reject
   - strict equality PASS against lightningcss oracle
   - no public substrate API, second retained substrate, sidecar class column,
     retained structural vector, or parse_only admission
+  - public API diff proves no directive, BIR variant, BackendShape variant,
+    `UnionTape`, generic event side vector, retained cursor/list, or
+    parser-owned fact slot was added
 - LOC budget: <=420 handwritten LOC plus regenerated CSS output.
 - Risk: high. This is the required new union category attempt and must pass
   mandatory CHALLENGE before redress.
 - Revert: revert generated union source, CSS generated output, bench/report,
-  and RESULTS/REDRESS changes as one slice; save rejected patch if measured
-  negative.
+  and RESULTS/REDRESS changes as one slice; save
+  `/tmp/skv12-waveW3-rejected.patch` if measured negative.
 
 ### E5 - ARMv9.2 TBL/TBX CSS Byte-Class Consumer
 
@@ -291,19 +318,25 @@ lightningcss comparator lane are measurable.
 - Same-wave consumer: generated CSS declaration-value parser consumes the
   classifier in layout skip, delimiter dispatch, or string-interesting scan.
   Dispatch-table-only or checkasm-only work rejects as orphan.
-- Gate: `G-W2-CSS-ARMV9-TBL-CONSUMER`.
+- Gate: `G-W4-CSS-ARMV9-TBL-CONSUMER`.
   - E3 correctness PASS if string/escape path is touched
   - scalar differential/checkasm PASS
   - same-host microbench positive on selected CSS caller
-  - generated CSS Track 1 >= `lightningcss_mbps + 1`
+  - generated CSS Track 1 > `lightningcss_mbps + 1`
   - strict equality PASS against lightningcss oracle
-  - zero new orphan aarch64 primitive at close
-  - JSON guards held or proven untouched
+  - carried orphan set zero or explicitly inventory-demoted with evidence:
+    `bitmap_prefix_xor_64`, `bitmap_next_set_bit`, `bulk_emit_positions_64`,
+    `byte_context`, and `cache_hints`
+  - if any JSON-producing path moves, refreshed JSON guards hold or record
+    measured REDRESS demotion; otherwise `skinny/RESULTS.md` is proven
+    unchanged
 - LOC budget: <=430 handwritten LOC plus regenerated CSS output.
 - Risk: high. It touches native SIMD dispatch and generated consumer wiring.
 - Revert: revert SIMD/source/generated/bench/report changes as one slice; if
-  parity passes but row movement fails, record measured REDRESS and leave no
-  orphan native body.
+  parity passes but row movement fails, record measured REDRESS, save
+  `/tmp/skv12-waveW4-rejected.patch`, and leave no orphan native body. A
+  parity pass with row miss must either remove the native body, demote it as
+  inventory-only with evidence, or admit a non-orphan consumer.
 
 ## Non-Shortlisted Fallbacks
 

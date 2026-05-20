@@ -11,8 +11,9 @@ and `restart/skinny/tranches/sk-v12/HANDOFF.md`.
 This lane does not create or edit `SPEC.md` or `DISPATCH-PROMPT.md`.
 The existing SK-V12 implementation packet predates the user pin wherever it
 still treats CSS/Sheets/BBNF-self as preflight-equivalent or keeps the
-union/ASM-gen categories blocked. S-P3 must re-derive the W1 plan and later
-packet text under this contract.
+union/ASM-gen categories blocked. After G-Alpha authorization, SK-V12 must run
+S-P1 Profile, S-P2 Research, and S-P3 Synthesis-Plan under this contract before
+any wave packet becomes implementation authority.
 
 ## 1. Authorities Read
 
@@ -71,6 +72,9 @@ ADMIT requires all of the following:
 2. Generated Track 1 throughput is strictly greater than
    `lightningcss_mbps + 1` on the same corpus, same output plane, same host,
    and same strictness semantics.
+   The selected output plane is one canonical CSS fact stream shared
+   symmetrically by generated Track 1, independent Track 2/oracle, and
+   lightningcss.
 3. Strict equality passes against an independent oracle or Track 2, and the
    oracle path is not generated Track 1 in disguise.
 4. The gate consumes provenance for grammar id, corpus/workload, generated
@@ -88,6 +92,10 @@ ADMIT requires all of the following:
    and same-wave consumer evidence.
 7. The JSON guard floors from the opening result surface hold or record
    measured-disposition demotions in REDRESS.
+8. The carried aarch64 orphan set is zero by admission, removal, or explicit
+   inventory demotion with evidence: `bitmap_prefix_xor_64`,
+   `bitmap_next_set_bit`, `bulk_emit_positions_64`, `byte_context`, and
+   `cache_hints`.
 
 ### FIXPOINT
 
@@ -125,14 +133,19 @@ it under the pin:
 | Sheets / BBNF-self | no admitted row | fallback only after CSS redress attempt |
 | Overall | `N-direct / NoGo` | seed outcome, not close |
 
+Local citations: `skinny/RESULTS.md:5-45` renders the JSON row table,
+`skinny/RESULTS.md:143-146` records the unchanged overall outcome and Track 2
+independence notes, REDRESS 119 is `skinny/REDRESS.md:3495-3527`, and REDRESS
+120 is `skinny/REDRESS.md:3531-3553`.
+
 The REDRESS 119 direct residual table remains historical evidence. The user pin
 does not make JSON direct rows first priority; it makes parse-time >SOTA first
 priority through the CSS L4 generated row and permits new union/ASM-gen routes
 where they have a real CSS or guard-row consumer.
 
-## 5. Required W1 Contract For S-P3
+## 5. Required Pass Contract For S-P3
 
-S-P3 must re-derive W1 under the pin. The W1 plan must:
+After G-Alpha, SK-V12 must rerun S-P1, S-P2, and S-P3 under the pin. S-P3 must:
 
 1. Select CSS L4 first and name the exact declaration-value corpus/workload,
    generated Track 1 path, generated runtime module, fixture/input source,
@@ -145,13 +158,17 @@ S-P3 must re-derive W1 under the pin. The W1 plan must:
    needed to remove JSON policy from generic generated templates before CSS L4
    emission can compile.
 4. Verify and resolve the `escape_mask_64` NEON bug before any SIMD admission.
-   If W1 contains no SIMD body, it must still record the SIMD-admission block
-   so W2+ cannot route around it.
+   If W1a/W1b contain no SIMD body, they must still record the SIMD-admission
+   block so W2+ cannot route around it.
 5. Re-evaluate union and ASM-gen candidates as admissible categories, not as
    globally pre-blocked families. Any candidate must cite prior REDRESS and
    name material differential.
 6. Preserve W0 as revalidated, not redone. Commit `f788eb97` remains the W0
    telemetry/gate lock unless the revalidation command shows drift.
+7. Split the row creation path so `GrammarConfig` legality and CSS baseline
+   admission are not one over-budget redress: W1a legalizes and proves the
+   grammar-neutral config surface; W1b creates the CSS L4 row and lightningcss
+   comparator.
 
 ## 6. Telemetry Binding
 
@@ -195,14 +212,25 @@ Refuse or return REVISE for any SK-V12 dispatch that:
 
 Pin-aware SK-V12 asks G-Alpha to authorize this revised contract:
 
-- Target row: generated CSS L4 direct or typed row selected by S-P3.
-- Admission floor: generated Track 1 > `lightningcss_mbps + 1`.
-- Fallback: Sheets/BBNF-self only after CSS L4 redress attempt records
-  measured disposition.
-- W0: revalidate `f788eb97`; do not redo unless drift is measured.
-- W1 next move: S-P3 re-derives W1 under the pin.
-- Campaign fixpoint: allowed only after CSS, union-substrate, and ASM-gen
-  categories each have new measured evidence in the closing tranche.
+| Seed | Target row / role | Hand LOC cap | Minute caps | REDRESS adjacency | Close contribution | Failure action |
+|---|---|---:|---|---|---|---|
+| S-P1 | Fresh JSON 17-corpus plus CSS L4 target profile | docs/profiling | pass prompt | profile-truth audit | establishes open baseline | rerun until §3Z or BLOCKED |
+| S-P2 | CSS/lightningcss, Lock 14/16, union, ASM-gen research | docs | pass prompt | REDRESS 88/89/90, 96/97/98, 112/113, 119/120 | names legal routes | rerun until §3Z or BLOCKED |
+| S-P3 | SPEC + DISPATCH-PROMPT under pin | docs | pass prompt | all carried | materializes wave authority | REVISE on stale pre-pin gate |
+| W0 | Revalidate `f788eb97`; do not redo unless drift is measured | docs-only | 20/15/30 | W0 lock | preserves open surface | return to S-P3 on drift |
+| W1a | `GrammarConfig` legality / JSON parity | <=360 | 20/15/30 | Lock 14 leaks | legalizes CSS emission | save `/tmp/skv12-waveW1a-rejected.patch` |
+| W1b | CSS L4 generated baseline + lightningcss comparator | <=620 | 20/15/30 | REDRESS 112/113 | possible ADMIT | save `/tmp/skv12-waveW1b-rejected.patch` |
+| W2 | `escape_mask_64` correctness | <=180 | 20/15/30 | Lock 16 bug | unblocks SIMD | save `/tmp/skv12-waveW2-rejected.patch` |
+| W3 | CSS-local same-tape union attempt | <=420 | 20/15/30 | REDRESS 96/97/98 | ADMIT lift or FIXPOINT union evidence | save `/tmp/skv12-waveW3-rejected.patch` |
+| W4 | ARMv9.2 TBL/TBX or selected ASM-gen consumer | <=430 | 20/15/30 | REDRESS 88/89/90 | ADMIT lift or FIXPOINT ASM evidence, zero-orphan disposition | save `/tmp/skv12-waveW4-rejected.patch` |
+| W5 | Close / G-Alpha feedback | docs-only | 20/15/30 | REDRESS close | ADMIT or measured FIXPOINT | synthesize SK-V13 if close unmet |
+
+Target row: generated CSS L4 direct or typed row selected by S-P3. Admission
+floor: generated Track 1 strictly `> lightningcss_mbps + 1`. Fallback:
+Sheets/BBNF-self only after a CSS L4 redress attempt records measured
+disposition. Campaign fixpoint is allowed only after CSS, union-substrate, and
+ASM-gen categories each have new measured evidence in the closing tranche and
+the carried orphan set is admitted, removed, or inventory-demoted.
 
 This Alpha-F draft deliberately leaves `SPEC.md` and `DISPATCH-PROMPT.md`
 unchanged. They are downstream S-P3 products and remain stale where they

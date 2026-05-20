@@ -1,226 +1,250 @@
 # SK-V11 P2-A: SOTA Comparator Teardown
 
-Pass: S-P2 Research. Cycle: V1.
+Pass: S-P2 Research. Cycle: V2.
 Date: 2026-05-19.
 Scope: strict comparator architecture teardown keyed to SK-V11 S-P1 hot leaves.
 Output: this file.
-P1 hot-leaf antecedents: bounded_plain_string_scan, string_escape_decode, unicode_escape_hex_decode, number_digit_span, ascii_whitespace_skip, container_dispatch, simd_movemask, output_digest_hash.
+P1 hot-leaf antecedents: bounded_plain_string_scan, string_escape_decode,
+unicode_escape_hex_decode, number_digit_span, ascii_whitespace_skip,
+container_dispatch, simd_movemask, output_digest_hash.
 Lock surface: Lock 1 + Lock 14.
+
+V2 fold rule: comparator evidence is not admission. A retained P2-A candidate
+must be anchored to one of the eight S-P1 hot leaves, must carry an executable
+scalar reference, must name a same-wave direct/typed product consumer and
+same-output proof shape, and must state its reject boundary. Parse-only rows are
+diagnostic only. REDRESS 96/97/98/102 keep W3, retained structural class lanes,
+structural-position vectors, streaming cursors, parser-owned projections, and
+parse-only movement blocked.
 
 ## §1 — Findings (concrete; file:line on bbnf claims, citation on external claims)
 
-S-P1 names the accepted hot-leaf vocabulary and rows: string/tiny residuals
-(`twitter`, `github_events`, `update_center`, `random`, `distinct_values`),
-number/sequence rows (`canada`, `mesh`), unicode rows
-(`unicode_escapes`, `y_string_unicode`), and the SIMD string-support row
-(`gsoc-2018`). The canonical leaves are listed in
-`restart/skinny/tranches/sk-v11/research/p1/p1e-hot-leaf-attribution.md:104`.
-Current S-P2 scope therefore targets direct and typed product planes, not
-parse-only: `skinny/RESULTS.md:143` records overall `N-direct / NoGo`,
-`skinny/RESULTS.md:144` names Track 1/Track 2, and `skinny/RESULTS.md:146`
-states that C++ sidecars are historical or absent and never strict anchors in
-W0. REDRESS 102 makes parse-only movement proof-only and non-behavioral
-(`skinny/REDRESS.md:3040`).
+Strict direct/typed comparison remains the unresolved product surface:
+`skinny/RESULTS.md:143` records `N-direct / NoGo`, `skinny/RESULTS.md:144`
+names Track 1/Track 2, `skinny/RESULTS.md:146` says C++ sidecars are historical
+or absent and never strict W0 anchors, and REDRESS 102 makes parse-only movement
+proof-only and non-behavioral (`skinny/REDRESS.md:3040`).
 
-| Comparator | Structural classification | String and number fast paths | Output plane | Strict comparator discipline | What it does that bbnf does not |
-|---|---|---|---|---|---|
-| asmjson | Classifies up to 64 bytes with AVX-512BW assembly or SWAR masks and uses those masks to skip whitespace/string bodies [A1][A6]. Portable Rust path has `ByteState { whitespace, quotes, backslashes, delimiters }` and a chunk FSM [A6]. | Strings are found by quote/backslash masks and backslash parity in the FSM [A2]. Numbers are stored as raw atom slices after JSON-number validation, including a C-callable validator for the assembly path [A3]. | SAX sink (`parse_with`) and flat DOM tape (`parse_to_dom`); the AVX-512 DOM entry writes `DomEntry` records directly into a preallocated array [A4][A5]. | Not a strict anchor for S-P2 gates: its README says bytes below `0x20` are whitespace and string contents are not scanned for unescaped controls [A7]. It is a flaw/probe source for architecture ideas only. | Direct-threaded x86 assembly, direct tape writes from assembly, and sink dispatch from assembly. bbnf has a generated scalar byte-dispatch parser (`skinny/crates/runtime/src/grammars/json/generated.rs:47`), an offset tape builder (`skinny/crates/runtime/src/tape/assembler.rs:42`), and sink-only direct parsing (`skinny/crates/runtime/src/grammars/json/generated.rs:409`), but no hand-written assembly producer and no direct assembly tape/SAX plane. |
-| sonic-rs | Does not use simdjson-style two-stage parsing; it applies SIMD to long strings, number fractions, field/element lookup, and whitespace [S1]. It has 64-byte quote/backslash/in-string masks for skipping containers [S2]. | Uses zero-copy string visits when possible, a 24-byte scalar key fast path that rejects escapes/control bytes, raw-number visiting when configured, and AArch64 digit packing for 1-16 digits [S3][S5]. | Primary SOTA plane is direct Serde/typed product: README says it parses directly into Rust structs without a temporary tape [S1]. It also has `LazyValue`, `Number`, and `RawNumber` surfaces [S1][S4]. | `from_slice` validates UTF-8 and trailing content; `from_slice_unchecked` is unsafe and requires caller-guaranteed UTF-8, while `utf8_lossy` is an explicit permissive mode [S6]. S-P2 should compare against strict `from_slice` or direct strict rows only. | Direct object/array loops use `u16` pair probes for comma/value, colon/value, and `,"` separators [S3]. bbnf has admitted array next-byte carry in retained parsing (`skinny/crates/runtime/src/grammars/json/generated.rs:348`) but direct object/array product loops still re-enter byte dispatch (`skinny/crates/runtime/src/grammars/json/generated.rs:468`, `:508`) and do not have sonic's short-key Serde visitor path. |
-| simdjson | Stage 1 scans 64/128-byte blocks into `structural_indexes` [J1]. Its scanner computes string masks, structural/operator masks, scalar starts, whitespace masks, escape parity, UTF-8 checks, and unescaped-control detection [J3][J4][J5]. AArch64 classification uses TBL/TBX-style tables and movemask packing [J6]. | Strings expose raw JSON strings and low-level unescape into caller buffers, while On Demand parses numbers from scalar spans at access time [J7][J8]. | DOM tape is an array of 64-bit words; strings live on a separate string tape, and array/object open entries point to matching close entries for skips [J2]. On Demand walks the structural index without materializing a DOM value tree [J7][J8]. | Strict DOM/On Demand is a valid JSON comparator, but C++ sidecars are not direct-product anchors in W0 (`skinny/RESULTS.md:146`). On Demand raw-key lookup intentionally matches raw keys without unescaping [J8], so direct typed-field comparators must align lookup semantics. | A retained structural-index producer plus On Demand cursor is the main delta. bbnf tried full class-column and streaming cursor shapes and rejected them (`skinny/REDRESS.md:2795`, `:2850`, `:2910`). Any simdjson lesson must be a transient producer consumed as the single tape/direct substrate under Lock 1 (`restart/locks/LOCKS.md:52`), not a sidecar. |
-| yyjson | Portable ANSI C, no explicit SIMD, strict RFC 8259 default, and performance built around inlined FSM/goto parsing plus branch-predictable unrolled loops [Y1][Y4]. | Strings use an unrolled 16-byte ASCII skip/copy loop, validate UTF-8 unless invalid-unicode is explicitly allowed, and decode `\uXXXX` plus surrogate pairs in the string reader [Y5]. Numbers use unrolled integral/fraction digit loops and strict leading-zero/fraction/exponent checks, with optional raw-number/bignum flags [Y6]. | Immutable DOM arena: `yyjson_val` is 16 bytes (`tag` + payload union), arrays/objects store lengths and relative offsets, and `yyjson_read_max_memory_usage` documents the 16-byte-per-value sizing [Y3][Y7]. | Use default flags (`0`) only. `yyjson_read` accepts flags where `0` means no options, and permissive JSON5/invalid-unicode/extended-number/extended-whitespace flags are explicitly non-standard [Y2][Y3]. | yyjson's comparator lesson is i-cache and value-pool discipline, not a second bbnf DOM. bbnf's retained plane is an offset tape with source, offsets, sparse flags, and payload arena (`skinny/crates/runtime/src/tape/mod.rs:94`), and direct-only `SinkOnly` retains no queryable document identity per Lock 1. Replacing it with yyjson's DOM arena would violate the current substrate contract. |
-
-Strict-vs-strict takeaway: sonic-rs strict direct/typed rows are the direct gate;
-yyjson default and simdjson strict DOM are useful architecture comparators but not
-direct-product anchors in the current W0 table; asmjson is a non-strict
-architecture probe. The target surface remains `direct_to_struct` digest and
-`real_typed_struct`, because S-P1/P1-F classify parse-only as diagnostic and W0
-direct rows as the unresolved product surface
-(`restart/skinny/tranches/sk-v11/research/p1/p1e-hot-leaf-attribution.md:123`,
-`skinny/RESULTS.md:95`).
+| Comparator-derived idea | V2 class | Why it carries or does not carry |
+|---|---|---|
+| asmjson 64-byte `ByteState` masks and SWAR/AVX-512 classification [A1][A6] | Support-only | Useful mask vocabulary for `byte_class_mask64_transient`, but asmjson is not a strict comparator because its README allows bytes below `0x20` as whitespace and does not scan string contents for unescaped controls [A7]. x86 assembly is pressure only. |
+| asmjson direct DOM/SAX writes from assembly [A4][A5] | Comparator pressure | It proves direct output planes can be produced without a separate DOM walk, but bbnf cannot import an assembly producer or a second retained substrate under Lock 1. |
+| sonic-rs strict direct Serde/typed parse with no temporary tape [S1] | Comparator pressure | Strict `from_slice` is the closest SOTA direct-product comparator; lossy/unchecked modes are excluded [S6]. |
+| sonic-rs key fast path, separator pair reads, raw-number visitor, AArch64 digit pack [S3][S7] | Candidate | These map to retained local pair-probe and digit-accumulation candidates only when the bbnf consumer is same-wave generated direct/typed output. Raw-key semantics must not change decoded-key equality. |
+| sonic/simdjson string masks and quote/escape state [S2][S5][J4][J5] | Support-only | Quote-state math can validate transient masks. It is not a retained cursor, class lane, or independent row mover. PMULL quote-state stays pre-blocked as a default hot body. |
+| simdjson stage1 structural index, DOM tape, string tape, and On Demand cursor [J1][J2][J7][J8] | Comparator pressure | Retained structural indexes, class columns, structural-position vectors, and streaming cursors are non-candidates. A transient mask may feed only the existing `TapeBuilder` or direct/typed sink in the same loop, and retained parse evidence remains diagnostic. |
+| simdjson AArch64 byte classification tables and movemask packing [J6] | Support-only | Useful for a scalar-first byte-set classifier and checkasm parity. It does not admit an Arm body without the same-wave consumer proof. |
+| yyjson portable parser shape: FSM/goto parser, whitespace helpers, unrolled ASCII string and number loops [Y1][Y4][Y5][Y6] | Support-only | V2 makes only the narrower sourced claim: the reviewed yyjson paths are portable C/FSM/unrolled-loop comparators. It makes no broader architecture claim. |
+| yyjson 16-byte DOM values and arena layout [Y3][Y7] | Comparator pressure | Useful i-cache/value-pool pressure, but replacing bbnf's offset tape or direct `SinkOnly` plane would violate Lock 1. |
 
 ## §2 — Candidate primitives (each: shape + scalar-ref status + arch + P1 antecedent)
 
-1. `byte_class_mask64`
-   - Shape: `fn(&[u8; 64], ByteClassSpec) -> ClassMasks64`, where the spec is
-     grammar metadata for whitespace, quote, escape, structural/operator, and
-     scalar-start classes. It returns transient bitmasks only; no retained
-     index, class column, or sidecar.
-   - Scalar-ref status: required first; scalar loop/SWAR reference must be the
-     oracle. SIMD checkasm parity required for any AArch64 body.
-   - Arch: scalar/SWAR, then AArch64 NEON TBL/TBX plus movemask. x86 AVX-512 is
-     comparator evidence only.
-   - P1 antecedent: `ascii_whitespace_skip`, `bounded_plain_string_scan`,
-     `container_dispatch`, `simd_movemask`.
-   - Comparator antecedent: asmjson `ByteState`, sonic-rs string/nonspace masks,
-     simdjson `json_character_block::classify` [A6][S2][S5][J6].
+Each parser packet below is S-P3-admissible only with the stated same-wave
+proof. If the proof cannot be named in the implementation packet, the row
+demotes to support-only or comparator pressure. C8 is carried as an output-plane
+oracle/sink surface, not as parser vocabulary.
 
-2. `string_special_block16_or64`
-   - Shape: `fn(ptr, terminator, escape, control_limit) -> { terminator_mask,
-     escape_mask, control_mask }`, with a first-special-byte helper and no UTF-8
-     policy beyond caller-selected mode.
-   - Scalar-ref status: existing scalar and 16-byte AArch64 shape exist in bbnf
-     (`skinny/crates/parse-that-regex/src/lib.rs:547`,
-     `skinny/crates/bbnf-simd/src/aarch64/movemask.rs:4`); any widening needs a
-     scalar executable mirror and same-caller proof.
-   - Arch: scalar/SWAR, AArch64 NEON. 64-byte widening is research-only until it
-     clears the REDRESS 61/62 failure class.
-   - P1 antecedent: `bounded_plain_string_scan`, `string_escape_decode`,
-     `simd_movemask`.
-   - Comparator antecedent: sonic-rs long-string SIMD, simdjson string scanner,
-     yyjson unrolled ASCII skip [S1][S2][J4][Y5].
+### C1 `byte_class_mask64_transient`
 
-3. `prefix_xor_quote_state64`
-   - Shape: `fn(quote_mask, escape_mask, prev_in_string, prev_escaped) ->
-     { in_string_mask, real_quote_mask, next_in_string, next_escaped }`.
-   - Scalar-ref status: required; reference must use scalar/SWAR prefix xor and
-     the exact JSON escape-parity law.
-   - Arch: scalar/SWAR production body first; AArch64 NEON bit operations only
-     behind row gates. PMULL is pre-blocked as the default hot body.
-   - P1 antecedent: `bounded_plain_string_scan`, `container_dispatch`,
-     `simd_movemask`.
-   - Comparator antecedent: sonic-rs `get_string_bits` and simdjson
-     `json_string_scanner`/`json_escape_scanner` [S2][S5][J4][J5].
+- **Class:** candidate.
+- **P1 antecedents:** `ascii_whitespace_skip`, `bounded_plain_string_scan`,
+  `container_dispatch`, `simd_movemask`.
+- **Shape:** `fn(block, ByteClassSpec) -> ClassMasks64`, returning transient
+  whitespace, quote, escape, structural/operator, and scalar-start masks. The
+  result is consumed immediately; no retained class column, structural-position
+  vector, or sidecar is allowed.
+- **Scalar-reference sketch:** scalar loop over bytes `i = 0..n`; set bit `i`
+  when `block[i]` belongs to the grammar-provided byte set. Quote/escape state
+  is checked against the support-only scalar quote-parity oracle before any
+  structural/scalar-start mask is trusted outside strings.
+- **Same-wave consumer/proof:** same patch must wire the masks into a generated
+  direct `SinkOnly` or generated typed product loop on an S-P1 residual row.
+  Proof compares generated Track 1 output to independent Track 2 or an output
+  oracle on identical strict inputs; SIMD bodies also require strict checkasm
+  parity against the scalar loop. Existing retained `TapeBuilder` use may be a
+  guard or micro-proof only, not an admission surface.
+- **Output plane:** direct/typed product plane. Retained parse is diagnostic.
+- **Feature/fallback:** scalar/SWAR is the default. AArch64 NEON TBL/TBX plus
+  movemask may be gated only after scalar and checkasm pass. x86 AVX-512 remains
+  comparator pressure.
+- **Reject boundary:** reject on any retained class lane, structural-position
+  buffer, streaming cursor, parser-owned projection, hidden sidecar, parse-only
+  win, strict-parity failure, or missing direct/typed row movement.
 
-4. `whitespace_run_skip64`
-   - Shape: `fn(bytes, offset, WhitespaceSet) -> offset`, with a block classifier
-     that skips only the grammar-declared whitespace set.
-   - Scalar-ref status: bbnf has scalar/SWAR reference for JSON whitespace
-     (`skinny/crates/parse-that-regex/src/lib.rs:113`); generic form needs
-     metadata-driven table tests.
-   - Arch: scalar/SWAR, AArch64 NEON byte-class mask.
-   - P1 antecedent: `ascii_whitespace_skip`, `container_dispatch`.
-   - Comparator antecedent: sonic-rs `get_nonspace_bits`, simdjson whitespace
-     classification, yyjson `char_is_space`/`skip_trivia` split [S5][J6][Y4].
+### C2 `bounded_plain_string_end`
 
-5. `separator_pair_probe16`
-   - Shape: `fn(ptr, SeparatorSpec) -> PairAction`, where the action carries
-     `Next(byte)`, `Done`, or `SlowPath`. It covers comma+next, colon+value, and
-     comma+quote probes in direct/typed loops only.
-   - Scalar-ref status: trivial scalar `u16` reference required with endian tests.
-   - Arch: scalar unaligned 16-bit load; no SIMD required.
-   - P1 antecedent: `container_dispatch`, `ascii_whitespace_skip`.
-   - Comparator antecedent: sonic-rs object/array pair reads [S3].
-   - Discipline: do not reopen retained object next-key carry; REDRESS 65
-     rejected that shape (`skinny/REDRESS.md:1637`). This candidate is only for
-     direct/typed product loops with measured same-wave consumer rows.
+- **Class:** candidate.
+- **P1 antecedents:** `bounded_plain_string_scan`, `string_escape_decode`,
+  `simd_movemask`.
+- **Shape:** `fn(bytes, start, limit, StringScanSpec) -> StringScanStop`,
+  returning the first terminator, escape, control byte, or limit stop. UTF-8 and
+  escape semantics remain caller policy; the primitive only finds the next byte
+  that requires caller action.
+- **Scalar-reference sketch:** byte-by-byte loop from `start` to `limit`;
+  terminate on grammar-provided quote/terminator, escape byte, or control byte
+  below the caller's control limit. The reference records the exact stop offset
+  and stop kind.
+- **Same-wave consumer/proof:** same patch must replace a generated direct or
+  generated typed string/key scan in the hot string residual rows. Proof covers
+  plain, escaped, control-byte, boundary, and UTF-8-valid/invalid strict cases
+  and compares generated Track 1 product output against independent Track 2 or
+  output oracle. A SIMD body requires strict checkasm for aligned, unaligned,
+  short, boundary, and random cases.
+- **Output plane:** direct/typed string product and digest sinks. Retained parse
+  callers may run as guards only.
+- **Feature/fallback:** scalar first; 16-byte SIMD may be proposed only with the
+  caller proof. A 64-byte scan is research-only until it is materially different
+  from the REDRESS 61/62/83/106 family.
+- **Reject boundary:** reject 64-byte retained trusted scans, delayed-wide
+  retained scans, generated-retained `StringBlock16` wrappers, NEON tiny-parser
+  wiring, primitive-only microbench wins, or any claim that primitive parity
+  implies production movement.
 
-6. `digit_block_accumulate_16`
-   - Shape: `fn(bytes, max_digits) -> { value_u64, digits_consumed, non_digit }`
-     plus a caller-owned JSON-number grammar validator. It accelerates digit
-     accumulation, not number policy.
-   - Scalar-ref status: current bbnf has 8/4/2-digit scalar/SWAR span parsing
-     (`skinny/crates/parse-that-regex/src/number/mod.rs:106`); 16-digit body
-     needs scalar mirror, overflow fixtures, and direct-row consumer.
-   - Arch: scalar/SWAR, AArch64 NEON unzip/multiply-add or UDOT-shaped variant
-     if P2-C admits the instruction route.
-   - P1 antecedent: `number_digit_span`.
-   - Comparator antecedent: sonic-number AArch64 digit pack/accumulate and yyjson
-     unrolled 19-digit loops [S7][Y6].
-   - Discipline: no mantissa/table-only route; REDRESS 80 found zero canada
-     fallback pool (`skinny/REDRESS.md:2215`).
+### C3 `whitespace_run_skip64`
 
-7. `hex_escape_quad_decode`
-   - Shape: `fn(&[u8; 4]) -> Result<u16, HexError>` and optional
-     `fn(&[u8; 16]) -> QuadHexResult` for four contiguous `uXXXX` units, with
-     surrogate policy outside the raw hex primitive.
-   - Scalar-ref status: current scalar hex unit exists through
-     `read_hex_unit_scalar`/`hex_nibble` per S-P1
-     (`restart/skinny/tranches/sk-v11/research/p1/p1e-hot-leaf-attribution.md:108`);
-     SIMD needs scalar oracle and caller-level direct row gate.
-   - Arch: scalar, AArch64 TBL/TBX nibble lookup; existing four-unit proof is
-     proof-only until a real production delta appears.
-   - P1 antecedent: `unicode_escape_hex_decode`, `string_escape_decode`.
-   - Comparator antecedent: yyjson `read_uni_esc` and simdjson unescape buffer API
-     [Y5][J7].
+- **Class:** candidate.
+- **P1 antecedents:** `ascii_whitespace_skip`, `container_dispatch`.
+- **Shape:** `fn(bytes, offset, WhitespaceSet) -> offset`, skipping only bytes
+  in the grammar-declared whitespace set.
+- **Scalar-reference sketch:** loop while `offset < len` and
+  `WhitespaceSet::contains(bytes[offset])`; return the first non-whitespace
+  offset. For JSON the set is the four RFC whitespace bytes; comment-aware CSS
+  trivia is caller policy, not this primitive.
+- **Same-wave consumer/proof:** same patch must wire the skip into generated
+  direct or generated typed value/separator entry points. Proof compares Track 1
+  generated output to an independent Track 2 or oracle and includes strict
+  whitespace, no-whitespace, long-run, short-run, and terminator cases. SIMD
+  variants require strict checkasm parity.
+- **Output plane:** direct/typed product plane. Retained parse rows can only
+  diagnose parity and regressions.
+- **Feature/fallback:** scalar/SWAR default; AArch64 byte-class mask optional
+  behind feature detection and scalar fallback.
+- **Reject boundary:** reject comment-aware layout in the generic primitive,
+  hidden JSON policy in generic crates, parse-only movement, or no product-row
+  improvement on the declared same-wave consumer.
 
-8. `live_mask_to_tape_or_sink`
-   - Shape: consume a live structural/string/scalar mask in the same loop that
-     writes `TapeBuilder` offsets or direct sink events; no `Vec<Structural>`,
-     no retained class column unless it is the tape projection itself.
-   - Scalar-ref status: current scalar reference is the generated parser plus
-     `TapeBuilder::push_plain_offset` (`skinny/crates/runtime/src/grammars/json/generated.rs:292`,
-     `skinny/crates/runtime/src/tape/assembler.rs:71`).
-   - Arch: scalar first, AArch64 NEON mask producer only with same-loop consumer.
-   - P1 antecedent: `container_dispatch`, `simd_movemask`,
-     `ascii_whitespace_skip`.
-   - Comparator antecedent: simdjson stage1-to-stage2 structural index and
-     asmjson direct DOM writes [J1][J2][A4].
-   - Discipline: this is a substrate candidate, not a sidecar candidate. It must
-     satisfy Lock 1 and not revive REDRESS 96/97/98.
+### C4 `separator_pair_probe16_direct`
 
-9. `output_digest_hash_block`
-   - Shape: `fn(hash_state, bytes_or_decoded_segment) -> hash_state`, with
-     product-plane hooks for borrowed raw string bytes and decoded escape segments.
-   - Scalar-ref status: scalar hash reference must be bit-exact with current
-     digest. No semantic string fact side tables.
-   - Arch: portable hash first; AArch64 AES/PMULL-adjacent hash body only if
-     P2-C and REDRESS constraints allow it.
-   - P1 antecedent: `output_digest_hash`, `string_escape_decode`.
-   - Comparator antecedent: sonic-rs direct Serde visitor and asmjson SAX sink
-     show output can be produced without DOM allocation [S1][A5].
-   - Discipline: REDRESS 54/55/66-69 rejected exact decoded stats, fused
-     materializer, source-hook field-layout, and semantic fact hashing routes;
-     any new digest primitive must have a different measured consumer and cross
-     direct floors, not just remove allocation.
+- **Class:** candidate.
+- **P1 antecedent:** `container_dispatch`.
+- **Shape:** `fn(ptr, SeparatorSpec) -> PairAction`, using only the current
+  pointer to classify local comma/value, colon/value, or comma/quote pairs in
+  generated direct/typed loops.
+- **Scalar-reference sketch:** endian-independent scalar read of at most two
+  bytes, compare against generated per-grammar pair table, and return
+  `Next(byte)`, `Done`, or `SlowPath`. The probe owns no persistent parser
+  state.
+- **Same-wave consumer/proof:** same patch must wire a local direct/typed
+  object or array separator site and compare Track 1 generated output to
+  independent Track 2 or oracle. The proof must include whitespace-present
+  slow paths, EOF/boundary cases, object member separators, array separators,
+  and decoded-key equality.
+- **Output plane:** direct/typed product plane only.
+- **Feature/fallback:** scalar unaligned 16-bit load or byte pair compare;
+  no SIMD requirement.
+- **Reject boundary:** reject object next-key carry, value-byte compaction,
+  retained next-byte state beyond the local probe, JSON pair policy in generic
+  crates, parse-only evidence, or any reopening of REDRESS 63/65/84 object
+  carry variants.
 
-Non-candidates from comparator teardown: retained structural sidecars,
-parse-only stage1 wins, asmjson permissive whitespace/control behavior, yyjson
-DOM replacement, and x86-only AVX-512 assembly kernels. They are useful
-architectural pressure, but they do not satisfy Lock 1, Lock 14, or the
-strict direct-product comparator contract.
+### C5 `digit_block_accumulate_16`
+
+- **Class:** candidate.
+- **P1 antecedent:** `number_digit_span`.
+- **Shape:** `fn(bytes, max_digits) -> DigitAccum { value_u64,
+  digits_consumed, first_non_digit }`. It accelerates decimal digit
+  accumulation only; JSON number grammar remains caller-owned.
+- **Scalar-reference sketch:** loop up to `min(max_digits, 16)` while
+  `b'0' <= byte <= b'9'`, updating `value = value * 10 + digit`; stop on first
+  non-digit. Caller validates leading zero, fraction, exponent, sign, range,
+  and conversion policy.
+- **Same-wave consumer/proof:** same patch must wire a generated direct or typed
+  numeric consumer on the `canada`/`mesh`-style number rows and compare final
+  product output against independent Track 2 or oracle. Proof includes
+  0/1/15/16/17+ digit spans, overflow boundaries, fraction/exponent handoff,
+  and strict invalid-number cases. AArch64 bodies require strict checkasm
+  parity against the scalar accumulator.
+- **Output plane:** direct/typed numeric product. Retained parse is diagnostic.
+- **Feature/fallback:** scalar/SWAR default; AArch64 NEON unzip/multiply-add or
+  UDOT-shaped body only behind feature detection and scalar fallback.
+- **Reject boundary:** reject mantissa/table-only routes, f64 fallback rewrites,
+  primitive-owned JSON policy, row movement limited to parse-only, or any
+  repeat of the REDRESS 80 zero-fallback-pool failure.
+
+### C8 `output_digest_hash_oracle`
+
+- **Class:** non-parser output-plane surface.
+- **P1 antecedent:** `output_digest_hash`.
+- **Shape:** `fn(hash_state, bytes_or_decoded_segment) -> hash_state`, folding
+  raw borrowed string bytes and decoded escape segments into the existing public
+  digest semantics.
+- **Scalar-reference sketch:** bit-exact mirror of the current scalar
+  `fold_string_scalar`, `hash_bytes`, and `mix` behavior
+  (`skinny/crates/bbnf-bench/src/direct_struct.rs:123`,
+  `skinny/crates/bbnf-bench/src/direct_struct.rs:717`,
+  `skinny/crates/bbnf-bench/src/direct_struct.rs:737`). Tests compare hash
+  state after every raw and decoded segment boundary.
+- **Same-wave consumer/proof:** same patch must wire a generated direct/typed
+  product output sink that already computes the digest. Proof compares generated
+  Track 1 product output to independent Track 2 or an output oracle that
+  recomputes digest from decoded values without calling Track 1 or reading a
+  hidden sidecar.
+- **Output plane:** benchmark/product output sink only. This is not parser
+  substrate, not generic parser semantics, and not a retained fact table.
+- **Feature/fallback:** portable scalar default. AArch64 hash acceleration is
+  eligible only if profiling shows digest work is the limiting direct/typed hot
+  leaf and strict parity passes.
+- **Reject boundary:** reject if profiling does not isolate digest as limiting,
+  if no direct/typed product row moves, if cache hints/prefetch alone are the
+  change, if semantic string facts are retained for hashing, or if digest logic
+  enters generic parser crates.
+
+### §2.1 — Support-only primitives and proof surfaces
+
+Support-only items can be used to prove candidate packets, but they do not move
+to S-P3 as standalone candidates without a same-wave product consumer.
+
+| Support item | Allowed use | Boundary |
+|---|---|---|
+| `quote_escape_state64` | Scalar prefix/parity oracle for C1/C2 masks using JSON escape-parity law or a generated per-grammar quote-state policy. | No retained in-string vector, no streaming cursor, no PMULL default hot body, no standalone row claim. |
+| `hex_escape_quad_decode` | Single-quartet scalar oracle and optional x4 proof/checkasm surface for fixed-width hex nibble decode. | `uXXXX` production remains blocked. Reusing the already-consuming `unescape_string` caller is REDRESS 107/108 paper-close unless a new escaped-segment source delta and direct/typed consumer are named. |
+| `movemask_pack64` | Bit-pack oracle for C1/C2/C3 SIMD bodies. | No standalone candidate and no class-column storage. |
+| `live_mask_same_loop_consume` | Accounting rule for consuming transient masks into generated direct/typed output or the existing `TapeBuilder` in the same loop. | Not a substrate candidate. No retained structural index, structural-position vector, parser-owned projection, sidecar, or parse-only admission. |
 
 ## §3 — Grammar-neutrality (each candidate: JSON-only or CSS/Sheets/BBNF-self generalisable)
 
-| Candidate | Grammar-neutral verdict |
-|---|---|
-| `byte_class_mask64` | Generalisable. Byte sets come from grammar metadata: JSON structurals, CSS delimiter/comment/string sets, Sheets separators, and BBNF-self token delimiters can all compile to class tables under Lock 14. |
-| `string_special_block16_or64` | Generalisable as a quoted-token scanner with grammar-provided terminator, escape byte, and control policy. CSS strings and identifiers differ in policy, but the primitive is byte-set based. |
-| `prefix_xor_quote_state64` | Generalisable only for grammars with quote/escape parity regions. For CSS comments or BBNF block strings, the same API can carry a different region-state policy; JSON must not be baked into the generic crate. |
-| `whitespace_run_skip64` | Generalisable. Whitespace set is metadata; JSON has four bytes, CSS may include comments via caller policy, and Sheets/BBNF can provide their own skip sets. |
-| `separator_pair_probe16` | Generalisable as a grammar-template optimization over delimiter+next-byte pairs. It is not a generic JSON function; codegen emits it from first/follow metadata for direct/typed loops. |
-| `digit_block_accumulate_16` | Generalisable to decimal digit spans. JSON number grammar, CSS numeric tokens, Sheets numbers, and BBNF integer literals can share digit accumulation while callers own grammar policy. |
-| `hex_escape_quad_decode` | Generalisable as a fixed-width hex decoder. JSON `uXXXX`, CSS hex escapes, Sheets escapes, and BBNF unicode literals differ in terminators and surrogate policy, so only raw nibble decode belongs in a generic primitive. |
-| `live_mask_to_tape_or_sink` | Generalisable if the mask producer consumes grammar-declared structural alphabets and the output is the existing tape/sink substrate. JSON-only class enums in generic crates would violate Lock 14. |
-| `output_digest_hash_block` | Generalisable as an output-plane hash fold over bytes/segments. The sink contract and checksum semantics are per benchmark/product, but the primitive must not know JSON fields or corpora. |
+| Candidate | Generic API must remain | Generated per grammar | Forbidden coupling |
+|---|---|---|---|
+| C1 `byte_class_mask64_transient` | Byte-set mask API over caller-provided sets. | Whitespace, quote, escape, structural/operator, and scalar-start sets. | JSON-named classes in generic crates, retained class columns, or generated sidecars. |
+| C2 `bounded_plain_string_end` | Stop-byte scan over terminator/escape/control metadata. | String delimiters, escape policy, control limit, UTF-8 mode, and decode caller. | JSON string semantics in `bbnf-simd` or `parse-that-regex`; retained wide string facts. |
+| C3 `whitespace_run_skip64` | Byte-set skip only. | Per-grammar whitespace bytes and caller-level trivia policy. | CSS comments or JSON whitespace policy baked into the primitive. |
+| C4 `separator_pair_probe16_direct` | Local pair compare over generated pair table. | FIRST/follow pair tables at direct/typed separator sites. | Persistent next-byte carry, object/key/value-byte compaction, or JSON pair constants in generic code. |
+| C5 `digit_block_accumulate_16` | Decimal digit accumulation only. | Number grammar, range policy, fraction/exponent/sign policy, and final conversion. | Primitive-owned JSON number validation or f64 fallback policy. |
+| C8 `output_digest_hash_oracle` | Host/output sink fold over bytes or decoded segments. | Benchmark/product digest semantics and output proof. | Parser substrate semantics, generic parser hash facts, or hidden side tables. |
 
 ## §4 — Risks (REDRESS entries any candidate must NOT re-open)
 
-- Lock 1 forbids parallel substrates: a SIMD mask stream may be transient, and
-  retained structural offsets must be the tape projection itself
-  (`restart/locks/LOCKS.md:52`). Lock 14 forbids grammar-specific code in
-  generic crates (`restart/locks/LOCKS.md:78`).
-- Parse-only is diagnostic. REDRESS 102 admits the parse firewall and reports
-  17 parse rows with no parse row outside `S / NO-GO`
-  (`skinny/REDRESS.md:3040`). S-P2-A candidates must target direct/typed
-  product planes.
-- Retained side-table/cursor routes are blocked. REDRESS 50 rejects parse-time
-  aux side tables (`skinny/REDRESS.md:715`); REDRESS 51 rejects byte-class
-  whitespace cursors and precomputed `StructuralIndex`/`Vec<JsonEvent>` routes
-  (`skinny/REDRESS.md:742`); REDRESS 53 rejects parser-local structural cursors
-  as second scanners (`skinny/REDRESS.md:784`).
-- Full union/class-column structural substrate routes are retired for SK-V9:
-  REDRESS 96, 97, and 98 rejected full class-column, streaming cursor, and the
-  union-substrate thesis (`skinny/REDRESS.md:2795`, `:2850`, `:2910`).
-- String widening is pre-blocked unless the candidate is materially different.
-  REDRESS 61 and 62 rejected always-wide and delayed-wide 64-byte trusted string
-  scanners (`skinny/REDRESS.md:1380`, `:1439`), and REDRESS 106 rejected the full
-  string primitive micro-proof (`skinny/REDRESS.md:3150`).
-- Unicode escape batching is not enough by itself. REDRESS 64 rejected the
-  retained four-unit validator in production (`skinny/REDRESS.md:1582`);
-  REDRESS 107 accepted a hex escape proof only, and REDRESS 108 rejected
-  production movement because no real source delta crossed direct floors
-  (`skinny/REDRESS.md:3172`, `:3198`).
-- Direct string/digest rewrites are fragile. REDRESS 54/55 rejected exact
-  decoded stats and fused quote-source materialization
-  (`skinny/REDRESS.md:815`, `:846`); REDRESS 66-69 remain the string allocation,
-  receiver, byte-writing, and semantic-fact hashing pre-block family.
-- Numeric fallback widening is blocked. REDRESS 80 found zero canada f64
-  fallback pool and requires any next numeric route to name a fresh numeric
-  scan/dispatch hot leaf (`skinny/REDRESS.md:2215`).
-- PMULL/CTZ bit tricks are not automatically admissible. REDRESS 88 rejected
-  PMULL prefix-XOR as the default hot body, and REDRESS 89 rejected the CTZ bulk
-  consumer after JSON row regressions (`skinny/REDRESS.md:2508`,
-  `skinny/REDRESS.md:2542`).
+- **Parse-only remains diagnostic.** Candidate admission must be direct/typed
+  product-plane evidence or a non-JSON generated direct/typed parser
+  intervention. Retained parse may only prove correctness or guard regressions.
+- **W3 remains blocked.** No retained class column, structural-position vector,
+  streaming cursor, parser-owned projection, structural sidecar, or retained
+  structural index is allowed, even if described as a tape projection. The only
+  retained projection is the existing offset tape itself under Lock 1.
+- **String widening is pre-blocked.** REDRESS 61/62/83/106 reject retained
+  wide-string scans, delayed-wide trusted scans, generated-retained
+  `StringBlock16`, and primitive-parity-only production claims.
+- **x4 Unicode escape production is blocked.** Hex decode can be proof/support
+  only until a new source delta and same-wave direct/typed consumer escape
+  REDRESS 107/108.
+- **Container carry is narrow.** Local scalar pair probes are allowed only at
+  direct/typed current-pointer sites. Object next-key carry, value-byte
+  compaction, and retained carry state are rejected.
+- **Numeric fallback stays closed.** Digit accumulation cannot become a
+  mantissa-table, f64 fallback, or parser-policy rewrite.
+- **Digest/hash stays output-plane only.** It is a benchmark/product sink
+  candidate only if the scalar digest source and direct/typed consumer are both
+  named; cache placement or prefetch inventory does not admit it.
 
 ## §5 — Sources (every external citation — comparator source, ISA manual, prior tranche)
 
@@ -336,6 +360,10 @@ Local sources and prior tranche anchors:
   `skinny/crates/parse-that-regex/src/number/mod.rs:38`,
   `skinny/crates/parse-that-regex/src/number/mod.rs:106`, and
   `skinny/crates/bbnf-simd/src/aarch64/movemask.rs:4`.
+- bbnf scalar digest sources:
+  `skinny/crates/bbnf-bench/src/direct_struct.rs:123`,
+  `skinny/crates/bbnf-bench/src/direct_struct.rs:717`, and
+  `skinny/crates/bbnf-bench/src/direct_struct.rs:737`.
 - REDRESS pre-block surface:
   `skinny/REDRESS.md:715`, `skinny/REDRESS.md:742`,
   `skinny/REDRESS.md:784`, `skinny/REDRESS.md:815`,

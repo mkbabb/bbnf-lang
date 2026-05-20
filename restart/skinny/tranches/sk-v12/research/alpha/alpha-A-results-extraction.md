@@ -1,169 +1,239 @@
-# SK-V12 Alpha-A Results Extraction
+# SK-V12 Alpha-A Results Extraction - Pin-Aware Re-Bracket
 
 Date: 2026-05-20.
 
-Pass: Alpha SK-V11 -> SK-V12, alpha-A.
+Pass: Alpha SK-V11 -> SK-V12 re-bracket, lane Alpha-A.
 
-Sources read:
+Scope: extract the carried SK-V11 close results under the 2026-05-20 USER PIN
+and identify the opening measurement surface for SK-V12. This lane is
+read-only synthesis: no source, gate, or benchmark semantics are changed here.
 
-- `restart/prompts/pass-contracts/PASS-ALPHA.md`
-- `restart/skinny/tranches/sk-v11/research/close/close-redress.md`
-- `restart/skinny/tranches/sk-v11/HANDOFF.md`
-- `skinny/RESULTS.md`
-- `skinny/REDRESS.md` through REDRESS 120
+## Sources Read
 
-## Close Surface
+- `restart/prompts/pass-contracts/PASS-ALPHA.md`.
+- `restart/skinny/tranches/sk-v12/USER-PIN-W1-CSS-L4-SOTA.md`.
+- `restart/skinny/tranches/sk-v12/HANDOFF.md`.
+- `restart/skinny/tranches/sk-v12/SPEC.md` Section 0.5, for guard floors.
+- `restart/skinny/tranches/sk-v12/SYNTHESIS.md`.
+- `skinny/RESULTS.md`.
+- `skinny/REDRESS.md` through REDRESS 120.
+- `restart/skinny/tranches/sk-v12/research/skv12-W1-A7-sheets-execution-scout.md`.
+- `restart/skinny/tranches/sk-v12/research/skv12-aarch64-simd-coverage-audit.md`.
+- `restart/skinny/tranches/sk-v12/research/skv12-profile-truth-audit.md`.
+- `restart/skinny/tranches/sk-v12/research/skv12-value-api-audit.md`.
+- `restart/skinny/tranches/sk-v12/research/skv12-decision-engine-audit.md`.
+- `restart/skinny/tranches/sk-v12/research/skv12-totality-fold-scout.md`.
 
-SK-V11 closes as a measured fixpoint only. REDRESS 120 states that W9 made no
-behavior source, generated runtime, benchmark body, gate semantic, or
-`skinny/RESULTS.md` change. The final measured surface is therefore the
-unchanged SK-V11-open result surface:
+## Pin Delta
 
-Source anchors: `skinny/RESULTS.md:5-45` for the human table,
-`skinny/RESULTS.md:46-91` for the gate-consumed row metadata,
-`skinny/RESULTS.md:143-146` for the overall advisory notes, and
-`skinny/REDRESS.md:3497-3553` for REDRESS 119/120 fixpoint and close
-authority.
+The prior Alpha-A extraction was correct for the pre-pin SK-V12 packet, but it
+is no longer sufficient. USER PIN D1/D2 rebinds the first non-JSON target to
+CSS L4, not Sheets, and raises the close bar from
+`ceil(baseline_mbps * 1.01)` to `lightningcss_mbps + 1` on the same corpus,
+same output plane, with strict equality.
 
-| Workload family | Current surface | Close role |
+Load-bearing pin effects for this lane:
+
+- The W1 V2 Sheets plan at commit `e24a7e01` is **OBSOLETE**. Sheets is now a
+  fallback only after a CSS L4 redress attempt, not after preflight-only
+  scouting.
+- The SK-V11 W1a non-JSON report lane is still only a report/gate lane. It did
+  not create a generated CSS L4 runtime, update `skinny/RESULTS.md`, or admit a
+  non-JSON row.
+- REDRESS 112/113 are superseded as a category-level dispatch block because
+  CSS L4 is now the explicit mandate, but their factual measurements remain
+  true: generated CSS L4 Track 1 is absent today.
+- REDRESS 114-119 remain unchanged for JSON direct residuals. JSON direct rows
+  are guard/reopen ledger rows, not the W1 first target.
+- USER PIN D3/D4 unblocks union-substrate and ASM-gen categories for new,
+  materially different attempts. REDRESS 88/89/90 and 96/97/98 stay historical
+  implementation evidence that new plans must cite.
+
+## CSS L4 Target Absence
+
+There is no current generated CSS L4 row.
+
+Evidence:
+
+- `skinny/RESULTS.md` contains only `json/...` row identities; no
+  `css_l4/...` row exists.
+- The runtime grammar directory contains generated JSON and
+  `sheets_witness` only. There is no
+  `skinny/crates/runtime/src/grammars/css_l4/` or
+  `skinny/crates/runtime/src/grammars/css_l4_declaration_values/`.
+- REDRESS 112 records that W1b selected
+  `css_l4/declaration_values/direct/main` but admitted no baseline report
+  because skinny codegen still routed emission through the JSON-only provider.
+- REDRESS 113 records that W2 could not measure a CSS intervention because
+  `W1b_css_baseline_mbps` was undefined.
+
+Current CSS L4 admission floor: **unmeasured**. Under USER PIN D2 it becomes
+`lightningcss_mbps + 1` only after W1 measures the same corpus and output plane
+against lightningcss with strict equality and gate-consumed provenance.
+
+## Carried JSON Close Surface
+
+REDRESS 120 closed SK-V11 as a measured fixpoint, not as overall direct `GO`.
+W9 made no behavior source, generated runtime, benchmark body, gate semantic,
+or `skinny/RESULTS.md` change. The SK-V12 seed JSON state is therefore the
+unchanged SK-V11 close surface:
+
+| Family | Carried state | SK-V12 role |
 |---|---:|---|
-| `parse_only` | 16 `S / NO-GO`, 1 `L / NO-GO` | Diagnostic only; not SOTA admission |
-| `direct_to_struct` | 4 `A / GO`, 13 `N-direct / NO-GO` | Primary direct fixpoint surface |
-| `real_typed_struct` | 7 `A / GO` | Guarded product-plane wins |
-| Overall | `N-direct / NoGo` | Still not direct close |
+| `parse_only` | 16 `S / NO-GO`, 1 `L / NO-GO` | Diagnostic only; no SOTA admission |
+| `direct_to_struct` | 4 `A / GO`, 13 `N-direct / NO-GO` | Guard rows plus REDRESS 119 reopen ledger |
+| `real_typed_struct` | 7 `A / GO` | Product-plane guard rows |
+| generated non-JSON parser | none admitted | CSS L4 first target under USER PIN |
+| Overall | `N-direct / NoGo` | Seed outcome |
 
-No SK-V11 wave moved a `skinny/RESULTS.md` row. W1a admitted only the companion
-non-JSON gate/report lane, W1b and W2 blocked the generated non-JSON baseline
-path, W3-W7 rejected or blocked direct residual routes, W8 recorded the direct
-fixpoint, and W9 only closed the measured fixpoint for Pass Alpha feedback.
+Delta vs SK-V11 close: zero row movement. `skinny/RESULTS.md` remains the JSON
+measurement authority, while the SK-V12 profile audit supplies the current
+SK-V12-open c/B and hot-leaf attribution from `/tmp/skv12-p1`.
 
-The `skinny/RESULTS.md` historical delta column is still `Delta vs SK-V6` and
-is `n/a` for these rows because W0b had no machine-readable SK-V6 baseline.
-The relevant SK-V11 delta is therefore "no row movement from W0 through W9".
+## Parse-Only Rows
 
-There are no current `path_lookup`, `unicode_string_float`, `memory`, or
-`cycles_per_byte` rows in `skinny/RESULTS.md`; the active surface is
-`parse_only`, `direct_to_struct`, and `real_typed_struct`.
+Common role: diagnostic only. These rows may inform profiling, but no
+parse-only row can close SK-V12 or satisfy USER PIN D6.
 
-## Comparator And Plane Notes
+| Row | Outcome | T1/T2 Mbps | c/B | Strictness | Output plane | Profile leaf | Carry-forward |
+|---|---|---:|---:|---|---|---|---|
+| `twitter/parse_only` | `S / NO-GO` | 10474 / 7757 | 2.214 | deferred | borrowed view over offset tape vs DOM | bounded_plain_string_scan | unchanged diagnostic |
+| `citm_catalog/parse_only` | `S / NO-GO` | 26791 / 18271 | 1.123 | deferred | borrowed view over offset tape vs DOM | container_dispatch | unchanged diagnostic |
+| `canada/parse_only` | `L / NO-GO` | 15544 / 16215 | 1.933 | deferred | borrowed view over offset tape vs DOM | container_dispatch | unchanged diagnostic |
+| `apache_builds/parse_only` | `S / NO-GO` | 12733 / 12196 | 2.737 | deferred | borrowed view over offset tape vs DOM | bounded_plain_string_scan | unchanged diagnostic |
+| `github_events/parse_only` | `S / NO-GO` | 14805 / 12791 | 2.281 | deferred | borrowed view over offset tape vs DOM | bounded_plain_string_scan | unchanged diagnostic |
+| `update_center/parse_only` | `S / NO-GO` | 11493 / 9033 | 2.893 | deferred | borrowed view over offset tape vs DOM | bounded_plain_string_scan | unchanged diagnostic |
+| `mesh/parse_only` | `S / NO-GO` | 13325 / 12128 | 2.653 | deferred | borrowed view over offset tape vs DOM | container_dispatch | unchanged diagnostic |
+| `random/parse_only` | `S / NO-GO` | 7747 / 7554 | 3.519 | deferred | borrowed view over offset tape vs DOM | bounded_plain_string_scan | unchanged diagnostic |
+| `gsoc-2018/parse_only` | `S / NO-GO` | 4887 / 4544 | 1.481 | deferred | borrowed view over offset tape vs DOM | simd_movemask | unchanged diagnostic |
+| `marine_ik/parse_only` | `S / NO-GO` | 10675 / 11700 | 2.556 | deferred | borrowed view over offset tape vs DOM | container_dispatch | unchanged diagnostic |
+| `instruments/parse_only` | `S / NO-GO` | 16574 / 11587 | 2.028 | deferred | borrowed view over offset tape vs DOM | bounded_plain_string_scan | unchanged diagnostic |
+| `numbers/parse_only` | `S / NO-GO` | 17941 / 18328 | 1.742 | deferred | borrowed view over offset tape vs DOM | number_digit_span | unchanged diagnostic |
+| `unicode_mixed/parse_only` | `S / NO-GO` | 1883 / 7326 | 4.297 | deferred | borrowed view over offset tape vs DOM | string_escape_decode | unchanged diagnostic |
+| `unicode_escapes/parse_only` | `S / NO-GO` | 3733 / 2421 | 2.819 | deferred | borrowed view over offset tape vs DOM | unicode_escape_hex_decode | unchanged diagnostic |
+| `unicode_basic/parse_only` | `S / NO-GO` | 3217 / 2985 | 2.865 | deferred | borrowed view over offset tape vs DOM | bounded_plain_string_scan | unchanged diagnostic |
+| `distinct_values/parse_only` | `S / NO-GO` | 2335 / 1675 | 3.585 | deferred | borrowed view over offset tape vs DOM | bounded_plain_string_scan | unchanged diagnostic |
+| `y_string_unicode/parse_only` | `S / NO-GO` | 1965 / 2695 | 5.622 | deferred | borrowed view over offset tape vs DOM | unicode_escape_hex_decode | unchanged diagnostic |
 
-- Parse-only rows use `deferred` strictness, `view-boundary` UTF-8, and the
-  `borrowed view over offset tape vs DOM` output plane. They publish broader
-  parser comparators where available, but every row remains `NO-GO`.
-- Direct rows use the `digest` output plane. Their live strict anchors are
-  same-run native `sonic-rs strict` direct digest and same-run `serde_json`
-  direct digest; C++ DOM comparators are absent for direct rows.
-- Typed rows use the `typed direct` output plane. Their live strict anchors are
-  same-run native `sonic-rs strict` typed direct and same-run `serde_json`
-  typed direct; Track 2 is a structural/product oracle, not the SOTA gate.
-- `simdjson On Demand`, `asmjson SWAR`, and `asmjson AVX-512` are absent or
-  uncollected in this Apple Silicon close surface. Historical C++ sidecars
-  remain disclosure anchors only, not SK-V11 strict close anchors.
-- Every row reports `hot-leaf=criterion-slope-profile`; the row identity is
-  `json/<corpus>/<workload>/main`.
+## Direct-To-Struct Rows
 
-## Parse-Only Surface
+Common output plane: generated Track 1 SinkOnly digest vs independent hand
+Track 2 SinkOnly digest. REDRESS 119 is the direct residual authority. USER
+PIN D6 makes these JSON rows guard/reopen rows after CSS L4, not the first
+admission target.
 
-Common plane: `deferred` strictness, `view-boundary` UTF-8, borrowed view over
-offset tape vs DOM. All rows are `NO-GO` diagnostic rows and had no SK-V11 row
-movement. Table source: `skinny/RESULTS.md:5`, `:8`, `:11`, `:13`, `:16`,
-`:19`, `:22`, `:25`, `:27`, `:29`, `:32`, `:34`, `:36`, `:38`, `:40`,
-`:43`, `:45`.
+| Row | Outcome | T1/T2 Mbps | sonic direct | c/B | Floor / guard | Carry-forward |
+|---|---|---:|---:|---:|---:|---|
+| `twitter/direct_to_struct` | `N-direct / NO-GO` | 11613 / 10816 | 15113 | 2.950 | reopen floor 13740 | REDRESS 119 fixpoint; W5/W7/W8 exhausted |
+| `citm_catalog/direct_to_struct` | `A / GO` | 18563 / 17787 | 15530 | 1.612 | guard 18191 / 17431 | admitted guard row |
+| `canada/direct_to_struct` | `N-direct / NO-GO` | 10316 / 9819 | 11700 | 3.254 | reopen floor 10637 | REDRESS 119 fixpoint; W3 sibling route rejected |
+| `apache_builds/direct_to_struct` | `A / GO` | 11254 / 10189 | 10995 | 3.058 | guard 11028 / 9996 | admitted guard row |
+| `github_events/direct_to_struct` | `N-direct / NO-GO` | 11918 / 10596 | 14743 | 2.830 | reopen floor 13403 | REDRESS 119 fixpoint |
+| `update_center/direct_to_struct` | `N-direct / NO-GO` | 8187 / 7474 | 11064 | 4.120 | reopen floor 10059 | REDRESS 119 fixpoint |
+| `mesh/direct_to_struct` | `N-direct / NO-GO` | 8561 / 8652 | 9542 | 3.956 | reopen floor 8675 | REDRESS 114 measured reject |
+| `random/direct_to_struct` | `N-direct / NO-GO` | 7693 / 6949 | 8665 | 4.403 | reopen floor 7878 | REDRESS 115 measured reject |
+| `gsoc-2018/direct_to_struct` | `N-direct / NO-GO` | 2665 / 2578 | 4110 | 2.336 | reopen floor 3737 | REDRESS 119 fixpoint |
+| `marine_ik/direct_to_struct` | `A / GO` | 8938 / 9437 | 8473 | 3.650 | guard 8759 / 9248 | admitted guard row |
+| `instruments/direct_to_struct` | `N-direct / NO-GO` | 11569 / 10736 | 9865 | 2.863 | reopen floor 8969 | W0-clamped; docs-only admission pre-blocked |
+| `numbers/direct_to_struct` | `N-direct / NO-GO` | 4479 / 2366 | 2667 | 2.703 | reopen floor 2425 | W0-clamped; Track 2 misses floor |
+| `unicode_mixed/direct_to_struct` | `N-direct / NO-GO` | 3753 / 2427 | 2846 | 7.454 | reopen floor 2588 | W0-clamped; Track 2 misses floor |
+| `unicode_escapes/direct_to_struct` | `N-direct / NO-GO` | 1345 / 1341 | 3785 | 6.722 | reopen floor 3441 | Unicode route blocked by W5/W6 and REDRESS 107/108 |
+| `unicode_basic/direct_to_struct` | `A / GO` | 2299 / 2227 | 2353 | 3.768 | guard 2253 / 2182 | admitted guard row |
+| `distinct_values/direct_to_struct` | `N-direct / NO-GO` | 1750 / 1625 | 2923 | 5.469 | reopen floor 2658 | REDRESS 119 fixpoint |
+| `y_string_unicode/direct_to_struct` | `N-direct / NO-GO` | 1983 / 1029 | 4344 | 9.993 | reopen floor 3950 | REDRESS 119 fixpoint |
 
-| Corpus | Outcome | Track 1 / Track 2 Mbps | Comparator anchors, Mbps | Delta vs anchors | Signal |
-|---|---:|---:|---|---|---|
-| `twitter` | `S` | 10474 / 7757 | sonic 16988; lossy 20801; simdjson 24522; yyjson 30931; RapidJSON 4020; serde 5905 | sonic -38.3%; simdjson -57.3%; yyjson -66.1% | NO-GO parse gate classified S |
-| `citm_catalog` | `S` | 26791 / 18271 | sonic 21564; lossy 21197; simdjson 35822; yyjson 20956; RapidJSON 6760; serde 6824 | sonic +24.2%; simdjson -25.2%; yyjson +27.8% | NO-GO parse gate classified S |
-| `canada` | `L` | 15544 / 16215 | sonic 13462; lossy 13554; simdjson 11493; yyjson 13003; RapidJSON 5187; serde 4888 | sonic +15.5%; simdjson +35.2%; yyjson +19.5% | NO-GO parse gate classified L |
-| `apache_builds` | `S` | 12733 / 12196 | sonic 17291; lossy 17505; simdjson 36014; yyjson 16275; RapidJSON 3945; serde 5906 | sonic -26.4%; simdjson -64.6%; yyjson -21.8% | NO-GO parse gate classified S |
-| `github_events` | `S` | 14805 / 12791 | sonic 22578; lossy 22623; simdjson 39642; yyjson 21426; RapidJSON n/a; serde 7578 | sonic -34.4%; simdjson -62.7%; yyjson -30.9% | NO-GO parse gate classified S |
-| `update_center` | `S` | 11493 / 9033 | sonic 18962; lossy 19039; simdjson 30593; yyjson 18540; RapidJSON n/a; serde 4045 | sonic -39.4%; simdjson -62.4%; yyjson -38.0% | NO-GO parse gate classified S |
-| `mesh` | `S` | 13325 / 12128 | sonic 11679; lossy 11780; simdjson 9414; yyjson n/a; RapidJSON n/a; serde 4549 | sonic +14.1%; simdjson +41.5%; yyjson n/a | NO-GO parse gate classified S |
-| `random` | `S` | 7747 / 7554 | sonic 14172; lossy 15084; simdjson 20638; yyjson n/a; RapidJSON 3526; serde 2304 | sonic -45.3%; simdjson -62.5%; yyjson n/a | NO-GO parse gate classified S |
-| `gsoc-2018` | `S` | 4887 / 4544 | sonic 8472; lossy 8558; simdjson n/a; yyjson n/a; RapidJSON n/a; serde 2585 | sonic -42.3%; simdjson n/a; yyjson n/a | NO-GO parse gate classified S |
-| `marine_ik` | `S` | 10675 / 11700 | sonic 9376; lossy 9788; simdjson n/a; yyjson n/a; RapidJSON n/a; serde 3689 | sonic +13.8%; simdjson n/a; yyjson n/a | NO-GO parse gate classified S |
-| `instruments` | `S` | 16574 / 11587 | sonic 19055; lossy 19122; simdjson n/a; yyjson n/a; RapidJSON 7477; serde 4589 | sonic -13.0%; simdjson n/a; yyjson n/a | NO-GO parse gate classified S |
-| `numbers` | `S` | 17941 / 18328 | sonic 13198; lossy 9906; simdjson n/a; yyjson n/a; RapidJSON n/a; serde 4020 | sonic +35.9%; simdjson n/a; yyjson n/a | NO-GO parse gate classified S |
-| `unicode_mixed` | `S` | 1883 / 7326 | sonic 15137; lossy 14997; simdjson 13150; yyjson n/a; RapidJSON n/a; serde 3780 | sonic -87.6%; simdjson -85.7%; yyjson n/a | NO-GO parse gate classified S |
-| `unicode_escapes` | `S` | 3733 / 2421 | sonic 7235; lossy 5881; simdjson 5637; yyjson n/a; RapidJSON n/a; serde 1336 | sonic -48.4%; simdjson -33.8%; yyjson n/a | NO-GO parse gate classified S |
-| `unicode_basic` | `S` | 3217 / 2985 | sonic 4354; lossy 6261; simdjson 16276; yyjson n/a; RapidJSON n/a; serde 867 | sonic -26.1%; simdjson -80.2%; yyjson n/a | NO-GO parse gate classified S |
-| `distinct_values` | `S` | 2335 / 1675 | sonic 4883; lossy 5357; simdjson 22825; yyjson n/a; RapidJSON n/a; serde 1177 | sonic -52.2%; simdjson -89.8%; yyjson n/a | NO-GO parse gate classified S |
-| `y_string_unicode` | `S` | 1965 / 2695 | sonic 6227; lossy 6282; simdjson 13627; yyjson n/a; RapidJSON n/a; serde 2473 | sonic -68.5%; simdjson -85.6%; yyjson n/a | NO-GO parse gate classified S |
+## Real-Typed-Struct Rows
 
-## Direct-To-Struct Surface
+Common output plane: generated Track 1 typed product vs independent Track 2
+structural or serde oracle. These are product-plane guard wins. They do not
+convert the overall surface out of `N-direct / NoGo`, and they do not satisfy
+the CSS L4 pin.
 
-Common plane: generated Track 1 SinkOnly digest vs independent hand Track 2
-SinkOnly digest. The 13 residual rows below are exhausted in SK-V11 by REDRESS
-119 unless a future pass names a material differential beyond REDRESS 114-119
-with fresh profile and micro-proof evidence. Table source:
-`skinny/RESULTS.md:6`, `:9`, `:12`, `:14`, `:17`, `:20`, `:23`, `:26`,
-`:28`, `:30`, `:33`, `:35`, `:37`, `:39`, `:41`, `:44`, `:46`; fixpoint
-source: `skinny/REDRESS.md:3508-3524`.
+| Row | Outcome | T1/T2 Mbps | sonic typed | c/B | Guard floor | Carry-forward |
+|---|---|---:|---:|---:|---:|---|
+| `twitter/real_typed_struct` | `A / GO` | 17740 / 15912 | 15010 | 1.881 | 17385 / 15593 | admitted typed guard |
+| `citm_catalog/real_typed_struct` | `A / GO` | 30539 / 17675 | 20726 | 0.964 | 29928 / 17321 | admitted typed guard |
+| `apache_builds/real_typed_struct` | `A / GO` | 8478 / 6892 | 8106 | 4.088 | 8308 / 6754 | admitted typed guard |
+| `github_events/real_typed_struct` | `A / GO` | 11871 / 12275 | 12224 | 2.706 | 11633 / 12029 | admitted typed guard |
+| `update_center/real_typed_struct` | `A / GO` | 11851 / 10358 | 12467 | 2.798 | 11613 / 10150 | admitted typed guard |
+| `mesh/real_typed_struct` | `A / GO` | 9403 / 7897 | 8923 | 3.694 | 9214 / 7739 | admitted typed guard |
+| `marine_ik/real_typed_struct` | `A / GO` | 11788 / 10096 | 9010 | 2.932 | 11552 / 9894 | admitted typed guard |
 
-| Corpus | Outcome / verdict | Strictness / output | Track 1 / Track 2 Mbps | sonic / serde Mbps | Delta vs sonic | SK-V11 delta or fixpoint note |
-|---|---|---|---:|---:|---:|---|
-| `twitter` | `N-direct / NO-GO` | deferred / digest | 11613 / 10816 | 15113 / 10286 | -23.2% | Floor 13740; W5 string-span and W7 digest routes blocked; no W8a source candidate remains. |
-| `citm_catalog` | `A / GO` | deferred / digest | 18563 / 17787 | 15530 / 9540 | +19.5% | Admitted direct row; unchanged by W8/W9. |
-| `canada` | `N-direct / NO-GO` | deferred / digest | 10316 / 9819 | 11700 / 6967 | -11.8% | Floor 10637; W3 numeric route rejected on sibling `mesh`; larger Track 2 floor gap; no W8a numeric candidate remains. |
-| `apache_builds` | `A / GO` | strict / digest | 11254 / 10189 | 10995 / 9723 | +2.4% | PASS W2 direct reclamation signal with strict measured-row contract; unchanged by W8/W9. |
-| `github_events` | `N-direct / NO-GO` | deferred / digest | 11918 / 10596 | 14743 / 12505 | -19.2% | Floor 13403; W5 string-span blocked; W7 digest visible-bucket math cannot close both tracks; no W8a candidate remains. |
-| `update_center` | `N-direct / NO-GO` | deferred / digest | 8187 / 7474 | 11064 / 8056 | -26.0% | Floor 10059; W5 string-span blocked; W7 digest route floor-insufficient; no W8a candidate remains. |
-| `mesh` | `N-direct / NO-GO` | deferred / digest | 8561 / 8652 | 9542 / 7037 | -10.3% | Floor 8675; W3 `number_span_emit_slot` measured 3835 / 3614 and was reverted; row remains uncloseable in SK-V11. |
-| `random` | `N-direct / NO-GO` | deferred / digest | 7693 / 6949 | 8665 / 6280 | -11.2% | Floor 7878; W4 `container_tail_next` probe measured 3518 / 3498 and was reverted; W5/W7 blocked. |
-| `gsoc-2018` | `N-direct / NO-GO` | deferred / digest | 2665 / 2578 | 4110 / 3364 | -35.2% | Floor 3737; movemask/string-scan residual; W5 and W7 leave no accepted source authority. |
-| `marine_ik` | `A / GO` | deferred / digest | 8938 / 9437 | 8473 / 6896 | +5.5% | Admitted direct row; unchanged by W8/W9. |
-| `instruments` | `N-direct / NO-GO` | deferred / digest | 11569 / 10736 | 9865 / 9218 | +17.3% | Floor 8969; numerically above floor but W0-clamped; docs-only admission is pre-blocked. |
-| `numbers` | `N-direct / NO-GO` | deferred / digest | 4479 / 2366 | 2667 / 1782 | +67.9% | Floor 2425; Track 2 misses floor and row is W0-clamped; W3 numeric route rejected. |
-| `unicode_mixed` | `N-direct / NO-GO` | deferred / digest | 3753 / 2427 | 2846 / 1392 | +31.9% | Floor 2588; Track 2 misses floor and row is W0-clamped; W6 decoded-source route blocked by REDRESS 117. |
-| `unicode_escapes` | `N-direct / NO-GO` | deferred / digest | 1345 / 1341 | 3785 / 2362 | -64.5% | Floor 3441; Unicode escape route blocked by W5/W6 and SK-V10 REDRESS 107/108 proof-only limits. |
-| `unicode_basic` | `A / GO` | deferred / digest | 2299 / 2227 | 2353 / 1592 | -2.3% | Admitted direct row within gate; unchanged by W8/W9. |
-| `distinct_values` | `N-direct / NO-GO` | deferred / digest | 1750 / 1625 | 2923 / 3355 | -40.1% | Floor 2658; W5 string route blocked; W7 digest bucket insufficient; no W8a candidate remains. |
-| `y_string_unicode` | `N-direct / NO-GO` | deferred / digest | 1983 / 1029 | 4344 / 3527 | -54.3% | Floor 3950; Unicode escape/string route blocked by W5/W6 and prior proof-only limits. |
+## Guard Floor Ledger
 
-## Real-Typed-Struct Surface
+These floors are binding whenever a wave refreshes JSON results or touches a
+JSON-producing path. A wave that does not touch JSON-producing paths may instead
+prove `skinny/RESULTS.md` unchanged.
 
-Common plane: generated Track 1 typed product vs independent Track 2 structural
-or serde oracle. All seven rows are guarded product-plane `A / GO`; they do not
-convert the overall surface out of `N-direct / NoGo`. Table source:
-`skinny/RESULTS.md:7`, `:10`, `:15`, `:18`, `:21`, `:24`, `:31`.
+Direct guard floors:
 
-| Corpus | Outcome / verdict | Strictness / output | Track 1 / Track 2 Mbps | sonic / serde Mbps | Delta vs sonic | Signal |
-|---|---|---|---:|---:|---:|---|
-| `twitter` | `A / GO` | deferred / typed direct | 17740 / 15912 | 15010 / 15664 | +18.2% | PASS generated typed output within sonic-rs * 1.10 ns slack; Track 2 oracle structurally different. |
-| `citm_catalog` | `A / GO` | deferred / typed direct | 30539 / 17675 | 20726 / 18295 | +47.4% | PASS generated typed output within sonic-rs * 1.10 ns slack; Track 2 oracle structurally different. |
-| `apache_builds` | `A / GO` | deferred / typed direct | 8478 / 6892 | 8106 / 6807 | +4.6% | PASS generated typed output within sonic-rs * 1.10 ns slack; Track 2 oracle structurally different. |
-| `github_events` | `A / GO` | strict / typed direct | 11871 / 12275 | 12224 / 12249 | -2.9% | PASS W6 github_events root typed admission; Track 2 oracle 12275 Mbps. |
-| `update_center` | `A / GO` | deferred / typed direct | 11851 / 10358 | 12467 / 10143 | -4.9% | PASS generated typed output within sonic-rs * 1.10 ns slack; Track 2 oracle structurally different. |
-| `mesh` | `A / GO` | deferred / typed direct | 9403 / 7897 | 8923 / 7562 | +5.4% | PASS generated typed output within sonic-rs * 1.10 ns slack; Track 2 oracle structurally different. |
-| `marine_ik` | `A / GO` | deferred / typed direct | 11788 / 10096 | 9010 / 10036 | +30.8% | PASS generated typed output within sonic-rs * 1.10 ns slack; Track 2 oracle structurally different. |
+| Row | Track 1 maintain | Track 2 maintain |
+|---|---:|---:|
+| `citm_catalog/direct_to_struct` | 18191 | 17431 |
+| `apache_builds/direct_to_struct` | 11028 | 9996 |
+| `marine_ik/direct_to_struct` | 8759 | 9248 |
+| `unicode_basic/direct_to_struct` | 2253 | 2182 |
 
-## SK-V11 Wave Delta Ledger
+Typed guard floors:
 
-| Wave | REDRESS | Result | `RESULTS.md` delta |
-|---|---:|---|---|
-| W1a | 111 | Non-JSON gate/report lane admitted | None |
-| W1b | 112 | Generated non-JSON baseline rejected | None |
-| W2 | 113 | CSS generated intervention blocked before measurement | None |
-| W3 | 114 | Numeric direct slice measured-rejected | None |
-| W4 | 115 | Container-tail dispatch measured-rejected | None |
-| W5 | 116 | Bounded string span blocked before source redress | None |
-| W6 | 117 | Escaped segment route blocked before source redress | None |
-| W7 | 118 | Output digest / host-sink route blocked | None |
-| W8 | 119 | Direct residual fixpoint recorded | None; direct rows become fixpoint proofs |
-| W9 | 120 | Close and Alpha feedback | None; overall remains `N-direct / NoGo` |
+| Row | Track 1 maintain | Track 2/oracle maintain |
+|---|---:|---:|
+| `twitter/real_typed_struct` | 17385 | 15593 |
+| `citm_catalog/real_typed_struct` | 29928 | 17321 |
+| `apache_builds/real_typed_struct` | 8308 | 6754 |
+| `github_events/real_typed_struct` | 11633 | 12029 |
+| `update_center/real_typed_struct` | 11613 | 10150 |
+| `mesh/real_typed_struct` | 9214 | 7739 |
+| `marine_ik/real_typed_struct` | 11552 | 9894 |
+
+Direct residual reopen floors:
+
+| Row | Track 1 | Track 2 | sonic direct | floor |
+|---|---:|---:|---:|---:|
+| `twitter/direct_to_struct` | 11613 | 10816 | 15113 | 13740 |
+| `canada/direct_to_struct` | 10316 | 9819 | 11700 | 10637 |
+| `github_events/direct_to_struct` | 11918 | 10596 | 14743 | 13403 |
+| `update_center/direct_to_struct` | 8187 | 7474 | 11064 | 10059 |
+| `mesh/direct_to_struct` | 8561 | 8652 | 9542 | 8675 |
+| `random/direct_to_struct` | 7693 | 6949 | 8665 | 7878 |
+| `gsoc-2018/direct_to_struct` | 2665 | 2578 | 4110 | 3737 |
+| `instruments/direct_to_struct` | 11569 | 10736 | 9865 | 8969 |
+| `numbers/direct_to_struct` | 4479 | 2366 | 2667 | 2425 |
+| `unicode_mixed/direct_to_struct` | 3753 | 2427 | 2846 | 2588 |
+| `unicode_escapes/direct_to_struct` | 1345 | 1341 | 3785 | 3441 |
+| `distinct_values/direct_to_struct` | 1750 | 1625 | 2923 | 2658 |
+| `y_string_unicode/direct_to_struct` | 1983 | 1029 | 4344 | 3950 |
+
+## Audit Carry-Forward For Alpha Lanes
+
+- Sheets execution scout: useful only as fallback technical inventory. Its
+  concrete Sheets-first execution route is obsolete under USER PIN D1.
+- SIMD audit: five aarch64 orphan primitives remain in scope for eventual
+  zero-orphan close, but any SIMD admission must first fix or verify the
+  `escape_mask_64` NEON correctness bug and pass Lock 16 scalar/checkasm/
+  same-wave-consumer gates.
+- Profile truth audit: SK-V12-open PMU authority is `/tmp/skv12-p1`; CSS L4 has
+  not yet been profiled because no generated CSS L4 baseline exists.
+- Value API audit: seven Lock 14 leaks in JSON generated templates block legal
+  CSS L4 emission until the `GrammarConfig`/per-grammar config surface removes
+  JSON policy from generic emission paths.
+- Decision engine audit: CSP/e-graph are absent from skinny and the cost model
+  is a passive ledger; candidate lanes must not claim optimizer generality from
+  current hardcoded shape selection.
+- Totality fold scout: Lock 14/16 amendments are owed; the `escape_mask_64`
+  falsifier is `0xCAFEF00DBAADF00D`, and SIMD SOTA claims are blocked until
+  parity is restored.
 
 ## Alpha-A Carry Forward
 
-The load-bearing SK-V12 starting facts are:
-
-- `skinny/RESULTS.md` is unchanged by W9 and remains the measurement authority.
-- Overall outcome remains `N-direct / NoGo`; SK-V11 did not close as overall
-  direct `GO`.
-- The 13 direct residual rows should be treated as exhausted within SK-V11
-  unless SK-V12 names a material differential beyond REDRESS 114-119.
-- The non-JSON generated-intervention axis is blocked by REDRESS 112 and 113.
-  SK-V12 should solve the generated non-JSON baseline first before spending
-  another JSON-only micro-wave.
-- Strict-vs-strict comparator discipline must stay intact; parse-only wins,
-  absent sidecars, and permissive/lossy comparators are disclosure or flaw
-  probes, not SOTA evidence.
+1. CSS L4 is the authoritative SK-V12 target. There is no current CSS L4 row,
+   no lightningcss comparator number, and no generated CSS L4 runtime module.
+2. The first measurable floor for CSS L4 is `lightningcss_mbps + 1`, not a
+   percentage over an internal baseline.
+3. The existing JSON surface is unchanged from SK-V11 close. It supplies guard
+   floors and residual fixpoint evidence, not the W1 admission target.
+4. The prior Sheets W1 V2 plan is obsolete and must be annotated as historical
+   if referenced by later Alpha or S-P3 lanes.
+5. A pin-aware next lane must treat union-substrate and ASM-gen categories as
+   unblocked for new material differentials while preserving the measured
+   evidence of prior rejected implementations.

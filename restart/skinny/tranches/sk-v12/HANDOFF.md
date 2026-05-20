@@ -2,13 +2,12 @@
 
 Date: 2026-05-20.
 
-Status: Pass Alpha SK-V11 -> SK-V12 converged under V2 hardening and G-Alpha
-PASS. SK-V12 S-P1 Profile converged under V5 hardening with two consecutive
-all-ACCEPT cycles. SK-V12 S-P2 Research converged under V3 hardening with two
-consecutive all-ACCEPT cycles. SK-V12 S-P3 Synthesis-Plan converged under V5
-hardening with two consecutive all-ACCEPT cycles and promoted `SPEC.md` plus
-`DISPATCH-PROMPT.md`. SK-V11 closed under REDRESS 120 as a measured fixpoint
-with unchanged overall `N-direct / NoGo`. SK-V12 starts from that evidence.
+Status: Pass Alpha SK-V11 -> SK-V12 is re-bracketed under
+`USER-PIN-W1-CSS-L4-SOTA.md`. The earlier SK-V12 packet remains useful
+historical context, but any clause that treats CSS/Sheets/BBNF-self as
+preflight-equivalent, sets the CSS close bar to a bbnf baseline lift, or blocks
+union/ASM-gen categories at the category level is superseded by the user pin
+and the updated `SYNTHESIS.md`.
 
 ## 1. Read First
 
@@ -17,164 +16,129 @@ with unchanged overall `N-direct / NoGo`. SK-V12 starts from that evidence.
 3. `restart/prompts/skinny/PASS-1-PROFILE.md`
 4. `restart/prompts/skinny/PASS-2-RESEARCH.md`
 5. `restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md`
-6. `restart/skinny/tranches/sk-v12/SYNTHESIS.md`
-7. `restart/skinny/tranches/sk-v12/research/alpha/alpha-F-contract-draft.md`
-8. `restart/skinny/tranches/sk-v12/research/alpha-hardening/V2/CONSOLIDATED.md`
-9. `restart/skinny/tranches/sk-v12/research/g-alpha/G-ALPHA-SK-V12.md`
-10. `restart/skinny/tranches/sk-v12/research/p1/hardening/HARDENING-S-P1-CONVERGED.md`
-11. `restart/skinny/tranches/sk-v12/research/p1/skv12-p1-capture-manifest.md`
-12. `restart/skinny/tranches/sk-v12/research/p1/skv12-p1-replay.tsv`
-13. `restart/skinny/tranches/sk-v12/research/p2/hardening/HARDENING-S-P2-CONVERGED.md`
-14. The six S-P2 research artefacts under `restart/skinny/tranches/sk-v12/research/p2/`
-15. `restart/skinny/tranches/sk-v12/research/p3/hardening/HARDENING-S-P3-CONVERGED.md`
-16. `restart/skinny/tranches/sk-v12/SPEC.md`
-17. `restart/skinny/tranches/sk-v12/DISPATCH-PROMPT.md`
-18. `restart/skinny/tranches/sk-v11/research/close/close-redress.md`
-19. `restart/skinny/tranches/sk-v11/SYNTHESIS.md`
-20. `restart/skinny/tranches/sk-v11/HANDOFF.md`
-21. `restart/skinny/tranches/sk-v11/SPEC.md`
-22. `restart/skinny/tranches/sk-v11/DISPATCH-PROMPT.md`
-23. `skinny/RESULTS.md`
-24. `skinny/REDRESS.md` through REDRESS 120
+6. `restart/skinny/tranches/sk-v12/USER-PIN-W1-CSS-L4-SOTA.md`
+7. `restart/skinny/tranches/sk-v12/SYNTHESIS.md`
+8. `restart/skinny/tranches/sk-v12/research/alpha/alpha-F-contract-draft.md`
+9. `restart/skinny/tranches/sk-v12/SPEC.md` as pre-pin implementation context
+   only where it does not conflict with the user pin
+10. `skinny/RESULTS.md`
+11. `skinny/REDRESS.md` through REDRESS 120
+12. The six 2026-05-20 audits in `restart/skinny/tranches/sk-v12/research/`.
 
 ## 2. Current State
 
-SK-V11 close is the SK-V12 seed authority:
+SK-V11 close remains the seed result surface:
 
 | Family | State | SK-V12 role |
 |---|---|---|
 | `parse_only` | 16 `S / NO-GO`, 1 `L / NO-GO` | diagnostic only |
-| `direct_to_struct` | 4 `A / GO`, 13 `N-direct / NO-GO` | guards plus pre-blocked residual fixpoint |
-| `real_typed_struct` | 7 `A / GO` | product-plane guard surface |
-| non-JSON generated parser | no admitted generated baseline | first material target |
+| `direct_to_struct` | 4 `A / GO`, 13 `N-direct / NO-GO` | JSON guard and routed ledger |
+| `real_typed_struct` | 7 `A / GO` | JSON typed guard surface |
+| CSS L4 generated parser | no admitted row | authoritative first target |
+| Sheets / BBNF-self | no admitted row | fallback only after CSS redress attempt |
 | Overall | `N-direct / NoGo` | seed outcome |
 
-The direct residual rows are not first-wave targets. REDRESS 119 gives each row
-a measured fixpoint proof, and REDRESS 120 routes SK-V12 to solve the generated
-non-JSON baseline first. Reopen any JSON direct row only with fresh material
-evidence beyond REDRESS 114-119. Source anchors:
-`skinny/RESULTS.md:5-45`, `skinny/RESULTS.md:143-146`, and
-`skinny/REDRESS.md:3497-3553`.
+The direct residual rows remain recorded by REDRESS 119/120, but the pin moves
+the campaign target to generated CSS L4 > lightningcss and reopens union plus
+ASM-gen categories where a new material-differential plan can pass CHALLENGE.
 
 ## 3. SK-V12 Goalset
 
 SK-V12 priority order is binding:
 
-1. Create one generated non-JSON direct or typed parser baseline first,
-   preferred order CSS L4 declaration values, Sheets, then BBNF-self.
-   Before behavior redress, the selected grammar must pass the executable
-   baseline pre-gate: generated emission seam or per-grammar runtime path,
-   runtime module build, fixture corpus, same-plane independent oracle,
-   compile/equality smoke, and REDRESS 111 gate consumption.
-2. Admit one measured grammar-generalized intervention against that baseline,
-   with generated Track 1 at least `ceil(baseline_mbps * 1.01)` unless S-P3
-   sets a stricter threshold, independent oracle/Track 2, strict output
-   equality, and gate consumption. The intervention follows the selected
-   baseline grammar: CSS L4, Sheets, or BBNF-self.
-3. Preserve admitted direct and typed guard rows. The 4 direct `A / GO` rows
-   and 7 typed `A / GO` rows cannot silently demote.
-4. Keep `parse_only` diagnostic. No parse-only row can count as SOTA admission.
-5. Carry W3, parse-only, and JSON direct residual pre-blocks into S-P1/S-P2/S-P3.
+1. Admit a generated CSS L4 row with Track 1 throughput greater than
+   `lightningcss_mbps + 1` on the same corpus, same output plane, same host,
+   and strict equality semantics.
+2. Preserve JSON direct and typed guard rows, or record measured demotions in
+   REDRESS. JSON guards are second priority after CSS L4 >SOTA.
+3. Keep `parse_only` diagnostic. No parse-only row can count as SOTA admission.
+4. Treat Sheets and BBNF-self as fallbacks only after a CSS L4 redress attempt
+   records measured BLOCKED or REJECTED evidence.
+5. Treat Rust union substrate and ASM-gen categories as unblocked at the
+   category level. Specific prior REDRESS entries remain measured historical
+   implementations that any new plan must cite and materially differentiate.
 
-## 4. Routed Remainder
+## 4. Campaign Close
 
-W1a admitted only a non-JSON report lane. W1b rejected the generated non-JSON
-baseline because the skinny codegen/runtime path remained JSON-profiled and no
-generated CSS L4 runtime existed. W2 blocked because it could not create the
-first measurable baseline row inside an intervention wave.
+SK-V12 closes by ADMIT or FIXPOINT.
 
-W3 through W7 exhausted the JSON direct candidate families in SK-V11:
-numeric slot, container-tail dispatch, bounded string span, escaped segment,
-and output digest host sink. W8 closed the 13 direct residual rows as measured
-fixpoint. W9 closed SK-V11 and routed SK-V12 to the generated non-JSON
-baseline.
+ADMIT:
 
-## 5. Telemetry Binding
+- generated CSS L4 Track 1 > `lightningcss_mbps + 1`;
+- independent oracle or Track 2 strict equality;
+- gate-consumed provenance and lightningcss comparator evidence;
+- Lock 14 clean after resolving the generic JSON leaks needed for CSS L4
+  emission;
+- Lock 16 clean for any SIMD admission;
+- JSON guards held or measured-disposition demoted.
 
-The generated non-JSON baseline and intervention must be gate-consumed, either
-in `skinny/RESULTS.md` with all consumers updated or in a companion report with
-an explicit gate command. Required evidence includes grammar/domain/workload
-identity, generated Track 1 provenance, independent Track 2 or oracle source,
-strict output equality, Track 1 and oracle Mbps, run id, host, flags, sample
-count, output plane, same-wave consumer class, JSON guard status if refreshed,
-and fail-closed checks for producer-only telemetry, stale run ids, oracle
-coupling, parse-only SOTA claims, W3 reopen claims, and JSON policy leaks.
+FIXPOINT:
 
-## 5.1 Alpha Cost And Revert Seed
+- CSS L4 has at least one measured redress attempt;
+- Sheets/BBNF-self were not used before the CSS redress attempt;
+- a new measured union-substrate attempt exists in the closing tranche;
+- a new measured ASM-gen attempt exists in the closing tranche;
+- orphan production SIMD primitives are zero by admission, removal, or
+  explicit inventory demotion;
+- REDRESS records every measured miss and all close docs agree.
 
-| Candidate | Wave slot | LOC budget | Risk | Plan cap | Redress cap | Revert / block rule |
-|---|---|---:|---|---:|---:|---|
-| E1 CSS baseline | W1 preferred | <=520 | high | 30 min | 75 min | revert codegen/runtime/bench/report/gate/RESULTS, save rejected patch, block E4 |
-| E2 Sheets baseline | W1 fallback | <=480 | medium-high | 30 min | 75 min | revert selected Sheets slice, save rejected patch, use Sheets intervention only after admit |
-| E3 BBNF-self baseline | W1 fallback | <=460 | medium-high | 30 min | 75 min | revert selected BBNF-self slice, save rejected patch, use BBNF-self intervention only after admit |
-| E4 selected-baseline intervention | W2 after baseline | <=430 | high | 30 min | 75 min | revert intervention slice, save rejected patch, preserve baseline evidence |
-| E5 JSON direct companion | W3+ conditional | <=300 | high | 30 min | 75 min | reject before non-JSON priority resolves; revert JSON slice if attempted |
+## 5. W0 Handling
 
-S-P3 may tighten these caps. Widening them requires CHALLENGE and user
-escalation before behavior redress. If baseline preflight fails, split into a
-generator/runtime unblock wave and a later baseline-report wave, or record a
-measured `BLOCKED` route.
+W0 telemetry/gate lock at commit `f788eb97` is revalidated, not redone. Treat
+it as valid unless revalidation shows drift in the gate/report surface, source
+baseline, or JSON result surface. Alpha-F does not authorize a W0 rewrite.
 
-## 6. Refusal Conditions
+## 6. Required W1 Re-Derivation
 
-Refuse any dispatch that:
+Next move: S-P3 re-derives W1 under the pin.
 
-- asks Alpha-F to create `SPEC.md` or `DISPATCH-PROMPT.md`;
-- edits source before S-P3 has created and converged the implementation packet;
-- schedules JSON-only direct work before the generated non-JSON baseline and
-  measured grammar-generalized intervention priority is satisfied or explicitly
-  blocked;
-- reopens W3 substrate, parse-only SOTA movement, or a JSON direct residual
-  without fresh material evidence beyond REDRESS 114-119;
-- admits direct or typed rows without the correct output-plane comparator,
-  independent Track 2/oracle, provenance, and gate consumption;
+The new W1 plan must:
+
+- select CSS L4 first;
+- name the exact CSS L4 row, output plane, generated Track 1 path, runtime
+  module, fixture/input source, independent oracle/Track 2, lightningcss
+  comparator, equality command, benchmark command, gate command, and rollback
+  slice;
+- use `lightningcss_mbps + 1` as the admission floor;
+- land `GrammarConfig` or equivalent generated metadata before CSS L4 emission
+  can legally leave JSON-only templates;
+- verify and resolve the `escape_mask_64` NEON correctness bug before any new
+  SIMD admission;
+- carry Sheets and BBNF-self only as post-CSS-redress fallbacks;
+- re-evaluate union and ASM-gen routes under the user pin, with REDRESS
+  citation and material differential.
+
+## 7. Telemetry Binding
+
+The CSS L4 gate or companion report must consume grammar id, row id, output
+plane, strictness, generated source/runtime paths, grammar/input checksums,
+oracle path, lightningcss comparator artifact and Mbps, strict equality,
+Track 1 Mbps, oracle Mbps, sample count, sample cost, run id, host triple,
+feature mask, build flags, profile artifact, benchmark artifact, Lock 14
+status, Lock 16 status where applicable, same-wave consumer class, JSON guard
+state, gate status, wave id, and REDRESS id.
+
+Producer-only fields, stale run ids, oracle coupling, grammar-name branches in
+generic crates, missing lightningcss evidence, parse-only admission, and orphan
+SIMD primitives fail closed.
+
+## 8. Refusal Conditions
+
+Refuse or return REVISE for any dispatch that:
+
+- asks this Alpha-F lane to edit `SPEC.md` or `DISPATCH-PROMPT.md`;
+- skips CSS L4 before a CSS redress attempt;
+- uses `ceil(baseline_mbps * 1.01)` as the CSS close bar;
+- treats REDRESS 96/97/98 or 88/89/90 as category-level blockers after the
+  user pin;
+- admits SIMD before the `escape_mask_64` bug is verified and resolved;
+- leaves production SIMD primitives orphaned at close;
 - claims grammar generalization by prose or stale hand-only witness modules;
-- emits telemetry without a same-wave gate consumer;
-- weakens admitted guard rows without measured disposition;
-- adds a directive, BIR variant, public substrate, parser-owned sidecar, second
-  retained substrate, generic-crate JSON policy, or x86 implementation target.
+- adds a directive, BIR variant, BackendShape variant, public substrate API,
+  parser-owned sidecar, or x86 implementation target.
 
-## 6.5 USER PIN — 2026-05-20
+## 9. Dispatch Boundary
 
-`restart/skinny/tranches/sk-v12/USER-PIN-W1-CSS-L4-SOTA.md` is in force.
-Verbatim user directive:
-
-> We MUST push all numbers to be >SOTA. CSS is the authoritative, not
-> sheets — whatever that takes for semantic parity with lightningcss —
-> we've trivially beaten this before, we can again. In short, SIMD
-> utilization must be perfected, Parse time / >SOTA is an absolute top
-> priority, and the ASM gen + Rust union facilities unblocked.
-
-Effect on this handoff:
-
-- §3 priority 1 rebinds: CSS L4 generated baseline is W1's authoritative
-  target; Sheets/BBNF-self are post-redress-attempt fallbacks only.
-- §3 priority 2 rebinds: admission floor on the CSS L4 row is
-  `lightningcss_mbps + 1`, not `ceil(baseline_mbps * 1.01)`.
-- §5.1 candidate ordering: E1 (CSS) is locked first; E2 (Sheets) and E3
-  (BBNF-self) are no longer preflight-equivalent.
-- SPEC §1, §6, §8 pre-blocks on the Rust union substrate category and on
-  REDRESS 88/89/90 ASM-gen routes are RESCINDED at the architectural-
-  category level (specific measured-rejected implementations remain
-  historical; new implementations must cite the prior REDRESS and pass
-  CHALLENGE).
-- The W1 V2 plan (commit `e24a7e01`, Sheets) is OBSOLETED. The in-flight
-  CHALLENGE V2 is evaluating an obsoleted plan; its disposition is
-  historical only.
-
-## 7. Next Move
-
-Next move: S-P3 re-derives W1 plan V3 under the pin (CSS L4 target;
-lightningcss-beating bar; union + ASM-gen waves admissible). The
-`GrammarConfig` trait + per-grammar config extraction (per
-`skv12-value-api-audit.md` §5) lands inside W1 redress so CSS L4
-emission is legal. The `escape_mask_64` NEON correctness bug (xorshift
-falsifier `0xCAFEF00DBAADF00D`, per `skv12-totality-fold-scout.md` §2)
-must be verified and resolved before any new SIMD admission.
-
-W0 telemetry/gate lock (commit `f788eb97`) remains valid.
-
-G-Alpha presentation seed: target one generated non-JSON baseline plus the
-same row's intervention delta; carry JSON direct residuals as pre-blocked
-ledger rows; predicted close is either baseline + intervention admit, or a
-measured BLOCKED generated-baseline route.
+This handoff authorizes no source work. It authorizes the next planning move:
+S-P3 re-derives W1 under the user pin, then downstream packet text may update
+`SPEC.md` and `DISPATCH-PROMPT.md` in its own lane.

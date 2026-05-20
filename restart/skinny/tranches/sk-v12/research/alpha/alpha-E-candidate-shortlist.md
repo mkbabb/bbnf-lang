@@ -1,360 +1,316 @@
-# SK-V12 Alpha-E Candidate Shortlist
+# SK-V12 Alpha-E Candidate Shortlist - User Pin Re-Bracket
 
-Pass: Alpha SK-V11 -> SK-V12, alpha-E.
+Pass: Alpha SK-V11 -> SK-V12, lane alpha-E.
 Date: 2026-05-20.
-Output: candidate intervention shortlist only.
+Scope: pin-aware shortlist only. This replaces the pre-pin Alpha-E shortlist
+that treated Sheets as an equivalent fallback and used the old
+`ceil(baseline_mbps * 1.01)` non-JSON bar.
 
-## Read Authority
+## Authority Read
 
 - `restart/prompts/pass-contracts/PASS-ALPHA.md`
-- `restart/skinny/tranches/sk-v11/research/close/close-redress.md`
-- `restart/skinny/tranches/sk-v11/HANDOFF.md`
-- `restart/skinny/tranches/sk-v11/SPEC.md`
-- `restart/skinny/tranches/sk-v11/DISPATCH-PROMPT.md`
+- `restart/skinny/tranches/sk-v12/USER-PIN-W1-CSS-L4-SOTA.md`
+- `restart/skinny/tranches/sk-v12/HANDOFF.md` Section 6.5 and Section 7
+- `restart/skinny/tranches/sk-v12/SPEC.md`
+- Six 2026-05-20 audits:
+  `skv12-W1-A7-sheets-execution-scout.md`,
+  `skv12-aarch64-simd-coverage-audit.md`,
+  `skv12-profile-truth-audit.md`,
+  `skv12-value-api-audit.md`,
+  `skv12-decision-engine-audit.md`,
+  `skv12-totality-fold-scout.md`
+- S-P1/S-P2/S-P3 converged artifacts:
+  `research/p1/hardening/HARDENING-S-P1-CONVERGED.md`,
+  `research/p2/hardening/HARDENING-S-P2-CONVERGED.md`,
+  `research/p3/hardening/HARDENING-S-P3-CONVERGED.md`
 - `skinny/RESULTS.md`
 - `skinny/REDRESS.md` through REDRESS 120
-- Supporting cohort context from SK-V11 P2/P3 and W1b/W8 research
 
-## Routing Summary
+## Pin Rebinding
 
-SK-V11 closed as a measured fixpoint under REDRESS 120, not as direct `GO` and
-not as a grammar-generalization win. REDRESS 119 is now the authority for the
-13 JSON direct residual rows. REDRESS 112 and REDRESS 113 are the material
-blockers for SK-V12: W1b could not create a generated non-JSON baseline because
-runtime emission remains JSON-profiled through `json_provider`, and W2 could
-not create the first measurable non-JSON row inside an intervention wave.
+The user pin changes the Alpha-E routing surface:
 
-Therefore the shortlist prioritizes generated non-JSON baseline/codegen/runtime
-proof before any JSON micro-wave. No numeric, string, escape, digest, or
-container-tail JSON retry is shortlisted as a standalone candidate. The only
-JSON direct entry below is conditional and evidence-gated: it may dispatch only
-after a generated non-JSON baseline/proof has landed and only with fresh
-post-REDRESS-119 material evidence that is not the rejected REDRESS 114-118
-route family under a new name.
-
-## Alpha-Level Cost, Cap, And Revert Matrix
-
-This matrix is a Pass Alpha seed for S-P3; it does not create `SPEC.md`.
-S-P3 may tighten these caps, but widening them requires CHALLENGE and user
-escalation before behavior redress.
-
-| Candidate | Intended wave slot | LOC budget | Risk | Plan cap | Redress cap | Same-wave consumer | Split-before-dispatch rule | Revert protocol |
-|---|---|---:|---|---:|---:|---|---|---|
-| E1 CSS L4 baseline | W1 preferred baseline | <=520 handwritten + selected generated output | high | 30 min | 75 min | generated CSS row + non-JSON gate report | split if selected-grammar preflight cannot prove generated emission seam, runtime target, oracle, fixture corpus, compile/equality smoke, and gate consumption | revert codegen/runtime/bench/report/gate/RESULTS as one slice; save `/tmp/skv12-waveW1-rejected.patch`; REDRESS blocks E4 until a baseline admits |
-| E2 Sheets baseline | W1 fallback baseline | <=480 handwritten + selected generated output | medium-high | 30 min | 75 min | generated Sheets row + non-JSON gate report | same preflight; dispatch only if CSS is blocked or rejected with evidence | revert selected Sheets codegen/runtime/bench/report/gate/RESULTS as one slice; save rejected patch; dependent intervention uses Sheets variant only after admit |
-| E3 BBNF-self baseline | W1 fallback baseline | <=460 handwritten + selected generated output | medium-high | 30 min | 75 min | generated BBNF-self row + non-JSON gate report | same preflight; dispatch only if CSS and Sheets are blocked or rejected, or S-P1 proves smaller runnable path | revert selected BBNF-self codegen/runtime/bench/report/gate/RESULTS as one slice; save rejected patch; dependent intervention uses BBNF-self variant only after admit |
-| E4 selected-baseline intervention | W2 after E1/E2/E3 admit | <=430 handwritten + selected generated output | high | 30 min | 75 min | same generated non-JSON row + non-JSON gate report | reject before redress if no admitted baseline row id and baseline Mbps exist | revert intervention codegen/runtime/bench/report/gate/RESULTS as one slice; save rejected patch; preserve baseline REDRESS evidence |
-| E5 JSON direct companion | W3+ conditional companion | <=300 handwritten + selected generated JSON output | high | 30 min | 75 min | selected JSON direct Track 1 + independent Track 2 + `gate-json` | hard REJECT if scheduled before E4 admits or blocks the non-JSON priority; split if more than one JSON row is selected without pre-dispatch microbench proof | revert JSON source/generated/bench/report/gate/RESULTS as one slice; save rejected patch; never demote non-JSON evidence |
-
-Every failed behavior wave records a numbered REDRESS entry and preserves the
-rejected patch. Any candidate that exceeds its LOC budget or 75-minute redress
-cap returns REVISE before behavior dispatch.
-
-## Baseline Entry Preflight
-
-Before S-P3 may dispatch E1, E2, or E3 as a behavior redress wave, the selected
-grammar must pass a read-only or proof-only preflight:
-
-- a named generated-emission seam or generated per-grammar runtime path exists
-  for exactly one selected grammar;
-- the path does not route through JSON-only
-  `json_provider::ensure_runtime_profile` as generality proof;
-- one fixture corpus and independent same-plane oracle are runnable;
-- compile/equality smoke can pass without behavior source edits;
-- the REDRESS 111 non-JSON report lane can consume the row evidence without
-  producer-only telemetry.
-
-If this preflight fails, S-P3 must split into a generator/runtime unblock wave
-followed by a baseline-report wave, or record a measured `BLOCKED` route.
+- CSS L4 declaration values are authoritative. Sheets and BBNF-self are
+  fallbacks only after a CSS L4 redress attempt fails, not after a preflight
+  skip.
+- The CSS admission floor is `lightningcss_mbps + 1` on the same corpus, same
+  output plane, strict equality, same-host run.
+- The seven Lock 14 leaks in `json_templates/generated.rs` must be extracted
+  through a `GrammarConfig`/generated-metadata surface before CSS emission is
+  legal.
+- `escape_mask_64` correctness is a campaign blocker before any new SIMD
+  admission.
+- The union-substrate and ASM-gen categories are unblocked at category level.
+  REDRESS 88/89/90 and 96/97/98 remain historical implementations; new
+  attempts must cite them, name the material differential, pass CHALLENGE, and
+  satisfy scalar reference, checkasm/parity, microbench, and same-wave consumer
+  gates.
+- JSON direct residuals remain guard-only under REDRESS 119 unless a future
+  route names fresh material evidence beyond REDRESS 114-119. `parse_only` is
+  diagnostic-only.
 
 ## Shortlist
 
-### E1: CSS L4 Generated Baseline And Oracle Lane
+| ID | Candidate | Primary role | LOC | Risk |
+|---|---|---|---:|---|
+| E1 | CSS L4 generated baseline plus lightningcss comparator | mandatory first admission target | <=620 | high |
+| E2 | `GrammarConfig` / Lock 14 leak extraction | legalizes CSS emission | <=360 | high |
+| E3 | `escape_mask_64` correctness closure | required before SIMD admission | <=180 | high |
+| E4 | CSS-local same-tape event union | union-substrate category attempt | <=420 | high |
+| E5 | ARMv9.2 TBL/TBX CSS byte-class consumer | ASM-gen/SIMD category attempt | <=430 | high |
 
-- **Priority:** 1.
-- **Purpose:** create the missing generated non-JSON baseline authority that
-  REDRESS 112 proved absent.
-- **Owner paths:**
-  - `skinny/crates/codegen/src/lib.rs`
-  - `skinny/crates/codegen/src/lower/`
-  - `skinny/crates/codegen/src/direct_schema.rs`
-  - `skinny/crates/runtime/src/grammars/css_l4_declaration_values/`
-  - `skinny/crates/bbnf-bench/src/bin/gate.rs`
-  - `skinny/crates/bbnf-bench/src/report.rs`
-  - `skinny/crates/bbnf-bench/src/metadata.rs`
-  - `skinny/crates/bbnf-bench/benches/`
+E1 and E2 are coupled for W1 planning: E2 is the generic-crate prerequisite
+without which E1 is not legal. E3 must close before E5 or any other new SIMD
+admission. E4 and E5 are eligible later-wave candidates after the CSS row and
+lightningcss comparator lane are measurable.
+
+### E1 - CSS L4 Generated Baseline Plus Lightningcss Comparator
+
+- Purpose: admit `css_l4/declaration_values/direct_to_struct/main` as a
+  generated CSS L4 row and compare it against lightningcss on the same fixture,
+  output plane, host, flags, and strict equality path.
+- Owner paths:
   - `grammar/css/l4/values.bbnf`
+  - `grammar/css/l4/tokens.bbnf`
   - `grammar/css/l4/value-unit.bbnf`
   - `grammar/css/l4/color.bbnf`
-  - `restart/skinny/tranches/sk-v12/research/w1-css-baseline/`
-- **Scalar/oracle status:** not currently admitted. W1a proved only the
-  non-JSON gate/report schema. This candidate must add generated CSS L4 Track
-  1 plus an independent same-plane oracle over declaration-value fact bytes;
-  the oracle must not call generated Track 1, generated SinkOnly helpers,
-  generated typed helpers, `sheets_witness`, or benchmark-private parser code.
-- **Checkasm/parity status:** scalar-only by default; no checkasm required
-  unless the implementation introduces a SIMD helper. Strict product parity is
-  required: generated fact bytes must equal the independent oracle bytes for
-  every fixture in the selected corpus.
-- **Same-wave consumer:** the generated CSS L4 benchmark row and
-  `bbnf-bench --bin gate` non-JSON report consumer must land in the same wave.
-  A report that merely produces fields without gate consumption rejects.
-- **Falsifiability gate:**
-
-  | Row | Threshold |
-  |---|---:|
-  | `css_l4/declaration_values/direct/main` generated Track 1 | finite positive Mbps |
-  | `css_l4/declaration_values/direct/main` independent oracle/Track 2 | finite positive Mbps |
-  | `css_l4/declaration_values/direct/main` strict equality | 100% fixture equality |
-  | `css_l4/declaration_values/direct/main` sample count | recorded from bench artifact |
-
-  Additional gate conditions: the report records run id, host, flags, feature
-  mask, output plane, oracle source, and source provenance; JSON `skinny/RESULTS.md`
-  rows do not move; `gate-json --with-cost-facts --check-results` remains green.
-- **LOC budget:** <= 520 handwritten source/test/gate LOC, plus regenerated
-  output only for the selected CSS L4 runtime module.
-- **Hard cap / revert:** see Alpha-Level Cost, Cap, And Revert Matrix.
-- **Risk:** high. This is first-of-class runtime/codegen proof and directly
-  crosses the REDRESS 112 blocker.
-- **Pre-blocked route adjacency:** REDRESS 111 may be reused only as schema
-  consumption, not baseline authority; REDRESS 112 blocks routing through
-  `json_provider::ensure_runtime_profile` as a generality proof; REDRESS 113
-  blocks combining first baseline creation with the intervention wave; Lock 14
-  blocks JSON policy in generic crates or runtime outside generated per-grammar
-  modules.
-
-### E2: Sheets Formula Generated Baseline Fallback
-
-- **Priority:** 2, fallback if E1 cannot make a positive generated CSS L4
-  baseline inside the SK-V12 budget.
-- **Purpose:** preserve the Pass Alpha preferred grammar order while giving
-  SK-V12 a second generated non-JSON baseline target that is not a JSON direct
-  micro-wave.
-- **Owner paths:**
   - `skinny/crates/codegen/src/lib.rs`
-  - `skinny/crates/codegen/src/lower/`
-  - `skinny/crates/codegen/src/direct_schema.rs`
-  - `skinny/crates/runtime/src/grammars/sheets_formula/`
-  - `skinny/crates/bbnf-bench/src/bin/gate.rs`
-  - `skinny/crates/bbnf-bench/src/report.rs`
-  - `skinny/crates/bbnf-bench/benches/`
-  - `grammar/google-sheets/google-sheets.bbnf`
-  - `restart/skinny/tranches/sk-v12/research/w1-sheets-baseline/`
-- **Scalar/oracle status:** not currently admitted. Existing
-  `sheets_witness` inventory is not generated Track 1 authority. This
-  candidate must generate one Sheets formula direct baseline and an
-  independent formula oracle on the same output plane.
-- **Checkasm/parity status:** scalar-only by default. Product parity requires
-  exact output equality against the independent oracle. If a byte-set or
-  string helper is routed, strict scalar differential/checkasm becomes
-  mandatory before row evidence counts.
-- **Same-wave consumer:** generated Sheets formula row plus the non-JSON gate
-  report consumer in the same wave; no producer-only report and no witness-only
-  admission.
-- **Falsifiability gate:**
-
-  | Row | Threshold |
-  |---|---:|
-  | `sheets/formula/direct/main` generated Track 1 | finite positive Mbps |
-  | `sheets/formula/direct/main` independent oracle/Track 2 | finite positive Mbps |
-  | `sheets/formula/direct/main` strict equality | 100% fixture equality |
-  | `sheets/formula/direct/main` sample count | recorded from bench artifact |
-
-  The row must validate under the non-JSON gate with `grammar_id=sheets` and
-  `domain=sheets_bench`; JSON rows remain unchanged.
-- **LOC budget:** <= 480 handwritten source/test/gate LOC, plus regenerated
-  output only for the selected Sheets formula module.
-- **Hard cap / revert:** see Alpha-Level Cost, Cap, And Revert Matrix.
-- **Risk:** medium-high. It avoids the CSS-specific blocker but still has the
-  same generated runtime/codegen boundary risk as REDRESS 112.
-- **Pre-blocked route adjacency:** REDRESS 112 blocks `sheets_witness` or
-  JSON-provider emission as baseline authority; REDRESS 113 blocks creating
-  the baseline inside a later intervention wave; REDRESS 118 blocks treating a
-  non-JSON host-sink or digest-only row as generated parser evidence.
-
-### E3: BBNF-Self Generated Baseline Fallback
-
-- **Priority:** 3, fallback if CSS L4 and Sheets cannot produce one generated
-  non-JSON baseline with an independent oracle.
-- **Purpose:** use the project grammar itself as a small generated-parser
-  baseline target while still satisfying Lock 14 through measured non-JSON
-  Track 1 rather than prose.
-- **Owner paths:**
-  - `skinny/crates/codegen/src/lib.rs`
-  - `skinny/crates/codegen/src/lower/`
-  - `skinny/crates/runtime/src/grammars/bbnf_self/`
-  - `skinny/crates/bbnf-bench/src/bin/gate.rs`
-  - `skinny/crates/bbnf-bench/src/report.rs`
-  - `skinny/crates/bbnf-bench/benches/`
-  - `grammar/bbnf/bbnf.bbnf`
-  - `grammar/bbnf/expressions.bbnf`
-  - `grammar/bbnf/types.bbnf`
-  - `restart/skinny/tranches/sk-v12/research/w1-bbnf-self-baseline/`
-- **Scalar/oracle status:** open. The wave must define a generated BBNF-self
-  direct Track 1 output plane and an independent grammar-file oracle that does
-  not share generated parser code.
-- **Checkasm/parity status:** scalar/product parity only; checkasm is N/A
-  unless a byte classifier or SIMD scan is added, which should be avoided in
-  the baseline wave.
-- **Same-wave consumer:** generated BBNF-self parser benchmark plus non-JSON
-  report/gate consumer in the same wave.
-- **Falsifiability gate:**
-
-  | Row | Threshold |
-  |---|---:|
-  | `bbnf_self/grammar/direct/main` generated Track 1 | finite positive Mbps |
-  | `bbnf_self/grammar/direct/main` independent oracle/Track 2 | finite positive Mbps |
-  | `bbnf_self/grammar/direct/main` strict equality | 100% fixture equality |
-  | `bbnf_self/grammar/direct/main` sample count | recorded from bench artifact |
-
-  The row must validate under the non-JSON gate with
-  `grammar_id=bbnf_self` and `domain=bbnf_self_bench`; JSON rows remain
-  unchanged.
-- **LOC budget:** <= 460 handwritten source/test/gate LOC, plus regenerated
-  output only for the selected BBNF-self module.
-- **Hard cap / revert:** see Alpha-Level Cost, Cap, And Revert Matrix.
-- **Risk:** medium-high. Smaller grammar surface may lower runtime work only if
-  S-P1 proves a materially smaller runnable generated Track 1 and independent
-  oracle path; otherwise it crosses the same REDRESS 112 codegen/runtime
-  boundary as E1/E2.
-- **Pre-blocked route adjacency:** REDRESS 112 blocks treating inventory or
-  grammar parser internals as generated Track 1; REDRESS 113 blocks baseline
-  creation inside an intervention wave; Lock 1 blocks hidden sidecar/parser
-  substrate; Lock 14 blocks generic JSON policy.
-
-### E4: Selected Generated FIRST/Prefix Intervention
-
-- **Priority:** 4, only after E1, E2, or E3 admits a concrete generated
-  non-JSON baseline row and records `W1_selected_baseline_mbps`.
-- **Purpose:** convert the first generated non-JSON baseline into an admitted
-  generated non-JSON intervention using grammar metadata rather than JSON role
-  policy.
-- **Owner paths:**
-  - `skinny/crates/codegen/src/lower/sink_only.rs`
-  - `skinny/crates/codegen/src/lower/schema_direct.rs`
-  - `skinny/crates/codegen/src/direct_schema.rs`
+  - `skinny/crates/codegen/src/json_provider.rs` only to remove/bypass the
+    JSON-only guard without turning it into a polymorphic grammar policy table
+  - selected grammar-neutral codegen provider/template files named by E2
+  - `skinny/crates/runtime/src/lib.rs`
   - `skinny/crates/runtime/src/grammars/css_l4_declaration_values/`
-  - `skinny/crates/runtime/src/grammars/sheets_formula/`
-  - `skinny/crates/runtime/src/grammars/bbnf_self/`
-  - `skinny/crates/bbnf-bench/src/bin/gate.rs`
+  - `skinny/crates/bbnf-bench/Cargo.toml`
+  - `skinny/crates/bbnf-bench/benches/nonjson_baseline.rs`
+  - `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs`
   - `skinny/crates/bbnf-bench/src/report.rs`
-  - `skinny/crates/bbnf-bench/benches/`
-  - `grammar/css/l4/values.bbnf`
-  - `grammar/css/l4/value-unit.bbnf`
-  - `grammar/css/l4/color.bbnf`
-  - `grammar/google-sheets/google-sheets.bbnf`
-  - `grammar/bbnf/bbnf.bbnf`
-  - `restart/skinny/tranches/sk-v12/research/w2-selected-intervention/`
-- **Scalar/oracle status:** depends on the admitted baseline. The selected
-  baseline's generated Track 1 plus independent oracle become the
-  scalar/product reference. E4 may add FIRST-set, prefix-trie, or lookahead
-  dispatch only from grammar metadata.
-- **Checkasm/parity status:** N/A for scalar generated dispatch. If E4 consumes
-  byte-set or movemask support, strict scalar differential/checkasm is required
-  for the exact same-wave consumer before benchmark evidence counts.
-- **Same-wave consumer:** the selected generated non-JSON direct or typed
-  parser row and the non-JSON gate/report consumer. The intervention cannot be
-  a helper-only change.
-- **Variants:**
-  - CSS L4 declaration values: preferred if E1 admitted.
-  - Sheets formula: fallback if E2 admitted; threshold uses
-    `W1_sheets_baseline_mbps`.
-  - BBNF-self grammar: fallback if E3 admitted; threshold uses
-    `W1_bbnf_self_baseline_mbps`.
-- **Falsifiability gate:**
-
-  | Row | Threshold |
-  |---|---:|
-  | selected generated non-JSON row Track 1 | >= `ceil(W1_selected_baseline_mbps * 1.01)` |
-  | selected generated non-JSON row independent oracle/Track 2 | finite positive Mbps |
-  | selected generated non-JSON row strict equality | 100% fixture equality |
-
-  If JSON reports are refreshed as companions, all direct guard floors from
-  SK-V11 SPEC Section 0.5 hold and no JSON residual row is admitted by
-  analogy.
-- **LOC budget:** <= 430 handwritten source/test/gate LOC, plus regenerated
-  output only for the selected non-JSON module.
-- **Hard cap / revert:** see Alpha-Level Cost, Cap, And Revert Matrix.
-- **Risk:** high. It is the first actual non-JSON generated intervention and
-  must avoid folding W1 baseline creation and W2 intervention into one paper
-  close.
-- **Pre-blocked route adjacency:** REDRESS 113 blocks dispatch before a
-  positive baseline exists; REDRESS 112 blocks JSON-provider emission as proof;
-  REDRESS 111 blocks schema-only evidence as intervention evidence; W3/W4/W5
-  JSON micro-wave results do not count for this non-JSON admission.
-
-### E5: Conditional JSON Direct Companion From A Non-JSON-Proven Template
-
-- **Priority:** 5, conditional and lowest priority. This is the only JSON
-  direct candidate in the shortlist.
-- **Purpose:** allow a JSON direct row to be reconsidered only if the successful
-  E1/E4 non-JSON generated template creates fresh material evidence beyond
-  REDRESS 114-119.
-- **Fresh material evidence required before dispatch:**
-  - a post-E4 profile showing the same grammar-neutral generated template is a
-    hot direct consumer on JSON, not `number_span_emit_slot`,
-    `container_tail_next`, bounded string span, escaped source fold, or
-    output-digest host sink under a new name;
-  - same-host caller microbench on the selected JSON row showing the template
-    can plausibly close both Track 1 and independent Track 2 floors before
-    production wiring;
-  - proof that the same source delta has already been consumed by a generated
-    non-JSON row, so this is not a JSON-only micro-wave.
-- **Owner paths:**
-  - `skinny/crates/codegen/src/lower/sink_only.rs`
-  - `skinny/crates/codegen/src/lower/schema_direct.rs`
-  - `skinny/crates/runtime/src/grammars/json/generated.rs`
-  - `skinny/crates/bbnf-bench/src/direct_struct.rs`
-  - `skinny/crates/bbnf-bench/src/track2/json.rs`
   - `skinny/crates/bbnf-bench/src/bin/gate.rs`
+  - `skinny/crates/bbnf-bench/src/lock14_baseline.rs`
+  - `restart/skinny/tranches/sk-v12/research/w1/css-l4/`
+- Scalar reference status: open. The generated Track 1 parser is the candidate
+  under test; the independent scalar/oracle side is lightningcss plus a
+  same-plane equality adapter over CSS declaration-value facts. The oracle must
+  not call generated Track 1, generated CSS sink helpers, or a report fixture.
+- Checkasm/parity status: checkasm N/A for the baseline if scalar-only.
+  Required parity is strict equality against the lightningcss-derived oracle
+  and independent Track 2/source provenance. Any SIMD helper used by the
+  baseline inherits E3/E5 gates.
+- Same-wave consumer: Criterion row
+  `nonjson/css_l4/declaration_values/direct_to_struct`, equality artifact, and
+  non-JSON gate report. Producer-only telemetry rejects.
+- Gate: `G-W1-CSS-L4-LIGHTNINGCSS-BASELINE`.
+  - generated Track 1 Mbps >= `lightningcss_mbps + 1`
+  - lightningcss comparator Mbps measured same-run and same corpus
+  - strict equality PASS for every fixture item
+  - sample count >= 30
+  - output plane `direct_sink`
+  - report schema `sk-v12-nonjson-generated-v1` consumed by gate
+  - Lock 14 Section 2.1 clean
+  - JSON direct/typed guard floors either hold in a refreshed run or
+    `skinny/RESULTS.md` is proven unchanged because no JSON-producing path
+    moved
+- LOC budget: <=620 handwritten source/test/gate LOC plus generated CSS output
+  outside the hand LOC budget. This deliberately widens the pre-pin 520 CSS
+  estimate because the pin makes lightningcss parity and comparator wiring
+  mandatory.
+- Risk: high. This crosses REDRESS 112/113 and establishes the campaign close
+  row.
+- Revert: revert codegen/runtime/bench/report/gate/RESULTS and generated CSS
+  files as one slice; save `/tmp/skv12-waveW1-rejected.patch`; REDRESS records
+  exact blocker or measured miss.
+
+### E2 - `GrammarConfig` And Lock 14 Leak Extraction
+
+- Purpose: remove the seven JSON policy leaks called out by
+  `skv12-value-api-audit.md` so E1 can emit CSS L4 without routing through JSON
+  value/container/string/number/key/sink policy.
+- Owner paths:
+  - `skinny/crates/runtime/src/tape/grammar_config.rs`
+  - `skinny/crates/runtime/src/tape/mod.rs`
+  - `skinny/crates/runtime/src/tape/assembler.rs`
+  - `skinny/crates/runtime/src/lib.rs`
+  - `skinny/crates/codegen/src/lib.rs`
+  - `skinny/crates/codegen/src/json_templates/generated.rs`
+  - new grammar-neutral codegen template/provider files, for example
+    `skinny/crates/codegen/src/nonjson_profile.rs` and
+    `skinny/crates/codegen/src/generated_config.rs`
+  - generated CSS config/output under
+    `skinny/crates/runtime/src/grammars/css_l4_declaration_values/`
+  - `skinny/crates/bbnf-bench/src/lock14_baseline.rs`
   - `skinny/crates/bbnf-bench/src/report.rs`
-  - `skinny/crates/bbnf-bench/benches/json_parity.rs`
-  - `skinny/RESULTS.md`
+- Scalar reference status: scalar-only API extraction. The reference is
+  byte-for-byte equivalence for existing JSON generated output and a compiling
+  CSS generated module whose grammar policies come from generated metadata.
+- Checkasm/parity status: checkasm N/A unless E2 changes SIMD contact points.
+  Required parity is JSON regen parity plus CSS compile/equality smoke through
+  E1's gate.
+- Same-wave consumer: E1 CSS generated runtime and non-JSON gate consume the
+  new `GrammarConfig` surface in the same wave. A generic API addition with no
+  CSS-generated consumer is a paper close.
+- Gate: `G-W1-GRAMMARCONFIG-LOCK14`.
+  - no new public JSON-named API in generic crates
+  - no generic branch on grammar name, corpus name, object/array role, field
+    name, string role, or layout role
+  - structural alphabet, dispatch primary set, escape policy, number policy,
+    key/member policy, flag interpretation, and sink trait are supplied by
+    generated grammar metadata or per-grammar generated modules
+  - JSON generated output remains parity-green
+  - E1 CSS row compiles, runs, and is gate-consumed
+- LOC budget: <=360 handwritten LOC.
+- Risk: high. This touches generic codegen/runtime substrate and is the main
+  Lock 14 failure surface.
+- Revert: revert generic API/template/runtime changes together with generated
+  CSS output if E1 fails for a Lock 14 reason.
+
+### E3 - `escape_mask_64` Correctness Closure Before SIMD
+
+- Purpose: verify and resolve the NEON/string escape-mask correctness blocker
+  (`0xCAFEF00DBAADF00D`) before any new SIMD/ASM admission. This candidate is
+  a correctness gate, not a throughput admission.
+- Owner paths:
+  - `skinny/crates/bbnf-simd/src/lib.rs`
+  - `skinny/crates/bbnf-simd/src/aarch64/string_block.rs`
+  - `skinny/crates/bbnf-simd/src/aarch64/byte_context.rs` only if boundary
+    handoff is needed
+  - `skinny/crates/bbnf-simd/tests/checkasm_parity.rs`
+  - `skinny/crates/bbnf-simd/tests/checkasm_byte_class_from_eq_set_64.rs`
+  - `skinny/crates/bbnf-simd/tests/corpus_parity.rs`
+  - `skinny/crates/bbnf-simd/CHECKASM-REPORT.md`
   - `skinny/REDRESS.md`
-  - `restart/skinny/tranches/sk-v12/research/w-json-template-companion/`
-- **Scalar/oracle status:** current generated JSON direct and independent
-  Track 2 are the references, but REDRESS 119 treats the residual rows as
-  exhausted. This candidate needs the fresh non-JSON-proven template proof
-  above before those references can be used for a new JSON row attempt.
-- **Checkasm/parity status:** scalar/product parity by default. SIMD/checkasm
-  is disallowed unless the non-JSON wave already consumed the same SIMD helper
-  with strict parity and the JSON consumer repeats strict scalar differential
-  on its row.
-- **Same-wave consumer:** generated JSON direct Track 1 plus independent Track
-  2 for the same selected row, with `gate-json` consuming provenance and row
-  movement in the same wave.
-- **Falsifiability gate:**
+- Scalar reference status: existing scalar `escape_mask_64` in
+  `skinny/crates/bbnf-simd/src/lib.rs` is the reference, subject to explicit
+  boundary-state semantics (`bs_carry_in` to `new_carry`) being documented by
+  tests.
+- Checkasm/parity status: incomplete for the pin. Add an adversarial xorshift
+  reproducer using seed `0xCAFEF00DBAADF00D`, boundary backslash runs,
+  carry-in true/false, every legal alignment, and corpus parity. A PASS must
+  run before E5 or any other SIMD candidate can claim admission.
+- Same-wave consumer: Lock 16/checkasm gate and corpus parity harness. If a
+  source fix is needed, the harness is the same-wave consumer; no performance
+  row moves from E3 alone.
+- Gate: `G-W1-ESCAPE-MASK64-CORRECTNESS`.
+  - scalar differential PASS for adversarial seed and boundary cases
+  - corpus parity PASS on expanded skinny corpus
+  - CHECKASM report updated with the resolved failure signature
+  - no throughput/SOTA admission claimed
+- LOC budget: <=180 handwritten LOC.
+- Risk: high because it gates all later SIMD claims. Scope is intentionally
+  narrow and correctness-only.
+- Revert: revert SIMD source/test/report edits; record REDRESS if the bug
+  cannot be resolved inside cap. Later SIMD waves stay blocked.
 
-  | Row | Threshold |
-  |---|---:|
-  | `github_events/direct_to_struct` | Track 1 and Track 2 >= 13403 Mbps |
-  | `update_center/direct_to_struct` | Track 1 and Track 2 >= 10059 Mbps |
-  | `random/direct_to_struct` | Track 1 and Track 2 >= 7878 Mbps |
-  | `canada/direct_to_struct` | Track 1 and Track 2 >= 10637 Mbps |
+### E4 - CSS-Local Same-Tape Event Union
 
-  Select at most one row unless the pre-dispatch microbench shows both tracks
-  clearing floor on multiple rows. Existing direct and typed guard floors from
-  SK-V11 SPEC Section 0.5 hold.
-- **LOC budget:** <= 300 handwritten source/test/gate LOC, plus regenerated
-  JSON output only for selected generated callers.
-- **Hard cap / revert:** see Alpha-Level Cost, Cap, And Revert Matrix.
-- **Risk:** high. It is adjacent to every SK-V11 direct rejection and should
-  be rejected at plan time if the fresh evidence is missing.
-- **Pre-blocked route adjacency:** REDRESS 114 blocks numeric slot retries;
-  REDRESS 115 blocks container-tail/direct-dispatch retry without material
-  difference; REDRESS 116 blocks bounded string span without accepted parity
-  and Track 2 cost evidence; REDRESS 117 blocks decoded source-fold routes;
-  REDRESS 118 blocks digest/host-sink recovery; REDRESS 119 blocks docs-only
-  direct row reclamation; REDRESS 120 prioritizes generated non-JSON baseline
-  first.
+- Purpose: exercise the user-pin-unblocked union-substrate category with a new
+  implementation that targets CSS L4 declaration-value alternatives rather than
+  JSON parse-plane structural rediscovery.
+- Material differential vs REDRESS 96/97/98:
+  - REDRESS 96 wrote a JSON class-column substrate plus move-consumed
+    structural index and regressed every row.
+  - REDRESS 97 removed allocation but retained a JSON streaming cursor route
+    and still regressed.
+  - REDRESS 98 retired that specific SK-V9 gate.
+  - This candidate is generated, CSS-local, output-plane-owned, and consumed
+    inside the CSS declaration-value direct parser. It does not retain a second
+    structural vector, public substrate API, parser-owned sidecar, or
+    parse_only scanner. The union tag is an in-row generated Rust enum or
+    same-tape event projection used immediately by the CSS direct sink.
+- Owner paths:
+  - `skinny/crates/codegen/src/lower/`
+  - `skinny/crates/codegen/src/direct_schema.rs`
+  - selected generated CSS runtime under
+    `skinny/crates/runtime/src/grammars/css_l4_declaration_values/`
+  - `skinny/crates/runtime/src/tape/event_grammar.rs`
+  - `skinny/crates/runtime/src/tape/mod.rs` only if an existing generic
+    `EventGrammar` bound must be consumed
+  - `skinny/crates/bbnf-bench/benches/nonjson_baseline.rs`
+  - `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs`
+  - `skinny/crates/bbnf-bench/src/report.rs`
+- Scalar reference status: required. The scalar reference is the pre-union CSS
+  generated baseline from E1 with identical fact output; E4 adds an isolated
+  microbench comparing baseline dispatch vs generated union dispatch.
+- Checkasm/parity status: checkasm N/A unless the union producer consumes
+  SIMD. Product parity against E1/lightningcss is mandatory.
+- Same-wave consumer: CSS L4 generated direct parser consumes the union route
+  in the row measured by the non-JSON gate. No helper-only event model lands.
+- Gate: `G-W2-CSS-SAME-TAPE-UNION`.
+  - E1 baseline admitted first
+  - microbench shows positive same-host movement on CSS declaration-value
+    dispatch before source redress continues
+  - generated CSS Track 1 >= `lightningcss_mbps + 1`
+  - generated CSS Track 1 is faster than E1 baseline or records a measured
+    REDRESS reject
+  - strict equality PASS against lightningcss oracle
+  - no public substrate API, second retained substrate, sidecar class column,
+    retained structural vector, or parse_only admission
+- LOC budget: <=420 handwritten LOC plus regenerated CSS output.
+- Risk: high. This is the required new union category attempt and must pass
+  mandatory CHALLENGE before redress.
+- Revert: revert generated union source, CSS generated output, bench/report,
+  and RESULTS/REDRESS changes as one slice; save rejected patch if measured
+  negative.
 
-## Explicitly Not Shortlisted
+### E5 - ARMv9.2 TBL/TBX CSS Byte-Class Consumer
 
-- JSON-only numeric, string, escape, dispatch, and digest micro-waves without
-  fresh non-JSON-proven material evidence.
-- Parse-only SOTA movement.
-- x86 implementation work.
-- JSON-provider emission as generic runtime proof.
-- Old hand non-JSON runtimes, witness modules, sidecars, or gate fixtures as
-  generated Track 1 baseline authority.
-- Any telemetry field that is not consumed by a same-wave gate/report consumer.
+- Purpose: exercise the ASM-gen/ARMv9.2 category with a real CSS consumer and
+  zero orphan kernel posture. Preferred primitive is a NEON TBL/TBX byte-class
+  classifier for CSS declaration-value layout/delimiter/string-interesting byte
+  sets; fallback within this candidate is UDOT digit span only if CSS numeric
+  token profile names digit-run as the hot leaf.
+- Material differential vs REDRESS 88/89/90:
+  - REDRESS 88 rejected PMULL prefix-XOR as a JSON default body.
+  - REDRESS 89 rejected CSSC CTZ bulk consumer/canary fold.
+  - REDRESS 90 admitted only canary hardening Stage 1, not row movement.
+  - This candidate uses CSS row-local byte-class or digit-run work, not PMULL
+    prefix-XOR default, not CTZ bulk emit, and not canary hardening as a row
+    movement claim.
+- Owner paths:
+  - `skinny/crates/bbnf-simd/src/scalar/byte_class_from_eq_set_64.rs`
+  - `skinny/crates/bbnf-simd/src/scalar/byte_class_from_table_64.rs`
+  - `skinny/crates/bbnf-simd/src/aarch64/byte_class_from_eq_set_64.rs`
+  - `skinny/crates/bbnf-simd/src/aarch64/byte_class_from_table_64.rs`
+  - `skinny/crates/bbnf-simd/src/aarch64/classify_tbl4.rs`
+  - `skinny/crates/bbnf-simd/src/dispatch.rs`
+  - `skinny/crates/bbnf-simd/tests/checkasm_byte_class_from_eq_set_64.rs`
+  - `skinny/crates/bbnf-simd/tests/checkasm_byte_class_from_table_64.rs`
+  - selected generated CSS runtime under
+    `skinny/crates/runtime/src/grammars/css_l4_declaration_values/`
+  - `skinny/crates/parse-that-regex/src/lib.rs` only for a grammar-neutral
+    byte-set span wrapper
+  - `skinny/crates/bbnf-bench/benches/nonjson_baseline.rs`
+  - `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs`
+- Scalar reference status: existing eq-set/table scalar references are usable;
+  the selected CSS caller still needs a scalar byte-set span reference with
+  generated CSS byte classes.
+- Checkasm/parity status: existing byte-class checkasm is a starting point.
+  Required additions: CSS delimiter/layout/string-interesting byte sets, tails,
+  alignment, high-bit bytes, duplicate-set cases, and corpus windows. E3 must
+  pass first if the consumer touches string/escape scanning.
+- Microbench status: required before wave-scoping. It must isolate the CSS
+  byte-class caller and prove positive movement over scalar on this host.
+- Same-wave consumer: generated CSS declaration-value parser consumes the
+  classifier in layout skip, delimiter dispatch, or string-interesting scan.
+  Dispatch-table-only or checkasm-only work rejects as orphan.
+- Gate: `G-W2-CSS-ARMV9-TBL-CONSUMER`.
+  - E3 correctness PASS if string/escape path is touched
+  - scalar differential/checkasm PASS
+  - same-host microbench positive on selected CSS caller
+  - generated CSS Track 1 >= `lightningcss_mbps + 1`
+  - strict equality PASS against lightningcss oracle
+  - zero new orphan aarch64 primitive at close
+  - JSON guards held or proven untouched
+- LOC budget: <=430 handwritten LOC plus regenerated CSS output.
+- Risk: high. It touches native SIMD dispatch and generated consumer wiring.
+- Revert: revert SIMD/source/generated/bench/report changes as one slice; if
+  parity passes but row movement fails, record measured REDRESS and leave no
+  orphan native body.
+
+## Non-Shortlisted Fallbacks
+
+Sheets and BBNF-self remain legal only after a CSS L4 redress attempt fails and
+is recorded. They are not Alpha-E candidates under the user pin because D1
+makes CSS L4 authoritative for the current campaign.
+
+JSON direct residuals are also not shortlisted here. REDRESS 119 remains the
+guard authority unless a later pass supplies fresh profile, microbench, and
+material differential evidence beyond REDRESS 114-119.

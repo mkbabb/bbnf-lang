@@ -1,6 +1,6 @@
 # SK-V11 P3-E: Pre-Blocked Route Ledger
 
-Pass: S-P3 Synthesis-Plan. Cycle: V1.
+Pass: S-P3 Synthesis-Plan. Cycle: V2.
 Date: 2026-05-20.
 Scope: enumerate SK-V11 per-wave pre-blocked routes from REDRESS, S-P2 V3, and the SK-V11 goalset.
 Output: this file.
@@ -31,15 +31,16 @@ P3-B may renumber waves. If it does, the pre-block list moves with the candidate
 | Wave family for P3-B/P3-F | Candidate surface | Routes it can consider | Routes it must pre-block |
 |---|---|---|---|
 | W0 baseline / telemetry lock | SK-V11-open run id, full `RESULTS.md`, gate-json schema, strict comparator provenance | Evidence only. It can identify hot leaves and row floors. | All behavior source changes, row relabeling, stale sidecars, PMU-only or parse-only admission, producer-only telemetry, and any source edit not required by telemetry/gate validation. |
-| W1 non-JSON harness / telemetry gate | C9 accounting, generated non-JSON bench lane, grammar id/output-plane/Track 2 telemetry | Harness-only. It can create the grammar-neutral gate lane and reject missing non-JSON fields. | Behavior row movement, hand-only non-JSON proof, JSON-provider emission as generality proof, hidden directives/BIR variants, or producer-only non-JSON telemetry. |
-| W2 CSS L4 generated intervention proof | C1/C2/C4/C5/C6 with C7 support on generated CSS direct/typed parser | One admitted benchmarked CSS L4 intervention with output oracle/comparator and same-wave gate. | REDRESS 36-38, 85-87, 100-102. No JSON policy in generic crates, no renamed JSON helper as generality proof, no CostFacts-as-performance, no prose-only Lock 14 proof, no parse-only SOTA movement. |
+| W1a non-JSON gate/report schema lane | C9 accounting, grammar id/output-plane/Track 2 telemetry gate | Harness-only. It creates the grammar-neutral gate lane and rejects missing or producer-only non-JSON fields. | Behavior row movement, generated baseline authority, hand-only non-JSON proof, JSON-provider emission as generality proof, hidden directives/BIR variants, or producer-only non-JSON telemetry. |
+| W1b generated non-JSON baseline/oracle lane | C9 accounting, generated CSS/Sheets/BBNF-self baseline row plus independent oracle/Track 2 | Baseline-only. It creates exactly one generated non-JSON baseline row with strict equality and gate consumption. | Behavior intervention, row admission, JSON-provider emission as generality proof, coupled oracle, or generic JSON policy. |
+| W2 CSS L4 generated intervention proof | C1/C2/C4/C5/C6 with C7 support on generated CSS direct/typed parser | One admitted benchmarked CSS L4 intervention with output oracle/comparator and same-wave gate, consuming the W1b baseline. | REDRESS 36-38, 85-87, 100-102. No JSON policy in generic crates, no renamed JSON helper as generality proof, no CostFacts-as-performance, no prose-only Lock 14 proof, no parse-only SOTA movement, and no first-baseline creation in W2. |
 | W3 numeric direct closure | C4; D4 `number_span_emit_slot`; P2-E `pt_digit_run_span_accumulate`; optional UDOT support | Direct/typed numeric consumer with scalar span/accumulate oracle and unchanged number semantics. | REDRESS 31, 39, 46, 80. No raw `parse::<f64>()`, mantissa/table widening without fallback pool, f64 fallback policy change, number side table, or digit work without same-wave product row movement. |
 | W4 generated dispatch / byte-set control | C1, C5, C6, C7 support; D1 `container_tail_next`; D2 `direct_slot_dispatch` | Same-loop direct/typed container, whitespace, byte-class, or generated dispatch cleanup with scalar reference and product-row gate. | REDRESS 16/17/18/25, 50/51/53, 63/65/84, 92, 96/97/98/102. No pair-token fusion, function-pointer table, token-width churn, EventCursor, parser-local structural cursor, object next-key/value-byte carry, sidecar, class column, or parse-only close. |
 | W5 bounded string span / special-byte scan | C2, C7 support; D3 `borrowed_string_span`; P2-E `pt_bounded_plain_string_end` | Direct/typed string/key consumer with scalar oracle; SIMD only after strict checkasm and caller microproof. | REDRESS 28+33, 49, 54/55, 59-62, 66-69, 72, 83, 106. No retained tiny-string parse fix, retained string widening, decoded scratch/stats/hash side channels, StringBlock16 wrapper, or primitive-parity-only production. |
 | W6 escaped segment / hex decode | C3, C2/D3 support; P2-E `pt_escaped_string_segments`; `HEX_QUARTET_X4_PROOF` proof-only unless source delta exists | Direct/typed escaped-string consumer with scalar oracle; SIMD only after strict checkasm and caller microproof. | REDRESS 64, 82, 107, 108. No x4 proof-to-production promotion through the already-wired `unescape_string` caller, no JSON surrogate policy in generic code, and no single-quartet materializer. |
 | W7 output digest/hash host sink | C8 per-product host sink/oracle only; C9 accounting | Product output sink only after fresh post-parser profile still names digest/hash as limiting. | Digest/hash as parser semantics, semantic string facts or hash side tables, cache hints/prefetch without fresh output-sink hot-leaf evidence. |
 | W8 direct residual fixpoint / row reclamation | Remaining measured C1-C8 residuals; docs/gate by default | Close rows by strict measurement or record per-row uncloseable proof naming exhausted candidates. | Paper-close by routed residual, W0-clamped admission without behavior provenance, direct/typed guard demotion, and hidden telemetry fields not consumed by gate-json. |
-| W9 close / Alpha feedback | Docs, RESULTS/REDRESS/SYNTHESIS/HANDOFF/SPEC/DISPATCH reconciliation | Close if direct rows are GO or each residual has measured uncloseable proof, and a non-JSON generated intervention admitted. | Close document drift, future-phase promises, G-Alpha presentation while any W1-W8 wave lacks admitted/rejected/measured status. |
+| W9 close / Alpha feedback | Docs, RESULTS/REDRESS/SYNTHESIS/HANDOFF/SPEC/DISPATCH reconciliation | Close if direct rows are GO or each residual has measured uncloseable proof, and a non-JSON generated intervention admitted. | Close document drift, future-phase promises, G-Alpha presentation while any W1a-W8 wave lacks admitted/rejected/measured status. |
 
 ### §2.2 — Candidate-To-REDRESS Ledger
 
@@ -150,17 +151,23 @@ Any material-differential route must write this package into the wave plan:
 - REDRESS: 78 and 87 for telemetry/CostFacts-as-evidence-only; 99 for explicit Criterion authority; 100 for direct row movement predicate.
 - Avoidance rule: W0 may only bind evidence. It cannot move rows or reopen any rejected implementation route.
 
-### W1 Non-JSON Harness / Telemetry Gate
+### W1a Non-JSON Gate / Report Schema Lane
 
 - Pre-block: JSON-provider generated parser claims without non-JSON benchmark, old hand non-JSON struct-direct runtimes as proof, hidden directives/BIR variants, stale row-table reclamation, gate-only consumers, and producer-only telemetry.
 - REDRESS: 34, 35, 36, 37, 38, 48, 85, 86, 87, 100, 101, 109; also SK-V11 goalset clauses 7 and 10.
-- Avoidance rule: W1 creates the grammar-neutral generated non-JSON bench lane and gate fields only. It cannot admit a row. Track 1, Track 2/oracle, grammar id, output plane, run id, feature mask, and same-wave consumer fields must be independently consumable by the gate.
+- Avoidance rule: W1a creates the grammar-neutral gate/report lane only. It cannot create baseline authority or admit a row. Track 1, Track 2/oracle, grammar id, output plane, run id, feature mask, and same-wave consumer fields must be independently consumable by the gate.
+
+### W1b Generated Non-JSON Baseline / Oracle Lane
+
+- Pre-block: JSON-provider generated parser claims without non-JSON benchmark, old hand non-JSON struct-direct runtimes as proof, hidden directives/BIR variants, behavior intervention, coupled oracle, and row admission from baseline creation.
+- REDRESS: 34, 35, 36, 37, 38, 48, 85, 86, 87, 100, 101, 109; also SK-V11 goalset clauses 7 and 10.
+- Avoidance rule: W1b creates exactly one generated CSS/Sheets/BBNF-self baseline row and independent oracle/Track 2. It cannot land an intervention, claim admission, or leave W2 to invent the first baseline.
 
 ### W2 CSS L4 Generated Direct/Typed Intervention Proof
 
 - Pre-block: prose-only Lock 14 proof, JSON-named generic helpers, `bbnf-simd` JSON god-module residue, fossil scanner routes, public JSON generic APIs, renamed JSON policy, CostFacts-as-performance, and non-JSON benchmark without generated Track 1 plus independent oracle.
 - REDRESS: 36, 37, 38, 85, 86, 87; string/numeric/control REDRESS entries apply if the selected CSS proof uses those primitives.
-- Avoidance rule: generic crate edits need the same-wave CSS generated direct/typed parser proof. CSS policy is generated per grammar; no generic helper may encode JSON roles. The row admits only with before/after Mbps and strict semantic equality.
+- Avoidance rule: generic crate edits need the same-wave CSS generated direct/typed parser proof over the W1b baseline. CSS policy is generated per grammar; no generic helper may encode JSON roles. The row admits only with before/after Mbps and strict semantic equality. W2 may not create the first non-JSON baseline and intervention in one redress.
 
 ### W3 Numeric Direct Closure Slice
 
@@ -200,8 +207,8 @@ Any material-differential route must write this package into the wave plan:
 
 ### W9 Close / Alpha Feedback
 
-- Pre-block: future-phase promise, close document drift, G-Alpha presentation while any W1-W8 wave lacks admitted/rejected/measured status, non-JSON axis closed by prose, unconsumed telemetry, and silent guard-row demotion.
-- REDRESS: all unresolved REDRESS entries cited by W1-W8 plus REDRESS 110.
+- Pre-block: future-phase promise, close document drift, G-Alpha presentation while any W1a-W8 wave lacks admitted/rejected/measured status, non-JSON axis closed by prose, unconsumed telemetry, and silent guard-row demotion.
+- REDRESS: all unresolved REDRESS entries cited by W1a-W8 plus REDRESS 110.
 - Avoidance rule: close requires every planned wave to admit or reject with measurement, direct rows either GO or per-row uncloseable proof, and at least one non-JSON generated parser intervention admitted.
 
 ### Routes No SK-V11 Wave May Reopen

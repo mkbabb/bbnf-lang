@@ -1,6 +1,6 @@
 # SK-V11 P3-F: SPEC And Dispatch Draft
 
-Pass: S-P3 Synthesis-Plan. Cycle: V1.
+Pass: S-P3 Synthesis-Plan. Cycle: V2.
 Date: 2026-05-20.
 Scope: compose the SK-V11 SPEC and dispatch prompt from the converged S-P1/S-P2 packet.
 Output: this file + `restart/skinny/tranches/sk-v11/SPEC.md` + `restart/skinny/tranches/sk-v11/DISPATCH-PROMPT.md`.
@@ -26,7 +26,7 @@ admissible pool for S-P3:
   parser vocabulary and cannot enter generic parser crates as semantics.
 - C9 is Lock-1/output-plane accounting only. It is not a row-moving primitive.
 
-The V1 SPEC therefore sequences waves around product-plane consumers, not
+The V2 SPEC therefore sequences waves around product-plane consumers, not
 parse-only substrate repair. W3 union/event/class-column/streaming-cursor
 routes are REDRESS 96/97/98-falsified and REDRESS 102-firewalled. Any route
 that re-derives W3 under another name fails the SPEC entry gate.
@@ -46,7 +46,7 @@ The draft `SPEC.md` mirrors the SK-V8 shape:
 - §1 non-negotiables.
 - §2 wave manifest, budgets, phase caps, micro-prove-first gate, and Lock 14
   generality gate.
-- W0 through W9, each with owner paths, tasks, entry gate, exit
+- W0, W1a, W1b, and W2 through W9, each with owner paths, tasks, entry gate, exit
   gate, revert protocol, downstream effect, and pre-blocked routes.
 - A pre-blocked route ledger and G-Alpha/dispatch scope.
 
@@ -56,7 +56,8 @@ topological sequence and folds P3-C/P3-D/P3-E gate facts into the SPEC:
 | Wave | Purpose | Candidate surface |
 |---|---|---|
 | W0 | SK-V11-open telemetry lock | closed by S-P1/W0 authority |
-| W1 | non-JSON generated-parser harness and telemetry gate | C9 accounting + Lock 14 gate |
+| W1a | non-JSON gate/report schema lane | C9 accounting + Lock 14 gate |
+| W1b | generated non-JSON baseline and oracle lane | C9 accounting + generated baseline harness |
 | W2 | CSS L4/non-JSON generated intervention proof | C1/C2/C4/C5/C6 with C7 support |
 | W3 | numeric direct closure slice | C4 + P2-D D4 |
 | W4 | generated dispatch and byte-set control slice | C1/C5/C6 with C7 support + P2-D D1/D2 |

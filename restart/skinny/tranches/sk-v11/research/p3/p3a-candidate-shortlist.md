@@ -1,6 +1,6 @@
 # SK-V11 P3-A: Candidate Shortlist
 
-Pass: S-P3 Synthesis-Plan. Cycle: V1.
+Pass: S-P3 Synthesis-Plan. Cycle: V2.
 Date: 2026-05-20.
 Scope: distil the converged S-P2 candidate pool into row-gated SK-V11 candidate interventions.
 Output: this file.
@@ -40,29 +40,31 @@ from the opening goalset are:
 | `distinct_values/direct_to_struct` | 2658 |
 | `y_string_unicode/direct_to_struct` | 3950 |
 
-Existing direct `A / GO` rows must not be silently lost. For V1 shortlist
-purposes the maintain floor is 99% of SK-V11-open for each direct track, plus
-the same strict direct comparator floor remains binding:
+Existing direct `A / GO` rows must not be silently lost. The maintain floor is
+the P3-C/SPEC authority: `max(ceil(sonic direct / 1.10),
+floor(SK-V11-open track Mbps * 0.98))` per track.
 
-| Direct guard row | Track 1 maintain | Track 2 maintain | Strict direct floor |
-|---|---:|---:|---:|
-| `citm_catalog/direct_to_struct` | 18377 | 17609 | 14119 |
-| `apache_builds/direct_to_struct` | 11141 | 10087 | 9996 |
-| `marine_ik/direct_to_struct` | 8848 | 9342 | 7703 |
-| `unicode_basic/direct_to_struct` | 2276 | 2204 | 2140 |
+| Direct guard row | Track 1 maintain | Track 2 maintain |
+|---|---:|---:|
+| `citm_catalog/direct_to_struct` | 18191 | 17431 |
+| `apache_builds/direct_to_struct` | 11028 | 9996 |
+| `marine_ik/direct_to_struct` | 8759 | 9248 |
+| `unicode_basic/direct_to_struct` | 2253 | 2182 |
 
-Existing typed `A / GO` rows are guarded on generated Track 1 no-regression at
-99% of SK-V11-open, with typed output parity still required:
+Existing typed `A / GO` rows are guarded on generated Track 1 by
+`max(ceil(sonic typed / 1.10), floor(SK-V11-open Track 1 * 0.98))`; Track 2 is
+an independent oracle guard at `floor(SK-V11-open Track 2 * 0.98)` when
+measured. Typed output parity remains required.
 
-| Typed guard row | Track 1 maintain floor Mbps |
-|---|---:|
-| `twitter/real_typed_struct` | 17562 |
-| `citm_catalog/real_typed_struct` | 30233 |
-| `apache_builds/real_typed_struct` | 8393 |
-| `github_events/real_typed_struct` | 11752 |
-| `update_center/real_typed_struct` | 11732 |
-| `mesh/real_typed_struct` | 9308 |
-| `marine_ik/real_typed_struct` | 11670 |
+| Typed guard row | Track 1 maintain | Track 2 oracle guard |
+|---|---:|---:|
+| `twitter/real_typed_struct` | 17385 | 15593 |
+| `citm_catalog/real_typed_struct` | 29928 | 17321 |
+| `apache_builds/real_typed_struct` | 8308 | 6754 |
+| `github_events/real_typed_struct` | 11633 | 12029 |
+| `update_center/real_typed_struct` | 11613 | 10150 |
+| `mesh/real_typed_struct` | 9214 | 7739 |
+| `marine_ik/real_typed_struct` | 11552 | 9894 |
 
 Every candidate below is therefore an intervention packet, not a primitive
 wish. It names owner paths, scalar-reference state, checkasm/parity state,
@@ -168,8 +170,9 @@ Dropped as standalone candidates:
 - **Falsifiability gate:** selected JSON direct rows must meet both-track
   floors: `twitter >= 13740`, `github_events >= 13403`,
   `update_center >= 10059`, `random >= 7878`, `gsoc-2018 >= 3737`,
-  `distinct_values >= 2658`. If any unicode string row is refreshed as a guard,
-  it must maintain 99% of W0 or meet its own direct floor:
+  `distinct_values >= 2658`. If any unicode string row is refreshed, it remains
+  a floor-bearing residual unless already admitted; it must meet its own direct
+  floor:
   `unicode_escapes >= 3441`, `unicode_mixed >= 2588`,
   `y_string_unicode >= 3950`.
 - **Reject boundary:** reject on REDRESS 61/62/83/106 route reuse, retained
@@ -347,16 +350,14 @@ Dropped as standalone candidates:
 - **Falsifiability gate:** JSON companion rows, if selected, must meet the
   direct floors `github_events >= 13403`, `update_center >= 10059`,
   `random >= 7878`, or `instruments >= 8969`. The non-JSON row is named
-  `css_l4/declaration_values/{direct,typed}` in V1, with fallback
-  `google_sheets/formula/{direct,typed}`; no SK-V11-open Mbps floor exists yet
-  in `skinny/RESULTS.md`, so P3-C/P3-D must either materialize a W0 non-JSON
-  baseline and concrete Mbps floor before this behavior wave dispatches or mark
-  the non-JSON gate unmeasurable. This candidate is therefore conditional until
-  W0 telemetry binds a concrete non-JSON floor.
+  `css_l4/declaration_values/{direct,typed}` in V2, with fallback
+  `google_sheets/formula/{direct,typed}`. W1a creates the gate/report lane and
+  W1b creates the baseline row; W2 admits only if the intervention reaches
+  `ceil(W1b_css_baseline_mbps * 1.01)` with strict oracle equality.
 - **Reject boundary:** reject on JSON-provider policy in generic codegen, new
   directive/BIR/backend variant, generic-crate grammar names, hidden sidecar,
   Track 1/Track 2 shared implementation, non-JSON proof by prose, or absence of
-  a concrete non-JSON Mbps floor before redress.
+  a W1b concrete non-JSON Mbps baseline before redress.
 
 ### P3A-C7: `typed_direct_guard_extension`
 
@@ -401,7 +402,7 @@ All JSON direct admissions use the same concrete target floors:
 | Candidate | Candidate row set | Mbps floor rule |
 |---|---|---|
 | P3A-C1 `direct_slot_dispatch_and_container_tail_next` | `github_events`, `update_center`, `random`, `canada`, `mesh`, `instruments` | Both Track 1 and Track 2/oracle meet 13403 / 10059 / 7878 / 10637 / 8675 / 8969 respectively. |
-| P3A-C2 `bounded_plain_string_span_direct` | `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, `distinct_values`; unicode rows as guards or selected rows | Both tracks meet 13740 / 13403 / 10059 / 7878 / 3737 / 2658 respectively; if selected, `unicode_escapes >= 3441`, `unicode_mixed >= 2588`, `y_string_unicode >= 3950`. |
+| P3A-C2 `bounded_plain_string_span_direct` | `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, `distinct_values`; unicode residual rows as floor-bearing selected rows | Both tracks meet 13740 / 13403 / 10059 / 7878 / 3737 / 2658 respectively; if selected, `unicode_escapes >= 3441`, `unicode_mixed >= 2588`, `y_string_unicode >= 3950`. |
 | P3A-C3 `escaped_string_segments_hex_run` | `unicode_escapes`, `unicode_mixed`, `y_string_unicode`, optional `gsoc-2018` | Both tracks meet 3441 / 2588 / 3950 / 3737 respectively. |
 | P3A-C4 `digit_run_span_accumulate_and_number_slot` | `canada`, `mesh`, `numbers`, `instruments` | Both tracks meet 10637 / 8675 / 2425 / 8969 respectively. |
 | P3A-C5 `byte_set_layout_skip_with_transient_masks` | `twitter`, `random`, `distinct_values`, `instruments`, optional `update_center` | Both tracks meet 13740 / 7878 / 2658 / 8969 / 10059 respectively. |

@@ -1,7 +1,7 @@
 # SK-V11 SPEC
 
 Pass: S-P3 Synthesis-Plan.
-Cycle: V1 draft.
+Cycle: V2 draft.
 Date: 2026-05-20.
 Status: DRAFT. S-P3 CHALLENGE must converge before this file becomes wave
 dispatch authority.
@@ -80,19 +80,25 @@ non-admission outcomes. `S` is diagnostic/substrate-guard, not a SOTA win.
 
 ### 0.3 Required Telemetry
 
-SK-V11 inherits the 36-field schema:
+SK-V11 inherits the schema-v3 required identifier set from P3-D:
 
 ```text
 row_id grammar_id domain corpus workload outcome_id verdict strictness
-output_plane track1_mbps track2_mbps comparator_id comparator_plane
-comparator_strictness comparator_freshness measured_validation_path
-profile_artifact sample_cost sample_count build_flags host_triple feature_mask
-costfacts_rule_id costfacts_chosen_shape costfacts_rejected_alternative_ids
-redress_entry wave_id run_id sidecar_freshness sk_v9_open_delta
-substrate_surface structural_projection_status substrate_cardinality
-same_wave_consumer_class track2_independence_status
+parse_utf8 escape_complete flaw_probe output_plane track1_mbps track2_mbps
+comparator_id comparator_plane comparator_strictness comparator_freshness
+sidecar_freshness comparator_value_mbps comparator_source_artifact
+measured_validation_path profile_artifact sample_cost sample_count build_flags
+host_triple feature_mask costfacts_rule_id costfacts_chosen_shape
+costfacts_rejected_alternative_ids redress_entry wave_id run_id
+sk_v9_open_delta substrate_surface structural_projection_status
+substrate_cardinality same_wave_consumer_class track2_independence_status
 diagnostic_nonproducer_status
 ```
+
+The gate may render fewer physical table columns than identifiers only when the
+folded cell is reconstructable and validator-consumed. Comparator value/source
+and UTF-8/escape/flaw-probe validation are evidence identifiers, not optional
+display text.
 
 `gate-json` must fail closed on missing required fields, duplicate or unknown
 row ids, unsupported outcomes, non-uniform or invalid run ids, stale strict
@@ -181,24 +187,28 @@ row is measured.
 | Wave | Section | Title | Candidate surface | Dispatch status | LOC budget | Redress cap |
 |---|---|---|---|---|---:|---:|
 | W0 | 3 | SK-V11-open Telemetry Lock | W0 profile authority | Closed by S-P1/W0 | 0 behavior LOC | n/a |
-| W1 | 4 | Non-JSON Generated Parser Harness And Telemetry Gate | C9 accounting + Lock 14 | Conditional on S-P3 convergence | 220-460 source/test/gate LOC | <=90 min |
-| W2 | 5 | CSS L4 Generated Direct/Typed Intervention Proof | C1/C2/C4/C5/C6 with C7 support | Conditional on W1 close + CHALLENGE | 300-650 source/test/generated LOC | <=90 min |
-| W3 | 6 | Numeric Direct Closure Slice | C4 + D4, optional UDOT | Conditional on W2 disposition + CHALLENGE | 220-500 source/test/generated LOC | <=90 min |
-| W4 | 7 | Generated Dispatch And Byte-Set Control Slice | C1/C5/C6 with C7 support + D1/D2 | Conditional on W3 disposition + CHALLENGE | 260-650 source/test/generated LOC | <=90 min |
-| W5 | 8 | Bounded String Span And Special-Byte Scan | C2 + D3 | Conditional on W4 disposition + CHALLENGE | 220-550 source/test/generated LOC | <=90 min |
-| W6 | 9 | Escaped Segment And Hex Decode Slice | C3, x4 proof only unless new source delta | Conditional on W5 disposition + CHALLENGE | 220-550 source/test/generated LOC | <=90 min |
-| W7 | 10 | Output Digest/Hash Host Sink | C8 only | Conditional on W3-W6 dispositions + CHALLENGE | 160-350 source/test/gate LOC | <=90 min |
-| W8 | 11 | Direct Residual Fixpoint And Row Reclamation | remaining C1-C8 measured routes | Conditional on W3-W7 dispositions | 250 docs/gate LOC; optional <=250 source LOC only with CHALLENGE | <=90 min |
-| W9 | 12 | Close And Alpha Feedback | docs/gate | Conditional on W8 close | 80-180 docs/gate LOC | <=90 min |
+| W1a | 4 | Non-JSON Gate/Report Schema Lane | C9 accounting + Lock 14 gate | Conditional on S-P3 convergence + CHALLENGE | <=260 handwritten source/test/gate LOC; 0 generated LOC unless fixtures are named | <=90 min |
+| W1b | 5 | Generated Non-JSON Baseline And Oracle Lane | C9 accounting + generated baseline harness | Conditional on W1a close + CHALLENGE | <=360 handwritten source/test/gate LOC; regenerated output capped to selected generated parser inputs | <=90 min |
+| W2 | 6 | CSS L4 Generated Direct/Typed Intervention Proof | C1/C2/C4/C5/C6 with C7 support | Conditional on W1b close + CHALLENGE | <=430 handwritten source/test/gate LOC; regenerated output capped to named inputs | <=90 min |
+| W3 | 7 | Numeric Direct Closure Slice | C4 + D4, optional UDOT | Conditional on W2 disposition + CHALLENGE | <=360 handwritten source/test/gate LOC; regenerated output capped to named JSON callers | <=90 min |
+| W4 | 8 | Generated Dispatch And Byte-Set Control Slice | C1/C5/C6 with C7 support + D1/D2 | Conditional on W3 disposition + CHALLENGE | <=430 handwritten source/test/gate LOC; regenerated output capped to named inputs | <=90 min |
+| W5 | 9 | Bounded String Span And Special-Byte Scan | C2 + D3 | Conditional on W4 disposition + CHALLENGE | <=360 handwritten source/test/gate LOC; regenerated output capped to named string/key callers | <=90 min |
+| W6 | 10 | Escaped Segment And Hex Decode Slice | C3, x4 proof only unless new source delta | Conditional on W5 disposition + CHALLENGE | <=360 handwritten source/test/gate LOC; regenerated output capped to named escaped-string callers | <=90 min |
+| W7 | 11 | Output Digest/Hash Host Sink | C8 only | Conditional on W3-W6 dispositions + CHALLENGE | <=350 handwritten source/test/gate LOC | <=90 min |
+| W8 | 12 | Direct Residual Fixpoint And Row Reclamation | remaining C1-C8 measured routes | Conditional on W3-W7 dispositions | <=250 docs/gate/result LOC; source work requires W8a split and remaining bracket slot | <=90 min |
+| W9 | 13 | Close And Alpha Feedback | docs/gate | Conditional on W8 close | 80-180 docs/gate LOC | <=90 min |
 
 Phase caps follow `SKINNY-TRIUMVIRATE.md`: research 30 min per agent, plan 30
 min, CHALLENGE 60-90 min when required, redress 75 min target and 90 min hard
 cap unless CHALLENGE grants a SPEC-recorded split or extension. If a plan
 cannot fit the budget, it returns REVISE before source work.
 
-Behavior waves W2-W7 are first-of-class or generic/source-touching and
-therefore require CHALLENGE before redress. W8 requires CHALLENGE only if it
-adds a final source route; gate/report-only fixpoint accounting may skip it.
+The bracket is W0, W1a, W1b, W2-W9: 11 waves, leaving one spare split before
+the skinny `> 12` escalation rule. W1a-W7 are first-of-class or
+generic/source-touching and therefore require CHALLENGE before redress. W8
+requires CHALLENGE only if it adds a final source route; that source route
+becomes W8a and consumes the only spare split. Gate/report-only fixpoint
+accounting may skip W8 CHALLENGE.
 
 ### 2.1 Micro-Prove-First Gate
 
@@ -258,7 +268,7 @@ SK-V11-open run id.
 
 Exit gate `G-W0-SK-V11-OPEN-LOCK`:
 
-- `skinny/RESULTS.md` and `gate-json` agree on the 36-field schema and
+- `skinny/RESULTS.md` and `gate-json` agree on the schema-v3 required identifier set and
   10-outcome enum.
 - Overall surface remains 16 `parse_only S / NO-GO`, one `parse_only L /
   NO-GO`, 4 direct `A / GO`, 13 direct `N-direct / NO-GO`, and 7 typed `A /
@@ -270,57 +280,103 @@ the missing telemetry consumer.
 
 Downstream effect: behavior waves dispatch only against this baseline.
 
-## 4. W1 - Non-JSON Generated Parser Harness And Telemetry Gate
+## 4. W1a - Non-JSON Gate/Report Schema Lane
 
-Candidate surface: C9 accounting and Lock 14 gate; proof infrastructure.
+Candidate surface: C9 accounting and Lock 14 gate/report infrastructure. No
+parser row moves in this wave.
+
+Owner paths:
+
+- `skinny/crates/bbnf-bench/src/bin/gate.rs`
+- `skinny/crates/bbnf-bench/src/report.rs`
+- `skinny/crates/bbnf-bench/src/metadata.rs`
+- `skinny/crates/bbnf-bench/benches/`
+- `restart/skinny/tranches/sk-v11/research/w1a/`
+
+Entry gate: W0 closed; CHALLENGE accepts the non-JSON identifier/gate
+extension without behavior row movement.
+
+Tasks:
+
+- Teach the gate/report path to consume non-JSON benchmark evidence without
+  weakening JSON `gate-json`.
+- Add failing and passing gate fixtures for grammar id, domain, output plane,
+  comparator/oracle, Track 2/oracle independence, run id, host, feature mask,
+  same-wave consumer class, and producer-only telemetry rejection.
+- Confirm JSON rows still pass with the schema-v3 required identifier set.
+
+Exit gate `G-W1a-NONJSON-GATE`:
+
+- Missing required non-JSON fields are rejected by the gate.
+- Producer-only non-JSON telemetry is rejected.
+- JSON `gate-json --with-cost-facts --check-results` remains green.
+- No JSON `RESULTS.md` row moves.
+- No generated non-JSON baseline authority is claimed.
+
+Revert protocol: revert gate/report/fixture changes as one slice and record
+REDRESS if the gate cannot consume the schema without weakening JSON.
+
+Downstream effect: W1b may create the first generated non-JSON baseline row
+against this gate/report lane.
+
+Pre-blocked routes: JSON-provider emission as a generic proof, documentation-
+only Lock 14 claims, behavior row movement, hidden directives/BIR variants, and
+producer-only telemetry.
+
+## 5. W1b - Generated Non-JSON Baseline And Oracle Lane
+
+Candidate surface: C9 accounting, generated non-JSON baseline harness, and an
+independent Track 2/oracle. No intervention admits in this wave.
 
 Owner paths:
 
 - `skinny/crates/codegen/src/lib.rs`
 - `skinny/crates/codegen/src/lower/`
 - `skinny/crates/codegen/src/direct_schema.rs`
+- `skinny/crates/runtime/src/grammars/`
 - `skinny/crates/bbnf-bench/src/bin/gate.rs`
 - `skinny/crates/bbnf-bench/src/report.rs`
 - `skinny/crates/bbnf-bench/benches/`
 - `grammar/css/l4/`
 - `grammar/google-sheets/google-sheets.bbnf`
 - `grammar/bbnf/`
-- `restart/skinny/tranches/sk-v11/research/w1/`
+- `restart/skinny/tranches/sk-v11/research/w1b/`
 
-Entry gate: W0 closed and the plan selects exactly one non-JSON target,
-preferring CSS L4 declaration values, then Sheets, then BBNF-self.
+Entry gate: W1a closed; CHALLENGE selects exactly one non-JSON target,
+preferring CSS L4 declaration values, then Sheets, then BBNF-self, and names
+the independent oracle/Track 2 path.
 
 Tasks:
 
-- Stand up a generated non-JSON direct or typed parser benchmark harness.
+- Stand up exactly one generated non-JSON direct or typed parser baseline row.
 - Add or name an independent Track 2/oracle for the selected output plane.
-- Teach the gate/report path to consume non-JSON benchmark evidence without
-  weakening JSON `gate-json`.
+- Prove strict output equality and gate consumption for the baseline.
 - Prove the live `json_provider` path does not leak JSON policy into the
   selected generated parser.
 
-Exit gate `G-W1-NONJSON-HARNESS`:
+Exit gate `G-W1b-NONJSON-BASELINE`:
 
-- Generated Track 1 non-JSON parser exists for the selected grammar/workload.
+- Generated Track 1 non-JSON parser baseline exists for the selected
+  grammar/workload.
 - Independent oracle or Track 2 exists and does not call generated Track 1.
 - Strict output equality passes on the selected corpus.
-- Before/after baseline throughput can be rendered with run id, host, flags,
-  sample count, output plane, and oracle status.
+- Baseline throughput is rendered with run id, host, flags, sample count,
+  output plane, and oracle status.
 - No JSON policy appears in generic crates or runtime outside generated
   per-grammar modules.
-- No JSON `RESULTS.md` row moves.
+- No behavior row admits and no JSON `RESULTS.md` row moves.
 
-Revert protocol: revert codegen/bench/gate/report generated harness as one
-slice; preserve failed proof in REDRESS.
+Revert protocol: revert codegen/bench/gate/report generated baseline changes
+as one slice; preserve failed proof in REDRESS.
 
 Downstream effect: W2 and any generic-codegen wave may claim Lock 14 only by
-using or extending this harness.
+using or extending this generated baseline/oracle lane.
 
 Pre-blocked routes: old non-JSON struct-direct modules that sever the tape
 substrate; JSON-provider emission as a generic proof; documentation-only Lock
-14 claims.
+14 claims; W2-style intervention in the baseline wave.
 
-## 5. W2 - CSS L4 Generated Direct/Typed Intervention Proof
+## 6. W2 - CSS L4 Generated Direct/Typed Intervention Proof
 
 Candidates: C1-C6 as selected by plan; C7 support only; C8 oracle only; C9
 accounting.
@@ -338,7 +394,7 @@ Owner paths:
 - `skinny/RESULTS.md` only if the wave extends it with gate consumption
 - `skinny/REDRESS.md`
 
-Entry gate: W1 closed; CHALLENGE selects exactly one generated non-JSON direct
+Entry gate: W1b closed; CHALLENGE selects exactly one generated non-JSON direct
 or typed intervention, preferring CSS L4 declaration values, and names the
 scalar oracle, independent Track 2/oracle, baseline Mbps, target threshold, and
 generic-codegen Lock 14 proof.
@@ -346,20 +402,19 @@ generic-codegen Lock 14 proof.
 Tasks:
 
 - Generate and benchmark the selected CSS L4 direct/typed parser intervention.
-- If no non-JSON baseline row exists yet, capture one in the same wave and set
-  the improvement floor from it.
 - Wire exactly one SK-V11 primitive family into the generated non-JSON
   consumer.
 - Keep JSON policy out of generic crates and generated runtime templates.
+- Consume the W1b baseline; W2 may not create the first measurable non-JSON
+  row.
 
 Exit gate `G-W2-CSS-GENERATED-INTERVENTION`:
 
 - Generated non-JSON Track 1 and independent Track 2/oracle exist for the
   selected workload.
 - Strict output equality passes.
-- If W1 supplied a baseline, Track 1 improves by at least 1.0%; if W2 creates
-  the baseline and intervention in one wave, the intervention result is at
-  least `floor(open_mbps * 1.01)`.
+- Track 1 is at least `ceil(W1b_css_baseline_mbps * 1.01)` on the selected
+  non-JSON row.
 - Any SIMD body passes strict scalar differential/checkasm.
 - JSON direct and typed guard floors in §0.5 hold if JSON reports are refreshed.
 - No JSON policy appears in generic crates or runtime outside generated
@@ -375,7 +430,7 @@ when admitted and unlocks later generic primitive waves.
 Pre-blocked routes: prose-only Lock 14 proof, JSON-provider emission as a
 generic proof, old hand non-JSON runtimes, generic JSON policy, source sidecars.
 
-## 6. W3 - Numeric Direct Closure Slice
+## 7. W3 - Numeric Direct Closure Slice
 
 Candidates: C4 digit span/accumulation, P2-D D4 `number_span_emit_slot`, P2-E
 `pt_digit_run_span_accumulate`, optional P2-C UDOT support.
@@ -394,8 +449,9 @@ Owner paths:
 - `skinny/REDRESS.md`
 
 Entry gate: W2 admits or records a measured non-JSON route; CHALLENGE accepts
-scalar `DigitRun` semantics, optional DotProd feature gate, and at most four
-numeric target rows.
+scalar `DigitRun` semantics, optional DotProd feature gate, and one or two
+numeric target rows unless existing same-host microbench data justifies all
+four.
 
 Tasks:
 
@@ -410,6 +466,8 @@ Exit gate `G-W3-NUMERIC-SEQUENCE-DIRECT`:
 
 - Selected direct rows from `canada`, `mesh`, `numbers`, and `instruments`
   meet their §0.4 floors where applicable.
+- The redress plan selects one or two rows by default; selecting three or four
+  rows requires pre-redress microbench evidence and CHALLENGE acceptance.
 - `marine_ik/direct_to_struct` remains admitted and satisfies §0.5 if measured.
 - Typed numeric guard rows named by plan meet §0.5 floors if measured.
 - No f64 fallback, mantissa table, leading-zero/sign/exponent, suffix, or
@@ -427,7 +485,7 @@ Pre-blocked routes: REDRESS 80 numeric fallback/mantissa widening; generic
 number policy; parse-only numeric evidence; direct admission from W0 clamp
 without measured wave provenance.
 
-## 7. W4 - Generated Dispatch And Byte-Set Control Slice
+## 8. W4 - Generated Dispatch And Byte-Set Control Slice
 
 Candidates: C6 generated FIRST/prefix/lookahead dispatch; P2-D D1
 `container_tail_next`; P2-D D2 `direct_slot_dispatch`.
@@ -477,7 +535,7 @@ residuals.
 Pre-blocked routes: REDRESS 63/65/84 object carry; W3 substrate; sidecar
 dispatch facts; Track 1/Track 2 coupling.
 
-## 8. W5 - Bounded String Span And Special-Byte Scan
+## 9. W5 - Bounded String Span And Special-Byte Scan
 
 Candidates: C2 bounded special-byte scan, P2-D D3 `borrowed_string_span`, P2-E
 `pt_bounded_plain_string_end`, optional string-block support only after
@@ -496,9 +554,9 @@ Owner paths:
 - `skinny/RESULTS.md`
 - `skinny/REDRESS.md`
 
-Entry gate: W4 admits or rejects; CHALLENGE selects scalar span shape, caller,
-cap, and target rows; any SIMD body has strict parity plan and REDRESS 106
-material differential.
+Entry gate: W4 admits or rejects; CHALLENGE selects scalar span shape, one
+string/key caller, cap, and at most two target rows; any SIMD body has strict
+parity plan and REDRESS 106 material differential.
 
 Tasks:
 
@@ -510,9 +568,12 @@ Tasks:
 Exit gate `G-W5-STRING-SPAN-DIRECT`:
 
 - Selected direct rows from `twitter`, `github_events`, `update_center`,
-  `random`, `distinct_values`, and `gsoc-2018` meet their §0.4 floors.
-- Unicode guard rows `unicode_escapes`, `unicode_mixed`, and
-  `y_string_unicode` lose no more than 0.5% if not selected.
+  `random`, `distinct_values`, `gsoc-2018`, and `y_string_unicode` meet their
+  §0.4 floors.
+- The redress plan selects one string/key consumer and at most two target rows.
+- Unicode residual rows `unicode_escapes`, `unicode_mixed`, and
+  `y_string_unicode` are not admitted guards. If not selected, they remain
+  residuals for W6/W8 and may not regress outside the full guard block.
 - No decoded scratch, retained string side table, `StringBlock16` retained
   wrapper, primitive-parity-only production, or 64-byte retained scan ships.
 - Non-JSON string/literal proof passes when generic code changes.
@@ -528,7 +589,7 @@ accepts a compatible rejected-but-reusable scalar proof with no behavior source.
 Pre-blocked routes: REDRESS 28/33, 60-62, 72, 83, 106; parser-owned decoded
 scratch; retained semantic string facts.
 
-## 9. W6 - Escaped Segment And Hex Decode Slice
+## 10. W6 - Escaped Segment And Hex Decode Slice
 
 Candidates: C3 escape segment/hex decode, P2-E `pt_escaped_string_segments`,
 P2-B `HEX_QUARTET_X4_PROOF` support only unless a new source delta exists.
@@ -581,7 +642,7 @@ residuals.
 Pre-blocked routes: REDRESS 64, 66-69, 82, 83, 107, 108; reuse of existing
 `unescape_string` as same-wave production.
 
-## 10. W7 - Output Digest/Hash Host Sink
+## 11. W7 - Output Digest/Hash Host Sink
 
 Candidate: C8 output digest/hash oracle or per-product host sink only.
 
@@ -592,13 +653,13 @@ Owner paths:
 - `skinny/crates/bbnf-bench/src/report.rs`
 - `skinny/crates/bbnf-bench/src/bin/gate.rs`
 - `skinny/crates/bbnf-bench/benches/json_parity.rs`
-- selected non-JSON oracle/report files if W1 uses digest output
+- selected non-JSON oracle/report files if W1b uses digest output
 - `skinny/RESULTS.md`
 - `skinny/REDRESS.md`
 
 Entry gate: W3-W6 have dispositions; CHALLENGE accepts that output digest/hash
-is an observed limiting hot leaf for selected product rows and names exact
-scalar fold/mix source, output plane, and independent oracle.
+is an observed limiting hot leaf for a bounded selected product-row subset and
+names exact scalar fold/mix source, output plane, and independent oracle.
 
 Tasks:
 
@@ -609,8 +670,10 @@ Tasks:
 
 Exit gate `G-W7-DIGEST-SINK`:
 
-- Selected direct rows meet §0.4 floors on Track 1 and Track 2/oracle, or the
-  selected non-JSON host sink improves >= 1.0% with strict output equality.
+- Selected direct rows whose fresh post-W6 profile still names
+  `output_digest_hash` as limiting meet §0.4 floors on Track 1 and
+  Track 2/oracle, or the selected non-JSON host sink improves >= 1.0% with
+  strict output equality.
 - No digest/hash state enters generic parser crates as parser semantics.
 - No cache hint or prefetch-only change admits the wave without measured row
   movement and no-regression.
@@ -625,10 +688,11 @@ Downstream effect: final output-sink chance before W8 direct fixpoint.
 Pre-blocked routes: output digest as parser primitive, hidden semantic string
 facts, PRFM/STNP/cache hints as standalone row movers.
 
-## 11. W8 - Direct Residual Fixpoint And Row Reclamation
+## 12. W8 - Direct Residual Fixpoint And Row Reclamation
 
 Candidate surface: no new primitive by default; consumes any remaining
-measured C1-C8 residual route accepted by CHALLENGE.
+measured C1-C8 residual route accepted by CHALLENGE. Source work is not part of
+W8 unless split as W8a and the bracket has its one spare slot available.
 
 Owner paths:
 
@@ -652,6 +716,8 @@ Tasks:
   Track 2/oracle.
 - For rows that miss, record a REDRESS uncloseable proof naming attempted
   candidate, measured tracks, comparator, floor, and guard status.
+- If source work is required, route to W8a first with exactly one candidate and
+  one row subset; W8 then remains docs/gate/result accounting.
 
 Exit gate `G-W8-DIRECT-FIXPOINT`:
 
@@ -670,7 +736,7 @@ or non-JSON gates.
 Pre-blocked routes: paper fixpoint, W0 clamp bypass, stale SK-V10 row
 admission, future-phase promises, direct digest as typed proof.
 
-## 12. W9 - Close And Alpha Feedback
+## 13. W9 - Close And Alpha Feedback
 
 Owner paths:
 
@@ -682,7 +748,7 @@ Owner paths:
 - `skinny/RESULTS.md`
 - `skinny/REDRESS.md`
 
-Entry gate: W8 has closed or escalated and every W1-W8 wave has admitted,
+Entry gate: W8 has closed or escalated and every W1a-W8 wave has admitted,
 proof-closed, or rejected with measurement.
 
 Exit gate `G-W9-CLOSE-SK-V11`:
@@ -736,12 +802,12 @@ before CHALLENGE. A narrower name is not a material differential.
 
 ## 14. G-Alpha And Dispatch Scope
 
-G-Alpha SK-V10 -> SK-V11 is presented by the SK-V11 opening packet. This V1
+G-Alpha SK-V10 -> SK-V11 is presented by the SK-V11 opening packet. This V2
 SPEC is a draft until S-P3 converges. After convergence, dispatch scope is:
 
 - W0 is closed unless the orchestrator explicitly invalidates the opening
   telemetry lock.
-- W1 dispatches first to make grammar generalization measurable.
+- W1a dispatches first, followed by W1b to make grammar generalization measurable.
 - W2-W8 dispatch only when their SPEC entry gates pass.
 - W9 Close dispatches after all behavior waves admit, reject, or proof-close with
   measurement.

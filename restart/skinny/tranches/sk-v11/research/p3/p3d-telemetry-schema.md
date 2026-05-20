@@ -1,6 +1,6 @@
 # SK-V11 P3-D: Telemetry-Schema Binding
 
-Pass: S-P3 Synthesis-Plan. Cycle: V1.
+Pass: S-P3 Synthesis-Plan. Cycle: V2.
 Date: 2026-05-20.
 Scope: bind the SK-V11 RESULTS schema, gate-json consumption, non-JSON row
 policy, and producer-only rejection rules before any SK-V11 wave dispatch.
@@ -33,11 +33,11 @@ The current implementation is two-layered:
    rendered by `Report::render_markdown`, backed by `SkV8Telemetry` and
    `SkV8ComparatorEvidence`, validated by `Report::validate_sk_v8_w0`.
 
-The canonical SK-V11 telemetry set is the carried-forward 36-identifier
-gate-consumed set from SK-V9/SK-V10 P3-D: the union of the schema-v3 fields,
-manifest fields, and comparator-evidence fields. SK-V11 adds no required
-column at P3-D. It adds only allowed-value obligations for non-JSON rows if
-P3-B/P3-F choose to put CSS L4, Sheets, or BBNF-self rows into
+The canonical SK-V11 telemetry set is the carried-forward schema-v3
+gate-consumed identifier set from SK-V9/SK-V10 P3-D: the union of the rendered
+schema fields, manifest fields, and comparator-evidence fields. SK-V11 adds no
+required column at P3-D. It adds only allowed-value obligations for non-JSON
+rows if P3-B/P3-F choose to put CSS L4, Sheets, or BBNF-self rows into
 `skinny/RESULTS.md`; those obligations require a same-wave gate extension, not
 a producer-only schema fork.
 
@@ -290,7 +290,7 @@ P3-D blocks telemetry relabeling for these routes:
   treatment of the 24-column shorthand versus the live 26-column schema-v3
   header.
 - `restart/skinny/tranches/sk-v9/research/p3/skv9-p3-D-telemetry-schema.md` -
-  36-identifier gate-consumed schema and outcome enum binding.
+  schema-v3 gate-consumed identifier set and outcome enum binding.
 - `restart/skinny/tranches/sk-v10/research/p3/p3d-telemetry-schema.md` -
   SK-V10 carry-forward schema and producer-only rejection rules.
 - `restart/skinny/tranches/sk-v11/SYNTHESIS.md` - Section 0 close condition,
@@ -316,5 +316,5 @@ P3-D blocks telemetry relabeling for these routes:
   `gate-json`, `--check-results`, run-id, manifest, and CostFacts gate
   behavior.
 
-Self-verdict: ACCEPT for V1 challenge. No source files edited; no telemetry
+Self-verdict: ACCEPT for V2 challenge. No source files edited; no telemetry
 column added.

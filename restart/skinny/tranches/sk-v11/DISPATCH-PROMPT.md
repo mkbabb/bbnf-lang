@@ -5,7 +5,7 @@ SK-V11. It binds to the SK-V11 packet at
 `restart/skinny/tranches/sk-v11/` and to the wave plan in
 `restart/skinny/tranches/sk-v11/SPEC.md`.
 
-Status: DRAFT. S-P3 V1 has not yet converged; no behavior source work is
+Status: DRAFT. S-P3 V2 has not yet converged; no behavior source work is
 authorized from this prompt until S-P3 CHALLENGE accepts the packet.
 
 SK-V11 is not a W3 retry. REDRESS 96/97/98 retired the union/event/class-column
@@ -51,21 +51,25 @@ Read in order:
 | Wave | SPEC section | Title | Candidate surface | Dispatch status | Budget | Redress cap |
 |---|---|---|---|---|---:|---:|
 | W0 | Section 3 | SK-V11-open Telemetry Lock | W0 profile authority | Closed by S-P1/W0 | 0 behavior LOC | n/a |
-| W1 | Section 4 | Non-JSON Generated Parser Harness And Telemetry Gate | C9 + Lock 14 | Conditional on S-P3 convergence | 220-460 LOC | <=90 min |
-| W2 | Section 5 | CSS L4 Generated Direct/Typed Intervention Proof | C1/C2/C4/C5/C6 with C7 support | Conditional on W1 close + CHALLENGE | 300-650 LOC | <=90 min |
-| W3 | Section 6 | Numeric Direct Closure Slice | C4 + D4 | Conditional on W2 disposition + CHALLENGE | 220-500 LOC | <=90 min |
-| W4 | Section 7 | Generated Dispatch And Byte-Set Control Slice | C1/C5/C6 + D1/D2 | Conditional on W3 disposition + CHALLENGE | 260-650 LOC | <=90 min |
-| W5 | Section 8 | Bounded String Span And Special-Byte Scan | C2 + D3 | Conditional on W4 disposition + CHALLENGE | 220-550 LOC | <=90 min |
-| W6 | Section 9 | Escaped Segment And Hex Decode Slice | C3 | Conditional on W5 disposition + CHALLENGE | 220-550 LOC | <=90 min |
-| W7 | Section 10 | Output Digest/Hash Host Sink | C8 only | Conditional on W3-W6 dispositions + CHALLENGE | 160-350 LOC | <=90 min |
-| W8 | Section 11 | Direct Residual Fixpoint And Row Reclamation | remaining measured C1-C8 routes | Conditional on W3-W7 dispositions | 250 LOC; optional <=250 source LOC only with CHALLENGE | <=90 min |
-| W9 | Section 12 | Close And Alpha Feedback | docs/gate | Conditional on W8 close | 80-180 LOC | <=90 min |
+| W1a | Section 4 | Non-JSON Gate/Report Schema Lane | C9 + Lock 14 gate | Conditional on S-P3 convergence + CHALLENGE | <=260 handwritten LOC; 0 generated LOC unless fixtures are named | <=90 min |
+| W1b | Section 5 | Generated Non-JSON Baseline And Oracle Lane | C9 + generated baseline harness | Conditional on W1a close + CHALLENGE | <=360 handwritten LOC; generated output capped to selected inputs | <=90 min |
+| W2 | Section 6 | CSS L4 Generated Direct/Typed Intervention Proof | C1/C2/C4/C5/C6 with C7 support | Conditional on W1b close + CHALLENGE | <=430 handwritten LOC; generated output capped to named inputs | <=90 min |
+| W3 | Section 7 | Numeric Direct Closure Slice | C4 + D4 | Conditional on W2 disposition + CHALLENGE | <=360 handwritten LOC; generated output capped to named callers | <=90 min |
+| W4 | Section 8 | Generated Dispatch And Byte-Set Control Slice | C1/C5/C6 + D1/D2 | Conditional on W3 disposition + CHALLENGE | <=430 handwritten LOC; generated output capped to named inputs | <=90 min |
+| W5 | Section 9 | Bounded String Span And Special-Byte Scan | C2 + D3 | Conditional on W4 disposition + CHALLENGE | <=360 handwritten LOC; generated output capped to named callers | <=90 min |
+| W6 | Section 10 | Escaped Segment And Hex Decode Slice | C3 | Conditional on W5 disposition + CHALLENGE | <=360 handwritten LOC; generated output capped to named callers | <=90 min |
+| W7 | Section 11 | Output Digest/Hash Host Sink | C8 only | Conditional on W3-W6 dispositions + CHALLENGE | <=350 handwritten LOC | <=90 min |
+| W8 | Section 12 | Direct Residual Fixpoint And Row Reclamation | remaining measured C1-C8 routes | Conditional on W3-W7 dispositions | <=250 docs/gate/result LOC; source requires W8a split and spare bracket slot | <=90 min |
+| W9 | Section 13 | Close And Alpha Feedback | docs/gate | Conditional on W8 close | 80-180 LOC | <=90 min |
 
-The dependency order is firm. W1 lands first because non-JSON generalization is
-not optional in SK-V11 and the live `json_provider` path is a Lock 14 blocker.
-W2 is the preferred non-JSON admitted intervention. W3-W7 are row-moving or
-proof/consumer waves and require CHALLENGE before redress. W8 reconciles every
-remaining direct residual as admitted or measured uncloseable. W9 closes.
+The dependency order is firm. W1a lands first because non-JSON telemetry must
+be gate-consumed before any baseline can become authority. W1b creates exactly
+one generated non-JSON baseline plus independent oracle. W2 is the preferred
+non-JSON admitted intervention and consumes the W1b baseline. W3-W7 are
+row-moving or proof/consumer waves and require CHALLENGE before redress. W8
+reconciles every remaining direct residual as admitted or measured
+uncloseable. W9 closes. The bracket is 11 waves, leaving one spare split before
+the skinny `> 12` escalation rule.
 
 ## Per-Wave Triumvirate Protocol
 
@@ -93,10 +97,10 @@ mandatory CHALLENGE, and Redress are distinct artifacts and commits.
 
 ### Phase 2.5 - CHALLENGE
 
-CHALLENGE is mandatory for W1, W2, W3, W4, W5, W6, and W7. It is mandatory for
-W8 if W8 touches behavior source or any generic/codegen/runtime-outside-JSON
-path. It is optional for W0 and W9 Close only when they stay in already
-accepted gate semantics.
+CHALLENGE is mandatory for W1a, W1b, W2, W3, W4, W5, W6, and W7. It is
+mandatory for W8 if W8 touches behavior source or any
+generic/codegen/runtime-outside-JSON path. It is optional for W0 and W9 Close
+only when they stay in already accepted gate semantics.
 
 Six lenses apply:
 
@@ -131,7 +135,8 @@ redress evidence. The next wave starts fresh.
 Each gate is stated in the SPEC and is not redefined here:
 
 - `G-W0-SK-V11-OPEN-LOCK`
-- `G-W1-NONJSON-HARNESS`
+- `G-W1a-NONJSON-GATE`
+- `G-W1b-NONJSON-BASELINE`
 - `G-W2-CSS-GENERATED-INTERVENTION`
 - `G-W3-NUMERIC-SEQUENCE-DIRECT`
 - `G-W4-DISPATCH-BYTESET-DIRECT`
@@ -184,7 +189,7 @@ implementation. A rename is not a material differential.
 
 ## Telemetry And Outcome Discipline
 
-SK-V11 inherits the 36-field telemetry schema and outcome enum
+SK-V11 inherits the schema-v3 required identifier set and outcome enum
 `A C G I J K L M N-direct S`. A wave that emits a new field or non-JSON
 companion report must update every report, fixture, gate, and consumer in the
 same commit. The default is no new columns in `skinny/RESULTS.md`.
@@ -208,7 +213,7 @@ decision. At the cap it halts.
 
 ## Convergence And Escalation
 
-SK-V11 converges when W1-W8 and W9 Close have admitted, proof-closed, or rejected
+SK-V11 converges when W1a-W8 and W9 Close have admitted, proof-closed, or rejected
 with measurement; SPEC §0 close holds; and the close documents agree. Close may
 declare direct `GO` or measured direct fixpoint, but it cannot waive the
 non-JSON benchmarked-intervention axis without a `BLOCKED` verdict.

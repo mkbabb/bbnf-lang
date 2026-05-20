@@ -24,7 +24,7 @@ work may land only through the selected wave's entry gate and owner paths.
 8. `restart/skinny/tranches/sk-v11/research/alpha/alpha-F-contract-draft.md`
 9. `restart/skinny/tranches/sk-v10/research/close/close-redress.md`
 10. `skinny/RESULTS.md`
-11. `skinny/REDRESS.md` through REDRESS 117
+11. `skinny/REDRESS.md` through REDRESS 118
 12. `restart/skinny/tranches/sk-v9/research/p3/hardening/HARDENING-S-P3-CONVERGED.md`
 13. `restart/skinny/tranches/sk-v10/SYNTHESIS.md`
 14. `restart/skinny/tranches/sk-v10/HANDOFF.md`
@@ -88,7 +88,7 @@ that S-P1/S-P2 identify on the JSON direct residual surface.
 
 ## 4. Next Move
 
-Next move: ready-for-wave-W7-research.
+Next move: ready-for-wave-W8-research.
 
 W0 is closed by S-P1/W0 authority in SPEC §3. W1a is admitted by REDRESS 111:
 the companion non-JSON gate/report lane exists and does not move JSON rows or
@@ -125,9 +125,18 @@ CH6 also required revisions around fixture parity, probe/guard binding,
 source-method fail-closed coverage, Track 1 / Track 2 independence, sampled
 consumer evidence, and negative x4 evidence. No W6 source patch was attempted;
 `/tmp/skv11-waveW6-rejected.patch` is an empty marker, no `RESULTS.md` row
-moved, and W7 may dispatch only through SPEC Section 11's output digest /
+moved, and W7 dispatched only through SPEC Section 11's output digest /
 host-sink route with REDRESS 54/55/66/69, 64, 82, 107, 108, 113, 116, and 117
-carried forward.
+carried forward. W7 is blocked by REDRESS 118 before source redress: all six
+CHALLENGE lenses accepted the no-source output-digest entry block. CH1 found no
+legal row/source/consumer/oracle candidate, CH2 found no generated non-JSON
+host-sink baseline, CH3 bound REDRESS 117 and 54, CH4 showed no residual row
+can plausibly clear both Track 1 and Track 2 floors through
+`output_digest_hash`, and CH5/CH6 classified any admitting source packet as
+REVISE without new oracle/gate evidence. No W7 source patch was attempted;
+`/tmp/skv11-waveW7-rejected.patch` is an empty marker, no `RESULTS.md` row
+moved, and W8 may dispatch only through SPEC Section 12's direct residual
+fixpoint and row reclamation route with W2-W7 dispositions carried forward.
 
 ## 5. Active Wave Packet
 

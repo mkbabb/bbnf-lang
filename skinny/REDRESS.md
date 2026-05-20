@@ -3458,3 +3458,36 @@ perturbation.
   scalar oracle. W7 may dispatch only through SPEC Section 11's output
   digest / host-sink route with REDRESS 54/55/66/69, 64, 82, 107, 108, 113,
   116, and 117 carried forward.
+
+## SK-V11 Wave 7 Output Digest/Hash Host-Sink Entry Block
+
+- Item 118 records W7 as `BLOCKED` before implementation dispatch under
+  `G-W7-DIGEST-SINK`. W7 completed research, selected a no-source
+  output-digest entry block, and ran mandatory six-lens CHALLENGE. All six
+  lenses accepted the block.
+- CH1 found no legal residual row, source function, same-wave consumer, and
+  independent oracle to name for REVISE. CH2 found no generated non-JSON
+  host-sink baseline inside W7 owner paths. CH3 bound REDRESS 117 and REDRESS
+  54: the apparent decoded-byte source-method route remains the rejected
+  sink-local decoded stats/hash family, not a new host-sink differential.
+- CH4 is the cost floor. `apache_builds/direct_to_struct` has the strongest
+  visible digest bucket but is already an admitted guard row. The closest
+  residual, `random/direct_to_struct`, can at most clear Track 1 under perfect
+  visible-bucket removal; Track 2 remains below the 7878 Mbps floor. The other
+  digest-visible residuals have larger floor gaps, and the unicode rows are
+  string/escape limited under the legal post-W6 seam.
+- CH5 and CH6 accepted the block as the only non-paper outcome: any future W7
+  family route needs fresh post-W6 hot-leaf evidence, a materially different
+  host-sink representation below the pre-blocked decoded-string seam,
+  independent Track 2/oracle proof, same-run comparator evidence clearing both
+  floors, and same-wave gate/report consumption.
+- No source patch was attempted. `/tmp/skv11-waveW7-rejected.patch` is an empty
+  marker; no behavior source, generated runtime, SIMD kernel, benchmark body,
+  gate/report schema, or `skinny/RESULTS.md` row moved. Evidence:
+  `git diff --exit-code -- skinny/RESULTS.md` passed, and
+  `CRITERION_HOME=/tmp/skv11-open-criterion-3ce75df RUSTFLAGS="-C target-cpu=native" cargo run --manifest-path skinny/Cargo.toml -p bbnf-bench --bin gate -- --advisory`
+  passed with the unchanged `N-direct / NoGo` advisory surface.
+- W7 admits no output digest/hash host-sink optimization, no non-JSON host-sink
+  baseline, no direct-row movement, and no rejected-but-reusable scalar oracle.
+  W8 may dispatch only through SPEC Section 12's direct residual fixpoint and
+  row reclamation route with W2-W7 dispositions carried forward.

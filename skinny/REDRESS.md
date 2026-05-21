@@ -3818,3 +3818,62 @@ perturbation.
   no paths. W4 therefore adds no new BBNF directive, BIR variant,
   `BackendShape`, public substrate API, x86 work, JSON guard demotion,
   production CSS wiring, or `RESULTS.md` edit.
+
+## SK-V12 Wave 5 Close And Alpha Feedback
+
+- Item 127 closes W5 under `G-W5-CLOSE` as `PASS-ADMIT`. SK-V12 closes by
+  USER PIN clause (a), not by FIXPOINT. The admitted row is
+  `css_l4/declaration_values/direct_to_struct/main` on output plane
+  `css_l4_declaration_value_fact_stream`.
+- W5 promotes the REDRESS-125 `PASS-ADMIT-CANDIDATE` after close-document
+  reconciliation. The gate-consumed W1b-2b report records generated Track 1
+  `429.34420791225705 Mbps`, cssparser oracle `217.42665242186035 Mbps`,
+  lightningcss same-plane strict comparator `168.92962215656692 Mbps`,
+  threshold `169.92962215656692 Mbps`, and measured margin
+  `259.41458575569015 Mbps`. Strict equality is
+  `pass:track1=cssparser=lightningcss` with fact-stream SHA-256
+  `caf97bee6e413157e6114985bc1108bc3a8fbf597a1e519b3ccff905d2e5236c`.
+- `skinny/RESULTS.md` now carries the CSS L4 summary row and telemetry row
+  using the existing `A` outcome and `GO` verdict. The legacy JSON
+  `gate --check-results` renderer remains JSON-shaped and was not used to
+  validate the appended CSS row; CSS provenance remains consumed by the
+  dedicated W1b-2b report gate `sk-v12-css-l4-sota-v1`.
+- JSON guards hold with no demotion. W5 reran the checked-in JSON floor AWK
+  proof after the `RESULTS.md` close edit. W5 did not change runtime, codegen,
+  benchmark, SIMD, or gate source.
+- Verification passed: `RUSTFLAGS="-C target-cpu=native" cargo run -p
+  bbnf-bench --bin gate -- --skv12-css-l4-sota-report
+  ../restart/skinny/tranches/sk-v12/research/w1b/skv12-W1b-css-l4-sota.json
+  --advisory` from `skinny/`, `awk -f
+  restart/skinny/tranches/sk-v12/research/w1a/verify-skv12-json-floors.awk
+  skinny/RESULTS.md`, `jq -e '.decision == "pass" and .parity_status ==
+  "pass" and .candidate_speedup_ratio > .threshold_speedup_ratio'
+  restart/skinny/tranches/sk-v12/research/w4/w4-delimiter-find-microbench.json`,
+  and `git diff --check`.
+- The first CSS gate attempt used the same report path from the repository root
+  and failed before gate logic with `No such file or directory`; no source or
+  artifact was produced by that failed invocation. The passing command above
+  ran from `skinny/`, matching the report path's `../restart/...` prefix.
+- W3 is not required for this close. SPEC Section 10 requires W3 disposition
+  only for FIXPOINT or when no prior CSS row satisfies ADMIT; W1b-2b supplies
+  an already-admitted CSS path.
+- Union-substrate category disposition: USER PIN D3 leaves the category
+  unblocked for future materially differentiated attempts; REDRESS 96/97/98
+  remain historical measured failures. No fresh union attempt is required for
+  this ADMIT close.
+- ASM-gen disposition: W4 is recorded by REDRESS-126 as a measured
+  `ROUTE-PRODUCTION-SPLIT` attempt. The retained microbench artifact verifies
+  decision `pass`, parity `pass`, and speedup ratio `4.718279341` over
+  threshold `1.01`. The production/gate split is routed separately and is not
+  retroactive W5 work.
+- Final aarch64 orphan state is zero. REDRESS-126 demotes
+  `bitmap_prefix_xor_64`, `bitmap_next_set_bit`, `bulk_emit_positions_64`,
+  `byte_context`, and `cache_hints` with evidence, while accounting for the
+  selected W4 candidate separately from the five-row orphan set.
+- Close artifacts agree:
+  `restart/skinny/tranches/sk-v12/SYNTHESIS.md`,
+  `restart/skinny/tranches/sk-v12/SPEC.md`,
+  `restart/skinny/tranches/sk-v12/HANDOFF.md`,
+  `restart/skinny/tranches/sk-v12/DISPATCH-PROMPT.md`, `skinny/RESULTS.md`,
+  and `restart/skinny/CAMPAIGN-CLOSE-SK-V12-V12.md` all record the
+  `PASS-ADMIT` close.

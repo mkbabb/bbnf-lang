@@ -1,8 +1,9 @@
 # SK-V12 SPEC - Pin-Aware S-P3 Wave Plan
 
 Date: 2026-05-20.
-Status: S-P3 CONVERGED. This packet supersedes the pre-pin V5 SPEC wherever it
-conflicts with `USER-PIN-W1-CSS-L4-SOTA.md`.
+Status: CLOSED PASS-ADMIT under `G-W5-CLOSE` / REDRESS-127. This packet is
+historical close authority for SK-V12; no further SK-V12 wave dispatch is
+authorized.
 
 Authority:
 
@@ -23,11 +24,21 @@ Authority:
 
 Dispatch lock:
 
-- S-P3 has converged under the user pin; W0 is the first dispatchable wave.
-- W1a/W2/W1b-1/W1b-2a/W1b-2b/W3/W4/W5 dispatch only after their entry
-  gates pass.
+- S-P3 converged under the user pin, and W0/W1a/W2/W1b-1/W1b-2a/W1b-2b/W4/W5
+  have final dispositions through REDRESS-127.
+- W3 is not required for this ADMIT close because Section 10 requires W3
+  disposition only for FIXPOINT or when no prior CSS row satisfies ADMIT.
 - Each wave is executed by the per-wave triumvirate: research, plan,
   CHALLENGE when required, and redress in distinct commits.
+
+Close result:
+
+- `PASS-ADMIT` via `css_l4/declaration_values/direct_to_struct/main` on
+  `css_l4_declaration_value_fact_stream`.
+- Generated Track 1 `429.34420791225705 Mbps` is strictly greater than
+  lightningcss threshold `169.92962215656692 Mbps`.
+- Strict equality is `pass:track1=cssparser=lightningcss`; JSON guards held;
+  W4 final orphan count is zero.
 
 ## Section 0 - Close Condition And Goalset
 
@@ -171,7 +182,7 @@ gate in the same wave. Missing lightningcss evidence, missing independent
 oracle, stale run id, producer-only telemetry, unsupported outcome, generic
 policy leak, parse-only admission, or orphan SIMD primitive rejects the wave.
 
-### Section 0.5 - Opening Goalset
+### Section 0.5 - Opening Goalset And Close Surface
 
 Seed state from SK-V11 close and pin-aware S-P1/S-P2:
 
@@ -180,9 +191,9 @@ Seed state from SK-V11 close and pin-aware S-P1/S-P2:
 | `parse_only` | 16 `S / NO-GO`, 1 `L / NO-GO` | Diagnostic only. |
 | `direct_to_struct` | 4 `A / GO`, 13 `N-direct / NO-GO` | JSON guard and routed ledger. |
 | `real_typed_struct` | 7 `A / GO` | JSON typed guard surface. |
-| CSS L4 generated parser | no admitted row | Authoritative first target. |
-| Sheets / BBNF-self | no admitted row | Fallback only after measured CSS redress attempt. |
-| Overall | `N-direct / NoGo` | Seed outcome. |
+| CSS L4 generated parser | `A / GO` via `css_l4/declaration_values/direct_to_struct/main` | Admitted close row. |
+| Sheets / BBNF-self | no admitted row | Fallback history only; not needed for close. |
+| Overall | `A / Go` | SK-V12 PASS-ADMIT close. |
 
 JSON direct guard floors:
 
@@ -710,7 +721,8 @@ Tasks:
 
 Exit gate `G-W5-CLOSE`:
 
-- PASS-ADMIT: Section 0.1 ADMIT holds.
+- PASS-ADMIT: Section 0.1 ADMIT holds. SK-V12 reached this state in
+  REDRESS-127.
 - PASS-FIXPOINT: Section 0.1 FIXPOINT holds.
 - ROUTE: ADMIT/FIXPOINT does not hold; Pass Alpha opens SK-V13 with explicit
   blockers. The campaign does not stop unless the user-pin close clause is met

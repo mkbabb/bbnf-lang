@@ -5,8 +5,19 @@ SK-V12 under `USER-PIN-W1-CSS-L4-SOTA.md` (2026-05-20). It binds to the packet
 at `restart/skinny/tranches/sk-v12/`. Each wave is executed by one triumvirate
 per `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`.
 
-Status: S-P3 CONVERGED. Dispatch authority exists for W0 first; later waves
-dispatch only after their SPEC entry gates pass.
+Status: CLOSED PASS-ADMIT under `G-W5-CLOSE` / REDRESS-127. This dispatch
+prompt is historical close authority only; no further SK-V12 wave dispatch is
+authorized.
+
+Close result:
+
+- Admitted row: `css_l4/declaration_values/direct_to_struct/main`.
+- Output plane: `css_l4_declaration_value_fact_stream`.
+- Generated Track 1: `429.34420791225705 Mbps`.
+- Lightningcss threshold: `169.92962215656692 Mbps`.
+- Strict equality: `pass:track1=cssparser=lightningcss`.
+- JSON guards held; W4 final orphan count is zero.
+- W3 is not required for this ADMIT close under SPEC Section 10.
 
 ## Required Reading
 
@@ -77,13 +88,13 @@ Load-bearing user-pin rules:
 | W4 | Section 9 | ASM-Gen CSS Consumer + AArch64 Orphan Disposition | Conditional on W1b-2 + W2 + CHALLENGE | <=430 hand/test/gate; high | 20m / 15m / 30m |
 | W5 | Section 10 | Close And Alpha Feedback | Conditional on W0, W1a, W2, W1b-1, W1b-2, W4, and conditional W3 disposition | <=140 docs/report/gate; medium | 20m / 15m / 30m |
 
-The order is firm. W2 is a correctness prerequisite after W1a and before any
+The manifest is now historical. W2 is a correctness prerequisite after W1a and before any
 new SIMD/ASM admission; W1b-1 may run before W2 only if its accepted plan proves
 the CSS scaffold is scalar-only. W1b-1 and W1b-2 cannot select Sheets or
 BBNF-self before a measured CSS redress attempt. W3 and W4 are required for a
 FIXPOINT close. If ADMIT is achieved before W3, close may route W3 as
 not-required, but W4 must still produce zero-orphan disposition and all close
-docs must agree.
+docs must agree. SK-V12 reached that ADMIT close in REDRESS-127.
 
 ## Per-Wave Triumvirate Protocol
 

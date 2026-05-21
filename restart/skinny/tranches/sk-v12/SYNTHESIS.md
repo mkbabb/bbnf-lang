@@ -2,13 +2,9 @@
 
 Date: 2026-05-20.
 
-Status: Pass Alpha SK-V11 -> SK-V12 is re-bracketed under
-`USER-PIN-W1-CSS-L4-SOTA.md`. This file is the pin-aware SK-V12 opening
-synthesis and goalset. It is not behavior implementation authority and does
-not create or edit `SPEC.md` or `DISPATCH-PROMPT.md`. After G-Alpha
-authorization, SK-V12 runs S-P1 Profile, S-P2 Research, and S-P3
-Synthesis-Plan under the user pin; only the downstream S-P3 packet may
-materialize replacement implementation authority.
+Status: CLOSED PASS-ADMIT under `G-W5-CLOSE` / REDRESS-127. This file began
+as the pin-aware SK-V12 opening synthesis and is now reconciled as SK-V12 close
+authority. No further SK-V12 wave dispatch is authorized.
 
 ## Authority
 
@@ -19,7 +15,7 @@ materialize replacement implementation authority.
   does not conflict with the user pin
 - `restart/skinny/tranches/sk-v12/HANDOFF.md`
 - `skinny/RESULTS.md`
-- `skinny/REDRESS.md` through REDRESS 120
+- `skinny/REDRESS.md` through REDRESS 127
 - `restart/skinny/tranches/sk-v12/research/alpha/alpha-F-contract-draft.md`
 - The six 2026-05-20 audits in `restart/skinny/tranches/sk-v12/research/`:
   `skv12-W1-A7-sheets-execution-scout.md`,
@@ -27,6 +23,23 @@ materialize replacement implementation authority.
   `skv12-profile-truth-audit.md`, `skv12-value-api-audit.md`,
   `skv12-decision-engine-audit.md`, and
   `skv12-totality-fold-scout.md`.
+
+## Close Addendum
+
+SK-V12 closed by ADMIT on 2026-05-21. The admitted generated CSS L4 row is
+`css_l4/declaration_values/direct_to_struct/main` on
+`css_l4_declaration_value_fact_stream`: Track 1
+`429.34420791225705 Mbps` against lightningcss
+`168.92962215656692 Mbps`, threshold `169.92962215656692 Mbps`, and margin
+`259.41458575569015 Mbps`. Track 1, cssparser oracle, and lightningcss emit
+strict-equal fact streams with SHA-256
+`caf97bee6e413157e6114985bc1108bc3a8fbf597a1e519b3ccff905d2e5236c`.
+
+W3 is not required for this close because SPEC Section 10 requires W3
+disposition only for FIXPOINT or when no prior CSS row satisfies ADMIT. W4
+records the ASM-gen route and final zero-orphan disposition in REDRESS-126.
+W5 records close reconciliation in REDRESS-127 and
+`restart/skinny/CAMPAIGN-CLOSE-SK-V12-V12.md`.
 
 ## Section 0 - Close Condition And Goalset
 
@@ -103,14 +116,14 @@ The current seed result surface is SK-V11 close, carried in
 | `parse_only` | 16 `S / NO-GO`, 1 `L / NO-GO` | diagnostic only |
 | `direct_to_struct` | 4 `A / GO`, 13 `N-direct / NO-GO` | JSON guard and routed ledger |
 | `real_typed_struct` | 7 `A / GO` | JSON typed guard surface |
-| CSS L4 generated parser | no admitted row | authoritative first target |
+| CSS L4 generated parser | `A / GO` via `css_l4/declaration_values/direct_to_struct/main` | admitted close row |
 | Sheets / BBNF-self | no admitted row | post-CSS-redress fallback only |
-| Overall | `N-direct / NoGo` | seed outcome |
+| Overall | `A / Go` | SK-V12 PASS-ADMIT close |
 
-Local citations: the live JSON rows are rendered in `skinny/RESULTS.md:5-45`,
-the unchanged overall outcome and Track 2 independence notes are at
-`skinny/RESULTS.md:143-146`, and REDRESS 120 records the SK-V11 close/fixpoint
-surface at `skinny/REDRESS.md:3531-3553`.
+Local citations: the live JSON rows and CSS L4 close row are rendered in
+`skinny/RESULTS.md`; REDRESS-125 records the CSS SOTA report gate; REDRESS-126
+records W4 zero-orphan / ASM-gen route evidence; REDRESS-127 records final W5
+close reconciliation.
 
 ### 0.4 Guard Rows
 
@@ -232,13 +245,10 @@ must treat W0 as live unless the revalidation command proves drift in the
 gate/report surface, source baseline, or JSON result surface. A revalidation
 miss returns to S-P3; it does not authorize rewriting W0 inside Alpha-F.
 
-## Section 6 - Pass Dispatch Requirements
+## Section 6 - Historical Pass Dispatch Requirements
 
-Next move after this Alpha re-bracket converges: present G-Alpha, then run
-SK-V12 S-P1 Profile, S-P2 Research, and S-P3 Synthesis-Plan under the user pin.
-Pre-pin S-P1/S-P2 evidence may be referenced only after measured revalidation;
-fresh TSV/profile and research convergence remain required before any wave
-scope is dispatch authority.
+This section records the dispatch requirements that produced the SK-V12 close.
+They are no longer forward dispatch authority after REDRESS-127.
 
 S-P3 must:
 
@@ -253,9 +263,9 @@ S-P3 must:
 - preserve W0 as revalidated unless drift is measured;
 - leave `SPEC.md` and `DISPATCH-PROMPT.md` for the downstream S-P3 packet.
 
-## Section 7 - G-Alpha Summary
+## Section 7 - Historical G-Alpha Summary
 
-Pin-aware G-Alpha asks for this pass sequence and wave seed:
+Pin-aware G-Alpha asked for this pass sequence and wave seed:
 
 | Seed | Target row / role | Hand LOC cap | Minute caps | REDRESS adjacency | Close contribution | Failure action |
 |---|---|---:|---|---|---|---|
@@ -268,12 +278,10 @@ Pin-aware G-Alpha asks for this pass sequence and wave seed:
 | W2 | `escape_mask_64` correctness | <=180 | 20/15/30 | Lock 16 bug | unblocks SIMD | save `/tmp/skv12-waveW2-rejected.patch` |
 | W3 | CSS-local same-tape union attempt | <=420 | 20/15/30 | REDRESS 96/97/98 | ADMIT lift or FIXPOINT union evidence | save `/tmp/skv12-waveW3-rejected.patch` |
 | W4 | ARMv9.2 TBL/TBX or selected ASM-gen consumer | <=430 | 20/15/30 | REDRESS 88/89/90 | ADMIT lift or FIXPOINT ASM evidence, zero-orphan disposition | save `/tmp/skv12-waveW4-rejected.patch` |
-| W5 | Close / G-Alpha feedback | docs-only | 20/15/30 | REDRESS close | ADMIT or measured FIXPOINT | synthesize SK-V13 if close unmet |
+| W5 | Close / G-Alpha feedback | docs-only | 20/15/30 | REDRESS close | PASS-ADMIT in REDRESS-127 | closed SK-V12 |
 
-ADMIT remains generated CSS L4 Track 1 strictly
-`> lightningcss_mbps + 1`. FIXPOINT requires CSS L4 measured uncloseable, plus
-new measured union-substrate and ASM-gen attempts in the closing tranche, with
-the carried orphan set admitted, removed, or inventory-demoted.
+ADMIT was satisfied by generated CSS L4 Track 1 strictly
+`> lightningcss_mbps + 1`. FIXPOINT was not used.
 
 This file authorizes no behavior source work. It replaces only the Alpha
 contract surface owned by this lane.

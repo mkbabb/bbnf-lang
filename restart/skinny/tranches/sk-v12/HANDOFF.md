@@ -2,11 +2,11 @@
 
 Date: 2026-05-20.
 
-Status: ready-for-wave-W0. Pass Alpha SK-V11 -> SK-V12 has been re-bracketed
-under `USER-PIN-W1-CSS-L4-SOTA.md`; pin-aware S-P1 Profile, S-P2 Research, and
-S-P3 Synthesis-Plan have converged. The earlier Sheets-first SK-V12 packet is
-historical context only where it does not conflict with the user pin or the
-current `SPEC.md`.
+Status: CLOSED PASS-ADMIT under `G-W5-CLOSE` / REDRESS-127. Pass Alpha
+SK-V11 -> SK-V12 was re-bracketed under `USER-PIN-W1-CSS-L4-SOTA.md`;
+pin-aware S-P1 Profile, S-P2 Research, S-P3 Synthesis-Plan, and W0/W1a/W2/
+W1b-1/W1b-2a/W1b-2b/W4/W5 have closed. No further SK-V12 wave dispatch is
+authorized.
 
 ## 1. Read First
 
@@ -30,22 +30,24 @@ current `SPEC.md`.
 
 ## 2. Current State
 
-SK-V11 close remains the seed result surface:
+SK-V12 close result:
 
 | Family | State | SK-V12 role |
 |---|---|---|
 | `parse_only` | diagnostic-only concession | no SOTA admission target |
 | `direct_to_struct` | JSON guard plus routed ledger | guard second after CSS L4 |
 | `real_typed_struct` | JSON typed guard surface | guard second after CSS L4 |
-| CSS L4 generated parser | no admitted row | authoritative first target |
-| Sheets / BBNF-self | no admitted row | fallback only after measured CSS redress |
-| Overall | campaign still open | close by ADMIT or FIXPOINT |
+| CSS L4 generated parser | `A / GO` via `css_l4/declaration_values/direct_to_struct/main` | admitted close row |
+| Sheets / BBNF-self | no admitted row | fallback history only; not needed for close |
+| Overall | `A / Go` | PASS-ADMIT close |
 
-The pin moves the campaign target to generated CSS L4 > lightningcss and
-reopens union plus ASM-gen categories at category level. REDRESS 96/97/98 and
-88/89/90 remain measured historical implementations; any new adjacent wave
-must cite them, name the material differential, and pass CHALLENGE before
-redress.
+The admitted CSS row records generated Track 1 `429.34420791225705 Mbps`,
+lightningcss threshold `169.92962215656692 Mbps`, strict equality
+`pass:track1=cssparser=lightningcss`, JSON guards held, and W4 final orphan
+count zero. REDRESS 96/97/98 and 88/89/90 remain measured historical
+implementations; the categories are still unblocked for future materially
+differentiated attempts, but no fresh union attempt is required for this ADMIT
+close.
 
 ## 3. SK-V12 Goalset
 
@@ -64,7 +66,7 @@ SK-V12 priority order is binding:
 
 ## 4. Campaign Close
 
-SK-V12 closes by ADMIT or FIXPOINT.
+SK-V12 closed by ADMIT, not FIXPOINT.
 
 ADMIT:
 
@@ -78,6 +80,18 @@ ADMIT:
   with evidence: `bitmap_prefix_xor_64`, `bitmap_next_set_bit`,
   `bulk_emit_positions_64`, `byte_context`, and `cache_hints`;
 - JSON guards held or measured-disposition demoted.
+
+Close evidence:
+
+- CSS L4 row: `css_l4/declaration_values/direct_to_struct/main`;
+- Track 1: `429.34420791225705 Mbps`;
+- lightningcss: `168.92962215656692 Mbps`;
+- threshold: `169.92962215656692 Mbps`;
+- margin: `259.41458575569015 Mbps`;
+- REDRESS: 125 for the report gate, 126 for W4 zero-orphan/ASM-gen route,
+  127 for W5 close reconciliation;
+- campaign close file:
+  `restart/skinny/CAMPAIGN-CLOSE-SK-V12-V12.md`.
 
 FIXPOINT:
 
@@ -93,20 +107,22 @@ FIXPOINT:
 
 | Wave | SPEC section | Title | Dispatch status |
 |---|---|---|---|
-| W0 | Section 3 | Pin Telemetry And Gate Revalidation | Dispatch now |
-| W1a | Section 4 | GrammarConfig + Lock 14 Legality Gate | After W0 close |
-| W2 | Section 5 | `escape_mask_64` Correctness Prerequisite | After W1a close |
-| W1b-1 | Section 6 | CSS L4 Generated Track 1 + Independent Oracle Scaffold | After W1a close; scalar-only unless W2 passed |
-| W1b-2 | Section 7 | CSS L4 Lightningcss Comparator + Admission Gate | After W1b-1 close |
-| W3 | Section 8 | CSS-Local Same-Tape Union Attempt | After W1b-2 measured CSS row plus CHALLENGE |
-| W4 | Section 9 | ASM-Gen CSS Consumer + AArch64 Orphan Disposition | After W1b-2 close, W2 close, and CHALLENGE |
-| W5 | Section 10 | Close And Alpha Feedback | After W0/W1a/W2/W1b-1/W1b-2/W4 and conditional W3 disposition |
+| W0 | Section 3 | Pin Telemetry And Gate Revalidation | Closed |
+| W1a | Section 4 | GrammarConfig + Lock 14 Legality Gate | Closed REDRESS-121 |
+| W2 | Section 5 | `escape_mask_64` Correctness Prerequisite | Closed REDRESS-122 |
+| W1b-1 | Section 6 | CSS L4 Generated Track 1 + Independent Oracle Scaffold | Closed REDRESS-123 |
+| W1b-2 | Section 7 | CSS L4 Lightningcss Comparator + Admission Gate | Closed REDRESS-124 / REDRESS-125 |
+| W3 | Section 8 | CSS-Local Same-Tape Union Attempt | Not required for ADMIT close |
+| W4 | Section 9 | ASM-Gen CSS Consumer + AArch64 Orphan Disposition | Closed REDRESS-126 |
+| W5 | Section 10 | Close And Alpha Feedback | Closed PASS-ADMIT REDRESS-127 |
 
-## 6. W0 Dispatch
+All SK-V12 wave dispatch is now historical. W3 is not required because W5
+closed by ADMIT on an already-admitted CSS path; W4 supplied zero-orphan and
+ASM-gen route evidence before close.
 
-W0 telemetry/gate lock at commit `f788eb97` is revalidated, not redone. Treat
-it as valid unless revalidation shows drift in the gate/report surface, source
-baseline, or JSON result surface.
+## 6. Historical W0 Dispatch
+
+W0 telemetry/gate lock at commit `f788eb97` was revalidated, not redone.
 
 W0 owner paths:
 
@@ -116,9 +132,8 @@ W0 owner paths:
   disposition
 - `skinny/REDRESS.md`
 
-W0 does not authorize parser/scanner/SIMD/codegen behavior edits, generated
-runtime output changes, or benchmark behavior changes. Dispatch W0 through the
-research -> plan -> redress triumvirate with distinct commits.
+W0 did not authorize parser/scanner/SIMD/codegen behavior edits, generated
+runtime output changes, or benchmark behavior changes.
 
 ## 7. Telemetry Binding
 
@@ -151,6 +166,6 @@ Refuse or return REVISE for any dispatch that:
 
 ## 9. Dispatch Boundary
 
-This handoff authorizes W0. Downstream behavior work is authorized only by the
-current `SPEC.md` wave entry gates and `DISPATCH-PROMPT.md` triumvirate
-protocol.
+This handoff no longer authorizes downstream SK-V12 behavior work. The next
+campaign action is external to SK-V12 unless a future user pin opens a new
+tranche from the recorded routed remainder.

@@ -99,31 +99,30 @@ length 1 with no structural bytes — and so leak through; this is expected and
 consistent with a +1-on-first injection profile). The uniform-random and
 corpus tests both flag 100%.
 
-### Open NEON divergence surfaced by the harness
+### W2 escape-mask disposition
 
-Strict mode currently fails — not because the harness is wrong, but because the
-NEON `escape_mask_64` boundary handoff to `scan_json_tail` does not match the
-scalar tail's `escaped` flag semantics on random-noise inputs. A minimal
-repro (xorshift seed `0xCAFEF00DBAADF00D`, iter 0, 128-byte JSON-pool buffer):
+SK-V12 W2 replaced the stale open-divergence note with executable proof cells:
+`tests/checkasm_escape_mask_64.rs` compares `escape_mask_64` against an
+independent byte-walk scalar reference, including the historical xorshift seed
+`0xCAFEF00DBAADF00D`, carry-in true/false, bit-0 continuation, bit-63 runs,
+`u64::MAX`, sparse/random masks, and long backslash runs split across stripes.
+The runtime JSON scanner now owns adversarial caller parity tests in
+`grammars/json/scan.rs`, comparing the NEON scanner against the scalar scanner
+on the historical 128-byte JSON-pool shape, residual tails, copied alignments,
+and slash runs before stripe-boundary quotes.
+
+Current HEAD passes strict mode:
 
 ```
-input tail: …\\\"f
-scalar emits position 126 (closing quote of a 1-char escaped string at EOF)
-neon   does not emit position 126
+BBNF_SIMD_STRICT=1 RUSTFLAGS="-C target-cpu=native" cargo test -p bbnf-simd --release --test checkasm_escape_mask_64 -- --nocapture
+BBNF_SIMD_STRICT=1 RUSTFLAGS="-C target-cpu=native" cargo test -p bbnf-simd --release --test checkasm_parity -- --nocapture
+RUSTFLAGS="-C target-cpu=native" cargo test -p runtime json::scan -- --nocapture
+cargo test -p bbnf-simd --release --test corpus_parity
 ```
 
-The divergence pattern matches a state-handoff confusion between
-`escape_mask_64`'s `new_carry` (does the next stripe start mid-escape?) and
-`scan_json_tail`'s `escaped` arg (is the *current* byte under an escape?). The
-fix is to either (a) consume the trailing 16-byte 4×_chunk of every input under
-the SIMD branch so the tail never sees mid-escape state, or (b) translate
-`bs_carry → escaped` correctly by walking the residual mask. This is a real
-bug, predates this harness, and is in scope for the next NEON tranche.
-
-Corpus parity remains 17/17 ✓ because real-world JSON never lands a single
-backslash immediately before a stripe boundary inside a string with no
-following ASCII — but synthetic and adversarial inputs do, which is precisely
-why the harness exists.
+W2 admits no throughput row and no new SIMD primitive. Its result is the Lock
+16 correctness prerequisite that unblocks later SIMD/ASM admission attempts
+under their own micro-proof and same-wave consumer gates.
 
 ## e. Per-test cost (M5 Max, ax-iter profile)
 

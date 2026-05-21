@@ -3599,3 +3599,34 @@ perturbation.
 - W1a admits no CSS/SOTA row and no SIMD primitive. W2 remains blocked on W1a
   close only; the `escape_mask_64` correctness prerequisite and all USER PIN
   CSS L4 / lightningcss / zero-orphan requirements carry forward unchanged.
+
+## SK-V12 Wave 2 Escape Mask Correctness Prerequisite
+
+- Item 122 closes W2 under `G-W2-ESCAPE-MASK-CORRECTNESS` /
+  `G-W2-ESCAPE-MASK-LOCK16` as an admitted correctness prerequisite. W2 adds a
+  direct `escape_mask_64` checkasm cell with an independent byte-walk scalar
+  reference and runtime JSON scanner adversarial parity tests; it makes no
+  production scanner, SIMD body, generated JSON, gate, `RESULTS.md`, or row
+  admission change.
+- The direct checkasm cell covers the historical xorshift falsifier seed
+  `0xCAFEF00DBAADF00D`, carry-in true/false, bit-0 continuation, bit-63
+  odd/even trailing runs, `u64::MAX`, sparse masks, deterministic random masks,
+  and backslash runs 1..128 split across 64-bit stripes.
+- The runtime scanner proof compares `scan_structurals` with
+  `scan_structurals_scalar` by structural positions and parity hash on the
+  historical 128-byte JSON-pool shape, residual tails 0..63, copied alignments,
+  mixed ASCII/escape windows, and odd/even slash runs before boundary quotes.
+  On aarch64 it asserts the NEON scanner backend so the proof cannot silently
+  pass as scalar-vs-scalar.
+- Verification passed:
+  `BBNF_SIMD_STRICT=1 RUSTFLAGS="-C target-cpu=native" cargo test -p bbnf-simd --release --test checkasm_escape_mask_64 -- --nocapture`;
+  `BBNF_SIMD_STRICT=1 RUSTFLAGS="-C target-cpu=native" cargo test -p bbnf-simd --release --test checkasm_parity -- --nocapture`;
+  `RUSTFLAGS="-C target-cpu=native" cargo test -p runtime json::scan -- --nocapture`;
+  and `cargo test -p bbnf-simd --release --test corpus_parity`.
+- No-touch JSON guard proof: `git diff --name-only HEAD -- skinny/crates/runtime/src/grammars/json/scan.rs skinny/crates/runtime/src/grammars/json/generated.rs skinny/crates/codegen/src skinny/RESULTS.md`
+  named only `scan.rs`, and inspection showed the diff is test-only under
+  `#[cfg(test)]`. The expanded JSON behavior guard was not required.
+- W2 admits no CSS L4 row, no lightningcss comparator movement, no JSON guard
+  row, and no SIMD/ASM throughput primitive. W1b/W3+ may now attempt their own
+  SIMD or CSS L4 admissions only under the USER PIN micro-proof, same-wave
+  consumer, zero-orphan, and strict comparator gates.

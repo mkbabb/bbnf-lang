@@ -274,3 +274,64 @@ mod neon {
         positions
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{scan_structurals, scan_structurals_scalar, ScanBackend};
+
+    fn fill_jsonish(seed: u64, len: usize) -> Vec<u8> {
+        const POOL: &[u8] = b"{}[],:\"\\\n\t \"abcdefghijklmnopqrstuvwxyz0123456789{}[],:\"\\";
+        let mut state = seed | 1;
+        let mut bytes = vec![0u8; len];
+        for byte in &mut bytes {
+            state ^= state << 13;
+            state ^= state >> 7;
+            state ^= state << 17;
+            *byte = POOL[(state as usize) % POOL.len()];
+        }
+        bytes
+    }
+
+    fn assert_scan_parity(input: &[u8]) {
+        let simd = scan_structurals(input);
+        let scalar = scan_structurals_scalar(input);
+        #[cfg(target_arch = "aarch64")]
+        assert_eq!(simd.backend(), ScanBackend::Neon);
+        assert_eq!(simd.positions(), scalar.positions(), "input={input:?}");
+        assert_eq!(simd.parity_hash(input), scalar.parity_hash(input));
+    }
+
+    #[test]
+    fn adversarial_escape_windows_match_scalar() {
+        assert_scan_parity(&fill_jsonish(0xCAFE_F00D_BAAD_F00D, 128));
+
+        for tail in 0..64 {
+            let mut input = b"[\"".to_vec();
+            input.resize(63, b'a');
+            input.push(b'\\');
+            input.extend(std::iter::repeat_n(b'a', tail));
+            input.extend_from_slice(b"\"]");
+            assert_scan_parity(&input);
+        }
+
+        for align in 0..16 {
+            let mut input = vec![b' '; align];
+            input.extend_from_slice(b"{\"a\":\"ascii\\\\\\\"quote\",\"b\":[1,2,3]}");
+            assert_scan_parity(&input);
+        }
+    }
+
+    #[test]
+    fn slash_runs_before_stripe_quotes_match_scalar() {
+        for boundary in [63usize, 64, 65] {
+            for run_len in 1..=8 {
+                let mut input = b"[\"".to_vec();
+                let target = boundary.saturating_sub(run_len);
+                input.resize(target, b'a');
+                input.extend(std::iter::repeat_n(b'\\', run_len));
+                input.extend_from_slice(b"\"]");
+                assert_scan_parity(&input);
+            }
+        }
+    }
+}

@@ -127,11 +127,15 @@ phases that append `skinny/RESULTS.md` or `skinny/REDRESS.md` must serialize.
 
 ## 6. Immediate Next Steps
 
-1. Run Alpha CHALLENGE against `restart/skinny/tranches/sk-v13/SYNTHESIS.md`
-   and this handoff.
-2. Dispatch Omega and hold Wave 0 behind G-Omega.
-3. After G-Omega, have S-P1 refresh profile truth for CSS L4 and all JSON
-   planes, including hot leaves and strict comparator rows.
+Next-move: `ready-for-S-P2`.
+
+1. S-P1 Profile is closed at `G-S-P1-CONVERGED` with V4/V5 consecutive
+   accepted challenge cycles. Its authority packet is
+   `restart/skinny/tranches/sk-v13/research/p1/hardening/HARDENING-S-P1-V5-CONVERGED.md`.
+2. Dispatch S-P2 Research across CSS parity, JSON all-plane SOTA reopen,
+   union substrate, ASM/SIMD production, decision-engine fold, and
+   GrammarConfig/Lock-14 finish.
+3. Continue Omega and hold Wave 0 behind G-Omega.
 4. Have S-P3 create the concrete wave plan, including rolling
    `restart/skinny/ROLLING-SOTA-DELTA.md` production and gate consumption.
 

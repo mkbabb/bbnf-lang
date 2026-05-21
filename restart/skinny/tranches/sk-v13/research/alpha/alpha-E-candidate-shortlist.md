@@ -391,6 +391,11 @@ Scalar/checkasm status:
 - `escape_mask_64` implementation is currently parity-green at caller level,
   but direct differential tests and adversarial scanner windows remain required
   before new string/escape SIMD admission.
+- `bbnf-simd` classifier dispatch currently selects by alphabet only. The live
+  aarch64 TBL path hardcodes JSON quote (`b'"'`), escape (`b'\\'`), and control
+  threshold (`0x20`) constants in `skinny/crates/bbnf-simd/src/dispatch.rs:23-32`,
+  so non-JSON consumers need an explicit grammar-policy gate before they may
+  consume that dispatch path.
 - `a64_ascii_set_run_skip` has W4 microbench parity and 4.72x scalar speedup,
   but lacks production wiring.
 - PMULL/CTZ/UDOT require scalar references and expanded checkasm matrices
@@ -412,6 +417,16 @@ Falsifiability gate:
 - `G-WX-SIMD-CONSUMED-KERNEL` passes only if scalar differential/checkasm pass,
   the production consumer executes in the measured row, Track 1 beats strict
   comparator or moves measurably toward it, and zero aarch64 orphans remain.
+- `G-SIMD-GRAMMAR-POLICY` is a prerequisite for any wave that wires
+  `bbnf-simd` into CSS, union, JSON `parse_only`, or shared generated code. It
+  passes only if the selected classifier uses the consuming grammar's
+  quote/escape/control policy or a no-string policy; scalar parity and
+  checkasm/differential cases cover at least JSON policy, CSS identifier/string
+  policy, and delimiter-only/no-string policy; the policy is consumed by a
+  same-wave measured row; no public substrate API or public `GrammarConfig` trait
+  is added; and no retained sidecar classifier state ships. The current
+  alphabet-only dispatch with hardcoded JSON constants is not admissible for
+  non-JSON consumers.
 - Row thresholds: CSS rows Track 1 > lightningcss + 1 Mbps; JSON direct/typed
   and parse_only rows Track 1 > sonic-rs strict + 1 Mbps.
 - A parity pass with no row movement must remove the primitive or demote it

@@ -152,6 +152,11 @@ Return REVISE for any downstream plan that:
   proofs, or user re-pin issues;
 - authorizes a new directive, BIR variant, `BackendShape`, public substrate API,
   or grammar-specific generic behavior through SPEC-local wording;
+- wires `bbnf-simd` into CSS, union, JSON `parse_only`, or shared generated
+  code without `G-SIMD-GRAMMAR-POLICY` proving the consuming grammar's
+  quote/escape/control policy or a no-string policy, plus scalar parity,
+  checkasm/differential coverage, same-wave row measurement, no public substrate
+  API, and no sidecar classifier state;
 - lets the hardcoded P1-P8 cascade silently serve JSON/CSS/Sheets/BBNF-self rows
   after the resolver fold rather than failing closed with visible
   rejection/non-admission;

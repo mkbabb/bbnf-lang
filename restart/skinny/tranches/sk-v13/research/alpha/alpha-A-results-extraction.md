@@ -181,7 +181,8 @@ as aggregate text:
 - `restart/prompts/pass-contracts/PASS-ALPHA.md:20-27`, `:77-108`: Alpha A
   must extract every results row and bind per-row deltas, strictness, output
   plane, comparator Mbps, and hot-leaf evidence.
-- `restart/skinny/tranches/sk-v12/USER-PIN-W1-CSS-L4-SOTA.md` and
+- `restart/skinny/tranches/sk-v12/USER-PIN-W1-CSS-L4-SOTA.md:5-9`,
+  `:16-21`, `:25-41` and
   `restart/skinny/USER-PIN-ADDENDUM-2026-05-21-FULL-SOTA.md:22-31`,
   `:33-46`, `:172-183`: CSS is authoritative; SK-V12 W1 close target is
   generated CSS L4 > lightningcss on the same output plane; addendum reference
@@ -202,12 +203,14 @@ as aggregate text:
 - `restart/skinny/tranches/sk-v13/scoping/sk-v13-scoping-css-parity-gap.md:13-18`,
   `:96-132`: records the single admitted CSS declaration-values row, the
   1/7/16/6 parity count, and the wave shortlist for remaining CSS L4 parity.
-- `restart/skinny/tranches/sk-v13/scoping/sk-v13-scoping-profile-truth.md`:
-  records PMU staleness, 13 JSON direct residual rows, 17-corpus capture scope,
-  and the need for fresh SK-V13 PMU over CSS plus JSON residuals.
-- `restart/skinny/tranches/sk-v13/scoping/sk-v13-scoping-value-api-union.md`:
-  records residual JSON policy leaks in config/value/sink surfaces that matter
-  for CSS full parity rows.
-- `restart/skinny/tranches/sk-v13/scoping/sk-v13-scoping-simd-asm-union.md`:
-  records W4 orphan disposition, the `a64_ascii_set_run_skip` route, and the
-  same-wave consumer requirement for any production SIMD/ASM admission.
+- `restart/skinny/tranches/sk-v13/scoping/sk-v13-scoping-profile-truth.md:11-25`,
+  `:105-112`, `:182-192`: records PMU staleness, direct-row priority/risk
+  accounting under the addendum, 17-corpus capture scope, and the need for fresh
+  SK-V13 PMU over CSS plus JSON residuals.
+- `restart/skinny/tranches/sk-v13/scoping/sk-v13-scoping-value-api-union.md:57-72`,
+  `:180-214`: records residual JSON policy leaks in config/value/sink surfaces
+  that matter for CSS full parity rows.
+- `restart/skinny/tranches/sk-v13/scoping/sk-v13-scoping-simd-asm-union.md:10-23`,
+  `:52-73`, `:184-203`: records W4 orphan disposition, the
+  `a64_ascii_set_run_skip` route, and the same-wave consumer requirement for any
+  production SIMD/ASM admission.

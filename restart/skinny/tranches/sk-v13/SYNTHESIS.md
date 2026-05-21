@@ -223,6 +223,12 @@ S-P3 owns the detailed wave plan, but it is constrained by this contract:
 - no SPEC clause may authorize a new directive, BIR variant, `BackendShape`,
   public substrate API, or grammar-specific generic behavior. The union category
   is unblocked only for same-tape, codegen-private, row-consumed variants.
+- any SPEC wave that wires `bbnf-simd` into CSS, union, JSON `parse_only`, or
+  shared generated code must include `G-SIMD-GRAMMAR-POLICY`: the selected
+  classifier must use the consuming grammar's quote/escape/control policy or a
+  no-string policy, with scalar parity, checkasm/differential coverage for JSON
+  and CSS policies, same-wave measured row consumption, no public substrate API,
+  and no retained sidecar classifier state.
 - after the decision-engine resolver lands, the hardcoded P1-P8 cascade must
   fail closed for JSON, CSS, Sheets, and BBNF-self rows unless S-P3 records an
   explicit row rejection/non-admission path. Silent fallback to the old cascade
@@ -239,6 +245,9 @@ Pre-blocked:
 - closing a JSON row through REDRESS-119 history without fresh SK-V13 evidence;
 - producer-only SIMD, union, resolver, or codegen artifacts without same-wave
   consumer measurement;
+- non-JSON or shared consumers of `bbnf-simd` alphabet-only classifier dispatch
+  unless `G-SIMD-GRAMMAR-POLICY` proves the selected path cannot inherit JSON
+  quote/escape/control constants;
 - grammar-name branches in generic crates, parser-owned sidecars, hidden
   Track 1/Track 2 coupling, or stale comparator sidecars;
 - dispatching Wave 0 before G-Omega closes.

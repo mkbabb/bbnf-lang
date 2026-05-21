@@ -1,11 +1,11 @@
 ---
 agent: 1C
 pass: T-P1-excavation
-cycle: V2
+cycle: V3
 generated_at: 2026-05-21T05:56:41Z
 spec_surfaces_audited: [PASS-1-EXCAVATION.md, ARCHITECTURE.md, LOCKS.md]
-files_audited_count: 27
-live_truth_method: "nl -ba + find + wc -l + rg over skinny/crates/runtime/src; focused cargo test -p runtime"
+files_audited_count: UNKNOWN
+live_truth_method: "path:line source reads over skinny/crates/runtime/src; uncaptured local find/wc/rg/cargo output is treated as scan-derived estimate or UNKNOWN verify_action, not closure evidence"
 prior_cycle_dispositions_folded:
   accepted:
     - CH1 accepted 1C runtime evidence as broadly supportable after spot checks.
@@ -20,6 +20,7 @@ prior_cycle_dispositions_folded:
     - Add wave, hard-cap, same-wave-consumer, and evidence-basis metadata to runtime divergences.
     - Expand Lock 14 implications for runtime root tests, proof aliases, generic-crate grammar names, and grammar-shape policy leaks.
     - Add Track 2 shared-substrate-helper caveat where runtime evidence is reused by bench hand parsers.
+    - V3 hardening downgrades uncaptured runtime file, LOC, and test-result counts to estimates or UNKNOWN verify actions unless committed artifact evidence is added.
   first_cycle_additions: [1C-runtime-census, 1C-lock14-leak-audit, 1C-shape-consumption-audit]
 divergence_count:
   spec_claims_implemented: 5
@@ -31,17 +32,17 @@ locks_amendment_candidates: 0
 
 # Executive Summary
 
-Runtime is a partial skinny prototype, not the V2 runtime described by the architecture. The live crate has 24 Rust files and 3 grammar directories under `skinny/crates/runtime/src/grammars`: `json`, `css_l4_declaration_values`, and `sheets_witness`. JSON is the only retained document parser and it implements an offset-tape shape: `ParserState` owns `TapeBuilder`, generated parsing emits offsets, and `JsonRoot` projects views from `Tape`. JSON also has generated `SinkOnly` direct consumption in `generated.rs`, but its receiver trait is explicitly hand-written JSON source. CSS L4 declaration-values must remain admitted same-plane row evidence from skinny history; the runtime gap is that V1 did not classify that fact-stream product as a formal runtime substrate/telemetry category. No live runtime `EventTape` consumer or compact event-cell storage exists; only proof-only event-grammar witnesses exist. Lock 14 is materially violated at the runtime root by grammar-named module aliases, root tests/proofs that import grammar surfaces from the generic crate, and hand-written per-grammar JSON/CSS files. The focused runtime test suite passes: `cargo test -p runtime` in `skinny/` ran 11 tests, all passing.
+Runtime is a partial skinny prototype, not the V2 runtime described by the architecture. A local scan-derived runtime census indicates roughly two dozen Rust files and 3 grammar directories under `skinny/crates/runtime/src/grammars`: `json`, `css_l4_declaration_values`, and `sheets_witness`; because no committed command transcript is cited here, the exact file count remains a verify action rather than closure evidence. JSON is the only retained document parser and it implements an offset-tape shape: `ParserState` owns `TapeBuilder`, generated parsing emits offsets, and `JsonRoot` projects views from `Tape`. JSON also has generated `SinkOnly` direct consumption in `generated.rs`, but its receiver trait is explicitly hand-written JSON source. CSS L4 declaration-values must remain admitted same-plane row evidence from skinny history; the runtime gap is that V1 did not classify that fact-stream product as a formal runtime substrate/telemetry category. No live runtime `EventTape` consumer or compact event-cell storage exists; only proof-only event-grammar witnesses exist. Lock 14 is materially violated at the runtime root by grammar-named module aliases, root tests/proofs that import grammar surfaces from the generic crate, and hand-written per-grammar JSON/CSS files. Focused runtime test status is UNKNOWN without a committed test transcript; rerun and capture `cargo test -p runtime` from `skinny/` before using pass counts as synthesis evidence.
 
 # Runtime Module Census
 
-| Grammar/module | Files | LOC | Generated? | Runtime shape evidence | Risk/LOC estimate |
-|---|---:|---:|---|---|---|
-| `json` | 10 | 2,096 | 8 generated markers; `scan.rs` and `sink.rs` explicitly non-generated | OffsetTape retained parser in `skinny/crates/runtime/src/grammars/json/parser.rs:7-12`, `skinny/crates/runtime/src/grammars/json/generated.rs:18-24`, `skinny/crates/runtime/src/grammars/json/generated.rs:290-303`; SinkOnly direct parser in `skinny/crates/runtime/src/grammars/json/generated.rs:393-407` | High: 400-800 LOC to make sink/scan generator-owned and metadata-derived |
-| `css_l4_declaration_values` | 5 | 415 | 4 generated markers; `sink.rs` lacks marker | Direct fact-stream scanner in `skinny/crates/runtime/src/grammars/css_l4_declaration_values/generated.rs:4-6`, `skinny/crates/runtime/src/grammars/css_l4_declaration_values/generated.rs:25-35`; no tape/view/value module | Medium: 150-300 LOC to classify as an admitted same-plane fact-stream product row with formal runtime substrate/telemetry status; do not demote or replace the admitted row without fresh regression evidence |
-| `sheets_witness` | 2 | 25 | no generated marker | Proof-only `EventGrammar` witness in `skinny/crates/runtime/src/grammars/sheets_witness/event_grammar_witness.rs:16-23`; no parser | Low/medium: 80-200 LOC to move witness generation behind codegen/proof fixtures |
-| Generic `tape` | 5 | 532 | hand-written generic substrate | Offset vector tape in `skinny/crates/runtime/src/tape/mod.rs:94-100`, `skinny/crates/runtime/src/tape/mod.rs:126-150`; generic typed cursor marker in `skinny/crates/runtime/src/tape/mod.rs:175-180` | Medium: 250-500 LOC to add true EventTape cells and generated consumers |
-| Runtime root/tests | 1 | 284 | hand-written | Grammar-named root modules in `skinny/crates/runtime/src/lib.rs:3-19`; JSON/CSS tests in `skinny/crates/runtime/src/lib.rs:24-283` | Medium: 120-250 LOC to replace hardcoded root exports with metadata manifest/test fixture generation |
+| Grammar/module | Files | LOC | Generated? | Runtime shape evidence | Risk/LOC estimate | Count/LOC verify_action |
+|---|---:|---:|---|---|---|---|
+| `json` | ~10 | ~2.1K | Generated markers observed; `scan.rs` and `sink.rs` explicitly non-generated | OffsetTape retained parser in `skinny/crates/runtime/src/grammars/json/parser.rs:7-12`, `skinny/crates/runtime/src/grammars/json/generated.rs:18-24`, `skinny/crates/runtime/src/grammars/json/generated.rs:290-303`; SinkOnly direct parser in `skinny/crates/runtime/src/grammars/json/generated.rs:393-407` | High: 400-800 LOC to make sink/scan generator-owned and metadata-derived | Capture `find skinny/crates/runtime/src/grammars/json -name '*.rs'` and `wc -l` output in a committed audit artifact before using exact counts. |
+| `css_l4_declaration_values` | ~5 | ~400 | Generated markers observed; `sink.rs` lacks marker | Direct fact-stream scanner in `skinny/crates/runtime/src/grammars/css_l4_declaration_values/generated.rs:4-6`, `skinny/crates/runtime/src/grammars/css_l4_declaration_values/generated.rs:25-35`; no tape/view/value module | Medium: 150-300 LOC to classify as an admitted same-plane fact-stream product row with formal runtime substrate/telemetry status; do not demote or replace the admitted row without fresh regression evidence | Capture `find skinny/crates/runtime/src/grammars/css_l4_declaration_values -name '*.rs'` and `wc -l` output in a committed audit artifact before using exact counts. |
+| `sheets_witness` | ~2 | ~25 | no generated marker observed | Proof-only `EventGrammar` witness in `skinny/crates/runtime/src/grammars/sheets_witness/event_grammar_witness.rs:16-23`; no parser | Low/medium: 80-200 LOC to move witness generation behind codegen/proof fixtures | Capture `find skinny/crates/runtime/src/grammars/sheets_witness -name '*.rs'` and `wc -l` output in a committed audit artifact before using exact counts. |
+| Generic `tape` | ~5 | ~500 | hand-written generic substrate | Offset vector tape in `skinny/crates/runtime/src/tape/mod.rs:94-100`, `skinny/crates/runtime/src/tape/mod.rs:126-150`; generic typed cursor marker in `skinny/crates/runtime/src/tape/mod.rs:175-180` | Medium: 250-500 LOC to add true EventTape cells and generated consumers | Capture `find skinny/crates/runtime/src/tape -name '*.rs'` and `wc -l` output in a committed audit artifact before using exact counts. |
+| Runtime root/tests | ~1 | ~300 | hand-written | Grammar-named root modules in `skinny/crates/runtime/src/lib.rs:3-19`; JSON/CSS tests in `skinny/crates/runtime/src/lib.rs:24-283` | Medium: 120-250 LOC to replace hardcoded root exports with metadata manifest/test fixture generation | Capture `wc -l skinny/crates/runtime/src/lib.rs` and current root test inventory in a committed audit artifact before using exact counts. |
 
 # Spec-Claim ↔ Implementation Table
 
@@ -109,15 +110,18 @@ Runtime is a partial skinny prototype, not the V2 runtime described by the archi
 | No metadata-derived runtime grammar manifest. | Root modules are hardcoded with `#[path = "..."]` (`skinny/crates/runtime/src/lib.rs:3-15`). | Verify planned manifest owner in pipeline/codegen; runtime should consume generated manifest or metadata output, not hand-coded aliases. |
 | No generated sink trait for JSON direct path. | `skinny/crates/runtime/src/grammars/json/sink.rs:1` says hand-owned; generated direct parser imports it (`skinny/crates/runtime/src/grammars/json/generated.rs:395`). | Regenerate from BIR/DirectFieldFacts and compare generated trait/receiver hooks to current tests. |
 | CSS fact stream is not mapped to a formal runtime shape/category. | CSS scanner returns `String` fact stream (`skinny/crates/runtime/src/grammars/css_l4_declaration_values/generated.rs:4-6`) and `FactSink` emits rows (`skinny/crates/runtime/src/grammars/css_l4_declaration_values/sink.rs:24-99`). | Preserve the admitted row, then determine whether its formal category is SinkOnly, fact-plane telemetry, or another generated product plane; require codegen evidence. |
+| Exact runtime file/LOC counts are not artifact-captured. | V2 used local `find`/`wc -l` output for the runtime census, but this file cites no committed transcript. | Commit an audit transcript for `find skinny/crates/runtime/src -name '*.rs'`, per-module `wc -l`, and generated-marker scans, or keep counts scan-derived estimates only. |
+| Focused runtime test result is not artifact-captured. | V2 used local `cargo test -p runtime` output, but this file cites no committed transcript or RESULTS row for the claimed pass count. | Rerun `cargo test -p runtime` from `/Users/mkbabb/Programming/bbnf-lang/skinny`, commit or cite the transcript, and only then state exact test count/pass status as evidence. |
 
 # Open Questions
 
 | UNKNOWN | Why unknown | verify_action |
 |---|---|---|
 | 1C-U1: What formal runtime category owns the admitted CSS declaration-values fact stream? | It lives under runtime grammar dirs and is admitted in skinny history, but emits a fact stream rather than document/tape/direct typed values. | Inspect the generating codegen path and skinny RESULTS row that consumes `css_l4_declaration_value_fact_stream`; classify before synthesis without demoting the admitted row. |
-| 1C-U2: Is `EventGrammar` witness scaffolding a replacement for `EventTape`, or only compile-time proof? | Witnesses compile and tests pass, but no event-cell tape or parser consumer exists. | Require a generated parser that writes/reads payload event cells, then cite path:line and rerun `cargo test -p runtime`. |
+| 1C-U2: Is `EventGrammar` witness scaffolding a replacement for `EventTape`, or only compile-time proof? | Witness source exists, but no event-cell tape or parser consumer exists; compile/test pass status is not artifact-captured in this file. | Require a generated parser that writes/reads payload event cells, then cite path:line and rerun/capture `cargo test -p runtime`. |
 | 1C-U3: Does architecture intentionally allow root-level generated grammar aliases despite Lock 14's "zero grammar-named modules" wording? | §4.3 allows per-grammar generated modules under `runtime/src/grammars/<name>/`, while Lock 14 forbids grammar-named modules in generic crates. | T-P3 should resolve wording: allow generated subdir names only, or require metadata manifest names outside generic root source. |
+| 1C-U4: What are the exact current runtime file counts, LOC totals, generated-marker counts, and focused runtime test pass counts? | V2 relied on local command output, but no committed transcript is cited in this artifact. | Capture and cite committed output for `find`, `wc -l`, generated-marker scans, and `cargo test -p runtime`; until then, keep counts as estimates and test status as UNKNOWN. |
 
 # Verification
 
-`cargo test -p runtime` from `/Users/mkbabb/Programming/bbnf-lang/skinny` passed 11 runtime tests, including JSON retained parse/view, lazy offset tape, generated direct parser sink dispatch, CSS fact stream, and event-grammar proof tests.
+Focused runtime test status is UNKNOWN for synthesis because no committed command transcript is cited here. Verify by rerunning `cargo test -p runtime` from `/Users/mkbabb/Programming/bbnf-lang/skinny`, capturing the exact output in an audit artifact, and then citing that artifact before asserting pass counts.

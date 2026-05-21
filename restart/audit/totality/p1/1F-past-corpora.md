@@ -1,7 +1,7 @@
 ---
 agent: 1F
 pass: T-P1-excavation
-cycle: V2
+cycle: V3
 generated_at: 2026-05-21T00:00:00-04:00
 spec_surfaces_audited: [skinny/REDRESS.md, skinny/RESULTS.md, restart/HANDOFF.md, restart/skinny/INDEX.md, restart/skinny/tranches/sk-v5/research, restart/skinny/tranches/sk-v6/research, restart/skinny/tranches/sk-v7/research, restart/skinny/tranches/sk-v8/research, restart/skinny/tranches/sk-v9/research, restart/skinny/tranches/sk-v10/research, restart/skinny/tranches/sk-v11/research, restart/skinny/tranches/sk-v12/research, restart/skinny/tranches/sk-v13/research, audit, restart/audit]
 files_audited_count: 1664
@@ -52,6 +52,8 @@ These are current hard pre-blocks from `restart/skinny/tranches/sk-v13/SYNTHESIS
 | SKV13-PB-008 | Do not dispatch Wave 0 before G-Omega closes. | `restart/skinny/tranches/sk-v13/SYNTHESIS.md:253` | Work-order rows need wave metadata and a hard cap. |
 
 ## Divergences Catalogued
+
+The ID-keyed `V2 Planning Metadata` table is the authoritative CH4 carrier for LOC, risk, wave, hard-cap, same-wave-consumer, and evidence-basis fields; this divergences table is an index only.
 
 | ID | Divergence / pre-block | Evidence | LOC / risk |
 |---|---|---|---|

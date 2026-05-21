@@ -1,7 +1,7 @@
 ---
 agent: 1F
 pass: T-P1-excavation
-cycle: V2
+cycle: V3
 generated_at: 2026-05-21T00:00:00-04:00
 spec_surfaces_audited: [restart/ARCHITECTURE.md, restart/MASTER-PLAN.md, restart/locks/LOCKS.md, restart/skinny/INDEX.md, skinny/REDRESS.md, skinny/RESULTS.md]
 files_audited_count: 633
@@ -9,19 +9,19 @@ live_truth_method: "line-cited source reads; uncaptured wc/rg/child-count scan s
 prior_cycle_dispositions_folded:
   accepted: [CH2-runtime-generated-split, CH2-bbnf-simd-current-genericity, CH3-1F-preblock-history, CH4-1F-cost-shape, CH5-json-lock1-central-danger]
   rejected: []
-  revised: [CH1-command-output-hygiene, CH1-lock13-child-count-narrowing, CH2-generic-crate-census, CH2-grammar-shape-leaks, CH4-hard-cap-metadata, CH5-structural-scanner-plane, CH5-css-source-sidecar-plane, CH5-proof-witness-root-coupling, CH6-eventcursor-closure-wording]
+  revised: [CH1-command-output-hygiene, CH1-lock13-child-count-narrowing, CH2-generic-crate-census, CH2-grammar-shape-leaks, CH4-hard-cap-metadata, CH5-structural-scanner-plane, CH5-css-source-sidecar-plane, CH5-proof-witness-root-coupling, CH5-track2-shared-substrate-helper, CH6-eventcursor-closure-wording]
   first_cycle_additions: [AP-001, AP-002, AP-003, AP-004, AP-005]
 divergence_count:
   spec_claims_implemented: 3
   spec_claims_unimplemented: 6
-  impl_exceeds_spec: 2
+  impl_exceeds_spec: 3
   unknown: 3
 locks_amendment_candidates: 0
 ---
 
 ## Executive Summary
 
-The live skinny code still contains Lock 13 and Lock 14 anti-patterns. The worst Lock 13 offenders are non-generated source files over 500 LOC: `bbnf-bench/src/report.rs`, `bbnf-bench/src/bin/gate.rs`, `passes/src/lib.rs`, `parse-that-regex/src/lib.rs`, and `ir/src/lib.rs`; exact LOC counts remain scan-derived and must be captured before becoming closure evidence. Lock 13 child-count claims are narrowed in V2: fanout alone is not enough because the lock also requires mixed concerns, so cohesive ISA/test partitions are follow-up inventory candidates rather than proven violations. The worst Lock 14 offenders are generic-crate grammar profiles, generated-module exports hardcoding JSON/CSS/SHEETS names, and JSON-shaped pass heuristics that leak grammar policy without `Json` symbols. The old SK-V5 EventCursor route remains a historical pre-block, but V2 weakens the current-tree closure wording and promotes proof/runtime witness exports to an explicit hidden-coupling row.
+The live skinny code still contains Lock 13 and Lock 14 anti-patterns. The worst Lock 13 offenders are non-generated source files over 500 LOC: `bbnf-bench/src/report.rs`, `bbnf-bench/src/bin/gate.rs`, `passes/src/lib.rs`, `parse-that-regex/src/lib.rs`, and `ir/src/lib.rs`; exact LOC counts remain scan-derived and must be captured before becoming closure evidence. Lock 13 child-count claims are narrowed in V2: fanout alone is not enough because the lock also requires mixed concerns, so cohesive ISA/test partitions are follow-up inventory candidates rather than proven violations. The worst Lock 14 offenders are generic-crate grammar profiles, generated-module exports hardcoding JSON/CSS/SHEETS names, and JSON-shaped pass heuristics that leak grammar policy without `Json` symbols. The old SK-V5 EventCursor route remains a historical pre-block, but V2 weakens the current-tree closure wording and promotes proof/runtime witness exports to an explicit hidden-coupling row. V3 also classifies Track 2 JSON as independent parser authority with shared runtime substrate helpers, not parser-authority dishonesty and not retained parallel substrate.
 
 ## Spec-Claim <-> Implementation Table
 
@@ -37,8 +37,11 @@ The live skinny code still contains Lock 13 and Lock 14 anti-patterns. The worst
 | AP-008 | Lock 1/ARCH require transient scanner planes not to become retained sidecars. | JSON scan source is explicitly JSON-owned at `skinny/crates/runtime/src/grammars/json/scan.rs:1`, returns `StructuralIndex` at `skinny/crates/runtime/src/grammars/json/scan.rs:22`, and uses it for capacity at `skinny/crates/runtime/src/grammars/json/scan.rs:47-52`. | transient scanner plane; UNKNOWN retained identity | 40-120 LOC audit/fencing; medium | No retained document identity is proven here; classify and fence as capacity/proof input, not substrate authority. |
 | AP-009 | CSS same-plane evidence must not hide comparator sidecars as runtime substrate. | `lightningcss_facts` routes through `fixture_sidecar_facts` at `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:222-234`, writes `same-plane-source-sidecar` at `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:298-303`, and validates fixture spans at `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:504-510`. | comparator-sidecar evidence plane | 60-160 LOC classification/reporting; medium-high | Preserve CSS admission evidence, but classify the lightningcss source sidecar as comparator-only and non-runtime-authoritative. |
 | AP-010 | Runtime proof witnesses are generic-root coupling surfaces, not harmless residue. | Runtime root exposes `json_event_grammar_witness` and `sheets_witness` under proof/test gates at `skinny/crates/runtime/src/lib.rs:9-15`. | proof-witness root coupling | 80-180 LOC relocation/generation; medium | Proof witnesses need generated or proof-crate routing before Lock 14 can close for runtime root. |
+| AP-011 | Track 2 benchmark parsers may be independent parser authority only if shared runtime substrate helpers are explicit and non-retained. | Track 2 JSON imports runtime JSON root/errors and tape builders at `skinny/crates/bbnf-bench/src/track2/json.rs:5-8`, uses runtime structural capacity helpers and `TapeBuilder` construction at `skinny/crates/bbnf-bench/src/track2/json.rs:24-32`, and returns `JsonRoot::from_tape` at `skinny/crates/bbnf-bench/src/track2/json.rs:43`. | independent parser authority with shared runtime substrate helpers | 0 LOC classification; low | This is not parser-authority dishonesty and not retained parallel substrate; preserve the independent parser classification while keeping helper sharing visible. |
 
 ## Divergences Catalogued
+
+The ID-keyed `V2 Planning Metadata` table is the authoritative CH4 carrier for LOC, risk, wave, hard-cap, same-wave-consumer, and evidence-basis fields; this divergences table is an index only.
 
 | ID | Divergence | Evidence | LOC / risk |
 |---|---|---|---|
@@ -51,6 +54,7 @@ The live skinny code still contains Lock 13 and Lock 14 anti-patterns. The worst
 | AP-008 | Structural scanner plane is live and must stay transient/non-authoritative. | `skinny/crates/runtime/src/grammars/json/scan.rs:1-52` | 40-120 LOC; medium |
 | AP-009 | CSS lightningcss source sidecar is comparator evidence, not runtime substrate. | `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:222-234`; `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:298-303`; `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:504-510` | 60-160 LOC; medium-high |
 | AP-010 | Runtime root proof witnesses couple generic root to grammar names. | `skinny/crates/runtime/src/lib.rs:9-15` | 80-180 LOC; medium |
+| AP-011 | Track 2 JSON is an independent parser authority sharing runtime substrate helpers, not parser-authority dishonesty and not retained parallel substrate. | `skinny/crates/bbnf-bench/src/track2/json.rs:5-8`; `skinny/crates/bbnf-bench/src/track2/json.rs:24-32`; `skinny/crates/bbnf-bench/src/track2/json.rs:43` | 0 LOC classification; low |
 
 ## V2 Planning Metadata
 
@@ -66,6 +70,7 @@ The live skinny code still contains Lock 13 and Lock 14 anti-patterns. The worst
 | AP-008 | 40-120 LOC audit/fence | medium | substrate-fencing wave | 180 LOC | retained-substrate audit consumer | `skinny/crates/runtime/src/grammars/json/scan.rs:1-52` |
 | AP-009 | 60-160 LOC classification | medium-high | CSS evidence-accounting wave | 220 LOC | CSS row-plane report consumer | `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:222-234`; `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:298-303` |
 | AP-010 | 80-180 LOC relocation/generation | medium | proof-surface wave | 240 LOC | proof crate or generated witness consumer | `skinny/crates/runtime/src/lib.rs:9-15` |
+| AP-011 | 0 LOC classification | low | Track 2 evidence-accounting wave | 0 LOC | benchmark report classification | `skinny/crates/bbnf-bench/src/track2/json.rs:5-8`; `skinny/crates/bbnf-bench/src/track2/json.rs:24-32`; `skinny/crates/bbnf-bench/src/track2/json.rs:43` |
 
 ## Gaps / Missing Primitives
 

@@ -1,7 +1,7 @@
 ---
 agent: 1F
 pass: T-P1-excavation
-cycle: V2
+cycle: V3
 generated_at: 2026-05-21T00:00:00-04:00
 spec_surfaces_audited: [restart/ARCHITECTURE.md, restart/MASTER-PLAN.md, restart/locks/LOCKS.md, restart/HANDOFF.md, restart/skinny/INDEX.md, restart/skinny/SUBSTRATE.md, restart/skinny/COMPILER.md, restart/skinny/BENCH.md, restart/skinny/WORKSPACE.md, restart/skinny/HARDENING.md, skinny/REDRESS.md, skinny/RESULTS.md]
 files_audited_count: 2211
@@ -43,6 +43,8 @@ Companion outputs are warranted: `1F-anti-pattern.md` carries the live code evid
 | PC-003 | `skinny/REDRESS.md:394-413` invalidates Class A tiny-string NEON as parse-G fix. | `skinny/crates/bbnf-simd/src/aarch64/match_tiny_plain_string.rs` remains as a primitive, not canonical parser wiring. | accepted historical pre-block | 0 LOC; medium if relitigated | Primitive may be reused only with new row-local evidence. |
 
 ## Divergences Catalogued
+
+The ID-keyed `V2 Planning Metadata` table is the authoritative CH4 carrier for LOC, risk, wave, hard-cap, same-wave-consumer, and evidence-basis fields; this divergences table is an index only.
 
 | ID | Divergence | Evidence | LOC / risk |
 |---|---|---|---|

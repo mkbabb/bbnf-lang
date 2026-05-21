@@ -631,6 +631,7 @@ Owner paths:
 - `skinny/crates/bbnf-simd/tests/checkasm_*.rs`
 - `skinny/crates/parse-that-regex/src/`
 - `skinny/crates/runtime/src/grammars/css_l4_declaration_values/`
+- `skinny/crates/codegen/src/css_l4_declaration_values_templates/`
 - `skinny/crates/codegen/src/json_templates/`
 - `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs`
 - `skinny/crates/bbnf-bench/benches/nonjson_css_l4.rs`

@@ -1,10 +1,11 @@
 ---
 agent: 2C
 pass: T-P2-research
-cycle: V2
+cycle: V3
 generated_at: 2026-05-21T08:37:12Z
 t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F]
-primary_sources_cited: 15
+primary_sources_cited: 7
+counted_source_ids: [T2C-SRC-CSS-SYNTAX, T2C-SRC-SELECTORS, T2C-SRC-CSS-VALUES, T2C-SRC-CSS-VARIABLES, T2C-SRC-OPENFORMULA, T2C-SRC-V2-FOLD, T2C-SRC-LOCAL-EVIDENCE]
 techniques_grounded: 12
 techniques_refuted: 5
 prior_cycle_dispositions_folded:
@@ -16,6 +17,7 @@ prior_cycle_dispositions_folded:
     - CH1 stable section/page provenance
     - CH2 canonical Lock-14 transfer contract
     - CH5 fact-stream output-plane boundary
+    - CH1 counted-source-id repair through restart/audit/totality/p2/T-P2-V3-FOLD-ADDENDUM.md
     - CH6 feature-to-transfer ledger and NOT-VALIDATED wording
   first_cycle_additions:
     - 2C-css-token-alphabet

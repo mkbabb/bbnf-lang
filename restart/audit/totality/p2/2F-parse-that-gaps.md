@@ -1,10 +1,11 @@
 ---
 agent: 2F
 pass: T-P2-research
-cycle: V2
+cycle: V3
 generated_at: 2026-05-21T04:42:44-04:00
 t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F]
-primary_sources_cited: 20
+primary_sources_cited: 21
+counted_source_ids: [SRC-COX-REGEX, SRC-RE2, SRC-RUST-REGEX, SRC-MEMCHR, SRC-FASTFLOAT, SRC-FNF, SRC-CLINGER, SRC-SIMDJSON-PAPER, SRC-SIMDJSON-SRC, SRC-UTF8, SRC-XXHASH, SRC-BBNF-PTR, SRC-UPSTREAM-REGEX, SRC-UPSTREAM-SCAN, SRC-BBNF-SIMD, SRC-BBNF-CODEGEN, SRC-BBNF-RUNTIME, SRC-BBNF-DIGEST, SRC-REDRESS, SRC-T-P1, SRC-V2-ADDENDUM]
 techniques_grounded: 13
 techniques_refuted: 6
 prior_cycle_dispositions_folded:
@@ -14,7 +15,9 @@ prior_cycle_dispositions_folded:
   first_cycle_additions: [PTG-REGEX-HIR-ENGINE, PTG-REGEX-INFO-FACTS, PTG-SIMD-SPAN-SCAN, PTG-STRING-SCAN-UTF8, PTG-UNICODE-ESCAPE-CODEC, PTG-FLOAT-CLINGER-EISEL, PTG-INTEGER-SWAR-DOTPROD, PTG-DIGEST-SEMANTIC-MIX, PTG-CSS-SCANNER-GAP]
 locks_amendment_candidates: 4
 v2_fold_addendum: restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md
+v3_fold_addendum: restart/audit/totality/p2/T-P2-V3-FOLD-ADDENDUM.md
 parse_that_import_authority: conditional-local-head-051a6d681da95a180e6b67f956526722d1d33322
+v3_fold_additions: [PINNED-SOURCE-REGISTER-REPAIR, EXECUTABLE-PARSE-THAT-LEDGER, NORMALIZED-STATE-FIELD]
 ---
 
 ## Executive Summary
@@ -65,16 +68,16 @@ semantic digest equality cannot be replaced by a byte-hash comparator.
 | ID | Primary source | Use in this dossier |
 |---|---|---|
 | SRC-COX-REGEX | Russ Cox, "Regular Expression Matching Can Be Simple And Fast" ([swtch.com](https://swtch.com/~rsc/regexp/regexp1.html)) | Thompson-NFA / automata route; refutes backtracking or ad hoc regex parsing as the totality baseline. |
-| SRC-RE2 | Google RE2 source/README ([github.com/google/re2](https://github.com/google/re2)) | Production finite-automata regex discipline: linear-time, bounded memory, parser/compiler/engine separation. |
-| SRC-RUST-REGEX | Rust `regex`, `regex-automata`, and `regex-syntax` source ([github.com/rust-lang/regex](https://github.com/rust-lang/regex)) | Established Rust HIR/NFA/DFA building blocks and the alternative to a bespoke skinny-only engine. |
-| SRC-MEMCHR | BurntSushi `memchr` source ([github.com/BurntSushi/memchr](https://github.com/BurntSushi/memchr)) | Primary Rust source for byte-search primitives used by upstream parse-that span scanners. |
-| SRC-FASTFLOAT | `fast_float` official implementation ([github.com/fastfloat/fast_float](https://github.com/fastfloat/fast_float)) | Fast exact decimal-to-binary float implementation lineage. |
+| SRC-RE2 | Google RE2 source/README at HEAD `972a15cedd008d846f1a39b2e88ce48d7f166cbd` ([github.com/google/re2](https://github.com/google/re2/tree/972a15cedd008d846f1a39b2e88ce48d7f166cbd)) | Production finite-automata regex discipline: linear-time, bounded memory, parser/compiler/engine separation. |
+| SRC-RUST-REGEX | Rust `regex`, `regex-automata`, and `regex-syntax` source at HEAD `839d16bc65b60e2006d3599d20bfa6efc14049d8` ([github.com/rust-lang/regex](https://github.com/rust-lang/regex/tree/839d16bc65b60e2006d3599d20bfa6efc14049d8)) | Established Rust HIR/NFA/DFA building blocks and the alternative to a bespoke skinny-only engine. |
+| SRC-MEMCHR | BurntSushi `memchr` source at HEAD `db1a77d4b556a1321e136ca0514e43e74ea5fcc3` ([github.com/BurntSushi/memchr](https://github.com/BurntSushi/memchr/tree/db1a77d4b556a1321e136ca0514e43e74ea5fcc3)) | Primary Rust source for byte-search primitives used by upstream parse-that span scanners. |
+| SRC-FASTFLOAT | `fast_float` official implementation at HEAD `05087a303dad9c98768b33c829d398223a649bc6` ([github.com/fastfloat/fast_float](https://github.com/fastfloat/fast_float/tree/05087a303dad9c98768b33c829d398223a649bc6)) | Fast exact decimal-to-binary float implementation lineage. |
 | SRC-FNF | Noble Mushtak and Daniel Lemire, "Fast Number Parsing Without Fallback" ([arXiv 2212.06644](https://arxiv.org/abs/2212.06644)) | Refines Eisel-Lemire fallback risk; bbnf should measure fallback rather than assume no fallback. |
 | SRC-CLINGER | William D. Clinger, "How to Read Floating-Point Numbers Accurately", PLDI 1990, DOI 10.1145/93542.93557 ([doi.org](https://doi.org/10.1145/93542.93557)) | Correct-rounding basis for Clinger-style fast path and exact fallback discipline. |
 | SRC-SIMDJSON-PAPER | Geoff Langdale and Daniel Lemire, "Parsing Gigabytes of JSON per Second", VLDB Journal 2019 ([arXiv 1902.08318](https://arxiv.org/abs/1902.08318)) | SIMD string/structural-scan architecture and the distinction between scanner speed and consumer admission. |
-| SRC-SIMDJSON-SRC | simdjson source/README ([github.com/simdjson/simdjson](https://github.com/simdjson/simdjson)) | Production source for validated SIMD JSON parsing, UTF-8, and lossless number claims. |
+| SRC-SIMDJSON-SRC | simdjson source/README at HEAD `168ef580757d75270475b379e83c2b39787a6765` ([github.com/simdjson/simdjson](https://github.com/simdjson/simdjson/tree/168ef580757d75270475b379e83c2b39787a6765)) | Production source for validated SIMD JSON parsing, UTF-8, and lossless number claims. |
 | SRC-UTF8 | John Keiser and Daniel Lemire, "Validating UTF-8 In Less Than One Instruction Per Byte" ([arXiv 2010.03090](https://arxiv.org/abs/2010.03090)) | SIMD UTF-8 validation route; refutes scalar-only UTF-8 as the only defensible primitive. |
-| SRC-XXHASH | xxHash official source/README ([github.com/Cyan4973/xxHash](https://github.com/Cyan4973/xxHash)) | Useful byte-hash baseline; explicitly not a replacement for bbnf semantic direct digest. |
+| SRC-XXHASH | xxHash official source/README at HEAD `e573d4d2aaeaba0f3e5a0a9a54144a1f2b4b56e7` ([github.com/Cyan4973/xxHash](https://github.com/Cyan4973/xxHash/tree/e573d4d2aaeaba0f3e5a0a9a54144a1f2b4b56e7)) | Useful byte-hash baseline; explicitly not a replacement for bbnf semantic direct digest. |
 | SRC-BBNF-PTR | `skinny/crates/parse-that-regex/src/lib.rs:4-8`, `:157-209`, `:547-573`, `:718-840`; `skinny/crates/parse-that-regex/src/number/mod.rs:31-272`; `skinny/crates/parse-that-regex/src/number/eisel_lemire/mod.rs:1-177` | Live skinny parse-that facade: string, unicode, number, and fallback behavior. |
 | SRC-UPSTREAM-REGEX | `/Users/mkbabb/Programming/parse-that/rust/regex/src/lib.rs:1-38`; `/Users/mkbabb/Programming/parse-that/rust/regex/src/hir/mod.rs:1-277`; `/Users/mkbabb/Programming/parse-that/rust/regex/src/automata/dfa.rs:1-170` | Local upstream regex/HIR/NFA/DFA engine not present in skinny `parse-that-regex`. |
 | SRC-UPSTREAM-SCAN | `/Users/mkbabb/Programming/parse-that/rust/parse_that/src/span_parser/scan.rs:1-183`; `/Users/mkbabb/Programming/parse-that/rust/parse_that/src/span_parser/span_scanner.rs:1-42` | Local upstream span scanners: memchr1/2/3, LUT, portable SIMD, and monolithic grammar-neutral scanner enum. |
@@ -182,6 +185,12 @@ following blockers close:
 
 ## V2 Admission Ledger Requirements
 
+V3 fold note: the executable parse-that ledger is centralized in
+`restart/audit/totality/p2/T-P2-V3-FOLD-ADDENDUM.md`. The table below remains
+an owner summary; the V3 addendum is authoritative for LOC, risk, rollback,
+abrogate thresholds, normalized `admissibility_state`, and separate
+`disposition_or_blocker` values.
+
 Every 2F candidate that reaches S-P3 must carry the shared V2 ledger columns:
 
 ```text
@@ -205,17 +214,17 @@ retention_lifetime
 policy_owner
 ```
 
-Minimum 2F ledger rows:
+Minimum 2F ledger rows, with state/disposition normalized by the V3 addendum:
 
-| candidate_id | admissibility_state | same_wave_consumer_path | expected gate | substrate_target / lifetime / owner | blocker before admission |
+| candidate_id | state / disposition | same_wave_consumer_path | expected gate | substrate_target / lifetime / owner | blocker before admission |
 |---|---|---|---|---|---|
-| `bbnf_regex_hir_import` | source_backed -> conditional | `skinny/crates/codegen/src/lower/sink_only.rs` resolver path or generated CSS scanner templates | JSON/CSS equality plus resolver-selected row movement | `local_temp_only` facts at compile time / `generated_function` / `generated_grammar` | parse-that snapshot/license/HIR mapping not complete. |
-| `regex_info_to_backendexpr_facts` | conditional | e-graph/CSP/cost resolver consuming regex facts | P1-P8 cascade replacement without JSON regression | `local_temp_only` / `generated_function` / `generated_grammar` | opaque `RegexProgram { pattern }` still sole fact source. |
-| `scanner_plan_import` | conditional | CSS L4 generated scanner loop or JSON string/number scanner loop | strict lightningcss or sonic row movement | runtime `local_temp_only` / `local_loop` / `generated_grammar` | retained mask/class/cursor stream or no row consumer. |
-| `string_escape_policy_surface` | partial | CSS escaped-ident/string row or JSON unicode direct row | strict equality plus >SOTA row movement | `direct_sink` or `admitted_fact_output` / `generated_function` / `generated_grammar` | JSON-only quote/backslash/control policy leaks. |
+| `bbnf_regex_hir_import` | `source_backed`; import/snapshot blocker | `skinny/crates/codegen/src/lower/sink_only.rs` resolver path or generated CSS scanner templates | JSON/CSS equality plus resolver-selected row movement | `local_temp_only` facts at compile time / `generated_function` / `generated_grammar` | parse-that snapshot/license/HIR mapping not complete. |
+| `regex_info_to_backendexpr_facts` | `source_backed`; opaque-pattern blocker | e-graph/CSP/cost resolver consuming regex facts | P1-P8 cascade replacement without JSON regression | `local_temp_only` / `generated_function` / `generated_grammar` | opaque `RegexProgram { pattern }` still sole fact source. |
+| `scanner_plan_import` | `source_backed`; runtime-substrate blocker | CSS L4 generated scanner loop or JSON string/number scanner loop | strict lightningcss or sonic row movement | runtime `local_temp_only` / `local_loop` / `generated_grammar` | retained mask/class/cursor stream or no row consumer. |
+| `string_escape_policy_surface` | `source_backed`; grammar-policy blocker | CSS escaped-ident/string row or JSON unicode direct row | strict equality plus >SOTA row movement | `direct_sink` or `admitted_fact_output` / `generated_function` / `generated_grammar` | JSON-only quote/backslash/control policy leaks. |
 | `float_fallback_telemetry` | scalar_backed | JSON/CSS number materializer consumer | fallback-rate TSV and numeric row movement or measured reject | `direct_sink` / `local_loop` / `generated_grammar` | fallback rate and self-time not measured. |
-| `digit_dotprod_materializer` | conditional | JSON numeric direct/parse row or CSS number/dimension row | strict equality plus number-heavy row movement | `direct_sink` / `local_loop` / `generated_grammar` | DOTPROD primitive not wired through scalar/checkasm/consumer path. |
-| `semantic_digest_simd_mix` | conditional | `JsonDirectDigest` strict Track 1/Track 2 consumer | sonic strict direct row movement without comparator change | `direct_sink` / `local_loop` / `generated_grammar` | byte-hash substitution or changed semantic contract. |
+| `digit_dotprod_materializer` | `source_backed`; checkasm/consumer blocker | JSON numeric direct/parse row or CSS number/dimension row | strict equality plus number-heavy row movement | `direct_sink` / `local_loop` / `generated_grammar` | DOTPROD primitive not wired through scalar/checkasm/consumer path. |
+| `semantic_digest_simd_mix` | `source_backed`; semantic-contract blocker | `JsonDirectDigest` strict Track 1/Track 2 consumer | sonic strict direct row movement without comparator change | `direct_sink` / `local_loop` / `generated_grammar` | byte-hash substitution or changed semantic contract. |
 
 ## Open Research Questions
 

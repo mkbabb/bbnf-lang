@@ -1,10 +1,11 @@
 ---
 agent: 2A
 pass: T-P2-research
-cycle: V2
+cycle: V3
 generated_at: 2026-05-21T04:38:47-04:00
 t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F]
 primary_sources_cited: 15
+counted_source_ids: [T2A-SRC-V2-FOLD, T2A-SRC-SIMDJSON-PAPER, T2A-SRC-SIMDJSON-SRC, T2A-SRC-SONIC, T2A-SRC-YYJSON, T2A-SRC-ASMJSON-README, T2A-SRC-ASMJSON-SAXDOM, T2A-SRC-ASMJSON-CONFORMANCE, T2A-SRC-FFMPEG-CHECKASM, T2A-SRC-DAV1D-CHECKASM, T2A-SRC-REDRESS, T2A-SRC-RESULTS, T2A-SRC-T-P1-1A, T2A-SRC-T-P1-1E, T2A-SRC-S-P1-LEDGER]
 techniques_grounded: 10
 techniques_refuted: 6
 prior_cycle_dispositions_folded:
@@ -13,7 +14,9 @@ prior_cycle_dispositions_folded:
   revised: [CH1, CH2, CH3, CH4, CH5, CH6]
   first_cycle_additions: [T2A-SOTA-001, T2A-SOTA-002, T2A-SOTA-003, T2A-SOTA-004, T2A-SOTA-005, T2A-SOTA-006, T2A-SOTA-007, T2A-SOTA-008]
   v2_shared_contract: restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md
+  v3_shared_contract: restart/audit/totality/p2/T-P2-V3-FOLD-ADDENDUM.md
   v2_fold_additions: [T2A-V2-FOLD-001, T2A-V2-FOLD-002, T2A-V2-FOLD-003, T2A-V2-FOLD-004]
+  v3_fold_additions: [T2A-V3-COUNTED-SOURCE-IDS]
 locks_amendment_candidates: 5
 ---
 

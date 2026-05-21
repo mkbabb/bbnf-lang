@@ -1,13 +1,15 @@
 ---
 agent: 2B
 pass: T-P2-research
-cycle: V2
+cycle: V3
 generated_at: 2026-05-21T10:24:00Z
 t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F]
 primary_sources_cited: 24
+counted_source_ids: [T2B-SRC-FFMPEG-C, T2B-SRC-FFMPEG-H, T2B-SRC-VIDEOLAN-CHECKASM, T2B-SRC-ARM-ACLE, T2B-SRC-ARM-NEON, T2B-SRC-P2-PROMPT, T2B-SRC-T-P1-1D, T2B-SRC-T-P1-1E, T2B-SRC-T-P1-HARDENING, T2B-SRC-V2-FOLD, T2B-SRC-V3-FOLD, T2B-SRC-LOCKS, T2B-SRC-SK-V13-SYNTHESIS, T2B-SRC-SK-V13-HANDOFF, T2B-SRC-SIMD-SCOPING, T2B-SRC-P1-B, T2B-SRC-P1-C, T2B-SRC-P1-E, T2B-SRC-P1-LEDGER, T2B-SRC-P2-B, T2B-SRC-P2-C, T2B-SRC-RESULTS, T2B-SRC-REDRESS, T2B-SRC-BBNF-SIMD]
 techniques_grounded: 13
 techniques_refuted: 6
 v2_fold_authority: restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md
+v3_fold_authority: restart/audit/totality/p2/T-P2-V3-FOLD-ADDENDUM.md
 v1_ch_lenses_folded: [CH1, CH2, CH3, CH4, CH5, CH6]
 prior_cycle_dispositions_folded:
   accepted: []
@@ -15,6 +17,7 @@ prior_cycle_dispositions_folded:
   revised: [CH1-provenance, CH2-lock14-transfer, CH3-redress-material-differentials, CH4-cost-and-admission-ledger, CH5-substrate-kind-fields, CH6-anti-paper-close-state-machine]
   first_cycle_additions: [2B-L0-vendored-macro-boundary, 2B-L1-primitive-contracts, 2B-checkasm-admission-loop, 2B-lock16-traceability-manifest, 2B-no-orphan-primitive-rule]
   v2_additions: [2B-per-technique-admission-ledger, 2B-source-present-orphan-enum, 2B-lock16-manifest-retention-fields, 2B-redress-121-127-taxonomy, 2B-union-asm-material-differential-checklist]
+  v3_additions: [2B-executable-shared-ledger, 2B-normalized-admission-state, 2B-counted-source-ids]
 locks_amendment_candidates: 7
 ---
 
@@ -135,17 +138,24 @@ missing transition and the same-wave consumer that reaches
 
 #### Per-Technique Admission Ledger
 
-| candidate_id | source / local status | BBNF_SIMD_STRICT_status | consumer and row/feature gate | substrate / lifetime / policy | V2 admissibility_state |
+V3 fold note: the executable ledger with LOC, risk, rollback, abrogate
+thresholds, normalized `admissibility_state`, and separate
+`disposition_or_blocker` fields lives in
+`restart/audit/totality/p2/T-P2-V3-FOLD-ADDENDUM.md`. The local table below is
+retained as a compact owner summary and must not be used as the gate-consumed
+ledger if it disagrees with the V3 addendum.
+
+| candidate_id | source / local status | BBNF_SIMD_STRICT_status | consumer and row/feature gate | substrate / lifetime / policy | V3 state / disposition |
 |---|---|---|---|---|---|
 | `ascii_set_member64_css_delimiter` | Scalar, NEON/checkasm, and 4.718x microbench in REDRESS-126; production CSS wiring deferred. | Mandatory for admission command; non-strict runs are exploratory. | CSS `scan_block` delimiter or `skip_ws_and_comments` consumer; strict lightningcss/cssparser equality and > lightningcss+1 row movement. | `local_temp_only` / `local_loop` / `generated_grammar`. | `micro_proven`; not admitted until CSS consumer lands. |
 | `escape_mask_64` | Scalar/checkasm correctness prerequisite; REDRESS-122 fixed the xorshift falsifier. | Mandatory; historical strict checkasm is prerequisite evidence only. | JSON/CSS string or escape row must consume it in production. | `local_temp_only` / `local_loop` / `generated_grammar` or `caller_data`. | `checkasm_backed`; prerequisite only. |
-| `tbl_tbx_escape_decode_batch` | TBL and `unescape_uxxxx` bodies exist; grammar policy split is incomplete for CSS escapes. | Mandatory once selected; checkasm must cover JSON fixed and CSS variable-width escapes separately. | JSON unicode direct/parse/typed row or CSS escaped identifier/string row. | `direct_sink` or `existing_tape` / `generated_function` / `generated_grammar`. | `conditional`; no proof-only codec landing. |
-| `digit_run_accumulate` / UDOT | Local `digit_mac.rs` source and ISA support exist; row consumer and strict matrix are missing. | Missing before admission; must set strict mode in new checkasm. | JSON numeric direct/parse row or CSS number/dimension row. | `direct_sink` or `existing_tape` / `generated_function` / `generated_grammar`. | `source_backed` to `scalar_backed`; conditional only. |
-| `pmull_cssc_structural_union_emit64` | PMULL/CSSC categories are unblocked, but REDRESS 88/89/96/97/98 block replay. | Missing before shortlist; scalar carry/order oracle plus strict checkasm required. | Row-local union/structural consumer that deletes or bypasses old scalar cost in that row. | `existing_tape`, `direct_sink`, or `admitted_fact_output` / `local_loop` or `generated_function` / `generated_grammar`. | `conditional-high-risk`; shortlist only after the material-differential checklist passes. |
-| `string_context_64` / `byte_context` | `vextq_u8` context helpers exist with no production caller. | Missing. | JSON/CSS string-context consumer with cross-chunk policy and row gate. | `local_temp_only` / `local_loop` / `generated_grammar`. | `inventory`; delete or wire, no close by inventory. |
-| `cache_hints` | PRFM/STNP wrappers exist with no row consumer. | Missing and likely not a parity primitive unless wrapped in measurable store/prefetch row. | Store/prefetch hot leaf with strict no-regression guards, or deletion. | `local_temp_only` / `local_loop` / `none` unless generated code owns policy. | `inventory`; delete, wire, or architectural-block. |
-| `bbnf-regex` extraction | Conditional import authority only; parse-that sibling worktree is pinned in the addendum but dirty. | Not a SIMD primitive; use parity/equality gates for scanner facts. | HIR-to-bbnf mapping consumed by resolver and generated parser rows. | `local_temp_only` compile-time facts / `generated_function` / `generated_grammar`. | `conditional`; no runtime scanner substrate. |
-| e-graph / CSP / cost resolver | Architecture candidate; not a primitive admission. | Not applicable. | JSON/CSS equality, bounded saturation/CSP report, and cascade fail-closed row guards. | extracted plan must declare `substrate_target` per node. | `conditional`; abrogate on caps below. |
+| `tbl_tbx_escape_decode_batch` | TBL and `unescape_uxxxx` bodies exist; grammar policy split is incomplete for CSS escapes. | Mandatory once selected; checkasm must cover JSON fixed and CSS variable-width escapes separately. | JSON unicode direct/parse/typed row or CSS escaped identifier/string row. | `direct_sink` or `existing_tape` / `generated_function` / `generated_grammar`. | `scalar_backed`; CSS policy/checkasm blocker. |
+| `digit_run_accumulate` / UDOT | Local `digit_mac.rs` source and ISA support exist; row consumer and strict matrix are missing. | Missing before admission; must set strict mode in new checkasm. | JSON numeric direct/parse row or CSS number/dimension row. | `direct_sink` or `existing_tape` / `generated_function` / `generated_grammar`. | `source_backed`; scalar/checkasm/consumer blockers. |
+| `pmull_cssc_structural_union_emit64` | PMULL/CSSC categories are unblocked, but REDRESS 88/89/96/97/98 block replay. | Missing before shortlist; scalar carry/order oracle plus strict checkasm required. | Row-local union/structural consumer that deletes or bypasses old scalar cost in that row. | `existing_tape`, `direct_sink`, or `admitted_fact_output` / `local_loop` or `generated_function` / `generated_grammar`. | `source_backed`; high-risk REDRESS-differential blocker. |
+| `string_context_64` / `byte_context` | `vextq_u8` context helpers exist with no production caller. | Missing. | JSON/CSS string-context consumer with cross-chunk policy and row gate. | `local_temp_only` / `local_loop` / `generated_grammar`. | `source_backed`; source-present inventory blocker. |
+| `cache_hints` | PRFM/STNP wrappers exist with no row consumer. | Missing and likely not a parity primitive unless wrapped in measurable store/prefetch row. | Store/prefetch hot leaf with strict no-regression guards, or deletion. | `local_temp_only` / `local_loop` / `none` unless generated code owns policy. | `source_backed`; source-present inventory blocker. |
+| `bbnf-regex` extraction | Conditional import authority only; parse-that sibling worktree is pinned in the addendum but dirty. | Not a SIMD primitive; use parity/equality gates for scanner facts. | HIR-to-bbnf mapping consumed by resolver and generated parser rows. | `local_temp_only` compile-time facts / `generated_function` / `generated_grammar`. | `source_backed`; import/snapshot blocker. |
+| e-graph / CSP / cost resolver | Architecture candidate; not a primitive admission. | Not applicable. | JSON/CSS equality, bounded saturation/CSP report, and cascade fail-closed row guards. | extracted plan must declare `substrate_target` per node. | `source_backed`; abrogate caps in V3 addendum. |
 
 #### Source-Present SIMD / ASM Orphan State
 
@@ -248,7 +258,7 @@ Primitive, union, and resolver routes fail closed when:
 |---|---|
 | parity/checkasm | Any scalar/checkasm/equality failure. |
 | row regression | Any previously admitted JSON/CSS row silently demotes. |
-| generated LOC growth | Exceeds the SPEC wave budget without traced O(N) reason. |
+| generated LOC growth | Exceeds the candidate ledger `loc_budget` upper bound, or a stricter SPEC wave budget if S-P3 names one, without traced O(N) reason. |
 | stale cost evidence | More than 30 percent of candidate expressions use stale/static fallback. |
 | e-graph saturation | Node/iteration cap exceeded without equality-preserving extraction. |
 | CSP solve | More than 1 s per grammar or unresolved UNSAT cause. |

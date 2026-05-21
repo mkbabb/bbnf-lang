@@ -1,19 +1,22 @@
 ---
 agent: 2E
 pass: T-P2-research
-cycle: V2
+cycle: V3
 generated_at: 2026-05-21T10:44:00Z
 t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F]
-primary_sources_cited: 18
+primary_sources_cited: 11
+counted_source_ids: [SRC-A64-ACLE, SRC-A64-NEON, SRC-A64-SVE2-MATCH, SRC-INTEL-X86, SRC-FFMPEG, SRC-DAV1D, SRC-SCOPE, SRC-BBNF-DISPATCH, SRC-BBNF-CHECKASM, SRC-BBNF-X86, SRC-V2-FOLD]
 techniques_grounded: 11
 techniques_refuted: 5
 shared_fold_authority: restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md
+v3_fold_authority: restart/audit/totality/p2/T-P2-V3-FOLD-ADDENDUM.md
 prior_cycle_dispositions_folded:
   accepted: []
   rejected: []
   revised: [CH1, CH2, CH3, CH4, CH5, CH6]
   first_cycle_additions: [A64-TBL, A64-PMULL, A64-CSSC-CTZ, A64-DOTPROD, A64-EOR3-BCAX, A64-LD4, A64-SVE2-MATCH, A64-ASCII-RUN-SKIP, A64-CACHE-HINTS, X86-AVX512-BACKGROUND, L16-HARDWARE-GATE-MANIFEST]
   v2_fold_additions: [PINNED-SOURCE-REGISTER, L16-HARDWARE-GATE-MANIFEST-FIELDS, SOURCE-PRESENT-ORPHAN-ENUM, MATERIAL-DIFFERENTIAL-CHECKLIST, PRODUCTION-REAL-WORDING-DOWNGRADE]
+  v3_fold_additions: [EXECUTABLE-HARDWARE-LEDGER, NORMALIZED-STATE-FIELD, COUNTED-SOURCE-IDS]
 locks_amendment_candidates: 4
 ---
 
@@ -127,6 +130,11 @@ manifest row before redress. Architecture availability is only
 | `policy_owner` | One of `generated_grammar`, `caller_data`, `none`; shared primitive crates cannot own grammar policy. |
 
 Minimum V2 ledger disposition for local hardware candidates:
+
+V3 fold note: the executable hardware ledger is centralized in
+`restart/audit/totality/p2/T-P2-V3-FOLD-ADDENDUM.md`. The table below remains
+an owner summary; the V3 addendum is authoritative for LOC, risk, rollback,
+abrogate thresholds, and normalized admission-state values.
 
 | candidate_id | current state | required consumer/gate before admission | substrate / retention / policy |
 |---|---|---|---|

@@ -1,12 +1,14 @@
 ---
 agent: 2D
 pass: T-P2-research
-cycle: V2
+cycle: V3
 generated_at: 2026-05-21T10:34:00Z
 t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F]
 v2_fold_authority: restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md
+v3_fold_authority: restart/audit/totality/p2/T-P2-V3-FOLD-ADDENDUM.md
 v1_hardening_lenses_folded: [CH1, CH2, CH3, CH4, CH5, CH6]
 primary_sources_cited: 11
+counted_source_ids: [SRC-01, SRC-02, SRC-03, SRC-04, SRC-05, SRC-06, SRC-07, SRC-08, SRC-09, SRC-10, SRC-11]
 techniques_grounded: 12
 techniques_refuted: 6
 prior_cycle_dispositions_folded:
@@ -14,6 +16,7 @@ prior_cycle_dispositions_folded:
   rejected: []
   revised: [CH1-provenance, CH2-lock14-transfer, CH3-redress-differentials, CH4-cost-admission-ledger, CH5-substrate-kind, CH6-anti-paper-close]
   first_cycle_additions: [T2D-EGRAPH-EXTRACTION, T2D-CSP-SCOPE, T2D-BACKENDSHAPE-FINITE-SET, T2D-COLLAPSEDSTAGE-X86-ONLY, T2D-P1P8-CASCADE-REFUTED]
+  v3_fold_additions: [T2D-PINNED-SIMDJSON-SOURCE, T2D-NUMERIC-ABROGATE-CAPS]
 locks_amendment_candidates: 5
 ---
 
@@ -57,7 +60,7 @@ extraction reports are named in the same wave.
 | `T2D-CSP-SCOPE`: CSP solves global feasibility constraints after local extraction. | Google OR-Tools CP-SAT official docs, <https://developers.google.com/optimization/cp/cp_solver>; local `crates/egraph/src/csp_scheduler.rs:1-23` uses CSP only for dirty-frontier propagation. | partial | CSP is appropriate for constraints such as feature gates, same-wave consumer, parity availability, substrate-kind rejection, and budget feasibility. Current local `CspScheduler` is not the promised multi-objective resolver. |
 | `T2D-REGEX-NFA-DFA`: regex NFA/DFA plan selection belongs in costed alternatives. | Rust `regex-automata` hybrid DFA docs, <https://docs.rs/regex-automata/latest/regex_automata/hybrid/dfa/struct.DFA.html>; Russ Cox, "Regular Expression Matching Can Be Simple And Fast", <https://swtch.com/~rsc/regexp/regexp1.html>. | grounded | This supports an analyzer that chooses Pike/Thompson NFA, lazy DFA, or full DFA by state count/cache and grammar facts. It refutes "always DFA" or raw string-pattern switches in generic IR. |
 | `T2D-SINKONLY-PROJECTION`: direct product/sink-only lowering can beat general materialization when the consumer is known. | Li et al., "Mison: A Fast JSON Parser for Data Analytics", VLDB 2017, <https://www.vldb.org/pvldb/vol10/p1118-li.pdf>. | grounded | Mison supports projection/filter-aware parsing as a materialization strategy. In bbnf terms, `SinkOnly` is admissible only when generated direct/typed consumers are same-wave measured, not when it is only a digest shortcut. |
-| `T2D-TAPE-MATERIALIZATION`: staged structural discovery plus later materialization is a proven JSON parser class. | Langdale and Lemire, "Parsing Gigabytes of JSON per Second", VLDB 2019, <https://arxiv.org/abs/1902.08318>; simdjson source/docs, <https://github.com/simdjson/simdjson>. | grounded | This grounds the general staged-materialization class. It does not reopen bbnf's retained union class-column or streaming-cursor replay, which REDRESS 96/97/98 measured as regressive on the M5 Max. |
+| `T2D-TAPE-MATERIALIZATION`: staged structural discovery plus later materialization is a proven JSON parser class. | Langdale and Lemire, "Parsing Gigabytes of JSON per Second", VLDB 2019, <https://arxiv.org/abs/1902.08318>; simdjson source/docs at HEAD `168ef580757d75270475b379e83c2b39787a6765`, <https://github.com/simdjson/simdjson/tree/168ef580757d75270475b379e83c2b39787a6765>. | grounded | This grounds the general staged-materialization class. It does not reopen bbnf's retained union class-column or streaming-cursor replay, which REDRESS 96/97/98 measured as regressive on the M5 Max. |
 | `T2D-COLLAPSEDSTAGE-FSM`: branchless FSM/direct writers are an architecture-pressure shape. | `asmjson` README/source, <https://docs.rs/crate/asmjson/0.2.5/source/README.md>; Sneller branchless AVX-512 post, <https://sneller.ai/blog/branchless-code-avx-512/>. | partial / architecture pressure | These sources ground the idea that branchless collapsed pipelines can be profitable under specific hardware, but Sneller is blog-only architecture pressure here and AVX-512 is out of SK-V13 skinny scope. No source supports a retained M5/aarch64 sidecar. |
 | `P1-1B-D4`: live `CollapsedStage` eligibility is enough. | Local skinny `skinny/crates/passes/src/lib.rs:804-806` checks only `avx512bw` plus entry node; local lowerer marker at `skinny/crates/codegen/src/lower/collapsed_stage.rs:15-17`. | refuted | Published AVX-512 parsers require concrete tables/FSM, feature gating, and an actual consumer. Current eligibility does not test byte-disjoint hub shape or emit a kernel. |
 | `SKINNY-GEN-001`: replaying the W3 union-substrate route is viable. | `skinny/REDRESS.md` REDRESS 96/97/98: full class-column and streaming-cursor union attempts regressed every required row; REDRESS 98 retires that thesis. | refuted | New union work must cite material differential, such as e-graph-selected per-rule union shape or SIMD-first extraction, and measure row movement. Literature does not override local falsification. |
@@ -78,13 +81,13 @@ extraction reports are named in the same wave.
 
 | candidate_id | source paths or external source | scalar / parity prerequisite | same-wave consumer path | expected gate | LOC budget | risk | rollback path | abrogate threshold | state | substrate target / retention / policy owner |
 |---|---|---|---|---|---:|---|---|---|---|---|
-| `backend_expr_language` | `crates/egraph/src/language.rs`, `skinny/crates/ir/src/lib.rs` | JSON/CSS equality fixtures; Lock 14 leak scan | `skinny/crates/passes` resolver entry | JSON equality, CSS declaration-values equality, no guard demotion | 180-320 | medium | restore legacy cascade behind fail-closed compatibility path | node cap exceeded or grammar-name leak | conditional | `local_temp_only` / `generated_function` / `generated_grammar` |
-| `canonical_rewrite_pack_10` | egg/equality-saturation sources; local egraph crate | per-rewrite before/after fixture | resolver extraction report consumer | >= 10 guarded rewrites, no new public substrate | 220-420 | high | disable rewrite pack by feature flag/config and keep report | equality failure or stale cost > 30% | conditional | per rewrite; retained sidecar rejected |
-| `costfacts_active_objective` | `skinny/crates/ir/src/cost.rs`, `crates/egraph/src/extract.rs` | report schema equality; gate-json consumer | `ir/cost.rs` plus `passes` extraction | cost report consumed by S-P3/W9 gate | 160-280 | medium | revert to metadata-only `CostFacts` with no admit | >30% static fallback or missing PMU/profile ID | conditional | `local_temp_only` / `generated_function` / `generated_grammar` |
-| `csp_feasibility_resolver` | OR-Tools process source; local `csp_scheduler.rs` | deterministic UNSAT/sat report tests | resolver after e-graph frontier | solve <= 1s per grammar; all UNSAT causes named | 160-300 | medium | bypass CSP and reject unresolved candidate | >1s per grammar or unresolved UNSAT | conditional | `local_temp_only` / `generated_function` / `generated_grammar` |
-| `regex_plan_alternatives` | Cox, regex-automata docs, V2 parse-that import authority | pinned/vendored HIR mapping; JSON/CSS equality | `bbnf-regex` to resolver fact provider | NFA/DFA plan facts available without JSON strings | 300-700 | high | remove imported crate link and keep opaque regex strings as non-admit | unpinned import or HIR mapping gap | conditional | compile-time facts only; runtime masks local |
-| `collapsed_stage_transient` | asmjson README; Sneller blog architecture pressure only | aarch64 scalar/checkasm/microbench before skinny use | CSS or JSON generated row sink | row movement and strict equality | 220-500 | high | remove emitted strategy and keep non-collapsed extraction | retained mask/FSM state or no row consumer | inventory / conditional | `local_temp_only` or `direct_sink` / `local_loop` / `generated_grammar` |
-| `sinkonly_projection_resolver` | Mison paper plus local direct/typed consumers | strict comparator + Track 2 oracle | generated direct/typed sink | JSON/CSS row Mbps or architectural block | 140-260 | medium | restore prior direct/typed lowering | digest-only shortcut or comparator mismatch | conditional | `direct_sink` / `generated_function` / `generated_grammar` |
+| `backend_expr_language` | `crates/egraph/src/language.rs`, `skinny/crates/ir/src/lib.rs` | JSON/CSS equality fixtures; Lock 14 leak scan | `skinny/crates/passes` resolver entry | JSON equality, CSS declaration-values equality, no guard demotion | 180-320 | medium | restore legacy cascade behind fail-closed compatibility path | >50,000 e-nodes, >10,000 e-classes, >30 iterations, >512 MiB RSS, or grammar-name leak | source_backed | `local_temp_only` / `generated_function` / `generated_grammar` |
+| `canonical_rewrite_pack_10` | egg/equality-saturation sources; local egraph crate | per-rewrite before/after fixture | resolver extraction report consumer | >= 10 guarded rewrites, no new public substrate | 220-420 | high | disable rewrite pack by feature flag/config and keep report | equality failure or stale cost > 30% | source_backed | per rewrite; retained sidecar rejected |
+| `costfacts_active_objective` | `skinny/crates/ir/src/cost.rs`, `crates/egraph/src/extract.rs` | report schema equality; gate-json consumer | `ir/cost.rs` plus `passes` extraction | cost report consumed by S-P3/W9 gate | 160-280 | medium | revert to metadata-only `CostFacts` with no admit | >30% static fallback or missing PMU/profile ID | source_backed | `local_temp_only` / `generated_function` / `generated_grammar` |
+| `csp_feasibility_resolver` | OR-Tools process source; local `csp_scheduler.rs` | deterministic UNSAT/sat report tests | resolver after e-graph frontier | solve <= 1s per grammar; all UNSAT causes named | 160-300 | medium | bypass CSP and reject unresolved candidate | >1s per grammar or unresolved UNSAT | source_backed | `local_temp_only` / `generated_function` / `generated_grammar` |
+| `regex_plan_alternatives` | Cox, regex-automata docs, V2 parse-that import authority | pinned/vendored HIR mapping; JSON/CSS equality | `bbnf-regex` to resolver fact provider | NFA/DFA plan facts available without JSON strings | 300-700 | high | remove imported crate link and keep opaque regex strings as non-admit | unpinned import or HIR mapping gap | source_backed | compile-time facts only; runtime masks local |
+| `collapsed_stage_transient` | asmjson README; Sneller blog architecture pressure only | aarch64 scalar/checkasm/microbench before skinny use | CSS or JSON generated row sink | row movement and strict equality | 220-500 | high | remove emitted strategy and keep non-collapsed extraction | retained mask/FSM state or no row consumer | source_backed | `local_temp_only` or `direct_sink` / `local_loop` / `generated_grammar` |
+| `sinkonly_projection_resolver` | Mison paper plus local direct/typed consumers | strict comparator + Track 2 oracle | generated direct/typed sink | JSON/CSS row Mbps or architectural block | 140-260 | medium | restore prior direct/typed lowering | digest-only shortcut or comparator mismatch | source_backed | `direct_sink` / `generated_function` / `generated_grammar` |
 
 ## Substrate-Kind Rules
 
@@ -137,10 +140,10 @@ row.
 
 | gate | threshold | disposition |
 |---|---|---|
-| e-graph saturation | node or iteration cap exceeded before equality-preserving extraction | measured reject; reduce rewrite set or abrogate resolver route. |
+| e-graph saturation | >50,000 e-nodes, >10,000 e-classes, >30 iterations, or >512 MiB resident memory before equality-preserving extraction | measured reject; reduce rewrite set or abrogate resolver route. |
 | CSP solve | >1s per grammar or unresolved UNSAT cause | measured reject; do not fall back silently to cascade admission. |
 | stale cost evidence | >30% of candidate expressions use stale/static fallback | reject extraction; refresh profile evidence or demote candidate. |
-| generated LOC growth | exceeds SPEC wave budget without traced O(N) reason | halt wave; inspect generator expansion before admission. |
+| generated LOC growth | exceeds the candidate's ledger `loc_budget` upper bound, or a stricter SPEC wave budget if S-P3 names one, without traced O(N) reason | halt wave; inspect generator expansion before admission. |
 | row regression | any previously admitted JSON/CSS row silently demotes | reject unless architectural-block disposition is recorded. |
 | parity/checkasm/equality | any scalar, checkasm, strict equality, or oracle failure | reject; no support-only landing. |
 | substrate-kind | candidate requires retained sidecar, second tape, or public substrate API | reject unless user amends Lock 1 at G-Omega. |
@@ -200,6 +203,6 @@ row.
 | SRC-06 | Russ Cox, "Regular Expression Matching Can Be Simple And Fast", <https://swtch.com/~rsc/regexp/regexp1.html>. |
 | SRC-07 | Li et al., "Mison: A Fast JSON Parser for Data Analytics", VLDB 2017, <https://www.vldb.org/pvldb/vol10/p1118-li.pdf>. |
 | SRC-08 | Langdale and Lemire, "Parsing Gigabytes of JSON per Second", VLDB 2019, <https://arxiv.org/abs/1902.08318>. |
-| SRC-09 | simdjson source and implementation docs, <https://github.com/simdjson/simdjson>. |
+| SRC-09 | simdjson source and implementation docs at HEAD `168ef580757d75270475b379e83c2b39787a6765`, <https://github.com/simdjson/simdjson/tree/168ef580757d75270475b379e83c2b39787a6765>. |
 | SRC-10 | asmjson crate source README, <https://docs.rs/crate/asmjson/0.2.5/source/README.md>. |
 | SRC-11 | Sneller branchless-code post, architecture pressure only, <https://sneller.ai/blog/branchless-code-avx-512/>. |

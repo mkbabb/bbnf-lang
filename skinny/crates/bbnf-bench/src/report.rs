@@ -110,6 +110,7 @@ pub struct ProbeReportRow {
 pub const W1A_NON_JSON_REPORT_SCHEMA: &str = "sk-v11-w1a-nonjson-v1";
 const W1A_RUN_ID_PREFIX: &str = "sk-v11-w1a:fixture-fnv64-";
 pub const SKV12_NON_JSON_REPORT_SCHEMA: &str = "sk-v12-nonjson-generated-v1";
+pub const SKV12_CSS_L4_SOTA_REPORT_SCHEMA: &str = "sk-v12-css-l4-sota-v1";
 pub type NonJsonEvidenceRow = TelemetryRow;
 pub type NonJsonOracleEvidence = SkV8ComparatorEvidence;
 
@@ -243,6 +244,94 @@ impl SkV12NonJsonReport {
             validate_skv12_non_json_row(row, &self.run_id)?;
         }
         Ok(())
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct SkV12CssL4SotaReport {
+    pub schema_id: String,
+    pub wave_id: String,
+    pub run_id: String,
+    pub rows: Vec<SkV12CssL4SotaRow>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct SkV12CssL4SotaRow {
+    pub schema_id: String,
+    pub wave_id: String,
+    pub run_id: String,
+    pub row_id: String,
+    pub grammar_id: String,
+    pub domain: String,
+    pub corpus_or_workload: String,
+    pub workload: String,
+    pub output_plane: String,
+    pub strictness: String,
+    pub outcome_id: String,
+    pub verdict: String,
+    pub gate_status: String,
+    pub generated_track1_source_path: String,
+    pub generated_runtime_path: String,
+    pub generated_input_provenance: String,
+    pub grammar_checksum: String,
+    pub input_checksum: String,
+    pub input_bytes: u64,
+    pub generated_loc: u64,
+    pub generated_module_bytes: u64,
+    pub grammar_size_guard: String,
+    pub track1_mbps: f64,
+    pub track2_or_oracle_mbps: f64,
+    pub lightningcss_mbps: f64,
+    pub threshold_mbps: f64,
+    pub admission_margin_mbps: f64,
+    pub admission_status: String,
+    pub track1_artifact: String,
+    pub cssparser_artifact_path: String,
+    pub track2_or_oracle_source_path: String,
+    pub lightningcss_command: String,
+    pub lightningcss_artifact: String,
+    pub lightningcss_fact_artifact_path: String,
+    pub fact_stream_sha256: String,
+    pub strict_output_equality: String,
+    pub three_way_equality: String,
+    pub lightningcss_sequence_status: String,
+    pub track2_independence_status: String,
+    pub measured_validation_path: String,
+    pub benchmark_artifact_path: String,
+    pub profile_artifact: String,
+    pub sample_count: u64,
+    pub sample_cost: String,
+    pub host_triple: String,
+    pub feature_mask: String,
+    pub build_flags: String,
+    pub lock14_status: String,
+    pub lock16_status: String,
+    pub scalar_reference_status: String,
+    pub checkasm_or_parity_status: String,
+    pub json_guard_state: String,
+    pub same_wave_consumer_class: String,
+    pub redress_entry: String,
+}
+
+impl SkV12CssL4SotaReport {
+    pub fn from_json_str(text: &str) -> Result<Self, String> {
+        serde_json::from_str(text)
+            .map_err(|error| format!("invalid SK-V12 CSS L4 SOTA report: {error}"))
+    }
+
+    pub fn validate_gate(&self) -> Result<(), String> {
+        if self.schema_id != SKV12_CSS_L4_SOTA_REPORT_SCHEMA {
+            return Err(format!("unsupported CSS L4 SOTA schema {}", self.schema_id));
+        }
+        if self.wave_id != "SK-V12-W1b-2b" || !is_skv12_run_id(&self.run_id) {
+            return Err("invalid CSS L4 SOTA report identity".to_string());
+        }
+        if self.rows.len() != 1 {
+            return Err("CSS L4 SOTA report must contain exactly one row".to_string());
+        }
+        validate_skv12_css_l4_sota_row(&self.rows[0], self)
     }
 }
 
@@ -1849,6 +1938,13 @@ fn is_skv12_run_id(run_id: &str) -> bool {
     !rest.is_empty() && !rest.contains("sk-v11")
 }
 
+fn is_lower_hex_64(value: &str) -> bool {
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|byte| matches!(byte, b'0'..=b'9' | b'a'..=b'f'))
+}
+
 macro_rules! require_w1a_text {
     ($id:expr; $($name:literal = $value:expr),+ $(,)?) => {
         $(
@@ -1857,6 +1953,185 @@ macro_rules! require_w1a_text {
             }
         )+
     };
+}
+
+fn validate_skv12_css_l4_sota_row(
+    row: &SkV12CssL4SotaRow,
+    report: &SkV12CssL4SotaReport,
+) -> Result<(), String> {
+    require_w1a_text!(
+        row.row_id;
+        "schema_id" = row.schema_id,
+        "wave_id" = row.wave_id,
+        "run_id" = row.run_id,
+        "grammar_id" = row.grammar_id,
+        "domain" = row.domain,
+        "corpus_or_workload" = row.corpus_or_workload,
+        "workload" = row.workload,
+        "output_plane" = row.output_plane,
+        "strictness" = row.strictness,
+        "outcome_id" = row.outcome_id,
+        "verdict" = row.verdict,
+        "gate_status" = row.gate_status,
+        "generated_track1_source_path" = row.generated_track1_source_path,
+        "generated_runtime_path" = row.generated_runtime_path,
+        "generated_input_provenance" = row.generated_input_provenance,
+        "grammar_checksum" = row.grammar_checksum,
+        "input_checksum" = row.input_checksum,
+        "grammar_size_guard" = row.grammar_size_guard,
+        "admission_status" = row.admission_status,
+        "track1_artifact" = row.track1_artifact,
+        "cssparser_artifact_path" = row.cssparser_artifact_path,
+        "track2_or_oracle_source_path" = row.track2_or_oracle_source_path,
+        "lightningcss_command" = row.lightningcss_command,
+        "lightningcss_artifact" = row.lightningcss_artifact,
+        "lightningcss_fact_artifact_path" = row.lightningcss_fact_artifact_path,
+        "fact_stream_sha256" = row.fact_stream_sha256,
+        "strict_output_equality" = row.strict_output_equality,
+        "three_way_equality" = row.three_way_equality,
+        "lightningcss_sequence_status" = row.lightningcss_sequence_status,
+        "track2_independence_status" = row.track2_independence_status,
+        "measured_validation_path" = row.measured_validation_path,
+        "benchmark_artifact_path" = row.benchmark_artifact_path,
+        "profile_artifact" = row.profile_artifact,
+        "sample_cost" = row.sample_cost,
+        "host_triple" = row.host_triple,
+        "feature_mask" = row.feature_mask,
+        "build_flags" = row.build_flags,
+        "lock14_status" = row.lock14_status,
+        "lock16_status" = row.lock16_status,
+        "scalar_reference_status" = row.scalar_reference_status,
+        "checkasm_or_parity_status" = row.checkasm_or_parity_status,
+        "json_guard_state" = row.json_guard_state,
+        "same_wave_consumer_class" = row.same_wave_consumer_class,
+        "redress_entry" = row.redress_entry,
+    );
+    if row.schema_id != report.schema_id
+        || row.wave_id != report.wave_id
+        || row.run_id != report.run_id
+    {
+        return Err(format!(
+            "{} does not match CSS L4 report identity",
+            row.row_id
+        ));
+    }
+    if row.row_id != "css_l4/declaration_values/direct_to_struct/main"
+        || row.grammar_id != "css_l4"
+        || row.domain != "non_json_generated:css_l4:declaration_values"
+        || row.corpus_or_workload != "declaration_values"
+        || row.workload != "direct_to_struct"
+        || row.output_plane != "css_l4_declaration_value_fact_stream"
+        || row.strictness != "strict"
+    {
+        return Err(format!("{} has invalid CSS L4 SOTA identity", row.row_id));
+    }
+    if row.redress_entry != "REDRESS-125"
+        || row.same_wave_consumer_class != "companion_gate_css_l4_lightningcss_sota"
+        || row.gate_status != "pass"
+        || row.verdict != "GO"
+    {
+        return Err(format!("{} has invalid CSS L4 gate context", row.row_id));
+    }
+    if row.input_checksum != "cbb639460a72ef82e7c1b7c53ccc69495a35f6860b29ad72370b042b470d7374"
+        || !row
+            .generated_input_provenance
+            .contains("sha256=cbb639460a72ef82e7c1b7c53ccc69495a35f6860b29ad72370b042b470d7374")
+        || row.input_bytes != 187
+        || row.generated_loc == 0
+        || row.generated_loc > 360
+        || row.generated_module_bytes == 0
+        || !is_lower_hex_64(&row.grammar_checksum)
+        || row.grammar_size_guard != "pass:generated_loc<=360"
+    {
+        return Err(format!("{} has invalid generated-source proof", row.row_id));
+    }
+    if !row
+        .generated_track1_source_path
+        .contains("css_l4_declaration_values_templates/generated.rs")
+        || !row
+            .generated_runtime_path
+            .contains("generated_css_l4_declaration_values::parser::parse")
+        || row.generated_runtime_path.contains("generated_json")
+    {
+        return Err(format!(
+            "{} has invalid generated runtime proof",
+            row.row_id
+        ));
+    }
+    if !positive_finite(row.track1_mbps)
+        || !positive_finite(row.track2_or_oracle_mbps)
+        || !positive_finite(row.lightningcss_mbps)
+        || !positive_finite(row.threshold_mbps)
+        || row.sample_count < 30
+        || row.strict_output_equality != "pass"
+        || row.three_way_equality != "pass:track1=cssparser=lightningcss"
+        || row.lightningcss_sequence_status != "pass:ast_projection_matches_source_sidecar"
+        || row.track2_independence_status != "independent_verified"
+    {
+        return Err(format!(
+            "{} has invalid CSS L4 measurement proof",
+            row.row_id
+        ));
+    }
+    let threshold = row.lightningcss_mbps + 1.0;
+    let margin = row.track1_mbps - threshold;
+    if (row.threshold_mbps - threshold).abs() > 0.01
+        || (row.admission_margin_mbps - margin).abs() > 0.01
+    {
+        return Err(format!("{} has stale CSS L4 threshold math", row.row_id));
+    }
+    match row.admission_status.as_str() {
+        "PASS-ADMIT-CANDIDATE" if row.track1_mbps > threshold && row.outcome_id == "A" => {}
+        "PASS-MEASURED-BASELINE" if row.track1_mbps <= threshold && row.outcome_id == "C" => {}
+        _ => {
+            return Err(format!(
+                "{} has invalid CSS L4 admission status",
+                row.row_id
+            ))
+        }
+    }
+    if !row.track2_or_oracle_source_path.contains("cssparser-0.34")
+        || row
+            .track2_or_oracle_source_path
+            .contains("generated_css_l4_declaration_values")
+        || !row
+            .lightningcss_command
+            .contains("lightningcss-1.0.0-alpha.71")
+        || !row
+            .lightningcss_command
+            .contains("same-plane-source-sidecar")
+        || !row.track1_artifact.contains("track1-facts.txt")
+        || !row.cssparser_artifact_path.contains("oracle-facts.txt")
+        || !row
+            .lightningcss_fact_artifact_path
+            .contains("lightningcss-facts.txt")
+        || !row
+            .lightningcss_artifact
+            .contains("lightningcss-strict-equality.txt")
+        || !is_lower_hex_64(&row.fact_stream_sha256)
+    {
+        return Err(format!(
+            "{} has stale or coupled comparator proof",
+            row.row_id
+        ));
+    }
+    if !row.measured_validation_path.contains("strict-equality")
+        || !row.benchmark_artifact_path.contains("nonjson_css_l4")
+        || !row.host_triple.contains("arch=")
+        || !row.feature_mask.contains("target_cpu=native")
+        || !row.build_flags.contains("target-cpu=native")
+        || !row.sample_cost.contains("mean_ns=")
+        || row.lock14_status != "pass:lock14_baseline::validate"
+        || row.lock16_status != "n/a:no_simd_or_asm_claim"
+        || row.scalar_reference_status != "pass:cssparser_oracle"
+        || row.checkasm_or_parity_status != "pass:three_way_fact_stream"
+        || !(row.json_guard_state == "not_refreshed:no_behavior_drift"
+            || (row.json_guard_state.starts_with("refreshed:")
+                && row.json_guard_state.contains("guards-pass")))
+    {
+        return Err(format!("{} has incomplete CSS L4 gate context", row.row_id));
+    }
+    Ok(())
 }
 
 fn validate_skv12_non_json_row(row: &SkV12NonJsonRow, run_id: &str) -> Result<(), String> {
@@ -2592,6 +2867,97 @@ mod tests {
         assert!(report.validate_gate().is_err());
     }
 
+    fn skv12_css_l4_sota_report() -> SkV12CssL4SotaReport {
+        SkV12CssL4SotaReport {
+            schema_id: SKV12_CSS_L4_SOTA_REPORT_SCHEMA.into(),
+            wave_id: "SK-V12-W1b-2b".into(),
+            run_id: "sk-v12-w1b-2b:criterion-fnv64-27240148e5780a54".into(),
+            rows: vec![SkV12CssL4SotaRow {
+                schema_id: SKV12_CSS_L4_SOTA_REPORT_SCHEMA.into(),
+                wave_id: "SK-V12-W1b-2b".into(),
+                run_id: "sk-v12-w1b-2b:criterion-fnv64-27240148e5780a54".into(),
+                row_id: "css_l4/declaration_values/direct_to_struct/main".into(),
+                grammar_id: "css_l4".into(),
+                domain: "non_json_generated:css_l4:declaration_values".into(),
+                corpus_or_workload: "declaration_values".into(),
+                workload: "direct_to_struct".into(),
+                output_plane: "css_l4_declaration_value_fact_stream".into(),
+                strictness: "strict".into(),
+                outcome_id: "A".into(),
+                verdict: "GO".into(),
+                gate_status: "pass".into(),
+                generated_track1_source_path:
+                    "crates/codegen/src/css_l4_declaration_values_templates/generated.rs".into(),
+                generated_runtime_path:
+                    "runtime::generated_css_l4_declaration_values::parser::parse".into(),
+                generated_input_provenance:
+                    "fixture:css_l4:declaration_values:sha256=cbb639460a72ef82e7c1b7c53ccc69495a35f6860b29ad72370b042b470d7374".into(),
+                grammar_checksum:
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef".into(),
+                input_checksum:
+                    "cbb639460a72ef82e7c1b7c53ccc69495a35f6860b29ad72370b042b470d7374".into(),
+                input_bytes: 187,
+                generated_loc: 287,
+                generated_module_bytes: 9243,
+                grammar_size_guard: "pass:generated_loc<=360".into(),
+                track1_mbps: 429.34,
+                track2_or_oracle_mbps: 217.43,
+                lightningcss_mbps: 168.93,
+                threshold_mbps: 169.93,
+                admission_margin_mbps: 259.41,
+                admission_status: "PASS-ADMIT-CANDIDATE".into(),
+                track1_artifact:
+                    "../restart/skinny/tranches/sk-v12/research/w1b/artifacts/track1-facts.txt"
+                        .into(),
+                cssparser_artifact_path:
+                    "../restart/skinny/tranches/sk-v12/research/w1b/artifacts/oracle-facts.txt"
+                        .into(),
+                track2_or_oracle_source_path:
+                    "cssparser-0.34:StyleSheetParser+RuleBodyParser:bench/nonjson_css_l4.rs"
+                        .into(),
+                lightningcss_command:
+                    "lightningcss-1.0.0-alpha.71:same-plane-source-sidecar".into(),
+                lightningcss_artifact:
+                    "../restart/skinny/tranches/sk-v12/research/w1b/artifacts/lightningcss-strict-equality.txt"
+                        .into(),
+                lightningcss_fact_artifact_path:
+                    "../restart/skinny/tranches/sk-v12/research/w1b/artifacts/lightningcss-facts.txt"
+                        .into(),
+                fact_stream_sha256:
+                    "caf97bee6e413157e6114985bc1108bc3a8fbf597a1e519b3ccff905d2e5236c".into(),
+                strict_output_equality: "pass".into(),
+                three_way_equality: "pass:track1=cssparser=lightningcss".into(),
+                lightningcss_sequence_status: "pass:ast_projection_matches_source_sidecar".into(),
+                track2_independence_status: "independent_verified".into(),
+                measured_validation_path:
+                    "../restart/skinny/tranches/sk-v12/research/w1b/artifacts/strict-equality.txt"
+                        .into(),
+                benchmark_artifact_path: "criterion:target/criterion/nonjson_css_l4".into(),
+                profile_artifact: "n/a:w1b-2b-report-gate-consumes-w1b-2a-criterion".into(),
+                sample_count: 30,
+                sample_cost:
+                    "track1_mean_ns=3484.383794;cssparser_mean_ns=6880.481226;lightningcss_mean_ns=8855.758871"
+                        .into(),
+                host_triple: "arch=aarch64;cpu=apple-m5-max".into(),
+                feature_mask: "arch=aarch64;os=macos;simd=neon;target_cpu=native".into(),
+                build_flags: "profile=bench;rustflags=-C target-cpu=native".into(),
+                lock14_status: "pass:lock14_baseline::validate".into(),
+                lock16_status: "n/a:no_simd_or_asm_claim".into(),
+                scalar_reference_status: "pass:cssparser_oracle".into(),
+                checkasm_or_parity_status: "pass:three_way_fact_stream".into(),
+                json_guard_state: "refreshed:skv12-w1a-json-guard-criterion:guards-pass".into(),
+                same_wave_consumer_class: "companion_gate_css_l4_lightningcss_sota".into(),
+                redress_entry: "REDRESS-125".into(),
+            }],
+        }
+    }
+
+    fn skv12_css_l4_reject(mut mutate: impl FnMut(&mut SkV12CssL4SotaReport)) {
+        let mut report = skv12_css_l4_sota_report();
+        mutate(&mut report);
+        assert!(report.validate_gate().is_err());
+    }
+
     fn opening_report() -> Report {
         let mut report = Report::new("Skinny JSON Bench");
         for baseline in SK_V8_OPEN_BASELINE {
@@ -2781,6 +3147,47 @@ mod tests {
         let mut value = serde_json::to_value(skv12_non_json_report()).unwrap();
         value["rows"][0]["producer_only_field"] = serde_json::json!("not consumed");
         assert!(SkV12NonJsonReport::from_json_str(&value.to_string()).is_err());
+    }
+
+    #[test]
+    fn skv12_css_l4_sota_report_accepts_admit_candidate() {
+        assert!(skv12_css_l4_sota_report().validate_gate().is_ok());
+    }
+
+    #[test]
+    fn skv12_css_l4_sota_report_rejects_required_fields() {
+        skv12_css_l4_reject(|report| report.schema_id = SKV12_NON_JSON_REPORT_SCHEMA.into());
+        skv12_css_l4_reject(|report| report.wave_id = "SK-V12-W1b-2a".into());
+        skv12_css_l4_reject(|report| report.rows[0].row_id = "json/twitter/direct/main".into());
+        skv12_css_l4_reject(|report| report.rows[0].input_bytes = 188);
+        skv12_css_l4_reject(|report| {
+            report.rows[0].track2_or_oracle_source_path =
+                "generated_css_l4_declaration_values::parser::parse".into()
+        });
+        skv12_css_l4_reject(|report| report.rows[0].fact_stream_sha256 = "abc".into());
+        skv12_css_l4_reject(|report| report.rows[0].same_wave_consumer_class = "gate_only".into());
+    }
+
+    #[test]
+    fn skv12_css_l4_sota_report_rejects_stale_math_and_status() {
+        skv12_css_l4_reject(|report| report.rows[0].threshold_mbps = 168.93);
+        skv12_css_l4_reject(|report| report.rows[0].admission_margin_mbps = 1.0);
+        skv12_css_l4_reject(|report| {
+            report.rows[0].admission_status = "PASS-MEASURED-BASELINE".into()
+        });
+        let mut baseline = skv12_css_l4_sota_report();
+        baseline.rows[0].track1_mbps = 169.93;
+        baseline.rows[0].admission_margin_mbps = 0.0;
+        baseline.rows[0].admission_status = "PASS-MEASURED-BASELINE".into();
+        baseline.rows[0].outcome_id = "C".into();
+        assert!(baseline.validate_gate().is_ok());
+    }
+
+    #[test]
+    fn skv12_css_l4_sota_report_rejects_unknown_producer_fields() {
+        let mut value = serde_json::to_value(skv12_css_l4_sota_report()).unwrap();
+        value["rows"][0]["producer_only_field"] = serde_json::json!("not consumed");
+        assert!(SkV12CssL4SotaReport::from_json_str(&value.to_string()).is_err());
     }
 
     #[test]

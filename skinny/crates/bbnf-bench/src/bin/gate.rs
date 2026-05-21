@@ -3,10 +3,11 @@ use bbnf_bench::lock14_baseline;
 use bbnf_bench::materialization::track_stats;
 use bbnf_bench::metadata::{current_peak_rss_bytes, RowMetadata, TrackTag};
 use bbnf_bench::report::{
-    sk_v8_open_baseline, ComparatorSet, NonJsonEvidenceReport, Report, SkV12NonJsonReport,
-    SkV8ComparatorEvidence, SkV8Telemetry, TelemetryRow,
+    sk_v8_open_baseline, ComparatorSet, NonJsonEvidenceReport, Report, SkV12CssL4SotaReport,
+    SkV12NonJsonReport, SkV8ComparatorEvidence, SkV8Telemetry, TelemetryRow,
 };
 use serde_json::Value;
+use sha2::{Digest, Sha256};
 use std::collections::BTreeSet;
 use std::env;
 use std::error::Error;
@@ -56,6 +57,23 @@ fn main() -> Result<(), Box<dyn Error>> {
             .and_then(|report| report.validate_gate().map(|_| report))
             .map_err(|error| format!("{}: {error}", path.display()))?;
         println!("G-W0-SK-V12-NONJSON-GATE PASS {}", path.display());
+        drop(report);
+        if !has_explicit_json_check {
+            return Ok(());
+        }
+    }
+    if let Some(path) = skv12_css_l4_sota_report_path(&args[1..])? {
+        let text = fs::read_to_string(&path)?;
+        let report = SkV12CssL4SotaReport::from_json_str(&text)
+            .and_then(|report| report.validate_gate().map(|_| report))
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        validate_skv12_css_l4_sota_report(&report, &criterion_root(), &workspace)
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        println!(
+            "G-W1b-2b-CSS-L4-LIGHTNINGCSS-SOTA {} {}",
+            report.rows[0].admission_status,
+            path.display()
+        );
         drop(report);
         if !has_explicit_json_check {
             return Ok(());
@@ -424,6 +442,10 @@ fn skv12_non_json_report_path(args: &[String]) -> Result<Option<PathBuf>, Box<dy
     companion_report_path(args, "--skv12-non-json-report")
 }
 
+fn skv12_css_l4_sota_report_path(args: &[String]) -> Result<Option<PathBuf>, Box<dyn Error>> {
+    companion_report_path(args, "--skv12-css-l4-sota-report")
+}
+
 fn companion_report_path(args: &[String], flag: &str) -> Result<Option<PathBuf>, Box<dyn Error>> {
     let Some(flag_index) = args.iter().position(|arg| arg == flag) else {
         return Ok(None);
@@ -443,7 +465,7 @@ fn companion_report_path(args: &[String], flag: &str) -> Result<Option<PathBuf>,
         .filter(|arg| {
             matches!(
                 arg.as_str(),
-                "--w1a-non-json-report" | "--skv12-non-json-report"
+                "--w1a-non-json-report" | "--skv12-non-json-report" | "--skv12-css-l4-sota-report"
             )
         })
         .count();
@@ -470,6 +492,217 @@ fn companion_report_path(args: &[String], flag: &str) -> Result<Option<PathBuf>,
 fn companion_report_runs_json_check(args: &[String]) -> bool {
     args.iter()
         .any(|arg| matches!(arg.as_str(), "--check-results" | "--with-cost-facts"))
+}
+
+struct CssL4Lane {
+    mbps: f64,
+    samples: u64,
+}
+
+fn validate_skv12_css_l4_sota_report(
+    report: &SkV12CssL4SotaReport,
+    criterion_root: &Path,
+    workspace: &Path,
+) -> Result<(), String> {
+    let row = &report.rows[0];
+    let track1 = read_css_l4_lane(criterion_root, "track1_generated_css_l4_decl_values")?;
+    let cssparser = read_css_l4_lane(criterion_root, "track2_cssparser_oracle")?;
+    let lightningcss = read_css_l4_lane(criterion_root, "lightningcss_same_plane_fact_stream")?;
+    require_close("track1_mbps", row.track1_mbps, track1.mbps)?;
+    require_close(
+        "track2_or_oracle_mbps",
+        row.track2_or_oracle_mbps,
+        cssparser.mbps,
+    )?;
+    require_close(
+        "lightningcss_mbps",
+        row.lightningcss_mbps,
+        lightningcss.mbps,
+    )?;
+    require_close(
+        "threshold_mbps",
+        row.threshold_mbps,
+        lightningcss.mbps + 1.0,
+    )?;
+    require_close(
+        "admission_margin_mbps",
+        row.admission_margin_mbps,
+        track1.mbps - (lightningcss.mbps + 1.0),
+    )?;
+    if row.sample_count != track1.samples
+        || row.sample_count != cssparser.samples
+        || row.sample_count != lightningcss.samples
+    {
+        return Err("CSS L4 sample count does not match Criterion lanes".to_string());
+    }
+    validate_css_l4_retained_artifacts(row, workspace)?;
+    validate_lightningcss_source_isolation(workspace)?;
+    Ok(())
+}
+
+fn read_css_l4_lane(criterion_root: &Path, lane: &str) -> Result<CssL4Lane, String> {
+    let lane_root = criterion_root.join("nonjson_css_l4").join(lane).join("new");
+    let benchmark: Value = serde_json::from_str(
+        &fs::read_to_string(lane_root.join("benchmark.json"))
+            .map_err(|error| format!("{lane} benchmark.json missing: {error}"))?,
+    )
+    .map_err(|error| format!("{lane} benchmark.json invalid: {error}"))?;
+    if benchmark
+        .pointer("/throughput/Bytes")
+        .and_then(Value::as_u64)
+        != Some(187)
+    {
+        return Err(format!("{lane} does not report throughput.Bytes == 187"));
+    }
+    let estimates: Value = serde_json::from_str(
+        &fs::read_to_string(lane_root.join("estimates.json"))
+            .map_err(|error| format!("{lane} estimates.json missing: {error}"))?,
+    )
+    .map_err(|error| format!("{lane} estimates.json invalid: {error}"))?;
+    let mean_ns = estimates
+        .pointer("/mean/point_estimate")
+        .and_then(Value::as_f64)
+        .filter(|value| value.is_finite() && *value > 0.0)
+        .ok_or_else(|| format!("{lane} missing finite positive mean.point_estimate"))?;
+    let sample: Value = serde_json::from_str(
+        &fs::read_to_string(lane_root.join("sample.json"))
+            .map_err(|error| format!("{lane} sample.json missing: {error}"))?,
+    )
+    .map_err(|error| format!("{lane} sample.json invalid: {error}"))?;
+    let samples = sample
+        .pointer("/iters")
+        .and_then(Value::as_array)
+        .map(|iters| iters.len() as u64)
+        .ok_or_else(|| format!("{lane} missing sample iters"))?;
+    if samples < 30 {
+        return Err(format!("{lane} sample count {samples} below 30"));
+    }
+    Ok(CssL4Lane {
+        mbps: 187.0 * 8_000.0 / mean_ns,
+        samples,
+    })
+}
+
+fn validate_css_l4_retained_artifacts(
+    row: &bbnf_bench::report::SkV12CssL4SotaRow,
+    workspace: &Path,
+) -> Result<(), String> {
+    let track1_path = resolve_workspace_path(workspace, &row.track1_artifact);
+    let cssparser_path = resolve_workspace_path(workspace, &row.cssparser_artifact_path);
+    let lightning_path = resolve_workspace_path(workspace, &row.lightningcss_fact_artifact_path);
+    let equality_dir = track1_path
+        .parent()
+        .ok_or_else(|| "CSS L4 Track 1 artifact has no parent directory".to_string())?;
+    let strict_path = equality_dir.join("strict-equality.txt");
+    let lightning_eq_path = equality_dir.join("lightningcss-strict-equality.txt");
+    let track1 = fs::read(&track1_path)
+        .map_err(|error| format!("failed to read {}: {error}", track1_path.display()))?;
+    let cssparser = fs::read(&cssparser_path)
+        .map_err(|error| format!("failed to read {}: {error}", cssparser_path.display()))?;
+    let lightning = fs::read(&lightning_path)
+        .map_err(|error| format!("failed to read {}: {error}", lightning_path.display()))?;
+    if track1 != cssparser || track1 != lightning {
+        return Err("CSS L4 retained fact streams differ".to_string());
+    }
+    if sha256_hex(&track1) != row.fact_stream_sha256 {
+        return Err("CSS L4 fact_stream_sha256 mismatch".to_string());
+    }
+    let fact_text = std::str::from_utf8(&track1)
+        .map_err(|error| format!("fact stream is not UTF-8: {error}"))?;
+    for needle in [
+        "row\tid=css_l4/declaration_values/direct_to_struct/main\tplane=css_l4_declaration_value_fact_stream",
+        "source\tinput_fnv64=27240148e5780a54\tinput_bytes=187",
+        "end\tdecls=7\ttokens=13\tstream_fnv64=285dd62f19dea4a8",
+    ] {
+        if !fact_text.contains(needle) {
+            return Err(format!("CSS L4 fact stream missing `{needle}`"));
+        }
+    }
+    validate_css_l4_equality_artifact(&strict_path, false)?;
+    validate_css_l4_equality_artifact(&lightning_eq_path, true)?;
+    if resolve_workspace_path(workspace, &row.lightningcss_artifact) != lightning_eq_path {
+        return Err("CSS L4 lightningcss equality path mismatch".to_string());
+    }
+    Ok(())
+}
+
+fn validate_css_l4_equality_artifact(path: &Path, lightningcss: bool) -> Result<(), String> {
+    let text = fs::read_to_string(path)
+        .map_err(|error| format!("failed to read {}: {error}", path.display()))?;
+    for needle in [
+        "status=pass",
+        "row_id=css_l4/declaration_values/direct_to_struct/main",
+        "run_id=sk-v12-w1b-1:fixture-fnv64-27240148e5780a54",
+    ] {
+        if !text.contains(needle) {
+            return Err(format!("{} missing `{needle}`", path.display()));
+        }
+    }
+    if lightningcss
+        && !text.contains("comparator=lightningcss-1.0.0-alpha.71:same-plane-source-sidecar")
+    {
+        return Err(format!(
+            "{} missing lightningcss comparator",
+            path.display()
+        ));
+    }
+    Ok(())
+}
+
+fn validate_lightningcss_source_isolation(workspace: &Path) -> Result<(), String> {
+    let source_path = workspace.join("crates/bbnf-bench/src/nonjson_css_l4.rs");
+    let source = fs::read_to_string(&source_path)
+        .map_err(|error| format!("failed to read {}: {error}", source_path.display()))?;
+    let start = source
+        .find("pub fn lightningcss_facts")
+        .ok_or_else(|| "lightningcss_facts function not found".to_string())?;
+    let rest = &source[start..];
+    let end = rest
+        .find("\npub fn assert_strict_equality")
+        .ok_or_else(|| "lightningcss_facts function end not found".to_string())?;
+    let body = &rest[..end];
+    for forbidden in [
+        "oracle_facts(",
+        "ParserInput",
+        "Parser::new",
+        "StyleSheetParser",
+        "cssparser::",
+    ] {
+        if body.contains(forbidden) {
+            return Err(format!(
+                "lightningcss_facts is coupled to cssparser via `{forbidden}`"
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn resolve_workspace_path(workspace: &Path, value: &str) -> PathBuf {
+    let path = PathBuf::from(value);
+    if path.is_absolute() {
+        path
+    } else {
+        workspace.join(path)
+    }
+}
+
+fn require_close(name: &str, actual: f64, expected: f64) -> Result<(), String> {
+    if !actual.is_finite() || (actual - expected).abs() > 0.01 {
+        return Err(format!(
+            "CSS L4 {name} mismatch: report {actual:.6}, criterion {expected:.6}"
+        ));
+    }
+    Ok(())
+}
+
+fn sha256_hex(bytes: &[u8]) -> String {
+    let digest = Sha256::digest(bytes);
+    let mut out = String::with_capacity(digest.len() * 2);
+    for byte in digest {
+        use std::fmt::Write as _;
+        let _ = write!(&mut out, "{byte:02x}");
+    }
+    out
 }
 
 fn w0_parse_non_admission(outcome: Outcome) -> Outcome {
@@ -2141,6 +2374,61 @@ mod tests {
         assert_eq!(
             skv12_non_json_report_path(&args).unwrap(),
             Some(PathBuf::from("skv12-nonjson-pass.json"))
+        );
+        assert!(companion_report_runs_json_check(&args));
+    }
+
+    #[test]
+    fn skv12_css_l4_sota_report_arg_extracts_single_path_and_rejects_mixed_flags() {
+        let args = vec![
+            "--skv12-css-l4-sota-report".to_string(),
+            "skv12-css-l4-sota.json".to_string(),
+        ];
+        assert_eq!(
+            skv12_css_l4_sota_report_path(&args).unwrap(),
+            Some(PathBuf::from("skv12-css-l4-sota.json"))
+        );
+        let mixed = vec![
+            "--skv12-non-json-report".to_string(),
+            "skv12-nonjson-pass.json".to_string(),
+            "--skv12-css-l4-sota-report".to_string(),
+            "skv12-css-l4-sota.json".to_string(),
+        ];
+        assert!(skv12_css_l4_sota_report_path(&mixed).is_err());
+    }
+
+    #[test]
+    fn skv12_css_l4_sota_report_arg_rejects_write_probe_and_flag_paths() {
+        let write = vec![
+            "--skv12-css-l4-sota-report".to_string(),
+            "skv12-css-l4-sota.json".to_string(),
+            "--write-results".to_string(),
+        ];
+        assert!(skv12_css_l4_sota_report_path(&write).is_err());
+        let probe = vec![
+            "--skv12-css-l4-sota-report".to_string(),
+            "skv12-css-l4-sota.json".to_string(),
+            "--include-volatile-probes".to_string(),
+        ];
+        assert!(skv12_css_l4_sota_report_path(&probe).is_err());
+        let flag_path = vec![
+            "--skv12-css-l4-sota-report".to_string(),
+            "--advisory".to_string(),
+        ];
+        assert!(skv12_css_l4_sota_report_path(&flag_path).is_err());
+    }
+
+    #[test]
+    fn skv12_css_l4_sota_report_arg_allows_no_write_json_check_flags() {
+        let args = vec![
+            "--skv12-css-l4-sota-report".to_string(),
+            "skv12-css-l4-sota.json".to_string(),
+            "--advisory".to_string(),
+            "--check-results".to_string(),
+        ];
+        assert_eq!(
+            skv12_css_l4_sota_report_path(&args).unwrap(),
+            Some(PathBuf::from("skv12-css-l4-sota.json"))
         );
         assert!(companion_report_runs_json_check(&args));
     }

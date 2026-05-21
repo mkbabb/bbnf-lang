@@ -3714,3 +3714,51 @@ perturbation.
   `BackendShape`, no public substrate API, no JSON guard demotion, and no
   `RESULTS.md` edit. W1b-2b owns strict-vs-strict CSS L4 admission or measured
   rejection against the USER PIN bar `track1_mbps > lightningcss_mbps + 1`.
+
+## SK-V12 Wave 1b-2b CSS L4 Lightningcss SOTA Report Gate
+
+- Item 125 closes W1b-2b under
+  `G-W1b-2b-CSS-L4-LIGHTNINGCSS-SOTA` as `PASS-ADMIT-CANDIDATE`, not final
+  campaign close and not a `RESULTS.md` movement. W5 remains responsible for
+  close reconciliation. The admitted candidate row is
+  `css_l4/declaration_values/direct_to_struct/main` on
+  `css_l4_declaration_value_fact_stream`.
+- W1b-2b adds the dedicated `sk-v12-css-l4-sota-v1` companion report and gate
+  consumer. The gate recomputes throughput from the live Criterion `new/`
+  lanes and consumes retained Track 1, cssparser, and lightningcss fact
+  artifacts. It rejects report-only Mbps, stale fact artifacts, mixed companion
+  reports, write/probe flags, and missing JSON guard evidence.
+- Consumed CSS Criterion means from `target/criterion/nonjson_css_l4`:
+  Track 1 `3484.3837937735266 ns` / `429.34420791225705 Mbps`;
+  cssparser oracle `6880.481225905082 ns` / `217.42665242186035 Mbps`;
+  lightningcss same-plane comparator `8855.758871072838 ns` /
+  `168.92962215656692 Mbps`. The USER PIN threshold is
+  `lightningcss_mbps + 1 = 169.92962215656692`, so the measured admission
+  margin is `259.41458575569015 Mbps`.
+- Retained fact streams are byte-identical and gate-consumed with SHA-256
+  `caf97bee6e413157e6114985bc1108bc3a8fbf597a1e519b3ccff905d2e5236c`,
+  `input_fnv64=27240148e5780a54`, `input_bytes=187`, and stream FNV64
+  `285dd62f19dea4a8`. The accepted retained equality run id is
+  `sk-v12-w1b-1:fixture-fnv64-27240148e5780a54` because W1b-2b consumes the
+  landed W1b/W1b-2a artifacts rather than regenerating fact streams.
+- Comparator isolation was checked in the gate: `lightningcss_facts` may call
+  lightningcss parse/projection and fixture-sidecar span emission, but the gate
+  rejects `oracle_facts`, `ParserInput`, `Parser::new`, `StyleSheetParser`, or
+  `cssparser::` in that function body. No SIMD/ASM primitive is admitted in
+  this wave; Lock 16 is recorded as `n/a:no_simd_or_asm_claim`.
+- Verification passed:
+  `cargo test -p bbnf-bench skv12_css_l4_sota_report -- --nocapture`;
+  `cargo test -p bbnf-bench skv12_css_l4_sota_report_arg -- --nocapture`;
+  `cargo test -p bbnf-bench nonjson_css_l4 -- --nocapture`;
+  `cargo test -p bbnf-bench lock14 -- --nocapture`; native
+  `RUSTFLAGS="-C target-cpu=native" cargo run -p bbnf-bench --bin gate -- --skv12-css-l4-sota-report ../restart/skinny/tranches/sk-v12/research/w1b/skv12-W1b-css-l4-sota.json --advisory`;
+  and the separate JSON guard command
+  `CRITERION_HOME=/tmp/skv12-w1a-json-guard-criterion RUSTFLAGS="-C target-cpu=native" cargo run -p bbnf-bench --bin gate -- --advisory --check-results`.
+  The JSON guard returned status 0 and `skinny/RESULTS.md` SHA-256 stayed
+  `ae756ae5cf42639ef20863129c804d01baaa56d041690a967c305166070dfd9b`
+  before and after the command.
+- W1b-2b adds no new BBNF directive, BIR variant, `BackendShape`, public
+  substrate API, generic JSON/CSS policy branch, SIMD/ASM admission, JSON guard
+  demotion, or `RESULTS.md` edit. The measured CSS ADMIT candidate satisfies
+  the USER PIN numeric bar; SK-V12 close still requires W5 reconciliation and
+  the remaining JSON/orphan/close-document dispositions.

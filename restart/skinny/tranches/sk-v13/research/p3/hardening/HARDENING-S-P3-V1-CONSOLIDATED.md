@@ -10,17 +10,17 @@ Output: `restart/skinny/tranches/sk-v13/research/p3/hardening/HARDENING-S-P3-V1-
 
 `G-S-P3-V1-CHALLENGE`: REVISE.
 
-Acceptance rate: 1/6 = 16.7%.
+Acceptance rate: 0/6 = 0.0%.
 Critical defects: 0.
-Open REVISE dispositions: CH1, CH2, CH3, CH4, CH6.
+Open REVISE dispositions: CH1, CH2, CH3, CH4, CH5, CH6.
 
-S-P3 V1 is a valid draft, but it cannot converge or dispatch W0. CH5 accepts
-the hidden-coupling posture. The other five lenses require a V2 fold because
-the draft SPEC/DISPATCH still lag the current P3-B through P3-E artifacts,
-carry a weaker Lock 14 witness-cardinality rule than Omega V2, compress the
-P3-E REDRESS ledger, split the wave cost model across incompatible manifests,
-and leave support-only/unnamed-consumer paper-close surfaces in W5-W8 and row
-subwaves.
+S-P3 V1 is a valid draft, but it cannot converge or dispatch W0. All six
+lenses require a V2 fold because the draft SPEC/DISPATCH still lag the current
+P3-B through P3-E artifacts, carry a weaker Lock 14 witness-cardinality rule
+than Omega V2, compress the P3-E REDRESS ledger, split the wave cost model
+across incompatible manifests, leave W9/C3 SIMD without same-wave zero-orphan
+closure, and leave support-only/unnamed-consumer paper-close surfaces in W5-W8
+and row subwaves.
 
 ## Lens Summary
 
@@ -30,7 +30,7 @@ subwaves.
 | CH2 generality / Lock 14 | REVISE | Fleet-wide grammar-neutral claims need CSS L4 plus both Sheets and BBNF-self fail-closed/generated-role witnesses. SPEC, DISPATCH, and P3-C still allow CSS plus only one of Sheets or BBNF-self. | yes |
 | CH3 regression / REDRESS | REVISE | P3-E passes as a route ledger, but SPEC/DISPATCH do not fold its per-wave route-state matrix and still compress pre-blocks through P3-F. | yes |
 | CH4 cost | REVISE | P3-B uses a packed W0-W11 bracket while SPEC/DISPATCH expand to W0-W15 plus W10.N/W11.N/W14.N subwaves; S-P3 needs one canonical costed manifest. | yes |
-| CH5 hidden coupling | ACCEPT | The packet preserves one-substrate, no-sidecar, no-renamed-scanner, no Track 1/Track 2 coupling, and no view-boundary-as-admission controls. | no |
+| CH5 hidden coupling | REVISE | Fleet-wide Lock 14 wording is too weak; W9/C3 SIMD can touch `bbnf-simd` without same-wave zero-orphan closure; DISPATCH/P3-F still treat P3-B through P3-E as absent, leaving source-overlap and telemetry gates non-binding. Accepted controls still include one-substrate, no-sidecar, no Track 1/Track 2 coupling, and no view-boundary-as-admission. | yes |
 | CH6 anti-paper-close | REVISE | W5-W8 can still close as support/consumer plumbing without row movement or architectural block, and W10.N/W11.N/W13/W14.N lack explicit same-wave consumer lines in SPEC. | yes |
 
 ## Required V2 Fold
@@ -72,11 +72,16 @@ subwaves.
    Resolver, cost, cascade, policy, sink, and flag surfaces cannot close as
    support-only landings.
 
-9. Add explicit `Same-wave consumer:` lines to W10.N, W11.N, W13, and W14.N in
+9. Add same-wave `orphan_count_after = 0`, delete/demote/revert protocol,
+   strict checkasm status, and production consumer row evidence to every SPEC
+   section that may touch `skinny/crates/bbnf-simd/`, including W9/C3 union.
+   W9/C3 cannot rely on W12 for later orphan cleanup.
+
+10. Add explicit `Same-wave consumer:` lines to W10.N, W11.N, W13, and W14.N in
    SPEC and mirror them in DISPATCH. Name the production caller or generated row
    path exercised in the same redress commit.
 
-10. Preserve the accepted CH5 controls while folding: one retained substrate,
+11. Preserve the accepted CH5 controls while folding: one retained substrate,
     no public substrate API or `UnionTape`, no parser-owned cursor/list, no aux
     density table, no retained side vector, no sidecar event vector, no second
     source scanner, no Track 1/Track 2 coupling, and no view-boundary validation

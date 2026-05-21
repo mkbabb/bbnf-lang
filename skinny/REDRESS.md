@@ -3677,3 +3677,40 @@ perturbation.
   `BackendShape`, and no public substrate API. W1b-2 remains responsible for
   the same-plane lightningcss comparator and the
   `track1_mbps > lightningcss_mbps + 1` admission bar.
+
+## SK-V12 Wave 1b-2a CSS L4 Lightningcss Comparator
+
+- Item 124 closes W1b-2a under `G-W1b-2a-CSS-L4-LIGHTNINGCSS-COMPARATOR` as
+  `PASS-COMPARATOR`, not as a CSS L4 SOTA admission and not as a
+  `RESULTS.md` row movement. W1b-2b remains responsible for the
+  lightningcss+1 Mbps admission report and gate consumption.
+- W1b-2a pins `lightningcss = "=1.0.0-alpha.71"` in `bbnf-bench`, adds a
+  fixture-scoped lightningcss comparator, and wires Criterion row
+  `nonjson_css_l4/lightningcss_same_plane_fact_stream`. The comparator parses
+  the frozen CSS L4 fixture with lightningcss, checks the AST declaration
+  projection against the retained declaration sequence, then emits the same
+  `css-l4-declaration-value-facts-v1` fact stream from verified byte spans in
+  the original source fixture. It does not reuse cssparser token state.
+- Retained W1b-2a artifacts:
+  `restart/skinny/tranches/sk-v12/research/w1b/artifacts/lightningcss-facts.txt`
+  and
+  `restart/skinny/tranches/sk-v12/research/w1b/artifacts/lightningcss-strict-equality.txt`.
+  `cmp` verified Track 1, cssparser oracle, and lightningcss-sidecar fact
+  streams are byte-identical; all three end with stream FNV64
+  `285dd62f19dea4a8`.
+- Native Criterion evidence passed with sample count 30:
+  `RUSTFLAGS="-C target-cpu=native" cargo bench -p bbnf-bench --bench nonjson_css_l4 -- --sample-size 30`.
+  The new row reported mean `8.8573 us` / `20.134 MiB/s`
+  (`lightningcss_same_plane_fact_stream`), alongside Track 1 mean
+  `3.5047 us` / `50.885 MiB/s` and cssparser oracle mean `6.8645 us` /
+  `25.980 MiB/s`.
+- Verification passed:
+  `cargo test -p bbnf-bench nonjson_css_l4 -- --nocapture`;
+  `cargo test -p bbnf-bench lock14 -- --nocapture`;
+  `cmp -s` Track 1 vs lightningcss facts; and `cmp -s` cssparser oracle vs
+  lightningcss facts. The fail-closed fixture-drift unit test rejects byte
+  length drift before lightningcss-sidecar emission.
+- W1b-2a adds no SIMD/ASM primitive, no new BBNF directive, no BIR variant, no
+  `BackendShape`, no public substrate API, no JSON guard demotion, and no
+  `RESULTS.md` edit. W1b-2b owns strict-vs-strict CSS L4 admission or measured
+  rejection against the USER PIN bar `track1_mbps > lightningcss_mbps + 1`.

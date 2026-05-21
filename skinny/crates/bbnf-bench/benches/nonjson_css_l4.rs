@@ -1,9 +1,12 @@
 use bbnf_bench::nonjson_css_l4;
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
+use std::time::Duration;
 
 fn bench_nonjson_css_l4(c: &mut Criterion) {
     let input = nonjson_css_l4::read_fixture().expect("CSS L4 fixture is readable");
     nonjson_css_l4::assert_strict_equality(&input).expect("CSS Track 1 equals cssparser oracle");
+    nonjson_css_l4::assert_lightningcss_strict_equality(&input)
+        .expect("CSS Track 1 equals lightningcss fact stream");
     let report =
         nonjson_css_l4::write_report_with_quick_measurement().expect("CSS L4 report is emitted");
     report.validate_gate().expect("CSS L4 report gate passes");
@@ -24,8 +27,26 @@ fn bench_nonjson_css_l4(c: &mut Criterion) {
             )
         })
     });
+    group.bench_function("lightningcss_same_plane_fact_stream", |b| {
+        b.iter(|| {
+            black_box(
+                nonjson_css_l4::lightningcss_facts(black_box(&input))
+                    .expect("lightningcss CSS fact stream"),
+            )
+        })
+    });
     group.finish();
 }
 
-criterion_group!(benches, bench_nonjson_css_l4);
+criterion_group! {
+    name = benches;
+    config = Criterion::default()
+        .warm_up_time(Duration::from_secs(3))
+        .measurement_time(Duration::from_secs(5))
+        .sample_size(30)
+        .confidence_level(0.95)
+        .significance_level(0.05)
+        .noise_threshold(0.02);
+    targets = bench_nonjson_css_l4
+}
 criterion_main!(benches);

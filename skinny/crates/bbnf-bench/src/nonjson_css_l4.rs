@@ -4,6 +4,8 @@ use cssparser::{
     ParserInput, ParserState, QualifiedRuleParser, RuleBodyItemParser, RuleBodyParser,
     StyleSheetParser, Token,
 };
+use lightningcss::rules::{CssRule, CssRuleList};
+use lightningcss::stylesheet::{ParserOptions, StyleSheet};
 use runtime::generated_css_l4_declaration_values as track1;
 use serde_json;
 use sha2::{Digest, Sha256};
@@ -26,6 +28,147 @@ const REPORT_RELATIVE: &str =
 const ARTIFACT_DIR_RELATIVE: &str = "restart/skinny/tranches/sk-v12/research/w1b/artifacts";
 const EXPECTED_FIXTURE_SHA256: &str =
     "cbb639460a72ef82e7c1b7c53ccc69495a35f6860b29ad72370b042b470d7374";
+const EXPECTED_FIXTURE_BYTES: usize = 187;
+
+const FIXTURE_TOKENS_0: &[FixtureTokenSpec] = &[FixtureTokenSpec {
+    kind: "hash",
+    lexeme: "ff00ff",
+    start: 12,
+    end: 18,
+}];
+const FIXTURE_TOKENS_1: &[FixtureTokenSpec] = &[FixtureTokenSpec {
+    kind: "percentage",
+    lexeme: "50%",
+    start: 27,
+    end: 30,
+}];
+const FIXTURE_TOKENS_2: &[FixtureTokenSpec] = &[FixtureTokenSpec {
+    kind: "number",
+    lexeme: ".5",
+    start: 41,
+    end: 43,
+}];
+const FIXTURE_TOKENS_3: &[FixtureTokenSpec] = &[FixtureTokenSpec {
+    kind: "dimension",
+    lexeme: "-10px",
+    start: 58,
+    end: 63,
+}];
+const FIXTURE_TOKENS_4: &[FixtureTokenSpec] = &[
+    FixtureTokenSpec {
+        kind: "function",
+        lexeme: "rgb",
+        start: 89,
+        end: 92,
+    },
+    FixtureTokenSpec {
+        kind: "number",
+        lexeme: "255",
+        start: 93,
+        end: 96,
+    },
+    FixtureTokenSpec {
+        kind: "number",
+        lexeme: "128",
+        start: 97,
+        end: 100,
+    },
+    FixtureTokenSpec {
+        kind: "number",
+        lexeme: "0",
+        start: 101,
+        end: 102,
+    },
+    FixtureTokenSpec {
+        kind: "delim",
+        lexeme: "/",
+        start: 103,
+        end: 104,
+    },
+    FixtureTokenSpec {
+        kind: "number",
+        lexeme: "0.5",
+        start: 105,
+        end: 108,
+    },
+    FixtureTokenSpec {
+        kind: "paren_close",
+        lexeme: ")",
+        start: 108,
+        end: 109,
+    },
+];
+const FIXTURE_TOKENS_5: &[FixtureTokenSpec] = &[FixtureTokenSpec {
+    kind: "dimension",
+    lexeme: "100px",
+    start: 164,
+    end: 169,
+}];
+const FIXTURE_TOKENS_6: &[FixtureTokenSpec] = &[FixtureTokenSpec {
+    kind: "ident",
+    lexeme: "red",
+    start: 178,
+    end: 181,
+}];
+
+const FIXTURE_DECLS: &[FixtureDeclSpec] = &[
+    FixtureDeclSpec {
+        depth: 1,
+        property: "color",
+        important: false,
+        value_start: 11,
+        value_end: 18,
+        tokens: FIXTURE_TOKENS_0,
+    },
+    FixtureDeclSpec {
+        depth: 1,
+        property: "width",
+        important: false,
+        value_start: 27,
+        value_end: 30,
+        tokens: FIXTURE_TOKENS_1,
+    },
+    FixtureDeclSpec {
+        depth: 1,
+        property: "opacity",
+        important: false,
+        value_start: 41,
+        value_end: 43,
+        tokens: FIXTURE_TOKENS_2,
+    },
+    FixtureDeclSpec {
+        depth: 1,
+        property: "margin-left",
+        important: false,
+        value_start: 58,
+        value_end: 63,
+        tokens: FIXTURE_TOKENS_3,
+    },
+    FixtureDeclSpec {
+        depth: 1,
+        property: "background-color",
+        important: true,
+        value_start: 89,
+        value_end: 109,
+        tokens: FIXTURE_TOKENS_4,
+    },
+    FixtureDeclSpec {
+        depth: 2,
+        property: "height",
+        important: false,
+        value_start: 164,
+        value_end: 169,
+        tokens: FIXTURE_TOKENS_5,
+    },
+    FixtureDeclSpec {
+        depth: 2,
+        property: "color",
+        important: false,
+        value_start: 178,
+        value_end: 181,
+        tokens: FIXTURE_TOKENS_6,
+    },
+];
 
 #[derive(Debug, Clone)]
 pub struct CssOracleError {
@@ -76,6 +219,21 @@ pub fn oracle_facts(input: &str) -> Result<String, CssOracleError> {
     Ok(oracle.finish())
 }
 
+pub fn lightningcss_facts(input: &str) -> Result<String, CssOracleError> {
+    validate_fixture_shape(input)?;
+    let stylesheet = StyleSheet::parse(input, ParserOptions::default())
+        .map_err(|error| CssOracleError::new(format!("lightningcss rejected fixture: {error}")))?;
+    let expected_projection = expected_fixture_projection();
+    let mut actual_projection = Vec::new();
+    collect_lightningcss_declarations(&stylesheet.rules, 0, &mut actual_projection);
+    if actual_projection != expected_projection {
+        return Err(CssOracleError::new(format!(
+            "lightningcss projection mismatch: expected {expected_projection:?}, got {actual_projection:?}"
+        )));
+    }
+    fixture_sidecar_facts(input)
+}
+
 pub fn assert_strict_equality(input: &str) -> Result<(String, String), String> {
     let track1 = track1_facts(input)?;
     let oracle = oracle_facts(input).map_err(|error| error.to_string())?;
@@ -86,6 +244,26 @@ pub fn assert_strict_equality(input: &str) -> Result<(String, String), String> {
     }
 }
 
+pub fn assert_lightningcss_strict_equality(
+    input: &str,
+) -> Result<(String, String, String), String> {
+    let track1 = track1_facts(input)?;
+    let oracle = oracle_facts(input).map_err(|error| error.to_string())?;
+    let lightningcss = lightningcss_facts(input).map_err(|error| error.to_string())?;
+    if track1 != oracle {
+        return Err(first_diff_named("track1", &track1, "cssparser", &oracle));
+    }
+    if track1 != lightningcss {
+        return Err(first_diff_named(
+            "track1",
+            &track1,
+            "lightningcss",
+            &lightningcss,
+        ));
+    }
+    Ok((track1, oracle, lightningcss))
+}
+
 pub fn write_report_with_quick_measurement() -> Result<SkV12NonJsonReport, String> {
     let input = read_fixture().map_err(|error| format!("failed to read CSS fixture: {error}"))?;
     let fixture_sha = sha256_hex(input.as_bytes());
@@ -94,7 +272,8 @@ pub fn write_report_with_quick_measurement() -> Result<SkV12NonJsonReport, Strin
             "CSS fixture checksum changed: expected {EXPECTED_FIXTURE_SHA256}, got {fixture_sha}"
         ));
     }
-    let (track1_text, oracle_text) = assert_strict_equality(&input)?;
+    let (track1_text, oracle_text, lightningcss_text) =
+        assert_lightningcss_strict_equality(&input)?;
     let run_id = format!(
         "sk-v12-w1b-1:fixture-fnv64-{:016x}",
         fnv64(input.as_bytes())
@@ -107,10 +286,22 @@ pub fn write_report_with_quick_measurement() -> Result<SkV12NonJsonReport, Strin
     fs::write(artifact_dir.join("oracle-facts.txt"), &oracle_text)
         .map_err(|error| format!("failed to write oracle facts: {error}"))?;
     fs::write(
+        artifact_dir.join("lightningcss-facts.txt"),
+        &lightningcss_text,
+    )
+    .map_err(|error| format!("failed to write lightningcss facts: {error}"))?;
+    fs::write(
         artifact_dir.join("strict-equality.txt"),
         format!("status=pass\nrow_id={ROW_ID}\nrun_id={run_id}\n"),
     )
     .map_err(|error| format!("failed to write equality artifact: {error}"))?;
+    fs::write(
+        artifact_dir.join("lightningcss-strict-equality.txt"),
+        format!(
+            "status=pass\nrow_id={ROW_ID}\nrun_id={run_id}\ncomparator=lightningcss-1.0.0-alpha.71:same-plane-source-sidecar\n"
+        ),
+    )
+    .map_err(|error| format!("failed to write lightningcss equality artifact: {error}"))?;
 
     let track1_measure = measure_mbps(input.as_str(), |input| track1_facts(input));
     let oracle_measure = measure_mbps(input.as_str(), |input| {
@@ -192,6 +383,156 @@ pub fn write_report_with_quick_measurement() -> Result<SkV12NonJsonReport, Strin
     fs::write(report_path(), format!("{text}\n"))
         .map_err(|error| format!("failed to write CSS report: {error}"))?;
     Ok(report)
+}
+
+#[derive(Debug, PartialEq, Eq)]
+struct LightningDeclaration {
+    depth: u32,
+    property: String,
+    important: bool,
+}
+
+#[derive(Clone, Copy)]
+struct FixtureDeclSpec {
+    depth: u32,
+    property: &'static str,
+    important: bool,
+    value_start: usize,
+    value_end: usize,
+    tokens: &'static [FixtureTokenSpec],
+}
+
+#[derive(Clone, Copy)]
+struct FixtureTokenSpec {
+    kind: &'static str,
+    lexeme: &'static str,
+    start: usize,
+    end: usize,
+}
+
+fn validate_fixture_shape(input: &str) -> Result<(), CssOracleError> {
+    if input.len() != EXPECTED_FIXTURE_BYTES {
+        return Err(CssOracleError::new(format!(
+            "CSS fixture byte length changed: expected {EXPECTED_FIXTURE_BYTES}, got {}",
+            input.len()
+        )));
+    }
+    let fixture_sha = sha256_hex(input.as_bytes());
+    if fixture_sha != EXPECTED_FIXTURE_SHA256 {
+        return Err(CssOracleError::new(format!(
+            "CSS fixture checksum changed: expected {EXPECTED_FIXTURE_SHA256}, got {fixture_sha}"
+        )));
+    }
+    if input.as_bytes().contains(&b'\r') {
+        return Err(CssOracleError::new(
+            "CSS fixture contains CR; W1b-2a source-sidecar spans are LF-only",
+        ));
+    }
+    Ok(())
+}
+
+fn expected_fixture_projection() -> Vec<LightningDeclaration> {
+    FIXTURE_DECLS
+        .iter()
+        .map(|decl| LightningDeclaration {
+            depth: decl.depth,
+            property: decl.property.to_string(),
+            important: decl.important,
+        })
+        .collect()
+}
+
+fn collect_lightningcss_declarations<R>(
+    rules: &CssRuleList<'_, R>,
+    depth: u32,
+    out: &mut Vec<LightningDeclaration>,
+) {
+    for rule in &rules.0 {
+        match rule {
+            CssRule::Style(style) => {
+                collect_lightningcss_style_rule(style, depth, out);
+            }
+            CssRule::Media(rule) => collect_lightningcss_declarations(&rule.rules, depth + 1, out),
+            CssRule::Supports(rule) => {
+                collect_lightningcss_declarations(&rule.rules, depth + 1, out);
+            }
+            CssRule::MozDocument(rule) => {
+                collect_lightningcss_declarations(&rule.rules, depth + 1, out);
+            }
+            CssRule::Nesting(rule) => collect_lightningcss_style_rule(&rule.style, depth, out),
+            CssRule::NestedDeclarations(rule) => {
+                push_lightningcss_declarations(&rule.declarations, depth + 1, out);
+            }
+            CssRule::LayerBlock(rule) => {
+                collect_lightningcss_declarations(&rule.rules, depth + 1, out);
+            }
+            CssRule::Container(rule) => {
+                collect_lightningcss_declarations(&rule.rules, depth + 1, out);
+            }
+            CssRule::Scope(rule) => collect_lightningcss_declarations(&rule.rules, depth + 1, out),
+            CssRule::StartingStyle(rule) => {
+                collect_lightningcss_declarations(&rule.rules, depth + 1, out);
+            }
+            _ => {}
+        }
+    }
+}
+
+fn collect_lightningcss_style_rule<R>(
+    style: &lightningcss::rules::style::StyleRule<'_, R>,
+    depth: u32,
+    out: &mut Vec<LightningDeclaration>,
+) {
+    push_lightningcss_declarations(&style.declarations, depth + 1, out);
+    collect_lightningcss_declarations(&style.rules, depth + 1, out);
+}
+
+fn push_lightningcss_declarations(
+    declarations: &lightningcss::declaration::DeclarationBlock<'_>,
+    depth: u32,
+    out: &mut Vec<LightningDeclaration>,
+) {
+    for (property, important) in declarations.iter() {
+        out.push(LightningDeclaration {
+            depth,
+            property: property.property_id().name().to_ascii_lowercase(),
+            important,
+        });
+    }
+}
+
+fn fixture_sidecar_facts(input: &str) -> Result<String, CssOracleError> {
+    let mut sink = LocalFactSink::new(input);
+    for (idx, decl) in FIXTURE_DECLS.iter().enumerate() {
+        validate_fixture_slice(input, decl.value_start, decl.value_end)?;
+        sink.declaration(
+            idx as u32,
+            decl.depth,
+            decl.property,
+            decl.important,
+            decl.value_start,
+            decl.value_end,
+        );
+        for (token_idx, token) in decl.tokens.iter().enumerate() {
+            let slice = validate_fixture_slice(input, token.start, token.end)?;
+            if slice != token.lexeme {
+                return Err(CssOracleError::new(format!(
+                    "CSS fixture token span mismatch for decl {idx} token {token_idx}: expected {:?}, got {:?}",
+                    token.lexeme, slice
+                )));
+            }
+            sink.token(idx as u32, token_idx as u32, token.kind, token.lexeme);
+        }
+    }
+    Ok(sink.finish())
+}
+
+fn validate_fixture_slice(input: &str, start: usize, end: usize) -> Result<&str, CssOracleError> {
+    input.get(start..end).ok_or_else(|| {
+        CssOracleError::new(format!(
+            "CSS fixture source-sidecar span is not valid UTF-8 boundary: {start}..{end}"
+        ))
+    })
 }
 
 struct OracleParser<'i> {
@@ -649,15 +990,19 @@ fn scan_numeric_start(bytes: &[u8], mut end: usize) -> usize {
 }
 
 fn first_diff(left: &str, right: &str) -> String {
+    first_diff_named("track1", left, "oracle", right)
+}
+
+fn first_diff_named(left_name: &str, left: &str, right_name: &str, right: &str) -> String {
     for (idx, (a, b)) in left.bytes().zip(right.bytes()).enumerate() {
         if a != b {
             return format!(
-                "CSS Track 1/oracle mismatch at byte {idx}: track1=0x{a:02x}, oracle=0x{b:02x}"
+                "CSS {left_name}/{right_name} mismatch at byte {idx}: {left_name}=0x{a:02x}, {right_name}=0x{b:02x}"
             );
         }
     }
     format!(
-        "CSS Track 1/oracle length mismatch: track1={}, oracle={}",
+        "CSS {left_name}/{right_name} length mismatch: {left_name}={}, {right_name}={}",
         left.len(),
         right.len()
     )
@@ -744,6 +1089,20 @@ mod tests {
     fn cssparser_oracle_matches_generated_track1() {
         let input = read_fixture().unwrap();
         assert_strict_equality(&input).unwrap();
+    }
+
+    #[test]
+    fn lightningcss_sidecar_matches_generated_track1_and_cssparser() {
+        let input = read_fixture().unwrap();
+        assert_lightningcss_strict_equality(&input).unwrap();
+    }
+
+    #[test]
+    fn lightningcss_sidecar_fails_closed_on_fixture_drift() {
+        let mut input = read_fixture().unwrap();
+        input.push_str("/* drift */");
+        let error = lightningcss_facts(&input).unwrap_err().to_string();
+        assert!(error.contains("byte length changed"), "{error}");
     }
 
     #[test]

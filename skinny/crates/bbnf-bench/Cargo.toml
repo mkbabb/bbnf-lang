@@ -11,6 +11,7 @@ bbnf-simd.workspace = true
 blake3.workspace = true
 bytemuck.workspace = true
 cssparser.workspace = true
+lightningcss = { version = "=1.0.0-alpha.71", default-features = false }
 libc.workspace = true
 mimalloc.workspace = true
 parse-that-regex.workspace = true

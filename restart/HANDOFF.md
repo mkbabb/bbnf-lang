@@ -1,5 +1,36 @@
 # Handoff — bbnf-lang Greenfield Restart
 
+## Current Totality Override — 2026-05-21
+
+Status: **SK-V13 totality excavation is current and T-P2 Research is
+authorized.** The historical body below remains useful for restart lineage, but
+it is not current dispatch authority. Current measured authority is
+`skinny/RESULTS.md` at SK-V13 head; current skinny tranche authority is
+`restart/skinny/tranches/sk-v13/`; current totality excavation authority is
+`restart/audit/totality/p1/` plus
+`restart/audit/totality/p1/hardening/HARDENING-T-P1-V5-CONSOLIDATED.md`.
+
+`G-T-P1-EXCAVATION-CONVERGED`: PASS. V4 and V5 both accepted all six
+CHALLENGE lenses, so T-P2 Research may dispatch under
+`restart/prompts/totality/PASS-2-RESEARCH.md`. The T-P2 entry packet is:
+
+1. `restart/prompts/ORCHESTRATOR.md`.
+2. `restart/prompts/totality/PASS-2-RESEARCH.md`.
+3. `restart/audit/totality/p1/1A-substrate-evidence.md`.
+4. `restart/audit/totality/p1/1B-codegen-evidence.md`.
+5. `restart/audit/totality/p1/1C-runtime-evidence.md`.
+6. `restart/audit/totality/p1/1D-skinny-lessons.md`.
+7. `restart/audit/totality/p1/1E-locks-evidence.md`.
+8. `restart/audit/totality/p1/1F-anti-pattern.md`,
+   `1F-coherence-scan.md`, and `1F-past-corpora.md`.
+9. `restart/audit/totality/p1/hardening/HARDENING-T-P1-V5-CONSOLIDATED.md`.
+10. `restart/skinny/tranches/sk-v13/` scoping, S-P1, and in-flight S-P2
+    artefacts as the current skinny evidence lane.
+11. `skinny/RESULTS.md` and `skinny/REDRESS.md`.
+
+T-P2 must not merge locks amendments or CRUD updates. Those remain gated by
+T-P3, Pass Omega convergence, and the mandatory G-Omega user sign-off.
+
 Date: 2026-05-15 (SK-V6 SOTA recovery active)
 Status: **SK-V6 same-plane SOTA recovery is current. Current measured authority is `skinny/RESULTS.md`: full gate `N-direct / NoGo`; retained parse has 13 G rows, with `canada`, `mesh`, `marine_ik`, and `numbers` A / GO. Canada structural scan is green in the refreshed full matrix at 69075 Mbps against the 40000 Mbps NEON floor. Direct correctness is green and four direct rows pass the sonic-rs 1.10x direct slack (`citm_catalog`, `apache_builds`, `github_events`, `instruments`); 13 direct rows remain red. Strictness/output-plane columns are disclosed and must be promoted to schema v3 before any SOTA claim. SK-V5 Waves 0-5 landed the Rust-state substrate and measured redress, but the Wave 3 UTF-8 fusion prescription is refuted by REDRESS 50-55. The SK-V6 asmjson/DAV1D synthesis adds the current route: strict comparator planes, DAV1D-grade primitive admission, retained string/materialization recovery, generated DirectFieldFacts, and optional x86 CollapsedStage after the arm64 matrix closes.**
 Audience: the next agent or human picking up this work.

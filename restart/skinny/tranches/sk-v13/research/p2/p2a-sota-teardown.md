@@ -1,6 +1,6 @@
 # SK-V13 P2-A: SOTA Comparator Teardown
 
-Pass: S-P2 Research. Cycle: V1.
+Pass: S-P2 Research. Cycle: V2.
 Date: 2026-05-21.
 Scope: SOTA comparator teardown for asmjson, sonic-rs, simdjson, and yyjson keyed to SK-V13 S-P1 hot leaves and strict-vs-strict discipline.
 Output: this file.
@@ -85,6 +85,13 @@ prefetch/cache hints, orphan bitmap scalar delegates, comparator harness
 adapters, and standalone egraph/CSP scaffolding. They become admissible only
 when attached to a candidate above with scalar reference, checkasm/parity, and a
 same-wave row consumer.
+
+CH1 V2 fold: C7 is a conditional route-production candidate, not a standalone
+P1-grounded parser primitive. The SK-V12 W4 microbench and exact CSS scanner
+contract justify carrying it into S-P3 only if the plan also requires a fresh
+narrow CSS parser profile or same-wave CSS scan-block measurement with strict
+lightningcss equality. It cannot close as another microbench-only delimiter
+helper.
 
 ## §3 — Grammar-neutrality
 

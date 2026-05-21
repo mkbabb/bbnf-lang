@@ -1,15 +1,28 @@
-# SK-V13 P2-B: DAV1D/FFmpeg ASM Process
+# SK-V13 P2-B: FFmpeg / VideoLAN Checkasm Process
 
-Pass: S-P2 Research. Cycle: V1.
+Pass: S-P2 Research. Cycle: V2.
 Date: 2026-05-21.
-Scope: dav1d / FFmpeg / VLC hand-ASM process mapped onto bbnf-simd scalar-reference, checkasm, and same-wave-consumer discipline.
+Scope: FFmpeg / VideoLAN checkasm process mapped onto bbnf-simd scalar-reference, checkasm, and same-wave-consumer discipline; dav1d lineage is bounded to cited VideoLAN context and is not source-file gate authority in V2.
 Output: this file.
 P1 hot-leaf antecedents: `parse_that_regex::unescape_string`, `read_hex_unit_scalar`, `match_tiny_plain_string_with_cap::<16>`, `scan_structurals`, `scan_tail`, `bulk_emit_positions_64_neon`, generated JSON direct envelopes, and the CSS declaration-values timer/fact-sink profile.
 Lock surface: Lock 16 primary; Lock 14 and Lock 1 guard any grammar-neutral consumer or union/substrate-adjacent candidate.
 
 ## §1 — Findings
 
-The transferable dav1d / FFmpeg / VLC process is not "write ASM, then hope the row moves." It is a three-part admission loop: scalar oracle first, differential checkasm over adversarial inputs, then production wiring into a measured consumer. The VideoLAN checkasm page demonstrates the public shape: aligned reference and optimized buffers, randomized inputs, `checkasm_call_ref`, `checkasm_call_new`, output comparison, and `checkasm_bench_new` only after correctness comparison. The same page records dav1d lineage: VideoLAN's standalone checkasm fork came from dav1d's internal checkasm copy and from FFmpeg / x264 ancestry. FFmpeg's own `checkasm.c` is the assembly testing and benchmarking tool, and its source carries VideoLAN / dav1d copyright alongside FFmpeg ancestry. FFmpeg `checkasm.h` exposes the same call pattern through `declare_func`, `fail`, `checkasm_check`, padded-buffer checking, and typed comparison helpers.
+The transferable FFmpeg / VideoLAN checkasm process is not "write ASM, then
+hope the row moves." It is a three-part admission loop: scalar oracle first,
+differential checkasm over adversarial inputs, then production wiring into a
+measured consumer. The VideoLAN checkasm page demonstrates the public shape:
+aligned reference and optimized buffers, randomized inputs, `checkasm_call_ref`,
+`checkasm_call_new`, output comparison, and `checkasm_bench_new` only after
+correctness comparison. The same page records dav1d lineage at project level:
+VideoLAN's standalone checkasm fork came from dav1d's internal checkasm copy
+and from FFmpeg / x264 ancestry. V2 deliberately treats that as context only.
+No dav1d-specific implementation or gate text may be copied into S-P3 unless a
+future pass adds exact dav1d source-file anchors. FFmpeg's own `checkasm.c` is
+the assembly testing and benchmarking tool, and FFmpeg `checkasm.h` exposes the
+same call pattern through `declare_func`, `fail`, `checkasm_check`,
+padded-buffer checking, and typed comparison helpers.
 
 bbnf already has the local skeleton, but S-P3 must make it a wave gate rather than tribal memory. `bbnf-simd`'s `checkasm_parity.rs` says it is modelled on FFmpeg checkasm, runs scalar and candidate implementations on bit-identical inputs, compares outputs and source mutation, sweeps misalignment, protects stack state, traps bad candidate faults, and times kernels after parity (`skinny/crates/bbnf-simd/tests/checkasm_parity.rs:1`-`20`). Its deterministic xorshift input generator is local and dependency-free (`skinny/crates/bbnf-simd/tests/checkasm_parity.rs:57`-`100`). Its strict mode is currently opt-in by `BBNF_SIMD_STRICT=1`, while corpus parity always asserts (`skinny/crates/bbnf-simd/tests/checkasm_parity.rs:16`-`20`, `:112`-`115`). `checkasm_common.rs` adds the stack-canary fold and AArch64 callee-saved-register sentinel checks (`skinny/crates/bbnf-simd/tests/checkasm_common.rs:49`-`71`, `:83`-`111`). Those are the right primitives for a dav1d-style process.
 
@@ -127,7 +140,12 @@ JSON-only wrappers such as `parse_object_value_at_direct` and `parse_array_eleme
 - REDRESS 28/33 and REDRESS 82-84: tiny-string and string-block primitives have parity-green history but failed row gates when wired broadly. Any string primitive must be scoped to the P1-named row family and cannot claim global string wins.
 - REDRESS 88/89/90: PMULL and CSSC routes are category-unblocked by the user pin, but the prior default hot-body implementations remain measured failures. A new route must prove a different consumer, body, or row plane.
 - Checkasm strictness risk: local `checkasm_parity` defaults to recording divergences unless `BBNF_SIMD_STRICT=1` is set. S-P3 must require strict mode for admission commands.
-- Citation gap: I verified FFmpeg and VideoLAN checkasm primary sources. I did not verify a specific dav1d source-file URL for this V1 artifact beyond VideoLAN's statement that standalone checkasm was forked from dav1d's internal copy; if CHALLENGE requires dav1d file-level citations, V2 should add the exact `code.videolan.org/videolan/dav1d` source anchors before expanding dav1d-specific claims.
+- V2 citation boundary: this artifact verifies FFmpeg and VideoLAN checkasm
+  primary sources. It does not verify a specific dav1d source-file URL, so
+  dav1d-specific process claims are downgraded to lineage context. S-P3 may
+  cite the FFmpeg/VideoLAN checkasm process, but not dav1d file-level mechanics,
+  unless a later research cycle adds exact `code.videolan.org/videolan/dav1d`
+  source anchors.
 
 ## §5 — Sources
 
@@ -162,5 +180,7 @@ JSON-only wrappers such as `parse_object_value_at_direct` and `parse_array_eleme
 - `skinny/crates/bbnf-simd/src/scalar/byte_class_from_eq_set_64.rs`.
 - FFmpeg `tests/checkasm/checkasm.c` source: https://ffmpeg.org/doxygen/8.0/checkasm_8c_source.html
 - FFmpeg `tests/checkasm/checkasm.h` source: https://ffmpeg.org/doxygen/trunk/checkasm_8h_source.html
-- VideoLAN checkasm project page and dav1d lineage note: https://www-test.videolan.org/projects/checkasm/
-- VideoLAN dav1d project page and source location: https://images.videolan.org/projects/dav1d.html
+- VideoLAN checkasm project page and dav1d lineage note, used as project-level
+  lineage context only: https://www-test.videolan.org/projects/checkasm/
+- VideoLAN dav1d project page: https://images.videolan.org/projects/dav1d.html
+  (project context only; not source-file authority for S-P3 gate text)

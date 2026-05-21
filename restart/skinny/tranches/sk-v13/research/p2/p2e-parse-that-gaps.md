@@ -1,6 +1,6 @@
 # SK-V13 P2-E: parse-that Primitive Gaps
 
-Pass: S-P2 Research. Cycle: V1.
+Pass: S-P2 Research. Cycle: V2.
 Date: 2026-05-21.
 Scope: parse-that primitive vocabulary gaps demanded by SK-V13 S-P1 hot leaves.
 Output: this file.
@@ -8,6 +8,11 @@ P1 hot-leaf antecedents: generated JSON `dispatch_value` / direct envelopes, `ma
 Lock surface: both — Lock 1 substrate union and Lock 14 grammar-neutrality; Lock 16 SIMD/checkasm is carried as the primitive admission gate.
 
 ## §1 — Findings (concrete; file:line on bbnf claims, citation on external claims)
+
+V2 challenge fold note: CH1/CH2/CH6 did not require changing the P2-E
+primitive set. The inventory/drop boundaries for P2E-6/P2E-8 remain governed by
+P2-B/P2-C/P2-F: CSS byte-set run-skip needs a same-wave CSS scan-block
+consumer, and structural scan remains transient/single-substrate only.
 
 1. parse-that is already the right ownership boundary for strings, numbers, unicode, and regex-shaped leaf work, but its public vocabulary is still thinner than the SK-V13 hot leaves require. `parse-that-regex` currently exports string, number, unicode, and a tiny integration hook (`skinny/crates/parse-that-regex/src/lib.rs:4-8`, `skinny/crates/parse-that-regex/src/integration/simd_scan_hook.rs:3-18`), while the generated JSON parser still owns policy-specific dispatch, tiny-string, and delimiter control (`skinny/crates/runtime/src/grammars/json/generated.rs:45-56`, `skinny/crates/runtime/src/grammars/json/generated.rs:159-183`, `skinny/crates/runtime/src/grammars/json/generated.rs:290-303`).
 

@@ -1,6 +1,6 @@
 # SK-V13 P2-C: Host AArch64 ASM/SIMD Esoterica
 
-Pass: S-P2 Research. Cycle: V1.
+Pass: S-P2 Research. Cycle: V2.
 Date: 2026-05-21.
 Scope: host aarch64 / Apple Silicon instruction inventory keyed to S-P1 hot leaves; x86 is background only.
 Output: this file.
@@ -21,11 +21,16 @@ Lock surface: both — Lock 1 for structural/union candidates, Lock 14 for gramm
 
 6. The string-special route is a wide-shift / context propagation candidate, not a standalone orphan. `string_block` currently scans 16-byte windows for terminator/escape/control/non-ASCII masks (`skinny/crates/bbnf-simd/src/aarch64/string_block.rs:30-72`) and parse-that consumes it in JSON string paths (`skinny/crates/parse-that-regex/src/lib.rs:472-478`, `:551-557`). The existing `byte_context` module is only `vextq_u8` one-byte neighbor propagation (`skinny/crates/bbnf-simd/src/aarch64/byte_context.rs:1-10`) and is demoted inventory unless wired into a 64-byte string-special consumer. Arm's Neon Intrinsics Reference maps `vextq_u8` to `EXT Vd.16B,Vn.16B,Vm.16B,#n` and fixed shifts like `vshlq_n_u16` to SHL (`https://arm-software.github.io/acle/neon_intrinsics/advsimd.html`, EXT and shift sections).
 
-7. EOR3/SHA3 is inventory-only for V1 research. Arm ACLE exposes `__ARM_FEATURE_SHA3` for SHA3 instruction availability and the Neon reference maps `veor3q_u8` to `EOR3 Vd.16B,Vn.16B,Vm.16B,Va.16B` (`https://arm-software.github.io/acle/main/acle.html`, SHA3 extension; `https://arm-software.github.io/acle/neon_intrinsics/advsimd.html`, EOR3 table). No S-P1 hot leaf identifies a three-input boolean expression after the V2/V4 folds: P1-E records CSS top leaves as timer/fact-sink and direct unicode as `unescape_string` rather than quote/escape/control fusion (`restart/skinny/tranches/sk-v13/research/p1/p1e-hot-leaf-attribution.md:82-87`, `:105-118`). EOR3 should not be shortlisted unless S-P2/P3 can name a measured string-mask consumer.
+7. EOR3/SHA3 is `NOT-S-P3-ELIGIBLE` inventory for V2 research. Arm ACLE exposes `__ARM_FEATURE_SHA3` for SHA3 instruction availability and the Neon reference maps `veor3q_u8` to `EOR3 Vd.16B,Vn.16B,Vm.16B,Va.16B` (`https://arm-software.github.io/acle/main/acle.html`, SHA3 extension; `https://arm-software.github.io/acle/neon_intrinsics/advsimd.html`, EOR3 table). No S-P1 hot leaf identifies a three-input boolean expression after the V2/V4 folds: P1-E records CSS top leaves as timer/fact-sink and direct unicode as `unescape_string` rather than quote/escape/control fusion (`restart/skinny/tranches/sk-v13/research/p1/p1e-hot-leaf-attribution.md:82-87`, `:105-118`). EOR3 should not be shortlisted unless S-P2/P3 can name a measured string-mask consumer.
 
 8. x86 remains background only. The tree contains x86 AVX2/AVX-512/GFNI/VBMI2/VPCLMUL modules, but SK-V13 implementation scope is aarch64/Apple Silicon. Their only S-P2-C value is conceptual: GFNI/VBMI2/VPCLMUL show what single-op classify, compress, and carry can look like, but no SK-V13 wave should implement or benchmark x86.
 
 ## §2 — Candidate primitives (each: shape + scalar-ref status + arch + P1 antecedent)
+
+Rows stamped `NOT-S-P3-ELIGIBLE` are retained as inventory or close-hygiene
+facts only. They are not S-P3 shortlist authority unless a later research fold
+adds a named S-P1 hot expression plus scalar reference, checkasm/parity, and a
+same-wave row consumer.
 
 | Candidate | Shape | Arch / feature | Scalar reference | Checkasm / parity expectation | Same-wave consumer | P1 antecedent | S-P3 disposition |
 |---|---|---|---|---|---|---|---|
@@ -34,8 +39,8 @@ Lock surface: both — Lock 1 for structural/union candidates, Lock 14 for gramm
 | C-P2C-3 `udot_digit_span_x4` | Validate/decode four independent 4-digit lanes or digit-run heads; output value(s) and validity mask for numeric token consumer. | AArch64 DotProd (`udot` / `vdotq_u32`) behind `target_feature=dotprod`. | `parse_4_digits` scalar in `digit_mac.rs:5-22` plus overflow/invalid token oracle. | Expand smoke tests into strict checkasm: invalid lanes, signs, decimal point, exponent edge, overflow, mixed-valid lanes, tail lengths. | JSON numeric direct/parse consumer or CSS number token consumer; only if numeric-density and row measurement move a JSON/CSS row. | Direct envelopes for `canada`, `numbers`, `mesh`; P1-D direct c/B and mode-III counters. | Medium/high risk; likely measured-reject unless S-P2-E proves numeric leaf density. |
 | C-P2C-4 `tbl_tbx_escape_decode_batch` | Batch hex escape/classification using TBL; TBX variant only when out-of-range bytes need accumulator-preserving fallback. | AArch64 TBL/TBX. | `unescape_uxxxx_scalar` and grammar-specific escape oracle. | Existing unicode escape parity plus fixed-width x4/xN, invalid nibbles, surrogate pairs, CSS variable-length escape terminator and whitespace rules if CSS consumes it. | JSON `parse_that_regex::unescape_string` or CSS escaped identifier/value parser in same wave. | `unicode_escapes` direct rank-1 `unescape_string` 46.7%; `y_string_unicode` parse rank-1 `read_hex_unit_scalar`. | Selectable for JSON fixed-width `\uXXXX`; CSS needs grammar-policy proof first. |
 | C-P2C-5 `string_special_64_context` | Four 16-byte string-special blocks as one 64-byte oracle; use `vextq_u8` for cross-chunk neighbor context and fixed shifts/OR for mask assembly. | AArch64 NEON EXT + shifts; no SVE. | 64-byte scalar oracle built from current 16-byte scalar block and byte-context scalar. | Alignment, tails, cross-chunk quote/escape/control, long backslash runs, non-ASCII, grammar quote/escape policy cases. | JSON string scanner or CSS string/escaped-ident scanner in same wave; row movement required. | `distinct_values` tiny-string parse sidecar, unicode/string direct gaps, existing parse-that string-block consumers. | Conditional; good support for C-P2C-4 or Union-C, not a standalone support landing. |
-| C-P2C-6 `eor3_string_mask_fusion` | Fuse three same-width masks, e.g. quote ^ escape ^ control, with one EOR3 instruction. | AArch64 SHA3/EOR3 (`__ARM_FEATURE_SHA3`). | Scalar `a ^ b ^ c` over u8x16/u64 masks. | Exhaustive three-mask truth table for 16 lanes plus corpus parity for consumer. | Only a measured string mask consumer. | No current S-P1 three-input hot expression. | Inventory only; S-P3 should not shortlist without new evidence. |
-| C-P2C-7 `byte_context_orphan_resolution` | Either wire `byte_context` into C-P2C-5 or delete/demote it with REDRESS evidence; do not retain as support-only. | AArch64 EXT. | Current tests / scalar neighbor context. | If wired, include C-P2C-5 checkasm; if deleted/demoted, REDRESS inventory proof. | C-P2C-5 consumer or none. | REDRESS-126 orphan inventory; no P1 production caller. | Close hygiene, not row-moving by itself. |
+| C-P2C-6 `eor3_string_mask_fusion` | Fuse three same-width masks, e.g. quote ^ escape ^ control, with one EOR3 instruction. | AArch64 SHA3/EOR3 (`__ARM_FEATURE_SHA3`). | Scalar `a ^ b ^ c` over u8x16/u64 masks. | Exhaustive three-mask truth table for 16 lanes plus corpus parity for consumer. | Only a measured string mask consumer. | No current S-P1 three-input hot expression. | `NOT-S-P3-ELIGIBLE` in V2. Inventory only; do not shortlist without new hot-expression evidence. |
+| C-P2C-7 `byte_context_orphan_resolution` | Either wire `byte_context` into C-P2C-5 or delete/demote it with REDRESS evidence; do not retain as support-only. | AArch64 EXT. | Current tests / scalar neighbor context. | If wired, include C-P2C-5 checkasm; if deleted/demoted, REDRESS inventory proof. | C-P2C-5 consumer or none. | REDRESS-126 orphan inventory; no P1 production caller. | `NOT-S-P3-ELIGIBLE` as a standalone wave. Close hygiene only; may be folded into C-P2C-5 consumer or deletion/demotion evidence. |
 
 ## §3 — Grammar-neutrality (each candidate: JSON-only or CSS/Sheets/BBNF-self generalisable)
 
@@ -66,6 +71,26 @@ Lock surface: both — Lock 1 for structural/union candidates, Lock 14 for gramm
 - Arm A64 / Armv8 instruction overview PDF supplied by orchestrator: `https://developer.arm.com/-/media/Files/pdf/graphics-and-multimedia/ARMv8_InstructionSetOverview.pdf`.
 - Arm Compiler for Embedded Reference Guide 6.20 supplied by orchestrator: `https://documentation-service.arm.com/static/641d6f0fac798355e7426b54`.
 - FFmpeg checkasm source: `https://ffmpeg.org/doxygen/8.0/checkasm_8c_source.html`; checkasm records function versions/perf state and reports OK/FAILED, matching the scalar-reference + candidate + benchmark discipline bbnf carries in Lock 16.
+
+V2 citation tightening for S-P3 gate text:
+
+- CSSC CTZ: cite the Arm ACLE `__ARM_FEATURE_CSSC` feature macro and the CTZ
+  instruction availability. Gate text must also state the scalar fallback
+  (`trailing_zeros` or `rbit` + `clz`) because there is no portable NEON
+  intrinsic name equivalent to `vctzq`.
+- PMULL: cite Neon polynomial multiply entries `vmull_p64` and
+  `vmull_high_p64`; any prefix/string-state body must retain the scalar
+  prefix-XOR oracle and REDRESS 88 differential.
+- UDOT: cite `__ARM_FEATURE_DOTPROD` and Neon `vdotq_u32`
+  (`UDOT Vd.4S,Vn.16B,Vm.16B`); admission still needs strict digit-lane
+  checkasm and numeric-row consumer.
+- TBL/TBX: cite Neon `vqtbl4q_u8` and `vqtbx4q_u8`; TBX is a fallback
+  refinement only when the grammar's escape/classification policy needs
+  accumulator-preserving out-of-range handling.
+- EXT: cite Neon `vextq_u8`; admissible only through a 64-byte string/context
+  consumer or deletion/demotion proof, not as `byte_context` inventory.
+- EOR3: cite `__ARM_FEATURE_SHA3` and Neon `veor3q_u8`; V2 marks it
+  `NOT-S-P3-ELIGIBLE` until a named three-input hot expression exists.
 - `restart/prompts/skinny/PASS-2-RESEARCH.md`.
 - `restart/locks/LOCKS.md` Lock 1, Lock 14, Lock 16.
 - `restart/skinny/tranches/sk-v13/HANDOFF.md`.

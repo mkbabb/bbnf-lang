@@ -1,6 +1,6 @@
 # SK-V13 P2-D: Substrate + Tape Design
 
-Pass: S-P2 Research. Cycle: V1.
+Pass: S-P2 Research. Cycle: V2.
 Date: 2026-05-21.
 Scope: substrate/tape interrogation under Lock 1: lazy materialization,
 tape ratios, structural projection union, union variants distinct from
@@ -143,7 +143,7 @@ substrate shapes for S-P3 to shortlist only if CHALLENGE accepts the
 scalar-reference, parity/checkasm, same-wave-consumer, and Lock 1
 constraints below.
 
-### D1. Lazy tape capacity policy tuning
+### D1. Lazy tape capacity policy tuning (measurement question; not standalone S-P3 candidate)
 
 **Shape.** Replace the fixed `GrowOnly` production default or its
 growth heuristic with a grammar-neutral capacity policy selected from
@@ -156,6 +156,7 @@ capacity/growth tweak over the same offset stream.
 and `numbers` (`skinny/RESULTS.md:105-144`); mode-III structural
 capacity signals
 (`restart/skinny/tranches/sk-v13/research/p1/p1c-samply-mode-3.md:63-81`).
+This is allocation/tape-shape evidence, not a named S-P1 hot leaf.
 
 **Scalar reference.** Existing `CapacityPlan::GrowOnly` and
 `TapeBuilder::push_plain_offset` are the scalar/control reference
@@ -176,9 +177,12 @@ The gate must measure parse rows where over-allocation is visible
 (`y_string_unicode`, `mesh`, `marine_ik`, `canada`) and guard all
 previous JSON admits.
 
-**Eligibility.** Medium-low. It is legal and cheap, but likely moves
-memory footprint more than throughput. It must micro-prove row movement
-before S-P3 treats it as a behavior wave.
+**Eligibility.** `NOT-S-P3-ELIGIBLE` as a standalone behavior wave in V2.
+It is legal and cheap, but current S-P1 rows are dominated by dispatch
+envelopes, unicode/string decode, structural scan, or output-plane work rather
+than a payload/tape writer. S-P3 may carry D1 only as a measurement question or
+as a sub-piece inside a row-moving consumer after micro-proof names the exact
+row and hot leaf it moves.
 
 ### D2. GrammarConfig per-rule same-tape event projection (Union C1 narrowed)
 

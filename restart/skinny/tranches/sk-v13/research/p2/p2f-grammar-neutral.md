@@ -1,19 +1,20 @@
 # SK-V13 P2-F: Grammar-Neutral Abstraction
 
-Pass: S-P2 Research. Cycle: V1.
+Pass: S-P2 Research. Cycle: V2.
 Date: 2026-05-21.
-Scope: grammar-neutral abstraction verdict for SK-V13 candidate primitives surfaced by S-P1, scoping, and sibling P2-B/C/D/E V1 artefacts.
+Scope: grammar-neutral abstraction verdict for SK-V13 candidate primitives surfaced by S-P1, scoping, and sibling P2-A/B/C/D/E V2 artefacts.
 Output: this file.
 P1 hot-leaf antecedents: generated JSON parse/direct envelopes, `parse_that_regex::unescape_string`, `read_hex_unit_scalar`, mode-III structural scalar/SIMD scan, CSS declaration-values fact-sink profile, seven JSON typed leaves, ten missing typed surfaces.
 Lock surface: Lock 14 primary; Lock 1 and Lock 16 secondary.
 
 ## §1 - Findings
 
-P2-F V1 cross-read is complete against the sibling P2-B/C/D/E artefacts present
+P2-F V2 cross-read is complete against the sibling P2-A/B/C/D/E artefacts present
 under `restart/skinny/tranches/sk-v13/research/p2/` at update time. P2-B adds
-the dav1d/FFmpeg process gate and B1-B5 SIMD admission candidates; P2-C adds
+the FFmpeg/VideoLAN checkasm process gate and B1-B5 SIMD admission candidates; P2-C adds
 C-P2C-1..7 host aarch64 candidates; P2-D adds D1-D5 substrate/tape candidates;
-P2-E adds P2E-1..8 parse-that vocabulary gaps. The table below folds those
+P2-E adds P2E-1..8 parse-that vocabulary gaps; P2-A adds C1-C8 comparator-led
+candidate primitives. The table below folds those
 names into one Lock-14 verdict matrix.
 
 The S-P1 authority is intentionally non-admissive. The canonical ledger says
@@ -81,13 +82,13 @@ surfaces, not a public `GrammarConfig` trait
 | B1 / C-P2C-4 / P2E-3 unicode and escape decoder | `unescape_string` / `read_hex_unit_scalar` generalized to escape productions | `unicode_escapes` rank-1 direct primitive; `y_string_unicode` parse leaf | Scalar decode table per grammar; checkasm for all nibble/tail/error cases if SIMD added; consumer: JSON and CSS escaped identifiers/strings. | `CONDITIONAL-GRAMMAR-NEUTRAL`; JSON `\uXXXX` and CSS hex escapes differ, so grammar policy is mandatory. |
 | C-P2C-3 / P2E-5 UDOT digit-run / digit block decode | Dot-product digit accumulation and span validation | numbers/canada/mesh direct gaps; scoping UDOT candidate | Scalar digit-span oracle; checkasm for valid/invalid/mixed/overflow lanes; consumer: JSON number projection or CSS number token. | `ADMISSIBLE-GRAMMAR-NEUTRAL` in abstract: JSON numbers, CSS numbers/dimensions, Sheets formulas, and BBNF numeric literals all carry digit runs. |
 | C-P2C-2 / P2E-8 PMULL + CSSC CTZ `GrammarStructuralScan` | SIMD structural-position matrix plus rank-order bit extraction | Mode-III structural SIMD beats scalar; union C scoping | Scalar consume-structural oracle; checkasm for density/alignment/string-boundary cases; consumer: JSON structural lane or CSS structural row. | `CONDITIONAL-GRAMMAR-NEUTRAL`; byte classes are grammar-supplied, but REDRESS 88/89/96/97/98 risks are high. |
-| D1 lazy tape capacity policy | Grammar-neutral capacity/growth policy selected from observed density and generated grammar metadata | High allocated/logical tape ratios in `y_string_unicode`, `mesh`, `marine_ik`, `update_center`, `canada`, `numbers`; mode-III capacity signal | Scalar ref: current `CapacityPlan::GrowOnly` and `TapeBuilder`; parity: offset/flag traversal equality; consumer: retained parse rows or CSS retained row. | `CONDITIONAL-GRAMMAR-NEUTRAL`; legal and metadata-driven, but throughput admission needs micro-proof because current P1 hot leaves are not payload/tape writers. |
+| D1 lazy tape capacity policy | Grammar-neutral capacity/growth policy selected from observed density and generated grammar metadata | High allocated/logical tape ratios in `y_string_unicode`, `mesh`, `marine_ik`, `update_center`, `canada`, `numbers`; mode-III capacity signal | Scalar ref: current `CapacityPlan::GrowOnly` and `TapeBuilder`; parity: offset/flag traversal equality; consumer: retained parse rows or CSS retained row. | `NOT-S-P3-ELIGIBLE` as a standalone V2 behavior wave; legal and metadata-driven, but current P1 hot leaves are not payload/tape writers. Carry only as a measurement question or as part of a row-moving consumer after micro-proof. |
 | `bitmap_prefix_xor_64` | Prefix-XOR/string mask bit operation | Orphan demoted; PMULL blocked history | Scalar bit oracle; checkasm exists/required; no current consumer. | `INVENTORY-ONLY` unless paired with union C or string scan consumer in same wave. |
 | `bitmap_next_set_bit` / CSSC CTZ | Next-bit extraction from bitmap | Orphan demoted; CTZ blocked history | Scalar `trailing_zeros` oracle; checkasm required; no current hot consumer. | `INVENTORY-ONLY` unless consumed by PMULL+CTZ union or a measured bitset row. |
 | `bulk_emit_positions_64` | Mask-to-offset compaction | Mode-III `bulk_emit_positions_64_neon` sidecar; orphan demoted | Scalar mask walk oracle; checkasm required; consumer must be active tape/fact emitter. | `CONDITIONAL-GRAMMAR-NEUTRAL` as a mask operation, but currently `INVENTORY-ONLY` for S-P3. |
-| `byte_context` / `vextq_u8` | Cross-chunk byte-context propagation | String-special candidate; orphan demoted | Scalar neighboring-window oracle; checkasm for chunk edges; consumer: string/comment/identifier scanner. | `ADMISSIBLE-GRAMMAR-NEUTRAL` if consumed by chunk-spanning tokens; otherwise orphan inventory. |
+| `byte_context` / `vextq_u8` | Cross-chunk byte-context propagation | String-special candidate; orphan demoted | Scalar neighboring-window oracle; checkasm for chunk edges; consumer: string/comment/identifier scanner. | `NOT-S-P3-ELIGIBLE` standalone; grammar-neutral only if consumed by a chunk-spanning token row or deleted/demoted with evidence. |
 | `cache_hints` | PRFM/STNP memory hinting for tape/fact writes | Orphan demoted; no P1 hot leaf | Scalar n/a; microbench only; consumer must be a measured writer path. | `INVENTORY-ONLY`; grammar-neutral in theory, but no P1 antecedent or same-wave consumer. |
-| EOR3/BCAX ternary boolean | Three-input boolean fold for masks | Scoping says no current three-input P1 expression | Scalar boolean oracle; checkasm if selected; consumer absent. | `INVENTORY-ONLY` for V1 S-P2; do not shortlist without a new hot expression. |
+| EOR3/BCAX ternary boolean | Three-input boolean fold for masks | Scoping says no current three-input P1 expression | Scalar boolean oracle; checkasm if selected; consumer absent. | `NOT-S-P3-ELIGIBLE` for V2 S-P2; do not shortlist without a new hot expression. |
 | LD4/TBX/SMIN/SMAX refinements | Load/deinterleave, out-of-range table, compare reductions | Scoping marks no measured consumer or no hot leaf | Scalar oracle varies; checkasm required if selected. | `INVENTORY-ONLY`; not eligible until P2-C/E names a measured consumer. |
 | Fact-stream digest u64x2 | Vectorized digest fold over emitted facts | JSON direct envelopes and prior digest routes | Scalar fact-stream digest oracle; SIMD parity; consumer: JSON/CSS fact-stream rows. | `CONDITIONAL-GRAMMAR-NEUTRAL`; valid only if it hashes grammar-neutral fact streams, not `JsonDigestSink` internals. |
 | Generated dispatch unroll | Template-level FIRST/action unroll and tail specialization | JSON direct envelopes (`parse_object_value_at_direct`, `parse_array_element_at_direct`) | Scalar generated dispatch table; checkasm n/a; consumer: JSON direct plus CSS generated dispatch row. | `ADMISSIBLE-GRAMMAR-NEUTRAL` if emitted from grammar facts; `JSON-OVERFIT` if it targets object/array/key colon directly. |
@@ -99,6 +100,19 @@ surfaces, not a public `GrammarConfig` trait
 | Union C1 per-rule policy | Codegen-time per-rule tape/event selection in config | Union scoping, GrammarConfig legality | Scalar fixed-shape tape baseline; parity across rule boundaries; consumer: CSS row and JSON guard. | `CONDITIONAL-GRAMMAR-NEUTRAL`; legal only if codegen-private, no `UnionTape`, no new directive/BIR/BackendShape/API. |
 | Union C2 e-graph selected shape | E-graph equivalence class selects tape/event shape | Union + decision-engine scoping | Scalar C1/fixed baseline; equivalence proof; consumer: measured JSON/CSS row. | `CONDITIONAL-GRAMMAR-NEUTRAL`; high CH5 coupling risk, but not JSON-overfit if shapes are IR-derived. |
 | Union C3 SIMD lane index | PMULL/CSSC/EOR3 vector index drives union selection | Mode-III scan signal, union C scoping | Scalar structural oracle; checkasm for vector lanes; consumer: JSON/CSS structural row. | `CONDITIONAL-GRAMMAR-NEUTRAL`; grammar byte-set parameterization required; current route is high-risk historical REDRESS adjacency. |
+
+### P2-A C1-C8 literal mapping
+
+| P2-A candidate | P2-F mapped verdict | Mapping boundary |
+|---|---|---|
+| C1 `class_mask64_transient` | `ADMISSIBLE-GRAMMAR-NEUTRAL` | Maps to the byte-set classifier family when classes are generated grammar tables and the mask is transient. Reject retained class sidecars. |
+| C2 `bounded_special_string_end` | `CONDITIONAL-GRAMMAR-NEUTRAL` | Maps to P2E-1/P2E-2 string policy and 64-byte special scan. Valid only after quote/escape/control/terminator policy is generated and a JSON or CSS string row consumes it. |
+| C3 `escape_segment_hex_decode` | `CONDITIONAL-GRAMMAR-NEUTRAL` | Maps to P2E-3 / B1 / C-P2C-4 escape decode. JSON `\uXXXX` and CSS variable-width escapes require separate grammar policy; the nibble core is neutral. |
+| C4 `digit_run_accumulate` | `ADMISSIBLE-GRAMMAR-NEUTRAL` | Maps to P2E-4/P2E-5 and C-P2C-3 digit-run work. JSON, CSS, Sheets, and BBNF can share digit spans if sign/suffix/materialization policy stays generated. |
+| C5 `generated_first_follow_probe` | `ADMISSIBLE-GRAMMAR-NEUTRAL` | Maps to per-grammar dispatch tables and generated dispatch unroll. Reject JSON object/array/key-colon branches in generic code. |
+| C6 `same_loop_structural_mask_consume` | `CONDITIONAL-GRAMMAR-NEUTRAL` | Maps to P2E-8 / D2-D3 / C-P2C-2 union routes. It must consume transient masks into the single tape or sink-only projection and carry REDRESS 96/97/98 material differential. |
+| C7 `ascii_set_member_find64_css` | `CONDITIONAL-GRAMMAR-NEUTRAL` route-production | Maps to C-P2C-1 / P2E-6 / B2 `ByteSetRunSkip64`. V2 treats it as conditional because CSS P1 is not yet a parser-hot-leaf proof; S-P3 must require a fresh narrow CSS profile or same-wave scan-block row movement. |
+| C8 `output_digest_fold_u64x2_sink` | `CONDITIONAL-GRAMMAR-NEUTRAL` only over fact streams | Maps to fact-stream digest u64x2. It is JSON-output-plane scoped unless a grammar-neutral fact stream is the row output; reject parser-speed claims or `JsonDigestSink` internals. |
 
 ## §3 - Grammar-neutrality
 
@@ -136,9 +150,11 @@ Immediate S-P3 eligibility:
   classifier, UDOT digit primitive, fact-stream digest iff generalized, regex
   extraction, e-graph/cost/CSP resolver surfaces, P1-P8 cascade deletion, and
   union C1/C2/C3 under the stated caveats.
-- Not eligible without new P2 evidence: EOR3/BCAX, TBX/LD4/SMIN/SMAX,
-  `cache_hints`, standalone `bitmap_prefix_xor_64`, standalone
-  `bitmap_next_set_bit`, and standalone `bulk_emit_positions_64`.
+- `NOT-S-P3-ELIGIBLE` without new P2 evidence and same-wave consumer:
+  EOR3/BCAX, TBX/LD4/SMIN/SMAX, `cache_hints`, standalone
+  `bitmap_prefix_xor_64`, standalone `bitmap_next_set_bit`, standalone
+  `bulk_emit_positions_64`, standalone `byte_context`, and standalone D1 lazy
+  tape capacity policy.
 - Must be rejected as written: JSON object/array/key-specific dispatch rewrites,
   `JsonSink`-specific sink acceleration, hardcoded JSON quote/backslash string
   widening, or any candidate that claims grammar-neutrality from JSON profile
@@ -204,6 +220,7 @@ domain ownership is a Lock 4 violation
 - `restart/skinny/tranches/sk-v13/scoping/sk-v13-scoping-decision-engine.md`
 - `restart/skinny/tranches/sk-v13/scoping/sk-v13-scoping-value-api-union.md`
 - `restart/skinny/tranches/sk-v13/scoping/sk-v13-scoping-simd-asm-union.md`
+- `restart/skinny/tranches/sk-v13/research/p2/p2a-sota-teardown.md`
 - `restart/skinny/tranches/sk-v13/research/p2/p2b-dav1d-process.md`
 - `restart/skinny/tranches/sk-v13/research/p2/p2c-arch-esoterica.md`
 - `restart/skinny/tranches/sk-v13/research/p2/p2d-substrate-tape.md`
@@ -211,13 +228,16 @@ domain ownership is a Lock 4 violation
 
 ## §6 - V2 Cross-Read Disposition
 
-P2-F V1 now incorporates the P2-B/C/D/E V1 sibling artefacts. No sibling output
-requires changing the core Lock-14 verdict: grammar-neutrality is admitted at
-byte-set, policy, fact-stream, regex-analysis, resolver, or codegen-private
-same-substrate boundaries; JSON-specific wrappers remain overfit; support-only
-SIMD remains inventory.
+P2-F V2 incorporates the P2-A/B/C/D/E V1 sibling artefacts and the V1 CH2 fold.
+The literal C1-C8 mapping above resolves the cross-read blocker. No sibling
+output requires changing the core Lock-14 verdict: grammar-neutrality is
+admitted at byte-set, policy, fact-stream, regex-analysis, resolver, or
+codegen-private same-substrate boundaries; JSON-specific wrappers remain
+overfit; support-only SIMD remains inventory.
 
-Residual V2 work is limited to convergence edits if later P2 revisions rename a
-candidate or if P2-A adds comparator/ISA evidence that changes a scalar-reference
-or same-wave-consumer requirement. P2-F should not add new source claims outside
-that convergence scope.
+Inventory/drop decisions are binding for S-P3 unless a later accepted research
+cycle adds fresh evidence: EOR3/BCAX, cache hints, standalone prefix/next/bulk
+bitmap primitives, standalone `byte_context`, LD4/TBX/SMIN/SMAX refinements,
+and D1 lazy capacity as a standalone wave do not enter the shortlist. Residual
+V2 work is limited to challenge confirmation or candidate renames; P2-F should
+not add new source claims outside that convergence scope.

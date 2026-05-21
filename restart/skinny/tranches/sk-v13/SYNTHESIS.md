@@ -100,9 +100,10 @@ architectural-level intrinsic-block proof. This is 51 JSON rows:
 `parse_only`, `direct_to_struct`, and `real_typed_struct` for every corpus.
 
 The prior `parse_only` diagnostic concession is revoked. The 17 `parse_only`
-rows are admission-eligible and must exceed sonic-rs strict `parse_only` by at
-least 1 Mbps or prove architectural block. REDRESS-119 and REDRESS-120 are
-history only; their 13-row direct fixpoint does not block fresh SK-V13 reopens.
+rows are admission-eligible and must satisfy
+`Track 1 > sonic-rs strict parse_only Mbps + 1` or prove architectural block.
+REDRESS-119 and REDRESS-120 are history only; their 13-row direct fixpoint does
+not block fresh SK-V13 reopens.
 
 No previously admitted A/GO row may silently demote. If a wave changes generic
 runtime, codegen, generated output, benchmark, report, or gate paths that can
@@ -214,6 +215,18 @@ S-P3 owns the detailed wave plan, but it is constrained by this contract:
   sequence covers all rows;
 - no SPEC clause may defer pinned work to a future tranche except the automatic
   Pass Alpha bracket after a rejected close.
+- this SYNTHESIS, the HANDOFF, and the 2026-05-21 addendum override weaker
+  scoping prose. S-P3 must not inherit scoping labels such as optional,
+  fallback, diagnostic, support-only, scaffold-only, or future-tranche when they
+  touch pinned CSS/JSON/G2-G7 work; those items become admitted row targets,
+  architectural-block proofs, or user re-pin issues.
+- no SPEC clause may authorize a new directive, BIR variant, `BackendShape`,
+  public substrate API, or grammar-specific generic behavior. The union category
+  is unblocked only for same-tape, codegen-private, row-consumed variants.
+- after the decision-engine resolver lands, the hardcoded P1-P8 cascade must
+  fail closed for JSON, CSS, Sheets, and BBNF-self rows unless S-P3 records an
+  explicit row rejection/non-admission path. Silent fallback to the old cascade
+  is not admission evidence.
 
 ## Section 5 - Pre-Blocked And Unblocked Routes
 

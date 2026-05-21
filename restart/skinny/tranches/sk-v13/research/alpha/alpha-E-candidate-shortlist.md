@@ -34,7 +34,8 @@ Global gates for every family:
   output plane, or carry an architectural intrinsic-block proof.
 - **JSON:** all 51 JSON rows, including the 13 REDRESS-119 N-direct rows and
   all `parse_only` rows, are admission-eligible and must beat sonic-rs strict
-  by >1 Mbps on the same plane, or carry architectural intrinsic-block proof.
+  by satisfying `Track 1 > sonic-rs strict Mbps + 1` on the same plane, or
+  carry architectural intrinsic-block proof.
 - **Comparator plane:** sonic-rs strict is the JSON SOTA comparator. Lossy or
   permissive comparators are flaw probes only.
 - **Behavior-wave rule:** every behavior wave must move at least one row toward
@@ -48,7 +49,7 @@ Global gates for every family:
 
 | ID | Candidate family | Required fanout | Primary rows | LOC envelope | Risk |
 |---|---|---|---|---:|---|
-| E1 | CSS L4 lightningcss parity expansion | W3/W4 + W10.{1..N} | 23 remaining CSS L4 parity features | 3.0k-5.0k source/test across fanout; generated LOC separately accounted | high |
+| E1 | CSS L4 lightningcss parity expansion | W3/W4 + W10.{1..N} | 23 remaining CSS L4 parity features | 8.0k-21.9k source/test upper envelope across one-wave-per-feature fanout; generated LOC separately accounted | high |
 | E2 | Per-grammar value/config/sink expansion | Consumed by E1 and optional Sheets fallback | CSS stylesheet/value rows; future Sheets/BBNF-self legality | 1.5k-2.1k | high |
 | E3 | Decision-engine fold: bbnf-regex + egraph + active cost + CSP + cascade deletion | W5-W9, feeds W11/W14 | JSON direct/typed/parse_only route generation | 2.3k-3.6k | very high |
 | E4 | Legal same-tape union substrate | W8/W12, feeds W11 and CSS rows | JSON structural/projection rows; CSS selector/context rows | 550-1.4k | high |
@@ -113,7 +114,9 @@ Falsifiability gate:
 LOC/risk:
 
 - 350-950 LOC per CSS feature family, depending on selector/at-rule/function
-  complexity; 3.0k-5.0k aggregate source/test envelope across W3/W4/W10.
+  complexity; 8.0k-21.9k source/test upper envelope across 23 feature rows if
+  S-P3 keeps one wave per feature. S-P3 may bundle features only when one
+  measured row/gate covers the bundle; generated LOC is separately accounted.
 - Risk high: selector recursion, media/nesting grammar, and lightningcss
   semantic projection are broad. The material risk is oracle mismatch, not
   pure throughput.
@@ -170,9 +173,10 @@ Falsifiability gate:
   strict lightningcss parity, JSON guard rows do not demote, and Lock 14 shows
   no generic branch on grammar name, corpus name, JSON object/array role,
   field name, string role, or layout role.
-- Any public trait, new directive, new BIR variant, new `BackendShape`, or
-  public `UnionTape`-style substrate change is REJECT unless S-P3 explicitly
-  records a user-approved SPEC override.
+- Any public trait, new directive, new BIR variant, new `BackendShape`, public
+  `UnionTape`-style substrate, or grammar-specific generic behavior is REJECT.
+  S-P3 may narrow owner paths and gates; it cannot authorize those surfaces.
+  Only user re-pin outside SPEC can change this scope.
 
 LOC/risk:
 
@@ -233,9 +237,10 @@ Same-wave consumer plan:
 
 - Every resolver rewrite or CSP constraint must be consumed by generated code
   for at least one named JSON or CSS row in the same behavior wave.
-- W5 can be infrastructure-only only if S-P3 classifies it as non-behavior and
-  binds it to W6/W7 in the same redress tranche; otherwise it must move a row
-  or record intrinsic-block.
+- If W5 is a non-behavior prerequisite, S-P3 must bind it to W6/W7 in the same
+  committed plan and it cannot be a close-bearing wave. The first behavior
+  closure must show row movement or intrinsic-block proof. No orphan
+  `bbnf-regex`/resolver stage is admissible.
 
 Falsifiability gate:
 
@@ -243,6 +248,10 @@ Falsifiability gate:
   the live selection path, the resolver produces deterministic candidates, the
   selected row beats its strict comparator or improves measured margin, and all
   existing admitted rows stay admitted.
+- After the resolver wave, the hardcoded P1-P8 cascade is not an admissible
+  production fallback for JSON, CSS, Sheets, or BBNF-self rows. Any retained
+  compatibility path must fail closed with visible row rejection/non-admission
+  rather than silently winning through the old cascade.
 - Abrogate criteria: egraph OOM, CSP >1s per grammar, stale cost data on >30%
   of expressions, or any rewrite that drops required output fields. Abrogation
   must name architectural or implementation reason; implementation abrogation
@@ -431,6 +440,32 @@ Material differential:
   scalar reference, checkasm, and same-wave row movement. W4b is specifically
   differentiated by a proved CSS delimiter-run microbench and a required CSS
   production consumer.
+
+## Cost, Caps, And Concurrency Fold
+
+Hard caps:
+
+| Family / waves | Research | Plan | Redress | Notes |
+|---|---:|---:|---:|---|
+| E1 CSS W3/W4/W10.N | 20 min | 15 min | 30 min | One feature row per behavior gate unless S-P3 bundles rows under one measured gate. |
+| E2 GrammarConfig/value/sink | 20 min | 15 min | 30 min | Mostly precondition work; close-bearing only when consumed by CSS/JSON row gate. |
+| E3 decision-engine W5-W9 | 20 min | 15 min | 45 min | Addendum redress-cap amendment applies. W5 cannot be close-bearing infrastructure. |
+| E4 union C1/C2 | 20 min | 15 min | 30 min | Same-tape, codegen-private, row-consumed only. |
+| E4 C3 / W12 union-SIMD | 20 min | 15 min | 45 min | Uses the decision-engine/union-SIMD extended cap. |
+| E5 SIMD W4b/W11/W14 kernels | 20 min | 15 min | 30 min | Each primitive needs scalar reference, checkasm/parity, and same-wave row consumer. |
+
+Concurrency and conflict matrix:
+
+| Domain | Can parallelize with | Must serialize with |
+|---|---|---|
+| E1 CSS feature waves | Other CSS feature waves only when runtime, codegen, comparator artifacts, and gates are disjoint | RESULTS/REDRESS writes; shared CSS tokenizer or fact-stream schema edits; E2 prerequisite edits |
+| E2 GrammarConfig/value/sink | Read-only pass work | Most E1/E4 behavior waves until the exact policy surface is consumed and stable |
+| E3 W5-W9 decision fold | Non-overlapping CSS feature implementation after committed interfaces | W5-W9 internally unless S-P3 proves disjoint owner paths; `choose_backend_shape`/lowering/cost/CSP edits |
+| E4 union | CSS/JSON rows only after C1/C2/C3 owner paths are isolated | E2 policy tables; E3-selected shape ownership; public substrate-adjacent files |
+| E5 SIMD/ASM | CSS or JSON row consumers with disjoint kernel modules | Shared `bbnf-simd` dispatch, checkasm reports, RESULTS/REDRESS writes |
+
+G-Omega closes before any source implementation wave. RESULTS and REDRESS are
+single-writer ledgers even when redress worktrees run in parallel.
 
 ## Non-Shortlisted Items
 

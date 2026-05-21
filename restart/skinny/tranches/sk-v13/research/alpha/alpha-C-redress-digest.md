@@ -192,10 +192,16 @@ S-P3 should encode these as wave-gate obligations:
 
 - W10.N CSS waves: one per non-OUT_OF_SCOPE CSS parity feature not admitted,
   with strict equality vs lightningcss and independent oracle.
-- W11.N JSON direct waves: one per direct residual row unless admitted earlier;
-  each wave cites the prior REDRESS fixpoint and material differential.
+- W11.N JSON direct waves: one per direct row that does not satisfy
+  `Track 1 > sonic-rs strict Mbps + 1`, regardless of older `A / GO` or
+  `N-direct / NO-GO` rendering; each wave cites the prior REDRESS fixpoint
+  or older admission basis plus a material differential.
 - W14.N parse-only waves: all 17 parse-only rows become admission-eligible
   under strict-vs-strict comparator rules.
+- Real typed waves: all 17 `real_typed_struct` rows are mandatory G5
+  accounting. The seven rendered rows must satisfy the strict comparator-plus-one
+  rule or reopen; the 10 absent rows must become measured rows or carry
+  architectural-block proof.
 - Union wave(s): at least one material differential from 96/97/98, or an
   architectural-level intrinsic-block proof.
 - ASM/SIMD production split: `a64_ascii_set_run_skip` may proceed only as a
@@ -211,7 +217,7 @@ S-P3 should encode these as wave-gate obligations:
 | Admitted and carried forward | 77, 78, 79, 81, 85-87, 94, 95, 99-102, 104, 105, 107, 109, 110, 111, 121-125, 127 | Carry as baseline/evidence; do not treat proof-only entries as behavior admission. |
 | Rejected exact implementations | 16-18, 80, 82-84, 92, 93, 96-98, 103, 106, 108, 114-118 | Pre-block same shape; allow materially different reopen under pin. |
 | Category-unblocked historical blocks | 88/89/90, 96/97/98, 119/120 | History only at category level; exact implementations remain pre-blocked. |
-| Mandatory reopen set | 13 JSON direct residuals, 17 JSON parse-only rows, 23 CSS parity features after SK-V12 row | Must admit or intrinsic-block; REDRESS history is not closure authority. |
+| Mandatory reopen/accounting set | 51 JSON rows (17 `parse_only`, 17 `direct_to_struct`, 17 `real_typed_struct` including 10 absent typed rows) plus 23 CSS parity features after the SK-V12 row | Must admit or intrinsic-block; REDRESS history and old GO/slack outcomes are not closure authority under the addendum. |
 | Production-split route | 126 | Microbench proof is usable evidence, not production admission. |
 
 The SK-V13 redress posture is therefore aggressive but bounded: reopen rows and

@@ -102,32 +102,38 @@ awk -f restart/skinny/tranches/sk-v12/research/w1a/verify-skv12-json-floors.awk 
 
 ---
 
-## §4 13 N-Direct Residual Rows: Reopen Candidate Survey
+## §4 Direct-Plane Residual Rows: Priority And Risk Survey
 
-Per REDRESS-119 (SK-V11 W8 direct fixpoint), all 13 rows have measured uncloseable proofs tied to W3–W7 attempted routes. Under SK-V12's **unblocked USER PIN D3 (union substrate) + D4 (ASM-gen)**, assess whether the unblocked routes open fresh differential evidence.
+Per REDRESS-119 (SK-V11 W8 direct fixpoint), the prior 13 residual rows have
+measured uncloseable proofs tied to W3-W7 attempted routes. The 2026-05-21
+addendum lifts that fixpoint as closure authority: all 17 direct rows remain
+G5 accounting, including older `A / GO` rows that do not satisfy
+`Track 1 > sonic-rs strict Mbps + 1`. This matrix is therefore priority/risk
+triage for S-P1/S-P3, not eligibility or close authority.
 
-### Reopen Candidate Matrix
+### Direct Priority Matrix
 
-| Row | Fixpoint Route LCA (REDRESS) | Prior Gap Route | Unblocked Pin Category | Fresh SK-V13 S-P1 Evidence Needed | Reopenable |
-|---|---|---|---|---|---|
-| twitter/direct | W5 string-span (REDRESS-116) + W7 digest (REDRESS-118) | output_digest_hash optimization | D4 ASM-gen for hash u64x2 | Samply hot-leaf; microbench u64x2_aarch64 vs scalar; parity proof | YES (modest ROI) |
-| canada/direct | W3 numeric rejected (REDRESS-108) | container_dispatch unroll | D3 union-substrate | Fresh W3 numeric_span_emit_slot on pin; samply; comparison to mesh W3 rejection | CONDITIONAL |
-| github_events/direct | W5 string-span blocked; W7 digest | dispatch_unroll_x2 | D4 ASM-gen | Samply callstack; microbench dispatch tail unroll; parity | YES (modest) |
-| update_center/direct | W5 string-span blocked; W7 digest | hash_u64x2_simd | D4 ASM-gen | Samply; u64x2 microbench; parity | YES (modest) |
-| mesh/direct | W3 measured rejected | number_span_emit_slot | D3 union-substrate | Fresh W3 rerun (prior showed 3835/3614 vs 8675); samply | NO (prior hard rejection) |
-| random/direct | W4/W5/W7 blocked | container_tail_next probe | D3/D4 combined | Fresh probe + samply; unlikely <7878 closure | NO (unlikely) |
-| gsoc-2018/direct | W5/W7 movemask/string blocked | no clear kernel route | D3/D4 | Samply shows sparse artifact-only profile; no kernel candidate clear | NO (sparse profile) |
-| instruments/direct | W0-clamped (no W3–W8 provenance) | no authority | D3/D4 | Fresh full profile + Criterion; requires back-filling W0 clamping excuse | NO (no prior proof) |
-| numbers/direct | W0-clamped; W3 numeric rejected | no authority | D3/D4 | Fresh full profile; back-fill W0 clamping | NO (no prior proof) |
-| unicode_mixed/direct | W6 decoded-source blocked; W0-clamped | no kernel route | D3/D4 | Fresh samply; unlikely given 7.454 c/B vs 2.588 floor | NO (wide gap) |
-| unicode_escapes/direct | W5/W6 proof-only limits | no kernel route | D3/D4 | Fresh samply; no kernel route visible | NO (no route) |
-| distinct_values/direct | W5 string blocked; W7 digest | no kernel route | D3/D4 | Fresh samply; digest insufficient | NO (no route) |
-| y_string_unicode/direct | W5/W6 proof-only limits | no kernel route | D3/D4 | Fresh samply; escape-heavy (6849.9 i/B) shows no kernel opportunity | NO (no route) |
+| Row | Prior evidence | Candidate differential | Fresh SK-V13 S-P1 evidence needed | Priority / risk |
+|---|---|---|---|---|
+| twitter/direct | W5 string-span (REDRESS-116) + W7 digest (REDRESS-118) | D4 ASM-gen `output_digest_hash` u64x2 | Samply hot-leaf; microbench `u64x2_aarch64` vs scalar; parity proof | first-wave candidate / modest gap |
+| canada/direct | W3 numeric rejected (REDRESS-108) | D3 union-substrate or numeric/container dispatch from resolver | Fresh numeric/container hot-leaf profile; compare to mesh W3 rejection | reopenable / high risk |
+| github_events/direct | W5 string-span blocked; W7 digest | D4 dispatch unroll/tail optimization | Samply callstack; dispatch tail-unroll microbench; parity | first-wave candidate / modest gap |
+| update_center/direct | W5 string-span blocked; W7 digest | D4 hash u64x2 SIMD | Samply; u64x2 microbench; parity | first-wave candidate / modest gap |
+| mesh/direct | W3 measured rejected | D3 per-rule union or resolver-selected numeric span | Fresh W3-style rerun only if W5-W9 creates a materially different route | reopenable / prior hard rejection |
+| random/direct | W4/W5/W7 blocked | D3/D4 container-tail probe or resolver-selected branch layout | Fresh probe + samply after resolver candidate generation | reopenable / low prior ROI |
+| gsoc-2018/direct | W5/W7 movemask/string blocked | D3/D4 sparse structural route from resolver | Fresh profile; require concrete kernel from W5-W12 output | reopenable / sparse profile |
+| instruments/direct | W0-clamped; no W3-W8 provenance | D3/D4 after full profile | Fresh full profile + Criterion; back-fill W0 clamping rationale | reopenable / evidence debt |
+| numbers/direct | older A/GO but misses addendum bar | D4 UDOT/digit path or resolver-selected numeric direct | Fresh numeric hot-leaf profile; strict comparator-plus-one check | reopenable / old admission insufficient |
+| unicode_mixed/direct | W6 decoded-source blocked; W0-clamped | D4 string/unescape route only if W5-W12 emits one | Fresh samply; check escape/string hot leaves against wide gap | reopenable / wide gap |
+| unicode_escapes/direct | W5/W6 proof-only limits | D4 string/unescape route from resolver/SIMD | Fresh samply; micro-prove escape route before wave scope | reopenable / route absent until W5-W12 |
+| unicode_basic/direct | older A/GO but misses addendum bar | D4 string-special or sink dispatch cleanup | Fresh profile; strict comparator-plus-one check | reopenable / old admission insufficient |
+| distinct_values/direct | W5 string blocked; W7 digest | D3/D4 route from resolver or string-special scan | Fresh samply; digest-only routes insufficient | reopenable / route absent until W5-W12 |
+| y_string_unicode/direct | W5/W6 proof-only limits | D4 escape/string route from resolver/SIMD | Fresh samply; escape-heavy profile requires concrete kernel | reopenable / route absent until W5-W12 |
 
-**Reopen Candidates**: **3 rows** with modest fresh ASM/union differential potential:
-1. **twitter/direct** — output_digest_hash u64x2 SIMD candidate
-2. **github_events/direct** — dispatch unroll/tail optimization
-3. **update_center/direct** — hash u64x2 SIMD candidate
+**First priority candidates** remain `twitter`, `github_events`, and
+`update_center`, because the pre-addendum audit already names modest fresh
+ASM/dispatch differentials. The other direct rows are not pre-blocked; they are
+lower-priority or higher-risk until W5-W12 produce fresh material routes.
 
 ---
 

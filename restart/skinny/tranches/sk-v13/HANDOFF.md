@@ -146,6 +146,15 @@ Return REVISE for any downstream plan that:
 - leaves any CSS feature `PARTIAL` at close;
 - adds support-only primitives, union substrates, resolver infrastructure, or
   codegen paths without a same-wave measured consumer;
+- inherits weaker scoping labels (`optional`, `fallback`, `diagnostic`,
+  `support-only`, `scaffold-only`, or `future-tranche`) for pinned CSS/JSON/G2-G7
+  work instead of converting them to admitted row targets, architectural-block
+  proofs, or user re-pin issues;
+- authorizes a new directive, BIR variant, `BackendShape`, public substrate API,
+  or grammar-specific generic behavior through SPEC-local wording;
+- lets the hardcoded P1-P8 cascade silently serve JSON/CSS/Sheets/BBNF-self rows
+  after the resolver fold rather than failing closed with visible
+  rejection/non-admission;
 - allows source/gate edits without telemetry and rolling delta updates;
 - closes a tranche with implementation-limited misses instead of full ADMIT,
   architectural-block proof, or immediate bracket to the next tranche.

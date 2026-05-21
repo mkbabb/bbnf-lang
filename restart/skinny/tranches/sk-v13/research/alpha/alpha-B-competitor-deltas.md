@@ -1,12 +1,12 @@
 # Alpha-B Competitor Deltas: SK-V13 Pass Alpha
 
-Scope: competitor deltas available at HEAD for the SK-V12 close feeding SK-V13. Required comparator accounting is strict: unavailable comparator cells are coverage debt, not wins. The binding addendum raises the SK-V13 target to full CSS L4 lightningcss parity: 24 features total, 23 remaining after the single admitted declaration-values row; JSON close accounting targets 51 JSON rows, each requiring Track 1 to beat sonic-rs strict by >=1 Mbps or carry an architectural intrinsic-block proof.
+Scope: competitor deltas available at HEAD for the SK-V12 close feeding SK-V13. Required comparator accounting is strict: unavailable comparator cells are coverage debt, not wins. The binding addendum raises the SK-V13 target to full CSS L4 lightningcss parity: 24 features total, 23 remaining after the single admitted declaration-values row; JSON close accounting targets 51 JSON rows, each requiring Track 1 to be greater than `sonic-rs strict Mbps + 1` or carry an architectural intrinsic-block proof.
 
 ## Sources
 
 | Source | Use |
 |---|---|
-| `restart/prompts/pass-contracts/PASS-ALPHA.md:31-35`, `:76-123` | Alpha-B scope and required comparator schema. |
+| `restart/prompts/pass-contracts/PASS-ALPHA.md:23`, `:64-75`, `:77-110` | Alpha-B scope, strict comparator gate, and required telemetry schema. |
 | `restart/skinny/CAMPAIGN-CLOSE-SK-V12-V12.md:12-21` | SK-V12 admitted CSS row, cssparser/lightningcss numbers, margin, equality. |
 | `skinny/RESULTS.md:3-46`, `:94`, `:146-148` | Current JSON/CSS benchmark table, manifest CSS comparator row, Track 1/Track 2 definitions. |
 | `restart/skinny/tranches/sk-v13/scoping/sk-v13-scoping-css-parity-gap.md:13-18`, `:56-90`, `:96-130` | CSS admitted scope and lightningcss parity gap surface. |
@@ -35,7 +35,7 @@ Citation: close row in `CAMPAIGN-CLOSE-SK-V12-V12.md:12-21`; manifest comparator
 
 ## JSON Direct vs sonic-rs Strict
 
-Only 3/17 direct rows beat sonic-rs strict by >=1 Mbps. Rows marked `miss` need an architectural intrinsic-block proof to satisfy the binding; GO verdicts that do not beat sonic are still misses under the new strict delta rule.
+Only 3/17 direct rows satisfy `Track 1 > sonic-rs strict Mbps + 1`. Rows marked `miss` need an architectural intrinsic-block proof or a later admission to satisfy the binding; GO verdicts that do not clear the strict comparator-plus-one boundary are still misses under the new rule.
 
 | Corpus | Track 1 | sonic strict | Delta Mbps | Delta % | RESULTS cite | Binding status |
 |---|---:|---:|---:|---:|---|---|
@@ -59,7 +59,7 @@ Only 3/17 direct rows beat sonic-rs strict by >=1 Mbps. Rows marked `miss` need 
 
 ## JSON Typed vs sonic-rs Strict
 
-Available typed rows: 7/17. Six beat sonic-rs strict by >=1 Mbps. `update_center` is a miss despite its GO verdict because the binding requires the sonic strict delta or intrinsic-block proof.
+Available typed rows: 7/17. Six satisfy `Track 1 > sonic-rs strict Mbps + 1`. `update_center` is a miss despite its GO verdict because the binding requires the strict comparator-plus-one boundary or intrinsic-block proof.
 
 | Corpus | Track 1 | sonic strict | Delta Mbps | Delta % | RESULTS cite | Binding status |
 |---|---:|---:|---:|---:|---|---|
@@ -75,7 +75,7 @@ Coverage debt: typed comparator rows are not available at HEAD for `canada`, `ra
 
 ## JSON parse_only Comparator Availability and Deltas
 
-`parse_only` is now admission-eligible by binding addendum. Current HEAD has sonic-rs strict for all 17 rows. Five rows beat sonic-rs strict by >=1 Mbps: `citm_catalog`, `canada`, `mesh`, `marine_ik`, `numbers`. All n/a comparator cells below are coverage debt.
+`parse_only` is now admission-eligible by binding addendum. Current HEAD has sonic-rs strict for all 17 rows. Five rows satisfy `Track 1 > sonic-rs strict Mbps + 1`: `citm_catalog`, `canada`, `mesh`, `marine_ik`, `numbers`. All n/a comparator cells below are coverage debt.
 
 | Corpus | Track 1 | sonic strict | Delta sonic | simdjson DOM delta | yyjson delta | RapidJSON delta | Binding status | RESULTS cite |
 |---|---:|---:|---:|---:|---:|---:|---|---|
@@ -102,6 +102,6 @@ Comparator availability on `parse_only`: sonic-rs strict 17/17, sonic-rs lossy 1
 ## Admission Implications
 
 1. CSS has a real strict same-plane win over lightningcss/cssparser for the single admitted declaration-values row, but the new binding converts the rest of CSS L4 into parity debt: 23 of 24 feature families remain.
-2. JSON direct is still the weak plane: 14/17 direct rows miss sonic strict by the new >=1 Mbps rule.
+2. JSON direct is still the weak plane: 14/17 direct rows miss sonic strict by the new strict comparator-plus-one rule.
 3. JSON typed is promising but under-covered: 6/7 available rows beat sonic strict, 1 misses, and 10 typed rows are missing at HEAD.
 4. `parse_only` has five admission-eligible beats over sonic strict, but most non-sonic comparator columns are partial or absent; n/a cells must drive SK-V13 telemetry expansion rather than inflate win counts.

@@ -144,6 +144,7 @@ The direct V2 profile materially changes the S-P1 state relative to V1:
 - `/tmp/skv13-p1-v2/summary/hotleaf_top20.tsv`
 - `restart/skinny/tranches/sk-v13/research/p1/support/evidence-ledger-v3.md`
 - `restart/skinny/tranches/sk-v13/research/p1/support/profile-provenance-v3.md`
+- `restart/skinny/tranches/sk-v13/research/p1/support/summarize_profile_rows.py`
 - `/tmp/skv13-p1/pmu/pmu_rows.tsv` and V1 typed samply profiles for the seven existing typed rows
 - `restart/prompts/skinny/PASS-1-PROFILE.md`
 - `skinny/RESULTS.md`

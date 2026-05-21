@@ -146,6 +146,7 @@ prior-tranche delta. V2 closes the V1 P1-C coverage defect:
 - `restart/skinny/tranches/sk-v13/research/p1/support/mode3-harness-provenance.md`
 - `restart/skinny/tranches/sk-v13/research/p1/support/evidence-ledger-v3.md`
 - `restart/skinny/tranches/sk-v13/research/p1/support/profile-provenance-v3.md`
+- `restart/skinny/tranches/sk-v13/research/p1/support/summarize_profile_rows.py`
 - `restart/prompts/skinny/PASS-1-PROFILE.md`
 - `skinny/RESULTS.md`
 - `skinny/REDRESS.md`

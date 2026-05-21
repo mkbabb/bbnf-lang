@@ -147,5 +147,6 @@ gate-consumed strict comparator workflow in later waves.
 - `/tmp/skv13-p1-v2/summary/mode3_summary.tsv`
 - `restart/skinny/tranches/sk-v13/research/p1/support/evidence-ledger-v3.md`
 - `restart/skinny/tranches/sk-v13/research/p1/support/profile-provenance-v3.md`
+- `restart/skinny/tranches/sk-v13/research/p1/support/summarize_profile_rows.py`
 - `skinny/RESULTS.md`
 - `skinny/REDRESS.md`

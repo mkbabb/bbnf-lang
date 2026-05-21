@@ -150,7 +150,7 @@ All 17 rows remain `S / NO-GO` in the checked-in report even where Track 1 excee
 - Run id/build identity: `/tmp/skv13-p1/artifacts/identity.txt`; commit `f8be692068e9e464b6ed24027ab26edfd05303fd`; timestamp `2026-05-21T06:01:45Z`.
 - V2 fold identity: `/tmp/skv13-p1-v2/artifacts/identity.txt`; head `7ee299096be7d7fdaa0e69344a6cd18bbd55524f`; no `skinny/crates/` source delta from the parse capture.
 - V3 canonical evidence ledger: `restart/skinny/tranches/sk-v13/research/p1/support/evidence-ledger-v3.md`.
-- V3 profile provenance: `restart/skinny/tranches/sk-v13/research/p1/support/profile-provenance-v3.md`.
+- V4 profile provenance and durable harness rebuilds: `restart/skinny/tranches/sk-v13/research/p1/support/profile-provenance-v3.md`.
 - Samply status ledger: `/tmp/skv13-p1/samply/capture_status.tsv`.
 - Samply run script: `/tmp/skv13-p1/samply/run-samply.sh`.
 - Samply profile root: `/tmp/skv13-p1/samply/profiles/`.

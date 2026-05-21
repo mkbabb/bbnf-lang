@@ -1,6 +1,6 @@
-# SK-V13 S-P1 V3 Profile Provenance
+# SK-V13 S-P1 V4 Profile Provenance
 
-Pass: S-P1 Profile. Cycle: V3 fold support.
+Pass: S-P1 Profile. Cycle: V4 fold support.
 Date: 2026-05-21.
 Scope: durable build/run provenance for retained S-P1 profile captures.
 Output: this file.
@@ -96,6 +96,9 @@ awk -F '\t' 'NR>1{n++; bad+=($4!=0)} END{print n,bad+0}' \
 
 ## V2 CSS Declaration-Values Capture
 
+The V4 fold preserves a checked-in, repo-relative source snapshot at
+`restart/skinny/tranches/sk-v13/research/p1/support/harnesses/css_profiler/`.
+
 Build:
 
 ```bash
@@ -104,7 +107,7 @@ RUSTFLAGS='-C target-cpu=native' \
 cargo build --release --manifest-path /tmp/skv13-css-profiler/Cargo.toml
 ```
 
-Binary/source hashes:
+Original binary/source hashes:
 
 | Path | SHA-256 |
 |---|---|
@@ -112,6 +115,29 @@ Binary/source hashes:
 | `/tmp/skv13-css-profiler/Cargo.lock` | `21c3911e49fe218f8a3c3f369781c2031939578b7f3b119d24c87f7159452fae` |
 | `/tmp/skv13-css-profiler/src/main.rs` | `89e8aa6296af3facaee66aec41eaf7154966d800f2955f4482c14dc5f2cfff78` |
 | `/tmp/skv13-css-profiler-target-v2/release/skv13-css-profiler` | `46b88b7e85ce126cfe9d5423b49e5560e63b75a9a66d08e987adc401efaea2a9` |
+
+Checked-in V4 source hashes:
+
+| Path | SHA-256 |
+|---|---|
+| `support/harnesses/css_profiler/Cargo.toml` | `60105f515aa6f7ea66ff9ef0028d7cd9759d4498956ae34ea7af6ebffc91abfd` |
+| `support/harnesses/css_profiler/Cargo.lock` | `21c3911e49fe218f8a3c3f369781c2031939578b7f3b119d24c87f7159452fae` |
+| `support/harnesses/css_profiler/src/main.rs` | `89e8aa6296af3facaee66aec41eaf7154966d800f2955f4482c14dc5f2cfff78` |
+
+Checked-in V4 rebuild command:
+
+```bash
+CARGO_TARGET_DIR=/tmp/skv13-css-profiler-target-v4 \
+RUSTFLAGS='-C target-cpu=native' \
+cargo build --release \
+  --manifest-path restart/skinny/tranches/sk-v13/research/p1/support/harnesses/css_profiler/Cargo.toml
+```
+
+Verified V4 rebuild binary hash:
+
+| Path | SHA-256 |
+|---|---|
+| `/tmp/skv13-css-profiler-target-v4/release/skv13-css-profiler` | `46b88b7e85ce126cfe9d5423b49e5560e63b75a9a66d08e987adc401efaea2a9` |
 
 Throughput/equality command:
 
@@ -134,11 +160,18 @@ Criterion close.
 
 ## Offline Sidecar Extraction
 
-Checked-in reproducer:
+Checked-in top-leaf reproducer:
 
 ```bash
 SKV13_P1_ROOT=/tmp/skv13-p1-v2 \
 python3 restart/skinny/tranches/sk-v13/research/p1/support/extract_hotleaf_top20.py
+```
+
+Checked-in direct/mode-III summary reproducer:
+
+```bash
+SKV13_P1_ROOT=/tmp/skv13-p1-v2 \
+python3 restart/skinny/tranches/sk-v13/research/p1/support/summarize_profile_rows.py
 ```
 
 Original temp extractor hash:
@@ -149,3 +182,11 @@ Original temp extractor hash:
 
 The extracted TSVs remain under `/tmp/skv13-p1-v2/summary/` and are referenced
 as measurement artefacts, not committed benchmark outputs.
+
+Summary output hashes after V4 regeneration:
+
+| Path | SHA-256 |
+|---|---|
+| `/tmp/skv13-p1-v2/summary/hotleaf_top20.tsv` | `34208692e49dd9ad7c6d17d70621caf631da553009faa418a241f61e140cbea2` |
+| `/tmp/skv13-p1-v2/summary/direct_summary.tsv` | `dce9264f4b7ea6a6a45d759e1a10dad49d632e1784dedf096f8a0b05af547043` |
+| `/tmp/skv13-p1-v2/summary/mode3_summary.tsv` | `4cbb893e802237316eb039ee9dde31e9c6f2988d5899e28e58c0cc79710cd94b` |

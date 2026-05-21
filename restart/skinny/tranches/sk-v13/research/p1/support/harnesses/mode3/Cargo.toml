@@ -1,0 +1,12 @@
+[package]
+name = "skv13-mode3-profiler"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+
+[dependencies]
+libc = "0.2"
+serde_json = "1"
+runtime = { path = "../../../../../../../../../skinny/crates/runtime", features = ["bench-counters"] }
+bbnf-bench = { path = "../../../../../../../../../skinny/crates/bbnf-bench" }

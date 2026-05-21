@@ -243,7 +243,7 @@ is unchanged. Guard misses require REDRESS disposition.
 | W2 | Section 5 | `escape_mask_64` Correctness Prerequisite | Conditional on W1a close; blocks SIMD admission | <=180 hand/test | high | <=30 min |
 | W1b-1 | Section 6 | CSS L4 Generated Track 1 + Independent Oracle Scaffold | Conditional on W1a close; scalar-only unless W2 PASS | <=360 hand; generated output named separately | high | <=30 min |
 | W1b-2a | Section 7.1 | CSS L4 Lightningcss Comparator + Criterion Row | Conditional on W1b-1 close | <=220 hand/test; generated output named separately | high | <=30 min |
-| W1b-2b | Section 7.2 | CSS L4 Lightningcss SOTA Report + Admission Gate | Conditional on W1b-2a close | <=220 report/gate/test | high | <=30 min |
+| W1b-2b | Section 7.2 | CSS L4 Lightningcss SOTA Report + Admission Gate | Conditional on W1b-2a close | <=330 report/gate/test (CHALLENGE V2 budget correction) | high | <=30 min |
 | W3 | Section 8 | CSS-Local Same-Tape Union Attempt | Conditional on W1b-2b measured CSS row + CHALLENGE | <=420 hand; generated output named separately | high | <=30 min |
 | W4 | Section 9 | ASM-Gen CSS Consumer + AArch64 Orphan Disposition | Conditional on W1b-2b + W2 + CHALLENGE | <=430 hand/test/gate | high | <=30 min |
 | W5 | Section 10 | Close And Alpha Feedback | Conditional on W0, W1a, W2, W1b-1, W1b-2a, W1b-2b, W4, and conditional W3 disposition | <=140 docs/report/gate; 0 behavior | medium | <=30 min |

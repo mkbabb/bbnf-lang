@@ -1,0 +1,16 @@
+{
+  "schema_id": "sk-v12-w4-delimiter-find-microbench-v1",
+  "wave_id": "SK-V12-W4",
+  "selected_candidate": "a64_ascii_set_run_skip",
+  "caller_api": "find_ascii_set_member64",
+  "delimiter_set_hex": "7b7d3b",
+  "fixture_sha256": "cbb639460a72ef82e7c1b7c53ccc69495a35f6860b29ad72370b042b470d7374",
+  "synthetic_windows_sha256": "1e156290050a175fc467bf085372ff16266e8df7d0a9aecd5d5906f32bc3b312",
+  "sample_count": 4988928,
+  "scalar_ns_per_iter": 18.510497846,
+  "candidate_ns_per_iter": 3.923145814,
+  "candidate_speedup_ratio": 4.718279341,
+  "threshold_speedup_ratio": 1.01,
+  "parity_status": "pass",
+  "decision": "pass"
+}

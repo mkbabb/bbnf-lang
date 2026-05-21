@@ -3762,3 +3762,59 @@ perturbation.
   demotion, or `RESULTS.md` edit. The measured CSS ADMIT candidate satisfies
   the USER PIN numeric bar; SK-V12 close still requires W5 reconciliation and
   the remaining JSON/orphan/close-document dispositions.
+
+## SK-V12 Wave 4 CSS Delimiter ASM Microbench Route
+
+- Item 126 closes W4 under `G-W4-ASM-GEN-CONSUMER` as
+  `ROUTE-PRODUCTION-SPLIT`, not as CSS ADMIT, not as production SIMD/ASM
+  admission, and not as `RESULTS.md` movement. PLAN-V4's accepted default
+  branch was pre-production microbench-only; a passing microbench requires W4
+  to halt before production CSS wiring and route a separately planned
+  production/gate split.
+- W4 adds caller-level checkasm/parity for
+  `find_ascii_set_member64(bytes, cursor, end, b"{};")` in
+  `skinny/crates/bbnf-simd/tests/checkasm_ascii_set_member_find_64.rs`. The
+  scalar reference byte-walk is compared against the existing
+  `bbnf_simd::prim::byte_class_from_eq_set_64` dispatch surface, covering
+  cursor/end/tails, no-hit windows, first-hit lanes, duplicate delimiter sets,
+  high-bit bytes, the frozen CSS fixture, adversarial seeds
+  `0xCAFEF00DBAADF00D`, `0x5441424c455f3634`, and `0xDEADBEEF12345678`, and
+  source immutability. The test file is 191 physical lines against the PLAN-V4
+  cap of 220.
+- Native release verification passed with the cargo manifest flag in the
+  subcommand position required by Cargo:
+  `BBNF_SIMD_STRICT=1 SKV12_W4_MICROBENCH_OUT=/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v12/research/w4/w4-delimiter-find-microbench.json RUSTFLAGS="-C target-cpu=native" cargo test --manifest-path skinny/Cargo.toml -p bbnf-simd --release --test checkasm_ascii_set_member_find_64 -- --nocapture`.
+  The earlier PLAN-V4 spelling with `cargo --manifest-path ... test` failed
+  before compilation with Cargo usage error `unexpected argument
+  '--manifest-path'`; no source or artifact was produced by that failed
+  invocation.
+- The emitted microbench artifact is
+  `restart/skinny/tranches/sk-v12/research/w4/w4-delimiter-find-microbench.json`.
+  It records schema `sk-v12-w4-delimiter-find-microbench-v1`, fixture SHA-256
+  `cbb639460a72ef82e7c1b7c53ccc69495a35f6860b29ad72370b042b470d7374`,
+  synthetic-window SHA-256
+  `1e156290050a175fc467bf085372ff16266e8df7d0a9aecd5d5906f32bc3b312`,
+  sample count `4988928`, scalar `18.510497846 ns/iter`, candidate
+  `3.923145814 ns/iter`, speedup ratio `4.718279341`, threshold `1.01`,
+  parity `pass`, and decision `pass`.
+- Because the decision is `pass`, W4 did not wire the primitive into generated
+  CSS, did not claim strict CSS fact-stream equality, and did not claim a
+  same-wave production consumer. The routed production split must separately
+  own CSS template/runtime wiring, W4-current report/gate, Lock 14 parent
+  authorization, fresh Criterion/equality artifacts, and any W2 prerequisite
+  rerun.
+- Orphan disposition is recorded in
+  `restart/skinny/tranches/sk-v12/research/w4/orphan-disposition.md`.
+  The five W4 orphan rows close as `inventory_demoted_with_evidence`:
+  `bitmap_prefix_xor_64`, `bitmap_next_set_bit`, `bulk_emit_positions_64`,
+  `byte_context`, and `cache_hints`. The selected
+  `a64_ascii_set_run_skip` candidate is accounted separately from the five-row
+  orphan set. Final W4 orphan count is `0`.
+- Default-branch no-touch proof for JSON/report/gate/Lock 14/RESULTS roots
+  passed: `git status --short -- skinny/crates/runtime/src/grammars/json
+  skinny/crates/codegen/src/json_templates skinny/crates/bbnf-bench/src/report.rs
+  skinny/crates/bbnf-bench/src/bin/gate.rs
+  skinny/crates/bbnf-bench/src/lock14_baseline.rs skinny/RESULTS.md` printed
+  no paths. W4 therefore adds no new BBNF directive, BIR variant,
+  `BackendShape`, public substrate API, x86 work, JSON guard demotion,
+  production CSS wiring, or `RESULTS.md` edit.

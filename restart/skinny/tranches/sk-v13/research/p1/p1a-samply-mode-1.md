@@ -1,14 +1,22 @@
 # SK-V13 P1-A: Samply Mode I Parse-Only Profile
 
-Pass: S-P1 Profile. Cycle: V13.
+Pass: S-P1 Profile. Cycle: V13 / S-P1 V2 fold.
 Date: 2026-05-21.
 Scope: samply profiling mode I, cold per-parse `parse_only` workload, Track 1 generated JSON and Track 2 independent hand JSON parser, all 17 JSON corpora.
 Output: this file.
-Baseline: SK-V13-open (f8be692068e9e464b6ed24027ab26edfd05303fd).
+Baseline: SK-V13-open (parse capture `f8be692068e9e464b6ed24027ab26edfd05303fd`; V2 fold head `7ee299096be7d7fdaa0e69344a6cd18bbd55524f`, with no `skinny/crates/` source delta).
 Host triple: aarch64-apple-darwin.
 Build flags: release profile, debug=true, split-debuginfo=packed, LTO profile per `skinny/Cargo.toml`; profiling binary root `/tmp/skv13-profile-target-0a7b41c5/release`; native target CPU per SK profile scripts.
 Profile tool: samply 0.13.1, `samply record --save-only --unstable-presymbolicate -r 1000`; PMU cross-check from proc_pid_rusage rows in `/tmp/skv13-p1/pmu/pmu_rows.tsv`.
 Corpus coverage: 17/17.
+
+V2 fold note: the S-P1 V1 challenge did not reject parse corpus coverage; it
+rejected direct panic captures, absent mode-III coverage, missing CSS
+hot-leaf evidence, and unresolved counter exports. This artefact therefore
+retains the V1 parse-only capture as the parse authority, with the limitation
+that it remains a save-only/offline-symbolicated samply profile. The source
+tree under `skinny/crates/` did not change between the parse capture and the
+V2 profile fold.
 
 ## §1 - Method (commands run; verbatim, reproducible)
 
@@ -130,6 +138,7 @@ All 17 rows remain `S / NO-GO` in the checked-in report even where Track 1 excee
 ## §5 - Sources (every artefact path + run id)
 
 - Run id/build identity: `/tmp/skv13-p1/artifacts/identity.txt`; commit `f8be692068e9e464b6ed24027ab26edfd05303fd`; timestamp `2026-05-21T06:01:45Z`.
+- V2 fold identity: `/tmp/skv13-p1-v2/artifacts/identity.txt`; head `7ee299096be7d7fdaa0e69344a6cd18bbd55524f`; no `skinny/crates/` source delta from the parse capture.
 - Samply status ledger: `/tmp/skv13-p1/samply/capture_status.tsv`.
 - Samply run script: `/tmp/skv13-p1/samply/run-samply.sh`.
 - Samply profile root: `/tmp/skv13-p1/samply/profiles/`.

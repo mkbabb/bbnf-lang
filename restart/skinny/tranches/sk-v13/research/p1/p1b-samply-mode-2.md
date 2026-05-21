@@ -1,154 +1,135 @@
 # SK-V13 P1-B: Samply Mode II Product-Plane Profile
 
-Pass: S-P1 Profile. Cycle: V13.
+Pass: S-P1 Profile. Cycle: V13 / S-P1 V2 fold.
 Date: 2026-05-21.
 Scope: samply profiling mode II, cold per-parse `direct_to_struct` plus `real_typed_struct` workloads.
 Output: this file.
-Baseline: SK-V13-open (f8be692068e9e464b6ed24027ab26edfd05303fd).
+Baseline: SK-V13-open (`7ee299096be7d7fdaa0e69344a6cd18bbd55524f`; source-equivalent to the V1 profile binary for `skinny/crates/`).
 Host triple: aarch64-apple-darwin.
-Build flags: release profile, debug=true expectation; profiling binary root `/tmp/skv13-profile-target-0a7b41c5/release`; capture identity records no complete build command or RUSTFLAGS.
-Profile tool: samply 0.13.1, `samply record --save-only --unstable-presymbolicate -r 1000`; PMU/proc_pid_rusage cross-check from `/tmp/skv13-p1/pmu/pmu_rows.tsv`.
-Corpus coverage: direct PMU 17/17; direct samply 0/17 valid hot-leaf profiles because the workload panicked before timed parsing; typed samply/PMU 7/17 supported generated typed rows.
+Build flags: release profile, `debug=true`, `RUSTFLAGS="-C target-cpu=native"`, target dir `/tmp/skv13-profile-target-v2`.
+Profile tool: samply 0.13.1, `samply record --save-only --unstable-presymbolicate -r 1000`; offline symbol resolution via `.json.syms.json`.
+Corpus coverage: direct samply 17/17 Track 1 + Track 2, 0 bad return codes; typed evidence retained from V1 for the 7 generated typed rows.
 
 ## §1 - Method (commands run; verbatim, reproducible)
 
 Identity:
 
 ```bash
-cat /tmp/skv13-p1/artifacts/identity.txt
-# root=/tmp/skv13-p1
-# bin=/tmp/skv13-profile-target-0a7b41c5/release
-# commit=f8be692068e9e464b6ed24027ab26edfd05303fd
-# date=2026-05-21T06:01:45Z
+cat /tmp/skv13-p1-v2/artifacts/identity.txt
+# root=/tmp/skv13-p1-v2
+# repo=/Users/mkbabb/Programming/bbnf-lang
+# head=7ee299096be7d7fdaa0e69344a6cd18bbd55524f
+# date=2026-05-21T06:56:28Z
 ```
 
-Direct and typed samply capture inventory:
+Build:
 
 ```bash
-awk -F '\t' 'NR==1 || $1=="direct" || $1=="typed" {print}' \
-  /tmp/skv13-p1/samply/capture_status.tsv
-
-sed -n '1,80p' /tmp/skv13-p1/samply/logs/direct__twitter__track1.log
-sed -n '1,80p' /tmp/skv13-p1/samply/logs/typed__twitter__real_typed_track1.log
+cd /Users/mkbabb/Programming/bbnf-lang/skinny
+CARGO_TARGET_DIR=/tmp/skv13-profile-target-v2 \
+RUSTFLAGS='-C target-cpu=native' \
+cargo build --release -p bbnf-bench --bin profile_direct --bin xctrace_probe
 ```
 
-PMU cross-check:
-
-```bash
-awk -F '\t' 'NR==1 || ($1=="direct" && ($3=="track1" || $3=="track2" || $3=="sonic")) || \
-  ($1=="typed" && ($3=="real_typed_track1" || $3=="real_typed_track2" || $3=="real_typed_sonic")) {print}' \
-  /tmp/skv13-p1/pmu/pmu_rows.tsv
-```
-
-Representative samply commands from `/tmp/skv13-p1/samply/capture_status.tsv`:
+Direct capture loop:
 
 ```bash
 samply record --save-only --unstable-presymbolicate -r 1000 \
-  -o /tmp/skv13-p1/samply/profiles/direct__twitter__track1.json.gz \
-  /tmp/skv13-profile-target-0a7b41c5/release/profile_direct 3000 twitter track1
-
-samply record --save-only --unstable-presymbolicate -r 1000 \
-  -o /tmp/skv13-p1/samply/profiles/typed__twitter__real_typed_track1.json.gz \
-  /tmp/skv13-profile-target-0a7b41c5/release/profile_direct 2000 twitter real_typed_track1
+  -o /tmp/skv13-p1-v2/samply/profiles/direct__${corpus}__${mode}.json.gz \
+  /tmp/skv13-profile-target-v2/release/profile_direct 3000 "${corpus}" "${mode}"
 ```
 
-The direct samply status rows have `rc=0` at the samply wrapper level, but
-their workload logs show `profile_direct` panicked before the timed loop. The
-PMU direct rows are valid because those were captured through `xctrace_probe`,
-not the failing samply direct wrapper.
+Status/reproduction checks:
+
+```bash
+awk -F '\t' 'NR>1{n++; bad+=($4!=0)} END{print n,bad+0}' \
+  /tmp/skv13-p1-v2/samply/direct_capture_status.tsv
+# 34 0
+
+find /tmp/skv13-p1-v2/samply/profiles -name 'direct__*.json.gz' | wc -l
+# 34
+find /tmp/skv13-p1-v2/samply/profiles -name 'direct__*.json.syms.json' | wc -l
+# 34
+```
+
+The V1 blocker was a command quoting bug: `profile_direct` received literal
+quoted corpus names and panicked before the timed loop. V2 passes corpus names
+as real argv entries; every direct log contains `profile-direct: starting timed
+loop` and a `PROBE_RESULT`.
 
 ## §2 - Findings (per-corpus table; file:line on every hot-leaf claim)
 
-No direct-to-struct self-time symbol is admitted from the samply profiles in
-this cycle. Every direct samply log for named corpora reports:
+Top self-time symbols below are the rank-1 leaf after resolving samply frame
+RVAs through the matching `.json.syms.json` sidecar. The full top-20 extraction
+for every direct profile is `/tmp/skv13-p1-v2/summary/hotleaf_top20.tsv`.
 
-```text
-thread 'main' panicked at crates/bbnf-bench/src/bin/profile_direct.rs:204:5:
-could not locate fixture '<corpus>'.json under crates/test-fixtures/corpus/json
-```
+| Corpus | Track 1 Mbps / cB | Track 1 rank-1 self-time symbol | Track 2 Mbps / cB | Track 2 rank-1 self-time symbol |
+|---|---:|---|---:|---|
+| twitter | 11821.161 / 2.969 | 74.0% `parse_object_value_at_direct::<JsonDigestSink>` (`skinny/crates/runtime/src/grammars/json/generated.rs:466`) | 10841.589 / 3.224 | 55.0% `HandParser::string` (`skinny/crates/bbnf-bench/src/direct_struct.rs:541`) |
+| citm_catalog | 21968.958 / 1.605 | 58.4% `parse_array_element_at_direct::<JsonDigestSink>` (`skinny/crates/runtime/src/grammars/json/generated.rs:506`) | 20806.401 / 1.694 | 46.9% `HandParser::value` (`skinny/crates/bbnf-bench/src/direct_struct.rs:460`) |
+| canada | 10547.205 / 3.262 | 85.3% `parse_array_element_at_direct::<JsonDigestSink>` (`skinny/crates/runtime/src/grammars/json/generated.rs:506`) | 10148.055 / 3.332 | 87.5% `HandParser::value` (`skinny/crates/bbnf-bench/src/direct_struct.rs:460`) |
+| apache_builds | 11071.291 / 3.081 | 38.1% `parse_object_value_at_direct::<JsonDigestSink>` (`skinny/crates/runtime/src/grammars/json/generated.rs:466`) | 10128.990 / 3.355 | 44.1% `HandParser::value` (`skinny/crates/bbnf-bench/src/direct_struct.rs:460`) |
+| github_events | 11885.718 / 2.839 | 67.7% `parse_object_value_at_direct::<JsonDigestSink>` (`skinny/crates/runtime/src/grammars/json/generated.rs:466`) | 11062.206 / 3.085 | 45.1% `HandParser::tiny_plain_string` (`skinny/crates/bbnf-bench/src/direct_struct.rs:567`) |
+| update_center | 8206.081 / 4.140 | 68.3% `parse_object_value_at_direct::<JsonDigestSink>` (`skinny/crates/runtime/src/grammars/json/generated.rs:466`) | 7334.045 / 4.622 | 56.8% `HandParser::string` (`skinny/crates/bbnf-bench/src/direct_struct.rs:541`) |
+| mesh | 8786.959 / 3.865 | 76.7% `parse_array_element_at_direct::<JsonDigestSink>` (`skinny/crates/runtime/src/grammars/json/generated.rs:506`) | 8063.295 / 4.205 | 95.3% `HandParser::value` (`skinny/crates/bbnf-bench/src/direct_struct.rs:460`) |
+| random | 7661.152 / 4.425 | 37.7% `parse_object_value_at_direct::<JsonDigestSink>` (`skinny/crates/runtime/src/grammars/json/generated.rs:466`) | 6839.907 / 4.957 | 39.8% `HandParser::string` (`skinny/crates/bbnf-bench/src/direct_struct.rs:541`) |
+| gsoc-2018 | 14522.580 / 2.337 | 60.2% `parse_object_value_at_direct::<JsonDigestSink>` (`skinny/crates/runtime/src/grammars/json/generated.rs:466`) | 13954.747 / 2.432 | 52.1% `HandParser::string` (`skinny/crates/bbnf-bench/src/direct_struct.rs:541`) |
+| marine_ik | 9241.327 / 3.673 | 72.3% `parse_array_element_at_direct::<JsonDigestSink>` (`skinny/crates/runtime/src/grammars/json/generated.rs:506`) | 9224.560 / 3.663 | 82.1% `HandParser::value` (`skinny/crates/bbnf-bench/src/direct_struct.rs:460`) |
+| instruments | 11738.320 / 2.882 | 58.3% `Option<&u8>::copied` (`core/src/option.rs:2141`) | 10895.383 / 3.112 | 40.2% `HandParser::string` (`skinny/crates/bbnf-bench/src/direct_struct.rs:541`) |
+| numbers | 12216.215 / 2.777 | 76.1% `parse_array_element_at_direct::<JsonDigestSink>` (`skinny/crates/runtime/src/grammars/json/generated.rs:506`) | 11950.227 / 2.832 | 89.8% `HandParser::value` (`skinny/crates/bbnf-bench/src/direct_struct.rs:460`) |
+| unicode_mixed | 4422.918 / 7.667 | 55.9% `parse_object_value_at_direct::<JsonDigestSink>` (`skinny/crates/runtime/src/grammars/json/generated.rs:466`) | 4283.724 / 7.878 | 55.0% `HandParser::string` (`skinny/crates/bbnf-bench/src/direct_struct.rs:541`) |
+| unicode_escapes | 4771.925 / 7.074 | 46.7% `parse_that_regex::unescape_string` (`skinny/crates/parse-that-regex/src/lib.rs:718`) | 4259.928 / 7.578 | 46.4% `parse_that_regex::unescape_string` (`skinny/crates/parse-that-regex/src/lib.rs:718`) |
+| unicode_basic | 8858.170 / 3.817 | 44.1% `parse_object_value_at_direct::<JsonDigestSink>` (`skinny/crates/runtime/src/grammars/json/generated.rs:466`) | 8043.084 / 4.209 | 48.2% `HandParser::string` (`skinny/crates/bbnf-bench/src/direct_struct.rs:541`) |
+| distinct_values | 6097.397 / 5.559 | 49.5% `parse_array_element_at_direct::<JsonDigestSink>` (`skinny/crates/runtime/src/grammars/json/generated.rs:542`) | 5458.584 / 6.208 | 34.8% `HandParser::take` (`skinny/crates/bbnf-bench/src/direct_struct.rs:610`) |
+| y_string_unicode | 3101.039 / 10.942 | 19.5% `parse_array_element_at_direct::<JsonDigestSink>` (`skinny/crates/runtime/src/grammars/json/generated.rs:506`) | 2975.830 / 11.408 | 31.1% `mach_absolute_time` (`libsystem_kernel.dylib`) |
 
-`update_center` fails through the quoted absolute-path variant at
-`skinny/crates/bbnf-bench/src/bin/profile_direct.rs:91`. Typed profiles are
-valid for the seven generated typed rows and line up with P1-E's sidecar symbol
-extraction.
-
-| Corpus | Direct samply profile | Direct PMU Track 1 / Track 2 / sonic Mbps | Direct c/B T1/T2 | Typed samply profile | Typed PMU Track 1 / Track 2 / sonic Mbps | Typed hot leaf status |
-|---|---|---:|---:|---|---:|---|
-| twitter | invalid: fixture lookup panic | 11433.616 / 10482.591 / 10284.590 | 2.979732 / 3.243479 | valid `typed__twitter__real_typed_track{1,2}` | 18492.440 / 16187.169 / 15303.652 | `DirectParser::skip_value`, file:line resolved in P1-E |
-| citm_catalog | invalid: fixture lookup panic | 21099.300 / 20057.601 / 14852.637 | 1.615142 / 1.697828 | valid `typed__citm_catalog__real_typed_track{1,2}` | 35379.335 / 19178.971 / 21888.586 | `DirectParser::skip_value`, file:line resolved in P1-E |
-| canada | invalid: fixture lookup panic | 10508.989 / 10201.315 / 12173.527 | 3.252040 / 3.340186 | not captured | n/a | typed row absent from generated typed set |
-| apache_builds | invalid: fixture lookup panic | 10895.295 / 10063.830 / 9297.831 | 3.085860 / 3.364679 | valid `typed__apache_builds__real_typed_track{1,2}` | 8549.791 / 5717.341 / 6695.326 | `parse_option_scalar_string`, file:line resolved in P1-E |
-| github_events | invalid: fixture lookup panic | 12009.588 / 11048.461 / 11539.159 | 2.839007 / 3.085457 | valid `typed__github_events__real_typed_track{1,2}` | 12484.918 / 11284.802 / 11643.157 | `DirectParser::skip_value`, file:line resolved in P1-E |
-| update_center | invalid: quoted-path read panic | 8196.715 / 7320.996 / 8033.542 | 4.142268 / 4.645216 | valid `typed__update_center__real_typed_track{1,2}` | 12131.792 / 9666.001 / 11398.226 | `parse_type_plugin`, file:line resolved in P1-E |
-| mesh | invalid: fixture lookup panic | 8778.456 / 8440.766 / 9632.793 | 3.889578 / 4.046466 | valid `typed__mesh__real_typed_track{1,2}` | 9082.600 / 7108.844 / 8504.545 | `parse_type_mesh`, file:line resolved in P1-E |
-| random | invalid: fixture lookup panic | 7607.363 / 6893.381 / 5712.266 | 4.436292 / 4.900058 | not captured | n/a | typed row absent from generated typed set |
-| gsoc-2018 | invalid: fixture lookup panic | 9982.229 / 12425.141 / 19948.066 | 2.919522 / 2.568889 | not captured | n/a | typed row absent from generated typed set |
-| marine_ik | invalid: fixture lookup panic | 9238.420 / 9241.584 / 7609.643 | 3.683827 / 3.668345 | valid `typed__marine_ik__real_typed_track{1,2}` | 12037.220 / 9349.449 / 8833.256 | `parse_type_marine_geometry_data`, file:line resolved in P1-E |
-| instruments | invalid: fixture lookup panic | 11960.749 / 11016.685 / 7960.651 | 2.870026 / 3.111853 | not captured | n/a | typed row absent from generated typed set |
-| numbers | invalid: fixture lookup panic | 12369.310 / 12167.361 / 12791.743 | 2.775024 / 2.816313 | not captured | n/a | typed row absent from generated typed set |
-| unicode_mixed | invalid: fixture lookup panic | 4558.814 / 4451.886 / 8890.244 | 7.536545 / 7.706815 | not captured | n/a | typed row absent from generated typed set |
-| unicode_escapes | invalid: fixture lookup panic | 5018.257 / 4839.622 / 13491.178 | 6.833959 / 7.051697 | not captured | n/a | typed row absent from generated typed set |
-| unicode_basic | invalid: fixture lookup panic | 9038.879 / 8116.719 / 6624.874 | 3.789464 / 4.229386 | not captured | n/a | typed row absent from generated typed set |
-| distinct_values | invalid: fixture lookup panic | 6255.739 / 5581.609 / 8033.781 | 5.512909 / 6.174830 | not captured | n/a | typed row absent from generated typed set |
-| y_string_unicode | invalid: fixture lookup panic | 3232.485 / 2919.435 / 8634.754 | 10.621480 / 11.728215 | not captured | n/a | typed row absent from generated typed set |
-
-Product-plane throughput finding: the fresh direct PMU rows beat same-run
-sonic on eight direct rows (`twitter`, `citm_catalog`, `apache_builds`,
-`github_events`, `update_center`, `random`, `marine_ik`, `instruments`,
-`unicode_basic`) and miss on eight direct rows plus `numbers` by a small
-margin. This is not an admission because equality/provenance gate consumption
-and valid direct hot-leaf profiles remain separate obligations.
+Typed evidence remains the V1 seven-row generated typed subset. There was no
+source change under `skinny/crates/` between the V1 profile baseline and V2;
+the V2 fold did not invent typed rows for the ten unsupported corpora.
 
 ## §3 - Delta vs SK-V12 (per row; Mbps + c/B + classification)
 
-The checked SK-V12 close document and current `skinny/RESULTS.md` are not a
-single machine-readable schema for product-plane deltas. This P1-B cycle
-therefore records fresh SK-V13-open product-plane values and flags SK-V12
-delta as unresolved except where the close narrative gives the same row.
+SK-V12 close does not publish a machine-readable product-plane profile ledger
+with direct samply symbols. V2 therefore reports current SK-V13-open direct
+symbols and leaves prior-tranche symbol delta as unavailable.
 
-| Plane | Current fresh state | Classification under SK-V13 addendum |
-|---|---|---|
-| direct_to_struct | 17/17 PMU rows valid; 0/17 valid samply hot-leaf rows; 9/17 Track 1 rows currently exceed same-run sonic by >1 Mbps in the fresh PMU ledger | profile incomplete; row admissions need equality, gate consumption, and direct symbol capture |
-| real_typed_struct | 7/17 generated typed rows captured; all 7 exceed same-run sonic Track 1 by >1 Mbps; 10/17 typed rows absent | partial product-plane profile; missing typed rows are explicit G5 obligations |
+The direct V2 profile materially changes the S-P1 state relative to V1:
 
-Rows still below same-run sonic in the fresh direct PMU ledger are:
-`canada`, `mesh`, `gsoc-2018`, `numbers`, `unicode_mixed`,
-`unicode_escapes`, `distinct_values`, and `y_string_unicode`. The widest
-misses are the unicode/string-heavy rows and `gsoc-2018`; those remain the
-highest-value S-P2 direct-profile targets once the direct samply wrapper is
-fixed.
+| Surface | V1 state | V2 state | S-P2 consequence |
+|---|---|---|---|
+| direct samply | 34 profile files were panic-path captures | 34 non-panic profile files, 34 sidecars, 0 bad rc | direct rows are now symbol-attributable |
+| direct unicode | unresolved at symbol level | `parse_that_regex::unescape_string` is rank-1 for `unicode_escapes` Track 1 and Track 2 | unicode direct research can target a named leaf |
+| direct string/digest rows | only PMU/cB evidence | generated `parse_*_direct` envelopes dominate Track 1; Track 2 hand parser string/value leaves dominate | S-P2 must separate generated dispatch envelope from primitive leaf work |
 
 ## §4 - Anomalies + masking signals (flagged for S-P2)
 
-- CH6 direct-profile blocker: direct samply profiles are artifacts on disk, but
-  they profile a panic path rather than the parser. Treat them as invalid even
-  though `capture_status.tsv` reports `rc=0` at the wrapper level.
-- CH1 product-plane gap: direct PMU is strong enough for throughput/cycles
-  accounting, but not for file:line hot-leaf attribution. P1-E correctly leaves
-  direct leaves unresolved.
-- CH2/Lock 14 gap: typed hot leaves live in
-  `skinny/crates/bbnf-bench/src/generated_real_typed.rs`, not a
-  grammar-neutral runtime surface. S-P2 must not generalize those typed leaves
-  to CSS without a separate non-JSON consumer.
-- CH4 reproducibility gap: the capture identity records binary root and commit
-  but not the full build command. Re-running mode II requires reconstructing
-  the profile target build from repository scripts or `/tmp/skv13-p1/*/run-*`.
-- CH5 plane separation: Track 1 generated/direct, Track 2 independent oracle,
-  and sonic strict sidecar are distinct. The same-run PMU values should not be
-  collapsed into a single parser authority.
+- V2 uses `--save-only --unstable-presymbolicate`; file:line resolution is
+  through the `.json.syms.json` sidecar and the top-20 TSV, not through a live
+  interactive samply UI. CH6 must decide whether this offline resolution is
+  sufficient for S-P1.
+- Direct Track 1 still often resolves to generated direct envelopes rather than
+  a primitive leaf. That is an attribution fact, not a license to scope a broad
+  dispatch rewrite without P1-C/P1-E corroboration.
+- `unicode_escapes` is now a clean primitive attribution:
+  `parse_that_regex::unescape_string` at `lib.rs:718` consumes 46.7% / 46.4%
+  self-time in Track 1 / Track 2.
+- `y_string_unicode` Track 2 rank-1 resolves to `mach_absolute_time`; its
+  parser leaves are in lower ranks in `/tmp/skv13-p1-v2/summary/hotleaf_top20.tsv`.
+  S-P2 should treat that row as timer-noisy unless a longer capture confirms it.
+- The ten missing typed rows remain missing product surfaces, not profiling
+  omissions.
 
 ## §5 - Sources (every artefact path + run id)
 
-- `/tmp/skv13-p1/artifacts/identity.txt`: run root, binary root, baseline commit, timestamp.
-- `/tmp/skv13-p1/samply/capture_status.tsv`: samply mode II inventory and commands.
-- `/tmp/skv13-p1/samply/logs/direct__*.log`: direct workload panic evidence.
-- `/tmp/skv13-p1/samply/logs/typed__*.log`: valid typed workload evidence.
-- `/tmp/skv13-p1/samply/profiles/direct__*.json.gz`: invalid direct profile artifacts; do not use for parser hot-leaf attribution.
-- `/tmp/skv13-p1/samply/profiles/typed__*.json.gz` and `.json.syms.json`: valid typed profile artifacts and sidecars.
-- `/tmp/skv13-p1/pmu/pmu_rows.tsv`: direct and typed Mbps/cycles/cpi/cB rows.
-- `/tmp/skv13-p1/pmu/logs/direct__*.log`, `/tmp/skv13-p1/pmu/logs/typed__*.log`: PMU workload logs.
-- `restart/prompts/skinny/PASS-1-PROFILE.md`: S-P1/P1-B contract.
-- `skinny/RESULTS.md`: current result authority.
-- `skinny/REDRESS.md`: route and probe history.
-- `restart/skinny/tranches/sk-v13/HANDOFF.md`: SK-V13 pass sequencing.
-- `restart/skinny/tranches/sk-v13/research/p1/p1e-hot-leaf-attribution.md`: cross-plane symbol extraction used only where it cites raw sidecar evidence.
+- `/tmp/skv13-p1-v2/artifacts/identity.txt`
+- `/tmp/skv13-p1-v2/samply/direct_capture_status.tsv`
+- `/tmp/skv13-p1-v2/samply/logs/direct__{corpus}__track{1,2}.log`
+- `/tmp/skv13-p1-v2/samply/profiles/direct__{corpus}__track{1,2}.json.gz`
+- `/tmp/skv13-p1-v2/samply/profiles/direct__{corpus}__track{1,2}.json.syms.json`
+- `/tmp/skv13-p1-v2/summary/direct_summary.tsv`
+- `/tmp/skv13-p1-v2/summary/hotleaf_top20.tsv`
+- `/tmp/skv13-p1/pmu/pmu_rows.tsv` and V1 typed samply profiles for the seven existing typed rows
+- `restart/prompts/skinny/PASS-1-PROFILE.md`
+- `skinny/RESULTS.md`
+- `skinny/REDRESS.md`
+- `restart/skinny/tranches/sk-v13/HANDOFF.md`

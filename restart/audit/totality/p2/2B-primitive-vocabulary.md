@@ -1,8 +1,8 @@
 ---
 agent: 2B
 pass: T-P2-research
-cycle: V3
-generated_at: 2026-05-21T10:24:00Z
+cycle: V4
+generated_at: 2026-05-21T12:10:00Z
 t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F]
 primary_sources_cited: 24
 counted_source_ids: [T2B-SRC-FFMPEG-C, T2B-SRC-FFMPEG-H, T2B-SRC-VIDEOLAN-CHECKASM, T2B-SRC-ARM-ACLE, T2B-SRC-ARM-NEON, T2B-SRC-P2-PROMPT, T2B-SRC-T-P1-1D, T2B-SRC-T-P1-1E, T2B-SRC-T-P1-HARDENING, T2B-SRC-V2-FOLD, T2B-SRC-V3-FOLD, T2B-SRC-LOCKS, T2B-SRC-SK-V13-SYNTHESIS, T2B-SRC-SK-V13-HANDOFF, T2B-SRC-SIMD-SCOPING, T2B-SRC-P1-B, T2B-SRC-P1-C, T2B-SRC-P1-E, T2B-SRC-P1-LEDGER, T2B-SRC-P2-B, T2B-SRC-P2-C, T2B-SRC-RESULTS, T2B-SRC-REDRESS, T2B-SRC-BBNF-SIMD]
@@ -10,6 +10,7 @@ techniques_grounded: 13
 techniques_refuted: 6
 v2_fold_authority: restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md
 v3_fold_authority: restart/audit/totality/p2/T-P2-V3-FOLD-ADDENDUM.md
+v4_fold_authority: restart/audit/totality/p2/T-P2-V4-FOLD-ADDENDUM.md
 v1_ch_lenses_folded: [CH1, CH2, CH3, CH4, CH5, CH6]
 prior_cycle_dispositions_folded:
   accepted: []
@@ -18,6 +19,7 @@ prior_cycle_dispositions_folded:
   first_cycle_additions: [2B-L0-vendored-macro-boundary, 2B-L1-primitive-contracts, 2B-checkasm-admission-loop, 2B-lock16-traceability-manifest, 2B-no-orphan-primitive-rule]
   v2_additions: [2B-per-technique-admission-ledger, 2B-source-present-orphan-enum, 2B-lock16-manifest-retention-fields, 2B-redress-121-127-taxonomy, 2B-union-asm-material-differential-checklist]
   v3_additions: [2B-executable-shared-ledger, 2B-normalized-admission-state, 2B-counted-source-ids]
+  v4_additions: [2B-non-shortlist-blockers, 2B-redress-slice-ownership]
 locks_amendment_candidates: 7
 ---
 
@@ -138,12 +140,13 @@ missing transition and the same-wave consumer that reaches
 
 #### Per-Technique Admission Ledger
 
-V3 fold note: the executable ledger with LOC, risk, rollback, abrogate
-thresholds, normalized `admissibility_state`, and separate
-`disposition_or_blocker` fields lives in
-`restart/audit/totality/p2/T-P2-V3-FOLD-ADDENDUM.md`. The local table below is
+V4 fold note: the executable ledger with LOC, risk, rollback, abrogate
+thresholds, normalized `admissibility_state`, separate `disposition_or_blocker`
+fields, non-shortlist blockers, and REDRESS-slice ownership lives in
+`restart/audit/totality/p2/T-P2-V3-FOLD-ADDENDUM.md` plus
+`restart/audit/totality/p2/T-P2-V4-FOLD-ADDENDUM.md`. The local table below is
 retained as a compact owner summary and must not be used as the gate-consumed
-ledger if it disagrees with the V3 addendum.
+ledger if it disagrees with the V3/V4 addenda.
 
 | candidate_id | source / local status | BBNF_SIMD_STRICT_status | consumer and row/feature gate | substrate / lifetime / policy | V3 state / disposition |
 |---|---|---|---|---|---|

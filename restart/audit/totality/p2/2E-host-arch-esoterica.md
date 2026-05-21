@@ -1,15 +1,16 @@
 ---
 agent: 2E
 pass: T-P2-research
-cycle: V3
-generated_at: 2026-05-21T10:44:00Z
+cycle: V4
+generated_at: 2026-05-21T12:10:00Z
 t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F]
 primary_sources_cited: 11
-counted_source_ids: [SRC-A64-ACLE, SRC-A64-NEON, SRC-A64-SVE2-MATCH, SRC-INTEL-X86, SRC-FFMPEG, SRC-DAV1D, SRC-SCOPE, SRC-BBNF-DISPATCH, SRC-BBNF-CHECKASM, SRC-BBNF-X86, SRC-V2-FOLD]
+counted_source_ids: [SRC-A64-ACLE, SRC-A64-NEON, SRC-A64-SVE2-MATCH, SRC-X86-INTEL, SRC-SCOPE, SRC-REDRESS, SRC-BBNF-A64, SRC-BBNF-DISPATCH, SRC-BBNF-CHECKASM, SRC-BBNF-X86, SRC-V2-FOLD]
 techniques_grounded: 11
 techniques_refuted: 5
 shared_fold_authority: restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md
 v3_fold_authority: restart/audit/totality/p2/T-P2-V3-FOLD-ADDENDUM.md
+v4_fold_authority: restart/audit/totality/p2/T-P2-V4-FOLD-ADDENDUM.md
 prior_cycle_dispositions_folded:
   accepted: []
   rejected: []
@@ -17,6 +18,7 @@ prior_cycle_dispositions_folded:
   first_cycle_additions: [A64-TBL, A64-PMULL, A64-CSSC-CTZ, A64-DOTPROD, A64-EOR3-BCAX, A64-LD4, A64-SVE2-MATCH, A64-ASCII-RUN-SKIP, A64-CACHE-HINTS, X86-AVX512-BACKGROUND, L16-HARDWARE-GATE-MANIFEST]
   v2_fold_additions: [PINNED-SOURCE-REGISTER, L16-HARDWARE-GATE-MANIFEST-FIELDS, SOURCE-PRESENT-ORPHAN-ENUM, MATERIAL-DIFFERENTIAL-CHECKLIST, PRODUCTION-REAL-WORDING-DOWNGRADE]
   v3_fold_additions: [EXECUTABLE-HARDWARE-LEDGER, NORMALIZED-STATE-FIELD, COUNTED-SOURCE-IDS]
+  v4_fold_additions: [COUNTED-SOURCE-ID-ALIGNMENT, NON-SHORTLIST-BLOCKERS, REDRESS-SLICE-OWNERSHIP]
 locks_amendment_candidates: 4
 ---
 
@@ -41,6 +43,12 @@ LD4, cache hints, and x86 AVX-512 remain conditional or background until a
 same-wave consumer and row movement exist.
 
 ## Source Registry
+
+Counted primary evidence rows are exactly the IDs in `counted_source_ids`.
+`SRC-REDRESS` and `SRC-BBNF-A64` are counted because this dossier uses prior
+measured dispositions and local primitive bodies as direct admissibility
+constraints. FFmpeg and dav1d remain inherited support under `SRC-V2-FOLD`; they
+are not counted as separate 2E registry rows.
 
 | ID | Source | Use in this dossier |
 |---|---|---|
@@ -131,10 +139,12 @@ manifest row before redress. Architecture availability is only
 
 Minimum V2 ledger disposition for local hardware candidates:
 
-V3 fold note: the executable hardware ledger is centralized in
-`restart/audit/totality/p2/T-P2-V3-FOLD-ADDENDUM.md`. The table below remains
-an owner summary; the V3 addendum is authoritative for LOC, risk, rollback,
-abrogate thresholds, and normalized admission-state values.
+V4 fold note: the executable hardware ledger is centralized in
+`restart/audit/totality/p2/T-P2-V3-FOLD-ADDENDUM.md` plus the V4 delta at
+`restart/audit/totality/p2/T-P2-V4-FOLD-ADDENDUM.md`. The table below remains
+an owner summary; the V3/V4 addenda are authoritative for LOC, risk, rollback,
+abrogate thresholds, normalized admission-state values, non-shortlist blockers,
+and REDRESS-slice ownership.
 
 | candidate_id | current state | required consumer/gate before admission | substrate / retention / policy |
 |---|---|---|---|

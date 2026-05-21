@@ -1,8 +1,8 @@
 ---
 agent: 2F
 pass: T-P2-research
-cycle: V3
-generated_at: 2026-05-21T04:42:44-04:00
+cycle: V4
+generated_at: 2026-05-21T12:10:00Z
 t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F]
 primary_sources_cited: 21
 counted_source_ids: [SRC-COX-REGEX, SRC-RE2, SRC-RUST-REGEX, SRC-MEMCHR, SRC-FASTFLOAT, SRC-FNF, SRC-CLINGER, SRC-SIMDJSON-PAPER, SRC-SIMDJSON-SRC, SRC-UTF8, SRC-XXHASH, SRC-BBNF-PTR, SRC-UPSTREAM-REGEX, SRC-UPSTREAM-SCAN, SRC-BBNF-SIMD, SRC-BBNF-CODEGEN, SRC-BBNF-RUNTIME, SRC-BBNF-DIGEST, SRC-REDRESS, SRC-T-P1, SRC-V2-ADDENDUM]
@@ -16,8 +16,10 @@ prior_cycle_dispositions_folded:
 locks_amendment_candidates: 4
 v2_fold_addendum: restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md
 v3_fold_addendum: restart/audit/totality/p2/T-P2-V3-FOLD-ADDENDUM.md
+v4_fold_addendum: restart/audit/totality/p2/T-P2-V4-FOLD-ADDENDUM.md
 parse_that_import_authority: conditional-local-head-051a6d681da95a180e6b67f956526722d1d33322
 v3_fold_additions: [PINNED-SOURCE-REGISTER-REPAIR, EXECUTABLE-PARSE-THAT-LEDGER, NORMALIZED-STATE-FIELD]
+v4_fold_additions: [NON-SHORTLIST-BLOCKERS, REDRESS-SLICE-OWNERSHIP]
 ---
 
 ## Executive Summary
@@ -185,11 +187,13 @@ following blockers close:
 
 ## V2 Admission Ledger Requirements
 
-V3 fold note: the executable parse-that ledger is centralized in
-`restart/audit/totality/p2/T-P2-V3-FOLD-ADDENDUM.md`. The table below remains
-an owner summary; the V3 addendum is authoritative for LOC, risk, rollback,
-abrogate thresholds, normalized `admissibility_state`, and separate
-`disposition_or_blocker` values.
+V4 fold note: the executable parse-that ledger is centralized in
+`restart/audit/totality/p2/T-P2-V3-FOLD-ADDENDUM.md` plus
+`restart/audit/totality/p2/T-P2-V4-FOLD-ADDENDUM.md`. The table below remains
+an owner summary; the V3/V4 addenda are authoritative for LOC, risk, rollback,
+abrogate thresholds, normalized `admissibility_state`, separate
+`disposition_or_blocker` values, non-shortlist blockers, and REDRESS-slice
+ownership.
 
 Every 2F candidate that reaches S-P3 must carry the shared V2 ledger columns:
 

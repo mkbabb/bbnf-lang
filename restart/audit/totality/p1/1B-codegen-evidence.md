@@ -1,12 +1,13 @@
 ---
 agent: 1B
 pass: T-P1-excavation
-cycle: V2
+cycle: V4
 generated_at: 2026-05-21T06:07:25Z
 spec_surfaces_audited: [PASS-1-EXCAVATION.md, ARCHITECTURE.md, MASTER-PLAN.md, LOCKS.md, HANDOFF.md, skinny/INDEX.md, skinny/SUBSTRATE.md, skinny/COMPILER.md, skinny/BENCH.md, skinny/WORKSPACE.md, skinny/HARDENING.md, skinny/REDRESS.md, skinny/RESULTS.md]
-hardening_inputs_folded: [restart/audit/totality/p1/hardening/HARDENING-T-P1-V1-CONSOLIDATED.md, restart/audit/totality/p1/hardening/V1/CH1.md, restart/audit/totality/p1/hardening/V1/CH2.md, restart/audit/totality/p1/hardening/V1/CH3.md, restart/audit/totality/p1/hardening/V1/CH4.md, restart/audit/totality/p1/hardening/V1/CH5.md, restart/audit/totality/p1/hardening/V1/CH6.md]
+hardening_inputs_folded: [restart/audit/totality/p1/hardening/HARDENING-T-P1-V1-CONSOLIDATED.md, restart/audit/totality/p1/hardening/V1/CH1.md, restart/audit/totality/p1/hardening/V1/CH2.md, restart/audit/totality/p1/hardening/V1/CH3.md, restart/audit/totality/p1/hardening/V1/CH4.md, restart/audit/totality/p1/hardening/V1/CH5.md, restart/audit/totality/p1/hardening/V1/CH6.md, restart/audit/totality/p1/hardening/HARDENING-T-P1-V3-CONSOLIDATED.md]
+v4_metadata_fold: "V3 CH1 required cycle/provenance repair only; no substantive 1B evidence claims changed in V4."
 files_audited_count: 29
-live_truth_method: "rg symbol search + nl -ba path:line reads + wc -l over skinny/crates/codegen/src, skinny/crates/passes/src, and related skinny/crates/ir/src cost/BIR surfaces; V2 folds CH1-CH6 hardening evidence; no cargo test run"
+live_truth_method: "rg symbol search + nl -ba path:line reads + wc -l over skinny/crates/codegen/src, skinny/crates/passes/src, and related skinny/crates/ir/src cost/BIR surfaces; V4 metadata-only fold after V3 CH1 accepted substantive corrections but required active-cycle provenance; no cargo test run"
 prior_cycle_dispositions_folded:
   accepted: [CH1-1B-wired-claim-evidence, CH2-codegen-profile-headline-leak, CH2-stale-passes-status-revision, CH4-1B-loc-risk-bands, CH6-1B-unknown-verify-actions]
   rejected: []

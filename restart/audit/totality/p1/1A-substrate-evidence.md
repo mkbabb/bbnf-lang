@@ -1,11 +1,12 @@
 ---
 agent: 1A
 pass: T-P1-excavation
-cycle: V2
+cycle: V4
 generated_at: 2026-05-21T12:00:00Z
 spec_surfaces_audited: [ARCHITECTURE.md, MASTER-PLAN.md, LOCKS.md, HANDOFF.md, skinny/REDRESS.md, skinny/RESULTS.md, restart/skinny/INDEX.md, restart/skinny/SUBSTRATE.md, restart/skinny/COMPILER.md, restart/skinny/BENCH.md, restart/skinny/WORKSPACE.md, restart/skinny/HARDENING.md]
 files_audited_count: 37
-live_truth_method: "nl -ba for path:line citations; V2 folds CH1-CH6 hardening; uncaptured negative-search claims are downgraded to UNKNOWN/verify_action unless backed by cited live code; no build or cargo tests run"
+live_truth_method: "nl -ba for path:line citations; V4 metadata-only fold after V3 CH1 accepted substantive corrections but required active-cycle provenance; uncaptured negative-search claims are downgraded to UNKNOWN/verify_action unless backed by cited live code; no build or cargo tests run"
+v4_metadata_fold: "V3 CH1 required cycle/provenance repair only; no substantive 1A evidence claims changed in V4."
 prior_cycle_dispositions_folded:
   accepted: [CH3-001, CH3-005, CH3-006, CH5-001, CH5-003, CH5-006, CH6-1A-UNKNOWN-verify-actions]
   rejected: []

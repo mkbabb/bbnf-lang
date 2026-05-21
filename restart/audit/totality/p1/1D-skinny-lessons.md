@@ -1,11 +1,12 @@
 ---
 agent: 1D
 pass: T-P1-excavation
-cycle: V3
+cycle: V4
 generated_at: 2026-05-21T02:07:26-04:00
 spec_surfaces_audited: [PASS-1-EXCAVATION.md, restart/prompts/ORCHESTRATOR.md, skinny/REDRESS.md, skinny/RESULTS.md, restart/skinny/tranches/sk-v8/SYNTHESIS.md, restart/skinny/tranches/sk-v9/SYNTHESIS.md, restart/skinny/tranches/sk-v10/SYNTHESIS.md, restart/skinny/tranches/sk-v11/SYNTHESIS.md, restart/skinny/tranches/sk-v12/SYNTHESIS.md, restart/skinny/tranches/sk-v13/SYNTHESIS.md, skinny/crates/passes/src/lib.rs, skinny/crates/codegen/src/grammar_profile.rs, skinny/crates/codegen/src/lib.rs, restart/audit/totality/p1/hardening/HARDENING-T-P1-V2-CONSOLIDATED.md]
 files_audited_count: 14
 live_truth_method: "nl -ba for path:line evidence; rg for tranche cross-checks; wc -l for audited surface census"
+v4_metadata_fold: "V4 is a metadata-only active-cycle fold after V3 CH1; no substantive 1D evidence claims changed."
 prior_cycle_dispositions_folded:
   accepted: [CH1-1D-evidence-map, CH2-1D-json-vs-grammar-neutral-separation, CH3-1D-rejected-route-ledger, CH6-1D-UNKNOWN-verify-actions]
   rejected: []

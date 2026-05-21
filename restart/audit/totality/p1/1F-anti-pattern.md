@@ -1,11 +1,12 @@
 ---
 agent: 1F
 pass: T-P1-excavation
-cycle: V3
+cycle: V4
 generated_at: 2026-05-21T00:00:00-04:00
 spec_surfaces_audited: [restart/ARCHITECTURE.md, restart/MASTER-PLAN.md, restart/locks/LOCKS.md, restart/skinny/INDEX.md, skinny/REDRESS.md, skinny/RESULTS.md]
 files_audited_count: 633
 live_truth_method: "line-cited source reads; uncaptured wc/rg/child-count scan summaries are V2 verify actions unless exact output is cited in-row; child-count rows must prove mixed concerns, not fanout alone"
+v4_metadata_fold: "V4 is a metadata-only active-cycle fold after V3 CH1; no substantive 1F anti-pattern evidence claims changed."
 prior_cycle_dispositions_folded:
   accepted: [CH2-runtime-generated-split, CH2-bbnf-simd-current-genericity, CH3-1F-preblock-history, CH4-1F-cost-shape, CH5-json-lock1-central-danger]
   rejected: []

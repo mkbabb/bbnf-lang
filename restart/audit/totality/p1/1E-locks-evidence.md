@@ -1,11 +1,12 @@
 ---
 agent: 1E
 pass: T-P1-excavation
-cycle: V3
+cycle: V4
 generated_at: 2026-05-21T05:57:03Z
 spec_surfaces_audited: [restart/locks/LOCKS.md, skinny/REDRESS.md, skinny/RESULTS.md, restart/ARCHITECTURE.md, restart/MASTER-PLAN.md, restart/MIGRATION.md, restart/skinny/WORKSPACE.md, restart/skinny/tranches/sk-v13/SYNTHESIS.md, skinny/crates/]
 files_audited_count: 2023
 live_truth_method: "nl -ba + rg + find over restart locks/skinny surfaces and skinny/crates; no cargo build or bench rerun; V3 folds hardening/HARDENING-T-P1-V2-CONSOLIDATED.md items 2 and 6 while preserving accepted V2 posture"
+v4_metadata_fold: "V4 is a metadata-only active-cycle fold after V3 CH1; no substantive 1E evidence claims changed."
 prior_cycle_dispositions_folded:
   accepted: [CH1-1D-results-redress-mapping, CH2-1C-runtime-lock14-audit, CH2-1E-lock14-amendment-routing, CH3-1E-l08-row-plane-accounting, CH4-1E-cost-template]
   rejected: []

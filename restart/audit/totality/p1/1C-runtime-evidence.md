@@ -1,11 +1,12 @@
 ---
 agent: 1C
 pass: T-P1-excavation
-cycle: V3
+cycle: V4
 generated_at: 2026-05-21T05:56:41Z
 spec_surfaces_audited: [PASS-1-EXCAVATION.md, ARCHITECTURE.md, LOCKS.md]
 files_audited_count: UNKNOWN
 live_truth_method: "path:line source reads over skinny/crates/runtime/src; uncaptured local find/wc/rg/cargo output is treated as scan-derived estimate or UNKNOWN verify_action, not closure evidence"
+v4_metadata_fold: "V4 is a metadata-only active-cycle fold after V3 CH1; no substantive 1C evidence claims changed."
 prior_cycle_dispositions_folded:
   accepted:
     - CH1 accepted 1C runtime evidence as broadly supportable after spot checks.

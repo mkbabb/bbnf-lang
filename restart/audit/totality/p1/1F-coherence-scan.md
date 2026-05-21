@@ -1,11 +1,12 @@
 ---
 agent: 1F
 pass: T-P1-excavation
-cycle: V3
+cycle: V4
 generated_at: 2026-05-21T00:00:00-04:00
 spec_surfaces_audited: [restart/ARCHITECTURE.md, restart/MASTER-PLAN.md, restart/locks/LOCKS.md, restart/HANDOFF.md, restart/skinny/INDEX.md, restart/skinny/SUBSTRATE.md, restart/skinny/COMPILER.md, restart/skinny/BENCH.md, restart/skinny/WORKSPACE.md, restart/skinny/HARDENING.md, skinny/REDRESS.md, skinny/RESULTS.md]
 files_audited_count: 2211
 live_truth_method: "nl -ba line-citation reads; uncaptured rg/find/wc/child-count scans are treated as V2 verify actions unless exact output is cited in-row; source tree child-count scan excluded target"
+v4_metadata_fold: "V4 is a metadata-only active-cycle fold after V3 CH1; no substantive 1F coherence evidence claims changed."
 prior_cycle_dispositions_folded:
   accepted: [CH1-1D-row-mapping, CH1-1F-coherence-drift, CH2-1C-runtime-audit, CH2-bbnf-simd-genericity-disposition, CH3-1F-rejected-route-history, CH4-1F-cost-shape]
   rejected: []

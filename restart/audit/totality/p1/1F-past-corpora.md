@@ -1,11 +1,12 @@
 ---
 agent: 1F
 pass: T-P1-excavation
-cycle: V3
+cycle: V4
 generated_at: 2026-05-21T00:00:00-04:00
 spec_surfaces_audited: [skinny/REDRESS.md, skinny/RESULTS.md, restart/HANDOFF.md, restart/skinny/INDEX.md, restart/skinny/tranches/sk-v5/research, restart/skinny/tranches/sk-v6/research, restart/skinny/tranches/sk-v7/research, restart/skinny/tranches/sk-v8/research, restart/skinny/tranches/sk-v9/research, restart/skinny/tranches/sk-v10/research, restart/skinny/tranches/sk-v11/research, restart/skinny/tranches/sk-v12/research, restart/skinny/tranches/sk-v13/research, audit, restart/audit]
 files_audited_count: 1664
 live_truth_method: "nl -ba cited REDRESS/RESULTS/HANDOFF/INDEX/SK-V13 rows; prior find/rg corpus counts are scan summaries and must be recaptured before exact-count closure"
+v4_metadata_fold: "V4 is a metadata-only active-cycle fold after V3 CH1; no substantive 1F past-corpora evidence claims changed."
 prior_cycle_dispositions_folded:
   accepted: [CH1-1D-results-redress-mapping, CH2-bbnf-simd-current-genericity, CH3-rejected-route-ledger, CH3-direct-codegen-honesty, CH4-zero-loc-preblock-treatment]
   rejected: []

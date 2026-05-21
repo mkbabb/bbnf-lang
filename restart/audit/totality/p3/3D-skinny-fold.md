@@ -1,8 +1,8 @@
 ---
 agent: 3D
 pass: T-P3-synthesis
-cycle: V2
-generated_at: 2026-05-21T19:37:16Z
+cycle: V3
+generated_at: 2026-05-21T19:46:41Z
 t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F]
 t_p2_dossiers_consumed: [2A, 2B, 2C, 2D, 2E, 2F]
 v1_surface_targeted: "V1.1 proposed-delta packet only; no direct spec or lock edit"
@@ -23,9 +23,9 @@ delta_summary:
     - FOLD-3D-009
     - FOLD-3D-010
 prior_cycle_dispositions_folded:
-  accepted: []
+  accepted: [G-T-P3-V2-CH2, G-T-P3-V2-CH3, G-T-P3-V2-CH4, G-T-P3-V2-CH5, G-T-P3-V2-CH6]
   rejected: []
-  revised: []
+  revised: [G-T-P3-V2-CH1]
 ---
 
 ## Executive Summary
@@ -52,7 +52,7 @@ replay, support-only SIMD, and one-row CSS closure cannot silently graduate
 `skinny/REDRESS.md:226`, `skinny/REDRESS.md:2910`,
 `restart/skinny/tranches/sk-v13/SYNTHESIS.md:95`). Proposed fold count: 10.
 
-## V1 Delta Summary
+## V3 Delta Summary
 
 | disposition | count | notes |
 | --- | ---: | --- |

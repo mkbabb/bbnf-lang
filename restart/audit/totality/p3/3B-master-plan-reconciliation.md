@@ -1,8 +1,8 @@
 ---
 agent: 3B
 pass: T-P3-synthesis
-cycle: V2
-generated_at: 2026-05-21T19:37:16Z
+cycle: V3
+generated_at: 2026-05-21T19:46:41Z
 t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F]
 t_p2_dossiers_consumed: [2A, 2B, 2C, 2D, 2E, 2F]
 v1_surface_targeted: MASTER-PLAN.md
@@ -13,20 +13,20 @@ delta_summary:
   answered: []
   newly_added: [MP-3B-D1, MP-3B-D2, MP-3B-D3, MP-3B-D4, MP-3B-D5, MP-3B-D6, MP-3B-D7, MP-3B-D8, MP-3B-D9]
 prior_cycle_dispositions_folded:
-  accepted: [G-T-P1-EXCAVATION-CONVERGED, G-T-P2-RESEARCH-CONVERGED]
+  accepted: [G-T-P1-EXCAVATION-CONVERGED, G-T-P2-RESEARCH-CONVERGED, G-T-P3-V2-CH2, G-T-P3-V2-CH3, G-T-P3-V2-CH4, G-T-P3-V2-CH5, G-T-P3-V2-CH6]
   rejected: []
-  revised: []
+  revised: [G-T-P3-V2-CH1]
 ---
 
 ## Executive Summary
 
 T-P3 is authorized to propose only, and must not edit `MASTER-PLAN.md` or other governance surfaces directly (`restart/HANDOFF.md:13-15`, `restart/HANDOFF.md:44-47`). This V1 reconciliation classifies the current MASTER tranche/wave set, whose A-J counts are planning stubs and whose H section already has ten concrete wave rows, not the stub count of five (`restart/MASTER-PLAN.md:181-202`, `restart/MASTER-PLAN.md:524-535`). Using T-P1/T-P2 and SK-V13 evidence, the 59 existing waves classify as 4 landed, 1 refuted, and 54 pending; this artifact also proposes 12 NEW waves. "Landed" here means the narrow skinny-era wave evidence is closed; it does not imply V1 tranche close, root workspace migration, or SK-V13 close. The main reconciliation is that MASTER must keep CSS declaration-values as admitted evidence while adding full CSS parity, all 51 JSON rows, G-Omega, decision-engine replacement, Lock 14 repair, zero-orphan SIMD/ASM production disposition, and a fresh union material-differential path (`restart/skinny/tranches/sk-v13/SYNTHESIS.md:38-122`, `restart/audit/totality/p1/1D-skinny-lessons.md:64-79`).
 
-## V1 Delta Summary
+## V3 Delta Summary
 
 | bucket | disposition | evidence |
 |---|---|---|
-| carried from prior cycle | none; this is 3B V1 | T-P3 frontmatter schema requires cycle declaration and delta buckets (`restart/prompts/totality/PASS-3-SYNTHESIS.md:57-78`). |
+| carried from prior cycle | none accepted; V3 folds the V2 CH1 hygiene revise set | T-P3 frontmatter schema requires cycle declaration and delta buckets (`restart/prompts/totality/PASS-3-SYNTHESIS.md:57-78`). |
 | removed | none | T-P3 proposes document deltas only; no MASTER surface was changed (`restart/HANDOFF.md:44-47`). |
 | answered | current MASTER wave census answered: 59 existing wave rows plus 12 proposed NEW waves | MASTER A-J stub counts and H concrete rows define the baseline (`restart/MASTER-PLAN.md:189-202`, `restart/MASTER-PLAN.md:524-535`). |
 | newly added | nine MASTER-plan deltas, MP-3B-D1 through MP-3B-D9 | T-P3 body must emit a proposed delta table, consequences, and open questions with path:line citations (`restart/prompts/totality/PASS-3-SYNTHESIS.md:81-90`). |

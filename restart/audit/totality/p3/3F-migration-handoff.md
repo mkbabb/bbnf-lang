@@ -1,8 +1,8 @@
 ---
 agent: "3F"
 pass: "T-P3-synthesis"
-cycle: "V2"
-generated_at: "2026-05-21T19:37:16Z"
+cycle: "V3"
+generated_at: "2026-05-21T19:46:41Z"
 t_p1_inventories_consumed:
   - "1A-substrate-evidence"
   - "1B-codegen-evidence"
@@ -47,19 +47,25 @@ prior_cycle_dispositions_folded:
     - "G-T-P1 PASS"
     - "G-T-P2 PASS"
     - "SK-V12 CSS L4 PASS-ADMIT"
+    - "G-T-P3-V2 CH2 ACCEPT"
+    - "G-T-P3-V2 CH3 ACCEPT"
+    - "G-T-P3-V2 CH4 ACCEPT"
+    - "G-T-P3-V2 CH5 ACCEPT"
+    - "G-T-P3-V2 CH6 ACCEPT"
   rejected:
     - "REDRESS-96/97/98 union-substrate preservation without material differential"
     - "Producer-only or orphan SIMD/source-present primitives as admission"
   revised:
     - "Lock 1 substrate closure narrowed to admitted grammar-runtime substrate, with fenced non-substrate fact streams"
     - "Lock 14 grammar-name exception narrowed to generated or rostered surfaces"
+    - "G-T-P3-V2 CH1 stale-cycle wording and prompt citation hygiene"
 ---
 
 ## Executive Summary
 
 3F proposes eleven V1-surface deltas: six for `restart/MIGRATION.md` and five for `restart/HANDOFF.md`. T-P3 is explicitly proposal-only: it may synthesize deltas, but V1 spec edits land through Pass Omega CRUD and user gate flow, not directly from this file (`restart/prompts/totality/PASS-3-SYNTHESIS.md:21`, `restart/prompts/totality/PASS-3-SYNTHESIS.md:197`). The current HANDOFF already authorizes T-P3 while forbidding direct edits to `MIGRATION.md` and `HANDOFF.md` (`restart/HANDOFF.md:5`, `restart/HANDOFF.md:44`). The proposed migration delta replaces rename-only and hardcoded-grammar fates with generated-provider, source-present, cost-model, and archive-proof gates grounded by T-P1/T-P2 convergence (`restart/audit/totality/p1/hardening/HARDENING-T-P1-V5-CONSOLIDATED.md:41`, `restart/audit/totality/p2/hardening/HARDENING-T-P2-V5-CONVERGED.md:47`). The proposed handoff delta updates top-level state from T-P3 entry to G3/Omega dispatch readiness while preserving SK-V13's G-Omega-before-W0 block (`restart/skinny/tranches/sk-v13/HANDOFF.md:54`, `restart/skinny/tranches/sk-v13/HANDOFF.md:85`).
 
-## V1 Delta Summary
+## V3 Delta Summary
 
 | bucket | summary | evidence |
 | --- | --- | --- |

@@ -1,8 +1,8 @@
 ---
 agent: 3C
 pass: T-P3-synthesis
-cycle: V2
-generated_at: 2026-05-21T19:37:16Z
+cycle: V3
+generated_at: 2026-05-21T19:46:41Z
 v1_surface_targeted: restart/locks/LOCKS.md
 diff_status: proposed-only
 ---
@@ -11,7 +11,7 @@ diff_status: proposed-only
 
 This document is a line-level proposed diff only. T-P3 must not edit `restart/locks/LOCKS.md`; Pass Omega CRUD applies ratified edits after G3 and G-Omega. Evidence: `restart/prompts/totality/PASS-3-SYNTHESIS.md:21`-`24`, `restart/prompts/totality/PASS-3-SYNTHESIS.md:189`-`198`, `restart/prompts/ORCHESTRATOR.md:165`-`170`, `restart/HANDOFF.md:44`-`47`.
 
-V2 keeps the line-level diff text stable and pairs it with the cost/disposition ledger in `3C-locks-crystallisation.md`; ACCEPT/MODIFY in this diff remains a lock-text disposition only, never an implementation admission.
+V3 keeps the line-level diff text stable and pairs it with the cost/disposition ledger in `3C-locks-crystallisation.md`; ACCEPT/MODIFY in this diff remains a lock-text disposition only, never an implementation admission.
 
 No lock is renumbered. The 16-lock count stays fixed. Any new lock, lock retirement, new directive, new BIR variant, public substrate API, retained sidecar, or `BackendShape` expansion remains user/G-Omega gated. Evidence: `restart/prompts/totality/PASS-3-SYNTHESIS.md:210`-`215`, `restart/audit/totality/p2/hardening/HARDENING-T-P2-V5-CONVERGED.md:57`-`58`, `restart/skinny/tranches/sk-v13/SYNTHESIS.md:223`-`230`.
 

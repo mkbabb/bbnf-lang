@@ -1,8 +1,8 @@
 ---
 agent: 3E
 pass: T-P3-synthesis
-cycle: V2
-generated_at: 2026-05-21T19:37:16Z
+cycle: V3
+generated_at: 2026-05-21T19:46:41Z
 t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F]
 t_p2_dossiers_consumed: [2A, 2B, 2C, 2D, 2E, 2F]
 v1_surface_targeted: n/a
@@ -13,9 +13,9 @@ delta_summary:
   answered: []
   newly_added: [3E-D01, 3E-D02, 3E-D03, 3E-D04, 3E-D05, 3E-D06, 3E-D07, 3E-D08]
 prior_cycle_dispositions_folded:
-  accepted: []
+  accepted: [G-T-P3-V2-CH2, G-T-P3-V2-CH3, G-T-P3-V2-CH4, G-T-P3-V2-CH5, G-T-P3-V2-CH6]
   rejected: []
-  revised: []
+  revised: [G-T-P3-V2-CH1]
 ---
 
 ## Executive Summary
@@ -37,11 +37,11 @@ come from generated data (`restart/audit/totality/p2/2C-grammar-neutrality.md:50
 proposes Lock 14 hardening clauses, a CSS/Sheets/BBNF-self `BackendShape`
 matrix, and a future-grammar onboarding test. It does not edit V1 spec surfaces.
 
-## V1 Delta Summary
+## V3 Delta Summary
 
 | bucket | disposition |
 |---|---|
-| carried from prior cycle | None. This is T-P3 V1 for agent 3E. |
+| carried from prior cycle | None accepted; V3 folds the V2 CH1 hygiene revise set for agent 3E. |
 | removed | None. |
 | answered | None from a prior T-P3 cycle. The artifact answers T-P2 2C's future-grammar onboarding requirement and Lock 14 transfer contract (`restart/audit/totality/p2/2C-grammar-neutrality.md:157-168`). |
 | newly added | 3E-D01 through 3E-D08 below. |

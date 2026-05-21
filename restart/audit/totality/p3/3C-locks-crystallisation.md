@@ -1,8 +1,8 @@
 ---
 agent: 3C
 pass: T-P3-synthesis
-cycle: V2
-generated_at: 2026-05-21T19:37:16Z
+cycle: V3
+generated_at: 2026-05-21T19:46:41Z
 t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F]
 t_p2_dossiers_consumed: [2A, 2B, 2C, 2D, 2E, 2F]
 v1_surface_targeted: LOCKS.md
@@ -13,16 +13,16 @@ delta_summary:
   answered: [LAC-1E-01, LAC-1E-02, LAC-1E-03, LAC-1E-04, LAC-1E-05, LAC-1E-06, LAC-1E-07, LAC-1E-08, LAC-1E-09, LAC-1E-10, LAC-1E-11, T2A-LAC-01, T2A-LAC-02, T2A-LAC-03, T2A-LAC-04, T2A-LAC-05, LAC-2B-01, LAC-2B-02, LAC-2B-03, LAC-2B-04, LAC-2B-05, LAC-2B-06, LAC-2B-07, LAC-2C-01, LAC-2C-02, LAC-2C-03, LAC-2C-04, LAC-2C-05, LAC-2D-01, LAC-2D-02, LAC-2D-03, LAC-2D-04, LAC-2D-05, LAC-2E-01, LAC-2E-02, LAC-2E-03, LAC-2E-04, LAC-2F-01, LAC-2F-02, LAC-2F-03, LAC-2F-04]
   newly_added: [3C-L01-substrate-ceiling-history, 3C-L08-non-json-bench-feed, 3C-L14-per-wave-gate, 3C-L16-checkasm-escape-mask, 3C-GOMEGA-boundaries]
 prior_cycle_dispositions_folded:
-  accepted: [G-T-P1-EXCAVATION-CONVERGED, G-T-P2-RESEARCH-CONVERGED]
+  accepted: [G-T-P1-EXCAVATION-CONVERGED, G-T-P2-RESEARCH-CONVERGED, G-T-P3-V2-CH2, G-T-P3-V2-CH3, G-T-P3-V2-CH4, G-T-P3-V2-CH5, G-T-P3-V2-CH6]
   rejected: []
-  revised: []
+  revised: [G-T-P3-V2-CH1]
 ---
 
 ## Executive Summary
 
-3C consolidates 41 LOCKS amendment candidates into 12 proposed v+1 hunks. The diff preserves the 16-lock numbering, supersedes the stale SK-V9 allowance without erasing it as history, and adds no directive, BIR variant, `BackendShape`, public substrate API, or new lock. The main changes are: Lock 1 gets substrate-ceiling history, fact-stream/output-plane fencing, and material-differential rules for union reopen; Lock 8 gets row-plane accounting plus the non-JSON telemetry feed into `BENCH.md` Section 8; Lock 10 gets active cost evidence and regex/HIR fact requirements without expanding the five-shape canon; Lock 14 gets generated-output allowance plus per-wave name/shape leak gates; Lock 16 gets strict checkasm, `escape_mask_64` prerequisite-only wording, primitive manifests, zero-orphan close states, and hardware-gate clarification. G3/G-Omega boundaries remain explicit: T-P3 proposes only, Pass Omega edits only after G-Omega. Evidence: `PASS-3-SYNTHESIS.md:21`-`24`, `PASS-3-SYNTHESIS.md:189`-`198`, `PASS-3-SYNTHESIS.md:210`, `restart/HANDOFF.md:44`-`47`.
+3C consolidates 41 LOCKS amendment candidates into 12 proposed v+1 hunks. The diff preserves the 16-lock numbering, supersedes the stale SK-V9 allowance without erasing it as history, and adds no directive, BIR variant, `BackendShape`, public substrate API, or new lock. The main changes are: Lock 1 gets substrate-ceiling history, fact-stream/output-plane fencing, and material-differential rules for union reopen; Lock 8 gets row-plane accounting plus the non-JSON telemetry feed into `BENCH.md` Section 8; Lock 10 gets active cost evidence and regex/HIR fact requirements without expanding the five-shape canon; Lock 14 gets generated-output allowance plus per-wave name/shape leak gates; Lock 16 gets strict checkasm, `escape_mask_64` prerequisite-only wording, primitive manifests, zero-orphan close states, and hardware-gate clarification. G3/G-Omega boundaries remain explicit: T-P3 proposes only, Pass Omega edits only after G-Omega. Evidence: `restart/prompts/totality/PASS-3-SYNTHESIS.md:21`-`24`, `restart/prompts/totality/PASS-3-SYNTHESIS.md:189`-`198`, `restart/prompts/totality/PASS-3-SYNTHESIS.md:210`, `restart/HANDOFF.md:44`-`47`.
 
-## V1 Delta Summary
+## V3 Delta Summary
 
 | delta id | affected LOCKS.md line(s) | disposition summary | source candidates |
 |---|---|---|---|
@@ -112,7 +112,7 @@ Positive: the v+1 diff converts repeated T-P2 manifest/checkasm/grammar-neutrali
 
 Cost: the highest-cost consequences route to implementation waves, not this artifact: generated provider manifest plus Lock 14 scan is 700-2,000 LOC per 1E (`restart/audit/totality/p1/1E-locks-evidence.md:107`); Lock 16 manifest/checkasm closure is 200-600 LOC per 1E (`restart/audit/totality/p1/1E-locks-evidence.md:109`); cost-model/decision-engine fold is high risk under T-P2 abrogate caps (`restart/audit/totality/p2/T-P2-V3-FOLD-ADDENDUM.md:103`-`115`).
 
-Propagation: 12 LOCKS hunks touch at least five other surfaces after G-Omega: `ARCHITECTURE.md` for cost/fact schema, `MASTER-PLAN.md` for wave gates, `BENCH.md` for non-JSON telemetry feed, `HANDOFF.md` for G-Omega status, and `MIGRATION.md` for workspace/archive drift. T-P3 does not perform those edits; `PASS-3-SYNTHESIS.md:197`-`198` assigns actual spec edits to Pass Omega.
+Propagation: 12 LOCKS hunks touch at least five other surfaces after G-Omega: `ARCHITECTURE.md` for cost/fact schema, `MASTER-PLAN.md` for wave gates, `BENCH.md` for non-JSON telemetry feed, `HANDOFF.md` for G-Omega status, and `MIGRATION.md` for workspace/archive drift. T-P3 does not perform those edits; `restart/prompts/totality/PASS-3-SYNTHESIS.md:197`-`198` assigns actual spec edits to Pass Omega.
 
 ## V2 Cost/Disposition Ledger
 

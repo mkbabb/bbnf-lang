@@ -1,8 +1,8 @@
 ---
 agent: 3A
 pass: T-P3-synthesis
-cycle: V2
-generated_at: 2026-05-21T19:37:16Z
+cycle: V3
+generated_at: 2026-05-21T19:46:41Z
 t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F]
 t_p2_dossiers_consumed: [2A, 2B, 2C, 2D, 2E, 2F]
 v1_surface_targeted: ARCHITECTURE.md
@@ -13,18 +13,18 @@ delta_summary:
   answered: []
   newly_added: [ARCH-3A-D01, ARCH-3A-D02, ARCH-3A-D03, ARCH-3A-D04, ARCH-3A-D05, ARCH-3A-D06, ARCH-3A-D07, ARCH-3A-D08, ARCH-3A-D09, ARCH-3A-D10]
 prior_cycle_dispositions_folded:
-  accepted: []
+  accepted: [G-T-P3-V2-CH2, G-T-P3-V2-CH3, G-T-P3-V2-CH4, G-T-P3-V2-CH5, G-T-P3-V2-CH6]
   rejected: []
-  revised: []
+  revised: [G-T-P3-V2-CH1]
 ---
 
 ## Executive Summary
 
 T-P3 is authorized to propose document deltas only after T-P2 convergence; it must not edit `ARCHITECTURE.md` in this pass (`restart/HANDOFF.md:3`, `restart/HANDOFF.md:12`, `restart/audit/totality/p2/hardening/HARDENING-T-P2-V5-CONVERGED.md:10`, `restart/audit/totality/p2/hardening/HARDENING-T-P2-V5-CONVERGED.md:47`). The V1 architecture surface is stale in three ways: authority still speaks in SK-V6 fold-back terms while SK-V13/T-P2 evidence is current (`restart/ARCHITECTURE.md:19`, `restart/skinny/tranches/sk-v13/SYNTHESIS.md:112`); backend and runtime sections describe aspirational BIR, BackendShape, EventTape, and generated-runtime contracts that live evidence does not yet satisfy (`restart/ARCHITECTURE.md:911`, `restart/audit/totality/p1/1A-substrate-evidence.md:52`, `restart/audit/totality/p1/1B-codegen-evidence.md:75`, `restart/audit/totality/p1/1C-runtime-evidence.md:98`); and skinny/SK-V13 evidence adds fact-stream, primitive, cost, and grammar-neutral admission rules not yet captured in `ARCHITECTURE.md` (`skinny/RESULTS.md:94`, `restart/audit/totality/p2/2D-cost-model.md:110`, `restart/audit/totality/p2/2B-primitive-vocabulary.md:186`, `restart/audit/totality/p2/2C-grammar-neutrality.md:89`).
 
-## V1 Delta Summary
+## V3 Delta Summary
 
-No prior T-P3 cycle is being carried forward, so all ten items below are newly proposed deltas for `ARCHITECTURE.md` (`restart/prompts/totality/PASS-3-SYNTHESIS.md:80`). They deliberately preserve T-P2 convergence limits: no new directive, BIR variant, public substrate, retained sidecar, or BackendShape expansion is proposed without G-Omega/user approval (`restart/audit/totality/p2/hardening/HARDENING-T-P2-V5-CONVERGED.md:57`, `restart/skinny/tranches/sk-v13/SYNTHESIS.md:220`). V1 removals, answered items, and prior-cycle dispositions are empty because this is the V1 artifact.
+No prior accepted T-P3 cycle is being carried forward, so all ten items below remain proposed deltas for `ARCHITECTURE.md` (`restart/prompts/totality/PASS-3-SYNTHESIS.md:80`). They deliberately preserve T-P2 convergence limits: no new directive, BIR variant, public substrate, retained sidecar, or BackendShape expansion is proposed without G-Omega/user approval (`restart/audit/totality/p2/hardening/HARDENING-T-P2-V5-CONVERGED.md:57`, `restart/skinny/tranches/sk-v13/SYNTHESIS.md:220`). V3 folds the V2 CH1 hygiene revise set while preserving the V2 cost/routing repairs.
 
 ## Proposed Delta Table
 

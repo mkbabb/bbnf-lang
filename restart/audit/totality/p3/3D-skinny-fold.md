@@ -1,8 +1,8 @@
 ---
 agent: 3D
 pass: T-P3-synthesis
-cycle: V1
-generated_at: 2026-05-21T19:13:04Z
+cycle: V2
+generated_at: 2026-05-21T19:37:16Z
 t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F]
 t_p2_dossiers_consumed: [2A, 2B, 2C, 2D, 2E, 2F]
 v1_surface_targeted: "V1.1 proposed-delta packet only; no direct spec or lock edit"
@@ -99,13 +99,30 @@ replay, support-only SIMD, and one-row CSS closure cannot silently graduate
 | FOLD-3D-008 | Gives the decision-engine work a bounded totality receiving surface and prevents optimizer work from inventing new directives or shapes. | High design risk because the current engine is hard-coded and missing egraph/CSP pieces (`restart/skinny/tranches/sk-v13/scoping/sk-v13-scoping-decision-engine.md:13`). | 3C Lock 4/10/14, 3E BackendShape coherence, implementation SPEC/DISPATCH after G-Omega. |
 | FOLD-3D-009 and FOLD-3D-010 | Keeps S-P1/S-P2 as evidence and makes G-Omega the pre-W0 gate, preserving monotonic skinny-to-totality direction. | Low documentation risk, high process risk if future packets treat research profiles as admissions (`restart/skinny/tranches/sk-v13/research/p1/hardening/HARDENING-S-P1-V5-CONVERGED.md:53`, `restart/skinny/tranches/sk-v13/research/p2/hardening/HARDENING-S-P2-V4-CONVERGED.md:46`). | 3C no-silent-drop checklist, 3F handoff, Pass Omega intake. |
 
-## Open Questions
+## V2 Cost And Routing Ledger
 
-| id | question | routed receiver |
-| --- | --- | --- |
-| CH1 | Does 3C disposition every 1E plus 2X lock candidate touched by these folds, including Lock 1, 4, 8, 10, 14, and 16, with no silent drops (`restart/prompts/totality/PASS-3-SYNTHESIS.md:210`)? | 3C |
-| CH2 | Should the generated-provider Lock14 amendment require Sheets and BBNF-self negative controls in the first V1.1 lock text, or may that remain a 3E onboarding gate (`restart/audit/totality/p2/2C-grammar-neutrality.md:157`)? | 3C/3E |
-| CH3 | What exact evidence distinguishes a fresh union material differential from a replay of REDRESS 96/97/98 (`skinny/REDRESS.md:2910`, `restart/skinny/tranches/sk-v13/SYNTHESIS.md:73`)? | 3C |
-| CH4 | Should CSS source-sidecar/lightningcss comparator code be named in Lock 1/14 text as comparator-only, so it cannot be mistaken for runtime substrate (`restart/audit/totality/p1/1A-substrate-evidence.md:58`, `skinny/REDRESS.md:3681`)? | 3C/3E |
-| CH5 | Where should the G-Omega before W0 gate live: HANDOFF only, BENCH only, or both (`restart/skinny/tranches/sk-v13/HANDOFF.md:54`, `restart/skinny/tranches/sk-v13/research/p2/hardening/HARDENING-S-P2-V4-CONVERGED.md:60`)? | 3F |
-| CH6 | Should row-plane SOTA ledgers include profile-method freshness as a required column, given S-P1 found profile facts are not gate admissions (`restart/skinny/tranches/sk-v13/research/p1/p1f-results-delta.md:13`, `restart/skinny/tranches/sk-v13/scoping/sk-v13-scoping-profile-truth.md:11`)? | 3C/3F |
+This ledger makes the skinny folds budgeted and receiver-bound. It routes evidence into totality amendments without authorizing any live skinny source, RESULTS, or REDRESS edit.
+
+| fold | LOC budget | propagation surfaces | risk class | wave alignment | same-wave consumer / receiver | hard cap or abrogate gate |
+| --- | ---: | ---: | --- | --- | --- | --- |
+| FOLD-3D-001 | 80-180 docs | 4 | Medium-high | Lock 1 / substrate taxonomy | Receiver: 3C Lock 1 and 3E non-JSON taxonomy. | Block if fact streams are retained sidecars or hidden substrates. |
+| FOLD-3D-002 | 80-200 docs | 4 | High | Lock 1/14 generated sink wave | Receiver: generated flag/sink schema and Lock 14 scan. | Abrogate generic public sink/flag APIs that encode JSON policy. |
+| FOLD-3D-003 | 100-220 docs/report | 5 | High | Lock 8 / BENCH row-plane ledger | Receiver: row-plane SOTA ledger covering parse, direct, typed, CSS. | Block if parse-only tolerance or row demotion loophole remains. |
+| FOLD-3D-004 | 60-140 docs | 4 | Medium | CSS parity gate | Receiver: Lock 8/14 and S-P3 CSS feature manifest. | Block if SK-V12 CSS row is treated as full CSS parity closure. |
+| FOLD-3D-005 | 120-260 docs | 5 | High | Lock 14 provider-registry wave | Receiver: generated manifest, leak scan, negative controls. | Abrogate if generic crates require hand-coded grammar roles. |
+| FOLD-3D-006 | 120-260 docs | 5 | High | Lock 16 SIMD/ASM manifest | Receiver: primitive manifest and source-present state machine. | Block support-only SIMD; each primitive wires, deletes, delegates, or blocks. |
+| FOLD-3D-007 | 80-180 docs | 4 | High | Rejected-route/material-differential ledger | Receiver: Lock 1/16 preblock text and S-P3 wave gates. | Block replay of pair fusion, dispatch table, skipless token, or old union routes without material differential. |
+| FOLD-3D-008 | 100-240 docs | 5 | High | Decision-engine fold | Receiver: Lock 4/10/14 and S-P3 G2 wave set. | Abrogate if optimizer work invents new directives, BIR variants, BackendShape, or retained substrate. |
+| FOLD-3D-009 | 60-140 docs | 4 | High process | G-Omega before W0 | Receiver: 3F handoff and BENCH gate. | Block any W0/source/generated/gate/RESULTS/REDRESS edit before G-Omega and S-P3 convergence. |
+| FOLD-3D-010 | 40-100 docs | 3 | Medium process | T-P3/Omega monotonic boundary | Receiver: Pass Omega intake and G3 packet. | Block if totality edits rewrite live skinny artifacts or treat research as admission. |
+
+## V2 Gated Open Questions
+
+| lens | question | receiver | blocker | gate |
+| --- | --- | --- | --- | --- |
+| CH1 | Does 3C disposition every 1E plus 2X lock candidate touched by these folds, including Lock 1, 4, 8, 10, 14, and 16, with no silent drops? | 3C / G3 packet. | 3D only routes folds; it does not own candidate disposition. | 3C V2 ledger must list every candidate group and no ACCEPT/MODIFY as implementation admission. |
+| CH2 | Should the generated-provider Lock14 amendment require Sheets and BBNF-self negative controls in the first V1.1 lock text, or may that remain a 3E onboarding gate? | 3C/3E plus G-Omega. | T-P2 requires negative control but not exact cardinality. | G-Omega pins witness cardinality or records explicit receiver gate. |
+| CH3 | What exact evidence distinguishes a fresh union material differential from a replay of REDRESS 96/97/98? | 3C Lock 1/16 and S-P3 union wave. | Prior union routes are historical failures but user pin unblocks category. | SPEC wave must name changed data movement, consumer shape, and row gate before redress. |
+| CH4 | Should CSS source-sidecar/lightningcss comparator code be named in Lock 1/14 text as comparator-only, so it cannot be mistaken for runtime substrate? | 3C/3E/BENCH. | CSS sidecar is valid comparator evidence but can become hidden coupling if unclassified. | Lock/BENCH text must state comparator-only provenance and no runtime dependency. |
+| CH5 | Where should the G-Omega before W0 gate live: HANDOFF only, BENCH only, or both? | 3F and Pass Omega CRUD-4. | T-P3 cannot edit either surface directly. | CRUD-4 must name W0 refusal conditions and S-P3/G-Omega prerequisites. |
+| CH6 | Should row-plane SOTA ledgers include profile-method freshness as a required column? | 3C Lock 8 and 3F handoff/BENCH routing. | S-P1 profile facts are not gate admissions. | Row ledger schema must separate profile freshness from row admission evidence. |

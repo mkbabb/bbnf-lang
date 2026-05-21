@@ -1,8 +1,8 @@
 ---
 agent: 3E
 pass: T-P3-synthesis
-cycle: V1
-generated_at: 2026-05-21T19:12:50Z
+cycle: V2
+generated_at: 2026-05-21T19:37:16Z
 t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F]
 t_p2_dossiers_consumed: [2A, 2B, 2C, 2D, 2E, 2F]
 v1_surface_targeted: n/a
@@ -147,13 +147,28 @@ Every future grammar must pass this test before any fleet-wide generality claim:
 | delta | positive consequence | cost / risk / wave | propagation |
 |---|---|---|---|
 | 3E-D01 | Makes Lock 14 concrete for CSS L4, Sheets, and BBNF-self while preserving the five-shape canon. | 180-320 doc LOC, medium risk, T-P3/Omega architecture fold. | 3 surfaces: `ARCHITECTURE.md`, `LOCKS.md`, S-P3 gates. |
-| 3E-D02 | Reconciles T-P1's live priority drift with T-P2's decision-engine research. | 80-180 doc LOC plus later resolver code, medium-high risk, decision-engine wave. | 3 surfaces: `ARCHITECTURE.md`, `LOCKS.md`, SK-V13 G2. |
-| 3E-D03 | Turns provider/sink/flag ownership from prose into a Lock 14 validator target. | 350-900 implementation LOC later, high risk, Lock 14 registry/runtime wave. | 4 surfaces: `LOCKS.md`, `ARCHITECTURE.md`, codegen/runtime plan, tests. |
-| 3E-D04 | Prevents support-only SIMD/primitive paper-close. | 200-600 manifest/tooling LOC later, medium-high risk, Lock 16 primitive-admission wave. | 4 surfaces: `LOCKS.md`, `BENCH`, `bbnf-simd` gates, S-P3 gates. |
+| 3E-D02 | Reconciles T-P1's live priority drift with T-P2's decision-engine research. | 80-180 doc LOC plus named resolver receiver wave, medium-high risk, decision-engine wave. | 3 surfaces: `ARCHITECTURE.md`, `LOCKS.md`, SK-V13 G2. |
+| 3E-D03 | Turns provider/sink/flag ownership from prose into a Lock 14 validator target. | 350-900 implementation LOC in the Lock 14 registry/runtime receiver wave, high risk. | 4 surfaces: `LOCKS.md`, `ARCHITECTURE.md`, codegen/runtime plan, tests. |
+| 3E-D04 | Prevents support-only SIMD/primitive paper-close. | 200-600 manifest/tooling LOC in the Lock 16 primitive-admission receiver wave, medium-high risk. | 4 surfaces: `LOCKS.md`, `BENCH`, `bbnf-simd` gates, S-P3 gates. |
 | 3E-D05 | Preserves the SK-V12 CSS win without inventing a parallel substrate. | 100-300 doc/report LOC, medium risk, substrate taxonomy fold. | 4 surfaces: `ARCHITECTURE.md`, `LOCKS.md`, `BENCH`, `RESULTS` schema. |
-| 3E-D06 | Gives arbitrary grammar onboarding a falsifiable gate. | 120-260 doc/test LOC now; higher generated-fixture cost later, medium risk. | 3 surfaces: `ARCHITECTURE.md`, `HANDOFF.md`, `LOCKS.md`. |
+| 3E-D06 | Gives arbitrary grammar onboarding a falsifiable gate. | 120-260 doc/test LOC now; generated-fixture receiver must be capped in S-P3 or routed to an explicit non-budgeted handoff gate, medium risk. | 3 surfaces: `ARCHITECTURE.md`, `HANDOFF.md`, `LOCKS.md`. |
 | 3E-D07 | Blocks JSON-only closure language and makes non-JSON witnesses required. | 80-180 doc LOC, medium risk, S-P3/MASTER wave criteria. | 4 surfaces: `LOCKS.md`, `MASTER-PLAN.md`, SK-V13 plan, challenge gates. |
-| 3E-D08 | Makes grammar-shaped overfit visible to CH2 even when `rg Json` passes. | 180-420 lint/report LOC later, high risk, Lock 14 census wave. | 4 surfaces: `LOCKS.md`, diagnostics, CI/gates, S-P3 validation. |
+| 3E-D08 | Makes grammar-shaped overfit visible to CH2 even when `rg Json` passes. | 180-420 lint/report LOC in the Lock 14 census receiver wave, high risk. | 4 surfaces: `LOCKS.md`, diagnostics, CI/gates, S-P3 validation. |
+
+## V2 Cost And Routing Ledger
+
+This ledger tightens the V1 consequence rows into explicit receiver/gate form. The D06 generated-fixture tail is no longer unrouted: S-P3 either budgets the receiver wave or Pass Omega records a non-budgeted handoff gate.
+
+| delta | LOC budget | propagation surfaces | risk class | wave alignment | same-wave consumer / receiver | hard cap or abrogate gate |
+|---|---:|---:|---|---|---|---|
+| 3E-D01 | 180-320 docs | 3 | Medium | Omega CRUD-1 architecture shape matrix | Receiver: CSS/Sheets/BBNF-self BackendShape matrix. | Block if any matrix row expands five-shape canon. |
+| 3E-D02 | 80-180 docs plus named resolver receiver wave | 3 | Medium-high | Decision-engine fold | Receiver: resolver pipeline wording and Lock 10 gate. | Abrogate if fixed P1-P8 order remains admitting. |
+| 3E-D03 | 350-900 impl/docs in receiver wave | 4 | High | Lock 14 registry/runtime wave | Receiver: generated provider/sink/fact/value/flag manifest. | Block if generic crates hand-code provider arrays, root aliases, or grammar branches. |
+| 3E-D04 | 200-600 manifest/tooling in receiver wave | 4 | Medium-high | Lock 16 primitive-admission wave | Receiver: primitive policy manifest and same-wave consumer gate. | Block primitive-only imports without scalar oracle, checkasm, and row movement/rejection. |
+| 3E-D05 | 100-300 docs/report | 4 | Medium | Substrate taxonomy + BENCH feed | Receiver: CSS fact-output as output-plane evidence. | Block if fact streams become retained sidecars or a sixth shape. |
+| 3E-D06 | 120-260 docs/test now; receiver wave capped by S-P3 | 3 | Medium | Future-grammar onboarding gate | Receiver: S-P3 generated witness wave or explicit Omega handoff gate. | Abrogate prose-only generality; fixture must fail closed without generated facts. |
+| 3E-D07 | 80-180 docs | 4 | Medium | Lock 14 and MASTER wave criteria | Receiver: CSS plus Sheets/BBNF-self negative-control rule. | Block "fleet-wide grammar-neutral" wording until positive CSS row plus negative control are gate-consumed. |
+| 3E-D08 | 180-420 lint/report in receiver wave | 4 | High | Lock 14 census wave | Receiver: grammar-name and grammar-shape leak command set. | Block if validation only searches literal names and misses JSON-shaped policy. |
 
 ## Open Questions
 

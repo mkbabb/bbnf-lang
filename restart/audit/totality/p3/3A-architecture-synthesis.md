@@ -1,8 +1,8 @@
 ---
 agent: 3A
 pass: T-P3-synthesis
-cycle: V1
-generated_at: 2026-05-21T19:16:10Z
+cycle: V2
+generated_at: 2026-05-21T19:37:16Z
 t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F]
 t_p2_dossiers_consumed: [2A, 2B, 2C, 2D, 2E, 2F]
 v1_surface_targeted: ARCHITECTURE.md
@@ -56,13 +56,30 @@ No prior T-P3 cycle is being carried forward, so all ten items below are newly p
 | ARCH-3A-D09 | Gives PrimitiveFacts and Lock16 a concrete manifest that can prevent source-present primitives from becoming orphans (`restart/audit/totality/p2/2B-primitive-vocabulary.md:315`; `restart/audit/totality/p2/2E-host-arch-esoterica.md:160`). | Adds same-wave consumer and telemetry burden to every SIMD/ASM primitive route (`restart/audit/totality/p2/T-P2-V4-FOLD-ADDENDUM.md:47`). | 5 surfaces: PrimitiveFacts, Lock16, SIMD/ASM tests, benchmarks, diagnostics. |
 | ARCH-3A-D10 | Allows parse-that/regex techniques to feed architecture through compile-time facts and decision-engine gates without smuggling a new runtime substrate (`restart/audit/totality/p2/2F-parse-that-gaps.md:162`; `restart/audit/totality/p2/2D-cost-model.md:92`). | Blocks local-worktree or opaque-pattern shortcuts until import, consumer, and abrogate gates exist (`restart/audit/totality/p2/2F-parse-that-gaps.md:154`). | 4 surfaces: regex facts, CostFacts, scanner/runtime taxonomy, SK-V13 decision engine. |
 
-## Open Questions
+## V2 Cost And Routing Ledger
 
-| question | CH lens | why it remains open |
-| --- | --- | --- |
-| Should the stale section 7.4 status paragraph be replaced entirely or kept with an explicit "historical divergence" label? | CH1 architecture-surface hygiene | T-P1 says the paragraph is stale because `passes::compile` has moved beyond the specific `shapes_for_json()` / `nominate_json` claim while residual leaks remain (`restart/audit/totality/p1/1B-codegen-evidence.md:48`; `restart/audit/totality/p1/1B-codegen-evidence.md:109`; `restart/ARCHITECTURE.md:1110`). |
-| Where should the generated registry manifest live: inside section 10 generated artifacts, section 12 onboarding, or a new Lock14 subsection? | CH2 grammar-neutrality | T-P2 requires generated provider/config/fact/sink/value/view/tests plus leak scans, but V1 currently spreads those concerns across generated runtime, future grammar onboarding, and file discipline sections (`restart/audit/totality/p2/2C-grammar-neutrality.md:157`; `restart/ARCHITECTURE.md:1597`; `restart/ARCHITECTURE.md:1716`; `restart/ARCHITECTURE.md:1813`). |
-| Should CSS fact-stream evidence be listed in the performance table, runtime substrate taxonomy, or both? | CH3 substrate/evidence plane | T-P1/T-P2 agree CSS fact streams are admitted non-JSON evidence but not retained runtime substrate, and SK-V13 requires 24 CSS parity features before full CSS closure (`restart/audit/totality/p1/1A-substrate-evidence.md:57`; `restart/audit/totality/p2/2C-grammar-neutrality.md:80`; `restart/skinny/tranches/sk-v13/SYNTHESIS.md:38`). |
-| Does `ARCHITECTURE.md` need one shared evidence-schema table for CostFacts and PrimitiveFacts, or two separate manifests? | CH4 evidence/cost discipline | CostFacts require objective/frontier/freshness/extraction fields, while primitive routes require source state, scalar reference, first consumer, retention, policy owner, and abrogate gates (`restart/audit/totality/p2/2D-cost-model.md:110`; `restart/audit/totality/p2/2B-primitive-vocabulary.md:186`; `restart/audit/totality/p2/2E-host-arch-esoterica.md:115`). |
-| Should generated root aliases for grammars be allowed if the manifest owns them, or must root crates remain completely alias-free? | CH5 Lock14 enforcement | T-P1 found root aliases and proof witnesses leaking grammar policy, while T-P1/T-P2 also distinguish generated per-grammar names from generic hardcoded branches (`restart/audit/totality/p1/1C-runtime-evidence.md:98`; `restart/audit/totality/p1/1C-runtime-evidence.md:104`; `restart/audit/totality/p1/1E-locks-evidence.md:116`; `restart/audit/totality/p2/2C-grammar-neutrality.md:141`). |
-| Which first non-shortlist primitive should receive the same-wave consumer gate after SK-V13, and which should be architecturally blocked instead? | CH6 primitive/host transfer | T-P2 keeps ascii delimiter micro-proven but missing a CSS consumer, classifies escape-mask as prerequisite-only, and requires source-present primitives to be wired, deleted, scalar-delegated, or architecturally blocked (`restart/audit/totality/p2/2B-primitive-vocabulary.md:151`; `restart/audit/totality/p2/2B-primitive-vocabulary.md:227`; `restart/audit/totality/p2/2E-host-arch-esoterica.md:160`; `restart/audit/totality/p2/T-P2-V4-FOLD-ADDENDUM.md:47`). |
+This ledger is the CH4 repair surface. It does not make the proposals authoritative; it gives Pass Omega and the authorized implementation SPEC a bounded cost, propagation, and consumer/gate target for each architecture delta.
+
+| delta | LOC budget | propagation surfaces | risk class | wave alignment | same-wave consumer / receiver | hard cap or abrogate gate |
+| --- | ---: | ---: | --- | --- | --- | --- |
+| ARCH-3A-D01 | 30-70 docs | 3 | Medium | Omega CRUD-1 authority/status | Receiver: `ARCHITECTURE.md` status block and `HANDOFF.md` current override. | Abrogate if T-P3/G3 authority cannot be cited from converged artifacts. |
+| ARCH-3A-D02 | 80-160 docs | 4 | Medium | Omega CRUD-1 BIR status | Receiver: BIR status table plus lowerer/VM replay gates. | Block close unless live/target BIR rows are separated and no new BIR variant is implied. |
+| ARCH-3A-D03 | 120-260 docs | 5 | High | SK-V13 decision-engine fold / Omega CRUD-1 | Receiver: active CostFacts schema and decision-engine S-P3 wave. | Abrogate if resolver still admits through static P1-P8 priority or stale cost. |
+| ARCH-3A-D04 | 90-180 docs | 4 | Medium | Omega CRUD-1 shape status | Receiver: per-shape implementation-status table and lowerer backlog. | Block if EventTape or CollapsedStage is described as live without same-wave consumer evidence. |
+| ARCH-3A-D05 | 70-140 docs | 3 | Medium | Omega CRUD-1 direct-plane wording | Receiver: direct row admission predicate and SinkOnly/shared-schedule text. | Block if direct movement can close on digest/parse success without same-plane equality. |
+| ARCH-3A-D06 | 100-220 docs | 5 | Medium-high | Omega CRUD-1 / BENCH feed | Receiver: substrate taxonomy plus CSS fact-output BENCH feed. | Block if CSS fact stream becomes retained substrate or a sixth BackendShape. |
+| ARCH-3A-D07 | 140-320 docs | 5 | High | Lock 14 registry wave | Receiver: generated manifest contract and Lock 14 scan. | Abrogate if generic crates require hand-coded grammar branches or JSON-shaped flags. |
+| ARCH-3A-D08 | 80-180 docs | 4 | High | Row-plane SOTA ledger | Receiver: BENCH/RESULTS row-plane schema. | Block if parse-only concessions or one CSS row can close campaign-level SOTA. |
+| ARCH-3A-D09 | 120-260 docs | 5 | High | Lock 16 primitive manifest wave | Receiver: PrimitiveFacts manifest and SIMD/ASM gate. | Abrogate any primitive without scalar reference, strict parity, first consumer, and row movement/rejection. |
+| ARCH-3A-D10 | 100-220 docs | 4 | Medium-high | Regex/HIR import and decision-engine wave | Receiver: regex fact import boundary and scanner taxonomy. | Block opaque-pattern or local-worktree shortcuts until fact import and consumer gates exist. |
+
+## V2 Gated Open Questions
+
+| lens | question | receiver | blocker | gate |
+| --- | --- | --- | --- | --- |
+| CH1 architecture-surface hygiene | Should the stale section 7.4 status paragraph be replaced entirely or kept with an explicit "historical divergence" label? | Pass Omega CRUD-1 for `ARCHITECTURE.md`. | T-P3 cannot edit the authoritative surface. | CRUD diff must reconcile `restart/ARCHITECTURE.md:1110` with T-P1 codegen evidence and keep stale prose out of current authority. |
+| CH2 grammar-neutrality | Where should the generated registry manifest live: section 10 generated artifacts, section 12 onboarding, or a new Lock14 subsection? | Pass Omega CRUD-1 plus CRUD-3 Lock 14. | Manifest schema is proposed, not ratified. | G-Omega accepts one canonical manifest location and Lock 14 scan consumes it. |
+| CH3 substrate/evidence plane | Should CSS fact-stream evidence be listed in the performance table, runtime substrate taxonomy, or both? | Pass Omega CRUD-1 and BENCH/CRUD surface. | CSS fact stream is admitted evidence but not retained substrate. | Accepted wording must preserve five BackendShape values and emit non-JSON telemetry provenance. |
+| CH4 evidence/cost discipline | Does `ARCHITECTURE.md` need one shared evidence-schema table for CostFacts and PrimitiveFacts, or two separate manifests? | Pass Omega CRUD-1 architecture schema, with 3C Lock 10/16 alignment. | CostFacts and PrimitiveFacts have different admission fields. | CRUD diff must provide objective/freshness fields for CostFacts and first-consumer/source-state fields for PrimitiveFacts. |
+| CH5 Lock14 enforcement | Should generated root aliases for grammars be allowed if the manifest owns them, or must root crates remain completely alias-free? | Pass Omega CRUD-1/CRUD-3 plus future Lock 14 registry wave. | T-P1 found root aliases but T-P2 permits generated rostered names. | G-Omega chooses generated-output allowance wording; leak scan must distinguish names from grammar-shaped policy. |
+| CH6 primitive/host transfer | Which first non-shortlist primitive should receive the same-wave consumer gate after SK-V13, and which should be architecturally blocked instead? | S-P3 / Lock 16 primitive wave after G-Omega. | T-P3 cannot pick production source changes. | SPEC wave must name scalar oracle, first consumer, row gate, or architectural block before redress. |

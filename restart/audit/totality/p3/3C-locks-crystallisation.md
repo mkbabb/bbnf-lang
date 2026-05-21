@@ -1,8 +1,8 @@
 ---
 agent: 3C
 pass: T-P3-synthesis
-cycle: V1
-generated_at: 2026-05-21T19:14:19Z
+cycle: V2
+generated_at: 2026-05-21T19:37:16Z
 t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F]
 t_p2_dossiers_consumed: [2A, 2B, 2C, 2D, 2E, 2F]
 v1_surface_targeted: LOCKS.md
@@ -82,7 +82,7 @@ prior_cycle_dispositions_folded:
 | LAC-2C-04 | 2C | Locks 10, 14 | ACCEPT | `restart/audit/totality/p2/2C-grammar-neutrality.md:187`; `restart/HANDOFF.md:195`-`245`; `restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md:68`-`75` | Add onboarding proof over existing five shapes and generated facts. |
 | LAC-2C-05 | 2C | Locks 16, 14 | ACCEPT | `restart/audit/totality/p2/2C-grammar-neutrality.md:188`; `skinny/REDRESS.md:3603`-`3632`; `skinny/REDRESS.md:3766`-`3820`; `restart/skinny/tranches/sk-v13/SYNTHESIS.md:246`-`247` | Add non-JSON exercise requirement when a primitive is claimed grammar-neutral. |
 | LAC-2D-01 | 2D | Lock 10 | MODIFY | `restart/audit/totality/p2/2D-cost-model.md:188`; `restart/audit/totality/p1/1B-codegen-evidence.md:38`-`39`; `restart/audit/totality/p2/T-P2-V3-FOLD-ADDENDUM.md:103`-`115` | Accept active cost resolver direction; final equality-saturation schema belongs in ARCH/3A, so LOCKS gets the non-closure and fail-closed rule. |
-| LAC-2D-02 | 2D | Lock 10 | MODIFY | `restart/audit/totality/p2/2D-cost-model.md:189`; `restart/audit/totality/p1/1B-codegen-evidence.md:38`; `restart/audit/totality/p2/T-P2-V3-FOLD-ADDENDUM.md:103`-`115` | Accept objective evidence requirement; defer exact `CostFacts` field list to ARCH but make stale/static fallback non-admitting in Lock 10. |
+| LAC-2D-02 | 2D | Lock 10 | MODIFY | `restart/audit/totality/p2/2D-cost-model.md:189`; `restart/audit/totality/p1/1B-codegen-evidence.md:38`; `restart/audit/totality/p2/T-P2-V3-FOLD-ADDENDUM.md:103`-`115` | Accept objective evidence requirement; route the exact `CostFacts` field list to ARCH-3A-D03/G-Omega while making stale/static fallback non-admitting in Lock 10. |
 | LAC-2D-03 | 2D | Lock 14 | ACCEPT | `restart/audit/totality/p2/2D-cost-model.md:190`; `restart/audit/totality/p1/1B-codegen-evidence.md:49`-`50`; `restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md:53`-`65` | Fold generated grammar metadata requirement into Lock 14 and Lock 10. |
 | LAC-2D-04 | 2D | Lock 16 / CollapsedStage | ACCEPT | `restart/audit/totality/p2/2D-cost-model.md:191`; `restart/locks/LOCKS.md:87`-`112`; `restart/audit/totality/p2/T-P2-V4-FOLD-ADDENDUM.md:47`-`55`; `restart/skinny/tranches/sk-v13/SYNTHESIS.md:223`-`230` | Add transient emitted-strategy constraint and x86-only literature boundary. |
 | LAC-2D-05 | 2D | Lock 1 | ACCEPT | `restart/audit/totality/p2/2D-cost-model.md:192`; `skinny/REDRESS.md:2910`-`2940`; `restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md:120`-`137` | Fold union-substrate history into Lock 1. |
@@ -114,11 +114,30 @@ Cost: the highest-cost consequences route to implementation waves, not this arti
 
 Propagation: 12 LOCKS hunks touch at least five other surfaces after G-Omega: `ARCHITECTURE.md` for cost/fact schema, `MASTER-PLAN.md` for wave gates, `BENCH.md` for non-JSON telemetry feed, `HANDOFF.md` for G-Omega status, and `MIGRATION.md` for workspace/archive drift. T-P3 does not perform those edits; `PASS-3-SYNTHESIS.md:197`-`198` assigns actual spec edits to Pass Omega.
 
-## Open Questions
+## V2 Cost/Disposition Ledger
 
-| lens | question | receiving gate |
-|---|---|---|
-| CH1 correctness | Does the proposed line-level diff remain patchable after other 3X agents edit adjacent proposed surfaces? | G3 review validates `3C-locks-v+1-diff.md` against current `restart/locks/LOCKS.md`; T-P3 itself does not edit LOCKS. Evidence boundary: `PASS-3-SYNTHESIS.md:21`-`24`. |
-| CH2 generality | Which exact generated provider manifest layout replaces `RuntimeProvider` without adding generic grammar branches? | 3E grammar-generalisation and Pass Omega ARCH/LOCKS CRUD; candidate evidence at `restart/audit/totality/p2/2C-grammar-neutrality.md:184`-`188`. |
-| CH4 cost | How much of the detailed `CostFacts` schema belongs in LOCKS versus ARCH? | 3A should own detailed ARCH schema; 3C keeps only non-closure and abrogate gates in Lock 10. Evidence: `restart/audit/totality/p2/2D-cost-model.md:188`-`192`. |
-| CH6 anti-paper-close | Are any accepted Lock 16 primitives row-admitted by the lock text alone? | No. The diff says `escape_mask_64` and microbench-only rows remain prerequisite/proof-only until same-wave consumer and row movement/rejection. Evidence: `skinny/REDRESS.md:3603`-`3632`, `skinny/REDRESS.md:3766`-`3820`. |
+This ledger is the CH4 repair surface for 3C. ACCEPT and MODIFY remain lock-text dispositions only; none is an implementation admission.
+
+| lock hunk | candidate ids | disposition | LOC budget | propagation surfaces | risk class | wave alignment | same-wave consumer / gate |
+|---|---|---|---:|---:|---|---|---|
+| 3C-L01-substrate-ceiling-history | LAC-1E-01, T2A-LAC-01, LAC-2B-05, LAC-2B-06, LAC-2D-05, LAC-2E-04 | MODIFY | 90-180 docs | 5 | High | Lock 1 + union material-differential wave | Gate: no union replay without material differential and measured row consumer/block. |
+| 3C-L02-layout-live-first | LAC-1E-02 | ACCEPT | 20-50 docs | 2 | Low-medium | Lock 2 API-freeze cleanup | Gate: live `LayoutFacts.backend_shape` text must not claim full `LayoutSink` closure. |
+| 3C-L03-path-cursor-proof | LAC-1E-03 | ACCEPT | 20-50 docs | 2 | Medium | Lock 3 verification wording | Gate: empty-path elision needs executable proof before close. |
+| 3C-L08-row-plane-bench-feed | LAC-1E-04, T2A-LAC-02, LAC-2F-04 | ACCEPT/MODIFY | 120-260 docs | 5 | High | Lock 8 + BENCH non-JSON telemetry | Gate: row-plane tables must carry comparator provenance and strict equality. |
+| 3C-L09-runtime-api-obligations | LAC-1E-05 | ACCEPT | 20-50 docs | 2 | Low-medium | Lock 9 V1 obligation note | Gate: skinny API cannot close bump/generator-owned document obligations. |
+| 3C-L10-decision-engine-cost | T2A-LAC-05, LAC-2C-04, LAC-2D-01, LAC-2D-02, LAC-2D-03, LAC-2F-03 | MODIFY | 140-320 docs | 5 | High | Lock 10 + decision-engine fold | Gate: active CostFacts and regex/HIR facts are required; P1-P8 fallback is non-admitting. |
+| 3C-L11-L12-workspace-drift | LAC-1E-06 | ACCEPT | 30-80 docs | 3 | Medium | Workspace/archive Omega CRUD | Gate: archive/remove proof required for root drift closure. |
+| 3C-L13-loc-exceptions | LAC-1E-07 | MODIFY | 30-80 docs | 3 | Medium | LOC budget gate | Gate: generated/report exceptions require budgets and transcripts. |
+| 3C-L14-generated-output-and-per-wave-gate | LAC-1E-08, LAC-1E-11, T2A-LAC-04, LAC-2B-03, LAC-2C-01, LAC-2C-02, LAC-2C-03, LAC-2C-05, LAC-2F-01 | MODIFY | 180-420 docs | 6 | High | Lock 14 registry/runtime wave | Gate: generated names allowed only through rostered output; grammar-shape leak scan required per wave. |
+| 3C-L15-profile-scope | LAC-1E-09 | ACCEPT | 20-50 docs | 2 | Medium | Lock 15 scope clarification | Gate: skinny profile evidence cannot close root thin-LTO drift. |
+| 3C-L16-manifest-checkasm-orphans | LAC-1E-10, T2A-LAC-03, LAC-2B-01, LAC-2B-02, LAC-2B-04, LAC-2B-07, LAC-2D-04, LAC-2E-01, LAC-2E-02, LAC-2E-03, LAC-2F-02 | ACCEPT/MODIFY | 180-420 docs | 6 | High | Lock 16 primitive/SIMD waves | Gate: strict checkasm, scalar reference, first consumer, row movement/rejection, and zero-orphan disposition. |
+| 3C-GOMEGA-boundaries | PASS-3, HANDOFF, T-P2 convergence | ACCEPT | 40-100 docs | 4 | High process | G3/G-Omega | Gate: T-P3 proposes only; authoritative edits merge only through Omega/G-Omega flow. |
+
+## V2 Gated Open Questions
+
+| lens | question | receiver | blocker | gate |
+|---|---|---|---|---|
+| CH1 correctness | Does the proposed line-level diff remain patchable after other 3X agents edit adjacent proposed surfaces? | G3 packet and Pass Omega CRUD-3. | T-P3 cannot edit `LOCKS.md`; sibling artifacts may shift adjacent proposed text. | G3 validates `3C-locks-v+1-diff.md` against current `restart/locks/LOCKS.md` before CRUD. |
+| CH2 generality | Which exact generated provider manifest layout replaces `RuntimeProvider` without adding generic grammar branches? | 3E grammar-generalisation plus Omega CRUD-1/CRUD-3. | T-P2 sets contract but leaves file/schema choice open. | G-Omega pins manifest schema; Lock 14 leak scan consumes it. |
+| CH4 cost | How much of the detailed `CostFacts` schema belongs in LOCKS versus ARCH? | ARCH-3A-D03 and Pass Omega CRUD-1/CRUD-3. | Lock text should not become a full implementation schema. | ARCH owns fields; Lock 10 owns non-closure and abrogate gates. |
+| CH6 anti-paper-close | Are any accepted Lock 16 primitives row-admitted by the lock text alone? | Lock 16 primitive wave after G-Omega. | Lock text is governance, not redress evidence. | Primitive admits only with scalar reference, strict checkasm, first consumer, and measured row movement or measured rejection/block. |

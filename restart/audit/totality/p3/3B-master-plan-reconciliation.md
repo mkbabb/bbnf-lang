@@ -1,8 +1,8 @@
 ---
 agent: 3B
 pass: T-P3-synthesis
-cycle: V1
-generated_at: 2026-05-21T19:13:43Z
+cycle: V2
+generated_at: 2026-05-21T19:37:16Z
 t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F]
 t_p2_dossiers_consumed: [2A, 2B, 2C, 2D, 2E, 2F]
 v1_surface_targeted: MASTER-PLAN.md
@@ -108,7 +108,7 @@ T-P3 is authorized to propose only, and must not edit `MASTER-PLAN.md` or other 
 
 | new wave | allocation | LOC / risk / propagation | same-wave consumer | evidence |
 |---|---|---|---|---|
-| MP.NW0 | G-Omega and Totality V1.1 ratification before any SK-V13 W0/source/RESULTS/REDRESS wave. | 250-700 LOC docs; high risk if skipped; touches MASTER, ARCH, LOCKS, MIGRATION, HANDOFF through later Omega only. | Ratified V1.1/G-Omega surfaces and sign-off, not implementation code. | SK-V13 hard pre-W0 (`restart/skinny/tranches/sk-v13/SYNTHESIS.md:112-122`); T-P3 no direct governance edit (`restart/HANDOFF.md:44-47`). |
+| MP.NW0 | G-Omega and Totality V1.1 ratification before any SK-V13 W0/source/RESULTS/REDRESS wave. | 250-700 LOC docs; high risk if skipped; touches MASTER, ARCH, LOCKS, MIGRATION, HANDOFF through Omega CRUD only. | Ratified V1.1/G-Omega surfaces and sign-off, not implementation code. | SK-V13 hard pre-W0 (`restart/skinny/tranches/sk-v13/SYNTHESIS.md:112-122`); T-P3 no direct governance edit (`restart/HANDOFF.md:44-47`). |
 | MP.NW1 | Current-state authority and row-plane telemetry fold: make SK-V12 CSS admission, JSON parse/direct/typed planes, companion reports, and stale-current surfaces explicit. | 180-420 LOC docs/report schema; high gate risk; propagates to HANDOFF, MASTER carry ledger, RESULTS/REDRESS schema notes. | Current-state authority page and gate-consumed row-plane report. | stale HANDOFF/INDEX drift (`restart/audit/totality/p1/1F-coherence-scan.md:33`, `restart/audit/totality/p1/1F-coherence-scan.md:38`); row-plane split (`restart/audit/totality/p1/1D-skinny-lessons.md:107`). |
 | MP.NW2 | CSS stylesheet root plus selector framework. | 350-500 LOC; high risk; propagates to codegen/runtime/bench/gate only after G-Omega. | Generated stylesheet/selector CSS row with lightningcss plus cssparser/golden oracle. | CSS Candidate Wave 1 (`restart/skinny/tranches/sk-v13/scoping/sk-v13-scoping-css-parity-gap.md:140-152`); SK-V13 CSS close bar (`restart/skinny/tranches/sk-v13/SYNTHESIS.md:38-57`). |
 | MP.NW3 | CSS declaration-values expansion: declarations, `var()`, `calc()`, color functions, custom-property/value facts. | 600-840 LOC; medium-high risk; touches CSS codegen/runtime/facts/bench. | Feature-level CSS declaration/value row above lightningcss+1 with strict equality. | Candidate Wave 2 (`restart/skinny/tranches/sk-v13/scoping/sk-v13-scoping-css-parity-gap.md:154-167`); missing productions (`restart/skinny/tranches/sk-v13/scoping/sk-v13-scoping-css-parity-gap.md:39-52`). |
@@ -141,17 +141,33 @@ Positive: MASTER can remain a planning surface while reflecting current evidence
 
 Cost: the proposal adds 12 waves and shifts close pressure from H/J into G-Omega, CSS feature rows, JSON 51-row matrix, Lock 14, and decision-engine waves; the largest code envelopes are CSS parity, decision engine, Lock 14 provider repair, and union material differential (`restart/skinny/tranches/sk-v13/scoping/sk-v13-scoping-css-parity-gap.md:140-181`, `restart/audit/totality/p1/1D-skinny-lessons.md:78-79`, `restart/audit/totality/p1/1E-locks-evidence.md:107`).
 
-Propagation: these deltas touch `MASTER-PLAN.md` only as proposed text, but later Omega must coordinate ARCH/LOCKS/MIGRATION/HANDOFF before implementation because T-P3 cannot edit governance surfaces directly (`restart/HANDOFF.md:44-47`). Implementation waves must retain same-wave consumers, LOC budgets, and abrogate gates from T-P1/T-P2 hardening (`restart/prompts/totality/PASS-3-SYNTHESIS.md:81-90`, `restart/audit/totality/p2/2D-cost-model.md:139-149`).
+Propagation: these deltas touch `MASTER-PLAN.md` only as proposed text, but Omega CRUD must coordinate ARCH/LOCKS/MIGRATION/HANDOFF before implementation because T-P3 cannot edit governance surfaces directly (`restart/HANDOFF.md:44-47`). Implementation waves must retain same-wave consumers, LOC budgets, and abrogate gates from T-P1/T-P2 hardening (`restart/prompts/totality/PASS-3-SYNTHESIS.md:81-90`, `restart/audit/totality/p2/2D-cost-model.md:139-149`).
 
 Risk: misclassifying partial skinny rows as tranche close would regress SK-V13. The highest paper-close traps are one-row CSS close, diagnostic-only parse rows, producer-only SIMD/ASM, and REDRESS-119/120 as current close authority (`restart/skinny/tranches/sk-v13/SYNTHESIS.md:25-36`, `restart/audit/totality/p1/1D-skinny-lessons.md:87-98`).
 
-## Open Questions
+## V2 Propagation And Receiver Ledger
 
-| lens | question | why it remains open |
-|---|---|---|
-| CH1 correctness | Should B.W0/B.W4/H.W0/H.W5 be labeled `landed-skinny` instead of plain `landed` in the next MASTER revision? | This artifact uses a single required class, but the evidence is scoped: B/H rows landed as narrow skinny prerequisites while V1/root close remains pending (`restart/audit/totality/p1/1A-substrate-evidence.md:26`, `restart/audit/totality/p1/1E-locks-evidence.md:77`). |
-| CH2 generality | Should MP.NW6 require both Sheets and BBNF-self, or one negative-control witness plus CSS is enough for V1.1? | 2C says CSS is mandatory and Sheets/BBNF-self are negative controls, but exact close cardinality belongs to G-Omega/user sign-off (`restart/audit/totality/p2/2C-grammar-neutrality.md:157-168`, `restart/skinny/tranches/sk-v13/SYNTHESIS.md:112-122`). |
-| CH3 regression | Can H.W5 remain `landed` in MASTER if x86 `CollapsedStage` is optional/background? | MASTER itself says consumed ARM64/generic set landed and x86 successor optional; T-P2 says SK-V13 production lane is aarch64 only (`restart/MASTER-PLAN.md:533`, `restart/audit/totality/p2/2E-host-arch-esoterica.md:27-43`). |
-| CH4 cost | Should CSS parity MP.NW2-MP.NW4 be three waves or more feature-family waves? | The scoping file provides three candidate waves and LOC envelopes, but the parity matrix has 23 target features and generated LOC growth may force splits (`restart/skinny/tranches/sk-v13/scoping/sk-v13-scoping-css-parity-gap.md:96-138`, `restart/audit/totality/p2/2D-cost-model.md:146`). |
-| CH5 hidden coupling | Does the CSS `same-plane-source-sidecar` comparator need a formal exception separate from fact-stream taxonomy? | T-P1 treats CSS sidecar as comparator evidence, not runtime substrate; Lock 1/14 wording should prevent it from becoming a retained sidecar (`restart/audit/totality/p1/1A-substrate-evidence.md:45-46`, `restart/audit/totality/p1/1A-substrate-evidence.md:58`). |
-| CH6 anti-paper-close | Can any NEW wave close as support-only? | No; T-P2 requires scalar/parity/strict equality and same-wave row consumer or measured rejection/block for primitives and decision-engine candidates (`restart/audit/totality/p2/2A-sota-landscape.md:39-52`, `restart/audit/totality/p2/2B-primitive-vocabulary.md:136-139`). |
+The NEW-wave table already carries consumer structure. This V2 ledger adds numeric propagation and the process-level receivers CH4 requested for the nine MASTER deltas.
+
+| delta | LOC budget | propagation surfaces | risk class | wave alignment | same-wave consumer / receiver | hard cap or abrogate gate |
+|---|---:|---:|---|---|---|---|
+| MP-3B-D1 | 20-50 docs | 2 | Medium | Omega CRUD-2 MASTER census | Receiver: MASTER wave-count/status note. | Block if A-J/H counts cannot be reconciled without silent renumbering. |
+| MP-3B-D2 | 80-160 docs | 4 | Medium | Omega CRUD-2 wave status | Receiver: per-wave landed/refuted/pending annotations. | Block if narrow skinny wins are described as V1/root close. |
+| MP-3B-D3 | 1650-2290 impl/docs across MP.NW2-MP.NW4 | 5 | High | CSS parity wave family | Consumer: CSS feature rows with lightningcss and independent oracle gates. | Split if generated LOC exceeds cap or any feature lacks strict comparator coverage. |
+| MP-3B-D4 | 350-900 bench/gate/docs | 4 | High | JSON 51-row reopen wave | Consumer: same-run strict sonic matrix for all JSON rows. | Block support-only movement; each row admits or records architectural block. |
+| MP-3B-D5 | 1200-2900 impl/docs | 5 | High | Decision-engine fold | Consumer: bounded resolver reports plus JSON/CSS equality rows. | Abrogate on egraph OOM, CSP >1s, or stale cost coverage above threshold. |
+| MP-3B-D6 | 700-2000 impl/docs | 5 | High | Lock 14 registry/runtime wave | Consumer: CSS plus Sheets/BBNF-self generated witness and leak scan. | Block if generic code requires hardcoded grammar branch or JSON-shaped policy. |
+| MP-3B-D7 | 120-220 narrow impl; higher if generalized | 4 | High | SIMD/ASM zero-orphan wave | Consumer: CSS scan-block row or measured rejection/delete. | Abrogate if primitive remains source-present without first consumer or delete/block state. |
+| MP-3B-D8 | 700-1600 impl/docs | 4 | High | Union material-differential wave | Consumer: measured row movement or architectural-block proof. | Block replay of REDRESS 96/97/98 data movement without material differential. |
+| MP-3B-D9 | 430-1220 docs/fixtures | 5 | Medium-high | Fact-stream taxonomy and negative-control wave | Consumer: BENCH telemetry schema plus generated Sheets/BBNF-self witness. | Block if CSS fact stream becomes retained substrate or if negative control is prose-only. |
+
+## V2 Gated Open Questions
+
+| lens | question | receiver | blocker | gate |
+|---|---|---|---|---|
+| CH1 correctness | Should B.W0/B.W4/H.W0/H.W5 be labeled `landed-skinny` instead of plain `landed` in the next MASTER revision? | Pass Omega CRUD-2 for `MASTER-PLAN.md`. | T-P3 classification uses the required three-class vocabulary. | CRUD-2 must preserve scoped evidence and prevent landed rows from implying V1/root close. |
+| CH2 generality | Should MP.NW6 require both Sheets and BBNF-self, or one negative-control witness plus CSS is enough for V1.1? | G-Omega and Lock 14 registry wave. | T-P2 requires negative controls but does not set cardinality. | G-Omega pins witness cardinality before implementation; S-P3 consumes that pin. |
+| CH3 regression | Can H.W5 remain `landed` in MASTER if x86 `CollapsedStage` is optional/background? | Pass Omega CRUD-2 and Lock 16 wording. | MASTER says ARM64/generic consumed set landed, while x86 is outside SK-V13. | CRUD-2 labels H.W5 as aarch64/generic-scoped and blocks x86 from SK-V13 admission accounting. |
+| CH4 cost | Should CSS parity MP.NW2-MP.NW4 be three waves or more feature-family waves? | S-P3 CSS wave manifest after G-Omega. | The parity matrix has 23 target features and generated LOC may force splits. | S-P3 must split any CSS wave whose generated LOC, ownership, or comparator scope exceeds cap. |
+| CH5 hidden coupling | Does the CSS `same-plane-source-sidecar` comparator need a formal exception separate from fact-stream taxonomy? | 3C Lock 1/14 plus BENCH/Omega. | Comparator sidecar is valid evidence but not runtime substrate. | Accepted text must mark sidecar as comparator-only and forbid runtime dependency. |
+| CH6 anti-paper-close | Can any NEW wave close as support-only? | S-P3/SKINNY-TRIUMVIRATE wave protocol. | T-P3 only proposes wave families. | Every wave must name row consumer, strict equality gate, measured rejection, or architectural block before redress. |

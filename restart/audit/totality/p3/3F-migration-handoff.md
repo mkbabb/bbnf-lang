@@ -1,8 +1,8 @@
 ---
 agent: "3F"
 pass: "T-P3-synthesis"
-cycle: "V1"
-generated_at: "2026-05-21T19:16:38Z"
+cycle: "V2"
+generated_at: "2026-05-21T19:37:16Z"
 t_p1_inventories_consumed:
   - "1A-substrate-evidence"
   - "1B-codegen-evidence"
@@ -96,7 +96,7 @@ Use these paragraphs as Pass Omega CRUD input, not as direct edits.
 
 3. Add a CSS/non-JSON telemetry plane: "Admitted grammar-specific fact outputs may be kept only as fenced generated telemetry or comparator outputs until routed into a V1 runtime substrate category or explicitly excluded; CSS L4 is currently admitted as a direct-to-struct fact row, not EventTape." This resolves the T-P1 category gap and SK-V12 admission evidence (`restart/audit/totality/p1/1A-substrate-evidence.md:80`, `restart/audit/totality/p1/1C-runtime-evidence.md:102`, `skinny/RESULTS.md:94`).
 
-4. Add a decision-engine tranche: "P1-P8 cascade, marker-string lowerers, thin `CostFacts`, and opaque regex programs are ABROGATE-REPLACE unless Pass Omega or a later gated wave installs candidate generation, eqsat, CSP, active cost extraction, and strict equivalence/cost evidence." This follows T-P2's cost-model and parse-that findings (`restart/audit/totality/p2/2D-cost-model.md:69`, `restart/audit/totality/p2/2D-cost-model.md:110`, `restart/audit/totality/p2/2F-parse-that-gaps.md:198`).
+4. Add a decision-engine tranche: "P1-P8 cascade, marker-string lowerers, thin `CostFacts`, and opaque regex programs are ABROGATE-REPLACE unless Pass Omega or a named S-P3 receiver wave installs candidate generation, eqsat, CSP, active cost extraction, and strict equivalence/cost evidence." This follows T-P2's cost-model and parse-that findings (`restart/audit/totality/p2/2D-cost-model.md:69`, `restart/audit/totality/p2/2D-cost-model.md:110`, `restart/audit/totality/p2/2F-parse-that-gaps.md:198`).
 
 5. Add a Lock 16 primitive manifest row: "Every SIMD, ASM, hardware, table, mask, carry, or source-present primitive must have manifest identity, source state, strict mode, first consumer, command, scalar fallback or architecture block, and row movement before admission." This adopts the T-P2 primitive and host-architecture ledgers (`restart/audit/totality/p2/2B-primitive-vocabulary.md:196`, `restart/audit/totality/p2/2E-host-arch-esoterica.md:184`).
 
@@ -164,12 +164,30 @@ Measurable dispatch checklist:
 | cost | Legacy handwritten grammar/runtime/test/proof files need explicit fate assignment instead of staying as tolerated root drift. | Propagates to generated fixtures, runtime root exports, and proof witnesses (`restart/audit/totality/p1/1C-runtime-evidence.md:75`, `restart/audit/totality/p1/1F-anti-pattern.md:40`). |
 | propagation | Decision-engine and primitive-manifest deltas route into future SK-V13 S-P3/W0 dispatch. | SK-V13 G2 requires decision-engine replacement, and G4 requires zero aarch64 orphans (`restart/skinny/tranches/sk-v13/SYNTHESIS.md:59`, `restart/skinny/tranches/sk-v13/SYNTHESIS.md:84`). |
 
-## Open Questions
+## V2 Cost And Routing Ledger
 
-| lens | question | evidence |
-| --- | --- | --- |
-| CH1 | Does the G3 packet include all 3A-3E source-linked deltas needed by Omega-F, or must 3F be revised after sibling artifacts land? | PASS-3 expects 3A through 3F outputs under the p3 root (`restart/prompts/totality/PASS-3-SYNTHESIS.md:160`). |
-| CH2 | What exact generated provider manifest filename and schema should replace runtime hardcoded providers? | T-P2 defines the Lock 14 contract but leaves exact implementation surface to downstream governance/CRUD (`restart/audit/totality/p2/2C-grammar-neutrality.md:82`, `restart/audit/totality/p2/2C-grammar-neutrality.md:184`). |
-| CH3 | How should future union attempts prove material differential without replaying REDRESS-96/97/98? | REDRESS retires the prior union-substrate thesis without new Alpha/S-P3 contract, while SK-V13 permits only materially differentiated attempts (`skinny/REDRESS.md:2910`, `skinny/REDRESS.md:3860`). |
-| CH4 | Which stale historical HANDOFF sections should be deleted versus retained under an explicit "archive lineage" heading? | T-P1 coherence flags stale current-state claims but does not prescribe deletion granularity (`restart/audit/totality/p1/1F-coherence-scan.md:63`). |
-| CH6 | Should Omega CRUD be described as preparing proposed diffs before G-Omega, with final merge after G-Omega, to reconcile Pass Omega and SK-V13 sequencing? | Pass Omega places CRUD before G-Omega presentation, while SK-V13 HANDOFF lists Totality CRUD after G-Omega (`restart/prompts/pass-contracts/PASS-OMEGA.md:92`, `restart/skinny/tranches/sk-v13/HANDOFF.md:115`). |
+This ledger gives the migration and handoff deltas concrete receivers and gates. It also resolves the CRUD/G-Omega ordering ambiguity by making pre-G-Omega CRUD output proposed diffs/logs and post-G-Omega work the authoritative merge.
+
+| delta | LOC budget | propagation surfaces | risk class | wave alignment | same-wave consumer / receiver | hard cap or abrogate gate |
+| --- | ---: | ---: | --- | --- | --- | --- |
+| 3F-MIG-001 | 60-140 docs | 4 | Medium-high | Omega CRUD-4 migration crate fates | Receiver: archive/remove proof rows for legacy crates. | Block rename-only closure; require archive/removal proof or reconstituted generated surface. |
+| 3F-MIG-002 | 120-260 docs | 4 | High | Lock 14 registry wave / Omega CRUD-4 | Receiver: generated-provider/roster migration row. | Abrogate hardcoded provider/runtime-profile/root-alias branches. |
+| 3F-MIG-003 | 120-260 docs | 4 | High | Runtime/codegen ownership cleanup | Receiver: generated/rostered/archive/fixture fate table. | Block hand-owned per-grammar runtime surface in generic crates. |
+| 3F-MIG-004 | 80-180 docs/report | 4 | Medium | Non-JSON telemetry/BENCH feed | Receiver: CSS fact-output migration plane. | Block forcing CSS fact stream into EventTape or retained substrate. |
+| 3F-MIG-005 | 120-260 docs plus named receiver wave | 5 | High | Decision-engine fold | Receiver: S-P3 decision-engine wave and Omega migration row. | Abrogate if no named receiver installs candidate generation, eqsat, CSP, active cost, and strict evidence. |
+| 3F-MIG-006 | 120-260 docs | 5 | High | Lock 16 primitive/source-present wave | Receiver: primitive manifest/source-state migration gate. | Block source-present primitive retention without wired consumer, scalar delegate, delete, or architectural block. |
+| 3F-HANDOFF-001 | 40-90 docs | 3 | High process | G3/Omega status | Receiver: top-level current override. | Block any claim that T-P3 directly edits V1 surfaces. |
+| 3F-HANDOFF-002 | 60-140 docs | 4 | Medium | Entry-packet refresh | Receiver: HANDOFF source map and historical lineage demotion. | Block stale SK-V6/N-direct state as current authority. |
+| 3F-HANDOFF-003 | 80-180 docs | 4 | High process | SK-V13 current-state gate | Receiver: current skinny state and next-move summary. | Block W0 dispatch from SK-V12 CSS admission alone. |
+| 3F-HANDOFF-004 | 80-180 docs | 4 | High process | Pre-Omega/post-G-Omega refusal conditions | Receiver: concurrency/refusal block. | Block source/generated/gate/RESULTS/REDRESS edits until G-Omega and S-P3 conditions pass. |
+| 3F-HANDOFF-005 | 60-140 docs | 3 | Medium-high | Grammar-onboarding language | Receiver: three-surface onboarding wording. | Block two-surface or generic-branch grammar onboarding language. |
+
+## V2 Gated Open Questions
+
+| lens | question | receiver | blocker | gate |
+| --- | --- | --- | --- | --- |
+| CH1 | Does the G3 packet include all 3A-3E source-linked deltas needed by Omega-F, or must 3F be revised after sibling artifacts land? | G3 packet owner / Pass Omega Omega-F. | 3F depends on sibling artifact finality. | G3 source map must cite all 3A-3F V2 artifacts or route a revise before Omega. |
+| CH2 | What exact generated provider manifest filename and schema should replace runtime hardcoded providers? | 3E + Pass Omega CRUD-1/CRUD-3/CRUD-4. | T-P2 defines contract but not file/schema. | G-Omega pins manifest schema before Lock 14 registry implementation. |
+| CH3 | How should future union attempts prove material differential without replaying REDRESS-96/97/98? | 3C Lock 1/16 and S-P3 union wave. | Prior union routes are historical failures but category is user-unblocked. | SPEC wave must name material differential, changed data movement, consumer, and row gate before redress. |
+| CH4 | Which stale historical HANDOFF sections should be deleted versus retained under an explicit "archive lineage" heading? | Pass Omega CRUD-4. | T-P1 flags stale state but not deletion granularity. | CRUD-4 diff must separate current override from archive lineage and pass G-Omega review. |
+| CH6 | Should Omega CRUD be described as preparing proposed diffs before G-Omega, with final merge after G-Omega, to reconcile Pass Omega and SK-V13 sequencing? | Pass Omega controller / G-Omega packet. | Pass Omega and SK-V13 HANDOFF sequence CRUD differently. | Pre-G-Omega CRUD emits proposed diffs/logs only; authoritative merge waits for user G-Omega. |

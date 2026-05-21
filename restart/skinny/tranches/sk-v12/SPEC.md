@@ -474,24 +474,34 @@ Owner paths:
 - `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs`
 - `skinny/crates/bbnf-bench/benches/nonjson_css_l4.rs`
 - `skinny/crates/bbnf-bench/Cargo.toml`
+- `skinny/Cargo.lock`
 - `skinny/crates/bbnf-bench/src/report.rs`
 - `skinny/crates/bbnf-bench/src/bin/gate.rs`
 - `restart/skinny/tranches/sk-v12/research/w1b/css_l4_declaration_values.css`
 - `restart/skinny/tranches/sk-v12/research/w1b/skv12-W1b-css-l4-sota.json`
+- `restart/skinny/tranches/sk-v12/research/w1b/artifacts/track1-facts.txt`
+- `restart/skinny/tranches/sk-v12/research/w1b/artifacts/oracle-facts.txt`
+- `restart/skinny/tranches/sk-v12/research/w1b/artifacts/lightningcss-facts.txt`
+- `restart/skinny/tranches/sk-v12/research/w1b/artifacts/strict-equality.txt`
+- `restart/skinny/tranches/sk-v12/research/w1b/artifacts/lightningcss-strict-equality.txt`
 - `skinny/RESULTS.md`, `skinny/REDRESS.md`
 
 Entry gate:
 
 - W1b-1 PASS.
 - Plan names lightningcss comparator command, version/build hash, equality
-  command, benchmark command, gate command, artifact paths, and rollback slice.
+  command, benchmark command, gate command, artifact paths, dependency lockfile
+  evidence, fixture-limit statement, and rollback slice.
 - The row remains exactly
   `css_l4/declaration_values/direct_to_struct/main` and output plane remains
   `css_l4_declaration_value_fact_stream`.
 
 Tasks:
 
-- Build the lightningcss same-plane fact extractor for the selected fixture.
+- Build the lightningcss-gated same-plane source-sidecar fact extractor for the
+  selected frozen fixture. Public lightningcss APIs validate parse success plus
+  declaration/property/importance projections; raw token and byte-span facts are
+  emitted by the source sidecar and must be fixture-limited in REDRESS.
 - Run strict equality across generated Track 1, independent Track 2/oracle, and
   lightningcss.
 - Run same-host throughput for generated Track 1, oracle/Track 2, and
@@ -504,7 +514,8 @@ Exit gate `G-W1b-2-CSS-L4-LIGHTNINGCSS`:
 - PASS-ADMIT-CANDIDATE: `track1_mbps > lightningcss_mbps + 1`, strict equality,
   oracle independent, telemetry consumed, JSON guards held/demoted.
 - PASS-MEASURED-BASELINE: CSS row is strict-equal and measurable but does not
-  beat lightningcss; continue to W3/W4 or record FIXPOINT evidence later.
+  beat `lightningcss_mbps + 1`; continue to W3/W4 or record FIXPOINT evidence
+  later.
 - BLOCKED/FAIL: comparator, equality, oracle independence, generated-size,
   throughput, or gate consumption fails; record REDRESS. Sheets/BBNF fallback
   requires a subsequent S-P3 or wave plan revision after this measured CSS

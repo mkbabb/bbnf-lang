@@ -1,0 +1,42 @@
+---
+lens: CH2
+name: GENERALITY
+pass: T-P1-excavation
+cycle: V2
+generated_at: 2026-05-21
+dispositions_used: [ACCEPT, REVISE, REJECT]
+source_artifacts_reviewed:
+  - restart/audit/totality/p1/1A-substrate-evidence.md
+  - restart/audit/totality/p1/1B-codegen-evidence.md
+  - restart/audit/totality/p1/1C-runtime-evidence.md
+  - restart/audit/totality/p1/1D-skinny-lessons.md
+  - restart/audit/totality/p1/1E-locks-evidence.md
+  - restart/audit/totality/p1/1F-anti-pattern.md
+  - restart/audit/totality/p1/1F-coherence-scan.md
+  - restart/audit/totality/p1/1F-past-corpora.md
+live_truth_method: "nl -ba over V2 inventories, V1 hardening, Lock 14, orchestrator CH2, and cited live source rows; no cargo tests run by this lens"
+---
+
+## Verdict
+
+Disposition: ACCEPT.
+
+T-P1 V2 folds the CH2 / Lock 14 generality requirements from V1. The inventories no longer treat JSON-only evidence as grammar-general closure; they distinguish grammar-name leaks from grammar-shape leaks; they broaden the census beyond codegen/runtime headline leaks; they downgrade GrammarConfig to partial row-level repair evidence; and they add explicit Sheets and BBNF-self consequences. No REJECT finding is present under the GENERALITY lens.
+
+## Dispositions
+
+| ID | Disposition | Target | Finding |
+|---|---|---|---|
+| CH2-V2-001 | ACCEPT | Generic-crate census width | V2 expands the census to the surfaces named by the V1 fold. 1B now lists codegen provider switches, pass recognizer mining, pass materialization role mining, the `grammar` crate root/tests, and runtime root tests/proofs at `restart/audit/totality/p1/1B-codegen-evidence.md:53-61`. 1C covers runtime root aliases, root tests, proof witnesses, hand-written JSON/CSS files, and generated per-grammar type names at `restart/audit/totality/p1/1C-runtime-evidence.md:73-83`. 1E keeps the same scope as an explicit verify action at `restart/audit/totality/p1/1E-locks-evidence.md:118`. Live checks support the cited classes: `RuntimeProvider::{Json, CssL4DeclarationValues}` at `skinny/crates/codegen/src/grammar_profile.rs:11-15`, root runtime modules at `skinny/crates/runtime/src/lib.rs:3-19`, JSON helper APIs/tests in `skinny/crates/grammar/src/lib.rs:16-27` and `skinny/crates/grammar/src/lib.rs:386-393`. |
+| CH2-V2-002 | ACCEPT | Grammar-name leaks | V2 correctly treats explicit grammar identities in generic/root crates as Lock 14 drift. 1B cites the codegen provider registry and CSS-vs-JSON renderer at `restart/audit/totality/p1/1B-codegen-evidence.md:46` and `restart/audit/totality/p1/1B-codegen-evidence.md:80`; live code confirms the two hardcoded providers at `skinny/crates/codegen/src/grammar_profile.rs:89-93` and the CSS/JSON branch at `skinny/crates/codegen/src/lib.rs:153-181`. 1C cites root runtime aliases at `restart/audit/totality/p1/1C-runtime-evidence.md:77`, confirmed by `skinny/crates/runtime/src/lib.rs:3-19`. |
+| CH2-V2-003 | ACCEPT | Grammar-shape leaks without grammar names | V2 now separates grammar-shape leaks from literal grammar-name leaks. 1B identifies recognizer JSON punctuation at `restart/audit/totality/p1/1B-codegen-evidence.md:48` and materialization role mining at `restart/audit/totality/p1/1B-codegen-evidence.md:49`; live code confirms recognizer bytes `{}`, `[]`, `,`, `:`, and `"` at `skinny/crates/passes/src/lib.rs:324-350`, bool/null literals at `skinny/crates/passes/src/lib.rs:1243-1260`, container/sequence braces at `skinny/crates/passes/src/lib.rs:1262-1277`, and pair colon logic at `skinny/crates/passes/src/lib.rs:1296-1306`. 1E records the name-vs-shape distinction at `restart/audit/totality/p1/1E-locks-evidence.md:103-109`. |
+| CH2-V2-004 | ACCEPT | GrammarConfig partial wording | V2 removes the V1 overclaim that GrammarConfig closes Lock 14. 1D says the repair is "partial row-level Lock 14 repair evidence" at `restart/audit/totality/p1/1D-skinny-lessons.md:31`, repeats that it is "proved as direction; partial as generic repair" at `restart/audit/totality/p1/1D-skinny-lessons.md:70`, and preserves the negative rule that generated non-JSON evidence plus name/shape census is still required at `restart/audit/totality/p1/1D-skinny-lessons.md:48`. This matches live codegen reality: profiles remain hardcoded at `skinny/crates/codegen/src/grammar_profile.rs:11-15` and `skinny/crates/codegen/src/grammar_profile.rs:89-93`. |
+| CH2-V2-005 | ACCEPT | CSS L4 implications | V2 preserves CSS L4 as admitted non-JSON row evidence while refusing to generalize it into universal grammar closure. 1A classifies CSS declaration-values as admitted same-plane fact-stream evidence and a substrate-category gap at `restart/audit/totality/p1/1A-substrate-evidence.md:45` and `restart/audit/totality/p1/1A-substrate-evidence.md:56`; 1C carries the same classification at `restart/audit/totality/p1/1C-runtime-evidence.md:69` and `restart/audit/totality/p1/1C-runtime-evidence.md:100`; 1D records CSS as real non-JSON admission at `restart/audit/totality/p1/1D-skinny-lessons.md:49` and `restart/audit/totality/p1/1D-skinny-lessons.md:71`. The live CSS fact-stream surface is `emit_fact_stream` at `skinny/crates/runtime/src/grammars/css_l4_declaration_values/generated.rs:4-6` with `FactSink` rows at `skinny/crates/runtime/src/grammars/css_l4_declaration_values/sink.rs:18-35`. |
+| CH2-V2-006 | ACCEPT | Sheets implications | V2 adds explicit Sheets consequences rather than hiding them behind JSON object/array roles. 1B says Sheets formulas need function names, operators, array literals, references, and error atoms beyond JSON roles at `restart/audit/totality/p1/1B-codegen-evidence.md:67`; 1D adds `SKINNY-GEN-009` with the same formula/function/array/cell/range requirement at `restart/audit/totality/p1/1D-skinny-lessons.md:76`. The requirement is anchored by the orchestrator's generality lens at `restart/prompts/ORCHESTRATOR.md:81-85` and the totality backend-shape examples naming Sheets at `restart/HANDOFF.md:188-190`. |
+| CH2-V2-007 | ACCEPT | BBNF-self implications | V2 adds explicit BBNF-self consequences. 1B states that directive payloads, grammar names, token operators, and Pratt/operator chains are not covered by JSON pair/container role mining at `restart/audit/totality/p1/1B-codegen-evidence.md:68`; 1D adds `SKINNY-GEN-010` for directives, declarations, alternatives, repetitions, and Pratt/operator chains at `restart/audit/totality/p1/1D-skinny-lessons.md:77`. This matches Lock 14's requirement that BBNF Pratt operators be encoded in grammar metadata/source rather than generic branching code at `restart/locks/LOCKS.md:78`, and the BBNF-self backend-shape examples at `restart/HANDOFF.md:185-187`. |
+| CH2-V2-008 | ACCEPT | Generated per-grammar allowance boundary | V2 keeps generated grammar-owned names distinct from forbidden generic-crate leaks. 1C allows generated per-grammar type names only if generated from metadata/source at `restart/audit/totality/p1/1C-runtime-evidence.md:83`, while flagging hand-written JSON/CSS files at `restart/audit/totality/p1/1C-runtime-evidence.md:81-82`. 1E proposes a generated non-JSON allowance that still rejects grammar-name branches and grammar-shape policy leaks in generic crates at `restart/audit/totality/p1/1E-locks-evidence.md:98`. Live hand-written exceptions remain real: `skinny/crates/runtime/src/grammars/json/sink.rs:1`, `skinny/crates/runtime/src/grammars/json/scan.rs:1`, and `skinny/crates/runtime/src/grammars/css_l4_declaration_values/sink.rs:1-18`. |
+| CH2-V2-009 | ACCEPT | bbnf-simd old Lock 14 findings | V2 keeps old `bbnf-simd` JSON-hardcode findings in verify-before-rederive state rather than reopening or paper-closing them. 1F-past-corpora records the partial closure at `restart/audit/totality/p1/1F-past-corpora.md:37`, the current verify-before-rederive divergence at `restart/audit/totality/p1/1F-past-corpora.md:63`, and the targeted verification command at `restart/audit/totality/p1/1F-past-corpora.md:91`. This is generality-safe because the current positive evidence is alphabet/table driven, not a claim that every old hit is absent. |
+
+## Residual Notes
+
+No CH2-blocking REVISE remains. 1F has a less precise duplicate citation for materialization-role evidence at `restart/audit/totality/p1/1F-coherence-scan.md:36` and `restart/audit/totality/p1/1F-anti-pattern.md:50`, but 1B carries the exact live role-mining lines at `restart/audit/totality/p1/1B-codegen-evidence.md:49` and `restart/audit/totality/p1/1B-codegen-evidence.md:83`. Treat the 1F citation precision as CH1 hygiene if desired, not a CH2 generality blocker.

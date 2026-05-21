@@ -1,0 +1,29 @@
+# CH3 REGRESSION - T-P1 V2
+
+## Lens Contract
+
+CH3 checks that V2 does not reopen routes already rejected in
+`skinny/REDRESS.md`, correctly identifies pre-blocks, and does not silently
+regress admitted rows. The pass prompt defines this scope at
+`restart/prompts/totality/PASS-1-EXCAVATION.md:116-119`; the orchestrator
+defines the same lens at `restart/prompts/ORCHESTRATOR.md:81-88`.
+
+## Findings
+
+| ID | Disposition | Finding | Evidence | Required action |
+|---|---|---|---|---|
+| CH3-001 | ACCEPT | V2 folds the SK-V13 pre-block / unblocked distinction. | 1D adds a dedicated split: hard pre-blocks at `restart/audit/totality/p1/1D-skinny-lessons.md:83-89` and fresh-evidence unblocks at `restart/audit/totality/p1/1D-skinny-lessons.md:90-94`. 1E preserves the same current route frame at `restart/audit/totality/p1/1E-locks-evidence.md:41-48`. 1F adds the current hard pre-block table at `restart/audit/totality/p1/1F-past-corpora.md:39-52`. These match SK-V13 authority: hard pre-blocks at `restart/skinny/tranches/sk-v13/SYNTHESIS.md:239-253` and unblocked routes at `restart/skinny/tranches/sk-v13/SYNTHESIS.md:255-263`. | Keep this framing. |
+| CH3-002 | ACCEPT | V2 no longer treats REDRESS-119/120 as current close authority. | 1D states REDRESS-119/120 are history, not SK-V13 close authority, at `restart/audit/totality/p1/1D-skinny-lessons.md:25`, folds that correction at `restart/audit/totality/p1/1D-skinny-lessons.md:33`, and records the direct residual history row at `restart/audit/totality/p1/1D-skinny-lessons.md:61`. 1E records JSON rows as unblocked only with fresh strict evidence at `restart/audit/totality/p1/1E-locks-evidence.md:45`. This matches REDRESS history at `skinny/REDRESS.md:3495-3527` and `skinny/REDRESS.md:3531-3553`, plus SK-V13's superseding wording at `restart/skinny/tranches/sk-v13/SYNTHESIS.md:102-106`. | Keep REDRESS-119/120 as provenance/history only. |
+| CH3-003 | ACCEPT | V2 preserves admitted SinkOnly direct evidence instead of reclassifying it as a regression. | 1A now says generated JSON `SinkOnly` direct parsing is admitted evidence and the open issue is shared event scheduling at `restart/audit/totality/p1/1A-substrate-evidence.md:25`, `restart/audit/totality/p1/1A-substrate-evidence.md:31`, and `restart/audit/totality/p1/1A-substrate-evidence.md:40`. 1C classifies `SinkOnly` as implemented with no retained document identity at `restart/audit/totality/p1/1C-runtime-evidence.md:53` and as live direct consumer evidence at `restart/audit/totality/p1/1C-runtime-evidence.md:68`. 1F keeps bench-private SinkParser dishonesty closed while separating throughput residuals at `restart/audit/totality/p1/1F-past-corpora.md:34-35` and `restart/audit/totality/p1/1F-past-corpora.md:60-61`. | No V3 regression repair needed for SinkOnly wording. |
+| CH3-004 | ACCEPT | V2 preserves the admitted CSS L4 fact-stream row while naming the V1 substrate/telemetry category gap. | 1A preserves CSS as admitted same-plane fact-stream evidence at `restart/audit/totality/p1/1A-substrate-evidence.md:45`, `restart/audit/totality/p1/1A-substrate-evidence.md:56`, and `restart/audit/totality/p1/1A-substrate-evidence.md:83`. 1C says the row is admitted evidence, not a row regression, at `restart/audit/totality/p1/1C-runtime-evidence.md:41`, `restart/audit/totality/p1/1C-runtime-evidence.md:69`, and `restart/audit/totality/p1/1C-runtime-evidence.md:100`. 1D and 1E preserve the PASS-ADMIT evidence at `restart/audit/totality/p1/1D-skinny-lessons.md:49`, `restart/audit/totality/p1/1D-skinny-lessons.md:71`, `restart/audit/totality/p1/1E-locks-evidence.md:46`, and `restart/audit/totality/p1/1E-locks-evidence.md:94`. REDRESS and RESULTS support this at `skinny/REDRESS.md:3824-3840` and `skinny/RESULTS.md:46`. | Keep CSS row-plane accounting; do not convert the taxonomy gap into a row demotion. |
+| CH3-005 | ACCEPT | V2 does not silently demote admitted rows. | Current RESULTS still carries admitted JSON direct rows such as `citm_catalog`, `apache_builds`, `marine_ik`, `numbers`, and `unicode_basic` at `skinny/RESULTS.md:9`, `skinny/RESULTS.md:14`, `skinny/RESULTS.md:30`, `skinny/RESULTS.md:35`, and `skinny/RESULTS.md:41`; it carries admitted typed rows at `skinny/RESULTS.md:7`, `skinny/RESULTS.md:10`, `skinny/RESULTS.md:15`, `skinny/RESULTS.md:18`, `skinny/RESULTS.md:21`, `skinny/RESULTS.md:24`, and `skinny/RESULTS.md:31`; it carries the CSS admission at `skinny/RESULTS.md:46`; and the notes preserve overall `A / Go` plus Track 2/CSS evidence at `skinny/RESULTS.md:145-148`. 1D states SK-V13 forbids silent demotion through refreshed row guards at `restart/audit/totality/p1/1D-skinny-lessons.md:90-91`; 1E's Lock 8 row is "drifted / over-stated, CSS row admitted" rather than downgraded at `restart/audit/totality/p1/1E-locks-evidence.md:61`. | Keep the no-demotion invariant explicit in consolidation. |
+| CH3-006 | ACCEPT | V2 keeps prior rejected-route pre-blocks intact while allowing only fresh differentiated attempts where SK-V13 allows them. | 1D retains rejected alternate, skipless-token, union, SIMD proof-only, and docs-only direct close lessons at `restart/audit/totality/p1/1D-skinny-lessons.md:68-73`; 1F records accepted historical pre-blocks for dispatch table, skipless token, EventCursor sidecar, and tiny-string NEON at `restart/audit/totality/p1/1F-past-corpora.md:30-33`. This matches REDRESS rejections at `skinny/REDRESS.md:209-234` and SK-V13's fresh-differential rule for union/SIMD at `restart/skinny/tranches/sk-v13/SYNTHESIS.md:73-93`. | Keep "historical pre-block" separate from "current absence proven." |
+
+## Cycle Verdict
+
+Disposition counts: ACCEPT 6, REVISE 0, REJECT 0.
+
+CH3 verdict: ACCEPT. V2 folds the V1 regression corrections: admitted
+SinkOnly and CSS evidence are preserved, REDRESS-119/120 are history rather
+than close authority, SK-V13 hard pre-blocks are explicit, and no admitted row
+is silently demoted.

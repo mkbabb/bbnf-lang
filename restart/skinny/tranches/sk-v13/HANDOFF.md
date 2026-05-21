@@ -117,8 +117,8 @@ phases that append `skinny/RESULTS.md` or `skinny/REDRESS.md` must serialize.
 5. Totality CRUD: apply G-Omega-approved V1.1 surface amendments.
 6. S-P1 Profile: fresh CSS and JSON profile truth; stale SK-V12 profiles are
    not enough.
-7. S-P2 Research: candidate research for CSS parity, JSON rows, decision
-   engine, union, SIMD/ASM, and telemetry gates.
+7. S-P2 Research: closed at `G-S-P2-CONVERGED` after V3/V4 consecutive
+   accepted challenge cycles.
 8. S-P3 Synthesis-Plan: author `SPEC.md` and `DISPATCH-PROMPT.md` from G1-G7.
 9. SK-V13 Wave 0 and later implementation waves: only after G-Omega and S-P3
    convergence.
@@ -127,16 +127,18 @@ phases that append `skinny/RESULTS.md` or `skinny/REDRESS.md` must serialize.
 
 ## 6. Immediate Next Steps
 
-Next-move: `ready-for-S-P2`.
+Next-move: `ready-for-S-P3`.
 
 1. S-P1 Profile is closed at `G-S-P1-CONVERGED` with V4/V5 consecutive
    accepted challenge cycles. Its authority packet is
    `restart/skinny/tranches/sk-v13/research/p1/hardening/HARDENING-S-P1-V5-CONVERGED.md`.
-2. Dispatch S-P2 Research across CSS parity, JSON all-plane SOTA reopen,
-   union substrate, ASM/SIMD production, decision-engine fold, and
-   GrammarConfig/Lock-14 finish.
-3. Continue Omega and hold Wave 0 behind G-Omega.
-4. Have S-P3 create the concrete wave plan, including rolling
+2. S-P2 Research is closed at `G-S-P2-CONVERGED` with V3/V4 consecutive
+   accepted challenge cycles. Its authority packet is
+   `restart/skinny/tranches/sk-v13/research/p2/hardening/HARDENING-S-P2-V4-CONVERGED.md`.
+3. Dispatch S-P3 Synthesis-Plan to create `SPEC.md` and
+   `DISPATCH-PROMPT.md` from the converged S-P1/S-P2 evidence and G1-G7.
+4. Continue Omega and hold Wave 0 behind G-Omega.
+5. Have S-P3 create the concrete wave plan, including rolling
    `restart/skinny/ROLLING-SOTA-DELTA.md` production and gate consumption.
 
 ## 7. Refusal Conditions

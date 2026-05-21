@@ -32,7 +32,7 @@ diff --git a/restart/MASTER-PLAN.md b/restart/MASTER-PLAN.md
 +| H.W2.5 | PARTIAL: primitive vocabulary exists; contract-only macros stay non-admitting until consumed or deleted/demoted/blocked. | Primitive state machine and zero-orphan gate. |
 +| H.W3 | SPLIT: number materialization landed; UTF-8/string fusion is refuted as a close route. | Regex/HIR facts and string/Unicode row gates. |
 +| H.W4 | PARTIAL: SinkOnly/direct/typed row-plane accounting remains open under SK-V13. | JSON 51-row strict sonic matrix. |
-+| H.W4.LOCK14 | PARTIAL: GrammarConfig legality is evidence, not full grammar-neutral repair. | Generated provider/config/sink repair plus Sheets/BBNF-self negative controls. |
++| H.W4.LOCK14 | PARTIAL: GrammarConfig legality is evidence, not fleet-wide grammar-neutral Lock 14 closure until CSS plus both Sheets and BBNF-self fail-closed or generated-role witnesses pass; with only one negative control, label the result `scoped non-JSON witness`. | Generated provider/config/sink repair plus both Sheets and BBNF-self witnesses. |
 +| H.W5 | LANDED-SCOPED: consumed arm64/generic set landed; x86 successor optional/background; no-orphan rule mandatory. | Lock 16 and SK-V13 G4. |
 +| H.W6 | REPLACE CURRENT WORDING: SK-V6 strict-matrix-before-CSS text is superseded by the SK-V13 full-SOTA receiver map. | SK-V13 G1-G7 and J.W1. |
 +| H.W7 | PENDING: Pratt recognizer facts and BIR `PrattSpine` still depend on C/E fact and BIR closure. | C.W3/C.W4/E.W0/E.W1/H. |
@@ -58,12 +58,12 @@ diff --git a/restart/MASTER-PLAN.md b/restart/MASTER-PLAN.md
 +| MP.NW3 | CSS declaration-values expansion: declarations, `var()`, `calc()`, colors, custom-property/value facts. | SK-V13 G1 feature rows. |
 +| MP.NW4 | CSS visual/rule expansion: gradients, transforms, filters, easing, at-rules, nesting. | SK-V13 G1 feature matrix. |
 +| MP.NW5 | JSON 51-row strict sonic matrix: 17 corpora x parse_only/direct_to_struct/real_typed_struct. | SK-V13 G5 and J.W1. |
-+| MP.NW6 | Lock 14 generated provider/config/sink/fact/flag/schema repair with CSS plus Sheets/BBNF-self negative controls. | Lock 14, generated registry, non-JSON witnesses. |
++| MP.NW6 | Lock 14 generated provider/config/sink/fact/flag/schema repair with CSS plus both Sheets and BBNF-self fail-closed or generated-role witnesses for fleet-wide Lock 14 closure; with only one negative control, label the result `scoped non-JSON witness`, not fleet-wide or grammar-neutral closure. | Lock 14, generated registry, non-JSON witnesses. |
 +| MP.NW7 | Regex/HIR fact extraction import boundary through `parse-that-regex` or equivalent facts. | D/H regex fact consumer and generated parser/resolver row. |
 +| MP.NW8 | Decision-engine replacement: bbnf-regex extraction, egraph language, guarded rewrites, active cost, CSP feasibility, P1-P8 retirement/fail-closed compatibility. | SK-V13 G2, C.W4/C.W5, backend-shape rows. |
 +| MP.NW9 | AArch64 ASCII run-skip production split and zero-orphan disposition. | SK-V13 G4, CSS scan-block consumer or measured rejection. |
 +| MP.NW10 | Fresh union-substrate variant or architectural block with material differential beyond REDRESS 96/97/98. | SK-V13 G3, substrate/runtime/codegen/bench wave. |
-+| MP.NW11 | Sheets and BBNF-self negative-control/generalization witnesses for generated role facts and future grammar onboarding. | Lock 14 and future grammar onboarding gates. |
++| MP.NW11 | Both Sheets and BBNF-self fail-closed or generated-role witnesses for generated role facts and future grammar onboarding; one negative control is `scoped non-JSON witness` evidence only, not fleet-wide Lock 14 or grammar-neutral closure. | Lock 14 and future grammar onboarding gates. |
 +| MP.NW12 | Rolling SOTA delta and no-demotion close gate for every JSON row/plane and every CSS feature. | BENCH rolling table, HANDOFF close gate, MASTER J.W1/J.W5. |
 +
 +Cost/risk summary: MP.NW0 250-700 doc LOC high process; MP.NW1 180-420 doc/report LOC high gate; MP.NW2 350-500 high parity; MP.NW3 600-840 medium-high; MP.NW4 700-950 medium; MP.NW5 350-900 high; MP.NW6 700-2000 cap 2600 high; MP.NW7 300-700 high; MP.NW8 900-2200 cap 2800 high; MP.NW9 120-220 narrow high if generalized; MP.NW10 700-1600 cap 2000 high; MP.NW11 250-800 medium-high; MP.NW12 150-350 high anti-paper-close. These costs are proposed allocations for CRUD-2/G-Omega review, not implementation authorization.

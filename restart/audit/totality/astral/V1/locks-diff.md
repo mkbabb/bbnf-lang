@@ -9,6 +9,26 @@ Receiver: CRUD-3 LOCKS after Pass Omega CHALLENGE convergence and user G-Omega s
 
 This proposed patch preserves the 16-lock count. It adds no directive, BIR variant, `BackendShape`, public substrate API, retained sidecar, or new lock. It is gated by `restart/prompts/pass-contracts/PASS-OMEGA.md:67` and `restart/prompts/pass-contracts/PASS-OMEGA.md:96`-`108`.
 
+## Hunk Cost Ledger
+
+This ledger mirrors Ω-C's CH4 budget. LOC budgets are CRUD-3 document-edit budgets for the proposed `LOCKS.md` amendment unless a row names a later implementation receiver; those later receivers remain blocked until Pass Omega CHALLENGE convergence and user G-Omega sign-off.
+
+| hunk | Ω-C family | LOC budget | propagation surfaces | risk class | wave alignment | same-wave gate | hard cap / receiver split |
+|---|---|---:|---|---|---|---|---|
+| Hunk 1 | Scoped SK-V9 allowance history | 40-90 docs | 3: `LOCKS.md`, G-Omega status text, skinny evidence references | High | Lock 14 history cleanup | SK-V9 remains historical and scoped; SK-V12 CSS L4 remains one strict positive row, not universal grammar closure. | Hard cap 90 doc LOC; CRUD-3 doc receiver only. |
+| Hunk 2 | `3C-L01-substrate-ceiling-history` | 90-180 docs | 5: `LOCKS.md`, `ARCHITECTURE.md`, `MASTER-PLAN.md`, `HANDOFF.md`, `MIGRATION.md` | High | Lock 1 + union material-differential wave | No union replay without material differential and measured row consumer/block. | Hard cap 180 doc LOC; any union/source work routes to a later implementation wave. |
+| Hunk 3 | `3C-L02-layout-live-first` | 20-50 docs | 2: `LOCKS.md`, `ARCHITECTURE.md` | Low-medium | Lock 2 API-freeze cleanup | Live `LayoutFacts.backend_shape` text must not claim full `LayoutSink` closure. | Hard cap 50 doc LOC; CRUD-3 doc receiver only. |
+| Hunk 4 | `3C-L03-path-cursor-proof` | 20-50 docs | 2: `LOCKS.md`, generator verification docs/tests | Medium | Lock 3 verification wording | Empty-path elision needs executable proof before close. | Hard cap 50 doc LOC; implementation/test proof routes to the owning generator wave. |
+| Hunk 5 | `3C-L08-row-plane-bench-feed` | 120-260 docs | 5: `LOCKS.md`, `BENCH.md`, companion gate report, `MASTER-PLAN.md`, skinny corpus sync | High | Lock 8 + BENCH non-JSON telemetry | Row-plane tables must carry comparator provenance and strict equality. | Hard cap 260 doc LOC; BENCH/gate production is a later receiver, not CRUD-3. |
+| Hunk 6 | `3C-L09-runtime-api-obligations` | 20-50 docs | 2: `LOCKS.md`, runtime API obligation docs | Low-medium | Lock 9 V1 obligation note | Skinny API cannot close bump/generator-owned document obligations. | Hard cap 50 doc LOC; runtime source/API tests route to a later implementation wave. |
+| Hunk 7 | `3C-L10-decision-engine-cost` | 140-320 docs | 5: `LOCKS.md`, `ARCHITECTURE.md`, `MASTER-PLAN.md`, `HANDOFF.md`, decision-engine receiver docs | High | Lock 10 + decision-engine fold | Active CostFacts and regex/HIR facts are required; P1-P8 fallback is non-admitting. | Hard cap 320 doc LOC; decision-engine implementation routes to a later generated-facts wave. |
+| Hunk 8 | `3C-L11-L12-workspace-drift` | 30-80 docs | 3: `LOCKS.md`, `HANDOFF.md`, workspace/archive metadata transcript | Medium | Workspace/archive Omega CRUD | Archive/remove proof required for root drift closure. | Hard cap 80 doc LOC; workspace mutation requires separate authorized CRUD. |
+| Hunk 9 | `3C-L13-loc-exceptions` | 30-80 docs | 3: `LOCKS.md`, gate/report LOC transcript, generated artifact roster | Medium | LOC budget gate | Generated/report exceptions require budgets and transcripts. | Hard cap 80 doc LOC; generated/report growth is not admitted by this doc edit. |
+| Hunk 10 | `3C-L14-generated-output-and-per-wave-gate` | 180-420 docs | 6: `LOCKS.md`, `ARCHITECTURE.md`, `MASTER-PLAN.md`, `BENCH.md`, generated-runtime registry docs, skinny corpus sync | High | Lock 14 registry/runtime wave | Generated names allowed only through rostered output; grammar-shape leak scan required per wave; fleet-wide transfer requires CSS L4 plus both Sheets and BBNF-self controls. | Hard cap 420 doc LOC; provider registry/runtime/source work routes to a later implementation wave. |
+| Hunk 11 | `3C-L15-profile-scope` | 20-50 docs | 2: `LOCKS.md`, profile/build-status docs | Medium | Lock 15 scope clarification | Skinny profile evidence cannot close root thin-LTO drift. | Hard cap 50 doc LOC; build/profile changes route to a later implementation wave. |
+| Hunk 12 | `3C-L16-manifest-checkasm-orphans` | 180-420 docs | 6: `LOCKS.md`, `ARCHITECTURE.md`, `BENCH.md`, `HANDOFF.md`, primitive manifest docs, hardware-gate docs | High | Lock 16 primitive/SIMD waves | Strict checkasm, scalar reference, first consumer, row movement/rejection, and zero-orphan disposition. | Hard cap 420 doc LOC; SIMD/ASM/primitive implementation routes to later primitive waves. |
+| Hunk 13 | `3C-GOMEGA-boundaries` | 40-100 docs | 4: `LOCKS.md`, G-Omega presentation, `HANDOFF.md`, orchestrator/pass-contract status | High process | G3/G-Omega | T-P3 proposes only; authoritative edits merge only through Omega/G-Omega flow. | Hard cap 100 doc LOC; no implementation receiver. |
+
 ```diff
 diff --git a/restart/locks/LOCKS.md b/restart/locks/LOCKS.md
 --- a/restart/locks/LOCKS.md
@@ -284,9 +304,12 @@ Target: append after current Lock 14 paragraph at `restart/locks/LOCKS.md:78`.
 +    a Lock 14 baseline gate plus a grammar-name and grammar-shape leak census
 +    in the same wave. At minimum, the gate checks generated provider registry,
 +    grammar-shape role mining, generated sink/fact/value/flag ownership,
-+    primitive policy source, CSS plus Sheets/BBNF-self witness or negative
-+    control when claiming fleet-wide transfer, and decision-engine generated
-+    facts. Evidence:
++    primitive policy source, one strict CSS L4 positive row, both Sheets and
++    BBNF-self fail-closed negative-control witnesses or admitted generated-role
++    fact rows when claiming fleet-wide transfer, and decision-engine generated
++    facts. With only one of Sheets or BBNF-self, the claim is scoped to the
++    witnessed grammars and may not use fleet-wide grammar-neutral wording.
++    Evidence:
 +    `restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md:53`-`75`,
 +    `restart/audit/totality/p1/hardening/HARDENING-T-P1-V5-CONSOLIDATED.md:47`-`51`.
 +

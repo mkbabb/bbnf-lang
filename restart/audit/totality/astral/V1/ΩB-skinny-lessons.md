@@ -66,6 +66,17 @@ This is not full CSS parity, universal grammar closure, or SK-V13 close authorit
 | CRUD-5 skinny corpus | Sync `restart/skinny/{BENCH,COMPILER,HARDENING,INDEX,SUBSTRATE,WORKSPACE}.md` to the CSS companion gate, row-plane schema, GrammarConfig legality, SIMD/checkasm gate, zero-orphan manifest, and ledger-count reconciliation finding. | Pass Omega CRUD-5 authority (`restart/prompts/pass-contracts/PASS-OMEGA.md:69`), current RESULTS rows (`skinny/RESULTS.md:3`, `skinny/RESULTS.md:46`, `skinny/RESULTS.md:145`). |
 | G-Omega presentation | Present CRUD proposals, proposed locks diff, master-plan diff, CHALLENGE consolidated verdict, and the explicit blockers below. No lock amendment merges before user sign-off. | Pass Omega G-Omega requirements (`restart/prompts/pass-contracts/PASS-OMEGA.md:98`), orchestrator G-Omega gate (`restart/prompts/ORCHESTRATOR.md:165`). |
 
+## CH4 Receiver Cost Ledger
+
+| Receiver | Doc LOC range | Propagation file count/files | Future implementation wave LOC, not authorized here | Risk class | Hard cap | Evidence-only / routing |
+|---|---:|---|---:|---|---:|---|
+| CRUD-1 ARCHITECTURE | 90-140 doc LOC | 1 file: `restart/ARCHITECTURE.md` | 0 CRUD LOC; 0-200 later LOC only if a future skinny/S-P3 wave changes BackendShape, GrammarConfig, or row-plane implementation | Medium implementation-status-risk | 160 doc LOC | `skinny/RESULTS.md`, `skinny/REDRESS.md`, and `skinny/crates/*` are evidence only unless a later owned wave edits them. |
+| CRUD-2 MASTER | 80-130 doc LOC | 1 file: `restart/MASTER-PLAN.md` | 0 CRUD LOC; SK-V13 G1-G7 implementation is future wave work, not master-plan cleanup | Medium planning-risk | 150 doc LOC | Carry CSS scoped ADMIT, W4 production split, union material-differential, and rolling SOTA requirements as plan text only. |
+| CRUD-3 LOCKS | 40-80 doc LOC | 1 file: `restart/locks/LOCKS.md`; proposal mirror: `restart/audit/totality/astral/V1/locks-diff.md` | 0 CRUD LOC | High governance-risk | 90 doc LOC | Lock 1/14/16 amendments require G-Omega sign-off before merge; REDRESS rows remain evidence only. |
+| CRUD-4 HANDOFF/MIGRATION | 100-170 doc LOC | 2 files: `restart/HANDOFF.md`, `restart/MIGRATION.md` | 0 CRUD LOC; SK-V13 W0/source/gate work remains future S-P3/SPEC authority | Medium-high state-risk | 200 doc LOC | Route old union variants, W4 production split, and direct residual history as state/migration fates only. |
+| CRUD-5 skinny corpus | 180-300 doc LOC | 6 files: `restart/skinny/BENCH.md`, `restart/skinny/COMPILER.md`, `restart/skinny/HARDENING.md`, `restart/skinny/INDEX.md`, `restart/skinny/SUBSTRATE.md`, `restart/skinny/WORKSPACE.md` | 300-700 later LOC for `bbnf-bench`, gate, telemetry, and generated-runtime work only under a later skinny redress/S-P3 wave | Medium-high corpus-risk | 340 doc LOC | `skinny/RESULTS.md` and `skinny/REDRESS.md` are evidence-only unless a later skinny redress wave explicitly owns them. |
+| G-Omega presentation | 60-100 presentation LOC | 1 presentation packet plus referenced proposed diffs: `locks-diff.md`, `master-plan-diff.md`, consolidated hardening verdict | 0 implementation LOC | High sign-off-risk | 120 presentation LOC | Presentation may summarize CRUD and blockers only; it does not merge locks, governance, source, RESULTS, or REDRESS edits. |
+
 ## Explicit Blockers
 
 - No governance edits are authorized by this artifact.

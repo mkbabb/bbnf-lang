@@ -358,6 +358,8 @@ Owner paths:
 - `skinny/crates/bbnf-simd/src/lib.rs`
 - `skinny/crates/bbnf-simd/src/aarch64/`
 - `skinny/crates/bbnf-simd/tests/checkasm_*.rs`
+- `skinny/crates/runtime/src/grammars/json/scan.rs` (caller-level
+  adversarial parity and, only if falsified, the minimal carry handoff fix)
 - `skinny/crates/bbnf-simd/CHECKASM-REPORT.md`
 - `skinny/REDRESS.md`
 

@@ -1,0 +1,78 @@
+use crate::{json_provider, CodegenError};
+use ir::BackendIr;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) struct GrammarProfile {
+    id: &'static str,
+    generated_runtime_files: &'static [&'static str],
+}
+
+impl GrammarProfile {
+    pub(crate) const fn new(
+        id: &'static str,
+        generated_runtime_files: &'static [&'static str],
+    ) -> Self {
+        Self {
+            id,
+            generated_runtime_files,
+        }
+    }
+
+    pub(crate) fn id(&self) -> &'static str {
+        self.id
+    }
+
+    pub(crate) fn generated_runtime_files(&self) -> &'static [&'static str] {
+        self.generated_runtime_files
+    }
+
+    fn matches_grammar_name(&self, grammar_name: &str) -> bool {
+        self.id == grammar_name
+    }
+}
+
+pub(crate) fn select_runtime_profile(
+    backend: &BackendIr,
+) -> Result<&'static GrammarProfile, CodegenError> {
+    select_runtime_profile_for_name(&backend.grammar_name)
+}
+
+pub(crate) fn select_runtime_profile_for_name(
+    grammar_name: &str,
+) -> Result<&'static GrammarProfile, CodegenError> {
+    for profile in runtime_profiles() {
+        if profile.matches_grammar_name(grammar_name) {
+            return Ok(profile);
+        }
+    }
+    let supported = runtime_profiles()
+        .iter()
+        .map(|profile| profile.id())
+        .collect::<Vec<_>>()
+        .join(", ");
+    Err(CodegenError::Lowering(format!(
+        "runtime emission currently supports grammar profiles [{supported}], found `{grammar_name}`"
+    )))
+}
+
+pub(crate) fn validate_generated_roster<'a>(
+    profile: &GrammarProfile,
+    actual: impl IntoIterator<Item = &'a str>,
+) -> Result<(), String> {
+    let actual = actual.into_iter().collect::<Vec<_>>();
+    let expected = profile.generated_runtime_files();
+    if actual == expected {
+        Ok(())
+    } else {
+        Err(format!(
+            "generated runtime file roster for `{}` was [{}], expected [{}]",
+            profile.id(),
+            actual.join(", "),
+            expected.join(", ")
+        ))
+    }
+}
+
+fn runtime_profiles() -> [&'static GrammarProfile; 1] {
+    [json_provider::runtime_profile()]
+}

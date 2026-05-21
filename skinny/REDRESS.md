@@ -3551,3 +3551,51 @@ perturbation.
   a future pass names a material differential beyond REDRESS 114-119 with
   fresh profile and micro-proof evidence, keep W0-clamped admission pre-blocked
   by docs-only accounting, and preserve strict-vs-strict comparator discipline.
+
+## SK-V12 Wave 1a GrammarConfig Lock 14 Legality Gate
+
+- Item 121 closes W1a under `G-W1a-GRAMMARCONFIG-LOCK14` as an admitted
+  legality gate. The redress introduced a generated JSON `config.rs` surface,
+  moved JSON-only sink/typed renderers behind explicit JSON names, made the
+  generated JSON roster exact, and kept JSON-owned `scan.rs` / `sink.rs` out of
+  the generated roster.
+- The Lock 14 leak repair is concrete: JSON literals, structural bytes,
+  tiny-string caps, and decode flags are consumed through generated
+  per-grammar config, while generic-crate scanning remains fail-closed for CSS
+  / Sheets / BBNF tokens outside tests. No CSS L4 row, Sheets row, non-JSON
+  parser, new BIR/directive/`BackendShape`, public substrate API, outcome
+  variant, or telemetry column was added.
+- Generated roster after W1a is exactly `config.rs`, `generated.rs`, `host.rs`,
+  `mod.rs`, `parser.rs`, `value.rs`, `view.rs`, and `visitor.rs`.
+  The generated JSON runtime roster is 1614 LOC; JSON-owned non-generated
+  `scan.rs` + `sink.rs` remain 396 LOC.
+- Verification passed:
+  `cargo test -p codegen`; `cargo test -p runtime`;
+  `cargo run -p xtask -- check-json`;
+  `cargo run -p xtask -- check-real-typed`;
+  `cargo run -p xtask -- check-conformance`;
+  `cargo test -p bbnf-bench lock14_baseline -- --nocapture`;
+  `cargo test -p bbnf-bench direct_contract -- --nocapture`;
+  `cargo test -p bbnf-bench w6_typed_contract -- --nocapture`;
+  `cargo test -p bbnf-bench generated_ -- --nocapture`; and
+  `cargo test -p bbnf-bench parity -- --nocapture`.
+- Native guard evidence is
+  `sk-v9-open:criterion-fnv64-6fdbdb8c960028ef` from
+  `/tmp/skv12-w1a-json-guard-criterion` with
+  `RUSTFLAGS="-C target-cpu=native"`. The initial full `bench-json --advisory`
+  capture exposed an environmental low-frequency segment in the direct/typed
+  portion; the same Criterion root was repaired by rerunning the direct and
+  real-typed benches before gate consumption. The final
+  `gate-json --update-results --advisory`,
+  `gate-json --advisory --check-results`,
+  `gate-json --with-cost-facts --check-results`, and
+  `verify-skv12-json-floors.awk` checks all passed.
+- JSON guard floors held in `skinny/RESULTS.md`: `citm_catalog/direct` 21623 /
+  20611, `apache_builds/direct` 11397 / 10269, `marine_ik/direct` 9443 / 9582,
+  `unicode_basic/direct` 8134 / 8148, `twitter/typed` 18887 / 16583,
+  `citm_catalog/typed` 36430 / 19610, `apache_builds/typed` 8613 / 7002,
+  `github_events/typed` 13098 / 12768, `update_center/typed` 12335 / 10663,
+  `mesh/typed` 9821 / 8262, and `marine_ik/typed` 12214 / 10164.
+- W1a admits no CSS/SOTA row and no SIMD primitive. W2 remains blocked on W1a
+  close only; the `escape_mask_64` correctness prerequisite and all USER PIN
+  CSS L4 / lightningcss / zero-orphan requirements carry forward unchanged.

@@ -1,3 +1,4 @@
+// JSON-owned direct sink source; not part of the generated JSON roster.
 use parse_that_regex::{unescape_string, RegexError};
 
 pub trait JsonSink {

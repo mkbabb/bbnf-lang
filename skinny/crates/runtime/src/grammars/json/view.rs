@@ -3,8 +3,9 @@ use std::borrow::Cow;
 
 use parse_that_regex::{match_string, unescape_string, StringMode};
 
-use crate::tape::{DocumentView, OffsetFlags, Tape, TapeId, ValueRef};
+use crate::tape::{DocumentView, Tape, TapeId, ValueRef};
 
+use super::config;
 use super::value::{value_from_ref, JsonNodeKind, JsonToken, JsonValue};
 use super::visitor::{walk_value, JsonVisitor};
 
@@ -207,7 +208,7 @@ impl<'doc, 'input: 'doc> JsonString<'doc, 'input> {
             .inner
             .tape()
             .flags_at(self.inner.cursor())
-            .is_some_and(|flags| flags.contains(OffsetFlags::HAS_ESC))
+            .is_some_and(|flags| flags.contains(config::STRING_NEEDS_DECODE))
         {
             unescape_string(self.raw()).expect("parser validated JSON string escapes")
         } else {

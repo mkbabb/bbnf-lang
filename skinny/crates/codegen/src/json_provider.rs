@@ -1,20 +1,27 @@
-use crate::CodegenError;
-use ir::BackendIr;
+use crate::grammar_profile::GrammarProfile;
 
-pub(crate) fn ensure_runtime_profile(backend: &BackendIr) -> Result<(), CodegenError> {
-    if backend.grammar_name == "json" {
-        Ok(())
-    } else {
-        Err(CodegenError::Lowering(format!(
-            "runtime emission currently supports grammar profile `json`, found `{}`",
-            backend.grammar_name
-        )))
-    }
+static RUNTIME_PROFILE: GrammarProfile = GrammarProfile::new(
+    "json",
+    &[
+        "config.rs",
+        "generated.rs",
+        "host.rs",
+        "mod.rs",
+        "parser.rs",
+        "value.rs",
+        "view.rs",
+        "visitor.rs",
+    ],
+);
+
+pub(crate) fn runtime_profile() -> &'static GrammarProfile {
+    &RUNTIME_PROFILE
 }
 
 pub(crate) fn mod_rs() -> String {
     normalize(
         r#"
+        pub(crate) mod config;
         pub mod generated;
         pub mod host;
         pub mod parser;
@@ -37,6 +44,10 @@ pub(crate) fn mod_rs() -> String {
     )
 }
 
+pub(crate) fn config_rs() -> String {
+    normalize(include_str!("json_templates/config.rs"))
+}
+
 pub(crate) fn host_rs() -> String {
     normalize(
         r#"
@@ -51,14 +62,6 @@ pub(crate) fn generated_rs() -> String {
 
 pub(crate) fn parser_rs() -> String {
     include_str!("json_templates/parser.rs").to_string()
-}
-
-pub(crate) fn scan_rs() -> String {
-    include_str!("../../runtime/src/grammars/json/scan.rs").to_string()
-}
-
-pub(crate) fn sink_rs() -> String {
-    include_str!("../../runtime/src/grammars/json/sink.rs").to_string()
 }
 
 pub(crate) fn view_rs() -> String {

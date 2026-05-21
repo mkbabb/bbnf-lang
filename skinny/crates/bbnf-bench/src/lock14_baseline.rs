@@ -126,6 +126,12 @@ pub const ALLOWLIST: &[AllowlistEntry] = &[
         "fixture",
     ),
     entry(
+        "crates/runtime/src/grammars/json/config.rs",
+        "generated_json_output",
+        "read_only",
+        "generated",
+    ),
+    entry(
         "crates/runtime/src/grammars/json/generated.rs",
         "generated_json_output",
         "read_only",
@@ -151,15 +157,15 @@ pub const ALLOWLIST: &[AllowlistEntry] = &[
     ),
     entry(
         "crates/runtime/src/grammars/json/scan.rs",
-        "generated_json_output",
+        "per_grammar_runtime_source",
         "read_only",
-        "generated",
+        "runtime_source",
     ),
     entry(
         "crates/runtime/src/grammars/json/sink.rs",
-        "generated_json_output",
+        "per_grammar_runtime_source",
         "read_only",
-        "generated",
+        "runtime_source",
     ),
     entry(
         "crates/runtime/src/grammars/json/value.rs",
@@ -186,10 +192,34 @@ pub const ALLOWLIST: &[AllowlistEntry] = &[
         "generated",
     ),
     entry(
+        "crates/codegen/src/grammar_profile.rs",
+        "generic_surface",
+        "read_only",
+        "codegen_profile",
+    ),
+    entry(
         "crates/codegen/src/json_provider.rs",
         "per_grammar_provider",
         "read_only",
         "provider",
+    ),
+    entry(
+        "crates/codegen/src/json_sink_direct.rs",
+        "per_grammar_provider",
+        "read_only",
+        "provider",
+    ),
+    entry(
+        "crates/codegen/src/json_typed_direct.rs",
+        "per_grammar_provider",
+        "read_only",
+        "provider",
+    ),
+    entry(
+        "crates/codegen/src/json_templates/config.rs",
+        "per_grammar_template",
+        "read_only",
+        "template",
     ),
     entry(
         "crates/codegen/src/json_templates/generated.rs",
@@ -343,6 +373,7 @@ pub fn validate(root: &Path) -> Result<(), String> {
     validate_entries(ALLOWLIST, root, true)?;
     validate_git_freeze(root)?;
     validate_backend_shape_surface(root)?;
+    validate_generic_crate_neutrality(root)?;
     Ok(())
 }
 
@@ -428,10 +459,41 @@ const SK_V10_W6_ROOT_TYPED_OWNER_PATHS: &[&str] = &[
     "xtask/src/real_typed_schema.rs",
 ];
 
+const SK_V12_W1A_OWNER_PATHS: &[&str] = &[
+    "crates/codegen/src/lib.rs",
+    "crates/codegen/src/grammar_profile.rs",
+    "crates/codegen/src/json_provider.rs",
+    "crates/codegen/src/json_sink_direct.rs",
+    "crates/codegen/src/json_typed_direct.rs",
+    "crates/codegen/src/sink_direct.rs",
+    "crates/codegen/src/typed_direct.rs",
+    "crates/codegen/src/json_templates/config.rs",
+    "crates/codegen/src/json_templates/generated.rs",
+    "crates/codegen/src/json_templates/parser.rs",
+    "crates/codegen/src/json_templates/value.rs",
+    "crates/codegen/src/json_templates/view.rs",
+    "crates/codegen/src/json_templates/visitor.rs",
+    "crates/runtime/src/grammars/json/config.rs",
+    "crates/runtime/src/grammars/json/generated.rs",
+    "crates/runtime/src/grammars/json/host.rs",
+    "crates/runtime/src/grammars/json/mod.rs",
+    "crates/runtime/src/grammars/json/parser.rs",
+    "crates/runtime/src/grammars/json/scan.rs",
+    "crates/runtime/src/grammars/json/sink.rs",
+    "crates/runtime/src/grammars/json/value.rs",
+    "crates/runtime/src/grammars/json/view.rs",
+    "crates/runtime/src/grammars/json/visitor.rs",
+    "crates/passes/src/lib.rs",
+    "crates/bbnf-bench/src/generated_real_typed.rs",
+];
+
 fn validate_git_freeze(root: &Path) -> Result<(), String> {
     let frozen_status = git_output(root, &git_path_args("status", "--porcelain", FROZEN_ROOTS))?;
-    validate_frozen_status_output(&frozen_status)?;
-    git_quiet(root, &git_path_args("diff", "--quiet", FROZEN_ROOTS))?;
+    validate_frozen_status_output_with_allowed(&frozen_status, SK_V12_W1A_OWNER_PATHS)?;
+    let frozen_diff = git_output(root, &git_path_args("diff", "--name-only", FROZEN_ROOTS))?;
+    validate_changed_paths_output(&frozen_diff, SK_V12_W1A_OWNER_PATHS)?;
+    let frozen_cached = git_output(root, &git_cached_name_args(FROZEN_ROOTS))?;
+    validate_changed_paths_output(&frozen_cached, SK_V12_W1A_OWNER_PATHS)?;
     if git_quiet(root, &["rev-parse", "--verify", "HEAD^"]).is_ok() {
         validate_parent_frozen_diff(root)?;
     }
@@ -444,6 +506,12 @@ fn git_path_args(
     paths: &[&'static str],
 ) -> Vec<&'static str> {
     let mut args = vec![command, mode, "--"];
+    args.extend_from_slice(paths);
+    args
+}
+
+fn git_cached_name_args(paths: &[&'static str]) -> Vec<&'static str> {
+    let mut args = vec!["diff", "--cached", "--name-only", "--"];
     args.extend_from_slice(paths);
     args
 }
@@ -519,6 +587,16 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
             return Ok(());
         }
     }
+    if subject.contains("sk-v12-waveW1a") {
+        let allowed = changed_paths.iter().all(|path| {
+            SK_V12_W1A_OWNER_PATHS
+                .iter()
+                .any(|allowed| path.as_str() == *allowed)
+        });
+        if allowed {
+            return Ok(());
+        }
+    }
     Err(format!(
         "Lock 14 frozen diff failed for parent paths [{}]",
         changed_paths.join(", ")
@@ -555,11 +633,82 @@ fn git_quiet(root: &Path, args: &[&str]) -> Result<(), String> {
     }
 }
 
+#[cfg(test)]
 fn validate_frozen_status_output(output: &str) -> Result<(), String> {
-    if output.trim().is_empty() {
+    validate_frozen_status_output_with_allowed(output, &[])
+}
+
+fn validate_frozen_status_output_with_allowed(
+    output: &str,
+    allowed_paths: &[&str],
+) -> Result<(), String> {
+    let changed = status_changed_paths(output);
+    if changed.is_empty() {
         return Ok(());
     }
-    Err(format!("Lock 14 frozen roots are dirty: {output}"))
+    validate_changed_paths(&changed, allowed_paths)
+        .map_err(|error| format!("Lock 14 frozen roots are dirty: {output}; {error}"))
+}
+
+fn validate_changed_paths_output(output: &str, allowed_paths: &[&str]) -> Result<(), String> {
+    let changed = output
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .map(normalize_git_path)
+        .collect::<Vec<_>>();
+    validate_changed_paths(&changed, allowed_paths)
+}
+
+fn status_changed_paths(output: &str) -> Vec<String> {
+    let mut changed = Vec::new();
+    for line in output
+        .lines()
+        .map(str::trim_end)
+        .filter(|line| !line.is_empty())
+    {
+        let path = if line.as_bytes().get(2) == Some(&b' ') {
+            line.get(3..).unwrap_or(line)
+        } else if line.as_bytes().get(1) == Some(&b' ') {
+            line.get(2..).unwrap_or(line)
+        } else {
+            line
+        }
+        .trim();
+        if let Some((old, new)) = path.split_once(" -> ") {
+            changed.push(normalize_git_path(old));
+            changed.push(normalize_git_path(new));
+        } else {
+            changed.push(normalize_git_path(path));
+        }
+    }
+    changed
+}
+
+fn validate_changed_paths(changed_paths: &[String], allowed_paths: &[&str]) -> Result<(), String> {
+    let allowed = changed_paths.iter().all(|path| {
+        allowed_paths
+            .iter()
+            .any(|allowed| path.as_str() == *allowed)
+    });
+    if allowed {
+        Ok(())
+    } else {
+        let disallowed = changed_paths
+            .iter()
+            .filter(|path| {
+                !allowed_paths
+                    .iter()
+                    .any(|allowed| path.as_str() == *allowed)
+            })
+            .cloned()
+            .collect::<Vec<_>>();
+        Err(format!(
+            "Lock 14 frozen diff failed for paths [{}]; disallowed [{}]",
+            changed_paths.join(", "),
+            disallowed.join(", ")
+        ))
+    }
 }
 
 fn validate_backend_shape_surface(root: &Path) -> Result<(), String> {
@@ -594,6 +743,89 @@ fn validate_backend_shape_surface(root: &Path) -> Result<(), String> {
     Ok(())
 }
 
+const GENERIC_SCAN_ROOTS: &[&str] = &[
+    "crates/codegen/src/lib.rs",
+    "crates/codegen/src/grammar_profile.rs",
+    "crates/passes/src/lib.rs",
+    "crates/runtime/src/lib.rs",
+    "crates/runtime/src/tape",
+    "crates/ir/src",
+];
+
+const FORBIDDEN_GENERIC_TOKENS: &[(&str, &str)] = &[
+    ("json_structural_alphabet_name", "STRUCTURAL_ALPHABET_JSON"),
+    ("json_structural_alphabet_bytes", "b\"{}[],:\\\"\""),
+    ("json_sink", "JsonSink"),
+    ("json_node_kind", "JsonNodeKind"),
+    ("json_value", "JsonValue"),
+    ("json_root", "JsonRoot"),
+    ("json_visitor", "JsonVisitor"),
+    ("json_escape_flag_meaning", "OffsetFlags::HAS_ESC"),
+    ("json_string_helper", "match_string_at_quote_trusted_utf8"),
+    ("json_number_helper", "match_number_span_from_first"),
+    ("serde_json_policy", "serde_json"),
+    ("json_colon_error", "ExpectedColon"),
+    ("json_comma_error", "ExpectedCommaOr"),
+    ("json_literal_branch", "grammar_name == \"json\""),
+];
+
+fn validate_generic_crate_neutrality(root: &Path) -> Result<(), String> {
+    for scan_root in GENERIC_SCAN_ROOTS {
+        for file in rust_files_under(&root.join(scan_root))? {
+            let source = std::fs::read_to_string(&file).map_err(|error| {
+                format!("failed to read generic root {}: {error}", file.display())
+            })?;
+            let production = strip_test_code(&source);
+            validate_generic_source(file.strip_prefix(root).unwrap_or(&file), production)?;
+        }
+    }
+    Ok(())
+}
+
+fn rust_files_under(path: &Path) -> Result<Vec<std::path::PathBuf>, String> {
+    if path.is_file() {
+        return Ok(vec![path.to_path_buf()]);
+    }
+    let mut files = Vec::new();
+    collect_rust_files(path, &mut files)?;
+    files.sort();
+    Ok(files)
+}
+
+fn collect_rust_files(path: &Path, files: &mut Vec<std::path::PathBuf>) -> Result<(), String> {
+    for entry in std::fs::read_dir(path)
+        .map_err(|error| format!("failed to read generic root {}: {error}", path.display()))?
+    {
+        let entry = entry.map_err(|error| format!("failed to read dir entry: {error}"))?;
+        let path = entry.path();
+        if path.is_dir() {
+            collect_rust_files(&path, files)?;
+        } else if path.extension().and_then(|ext| ext.to_str()) == Some("rs") {
+            files.push(path);
+        }
+    }
+    Ok(())
+}
+
+fn strip_test_code(source: &str) -> &str {
+    match source.find("#[cfg(test)]") {
+        Some(index) => &source[..index],
+        None => source,
+    }
+}
+
+fn validate_generic_source(path: &Path, source: &str) -> Result<(), String> {
+    for (class, token) in FORBIDDEN_GENERIC_TOKENS {
+        if source.contains(token) {
+            return Err(format!(
+                "Lock 14 generic-crate scan found {class} token `{token}` in {}",
+                path.display()
+            ));
+        }
+    }
+    Ok(())
+}
+
 fn is_allowed_class(class: &str) -> bool {
     matches!(
         class,
@@ -601,6 +833,7 @@ fn is_allowed_class(class: &str) -> bool {
             | "fixture_input"
             | "generated_json_output"
             | "generated_typed_output"
+            | "per_grammar_runtime_source"
             | "per_grammar_provider"
             | "per_grammar_template"
             | "test_fixture"
@@ -670,6 +903,20 @@ mod tests {
         assert!(validate_frozen_status_output(" M crates/grammar/src/lib.rs").is_err());
         assert!(validate_frozen_status_output(" M crates/bbnf-simd/build.rs").is_err());
         assert!(validate_frozen_status_output("?? crates/bbnf-simd/ext/x86/new.S").is_err());
+    }
+
+    #[test]
+    fn admits_w1a_owner_dirty_paths_only_under_w1a_allowance() {
+        assert!(validate_frozen_status_output_with_allowed(
+            " M crates/runtime/src/grammars/json/scan.rs\nD  crates/codegen/src/sink_direct.rs\n?? crates/codegen/src/json_sink_direct.rs",
+            SK_V12_W1A_OWNER_PATHS,
+        )
+        .is_ok());
+        assert!(validate_frozen_status_output_with_allowed(
+            " M crates/runtime/src/tape/mod.rs",
+            SK_V12_W1A_OWNER_PATHS,
+        )
+        .is_err());
     }
 
     #[test]
@@ -752,6 +999,29 @@ mod tests {
     }
 
     #[test]
+    fn admits_sk_v12_w1a_parent_diff_under_w1a_scope() {
+        let changed = vec![
+            "crates/codegen/src/lib.rs".to_string(),
+            "crates/codegen/src/grammar_profile.rs".to_string(),
+            "crates/runtime/src/grammars/json/config.rs".to_string(),
+            "crates/runtime/src/grammars/json/scan.rs".to_string(),
+            "crates/passes/src/lib.rs".to_string(),
+        ];
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v12-waveW1a): admit GrammarConfig Lock 14 legality gate"
+        )
+        .is_ok());
+        let mut outside = changed;
+        outside.push("crates/ir/src/lib.rs".into());
+        assert!(validate_authorized_parent_diff(
+            &outside,
+            "feat(sk-v12-waveW1a): admit GrammarConfig Lock 14 legality gate"
+        )
+        .is_err());
+    }
+
+    #[test]
     fn normalizes_repo_root_paths_to_skinny_workspace_paths() {
         assert_eq!(
             normalize_git_path("skinny/crates/bbnf-bench/src/generated_real_typed.rs"),
@@ -761,6 +1031,55 @@ mod tests {
             normalize_git_path("crates/runtime/src/lib.rs"),
             "crates/runtime/src/lib.rs"
         );
+    }
+
+    #[test]
+    fn generic_crate_scan_rejects_json_policy_leaks() {
+        for (_, token) in FORBIDDEN_GENERIC_TOKENS {
+            let source = format!("fn leak() {{ /* {token} */ }}");
+            assert!(
+                validate_generic_source(Path::new("crates/codegen/src/lib.rs"), &source).is_err(),
+                "token {token} should fail in generic roots"
+            );
+        }
+    }
+
+    #[test]
+    fn generic_crate_scan_strips_test_only_json_tokens() {
+        let source = r#"
+pub fn production() {}
+
+#[cfg(test)]
+mod tests {
+    use crate::grammars::json::{JsonSink, JsonValue};
+}
+"#;
+        assert!(validate_generic_source(
+            Path::new("crates/runtime/src/lib.rs"),
+            strip_test_code(source)
+        )
+        .is_ok());
+    }
+
+    #[test]
+    fn json_owned_roots_may_contain_json_policy_tokens() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+        for relative in [
+            "crates/codegen/src/json_templates/generated.rs",
+            "crates/codegen/src/json_templates/view.rs",
+            "crates/codegen/src/json_sink_direct.rs",
+            "crates/codegen/src/json_typed_direct.rs",
+            "crates/runtime/src/grammars/json/scan.rs",
+            "crates/runtime/src/grammars/json/sink.rs",
+        ] {
+            let source = std::fs::read_to_string(root.join(relative)).unwrap();
+            assert!(
+                FORBIDDEN_GENERIC_TOKENS
+                    .iter()
+                    .any(|(_, token)| source.contains(token)),
+                "{relative} should carry JSON-owned policy evidence"
+            );
+        }
     }
 
     #[test]

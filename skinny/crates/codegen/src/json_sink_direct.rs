@@ -142,17 +142,17 @@ fn parse_value_direct<'i, S: JsonSink>(
         }
         b'-' | b'0'..=b'9' => parse_number_direct(input, bytes, cursor, sink, byte),
         b't' => {
-            consume_literal_direct(input, bytes, cursor, b"true")?;
+            consume_literal_direct(input, bytes, cursor, config::TRUE_LITERAL)?;
             sink.bool(true);
             Ok(())
         }
         b'f' => {
-            consume_literal_direct(input, bytes, cursor, b"false")?;
+            consume_literal_direct(input, bytes, cursor, config::FALSE_LITERAL)?;
             sink.bool(false);
             Ok(())
         }
         b'n' => {
-            consume_literal_direct(input, bytes, cursor, b"null")?;
+            consume_literal_direct(input, bytes, cursor, config::NULL_LITERAL)?;
             sink.null();
             Ok(())
         }
@@ -182,17 +182,17 @@ fn parse_object_value_at_direct<'i, S: JsonSink>(
         }
         b'-' | b'0'..=b'9' => parse_number_object_direct(input, bytes, cursor, sink, byte),
         b't' => {
-            consume_literal_direct(input, bytes, cursor, b"true")?;
+            consume_literal_direct(input, bytes, cursor, config::TRUE_LITERAL)?;
             sink.object_bool(true);
             Ok(())
         }
         b'f' => {
-            consume_literal_direct(input, bytes, cursor, b"false")?;
+            consume_literal_direct(input, bytes, cursor, config::FALSE_LITERAL)?;
             sink.object_bool(false);
             Ok(())
         }
         b'n' => {
-            consume_literal_direct(input, bytes, cursor, b"null")?;
+            consume_literal_direct(input, bytes, cursor, config::NULL_LITERAL)?;
             sink.object_null();
             Ok(())
         }
@@ -222,17 +222,17 @@ fn parse_array_element_at_direct<'i, S: JsonSink>(
         }
         b'-' | b'0'..=b'9' => parse_number_array_direct(input, bytes, cursor, sink, byte),
         b't' => {
-            consume_literal_direct(input, bytes, cursor, b"true")?;
+            consume_literal_direct(input, bytes, cursor, config::TRUE_LITERAL)?;
             sink.array_bool(true);
             Ok(())
         }
         b'f' => {
-            consume_literal_direct(input, bytes, cursor, b"false")?;
+            consume_literal_direct(input, bytes, cursor, config::FALSE_LITERAL)?;
             sink.array_bool(false);
             Ok(())
         }
         b'n' => {
-            consume_literal_direct(input, bytes, cursor, b"null")?;
+            consume_literal_direct(input, bytes, cursor, config::NULL_LITERAL)?;
             sink.array_null();
             Ok(())
         }

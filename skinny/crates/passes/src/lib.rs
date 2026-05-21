@@ -337,11 +337,8 @@ pub mod recognizers {
                 _ => {}
             }
         }
-        let bytes = b"{}[],:\""
-            .iter()
-            .copied()
-            .filter(|byte| present.contains(byte))
-            .collect::<Vec<_>>();
+        let mut bytes = present.into_iter().collect::<Vec<_>>();
+        bytes.sort_unstable();
         if bytes.is_empty() {
             return Vec::new();
         }

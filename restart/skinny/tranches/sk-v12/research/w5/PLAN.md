@@ -54,7 +54,7 @@ W5 verifies the close by re-running:
 
 - `RUSTFLAGS="-C target-cpu=native" cargo run --manifest-path skinny/Cargo.toml -p bbnf-bench --bin gate -- --skv12-css-l4-sota-report ../restart/skinny/tranches/sk-v12/research/w1b/skv12-W1b-css-l4-sota.json --advisory`
 - `awk -f restart/skinny/tranches/sk-v12/research/w1a/verify-skv12-json-floors.awk skinny/RESULTS.md`
-- `jq -e '.decision == "pass" and .parity == "pass" and .speedup_ratio > 1.01' restart/skinny/tranches/sk-v12/research/w4/w4-delimiter-find-microbench.json`
+- `jq -e '.decision == "pass" and .parity_status == "pass" and .candidate_speedup_ratio > .threshold_speedup_ratio' restart/skinny/tranches/sk-v12/research/w4/w4-delimiter-find-microbench.json`
 - `git diff --check`
 
 ## CHALLENGE Requirement

@@ -1,8 +1,8 @@
-# SK-V13 DISPATCH-PROMPT - Per-Wave Implementation Contract V1 Draft
+# SK-V13 DISPATCH-PROMPT - Per-Wave Implementation Contract V2 Draft
 
 Date: 2026-05-21.
 
-Status: S-P3 V1 planning draft. This prompt is not live implementation
+Status: S-P3 V2 planning draft. This prompt is not live implementation
 authority. Implementation waves remain blocked until G-Omega closes and S-P3
 converges or the user explicitly pins S-P3 final.
 
@@ -14,18 +14,24 @@ Read in this order before dispatching any SK-V13 implementation wave:
 2. `restart/skinny/tranches/sk-v13/SYNTHESIS.md`
 3. `restart/skinny/tranches/sk-v13/HANDOFF.md`
 4. `restart/skinny/tranches/sk-v13/SPEC.md`
-5. `restart/skinny/tranches/sk-v13/research/p3/p3f-spec-draft.md`
-6. `restart/skinny/tranches/sk-v13/research/p3/p3a-candidate-shortlist.md`
-7. `restart/skinny/tranches/sk-v13/research/p1/hardening/HARDENING-S-P1-V5-CONVERGED.md`
-8. `restart/skinny/tranches/sk-v13/research/p2/hardening/HARDENING-S-P2-V4-CONVERGED.md`
-9. `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`
-10. `restart/prompts/ORCHESTRATOR.md` Section 3, Section 3W, and Section 3Z
-11. `skinny/RESULTS.md`
-12. `skinny/REDRESS.md`
+5. `restart/skinny/tranches/sk-v13/research/p3/p3a-candidate-shortlist.md`
+6. `restart/skinny/tranches/sk-v13/research/p3/p3b-wave-sequencing.md`
+7. `restart/skinny/tranches/sk-v13/research/p3/p3c-falsifiability-gates.md`
+8. `restart/skinny/tranches/sk-v13/research/p3/p3d-telemetry-schema.md`
+9. `restart/skinny/tranches/sk-v13/research/p3/p3e-preblocked-ledger.md`
+10. `restart/skinny/tranches/sk-v13/research/p3/p3f-spec-draft.md`
+11. `restart/skinny/tranches/sk-v13/research/p3/hardening/HARDENING-S-P3-V1-CONSOLIDATED.md`
+12. `restart/skinny/tranches/sk-v13/research/p1/hardening/HARDENING-S-P1-V5-CONVERGED.md`
+13. `restart/skinny/tranches/sk-v13/research/p2/hardening/HARDENING-S-P2-V4-CONVERGED.md`
+14. `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`
+15. `restart/prompts/ORCHESTRATOR.md` Section 3, Section 3W, and Section 3Z
+16. `skinny/RESULTS.md`
+17. `skinny/REDRESS.md`
 
-P3-B, P3-C, P3-D, and P3-E are absent at V1 draft time. If they exist by the
-time of dispatch, the orchestrator must read and fold them before issuing a
-wave packet.
+P3-A through P3-E are current required inputs. P3-A owns the candidate
+shortlist; P3-B owns cost/dependency/bracket accounting; P3-C owns formulas;
+P3-D owns telemetry and gate-json rejection; P3-E owns the REDRESS route-state
+ledger. No implementation wave packet may treat those artifacts as absent.
 
 ## Global Block
 
@@ -67,11 +73,15 @@ Every dispatch packet must include:
 - Falsifiability rows and thresholds.
 - Same-wave consumer path.
 - Scalar reference and parity/checkasm path if SIMD/ASM is involved.
-- Generality proof target: CSS L4 plus Sheets or BBNF-self when generic crates
-  are edited.
+- Generality proof target: CSS L4 plus both Sheets and BBNF-self for
+  fleet-wide grammar-neutral claims; CSS L4 plus only one of Sheets or
+  BBNF-self is scoped evidence only.
 - Pre-blocked REDRESS entries.
 - LOC cap, phase cap, rerun ceiling, and revert slice.
 - Required RESULTS/REDRESS/rolling-delta updates on admit or reject.
+- Required telemetry fields: `row_state`, `source_commit`, `consumer_gate`,
+  `g_omega_status`, CSS feature id/status, domain extension blocks, generated
+  LOC budget, and all SPEC Section 0.4 gate-json rejection fields.
 
 If any item is missing, dispatch returns REVISE before source redress.
 
@@ -129,8 +139,11 @@ Lock 14:
   name.
 - Grammar-specific behavior enters through generated per-grammar modules,
   tables, templates, or opaque facts.
-- Generic edits require a non-JSON proof: CSS L4 plus Sheets or BBNF-self
-  compile/lower/cost/unchanged-output audit.
+- Generic edits require a non-JSON proof. Fleet-wide grammar-neutral claims
+  require CSS L4 plus both Sheets and BBNF-self fail-closed, compile/lower/cost,
+  unchanged-output, or generated-role fact-row witnesses. CSS L4 plus only one
+  of Sheets or BBNF-self is scoped to the witnessed grammars and cannot close a
+  fleet-wide Lock 14 claim.
 
 Lock 16:
 
@@ -172,27 +185,70 @@ Subwaves W10.N, W11.N, and W14.N may be dispatched concurrently only after
 their plans prove non-overlapping file domains. RESULTS and REDRESS writes
 serialize.
 
+Canonical wave-accounting rule: this W0-W15 table is authoritative for V2.
+P3-B's W0-W11 labels are packing aliases only. A W10.N, W11.N, or W14.N
+subwave is a planning lane until the accepted wave plan declares it a real
+triumvirate; each real subwave counts against the active skinny-bracket
+accounting. If bracket accounting overflows, W15 closes the tranche as
+`REJECT-BRACKET` and Pass Alpha immediately opens SK-V14 without dropping any
+pinned row or feature.
+
+Decision/policy anti-paper-close rule: W5, W6, W7, and W8 must be consumed by a
+named generated selection, backend, compile, or generated row path and must move
+at least one JSON or CSS row by P3-C `row_move_toward_sota`, admit a row, or
+record a measured architectural block. API extraction, e-graph/cost telemetry,
+CSP plumbing, cascade retirement, or generated policy wiring without row
+movement/block is a measured reject.
+
+Same-wave consumer minimums:
+
+| Wave family | Required consumer |
+|---|---|
+| W10.N | Generated CSS feature row and production fact-stream caller in `skinny/crates/runtime/src/grammars/css_l4_*`. |
+| W11.N | Generated JSON direct sink/digest production path exercised by `skinny/crates/bbnf-bench/src/direct_struct.rs`. |
+| W13 | Generated real-typed product parser and independent Track 2/oracle harness for the selected corpus batch. |
+| W14.N | Generated JSON parse path or selected parse runtime caller exercised by `bbnf-bench` `parse_only`. |
+
+SIMD same-wave zero-orphan rule: any wave that touches `skinny/crates/bbnf-simd/`
+or selects a SIMD-generated consumer, including W9/C3 union, must exit with
+`orphan_count_after = 0`, strict checkasm status, scalar-reference status,
+delete/demote/revert protocol, and production consumer row evidence in that
+same wave. Later W12 cleanup is not an admissible dependency for a wave that
+creates or reclassifies a SIMD primitive.
+
 ## Pre-Blocked Routes
 
 Every wave inherits these blocks unless the wave plan cites the REDRESS entry,
 names a fresh material differential, and passes challenge where required:
 
-- REDRESS 28/33: tiny-string NEON replay or broad string-kernel close.
-- REDRESS 50-55: aux side tables, event cursors, structural-mask cursors,
-  decoded-string stats sinks, quote-source hash streams, visitor sidecars.
-- REDRESS 60-72: direct-materialization replay, source-hook receiver shortcuts,
-  semantic fact hashing, retained string-boundary collapse, direct cap replay.
-- REDRESS 80: one-row `canada` mantissa widening.
-- REDRESS 82-84: single-quartet unicode classifier, StringBlock16 tiny probe,
-  object-pair value-byte control compaction.
-- REDRESS 88-90: PMULL/CSSC/body-fill performance admission or canary-only
-  route as row movement.
-- REDRESS 92 and 96-98: scanner/tape isomorphism, class column, streaming
-  cursor, class lane, sidecar event vector.
-- REDRESS 107/108 and 113-120: proof-only escape routes, non-JSON axis blocks,
-  and direct fixpoint history as close authority.
-- REDRESS 121-127: preserve GrammarConfig, escape-mask, CSS comparator,
-  zero-orphan, and SK-V12 close evidence.
+- Pre-W0/W0: REDRESS 75, 77, 78, 99-102, 111, 119-127 are gate feed; 119/120
+  cannot close; no source, RESULTS, or REDRESS work before G-Omega.
+- W1-W4 and W10.N CSS: REDRESS 112, 113, 123-127 are gate feed; 28/33,
+  50-55, 60-72, 82-84, 88/89, and 126 block string, escape, or SIMD replays;
+  123-125/127 are not full CSS close.
+- W5-W7 decision engine: REDRESS 84, 87, 114, 115 plus 85-87/121 Lock 14 and
+  CostFacts families block JSON-specific generic branches, support-only
+  resolver extraction, and old cascade fallback admission.
+- W8 policy/sink/view: REDRESS 121, 54/55/66-69, and 80/82/84 block generic
+  JSON policy, public `GrammarConfig`, generic `JsonSink` acceleration, and
+  direct source-hook/string/control replays.
+- W9 union: REDRESS 50, 51, 53, 88, 89, 92, 96, 97, 98, and 126 block class
+  column, streaming cursor, parser-local cursor, sidecar, scalar-delegate body,
+  and `UnionTape` replays.
+- W11.N direct: REDRESS 54, 55, 66-69, 73, 80, 82, 84, 106-108, 114-119
+  block direct source-hook/digest/hash/string/number/control replays; 119/120
+  are history only.
+- W12 SIMD/ASM: REDRESS 88, 89, 90, 122, 126 and relevant 121-127 gate feed
+  block microbench-only/checkasm-only admission and require zero orphans.
+- W13 typed product: REDRESS 70-72 and 103-110 are mixed precedent; typed
+  product precedent is allowed but hidden typed sinks, proof-only escape routes,
+  and no-op production rows do not admit.
+- W14.N parse-only: REDRESS 28, 33, 50, 51, 53, 60-65, 72 overgeneralization,
+  82-84, 88, 89, 92, 96-98, and 102 block docs-only parse movement and stale
+  retained string/control/union replays.
+- W15 close: REDRESS 119, 120, 123-127 plus the full-SOTA addendum block
+  ordinary fixpoint, implementation-limited miss, one-CSS-row close, or
+  REDRESS-history close.
 
 ## Redress Outcome Rules
 

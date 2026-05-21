@@ -1,11 +1,11 @@
-# SK-V13 SPEC - S-P3 Wave Plan V1 Draft
+# SK-V13 SPEC - S-P3 Wave Plan V2 Draft
 
 Date: 2026-05-21.
 
-Status: S-P3 V1 planning draft. This file is not implementation dispatch
+Status: S-P3 V2 planning draft. This file is not implementation dispatch
 authority. It folds the SK-V13 SYNTHESIS/HANDOFF, the 2026-05-21 full-SOTA
-user pin, converged S-P1/S-P2 evidence, and P3-A. P3-B, P3-C, P3-D, and P3-E
-were absent at V1 drafting time; later S-P3 cycles may fold them.
+user pin, converged S-P1/S-P2 evidence, P3-A through P3-E, and the S-P3 V1
+CHALLENGE revise set.
 
 Authority:
 
@@ -15,7 +15,12 @@ Authority:
 - `restart/skinny/tranches/sk-v13/research/p1/hardening/HARDENING-S-P1-V5-CONVERGED.md`
 - `restart/skinny/tranches/sk-v13/research/p2/hardening/HARDENING-S-P2-V4-CONVERGED.md`
 - `restart/skinny/tranches/sk-v13/research/p3/p3a-candidate-shortlist.md`
+- `restart/skinny/tranches/sk-v13/research/p3/p3b-wave-sequencing.md`
+- `restart/skinny/tranches/sk-v13/research/p3/p3c-falsifiability-gates.md`
+- `restart/skinny/tranches/sk-v13/research/p3/p3d-telemetry-schema.md`
+- `restart/skinny/tranches/sk-v13/research/p3/p3e-preblocked-ledger.md`
 - `restart/skinny/tranches/sk-v13/research/p3/p3f-spec-draft.md`
+- `restart/skinny/tranches/sk-v13/research/p3/hardening/HARDENING-S-P3-V1-CONSOLIDATED.md`
 - `restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md`
 - `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`
 - `restart/prompts/ORCHESTRATOR.md`
@@ -128,11 +133,13 @@ Missing required fields fail closed.
 Required common fields:
 
 ```text
+schema_version
 row_id
 grammar_id
 domain
 corpus
 workload
+row_state
 outcome
 verdict
 strictness
@@ -141,10 +148,22 @@ track1_mbps
 track2_mbps_or_oracle
 strict_anchor_id
 strict_anchor_mbps
+comparator_id
+comparator_plane
+comparator_strictness
+comparator_freshness
+measured_validation_path
 delta_vs_sota
 delta_vs_prior_tranche
 profile_artifact
 hot_leaf
+source_commit
+criterion_root_or_report_root
+artifact_sha256
+producer_id
+consumer_gate
+evidence_timestamp_utc
+pass_alpha_goal_id
 sample_count
 build_flags
 host_triple
@@ -153,8 +172,14 @@ wave_id
 run_id
 redress_id
 gate_artifact
+g_alpha_status
+g_omega_status
+totality_surface_version
 same_wave_consumer_class
 track2_independence_status
+substrate_surface
+structural_projection_status
+substrate_cardinality
 lock14_status
 lock16_status
 rolling_sota_delta_status
@@ -181,14 +206,22 @@ Required CSS-specific fields:
 
 ```text
 css_feature
+css_feature_id
+css_feature_status
 lightningcss_mbps
+lightningcss_version
+lightningcss_artifact
 cssparser_or_golden_oracle
+golden_oracle_status
 feature_coverage_status
 strict_equality_artifact
 fixture_id
+corpus_id
 grammar_checksum
+input_checksum
 generated_loc
 generated_module_bytes
+json_guard_state
 ```
 
 Required decision-engine fields:
@@ -206,6 +239,11 @@ abrogate_status
 
 Every emitted field must be consumed by `gate-json`, a CSS companion gate, or
 the rolling SOTA delta gate in the same wave. Producer-only telemetry rejects.
+The gate also rejects a missing JSON/CSS row universe, stale run ids, mixed
+planes, producer-only fields, SIMD orphans, union stale-route claims,
+decision-engine paper close, generated LOC opacity, rolling demotion, and any
+implementation-wave telemetry with `g_omega_status` still
+`blocked-pre-w0`.
 
 ### Section 0.5 - Opening Goalset
 
@@ -273,6 +311,14 @@ All implementation waves are initially blocked. The `Initial dispatch status`
 column names the first condition; each wave still requires its own plan and
 orchestrator dispatch.
 
+The table below is the canonical V2 dispatch manifest. P3-B's W0-W11 labels
+are retained only as V1 packing aliases and map to this table. W10.N, W11.N,
+and W14.N are planning subwave series until a wave plan declares a concrete
+triumvirate; every declared real subwave counts against the active skinny
+bracket. If bracket accounting overflows, W15 closes the tranche as
+`REJECT-BRACKET` and Pass Alpha opens SK-V14 immediately; no pinned CSS feature
+or JSON row is dropped to satisfy the ceiling.
+
 | Wave | Section | Name | Initial dispatch status | Source/edit LOC budget | Redress cap |
 |---|---|---|---|---|---:|
 | Pre-W0 | Section 21 | G-Omega Totality V1.1 Block | Mandatory before W0 | Totality CRUD only; no skinny source | n/a |
@@ -335,9 +381,13 @@ Every wave has this exit gate. Generic-crate edits add the non-JSON proof.
   control policy or CSS feature semantics.
 - Template/provider boundary: per-grammar providers/templates own policy;
   generic codegen consumes grammar-derived facts.
-- Non-JSON proof: any generic edit must prove CSS L4 and at least one of
-  Sheets or BBNF-self compiles, lowers, costs, or unchanged-output-audits
-  without JSON structural roles.
+- Non-JSON proof: any generic edit must prove a strict CSS L4 positive lane
+  and both Sheets and BBNF-self fail-closed, compile/lower/cost,
+  unchanged-output, or generated-role fact-row witnesses before making
+  fleet-wide grammar-neutral claims. With CSS L4 plus only one of Sheets or
+  BBNF-self, the wave may proceed only with a scoped witness label naming the
+  covered grammars; it may not use fleet-wide, universal, or grammar-neutral
+  closure wording.
 - Lock 16 proof: every SIMD/ASM primitive must have scalar reference,
   strict checkasm/differential coverage, corpus parity, feature-mask
   disclosure, same-wave production consumer, and no public substrate API.
@@ -412,7 +462,7 @@ Tasks:
 Exit gate:
 
 - The admitted declaration-values row maintains strict equality and
-  `Track 1 > 169.92962215656692 Mbps`.
+  `Track1_after >= max(lightningcss_open + 1.0, 0.98 * SK-V13-open Track1)`.
 - New harness rows are gate-consumed, freshness-bound, and reject report-only
   Mbps.
 - JSON guards show no silent demotion.
@@ -537,6 +587,10 @@ Exit gate:
   the same wave.
 - Zero hardcoded JSON regex pattern strings remain in generic decision logic.
 - JSON/CSS guard rows maintain.
+- The extracted facts are consumed by a named generated selection path and
+  either move at least one JSON or CSS row by P3-C `row_move_toward_sota`, admit
+  a row, or record a measured architectural block. Support-only extraction
+  rejects.
 
 Same-wave consumer: IR/passes analysis calls.
 
@@ -570,6 +624,10 @@ Exit gate:
   by the gate.
 - Stale cost rate is <=30% of candidate expressions or REDRESS abrogates.
 - JSON/CSS guard rows maintain.
+- The selected candidate is consumed by generated backend selection and either
+  moves at least one JSON or CSS row by P3-C `row_move_toward_sota`, admits a
+  row, or records a measured architectural block. Bounded e-graph/cost
+  telemetry alone rejects.
 
 Same-wave consumer: generated backend selection consumes extracted candidate.
 
@@ -603,6 +661,10 @@ Exit gate:
   measured fallback.
 - Old cascade cannot silently serve rows after resolver fold.
 - JSON and CSS guard rows maintain or improve.
+- Resolver output is consumed by `compile()` / generated backend selection and
+  either moves at least one JSON or CSS row by P3-C `row_move_toward_sota`,
+  admits a row, or records a measured architectural block. Cascade retirement
+  without a row-consumed result is a measured reject, not an admit.
 
 Same-wave consumer: `compile()` / generated backend selection consumes resolver
 output.
@@ -636,9 +698,10 @@ Tasks:
 
 Exit gate:
 
-- JSON output unchanged or improved.
 - At least one touched JSON/CSS row consumes the new policy surface in the same
-  wave, unless the wave records architectural block.
+  wave and either moves by P3-C `row_move_toward_sota`, admits, or records a
+  measured architectural block. "JSON output unchanged" is guard evidence only,
+  not an admission.
 - Lock 14 proof passes.
 
 Same-wave consumer: generated JSON and CSS rows named by plan.
@@ -682,6 +745,10 @@ Exit gate:
 - No class column, retained structural index, parser-owned cursor/list, aux
   table, sidecar vector, second scan, or public `UnionTape` survives.
 - Full JSON/CSS guard maintain.
+- If W9 touches `skinny/crates/bbnf-simd/` or selects C3 SIMD-first routing,
+  `orphan_count_after = 0`, strict checkasm status, scalar-reference status,
+  delete/demote/revert protocol, and production consumer row evidence are
+  same-wave exit predicates. W9 cannot rely on W12 for later orphan cleanup.
 
 Same-wave consumer: generated CSS fact stream, JSON retained parse, JSON direct
 projection, or another plan-named production row.
@@ -709,6 +776,9 @@ Exit gate:
 - Each subwave either admits its feature above lightningcss + 1 with strict
   equality and oracle proof, or records architectural-level intrinsic block.
 - No feature remains `PARTIAL` at SK-V13 close.
+
+Same-wave consumer: the generated CSS feature row named by the subwave, plus
+its production fact-stream caller in `skinny/crates/runtime/src/grammars/css_l4_*`.
 
 Revert protocol: revert feature row source/generated/gate/RESULTS; record
 REDRESS with exact feature and failed variants.
@@ -742,6 +812,9 @@ Exit gate:
 - Selected direct rows admit above sonic strict + 1 or are architecturally
   blocked.
 - Existing A/GO rows and other planes do not silently demote.
+
+Same-wave consumer: the generated JSON direct sink / digest production path
+selected by the row plan and exercised by `skinny/crates/bbnf-bench/src/direct_struct.rs`.
 
 Revert protocol: revert row changes and generated outputs; append REDRESS with
 row, material differential, comparator, and failed threshold.
@@ -806,6 +879,9 @@ Exit gate:
 - Existing typed admits maintain.
 - Direct digest rows are not counted as typed product proof.
 
+Same-wave consumer: the generated real-typed product parser and its independent
+Track 2/oracle harness for the selected corpus batch.
+
 Revert protocol: revert typed row generation and reports; REDRESS missing
 schema/oracle/threshold failures.
 
@@ -838,6 +914,9 @@ Exit gate:
 - Selected `parse_only` rows beat sonic strict parse + 1 with strict equality
   and measured validation path.
 - No parse row remains closed as `S / NO-GO` by diagnostic exemption.
+
+Same-wave consumer: the generated JSON parse path or selected parse runtime
+caller exercised by `bbnf-bench` `parse_only` for the named corpus row.
 
 Revert protocol: revert parse changes and generated outputs; record REDRESS
 with row, threshold, and differential.
@@ -873,19 +952,38 @@ close blocked with exact files, rows, and missing evidence.
 
 ## Section 20 - Pre-Blocked Routes
 
-Every wave inherits this ledger:
+Every wave packet must copy the exact row below that applies to the wave. A
+generic "inherits Section 20" reference is insufficient for redress dispatch.
 
-- New directive, BIR variant, `BackendShape`, `UnionTape`, public substrate API,
-  parser-owned cursor/facts, sidecar substrate, and parallel substrate.
-- Generic JSON/CSS policy in generic crates, including renamed helpers.
-- Sidecar/permissive/lossy/stale comparator evidence as strict admission.
-- Orphan primitives, checkasm-only admission, harness-only hardening as row
-  movement, and telemetry-only producers.
-- Track 1/Track 2 coupling or benchmark-private parsers.
-- REDRESS 28/33, 50-55, 60-72, 80, 82-84, 88-90, 92, 96-98, 107/108, 113-120
-  as described in P3-F §4.
-- REDRESS 121-127 preservation: Lock 14, Lock 16, CSS comparator/admission,
-  zero-orphan, and SK-V12 close evidence remain binding.
+Global blocks for every wave: no new directive, BIR variant, `BackendShape`,
+`UnionTape`, public substrate API, parser-owned cursor/facts, sidecar substrate,
+parallel substrate, generic JSON/CSS policy in generic crates, stale/permissive
+comparator evidence as strict admission, Track 1/Track 2 coupling,
+benchmark-private parser equality, orphan primitive, checkasm-only admission,
+harness-only hardening as row movement, or telemetry-only producer.
+
+Route-state vocabulary:
+
+```text
+BLOCKED-HISTORICAL
+REOPEN-CONDITIONAL
+GATE-FEED
+HISTORY-LIFTED
+MIXED
+```
+
+| SPEC wave family | Pre-blocked REDRESS entries and route-state handling |
+|---|---|
+| Pre-W0/W0 | 75, 77, 78, 99-102, 111, and 119-127 are `GATE-FEED`; 119/120 cannot close; no source, RESULTS, or REDRESS work before G-Omega. |
+| W1-W4 CSS + W10.N CSS | 112, 113, 123-127 are `GATE-FEED`; 28/33, 50-55, 60-72, 82-84, 88/89, and 126 are `BLOCKED-HISTORICAL` whenever CSS uses string, escape, or SIMD routes; 123-125/127 cannot count as full CSS close. |
+| W5-W7 decision engine | 84, 87, 114, 115 plus 85-87/121 are gate/block families; no JSON-specific generic branch, support-only regex/egraph/CSP extraction, fused hidden solver, or old P1-P8 cascade fallback admission. |
+| W8 policy/sink/view | 121 is `GATE-FEED`; 54/55/66-69, 80, 82, and 84 are `BLOCKED-HISTORICAL`; no public `GrammarConfig`, generic `JsonSink` acceleration, JSON policy in generic code, source-hook, decoded-string stats/hash, one-row number patch, or control compaction replay. |
+| W9 union | 50, 51, 53, 92, 96, 97, 98, 88, 89, and 126 bind; REDRESS 96/97/98 are `REOPEN-CONDITIONAL` only for a named material differential. Exact class-column, streaming-cursor, class-lane-only, `StructuralIndex`, parser-owned cursor/list, aux table, sidecar vector, scalar-delegate body, and `UnionTape` routes stay blocked. |
+| W11.N direct | 54, 55, 66-69, 73, 80, 82, 84, 106-108, and 114-119 bind; 119/120 are `HISTORY-LIFTED` and must be cited but cannot close a row. Source-hook/digest/hash/string/number/control replays stay blocked. |
+| W12 SIMD/ASM | 88, 89, 90, 122, 126, and relevant 121-127 gate feed bind; PMULL/CTZ tested bodies, microbench-only admission, checkasm-only admission, second production-split deferral, and retained orphans stay blocked. |
+| W13 typed product | 70-72 and 103-110 are `MIXED`: typed product precedent is allowed, but direct digest rows, hidden typed sinks, proof-only escape routes, and no-op production rows are not typed admission. |
+| W14.N parse-only | 28, 33, 50, 51, 53, 60-65, 72 overgeneralization, 82-84, 88, 89, 92, 96-98, and 102 bind. Parse rows are target-eligible, but docs-only `S` to `A` movement and stale retained string/control/union replays remain blocked. |
+| W15 close | 119, 120, 123-127 plus the full-SOTA addendum bind; no ordinary fixpoint, implementation-limited miss, one-CSS-row close, or REDRESS-history close. |
 
 ## Section 21 - G-Omega And Dispatch Scope
 

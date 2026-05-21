@@ -105,7 +105,10 @@ mandatory CHALLENGE acceptance before redress.
 - **Lock 14 / CSS / zero-orphan gate feed:** REDRESS 121 supplies generated
   per-grammar config as the Lock 14 route; every generic-crate edit must prove
   no grammar-name control flow and must include a non-JSON proof when the crate
-  is generic (`skinny/REDRESS.md:3557`-`:3602`).
+  is generic (`skinny/REDRESS.md:3557`-`:3602`). Fleet-wide Lock 14 closure also
+  requires a strict CSS L4 positive lane plus both Sheets and BBNF-self
+  fail-closed or generated-role witnesses; with only one of those non-CSS
+  witnesses, the result is scoped to the witnessed grammars.
 - **Lock 16 escape prerequisite:** REDRESS 122 supplies `escape_mask_64`
   scalar/checkasm/runtime scanner parity. It is a prerequisite, not a row
   movement claim (`skinny/REDRESS.md:3605`-`:3633`).

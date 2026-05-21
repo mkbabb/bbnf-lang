@@ -237,8 +237,11 @@ JSON regression-free gate:
   `row_move_toward_sota`; otherwise the subwave is a measured reject.
 - No legacy cascade result may be presented as resolver admission after the
   cascade retirement subwave.
-- Lock 14 proof is mandatory for generic crate edits: CSS L4, Sheets or
-  BBNF-self no-op/lowering proof must be named.
+- Lock 14 proof is mandatory for generic crate edits. Fleet-wide
+  grammar-neutral claims require CSS L4 plus both Sheets and BBNF-self
+  fail-closed, compile/lower/cost, unchanged-output, or generated-role fact-row
+  witnesses. CSS L4 plus only one of Sheets or BBNF-self is scoped non-JSON
+  evidence and cannot close a fleet-wide grammar-neutral claim.
 
 Abrogate-before-patch criteria:
 

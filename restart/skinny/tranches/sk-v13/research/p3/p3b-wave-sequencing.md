@@ -7,6 +7,16 @@ Output: this file.
 Pass Alpha goalset: G1 full CSS L4 parity, G2 decision-engine fold, G3 one union variant or architectural block, G4 zero aarch64 orphans, G5 all 51 JSON rows above sonic-rs strict including `parse_only`, G6 totality V1.1/G-Omega before W0, and G7 no demotion with immediate bracket if unmet.
 Candidate pool: research/p2/ post-CHALLENGE survivors.
 
+V2 fold note: the canonical dispatch identifiers are the folded SPEC /
+DISPATCH W0-W15 names. The W0-W11 manifest below is retained as the V1 cost
+packing rationale only; it is not dispatch authority after the V2 fold. Mapping:
+P3-B W0 -> SPEC W0; P3-B W1/W2 -> SPEC W1-W4 plus W10.N and W12 when CSS SIMD
+is selected; P3-B W3-W7 -> SPEC W5-W7; P3-B W8 -> SPEC W9 plus W12 when SIMD is
+selected; P3-B W9 -> SPEC W11.N plus W13; P3-B W10 -> SPEC W14.N; P3-B W11 ->
+SPEC W15. Every real top-level wave or separately dispatched subwave counts
+against the active skinny-bracket accounting; overflow closes the tranche as
+REJECT-BRACKET and immediately brackets forward, never drops a pinned row.
+
 ## §1 — Synthesis (concrete; cites P1 row, P2 candidate, REDRESS entry, or goalset line)
 
 The SK-V13 candidate pool is bigger than a literal 12-wave skinny bracket if

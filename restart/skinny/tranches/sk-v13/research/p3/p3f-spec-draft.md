@@ -1,8 +1,8 @@
 # SK-V13 P3-F: SPEC + Dispatch Drafting
 
-Pass: S-P3 Synthesis-Plan. Cycle: V1.
+Pass: S-P3 Synthesis-Plan. Cycle: V2 fold.
 Date: 2026-05-21.
-Scope: Compose the V1 SK-V13 SPEC and DISPATCH-PROMPT from converged S-P1/S-P2 evidence, P3-A, and the G1-G7 full-SOTA goalset.
+Scope: Compose the V2 SK-V13 SPEC and DISPATCH-PROMPT from converged S-P1/S-P2 evidence, P3-A through P3-E, S-P3 V1 CHALLENGE, and the G1-G7 full-SOTA goalset.
 Output: this file + `restart/skinny/tranches/sk-v13/SPEC.md` + `restart/skinny/tranches/sk-v13/DISPATCH-PROMPT.md`.
 Pass Alpha goalset: SK-V13 closes only by full ADMIT or architectural-level intrinsic-block proof for G1 full CSS L4 lightningcss parity, G2 decision-engine fold, G3 >=1 fresh union variant or architectural block, G4 zero aarch64 orphans, G5 all 51 JSON rows above strict sonic-rs including `parse_only`, G6 totality V1.1/G-Omega before W0, and G7 no silent demotion with bracket-forward on any open pinned target.
 Candidate pool: research/p2/ post-CHALLENGE survivors.
@@ -24,12 +24,15 @@ support-only items are non-admissive; every JSON plane and every non-OUT_OF_SCOP
 CSS feature remains an admission target until admitted or architecturally
 blocked.
 
-Only P3-A is present at V1. P3-B wave sequencing, P3-C falsifiability gates,
-P3-D telemetry-schema binding, and P3-E pre-blocked-route ledger are absent
-under `restart/skinny/tranches/sk-v13/research/p3/` at draft time. This draft
-therefore cites that absence and uses P3-A plus S-P1/S-P2/SYNTHESIS/HANDOFF as
-the source of truth. The orchestrator may fold later P3-B through P3-E outputs
-into a V2/V3 draft, but this V1 draft must not invent a narrower scope.
+P3-A through P3-E are present and binding for the V2 fold. P3-A owns the
+candidate shortlist and reclassifies P3A-0 as `W0-GOVERNANCE-SUBSTRATE`;
+P3-B owns cost, dependencies, and bracket-forward accounting but its W0-W11
+labels are V1 packing aliases superseded by the folded SPEC/DISPATCH W0-W15
+names; P3-C owns falsifiability formulas and `SK-V13-open` threshold
+discipline; P3-D owns telemetry fields and `gate-json` rejection rules; P3-E
+owns the REDRESS route-state ledger and per-wave pre-block matrix. The V2 SPEC
+and DISPATCH are the dispatch source of truth only after S-P3 CHALLENGE
+accepts them and G-Omega remains closed.
 
 The user pin addendum controls the close. The prior REDRESS-119 direct fixpoint
 and REDRESS-120 SK-V11 close are history only. `parse_only` is admission-
@@ -171,7 +174,11 @@ when first-of-class, wiring the same-wave consumer, and measuring the row.
 - `restart/skinny/tranches/sk-v13/research/p2/p2f-grammar-neutral.md`
 - `restart/skinny/tranches/sk-v13/research/p2/hardening/HARDENING-S-P2-V4-CONVERGED.md`
 - `restart/skinny/tranches/sk-v13/research/p3/p3a-candidate-shortlist.md`
-- P3-B/P3-C/P3-D/P3-E absence under `restart/skinny/tranches/sk-v13/research/p3/` at V1 draft time
+- `restart/skinny/tranches/sk-v13/research/p3/p3b-wave-sequencing.md`
+- `restart/skinny/tranches/sk-v13/research/p3/p3c-falsifiability-gates.md`
+- `restart/skinny/tranches/sk-v13/research/p3/p3d-telemetry-schema.md`
+- `restart/skinny/tranches/sk-v13/research/p3/p3e-preblocked-ledger.md`
+- `restart/skinny/tranches/sk-v13/research/p3/hardening/HARDENING-S-P3-V1-CONSOLIDATED.md`
 - `restart/skinny/tranches/sk-v13/scoping/sk-v13-scoping-css-parity-gap.md`
 - `restart/skinny/tranches/sk-v13/scoping/sk-v13-scoping-decision-engine.md`
 - `restart/skinny/tranches/sk-v13/scoping/sk-v13-scoping-value-api-union.md`

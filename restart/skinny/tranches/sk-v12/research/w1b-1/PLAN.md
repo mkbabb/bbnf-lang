@@ -1,7 +1,7 @@
 # SK-V12 W1b-1 Plan - CSS L4 Scaffold
 
-Status: selected plan proposal for CHALLENGE. No behavior/source authority until
-CHALLENGE accepts the owner amendments below.
+Status: plan V2 after CHALLENGE V1 REVISE. No behavior/source authority until
+CHALLENGE accepts the Lock 14 owner repair and cap-fit redress boundary below.
 
 ## Selection
 
@@ -41,6 +41,7 @@ with exactly these additional paths:
 - `skinny/crates/runtime/src/lib.rs`
 - `skinny/crates/bbnf-bench/src/gate.rs` only if report validation needs a
   shared gate helper change beyond `report.rs`
+- `skinny/crates/bbnf-bench/src/lock14_baseline.rs`
 - `restart/skinny/tranches/sk-v12/research/w1b/skv12-W1b-1-css-l4-oracle.json`
 - `restart/skinny/tranches/sk-v12/research/w1b/artifacts/`
 
@@ -133,17 +134,53 @@ For W1b-1 require:
 Do not add an outcome variant, do not add main `RESULTS.md` JSON columns, and
 do not add a `lightningcss_mbps` placeholder in W1b-1.
 
+## Lock 14 V2 Repair
+
+CHALLENGE V1 found a plan-time owner blocker: `gate-json` always invokes
+`lock14_baseline::validate`, so W1b-1 must own the Lock 14 gate file it needs
+to update. Plan V2 therefore selects
+`skinny/crates/bbnf-bench/src/lock14_baseline.rs` as an owner path.
+
+The redress edit to `lock14_baseline.rs` is narrow:
+
+- add a W1b-1 frozen-root / parent-diff authorization keyed to the
+  `sk-v12-waveW1b-1` commit subject;
+- cover only the Section 6 CSS scaffold owner slice: CSS grammar inputs,
+  `skinny/Cargo.toml`, codegen profile/provider/templates, CSS generated
+  runtime output, runtime export, `bbnf-bench` non-JSON oracle/bench, report,
+  gate, and generated CSS artifacts;
+- keep `crates/runtime/src/tape`, `crates/ir/src`, `crates/grammar/src`,
+  `crates/passes/src`, `crates/bbnf-simd`, public substrate APIs, directives,
+  BIR variants, and `BackendShape` outside the authorization;
+- extend the generic-root scan only enough to reject CSS policy leaks in
+  generic roots while still allowing profile/provider registration.
+
+The report may record `lock14_status = pass` only when this executable Lock 14
+path has run in the same gate command. A self-reported field is producer-only
+and fails W1b-1.
+
 ## Budget
 
-Hand-written LOC cap: 360.
+Hand-written source LOC cap: 360. This cap counts Rust source and Rust tests in
+the W1b-1 implementation slice; generated runtime output, fixture bytes,
+report JSON, retained artifacts, and REDRESS/docs are named separately.
 
-Target allocation:
+Plan V2 narrows redress to the minimum scaffold that can falsify
+`G-W1b-1-CSS-L4-ORACLE` without trying to land the full CSS compiler:
 
-- codegen profile/provider/templates: 95 hand LOC, generated output separate;
-- CSS runtime hand sink/export glue: 55 hand LOC;
-- bench oracle/equality/bench harness: 145 hand LOC;
-- report/gate schema validation: 65 hand LOC;
-- fixture/report/REDRESS docs: 40 hand LOC.
+- codegen provider/profile/reproducibility tests: <=85 hand LOC;
+- CSS runtime hand sink/export glue: <=55 hand LOC;
+- bench oracle/equality/bench harness: <=90 hand LOC;
+- report/gate schema validation and negative tests: <=95 hand LOC;
+- Lock 14 W1b-1 owner authorization and scan delta: <=20 hand LOC;
+- contingency for imports/error text/helpers: <=15 hand LOC.
+
+If the generated runtime and strict Track 1/oracle equality tests are not green
+by 0.9x of the redress cap, redress stops, saves
+`/tmp/skv12-waveW1b-1-rejected.patch`, and records `BLOCKED/FAIL`. Criterion,
+companion gate validation, and JSON guard are mandatory measurement, not
+optional after-work; if they cannot complete inside the cap, the wave records
+the overrun as measured REDRESS instead of silently rolling work into W1b-2.
 
 Generated CSS runtime budget: record actual generated LOC and module bytes in
 the report. Target <= 300 generated LOC and <= 14000 module bytes; a larger

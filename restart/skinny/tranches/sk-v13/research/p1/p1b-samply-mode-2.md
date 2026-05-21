@@ -10,6 +10,12 @@ Build flags: release profile, `debug=true`, `RUSTFLAGS="-C target-cpu=native"`, 
 Profile tool: samply 0.13.1, `samply record --save-only --unstable-presymbolicate -r 1000`; offline symbol resolution via `.json.syms.json`.
 Corpus coverage: direct samply 17/17 Track 1 + Track 2, 0 bad return codes; typed evidence retained from V1 for the 7 generated typed rows.
 
+V3 fold note: direct rows are classified in
+`support/evidence-ledger-v3.md`. Generated `parse_*_direct` leaves are
+`json-direct-envelope`; `unicode_escapes` / `unescape_string` is a
+`resolved-json-unicode-candidate`; `y_string_unicode` Track 2 is
+`timer/noise`.
+
 ## §1 - Method (commands run; verbatim, reproducible)
 
 Identity:
@@ -118,6 +124,14 @@ The direct V2 profile materially changes the S-P1 state relative to V1:
   S-P2 should treat that row as timer-noisy unless a longer capture confirms it.
 - The ten missing typed rows remain missing product surfaces, not profiling
   omissions.
+- CH3 direct-row guard: none of these direct profile signals reopens
+  REDRESS 119/120 by itself. Every residual direct-row reopen must cite the
+  prior fixpoint, name a fresh material differential, and carry same-harness
+  strict comparator evidence.
+- CH3 pre-pin guard: generated direct envelopes and `unescape_string` do not
+  reopen dispatch-table/function-pointer alternates, parser-local cursors,
+  event sidecars, decoded-string stats sinks, generic source visitors, or
+  source-method digest folds.
 
 ## §5 - Sources (every artefact path + run id)
 
@@ -128,6 +142,8 @@ The direct V2 profile materially changes the S-P1 state relative to V1:
 - `/tmp/skv13-p1-v2/samply/profiles/direct__{corpus}__track{1,2}.json.syms.json`
 - `/tmp/skv13-p1-v2/summary/direct_summary.tsv`
 - `/tmp/skv13-p1-v2/summary/hotleaf_top20.tsv`
+- `restart/skinny/tranches/sk-v13/research/p1/support/evidence-ledger-v3.md`
+- `restart/skinny/tranches/sk-v13/research/p1/support/profile-provenance-v3.md`
 - `/tmp/skv13-p1/pmu/pmu_rows.tsv` and V1 typed samply profiles for the seven existing typed rows
 - `restart/prompts/skinny/PASS-1-PROFILE.md`
 - `skinny/RESULTS.md`

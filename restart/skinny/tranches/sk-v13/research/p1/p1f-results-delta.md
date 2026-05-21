@@ -10,6 +10,11 @@ Build flags: release profile, `debug=true`, `RUSTFLAGS="-C target-cpu=native"` f
 Profile tool: `skinny/RESULTS.md`, `/tmp/skv13-p1/pmu/pmu_rows.tsv`, `/tmp/skv13-p1-v2/samply/*`, `/tmp/skv13-p1-v2/mode3/*`, CSS profile log.
 Corpus coverage: JSON 51/51 conceptual rows; measured parse 17/17, direct 17/17, typed 7/17, mode III 17/17 x 5; CSS declaration-values 1/1.
 
+V3 fold note: row status, primitive status, missing typed rows, CSS
+method-mismatch, and unavailable counters are canonicalized in
+`support/evidence-ledger-v3.md`. Every classification below remains
+`profile_signal_not_gate_admission`.
+
 ## §1 - Method
 
 Inputs:
@@ -118,6 +123,12 @@ Current addendum-facing row inventory:
   is hot-leaf/equality signal, not demotion.
 - Every profile classification in this document is explicitly
   `profile_signal_not_gate_admission`.
+- REDRESS 119/120 are history under the user pin, but V2 direct profile signals
+  are not direct-row reopens or admissions. A future reopen must cite the prior
+  fixpoint, name a material differential, and use same-harness strict
+  comparator evidence.
+- Pre-pin rejected route families and REDRESS-126 zero-orphan accounting remain
+  in force; V2 profile signals do not create implementation authority.
 
 ## §5 - Sources
 
@@ -138,3 +149,5 @@ Current addendum-facing row inventory:
 - `/tmp/skv13-p1-v2/summary/direct_summary.tsv`
 - `/tmp/skv13-p1-v2/summary/mode3_summary.tsv`
 - `/tmp/skv13-p1-v2/summary/hotleaf_top20.tsv`
+- `restart/skinny/tranches/sk-v13/research/p1/support/evidence-ledger-v3.md`
+- `restart/skinny/tranches/sk-v13/research/p1/support/profile-provenance-v3.md`

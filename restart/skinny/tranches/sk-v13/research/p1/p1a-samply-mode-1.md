@@ -18,6 +18,11 @@ that it remains a save-only/offline-symbolicated samply profile. The source
 tree under `skinny/crates/` did not change between the parse capture and the
 V2 profile fold.
 
+V3 fold note: parse rows are classified in
+`support/evidence-ledger-v3.md` as `json-parse-envelope`,
+`function-only-sidecar`, or `resolved-json-unicode-candidate`; no
+`dispatch_value` row is grammar-neutral primitive evidence.
+
 ## §1 - Method (commands run; verbatim, reproducible)
 
 Identity:
@@ -133,12 +138,19 @@ All 17 rows remain `S / NO-GO` in the checked-in report even where Track 1 excee
 - CH1 coverage: parse_only corpus coverage is complete, 17/17, for both Track 1 and Track 2. The direct and typed lanes in the same samply run are not part of this artifact and had separate panics/quoting issues; they do not invalidate the parse lane evidence here.
 - CH5 substrate separation: Track 1 hot leaves come from `runtime::generated_json::*`; Track 2 hot leaves come from `bbnf_bench::track2::json::*`. This artifact keeps those planes separate and does not collapse Track 2 into generated runtime attribution.
 - Masking signal: Track 1 often collapses to `dispatch_value`, hiding inner string/number/structural primitive attribution. `distinct_values` and `y_string_unicode` are the clearest exceptions, surfacing tiny plain string and hex escape scalar leaves.
+- CH3 route guard: parse `dispatch_value`, tiny-string, and hex-escape signals
+  do not reopen pre-pin rejected dispatch-table/function-pointer,
+  parser-local cursor, event sidecar, source-method digest, or decoded-string
+  stats routes. Any S-P2 route using these signals must cite the relevant
+  REDRESS family and name a material differential.
 - Delta gap: no SK-V12 parse_only machine-readable delta was found in the required authority files. Treat any SK-V12 row movement claim as absent until P1-F or a later hardening pass supplies a same-schema comparator.
 
 ## §5 - Sources (every artefact path + run id)
 
 - Run id/build identity: `/tmp/skv13-p1/artifacts/identity.txt`; commit `f8be692068e9e464b6ed24027ab26edfd05303fd`; timestamp `2026-05-21T06:01:45Z`.
 - V2 fold identity: `/tmp/skv13-p1-v2/artifacts/identity.txt`; head `7ee299096be7d7fdaa0e69344a6cd18bbd55524f`; no `skinny/crates/` source delta from the parse capture.
+- V3 canonical evidence ledger: `restart/skinny/tranches/sk-v13/research/p1/support/evidence-ledger-v3.md`.
+- V3 profile provenance: `restart/skinny/tranches/sk-v13/research/p1/support/profile-provenance-v3.md`.
 - Samply status ledger: `/tmp/skv13-p1/samply/capture_status.tsv`.
 - Samply run script: `/tmp/skv13-p1/samply/run-samply.sh`.
 - Samply profile root: `/tmp/skv13-p1/samply/profiles/`.

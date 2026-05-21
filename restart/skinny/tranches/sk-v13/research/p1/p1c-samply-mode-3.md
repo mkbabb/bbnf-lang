@@ -10,6 +10,11 @@ Build flags: release profile, `debug=true`, `RUSTFLAGS="-C target-cpu=native"`, 
 Profile tool: samply 0.13.1, `samply record --save-only --unstable-presymbolicate -r 1000`; proc counters emitted by the temporary mode-III profiler.
 Corpus coverage: 17/17 JSON corpora x 5 captured probes = 85/85 profiles, 0 bad rc; `alternate_pext_mask_plan` and `alternate_dispatch_table_plan` explicitly unsupported.
 
+V3 fold note: the mode-III harness provenance is checked in at
+`support/mode3-harness-provenance.md`, and the mode-III rows are classified in
+`support/evidence-ledger-v3.md`. Rank-1 mode-III rows remain
+`function-only-sidecar` unless the source anchor is separately stated.
+
 ## §1 - Method (commands run; verbatim, reproducible)
 
 Identity:
@@ -120,6 +125,12 @@ prior-tranche delta. V2 closes the V1 P1-C coverage defect:
   in S-P2 as a missing optimization route.
 - Some NEON symbols lack file:line frames in sidecars. The function names are
   citable; file:line precision remains a CH6 risk for those ASM leaves.
+- REDRESS-126 zero-orphan guard: PEXT, line-poor NEON leaves,
+  `bulk_emit_positions_64_neon`, and absent C/C++ sidecars are telemetry or
+  attribution gaps only. They do not create an orphan SIMD primitive or reopen
+  production PMULL/CSSC/prefix-XOR/bulk-emission routes. Any future SIMD
+  primitive needs scalar reference, parity/checkasm, feature-mask disclosure,
+  same-wave consumer, and zero-orphan disposition.
 
 ## §5 - Sources (every artefact path + run id)
 
@@ -132,6 +143,9 @@ prior-tranche delta. V2 closes the V1 P1-C coverage defect:
 - `/tmp/skv13-p1-v2/mode3/profiles/mode3__{corpus}__{mode}.json.syms.json`
 - `/tmp/skv13-p1-v2/summary/mode3_summary.tsv`
 - `/tmp/skv13-p1-v2/summary/hotleaf_top20.tsv`
+- `restart/skinny/tranches/sk-v13/research/p1/support/mode3-harness-provenance.md`
+- `restart/skinny/tranches/sk-v13/research/p1/support/evidence-ledger-v3.md`
+- `restart/skinny/tranches/sk-v13/research/p1/support/profile-provenance-v3.md`
 - `restart/prompts/skinny/PASS-1-PROFILE.md`
 - `skinny/RESULTS.md`
 - `skinny/REDRESS.md`

@@ -10,6 +10,11 @@ Build flags: release profile, `debug=true`, `RUSTFLAGS="-C target-cpu=native"` f
 Profile tool: samply 0.13.1 saved Firefox-profile JSON plus `.json.syms.json` sidecars; V2 top-20 extractor output.
 Corpus coverage: parse 17/17 from V1, direct 17/17 from V2, typed 7/17 from V1 generated typed rows, mode III 17/17 x 5 from V2, CSS declaration-values 1/1 from V2.
 
+V3 fold note: canonical primitive status lives in
+`support/evidence-ledger-v3.md`, and the sidecar extractor is now checked in at
+`support/extract_hotleaf_top20.py`. This file is the synthesis view; the ledger
+is the row-level authority for resolved/unresolved status.
+
 ## §1 - Method (commands run; verbatim, reproducible)
 
 Read profile cohort and raw artefacts:
@@ -30,6 +35,13 @@ python3 /tmp/skv13-p1-v2/summary/extract-hotleaf-top20-equivalent.py
 # /tmp/skv13-p1-v2/summary/hotleaf_top20.tsv
 # /tmp/skv13-p1-v2/summary/direct_summary.tsv
 # /tmp/skv13-p1-v2/summary/mode3_summary.tsv
+```
+
+Checked-in reproducer:
+
+```bash
+SKV13_P1_ROOT=/tmp/skv13-p1-v2 \
+python3 restart/skinny/tranches/sk-v13/research/p1/support/extract_hotleaf_top20.py
 ```
 
 The extractor maps each sample's leaf frame RVA to the owning library in the
@@ -97,6 +109,10 @@ S-P1 V1 challenge defects:
 - Sidecar symbol resolution produces file:line for most Rust leaves; some ASM
   and system leaves have function-only attribution. Those cells are explicit,
   not silently resolved.
+- REDRESS guards are binding for this synthesis: direct progress signals do not
+  reopen REDRESS 119/120; dispatch/masking/unescape signals do not reopen
+  pre-pin rejected route families; function-only ASM leaves and PEXT gaps do
+  not reopen REDRESS-126 or create orphan SIMD primitives.
 
 ## §5 - Sources (every artefact path + run id)
 
@@ -113,6 +129,9 @@ S-P1 V1 challenge defects:
 - `/tmp/skv13-p1-v2/summary/hotleaf_top20.tsv`
 - `/tmp/skv13-p1-v2/summary/direct_summary.tsv`
 - `/tmp/skv13-p1-v2/summary/mode3_summary.tsv`
+- `restart/skinny/tranches/sk-v13/research/p1/support/extract_hotleaf_top20.py`
+- `restart/skinny/tranches/sk-v13/research/p1/support/evidence-ledger-v3.md`
+- `restart/skinny/tranches/sk-v13/research/p1/support/profile-provenance-v3.md`
 - `restart/skinny/tranches/sk-v13/research/p1/p1a-samply-mode-1.md`
 - `restart/skinny/tranches/sk-v13/research/p1/p1b-samply-mode-2.md`
 - `restart/skinny/tranches/sk-v13/research/p1/p1c-samply-mode-3.md`

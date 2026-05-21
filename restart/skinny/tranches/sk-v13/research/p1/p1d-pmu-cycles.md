@@ -10,6 +10,10 @@ Build flags: release profile, `debug=true`, `RUSTFLAGS="-C target-cpu=native"`.
 Profile tool: V1 `/tmp/skv13-p1/pmu/pmu_rows.tsv`, V2 direct logs, V2 mode-III `PROBE_RESULT` rows, xctrace export check.
 Corpus coverage: parse 17/17, direct 17/17, typed 7/7 existing typed rows, mode III 17/17 x 5 probes.
 
+V3 fold note: counter availability is canonicalized in
+`support/evidence-ledger-v3.md`; branch/L1/LLC remain
+`unavailable_from_current_export`.
+
 ## §1 - Method (commands run; verbatim, reproducible)
 
 V1 PMU authority retained where no source changed:
@@ -141,5 +145,7 @@ gate-consumed strict comparator workflow in later waves.
 - `/tmp/skv13-p1-v2/xctrace-export/cpu-state.xml`
 - `/tmp/skv13-p1-v2/summary/direct_summary.tsv`
 - `/tmp/skv13-p1-v2/summary/mode3_summary.tsv`
+- `restart/skinny/tranches/sk-v13/research/p1/support/evidence-ledger-v3.md`
+- `restart/skinny/tranches/sk-v13/research/p1/support/profile-provenance-v3.md`
 - `skinny/RESULTS.md`
 - `skinny/REDRESS.md`

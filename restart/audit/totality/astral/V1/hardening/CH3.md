@@ -1,0 +1,46 @@
+# Pass Omega V1 CH3 Regression Redress
+
+| Field | Value |
+|---|---|
+| Pass | Pass Omega |
+| Cycle | V1 CHALLENGE |
+| Date | 2026-05-21 |
+| Lens | CH3 Regression / REDRESS |
+| Output | `restart/audit/totality/astral/V1/hardening/CH3.md` |
+
+## Verdict
+
+ACCEPT.
+
+No proposed Omega V1 amendment in the CH3 scope reintroduces a rejected
+`skinny/REDRESS.md` route. Omega-C, Omega-D, Omega-E, `locks-diff.md`, and
+`master-plan-diff.md` preserve row-plane truth, keep prior rejects as binding
+history, require material differentials for fresh reopens, and add explicit
+no-demotion gates.
+
+## Evidence Table
+
+| Check | Disposition | Evidence | CH3 finding |
+|---|---|---|---|
+| CH3 scope | ACCEPT | PASS-OMEGA defines CH3 as checking whether proposed amendments reintroduce REDRESS routes (`restart/prompts/pass-contracts/PASS-OMEGA.md:47`); ORCHESTRATOR defines CH3 as no REDRESS reopen, correct pre-block list, and no silent admitted-row regression (`restart/prompts/ORCHESTRATOR.md:85`). | This review applies to Omega-C, Omega-D, Omega-E, `locks-diff.md`, and `master-plan-diff.md`. |
+| Proposal boundary | ACCEPT | G3 says no governance/source/RESULTS/REDRESS/SK-V13 W0 work is authorized before Omega convergence and G-Omega (`restart/audit/totality/p3/G3-PRESENTATION.md:64`-`68`); `locks-diff.md` is proposed-only and preserves the 16-lock count with no directive, BIR variant, `BackendShape`, public substrate API, sidecar, or new lock (`restart/audit/totality/astral/V1/locks-diff.md:6`-`10`). | The packet cannot itself reopen a REDRESS route as implementation authority. |
+| REDRESS 96/97/98 union substrate | ACCEPT | REDRESS 96 and 97 missed every W3 must-improve row or maintain floor (`skinny/REDRESS.md:2823`-`2848`, `skinny/REDRESS.md:2881`-`2906`); REDRESS 98 retired `G-W3-UNION-SUBSTRATE` for SK-V9 (`skinny/REDRESS.md:2910`-`2940`). `locks-diff.md` treats class-column vectors, streaming cursors, parser sidecars, and `UnionTape` as unsafe without fresh material differential, same-wave consumer, strict row gate, rollback, and abrogate threshold (`restart/audit/totality/astral/V1/locks-diff.md:95`-`101`). Omega-D routes only a fresh union variant or architectural block with material differential beyond REDRESS 96/97/98 (`restart/audit/totality/astral/V1/ΩD-master-plan-reconciliation.md:78`). | No class-column, streaming-cursor, class-lane-only, or `UnionTape` route is reopened as admitted work. Future union work is fenced behind the required differential and row gate. |
+| REDRESS 119/120 direct residuals | ACCEPT | REDRESS 119 closed W8 as measured direct fixpoint with no source, gate, validator, RESULTS movement, direct row, or W0-clamped admission (`skinny/REDRESS.md:3497`-`3527`); REDRESS 120 closed SK-V11 as fixpoint, not direct GO or grammar-generalization admission, and requires future material differential beyond REDRESS 114-119 (`skinny/REDRESS.md:3531`-`3553`). Omega-D marks H.W4 partial and keeps all JSON planes open under strict sonic-rs (`restart/audit/totality/astral/V1/ΩD-master-plan-reconciliation.md:43`, `restart/audit/totality/astral/V1/ΩD-master-plan-reconciliation.md:73`). | The packet does not convert residual direct rows into GO. It reopens SK-V13 only under the stricter 51-row same-plane bar. |
+| REDRESS 121/122 Lock 14 and escape-mask prerequisites | ACCEPT | REDRESS 121 admits a Lock 14 legality gate but no CSS row, Sheets row, non-JSON parser, BIR/directive/`BackendShape`, public substrate API, outcome variant, or telemetry column (`skinny/REDRESS.md:3557`-`3567`); REDRESS 122 admits `escape_mask_64` correctness only and no production scanner, SIMD body, gate, RESULTS row, or throughput primitive (`skinny/REDRESS.md:3605`-`3632`). `locks-diff.md` keeps generated-output allowance inside generated files and mandates per-wave Lock 14 leak census (`restart/audit/totality/astral/V1/locks-diff.md:263`-`301`); it also names `escape_mask_64` as prerequisite-only until a same-wave row consumer moves or rejects a row (`restart/audit/totality/astral/V1/locks-diff.md:344`-`351`). | The packet preserves prerequisite status and does not silently promote legality/checkasm proof into row admission. |
+| REDRESS 123/124/125/127 CSS row | ACCEPT | REDRESS 123 is a CSS generated baseline scaffold, not CSS SOTA (`skinny/REDRESS.md:3636`-`3679`); REDRESS 124 is a comparator, not CSS SOTA or RESULTS movement (`skinny/REDRESS.md:3683`-`3716`); REDRESS 125 is `PASS-ADMIT-CANDIDATE`, not final campaign close or RESULTS movement (`skinny/REDRESS.md:3720`-`3764`); REDRESS 127 promotes one declaration-values fact-stream row to `PASS-ADMIT` and records JSON guards with no demotion (`skinny/REDRESS.md:3824`-`3843`). Omega-C and `locks-diff.md` state this is not full CSS parity, universal grammar closure, or SK-V13 close authority (`restart/audit/totality/astral/V1/ΩC-locks-amendments.md:35`-`39`, `restart/audit/totality/astral/V1/locks-diff.md:139`-`146`). | One CSS row remains one admitted row. The packet does not over-close CSS parity. |
+| REDRESS 126 and older SIMD/ASM rejects | ACCEPT | REDRESS 126 records the CSS delimiter ASM path as microbench-only `ROUTE-PRODUCTION-SPLIT`, not CSS ADMIT, production SIMD/ASM admission, or RESULTS movement (`skinny/REDRESS.md:3768`-`3820`). `locks-diff.md` requires every source-present primitive to be wired, deleted, scalar-delegate-non-ASM, or architectural-block-with-REDRESS, and treats `inventory_demoted_with_evidence` as historical only (`restart/audit/totality/astral/V1/locks-diff.md:353`-`360`); PMULL/CSSC, union, ASM-gen, cache-hint, parse-that, and hardware facade routes require material differential plus same-wave consumer or measured deletion/rejection (`restart/audit/totality/astral/V1/locks-diff.md:376`-`382`). | Microbench and orphan cleanup are not promoted into production primitive admission. |
+| Older retained sidecar/cursor substrate rejects | ACCEPT | REDRESS 50 rejects retained projection side tables in the SOTA parse path (`skinny/REDRESS.md:715`-`740`); REDRESS 51 rejects byte-class whitespace cursor and forbids precomputed structural index, `Vec<JsonEvent>`, whitespace sidecar, and aux projection column (`skinny/REDRESS.md:742`-`767`); REDRESS 53 rejects parser-local structural cursor as a second scanner (`skinny/REDRESS.md:784`-`813`). `locks-diff.md` rejects retained class/mask streams, parser-owned cursor/list state, public substrate API, `UnionTape`, or second tape unless G-Omega explicitly amends Lock 1 (`restart/audit/totality/astral/V1/locks-diff.md:84`-`93`). | The packet strengthens the substrate reject list instead of reopening older sidecar/cursor routes. |
+| Older direct string/Unicode rejects | ACCEPT | REDRESS 54/55 reject sink-local decoded stats and quote-source streaming hash (`skinny/REDRESS.md:839`-`844`, `skinny/REDRESS.md:874`-`882`); REDRESS 66-69 reject direct source-hook folding, parser-owned decoded scratch, byte-output materialization, and semantic string fact hashing under the current direct digest workload (`skinny/REDRESS.md:1727`-`1732`, `skinny/REDRESS.md:1777`-`1785`, `skinny/REDRESS.md:1828`-`1835`, `skinny/REDRESS.md:1877`-`1886`). Omega-D marks H.W3 as number landed plus string/Unicode exactness pending, with UTF-8 fusion refuted-as-close and high regression risk if REDRESS 66-69 routes are replayed (`restart/audit/totality/astral/V1/ΩD-master-plan-reconciliation.md:42`, `restart/audit/totality/astral/V1/ΩD-master-plan-reconciliation.md:57`). | No rejected string/Unicode route is renamed into an accepted wave. |
+| Row-plane truth and no silent demotion | ACCEPT | G3 requires CSS row scope, JSON `parse_only`/`direct_to_struct`/`real_typed_struct` separation, and material differential for fresh direct/SIMD/decision work (`restart/audit/totality/p3/G3-PRESENTATION.md:37`-`43`). Current RESULTS records separate JSON planes and the CSS fact-stream row (`skinny/RESULTS.md:5`-`46`, `skinny/RESULTS.md:145`-`149`). `locks-diff.md` makes SOTA row-plane specific and requires comparator provenance (`restart/audit/totality/astral/V1/locks-diff.md:139`-`155`); Omega-D adds a rolling SOTA delta and no-demotion close gate (`restart/audit/totality/astral/V1/ΩD-master-plan-reconciliation.md:80`). | The packet preserves admitted rows as row-plane facts and adds a no-demotion receiver. |
+| Omega-E corpus alignment | ACCEPT | Omega-E proposes only CRUD-5 receiver edits and explicitly forbids governance, source, generated runtime, gate/report, RESULTS, REDRESS, or SK-V13 W0 work (`restart/audit/totality/astral/V1/ΩE-skinny-corpus.md:11`, `restart/audit/totality/astral/V1/ΩE-skinny-corpus.md:43`-`46`). It updates stale skinny surfaces toward SK-V13 telemetry, CSS parity, Lock 14, substrate, and no-W0-before-G-Omega anchors without editing RESULTS/REDRESS (`restart/audit/totality/astral/V1/ΩE-skinny-corpus.md:19`-`28`). | The skinny corpus proposal is an alignment fence, not a route reopen. |
+
+## Fold Actions
+
+No CH3 fold action is required.
+
+## G-Omega Block
+
+This lens does not block G-Omega presentation. G-Omega remains subject to Pass
+Omega consolidated convergence: at least 95 percent ACCEPT, zero open critical
+defects, and no orphan unresolved REVISE before advancement
+(`restart/prompts/ORCHESTRATOR.md:118`-`123`).

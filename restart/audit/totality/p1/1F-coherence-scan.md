@@ -1,15 +1,15 @@
 ---
 agent: 1F
 pass: T-P1-excavation
-cycle: V1
+cycle: V2
 generated_at: 2026-05-21T00:00:00-04:00
 spec_surfaces_audited: [restart/ARCHITECTURE.md, restart/MASTER-PLAN.md, restart/locks/LOCKS.md, restart/HANDOFF.md, restart/skinny/INDEX.md, restart/skinny/SUBSTRATE.md, restart/skinny/COMPILER.md, restart/skinny/BENCH.md, restart/skinny/WORKSPACE.md, restart/skinny/HARDENING.md, skinny/REDRESS.md, skinny/RESULTS.md]
 files_audited_count: 2211
-live_truth_method: "nl -ba line-citation reads; rg grammar-name/sidecar/god-module scans; find + wc -l over skinny/crates and restart/skinny/tranches research; source tree child-count scan excluding target"
+live_truth_method: "nl -ba line-citation reads; uncaptured rg/find/wc/child-count scans are treated as V2 verify actions unless exact output is cited in-row; source tree child-count scan excluded target"
 prior_cycle_dispositions_folded:
-  accepted: []
+  accepted: [CH1-1D-row-mapping, CH1-1F-coherence-drift, CH2-1C-runtime-audit, CH2-bbnf-simd-genericity-disposition, CH3-1F-rejected-route-history, CH4-1F-cost-shape]
   rejected: []
-  revised: []
+  revised: [CH1-command-output-hygiene, CH1-lock13-child-count-narrowing, CH2-grammar-name-vs-shape-leaks, CH3-sk-v13-preblock-split, CH4-hard-cap-metadata, CH5-css-sidecar-plane, CH5-proof-witness-root-coupling, CH6-closure-wording]
   first_cycle_additions: [COH-001, COH-002, COH-003, COH-004, COH-005, COH-006, AP-001, AP-002, AP-003, AP-004, AP-005, PC-001, PC-002, PC-003, PC-004, PC-005, PC-006]
 divergence_count:
   spec_claims_implemented: 8
@@ -21,7 +21,7 @@ locks_amendment_candidates: 0
 
 ## Executive Summary
 
-1F found six cross-surface coherence divergences, five live anti-pattern clusters, and six prior-corpus findings that must be treated as pre-blocks rather than re-researched. The highest-risk drift is temporal: `restart/HANDOFF.md` still declares SK-V6 current state while live results and tranche directories carry SK-V9 through SK-V13 evidence, including an SK-V12 campaign close row. The second major drift is Lock 14: the spec bars grammar names in generic crates, but live `skinny/crates/codegen`, `runtime`, `grammar`, and `passes` still route through explicit JSON/CSS/SHEETS names. The third is Lock 13: several non-generated source files exceed 500 LOC, and source directories exceed the 10-child ceiling.
+1F found six cross-surface coherence divergences, five live anti-pattern clusters, and six prior-corpus findings that must be treated as pre-blocks rather than re-researched. The highest-risk drift is temporal: `restart/HANDOFF.md` still declares SK-V6 current state while live results and tranche directories carry SK-V9 through SK-V13 evidence, including an SK-V12 campaign close row. The second major drift is Lock 14: the spec bars grammar names and grammar-shaped policy in generic crates, but live `skinny/crates/codegen`, `runtime`, `grammar`, and `passes` still route through explicit JSON/CSS/SHEETS names or JSON-shaped structural roles. The third is Lock 13: several non-generated source files exceed 500 LOC, while directory child-count claims remain V2 verify actions unless the row also proves mixed concerns rather than merely cohesive fanout.
 
 Companion outputs are warranted: `1F-anti-pattern.md` carries the live code evidence; `1F-past-corpora.md` carries the prior-corpora pre-block ledger.
 
@@ -35,12 +35,12 @@ Companion outputs are warranted: `1F-anti-pattern.md` carries the live code evid
 | COH-004 | `restart/ARCHITECTURE.md:1090-1098` defines the 8-step `BackendShape` derivation. | `skinny/crates/passes/src/lib.rs:44-45` calls shape derivation, but tests assert every JSON rule is `OffsetTape` at `skinny/crates/passes/src/lib.rs:1497-1503`. | partially implemented | 150-300 LOC plus tests; high cost-model risk | The field exists, but measured per-rule selection is not proven by the current test posture. |
 | COH-005 | `restart/ARCHITECTURE.md:1129-1131` itself states remaining generic-pass grammar-specific mining must be removed. | `skinny/crates/passes/src/lib.rs:324-349` still derives recognizers from JSON punctuation bytes; materialization roles infer JSON-like object/array/pair/string/number/bool/null at `skinny/crates/passes/src/lib.rs:978-1119`. | unimplemented cleanup | 300-600 LOC; high Lock 14 risk | This is acknowledged spec debt and live code debt. |
 | COH-006 | `restart/skinny/INDEX.md:42-56` says current measured split is 13 retained G rows plus `N-direct / NoGo`. | `skinny/RESULTS.md:94-148` includes a CSS L4 SK-V12 admission row and overall `A / Go`. | spec-surface drift | 80-160 LOC doc/result authority update; high gate risk | Skinny surfaces lag after later tranche results. |
-| AP-001 | `restart/locks/LOCKS.md:76` forbids files >500 LOC outside generated. | `skinny/crates/passes/src/lib.rs` has 1748 LOC and `skinny/crates/parse-that-regex/src/lib.rs` has 1214 LOC by `wc -l`; details in `1F-anti-pattern.md`. | unimplemented | 400-900 LOC split; medium-high maintenance risk | Lock 13 is not enforced in live skinny source. |
-| AP-002 | `restart/locks/LOCKS.md:78` bars grammar-named modules in generic crates. | `skinny/crates/codegen/src/grammar_profile.rs:11-15` hardcodes `Json` and `CssL4DeclarationValues`; runtime exposes generated grammar modules at `skinny/crates/runtime/src/lib.rs:3-19`. | unimplemented | 300-700 LOC; high Lock 14 risk | More evidence in `1F-anti-pattern.md`. |
-| AP-003 | `restart/ARCHITECTURE.md:1571-1580` says mask streams are transient and EventCursor sidecars must not become retained prepasses. | Current tree lacks the old eventcursor branch found in SK-V5, but runtime proof witnesses still use grammar-specific event witness modules at `skinny/crates/runtime/src/lib.rs:9-15`. | implemented with residue | 80-160 LOC cleanup; medium hidden-coupling risk | Refuted prepass appears purged; proof fixtures still carry grammar names. |
-| PC-001 | `skinny/REDRESS.md:216-224` rejects dispatch-table/function-pointer alternates. | No current `alternate_dispatch_table_plan` implementation was found by targeted scan; prior finding should remain a pre-block. | implemented pre-block | 0 LOC; low if ledger respected | Do not re-open without a fresh before/after row. |
-| PC-002 | `skinny/REDRESS.md:226-234` rejects 12-byte token shape as canonical. | Current tape uses offset projection; `skinny/REDRESS.md:246-256` records lazy-offset migration and current NoGo. | implemented pre-block | 0 LOC; medium if relitigated | Treat token-width churn as blocked. |
-| PC-003 | `skinny/REDRESS.md:394-413` invalidates Class A tiny-string NEON as parse-G fix. | `skinny/crates/bbnf-simd/src/aarch64/match_tiny_plain_string.rs` remains as a primitive, not canonical parser wiring. | implemented pre-block | 0 LOC; medium if relitigated | Primitive may be reused only with new row-local evidence. |
+| AP-001 | `restart/locks/LOCKS.md:76` forbids files >500 LOC outside generated. | Prior `wc -l` scan reports multiple non-generated source files above 500 LOC; exact output is not captured in this artifact, so `1F-anti-pattern.md` carries the verify-count downgrade. | unimplemented / verify count | 400-900 LOC split; medium-high maintenance risk | Lock 13 appears unenforced in live skinny source, but implementation ordering needs a captured LOC transcript. |
+| AP-002 | `restart/locks/LOCKS.md:78` bars grammar-named modules in generic crates. | `skinny/crates/codegen/src/grammar_profile.rs:11-15` hardcodes `Json` and `CssL4DeclarationValues`; runtime exposes generated grammar modules at `skinny/crates/runtime/src/lib.rs:3-19`. | unimplemented | 300-700 LOC; high Lock 14 risk | More evidence in `1F-anti-pattern.md`; this is a grammar-name leak, distinct from grammar-shape leaks in passes. |
+| AP-003 | `restart/ARCHITECTURE.md:1571-1580` says mask streams are transient and EventCursor sidecars must not become retained prepasses. | Current tree has no cited retained EventCursor implementation in this artifact; runtime proof witnesses still use grammar-specific event witness modules at `skinny/crates/runtime/src/lib.rs:9-15`. | partial / residue | 80-160 LOC cleanup; medium hidden-coupling risk | Refuted prepass is a historical pre-block unless a current targeted-scan transcript is added; proof fixtures still carry grammar names. |
+| PC-001 | `skinny/REDRESS.md:216-224` rejects dispatch-table/function-pointer alternates. | Historical REDRESS rejection remains binding absent fresh row evidence; this V2 row does not claim a live no-match scan. | accepted historical pre-block | 0 LOC; low if ledger respected | Do not re-open without a fresh before/after row. |
+| PC-002 | `skinny/REDRESS.md:226-234` rejects 12-byte token shape as canonical. | Lazy-offset tape migration supersedes old token churn at `skinny/REDRESS.md:246-256`. | accepted historical pre-block | 0 LOC; medium if relitigated | Treat token-width churn as blocked. |
+| PC-003 | `skinny/REDRESS.md:394-413` invalidates Class A tiny-string NEON as parse-G fix. | `skinny/crates/bbnf-simd/src/aarch64/match_tiny_plain_string.rs` remains as a primitive, not canonical parser wiring. | accepted historical pre-block | 0 LOC; medium if relitigated | Primitive may be reused only with new row-local evidence. |
 
 ## Divergences Catalogued
 
@@ -52,6 +52,22 @@ Companion outputs are warranted: `1F-anti-pattern.md` carries the live code evid
 | COH-004 | BackendShape derivation surface exists, but tests pin all JSON rules to OffsetTape rather than proving 8-step selection. | `restart/ARCHITECTURE.md:1090-1098`; `skinny/crates/passes/src/lib.rs:1497-1503` | 150-300 LOC; high |
 | COH-005 | Spec acknowledges generic-pass grammar leaks, and live passes still carry JSON-shaped inference. | `restart/ARCHITECTURE.md:1129-1131`; `skinny/crates/passes/src/lib.rs:324-349`; `skinny/crates/passes/src/lib.rs:978-1119` | 300-600 LOC; high |
 | COH-006 | Skinny INDEX current-state prose lags live SK-V12 result authority. | `restart/skinny/INDEX.md:42-56`; `skinny/RESULTS.md:94-148` | 80-160 LOC; high |
+
+## V2 Planning Metadata
+
+Rows that imply work use the V2 hardening metadata below. Historical pre-block rows remain 0-LOC ledger constraints, not implementation closure claims.
+
+| ID | loc_budget | risk | wave | hard_cap | same_wave_consumer | evidence_basis |
+|---|---:|---|---|---:|---|---|
+| COH-001 | 60-120 LOC docs | high | T-P3 governance | 160 LOC | totality handoff consumer | `restart/HANDOFF.md:3-4`; `skinny/RESULTS.md:145-148` |
+| COH-002 | 20-40 LOC docs | medium | T-P3 governance | 60 LOC | grammar onboarding docs | `restart/HANDOFF.md:17`; `restart/locks/LOCKS.md:78`; `restart/ARCHITECTURE.md:37` |
+| COH-003 | 20-50 LOC docs | medium | T-P3 governance | 80 LOC | H-wave gate plan | `restart/MASTER-PLAN.md:151-154`; `restart/locks/LOCKS.md:66` |
+| COH-004 | 150-300 LOC code/tests | high | pass-hardening wave | 400 LOC | codegen backend-shape selection tests | `restart/ARCHITECTURE.md:1090-1098`; `skinny/crates/passes/src/lib.rs:1497-1503` |
+| COH-005 | 300-600 LOC code/tests | high | Lock 14 wave | 800 LOC | CSS/Sheets/BBNF-self recognizer fixtures | `restart/ARCHITECTURE.md:1129-1131`; `skinny/crates/passes/src/lib.rs:324-349`; `skinny/crates/passes/src/lib.rs:978-1119` |
+| COH-006 | 80-160 LOC docs/results | high | T-P3 governance | 220 LOC | current-state authority page | `restart/skinny/INDEX.md:42-56`; `skinny/RESULTS.md:94-148` |
+| AP-001 | 400-900 LOC movement | medium-high | Lock 13 source-split wave | 1200 LOC | Lock 13 lint/report consumer | `restart/locks/LOCKS.md:76`; exact LOC scan must be captured before work order |
+| AP-002 | 300-700 LOC codegen/runtime | high | Lock 14 registry wave | 900 LOC | generated registry plus runtime root consumer | `skinny/crates/codegen/src/grammar_profile.rs:11-15`; `skinny/crates/runtime/src/lib.rs:3-19` |
+| AP-003 | 80-160 LOC cleanup/proof relocation | medium | proof-surface wave | 220 LOC | proof-gated witness consumer only | `restart/ARCHITECTURE.md:1571-1580`; `skinny/crates/runtime/src/lib.rs:9-15` |
 
 ## Gaps / Missing Primitives
 

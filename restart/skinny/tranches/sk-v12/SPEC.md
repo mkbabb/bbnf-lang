@@ -24,7 +24,7 @@ Authority:
 Dispatch lock:
 
 - S-P3 has converged under the user pin; W0 is the first dispatchable wave.
-- W1a/W2/W1b-1/W1b-2/W3/W4/W5 dispatch only after their entry
+- W1a/W2/W1b-1/W1b-2a/W1b-2b/W3/W4/W5 dispatch only after their entry
   gates pass.
 - Each wave is executed by the per-wave triumvirate: research, plan,
   CHALLENGE when required, and redress in distinct commits.
@@ -242,15 +242,17 @@ is unchanged. Guard misses require REDRESS disposition.
 | W1a | Section 4 | GrammarConfig + Lock 14 Legality Gate | Conditional on W0 close | <=360 hand; generated output named separately | high | <=30 min |
 | W2 | Section 5 | `escape_mask_64` Correctness Prerequisite | Conditional on W1a close; blocks SIMD admission | <=180 hand/test | high | <=30 min |
 | W1b-1 | Section 6 | CSS L4 Generated Track 1 + Independent Oracle Scaffold | Conditional on W1a close; scalar-only unless W2 PASS | <=360 hand; generated output named separately | high | <=30 min |
-| W1b-2 | Section 7 | CSS L4 Lightningcss Comparator + Admission Gate | Conditional on W1b-1 close | <=300 hand/gate; generated output named separately | high | <=30 min |
-| W3 | Section 8 | CSS-Local Same-Tape Union Attempt | Conditional on W1b-2 measured CSS row + CHALLENGE | <=420 hand; generated output named separately | high | <=30 min |
-| W4 | Section 9 | ASM-Gen CSS Consumer + AArch64 Orphan Disposition | Conditional on W1b-2 + W2 + CHALLENGE | <=430 hand/test/gate | high | <=30 min |
-| W5 | Section 10 | Close And Alpha Feedback | Conditional on W0, W1a, W2, W1b-1, W1b-2, W4, and conditional W3 disposition | <=140 docs/report/gate; 0 behavior | medium | <=30 min |
+| W1b-2a | Section 7.1 | CSS L4 Lightningcss Comparator + Criterion Row | Conditional on W1b-1 close | <=220 hand/test; generated output named separately | high | <=30 min |
+| W1b-2b | Section 7.2 | CSS L4 Lightningcss SOTA Report + Admission Gate | Conditional on W1b-2a close | <=220 report/gate/test | high | <=30 min |
+| W3 | Section 8 | CSS-Local Same-Tape Union Attempt | Conditional on W1b-2b measured CSS row + CHALLENGE | <=420 hand; generated output named separately | high | <=30 min |
+| W4 | Section 9 | ASM-Gen CSS Consumer + AArch64 Orphan Disposition | Conditional on W1b-2b + W2 + CHALLENGE | <=430 hand/test/gate | high | <=30 min |
+| W5 | Section 10 | Close And Alpha Feedback | Conditional on W0, W1a, W2, W1b-1, W1b-2a, W1b-2b, W4, and conditional W3 disposition | <=140 docs/report/gate; 0 behavior | medium | <=30 min |
 
 Phase caps for the pinned campaign are tighter than earlier SK-V9/SK-V10
 packets: 20 min research, 15 min plan, 30 min redress. CHALLENGE remains
 mandatory for first-of-class, primitive, generic-crate, union, ASM-gen, and
-high-risk waves. W1a, W2, W1b-1, W1b-2, W3, and W4 are CHALLENGE-mandatory.
+high-risk waves. W1a, W2, W1b-1, W1b-2a, W1b-2b, W3, and W4 are
+CHALLENGE-mandatory.
 
 At 0.9x cap the agent commits or records the blocking state. At the cap it
 halts. A wave may fail honestly; failure records REDRESS evidence and the next
@@ -431,7 +433,7 @@ Entry gate:
   oracle/Track 2, equality command, benchmark command, gate command, and
   rollback slice.
 - Sheets/BBNF-self are not selectable in W1b-1 before a measured CSS redress
-  attempt from W1b-2.
+  attempt from W1b-2b.
 - No new SIMD helper is legal in W1b-1 unless W2 has already passed.
 
 Tasks:
@@ -458,7 +460,7 @@ Exit gate `G-W1b-1-CSS-L4-ORACLE`:
 - BLOCKED/FAIL: CSS cannot be generated/measured inside the W1b-1 scaffold
   surface; record REDRESS and return to plan. This scaffold failure does not
   satisfy the post-CSS-redress fallback condition. Sheets/BBNF fallback remains
-  blocked until W1b-2 records measured CSS lightningcss comparator/admission
+  blocked until W1b-2b records measured CSS lightningcss comparator/admission
   redress, unless the user re-pins or S-P3 explicitly revises the topology.
 
 Revert protocol: revert CSS generated/runtime/bench/gate/report changes and
@@ -466,8 +468,16 @@ save `/tmp/skv12-waveW1b-1-rejected.patch` when a patch was attempted.
 
 ## Section 7 - W1b-2 CSS L4 Lightningcss Comparator + Admission Gate
 
-Purpose: add the same-plane lightningcss comparator, gate consumption, and CSS
-ADMIT measurement for the row scaffolded by W1b-1.
+Purpose: add the same-plane lightningcss comparator, then consume Criterion
+evidence into the CSS ADMIT gate for the row scaffolded by W1b-1. Section 7 is
+sub-waved because CHALLENGE V2 found the monolithic comparator+gate surface too
+large for the 30-minute redress cap.
+
+### Section 7.1 - W1b-2a CSS L4 Lightningcss Comparator + Criterion Row
+
+Purpose: land the dependency, fixture-limited lightningcss-gated source-sidecar
+fact emitter, strict equality artifacts, and Criterion benchmark row. This
+sub-wave cannot admit CSS SOTA and cannot move RESULTS.
 
 Owner paths:
 
@@ -475,23 +485,20 @@ Owner paths:
 - `skinny/crates/bbnf-bench/benches/nonjson_css_l4.rs`
 - `skinny/crates/bbnf-bench/Cargo.toml`
 - `skinny/Cargo.lock`
-- `skinny/crates/bbnf-bench/src/report.rs`
-- `skinny/crates/bbnf-bench/src/bin/gate.rs`
 - `restart/skinny/tranches/sk-v12/research/w1b/css_l4_declaration_values.css`
-- `restart/skinny/tranches/sk-v12/research/w1b/skv12-W1b-css-l4-sota.json`
 - `restart/skinny/tranches/sk-v12/research/w1b/artifacts/track1-facts.txt`
 - `restart/skinny/tranches/sk-v12/research/w1b/artifacts/oracle-facts.txt`
 - `restart/skinny/tranches/sk-v12/research/w1b/artifacts/lightningcss-facts.txt`
 - `restart/skinny/tranches/sk-v12/research/w1b/artifacts/strict-equality.txt`
 - `restart/skinny/tranches/sk-v12/research/w1b/artifacts/lightningcss-strict-equality.txt`
-- `skinny/RESULTS.md`, `skinny/REDRESS.md`
+- `skinny/REDRESS.md`
 
 Entry gate:
 
 - W1b-1 PASS.
 - Plan names lightningcss comparator command, version/build hash, equality
-  command, benchmark command, gate command, artifact paths, dependency lockfile
-  evidence, fixture-limit statement, and rollback slice.
+  command, benchmark command, artifact paths, dependency lockfile evidence,
+  fixture-limit statement, and rollback slice.
 - The row remains exactly
   `css_l4/declaration_values/direct_to_struct/main` and output plane remains
   `css_l4_declaration_value_fact_stream`.
@@ -506,23 +513,64 @@ Tasks:
   lightningcss.
 - Run same-host throughput for generated Track 1, oracle/Track 2, and
   lightningcss with sample count >= 30.
-- Consume all CSS, generated-size, comparator, oracle, and JSON guard fields in
-  the same-wave gate/report.
 
-Exit gate `G-W1b-2-CSS-L4-LIGHTNINGCSS`:
+Exit gate `G-W1b-2a-CSS-L4-LIGHTNINGCSS-COMPARATOR`:
+
+- PASS-COMPARATOR: dependency compiles, fixture limits fail closed, strict
+  equality artifacts are byte-identical across Track 1, Track 2/oracle, and the
+  lightningcss-gated sidecar, and the Criterion group includes
+  `lightningcss_same_plane_fact_stream` with sample count >= 30.
+- FAIL: dependency, comparator, fixture-limit enforcement, equality, artifact
+  writing, or Criterion row execution fails. Save rejected patch at
+  `/tmp/skv12-waveW1b-2a-rejected.patch`.
+
+No W1b-2a outcome is CSS ADMIT. RESULTS is not an owner path for W1b-2a.
+
+### Section 7.2 - W1b-2b CSS L4 Lightningcss SOTA Report + Admission Gate
+
+Purpose: consume the already-landed W1b-2a Criterion artifacts and equality
+artifacts into the W1b-2-specific SOTA report/gate.
+
+Owner paths:
+
+- `skinny/crates/bbnf-bench/src/report.rs`
+- `skinny/crates/bbnf-bench/src/bin/gate.rs`
+- `restart/skinny/tranches/sk-v12/research/w1b/skv12-W1b-css-l4-sota.json`
+- `skinny/RESULTS.md`
+- `skinny/REDRESS.md`
+
+Entry gate:
+
+- W1b-2a PASS-COMPARATOR.
+- Plan names the Criterion artifact root, JSON guard root, report path, gate
+  flag, no-write rejection matrix, stale-results guidance update, and rollback
+  slice.
+
+Tasks:
+
+- Add `sk-v12-css-l4-sota-v1` report validation and
+  `--skv12-css-l4-sota-report <path>`.
+- Consume Criterion estimates for Track 1, Track 2/oracle, and lightningcss.
+- Compute threshold and margin from `lightningcss_mbps + 1`.
+- Run JSON guards against an existing accepted JSON Criterion root or a fresh
+  populated JSON guard capture, not an empty CSS-only Criterion directory.
+- Fail closed if the companion report is combined with write/probe flags.
+
+Exit gate `G-W1b-2b-CSS-L4-LIGHTNINGCSS-SOTA`:
 
 - PASS-ADMIT-CANDIDATE: `track1_mbps > lightningcss_mbps + 1`, strict equality,
   oracle independent, telemetry consumed, JSON guards held/demoted.
 - PASS-MEASURED-BASELINE: CSS row is strict-equal and measurable but does not
   beat `lightningcss_mbps + 1`; continue to W3/W4 or record FIXPOINT evidence
-  later.
+  later. This outcome records REDRESS evidence and **does not move
+  `skinny/RESULTS.md`**.
 - BLOCKED/FAIL: comparator, equality, oracle independence, generated-size,
   throughput, or gate consumption fails; record REDRESS. Sheets/BBNF fallback
   requires a subsequent S-P3 or wave plan revision after this measured CSS
   redress attempt.
 
-Revert protocol: revert CSS bench/comparator/gate/report/result edits and save
-`/tmp/skv12-waveW1b-2-rejected.patch`.
+Revert protocol: revert gate/report/result edits and save
+`/tmp/skv12-waveW1b-2b-rejected.patch`.
 
 ## Section 8 - W3 CSS-Local Same-Tape Union Attempt
 
@@ -543,7 +591,7 @@ Owner paths:
 
 Entry gate:
 
-- W1b-2 has a measured CSS row.
+- W1b-2b has a measured CSS row.
 - Fresh profile or same-host microbench identifies a CSS hot leaf that a
   same-tape union can consume.
 - CHALLENGE accepts the material differential from REDRESS 96/97/98.
@@ -593,7 +641,7 @@ Owner paths:
 
 Entry gate:
 
-- W1b-2 has a measured CSS row.
+- W1b-2b has a measured CSS row.
 - W2 PASS if the candidate touches string/escape/SIMD correctness surfaces.
 - CHALLENGE accepts REDRESS adjacency and cost.
 - Same-host microbench proves the selected candidate on a CSS or JSON-guard hot
@@ -646,8 +694,8 @@ Owner paths:
 
 Entry gate:
 
-- W0, W1a, W2, W1b-1, W1b-2, and W4 have admitted, rejected, routed, or
-  blocked with evidence.
+- W0, W1a, W2, W1b-1, W1b-2a, W1b-2b, and W4 have admitted, rejected, routed,
+  or blocked with evidence.
 - W3 has disposition only when closing as FIXPOINT or when no prior CSS row
   satisfies ADMIT. W3 is not required on an already-admitted CSS path.
 
@@ -701,10 +749,10 @@ Reopened at category level:
 
 ## Section 12 - Convergence And Escalation
 
-SK-V12 converges when W0, W1a, W2, W1b-1, W1b-2, W4, W5, and W3 when required
-for FIXPOINT have dispositions and Section 0.1 ADMIT or FIXPOINT holds. If
-neither holds, W5 routes the exact remainder into Pass Alpha for SK-V13 and the
-campaign continues.
+SK-V12 converges when W0, W1a, W2, W1b-1, W1b-2a, W1b-2b, W4, W5, and W3 when
+required for FIXPOINT have dispositions and Section 0.1 ADMIT or FIXPOINT
+holds. If neither holds, W5 routes the exact remainder into Pass Alpha for
+SK-V13 and the campaign continues.
 
 Escalate immediately if:
 

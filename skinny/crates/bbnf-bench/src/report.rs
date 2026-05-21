@@ -178,9 +178,13 @@ pub struct SkV12NonJsonRow {
     pub output_plane: String,
     pub outcome_id: String,
     pub verdict: String,
+    pub strictness: String,
     pub generated_track1_source_path: String,
     pub generated_runtime_path: String,
     pub generated_input_provenance: String,
+    pub grammar_checksum: String,
+    pub input_checksum: String,
+    pub input_bytes: u64,
     pub track1_mbps: f64,
     pub track1_artifact: String,
     pub track2_or_oracle_source_path: String,
@@ -197,6 +201,15 @@ pub struct SkV12NonJsonRow {
     pub sample_count: u64,
     pub sample_cost: String,
     pub benchmark_artifact_path: String,
+    pub measured_validation_path: String,
+    pub profile_artifact: String,
+    pub generated_loc: u64,
+    pub generated_module_bytes: u64,
+    pub grammar_size_guard: String,
+    pub lock14_status: String,
+    pub lock16_status: String,
+    pub scalar_reference_status: String,
+    pub checkasm_or_parity_status: String,
     pub json_guard_state: String,
     pub redress_entry: String,
     pub same_wave_consumer_class: String,
@@ -1857,9 +1870,12 @@ fn validate_skv12_non_json_row(row: &SkV12NonJsonRow, run_id: &str) -> Result<()
         "output_plane" = row.output_plane,
         "outcome_id" = row.outcome_id,
         "verdict" = row.verdict,
+        "strictness" = row.strictness,
         "generated_track1_source_path" = row.generated_track1_source_path,
         "generated_runtime_path" = row.generated_runtime_path,
         "generated_input_provenance" = row.generated_input_provenance,
+        "grammar_checksum" = row.grammar_checksum,
+        "input_checksum" = row.input_checksum,
         "track1_artifact" = row.track1_artifact,
         "track2_or_oracle_source_path" = row.track2_or_oracle_source_path,
         "track2_independence_status" = row.track2_independence_status,
@@ -1871,6 +1887,13 @@ fn validate_skv12_non_json_row(row: &SkV12NonJsonRow, run_id: &str) -> Result<()
         "build_flags" = row.build_flags,
         "sample_cost" = row.sample_cost,
         "benchmark_artifact_path" = row.benchmark_artifact_path,
+        "measured_validation_path" = row.measured_validation_path,
+        "profile_artifact" = row.profile_artifact,
+        "grammar_size_guard" = row.grammar_size_guard,
+        "lock14_status" = row.lock14_status,
+        "lock16_status" = row.lock16_status,
+        "scalar_reference_status" = row.scalar_reference_status,
+        "checkasm_or_parity_status" = row.checkasm_or_parity_status,
         "json_guard_state" = row.json_guard_state,
         "redress_entry" = row.redress_entry,
         "same_wave_consumer_class" = row.same_wave_consumer_class,
@@ -1895,6 +1918,9 @@ fn validate_skv12_non_json_row(row: &SkV12NonJsonRow, run_id: &str) -> Result<()
         ));
     }
     let expected_plane = match row.workload.as_str() {
+        "direct_to_struct" if row.row_id == "css_l4/declaration_values/direct_to_struct/main" => {
+            "css_l4_declaration_value_fact_stream"
+        }
         "direct_to_struct" => "direct_sink",
         "real_typed_struct" => "typed_direct",
         "parse_only" => return Err(format!("{} attempts parse_only admission", row.row_id)),
@@ -1928,7 +1954,13 @@ fn parse_skv12_non_json_row_id(row_id: &str) -> Result<(&str, &str, &str), Strin
 }
 
 fn validate_skv12_generated_source(row: &SkV12NonJsonRow) -> Result<(), String> {
-    let forbidden = ["json", "sheets_witness", "w1a", "hand_only"];
+    let forbidden = [
+        "generated_json",
+        "grammars/json",
+        "sheets_witness",
+        "w1a",
+        "hand_only",
+    ];
     for value in [
         &row.generated_track1_source_path,
         &row.generated_runtime_path,
@@ -1938,6 +1970,34 @@ fn validate_skv12_generated_source(row: &SkV12NonJsonRow) -> Result<(), String> 
         {
             return Err(format!(
                 "{} has stale or mismatched generated Track 1 evidence",
+                row.row_id
+            ));
+        }
+    }
+    if row.row_id == "css_l4/declaration_values/direct_to_struct/main" {
+        if !row
+            .generated_track1_source_path
+            .contains("css_l4_declaration_values_templates/generated.rs")
+            || row
+                .generated_runtime_path
+                .contains("runtime::generated_json")
+            || !row
+                .generated_runtime_path
+                .contains("generated_css_l4_declaration_values::parser::parse")
+            || !row
+                .generated_input_provenance
+                .contains("sha256=cbb639460a72ef82e7c1b7c53ccc69495a35f6860b29ad72370b042b470d7374")
+            || row.input_checksum
+                != "cbb639460a72ef82e7c1b7c53ccc69495a35f6860b29ad72370b042b470d7374"
+            || row.input_bytes != 187
+            || row.generated_loc == 0
+            || row.generated_loc > 360
+            || row.generated_module_bytes == 0
+            || row.grammar_checksum.len() != 64
+            || row.grammar_size_guard != "pass:generated_loc<=360"
+        {
+            return Err(format!(
+                "{} has incomplete CSS L4 generated-source evidence",
                 row.row_id
             ));
         }
@@ -1952,6 +2012,9 @@ fn validate_skv12_oracle(row: &SkV12NonJsonRow, run_id: &str) -> Result<(), Stri
         || row
             .track2_or_oracle_source_path
             .contains("runtime::generated_json::parse")
+        || row
+            .track2_or_oracle_source_path
+            .contains("generated_css_l4_declaration_values")
         || row.track2_or_oracle_source_path.contains("track1")
         || !row.oracle_status.contains("same-plane")
         || !row.oracle_status.contains("strict")
@@ -1965,6 +2028,15 @@ fn validate_skv12_oracle(row: &SkV12NonJsonRow, run_id: &str) -> Result<(), Stri
             row.row_id
         ));
     }
+    if row.row_id == "css_l4/declaration_values/direct_to_struct/main"
+        && (!row.track2_or_oracle_source_path.contains("cssparser-0.34")
+            || !row.oracle_status.contains("cssparser")
+            || row.strict_output_equality != "pass"
+            || row.scalar_reference_status != "pass:cssparser_oracle"
+            || row.checkasm_or_parity_status != "pass:track1_equals_cssparser")
+    {
+        return Err(format!("{} is missing CSS parser oracle proof", row.row_id));
+    }
     Ok(())
 }
 
@@ -1977,6 +2049,7 @@ fn validate_skv12_measurement(row: &SkV12NonJsonRow) -> Result<(), String> {
         || row.sample_count < 30
         || row.strict_output_equality != "pass"
         || row.gate_status != "pass"
+        || row.strictness != "strict"
         || row.verdict != "GO"
     {
         return Err(format!(
@@ -2006,17 +2079,25 @@ fn validate_skv12_measurement(row: &SkV12NonJsonRow) -> Result<(), String> {
 
 fn validate_skv12_gate_context(row: &SkV12NonJsonRow) -> Result<(), String> {
     let expected_consumer = match row.workload_class.as_str() {
+        "baseline" if row.row_id == "css_l4/declaration_values/direct_to_struct/main" => {
+            "companion_gate_generated_css_l4_baseline"
+        }
         "baseline" => "companion_gate_generated_baseline",
         "intervention" => "companion_gate_generated_intervention",
         _ => unreachable!("workload class already validated"),
     };
     if row.same_wave_consumer_class != expected_consumer
         || !(row.json_guard_state == "not_refreshed:no_behavior_drift"
-            || row.json_guard_state.starts_with("refreshed:"))
+            || (row.json_guard_state.starts_with("refreshed:")
+                && row.json_guard_state.contains("guards-pass")))
         || !row.host_triple.contains("arch=")
         || !row.feature_mask.contains("target_cpu=native")
         || !row.build_flags.contains("target-cpu=native")
         || !row.sample_cost.contains("ns_per_byte=")
+        || row.measured_validation_path.trim().is_empty()
+        || row.profile_artifact.trim().is_empty()
+        || row.lock14_status != "pass:lock14_baseline::validate"
+        || row.lock16_status.trim().is_empty()
     {
         return Err(format!(
             "{} has producer-only or incomplete gate context",
@@ -2446,32 +2527,38 @@ mod tests {
     fn skv12_non_json_report() -> SkV12NonJsonReport {
         SkV12NonJsonReport {
             schema_id: SKV12_NON_JSON_REPORT_SCHEMA.into(),
-            wave_id: "SK-V12-W0".into(),
-            run_id: "sk-v12-w0:fixture-fnv64-0000000000000001".into(),
+            wave_id: "SK-V12-W1b-1".into(),
+            run_id: "sk-v12-w1b-1:fixture-fnv64-0000000000000001".into(),
             rows: vec![SkV12NonJsonRow {
                 row_id: "css_l4/declaration_values/direct_to_struct/main".into(),
                 grammar_id: "css_l4".into(),
-                domain: "non_json_generated:css_l4".into(),
+                domain: "non_json_generated:css_l4:declaration_values".into(),
                 corpus_or_workload: "declaration_values".into(),
                 workload: "direct_to_struct".into(),
                 workload_class: "baseline".into(),
-                output_plane: "direct_sink".into(),
-                outcome_id: "A".into(),
+                output_plane: "css_l4_declaration_value_fact_stream".into(),
+                outcome_id: "C".into(),
                 verdict: "GO".into(),
-                generated_track1_source_path: "crates/runtime/src/grammars/css_l4/generated.rs"
+                strictness: "strict".into(),
+                generated_track1_source_path: "crates/codegen/src/css_l4_declaration_values_templates/generated.rs"
                     .into(),
-                generated_runtime_path: "bbnf::runtime::grammars::css_l4::generated::parse".into(),
+                generated_runtime_path: "runtime::generated_css_l4_declaration_values::parser::parse".into(),
                 generated_input_provenance:
-                    "fixture:css_l4:declaration_values:sha256=0123456789abcdef".into(),
+                    "fixture:css_l4:declaration_values:sha256=cbb639460a72ef82e7c1b7c53ccc69495a35f6860b29ad72370b042b470d7374".into(),
+                grammar_checksum:
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef".into(),
+                input_checksum:
+                    "cbb639460a72ef82e7c1b7c53ccc69495a35f6860b29ad72370b042b470d7374".into(),
+                input_bytes: 187,
                 track1_mbps: 12.0,
-                track1_artifact: "criterion:sk-v12-w0:fixture-fnv64-0000000000000001:css_l4/direct"
+                track1_artifact: "criterion:sk-v12-w1b-1:fixture-fnv64-0000000000000001:target/criterion/nonjson_css_l4/track1_generated_css_l4_decl_values"
                     .into(),
                 track2_or_oracle_source_path:
-                    "oracle:css_l4:declaration_values:direct_sink:same-run".into(),
+                    "cssparser-0.34:StyleSheetParser+RuleBodyParser:bench/nonjson_css_l4.rs".into(),
                 track2_independence_status: "independent_verified".into(),
                 track2_or_oracle_mbps: Some(10.0),
                 strict_output_equality: "pass".into(),
-                oracle_status: "same-plane:strict:independent:fresh".into(),
+                oracle_status: "same-plane:strict:independent:cssparser:fresh".into(),
                 baseline_row_id: "none".into(),
                 baseline_mbps: None,
                 threshold_mbps: None,
@@ -2481,10 +2568,19 @@ mod tests {
                 sample_count: 30,
                 sample_cost: "ns_per_byte=0.83".into(),
                 benchmark_artifact_path:
-                    "criterion:sk-v12-w0:fixture-fnv64-0000000000000001:css_l4/direct".into(),
-                json_guard_state: "not_refreshed:no_behavior_drift".into(),
+                    "criterion:sk-v12-w1b-1:fixture-fnv64-0000000000000001:target/criterion/nonjson_css_l4".into(),
+                measured_validation_path: "track1-vs-cssparser-byte-identical-fact-stream".into(),
+                profile_artifact: "profile:not_required_for_generated_baseline".into(),
+                generated_loc: 120,
+                generated_module_bytes: 4096,
+                grammar_size_guard: "pass:generated_loc<=360".into(),
+                lock14_status: "pass:lock14_baseline::validate".into(),
+                lock16_status: "n/a:scalar-css-scaffold-no-simd".into(),
+                scalar_reference_status: "pass:cssparser_oracle".into(),
+                checkasm_or_parity_status: "pass:track1_equals_cssparser".into(),
+                json_guard_state: "refreshed:sk-v12-w1b-1:guards-pass".into(),
                 redress_entry: "none".into(),
-                same_wave_consumer_class: "companion_gate_generated_baseline".into(),
+                same_wave_consumer_class: "companion_gate_generated_css_l4_baseline".into(),
                 gate_status: "pass".into(),
             }],
         }

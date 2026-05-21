@@ -3630,3 +3630,50 @@ perturbation.
   row, and no SIMD/ASM throughput primitive. W1b/W3+ may now attempt their own
   SIMD or CSS L4 admissions only under the USER PIN micro-proof, same-wave
   consumer, zero-orphan, and strict comparator gates.
+
+## SK-V12 Wave 1b-1 CSS L4 Generated Track 1 Scaffold
+
+- Item 123 closes W1b-1 under `G-W1b-1-CSS-L4-ORACLE` as an admitted generated
+  non-JSON baseline scaffold, not as a CSS SOTA admission. The admitted row is
+  `css_l4/declaration_values/direct_to_struct/main`; the output plane is
+  `css_l4_declaration_value_fact_stream`; the report entry is
+  `REDRESS-123`.
+- W1b-1 adds a CSS L4 declaration-values runtime profile/provider, generated
+  scalar Track 1 runtime, CSS-local fact sink, `cssparser` independent oracle,
+  Criterion bench, retained fact-stream artifacts, and a gate-consumed
+  `sk-v12-nonjson-generated-v1` report. The fixture is 187 LF-terminated bytes
+  with SHA-256
+  `cbb639460a72ef82e7c1b7c53ccc69495a35f6860b29ad72370b042b470d7374`.
+- Strict equality is byte-for-byte over the retained
+  `css-l4-declaration-value-facts-v1` fact stream. The Track 1 artifact and
+  oracle artifact are retained under
+  `restart/skinny/tranches/sk-v12/research/w1b/artifacts/`; the companion
+  report is
+  `restart/skinny/tranches/sk-v12/research/w1b/skv12-W1b-1-css-l4-oracle.json`.
+- Generated-size telemetry is consumed by the same gate: generated CSS runtime
+  files total 287 LOC / 9243 bytes, with
+  `grammar_size_guard=pass:generated_loc<=360`. Lock 14 is consumed through
+  `lock14_baseline::validate`; Lock 16 is recorded as
+  `n/a:scalar-css-scaffold-no-simd`.
+- Verification passed:
+  `cargo test -p codegen css_l4_declaration_values -- --nocapture`;
+  `cargo test -p runtime css_l4_declaration_values_emit_fact_stream -- --nocapture`;
+  `cargo test -p bbnf-bench nonjson_css_l4 -- --nocapture`;
+  `cargo test -p bbnf-bench skv12_non_json_report -- --nocapture`;
+  `cargo test -p bbnf-bench skv12_non_json_report_arg -- --nocapture`;
+  `cargo test -p bbnf-bench lock14 -- --nocapture`; native
+  `cargo bench -p bbnf-bench --bench nonjson_css_l4 -- --sample-size 30`;
+  and native
+  `cargo run -p bbnf-bench --bin gate -- --skv12-non-json-report ../restart/skinny/tranches/sk-v12/research/w1b/skv12-W1b-1-css-l4-oracle.json`.
+- JSON guard evidence was reconciled without committing ledger churn:
+  `CRITERION_HOME=/tmp/skv12-w1a-json-guard-criterion RUSTFLAGS="-C target-cpu=native" cargo run -p bbnf-bench --bin gate -- --skv12-non-json-report ../restart/skinny/tranches/sk-v12/research/w1b/skv12-W1b-1-css-l4-oracle.json --advisory --check-results`
+  consumed the CSS companion report and then passed the JSON no-write ledger
+  check against the checked-in guard authority, and
+  `awk -f restart/skinny/tranches/sk-v12/research/w1a/verify-skv12-json-floors.awk skinny/RESULTS.md`
+  passed. `skinny/RESULTS.md` remains unchanged for W1b-1 because no JSON guard
+  demotion was required.
+- W1b-1 admits no lightningcss comparator row, no CSS `ADMIT` under the user
+  pin, no SIMD/ASM primitive, no JSON row movement, no new directive/BIR/
+  `BackendShape`, and no public substrate API. W1b-2 remains responsible for
+  the same-plane lightningcss comparator and the
+  `track1_mbps > lightningcss_mbps + 1` admission bar.

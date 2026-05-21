@@ -38,6 +38,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     if let Err(error) = lock14_baseline::validate(&workspace) {
         return Err(format!("Lock 14 baseline validation failed: {error}").into());
     }
+    let has_explicit_json_check = companion_report_runs_json_check(&args[1..]);
     if let Some(path) = w1a_non_json_report_path(&args[1..])? {
         let text = fs::read_to_string(&path)?;
         let report = NonJsonEvidenceReport::from_json_str(&text)
@@ -45,7 +46,9 @@ fn main() -> Result<(), Box<dyn Error>> {
             .map_err(|error| format!("{}: {error}", path.display()))?;
         println!("G-W1a-NONJSON-GATE PASS {}", path.display());
         drop(report);
-        return Ok(());
+        if !has_explicit_json_check {
+            return Ok(());
+        }
     }
     if let Some(path) = skv12_non_json_report_path(&args[1..])? {
         let text = fs::read_to_string(&path)?;
@@ -54,7 +57,9 @@ fn main() -> Result<(), Box<dyn Error>> {
             .map_err(|error| format!("{}: {error}", path.display()))?;
         println!("G-W0-SK-V12-NONJSON-GATE PASS {}", path.display());
         drop(report);
-        return Ok(());
+        if !has_explicit_json_check {
+            return Ok(());
+        }
     }
 
     let criterion_root = criterion_root();
@@ -442,10 +447,29 @@ fn companion_report_path(args: &[String], flag: &str) -> Result<Option<PathBuf>,
             )
         })
         .count();
-    if companion_flags != 1 || args.len() != flag_index + 2 || flag_index != 0 {
+    if companion_flags != 1
+        || flag_index + 1 >= args.len()
+        || args[flag_index + 1].starts_with("--")
+    {
         return Err(format!("{flag} expects exactly one path argument").into());
     }
+    for (index, arg) in args.iter().enumerate() {
+        if index == flag_index || index == flag_index + 1 {
+            continue;
+        }
+        if !matches!(
+            arg.as_str(),
+            "--advisory" | "--check-results" | "--with-cost-facts"
+        ) {
+            return Err(format!("{flag} cannot be combined with {arg}").into());
+        }
+    }
     Ok(Some(PathBuf::from(&args[flag_index + 1])))
+}
+
+fn companion_report_runs_json_check(args: &[String]) -> bool {
+    args.iter()
+        .any(|arg| matches!(arg.as_str(), "--check-results" | "--with-cost-facts"))
 }
 
 fn w0_parse_non_admission(outcome: Outcome) -> Outcome {
@@ -2104,6 +2128,21 @@ mod tests {
             "skv12.json".to_string(),
         ];
         assert!(skv12_non_json_report_path(&mixed).is_err());
+    }
+
+    #[test]
+    fn skv12_non_json_report_arg_allows_no_write_json_check_flags() {
+        let args = vec![
+            "--skv12-non-json-report".to_string(),
+            "skv12-nonjson-pass.json".to_string(),
+            "--advisory".to_string(),
+            "--check-results".to_string(),
+        ];
+        assert_eq!(
+            skv12_non_json_report_path(&args).unwrap(),
+            Some(PathBuf::from("skv12-nonjson-pass.json"))
+        );
+        assert!(companion_report_runs_json_check(&args));
     }
 
     #[test]

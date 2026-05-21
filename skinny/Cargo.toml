@@ -36,6 +36,7 @@ anyhow = "1"
 blake3 = "1"
 bytemuck = { version = "1", features = ["derive"] }
 criterion = { version = "0.5", features = ["html_reports"] }
+cssparser = "0.34"
 memchr = "2"
 libc = "0.2"
 mimalloc = { version = "0.1", default-features = false }

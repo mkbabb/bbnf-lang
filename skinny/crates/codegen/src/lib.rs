@@ -1,3 +1,4 @@
+mod css_l4_declaration_values_provider;
 pub mod direct_schema;
 mod grammar_profile;
 mod json_provider;
@@ -105,6 +106,11 @@ pub fn emit(backend: &BackendIr) -> Result<EmittedSource, CodegenError> {
     emit_with_layout(backend, &backend_shape, &cost_facts, &[])
 }
 
+pub fn emit_runtime_profile(grammar_name: &str) -> Result<EmittedSource, CodegenError> {
+    let profile = grammar_profile::select_runtime_profile_for_name(grammar_name)?;
+    render_runtime_profile(profile, None)
+}
+
 pub fn emit_typed_from_source(
     grammar_name: &str,
     source: &str,
@@ -136,13 +142,29 @@ fn emit_with_layout(
             diagnostics,
         },
     );
-    let mut files = BTreeMap::new();
-    let mut generated = json_provider::generated_rs();
     let sink_only = lowered.sink_only_program.as_ref().ok_or_else(|| {
         CodegenError::Lowering(
             "BackendIr did not contain DirectBuild sink-only program".to_string(),
         )
     })?;
+    render_runtime_profile(profile, Some(sink_only))
+}
+
+fn render_runtime_profile(
+    profile: &grammar_profile::GrammarProfile,
+    sink_only: Option<&lower::sink_only::SinkOnlyProgram>,
+) -> Result<EmittedSource, CodegenError> {
+    if profile.provider() == grammar_profile::RuntimeProvider::CssL4DeclarationValues {
+        let files = css_l4_declaration_values_provider::emit_runtime_files();
+        grammar_profile::validate_generated_roster(profile, files.keys().map(String::as_str))
+            .map_err(CodegenError::Lowering)?;
+        return Ok(EmittedSource { files });
+    }
+    let sink_only = sink_only.ok_or_else(|| {
+        CodegenError::Lowering("JSON runtime profile requires sink-only lowering".to_string())
+    })?;
+    let mut files = BTreeMap::new();
+    let mut generated = json_provider::generated_rs();
     generated.push('\n');
     generated.push_str(&json_sink_direct::render(sink_only).map_err(CodegenError::Lowering)?);
 
@@ -341,6 +363,30 @@ mod tests {
         assert_eq!(profile.id(), "json");
         assert_eq!(names, profile.generated_runtime_files());
         assert!(grammar_profile::select_runtime_profile_for_name("css_l4").is_err());
+    }
+
+    #[test]
+    fn css_l4_declaration_values_profile_fields_are_consumed() {
+        let profile = grammar_profile::select_runtime_profile_for_name("css_l4_declaration_values")
+            .expect("css profile");
+        let emitted = emit_runtime_profile("css_l4_declaration_values").unwrap();
+        let names = emitted.files().map(|(name, _)| name).collect::<Vec<_>>();
+
+        assert_eq!(profile.id(), "css_l4_declaration_values");
+        assert_eq!(names, profile.generated_runtime_files());
+        assert!(emitted
+            .get("generated.rs")
+            .unwrap()
+            .contains("emit_fact_stream"));
+        assert!(emitted.get("parser.rs").unwrap().contains("parse_bytes"));
+    }
+
+    #[test]
+    fn css_l4_declaration_values_generated_runtime_reproducible() {
+        let emitted = emit_runtime_profile("css_l4_declaration_values").unwrap();
+        let runtime_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../runtime/src/grammars/css_l4_declaration_values");
+        emitted.check_dir(runtime_dir).unwrap();
     }
 
     #[test]

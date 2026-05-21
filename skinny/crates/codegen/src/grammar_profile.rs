@@ -1,20 +1,29 @@
-use crate::{json_provider, CodegenError};
+use crate::{css_l4_declaration_values_provider, json_provider, CodegenError};
 use ir::BackendIr;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) struct GrammarProfile {
     id: &'static str,
     generated_runtime_files: &'static [&'static str],
+    provider: RuntimeProvider,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum RuntimeProvider {
+    Json,
+    CssL4DeclarationValues,
 }
 
 impl GrammarProfile {
     pub(crate) const fn new(
         id: &'static str,
         generated_runtime_files: &'static [&'static str],
+        provider: RuntimeProvider,
     ) -> Self {
         Self {
             id,
             generated_runtime_files,
+            provider,
         }
     }
 
@@ -24,6 +33,10 @@ impl GrammarProfile {
 
     pub(crate) fn generated_runtime_files(&self) -> &'static [&'static str] {
         self.generated_runtime_files
+    }
+
+    pub(crate) fn provider(&self) -> RuntimeProvider {
+        self.provider
     }
 
     fn matches_grammar_name(&self, grammar_name: &str) -> bool {
@@ -73,6 +86,9 @@ pub(crate) fn validate_generated_roster<'a>(
     }
 }
 
-fn runtime_profiles() -> [&'static GrammarProfile; 1] {
-    [json_provider::runtime_profile()]
+fn runtime_profiles() -> [&'static GrammarProfile; 2] {
+    [
+        json_provider::runtime_profile(),
+        css_l4_declaration_values_provider::runtime_profile(),
+    ]
 }

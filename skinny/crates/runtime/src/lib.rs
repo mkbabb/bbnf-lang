@@ -3,6 +3,9 @@ pub mod tape;
 #[path = "grammars/json/mod.rs"]
 pub mod generated_json;
 
+#[path = "grammars/css_l4_declaration_values/mod.rs"]
+pub mod generated_css_l4_declaration_values;
+
 #[cfg(any(test, feature = "proof"))]
 #[path = "grammars/json/event_grammar_witness.rs"]
 pub mod json_event_grammar_witness;
@@ -12,6 +15,7 @@ pub mod json_event_grammar_witness;
 pub mod sheets_witness;
 
 pub mod grammars {
+    pub use crate::generated_css_l4_declaration_values as css_l4_declaration_values;
     pub use crate::generated_json as json;
 }
 
@@ -265,5 +269,16 @@ mod tests {
                 "end_object"
             ]
         );
+    }
+
+    #[test]
+    fn css_l4_declaration_values_emit_fact_stream() {
+        let css = "a { color: #ff00ff; width: 50%; }\n";
+        let facts = crate::generated_css_l4_declaration_values::parse(css).unwrap();
+        assert!(facts.contains("css-l4-declaration-value-facts-v1"));
+        assert!(facts.contains("property_hex=636f6c6f72"));
+        assert!(facts.contains("kind=hash\tlexeme_hex=666630306666"));
+        assert!(facts.contains("property_hex=7769647468"));
+        assert!(facts.contains("kind=percentage\tlexeme_hex=353025"));
     }
 }

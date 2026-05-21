@@ -4,6 +4,7 @@ pub mod generated_real_typed;
 pub mod lock14_baseline;
 pub mod materialization;
 pub mod metadata;
+pub mod nonjson_css_l4;
 pub mod parity;
 pub mod probes;
 pub mod real_typed_struct;

@@ -186,6 +186,36 @@ pub const ALLOWLIST: &[AllowlistEntry] = &[
         "generated",
     ),
     entry(
+        "crates/runtime/src/grammars/css_l4_declaration_values/config.rs",
+        "generated_nonjson_output",
+        "read_only",
+        "generated",
+    ),
+    entry(
+        "crates/runtime/src/grammars/css_l4_declaration_values/generated.rs",
+        "generated_nonjson_output",
+        "read_only",
+        "generated",
+    ),
+    entry(
+        "crates/runtime/src/grammars/css_l4_declaration_values/mod.rs",
+        "generated_nonjson_output",
+        "read_only",
+        "generated",
+    ),
+    entry(
+        "crates/runtime/src/grammars/css_l4_declaration_values/parser.rs",
+        "generated_nonjson_output",
+        "read_only",
+        "generated",
+    ),
+    entry(
+        "crates/runtime/src/grammars/css_l4_declaration_values/sink.rs",
+        "per_grammar_runtime_source",
+        "read_only",
+        "runtime_source",
+    ),
+    entry(
         "crates/bbnf-bench/src/generated_real_typed.rs",
         "generated_typed_output",
         "read_only",
@@ -487,13 +517,41 @@ const SK_V12_W1A_OWNER_PATHS: &[&str] = &[
     "crates/bbnf-bench/src/generated_real_typed.rs",
 ];
 
+const SK_V12_W1B1_OWNER_PATHS: &[&str] = &[
+    "crates/codegen/src/lib.rs",
+    "crates/codegen/src/grammar_profile.rs",
+    "crates/codegen/src/json_provider.rs",
+    "crates/codegen/src/css_l4_declaration_values_provider.rs",
+    "crates/codegen/src/css_l4_declaration_values_templates/",
+    "crates/codegen/src/css_l4_declaration_values_templates/config.rs",
+    "crates/codegen/src/css_l4_declaration_values_templates/generated.rs",
+    "crates/codegen/src/css_l4_declaration_values_templates/mod.rs",
+    "crates/codegen/src/css_l4_declaration_values_templates/parser.rs",
+    "crates/runtime/src/lib.rs",
+    "crates/runtime/src/grammars/css_l4_declaration_values/",
+    "crates/runtime/src/grammars/css_l4_declaration_values/config.rs",
+    "crates/runtime/src/grammars/css_l4_declaration_values/generated.rs",
+    "crates/runtime/src/grammars/css_l4_declaration_values/mod.rs",
+    "crates/runtime/src/grammars/css_l4_declaration_values/parser.rs",
+    "crates/runtime/src/grammars/css_l4_declaration_values/sink.rs",
+];
+
+fn current_lock14_owner_paths() -> Vec<&'static str> {
+    let mut paths =
+        Vec::with_capacity(SK_V12_W1A_OWNER_PATHS.len() + SK_V12_W1B1_OWNER_PATHS.len());
+    paths.extend_from_slice(SK_V12_W1A_OWNER_PATHS);
+    paths.extend_from_slice(SK_V12_W1B1_OWNER_PATHS);
+    paths
+}
+
 fn validate_git_freeze(root: &Path) -> Result<(), String> {
+    let current_owner_paths = current_lock14_owner_paths();
     let frozen_status = git_output(root, &git_path_args("status", "--porcelain", FROZEN_ROOTS))?;
-    validate_frozen_status_output_with_allowed(&frozen_status, SK_V12_W1A_OWNER_PATHS)?;
+    validate_frozen_status_output_with_allowed(&frozen_status, &current_owner_paths)?;
     let frozen_diff = git_output(root, &git_path_args("diff", "--name-only", FROZEN_ROOTS))?;
-    validate_changed_paths_output(&frozen_diff, SK_V12_W1A_OWNER_PATHS)?;
+    validate_changed_paths_output(&frozen_diff, &current_owner_paths)?;
     let frozen_cached = git_output(root, &git_cached_name_args(FROZEN_ROOTS))?;
-    validate_changed_paths_output(&frozen_cached, SK_V12_W1A_OWNER_PATHS)?;
+    validate_changed_paths_output(&frozen_cached, &current_owner_paths)?;
     if git_quiet(root, &["rev-parse", "--verify", "HEAD^"]).is_ok() {
         validate_parent_frozen_diff(root)?;
     }
@@ -588,11 +646,17 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
         }
     }
     if subject.contains("sk-v12-waveW1a") {
-        let allowed = changed_paths.iter().all(|path| {
-            SK_V12_W1A_OWNER_PATHS
-                .iter()
-                .any(|allowed| path.as_str() == *allowed)
-        });
+        let allowed = changed_paths
+            .iter()
+            .all(|path| is_allowed_path(path, SK_V12_W1A_OWNER_PATHS));
+        if allowed {
+            return Ok(());
+        }
+    }
+    if subject.contains("sk-v12-waveW1b-1") {
+        let allowed = changed_paths
+            .iter()
+            .all(|path| is_allowed_path(path, SK_V12_W1B1_OWNER_PATHS));
         if allowed {
             return Ok(());
         }
@@ -686,21 +750,15 @@ fn status_changed_paths(output: &str) -> Vec<String> {
 }
 
 fn validate_changed_paths(changed_paths: &[String], allowed_paths: &[&str]) -> Result<(), String> {
-    let allowed = changed_paths.iter().all(|path| {
-        allowed_paths
-            .iter()
-            .any(|allowed| path.as_str() == *allowed)
-    });
+    let allowed = changed_paths
+        .iter()
+        .all(|path| is_allowed_path(path, allowed_paths));
     if allowed {
         Ok(())
     } else {
         let disallowed = changed_paths
             .iter()
-            .filter(|path| {
-                !allowed_paths
-                    .iter()
-                    .any(|allowed| path.as_str() == *allowed)
-            })
+            .filter(|path| !is_allowed_path(path, allowed_paths))
             .cloned()
             .collect::<Vec<_>>();
         Err(format!(
@@ -709,6 +767,16 @@ fn validate_changed_paths(changed_paths: &[String], allowed_paths: &[&str]) -> R
             disallowed.join(", ")
         ))
     }
+}
+
+fn is_allowed_path(path: &str, allowed_paths: &[&str]) -> bool {
+    allowed_paths.iter().any(|allowed| {
+        if allowed.ends_with('/') {
+            path.starts_with(*allowed)
+        } else {
+            path == *allowed
+        }
+    })
 }
 
 fn validate_backend_shape_surface(root: &Path) -> Result<(), String> {
@@ -832,6 +900,7 @@ fn is_allowed_class(class: &str) -> bool {
         "grammar_input"
             | "fixture_input"
             | "generated_json_output"
+            | "generated_nonjson_output"
             | "generated_typed_output"
             | "per_grammar_runtime_source"
             | "per_grammar_provider"

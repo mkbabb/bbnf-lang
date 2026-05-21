@@ -10,6 +10,7 @@ rust-version.workspace = true
 bbnf-simd.workspace = true
 blake3.workspace = true
 bytemuck.workspace = true
+cssparser.workspace = true
 libc.workspace = true
 mimalloc.workspace = true
 parse-that-regex.workspace = true
@@ -32,4 +33,8 @@ harness = false
 
 [[bench]]
 name = "simd_scan"
+harness = false
+
+[[bench]]
+name = "nonjson_css_l4"
 harness = false

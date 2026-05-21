@@ -1,4 +1,4 @@
-use crate::grammar_profile::GrammarProfile;
+use crate::grammar_profile::{GrammarProfile, RuntimeProvider};
 
 static RUNTIME_PROFILE: GrammarProfile = GrammarProfile::new(
     "json",
@@ -12,6 +12,7 @@ static RUNTIME_PROFILE: GrammarProfile = GrammarProfile::new(
         "view.rs",
         "visitor.rs",
     ],
+    RuntimeProvider::Json,
 );
 
 pub(crate) fn runtime_profile() -> &'static GrammarProfile {

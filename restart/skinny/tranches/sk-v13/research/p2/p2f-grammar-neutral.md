@@ -1,8 +1,8 @@
 # SK-V13 P2-F: Grammar-Neutral Abstraction
 
-Pass: S-P2 Research. Cycle: V2.
+Pass: S-P2 Research. Cycle: V3.
 Date: 2026-05-21.
-Scope: grammar-neutral abstraction verdict for SK-V13 candidate primitives surfaced by S-P1, scoping, and sibling P2-A/B/C/D/E V2 artefacts.
+Scope: grammar-neutral abstraction verdict for SK-V13 candidate primitives surfaced by S-P1, scoping, and sibling P2-A/B/C/D/E artefacts, with the V2 CH1 CSS row-scope fold applied.
 Output: this file.
 P1 hot-leaf antecedents: generated JSON parse/direct envelopes, `parse_that_regex::unescape_string`, `read_hex_unit_scalar`, mode-III structural scalar/SIMD scan, CSS declaration-values fact-sink profile, seven JSON typed leaves, ten missing typed surfaces.
 Lock surface: Lock 14 primary; Lock 1 and Lock 16 secondary.
@@ -41,6 +41,10 @@ template
   quote/escape policy, object/pair shape, or `JsonSink`.
 - `INVENTORY-ONLY`: no current P1 antecedent or same-wave consumer; S-P3 should
   not shortlist without a fresh P2-B/C/D/E material differential.
+- `CSS-ROW-SCOPE-CONDITIONAL`: a generated CSS parity row/fact-stream scope, not
+  a primitive admission. S-P3 may plan it only with a fresh narrow CSS parser
+  profile or same-wave strict lightningcss/cssparser row movement; do not read
+  the grammar-neutral row template as a CH1 primitive hot-leaf proof.
 
 CSS L4 is the binding non-JSON target. Sheets and BBNF-self remain fallback
 history unless CSS L4 redress attempts are measured blocked, but P2-F still
@@ -62,12 +66,12 @@ surfaces, not a public `GrammarConfig` trait
 
 | Candidate | Shape | P1 antecedent | Scalar ref / checkasm / same-wave consumer | Grammar-neutrality verdict |
 |---|---|---|---|---|
-| CSS stylesheet + selector facts | Generated `stylesheet`, `ruleList`, `selectorList`, `qualifiedRule` fact stream | CSS row admitted only for declaration values; selectors missing in scoping matrix | Scalar oracle: lightningcss rule AST plus cssparser selector token check. Checkasm: n/a unless SIMD scanner added. Consumer: `css_l4/stylesheet_and_selectors/direct_to_struct/main`. | `ADMISSIBLE-GRAMMAR-NEUTRAL` as generated CSS row, but not a generic primitive. Template must be grammar-agnostic and all CSS specifics must live in CSS grammar metadata. |
-| CSS declaration-value extension | Generated var/calc/color/url dispatch and fact stream | CSS declaration-values equality exists, parser hot leaf unresolved; feature gap lists var/calc/color missing | Scalar oracle: lightningcss property value AST plus cssparser tokens. Checkasm: n/a for scalar codegen. Consumer: `css_l4/declaration_values_extended/direct_to_struct/main`. | `ADMISSIBLE-GRAMMAR-NEUTRAL` if implemented as generated productions over grammar metadata; `JSON-OVERFIT` if it reuses JSON number/string rules unchanged. |
-| CSS visual functions | Generated gradient, transform, filter, easing fact stream | CSS feature gap; no P1 parser hot leaf | Scalar oracle: lightningcss AST plus cssparser token cross-check. Checkasm: n/a unless numeric SIMD is added. Consumer: `css_l4/visual_functions/direct_to_struct/main`. | `ADMISSIBLE-GRAMMAR-NEUTRAL` at generated-row level; formulas map conceptually to Sheets functions and BBNF calls, but CSS semantics stay in CSS metadata. |
-| CSS at-rules and media queries | Generated `mediaRule`, `keyframesRule`, `mediaQueryList`, at-rule taxonomy | CSS feature gap; W1b fixture has only shallow `@media` | Scalar oracle: lightningcss rule/media AST. Checkasm: n/a. Consumer: `css_l4/at_rules_and_media/direct_to_struct/main`. | `ADMISSIBLE-GRAMMAR-NEUTRAL` as rule/fact emission; no generic at-rule branch may enter runtime or IR. |
-| CSS nesting | Generated nested `ruleItem` and bounded recursion facts | CSS feature gap; no P1 hot leaf | Scalar oracle: lightningcss nested `StyleRule::rules`. Checkasm: n/a. Consumer: `css_l4/nested_rules_and_queries/direct_to_struct/main`. | `CONDITIONAL-GRAMMAR-NEUTRAL`; recursion/depth policy must be grammar metadata, not a generic CSS branch. Container/scope query status needs S-P3 OUT_OF_SCOPE reconciliation. |
-| Vendor/custom at-rule taxonomy | Generated `dashIdent` and custom at-rule fact categories | CSS feature gap | Scalar oracle: lightningcss property normalization and cssparser at-rule scan. Checkasm: n/a. Consumer: `css_l4/vendor_and_custom_atrules/direct_to_struct/main`. | `CONDITIONAL-GRAMMAR-NEUTRAL`; valid only if taxonomy is emitted from grammar metadata and not hardcoded in generic code. |
+| CSS stylesheet + selector facts | Generated `stylesheet`, `ruleList`, `selectorList`, `qualifiedRule` fact stream | CSS row admitted only for declaration values; selectors missing in scoping matrix; no CSS parser hot leaf isolated. | Scalar oracle: lightningcss rule AST plus cssparser selector token check. Checkasm: n/a unless SIMD scanner added. Consumer: `css_l4/stylesheet_and_selectors/direct_to_struct/main`; S-P3 must require fresh narrow CSS parser profile or same-wave strict row movement. | `CSS-ROW-SCOPE-CONDITIONAL`, not primitive eligibility. The row template is grammar-neutral, but CSS facts are row-production scope until measured. |
+| CSS declaration-value extension | Generated var/calc/color/url dispatch and fact stream | CSS declaration-values equality exists, parser hot leaf unresolved; feature gap lists var/calc/color missing. | Scalar oracle: lightningcss property value AST plus cssparser tokens. Checkasm: n/a for scalar codegen. Consumer: `css_l4/declaration_values_extended/direct_to_struct/main`; S-P3 must require fresh narrow CSS parser profile or same-wave strict row movement. | `CSS-ROW-SCOPE-CONDITIONAL`, not primitive eligibility. It becomes `JSON-OVERFIT` if it reuses JSON number/string rules unchanged. |
+| CSS visual functions | Generated gradient, transform, filter, easing fact stream | CSS feature gap; no P1 parser hot leaf. | Scalar oracle: lightningcss AST plus cssparser token cross-check. Checkasm: n/a unless numeric SIMD is added. Consumer: `css_l4/visual_functions/direct_to_struct/main`; S-P3 must require fresh narrow CSS parser profile or same-wave strict row movement. | `CSS-ROW-SCOPE-CONDITIONAL`, not primitive eligibility. Formulas map conceptually to Sheets functions and BBNF calls, but CSS semantics stay in CSS metadata. |
+| CSS at-rules and media queries | Generated `mediaRule`, `keyframesRule`, `mediaQueryList`, at-rule taxonomy | CSS feature gap; W1b fixture has only shallow `@media`; no P1 parser hot leaf. | Scalar oracle: lightningcss rule/media AST. Checkasm: n/a. Consumer: `css_l4/at_rules_and_media/direct_to_struct/main`; S-P3 must require fresh narrow CSS parser profile or same-wave strict row movement. | `CSS-ROW-SCOPE-CONDITIONAL`, not primitive eligibility. No generic at-rule branch may enter runtime or IR. |
+| CSS nesting | Generated nested `ruleItem` and bounded recursion facts | CSS feature gap; no P1 hot leaf. | Scalar oracle: lightningcss nested `StyleRule::rules`. Checkasm: n/a. Consumer: `css_l4/nested_rules_and_queries/direct_to_struct/main`; S-P3 must require fresh narrow CSS parser profile or same-wave strict row movement. | `CSS-ROW-SCOPE-CONDITIONAL`, not primitive eligibility. Recursion/depth policy must be grammar metadata; container/scope query status needs S-P3 OUT_OF_SCOPE reconciliation. |
+| Vendor/custom at-rule taxonomy | Generated `dashIdent` and custom at-rule fact categories | CSS feature gap; no P1 parser hot leaf. | Scalar oracle: lightningcss property normalization and cssparser at-rule scan. Checkasm: n/a. Consumer: `css_l4/vendor_and_custom_atrules/direct_to_struct/main`; S-P3 must require fresh narrow CSS parser profile or same-wave strict row movement. | `CSS-ROW-SCOPE-CONDITIONAL`, not primitive eligibility. Valid only if taxonomy is emitted from grammar metadata and not hardcoded in generic code. |
 | Source/comment/whitespace facts | Offset/comment/whitespace fact emission | CSS profile top leaves are fact sink/timer overhead | Scalar oracle: cssparser token offsets and lightningcss source positions. Checkasm: n/a. Consumer: diagnostic row only. | `INVENTORY-ONLY` for SK-V13 admission because scoping marks source mapping/comments/whitespace low-priority or out of scope. |
 | Per-grammar dispatch table | Generated FIRST-byte/action table per grammar | JSON direct and parse envelopes dominate P1; CSS needs different FIRST set | Scalar ref: byte-loop dispatch using generated table. Checkasm: n/a. Consumer: JSON guard + CSS stylesheet/declaration rows. | `ADMISSIBLE-GRAMMAR-NEUTRAL` if table comes from grammar metadata. This is the required refactor for JSON dispatch envelopes. |
 | Per-grammar whitespace/comment skipper | `skip_ws_and_comments(input, cursor)` generated from layout policy | CSS delimiter/skip route; CSS feature gap for comments | Scalar ref: byte walk with grammar comment rules. Checkasm: optional if SIMD set-run-skip added. Consumer: CSS scanner rows. | `ADMISSIBLE-GRAMMAR-NEUTRAL`; applies to CSS comments, BBNF comments, Sheets whitespace. |
@@ -116,14 +120,15 @@ surfaces, not a public `GrammarConfig` trait
 
 ## §3 - Grammar-neutrality
 
-CSS L4 candidates are admissible when their output is a generated fact stream
-with strict equality against lightningcss and cssparser. They are not generic
-runtime primitives by themselves; the grammar-neutral property is that the same
-template and metadata mechanism could emit Sheets or BBNF-self without adding
-grammar arms to generic crates. The scoping matrix confirms the SK-V12 row is
-only declaration values and that selectors, stylesheet root, variables, calc,
-visual functions, media, nested rules, and several at-rule families remain
-missing or partial
+CSS L4 row scopes are admissible only as row-production work: generated fact
+streams with strict equality against lightningcss and cssparser plus either a
+fresh narrow CSS parser profile or same-wave strict row movement. They are not
+generic runtime primitives by themselves and they are not CH1 primitive
+hot-leaf evidence. The grammar-neutral property is that the same template and
+metadata mechanism could emit Sheets or BBNF-self without adding grammar arms to
+generic crates. The scoping matrix confirms the SK-V12 row is only declaration
+values and that selectors, stylesheet root, variables, calc, visual functions,
+media, nested rules, and several at-rule families remain missing or partial
 (`restart/skinny/tranches/sk-v13/scoping/sk-v13-scoping-css-parity-gap.md:96`-`132`).
 
 Sheets and BBNF-self are not SK-V13 admission targets unless CSS is blocked,
@@ -143,13 +148,17 @@ expects S-P3 to carry:
   over one substrate; a retained side vector, parser-owned cursor/list, or
   public substrate API violates Lock 1 and Lock 14.
 
-Immediate S-P3 eligibility:
+S-P3 carry-forward classification:
 
-- Eligible: CSS rows 1-6, per-grammar dispatch/whitespace/string/number/sink
+- Eligible primitive/refactor families: per-grammar dispatch/whitespace/string/number/sink
   refactors, `a64_ascii_set_run_skip` production wiring, generic byte-set
   classifier, UDOT digit primitive, fact-stream digest iff generalized, regex
   extraction, e-graph/cost/CSP resolver surfaces, P1-P8 cascade deletion, and
   union C1/C2/C3 under the stated caveats.
+- Conditional row-production scopes, not primitive eligibility: CSS rows 1-6.
+  S-P3 may plan them only with fresh narrow CSS parser profiling or same-wave
+  strict lightningcss/cssparser row movement, and any SIMD primitive inside the
+  row inherits its own scalar/checkasm/consumer gate.
 - `NOT-S-P3-ELIGIBLE` without new P2 evidence and same-wave consumer:
   EOR3/BCAX, TBX/LD4/SMIN/SMAX, `cache_hints`, standalone
   `bitmap_prefix_xor_64`, standalone `bitmap_next_set_bit`, standalone
@@ -226,9 +235,17 @@ domain ownership is a Lock 4 violation
 - `restart/skinny/tranches/sk-v13/research/p2/p2d-substrate-tape.md`
 - `restart/skinny/tranches/sk-v13/research/p2/p2e-parse-that-gaps.md`
 
-## §6 - V2 Cross-Read Disposition
+## §6 - V3 Cross-Read Disposition
 
-P2-F V2 incorporates the P2-A/B/C/D/E V1 sibling artefacts and the V1 CH2 fold.
+P2-F V3 incorporates the P2-A/B/C/D/E sibling artefacts, the V1 CH2 fold, and
+the V2 CH1 CSS row-scope revise. CSS stylesheet/selectors, declaration-value
+extension, visual functions, at-rules/media, nesting, and vendor/custom at-rule
+taxonomy are now `CSS-ROW-SCOPE-CONDITIONAL`: row-production scopes requiring
+fresh narrow CSS parser profile or same-wave strict row movement, not primitive
+hot-leaf admissions.
+
+The V2 accepted folds remain unchanged. P2-F still incorporates the P2-A/B/C/D/E
+siblings and the V1 CH2 fold.
 The literal C1-C8 mapping above resolves the cross-read blocker. No sibling
 output requires changing the core Lock-14 verdict: grammar-neutrality is
 admitted at byte-set, policy, fact-stream, regex-analysis, resolver, or

@@ -13,6 +13,13 @@ This pin amends `restart/skinny/tranches/sk-v12/SPEC.md` and
 It does NOT open SK-V13; SK-V12 is the campaign that delivers the
 pinned outcome.
 
+> **Addendum 2026-05-21** — see
+> `restart/skinny/USER-PIN-ADDENDUM-2026-05-21-FULL-SOTA.md`. The
+> addendum extends this pin campaign-wide (SK-V13 → SK-V14 → ...),
+> raises the bar to FULL lightningcss parity + every JSON path
+> > sonic-rs strict, re-pins `parse_only` as admission-eligible, lifts
+> the REDRESS-119 fixpoint, and binds the campaign indefatigably.
+
 ## Directives
 
 ### D1. CSS L4 authoritative

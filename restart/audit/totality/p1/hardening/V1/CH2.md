@@ -1,0 +1,44 @@
+---
+lens: CH2
+name: GENERALITY
+pass: T-P1-excavation
+cycle: V1
+generated_at: 2026-05-21
+dispositions_used: [ACCEPT, REVISE, REJECT]
+source_artifacts_reviewed:
+  - restart/audit/totality/p1/1A-substrate-evidence.md
+  - restart/audit/totality/p1/1B-codegen-evidence.md
+  - restart/audit/totality/p1/1C-runtime-evidence.md
+  - restart/audit/totality/p1/1D-skinny-lessons.md
+  - restart/audit/totality/p1/1E-locks-evidence.md
+  - restart/audit/totality/p1/1F-anti-pattern.md
+  - restart/audit/totality/p1/1F-coherence-scan.md
+  - restart/audit/totality/p1/1F-past-corpora.md
+live_truth_method: "nl -ba cited prompt/spec/code rows; rg grammar-name census over skinny/crates/{codegen,passes,runtime,grammar,ir,bbnf-simd,parse-that-regex}/src; no cargo tests run"
+---
+
+## Verdict
+
+T-P1 V1 does not paper-close Lock 14, but it needs revision before convergence. The inventories correctly identify the main generic-crate leaks in codegen, runtime, and passes, and 1D correctly separates several JSON-empirical lessons from grammar-neutral implications. The gaps are: 1B/1F understate the full generic-crate census; 1D overstates the current implementation status of the GrammarConfig repair; and the pass needs explicit Sheets and BBNF-self consequences where the live code still relies on JSON object/array/string/number/bool/null roles.
+
+## Dispositions
+
+| ID | Disposition | Target | Finding |
+|---|---|---|---|
+| CH2-001 | ACCEPT | 1C runtime Lock 14 audit | 1C satisfies the CH2 requirement to flag runtime root grammar-name leaks. It cites root JSON/CSS modules at `skinny/crates/runtime/src/lib.rs:3-7`, root proof witnesses at `skinny/crates/runtime/src/lib.rs:9-15`, and root aliases at `skinny/crates/runtime/src/lib.rs:17-19` in `restart/audit/totality/p1/1C-runtime-evidence.md:66-67`. Live code confirms those modules and aliases at `skinny/crates/runtime/src/lib.rs:3-19`. |
+| CH2-002 | ACCEPT | 1C generated-vs-handwritten split | 1C correctly allows generated per-grammar type names only conditionally and flags hand-written per-grammar runtime files. `json/sink.rs` and `json/scan.rs` explicitly say they are JSON-owned and not generated at `skinny/crates/runtime/src/grammars/json/sink.rs:1` and `skinny/crates/runtime/src/grammars/json/scan.rs:1`; CSS `FactSink` is hand-written at `skinny/crates/runtime/src/grammars/css_l4_declaration_values/sink.rs:4-35`; generated CSS scanner carries a generated header at `skinny/crates/runtime/src/grammars/css_l4_declaration_values/generated.rs:1-6`. This matches 1C rows at `restart/audit/totality/p1/1C-runtime-evidence.md:68-70`. |
+| CH2-003 | REVISE | 1B / 1F generic-crate census | The V1 inventories catch the headline leaks but should widen the census beyond codegen/runtime roots. 1B cites codegen profile hardcoding at `restart/audit/totality/p1/1B-codegen-evidence.md:45` and recognizer JSON-shape at `restart/audit/totality/p1/1B-codegen-evidence.md:47`; 1F cites codegen/runtime leaks at `restart/audit/totality/p1/1F-anti-pattern.md:32-33`. Live census also finds generic grammar helper APIs in `skinny/crates/grammar/src/lib.rs:16-27`, JSON-focused generic tests at `skinny/crates/grammar/src/lib.rs:386-393`, and root runtime tests importing `JsonSink` / `JsonValue` from the generic crate root at `skinny/crates/runtime/src/lib.rs:22-35`. These may be skinny test conveniences, but CH2 needs them classified rather than absent from the census. |
+| CH2-004 | REVISE | 1B / 1F passes generality | The stale ARCH claim that `shapes_for_json()` / `nominate_json()` still exist is correctly revised by 1B at `restart/audit/totality/p1/1B-codegen-evidence.md:26` and `restart/audit/totality/p1/1B-codegen-evidence.md:63`; live compile is no longer those functions at `skinny/crates/passes/src/lib.rs:28-45`. However, the current materialization role miner is still JSON-shape-specific without necessarily naming JSON: container requires `{` and `}` at `skinny/crates/passes/src/lib.rs:1262-1269`, sequence requires `[` and `]` at `skinny/crates/passes/src/lib.rs:1270-1277`, bool/null require `true`/`false`/`null` at `skinny/crates/passes/src/lib.rs:1243-1260`, and pair requires `:` at `skinny/crates/passes/src/lib.rs:1296-1306`. 1B/1F should call this a Lock 14 generality leak by mechanism, not only a JSON-name leak. |
+| CH2-005 | ACCEPT | 1D JSON-only vs grammar-neutral separation | 1D correctly rejects treating JSON-only work as grammar-general proof. It records that generated non-JSON baseline was previously rejected because codegen was JSON-profile-only at `restart/audit/totality/p1/1D-skinny-lessons.md:36` and summarizes the rule as "V1 must not claim JSON-only changes prove grammar-general behavior" at `restart/audit/totality/p1/1D-skinny-lessons.md:71`. That directly satisfies PASS-1 CH2 lines `restart/prompts/totality/PASS-1-EXCAVATION.md:110-114`. |
+| CH2-006 | REVISE | 1D GrammarConfig repair status | The GrammarConfig/per-grammar metadata direction is valid, but 1D's "Implemented in skinny" wording at `restart/audit/totality/p1/1D-skinny-lessons.md:59` is too strong for current live generic crates. Codegen still hardcodes `RuntimeProvider::{Json, CssL4DeclarationValues}` at `skinny/crates/codegen/src/grammar_profile.rs:11-15`, returns exactly two runtime profiles at `skinny/crates/codegen/src/grammar_profile.rs:89-93`, and branches CSS-vs-JSON rendering at `skinny/crates/codegen/src/lib.rs:153-181`. Revise to "implemented for specific skinny rows, not a complete generic-crate repair." |
+| CH2-007 | ACCEPT | 1E Lock 14 amendment routing | 1E correctly avoids a blanket "zero grep" claim and routes Lock 14 to amendment/refinement. It says current runtime/codegen still have grammar-specific shells at `restart/audit/totality/p1/1E-locks-evidence.md:45`, proposes generated non-JSON allowance criteria at `restart/audit/totality/p1/1E-locks-evidence.md:76`, and leaves a direct verify action for generic-crate grep at `restart/audit/totality/p1/1E-locks-evidence.md:88`. This is the right disposition shape for generated CSS evidence without weakening generic-crate fences. |
+| CH2-008 | REVISE | CSS / Sheets / BBNF-self implications | CSS implications are covered by 1A, 1C, 1D, and 1E, but Sheets and BBNF-self implications are thinner than CH2 requires. The spec names CSS, BBNF-self, and Sheets backend-shape examples at `restart/HANDOFF.md:181-189`, and requires proposed interventions to work for CSS L4 / Sheets / BBNF-self at `restart/prompts/ORCHESTRATOR.md:81-85`. V1 artifacts mention Sheets mostly as a proof witness (`restart/audit/totality/p1/1C-runtime-evidence.md:59`, `restart/audit/totality/p1/1F-anti-pattern.md:34`) and do not trace how JSON-shaped recognizer/materialization logic fails or generalizes for BBNF-self directives/operators and Sheets formula/function/array literals. Add explicit rows for those two grammar classes. |
+| CH2-009 | ACCEPT | bbnf-simd current genericity disposition | 1F-past-corpora is right to mark old `bbnf-simd` Lock 14 JSON leaks as verify-before-rederive rather than automatically open. Current public APIs are alphabet/table driven at `skinny/crates/bbnf-simd/src/lib.rs:19-50` and aarch64 table building consumes arbitrary bytes at `skinny/crates/bbnf-simd/src/aarch64/classify_tbl4.rs:7-14`. The remaining JSON structural set hits are in runtime JSON config/scan and tests, not production `bbnf-simd/src`, as shown by `skinny/crates/runtime/src/grammars/json/scan.rs:6`, `skinny/crates/runtime/src/grammars/json/config.rs:4`, and `skinny/crates/bbnf-simd/tests/checkasm_parity.rs:33`. |
+| CH2-010 | REVISE | JSON-name leak wording | Some leaks are grammar-name leaks, while others are grammar-shape leaks. 1F says generic crates route through explicit JSON/CSS/SHEETS names at `restart/audit/totality/p1/1F-coherence-scan.md:24`; that is true for runtime/codegen roots, but passes also leak JSON shape through byte sets and semantic roles without requiring a `Json` symbol. Revise the consolidated Lock 14 language to include both categories: literal grammar names and grammar-specific structural/semantic policy in generic crates. |
+
+## Required V2 Fold
+
+1. Extend the generic-crate census table to include `grammar`, root tests/proof fixtures, codegen provider modules/templates, and pass role-mining heuristics, with an explicit generated/test/proof/runtime disposition for each.
+2. Change 1D's GrammarConfig row from complete skinny implementation to partial row-level repair evidence; keep it as the right Lock 14 direction.
+3. Add Sheets and BBNF-self rows showing whether current recognizer/materialization/codegen paths would handle formula operators, function-name payloads, array literals, directive payloads, and Pratt operator chains without generic-code edits.
+4. Separate "grammar-name leak" from "grammar-shape leak" in 1B/1F so JSON-shaped code without `Json` identifiers is still caught by Lock 14.

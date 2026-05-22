@@ -243,6 +243,9 @@ fn gate_json(root: &Path, passthrough: Vec<String>) -> Result<()> {
     if passthrough.iter().any(|arg| arg == "--with-cost-facts") {
         return gate_json_cost_facts(root, passthrough);
     }
+    if passthrough.iter().any(|arg| arg == "--check-results") {
+        validate_w0_results_snapshot(root)?;
+    }
     validate_gate_json_passthrough(&passthrough)?;
     let mut command = Command::new("cargo");
     command
@@ -268,7 +271,7 @@ fn validate_gate_json_passthrough(args: &[String]) -> Result<()> {
             | "--update-results"
             | "--write-results"
             | "--include-volatile-probes" => index += 1,
-            "--w1a-non-json-report" | "--skv12-non-json-report" => {
+            "--w1a-non-json-report" | "--skv12-non-json-report" | "--skv12-css-l4-sota-report" => {
                 if index + 1 >= args.len() {
                     bail!("{} expects one path argument", args[index]);
                 }
@@ -332,64 +335,349 @@ fn validate_cost_facts_flags(passthrough: &[String]) -> Result<bool> {
 }
 
 fn validate_w0_results_snapshot(root: &Path) -> Result<()> {
-    const SK_V10_OPENING_MANIFEST_ROWS: usize = 40;
-    const SK_V10_W6_MANIFEST_ROWS: usize = 41;
-
     let text = std::fs::read_to_string(root.join("RESULTS.md"))
         .context("gate-json --with-cost-facts --check-results requires RESULTS.md")?;
-    let manifest_rows = text
-        .lines()
-        .filter(|line| line.starts_with("| json/"))
-        .count();
-    let has_w6_github_events_typed = text.lines().any(|line| {
-        line.starts_with("| json/github_events/real_typed_struct/main |")
-            && line.contains("| SK-V10-W6 |")
-            && line.contains("| REDRESS-105 |")
-            && line.contains("| typed-row-added |")
-            && line.contains("| gate_json_typed_contract |")
-    });
-    let expected_rows = if has_w6_github_events_typed {
-        SK_V10_W6_MANIFEST_ROWS
-    } else {
-        SK_V10_OPENING_MANIFEST_ROWS
-    };
-    if manifest_rows != expected_rows {
-        bail!("RESULTS.md SK-V10 manifest row count expected {expected_rows}, saw {manifest_rows}");
-    }
-    for required in ["SK-V9-open", "none:pre-W1:none:pre-W1:none:pre-W1"] {
-        if !text.contains(required) {
-            bail!("RESULTS.md missing W0 snapshot marker {required}");
+    let rolling_path = root
+        .parent()
+        .context("skinny workspace has no parent")?
+        .join("restart/skinny/ROLLING-SOTA-DELTA.md");
+    validate_skv13_rolling_delta(&text, &rolling_path).with_context(|| {
+        format!(
+            "{} is not a valid SK-V13 rolling delta",
+            rolling_path.display()
+        )
+    })?;
+    Ok(())
+}
+
+const SKV13_JSON_CORPORA: &[&str] = &[
+    "twitter",
+    "citm_catalog",
+    "canada",
+    "apache_builds",
+    "github_events",
+    "update_center",
+    "mesh",
+    "random",
+    "gsoc-2018",
+    "marine_ik",
+    "instruments",
+    "numbers",
+    "unicode_mixed",
+    "unicode_escapes",
+    "unicode_basic",
+    "distinct_values",
+    "y_string_unicode",
+];
+
+const SKV13_JSON_WORKLOADS: &[&str] = &["parse_only", "direct_to_struct", "real_typed_struct"];
+
+const SKV13_CSS_FEATURES: &[&str] = &[
+    "declaration_values",
+    "declarations",
+    "stylesheet_root",
+    "selectors",
+    "at_rules_keyframes",
+    "nested_rules",
+    "css_variables",
+    "calc_expressions",
+    "var_url_functions",
+    "color_functions",
+    "gradients",
+    "transforms",
+    "filters",
+    "easing_functions",
+    "media_queries",
+    "vendor_prefixes",
+    "custom_at_rules",
+    "pseudo_classes",
+    "pseudo_elements",
+    "attribute_selectors",
+    "logical_properties",
+    "grid",
+    "flexbox",
+    "typed_property_groups",
+];
+
+#[derive(Debug, Clone)]
+struct RollingDeltaRow {
+    row_id: String,
+    plane: String,
+    t1_current: String,
+    t1_sota: String,
+    margin: String,
+    tranche_admitted: String,
+}
+
+#[derive(Debug, Clone, Copy)]
+struct ResultsMetric {
+    track1_threshold_mbps: f64,
+    threshold_mbps: f64,
+}
+
+fn validate_skv13_rolling_delta(results_text: &str, rolling_path: &Path) -> Result<()> {
+    let rolling_text = std::fs::read_to_string(rolling_path).with_context(|| {
+        format!(
+            "gate-json --check-results requires {}",
+            rolling_path.display()
+        )
+    })?;
+    for required in [
+        "schema_version: sk-v13-rolling-sota-delta-v1",
+        "run_id: SK-V13-open",
+        "g_omega_status: signed",
+        "consumer_gate: cargo xtask gate-json --check-results",
+    ] {
+        if !rolling_text.contains(required) {
+            bail!("ROLLING-SOTA-DELTA.md missing `{required}`");
         }
     }
-    if !text.contains("structural_scan+masking_probes+pmu+cycles:nonproducer") {
-        bail!("RESULTS.md missing W0 diagnostic nonproducer marker");
+
+    let json_rows = parse_rolling_rows(&rolling_text, "json/")?;
+    let css_rows = parse_rolling_rows(&rolling_text, "css_l4/")?;
+    if json_rows.len() != SKV13_JSON_CORPORA.len() * SKV13_JSON_WORKLOADS.len() {
+        bail!(
+            "ROLLING-SOTA-DELTA.md expected 51 JSON rows, saw {}",
+            json_rows.len()
+        );
     }
-    let mut run_ids = BTreeSet::new();
-    for line in text.lines().filter(|line| line.starts_with("| json/")) {
-        let Some(offset) = line.find("sk-v9-open:criterion-fnv64-") else {
-            bail!("RESULTS.md manifest row missing SK-V9 run id");
-        };
-        let end = offset + "sk-v9-open:criterion-fnv64-".len() + 16;
-        let Some(run_id) = line.get(offset..end) else {
-            bail!("RESULTS.md manifest row has truncated SK-V9 run id");
-        };
-        if !run_id
-            .strip_prefix("sk-v9-open:criterion-fnv64-")
-            .is_some_and(|suffix| {
-                suffix.len() == 16
-                    && suffix
-                        .bytes()
-                        .all(|byte| matches!(byte, b'0'..=b'9' | b'a'..=b'f'))
-            })
-        {
-            bail!("RESULTS.md manifest row has malformed SK-V9 run id `{run_id}`");
+    if css_rows.len() != SKV13_CSS_FEATURES.len() {
+        bail!(
+            "ROLLING-SOTA-DELTA.md expected 24 CSS feature rows, saw {}",
+            css_rows.len()
+        );
+    }
+
+    let result_metrics = parse_results_metrics(results_text)?;
+    let mut seen = BTreeSet::new();
+    for corpus in SKV13_JSON_CORPORA {
+        for workload in SKV13_JSON_WORKLOADS {
+            let row_id = format!("json/{corpus}/{workload}/main");
+            let row = find_rolling_row(&json_rows, &row_id)?;
+            if !seen.insert(row_id.clone()) {
+                bail!("duplicate rolling row {row_id}");
+            }
+            if row.plane != *workload {
+                bail!(
+                    "{row_id} rolling plane {} does not match {workload}",
+                    row.plane
+                );
+            }
+            validate_rolling_status(row)?;
+            if let Some(metric) = result_metrics.get(&row_id) {
+                validate_numeric_rolling_row(row, *metric)?;
+            } else {
+                validate_absent_rolling_row(row)?;
+            }
         }
-        run_ids.insert(run_id);
     }
-    if run_ids.len() != 1 {
-        bail!("RESULTS.md SK-V9 manifest run id is not uniform: {run_ids:?}");
+
+    let mut seen_css = BTreeSet::new();
+    let css_metric = parse_css_declaration_metric(results_text)?;
+    for feature in SKV13_CSS_FEATURES {
+        let row_id = format!("css_l4/{feature}/direct_to_struct/main");
+        let row = find_rolling_row(&css_rows, &row_id)?;
+        if !seen_css.insert(row_id.clone()) {
+            bail!("duplicate CSS rolling row {row_id}");
+        }
+        if row.plane != "css_l4_parity" {
+            bail!("{row_id} rolling plane {} is not css_l4_parity", row.plane);
+        }
+        validate_rolling_status(row)?;
+        if *feature == "declaration_values" {
+            validate_numeric_rolling_row(row, css_metric)?;
+            if row.tranche_admitted != "ADMITTED" {
+                bail!("{row_id} must preserve the SK-V12 CSS admission");
+            }
+        } else {
+            validate_absent_rolling_row(row)?;
+            if row.tranche_admitted != "OPEN" {
+                bail!(
+                    "{row_id} open CSS target has status {}",
+                    row.tranche_admitted
+                );
+            }
+        }
     }
     Ok(())
+}
+
+fn parse_rolling_rows(text: &str, prefix: &str) -> Result<Vec<RollingDeltaRow>> {
+    let mut rows = Vec::new();
+    for line in text.lines() {
+        let cells = markdown_cells(line);
+        if cells.len() != 6 || !cells[0].starts_with(prefix) {
+            continue;
+        }
+        rows.push(RollingDeltaRow {
+            row_id: cells[0].clone(),
+            plane: cells[1].clone(),
+            t1_current: cells[2].clone(),
+            t1_sota: cells[3].clone(),
+            margin: cells[4].clone(),
+            tranche_admitted: cells[5].clone(),
+        });
+    }
+    Ok(rows)
+}
+
+fn find_rolling_row<'a>(rows: &'a [RollingDeltaRow], row_id: &str) -> Result<&'a RollingDeltaRow> {
+    rows.iter()
+        .find(|row| row.row_id == row_id)
+        .with_context(|| format!("ROLLING-SOTA-DELTA.md missing {row_id}"))
+}
+
+fn validate_rolling_status(row: &RollingDeltaRow) -> Result<()> {
+    match row.tranche_admitted.as_str() {
+        "ADMITTED" | "OPEN" | "MISSING" | "ARCHITECTURAL-BLOCK" | "OUT_OF_SCOPE" => Ok(()),
+        other => bail!("{} has unsupported tranche_admitted {other}", row.row_id),
+    }
+}
+
+fn validate_numeric_rolling_row(row: &RollingDeltaRow, metric: ResultsMetric) -> Result<()> {
+    let current = parse_delta_number(&row.row_id, "T1_current", &row.t1_current)?;
+    let threshold = parse_delta_number(&row.row_id, "T1_sota", &row.t1_sota)?;
+    let margin = parse_delta_number(&row.row_id, "margin", &row.margin)?;
+    require_close_delta(
+        &row.row_id,
+        "T1_current",
+        current,
+        metric.track1_threshold_mbps,
+    )?;
+    require_close_delta(&row.row_id, "T1_sota", threshold, metric.threshold_mbps)?;
+    require_close_delta(&row.row_id, "margin", margin, current - threshold)?;
+    if row.tranche_admitted == "ADMITTED" && margin <= 0.0 {
+        bail!(
+            "{} is ADMITTED with non-positive margin {margin}",
+            row.row_id
+        );
+    }
+    Ok(())
+}
+
+fn validate_absent_rolling_row(row: &RollingDeltaRow) -> Result<()> {
+    for (field, value) in [
+        ("T1_current", &row.t1_current),
+        ("T1_sota", &row.t1_sota),
+        ("margin", &row.margin),
+    ] {
+        let Some(reason) = value.strip_prefix("absent:") else {
+            bail!(
+                "{} missing row must use absent:<reason> for {field}",
+                row.row_id
+            );
+        };
+        if reason.trim().is_empty() {
+            bail!("{} has empty absent reason for {field}", row.row_id);
+        }
+    }
+    if row.tranche_admitted == "ADMITTED" {
+        bail!("{} cannot be ADMITTED while absent", row.row_id);
+    }
+    Ok(())
+}
+
+fn parse_delta_number(row_id: &str, field: &str, value: &str) -> Result<f64> {
+    if value.starts_with("absent:") {
+        bail!("{row_id} has absent {field} where numeric evidence exists");
+    }
+    value
+        .parse::<f64>()
+        .with_context(|| format!("{row_id} has malformed {field} `{value}`"))
+}
+
+fn require_close_delta(row_id: &str, field: &str, observed: f64, expected: f64) -> Result<()> {
+    if (observed - expected).abs() > 0.02 {
+        bail!("{row_id} {field} {observed:.2} does not match expected {expected:.2}");
+    }
+    Ok(())
+}
+
+fn parse_results_metrics(
+    results_text: &str,
+) -> Result<std::collections::BTreeMap<String, ResultsMetric>> {
+    let mut metrics = std::collections::BTreeMap::new();
+    for line in results_text.lines() {
+        let cells = markdown_cells(line);
+        if cells.len() < 12 {
+            continue;
+        }
+        let corpus = cells[0].as_str();
+        let workload = cells[1].as_str();
+        if !SKV13_JSON_CORPORA.contains(&corpus) || !SKV13_JSON_WORKLOADS.contains(&workload) {
+            continue;
+        }
+        let track1 = parse_results_number(corpus, workload, "Track 1 Mbps", &cells[9])?;
+        let sonic = parse_results_number(corpus, workload, "sonic-rs strict Mbps", &cells[11])?;
+        let row_id = format!("json/{corpus}/{workload}/main");
+        metrics.insert(
+            row_id,
+            ResultsMetric {
+                track1_threshold_mbps: track1,
+                threshold_mbps: sonic + 1.0,
+            },
+        );
+    }
+    if metrics.len() < 41 {
+        bail!(
+            "RESULTS.md expected at least 41 extant JSON rows before missing typed surfaces, saw {}",
+            metrics.len()
+        );
+    }
+    Ok(metrics)
+}
+
+fn parse_css_declaration_metric(results_text: &str) -> Result<ResultsMetric> {
+    let row = results_text
+        .lines()
+        .find(|line| line.starts_with("| css_l4/declaration_values/direct_to_struct/main |"))
+        .context("RESULTS.md missing SK-V12 CSS declaration-values manifest row")?;
+    let track1 = extract_mbps(row, "track1_generated")?;
+    let threshold = extract_keyed_f64(row, "threshold_mbps=")?;
+    Ok(ResultsMetric {
+        track1_threshold_mbps: track1,
+        threshold_mbps: threshold,
+    })
+}
+
+fn parse_results_number(corpus: &str, workload: &str, field: &str, value: &str) -> Result<f64> {
+    value
+        .parse::<f64>()
+        .with_context(|| format!("RESULTS.md {corpus}/{workload} has malformed {field} `{value}`"))
+}
+
+fn extract_mbps(line: &str, comparator: &str) -> Result<f64> {
+    let marker = format!("{comparator}[");
+    let start = line
+        .find(&marker)
+        .with_context(|| format!("RESULTS.md CSS row missing {comparator} comparator"))?;
+    let comparator_tail = &line[start..];
+    extract_keyed_f64(comparator_tail, "mbps=")
+}
+
+fn extract_keyed_f64(text: &str, key: &str) -> Result<f64> {
+    let start = text
+        .find(key)
+        .with_context(|| format!("missing numeric key {key}"))?
+        + key.len();
+    let tail = &text[start..];
+    let end = tail
+        .find(|ch: char| !(ch.is_ascii_digit() || ch == '.'))
+        .unwrap_or(tail.len());
+    tail[..end]
+        .parse::<f64>()
+        .with_context(|| format!("malformed numeric key {key}"))
+}
+
+fn markdown_cells(line: &str) -> Vec<String> {
+    if !line.trim_start().starts_with('|') {
+        return Vec::new();
+    }
+    line.trim()
+        .trim_matches('|')
+        .split('|')
+        .map(|cell| cell.trim().to_string())
+        .collect()
 }
 
 fn cost_facts_gate_report(snapshot: &codegen::CostFactsSnapshot) -> Result<serde_json::Value> {
@@ -656,6 +944,11 @@ mod tests {
             "skv12-nonjson-pass.json".into(),
         ])
         .unwrap();
+        validate_gate_json_passthrough(&[
+            "--skv12-css-l4-sota-report".into(),
+            "skv12-css-pass.json".into(),
+        ])
+        .unwrap();
         assert!(validate_gate_json_passthrough(&["--skv12-non-json-report".into()]).is_err());
         assert!(validate_gate_json_passthrough(&["--unknown".into()]).is_err());
     }
@@ -714,28 +1007,67 @@ mod tests {
     }
 
     #[test]
-    fn w6_costfacts_snapshot_accepts_single_github_events_typed_row() {
+    fn skv13_rolling_delta_accepts_full_json_and_css_universe() {
         let root = std::env::temp_dir().join(format!(
-            "skv10-w6-costfacts-{}-{}",
+            "skv13-rolling-delta-{}-{}",
             std::process::id(),
             "results"
         ));
         let _ = std::fs::remove_dir_all(&root);
         std::fs::create_dir_all(&root).unwrap();
 
-        let run_id = "sk-v9-open:criterion-fnv64-91b28e519f0fea1d";
-        let mut rows = Vec::new();
-        for idx in 0..40 {
-            rows.push(format!(
-                "| json/baseline_{idx}/parse_only/main | json | json_bench | SK-V9-open | {run_id} | view-boundary | criterion-slope-profile:json_baseline_{idx}/track1_generated/new/estimates.json | ns_per_byte=1.0 | 100 | profile=bench;rustflags=-C target-cpu=native;target_cpu=native | aarch64-apple-darwin | arch=aarch64;os=macos;simd=Scalar;target_cpu=native | none:pre-W1:none:pre-W1:none:pre-W1 | none | baseline | borrowed_view_over_offset_tape | discarded_after_capacity | one | gate_only | independent_verified | structural_scan+masking_probes+pmu+cycles:nonproducer | sonic_rs_strict[plane=DOM,strictness=strict,freshness=same-run-native,sidecar=n/a,mbps=1,source=criterion:json_baseline_{idx}/sonic_rs_anchor/new/estimates.json] |"
+        let mut results = Vec::new();
+        let mut rolling = vec![
+            "# Rolling SOTA Delta".to_string(),
+            "".to_string(),
+            "schema_version: sk-v13-rolling-sota-delta-v1".to_string(),
+            "run_id: SK-V13-open".to_string(),
+            "g_omega_status: signed".to_string(),
+            "consumer_gate: cargo xtask gate-json --check-results".to_string(),
+            "".to_string(),
+            "| row | plane | T1_current | T1_sota | margin | tranche_admitted |".to_string(),
+            "|---|---|---:|---:|---:|---|".to_string(),
+        ];
+        for corpus in SKV13_JSON_CORPORA {
+            for workload in SKV13_JSON_WORKLOADS {
+                results.push(format!(
+                    "| {corpus} | {workload} | A | GO | strict | measured-row | yes | probe | {workload} | 200.00 | 190.00 | 100.00 |"
+                ));
+                rolling.push(format!(
+                    "| json/{corpus}/{workload}/main | {workload} | 200.00 | 101.00 | 99.00 | ADMITTED |"
+                ));
+            }
+        }
+        results.push(
+            "| css_l4/declaration_values/direct_to_struct/main | css_l4 | non_json_generated:css_l4:declaration_values | SK-V12-W1b-2b | run | equality | gate | samples | 30 | flags | host | features | schema | REDRESS-125 | delta | generated_css_l4_declaration_values | css_l4_declaration_value_fact_stream | one | companion_gate_css_l4_lightningcss_sota | independent | parity | track1_generated[plane=css_l4_declaration_value_fact_stream,strictness=strict,freshness=same-run-native,sidecar=n/a,mbps=429.34,source=track1]; lightningcss_strict[plane=css_l4_declaration_value_fact_stream,strictness=strict,freshness=same-run-native,sidecar=same-plane-source-sidecar,mbps=168.93,threshold_mbps=169.93,source=lightningcss] |".to_string(),
+        );
+        rolling.push(
+            "| css_l4/declaration_values/direct_to_struct/main | css_l4_parity | 429.34 | 169.93 | 259.41 | ADMITTED |".to_string(),
+        );
+        for feature in SKV13_CSS_FEATURES
+            .iter()
+            .filter(|feature| **feature != "declaration_values")
+        {
+            rolling.push(format!(
+                "| css_l4/{feature}/direct_to_struct/main | css_l4_parity | absent:not-yet-generated | absent:not-yet-generated | absent:not-yet-generated | OPEN |"
             ));
         }
-        rows.push(format!(
-            "| json/github_events/real_typed_struct/main | json | json_bench | SK-V10-W6 | {run_id} | measured-row | criterion-slope-profile:json_github_events/track1_real_typed_struct/new/estimates.json | ns_per_byte=0.623701;track1_ns=40622.88;bytes=65132 | 100 | profile=bench;rustflags=-C target-cpu=native;target_cpu=native | aarch64-apple-darwin | arch=aarch64;os=macos;simd=Scalar;target_cpu=native | none:pre-W1:none:pre-W1:none:pre-W1 | REDRESS-105 | typed-row-added | typed_direct_projection | n/a | zero_or_inert | gate_json_typed_contract | independent_verified | structural_scan+masking_probes+pmu+cycles:nonproducer | sonic_rs_strict[plane=typed direct,strictness=strict,freshness=same-run-native,sidecar=n/a,mbps=12695,source=criterion:json_github_events/sonic_rs_real_typed_struct/new/estimates.json] |"
-        ));
-        std::fs::write(root.join("RESULTS.md"), rows.join("\n")).unwrap();
+        let rolling_path = root.join("ROLLING-SOTA-DELTA.md");
+        std::fs::write(&rolling_path, rolling.join("\n")).unwrap();
 
-        validate_w0_results_snapshot(&root).unwrap();
+        validate_skv13_rolling_delta(&results.join("\n"), &rolling_path).unwrap();
+
+        let malformed = std::fs::read_to_string(&rolling_path).unwrap().replace(
+            "| json/twitter/parse_only/main | parse_only | 200.00 | 101.00 | 99.00 | ADMITTED |",
+            "| json/twitter/parse_only/main | parse_only | 200.00 | 101.00 | 98.00 | ADMITTED |",
+        );
+        let bad_path = root.join("ROLLING-SOTA-DELTA.bad.md");
+        std::fs::write(&bad_path, malformed).unwrap();
+        assert!(
+            validate_skv13_rolling_delta(&results.join("\n"), &bad_path).is_err(),
+            "rolling delta must reject malformed margins"
+        );
+
         let _ = std::fs::remove_dir_all(&root);
     }
 }

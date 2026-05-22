@@ -399,10 +399,12 @@ fn main() -> Result<(), Box<dyn Error>> {
         println!("{}", report.render_markdown());
         std::process::exit(exit_code_for_verdict(Verdict::Invalid));
     }
-    let rendered = report.render_markdown();
+    let existing_results = fs::read_to_string(&results_path).ok();
+    let rendered =
+        merge_retained_non_json_results(&report.render_markdown(), existing_results.as_deref());
     if update_results {
-        report.write_markdown(&results_path)?;
-    } else if fs::read_to_string(&results_path).ok().as_deref() != Some(rendered.as_str()) {
+        fs::write(&results_path, &rendered)?;
+    } else if existing_results.as_deref() != Some(rendered.as_str()) {
         eprintln!(
             "{} is stale; rerun `cargo xtask gate-json --update-results{}` to rewrite it.",
             results_path.display(),
@@ -423,6 +425,50 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     }
     Ok(())
+}
+
+fn merge_retained_non_json_results(json_rendered: &str, existing_results: Option<&str>) -> String {
+    let Some(existing_results) = existing_results else {
+        return ensure_trailing_newline(json_rendered);
+    };
+    if json_rendered.contains("| css_l4/") {
+        return ensure_trailing_newline(json_rendered);
+    }
+
+    let retained_rows = existing_results
+        .lines()
+        .filter(|line| line.starts_with("| css_l4/"))
+        .collect::<Vec<_>>();
+    if retained_rows.is_empty() {
+        return ensure_trailing_newline(json_rendered);
+    }
+    let retained_notes = existing_results
+        .lines()
+        .filter(|line| line.starts_with("- SK-V12 campaign close:"))
+        .collect::<Vec<_>>();
+
+    let mut merged = json_rendered.trim_end().to_string();
+    let retained_block = format!("\n\n{}", retained_rows.join("\n"));
+    if let Some(notes_index) = merged.find("\n## Notes") {
+        merged.insert_str(notes_index, &retained_block);
+    } else {
+        merged.push_str(&retained_block);
+    }
+    for note in retained_notes {
+        if !merged.contains(note) {
+            merged.push('\n');
+            merged.push_str(note);
+        }
+    }
+    ensure_trailing_newline(&merged)
+}
+
+fn ensure_trailing_newline(text: &str) -> String {
+    if text.ends_with('\n') {
+        text.to_string()
+    } else {
+        format!("{text}\n")
+    }
 }
 
 fn exit_code_for_verdict(verdict: Verdict) -> i32 {
@@ -2739,6 +2785,16 @@ mod tests {
         );
         assert_ne!(before_probe, criterion_fingerprint(&root, &fixture_names));
         let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn update_results_retains_css_l4_rows() {
+        let json = "# Skinny JSON Bench Results\n\n| Corpus | Workload |\n|---|---|\n| twitter | parse_only |\n\n## Notes\n\n- JSON note.\n";
+        let existing = "# Skinny JSON Bench Results\n\n| css_l4/declaration_values/direct_to_struct/main | css_l4 | evidence |\n\n## Notes\n\n- SK-V12 campaign close: PASS-ADMIT via css_l4/declaration_values/direct_to_struct/main.\n";
+        let merged = merge_retained_non_json_results(json, Some(existing));
+        assert!(merged.contains("| css_l4/declaration_values/direct_to_struct/main |"));
+        assert!(merged.contains("- SK-V12 campaign close: PASS-ADMIT"));
+        assert!(merged.find("| css_l4/").unwrap() < merged.find("## Notes").unwrap());
     }
 
     fn metadata_rows(real_typed: bool) -> Vec<RowMetadata> {

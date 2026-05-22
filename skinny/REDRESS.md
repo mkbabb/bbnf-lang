@@ -4832,3 +4832,39 @@ perturbation.
   `restart/skinny/tranches/sk-v13/research/w14.2/redress.md`.
 - `canada`, `marine_ik`, and `mesh` remain positive-margin OPEN parse-only
   rows until they receive their own W14.N packet and REDRESS citation.
+
+## SK-V13 Wave 14.3 Canada Parse-Only Admission
+
+- Item 156 closes W14.3 under `G-W14.3-JSON-PARSE-CANADA` as `ADMIT`.
+  The material differential from REDRESS 102 and W14.1/W14.2 is row-local:
+  W14.3 does not alter parser runtime, generated JSON parser bodies, union
+  substrate, or SIMD code. It adds a single W14 parse-only admission spec for
+  `json/canada/parse_only/main` and supplies gate-consumed strict DOM evidence
+  for that row.
+- Native Criterion was refreshed for
+  `json/canada/(track1_generated|track2_handcoded|sonic_rs_anchor|serde_json)`
+  with `RUSTFLAGS="-C target-cpu=native"`. The companion facts measured Track
+  1 mean `17052.470` Mbps, Track 1 lower confidence `17006.626` Mbps, Track 2
+  oracle `17101.405` Mbps, sonic strict `14078.954` Mbps, threshold
+  `14079.954` Mbps, and mean margin `2972.516` Mbps. The gate-generated
+  RESULTS slope row records Track 1 `16977` Mbps, Track 2 `17119` Mbps, sonic
+  strict `14101` Mbps, and rolling margin `2875.00` Mbps.
+- `gate-json --update-results` initially rejected stale
+  `simd_structural_scan/*_simd/metadata.toml` capture identity after the
+  W14.3 Criterion lanes were refreshed. The SIMD scan bench was rerun only to
+  refresh required gate metadata; W14.3 does not claim a SIMD admission.
+- Verification passed:
+  `cargo test -p bbnf-bench skv13_json_parse_only_report_accepts_configured_corpus_admit -- --nocapture`,
+  `cargo test -p bbnf-bench json_parse_only_admission_passes_configured_corpora_only -- --nocapture`,
+  `cargo test -p bbnf-bench validate_sk_v8_w0_accepts_configured_parse_only_admission_rows -- --nocapture`,
+  `cargo test -p bbnf-bench admits_sk_v13_w14_parent_diff_under_w14_scope -- --nocapture`,
+  `RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --update-results --advisory`, and
+  `RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --check-results --advisory --skv13-json-parse-only-report ../restart/skinny/tranches/sk-v13/research/w14.3/skv13-W14.3-json-parse-only.json`.
+- The retained measurement facts are
+  `restart/skinny/tranches/sk-v13/research/w14.3/canada-parse-facts.json`
+  with SHA-256
+  `f1a34375b0126fbb3c2d9fe273f3f32fb8d4d9d8c169b43b73940fe8b8a41df2`;
+  the retained redress note is
+  `restart/skinny/tranches/sk-v13/research/w14.3/redress.md`.
+- `marine_ik` and `mesh` remain positive-margin OPEN parse-only rows until
+  they receive their own W14.N packet and REDRESS citation.

@@ -4912,12 +4912,23 @@ mod tests {
             .map(|spec| spec.label),
             Some("W14.2")
         );
+        assert_eq!(
+            json_parse_only_admission_passes(
+                "canada",
+                2_251_051,
+                Some(1_063_228.0),
+                Some(1_104_942.0),
+                Some(1_293_055.0),
+            )
+            .map(|spec| spec.label),
+            Some("W14.3")
+        );
         assert!(json_parse_only_admission_passes(
-            "canada",
-            2_251_051,
-            Some(1_063_228.0),
-            Some(1_104_942.0),
-            Some(1_293_055.0),
+            "marine_ik",
+            3_025_084,
+            Some(1_879_276.0),
+            Some(1_946_287.0),
+            Some(2_354_509.0),
         )
         .is_none());
         assert!(json_parse_only_admission_passes(

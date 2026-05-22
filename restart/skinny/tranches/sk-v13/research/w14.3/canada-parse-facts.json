@@ -1,0 +1,61 @@
+{
+  "schema_version": "sk-v13-w14.3-json-parse-only-facts-v1",
+  "wave_id": "SK-V13-W14.3",
+  "row_id": "json/canada/parse_only/main",
+  "corpus": "canada",
+  "input_bytes": 2251051,
+  "criterion_group": "json_canada",
+  "measurement_command": "RUSTFLAGS=\"-C target-cpu=native\" cargo bench -p bbnf-bench --bench json_parity -- 'json/canada/(track1_generated|track2_handcoded|sonic_rs_anchor|serde_json)'",
+  "strict_equality": {
+    "status": "pass",
+    "source": "bbnf-bench/benches/json_parity.rs preflight assert_parity(input) before Criterion group registration",
+    "output_plane": "DOM",
+    "track2_independence": "independent"
+  },
+  "lanes": {
+    "track1_generated": {
+      "mean_ns": 1056058.6239501422,
+      "lower_ns": 1053167.746702237,
+      "upper_ns": 1058905.416697492,
+      "mbps": 17052.46999701619,
+      "lower_mbps": 17006.625630610637,
+      "upper_mbps": 17099.27792261904,
+      "samples": 50,
+      "artifact": "target/criterion/json_canada/track1_generated/new/estimates.json"
+    },
+    "track2_handcoded": {
+      "mean_ns": 1053036.738896399,
+      "lower_ns": 1050269.0513852704,
+      "upper_ns": 1055861.2098970392,
+      "mbps": 17101.405235750015,
+      "lower_mbps": 17055.645909285302,
+      "upper_mbps": 17146.46699415512,
+      "samples": 50,
+      "artifact": "target/criterion/json_canada/track2_handcoded/new/estimates.json"
+    },
+    "sonic_rs_anchor": {
+      "mean_ns": 1279101.3070355267,
+      "lower_ns": 1277835.2300330307,
+      "upper_ns": 1280565.0415461755,
+      "mbps": 14078.953637954357,
+      "lower_mbps": 14062.865181529733,
+      "upper_mbps": 14092.900714188367,
+      "samples": 50,
+      "artifact": "target/criterion/json_canada/sonic_rs_anchor/new/estimates.json"
+    },
+    "serde_json": {
+      "mean_ns": 3365049.6061425162,
+      "lower_ns": 3355800.1931973426,
+      "upper_ns": 3375886.631970304,
+      "mbps": 5351.6025342175335,
+      "lower_mbps": 5334.425344461746,
+      "upper_mbps": 5366.349650793125,
+      "samples": 50,
+      "artifact": "target/criterion/json_canada/serde_json/new/estimates.json"
+    }
+  },
+  "threshold_mbps": 14079.953637954357,
+  "track1_margin_mbps": 2972.516359061832,
+  "track1_lower_margin_mbps": 2926.67199265628,
+  "decision": "pass"
+}

@@ -5,7 +5,7 @@ run_id: SK-V13-open
 g_omega_status: signed
 consumer_gate: cargo xtask gate-json --check-results
 source_results: skinny/RESULTS.md
-source_commit: 64e1f8431+w14.2-redress
+source_commit: b63df5708+w14.3-redress
 
 ## JSON Targets
 
@@ -17,7 +17,7 @@ source_commit: 64e1f8431+w14.2-redress
 | json/citm_catalog/parse_only/main | parse_only | 30150.00 | 25566.00 | 4584.00 | ADMITTED |
 | json/citm_catalog/direct_to_struct/main | direct_to_struct | 21414.00 | 19939.00 | 1475.00 | ADMITTED |
 | json/citm_catalog/real_typed_struct/main | real_typed_struct | 36719.00 | 22858.00 | 13861.00 | ADMITTED |
-| json/canada/parse_only/main | parse_only | 16993.00 | 13934.00 | 3059.00 | OPEN |
+| json/canada/parse_only/main | parse_only | 16977.00 | 14102.00 | 2875.00 | ADMITTED |
 | json/canada/direct_to_struct/main | direct_to_struct | 10856.00 | 12214.00 | -1358.00 | OPEN |
 | json/canada/real_typed_struct/main | real_typed_struct | absent:product-surface-not-generated | absent:product-surface-not-generated | absent:product-surface-not-generated | MISSING |
 | json/apache_builds/parse_only/main | parse_only | 12767.00 | 17352.00 | -4585.00 | OPEN |

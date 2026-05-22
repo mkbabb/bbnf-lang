@@ -174,6 +174,19 @@ pub const SKV13_JSON_PARSE_ONLY_ADMISSION_SPECS: &[JsonParseOnlyAdmissionSpec] =
         redress_entry: "REDRESS-155",
         prior_redress_citation: "102",
     },
+    JsonParseOnlyAdmissionSpec {
+        label: "W14.3",
+        wave_id: "SK-V13-W14.3",
+        run_id_prefix: "sk-v13-w14.3:",
+        consumer_gate: "G-W14.3-JSON-PARSE-CANADA",
+        row_id: "json/canada/parse_only/main",
+        corpus: "canada",
+        criterion_group: "json_canada",
+        bytes: 2_251_051,
+        route_id: "generated-json-parse-only-canada",
+        redress_entry: "REDRESS-156",
+        prior_redress_citation: "102",
+    },
 ];
 
 pub fn json_parse_only_admission_spec_for_report(

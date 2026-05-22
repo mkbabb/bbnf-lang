@@ -76,8 +76,15 @@ impl std::error::Error for DirectBuildError<'_> {}
                 ignored_fields,
                 unknown_fields,
             } => {
+                let generic_fn_name = if type_id == "Plugin" {
+                    let generic = format!("{fn_name}_generic");
+                    renderer.render_plugin_wrapper(&mut out, &fn_name, &generic, type_name)?;
+                    generic
+                } else {
+                    fn_name.clone()
+                };
                 out.push_str(&format!(
-                    "fn {fn_name}<'i>(parser: &mut DirectParser<'i>) -> Result<{type_name}, DirectBuildError<'i>> {{\n"
+                    "fn {generic_fn_name}<'i>(parser: &mut DirectParser<'i>) -> Result<{type_name}, DirectBuildError<'i>> {{\n"
                 ));
                 out.push_str("    parser.ws();\n    parser.expect(b'{')?;\n");
                 for field in fields {
@@ -114,6 +121,9 @@ impl std::error::Error for DirectBuildError<'_> {}
                 );
                 renderer.render_construct(&mut out, type_name, fields)?;
                 out.push_str(");\n    }\n}\n\n");
+                if type_id == "Plugin" {
+                    renderer.render_plugin_ordered(&mut out, type_name)?;
+                }
             }
         }
     }
@@ -266,6 +276,90 @@ impl<'a> Renderer<'a> {
             out.push_str(",\n");
         }
         out.push_str("        }");
+        Ok(())
+    }
+
+    fn render_plugin_wrapper(
+        &self,
+        out: &mut String,
+        fn_name: &str,
+        generic_fn_name: &str,
+        type_name: &str,
+    ) -> Result<(), String> {
+        out.push_str(&format!(
+            "fn {fn_name}<'i>(parser: &mut DirectParser<'i>) -> Result<{type_name}, DirectBuildError<'i>> {{\n"
+        ));
+        out.push_str("    let checkpoint = parser.cursor;\n");
+        out.push_str("    match parse_type_plugin_ordered(parser) {\n");
+        out.push_str("        Ok(value) => Ok(value),\n");
+        out.push_str("        Err(_) => {\n");
+        out.push_str("            parser.cursor = checkpoint;\n");
+        out.push_str(&format!("            {generic_fn_name}(parser)\n"));
+        out.push_str("        }\n");
+        out.push_str("    }\n");
+        out.push_str("}\n\n");
+        Ok(())
+    }
+
+    fn render_plugin_ordered(&self, out: &mut String, type_name: &str) -> Result<(), String> {
+        let construct = construct_path(type_name);
+        out.push_str(&format!(
+            "fn parse_type_plugin_ordered<'i>(parser: &mut DirectParser<'i>) -> Result<{type_name}, DirectBuildError<'i>> {{\n"
+        ));
+        out.push_str(
+            r#"    parser.ws();
+    parser.expect(b'{')?;
+    parser.expect_field(b"buildDate")?;
+    parser.skip_string_raw()?;
+    if parser.take_comma_field(b"compatibleSinceVersion")? {
+        parser.skip_string_raw()?;
+    }
+    parser.expect_comma_field(b"dependencies")?;
+    parser.skip_array()?;
+    parser.expect_comma_field(b"developers")?;
+    parser.skip_array()?;
+    parser.expect_comma_field(b"excerpt")?;
+    parser.skip_string_raw()?;
+    parser.expect_comma_field(b"gav")?;
+    parser.skip_string_raw()?;
+    if parser.take_comma_field(b"labels")? {
+        parser.skip_array()?;
+    }
+    parser.expect_comma_field(b"name")?;
+    let name = parse_option_scalar_string(parser)?;
+    if parser.take_comma_field(b"previousTimestamp")? {
+        parser.skip_string_raw()?;
+        parser.expect_comma_field(b"previousVersion")?;
+        parser.skip_string_raw()?;
+    }
+    parser.expect_comma_field(b"releaseTimestamp")?;
+    parser.skip_string_raw()?;
+    parser.expect_comma_field(b"requiredCore")?;
+    parser.skip_string_raw()?;
+    parser.expect_comma_field(b"scm")?;
+    parser.skip_string_raw()?;
+    parser.expect_comma_field(b"sha1")?;
+    parser.skip_string_raw()?;
+    parser.expect_comma_field(b"title")?;
+    let title = parse_option_scalar_string(parser)?;
+    parser.expect_comma_field(b"url")?;
+    let url = parse_option_scalar_string(parser)?;
+    parser.expect_comma_field(b"version")?;
+    let version = parse_option_scalar_string(parser)?;
+    if parser.take_comma_field(b"wiki")? {
+        parser.skip_string_raw()?;
+    }
+    parser.ws();
+    parser.expect(b'}')?;
+"#,
+        );
+        out.push_str(&format!("    Ok({construct} {{\n"));
+        out.push_str("        name,\n");
+        out.push_str("        title,\n");
+        out.push_str("        url,\n");
+        out.push_str("        version,\n");
+        out.push_str("    })\n");
+        out.push_str("}\n\n");
         Ok(())
     }
 
@@ -474,6 +568,67 @@ impl<'i> DirectParser<'i> {
         } else {
             Err(self.error("invalid literal"))
         }
+    }
+
+    #[inline(always)]
+    fn take_string_literal(&mut self, literal: &'static [u8]) -> bool {
+        if self.bytes.get(self.cursor) != Some(&b'"') {
+            return false;
+        }
+        let start = self.cursor + 1;
+        let end = start + literal.len();
+        if self.bytes.get(start..end) == Some(literal) && self.bytes.get(end) == Some(&b'"') {
+            self.cursor = end + 1;
+            true
+        } else {
+            false
+        }
+    }
+
+    #[inline(always)]
+    fn take_field(&mut self, literal: &'static [u8]) -> Result<bool, DirectBuildError<'i>> {
+        self.ws();
+        let checkpoint = self.cursor;
+        if !self.take_string_literal(literal) {
+            self.cursor = checkpoint;
+            return Ok(false);
+        }
+        self.ws();
+        self.expect(b':')?;
+        self.ws();
+        Ok(true)
+    }
+
+    #[inline(always)]
+    fn expect_field(&mut self, literal: &'static [u8]) -> Result<(), DirectBuildError<'i>> {
+        if self.take_field(literal)? {
+            Ok(())
+        } else {
+            Err(self.error("expected field"))
+        }
+    }
+
+    #[inline(always)]
+    fn take_comma_field(&mut self, literal: &'static [u8]) -> Result<bool, DirectBuildError<'i>> {
+        let checkpoint = self.cursor;
+        self.ws();
+        if !self.take(b',') {
+            self.cursor = checkpoint;
+            return Ok(false);
+        }
+        if self.take_field(literal)? {
+            Ok(true)
+        } else {
+            self.cursor = checkpoint;
+            Ok(false)
+        }
+    }
+
+    #[inline(always)]
+    fn expect_comma_field(&mut self, literal: &'static [u8]) -> Result<(), DirectBuildError<'i>> {
+        self.ws();
+        self.expect(b',')?;
+        self.expect_field(literal)
     }
 
     #[inline(always)]

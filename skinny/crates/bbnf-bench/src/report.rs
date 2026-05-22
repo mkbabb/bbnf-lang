@@ -1827,6 +1827,14 @@ impl SkV13TypedProductReport {
                 "generated-real-typed-instruments-document",
                 "REDRESS-148",
             ),
+            "json/update_center/real_typed_struct/main" => (
+                "SK-V13-W15.1",
+                "sk-v13-w15.1:",
+                "G-W15.1-JSON-TYPED-UPDATE-CENTER-PLUGIN",
+                "update_center",
+                "generated-real-typed-update-center-plugin-fast-path",
+                "REDRESS-160",
+            ),
             _ => return Err(format!("unsupported W13 typed-product row {}", self.row_id)),
         };
         if self.wave_id != expected_wave || !self.run_id.starts_with(expected_run_prefix) {
@@ -1935,7 +1943,7 @@ impl SkV13TypedProductReport {
             || self.affected_row_ids[0] != self.row_id
             || self.material_differential.trim().is_empty()
             || self.redress_entry != expected_redress
-            || !["70", "103", "105", "110"]
+            || !expected_prior_typed_redress(self.row_id.as_str())
                 .iter()
                 .all(|id| self.prior_redress_citations.iter().any(|entry| entry == id))
         {
@@ -1945,6 +1953,15 @@ impl SkV13TypedProductReport {
             );
         }
         Ok(())
+    }
+}
+
+fn expected_prior_typed_redress(row_id: &str) -> &'static [&'static str] {
+    match row_id {
+        "json/update_center/real_typed_struct/main" => {
+            &["70", "103", "105", "110", "119", "120", "143", "159"]
+        }
+        _ => &["70", "103", "105", "110"],
     }
 }
 
@@ -3314,6 +3331,8 @@ impl Report {
             } else if row_id == W13_INSTRUMENTS_TYPED_ROW_ID {
                 validate_w13_instruments_typed_row(row)?;
                 w13_instruments_typed_seen = true;
+            } else if row_id == W15_UPDATE_CENTER_TYPED_ROW_ID {
+                validate_w15_update_center_typed_row(row)?;
             } else if row.outcome_id == "A" {
                 if let Some(spec) = json_parse_only_admission_spec_for_row_id(row_id) {
                     validate_json_parse_only_admission_row(row, spec)?;
@@ -3943,6 +3962,7 @@ const W13_NUMBERS_TYPED_ROW_ID: &str = "json/numbers/real_typed_struct/main";
 const W13_UNICODE_BASIC_TYPED_ROW_ID: &str = "json/unicode_basic/real_typed_struct/main";
 const W13_RANDOM_TYPED_ROW_ID: &str = "json/random/real_typed_struct/main";
 const W13_INSTRUMENTS_TYPED_ROW_ID: &str = "json/instruments/real_typed_struct/main";
+const W15_UPDATE_CENTER_TYPED_ROW_ID: &str = "json/update_center/real_typed_struct/main";
 fn validate_json_parse_only_admission_row(
     row: &TelemetryRow,
     spec: &JsonParseOnlyAdmissionSpec,
@@ -4162,19 +4182,58 @@ fn validate_w6_github_events_typed_row(row: &TelemetryRow) -> Result<(), String>
 }
 
 fn validate_w13_numbers_typed_row(row: &TelemetryRow) -> Result<(), String> {
-    validate_w13_typed_row(row, "numbers", "REDRESS-145", "SK-V13-W13.1", "W13.1")
+    validate_w13_typed_row(
+        row,
+        "numbers",
+        "REDRESS-145",
+        "SK-V13-W13.1",
+        "W13.1",
+        "typed-row-added",
+    )
 }
 
 fn validate_w13_unicode_basic_typed_row(row: &TelemetryRow) -> Result<(), String> {
-    validate_w13_typed_row(row, "unicode_basic", "REDRESS-146", "SK-V13-W13.2", "W13.2")
+    validate_w13_typed_row(
+        row,
+        "unicode_basic",
+        "REDRESS-146",
+        "SK-V13-W13.2",
+        "W13.2",
+        "typed-row-added",
+    )
 }
 
 fn validate_w13_random_typed_row(row: &TelemetryRow) -> Result<(), String> {
-    validate_w13_typed_row(row, "random", "REDRESS-147", "SK-V13-W13.3", "W13.3")
+    validate_w13_typed_row(
+        row,
+        "random",
+        "REDRESS-147",
+        "SK-V13-W13.3",
+        "W13.3",
+        "typed-row-added",
+    )
 }
 
 fn validate_w13_instruments_typed_row(row: &TelemetryRow) -> Result<(), String> {
-    validate_w13_typed_row(row, "instruments", "REDRESS-148", "SK-V13-W13.4", "W13.4")
+    validate_w13_typed_row(
+        row,
+        "instruments",
+        "REDRESS-148",
+        "SK-V13-W13.4",
+        "W13.4",
+        "typed-row-added",
+    )
+}
+
+fn validate_w15_update_center_typed_row(row: &TelemetryRow) -> Result<(), String> {
+    validate_w13_typed_row(
+        row,
+        "update_center",
+        "REDRESS-160",
+        "SK-V13-W15.1",
+        "W15.1",
+        "typed-plugin-fast-path",
+    )
 }
 
 fn validate_w13_typed_row(
@@ -4183,6 +4242,7 @@ fn validate_w13_typed_row(
     redress_entry: &str,
     wave_id: &str,
     label: &str,
+    expected_delta: &str,
 ) -> Result<(), String> {
     let row_id = row.sk_v8.row_id.as_str();
     row.validate_schema_v3()?;
@@ -4224,10 +4284,10 @@ fn validate_w13_typed_row(
             "{row_id} {label} typed row lacks REDRESS/W13 provenance"
         ));
     }
-    if row.sk_v8.sk_v9_open_delta != "typed-row-added" {
+    if row.sk_v8.sk_v9_open_delta != expected_delta {
         return Err(format!(
-            "{row_id} {label} typed row delta {} is not typed-row-added",
-            row.sk_v8.sk_v9_open_delta
+            "{row_id} {label} typed row delta {} is not {expected_delta}",
+            row.sk_v8.sk_v9_open_delta,
         ));
     }
     let (Some(track1), Some(track2), Some(sonic)) = (

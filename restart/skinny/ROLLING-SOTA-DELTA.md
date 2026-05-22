@@ -5,7 +5,7 @@ run_id: SK-V13-open
 g_omega_status: signed
 consumer_gate: cargo xtask gate-json --check-results
 source_results: skinny/RESULTS.md
-source_commit: 58a5c4605+w14.5-redress
+source_commit: 653cdf795+w15.1-redress
 
 ## JSON Targets
 
@@ -13,36 +13,36 @@ source_commit: 58a5c4605+w14.5-redress
 |---|---|---:|---:|---:|---|
 | json/twitter/parse_only/main | parse_only | 15561.00 | 21014.00 | -5453.00 | OPEN |
 | json/twitter/direct_to_struct/main | direct_to_struct | 11908.00 | 15111.00 | -3203.00 | OPEN |
-| json/twitter/real_typed_struct/main | real_typed_struct | 18563.00 | 15471.00 | 3092.00 | ADMITTED |
+| json/twitter/real_typed_struct/main | real_typed_struct | 17898.00 | 15503.00 | 2395.00 | ADMITTED |
 | json/citm_catalog/parse_only/main | parse_only | 30150.00 | 25566.00 | 4584.00 | ADMITTED |
 | json/citm_catalog/direct_to_struct/main | direct_to_struct | 21414.00 | 19939.00 | 1475.00 | ADMITTED |
 | json/citm_catalog/real_typed_struct/main | real_typed_struct | 36719.00 | 22858.00 | 13861.00 | ADMITTED |
 | json/canada/parse_only/main | parse_only | 16977.00 | 14102.00 | 2875.00 | ADMITTED |
-| json/canada/direct_to_struct/main | direct_to_struct | 10856.00 | 12214.00 | -1358.00 | OPEN |
+| json/canada/direct_to_struct/main | direct_to_struct | 10962.00 | 12206.00 | -1244.00 | OPEN |
 | json/canada/real_typed_struct/main | real_typed_struct | absent:product-surface-not-generated | absent:product-surface-not-generated | absent:product-surface-not-generated | MISSING |
 | json/apache_builds/parse_only/main | parse_only | 12767.00 | 17352.00 | -4585.00 | OPEN |
 | json/apache_builds/direct_to_struct/main | direct_to_struct | 11428.00 | 11106.00 | 322.00 | ADMITTED |
 | json/apache_builds/real_typed_struct/main | real_typed_struct | 8127.00 | 8092.00 | 35.00 | ADMITTED |
 | json/github_events/parse_only/main | parse_only | 14966.00 | 23010.00 | -8044.00 | OPEN |
-| json/github_events/direct_to_struct/main | direct_to_struct | 12520.00 | 16073.00 | -3553.00 | OPEN |
-| json/github_events/real_typed_struct/main | real_typed_struct | 12853.00 | 12670.00 | 183.00 | ADMITTED |
+| json/github_events/direct_to_struct/main | direct_to_struct | 12483.00 | 16198.00 | -3715.00 | OPEN |
+| json/github_events/real_typed_struct/main | real_typed_struct | 13040.00 | 12628.00 | 412.00 | ADMITTED |
 | json/update_center/parse_only/main | parse_only | 11791.00 | 19662.00 | -7871.00 | OPEN |
 | json/update_center/direct_to_struct/main | direct_to_struct | 8546.00 | 11184.00 | -2638.00 | OPEN |
-| json/update_center/real_typed_struct/main | real_typed_struct | 11774.00 | 12561.00 | -787.00 | OPEN |
+| json/update_center/real_typed_struct/main | real_typed_struct | 13191.00 | 12624.00 | 567.00 | ADMITTED |
 | json/mesh/parse_only/main | parse_only | 12987.00 | 11759.00 | 1228.00 | ADMITTED |
-| json/mesh/direct_to_struct/main | direct_to_struct | 9907.00 | 9671.00 | 236.00 | ADMITTED |
-| json/mesh/real_typed_struct/main | real_typed_struct | 9940.00 | 9005.00 | 935.00 | ADMITTED |
+| json/mesh/direct_to_struct/main | direct_to_struct | 9661.00 | 9758.00 | -97.00 | OPEN |
+| json/mesh/real_typed_struct/main | real_typed_struct | 9686.00 | 8868.00 | 818.00 | ADMITTED |
 | json/random/parse_only/main | parse_only | 9946.00 | 15666.00 | -5720.00 | OPEN |
-| json/random/direct_to_struct/main | direct_to_struct | 7956.00 | 8950.00 | -994.00 | OPEN |
+| json/random/direct_to_struct/main | direct_to_struct | 7801.00 | 8945.00 | -1144.00 | OPEN |
 | json/random/real_typed_struct/main | real_typed_struct | 8151.00 | 7394.00 | 757.00 | ADMITTED |
 | json/gsoc-2018/parse_only/main | parse_only | 23587.00 | 50364.00 | -26777.00 | OPEN |
 | json/gsoc-2018/direct_to_struct/main | direct_to_struct | 15385.00 | 23881.00 | -8496.00 | OPEN |
 | json/gsoc-2018/real_typed_struct/main | real_typed_struct | absent:product-surface-not-generated | absent:product-surface-not-generated | absent:product-surface-not-generated | MISSING |
 | json/marine_ik/parse_only/main | parse_only | 12357.00 | 9903.00 | 2454.00 | ADMITTED |
 | json/marine_ik/direct_to_struct/main | direct_to_struct | 10513.00 | 8455.00 | 2058.00 | ADMITTED |
-| json/marine_ik/real_typed_struct/main | real_typed_struct | 12254.00 | 9022.00 | 3232.00 | ADMITTED |
+| json/marine_ik/real_typed_struct/main | real_typed_struct | 12164.00 | 9199.00 | 2965.00 | ADMITTED |
 | json/instruments/parse_only/main | parse_only | 17468.00 | 19631.00 | -2163.00 | OPEN |
-| json/instruments/direct_to_struct/main | direct_to_struct | 12307.00 | 12785.00 | -478.00 | OPEN |
+| json/instruments/direct_to_struct/main | direct_to_struct | 12060.00 | 12732.00 | -672.00 | OPEN |
 | json/instruments/real_typed_struct/main | real_typed_struct | 21464.00 | 16210.00 | 5254.00 | ADMITTED |
 | json/numbers/parse_only/main | parse_only | 19267.00 | 13667.00 | 5600.00 | ADMITTED |
 | json/numbers/direct_to_struct/main | direct_to_struct | 14125.00 | 12748.00 | 1377.00 | ADMITTED |

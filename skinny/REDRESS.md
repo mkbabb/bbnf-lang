@@ -4988,3 +4988,54 @@ perturbation.
 - W11.4 updates no `RESULTS.md` or rolling-delta row. The next JSON wave must
   use a materially different implementation route; the direct byte-fetch
   envelope is not the missing instruments/direct SOTA gap.
+
+## SK-V13 Wave 15.1 UpdateCenter Typed Plugin Fast-Path Admission
+
+- Item 160 closes W15.1 under
+  `G-W15.1-JSON-TYPED-UPDATE-CENTER-PLUGIN` as `ADMIT`. The material
+  differential from REDRESS 70-72, 103-110, 119, 120, 143, and 159 is a
+  generated typed-product specialization, not a direct digest stand-in,
+  hidden sink, proof-only root, or direct cursor byte-fetch patch. W15.1 emits
+  an ordered `Plugin` parser for the observed 654-entry UpdateCenter plugin map
+  and falls back to the generic typed parser on mismatch.
+- Native Criterion was refreshed for
+  `json/(update_center|twitter|github_events|mesh|marine_ik)/(track1_real_typed_struct|track2_real_typed_struct|sonic_rs_real_typed_struct|serde_json_real_typed_struct)`
+  with `RUSTFLAGS="-C target-cpu=native"`. The retained facts measured
+  UpdateCenter Track 1 mean `13264.676` Mbps, Track 1 lower confidence
+  `13220.831` Mbps, Track 2 oracle `10407.236` Mbps, sonic strict
+  `12598.123` Mbps, threshold `12599.123` Mbps, and lower-confidence margin
+  `621.708` Mbps. The gate-generated RESULTS slope row records Track 1
+  `13191` Mbps, Track 2 `10417` Mbps, sonic strict `12623` Mbps, and rolling
+  margin `567.00` Mbps. `ROLLING-SOTA-DELTA.md` was regenerated from the same
+  gate-consumed RESULTS snapshot; W15.1 claims only
+  `json/update_center/real_typed_struct/main`, and direct-plane rows that remain
+  `OPEN` are carried as current gate state rather than W15.1 row movement.
+- Typed guard rows held against same-run sonic strict after a focused
+  `github_events` confirmation rerun: `twitter` `17891.124` vs `15483.243`
+  Mbps, `github_events` `13055.906` vs `12619.336`, `mesh` `9685.424` vs
+  `8856.805`, and `marine_ik` `12143.344` vs `9198.260`. The SIMD scan bench
+  was rerun only to refresh required gate metadata after an aggregate stale
+  metadata rejection; W15.1 claims no SIMD admission.
+- Verification passed:
+  `cargo xtask regen-real-typed`,
+  `cargo test -p bbnf-bench generated_update_center_typed_parser_matches_sidecars -- --nocapture`,
+  `cargo test -p bbnf-bench w2_full_real_typed_fixtures_match_sidecars -- --nocapture`,
+  `cargo test -p codegen emits_typed_direct_consumer_module -- --nocapture`,
+  `cargo xtask check-real-typed`,
+  `cargo test -p bbnf-bench real_typed_struct -- --nocapture`,
+  `cargo test -p bbnf-bench admits_sk_v13_w15_1_parent_diff_under_w15_1_scope -- --nocapture`,
+  `cargo test -p bbnf-bench w15_update_center_typed_admits_only_strict_sonic_plus_one_pass -- --nocapture`,
+  `RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --update-results --advisory`, and
+  `RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --check-results --advisory --skv13-typed-product-report ../restart/skinny/tranches/sk-v13/research/w15.1/skv13-W15.1-typed-product.json`.
+- Earlier in the wave, `cargo test -p codegen json -- --nocapture` failed
+  outside the W15.1 owner slice in
+  `tests::json_config_policy_fields_are_consumed`: the test searches for the
+  exact `config::STRING_NEEDS_DECODE` spelling while current generated code
+  consumes the policy through `config::needs_decode_flags()` and
+  `config::string_needs_decode`.
+- The retained measurement facts are
+  `restart/skinny/tranches/sk-v13/research/w15.1/update-center-typed-facts.json`
+  with SHA-256
+  `2a652e0b8e3ec3608ca2bdd4c1bf539557f337653112c58f7076c3ee37147112`;
+  the retained redress note is
+  `restart/skinny/tranches/sk-v13/research/w15.1/redress.md`.

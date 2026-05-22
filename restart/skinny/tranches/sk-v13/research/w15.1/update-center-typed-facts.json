@@ -1,0 +1,73 @@
+{
+  "schema_version": "sk-v13-w15.1-typed-product-facts-v1",
+  "wave_id": "SK-V13-W15.1",
+  "row_id": "json/update_center/real_typed_struct/main",
+  "corpus": "update_center",
+  "input_bytes": 533178,
+  "criterion_group": "json_update_center",
+  "measurement_command": "RUSTFLAGS=\"-C target-cpu=native\" cargo bench -p bbnf-bench --bench json_parity -- 'json/(update_center|twitter|github_events|mesh|marine_ik)/(track1_real_typed_struct|track2_real_typed_struct|sonic_rs_real_typed_struct|serde_json_real_typed_struct)' plus focused github_events guard confirmation",
+  "lanes": {
+    "track1_real_typed_struct": {
+      "mean_ns": 321562.6104308894,
+      "lower_ns": 320577.5647316141,
+      "upper_ns": 322629.0504085923,
+      "mbps": 13264.676494211784,
+      "lower_mbps": 13220.83053152861,
+      "upper_mbps": 13305.435155984766,
+      "samples": 100
+    },
+    "track2_real_typed_struct": {
+      "mean_ns": 409851.78022493725,
+      "lower_ns": 408609.42108418304,
+      "upper_ns": 411247.7951953318,
+      "mbps": 10407.235507575508,
+      "lower_mbps": 10371.907277883489,
+      "upper_mbps": 10438.878253669103,
+      "samples": 100
+    },
+    "sonic_rs_real_typed_struct": {
+      "mean_ns": 338576.16091494926,
+      "lower_ns": 338019.8406785012,
+      "upper_ns": 339150.30320311175,
+      "mbps": 12598.122645355057,
+      "lower_mbps": 12576.795478922231,
+      "upper_mbps": 12618.856903305115,
+      "samples": 100
+    },
+    "serde_json_real_typed_struct": {
+      "mean_ns": 409716.7802105617,
+      "lower_ns": 408399.439617642,
+      "upper_ns": 411410.730033134,
+      "mbps": 10410.664649390032,
+      "lower_mbps": 10367.799594474538,
+      "upper_mbps": 10444.245476912114,
+      "samples": 100
+    }
+  },
+  "guard_lanes": {
+    "twitter": {
+      "track1_mbps": 17891.12386401092,
+      "sonic_strict_mbps": 15483.243206064542,
+      "status": "maintain"
+    },
+    "github_events": {
+      "track1_mbps": 13055.90601385295,
+      "sonic_strict_mbps": 12619.336205026731,
+      "status": "maintain"
+    },
+    "mesh": {
+      "track1_mbps": 9685.424110641725,
+      "sonic_strict_mbps": 8856.805440759023,
+      "status": "maintain"
+    },
+    "marine_ik": {
+      "track1_mbps": 12143.34429807615,
+      "sonic_strict_mbps": 9198.25992813613,
+      "status": "maintain"
+    }
+  },
+  "threshold_mbps": 12599.122645355057,
+  "track1_margin_mbps": 665.5538488567272,
+  "track1_lower_margin_mbps": 621.7078861735536,
+  "decision": "pass"
+}

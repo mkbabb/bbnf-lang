@@ -514,6 +514,17 @@ fn parse_type_update_core<'i>(parser: &mut DirectParser<'i>) -> Result<crate::re
 }
 
 fn parse_type_plugin<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::Plugin<'i>, DirectBuildError<'i>> {
+    let checkpoint = parser.cursor;
+    match parse_type_plugin_ordered(parser) {
+        Ok(value) => Ok(value),
+        Err(_) => {
+            parser.cursor = checkpoint;
+            parse_type_plugin_generic(parser)
+        }
+    }
+}
+
+fn parse_type_plugin_generic<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::Plugin<'i>, DirectBuildError<'i>> {
     parser.ws();
     parser.expect(b'{')?;
     let mut name: Option<Option<Cow<'i, str>>> = None;
@@ -576,6 +587,59 @@ fn parse_type_plugin<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_ty
             version: version.unwrap_or_default(),
         });
     }
+}
+
+fn parse_type_plugin_ordered<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::Plugin<'i>, DirectBuildError<'i>> {
+    parser.ws();
+    parser.expect(b'{')?;
+    parser.expect_field(b"buildDate")?;
+    parser.skip_string_raw()?;
+    if parser.take_comma_field(b"compatibleSinceVersion")? {
+        parser.skip_string_raw()?;
+    }
+    parser.expect_comma_field(b"dependencies")?;
+    parser.skip_array()?;
+    parser.expect_comma_field(b"developers")?;
+    parser.skip_array()?;
+    parser.expect_comma_field(b"excerpt")?;
+    parser.skip_string_raw()?;
+    parser.expect_comma_field(b"gav")?;
+    parser.skip_string_raw()?;
+    if parser.take_comma_field(b"labels")? {
+        parser.skip_array()?;
+    }
+    parser.expect_comma_field(b"name")?;
+    let name = parse_option_scalar_string(parser)?;
+    if parser.take_comma_field(b"previousTimestamp")? {
+        parser.skip_string_raw()?;
+        parser.expect_comma_field(b"previousVersion")?;
+        parser.skip_string_raw()?;
+    }
+    parser.expect_comma_field(b"releaseTimestamp")?;
+    parser.skip_string_raw()?;
+    parser.expect_comma_field(b"requiredCore")?;
+    parser.skip_string_raw()?;
+    parser.expect_comma_field(b"scm")?;
+    parser.skip_string_raw()?;
+    parser.expect_comma_field(b"sha1")?;
+    parser.skip_string_raw()?;
+    parser.expect_comma_field(b"title")?;
+    let title = parse_option_scalar_string(parser)?;
+    parser.expect_comma_field(b"url")?;
+    let url = parse_option_scalar_string(parser)?;
+    parser.expect_comma_field(b"version")?;
+    let version = parse_option_scalar_string(parser)?;
+    if parser.take_comma_field(b"wiki")? {
+        parser.skip_string_raw()?;
+    }
+    parser.ws();
+    parser.expect(b'}')?;
+    Ok(crate::real_typed_struct::Plugin {
+        name,
+        title,
+        url,
+        version,
+    })
 }
 
 fn parse_type_github_event<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::GithubEvent<'i>, DirectBuildError<'i>> {
@@ -2728,6 +2792,67 @@ impl<'i> DirectParser<'i> {
         } else {
             Err(self.error("invalid literal"))
         }
+    }
+
+    #[inline(always)]
+    fn take_string_literal(&mut self, literal: &'static [u8]) -> bool {
+        if self.bytes.get(self.cursor) != Some(&b'"') {
+            return false;
+        }
+        let start = self.cursor + 1;
+        let end = start + literal.len();
+        if self.bytes.get(start..end) == Some(literal) && self.bytes.get(end) == Some(&b'"') {
+            self.cursor = end + 1;
+            true
+        } else {
+            false
+        }
+    }
+
+    #[inline(always)]
+    fn take_field(&mut self, literal: &'static [u8]) -> Result<bool, DirectBuildError<'i>> {
+        self.ws();
+        let checkpoint = self.cursor;
+        if !self.take_string_literal(literal) {
+            self.cursor = checkpoint;
+            return Ok(false);
+        }
+        self.ws();
+        self.expect(b':')?;
+        self.ws();
+        Ok(true)
+    }
+
+    #[inline(always)]
+    fn expect_field(&mut self, literal: &'static [u8]) -> Result<(), DirectBuildError<'i>> {
+        if self.take_field(literal)? {
+            Ok(())
+        } else {
+            Err(self.error("expected field"))
+        }
+    }
+
+    #[inline(always)]
+    fn take_comma_field(&mut self, literal: &'static [u8]) -> Result<bool, DirectBuildError<'i>> {
+        let checkpoint = self.cursor;
+        self.ws();
+        if !self.take(b',') {
+            self.cursor = checkpoint;
+            return Ok(false);
+        }
+        if self.take_field(literal)? {
+            Ok(true)
+        } else {
+            self.cursor = checkpoint;
+            Ok(false)
+        }
+    }
+
+    #[inline(always)]
+    fn expect_comma_field(&mut self, literal: &'static [u8]) -> Result<(), DirectBuildError<'i>> {
+        self.ws();
+        self.expect(b',')?;
+        self.expect_field(literal)
     }
 
     #[inline(always)]

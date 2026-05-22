@@ -15,6 +15,7 @@ pub enum RealTypedFixture {
     UpdateCenter,
     Mesh,
     MarineIk,
+    Numbers,
 }
 
 #[derive(Debug, Deserialize)]
@@ -306,6 +307,7 @@ pub enum RealTypedOutput<'a> {
     UpdateCenter(UpdateCenter<'a>),
     Mesh(Mesh),
     MarineIk(MarineIk),
+    Numbers(Vec<f64>),
 }
 
 pub fn fixture_for_name(name: &str) -> Option<RealTypedFixture> {
@@ -317,6 +319,7 @@ pub fn fixture_for_name(name: &str) -> Option<RealTypedFixture> {
         "update_center" | "update-center" => Some(RealTypedFixture::UpdateCenter),
         "mesh" => Some(RealTypedFixture::Mesh),
         "marine_ik" | "marine-ik" => Some(RealTypedFixture::MarineIk),
+        "numbers" => Some(RealTypedFixture::Numbers),
         _ => None,
     }
 }
@@ -378,6 +381,9 @@ pub fn track1_typed<'a>(
         RealTypedFixture::MarineIk => crate::generated_real_typed::parse_marine_ik(input)
             .map(RealTypedOutput::MarineIk)
             .map_err(|error| DirectStructError::Parse(error.to_string())),
+        RealTypedFixture::Numbers => crate::generated_real_typed::parse_numbers(input)
+            .map(RealTypedOutput::Numbers)
+            .map_err(|error| DirectStructError::Parse(error.to_string())),
     }
 }
 
@@ -414,6 +420,9 @@ pub fn serde_typed<'a>(
         RealTypedFixture::MarineIk => serde_json::from_slice::<MarineIk>(bytes)
             .map(RealTypedOutput::MarineIk)
             .map_err(|error| DirectStructError::Serde(error.to_string())),
+        RealTypedFixture::Numbers => serde_json::from_slice::<Vec<f64>>(bytes)
+            .map(RealTypedOutput::Numbers)
+            .map_err(|error| DirectStructError::Serde(error.to_string())),
     }
 }
 
@@ -443,6 +452,9 @@ pub fn sonic_typed<'a>(
         RealTypedFixture::MarineIk => sonic_rs::from_slice::<MarineIk>(bytes)
             .map(RealTypedOutput::MarineIk)
             .map_err(|error| DirectStructError::Sonic(error.to_string())),
+        RealTypedFixture::Numbers => sonic_rs::from_slice::<Vec<f64>>(bytes)
+            .map(RealTypedOutput::Numbers)
+            .map_err(|error| DirectStructError::Sonic(error.to_string())),
     }
 }
 
@@ -471,6 +483,7 @@ pub fn typed_checksum(output: &RealTypedOutput<'_>) -> u64 {
         RealTypedOutput::UpdateCenter(value) => checksum_update_center(value),
         RealTypedOutput::Mesh(value) => checksum_mesh(value),
         RealTypedOutput::MarineIk(value) => checksum_marine_ik(value),
+        RealTypedOutput::Numbers(value) => checksum_numbers(value),
     }
 }
 
@@ -640,6 +653,10 @@ fn checksum_marine_ik(value: &MarineIk) -> u64 {
         hash = mix(hash, checksum_marine_geometry(geometry));
     }
     hash
+}
+
+fn checksum_numbers(values: &[f64]) -> u64 {
+    fold_f64_slice(0x6e756d62657273, values)
 }
 
 fn checksum_marine_geometry(value: &MarineGeometry) -> u64 {
@@ -911,5 +928,19 @@ mod tests {
         let input = br#"{"metadata":{"version":4.3},"geometries":[{"uuid":"g","type":"Geometry","data":{"uvs":[[0.0,1.0]],"vertices":[1.0,2.0,3.0],"skinWeights":[1.0,0.0],"skinIndices":[0,1],"normals":[0.0,1.0,0.0],"faces":[1,2,3],"animations":[]}}],"materials":[]}"#;
         let text = std::str::from_utf8(input).unwrap();
         assert_real_typed_parity(text, input, RealTypedFixture::MarineIk);
+    }
+
+    #[test]
+    fn generated_numbers_typed_parser_matches_sidecars() {
+        let input = br#"[0,1,-2,3.5,6.25e2,-7.125e-1]"#;
+        let text = std::str::from_utf8(input).unwrap();
+        assert_real_typed_parity(text, input, RealTypedFixture::Numbers);
+    }
+
+    #[test]
+    fn w13_full_numbers_typed_fixture_matches_sidecars() {
+        let bytes = std::fs::read(locate_fixture("numbers")).unwrap();
+        let text = std::str::from_utf8(&bytes).unwrap();
+        assert_real_typed_parity(text, &bytes, RealTypedFixture::Numbers);
     }
 }

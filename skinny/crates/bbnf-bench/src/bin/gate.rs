@@ -9,7 +9,8 @@ use bbnf_bench::report::{
     SkV13CssStylesheetSelectorsReport, SkV13CssVendorCustomReport, SkV13CssVisualFunctionsReport,
     SkV13DecisionActiveCostReport, SkV13DecisionCspCascadeReport, SkV13DecisionRegexReport,
     SkV13JsonDirectReopenReport, SkV13PerGrammarPolicyReport, SkV13SameSubstrateUnionReport,
-    SkV13SimdAsmProductionReport, SkV8ComparatorEvidence, SkV8Telemetry, TelemetryRow,
+    SkV13SimdAsmProductionReport, SkV13TypedProductReport, SkV8ComparatorEvidence, SkV8Telemetry,
+    TelemetryRow,
 };
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -322,6 +323,24 @@ fn main() -> Result<(), Box<dyn Error>> {
         );
         drop(report);
     }
+    if let Some(path) = skv13_typed_product_report_path(&args[1..])? {
+        if !has_explicit_json_check {
+            return Err(format!("{} requires --check-results", path.display()).into());
+        }
+        let text = fs::read_to_string(&path)?;
+        let report = SkV13TypedProductReport::from_json_str(&text)
+            .and_then(|report| report.validate_gate().map(|_| report))
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        validate_skv13_typed_product_report(&report, &criterion_root(), &workspace)
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        println!(
+            "{} {} {}",
+            report.consumer_gate,
+            report.row_move_toward_sota_status,
+            path.display()
+        );
+        drop(report);
+    }
     if let Some(path) = skv13_simd_asm_production_report_path(&args[1..])? {
         if !has_explicit_json_check {
             return Err(format!("{} requires --check-results", path.display()).into());
@@ -594,6 +613,8 @@ fn main() -> Result<(), Box<dyn Error>> {
             .with_sk_v8(typed_telemetry);
             if typed_decision.w6_github_events_added {
                 mark_w6_github_events_typed_admission(&mut typed_row);
+            } else if typed_decision.w13_numbers_added {
+                mark_w13_numbers_typed_admission(&mut typed_row);
             }
             report.rows.push(typed_row);
         }
@@ -830,6 +851,10 @@ fn skv13_json_direct_reopen_report_path(
     companion_report_path(args, "--skv13-json-direct-reopen-report")
 }
 
+fn skv13_typed_product_report_path(args: &[String]) -> Result<Option<PathBuf>, Box<dyn Error>> {
+    companion_report_path(args, "--skv13-typed-product-report")
+}
+
 fn skv13_simd_asm_production_report_path(
     args: &[String],
 ) -> Result<Option<PathBuf>, Box<dyn Error>> {
@@ -904,6 +929,8 @@ fn is_companion_report_flag(arg: &str) -> bool {
             | "--skv13-per-grammar-policy-report"
             | "--skv13-same-substrate-union-report"
             | "--skv13-json-direct-reopen-report"
+            | "--skv13-typed-product-report"
+            | "--skv13-simd-asm-production-report"
     )
 }
 
@@ -2185,6 +2212,75 @@ fn validate_skv13_json_direct_reopen_report(
     )
 }
 
+fn validate_skv13_typed_product_report(
+    report: &SkV13TypedProductReport,
+    criterion_root: &Path,
+    workspace: &Path,
+) -> Result<(), String> {
+    let track1 = read_css_l4_lane_in_group(
+        criterion_root,
+        "json_numbers",
+        "track1_real_typed_struct",
+        150_124,
+    )?;
+    let track2 = read_css_l4_lane_in_group(
+        criterion_root,
+        "json_numbers",
+        "track2_real_typed_struct",
+        150_124,
+    )?;
+    let sonic = read_css_l4_lane_in_group(
+        criterion_root,
+        "json_numbers",
+        "sonic_rs_real_typed_struct",
+        150_124,
+    )?;
+    let serde = read_css_l4_lane_in_group(
+        criterion_root,
+        "json_numbers",
+        "serde_json_real_typed_struct",
+        150_124,
+    )?;
+    require_close(
+        "W13.1 typed track1_mbps_after",
+        report.track1_mbps_after,
+        track1.mbps,
+    )?;
+    require_close(
+        "W13.1 typed track2_mbps_after",
+        report.track2_mbps_after,
+        track2.mbps,
+    )?;
+    require_close(
+        "W13.1 typed sonic_strict_mbps_after",
+        report.sonic_strict_mbps_after,
+        sonic.mbps,
+    )?;
+    require_close(
+        "W13.1 typed serde_mbps_after",
+        report.serde_mbps_after,
+        serde.mbps,
+    )?;
+    require_close(
+        "W13.1 typed threshold_mbps",
+        report.threshold_mbps,
+        sonic.mbps + 1.0,
+    )?;
+    if track1.lower_mbps <= sonic.mbps + 1.0 {
+        return Err(format!(
+            "W13.1 typed Track 1 lower confidence throughput {:.3} <= sonic+1 {:.3}",
+            track1.lower_mbps,
+            sonic.mbps + 1.0
+        ));
+    }
+    validate_report_artifact_hash(
+        workspace,
+        "W13.1 typed product measurement artifact",
+        &report.measurement_artifact_path,
+        &report.measurement_artifact_sha256,
+    )
+}
+
 fn validate_skv13_simd_asm_production_report(
     report: &SkV13SimdAsmProductionReport,
     workspace: &Path,
@@ -2950,6 +3046,7 @@ fn mark_w11_3_direct_reopen(row: &mut TelemetryRow) {
 struct RealTypedRowDecision {
     outcome: Option<Outcome>,
     w6_github_events_added: bool,
+    w13_numbers_added: bool,
 }
 
 fn real_typed_row_decision(
@@ -2967,16 +3064,33 @@ fn real_typed_row_decision(
             return RealTypedRowDecision {
                 outcome: None,
                 w6_github_events_added: true,
+                w13_numbers_added: false,
             };
         }
         return RealTypedRowDecision {
             outcome: Some(classified.unwrap_or(Outcome::NDirectProjectionFailure)),
             w6_github_events_added: false,
+            w13_numbers_added: false,
+        };
+    }
+    if corpus == "numbers" {
+        if w13_numbers_typed_passes(bytes, track1_ns, track2_ns, sonic_ns) {
+            return RealTypedRowDecision {
+                outcome: None,
+                w6_github_events_added: false,
+                w13_numbers_added: true,
+            };
+        }
+        return RealTypedRowDecision {
+            outcome: Some(classified.unwrap_or(Outcome::NDirectProjectionFailure)),
+            w6_github_events_added: false,
+            w13_numbers_added: false,
         };
     }
     RealTypedRowDecision {
         outcome: classified,
         w6_github_events_added: false,
+        w13_numbers_added: false,
     }
 }
 
@@ -3012,6 +3126,40 @@ fn mark_w6_github_events_typed_admission(row: &mut TelemetryRow) {
     row.sk_v8.same_wave_consumer_class = "gate_json_typed_contract".to_string();
     row.sk_v8.redress_entry = "REDRESS-105".to_string();
     row.sk_v8.wave_id = "SK-V10-W6".to_string();
+    row.sk_v8.sk_v9_open_delta = "typed-row-added".to_string();
+}
+
+fn w13_numbers_typed_passes(
+    bytes: u64,
+    track1_ns: Option<f64>,
+    track2_ns: Option<f64>,
+    sonic_ns: Option<f64>,
+) -> bool {
+    let track1 = throughput_mbps(bytes, track1_ns);
+    let track2 = throughput_mbps(bytes, track2_ns);
+    let sonic = throughput_mbps(bytes, sonic_ns);
+    let (Some(track1), Some(track2), Some(sonic)) = (track1, track2, sonic) else {
+        return false;
+    };
+    track1 > sonic + 1.0 && track2.is_finite()
+}
+
+fn mark_w13_numbers_typed_admission(row: &mut TelemetryRow) {
+    row.strictness = "strict".to_string();
+    row.parse_utf8 = "measured-row".to_string();
+    row.flaw_probe =
+        "generated Track 1 typed Vec<f64> product vs independent serde Track 2/oracle; UTF-8 measured in row"
+            .to_string();
+    row.signal = format!(
+        "PASS W13.1 numbers typed product admission; Track 1 {}, Track 2 oracle {}, sonic {} Mbps",
+        format_mbps(row.track1_mbps),
+        format_mbps(row.track2_mbps),
+        format_mbps(row.competitors.sonic_strict_mbps)
+    );
+    row.sk_v8.measured_validation_path = "measured-row".to_string();
+    row.sk_v8.same_wave_consumer_class = "gate_json_typed_contract".to_string();
+    row.sk_v8.redress_entry = "REDRESS-145".to_string();
+    row.sk_v8.wave_id = "SK-V13-W13.1".to_string();
     row.sk_v8.sk_v9_open_delta = "typed-row-added".to_string();
 }
 
@@ -3386,6 +3534,7 @@ fn validate_report_capture_identity(
 fn w0_real_typed_metadata_expected(fixture: &str) -> bool {
     sk_v8_open_baseline(&format!("json/{fixture}/real_typed_struct/main")).is_some()
         || fixture == "github_events"
+        || fixture == "numbers"
 }
 
 #[derive(Clone)]
@@ -4119,6 +4268,8 @@ mod tests {
             "skv13-w8.json".to_string(),
             "--skv13-same-substrate-union-report".to_string(),
             "skv13-w9.json".to_string(),
+            "--skv13-typed-product-report".to_string(),
+            "skv13-w13-1.json".to_string(),
             "--skv13-simd-asm-production-report".to_string(),
             "skv13-w12.json".to_string(),
         ];
@@ -4171,6 +4322,10 @@ mod tests {
             Some(PathBuf::from("skv13-w9.json"))
         );
         assert_eq!(
+            skv13_typed_product_report_path(&mixed).unwrap(),
+            Some(PathBuf::from("skv13-w13-1.json"))
+        );
+        assert_eq!(
             skv13_simd_asm_production_report_path(&mixed).unwrap(),
             Some(PathBuf::from("skv13-w12.json"))
         );
@@ -4183,6 +4338,16 @@ mod tests {
         assert_eq!(
             skv13_json_direct_reopen_report_path(&mixed).unwrap(),
             Some(PathBuf::from("skv13-w11-1.json"))
+        );
+        let mixed = vec![
+            "--skv13-typed-product-report".to_string(),
+            "skv13-w13-1.json".to_string(),
+            "--advisory".to_string(),
+            "--check-results".to_string(),
+        ];
+        assert_eq!(
+            skv13_typed_product_report_path(&mixed).unwrap(),
+            Some(PathBuf::from("skv13-w13-1.json"))
         );
         let write = vec![
             "--skv13-css-comparator-oracle-report".to_string(),
@@ -4495,6 +4660,7 @@ mod tests {
             RealTypedRowDecision {
                 outcome: None,
                 w6_github_events_added: true,
+                w13_numbers_added: false,
             }
         );
         assert_eq!(
@@ -4509,6 +4675,7 @@ mod tests {
             RealTypedRowDecision {
                 outcome: Some(Outcome::NDirectProjectionFailure),
                 w6_github_events_added: false,
+                w13_numbers_added: false,
             }
         );
         assert_eq!(
@@ -4523,6 +4690,41 @@ mod tests {
             RealTypedRowDecision {
                 outcome: Some(Outcome::IParityOracleFail),
                 w6_github_events_added: false,
+                w13_numbers_added: false,
+            }
+        );
+    }
+
+    #[test]
+    fn w13_numbers_typed_admits_only_strict_sonic_plus_one_pass() {
+        assert_eq!(
+            real_typed_row_decision(
+                "numbers",
+                None,
+                150_124,
+                Some(91_284.0),
+                Some(123_730.0),
+                Some(101_180.0),
+            ),
+            RealTypedRowDecision {
+                outcome: None,
+                w6_github_events_added: false,
+                w13_numbers_added: true,
+            }
+        );
+        assert_eq!(
+            real_typed_row_decision(
+                "numbers",
+                None,
+                150_124,
+                Some(101_200.0),
+                Some(123_730.0),
+                Some(101_180.0),
+            ),
+            RealTypedRowDecision {
+                outcome: Some(Outcome::NDirectProjectionFailure),
+                w6_github_events_added: false,
+                w13_numbers_added: false,
             }
         );
     }
@@ -4540,6 +4742,7 @@ mod tests {
         assert!(w0_real_typed_metadata_expected("apache_builds"));
         assert!(w0_real_typed_metadata_expected("citm_catalog"));
         assert!(w0_real_typed_metadata_expected("github_events"));
+        assert!(w0_real_typed_metadata_expected("numbers"));
     }
 
     #[test]

@@ -7,7 +7,7 @@ use codegen::direct_schema::{
 pub fn schema() -> DirectSchemaSet {
     DirectSchemaSet {
         module_name: "generated_real_typed".to_string(),
-        schema_hash: "sk-v10-w6-github-events".to_string(),
+        schema_hash: "sk-v13-w13.1-numbers".to_string(),
         roots: vec![
             DirectRootSchema::struct_root(
                 "parse_twitter_search",
@@ -39,6 +39,11 @@ pub fn schema() -> DirectSchemaSet {
                 "parse_marine_ik",
                 "crate::real_typed_struct::MarineIk",
                 "MarineIk",
+            ),
+            DirectRootSchema::typed_root(
+                "parse_numbers",
+                "Vec<f64>",
+                vec_with_capacity(f64_ty(), 10_001),
             ),
             DirectRootSchema::typed_root(
                 "parse_w5_array_root_probe",

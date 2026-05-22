@@ -4668,3 +4668,33 @@ perturbation.
   in-tranche reopen triggers the round-trip rule unless it names a fresh
   material differential, such as decode-allocation deletion, row-specific
   string borrowing policy, or SIMD unicode string decode consumption.
+
+## SK-V13 Wave 13.7 Typed Product Y String Unicode Surface
+
+- Item 151 closes W13.7 under `G-W13.7-TYPED-Y-STRING-UNICODE` as
+  `MEASURED-REJECT`. The material differential from REDRESS 70-72/103-110 and
+  REDRESS 150 was real: the rejected patch added a generated
+  `y_string_unicode` typed product root as `Vec<Cow<'input, str>>`, routed it
+  through the `real_typed_struct` Track 1 consumer, and compared it against
+  Track 2, sonic-rs strict, and serde_json typed outputs. It was not a direct
+  digest, parse-only row, unicode codec proof, hidden sink, or partial fixture.
+- Correctness passed before measurement:
+  `cargo xtask regen-real-typed`, `cargo xtask check-real-typed`,
+  `cargo test -p bbnf-bench y_string_unicode_typed -- --nocapture`,
+  `cargo test -p bbnf-bench --bin gate w13_y_string_unicode -- --nocapture`,
+  and
+  `cargo test -p bbnf-bench lock14_baseline::tests::admits_sk_v13_w13_7_parent_diff_under_w13_7_scope -- --nocapture`.
+  Native Criterion then measured Track 1 generated typed `639.759` Mbps,
+  Track 2 serde oracle `718.903` Mbps, sonic strict typed `823.749` Mbps,
+  and serde_json typed `720.387` Mbps. The pinned threshold was
+  `sonic + 1 = 824.749` Mbps, so Track 1 missed by `184.990` Mbps.
+- The rejected implementation patch is saved at
+  `/tmp/skv13-waveW13.7-rejected.patch`. The retained measurement facts are
+  `restart/skinny/tranches/sk-v13/research/w13.7/y-string-unicode-typed-facts.json`;
+  the retained redress note is
+  `restart/skinny/tranches/sk-v13/research/w13.7/redress.md`.
+- `json/y_string_unicode/real_typed_struct/main` remains `MISSING`. A second
+  in-tranche reopen triggers the round-trip rule unless it names a fresh
+  material differential, such as row-specific escape decode deletion, SIMD
+  unicode decode consumption, or a typed product shape that avoids per-string
+  allocation pressure without weakening strict equality.

@@ -2,9 +2,12 @@
 
 Date: 2026-05-21.
 
-Status: S-P3 V2 planning draft. This prompt is not live implementation
-authority. Implementation waves remain blocked until G-Omega closes and S-P3
-converges or the user explicitly pins S-P3 final.
+Status: live implementation authority. S-P3 converged at
+`G-S-P3-SPEC-DISPATCH-CONVERGED` in
+`research/p3/hardening/HARDENING-S-P3-V3-CONSOLIDATED.md`; G-Omega closed by
+explicit user sign-off at `2026-05-22T03:52:18Z`; Pass Omega CRUD completed in
+`restart/audit/totality/astral/V1/CRUD-LOG.md`. Implementation waves may
+dispatch under this contract after their per-wave packet is accepted.
 
 ## Authority
 
@@ -33,18 +36,16 @@ shortlist; P3-B owns cost/dependency/bracket accounting; P3-C owns formulas;
 P3-D owns telemetry and gate-json rejection; P3-E owns the REDRESS route-state
 ledger. No implementation wave packet may treat those artifacts as absent.
 
-## Global Block
+## Global Block Status
 
-Do not dispatch Wave 0 or any later implementation wave until both are true:
+The pre-W0 block is lifted for SK-V13:
 
-- G-Omega has closed by user sign-off and totality V1.1 CRUD is landed.
-- S-P3 has converged by two consecutive accepted CHALLENGE cycles, or the user
-  has explicitly pinned S-P3 final.
+- G-Omega closed by user sign-off and totality V1.1 CRUD is landed.
+- S-P3 converged by two consecutive accepted CHALLENGE cycles.
 
-Before both gates close, allowed work is planning/research only under
-`restart/skinny/tranches/sk-v13/` plus read-only inspection of `skinny/RESULTS.md`
-and `skinny/REDRESS.md`. No source edit, generated runtime edit, gate/report
-edit, RESULTS edit, or REDRESS append is authorized before the block lifts.
+The lift is not blanket source authority. Wave 0 and later redress may edit only
+the owner paths named by the accepted wave packet, and each wave must preserve
+the research -> plan -> CHALLENGE when required -> redress commit discipline.
 
 ## Wave Triumvirate Contract
 

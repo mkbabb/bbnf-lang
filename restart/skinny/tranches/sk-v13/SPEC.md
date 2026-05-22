@@ -2,10 +2,13 @@
 
 Date: 2026-05-21.
 
-Status: S-P3 V2 planning draft. This file is not implementation dispatch
-authority. It folds the SK-V13 SYNTHESIS/HANDOFF, the 2026-05-21 full-SOTA
-user pin, converged S-P1/S-P2 evidence, P3-A through P3-E, and the S-P3 V1
-CHALLENGE revise set.
+Status: user-pinned final implementation dispatch authority. S-P3 converged at
+`G-S-P3-SPEC-DISPATCH-CONVERGED` in
+`research/p3/hardening/HARDENING-S-P3-V3-CONSOLIDATED.md`; G-Omega closed by
+explicit user sign-off at `2026-05-22T03:52:18Z`; Pass Omega CRUD completed in
+`restart/audit/totality/astral/V1/CRUD-LOG.md`. This file folds the SK-V13
+SYNTHESIS/HANDOFF, the 2026-05-21 full-SOTA user pin, converged S-P1/S-P2
+evidence, P3-A through P3-E, and the S-P3 CHALLENGE accepted packet.
 
 Authority:
 
@@ -29,18 +32,15 @@ Authority:
 - `skinny/RESULTS.md`
 - `skinny/REDRESS.md`
 
-Dispatch lock:
+Dispatch lock status:
 
-- No SK-V13 implementation wave dispatches from this V1 S-P3 draft.
-- No Wave 0 or later redress may edit source, generated runtime, gate/report
-  code, `skinny/RESULTS.md`, or `skinny/REDRESS.md` until G-Omega is closed by
-  the user and S-P3 has converged under the two-accepted-cycle rule or explicit
-  user pin.
-- G-Omega is a hard pre-W0 gate. Planning may continue before G-Omega; source
-  implementation may not.
-- All waves below are conditional. Each requires a wave plan with exact owner
+- `G-S-P3-SPEC-DISPATCH-CONVERGED`: PASS, with two accepted CHALLENGE cycles.
+- `G-Omega`: CLOSED by user sign-off; totality V1.1 CRUD is complete.
+- The pre-W0 block is lifted for SK-V13 Wave 0 and later waves, subject to the
+  per-wave triumvirate contract.
+- All waves below remain conditional. Each requires a wave plan with exact owner
   paths, thresholds, revert slice, same-wave consumer, and pre-block list before
-  redress.
+  redress. No wave may edit outside the owner paths named by its accepted plan.
 
 ## Section 0 - Close Condition And Goalset
 

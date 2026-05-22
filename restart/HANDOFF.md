@@ -1,50 +1,57 @@
 # Handoff — bbnf-lang Greenfield Restart
 
-## Current Totality Override — 2026-05-21
+## Current Totality Override — 2026-05-22
 
-Status: **SK-V13 totality T-P2 Research is converged and T-P3 Synthesis is
-authorized.** The historical body below remains useful for restart lineage, but
-it is not current dispatch authority. Current measured authority is
-`skinny/RESULTS.md` at SK-V13 head; current skinny tranche authority is
-`restart/skinny/tranches/sk-v13/`; current totality excavation authority is
-`restart/audit/totality/p1/` plus `restart/audit/totality/p2/` and their
-converged hardening records.
+Status: **Pass Omega V1.1 is signed off and its CRUD receiver is applying.**
+`G-Omega` closed by explicit user sign-off at `2026-05-22T03:52:18Z`; the
+record is `restart/audit/totality/astral/V1/G-OMEGA-SIGNOFF.md`, and the
+receiver state is `restart/audit/totality/astral/V1/CRUD-LOG.md`. The
+historical body below remains useful for restart lineage, but it is not current
+dispatch authority.
 
-`G-T-P1-EXCAVATION-CONVERGED`: PASS. `G-T-P2-RESEARCH-CONVERGED`: PASS. T-P2
-V4 and V5 both accepted all six CHALLENGE lenses, so T-P3 Synthesis may
-dispatch under `restart/prompts/totality/PASS-3-SYNTHESIS.md`. The T-P3 entry
-packet is:
+Current measured authority is `skinny/RESULTS.md` at SK-V13 head. Current skinny
+tranche authority is `restart/skinny/tranches/sk-v13/`. Current totality
+authority is the converged Pass Omega packet under
+`restart/audit/totality/astral/V1/`, plus the CRUD-applied V1.1 surfaces:
+`restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`,
+`restart/locks/LOCKS.md`, `restart/MIGRATION.md`, and this file.
+
+Read in order for current work:
 
 1. `restart/prompts/ORCHESTRATOR.md`.
-2. `restart/prompts/totality/PASS-3-SYNTHESIS.md`.
-3. `restart/audit/totality/p1/1A-substrate-evidence.md`.
-4. `restart/audit/totality/p1/1B-codegen-evidence.md`.
-5. `restart/audit/totality/p1/1C-runtime-evidence.md`.
-6. `restart/audit/totality/p1/1D-skinny-lessons.md`.
-7. `restart/audit/totality/p1/1E-locks-evidence.md`.
-8. `restart/audit/totality/p1/1F-anti-pattern.md`,
-   `1F-coherence-scan.md`, and `1F-past-corpora.md`.
-9. `restart/audit/totality/p1/hardening/HARDENING-T-P1-V5-CONSOLIDATED.md`.
-10. `restart/audit/totality/p2/2A-sota-landscape.md`.
-11. `restart/audit/totality/p2/2B-primitive-vocabulary.md`.
-12. `restart/audit/totality/p2/2C-grammar-neutrality.md`.
-13. `restart/audit/totality/p2/2D-cost-model.md`.
-14. `restart/audit/totality/p2/2E-host-arch-esoterica.md`.
-15. `restart/audit/totality/p2/2F-parse-that-gaps.md`.
-16. `restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md`.
-17. `restart/audit/totality/p2/T-P2-V3-FOLD-ADDENDUM.md`.
-18. `restart/audit/totality/p2/T-P2-V4-FOLD-ADDENDUM.md`.
-19. `restart/audit/totality/p2/hardening/HARDENING-T-P2-V5-CONVERGED.md`.
-20. V1 spec surfaces: `restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`,
-    `restart/locks/LOCKS.md`, `restart/MIGRATION.md`, and this file.
-21. `restart/skinny/tranches/sk-v13/` scoping, S-P1, and converged S-P2
-    artefacts as the current skinny evidence lane.
-22. `skinny/RESULTS.md` and `skinny/REDRESS.md`.
+2. `restart/prompts/pass-contracts/PASS-OMEGA.md`.
+3. `restart/audit/totality/p3/G3-totality-v1-synthesis.md`.
+4. `restart/audit/totality/p3/hardening/HARDENING-T-P3-V3-CONVERGED.md`.
+5. `restart/audit/totality/astral/V1/omega-hardening-consolidated.md`.
+6. `restart/audit/totality/astral/V1/G-OMEGA-SIGNOFF.md`.
+7. `restart/audit/totality/astral/V1/CRUD-LOG.md`.
+8. `restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`,
+   `restart/locks/LOCKS.md`, `restart/MIGRATION.md`, and this file.
+9. `restart/skinny/tranches/sk-v13/SYNTHESIS.md`.
+10. `restart/skinny/tranches/sk-v13/SPEC.md`.
+11. `restart/skinny/tranches/sk-v13/DISPATCH-PROMPT.md`.
+12. `restart/skinny/tranches/sk-v13/HANDOFF.md`.
+13. `skinny/RESULTS.md` and `skinny/REDRESS.md`.
 
-T-P3 proposes document deltas only. It must not edit `ARCHITECTURE.md`,
-`MASTER-PLAN.md`, `LOCKS.md`, `MIGRATION.md`, or governance surfaces directly.
-Those remain gated by T-P3 convergence, Pass Omega, and the mandatory G-Omega
-user sign-off.
+The SK-V13 skinny bar is the user-pinned full-SOTA bar: every non-out-of-scope
+CSS L4 parity row must beat lightningcss with strict equality, every JSON row
+in every output plane must beat sonic-rs strict or carry an architectural block,
+decision-engine/union/SIMD/totality obligations must close, and no prior admit
+may silently demote. The SK-V12 single CSS row remains admitted evidence, not
+full CSS parity.
+
+Grammar onboarding remains three declarative surfaces only: grammar source,
+workspace metadata, and an optional per-grammar declaration crate for host
+functions. Generated per-grammar names are allowed only as generator output from
+the rostered metadata. Generic crates must not grow grammar switches,
+grammar-named public APIs, or hand-written per-grammar runtime files.
+
+Dispatch rule: SK-V13 W0 and later source/gate/RESULTS/REDRESS edits are
+authorized only after the Pass Omega CRUD receiver log is complete and the
+worktree is clean. Until then, S-P3/SPEC text is planning authority but not
+implementation authority.
+
+## Historical SK-V6 Handoff Body (not current authority)
 
 Date: 2026-05-15 (SK-V6 SOTA recovery active)
 Status: **SK-V6 same-plane SOTA recovery is current. Current measured authority is `skinny/RESULTS.md`: full gate `N-direct / NoGo`; retained parse has 13 G rows, with `canada`, `mesh`, `marine_ik`, and `numbers` A / GO. Canada structural scan is green in the refreshed full matrix at 69075 Mbps against the 40000 Mbps NEON floor. Direct correctness is green and four direct rows pass the sonic-rs 1.10x direct slack (`citm_catalog`, `apache_builds`, `github_events`, `instruments`); 13 direct rows remain red. Strictness/output-plane columns are disclosed and must be promoted to schema v3 before any SOTA claim. SK-V5 Waves 0-5 landed the Rust-state substrate and measured redress, but the Wave 3 UTF-8 fusion prescription is refuted by REDRESS 50-55. The SK-V6 asmjson/DAV1D synthesis adds the current route: strict comparator planes, DAV1D-grade primitive admission, retained string/materialization recovery, generated DirectFieldFacts, and optional x86 CollapsedStage after the arm64 matrix closes.**

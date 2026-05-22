@@ -15,7 +15,7 @@ G-Omega closed by user sign-off recorded in
 
 | CRUD | Receiver | Operation | Files | Status | Commit | Notes |
 |---|---|---|---|---|---|---|
-| CRUD-1 | ARCHITECTURE | Update | `restart/ARCHITECTURE.md` | pending | pending | Implementation-status, BackendShape citations, row-plane/CSS/REDRESS status. |
+| CRUD-1 | ARCHITECTURE | Update | `restart/ARCHITECTURE.md` | complete | this commit | Reconciled lock anchors, BackendShape live citations, row-plane/CSS/REDRESS status. |
 | CRUD-2 | MASTER-PLAN | Update | `restart/MASTER-PLAN.md` | pending | pending | H-tranche reconciliation and V1.1 receiver waves. |
 | CRUD-3 | LOCKS | Update | `restart/locks/LOCKS.md` | complete | this commit | Applied accepted `locks-diff.md`; 16-lock count preserved. |
 | CRUD-4 | HANDOFF + MIGRATION | Update | `restart/HANDOFF.md`, `restart/MIGRATION.md` | pending | pending | Current state, migration fates, G-Omega closure. |

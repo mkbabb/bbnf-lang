@@ -3,7 +3,7 @@
 This document is the Phase 2 architecture contract for the greenfield restart.
 It binds the workspace shape, dependency DAG, public APIs, private internals,
 Cargo metadata, IR contracts, BBNF surface, and migration-facing invariants.
-It is written from the resolved authority set: `restart/README.md`, the 14
+It is written from the resolved authority set: `restart/README.md`, the 16
 locks, the instruction precepts, the three PASS syntheses, and the current
 dispatch authority.
 
@@ -28,16 +28,16 @@ tables, not generic crate branches.
 
 | Topic | Settled architecture | Superseded material | Resolution |
 |---|---|---|---|
-| Runtime substrate | Tape is the substrate and is unioned with direct-to-struct. | Older restart notes and inheritance rows that say tape dies or ParseStream replaces it. | The README names tape and direct-to-struct as a union (`restart/README.md:272-318`), Lock 1 repeats this (`restart/locks/LOCKS.md:34`), and PASS-3 resolves ParseStream mentions as stale (`restart/audit/pass-3-runtime/PASS-3.md:14-23`). |
+| Runtime substrate | Tape is the substrate and is unioned with direct-to-struct. | Older restart notes and inheritance rows that say tape dies or ParseStream replaces it. | The README names tape and direct-to-struct as a union (`restart/README.md:272-318`), Lock 1 repeats this (`restart/locks/LOCKS.md:48`), and PASS-3 resolves ParseStream mentions as stale (`restart/audit/pass-3-runtime/PASS-3.md:14-23`). |
 | ParseStream term | Do not rename tape to ParseStream. | `restart/inheritance/INDEX.md:66` and old README remnants that mention ParseStream. | Keep the term `tape`. `ParseStream` only appears today as a `syn` macro parse type, not a runtime concept. |
-| Columnar SoA / parallel substrate | Dead. | Old speculative substrate sketches. | Lock 1 rejects parallel substrates and OpenFrame ladders (`restart/locks/LOCKS.md:34`). |
+| Columnar SoA / parallel substrate | Dead. | Old speculative substrate sketches. | Lock 1 rejects parallel substrates and OpenFrame ladders (`restart/locks/LOCKS.md:48`). |
 | Rewrite-mode | Out of the BBNF surface. | ffuzzy transducer/rewrite ideas and stale README line language. | README says rewrite-mode is rejected (`restart/README.md:139-148`); PASS-1 discards it (`restart/audit/pass-1-substrate/PASS-1.md:5-20`). |
 | Unicode class algebra | Deferred to `parse-that-regex`; not a grammar-level BBNF surface. | ffuzzy and stale extension lists that treat class algebra as a grammar feature. | README routes Unicode set work below BBNF (`restart/README.md:150-158`); PASS-1 says no BBNF-level Unicode class algebra (`restart/audit/pass-1-substrate/PASS-1.md:84-121`). |
 | Lookbehind | In. | Old rejection of lookbehind. | README accepts lookbehind as a first-class extension (`restart/README.md:121-137`); PASS-1 includes `Lookbehind` in Grammar IR (`restart/audit/pass-1-substrate/PASS-1.md:24-42`). |
-| Per-grammar declaration crates | Not default. A rare escape valve must be explicit and fenced. | Old plans that created declaration crates per grammar. | README says onboarding is `.bbnf` plus workspace metadata, with no Rust crate or match arms (`restart/README.md:11-25`); Lock 14 allows only rare optional declaration crates (`restart/locks/LOCKS.md:60`). |
-| Generic grammar code | Mandatory. | Current hardcoded parser registries and grammar-name Rust modules. | CENSUS identifies grammar-name leaks in metadata, registries, path mirrors, and generated shims (`restart/corpora/CENSUS.md:103-122`). Lock 14 rejects generic crates with grammar switches, types, modules, or features (`restart/locks/LOCKS.md:60`). |
-| IR boundary | Two IRs plus side tables. | Old backend walkers that emit from Grammar IR directly. | README requires Grammar IR and Backend IR (`restart/README.md:104-118`); Lock 5 forbids emitter walking grammar directly (`restart/locks/LOCKS.md:42`). |
-| Optimization graph | CSP, egraph, miners, and cost model compose by output piping. | A fused global hypergraph. | README and Lock 4 require bridged sister crates rather than a fused graph (`restart/README.md:219-228`, `restart/locks/LOCKS.md:40`). |
+| Per-grammar declaration crates | Not default. A rare escape valve must be explicit and fenced. | Old plans that created declaration crates per grammar. | README says onboarding is `.bbnf` plus workspace metadata, with no Rust crate or match arms (`restart/README.md:11-25`); Lock 14 allows only rare optional declaration crates (`restart/locks/LOCKS.md:220`). |
+| Generic grammar code | Mandatory. | Current hardcoded parser registries and grammar-name Rust modules. | CENSUS identifies grammar-name leaks in metadata, registries, path mirrors, and generated shims (`restart/corpora/CENSUS.md:103-122`). Lock 14 rejects generic crates with grammar switches, types, modules, or features (`restart/locks/LOCKS.md:220`). |
+| IR boundary | Two IRs plus side tables. | Old backend walkers that emit from Grammar IR directly. | README requires Grammar IR and Backend IR (`restart/README.md:104-118`); Lock 5 forbids emitter walking grammar directly (`restart/locks/LOCKS.md:113`). |
+| Optimization graph | CSP, egraph, miners, and cost model compose by output piping. | A fused global hypergraph. | README and Lock 4 require bridged sister crates rather than a fused graph (`restart/README.md:219-228`, `restart/locks/LOCKS.md:111`). |
 | asmjson/DAV1D lift | Lift instruction/process vocabulary into `BackendShape`, `CostFacts`, and Lock 16 primitive admission. | JSON-specific asmjson mode or a new `@asm` / `@simd` directive. | SK-V6 A/B reports show the portable unit is DPDA facts plus checkasm-admitted primitives. `CollapsedStage` remains cost-model selected and table-driven; generic crates stay grammar-neutral. |
 
 egglog-style Datalog/equality-saturation fusion is a known SOTA alternative,
@@ -71,7 +71,7 @@ set below is authoritative for tranche planning and for migration disposition.
 | `cost-model` | Internal | Cost facts, SOTA profiles, extraction scoring, generated LOC budgets. | PASS-1 keeps a real cost model with SOTA gates (`restart/audit/pass-1-substrate/PASS-1.md:46-61`). |
 | `path` | Public | Rust macro/front-facing path DSL: `path!`, `select!`, visitor selectors. | Renames current `bbnf-path`; README requires `path`, `path-core`, `path-ts` (`restart/README.md:47-53`). |
 | `path-core` | Internal/shared | Path parser, typed segments, evaluator core, diagnostics shared by Rust and TS. | Extract from `bbnf-path` and `bbnf-path-ts`. |
-| `path-ts` | V2 deferred | TypeScript path package generated over `path-core` semantics after `TsBackend: Backend` lands. | Legacy `bbnf-path-ts` is deferred; Lock 7 names the split and Lock 5 keeps TS post-V1 (`restart/locks/LOCKS.md:42`, `restart/locks/LOCKS.md:46`). |
+| `path-ts` | V2 deferred | TypeScript path package generated over `path-core` semantics after `TsBackend: Backend` lands. | Legacy `bbnf-path-ts` is deferred; Lock 7 names the split and Lock 5 keeps TS post-V1 (`restart/locks/LOCKS.md:117`, `restart/locks/LOCKS.md:113`). |
 | `egraph` | Internal/sister | Equality saturation core and bridge APIs. | Keep and harden current `crates/egraph` (`restart/corpora/MODULES.md:136-162`). |
 | `egraph-derive` | Internal/sister | Derive support for egraph term declarations. | Keep with `egraph` (`restart/corpora/MODULES.md:136-162`). |
 | `csp-solver` | Internal/sister | Generic CSP solver used by type inference, layout choices, and extraction facts. | Keep and harden current generic solver (`restart/corpora/MODULES.md:73-132`). |
@@ -81,7 +81,7 @@ set below is authoritative for tranche planning and for migration disposition.
 
 Crates not in this list do not survive as production crates. `ser` and
 `gorgeous` are archived before the first implementation tranche, as Lock 12
-requires (`restart/locks/LOCKS.md:56`). `bootstrap` is slimmed into
+requires (`restart/locks/LOCKS.md:199`). `bootstrap` is slimmed into
 bootstrap artifacts and developer commands, not kept as a first-class runtime
 crate.
 
@@ -187,10 +187,10 @@ The edge rules are:
 |---|---|
 | No public crate is a dependency of an internal crate except where the public crate is only a facade-free data crate. | `runtime` depends on `path-core`, not `path`; `passes` depends on `ir`, not `bbnf`. |
 | `runtime` never depends on `codegen`. | Code generation emits files into `runtime/src/grammars/<name>/`; runtime remains buildable without codegen at library use time. |
-| `codegen` never reads Grammar IR directly for emitter logic. | Lowerers consume Backend IR and side tables, honoring Lock 5 (`restart/locks/LOCKS.md:42`). |
+| `codegen` never reads Grammar IR directly for emitter logic. | Lowerers consume Backend IR and side tables, honoring Lock 5 (`restart/locks/LOCKS.md:113`). |
 | `parse-that` has no `bbnf` dependency. | Unicode-class algebra remains regex-layer machinery, not grammar-level BBNF syntax. |
-| V2 `path-ts` consumes shared semantics, not Rust macro internals. | `path-core` is the single semantics owner, matching the path split in Lock 7 (`restart/locks/LOCKS.md:46`). |
-| `egraph` and `csp-solver` remain generic. | They can be published or path-dep incubated without grammar concepts (`restart/locks/LOCKS.md:52-56`). |
+| V2 `path-ts` consumes shared semantics, not Rust macro internals. | `path-core` is the single semantics owner, matching the path split in Lock 7 (`restart/locks/LOCKS.md:117`). |
+| `egraph` and `csp-solver` remain generic. | They can be published or path-dep incubated without grammar concepts per Lock 11 and Lock 14 (`restart/locks/LOCKS.md:190`, `restart/locks/LOCKS.md:220`). |
 
 ## 3. Public API Surfaces
 
@@ -224,7 +224,7 @@ PASS-3 sets the user runtime API around `parse`, `parse_in`, `parse_owned`, and
 `DocumentView` (`restart/audit/pass-3-runtime/PASS-3.md:42-80`). `parse` is
 slice-borrow primary, `parse_in` is arena-aware, and `parse_owned` owns input
 bytes for longer-lived documents. Lock 9 confirms this API family
-(`restart/locks/LOCKS.md:50`).
+(`restart/locks/LOCKS.md:155`).
 
 This API family is the V1 Rust-line surface. V2 `WasmBackend` and `TsBackend`
 may expose host-idiomatic allocation and GC forms without changing Backend IR:
@@ -269,7 +269,7 @@ Commands:
 
 The CLI may expose grammar names as user input, but it must not encode those
 names in Rust switches. Lock 14 forbids generic crates from containing grammar
-switches or modules (`restart/locks/LOCKS.md:60`).
+switches or modules (`restart/locks/LOCKS.md:220`).
 
 ### 3.3 `bbnf-language-server`
 
@@ -359,7 +359,7 @@ are not part of the public contract.
 | Backend syntax | Lowerer peeking at `GrammarIr::Alt`. | `BackendIr::Alt` (`mode: Dispatch | Speculative`). |
 
 These rules are direct consequences of Lock 14 and the current generalization
-audit (`restart/locks/LOCKS.md:60`, `restart/corpora/CENSUS.md:103-122`).
+audit (`restart/locks/LOCKS.md:220`, `restart/corpora/CENSUS.md:103-122`).
 
 ## 4. Private Internals By Crate
 
@@ -582,7 +582,7 @@ test-fixtures/src/
 
 No directory may become a dumping ground. Lock 13 sets the 4-10 child target
 and the 500 LOC handwritten file ceiling, generated files excepted
-(`restart/locks/LOCKS.md:58`).
+(`restart/locks/LOCKS.md:207`).
 
 ### 4.5 Complete Private Internals Matrix
 
@@ -739,9 +739,9 @@ Schema rules:
 |---|---|
 | Metadata may name files, profiles, and feature flags. | `grammar::metadata` validates paths and profile names. |
 | Metadata may not name Rust parser types, generated modules, or builder structs. | `pipeline::workspace` rejects Rust-looking paths and known old strategy keys. |
-| `allow_declaration_crate = true` requires an explicit reason and review gate. | Lock 14 makes declaration crates rare escape valves (`restart/locks/LOCKS.md:60`). |
-| `pratt`, `simd`, and recognizers default to `auto`. | Lock 10 says Pratt and SIMD are auto-detected, not directives (`restart/locks/LOCKS.md:52`). |
-| `wasm = true` is invalid in V1 metadata and routes to the V2 `WasmBackend: Backend` receiver. | V1 ships `RustBackend` only; WASM lower-and-bench waits for the V2 backend impl (`restart/locks/LOCKS.md:42`, `restart/ARCHITECTURE.md:1095-1097`). |
+| `allow_declaration_crate = true` requires an explicit reason and review gate. | Lock 14 makes declaration crates rare escape valves (`restart/locks/LOCKS.md:220`). |
+| `pratt`, `simd`, and recognizers default to `auto`. | Lock 10 says Pratt and SIMD are auto-detected, not directives (`restart/locks/LOCKS.md:164`). |
+| `wasm = true` is invalid in V1 metadata and routes to the V2 `WasmBackend: Backend` receiver. | V1 ships `RustBackend` only; WASM lower-and-bench waits for the V2 backend impl (`restart/locks/LOCKS.md:113`, `restart/ARCHITECTURE.md:1095-1097`). |
 | Adding a grammar must not touch Rust source. | The future grammar test in this document makes that a hard gate. |
 
 Metadata validation errors are normal diagnostics, not panics. They flow
@@ -1109,9 +1109,19 @@ Per-shape lowering output. Each `BackendShape` value resolves to a concrete arte
 
 The bifurcation is load-bearing for LLVM compatibility. Recursive-descent Rust compiles to an implicit automaton through LLVM's optimiser — the call-stack-as-parse-state lowering fuses with force-inlined hot leaves under Lock 15's `lto = "fat"` + `codegen-units = 1` + ~20 KiB hot-function ceiling, and yyjson's reference C body demonstrates the same shape stays in i-cache. Codegen-emitted *explicit* Rust automatons do not survive this lowering: LLVM cannot fold an indirect-dispatch state walk back into PC-as-state form, and the overhead asmjson eliminates via `jmp [r10 + state*8]` reappears as branch-misprediction taxa in any LLVM-emitted equivalent. The lone exception — `CollapsedStage` — therefore consumes hand-written NASM where direct control over generated-code addresses is available (asmjson's PC-as-state pattern; Lock 16's `FSM_DISPATCH_THREADED` primitive in `skinny/crates/bbnf-simd/ext/x86/bbnf.asm`). All four other shapes stay in LLVM's territory and consume Layer-1 primitives from the same `ext/x86/bbnf.asm` vocabulary only at scan-shaped inner loops where the primitive's grammar-neutral signature (`BYTE_CLASS_FROM_TABLE_64`, `BYTE_CLASS_FROM_EQ_SET_64`, `BITMAP_PREFIX_XOR_64`, `BITMAP_NEXT_SET_BIT`, `BULK_EMIT_COMPRESSED`, `EOB_PAD_CLAMP`, `FRAME_PUSH_BOUNDED`, `FRAME_POP_BOUNDED`) admits a direct FFI binding. The Rust per-shape lowerer surface now exists in the skinny prototype at `skinny/crates/codegen/src/lower/rust.rs`; its `SinkOnly` path lowers Backend IR into a grammar-neutral `SinkOnlyProgram` consumed by the JSON runtime renderer. The two-layer reusable vocabulary — Layer 0 vendored from dav1d at `skinny/crates/bbnf-simd/ext/x86/x86inc.asm` (1,978 LOC, BSD-2), Layer 1 grammar-neutral macros at `skinny/crates/bbnf-simd/ext/x86/bbnf.asm` — is the dav1d / asmjson factoring elaborated at `restart/skinny/tranches/shared/SOTA-BEAT-DESIGN.md` §5.2; Lock 1 governs the substrate union that admits all five shapes, Lock 14 governs the zero-grammar-overfitting discipline that keeps `bbnf.asm` grammar-neutral, Lock 15 governs the i-cache residency budget that bounds the recursive-descent shapes, and Lock 16 governs the admissibility allowlist that bounds the primitive vocabulary. The same-wave-consumer rule at `docs/precepts/instructions/LESSONS-LEARNED.md:17-26` constrains admission: a `CollapsedStage` lowering target lands only when a per-grammar kernel author is in flight (no substrate-without-consumer); a primitive lands in `bbnf.asm` only when at least one shape consumes it through codegen at the same wave.
 
-### 7.4 SK-V5 / SK-V6 Implementation Status
+### 7.4 SK-V5 Through SK-V13 Implementation Status
 
-The §7.3 surfaces — the `BackendShape` enum, the `derive_backend_shape` algorithm, and the `LayoutFacts.backend_shape: HashMap<RuleId, BackendShape>` field — are now present in the skinny prototype. `ir/src/lib.rs` owns `BackendShape`; `passes/src/lib.rs` populates `LayoutFacts.backend_shape` through `passes::recognizers::derive_backend_shape_with_diagnostics`; `codegen/src/lower/` dispatches per shape. The current close blocker is no longer symbol absence; it is measured cost selection and runtime materialization quality across retained parse and generated `SinkOnly`.
+The §7.3 surfaces — the `BackendShape` enum, the shape derivation path, and
+`LayoutFacts.backend_shape` — are present in the skinny prototype, but they are
+not a SOTA close by themselves. `skinny/crates/ir/src/lib.rs:401`-`408` owns
+the five-shape enum; `skinny/crates/passes/src/lib.rs:28`-`60` normalizes the
+grammar, derives materialization, recognizers, shape facts, and cost facts, and
+assigns `layout_facts.backend_shape`; `skinny/crates/passes/src/lib.rs:387`-`438`
+builds the `BackendShapePlan`; `skinny/crates/passes/src/lib.rs:446`-`506`
+applies the current P1-P8-style chooser; `skinny/crates/codegen/src/lower/mod.rs:17`-`24`
+selects the per-shape lowerer. The blocker is now measured cost selection,
+runtime materialization quality, and row movement across retained, direct, and
+generated non-JSON outputs.
 
 SK-V6 fold-back (2026-05-14): Wave 1 substrate state is **LANDED** in
 `603308b3` (`BackendShape`, `LayoutFacts.backend_shape`,
@@ -1124,9 +1134,48 @@ longer an architectural prescription. SK-V6 requires fresh PC-level
 `parse-attribution` profiles on the generated Track 1 baseline before another
 kernel or substrate intervention is selected.
 
-The codegen text-emission step is split. Retained parser/view scaffolding still uses the historical JSON template surface, but the direct `SinkOnly` entry is no longer a decorative pass-through. `codegen/src/lower/sink_only.rs` walks `BackendIr` into `SinkOnlyProgram`, `DirectBuild` carries a field/source roster, and `codegen/src/lib.rs` refuses direct emission if the backend lacks `DirectBuild`. The former `json_templates/sink_direct.rs` splice is removed. Generated direct string lowering now passes raw string spans plus `needs_unescape` to `JsonSink::*_source`; the default hooks preserve the old allocation behavior, and the measured no-allocation decoded visitor route is rejected until a fused decode+sink primitive exists. SK-V5 item 57 adds force-inlined direct receivers plus a bounded direct-only tiny-plain-string raw-span fast path; the refreshed full matrix moves direct passes to `citm_catalog`, `apache_builds`, `github_events`, and `instruments`, but still reports `N-direct / NoGo`, so this is receiver/source-shape evidence rather than SOTA closure. REDRESS 72 additionally admits a generated-retained-only cap-16 tiny string probe while rejecting global/direct/Track 2 widening; V1 must model that as a cost decision, not as a grammar directive. The BIR construction itself remains non-decorative — `extract::single_plan` walks the grammar honestly, projects `materialize_rule` per rule, and emits a `BackendIr` whose recognizers, rules, shape facts, and direct field rosters drive the direct renderer tests.
+The codegen text-emission step is split. Retained parser/view scaffolding still
+uses historical template surfaces, but the direct `SinkOnly` entry is no longer
+a decorative pass-through. `skinny/crates/codegen/src/lower/sink_only.rs`
+lowers `BackendIr` into a `SinkOnlyProgram`; `DirectBuild` carries a
+field/source roster; and codegen refuses direct emission if the backend lacks
+direct field facts. REDRESS 72 additionally admits a generated-retained-only
+cap-16 tiny string probe while rejecting global/direct/Track 2 widening; V1
+models that as a cost decision, not as a grammar directive. The BIR
+construction remains non-decorative: `extract::single_plan` walks the grammar,
+projects `materialize_rule` per rule, and emits a `BackendIr` whose recognizers,
+rules, shape facts, and direct field rosters drive the renderer tests.
 
-`passes::compile` at `passes/src/lib.rs:24-36` is grammar-blind in two places that the §7.3 contract requires it not to be. The shape-mining call at `passes/src/lib.rs:28` is the literal `shapes::shapes_for_json()` regardless of input grammar; the recognizer-mining call at `passes/src/lib.rs:29` is `recognizers::nominate_json(&_grammar)` whose `_grammar` parameter is unused (`passes/src/lib.rs:232-238` returns a single hardcoded `SimdScan` over the JSON structural alphabet). The downstream `materialization_for_rule` helper at `passes/src/lib.rs:423-434` matches on the literal rule-name strings `"object"`, `"array"`, `"pair"`, `"string"`, `"number"`, `"bool"`, `"null"`. Each is a `BBNF-GRAMMAR-NAME-IN-GENERIC-CRATE` Lock 14 violation that `cargo xtask lint-no-hardcoded-grammars` would surface if run against `passes`; the lint is catalogued at `restart/locks/LOCKS.md:60` and the diagnostic row sits at §7.5 of this document.
+The stale SK-V6 note that `passes::compile` still called `shapes_for_json()`,
+`nominate_json()`, or `materialization_for_rule()` is retired. Current
+`skinny/crates/passes/src/lib.rs:28`-`60` derives shape facts and recognizers
+from the normalized grammar, and the Ω-A audit records no remaining
+`shapes_for_json`, `nominate_json`, or `materialization_for_rule` symbols in
+the skinny passes/codegen/IR surface (`restart/audit/totality/astral/V1/ΩA-coherence-audit.md:31`-`38`).
+That does not close Lock 14 globally: current codegen still
+has provider-specific compatibility points such as
+`skinny/crates/codegen/src/lib.rs:157`, and those route to the Lock 14
+generated-provider/manifest receiver rather than to a SPEC-local exception
+(`restart/locks/LOCKS.md:220`).
+
+Current skinny row-plane truth is explicit and plane-specific:
+
+| plane | current status | V1.1 consequence |
+|---|---|---|
+| CSS L4 declaration-values | `css_l4/declaration_values/direct_to_struct/main` is a scoped SK-V12 `PASS-ADMIT` row on `css_l4_declaration_value_fact_stream`: Track 1 429.34420791225705 Mbps, cssparser 217.42665242186035 Mbps, lightningcss 168.92962215656692 Mbps, strict equality pass, fact-stream SHA-256 `caf97bee6e413157e6114985bc1108bc3a8fbf597a1e519b3ccff905d2e5236c` (`skinny/REDRESS.md:3824`-`3840`, `skinny/RESULTS.md:94`). | Scoped evidence only: not full CSS parity, not universal grammar closure, and not SK-V13 close authority (`restart/skinny/tranches/sk-v13/SYNTHESIS.md:38`-`57`). |
+| JSON `parse_only` | 17 rows reopen under SK-V13 full-SOTA; prior diagnostic/no-go labels are history (`restart/skinny/tranches/sk-v13/SYNTHESIS.md:95`-`110`). | Same-plane strict sonic-rs comparator or architectural-block proof is required. |
+| JSON `direct_to_struct` | REDRESS 119/120 record SK-V11 fixpoint history; SK-V13 lifts that fixpoint and reopens every direct row (`skinny/REDRESS.md:3497`, `skinny/REDRESS.md:3531`, `restart/skinny/tranches/sk-v13/SYNTHESIS.md:105`). | Every row must exceed strict sonic-rs on the same plane or carry architectural-block proof. |
+| JSON `real_typed_struct` | Typed-plane wins remain admitted evidence, but SK-V13 treats all 17 corpora x 3 planes as the JSON target set (`restart/skinny/tranches/sk-v13/SYNTHESIS.md:95`). | Prior A/GO rows cannot silently demote; missing rows remain work. |
+
+Measured REDRESS history is part of the architecture contract:
+
+| family | architecture disposition |
+|---|---|
+| Union substrate REDRESS 96/97/98 | Full class-column vectors, streaming structural cursors, and class-lane-only replays are measured history, not a category ban. Any new union attempt cites material differential, same-wave consumer, strict row gate, and rollback evidence (`skinny/REDRESS.md:2910`-`2940`, `restart/locks/LOCKS.md:48`-`89`). |
+| Direct residual REDRESS 119/120 | SK-V11 direct fixpoint is historical evidence only under the SK-V13 addendum; fresh material differentials may reopen every row (`skinny/REDRESS.md:3497`, `skinny/REDRESS.md:3531`). |
+| GrammarConfig / Lock 14 REDRESS 121 | GrammarConfig made JSON literals, structural bytes, tiny-string caps, and decode flags generated/configured rather than generic constants, but it is not fleet-wide grammar-neutral closure (`skinny/REDRESS.md:3555`-`3601`, `restart/locks/LOCKS.md:220`-`263`). |
+| `escape_mask_64` / Lock 16 REDRESS 122 | Correctness prerequisite admitted; no production throughput primitive or row movement admitted without same-wave consumer (`skinny/REDRESS.md:3603`-`3632`, `restart/locks/LOCKS.md:309`-`364`). |
+| Zero-orphan / ASM split REDRESS 126/127 | SK-V12 closed with zero source-present orphan disposition and one CSS delimiter microbench route split to future production wiring; microbench success is not production SIMD admission (`skinny/REDRESS.md:3766`-`3820`, `skinny/REDRESS.md:3824`-`3872`). |
 
 The remaining remediation is not another directive or BIR variant. H.W4 must make `derive_backend_shape` a measured cost decision across retained and direct workloads, remove the remaining grammar-specific mining from generic passes during Lock 14 cleanup, and close the measured rows named in `skinny/RESULTS.md`: retained parse G rows, `N-direct` rows, fused decoded-string delivery, exact float/string/Unicode materialization, and event-stream consumption. Item 56 is a useful general lesson for V1: structural scan throughput is a pair of grammar-neutral operations — classify structural/terminator bytes from a supplied alphabet, then bulk-emit set-bit positions into the active projection — not a JSON-only special case and not a reason to reintroduce a sidecar substrate. Item 57 is the paired direct lesson: inlinable receiver methods and direct raw-span source hooks are necessary but not sufficient; escape-heavy and high-cardinality string rows require same-loop field-layout materializers that beat allocate-then-contiguous-hash, not sink-local decoded-stat helpers or a second scanner. SK-V6 REDRESS 66-70 narrows this direct surface again: direct source-hook folding, parser-owned decoded scratch, byte-output `unescape_json_string`, semantic string facts, and a hand-authored JSON typed sink also failed as closes. The remaining route is an existing-BIR `DirectBuild { shape, fields }` payload refinement aimed at owned typed output: field facts carry representation policy such as borrowed span, number scalar, literal map, child, repeated, map, or empty; `SinkOnlyProgram` preserves those facts; generated direct code consumes them without adding directives, BIR variants, or JSON branches in generic crates. REDRESS 70 adds the schema-source rule for V1: if the target output is not implied by the grammar itself, the host/API type contract supplies the output schema that `DirectBuild` lowers. The `semantic_full_digest_stressor` remains a guard row, while `real_typed_struct` is the representative DirectBuild closure gate only after the schema-source contract is generated rather than hand-authored.
 
@@ -1140,7 +1189,7 @@ PASS-2 contributes the codegen and lifetime clauses
 (`restart/audit/pass-2-codegen/PASS-2.md` §8), PASS-3 contributes the
 runtime, host, layout, and pointer clauses
 (`restart/audit/pass-3-runtime/PASS-3.md:352-366`), and Lock 14 contributes
-the metadata/onboarding clauses (`restart/locks/LOCKS.md:60`). The
+the metadata/onboarding clauses (`restart/locks/LOCKS.md:220`). The
 table below is the consolidated catalogue; MASTER-PLAN §24 cookbook table
 references this catalogue rather than re-enumerating codes.
 
@@ -1213,7 +1262,7 @@ and let consumers inspect the producer for the verbatim string.
 ### 7.6 Backend Trait
 
 Lock 5 commits to per-backend lowerers as the contract boundary
-(`restart/locks/LOCKS.md:42`). PASS-1 §2 names the per-backend lowering
+(`restart/locks/LOCKS.md:113`). PASS-1 §2 names the per-backend lowering
 obligations table (`restart/audit/pass-1-substrate/PASS-1.md:61-71`). The
 formal Rust trait that enforces this boundary is the `Backend` trait. V1
 ships `RustBackend: Backend` only; V2 and later add `WasmBackend: Backend`
@@ -1471,7 +1520,7 @@ Per-grammar declaration crates are not a default escape hatch. A declaration
 crate can only be introduced when metadata and `@host fn` cannot represent the
 host boundary; it must be fenced with an explicit reason and a deletion path.
 This follows the current dispatch authority and Lock 14
-(`restart/locks/LOCKS.md:60`).
+(`restart/locks/LOCKS.md:220`).
 
 ### 8.4 Closure Semantics
 
@@ -1613,7 +1662,7 @@ are emitted under `runtime/src/grammars/<name>` (`restart/audit/pass-2-codegen/P
 ## 10. Codegen And Lowerers
 
 Code generation is Backend-IR-only. Lock 5 forbids source-emitting per backend
-and forbids emitters walking grammar directly (`restart/locks/LOCKS.md:42`).
+and forbids emitters walking grammar directly (`restart/locks/LOCKS.md:113`).
 PASS-2 defines the `BackendLowerer` contract and final lowerer ownership
 (`restart/audit/pass-2-codegen/PASS-2.md:80-96`).
 
@@ -1628,13 +1677,13 @@ Lowerers:
 | TS | Deferred post-V1; lands as `TsBackend: Backend` in V2 alongside the principled TS-native parse+runtime fork. | V2. |
 
 Generated source is committed. Lock 6 rejects a proc-macro facade and requires
-`xtask`-style committed source generation (`restart/locks/LOCKS.md:44`).
+`xtask`-style committed source generation (`restart/locks/LOCKS.md:115`).
 
 ### 10.1 Rewrite-Budget Categories And Thresholds
 
 The egraph + cost-model bridge (§7.3 `EGraphFacts`, `BridgeJustification`,
 `CostFacts`) rewrites Backend IR plans within a per-category saturation
-budget. Lock 4's per-domain orthogonality (`restart/locks/LOCKS.md:40`)
+budget. Lock 4's per-domain orthogonality (`restart/locks/LOCKS.md:111`)
 demands that each rewrite category run inside its own budget pool with
 its own legality-vs-cost discipline. The post-Phase-8.4 fold lands three
 categories — `legality-rewrites` and `normalization-rewrites` are
@@ -1671,7 +1720,7 @@ twitter <= 380 us, canada <= 2.8 ms, citm <= 750 us, CSS bootstrap <= 3 ms,
 animate <= 1.6 ms, and simdjson on-demand 56000 Mbps-class x86 targets
 (`restart/README.md:322-340`). Lock 8 lists competitor anchors: simdjson OD
 56000 Mbps, sonic-rs M1 twitter 436 us, and lightning-css Bootstrap 4.16 ms
-(`restart/locks/LOCKS.md:48`). SOTA.md records the supporting competitor
+(`restart/locks/LOCKS.md:119`). SOTA.md records the supporting competitor
 benchmarks (`restart/corpora/SOTA.md:50-89`, `restart/corpora/SOTA.md:130-136`).
 
 Gate owners:
@@ -1803,7 +1852,7 @@ Column semantics:
 V1 trajectory carry: TS and WASM lowering columns are absent from the
 matrix above. They land in V2 alongside `WasmBackend: Backend` and
 `TsBackend: Backend` (§7.6) plus the Lock 11 V2 publication rows
-(`restart/locks/LOCKS.md:54`). The V1 `RustBackend` is the sole
+(`restart/locks/LOCKS.md:190`). The V1 `RustBackend` is the sole
 active `Backend` impl; the per-grammar matrix grows columns mechanically
 when a new `Backend` impl lands.
 

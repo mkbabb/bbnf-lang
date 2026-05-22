@@ -8,9 +8,9 @@ use bbnf_bench::report::{
     SkV13CssDeclarationValuesExtendedReport, SkV13CssNestedLayoutReport,
     SkV13CssStylesheetSelectorsReport, SkV13CssVendorCustomReport, SkV13CssVisualFunctionsReport,
     SkV13DecisionActiveCostReport, SkV13DecisionCspCascadeReport, SkV13DecisionRegexReport,
-    SkV13JsonDirectReopenReport, SkV13PerGrammarPolicyReport, SkV13SameSubstrateUnionReport,
-    SkV13SimdAsmProductionReport, SkV13TypedProductReport, SkV8ComparatorEvidence, SkV8Telemetry,
-    TelemetryRow,
+    SkV13JsonDirectReopenReport, SkV13JsonParseOnlyReport, SkV13PerGrammarPolicyReport,
+    SkV13SameSubstrateUnionReport, SkV13SimdAsmProductionReport, SkV13TypedProductReport,
+    SkV8ComparatorEvidence, SkV8Telemetry, TelemetryRow,
 };
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -323,6 +323,24 @@ fn main() -> Result<(), Box<dyn Error>> {
         );
         drop(report);
     }
+    if let Some(path) = skv13_json_parse_only_report_path(&args[1..])? {
+        if !has_explicit_json_check {
+            return Err(format!("{} requires --check-results", path.display()).into());
+        }
+        let text = fs::read_to_string(&path)?;
+        let report = SkV13JsonParseOnlyReport::from_json_str(&text)
+            .and_then(|report| report.validate_gate().map(|_| report))
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        validate_skv13_json_parse_only_report(&report, &criterion_root(), &workspace)
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        println!(
+            "{} {} {}",
+            report.consumer_gate,
+            report.row_move_toward_sota_status,
+            path.display()
+        );
+        drop(report);
+    }
     if let Some(path) = skv13_typed_product_report_path(&args[1..])? {
         if !has_explicit_json_check {
             return Err(format!("{} requires --check-results", path.display()).into());
@@ -375,12 +393,13 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     for fixture in fixtures {
         let group = criterion_root.join(format!("json_{}", fixture.name));
-        let mut rows = read_metadata_rows(&group)?;
+        let real_typed_expected = w0_real_typed_metadata_expected(&fixture.name);
+        let mut rows = read_metadata_rows(&group, real_typed_expected)?;
         validate_w0_capture_metadata(
             &fixture.name,
             &fixture.sha256,
             fixture.bytes.len() as u64,
-            w0_real_typed_metadata_expected(&fixture.name),
+            real_typed_expected,
             &rows,
         )
         .map_err(|error| format!("{} metadata invalid: {error}", fixture.name))?;
@@ -452,7 +471,18 @@ fn main() -> Result<(), Box<dyn Error>> {
             fastest_competitor_peak_rss,
             bbnf_peak_rss,
         });
-        let outcome = w0_parse_non_admission(classified_outcome);
+        let w14_1_numbers_parse_added = w14_1_numbers_parse_only_passes(
+            &fixture.name,
+            fixture.bytes.len() as u64,
+            estimates.track1,
+            estimates.track2,
+            estimates.sonic,
+        );
+        let outcome = if w14_1_numbers_parse_added {
+            Outcome::ABeatAndParity
+        } else {
+            w0_parse_non_admission(classified_outcome)
+        };
         outcomes.push(outcome);
         let classified_direct_outcome = gate::classify_direct_projection(&DirectProjectionInput {
             correctness_ok: direct_struct_ok,
@@ -486,18 +516,20 @@ fn main() -> Result<(), Box<dyn Error>> {
             &run_facts,
             "track1_generated",
         );
-        report.rows.push(
-            TelemetryRow::parse(
-                fixture.name.clone(),
-                outcome,
-                fixture.bytes.len() as u64,
-                estimates.track1,
-                estimates.track2,
-                parse_comparators,
-                parse_hot_leaf,
-            )
-            .with_sk_v8(parse_telemetry),
-        );
+        let mut parse_row = TelemetryRow::parse(
+            fixture.name.clone(),
+            outcome,
+            fixture.bytes.len() as u64,
+            estimates.track1,
+            estimates.track2,
+            parse_comparators,
+            parse_hot_leaf,
+        )
+        .with_sk_v8(parse_telemetry);
+        if w14_1_numbers_parse_added {
+            mark_w14_1_numbers_parse_only_admission(&mut parse_row);
+        }
+        report.rows.push(parse_row);
         let direct_comparators = direct_comparators(fixture.bytes.len() as u64, &estimates);
         let direct_signal = direct_workload_signal(
             direct_struct_ok,
@@ -857,6 +889,10 @@ fn skv13_json_direct_reopen_report_path(
     companion_report_path(args, "--skv13-json-direct-reopen-report")
 }
 
+fn skv13_json_parse_only_report_path(args: &[String]) -> Result<Option<PathBuf>, Box<dyn Error>> {
+    companion_report_path(args, "--skv13-json-parse-only-report")
+}
+
 fn skv13_typed_product_report_path(args: &[String]) -> Result<Option<PathBuf>, Box<dyn Error>> {
     companion_report_path(args, "--skv13-typed-product-report")
 }
@@ -935,6 +971,7 @@ fn is_companion_report_flag(arg: &str) -> bool {
             | "--skv13-per-grammar-policy-report"
             | "--skv13-same-substrate-union-report"
             | "--skv13-json-direct-reopen-report"
+            | "--skv13-json-parse-only-report"
             | "--skv13-typed-product-report"
             | "--skv13-simd-asm-production-report"
     )
@@ -2218,6 +2255,88 @@ fn validate_skv13_json_direct_reopen_report(
     )
 }
 
+fn validate_skv13_json_parse_only_report(
+    report: &SkV13JsonParseOnlyReport,
+    criterion_root: &Path,
+    workspace: &Path,
+) -> Result<(), String> {
+    let spec = skv13_json_parse_only_criterion_spec(report)?;
+    let track1 = read_css_l4_lane_in_group(
+        criterion_root,
+        spec.criterion_group,
+        "track1_generated",
+        spec.bytes,
+    )?;
+    let track2 = read_css_l4_lane_in_group(
+        criterion_root,
+        spec.criterion_group,
+        "track2_handcoded",
+        spec.bytes,
+    )?;
+    let sonic = read_css_l4_lane_in_group(
+        criterion_root,
+        spec.criterion_group,
+        "sonic_rs_anchor",
+        spec.bytes,
+    )?;
+    let serde = read_css_l4_lane_in_group(
+        criterion_root,
+        spec.criterion_group,
+        "serde_json",
+        spec.bytes,
+    )?;
+    require_close(
+        &format!("{} parse-only track1_mbps_after", spec.label),
+        report.track1_mbps_after,
+        track1.mbps,
+    )?;
+    require_close(
+        &format!("{} parse-only track2_mbps_after", spec.label),
+        report.track2_mbps_after,
+        track2.mbps,
+    )?;
+    require_close(
+        &format!("{} parse-only sonic_strict_mbps_after", spec.label),
+        report.sonic_strict_mbps_after,
+        sonic.mbps,
+    )?;
+    require_close(
+        &format!("{} parse-only serde_mbps_after", spec.label),
+        report.serde_mbps_after,
+        serde.mbps,
+    )?;
+    require_close(
+        &format!("{} parse-only threshold_mbps", spec.label),
+        report.threshold_mbps,
+        sonic.mbps + 1.0,
+    )?;
+    require_close(
+        &format!("{} parse-only admission_margin_mbps", spec.label),
+        report.admission_margin_mbps,
+        track1.mbps - (sonic.mbps + 1.0),
+    )?;
+    if track1.lower_mbps <= sonic.mbps + 1.0 {
+        return Err(format!(
+            "{} parse-only Track 1 lower confidence throughput {:.3} <= sonic+1 {:.3}",
+            spec.label,
+            track1.lower_mbps,
+            sonic.mbps + 1.0
+        ));
+    }
+    validate_report_artifact_hash(
+        workspace,
+        &format!("{} parse-only strict equality artifact", spec.label),
+        &report.strict_equality_artifact_path,
+        &report.strict_equality_artifact_sha256,
+    )?;
+    validate_report_artifact_hash(
+        workspace,
+        &format!("{} parse-only measurement artifact", spec.label),
+        &report.measurement_artifact_path,
+        &report.measurement_artifact_sha256,
+    )
+}
+
 fn validate_skv13_typed_product_report(
     report: &SkV13TypedProductReport,
     criterion_root: &Path,
@@ -2321,6 +2440,28 @@ fn skv13_typed_product_criterion_spec(
         }),
         _ => Err(format!(
             "unsupported W13 typed-product criterion identity {}/{}",
+            report.wave_id, report.corpus
+        )),
+    }
+}
+
+struct JsonParseOnlyCriterionSpec {
+    label: &'static str,
+    criterion_group: &'static str,
+    bytes: u64,
+}
+
+fn skv13_json_parse_only_criterion_spec(
+    report: &SkV13JsonParseOnlyReport,
+) -> Result<JsonParseOnlyCriterionSpec, String> {
+    match (report.wave_id.as_str(), report.corpus.as_str()) {
+        ("SK-V13-W14.1", "numbers") => Ok(JsonParseOnlyCriterionSpec {
+            label: "W14.1",
+            criterion_group: "json_numbers",
+            bytes: 150_124,
+        }),
+        _ => Err(format!(
+            "{} {} has no JSON parse-only Criterion mapping",
             report.wave_id, report.corpus
         )),
     }
@@ -2431,6 +2572,18 @@ fn w0_parse_non_admission(outcome: Outcome) -> Outcome {
         | Outcome::MMemoryResidencyFail => outcome,
         _ => Outcome::SSubstrateGuardNonAdmission,
     }
+}
+
+fn w14_1_numbers_parse_only_passes(
+    corpus: &str,
+    bytes: u64,
+    track1_ns: Option<f64>,
+    track2_ns: Option<f64>,
+    sonic_ns: Option<f64>,
+) -> bool {
+    corpus == "numbers"
+        && bytes == 150_124
+        && w13_typed_strict_sonic_plus_one_passes(bytes, track1_ns, track2_ns, sonic_ns)
 }
 
 #[derive(Debug, Clone)]
@@ -3295,6 +3448,26 @@ fn mark_w13_numbers_typed_admission(row: &mut TelemetryRow) {
     row.sk_v8.sk_v9_open_delta = "typed-row-added".to_string();
 }
 
+fn mark_w14_1_numbers_parse_only_admission(row: &mut TelemetryRow) {
+    row.strictness = "strict".to_string();
+    row.parse_utf8 = "measured-row".to_string();
+    row.output_plane = "DOM".to_string();
+    row.flaw_probe =
+        "generated Track 1 DOM parse contract vs independent hand Track 2/oracle; UTF-8 measured in row"
+            .to_string();
+    row.signal = format!(
+        "PASS W14.1 numbers parse-only admission; Track 1 {}, Track 2 oracle {}, sonic {} Mbps",
+        format_mbps(row.track1_mbps),
+        format_mbps(row.track2_mbps),
+        format_mbps(row.competitors.sonic_strict_mbps)
+    );
+    row.sk_v8.measured_validation_path = "measured-row".to_string();
+    row.sk_v8.same_wave_consumer_class = "generated_json_parse_only_contract".to_string();
+    row.sk_v8.redress_entry = "REDRESS-154".to_string();
+    row.sk_v8.wave_id = "SK-V13-W14.1".to_string();
+    row.sk_v8.sk_v9_open_delta = "parse-row-added".to_string();
+}
+
 fn mark_w13_unicode_basic_typed_admission(row: &mut TelemetryRow) {
     row.strictness = "strict".to_string();
     row.parse_utf8 = "measured-row".to_string();
@@ -3582,9 +3755,8 @@ impl Estimates {
     }
 }
 
-fn read_metadata_rows(group: &Path) -> Result<Vec<RowMetadata>, String> {
-    let mut rows = Vec::new();
-    for bench in [
+fn read_metadata_rows(group: &Path, real_typed_expected: bool) -> Result<Vec<RowMetadata>, String> {
+    let mut benches = vec![
         "track1_generated",
         "track2_handcoded",
         "sonic_rs_anchor",
@@ -3596,13 +3768,17 @@ fn read_metadata_rows(group: &Path) -> Result<Vec<RowMetadata>, String> {
         "track2_direct_to_struct",
         "sonic_rs_direct_to_struct",
         "serde_json_direct_to_struct",
-        "track1_real_typed_struct",
-        "track2_real_typed_struct",
-        "sonic_rs_real_typed_struct",
-        "serde_json_real_typed_struct",
-    ]
-    .into_iter()
-    {
+    ];
+    if real_typed_expected {
+        benches.extend([
+            "track1_real_typed_struct",
+            "track2_real_typed_struct",
+            "sonic_rs_real_typed_struct",
+            "serde_json_real_typed_struct",
+        ]);
+    }
+    let mut rows = Vec::new();
+    for bench in benches {
         let path = group.join(bench).join("metadata.toml");
         if !path.exists() {
             continue;
@@ -4460,6 +4636,8 @@ mod tests {
             "skv13-w8.json".to_string(),
             "--skv13-same-substrate-union-report".to_string(),
             "skv13-w9.json".to_string(),
+            "--skv13-json-parse-only-report".to_string(),
+            "skv13-w14-1.json".to_string(),
             "--skv13-typed-product-report".to_string(),
             "skv13-w13-1.json".to_string(),
             "--skv13-simd-asm-production-report".to_string(),
@@ -4512,6 +4690,10 @@ mod tests {
         assert_eq!(
             skv13_same_substrate_union_report_path(&mixed).unwrap(),
             Some(PathBuf::from("skv13-w9.json"))
+        );
+        assert_eq!(
+            skv13_json_parse_only_report_path(&mixed).unwrap(),
+            Some(PathBuf::from("skv13-w14-1.json"))
         );
         assert_eq!(
             skv13_typed_product_report_path(&mixed).unwrap(),
@@ -4640,6 +4822,21 @@ mod tests {
     }
 
     #[test]
+    fn skv13_json_parse_only_report_arg_allows_json_check_only() {
+        let args = vec![
+            "--skv13-json-parse-only-report".to_string(),
+            "skv13-w14-1.json".to_string(),
+            "--advisory".to_string(),
+            "--check-results".to_string(),
+        ];
+        assert_eq!(
+            skv13_json_parse_only_report_path(&args).unwrap(),
+            Some(PathBuf::from("skv13-w14-1.json"))
+        );
+        assert!(companion_report_runs_json_check(&args));
+    }
+
+    #[test]
     fn skv13_simd_asm_production_report_arg_allows_json_check_only() {
         let args = vec![
             "--skv13-simd-asm-production-report".to_string(),
@@ -4688,6 +4885,31 @@ mod tests {
             w0_parse_non_admission(Outcome::GSubstrateFailure),
             Outcome::SSubstrateGuardNonAdmission
         );
+    }
+
+    #[test]
+    fn w14_1_numbers_parse_only_reopens_only_sonic_plus_one_numbers() {
+        assert!(w14_1_numbers_parse_only_passes(
+            "numbers",
+            150_124,
+            Some(62_870.0),
+            Some(62_800.0),
+            Some(87_880.0),
+        ));
+        assert!(!w14_1_numbers_parse_only_passes(
+            "canada",
+            150_124,
+            Some(62_870.0),
+            Some(62_800.0),
+            Some(87_880.0),
+        ));
+        assert!(!w14_1_numbers_parse_only_passes(
+            "numbers",
+            150_124,
+            Some(87_880.0),
+            Some(62_800.0),
+            Some(62_870.0),
+        ));
     }
 
     #[test]

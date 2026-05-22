@@ -126,6 +126,7 @@ pub const SKV13_DECISION_CSP_CASCADE_REPORT_SCHEMA: &str = "sk-v13-decision-csp-
 pub const SKV13_PER_GRAMMAR_POLICY_REPORT_SCHEMA: &str = "sk-v13-per-grammar-policy-v1";
 pub const SKV13_SAME_SUBSTRATE_UNION_REPORT_SCHEMA: &str = "sk-v13-same-substrate-union-v1";
 pub const SKV13_JSON_DIRECT_REOPEN_REPORT_SCHEMA: &str = "sk-v13-json-direct-reopen-v1";
+pub const SKV13_JSON_PARSE_ONLY_REPORT_SCHEMA: &str = "sk-v13-json-parse-only-v1";
 pub const SKV13_TYPED_PRODUCT_REPORT_SCHEMA: &str = "sk-v13-typed-product-v1";
 pub const SKV13_SIMD_ASM_PRODUCTION_REPORT_SCHEMA: &str = "sk-v13-simd-asm-production-v1";
 pub type NonJsonEvidenceRow = TelemetryRow;
@@ -445,6 +446,54 @@ pub struct SkV13JsonDirectReopenReport {
     pub sonic_strict_mbps_after: f64,
     pub serde_mbps_after: f64,
     pub threshold_mbps: f64,
+    pub row_move_toward_sota_status: String,
+    pub lock14_status: String,
+    pub lock14_owner_path_status: String,
+    pub lock14_generic_scan_status: String,
+    pub measurement_artifact_path: String,
+    pub measurement_artifact_sha256: String,
+    pub affected_row_ids: Vec<String>,
+    pub block_id: Option<String>,
+    pub prior_redress_citations: Vec<String>,
+    pub material_differential: String,
+    pub redress_entry: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct SkV13JsonParseOnlyReport {
+    pub schema_version: String,
+    pub wave_id: String,
+    pub run_id: String,
+    pub source_commit: String,
+    pub host_triple: String,
+    pub build_flags: String,
+    pub feature_mask: String,
+    pub consumer_gate: String,
+    pub g_omega_status: String,
+    pub row_id: String,
+    pub corpus: String,
+    pub workload: String,
+    pub output_plane: String,
+    pub route_id: String,
+    pub same_wave_consumer_path: String,
+    pub same_wave_consumer_class: String,
+    pub strict_equality_status: String,
+    pub strict_equality_artifact_path: String,
+    pub strict_equality_artifact_sha256: String,
+    pub track2_independence_status: String,
+    pub measured_validation_path: String,
+    pub parse_utf8: String,
+    pub escape_complete: String,
+    pub json_guard_state: String,
+    pub css_guard_state: String,
+    pub track1_mbps_before: f64,
+    pub track1_mbps_after: f64,
+    pub track2_mbps_after: f64,
+    pub sonic_strict_mbps_after: f64,
+    pub serde_mbps_after: f64,
+    pub threshold_mbps: f64,
+    pub admission_margin_mbps: f64,
     pub row_move_toward_sota_status: String,
     pub lock14_status: String,
     pub lock14_owner_path_status: String,
@@ -1425,6 +1474,160 @@ impl SkV13JsonDirectReopenReport {
                 "{} report missing affected rows, material differential, or REDRESS entry",
                 spec.label
             ));
+        }
+        Ok(())
+    }
+}
+
+impl SkV13JsonParseOnlyReport {
+    pub fn from_json_str(text: &str) -> Result<Self, String> {
+        serde_json::from_str(text)
+            .map_err(|error| format!("invalid SK-V13 JSON parse-only report: {error}"))
+    }
+
+    pub fn validate_gate(&self) -> Result<(), String> {
+        if self.schema_version != SKV13_JSON_PARSE_ONLY_REPORT_SCHEMA {
+            return Err(format!(
+                "unsupported SK-V13 JSON parse-only schema {}",
+                self.schema_version
+            ));
+        }
+        if self.wave_id != "SK-V13-W14.1" || !self.run_id.starts_with("sk-v13-w14.1:") {
+            return Err(format!(
+                "invalid W14.1 JSON parse-only identity {}/{}",
+                self.wave_id, self.run_id
+            ));
+        }
+        if self.source_commit.trim().is_empty()
+            || self.host_triple.trim().is_empty()
+            || self.build_flags.trim().is_empty()
+            || self.feature_mask.trim().is_empty()
+        {
+            return Err("W14.1 JSON parse-only report missing source/build provenance".into());
+        }
+        if self.consumer_gate != "G-W14.1-JSON-PARSE-NUMBERS"
+            || self.g_omega_status != "user-signed"
+            || self.row_id != "json/numbers/parse_only/main"
+            || self.corpus != "numbers"
+            || self.workload != "parse_only"
+            || self.output_plane != "DOM"
+        {
+            return Err("W14.1 JSON parse-only row identity invalid".into());
+        }
+        if self.route_id != "generated-json-parse-only-numeric-array"
+            || self.same_wave_consumer_path.trim().is_empty()
+            || self.same_wave_consumer_class != "generated_json_parse_only_contract"
+        {
+            return Err("W14.1 JSON parse-only consumer evidence invalid".into());
+        }
+        for (label, actual, expected) in [
+            (
+                "strict equality",
+                self.strict_equality_status.as_str(),
+                "pass",
+            ),
+            (
+                "Track 2 independence",
+                self.track2_independence_status.as_str(),
+                "independent",
+            ),
+            (
+                "measured validation",
+                self.measured_validation_path.as_str(),
+                "measured-row",
+            ),
+            ("parse UTF-8", self.parse_utf8.as_str(), "measured-row"),
+            ("escape completeness", self.escape_complete.as_str(), "yes"),
+            ("Lock 14", self.lock14_status.as_str(), "pass"),
+            (
+                "Lock 14 owner path",
+                self.lock14_owner_path_status.as_str(),
+                "pass",
+            ),
+            (
+                "Lock 14 generic scan",
+                self.lock14_generic_scan_status.as_str(),
+                "pass",
+            ),
+        ] {
+            if actual != expected {
+                return Err(format!(
+                    "W14.1 JSON parse-only {label} status {actual} != {expected}"
+                ));
+            }
+        }
+        for (label, status) in [
+            ("JSON guard", self.json_guard_state.as_str()),
+            ("CSS guard", self.css_guard_state.as_str()),
+        ] {
+            if status.trim().is_empty()
+                || matches!(
+                    status,
+                    "support_only" | "gate_only" | "telemetry_only" | "future_consumer"
+                )
+            {
+                return Err(format!("W14.1 JSON parse-only {label} status invalid"));
+            }
+        }
+        for (label, value) in [
+            ("Track 1 before", self.track1_mbps_before),
+            ("Track 1 after", self.track1_mbps_after),
+            ("Track 2 after", self.track2_mbps_after),
+            ("sonic strict after", self.sonic_strict_mbps_after),
+            ("serde after", self.serde_mbps_after),
+            ("threshold", self.threshold_mbps),
+            ("admission margin", self.admission_margin_mbps),
+        ] {
+            if !value.is_finite() || value < 0.0 {
+                return Err(format!("W14.1 JSON parse-only {label} invalid"));
+            }
+        }
+        if (self.threshold_mbps - (self.sonic_strict_mbps_after + 1.0)).abs() > 0.01 {
+            return Err("W14.1 JSON parse-only threshold must equal sonic strict + 1 Mbps".into());
+        }
+        if (self.admission_margin_mbps - (self.track1_mbps_after - self.threshold_mbps)).abs()
+            > 0.01
+        {
+            return Err("W14.1 JSON parse-only admission margin mismatch".into());
+        }
+        if self.track1_mbps_after <= self.threshold_mbps
+            || !matches!(
+                self.row_move_toward_sota_status.as_str(),
+                "pass" | "admitted"
+            )
+            || self.block_id.is_some()
+        {
+            return Err("W14.1 JSON parse-only did not admit over sonic + 1".into());
+        }
+        for (label, path, sha) in [
+            (
+                "strict equality artifact",
+                self.strict_equality_artifact_path.as_str(),
+                self.strict_equality_artifact_sha256.as_str(),
+            ),
+            (
+                "measurement artifact",
+                self.measurement_artifact_path.as_str(),
+                self.measurement_artifact_sha256.as_str(),
+            ),
+        ] {
+            if path.trim().is_empty() || !is_hex_sha256(sha) {
+                return Err(format!("W14.1 JSON parse-only {label} path/hash invalid"));
+            }
+        }
+        if self.affected_row_ids.len() != 1
+            || self.affected_row_ids[0] != "json/numbers/parse_only/main"
+            || self.material_differential.trim().is_empty()
+            || self.redress_entry != "REDRESS-154"
+            || !self
+                .prior_redress_citations
+                .iter()
+                .any(|entry| entry == "102")
+        {
+            return Err(
+                "W14.1 JSON parse-only report missing rows, REDRESS citation, or differential"
+                    .into(),
+            );
         }
         Ok(())
     }
@@ -2970,6 +3173,8 @@ impl Report {
             } else if row_id == W13_INSTRUMENTS_TYPED_ROW_ID {
                 validate_w13_instruments_typed_row(row)?;
                 w13_instruments_typed_seen = true;
+            } else if row_id == W14_1_NUMBERS_PARSE_ROW_ID && row.outcome_id == "A" {
+                validate_w14_1_numbers_parse_row(row)?;
             } else {
                 let Some(baseline) = sk_v8_open_baseline(row_id) else {
                     return Err(format!("unknown SK-V8 comparison row_id {row_id}"));
@@ -3569,6 +3774,113 @@ const W13_NUMBERS_TYPED_ROW_ID: &str = "json/numbers/real_typed_struct/main";
 const W13_UNICODE_BASIC_TYPED_ROW_ID: &str = "json/unicode_basic/real_typed_struct/main";
 const W13_RANDOM_TYPED_ROW_ID: &str = "json/random/real_typed_struct/main";
 const W13_INSTRUMENTS_TYPED_ROW_ID: &str = "json/instruments/real_typed_struct/main";
+const W14_1_NUMBERS_PARSE_ROW_ID: &str = "json/numbers/parse_only/main";
+
+fn validate_w14_1_numbers_parse_row(row: &TelemetryRow) -> Result<(), String> {
+    let row_id = row.sk_v8.row_id.as_str();
+    row.validate_schema_v3()?;
+    validate_w0_row_identity(row)?;
+    validate_w0_outcome(row_id, &row.outcome_id)?;
+    if row.outcome_id != "A" || row.verdict != "GO" {
+        return Err(format!(
+            "{row_id} W14.1 parse row admits only A / GO, saw {} / {}",
+            row.outcome_id, row.verdict
+        ));
+    }
+    if row.corpus != "numbers" || row.workload != "parse_only" {
+        return Err(format!("{row_id} is not the W14.1 numbers parse row"));
+    }
+    if row.output_plane != "DOM" {
+        return Err(format!(
+            "{row_id} W14.1 parse output plane {} is not DOM",
+            row.output_plane
+        ));
+    }
+    if row.strictness != "strict" {
+        return Err(format!(
+            "{row_id} W14.1 parse strictness {} is not strict",
+            row.strictness
+        ));
+    }
+    if row.parse_utf8 != "measured-row" || row.sk_v8.measured_validation_path != "measured-row" {
+        return Err(format!(
+            "{row_id} W14.1 parse row is not measured-row validated"
+        ));
+    }
+    if row.escape_complete != "yes" {
+        return Err(format!(
+            "{row_id} W14.1 parse row has incomplete escape validation"
+        ));
+    }
+    if row.sk_v8.track2_independence_status != "independent_verified" {
+        return Err(format!(
+            "{row_id} W14.1 parse row lacks Track 2 independence"
+        ));
+    }
+    if row.sk_v8.same_wave_consumer_class != "generated_json_parse_only_contract" {
+        return Err(format!(
+            "{row_id} W14.1 parse row consumer {} is not generated_json_parse_only_contract",
+            row.sk_v8.same_wave_consumer_class
+        ));
+    }
+    if row.sk_v8.redress_entry != "REDRESS-154" || row.sk_v8.wave_id != "SK-V13-W14.1" {
+        return Err(format!(
+            "{row_id} W14.1 parse row lacks REDRESS/W14.1 provenance"
+        ));
+    }
+    if row.sk_v8.sk_v9_open_delta != "parse-row-added" {
+        return Err(format!(
+            "{row_id} W14.1 parse row delta {} is not parse-row-added",
+            row.sk_v8.sk_v9_open_delta
+        ));
+    }
+    if row.sk_v8.run_id.trim().is_empty() || !is_skv9_open_run_id(&row.sk_v8.run_id) {
+        return Err(format!(
+            "{row_id} W14.1 parse row has invalid run_id {}",
+            row.sk_v8.run_id
+        ));
+    }
+    let expected = w0_substrate_tuple(&row.workload).ok_or_else(|| {
+        format!(
+            "{row_id} has unsupported W14.1 parse workload {}",
+            row.workload
+        )
+    })?;
+    let actual = (
+        row.sk_v8.substrate_surface.as_str(),
+        row.sk_v8.structural_projection_status.as_str(),
+        row.sk_v8.substrate_cardinality.as_str(),
+    );
+    if actual != expected {
+        return Err(format!(
+            "{row_id} W14.1 parse row substrate tuple {:?} does not match {:?}",
+            actual, expected
+        ));
+    }
+    let (Some(track1), Some(track2), Some(sonic)) = (
+        row.track1_mbps,
+        row.track2_mbps,
+        row.competitors.sonic_strict_mbps,
+    ) else {
+        return Err(format!(
+            "{row_id} W14.1 parse row lacks Track 1, Track 2, or sonic Mbps"
+        ));
+    };
+    if track1 <= sonic + 1.0 {
+        return Err(format!(
+            "{row_id} W14.1 parse row misses sonic+1: Track 1 {track1:.0}, sonic {sonic:.0}"
+        ));
+    }
+    if !track2.is_finite() || track2 <= 0.0 {
+        return Err(format!(
+            "{row_id} W14.1 parse row has invalid Track 2 oracle {track2:.0}"
+        ));
+    }
+    validate_w0_profile_artifact(row_id, &row.sk_v8.profile_artifact)?;
+    validate_w0_hot_leaf(row_id, &row.hot_leaf, &row.sk_v8.profile_artifact)?;
+    validate_comparator_evidence(row_id, &row.workload, &row.sk_v8.comparators)?;
+    Ok(())
+}
 
 fn validate_w6_github_events_typed_row(row: &TelemetryRow) -> Result<(), String> {
     let row_id = row.sk_v8.row_id.as_str();
@@ -7592,6 +7904,76 @@ mod tests {
         missing_citation
             .prior_redress_citations
             .retain(|entry| entry != "142");
+        assert!(missing_citation.validate_gate().is_err());
+    }
+
+    #[test]
+    fn skv13_json_parse_only_report_accepts_numbers_admit() {
+        let report = SkV13JsonParseOnlyReport {
+            schema_version: SKV13_JSON_PARSE_ONLY_REPORT_SCHEMA.into(),
+            wave_id: "SK-V13-W14.1".into(),
+            run_id: "sk-v13-w14.1:numbers-parse-fnv64-0000000000000000".into(),
+            source_commit: "196a3f2a4".into(),
+            host_triple: "aarch64-apple-darwin".into(),
+            build_flags: "RUSTFLAGS=-C target-cpu=native".into(),
+            feature_mask: "arch=aarch64;target_cpu=native".into(),
+            consumer_gate: "G-W14.1-JSON-PARSE-NUMBERS".into(),
+            g_omega_status: "user-signed".into(),
+            row_id: "json/numbers/parse_only/main".into(),
+            corpus: "numbers".into(),
+            workload: "parse_only".into(),
+            output_plane: "DOM".into(),
+            route_id: "generated-json-parse-only-numeric-array".into(),
+            same_wave_consumer_path: "runtime::generated_json::parse".into(),
+            same_wave_consumer_class: "generated_json_parse_only_contract".into(),
+            strict_equality_status: "pass".into(),
+            strict_equality_artifact_path:
+                "../restart/skinny/tranches/sk-v13/research/w14.1/numbers-parse-facts.json"
+                    .into(),
+            strict_equality_artifact_sha256:
+                "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef".into(),
+            track2_independence_status: "independent".into(),
+            measured_validation_path: "measured-row".into(),
+            parse_utf8: "measured-row".into(),
+            escape_complete: "yes".into(),
+            json_guard_state: "maintain".into(),
+            css_guard_state: "maintain".into(),
+            track1_mbps_before: 19110.0,
+            track1_mbps_after: 19110.0,
+            track2_mbps_after: 18277.0,
+            sonic_strict_mbps_after: 13335.0,
+            serde_mbps_after: 6290.0,
+            threshold_mbps: 13336.0,
+            admission_margin_mbps: 5774.0,
+            row_move_toward_sota_status: "admitted".into(),
+            lock14_status: "pass".into(),
+            lock14_owner_path_status: "pass".into(),
+            lock14_generic_scan_status: "pass".into(),
+            measurement_artifact_path:
+                "../restart/skinny/tranches/sk-v13/research/w14.1/numbers-parse-facts.json"
+                    .into(),
+            measurement_artifact_sha256:
+                "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef".into(),
+            affected_row_ids: vec!["json/numbers/parse_only/main".into()],
+            block_id: None,
+            prior_redress_citations: vec!["102".into()],
+            material_differential:
+                "REDRESS 102 classified parse-only as view-boundary; W14.1 admits DOM strict evidence"
+                    .into(),
+            redress_entry: "REDRESS-154".into(),
+        };
+        assert!(report.validate_gate().is_ok());
+        let mut borrowed_view = report.clone();
+        borrowed_view.output_plane = "borrowed view over offset tape vs DOM".into();
+        assert!(borrowed_view.validate_gate().is_err());
+        let mut support_only = report.clone();
+        support_only.row_move_toward_sota_status = "support_only".into();
+        assert!(support_only.validate_gate().is_err());
+        let mut bad_margin = report.clone();
+        bad_margin.admission_margin_mbps += 1.0;
+        assert!(bad_margin.validate_gate().is_err());
+        let mut missing_citation = report;
+        missing_citation.prior_redress_citations.clear();
         assert!(missing_citation.validate_gate().is_err());
     }
 

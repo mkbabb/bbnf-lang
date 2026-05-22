@@ -5,62 +5,62 @@ run_id: SK-V13-open
 g_omega_status: signed
 consumer_gate: cargo xtask gate-json --check-results
 source_results: skinny/RESULTS.md
-source_commit: 76f556124+w13.3-redress
+source_commit: 196a3f2a4+w14.1-redress
 
 ## JSON Targets
 
 | row | plane | T1_current | T1_sota | margin | tranche_admitted |
 |---|---|---:|---:|---:|---|
-| json/twitter/parse_only/main | parse_only | 16412.00 | 21018.00 | -4606.00 | OPEN |
-| json/twitter/direct_to_struct/main | direct_to_struct | 11835.00 | 15071.00 | -3236.00 | OPEN |
-| json/twitter/real_typed_struct/main | real_typed_struct | 18418.00 | 15608.00 | 2810.00 | ADMITTED |
-| json/citm_catalog/parse_only/main | parse_only | 30893.00 | 25668.00 | 5225.00 | OPEN |
-| json/citm_catalog/direct_to_struct/main | direct_to_struct | 21643.00 | 19693.00 | 1950.00 | ADMITTED |
-| json/citm_catalog/real_typed_struct/main | real_typed_struct | 35263.00 | 21883.00 | 13380.00 | ADMITTED |
-| json/canada/parse_only/main | parse_only | 17357.00 | 13973.00 | 3384.00 | OPEN |
-| json/canada/direct_to_struct/main | direct_to_struct | 10607.00 | 12189.00 | -1582.00 | OPEN |
+| json/twitter/parse_only/main | parse_only | 15561.00 | 21014.00 | -5453.00 | OPEN |
+| json/twitter/direct_to_struct/main | direct_to_struct | 11908.00 | 15111.00 | -3203.00 | OPEN |
+| json/twitter/real_typed_struct/main | real_typed_struct | 18563.00 | 15471.00 | 3092.00 | ADMITTED |
+| json/citm_catalog/parse_only/main | parse_only | 30035.00 | 25546.00 | 4489.00 | OPEN |
+| json/citm_catalog/direct_to_struct/main | direct_to_struct | 21414.00 | 19939.00 | 1475.00 | ADMITTED |
+| json/citm_catalog/real_typed_struct/main | real_typed_struct | 36719.00 | 22858.00 | 13861.00 | ADMITTED |
+| json/canada/parse_only/main | parse_only | 16993.00 | 13934.00 | 3059.00 | OPEN |
+| json/canada/direct_to_struct/main | direct_to_struct | 10856.00 | 12214.00 | -1358.00 | OPEN |
 | json/canada/real_typed_struct/main | real_typed_struct | absent:product-surface-not-generated | absent:product-surface-not-generated | absent:product-surface-not-generated | MISSING |
-| json/apache_builds/parse_only/main | parse_only | 12919.00 | 17575.00 | -4656.00 | OPEN |
-| json/apache_builds/direct_to_struct/main | direct_to_struct | 11400.00 | 11171.00 | 229.00 | ADMITTED |
-| json/apache_builds/real_typed_struct/main | real_typed_struct | 8744.00 | 8309.00 | 435.00 | ADMITTED |
-| json/github_events/parse_only/main | parse_only | 15585.00 | 21959.00 | -6374.00 | OPEN |
-| json/github_events/direct_to_struct/main | direct_to_struct | 12546.00 | 16293.00 | -3747.00 | OPEN |
-| json/github_events/real_typed_struct/main | real_typed_struct | 12980.00 | 12722.00 | 258.00 | ADMITTED |
-| json/update_center/parse_only/main | parse_only | 11810.00 | 19850.00 | -8040.00 | OPEN |
-| json/update_center/direct_to_struct/main | direct_to_struct | 8595.00 | 11238.00 | -2643.00 | OPEN |
-| json/update_center/real_typed_struct/main | real_typed_struct | 12145.00 | 12889.00 | -744.00 | OPEN |
-| json/mesh/parse_only/main | parse_only | 13444.00 | 11753.00 | 1691.00 | OPEN |
-| json/mesh/direct_to_struct/main | direct_to_struct | 9631.00 | 9582.00 | 49.00 | ADMITTED |
-| json/mesh/real_typed_struct/main | real_typed_struct | 9788.00 | 9110.00 | 678.00 | ADMITTED |
-| json/random/parse_only/main | parse_only | 9935.00 | 15679.00 | -5744.00 | OPEN |
-| json/random/direct_to_struct/main | direct_to_struct | 7894.00 | 8788.00 | -894.00 | OPEN |
-| json/random/real_typed_struct/main | real_typed_struct | 8559.00 | 7261.00 | 1298.00 | ADMITTED |
-| json/gsoc-2018/parse_only/main | parse_only | 23333.00 | 49847.00 | -26514.00 | OPEN |
-| json/gsoc-2018/direct_to_struct/main | direct_to_struct | 15318.00 | 23900.00 | -8582.00 | OPEN |
+| json/apache_builds/parse_only/main | parse_only | 12767.00 | 17352.00 | -4585.00 | OPEN |
+| json/apache_builds/direct_to_struct/main | direct_to_struct | 11428.00 | 11106.00 | 322.00 | ADMITTED |
+| json/apache_builds/real_typed_struct/main | real_typed_struct | 8127.00 | 8092.00 | 35.00 | ADMITTED |
+| json/github_events/parse_only/main | parse_only | 14966.00 | 23010.00 | -8044.00 | OPEN |
+| json/github_events/direct_to_struct/main | direct_to_struct | 12520.00 | 16073.00 | -3553.00 | OPEN |
+| json/github_events/real_typed_struct/main | real_typed_struct | 12853.00 | 12670.00 | 183.00 | ADMITTED |
+| json/update_center/parse_only/main | parse_only | 11791.00 | 19662.00 | -7871.00 | OPEN |
+| json/update_center/direct_to_struct/main | direct_to_struct | 8546.00 | 11184.00 | -2638.00 | OPEN |
+| json/update_center/real_typed_struct/main | real_typed_struct | 11774.00 | 12561.00 | -787.00 | OPEN |
+| json/mesh/parse_only/main | parse_only | 12917.00 | 11835.00 | 1082.00 | OPEN |
+| json/mesh/direct_to_struct/main | direct_to_struct | 9907.00 | 9671.00 | 236.00 | ADMITTED |
+| json/mesh/real_typed_struct/main | real_typed_struct | 9940.00 | 9005.00 | 935.00 | ADMITTED |
+| json/random/parse_only/main | parse_only | 9946.00 | 15666.00 | -5720.00 | OPEN |
+| json/random/direct_to_struct/main | direct_to_struct | 7956.00 | 8950.00 | -994.00 | OPEN |
+| json/random/real_typed_struct/main | real_typed_struct | 8151.00 | 7394.00 | 757.00 | ADMITTED |
+| json/gsoc-2018/parse_only/main | parse_only | 23587.00 | 50364.00 | -26777.00 | OPEN |
+| json/gsoc-2018/direct_to_struct/main | direct_to_struct | 15385.00 | 23881.00 | -8496.00 | OPEN |
 | json/gsoc-2018/real_typed_struct/main | real_typed_struct | absent:product-surface-not-generated | absent:product-surface-not-generated | absent:product-surface-not-generated | MISSING |
-| json/marine_ik/parse_only/main | parse_only | 13049.00 | 10162.00 | 2887.00 | OPEN |
-| json/marine_ik/direct_to_struct/main | direct_to_struct | 9566.00 | 8494.00 | 1072.00 | ADMITTED |
-| json/marine_ik/real_typed_struct/main | real_typed_struct | 11819.00 | 9309.00 | 2510.00 | ADMITTED |
-| json/instruments/parse_only/main | parse_only | 17312.00 | 19615.00 | -2303.00 | OPEN |
-| json/instruments/direct_to_struct/main | direct_to_struct | 12200.00 | 12786.00 | -586.00 | OPEN |
-| json/instruments/real_typed_struct/main | real_typed_struct | 21026.00 | 15996.00 | 5030.00 | ADMITTED |
-| json/numbers/parse_only/main | parse_only | 19110.00 | 13336.00 | 5774.00 | OPEN |
-| json/numbers/direct_to_struct/main | direct_to_struct | 13875.00 | 12919.00 | 956.00 | ADMITTED |
-| json/numbers/real_typed_struct/main | real_typed_struct | 13157.00 | 11871.00 | 1286.00 | ADMITTED |
-| json/unicode_mixed/parse_only/main | parse_only | 8836.00 | 17336.00 | -8500.00 | OPEN |
-| json/unicode_mixed/direct_to_struct/main | direct_to_struct | 4808.00 | 10497.00 | -5689.00 | OPEN |
+| json/marine_ik/parse_only/main | parse_only | 12880.00 | 10274.00 | 2606.00 | OPEN |
+| json/marine_ik/direct_to_struct/main | direct_to_struct | 10513.00 | 8455.00 | 2058.00 | ADMITTED |
+| json/marine_ik/real_typed_struct/main | real_typed_struct | 12254.00 | 9022.00 | 3232.00 | ADMITTED |
+| json/instruments/parse_only/main | parse_only | 17468.00 | 19631.00 | -2163.00 | OPEN |
+| json/instruments/direct_to_struct/main | direct_to_struct | 12307.00 | 12785.00 | -478.00 | OPEN |
+| json/instruments/real_typed_struct/main | real_typed_struct | 21464.00 | 16210.00 | 5254.00 | ADMITTED |
+| json/numbers/parse_only/main | parse_only | 19267.00 | 13667.00 | 5600.00 | ADMITTED |
+| json/numbers/direct_to_struct/main | direct_to_struct | 14125.00 | 12748.00 | 1377.00 | ADMITTED |
+| json/numbers/real_typed_struct/main | real_typed_struct | 13281.00 | 12250.00 | 1031.00 | ADMITTED |
+| json/unicode_mixed/parse_only/main | parse_only | 9294.00 | 18859.00 | -9565.00 | OPEN |
+| json/unicode_mixed/direct_to_struct/main | direct_to_struct | 5062.00 | 10654.00 | -5592.00 | OPEN |
 | json/unicode_mixed/real_typed_struct/main | real_typed_struct | absent:product-surface-not-generated | absent:product-surface-not-generated | absent:product-surface-not-generated | MISSING |
-| json/unicode_escapes/parse_only/main | parse_only | 13006.00 | 18902.00 | -5896.00 | OPEN |
-| json/unicode_escapes/direct_to_struct/main | direct_to_struct | 5127.00 | 14041.00 | -8914.00 | OPEN |
+| json/unicode_escapes/parse_only/main | parse_only | 13550.00 | 19274.00 | -5724.00 | OPEN |
+| json/unicode_escapes/direct_to_struct/main | direct_to_struct | 5523.00 | 14299.00 | -8776.00 | OPEN |
 | json/unicode_escapes/real_typed_struct/main | real_typed_struct | absent:product-surface-not-generated | absent:product-surface-not-generated | absent:product-surface-not-generated | MISSING |
-| json/unicode_basic/parse_only/main | parse_only | 11631.00 | 15874.00 | -4243.00 | OPEN |
-| json/unicode_basic/direct_to_struct/main | direct_to_struct | 9189.00 | 8821.00 | 368.00 | ADMITTED |
-| json/unicode_basic/real_typed_struct/main | real_typed_struct | 6584.00 | 6033.00 | 551.00 | ADMITTED |
-| json/distinct_values/parse_only/main | parse_only | 9687.00 | 17709.00 | -8022.00 | OPEN |
-| json/distinct_values/direct_to_struct/main | direct_to_struct | 6281.00 | 11668.00 | -5387.00 | OPEN |
+| json/unicode_basic/parse_only/main | parse_only | 12041.00 | 16126.00 | -4085.00 | OPEN |
+| json/unicode_basic/direct_to_struct/main | direct_to_struct | 9317.00 | 8977.00 | 340.00 | ADMITTED |
+| json/unicode_basic/real_typed_struct/main | real_typed_struct | 6753.00 | 6045.00 | 708.00 | ADMITTED |
+| json/distinct_values/parse_only/main | parse_only | 9920.00 | 18161.00 | -8241.00 | OPEN |
+| json/distinct_values/direct_to_struct/main | direct_to_struct | 6540.00 | 11949.00 | -5409.00 | OPEN |
 | json/distinct_values/real_typed_struct/main | real_typed_struct | absent:product-surface-not-generated | absent:product-surface-not-generated | absent:product-surface-not-generated | MISSING |
-| json/y_string_unicode/parse_only/main | parse_only | 6285.00 | 13609.00 | -7324.00 | OPEN |
-| json/y_string_unicode/direct_to_struct/main | direct_to_struct | 4997.00 | 8680.00 | -3683.00 | OPEN |
+| json/y_string_unicode/parse_only/main | parse_only | 6590.00 | 13861.00 | -7271.00 | OPEN |
+| json/y_string_unicode/direct_to_struct/main | direct_to_struct | 5061.00 | 8999.00 | -3938.00 | OPEN |
 | json/y_string_unicode/real_typed_struct/main | real_typed_struct | absent:product-surface-not-generated | absent:product-surface-not-generated | absent:product-surface-not-generated | MISSING |
 
 ## CSS L4 Targets

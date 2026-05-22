@@ -4761,3 +4761,38 @@ perturbation.
   differential, such as exact f64 materialization for generated typed products
   or a coordinate-specific product shape that preserves serde/sonic f64 bits
   without weakening strict equality.
+
+## SK-V13 Wave 14.1 Numbers Parse-Only Admission
+
+- Item 154 closes W14.1 under `G-W14.1-JSON-PARSE-NUMBERS` as `ADMIT`.
+  The material differential from REDRESS 102 and the pre-pin parse-only
+  firewall is narrow: W14.1 does not change parser runtime, union substrate,
+  or SIMD code. It supplies the missing gate-consumed strict DOM
+  output-plane contract for `json/numbers/parse_only/main`, with independent
+  Track 2 evidence and measured UTF-8 / escape completeness.
+- Native full-capture Criterion was rerun with
+  `RUSTFLAGS="-C target-cpu=native" cargo bench -p bbnf-bench --bench json_parity`.
+  The W14.1 companion facts measured Track 1 mean `19102.844` Mbps, Track 1
+  lower confidence `19002.696` Mbps, Track 2 `19289.254` Mbps, sonic strict
+  `13610.385` Mbps, threshold `13611.385` Mbps, and mean margin
+  `5491.459` Mbps. The gate-generated RESULTS slope row records Track 1
+  `19267` Mbps, Track 2 `19126` Mbps, sonic strict `13666` Mbps, and rolling
+  margin `5600.00` Mbps.
+- The source change adds `sk-v13-json-parse-only-v1`, companion
+  `gate-json` / `xtask` plumbing, generated RESULTS support for the admitted
+  row, rolling delta status discipline, and a metadata validator correction:
+  stale non-required `real_typed_struct` Criterion directories are ignored for
+  fixtures that do not have a real typed product surface.
+- Verification passed:
+  `cargo test -p bbnf-bench skv13_json_parse_only_report_accepts_numbers_admit -- --nocapture`,
+  `cargo test -p bbnf-bench skv13_json_parse_only_report_arg_allows_json_check_only -- --nocapture`,
+  `cargo test -p bbnf-bench w14_1_numbers_parse_only_reopens_only_sonic_plus_one_numbers -- --nocapture`,
+  `cargo test -p bbnf-bench admits_sk_v13_w14_1_parent_diff_under_w14_1_scope -- --nocapture`,
+  `cargo test -p xtask gate_json_passthrough_accepts_skv13_json_parse_only_report_flag -- --nocapture`, and
+  `RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --check-results --advisory --skv13-json-parse-only-report ../restart/skinny/tranches/sk-v13/research/w14.1/skv13-W14.1-json-parse-only.json`.
+- The retained measurement facts are
+  `restart/skinny/tranches/sk-v13/research/w14.1/numbers-parse-facts.json`
+  with SHA-256
+  `a4c6afeb13a342691fd1639f5a15bcecd274f2e8f7e8e2a7a410d653735fce50`;
+  the retained redress note is
+  `restart/skinny/tranches/sk-v13/research/w14.1/redress.md`.

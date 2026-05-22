@@ -287,6 +287,7 @@ fn validate_gate_json_passthrough(args: &[String]) -> Result<()> {
             | "--skv13-per-grammar-policy-report"
             | "--skv13-same-substrate-union-report"
             | "--skv13-json-direct-reopen-report"
+            | "--skv13-json-parse-only-report"
             | "--skv13-typed-product-report"
             | "--skv13-simd-asm-production-report" => {
                 if index + 1 >= args.len() {
@@ -1081,6 +1082,12 @@ mod tests {
         ])
         .unwrap();
         validate_gate_json_passthrough(&[
+            "--skv13-json-parse-only-report".into(),
+            "skv13-w14-1.json".into(),
+            "--check-results".into(),
+        ])
+        .unwrap();
+        validate_gate_json_passthrough(&[
             "--skv13-typed-product-report".into(),
             "skv13-w13-1.json".into(),
             "--check-results".into(),
@@ -1151,6 +1158,16 @@ mod tests {
         validate_gate_json_passthrough(&[
             "--skv13-json-direct-reopen-report".into(),
             "skv13-w11-1.json".into(),
+            "--check-results".into(),
+        ])
+        .unwrap();
+    }
+
+    #[test]
+    fn gate_json_passthrough_accepts_skv13_json_parse_only_report_flag() {
+        validate_gate_json_passthrough(&[
+            "--skv13-json-parse-only-report".into(),
+            "skv13-w14-1.json".into(),
             "--check-results".into(),
         ])
         .unwrap();

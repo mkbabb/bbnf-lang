@@ -1,20 +1,16 @@
-# SK-V9 Scoped Lock 14 Allowances
+# Scoped Lock 14 Allowance History
 
-- `sk-v9-real-typed-w1` permits the SK-V9 W1 parent diff only for the
-  Apache/CITM measured typed row-table admission. The scoped owner paths are
-  `skinny/crates/bbnf-bench/src/report.rs`,
-  `skinny/crates/bbnf-bench/src/bin/gate.rs`, `skinny/RESULTS.md`,
-  `skinny/crates/bbnf-bench/target/skv9-w1/criterion/` (out-of-band capture),
-  `skinny/REDRESS.md`, `restart/skinny/tranches/sk-v9/HANDOFF.md`, and this
-  `restart/locks/LOCKS.md` allowance text.
-- The allowance does not authorize grammar, runtime, codegen, SIMD, fixture,
-  direct-output, generated typed-output, or generic-crate behavior changes.
-  `canada/real_typed_struct` remains blocked pending the full-fixture
-  DirectBuild-vs-serde checksum proof.
-- Evidence: `skinny/RESULTS.md` run id
-  `sk-v9-open:criterion-fnv64-a1e8a51ae806d386`, Apache
-  `real_typed_struct A / GO` at 8174 Mbps, and CITM
-  `real_typed_struct A / GO` at 35102 Mbps.
+- `sk-v9-real-typed-w1` remains a historical, scoped allowance for the
+  Apache/CITM measured typed row-table admission only. It does not authorize
+  grammar, runtime, codegen, SIMD, fixture, direct-output, generated
+  typed-output, or generic-crate behavior changes.
+- SK-V12 supersedes the allowance surface for generated non-JSON evidence:
+  `css_l4/declaration_values/direct_to_struct/main` is admitted as a
+  same-plane fact-stream row, with `lock14=pass:lock14_baseline::validate`,
+  but it is not full CSS parity, universal grammar closure, or a generic-crate
+  exception. Evidence: `skinny/RESULTS.md:94`, `skinny/REDRESS.md:3824`-`3840`.
+- All new generated non-JSON allowances are governed by Lock 14's generated
+  output rule below and remain G-Omega/Pass Omega edits, not T-P3 direct edits.
 
 # Hardening pass — plan set
 
@@ -51,9 +47,66 @@ The plan must reflect these sixteen architectural commitments faithfully. Any wa
 
 1. **Tape is the substrate, properly unioned with direct-to-struct; columnar SoA is dead; orthogonal codepaths and parallel substrates are dead.** Tape is the greenfield's parsed event projection, unioned with direct-to-struct typed values that borrow into it (`&'i Tape<'i>` + cursor) when a retained document exists. The projection may be an offset tape, event tape, or collapsed-stage event sink; direct-only `SinkOnly` retains no queryable document identity. The 2,000-commit prior failure was implementation, not concept: orthogonal codepaths (the Vec<OpenFrame>::clone parallel substrate that produced the 86.07% samply pathology); type ambivalence (tape and OpenFrame and direct-to-struct competing for the same role); substrate-first/consumer-later (Era V failure mode); columnar SoA designed in AV.04 archaeology but never activated. The greenfield's tape lives at `runtime/src/tape/`; typed-value records borrow into it; per-grammar runtime modules (template-emitted at `runtime/src/grammars/<name>/`) emit accessors; one materialisation surface; one Visitor pattern; no parallel substrate. A SIMD mask stream is a transient producer, not a retained sidecar; if structural offsets are retained, the structural projection IS the tape. Columnar SoA stays buried. Plans that resurrect parallel substrates (OpenFrame ladders; columnar SoA; type-ambivalent dual representations) or implement tape with consumer-later sequencing are faults; plans that implement tape properly with same-wave consumer wiring + direct-to-struct union are honoured. **2026-05-04 reframe**: the prior restart's wholesale retirement of the tape name was an over-correction against the implementation failure; the user has confirmed tape is the right substrate when implemented properly. Lock 1's spirit (no parallel substrate; no orthogonal codepath; no Vec<OpenFrame>::clone pathology) holds; the no-rename clause is amended.
 
+    **2026-05-21 v+1 substrate-ceiling fold**: Skinny Track 2 remains a
+    substrate-ceiling probe, not a second substrate. Track 2 measures whether
+    the same `runtime::tape` + `bbnf-simd` APIs can reach the SOTA envelope
+    when hand-coded against the APIs codegen will emit; it does not authorize
+    hidden runtime identity, parser-owned sidecars, or a parallel representation.
+    Evidence: `restart/skinny/BENCH.md:71`-`107`,
+    `restart/skinny/BENCH.md:121`-`136`,
+    `restart/audit/totality/p1/1C-runtime-evidence.md:91`.
+
+    Lazy-offset tape with sparse flags is admitted as scoped JSON evidence
+    under this tape/direct union. It proves an offset-tape/direct shape can be
+    viable for the measured JSON lane, not that Lock 1 is universally closed
+    for every grammar or backend. Evidence: `skinny/REDRESS.md:246`-`256`,
+    `skinny/RESULTS.md:98`-`144`,
+    `restart/audit/totality/p1/hardening/HARDENING-T-P1-V5-CONSOLIDATED.md:45`-`46`.
+
+    Fact streams are output-plane contracts, not retained internal sidecars.
+    A generated fact stream such as `css_l4_declaration_value_fact_stream` may
+    be admitted only with strict comparator/oracle provenance and gate-consumed
+    telemetry; it does not by itself close a retained runtime substrate claim.
+    Evidence: `restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md:96`-`98`,
+    `skinny/RESULTS.md:94`, `restart/audit/totality/p1/1A-substrate-evidence.md:45`-`46`.
+
+    Every e-graph candidate, backend rewrite, imported scanner plan, union
+    candidate, and SIMD consumer must declare `substrate_target`,
+    `retention_lifetime`, and `policy_owner`. Allowed targets are
+    `local_temp_only`, `existing_tape`, `direct_sink`, and
+    `admitted_fact_output`; allowed lifetimes are `local_loop`,
+    `generated_function`, and `output_row`; allowed owners are
+    `generated_grammar`, `caller_data`, and `none`. Any retained class/mask
+    stream, parser-owned cursor/list state, public substrate API, `UnionTape`,
+    or second tape is rejected unless G-Omega explicitly amends Lock 1.
+    Evidence: `restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md:77`-`98`.
+
+    REDRESS 96/97/98 are binding substrate-ceiling history. Full class-column
+    vectors, streaming structural cursors, class-lane-only replays,
+    parser-owned sidecars, and `UnionTape`-style retained structures are not
+    shortlist-safe without a fresh material differential, scalar/checkasm or
+    equality proof, same-wave consumer, strict row gate, rollback path, and
+    abrogate threshold. Evidence: `skinny/REDRESS.md:2910`-`2940`,
+    `restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md:120`-`137`.
+
 2. **Layout lowering is the canonical IR pass name**. The term replaces *type projection / type collapsing / type inference / type elaboration / TypeMap / StructLayout / TypeDesc / schema synthesis* everywhere. Old terms appear only in archived docs. The IR module is `passes::layout` (canonical unprefixed path under the `passes` crate per the README's workspace shape); the IR record is `Layout`; the trait that consumes it is `LayoutSink`. HM/CSP type checking is a subroutine of layout lowering, never a public peer pass; `LayoutFacts` is the public side-table. Any plan section referring to a retired term, to the stale `bbnf-ir/` prefix, or to `TypeFacts` as a public artefact is a fault.
 
+    **v+1 live-state clarification**: `LayoutFacts.backend_shape` is the live
+    side-table evidence today; `Layout` and `LayoutSink` remain V1 public
+    API-freeze obligations unless Pass Omega removes those names from this
+    lock. A wave may not claim Lock 2 closure by pointing only to
+    `LayoutFacts` while the public `Layout` / `LayoutSink` names remain absent.
+    Evidence: `restart/audit/totality/p1/1E-locks-evidence.md:64`,
+    `restart/audit/totality/p1/1B-codegen-evidence.md:37`.
+
 3. **Cursor-parse + byte-skip unified, with cursor branch elided when path is empty**. One parse implementation. Cursor consultation generates byte-skip when consult returns `Skip`. The empty-path case (`__EAGER_EMPTY_PATH`) elides cursor calls entirely so the eager fast path pays no consultation cost. Any plan that bifurcates byte-skip and cursor-parse into two implementations is a fault.
+
+    **v+1 verification clause**: empty-path elision is not closed until a
+    generated-code unit/golden test proves the empty path emits no cursor calls
+    or equivalent consult symbols. Absence claims without captured command
+    output remain UNKNOWN verification actions, not lock closure.
+    Evidence: `restart/audit/totality/p1/1E-locks-evidence.md:65`,
+    `restart/audit/totality/p1/1E-locks-evidence.md:125`.
 
 4. **Per-domain orthogonal optimization**. CSP type/layout inference, e-graph rewriting, pattern miners, shape analysis, and cost model compose by output-piping. No unified hypergraph. Each lives in its own crate (egraph + csp-solver path-deps until stable). Egglog-style Datalog/equality-saturation fusion is a known SOTA pressure, not an omitted option; V1 rejects that fusion because diagnostics, public proof records, monotone bridge boundaries, and independent stabilization gates must stay owned by the domain that produced them. Fusion remains a post-V1 research comparison, not the governing architecture. Any plan that fuses CSP and e-graph into one solver is a fault. **V1 type system folds higher-rank polymorphism via DK13 algorithmic completeness (Dunfield-Krishnaswami 2013); GADT user-facing surface lands V1: pattern-match arms admit branch-local-equality refinements (`Pattern @ where T = U -> Block` per the §6 BBNF grammar amendment); OutsideIn(X)-style implication constraints solved at `passes/types/` carry the equalities through to `LayoutFacts`; the user-facing diagnostic `BBNF-LOCAL-EQUALITY-ANNOTATION` is emitted when a match-arm refinement annotation is missing or ill-typed. Closures capture by `&'i` reference only; capture-by-move is forbidden in V1; `Fn` / `FnMut` / `FnOnce` discrimination is not exposed at the BBNF surface in V1.**
 
@@ -65,17 +118,149 @@ The plan must reflect these sixteen architectural commitments faithfully. Any wa
 
 8. **Surpass sonic-rs / simdjson / lightning-css**. AU is never mentioned. Every perf gate names a specific competitor's number on a specific dataset on a specific platform. simdjson On-Demand 7 GB/s (JSON parse). sonic-rs M1 Pro twitter 436 µs (parse-to-typed-struct). lightning-css 4.16 ms Bootstrap (CSS). Plans that reference AU's bench numbers are stale. **V1 SOTA close gates measure the Rust-line only at H.W3 and H.W4; WASM SOTA defers post-V1. The H tranche carries five waves (H.W0-H.W4) after the V1-FOLD-CANDIDATES Tier 4 wave-count drop. No measurement-pending WASM anchor lands in V1; the WASM lower-and-bench programme awaits the V2 `WasmBackend: Backend` impl.**
 
+    **v+1 row-plane accounting**: SOTA is row-plane specific. JSON
+    `parse_only`, `direct_to_struct`, and `real_typed_struct` rows are separate
+    gates with same-plane strict comparators; CSS L4 declaration-values is a
+    SK-V12 `PASS-ADMIT` row on `css_l4_declaration_value_fact_stream`, not full
+    CSS parity, not universal grammar closure, and not SK-V13 close authority.
+    Evidence: `skinny/RESULTS.md:5`-`35`, `skinny/RESULTS.md:94`,
+    `restart/skinny/tranches/sk-v13/SYNTHESIS.md:38`-`57`,
+    `restart/skinny/tranches/sk-v13/SYNTHESIS.md:95`-`110`.
+
+    Comparator-plane provenance is mandatory. Same-run Rust strict sonic rows
+    can anchor current JSON gates; simdjson, yyjson, asmjson, lightningcss, and
+    other sidecars are strict anchors only when the same corpus, output plane,
+    host, strictness, freshness, sidecar status, and gate-consumed artifact
+    provenance match the candidate row. Historical, absent, permissive,
+    x86-only, or different-plane rows are architecture pressure or comparator
+    notes, not gate anchors. Evidence: `restart/skinny/BENCH.md:678`-`684`,
+    `skinny/RESULTS.md:149`.
+
+    Non-JSON telemetry must feed the bench gate, not prose. A non-JSON row may
+    enter `skinny/RESULTS.md` only through the `BENCH.md` Section 8 post-bench
+    gate shape or a dedicated companion report consumed by that gate family,
+    with JSON guard proof when JSON rows can be affected. The legacy JSON
+    `gate --check-results` renderer alone is insufficient for an appended
+    non-JSON row. Evidence: `restart/skinny/BENCH.md:1498`-`1512`,
+    `restart/skinny/BENCH.md:1534`-`1545`,
+    `skinny/REDRESS.md:3836`-`3840`.
+
+    Direct digest hashing is a semantic-output contract. Byte-hash or SIMD
+    sub-hash acceleration is admissible only when Track 1, Track 2, serde, and
+    sonic strict equality hold for the same semantic output plane and no prior
+    A/GO guard silently demotes. Evidence:
+    `restart/audit/totality/p2/2F-parse-that-gaps.md:252`,
+    `restart/audit/totality/p1/1D-skinny-lessons.md:107`.
+
 9. **Slice-borrow primary; bumpalo + owned escape hatches**. Default API is `&'i str` slices + `Cow<'i, str>` for transformations (lightning-css model). Bumpalo arena is opt-in via `parse_in(input, &bump)` (sonic-rs model). Owned (no-borrow) is opt-in via `parse_owned(input)` (serde-json escape). The three are surfaces over the same parse implementation; the lifetime parameter is the discriminant. Any plan that allocates eagerly into bumpalo without justifying why borrowing won't suffice is a fault.
+
+    **v+1 skinny-scope clarification**: the skinny facade does not prove the
+    full Lock 9 surface. `parse_in(input, &bump)` and true generated owned
+    documents remain V1 runtime obligations until runtime API tests prove the
+    bump and owned surfaces share the same parse implementation and lifetime
+    discipline. Evidence: `restart/audit/totality/p1/1E-locks-evidence.md:71`,
+    `restart/audit/totality/p1/1E-locks-evidence.md:104`.
 
 10. **Pratt + SIMD auto-detected; materialization plan also auto-detected via cost model**. No `@pratt` or `@simd` directives. Optimizer mines grammar shape (left-recursive operator chains → Pratt) and leaf-pattern shape (charclass / keyword set / regex → SIMD scanner) and emits accordingly. Cost model decides when SIMD overhead is worth the dispatch cost AND derives `LayoutFacts.backend_shape ∈ {EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage}` per-rule from existing Grammar IR facts (first-set disjointness, output mode, transitive `@error(recover)` use, `@host fn` decoded-at-parse, `@layout` scope, target features) per ARCHITECTURE.md §7.3's 8-priority decision tree. No new BBNF directive carries the materialization plan; `backend_shape` is a side-table field, not a surface annotation. Any plan that requires grammar authors to annotate Pratt, SIMD, or materialization plan is a fault. **The V1 BBNF grammar formalises six directives: `Directive = ImportDecl | HostFn | ErrorDecl | LayoutDecl | PrettyDecl | TokenDecl ;` — replacing the prior three-directive form `Directive = HostFn | ErrorDecl | LayoutDecl ;`. `@import` carries cross-file grammar composition; `@host fn` carries typed host primitives; `@error(recover = ...)` carries recovery vocabulary; `@layout` carries layout policies (with `@ws` folded into `@layout(ws = ...)`); `@pretty` carries pretty-printing strategy with the verbatim vocabulary `compact`, `group`, `indent`, `hardbreak`, `sep(...)`, and `block` preserved from the 30+ extant grammar sites; `@token` carries atomic-token markers binding to the BIR scanner. `@debug` is a host primitive, not a directive. Standalone `@recover` retires; absorbed by `@error(recover = ...)`. `@pratt`, `@simd`, `@transducer`, `@rewrite`, and `@unicode` retire. **BBNF V1 also includes function values + lambda literals (`|x| body`) + closure capture by `&'i`; function types `fn(T) -> U` are first-class members of the `Type` non-terminal.**
 
+    **v+1 decision-engine and cost-evidence clause**: the five
+    `BackendShape` variants remain the V1 search domain. A new
+    `BackendShape`, new directive, or new BIR variant is not admitted by cost
+    evidence and remains G-Omega gated. The current P1-P8 cascade and thin
+    `CostFacts` are diagnostics or compatibility evidence only until the
+    resolver generates backend-plan candidates, consumes generated grammar
+    facts, filters infeasible plans, records selected and rejected alternatives,
+    and extracts with active cost evidence. Evidence:
+    `restart/audit/totality/p1/1B-codegen-evidence.md:36`-`39`,
+    `restart/audit/totality/p2/2D-cost-model.md:188`-`190`.
+
+    Regex/HIR facts are required where regex or scanner plans influence
+    backend-shape or scanner selection. Opaque pattern strings alone cannot
+    justify SIMD, scanner-plan import, or backend-shape admission. Exact fact
+    schema belongs in `ARCHITECTURE.md`, but Lock 10 treats stale/static
+    fallback and opaque-string-only selection as non-admitting evidence.
+    Evidence: `restart/audit/totality/p2/2F-parse-that-gaps.md:251`,
+    `restart/audit/totality/p2/T-P2-V4-FOLD-ADDENDUM.md:79`.
+
+    Decision-engine and SIMD/substrate candidates fail closed on e-graph cap,
+    CSP timeout, stale cost evidence over 30 percent, generated LOC overrun,
+    admitted-row regression, or any scalar/checkasm/equality failure.
+    Evidence: `restart/audit/totality/p2/T-P2-V3-FOLD-ADDENDUM.md:103`-`115`.
+
 11. **Path-deps for incubating sister crates**. egraph + egraph-derive + csp-solver + parse-that (with `parse-that-regex` as its regex sub-crate) as path-deps in workspace until each API stabilises; promote to registry once stable. bbnf-simd + bootstrap + analysis + lsp stay workspace-internal. ser + gorgeous archive at `archive/<crate>/`, removed from workspace, source preserved. **`parse-that` is the canonical name for the published parser combinator + regex family; the legacy `bbnf-regex` crate renames to `parse-that-regex` and publishes as such. The `crates/bbnf-regex/` directory rename to `crates/parse-that-regex/` is a follow-up commit; documentation uses the new name now.**
+
+    **Lock 11 v+1 workspace verification**: root legacy workspace drift is not
+    skinny truth. A.W0/A.W1 closure requires `cargo metadata` or equivalent
+    artifact proof that `ser`, `gorgeous`, `simd-scan`, `bbnf-path`, and
+    `bbnf-path-ts` match the archive/rename/removal state this lock names.
+    Evidence: `restart/audit/totality/p1/1E-locks-evidence.md:73`,
+    `restart/audit/totality/p1/1E-locks-evidence.md:105`.
 
 12. **ser + gorgeous archive BEFORE A.W0**. Clean slate is the precondition for the A tranche to begin. Any plan that interleaves the archive ceremony with A waves is a fault. **The archive ceremony cites `pre-restart-2026-05-04` as the source-of-truth tag; legacy `BA-` / `BB-` / `BC-` / `BD-` slot drift retires under the canonical `A-` / `B-` / `C-` / `D-` tranche letters.**
 
+    **Lock 12 v+1 archive verification**: the archive ceremony remains a hard
+    precondition; root workspace membership after archive must be proven by a
+    committed metadata transcript or Pass Omega-equivalent evidence, not by
+    stale prose. Evidence: `restart/audit/totality/p1/1E-locks-evidence.md:74`,
+    `restart/audit/totality/p1/1E-locks-evidence.md:105`.
+
 13. **No god directories; cohesive encapsulation at every level**. Every directory partitions one cohesive concern; siblings are peer partitions of that concern; sub-modules express finer partitions. Per-level surface APIs are uniform across siblings. The standard is set by sonic-rs (`src/{parser, value, serde, util, lazyvalue, ...}`), lightning-css (`src/{rules, properties, selector, declaration, traits, ...}`), and simdjson (`{dom, ondemand, generic, ...}`): each top-level directory names a concern, expresses it through 4–10 children at the next level, and each child carries a uniform sub-API (e.g., every property module exports `Property` enum + `parse` + `print` + `Visit` impls). bbnf must match this discipline. A 16-sibling directory mixing per-grammar subdirs with generic mechanism files (e.g., today's `crates/core/src/runtime/`) is a god directory and is a fault. Files >500 LOC outside `generated/` are forbidden; directories with >10 immediate children mixing concerns are forbidden; sibling-API divergence (one module exports `parse` + `emit`, the next exports `compile` + `walk`) is forbidden.
 
+    **v+1 exception discipline**: generated files are exempt only when they are
+    rostered generated artifacts with per-wave generated-LOC budgets and
+    regeneration checks. Bench/report/gate files may exceed 500 LOC only under
+    an explicit gate-surface budget and committed LOC transcript. The 500 LOC
+    ceiling remains binding for non-generated production modules; directory
+    fanout is a violation only when the inventory proves mixed concerns, not
+    merely many cohesive ISA/test partitions. Evidence:
+    `skinny/REDRESS.md:299`-`312`,
+    `restart/audit/totality/p1/1F-anti-pattern.md:31`-`32`,
+    `restart/audit/totality/p1/1E-locks-evidence.md:106`.
+
 14. **Full grammar generalisation; zero overfitting**. The substrate carries ZERO grammar-specific code. Every grammar plugs into the fleet via three declarative surfaces only: (a) a grammar source file (`<name>.bbnf`), (b) workspace metadata declaring its strategy (recognisers, host fns, output-dir, pratt eligibility, simd eligibility, etc., per Lock 5's IR contract), and (c) optionally a per-grammar declaration crate (`crates/<grammar>/`) carrying host-fn implementations. Generic crates — `bbnf-parse`, `bbnf-codegen`, `bbnf-runtime`, `bbnf-ir`, `path`, `path-core`, `egraph`, `csp-solver`, `parse-that-regex`, `parse-that`, `bbnf-simd`, `analysis`, `lsp` — carry ZERO `match grammar { Json => ..., CssL4 => ..., ... }` arms; ZERO grammar-named modules; ZERO grammar-specific types in their public APIs; ZERO per-grammar feature flags. Per-grammar runtime modules (value, document, view, kind) are emitted from a single grammar-agnostic generator template that consumes (grammar source + workspace metadata) and produces typed Rust; hand-written per-grammar runtime files are forbidden. Per-grammar deviations (CSS L4 colour-function emit; BBNF Pratt operators; Sheets array literals) are encoded in the grammar metadata + source, NOT in branching code in any other crate. Adding a new grammar is a config + grammar-source change with NO code change in any generic or other-grammar crate. The current overfitting mess — CSS L4 14-variant `OpenFrame`; BBNF aggregator `pub use bbnf::*`; Sheets arena fallbacks; per-grammar registry arms in `bbnf-ir`; `shape_dict_bbnf.rs`; `crates/core/src/css_types.rs`; per-grammar runtime/<g>/ hand-written modules — is the failure mode this lock prevents from recurring. Any plan, tranche, wave, or commit that introduces grammar-specific code in a generic crate, or any new hand-written per-grammar runtime file, is a fault regardless of its other merits. Verification commands: `rg -n 'JsonParser|CssL4Parser|BbnfBootstrap|GoogleSheetsParser' crates/{ir,parse,codegen,runtime,path,path-core,egraph,csp-solver,parse-that-regex,parse-that,bbnf-simd,analysis,lsp}/src/` returns ZERO; `find crates/core/src/runtime -mindepth 1 -maxdepth 1 -type d` returns ZERO per-grammar dirs (all generated from template); `rg -nE 'match\s+\w+\s*\{[^}]*Json\s*=>|CssL4\s*=>|Bbnf\w*\s*=>|GoogleSheets\w*\s*=>' crates/` returns ZERO matches in non-generated source under generic-crate paths.
+
+    **v+1 generated-output allowance**: generated files under
+    `runtime/src/grammars/<name>/` may contain grammar names only when emitted
+    from the rostered generator using grammar source plus workspace metadata.
+    This allowance does not extend to hand-coded provider enums, root aliases,
+    generic-crate grammar branches, grammar-named public types in generic APIs,
+    tests/proof fixtures routed through generic roots, or grammar-shaped policy
+    mining. Evidence: `restart/audit/totality/p2/2C-grammar-neutrality.md:184`,
+    `restart/audit/totality/p1/1C-runtime-evidence.md:79`-`85`.
+
+    Generic crates consume generated provider manifests, generated
+    sink/fact/value/flag surfaces, and generated grammar facts. They may not
+    hand-code `RuntimeProvider::{Json, CssL4DeclarationValues}`, JSON/CSS
+    renderer branches, JSON punctuation alphabets, object/array/pair/string/
+    number/bool/null role mining, hardcoded sink callback names, or
+    grammar-specific feature flags. Evidence:
+    `restart/audit/totality/p1/1B-codegen-evidence.md:58`-`60`,
+    `restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md:57`-`65`.
+
+    **Per-wave gate enforcement**: any wave touching generic crates, generated
+    provider manifests, primitive policy manifests, runtime roots, codegen
+    templates, decision-engine facts, or shared `bbnf-simd` consumers must run
+    a Lock 14 baseline gate plus a grammar-name and grammar-shape leak census
+    in the same wave. At minimum, the gate checks generated provider registry,
+    grammar-shape role mining, generated sink/fact/value/flag ownership,
+    primitive policy source, one strict CSS L4 positive row, both Sheets and
+    BBNF-self fail-closed negative-control witnesses or admitted generated-role
+    fact rows when claiming fleet-wide transfer, and decision-engine generated
+    facts. With only one of Sheets or BBNF-self, the claim is scoped to the
+    witnessed grammars and may not use fleet-wide grammar-neutral wording.
+    Evidence:
+    `restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md:53`-`75`,
+    `restart/audit/totality/p1/hardening/HARDENING-T-P1-V5-CONSOLIDATED.md:47`-`51`.
+
+    Shared `bbnf-simd`, parse-that, and future regex APIs expose
+    grammar-neutral facts and primitives only. Quote, escape, control,
+    delimiter, number, string, and no-string/no-number policy must come from
+    generated grammar config or caller data, not hardcoded JSON/CSS constants.
+    A primitive claimed grammar-neutral must exercise at least one non-JSON
+    consumer or record a measured deletion/rejection. Evidence:
+    `restart/skinny/tranches/sk-v13/SYNTHESIS.md:226`-`230`,
+    `restart/audit/totality/p2/2C-grammar-neutrality.md:188`,
+    `restart/audit/totality/p2/2F-parse-that-gaps.md:249`.
 
 15. **Build-profile discipline + fusion discipline + i-cache residency: LTO + codegen-units = 1 + force-inline hot leaves + ~20 KiB hot-function ceiling**. Every bbnf-generated runtime crate declares `[profile.release] lto = "fat"` (verify via `cargo build --release -v 2>&1 | grep '\-C lto'` returns `lto=fat`, not `lto=thin`; per `skinny/profile/skinny-expanded/PROFILE-REPORT.md` the binary built with `lto=thin` regressed twitter throughput 11780→5521 Mbps — Lock 15 enforcement gap), `codegen-units = 1`, `panic = "abort"` (or `"unwind"` only if the grammar carries `@error(recover = ...)`), `debug = true` (per `feedback_samply_symbols` for samply-resolvable profiles). Three co-load-bearing dimensions, each falsifiable:
     - **LTO + codegen-units = 1**: sonic-rs's INLINED hot-leaf count is 1-2 because LTO fuses the entire SIMD inner kernel into `parse_object`/`parse_array`; without LTO sonic-rs's NOINLINE wall-clock falls 2.1-3.2× on M5 Max (`skinny/profile/sonic-rs-v2/PROFILE-REPORT.md`). The codegen template inversion yields only half its gain without LTO.
@@ -83,6 +268,16 @@ The plan must reflect these sixteen architectural commitments faithfully. Any wa
     - **I-cache budget**: target hot-function size ≤ 20 KiB post-LTO. Diagnostic `BBNF-ICACHE-BUDGET-EXCEEDED` fires when `cargo asm` reports fused-function size exceeds budget (yyjson reference: ~18 KiB). **Budget already met for JSON** per Wave 2 Agent 3 evidence (`skinny/profile/wave2-asm/PROFILE-REPORT.md` Appendix C): `parse_value_at` is a single 7,304-byte hot function (RVA `0x2460..0x40e8`, 1,826 mnemonics) under the current workspace `[profile.release]` (`opt-level=3`, `lto=thin`, `codegen-units=1`, `debug=true`). Sub-budget; the open question is whether `lto=fat` enforcement lands the budget-overrun warning for other grammars at codegen time.
     - The discipline applies to (a) the bbnf-generated runtime, (b) the `bbnf-simd` primitive crate, (c) any user-side crate consuming the generated parser in throughput-sensitive contexts.
     - Workspace metadata `[workspace.metadata.bbnf.grammars.<name>.profile]` carries optional per-grammar overrides only with a documented measurement justification. Plans that ship release profiles without LTO are faults; verification: `cargo build --release -v 2>&1 | grep -E '\-C lto=(fat|true)' | wc -l` must equal the number of workspace members.
+
+    **v+1 scope clarification**: skinny release profile evidence proves skinny
+    enforcement only. Root workspace thin-LTO or profile drift remains a V1
+    migration gap until the root release build proves `lto=fat`,
+    `codegen-units=1`, panic policy, and debug-symbol requirements for every
+    generated runtime and throughput-sensitive consumer. JSON `parse_value_at`
+    i-cache evidence is scoped JSON evidence, not a blanket grammar closure.
+    Evidence: `restart/audit/totality/p1/1E-locks-evidence.md:77`,
+    `skinny/REDRESS.md:258`-`264`,
+    `restart/HANDOFF.md:132`-`134`.
 
 16. **SIMD/ASM admissibility allowlist; handwritten ASM only for missing intrinsics; abstract primitive lifts from dav1d/ffmpeg/VLC**. Admissible SIMD primitives are an explicit allowlist with citations to published architectures (papers, blog posts with named techniques, or established library implementations). The allowlist for V1 (extensible only by appending; see `MASTER-PLAN.md` §4 admissible-SIMD-primitives table):
     - **arm64 NEON byte classify**: `vqtbl4q_u8` 4-table 64-byte lookup (Lemire 2019); `vqtbl1q_u8` 1-table (sonic-rs baseline).
@@ -110,6 +305,74 @@ The plan must reflect these sixteen architectural commitments faithfully. Any wa
     **Abstract primitive lifts**: dav1d's pixel-arithmetic kernels do not translate to JSON (T14-T17 of the catalog: motion compensation, IDCT, loop filter, film grain — all are pixel-domain). But the *primitive operations* underneath them DO translate: cross-lane permute (`vextq_u8`), multiply-accumulate (`udot`), saturating arithmetic, cache hints, mask-register state machines. Each generalizes to byte-stream parsing for arbitrary grammars; the per-grammar selection is cost-model-derived from Grammar IR (alphabet size, number-token presence, string-token presence, chunk-spanning-token presence). The msac entropy decoder's `cnt/buf/end` cross-chunk refill pattern (`/tmp/dav1d-research/dav1d/src/x86/msac.asm:80-220`) is the one genuinely transferable algorithmic insight beyond what simdjson/sonic-rs/yyjson already demonstrate.
     
     Every SIMD primitive carries a unit-parity test against the scalar reference and a corpus-parity test against the expanded skinny corpus recorded in `restart/skinny/BENCH.md` §3 and `skinny/RESULTS.md` in `crates/bbnf-simd/tests/` (per `feedback_no_inline_tests`). Verification: every `core::arch::*` use-site and every `asm!` block in `crates/bbnf-simd/` traces to a citation in the Lock 16 allowlist or in the current skinny SOTA-BEAT synthesis.
+
+    **v+1 primitive manifest**: every `core::arch::*`, `target_feature`, and
+    `asm!` use-site in `bbnf-simd`, parse-that facades, generated scanners, or
+    collapsed-stage code maps to a manifest row containing stable primitive id,
+    abstract primitive name, primary ISA/library citation, hardware gate,
+    scalar reference, strict checkasm/parity command, corpus/equality parity,
+    grammar policy source, substrate target, retention lifetime, policy owner,
+    same-wave production consumer, expected row/feature gate, LOC/risk,
+    rollback path, abrogate threshold, and final disposition. Evidence:
+    `restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md:150`-`180`,
+    `restart/audit/totality/p2/T-P2-V3-FOLD-ADDENDUM.md:89`-`101`.
+
+    Admission checkasm commands run with `BBNF_SIMD_STRICT=1`. Non-strict
+    parity is exploratory only and cannot admit a primitive, route, or row.
+    Every scalar/checkasm/equality failure rejects the candidate for that wave.
+    Evidence: `skinny/REDRESS.md:3621`-`3625`,
+    `restart/audit/totality/p2/T-P2-V4-FOLD-ADDENDUM.md:47`-`58`.
+
+    `escape_mask_64` is an admitted correctness prerequisite, not a production
+    SIMD/ASM throughput primitive. Its checkasm-backed state covers the
+    historical xorshift falsifier and scanner parity cases, but it admits a
+    row only when a JSON/CSS string or escape consumer wires it in the same
+    wave and moves or rejects the named row under strict comparator evidence.
+    Evidence: `skinny/REDRESS.md:3603`-`3632`,
+    `restart/audit/totality/p2/T-P2-V3-FOLD-ADDENDUM.md:91`-`92`,
+    `restart/audit/totality/p2/T-P2-V4-FOLD-ADDENDUM.md:49`.
+
+    At close, every source-present primitive is exactly one of `wired`,
+    `deleted`, `scalar-delegate-non-ASM`, or
+    `architectural-block-with-REDRESS`. `inventory_demoted_with_evidence` is
+    historical evidence only. Support-only hint modules, unconsumed prefix/next
+    bitmap bodies, cache hints without exact caller placement, and orphan
+    `asm!`/intrinsic files do not close Lock 16. Evidence:
+    `restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md:194`-`206`,
+    `restart/skinny/tranches/sk-v13/SYNTHESIS.md:84`-`93`.
+
+    `CollapsedStage` is admissible only as a concrete emitted transient
+    strategy with scalar reference, strict parity/checkasm, feature gate,
+    local temporary lifetime, and same-wave measured consumer. AVX-512
+    literature is x86 architecture pressure and cannot close M5/aarch64 rows.
+    Evidence: `restart/audit/totality/p2/2D-cost-model.md:191`,
+    `restart/skinny/tranches/sk-v13/SYNTHESIS.md:223`-`230`.
+
+    Native `svmatch_u8` is SVE2-only. The existing Lock 16 NEON set-membership
+    row remains a separate NEON reduction-tree port only if the manifest names
+    the NEON implementation, scalar oracle, strict checkasm, hardware gate,
+    and consumer row. Evidence:
+    `restart/audit/totality/p2/2E-host-arch-esoterica.md:270`,
+    `restart/locks/LOCKS.md:290`.
+
+    PMULL/CSSC, union, ASM-gen, cache-hint, parse-that, and hardware facade
+    routes require material-differential text against prior REDRESS rows,
+    micro-prove-first evidence where applicable, grammar-policy proof, and a
+    same-wave production consumer or measured deletion/rejection. Evidence:
+    `restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md:120`-`137`,
+    `skinny/REDRESS.md:3766`-`3820`,
+    `skinny/REDRESS.md:3864`-`3868`.
+
+## v+1 Governance Boundary
+
+The v+1 text above is active only because Pass Omega CHALLENGE converged and
+G-Omega authorized CRUD operations on governance surfaces. No implementation
+wave may use v+1 wording as permission to add a directive, add a BIR variant,
+add or retire a lock, expand `BackendShape`, add a public substrate API,
+retain a sidecar, or bypass the owning skinny SPEC gate. Evidence:
+`restart/prompts/pass-contracts/PASS-OMEGA.md:86`-`108`,
+`restart/prompts/ORCHESTRATOR.md:165`-`172`,
+`restart/audit/totality/astral/V1/G-OMEGA-SIGNOFF.md`.
 
 ## Lanes
 

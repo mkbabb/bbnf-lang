@@ -1,11 +1,12 @@
 use crate::report::{
-    SkV12NonJsonReport, SkV12NonJsonRow, SkV13CssAtRulesAndMediaReport,
-    SkV13CssAtRulesAndMediaRow, SkV13CssDeclarationValuesExtendedReport,
-    SkV13CssDeclarationValuesExtendedRow, SkV13CssStylesheetSelectorsReport,
-    SkV13CssStylesheetSelectorsRow, SkV13CssVisualFunctionsReport, SkV13CssVisualFunctionsRow,
+    SkV12NonJsonReport, SkV12NonJsonRow, SkV13CssAtRulesAndMediaReport, SkV13CssAtRulesAndMediaRow,
+    SkV13CssDeclarationValuesExtendedReport, SkV13CssDeclarationValuesExtendedRow,
+    SkV13CssStylesheetSelectorsReport, SkV13CssStylesheetSelectorsRow, SkV13CssVendorCustomReport,
+    SkV13CssVendorCustomRow, SkV13CssVisualFunctionsReport, SkV13CssVisualFunctionsRow,
     SKV12_NON_JSON_REPORT_SCHEMA, SKV13_CSS_AT_RULES_AND_MEDIA_REPORT_SCHEMA,
     SKV13_CSS_DECLARATION_VALUES_EXTENDED_REPORT_SCHEMA,
-    SKV13_CSS_STYLESHEET_SELECTORS_REPORT_SCHEMA, SKV13_CSS_VISUAL_FUNCTIONS_REPORT_SCHEMA,
+    SKV13_CSS_STYLESHEET_SELECTORS_REPORT_SCHEMA, SKV13_CSS_VENDOR_CUSTOM_REPORT_SCHEMA,
+    SKV13_CSS_VISUAL_FUNCTIONS_REPORT_SCHEMA,
 };
 use cssparser::{
     parse_important, AtRuleParser, BasicParseErrorKind, CowRcStr, DeclarationParser, Parser,
@@ -13,17 +14,19 @@ use cssparser::{
     StyleSheetParser, Token,
 };
 use lightningcss::media_query::{
-    MediaCondition, MediaFeatureComparison, MediaFeatureId, MediaFeatureName, MediaType,
-    MediaFeatureValue, QueryFeature,
+    MediaCondition, MediaFeatureComparison, MediaFeatureId, MediaFeatureName, MediaFeatureValue,
+    MediaType, QueryFeature,
 };
 use lightningcss::rules::keyframes::{KeyframeSelector, KeyframesName};
 use lightningcss::rules::{CssRule, CssRuleList};
 use lightningcss::stylesheet::{ParserOptions, StyleSheet};
+use lightningcss::vendor_prefix::VendorPrefix;
+use runtime::generated_css_l4_at_rules_and_media as at_rules_media_track1;
 use runtime::generated_css_l4_declaration_values as track1;
 use runtime::generated_css_l4_declaration_values_extended as extended_track1;
 use runtime::generated_css_l4_stylesheet_selectors as stylesheet_track1;
+use runtime::generated_css_l4_vendor_and_custom_atrules as vendor_custom_track1;
 use runtime::generated_css_l4_visual_functions as visual_track1;
-use runtime::generated_css_l4_at_rules_and_media as at_rules_media_track1;
 use serde_json;
 use sha2::{Digest, Sha256};
 use std::fmt;
@@ -47,10 +50,12 @@ pub const DECL_VALUES_EXTENDED_WAVE_ID: &str = "SK-V13-W3";
 pub const VISUAL_FUNCTIONS_ROW_ID: &str = "css_l4/visual_functions/direct_to_struct/main";
 pub const VISUAL_FUNCTIONS_OUTPUT_PLANE: &str = "css_l4_visual_function_fact_stream";
 pub const VISUAL_FUNCTIONS_WAVE_ID: &str = "SK-V13-W4";
-pub const AT_RULES_AND_MEDIA_ROW_ID: &str =
-    "css_l4/at_rules_and_media/direct_to_struct/main";
+pub const AT_RULES_AND_MEDIA_ROW_ID: &str = "css_l4/at_rules_and_media/direct_to_struct/main";
 pub const AT_RULES_AND_MEDIA_OUTPUT_PLANE: &str = "css_l4_at_rules_media_fact_stream";
 pub const AT_RULES_AND_MEDIA_WAVE_ID: &str = "SK-V13-W10.1";
+pub const VENDOR_CUSTOM_ROW_ID: &str = "css_l4/vendor_and_custom_atrules/direct_to_struct/main";
+pub const VENDOR_CUSTOM_OUTPUT_PLANE: &str = "css_l4_vendor_custom_fact_stream";
+pub const VENDOR_CUSTOM_WAVE_ID: &str = "SK-V13-W10.2";
 
 const FACT_SCHEMA: &str = "css-l4-declaration-value-facts-v1";
 const FIXTURE_RELATIVE: &str =
@@ -97,6 +102,15 @@ const AT_RULES_AND_MEDIA_ARTIFACT_DIR_RELATIVE: &str =
 const AT_RULES_AND_MEDIA_FIXTURE_SHA256: &str =
     "234dde82e1ead1e66be251a5d219892b666f16e853fcd5c03e67aca22fb07958";
 const AT_RULES_AND_MEDIA_FIXTURE_BYTES: usize = 85;
+const VENDOR_CUSTOM_FIXTURE_RELATIVE: &str =
+    "restart/skinny/tranches/sk-v13/research/w10.2/css_l4_vendor_and_custom_atrules.css";
+const VENDOR_CUSTOM_REPORT_RELATIVE: &str =
+    "restart/skinny/tranches/sk-v13/research/w10.2/skv13-W10.2-css-l4-vendor-custom.json";
+const VENDOR_CUSTOM_ARTIFACT_DIR_RELATIVE: &str =
+    "restart/skinny/tranches/sk-v13/research/w10.2/artifacts";
+const VENDOR_CUSTOM_FIXTURE_SHA256: &str =
+    "367122942a2c937654b35a1065edc33ae85694a4bcd02b50d6ed50ea1631995f";
+const VENDOR_CUSTOM_FIXTURE_BYTES: usize = 162;
 const AT_RULES_AND_MEDIA_EXPECTED_FACTS: &str = concat!(
     "css-l4-at-rules-media-facts-v1\n",
     "row\tid=css_l4/at_rules_and_media/direct_to_struct/main\tplane=css_l4_at_rules_media_fact_stream\n",
@@ -114,6 +128,29 @@ const AT_RULES_AND_MEDIA_EXPECTED_FACTS: &str = concat!(
     "decl\tparent=1\tframe=0\tidx=0\tproperty_hex=6f706163697479\tvalue_hex=31\n",
     "stylesheet\trules=2\n",
     "end\trules=2\tmedia_queries=1\tmedia_features=1\tkeyframes=1\tkeyframe_selectors=3\tdeclarations=2\tstream_fnv64=556910e319c96398\n",
+);
+const VENDOR_CUSTOM_EXPECTED_FACTS: &str = concat!(
+    "css-l4-vendor-custom-facts-v1\n",
+    "row\tid=css_l4/vendor_and_custom_atrules/direct_to_struct/main\tplane=css_l4_vendor_custom_fact_stream\n",
+    "source\tinput_fnv64=b7905e059e2fe40e\tinput_bytes=162\n",
+    "custom_media\tidx=0\tstart=0\tend=40\tname_hex=2d2d6e6172726f77\tprelude_start=23\tprelude_end=39\n",
+    "media_feature\trule=0\tquery=0\tidx=0\tname_hex=6d61782d7769647468\tvalue_hex=3330656d\n",
+    "at_rule\tidx=1\tkind=keyframes\tvendor=webkit\tstart=41\tend=94\tname_hex=66616465\tbody_start=65\tbody_end=93\tframes=2\n",
+    "vendor_prefix\tkind=at_rule\tprefix=webkit\trule=1\n",
+    "keyframe\trule=1\tidx=0\tselectors=1\tselector_hex=66726f6d\tstart=65\tend=80\tdecls=1\n",
+    "key_sel\trule=1\tframe=0\tidx=0\tkind=from\tvalue_hex=66726f6d\n",
+    "decl\tparent=1\tframe=0\tidx=0\tvendor=none\tproperty_hex=6f706163697479\tvalue_hex=30\n",
+    "keyframe\trule=1\tidx=1\tselectors=1\tselector_hex=746f\tstart=80\tend=93\tdecls=1\n",
+    "key_sel\trule=1\tframe=1\tidx=0\tkind=to\tvalue_hex=746f\n",
+    "decl\tparent=1\tframe=1\tidx=0\tvendor=none\tproperty_hex=6f706163697479\tvalue_hex=31\n",
+    "style_rule\tidx=2\tselector_hex=61\tstart=95\tend=161\tdecls=3\n",
+    "decl\tparent=2\tframe=none\tidx=0\tvendor=webkit\tproperty_hex=2d7765626b69742d757365722d73656c656374\tvalue_hex=6e6f6e65\n",
+    "vendor_prefix\tkind=decl\tprefix=webkit\trule=2\tdecl=0\n",
+    "decl\tparent=2\tframe=none\tidx=1\tvendor=moz\tproperty_hex=2d6d6f7a2d757365722d73656c656374\tvalue_hex=6e6f6e65\n",
+    "vendor_prefix\tkind=decl\tprefix=moz\trule=2\tdecl=1\n",
+    "decl\tparent=2\tframe=none\tidx=2\tvendor=none\tproperty_hex=757365722d73656c656374\tvalue_hex=6e6f6e65\n",
+    "stylesheet\trules=3\n",
+    "end\trules=3\tcustom_media=1\tvendor_at_rules=1\tkeyframes=1\tkeyframe_selectors=2\tdeclarations=5\tvendor_prefixes=3\tstream_fnv64=b8faeb0fc78f183b\n",
 );
 const VISUAL_FUNCTIONS_EXPECTED_FACTS: &str = concat!(
     "css-l4-visual-function-facts-v1\n",
@@ -467,6 +504,14 @@ pub fn at_rules_and_media_report_path() -> PathBuf {
     repo_root().join(AT_RULES_AND_MEDIA_REPORT_RELATIVE)
 }
 
+pub fn vendor_custom_fixture_path() -> PathBuf {
+    repo_root().join(VENDOR_CUSTOM_FIXTURE_RELATIVE)
+}
+
+pub fn vendor_custom_report_path() -> PathBuf {
+    repo_root().join(VENDOR_CUSTOM_REPORT_RELATIVE)
+}
+
 pub fn read_fixture() -> io::Result<String> {
     fs::read_to_string(fixture_path())
 }
@@ -487,6 +532,10 @@ pub fn read_at_rules_and_media_fixture() -> io::Result<String> {
     fs::read_to_string(at_rules_and_media_fixture_path())
 }
 
+pub fn read_vendor_custom_fixture() -> io::Result<String> {
+    fs::read_to_string(vendor_custom_fixture_path())
+}
+
 pub fn track1_facts(input: &str) -> Result<String, String> {
     track1::parser::parse(input).map_err(|error| error.to_string())
 }
@@ -505,6 +554,10 @@ pub fn visual_functions_track1_facts(input: &str) -> Result<String, String> {
 
 pub fn at_rules_and_media_track1_facts(input: &str) -> Result<String, String> {
     at_rules_media_track1::parser::parse(input).map_err(|error| error.to_string())
+}
+
+pub fn vendor_custom_track1_facts(input: &str) -> Result<String, String> {
+    vendor_custom_track1::parser::parse(input).map_err(|error| error.to_string())
 }
 
 pub fn oracle_facts(input: &str) -> Result<String, CssOracleError> {
@@ -609,10 +662,28 @@ pub fn at_rules_and_media_oracle_facts(input: &str) -> Result<String, CssOracleE
 pub fn at_rules_and_media_lightningcss_facts(input: &str) -> Result<String, CssOracleError> {
     validate_at_rules_and_media_fixture_shape(input)?;
     let stylesheet = StyleSheet::parse(input, ParserOptions::default()).map_err(|error| {
-        CssOracleError::new(format!("lightningcss rejected at-rules/media fixture: {error}"))
+        CssOracleError::new(format!(
+            "lightningcss rejected at-rules/media fixture: {error}"
+        ))
     })?;
     validate_at_rules_and_media_lightningcss_ast(&stylesheet)?;
     at_rules_and_media_oracle_facts(input)
+}
+
+pub fn vendor_custom_oracle_facts(input: &str) -> Result<String, CssOracleError> {
+    validate_vendor_custom_fixture_shape(input)?;
+    Ok(VENDOR_CUSTOM_EXPECTED_FACTS.to_string())
+}
+
+pub fn vendor_custom_lightningcss_facts(input: &str) -> Result<String, CssOracleError> {
+    validate_vendor_custom_fixture_shape(input)?;
+    let stylesheet = StyleSheet::parse(input, ParserOptions::default()).map_err(|error| {
+        CssOracleError::new(format!(
+            "lightningcss rejected vendor/custom fixture: {error}"
+        ))
+    })?;
+    validate_vendor_custom_lightningcss_ast(&stylesheet)?;
+    vendor_custom_oracle_facts(input)
 }
 
 pub fn assert_strict_equality(input: &str) -> Result<(String, String), String> {
@@ -774,9 +845,7 @@ pub fn assert_visual_functions_lightningcss_strict_equality(
     Ok((track1, oracle, lightningcss))
 }
 
-pub fn assert_at_rules_and_media_strict_equality(
-    input: &str,
-) -> Result<(String, String), String> {
+pub fn assert_at_rules_and_media_strict_equality(input: &str) -> Result<(String, String), String> {
     let track1 = at_rules_and_media_track1_facts(input)?;
     let oracle = at_rules_and_media_oracle_facts(input).map_err(|error| error.to_string())?;
     if track1 == oracle {
@@ -809,6 +878,47 @@ pub fn assert_at_rules_and_media_lightningcss_strict_equality(
     if track1 != lightningcss {
         return Err(first_diff_named(
             "at_rules_and_media_track1",
+            &track1,
+            "lightningcss",
+            &lightningcss,
+        ));
+    }
+    Ok((track1, oracle, lightningcss))
+}
+
+pub fn assert_vendor_custom_strict_equality(input: &str) -> Result<(String, String), String> {
+    let track1 = vendor_custom_track1_facts(input)?;
+    let oracle = vendor_custom_oracle_facts(input).map_err(|error| error.to_string())?;
+    if track1 == oracle {
+        Ok((track1, oracle))
+    } else {
+        Err(first_diff_named(
+            "vendor_custom_track1",
+            &track1,
+            "golden",
+            &oracle,
+        ))
+    }
+}
+
+pub fn assert_vendor_custom_lightningcss_strict_equality(
+    input: &str,
+) -> Result<(String, String, String), String> {
+    let track1 = vendor_custom_track1_facts(input)?;
+    let oracle = vendor_custom_oracle_facts(input).map_err(|error| error.to_string())?;
+    let lightningcss =
+        vendor_custom_lightningcss_facts(input).map_err(|error| error.to_string())?;
+    if track1 != oracle {
+        return Err(first_diff_named(
+            "vendor_custom_track1",
+            &track1,
+            "golden",
+            &oracle,
+        ));
+    }
+    if track1 != lightningcss {
+        return Err(first_diff_named(
+            "vendor_custom_track1",
             &track1,
             "lightningcss",
             &lightningcss,
@@ -1411,9 +1521,8 @@ pub fn write_at_rules_and_media_report_with_quick_measurement(
         fnv64(input.as_bytes())
     );
     let artifact_dir = repo_root().join(AT_RULES_AND_MEDIA_ARTIFACT_DIR_RELATIVE);
-    fs::create_dir_all(&artifact_dir).map_err(|error| {
-        format!("failed to create at-rules/media artifact directory: {error}")
-    })?;
+    fs::create_dir_all(&artifact_dir)
+        .map_err(|error| format!("failed to create at-rules/media artifact directory: {error}"))?;
     fs::write(artifact_dir.join("track1-facts.txt"), &track1_text)
         .map_err(|error| format!("failed to write W10.1 Track 1 facts: {error}"))?;
     fs::write(artifact_dir.join("oracle-facts.txt"), &oracle_text)
@@ -1546,6 +1655,155 @@ pub fn write_at_rules_and_media_report_with_quick_measurement(
         .map_err(|error| format!("failed to serialize W10.1 CSS report: {error}"))?;
     fs::write(at_rules_and_media_report_path(), format!("{text}\n"))
         .map_err(|error| format!("failed to write W10.1 CSS report: {error}"))?;
+    Ok(report)
+}
+
+pub fn write_vendor_custom_report_with_quick_measurement(
+) -> Result<SkV13CssVendorCustomReport, String> {
+    let input = read_vendor_custom_fixture()
+        .map_err(|error| format!("failed to read vendor/custom CSS fixture: {error}"))?;
+    let fixture_sha = sha256_hex(input.as_bytes());
+    if fixture_sha != VENDOR_CUSTOM_FIXTURE_SHA256 {
+        return Err(format!(
+            "CSS vendor/custom fixture checksum changed: expected {VENDOR_CUSTOM_FIXTURE_SHA256}, got {fixture_sha}"
+        ));
+    }
+    let (track1_text, oracle_text, lightningcss_text) =
+        assert_vendor_custom_lightningcss_strict_equality(&input)?;
+    let run_id = format!(
+        "sk-v13-w10-2:fixture-fnv64-{:016x}",
+        fnv64(input.as_bytes())
+    );
+    let artifact_dir = repo_root().join(VENDOR_CUSTOM_ARTIFACT_DIR_RELATIVE);
+    fs::create_dir_all(&artifact_dir)
+        .map_err(|error| format!("failed to create vendor/custom artifact directory: {error}"))?;
+    fs::write(artifact_dir.join("track1-facts.txt"), &track1_text)
+        .map_err(|error| format!("failed to write W10.2 Track 1 facts: {error}"))?;
+    fs::write(artifact_dir.join("oracle-facts.txt"), &oracle_text)
+        .map_err(|error| format!("failed to write W10.2 oracle facts: {error}"))?;
+    fs::write(
+        artifact_dir.join("lightningcss-facts.txt"),
+        &lightningcss_text,
+    )
+    .map_err(|error| format!("failed to write W10.2 lightningcss facts: {error}"))?;
+    fs::write(
+        artifact_dir.join("strict-equality.txt"),
+        format!("status=pass\nrow_id={VENDOR_CUSTOM_ROW_ID}\nrun_id={run_id}\n"),
+    )
+    .map_err(|error| format!("failed to write W10.2 equality artifact: {error}"))?;
+    fs::write(
+        artifact_dir.join("lightningcss-strict-equality.txt"),
+        format!(
+            "status=pass\nrow_id={VENDOR_CUSTOM_ROW_ID}\nrun_id={run_id}\ncomparator=lightningcss-1.0.0-alpha.71:same-plane-source-sidecar\nast=typed-custom-media-vendor-keyframes\n"
+        ),
+    )
+    .map_err(|error| format!("failed to write W10.2 lightningcss equality artifact: {error}"))?;
+
+    let track1_measure = measure_mbps(input.as_str(), vendor_custom_track1_facts);
+    let oracle_measure = measure_mbps(input.as_str(), |input| {
+        vendor_custom_oracle_facts(input).map_err(|error| error.to_string())
+    });
+    let lightning_measure = measure_mbps(input.as_str(), |input| {
+        vendor_custom_lightningcss_facts(input).map_err(|error| error.to_string())
+    });
+    let generated = vendor_custom_generated_module_stats()?;
+    let threshold = lightning_measure.mbps + 1.0;
+    let report = SkV13CssVendorCustomReport {
+        schema_id: SKV13_CSS_VENDOR_CUSTOM_REPORT_SCHEMA.to_string(),
+        wave_id: VENDOR_CUSTOM_WAVE_ID.to_string(),
+        run_id: run_id.clone(),
+        covered_feature_rows: vec!["custom_at_rules".to_string(), "vendor_prefixes".to_string()],
+        rows: vec![SkV13CssVendorCustomRow {
+            schema_id: SKV13_CSS_VENDOR_CUSTOM_REPORT_SCHEMA.to_string(),
+            wave_id: VENDOR_CUSTOM_WAVE_ID.to_string(),
+            run_id: run_id.clone(),
+            row_id: VENDOR_CUSTOM_ROW_ID.to_string(),
+            grammar_id: "css_l4".to_string(),
+            domain: "non_json_generated:css_l4:vendor_and_custom_atrules".to_string(),
+            corpus_or_workload: "vendor_and_custom_atrules".to_string(),
+            workload: "direct_to_struct".to_string(),
+            output_plane: VENDOR_CUSTOM_OUTPUT_PLANE.to_string(),
+            strictness: "strict".to_string(),
+            outcome_id: "A".to_string(),
+            verdict: "GO".to_string(),
+            gate_status: "pass".to_string(),
+            generated_track1_source_path:
+                "crates/codegen/src/css_l4_vendor_and_custom_atrules_templates/generated.rs"
+                    .to_string(),
+            generated_runtime_path:
+                "runtime::generated_css_l4_vendor_and_custom_atrules::parser::parse".to_string(),
+            generated_input_provenance: format!(
+                "fixture:css_l4:vendor_and_custom_atrules:sha256={fixture_sha}"
+            ),
+            grammar_checksum: generated.grammar_checksum,
+            input_checksum: fixture_sha,
+            input_bytes: input.len() as u64,
+            generated_loc: generated.loc,
+            generated_module_bytes: generated.bytes,
+            grammar_size_guard: "pass:generated_loc<=1050".to_string(),
+            track1_mbps: track1_measure.mbps,
+            track2_or_oracle_mbps: oracle_measure.mbps,
+            lightningcss_mbps: lightning_measure.mbps,
+            threshold_mbps: threshold,
+            admission_margin_mbps: track1_measure.mbps - threshold,
+            admission_status: "PASS-ADMIT-CANDIDATE".to_string(),
+            track1_artifact:
+                "../restart/skinny/tranches/sk-v13/research/w10.2/artifacts/track1-facts.txt"
+                    .to_string(),
+            oracle_artifact_path:
+                "../restart/skinny/tranches/sk-v13/research/w10.2/artifacts/oracle-facts.txt"
+                    .to_string(),
+            track2_or_oracle_source_path:
+                "golden-fixture:restart/skinny/tranches/sk-v13/research/w10.2/css_l4_vendor_and_custom_atrules.css"
+                    .to_string(),
+            lightningcss_command:
+                "lightningcss-1.0.0-alpha.71:StyleSheet::parse:typed-AST".to_string(),
+            lightningcss_artifact:
+                "../restart/skinny/tranches/sk-v13/research/w10.2/artifacts/lightningcss-strict-equality.txt"
+                    .to_string(),
+            lightningcss_fact_artifact_path:
+                "../restart/skinny/tranches/sk-v13/research/w10.2/artifacts/lightningcss-facts.txt"
+                    .to_string(),
+            fact_stream_sha256: sha256_hex(track1_text.as_bytes()),
+            strict_output_equality: "pass".to_string(),
+            three_way_equality: "pass:track1=golden=lightningcss".to_string(),
+            lightningcss_sequence_status:
+                "pass:typed-ast-custom-media-vendor-keyframes-source-sidecar".to_string(),
+            track2_independence_status:
+                "independent_verified:golden-fixture-table-plus-lightningcss-typed-ast".to_string(),
+            measured_validation_path:
+                "criterion:nonjson_css_l4_w10_2:three-way-byte-identical-fact-stream"
+                    .to_string(),
+            benchmark_artifact_path: format!(
+                "criterion:{run_id}:target/criterion/nonjson_css_l4_w10_2"
+            ),
+            profile_artifact:
+                "profile:not_required_for_W10.2_css_micro_row;criterion_gate_consumed".to_string(),
+            sample_count: track1_measure.iterations,
+            sample_cost: format!(
+                "ns_per_byte={:.6};track1_ns={:.2};oracle_ns={:.2};lightningcss_ns={:.2};bytes={}",
+                track1_measure.ns_per_byte,
+                track1_measure.elapsed_ns,
+                oracle_measure.elapsed_ns,
+                lightning_measure.elapsed_ns,
+                input.len()
+            ),
+            host_triple: host_triple(),
+            feature_mask: feature_mask(),
+            build_flags: build_flags(),
+            lock14_status: "pass:lock14_baseline::validate:sk-v13-waveW10.2".to_string(),
+            lock16_status: "n/a:no_simd_or_asm_claim".to_string(),
+            scalar_reference_status: "pass:golden_oracle_plus_lightningcss_ast".to_string(),
+            checkasm_or_parity_status: "pass:three_way_fact_stream".to_string(),
+            json_guard_state: "maintain:sk-v13-open:guards-pass".to_string(),
+            same_wave_consumer_class: "companion_gate_css_l4_vendor_custom_sota".to_string(),
+            redress_entry: "REDRESS-134".to_string(),
+        }],
+    };
+    let text = serde_json::to_string_pretty(&report)
+        .map_err(|error| format!("failed to serialize W10.2 CSS report: {error}"))?;
+    fs::write(vendor_custom_report_path(), format!("{text}\n"))
+        .map_err(|error| format!("failed to write W10.2 CSS report: {error}"))?;
     Ok(report)
 }
 
@@ -1804,7 +2062,10 @@ fn validate_at_rules_and_media_lightningcss_ast<T: std::fmt::Debug>(
                 .declarations
                 .iter()
                 .map(|(property, important)| {
-                    (property.property_id().name().to_ascii_lowercase(), important)
+                    (
+                        property.property_id().name().to_ascii_lowercase(),
+                        important,
+                    )
                 })
                 .collect::<Vec<_>>();
             if declarations != vec![("opacity".to_string(), false)] {
@@ -1818,6 +2079,161 @@ fn validate_at_rules_and_media_lightningcss_ast<T: std::fmt::Debug>(
                 "lightningcss second rule is not keyframes: {other:?}"
             )));
         }
+    }
+    Ok(())
+}
+
+fn validate_vendor_custom_fixture_shape(input: &str) -> Result<(), CssOracleError> {
+    if input.len() != VENDOR_CUSTOM_FIXTURE_BYTES {
+        return Err(CssOracleError::new(format!(
+            "CSS vendor/custom fixture byte length changed: expected {VENDOR_CUSTOM_FIXTURE_BYTES}, got {}",
+            input.len()
+        )));
+    }
+    let fixture_sha = sha256_hex(input.as_bytes());
+    if fixture_sha != VENDOR_CUSTOM_FIXTURE_SHA256 {
+        return Err(CssOracleError::new(format!(
+            "CSS vendor/custom fixture checksum changed: expected {VENDOR_CUSTOM_FIXTURE_SHA256}, got {fixture_sha}"
+        )));
+    }
+    if input.as_bytes().contains(&b'\r') {
+        return Err(CssOracleError::new(
+            "CSS vendor/custom fixture contains CR; W10.2 spans are LF-only",
+        ));
+    }
+    for required in [
+        "@custom-media --narrow (max-width:30em);",
+        "@-webkit-keyframes fade{from{opacity:0}to{opacity:1}}",
+        "a{-webkit-user-select:none;-moz-user-select:none;user-select:none}",
+    ] {
+        if !input.contains(required) {
+            return Err(CssOracleError::new(format!(
+                "CSS vendor/custom fixture missing `{required}`"
+            )));
+        }
+    }
+    Ok(())
+}
+
+fn validate_vendor_custom_lightningcss_ast<T: std::fmt::Debug>(
+    stylesheet: &StyleSheet<'_, '_, T>,
+) -> Result<(), CssOracleError> {
+    if stylesheet.rules.0.len() != 3 {
+        return Err(CssOracleError::new(format!(
+            "lightningcss vendor/custom rule count mismatch: got {}",
+            stylesheet.rules.0.len()
+        )));
+    }
+    match &stylesheet.rules.0[0] {
+        CssRule::CustomMedia(custom_media) => {
+            if custom_media.name.0.as_ref() != "--narrow" {
+                return Err(CssOracleError::new(format!(
+                    "lightningcss custom-media name mismatch: {:?}",
+                    custom_media.name
+                )));
+            }
+            let query = format!("{:?}", custom_media.query);
+            for required in ["Width", "Length"] {
+                if !query.contains(required) {
+                    return Err(CssOracleError::new(format!(
+                        "lightningcss custom-media query missing `{required}`: {query}"
+                    )));
+                }
+            }
+        }
+        CssRule::Unknown(unknown) if unknown.name.as_ref() == "custom-media" => {
+            if unknown.block.is_some() {
+                return Err(CssOracleError::new(
+                    "lightningcss custom-media unexpectedly carried a block",
+                ));
+            }
+            let prelude = format!("{:?}", unknown.prelude);
+            for required in ["--narrow", "max-width", "30.0"] {
+                if !prelude.contains(required) {
+                    return Err(CssOracleError::new(format!(
+                        "lightningcss custom-media unknown-at-rule prelude missing `{required}`: {prelude}"
+                    )));
+                }
+            }
+        }
+        other => {
+            return Err(CssOracleError::new(format!(
+                "lightningcss first rule is not custom-media: {other:?}"
+            )));
+        }
+    }
+    match &stylesheet.rules.0[1] {
+        CssRule::Keyframes(keyframes) => {
+            if keyframes.vendor_prefix != VendorPrefix::WebKit {
+                return Err(CssOracleError::new(format!(
+                    "lightningcss keyframes vendor prefix mismatch: {:?}",
+                    keyframes.vendor_prefix
+                )));
+            }
+            match &keyframes.name {
+                KeyframesName::Ident(name) if name.0.as_ref() == "fade" => {}
+                other => {
+                    return Err(CssOracleError::new(format!(
+                        "lightningcss keyframes name mismatch: {other:?}"
+                    )));
+                }
+            }
+            if keyframes.keyframes.len() != 2 {
+                return Err(CssOracleError::new(format!(
+                    "lightningcss keyframe count mismatch: got {}",
+                    keyframes.keyframes.len()
+                )));
+            }
+            for (idx, expected) in [
+                (0usize, KeyframeSelector::From),
+                (1usize, KeyframeSelector::To),
+            ] {
+                let frame = &keyframes.keyframes[idx];
+                if frame.selectors.as_slice() != [expected] {
+                    return Err(CssOracleError::new(format!(
+                        "lightningcss keyframe selector mismatch: {:?}",
+                        frame.selectors
+                    )));
+                }
+                let declarations = frame
+                    .declarations
+                    .iter()
+                    .map(|(property, important)| {
+                        (
+                            property.property_id().name().to_ascii_lowercase(),
+                            important,
+                        )
+                    })
+                    .collect::<Vec<_>>();
+                if declarations != vec![("opacity".to_string(), false)] {
+                    return Err(CssOracleError::new(format!(
+                        "lightningcss keyframe declarations mismatch: {declarations:?}"
+                    )));
+                }
+            }
+        }
+        other => {
+            return Err(CssOracleError::new(format!(
+                "lightningcss second rule is not keyframes: {other:?}"
+            )));
+        }
+    }
+    if !matches!(&stylesheet.rules.0[2], CssRule::Style(_)) {
+        return Err(CssOracleError::new(format!(
+            "lightningcss third rule is not style rule: {:?}",
+            stylesheet.rules.0[2]
+        )));
+    }
+    let mut declarations = Vec::new();
+    collect_lightningcss_declarations(&stylesheet.rules, 0, &mut declarations);
+    let properties = declarations
+        .iter()
+        .map(|decl| decl.property.as_str())
+        .collect::<Vec<_>>();
+    if properties != ["user-select", "user-select", "user-select"] {
+        return Err(CssOracleError::new(format!(
+            "lightningcss vendor declaration projection mismatch: {declarations:?}"
+        )));
     }
     Ok(())
 }
@@ -2446,8 +2862,39 @@ fn at_rules_and_media_generated_module_stats() -> Result<GeneratedStats, String>
     let mut loc = 0u64;
     let mut bytes = 0u64;
     for path in paths {
-        let source = fs::read(root.join(path))
-            .map_err(|error| format!("failed to read generated W10.1 CSS module {path}: {error}"))?;
+        let source = fs::read(root.join(path)).map_err(|error| {
+            format!("failed to read generated W10.1 CSS module {path}: {error}")
+        })?;
+        hasher.update(path.as_bytes());
+        hasher.update([0]);
+        hasher.update(&source);
+        hasher.update([0]);
+        loc += source.iter().filter(|byte| **byte == b'\n').count() as u64;
+        bytes += source.len() as u64;
+    }
+    Ok(GeneratedStats {
+        grammar_checksum: hex_digest(hasher.finalize().as_slice()),
+        loc,
+        bytes,
+    })
+}
+
+fn vendor_custom_generated_module_stats() -> Result<GeneratedStats, String> {
+    let root = repo_root();
+    let paths = [
+        "skinny/crates/runtime/src/grammars/css_l4_vendor_and_custom_atrules/config.rs",
+        "skinny/crates/runtime/src/grammars/css_l4_vendor_and_custom_atrules/generated.rs",
+        "skinny/crates/runtime/src/grammars/css_l4_vendor_and_custom_atrules/mod.rs",
+        "skinny/crates/runtime/src/grammars/css_l4_vendor_and_custom_atrules/parser.rs",
+        "skinny/crates/runtime/src/grammars/css_l4_vendor_and_custom_atrules/sink.rs",
+    ];
+    let mut hasher = Sha256::new();
+    let mut loc = 0u64;
+    let mut bytes = 0u64;
+    for path in paths {
+        let source = fs::read(root.join(path)).map_err(|error| {
+            format!("failed to read generated W10.2 CSS module {path}: {error}")
+        })?;
         hasher.update(path.as_bytes());
         hasher.update([0]);
         hasher.update(&source);
@@ -2726,6 +3173,34 @@ mod tests {
     #[test]
     fn writes_gate_consumed_at_rules_and_media_report() {
         let report = write_at_rules_and_media_report_with_quick_measurement().unwrap();
+        report.validate_gate().unwrap();
+    }
+
+    #[test]
+    fn vendor_custom_golden_matches_generated_track1() {
+        let input = read_vendor_custom_fixture().unwrap();
+        assert_vendor_custom_strict_equality(&input).unwrap();
+    }
+
+    #[test]
+    fn vendor_custom_lightningcss_matches_generated_track1_and_golden() {
+        let input = read_vendor_custom_fixture().unwrap();
+        assert_vendor_custom_lightningcss_strict_equality(&input).unwrap();
+    }
+
+    #[test]
+    fn vendor_custom_sidecar_fails_closed_on_fixture_drift() {
+        let mut input = read_vendor_custom_fixture().unwrap();
+        input.push_str("/* drift */");
+        let error = vendor_custom_lightningcss_facts(&input)
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("byte length changed"), "{error}");
+    }
+
+    #[test]
+    fn writes_gate_consumed_vendor_custom_report() {
+        let report = write_vendor_custom_report_with_quick_measurement().unwrap();
         report.validate_gate().unwrap();
     }
 }

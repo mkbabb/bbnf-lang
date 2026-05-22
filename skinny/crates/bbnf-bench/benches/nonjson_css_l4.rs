@@ -222,6 +222,46 @@ fn bench_nonjson_css_l4(c: &mut Criterion) {
         },
     );
     at_rules_group.finish();
+
+    let vendor_input = nonjson_css_l4::read_vendor_custom_fixture()
+        .expect("CSS L4 vendor/custom fixture is readable");
+    nonjson_css_l4::assert_vendor_custom_strict_equality(&vendor_input)
+        .expect("CSS vendor/custom Track 1 equals golden oracle");
+    nonjson_css_l4::assert_vendor_custom_lightningcss_strict_equality(&vendor_input)
+        .expect("CSS vendor/custom Track 1 equals lightningcss fact stream");
+    let vendor_report = nonjson_css_l4::write_vendor_custom_report_with_quick_measurement()
+        .expect("CSS L4 vendor/custom report is emitted");
+    vendor_report
+        .validate_gate()
+        .expect("CSS L4 vendor/custom report gate passes");
+
+    let mut vendor_group = c.benchmark_group("nonjson_css_l4_w10_2");
+    vendor_group.throughput(Throughput::Bytes(vendor_input.len() as u64));
+    vendor_group.bench_function("track1_generated_css_l4_vendor_and_custom_atrules", |b| {
+        b.iter(|| {
+            black_box(
+                nonjson_css_l4::vendor_custom_track1_facts(black_box(&vendor_input))
+                    .expect("Track 1 CSS vendor/custom fact stream"),
+            )
+        })
+    });
+    vendor_group.bench_function("track2_golden_vendor_custom_oracle", |b| {
+        b.iter(|| {
+            black_box(
+                nonjson_css_l4::vendor_custom_oracle_facts(black_box(&vendor_input))
+                    .expect("golden CSS vendor/custom fact stream"),
+            )
+        })
+    });
+    vendor_group.bench_function("lightningcss_vendor_custom_same_plane_fact_stream", |b| {
+        b.iter(|| {
+            black_box(
+                nonjson_css_l4::vendor_custom_lightningcss_facts(black_box(&vendor_input))
+                    .expect("lightningcss CSS vendor/custom fact stream"),
+            )
+        })
+    });
+    vendor_group.finish();
 }
 
 criterion_group! {

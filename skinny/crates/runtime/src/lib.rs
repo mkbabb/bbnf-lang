@@ -18,6 +18,9 @@ pub mod generated_css_l4_visual_functions;
 #[path = "grammars/css_l4_at_rules_and_media/mod.rs"]
 pub mod generated_css_l4_at_rules_and_media;
 
+#[path = "grammars/css_l4_vendor_and_custom_atrules/mod.rs"]
+pub mod generated_css_l4_vendor_and_custom_atrules;
+
 #[cfg(any(test, feature = "proof"))]
 #[path = "grammars/json/event_grammar_witness.rs"]
 pub mod json_event_grammar_witness;
@@ -27,11 +30,12 @@ pub mod json_event_grammar_witness;
 pub mod sheets_witness;
 
 pub mod grammars {
+    pub use crate::generated_css_l4_at_rules_and_media as css_l4_at_rules_and_media;
     pub use crate::generated_css_l4_declaration_values as css_l4_declaration_values;
     pub use crate::generated_css_l4_declaration_values_extended as css_l4_declaration_values_extended;
     pub use crate::generated_css_l4_stylesheet_selectors as css_l4_stylesheet_selectors;
+    pub use crate::generated_css_l4_vendor_and_custom_atrules as css_l4_vendor_and_custom_atrules;
     pub use crate::generated_css_l4_visual_functions as css_l4_visual_functions;
-    pub use crate::generated_css_l4_at_rules_and_media as css_l4_at_rules_and_media;
     pub use crate::generated_json as json;
 }
 
@@ -127,6 +131,25 @@ mod tests {
         assert!(facts.contains("key_sel\trule=1\tframe=0\tidx=2\tkind=to"));
         assert!(facts.contains(
             "end\trules=2\tmedia_queries=1\tmedia_features=1\tkeyframes=1\tkeyframe_selectors=3\tdeclarations=2"
+        ));
+    }
+
+    #[test]
+    fn css_l4_vendor_and_custom_atrules_emit_fact_stream() {
+        let input = concat!(
+            "@custom-media --narrow (max-width:30em);\n",
+            "@-webkit-keyframes fade{from{opacity:0}to{opacity:1}}\n",
+            "a{-webkit-user-select:none;-moz-user-select:none;user-select:none}\n",
+        );
+        let facts = crate::grammars::css_l4_vendor_and_custom_atrules::parse(input).unwrap();
+        assert!(facts.contains(
+            "row\tid=css_l4/vendor_and_custom_atrules/direct_to_struct/main\tplane=css_l4_vendor_custom_fact_stream"
+        ));
+        assert!(facts.contains("custom_media\tidx=0"));
+        assert!(facts.contains("vendor_prefix\tkind=at_rule\tprefix=webkit\trule=1"));
+        assert!(facts.contains("vendor_prefix\tkind=decl\tprefix=moz\trule=2\tdecl=1"));
+        assert!(facts.contains(
+            "end\trules=3\tcustom_media=1\tvendor_at_rules=1\tkeyframes=1\tkeyframe_selectors=2\tdeclarations=5\tvendor_prefixes=3"
         ));
     }
 

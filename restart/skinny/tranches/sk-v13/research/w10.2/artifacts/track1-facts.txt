@@ -1,0 +1,21 @@
+css-l4-vendor-custom-facts-v1
+row	id=css_l4/vendor_and_custom_atrules/direct_to_struct/main	plane=css_l4_vendor_custom_fact_stream
+source	input_fnv64=b7905e059e2fe40e	input_bytes=162
+custom_media	idx=0	start=0	end=40	name_hex=2d2d6e6172726f77	prelude_start=23	prelude_end=39
+media_feature	rule=0	query=0	idx=0	name_hex=6d61782d7769647468	value_hex=3330656d
+at_rule	idx=1	kind=keyframes	vendor=webkit	start=41	end=94	name_hex=66616465	body_start=65	body_end=93	frames=2
+vendor_prefix	kind=at_rule	prefix=webkit	rule=1
+keyframe	rule=1	idx=0	selectors=1	selector_hex=66726f6d	start=65	end=80	decls=1
+key_sel	rule=1	frame=0	idx=0	kind=from	value_hex=66726f6d
+decl	parent=1	frame=0	idx=0	vendor=none	property_hex=6f706163697479	value_hex=30
+keyframe	rule=1	idx=1	selectors=1	selector_hex=746f	start=80	end=93	decls=1
+key_sel	rule=1	frame=1	idx=0	kind=to	value_hex=746f
+decl	parent=1	frame=1	idx=0	vendor=none	property_hex=6f706163697479	value_hex=31
+style_rule	idx=2	selector_hex=61	start=95	end=161	decls=3
+decl	parent=2	frame=none	idx=0	vendor=webkit	property_hex=2d7765626b69742d757365722d73656c656374	value_hex=6e6f6e65
+vendor_prefix	kind=decl	prefix=webkit	rule=2	decl=0
+decl	parent=2	frame=none	idx=1	vendor=moz	property_hex=2d6d6f7a2d757365722d73656c656374	value_hex=6e6f6e65
+vendor_prefix	kind=decl	prefix=moz	rule=2	decl=1
+decl	parent=2	frame=none	idx=2	vendor=none	property_hex=757365722d73656c656374	value_hex=6e6f6e65
+stylesheet	rules=3
+end	rules=3	custom_media=1	vendor_at_rules=1	keyframes=1	keyframe_selectors=2	declarations=5	vendor_prefixes=3	stream_fnv64=b8faeb0fc78f183b

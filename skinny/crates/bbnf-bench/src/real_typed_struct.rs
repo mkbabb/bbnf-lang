@@ -17,6 +17,7 @@ pub enum RealTypedFixture {
     MarineIk,
     Numbers,
     UnicodeBasic,
+    Random,
 }
 
 #[derive(Debug, Deserialize)]
@@ -198,6 +199,54 @@ pub struct UnicodeBasicRecord<'a> {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct RandomDocument<'a> {
+    #[serde(default)]
+    pub id: Option<u64>,
+    #[serde(default, borrow)]
+    pub jsonrpc: Option<Cow<'a, str>>,
+    #[serde(default)]
+    pub total: Option<u64>,
+    #[serde(default, borrow)]
+    pub result: Vec<RandomUser<'a>>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct RandomUser<'a> {
+    #[serde(default)]
+    pub id: Option<u64>,
+    #[serde(default, borrow)]
+    pub avatar: Option<Cow<'a, str>>,
+    #[serde(default)]
+    pub age: Option<u64>,
+    #[serde(default)]
+    pub admin: Option<bool>,
+    #[serde(default, borrow)]
+    pub name: Option<Cow<'a, str>>,
+    #[serde(default, borrow)]
+    pub company: Option<Cow<'a, str>>,
+    #[serde(default, borrow)]
+    pub phone: Option<Cow<'a, str>>,
+    #[serde(default, borrow)]
+    pub email: Option<Cow<'a, str>>,
+    #[serde(default, borrow, rename = "birthDate")]
+    pub birth_date: Option<Cow<'a, str>>,
+    #[serde(default, borrow)]
+    pub friends: Vec<RandomFriend<'a>>,
+    #[serde(default, borrow)]
+    pub field: Option<Cow<'a, str>>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct RandomFriend<'a> {
+    #[serde(default)]
+    pub id: Option<u64>,
+    #[serde(default, borrow)]
+    pub name: Option<Cow<'a, str>>,
+    #[serde(default, borrow)]
+    pub phone: Option<Cow<'a, str>>,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct Mesh {
     #[serde(default)]
     pub batches: Vec<MeshBatch>,
@@ -324,6 +373,7 @@ pub enum RealTypedOutput<'a> {
     MarineIk(MarineIk),
     Numbers(Vec<f64>),
     UnicodeBasic(Vec<UnicodeBasicRecord<'a>>),
+    Random(RandomDocument<'a>),
 }
 
 pub fn fixture_for_name(name: &str) -> Option<RealTypedFixture> {
@@ -337,6 +387,7 @@ pub fn fixture_for_name(name: &str) -> Option<RealTypedFixture> {
         "marine_ik" | "marine-ik" => Some(RealTypedFixture::MarineIk),
         "numbers" => Some(RealTypedFixture::Numbers),
         "unicode_basic" | "unicode-basic" => Some(RealTypedFixture::UnicodeBasic),
+        "random" => Some(RealTypedFixture::Random),
         _ => None,
     }
 }
@@ -404,6 +455,9 @@ pub fn track1_typed<'a>(
         RealTypedFixture::UnicodeBasic => crate::generated_real_typed::parse_unicode_basic(input)
             .map(RealTypedOutput::UnicodeBasic)
             .map_err(|error| DirectStructError::Parse(error.to_string())),
+        RealTypedFixture::Random => crate::generated_real_typed::parse_random(input)
+            .map(RealTypedOutput::Random)
+            .map_err(|error| DirectStructError::Parse(error.to_string())),
     }
 }
 
@@ -448,6 +502,9 @@ pub fn serde_typed<'a>(
                 .map(RealTypedOutput::UnicodeBasic)
                 .map_err(|error| DirectStructError::Serde(error.to_string()))
         }
+        RealTypedFixture::Random => serde_json::from_slice::<RandomDocument<'a>>(bytes)
+            .map(RealTypedOutput::Random)
+            .map_err(|error| DirectStructError::Serde(error.to_string())),
     }
 }
 
@@ -485,6 +542,9 @@ pub fn sonic_typed<'a>(
                 .map(RealTypedOutput::UnicodeBasic)
                 .map_err(|error| DirectStructError::Sonic(error.to_string()))
         }
+        RealTypedFixture::Random => sonic_rs::from_slice::<RandomDocument<'a>>(bytes)
+            .map(RealTypedOutput::Random)
+            .map_err(|error| DirectStructError::Sonic(error.to_string())),
     }
 }
 
@@ -515,6 +575,7 @@ pub fn typed_checksum(output: &RealTypedOutput<'_>) -> u64 {
         RealTypedOutput::MarineIk(value) => checksum_marine_ik(value),
         RealTypedOutput::Numbers(value) => checksum_numbers(value),
         RealTypedOutput::UnicodeBasic(value) => checksum_unicode_basic(value),
+        RealTypedOutput::Random(value) => checksum_random(value),
     }
 }
 
@@ -705,6 +766,43 @@ fn checksum_unicode_basic_record(value: &UnicodeBasicRecord<'_>) -> u64 {
     hash = fold_opt_str(hash, &value.text);
     hash = fold_opt_u64(hash, value.len);
     fold_str_slice(hash, &value.tags)
+}
+
+fn checksum_random(value: &RandomDocument<'_>) -> u64 {
+    let mut hash = 0x72616e646f6d;
+    hash = fold_opt_u64(hash, value.id);
+    hash = fold_opt_str(hash, &value.jsonrpc);
+    hash = fold_opt_u64(hash, value.total);
+    hash = mix(hash, value.result.len() as u64);
+    for user in &value.result {
+        hash = mix(hash, checksum_random_user(user));
+    }
+    hash
+}
+
+fn checksum_random_user(value: &RandomUser<'_>) -> u64 {
+    let mut hash = 0x72616e64757365;
+    hash = fold_opt_u64(hash, value.id);
+    hash = fold_opt_str(hash, &value.avatar);
+    hash = fold_opt_u64(hash, value.age);
+    hash = fold_opt_bool(hash, value.admin);
+    hash = fold_opt_str(hash, &value.name);
+    hash = fold_opt_str(hash, &value.company);
+    hash = fold_opt_str(hash, &value.phone);
+    hash = fold_opt_str(hash, &value.email);
+    hash = fold_opt_str(hash, &value.birth_date);
+    hash = mix(hash, value.friends.len() as u64);
+    for friend in &value.friends {
+        hash = mix(hash, checksum_random_friend(friend));
+    }
+    fold_opt_str(hash, &value.field)
+}
+
+fn checksum_random_friend(value: &RandomFriend<'_>) -> u64 {
+    let mut hash = 0x72616e64667269;
+    hash = fold_opt_u64(hash, value.id);
+    hash = fold_opt_str(hash, &value.name);
+    fold_opt_str(hash, &value.phone)
 }
 
 fn checksum_marine_geometry(value: &MarineGeometry) -> u64 {
@@ -1012,5 +1110,19 @@ mod tests {
         let bytes = std::fs::read(locate_fixture("unicode_basic")).unwrap();
         let text = std::str::from_utf8(&bytes).unwrap();
         assert_real_typed_parity(text, &bytes, RealTypedFixture::UnicodeBasic);
+    }
+
+    #[test]
+    fn generated_random_typed_parser_matches_sidecars() {
+        let input = br#"{"id":1,"jsonrpc":"2.0","total":1,"result":[{"id":7,"avatar":"images/user_7.png","age":29,"admin":true,"name":"Ada","company":"Babbage","phone":"+15550107","email":"ada@example.com","birthDate":"Mon, 05 Jan 1998 15:59:20 GMT","friends":[{"id":1,"name":"Grace","phone":"+15550101"}],"field":"field value"}]}"#;
+        let text = std::str::from_utf8(input).unwrap();
+        assert_real_typed_parity(text, input, RealTypedFixture::Random);
+    }
+
+    #[test]
+    fn w13_full_random_typed_fixture_matches_sidecars() {
+        let bytes = std::fs::read(locate_fixture("random")).unwrap();
+        let text = std::str::from_utf8(&bytes).unwrap();
+        assert_real_typed_parity(text, &bytes, RealTypedFixture::Random);
     }
 }

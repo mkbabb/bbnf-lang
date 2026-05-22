@@ -5,7 +5,7 @@ run_id: SK-V13-open
 g_omega_status: signed
 consumer_gate: cargo xtask gate-json --check-results
 source_results: skinny/RESULTS.md
-source_commit: 8b1debee0+w13.1-redress
+source_commit: 76f556124+w13.3-redress
 
 ## JSON Targets
 
@@ -34,7 +34,7 @@ source_commit: 8b1debee0+w13.1-redress
 | json/mesh/real_typed_struct/main | real_typed_struct | 9788.00 | 9110.00 | 678.00 | ADMITTED |
 | json/random/parse_only/main | parse_only | 9935.00 | 15679.00 | -5744.00 | OPEN |
 | json/random/direct_to_struct/main | direct_to_struct | 7894.00 | 8788.00 | -894.00 | OPEN |
-| json/random/real_typed_struct/main | real_typed_struct | absent:product-surface-not-generated | absent:product-surface-not-generated | absent:product-surface-not-generated | MISSING |
+| json/random/real_typed_struct/main | real_typed_struct | 8559.00 | 7261.00 | 1298.00 | ADMITTED |
 | json/gsoc-2018/parse_only/main | parse_only | 23333.00 | 49847.00 | -26514.00 | OPEN |
 | json/gsoc-2018/direct_to_struct/main | direct_to_struct | 15318.00 | 23900.00 | -8582.00 | OPEN |
 | json/gsoc-2018/real_typed_struct/main | real_typed_struct | absent:product-surface-not-generated | absent:product-surface-not-generated | absent:product-surface-not-generated | MISSING |

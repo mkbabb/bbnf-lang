@@ -1467,6 +1467,14 @@ impl SkV13TypedProductReport {
                 "generated-real-typed-unicode-basic-record-array",
                 "REDRESS-146",
             ),
+            "json/random/real_typed_struct/main" => (
+                "SK-V13-W13.3",
+                "sk-v13-w13.3:",
+                "G-W13.3-TYPED-RANDOM",
+                "random",
+                "generated-real-typed-random-document",
+                "REDRESS-147",
+            ),
             _ => return Err(format!("unsupported W13 typed-product row {}", self.row_id)),
         };
         if self.wave_id != expected_wave || !self.run_id.starts_with(expected_run_prefix) {
@@ -2932,6 +2940,7 @@ impl Report {
         let mut w6_github_events_typed_seen = false;
         let mut w13_numbers_typed_seen = false;
         let mut w13_unicode_basic_typed_seen = false;
+        let mut w13_random_typed_seen = false;
         for row in &self.rows {
             let row_id = row.sk_v8.row_id.as_str();
             if !seen.insert(row_id) {
@@ -2946,6 +2955,9 @@ impl Report {
             } else if row_id == W13_UNICODE_BASIC_TYPED_ROW_ID {
                 validate_w13_unicode_basic_typed_row(row)?;
                 w13_unicode_basic_typed_seen = true;
+            } else if row_id == W13_RANDOM_TYPED_ROW_ID {
+                validate_w13_random_typed_row(row)?;
+                w13_random_typed_seen = true;
             } else {
                 let Some(baseline) = sk_v8_open_baseline(row_id) else {
                     return Err(format!("unknown SK-V8 comparison row_id {row_id}"));
@@ -2987,7 +2999,8 @@ impl Report {
         let expected_rows = SK_V8_OPEN_BASELINE.len()
             + usize::from(w6_github_events_typed_seen)
             + usize::from(w13_numbers_typed_seen)
-            + usize::from(w13_unicode_basic_typed_seen);
+            + usize::from(w13_unicode_basic_typed_seen)
+            + usize::from(w13_random_typed_seen);
         if self.rows.len() != expected_rows {
             return Err(format!(
                 "SK-V9 W0 expected {expected_rows} main rows, saw {}",
@@ -3541,6 +3554,7 @@ fn validate_direct_row_movement(
 const W6_GITHUB_EVENTS_TYPED_ROW_ID: &str = "json/github_events/real_typed_struct/main";
 const W13_NUMBERS_TYPED_ROW_ID: &str = "json/numbers/real_typed_struct/main";
 const W13_UNICODE_BASIC_TYPED_ROW_ID: &str = "json/unicode_basic/real_typed_struct/main";
+const W13_RANDOM_TYPED_ROW_ID: &str = "json/random/real_typed_struct/main";
 
 fn validate_w6_github_events_typed_row(row: &TelemetryRow) -> Result<(), String> {
     let row_id = row.sk_v8.row_id.as_str();
@@ -3646,6 +3660,10 @@ fn validate_w13_numbers_typed_row(row: &TelemetryRow) -> Result<(), String> {
 
 fn validate_w13_unicode_basic_typed_row(row: &TelemetryRow) -> Result<(), String> {
     validate_w13_typed_row(row, "unicode_basic", "REDRESS-146", "SK-V13-W13.2", "W13.2")
+}
+
+fn validate_w13_random_typed_row(row: &TelemetryRow) -> Result<(), String> {
+    validate_w13_typed_row(row, "random", "REDRESS-147", "SK-V13-W13.3", "W13.3")
 }
 
 fn validate_w13_typed_row(

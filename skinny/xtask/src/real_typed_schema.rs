@@ -7,7 +7,7 @@ use codegen::direct_schema::{
 pub fn schema() -> DirectSchemaSet {
     DirectSchemaSet {
         module_name: "generated_real_typed".to_string(),
-        schema_hash: "sk-v13-w13.2-unicode-basic".to_string(),
+        schema_hash: "sk-v13-w13.3-random".to_string(),
         roots: vec![
             DirectRootSchema::struct_root(
                 "parse_twitter_search",
@@ -49,6 +49,11 @@ pub fn schema() -> DirectSchemaSet {
                 "parse_unicode_basic",
                 "Vec<crate::real_typed_struct::UnicodeBasicRecord<'i>>",
                 vec_with_capacity(ty("UnicodeBasicRecord"), 5_759),
+            ),
+            DirectRootSchema::struct_root(
+                "parse_random",
+                "crate::real_typed_struct::RandomDocument<'i>",
+                "RandomDocument",
             ),
             DirectRootSchema::typed_root(
                 "parse_w5_array_root_probe",
@@ -242,6 +247,42 @@ pub fn schema() -> DirectSchemaSet {
                     default("text", "text", opt(string())),
                     default("len", "len", opt(u64_ty())),
                     default("tags", "tags", vec_with_capacity(string(), 3)),
+                ],
+            ),
+            struct_ty(
+                "RandomDocument",
+                "crate::real_typed_struct::RandomDocument<'i>",
+                vec![
+                    default("id", "id", opt(u64_ty())),
+                    default("jsonrpc", "jsonrpc", opt(string())),
+                    default("total", "total", opt(u64_ty())),
+                    default("result", "result", vec_with_capacity(ty("RandomUser"), 1_000)),
+                ],
+            ),
+            struct_ty(
+                "RandomUser",
+                "crate::real_typed_struct::RandomUser<'i>",
+                vec![
+                    default("id", "id", opt(u64_ty())),
+                    default("avatar", "avatar", opt(string())),
+                    default("age", "age", opt(u64_ty())),
+                    default("admin", "admin", opt(bool_ty())),
+                    default("name", "name", opt(string())),
+                    default("company", "company", opt(string())),
+                    default("phone", "phone", opt(string())),
+                    default("email", "email", opt(string())),
+                    default("birthDate", "birth_date", opt(string())),
+                    default("friends", "friends", vec_with_capacity(ty("RandomFriend"), 3)),
+                    default("field", "field", opt(string())),
+                ],
+            ),
+            struct_ty(
+                "RandomFriend",
+                "crate::real_typed_struct::RandomFriend<'i>",
+                vec![
+                    default("id", "id", opt(u64_ty())),
+                    default("name", "name", opt(string())),
+                    default("phone", "phone", opt(string())),
                 ],
             ),
             struct_ty(

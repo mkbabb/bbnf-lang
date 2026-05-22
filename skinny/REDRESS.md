@@ -4536,3 +4536,41 @@ perturbation.
   `RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --check-results
   --advisory --skv13-typed-product-report
   ../restart/skinny/tranches/sk-v13/research/w13.2/skv13-W13.2-typed-product.json`.
+
+## SK-V13 Wave 13.3 Typed Product Random Surface
+
+- Item 147 closes W13.3 under `G-W13.3-TYPED-RANDOM` as `PASS-ADMIT`.
+  The material differential from REDRESS 70-72/103-110 is a real generated
+  typed product surface for the `random` corpus, not a direct digest,
+  hidden sink, proof-only fixture, or generated no-op. W13.3 adds generated
+  `RandomDocument`, `RandomUser`, and `RandomFriend` product roots, routes
+  `real_typed_struct` Track 1 through `generated_real_typed::parse_random`,
+  and consumes the row through the companion `gate-json` report.
+- The measured typed row admits over same-run sonic strict. The companion
+  facts record Track 1 mean `8568.644` Mbps, Track 2 oracle `5347.998`
+  Mbps, sonic strict `7263.180` Mbps, serde `5347.005` Mbps, threshold
+  `7264.180` Mbps, lower-confidence Track 1 `8556.729` Mbps, and margin
+  `1304.464` Mbps over threshold. The refreshed campaign table records the
+  admitted row as Track 1 `8559`, Track 2 oracle `5346`, sonic strict
+  `7260`, serde `5347` Mbps in `RESULTS.md`, with
+  `ROLLING-SOTA-DELTA.md` marking
+  `json/random/real_typed_struct/main` admitted.
+- Gate evidence is consumed by
+  `restart/skinny/tranches/sk-v13/research/w13.3/skv13-W13.3-typed-product.json`.
+  The retained measurement artifact is
+  `restart/skinny/tranches/sk-v13/research/w13.3/random-typed-facts.json`
+  with SHA-256
+  `a9b1d495b5faf3896a300508725ad2fd0665a5b611aa9e844911bf6347648c27`.
+- Verification passed:
+  `cargo xtask regen-real-typed`,
+  `cargo xtask check-real-typed`,
+  `cargo test -p bbnf-bench random_typed -- --nocapture`,
+  `cargo test -p bbnf-bench --bin gate w13_random -- --nocapture`,
+  `cargo test -p bbnf-bench lock14_baseline::tests::admits_sk_v13_w13_3_parent_diff_under_w13_3_scope -- --nocapture`,
+  `RUSTFLAGS="-C target-cpu=native" cargo bench -p bbnf-bench --bench json_parity -- 'json/random/(track1_real_typed_struct|track2_real_typed_struct|sonic_rs_real_typed_struct|serde_json_real_typed_struct)'`,
+  `RUSTFLAGS="-C target-cpu=native" cargo bench -p bbnf-bench --bench simd_scan`,
+  `RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --update-results --advisory`,
+  and the W13.3 companion gate:
+  `RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --check-results
+  --advisory --skv13-typed-product-report
+  ../restart/skinny/tranches/sk-v13/research/w13.3/skv13-W13.3-typed-product.json`.

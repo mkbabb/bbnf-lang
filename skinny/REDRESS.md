@@ -4615,3 +4615,27 @@ perturbation.
   `RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --check-results
   --advisory --skv13-typed-product-report
   ../restart/skinny/tranches/sk-v13/research/w13.4/skv13-W13.4-typed-product.json`.
+
+## SK-V13 Wave 13.5 Typed Product GSOC Surface
+
+- Item 149 closes W13.5 under `G-W13.5-TYPED-GSOC-2018` as
+  `MEASURED-REJECT`. The material differential from REDRESS 70/103/105/110
+  was real: the rejected patch added a generated map-entry typed product root
+  for all 1,264 `gsoc-2018` proposal records, including nested sponsor and
+  author objects, and routed it through the `real_typed_struct` Track 1
+  consumer. It was not a direct digest, hidden sink, proof-only fixture, root
+  key collector, or no-op wrapper.
+- Correctness passed before measurement:
+  `cargo xtask regen-real-typed && cargo xtask check-real-typed`, and
+  `cargo test -p bbnf-bench gsoc_2018_typed -- --nocapture`. Native
+  Criterion then measured Track 1 generated typed `6053.150` Mbps, Track 2
+  serde oracle `6357.845` Mbps, sonic strict typed `6817.382` Mbps, and
+  serde_json typed `6413.127` Mbps. The pinned threshold was
+  `sonic + 1 = 6818.382` Mbps, so Track 1 missed by `765.232` Mbps.
+- The rejected implementation patch is saved at
+  `/tmp/skv13-waveW13.5-rejected.patch`. The retained redress note is
+  `restart/skinny/tranches/sk-v13/research/w13.5/redress.md`.
+- `json/gsoc-2018/real_typed_struct/main` remains `MISSING`. A second
+  in-tranche GSOC reopen triggers the round-trip rule unless it names a fresh
+  material differential, such as schema specialization that avoids generic
+  map-entry string matching or a row-specific string-copy deletion.

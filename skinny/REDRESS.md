@@ -4698,3 +4698,33 @@ perturbation.
   material differential, such as row-specific escape decode deletion, SIMD
   unicode decode consumption, or a typed product shape that avoids per-string
   allocation pressure without weakening strict equality.
+
+## SK-V13 Wave 13.8 Typed Product Unicode Escapes Surface
+
+- Item 152 closes W13.8 under `G-W13.8-TYPED-UNICODE-ESCAPES` as
+  `MEASURED-REJECT`. The material differential from REDRESS 70-72/103-110 and
+  REDRESS 150/151 was real: the rejected patch added a generated
+  `unicode_escapes` typed product root covering corpus metadata and all escaped
+  records, including `id` and `v`, and routed it through the
+  `real_typed_struct` Track 1 consumer. It was not a direct digest,
+  parse-only row, unicode codec proof, hidden sink, or partial fixture.
+- Correctness passed before measurement:
+  `cargo xtask regen-real-typed`, `cargo xtask check-real-typed`,
+  `cargo test -p bbnf-bench unicode_escapes_typed -- --nocapture`,
+  `cargo test -p bbnf-bench --bin gate w13_unicode_escapes -- --nocapture`,
+  and
+  `cargo test -p bbnf-bench lock14_baseline::tests::admits_sk_v13_w13_8_parent_diff_under_w13_8_scope -- --nocapture`.
+  Native Criterion then measured Track 1 generated typed `511.121` Mbps,
+  Track 2 serde oracle `512.133` Mbps, sonic strict typed `997.986` Mbps,
+  and serde_json typed `512.945` Mbps. The pinned threshold was
+  `sonic + 1 = 998.986` Mbps, so Track 1 missed by `487.865` Mbps.
+- The rejected implementation patch is saved at
+  `/tmp/skv13-waveW13.8-rejected.patch`. The retained measurement facts are
+  `restart/skinny/tranches/sk-v13/research/w13.8/unicode-escapes-typed-facts.json`;
+  the retained redress note is
+  `restart/skinny/tranches/sk-v13/research/w13.8/redress.md`.
+- `json/unicode_escapes/real_typed_struct/main` remains `MISSING`. A second
+  in-tranche reopen triggers the round-trip rule unless it names a fresh
+  material differential, such as SIMD unicode escape decode consumption,
+  row-specific escape-allocation deletion, or a typed product shape that avoids
+  per-string decode overhead without weakening strict equality.

@@ -55,7 +55,7 @@ source_commit: 8b1debee0+w13.1-redress
 | json/unicode_escapes/real_typed_struct/main | real_typed_struct | absent:product-surface-not-generated | absent:product-surface-not-generated | absent:product-surface-not-generated | MISSING |
 | json/unicode_basic/parse_only/main | parse_only | 11631.00 | 15874.00 | -4243.00 | OPEN |
 | json/unicode_basic/direct_to_struct/main | direct_to_struct | 9189.00 | 8821.00 | 368.00 | ADMITTED |
-| json/unicode_basic/real_typed_struct/main | real_typed_struct | absent:product-surface-not-generated | absent:product-surface-not-generated | absent:product-surface-not-generated | MISSING |
+| json/unicode_basic/real_typed_struct/main | real_typed_struct | 6584.00 | 6033.00 | 551.00 | ADMITTED |
 | json/distinct_values/parse_only/main | parse_only | 9687.00 | 17709.00 | -8022.00 | OPEN |
 | json/distinct_values/direct_to_struct/main | direct_to_struct | 6281.00 | 11668.00 | -5387.00 | OPEN |
 | json/distinct_values/real_typed_struct/main | real_typed_struct | absent:product-surface-not-generated | absent:product-surface-not-generated | absent:product-surface-not-generated | MISSING |

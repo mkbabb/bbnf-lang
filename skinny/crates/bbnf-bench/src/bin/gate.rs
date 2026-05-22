@@ -615,6 +615,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                 mark_w6_github_events_typed_admission(&mut typed_row);
             } else if typed_decision.w13_numbers_added {
                 mark_w13_numbers_typed_admission(&mut typed_row);
+            } else if typed_decision.w13_unicode_basic_added {
+                mark_w13_unicode_basic_typed_admission(&mut typed_row);
             }
             report.rows.push(typed_row);
         }
@@ -2217,68 +2219,97 @@ fn validate_skv13_typed_product_report(
     criterion_root: &Path,
     workspace: &Path,
 ) -> Result<(), String> {
+    let spec = skv13_typed_product_criterion_spec(report)?;
     let track1 = read_css_l4_lane_in_group(
         criterion_root,
-        "json_numbers",
+        spec.criterion_group,
         "track1_real_typed_struct",
-        150_124,
+        spec.bytes,
     )?;
     let track2 = read_css_l4_lane_in_group(
         criterion_root,
-        "json_numbers",
+        spec.criterion_group,
         "track2_real_typed_struct",
-        150_124,
+        spec.bytes,
     )?;
     let sonic = read_css_l4_lane_in_group(
         criterion_root,
-        "json_numbers",
+        spec.criterion_group,
         "sonic_rs_real_typed_struct",
-        150_124,
+        spec.bytes,
     )?;
     let serde = read_css_l4_lane_in_group(
         criterion_root,
-        "json_numbers",
+        spec.criterion_group,
         "serde_json_real_typed_struct",
-        150_124,
+        spec.bytes,
     )?;
     require_close(
-        "W13.1 typed track1_mbps_after",
+        &format!("{} typed track1_mbps_after", spec.label),
         report.track1_mbps_after,
         track1.mbps,
     )?;
     require_close(
-        "W13.1 typed track2_mbps_after",
+        &format!("{} typed track2_mbps_after", spec.label),
         report.track2_mbps_after,
         track2.mbps,
     )?;
     require_close(
-        "W13.1 typed sonic_strict_mbps_after",
+        &format!("{} typed sonic_strict_mbps_after", spec.label),
         report.sonic_strict_mbps_after,
         sonic.mbps,
     )?;
     require_close(
-        "W13.1 typed serde_mbps_after",
+        &format!("{} typed serde_mbps_after", spec.label),
         report.serde_mbps_after,
         serde.mbps,
     )?;
     require_close(
-        "W13.1 typed threshold_mbps",
+        &format!("{} typed threshold_mbps", spec.label),
         report.threshold_mbps,
         sonic.mbps + 1.0,
     )?;
     if track1.lower_mbps <= sonic.mbps + 1.0 {
         return Err(format!(
-            "W13.1 typed Track 1 lower confidence throughput {:.3} <= sonic+1 {:.3}",
+            "{} typed Track 1 lower confidence throughput {:.3} <= sonic+1 {:.3}",
+            spec.label,
             track1.lower_mbps,
             sonic.mbps + 1.0
         ));
     }
     validate_report_artifact_hash(
         workspace,
-        "W13.1 typed product measurement artifact",
+        &format!("{} typed product measurement artifact", spec.label),
         &report.measurement_artifact_path,
         &report.measurement_artifact_sha256,
     )
+}
+
+struct TypedProductCriterionSpec {
+    label: &'static str,
+    criterion_group: &'static str,
+    bytes: u64,
+}
+
+fn skv13_typed_product_criterion_spec(
+    report: &SkV13TypedProductReport,
+) -> Result<TypedProductCriterionSpec, String> {
+    match (report.wave_id.as_str(), report.corpus.as_str()) {
+        ("SK-V13-W13.1", "numbers") => Ok(TypedProductCriterionSpec {
+            label: "W13.1",
+            criterion_group: "json_numbers",
+            bytes: 150_124,
+        }),
+        ("SK-V13-W13.2", "unicode_basic") => Ok(TypedProductCriterionSpec {
+            label: "W13.2",
+            criterion_group: "json_unicode_basic",
+            bytes: 1_048_586,
+        }),
+        _ => Err(format!(
+            "unsupported W13 typed-product criterion identity {}/{}",
+            report.wave_id, report.corpus
+        )),
+    }
 }
 
 fn validate_skv13_simd_asm_production_report(
@@ -3047,6 +3078,7 @@ struct RealTypedRowDecision {
     outcome: Option<Outcome>,
     w6_github_events_added: bool,
     w13_numbers_added: bool,
+    w13_unicode_basic_added: bool,
 }
 
 fn real_typed_row_decision(
@@ -3065,12 +3097,14 @@ fn real_typed_row_decision(
                 outcome: None,
                 w6_github_events_added: true,
                 w13_numbers_added: false,
+                w13_unicode_basic_added: false,
             };
         }
         return RealTypedRowDecision {
             outcome: Some(classified.unwrap_or(Outcome::NDirectProjectionFailure)),
             w6_github_events_added: false,
             w13_numbers_added: false,
+            w13_unicode_basic_added: false,
         };
     }
     if corpus == "numbers" {
@@ -3079,18 +3113,37 @@ fn real_typed_row_decision(
                 outcome: None,
                 w6_github_events_added: false,
                 w13_numbers_added: true,
+                w13_unicode_basic_added: false,
             };
         }
         return RealTypedRowDecision {
             outcome: Some(classified.unwrap_or(Outcome::NDirectProjectionFailure)),
             w6_github_events_added: false,
             w13_numbers_added: false,
+            w13_unicode_basic_added: false,
+        };
+    }
+    if corpus == "unicode_basic" {
+        if w13_typed_strict_sonic_plus_one_passes(bytes, track1_ns, track2_ns, sonic_ns) {
+            return RealTypedRowDecision {
+                outcome: None,
+                w6_github_events_added: false,
+                w13_numbers_added: false,
+                w13_unicode_basic_added: true,
+            };
+        }
+        return RealTypedRowDecision {
+            outcome: Some(classified.unwrap_or(Outcome::NDirectProjectionFailure)),
+            w6_github_events_added: false,
+            w13_numbers_added: false,
+            w13_unicode_basic_added: false,
         };
     }
     RealTypedRowDecision {
         outcome: classified,
         w6_github_events_added: false,
         w13_numbers_added: false,
+        w13_unicode_basic_added: false,
     }
 }
 
@@ -3135,6 +3188,15 @@ fn w13_numbers_typed_passes(
     track2_ns: Option<f64>,
     sonic_ns: Option<f64>,
 ) -> bool {
+    w13_typed_strict_sonic_plus_one_passes(bytes, track1_ns, track2_ns, sonic_ns)
+}
+
+fn w13_typed_strict_sonic_plus_one_passes(
+    bytes: u64,
+    track1_ns: Option<f64>,
+    track2_ns: Option<f64>,
+    sonic_ns: Option<f64>,
+) -> bool {
     let track1 = throughput_mbps(bytes, track1_ns);
     let track2 = throughput_mbps(bytes, track2_ns);
     let sonic = throughput_mbps(bytes, sonic_ns);
@@ -3160,6 +3222,25 @@ fn mark_w13_numbers_typed_admission(row: &mut TelemetryRow) {
     row.sk_v8.same_wave_consumer_class = "gate_json_typed_contract".to_string();
     row.sk_v8.redress_entry = "REDRESS-145".to_string();
     row.sk_v8.wave_id = "SK-V13-W13.1".to_string();
+    row.sk_v8.sk_v9_open_delta = "typed-row-added".to_string();
+}
+
+fn mark_w13_unicode_basic_typed_admission(row: &mut TelemetryRow) {
+    row.strictness = "strict".to_string();
+    row.parse_utf8 = "measured-row".to_string();
+    row.flaw_probe =
+        "generated Track 1 typed UnicodeBasicRecord product vs independent serde Track 2/oracle; UTF-8 measured in row"
+            .to_string();
+    row.signal = format!(
+        "PASS W13.2 unicode_basic typed product admission; Track 1 {}, Track 2 oracle {}, sonic {} Mbps",
+        format_mbps(row.track1_mbps),
+        format_mbps(row.track2_mbps),
+        format_mbps(row.competitors.sonic_strict_mbps)
+    );
+    row.sk_v8.measured_validation_path = "measured-row".to_string();
+    row.sk_v8.same_wave_consumer_class = "gate_json_typed_contract".to_string();
+    row.sk_v8.redress_entry = "REDRESS-146".to_string();
+    row.sk_v8.wave_id = "SK-V13-W13.2".to_string();
     row.sk_v8.sk_v9_open_delta = "typed-row-added".to_string();
 }
 
@@ -3535,6 +3616,7 @@ fn w0_real_typed_metadata_expected(fixture: &str) -> bool {
     sk_v8_open_baseline(&format!("json/{fixture}/real_typed_struct/main")).is_some()
         || fixture == "github_events"
         || fixture == "numbers"
+        || fixture == "unicode_basic"
 }
 
 #[derive(Clone)]
@@ -4661,6 +4743,7 @@ mod tests {
                 outcome: None,
                 w6_github_events_added: true,
                 w13_numbers_added: false,
+                w13_unicode_basic_added: false,
             }
         );
         assert_eq!(
@@ -4676,6 +4759,7 @@ mod tests {
                 outcome: Some(Outcome::NDirectProjectionFailure),
                 w6_github_events_added: false,
                 w13_numbers_added: false,
+                w13_unicode_basic_added: false,
             }
         );
         assert_eq!(
@@ -4691,6 +4775,7 @@ mod tests {
                 outcome: Some(Outcome::IParityOracleFail),
                 w6_github_events_added: false,
                 w13_numbers_added: false,
+                w13_unicode_basic_added: false,
             }
         );
     }
@@ -4710,6 +4795,7 @@ mod tests {
                 outcome: None,
                 w6_github_events_added: false,
                 w13_numbers_added: true,
+                w13_unicode_basic_added: false,
             }
         );
         assert_eq!(
@@ -4725,6 +4811,43 @@ mod tests {
                 outcome: Some(Outcome::NDirectProjectionFailure),
                 w6_github_events_added: false,
                 w13_numbers_added: false,
+                w13_unicode_basic_added: false,
+            }
+        );
+    }
+
+    #[test]
+    fn w13_unicode_basic_typed_admits_only_strict_sonic_plus_one_pass() {
+        assert_eq!(
+            real_typed_row_decision(
+                "unicode_basic",
+                None,
+                1_048_586,
+                Some(700_000.0),
+                Some(900_000.0),
+                Some(800_000.0),
+            ),
+            RealTypedRowDecision {
+                outcome: None,
+                w6_github_events_added: false,
+                w13_numbers_added: false,
+                w13_unicode_basic_added: true,
+            }
+        );
+        assert_eq!(
+            real_typed_row_decision(
+                "unicode_basic",
+                None,
+                1_048_586,
+                Some(800_000.0),
+                Some(900_000.0),
+                Some(800_000.0),
+            ),
+            RealTypedRowDecision {
+                outcome: Some(Outcome::NDirectProjectionFailure),
+                w6_github_events_added: false,
+                w13_numbers_added: false,
+                w13_unicode_basic_added: false,
             }
         );
     }
@@ -4743,6 +4866,7 @@ mod tests {
         assert!(w0_real_typed_metadata_expected("citm_catalog"));
         assert!(w0_real_typed_metadata_expected("github_events"));
         assert!(w0_real_typed_metadata_expected("numbers"));
+        assert!(w0_real_typed_metadata_expected("unicode_basic"));
     }
 
     #[test]

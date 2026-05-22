@@ -16,6 +16,7 @@ pub enum RealTypedFixture {
     Mesh,
     MarineIk,
     Numbers,
+    UnicodeBasic,
 }
 
 #[derive(Debug, Deserialize)]
@@ -183,6 +184,20 @@ pub struct GithubPayload<'a> {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct UnicodeBasicRecord<'a> {
+    #[serde(default)]
+    pub id: Option<u64>,
+    #[serde(default, borrow)]
+    pub script: Option<Cow<'a, str>>,
+    #[serde(default, borrow)]
+    pub text: Option<Cow<'a, str>>,
+    #[serde(default)]
+    pub len: Option<u64>,
+    #[serde(default, borrow)]
+    pub tags: Vec<Cow<'a, str>>,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct Mesh {
     #[serde(default)]
     pub batches: Vec<MeshBatch>,
@@ -308,6 +323,7 @@ pub enum RealTypedOutput<'a> {
     Mesh(Mesh),
     MarineIk(MarineIk),
     Numbers(Vec<f64>),
+    UnicodeBasic(Vec<UnicodeBasicRecord<'a>>),
 }
 
 pub fn fixture_for_name(name: &str) -> Option<RealTypedFixture> {
@@ -320,6 +336,7 @@ pub fn fixture_for_name(name: &str) -> Option<RealTypedFixture> {
         "mesh" => Some(RealTypedFixture::Mesh),
         "marine_ik" | "marine-ik" => Some(RealTypedFixture::MarineIk),
         "numbers" => Some(RealTypedFixture::Numbers),
+        "unicode_basic" | "unicode-basic" => Some(RealTypedFixture::UnicodeBasic),
         _ => None,
     }
 }
@@ -384,6 +401,9 @@ pub fn track1_typed<'a>(
         RealTypedFixture::Numbers => crate::generated_real_typed::parse_numbers(input)
             .map(RealTypedOutput::Numbers)
             .map_err(|error| DirectStructError::Parse(error.to_string())),
+        RealTypedFixture::UnicodeBasic => crate::generated_real_typed::parse_unicode_basic(input)
+            .map(RealTypedOutput::UnicodeBasic)
+            .map_err(|error| DirectStructError::Parse(error.to_string())),
     }
 }
 
@@ -423,6 +443,11 @@ pub fn serde_typed<'a>(
         RealTypedFixture::Numbers => serde_json::from_slice::<Vec<f64>>(bytes)
             .map(RealTypedOutput::Numbers)
             .map_err(|error| DirectStructError::Serde(error.to_string())),
+        RealTypedFixture::UnicodeBasic => {
+            serde_json::from_slice::<Vec<UnicodeBasicRecord<'a>>>(bytes)
+                .map(RealTypedOutput::UnicodeBasic)
+                .map_err(|error| DirectStructError::Serde(error.to_string()))
+        }
     }
 }
 
@@ -455,6 +480,11 @@ pub fn sonic_typed<'a>(
         RealTypedFixture::Numbers => sonic_rs::from_slice::<Vec<f64>>(bytes)
             .map(RealTypedOutput::Numbers)
             .map_err(|error| DirectStructError::Sonic(error.to_string())),
+        RealTypedFixture::UnicodeBasic => {
+            sonic_rs::from_slice::<Vec<UnicodeBasicRecord<'a>>>(bytes)
+                .map(RealTypedOutput::UnicodeBasic)
+                .map_err(|error| DirectStructError::Sonic(error.to_string()))
+        }
     }
 }
 
@@ -484,6 +514,7 @@ pub fn typed_checksum(output: &RealTypedOutput<'_>) -> u64 {
         RealTypedOutput::Mesh(value) => checksum_mesh(value),
         RealTypedOutput::MarineIk(value) => checksum_marine_ik(value),
         RealTypedOutput::Numbers(value) => checksum_numbers(value),
+        RealTypedOutput::UnicodeBasic(value) => checksum_unicode_basic(value),
     }
 }
 
@@ -659,6 +690,23 @@ fn checksum_numbers(values: &[f64]) -> u64 {
     fold_f64_slice(0x6e756d62657273, values)
 }
 
+fn checksum_unicode_basic(values: &[UnicodeBasicRecord<'_>]) -> u64 {
+    let mut hash = mix(0x756e69636f6465, values.len() as u64);
+    for value in values {
+        hash = mix(hash, checksum_unicode_basic_record(value));
+    }
+    hash
+}
+
+fn checksum_unicode_basic_record(value: &UnicodeBasicRecord<'_>) -> u64 {
+    let mut hash = 0x756e6962617369;
+    hash = fold_opt_u64(hash, value.id);
+    hash = fold_opt_str(hash, &value.script);
+    hash = fold_opt_str(hash, &value.text);
+    hash = fold_opt_u64(hash, value.len);
+    fold_str_slice(hash, &value.tags)
+}
+
 fn checksum_marine_geometry(value: &MarineGeometry) -> u64 {
     match &value.data {
         Some(data) => mix(0x67656f6d, checksum_marine_geometry_data(data)),
@@ -714,6 +762,14 @@ fn fold_opt_u64(hash: u64, value: Option<u64>) -> u64 {
 
 fn fold_opt_bool(hash: u64, value: Option<bool>) -> u64 {
     value.map_or_else(|| mix(hash, 0xff), |value| mix(hash, value as u64))
+}
+
+fn fold_str_slice(mut hash: u64, values: &[Cow<'_, str>]) -> u64 {
+    hash = mix(hash, values.len() as u64);
+    for value in values {
+        hash = mix(hash, hash_str(value.as_ref()));
+    }
+    hash
 }
 
 fn fold_u64_slice(mut hash: u64, values: &[u64]) -> u64 {
@@ -942,5 +998,19 @@ mod tests {
         let bytes = std::fs::read(locate_fixture("numbers")).unwrap();
         let text = std::str::from_utf8(&bytes).unwrap();
         assert_real_typed_parity(text, &bytes, RealTypedFixture::Numbers);
+    }
+
+    #[test]
+    fn generated_unicode_basic_typed_parser_matches_sidecars() {
+        let input = br#"[{"id":0,"script":"latin","text":"hello, world","len":12,"tags":["latin","sample"]}]"#;
+        let text = std::str::from_utf8(input).unwrap();
+        assert_real_typed_parity(text, input, RealTypedFixture::UnicodeBasic);
+    }
+
+    #[test]
+    fn w13_full_unicode_basic_typed_fixture_matches_sidecars() {
+        let bytes = std::fs::read(locate_fixture("unicode_basic")).unwrap();
+        let text = std::str::from_utf8(&bytes).unwrap();
+        assert_real_typed_parity(text, &bytes, RealTypedFixture::UnicodeBasic);
     }
 }

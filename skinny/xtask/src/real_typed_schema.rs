@@ -7,7 +7,7 @@ use codegen::direct_schema::{
 pub fn schema() -> DirectSchemaSet {
     DirectSchemaSet {
         module_name: "generated_real_typed".to_string(),
-        schema_hash: "sk-v13-w13.1-numbers".to_string(),
+        schema_hash: "sk-v13-w13.2-unicode-basic".to_string(),
         roots: vec![
             DirectRootSchema::struct_root(
                 "parse_twitter_search",
@@ -44,6 +44,11 @@ pub fn schema() -> DirectSchemaSet {
                 "parse_numbers",
                 "Vec<f64>",
                 vec_with_capacity(f64_ty(), 10_001),
+            ),
+            DirectRootSchema::typed_root(
+                "parse_unicode_basic",
+                "Vec<crate::real_typed_struct::UnicodeBasicRecord<'i>>",
+                vec_with_capacity(ty("UnicodeBasicRecord"), 5_759),
             ),
             DirectRootSchema::typed_root(
                 "parse_w5_array_root_probe",
@@ -226,6 +231,17 @@ pub fn schema() -> DirectSchemaSet {
                     default("before", "before", opt(string())),
                     default("description", "description", opt(string())),
                     default("master_branch", "master_branch", opt(string())),
+                ],
+            ),
+            struct_ty(
+                "UnicodeBasicRecord",
+                "crate::real_typed_struct::UnicodeBasicRecord<'i>",
+                vec![
+                    default("id", "id", opt(u64_ty())),
+                    default("script", "script", opt(string())),
+                    default("text", "text", opt(string())),
+                    default("len", "len", opt(u64_ty())),
+                    default("tags", "tags", vec_with_capacity(string(), 3)),
                 ],
             ),
             struct_ty(

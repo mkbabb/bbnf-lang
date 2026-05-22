@@ -1443,9 +1443,35 @@ impl SkV13TypedProductReport {
                 self.schema_version
             ));
         }
-        if self.wave_id != "SK-V13-W13.1" || !self.run_id.starts_with("sk-v13-w13.1:") {
+        let (
+            expected_wave,
+            expected_run_prefix,
+            expected_gate,
+            expected_corpus,
+            expected_route,
+            expected_redress,
+        ) = match self.row_id.as_str() {
+            "json/numbers/real_typed_struct/main" => (
+                "SK-V13-W13.1",
+                "sk-v13-w13.1:",
+                "G-W13.1-TYPED-NUMBERS",
+                "numbers",
+                "generated-real-typed-numeric-array",
+                "REDRESS-145",
+            ),
+            "json/unicode_basic/real_typed_struct/main" => (
+                "SK-V13-W13.2",
+                "sk-v13-w13.2:",
+                "G-W13.2-TYPED-UNICODE-BASIC",
+                "unicode_basic",
+                "generated-real-typed-unicode-basic-record-array",
+                "REDRESS-146",
+            ),
+            _ => return Err(format!("unsupported W13 typed-product row {}", self.row_id)),
+        };
+        if self.wave_id != expected_wave || !self.run_id.starts_with(expected_run_prefix) {
             return Err(format!(
-                "invalid W13.1 typed-product identity {}/{}",
+                "invalid W13 typed-product identity {}/{}",
                 self.wave_id, self.run_id
             ));
         }
@@ -1454,23 +1480,22 @@ impl SkV13TypedProductReport {
             || self.build_flags.trim().is_empty()
             || self.feature_mask.trim().is_empty()
         {
-            return Err("W13.1 typed-product report missing source/build provenance".to_string());
+            return Err("W13 typed-product report missing source/build provenance".to_string());
         }
-        if self.consumer_gate != "G-W13.1-TYPED-NUMBERS"
+        if self.consumer_gate != expected_gate
             || self.g_omega_status != "user-signed"
-            || self.row_id != "json/numbers/real_typed_struct/main"
-            || self.corpus != "numbers"
+            || self.corpus != expected_corpus
             || self.workload != "real_typed_struct"
             || self.output_plane != "typed direct"
         {
-            return Err("W13.1 typed-product row identity invalid".to_string());
+            return Err("W13 typed-product row identity invalid".to_string());
         }
-        if self.route_id != "generated-real-typed-numeric-array"
+        if self.route_id != expected_route
             || self.same_wave_consumer_path.trim().is_empty()
             || self.same_wave_consumer_class != "gate_json_typed_contract"
             || self.oracle_model != "serde-track2-plus-sonic-strict"
         {
-            return Err("W13.1 typed-product consumer/oracle evidence invalid".to_string());
+            return Err("W13 typed-product consumer/oracle evidence invalid".to_string());
         }
         for (label, actual, expected) in [
             (
@@ -1502,7 +1527,7 @@ impl SkV13TypedProductReport {
         ] {
             if actual != expected {
                 return Err(format!(
-                    "W13.1 typed-product {label} status {actual} != {expected}"
+                    "W13 typed-product {label} status {actual} != {expected}"
                 ));
             }
         }
@@ -1516,7 +1541,7 @@ impl SkV13TypedProductReport {
                     "support_only" | "gate_only" | "telemetry_only" | "future_consumer"
                 )
             {
-                return Err(format!("W13.1 typed-product {label} status invalid"));
+                return Err(format!("W13 typed-product {label} status invalid"));
             }
         }
         for (label, value) in [
@@ -1527,13 +1552,11 @@ impl SkV13TypedProductReport {
             ("threshold", self.threshold_mbps),
         ] {
             if !value.is_finite() || value < 0.0 {
-                return Err(format!("W13.1 typed-product {label} invalid"));
+                return Err(format!("W13 typed-product {label} invalid"));
             }
         }
         if (self.threshold_mbps - (self.sonic_strict_mbps_after + 1.0)).abs() > 0.01 {
-            return Err(
-                "W13.1 typed-product threshold must equal sonic strict + 1 Mbps".to_string(),
-            );
+            return Err("W13 typed-product threshold must equal sonic strict + 1 Mbps".to_string());
         }
         if self.track1_mbps_after <= self.threshold_mbps
             || !matches!(
@@ -1541,23 +1564,23 @@ impl SkV13TypedProductReport {
                 "pass" | "admitted"
             )
         {
-            return Err("W13.1 typed-product did not admit over sonic + 1".to_string());
+            return Err("W13 typed-product did not admit over sonic + 1".to_string());
         }
         if self.measurement_artifact_path.trim().is_empty()
             || !is_hex_sha256(&self.measurement_artifact_sha256)
         {
-            return Err("W13.1 typed-product measurement artifact path/hash invalid".to_string());
+            return Err("W13 typed-product measurement artifact path/hash invalid".to_string());
         }
         if self.affected_row_ids.len() != 1
-            || self.affected_row_ids[0] != "json/numbers/real_typed_struct/main"
+            || self.affected_row_ids[0] != self.row_id
             || self.material_differential.trim().is_empty()
-            || self.redress_entry != "REDRESS-145"
+            || self.redress_entry != expected_redress
             || !["70", "103", "105", "110"]
                 .iter()
                 .all(|id| self.prior_redress_citations.iter().any(|entry| entry == id))
         {
             return Err(
-                "W13.1 typed-product report missing rows, REDRESS citations, or differential"
+                "W13 typed-product report missing rows, REDRESS citations, or differential"
                     .to_string(),
             );
         }
@@ -2908,6 +2931,7 @@ impl Report {
         let mut run_id = None::<String>;
         let mut w6_github_events_typed_seen = false;
         let mut w13_numbers_typed_seen = false;
+        let mut w13_unicode_basic_typed_seen = false;
         for row in &self.rows {
             let row_id = row.sk_v8.row_id.as_str();
             if !seen.insert(row_id) {
@@ -2919,6 +2943,9 @@ impl Report {
             } else if row_id == W13_NUMBERS_TYPED_ROW_ID {
                 validate_w13_numbers_typed_row(row)?;
                 w13_numbers_typed_seen = true;
+            } else if row_id == W13_UNICODE_BASIC_TYPED_ROW_ID {
+                validate_w13_unicode_basic_typed_row(row)?;
+                w13_unicode_basic_typed_seen = true;
             } else {
                 let Some(baseline) = sk_v8_open_baseline(row_id) else {
                     return Err(format!("unknown SK-V8 comparison row_id {row_id}"));
@@ -2959,7 +2986,8 @@ impl Report {
         }
         let expected_rows = SK_V8_OPEN_BASELINE.len()
             + usize::from(w6_github_events_typed_seen)
-            + usize::from(w13_numbers_typed_seen);
+            + usize::from(w13_numbers_typed_seen)
+            + usize::from(w13_unicode_basic_typed_seen);
         if self.rows.len() != expected_rows {
             return Err(format!(
                 "SK-V9 W0 expected {expected_rows} main rows, saw {}",
@@ -3512,6 +3540,7 @@ fn validate_direct_row_movement(
 
 const W6_GITHUB_EVENTS_TYPED_ROW_ID: &str = "json/github_events/real_typed_struct/main";
 const W13_NUMBERS_TYPED_ROW_ID: &str = "json/numbers/real_typed_struct/main";
+const W13_UNICODE_BASIC_TYPED_ROW_ID: &str = "json/unicode_basic/real_typed_struct/main";
 
 fn validate_w6_github_events_typed_row(row: &TelemetryRow) -> Result<(), String> {
     let row_id = row.sk_v8.row_id.as_str();
@@ -3612,22 +3641,36 @@ fn validate_w6_github_events_typed_row(row: &TelemetryRow) -> Result<(), String>
 }
 
 fn validate_w13_numbers_typed_row(row: &TelemetryRow) -> Result<(), String> {
+    validate_w13_typed_row(row, "numbers", "REDRESS-145", "SK-V13-W13.1", "W13.1")
+}
+
+fn validate_w13_unicode_basic_typed_row(row: &TelemetryRow) -> Result<(), String> {
+    validate_w13_typed_row(row, "unicode_basic", "REDRESS-146", "SK-V13-W13.2", "W13.2")
+}
+
+fn validate_w13_typed_row(
+    row: &TelemetryRow,
+    corpus: &str,
+    redress_entry: &str,
+    wave_id: &str,
+    label: &str,
+) -> Result<(), String> {
     let row_id = row.sk_v8.row_id.as_str();
     row.validate_schema_v3()?;
     validate_w0_row_identity(row)?;
     validate_w0_outcome(row_id, &row.outcome_id)?;
     if row.outcome_id != "A" || row.verdict != "GO" {
         return Err(format!(
-            "{row_id} W13.1 typed contract admits only A / GO, saw {} / {}",
+            "{row_id} {label} typed contract admits only A / GO, saw {} / {}",
             row.outcome_id, row.verdict
         ));
     }
-    if row.corpus != "numbers" || row.workload != "real_typed_struct" {
-        return Err(format!("{row_id} is not the W13.1 numbers typed row"));
+    if row.corpus != corpus || row.workload != "real_typed_struct" {
+        return Err(format!("{row_id} is not the {label} {corpus} typed row"));
     }
     if row.output_plane != "typed direct" {
         return Err(format!(
-            "{row_id} W13.1 typed output plane {} is not typed direct",
+            "{row_id} {label} typed output plane {} is not typed direct",
             row.output_plane
         ));
     }
@@ -3637,24 +3680,24 @@ fn validate_w13_numbers_typed_row(row: &TelemetryRow) -> Result<(), String> {
         || row.escape_complete != "yes"
     {
         return Err(format!(
-            "{row_id} W13.1 typed row lacks strict measured validation"
+            "{row_id} {label} typed row lacks strict measured validation"
         ));
     }
     if row.sk_v8.track2_independence_status != "independent_verified"
         || row.sk_v8.same_wave_consumer_class != "gate_json_typed_contract"
     {
         return Err(format!(
-            "{row_id} W13.1 typed row lacks independent gate consumer"
+            "{row_id} {label} typed row lacks independent gate consumer"
         ));
     }
-    if row.sk_v8.redress_entry != "REDRESS-145" || row.sk_v8.wave_id != "SK-V13-W13.1" {
+    if row.sk_v8.redress_entry != redress_entry || row.sk_v8.wave_id != wave_id {
         return Err(format!(
-            "{row_id} W13.1 typed row lacks REDRESS/W13 provenance"
+            "{row_id} {label} typed row lacks REDRESS/W13 provenance"
         ));
     }
     if row.sk_v8.sk_v9_open_delta != "typed-row-added" {
         return Err(format!(
-            "{row_id} W13.1 typed row delta {} is not typed-row-added",
+            "{row_id} {label} typed row delta {} is not typed-row-added",
             row.sk_v8.sk_v9_open_delta
         ));
     }
@@ -3664,12 +3707,12 @@ fn validate_w13_numbers_typed_row(row: &TelemetryRow) -> Result<(), String> {
         row.competitors.sonic_strict_mbps,
     ) else {
         return Err(format!(
-            "{row_id} W13.1 typed row lacks Track 1, Track 2, or sonic Mbps"
+            "{row_id} {label} typed row lacks Track 1, Track 2, or sonic Mbps"
         ));
     };
     if track1 <= sonic + 1.0 || !track2.is_finite() {
         return Err(format!(
-            "{row_id} W13.1 typed floor miss: Track 1 {track1:.0}, Track 2 {track2:.0}, sonic+1 {:.0}",
+            "{row_id} {label} typed floor miss: Track 1 {track1:.0}, Track 2 {track2:.0}, sonic+1 {:.0}",
             sonic + 1.0
         ));
     }

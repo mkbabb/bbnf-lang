@@ -13,7 +13,10 @@ and records whether the result reaches generated backend selection.
 W7 has a binary close route:
 
 1. ADMIT only if CSP-selected output changes executable emitted JSON or CSS code
-   and moves or admits at least one row by P3-C `row_move_toward_sota`.
+   and moves or admits at least one row by P3-C `row_move_toward_sota`. The
+   emitted runtime diff must be saved, hash-checked, and gate-consumed through
+   `generated_runtime_diff_status`, `generated_runtime_diff_artifact_path`, and
+   `generated_runtime_diff_sha256`.
 2. Otherwise close as the measured architectural block
    `JSON-CSS-W7-CSP-CASCADE-CONSUMED-BUT-NO-ROW-MOVEMENT`, with CSP metrics,
    fail-closed cascade evidence, generated-runtime static-template evidence,
@@ -34,8 +37,7 @@ Primary SPEC owner paths:
 Required support owner paths for the selected intervention:
 
 - `skinny/Cargo.toml` for the direct `csp-solver` workspace dependency.
-- `skinny/crates/ir/src/cost.rs` if redress adds `DecisionCspFacts` to
-  `CostFacts`.
+- `skinny/crates/ir/src/cost.rs` for `DecisionCspFacts`.
 - `skinny/xtask/src/main.rs` for `gate-json` passthrough.
 - `restart/skinny/tranches/sk-v13/research/w7/` for W7 evidence artifacts.
 - `skinny/REDRESS.md` for REDRESS-138.
@@ -44,14 +46,40 @@ Required support owner paths for the selected intervention:
 
 Root `crates/csp-solver/` is a dependency surface, not an edit surface.
 
+Lock 14 redress must add an explicit `SK_V13_W7_OWNER_PATHS` set and a parent
+diff subject matcher for `sk-v13-waveW7`. The owner set must cover the exact
+generic modules touched by W7, including at minimum:
+
+- `crates/ir/src/cost.rs`
+- `crates/passes/Cargo.toml`
+- `crates/passes/src/lib.rs`
+- `crates/passes/src/backend_egraph.rs`
+- `crates/passes/src/decision_csp.rs`
+- `crates/passes/src/diagnostics.rs`
+- `crates/codegen/src/lib.rs`
+- `crates/codegen/src/lower/mod.rs`
+- `crates/codegen/src/lower/rust.rs`
+- `crates/bbnf-bench/src/report.rs`
+- `crates/bbnf-bench/src/bin/gate.rs`
+- `crates/bbnf-bench/src/lock14_baseline.rs`
+- `xtask/src/main.rs`
+- `Cargo.toml`
+
+Lock 14 scanning must include every W7-touched generic module. Adding a generic
+file outside current scan roots without scan coverage is a CH2 fail.
+
 ## Implementation Shape
 
 1. Add `csp-solver = { path = "../crates/csp-solver" }` to skinny workspace
    dependencies and consume it from `passes`.
 2. Add `passes::decision_csp`.
-3. Build one CSP variable per `RuleId`. Domain values are W6 backend candidate
-   ids; costs are the active-cost tuple collapsed into a deterministic numeric
-   objective.
+3. Build one CSP variable per `RuleId`. Domain values are backend-shape
+   candidates after W5/W6 fact construction, but P1-P8 priority data,
+   `hard_pruned`, `priority_fired`, and `shape_rank` are evidence only. They
+   cannot hard-prune the CSP domain, cannot be the objective, and cannot admit a
+   row. Legality is enforced only by W7 hard constraints; cost order must be
+   derived from the W6 active-cost tuple without letting old cascade labels
+   become authoritative.
 4. Solve with `OptimizationMode::MinimizeCost`, `max_solutions = 1`, bounded
    `node_budget`, and explicit `Instant` wall-clock timing.
 5. Treat all of the following as non-admission states:
@@ -76,14 +104,17 @@ Root `crates/csp-solver/` is a dependency surface, not an edit surface.
      production row admit path.
 9. Add the W7 gate report and xtask passthrough.
 10. Add Lock 14 owner paths and report fields for CSS, Sheets, and BBNF-self
-    witnesses. If a non-JSON runtime is not generated in W7, it must be a
-    fail-closed witness, not silence.
+    witnesses. The witnesses must include artifact paths, SHA-256 hashes, and
+    commands or named generated-role evidence. If a non-JSON runtime is not
+    generated in W7, it must be a gate-consumed fail-closed witness, not
+    silence.
 
-If redress attempts executable emitted-runtime selection beyond the above and
-the source/test LOC approaches the W7 budget, split before editing. The default
-redress target is CSP finalization plus fail-closed evidence; executable row
-movement is accepted only if it fits inside the W7 cap without dropping any gate
-predicate.
+The default redress target is CSP finalization plus fail-closed evidence and the
+named measured block. Executable runtime row movement is a mandatory split
+unless the CSP/fail-close slice lands far under budget and every gate predicate
+above can still be implemented, tested, and measured. Routing runtime emission
+to a later wave is non-admission in W7; it may only appear as remainder after
+the measured block has passed.
 
 ## Falsifiability Gate
 
@@ -94,23 +125,42 @@ Pass conditions:
 1. W5 regex and W6 active-cost artifacts are hash-checked by the W7 gate.
 2. W7 CSP problem and solution/abrogation artifacts are hash-checked by the
    W7 gate.
-3. CSP status is SAT with nonempty solution, or a measured timeout/UNSAT
+3. CSS L4, Sheets, and BBNF-self witness artifacts are hash-checked by the W7
+   gate, or the report uses an explicit scoped-witness label accepted by
+   CHALLENGE. Status-only witness fields are rejected.
+4. CSP status is SAT with nonempty solution, or a measured timeout/UNSAT
    abrogation is recorded as non-admission.
-4. Solve time is <=1.0 second per named grammar unless measured timeout
+5. Solve time is <=1.0 second per named grammar unless measured timeout
    abrogation is recorded.
-5. `budget_exceeded = false` for any SAT admit/movement claim.
-6. `resolver_output_piping` is exactly
+6. `budget_exceeded = false` for any SAT admit/movement claim.
+7. Every compiled rule has a CSP-selected decision backed by W6 active-cost
+   facts. If the W6 active-cost selected shape remains legal under W7 hard
+   constraints, CSP preserves that selected shape; any CSP-induced shape change
+   is non-admission unless it also changes emitted executable runtime code and
+   moves/admites a row.
+8. P1-P8 priority labels, `hard_pruned`, and `shape_rank` are reported as
+   evidence-only and cannot be domain-pruning or objective inputs.
+9. `resolver_output_piping` is exactly
    `regex_facts->egraph_active_cost->csp->compile_codegen`.
-7. `fused_solver_status = not-fused`.
-8. Old cascade status is `deleted`, `fail_closed`, or `gated_retired`.
-9. `choose_backend_shape_status`, `priority_table_status`,
+10. `fused_solver_status = not-fused`.
+11. Old cascade status is `deleted`, `fail_closed`, or `gated_retired`.
+12. `choose_backend_shape_status`, `priority_table_status`,
    `p1_p8_fallback_status`, and `legacy_cascade_admission_status` prove that
    no production admission path remains.
-10. JSON and CSS guard rows maintain or improve.
-11. Sheets and BBNF-self witnesses are present as generated-role or
-    fail-closed evidence.
-12. `row_move_toward_sota_status` is `pass`, `admitted`, or
+13. `fallback_invoked = false` for any row movement/admit claim. If a
+    compile-safety fallback remains reachable, it must be recorded as
+    `compat_non_admission`.
+14. `static_css_provider_status` and `json_sink_only_status` prove whether CSS
+    static templates or JSON sink-only rendering blocked runtime consumption.
+15. JSON and CSS guard rows maintain or improve.
+16. Sheets and BBNF-self witnesses are present as generated-role or
+    fail-closed evidence with artifacts and hashes.
+17. `row_move_toward_sota_status` is `pass`, `admitted`, or
     `measured_architectural_block`.
+18. `pass` or `admitted` requires `generated_runtime_diff_status = present`,
+    a nonempty diff artifact path, a valid SHA-256, and gate hash validation.
+    Without that generated-runtime diff, only the named measured block is
+    accepted.
 
 Reject states:
 
@@ -123,6 +173,11 @@ Reject states:
 - hidden fused CSP/e-graph solver.
 - any silent fallback to legacy P1-P8, default backend shape, or projected
   cost facts.
+- priority/P1-P8 labels hard-pruning the CSP domain or contributing to the
+  objective.
+- `pass` or `admitted` without a hash-checked generated-runtime diff artifact.
+- `fallback_invoked = true` on a row movement/admit claim.
+- status-only CSS/Sheets/BBNF-self witnesses.
 - JSON/CSS guard regression not recovered in-wave.
 - missing Sheets or BBNF-self witness.
 - claiming row admission from REDRESS-136, REDRESS-137, or REDRESS-138 alone.
@@ -148,12 +203,23 @@ Required fields:
 - Constraints: `parity_constraint_status`, `recognizer_constraint_status`,
   `substrate_constraint_status`, `simd_constraint_status`,
   `capacity_constraint_status`.
+- Witnesses: `css_l4_witness_artifact_path`, `css_l4_witness_sha256`,
+  `css_l4_witness_command`, `sheets_witness_artifact_path`,
+  `sheets_witness_sha256`, `sheets_witness_command`,
+  `bbnf_self_witness_artifact_path`, `bbnf_self_witness_sha256`,
+  `bbnf_self_witness_command`, `scoped_witness_label`.
 - Consumers: `resolver_output_piping`, `fused_solver_status`,
   `generated_selection_path`, `compile_consumer_path`,
   `same_wave_consumer_path`, `same_wave_consumer_class`.
+- Runtime diff: `generated_runtime_diff_status`,
+  `generated_runtime_diff_artifact_path`, `generated_runtime_diff_sha256`.
 - Cascade: `cascade_retirement_status`, `choose_backend_shape_status`,
   `priority_table_status`, `p1_p8_fallback_status`,
-  `legacy_cascade_admission_status`.
+  `legacy_cascade_admission_status`, `priority_data_role`,
+  `priority_hard_prune_status`, `priority_objective_status`,
+  `fallback_invoked`, `compat_fallback_status`.
+- Static runtime blockers: `static_css_provider_status`,
+  `json_sink_only_status`.
 - Guards: `json_guard_state`, `css_guard_state`,
   `sheets_fail_closed_status`, `bbnf_self_fail_closed_status`,
   `lock14_status`.
@@ -207,8 +273,8 @@ selection, gate reporting, and fail-closed lowering behavior.
 Hard cap: 45 min redress + 15 min measurement under the decision-fold
 amendment. Source/test/report LOC budget: <=970. If executable runtime
 selection cannot fit with every gate predicate, redress must close the measured
-block and route runtime emission to the next wave rather than dropping the W7
-gate.
+block. Runtime emission may be routed as remainder only after W7 has recorded
+non-admission; it cannot satisfy W7 by future promise.
 
 ## Revert Protocol
 

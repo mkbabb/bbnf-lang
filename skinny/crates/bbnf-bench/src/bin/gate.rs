@@ -8,8 +8,8 @@ use bbnf_bench::report::{
     SkV13CssDeclarationValuesExtendedReport, SkV13CssNestedLayoutReport,
     SkV13CssStylesheetSelectorsReport, SkV13CssVendorCustomReport, SkV13CssVisualFunctionsReport,
     SkV13DecisionActiveCostReport, SkV13DecisionCspCascadeReport, SkV13DecisionRegexReport,
-    SkV13PerGrammarPolicyReport, SkV13SameSubstrateUnionReport, SkV8ComparatorEvidence,
-    SkV8Telemetry, TelemetryRow,
+    SkV13JsonDirectReopenReport, SkV13PerGrammarPolicyReport, SkV13SameSubstrateUnionReport,
+    SkV8ComparatorEvidence, SkV8Telemetry, TelemetryRow,
 };
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -299,6 +299,23 @@ fn main() -> Result<(), Box<dyn Error>> {
             .map_err(|error| format!("{}: {error}", path.display()))?;
         println!(
             "G-W9-SAME-SUBSTRATE-UNION {} {}",
+            report.row_move_toward_sota_status,
+            path.display()
+        );
+        drop(report);
+    }
+    if let Some(path) = skv13_json_direct_reopen_report_path(&args[1..])? {
+        if !has_explicit_json_check {
+            return Err(format!("{} requires --check-results", path.display()).into());
+        }
+        let text = fs::read_to_string(&path)?;
+        let report = SkV13JsonDirectReopenReport::from_json_str(&text)
+            .and_then(|report| report.validate_gate().map(|_| report))
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        validate_skv13_json_direct_reopen_report(&report, &criterion_root(), &workspace)
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        println!(
+            "G-W11.1-JSON-DIRECT-NUMBERS {} {}",
             report.row_move_toward_sota_status,
             path.display()
         );
@@ -783,6 +800,12 @@ fn skv13_same_substrate_union_report_path(
     companion_report_path(args, "--skv13-same-substrate-union-report")
 }
 
+fn skv13_json_direct_reopen_report_path(
+    args: &[String],
+) -> Result<Option<PathBuf>, Box<dyn Error>> {
+    companion_report_path(args, "--skv13-json-direct-reopen-report")
+}
+
 fn companion_report_path(args: &[String], flag: &str) -> Result<Option<PathBuf>, Box<dyn Error>> {
     let flag_positions = args
         .iter()
@@ -850,6 +873,7 @@ fn is_companion_report_flag(arg: &str) -> bool {
             | "--skv13-decision-csp-cascade-report"
             | "--skv13-per-grammar-policy-report"
             | "--skv13-same-substrate-union-report"
+            | "--skv13-json-direct-reopen-report"
     )
 }
 
@@ -860,6 +884,8 @@ fn companion_report_runs_json_check(args: &[String]) -> bool {
 
 struct CssL4Lane {
     mbps: f64,
+    lower_mbps: f64,
+    upper_mbps: f64,
     samples: u64,
 }
 
@@ -1275,6 +1301,16 @@ fn read_css_l4_lane_in_group(
         .and_then(Value::as_f64)
         .filter(|value| value.is_finite() && *value > 0.0)
         .ok_or_else(|| format!("{lane} missing finite positive mean.point_estimate"))?;
+    let lower_ns = estimates
+        .pointer("/mean/confidence_interval/lower_bound")
+        .and_then(Value::as_f64)
+        .filter(|value| value.is_finite() && *value > 0.0)
+        .ok_or_else(|| format!("{lane} missing finite positive lower confidence bound"))?;
+    let upper_ns = estimates
+        .pointer("/mean/confidence_interval/upper_bound")
+        .and_then(Value::as_f64)
+        .filter(|value| value.is_finite() && *value > 0.0)
+        .ok_or_else(|| format!("{lane} missing finite positive upper confidence bound"))?;
     let sample: Value = serde_json::from_str(
         &fs::read_to_string(lane_root.join("sample.json"))
             .map_err(|error| format!("{lane} sample.json missing: {error}"))?,
@@ -1290,6 +1326,8 @@ fn read_css_l4_lane_in_group(
     }
     Ok(CssL4Lane {
         mbps: expected_bytes as f64 * 8_000.0 / mean_ns,
+        lower_mbps: expected_bytes as f64 * 8_000.0 / upper_ns,
+        upper_mbps: expected_bytes as f64 * 8_000.0 / lower_ns,
         samples,
     })
 }
@@ -2037,6 +2075,78 @@ fn validate_skv13_same_substrate_union_report(
         "W9 same-substrate union artifact",
         &report.union_artifact_path,
         &report.union_artifact_sha256,
+    )
+}
+
+fn validate_skv13_json_direct_reopen_report(
+    report: &SkV13JsonDirectReopenReport,
+    criterion_root: &Path,
+    workspace: &Path,
+) -> Result<(), String> {
+    let track1 = read_css_l4_lane_in_group(
+        criterion_root,
+        "json_numbers",
+        "track1_direct_to_struct",
+        150_124,
+    )?;
+    let track2 = read_css_l4_lane_in_group(
+        criterion_root,
+        "json_numbers",
+        "track2_direct_to_struct",
+        150_124,
+    )?;
+    let sonic = read_css_l4_lane_in_group(
+        criterion_root,
+        "json_numbers",
+        "sonic_rs_direct_to_struct",
+        150_124,
+    )?;
+    let serde = read_css_l4_lane_in_group(
+        criterion_root,
+        "json_numbers",
+        "serde_json_direct_to_struct",
+        150_124,
+    )?;
+    require_close(
+        "W11.1 track1_mbps_after",
+        report.track1_mbps_after,
+        track1.mbps,
+    )?;
+    require_close(
+        "W11.1 track2_mbps_after",
+        report.track2_mbps_after,
+        track2.mbps,
+    )?;
+    require_close(
+        "W11.1 sonic_strict_mbps_after",
+        report.sonic_strict_mbps_after,
+        sonic.mbps,
+    )?;
+    require_close(
+        "W11.1 serde_mbps_after",
+        report.serde_mbps_after,
+        serde.mbps,
+    )?;
+    require_close(
+        "W11.1 threshold_mbps",
+        report.threshold_mbps,
+        sonic.mbps + 1.0,
+    )?;
+    if track1.lower_mbps <= sonic.mbps + 1.0 {
+        return Err(format!(
+            "W11.1 Track 1 lower confidence throughput {:.3} <= sonic+1 {:.3}",
+            track1.lower_mbps,
+            sonic.mbps + 1.0
+        ));
+    }
+    if track1.upper_mbps <= sonic.mbps + 1.0 {
+        return Err("W11.1 Track 1 confidence interval does not clear sonic+1".into());
+    }
+    validate_report_artifact_hash(
+        workspace,
+        "W11.1 JSON direct reopen artifact",
+        &report.measurement_artifact_path,
+        &report.measurement_artifact_sha256,
     )
 }
 
@@ -3912,6 +4022,16 @@ mod tests {
             skv13_same_substrate_union_report_path(&mixed).unwrap(),
             Some(PathBuf::from("skv13-w9.json"))
         );
+        let mixed = vec![
+            "--skv13-json-direct-reopen-report".to_string(),
+            "skv13-w11-1.json".to_string(),
+            "--advisory".to_string(),
+            "--check-results".to_string(),
+        ];
+        assert_eq!(
+            skv13_json_direct_reopen_report_path(&mixed).unwrap(),
+            Some(PathBuf::from("skv13-w11-1.json"))
+        );
         let write = vec![
             "--skv13-css-comparator-oracle-report".to_string(),
             "skv13-css-comparator.json".to_string(),
@@ -3991,6 +4111,21 @@ mod tests {
         assert_eq!(
             skv13_same_substrate_union_report_path(&args).unwrap(),
             Some(PathBuf::from("skv13-w9.json"))
+        );
+        assert!(companion_report_runs_json_check(&args));
+    }
+
+    #[test]
+    fn skv13_json_direct_reopen_report_arg_allows_json_check_only() {
+        let args = vec![
+            "--skv13-json-direct-reopen-report".to_string(),
+            "skv13-w11-1.json".to_string(),
+            "--advisory".to_string(),
+            "--check-results".to_string(),
+        ];
+        assert_eq!(
+            skv13_json_direct_reopen_report_path(&args).unwrap(),
+            Some(PathBuf::from("skv13-w11-1.json"))
         );
         assert!(companion_report_runs_json_check(&args));
     }

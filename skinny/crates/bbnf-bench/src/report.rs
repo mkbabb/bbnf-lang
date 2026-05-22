@@ -125,6 +125,7 @@ pub const SKV13_DECISION_ACTIVE_COST_REPORT_SCHEMA: &str = "sk-v13-decision-acti
 pub const SKV13_DECISION_CSP_CASCADE_REPORT_SCHEMA: &str = "sk-v13-decision-csp-cascade-v1";
 pub const SKV13_PER_GRAMMAR_POLICY_REPORT_SCHEMA: &str = "sk-v13-per-grammar-policy-v1";
 pub const SKV13_SAME_SUBSTRATE_UNION_REPORT_SCHEMA: &str = "sk-v13-same-substrate-union-v1";
+pub const SKV13_JSON_DIRECT_REOPEN_REPORT_SCHEMA: &str = "sk-v13-json-direct-reopen-v1";
 pub type NonJsonEvidenceRow = TelemetryRow;
 pub type NonJsonOracleEvidence = SkV8ComparatorEvidence;
 
@@ -409,6 +410,48 @@ pub struct SkV13SameSubstrateUnionReport {
     pub union_artifact_sha256: String,
     pub affected_row_ids: Vec<String>,
     pub block_id: Option<String>,
+    pub material_differential: String,
+    pub redress_entry: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct SkV13JsonDirectReopenReport {
+    pub schema_version: String,
+    pub wave_id: String,
+    pub run_id: String,
+    pub source_commit: String,
+    pub host_triple: String,
+    pub build_flags: String,
+    pub feature_mask: String,
+    pub consumer_gate: String,
+    pub g_omega_status: String,
+    pub row_id: String,
+    pub corpus: String,
+    pub workload: String,
+    pub output_plane: String,
+    pub route_id: String,
+    pub same_wave_consumer_path: String,
+    pub same_wave_consumer_class: String,
+    pub strict_equality_status: String,
+    pub track2_independence_status: String,
+    pub json_guard_state: String,
+    pub css_guard_state: String,
+    pub track1_mbps_before: f64,
+    pub track1_mbps_after: f64,
+    pub track2_mbps_after: f64,
+    pub sonic_strict_mbps_after: f64,
+    pub serde_mbps_after: f64,
+    pub threshold_mbps: f64,
+    pub row_move_toward_sota_status: String,
+    pub lock14_status: String,
+    pub lock14_owner_path_status: String,
+    pub lock14_generic_scan_status: String,
+    pub measurement_artifact_path: String,
+    pub measurement_artifact_sha256: String,
+    pub affected_row_ids: Vec<String>,
+    pub block_id: Option<String>,
+    pub prior_redress_citations: Vec<String>,
     pub material_differential: String,
     pub redress_entry: String,
 }
@@ -1118,6 +1161,149 @@ impl SkV13SameSubstrateUnionReport {
         {
             return Err(
                 "W9 report missing affected rows, material differential, or REDRESS entry".into(),
+            );
+        }
+        Ok(())
+    }
+}
+
+impl SkV13JsonDirectReopenReport {
+    pub fn from_json_str(text: &str) -> Result<Self, String> {
+        serde_json::from_str(text)
+            .map_err(|error| format!("invalid SK-V13 JSON direct reopen report: {error}"))
+    }
+
+    pub fn validate_gate(&self) -> Result<(), String> {
+        if self.schema_version != SKV13_JSON_DIRECT_REOPEN_REPORT_SCHEMA {
+            return Err(format!(
+                "unsupported SK-V13 JSON direct reopen schema {}",
+                self.schema_version
+            ));
+        }
+        if self.wave_id != "SK-V13-W11.1" {
+            return Err(format!("{} cannot claim W11.1 authority", self.wave_id));
+        }
+        if !self.run_id.starts_with("sk-v13-w11.1:") {
+            return Err(format!("invalid W11.1 run id {}", self.run_id));
+        }
+        if self.source_commit.trim().is_empty()
+            || self.host_triple.trim().is_empty()
+            || self.build_flags.trim().is_empty()
+            || self.feature_mask.trim().is_empty()
+        {
+            return Err("W11.1 report missing source/build provenance".into());
+        }
+        if self.consumer_gate != "G-W11.1-JSON-DIRECT-NUMBERS"
+            || self.g_omega_status != "user-signed"
+        {
+            return Err("W11.1 consumer gate or G-Omega status invalid".into());
+        }
+        if self.row_id != "json/numbers/direct_to_struct/main"
+            || self.corpus != "numbers"
+            || self.workload != "direct_to_struct"
+            || self.output_plane != "digest"
+        {
+            return Err("W11.1 row identity invalid".into());
+        }
+        if self.route_id != "generated-json-direct-numeric-array-dispatch"
+            || self.same_wave_consumer_path.trim().is_empty()
+            || self.same_wave_consumer_class != "generated_json_direct_numeric_array_dispatch"
+        {
+            return Err("W11.1 same-wave consumer evidence invalid".into());
+        }
+        for (label, actual, expected) in [
+            (
+                "strict equality",
+                self.strict_equality_status.as_str(),
+                "pass",
+            ),
+            (
+                "Track 2 independence",
+                self.track2_independence_status.as_str(),
+                "independent",
+            ),
+            ("Lock 14", self.lock14_status.as_str(), "pass"),
+            (
+                "Lock 14 owner path",
+                self.lock14_owner_path_status.as_str(),
+                "pass",
+            ),
+            (
+                "Lock 14 generic scan",
+                self.lock14_generic_scan_status.as_str(),
+                "pass",
+            ),
+        ] {
+            if actual != expected {
+                return Err(format!("W11.1 {label} status {actual} != {expected}"));
+            }
+        }
+        for (label, status) in [
+            ("JSON guard", self.json_guard_state.as_str()),
+            ("CSS guard", self.css_guard_state.as_str()),
+        ] {
+            if status.trim().is_empty()
+                || matches!(
+                    status,
+                    "support_only" | "gate_only" | "telemetry_only" | "future_consumer"
+                )
+            {
+                return Err(format!("W11.1 {label} status invalid"));
+            }
+        }
+        for (label, value) in [
+            ("Track 1 before", self.track1_mbps_before),
+            ("Track 1 after", self.track1_mbps_after),
+            ("Track 2 after", self.track2_mbps_after),
+            ("sonic strict after", self.sonic_strict_mbps_after),
+            ("serde after", self.serde_mbps_after),
+            ("threshold", self.threshold_mbps),
+        ] {
+            if !value.is_finite() || value < 0.0 {
+                return Err(format!("W11.1 {label} invalid"));
+            }
+        }
+        if (self.threshold_mbps - (self.sonic_strict_mbps_after + 1.0)).abs() > 0.01 {
+            return Err("W11.1 threshold must equal sonic strict + 1 Mbps".into());
+        }
+        if self.measurement_artifact_path.trim().is_empty()
+            || !is_hex_sha256(&self.measurement_artifact_sha256)
+        {
+            return Err("W11.1 measurement artifact path/hash invalid".into());
+        }
+        if !["119", "120"]
+            .iter()
+            .all(|id| self.prior_redress_citations.iter().any(|entry| entry == id))
+        {
+            return Err("W11.1 prior REDRESS citations missing".into());
+        }
+        match self.row_move_toward_sota_status.as_str() {
+            "pass" | "admitted" => {
+                if self.track1_mbps_after <= self.track1_mbps_before
+                    || self.track1_mbps_after <= self.threshold_mbps
+                {
+                    return Err("W11.1 pass/admitted requires row movement and SOTA pass".into());
+                }
+                if self.block_id.is_some() {
+                    return Err("W11.1 pass/admitted cannot carry a block id".into());
+                }
+            }
+            "measured_architectural_block" => {
+                if self.block_id.as_deref()
+                    != Some("JSON-W11-1-NUMBERS-DIRECT-NUMERIC-DISPATCH-INTRINSIC-BLOCK")
+                {
+                    return Err("W11.1 measured block id missing".into());
+                }
+            }
+            other => return Err(format!("W11.1 row movement status {other} is rejected")),
+        }
+        if self.affected_row_ids != ["json/numbers/direct_to_struct/main"]
+            || self.material_differential.trim().is_empty()
+            || self.redress_entry.trim().is_empty()
+        {
+            return Err(
+                "W11.1 report missing affected rows, material differential, or REDRESS entry"
+                    .into(),
             );
         }
         Ok(())
@@ -6644,5 +6830,62 @@ mod tests {
         let mut public_substrate = report;
         public_substrate.public_substrate_api_status = "present".into();
         assert!(public_substrate.validate_gate().is_err());
+    }
+
+    #[test]
+    fn skv13_json_direct_reopen_report_accepts_numbers_admit() {
+        let report = SkV13JsonDirectReopenReport {
+            schema_version: SKV13_JSON_DIRECT_REOPEN_REPORT_SCHEMA.into(),
+            wave_id: "SK-V13-W11.1".into(),
+            run_id: "sk-v13-w11.1:numbers-direct-fnv64-0000000000000000".into(),
+            source_commit: "000000000000".into(),
+            host_triple: "aarch64-apple-darwin".into(),
+            build_flags: "RUSTFLAGS=-C target-cpu=native".into(),
+            feature_mask: "arch=aarch64;target_cpu=native".into(),
+            consumer_gate: "G-W11.1-JSON-DIRECT-NUMBERS".into(),
+            g_omega_status: "user-signed".into(),
+            row_id: "json/numbers/direct_to_struct/main".into(),
+            corpus: "numbers".into(),
+            workload: "direct_to_struct".into(),
+            output_plane: "digest".into(),
+            route_id: "generated-json-direct-numeric-array-dispatch".into(),
+            same_wave_consumer_path: "runtime::generated_json::generated::parse_array_direct"
+                .into(),
+            same_wave_consumer_class: "generated_json_direct_numeric_array_dispatch".into(),
+            strict_equality_status: "pass".into(),
+            track2_independence_status: "independent".into(),
+            json_guard_state: "maintain".into(),
+            css_guard_state: "maintain".into(),
+            track1_mbps_before: 12545.081,
+            track1_mbps_after: 13798.591,
+            track2_mbps_after: 12460.914,
+            sonic_strict_mbps_after: 12937.655,
+            serde_mbps_after: 8133.978,
+            threshold_mbps: 12938.655,
+            row_move_toward_sota_status: "admitted".into(),
+            lock14_status: "pass".into(),
+            lock14_owner_path_status: "pass".into(),
+            lock14_generic_scan_status: "pass".into(),
+            measurement_artifact_path:
+                "../restart/skinny/tranches/sk-v13/research/w11.1/numbers-direct-facts.json".into(),
+            measurement_artifact_sha256:
+                "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef".into(),
+            affected_row_ids: vec!["json/numbers/direct_to_struct/main".into()],
+            block_id: None,
+            prior_redress_citations: vec!["119".into(), "120".into()],
+            material_differential:
+                "REDRESS 119/120 did not remove generated array numeric redispatch".into(),
+            redress_entry: "REDRESS-141".into(),
+        };
+        assert!(report.validate_gate().is_ok());
+        let mut support_only = report.clone();
+        support_only.row_move_toward_sota_status = "support_only".into();
+        assert!(support_only.validate_gate().is_err());
+        let mut below_sota = report.clone();
+        below_sota.track1_mbps_after = below_sota.threshold_mbps;
+        assert!(below_sota.validate_gate().is_err());
+        let mut bad_threshold = report;
+        bad_threshold.threshold_mbps += 0.5;
+        assert!(bad_threshold.validate_gate().is_err());
     }
 }

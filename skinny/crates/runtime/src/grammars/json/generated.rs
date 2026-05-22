@@ -591,7 +591,14 @@ fn parse_array_direct<'i, S: JsonSink>(
         return Ok(());
     }
     loop {
-        parse_array_element_at_direct(input, bytes, cursor, sink)?;
+        let Some(byte) = bytes.get(*cursor).copied() else {
+            return Err(direct_error(input, *cursor, ParseErrorKind::ExpectedValue));
+        };
+        if matches!(byte, b'-' | b'0'..=b'9') {
+            parse_number_array_direct(input, bytes, cursor, sink, byte)?;
+        } else {
+            parse_array_element_at_direct(input, bytes, cursor, sink)?;
+        }
         *cursor = skip_ascii_whitespace(bytes, *cursor);
         if take_direct(bytes, cursor, b',') {
             *cursor = skip_ascii_whitespace(bytes, *cursor);

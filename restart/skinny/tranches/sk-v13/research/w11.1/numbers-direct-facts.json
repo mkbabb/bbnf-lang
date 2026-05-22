@@ -1,0 +1,144 @@
+{
+  "schema_version": "sk-v13-json-direct-reopen-facts-v1",
+  "wave_id": "SK-V13-W11.1",
+  "run_id": "sk-v13-w11.1:numbers-direct-fnv64-8a855e128b900f48",
+  "source_commit_before_redress": "71b817033",
+  "host_triple": "aarch64-apple-darwin",
+  "build_flags": "cargo build --release -p bbnf-bench --bin profile_direct; RUSTFLAGS=-C target-cpu=native for Criterion and gate-json",
+  "row_id": "json/numbers/direct_to_struct/main",
+  "material_differential": "REDRESS 119/120 left the generated direct array loop redispatching every numeric element through parse_array_element_at_direct. W11.1 consumes the already-skipped next byte in parse_array_direct and calls the existing parse_number_array_direct numeric sink arm directly for numeric-leading array elements.",
+  "prior_redress_citations": [
+    "119",
+    "120"
+  ],
+  "consumer": {
+    "path": "runtime::generated_json::generated::parse_array_direct",
+    "same_wave_consumer_class": "generated_json_direct_numeric_array_dispatch",
+    "strict_equality": "pass",
+    "track2_oracle": "hand direct digest + serde_json + sonic-rs strict"
+  },
+  "baseline_repeated_probe": {
+    "iters_per_run": 20000,
+    "track1_mbps": [
+      12581.832,
+      12470.73,
+      12486.299,
+      12603.916,
+      12545.081
+    ],
+    "track2_mbps": [
+      12112.836,
+      11882.583,
+      11948.044,
+      12014.75,
+      11972.221
+    ],
+    "sonic_strict_mbps": [
+      13114.168,
+      12858.859,
+      12851.585,
+      12913.973,
+      13008.102
+    ],
+    "serde_mbps": [
+      8133.549,
+      8121.395,
+      8150.836,
+      8138.486,
+      8103.57
+    ],
+    "median": {
+      "track1_mbps": 12545.081,
+      "track2_mbps": 11972.221,
+      "sonic_strict_mbps": 12913.973,
+      "serde_mbps": 8133.549
+    }
+  },
+  "post_patch_repeated_probe": {
+    "iters_per_run": 20000,
+    "track1_mbps": [
+      13951.266,
+      13798.591,
+      13925.504,
+      13782.275,
+      13685.079
+    ],
+    "track2_mbps": [
+      12460.914,
+      12554.715,
+      12484.657,
+      12347.371,
+      12367.424
+    ],
+    "sonic_strict_mbps": [
+      13038.476,
+      13085.551,
+      12937.655,
+      12692.981,
+      12851.842
+    ],
+    "serde_mbps": [
+      8133.985,
+      8133.978,
+      8067.086,
+      8134.895,
+      8132.393
+    ],
+    "median": {
+      "track1_mbps": 13798.591,
+      "track2_mbps": 12460.914,
+      "sonic_strict_mbps": 12937.655,
+      "serde_mbps": 8133.978,
+      "threshold_mbps": 12938.655,
+      "margin_mbps": 859.936,
+      "delta_track1_mbps": 1253.51
+    }
+  },
+  "criterion_binding": {
+    "group": "json/numbers",
+    "sample_count": 100,
+    "track1_direct_to_struct": {
+      "point_mbps": 13825.787,
+      "lower_mbps": 13795.291,
+      "upper_mbps": 13854.198,
+      "mean_ns": 86866.086
+    },
+    "track2_direct_to_struct": {
+      "point_mbps": 12187.685,
+      "lower_mbps": 12109.037,
+      "upper_mbps": 12251.665,
+      "mean_ns": 98541.436
+    },
+    "sonic_rs_direct_to_struct": {
+      "point_mbps": 12919.013,
+      "lower_mbps": 12897.73,
+      "upper_mbps": 12940.144,
+      "mean_ns": 92963.136
+    },
+    "serde_json_direct_to_struct": {
+      "point_mbps": 8114.854,
+      "lower_mbps": 8096.713,
+      "upper_mbps": 8129.299,
+      "mean_ns": 147999.208
+    },
+    "threshold_mbps": 12920.013,
+    "criterion_margin_mbps": 905.774,
+    "lower_confidence_margin_vs_sonic_point_plus_1_mbps": 875.278
+  },
+  "forbidden_routes": {
+    "fixture_branch": "absent",
+    "corpus_branch": "absent",
+    "new_number_parser": "absent",
+    "digest_hash_shortcut": "absent",
+    "source_hook": "absent",
+    "bbnf_simd_touch": "absent",
+    "parse_that_regex_touch": "absent",
+    "backend_shape_expansion": "absent",
+    "bir_directive_expansion": "absent",
+    "second_substrate": "absent"
+  },
+  "guard_state": {
+    "json": "maintain:direct/typed guard refresh required before commit",
+    "css": "maintain:CSS gate-json companion chain required before commit"
+  }
+}

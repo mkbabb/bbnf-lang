@@ -4286,3 +4286,60 @@ perturbation.
   ../restart/skinny/tranches/sk-v13/research/w8/skv13-W8-per-grammar-policy.json
   --skv13-same-substrate-union-report
   ../restart/skinny/tranches/sk-v13/research/w9/skv13-W9-same-substrate-union.json`.
+
+## SK-V13 Wave 11.1 Numbers Direct Numeric-Array Dispatch
+
+- Item 141 closes W11.1 under `G-W11.1-JSON-DIRECT-NUMBERS` as
+  `PASS-ADMIT`. W11.1 reopens `json/numbers/direct_to_struct/main` from the
+  REDRESS 119/120 N-direct fixpoint and lands a generated JSON direct-array
+  fast path: after comma/whitespace handling, `parse_array_direct` peeks the
+  already-current byte and routes numeric-leading elements through the existing
+  `parse_number_array_direct` sink path. The same behavior is emitted by
+  `codegen::json_sink_direct`; no row-private branch, new number parser,
+  digest shortcut, SIMD primitive, source hook, substrate, directive, BIR
+  variant, or `BackendShape` expansion is introduced.
+- The material differential from REDRESS 119/120 is that those attempts left
+  numeric arrays redispatching each element through
+  `parse_array_element_at_direct`; W11.1 consumes the generic generated direct
+  array loop itself and removes the extra dispatcher hop for every numeric
+  array element while preserving the existing numeric parser and strict error
+  offsets.
+- Measurement moved the row over the strict same-plane sonic bar. Repeated
+  clean-run probes recorded baseline Track 1 median `12545.081` Mbps and
+  post-patch Track 1 median `13798.591` Mbps against post-patch sonic strict
+  median `12937.655` Mbps. Criterion binding for the companion report records
+  Track 1 `13825.787` Mbps, Track 2 `12187.685` Mbps, sonic strict
+  `12919.013` Mbps, serde `8114.854` Mbps, threshold `12920.013` Mbps, and
+  lower-confidence margin `875.278` Mbps over sonic+1. The refreshed
+  campaign table records the admitted row as Track 1 `13875`, Track 2
+  `12286`, sonic strict `12918`, serde `8128` Mbps in `RESULTS.md`, with
+  `ROLLING-SOTA-DELTA.md` updated to margin `956`.
+- Gate evidence is consumed by
+  `restart/skinny/tranches/sk-v13/research/w11.1/skv13-W11.1-json-direct-reopen.json`.
+  The retained measurement artifact is
+  `restart/skinny/tranches/sk-v13/research/w11.1/numbers-direct-facts.json`
+  with SHA-256
+  `8f608f6705f0c9eeab06e5dd7c655009b9b91ea6940325a0317dc033e943ce15`.
+- Verification passed:
+  `cargo xtask check-json`,
+  `cargo test -p bbnf-bench direct_numeric_array_dispatch -- --nocapture`,
+  `cargo test -p bbnf-bench skv13_json_direct_reopen_report -- --nocapture`,
+  `cargo test -p bbnf-bench --bin gate skv13_json_direct_reopen_report -- --nocapture`,
+  `cargo test -p bbnf-bench lock14_baseline::tests::admits_sk_v13_w11_1_parent_diff_under_w11_1_scope -- --nocapture`,
+  `cargo test -p xtask gate_json_passthrough_accepts_skv13_json_direct_reopen_report_flag -- --nocapture`,
+  `RUSTFLAGS="-C target-cpu=native" cargo bench -p bbnf-bench --bench json_parity -- 'json/numbers/(track1_direct_to_struct|track2_direct_to_struct|sonic_rs_direct_to_struct|serde_json_direct_to_struct)'`,
+  `RUSTFLAGS="-C target-cpu=native" cargo bench -p bbnf-bench --bench simd_scan -- 'simd/structural_scan/twitter/simd'`, and
+  the companion W5-W9/W11.1 gate:
+  `RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --check-results
+  --advisory --skv13-decision-regex-report
+  ../restart/skinny/tranches/sk-v13/research/w5/skv13-W5-decision-regex.json
+  --skv13-decision-active-cost-report
+  ../restart/skinny/tranches/sk-v13/research/w6/skv13-W6-decision-active-cost.json
+  --skv13-decision-csp-cascade-report
+  ../restart/skinny/tranches/sk-v13/research/w7/skv13-W7-decision-csp-cascade.json
+  --skv13-per-grammar-policy-report
+  ../restart/skinny/tranches/sk-v13/research/w8/skv13-W8-per-grammar-policy.json
+  --skv13-same-substrate-union-report
+  ../restart/skinny/tranches/sk-v13/research/w9/skv13-W9-same-substrate-union.json
+  --skv13-json-direct-reopen-report
+  ../restart/skinny/tranches/sk-v13/research/w11.1/skv13-W11.1-json-direct-reopen.json`.

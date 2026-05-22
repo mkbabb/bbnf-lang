@@ -744,6 +744,7 @@ fn mix(seed: u64, value: u64) -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use runtime::grammars::json::ParseErrorKind;
 
     #[test]
     fn direct_digest_matches_tracks_and_serde_baselines() {
@@ -757,6 +758,32 @@ mod tests {
         let input = br#"[9223372036854775807,9223372036854775808,1.5,-0]"#;
         let text = std::str::from_utf8(input).unwrap();
         assert_direct_struct_parity(text, input).unwrap();
+    }
+
+    #[test]
+    fn direct_numeric_array_dispatch_preserves_array_parity() {
+        for raw in [
+            "[]",
+            "[0,1,-2,3.5,6.02214076e23]",
+            r#"[1,true,false,null,"x",2]"#,
+            r#"[1, {"a":[2,3]}, [4,{"b":5}]]"#,
+            "[1, \n\t 2,  3]",
+        ] {
+            assert_direct_struct_parity(raw, raw.as_bytes()).unwrap();
+        }
+    }
+
+    #[test]
+    fn direct_numeric_array_dispatch_preserves_error_offsets() {
+        for (raw, offset, kind) in [
+            ("[1,]", 3, ParseErrorKind::ExpectedValue),
+            ("[-]", 1, ParseErrorKind::InvalidNumber),
+            ("[1e]", 1, ParseErrorKind::InvalidNumber),
+        ] {
+            let mut sink = JsonDigestSink::default();
+            let error = runtime::generated_json::parse_direct(raw, &mut sink).unwrap_err();
+            assert_eq!((error.offset, error.kind), (offset, kind), "{raw}");
+        }
     }
 
     #[test]

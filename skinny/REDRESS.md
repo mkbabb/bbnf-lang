@@ -4343,3 +4343,30 @@ perturbation.
   ../restart/skinny/tranches/sk-v13/research/w9/skv13-W9-same-substrate-union.json
   --skv13-json-direct-reopen-report
   ../restart/skinny/tranches/sk-v13/research/w11.1/skv13-W11.1-json-direct-reopen.json`.
+
+## SK-V13 Wave 11.2 Object-Loop Scalar Direct Dispatch
+
+- Item 142 closes W11.2 under `G-W11.2-JSON-DIRECT-OBJECT-SCALARS` as
+  `REJECTED-MEASURED`. The attempted material differential extended W11.1's
+  dispatch-envelope route from array numeric elements to object scalar values:
+  `parse_object_direct` peeked the current post-colon byte and routed strings,
+  numbers, booleans, and nulls directly to the existing object sink arms,
+  falling back to `parse_object_value_at_direct` for nested containers and
+  invalid values.
+- Correctness checks passed before revert:
+  `cargo test -p bbnf-bench direct_object_scalar_dispatch -- --nocapture`.
+  The rejected behavior patch was saved at
+  `/tmp/skv13-waveW11.2-rejected.patch` and the source patch was reverted
+  before commit.
+- Criterion with `RUSTFLAGS="-C target-cpu=native"` did not admit a primary
+  row. `twitter/direct_to_struct` recorded Track 1 `11842.746` Mbps vs sonic
+  strict `15068.981` Mbps; `github_events/direct_to_struct` recorded Track 1
+  `12536.922` Mbps vs sonic strict `16296.054` Mbps; `update_center/direct_to_struct`
+  recorded Track 1 `8587.486` Mbps vs sonic strict `11243.365` Mbps.
+  `github_events` improved by `+2.4403%` throughput, but the absolute row
+  remained below sonic+1.
+- No `RESULTS.md` or `ROLLING-SOTA-DELTA.md` update was made. The routed
+  remainder is a stronger object-heavy direct material differential: generated
+  per-shape object member handling, sink stack specialization, or another
+  CHALLENGE-accepted route that changes the object-value cost center rather
+  than only removing the scalar wrapper.

@@ -1,14 +1,14 @@
 mod checkasm_common;
 
-use bbnf_simd::prim::byte_class_from_eq_set_64;
 use checkasm_common::{guarded_call, Xorshift64};
 use std::hint::black_box;
 use std::time::Instant;
 use test_fixtures::sha256_hex;
 
 const DELIMS: &[u8] = b"{};";
-const FIXTURE: &[u8] =
-    include_bytes!("../../../../restart/skinny/tranches/sk-v12/research/w1b/css_l4_declaration_values.css");
+const FIXTURE: &[u8] = include_bytes!(
+    "../../../../restart/skinny/tranches/sk-v12/research/w1b/css_l4_declaration_values.css"
+);
 
 #[derive(Clone)]
 struct Case {
@@ -26,18 +26,8 @@ fn find_scalar(bytes: &[u8], mut cursor: usize, end: usize, set: &[u8]) -> usize
     cursor
 }
 
-fn find_candidate(bytes: &[u8], mut cursor: usize, end: usize, set: &[u8]) -> usize {
-    assert!(cursor <= end && end <= bytes.len());
-    assert!(set.len() <= 8);
-    while cursor + 64 <= end {
-        let block: &[u8; 64] = bytes[cursor..cursor + 64].try_into().unwrap();
-        let mask = byte_class_from_eq_set_64(block, set);
-        if mask != 0 {
-            return cursor + mask.trailing_zeros() as usize;
-        }
-        cursor += 64;
-    }
-    find_scalar(bytes, cursor, end, set)
+fn find_candidate(bytes: &[u8], cursor: usize, end: usize, set: &[u8]) -> usize {
+    bbnf_simd::find_ascii_set_member64(bytes, cursor, end, set)
 }
 
 fn cases() -> Vec<Case> {
@@ -145,8 +135,9 @@ fn ascii_set_member_find_microbench_artifact() {
             find_scalar(&case.bytes, case.cursor, case.end, DELIMS)
         );
     }
-    let scalar_ns =
-        time_calls(&cases, rounds, |case| find_scalar(&case.bytes, case.cursor, case.end, DELIMS));
+    let scalar_ns = time_calls(&cases, rounds, |case| {
+        find_scalar(&case.bytes, case.cursor, case.end, DELIMS)
+    });
     let candidate_ns = time_calls(&cases, rounds, |case| {
         find_candidate(&case.bytes, case.cursor, case.end, DELIMS)
     });

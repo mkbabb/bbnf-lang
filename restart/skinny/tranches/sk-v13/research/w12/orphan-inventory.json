@@ -1,0 +1,131 @@
+{
+  "schema_version": "sk-v13-w12-aarch64-orphan-inventory-v1",
+  "wave_id": "SK-V13-W12",
+  "run_id": "sk-v13-w12:css-delimiter-simd-fnv64-27240148e5780a54",
+  "source_commit": "20ff525da+w12-redress",
+  "scope": "skinny/crates/bbnf-simd/src/aarch64",
+  "orphan_count_before": 0,
+  "orphan_count_after": 0,
+  "classification_policy": "A file is an orphan only if it claims production SIMD admission without a same-wave or retained production consumer. Test-only helpers and REDRESS-126 inventory-demoted primitives are not admission orphans.",
+  "entries": [
+    {
+      "path": "crates/bbnf-simd/src/aarch64/bitmap_next_set_bit.rs",
+      "status": "inventory_demoted_with_evidence",
+      "consumer": "primitive-kernel-table checkasm only",
+      "evidence": "REDRESS-126"
+    },
+    {
+      "path": "crates/bbnf-simd/src/aarch64/bitmap_prefix_xor_64.rs",
+      "status": "inventory_demoted_with_evidence",
+      "consumer": "primitive-kernel-table checkasm only",
+      "evidence": "REDRESS-126"
+    },
+    {
+      "path": "crates/bbnf-simd/src/aarch64/bulk_emit_positions_64.rs",
+      "status": "inventory_demoted_with_evidence",
+      "consumer": "primitive-kernel-table checkasm only",
+      "evidence": "REDRESS-126"
+    },
+    {
+      "path": "crates/bbnf-simd/src/aarch64/byte_class_from_eq_set_64.rs",
+      "status": "production_consumed",
+      "consumer": "bbnf_simd::find_ascii_set_member64 -> css_l4_declaration_values::Scanner::scan_block",
+      "evidence": "SK-V13-W12"
+    },
+    {
+      "path": "crates/bbnf-simd/src/aarch64/byte_class_from_table_64.rs",
+      "status": "inventory_demoted_with_evidence",
+      "consumer": "primitive-kernel-table checkasm only",
+      "evidence": "REDRESS-126"
+    },
+    {
+      "path": "crates/bbnf-simd/src/aarch64/byte_context.rs",
+      "status": "test_only_helper",
+      "consumer": "aarch64_primitives test surface",
+      "evidence": "REDRESS-126"
+    },
+    {
+      "path": "crates/bbnf-simd/src/aarch64/cache_hints.rs",
+      "status": "test_only_helper",
+      "consumer": "aarch64_primitives test surface",
+      "evidence": "REDRESS-126"
+    },
+    {
+      "path": "crates/bbnf-simd/src/aarch64/classify_tbl4.rs",
+      "status": "production_consumed",
+      "consumer": "runtime::grammars::json::scan structural classifier",
+      "evidence": "existing production scan route"
+    },
+    {
+      "path": "crates/bbnf-simd/src/aarch64/digit_mac.rs",
+      "status": "inventory_demoted_with_evidence",
+      "consumer": "aarch64_primitives test surface only",
+      "evidence": "REDRESS-126"
+    },
+    {
+      "path": "crates/bbnf-simd/src/aarch64/eob_pad_clamp.rs",
+      "status": "production_consumed",
+      "consumer": "runtime::grammars::json::scan via prim::eob_pad_clamp",
+      "evidence": "xtask primitive-checkasm"
+    },
+    {
+      "path": "crates/bbnf-simd/src/aarch64/match_tiny_plain_string.rs",
+      "status": "inventory_demoted_with_evidence",
+      "consumer": "checkasm parity only; generated JSON uses scalar local scanner",
+      "evidence": "REDRESS-126"
+    },
+    {
+      "path": "crates/bbnf-simd/src/aarch64/mod.rs",
+      "status": "module_index",
+      "consumer": "bbnf-simd public module tree",
+      "evidence": "not a primitive body"
+    },
+    {
+      "path": "crates/bbnf-simd/src/aarch64/movemask.rs",
+      "status": "production_helper",
+      "consumer": "classify_tbl4, string_block, utf8, and tests",
+      "evidence": "existing helper route"
+    },
+    {
+      "path": "crates/bbnf-simd/src/aarch64/quad_load.rs",
+      "status": "test_only_helper",
+      "consumer": "aarch64_primitives test surface",
+      "evidence": "REDRESS-126"
+    },
+    {
+      "path": "crates/bbnf-simd/src/aarch64/string_block.rs",
+      "status": "production_consumed",
+      "consumer": "parse-that-regex JSON string scanner",
+      "evidence": "existing production parser route"
+    },
+    {
+      "path": "crates/bbnf-simd/src/aarch64/unescape_uxxxx.rs",
+      "status": "production_consumed",
+      "consumer": "parse-that-regex unicode escape scanner",
+      "evidence": "existing production parser route"
+    },
+    {
+      "path": "crates/bbnf-simd/src/aarch64/utf8/mod.rs",
+      "status": "module_index",
+      "consumer": "bbnf-simd utf8 module tree",
+      "evidence": "not a primitive body"
+    },
+    {
+      "path": "crates/bbnf-simd/src/aarch64/utf8/validate_block.rs",
+      "status": "production_consumed",
+      "consumer": "parse-that-regex UTF-8 validation route",
+      "evidence": "existing production parser route"
+    }
+  ],
+  "deleted_or_demoted_primitives": [
+    "bitmap_prefix_xor_64",
+    "bitmap_next_set_bit",
+    "bulk_emit_positions_64",
+    "byte_context",
+    "cache_hints",
+    "byte_class_from_table_64",
+    "digit_mac",
+    "match_tiny_plain_string",
+    "quad_load"
+  ]
+}

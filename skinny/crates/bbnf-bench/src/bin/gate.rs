@@ -9,7 +9,7 @@ use bbnf_bench::report::{
     SkV13CssStylesheetSelectorsReport, SkV13CssVendorCustomReport, SkV13CssVisualFunctionsReport,
     SkV13DecisionActiveCostReport, SkV13DecisionCspCascadeReport, SkV13DecisionRegexReport,
     SkV13JsonDirectReopenReport, SkV13PerGrammarPolicyReport, SkV13SameSubstrateUnionReport,
-    SkV8ComparatorEvidence, SkV8Telemetry, TelemetryRow,
+    SkV13SimdAsmProductionReport, SkV8ComparatorEvidence, SkV8Telemetry, TelemetryRow,
 };
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -318,6 +318,25 @@ fn main() -> Result<(), Box<dyn Error>> {
             "{} {} {}",
             report.consumer_gate,
             report.row_move_toward_sota_status,
+            path.display()
+        );
+        drop(report);
+    }
+    if let Some(path) = skv13_simd_asm_production_report_path(&args[1..])? {
+        if !has_explicit_json_check {
+            return Err(format!("{} requires --check-results", path.display()).into());
+        }
+        let text = fs::read_to_string(&path)?;
+        let report = SkV13SimdAsmProductionReport::from_json_str(&text)
+            .and_then(|report| report.validate_gate().map(|_| report))
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        validate_skv13_simd_asm_production_report(&report, &workspace)
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        println!(
+            "{} {} orphan_count_after={} {}",
+            report.consumer_gate,
+            report.row_move_toward_sota_status,
+            report.orphan_count_after,
             path.display()
         );
         drop(report);
@@ -809,6 +828,12 @@ fn skv13_json_direct_reopen_report_path(
     args: &[String],
 ) -> Result<Option<PathBuf>, Box<dyn Error>> {
     companion_report_path(args, "--skv13-json-direct-reopen-report")
+}
+
+fn skv13_simd_asm_production_report_path(
+    args: &[String],
+) -> Result<Option<PathBuf>, Box<dyn Error>> {
+    companion_report_path(args, "--skv13-simd-asm-production-report")
 }
 
 fn companion_report_path(args: &[String], flag: &str) -> Result<Option<PathBuf>, Box<dyn Error>> {
@@ -2157,6 +2182,30 @@ fn validate_skv13_json_direct_reopen_report(
         &format!("{} JSON direct reopen artifact", spec.label),
         &report.measurement_artifact_path,
         &report.measurement_artifact_sha256,
+    )
+}
+
+fn validate_skv13_simd_asm_production_report(
+    report: &SkV13SimdAsmProductionReport,
+    workspace: &Path,
+) -> Result<(), String> {
+    validate_report_artifact_hash(
+        workspace,
+        "W12 SIMD production measurement artifact",
+        &report.measurement_artifact_path,
+        &report.measurement_artifact_sha256,
+    )?;
+    validate_report_artifact_hash(
+        workspace,
+        "W12 SIMD production checkasm artifact",
+        &report.checkasm_artifact_path,
+        &report.checkasm_artifact_sha256,
+    )?;
+    validate_report_artifact_hash(
+        workspace,
+        "W12 SIMD production orphan inventory",
+        &report.orphan_inventory_artifact_path,
+        &report.orphan_inventory_sha256,
     )
 }
 
@@ -4070,6 +4119,8 @@ mod tests {
             "skv13-w8.json".to_string(),
             "--skv13-same-substrate-union-report".to_string(),
             "skv13-w9.json".to_string(),
+            "--skv13-simd-asm-production-report".to_string(),
+            "skv13-w12.json".to_string(),
         ];
         assert_eq!(
             skv13_css_comparator_oracle_report_path(&mixed).unwrap(),
@@ -4118,6 +4169,10 @@ mod tests {
         assert_eq!(
             skv13_same_substrate_union_report_path(&mixed).unwrap(),
             Some(PathBuf::from("skv13-w9.json"))
+        );
+        assert_eq!(
+            skv13_simd_asm_production_report_path(&mixed).unwrap(),
+            Some(PathBuf::from("skv13-w12.json"))
         );
         let mixed = vec![
             "--skv13-json-direct-reopen-report".to_string(),
@@ -4223,6 +4278,21 @@ mod tests {
         assert_eq!(
             skv13_json_direct_reopen_report_path(&args).unwrap(),
             Some(PathBuf::from("skv13-w11-1.json"))
+        );
+        assert!(companion_report_runs_json_check(&args));
+    }
+
+    #[test]
+    fn skv13_simd_asm_production_report_arg_allows_json_check_only() {
+        let args = vec![
+            "--skv13-simd-asm-production-report".to_string(),
+            "skv13-w12.json".to_string(),
+            "--advisory".to_string(),
+            "--check-results".to_string(),
+        ];
+        assert_eq!(
+            skv13_simd_asm_production_report_path(&args).unwrap(),
+            Some(PathBuf::from("skv13-w12.json"))
         );
         assert!(companion_report_runs_json_check(&args));
     }

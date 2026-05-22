@@ -126,6 +126,7 @@ pub const SKV13_DECISION_CSP_CASCADE_REPORT_SCHEMA: &str = "sk-v13-decision-csp-
 pub const SKV13_PER_GRAMMAR_POLICY_REPORT_SCHEMA: &str = "sk-v13-per-grammar-policy-v1";
 pub const SKV13_SAME_SUBSTRATE_UNION_REPORT_SCHEMA: &str = "sk-v13-same-substrate-union-v1";
 pub const SKV13_JSON_DIRECT_REOPEN_REPORT_SCHEMA: &str = "sk-v13-json-direct-reopen-v1";
+pub const SKV13_SIMD_ASM_PRODUCTION_REPORT_SCHEMA: &str = "sk-v13-simd-asm-production-v1";
 pub type NonJsonEvidenceRow = TelemetryRow;
 pub type NonJsonOracleEvidence = SkV8ComparatorEvidence;
 
@@ -452,6 +453,57 @@ pub struct SkV13JsonDirectReopenReport {
     pub affected_row_ids: Vec<String>,
     pub block_id: Option<String>,
     pub prior_redress_citations: Vec<String>,
+    pub material_differential: String,
+    pub redress_entry: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct SkV13SimdAsmProductionReport {
+    pub schema_version: String,
+    pub wave_id: String,
+    pub run_id: String,
+    pub source_commit: String,
+    pub host_triple: String,
+    pub build_flags: String,
+    pub feature_mask: String,
+    pub consumer_gate: String,
+    pub g_omega_status: String,
+    pub route_id: String,
+    pub selected_primitive: String,
+    pub primitive_source_paths: Vec<String>,
+    pub scalar_reference_status: String,
+    pub checkasm_status: String,
+    pub checkasm_command: String,
+    pub checkasm_artifact_path: String,
+    pub checkasm_artifact_sha256: String,
+    pub corpus_parity_status: String,
+    pub consumer_row_id: String,
+    pub consumer_runtime_path: String,
+    pub consumer_bench_path: String,
+    pub same_wave_consumer_class: String,
+    pub production_consumer_status: String,
+    pub track1_mbps_before: f64,
+    pub track1_mbps_after: f64,
+    pub lightningcss_mbps: f64,
+    pub threshold_mbps: f64,
+    pub criterion_delta_pct: f64,
+    pub row_move_toward_sota_status: String,
+    pub measurement_artifact_path: String,
+    pub measurement_artifact_sha256: String,
+    pub orphan_count_before: u32,
+    pub orphan_count_after: u32,
+    pub orphan_inventory_artifact_path: String,
+    pub orphan_inventory_sha256: String,
+    pub deleted_or_demoted_primitives: Vec<String>,
+    pub json_guard_state: String,
+    pub css_guard_state: String,
+    pub lock14_status: String,
+    pub lock14_owner_path_status: String,
+    pub lock14_generic_scan_status: String,
+    pub prior_redress_citations: Vec<String>,
+    pub affected_row_ids: Vec<String>,
+    pub block_id: Option<String>,
     pub material_differential: String,
     pub redress_entry: String,
 }
@@ -1330,6 +1382,174 @@ impl SkV13JsonDirectReopenReport {
                 "{} report missing affected rows, material differential, or REDRESS entry",
                 spec.label
             ));
+        }
+        Ok(())
+    }
+}
+
+impl SkV13SimdAsmProductionReport {
+    pub fn from_json_str(text: &str) -> Result<Self, String> {
+        serde_json::from_str(text)
+            .map_err(|error| format!("invalid SK-V13 SIMD/ASM production report: {error}"))
+    }
+
+    pub fn validate_gate(&self) -> Result<(), String> {
+        if self.schema_version != SKV13_SIMD_ASM_PRODUCTION_REPORT_SCHEMA {
+            return Err(format!(
+                "unsupported SK-V13 SIMD/ASM production schema {}",
+                self.schema_version
+            ));
+        }
+        if self.wave_id != "SK-V13-W12" || !self.run_id.starts_with("sk-v13-w12:") {
+            return Err(format!(
+                "{} run {} cannot claim W12 authority",
+                self.wave_id, self.run_id
+            ));
+        }
+        if self.source_commit.trim().is_empty()
+            || self.host_triple.trim().is_empty()
+            || self.build_flags.trim().is_empty()
+            || self.feature_mask.trim().is_empty()
+        {
+            return Err("W12 report missing source/build provenance".into());
+        }
+        if self.consumer_gate != "G-W12-SIMD-ASM-PRODUCTION" || self.g_omega_status != "user-signed"
+        {
+            return Err("W12 consumer gate or G-Omega status invalid".into());
+        }
+        if self.route_id != "css-delimiter-ascii-set-member64"
+            || self.selected_primitive != "bbnf_simd::find_ascii_set_member64"
+            || !self
+                .primitive_source_paths
+                .iter()
+                .any(|path| path == "crates/bbnf-simd/src/lib.rs")
+            || !self
+                .primitive_source_paths
+                .iter()
+                .any(|path| path == "crates/bbnf-simd/src/aarch64/byte_class_from_eq_set_64.rs")
+        {
+            return Err("W12 primitive route evidence invalid".into());
+        }
+        for (label, actual, expected) in [
+            (
+                "scalar reference",
+                self.scalar_reference_status.as_str(),
+                "pass",
+            ),
+            ("checkasm", self.checkasm_status.as_str(), "pass"),
+            ("corpus parity", self.corpus_parity_status.as_str(), "pass"),
+            (
+                "production consumer",
+                self.production_consumer_status.as_str(),
+                "wired",
+            ),
+            ("Lock 14", self.lock14_status.as_str(), "pass"),
+            (
+                "Lock 14 owner path",
+                self.lock14_owner_path_status.as_str(),
+                "pass",
+            ),
+            (
+                "Lock 14 generic scan",
+                self.lock14_generic_scan_status.as_str(),
+                "pass",
+            ),
+        ] {
+            if actual != expected {
+                return Err(format!("W12 {label} status {actual} != {expected}"));
+            }
+        }
+        if self.checkasm_command.trim().is_empty()
+            || matches!(
+                self.checkasm_command.as_str(),
+                "support_only" | "gate_only" | "telemetry_only" | "future_consumer"
+            )
+            || self.checkasm_artifact_path.trim().is_empty()
+            || !is_hex_sha256(&self.checkasm_artifact_sha256)
+            || self.measurement_artifact_path.trim().is_empty()
+            || !is_hex_sha256(&self.measurement_artifact_sha256)
+            || self.orphan_inventory_artifact_path.trim().is_empty()
+            || !is_hex_sha256(&self.orphan_inventory_sha256)
+        {
+            return Err("W12 artifact path/hash evidence invalid".into());
+        }
+        if self.consumer_row_id != "css_l4/declaration_values/direct_to_struct/main"
+            || !self
+                .consumer_runtime_path
+                .contains("generated_css_l4_declaration_values")
+            || !self.consumer_bench_path.contains("nonjson_css_l4")
+            || self.same_wave_consumer_class != "generated_css_l4_declaration_values_scan_block"
+        {
+            return Err("W12 same-wave production consumer evidence invalid".into());
+        }
+        for (label, status) in [
+            ("JSON guard", self.json_guard_state.as_str()),
+            ("CSS guard", self.css_guard_state.as_str()),
+        ] {
+            if status.trim().is_empty()
+                || matches!(
+                    status,
+                    "support_only" | "gate_only" | "telemetry_only" | "future_consumer"
+                )
+            {
+                return Err(format!("W12 {label} status invalid"));
+            }
+        }
+        for (label, value) in [
+            ("Track 1 before", self.track1_mbps_before),
+            ("Track 1 after", self.track1_mbps_after),
+            ("lightningcss", self.lightningcss_mbps),
+            ("threshold", self.threshold_mbps),
+            ("Criterion delta", self.criterion_delta_pct),
+        ] {
+            if !value.is_finite() {
+                return Err(format!("W12 {label} invalid"));
+            }
+        }
+        if self.track1_mbps_before <= 0.0
+            || self.track1_mbps_after <= 0.0
+            || self.lightningcss_mbps <= 0.0
+            || self.threshold_mbps <= 0.0
+            || (self.threshold_mbps - (self.lightningcss_mbps + 1.0)).abs() > 0.01
+        {
+            return Err("W12 throughput threshold evidence invalid".into());
+        }
+        if self.orphan_count_after != 0 {
+            return Err("W12 leaves aarch64 orphan primitives".into());
+        }
+        if !["88", "89", "90", "122", "126"]
+            .iter()
+            .all(|id| self.prior_redress_citations.iter().any(|entry| entry == id))
+        {
+            return Err("W12 prior REDRESS citations missing".into());
+        }
+        match self.row_move_toward_sota_status.as_str() {
+            "pass" | "admitted" => {
+                if self.track1_mbps_after <= self.track1_mbps_before
+                    || self.track1_mbps_after <= self.threshold_mbps
+                    || self.criterion_delta_pct <= 0.0
+                    || self.block_id.is_some()
+                {
+                    return Err("W12 admitted report requires row movement and no block id".into());
+                }
+            }
+            "measured_architectural_block" => {
+                if self.block_id.as_deref()
+                    != Some("CSS-W12-SIMD-PRODUCTION-CONSUMED-BUT-NO-ROW-MOVEMENT")
+                {
+                    return Err("W12 measured block id missing".into());
+                }
+            }
+            other => return Err(format!("W12 row movement status {other} is rejected")),
+        }
+        if self.affected_row_ids.len() != 1
+            || self.affected_row_ids[0] != "css_l4/declaration_values/direct_to_struct/main"
+            || self.material_differential.trim().is_empty()
+            || self.redress_entry.trim().is_empty()
+        {
+            return Err(
+                "W12 report missing affected row, material differential, or REDRESS entry".into(),
+            );
         }
         Ok(())
     }
@@ -7040,6 +7260,93 @@ mod tests {
         missing_citation
             .prior_redress_citations
             .retain(|entry| entry != "142");
+        assert!(missing_citation.validate_gate().is_err());
+    }
+
+    #[test]
+    fn skv13_simd_asm_production_report_accepts_css_delimiter_admit() {
+        let report = SkV13SimdAsmProductionReport {
+            schema_version: SKV13_SIMD_ASM_PRODUCTION_REPORT_SCHEMA.into(),
+            wave_id: "SK-V13-W12".into(),
+            run_id: "sk-v13-w12:css-delimiter-simd-fnv64-0000000000000000".into(),
+            source_commit: "20ff525da+w12-redress".into(),
+            host_triple: "aarch64-apple-darwin".into(),
+            build_flags: "RUSTFLAGS=-C target-cpu=native".into(),
+            feature_mask: "arch=aarch64;target_cpu=native;simd=neon".into(),
+            consumer_gate: "G-W12-SIMD-ASM-PRODUCTION".into(),
+            g_omega_status: "user-signed".into(),
+            route_id: "css-delimiter-ascii-set-member64".into(),
+            selected_primitive: "bbnf_simd::find_ascii_set_member64".into(),
+            primitive_source_paths: vec![
+                "crates/bbnf-simd/src/lib.rs".into(),
+                "crates/bbnf-simd/src/aarch64/byte_class_from_eq_set_64.rs".into(),
+            ],
+            scalar_reference_status: "pass".into(),
+            checkasm_status: "pass".into(),
+            checkasm_command:
+                "BBNF_SIMD_STRICT=1 RUSTFLAGS=\"-C target-cpu=native\" cargo run -p xtask --release -- primitive-checkasm"
+                    .into(),
+            checkasm_artifact_path:
+                "../restart/skinny/tranches/sk-v13/research/w12/simd-production-facts.json"
+                    .into(),
+            checkasm_artifact_sha256:
+                "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef".into(),
+            corpus_parity_status: "pass".into(),
+            consumer_row_id: "css_l4/declaration_values/direct_to_struct/main".into(),
+            consumer_runtime_path:
+                "runtime::generated_css_l4_declaration_values::generated::Scanner::scan_block"
+                    .into(),
+            consumer_bench_path: "bbnf-bench::nonjson_css_l4".into(),
+            same_wave_consumer_class: "generated_css_l4_declaration_values_scan_block".into(),
+            production_consumer_status: "wired".into(),
+            track1_mbps_before: 434.131,
+            track1_mbps_after: 444.208,
+            lightningcss_mbps: 168.235,
+            threshold_mbps: 169.235,
+            criterion_delta_pct: 109.87,
+            row_move_toward_sota_status: "admitted".into(),
+            measurement_artifact_path:
+                "../restart/skinny/tranches/sk-v13/research/w12/simd-production-facts.json"
+                    .into(),
+            measurement_artifact_sha256:
+                "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+                    .into(),
+            orphan_count_before: 0,
+            orphan_count_after: 0,
+            orphan_inventory_artifact_path:
+                "../restart/skinny/tranches/sk-v13/research/w12/orphan-inventory.json".into(),
+            orphan_inventory_sha256:
+                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".into(),
+            deleted_or_demoted_primitives: Vec::new(),
+            json_guard_state: "maintain".into(),
+            css_guard_state: "strict-equality-pass".into(),
+            lock14_status: "pass".into(),
+            lock14_owner_path_status: "pass".into(),
+            lock14_generic_scan_status: "pass".into(),
+            prior_redress_citations: vec![
+                "88".into(),
+                "89".into(),
+                "90".into(),
+                "122".into(),
+                "126".into(),
+            ],
+            affected_row_ids: vec!["css_l4/declaration_values/direct_to_struct/main".into()],
+            block_id: None,
+            material_differential:
+                "REDRESS 126 demoted primitives without a production CSS delimiter consumer".into(),
+            redress_entry: "REDRESS-144".into(),
+        };
+        assert!(report.validate_gate().is_ok());
+        let mut support_only = report.clone();
+        support_only.production_consumer_status = "future_consumer".into();
+        assert!(support_only.validate_gate().is_err());
+        let mut orphan = report.clone();
+        orphan.orphan_count_after = 1;
+        assert!(orphan.validate_gate().is_err());
+        let mut missing_citation = report;
+        missing_citation
+            .prior_redress_citations
+            .retain(|entry| entry != "126");
         assert!(missing_citation.validate_gate().is_err());
     }
 }

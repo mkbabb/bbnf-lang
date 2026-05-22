@@ -1,0 +1,72 @@
+{
+  "schema_version": "sk-v13-w12-simd-production-facts-v1",
+  "wave_id": "SK-V13-W12",
+  "run_id": "sk-v13-w12:css-delimiter-simd-fnv64-27240148e5780a54",
+  "source_commit": "20ff525da+w12-redress",
+  "host_triple": "aarch64-apple-darwin",
+  "rustc": "rustc 1.96.0-nightly (02c7f9bec 2026-04-10)",
+  "build_flags": "profile=bench;rustflags=-C target-cpu=native;target_cpu=native",
+  "feature_mask": "arch=aarch64;os=macos;simd=neon;target_cpu=native",
+  "primitive": {
+    "route_id": "css-delimiter-ascii-set-member64",
+    "selected_primitive": "bbnf_simd::find_ascii_set_member64",
+    "source_paths": [
+      "crates/bbnf-simd/src/lib.rs",
+      "crates/bbnf-simd/src/aarch64/byte_class_from_eq_set_64.rs",
+      "crates/bbnf-simd/src/scalar/byte_class_from_eq_set_64.rs",
+      "crates/bbnf-simd/tests/checkasm_ascii_set_member_find_64.rs"
+    ],
+    "scalar_reference_status": "pass",
+    "checkasm_status": "pass",
+    "checkasm_command": "BBNF_SIMD_STRICT=1 RUSTFLAGS=\"-C target-cpu=native\" cargo run -p xtask --release -- primitive-checkasm",
+    "caller_checkasm_command": "BBNF_SIMD_STRICT=1 RUSTFLAGS=\"-C target-cpu=native\" cargo test -p bbnf-simd --release --test checkasm_ascii_set_member_find_64 -- --nocapture",
+    "caller_microbench": {
+      "scalar_ns": 17.663406,
+      "candidate_ns": 3.891609,
+      "ratio": 4.538843,
+      "decision": "pass"
+    }
+  },
+  "consumer": {
+    "row_id": "css_l4/declaration_values/direct_to_struct/main",
+    "runtime_path": "runtime::generated_css_l4_declaration_values::generated::Scanner::scan_block",
+    "template_path": "codegen::css_l4_declaration_values_templates::generated::Scanner::scan_block",
+    "bench_path": "bbnf-bench::nonjson_css_l4::track1_generated_css_l4_decl_values",
+    "same_wave_consumer_class": "generated_css_l4_declaration_values_scan_block",
+    "production_consumer_status": "wired"
+  },
+  "measurement": {
+    "criterion_group": "nonjson_css_l4/track1_generated_css_l4_decl_values",
+    "command": "RUSTFLAGS=\"-C target-cpu=native\" cargo bench -p bbnf-bench --bench nonjson_css_l4 -- nonjson_css_l4/track1_generated_css_l4_decl_values",
+    "bytes": 187,
+    "mean_ns": 3365.122638304526,
+    "slope_ns": 3367.7911246639546,
+    "track1_mbps_before": 434.1316520595916,
+    "track1_mbps_after_slope": 444.208,
+    "track1_mbps_after_mean": 444.56,
+    "criterion_time_change_pct": -52.3504220174114,
+    "criterion_throughput_change_pct": 109.87,
+    "lightningcss_mbps": 168.23458062242955,
+    "threshold_mbps": 169.23458062242955,
+    "row_move_toward_sota_status": "admitted"
+  },
+  "strict_equality": {
+    "cssparser_oracle_status": "pass",
+    "lightningcss_status": "pass",
+    "commands": [
+      "RUSTFLAGS=\"-C target-cpu=native\" cargo test -p bbnf-bench lightningcss_sidecar_matches_generated_track1_and_cssparser -- --nocapture",
+      "RUSTFLAGS=\"-C target-cpu=native\" cargo test -p bbnf-bench writes_gate_consumed_css_l4_report -- --nocapture"
+    ]
+  },
+  "guards": {
+    "json_guard_state": "maintain:unchanged-by-css-delimiter-consumer",
+    "css_guard_state": "strict-equality-pass",
+    "lock14_status": "pass",
+    "lock14_owner_path_status": "pass",
+    "lock14_generic_scan_status": "pass"
+  },
+  "history": {
+    "prior_redress_citations": ["88", "89", "90", "122", "126"],
+    "material_differential": "REDRESS 126 demoted the old aarch64 orphan inventory; W12 wires byte_class_from_eq_set_64 through a production CSS delimiter consumer and adds caller checkasm to xtask primitive-checkasm."
+  }
+}

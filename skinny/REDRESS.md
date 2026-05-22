@@ -4414,3 +4414,46 @@ perturbation.
   `RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --check-results
   --advisory --skv13-json-direct-reopen-report
   ../restart/skinny/tranches/sk-v13/research/w11.3/skv13-W11.3-json-direct-reopen.json`.
+
+## SK-V13 Wave 12 SIMD/ASM Production Wiring
+
+- Item 144 closes W12 under `G-W12-SIMD-ASM-PRODUCTION` as `PASS-ADMIT`.
+  The material differential from REDRESS 88/89/90/122/126 is production
+  consumption: REDRESS 126 demoted the aarch64 primitive inventory with
+  evidence but left the `a64_ascii_set_run_skip` split unwired. W12 lands
+  `bbnf_simd::find_ascii_set_member64` as the scalar-reference-backed caller
+  of `byte_class_from_eq_set_64` and consumes it in the generated CSS L4
+  declaration-values `Scanner::scan_block` delimiter search in both runtime
+  and codegen template output.
+- Caller checkasm and primitive checkasm passed. The caller microbench recorded
+  scalar `17.663406` ns, candidate `3.891609` ns, ratio `4.538843`, decision
+  `pass`; `xtask primitive-checkasm` now includes
+  `checkasm_ascii_set_member_find_64`.
+- Production measurement moved the retained CSS row. Criterion for
+  `nonjson_css_l4/track1_generated_css_l4_decl_values` reported slope
+  `3367.7911246639546` ns, Track 1 `444.208` Mbps, versus the retained
+  row's prior Track 1 `434.1316520595916` Mbps and lightningcss threshold
+  `169.23458062242955` Mbps. Criterion reported `+109.87%` throughput against
+  its saved baseline for the production lane, and strict equality versus
+  cssparser and lightningcss remained green.
+- The aarch64 orphan audit classifies every file under
+  `crates/bbnf-simd/src/aarch64`; final `orphan_count_after = 0`. Historical
+  checkasm-only/test-only bodies remain `inventory_demoted_with_evidence`
+  under REDRESS 126 rather than retained production orphans.
+- Gate evidence is consumed by
+  `restart/skinny/tranches/sk-v13/research/w12/skv13-W12-simd-asm-production.json`.
+  Retained artifacts:
+  `restart/skinny/tranches/sk-v13/research/w12/simd-production-facts.json`
+  SHA-256 `6b314ca6bb6e915f66d2e0e8013d08b132717fb6a0c3ad5bddcd1418f69869e2`,
+  and `restart/skinny/tranches/sk-v13/research/w12/orphan-inventory.json`
+  SHA-256 `0189f98d8e832de133bfbfc543028e1c7c198e21fdc8113487cefa91e9b54562`.
+- Verification passed:
+  `BBNF_SIMD_STRICT=1 RUSTFLAGS="-C target-cpu=native" cargo test -p bbnf-simd --release --test checkasm_ascii_set_member_find_64 -- --nocapture`,
+  `BBNF_SIMD_STRICT=1 RUSTFLAGS="-C target-cpu=native" cargo run -p xtask --release -- primitive-checkasm`,
+  `RUSTFLAGS="-C target-cpu=native" cargo test -p bbnf-bench lightningcss_sidecar_matches_generated_track1_and_cssparser -- --nocapture`,
+  `RUSTFLAGS="-C target-cpu=native" cargo test -p bbnf-bench writes_gate_consumed_css_l4_report -- --nocapture`,
+  `RUSTFLAGS="-C target-cpu=native" cargo bench -p bbnf-bench --bench nonjson_css_l4 -- nonjson_css_l4/track1_generated_css_l4_decl_values`,
+  and the W12 companion gate:
+  `RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --check-results
+  --advisory --skv13-simd-asm-production-report
+  ../restart/skinny/tranches/sk-v13/research/w12/skv13-W12-simd-asm-production.json`.

@@ -37,6 +37,11 @@ impl<'i> Scanner<'i> {
     fn scan_block(&mut self, depth: u32, sink: &mut FactSink) -> Result<(), CssFactError> {
         let mut segment_start = self.pos;
         while self.pos < self.bytes.len() {
+            self.pos =
+                bbnf_simd::find_ascii_set_member64(self.bytes, self.pos, self.bytes.len(), b"{};");
+            if self.pos >= self.bytes.len() {
+                break;
+            }
             match self.bytes[self.pos] {
                 b'{' => {
                     self.pos += 1;

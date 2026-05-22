@@ -205,6 +205,26 @@ pub fn escape_mask_64(bs_mask: u64, bs_carry_in: bool) -> (u64, bool) {
     (escape, new_carry)
 }
 
+#[inline]
+pub fn find_ascii_set_member64(bytes: &[u8], mut cursor: usize, end: usize, set: &[u8]) -> usize {
+    assert!(cursor <= end && end <= bytes.len());
+    debug_assert!(set.len() <= 8);
+    while cursor + 64 <= end {
+        let block: &[u8; 64] = bytes[cursor..cursor + 64]
+            .try_into()
+            .expect("slice length is fixed by loop guard");
+        let mask = prim::byte_class_from_eq_set_64(block, set);
+        if mask != 0 {
+            return cursor + mask.trailing_zeros() as usize;
+        }
+        cursor += 64;
+    }
+    while cursor < end && !set.contains(&bytes[cursor]) {
+        cursor += 1;
+    }
+    cursor
+}
+
 #[inline(always)]
 pub fn compact_mask(base: usize, mask: u64, positions: &mut Vec<u32>) {
     if mask == 0 {

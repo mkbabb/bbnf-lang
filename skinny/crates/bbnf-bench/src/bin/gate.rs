@@ -7,7 +7,8 @@ use bbnf_bench::report::{
     SkV12NonJsonReport, SkV13CssAtRulesAndMediaReport, SkV13CssComparatorOracleReport,
     SkV13CssDeclarationValuesExtendedReport, SkV13CssNestedLayoutReport,
     SkV13CssStylesheetSelectorsReport, SkV13CssVendorCustomReport, SkV13CssVisualFunctionsReport,
-    SkV13DecisionRegexReport, SkV8ComparatorEvidence, SkV8Telemetry, TelemetryRow,
+    SkV13DecisionActiveCostReport, SkV13DecisionRegexReport, SkV8ComparatorEvidence, SkV8Telemetry,
+    TelemetryRow,
 };
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -229,6 +230,23 @@ fn main() -> Result<(), Box<dyn Error>> {
             .map_err(|error| format!("{}: {error}", path.display()))?;
         println!(
             "G-W5-DECISION-REGEX {} {}",
+            report.row_move_toward_sota_status,
+            path.display()
+        );
+        drop(report);
+    }
+    if let Some(path) = skv13_decision_active_cost_report_path(&args[1..])? {
+        if !has_explicit_json_check {
+            return Err(format!("{} requires --check-results", path.display()).into());
+        }
+        let text = fs::read_to_string(&path)?;
+        let report = SkV13DecisionActiveCostReport::from_json_str(&text)
+            .and_then(|report| report.validate_gate().map(|_| report))
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        validate_skv13_decision_active_cost_report(&report, &workspace)
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        println!(
+            "G-W6-DECISION-ACTIVE-COST {} {}",
             report.row_move_toward_sota_status,
             path.display()
         );
@@ -689,6 +707,12 @@ fn skv13_decision_regex_report_path(args: &[String]) -> Result<Option<PathBuf>, 
     companion_report_path(args, "--skv13-decision-regex-report")
 }
 
+fn skv13_decision_active_cost_report_path(
+    args: &[String],
+) -> Result<Option<PathBuf>, Box<dyn Error>> {
+    companion_report_path(args, "--skv13-decision-active-cost-report")
+}
+
 fn companion_report_path(args: &[String], flag: &str) -> Result<Option<PathBuf>, Box<dyn Error>> {
     let flag_positions = args
         .iter()
@@ -752,6 +776,7 @@ fn is_companion_report_flag(arg: &str) -> bool {
             | "--skv13-css-vendor-custom-report"
             | "--skv13-css-nested-layout-report"
             | "--skv13-decision-regex-report"
+            | "--skv13-decision-active-cost-report"
     )
 }
 
@@ -1832,6 +1857,33 @@ fn validate_skv13_decision_regex_report(
         return Err(format!(
             "W5 regex fact artifact hash mismatch: report {}, actual {actual}",
             report.regex_fact_sha256
+        ));
+    }
+    Ok(())
+}
+
+fn validate_skv13_decision_active_cost_report(
+    report: &SkV13DecisionActiveCostReport,
+    workspace: &Path,
+) -> Result<(), String> {
+    let regex_path = resolve_workspace_path(workspace, &report.regex_fact_artifact_path);
+    let regex_bytes = fs::read(&regex_path)
+        .map_err(|error| format!("failed to read W5 regex fact artifact: {error}"))?;
+    let regex_actual = sha256_hex(&regex_bytes);
+    if regex_actual != report.regex_fact_sha256 {
+        return Err(format!(
+            "W6 regex fact artifact hash mismatch: report {}, actual {regex_actual}",
+            report.regex_fact_sha256
+        ));
+    }
+    let cost_path = resolve_workspace_path(workspace, &report.cost_facts_artifact_path);
+    let cost_bytes = fs::read(&cost_path)
+        .map_err(|error| format!("failed to read W6 active-cost artifact: {error}"))?;
+    let cost_actual = sha256_hex(&cost_bytes);
+    if cost_actual != report.cost_facts_sha256 {
+        return Err(format!(
+            "W6 active-cost artifact hash mismatch: report {}, actual {cost_actual}",
+            report.cost_facts_sha256
         ));
     }
     Ok(())
@@ -3635,6 +3687,8 @@ mod tests {
             "skv13-css-w10-3.json".to_string(),
             "--skv13-decision-regex-report".to_string(),
             "skv13-w5.json".to_string(),
+            "--skv13-decision-active-cost-report".to_string(),
+            "skv13-w6.json".to_string(),
         ];
         assert_eq!(
             skv13_css_comparator_oracle_report_path(&mixed).unwrap(),
@@ -3668,6 +3722,10 @@ mod tests {
             skv13_decision_regex_report_path(&mixed).unwrap(),
             Some(PathBuf::from("skv13-w5.json"))
         );
+        assert_eq!(
+            skv13_decision_active_cost_report_path(&mixed).unwrap(),
+            Some(PathBuf::from("skv13-w6.json"))
+        );
         let write = vec![
             "--skv13-css-comparator-oracle-report".to_string(),
             "skv13-css-comparator.json".to_string(),
@@ -3687,6 +3745,21 @@ mod tests {
         assert_eq!(
             skv13_decision_regex_report_path(&args).unwrap(),
             Some(PathBuf::from("skv13-w5.json"))
+        );
+        assert!(companion_report_runs_json_check(&args));
+    }
+
+    #[test]
+    fn skv13_decision_active_cost_report_arg_allows_json_check_only() {
+        let args = vec![
+            "--skv13-decision-active-cost-report".to_string(),
+            "skv13-w6.json".to_string(),
+            "--advisory".to_string(),
+            "--check-results".to_string(),
+        ];
+        assert_eq!(
+            skv13_decision_active_cost_report_path(&args).unwrap(),
+            Some(PathBuf::from("skv13-w6.json"))
         );
         assert!(companion_report_runs_json_check(&args));
     }

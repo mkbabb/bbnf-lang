@@ -9,6 +9,7 @@ use ir::{
 use std::collections::{HashMap, HashSet};
 use thiserror::Error;
 
+mod backend_egraph;
 pub mod diagnostics;
 
 #[derive(Debug, Error, PartialEq, Eq)]
@@ -397,7 +398,7 @@ pub mod recognizers {
 
         for rule in &grammar.rules {
             let backend_rule = backend.rules.get(rule.id.0);
-            let (chosen, rationale, priority_fired) = choose_backend_shape(
+            let selection = choose_backend_shape(
                 grammar,
                 rule,
                 backend_rule,
@@ -405,15 +406,17 @@ pub mod recognizers {
                 target,
                 &mut diagnostics,
             );
+            let chosen = selection.shape;
             let rejected = rejected_alternatives(backend_rule, chosen, target);
             let capacity_policy = capacity_policy(backend_rule, chosen);
             let facts = CostFacts {
                 rule_id: rule.id,
                 chosen,
-                rationale,
+                rationale: selection.rationale,
                 rejected,
-                priority_fired,
+                priority_fired: selection.priority_fired,
                 capacity_policy,
+                active_cost: Some(selection.facts),
             };
             if facts.rejected.len() < 4 || !has_measurement_evidence(&facts) {
                 diagnostics.push(diagnostics::PassDiagnostic::cost_facts_missing_evidence(
@@ -451,58 +454,129 @@ pub mod recognizers {
         layout: &LayoutFacts,
         target: TargetFeatures,
         diagnostics: &mut Vec<diagnostics::PassDiagnostic>,
-    ) -> (BackendShape, ShapeRationale, PriorityStep) {
-        match backend_rule {
-            Some(_) if requires_eager_tape(grammar, rule.body, layout) => (
+    ) -> crate::backend_egraph::ActiveSelection {
+        let missing_backend_rule = backend_rule.is_none();
+        if missing_backend_rule {
+            diagnostics.push(diagnostics::PassDiagnostic::backend_shape_inconsistent(
+                rule.id,
+                "grammar rule has no matching backend rule",
+            ));
+        }
+        if let Some(rule_ir) = backend_rule {
+            if admits_collapsed_stage(rule_ir, target) && !target.collapsed_stage_author_declared {
+                diagnostics.push(diagnostics::PassDiagnostic::collapsed_stage_not_viable(
+                    rule.id,
+                    "missing per-grammar collapsed-stage assembly wrapper",
+                ));
+            }
+        }
+
+        let candidates = backend_candidates(grammar, rule, backend_rule, layout, target);
+        crate::backend_egraph::select(rule.id, candidates)
+    }
+
+    fn backend_candidates(
+        grammar: &GrammarIr,
+        rule: &ir::Rule,
+        backend_rule: Option<&BackendRule>,
+        layout: &LayoutFacts,
+        target: TargetFeatures,
+    ) -> Vec<crate::backend_egraph::BackendCandidate> {
+        let eager_forced = backend_rule
+            .map(|_| requires_eager_tape(grammar, rule.body, layout))
+            .unwrap_or(true);
+        let rationale_for_eager = if backend_rule.is_some() {
+            eager_rationale(grammar, rule.body, layout)
+        } else {
+            ShapeRationale::DefaultOffsetTape
+        };
+        let sink_only = backend_rule
+            .map(|rule_ir| admits_sink_only(rule_ir, target))
+            .unwrap_or(false)
+            && !eager_forced;
+        let collapsed_stage = backend_rule
+            .map(|rule_ir| admits_collapsed_stage(rule_ir, target))
+            .unwrap_or(false)
+            && target.collapsed_stage_author_declared
+            && !eager_forced;
+        let event_tape = backend_rule.map(prefers_event_tape).unwrap_or(false) && !eager_forced;
+        let offset_tape = backend_rule.is_some() && !eager_forced;
+
+        let specs = [
+            (
                 BackendShape::EagerTape,
-                eager_rationale(grammar, rule.body, layout),
-                PriorityStep::P1EagerForced,
+                eager_forced,
+                rationale_for_eager,
+                if backend_rule.is_some() {
+                    PriorityStep::P1EagerForced
+                } else {
+                    PriorityStep::P8EagerFallback
+                },
+                if eager_forced { 0 } else { 90 },
             ),
-            Some(rule_ir) if admits_sink_only(rule_ir, target) => (
+            (
                 BackendShape::SinkOnly,
+                sink_only,
                 ShapeRationale::DirectBuildNoConsumer,
                 PriorityStep::P2SinkOnlyConsumer,
+                10,
             ),
-            Some(rule_ir) if admits_collapsed_stage(rule_ir, target) => {
-                if target.collapsed_stage_author_declared {
-                    (
-                        BackendShape::CollapsedStage,
-                        ShapeRationale::CollapsedStageAdmissible,
-                        PriorityStep::P3CollapsedStage,
-                    )
-                } else {
-                    diagnostics.push(diagnostics::PassDiagnostic::collapsed_stage_not_viable(
-                        rule.id,
-                        "missing per-grammar collapsed-stage assembly wrapper",
-                    ));
-                    (
-                        BackendShape::OffsetTape,
-                        ShapeRationale::DefaultOffsetTape,
-                        PriorityStep::P7OffsetTapeDefault,
-                    )
-                }
-            }
-            Some(rule_ir) if prefers_event_tape(rule_ir) => (
+            (
+                BackendShape::CollapsedStage,
+                collapsed_stage,
+                ShapeRationale::CollapsedStageAdmissible,
+                PriorityStep::P3CollapsedStage,
+                20,
+            ),
+            (
                 BackendShape::EventTape,
+                event_tape,
                 ShapeRationale::EventTapeAltDensity,
                 PriorityStep::P4EventTapeAltDensity,
+                30,
             ),
-            Some(_) => (
+            (
                 BackendShape::OffsetTape,
+                offset_tape,
                 ShapeRationale::DefaultOffsetTape,
                 PriorityStep::P7OffsetTapeDefault,
+                40,
             ),
-            None => {
-                diagnostics.push(diagnostics::PassDiagnostic::backend_shape_inconsistent(
-                    rule.id,
-                    "grammar rule has no matching backend rule",
-                ));
-                (
-                    BackendShape::EagerTape,
-                    ShapeRationale::DefaultOffsetTape,
-                    PriorityStep::P8EagerFallback,
-                )
-            }
+        ];
+
+        specs
+            .into_iter()
+            .map(|(shape, ranked, rationale, priority_fired, shape_rank)| {
+                crate::backend_egraph::BackendCandidate {
+                    id: format!(
+                        "rule-{}-shape-{:?}-priority-{:?}",
+                        rule.id.0, shape, priority_fired
+                    ),
+                    shape,
+                    rationale,
+                    priority_fired,
+                    hard_pruned: !ranked,
+                    stale: false,
+                    perf_cost: 0,
+                    capacity_cost: candidate_capacity_cost(backend_rule, shape),
+                    static_size_cost: candidate_static_size_cost(shape),
+                    shape_rank,
+                }
+            })
+            .collect()
+    }
+
+    fn candidate_capacity_cost(backend_rule: Option<&BackendRule>, shape: BackendShape) -> u32 {
+        u32::from(capacity_policy(backend_rule, shape).is_some())
+    }
+
+    fn candidate_static_size_cost(shape: BackendShape) -> u32 {
+        match shape {
+            BackendShape::SinkOnly => 1,
+            BackendShape::OffsetTape => 2,
+            BackendShape::EventTape => 3,
+            BackendShape::CollapsedStage => 4,
+            BackendShape::EagerTape => 5,
         }
     }
 
@@ -1559,6 +1633,36 @@ mod tests {
             recognizers::priority_steps(),
             ir::PriorityStep::ALL.as_slice()
         );
+    }
+
+    #[test]
+    fn active_cost_facts_are_consumed_by_backend_selection() {
+        let grammar = grammar::parse_json_grammar(JSON_GRAMMAR).unwrap();
+        let output = compile(&grammar).unwrap();
+
+        for (rule_id, facts) in &output.layout_facts.cost_facts {
+            let active = facts
+                .active_cost
+                .as_ref()
+                .unwrap_or_else(|| panic!("missing active cost for rule {}", rule_id.0));
+            assert_eq!(active.schema_version, "sk-v13-decision-active-cost-v1");
+            assert_eq!(active.selected_rule_id, *rule_id);
+            assert_eq!(active.selected_shape, facts.chosen);
+            assert_eq!(
+                output.layout_facts.backend_shape.get(rule_id),
+                Some(&active.selected_shape)
+            );
+            assert!(active.candidate_total_count >= active.candidate_ranked_count);
+            assert!(active.candidate_ranked_count > 0);
+            assert!(active.candidate_stale_count * 10 <= active.candidate_ranked_count * 3);
+            assert_eq!(active.selected_cost_freshness, "fresh");
+            assert_eq!(active.egraph_budget_status, "pass");
+            assert_eq!(active.determinism_replay_status, "pass");
+            assert!(active
+                .generated_selection_path
+                .contains("derive_backend_shape"));
+            assert!(active.same_wave_consumer_path.contains("lower_to_rust"));
+        }
     }
 
     #[test]

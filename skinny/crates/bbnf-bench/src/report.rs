@@ -121,6 +121,7 @@ pub const SKV13_CSS_AT_RULES_AND_MEDIA_REPORT_SCHEMA: &str = "sk-v13-css-at-rule
 pub const SKV13_CSS_VENDOR_CUSTOM_REPORT_SCHEMA: &str = "sk-v13-css-vendor-custom-sota-v1";
 pub const SKV13_CSS_NESTED_LAYOUT_REPORT_SCHEMA: &str = "sk-v13-css-nested-layout-sota-v1";
 pub const SKV13_DECISION_REGEX_REPORT_SCHEMA: &str = "sk-v13-decision-regex-v1";
+pub const SKV13_DECISION_ACTIVE_COST_REPORT_SCHEMA: &str = "sk-v13-decision-active-cost-v1";
 pub type NonJsonEvidenceRow = TelemetryRow;
 pub type NonJsonOracleEvidence = SkV8ComparatorEvidence;
 
@@ -178,6 +179,164 @@ pub struct SkV13DecisionRegexReport {
     pub block_id: Option<String>,
     pub material_differential: String,
     pub redress_entry: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct SkV13DecisionActiveCostReport {
+    pub schema_version: String,
+    pub wave_id: String,
+    pub run_id: String,
+    pub source_commit: String,
+    pub host_triple: String,
+    pub build_flags: String,
+    pub feature_mask: String,
+    pub consumer_gate: String,
+    pub g_omega_status: String,
+    pub regex_fact_artifact_path: String,
+    pub regex_fact_sha256: String,
+    pub egraph_language_status: String,
+    pub rewrite_set_id: String,
+    pub egraph_node_count: u32,
+    pub egraph_eclass_count: u32,
+    pub egraph_iteration_count: u32,
+    pub egraph_memory_peak_bytes: u64,
+    pub egraph_budget_status: String,
+    pub cost_function_source: String,
+    pub cost_formula_version: String,
+    pub candidate_total_count: u32,
+    pub candidate_hard_pruned_count: u32,
+    pub candidate_ranked_count: u32,
+    pub candidate_stale_count: u32,
+    pub candidate_cost_stale_rate: f64,
+    pub selected_candidate_id: String,
+    pub selected_rule_id: String,
+    pub selected_shape: String,
+    pub selected_cost_freshness: String,
+    pub capacity_policy_cost_status: String,
+    pub determinism_replay_status: String,
+    pub rewrite_order_replay_count: u32,
+    pub rewrite_order_variance_pct: f64,
+    pub selection_trace_sha256: String,
+    pub cost_facts_artifact_path: String,
+    pub cost_facts_sha256: String,
+    pub generated_selection_path: String,
+    pub same_wave_consumer_path: String,
+    pub same_wave_consumer_class: String,
+    pub row_move_toward_sota_status: String,
+    pub block_id: Option<String>,
+    pub cascade_fallback_status: String,
+    pub abrogate_status: String,
+    pub material_differential: String,
+    pub redress_entry: String,
+    pub csp_solve_ms: String,
+}
+
+impl SkV13DecisionActiveCostReport {
+    pub fn from_json_str(text: &str) -> Result<Self, String> {
+        serde_json::from_str(text)
+            .map_err(|error| format!("invalid SK-V13 decision-active-cost report: {error}"))
+    }
+
+    pub fn validate_gate(&self) -> Result<(), String> {
+        if self.schema_version != SKV13_DECISION_ACTIVE_COST_REPORT_SCHEMA {
+            return Err(format!(
+                "unsupported SK-V13 decision-active-cost schema {}",
+                self.schema_version
+            ));
+        }
+        if self.wave_id != "SK-V13-W6" {
+            return Err(format!("{} cannot claim W6 authority", self.wave_id));
+        }
+        if !self.run_id.starts_with("sk-v13-w6:") {
+            return Err(format!("invalid W6 run id {}", self.run_id));
+        }
+        if self.source_commit.trim().is_empty()
+            || self.host_triple.trim().is_empty()
+            || self.build_flags.trim().is_empty()
+            || self.feature_mask.trim().is_empty()
+        {
+            return Err("W6 report missing source/build provenance".into());
+        }
+        if self.consumer_gate != "G-W6-DECISION-ACTIVE-COST" || self.g_omega_status != "user-signed"
+        {
+            return Err("W6 consumer gate or G-Omega status invalid".into());
+        }
+        if self.regex_fact_artifact_path.trim().is_empty()
+            || self.cost_facts_artifact_path.trim().is_empty()
+            || !is_hex_sha256(&self.regex_fact_sha256)
+            || !is_hex_sha256(&self.cost_facts_sha256)
+            || !is_hex_sha256(&self.selection_trace_sha256)
+        {
+            return Err("W6 artifact path/hash invalid".into());
+        }
+        if self.egraph_language_status != "pass"
+            || self.egraph_budget_status != "pass"
+            || self.egraph_node_count == 0
+            || self.egraph_node_count > 100_000
+            || self.egraph_eclass_count == 0
+            || self.egraph_iteration_count == 0
+            || self.egraph_iteration_count > 100
+            || self.egraph_memory_peak_bytes >= (1u64 << 30)
+        {
+            return Err("W6 egraph bounds invalid".into());
+        }
+        if self.cost_function_source != "passes::backend_egraph::DecisionCostModel"
+            || self.cost_formula_version.trim().is_empty()
+            || self.candidate_total_count == 0
+            || self.candidate_ranked_count == 0
+            || self.candidate_stale_count * 10 > self.candidate_ranked_count * 3
+            || self.candidate_cost_stale_rate > 0.30
+            || self.selected_candidate_id.trim().is_empty()
+            || self.selected_rule_id.trim().is_empty()
+            || self.selected_shape.trim().is_empty()
+            || self.selected_cost_freshness != "fresh"
+        {
+            return Err("W6 active cost evidence invalid".into());
+        }
+        if self.determinism_replay_status != "pass"
+            || self.rewrite_order_replay_count < 2
+            || self.rewrite_order_variance_pct > 10.0
+        {
+            return Err("W6 determinism or rewrite-order evidence invalid".into());
+        }
+        for value in [
+            self.generated_selection_path.as_str(),
+            self.same_wave_consumer_path.as_str(),
+            self.same_wave_consumer_class.as_str(),
+        ] {
+            if value.trim().is_empty()
+                || matches!(
+                    value,
+                    "support_only" | "gate_only" | "telemetry_only" | "future_consumer"
+                )
+            {
+                return Err("W6 generated selection path is paper-close".into());
+            }
+        }
+        if self.same_wave_consumer_class != "gate_json_decision_active_cost_contract"
+            || self.cascade_fallback_status != "fail-closed"
+            || self.abrogate_status != "not-triggered"
+            || self.csp_solve_ms != "n/a:w6-before-csp"
+        {
+            return Err("W6 consumer/cascade/abrogate/CSP status invalid".into());
+        }
+        match self.row_move_toward_sota_status.as_str() {
+            "pass" | "admitted" => {}
+            "measured_architectural_block" => {
+                if self.block_id.as_deref()
+                    != Some("JSON-CSS-W6-EGRAPH-COST-CANDIDATE-NOT-CONSUMED-BY-GENERATED-RUNTIME")
+                {
+                    return Err("W6 measured block id missing".into());
+                }
+            }
+            other => return Err(format!("W6 row movement status {other} is rejected")),
+        }
+        if self.material_differential.trim().is_empty() || self.redress_entry.trim().is_empty() {
+            return Err("W6 report missing material differential or REDRESS entry".into());
+        }
+        Ok(())
+    }
 }
 
 impl SkV13DecisionRegexReport {
@@ -5455,5 +5614,74 @@ mod tests {
         let mut bad = report.clone();
         bad.row_move_toward_sota_status = "support_only".into();
         assert!(bad.validate_gate().is_err());
+    }
+
+    #[test]
+    fn skv13_decision_active_cost_report_accepts_measured_block() {
+        let report = SkV13DecisionActiveCostReport {
+            schema_version: SKV13_DECISION_ACTIVE_COST_REPORT_SCHEMA.into(),
+            wave_id: "SK-V13-W6".into(),
+            run_id: "sk-v13-w6:active-cost-fnv64-0000000000000000".into(),
+            source_commit: "000000000000".into(),
+            host_triple: "aarch64-apple-darwin".into(),
+            build_flags: "RUSTFLAGS=-C target-cpu=native".into(),
+            feature_mask: "arch=aarch64;target_cpu=native".into(),
+            consumer_gate: "G-W6-DECISION-ACTIVE-COST".into(),
+            g_omega_status: "user-signed".into(),
+            regex_fact_artifact_path:
+                "../restart/skinny/tranches/sk-v13/research/w5/regex-facts.json".into(),
+            regex_fact_sha256: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                .into(),
+            egraph_language_status: "pass".into(),
+            rewrite_set_id: "sk-v13-w6-conservative-shape-v1".into(),
+            egraph_node_count: 5,
+            egraph_eclass_count: 1,
+            egraph_iteration_count: 1,
+            egraph_memory_peak_bytes: 1024,
+            egraph_budget_status: "pass".into(),
+            cost_function_source: "passes::backend_egraph::DecisionCostModel".into(),
+            cost_formula_version: "sk-v13-w6-integer-v1".into(),
+            candidate_total_count: 5,
+            candidate_hard_pruned_count: 4,
+            candidate_ranked_count: 1,
+            candidate_stale_count: 0,
+            candidate_cost_stale_rate: 0.0,
+            selected_candidate_id: "rule-0-shape-OffsetTape-priority-P7OffsetTapeDefault".into(),
+            selected_rule_id: "0".into(),
+            selected_shape: "OffsetTape".into(),
+            selected_cost_freshness: "fresh".into(),
+            capacity_policy_cost_status: "pass".into(),
+            determinism_replay_status: "pass".into(),
+            rewrite_order_replay_count: 2,
+            rewrite_order_variance_pct: 0.0,
+            selection_trace_sha256:
+                "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef".into(),
+            cost_facts_artifact_path:
+                "../restart/skinny/tranches/sk-v13/research/w6/active-cost-facts.json".into(),
+            cost_facts_sha256: "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+                .into(),
+            generated_selection_path: "passes::recognizers::derive_backend_shape_with_diagnostics"
+                .into(),
+            same_wave_consumer_path: "codegen::lower::rust::lower_to_rust".into(),
+            same_wave_consumer_class: "gate_json_decision_active_cost_contract".into(),
+            row_move_toward_sota_status: "measured_architectural_block".into(),
+            block_id: Some(
+                "JSON-CSS-W6-EGRAPH-COST-CANDIDATE-NOT-CONSUMED-BY-GENERATED-RUNTIME".into(),
+            ),
+            cascade_fallback_status: "fail-closed".into(),
+            abrogate_status: "not-triggered".into(),
+            material_differential: "REDRESS 87 was passive cost evidence only".into(),
+            redress_entry: "REDRESS-137".into(),
+            csp_solve_ms: "n/a:w6-before-csp".into(),
+        };
+        assert!(report.validate_gate().is_ok());
+        let mut bad = report.clone();
+        bad.row_move_toward_sota_status = "support_only".into();
+        assert!(bad.validate_gate().is_err());
+        let mut stale = report;
+        stale.candidate_ranked_count = 10;
+        stale.candidate_stale_count = 4;
+        stale.candidate_cost_stale_rate = 0.4;
+        assert!(stale.validate_gate().is_err());
     }
 }

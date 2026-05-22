@@ -6,8 +6,8 @@ use thiserror::Error;
 
 pub mod cost;
 pub use cost::{
-    all_backend_shapes, CapacityPolicy, CostFacts, EvidenceSource, Measurement, PriorityStep,
-    RejectedAlternative, RejectionReason, ShapeRationale,
+    all_backend_shapes, ActiveCostFacts, CapacityPolicy, CostFacts, EvidenceSource, Measurement,
+    PriorityStep, RejectedAlternative, RejectionReason, ShapeRationale,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]

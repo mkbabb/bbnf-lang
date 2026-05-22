@@ -1,0 +1,33 @@
+{
+  "schema_version": "sk-v13-w6-active-cost-facts-v1",
+  "wave_id": "SK-V13-W6",
+  "selector": "passes::backend_egraph",
+  "cost_function_source": "passes::backend_egraph::DecisionCostModel",
+  "cost_formula_version": "sk-v13-w6-integer-v1",
+  "source_commit": "535f20066ab4",
+  "host_triple": "aarch64-apple-darwin",
+  "build_flags": "RUSTFLAGS=-C target-cpu=native",
+  "feature_mask": "arch=aarch64;target_cpu=native",
+  "rules_examined": 15,
+  "candidate_total_count": 75,
+  "candidate_hard_pruned_count": 60,
+  "candidate_ranked_count": 15,
+  "candidate_stale_count": 0,
+  "candidate_cost_stale_rate": 0.0,
+  "selected_shapes": {
+    "OffsetTape": 15
+  },
+  "egraph_language_status": "pass",
+  "rewrite_set_id": "sk-v13-w6-conservative-shape-v1",
+  "egraph_node_count": 15,
+  "egraph_eclass_count": 15,
+  "egraph_iteration_count": 15,
+  "egraph_memory_peak_bytes": 3120,
+  "egraph_budget_status": "pass",
+  "determinism_replay_status": "pass",
+  "rewrite_order_replay_count": 2,
+  "rewrite_order_variance_pct": 0.0,
+  "generated_selection_path": "passes::recognizers::derive_backend_shape_with_diagnostics",
+  "same_wave_consumer_path": "codegen::lower::rust::lower_to_rust",
+  "consumer_gap": "CostFacts.chosen reaches lowering, but emitted JSON/CSS runtime paths do not render the extracted candidate into row-moving code in W6."
+}

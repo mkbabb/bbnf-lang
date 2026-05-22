@@ -10,6 +10,8 @@ pub struct CostFacts {
     pub priority_fired: PriorityStep,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub capacity_policy: Option<CapacityPolicy>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub active_cost: Option<ActiveCostFacts>,
 }
 
 impl CostFacts {
@@ -36,11 +38,41 @@ impl CostFacts {
             rejected,
             priority_fired,
             capacity_policy: None,
+            active_cost: None,
         }
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ActiveCostFacts {
+    pub schema_version: String,
+    pub cost_formula_version: String,
+    pub egraph_language_status: String,
+    pub rewrite_set_id: String,
+    pub candidate_total_count: u32,
+    pub candidate_hard_pruned_count: u32,
+    pub candidate_ranked_count: u32,
+    pub candidate_stale_count: u32,
+    pub candidate_cost_stale_rate_bps: u32,
+    pub selected_candidate_id: String,
+    pub selected_shape: BackendShape,
+    pub selected_cost_freshness: String,
+    pub selected_rule_id: RuleId,
+    pub egraph_node_count: u32,
+    pub egraph_eclass_count: u32,
+    pub egraph_iteration_count: u32,
+    pub egraph_memory_peak_bytes: u64,
+    pub egraph_budget_status: String,
+    pub determinism_replay_status: String,
+    pub rewrite_order_replay_count: u32,
+    pub rewrite_order_variance_pct: u32,
+    pub selection_trace_hash: String,
+    pub generated_selection_path: String,
+    pub same_wave_consumer_path: String,
+    pub cascade_fallback_status: String,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ShapeRationale {
     FirstSetDisjoint,
     FirstSetOverlap,
@@ -53,7 +85,7 @@ pub enum ShapeRationale {
     DefaultOffsetTape,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum PriorityStep {
     P1EagerForced,
     P2SinkOnlyConsumer,

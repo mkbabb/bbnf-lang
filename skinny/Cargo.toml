@@ -33,6 +33,7 @@ bbnf-regex = { path = "crates/bbnf-regex" }
 bbnf-simd = { path = "crates/bbnf-simd" }
 bbnf-bench = { path = "crates/bbnf-bench" }
 test-fixtures = { path = "crates/test-fixtures" }
+egraph = { path = "../crates/egraph" }
 
 anyhow = "1"
 blake3 = "1"

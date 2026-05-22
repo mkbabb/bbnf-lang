@@ -392,6 +392,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "csp-solver"
+version = "0.1.0"
+
+[[package]]
 name = "cssparser"
 version = "0.33.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -465,6 +469,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cd1511a7b6a56299bd043a9c167a6d2bfb37bf84a6dfceaba651168adfb43c87"
 dependencies = [
  "dtoa",
+]
+
+[[package]]
+name = "egraph"
+version = "0.1.0"
+dependencies = [
+ "csp-solver",
+ "rustc-hash",
+ "smallvec",
 ]
 
 [[package]]
@@ -888,6 +901,7 @@ name = "passes"
 version = "0.1.0"
 dependencies = [
  "bbnf-regex",
+ "egraph",
  "grammar",
  "ir",
  "thiserror 1.0.69",
@@ -1712,14 +1726,6 @@ version = "0.1.0"
 
 [[patch.unused]]
 name = "bbnf-ser"
-version = "0.1.0"
-
-[[patch.unused]]
-name = "csp-solver"
-version = "0.1.0"
-
-[[patch.unused]]
-name = "egraph"
 version = "0.1.0"
 
 [[patch.unused]]

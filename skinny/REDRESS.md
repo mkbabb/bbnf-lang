@@ -4100,3 +4100,46 @@ perturbation.
   the retained fact artifact is
   `restart/skinny/tranches/sk-v13/research/w5/regex-facts.json` with SHA-256
   `0bbb10d28ec754a432e4ecae96de336fc6f3ea032276e10415e9d486c0c6be49`.
+
+## SK-V13 Wave 6 Decision E-Graph Active Cost
+
+- Item 137 closes W6 under `G-W6-DECISION-ACTIVE-COST` as `PASS-BLOCKED`.
+  W6 imports the local root `egraph` crate into skinny, builds a bounded
+  backend-shape candidate language, and replaces passive backend selection
+  with active e-graph cost extraction at
+  `passes::recognizers::derive_backend_shape_with_diagnostics`.
+- The material differential from REDRESS 87/119/120/136 is that W6 no longer
+  treats CostFacts as a passive ledger and no longer claims regex facts alone
+  can move rows. The selected candidate is written to `CostFacts.chosen`, is
+  consumed by `codegen::lower::rust::lower_to_rust`, and is gate-consumed by
+  `sk-v13-decision-active-cost-v1`.
+- The production row movement remains architecturally blocked in this wave:
+  `JSON-CSS-W6-EGRAPH-COST-CANDIDATE-NOT-CONSUMED-BY-GENERATED-RUNTIME`.
+  The selected candidate reaches lowering, but the emitted JSON/CSS runtime
+  templates still do not render that candidate into row-moving code. W7 owns
+  the CSP/cascade fail-closed step needed to turn the active selector into a
+  generated runtime choice.
+- The W6 gate records 75 candidates across the JSON grammar, 60 hard-pruned
+  candidates, 15 ranked candidates, zero stale candidates, deterministic replay
+  PASS, rewrite-order variance 0%, e-graph memory estimate 3120 bytes, and
+  budget status PASS. The CSS W10 admitted rows and JSON guard table maintain
+  under the advisory gate.
+- Gate evidence is consumed by
+  `restart/skinny/tranches/sk-v13/research/w6/skv13-W6-decision-active-cost.json`;
+  the retained active-cost artifact is
+  `restart/skinny/tranches/sk-v13/research/w6/active-cost-facts.json` with
+  SHA-256
+  `a7de15802b3794d0c1ead6cb7f1971ac4f5c05723bcbf1eb0d89468700a395f1`.
+- Verification passed:
+  `cargo check -p egraph`,
+  `cargo test -p passes active_cost`,
+  `cargo test -p ir cost`,
+  `cargo test -p codegen cost_facts`,
+  `cargo test -p bbnf-bench --lib skv13_decision_active_cost_report`,
+  `cargo test -p bbnf-bench --bin gate skv13_decision_active_cost_report`,
+  `cargo test -p xtask gate_json_passthrough_accepts_skv13_decision_active_cost_report_flag`, and
+  `RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --check-results
+  --advisory --skv13-decision-regex-report
+  ../restart/skinny/tranches/sk-v13/research/w5/skv13-W5-decision-regex.json
+  --skv13-decision-active-cost-report
+  ../restart/skinny/tranches/sk-v13/research/w6/skv13-W6-decision-active-cost.json`.

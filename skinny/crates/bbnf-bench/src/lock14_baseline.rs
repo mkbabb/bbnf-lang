@@ -783,6 +783,21 @@ const SK_V13_W5_OWNER_PATHS: &[&str] = &[
     "crates/passes/src/lib.rs",
 ];
 
+const SK_V13_W6_OWNER_PATHS: &[&str] = &[
+    "crates/ir/src/cost.rs",
+    "crates/ir/src/lib.rs",
+    "crates/passes/Cargo.toml",
+    "crates/passes/src/backend_egraph.rs",
+    "crates/passes/src/lib.rs",
+    "crates/codegen/src/lower/mod.rs",
+    "crates/codegen/src/lower/rust.rs",
+    "crates/bbnf-bench/src/report.rs",
+    "crates/bbnf-bench/src/bin/gate.rs",
+    "crates/bbnf-bench/src/lock14_baseline.rs",
+    "xtask/src/main.rs",
+    "Cargo.toml",
+];
+
 fn current_lock14_owner_paths() -> Vec<&'static str> {
     let mut paths = Vec::with_capacity(
         SK_V12_W1A_OWNER_PATHS.len()
@@ -793,7 +808,8 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
             + SK_V13_W10_1_OWNER_PATHS.len()
             + SK_V13_W10_2_OWNER_PATHS.len()
             + SK_V13_W10_3_OWNER_PATHS.len()
-            + SK_V13_W5_OWNER_PATHS.len(),
+            + SK_V13_W5_OWNER_PATHS.len()
+            + SK_V13_W6_OWNER_PATHS.len(),
     );
     paths.extend_from_slice(SK_V12_W1A_OWNER_PATHS);
     paths.extend_from_slice(SK_V12_W1B1_OWNER_PATHS);
@@ -804,6 +820,7 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
     paths.extend_from_slice(SK_V13_W10_2_OWNER_PATHS);
     paths.extend_from_slice(SK_V13_W10_3_OWNER_PATHS);
     paths.extend_from_slice(SK_V13_W5_OWNER_PATHS);
+    paths.extend_from_slice(SK_V13_W6_OWNER_PATHS);
     paths
 }
 
@@ -976,6 +993,14 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
         let allowed = changed_paths
             .iter()
             .all(|path| is_allowed_path(path, SK_V13_W5_OWNER_PATHS));
+        if allowed {
+            return Ok(());
+        }
+    }
+    if subject.contains("sk-v13-waveW6") || subject.contains("sk-v13-wave6-challenge") {
+        let allowed = changed_paths
+            .iter()
+            .all(|path| is_allowed_path(path, SK_V13_W6_OWNER_PATHS));
         if allowed {
             return Ok(());
         }

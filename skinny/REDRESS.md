@@ -4956,3 +4956,35 @@ perturbation.
   block, with `json/instruments/direct_to_struct/main` and
   `json/update_center/real_typed_struct/main` the closest pinned-margin
   targets.
+
+## SK-V13 Wave 11.4 Direct Cursor Byte-Fetch Reject
+
+- Item 159 closes W11.4 under `G-W11.4-JSON-DIRECT-CURSOR-BYTE` as `REJECT`.
+  The material differential from REDRESS 119/120/143 was generated direct
+  parser byte-fetch specialization: replace the four hot
+  `bytes.get(*cursor).copied()` direct-dispatch fetches with an explicit bounds
+  check followed by `get_unchecked`. The rejected patch is saved at
+  `/tmp/skv13-waveW11.4-rejected.patch` with SHA-256
+  `7ce243dc25e321d8e370670c9939055db5627d962a51d91ce404a55abf550cd7` and has
+  been reverted from source.
+- Native Criterion was refreshed for
+  `json/(instruments|mesh|random|canada|github_events)/(track1_direct_to_struct|track2_direct_to_struct|sonic_rs_direct_to_struct|serde_json_direct_to_struct)`
+  with `RUSTFLAGS="-C target-cpu=native"`. Same-run Track 1 vs sonic strict
+  measured: `instruments` `12025.558` vs `12721.724` Mbps (misses sonic+1 by
+  `697.166`, time delta `+2.249%`), `mesh` `9665.378` vs `9744.222` Mbps
+  (misses by `79.844`, `+2.380%`), `random` `7815.510` vs `8944.573` Mbps
+  (misses by `1130.064`, `+1.697%`), `canada` `10983.047` vs `12201.442`
+  Mbps (misses by `1219.395`, `-1.101%`), and `github_events` `12474.864` vs
+  `16161.279` Mbps (misses by `3687.414`, `+0.148%`).
+- Verification passed:
+  `cargo test -p bbnf-bench direct_struct::tests -- --nocapture`,
+  `cargo test -p bbnf-bench direct_contract -- --nocapture`, and
+  `cargo test -p runtime json -- --nocapture`. `cargo test -p codegen json
+  -- --nocapture` failed outside the W11.4 owner slice in
+  `tests::json_config_policy_fields_are_consumed` because the test searches
+  for the exact `config::STRING_NEEDS_DECODE` spelling while current generated
+  code consumes the policy through `config::needs_decode_flags()` and
+  `config::string_needs_decode`.
+- W11.4 updates no `RESULTS.md` or rolling-delta row. The next JSON wave must
+  use a materially different implementation route; the direct byte-fetch
+  envelope is not the missing instruments/direct SOTA gap.

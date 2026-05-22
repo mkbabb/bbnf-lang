@@ -1,0 +1,61 @@
+{
+  "schema_version": "sk-v13-w14.2-json-parse-only-facts-v1",
+  "wave_id": "SK-V13-W14.2",
+  "row_id": "json/citm_catalog/parse_only/main",
+  "corpus": "citm_catalog",
+  "input_bytes": 1727204,
+  "criterion_group": "json_citm_catalog",
+  "measurement_command": "RUSTFLAGS=\"-C target-cpu=native\" cargo bench -p bbnf-bench --bench json_parity -- 'json/citm_catalog/(track1_generated|track2_handcoded|sonic_rs_anchor|serde_json)'",
+  "strict_equality": {
+    "status": "pass",
+    "source": "bbnf-bench/benches/json_parity.rs preflight assert_parity(input) before Criterion group registration",
+    "output_plane": "DOM",
+    "track2_independence": "independent"
+  },
+  "lanes": {
+    "track1_generated": {
+      "mean_ns": 457586.7168781384,
+      "lower_ns": 456624.64167001174,
+      "upper_ns": 458538.4824105326,
+      "mbps": 30196.750671151636,
+      "lower_mbps": 30134.0727769692,
+      "upper_mbps": 30260.3730483419,
+      "samples": 100,
+      "artifact": "target/criterion/json_citm_catalog/track1_generated/new/estimates.json"
+    },
+    "track2_handcoded": {
+      "mean_ns": 670817.4506891523,
+      "lower_ns": 669871.9918271819,
+      "upper_ns": 671797.3305692484,
+      "mbps": 20598.19998094072,
+      "lower_mbps": 20568.15556008776,
+      "upper_mbps": 20627.272327523682,
+      "samples": 100,
+      "artifact": "target/criterion/json_citm_catalog/track2_handcoded/new/estimates.json"
+    },
+    "sonic_rs_anchor": {
+      "mean_ns": 540444.4425825141,
+      "lower_ns": 540140.9048818556,
+      "upper_ns": 540753.0647092402,
+      "mbps": 25567.164561767786,
+      "lower_mbps": 25552.57270234735,
+      "upper_mbps": 25581.532291138577,
+      "samples": 100,
+      "artifact": "target/criterion/json_citm_catalog/sonic_rs_anchor/new/estimates.json"
+    },
+    "serde_json": {
+      "mean_ns": 1816252.5516162438,
+      "lower_ns": 1814376.2016483678,
+      "upper_ns": 1818780.1472780171,
+      "mbps": 7607.77017915487,
+      "lower_mbps": 7597.197506625219,
+      "upper_mbps": 7615.637808436105,
+      "samples": 100,
+      "artifact": "target/criterion/json_citm_catalog/serde_json/new/estimates.json"
+    }
+  },
+  "threshold_mbps": 25568.164561767786,
+  "track1_margin_mbps": 4628.58610938385,
+  "track1_lower_margin_mbps": 4565.9082152014125,
+  "decision": "pass"
+}

@@ -922,7 +922,7 @@ const SK_V13_W13_4_OWNER_PATHS: &[&str] = &[
     "xtask/src/main.rs",
 ];
 
-const SK_V13_W14_1_OWNER_PATHS: &[&str] = &[
+const SK_V13_W14_OWNER_PATHS: &[&str] = &[
     "crates/bbnf-bench/src/report.rs",
     "crates/bbnf-bench/src/bin/gate.rs",
     "crates/bbnf-bench/src/lock14_baseline.rs",
@@ -951,7 +951,7 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
             + SK_V13_W13_2_OWNER_PATHS.len()
             + SK_V13_W13_3_OWNER_PATHS.len()
             + SK_V13_W13_4_OWNER_PATHS.len()
-            + SK_V13_W14_1_OWNER_PATHS.len(),
+            + SK_V13_W14_OWNER_PATHS.len(),
     );
     paths.extend_from_slice(SK_V12_W1A_OWNER_PATHS);
     paths.extend_from_slice(SK_V12_W1B1_OWNER_PATHS);
@@ -973,7 +973,7 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
     paths.extend_from_slice(SK_V13_W13_2_OWNER_PATHS);
     paths.extend_from_slice(SK_V13_W13_3_OWNER_PATHS);
     paths.extend_from_slice(SK_V13_W13_4_OWNER_PATHS);
-    paths.extend_from_slice(SK_V13_W14_1_OWNER_PATHS);
+    paths.extend_from_slice(SK_V13_W14_OWNER_PATHS);
     paths
 }
 
@@ -1238,10 +1238,10 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
             return Ok(());
         }
     }
-    if subject.contains("sk-v13-waveW14.1") || subject.contains("sk-v13-wave14.1-challenge") {
+    if subject.contains("sk-v13-waveW14.") || subject.contains("sk-v13-wave14.") {
         let allowed = changed_paths
             .iter()
-            .all(|path| is_allowed_path(path, SK_V13_W14_1_OWNER_PATHS));
+            .all(|path| is_allowed_path(path, SK_V13_W14_OWNER_PATHS));
         if allowed {
             return Ok(());
         }
@@ -1942,8 +1942,8 @@ mod tests {
     }
 
     #[test]
-    fn admits_sk_v13_w14_1_parent_diff_under_w14_1_scope() {
-        let changed = SK_V13_W14_1_OWNER_PATHS
+    fn admits_sk_v13_w14_parent_diff_under_w14_scope() {
+        let changed = SK_V13_W14_OWNER_PATHS
             .iter()
             .map(|path| (*path).to_string())
             .collect::<Vec<_>>();
@@ -1952,11 +1952,16 @@ mod tests {
             "feat(sk-v13-waveW14.1): admit numbers parse-only surface"
         )
         .is_ok());
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v13-waveW14.2): admit CITM catalog parse-only surface"
+        )
+        .is_ok());
         let mut outside = changed;
         outside.push("crates/runtime/src/grammars/json/generated.rs".into());
         assert!(validate_authorized_parent_diff(
             &outside,
-            "feat(sk-v13-waveW14.1): admit numbers parse-only surface"
+            "feat(sk-v13-waveW14.2): admit CITM catalog parse-only surface"
         )
         .is_err());
     }

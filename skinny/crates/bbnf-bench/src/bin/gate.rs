@@ -3,14 +3,15 @@ use bbnf_bench::lock14_baseline;
 use bbnf_bench::materialization::track_stats;
 use bbnf_bench::metadata::{current_peak_rss_bytes, RowMetadata, TrackTag};
 use bbnf_bench::report::{
-    sk_v8_open_baseline, ComparatorSet, NonJsonEvidenceReport, Report, SkV12CssL4SotaReport,
-    SkV12NonJsonReport, SkV13CssAtRulesAndMediaReport, SkV13CssComparatorOracleReport,
-    SkV13CssDeclarationValuesExtendedReport, SkV13CssNestedLayoutReport,
-    SkV13CssStylesheetSelectorsReport, SkV13CssVendorCustomReport, SkV13CssVisualFunctionsReport,
-    SkV13DecisionActiveCostReport, SkV13DecisionCspCascadeReport, SkV13DecisionRegexReport,
-    SkV13JsonDirectReopenReport, SkV13JsonParseOnlyReport, SkV13PerGrammarPolicyReport,
-    SkV13SameSubstrateUnionReport, SkV13SimdAsmProductionReport, SkV13TypedProductReport,
-    SkV8ComparatorEvidence, SkV8Telemetry, TelemetryRow,
+    json_parse_only_admission_spec_for_corpus, json_parse_only_admission_spec_for_report,
+    sk_v8_open_baseline, ComparatorSet, JsonParseOnlyAdmissionSpec, NonJsonEvidenceReport, Report,
+    SkV12CssL4SotaReport, SkV12NonJsonReport, SkV13CssAtRulesAndMediaReport,
+    SkV13CssComparatorOracleReport, SkV13CssDeclarationValuesExtendedReport,
+    SkV13CssNestedLayoutReport, SkV13CssStylesheetSelectorsReport, SkV13CssVendorCustomReport,
+    SkV13CssVisualFunctionsReport, SkV13DecisionActiveCostReport, SkV13DecisionCspCascadeReport,
+    SkV13DecisionRegexReport, SkV13JsonDirectReopenReport, SkV13JsonParseOnlyReport,
+    SkV13PerGrammarPolicyReport, SkV13SameSubstrateUnionReport, SkV13SimdAsmProductionReport,
+    SkV13TypedProductReport, SkV8ComparatorEvidence, SkV8Telemetry, TelemetryRow,
 };
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -471,14 +472,14 @@ fn main() -> Result<(), Box<dyn Error>> {
             fastest_competitor_peak_rss,
             bbnf_peak_rss,
         });
-        let w14_1_numbers_parse_added = w14_1_numbers_parse_only_passes(
+        let json_parse_only_admission = json_parse_only_admission_passes(
             &fixture.name,
             fixture.bytes.len() as u64,
             estimates.track1,
             estimates.track2,
             estimates.sonic,
         );
-        let outcome = if w14_1_numbers_parse_added {
+        let outcome = if json_parse_only_admission.is_some() {
             Outcome::ABeatAndParity
         } else {
             w0_parse_non_admission(classified_outcome)
@@ -526,8 +527,8 @@ fn main() -> Result<(), Box<dyn Error>> {
             parse_hot_leaf,
         )
         .with_sk_v8(parse_telemetry);
-        if w14_1_numbers_parse_added {
-            mark_w14_1_numbers_parse_only_admission(&mut parse_row);
+        if let Some(spec) = json_parse_only_admission {
+            mark_json_parse_only_admission(&mut parse_row, spec);
         }
         report.rows.push(parse_row);
         let direct_comparators = direct_comparators(fixture.bytes.len() as u64, &estimates);
@@ -2454,17 +2455,12 @@ struct JsonParseOnlyCriterionSpec {
 fn skv13_json_parse_only_criterion_spec(
     report: &SkV13JsonParseOnlyReport,
 ) -> Result<JsonParseOnlyCriterionSpec, String> {
-    match (report.wave_id.as_str(), report.corpus.as_str()) {
-        ("SK-V13-W14.1", "numbers") => Ok(JsonParseOnlyCriterionSpec {
-            label: "W14.1",
-            criterion_group: "json_numbers",
-            bytes: 150_124,
-        }),
-        _ => Err(format!(
-            "{} {} has no JSON parse-only Criterion mapping",
-            report.wave_id, report.corpus
-        )),
-    }
+    let spec = json_parse_only_admission_spec_for_report(report)?;
+    Ok(JsonParseOnlyCriterionSpec {
+        label: spec.label,
+        criterion_group: spec.criterion_group,
+        bytes: spec.bytes,
+    })
 }
 
 fn validate_skv13_simd_asm_production_report(
@@ -2574,16 +2570,19 @@ fn w0_parse_non_admission(outcome: Outcome) -> Outcome {
     }
 }
 
-fn w14_1_numbers_parse_only_passes(
+fn json_parse_only_admission_passes(
     corpus: &str,
     bytes: u64,
     track1_ns: Option<f64>,
     track2_ns: Option<f64>,
     sonic_ns: Option<f64>,
-) -> bool {
-    corpus == "numbers"
-        && bytes == 150_124
-        && w13_typed_strict_sonic_plus_one_passes(bytes, track1_ns, track2_ns, sonic_ns)
+) -> Option<&'static JsonParseOnlyAdmissionSpec> {
+    let spec = json_parse_only_admission_spec_for_corpus(corpus, bytes)?;
+    if w13_typed_strict_sonic_plus_one_passes(bytes, track1_ns, track2_ns, sonic_ns) {
+        Some(spec)
+    } else {
+        None
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -3448,7 +3447,7 @@ fn mark_w13_numbers_typed_admission(row: &mut TelemetryRow) {
     row.sk_v8.sk_v9_open_delta = "typed-row-added".to_string();
 }
 
-fn mark_w14_1_numbers_parse_only_admission(row: &mut TelemetryRow) {
+fn mark_json_parse_only_admission(row: &mut TelemetryRow, spec: &JsonParseOnlyAdmissionSpec) {
     row.strictness = "strict".to_string();
     row.parse_utf8 = "measured-row".to_string();
     row.output_plane = "DOM".to_string();
@@ -3456,15 +3455,17 @@ fn mark_w14_1_numbers_parse_only_admission(row: &mut TelemetryRow) {
         "generated Track 1 DOM parse contract vs independent hand Track 2/oracle; UTF-8 measured in row"
             .to_string();
     row.signal = format!(
-        "PASS W14.1 numbers parse-only admission; Track 1 {}, Track 2 oracle {}, sonic {} Mbps",
+        "PASS {} {} parse-only admission; Track 1 {}, Track 2 oracle {}, sonic {} Mbps",
+        spec.label,
+        spec.corpus,
         format_mbps(row.track1_mbps),
         format_mbps(row.track2_mbps),
         format_mbps(row.competitors.sonic_strict_mbps)
     );
     row.sk_v8.measured_validation_path = "measured-row".to_string();
     row.sk_v8.same_wave_consumer_class = "generated_json_parse_only_contract".to_string();
-    row.sk_v8.redress_entry = "REDRESS-154".to_string();
-    row.sk_v8.wave_id = "SK-V13-W14.1".to_string();
+    row.sk_v8.redress_entry = spec.redress_entry.to_string();
+    row.sk_v8.wave_id = spec.wave_id.to_string();
     row.sk_v8.sk_v9_open_delta = "parse-row-added".to_string();
 }
 
@@ -4888,28 +4889,45 @@ mod tests {
     }
 
     #[test]
-    fn w14_1_numbers_parse_only_reopens_only_sonic_plus_one_numbers() {
-        assert!(w14_1_numbers_parse_only_passes(
-            "numbers",
-            150_124,
-            Some(62_870.0),
-            Some(62_800.0),
-            Some(87_880.0),
-        ));
-        assert!(!w14_1_numbers_parse_only_passes(
+    fn json_parse_only_admission_passes_configured_corpora_only() {
+        assert_eq!(
+            json_parse_only_admission_passes(
+                "numbers",
+                150_124,
+                Some(62_870.0),
+                Some(62_800.0),
+                Some(87_880.0),
+            )
+            .map(|spec| spec.label),
+            Some("W14.1")
+        );
+        assert_eq!(
+            json_parse_only_admission_passes(
+                "citm_catalog",
+                1_727_204,
+                Some(466_600.0),
+                Some(662_654.0),
+                Some(540_294.0),
+            )
+            .map(|spec| spec.label),
+            Some("W14.2")
+        );
+        assert!(json_parse_only_admission_passes(
             "canada",
-            150_124,
-            Some(62_870.0),
-            Some(62_800.0),
-            Some(87_880.0),
-        ));
-        assert!(!w14_1_numbers_parse_only_passes(
+            2_251_051,
+            Some(1_063_228.0),
+            Some(1_104_942.0),
+            Some(1_293_055.0),
+        )
+        .is_none());
+        assert!(json_parse_only_admission_passes(
             "numbers",
             150_124,
             Some(87_880.0),
             Some(62_800.0),
             Some(62_870.0),
-        ));
+        )
+        .is_none());
     }
 
     #[test]

@@ -4728,3 +4728,36 @@ perturbation.
   material differential, such as SIMD unicode escape decode consumption,
   row-specific escape-allocation deletion, or a typed product shape that avoids
   per-string decode overhead without weakening strict equality.
+
+## SK-V13 Wave 13.9 Typed Product Canada Surface
+
+- Item 153 closes W13.9 under `G-W13.9-TYPED-CANADA` as
+  `CORRECTNESS-REJECT`. The material differential from REDRESS 80 and
+  REDRESS 119/120 was real: the rejected patch added a generated Canada
+  GeoJSON typed product root covering top-level type, feature type,
+  `properties.name`, geometry type, and all 111,126 coordinate numbers in
+  source order. It was not a direct digest, count-only coordinate checksum,
+  parse-only row, or f64 mantissa replay.
+- Schema and local gate checks passed before full-corpus parity:
+  `cargo xtask regen-real-typed`, `cargo xtask check-real-typed`,
+  `cargo test -p bbnf-bench --bin gate w13_canada -- --nocapture`, and
+  `cargo test -p bbnf-bench lock14_baseline::tests::admits_sk_v13_w13_9_parent_diff_under_w13_9_scope -- --nocapture`.
+  The full Canada typed fixture failed strict equality under
+  `cargo test -p bbnf-bench canada_typed -- --nocapture`: Track 1 checksum
+  `7760849640330549600` differed from Track 2 checksum
+  `17574774450138172291`.
+- The first isolated mismatch was a one-ULP f64 rounding difference in ring
+  `0`, point `4`, coordinate `1`: Track 1 materialized
+  `43.47470900000013` (`0x4045bcc343b70f08`), while serde/sonic materialized
+  `43.474709000000125` (`0x4045bcc343b70f07`). Native Criterion was not run
+  because the parity precondition failed.
+- The rejected implementation patch is saved at
+  `/tmp/skv13-waveW13.9-rejected.patch`. The retained correctness facts are
+  `restart/skinny/tranches/sk-v13/research/w13.9/canada-typed-facts.json`;
+  the retained redress note is
+  `restart/skinny/tranches/sk-v13/research/w13.9/redress.md`.
+- `json/canada/real_typed_struct/main` remains `MISSING`. A second in-tranche
+  reopen triggers the round-trip rule unless it names a fresh material
+  differential, such as exact f64 materialization for generated typed products
+  or a coordinate-specific product shape that preserves serde/sonic f64 bits
+  without weakening strict equality.

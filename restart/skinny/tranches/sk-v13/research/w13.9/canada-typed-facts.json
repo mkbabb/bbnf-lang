@@ -1,0 +1,32 @@
+{
+  "schema_version": "sk-v13-typed-product-reject-facts-v1",
+  "wave_id": "SK-V13-W13.9",
+  "row_id": "json/canada/real_typed_struct/main",
+  "corpus": "canada",
+  "bytes": 2251051,
+  "fixture_sha256": "f83b3b354030d5dd58740c68ac4fecef64cb730a0d12a90362a7f23077f50d78",
+  "strict_equality_status": "fail",
+  "disposition": "CORRECTNESS-REJECT",
+  "rejected_patch": "/tmp/skv13-waveW13.9-rejected.patch",
+  "passing_commands": [
+    "cargo xtask regen-real-typed",
+    "cargo xtask check-real-typed",
+    "cargo test -p bbnf-bench --bin gate w13_canada -- --nocapture",
+    "cargo test -p bbnf-bench lock14_baseline::tests::admits_sk_v13_w13_9_parent_diff_under_w13_9_scope -- --nocapture"
+  ],
+  "failing_command": "cargo test -p bbnf-bench canada_typed -- --nocapture",
+  "track1_checksum": 7760849640330549600,
+  "track2_checksum": 17574774450138172291,
+  "first_observed_coordinate_mismatch": {
+    "ring": 0,
+    "point": 4,
+    "coordinate_index": 1,
+    "track1_value": "43.47470900000013",
+    "track1_bits": "4045bcc343b70f08",
+    "track2_value": "43.474709000000125",
+    "track2_bits": "4045bcc343b70f07"
+  },
+  "criterion_status": "not-run-after-parity-failure",
+  "threshold_mbps": null,
+  "track1_margin_mbps": null
+}

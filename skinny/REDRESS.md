@@ -4370,3 +4370,47 @@ perturbation.
   per-shape object member handling, sink stack specialization, or another
   CHALLENGE-accepted route that changes the object-value cost center rather
   than only removing the scalar wrapper.
+
+## SK-V13 Wave 11.3 Direct Sink Stack Specialization
+
+- Item 143 closes W11.3 under `G-W11.3-JSON-DIRECT-SINK-STACK` as
+  `PASS-ADMIT`. W11.3 reopens `json/mesh/direct_to_struct/main` from the
+  REDRESS 119/120 N-direct fixpoint and the REDRESS 142 object-loop rejection.
+  The landed material differential removes closure-mediated parent callbacks
+  inside the sink-only Track 1 digest stack: scalar object folds now borrow the
+  object parent directly, and scalar array folds borrow the array parent
+  directly before incrementing the element counter. Runtime parsing, JSON
+  codegen, SIMD primitives, generic-crate behavior, and the independent Track 2
+  oracle are unchanged.
+- The measured row admits over same-run sonic strict. The retained W11.3
+  Criterion artifact records `mesh/direct_to_struct` Track 1 `9657.892` Mbps,
+  Track 2 `6959.985` Mbps, sonic strict `9569.599` Mbps, serde `7011.870`
+  Mbps, threshold `9570.599` Mbps, and lower-confidence Track 1 `9623.984`
+  Mbps. The refreshed campaign table records the admitted row as Track 1
+  `9631`, Track 2 `7828`, sonic strict `9581`, serde `7033` Mbps in
+  `RESULTS.md`, with `ROLLING-SOTA-DELTA.md` updated to mark the row admitted.
+- The same Criterion run did not admit the other W11.3 primary probes:
+  `canada/direct_to_struct` Track 1 `10602.676` Mbps vs sonic strict
+  `12155.126` Mbps; `random/direct_to_struct` Track 1 `7891.740` Mbps vs
+  sonic strict `8802.458` Mbps; `instruments/direct_to_struct` Track 1
+  `12179.139` Mbps vs sonic strict `12787.011` Mbps. Those rows remain routed
+  to later JSON direct reopen waves.
+- Gate evidence is consumed by
+  `restart/skinny/tranches/sk-v13/research/w11.3/skv13-W11.3-json-direct-reopen.json`.
+  The retained measurement artifact is
+  `restart/skinny/tranches/sk-v13/research/w11.3/direct-sink-stack-facts.json`
+  with SHA-256
+  `5ed0b8d300b212c5c385e78a2dd177b0a71d958a74a883fa46f559eec41e94fa`.
+- Verification passed:
+  `cargo test -p bbnf-bench direct_struct::tests -- --nocapture`,
+  `cargo test -p bbnf-bench w11 -- --nocapture`,
+  `cargo test -p bbnf-bench skv13_json_direct_reopen_report -- --nocapture`,
+  `cargo test -p bbnf-bench direct_contract -- --nocapture`,
+  `RUSTFLAGS="-C target-cpu=native" cargo bench -p bbnf-bench --bench json_parity -- 'json/(mesh|instruments|random|canada)/(track1_direct_to_struct|track2_direct_to_struct|sonic_rs_direct_to_struct|serde_json_direct_to_struct)'`,
+  `RUSTFLAGS="-C target-cpu=native" cargo bench -p bbnf-bench --bench simd_scan`,
+  `RUSTFLAGS="-C target-cpu=native" cargo bench -p bbnf-bench --bench json_parity -- 'json/twitter/track1_generated'`,
+  `RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --update-results --advisory`,
+  and the W11.3 companion gate:
+  `RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --check-results
+  --advisory --skv13-json-direct-reopen-report
+  ../restart/skinny/tranches/sk-v13/research/w11.3/skv13-W11.3-json-direct-reopen.json`.

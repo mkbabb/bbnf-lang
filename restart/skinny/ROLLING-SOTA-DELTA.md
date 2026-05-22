@@ -11,29 +11,29 @@ source_commit: 01c335ac9
 
 | row | plane | T1_current | T1_sota | margin | tranche_admitted |
 |---|---|---:|---:|---:|---|
-| json/twitter/parse_only/main | parse_only | 15589.00 | 21018.00 | -5429.00 | OPEN |
-| json/twitter/direct_to_struct/main | direct_to_struct | 11838.00 | 15231.00 | -3393.00 | OPEN |
+| json/twitter/parse_only/main | parse_only | 16412.00 | 21018.00 | -4606.00 | OPEN |
+| json/twitter/direct_to_struct/main | direct_to_struct | 11835.00 | 15071.00 | -3236.00 | OPEN |
 | json/twitter/real_typed_struct/main | real_typed_struct | 18418.00 | 15608.00 | 2810.00 | ADMITTED |
 | json/citm_catalog/parse_only/main | parse_only | 30893.00 | 25668.00 | 5225.00 | OPEN |
 | json/citm_catalog/direct_to_struct/main | direct_to_struct | 21643.00 | 19693.00 | 1950.00 | ADMITTED |
 | json/citm_catalog/real_typed_struct/main | real_typed_struct | 35263.00 | 21883.00 | 13380.00 | ADMITTED |
 | json/canada/parse_only/main | parse_only | 17357.00 | 13973.00 | 3384.00 | OPEN |
-| json/canada/direct_to_struct/main | direct_to_struct | 10456.00 | 12097.00 | -1641.00 | OPEN |
+| json/canada/direct_to_struct/main | direct_to_struct | 10607.00 | 12189.00 | -1582.00 | OPEN |
 | json/canada/real_typed_struct/main | real_typed_struct | absent:product-surface-not-generated | absent:product-surface-not-generated | absent:product-surface-not-generated | MISSING |
 | json/apache_builds/parse_only/main | parse_only | 12919.00 | 17575.00 | -4656.00 | OPEN |
 | json/apache_builds/direct_to_struct/main | direct_to_struct | 11400.00 | 11171.00 | 229.00 | ADMITTED |
 | json/apache_builds/real_typed_struct/main | real_typed_struct | 8744.00 | 8309.00 | 435.00 | ADMITTED |
 | json/github_events/parse_only/main | parse_only | 15585.00 | 21959.00 | -6374.00 | OPEN |
-| json/github_events/direct_to_struct/main | direct_to_struct | 12277.00 | 14836.00 | -2559.00 | OPEN |
+| json/github_events/direct_to_struct/main | direct_to_struct | 12546.00 | 16293.00 | -3747.00 | OPEN |
 | json/github_events/real_typed_struct/main | real_typed_struct | 12980.00 | 12722.00 | 258.00 | ADMITTED |
 | json/update_center/parse_only/main | parse_only | 11810.00 | 19850.00 | -8040.00 | OPEN |
-| json/update_center/direct_to_struct/main | direct_to_struct | 8495.00 | 11278.00 | -2783.00 | OPEN |
+| json/update_center/direct_to_struct/main | direct_to_struct | 8595.00 | 11238.00 | -2643.00 | OPEN |
 | json/update_center/real_typed_struct/main | real_typed_struct | 12145.00 | 12889.00 | -744.00 | OPEN |
 | json/mesh/parse_only/main | parse_only | 13444.00 | 11753.00 | 1691.00 | OPEN |
-| json/mesh/direct_to_struct/main | direct_to_struct | 8703.00 | 9942.00 | -1239.00 | OPEN |
+| json/mesh/direct_to_struct/main | direct_to_struct | 9631.00 | 9582.00 | 49.00 | ADMITTED |
 | json/mesh/real_typed_struct/main | real_typed_struct | 9788.00 | 9110.00 | 678.00 | ADMITTED |
 | json/random/parse_only/main | parse_only | 9935.00 | 15679.00 | -5744.00 | OPEN |
-| json/random/direct_to_struct/main | direct_to_struct | 7902.00 | 8997.00 | -1095.00 | OPEN |
+| json/random/direct_to_struct/main | direct_to_struct | 7894.00 | 8788.00 | -894.00 | OPEN |
 | json/random/real_typed_struct/main | real_typed_struct | absent:product-surface-not-generated | absent:product-surface-not-generated | absent:product-surface-not-generated | MISSING |
 | json/gsoc-2018/parse_only/main | parse_only | 23333.00 | 49847.00 | -26514.00 | OPEN |
 | json/gsoc-2018/direct_to_struct/main | direct_to_struct | 15318.00 | 23900.00 | -8582.00 | OPEN |
@@ -42,7 +42,7 @@ source_commit: 01c335ac9
 | json/marine_ik/direct_to_struct/main | direct_to_struct | 9566.00 | 8494.00 | 1072.00 | ADMITTED |
 | json/marine_ik/real_typed_struct/main | real_typed_struct | 11819.00 | 9309.00 | 2510.00 | ADMITTED |
 | json/instruments/parse_only/main | parse_only | 17312.00 | 19615.00 | -2303.00 | OPEN |
-| json/instruments/direct_to_struct/main | direct_to_struct | 12140.00 | 12443.00 | -303.00 | OPEN |
+| json/instruments/direct_to_struct/main | direct_to_struct | 12200.00 | 12786.00 | -586.00 | OPEN |
 | json/instruments/real_typed_struct/main | real_typed_struct | absent:product-surface-not-generated | absent:product-surface-not-generated | absent:product-surface-not-generated | MISSING |
 | json/numbers/parse_only/main | parse_only | 19110.00 | 13336.00 | 5774.00 | OPEN |
 | json/numbers/direct_to_struct/main | direct_to_struct | 13875.00 | 12919.00 | 956.00 | ADMITTED |

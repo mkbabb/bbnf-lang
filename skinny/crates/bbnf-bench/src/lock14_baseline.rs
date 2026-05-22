@@ -864,6 +864,14 @@ const SK_V13_W11_1_OWNER_PATHS: &[&str] = &[
     "xtask/src/main.rs",
 ];
 
+const SK_V13_W11_3_OWNER_PATHS: &[&str] = &[
+    "crates/bbnf-bench/src/direct_struct.rs",
+    "crates/bbnf-bench/src/report.rs",
+    "crates/bbnf-bench/src/bin/gate.rs",
+    "crates/bbnf-bench/src/lock14_baseline.rs",
+    "xtask/src/main.rs",
+];
+
 fn current_lock14_owner_paths() -> Vec<&'static str> {
     let mut paths = Vec::with_capacity(
         SK_V12_W1A_OWNER_PATHS.len()
@@ -879,7 +887,8 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
             + SK_V13_W7_OWNER_PATHS.len()
             + SK_V13_W8_OWNER_PATHS.len()
             + SK_V13_W9_OWNER_PATHS.len()
-            + SK_V13_W11_1_OWNER_PATHS.len(),
+            + SK_V13_W11_1_OWNER_PATHS.len()
+            + SK_V13_W11_3_OWNER_PATHS.len(),
     );
     paths.extend_from_slice(SK_V12_W1A_OWNER_PATHS);
     paths.extend_from_slice(SK_V12_W1B1_OWNER_PATHS);
@@ -895,6 +904,7 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
     paths.extend_from_slice(SK_V13_W8_OWNER_PATHS);
     paths.extend_from_slice(SK_V13_W9_OWNER_PATHS);
     paths.extend_from_slice(SK_V13_W11_1_OWNER_PATHS);
+    paths.extend_from_slice(SK_V13_W11_3_OWNER_PATHS);
     paths
 }
 
@@ -1107,6 +1117,14 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
         let allowed = changed_paths
             .iter()
             .all(|path| is_allowed_path(path, SK_V13_W11_1_OWNER_PATHS));
+        if allowed {
+            return Ok(());
+        }
+    }
+    if subject.contains("sk-v13-waveW11.3") || subject.contains("sk-v13-wave11.3-challenge") {
+        let allowed = changed_paths
+            .iter()
+            .all(|path| is_allowed_path(path, SK_V13_W11_3_OWNER_PATHS));
         if allowed {
             return Ok(());
         }
@@ -1682,6 +1700,26 @@ mod tests {
         assert!(validate_authorized_parent_diff(
             &outside,
             "feat(sk-v13-waveW11.1): admit numbers direct numeric-array dispatch"
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn admits_sk_v13_w11_3_parent_diff_under_w11_3_scope() {
+        let changed = SK_V13_W11_3_OWNER_PATHS
+            .iter()
+            .map(|path| (*path).to_string())
+            .collect::<Vec<_>>();
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v13-waveW11.3): admit mesh direct sink stack specialization"
+        )
+        .is_ok());
+        let mut outside = changed;
+        outside.push("crates/runtime/src/grammars/json/generated.rs".into());
+        assert!(validate_authorized_parent_diff(
+            &outside,
+            "feat(sk-v13-waveW11.3): admit mesh direct sink stack specialization"
         )
         .is_err());
     }

@@ -239,20 +239,19 @@ impl JsonDigestSink {
     }
 
     #[inline(always)]
-    fn with_object_parent(&mut self, f: impl FnOnce(&mut JsonDirectDigest)) {
+    fn object_parent_mut(&mut self) -> &mut JsonDirectDigest {
         let Some(DigestFrame::Object(parent)) = self.stack.last_mut() else {
             unreachable!("object scalar outside object frame");
         };
-        f(parent);
+        parent
     }
 
     #[inline(always)]
-    fn with_array_parent(&mut self, f: impl FnOnce(&mut JsonDirectDigest)) {
+    fn array_parent_mut(&mut self) -> &mut JsonDirectDigest {
         let Some(DigestFrame::Array(parent)) = self.stack.last_mut() else {
             unreachable!("array scalar outside array frame");
         };
-        parent.elements += 1;
-        f(parent);
+        parent
     }
 }
 
@@ -339,62 +338,74 @@ impl JsonSink for JsonDigestSink {
 
     #[inline(always)]
     fn array_string(&mut self, value: &str) {
-        self.with_array_parent(|parent| parent.fold_string_scalar(value));
+        let parent = self.array_parent_mut();
+        parent.elements += 1;
+        parent.fold_string_scalar(value);
     }
 
     #[inline(always)]
     fn array_i64(&mut self, value: i64) {
-        self.with_array_parent(|parent| parent.fold_number_i64_scalar(value));
+        let parent = self.array_parent_mut();
+        parent.elements += 1;
+        parent.fold_number_i64_scalar(value);
     }
 
     #[inline(always)]
     fn array_u64(&mut self, value: u64) {
-        self.with_array_parent(|parent| parent.fold_number_u64_scalar(value));
+        let parent = self.array_parent_mut();
+        parent.elements += 1;
+        parent.fold_number_u64_scalar(value);
     }
 
     #[inline(always)]
     fn array_f64(&mut self, value: f64) {
-        self.with_array_parent(|parent| parent.fold_number_f64_scalar(value));
+        let parent = self.array_parent_mut();
+        parent.elements += 1;
+        parent.fold_number_f64_scalar(value);
     }
 
     #[inline(always)]
     fn array_bool(&mut self, value: bool) {
-        self.with_array_parent(|parent| parent.fold_bool_scalar(value));
+        let parent = self.array_parent_mut();
+        parent.elements += 1;
+        parent.fold_bool_scalar(value);
     }
 
     #[inline(always)]
     fn array_null(&mut self) {
-        self.with_array_parent(JsonDirectDigest::fold_null_scalar);
+        let parent = self.array_parent_mut();
+        parent.elements += 1;
+        parent.fold_null_scalar();
     }
 
     #[inline(always)]
     fn object_string(&mut self, value: &str) {
-        self.with_object_parent(|parent| parent.fold_string_scalar(value));
+        self.object_parent_mut().fold_string_scalar(value);
     }
 
     #[inline(always)]
     fn object_i64(&mut self, value: i64) {
-        self.with_object_parent(|parent| parent.fold_number_i64_scalar(value));
+        self.object_parent_mut().fold_number_i64_scalar(value);
     }
 
     #[inline(always)]
     fn object_u64(&mut self, value: u64) {
-        self.with_object_parent(|parent| parent.fold_number_u64_scalar(value));
+        self.object_parent_mut().fold_number_u64_scalar(value);
     }
 
     #[inline(always)]
     fn object_f64(&mut self, value: f64) {
-        self.with_object_parent(|parent| parent.fold_number_f64_scalar(value));
+        self.object_parent_mut().fold_number_f64_scalar(value);
     }
 
     #[inline(always)]
     fn object_bool(&mut self, value: bool) {
-        self.with_object_parent(|parent| parent.fold_bool_scalar(value));
+        self.object_parent_mut().fold_bool_scalar(value);
     }
 
     #[inline(always)]
     fn object_null(&mut self) {
-        self.with_object_parent(JsonDirectDigest::fold_null_scalar);
+        self.object_parent_mut().fold_null_scalar();
     }
 }
 

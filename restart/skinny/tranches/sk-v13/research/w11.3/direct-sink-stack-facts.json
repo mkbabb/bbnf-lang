@@ -1,0 +1,67 @@
+{
+  "schema_version": "sk-v13-w11.3-direct-sink-stack-facts-v1",
+  "wave_id": "SK-V13-W11.3",
+  "run_id": "sk-v13-w11.3:direct-sink-stack-fnv64-local",
+  "source_commit": "ee65ee42b608",
+  "host_triple": "aarch64-apple-darwin",
+  "build_flags": "RUSTFLAGS=-C target-cpu=native",
+  "feature_mask": "arch=aarch64;target_cpu=native",
+  "consumer": "bbnf_bench::direct_struct::JsonDirectSink",
+  "consumer_class": "direct_sink_stack_specialization",
+  "benchmark_command": "RUSTFLAGS=\"-C target-cpu=native\" cargo bench -p bbnf-bench --bench json_parity -- 'json/(mesh|instruments|random|canada)/(track1_direct_to_struct|track2_direct_to_struct|sonic_rs_direct_to_struct|serde_json_direct_to_struct)'",
+  "parity_command": "cargo test -p bbnf-bench direct_struct::tests -- --nocapture",
+  "parity_status": "pass:5 tests",
+  "rows": [
+    {
+      "row_id": "json/mesh/direct_to_struct/main",
+      "status": "admitted",
+      "bytes": 723597,
+      "track1_mbps": 9657.892,
+      "track1_lower_mbps": 9623.984,
+      "track1_upper_mbps": 9690.027,
+      "track2_mbps": 6959.985,
+      "sonic_strict_mbps": 9569.599,
+      "serde_mbps": 7011.87,
+      "threshold_mbps": 9570.599,
+      "margin_mbps": 87.293,
+      "criterion_group": "json_mesh"
+    },
+    {
+      "row_id": "json/canada/direct_to_struct/main",
+      "status": "miss",
+      "bytes": 2251051,
+      "track1_mbps": 10602.676,
+      "track2_mbps": 10126.27,
+      "sonic_strict_mbps": 12155.126,
+      "serde_mbps": 7359.337,
+      "threshold_mbps": 12156.126,
+      "margin_mbps": -1553.45,
+      "criterion_group": "json_canada"
+    },
+    {
+      "row_id": "json/random/direct_to_struct/main",
+      "status": "miss",
+      "bytes": 510476,
+      "track1_mbps": 7891.74,
+      "track2_mbps": 7061.866,
+      "sonic_strict_mbps": 8802.458,
+      "serde_mbps": 6528.663,
+      "threshold_mbps": 8803.458,
+      "margin_mbps": -911.718,
+      "criterion_group": "json_random"
+    },
+    {
+      "row_id": "json/instruments/direct_to_struct/main",
+      "status": "miss",
+      "bytes": 220346,
+      "track1_mbps": 12179.139,
+      "track2_mbps": 11159.796,
+      "sonic_strict_mbps": 12787.011,
+      "serde_mbps": 9433.403,
+      "threshold_mbps": 12788.011,
+      "margin_mbps": -608.872,
+      "criterion_group": "json_instruments"
+    }
+  ],
+  "material_differential": "REDRESS 119/120/142 kept the direct sink scalar callbacks behind closure-mediated parent access. W11.3 removes the closure layer inside the sink-only digest stack without changing runtime parsing, JSON codegen, or the independent Track 2 oracle."
+}

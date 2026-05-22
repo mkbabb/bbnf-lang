@@ -315,7 +315,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         validate_skv13_json_direct_reopen_report(&report, &criterion_root(), &workspace)
             .map_err(|error| format!("{}: {error}", path.display()))?;
         println!(
-            "G-W11.1-JSON-DIRECT-NUMBERS {} {}",
+            "{} {} {}",
+            report.consumer_gate,
             report.row_move_toward_sota_status,
             path.display()
         );
@@ -427,6 +428,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             fixture.bytes.len() as u64,
             estimates.direct_track1,
             estimates.direct_track2,
+            estimates.direct_sonic,
         );
         let direct_outcome = direct_decision.outcome;
         if let Some(outcome) = direct_outcome {
@@ -465,6 +467,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             direct_decision.w0_clamped,
             direct_decision.w2_reclaimed,
             direct_decision.w10_residual,
+            direct_decision.w11_3_reopened,
             fixture.bytes.len() as u64,
             estimates.direct_track1,
             estimates.direct_track2,
@@ -499,6 +502,8 @@ fn main() -> Result<(), Box<dyn Error>> {
             mark_w2_direct_reclamation(&mut direct_row);
         } else if direct_decision.w10_residual {
             mark_w10_direct_residual(&mut direct_row);
+        } else if direct_decision.w11_3_reopened {
+            mark_w11_3_direct_reopen(&mut direct_row);
         }
         report.rows.push(direct_row);
         if direct_outcome == Some(Outcome::NDirectProjectionFailure) {
@@ -2083,71 +2088,103 @@ fn validate_skv13_json_direct_reopen_report(
     criterion_root: &Path,
     workspace: &Path,
 ) -> Result<(), String> {
+    let spec = skv13_json_direct_reopen_criterion_spec(report)?;
     let track1 = read_css_l4_lane_in_group(
         criterion_root,
-        "json_numbers",
+        spec.criterion_group,
         "track1_direct_to_struct",
-        150_124,
+        spec.bytes,
     )?;
     let track2 = read_css_l4_lane_in_group(
         criterion_root,
-        "json_numbers",
+        spec.criterion_group,
         "track2_direct_to_struct",
-        150_124,
+        spec.bytes,
     )?;
     let sonic = read_css_l4_lane_in_group(
         criterion_root,
-        "json_numbers",
+        spec.criterion_group,
         "sonic_rs_direct_to_struct",
-        150_124,
+        spec.bytes,
     )?;
     let serde = read_css_l4_lane_in_group(
         criterion_root,
-        "json_numbers",
+        spec.criterion_group,
         "serde_json_direct_to_struct",
-        150_124,
+        spec.bytes,
     )?;
     require_close(
-        "W11.1 track1_mbps_after",
+        &format!("{} track1_mbps_after", spec.label),
         report.track1_mbps_after,
         track1.mbps,
     )?;
     require_close(
-        "W11.1 track2_mbps_after",
+        &format!("{} track2_mbps_after", spec.label),
         report.track2_mbps_after,
         track2.mbps,
     )?;
     require_close(
-        "W11.1 sonic_strict_mbps_after",
+        &format!("{} sonic_strict_mbps_after", spec.label),
         report.sonic_strict_mbps_after,
         sonic.mbps,
     )?;
     require_close(
-        "W11.1 serde_mbps_after",
+        &format!("{} serde_mbps_after", spec.label),
         report.serde_mbps_after,
         serde.mbps,
     )?;
     require_close(
-        "W11.1 threshold_mbps",
+        &format!("{} threshold_mbps", spec.label),
         report.threshold_mbps,
         sonic.mbps + 1.0,
     )?;
     if track1.lower_mbps <= sonic.mbps + 1.0 {
         return Err(format!(
-            "W11.1 Track 1 lower confidence throughput {:.3} <= sonic+1 {:.3}",
+            "{} Track 1 lower confidence throughput {:.3} <= sonic+1 {:.3}",
+            spec.label,
             track1.lower_mbps,
             sonic.mbps + 1.0
         ));
     }
     if track1.upper_mbps <= sonic.mbps + 1.0 {
-        return Err("W11.1 Track 1 confidence interval does not clear sonic+1".into());
+        return Err(format!(
+            "{} Track 1 confidence interval does not clear sonic+1",
+            spec.label
+        ));
     }
     validate_report_artifact_hash(
         workspace,
-        "W11.1 JSON direct reopen artifact",
+        &format!("{} JSON direct reopen artifact", spec.label),
         &report.measurement_artifact_path,
         &report.measurement_artifact_sha256,
     )
+}
+
+struct JsonDirectReopenCriterionSpec {
+    label: &'static str,
+    criterion_group: &'static str,
+    bytes: u64,
+}
+
+fn skv13_json_direct_reopen_criterion_spec(
+    report: &SkV13JsonDirectReopenReport,
+) -> Result<JsonDirectReopenCriterionSpec, String> {
+    match (report.wave_id.as_str(), report.corpus.as_str()) {
+        ("SK-V13-W11.1", "numbers") => Ok(JsonDirectReopenCriterionSpec {
+            label: "W11.1",
+            criterion_group: "json_numbers",
+            bytes: 150_124,
+        }),
+        ("SK-V13-W11.3", "mesh") => Ok(JsonDirectReopenCriterionSpec {
+            label: "W11.3",
+            criterion_group: "json_mesh",
+            bytes: 723_597,
+        }),
+        _ => Err(format!(
+            "{} {} has no JSON direct reopen Criterion mapping",
+            report.wave_id, report.corpus
+        )),
+    }
 }
 
 fn validate_report_artifact_hash(
@@ -2611,6 +2648,7 @@ fn direct_workload_signal(
     w0_no_admission_clamp: bool,
     w2_reclaimed: bool,
     w10_residual: bool,
+    w11_3_reopened: bool,
     bytes: u64,
     track1_ns: Option<f64>,
     track2_ns: Option<f64>,
@@ -2636,6 +2674,17 @@ fn direct_workload_signal(
         let sonic = throughput_mbps(bytes, sonic_ns);
         return format!(
             "PASS W10 direct residual admission; strict measured-row contract; Track 1 {}, Track 2 {}, sonic {} Mbps",
+            format_mbps(track1),
+            format_mbps(track2),
+            format_mbps(sonic)
+        );
+    }
+    if w11_3_reopened {
+        let track1 = throughput_mbps(bytes, track1_ns);
+        let track2 = throughput_mbps(bytes, track2_ns);
+        let sonic = throughput_mbps(bytes, sonic_ns);
+        return format!(
+            "PASS W11.3 direct sink stack admission; strict measured-row contract; Track 1 {}, Track 2 {}, sonic {} Mbps",
             format_mbps(track1),
             format_mbps(track2),
             format_mbps(sonic)
@@ -2673,6 +2722,7 @@ struct DirectRowDecision {
     w0_clamped: bool,
     w2_reclaimed: bool,
     w10_residual: bool,
+    w11_3_reopened: bool,
 }
 
 fn direct_row_decision(
@@ -2681,6 +2731,7 @@ fn direct_row_decision(
     bytes: u64,
     track1_ns: Option<f64>,
     track2_ns: Option<f64>,
+    sonic_ns: Option<f64>,
 ) -> DirectRowDecision {
     let row_id = format!("json/{corpus}/direct_to_struct/main");
     if sk_v8_open_baseline(&row_id).is_some_and(|baseline| baseline.verdict == "NO-GO") {
@@ -2691,6 +2742,7 @@ fn direct_row_decision(
                 w0_clamped: false,
                 w2_reclaimed: true,
                 w10_residual: false,
+                w11_3_reopened: false,
             };
         }
         if matches!(classified, None | Some(Outcome::NDirectProjectionFailure))
@@ -2701,6 +2753,18 @@ fn direct_row_decision(
                 w0_clamped: false,
                 w2_reclaimed: false,
                 w10_residual: true,
+                w11_3_reopened: false,
+            };
+        }
+        if matches!(classified, None | Some(Outcome::NDirectProjectionFailure))
+            && w11_3_direct_reopen_passes(corpus, bytes, track1_ns, sonic_ns)
+        {
+            return DirectRowDecision {
+                outcome: None,
+                w0_clamped: false,
+                w2_reclaimed: false,
+                w10_residual: false,
+                w11_3_reopened: true,
             };
         }
         if classified.is_none() {
@@ -2709,6 +2773,7 @@ fn direct_row_decision(
                 w0_clamped: true,
                 w2_reclaimed: false,
                 w10_residual: false,
+                w11_3_reopened: false,
             };
         }
     }
@@ -2717,6 +2782,7 @@ fn direct_row_decision(
         w0_clamped: false,
         w2_reclaimed: false,
         w10_residual: false,
+        w11_3_reopened: false,
     }
 }
 
@@ -2742,6 +2808,24 @@ fn w10_direct_residual_passes(
         return false;
     };
     direct_row_passes_floor(bytes, track1_ns, track2_ns, floor)
+}
+
+fn w11_3_direct_reopen_passes(
+    corpus: &str,
+    bytes: u64,
+    track1_ns: Option<f64>,
+    sonic_ns: Option<f64>,
+) -> bool {
+    if corpus != "mesh" {
+        return false;
+    }
+    let (Some(track1), Some(sonic)) = (
+        throughput_mbps(bytes, track1_ns),
+        throughput_mbps(bytes, sonic_ns),
+    ) else {
+        return false;
+    };
+    track1 > sonic + 1.0
 }
 
 fn direct_row_passes_floor(
@@ -2798,6 +2882,19 @@ fn mark_w10_direct_residual(row: &mut TelemetryRow) {
     row.sk_v8.redress_entry = "REDRESS-109".to_string();
     row.sk_v8.wave_id = "SK-V10-W10".to_string();
     row.sk_v8.sk_v9_open_delta = "direct-residual".to_string();
+}
+
+fn mark_w11_3_direct_reopen(row: &mut TelemetryRow) {
+    row.strictness = "strict".to_string();
+    row.parse_utf8 = "measured-row".to_string();
+    row.flaw_probe =
+        "generated Track 1 SinkOnly vs independent hand Track 2 SinkOnly; UTF-8 measured in row"
+            .to_string();
+    row.sk_v8.measured_validation_path = "measured-row".to_string();
+    row.sk_v8.same_wave_consumer_class = "direct_sink_stack_specialization".to_string();
+    row.sk_v8.redress_entry = "REDRESS-143".to_string();
+    row.sk_v8.wave_id = "SK-V13-W11.3".to_string();
+    row.sk_v8.sk_v9_open_delta = "direct-sink-stack-specialization".to_string();
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -4174,22 +4271,32 @@ mod tests {
                 None,
                 1_000_000,
                 Some(750_000.0),
-                Some(760_000.0)
+                Some(760_000.0),
+                Some(700_000.0),
             ),
             DirectRowDecision {
                 outcome: None,
                 w0_clamped: false,
                 w2_reclaimed: true,
                 w10_residual: false,
+                w11_3_reopened: false,
             }
         );
         assert_eq!(
-            direct_row_decision("twitter", None, 1_000_000, Some(800_000.0), Some(850_000.0)),
+            direct_row_decision(
+                "twitter",
+                None,
+                1_000_000,
+                Some(800_000.0),
+                Some(850_000.0),
+                Some(700_000.0),
+            ),
             DirectRowDecision {
                 outcome: Some(Outcome::NDirectProjectionFailure),
                 w0_clamped: true,
                 w2_reclaimed: false,
                 w10_residual: false,
+                w11_3_reopened: false,
             }
         );
         assert_eq!(
@@ -4198,13 +4305,15 @@ mod tests {
                 None,
                 1_000_000,
                 Some(800_000.0),
-                Some(850_000.0)
+                Some(850_000.0),
+                Some(700_000.0),
             ),
             DirectRowDecision {
                 outcome: None,
                 w0_clamped: false,
                 w2_reclaimed: false,
                 w10_residual: false,
+                w11_3_reopened: false,
             }
         );
         assert_eq!(
@@ -4213,13 +4322,15 @@ mod tests {
                 Some(Outcome::IParityOracleFail),
                 1_000_000,
                 Some(800_000.0),
-                Some(850_000.0)
+                Some(850_000.0),
+                Some(700_000.0),
             ),
             DirectRowDecision {
                 outcome: Some(Outcome::IParityOracleFail),
                 w0_clamped: false,
                 w2_reclaimed: false,
                 w10_residual: false,
+                w11_3_reopened: false,
             }
         );
     }
@@ -4232,13 +4343,15 @@ mod tests {
                 Some(Outcome::NDirectProjectionFailure),
                 1_000_000,
                 Some(700_000.0),
-                Some(720_000.0)
+                Some(720_000.0),
+                Some(650_000.0),
             ),
             DirectRowDecision {
                 outcome: None,
                 w0_clamped: false,
                 w2_reclaimed: false,
                 w10_residual: true,
+                w11_3_reopened: false,
             }
         );
         assert_eq!(
@@ -4247,22 +4360,53 @@ mod tests {
                 None,
                 1_000_000,
                 Some(700_000.0),
-                Some(730_000.0)
+                Some(730_000.0),
+                Some(650_000.0),
             ),
             DirectRowDecision {
                 outcome: Some(Outcome::NDirectProjectionFailure),
                 w0_clamped: true,
                 w2_reclaimed: false,
                 w10_residual: false,
+                w11_3_reopened: false,
             }
         );
         assert_eq!(
-            direct_row_decision("random", None, 1_000_000, Some(700_000.0), Some(700_000.0)),
+            direct_row_decision(
+                "random",
+                None,
+                1_000_000,
+                Some(700_000.0),
+                Some(700_000.0),
+                Some(650_000.0),
+            ),
             DirectRowDecision {
                 outcome: Some(Outcome::NDirectProjectionFailure),
                 w0_clamped: true,
                 w2_reclaimed: false,
                 w10_residual: false,
+                w11_3_reopened: false,
+            }
+        );
+    }
+
+    #[test]
+    fn w11_3_direct_reopen_admits_mesh_track1_sota_pass() {
+        assert_eq!(
+            direct_row_decision(
+                "mesh",
+                Some(Outcome::NDirectProjectionFailure),
+                723_597,
+                Some(599_382.975),
+                Some(831_722.431),
+                Some(604_913.116),
+            ),
+            DirectRowDecision {
+                outcome: None,
+                w0_clamped: false,
+                w2_reclaimed: false,
+                w10_residual: false,
+                w11_3_reopened: true,
             }
         );
     }

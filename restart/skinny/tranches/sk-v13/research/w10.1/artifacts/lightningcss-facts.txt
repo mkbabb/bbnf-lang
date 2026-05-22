@@ -1,0 +1,16 @@
+css-l4-at-rules-media-facts-v1
+row	id=css_l4/at_rules_and_media/direct_to_struct/main	plane=css_l4_at_rules_media_fact_stream
+source	input_fnv64=83cb4eb20e5253c7	input_bytes=85
+at_rule	idx=0	kind=media	start=0	end=47	prelude_start=7	prelude_end=33	body_start=34	body_end=46	queries=1	children=1
+media_query	rule=0	idx=0	text_hex=73637265656e20616e6420286d696e2d77696474683a31707829
+media_feature	rule=0	query=0	idx=0	name_hex=6d696e2d7769647468	value_hex=317078
+body_rule	parent=0	idx=0	kind=qualified	selector_hex=61	start=34	end=46	decls=1
+decl	parent=0	frame=none	idx=0	property_hex=636f6c6f72	value_hex=726564
+at_rule	idx=1	kind=keyframes	start=48	end=84	name_hex=6b	body_start=61	body_end=83	frames=1
+keyframe	rule=1	idx=0	selectors=3	selector_hex=66726f6d2c3530252c746f	start=61	end=83	decls=1
+key_sel	rule=1	frame=0	idx=0	kind=from	value_hex=66726f6d
+key_sel	rule=1	frame=0	idx=1	kind=percentage	value_hex=353025
+key_sel	rule=1	frame=0	idx=2	kind=to	value_hex=746f
+decl	parent=1	frame=0	idx=0	property_hex=6f706163697479	value_hex=31
+stylesheet	rules=2
+end	rules=2	media_queries=1	media_features=1	keyframes=1	keyframe_selectors=3	declarations=2	stream_fnv64=556910e319c96398

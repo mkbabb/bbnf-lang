@@ -4,9 +4,9 @@ use bbnf_bench::materialization::track_stats;
 use bbnf_bench::metadata::{current_peak_rss_bytes, RowMetadata, TrackTag};
 use bbnf_bench::report::{
     sk_v8_open_baseline, ComparatorSet, NonJsonEvidenceReport, Report, SkV12CssL4SotaReport,
-    SkV12NonJsonReport, SkV13CssComparatorOracleReport, SkV13CssDeclarationValuesExtendedReport,
-    SkV13CssStylesheetSelectorsReport, SkV13CssVisualFunctionsReport, SkV8ComparatorEvidence,
-    SkV8Telemetry, TelemetryRow,
+    SkV12NonJsonReport, SkV13CssAtRulesAndMediaReport, SkV13CssComparatorOracleReport,
+    SkV13CssDeclarationValuesExtendedReport, SkV13CssStylesheetSelectorsReport,
+    SkV13CssVisualFunctionsReport, SkV8ComparatorEvidence, SkV8Telemetry, TelemetryRow,
 };
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -156,6 +156,24 @@ fn main() -> Result<(), Box<dyn Error>> {
             .map_err(|error| format!("{}: {error}", path.display()))?;
         println!(
             "G-W4-CSS-VISUAL-FUNCTIONS {} {} feature_rows={}",
+            report.rows[0].admission_status,
+            path.display(),
+            report.covered_feature_rows.len()
+        );
+        drop(report);
+    }
+    if let Some(path) = skv13_css_at_rules_and_media_report_path(&args[1..])? {
+        if !has_explicit_json_check {
+            return Err(format!("{} requires --check-results", path.display()).into());
+        }
+        let text = fs::read_to_string(&path)?;
+        let report = SkV13CssAtRulesAndMediaReport::from_json_str(&text)
+            .and_then(|report| report.validate_gate().map(|_| report))
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        validate_skv13_css_at_rules_and_media_report(&report, &criterion_root(), &workspace)
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        println!(
+            "G-W10-1-CSS-AT-RULES-MEDIA {} {} feature_rows={}",
             report.rows[0].admission_status,
             path.display(),
             report.covered_feature_rows.len()
@@ -599,6 +617,12 @@ fn skv13_css_visual_functions_report_path(
     companion_report_path(args, "--skv13-css-visual-functions-report")
 }
 
+fn skv13_css_at_rules_and_media_report_path(
+    args: &[String],
+) -> Result<Option<PathBuf>, Box<dyn Error>> {
+    companion_report_path(args, "--skv13-css-at-rules-media-report")
+}
+
 fn companion_report_path(args: &[String], flag: &str) -> Result<Option<PathBuf>, Box<dyn Error>> {
     let flag_positions = args
         .iter()
@@ -658,6 +682,7 @@ fn is_companion_report_flag(arg: &str) -> bool {
             | "--skv13-css-stylesheet-selectors-report"
             | "--skv13-css-declaration-values-extended-report"
             | "--skv13-css-visual-functions-report"
+            | "--skv13-css-at-rules-media-report"
     )
 }
 
@@ -877,6 +902,62 @@ fn validate_skv13_css_visual_functions_report(
     }
     validate_css_l4_visual_functions_retained_artifacts(row, workspace)?;
     validate_visual_functions_lightningcss_source_isolation(workspace)?;
+    Ok(())
+}
+
+fn validate_skv13_css_at_rules_and_media_report(
+    report: &SkV13CssAtRulesAndMediaReport,
+    criterion_root: &Path,
+    workspace: &Path,
+) -> Result<(), String> {
+    let row = &report.rows[0];
+    let track1 = read_css_l4_lane_in_group(
+        criterion_root,
+        "nonjson_css_l4_w10_1",
+        "track1_generated_css_l4_at_rules_and_media",
+        85,
+    )?;
+    let golden = read_css_l4_lane_in_group(
+        criterion_root,
+        "nonjson_css_l4_w10_1",
+        "track2_golden_at_rules_and_media_oracle",
+        85,
+    )?;
+    let lightningcss = read_css_l4_lane_in_group(
+        criterion_root,
+        "nonjson_css_l4_w10_1",
+        "lightningcss_at_rules_and_media_same_plane_fact_stream",
+        85,
+    )?;
+    require_close("track1_mbps", row.track1_mbps, track1.mbps)?;
+    require_close(
+        "track2_or_oracle_mbps",
+        row.track2_or_oracle_mbps,
+        golden.mbps,
+    )?;
+    require_close(
+        "lightningcss_mbps",
+        row.lightningcss_mbps,
+        lightningcss.mbps,
+    )?;
+    require_close(
+        "threshold_mbps",
+        row.threshold_mbps,
+        lightningcss.mbps + 1.0,
+    )?;
+    require_close(
+        "admission_margin_mbps",
+        row.admission_margin_mbps,
+        track1.mbps - (lightningcss.mbps + 1.0),
+    )?;
+    if row.sample_count != track1.samples
+        || row.sample_count != golden.samples
+        || row.sample_count != lightningcss.samples
+    {
+        return Err("W10.1 CSS sample count does not match Criterion lanes".to_string());
+    }
+    validate_css_l4_at_rules_and_media_retained_artifacts(row, workspace)?;
+    validate_at_rules_and_media_lightningcss_source_isolation(workspace)?;
     Ok(())
 }
 
@@ -1145,6 +1226,66 @@ fn validate_css_l4_visual_functions_retained_artifacts(
     Ok(())
 }
 
+fn validate_css_l4_at_rules_and_media_retained_artifacts(
+    row: &bbnf_bench::report::SkV13CssAtRulesAndMediaRow,
+    workspace: &Path,
+) -> Result<(), String> {
+    let track1_path = resolve_workspace_path(workspace, &row.track1_artifact);
+    let oracle_path = resolve_workspace_path(workspace, &row.oracle_artifact_path);
+    let lightning_path = resolve_workspace_path(workspace, &row.lightningcss_fact_artifact_path);
+    let equality_dir = track1_path
+        .parent()
+        .ok_or_else(|| "W10.1 CSS Track 1 artifact has no parent directory".to_string())?;
+    let strict_path = equality_dir.join("strict-equality.txt");
+    let lightning_eq_path = equality_dir.join("lightningcss-strict-equality.txt");
+    let track1 = fs::read(&track1_path)
+        .map_err(|error| format!("failed to read {}: {error}", track1_path.display()))?;
+    let oracle = fs::read(&oracle_path)
+        .map_err(|error| format!("failed to read {}: {error}", oracle_path.display()))?;
+    let lightning = fs::read(&lightning_path)
+        .map_err(|error| format!("failed to read {}: {error}", lightning_path.display()))?;
+    if track1 != oracle || track1 != lightning {
+        return Err("W10.1 CSS retained fact streams differ".to_string());
+    }
+    if sha256_hex(&track1) != row.fact_stream_sha256 {
+        return Err("W10.1 CSS fact_stream_sha256 mismatch".to_string());
+    }
+    let fact_text = std::str::from_utf8(&track1)
+        .map_err(|error| format!("W10.1 fact stream is not UTF-8: {error}"))?;
+    for needle in [
+        "row\tid=css_l4/at_rules_and_media/direct_to_struct/main\tplane=css_l4_at_rules_media_fact_stream",
+        "source\tinput_fnv64=83cb4eb20e5253c7\tinput_bytes=85",
+        "stylesheet\trules=2",
+        "at_rule\tidx=0\tkind=media\tstart=0\tend=47\tprelude_start=7\tprelude_end=33\tbody_start=34\tbody_end=46\tqueries=1\tchildren=1",
+        "media_feature\trule=0\tquery=0\tidx=0\tname_hex=6d696e2d7769647468\tvalue_hex=317078",
+        "body_rule\tparent=0\tidx=0\tkind=qualified\tselector_hex=61\tstart=34\tend=46\tdecls=1",
+        "at_rule\tidx=1\tkind=keyframes\tstart=48\tend=84\tname_hex=6b\tbody_start=61\tbody_end=83\tframes=1",
+        "key_sel\trule=1\tframe=0\tidx=2\tkind=to\tvalue_hex=746f",
+        "decl\tparent=1\tframe=0\tidx=0\tproperty_hex=6f706163697479\tvalue_hex=31",
+        "end\trules=2\tmedia_queries=1\tmedia_features=1\tkeyframes=1\tkeyframe_selectors=3\tdeclarations=2\tstream_fnv64=556910e319c96398",
+    ] {
+        if !fact_text.contains(needle) {
+            return Err(format!("W10.1 CSS fact stream missing `{needle}`"));
+        }
+    }
+    validate_css_l4_named_equality_artifact(
+        &strict_path,
+        "css_l4/at_rules_and_media/direct_to_struct/main",
+        "sk-v13-w10-1:fixture-fnv64-83cb4eb20e5253c7",
+        false,
+    )?;
+    validate_css_l4_named_equality_artifact(
+        &lightning_eq_path,
+        "css_l4/at_rules_and_media/direct_to_struct/main",
+        "sk-v13-w10-1:fixture-fnv64-83cb4eb20e5253c7",
+        true,
+    )?;
+    if resolve_workspace_path(workspace, &row.lightningcss_artifact) != lightning_eq_path {
+        return Err("W10.1 CSS lightningcss equality path mismatch".to_string());
+    }
+    Ok(())
+}
+
 fn validate_css_l4_equality_artifact(path: &Path, lightningcss: bool) -> Result<(), String> {
     validate_css_l4_named_equality_artifact(
         path,
@@ -1291,6 +1432,34 @@ fn validate_visual_functions_lightningcss_source_isolation(workspace: &Path) -> 
         if body.contains(forbidden) {
             return Err(format!(
                 "visual-functions lightningcss facts are coupled to Track 1 via `{forbidden}`"
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn validate_at_rules_and_media_lightningcss_source_isolation(
+    workspace: &Path,
+) -> Result<(), String> {
+    let source_path = workspace.join("crates/bbnf-bench/src/nonjson_css_l4.rs");
+    let source = fs::read_to_string(&source_path)
+        .map_err(|error| format!("failed to read {}: {error}", source_path.display()))?;
+    let start = source
+        .find("pub fn at_rules_and_media_lightningcss_facts")
+        .ok_or_else(|| "at_rules_and_media_lightningcss_facts function not found".to_string())?;
+    let rest = &source[start..];
+    let end = rest
+        .find("\npub fn assert_strict_equality")
+        .ok_or_else(|| "at-rules/media lightningcss function end not found".to_string())?;
+    let body = &rest[..end];
+    for forbidden in [
+        "at_rules_and_media_track1_facts(",
+        "runtime::generated_css_l4_at_rules_and_media",
+        "generated_css_l4_at_rules_and_media",
+    ] {
+        if body.contains(forbidden) {
+            return Err(format!(
+                "at-rules/media lightningcss facts are coupled to Track 1 via `{forbidden}`"
             ));
         }
     }
@@ -3087,6 +3256,8 @@ mod tests {
             "skv13-css-w3.json".to_string(),
             "--skv13-css-visual-functions-report".to_string(),
             "skv13-css-w4.json".to_string(),
+            "--skv13-css-at-rules-media-report".to_string(),
+            "skv13-css-w10-1.json".to_string(),
         ];
         assert_eq!(
             skv13_css_comparator_oracle_report_path(&mixed).unwrap(),
@@ -3103,6 +3274,10 @@ mod tests {
         assert_eq!(
             skv13_css_visual_functions_report_path(&mixed).unwrap(),
             Some(PathBuf::from("skv13-css-w4.json"))
+        );
+        assert_eq!(
+            skv13_css_at_rules_and_media_report_path(&mixed).unwrap(),
+            Some(PathBuf::from("skv13-css-w10-1.json"))
         );
         let write = vec![
             "--skv13-css-comparator-oracle-report".to_string(),

@@ -1,0 +1,3 @@
+pub(crate) const FACT_SCHEMA: &str = "css-l4-at-rules-media-facts-v1";
+pub(crate) const ROW_ID: &str = "css_l4/at_rules_and_media/direct_to_struct/main";
+pub(crate) const OUTPUT_PLANE: &str = "css_l4_at_rules_media_fact_stream";

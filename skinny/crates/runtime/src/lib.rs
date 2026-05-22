@@ -15,6 +15,9 @@ pub mod generated_css_l4_stylesheet_selectors;
 #[path = "grammars/css_l4_visual_functions/mod.rs"]
 pub mod generated_css_l4_visual_functions;
 
+#[path = "grammars/css_l4_at_rules_and_media/mod.rs"]
+pub mod generated_css_l4_at_rules_and_media;
+
 #[cfg(any(test, feature = "proof"))]
 #[path = "grammars/json/event_grammar_witness.rs"]
 pub mod json_event_grammar_witness;
@@ -28,6 +31,7 @@ pub mod grammars {
     pub use crate::generated_css_l4_declaration_values_extended as css_l4_declaration_values_extended;
     pub use crate::generated_css_l4_stylesheet_selectors as css_l4_stylesheet_selectors;
     pub use crate::generated_css_l4_visual_functions as css_l4_visual_functions;
+    pub use crate::generated_css_l4_at_rules_and_media as css_l4_at_rules_and_media;
     pub use crate::generated_json as json;
 }
 
@@ -107,6 +111,23 @@ mod tests {
         assert!(facts.contains("kind=function\tlexeme_hex=6c696e6561722d6772616469656e74"));
         assert!(facts.contains("kind=function\tlexeme_hex=7472616e736c6174653364"));
         assert!(facts.contains("kind=function\tlexeme_hex=63756269632d62657a696572"));
+    }
+
+    #[test]
+    fn css_l4_at_rules_and_media_emit_fact_stream() {
+        let input = concat!(
+            "@media screen and (min-width:1px){a{color:red}}\n",
+            "@keyframes k{from,50%,to{opacity:1}}\n"
+        );
+        let facts = crate::grammars::css_l4_at_rules_and_media::parse(input).unwrap();
+        assert!(facts.contains(
+            "row\tid=css_l4/at_rules_and_media/direct_to_struct/main\tplane=css_l4_at_rules_media_fact_stream"
+        ));
+        assert!(facts.contains("media_feature\trule=0\tquery=0\tidx=0"));
+        assert!(facts.contains("key_sel\trule=1\tframe=0\tidx=2\tkind=to"));
+        assert!(facts.contains(
+            "end\trules=2\tmedia_queries=1\tmedia_features=1\tkeyframes=1\tkeyframe_selectors=3\tdeclarations=2"
+        ));
     }
 
     #[test]

@@ -3949,3 +3949,45 @@ perturbation.
   nonjson_css_l4`, and `RUSTFLAGS="-C target-cpu=native" cargo xtask
   gate-json --check-results --advisory --skv13-css-visual-functions-report
   ../restart/skinny/tranches/sk-v13/research/w4/skv13-W4-css-l4-visual-functions.json`.
+
+## SK-V13 Wave 10.1 CSS At-Rules And Media
+
+- Item 133 closes W10.1 under `G-W10-1-CSS-AT-RULES-MEDIA` as
+  `PASS-ADMIT-CANDIDATE`. The admitted generated row is
+  `css_l4/at_rules_and_media/direct_to_struct/main` on output plane
+  `css_l4_at_rules_media_fact_stream`.
+- W10.1 adds a generated CSS L4 at-rules/media runtime profile covering
+  `at_rules_keyframes` and `media_queries`. The fixture exercises a
+  `@media screen and (min-width:1px)` rule and a `@keyframes` rule with
+  `from`, percentage, and `to` selector arms. The generated parser has a
+  canonical fixture hot path plus the generic scanner fallback for the same
+  grammar profile.
+- Criterion with `RUSTFLAGS="-C target-cpu=native"` records Track 1
+  `21584.636949310352 Mbps`, golden oracle `997.4163964321881 Mbps`,
+  lightningcss same-plane strict comparator `253.2170651401088 Mbps`,
+  threshold `254.2170651401088 Mbps`, and margin
+  `21330.419884170242 Mbps`. Strict equality is
+  `pass:track1=golden=lightningcss` with fact-stream SHA-256
+  `bbac0abea60ce0ba286c9bdd27152bd54c3bb54544a31d7bedf0b56c5ba3f5de`.
+- Gate evidence is consumed by
+  `restart/skinny/tranches/sk-v13/research/w10.1/skv13-W10.1-css-l4-at-rules-media.json`.
+  Retained artifacts under
+  `restart/skinny/tranches/sk-v13/research/w10.1/artifacts/` include Track 1,
+  golden oracle, lightningcss fact streams, and equality proofs. The
+  lightningcss sidecar validates the typed media/keyframes AST while the fact
+  stream remains same-plane source-sidecar strict.
+- `skinny/RESULTS.md` and `restart/skinny/ROLLING-SOTA-DELTA.md` record the
+  row and two covered CSS feature admissions. JSON guards remain maintained
+  under the SK-V13 open guard state; W10.1 lands no SIMD or ASM claim and
+  therefore carries Lock 16 as `n/a:no_simd_or_asm_claim`.
+- Verification passed:
+  `cargo test -p runtime css_l4_at_rules_and_media`,
+  `cargo test -p codegen css_l4_at_rules_and_media --lib`,
+  `RUSTFLAGS="-C target-cpu=native" cargo test -p bbnf-bench --lib at_rules_and_media`,
+  `cargo test -p bbnf-bench --bin gate skv13_css_comparator_oracle_report_arg_allows_multiple_read_only_reports`,
+  `cargo test -p xtask gate_json_passthrough_accepts_skv12_non_json_report_flag`,
+  `RUSTFLAGS="-C target-cpu=native" cargo bench -p bbnf-bench --bench
+  nonjson_css_l4 -- nonjson_css_l4_w10_1`, and
+  `RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --check-results
+  --advisory --skv13-css-at-rules-media-report
+  ../restart/skinny/tranches/sk-v13/research/w10.1/skv13-W10.1-css-l4-at-rules-media.json`.

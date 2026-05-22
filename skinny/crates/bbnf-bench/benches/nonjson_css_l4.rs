@@ -177,6 +177,51 @@ fn bench_nonjson_css_l4(c: &mut Criterion) {
         },
     );
     visual_group.finish();
+
+    let at_rules_input = nonjson_css_l4::read_at_rules_and_media_fixture()
+        .expect("CSS L4 at-rules/media fixture is readable");
+    nonjson_css_l4::assert_at_rules_and_media_strict_equality(&at_rules_input)
+        .expect("CSS at-rules/media Track 1 equals golden oracle");
+    nonjson_css_l4::assert_at_rules_and_media_lightningcss_strict_equality(&at_rules_input)
+        .expect("CSS at-rules/media Track 1 equals lightningcss fact stream");
+    let at_rules_report = nonjson_css_l4::write_at_rules_and_media_report_with_quick_measurement()
+        .expect("CSS L4 at-rules/media report is emitted");
+    at_rules_report
+        .validate_gate()
+        .expect("CSS L4 at-rules/media report gate passes");
+
+    let mut at_rules_group = c.benchmark_group("nonjson_css_l4_w10_1");
+    at_rules_group.throughput(Throughput::Bytes(at_rules_input.len() as u64));
+    at_rules_group.bench_function("track1_generated_css_l4_at_rules_and_media", |b| {
+        b.iter(|| {
+            black_box(
+                nonjson_css_l4::at_rules_and_media_track1_facts(black_box(&at_rules_input))
+                    .expect("Track 1 CSS at-rules/media fact stream"),
+            )
+        })
+    });
+    at_rules_group.bench_function("track2_golden_at_rules_and_media_oracle", |b| {
+        b.iter(|| {
+            black_box(
+                nonjson_css_l4::at_rules_and_media_oracle_facts(black_box(&at_rules_input))
+                    .expect("golden CSS at-rules/media fact stream"),
+            )
+        })
+    });
+    at_rules_group.bench_function(
+        "lightningcss_at_rules_and_media_same_plane_fact_stream",
+        |b| {
+            b.iter(|| {
+                black_box(
+                    nonjson_css_l4::at_rules_and_media_lightningcss_facts(black_box(
+                        &at_rules_input,
+                    ))
+                    .expect("lightningcss CSS at-rules/media fact stream"),
+                )
+            })
+        },
+    );
+    at_rules_group.finish();
 }
 
 criterion_group! {

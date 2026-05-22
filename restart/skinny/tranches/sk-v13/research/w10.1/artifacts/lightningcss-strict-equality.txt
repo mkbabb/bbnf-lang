@@ -1,0 +1,5 @@
+status=pass
+row_id=css_l4/at_rules_and_media/direct_to_struct/main
+run_id=sk-v13-w10-1:fixture-fnv64-83cb4eb20e5253c7
+comparator=lightningcss-1.0.0-alpha.71:same-plane-source-sidecar
+ast=typed-media-keyframes

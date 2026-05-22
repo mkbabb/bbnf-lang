@@ -4868,3 +4868,46 @@ perturbation.
   `restart/skinny/tranches/sk-v13/research/w14.3/redress.md`.
 - `marine_ik` and `mesh` remain positive-margin OPEN parse-only rows until
   they receive their own W14.N packet and REDRESS citation.
+
+## SK-V13 Wave 14.4 Marine IK Parse-Only Admission
+
+- Item 157 closes W14.4 under `G-W14.4-JSON-PARSE-MARINE-IK` as `ADMIT`.
+  The material differential from REDRESS 102 and W14.1-W14.3 is row-local:
+  W14.4 does not alter parser runtime, generated JSON parser bodies, union
+  substrate, SIMD primitives, output digests, or decision-engine policy. It
+  adds a single W14 parse-only admission spec for
+  `json/marine_ik/parse_only/main` and supplies gate-consumed strict DOM
+  evidence for that row.
+- Native Criterion was refreshed for
+  `json/marine_ik/(track1_generated|track2_handcoded|sonic_rs_anchor|serde_json)`
+  with `RUSTFLAGS="-C target-cpu=native"`. The companion facts measured Track
+  1 mean `12272.307` Mbps, Track 1 lower confidence `12196.346` Mbps, Track 2
+  oracle `12311.606` Mbps, sonic strict `9901.936` Mbps, threshold
+  `9902.936` Mbps, and mean margin `2369.371` Mbps. The gate-generated
+  RESULTS slope row records Track 1 `12357` Mbps, Track 2 `12302` Mbps, sonic
+  strict `9902` Mbps, and rolling margin `2454.00` Mbps.
+- `gate-json --update-results` initially rejected stale
+  `simd_structural_scan/*_simd/metadata.toml` capture identity after the
+  Marine IK Criterion lanes were refreshed. The SIMD scan bench was rerun only
+  to refresh required gate metadata; W14.4 does not claim a SIMD admission.
+  The `json_parity` regex also refreshed adjacent Marine IK serde
+  direct/typed comparator lanes; W14.4 claims only the parse-only row.
+- Verification passed:
+  `cargo test -p bbnf-bench skv13_json_parse_only_report_accepts_configured_corpus_admit -- --nocapture`,
+  `cargo test -p bbnf-bench json_parse_only_admission_passes_configured_corpora_only -- --nocapture`,
+  `cargo test -p bbnf-bench validate_sk_v8_w0_accepts_configured_parse_only_admission_rows -- --nocapture`,
+  `cargo test -p bbnf-bench admits_sk_v13_w14_parent_diff_under_w14_scope -- --nocapture`,
+  `cargo test -p xtask gate_json_passthrough_accepts_skv13_json_parse_only_report_flag -- --nocapture`,
+  `RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --update-results --advisory`, and
+  `RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --check-results --advisory --skv13-json-parse-only-report ../restart/skinny/tranches/sk-v13/research/w14.4/skv13-W14.4-json-parse-only.json`.
+  Compatibility checks for W14.1, W14.2, and W14.3 parse-only reports also
+  passed after the rolling-delta refresh.
+- The retained measurement facts are
+  `restart/skinny/tranches/sk-v13/research/w14.4/marine-ik-parse-facts.json`
+  with SHA-256
+  `01a4ce96289ab0efadb88c55d3817f84da05dfe1cde8fe0b2f908475dcf9f1bc`;
+  the retained redress note is
+  `restart/skinny/tranches/sk-v13/research/w14.4/redress.md`.
+- `mesh` remains the only positive-margin OPEN parse-only row in the W14
+  table-admission pattern. After mesh receives its own W14.N packet, remaining
+  JSON rows need implementation work rather than status/report-only admission.

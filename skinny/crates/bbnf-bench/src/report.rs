@@ -187,6 +187,19 @@ pub const SKV13_JSON_PARSE_ONLY_ADMISSION_SPECS: &[JsonParseOnlyAdmissionSpec] =
         redress_entry: "REDRESS-156",
         prior_redress_citation: "102",
     },
+    JsonParseOnlyAdmissionSpec {
+        label: "W14.4",
+        wave_id: "SK-V13-W14.4",
+        run_id_prefix: "sk-v13-w14.4:",
+        consumer_gate: "G-W14.4-JSON-PARSE-MARINE-IK",
+        row_id: "json/marine_ik/parse_only/main",
+        corpus: "marine_ik",
+        criterion_group: "json_marine_ik",
+        bytes: 2_983_466,
+        route_id: "generated-json-parse-only-marine-ik",
+        redress_entry: "REDRESS-157",
+        prior_redress_citation: "102",
+    },
 ];
 
 pub fn json_parse_only_admission_spec_for_report(

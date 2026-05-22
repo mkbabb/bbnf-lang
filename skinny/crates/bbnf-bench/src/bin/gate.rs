@@ -4923,6 +4923,25 @@ mod tests {
             .map(|spec| spec.label),
             Some("W14.3")
         );
+        assert_eq!(
+            json_parse_only_admission_passes(
+                "marine_ik",
+                2_983_466,
+                Some(1_853_123.0),
+                Some(1_946_287.0),
+                Some(2_354_509.0),
+            )
+            .map(|spec| spec.label),
+            Some("W14.4")
+        );
+        assert!(json_parse_only_admission_passes(
+            "mesh",
+            723_597,
+            Some(447_500.0),
+            Some(450_000.0),
+            Some(500_000.0),
+        )
+        .is_none());
         assert!(json_parse_only_admission_passes(
             "marine_ik",
             3_025_084,

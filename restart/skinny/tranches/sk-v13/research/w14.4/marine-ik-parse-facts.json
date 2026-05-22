@@ -1,0 +1,61 @@
+{
+  "schema_version": "sk-v13-w14.4-json-parse-only-facts-v1",
+  "wave_id": "SK-V13-W14.4",
+  "row_id": "json/marine_ik/parse_only/main",
+  "corpus": "marine_ik",
+  "input_bytes": 2983466,
+  "criterion_group": "json_marine_ik",
+  "measurement_command": "RUSTFLAGS=\"-C target-cpu=native\" cargo bench -p bbnf-bench --bench json_parity -- 'json/marine_ik/(track1_generated|track2_handcoded|sonic_rs_anchor|serde_json)'",
+  "strict_equality": {
+    "status": "pass",
+    "source": "bbnf-bench/benches/json_parity.rs preflight assert_parity(input) before Criterion group registration",
+    "output_plane": "DOM",
+    "track2_independence": "independent"
+  },
+  "lanes": {
+    "track1_generated": {
+      "mean_ns": 1944844.460786092,
+      "lower_ns": 1934355.7612877656,
+      "upper_ns": 1956957.2741239201,
+      "mbps": 12272.306850879395,
+      "lower_mbps": 12196.345988537218,
+      "upper_mbps": 12338.851248392102,
+      "samples": 100,
+      "artifact": "target/criterion/json_marine_ik/track1_generated/new/estimates.json"
+    },
+    "track2_handcoded": {
+      "mean_ns": 1938636.466440702,
+      "lower_ns": 1934242.7735412435,
+      "upper_ns": 1943062.1513331074,
+      "mbps": 12311.605818403217,
+      "lower_mbps": 12283.563849784574,
+      "upper_mbps": 12339.572015720949,
+      "samples": 100,
+      "artifact": "target/criterion/json_marine_ik/track2_handcoded/new/estimates.json"
+    },
+    "sonic_rs_anchor": {
+      "mean_ns": 2410410.2595238113,
+      "lower_ns": 2400768.3146547624,
+      "upper_ns": 2421281.1062500007,
+      "mbps": 9901.935948743925,
+      "lower_mbps": 9857.47914126565,
+      "upper_mbps": 9941.704017962371,
+      "samples": 100,
+      "artifact": "target/criterion/json_marine_ik/sonic_rs_anchor/new/estimates.json"
+    },
+    "serde_json": {
+      "mean_ns": 6093370.874444446,
+      "lower_ns": 6046816.945250001,
+      "upper_ns": 6150427.3721388895,
+      "mbps": 3916.999062062853,
+      "lower_mbps": 3880.661709480474,
+      "upper_mbps": 3947.155704580901,
+      "samples": 100,
+      "artifact": "target/criterion/json_marine_ik/serde_json/new/estimates.json"
+    }
+  },
+  "threshold_mbps": 9902.935948743925,
+  "track1_margin_mbps": 2369.37090213547,
+  "track1_lower_margin_mbps": 2293.410039793293,
+  "decision": "pass"
+}

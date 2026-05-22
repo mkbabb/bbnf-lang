@@ -26,6 +26,18 @@ schema v3 comparator-plane rows before any SOTA decision. Remaining Lock 14
 cleanup includes splitting the `bbnf-simd` JSON god-module residue and
 removing JSON-name logic from generic pass/codegen crates.
 
+**Pass Omega V1.1 / SK-V13 workspace receiver (2026-05-22).** The active
+workspace boundary is no longer JSON-only validation. `bbnf-bench` owns the
+grammar-neutral common telemetry envelope, rolling SOTA delta production, JSON
+sonic-rs strict comparators, CSS lightningcss/cssparser comparators, PMU/samply
+capture references, and gate-consumed provenance. `bbnf-simd` owns source-
+present primitive inventory only when each primitive is wired, deleted,
+scalar-delegated, or architecturally blocked by the owning wave. CSS L4 and all
+51 JSON rows are SK-V13 close targets or architectural-block proofs, not V1-H
+caveats. This document records ownership and budget receivers only; it does not
+authorize telemetry implementation, source edits, gates, `RESULTS.md`, or
+`REDRESS.md` mutations.
+
 Not in this file: substrate internals (`SUBSTRATE.md`), compiler pipeline internals (`COMPILER.md`), bench thresholds and reproducibility schema (`BENCH.md`).
 
 ### 0.1 Post-Iteration State (SK-V2)
@@ -103,7 +115,7 @@ The handwritten LOC budget for the skinny is **32,000 LOC** across ten crates. G
 | `runtime` | 4,000 | `tape/` (~1,500), `document/` (~800), `builder/` (~600), `visitor/` minimal (~400), `support/` (~300), `grammars/json/` skeleton (~400, plus the generated body which is not handwritten). | 8,000 |
 | `parse-that-regex` | 4,000 | `regex/hir` subset (~1,000), `regex/nfa` (~1,000), `regex/dfa` (~1,000), `regex/vm` (~700), `literal/` (~300). No `unicode/` algebra, no lazy-DFA cache policy. | 10,000 |
 | `bbnf-simd` | 3,500 | Structural scanner and per-target primitive layer used by runtime and bench; carries scalar/SWAR, aarch64, x86_64 AVX2/VBMI2, and ASM-admissible host paths under Lock 16. | 3,500 |
-| `bbnf-bench` | 3,300 | Criterion harness, reproducibility schema serializer, parity matrix runner, materialization report, scan report, masking probes, fastest-anchor `S` rendering, subprocess RSS probes, persisted SIMD parity metadata, direct-to-struct workload proof, sidecar comparator reports, and Track 2 handwritten parser/sink probes (substrate-API correspondence per BENCH.md §10.6). The 2026-05-12 full auditability gates plus SK-V3 direct projection proof made the old 2,000/2,400 caps too narrow. SK-V4 moves Track 1 direct into generated runtime/codegen `SinkOnly`; `bbnf-bench` owns measurement and independent oracles only. CSS prior probe remains deferred. Exact internal split owned by BENCH.md. | 4,000 |
+| `bbnf-bench` | 3,300 | Criterion harness, reproducibility schema serializer, parity matrix runner, materialization report, scan report, masking probes, fastest-anchor `S` rendering, subprocess RSS probes, persisted SIMD parity metadata, direct-to-struct workload proof, sidecar comparator reports, and Track 2 handwritten parser/sink probes (substrate-API correspondence per BENCH.md §10.6). The 2026-05-12 full auditability gates plus SK-V3 direct projection proof made the old 2,000/2,400 caps too narrow. SK-V4 moves Track 1 direct into generated runtime/codegen `SinkOnly`; `bbnf-bench` owns measurement and independent oracles only. Under SK-V13 it also owns the common telemetry envelope, CSS comparator/oracle rows, and rolling SOTA delta reporting. Exact internal split owned by BENCH.md. | 4,000 |
 | `test-fixtures` | 800 | JSON corpora pointers + checksums (~200), parity matrix manifest (~300), corpus loader (~300). Twitter / citm / canada are not committed as binary; they are downloaded by the loader and checksummed against the manifest. | 1,500 |
 | **Skinny total (handwritten)** | **32,000** | | **~83,500** |
 | Generated `runtime/src/grammars/json/` | ≤ 4,000 | PASS-2 baseline + 2 percent (`PASS-2.md:432`). Tracked separately; not counted in handwritten LOC. | ≤ 4,000 |
@@ -385,7 +397,14 @@ runtime/src/
     json/                  # generated; not handwritten.
 ```
 
-Six children at `src/`. `grammars/` is a deliberate single-child mount-point in the skinny (only `json/` is generated; CSS L4 / Sheets / BBNF-self trees arrive in V1 H tranche). The mount-point form is ratified by Lock 14's generation-target shape: every grammar lands as its own subdir under `grammars/`, and the single-child state is the JSON-only intermediate. Lock 13's 4-10 rule applies to crates whose immediate children are handwritten; `grammars/` is generated and exempt from the per-file 500 LOC cap and from the immediate-children minimum.
+Six children at `src/`. `grammars/` is a generated mount-point: the historical
+skinny started with only `json/`, while SK-V13 adds CSS L4 generated rows under
+the same generated-provider discipline. The mount-point form is ratified by
+Lock 14's generation-target shape: every grammar lands as its own generated
+subdir under `grammars/`, and a single-child intermediate is acceptable only as
+a tranche state, not as a campaign close. Lock 13's 4-10 rule applies to crates
+whose immediate children are handwritten; `grammars/` is generated and exempt
+from the per-file 500 LOC cap and from the immediate-children minimum.
 
 ### 4.7 `crates/parse-that-regex/`
 
@@ -661,8 +680,8 @@ The skinny explicitly omits the following V1 mechanisms. Each omission's impact 
 | Host fns + chains | Main JSON grammar has none. | JSON-FAITHFUL only after BOTH host-call probes pass: dispatch ≤50ns AND eager-decode bands per BENCH §7.8.1. REDRESS §19: eager-decode currently exceeds expected bands (57.6%/77.2%/81.9% of Track 1 ns for twitter/citm/canada) — the host-fn-free cut is FAITHFUL only for a V1 path that keeps string decode lazy. CSS / Sheets carry host calls and the V1 must measure their cost separately. |
 | Direct decoded-string sink delivery | Skinny now passes raw string spans plus decode flags through generated `JsonSink::*_source` hooks. | The source-hook seam is JSON-FAITHFUL and grammar-general; the attempted generic no-allocation decoded visitor, exact decoded-stats sink, and quote-source streaming hasher are not. V1 closure must land a measured field-layout decode+sink materializer for grammars that need decoded direct fields, preserving lazy retained views and avoiding parser-side eager decode or sink-local decoded hash helpers. |
 | Recovery / `@error` directives | Skinny tests on valid + minimally malformed corpus only. | Zero impact on twitter / citm / canada SOTA rows; recovery is its own gate (tranche I). |
-| Multiple grammars | Skinny is JSON-only. | Risk: SIMD-beat for JSON does not imply SIMD-beat for CSS L4 (107K generated LOC, 14-variant OpenFrame relics in current code). The V1 H tranche owns the per-grammar SOTA-beat closure. |
-| CSS prior probe | Spec'd as anti-overfit lever in BENCH.md §9.1 / §11.1; deferred from skinny prototype (no `track2/css_prior.rs` on disk). | Risk: JSON-only result without the CSS prior probe does not bound substrate viability for non-JSON grammars; the only structural anti-overfit measurement the spec proposed is not executed. Mitigation: route the anti-overfit lever to V1 H tranche per multi-grammar V1-closure. |
+| Multiple grammars | Historical skinny was JSON-only; SK-V13 makes CSS L4 an active generated row family. | Risk: SIMD-beat for JSON does not imply SIMD-beat for CSS L4. Current mitigation is no longer deferral: CSS L4 rows must admit against lightningcss/cssparser or record architectural-block evidence. |
+| CSS prior probe | Historical anti-overfit lever in BENCH.md §9.1 / §11.1. | Historical only. SK-V13 closes non-JSON generality through generated CSS L4 strict parity rows, not an optional substrate-only probe. |
 | Lazy-offset tape route | Measured canonical JSON substrate for the historical triad (REDRESS §20-§25). The expanded parse gate still has 5 G rows plus D/E codegen-gap rows, and the full gate is N-direct / NoGo; misses concentrate in event-cursor dispatch, string/Unicode-shaped rows, SinkOnly digest stressor rows, and exact float/string/Unicode materialization inside typed sinks. Canada structural scan is no longer the floor blocker after SK-V5 redress item 56. | Risk: V1 may overgeneralize the triad result to grammars with recovery, layout, eager host materialization, or different token alphabets. Mitigation: keep grammar-specific materialization gates and require before/after bench proof for rejected alternates. |
 | `egraph-derive` / proc-macro infrastructure | Not invoked in skinny. | Zero impact. |
 | Workspace metadata cross-grammar coherence | One grammar entry only. | Zero impact for JSON. |
@@ -683,7 +702,10 @@ The skinny is buildable in 2-4 weeks at 32,000 handwritten LOC plus ≤ 4,000 ge
 7. Conditional bench outcomes are non-green; only an unconditional GO authorizes dispatch.
 8. The cross-quadrant deviation ledger (INDEX §"Open contradictions" + WORKSPACE §8.1) stays consistent: every skinny deviation appears in both ledgers with the same row, the same V1 closure cost, and the same MECHANICAL / MASKING-CANDIDATE / DEFERRED-MASKING-CANDIDATE classification.
 9. The empirical LOC headroom is read as V1-destination-shape headroom, not as scope-wrong evidence: the on-disk skinny prototype remains far under the 32,000 ceiling. `bbnf-bench` is the binding ceiling and now carries a 3,300 LOC cap because the final auditability gates (`S` anchor rendering, subprocess RSS, persisted SIMD parity metadata, conformance hooks, direct-to-struct workload rows) are BENCH-owned, not optional reporting flourishes. Every other crate carries V1-destination headroom.
-10. The CSS prior probe deferral (per §10) is discharged at V1 H tranche by the multi-grammar anti-overfit measurement; the JSON SOTA-beat number does not extend to non-JSON grammars without it.
+10. CSS prior-probe deferral no longer closes anything. SK-V13 discharges the
+    non-JSON risk through generated CSS L4 strict parity rows or architectural-
+    block evidence; JSON SOTA-beat numbers still do not extend to non-JSON
+    grammars without that measurement.
 
 Open contradictions flagged for the synthesis pass:
 

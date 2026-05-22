@@ -4,6 +4,16 @@ You are the hardening agent for the **skinny implementation spec**. The skinny e
 
 This prompt is parameterised by target. It composes with the existing greenfield-restart hardening apparatus rather than duplicating it.
 
+**Pass Omega V1.1 / SK-V13 receiver (2026-05-22).** The active skinny cycle is
+SK-V13, not SK-V1/SK-V6. A hardening run now reads the SK-V13
+`SYNTHESIS.md`, `HANDOFF.md`, converged S-P1/S-P2 hardening records, S-P3 plan
+artifacts, and the G-Omega sign-off before it treats any skinny surface as
+dispatch authority. Refuse W0-before-G-Omega, missing parse_only admission
+coverage, weak strict-vs-strict comparator anchors, support-only primitives,
+P1-P8 silent fallback, source-present SIMD/ASM orphans, and Lock 14 generic
+crate branches. This prompt still defines the lenses; it does not authorize
+source, gate, `RESULTS.md`, or `REDRESS.md` edits by itself.
+
 ## §1 — Purpose: why skinny hardening differs from V1 hardening
 
 The V1 corpus hardening (`restart/prompts/audit-specs/HARDENING-LENS-SET.md`) audits whether the V1 architecture is internally coherent and load-bearing. The skinny hardening audits something different: **whether the skinny faithfully tests the V1 premise, while remaining buildable in 2-4 weeks and graduating mechanically**.

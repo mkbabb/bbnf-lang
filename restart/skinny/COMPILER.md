@@ -38,6 +38,22 @@ C6 extends this cleanup to `parse-that-regex`: JSON-named string, number,
 whitespace, and Unicode helper APIs must become grammar-neutral primitive facts
 or generated compatibility wrappers, not generic crate surface.
 
+**Pass Omega V1.1 / SK-V13 compiler receiver (2026-05-22).** SK-V13 replaces
+the old "single-plan JSON cut" with an active decision-engine fold. The
+compiler receiver is: extract the regex family into the grammar-neutral
+`parse-that-regex` surface, wire `crates/egraph/` as the BackendExpr language
+with canonical rewrites, use `ir/cost.rs` as an active `egg::CostFunction`, and
+replace or gated-retire the hardcoded P1-P8 cascade with a CSP + egraph + cost
+resolver. This fold must preserve the five `BackendShape` values and cannot add
+a directive, BIR variant, `BackendShape` enum member, substrate, or
+grammar-specific branch in a generic crate.
+
+Lock 14 cleanup uses V1.1 terms: generated provider manifests, generated
+sink/fact/value/flag surfaces, grammar-shape leak census, primitive policy
+ownership, CSS plus negative-control closure, and resolver-generated shape
+facts. Historical helpers such as `shapes_for_json` and `nominate_json` are
+waivers with deletion gates, not naming patterns for new compiler code.
+
 ---
 
 ## 1. `json.bbnf` Source Sketch

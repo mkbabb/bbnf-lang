@@ -2,17 +2,22 @@
 
 The skinny exists to validate the V1 architectural premise — specifically the SOTA-viability claim — before tranches A-J commit. **One grammar (JSON) end-to-end through 10 partial crates plus `xtask`, dual-track measured against sonic-rs / simd-json. Buildable in 2-4 weeks; ~32,000 handwritten LOC + ≤4,000 generated LOC.**
 
-**SK-V6 authority update (2026-05-15).** The current synthesis layer is
-`audit/GRAND-SYNTHESIS-SK-V6-ASMJSON-DAV1D.md`, with implementation routing in
-`audit/IMPLEMENTATION-PACKET-SK-V6-SOTA-RECOVERY.md` and handoff in
-`audit/HANDOFF-SK-V6.md`. The twelve-agent SK-V6 asmjson/DAV1D pass is archived
-under `audit/SK-V6-COHORT/skv6-A*.md` and `audit/SK-V6-COHORT/skv6-B*.md`.
-Binding fold-back: asmjson is an x86 DPDA architecture reference and a
-permissive flaw probe unless strict same-plane rows exist; DAV1D/FFmpeg/VLC
-contribute the SIMD admission discipline; grammar-specific behavior enters
-only through grammar source, metadata, generated `.data`, recognizer/cost
-facts, host/API schema facts, and generated runtime modules. No new directive,
-no new BIR variant, and no parallel substrate are admitted by the SK-V6 route.
+**Pass Omega V1.1 / SK-V13 authority update (2026-05-22).** Current dispatch
+authority is `restart/skinny/tranches/sk-v13/SYNTHESIS.md`,
+`restart/skinny/tranches/sk-v13/HANDOFF.md`,
+`restart/skinny/tranches/sk-v13/SPEC.md`,
+`restart/skinny/tranches/sk-v13/DISPATCH-PROMPT.md`, the SK-V12 campaign close
+packet, the user pin addendum, `skinny/RESULTS.md`, and `skinny/REDRESS.md`
+through the current head. SK-V13 W0 is blocked until Pass Omega V1.1 CRUD is
+complete and the worktree is clean; after that, W0 and later waves dispatch
+only through the SK-V13 SPEC/DISPATCH contract.
+
+Historical SK-V5/SK-V6 cohorts remain evidence for rejected routes, primitive
+admission discipline, and strict same-plane comparator language. They are not
+the active dispatch anchor. The current close posture is SK-V13 G1-G7:
+full CSS L4 parity or architectural block, all 51 JSON rows above sonic-rs
+strict or architectural block, decision-engine fold, union route, zero SIMD/ASM
+orphans, totality V1.1 ratification, and no silent demotion.
 
 The full V1 spec lives at `restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`, `restart/MIGRATION.md`, plus the PASS surfaces. This skinny spec carves out a minimum-viable subset of that V1 contract.
 
@@ -54,15 +59,12 @@ correctness is green. The `semantic_full_digest_stressor` pass rows are
 `update_center` pass under the host/API output-schema plane. Tranche dispatch
 must treat the expanded corpus plus both direct workload planes as the current
 SOTA-BEAT block.
-SK-V6 is the active dispatch anchor:
-`audit/IMPLEMENTATION-AGENT-PROMPT-SK-V6.md`. It supersedes the deleted
-SK-V3/SK-V4 implementation packets and SK-V1/SK-V2 hardening reports. SK-V6
-keeps the SK-V5 Rust-state landings but withdraws the Wave 3 UTF-8-fusion
-prescription as a close route; REDRESS 50-55 are the binding negative
-evidence. REDRESS 72 further rejects a simple global 16-byte retained
-tiny-string cap: scout rows improved, but Criterion guard rows regressed past
-the stop gate. No new kernel prescription is canonical before a fresh
-profile/falsifier names a row-local or grammar-neutral cost-model route.
+SK-V13 is the active dispatch anchor via
+`restart/skinny/tranches/sk-v13/SPEC.md` and
+`restart/skinny/tranches/sk-v13/DISPATCH-PROMPT.md`. Older SK-V6 prompt text is
+legacy evidence only. REDRESS 50-55, 72, 96/97/98, 119, and 120 remain
+negative-route evidence that a new wave must cite with material differential;
+they are not close waivers under the SK-V13 addendum.
 Generated direct string lowering now preserves raw spans to the sink boundary
 through `JsonSink::*_source`; the first no-allocation decoded visitor consumer
 and a later exact decoded-stats sink were measured and rejected, so the current
@@ -152,18 +154,19 @@ The skinny is the prior-validation step. Dispatch order:
 5. Hand-code the JSON parallel against the same substrate per BENCH.md §1.2 (substrate-API correspondence-gated inside `bbnf-bench`, not a separate runtime crate).
 6. Run the parity matrix per BENCH.md §6.
 7. Write `skinny/RESULTS.md` recording the verdict, Mbps table, reproducibility schema rows, arena counters, and tape-materialization notes. The `restart/skinny/` tree remains the spec authority.
-8. If GO → tranche A.W0 dispatches with the skinny crates as the V1 starting state.
-9. If CONDITIONAL → full A-J dispatch is blocked; only the explicitly named BENCH.md work may proceed while F/H waits on the failing ratio or probe.
-10. If INVALID → re-run instrumentation; do not dispatch from that bench.
-11. If NO-GO → route by failing plane: parse substrate/fusion rows to Lock 1 or COMPILER §3 only when the delta proves that plane failed; `N-direct` rows route to generated `SinkOnly` typed emission and parse-that materialization primitives.
+8. If SK-V13 G1-G7 are fully admitted or architecturally blocked, Pass Alpha brackets close and records the campaign disposition.
+9. If any SK-V13 row or CSS feature remains implementation-blocked, Pass Alpha brackets the next skinny tranche immediately; do not claim tranche close by deferral.
+10. If instrumentation is INVALID, re-run instrumentation; do not dispatch from that bench.
+11. If a row fails twice in-tranche, surface the round-trip rule with architectural-block evidence or a fresh material differential, then continue under the user pin.
 
 The skinny is buildable, measurable, and falsifiable. It exists to update the SOTA-beat probability with measurement evidence before the V1 plan commits 6-12 months of tranche execution.
 
 ## Authority cross-references
 
-The four sibling slices ([SUBSTRATE.md](SUBSTRATE.md), [COMPILER.md](COMPILER.md), [BENCH.md](BENCH.md), [WORKSPACE.md](WORKSPACE.md), [HARDENING.md](HARDENING.md)) compose with the current SK-V6/SK-V5 audit authorities that bind the SOTA-BEAT route:
+The four sibling slices ([SUBSTRATE.md](SUBSTRATE.md), [COMPILER.md](COMPILER.md), [BENCH.md](BENCH.md), [WORKSPACE.md](WORKSPACE.md), [HARDENING.md](HARDENING.md)) compose with the current SK-V13 tranche authority and keep older SK-V5/SK-V6 packets as historical evidence:
 
-- [`audit/IMPLEMENTATION-AGENT-PROMPT-SK-V6.md`](audit/IMPLEMENTATION-AGENT-PROMPT-SK-V6.md) — SK-V6 dispatch authority (2026-05-14): legacy purge, profile-first regression recovery, direct-string close discipline, strict workload matrix, and final SK-V6 close conditions.
+- [`tranches/sk-v13/SYNTHESIS.md`](tranches/sk-v13/SYNTHESIS.md), [`tranches/sk-v13/SPEC.md`](tranches/sk-v13/SPEC.md), [`tranches/sk-v13/DISPATCH-PROMPT.md`](tranches/sk-v13/DISPATCH-PROMPT.md), and [`tranches/sk-v13/HANDOFF.md`](tranches/sk-v13/HANDOFF.md) — active skinny dispatch authority after Pass Omega CRUD completion.
+- [`audit/IMPLEMENTATION-AGENT-PROMPT-SK-V6.md`](audit/IMPLEMENTATION-AGENT-PROMPT-SK-V6.md) — historical SK-V6 evidence (2026-05-14): legacy purge, profile-first regression recovery, direct-string close discipline, strict workload matrix, and negative-route evidence.
 - [`audit/SOTA-BEAT-DESIGN.md`](audit/SOTA-BEAT-DESIGN.md) §6 — falsifiability matrix per pathology class; `checkasm` admission gate; Wave 2 re-baseline against S-anchors.
 - [`audit/GRAND-SYNTHESIS-SK-V5.md`](audit/GRAND-SYNTHESIS-SK-V5.md) — SK-V5 authority (2026-05-13; 417 LOC): corrected diagnoses (parse-attribution dishonesty, bench-private dishonesty, strictness honesty gap, BackendShape wiring gap, Lock 14 leak status, tape-union verdict) plus wave structure feeding the SK-V5 implementation packet.
 - [`audit/IMPLEMENTATION-PACKET-SK-V5.md`](audit/IMPLEMENTATION-PACKET-SK-V5.md) — SK-V5 receiver packet (771 LOC; 7 waves): Wave 0 strictness columns + `parse-attribution` feature flag + nuke audit; Wave 1 BackendShape + LayoutFacts + `derive_backend_shape`; Wave 2 number lever + generated `SinkOnly`; Wave 3 source-hook/string work with UTF-8 fusion refuted as a close; Wave 4 partial Lock 14 remediation; Wave 5 consumed bbnf.asm primitive admission; Wave 6 strict workload matrix; Wave 7 optional x86 `CollapsedStage` successor.

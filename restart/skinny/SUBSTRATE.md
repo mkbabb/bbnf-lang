@@ -30,6 +30,16 @@ supplies one instance; CSS, Sheets, and BBNF-self supply others. SIMD/ASM
 primitives are admitted only through Lock 16 scalar-oracle plus checkasm gates
 and a same-wave runtime or generated consumer.
 
+**Pass Omega V1.1 / SK-V13 substrate receiver (2026-05-22).** The active
+substrate obligations are stricter than the historical JSON-only split:
+one substrate remains binding, but SK-V13 must admit or architecturally block a
+new union variant distinct from REDRESS 96/97/98; every SIMD/ASM primitive must
+be wired, deleted, scalar-delegated, or architecturally blocked with same-wave
+measurement; and grammar-owned quote/escape/control policy must flow from
+generated policy/fact surfaces rather than generic JSON branches. A retained
+sidecar classifier, support-only primitive, or orphan source-present kernel is
+not a valid close state.
+
 Source authority (verbatim citations, not paraphrase):
 
 - `restart/ARCHITECTURE.md` §9 (lines 1373-1426) — tape and direct-to-struct union; tape invariants; per-grammar runtime template path.
@@ -37,8 +47,8 @@ Source authority (verbatim citations, not paraphrase):
 - `restart/audit/pass-3-runtime/PASS-3.md` §4 (lines 150-191) — illustrative `Tape<'input>` / `TapeToken` / `ValueRef<'doc, 'input, K>` shape; closure environment by `&'i Tape<'i>`.
 - `restart/ARCHITECTURE.md` §7.2 BIR rows for `TapeEmit`, `DirectBuild`, `ValueProject`, `SimdScan`, `SpanMark` (lines 920-963) — what the substrate is the receiver of.
 - `restart/audit/pass-2-codegen/PASS-2.md` §2 commitment 3 — TapeShape + ValueShape are one materialisation plan.
-- `restart/locks/LOCKS.md` Lock 1 (line 34) — tape is THE substrate; no parallel substrate; no OpenFrame clone.
-- `restart/locks/LOCKS.md` Lock 8 (line 48) — sonic-rs / simdjson / lightning-css anchors.
+- `restart/locks/LOCKS.md` Lock 1 (line 48) — tape is THE substrate; no parallel substrate; no OpenFrame clone.
+- `restart/locks/LOCKS.md` Lock 8 (line 119) — sonic-rs / simdjson / lightning-css anchors.
 - `restart/ARCHITECTURE.md` §11 row `simd/structural_scan` (line 1519) — ≥56000 Mbps AVX2, ≥40000 Mbps NEON, scalar parity hash mandatory.
 
 The full-V1 spec PASS-3 §4 admits its layout is **illustrative, not mandatory** ("This layout is not a PASS-1 mandate; it is a user-surface contract. PASS-1 may pack differently if these semantics remain true." — `PASS-3.md:187`). The skinny pins one packing and measures it. If the bench fails parity, the packing is the variable to perturb, not the contract.

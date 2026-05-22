@@ -22,12 +22,26 @@ strictness, UTF-8 validation point, escape completeness, output plane, ownership
 plane, feature mask, API symbol, corpus hash, hardware, build flags, sidecar
 freshness, and primitive/checkasm status. asmjson is an architectural reference
 for x86 `CollapsedStage`, but permissive asmjson rows are flaw probes only.
-The active implementation route is
-`restart/skinny/tranches/sk-v6/SPEC.md`.
+The historical SK-V6 implementation route was
+`restart/skinny/tranches/sk-v6/SPEC.md`; current authority is the SK-V13
+receiver below.
+
+**Pass Omega V1.1 / SK-V13 receiver (2026-05-22).** The active route is now
+`restart/skinny/tranches/sk-v13/SPEC.md` after G-Omega sign-off. Schema v3 is
+historical comparator-plane disclosure, not the current close schema. SK-V13
+bench rows use a common telemetry envelope across JSON and CSS: grammar id,
+output plane, strictness, oracle/comparator id, witness kind, generated policy
+source, row verdict, run id, host, wave id, and REDRESS provenance. JSON rows
+then extend that envelope with sonic-rs strict comparators; CSS L4 rows extend
+it with lightningcss plus an independent oracle such as cssparser or a golden
+table. Throughput, rolling deltas, hot-leaf attribution, PMU/samply signals,
+and primitive/checkasm state are workload extensions consumed by the owning
+SK-V13 gate. No `RESULTS.md` or gate-code mutation is authorized by this
+document alone.
 
 The full V1 spec lives at `restart/ARCHITECTURE.md` and `restart/MASTER-PLAN.md`.
 SOTA anchors live at `restart/corpora/SOTA.md` and Lock 8
-(`restart/locks/LOCKS.md:48`). This document binds the skinny bench harness
+(`restart/locks/LOCKS.md:119`). This document binds the skinny bench harness
 to those anchors without reproducing them.
 
 ---
@@ -278,7 +292,9 @@ in generic crates.
   cross-language noise that defeats the controlled comparison. The simdjson
   number anchors the structural-scan microbenchmark target (§4) but does not
   appear as a parse-time competitor row.
-- **lightning-css:** CSS, not JSON. Defers to V1 H.W4.
+- **lightning-css:** CSS L4 comparator for SK-V13 CSS rows. It is not a JSON
+  parse-time competitor, but it is now an active skinny SOTA comparator for CSS
+  feature rows.
 - **tree-sitter:** different output shape (CST vs typed root). Defers to V1
   diagnostic ledger only.
 - **jq, oj, json-parser-c:** not architecturally adjacent.
@@ -406,7 +422,9 @@ test-fail signal, not a regression.
 The user's skinny target table (provided in the prompt) sets BEAT and PARITY
 floors. PARITY is the V1-correctness floor (matches sonic-rs envelope per
 ARCHITECTURE.md §4 amendment); BEAT is the J.W1 audacious target. The skinny
-gates against PARITY for GO; BEAT routes to V1 H tranche body.
+gates against PARITY for GO. Current SK-V13 JSON/CSS rows override this
+historical triad framing: each row must beat its same-plane strict comparator
+or record an architectural block.
 
 | Corpus | Beat target (Track 2) | Parity floor (Track 2) | sonic-rs anchor | simd-json anchor |
 |---|---|---|---|---|
@@ -1592,12 +1610,17 @@ graduates, this workflow renames or absorbs into J.W1.
 The skinny intentionally does NOT measure several axes that V1 does. Each
 omission has an explicit impact statement on the SOTA-viability conclusion.
 
-### 9.1 No CSS gates — but a CSS prior probe (substrate-only)
+### 9.1 CSS L4 receiver — current gate, historical prior probe
 
-Full lightning-css comparison defers to V1 H.W4 (the H tranche owns the
-CSS SOTA close). The skinny does not run codegen for CSS L4. However,
-there is a **CSS prior probe** that is cheap to add and substantially
-sharpens the SOTA-viability conclusion:
+Full lightning-css comparison no longer defers to a V1 H-tranche as an active
+skinny caveat. Under SK-V13, CSS L4 rows are close targets: each non-out-of-
+scope feature must match lightningcss coverage for the production, pass strict
+equality on the same corpus/output plane/host, carry an independent oracle, and
+beat lightningcss Track 1 by at least 1 Mbps or record an architectural block.
+The old substrate-only probe below remains historical evidence only.
+
+There was a **CSS prior probe** intended to sharpen the earlier
+SOTA-viability conclusion:
 
 `json/probes/css_prior/bootstrap` parses `bootstrap.css` (canonical
 ~143 KB CSS3 fixture used by lightning-css) using a hand-coded
@@ -1622,9 +1645,9 @@ SOTA-beat-on-CSS probability update. A skinny that hits JSON outcome A
 but degrades 3× on CSS bootstrap should *lower* the V1 SOTA-beat
 probability for the CSS row, not assume JSON parity transfers.
 
-Defer if implementation budget excludes this probe; record explicit
-"deferred to V1 H.W4 entry gate" in RESULTS rather than assuming
-generality.
+If an SK-V13 CSS row is not implemented, that is an implementation block until
+the owning wave records an architectural block. Do not record a V1 H-tranche
+deferral as close evidence.
 
 ### 9.2 No incremental parsing bench
 
@@ -2190,8 +2213,8 @@ head -1 skinny/RESULTS.md
 | Is the single-plan extraction masking cost-model wins? | open on event/tape consumption | scalar alternate passes (canonical wins); dispatch-table alternate INVALID per `skinny/REDRESS.md` item 17; byte-class whitespace EventCursor INVALID per item 51; parser-local structural-mask cursor INVALID per item 53; the remaining admissible alternate is single-substrate event/tape consumption |
 | Is cold-cache parse latency acceptable? | report-only | cold_first_parse probe per corpus |
 | Is the substrate viable for concurrent-parse workloads? | yes | peak RSS gated at outcome M (≤ 3× competitor on canada) |
-| Does the substrate generalise beyond JSON? | report-only | optional CSS prior probe at bootstrap.css |
-| Are CSS SOTA gates cleared? | NO (defers to V1 H.W4) | CSS prior probe is a substrate-generality signal, not a CSS SOTA verdict |
+| Does the substrate generalise beyond JSON? | gate-owned by SK-V13 CSS rows | CSS prior probe is historical; current proof is generated CSS L4 strict parity |
+| Are CSS SOTA gates cleared? | SK-V13 close target | each non-out-of-scope CSS row must beat lightningcss or carry architectural-block evidence |
 | Is incremental parsing performance acceptable? | NO (defers to V1 I) | n/a — committed tape is private and immutable; mutable reuse belongs to the V1 I `TapeBuilder` path documented in INDEX.md deviation ledger |
 | Is generated JSON LOC inside budget? | yes | `xtask lint-loc` / gate metadata; V1 nine-grammar scale defers to F.W3 |
 | Is WASM lower path measured? | NO (defers to V2) | n/a — see §9.4 |

@@ -572,8 +572,13 @@ const FROZEN_ROOTS: &[&str] = &[
     "crates/runtime/src",
     "crates/ir/src",
     "crates/bbnf-regex/src",
+    "crates/passes/Cargo.toml",
     "crates/passes/src",
+    "crates/codegen/Cargo.toml",
     "crates/codegen/src",
+    "crates/bbnf-bench/src/bin/gate.rs",
+    "crates/bbnf-bench/src/report.rs",
+    "crates/bbnf-bench/src/lock14_baseline.rs",
     "crates/grammar/src",
     "crates/bbnf/src",
     "crates/bbnf-simd/src",
@@ -588,6 +593,9 @@ const FROZEN_ROOTS: &[&str] = &[
     "crates/bbnf-bench/src/scan.rs",
     "crates/bbnf-bench/src/materialization.rs",
     "xtask/src/real_typed_schema.rs",
+    "xtask/src/main.rs",
+    "Cargo.toml",
+    "Cargo.lock",
 ];
 
 const W2_TYPED_OWNER_PATHS: &[&str] = &[
@@ -798,6 +806,24 @@ const SK_V13_W6_OWNER_PATHS: &[&str] = &[
     "Cargo.toml",
 ];
 
+const SK_V13_W7_OWNER_PATHS: &[&str] = &[
+    "crates/ir/src/cost.rs",
+    "crates/ir/src/lib.rs",
+    "crates/passes/Cargo.toml",
+    "crates/passes/src/backend_egraph.rs",
+    "crates/passes/src/decision_csp.rs",
+    "crates/passes/src/lib.rs",
+    "crates/codegen/src/lib.rs",
+    "crates/codegen/src/lower/mod.rs",
+    "crates/codegen/src/lower/rust.rs",
+    "crates/bbnf-bench/src/report.rs",
+    "crates/bbnf-bench/src/bin/gate.rs",
+    "crates/bbnf-bench/src/lock14_baseline.rs",
+    "xtask/src/main.rs",
+    "Cargo.toml",
+    "Cargo.lock",
+];
+
 fn current_lock14_owner_paths() -> Vec<&'static str> {
     let mut paths = Vec::with_capacity(
         SK_V12_W1A_OWNER_PATHS.len()
@@ -809,7 +835,8 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
             + SK_V13_W10_2_OWNER_PATHS.len()
             + SK_V13_W10_3_OWNER_PATHS.len()
             + SK_V13_W5_OWNER_PATHS.len()
-            + SK_V13_W6_OWNER_PATHS.len(),
+            + SK_V13_W6_OWNER_PATHS.len()
+            + SK_V13_W7_OWNER_PATHS.len(),
     );
     paths.extend_from_slice(SK_V12_W1A_OWNER_PATHS);
     paths.extend_from_slice(SK_V12_W1B1_OWNER_PATHS);
@@ -821,6 +848,7 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
     paths.extend_from_slice(SK_V13_W10_3_OWNER_PATHS);
     paths.extend_from_slice(SK_V13_W5_OWNER_PATHS);
     paths.extend_from_slice(SK_V13_W6_OWNER_PATHS);
+    paths.extend_from_slice(SK_V13_W7_OWNER_PATHS);
     paths
 }
 
@@ -1005,6 +1033,14 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
             return Ok(());
         }
     }
+    if subject.contains("sk-v13-waveW7") || subject.contains("sk-v13-wave7-challenge") {
+        let allowed = changed_paths
+            .iter()
+            .all(|path| is_allowed_path(path, SK_V13_W7_OWNER_PATHS));
+        if allowed {
+            return Ok(());
+        }
+    }
     Err(format!(
         "Lock 14 frozen diff failed for parent paths [{}]",
         changed_paths.join(", ")
@@ -1158,8 +1194,9 @@ fn validate_backend_shape_surface(root: &Path) -> Result<(), String> {
 const GENERIC_SCAN_ROOTS: &[&str] = &[
     "crates/bbnf-regex/src",
     "crates/codegen/src/lib.rs",
+    "crates/codegen/src/lower",
     "crates/codegen/src/grammar_profile.rs",
-    "crates/passes/src/lib.rs",
+    "crates/passes/src",
     "crates/runtime/src/lib.rs",
     "crates/runtime/src/tape",
     "crates/ir/src",
@@ -1334,6 +1371,20 @@ mod tests {
     }
 
     #[test]
+    fn admits_sk_v13_w7_owner_dirty_paths_under_w7_allowance() {
+        assert!(validate_frozen_status_output_with_allowed(
+            " M crates/passes/src/lib.rs\n?? crates/passes/src/decision_csp.rs\n M crates/bbnf-bench/src/bin/gate.rs",
+            SK_V13_W7_OWNER_PATHS,
+        )
+        .is_ok());
+        assert!(validate_frozen_status_output_with_allowed(
+            " M crates/runtime/src/tape/mod.rs",
+            SK_V13_W7_OWNER_PATHS,
+        )
+        .is_err());
+    }
+
+    #[test]
     fn admits_w2_typed_owner_parent_diff_only_under_w2_scope() {
         let changed = W2_TYPED_OWNER_PATHS
             .iter()
@@ -1436,6 +1487,31 @@ mod tests {
     }
 
     #[test]
+    fn admits_sk_v13_w7_parent_diff_under_w7_scope() {
+        let changed = SK_V13_W7_OWNER_PATHS
+            .iter()
+            .map(|path| (*path).to_string())
+            .collect::<Vec<_>>();
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v13-waveW7): admit CSP cascade fail-closed finalizer"
+        )
+        .is_ok());
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v13-waveW6): admit active cost"
+        )
+        .is_err());
+        let mut outside = changed;
+        outside.push("crates/runtime/src/tape/mod.rs".into());
+        assert!(validate_authorized_parent_diff(
+            &outside,
+            "feat(sk-v13-waveW7): admit CSP cascade fail-closed finalizer"
+        )
+        .is_err());
+    }
+
+    #[test]
     fn normalizes_repo_root_paths_to_skinny_workspace_paths() {
         assert_eq!(
             normalize_git_path("skinny/crates/bbnf-bench/src/generated_real_typed.rs"),
@@ -1473,6 +1549,17 @@ mod tests {
             strip_test_code(source)
         )
         .is_ok());
+    }
+
+    #[test]
+    fn generic_scan_roots_cover_w7_generic_modules() {
+        for root in [
+            "crates/passes/src",
+            "crates/codegen/src/lower",
+            "crates/ir/src",
+        ] {
+            assert!(GENERIC_SCAN_ROOTS.contains(&root), "{root} is not scanned");
+        }
     }
 
     #[test]

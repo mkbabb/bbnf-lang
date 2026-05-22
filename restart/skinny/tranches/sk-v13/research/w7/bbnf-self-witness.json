@@ -1,0 +1,8 @@
+{
+  "schema_version": "sk-v13-w7-bbnf-self-witness-v1",
+  "wave_id": "SK-V13-W7",
+  "grammar": "bbnf_self_witness",
+  "command": "cargo test -p passes decision_csp -- --nocapture",
+  "status": "fail-closed-generated-role",
+  "evidence": "BBNF-self remains a witness-only grammar. The W7 CSP finalizer is grammar-neutral and refuses production admission without generated runtime row movement."
+}

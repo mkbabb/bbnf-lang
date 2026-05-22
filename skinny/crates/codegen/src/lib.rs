@@ -13,7 +13,7 @@ mod json_typed_direct;
 pub(crate) mod lower;
 
 use direct_schema::DirectSchemaSet;
-use ir::{BackendIr, BackendShape, CostFacts, PriorityStep, RuleId, ShapeRationale};
+use ir::{BackendIr, BackendShape, CostFacts, RuleId};
 use std::collections::BTreeMap;
 use std::path::Path;
 use thiserror::Error;
@@ -107,9 +107,11 @@ pub fn emit_from_source(grammar_name: &str, source: &str) -> Result<EmittedSourc
 }
 
 pub fn emit(backend: &BackendIr) -> Result<EmittedSource, CodegenError> {
-    let backend_shape = default_backend_shape(backend);
-    let cost_facts = default_cost_facts(&backend_shape);
-    emit_with_layout(backend, &backend_shape, &cost_facts, &[])
+    let _ = backend;
+    Err(CodegenError::Lowering(
+        "W7 fail-closed: emit() requires pass-produced backend shape, active-cost, and CSP facts"
+            .to_string(),
+    ))
 }
 
 pub fn emit_runtime_profile(grammar_name: &str) -> Result<EmittedSource, CodegenError> {
@@ -147,7 +149,8 @@ fn emit_with_layout(
             cost_facts,
             diagnostics,
         },
-    );
+    )
+    .map_err(CodegenError::Lowering)?;
     let sink_only = lowered.sink_only_program.as_ref().ok_or_else(|| {
         CodegenError::Lowering(
             "BackendIr did not contain DirectBuild sink-only program".to_string(),
@@ -241,7 +244,8 @@ fn emit_typed_with_layout(
             cost_facts,
             diagnostics,
         },
-    );
+    )
+    .map_err(CodegenError::Lowering)?;
     let sink_only = lowered.sink_only_program.as_ref().ok_or_else(|| {
         CodegenError::Lowering(
             "BackendIr did not contain DirectBuild sink-only program".to_string(),
@@ -255,34 +259,6 @@ fn emit_typed_with_layout(
         json_typed_direct::render(&typed).map_err(CodegenError::Lowering)?,
     );
     Ok(EmittedSource { files })
-}
-
-fn default_backend_shape(backend: &BackendIr) -> std::collections::HashMap<RuleId, BackendShape> {
-    backend
-        .rules
-        .iter()
-        .enumerate()
-        .map(|(index, _)| (RuleId(index), BackendShape::OffsetTape))
-        .collect()
-}
-
-fn default_cost_facts(
-    backend_shape: &std::collections::HashMap<RuleId, BackendShape>,
-) -> std::collections::HashMap<RuleId, CostFacts> {
-    backend_shape
-        .iter()
-        .map(|(rule_id, shape)| {
-            (
-                *rule_id,
-                CostFacts::projection(
-                    *rule_id,
-                    *shape,
-                    ShapeRationale::DefaultOffsetTape,
-                    PriorityStep::P7OffsetTapeDefault,
-                ),
-            )
-        })
-        .collect()
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -592,7 +568,8 @@ mod tests {
                 cost_facts: &output.layout_facts.cost_facts,
                 diagnostics: &output.diagnostics,
             },
-        );
+        )
+        .unwrap();
         let program = lowered.sink_only_program.unwrap();
 
         assert_eq!(program.entry_rule, "json");
@@ -606,6 +583,39 @@ mod tests {
         let generated = emitted.get("generated.rs").unwrap();
         assert!(generated.contains("// sink-only lowered from BackendIr: entry=json"));
         assert!(generated.contains("pub fn parse_direct"));
+    }
+
+    #[test]
+    fn bare_emit_fails_closed_without_pass_facts() {
+        let grammar = grammar::parse_grammar("json", JSON_GRAMMAR).unwrap();
+        let output = passes::compile(&grammar).unwrap();
+        let err = emit(&output.backend_ir).unwrap_err();
+
+        assert!(
+            matches!(err, CodegenError::Lowering(message) if message.contains("W7 fail-closed"))
+        );
+    }
+
+    #[test]
+    fn lowering_rejects_non_sat_csp_facts() {
+        let grammar = grammar::parse_grammar("json", JSON_GRAMMAR).unwrap();
+        let mut output = passes::compile(&grammar).unwrap();
+        let cost = output.layout_facts.cost_facts.get_mut(&RuleId(0)).unwrap();
+        let csp = cost.decision_csp.as_mut().unwrap();
+        csp.csp_status = "unsat".into();
+        csp.selected_rule_count = 0;
+
+        let err = lower::lower_to_rust(
+            &output.backend_ir,
+            &lower::LowerCtx {
+                backend_shape: &output.layout_facts.backend_shape,
+                cost_facts: &output.layout_facts.cost_facts,
+                diagnostics: &output.diagnostics,
+            },
+        )
+        .unwrap_err();
+
+        assert!(err.contains("W7 fail-closed: decision-CSP status unsat"));
     }
 
     #[test]

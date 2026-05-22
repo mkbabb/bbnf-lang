@@ -122,6 +122,7 @@ pub const SKV13_CSS_VENDOR_CUSTOM_REPORT_SCHEMA: &str = "sk-v13-css-vendor-custo
 pub const SKV13_CSS_NESTED_LAYOUT_REPORT_SCHEMA: &str = "sk-v13-css-nested-layout-sota-v1";
 pub const SKV13_DECISION_REGEX_REPORT_SCHEMA: &str = "sk-v13-decision-regex-v1";
 pub const SKV13_DECISION_ACTIVE_COST_REPORT_SCHEMA: &str = "sk-v13-decision-active-cost-v1";
+pub const SKV13_DECISION_CSP_CASCADE_REPORT_SCHEMA: &str = "sk-v13-decision-csp-cascade-v1";
 pub type NonJsonEvidenceRow = TelemetryRow;
 pub type NonJsonOracleEvidence = SkV8ComparatorEvidence;
 
@@ -230,6 +231,91 @@ pub struct SkV13DecisionActiveCostReport {
     pub material_differential: String,
     pub redress_entry: String,
     pub csp_solve_ms: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct SkV13DecisionCspCascadeReport {
+    pub schema_version: String,
+    pub wave_id: String,
+    pub run_id: String,
+    pub source_commit: String,
+    pub host_triple: String,
+    pub build_flags: String,
+    pub feature_mask: String,
+    pub consumer_gate: String,
+    pub g_omega_status: String,
+    pub regex_fact_artifact_path: String,
+    pub regex_fact_sha256: String,
+    pub active_cost_artifact_path: String,
+    pub active_cost_sha256: String,
+    pub selection_trace_sha256: String,
+    pub csp_problem_artifact_path: String,
+    pub csp_problem_sha256: String,
+    pub csp_solution_artifact_path: String,
+    pub csp_solution_sha256: String,
+    pub css_l4_witness_artifact_path: String,
+    pub css_l4_witness_sha256: String,
+    pub css_l4_witness_command: String,
+    pub sheets_witness_artifact_path: String,
+    pub sheets_witness_sha256: String,
+    pub sheets_witness_command: String,
+    pub bbnf_self_witness_artifact_path: String,
+    pub bbnf_self_witness_sha256: String,
+    pub bbnf_self_witness_command: String,
+    pub scoped_witness_label: String,
+    pub csp_solver_source: String,
+    pub csp_solver_version: String,
+    pub csp_status: String,
+    pub csp_variable_count: u32,
+    pub csp_constraint_count: u32,
+    pub csp_objective_count: u32,
+    pub csp_named_grammars: Vec<String>,
+    pub csp_solve_ms: f64,
+    pub csp_timeout_ms: u64,
+    pub csp_node_budget: u64,
+    pub csp_nodes_explored: u64,
+    pub csp_budget_status: String,
+    pub selected_rule_count: u32,
+    pub selected_candidate_id: String,
+    pub selected_shape: String,
+    pub parity_constraint_status: String,
+    pub recognizer_constraint_status: String,
+    pub substrate_constraint_status: String,
+    pub simd_constraint_status: String,
+    pub capacity_constraint_status: String,
+    pub resolver_output_piping: String,
+    pub fused_solver_status: String,
+    pub generated_selection_path: String,
+    pub compile_consumer_path: String,
+    pub same_wave_consumer_path: String,
+    pub same_wave_consumer_class: String,
+    pub cascade_retirement_status: String,
+    pub choose_backend_shape_status: String,
+    pub priority_table_status: String,
+    pub p1_p8_fallback_status: String,
+    pub legacy_cascade_admission_status: String,
+    pub priority_data_role: String,
+    pub priority_hard_prune_status: String,
+    pub priority_objective_status: String,
+    pub fallback_invoked: bool,
+    pub compat_fallback_status: String,
+    pub static_css_provider_status: String,
+    pub json_sink_only_status: String,
+    pub json_guard_state: String,
+    pub css_guard_state: String,
+    pub sheets_fail_closed_status: String,
+    pub bbnf_self_fail_closed_status: String,
+    pub lock14_status: String,
+    pub generated_runtime_diff_status: String,
+    pub generated_runtime_diff_artifact_path: String,
+    pub generated_runtime_diff_sha256: String,
+    pub row_move_toward_sota_status: String,
+    pub affected_row_ids: Vec<String>,
+    pub block_id: Option<String>,
+    pub abrogate_status: String,
+    pub material_differential: String,
+    pub redress_entry: String,
 }
 
 impl SkV13DecisionActiveCostReport {
@@ -400,6 +486,209 @@ impl SkV13DecisionRegexReport {
         }
         if self.material_differential.trim().is_empty() || self.redress_entry.trim().is_empty() {
             return Err("W5 report missing material differential or REDRESS entry".into());
+        }
+        Ok(())
+    }
+}
+
+impl SkV13DecisionCspCascadeReport {
+    pub fn from_json_str(text: &str) -> Result<Self, String> {
+        serde_json::from_str(text)
+            .map_err(|error| format!("invalid SK-V13 decision-CSP-cascade report: {error}"))
+    }
+
+    pub fn validate_gate(&self) -> Result<(), String> {
+        if self.schema_version != SKV13_DECISION_CSP_CASCADE_REPORT_SCHEMA {
+            return Err(format!(
+                "unsupported SK-V13 decision-CSP-cascade schema {}",
+                self.schema_version
+            ));
+        }
+        if self.wave_id != "SK-V13-W7" {
+            return Err(format!("{} cannot claim W7 authority", self.wave_id));
+        }
+        if !self.run_id.starts_with("sk-v13-w7:") {
+            return Err(format!("invalid W7 run id {}", self.run_id));
+        }
+        if self.source_commit.trim().is_empty()
+            || self.host_triple.trim().is_empty()
+            || self.build_flags.trim().is_empty()
+            || self.feature_mask.trim().is_empty()
+        {
+            return Err("W7 report missing source/build provenance".into());
+        }
+        if self.consumer_gate != "G-W7-DECISION-CSP-CASCADE" || self.g_omega_status != "user-signed"
+        {
+            return Err("W7 consumer gate or G-Omega status invalid".into());
+        }
+        if !is_hex_sha256(&self.selection_trace_sha256) {
+            return Err("W7 selection trace hash invalid".into());
+        }
+        for (label, path, sha) in [
+            (
+                "W5 regex facts",
+                self.regex_fact_artifact_path.as_str(),
+                self.regex_fact_sha256.as_str(),
+            ),
+            (
+                "W6 active-cost facts",
+                self.active_cost_artifact_path.as_str(),
+                self.active_cost_sha256.as_str(),
+            ),
+            (
+                "W7 CSP problem",
+                self.csp_problem_artifact_path.as_str(),
+                self.csp_problem_sha256.as_str(),
+            ),
+            (
+                "W7 CSP solution",
+                self.csp_solution_artifact_path.as_str(),
+                self.csp_solution_sha256.as_str(),
+            ),
+            (
+                "W7 CSS L4 witness",
+                self.css_l4_witness_artifact_path.as_str(),
+                self.css_l4_witness_sha256.as_str(),
+            ),
+            (
+                "W7 Sheets witness",
+                self.sheets_witness_artifact_path.as_str(),
+                self.sheets_witness_sha256.as_str(),
+            ),
+            (
+                "W7 BBNF-self witness",
+                self.bbnf_self_witness_artifact_path.as_str(),
+                self.bbnf_self_witness_sha256.as_str(),
+            ),
+        ] {
+            if path.trim().is_empty() || !is_hex_sha256(sha) {
+                return Err(format!("{label} artifact path/hash invalid"));
+            }
+        }
+        for (label, command) in [
+            ("CSS L4", self.css_l4_witness_command.as_str()),
+            ("Sheets", self.sheets_witness_command.as_str()),
+            ("BBNF-self", self.bbnf_self_witness_command.as_str()),
+        ] {
+            if command.trim().is_empty()
+                || matches!(command, "status-only" | "support_only" | "future")
+            {
+                return Err(format!("W7 {label} witness command is status-only"));
+            }
+        }
+        if self.scoped_witness_label.trim().is_empty() {
+            return Err("W7 scoped witness label missing".into());
+        }
+        if self.csp_solver_source != "csp_solver::Csp<CostFiniteDomain>"
+            || self.csp_solver_version.trim().is_empty()
+            || !matches!(self.csp_status.as_str(), "sat" | "unsat" | "timeout")
+            || self.csp_variable_count == 0
+            || self.csp_constraint_count < 6
+            || self.csp_objective_count == 0
+            || self.csp_named_grammars.is_empty()
+            || !self.csp_solve_ms.is_finite()
+            || self.csp_solve_ms > self.csp_timeout_ms as f64
+            || self.csp_timeout_ms > 1_000
+            || self.csp_node_budget == 0
+            || self.csp_budget_status != "pass"
+        {
+            return Err("W7 CSP bounds invalid".into());
+        }
+        if self.selected_rule_count == 0
+            || self.selected_candidate_id.trim().is_empty()
+            || self.selected_shape.trim().is_empty()
+        {
+            return Err("W7 selected rule/candidate evidence invalid".into());
+        }
+        for (label, status) in [
+            ("parity", self.parity_constraint_status.as_str()),
+            ("recognizer", self.recognizer_constraint_status.as_str()),
+            ("substrate", self.substrate_constraint_status.as_str()),
+            ("simd", self.simd_constraint_status.as_str()),
+            ("capacity", self.capacity_constraint_status.as_str()),
+        ] {
+            if status != "pass" {
+                return Err(format!("W7 {label} constraint did not pass"));
+            }
+        }
+        if self.resolver_output_piping != "regex_facts->egraph_active_cost->csp->compile_codegen"
+            || self.fused_solver_status != "not-fused"
+            || self.generated_selection_path.trim().is_empty()
+            || self.compile_consumer_path.trim().is_empty()
+            || self.same_wave_consumer_path.trim().is_empty()
+            || self.same_wave_consumer_class != "gate_json_decision_csp_cascade_contract"
+        {
+            return Err("W7 resolver/consumer path invalid".into());
+        }
+        if self.cascade_retirement_status != "fail_closed"
+            || self.choose_backend_shape_status != "csp-finalized"
+            || self.priority_table_status != "evidence-only"
+            || self.p1_p8_fallback_status != "non-admission"
+            || self.legacy_cascade_admission_status != "blocked"
+            || self.priority_data_role != "evidence-only"
+            || self.priority_hard_prune_status != "not-used"
+            || self.priority_objective_status != "not-used"
+            || self.fallback_invoked
+            || self.compat_fallback_status != "not-invoked"
+        {
+            return Err("W7 cascade retirement or fallback status invalid".into());
+        }
+        if self.static_css_provider_status.trim().is_empty()
+            || self.json_sink_only_status.trim().is_empty()
+            || self.static_css_provider_status == "pass"
+            || self.json_sink_only_status == "pass"
+        {
+            return Err("W7 static provider blocker evidence invalid".into());
+        }
+        for (label, status) in [
+            ("JSON guard", self.json_guard_state.as_str()),
+            ("CSS guard", self.css_guard_state.as_str()),
+            (
+                "Sheets fail-closed",
+                self.sheets_fail_closed_status.as_str(),
+            ),
+            (
+                "BBNF-self fail-closed",
+                self.bbnf_self_fail_closed_status.as_str(),
+            ),
+            ("Lock 14", self.lock14_status.as_str()),
+        ] {
+            if status.trim().is_empty()
+                || matches!(
+                    status,
+                    "support_only" | "gate_only" | "telemetry_only" | "future_consumer"
+                )
+            {
+                return Err(format!("W7 {label} status invalid"));
+            }
+        }
+        match self.row_move_toward_sota_status.as_str() {
+            "pass" | "admitted" => {
+                if self.generated_runtime_diff_status != "present"
+                    || self.generated_runtime_diff_artifact_path.trim().is_empty()
+                    || !is_hex_sha256(&self.generated_runtime_diff_sha256)
+                {
+                    return Err("W7 admitted row requires generated runtime diff artifact".into());
+                }
+            }
+            "measured_architectural_block" => {
+                if self.block_id.as_deref()
+                    != Some("JSON-CSS-W7-CSP-CASCADE-CONSUMED-BUT-NO-ROW-MOVEMENT")
+                    || self.generated_runtime_diff_status != "absent"
+                    || !self.generated_runtime_diff_artifact_path.trim().is_empty()
+                    || !self.generated_runtime_diff_sha256.trim().is_empty()
+                {
+                    return Err("W7 measured block/diff status invalid".into());
+                }
+            }
+            other => return Err(format!("W7 row movement status {other} is rejected")),
+        }
+        if self.affected_row_ids.is_empty()
+            || self.abrogate_status.trim().is_empty()
+            || self.material_differential.trim().is_empty()
+            || self.redress_entry.trim().is_empty()
+        {
+            return Err("W7 report missing material differential or REDRESS entry".into());
         }
         Ok(())
     }
@@ -5683,5 +5972,117 @@ mod tests {
         stale.candidate_stale_count = 4;
         stale.candidate_cost_stale_rate = 0.4;
         assert!(stale.validate_gate().is_err());
+    }
+
+    #[test]
+    fn skv13_decision_csp_cascade_report_accepts_measured_block() {
+        let report = SkV13DecisionCspCascadeReport {
+            schema_version: SKV13_DECISION_CSP_CASCADE_REPORT_SCHEMA.into(),
+            wave_id: "SK-V13-W7".into(),
+            run_id: "sk-v13-w7:csp-cascade-fnv64-0000000000000000".into(),
+            source_commit: "000000000000".into(),
+            host_triple: "aarch64-apple-darwin".into(),
+            build_flags: "RUSTFLAGS=-C target-cpu=native".into(),
+            feature_mask: "arch=aarch64;target_cpu=native".into(),
+            consumer_gate: "G-W7-DECISION-CSP-CASCADE".into(),
+            g_omega_status: "user-signed".into(),
+            regex_fact_artifact_path:
+                "../restart/skinny/tranches/sk-v13/research/w5/regex-facts.json".into(),
+            regex_fact_sha256: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                .into(),
+            active_cost_artifact_path:
+                "../restart/skinny/tranches/sk-v13/research/w6/active-cost-facts.json".into(),
+            active_cost_sha256: "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+                .into(),
+            selection_trace_sha256:
+                "1111111111111111111111111111111111111111111111111111111111111111".into(),
+            csp_problem_artifact_path:
+                "../restart/skinny/tranches/sk-v13/research/w7/csp-problem.json".into(),
+            csp_problem_sha256: "2222222222222222222222222222222222222222222222222222222222222222"
+                .into(),
+            csp_solution_artifact_path:
+                "../restart/skinny/tranches/sk-v13/research/w7/csp-solution.json".into(),
+            csp_solution_sha256: "3333333333333333333333333333333333333333333333333333333333333333"
+                .into(),
+            css_l4_witness_artifact_path:
+                "../restart/skinny/tranches/sk-v13/research/w7/css-l4-witness.json".into(),
+            css_l4_witness_sha256:
+                "4444444444444444444444444444444444444444444444444444444444444444".into(),
+            css_l4_witness_command: "cargo test -p codegen css_l4".into(),
+            sheets_witness_artifact_path:
+                "../restart/skinny/tranches/sk-v13/research/w7/sheets-witness.json".into(),
+            sheets_witness_sha256:
+                "5555555555555555555555555555555555555555555555555555555555555555".into(),
+            sheets_witness_command: "cargo test -p codegen sheets".into(),
+            bbnf_self_witness_artifact_path:
+                "../restart/skinny/tranches/sk-v13/research/w7/bbnf-self-witness.json".into(),
+            bbnf_self_witness_sha256:
+                "6666666666666666666666666666666666666666666666666666666666666666".into(),
+            bbnf_self_witness_command: "cargo test -p codegen bbnf_self".into(),
+            scoped_witness_label: "css-l4+sheets+bbnf-self fail-closed generated-role".into(),
+            csp_solver_source: "csp_solver::Csp<CostFiniteDomain>".into(),
+            csp_solver_version: "0.1.0".into(),
+            csp_status: "sat".into(),
+            csp_variable_count: 1,
+            csp_constraint_count: 6,
+            csp_objective_count: 1,
+            csp_named_grammars: vec!["json".into(), "css_l4".into()],
+            csp_solve_ms: 0.2,
+            csp_timeout_ms: 1_000,
+            csp_node_budget: 10_000,
+            csp_nodes_explored: 1,
+            csp_budget_status: "pass".into(),
+            selected_rule_count: 1,
+            selected_candidate_id: "rule-0-shape-OffsetTape-priority-P7OffsetTapeDefault".into(),
+            selected_shape: "OffsetTape".into(),
+            parity_constraint_status: "pass".into(),
+            recognizer_constraint_status: "pass".into(),
+            substrate_constraint_status: "pass".into(),
+            simd_constraint_status: "pass".into(),
+            capacity_constraint_status: "pass".into(),
+            resolver_output_piping: "regex_facts->egraph_active_cost->csp->compile_codegen".into(),
+            fused_solver_status: "not-fused".into(),
+            generated_selection_path: "passes::recognizers::derive_backend_shape_with_diagnostics"
+                .into(),
+            compile_consumer_path: "passes::compile".into(),
+            same_wave_consumer_path: "codegen::lower::rust::lower_to_rust".into(),
+            same_wave_consumer_class: "gate_json_decision_csp_cascade_contract".into(),
+            cascade_retirement_status: "fail_closed".into(),
+            choose_backend_shape_status: "csp-finalized".into(),
+            priority_table_status: "evidence-only".into(),
+            p1_p8_fallback_status: "non-admission".into(),
+            legacy_cascade_admission_status: "blocked".into(),
+            priority_data_role: "evidence-only".into(),
+            priority_hard_prune_status: "not-used".into(),
+            priority_objective_status: "not-used".into(),
+            fallback_invoked: false,
+            compat_fallback_status: "not-invoked".into(),
+            static_css_provider_status: "static-template-blocker".into(),
+            json_sink_only_status: "sink-only-static-blocker".into(),
+            json_guard_state: "maintain".into(),
+            css_guard_state: "maintain".into(),
+            sheets_fail_closed_status: "fail-closed-artifact".into(),
+            bbnf_self_fail_closed_status: "fail-closed-artifact".into(),
+            lock14_status: "pass".into(),
+            generated_runtime_diff_status: "absent".into(),
+            generated_runtime_diff_artifact_path: "".into(),
+            generated_runtime_diff_sha256: "".into(),
+            row_move_toward_sota_status: "measured_architectural_block".into(),
+            affected_row_ids: vec!["json/twitter/direct_to_struct/main".into()],
+            block_id: Some("JSON-CSS-W7-CSP-CASCADE-CONSUMED-BUT-NO-ROW-MOVEMENT".into()),
+            abrogate_status: "not-triggered".into(),
+            material_differential: "REDRESS 119/120 had no CSP resolver".into(),
+            redress_entry: "REDRESS-138".into(),
+        };
+        assert!(report.validate_gate().is_ok());
+        let mut bad = report.clone();
+        bad.fallback_invoked = true;
+        assert!(bad.validate_gate().is_err());
+        let mut support_only = report.clone();
+        support_only.row_move_toward_sota_status = "support_only".into();
+        assert!(support_only.validate_gate().is_err());
+        let mut no_command = report;
+        no_command.css_l4_witness_command = "status-only".into();
+        assert!(no_command.validate_gate().is_err());
     }
 }

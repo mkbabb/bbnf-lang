@@ -1,0 +1,33 @@
+{
+  "schema_version": "sk-v13-decision-csp-problem-v1",
+  "wave_id": "SK-V13-W7",
+  "solver_source": "csp_solver::Csp<CostFiniteDomain>",
+  "solver_version": "0.1.0",
+  "grammar_scope": [
+    "json",
+    "css_l4_declaration_values",
+    "sheets_witness",
+    "bbnf_self_witness"
+  ],
+  "variables": [
+    {
+      "name": "selected_backend_candidate",
+      "domain": "candidate_index",
+      "cost": "0 for W6 active-cost selected candidate, 1 for other legal candidates"
+    }
+  ],
+  "constraints": [
+    "selected-active-cost-candidate",
+    "parity",
+    "recognizer",
+    "substrate",
+    "simd",
+    "capacity"
+  ],
+  "objective": "minimize deviation from W6 active-cost selected candidate",
+  "timeout_ms": 1000,
+  "node_budget": 10000,
+  "priority_data_role": "evidence-only",
+  "priority_hard_prune_status": "not-used",
+  "priority_objective_status": "not-used"
+}

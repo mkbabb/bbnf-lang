@@ -10,6 +10,7 @@ use std::collections::{HashMap, HashSet};
 use thiserror::Error;
 
 mod backend_egraph;
+mod decision_csp;
 pub mod diagnostics;
 
 #[derive(Debug, Error, PartialEq, Eq)]
@@ -417,6 +418,7 @@ pub mod recognizers {
                 priority_fired: selection.priority_fired,
                 capacity_policy,
                 active_cost: Some(selection.facts),
+                decision_csp: selection.decision_csp,
             };
             if facts.rejected.len() < 4 || !has_measurement_evidence(&facts) {
                 diagnostics.push(diagnostics::PassDiagnostic::cost_facts_missing_evidence(
@@ -472,7 +474,8 @@ pub mod recognizers {
         }
 
         let candidates = backend_candidates(grammar, rule, backend_rule, layout, target);
-        crate::backend_egraph::select(rule.id, candidates)
+        let active = crate::backend_egraph::select(rule.id, candidates.clone());
+        crate::decision_csp::finalize_rule(&grammar.name, rule.id, candidates, active)
     }
 
     fn backend_candidates(

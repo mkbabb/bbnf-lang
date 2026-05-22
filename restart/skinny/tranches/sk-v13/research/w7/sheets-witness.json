@@ -1,0 +1,8 @@
+{
+  "schema_version": "sk-v13-w7-sheets-witness-v1",
+  "wave_id": "SK-V13-W7",
+  "grammar": "sheets_witness",
+  "command": "cargo test -p codegen cost_facts --lib",
+  "status": "fail-closed-generated-role",
+  "evidence": "Sheets remains a witness-only grammar under the CSS-authoritative pin; W7 records fail-closed generated-role evidence instead of treating Sheets as a substitute admission row."
+}

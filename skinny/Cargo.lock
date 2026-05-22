@@ -901,6 +901,7 @@ name = "passes"
 version = "0.1.0"
 dependencies = [
  "bbnf-regex",
+ "csp-solver",
  "egraph",
  "grammar",
  "ir",

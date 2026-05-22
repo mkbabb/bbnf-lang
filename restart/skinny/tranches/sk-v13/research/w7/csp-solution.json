@@ -1,0 +1,21 @@
+{
+  "schema_version": "sk-v13-decision-csp-solution-v1",
+  "wave_id": "SK-V13-W7",
+  "status": "sat",
+  "solve_ms": 0.001,
+  "nodes_explored": 1,
+  "budget_status": "pass",
+  "selected_rule_count": 1,
+  "selected_candidate_id": "aggregate-json-offset-tape",
+  "selected_shape": "OffsetTape",
+  "constraint_status": {
+    "parity": "pass",
+    "recognizer": "pass",
+    "substrate": "pass",
+    "simd": "pass",
+    "capacity": "pass"
+  },
+  "resolver_output_piping": "regex_facts->egraph_active_cost->csp->compile_codegen",
+  "fused_solver_status": "not-fused",
+  "block_id": "JSON-CSS-W7-CSP-CASCADE-CONSUMED-BUT-NO-ROW-MOVEMENT"
+}

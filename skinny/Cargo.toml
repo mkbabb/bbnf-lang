@@ -34,6 +34,7 @@ bbnf-simd = { path = "crates/bbnf-simd" }
 bbnf-bench = { path = "crates/bbnf-bench" }
 test-fixtures = { path = "crates/test-fixtures" }
 egraph = { path = "../crates/egraph" }
+csp-solver = { path = "../crates/csp-solver" }
 
 anyhow = "1"
 blake3 = "1"

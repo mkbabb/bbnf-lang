@@ -12,6 +12,8 @@ pub struct CostFacts {
     pub capacity_policy: Option<CapacityPolicy>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub active_cost: Option<ActiveCostFacts>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub decision_csp: Option<DecisionCspFacts>,
 }
 
 impl CostFacts {
@@ -39,6 +41,7 @@ impl CostFacts {
             priority_fired,
             capacity_policy: None,
             active_cost: None,
+            decision_csp: None,
         }
     }
 }
@@ -70,6 +73,52 @@ pub struct ActiveCostFacts {
     pub generated_selection_path: String,
     pub same_wave_consumer_path: String,
     pub cascade_fallback_status: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DecisionCspFacts {
+    pub schema_version: String,
+    pub csp_solver_source: String,
+    pub csp_solver_version: String,
+    pub csp_status: String,
+    pub csp_variable_count: u32,
+    pub csp_constraint_count: u32,
+    pub csp_objective_count: u32,
+    pub csp_named_grammars: Vec<String>,
+    pub csp_solve_us: u64,
+    pub csp_timeout_ms: u64,
+    pub csp_node_budget: u64,
+    pub csp_nodes_explored: u64,
+    pub csp_budget_status: String,
+    pub selected_rule_count: u32,
+    pub selected_candidate_id: String,
+    pub selected_shape: BackendShape,
+    pub parity_constraint_status: String,
+    pub recognizer_constraint_status: String,
+    pub substrate_constraint_status: String,
+    pub simd_constraint_status: String,
+    pub capacity_constraint_status: String,
+    pub resolver_output_piping: String,
+    pub fused_solver_status: String,
+    pub generated_selection_path: String,
+    pub compile_consumer_path: String,
+    pub same_wave_consumer_path: String,
+    pub same_wave_consumer_class: String,
+    pub cascade_retirement_status: String,
+    pub choose_backend_shape_status: String,
+    pub priority_table_status: String,
+    pub p1_p8_fallback_status: String,
+    pub legacy_cascade_admission_status: String,
+    pub priority_data_role: String,
+    pub priority_hard_prune_status: String,
+    pub priority_objective_status: String,
+    pub fallback_invoked: bool,
+    pub compat_fallback_status: String,
+    pub static_css_provider_status: String,
+    pub json_sink_only_status: String,
+    pub generated_runtime_diff_status: String,
+    pub row_move_toward_sota_status: String,
+    pub block_id: Option<String>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]

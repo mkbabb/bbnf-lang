@@ -7,8 +7,8 @@ use bbnf_bench::report::{
     SkV12NonJsonReport, SkV13CssAtRulesAndMediaReport, SkV13CssComparatorOracleReport,
     SkV13CssDeclarationValuesExtendedReport, SkV13CssNestedLayoutReport,
     SkV13CssStylesheetSelectorsReport, SkV13CssVendorCustomReport, SkV13CssVisualFunctionsReport,
-    SkV13DecisionActiveCostReport, SkV13DecisionRegexReport, SkV8ComparatorEvidence, SkV8Telemetry,
-    TelemetryRow,
+    SkV13DecisionActiveCostReport, SkV13DecisionCspCascadeReport, SkV13DecisionRegexReport,
+    SkV8ComparatorEvidence, SkV8Telemetry, TelemetryRow,
 };
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -247,6 +247,23 @@ fn main() -> Result<(), Box<dyn Error>> {
             .map_err(|error| format!("{}: {error}", path.display()))?;
         println!(
             "G-W6-DECISION-ACTIVE-COST {} {}",
+            report.row_move_toward_sota_status,
+            path.display()
+        );
+        drop(report);
+    }
+    if let Some(path) = skv13_decision_csp_cascade_report_path(&args[1..])? {
+        if !has_explicit_json_check {
+            return Err(format!("{} requires --check-results", path.display()).into());
+        }
+        let text = fs::read_to_string(&path)?;
+        let report = SkV13DecisionCspCascadeReport::from_json_str(&text)
+            .and_then(|report| report.validate_gate().map(|_| report))
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        validate_skv13_decision_csp_cascade_report(&report, &workspace)
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        println!(
+            "G-W7-DECISION-CSP-CASCADE {} {}",
             report.row_move_toward_sota_status,
             path.display()
         );
@@ -713,6 +730,12 @@ fn skv13_decision_active_cost_report_path(
     companion_report_path(args, "--skv13-decision-active-cost-report")
 }
 
+fn skv13_decision_csp_cascade_report_path(
+    args: &[String],
+) -> Result<Option<PathBuf>, Box<dyn Error>> {
+    companion_report_path(args, "--skv13-decision-csp-cascade-report")
+}
+
 fn companion_report_path(args: &[String], flag: &str) -> Result<Option<PathBuf>, Box<dyn Error>> {
     let flag_positions = args
         .iter()
@@ -777,6 +800,7 @@ fn is_companion_report_flag(arg: &str) -> bool {
             | "--skv13-css-nested-layout-report"
             | "--skv13-decision-regex-report"
             | "--skv13-decision-active-cost-report"
+            | "--skv13-decision-csp-cascade-report"
     )
 }
 
@@ -1884,6 +1908,77 @@ fn validate_skv13_decision_active_cost_report(
         return Err(format!(
             "W6 active-cost artifact hash mismatch: report {}, actual {cost_actual}",
             report.cost_facts_sha256
+        ));
+    }
+    Ok(())
+}
+
+fn validate_skv13_decision_csp_cascade_report(
+    report: &SkV13DecisionCspCascadeReport,
+    workspace: &Path,
+) -> Result<(), String> {
+    for (label, path, sha) in [
+        (
+            "W5 regex fact artifact",
+            report.regex_fact_artifact_path.as_str(),
+            report.regex_fact_sha256.as_str(),
+        ),
+        (
+            "W6 active-cost artifact",
+            report.active_cost_artifact_path.as_str(),
+            report.active_cost_sha256.as_str(),
+        ),
+        (
+            "W7 CSP problem artifact",
+            report.csp_problem_artifact_path.as_str(),
+            report.csp_problem_sha256.as_str(),
+        ),
+        (
+            "W7 CSP solution artifact",
+            report.csp_solution_artifact_path.as_str(),
+            report.csp_solution_sha256.as_str(),
+        ),
+        (
+            "W7 CSS L4 witness artifact",
+            report.css_l4_witness_artifact_path.as_str(),
+            report.css_l4_witness_sha256.as_str(),
+        ),
+        (
+            "W7 Sheets witness artifact",
+            report.sheets_witness_artifact_path.as_str(),
+            report.sheets_witness_sha256.as_str(),
+        ),
+        (
+            "W7 BBNF-self witness artifact",
+            report.bbnf_self_witness_artifact_path.as_str(),
+            report.bbnf_self_witness_sha256.as_str(),
+        ),
+    ] {
+        validate_report_artifact_hash(workspace, label, path, sha)?;
+    }
+    if report.generated_runtime_diff_status == "present" {
+        validate_report_artifact_hash(
+            workspace,
+            "W7 generated runtime diff artifact",
+            &report.generated_runtime_diff_artifact_path,
+            &report.generated_runtime_diff_sha256,
+        )?;
+    }
+    Ok(())
+}
+
+fn validate_report_artifact_hash(
+    workspace: &Path,
+    label: &str,
+    artifact_path: &str,
+    expected_sha256: &str,
+) -> Result<(), String> {
+    let path = resolve_workspace_path(workspace, artifact_path);
+    let bytes = fs::read(&path).map_err(|error| format!("failed to read {label}: {error}"))?;
+    let actual = sha256_hex(&bytes);
+    if actual != expected_sha256 {
+        return Err(format!(
+            "{label} hash mismatch: report {expected_sha256}, actual {actual}"
         ));
     }
     Ok(())
@@ -3689,6 +3784,8 @@ mod tests {
             "skv13-w5.json".to_string(),
             "--skv13-decision-active-cost-report".to_string(),
             "skv13-w6.json".to_string(),
+            "--skv13-decision-csp-cascade-report".to_string(),
+            "skv13-w7.json".to_string(),
         ];
         assert_eq!(
             skv13_css_comparator_oracle_report_path(&mixed).unwrap(),
@@ -3726,6 +3823,10 @@ mod tests {
             skv13_decision_active_cost_report_path(&mixed).unwrap(),
             Some(PathBuf::from("skv13-w6.json"))
         );
+        assert_eq!(
+            skv13_decision_csp_cascade_report_path(&mixed).unwrap(),
+            Some(PathBuf::from("skv13-w7.json"))
+        );
         let write = vec![
             "--skv13-css-comparator-oracle-report".to_string(),
             "skv13-css-comparator.json".to_string(),
@@ -3760,6 +3861,21 @@ mod tests {
         assert_eq!(
             skv13_decision_active_cost_report_path(&args).unwrap(),
             Some(PathBuf::from("skv13-w6.json"))
+        );
+        assert!(companion_report_runs_json_check(&args));
+    }
+
+    #[test]
+    fn skv13_decision_csp_cascade_report_arg_allows_json_check_only() {
+        let args = vec![
+            "--skv13-decision-csp-cascade-report".to_string(),
+            "skv13-w7.json".to_string(),
+            "--advisory".to_string(),
+            "--check-results".to_string(),
+        ];
+        assert_eq!(
+            skv13_decision_csp_cascade_report_path(&args).unwrap(),
+            Some(PathBuf::from("skv13-w7.json"))
         );
         assert!(companion_report_runs_json_check(&args));
     }

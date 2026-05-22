@@ -1,0 +1,8 @@
+{
+  "schema_version": "sk-v13-w7-css-l4-witness-v1",
+  "wave_id": "SK-V13-W7",
+  "grammar": "css_l4_declaration_values",
+  "command": "cargo test -p codegen css_l4 --lib",
+  "status": "fail-closed-generated-role",
+  "evidence": "CSS L4 generated rows remain static-template provider rows; W7 CSP facts are consumed by compile/lowering but no generated-runtime diff is emitted in this slice."
+}

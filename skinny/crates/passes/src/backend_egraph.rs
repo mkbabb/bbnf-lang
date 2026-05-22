@@ -2,7 +2,7 @@ use egraph::{
     BackoffScheduler, CostModel, EGraph, Extractor, Id, Language, Lattice, NoAnalysis, RewriteFn,
     Scheduler,
 };
-use ir::{ActiveCostFacts, BackendShape, PriorityStep, RuleId, ShapeRationale};
+use ir::{ActiveCostFacts, BackendShape, DecisionCspFacts, PriorityStep, RuleId, ShapeRationale};
 
 const SCHEMA: &str = "sk-v13-decision-active-cost-v1";
 const FORMULA: &str = "sk-v13-w6-integer-v1";
@@ -30,6 +30,7 @@ pub(crate) struct ActiveSelection {
     pub rationale: ShapeRationale,
     pub priority_fired: PriorityStep,
     pub facts: ActiveCostFacts,
+    pub decision_csp: Option<DecisionCspFacts>,
 }
 
 pub(crate) fn select(rule_id: RuleId, candidates: Vec<BackendCandidate>) -> ActiveSelection {
@@ -128,6 +129,7 @@ pub(crate) fn select(rule_id: RuleId, candidates: Vec<BackendCandidate>) -> Acti
             same_wave_consumer_path: SAME_WAVE_CONSUMER.to_string(),
             cascade_fallback_status: "fail-closed".to_string(),
         },
+        decision_csp: None,
     }
 }
 

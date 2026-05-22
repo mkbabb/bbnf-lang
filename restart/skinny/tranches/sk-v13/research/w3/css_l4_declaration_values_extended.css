@@ -1,0 +1,2 @@
+:root { --brand-\31: rgb(255 128 0 / 50%); --gap: calc(100% - 2rem); }
+.card { width: calc(var(--gap, 10px) + clamp(1rem, 2vw, 3rem)); color: color-mix(in srgb, var(--brand-\31) 80%, white); background-image: url("/assets/bg\\ space.svg"); mask-image: url(/assets/mask.svg); content: "escaped\\A line"; }

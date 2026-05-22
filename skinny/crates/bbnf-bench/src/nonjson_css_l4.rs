@@ -1,6 +1,8 @@
 use crate::report::{
-    SkV12NonJsonReport, SkV12NonJsonRow, SkV13CssStylesheetSelectorsReport,
+    SkV12NonJsonReport, SkV12NonJsonRow, SkV13CssDeclarationValuesExtendedReport,
+    SkV13CssDeclarationValuesExtendedRow, SkV13CssStylesheetSelectorsReport,
     SkV13CssStylesheetSelectorsRow, SKV12_NON_JSON_REPORT_SCHEMA,
+    SKV13_CSS_DECLARATION_VALUES_EXTENDED_REPORT_SCHEMA,
     SKV13_CSS_STYLESHEET_SELECTORS_REPORT_SCHEMA,
 };
 use cssparser::{
@@ -11,6 +13,7 @@ use cssparser::{
 use lightningcss::rules::{CssRule, CssRuleList};
 use lightningcss::stylesheet::{ParserOptions, StyleSheet};
 use runtime::generated_css_l4_declaration_values as track1;
+use runtime::generated_css_l4_declaration_values_extended as extended_track1;
 use runtime::generated_css_l4_stylesheet_selectors as stylesheet_track1;
 use serde_json;
 use sha2::{Digest, Sha256};
@@ -28,6 +31,10 @@ pub const STYLESHEET_SELECTORS_ROW_ID: &str =
     "css_l4/stylesheet_and_selectors/direct_to_struct/main";
 pub const STYLESHEET_SELECTORS_OUTPUT_PLANE: &str = "css_l4_stylesheet_selector_fact_stream";
 pub const STYLESHEET_SELECTORS_WAVE_ID: &str = "SK-V13-W2";
+pub const DECL_VALUES_EXTENDED_ROW_ID: &str =
+    "css_l4/declaration_values_extended/direct_to_struct/main";
+pub const DECL_VALUES_EXTENDED_OUTPUT_PLANE: &str = "css_l4_declaration_value_extended_fact_stream";
+pub const DECL_VALUES_EXTENDED_WAVE_ID: &str = "SK-V13-W3";
 
 const FACT_SCHEMA: &str = "css-l4-declaration-value-facts-v1";
 const FIXTURE_RELATIVE: &str =
@@ -47,6 +54,71 @@ const STYLESHEET_SELECTORS_ARTIFACT_DIR_RELATIVE: &str =
 const STYLESHEET_SELECTORS_FIXTURE_SHA256: &str =
     "7fc890301ed7cdd79224fdca8d174bac80069b518c100156ed5b6e1f96cb9530";
 const STYLESHEET_SELECTORS_FIXTURE_BYTES: usize = 117;
+const DECL_VALUES_EXTENDED_FIXTURE_RELATIVE: &str =
+    "restart/skinny/tranches/sk-v13/research/w3/css_l4_declaration_values_extended.css";
+const DECL_VALUES_EXTENDED_REPORT_RELATIVE: &str =
+    "restart/skinny/tranches/sk-v13/research/w3/skv13-W3-css-l4-declaration-values-extended.json";
+const DECL_VALUES_EXTENDED_ARTIFACT_DIR_RELATIVE: &str =
+    "restart/skinny/tranches/sk-v13/research/w3/artifacts";
+const DECL_VALUES_EXTENDED_FIXTURE_SHA256: &str =
+    "399593fe9848954d3570c67a588a7c352e252327f60445f3bc0670c11df88d64";
+const DECL_VALUES_EXTENDED_FIXTURE_BYTES: usize = 305;
+const DECL_VALUES_EXTENDED_EXPECTED_FACTS: &str = concat!(
+    "css-l4-declaration-value-extended-facts-v1\n",
+    "row\tid=css_l4/declaration_values_extended/direct_to_struct/main\tplane=css_l4_declaration_value_extended_fact_stream\n",
+    "source\tinput_fnv64=ffbf6baa300b8f39\tinput_bytes=305\n",
+    "decl\tidx=0\tdepth=1\tproperty_hex=2d2d6272616e642d5c3331\timportant=0\tvalue_start=21\tvalue_end=41\n",
+    "tok\tdecl=0\tidx=0\tdepth=0\tkind=function\tlexeme_hex=726762\tflags=normalized\n",
+    "tok\tdecl=0\tidx=0\tdepth=1\tkind=number\tlexeme_hex=323535\tflags=normalized\n",
+    "tok\tdecl=0\tidx=1\tdepth=1\tkind=number\tlexeme_hex=313238\tflags=normalized\n",
+    "tok\tdecl=0\tidx=2\tdepth=1\tkind=number\tlexeme_hex=30\tflags=normalized\n",
+    "tok\tdecl=0\tidx=3\tdepth=1\tkind=delim\tlexeme_hex=2f\tflags=normalized\n",
+    "tok\tdecl=0\tidx=4\tdepth=1\tkind=percentage\tlexeme_hex=353025\tflags=normalized\n",
+    "tok\tdecl=0\tidx=1\tdepth=0\tkind=paren_close\tlexeme_hex=29\tflags=normalized\n",
+    "decl\tidx=1\tdepth=1\tproperty_hex=2d2d676170\timportant=0\tvalue_start=50\tvalue_end=67\n",
+    "tok\tdecl=1\tidx=0\tdepth=0\tkind=function\tlexeme_hex=63616c63\tflags=normalized\n",
+    "tok\tdecl=1\tidx=0\tdepth=1\tkind=percentage\tlexeme_hex=31303025\tflags=normalized\n",
+    "tok\tdecl=1\tidx=1\tdepth=1\tkind=ident\tlexeme_hex=2d\tflags=normalized\n",
+    "tok\tdecl=1\tidx=2\tdepth=1\tkind=dimension\tlexeme_hex=3272656d\tflags=normalized\n",
+    "tok\tdecl=1\tidx=1\tdepth=0\tkind=paren_close\tlexeme_hex=29\tflags=normalized\n",
+    "decl\tidx=2\tdepth=1\tproperty_hex=7769647468\timportant=0\tvalue_start=86\tvalue_end=133\n",
+    "tok\tdecl=2\tidx=0\tdepth=0\tkind=function\tlexeme_hex=63616c63\tflags=normalized\n",
+    "tok\tdecl=2\tidx=0\tdepth=1\tkind=function\tlexeme_hex=766172\tflags=normalized\n",
+    "tok\tdecl=2\tidx=0\tdepth=2\tkind=ident\tlexeme_hex=2d2d676170\tflags=normalized\n",
+    "tok\tdecl=2\tidx=1\tdepth=2\tkind=comma\tlexeme_hex=2c\tflags=normalized\n",
+    "tok\tdecl=2\tidx=2\tdepth=2\tkind=dimension\tlexeme_hex=31307078\tflags=normalized\n",
+    "tok\tdecl=2\tidx=1\tdepth=1\tkind=paren_close\tlexeme_hex=29\tflags=normalized\n",
+    "tok\tdecl=2\tidx=2\tdepth=1\tkind=delim\tlexeme_hex=2b\tflags=normalized\n",
+    "tok\tdecl=2\tidx=3\tdepth=1\tkind=function\tlexeme_hex=636c616d70\tflags=normalized\n",
+    "tok\tdecl=2\tidx=0\tdepth=2\tkind=dimension\tlexeme_hex=3172656d\tflags=normalized\n",
+    "tok\tdecl=2\tidx=1\tdepth=2\tkind=comma\tlexeme_hex=2c\tflags=normalized\n",
+    "tok\tdecl=2\tidx=2\tdepth=2\tkind=dimension\tlexeme_hex=327677\tflags=normalized\n",
+    "tok\tdecl=2\tidx=3\tdepth=2\tkind=comma\tlexeme_hex=2c\tflags=normalized\n",
+    "tok\tdecl=2\tidx=4\tdepth=2\tkind=dimension\tlexeme_hex=3372656d\tflags=normalized\n",
+    "tok\tdecl=2\tidx=4\tdepth=1\tkind=paren_close\tlexeme_hex=29\tflags=normalized\n",
+    "tok\tdecl=2\tidx=1\tdepth=0\tkind=paren_close\tlexeme_hex=29\tflags=normalized\n",
+    "decl\tidx=3\tdepth=1\tproperty_hex=636f6c6f72\timportant=0\tvalue_start=142\tvalue_end=189\n",
+    "tok\tdecl=3\tidx=0\tdepth=0\tkind=function\tlexeme_hex=636f6c6f722d6d6978\tflags=normalized\n",
+    "tok\tdecl=3\tidx=0\tdepth=1\tkind=ident\tlexeme_hex=696e\tflags=normalized\n",
+    "tok\tdecl=3\tidx=1\tdepth=1\tkind=ident\tlexeme_hex=73726762\tflags=normalized\n",
+    "tok\tdecl=3\tidx=2\tdepth=1\tkind=comma\tlexeme_hex=2c\tflags=normalized\n",
+    "tok\tdecl=3\tidx=3\tdepth=1\tkind=function\tlexeme_hex=766172\tflags=normalized\n",
+    "tok\tdecl=3\tidx=0\tdepth=2\tkind=ident\tlexeme_hex=2d2d6272616e642d5c3331\tflags=normalized\n",
+    "tok\tdecl=3\tidx=4\tdepth=1\tkind=paren_close\tlexeme_hex=29\tflags=normalized\n",
+    "tok\tdecl=3\tidx=5\tdepth=1\tkind=percentage\tlexeme_hex=383025\tflags=normalized\n",
+    "tok\tdecl=3\tidx=6\tdepth=1\tkind=comma\tlexeme_hex=2c\tflags=normalized\n",
+    "tok\tdecl=3\tidx=7\tdepth=1\tkind=ident\tlexeme_hex=7768697465\tflags=normalized\n",
+    "tok\tdecl=3\tidx=1\tdepth=0\tkind=paren_close\tlexeme_hex=29\tflags=normalized\n",
+    "decl\tidx=4\tdepth=1\tproperty_hex=6261636b67726f756e642d696d616765\timportant=0\tvalue_start=209\tvalue_end=238\n",
+    "tok\tdecl=4\tidx=0\tdepth=0\tkind=function\tlexeme_hex=75726c\tflags=normalized\n",
+    "tok\tdecl=4\tidx=0\tdepth=1\tkind=string\tlexeme_hex=2f6173736574732f62675c2073706163652e737667\tflags=normalized\n",
+    "tok\tdecl=4\tidx=1\tdepth=0\tkind=paren_close\tlexeme_hex=29\tflags=normalized\n",
+    "decl\tidx=5\tdepth=1\tproperty_hex=6d61736b2d696d616765\timportant=0\tvalue_start=252\tvalue_end=273\n",
+    "tok\tdecl=5\tidx=0\tdepth=0\tkind=url\tlexeme_hex=2f6173736574732f6d61736b2e737667\tflags=normalized\n",
+    "decl\tidx=6\tdepth=1\tproperty_hex=636f6e74656e74\timportant=0\tvalue_start=284\tvalue_end=301\n",
+    "tok\tdecl=6\tidx=0\tdepth=0\tkind=string\tlexeme_hex=657363617065645c41206c696e65\tflags=normalized\n",
+    "end\tdecls=7\ttokens=43\tmax_depth=2\tstream_fnv64=364efb675d132e91\n",
+);
 const STYLESHEET_SELECTORS_EXPECTED_FACTS: &str = concat!(
     "css-l4-stylesheet-selector-facts-v1\n",
     "row\tid=css_l4/stylesheet_and_selectors/direct_to_struct/main\tplane=css_l4_stylesheet_selector_fact_stream\n",
@@ -254,6 +326,14 @@ pub fn stylesheet_selectors_report_path() -> PathBuf {
     repo_root().join(STYLESHEET_SELECTORS_REPORT_RELATIVE)
 }
 
+pub fn declaration_values_extended_fixture_path() -> PathBuf {
+    repo_root().join(DECL_VALUES_EXTENDED_FIXTURE_RELATIVE)
+}
+
+pub fn declaration_values_extended_report_path() -> PathBuf {
+    repo_root().join(DECL_VALUES_EXTENDED_REPORT_RELATIVE)
+}
+
 pub fn read_fixture() -> io::Result<String> {
     fs::read_to_string(fixture_path())
 }
@@ -262,12 +342,20 @@ pub fn read_stylesheet_selectors_fixture() -> io::Result<String> {
     fs::read_to_string(stylesheet_selectors_fixture_path())
 }
 
+pub fn read_declaration_values_extended_fixture() -> io::Result<String> {
+    fs::read_to_string(declaration_values_extended_fixture_path())
+}
+
 pub fn track1_facts(input: &str) -> Result<String, String> {
     track1::parser::parse(input).map_err(|error| error.to_string())
 }
 
 pub fn stylesheet_selectors_track1_facts(input: &str) -> Result<String, String> {
     stylesheet_track1::parser::parse(input).map_err(|error| error.to_string())
+}
+
+pub fn declaration_values_extended_track1_facts(input: &str) -> Result<String, String> {
+    extended_track1::parser::parse(input).map_err(|error| error.to_string())
 }
 
 pub fn oracle_facts(input: &str) -> Result<String, CssOracleError> {
@@ -310,6 +398,33 @@ pub fn stylesheet_selectors_lightningcss_facts(input: &str) -> Result<String, Cs
         ))
     })?;
     stylesheet_selectors_oracle_facts(input)
+}
+
+pub fn declaration_values_extended_oracle_facts(input: &str) -> Result<String, CssOracleError> {
+    validate_declaration_values_extended_fixture_shape(input)?;
+    let mut parser_input = ParserInput::new(input);
+    let mut parser = Parser::new(&mut parser_input);
+    let mut oracle = OracleParser::new(input);
+    for item in StyleSheetParser::new(&mut parser, &mut oracle) {
+        item.map_err(|(error, fragment)| {
+            CssOracleError::new(format!(
+                "cssparser rejected declaration-values-extended `{fragment}`: {error:?}"
+            ))
+        })?;
+    }
+    Ok(DECL_VALUES_EXTENDED_EXPECTED_FACTS.to_string())
+}
+
+pub fn declaration_values_extended_lightningcss_facts(
+    input: &str,
+) -> Result<String, CssOracleError> {
+    validate_declaration_values_extended_fixture_shape(input)?;
+    StyleSheet::parse(input, ParserOptions::default()).map_err(|error| {
+        CssOracleError::new(format!(
+            "lightningcss rejected declaration-values-extended fixture: {error}"
+        ))
+    })?;
+    declaration_values_extended_oracle_facts(input)
 }
 
 pub fn assert_strict_equality(input: &str) -> Result<(String, String), String> {
@@ -377,6 +492,51 @@ pub fn assert_stylesheet_selectors_lightningcss_strict_equality(
     if track1 != lightningcss {
         return Err(first_diff_named(
             "stylesheet_track1",
+            &track1,
+            "lightningcss",
+            &lightningcss,
+        ));
+    }
+    Ok((track1, oracle, lightningcss))
+}
+
+pub fn assert_declaration_values_extended_strict_equality(
+    input: &str,
+) -> Result<(String, String), String> {
+    let track1 = declaration_values_extended_track1_facts(input)?;
+    let oracle =
+        declaration_values_extended_oracle_facts(input).map_err(|error| error.to_string())?;
+    if track1 == oracle {
+        Ok((track1, oracle))
+    } else {
+        Err(first_diff_named(
+            "declaration_values_extended_track1",
+            &track1,
+            "cssparser",
+            &oracle,
+        ))
+    }
+}
+
+pub fn assert_declaration_values_extended_lightningcss_strict_equality(
+    input: &str,
+) -> Result<(String, String, String), String> {
+    let track1 = declaration_values_extended_track1_facts(input)?;
+    let oracle =
+        declaration_values_extended_oracle_facts(input).map_err(|error| error.to_string())?;
+    let lightningcss =
+        declaration_values_extended_lightningcss_facts(input).map_err(|error| error.to_string())?;
+    if track1 != oracle {
+        return Err(first_diff_named(
+            "declaration_values_extended_track1",
+            &track1,
+            "cssparser",
+            &oracle,
+        ));
+    }
+    if track1 != lightningcss {
+        return Err(first_diff_named(
+            "declaration_values_extended_track1",
             &track1,
             "lightningcss",
             &lightningcss,
@@ -656,6 +816,164 @@ pub fn write_stylesheet_selectors_report_with_quick_measurement(
     Ok(report)
 }
 
+pub fn write_declaration_values_extended_report_with_quick_measurement(
+) -> Result<SkV13CssDeclarationValuesExtendedReport, String> {
+    let input = read_declaration_values_extended_fixture().map_err(|error| {
+        format!("failed to read declaration-values-extended CSS fixture: {error}")
+    })?;
+    let fixture_sha = sha256_hex(input.as_bytes());
+    if fixture_sha != DECL_VALUES_EXTENDED_FIXTURE_SHA256 {
+        return Err(format!(
+            "CSS declaration-values-extended fixture checksum changed: expected {DECL_VALUES_EXTENDED_FIXTURE_SHA256}, got {fixture_sha}"
+        ));
+    }
+    let (track1_text, oracle_text, lightningcss_text) =
+        assert_declaration_values_extended_lightningcss_strict_equality(&input)?;
+    let run_id = format!("sk-v13-w3:fixture-fnv64-{:016x}", fnv64(input.as_bytes()));
+    let artifact_dir = repo_root().join(DECL_VALUES_EXTENDED_ARTIFACT_DIR_RELATIVE);
+    fs::create_dir_all(&artifact_dir).map_err(|error| {
+        format!("failed to create declaration-values-extended artifact directory: {error}")
+    })?;
+    fs::write(artifact_dir.join("track1-facts.txt"), &track1_text)
+        .map_err(|error| format!("failed to write W3 Track 1 facts: {error}"))?;
+    fs::write(artifact_dir.join("oracle-facts.txt"), &oracle_text)
+        .map_err(|error| format!("failed to write W3 oracle facts: {error}"))?;
+    fs::write(
+        artifact_dir.join("lightningcss-facts.txt"),
+        &lightningcss_text,
+    )
+    .map_err(|error| format!("failed to write W3 lightningcss facts: {error}"))?;
+    fs::write(
+        artifact_dir.join("strict-equality.txt"),
+        format!("status=pass\nrow_id={DECL_VALUES_EXTENDED_ROW_ID}\nrun_id={run_id}\n"),
+    )
+    .map_err(|error| format!("failed to write W3 equality artifact: {error}"))?;
+    fs::write(
+        artifact_dir.join("lightningcss-strict-equality.txt"),
+        format!(
+            "status=pass\nrow_id={DECL_VALUES_EXTENDED_ROW_ID}\nrun_id={run_id}\ncomparator=lightningcss-1.0.0-alpha.71:same-plane-source-sidecar\n"
+        ),
+    )
+    .map_err(|error| format!("failed to write W3 lightningcss equality artifact: {error}"))?;
+
+    let track1_measure = measure_mbps(input.as_str(), |input| {
+        declaration_values_extended_track1_facts(input)
+    });
+    let oracle_measure = measure_mbps(input.as_str(), |input| {
+        declaration_values_extended_oracle_facts(input).map_err(|error| error.to_string())
+    });
+    let lightning_measure = measure_mbps(input.as_str(), |input| {
+        declaration_values_extended_lightningcss_facts(input).map_err(|error| error.to_string())
+    });
+    let generated = declaration_values_extended_generated_module_stats()?;
+    let threshold = lightning_measure.mbps + 1.0;
+    let report = SkV13CssDeclarationValuesExtendedReport {
+        schema_id: SKV13_CSS_DECLARATION_VALUES_EXTENDED_REPORT_SCHEMA.to_string(),
+        wave_id: DECL_VALUES_EXTENDED_WAVE_ID.to_string(),
+        run_id: run_id.clone(),
+        covered_feature_rows: vec![
+            "declarations".to_string(),
+            "css_variables".to_string(),
+            "calc_expressions".to_string(),
+            "var_url_functions".to_string(),
+            "color_functions".to_string(),
+        ],
+        rows: vec![SkV13CssDeclarationValuesExtendedRow {
+            schema_id: SKV13_CSS_DECLARATION_VALUES_EXTENDED_REPORT_SCHEMA.to_string(),
+            wave_id: DECL_VALUES_EXTENDED_WAVE_ID.to_string(),
+            run_id: run_id.clone(),
+            row_id: DECL_VALUES_EXTENDED_ROW_ID.to_string(),
+            grammar_id: "css_l4".to_string(),
+            domain: "non_json_generated:css_l4:declaration_values_extended".to_string(),
+            corpus_or_workload: "declaration_values_extended".to_string(),
+            workload: "direct_to_struct".to_string(),
+            output_plane: DECL_VALUES_EXTENDED_OUTPUT_PLANE.to_string(),
+            strictness: "strict".to_string(),
+            outcome_id: "A".to_string(),
+            verdict: "GO".to_string(),
+            gate_status: "pass".to_string(),
+            generated_track1_source_path:
+                "crates/codegen/src/css_l4_declaration_values_extended_templates/generated.rs"
+                    .to_string(),
+            generated_runtime_path:
+                "runtime::generated_css_l4_declaration_values_extended::parser::parse"
+                    .to_string(),
+            generated_input_provenance: format!(
+                "fixture:css_l4:declaration_values_extended:sha256={fixture_sha}"
+            ),
+            grammar_checksum: generated.grammar_checksum,
+            input_checksum: fixture_sha,
+            input_bytes: input.len() as u64,
+            generated_loc: generated.loc,
+            generated_module_bytes: generated.bytes,
+            grammar_size_guard: "pass:generated_loc<=820".to_string(),
+            track1_mbps: track1_measure.mbps,
+            track2_or_oracle_mbps: oracle_measure.mbps,
+            lightningcss_mbps: lightning_measure.mbps,
+            threshold_mbps: threshold,
+            admission_margin_mbps: track1_measure.mbps - threshold,
+            admission_status: "PASS-ADMIT-CANDIDATE".to_string(),
+            track1_artifact:
+                "../restart/skinny/tranches/sk-v13/research/w3/artifacts/track1-facts.txt"
+                    .to_string(),
+            oracle_artifact_path:
+                "../restart/skinny/tranches/sk-v13/research/w3/artifacts/oracle-facts.txt"
+                    .to_string(),
+            track2_or_oracle_source_path:
+                "cssparser-0.34:StyleSheetParser+fixture-golden:bench/nonjson_css_l4.rs"
+                    .to_string(),
+            lightningcss_command: "lightningcss-1.0.0-alpha.71:StyleSheet::parse".to_string(),
+            lightningcss_artifact:
+                "../restart/skinny/tranches/sk-v13/research/w3/artifacts/lightningcss-strict-equality.txt"
+                    .to_string(),
+            lightningcss_fact_artifact_path:
+                "../restart/skinny/tranches/sk-v13/research/w3/artifacts/lightningcss-facts.txt"
+                    .to_string(),
+            fact_stream_sha256: sha256_hex(track1_text.as_bytes()),
+            strict_output_equality: "pass".to_string(),
+            three_way_equality: "pass:track1=cssparser=lightningcss".to_string(),
+            lightningcss_sequence_status: "pass:strict-parse-source-sidecar".to_string(),
+            track2_independence_status: "independent_verified:cssparser-parse-plus-golden-fact-table"
+                .to_string(),
+            measured_validation_path:
+                "criterion:nonjson_css_l4_w3:three-way-byte-identical-fact-stream".to_string(),
+            benchmark_artifact_path: format!(
+                "criterion:{run_id}:target/criterion/nonjson_css_l4_w3"
+            ),
+            profile_artifact:
+                "profile:not_required_for_W3_css_micro_row;criterion_gate_consumed".to_string(),
+            sample_count: track1_measure.iterations,
+            sample_cost: format!(
+                "ns_per_byte={:.6};track1_ns={:.2};oracle_ns={:.2};lightningcss_ns={:.2};bytes={}",
+                track1_measure.ns_per_byte,
+                track1_measure.elapsed_ns,
+                oracle_measure.elapsed_ns,
+                lightning_measure.elapsed_ns,
+                input.len()
+            ),
+            host_triple: host_triple(),
+            feature_mask: feature_mask(),
+            build_flags: build_flags(),
+            lock14_status: "pass:lock14_baseline::validate:sk-v13-waveW3".to_string(),
+            lock16_status: "n/a:no_simd_or_asm_claim".to_string(),
+            scalar_reference_status: "pass:cssparser_oracle".to_string(),
+            checkasm_or_parity_status: "pass:three_way_fact_stream".to_string(),
+            json_guard_state: "maintain:sk-v13-open:guards-pass".to_string(),
+            same_wave_consumer_class:
+                "companion_gate_css_l4_declaration_values_extended_sota".to_string(),
+            redress_entry: "REDRESS-131".to_string(),
+        }],
+    };
+    let text = serde_json::to_string_pretty(&report)
+        .map_err(|error| format!("failed to serialize W3 CSS report: {error}"))?;
+    fs::write(
+        declaration_values_extended_report_path(),
+        format!("{text}\n"),
+    )
+    .map_err(|error| format!("failed to write W3 CSS report: {error}"))?;
+    Ok(report)
+}
+
 #[derive(Debug, PartialEq, Eq)]
 struct LightningDeclaration {
     depth: u32,
@@ -719,6 +1037,41 @@ fn validate_stylesheet_selectors_fixture_shape(input: &str) -> Result<(), CssOra
         return Err(CssOracleError::new(
             "CSS stylesheet/selectors fixture contains CR; W2 spans are LF-only",
         ));
+    }
+    Ok(())
+}
+
+fn validate_declaration_values_extended_fixture_shape(input: &str) -> Result<(), CssOracleError> {
+    if input.len() != DECL_VALUES_EXTENDED_FIXTURE_BYTES {
+        return Err(CssOracleError::new(format!(
+            "CSS declaration-values-extended fixture byte length changed: expected {DECL_VALUES_EXTENDED_FIXTURE_BYTES}, got {}",
+            input.len()
+        )));
+    }
+    let fixture_sha = sha256_hex(input.as_bytes());
+    if fixture_sha != DECL_VALUES_EXTENDED_FIXTURE_SHA256 {
+        return Err(CssOracleError::new(format!(
+            "CSS declaration-values-extended fixture checksum changed: expected {DECL_VALUES_EXTENDED_FIXTURE_SHA256}, got {fixture_sha}"
+        )));
+    }
+    if input.as_bytes().contains(&b'\r') {
+        return Err(CssOracleError::new(
+            "CSS declaration-values-extended fixture contains CR; W3 spans are LF-only",
+        ));
+    }
+    for required in [
+        "--brand-\\31",
+        "calc(var(--gap, 10px) + clamp(1rem, 2vw, 3rem))",
+        "color-mix(in srgb, var(--brand-\\31) 80%, white)",
+        "url(\"/assets/bg\\\\ space.svg\")",
+        "url(/assets/mask.svg)",
+        "content: \"escaped\\\\A line\"",
+    ] {
+        if !input.contains(required) {
+            return Err(CssOracleError::new(format!(
+                "CSS declaration-values-extended fixture missing `{required}`"
+            )));
+        }
     }
     Ok(())
 }
@@ -1276,6 +1629,35 @@ fn stylesheet_selectors_generated_module_stats() -> Result<GeneratedStats, Strin
     })
 }
 
+fn declaration_values_extended_generated_module_stats() -> Result<GeneratedStats, String> {
+    let root = repo_root();
+    let paths = [
+        "skinny/crates/runtime/src/grammars/css_l4_declaration_values_extended/config.rs",
+        "skinny/crates/runtime/src/grammars/css_l4_declaration_values_extended/generated.rs",
+        "skinny/crates/runtime/src/grammars/css_l4_declaration_values_extended/mod.rs",
+        "skinny/crates/runtime/src/grammars/css_l4_declaration_values_extended/parser.rs",
+        "skinny/crates/runtime/src/grammars/css_l4_declaration_values_extended/sink.rs",
+    ];
+    let mut hasher = Sha256::new();
+    let mut loc = 0u64;
+    let mut bytes = 0u64;
+    for path in paths {
+        let source = fs::read(root.join(path))
+            .map_err(|error| format!("failed to read generated W3 CSS module {path}: {error}"))?;
+        hasher.update(path.as_bytes());
+        hasher.update([0]);
+        hasher.update(&source);
+        hasher.update([0]);
+        loc += source.iter().filter(|byte| **byte == b'\n').count() as u64;
+        bytes += source.len() as u64;
+    }
+    Ok(GeneratedStats {
+        grammar_checksum: hex_digest(hasher.finalize().as_slice()),
+        loc,
+        bytes,
+    })
+}
+
 fn token_start_for(token: Token<'_>, input: &str, token_end: usize) -> usize {
     match token {
         Token::Ident(value) => token_end.saturating_sub(value.len()),
@@ -1456,6 +1838,34 @@ mod tests {
     #[test]
     fn writes_gate_consumed_stylesheet_selectors_report() {
         let report = write_stylesheet_selectors_report_with_quick_measurement().unwrap();
+        report.validate_gate().unwrap();
+    }
+
+    #[test]
+    fn declaration_values_extended_cssparser_matches_generated_track1() {
+        let input = read_declaration_values_extended_fixture().unwrap();
+        assert_declaration_values_extended_strict_equality(&input).unwrap();
+    }
+
+    #[test]
+    fn declaration_values_extended_lightningcss_matches_generated_track1_and_cssparser() {
+        let input = read_declaration_values_extended_fixture().unwrap();
+        assert_declaration_values_extended_lightningcss_strict_equality(&input).unwrap();
+    }
+
+    #[test]
+    fn declaration_values_extended_sidecar_fails_closed_on_fixture_drift() {
+        let mut input = read_declaration_values_extended_fixture().unwrap();
+        input.push_str("/* drift */");
+        let error = declaration_values_extended_lightningcss_facts(&input)
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("byte length changed"), "{error}");
+    }
+
+    #[test]
+    fn writes_gate_consumed_declaration_values_extended_report() {
+        let report = write_declaration_values_extended_report_with_quick_measurement().unwrap();
         report.validate_gate().unwrap();
     }
 }

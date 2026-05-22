@@ -1,0 +1,4 @@
+status=pass
+row_id=css_l4/declaration_values_extended/direct_to_struct/main
+run_id=sk-v13-w3:fixture-fnv64-ffbf6baa300b8f39
+comparator=lightningcss-1.0.0-alpha.71:same-plane-source-sidecar

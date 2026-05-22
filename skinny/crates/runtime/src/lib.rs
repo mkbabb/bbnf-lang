@@ -6,6 +6,9 @@ pub mod generated_json;
 #[path = "grammars/css_l4_declaration_values/mod.rs"]
 pub mod generated_css_l4_declaration_values;
 
+#[path = "grammars/css_l4_declaration_values_extended/mod.rs"]
+pub mod generated_css_l4_declaration_values_extended;
+
 #[path = "grammars/css_l4_stylesheet_selectors/mod.rs"]
 pub mod generated_css_l4_stylesheet_selectors;
 
@@ -19,6 +22,7 @@ pub mod sheets_witness;
 
 pub mod grammars {
     pub use crate::generated_css_l4_declaration_values as css_l4_declaration_values;
+    pub use crate::generated_css_l4_declaration_values_extended as css_l4_declaration_values_extended;
     pub use crate::generated_css_l4_stylesheet_selectors as css_l4_stylesheet_selectors;
     pub use crate::generated_json as json;
 }
@@ -64,6 +68,23 @@ mod tests {
         assert!(facts.contains(
             "end\trules=1\tselector_lists=1\tselectors=2\tselector_items=16\tdeclarations=1"
         ));
+    }
+
+    #[test]
+    fn css_l4_declaration_values_extended_emit_fact_stream() {
+        let input = concat!(
+            ":root { --brand-\\31: rgb(255 128 0 / 50%); --gap: calc(100% - 2rem); }\n",
+            ".card { width: calc(var(--gap, 10px) + clamp(1rem, 2vw, 3rem)); ",
+            "color: color-mix(in srgb, var(--brand-\\31) 80%, white); ",
+            "background-image: url(\"/assets/bg\\\\ space.svg\"); ",
+            "mask-image: url(/assets/mask.svg); content: \"escaped\\\\A line\"; }\n"
+        );
+        let facts = crate::grammars::css_l4_declaration_values_extended::parse(input).unwrap();
+        assert!(facts.contains(
+            "row\tid=css_l4/declaration_values_extended/direct_to_struct/main\tplane=css_l4_declaration_value_extended_fact_stream"
+        ));
+        assert!(facts.contains("kind=function\tlexeme_hex=63616c63"));
+        assert!(facts.contains("kind=url\tlexeme_hex=2f6173736574732f6d61736b2e737667"));
     }
 
     #[test]

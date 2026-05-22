@@ -3877,3 +3877,39 @@ perturbation.
   `restart/skinny/tranches/sk-v12/DISPATCH-PROMPT.md`, `skinny/RESULTS.md`,
   and `restart/skinny/CAMPAIGN-CLOSE-SK-V12-V12.md` all record the
   `PASS-ADMIT` close.
+
+## SK-V13 Wave 3 CSS Declaration-Values Extended
+
+- Item 131 closes W3 under `G-W3-CSS-DECLARATION-VALUES-EXTENDED` as
+  `PASS-ADMIT-CANDIDATE`. The admitted generated row is
+  `css_l4/declaration_values_extended/direct_to_struct/main` on output plane
+  `css_l4_declaration_value_extended_fact_stream`.
+- W3 adds a generated CSS L4 declaration-values-extended runtime profile
+  covering `declarations`, `css_variables`, `calc_expressions`,
+  `var_url_functions`, and `color_functions`. The fixture exercises custom
+  properties, escaped identifiers, nested `calc(var(...), clamp(...))`,
+  `color-mix`, quoted and unquoted `url(...)`, and escaped strings.
+- Criterion with `RUSTFLAGS="-C target-cpu=native"` records Track 1
+  `265.724931228299 Mbps`, cssparser oracle `94.4096397540887 Mbps`,
+  lightningcss same-plane strict comparator `54.91396410515015 Mbps`,
+  threshold `55.91396410515015 Mbps`, and margin
+  `209.81096712314886 Mbps`. Strict equality is
+  `pass:track1=cssparser=lightningcss` with fact-stream SHA-256
+  `a39c3cf33479015fa1195f857ac2c2d84cf43977489cc97fe4a1f6f3b99038c9`.
+- Gate evidence is consumed by
+  `restart/skinny/tranches/sk-v13/research/w3/skv13-W3-css-l4-declaration-values-extended.json`.
+  Retained artifacts under `restart/skinny/tranches/sk-v13/research/w3/artifacts/`
+  include Track 1, cssparser oracle, lightningcss fact streams, and equality
+  proofs. `skinny/RESULTS.md` and `restart/skinny/ROLLING-SOTA-DELTA.md`
+  record the row and five covered CSS feature admissions.
+- Verification passed:
+  `cargo test -p codegen css_l4_declaration_values_extended --lib`,
+  `cargo test -p bbnf-bench --lib nonjson_css_l4::tests::declaration_values_extended`,
+  `cargo test -p bbnf-bench --lib nonjson_css_l4::tests::writes_gate_consumed_declaration_values_extended_report`,
+  `cargo test -p bbnf-bench --bin gate skv13_css_comparator_oracle_report_arg_allows_multiple_read_only_reports`,
+  `cargo test -p xtask gate_json_passthrough_accepts_skv12_non_json_report_flag`,
+  `RUSTFLAGS="-C target-cpu=native" cargo bench -p bbnf-bench --bench
+  nonjson_css_l4`, and `RUSTFLAGS="-C target-cpu=native" cargo xtask
+  gate-json --check-results --advisory
+  --skv13-css-declaration-values-extended-report
+  ../restart/skinny/tranches/sk-v13/research/w3/skv13-W3-css-l4-declaration-values-extended.json`.

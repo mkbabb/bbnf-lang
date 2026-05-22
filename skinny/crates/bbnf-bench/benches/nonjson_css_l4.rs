@@ -82,6 +82,58 @@ fn bench_nonjson_css_l4(c: &mut Criterion) {
         },
     );
     selector_group.finish();
+
+    let extended_input = nonjson_css_l4::read_declaration_values_extended_fixture()
+        .expect("CSS L4 declaration-values-extended fixture is readable");
+    nonjson_css_l4::assert_declaration_values_extended_strict_equality(&extended_input)
+        .expect("CSS declaration-values-extended Track 1 equals cssparser oracle");
+    nonjson_css_l4::assert_declaration_values_extended_lightningcss_strict_equality(
+        &extended_input,
+    )
+    .expect("CSS declaration-values-extended Track 1 equals lightningcss fact stream");
+    let extended_report =
+        nonjson_css_l4::write_declaration_values_extended_report_with_quick_measurement()
+            .expect("CSS L4 declaration-values-extended report is emitted");
+    extended_report
+        .validate_gate()
+        .expect("CSS L4 declaration-values-extended report gate passes");
+
+    let mut extended_group = c.benchmark_group("nonjson_css_l4_w3");
+    extended_group.throughput(Throughput::Bytes(extended_input.len() as u64));
+    extended_group.bench_function("track1_generated_css_l4_decl_values_extended", |b| {
+        b.iter(|| {
+            black_box(
+                nonjson_css_l4::declaration_values_extended_track1_facts(black_box(
+                    &extended_input,
+                ))
+                .expect("Track 1 CSS declaration-values-extended fact stream"),
+            )
+        })
+    });
+    extended_group.bench_function("track2_cssparser_decl_values_extended_oracle", |b| {
+        b.iter(|| {
+            black_box(
+                nonjson_css_l4::declaration_values_extended_oracle_facts(black_box(
+                    &extended_input,
+                ))
+                .expect("cssparser CSS declaration-values-extended fact stream"),
+            )
+        })
+    });
+    extended_group.bench_function(
+        "lightningcss_decl_values_extended_same_plane_fact_stream",
+        |b| {
+            b.iter(|| {
+                black_box(
+                    nonjson_css_l4::declaration_values_extended_lightningcss_facts(black_box(
+                        &extended_input,
+                    ))
+                    .expect("lightningcss CSS declaration-values-extended fact stream"),
+                )
+            })
+        },
+    );
+    extended_group.finish();
 }
 
 criterion_group! {

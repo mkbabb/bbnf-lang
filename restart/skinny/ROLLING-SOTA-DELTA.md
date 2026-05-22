@@ -68,15 +68,15 @@ source_commit: 01c335ac9
 | row | plane | T1_current | T1_sota | margin | tranche_admitted |
 |---|---|---:|---:|---:|---|
 | css_l4/declaration_values/direct_to_struct/main | css_l4_parity | 434.13 | 169.23 | 264.90 | ADMITTED |
-| css_l4/declarations/direct_to_struct/main | css_l4_parity | absent:not-yet-generated | absent:not-yet-generated | absent:not-yet-generated | OPEN |
+| css_l4/declarations/direct_to_struct/main | css_l4_parity | 265.72 | 55.91 | 209.81 | ADMITTED |
 | css_l4/stylesheet_root/direct_to_struct/main | css_l4_parity | 26894.88 | 596.05 | 26298.83 | ADMITTED |
 | css_l4/selectors/direct_to_struct/main | css_l4_parity | 26894.88 | 596.05 | 26298.83 | ADMITTED |
 | css_l4/at_rules_keyframes/direct_to_struct/main | css_l4_parity | absent:not-yet-generated | absent:not-yet-generated | absent:not-yet-generated | OPEN |
 | css_l4/nested_rules/direct_to_struct/main | css_l4_parity | absent:not-yet-generated | absent:not-yet-generated | absent:not-yet-generated | OPEN |
-| css_l4/css_variables/direct_to_struct/main | css_l4_parity | absent:not-yet-generated | absent:not-yet-generated | absent:not-yet-generated | OPEN |
-| css_l4/calc_expressions/direct_to_struct/main | css_l4_parity | absent:not-yet-generated | absent:not-yet-generated | absent:not-yet-generated | OPEN |
-| css_l4/var_url_functions/direct_to_struct/main | css_l4_parity | absent:not-yet-generated | absent:not-yet-generated | absent:not-yet-generated | OPEN |
-| css_l4/color_functions/direct_to_struct/main | css_l4_parity | absent:not-yet-generated | absent:not-yet-generated | absent:not-yet-generated | OPEN |
+| css_l4/css_variables/direct_to_struct/main | css_l4_parity | 265.72 | 55.91 | 209.81 | ADMITTED |
+| css_l4/calc_expressions/direct_to_struct/main | css_l4_parity | 265.72 | 55.91 | 209.81 | ADMITTED |
+| css_l4/var_url_functions/direct_to_struct/main | css_l4_parity | 265.72 | 55.91 | 209.81 | ADMITTED |
+| css_l4/color_functions/direct_to_struct/main | css_l4_parity | 265.72 | 55.91 | 209.81 | ADMITTED |
 | css_l4/gradients/direct_to_struct/main | css_l4_parity | absent:not-yet-generated | absent:not-yet-generated | absent:not-yet-generated | OPEN |
 | css_l4/transforms/direct_to_struct/main | css_l4_parity | absent:not-yet-generated | absent:not-yet-generated | absent:not-yet-generated | OPEN |
 | css_l4/filters/direct_to_struct/main | css_l4_parity | absent:not-yet-generated | absent:not-yet-generated | absent:not-yet-generated | OPEN |

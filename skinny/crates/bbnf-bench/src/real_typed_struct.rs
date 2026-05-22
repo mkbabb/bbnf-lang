@@ -15,6 +15,7 @@ pub enum RealTypedFixture {
     UpdateCenter,
     Mesh,
     MarineIk,
+    Instruments,
     Numbers,
     UnicodeBasic,
     Random,
@@ -247,6 +248,176 @@ pub struct RandomFriend<'a> {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct InstrumentsDocument<'a> {
+    #[serde(default, borrow)]
+    pub instruments: Vec<Instrument<'a>>,
+    #[serde(default, borrow)]
+    pub name: Option<Cow<'a, str>>,
+    #[serde(default, borrow)]
+    pub patterns: Vec<InstrumentPattern<'a>>,
+    #[serde(default, borrow)]
+    pub samples: Vec<InstrumentSample<'a>>,
+    #[serde(default)]
+    pub version: Option<u32>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Instrument<'a> {
+    #[serde(default)]
+    pub default_filter_cutoff: u32,
+    #[serde(default)]
+    pub default_filter_cutoff_enabled: bool,
+    #[serde(default)]
+    pub default_filter_mode: u32,
+    #[serde(default)]
+    pub default_filter_resonance: u32,
+    #[serde(default)]
+    pub default_filter_resonance_enabled: bool,
+    #[serde(default)]
+    pub default_pan: u32,
+    #[serde(default)]
+    pub duplicate_check_type: u32,
+    #[serde(default)]
+    pub duplicate_note_action: u32,
+    #[serde(default)]
+    pub fadeout: u32,
+    #[serde(default)]
+    pub global_volume: u32,
+    #[serde(default)]
+    pub graph_insert: u32,
+    #[serde(default, borrow)]
+    pub legacy_filename: Option<Cow<'a, str>>,
+    #[serde(default)]
+    pub midi_bank: u32,
+    #[serde(default)]
+    pub midi_channel: u32,
+    #[serde(default)]
+    pub midi_drum_set: u32,
+    #[serde(default)]
+    pub midi_program: u32,
+    #[serde(default, borrow)]
+    pub name: Option<Cow<'a, str>>,
+    #[serde(default)]
+    pub new_note_action: u32,
+    #[serde(default)]
+    pub panning_envelope: Option<InstrumentEnvelope>,
+    #[serde(default)]
+    pub pitch_envelope: Option<InstrumentEnvelope>,
+    #[serde(default)]
+    pub pitch_pan_center: u32,
+    #[serde(default)]
+    pub pitch_pan_separation: u32,
+    #[serde(default)]
+    pub pitch_to_tempo_lock: u32,
+    #[serde(default)]
+    pub random_cutoff_weight: u32,
+    #[serde(default)]
+    pub random_pan_weight: u32,
+    #[serde(default)]
+    pub random_resonance_weight: u32,
+    #[serde(default)]
+    pub random_volume_weight: u32,
+    #[serde(default)]
+    pub volume_envelope: Option<InstrumentEnvelope>,
+    #[serde(default)]
+    pub volume_ramp_down: u32,
+    #[serde(default)]
+    pub volume_ramp_up: u32,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct InstrumentEnvelope {
+    #[serde(default)]
+    pub loop_end: u32,
+    #[serde(default)]
+    pub loop_start: u32,
+    #[serde(default)]
+    pub nodes: Vec<InstrumentEnvelopeNode>,
+    #[serde(default)]
+    pub release_node: u32,
+    #[serde(default)]
+    pub sustain_end: u32,
+    #[serde(default)]
+    pub sustain_start: u32,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct InstrumentEnvelopeNode {
+    #[serde(default)]
+    pub tick: u32,
+    #[serde(default)]
+    pub value: u32,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct InstrumentPattern<'a> {
+    #[serde(default)]
+    pub data: Option<Vec<InstrumentPatternEvent>>,
+    #[serde(default, borrow)]
+    pub name: Option<Cow<'a, str>>,
+    #[serde(default)]
+    pub rows: u32,
+    #[serde(default)]
+    pub rows_per_beat: u32,
+    #[serde(default)]
+    pub rows_per_measure: u32,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct InstrumentPatternEvent {
+    #[serde(default)]
+    pub channel: u32,
+    #[serde(default)]
+    pub fxcmd: u32,
+    #[serde(default)]
+    pub fxparam: u32,
+    #[serde(default)]
+    pub instr: u32,
+    #[serde(default)]
+    pub note: u32,
+    #[serde(default)]
+    pub row: u32,
+    #[serde(default)]
+    pub volcmd: u32,
+    #[serde(default)]
+    pub volval: u32,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct InstrumentSample<'a> {
+    #[serde(default)]
+    pub c5_samplerate: u32,
+    #[serde(default)]
+    pub global_volume: u32,
+    #[serde(default, borrow)]
+    pub legacy_filename: Option<Cow<'a, str>>,
+    #[serde(default)]
+    pub length: u32,
+    #[serde(default)]
+    pub loop_end: u32,
+    #[serde(default)]
+    pub loop_start: u32,
+    #[serde(default, borrow)]
+    pub name: Option<Cow<'a, str>>,
+    #[serde(default)]
+    pub pan: u32,
+    #[serde(default)]
+    pub sustain_end: u32,
+    #[serde(default)]
+    pub sustain_start: u32,
+    #[serde(default)]
+    pub vibrato_depth: u32,
+    #[serde(default)]
+    pub vibrato_rate: u32,
+    #[serde(default)]
+    pub vibrato_sweep: u32,
+    #[serde(default)]
+    pub vibrato_type: u32,
+    #[serde(default)]
+    pub volume: u32,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct Mesh {
     #[serde(default)]
     pub batches: Vec<MeshBatch>,
@@ -371,6 +542,7 @@ pub enum RealTypedOutput<'a> {
     UpdateCenter(UpdateCenter<'a>),
     Mesh(Mesh),
     MarineIk(MarineIk),
+    Instruments(InstrumentsDocument<'a>),
     Numbers(Vec<f64>),
     UnicodeBasic(Vec<UnicodeBasicRecord<'a>>),
     Random(RandomDocument<'a>),
@@ -385,6 +557,7 @@ pub fn fixture_for_name(name: &str) -> Option<RealTypedFixture> {
         "update_center" | "update-center" => Some(RealTypedFixture::UpdateCenter),
         "mesh" => Some(RealTypedFixture::Mesh),
         "marine_ik" | "marine-ik" => Some(RealTypedFixture::MarineIk),
+        "instruments" => Some(RealTypedFixture::Instruments),
         "numbers" => Some(RealTypedFixture::Numbers),
         "unicode_basic" | "unicode-basic" => Some(RealTypedFixture::UnicodeBasic),
         "random" => Some(RealTypedFixture::Random),
@@ -449,6 +622,9 @@ pub fn track1_typed<'a>(
         RealTypedFixture::MarineIk => crate::generated_real_typed::parse_marine_ik(input)
             .map(RealTypedOutput::MarineIk)
             .map_err(|error| DirectStructError::Parse(error.to_string())),
+        RealTypedFixture::Instruments => crate::generated_real_typed::parse_instruments(input)
+            .map(RealTypedOutput::Instruments)
+            .map_err(|error| DirectStructError::Parse(error.to_string())),
         RealTypedFixture::Numbers => crate::generated_real_typed::parse_numbers(input)
             .map(RealTypedOutput::Numbers)
             .map_err(|error| DirectStructError::Parse(error.to_string())),
@@ -494,6 +670,9 @@ pub fn serde_typed<'a>(
         RealTypedFixture::MarineIk => serde_json::from_slice::<MarineIk>(bytes)
             .map(RealTypedOutput::MarineIk)
             .map_err(|error| DirectStructError::Serde(error.to_string())),
+        RealTypedFixture::Instruments => serde_json::from_slice::<InstrumentsDocument<'a>>(bytes)
+            .map(RealTypedOutput::Instruments)
+            .map_err(|error| DirectStructError::Serde(error.to_string())),
         RealTypedFixture::Numbers => serde_json::from_slice::<Vec<f64>>(bytes)
             .map(RealTypedOutput::Numbers)
             .map_err(|error| DirectStructError::Serde(error.to_string())),
@@ -534,6 +713,9 @@ pub fn sonic_typed<'a>(
         RealTypedFixture::MarineIk => sonic_rs::from_slice::<MarineIk>(bytes)
             .map(RealTypedOutput::MarineIk)
             .map_err(|error| DirectStructError::Sonic(error.to_string())),
+        RealTypedFixture::Instruments => sonic_rs::from_slice::<InstrumentsDocument<'a>>(bytes)
+            .map(RealTypedOutput::Instruments)
+            .map_err(|error| DirectStructError::Sonic(error.to_string())),
         RealTypedFixture::Numbers => sonic_rs::from_slice::<Vec<f64>>(bytes)
             .map(RealTypedOutput::Numbers)
             .map_err(|error| DirectStructError::Sonic(error.to_string())),
@@ -573,6 +755,7 @@ pub fn typed_checksum(output: &RealTypedOutput<'_>) -> u64 {
         RealTypedOutput::UpdateCenter(value) => checksum_update_center(value),
         RealTypedOutput::Mesh(value) => checksum_mesh(value),
         RealTypedOutput::MarineIk(value) => checksum_marine_ik(value),
+        RealTypedOutput::Instruments(value) => checksum_instruments(value),
         RealTypedOutput::Numbers(value) => checksum_numbers(value),
         RealTypedOutput::UnicodeBasic(value) => checksum_unicode_basic(value),
         RealTypedOutput::Random(value) => checksum_random(value),
@@ -803,6 +986,141 @@ fn checksum_random_friend(value: &RandomFriend<'_>) -> u64 {
     hash = fold_opt_u64(hash, value.id);
     hash = fold_opt_str(hash, &value.name);
     fold_opt_str(hash, &value.phone)
+}
+
+fn checksum_instruments(value: &InstrumentsDocument<'_>) -> u64 {
+    let mut hash = 0x696e737472756d65;
+    hash = fold_opt_str(hash, &value.name);
+    hash = fold_opt_u64(hash, value.version.map(u64::from));
+    hash = mix(hash, value.instruments.len() as u64);
+    for instrument in &value.instruments {
+        hash = mix(hash, checksum_instrument(instrument));
+    }
+    hash = mix(hash, value.patterns.len() as u64);
+    for pattern in &value.patterns {
+        hash = mix(hash, checksum_instrument_pattern(pattern));
+    }
+    hash = mix(hash, value.samples.len() as u64);
+    for sample in &value.samples {
+        hash = mix(hash, checksum_instrument_sample(sample));
+    }
+    hash
+}
+
+fn checksum_instrument(value: &Instrument<'_>) -> u64 {
+    let mut hash = 0x696e737472;
+    for scalar in [
+        value.default_filter_cutoff,
+        u32::from(value.default_filter_cutoff_enabled),
+        value.default_filter_mode,
+        value.default_filter_resonance,
+        u32::from(value.default_filter_resonance_enabled),
+        value.default_pan,
+        value.duplicate_check_type,
+        value.duplicate_note_action,
+        value.fadeout,
+        value.global_volume,
+        value.graph_insert,
+        value.midi_bank,
+        value.midi_channel,
+        value.midi_drum_set,
+        value.midi_program,
+        value.new_note_action,
+        value.pitch_pan_center,
+        value.pitch_pan_separation,
+        value.pitch_to_tempo_lock,
+        value.random_cutoff_weight,
+        value.random_pan_weight,
+        value.random_resonance_weight,
+        value.random_volume_weight,
+        value.volume_ramp_down,
+        value.volume_ramp_up,
+    ] {
+        hash = mix(hash, scalar as u64);
+    }
+    hash = fold_opt_str(hash, &value.legacy_filename);
+    hash = fold_opt_str(hash, &value.name);
+    hash = fold_opt_envelope(hash, &value.panning_envelope);
+    hash = fold_opt_envelope(hash, &value.pitch_envelope);
+    fold_opt_envelope(hash, &value.volume_envelope)
+}
+
+fn fold_opt_envelope(hash: u64, value: &Option<InstrumentEnvelope>) -> u64 {
+    value
+        .as_ref()
+        .map_or_else(|| mix(hash, 0), |value| mix(hash, checksum_envelope(value)))
+}
+
+fn checksum_envelope(value: &InstrumentEnvelope) -> u64 {
+    let mut hash = 0x656e76656c6f70;
+    hash = mix(hash, value.loop_end as u64);
+    hash = mix(hash, value.loop_start as u64);
+    hash = mix(hash, value.nodes.len() as u64);
+    for node in &value.nodes {
+        hash = mix(hash, node.tick as u64);
+        hash = mix(hash, node.value as u64);
+    }
+    hash = mix(hash, value.release_node as u64);
+    hash = mix(hash, value.sustain_end as u64);
+    mix(hash, value.sustain_start as u64)
+}
+
+fn checksum_instrument_pattern(value: &InstrumentPattern<'_>) -> u64 {
+    let mut hash = 0x7061747465726e;
+    hash = fold_opt_str(hash, &value.name);
+    hash = mix(hash, value.rows as u64);
+    hash = mix(hash, value.rows_per_beat as u64);
+    hash = mix(hash, value.rows_per_measure as u64);
+    match &value.data {
+        Some(events) => {
+            hash = mix(hash, events.len() as u64);
+            for event in events {
+                hash = mix(hash, checksum_pattern_event(event));
+            }
+            hash
+        }
+        None => mix(hash, 0),
+    }
+}
+
+fn checksum_pattern_event(value: &InstrumentPatternEvent) -> u64 {
+    let mut hash = 0x6576656e74;
+    for scalar in [
+        value.channel,
+        value.fxcmd,
+        value.fxparam,
+        value.instr,
+        value.note,
+        value.row,
+        value.volcmd,
+        value.volval,
+    ] {
+        hash = mix(hash, scalar as u64);
+    }
+    hash
+}
+
+fn checksum_instrument_sample(value: &InstrumentSample<'_>) -> u64 {
+    let mut hash = 0x73616d706c65;
+    for scalar in [
+        value.c5_samplerate,
+        value.global_volume,
+        value.length,
+        value.loop_end,
+        value.loop_start,
+        value.pan,
+        value.sustain_end,
+        value.sustain_start,
+        value.vibrato_depth,
+        value.vibrato_rate,
+        value.vibrato_sweep,
+        value.vibrato_type,
+        value.volume,
+    ] {
+        hash = mix(hash, scalar as u64);
+    }
+    hash = fold_opt_str(hash, &value.legacy_filename);
+    fold_opt_str(hash, &value.name)
 }
 
 fn checksum_marine_geometry(value: &MarineGeometry) -> u64 {
@@ -1124,5 +1442,19 @@ mod tests {
         let bytes = std::fs::read(locate_fixture("random")).unwrap();
         let text = std::str::from_utf8(&bytes).unwrap();
         assert_real_typed_parity(text, &bytes, RealTypedFixture::Random);
+    }
+
+    #[test]
+    fn generated_instruments_typed_parser_matches_sidecars() {
+        let input = br#"{"name":"demo","version":1,"instruments":[{"default_filter_cutoff":127,"default_filter_cutoff_enabled":true,"default_filter_mode":2,"default_filter_resonance":12,"default_filter_resonance_enabled":false,"default_pan":32,"duplicate_check_type":1,"duplicate_note_action":0,"fadeout":256,"global_volume":64,"graph_insert":0,"legacy_filename":"lead.xi","midi_bank":1,"midi_channel":2,"midi_drum_set":0,"midi_program":33,"name":"lead","new_note_action":1,"panning_envelope":{"loop_end":2,"loop_start":0,"nodes":[{"tick":0,"value":32},{"tick":12,"value":48}],"release_node":0,"sustain_end":1,"sustain_start":1},"pitch_envelope":{"loop_end":0,"loop_start":0,"nodes":[],"release_node":0,"sustain_end":0,"sustain_start":0},"pitch_pan_center":60,"pitch_pan_separation":4,"pitch_to_tempo_lock":0,"random_cutoff_weight":3,"random_pan_weight":2,"random_resonance_weight":1,"random_volume_weight":5,"volume_envelope":{"loop_end":1,"loop_start":0,"nodes":[{"tick":0,"value":64}],"release_node":0,"sustain_end":1,"sustain_start":0},"volume_ramp_down":8,"volume_ramp_up":9}],"patterns":[{"data":[{"channel":1,"fxcmd":2,"fxparam":3,"instr":4,"note":48,"row":0,"volcmd":1,"volval":32}],"name":"p0","rows":64,"rows_per_beat":4,"rows_per_measure":16}],"samples":[{"c5_samplerate":44100,"global_volume":64,"legacy_filename":"s0.wav","length":2048,"loop_end":1024,"loop_start":128,"name":"sample","pan":32,"sustain_end":900,"sustain_start":100,"vibrato_depth":1,"vibrato_rate":2,"vibrato_sweep":3,"vibrato_type":4,"volume":64}]}"#;
+        let text = std::str::from_utf8(input).unwrap();
+        assert_real_typed_parity(text, input, RealTypedFixture::Instruments);
+    }
+
+    #[test]
+    fn w13_full_instruments_typed_fixture_matches_sidecars() {
+        let bytes = std::fs::read(locate_fixture("instruments")).unwrap();
+        let text = std::str::from_utf8(&bytes).unwrap();
+        assert_real_typed_parity(text, &bytes, RealTypedFixture::Instruments);
     }
 }

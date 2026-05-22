@@ -1,0 +1,51 @@
+{
+  "schema_version": "sk-v13-w13.4-typed-product-facts-v1",
+  "wave_id": "SK-V13-W13.4",
+  "row_id": "json/instruments/real_typed_struct/main",
+  "corpus": "instruments",
+  "input_bytes": 220346,
+  "criterion_group": "json_instruments",
+  "measurement_command": "RUSTFLAGS=\"-C target-cpu=native\" cargo bench -p bbnf-bench --bench json_parity -- 'json/instruments/(track1_real_typed_struct|track2_real_typed_struct|sonic_rs_real_typed_struct|serde_json_real_typed_struct)'",
+  "lanes": {
+    "track1_real_typed_struct": {
+      "mean_ns": 84067.73298198845,
+      "lower_ns": 83892.12877573393,
+      "upper_ns": 84254.96730765575,
+      "mbps": 20968.425547738676,
+      "lower_mbps": 20921.828781480373,
+      "upper_mbps": 21012.31695660447,
+      "samples": 100
+    },
+    "track2_real_typed_struct": {
+      "mean_ns": 145744.18996859298,
+      "lower_ns": 145624.02469575312,
+      "upper_ns": 145897.1132155823,
+      "mbps": 12094.945262516922,
+      "lower_mbps": 12082.267847173076,
+      "upper_mbps": 12104.925706337852,
+      "samples": 100
+    },
+    "sonic_rs_real_typed_struct": {
+      "mean_ns": 110327.56030340256,
+      "lower_ns": 110187.85639771588,
+      "upper_ns": 110502.72340043228,
+      "mbps": 15977.585248439826,
+      "lower_mbps": 15952.258421832743,
+      "upper_mbps": 15997.842753537232,
+      "samples": 100
+    },
+    "serde_json_real_typed_struct": {
+      "mean_ns": 145596.34929836384,
+      "lower_ns": 145451.30643593156,
+      "upper_ns": 145773.04252509068,
+      "mbps": 12107.22664747343,
+      "lower_mbps": 12092.551335042552,
+      "upper_mbps": 12119.299875635455,
+      "samples": 100
+    }
+  },
+  "threshold_mbps": 15978.585248439826,
+  "track1_margin_mbps": 4989.84029929885,
+  "track1_lower_margin_mbps": 4943.243533040548,
+  "decision": "pass"
+}

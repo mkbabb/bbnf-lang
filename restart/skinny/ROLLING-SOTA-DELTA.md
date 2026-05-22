@@ -43,7 +43,7 @@ source_commit: 76f556124+w13.3-redress
 | json/marine_ik/real_typed_struct/main | real_typed_struct | 11819.00 | 9309.00 | 2510.00 | ADMITTED |
 | json/instruments/parse_only/main | parse_only | 17312.00 | 19615.00 | -2303.00 | OPEN |
 | json/instruments/direct_to_struct/main | direct_to_struct | 12200.00 | 12786.00 | -586.00 | OPEN |
-| json/instruments/real_typed_struct/main | real_typed_struct | absent:product-surface-not-generated | absent:product-surface-not-generated | absent:product-surface-not-generated | MISSING |
+| json/instruments/real_typed_struct/main | real_typed_struct | 21026.00 | 15996.00 | 5030.00 | ADMITTED |
 | json/numbers/parse_only/main | parse_only | 19110.00 | 13336.00 | 5774.00 | OPEN |
 | json/numbers/direct_to_struct/main | direct_to_struct | 13875.00 | 12919.00 | 956.00 | ADMITTED |
 | json/numbers/real_typed_struct/main | real_typed_struct | 13157.00 | 11871.00 | 1286.00 | ADMITTED |

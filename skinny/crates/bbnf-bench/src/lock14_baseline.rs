@@ -912,6 +912,16 @@ const SK_V13_W13_3_OWNER_PATHS: &[&str] = &[
     "xtask/src/main.rs",
 ];
 
+const SK_V13_W13_4_OWNER_PATHS: &[&str] = &[
+    "crates/bbnf-bench/src/generated_real_typed.rs",
+    "crates/bbnf-bench/src/real_typed_struct.rs",
+    "crates/bbnf-bench/src/report.rs",
+    "crates/bbnf-bench/src/bin/gate.rs",
+    "crates/bbnf-bench/src/lock14_baseline.rs",
+    "xtask/src/real_typed_schema.rs",
+    "xtask/src/main.rs",
+];
+
 fn current_lock14_owner_paths() -> Vec<&'static str> {
     let mut paths = Vec::with_capacity(
         SK_V12_W1A_OWNER_PATHS.len()
@@ -932,7 +942,8 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
             + SK_V13_W12_OWNER_PATHS.len()
             + SK_V13_W13_1_OWNER_PATHS.len()
             + SK_V13_W13_2_OWNER_PATHS.len()
-            + SK_V13_W13_3_OWNER_PATHS.len(),
+            + SK_V13_W13_3_OWNER_PATHS.len()
+            + SK_V13_W13_4_OWNER_PATHS.len(),
     );
     paths.extend_from_slice(SK_V12_W1A_OWNER_PATHS);
     paths.extend_from_slice(SK_V12_W1B1_OWNER_PATHS);
@@ -953,6 +964,7 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
     paths.extend_from_slice(SK_V13_W13_1_OWNER_PATHS);
     paths.extend_from_slice(SK_V13_W13_2_OWNER_PATHS);
     paths.extend_from_slice(SK_V13_W13_3_OWNER_PATHS);
+    paths.extend_from_slice(SK_V13_W13_4_OWNER_PATHS);
     paths
 }
 
@@ -1205,6 +1217,14 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
         let allowed = changed_paths
             .iter()
             .all(|path| is_allowed_path(path, SK_V13_W13_3_OWNER_PATHS));
+        if allowed {
+            return Ok(());
+        }
+    }
+    if subject.contains("sk-v13-waveW13.4") || subject.contains("sk-v13-wave13.4-challenge") {
+        let allowed = changed_paths
+            .iter()
+            .all(|path| is_allowed_path(path, SK_V13_W13_4_OWNER_PATHS));
         if allowed {
             return Ok(());
         }
@@ -1880,6 +1900,26 @@ mod tests {
         assert!(validate_authorized_parent_diff(
             &outside,
             "feat(sk-v13-waveW13.3): admit random typed product surface"
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn admits_sk_v13_w13_4_parent_diff_under_w13_4_scope() {
+        let changed = SK_V13_W13_4_OWNER_PATHS
+            .iter()
+            .map(|path| (*path).to_string())
+            .collect::<Vec<_>>();
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v13-waveW13.4): admit instruments typed product surface"
+        )
+        .is_ok());
+        let mut outside = changed;
+        outside.push("crates/runtime/src/grammars/json/generated.rs".into());
+        assert!(validate_authorized_parent_diff(
+            &outside,
+            "feat(sk-v13-waveW13.4): admit instruments typed product surface"
         )
         .is_err());
     }

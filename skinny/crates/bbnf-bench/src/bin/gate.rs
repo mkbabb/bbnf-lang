@@ -7,7 +7,7 @@ use bbnf_bench::report::{
     SkV12NonJsonReport, SkV13CssAtRulesAndMediaReport, SkV13CssComparatorOracleReport,
     SkV13CssDeclarationValuesExtendedReport, SkV13CssNestedLayoutReport,
     SkV13CssStylesheetSelectorsReport, SkV13CssVendorCustomReport, SkV13CssVisualFunctionsReport,
-    SkV8ComparatorEvidence, SkV8Telemetry, TelemetryRow,
+    SkV13DecisionRegexReport, SkV8ComparatorEvidence, SkV8Telemetry, TelemetryRow,
 };
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -214,6 +214,23 @@ fn main() -> Result<(), Box<dyn Error>> {
             report.rows[0].admission_status,
             path.display(),
             report.covered_feature_rows.len()
+        );
+        drop(report);
+    }
+    if let Some(path) = skv13_decision_regex_report_path(&args[1..])? {
+        if !has_explicit_json_check {
+            return Err(format!("{} requires --check-results", path.display()).into());
+        }
+        let text = fs::read_to_string(&path)?;
+        let report = SkV13DecisionRegexReport::from_json_str(&text)
+            .and_then(|report| report.validate_gate().map(|_| report))
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        validate_skv13_decision_regex_report(&report, &workspace)
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        println!(
+            "G-W5-DECISION-REGEX {} {}",
+            report.row_move_toward_sota_status,
+            path.display()
         );
         drop(report);
     }
@@ -668,6 +685,10 @@ fn skv13_css_nested_layout_report_path(args: &[String]) -> Result<Option<PathBuf
     companion_report_path(args, "--skv13-css-nested-layout-report")
 }
 
+fn skv13_decision_regex_report_path(args: &[String]) -> Result<Option<PathBuf>, Box<dyn Error>> {
+    companion_report_path(args, "--skv13-decision-regex-report")
+}
+
 fn companion_report_path(args: &[String], flag: &str) -> Result<Option<PathBuf>, Box<dyn Error>> {
     let flag_positions = args
         .iter()
@@ -729,6 +750,8 @@ fn is_companion_report_flag(arg: &str) -> bool {
             | "--skv13-css-visual-functions-report"
             | "--skv13-css-at-rules-media-report"
             | "--skv13-css-vendor-custom-report"
+            | "--skv13-css-nested-layout-report"
+            | "--skv13-decision-regex-report"
     )
 }
 
@@ -1793,6 +1816,23 @@ fn validate_nested_layout_lightningcss_source_isolation(workspace: &Path) -> Res
                 "nested/layout lightningcss facts are coupled to Track 1 via `{forbidden}`"
             ));
         }
+    }
+    Ok(())
+}
+
+fn validate_skv13_decision_regex_report(
+    report: &SkV13DecisionRegexReport,
+    workspace: &Path,
+) -> Result<(), String> {
+    let path = resolve_workspace_path(workspace, &report.regex_fact_artifact_path);
+    let bytes = fs::read(&path)
+        .map_err(|error| format!("failed to read W5 regex fact artifact: {error}"))?;
+    let actual = sha256_hex(&bytes);
+    if actual != report.regex_fact_sha256 {
+        return Err(format!(
+            "W5 regex fact artifact hash mismatch: report {}, actual {actual}",
+            report.regex_fact_sha256
+        ));
     }
     Ok(())
 }
@@ -3591,6 +3631,10 @@ mod tests {
             "skv13-css-w10-1.json".to_string(),
             "--skv13-css-vendor-custom-report".to_string(),
             "skv13-css-w10-2.json".to_string(),
+            "--skv13-css-nested-layout-report".to_string(),
+            "skv13-css-w10-3.json".to_string(),
+            "--skv13-decision-regex-report".to_string(),
+            "skv13-w5.json".to_string(),
         ];
         assert_eq!(
             skv13_css_comparator_oracle_report_path(&mixed).unwrap(),
@@ -3616,12 +3660,35 @@ mod tests {
             skv13_css_vendor_custom_report_path(&mixed).unwrap(),
             Some(PathBuf::from("skv13-css-w10-2.json"))
         );
+        assert_eq!(
+            skv13_css_nested_layout_report_path(&mixed).unwrap(),
+            Some(PathBuf::from("skv13-css-w10-3.json"))
+        );
+        assert_eq!(
+            skv13_decision_regex_report_path(&mixed).unwrap(),
+            Some(PathBuf::from("skv13-w5.json"))
+        );
         let write = vec![
             "--skv13-css-comparator-oracle-report".to_string(),
             "skv13-css-comparator.json".to_string(),
             "--write-results".to_string(),
         ];
         assert!(skv13_css_comparator_oracle_report_path(&write).is_err());
+    }
+
+    #[test]
+    fn skv13_decision_regex_report_arg_allows_json_check_only() {
+        let args = vec![
+            "--skv13-decision-regex-report".to_string(),
+            "skv13-w5.json".to_string(),
+            "--advisory".to_string(),
+            "--check-results".to_string(),
+        ];
+        assert_eq!(
+            skv13_decision_regex_report_path(&args).unwrap(),
+            Some(PathBuf::from("skv13-w5.json"))
+        );
+        assert!(companion_report_runs_json_check(&args));
     }
 
     #[test]

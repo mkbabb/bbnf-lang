@@ -4075,3 +4075,28 @@ perturbation.
   `RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --check-results
   --advisory --skv13-css-nested-layout-report
   ../restart/skinny/tranches/sk-v13/research/w10.3/skv13-W10.3-css-l4-nested-layout.json`.
+
+## SK-V13 Wave 5 Decision Regex Extraction
+
+- Item 136 closes W5 under `G-W5-DECISION-REGEX` as `PASS-BLOCKED`. W5 lands
+  the analysis-only `bbnf-regex` crate and consumes it from `ir::nullability`,
+  `passes::recognizers::regex_first_bytes`, and `passes::extract::span_kind`.
+- The material differential from REDRESS 119/120 is that W5 removes the exact
+  JSON regex-pattern decisions from generic IR/passes decision logic and
+  replaces them with grammar-neutral nullable, first-set, byte-class, and HIR
+  facts. The direct residual fixpoints were measured before this decision
+  surface existed.
+- The production row movement remains architecturally blocked in this wave:
+  `JSON-W5-REGEX-FACTS-NOT-CONSUMED-BY-GENERATED-DISPATCH`. The extracted
+  facts are consumed by IR/passes, but the current generated JSON/CSS selection
+  machinery has no row-moving production selection that can consume regex facts
+  alone. W6/W7 own the e-graph/CSP resolver needed to turn this fact surface
+  into row-moving generated selection.
+- Unknown regex first sets now fail closed for dispatch disjointness. A branch
+  with unknown first bytes forces eager tape rather than being skipped as
+  non-overlapping.
+- Gate evidence is consumed by
+  `restart/skinny/tranches/sk-v13/research/w5/skv13-W5-decision-regex.json`;
+  the retained fact artifact is
+  `restart/skinny/tranches/sk-v13/research/w5/regex-facts.json` with SHA-256
+  `0bbb10d28ec754a432e4ecae96de336fc6f3ea032276e10415e9d486c0c6be49`.

@@ -1,3 +1,4 @@
+use bbnf_regex::analyze;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
@@ -306,7 +307,7 @@ pub fn nullability(grammar: &GrammarIr) -> Vec<bool> {
                 ExprKind::Repeat { min, .. } => *min == 0,
                 ExprKind::Optional(_) => true,
                 ExprKind::Literal { bytes, .. } => bytes.is_empty(),
-                ExprKind::Regex { pattern } => regex_is_nullable(pattern),
+                ExprKind::Regex { pattern } => analyze(pattern).nullable,
                 ExprKind::Ref { target, .. } => target
                     .and_then(|rule_id| grammar.rule(rule_id))
                     .map(|rule| nullable[rule.body.0])
@@ -322,71 +323,6 @@ pub fn nullability(grammar: &GrammarIr) -> Vec<bool> {
             return nullable;
         }
     }
-}
-
-fn regex_is_nullable(pattern: &str) -> bool {
-    let Some(atom) = pattern
-        .strip_suffix('*')
-        .or_else(|| pattern.strip_suffix('?'))
-    else {
-        return pattern.is_empty();
-    };
-    is_single_regex_atom(atom)
-}
-
-fn is_single_regex_atom(pattern: &str) -> bool {
-    if pattern.is_empty() {
-        return false;
-    }
-    if pattern.starts_with('[') {
-        return pattern.ends_with(']') && !ends_with_unescaped(pattern, b'\\');
-    }
-    if pattern.starts_with("(?:") || pattern.starts_with('(') {
-        return pattern.ends_with(')') && balanced_parenthesized(pattern);
-    }
-    if pattern.starts_with('\\') {
-        return pattern.as_bytes().len() == 2;
-    }
-    pattern.chars().count() == 1
-}
-
-fn ends_with_unescaped(pattern: &str, byte: u8) -> bool {
-    let bytes = pattern.as_bytes();
-    let mut count = 0usize;
-    for current in bytes.iter().rev().skip(1) {
-        if *current == byte {
-            count += 1;
-        } else {
-            break;
-        }
-    }
-    count % 2 == 1
-}
-
-fn balanced_parenthesized(pattern: &str) -> bool {
-    let mut depth = 0usize;
-    let mut escaped = false;
-    for (index, byte) in pattern.bytes().enumerate() {
-        if escaped {
-            escaped = false;
-            continue;
-        }
-        match byte {
-            b'\\' => escaped = true,
-            b'(' => depth += 1,
-            b')' => {
-                depth = match depth.checked_sub(1) {
-                    Some(next) => next,
-                    None => return false,
-                };
-                if depth == 0 && index + 1 != pattern.len() {
-                    return false;
-                }
-            }
-            _ => {}
-        }
-    }
-    depth == 0
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

@@ -8,6 +8,7 @@ members = [
   "crates/codegen",
   "crates/runtime",
   "crates/parse-that-regex",
+  "crates/bbnf-regex",
   "crates/bbnf-simd",
   "crates/bbnf-bench",
   "crates/test-fixtures",
@@ -28,6 +29,7 @@ passes = { path = "crates/passes" }
 codegen = { path = "crates/codegen" }
 runtime = { path = "crates/runtime" }
 parse-that-regex = { path = "crates/parse-that-regex" }
+bbnf-regex = { path = "crates/bbnf-regex" }
 bbnf-simd = { path = "crates/bbnf-simd" }
 bbnf-bench = { path = "crates/bbnf-bench" }
 test-fixtures = { path = "crates/test-fixtures" }

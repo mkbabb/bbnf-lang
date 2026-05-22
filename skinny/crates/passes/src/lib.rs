@@ -1,3 +1,4 @@
+use bbnf_regex::{analyze, FirstSet, RegexKind};
 use ir::{
     all_backend_shapes, BackendExpr, BackendIr, BackendRule, BackendShape, CapacityPolicy,
     CostFacts, DirectBuildField, DirectBuildSource, EvidenceSource, ExprId, ExprKind, GrammarIr,
@@ -206,10 +207,8 @@ pub mod layout {
         }
 
         fn regex_type(pattern: &str) -> BuiltinTy {
-            if pattern == r"[ \t\n\r]*" {
+            if analyze(pattern).hir.kind == RegexKind::Whitespace {
                 BuiltinTy::Unit
-            } else if pattern.starts_with('"') {
-                BuiltinTy::Span
             } else {
                 BuiltinTy::Span
             }
@@ -331,7 +330,9 @@ pub mod recognizers {
                         present.insert(byte);
                     }
                 }
-                ExprKind::Regex { pattern } if pattern.starts_with('"') => {
+                ExprKind::Regex { pattern }
+                    if analyze(pattern).hir.kind == RegexKind::QuotedString =>
+                {
                     present.insert(b'"');
                 }
                 _ => {}
@@ -696,7 +697,7 @@ pub mod recognizers {
         let mut seen = HashSet::new();
         for branch in branches {
             let Some(first) = first_bytes(grammar, *branch, 0) else {
-                continue;
+                return true;
             };
             for byte in first.bytes {
                 if !seen.insert(byte) {
@@ -777,22 +778,14 @@ pub mod recognizers {
     }
 
     fn regex_first_bytes(pattern: &str) -> Option<FirstBytes> {
-        let mut bytes = HashSet::new();
-        let nullable = pattern == r"[ \t\n\r]*";
-        match pattern {
-            r"[ \t\n\r]*" => {
-                bytes.extend([b' ', b'\t', b'\n', b'\r']);
-            }
-            r"-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+\-]?[0-9]+)?" => {
-                bytes.insert(b'-');
-                bytes.extend(b'0'..=b'9');
-            }
-            pattern if pattern.starts_with('"') => {
-                bytes.insert(b'"');
-            }
-            _ => return None,
+        let facts = analyze(pattern);
+        match facts.first {
+            FirstSet::Exact(first) => Some(FirstBytes {
+                bytes: first.to_vec().into_iter().collect(),
+                nullable: facts.nullable,
+            }),
+            FirstSet::Unknown => None,
         }
-        Some(FirstBytes { bytes, nullable })
     }
 
     fn admits_sink_only(rule_ir: &BackendRule, target: TargetFeatures) -> bool {
@@ -1179,7 +1172,7 @@ pub mod extract {
             ExprKind::Literal { bytes, .. } => BackendExpr::ByteLiteral(bytes.clone()),
             ExprKind::Regex { pattern } => BackendExpr::RegexProgram {
                 pattern: pattern.clone(),
-                span_kind: span_kind(pattern),
+                span_kind: backend_span_kind(pattern),
             },
             ExprKind::Ref { name, .. } => BackendExpr::CallRule {
                 callee: name.clone(),
@@ -1334,7 +1327,7 @@ pub mod extract {
             ExprKind::Repeat { body, .. } | ExprKind::Optional(body) => {
                 expr_has_regex_kind(grammar, *body, kind)
             }
-            ExprKind::Regex { pattern } => span_kind(pattern) == kind,
+            ExprKind::Regex { pattern } => span_kind(pattern).is_some_and(|span| span == kind),
             ExprKind::Literal { .. } | ExprKind::Ref { .. } | ExprKind::Annotation { .. } => false,
         }
     }
@@ -1464,13 +1457,16 @@ pub mod extract {
         out
     }
 
-    fn span_kind(pattern: &str) -> SpanKind {
-        if pattern == r"[ \t\n\r]*" {
-            SpanKind::Whitespace
-        } else if pattern.starts_with('"') {
-            SpanKind::String
-        } else {
-            SpanKind::Number
+    fn backend_span_kind(pattern: &str) -> SpanKind {
+        span_kind(pattern).unwrap_or(SpanKind::String)
+    }
+
+    fn span_kind(pattern: &str) -> Option<SpanKind> {
+        match analyze(pattern).hir.kind {
+            RegexKind::Whitespace => Some(SpanKind::Whitespace),
+            RegexKind::QuotedString => Some(SpanKind::String),
+            RegexKind::Numeric => Some(SpanKind::Number),
+            RegexKind::Unknown => None,
         }
     }
 }
@@ -1669,6 +1665,24 @@ sample_json = space item space ;
             assert_eq!(kind, expected_kind, "{rule_name} tape kind");
             assert_eq!(shape, expected_shape, "{rule_name} shape");
         }
+    }
+
+    #[test]
+    fn unknown_regexes_fail_closed_for_dispatch_and_roles() {
+        let source = r#"
+unknown = /(?:ab|cd)+/ ;
+literal = "x" ;
+root = unknown | literal ;
+"#;
+        let grammar = grammar::parse_grammar("root", source).unwrap();
+        let output = compile(&grammar).unwrap();
+        let root = output.grammar.rule_by_name("root").unwrap();
+        assert_eq!(
+            output.layout_facts.backend_shape.get(&root.id),
+            Some(&BackendShape::EagerTape)
+        );
+        let materialization = extract::derive_materialization_plan(&output.grammar);
+        assert!(materialization.descriptors.is_empty());
     }
 
     #[test]

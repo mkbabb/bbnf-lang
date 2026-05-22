@@ -102,6 +102,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "bbnf-regex"
+version = "0.1.0"
+
+[[package]]
 name = "bbnf-simd"
 version = "0.1.0"
 dependencies = [
@@ -628,6 +632,7 @@ dependencies = [
 name = "ir"
 version = "0.1.0"
 dependencies = [
+ "bbnf-regex",
  "serde",
  "thiserror 1.0.69",
 ]
@@ -882,6 +887,7 @@ dependencies = [
 name = "passes"
 version = "0.1.0"
 dependencies = [
+ "bbnf-regex",
  "grammar",
  "ir",
  "thiserror 1.0.69",

@@ -120,6 +120,7 @@ pub const SKV13_CSS_VISUAL_FUNCTIONS_REPORT_SCHEMA: &str = "sk-v13-css-visual-fu
 pub const SKV13_CSS_AT_RULES_AND_MEDIA_REPORT_SCHEMA: &str = "sk-v13-css-at-rules-media-sota-v1";
 pub const SKV13_CSS_VENDOR_CUSTOM_REPORT_SCHEMA: &str = "sk-v13-css-vendor-custom-sota-v1";
 pub const SKV13_CSS_NESTED_LAYOUT_REPORT_SCHEMA: &str = "sk-v13-css-nested-layout-sota-v1";
+pub const SKV13_DECISION_REGEX_REPORT_SCHEMA: &str = "sk-v13-decision-regex-v1";
 pub type NonJsonEvidenceRow = TelemetryRow;
 pub type NonJsonOracleEvidence = SkV8ComparatorEvidence;
 
@@ -157,6 +158,96 @@ pub struct NonJsonEvidenceReport {
     pub wave_id: String,
     pub run_id: String,
     pub rows: Vec<NonJsonEvidenceRow>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct SkV13DecisionRegexReport {
+    pub schema_version: String,
+    pub wave_id: String,
+    pub run_id: String,
+    pub regex_fact_source: String,
+    pub regex_fact_artifact_path: String,
+    pub regex_fact_sha256: String,
+    pub regex_fact_consumer_path: Vec<String>,
+    pub generated_selection_path: String,
+    pub hardcoded_regex_scan_status: String,
+    pub feature_gate_status: String,
+    pub cascade_fallback_status: String,
+    pub row_move_toward_sota_status: String,
+    pub block_id: Option<String>,
+    pub material_differential: String,
+    pub redress_entry: String,
+}
+
+impl SkV13DecisionRegexReport {
+    pub fn from_json_str(text: &str) -> Result<Self, String> {
+        serde_json::from_str(text)
+            .map_err(|error| format!("invalid SK-V13 decision-regex report: {error}"))
+    }
+
+    pub fn validate_gate(&self) -> Result<(), String> {
+        if self.schema_version != SKV13_DECISION_REGEX_REPORT_SCHEMA {
+            return Err(format!(
+                "unsupported SK-V13 decision-regex schema {}",
+                self.schema_version
+            ));
+        }
+        if self.wave_id != "SK-V13-W5" {
+            return Err(format!("{} cannot claim W5 authority", self.wave_id));
+        }
+        if !self.run_id.starts_with("sk-v13-w5:") {
+            return Err(format!("invalid W5 run id {}", self.run_id));
+        }
+        if self.regex_fact_source != "bbnf-regex::analyze" {
+            return Err("W5 regex fact source must be bbnf-regex::analyze".into());
+        }
+        if self.regex_fact_artifact_path.trim().is_empty()
+            || !is_hex_sha256(&self.regex_fact_sha256)
+        {
+            return Err("W5 regex fact artifact path/hash invalid".into());
+        }
+        for required in ["ir::nullability", "passes::recognizers", "passes::extract"] {
+            if !self
+                .regex_fact_consumer_path
+                .iter()
+                .any(|path| path.contains(required))
+            {
+                return Err(format!("W5 report missing consumer path {required}"));
+            }
+        }
+        if self.generated_selection_path.trim().is_empty()
+            || self.generated_selection_path == "support_only"
+            || self.generated_selection_path == "gate_only"
+        {
+            return Err("W5 generated selection path is paper-close".into());
+        }
+        if self.hardcoded_regex_scan_status != "no-hardcoded-json-patterns" {
+            return Err("W5 hardcoded regex scan did not pass".into());
+        }
+        if self.feature_gate_status != "pass" || self.cascade_fallback_status != "fail-closed" {
+            return Err("W5 feature gate or cascade fallback status invalid".into());
+        }
+        match self.row_move_toward_sota_status.as_str() {
+            "pass" | "admitted" => {}
+            "measured_architectural_block" => {
+                if self.block_id.as_deref()
+                    != Some("JSON-W5-REGEX-FACTS-NOT-CONSUMED-BY-GENERATED-DISPATCH")
+                {
+                    return Err("W5 measured block id missing".into());
+                }
+            }
+            other => return Err(format!("W5 row movement status {other} is rejected")),
+        }
+        if self.material_differential.trim().is_empty() || self.redress_entry.trim().is_empty() {
+            return Err("W5 report missing material differential or REDRESS entry".into());
+        }
+        Ok(())
+    }
+}
+
+fn is_hex_sha256(value: &str) -> bool {
+    value.len() == 64 && value.as_bytes().iter().all(u8::is_ascii_hexdigit)
 }
 
 impl NonJsonEvidenceReport {
@@ -5331,5 +5422,38 @@ mod tests {
         reject(|row| row.sk_v8.feature_mask = "arch=aarch64;simd=Scalar".into());
         reject(|row| row.sk_v8.feature_mask = "arch=;os=;simd=;target_cpu=native".into());
         reject(|row| row.sk_v8.substrate_surface = "side_substrate".into());
+    }
+
+    #[test]
+    fn skv13_decision_regex_report_accepts_measured_block() {
+        let report = SkV13DecisionRegexReport {
+            schema_version: SKV13_DECISION_REGEX_REPORT_SCHEMA.into(),
+            wave_id: "SK-V13-W5".into(),
+            run_id: "sk-v13-w5:regex-facts-fnv64-0000000000000000".into(),
+            regex_fact_source: "bbnf-regex::analyze".into(),
+            regex_fact_artifact_path:
+                "../restart/skinny/tranches/sk-v13/research/w5/regex-facts.json".into(),
+            regex_fact_sha256: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                .into(),
+            regex_fact_consumer_path: vec![
+                "ir::nullability".into(),
+                "passes::recognizers".into(),
+                "passes::extract".into(),
+            ],
+            generated_selection_path: "passes::recognizers::derive_backend_shape_with_diagnostics"
+                .into(),
+            hardcoded_regex_scan_status: "no-hardcoded-json-patterns".into(),
+            feature_gate_status: "pass".into(),
+            cascade_fallback_status: "fail-closed".into(),
+            row_move_toward_sota_status: "measured_architectural_block".into(),
+            block_id: Some("JSON-W5-REGEX-FACTS-NOT-CONSUMED-BY-GENERATED-DISPATCH".into()),
+            material_differential: "REDRESS 119/120 did not extract grammar-neutral regex facts"
+                .into(),
+            redress_entry: "REDRESS-136".into(),
+        };
+        assert!(report.validate_gate().is_ok());
+        let mut bad = report.clone();
+        bad.row_move_toward_sota_status = "support_only".into();
+        assert!(bad.validate_gate().is_err());
     }
 }

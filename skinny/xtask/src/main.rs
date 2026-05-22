@@ -280,7 +280,8 @@ fn validate_gate_json_passthrough(args: &[String]) -> Result<()> {
             | "--skv13-css-visual-functions-report"
             | "--skv13-css-at-rules-media-report"
             | "--skv13-css-vendor-custom-report"
-            | "--skv13-css-nested-layout-report" => {
+            | "--skv13-css-nested-layout-report"
+            | "--skv13-decision-regex-report" => {
                 if index + 1 >= args.len() {
                     bail!("{} expects one path argument", args[index]);
                 }
@@ -1035,8 +1036,24 @@ mod tests {
             "--check-results".into(),
         ])
         .unwrap();
+        validate_gate_json_passthrough(&[
+            "--skv13-decision-regex-report".into(),
+            "skv13-w5.json".into(),
+            "--check-results".into(),
+        ])
+        .unwrap();
         assert!(validate_gate_json_passthrough(&["--skv12-non-json-report".into()]).is_err());
         assert!(validate_gate_json_passthrough(&["--unknown".into()]).is_err());
+    }
+
+    #[test]
+    fn gate_json_passthrough_accepts_skv13_decision_regex_report_flag() {
+        validate_gate_json_passthrough(&[
+            "--skv13-decision-regex-report".into(),
+            "skv13-w5.json".into(),
+            "--check-results".into(),
+        ])
+        .unwrap();
     }
 
     #[test]

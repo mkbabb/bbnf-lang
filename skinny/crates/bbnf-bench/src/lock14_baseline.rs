@@ -420,6 +420,12 @@ pub const ALLOWLIST: &[AllowlistEntry] = &[
         "bir_backend_shape",
     ),
     entry(
+        "crates/bbnf-regex/src/lib.rs",
+        "generic_surface",
+        "read_only",
+        "regex_analysis",
+    ),
+    entry(
         "crates/passes/src/lib.rs",
         "generic_surface",
         "read_only",
@@ -565,6 +571,7 @@ const FROZEN_ROOTS: &[&str] = &[
     "crates/test-fixtures",
     "crates/runtime/src",
     "crates/ir/src",
+    "crates/bbnf-regex/src",
     "crates/passes/src",
     "crates/codegen/src",
     "crates/grammar/src",
@@ -770,6 +777,12 @@ const SK_V13_W10_3_OWNER_PATHS: &[&str] = &[
     "crates/runtime/src/grammars/css_l4_nested_layout/sink.rs",
 ];
 
+const SK_V13_W5_OWNER_PATHS: &[&str] = &[
+    "crates/bbnf-regex/",
+    "crates/ir/src/lib.rs",
+    "crates/passes/src/lib.rs",
+];
+
 fn current_lock14_owner_paths() -> Vec<&'static str> {
     let mut paths = Vec::with_capacity(
         SK_V12_W1A_OWNER_PATHS.len()
@@ -779,7 +792,8 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
             + SK_V13_W4_OWNER_PATHS.len()
             + SK_V13_W10_1_OWNER_PATHS.len()
             + SK_V13_W10_2_OWNER_PATHS.len()
-            + SK_V13_W10_3_OWNER_PATHS.len(),
+            + SK_V13_W10_3_OWNER_PATHS.len()
+            + SK_V13_W5_OWNER_PATHS.len(),
     );
     paths.extend_from_slice(SK_V12_W1A_OWNER_PATHS);
     paths.extend_from_slice(SK_V12_W1B1_OWNER_PATHS);
@@ -789,6 +803,7 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
     paths.extend_from_slice(SK_V13_W10_1_OWNER_PATHS);
     paths.extend_from_slice(SK_V13_W10_2_OWNER_PATHS);
     paths.extend_from_slice(SK_V13_W10_3_OWNER_PATHS);
+    paths.extend_from_slice(SK_V13_W5_OWNER_PATHS);
     paths
 }
 
@@ -957,6 +972,14 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
             return Ok(());
         }
     }
+    if subject.contains("sk-v13-waveW5") {
+        let allowed = changed_paths
+            .iter()
+            .all(|path| is_allowed_path(path, SK_V13_W5_OWNER_PATHS));
+        if allowed {
+            return Ok(());
+        }
+    }
     Err(format!(
         "Lock 14 frozen diff failed for parent paths [{}]",
         changed_paths.join(", ")
@@ -1108,6 +1131,7 @@ fn validate_backend_shape_surface(root: &Path) -> Result<(), String> {
 }
 
 const GENERIC_SCAN_ROOTS: &[&str] = &[
+    "crates/bbnf-regex/src",
     "crates/codegen/src/lib.rs",
     "crates/codegen/src/grammar_profile.rs",
     "crates/passes/src/lib.rs",

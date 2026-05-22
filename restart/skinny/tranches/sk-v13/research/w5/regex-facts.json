@@ -1,0 +1,42 @@
+{
+  "schema_version": "sk-v13-w5-regex-facts-v1",
+  "wave_id": "SK-V13-W5",
+  "fact_source": "bbnf-regex::analyze",
+  "patterns": [
+    {
+      "name": "whitespace",
+      "pattern": "[ \\t\\n\\r]*",
+      "nullable": true,
+      "first_hex": ["20", "09", "0a", "0d"],
+      "kind": "Whitespace"
+    },
+    {
+      "name": "quoted_string",
+      "pattern": "\"(?:[^\"\\\\]|\\\\(?:[\"\\\\\\/bfnrt]|u[0-9a-fA-F]{4}))*\"",
+      "nullable": false,
+      "first_hex": ["22"],
+      "kind": "QuotedString"
+    },
+    {
+      "name": "numeric",
+      "pattern": "-?(0|[1-9]\\d*)(\\.\\d+)?([eE][+-]?\\d+)?",
+      "nullable": false,
+      "first_hex": ["2d", "30-39"],
+      "kind": "Numeric"
+    },
+    {
+      "name": "unknown",
+      "pattern": "(?:ab|cd)+",
+      "nullable": false,
+      "first_hex": "unknown",
+      "kind": "Unknown"
+    }
+  ],
+  "consumer_paths": [
+    "ir::nullability -> bbnf_regex::analyze",
+    "passes::recognizers::regex_first_bytes -> bbnf_regex::analyze",
+    "passes::extract::span_kind -> bbnf_regex::analyze"
+  ],
+  "unknown_first_set_dispatch_policy": "fail-closed",
+  "generated_selection_path": "passes::recognizers::derive_backend_shape_with_diagnostics"
+}

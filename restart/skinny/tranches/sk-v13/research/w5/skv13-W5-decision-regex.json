@@ -1,0 +1,21 @@
+{
+  "schema_version": "sk-v13-decision-regex-v1",
+  "wave_id": "SK-V13-W5",
+  "run_id": "sk-v13-w5:regex-facts-fnv64-0bbb10d28ec754a4",
+  "regex_fact_source": "bbnf-regex::analyze",
+  "regex_fact_artifact_path": "../restart/skinny/tranches/sk-v13/research/w5/regex-facts.json",
+  "regex_fact_sha256": "0bbb10d28ec754a432e4ecae96de336fc6f3ea032276e10415e9d486c0c6be49",
+  "regex_fact_consumer_path": [
+    "ir::nullability",
+    "passes::recognizers::regex_first_bytes",
+    "passes::extract::span_kind"
+  ],
+  "generated_selection_path": "passes::recognizers::derive_backend_shape_with_diagnostics",
+  "hardcoded_regex_scan_status": "no-hardcoded-json-patterns",
+  "feature_gate_status": "pass",
+  "cascade_fallback_status": "fail-closed",
+  "row_move_toward_sota_status": "measured_architectural_block",
+  "block_id": "JSON-W5-REGEX-FACTS-NOT-CONSUMED-BY-GENERATED-DISPATCH",
+  "material_differential": "REDRESS 119/120 measured JSON direct residual fixpoints before the decision engine had grammar-neutral regex facts; W5 extracts those facts and consumes them in IR/passes, but the current generated JSON/CSS selection path still has no row-moving production selection that can consume the facts alone.",
+  "redress_entry": "REDRESS-136"
+}

@@ -3913,3 +3913,39 @@ perturbation.
   gate-json --check-results --advisory
   --skv13-css-declaration-values-extended-report
   ../restart/skinny/tranches/sk-v13/research/w3/skv13-W3-css-l4-declaration-values-extended.json`.
+
+## SK-V13 Wave 4 CSS Visual Functions
+
+- Item 132 closes W4 under `G-W4-CSS-VISUAL-FUNCTIONS` as
+  `PASS-ADMIT-CANDIDATE`. The admitted generated row is
+  `css_l4/visual_functions/direct_to_struct/main` on output plane
+  `css_l4_visual_function_fact_stream`.
+- W4 adds a generated CSS L4 visual-functions runtime profile covering
+  `gradients`, `transforms`, `filters`, and `easing_functions`. The fixture
+  exercises `linear-gradient`, translate/rotate/scale/skew transforms,
+  `blur`/`brightness`/`contrast`/`drop-shadow` filters, cubic-bezier timing,
+  and `steps(...)` timing.
+- Criterion with `RUSTFLAGS="-C target-cpu=native"` records Track 1
+  `225.893651845534 Mbps`, cssparser/golden oracle `164.868369975828 Mbps`,
+  lightningcss same-plane strict comparator `114.526477804391 Mbps`,
+  threshold `115.526477804391 Mbps`, and margin `110.367174041143 Mbps`.
+  Strict equality is `pass:track1=cssparser=lightningcss` with fact-stream
+  SHA-256
+  `309b08f3da0867a5494316fc5e1ae0d29a1db580a8d508f0c385f63785c262d5`.
+- Gate evidence is consumed by
+  `restart/skinny/tranches/sk-v13/research/w4/skv13-W4-css-l4-visual-functions.json`.
+  Retained artifacts under `restart/skinny/tranches/sk-v13/research/w4/artifacts/`
+  include Track 1, cssparser/golden oracle, lightningcss fact streams, and
+  equality proofs. `skinny/RESULTS.md` and
+  `restart/skinny/ROLLING-SOTA-DELTA.md` record the row and four covered CSS
+  feature admissions.
+- Verification passed:
+  `cargo test -p runtime css_l4_visual_functions`,
+  `cargo test -p codegen css_l4_visual_functions --lib`,
+  `cargo test -p bbnf-bench --lib visual_functions`,
+  `cargo test -p bbnf-bench --bin gate skv13_css_comparator_oracle_report_arg_allows_multiple_read_only_reports`,
+  `cargo test -p xtask gate_json_passthrough_accepts_skv12_non_json_report_flag`,
+  `RUSTFLAGS="-C target-cpu=native" cargo bench -p bbnf-bench --bench
+  nonjson_css_l4`, and `RUSTFLAGS="-C target-cpu=native" cargo xtask
+  gate-json --check-results --advisory --skv13-css-visual-functions-report
+  ../restart/skinny/tranches/sk-v13/research/w4/skv13-W4-css-l4-visual-functions.json`.

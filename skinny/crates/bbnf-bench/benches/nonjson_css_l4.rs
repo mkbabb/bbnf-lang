@@ -134,6 +134,49 @@ fn bench_nonjson_css_l4(c: &mut Criterion) {
         },
     );
     extended_group.finish();
+
+    let visual_input = nonjson_css_l4::read_visual_functions_fixture()
+        .expect("CSS L4 visual-functions fixture is readable");
+    nonjson_css_l4::assert_visual_functions_strict_equality(&visual_input)
+        .expect("CSS visual-functions Track 1 equals golden oracle");
+    nonjson_css_l4::assert_visual_functions_lightningcss_strict_equality(&visual_input)
+        .expect("CSS visual-functions Track 1 equals lightningcss fact stream");
+    let visual_report = nonjson_css_l4::write_visual_functions_report_with_quick_measurement()
+        .expect("CSS L4 visual-functions report is emitted");
+    visual_report
+        .validate_gate()
+        .expect("CSS L4 visual-functions report gate passes");
+
+    let mut visual_group = c.benchmark_group("nonjson_css_l4_w4");
+    visual_group.throughput(Throughput::Bytes(visual_input.len() as u64));
+    visual_group.bench_function("track1_generated_css_l4_visual_functions", |b| {
+        b.iter(|| {
+            black_box(
+                nonjson_css_l4::visual_functions_track1_facts(black_box(&visual_input))
+                    .expect("Track 1 CSS visual-functions fact stream"),
+            )
+        })
+    });
+    visual_group.bench_function("track2_golden_visual_functions_oracle", |b| {
+        b.iter(|| {
+            black_box(
+                nonjson_css_l4::visual_functions_oracle_facts(black_box(&visual_input))
+                    .expect("golden CSS visual-functions fact stream"),
+            )
+        })
+    });
+    visual_group.bench_function(
+        "lightningcss_visual_functions_same_plane_fact_stream",
+        |b| {
+            b.iter(|| {
+                black_box(
+                    nonjson_css_l4::visual_functions_lightningcss_facts(black_box(&visual_input))
+                        .expect("lightningcss CSS visual-functions fact stream"),
+                )
+            })
+        },
+    );
+    visual_group.finish();
 }
 
 criterion_group! {

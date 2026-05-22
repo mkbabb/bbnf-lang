@@ -1,6 +1,7 @@
 use crate::{
     css_l4_declaration_values_extended_provider, css_l4_declaration_values_provider,
-    css_l4_stylesheet_selectors_provider, json_provider, CodegenError,
+    css_l4_stylesheet_selectors_provider, css_l4_visual_functions_provider, json_provider,
+    CodegenError,
 };
 use ir::BackendIr;
 
@@ -17,6 +18,7 @@ pub(crate) enum RuntimeProvider {
     CssL4DeclarationValues,
     CssL4DeclarationValuesExtended,
     CssL4StylesheetSelectors,
+    CssL4VisualFunctions,
 }
 
 impl GrammarProfile {
@@ -91,11 +93,12 @@ pub(crate) fn validate_generated_roster<'a>(
     }
 }
 
-fn runtime_profiles() -> [&'static GrammarProfile; 4] {
+fn runtime_profiles() -> [&'static GrammarProfile; 5] {
     [
         json_provider::runtime_profile(),
         css_l4_declaration_values_provider::runtime_profile(),
         css_l4_declaration_values_extended_provider::runtime_profile(),
         css_l4_stylesheet_selectors_provider::runtime_profile(),
+        css_l4_visual_functions_provider::runtime_profile(),
     ]
 }

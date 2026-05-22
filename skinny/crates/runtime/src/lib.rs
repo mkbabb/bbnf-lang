@@ -12,6 +12,9 @@ pub mod generated_css_l4_declaration_values_extended;
 #[path = "grammars/css_l4_stylesheet_selectors/mod.rs"]
 pub mod generated_css_l4_stylesheet_selectors;
 
+#[path = "grammars/css_l4_visual_functions/mod.rs"]
+pub mod generated_css_l4_visual_functions;
+
 #[cfg(any(test, feature = "proof"))]
 #[path = "grammars/json/event_grammar_witness.rs"]
 pub mod json_event_grammar_witness;
@@ -24,6 +27,7 @@ pub mod grammars {
     pub use crate::generated_css_l4_declaration_values as css_l4_declaration_values;
     pub use crate::generated_css_l4_declaration_values_extended as css_l4_declaration_values_extended;
     pub use crate::generated_css_l4_stylesheet_selectors as css_l4_stylesheet_selectors;
+    pub use crate::generated_css_l4_visual_functions as css_l4_visual_functions;
     pub use crate::generated_json as json;
 }
 
@@ -85,6 +89,24 @@ mod tests {
         ));
         assert!(facts.contains("kind=function\tlexeme_hex=63616c63"));
         assert!(facts.contains("kind=url\tlexeme_hex=2f6173736574732f6d61736b2e737667"));
+    }
+
+    #[test]
+    fn css_l4_visual_functions_emit_fact_stream() {
+        let input = concat!(
+            ".hero { background-image: linear-gradient(45deg, #123456 0%, color-mix(in srgb, red 30%, blue) 100%); ",
+            "transform: translate3d(10px, 20%, 0) rotate(12deg) scale(1.2); ",
+            "filter: blur(2px) brightness(1.2) contrast(80%); ",
+            "transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); ",
+            "animation-timing-function: steps(4, jump-end); }\n"
+        );
+        let facts = crate::grammars::css_l4_visual_functions::parse(input).unwrap();
+        assert!(facts.contains(
+            "row\tid=css_l4/visual_functions/direct_to_struct/main\tplane=css_l4_visual_function_fact_stream"
+        ));
+        assert!(facts.contains("kind=function\tlexeme_hex=6c696e6561722d6772616469656e74"));
+        assert!(facts.contains("kind=function\tlexeme_hex=7472616e736c6174653364"));
+        assert!(facts.contains("kind=function\tlexeme_hex=63756269632d62657a696572"));
     }
 
     #[test]

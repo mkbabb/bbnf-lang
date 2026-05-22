@@ -23,7 +23,7 @@ registries are migration targets, not patterns to preserve
 The central runtime move is tape unioned with direct-to-struct. Tape is the
 substrate name and implementation family; ParseStream is not a replacement
 term. Lock 1 sets tape plus direct-to-struct and rejects parallel substrates
-and OpenFrame ladders (`restart/locks/LOCKS.md:34`). PASS-3 resolves stale
+and OpenFrame ladders (`restart/locks/LOCKS.md:48`). PASS-3 resolves stale
 ParseStream mentions against the README and locks
 (`restart/audit/pass-3-runtime/PASS-3.md:14-23`).
 
@@ -37,7 +37,7 @@ and freshness can close SOTA. The mandatory implementation handoff is
 The central compiler move is two IRs plus side tables. Grammar IR is semantic;
 Backend IR is executable and is the only lowerer input. README requires two
 IRs (`restart/README.md:104-118`), and Lock 5 rejects emitters walking grammar
-directly (`restart/locks/LOCKS.md:42`). PASS-2 supplies the Backend IR
+directly (`restart/locks/LOCKS.md:113`). PASS-2 supplies the Backend IR
 payload contract (`restart/audit/pass-2-codegen/PASS-2.md:52-76`); the
 post-Phase-8.4 fold lands the 20-variant alphabet (19 semantic variants plus
 `Return`) per ARCH §7.2.
@@ -92,7 +92,7 @@ rule (`restart/README.md:29-60`).
 
 The old workspace crates map to this set according to `restart/MIGRATION.md`.
 `ser` and `gorgeous` are archive-only before implementation starts, per Lock 12
-(`restart/locks/LOCKS.md:56`).
+(`restart/locks/LOCKS.md:199`).
 
 ## 3. IR And BBNF Contract Summary
 
@@ -127,8 +127,8 @@ inputs, not work to reopen inside tranche drafting.
 | Tree shape | 4-10 children and no handwritten file over 500 LOC. | A through J |
 | SOTA | JSON/CSS/SIMD gates. | H/J |
 
-Lock 13 defines the tree-shape and LOC ceiling (`restart/locks/LOCKS.md:58`).
-Lock 8 defines SOTA competitor anchors (`restart/locks/LOCKS.md:48`).
+Lock 13 defines the tree-shape and LOC ceiling (`restart/locks/LOCKS.md:207`).
+Lock 8 defines SOTA competitor anchors (`restart/locks/LOCKS.md:119`).
 PASS-2 defines generated LOC budget tracking (`restart/audit/pass-2-codegen/PASS-2.md` §6).
 
 Exact SOTA close rows. Each row binds a competitor baseline, a bbnf target, and
@@ -149,7 +149,7 @@ in `restart/corpora/SOTA.md:50-89` and `restart/corpora/SOTA.md:130-136`.
 | `simd/structural_scan` | simdjson On-Demand ~56000 Mbps on x86 AVX2; ~40000 Mbps on M-series NEON. | >= 40000 Mbps on M-series, >= 56000 Mbps on x86 AVX2; scalar parity hash matches. | M1 Pro macOS NEON and x86_64 AVX2 build host. | H.W2/H.W5, J.W1. |
 
 The SOTA close gates measure the Rust line only at H.W1/H.W2/H.W4/H.W5/H.W6
-per Lock 8 amendment (`restart/locks/LOCKS.md:48`). WASM SOTA measurements
+per Lock 8 amendment (`restart/locks/LOCKS.md:119`). WASM SOTA measurements
 defer post-V1 alongside the V2 `WasmBackend: Backend` impl per
 `restart/ARCHITECTURE.md` §7.5; no measurement-pending WASM anchor lands in V1.
 
@@ -195,11 +195,19 @@ limits parallel work to disjoint paths and clear ownership
 | E | Backend IR And VM | 5 | 20-variant Backend IR validates and VM replays all variants (post-Phase-8.4 fold per ARCH §7.2). |
 | F | Rust Lowerer And Runtime Template | 6 | Rust lowerer emits equal generated runtime for seed grammars. |
 | G | Path, Value, Visitor | 5 | `path!`, `select!`, visitor mutation, and future grammar gate pass. |
-| H | Pratt, SIMD | 5 | Auto-detected Pratt/SIMD pass early SOTA gates on the Rust line. WASM defers post-V1 via `WasmBackend: Backend` per `restart/ARCHITECTURE.md` §7.5. |
+| H | Pratt, SIMD, typed-event codegen, full-SOTA receivers | 10 current rows + V1.1 receiver waves | Auto-detected Pratt/SIMD pass, typed-event/direct row-plane accounting, CSS parity, JSON 51-row strict matrix, decision-engine fold, union material-differential/block, zero-orphan primitive discipline, and no-demotion gates on the Rust line. WASM defers post-V1 via `WasmBackend: Backend` per `restart/ARCHITECTURE.md` §7.5. |
 | I | Recovery, Incremental, LSP | 5 | LSP incremental parse and recovery diagnostics work on seed grammars. |
 | J | Parity, Docs, Publication Close | 6 | Rust/VM parity, SOTA, docs, and publication readiness pass; WASM/TS parity defers to V2 backends. |
 
 The counts are planning stubs. Full wave docs are not part of Phase 2.
+
+Pass Omega V1.1 reconciliation note: the A-J table remains a planning census,
+but §13 already has ten concrete H rows (`H.W0`, `H.W1`, `H.W2`, `H.W2.5`,
+`H.W3`, `H.W4`, `H.W4.LOCK14`, `H.W5`, `H.W6`, `H.W7`). The current concrete
+MASTER census is 59 rows: A5 + B5 + C6 + D6 + E5 + F6 + G5 + H10 + I5 + J6.
+Scoped skinny landings are not V1/root/campaign close unless the row text says
+so. Evidence: `restart/MASTER-PLAN.md:524`-`535`,
+`restart/audit/totality/p3/3B-master-plan-reconciliation.md:34`-`41`.
 
 ### 5.1 Calendar And Carry Matrix
 
@@ -264,7 +272,7 @@ Inheritance:
 | BA archive ceremony and preflight gates. | Archive `ser`/`gorgeous`; establish close checklist. |
 | README crate table. | Create the 24-crate workspace (`restart/README.md:29-60`). |
 | MODULES archive calls. | Move archive-only crates out of production (`restart/corpora/MODULES.md:165-212`). |
-| Lock 14. | Enforce grammar generalization (`restart/locks/LOCKS.md:60`). |
+| Lock 14. | Enforce grammar generalization (`restart/locks/LOCKS.md:220`). |
 
 Stub waves:
 
@@ -295,7 +303,7 @@ Inheritance:
 
 | Source | Use |
 |---|---|
-| Lock 1. | Tape/direct substrate and no OpenFrame ladders (`restart/locks/LOCKS.md:34`). |
+| Lock 1. | Tape/direct substrate and no OpenFrame ladders (`restart/locks/LOCKS.md:48`). |
 | PASS-3 runtime architecture. | `DocumentView`, `parse`, `parse_in`, `parse_owned`, tape/direct model (`restart/audit/pass-3-runtime/PASS-3.md:42-135`). |
 | Restart sketch perf evidence. | Remove OpenFrame clone pressure (`restart/corpora/RESTART-SKETCH.md:154-184`). |
 
@@ -331,7 +339,7 @@ Inheritance:
 |---|---|
 | README two-IR decision. | Grammar IR and Backend IR stay distinct (`restart/README.md:104-118`). |
 | PASS-1 IR and type commitments. | Grammar IR variants, type inference, CSP/egraph bridge (`restart/audit/pass-1-substrate/PASS-1.md:24-42`). |
-| Lock 4. | Bridge crates compose by output piping, not fused hypergraph (`restart/locks/LOCKS.md:40`). |
+| Lock 4. | Bridge crates compose by output piping, not fused hypergraph (`restart/locks/LOCKS.md:111`). |
 | Current `ir` corpus. | Mine useful facts and split large files (`restart/corpora/MODULES.md:264-505`). |
 
 Stub waves:
@@ -400,7 +408,7 @@ Inheritance:
 | Source | Use |
 |---|---|
 | PASS-2 BIR table. | 20-variant shape (19 semantic variants plus `Return`) per ARCH §7.2 and PASS-2 payload-refiner mapping. |
-| Lock 5. | Lowerers consume BIR, not Grammar IR (`restart/locks/LOCKS.md:42`). |
+| Lock 5. | Lowerers consume BIR, not Grammar IR (`restart/locks/LOCKS.md:113`). |
 | BC backend ABI inheritance. | Parity and typed boundary discipline. |
 
 Stub waves:
@@ -432,7 +440,7 @@ Inheritance:
 |---|---|
 | PASS-2 runtime template. | Output under `runtime/src/grammars/<name>` (`restart/audit/pass-2-codegen/PASS-2.md` §7). |
 | PASS-2 lowerer contract. | `BackendLowerer` methods and Rust V1 scope (`restart/audit/pass-2-codegen/PASS-2.md:80-96`). |
-| Lock 6. | Committed source generation, no proc-macro facade (`restart/locks/LOCKS.md:44`). |
+| Lock 6. | Committed source generation, no proc-macro facade (`restart/locks/LOCKS.md:115`). |
 
 Stub waves:
 
@@ -464,7 +472,7 @@ Inheritance:
 | Source | Use |
 |---|---|
 | README path API. | `path!`, `select!`, visitor mutation (`restart/README.md:272-318`). |
-| Lock 7. | `path`, `path-core` split on the V1 Rust line (`restart/locks/LOCKS.md:46`); `path-ts` defers post-V1. |
+| Lock 7. | `path`, `path-core` split on the V1 Rust line (`restart/locks/LOCKS.md:117`); `path-ts` defers post-V1. |
 | PASS-3 path and visitor commitments. | Typed path diagnostics and mutation API (`restart/audit/pass-3-runtime/PASS-3.md:82-95`). |
 
 Stub waves:
@@ -492,17 +500,32 @@ The SK-V5 implementation packet at `restart/skinny/tranches/sk-v5/SPEC.md` decla
 
 Goal: activate performance recognizers + typed-event codegen template + per-target SIMD/ASM primitive layer (`bbnf-simd`) on the Rust line; close the expanded skinny SOTA-BEAT gate against sonic-rs, simd-json, yyjson, simdjson C++, and asmjson reference planes. The primary close is **arm64 Apple Silicon**. x86_64 AVX-512 closes as a secondary hardware gate with strict/permissive comparator rows separated.
 
+Pass Omega V1.1 status ledger:
+
+| Wave | V1.1 status | Receiver |
+|---|---|---|
+| H.W0 | LANDED-SCOPED: preflight, Plan D capacity, and escape-mask correctness prerequisite landed; no throughput row admitted by this alone. | Lock 15/16 evidence and S-P3 primitive guards. |
+| H.W1 | PARTIAL: Rust-state substrate/backend-shape derivation landed (`603308b3`), throughput recovery pending. | H/J benchmark rows and S-P3 row movement. |
+| H.W2 | PARTIAL: consumed primitive subset admitted; new primitives require scalar parity, checkasm, same-wave consumer, and measured row movement. | Lock 16 manifest and primitive ledger. |
+| H.W2.5 | PARTIAL: primitive vocabulary exists; contract-only macros stay non-admitting until consumed or deleted/demoted/blocked. | Primitive state machine and zero-orphan gate. |
+| H.W3 | SPLIT: number materialization landed; UTF-8/string fusion is refuted as a close route. | Regex/HIR facts and string/Unicode row gates. |
+| H.W4 | PARTIAL: SinkOnly/direct/typed row-plane accounting remains open under SK-V13. | JSON 51-row strict sonic matrix. |
+| H.W4.LOCK14 | PARTIAL: GrammarConfig legality is evidence, not fleet-wide grammar-neutral Lock 14 closure until CSS plus both Sheets and BBNF-self fail-closed or generated-role witnesses pass; with only one negative control, label the result `scoped non-JSON witness`. | Generated provider/config/sink repair plus both Sheets and BBNF-self witnesses. |
+| H.W5 | LANDED-SCOPED: consumed arm64/generic set landed; x86 successor optional/background; no-orphan rule mandatory. | Lock 16 and SK-V13 G4. |
+| H.W6 | REPLACED: SK-V6 strict-matrix-before-CSS text is superseded by the SK-V13 full-SOTA receiver map. | SK-V13 G1-G7 and J.W1. |
+| H.W7 | PENDING: Pratt recognizer facts and BIR `PrattSpine` still depend on C/E fact and BIR closure. | C.W3/C.W4/E.W0/E.W1/H. |
+
 The H tranche post-2026-05-12 is no longer "aspirational" per Lock 8's earlier framing. It is a concrete engineering target with empirical attribution (`restart/skinny/tranches/shared/SOTA-BEAT-DESIGN.md` §1) and three measurable gates: (a) twitter Mbps wall-clock, (b) hot-leaf count vs comparator, (c) cycle-per-byte vs simdjson floor.
 
 Inheritance:
 
 | Source | Use |
 |---|---|
-| Lock 10. | Pratt and SIMD are auto-detected (`restart/locks/LOCKS.md:52`); the cost model selects per-grammar `backend_shape ∈ {EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage}`. |
+| Lock 10. | Pratt and SIMD are auto-detected (`restart/locks/LOCKS.md:164`); the cost model selects per-grammar `backend_shape ∈ {EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage}`. |
 | Lock 15. | Build-profile discipline (`lto=true codegen-units=1 panic="abort" debug=true`) — co-load-bearing with the codegen template inversion. |
 | Lock 16. | SIMD/ASM admissibility allowlist (§4 below carries the verbatim allowlist). |
 | Lock 5. | V1 ships `RustBackend: Backend` only via `restart/ARCHITECTURE.md` §7.5; WASM defers post-V1 as `WasmBackend: Backend`. |
-| Lock 8. | V1 SOTA close gates measure the Rust line only; WASM SOTA defers post-V1 (`restart/locks/LOCKS.md:48`). |
+| Lock 8. | V1 SOTA close gates measure the Rust line only; WASM SOTA defers post-V1 (`restart/locks/LOCKS.md:119`). |
 | PASS-2 detector and SIMD coverage. | Detection thresholds and scalar/NEON/AVX2/AVX512 coverage (`restart/audit/pass-2-codegen/PASS-2.md` §3). |
 | SOTA corpus + comparative profile baseline. | JSON/CSS competitor baselines (`restart/corpora/SOTA.md:50-89`, `restart/corpora/SOTA.md:130-136`); six-agent comparative-profile cohort outputs at `skinny/profile/{sonic-rs-v2,simdjson-v2}/PROFILE-REPORT.md` (post-2026-05-12). |
 | SOTA-BEAT design. | `restart/skinny/tranches/sk-v6/DISPATCH-PROMPT.md` + `restart/skinny/tranches/sk-v6/SYNTHESIS.md` + `restart/skinny/tranches/sk-v6/SPEC.md` + `restart/skinny/tranches/sk-v6/research/` — SK-V6 same-plane recovery over the SK-V5 measured substrate history. The deleted SK-V3/SK-V4 packets are no longer dispatch authority. |
@@ -531,8 +554,34 @@ benchmark-private sink.
 | H.W4 (workload gates + direct-to-struct `SinkOnly` closure + 5-shape backend_shape per-rule selection) | **PARTIALLY LANDED.** The generated `SinkOnly` path is correctness-green, lowerer-authored from BIR, preserves raw string spans to `JsonSink::*_source`, and keeps retained view-walk digest as parity oracle. Direct receiver/source-shape redress lifts four stressor rows (`citm_catalog`, `apache_builds`, `github_events`, `instruments`) but overall gate remains `N-direct / NoGo`. Generic decoded visitor, sink-local exact-stats helper, quote-source streaming hasher, source-hook folding, parser-owned decoded scratch, byte-output unescape, semantic string facts, and the first hand-authored JSON typed sink are rejected as closes. REDRESS 72 admits a generated-retained-only cap-16 probe and rejects global/direct/Track 2 widening, so H.W4 must carry per-shape cost facts instead of a single string threshold. | SK-V6 Wave 3 splits the plane: `semantic_full_digest_stressor` remains visible as a guard, while `real_typed_struct` becomes the representative DirectBuild closure row only after the host/API output schema is lowered into generated field facts rather than supplied by a benchmark-private hand sink. |
 | H.W4.LOCK14 (Lock 14 remediation — generic-crate audit closure; SK-V5 Wave 4) | **PARTIALLY LANDED.** `simd-scan`, `generated_eventcursor.rs`, and the `eventcursor` feature/cfg path are purged. The `bbnf-simd/src/lib.rs` god-module split and remaining JSON classifier parameterization are still pending. | SK-V6 Wave 5 performs the durability split only after parse-G and direct N-direct are reduced; it is not a SOTA-beat prerequisite. |
 | H.W5 (x86_64 AVX-512 primitive path — strict additions consumed by retained and direct shapes) | **LANDED FOR CONSUMED ARM64/GENERIC SET; X86 SUCCESSOR OPTIONAL.** Consumed primitive admission is green for the active host set. No-orphan macro bodies stay blocked until same-wave consumers exist. `CollapsedStage` remains a separate per-grammar `.asm` authoring wave. | `primitive-checkasm` must pass for admitted primitives; x86 `CollapsedStage` requires Zen 4 silicon, NASM author, strict comparator plane, and per-grammar consumer. |
-| H.W6 | **SK-V6 strict matrix target before CSS gates.** Full 17-corpus × 7-workload matrix with same-plane sidecars, zero parse-G or falsified rejections, and zero N-direct or falsified rejections. | SK-V6 Wave 4 close condition fires before CSS SOTA work resumes. |
+| H.W6 | **SK-V13 full-SOTA receiver map.** G1 full CSS L4 parity, G2 decision-engine fold, G3 union variant or architectural block, G4 zero aarch64 production orphans, G5 all 51 JSON rows above strict sonic-rs or architecturally blocked, G6 Totality V1.1/G-Omega before W0, and G7 no-demotion. | `restart/skinny/tranches/sk-v13/SYNTHESIS.md` G1-G7 governs S-P3 and J.W1; every miss needs row admission, measured rejection, or architectural-block proof. |
 | H.W7 | Pratt recognizer facts and BIR `PrattSpine`. | Expression grammar uses auto-detected Pratt. |
+
+### 13.2 Pass Omega V1.1 Receiver Waves
+
+| New wave | Allocation | Receiver |
+|---|---|---|
+| MP.NW0 | G-Omega and Totality V1.1 ratification before any SK-V13 W0/source/RESULTS/REDRESS wave. | G-Omega packet; CRUD-2/CRUD-4; S-P3 pre-W0 refusal gate. |
+| MP.NW1 | Current-state authority and row-plane telemetry fold for SK-V12 CSS admission and JSON parse/direct/typed planes. | BENCH, HANDOFF, MASTER current-state ledger. |
+| MP.NW2 | CSS stylesheet root and selector framework under strict lightningcss parity. | SK-V13 G1 CSS feature rows. |
+| MP.NW3 | CSS declaration-values expansion: declarations, `var()`, `calc()`, colors, custom-property/value facts. | SK-V13 G1 feature rows. |
+| MP.NW4 | CSS visual/rule expansion: gradients, transforms, filters, easing, at-rules, nesting. | SK-V13 G1 feature matrix. |
+| MP.NW5 | JSON 51-row strict sonic matrix: 17 corpora x parse_only/direct_to_struct/real_typed_struct. | SK-V13 G5 and J.W1. |
+| MP.NW6 | Lock 14 generated provider/config/sink/fact/flag/schema repair with CSS plus both Sheets and BBNF-self fail-closed or generated-role witnesses for fleet-wide Lock 14 closure; with only one negative control, label the result `scoped non-JSON witness`, not fleet-wide or grammar-neutral closure. | Lock 14, generated registry, non-JSON witnesses. |
+| MP.NW7 | Regex/HIR fact extraction import boundary through `parse-that-regex` or equivalent facts. | D/H regex fact consumer and generated parser/resolver row. |
+| MP.NW8 | Decision-engine replacement: bbnf-regex extraction, egraph language, guarded rewrites, active cost, CSP feasibility, P1-P8 retirement/fail-closed compatibility. | SK-V13 G2, C.W4/C.W5, backend-shape rows. |
+| MP.NW9 | AArch64 ASCII run-skip production split and zero-orphan disposition. | SK-V13 G4, CSS scan-block consumer or measured rejection. |
+| MP.NW10 | Fresh union-substrate variant or architectural block with material differential beyond REDRESS 96/97/98. | SK-V13 G3, substrate/runtime/codegen/bench wave. |
+| MP.NW11 | Both Sheets and BBNF-self fail-closed or generated-role witnesses for generated role facts and future grammar onboarding; one negative control is `scoped non-JSON witness` evidence only, not fleet-wide Lock 14 or grammar-neutral closure. | Lock 14 and future grammar onboarding gates. |
+| MP.NW12 | Rolling SOTA delta and no-demotion close gate for every JSON row/plane and every CSS feature. | BENCH rolling table, HANDOFF close gate, MASTER J.W1/J.W5. |
+
+Cost/risk summary: MP.NW0 250-700 doc LOC high process; MP.NW1 180-420
+doc/report LOC high gate; MP.NW2 350-500 high parity; MP.NW3 600-840
+medium-high; MP.NW4 700-950 medium; MP.NW5 350-900 high; MP.NW6 700-2000 cap
+2600 high; MP.NW7 300-700 high; MP.NW8 900-2200 cap 2800 high; MP.NW9 120-220
+narrow high if generalized; MP.NW10 700-1600 cap 2000 high; MP.NW11 250-800
+medium-high; MP.NW12 150-350 high anti-paper-close. These costs are receiver
+allocations for G-Omega-ratified planning, not implementation authorization.
 
 The typed event cursor at H.W1 remains the load-bearing architectural change
 for the current arm64 expanded-gate miss, but SK-V6 withdraws the old claim
@@ -662,9 +711,9 @@ Stub waves:
 | Wave | Scope | Consumer gate |
 |---|---|---|
 | J.W0 | Rust/VM parity matrix for the V1 line; WASM/TS parity defers to V2 backend impls. | Rust/VM parity matrix passes for seed grammars; V2 carries cross-backend parity after `WasmBackend` / `TsBackend` registration. |
-| J.W1 | Final SOTA gate and benchmark report. | JSON/CSS/SIMD targets met; misses require amendment before close. |
+| J.W1 | Final SOTA gate and benchmark report. | JSON/CSS/SIMD targets met under SK-V13 G1-G7: full CSS parity, all 51 JSON rows above strict sonic-rs or architecturally blocked, decision-engine fold, union variant/block, zero aarch64 production orphans, Totality V1.1/G-Omega pre-W0, and no demotion. Misses require architectural-block proof or amendment before close. |
 | J.W2 | Public docs redo. | Docs build and examples run. |
-| J.W3 | Package readiness for public crates: confirm publication-name plan, validate `[workspace.package]` defaults, dry-run `cargo publish` for every public crate, and verify path-dep incubation does not leak to `crates.io`. Two gates apply per Lock 11 (`restart/locks/LOCKS.md:54`): (i) the **stable surface** (`bbnf`, `bbnf-cli`, `bbnf-language-server`, `bbnf-bench`, `path`, `path-core`, `parse-that-regex`) publishes unconditionally at J.W3; (ii) the **incubation-cleared sister crates** (`egraph`, `egraph-derive`, `csp-solver`, `parse-that`) publish at J.W3 only after the 2-tranche stability gate clears — API has not changed across two consecutive prior tranche closes, downstream consumers compile against a frozen-version dry-run, and no breaking change is queued. Crates that fail the stability gate carry their dry-run results in the J.W3 report and remain path-deps until the next J cycle. `path-ts` defers post-V1 alongside the principled TS-native parse+runtime fork; the V2 `TsBackend: Backend` impl per `restart/ARCHITECTURE.md` §7.5 publishes `path-ts` in V2. | `cargo xtask publish --dry-run` passes for the stable surface (`bbnf`, `bbnf-cli`, `bbnf-language-server`, `bbnf-bench`, `path`, `path-core`, `parse-that-regex`) plus every incubation-cleared sister crate (`egraph`, `egraph-derive`, `csp-solver`, `parse-that`); incubation-failing sister crates remain path-deps with the failure recorded; `path-ts` is not in V1 publish scope; private crates are unpublished. |
+| J.W3 | Package readiness for public crates: confirm publication-name plan, validate `[workspace.package]` defaults, dry-run `cargo publish` for every public crate, and verify path-dep incubation does not leak to `crates.io`. Two gates apply per Lock 11 (`restart/locks/LOCKS.md:190`): (i) the **stable surface** (`bbnf`, `bbnf-cli`, `bbnf-language-server`, `bbnf-bench`, `path`, `path-core`, `parse-that-regex`) publishes unconditionally at J.W3; (ii) the **incubation-cleared sister crates** (`egraph`, `egraph-derive`, `csp-solver`, `parse-that`) publish at J.W3 only after the 2-tranche stability gate clears — API has not changed across two consecutive prior tranche closes, downstream consumers compile against a frozen-version dry-run, and no breaking change is queued. Crates that fail the stability gate carry their dry-run results in the J.W3 report and remain path-deps until the next J cycle. `path-ts` defers post-V1 alongside the principled TS-native parse+runtime fork; the V2 `TsBackend: Backend` impl per `restart/ARCHITECTURE.md` §7.5 publishes `path-ts` in V2. | `cargo xtask publish --dry-run` passes for the stable surface (`bbnf`, `bbnf-cli`, `bbnf-language-server`, `bbnf-bench`, `path`, `path-core`, `parse-that-regex`) plus every incubation-cleared sister crate (`egraph`, `egraph-derive`, `csp-solver`, `parse-that`); incubation-failing sister crates remain path-deps with the failure recorded; `path-ts` is not in V1 publish scope; private crates are unpublished. |
 | J.W4 | Archive and migration audit. | No stale crates/docs in production workspace. |
 | J.W5 | Restart close report. | All locks, gates, and routed punch-list items recorded. |
 
@@ -821,6 +870,8 @@ Budget enforcement rows:
 | 12 Archive `ser`/`gorgeous` | A/J | Archive paths outside workspace. |
 | 13 Tree discipline | A through J | `lint-tree`, `lint-loc`. |
 | 14 Grammar generalization | A/D/F/G/J | Future grammar test and no hardcoded dispatch. |
+| 15 Build-profile / i-cache discipline | F/H/J | Release profile, force-inline, hot-function budget, and post-LTO profile evidence. |
+| 16 SIMD/ASM admissibility | H/J | Primitive manifest, scalar reference, strict checkasm, same-wave consumer, and zero-orphan disposition. |
 
 Lock 13 verification rows. Each row is the executable evidence the named owner
 must produce when closing its tranche; ARCHITECTURE.md §13 owns the exception
@@ -881,6 +932,9 @@ rather than duplicating receivers.
 
 | Item | Receiver | Blocker | Gate | Source |
 |---|---|---|---|---|
+| Omega V1.1 MASTER reconciliation | CRUD-2 / G-Omega | §H scoped landings, refuted routes, and SK-V13 full-SOTA receivers are not visible in current MASTER. | Apply the Ω-D accepted diff only after Pass Omega convergence and G-Omega; preserve landed-scoped/partial/refuted/pending labels. | omega |
+| Rolling SOTA delta | H/J/BENCH/HANDOFF | Close can paper over row demotion or one-row CSS admission. | `restart/skinny/ROLLING-SOTA-DELTA.md` or equivalent BENCH-owned table carries every JSON row/plane and CSS feature; regressions fail G7 unless architectural-block/user re-pin is recorded. | omega + skinny |
+| G-Omega before SK-V13 W0 | HANDOFF / S-P3 | Implementation waves can start before Totality V1.1 ratifies skinny lessons. | HANDOFF and S-P3 SPEC refuse Wave 0, source edit waves, and RESULTS/REDRESS-writing waves until G-Omega closes. | omega + skinny |
 | Declaration-crate escape valve | A/D | Review form missing reason, scope, owner, or deletion path. | Metadata validator rejects `allow_declaration_crate = true` without the eight-field review form (template at `restart/ARCHITECTURE.md` §5.6 lines 738-770 — landed Phase 7.1). A.W4 consumes the template; D consumers reference it when the rare escape valve fires. | synthesis + migration |
 | Layout lowering | D/F | `@layout` remains parser metadata and does not lower through `LayoutFacts` and BIR. | LayoutFacts test plus BIR `LayoutScope` (`Push`/`Pop`) replay. | synthesis |
 | Cursor skip | B/H | Runtime cannot prove empty-path and byte-skip behavior. | `__EAGER_EMPTY_PATH` and `CursorDecision::Skip` fixtures. | synthesis + migration |
@@ -928,21 +982,26 @@ so J.W2 produces uniform pages, not seven varieties.
 The implementation order is:
 
 1. Commit Phase 2 synthesis outputs.
-2. Start tranche A from a clean worktree.
-3. Archive `ser` and `gorgeous`.
-4. Create the 24-crate skeleton and metadata validator.
-5. Close A with generalization and tree-shape gates.
-6. Build B and C before any production lowerer work.
-7. Build D before F needs extension-aware generation.
-8. Build E before F lowerers.
-9. Build F before G future-grammar proof.
-10. Build H after recognizer facts and runtime template exist.
-11. Build I after recovery facts and runtime views exist.
-12. Build J only when parity, SOTA, docs, and publication checks have real
+2. Complete Pass Omega convergence and G-Omega before applying any V1.1
+   MASTER/LOCKS/HANDOFF/MIGRATION/SKINNY corpus amendments or dispatching
+   SK-V13 W0.
+3. Start tranche A from a clean worktree.
+4. Archive `ser` and `gorgeous`.
+5. Create the 24-crate skeleton and metadata validator.
+6. Close A with generalization and tree-shape gates.
+7. Build B and C before any production lowerer work.
+8. Build D before F needs extension-aware generation.
+9. Build E before F lowerers.
+10. Build F before G future-grammar proof.
+11. Build H after recognizer facts and runtime template exist.
+12. Build I after recovery facts and runtime views exist.
+13. Build J only when parity, SOTA, docs, and publication checks have real
     artifacts to verify.
 
 No implementation tranche starts by editing PASS outputs, prompt contracts,
-locks, corpora, or inheritance docs. Those documents are inputs.
+locks, corpora, inheritance docs, `skinny/RESULTS.md`, or `skinny/REDRESS.md`.
+Those documents are inputs. SK-V13 source/generated/gate/result waves remain
+blocked until Pass Omega convergence, CRUD authorization, and G-Omega.
 
 ## 26. Master Close
 

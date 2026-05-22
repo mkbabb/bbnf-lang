@@ -200,6 +200,19 @@ pub const SKV13_JSON_PARSE_ONLY_ADMISSION_SPECS: &[JsonParseOnlyAdmissionSpec] =
         redress_entry: "REDRESS-157",
         prior_redress_citation: "102",
     },
+    JsonParseOnlyAdmissionSpec {
+        label: "W14.5",
+        wave_id: "SK-V13-W14.5",
+        run_id_prefix: "sk-v13-w14.5:",
+        consumer_gate: "G-W14.5-JSON-PARSE-MESH",
+        row_id: "json/mesh/parse_only/main",
+        corpus: "mesh",
+        criterion_group: "json_mesh",
+        bytes: 723_597,
+        route_id: "generated-json-parse-only-mesh",
+        redress_entry: "REDRESS-158",
+        prior_redress_citation: "102",
+    },
 ];
 
 pub fn json_parse_only_admission_spec_for_report(

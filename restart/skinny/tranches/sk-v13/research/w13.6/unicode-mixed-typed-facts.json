@@ -1,0 +1,38 @@
+{
+  "schema_version": "sk-v13-typed-product-reject-facts-v1",
+  "wave_id": "SK-V13-W13.6",
+  "row_id": "json/unicode_mixed/real_typed_struct/main",
+  "corpus": "unicode_mixed",
+  "bytes": 1053086,
+  "measurement_command": "RUSTFLAGS=\"-C target-cpu=native\" cargo bench -p bbnf-bench --bench json_parity -- 'json/unicode_mixed/(track1_real_typed_struct|track2_real_typed_struct|sonic_rs_real_typed_struct|serde_json_real_typed_struct)'",
+  "lanes": {
+    "track1_real_typed_struct": {
+      "mean_ns": 2546648.8974999995,
+      "mbps": 413.51833031785264,
+      "lower_confidence_mbps": 412.588713585485,
+      "upper_confidence_mbps": 414.3594074695017
+    },
+    "track2_real_typed_struct": {
+      "mean_ns": 2384038.9485714287,
+      "mbps": 441.7234880457945,
+      "lower_confidence_mbps": 440.53881602423695,
+      "upper_confidence_mbps": 442.7857156931993
+    },
+    "sonic_rs_real_typed_struct": {
+      "mean_ns": 1496750.607733055,
+      "mbps": 703.5814748022588,
+      "lower_confidence_mbps": 702.5078708005644,
+      "upper_confidence_mbps": 704.437612944711
+    },
+    "serde_json_real_typed_struct": {
+      "mean_ns": 2393741.427619048,
+      "mbps": 439.9330637175209,
+      "lower_confidence_mbps": 439.04530492716145,
+      "upper_confidence_mbps": 440.7183703581797
+    }
+  },
+  "threshold_mbps": 704.5814748022588,
+  "track1_margin_mbps": -291.0631444844062,
+  "strict_equality_status": "pass",
+  "disposition": "MEASURED-REJECT"
+}

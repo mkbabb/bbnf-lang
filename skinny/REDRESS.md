@@ -4639,3 +4639,32 @@ perturbation.
   in-tranche GSOC reopen triggers the round-trip rule unless it names a fresh
   material differential, such as schema specialization that avoids generic
   map-entry string matching or a row-specific string-copy deletion.
+
+## SK-V13 Wave 13.6 Typed Product Unicode Mixed Surface
+
+- Item 150 closes W13.6 under `G-W13.6-TYPED-UNICODE-MIXED` as
+  `MEASURED-REJECT`. The material differential from REDRESS 70-72/103-110
+  was real: the rejected patch added a generated `UnicodeMixed` typed product
+  root covering metadata and all 4,185 records, including `id`, `type`,
+  `value`, and `n`, and routed it through the `real_typed_struct` Track 1
+  consumer. It was not a direct digest, parse-only row, unicode codec proof,
+  hidden sink, or partial string-only surface.
+- Correctness passed before measurement:
+  `cargo xtask regen-real-typed`, `cargo xtask check-real-typed`,
+  `cargo test -p bbnf-bench unicode_mixed_typed -- --nocapture`,
+  `cargo test -p bbnf-bench --bin gate w13_unicode_mixed -- --nocapture`,
+  and
+  `cargo test -p bbnf-bench lock14_baseline::tests::admits_sk_v13_w13_6_parent_diff_under_w13_6_scope -- --nocapture`.
+  Native Criterion then measured Track 1 generated typed `413.518` Mbps,
+  Track 2 serde oracle `441.723` Mbps, sonic strict typed `703.581` Mbps,
+  and serde_json typed `439.933` Mbps. The pinned threshold was
+  `sonic + 1 = 704.581` Mbps, so Track 1 missed by `291.063` Mbps.
+- The rejected implementation patch is saved at
+  `/tmp/skv13-waveW13.6-rejected.patch`. The retained measurement facts are
+  `restart/skinny/tranches/sk-v13/research/w13.6/unicode-mixed-typed-facts.json`;
+  the retained redress note is
+  `restart/skinny/tranches/sk-v13/research/w13.6/redress.md`.
+- `json/unicode_mixed/real_typed_struct/main` remains `MISSING`. A second
+  in-tranche reopen triggers the round-trip rule unless it names a fresh
+  material differential, such as decode-allocation deletion, row-specific
+  string borrowing policy, or SIMD unicode string decode consumption.

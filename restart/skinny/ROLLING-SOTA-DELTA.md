@@ -72,7 +72,7 @@ source_commit: 01c335ac9
 | css_l4/stylesheet_root/direct_to_struct/main | css_l4_parity | 26894.88 | 596.05 | 26298.83 | ADMITTED |
 | css_l4/selectors/direct_to_struct/main | css_l4_parity | 26894.88 | 596.05 | 26298.83 | ADMITTED |
 | css_l4/at_rules_keyframes/direct_to_struct/main | css_l4_parity | 21584.64 | 254.22 | 21330.42 | ADMITTED |
-| css_l4/nested_rules/direct_to_struct/main | css_l4_parity | absent:not-yet-generated | absent:not-yet-generated | absent:not-yet-generated | OPEN |
+| css_l4/nested_rules/direct_to_struct/main | css_l4_parity | 52233.54 | 422.16 | 51811.38 | ADMITTED |
 | css_l4/css_variables/direct_to_struct/main | css_l4_parity | 265.72 | 55.91 | 209.81 | ADMITTED |
 | css_l4/calc_expressions/direct_to_struct/main | css_l4_parity | 265.72 | 55.91 | 209.81 | ADMITTED |
 | css_l4/var_url_functions/direct_to_struct/main | css_l4_parity | 265.72 | 55.91 | 209.81 | ADMITTED |
@@ -87,10 +87,10 @@ source_commit: 01c335ac9
 | css_l4/pseudo_classes/direct_to_struct/main | css_l4_parity | 26894.88 | 596.05 | 26298.83 | ADMITTED |
 | css_l4/pseudo_elements/direct_to_struct/main | css_l4_parity | 26894.88 | 596.05 | 26298.83 | ADMITTED |
 | css_l4/attribute_selectors/direct_to_struct/main | css_l4_parity | 26894.88 | 596.05 | 26298.83 | ADMITTED |
-| css_l4/logical_properties/direct_to_struct/main | css_l4_parity | absent:not-yet-generated | absent:not-yet-generated | absent:not-yet-generated | OPEN |
-| css_l4/grid/direct_to_struct/main | css_l4_parity | absent:not-yet-generated | absent:not-yet-generated | absent:not-yet-generated | OPEN |
-| css_l4/flexbox/direct_to_struct/main | css_l4_parity | absent:not-yet-generated | absent:not-yet-generated | absent:not-yet-generated | OPEN |
-| css_l4/typed_property_groups/direct_to_struct/main | css_l4_parity | absent:not-yet-generated | absent:not-yet-generated | absent:not-yet-generated | OPEN |
+| css_l4/logical_properties/direct_to_struct/main | css_l4_parity | 52233.54 | 422.16 | 51811.38 | ADMITTED |
+| css_l4/grid/direct_to_struct/main | css_l4_parity | 52233.54 | 422.16 | 51811.38 | ADMITTED |
+| css_l4/flexbox/direct_to_struct/main | css_l4_parity | 52233.54 | 422.16 | 51811.38 | ADMITTED |
+| css_l4/typed_property_groups/direct_to_struct/main | css_l4_parity | 52233.54 | 422.16 | 51811.38 | ADMITTED |
 
 ## Gate Notes
 

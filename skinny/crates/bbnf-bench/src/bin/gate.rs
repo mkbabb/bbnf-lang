@@ -5,9 +5,9 @@ use bbnf_bench::metadata::{current_peak_rss_bytes, RowMetadata, TrackTag};
 use bbnf_bench::report::{
     sk_v8_open_baseline, ComparatorSet, NonJsonEvidenceReport, Report, SkV12CssL4SotaReport,
     SkV12NonJsonReport, SkV13CssAtRulesAndMediaReport, SkV13CssComparatorOracleReport,
-    SkV13CssDeclarationValuesExtendedReport, SkV13CssStylesheetSelectorsReport,
-    SkV13CssVendorCustomReport, SkV13CssVisualFunctionsReport, SkV8ComparatorEvidence,
-    SkV8Telemetry, TelemetryRow,
+    SkV13CssDeclarationValuesExtendedReport, SkV13CssNestedLayoutReport,
+    SkV13CssStylesheetSelectorsReport, SkV13CssVendorCustomReport, SkV13CssVisualFunctionsReport,
+    SkV8ComparatorEvidence, SkV8Telemetry, TelemetryRow,
 };
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -193,6 +193,24 @@ fn main() -> Result<(), Box<dyn Error>> {
             .map_err(|error| format!("{}: {error}", path.display()))?;
         println!(
             "G-W10-2-CSS-VENDOR-CUSTOM {} {} feature_rows={}",
+            report.rows[0].admission_status,
+            path.display(),
+            report.covered_feature_rows.len()
+        );
+        drop(report);
+    }
+    if let Some(path) = skv13_css_nested_layout_report_path(&args[1..])? {
+        if !has_explicit_json_check {
+            return Err(format!("{} requires --check-results", path.display()).into());
+        }
+        let text = fs::read_to_string(&path)?;
+        let report = SkV13CssNestedLayoutReport::from_json_str(&text)
+            .and_then(|report| report.validate_gate().map(|_| report))
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        validate_skv13_css_nested_layout_report(&report, &criterion_root(), &workspace)
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        println!(
+            "G-W10-3-CSS-NESTED-LAYOUT {} {} feature_rows={}",
             report.rows[0].admission_status,
             path.display(),
             report.covered_feature_rows.len()
@@ -646,6 +664,10 @@ fn skv13_css_vendor_custom_report_path(args: &[String]) -> Result<Option<PathBuf
     companion_report_path(args, "--skv13-css-vendor-custom-report")
 }
 
+fn skv13_css_nested_layout_report_path(args: &[String]) -> Result<Option<PathBuf>, Box<dyn Error>> {
+    companion_report_path(args, "--skv13-css-nested-layout-report")
+}
+
 fn companion_report_path(args: &[String], flag: &str) -> Result<Option<PathBuf>, Box<dyn Error>> {
     let flag_positions = args
         .iter()
@@ -1041,6 +1063,62 @@ fn validate_skv13_css_vendor_custom_report(
     Ok(())
 }
 
+fn validate_skv13_css_nested_layout_report(
+    report: &SkV13CssNestedLayoutReport,
+    criterion_root: &Path,
+    workspace: &Path,
+) -> Result<(), String> {
+    let row = &report.rows[0];
+    let track1 = read_css_l4_lane_in_group(
+        criterion_root,
+        "nonjson_css_l4_w10_3",
+        "track1_generated_css_l4_nested_layout",
+        351,
+    )?;
+    let golden = read_css_l4_lane_in_group(
+        criterion_root,
+        "nonjson_css_l4_w10_3",
+        "track2_golden_nested_layout_oracle",
+        351,
+    )?;
+    let lightningcss = read_css_l4_lane_in_group(
+        criterion_root,
+        "nonjson_css_l4_w10_3",
+        "lightningcss_nested_layout_same_plane_fact_stream",
+        351,
+    )?;
+    require_close("track1_mbps", row.track1_mbps, track1.mbps)?;
+    require_close(
+        "track2_or_oracle_mbps",
+        row.track2_or_oracle_mbps,
+        golden.mbps,
+    )?;
+    require_close(
+        "lightningcss_mbps",
+        row.lightningcss_mbps,
+        lightningcss.mbps,
+    )?;
+    require_close(
+        "threshold_mbps",
+        row.threshold_mbps,
+        lightningcss.mbps + 1.0,
+    )?;
+    require_close(
+        "admission_margin_mbps",
+        row.admission_margin_mbps,
+        track1.mbps - (lightningcss.mbps + 1.0),
+    )?;
+    if row.sample_count != track1.samples
+        || row.sample_count != golden.samples
+        || row.sample_count != lightningcss.samples
+    {
+        return Err("W10.3 CSS sample count does not match Criterion lanes".to_string());
+    }
+    validate_css_l4_nested_layout_retained_artifacts(row, workspace)?;
+    validate_nested_layout_lightningcss_source_isolation(workspace)?;
+    Ok(())
+}
+
 fn read_css_l4_lane(criterion_root: &Path, lane: &str) -> Result<CssL4Lane, String> {
     read_css_l4_lane_in_group(criterion_root, "nonjson_css_l4", lane, 187)
 }
@@ -1426,6 +1504,67 @@ fn validate_css_l4_vendor_custom_retained_artifacts(
     Ok(())
 }
 
+fn validate_css_l4_nested_layout_retained_artifacts(
+    row: &bbnf_bench::report::SkV13CssNestedLayoutRow,
+    workspace: &Path,
+) -> Result<(), String> {
+    let track1_path = resolve_workspace_path(workspace, &row.track1_artifact);
+    let oracle_path = resolve_workspace_path(workspace, &row.oracle_artifact_path);
+    let lightning_path = resolve_workspace_path(workspace, &row.lightningcss_fact_artifact_path);
+    let equality_dir = track1_path
+        .parent()
+        .ok_or_else(|| "W10.3 CSS Track 1 artifact has no parent directory".to_string())?;
+    let strict_path = equality_dir.join("strict-equality.txt");
+    let lightning_eq_path = equality_dir.join("lightningcss-strict-equality.txt");
+    let track1 = fs::read(&track1_path)
+        .map_err(|error| format!("failed to read {}: {error}", track1_path.display()))?;
+    let oracle = fs::read(&oracle_path)
+        .map_err(|error| format!("failed to read {}: {error}", oracle_path.display()))?;
+    let lightning = fs::read(&lightning_path)
+        .map_err(|error| format!("failed to read {}: {error}", lightning_path.display()))?;
+    if track1 != oracle || track1 != lightning {
+        return Err("W10.3 CSS retained fact streams differ".to_string());
+    }
+    if sha256_hex(&track1) != row.fact_stream_sha256 {
+        return Err("W10.3 CSS fact_stream_sha256 mismatch".to_string());
+    }
+    let fact_text = std::str::from_utf8(&track1)
+        .map_err(|error| format!("W10.3 fact stream is not UTF-8: {error}"))?;
+    for needle in [
+        "row\tid=css_l4/nested_layout/direct_to_struct/main\tplane=css_l4_nested_layout_fact_stream",
+        "source\tinput_fnv64=8e1b6e16acdd574d\tinput_bytes=351",
+        "style_rule\tidx=0\tdepth=0\tselector_hex=2e67726964\tstart=0\tend=138\tdecls=3\tnested=1",
+        "nested_rule\tparent=0\tidx=0\tdepth=1\tselector_hex=263e2e6974656d\tstart=74\tend=137\tdecls=2",
+        "decl\trule=1\tnested=none\tidx=0\tdepth=1\tgroup=flex\tproperty_hex=646973706c6179\tvalue_hex=666c6578",
+        "decl\trule=1\tnested=none\tidx=5\tdepth=1\tgroup=logical\tproperty_hex=626f726465722d696e6c696e652d7374617274",
+        "property_group\tkind=grid\tdecls=3",
+        "property_group\tkind=flex\tdecls=4",
+        "property_group\tkind=logical\tdecls=4",
+        "property_group\tkind=border\tdecls=1",
+        "end\trules=3\tnested_rules=1\tdeclarations=14\tgrid_decls=3\tflex_decls=4\tlogical_decls=4\ttyped_property_groups=6\tstream_fnv64=1898abace9561b73",
+    ] {
+        if !fact_text.contains(needle) {
+            return Err(format!("W10.3 CSS fact stream missing `{needle}`"));
+        }
+    }
+    validate_css_l4_named_equality_artifact(
+        &strict_path,
+        "css_l4/nested_layout/direct_to_struct/main",
+        "sk-v13-w10-3:fixture-fnv64-8e1b6e16acdd574d",
+        false,
+    )?;
+    validate_css_l4_named_equality_artifact(
+        &lightning_eq_path,
+        "css_l4/nested_layout/direct_to_struct/main",
+        "sk-v13-w10-3:fixture-fnv64-8e1b6e16acdd574d",
+        true,
+    )?;
+    if resolve_workspace_path(workspace, &row.lightningcss_artifact) != lightning_eq_path {
+        return Err("W10.3 CSS lightningcss equality path mismatch".to_string());
+    }
+    Ok(())
+}
+
 fn validate_css_l4_equality_artifact(path: &Path, lightningcss: bool) -> Result<(), String> {
     validate_css_l4_named_equality_artifact(
         path,
@@ -1626,6 +1765,32 @@ fn validate_vendor_custom_lightningcss_source_isolation(workspace: &Path) -> Res
         if body.contains(forbidden) {
             return Err(format!(
                 "vendor/custom lightningcss facts are coupled to Track 1 via `{forbidden}`"
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn validate_nested_layout_lightningcss_source_isolation(workspace: &Path) -> Result<(), String> {
+    let source_path = workspace.join("crates/bbnf-bench/src/nonjson_css_l4.rs");
+    let source = fs::read_to_string(&source_path)
+        .map_err(|error| format!("failed to read {}: {error}", source_path.display()))?;
+    let start = source
+        .find("pub fn nested_layout_lightningcss_facts")
+        .ok_or_else(|| "nested_layout_lightningcss_facts function not found".to_string())?;
+    let rest = &source[start..];
+    let end = rest
+        .find("\npub fn assert_strict_equality")
+        .ok_or_else(|| "nested/layout lightningcss function end not found".to_string())?;
+    let body = &rest[..end];
+    for forbidden in [
+        "nested_layout_track1_facts(",
+        "runtime::generated_css_l4_nested_layout",
+        "generated_css_l4_nested_layout",
+    ] {
+        if body.contains(forbidden) {
+            return Err(format!(
+                "nested/layout lightningcss facts are coupled to Track 1 via `{forbidden}`"
             ));
         }
     }

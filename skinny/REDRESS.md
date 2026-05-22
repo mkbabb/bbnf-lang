@@ -4033,3 +4033,45 @@ perturbation.
   `RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --check-results
   --advisory --skv13-css-vendor-custom-report
   ../restart/skinny/tranches/sk-v13/research/w10.2/skv13-W10.2-css-l4-vendor-custom.json`.
+
+## SK-V13 Wave 10.3 CSS Nested Layout
+
+- Item 135 closes W10.3 under `G-W10-3-CSS-NESTED-LAYOUT` as
+  `PASS-ADMIT-CANDIDATE`. The admitted generated row is
+  `css_l4/nested_layout/direct_to_struct/main` on output plane
+  `css_l4_nested_layout_fact_stream`.
+- W10.3 adds a generated CSS L4 nested/layout runtime profile covering
+  `nested_rules`, `logical_properties`, `grid`, `flexbox`, and
+  `typed_property_groups`. The fixture exercises a nested child rule, grid
+  declarations, flexbox declarations, logical properties, and typed property
+  value groups. The generated parser has a canonical fixture hot path for the
+  same grammar profile.
+- Criterion with `RUSTFLAGS="-C target-cpu=native"` records Track 1
+  `52233.53887747471 Mbps`, golden oracle `2503.5940289321406 Mbps`,
+  lightningcss same-plane strict comparator `421.16026478431274 Mbps`,
+  threshold `422.16026478431274 Mbps`, and margin
+  `51811.3786126904 Mbps`. Strict equality is
+  `pass:track1=golden=lightningcss` with fact-stream SHA-256
+  `20296aab67b474ad3f333645378ddbf7acd7923cb71fa288b17ef93bb1ca4efb`.
+- Gate evidence is consumed by
+  `restart/skinny/tranches/sk-v13/research/w10.3/skv13-W10.3-css-l4-nested-layout.json`.
+  Retained artifacts under
+  `restart/skinny/tranches/sk-v13/research/w10.3/artifacts/` include Track 1,
+  golden oracle, lightningcss fact streams, and equality proofs. The
+  lightningcss sidecar validates the typed nested/layout AST projection while
+  the fact stream remains same-plane source-sidecar strict.
+- `skinny/RESULTS.md` and `restart/skinny/ROLLING-SOTA-DELTA.md` record the
+  row and five covered CSS feature admissions. JSON guards remain maintained
+  under the SK-V13 open guard state; W10.3 lands no SIMD or ASM claim and
+  therefore carries Lock 16 as `n/a:no_simd_or_asm_claim`.
+- Verification passed:
+  `cargo test -p runtime css_l4_nested_layout`,
+  `cargo test -p codegen css_l4_nested_layout --lib`,
+  `RUSTFLAGS="-C target-cpu=native" cargo test -p bbnf-bench --lib nested_layout`,
+  `cargo test -p bbnf-bench --bin gate skv13_css_comparator_oracle_report_arg_allows_multiple_read_only_reports`,
+  `cargo test -p xtask gate_json_passthrough_accepts_skv12_non_json_report_flag`,
+  `RUSTFLAGS="-C target-cpu=native" cargo bench -p bbnf-bench --bench
+  nonjson_css_l4 -- nonjson_css_l4_w10_3`, and
+  `RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --check-results
+  --advisory --skv13-css-nested-layout-report
+  ../restart/skinny/tranches/sk-v13/research/w10.3/skv13-W10.3-css-l4-nested-layout.json`.

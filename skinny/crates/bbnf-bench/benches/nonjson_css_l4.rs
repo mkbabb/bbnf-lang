@@ -262,6 +262,46 @@ fn bench_nonjson_css_l4(c: &mut Criterion) {
         })
     });
     vendor_group.finish();
+
+    let nested_input = nonjson_css_l4::read_nested_layout_fixture()
+        .expect("CSS L4 nested/layout fixture is readable");
+    nonjson_css_l4::assert_nested_layout_strict_equality(&nested_input)
+        .expect("CSS nested/layout Track 1 equals golden oracle");
+    nonjson_css_l4::assert_nested_layout_lightningcss_strict_equality(&nested_input)
+        .expect("CSS nested/layout Track 1 equals lightningcss fact stream");
+    let nested_report = nonjson_css_l4::write_nested_layout_report_with_quick_measurement()
+        .expect("CSS L4 nested/layout report is emitted");
+    nested_report
+        .validate_gate()
+        .expect("CSS L4 nested/layout report gate passes");
+
+    let mut nested_group = c.benchmark_group("nonjson_css_l4_w10_3");
+    nested_group.throughput(Throughput::Bytes(nested_input.len() as u64));
+    nested_group.bench_function("track1_generated_css_l4_nested_layout", |b| {
+        b.iter(|| {
+            black_box(
+                nonjson_css_l4::nested_layout_track1_facts(black_box(&nested_input))
+                    .expect("Track 1 CSS nested/layout fact stream"),
+            )
+        })
+    });
+    nested_group.bench_function("track2_golden_nested_layout_oracle", |b| {
+        b.iter(|| {
+            black_box(
+                nonjson_css_l4::nested_layout_oracle_facts(black_box(&nested_input))
+                    .expect("golden CSS nested/layout fact stream"),
+            )
+        })
+    });
+    nested_group.bench_function("lightningcss_nested_layout_same_plane_fact_stream", |b| {
+        b.iter(|| {
+            black_box(
+                nonjson_css_l4::nested_layout_lightningcss_facts(black_box(&nested_input))
+                    .expect("lightningcss CSS nested/layout fact stream"),
+            )
+        })
+    });
+    nested_group.finish();
 }
 
 criterion_group! {

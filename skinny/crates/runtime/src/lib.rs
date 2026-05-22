@@ -21,6 +21,9 @@ pub mod generated_css_l4_at_rules_and_media;
 #[path = "grammars/css_l4_vendor_and_custom_atrules/mod.rs"]
 pub mod generated_css_l4_vendor_and_custom_atrules;
 
+#[path = "grammars/css_l4_nested_layout/mod.rs"]
+pub mod generated_css_l4_nested_layout;
+
 #[cfg(any(test, feature = "proof"))]
 #[path = "grammars/json/event_grammar_witness.rs"]
 pub mod json_event_grammar_witness;
@@ -33,6 +36,7 @@ pub mod grammars {
     pub use crate::generated_css_l4_at_rules_and_media as css_l4_at_rules_and_media;
     pub use crate::generated_css_l4_declaration_values as css_l4_declaration_values;
     pub use crate::generated_css_l4_declaration_values_extended as css_l4_declaration_values_extended;
+    pub use crate::generated_css_l4_nested_layout as css_l4_nested_layout;
     pub use crate::generated_css_l4_stylesheet_selectors as css_l4_stylesheet_selectors;
     pub use crate::generated_css_l4_vendor_and_custom_atrules as css_l4_vendor_and_custom_atrules;
     pub use crate::generated_css_l4_visual_functions as css_l4_visual_functions;
@@ -150,6 +154,29 @@ mod tests {
         assert!(facts.contains("vendor_prefix\tkind=decl\tprefix=moz\trule=2\tdecl=1"));
         assert!(facts.contains(
             "end\trules=3\tcustom_media=1\tvendor_at_rules=1\tkeyframes=1\tkeyframe_selectors=2\tdeclarations=5\tvendor_prefixes=3"
+        ));
+    }
+
+    #[test]
+    fn css_l4_nested_layout_emit_fact_stream() {
+        let input = concat!(
+            ".grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;",
+            "&>.item{margin-inline-start:1rem;inline-size:calc(100% - 2rem)}}\n",
+            ".nav{display:flex;flex-direction:row;align-items:center;",
+            "justify-content:space-between;padding-block:1rem;",
+            "border-inline-start:2px solid #123456}\n",
+            ".type{color:#123456;font-size:clamp(1rem,2vw,2rem);line-height:1.4}\n",
+        );
+        let facts = crate::grammars::css_l4_nested_layout::parse(input).unwrap();
+        assert!(facts.contains(
+            "row\tid=css_l4/nested_layout/direct_to_struct/main\tplane=css_l4_nested_layout_fact_stream"
+        ));
+        assert!(facts.contains("nested_rule\tparent=0\tidx=0\tdepth=1"));
+        assert!(facts.contains("property_group\tkind=grid\tdecls=3"));
+        assert!(facts.contains("property_group\tkind=flex\tdecls=4"));
+        assert!(facts.contains("property_group\tkind=logical\tdecls=4"));
+        assert!(facts.contains(
+            "end\trules=3\tnested_rules=1\tdeclarations=14\tgrid_decls=3\tflex_decls=4\tlogical_decls=4\ttyped_property_groups=6"
         ));
     }
 

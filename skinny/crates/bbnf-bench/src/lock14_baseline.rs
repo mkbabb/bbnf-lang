@@ -751,6 +751,25 @@ const SK_V13_W10_2_OWNER_PATHS: &[&str] = &[
     "crates/runtime/src/grammars/css_l4_vendor_and_custom_atrules/sink.rs",
 ];
 
+const SK_V13_W10_3_OWNER_PATHS: &[&str] = &[
+    "crates/codegen/src/lib.rs",
+    "crates/codegen/src/grammar_profile.rs",
+    "crates/codegen/src/css_l4_nested_layout_provider.rs",
+    "crates/codegen/src/css_l4_nested_layout_templates/",
+    "crates/codegen/src/css_l4_nested_layout_templates/config.rs",
+    "crates/codegen/src/css_l4_nested_layout_templates/generated.rs",
+    "crates/codegen/src/css_l4_nested_layout_templates/mod.rs",
+    "crates/codegen/src/css_l4_nested_layout_templates/parser.rs",
+    "crates/codegen/src/css_l4_nested_layout_templates/sink.rs",
+    "crates/runtime/src/lib.rs",
+    "crates/runtime/src/grammars/css_l4_nested_layout/",
+    "crates/runtime/src/grammars/css_l4_nested_layout/config.rs",
+    "crates/runtime/src/grammars/css_l4_nested_layout/generated.rs",
+    "crates/runtime/src/grammars/css_l4_nested_layout/mod.rs",
+    "crates/runtime/src/grammars/css_l4_nested_layout/parser.rs",
+    "crates/runtime/src/grammars/css_l4_nested_layout/sink.rs",
+];
+
 fn current_lock14_owner_paths() -> Vec<&'static str> {
     let mut paths = Vec::with_capacity(
         SK_V12_W1A_OWNER_PATHS.len()
@@ -759,7 +778,8 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
             + SK_V13_W3_OWNER_PATHS.len()
             + SK_V13_W4_OWNER_PATHS.len()
             + SK_V13_W10_1_OWNER_PATHS.len()
-            + SK_V13_W10_2_OWNER_PATHS.len(),
+            + SK_V13_W10_2_OWNER_PATHS.len()
+            + SK_V13_W10_3_OWNER_PATHS.len(),
     );
     paths.extend_from_slice(SK_V12_W1A_OWNER_PATHS);
     paths.extend_from_slice(SK_V12_W1B1_OWNER_PATHS);
@@ -768,6 +788,7 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
     paths.extend_from_slice(SK_V13_W4_OWNER_PATHS);
     paths.extend_from_slice(SK_V13_W10_1_OWNER_PATHS);
     paths.extend_from_slice(SK_V13_W10_2_OWNER_PATHS);
+    paths.extend_from_slice(SK_V13_W10_3_OWNER_PATHS);
     paths
 }
 
@@ -924,6 +945,14 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
         let allowed = changed_paths
             .iter()
             .all(|path| is_allowed_path(path, SK_V13_W10_2_OWNER_PATHS));
+        if allowed {
+            return Ok(());
+        }
+    }
+    if subject.contains("sk-v13-waveW10.3") || subject.contains("sk-v13-wave10.3-challenge") {
+        let allowed = changed_paths
+            .iter()
+            .all(|path| is_allowed_path(path, SK_V13_W10_3_OWNER_PATHS));
         if allowed {
             return Ok(());
         }

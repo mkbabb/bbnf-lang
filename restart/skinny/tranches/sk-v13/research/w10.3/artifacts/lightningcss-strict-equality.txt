@@ -1,0 +1,5 @@
+status=pass
+row_id=css_l4/nested_layout/direct_to_struct/main
+run_id=sk-v13-w10-3:fixture-fnv64-8e1b6e16acdd574d
+comparator=lightningcss-1.0.0-alpha.71:same-plane-source-sidecar
+ast=typed-nesting-layout-declarations

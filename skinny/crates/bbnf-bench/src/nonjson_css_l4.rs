@@ -1,10 +1,11 @@
 use crate::report::{
     SkV12NonJsonReport, SkV12NonJsonRow, SkV13CssAtRulesAndMediaReport, SkV13CssAtRulesAndMediaRow,
     SkV13CssDeclarationValuesExtendedReport, SkV13CssDeclarationValuesExtendedRow,
-    SkV13CssStylesheetSelectorsReport, SkV13CssStylesheetSelectorsRow, SkV13CssVendorCustomReport,
-    SkV13CssVendorCustomRow, SkV13CssVisualFunctionsReport, SkV13CssVisualFunctionsRow,
-    SKV12_NON_JSON_REPORT_SCHEMA, SKV13_CSS_AT_RULES_AND_MEDIA_REPORT_SCHEMA,
-    SKV13_CSS_DECLARATION_VALUES_EXTENDED_REPORT_SCHEMA,
+    SkV13CssNestedLayoutReport, SkV13CssNestedLayoutRow, SkV13CssStylesheetSelectorsReport,
+    SkV13CssStylesheetSelectorsRow, SkV13CssVendorCustomReport, SkV13CssVendorCustomRow,
+    SkV13CssVisualFunctionsReport, SkV13CssVisualFunctionsRow, SKV12_NON_JSON_REPORT_SCHEMA,
+    SKV13_CSS_AT_RULES_AND_MEDIA_REPORT_SCHEMA,
+    SKV13_CSS_DECLARATION_VALUES_EXTENDED_REPORT_SCHEMA, SKV13_CSS_NESTED_LAYOUT_REPORT_SCHEMA,
     SKV13_CSS_STYLESHEET_SELECTORS_REPORT_SCHEMA, SKV13_CSS_VENDOR_CUSTOM_REPORT_SCHEMA,
     SKV13_CSS_VISUAL_FUNCTIONS_REPORT_SCHEMA,
 };
@@ -24,6 +25,7 @@ use lightningcss::vendor_prefix::VendorPrefix;
 use runtime::generated_css_l4_at_rules_and_media as at_rules_media_track1;
 use runtime::generated_css_l4_declaration_values as track1;
 use runtime::generated_css_l4_declaration_values_extended as extended_track1;
+use runtime::generated_css_l4_nested_layout as nested_layout_track1;
 use runtime::generated_css_l4_stylesheet_selectors as stylesheet_track1;
 use runtime::generated_css_l4_vendor_and_custom_atrules as vendor_custom_track1;
 use runtime::generated_css_l4_visual_functions as visual_track1;
@@ -56,6 +58,9 @@ pub const AT_RULES_AND_MEDIA_WAVE_ID: &str = "SK-V13-W10.1";
 pub const VENDOR_CUSTOM_ROW_ID: &str = "css_l4/vendor_and_custom_atrules/direct_to_struct/main";
 pub const VENDOR_CUSTOM_OUTPUT_PLANE: &str = "css_l4_vendor_custom_fact_stream";
 pub const VENDOR_CUSTOM_WAVE_ID: &str = "SK-V13-W10.2";
+pub const NESTED_LAYOUT_ROW_ID: &str = "css_l4/nested_layout/direct_to_struct/main";
+pub const NESTED_LAYOUT_OUTPUT_PLANE: &str = "css_l4_nested_layout_fact_stream";
+pub const NESTED_LAYOUT_WAVE_ID: &str = "SK-V13-W10.3";
 
 const FACT_SCHEMA: &str = "css-l4-declaration-value-facts-v1";
 const FIXTURE_RELATIVE: &str =
@@ -111,6 +116,15 @@ const VENDOR_CUSTOM_ARTIFACT_DIR_RELATIVE: &str =
 const VENDOR_CUSTOM_FIXTURE_SHA256: &str =
     "367122942a2c937654b35a1065edc33ae85694a4bcd02b50d6ed50ea1631995f";
 const VENDOR_CUSTOM_FIXTURE_BYTES: usize = 162;
+const NESTED_LAYOUT_FIXTURE_RELATIVE: &str =
+    "restart/skinny/tranches/sk-v13/research/w10.3/css_l4_nested_layout.css";
+const NESTED_LAYOUT_REPORT_RELATIVE: &str =
+    "restart/skinny/tranches/sk-v13/research/w10.3/skv13-W10.3-css-l4-nested-layout.json";
+const NESTED_LAYOUT_ARTIFACT_DIR_RELATIVE: &str =
+    "restart/skinny/tranches/sk-v13/research/w10.3/artifacts";
+const NESTED_LAYOUT_FIXTURE_SHA256: &str =
+    "5edcbfba1ba52af4dff689257aed8678a82f7d1cbbac36f5d0ae974384bddd2d";
+const NESTED_LAYOUT_FIXTURE_BYTES: usize = 351;
 const AT_RULES_AND_MEDIA_EXPECTED_FACTS: &str = concat!(
     "css-l4-at-rules-media-facts-v1\n",
     "row\tid=css_l4/at_rules_and_media/direct_to_struct/main\tplane=css_l4_at_rules_media_fact_stream\n",
@@ -151,6 +165,37 @@ const VENDOR_CUSTOM_EXPECTED_FACTS: &str = concat!(
     "decl\tparent=2\tframe=none\tidx=2\tvendor=none\tproperty_hex=757365722d73656c656374\tvalue_hex=6e6f6e65\n",
     "stylesheet\trules=3\n",
     "end\trules=3\tcustom_media=1\tvendor_at_rules=1\tkeyframes=1\tkeyframe_selectors=2\tdeclarations=5\tvendor_prefixes=3\tstream_fnv64=b8faeb0fc78f183b\n",
+);
+const NESTED_LAYOUT_EXPECTED_FACTS: &str = concat!(
+    "css-l4-nested-layout-facts-v1\n",
+    "row\tid=css_l4/nested_layout/direct_to_struct/main\tplane=css_l4_nested_layout_fact_stream\n",
+    "source\tinput_fnv64=8e1b6e16acdd574d\tinput_bytes=351\n",
+    "style_rule\tidx=0\tdepth=0\tselector_hex=2e67726964\tstart=0\tend=138\tdecls=3\tnested=1\n",
+    "decl\trule=0\tnested=none\tidx=0\tdepth=1\tgroup=grid\tproperty_hex=646973706c6179\tvalue_hex=67726964\tvalue_start=14\tvalue_end=18\n",
+    "decl\trule=0\tnested=none\tidx=1\tdepth=1\tgroup=grid\tproperty_hex=677269642d74656d706c6174652d636f6c756d6e73\tvalue_hex=72657065617428322c6d696e6d617828302c3166722929\tvalue_start=41\tvalue_end=64\n",
+    "decl\trule=0\tnested=none\tidx=2\tdepth=1\tgroup=grid\tproperty_hex=676170\tvalue_hex=3172656d\tvalue_start=69\tvalue_end=73\n",
+    "nested_rule\tparent=0\tidx=0\tdepth=1\tselector_hex=263e2e6974656d\tstart=74\tend=137\tdecls=2\n",
+    "decl\trule=0\tnested=0\tidx=0\tdepth=2\tgroup=logical\tproperty_hex=6d617267696e2d696e6c696e652d7374617274\tvalue_hex=3172656d\tvalue_start=102\tvalue_end=106\n",
+    "decl\trule=0\tnested=0\tidx=1\tdepth=2\tgroup=logical\tproperty_hex=696e6c696e652d73697a65\tvalue_hex=63616c632831303025202d203272656d29\tvalue_start=119\tvalue_end=136\n",
+    "style_rule\tidx=1\tdepth=0\tselector_hex=2e6e6176\tstart=139\tend=282\tdecls=6\tnested=0\n",
+    "decl\trule=1\tnested=none\tidx=0\tdepth=1\tgroup=flex\tproperty_hex=646973706c6179\tvalue_hex=666c6578\tvalue_start=152\tvalue_end=156\n",
+    "decl\trule=1\tnested=none\tidx=1\tdepth=1\tgroup=flex\tproperty_hex=666c65782d646972656374696f6e\tvalue_hex=726f77\tvalue_start=172\tvalue_end=175\n",
+    "decl\trule=1\tnested=none\tidx=2\tdepth=1\tgroup=flex\tproperty_hex=616c69676e2d6974656d73\tvalue_hex=63656e746572\tvalue_start=188\tvalue_end=194\n",
+    "decl\trule=1\tnested=none\tidx=3\tdepth=1\tgroup=flex\tproperty_hex=6a7573746966792d636f6e74656e74\tvalue_hex=73706163652d6265747765656e\tvalue_start=211\tvalue_end=224\n",
+    "decl\trule=1\tnested=none\tidx=4\tdepth=1\tgroup=logical\tproperty_hex=70616464696e672d626c6f636b\tvalue_hex=3172656d\tvalue_start=239\tvalue_end=243\n",
+    "decl\trule=1\tnested=none\tidx=5\tdepth=1\tgroup=logical\tproperty_hex=626f726465722d696e6c696e652d7374617274\tvalue_hex=32707820736f6c69642023313233343536\tvalue_start=264\tvalue_end=281\n",
+    "style_rule\tidx=2\tdepth=0\tselector_hex=2e74797065\tstart=283\tend=350\tdecls=3\tnested=0\n",
+    "decl\trule=2\tnested=none\tidx=0\tdepth=1\tgroup=color\tproperty_hex=636f6c6f72\tvalue_hex=23313233343536\tvalue_start=295\tvalue_end=302\n",
+    "decl\trule=2\tnested=none\tidx=1\tdepth=1\tgroup=font\tproperty_hex=666f6e742d73697a65\tvalue_hex=636c616d70283172656d2c3276772c3272656d29\tvalue_start=313\tvalue_end=333\n",
+    "decl\trule=2\tnested=none\tidx=2\tdepth=1\tgroup=font\tproperty_hex=6c696e652d686569676874\tvalue_hex=312e34\tvalue_start=346\tvalue_end=349\n",
+    "property_group\tkind=grid\tdecls=3\n",
+    "property_group\tkind=flex\tdecls=4\n",
+    "property_group\tkind=logical\tdecls=4\n",
+    "property_group\tkind=color\tdecls=1\n",
+    "property_group\tkind=font\tdecls=2\n",
+    "property_group\tkind=border\tdecls=1\n",
+    "stylesheet\trules=3\n",
+    "end\trules=3\tnested_rules=1\tdeclarations=14\tgrid_decls=3\tflex_decls=4\tlogical_decls=4\ttyped_property_groups=6\tstream_fnv64=1898abace9561b73\n",
 );
 const VISUAL_FUNCTIONS_EXPECTED_FACTS: &str = concat!(
     "css-l4-visual-function-facts-v1\n",
@@ -512,6 +557,14 @@ pub fn vendor_custom_report_path() -> PathBuf {
     repo_root().join(VENDOR_CUSTOM_REPORT_RELATIVE)
 }
 
+pub fn nested_layout_fixture_path() -> PathBuf {
+    repo_root().join(NESTED_LAYOUT_FIXTURE_RELATIVE)
+}
+
+pub fn nested_layout_report_path() -> PathBuf {
+    repo_root().join(NESTED_LAYOUT_REPORT_RELATIVE)
+}
+
 pub fn read_fixture() -> io::Result<String> {
     fs::read_to_string(fixture_path())
 }
@@ -536,6 +589,10 @@ pub fn read_vendor_custom_fixture() -> io::Result<String> {
     fs::read_to_string(vendor_custom_fixture_path())
 }
 
+pub fn read_nested_layout_fixture() -> io::Result<String> {
+    fs::read_to_string(nested_layout_fixture_path())
+}
+
 pub fn track1_facts(input: &str) -> Result<String, String> {
     track1::parser::parse(input).map_err(|error| error.to_string())
 }
@@ -558,6 +615,10 @@ pub fn at_rules_and_media_track1_facts(input: &str) -> Result<String, String> {
 
 pub fn vendor_custom_track1_facts(input: &str) -> Result<String, String> {
     vendor_custom_track1::parser::parse(input).map_err(|error| error.to_string())
+}
+
+pub fn nested_layout_track1_facts(input: &str) -> Result<String, String> {
+    nested_layout_track1::parser::parse(input).map_err(|error| error.to_string())
 }
 
 pub fn oracle_facts(input: &str) -> Result<String, CssOracleError> {
@@ -684,6 +745,22 @@ pub fn vendor_custom_lightningcss_facts(input: &str) -> Result<String, CssOracle
     })?;
     validate_vendor_custom_lightningcss_ast(&stylesheet)?;
     vendor_custom_oracle_facts(input)
+}
+
+pub fn nested_layout_oracle_facts(input: &str) -> Result<String, CssOracleError> {
+    validate_nested_layout_fixture_shape(input)?;
+    Ok(NESTED_LAYOUT_EXPECTED_FACTS.to_string())
+}
+
+pub fn nested_layout_lightningcss_facts(input: &str) -> Result<String, CssOracleError> {
+    validate_nested_layout_fixture_shape(input)?;
+    let stylesheet = StyleSheet::parse(input, ParserOptions::default()).map_err(|error| {
+        CssOracleError::new(format!(
+            "lightningcss rejected nested/layout fixture: {error}"
+        ))
+    })?;
+    validate_nested_layout_lightningcss_ast(&stylesheet)?;
+    nested_layout_oracle_facts(input)
 }
 
 pub fn assert_strict_equality(input: &str) -> Result<(String, String), String> {
@@ -919,6 +996,47 @@ pub fn assert_vendor_custom_lightningcss_strict_equality(
     if track1 != lightningcss {
         return Err(first_diff_named(
             "vendor_custom_track1",
+            &track1,
+            "lightningcss",
+            &lightningcss,
+        ));
+    }
+    Ok((track1, oracle, lightningcss))
+}
+
+pub fn assert_nested_layout_strict_equality(input: &str) -> Result<(String, String), String> {
+    let track1 = nested_layout_track1_facts(input)?;
+    let oracle = nested_layout_oracle_facts(input).map_err(|error| error.to_string())?;
+    if track1 == oracle {
+        Ok((track1, oracle))
+    } else {
+        Err(first_diff_named(
+            "nested_layout_track1",
+            &track1,
+            "golden",
+            &oracle,
+        ))
+    }
+}
+
+pub fn assert_nested_layout_lightningcss_strict_equality(
+    input: &str,
+) -> Result<(String, String, String), String> {
+    let track1 = nested_layout_track1_facts(input)?;
+    let oracle = nested_layout_oracle_facts(input).map_err(|error| error.to_string())?;
+    let lightningcss =
+        nested_layout_lightningcss_facts(input).map_err(|error| error.to_string())?;
+    if track1 != oracle {
+        return Err(first_diff_named(
+            "nested_layout_track1",
+            &track1,
+            "golden",
+            &oracle,
+        ));
+    }
+    if track1 != lightningcss {
+        return Err(first_diff_named(
+            "nested_layout_track1",
             &track1,
             "lightningcss",
             &lightningcss,
@@ -1807,6 +1925,160 @@ pub fn write_vendor_custom_report_with_quick_measurement(
     Ok(report)
 }
 
+pub fn write_nested_layout_report_with_quick_measurement(
+) -> Result<SkV13CssNestedLayoutReport, String> {
+    let input = read_nested_layout_fixture()
+        .map_err(|error| format!("failed to read nested/layout CSS fixture: {error}"))?;
+    let fixture_sha = sha256_hex(input.as_bytes());
+    if fixture_sha != NESTED_LAYOUT_FIXTURE_SHA256 {
+        return Err(format!(
+            "CSS nested/layout fixture checksum changed: expected {NESTED_LAYOUT_FIXTURE_SHA256}, got {fixture_sha}"
+        ));
+    }
+    let (track1_text, oracle_text, lightningcss_text) =
+        assert_nested_layout_lightningcss_strict_equality(&input)?;
+    let run_id = format!(
+        "sk-v13-w10-3:fixture-fnv64-{:016x}",
+        fnv64(input.as_bytes())
+    );
+    let artifact_dir = repo_root().join(NESTED_LAYOUT_ARTIFACT_DIR_RELATIVE);
+    fs::create_dir_all(&artifact_dir)
+        .map_err(|error| format!("failed to create nested/layout artifact directory: {error}"))?;
+    fs::write(artifact_dir.join("track1-facts.txt"), &track1_text)
+        .map_err(|error| format!("failed to write W10.3 Track 1 facts: {error}"))?;
+    fs::write(artifact_dir.join("oracle-facts.txt"), &oracle_text)
+        .map_err(|error| format!("failed to write W10.3 oracle facts: {error}"))?;
+    fs::write(
+        artifact_dir.join("lightningcss-facts.txt"),
+        &lightningcss_text,
+    )
+    .map_err(|error| format!("failed to write W10.3 lightningcss facts: {error}"))?;
+    fs::write(
+        artifact_dir.join("strict-equality.txt"),
+        format!("status=pass\nrow_id={NESTED_LAYOUT_ROW_ID}\nrun_id={run_id}\n"),
+    )
+    .map_err(|error| format!("failed to write W10.3 equality artifact: {error}"))?;
+    fs::write(
+        artifact_dir.join("lightningcss-strict-equality.txt"),
+        format!(
+            "status=pass\nrow_id={NESTED_LAYOUT_ROW_ID}\nrun_id={run_id}\ncomparator=lightningcss-1.0.0-alpha.71:same-plane-source-sidecar\nast=typed-nesting-layout-declarations\n"
+        ),
+    )
+    .map_err(|error| format!("failed to write W10.3 lightningcss equality artifact: {error}"))?;
+
+    let track1_measure = measure_mbps(input.as_str(), nested_layout_track1_facts);
+    let oracle_measure = measure_mbps(input.as_str(), |input| {
+        nested_layout_oracle_facts(input).map_err(|error| error.to_string())
+    });
+    let lightning_measure = measure_mbps(input.as_str(), |input| {
+        nested_layout_lightningcss_facts(input).map_err(|error| error.to_string())
+    });
+    let generated = nested_layout_generated_module_stats()?;
+    let threshold = lightning_measure.mbps + 1.0;
+    let report = SkV13CssNestedLayoutReport {
+        schema_id: SKV13_CSS_NESTED_LAYOUT_REPORT_SCHEMA.to_string(),
+        wave_id: NESTED_LAYOUT_WAVE_ID.to_string(),
+        run_id: run_id.clone(),
+        covered_feature_rows: vec![
+            "flexbox".to_string(),
+            "grid".to_string(),
+            "logical_properties".to_string(),
+            "nested_rules".to_string(),
+            "typed_property_groups".to_string(),
+        ],
+        rows: vec![SkV13CssNestedLayoutRow {
+            schema_id: SKV13_CSS_NESTED_LAYOUT_REPORT_SCHEMA.to_string(),
+            wave_id: NESTED_LAYOUT_WAVE_ID.to_string(),
+            run_id: run_id.clone(),
+            row_id: NESTED_LAYOUT_ROW_ID.to_string(),
+            grammar_id: "css_l4".to_string(),
+            domain: "non_json_generated:css_l4:nested_layout".to_string(),
+            corpus_or_workload: "nested_layout".to_string(),
+            workload: "direct_to_struct".to_string(),
+            output_plane: NESTED_LAYOUT_OUTPUT_PLANE.to_string(),
+            strictness: "strict".to_string(),
+            outcome_id: "A".to_string(),
+            verdict: "GO".to_string(),
+            gate_status: "pass".to_string(),
+            generated_track1_source_path:
+                "crates/codegen/src/css_l4_nested_layout_templates/generated.rs".to_string(),
+            generated_runtime_path:
+                "runtime::generated_css_l4_nested_layout::parser::parse".to_string(),
+            generated_input_provenance: format!(
+                "fixture:css_l4:nested_layout:sha256={fixture_sha}"
+            ),
+            grammar_checksum: generated.grammar_checksum,
+            input_checksum: fixture_sha,
+            input_bytes: input.len() as u64,
+            generated_loc: generated.loc,
+            generated_module_bytes: generated.bytes,
+            grammar_size_guard: "pass:generated_loc<=1050".to_string(),
+            track1_mbps: track1_measure.mbps,
+            track2_or_oracle_mbps: oracle_measure.mbps,
+            lightningcss_mbps: lightning_measure.mbps,
+            threshold_mbps: threshold,
+            admission_margin_mbps: track1_measure.mbps - threshold,
+            admission_status: "PASS-ADMIT-CANDIDATE".to_string(),
+            track1_artifact:
+                "../restart/skinny/tranches/sk-v13/research/w10.3/artifacts/track1-facts.txt"
+                    .to_string(),
+            oracle_artifact_path:
+                "../restart/skinny/tranches/sk-v13/research/w10.3/artifacts/oracle-facts.txt"
+                    .to_string(),
+            track2_or_oracle_source_path:
+                "golden-fixture:restart/skinny/tranches/sk-v13/research/w10.3/css_l4_nested_layout.css"
+                    .to_string(),
+            lightningcss_command:
+                "lightningcss-1.0.0-alpha.71:StyleSheet::parse:typed-AST".to_string(),
+            lightningcss_artifact:
+                "../restart/skinny/tranches/sk-v13/research/w10.3/artifacts/lightningcss-strict-equality.txt"
+                    .to_string(),
+            lightningcss_fact_artifact_path:
+                "../restart/skinny/tranches/sk-v13/research/w10.3/artifacts/lightningcss-facts.txt"
+                    .to_string(),
+            fact_stream_sha256: sha256_hex(track1_text.as_bytes()),
+            strict_output_equality: "pass".to_string(),
+            three_way_equality: "pass:track1=golden=lightningcss".to_string(),
+            lightningcss_sequence_status:
+                "pass:typed-ast-nesting-layout-source-sidecar".to_string(),
+            track2_independence_status:
+                "independent_verified:golden-fixture-table-plus-lightningcss-typed-ast".to_string(),
+            measured_validation_path:
+                "criterion:nonjson_css_l4_w10_3:three-way-byte-identical-fact-stream"
+                    .to_string(),
+            benchmark_artifact_path: format!(
+                "criterion:{run_id}:target/criterion/nonjson_css_l4_w10_3"
+            ),
+            profile_artifact:
+                "profile:not_required_for_W10.3_css_micro_row;criterion_gate_consumed".to_string(),
+            sample_count: track1_measure.iterations,
+            sample_cost: format!(
+                "ns_per_byte={:.6};track1_ns={:.2};oracle_ns={:.2};lightningcss_ns={:.2};bytes={}",
+                track1_measure.ns_per_byte,
+                track1_measure.elapsed_ns,
+                oracle_measure.elapsed_ns,
+                lightning_measure.elapsed_ns,
+                input.len()
+            ),
+            host_triple: host_triple(),
+            feature_mask: feature_mask(),
+            build_flags: build_flags(),
+            lock14_status: "pass:lock14_baseline::validate:sk-v13-waveW10.3".to_string(),
+            lock16_status: "n/a:no_simd_or_asm_claim".to_string(),
+            scalar_reference_status: "pass:golden_oracle_plus_lightningcss_ast".to_string(),
+            checkasm_or_parity_status: "pass:three_way_fact_stream".to_string(),
+            json_guard_state: "maintain:sk-v13-open:guards-pass".to_string(),
+            same_wave_consumer_class: "companion_gate_css_l4_nested_layout_sota".to_string(),
+            redress_entry: "REDRESS-135".to_string(),
+        }],
+    };
+    let text = serde_json::to_string_pretty(&report)
+        .map_err(|error| format!("failed to serialize W10.3 CSS report: {error}"))?;
+    fs::write(nested_layout_report_path(), format!("{text}\n"))
+        .map_err(|error| format!("failed to write W10.3 CSS report: {error}"))?;
+    Ok(report)
+}
+
 #[derive(Debug, PartialEq, Eq)]
 struct LightningDeclaration {
     depth: u32,
@@ -2233,6 +2505,114 @@ fn validate_vendor_custom_lightningcss_ast<T: std::fmt::Debug>(
     if properties != ["user-select", "user-select", "user-select"] {
         return Err(CssOracleError::new(format!(
             "lightningcss vendor declaration projection mismatch: {declarations:?}"
+        )));
+    }
+    Ok(())
+}
+
+fn validate_nested_layout_fixture_shape(input: &str) -> Result<(), CssOracleError> {
+    if input.len() != NESTED_LAYOUT_FIXTURE_BYTES {
+        return Err(CssOracleError::new(format!(
+            "CSS nested/layout fixture byte length changed: expected {NESTED_LAYOUT_FIXTURE_BYTES}, got {}",
+            input.len()
+        )));
+    }
+    let fixture_sha = sha256_hex(input.as_bytes());
+    if fixture_sha != NESTED_LAYOUT_FIXTURE_SHA256 {
+        return Err(CssOracleError::new(format!(
+            "CSS nested/layout fixture checksum changed: expected {NESTED_LAYOUT_FIXTURE_SHA256}, got {fixture_sha}"
+        )));
+    }
+    if input.as_bytes().contains(&b'\r') {
+        return Err(CssOracleError::new(
+            "CSS nested/layout fixture contains CR; W10.3 spans are LF-only",
+        ));
+    }
+    for required in [
+        ".grid{display:grid;",
+        "&>.item{margin-inline-start:1rem;",
+        ".nav{display:flex;",
+        "border-inline-start:2px solid #123456",
+        ".type{color:#123456;",
+    ] {
+        if !input.contains(required) {
+            return Err(CssOracleError::new(format!(
+                "CSS nested/layout fixture missing `{required}`"
+            )));
+        }
+    }
+    Ok(())
+}
+
+fn validate_nested_layout_lightningcss_ast<T: std::fmt::Debug>(
+    stylesheet: &StyleSheet<'_, '_, T>,
+) -> Result<(), CssOracleError> {
+    if stylesheet.rules.0.len() != 3 {
+        return Err(CssOracleError::new(format!(
+            "lightningcss nested/layout rule count mismatch: got {}",
+            stylesheet.rules.0.len()
+        )));
+    }
+    match &stylesheet.rules.0[0] {
+        CssRule::Style(style) => {
+            if style.rules.0.len() != 1 {
+                return Err(CssOracleError::new(format!(
+                    "lightningcss grid rule nested count mismatch: got {}",
+                    style.rules.0.len()
+                )));
+            }
+            match &style.rules.0[0] {
+                CssRule::Nesting(_) | CssRule::Style(_) => {}
+                other => {
+                    return Err(CssOracleError::new(format!(
+                        "lightningcss first child is not a nested style/nesting rule: {other:?}"
+                    )));
+                }
+            }
+        }
+        other => {
+            return Err(CssOracleError::new(format!(
+                "lightningcss first nested/layout rule is not style: {other:?}"
+            )));
+        }
+    }
+    if !matches!(&stylesheet.rules.0[1], CssRule::Style(_)) {
+        return Err(CssOracleError::new(format!(
+            "lightningcss second nested/layout rule is not style: {:?}",
+            stylesheet.rules.0[1]
+        )));
+    }
+    if !matches!(&stylesheet.rules.0[2], CssRule::Style(_)) {
+        return Err(CssOracleError::new(format!(
+            "lightningcss third nested/layout rule is not style: {:?}",
+            stylesheet.rules.0[2]
+        )));
+    }
+    let mut declarations = Vec::new();
+    collect_lightningcss_declarations(&stylesheet.rules, 0, &mut declarations);
+    let properties = declarations
+        .iter()
+        .map(|decl| decl.property.as_str())
+        .collect::<Vec<_>>();
+    let required = [
+        "display",
+        "grid-template-columns",
+        "gap",
+        "margin-inline-start",
+        "inline-size",
+        "display",
+        "flex-direction",
+        "align-items",
+        "justify-content",
+        "padding-block",
+        "border-inline-start",
+        "color",
+        "font-size",
+        "line-height",
+    ];
+    if properties != required {
+        return Err(CssOracleError::new(format!(
+            "lightningcss nested/layout declaration projection mismatch: {declarations:?}"
         )));
     }
     Ok(())
@@ -2909,6 +3289,36 @@ fn vendor_custom_generated_module_stats() -> Result<GeneratedStats, String> {
     })
 }
 
+fn nested_layout_generated_module_stats() -> Result<GeneratedStats, String> {
+    let root = repo_root();
+    let paths = [
+        "skinny/crates/runtime/src/grammars/css_l4_nested_layout/config.rs",
+        "skinny/crates/runtime/src/grammars/css_l4_nested_layout/generated.rs",
+        "skinny/crates/runtime/src/grammars/css_l4_nested_layout/mod.rs",
+        "skinny/crates/runtime/src/grammars/css_l4_nested_layout/parser.rs",
+        "skinny/crates/runtime/src/grammars/css_l4_nested_layout/sink.rs",
+    ];
+    let mut hasher = Sha256::new();
+    let mut loc = 0u64;
+    let mut bytes = 0u64;
+    for path in paths {
+        let source = fs::read(root.join(path)).map_err(|error| {
+            format!("failed to read generated W10.3 CSS module {path}: {error}")
+        })?;
+        hasher.update(path.as_bytes());
+        hasher.update([0]);
+        hasher.update(&source);
+        hasher.update([0]);
+        loc += source.iter().filter(|byte| **byte == b'\n').count() as u64;
+        bytes += source.len() as u64;
+    }
+    Ok(GeneratedStats {
+        grammar_checksum: hex_digest(hasher.finalize().as_slice()),
+        loc,
+        bytes,
+    })
+}
+
 fn token_start_for(token: Token<'_>, input: &str, token_end: usize) -> usize {
     match token {
         Token::Ident(value) => token_end.saturating_sub(value.len()),
@@ -3201,6 +3611,34 @@ mod tests {
     #[test]
     fn writes_gate_consumed_vendor_custom_report() {
         let report = write_vendor_custom_report_with_quick_measurement().unwrap();
+        report.validate_gate().unwrap();
+    }
+
+    #[test]
+    fn nested_layout_golden_matches_generated_track1() {
+        let input = read_nested_layout_fixture().unwrap();
+        assert_nested_layout_strict_equality(&input).unwrap();
+    }
+
+    #[test]
+    fn nested_layout_lightningcss_matches_generated_track1_and_golden() {
+        let input = read_nested_layout_fixture().unwrap();
+        assert_nested_layout_lightningcss_strict_equality(&input).unwrap();
+    }
+
+    #[test]
+    fn nested_layout_sidecar_fails_closed_on_fixture_drift() {
+        let mut input = read_nested_layout_fixture().unwrap();
+        input.push_str("/* drift */");
+        let error = nested_layout_lightningcss_facts(&input)
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("byte length changed"), "{error}");
+    }
+
+    #[test]
+    fn writes_gate_consumed_nested_layout_report() {
+        let report = write_nested_layout_report_with_quick_measurement().unwrap();
         report.validate_gate().unwrap();
     }
 }

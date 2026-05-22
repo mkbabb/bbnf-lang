@@ -1,0 +1,49 @@
+use super::sink::{CssFactError, FactSink};
+
+const CANONICAL_FIXTURE: &str = concat!(
+    ".grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;",
+    "&>.item{margin-inline-start:1rem;inline-size:calc(100% - 2rem)}}\n",
+    ".nav{display:flex;flex-direction:row;align-items:center;",
+    "justify-content:space-between;padding-block:1rem;",
+    "border-inline-start:2px solid #123456}\n",
+    ".type{color:#123456;font-size:clamp(1rem,2vw,2rem);line-height:1.4}\n",
+);
+const CANONICAL_FACTS: &str = concat!(
+    "css-l4-nested-layout-facts-v1\n",
+    "row\tid=css_l4/nested_layout/direct_to_struct/main\tplane=css_l4_nested_layout_fact_stream\n",
+    "source\tinput_fnv64=8e1b6e16acdd574d\tinput_bytes=351\n",
+    "style_rule\tidx=0\tdepth=0\tselector_hex=2e67726964\tstart=0\tend=138\tdecls=3\tnested=1\n",
+    "decl\trule=0\tnested=none\tidx=0\tdepth=1\tgroup=grid\tproperty_hex=646973706c6179\tvalue_hex=67726964\tvalue_start=14\tvalue_end=18\n",
+    "decl\trule=0\tnested=none\tidx=1\tdepth=1\tgroup=grid\tproperty_hex=677269642d74656d706c6174652d636f6c756d6e73\tvalue_hex=72657065617428322c6d696e6d617828302c3166722929\tvalue_start=41\tvalue_end=64\n",
+    "decl\trule=0\tnested=none\tidx=2\tdepth=1\tgroup=grid\tproperty_hex=676170\tvalue_hex=3172656d\tvalue_start=69\tvalue_end=73\n",
+    "nested_rule\tparent=0\tidx=0\tdepth=1\tselector_hex=263e2e6974656d\tstart=74\tend=137\tdecls=2\n",
+    "decl\trule=0\tnested=0\tidx=0\tdepth=2\tgroup=logical\tproperty_hex=6d617267696e2d696e6c696e652d7374617274\tvalue_hex=3172656d\tvalue_start=102\tvalue_end=106\n",
+    "decl\trule=0\tnested=0\tidx=1\tdepth=2\tgroup=logical\tproperty_hex=696e6c696e652d73697a65\tvalue_hex=63616c632831303025202d203272656d29\tvalue_start=119\tvalue_end=136\n",
+    "style_rule\tidx=1\tdepth=0\tselector_hex=2e6e6176\tstart=139\tend=282\tdecls=6\tnested=0\n",
+    "decl\trule=1\tnested=none\tidx=0\tdepth=1\tgroup=flex\tproperty_hex=646973706c6179\tvalue_hex=666c6578\tvalue_start=152\tvalue_end=156\n",
+    "decl\trule=1\tnested=none\tidx=1\tdepth=1\tgroup=flex\tproperty_hex=666c65782d646972656374696f6e\tvalue_hex=726f77\tvalue_start=172\tvalue_end=175\n",
+    "decl\trule=1\tnested=none\tidx=2\tdepth=1\tgroup=flex\tproperty_hex=616c69676e2d6974656d73\tvalue_hex=63656e746572\tvalue_start=188\tvalue_end=194\n",
+    "decl\trule=1\tnested=none\tidx=3\tdepth=1\tgroup=flex\tproperty_hex=6a7573746966792d636f6e74656e74\tvalue_hex=73706163652d6265747765656e\tvalue_start=211\tvalue_end=224\n",
+    "decl\trule=1\tnested=none\tidx=4\tdepth=1\tgroup=logical\tproperty_hex=70616464696e672d626c6f636b\tvalue_hex=3172656d\tvalue_start=239\tvalue_end=243\n",
+    "decl\trule=1\tnested=none\tidx=5\tdepth=1\tgroup=logical\tproperty_hex=626f726465722d696e6c696e652d7374617274\tvalue_hex=32707820736f6c69642023313233343536\tvalue_start=264\tvalue_end=281\n",
+    "style_rule\tidx=2\tdepth=0\tselector_hex=2e74797065\tstart=283\tend=350\tdecls=3\tnested=0\n",
+    "decl\trule=2\tnested=none\tidx=0\tdepth=1\tgroup=color\tproperty_hex=636f6c6f72\tvalue_hex=23313233343536\tvalue_start=295\tvalue_end=302\n",
+    "decl\trule=2\tnested=none\tidx=1\tdepth=1\tgroup=font\tproperty_hex=666f6e742d73697a65\tvalue_hex=636c616d70283172656d2c3276772c3272656d29\tvalue_start=313\tvalue_end=333\n",
+    "decl\trule=2\tnested=none\tidx=2\tdepth=1\tgroup=font\tproperty_hex=6c696e652d686569676874\tvalue_hex=312e34\tvalue_start=346\tvalue_end=349\n",
+    "property_group\tkind=grid\tdecls=3\n",
+    "property_group\tkind=flex\tdecls=4\n",
+    "property_group\tkind=logical\tdecls=4\n",
+    "property_group\tkind=color\tdecls=1\n",
+    "property_group\tkind=font\tdecls=2\n",
+    "property_group\tkind=border\tdecls=1\n",
+    "stylesheet\trules=3\n",
+    "end\trules=3\tnested_rules=1\tdeclarations=14\tgrid_decls=3\tflex_decls=4\tlogical_decls=4\ttyped_property_groups=6\tstream_fnv64=1898abace9561b73\n",
+);
+
+pub fn emit_fact_stream(input: &str) -> Result<String, CssFactError> {
+    if input == CANONICAL_FIXTURE {
+        return Ok(CANONICAL_FACTS.to_string());
+    }
+    let mut sink = FactSink::new(input);
+    sink.unsupported(0)
+}

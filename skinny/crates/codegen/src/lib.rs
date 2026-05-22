@@ -1,6 +1,7 @@
 mod css_l4_at_rules_and_media_provider;
 mod css_l4_declaration_values_extended_provider;
 mod css_l4_declaration_values_provider;
+mod css_l4_nested_layout_provider;
 mod css_l4_stylesheet_selectors_provider;
 mod css_l4_vendor_and_custom_atrules_provider;
 mod css_l4_visual_functions_provider;
@@ -192,6 +193,12 @@ fn render_runtime_profile(
         }
         grammar_profile::RuntimeProvider::CssL4VendorAndCustomAtRules => {
             let files = css_l4_vendor_and_custom_atrules_provider::emit_runtime_files();
+            grammar_profile::validate_generated_roster(profile, files.keys().map(String::as_str))
+                .map_err(CodegenError::Lowering)?;
+            return Ok(EmittedSource { files });
+        }
+        grammar_profile::RuntimeProvider::CssL4NestedLayout => {
+            let files = css_l4_nested_layout_provider::emit_runtime_files();
             grammar_profile::validate_generated_roster(profile, files.keys().map(String::as_str))
                 .map_err(CodegenError::Lowering)?;
             return Ok(EmittedSource { files });
@@ -503,6 +510,22 @@ mod tests {
     }
 
     #[test]
+    fn css_l4_nested_layout_profile_fields_are_consumed() {
+        let profile = grammar_profile::select_runtime_profile_for_name("css_l4_nested_layout")
+            .expect("css profile");
+        let emitted = emit_runtime_profile("css_l4_nested_layout").unwrap();
+        let names = emitted.files().map(|(name, _)| name).collect::<Vec<_>>();
+
+        assert_eq!(profile.id(), "css_l4_nested_layout");
+        assert_eq!(names, profile.generated_runtime_files());
+        assert!(emitted
+            .get("generated.rs")
+            .unwrap()
+            .contains("emit_fact_stream"));
+        assert!(emitted.get("parser.rs").unwrap().contains("parse_bytes"));
+    }
+
+    #[test]
     fn css_l4_declaration_values_generated_runtime_reproducible() {
         let emitted = emit_runtime_profile("css_l4_declaration_values").unwrap();
         let runtime_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -547,6 +570,14 @@ mod tests {
         let emitted = emit_runtime_profile("css_l4_vendor_and_custom_atrules").unwrap();
         let runtime_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../runtime/src/grammars/css_l4_vendor_and_custom_atrules");
+        emitted.check_dir(runtime_dir).unwrap();
+    }
+
+    #[test]
+    fn css_l4_nested_layout_generated_runtime_reproducible() {
+        let emitted = emit_runtime_profile("css_l4_nested_layout").unwrap();
+        let runtime_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../runtime/src/grammars/css_l4_nested_layout");
         emitted.check_dir(runtime_dir).unwrap();
     }
 

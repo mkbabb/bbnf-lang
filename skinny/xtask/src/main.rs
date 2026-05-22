@@ -279,7 +279,8 @@ fn validate_gate_json_passthrough(args: &[String]) -> Result<()> {
             | "--skv13-css-declaration-values-extended-report"
             | "--skv13-css-visual-functions-report"
             | "--skv13-css-at-rules-media-report"
-            | "--skv13-css-vendor-custom-report" => {
+            | "--skv13-css-vendor-custom-report"
+            | "--skv13-css-nested-layout-report" => {
                 if index + 1 >= args.len() {
                     bail!("{} expects one path argument", args[index]);
                 }
@@ -1025,6 +1026,12 @@ mod tests {
         validate_gate_json_passthrough(&[
             "--skv13-css-vendor-custom-report".into(),
             "skv13-css-w10-2.json".into(),
+            "--check-results".into(),
+        ])
+        .unwrap();
+        validate_gate_json_passthrough(&[
+            "--skv13-css-nested-layout-report".into(),
+            "skv13-css-w10-3.json".into(),
             "--check-results".into(),
         ])
         .unwrap();

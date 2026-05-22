@@ -119,6 +119,7 @@ pub const SKV13_CSS_DECLARATION_VALUES_EXTENDED_REPORT_SCHEMA: &str =
 pub const SKV13_CSS_VISUAL_FUNCTIONS_REPORT_SCHEMA: &str = "sk-v13-css-visual-functions-sota-v1";
 pub const SKV13_CSS_AT_RULES_AND_MEDIA_REPORT_SCHEMA: &str = "sk-v13-css-at-rules-media-sota-v1";
 pub const SKV13_CSS_VENDOR_CUSTOM_REPORT_SCHEMA: &str = "sk-v13-css-vendor-custom-sota-v1";
+pub const SKV13_CSS_NESTED_LAYOUT_REPORT_SCHEMA: &str = "sk-v13-css-nested-layout-sota-v1";
 pub type NonJsonEvidenceRow = TelemetryRow;
 pub type NonJsonOracleEvidence = SkV8ComparatorEvidence;
 
@@ -487,6 +488,18 @@ pub struct SkV13CssVendorCustomReport {
 
 pub type SkV13CssVendorCustomRow = SkV13CssStylesheetSelectorsRow;
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct SkV13CssNestedLayoutReport {
+    pub schema_id: String,
+    pub wave_id: String,
+    pub run_id: String,
+    pub covered_feature_rows: Vec<String>,
+    pub rows: Vec<SkV13CssNestedLayoutRow>,
+}
+
+pub type SkV13CssNestedLayoutRow = SkV13CssStylesheetSelectorsRow;
+
 impl SkV13CssStylesheetSelectorsReport {
     pub fn from_json_str(text: &str) -> Result<Self, String> {
         serde_json::from_str(text)
@@ -662,6 +675,45 @@ impl SkV13CssVendorCustomReport {
             return Err("SK-V13 W10.2 report must contain exactly one row".to_string());
         }
         validate_skv13_css_vendor_custom_row(&self.rows[0], self)
+    }
+}
+
+impl SkV13CssNestedLayoutReport {
+    pub fn from_json_str(text: &str) -> Result<Self, String> {
+        serde_json::from_str(text)
+            .map_err(|error| format!("invalid SK-V13 CSS nested/layout report: {error}"))
+    }
+
+    pub fn validate_gate(&self) -> Result<(), String> {
+        if self.schema_id != SKV13_CSS_NESTED_LAYOUT_REPORT_SCHEMA {
+            return Err(format!(
+                "unsupported SK-V13 nested/layout schema {}",
+                self.schema_id
+            ));
+        }
+        if self.wave_id != "SK-V13-W10.3" || !self.run_id.starts_with("sk-v13-w10-3:") {
+            return Err("invalid SK-V13 nested/layout report identity".to_string());
+        }
+        let expected_features = [
+            "flexbox",
+            "grid",
+            "logical_properties",
+            "nested_rules",
+            "typed_property_groups",
+        ];
+        let mut actual = self
+            .covered_feature_rows
+            .iter()
+            .map(String::as_str)
+            .collect::<Vec<_>>();
+        actual.sort_unstable();
+        if actual != expected_features {
+            return Err("SK-V13 W10.3 covered feature rows are stale".to_string());
+        }
+        if self.rows.len() != 1 {
+            return Err("SK-V13 W10.3 report must contain exactly one row".to_string());
+        }
+        validate_skv13_css_nested_layout_row(&self.rows[0], self)
     }
 }
 
@@ -3247,6 +3299,169 @@ fn validate_skv13_css_vendor_custom_row(
         || row.redress_entry != "REDRESS-134"
     {
         return Err(format!("{} has incomplete W10.2 gate context", row.row_id));
+    }
+    Ok(())
+}
+
+fn validate_skv13_css_nested_layout_row(
+    row: &SkV13CssNestedLayoutRow,
+    report: &SkV13CssNestedLayoutReport,
+) -> Result<(), String> {
+    require_w1a_text!(
+        row.row_id;
+        "schema_id" = row.schema_id,
+        "wave_id" = row.wave_id,
+        "run_id" = row.run_id,
+        "grammar_id" = row.grammar_id,
+        "domain" = row.domain,
+        "corpus_or_workload" = row.corpus_or_workload,
+        "workload" = row.workload,
+        "output_plane" = row.output_plane,
+        "strictness" = row.strictness,
+        "outcome_id" = row.outcome_id,
+        "verdict" = row.verdict,
+        "gate_status" = row.gate_status,
+        "generated_track1_source_path" = row.generated_track1_source_path,
+        "generated_runtime_path" = row.generated_runtime_path,
+        "generated_input_provenance" = row.generated_input_provenance,
+        "grammar_checksum" = row.grammar_checksum,
+        "input_checksum" = row.input_checksum,
+        "grammar_size_guard" = row.grammar_size_guard,
+        "admission_status" = row.admission_status,
+        "track1_artifact" = row.track1_artifact,
+        "oracle_artifact_path" = row.oracle_artifact_path,
+        "track2_or_oracle_source_path" = row.track2_or_oracle_source_path,
+        "lightningcss_command" = row.lightningcss_command,
+        "lightningcss_artifact" = row.lightningcss_artifact,
+        "lightningcss_fact_artifact_path" = row.lightningcss_fact_artifact_path,
+        "fact_stream_sha256" = row.fact_stream_sha256,
+        "strict_output_equality" = row.strict_output_equality,
+        "three_way_equality" = row.three_way_equality,
+        "lightningcss_sequence_status" = row.lightningcss_sequence_status,
+        "track2_independence_status" = row.track2_independence_status,
+        "measured_validation_path" = row.measured_validation_path,
+        "benchmark_artifact_path" = row.benchmark_artifact_path,
+        "profile_artifact" = row.profile_artifact,
+        "sample_cost" = row.sample_cost,
+        "host_triple" = row.host_triple,
+        "feature_mask" = row.feature_mask,
+        "build_flags" = row.build_flags,
+        "lock14_status" = row.lock14_status,
+        "lock16_status" = row.lock16_status,
+        "scalar_reference_status" = row.scalar_reference_status,
+        "checkasm_or_parity_status" = row.checkasm_or_parity_status,
+        "json_guard_state" = row.json_guard_state,
+        "same_wave_consumer_class" = row.same_wave_consumer_class,
+        "redress_entry" = row.redress_entry,
+    );
+    if row.schema_id != report.schema_id
+        || row.wave_id != report.wave_id
+        || row.run_id != report.run_id
+    {
+        return Err(format!(
+            "{} does not match W10.3 nested/layout report identity",
+            row.row_id
+        ));
+    }
+    if row.row_id != "css_l4/nested_layout/direct_to_struct/main"
+        || row.grammar_id != "css_l4"
+        || row.domain != "non_json_generated:css_l4:nested_layout"
+        || row.corpus_or_workload != "nested_layout"
+        || row.workload != "direct_to_struct"
+        || row.output_plane != "css_l4_nested_layout_fact_stream"
+        || row.strictness != "strict"
+    {
+        return Err(format!("{} has invalid W10.3 CSS identity", row.row_id));
+    }
+    if row.input_checksum != "5edcbfba1ba52af4dff689257aed8678a82f7d1cbbac36f5d0ae974384bddd2d"
+        || !row
+            .generated_input_provenance
+            .contains("sha256=5edcbfba1ba52af4dff689257aed8678a82f7d1cbbac36f5d0ae974384bddd2d")
+        || row.input_bytes != 351
+        || row.generated_loc == 0
+        || row.generated_loc > 1050
+        || row.generated_module_bytes == 0
+        || !is_lower_hex_64(&row.grammar_checksum)
+        || row.grammar_size_guard != "pass:generated_loc<=1050"
+    {
+        return Err(format!(
+            "{} has invalid W10.3 generated-source proof",
+            row.row_id
+        ));
+    }
+    if !row
+        .generated_track1_source_path
+        .contains("css_l4_nested_layout_templates/generated.rs")
+        || !row
+            .generated_runtime_path
+            .contains("generated_css_l4_nested_layout::parser::parse")
+        || row.generated_runtime_path.contains("generated_json")
+    {
+        return Err(format!("{} has invalid W10.3 runtime proof", row.row_id));
+    }
+    if !positive_finite(row.track1_mbps)
+        || !positive_finite(row.track2_or_oracle_mbps)
+        || !positive_finite(row.lightningcss_mbps)
+        || !positive_finite(row.threshold_mbps)
+        || row.sample_count < 30
+        || row.strict_output_equality != "pass"
+        || row.three_way_equality != "pass:track1=golden=lightningcss"
+        || row.lightningcss_sequence_status != "pass:typed-ast-nesting-layout-source-sidecar"
+        || !row.track2_independence_status.contains("golden")
+    {
+        return Err(format!(
+            "{} has invalid W10.3 measurement proof",
+            row.row_id
+        ));
+    }
+    let threshold = row.lightningcss_mbps + 1.0;
+    let margin = row.track1_mbps - threshold;
+    if (row.threshold_mbps - threshold).abs() > 0.01
+        || (row.admission_margin_mbps - margin).abs() > 0.01
+        || row.track1_mbps <= threshold
+        || row.admission_status != "PASS-ADMIT-CANDIDATE"
+        || row.outcome_id != "A"
+        || row.verdict != "GO"
+        || row.gate_status != "pass"
+    {
+        return Err(format!("{} has stale W10.3 threshold math", row.row_id));
+    }
+    if !row.track1_artifact.contains("track1-facts.txt")
+        || !row.oracle_artifact_path.contains("oracle-facts.txt")
+        || !row
+            .lightningcss_fact_artifact_path
+            .contains("lightningcss-facts.txt")
+        || !row
+            .lightningcss_artifact
+            .contains("lightningcss-strict-equality.txt")
+        || !row
+            .lightningcss_command
+            .contains("lightningcss-1.0.0-alpha.71")
+        || !row.track2_or_oracle_source_path.contains("golden-fixture")
+        || row
+            .track2_or_oracle_source_path
+            .contains("generated_css_l4_nested_layout")
+        || !is_lower_hex_64(&row.fact_stream_sha256)
+    {
+        return Err(format!("{} has invalid W10.3 comparator proof", row.row_id));
+    }
+    if !row
+        .measured_validation_path
+        .contains("criterion:nonjson_css_l4_w10_3")
+        || !row.benchmark_artifact_path.contains("nonjson_css_l4_w10_3")
+        || !row.host_triple.contains("arch=")
+        || !row.feature_mask.contains("target_cpu=native")
+        || !row.build_flags.contains("target-cpu=native")
+        || !row.sample_cost.contains("bytes=351")
+        || !row.lock14_status.contains("sk-v13-waveW10.3")
+        || row.lock16_status != "n/a:no_simd_or_asm_claim"
+        || row.scalar_reference_status != "pass:golden_oracle_plus_lightningcss_ast"
+        || row.checkasm_or_parity_status != "pass:three_way_fact_stream"
+        || !row.json_guard_state.contains("guards-pass")
+        || row.same_wave_consumer_class != "companion_gate_css_l4_nested_layout_sota"
+        || row.redress_entry != "REDRESS-135"
+    {
+        return Err(format!("{} has incomplete W10.3 gate context", row.row_id));
     }
     Ok(())
 }

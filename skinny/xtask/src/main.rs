@@ -274,7 +274,8 @@ fn validate_gate_json_passthrough(args: &[String]) -> Result<()> {
             "--w1a-non-json-report"
             | "--skv12-non-json-report"
             | "--skv12-css-l4-sota-report"
-            | "--skv13-css-comparator-oracle-report" => {
+            | "--skv13-css-comparator-oracle-report"
+            | "--skv13-css-stylesheet-selectors-report" => {
                 if index + 1 >= args.len() {
                     bail!("{} expects one path argument", args[index]);
                 }
@@ -476,7 +477,7 @@ fn validate_skv13_rolling_delta(results_text: &str, rolling_path: &Path) -> Resu
     }
 
     let mut seen_css = BTreeSet::new();
-    let css_metric = parse_css_declaration_metric(results_text)?;
+    let css_metrics = parse_css_results_metrics(results_text)?;
     for feature in SKV13_CSS_FEATURES {
         let row_id = format!("css_l4/{feature}/direct_to_struct/main");
         let row = find_rolling_row(&css_rows, &row_id)?;
@@ -487,10 +488,13 @@ fn validate_skv13_rolling_delta(results_text: &str, rolling_path: &Path) -> Resu
             bail!("{row_id} rolling plane {} is not css_l4_parity", row.plane);
         }
         validate_rolling_status(row)?;
-        if *feature == "declaration_values" {
-            validate_numeric_rolling_row(row, css_metric)?;
+        if let Some(metric) = css_metrics.get(&row_id) {
+            validate_numeric_rolling_row(row, *metric)?;
             if row.tranche_admitted != "ADMITTED" {
-                bail!("{row_id} must preserve the SK-V12 CSS admission");
+                bail!(
+                    "{row_id} has numeric CSS evidence but is {}",
+                    row.tranche_admitted
+                );
             }
         } else {
             validate_absent_rolling_row(row)?;
@@ -630,25 +634,41 @@ fn parse_results_metrics(
     Ok(metrics)
 }
 
-fn parse_css_declaration_metric(results_text: &str) -> Result<ResultsMetric> {
-    let row = results_text
-        .lines()
-        .find(|line| line.starts_with("| css_l4/declaration_values/direct_to_struct/main |"))
-        .context("RESULTS.md missing SK-V12 CSS declaration-values manifest row")?;
-    let track1 = extract_mbps(row, "track1_generated")?;
-    let lightningcss = extract_mbps(row, "lightningcss_strict")?;
-    let lightningcss_segment = extract_comparator_segment(row, "lightningcss_strict")?;
-    let threshold = extract_keyed_f64(lightningcss_segment, "threshold_mbps=")?;
-    require_close_delta(
-        "css_l4/declaration_values/direct_to_struct/main",
-        "lightningcss threshold",
-        threshold,
-        lightningcss + 1.0,
-    )?;
-    Ok(ResultsMetric {
-        track1_threshold_mbps: track1,
-        threshold_mbps: threshold,
-    })
+fn parse_css_results_metrics(
+    results_text: &str,
+) -> Result<std::collections::BTreeMap<String, ResultsMetric>> {
+    let mut metrics = std::collections::BTreeMap::new();
+    for line in results_text.lines() {
+        let cells = markdown_cells(line);
+        if cells.is_empty()
+            || !cells[0].starts_with("css_l4/")
+            || !cells[0].ends_with("/direct_to_struct/main")
+        {
+            continue;
+        }
+        let row_id = &cells[0];
+        let track1 = extract_mbps(line, "track1_generated")?;
+        let lightningcss = extract_mbps(line, "lightningcss_strict")?;
+        let lightningcss_segment = extract_comparator_segment(line, "lightningcss_strict")?;
+        let threshold = extract_keyed_f64(lightningcss_segment, "threshold_mbps=")?;
+        require_close_delta(
+            row_id,
+            "lightningcss threshold",
+            threshold,
+            lightningcss + 1.0,
+        )?;
+        metrics.insert(
+            row_id.clone(),
+            ResultsMetric {
+                track1_threshold_mbps: track1,
+                threshold_mbps: threshold,
+            },
+        );
+    }
+    if !metrics.contains_key("css_l4/declaration_values/direct_to_struct/main") {
+        bail!("RESULTS.md missing SK-V12 CSS declaration-values manifest row");
+    }
+    Ok(metrics)
 }
 
 fn parse_results_number(corpus: &str, workload: &str, field: &str, value: &str) -> Result<f64> {
@@ -971,6 +991,12 @@ mod tests {
         validate_gate_json_passthrough(&[
             "--skv13-css-comparator-oracle-report".into(),
             "skv13-css-comparator.json".into(),
+            "--check-results".into(),
+        ])
+        .unwrap();
+        validate_gate_json_passthrough(&[
+            "--skv13-css-stylesheet-selectors-report".into(),
+            "skv13-css-w2.json".into(),
             "--check-results".into(),
         ])
         .unwrap();

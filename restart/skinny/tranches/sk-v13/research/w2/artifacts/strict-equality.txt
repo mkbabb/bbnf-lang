@@ -1,0 +1,3 @@
+status=pass
+row_id=css_l4/stylesheet_and_selectors/direct_to_struct/main
+run_id=sk-v13-w2:fixture-fnv64-b6ac6a6f4f0f0960

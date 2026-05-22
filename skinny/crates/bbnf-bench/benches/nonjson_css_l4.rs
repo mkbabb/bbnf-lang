@@ -36,6 +36,52 @@ fn bench_nonjson_css_l4(c: &mut Criterion) {
         })
     });
     group.finish();
+
+    let selector_input = nonjson_css_l4::read_stylesheet_selectors_fixture()
+        .expect("CSS L4 stylesheet/selectors fixture is readable");
+    nonjson_css_l4::assert_stylesheet_selectors_strict_equality(&selector_input)
+        .expect("CSS stylesheet/selectors Track 1 equals golden oracle");
+    nonjson_css_l4::assert_stylesheet_selectors_lightningcss_strict_equality(&selector_input)
+        .expect("CSS stylesheet/selectors Track 1 equals lightningcss fact stream");
+    let selector_report =
+        nonjson_css_l4::write_stylesheet_selectors_report_with_quick_measurement()
+            .expect("CSS L4 stylesheet/selectors report is emitted");
+    selector_report
+        .validate_gate()
+        .expect("CSS L4 stylesheet/selectors report gate passes");
+
+    let mut selector_group = c.benchmark_group("nonjson_css_l4_w2");
+    selector_group.throughput(Throughput::Bytes(selector_input.len() as u64));
+    selector_group.bench_function("track1_generated_css_l4_stylesheet_selectors", |b| {
+        b.iter(|| {
+            black_box(
+                nonjson_css_l4::stylesheet_selectors_track1_facts(black_box(&selector_input))
+                    .expect("Track 1 CSS stylesheet/selectors fact stream"),
+            )
+        })
+    });
+    selector_group.bench_function("track2_golden_stylesheet_selectors_oracle", |b| {
+        b.iter(|| {
+            black_box(
+                nonjson_css_l4::stylesheet_selectors_oracle_facts(black_box(&selector_input))
+                    .expect("golden CSS stylesheet/selectors fact stream"),
+            )
+        })
+    });
+    selector_group.bench_function(
+        "lightningcss_stylesheet_selectors_same_plane_fact_stream",
+        |b| {
+            b.iter(|| {
+                black_box(
+                    nonjson_css_l4::stylesheet_selectors_lightningcss_facts(black_box(
+                        &selector_input,
+                    ))
+                    .expect("lightningcss CSS stylesheet/selectors fact stream"),
+                )
+            })
+        },
+    );
+    selector_group.finish();
 }
 
 criterion_group! {

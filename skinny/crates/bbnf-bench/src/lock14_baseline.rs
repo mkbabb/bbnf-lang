@@ -216,6 +216,36 @@ pub const ALLOWLIST: &[AllowlistEntry] = &[
         "runtime_source",
     ),
     entry(
+        "crates/runtime/src/grammars/css_l4_stylesheet_selectors/config.rs",
+        "generated_nonjson_output",
+        "read_only",
+        "generated",
+    ),
+    entry(
+        "crates/runtime/src/grammars/css_l4_stylesheet_selectors/generated.rs",
+        "generated_nonjson_output",
+        "read_only",
+        "generated",
+    ),
+    entry(
+        "crates/runtime/src/grammars/css_l4_stylesheet_selectors/mod.rs",
+        "generated_nonjson_output",
+        "read_only",
+        "generated",
+    ),
+    entry(
+        "crates/runtime/src/grammars/css_l4_stylesheet_selectors/parser.rs",
+        "generated_nonjson_output",
+        "read_only",
+        "generated",
+    ),
+    entry(
+        "crates/runtime/src/grammars/css_l4_stylesheet_selectors/sink.rs",
+        "per_grammar_runtime_source",
+        "read_only",
+        "runtime_source",
+    ),
+    entry(
         "crates/bbnf-bench/src/generated_real_typed.rs",
         "generated_typed_output",
         "read_only",
@@ -536,11 +566,32 @@ const SK_V12_W1B1_OWNER_PATHS: &[&str] = &[
     "crates/runtime/src/grammars/css_l4_declaration_values/sink.rs",
 ];
 
+const SK_V13_W2_OWNER_PATHS: &[&str] = &[
+    "crates/codegen/src/lib.rs",
+    "crates/codegen/src/grammar_profile.rs",
+    "crates/codegen/src/css_l4_stylesheet_selectors_provider.rs",
+    "crates/codegen/src/css_l4_stylesheet_selectors_templates/",
+    "crates/codegen/src/css_l4_stylesheet_selectors_templates/config.rs",
+    "crates/codegen/src/css_l4_stylesheet_selectors_templates/generated.rs",
+    "crates/codegen/src/css_l4_stylesheet_selectors_templates/mod.rs",
+    "crates/codegen/src/css_l4_stylesheet_selectors_templates/parser.rs",
+    "crates/codegen/src/css_l4_stylesheet_selectors_templates/sink.rs",
+    "crates/runtime/src/lib.rs",
+    "crates/runtime/src/grammars/css_l4_stylesheet_selectors/",
+    "crates/runtime/src/grammars/css_l4_stylesheet_selectors/config.rs",
+    "crates/runtime/src/grammars/css_l4_stylesheet_selectors/generated.rs",
+    "crates/runtime/src/grammars/css_l4_stylesheet_selectors/mod.rs",
+    "crates/runtime/src/grammars/css_l4_stylesheet_selectors/parser.rs",
+    "crates/runtime/src/grammars/css_l4_stylesheet_selectors/sink.rs",
+];
+
 fn current_lock14_owner_paths() -> Vec<&'static str> {
-    let mut paths =
-        Vec::with_capacity(SK_V12_W1A_OWNER_PATHS.len() + SK_V12_W1B1_OWNER_PATHS.len());
+    let mut paths = Vec::with_capacity(
+        SK_V12_W1A_OWNER_PATHS.len() + SK_V12_W1B1_OWNER_PATHS.len() + SK_V13_W2_OWNER_PATHS.len(),
+    );
     paths.extend_from_slice(SK_V12_W1A_OWNER_PATHS);
     paths.extend_from_slice(SK_V12_W1B1_OWNER_PATHS);
+    paths.extend_from_slice(SK_V13_W2_OWNER_PATHS);
     paths
 }
 
@@ -657,6 +708,14 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
         let allowed = changed_paths
             .iter()
             .all(|path| is_allowed_path(path, SK_V12_W1B1_OWNER_PATHS));
+        if allowed {
+            return Ok(());
+        }
+    }
+    if subject.contains("sk-v13-waveW2") || subject.contains("sk-v13-wave2-challenge") {
+        let allowed = changed_paths
+            .iter()
+            .all(|path| is_allowed_path(path, SK_V13_W2_OWNER_PATHS));
         if allowed {
             return Ok(());
         }

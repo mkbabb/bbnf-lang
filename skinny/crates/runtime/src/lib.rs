@@ -6,6 +6,9 @@ pub mod generated_json;
 #[path = "grammars/css_l4_declaration_values/mod.rs"]
 pub mod generated_css_l4_declaration_values;
 
+#[path = "grammars/css_l4_stylesheet_selectors/mod.rs"]
+pub mod generated_css_l4_stylesheet_selectors;
+
 #[cfg(any(test, feature = "proof"))]
 #[path = "grammars/json/event_grammar_witness.rs"]
 pub mod json_event_grammar_witness;
@@ -16,6 +19,7 @@ pub mod sheets_witness;
 
 pub mod grammars {
     pub use crate::generated_css_l4_declaration_values as css_l4_declaration_values;
+    pub use crate::generated_css_l4_stylesheet_selectors as css_l4_stylesheet_selectors;
     pub use crate::generated_json as json;
 }
 
@@ -45,6 +49,21 @@ mod tests {
             .map(|value| value.to_canonical_string())
             .collect();
         assert_eq!(collected, ["1", "true", "null", r#""A""#]);
+    }
+
+    #[test]
+    fn css_l4_stylesheet_selectors_emit_fact_stream() {
+        let input = concat!(
+            "main.card#hero > a[href^=\"https\"]:hover::before,\n",
+            "#nav .item[data-state=\"open\"] + button:focus::after { color: red; }\n"
+        );
+        let facts = crate::grammars::css_l4_stylesheet_selectors::parse(input).unwrap();
+        assert!(facts.contains(
+            "row\tid=css_l4/stylesheet_and_selectors/direct_to_struct/main\tplane=css_l4_stylesheet_selector_fact_stream"
+        ));
+        assert!(facts.contains(
+            "end\trules=1\tselector_lists=1\tselectors=2\tselector_items=16\tdeclarations=1"
+        ));
     }
 
     #[test]

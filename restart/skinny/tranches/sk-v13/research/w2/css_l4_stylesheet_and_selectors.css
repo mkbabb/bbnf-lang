@@ -1,0 +1,2 @@
+main.card#hero > a[href^="https"]:hover::before,
+#nav .item[data-state="open"] + button:focus::after { color: red; }

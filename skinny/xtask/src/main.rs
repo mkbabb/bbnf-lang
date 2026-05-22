@@ -271,7 +271,10 @@ fn validate_gate_json_passthrough(args: &[String]) -> Result<()> {
             | "--update-results"
             | "--write-results"
             | "--include-volatile-probes" => index += 1,
-            "--w1a-non-json-report" | "--skv12-non-json-report" | "--skv12-css-l4-sota-report" => {
+            "--w1a-non-json-report"
+            | "--skv12-non-json-report"
+            | "--skv12-css-l4-sota-report"
+            | "--skv13-css-comparator-oracle-report" => {
                 if index + 1 >= args.len() {
                     bail!("{} expects one path argument", args[index]);
                 }
@@ -633,7 +636,15 @@ fn parse_css_declaration_metric(results_text: &str) -> Result<ResultsMetric> {
         .find(|line| line.starts_with("| css_l4/declaration_values/direct_to_struct/main |"))
         .context("RESULTS.md missing SK-V12 CSS declaration-values manifest row")?;
     let track1 = extract_mbps(row, "track1_generated")?;
-    let threshold = extract_keyed_f64(row, "threshold_mbps=")?;
+    let lightningcss = extract_mbps(row, "lightningcss_strict")?;
+    let lightningcss_segment = extract_comparator_segment(row, "lightningcss_strict")?;
+    let threshold = extract_keyed_f64(lightningcss_segment, "threshold_mbps=")?;
+    require_close_delta(
+        "css_l4/declaration_values/direct_to_struct/main",
+        "lightningcss threshold",
+        threshold,
+        lightningcss + 1.0,
+    )?;
     Ok(ResultsMetric {
         track1_threshold_mbps: track1,
         threshold_mbps: threshold,
@@ -647,12 +658,20 @@ fn parse_results_number(corpus: &str, workload: &str, field: &str, value: &str) 
 }
 
 fn extract_mbps(line: &str, comparator: &str) -> Result<f64> {
+    let comparator_tail = extract_comparator_segment(line, comparator)?;
+    extract_keyed_f64(comparator_tail, "mbps=")
+}
+
+fn extract_comparator_segment<'a>(line: &'a str, comparator: &str) -> Result<&'a str> {
     let marker = format!("{comparator}[");
     let start = line
         .find(&marker)
         .with_context(|| format!("RESULTS.md CSS row missing {comparator} comparator"))?;
     let comparator_tail = &line[start..];
-    extract_keyed_f64(comparator_tail, "mbps=")
+    let end = comparator_tail
+        .find(']')
+        .context("RESULTS.md CSS comparator segment is unterminated")?;
+    Ok(&comparator_tail[..=end])
 }
 
 fn extract_keyed_f64(text: &str, key: &str) -> Result<f64> {
@@ -949,6 +968,12 @@ mod tests {
             "skv12-css-pass.json".into(),
         ])
         .unwrap();
+        validate_gate_json_passthrough(&[
+            "--skv13-css-comparator-oracle-report".into(),
+            "skv13-css-comparator.json".into(),
+            "--check-results".into(),
+        ])
+        .unwrap();
         assert!(validate_gate_json_passthrough(&["--skv12-non-json-report".into()]).is_err());
         assert!(validate_gate_json_passthrough(&["--unknown".into()]).is_err());
     }
@@ -1066,6 +1091,14 @@ mod tests {
         assert!(
             validate_skv13_rolling_delta(&results.join("\n"), &bad_path).is_err(),
             "rolling delta must reject malformed margins"
+        );
+
+        let stale_threshold = results
+            .join("\n")
+            .replace("threshold_mbps=169.93", "threshold_mbps=170.93");
+        assert!(
+            validate_skv13_rolling_delta(&stale_threshold, &rolling_path).is_err(),
+            "rolling delta must reject stale CSS threshold math"
         );
 
         let _ = std::fs::remove_dir_all(&root);

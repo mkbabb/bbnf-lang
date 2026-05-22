@@ -4,7 +4,8 @@ use bbnf_bench::materialization::track_stats;
 use bbnf_bench::metadata::{current_peak_rss_bytes, RowMetadata, TrackTag};
 use bbnf_bench::report::{
     sk_v8_open_baseline, ComparatorSet, NonJsonEvidenceReport, Report, SkV12CssL4SotaReport,
-    SkV12NonJsonReport, SkV8ComparatorEvidence, SkV8Telemetry, TelemetryRow,
+    SkV12NonJsonReport, SkV13CssComparatorOracleReport, SkV8ComparatorEvidence, SkV8Telemetry,
+    TelemetryRow,
 };
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -78,6 +79,29 @@ fn main() -> Result<(), Box<dyn Error>> {
         if !has_explicit_json_check {
             return Ok(());
         }
+    }
+    if let Some(path) = skv13_css_comparator_oracle_report_path(&args[1..])? {
+        if !has_explicit_json_check {
+            return Err(format!("{} requires --check-results", path.display()).into());
+        }
+        let text = fs::read_to_string(&path)?;
+        let report = SkV13CssComparatorOracleReport::from_json_str(&text)
+            .and_then(|report| report.validate_gate().map(|_| report))
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        let sota_path =
+            resolve_workspace_path(&workspace, &report.declaration_values_sota_report_path);
+        let sota_text = fs::read_to_string(&sota_path)?;
+        let sota_report = SkV12CssL4SotaReport::from_json_str(&sota_text)
+            .and_then(|report| report.validate_gate().map(|_| report))
+            .map_err(|error| format!("{}: {error}", sota_path.display()))?;
+        validate_skv12_css_l4_sota_report(&sota_report, &criterion_root(), &workspace)
+            .map_err(|error| format!("{}: {error}", sota_path.display()))?;
+        println!(
+            "G-W1-CSS-COMPARATOR-ORACLE PASS {} feature_rows={}",
+            path.display(),
+            report.rows.len()
+        );
+        drop(report);
     }
 
     let criterion_root = criterion_root();
@@ -492,6 +516,12 @@ fn skv12_css_l4_sota_report_path(args: &[String]) -> Result<Option<PathBuf>, Box
     companion_report_path(args, "--skv12-css-l4-sota-report")
 }
 
+fn skv13_css_comparator_oracle_report_path(
+    args: &[String],
+) -> Result<Option<PathBuf>, Box<dyn Error>> {
+    companion_report_path(args, "--skv13-css-comparator-oracle-report")
+}
+
 fn companion_report_path(args: &[String], flag: &str) -> Result<Option<PathBuf>, Box<dyn Error>> {
     let Some(flag_index) = args.iter().position(|arg| arg == flag) else {
         return Ok(None);
@@ -511,7 +541,10 @@ fn companion_report_path(args: &[String], flag: &str) -> Result<Option<PathBuf>,
         .filter(|arg| {
             matches!(
                 arg.as_str(),
-                "--w1a-non-json-report" | "--skv12-non-json-report" | "--skv12-css-l4-sota-report"
+                "--w1a-non-json-report"
+                    | "--skv12-non-json-report"
+                    | "--skv12-css-l4-sota-report"
+                    | "--skv13-css-comparator-oracle-report"
             )
         })
         .count();
@@ -2477,6 +2510,38 @@ mod tests {
             Some(PathBuf::from("skv12-css-l4-sota.json"))
         );
         assert!(companion_report_runs_json_check(&args));
+    }
+
+    #[test]
+    fn skv13_css_comparator_oracle_report_arg_allows_json_check_only() {
+        let args = vec![
+            "--skv13-css-comparator-oracle-report".to_string(),
+            "skv13-css-comparator.json".to_string(),
+            "--advisory".to_string(),
+            "--check-results".to_string(),
+        ];
+        assert_eq!(
+            skv13_css_comparator_oracle_report_path(&args).unwrap(),
+            Some(PathBuf::from("skv13-css-comparator.json"))
+        );
+        assert!(companion_report_runs_json_check(&args));
+    }
+
+    #[test]
+    fn skv13_css_comparator_oracle_report_arg_rejects_mixed_or_write_flags() {
+        let mixed = vec![
+            "--skv12-css-l4-sota-report".to_string(),
+            "skv12-css-l4-sota.json".to_string(),
+            "--skv13-css-comparator-oracle-report".to_string(),
+            "skv13-css-comparator.json".to_string(),
+        ];
+        assert!(skv13_css_comparator_oracle_report_path(&mixed).is_err());
+        let write = vec![
+            "--skv13-css-comparator-oracle-report".to_string(),
+            "skv13-css-comparator.json".to_string(),
+            "--write-results".to_string(),
+        ];
+        assert!(skv13_css_comparator_oracle_report_path(&write).is_err());
     }
 
     #[test]

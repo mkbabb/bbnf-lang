@@ -111,8 +111,36 @@ pub const W1A_NON_JSON_REPORT_SCHEMA: &str = "sk-v11-w1a-nonjson-v1";
 const W1A_RUN_ID_PREFIX: &str = "sk-v11-w1a:fixture-fnv64-";
 pub const SKV12_NON_JSON_REPORT_SCHEMA: &str = "sk-v12-nonjson-generated-v1";
 pub const SKV12_CSS_L4_SOTA_REPORT_SCHEMA: &str = "sk-v12-css-l4-sota-v1";
+pub const SKV13_CSS_COMPARATOR_ORACLE_REPORT_SCHEMA: &str = "sk-v13-css-comparator-oracle-v1";
 pub type NonJsonEvidenceRow = TelemetryRow;
 pub type NonJsonOracleEvidence = SkV8ComparatorEvidence;
+
+const SKV13_CSS_FEATURES: &[&str] = &[
+    "declaration_values",
+    "declarations",
+    "stylesheet_root",
+    "selectors",
+    "at_rules_keyframes",
+    "nested_rules",
+    "css_variables",
+    "calc_expressions",
+    "var_url_functions",
+    "color_functions",
+    "gradients",
+    "transforms",
+    "filters",
+    "easing_functions",
+    "media_queries",
+    "vendor_prefixes",
+    "custom_at_rules",
+    "pseudo_classes",
+    "pseudo_elements",
+    "attribute_selectors",
+    "logical_properties",
+    "grid",
+    "flexbox",
+    "typed_property_groups",
+];
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
@@ -333,6 +361,165 @@ impl SkV12CssL4SotaReport {
         }
         validate_skv12_css_l4_sota_row(&self.rows[0], self)
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct SkV13CssComparatorOracleReport {
+    pub schema_id: String,
+    pub wave_id: String,
+    pub run_id: String,
+    pub declaration_values_sota_report_path: String,
+    pub coverage: SkV13CssCoverageSummary,
+    pub rows: Vec<SkV13CssFeatureCoverageRow>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct SkV13CssCoverageSummary {
+    pub feature_row_count: u64,
+    pub measured_row_count: u64,
+    pub open_absent_row_count: u64,
+    pub admission_eligible_row_count: u64,
+    pub admitted_row_count: u64,
+    pub feature_accept_count: u64,
+    pub feature_reject_count: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct SkV13CssFeatureCoverageRow {
+    pub row_id: String,
+    pub css_feature_id: String,
+    pub row_state: String,
+    pub row_presence: String,
+    pub css_feature_status: String,
+    pub planned_wave: String,
+    pub absence_reason: String,
+    pub output_plane: String,
+    pub feature_accept_count: u64,
+    pub feature_reject_count: u64,
+    pub feature_coverage_status: String,
+    pub cssparser_or_golden_oracle: String,
+    pub same_plane_fact_contract: String,
+    pub admission_status: String,
+}
+
+impl SkV13CssComparatorOracleReport {
+    pub fn from_json_str(text: &str) -> Result<Self, String> {
+        serde_json::from_str(text)
+            .map_err(|error| format!("invalid SK-V13 CSS comparator report: {error}"))
+    }
+
+    pub fn validate_gate(&self) -> Result<(), String> {
+        if self.schema_id != SKV13_CSS_COMPARATOR_ORACLE_REPORT_SCHEMA {
+            return Err(format!(
+                "unsupported SK-V13 CSS comparator schema {}",
+                self.schema_id
+            ));
+        }
+        if self.wave_id != "SK-V13-W1" || !self.run_id.starts_with("sk-v13-w1:") {
+            return Err("invalid SK-V13 CSS comparator report identity".to_string());
+        }
+        if self.declaration_values_sota_report_path.trim().is_empty() {
+            return Err("SK-V13 CSS report missing declaration-values SOTA path".to_string());
+        }
+        if self.rows.len() != SKV13_CSS_FEATURES.len() {
+            return Err(format!(
+                "SK-V13 CSS comparator expected 24 feature rows, saw {}",
+                self.rows.len()
+            ));
+        }
+        let mut seen = BTreeSet::new();
+        let mut measured = 0u64;
+        let mut open_absent = 0u64;
+        let mut eligible = 0u64;
+        let mut admitted = 0u64;
+        let mut accepts = 0u64;
+        let mut rejects = 0u64;
+        for feature in SKV13_CSS_FEATURES {
+            let row_id = format!("css_l4/{feature}/direct_to_struct/main");
+            let row = self
+                .rows
+                .iter()
+                .find(|row| row.row_id == row_id)
+                .ok_or_else(|| format!("SK-V13 CSS comparator missing {row_id}"))?;
+            if !seen.insert(row.row_id.as_str()) {
+                return Err(format!("duplicate SK-V13 CSS feature row {}", row.row_id));
+            }
+            if row.css_feature_id != *feature || row.css_feature_status == "PARTIAL" {
+                return Err(format!("{} has invalid CSS feature identity", row.row_id));
+            }
+            accepts += row.feature_accept_count;
+            rejects += row.feature_reject_count;
+            if *feature == "declaration_values" {
+                validate_skv13_measured_css_row(row)?;
+                measured += 1;
+                eligible += 1;
+                admitted += 1;
+            } else {
+                validate_skv13_open_css_row(row)?;
+                open_absent += 1;
+            }
+        }
+        if self.coverage.feature_row_count != SKV13_CSS_FEATURES.len() as u64
+            || self.coverage.measured_row_count != measured
+            || self.coverage.open_absent_row_count != open_absent
+            || self.coverage.admission_eligible_row_count != eligible
+            || self.coverage.admitted_row_count != admitted
+            || self.coverage.feature_accept_count != accepts
+            || self.coverage.feature_reject_count != rejects
+        {
+            return Err("SK-V13 CSS comparator coverage totals are stale".to_string());
+        }
+        Ok(())
+    }
+}
+
+fn validate_skv13_measured_css_row(row: &SkV13CssFeatureCoverageRow) -> Result<(), String> {
+    if row.row_state != "admission_candidate"
+        || row.row_presence != "measured"
+        || row.css_feature_status != "ADMITTED-PARITY"
+        || row.planned_wave != "SK-V12-W1b-2b"
+        || row.absence_reason != "n/a"
+        || row.output_plane != "css_l4_declaration_value_fact_stream"
+        || row.admission_status != "PASS-MAINTAIN"
+        || row.feature_accept_count == 0
+        || row.feature_reject_count != 0
+        || row.feature_coverage_status != "pass:strict-equality"
+        || !row.cssparser_or_golden_oracle.contains("cssparser")
+        || !row
+            .same_plane_fact_contract
+            .contains("track1=cssparser=lightningcss")
+    {
+        return Err(format!(
+            "{} has invalid measured CSS comparator context",
+            row.row_id
+        ));
+    }
+    Ok(())
+}
+
+fn validate_skv13_open_css_row(row: &SkV13CssFeatureCoverageRow) -> Result<(), String> {
+    if row.row_state != "open"
+        || row.row_presence != "absent_until_planned_wave"
+        || row.css_feature_status != "OPEN"
+        || row.output_plane != "pending:same-plane-fact-stream"
+        || row.feature_accept_count != 0
+        || row.feature_reject_count != 0
+        || row.feature_coverage_status != "open:awaiting-row-wave"
+        || row.cssparser_or_golden_oracle != "pending"
+        || row.same_plane_fact_contract != "pending"
+        || row.admission_status != "not-admitted:absent"
+        || row.planned_wave.trim().is_empty()
+        || row.absence_reason.trim().is_empty()
+    {
+        return Err(format!(
+            "{} has invalid open CSS comparator context",
+            row.row_id
+        ));
+    }
+    Ok(())
 }
 
 impl TelemetryRow {
@@ -2958,6 +3145,71 @@ mod tests {
         assert!(report.validate_gate().is_err());
     }
 
+    fn skv13_css_comparator_report() -> SkV13CssComparatorOracleReport {
+        let mut rows = Vec::new();
+        for feature in SKV13_CSS_FEATURES {
+            let row_id = format!("css_l4/{feature}/direct_to_struct/main");
+            if *feature == "declaration_values" {
+                rows.push(SkV13CssFeatureCoverageRow {
+                    row_id,
+                    css_feature_id: feature.to_string(),
+                    row_state: "admission_candidate".into(),
+                    row_presence: "measured".into(),
+                    css_feature_status: "ADMITTED-PARITY".into(),
+                    planned_wave: "SK-V12-W1b-2b".into(),
+                    absence_reason: "n/a".into(),
+                    output_plane: "css_l4_declaration_value_fact_stream".into(),
+                    feature_accept_count: 1,
+                    feature_reject_count: 0,
+                    feature_coverage_status: "pass:strict-equality".into(),
+                    cssparser_or_golden_oracle: "cssparser-0.34".into(),
+                    same_plane_fact_contract: "pass:track1=cssparser=lightningcss".into(),
+                    admission_status: "PASS-MAINTAIN".into(),
+                });
+            } else {
+                rows.push(SkV13CssFeatureCoverageRow {
+                    row_id,
+                    css_feature_id: feature.to_string(),
+                    row_state: "open".into(),
+                    row_presence: "absent_until_planned_wave".into(),
+                    css_feature_status: "OPEN".into(),
+                    planned_wave: "W10.N".into(),
+                    absence_reason: "not-yet-generated".into(),
+                    output_plane: "pending:same-plane-fact-stream".into(),
+                    feature_accept_count: 0,
+                    feature_reject_count: 0,
+                    feature_coverage_status: "open:awaiting-row-wave".into(),
+                    cssparser_or_golden_oracle: "pending".into(),
+                    same_plane_fact_contract: "pending".into(),
+                    admission_status: "not-admitted:absent".into(),
+                });
+            }
+        }
+        SkV13CssComparatorOracleReport {
+            schema_id: SKV13_CSS_COMPARATOR_ORACLE_REPORT_SCHEMA.into(),
+            wave_id: "SK-V13-W1".into(),
+            run_id: "sk-v13-w1:coverage-fnv64-0000000000000001".into(),
+            declaration_values_sota_report_path:
+                "../restart/skinny/tranches/sk-v12/research/w1b/skv12-W1b-css-l4-sota.json".into(),
+            coverage: SkV13CssCoverageSummary {
+                feature_row_count: 24,
+                measured_row_count: 1,
+                open_absent_row_count: 23,
+                admission_eligible_row_count: 1,
+                admitted_row_count: 1,
+                feature_accept_count: 1,
+                feature_reject_count: 0,
+            },
+            rows,
+        }
+    }
+
+    fn skv13_css_comparator_reject(mut mutate: impl FnMut(&mut SkV13CssComparatorOracleReport)) {
+        let mut report = skv13_css_comparator_report();
+        mutate(&mut report);
+        assert!(report.validate_gate().is_err());
+    }
+
     fn opening_report() -> Report {
         let mut report = Report::new("Skinny JSON Bench");
         for baseline in SK_V8_OPEN_BASELINE {
@@ -3188,6 +3440,33 @@ mod tests {
         let mut value = serde_json::to_value(skv12_css_l4_sota_report()).unwrap();
         value["rows"][0]["producer_only_field"] = serde_json::json!("not consumed");
         assert!(SkV12CssL4SotaReport::from_json_str(&value.to_string()).is_err());
+    }
+
+    #[test]
+    fn skv13_css_comparator_report_accepts_full_matrix() {
+        assert!(skv13_css_comparator_report().validate_gate().is_ok());
+    }
+
+    #[test]
+    fn skv13_css_comparator_report_rejects_missing_or_stale_coverage() {
+        skv13_css_comparator_reject(|report| {
+            report.rows.retain(|row| row.css_feature_id != "flexbox")
+        });
+        skv13_css_comparator_reject(|report| report.coverage.open_absent_row_count = 22);
+        skv13_css_comparator_reject(|report| report.rows[1].css_feature_status = "PARTIAL".into());
+        skv13_css_comparator_reject(|report| {
+            report.rows[1].admission_status = "PASS-ADMIT-CANDIDATE".into()
+        });
+        skv13_css_comparator_reject(|report| {
+            report.rows[0].same_plane_fact_contract = "pass:track1=cssparser".into()
+        });
+    }
+
+    #[test]
+    fn skv13_css_comparator_report_rejects_unknown_producer_fields() {
+        let mut value = serde_json::to_value(skv13_css_comparator_report()).unwrap();
+        value["rows"][0]["producer_only_field"] = serde_json::json!("not consumed");
+        assert!(SkV13CssComparatorOracleReport::from_json_str(&value.to_string()).is_err());
     }
 
     #[test]

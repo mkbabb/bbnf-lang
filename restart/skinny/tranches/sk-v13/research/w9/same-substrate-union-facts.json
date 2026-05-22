@@ -1,0 +1,64 @@
+{
+  "schema_version": "sk-v13-same-substrate-union-facts-v1",
+  "wave_id": "SK-V13-W9",
+  "run_id": "sk-v13-w9:fixture-fnv64-ffbf6baa300b8f39",
+  "source_commit_before_redress": "5f7dd3ef9",
+  "host_triple": "aarch64-apple-darwin",
+  "build_flags": "RUSTFLAGS=-C target-cpu=native; cargo test --release -p bbnf-bench writes_gate_consumed_declaration_values_extended_report -- --nocapture",
+  "union_variant_id": "union-c1-per-rule-same-tape",
+  "material_differential": "Generated-private CSS token projection consumed inside the existing declaration-values-extended FactSink on the same fact-stream substrate; no public UnionTape, class column, sidecar vector, retained StructuralIndex, parser-owned cursor, new BackendShape, BIR variant, directive, second scan, or bbnf-simd edit.",
+  "prior_redress_citations": [
+    "96",
+    "97",
+    "98"
+  ],
+  "consumer": {
+    "row_id": "css_l4/declaration_values_extended/direct_to_struct/main",
+    "path": "runtime::generated_css_l4_declaration_values_extended::sink::FactSink::token",
+    "same_wave_consumer_class": "generated_css_decl_values_extended_same_substrate_projection",
+    "strict_equality": "pass",
+    "track2_oracle": "cssparser + lightningcss strict fact stream"
+  },
+  "measurement": {
+    "before": {
+      "track1_mbps": 265.6571549610303,
+      "track2_oracle_mbps": 195.76772640657907,
+      "lightningcss_mbps": 131.81084603385756,
+      "threshold_mbps": 132.81084603385756,
+      "sample_count": 2000,
+      "sample_cost": "ns_per_byte=30.114002;track1_ns=18369541.00;oracle_ns=24927500.00;lightningcss_ns=37022750.00;bytes=305",
+      "grammar_checksum": "1095ad212bfa3b4abfbacfe1c12355e2da72d7698f89a4083de25e6b66212e8c",
+      "generated_loc": 693,
+      "generated_module_bytes": 22657
+    },
+    "after": {
+      "track1_mbps": 269.54252337093857,
+      "track2_oracle_mbps": 193.33304465434725,
+      "lightningcss_mbps": 132.14144279230032,
+      "threshold_mbps": 133.14144279230032,
+      "sample_count": 2000,
+      "sample_cost": "ns_per_byte=29.679918;track1_ns=18104750.00;oracle_ns=25241417.00;lightningcss_ns=36930125.00;bytes=305",
+      "grammar_checksum": "a097ba802749d79d59845582874339793f606f51ea5893a384bade095d0feba3",
+      "generated_loc": 711,
+      "generated_module_bytes": 23297
+    },
+    "delta_track1_mbps": 3.885368409908259,
+    "status": "admitted"
+  },
+  "forbidden_routes": {
+    "public_union_tape": "absent",
+    "public_substrate_api": "absent",
+    "backend_shape_expansion": "absent",
+    "bir_directive_expansion": "absent",
+    "class_column": "absent",
+    "retained_structural_index": "absent",
+    "sidecar_vector": "absent",
+    "second_scan": "absent",
+    "parser_owned_cursor": "absent",
+    "bbnf_simd_touch": "read-only"
+  },
+  "guard_state": {
+    "json": "maintain:unchanged-source;gate-json chain retained",
+    "css": "maintain:declaration-values-extended strict equality pass"
+  }
+}

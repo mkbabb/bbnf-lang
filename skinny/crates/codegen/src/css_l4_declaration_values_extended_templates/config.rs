@@ -17,6 +17,8 @@ pub(crate) const TOKEN_COMMA: &str = "comma";
 pub(crate) const TOKEN_BRACKET_OPEN: &str = "bracket_open";
 pub(crate) const TOKEN_BRACKET_CLOSE: &str = "bracket_close";
 pub(crate) const TOKEN_DELIM: &str = "delim";
+pub(crate) const UNION_PROJECTION_NORMALIZED_ASCII: &str = "normalized_ascii_token";
+pub(crate) const UNION_PROJECTION_RAW_BYTES: &str = "raw_byte_token";
 pub(crate) const CSS_ESCAPE_BYTE: u8 = b'\\';
 pub(crate) const CSS_HEX_ESCAPE_MAX_DIGITS: usize = 6;
 pub(crate) const IMPORTANT_KEYWORD: &[u8] = b"important";
@@ -71,4 +73,19 @@ pub(crate) fn token_uses_ascii_lower_hex(kind: &str) -> bool {
         kind,
         TOKEN_IDENT | TOKEN_FUNCTION | TOKEN_HASH | TOKEN_DIMENSION | TOKEN_URL
     )
+}
+
+#[inline(always)]
+pub(crate) fn token_union_projection(kind: &str, depth: u32) -> &'static str {
+    let _ = depth;
+    if token_uses_ascii_lower_hex(kind) {
+        UNION_PROJECTION_NORMALIZED_ASCII
+    } else {
+        UNION_PROJECTION_RAW_BYTES
+    }
+}
+
+#[inline(always)]
+pub(crate) fn projection_uses_ascii_lower_hex(projection: &str) -> bool {
+    projection == UNION_PROJECTION_NORMALIZED_ASCII
 }

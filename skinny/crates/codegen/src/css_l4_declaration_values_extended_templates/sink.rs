@@ -82,7 +82,8 @@ impl FactSink {
         self.out.push_str("\tkind=");
         self.out.push_str(kind);
         self.out.push_str("\tlexeme_hex=");
-        if config::token_uses_ascii_lower_hex(kind) {
+        let projection = config::token_union_projection(kind, depth);
+        if config::projection_uses_ascii_lower_hex(projection) {
             push_ascii_lower_hex(&mut self.out, lexeme);
         } else {
             push_hex(&mut self.out, lexeme.as_bytes());

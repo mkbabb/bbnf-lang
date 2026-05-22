@@ -843,6 +843,17 @@ const SK_V13_W8_OWNER_PATHS: &[&str] = &[
     "xtask/src/main.rs",
 ];
 
+const SK_V13_W9_OWNER_PATHS: &[&str] = &[
+    "crates/runtime/src/grammars/css_l4_declaration_values_extended/config.rs",
+    "crates/runtime/src/grammars/css_l4_declaration_values_extended/sink.rs",
+    "crates/codegen/src/css_l4_declaration_values_extended_templates/config.rs",
+    "crates/codegen/src/css_l4_declaration_values_extended_templates/sink.rs",
+    "crates/bbnf-bench/src/report.rs",
+    "crates/bbnf-bench/src/bin/gate.rs",
+    "crates/bbnf-bench/src/lock14_baseline.rs",
+    "xtask/src/main.rs",
+];
+
 fn current_lock14_owner_paths() -> Vec<&'static str> {
     let mut paths = Vec::with_capacity(
         SK_V12_W1A_OWNER_PATHS.len()
@@ -856,7 +867,8 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
             + SK_V13_W5_OWNER_PATHS.len()
             + SK_V13_W6_OWNER_PATHS.len()
             + SK_V13_W7_OWNER_PATHS.len()
-            + SK_V13_W8_OWNER_PATHS.len(),
+            + SK_V13_W8_OWNER_PATHS.len()
+            + SK_V13_W9_OWNER_PATHS.len(),
     );
     paths.extend_from_slice(SK_V12_W1A_OWNER_PATHS);
     paths.extend_from_slice(SK_V12_W1B1_OWNER_PATHS);
@@ -870,6 +882,7 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
     paths.extend_from_slice(SK_V13_W6_OWNER_PATHS);
     paths.extend_from_slice(SK_V13_W7_OWNER_PATHS);
     paths.extend_from_slice(SK_V13_W8_OWNER_PATHS);
+    paths.extend_from_slice(SK_V13_W9_OWNER_PATHS);
     paths
 }
 
@@ -1066,6 +1079,14 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
         let allowed = changed_paths
             .iter()
             .all(|path| is_allowed_path(path, SK_V13_W8_OWNER_PATHS));
+        if allowed {
+            return Ok(());
+        }
+    }
+    if subject.contains("sk-v13-waveW9") || subject.contains("sk-v13-wave9-challenge") {
+        let allowed = changed_paths
+            .iter()
+            .all(|path| is_allowed_path(path, SK_V13_W9_OWNER_PATHS));
         if allowed {
             return Ok(());
         }
@@ -1591,6 +1612,31 @@ mod tests {
         assert!(validate_authorized_parent_diff(
             &outside,
             "feat(sk-v13-waveW8): admit per-grammar policy surface"
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn admits_sk_v13_w9_parent_diff_under_w9_scope() {
+        let changed = SK_V13_W9_OWNER_PATHS
+            .iter()
+            .map(|path| (*path).to_string())
+            .collect::<Vec<_>>();
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v13-waveW9): admit same-substrate union projection"
+        )
+        .is_ok());
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v13-waveW7): admit CSP cascade fail-closed finalizer"
+        )
+        .is_err());
+        let mut outside = changed;
+        outside.push("crates/bbnf-simd/src/bitmap_next_set_bit.rs".into());
+        assert!(validate_authorized_parent_diff(
+            &outside,
+            "feat(sk-v13-waveW9): admit same-substrate union projection"
         )
         .is_err());
     }

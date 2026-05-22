@@ -124,6 +124,7 @@ pub const SKV13_DECISION_REGEX_REPORT_SCHEMA: &str = "sk-v13-decision-regex-v1";
 pub const SKV13_DECISION_ACTIVE_COST_REPORT_SCHEMA: &str = "sk-v13-decision-active-cost-v1";
 pub const SKV13_DECISION_CSP_CASCADE_REPORT_SCHEMA: &str = "sk-v13-decision-csp-cascade-v1";
 pub const SKV13_PER_GRAMMAR_POLICY_REPORT_SCHEMA: &str = "sk-v13-per-grammar-policy-v1";
+pub const SKV13_SAME_SUBSTRATE_UNION_REPORT_SCHEMA: &str = "sk-v13-same-substrate-union-v1";
 pub type NonJsonEvidenceRow = TelemetryRow;
 pub type NonJsonOracleEvidence = SkV8ComparatorEvidence;
 
@@ -358,6 +359,54 @@ pub struct SkV13PerGrammarPolicyReport {
     pub lock14_generic_scan_status: String,
     pub policy_artifact_path: String,
     pub policy_artifact_sha256: String,
+    pub affected_row_ids: Vec<String>,
+    pub block_id: Option<String>,
+    pub material_differential: String,
+    pub redress_entry: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct SkV13SameSubstrateUnionReport {
+    pub schema_version: String,
+    pub wave_id: String,
+    pub run_id: String,
+    pub source_commit: String,
+    pub host_triple: String,
+    pub build_flags: String,
+    pub feature_mask: String,
+    pub consumer_gate: String,
+    pub g_omega_status: String,
+    pub union_variant_id: String,
+    pub material_differential_status: String,
+    pub prior_redress_citations: Vec<String>,
+    pub substrate_cardinality: String,
+    pub public_union_tape_status: String,
+    pub public_substrate_api_status: String,
+    pub backend_shape_expansion_status: String,
+    pub bir_directive_expansion_status: String,
+    pub class_column_status: String,
+    pub retained_structural_index_status: String,
+    pub sidecar_vector_status: String,
+    pub second_scan_status: String,
+    pub parser_owned_cursor_status: String,
+    pub bbnf_simd_touch_status: String,
+    pub css_consumer_row_id: String,
+    pub css_consumer_path: String,
+    pub same_wave_consumer_class: String,
+    pub css_strict_equality_status: String,
+    pub json_guard_state: String,
+    pub css_guard_state: String,
+    pub css_row_mbps_before: f64,
+    pub css_row_mbps_after: f64,
+    pub lightningcss_mbps: f64,
+    pub threshold_mbps: f64,
+    pub row_move_toward_sota_status: String,
+    pub lock14_status: String,
+    pub lock14_owner_path_status: String,
+    pub lock14_generic_scan_status: String,
+    pub union_artifact_path: String,
+    pub union_artifact_sha256: String,
     pub affected_row_ids: Vec<String>,
     pub block_id: Option<String>,
     pub material_differential: String,
@@ -896,6 +945,179 @@ impl SkV13PerGrammarPolicyReport {
         {
             return Err(
                 "W8 report missing affected rows, material differential, or REDRESS entry".into(),
+            );
+        }
+        Ok(())
+    }
+}
+
+impl SkV13SameSubstrateUnionReport {
+    pub fn from_json_str(text: &str) -> Result<Self, String> {
+        serde_json::from_str(text)
+            .map_err(|error| format!("invalid SK-V13 same-substrate-union report: {error}"))
+    }
+
+    pub fn validate_gate(&self) -> Result<(), String> {
+        if self.schema_version != SKV13_SAME_SUBSTRATE_UNION_REPORT_SCHEMA {
+            return Err(format!(
+                "unsupported SK-V13 same-substrate-union schema {}",
+                self.schema_version
+            ));
+        }
+        if self.wave_id != "SK-V13-W9" {
+            return Err(format!("{} cannot claim W9 authority", self.wave_id));
+        }
+        if !self.run_id.starts_with("sk-v13-w9:") {
+            return Err(format!("invalid W9 run id {}", self.run_id));
+        }
+        if self.source_commit.trim().is_empty()
+            || self.host_triple.trim().is_empty()
+            || self.build_flags.trim().is_empty()
+            || self.feature_mask.trim().is_empty()
+        {
+            return Err("W9 report missing source/build provenance".into());
+        }
+        if self.consumer_gate != "G-W9-SAME-SUBSTRATE-UNION" || self.g_omega_status != "user-signed"
+        {
+            return Err("W9 consumer gate or G-Omega status invalid".into());
+        }
+        if self.union_variant_id != "union-c1-per-rule-same-tape"
+            || self.material_differential_status != "accepted"
+            || !["96", "97", "98"]
+                .iter()
+                .all(|id| self.prior_redress_citations.iter().any(|entry| entry == id))
+        {
+            return Err("W9 material differential evidence invalid".into());
+        }
+        for (label, actual, expected) in [
+            (
+                "substrate cardinality",
+                self.substrate_cardinality.as_str(),
+                "one",
+            ),
+            (
+                "public UnionTape",
+                self.public_union_tape_status.as_str(),
+                "absent",
+            ),
+            (
+                "public substrate API",
+                self.public_substrate_api_status.as_str(),
+                "absent",
+            ),
+            (
+                "BackendShape expansion",
+                self.backend_shape_expansion_status.as_str(),
+                "absent",
+            ),
+            (
+                "BIR/directive expansion",
+                self.bir_directive_expansion_status.as_str(),
+                "absent",
+            ),
+            ("class column", self.class_column_status.as_str(), "absent"),
+            (
+                "retained structural index",
+                self.retained_structural_index_status.as_str(),
+                "absent",
+            ),
+            (
+                "sidecar vector",
+                self.sidecar_vector_status.as_str(),
+                "absent",
+            ),
+            ("second scan", self.second_scan_status.as_str(), "absent"),
+            (
+                "parser-owned cursor",
+                self.parser_owned_cursor_status.as_str(),
+                "absent",
+            ),
+            (
+                "bbnf-simd touch",
+                self.bbnf_simd_touch_status.as_str(),
+                "read-only",
+            ),
+            (
+                "CSS strict equality",
+                self.css_strict_equality_status.as_str(),
+                "pass",
+            ),
+            ("Lock 14", self.lock14_status.as_str(), "pass"),
+            (
+                "Lock 14 owner path",
+                self.lock14_owner_path_status.as_str(),
+                "pass",
+            ),
+            (
+                "Lock 14 generic scan",
+                self.lock14_generic_scan_status.as_str(),
+                "pass",
+            ),
+        ] {
+            if actual != expected {
+                return Err(format!("W9 {label} status {actual} != {expected}"));
+            }
+        }
+        if self.css_consumer_row_id != "css_l4/declaration_values_extended/direct_to_struct/main"
+            || self.css_consumer_path.trim().is_empty()
+            || self.same_wave_consumer_class
+                != "generated_css_decl_values_extended_same_substrate_projection"
+        {
+            return Err("W9 same-wave consumer evidence invalid".into());
+        }
+        for (label, status) in [
+            ("JSON guard", self.json_guard_state.as_str()),
+            ("CSS guard", self.css_guard_state.as_str()),
+        ] {
+            if status.trim().is_empty()
+                || matches!(
+                    status,
+                    "support_only" | "gate_only" | "telemetry_only" | "future_consumer"
+                )
+            {
+                return Err(format!("W9 {label} status invalid"));
+            }
+        }
+        for (label, value) in [
+            ("CSS Mbps before", self.css_row_mbps_before),
+            ("CSS Mbps after", self.css_row_mbps_after),
+            ("lightningcss Mbps", self.lightningcss_mbps),
+            ("threshold Mbps", self.threshold_mbps),
+        ] {
+            if !value.is_finite() || value < 0.0 {
+                return Err(format!("W9 {label} invalid"));
+            }
+        }
+        if self.union_artifact_path.trim().is_empty() || !is_hex_sha256(&self.union_artifact_sha256)
+        {
+            return Err("W9 union artifact path/hash invalid".into());
+        }
+        match self.row_move_toward_sota_status.as_str() {
+            "pass" | "admitted" => {
+                if self.css_row_mbps_after <= self.css_row_mbps_before
+                    || self.css_row_mbps_after <= self.threshold_mbps
+                {
+                    return Err("W9 pass/admitted requires row movement and SOTA pass".into());
+                }
+                if self.block_id.is_some() {
+                    return Err("W9 pass/admitted cannot carry a block id".into());
+                }
+            }
+            "measured_architectural_block" => {
+                if self.block_id.as_deref()
+                    != Some("JSON-CSS-W9-SAME-SUBSTRATE-UNION-CONSUMED-BUT-NO-ROW-MOVEMENT")
+                {
+                    return Err("W9 measured block id missing".into());
+                }
+            }
+            other => return Err(format!("W9 row movement status {other} is rejected")),
+        }
+        if self.affected_row_ids.is_empty()
+            || self.material_differential.trim().is_empty()
+            || self.redress_entry.trim().is_empty()
+        {
+            return Err(
+                "W9 report missing affected rows, material differential, or REDRESS entry".into(),
             );
         }
         Ok(())
@@ -6355,5 +6577,72 @@ mod tests {
         let mut wrong_block = report;
         wrong_block.block_id = Some("support-only".into());
         assert!(wrong_block.validate_gate().is_err());
+    }
+
+    #[test]
+    fn skv13_same_substrate_union_report_accepts_measured_admit() {
+        let report = SkV13SameSubstrateUnionReport {
+            schema_version: SKV13_SAME_SUBSTRATE_UNION_REPORT_SCHEMA.into(),
+            wave_id: "SK-V13-W9".into(),
+            run_id: "sk-v13-w9:same-substrate-union-fnv64-0000000000000000".into(),
+            source_commit: "000000000000".into(),
+            host_triple: "aarch64-apple-darwin".into(),
+            build_flags: "RUSTFLAGS=-C target-cpu=native".into(),
+            feature_mask: "arch=aarch64;target_cpu=native".into(),
+            consumer_gate: "G-W9-SAME-SUBSTRATE-UNION".into(),
+            g_omega_status: "user-signed".into(),
+            union_variant_id: "union-c1-per-rule-same-tape".into(),
+            material_differential_status: "accepted".into(),
+            prior_redress_citations: vec!["96".into(), "97".into(), "98".into()],
+            substrate_cardinality: "one".into(),
+            public_union_tape_status: "absent".into(),
+            public_substrate_api_status: "absent".into(),
+            backend_shape_expansion_status: "absent".into(),
+            bir_directive_expansion_status: "absent".into(),
+            class_column_status: "absent".into(),
+            retained_structural_index_status: "absent".into(),
+            sidecar_vector_status: "absent".into(),
+            second_scan_status: "absent".into(),
+            parser_owned_cursor_status: "absent".into(),
+            bbnf_simd_touch_status: "read-only".into(),
+            css_consumer_row_id: "css_l4/declaration_values_extended/direct_to_struct/main".into(),
+            css_consumer_path:
+                "runtime::generated_css_l4_declaration_values_extended::sink::FactSink::token"
+                    .into(),
+            same_wave_consumer_class:
+                "generated_css_decl_values_extended_same_substrate_projection".into(),
+            css_strict_equality_status: "pass".into(),
+            json_guard_state: "maintain".into(),
+            css_guard_state: "maintain".into(),
+            css_row_mbps_before: 265.657,
+            css_row_mbps_after: 269.543,
+            lightningcss_mbps: 132.141,
+            threshold_mbps: 133.141,
+            row_move_toward_sota_status: "admitted".into(),
+            lock14_status: "pass".into(),
+            lock14_owner_path_status: "pass".into(),
+            lock14_generic_scan_status: "pass".into(),
+            union_artifact_path:
+                "../restart/skinny/tranches/sk-v13/research/w9/same-substrate-union-facts.json"
+                    .into(),
+            union_artifact_sha256:
+                "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef".into(),
+            affected_row_ids: vec![
+                "css_l4/declaration_values_extended/direct_to_struct/main".into()
+            ],
+            block_id: None,
+            material_differential: "REDRESS 96/97/98 used parse-plane side structures".into(),
+            redress_entry: "REDRESS-140".into(),
+        };
+        assert!(report.validate_gate().is_ok());
+        let mut no_move = report.clone();
+        no_move.css_row_mbps_after = no_move.css_row_mbps_before;
+        assert!(no_move.validate_gate().is_err());
+        let mut support_only = report.clone();
+        support_only.row_move_toward_sota_status = "support_only".into();
+        assert!(support_only.validate_gate().is_err());
+        let mut public_substrate = report;
+        public_substrate.public_substrate_api_status = "present".into();
+        assert!(public_substrate.validate_gate().is_err());
     }
 }

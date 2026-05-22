@@ -4239,3 +4239,50 @@ perturbation.
   ../restart/skinny/tranches/sk-v13/research/w7/skv13-W7-decision-csp-cascade.json
   --skv13-per-grammar-policy-report
   ../restart/skinny/tranches/sk-v13/research/w8/skv13-W8-per-grammar-policy.json`.
+
+## SK-V13 Wave 9 Same-Substrate Union Projection
+
+- Item 140 closes W9 under `G-W9-SAME-SUBSTRATE-UNION` as `PASS-ADMIT`. W9
+  lands the C1 union category as a generated-private CSS token projection
+  consumed inside the existing declaration-values-extended `FactSink::token`
+  path. The material differential from REDRESS 96/97/98 is that no public
+  `UnionTape`, public substrate API, `BackendShape`, BIR/directive, class
+  column, retained structural index, sidecar vector, parser-owned cursor,
+  second scan, or `bbnf-simd` edit is introduced. Substrate cardinality remains
+  one.
+- The moved row is
+  `css_l4/declaration_values_extended/direct_to_struct/main`. Same-harness
+  optimized measurement with `RUSTFLAGS="-C target-cpu=native"` records Track 1
+  `265.6571549610303 -> 269.54252337093857` Mbps while the same run records
+  lightningcss `132.14144279230032` Mbps and threshold
+  `133.14144279230032` Mbps. Strict equality remains
+  `pass:track1=cssparser=lightningcss`; the retained movement is
+  `+3.885368409908259` Mbps.
+- Gate evidence is consumed by
+  `restart/skinny/tranches/sk-v13/research/w9/skv13-W9-same-substrate-union.json`
+  (`afecf64a8a4ad2546173f9c6bcd5e230ccea329034822040c7e0d6071bf59d7d` for the
+  retained fact artifact
+  `restart/skinny/tranches/sk-v13/research/w9/same-substrate-union-facts.json`).
+  `skinny/RESULTS.md` and `restart/skinny/ROLLING-SOTA-DELTA.md` are unchanged:
+  W9 strengthens an already admitted CSS row and does not add a new row.
+- Verification passed:
+  `cargo test -p bbnf-bench declaration_values_extended_lightningcss_matches_generated_track1_and_cssparser -- --nocapture`,
+  `cargo test --release -p bbnf-bench writes_gate_consumed_declaration_values_extended_report -- --nocapture`
+  before and after applying the W9 patch,
+  `cargo test -p bbnf-bench skv13_same_substrate_union_report -- --nocapture`,
+  `cargo test -p bbnf-bench lock14_baseline::tests::admits_sk_v13_w9_parent_diff_under_w9_scope -- --nocapture`,
+  `cargo test -p xtask gate_json_passthrough_accepts_skv13_same_substrate_union_report_flag -- --nocapture`,
+  `cargo test -p codegen css_l4_declaration_values_extended_generated_runtime_reproducible -- --nocapture`,
+  `cargo test -p runtime css_l4_declaration_values_extended_emit_fact_stream -- --nocapture`, and
+  the companion W5-W9 gate:
+  `RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --check-results
+  --advisory --skv13-decision-regex-report
+  ../restart/skinny/tranches/sk-v13/research/w5/skv13-W5-decision-regex.json
+  --skv13-decision-active-cost-report
+  ../restart/skinny/tranches/sk-v13/research/w6/skv13-W6-decision-active-cost.json
+  --skv13-decision-csp-cascade-report
+  ../restart/skinny/tranches/sk-v13/research/w7/skv13-W7-decision-csp-cascade.json
+  --skv13-per-grammar-policy-report
+  ../restart/skinny/tranches/sk-v13/research/w8/skv13-W8-per-grammar-policy.json
+  --skv13-same-substrate-union-report
+  ../restart/skinny/tranches/sk-v13/research/w9/skv13-W9-same-substrate-union.json`.

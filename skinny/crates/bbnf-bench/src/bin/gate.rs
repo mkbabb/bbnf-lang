@@ -8,7 +8,8 @@ use bbnf_bench::report::{
     SkV13CssDeclarationValuesExtendedReport, SkV13CssNestedLayoutReport,
     SkV13CssStylesheetSelectorsReport, SkV13CssVendorCustomReport, SkV13CssVisualFunctionsReport,
     SkV13DecisionActiveCostReport, SkV13DecisionCspCascadeReport, SkV13DecisionRegexReport,
-    SkV13PerGrammarPolicyReport, SkV8ComparatorEvidence, SkV8Telemetry, TelemetryRow,
+    SkV13PerGrammarPolicyReport, SkV13SameSubstrateUnionReport, SkV8ComparatorEvidence,
+    SkV8Telemetry, TelemetryRow,
 };
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -281,6 +282,23 @@ fn main() -> Result<(), Box<dyn Error>> {
             .map_err(|error| format!("{}: {error}", path.display()))?;
         println!(
             "G-W8-PER-GRAMMAR-POLICY {} {}",
+            report.row_move_toward_sota_status,
+            path.display()
+        );
+        drop(report);
+    }
+    if let Some(path) = skv13_same_substrate_union_report_path(&args[1..])? {
+        if !has_explicit_json_check {
+            return Err(format!("{} requires --check-results", path.display()).into());
+        }
+        let text = fs::read_to_string(&path)?;
+        let report = SkV13SameSubstrateUnionReport::from_json_str(&text)
+            .and_then(|report| report.validate_gate().map(|_| report))
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        validate_skv13_same_substrate_union_report(&report, &workspace)
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        println!(
+            "G-W9-SAME-SUBSTRATE-UNION {} {}",
             report.row_move_toward_sota_status,
             path.display()
         );
@@ -759,6 +777,12 @@ fn skv13_per_grammar_policy_report_path(
     companion_report_path(args, "--skv13-per-grammar-policy-report")
 }
 
+fn skv13_same_substrate_union_report_path(
+    args: &[String],
+) -> Result<Option<PathBuf>, Box<dyn Error>> {
+    companion_report_path(args, "--skv13-same-substrate-union-report")
+}
+
 fn companion_report_path(args: &[String], flag: &str) -> Result<Option<PathBuf>, Box<dyn Error>> {
     let flag_positions = args
         .iter()
@@ -825,6 +849,7 @@ fn is_companion_report_flag(arg: &str) -> bool {
             | "--skv13-decision-active-cost-report"
             | "--skv13-decision-csp-cascade-report"
             | "--skv13-per-grammar-policy-report"
+            | "--skv13-same-substrate-union-report"
     )
 }
 
@@ -2000,6 +2025,18 @@ fn validate_skv13_per_grammar_policy_report(
         "W8 policy surface artifact",
         &report.policy_artifact_path,
         &report.policy_artifact_sha256,
+    )
+}
+
+fn validate_skv13_same_substrate_union_report(
+    report: &SkV13SameSubstrateUnionReport,
+    workspace: &Path,
+) -> Result<(), String> {
+    validate_report_artifact_hash(
+        workspace,
+        "W9 same-substrate union artifact",
+        &report.union_artifact_path,
+        &report.union_artifact_sha256,
     )
 }
 
@@ -3824,6 +3861,8 @@ mod tests {
             "skv13-w7.json".to_string(),
             "--skv13-per-grammar-policy-report".to_string(),
             "skv13-w8.json".to_string(),
+            "--skv13-same-substrate-union-report".to_string(),
+            "skv13-w9.json".to_string(),
         ];
         assert_eq!(
             skv13_css_comparator_oracle_report_path(&mixed).unwrap(),
@@ -3868,6 +3907,10 @@ mod tests {
         assert_eq!(
             skv13_per_grammar_policy_report_path(&mixed).unwrap(),
             Some(PathBuf::from("skv13-w8.json"))
+        );
+        assert_eq!(
+            skv13_same_substrate_union_report_path(&mixed).unwrap(),
+            Some(PathBuf::from("skv13-w9.json"))
         );
         let write = vec![
             "--skv13-css-comparator-oracle-report".to_string(),
@@ -3933,6 +3976,21 @@ mod tests {
         assert_eq!(
             skv13_per_grammar_policy_report_path(&args).unwrap(),
             Some(PathBuf::from("skv13-w8.json"))
+        );
+        assert!(companion_report_runs_json_check(&args));
+    }
+
+    #[test]
+    fn skv13_same_substrate_union_report_arg_allows_json_check_only() {
+        let args = vec![
+            "--skv13-same-substrate-union-report".to_string(),
+            "skv13-w9.json".to_string(),
+            "--advisory".to_string(),
+            "--check-results".to_string(),
+        ];
+        assert_eq!(
+            skv13_same_substrate_union_report_path(&args).unwrap(),
+            Some(PathBuf::from("skv13-w9.json"))
         );
         assert!(companion_report_runs_json_check(&args));
     }

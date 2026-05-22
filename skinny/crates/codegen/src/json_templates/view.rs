@@ -208,7 +208,7 @@ impl<'doc, 'input: 'doc> JsonString<'doc, 'input> {
             .inner
             .tape()
             .flags_at(self.inner.cursor())
-            .is_some_and(|flags| flags.contains(config::STRING_NEEDS_DECODE))
+            .is_some_and(config::string_needs_decode)
         {
             unescape_string(self.raw()).expect("parser validated JSON string escapes")
         } else {

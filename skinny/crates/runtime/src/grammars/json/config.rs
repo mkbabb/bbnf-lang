@@ -2,7 +2,7 @@
 use crate::tape::OffsetFlags;
 
 pub(crate) const STRUCTURAL_BYTES: &[u8] = b"{}[],:\"";
-pub(crate) const STRING_NEEDS_DECODE: u8 = OffsetFlags::HAS_ESC;
+pub(crate) const STRING_NEEDS_DECODE: u8 = OffsetFlags::GRAMMAR_BIT0;
 pub(crate) const TINY_STRING_CAP: usize = 16;
 pub(crate) const DIRECT_TINY_STRING_CAP: usize = 8;
 pub(crate) const TRUE_LITERAL: &[u8] = b"true";
@@ -12,4 +12,9 @@ pub(crate) const NULL_LITERAL: &[u8] = b"null";
 #[inline(always)]
 pub(crate) fn needs_decode_flags() -> OffsetFlags {
     OffsetFlags::NONE.with(STRING_NEEDS_DECODE)
+}
+
+#[inline(always)]
+pub(crate) fn string_needs_decode(flags: OffsetFlags) -> bool {
+    flags.contains(STRING_NEEDS_DECODE)
 }

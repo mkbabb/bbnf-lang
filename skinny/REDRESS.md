@@ -4191,3 +4191,51 @@ perturbation.
   ../restart/skinny/tranches/sk-v13/research/w6/skv13-W6-decision-active-cost.json
   --skv13-decision-csp-cascade-report
   ../restart/skinny/tranches/sk-v13/research/w7/skv13-W7-decision-csp-cascade.json`.
+
+## SK-V13 Wave 8 Per-Grammar Policy Surface
+
+- Item 139 closes W8 under `G-W8-PER-GRAMMAR-POLICY` as `PASS-BLOCKED`. W8
+  preserves generic tape storage while renaming `OffsetFlags` physical bits to
+  neutral grammar-owned names, moves JSON string-decode meaning behind
+  generated JSON config helpers, mirrors the physical bit in Track 2 without
+  using a generic JSON-named flag, and moves the selected CSS
+  declaration-values-extended scanner/sink policy into generated CSS config.
+- The material differential from REDRESS 121 and 54/55/66-69/80/82/84 is that
+  W8 does not add a public `GrammarConfig`, generic `JsonSink` acceleration,
+  source hook, decoded-string stat/hash, one-row number patch, scalar-parent
+  fold, or control compaction replay. Policy remains private to generated
+  grammar modules and is consumed by live generated JSON/CSS row paths in the
+  same wave.
+- The production row movement remains architecturally blocked in this wave:
+  `JSON-CSS-W8-PER-GRAMMAR-POLICY-CONSUMED-BUT-NO-ROW-MOVEMENT`. The named
+  consumers are `json/y_string_unicode/direct_to_struct/main` and
+  `css_l4/declaration_values_extended/direct_to_struct/main`; strict JSON
+  runtime tests and CSS cssparser/lightningcss equality pass, but policy
+  ownership relocation does not change executable row shape or move throughput.
+  `skinny/RESULTS.md` and `restart/skinny/ROLLING-SOTA-DELTA.md` are unchanged.
+- Gate evidence is consumed by
+  `restart/skinny/tranches/sk-v13/research/w8/skv13-W8-per-grammar-policy.json`
+  (`3a09163c8718f3f2e7aba3be6cf802add0a713430298a8f41d1039646fdec03a`).
+  The retained policy artifact is
+  `restart/skinny/tranches/sk-v13/research/w8/policy-surface-facts.json`
+  (`a46240bf67152608dcf084ca02962fc1b9b12dae8c0dd8cf9f9fdd0d2e4723dd`).
+- Verification passed:
+  `cargo test -p runtime json -- --nocapture`,
+  `cargo test -p runtime css_l4_declaration_values_extended_emit_fact_stream -- --nocapture`,
+  `cargo test -p codegen css_l4_declaration_values_extended_generated_runtime_reproducible -- --nocapture`,
+  `cargo test -p bbnf-bench declaration_values_extended_cssparser_matches_generated_track1 -- --nocapture`,
+  `cargo test -p bbnf-bench declaration_values_extended_lightningcss_matches_generated_track1_and_cssparser -- --nocapture`,
+  `cargo test -p bbnf-bench skv13_per_grammar_policy_report -- --nocapture`,
+  `cargo test -p bbnf-bench --bin gate skv13_per_grammar_policy_report -- --nocapture`,
+  `cargo test -p bbnf-bench lock14_baseline -- --nocapture`, and
+  `cargo test -p xtask gate_json_passthrough_accepts_skv13_per_grammar_policy_report_flag -- --nocapture`.
+  The companion gate passed with W5/W6/W7/W8 evidence chained:
+  `RUSTFLAGS="-C target-cpu=native" cargo xtask gate-json --check-results
+  --advisory --skv13-decision-regex-report
+  ../restart/skinny/tranches/sk-v13/research/w5/skv13-W5-decision-regex.json
+  --skv13-decision-active-cost-report
+  ../restart/skinny/tranches/sk-v13/research/w6/skv13-W6-decision-active-cost.json
+  --skv13-decision-csp-cascade-report
+  ../restart/skinny/tranches/sk-v13/research/w7/skv13-W7-decision-csp-cascade.json
+  --skv13-per-grammar-policy-report
+  ../restart/skinny/tranches/sk-v13/research/w8/skv13-W8-per-grammar-policy.json`.

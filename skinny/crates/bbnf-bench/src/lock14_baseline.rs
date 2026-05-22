@@ -824,6 +824,25 @@ const SK_V13_W7_OWNER_PATHS: &[&str] = &[
     "Cargo.lock",
 ];
 
+const SK_V13_W8_OWNER_PATHS: &[&str] = &[
+    "crates/runtime/src/tape/mod.rs",
+    "crates/runtime/src/grammars/json/config.rs",
+    "crates/runtime/src/grammars/json/view.rs",
+    "crates/codegen/src/json_templates/config.rs",
+    "crates/codegen/src/json_templates/view.rs",
+    "crates/bbnf-bench/src/track2/json.rs",
+    "crates/runtime/src/grammars/css_l4_declaration_values_extended/config.rs",
+    "crates/runtime/src/grammars/css_l4_declaration_values_extended/generated.rs",
+    "crates/runtime/src/grammars/css_l4_declaration_values_extended/sink.rs",
+    "crates/codegen/src/css_l4_declaration_values_extended_templates/config.rs",
+    "crates/codegen/src/css_l4_declaration_values_extended_templates/generated.rs",
+    "crates/codegen/src/css_l4_declaration_values_extended_templates/sink.rs",
+    "crates/bbnf-bench/src/report.rs",
+    "crates/bbnf-bench/src/bin/gate.rs",
+    "crates/bbnf-bench/src/lock14_baseline.rs",
+    "xtask/src/main.rs",
+];
+
 fn current_lock14_owner_paths() -> Vec<&'static str> {
     let mut paths = Vec::with_capacity(
         SK_V12_W1A_OWNER_PATHS.len()
@@ -836,7 +855,8 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
             + SK_V13_W10_3_OWNER_PATHS.len()
             + SK_V13_W5_OWNER_PATHS.len()
             + SK_V13_W6_OWNER_PATHS.len()
-            + SK_V13_W7_OWNER_PATHS.len(),
+            + SK_V13_W7_OWNER_PATHS.len()
+            + SK_V13_W8_OWNER_PATHS.len(),
     );
     paths.extend_from_slice(SK_V12_W1A_OWNER_PATHS);
     paths.extend_from_slice(SK_V12_W1B1_OWNER_PATHS);
@@ -849,6 +869,7 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
     paths.extend_from_slice(SK_V13_W5_OWNER_PATHS);
     paths.extend_from_slice(SK_V13_W6_OWNER_PATHS);
     paths.extend_from_slice(SK_V13_W7_OWNER_PATHS);
+    paths.extend_from_slice(SK_V13_W8_OWNER_PATHS);
     paths
 }
 
@@ -1041,6 +1062,14 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
             return Ok(());
         }
     }
+    if subject.contains("sk-v13-waveW8") || subject.contains("sk-v13-wave8-challenge") {
+        let allowed = changed_paths
+            .iter()
+            .all(|path| is_allowed_path(path, SK_V13_W8_OWNER_PATHS));
+        if allowed {
+            return Ok(());
+        }
+    }
     Err(format!(
         "Lock 14 frozen diff failed for parent paths [{}]",
         changed_paths.join(", ")
@@ -1211,6 +1240,8 @@ const FORBIDDEN_GENERIC_TOKENS: &[(&str, &str)] = &[
     ("json_root", "JsonRoot"),
     ("json_visitor", "JsonVisitor"),
     ("json_escape_flag_meaning", "OffsetFlags::HAS_ESC"),
+    ("json_escape_flag_name", "HAS_ESC"),
+    ("json_control_flag_name", "HAS_CONTROL"),
     ("json_string_helper", "match_string_at_quote_trusted_utf8"),
     ("json_number_helper", "match_number_span_from_first"),
     ("serde_json_policy", "serde_json"),
@@ -1385,6 +1416,34 @@ mod tests {
     }
 
     #[test]
+    fn admits_sk_v13_w8_owner_dirty_paths_under_w8_allowance() {
+        assert!(validate_frozen_status_output_with_allowed(
+            " M crates/runtime/src/tape/mod.rs\n M crates/runtime/src/grammars/json/config.rs\n M crates/runtime/src/grammars/css_l4_declaration_values_extended/generated.rs\n M crates/bbnf-bench/src/bin/gate.rs",
+            SK_V13_W8_OWNER_PATHS,
+        )
+        .is_ok());
+        assert!(validate_frozen_status_output_with_allowed(
+            " M crates/parse-that-regex/src/lib.rs",
+            SK_V13_W8_OWNER_PATHS,
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn rejects_json_named_tape_flag_tokens_in_generic_roots() {
+        assert!(validate_generic_source(
+            Path::new("crates/runtime/src/tape/mod.rs"),
+            "pub const HAS_ESC: u8 = 0x01;"
+        )
+        .is_err());
+        assert!(validate_generic_source(
+            Path::new("crates/runtime/src/tape/mod.rs"),
+            "pub const GRAMMAR_BIT0: u8 = 0x01;"
+        )
+        .is_ok());
+    }
+
+    #[test]
     fn admits_w2_typed_owner_parent_diff_only_under_w2_scope() {
         let changed = W2_TYPED_OWNER_PATHS
             .iter()
@@ -1507,6 +1566,31 @@ mod tests {
         assert!(validate_authorized_parent_diff(
             &outside,
             "feat(sk-v13-waveW7): admit CSP cascade fail-closed finalizer"
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn admits_sk_v13_w8_parent_diff_under_w8_scope() {
+        let changed = SK_V13_W8_OWNER_PATHS
+            .iter()
+            .map(|path| (*path).to_string())
+            .collect::<Vec<_>>();
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v13-waveW8): admit per-grammar policy surface"
+        )
+        .is_ok());
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v13-waveW7): admit CSP cascade fail-closed finalizer"
+        )
+        .is_err());
+        let mut outside = changed;
+        outside.push("crates/parse-that-regex/src/lib.rs".into());
+        assert!(validate_authorized_parent_diff(
+            &outside,
+            "feat(sk-v13-waveW8): admit per-grammar policy surface"
         )
         .is_err());
     }

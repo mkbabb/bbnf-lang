@@ -82,12 +82,14 @@ impl FactSink {
         self.out.push_str("\tkind=");
         self.out.push_str(kind);
         self.out.push_str("\tlexeme_hex=");
-        if matches!(kind, "ident" | "function" | "hash" | "dimension" | "url") {
+        if config::token_uses_ascii_lower_hex(kind) {
             push_ascii_lower_hex(&mut self.out, lexeme);
         } else {
             push_hex(&mut self.out, lexeme.as_bytes());
         }
-        self.out.push_str("\tflags=normalized\n");
+        self.out.push_str("\tflags=");
+        self.out.push_str(config::TOKEN_FLAGS_NORMALIZED);
+        self.out.push('\n');
     }
 
     pub fn finish(mut self) -> String {

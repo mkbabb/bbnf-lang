@@ -1,6 +1,5 @@
+use super::config;
 use super::sink::{CssFactError, FactSink};
-
-const MAX_RECURSION: u32 = 8;
 
 pub fn emit_fact_stream(input: &str) -> Result<String, CssFactError> {
     Scanner::new(input).emit()
@@ -55,7 +54,7 @@ impl<'i> Scanner<'i> {
                     self.pos += 1;
                     return Ok(());
                 }
-                b'"' | b'\'' => {
+                byte if config::is_quote_byte(byte) => {
                     self.pos = consume_quoted(self.bytes, self.pos, self.bytes.len())?;
                 }
                 _ => self.pos += 1,
@@ -116,7 +115,7 @@ impl<'i> Scanner<'i> {
         depth: u32,
         sink: &mut FactSink,
     ) -> Result<usize, CssFactError> {
-        if depth > MAX_RECURSION {
+        if depth > config::MAX_VALUE_RECURSION {
             return Err(CssFactError {
                 offset: pos,
                 message: "CSS value recursion limit exceeded",
@@ -139,23 +138,41 @@ impl<'i> Scanner<'i> {
                 while pos < end && is_ident_byte(self.bytes[pos]) {
                     pos = consume_ident_byte(self.bytes, pos, end);
                 }
-                sink.token(decl, idx, depth, "hash", &self.input[mark..pos]);
-            } else if b == b'"' || b == b'\'' {
+                sink.token(decl, idx, depth, config::TOKEN_HASH, &self.input[mark..pos]);
+            } else if config::is_quote_byte(b) {
                 let (next, normalized) = normalized_quoted(self.input, self.bytes, pos, end)?;
                 pos = next;
-                sink.token(decl, idx, depth, "string", &normalized);
+                sink.token(decl, idx, depth, config::TOKEN_STRING, &normalized);
             } else if starts_number(self.bytes, pos, end) {
                 pos = consume_number(self.bytes, pos, end);
                 if pos < end && self.bytes[pos] == b'%' {
                     pos += 1;
-                    sink.token(decl, idx, depth, "percentage", &self.input[start..pos]);
+                    sink.token(
+                        decl,
+                        idx,
+                        depth,
+                        config::TOKEN_PERCENTAGE,
+                        &self.input[start..pos],
+                    );
                 } else if pos < end && is_ident_start(self.bytes[pos]) {
                     while pos < end && is_ident_byte(self.bytes[pos]) {
                         pos = consume_ident_byte(self.bytes, pos, end);
                     }
-                    sink.token(decl, idx, depth, "dimension", &self.input[start..pos]);
+                    sink.token(
+                        decl,
+                        idx,
+                        depth,
+                        config::TOKEN_DIMENSION,
+                        &self.input[start..pos],
+                    );
                 } else {
-                    sink.token(decl, idx, depth, "number", &self.input[start..pos]);
+                    sink.token(
+                        decl,
+                        idx,
+                        depth,
+                        config::TOKEN_NUMBER,
+                        &self.input[start..pos],
+                    );
                 }
             } else if is_ident_start(b) {
                 while pos < end && is_ident_byte(self.bytes[pos]) {
@@ -166,10 +183,9 @@ impl<'i> Scanner<'i> {
                     let name = &self.input[start..ident_end];
                     pos += 1;
                     let inner = skip_ws_and_comments(self.bytes, pos, end);
-                    if eq_ignore_ascii_case(name, "url")
+                    if config::is_url_function(name)
                         && inner < end
-                        && self.bytes[inner] != b'"'
-                        && self.bytes[inner] != b'\''
+                        && !config::is_quote_byte(self.bytes[inner])
                     {
                         let close = find_unquoted_url_close(self.bytes, inner, end)?;
                         let lexeme_start = trim_start(self.bytes, inner, close);
@@ -178,33 +194,45 @@ impl<'i> Scanner<'i> {
                             decl,
                             idx,
                             depth,
-                            "url",
+                            config::TOKEN_URL,
                             &self.input[lexeme_start..lexeme_end],
                         );
                         pos = close + 1;
                     } else {
-                        sink.token(decl, idx, depth, "function", name);
+                        sink.token(decl, idx, depth, config::TOKEN_FUNCTION, name);
                         idx += 1;
                         pos = self.emit_tokens(decl, pos, end, depth + 1, sink)?;
-                        sink.token(decl, idx, depth, "paren_close", ")");
+                        sink.token(decl, idx, depth, config::TOKEN_PAREN_CLOSE, ")");
                     }
                 } else {
-                    sink.token(decl, idx, depth, "ident", &self.input[start..pos]);
+                    sink.token(
+                        decl,
+                        idx,
+                        depth,
+                        config::TOKEN_IDENT,
+                        &self.input[start..pos],
+                    );
                 }
             } else {
                 pos += 1;
                 match b {
-                    b',' => sink.token(decl, idx, depth, "comma", ","),
+                    b',' => sink.token(decl, idx, depth, config::TOKEN_COMMA, ","),
                     b'(' => {
-                        sink.token(decl, idx, depth, "paren_open", "(");
+                        sink.token(decl, idx, depth, config::TOKEN_PAREN_OPEN, "(");
                         idx += 1;
                         pos = self.emit_tokens(decl, pos, end, depth + 1, sink)?;
-                        sink.token(decl, idx, depth, "paren_close", ")");
+                        sink.token(decl, idx, depth, config::TOKEN_PAREN_CLOSE, ")");
                     }
-                    b')' => sink.token(decl, idx, depth, "paren_close", ")"),
-                    b'[' => sink.token(decl, idx, depth, "bracket_open", "["),
-                    b']' => sink.token(decl, idx, depth, "bracket_close", "]"),
-                    _ => sink.token(decl, idx, depth, "delim", &self.input[start..pos]),
+                    b')' => sink.token(decl, idx, depth, config::TOKEN_PAREN_CLOSE, ")"),
+                    b'[' => sink.token(decl, idx, depth, config::TOKEN_BRACKET_OPEN, "["),
+                    b']' => sink.token(decl, idx, depth, config::TOKEN_BRACKET_CLOSE, "]"),
+                    _ => sink.token(
+                        decl,
+                        idx,
+                        depth,
+                        config::TOKEN_DELIM,
+                        &self.input[start..pos],
+                    ),
                 }
             }
             idx += 1;
@@ -214,14 +242,14 @@ impl<'i> Scanner<'i> {
 }
 
 fn trim_start(bytes: &[u8], mut start: usize, end: usize) -> usize {
-    while start < end && bytes[start].is_ascii_whitespace() {
+    while start < end && config::is_trivia_byte(bytes[start]) {
         start += 1;
     }
     start
 }
 
 fn trim_end(bytes: &[u8], start: usize, mut end: usize) -> usize {
-    while end > start && bytes[end - 1].is_ascii_whitespace() {
+    while end > start && config::is_trivia_byte(bytes[end - 1]) {
         end -= 1;
     }
     end
@@ -232,7 +260,7 @@ fn find_colon(bytes: &[u8], start: usize, end: usize) -> Option<usize> {
     let mut pos = start;
     while pos < end {
         match bytes[pos] {
-            b'"' | b'\'' => pos = consume_quoted(bytes, pos, end).ok()?,
+            byte if config::is_quote_byte(byte) => pos = consume_quoted(bytes, pos, end).ok()?,
             b'(' | b'[' => {
                 depth += 1;
                 pos += 1;
@@ -250,7 +278,7 @@ fn find_colon(bytes: &[u8], start: usize, end: usize) -> Option<usize> {
 
 fn strip_important(bytes: &[u8], start: usize, end: usize) -> (usize, bool) {
     let end = trim_end(bytes, start, end);
-    let word = b"important";
+    let word = config::IMPORTANT_KEYWORD;
     if end < start + word.len() {
         return (end, false);
     }
@@ -268,12 +296,12 @@ fn strip_important(bytes: &[u8], start: usize, end: usize) -> (usize, bool) {
 
 fn skip_ws_and_comments(bytes: &[u8], mut pos: usize, end: usize) -> usize {
     loop {
-        while pos < end && bytes[pos].is_ascii_whitespace() {
+        while pos < end && config::is_trivia_byte(bytes[pos]) {
             pos += 1;
         }
-        if pos + 1 < end && bytes[pos] == b'/' && bytes[pos + 1] == b'*' {
+        if config::starts_block_comment(bytes, pos, end) {
             pos += 2;
-            while pos + 1 < end && !(bytes[pos] == b'*' && bytes[pos + 1] == b'/') {
+            while pos + 1 < end && !config::ends_block_comment(bytes, pos, end) {
                 pos += 1;
             }
             pos = (pos + 2).min(end);
@@ -310,25 +338,28 @@ fn consume_number(bytes: &[u8], mut pos: usize, end: usize) -> usize {
 }
 
 fn is_ident_start(byte: u8) -> bool {
-    byte.is_ascii_alphabetic() || byte == b'_' || byte == b'-' || byte == b'\\'
+    config::is_ident_start(byte)
 }
 
 fn is_ident_byte(byte: u8) -> bool {
-    is_ident_start(byte) || byte.is_ascii_digit()
+    config::is_ident_byte(byte)
 }
 
 fn consume_ident_byte(bytes: &[u8], pos: usize, end: usize) -> usize {
-    if bytes[pos] != b'\\' {
+    if !config::is_escape_byte(bytes[pos]) {
         return pos + 1;
     }
     let mut next = pos + 1;
-    while next < end && next < pos + 7 && bytes[next].is_ascii_hexdigit() {
+    while next < end
+        && next < pos + 1 + config::CSS_HEX_ESCAPE_MAX_DIGITS
+        && bytes[next].is_ascii_hexdigit()
+    {
         next += 1;
     }
     if next == pos + 1 && next < end {
         next += 1;
     }
-    if next < end && bytes[next].is_ascii_whitespace() {
+    if next < end && config::is_trivia_byte(bytes[next]) {
         next += 1;
     }
     next
@@ -339,7 +370,7 @@ fn consume_quoted(bytes: &[u8], pos: usize, end: usize) -> Result<usize, CssFact
     let mut cursor = pos + 1;
     while cursor < end {
         match bytes[cursor] {
-            b'\\' => cursor = (cursor + 2).min(end),
+            byte if config::is_escape_byte(byte) => cursor = (cursor + 2).min(end),
             byte if byte == quote => return Ok(cursor + 1),
             _ => cursor += 1,
         }
@@ -362,11 +393,11 @@ fn normalized_quoted(
     while cursor < end {
         match bytes[cursor] {
             byte if byte == quote => return Ok((cursor + 1, normalized)),
-            b'\\' if cursor + 1 < end => {
+            byte if config::is_escape_byte(byte) && cursor + 1 < end => {
                 if bytes[cursor + 1].is_ascii_hexdigit() {
                     let mut hex_end = cursor + 1;
                     while hex_end < end
-                        && hex_end < cursor + 7
+                        && hex_end < cursor + 1 + config::CSS_HEX_ESCAPE_MAX_DIGITS
                         && bytes[hex_end].is_ascii_hexdigit()
                     {
                         hex_end += 1;
@@ -379,7 +410,7 @@ fn normalized_quoted(
                         }
                     }
                     cursor = hex_end;
-                    if cursor < end && bytes[cursor].is_ascii_whitespace() {
+                    if cursor < end && config::is_trivia_byte(bytes[cursor]) {
                         cursor += 1;
                     }
                 } else {
@@ -409,7 +440,7 @@ fn find_unquoted_url_close(
     while pos < end {
         match bytes[pos] {
             b')' => return Ok(pos),
-            b'"' | b'\'' => {
+            byte if config::is_quote_byte(byte) => {
                 return Err(CssFactError {
                     offset: pos,
                     message: "quoted URL must use function token form",
@@ -422,12 +453,4 @@ fn find_unquoted_url_close(
         offset: end,
         message: "unterminated CSS url",
     })
-}
-
-fn eq_ignore_ascii_case(left: &str, right: &str) -> bool {
-    left.len() == right.len()
-        && left
-            .bytes()
-            .zip(right.bytes())
-            .all(|(a, b)| a.eq_ignore_ascii_case(&b))
 }

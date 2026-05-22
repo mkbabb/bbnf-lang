@@ -19,8 +19,8 @@ pub struct OffsetFlags(pub u8);
 
 impl OffsetFlags {
     pub const NONE: Self = Self(0);
-    pub const HAS_ESC: u8 = 0x01;
-    pub const HAS_CONTROL: u8 = 0x02;
+    pub const GRAMMAR_BIT0: u8 = 0x01;
+    pub const GRAMMAR_BIT1: u8 = 0x02;
 
     pub const fn with(self, bit: u8) -> Self {
         Self(self.0 | bit)

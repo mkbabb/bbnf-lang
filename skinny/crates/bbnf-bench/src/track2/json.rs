@@ -7,6 +7,8 @@ use runtime::{
     tape::{CapacityPlan, OffsetFlags, TapeBuilder},
 };
 
+const STRING_NEEDS_DECODE_FLAG: u8 = OffsetFlags::GRAMMAR_BIT0;
+
 pub fn parse<'i>(input: &'i str) -> Result<JsonRoot<'i>, ParseError<'i>> {
     Parser::new(input).parse()
 }
@@ -113,8 +115,10 @@ impl<'i> Parser<'i> {
                 }
             })?;
             if span.needs_decode() {
-                self.tape
-                    .patch_flags(open_cursor, OffsetFlags::NONE.with(OffsetFlags::HAS_ESC));
+                self.tape.patch_flags(
+                    open_cursor,
+                    OffsetFlags::NONE.with(STRING_NEEDS_DECODE_FLAG),
+                );
             }
             self.cursor = span.raw_end;
         }
@@ -173,8 +177,10 @@ impl<'i> Parser<'i> {
                 },
             })?;
         if span.needs_decode() {
-            self.tape
-                .patch_flags(open_cursor, OffsetFlags::NONE.with(OffsetFlags::HAS_ESC));
+            self.tape.patch_flags(
+                open_cursor,
+                OffsetFlags::NONE.with(STRING_NEEDS_DECODE_FLAG),
+            );
         }
         self.cursor = span.raw_end;
         Ok(())

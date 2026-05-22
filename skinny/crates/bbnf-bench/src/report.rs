@@ -123,6 +123,7 @@ pub const SKV13_CSS_NESTED_LAYOUT_REPORT_SCHEMA: &str = "sk-v13-css-nested-layou
 pub const SKV13_DECISION_REGEX_REPORT_SCHEMA: &str = "sk-v13-decision-regex-v1";
 pub const SKV13_DECISION_ACTIVE_COST_REPORT_SCHEMA: &str = "sk-v13-decision-active-cost-v1";
 pub const SKV13_DECISION_CSP_CASCADE_REPORT_SCHEMA: &str = "sk-v13-decision-csp-cascade-v1";
+pub const SKV13_PER_GRAMMAR_POLICY_REPORT_SCHEMA: &str = "sk-v13-per-grammar-policy-v1";
 pub type NonJsonEvidenceRow = TelemetryRow;
 pub type NonJsonOracleEvidence = SkV8ComparatorEvidence;
 
@@ -314,6 +315,51 @@ pub struct SkV13DecisionCspCascadeReport {
     pub affected_row_ids: Vec<String>,
     pub block_id: Option<String>,
     pub abrogate_status: String,
+    pub material_differential: String,
+    pub redress_entry: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct SkV13PerGrammarPolicyReport {
+    pub schema_version: String,
+    pub wave_id: String,
+    pub run_id: String,
+    pub source_commit: String,
+    pub host_triple: String,
+    pub build_flags: String,
+    pub feature_mask: String,
+    pub consumer_gate: String,
+    pub g_omega_status: String,
+    pub json_consumer_row_id: String,
+    pub json_consumer_path: String,
+    pub css_consumer_row_id: String,
+    pub css_consumer_path: String,
+    pub same_wave_consumer_class: String,
+    pub generic_storage_status: String,
+    pub public_grammar_config_status: String,
+    pub generic_json_sink_acceleration_status: String,
+    pub generic_json_policy_token_status: String,
+    pub json_flag_semantics_owner: String,
+    pub json_flag_physical_bit_status: String,
+    pub css_policy_owner: String,
+    pub css_policy_consumer_status: String,
+    pub json_strict_equality_status: String,
+    pub css_strict_equality_status: String,
+    pub json_guard_state: String,
+    pub css_guard_state: String,
+    pub json_row_mbps_before: f64,
+    pub json_row_mbps_after: f64,
+    pub css_row_mbps_before: f64,
+    pub css_row_mbps_after: f64,
+    pub row_move_toward_sota_status: String,
+    pub lock14_status: String,
+    pub lock14_owner_path_status: String,
+    pub lock14_generic_scan_status: String,
+    pub policy_artifact_path: String,
+    pub policy_artifact_sha256: String,
+    pub affected_row_ids: Vec<String>,
+    pub block_id: Option<String>,
     pub material_differential: String,
     pub redress_entry: String,
 }
@@ -689,6 +735,168 @@ impl SkV13DecisionCspCascadeReport {
             || self.redress_entry.trim().is_empty()
         {
             return Err("W7 report missing material differential or REDRESS entry".into());
+        }
+        Ok(())
+    }
+}
+
+impl SkV13PerGrammarPolicyReport {
+    pub fn from_json_str(text: &str) -> Result<Self, String> {
+        serde_json::from_str(text)
+            .map_err(|error| format!("invalid SK-V13 per-grammar-policy report: {error}"))
+    }
+
+    pub fn validate_gate(&self) -> Result<(), String> {
+        if self.schema_version != SKV13_PER_GRAMMAR_POLICY_REPORT_SCHEMA {
+            return Err(format!(
+                "unsupported SK-V13 per-grammar-policy schema {}",
+                self.schema_version
+            ));
+        }
+        if self.wave_id != "SK-V13-W8" {
+            return Err(format!("{} cannot claim W8 authority", self.wave_id));
+        }
+        if !self.run_id.starts_with("sk-v13-w8:") {
+            return Err(format!("invalid W8 run id {}", self.run_id));
+        }
+        if self.source_commit.trim().is_empty()
+            || self.host_triple.trim().is_empty()
+            || self.build_flags.trim().is_empty()
+            || self.feature_mask.trim().is_empty()
+        {
+            return Err("W8 report missing source/build provenance".into());
+        }
+        if self.consumer_gate != "G-W8-PER-GRAMMAR-POLICY" || self.g_omega_status != "user-signed" {
+            return Err("W8 consumer gate or G-Omega status invalid".into());
+        }
+        if self.json_consumer_row_id != "json/y_string_unicode/direct_to_struct/main"
+            || self.css_consumer_row_id
+                != "css_l4/declaration_values_extended/direct_to_struct/main"
+            || self.json_consumer_path.trim().is_empty()
+            || self.css_consumer_path.trim().is_empty()
+            || self.same_wave_consumer_class != "generated_json_and_css_policy_rows"
+        {
+            return Err("W8 same-wave consumer evidence invalid".into());
+        }
+        for (label, actual, expected) in [
+            (
+                "generic storage",
+                self.generic_storage_status.as_str(),
+                "stable",
+            ),
+            (
+                "public GrammarConfig",
+                self.public_grammar_config_status.as_str(),
+                "absent",
+            ),
+            (
+                "generic JsonSink acceleration",
+                self.generic_json_sink_acceleration_status.as_str(),
+                "absent",
+            ),
+            (
+                "generic JSON policy token",
+                self.generic_json_policy_token_status.as_str(),
+                "absent",
+            ),
+            (
+                "JSON flag owner",
+                self.json_flag_semantics_owner.as_str(),
+                "generated_json_config",
+            ),
+            (
+                "JSON flag physical bit",
+                self.json_flag_physical_bit_status.as_str(),
+                "preserved",
+            ),
+            (
+                "CSS policy owner",
+                self.css_policy_owner.as_str(),
+                "generated_css_config",
+            ),
+            (
+                "CSS policy consumer",
+                self.css_policy_consumer_status.as_str(),
+                "generated_scanner_and_sink",
+            ),
+            (
+                "JSON strict equality",
+                self.json_strict_equality_status.as_str(),
+                "pass",
+            ),
+            (
+                "CSS strict equality",
+                self.css_strict_equality_status.as_str(),
+                "pass",
+            ),
+            ("Lock 14", self.lock14_status.as_str(), "pass"),
+            (
+                "Lock 14 owner path",
+                self.lock14_owner_path_status.as_str(),
+                "pass",
+            ),
+            (
+                "Lock 14 generic scan",
+                self.lock14_generic_scan_status.as_str(),
+                "pass",
+            ),
+        ] {
+            if actual != expected {
+                return Err(format!("W8 {label} status {actual} != {expected}"));
+            }
+        }
+        for (label, status) in [
+            ("JSON guard", self.json_guard_state.as_str()),
+            ("CSS guard", self.css_guard_state.as_str()),
+        ] {
+            if status.trim().is_empty()
+                || matches!(
+                    status,
+                    "support_only" | "gate_only" | "telemetry_only" | "future_consumer"
+                )
+            {
+                return Err(format!("W8 {label} status invalid"));
+            }
+        }
+        for (label, value) in [
+            ("JSON Mbps before", self.json_row_mbps_before),
+            ("JSON Mbps after", self.json_row_mbps_after),
+            ("CSS Mbps before", self.css_row_mbps_before),
+            ("CSS Mbps after", self.css_row_mbps_after),
+        ] {
+            if !value.is_finite() || value < 0.0 {
+                return Err(format!("W8 {label} invalid"));
+            }
+        }
+        if self.policy_artifact_path.trim().is_empty()
+            || !is_hex_sha256(&self.policy_artifact_sha256)
+        {
+            return Err("W8 policy artifact path/hash invalid".into());
+        }
+        match self.row_move_toward_sota_status.as_str() {
+            "pass" | "admitted" => {
+                if self.json_row_mbps_after <= self.json_row_mbps_before
+                    && self.css_row_mbps_after <= self.css_row_mbps_before
+                {
+                    return Err("W8 pass/admitted requires row movement".into());
+                }
+            }
+            "measured_architectural_block" => {
+                if self.block_id.as_deref()
+                    != Some("JSON-CSS-W8-PER-GRAMMAR-POLICY-CONSUMED-BUT-NO-ROW-MOVEMENT")
+                {
+                    return Err("W8 measured block id missing".into());
+                }
+            }
+            other => return Err(format!("W8 row movement status {other} is rejected")),
+        }
+        if self.affected_row_ids.len() < 2
+            || self.material_differential.trim().is_empty()
+            || self.redress_entry.trim().is_empty()
+        {
+            return Err(
+                "W8 report missing affected rows, material differential, or REDRESS entry".into(),
+            );
         }
         Ok(())
     }
@@ -6084,5 +6292,68 @@ mod tests {
         let mut no_command = report;
         no_command.css_l4_witness_command = "status-only".into();
         assert!(no_command.validate_gate().is_err());
+    }
+
+    #[test]
+    fn skv13_per_grammar_policy_report_accepts_measured_block() {
+        let report = SkV13PerGrammarPolicyReport {
+            schema_version: SKV13_PER_GRAMMAR_POLICY_REPORT_SCHEMA.into(),
+            wave_id: "SK-V13-W8".into(),
+            run_id: "sk-v13-w8:per-grammar-policy-fnv64-0000000000000000".into(),
+            source_commit: "000000000000".into(),
+            host_triple: "aarch64-apple-darwin".into(),
+            build_flags: "RUSTFLAGS=-C target-cpu=native".into(),
+            feature_mask: "arch=aarch64;target_cpu=native".into(),
+            consumer_gate: "G-W8-PER-GRAMMAR-POLICY".into(),
+            g_omega_status: "user-signed".into(),
+            json_consumer_row_id: "json/y_string_unicode/direct_to_struct/main".into(),
+            json_consumer_path: "runtime::grammars::json::parse_direct".into(),
+            css_consumer_row_id: "css_l4/declaration_values_extended/direct_to_struct/main".into(),
+            css_consumer_path:
+                "runtime::generated_css_l4_declaration_values_extended::generated::emit_fact_stream"
+                    .into(),
+            same_wave_consumer_class: "generated_json_and_css_policy_rows".into(),
+            generic_storage_status: "stable".into(),
+            public_grammar_config_status: "absent".into(),
+            generic_json_sink_acceleration_status: "absent".into(),
+            generic_json_policy_token_status: "absent".into(),
+            json_flag_semantics_owner: "generated_json_config".into(),
+            json_flag_physical_bit_status: "preserved".into(),
+            css_policy_owner: "generated_css_config".into(),
+            css_policy_consumer_status: "generated_scanner_and_sink".into(),
+            json_strict_equality_status: "pass".into(),
+            css_strict_equality_status: "pass".into(),
+            json_guard_state: "maintain".into(),
+            css_guard_state: "maintain".into(),
+            json_row_mbps_before: 1983.0,
+            json_row_mbps_after: 1983.0,
+            css_row_mbps_before: 429.34,
+            css_row_mbps_after: 429.34,
+            row_move_toward_sota_status: "measured_architectural_block".into(),
+            lock14_status: "pass".into(),
+            lock14_owner_path_status: "pass".into(),
+            lock14_generic_scan_status: "pass".into(),
+            policy_artifact_path:
+                "../restart/skinny/tranches/sk-v13/research/w8/policy-surface-facts.json".into(),
+            policy_artifact_sha256:
+                "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef".into(),
+            affected_row_ids: vec![
+                "json/y_string_unicode/direct_to_struct/main".into(),
+                "css_l4/declaration_values_extended/direct_to_struct/main".into(),
+            ],
+            block_id: Some("JSON-CSS-W8-PER-GRAMMAR-POLICY-CONSUMED-BUT-NO-ROW-MOVEMENT".into()),
+            material_differential: "REDRESS 121 was public GrammarConfig prose-only".into(),
+            redress_entry: "REDRESS-139".into(),
+        };
+        assert!(report.validate_gate().is_ok());
+        let mut support_only = report.clone();
+        support_only.row_move_toward_sota_status = "support_only".into();
+        assert!(support_only.validate_gate().is_err());
+        let mut generic_policy = report.clone();
+        generic_policy.generic_json_policy_token_status = "present".into();
+        assert!(generic_policy.validate_gate().is_err());
+        let mut wrong_block = report;
+        wrong_block.block_id = Some("support-only".into());
+        assert!(wrong_block.validate_gate().is_err());
     }
 }

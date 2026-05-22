@@ -1,0 +1,64 @@
+{
+  "schema_version": "sk-v13-w8-policy-surface-facts-v1",
+  "wave_id": "SK-V13-W8",
+  "source_commit": "6f21d26f278e",
+  "storage": {
+    "generic_storage_status": "stable",
+    "offset_flag_physical_bits": {
+      "GRAMMAR_BIT0": "0x01",
+      "GRAMMAR_BIT1": "0x02"
+    },
+    "raw_flag_byte_status": "preserved"
+  },
+  "json_policy": {
+    "owner": "generated_json_config",
+    "runtime_config": "skinny/crates/runtime/src/grammars/json/config.rs",
+    "template_config": "skinny/crates/codegen/src/json_templates/config.rs",
+    "read_helper": "string_needs_decode(flags)",
+    "write_helper": "needs_decode_flags()",
+    "track2_mirror": "skinny/crates/bbnf-bench/src/track2/json.rs",
+    "consumer_row": "json/y_string_unicode/direct_to_struct/main"
+  },
+  "css_policy": {
+    "owner": "generated_css_config",
+    "runtime_config": "skinny/crates/runtime/src/grammars/css_l4_declaration_values_extended/config.rs",
+    "template_config": "skinny/crates/codegen/src/css_l4_declaration_values_extended_templates/config.rs",
+    "generated_scanner": "skinny/crates/runtime/src/grammars/css_l4_declaration_values_extended/generated.rs",
+    "generated_sink": "skinny/crates/runtime/src/grammars/css_l4_declaration_values_extended/sink.rs",
+    "moved_policy": [
+      "row/schema/plane metadata",
+      "max value recursion",
+      "normalized token flag label",
+      "token kind labels",
+      "quote byte classification",
+      "escape byte classification",
+      "CSS hex escape width",
+      "trivia and block comment classification",
+      "identifier byte classification",
+      "url() function classification",
+      "!important keyword"
+    ],
+    "consumer_row": "css_l4/declaration_values_extended/direct_to_struct/main"
+  },
+  "preblocks": {
+    "public_grammar_config_status": "absent",
+    "generic_json_sink_acceleration_status": "absent",
+    "generic_json_policy_token_status": "absent"
+  },
+  "validation": [
+    "cargo test -p runtime json -- --nocapture",
+    "cargo test -p runtime css_l4_declaration_values_extended_emit_fact_stream -- --nocapture",
+    "cargo test -p codegen css_l4_declaration_values_extended_generated_runtime_reproducible -- --nocapture",
+    "cargo test -p bbnf-bench declaration_values_extended_cssparser_matches_generated_track1 -- --nocapture",
+    "cargo test -p bbnf-bench declaration_values_extended_lightningcss_matches_generated_track1_and_cssparser -- --nocapture",
+    "cargo test -p bbnf-bench skv13_per_grammar_policy_report -- --nocapture",
+    "cargo test -p bbnf-bench --bin gate skv13_per_grammar_policy_report -- --nocapture",
+    "cargo test -p bbnf-bench lock14_baseline -- --nocapture",
+    "cargo test -p xtask gate_json_passthrough_accepts_skv13_per_grammar_policy_report_flag -- --nocapture"
+  ],
+  "disposition": {
+    "row_move_toward_sota_status": "measured_architectural_block",
+    "block_id": "JSON-CSS-W8-PER-GRAMMAR-POLICY-CONSUMED-BUT-NO-ROW-MOVEMENT",
+    "redress_entry": "REDRESS-139"
+  }
+}

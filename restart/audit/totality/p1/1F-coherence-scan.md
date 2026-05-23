@@ -35,10 +35,20 @@ prior_cycle_dispositions_folded:
     - COH-011  # nine-grammar `crates/core/src/runtime/` census vs ARCH/spec
     - COH-012  # CH7 Overfit-Prune lens not registered in PASS-1-EXCAVATION.md §3
 divergence_count:
-  spec_claims_implemented: 4
-  spec_claims_unimplemented: 8
-  impl_exceeds_spec: 2
-  unknown: 3
+  # Reconciled to the 12-row Spec-Claim ↔ Implementation Table below.
+  # spec_surface_drift = spec-vs-impl wording lags (COH-001/002/003/006/012) = 5
+  # partially_implemented = surface exists, evidence partial (COH-004) = 1
+  # unimplemented_cleanup = spec-acknowledged debt (COH-005) = 1
+  # silent_must_add = SK-V14 binding facts absent from V1 surfaces (COH-007/008/009/010) = 4
+  # impl_exceeds_spec = live impl above spec baseline (COH-011) = 1
+  # Total rows: 12 (sum = 5+1+1+4+1 = 12).
+  spec_surface_drift: 5
+  partially_implemented: 1
+  unimplemented_cleanup: 1
+  silent_must_add: 4
+  impl_exceeds_spec: 1
+  unknown_open_questions: 3   # U-COH-007, U-COH-011, U-COH-012 (see Open Questions table)
+  total_rows: 12
 locks_amendment_candidates: 0
 ---
 
@@ -60,8 +70,8 @@ The cross-document coherence picture is dominated by a single rupture: the SK-V1
 | COH-008 | NEW. `restart/locks/LOCKS.md:220` text bans grammar-name leaks in generic crates; no surface tracks the live 30-violation census. | `restart/skinny/tranches/sk-v14/audit-overfit/sk-v14-audit-overfit-lock14-scan.md` (axis A3) records 11 CRIT + 7 HIGH + 5 MED + 7 LOW = 30 violations; the 8 hand-written per-grammar provider modules under `skinny/crates/codegen/` are the recurrence vector. | spec-claims-unimplemented (silent-must-add) | 60-120 LOC LOCKS / ARCH addendum; high enforcement risk | The lock requires `rg`-verifiable invariants and Pattern H is uncited. |
 | COH-009 | NEW. `restart/MASTER-PLAN.md:564-575` enumerates MP.NW0..MP.NW10 receivers; no entry sequences SK-V14 PRUNE-1..PRUNE-5. | `restart/skinny/tranches/sk-v14/SYNTHESIS.md:88-103` binds R3 PRUNE-1..PRUNE-5 + R4 + R5 as the gating wave-prelude; `audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md:53-59` recites the `PASS-0-OVERFIT-AUDIT.md §Failure mode` clause halting the campaign until prune converges. | spec-claims-unimplemented | 100-200 LOC MASTER amendment; high wave-routing risk | The wave manifest cannot dispatch new admit waves until PRUNE is enumerated. |
 | COH-010 | NEW. P-1..P-7 pattern-level pre-blocks are absent from MASTER / ARCH / LOCKS. | `restart/skinny/tranches/sk-v14/SYNTHESIS.md:106-149` enumerates seven pattern pre-blocks (fake `@generated`, sonic-rs eager-DOM, tiny-fixture inflation, gate-relabel, scaffold-as-load-bearing, per-grammar provider modules, Track 1 ≡ Track 2). | spec-claims-unimplemented (silent-must-add) | 80-160 LOC pre-block ledger (one anchor each in MASTER + LOCKS); high regression risk | Without P-list registration, future tranches re-derive the same fake-patterns. |
-| COH-011 | NEW. `restart/ARCHITECTURE.md:765` cites the eight-grammar set `(bbnf, bnf, csv, css_l4, css_pretty, ebnf, google_sheets, json, math)` but is not authoritative on per-grammar file counts. | Live `find /Users/mkbabb/Programming/bbnf-lang/crates/core/src/runtime -mindepth 1 -maxdepth 1 -type d \| wc -l` returns 9; per-grammar census `bbnf=8, bnf=7, css_l4=7, css_pretty=7, csv=7, ebnf=7, google_sheets=6, json=7, math=7 = 67 hand-written files` confirmed at `restart/skinny/tranches/sk-v14/audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md:194-211`. | impl-exceeds-spec (drift +3 vs V13 baseline of 64) | 0 LOC for census; 600-1200 LOC for PRUNE-4 generator rollout | The +3 delta comes from the `css_pretty` directory addition; PRUNE-4 sub-wave count is 9 not 8. |
-| COH-012 | NEW. `restart/prompts/totality/PASS-1-EXCAVATION.md:91-138` registers six lenses CH1..CH6; no CH7 line. | `restart/locks/LOCKS.md:46` declares "Lock 14 + CH7 Overfit-Prune lens binding"; `restart/skinny/tranches/sk-v14/SYNTHESIS.md:22` cites the same CH7 binding. | spec-surface drift (impl ahead of spec) | 30-60 LOC `PASS-1-EXCAVATION.md §3` extension | The CHALLENGE wave omits the Overfit-Prune lens the SK-V14 contract relies on. |
+| COH-011 | NEW. `restart/ARCHITECTURE.md:764-765` cites the nine-grammar set `(bbnf, bnf, csv, css_l4, css_pretty, ebnf, google_sheets, json, math)` but is not authoritative on per-grammar file counts. | Live `find /Users/mkbabb/Programming/bbnf-lang/crates/core/src/runtime -mindepth 1 -maxdepth 1 -type d \| wc -l` returns 9; per-grammar census `bbnf=8, bnf=7, css_l4=7, css_pretty=7, csv=7, ebnf=7, google_sheets=10, json=7, math=7 = 67 hand-written files` (live `find crates/core/src/runtime/google_sheets -type f \| wc -l` returns 10; verified at HEAD 2026-05-23) confirmed at `restart/skinny/tranches/sk-v14/audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md:194-211` and S-P0 A6 baseline `sk-v14-audit-overfit-pre-restart-pattern.md:53`. | impl-exceeds-spec (drift +3 vs V13 baseline of 64) | 0 LOC for census; 600-1200 LOC for PRUNE-4 generator rollout | The +3 delta comes from the `css_pretty` directory addition; PRUNE-4 sub-wave count is 9 not 8. |
+| COH-012 | NEW. `restart/prompts/totality/PASS-1-EXCAVATION.md:91-138` registers six lenses CH1..CH6; no CH7 line. | `restart/locks/LOCKS.md` carries no CH7 binding clause (verified `grep -n "CH7\|Overfit" restart/locks/LOCKS.md` returns zero hits at HEAD 2026-05-23); `restart/prompts/skinny/PASS-0-OVERFIT-AUDIT.md:62-87` is the de facto CH7 lens authority that the SK-V14 contract relies on; `restart/skinny/tranches/sk-v14/SYNTHESIS.md:22` cites the CH7 binding via the SK-V14 audit-corrected baseline. 1E LAC-1E-12 at `1E-locks-evidence.md:120` carries the anti-fabrication phrasing `LOCKS.md (no CH7 mention)` as the canonical template. | spec-surface drift (impl ahead of spec) | 30-60 LOC `PASS-1-EXCAVATION.md §3` extension | The CHALLENGE wave omits the Overfit-Prune lens the SK-V14 contract relies on. |
 
 ## Divergences Catalogued
 
@@ -79,8 +89,8 @@ The ID-keyed `V2 Planning Metadata` table is the authoritative CH4 carrier; this
 | COH-008 | 30 Lock-14 violations census uncited on LOCKS/ARCH. | `audit-overfit/sk-v14-audit-overfit-lock14-scan.md`; `restart/locks/LOCKS.md:220` | 60-120 LOC; high |
 | COH-009 | PRUNE-1..PRUNE-5 wave sequencing absent from MASTER wave manifest. | `restart/skinny/tranches/sk-v14/SYNTHESIS.md:88-103`; `restart/MASTER-PLAN.md:564-575` | 100-200 LOC; high |
 | COH-010 | P-1..P-7 pattern pre-blocks unregistered in MASTER/ARCH/LOCKS. | `restart/skinny/tranches/sk-v14/SYNTHESIS.md:106-149` | 80-160 LOC; high |
-| COH-011 | Nine-grammar `crates/core/src/runtime/` census (67 files) drifts +3 vs prior baseline; PRUNE-4 sub-waves 9 not 8. | live `find` output; `audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md:194-211` | 0 LOC census; 600-1200 LOC PRUNE-4 | medium-high |
-| COH-012 | CH7 Overfit-Prune lens missing from PASS-1-EXCAVATION.md §3 registry. | `restart/prompts/totality/PASS-1-EXCAVATION.md:91-138`; `restart/locks/LOCKS.md:46` | 30-60 LOC; medium |
+| COH-011 | Nine-grammar `crates/core/src/runtime/` census (67 files; `bbnf=8, bnf=7, css_l4=7, css_pretty=7, csv=7, ebnf=7, google_sheets=10, json=7, math=7 = 67`) drifts +3 vs prior baseline; PRUNE-4 sub-waves 9 not 8. | live `find` output (`google_sheets` = 10 verified at HEAD); `audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md:194-211`; S-P0 A6 `sk-v14-audit-overfit-pre-restart-pattern.md:53` | 0 LOC census; 600-1200 LOC PRUNE-4 | medium-high |
+| COH-012 | CH7 Overfit-Prune lens missing from PASS-1-EXCAVATION.md §3 registry; LOCKS.md silent on CH7 binding. | `restart/prompts/totality/PASS-1-EXCAVATION.md:91-138`; `restart/locks/LOCKS.md` (no CH7 mention; `grep -n "CH7\|Overfit"` returns zero); `restart/prompts/skinny/PASS-0-OVERFIT-AUDIT.md:62-87` (lens authority); 1E LAC-1E-12 template | 30-60 LOC; medium |
 
 ## V2 Planning Metadata (authoritative CH4 carrier)
 
@@ -97,7 +107,7 @@ The ID-keyed `V2 Planning Metadata` table is the authoritative CH4 carrier; this
 | COH-009 | 100-200 LOC docs | high | T-P3 governance | 260 LOC | S-P3 wave manifest | `restart/skinny/tranches/sk-v14/SYNTHESIS.md:88-103` |
 | COH-010 | 80-160 LOC docs | high | T-P3 governance + LOCKS amendment | 220 LOC | pattern pre-block ledger consumer | `restart/skinny/tranches/sk-v14/SYNTHESIS.md:106-149` |
 | COH-011 | 0 LOC census; 600-1200 LOC PRUNE-4 | medium-high | PRUNE-4 (9 sub-waves) | 1400 LOC for code | per-grammar generator template consumer | live `find` + `audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md:194-211` |
-| COH-012 | 30-60 LOC docs | medium | T-P3 governance | 80 LOC | PASS-1-EXCAVATION §3 amendment; CH7 author | `restart/prompts/totality/PASS-1-EXCAVATION.md:91-138`; `restart/locks/LOCKS.md:46` |
+| COH-012 | 30-60 LOC docs | medium | T-P3 governance | 80 LOC | PASS-1-EXCAVATION §3 amendment; CH7 author | `restart/prompts/totality/PASS-1-EXCAVATION.md:91-138`; `restart/locks/LOCKS.md` (no CH7 mention; `grep -n "CH7\|Overfit"` returns zero hits); `restart/prompts/skinny/PASS-0-OVERFIT-AUDIT.md:62-87`; 1E LAC-1E-12 |
 
 ## Gaps / Missing Primitives
 
@@ -106,7 +116,7 @@ The ID-keyed `V2 Planning Metadata` table is the authoritative CH4 carrier; this
 | No single current-state authority surface spans SK-V13 close → SK-V14 audit overlay → SK-V14 R-targets. | HANDOFF SK-V13 head at `restart/HANDOFF.md:12`; SK-V14 SYNTHESIS active contract at `restart/skinny/tranches/sk-v14/SYNTHESIS.md:1`. | 120-220 LOC; high |
 | Lock 14 verification commands at `restart/locks/LOCKS.md:220` do not include the SK-V14 generic-codegen-provider census command (audit-overfit/sk-v14-audit-overfit-lock14-scan.md axis A3). | Verification command list at `restart/locks/LOCKS.md:220` ends at three `rg/find/rg` commands; the per-grammar `RuntimeProvider` variant scan is missing. | 30-60 LOC; medium |
 | MASTER-PLAN MP.NW-receiver enumeration has no PRUNE-prelude row. | `restart/MASTER-PLAN.md:564-575`. | 100-200 LOC; high |
-| PASS-1-EXCAVATION CH-lens registry omits CH7 Overfit-Prune. | `restart/prompts/totality/PASS-1-EXCAVATION.md:91-138` lists CH1..CH6 only; LOCKS §0 line `46` cites CH7. | 30-60 LOC; medium |
+| PASS-1-EXCAVATION CH-lens registry omits CH7 Overfit-Prune; LOCKS.md silent on the binding. | `restart/prompts/totality/PASS-1-EXCAVATION.md:91-138` lists CH1..CH6 only; `restart/locks/LOCKS.md` carries no CH7 clause (`grep -n "CH7\|Overfit" restart/locks/LOCKS.md` returns zero hits at HEAD); `restart/prompts/skinny/PASS-0-OVERFIT-AUDIT.md:62-87` is the de facto lens authority the SK-V14 contract relies on. | 30-60 LOC; medium |
 
 ## Open Questions
 
@@ -114,4 +124,4 @@ The ID-keyed `V2 Planning Metadata` table is the authoritative CH4 carrier; this
 |---|---|---|
 | U-COH-007 | Which surface is authoritative for the audit-zero baseline restatement: HANDOFF, MASTER, or INDEX? | T-P3 disposes; Pass Omega CRUD adds the audit-zero anchor to all three; 1E proposes LOCKS-amendment candidate L-AUDIT-ZERO. |
 | U-COH-011 | Does the nine-grammar `crates/core/src/runtime/` census require a Lock 14 amendment to admit `css_pretty` and acknowledge the 9-sub-wave PRUNE-4 partitioning, or is the existing Lock 14 prohibition sufficient? | 1E proposes amendment candidate; T-P3 disposes; PRUNE-4 implementation order independent of amendment. |
-| U-COH-012 | Should CH7 register in `PASS-1-EXCAVATION.md §3` (per LOCKS:46) or only in the SK-V14 totality-pass overlay? | T-P3 disposes; the SK-V14 dispatch context already cites "CHALLENGE V1 (CH1-CH7 + aggregator)" — implementation lags only the lens prose. |
+| U-COH-012 | Should CH7 register in `PASS-1-EXCAVATION.md §3` (per `PASS-0-OVERFIT-AUDIT.md:62-87` lens authority and 1E LAC-1E-12 promotion candidate) or only in the SK-V14 totality-pass overlay? Note: LOCKS.md is silent on CH7 binding (verified zero hits) — the SK-V14 contract relies on `PASS-0-OVERFIT-AUDIT.md:62-87` as the de facto authority. | T-P3 disposes; the SK-V14 dispatch context already cites "CHALLENGE V1 (CH1-CH7 + aggregator)" — implementation lags only the lens prose. |

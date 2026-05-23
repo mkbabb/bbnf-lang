@@ -12,6 +12,8 @@ Corpus coverage: 17/17 parse_only (carry-through from SK-V13 P1-A V1 save-only +
 
 V14 V1 fold note: this synthesis is a **carry-through** view. The SK-V14 dispatch context §1 binds that "the SK-V14 baseline is the SK-V13 close state with audit-falsified verdict overlay … no SK-V14 implementation work has landed yet — the bench harness, corpora, and comparator binding all remain in their SK-V13 form." The SK-V13 profile artefacts under `/tmp/skv13-p1/` and `/tmp/skv13-p1-v2/` are therefore the load-bearing primary source for SK-V14 P1-E. The audit-overlay verdict (`AUDIT-FALSIFIED` / `AUDIT-SUSTAINED` / `AUDIT-PENDING`) is the SK-V14 contribution per dispatch context §4 + audit pack §1 / "Honest SK-V13 rolling delta" subsection.
 
+V14 V2 fold note: this is a write-only micro-fold that closes the CH1 V1 REVISE orphan (CH1.md §3 Finding 1) on `generated_real_typed.rs` typed-plane file:line drift. The SK-V13 V2 capture cited typed-plane lines against a `generated_real_typed.rs` that has since grown to 3056 lines at HEAD; V1's §1.2 grep set covered `generated.rs` + `scan.rs` + `parse-that-regex/src/lib.rs` but missed `generated_real_typed.rs` — the file where the drift sits. V2 extends the §1.2 grep set to include `generated_real_typed.rs` explicitly + refreshes every §2.3 typed-plane file:line cite verbatim from HEAD grep output. Symbol identities are unchanged; only line-anchors drift. Same micro-fold also refreshes the CH2 R1+R2 and CH5 CH5-A carry-throughs of the same `DirectParser::skip_value :1739` cite.
+
 V14 V1 dependency status: SK-V14 P1-A / P1-B / P1-C / P1-D dispatched in parallel; none had committed at dispatch time of this agent. The V14 V1 fold target per CHALLENGE-V2 cycle is: re-fold this synthesis against the V14 P1-A/B/C/D outputs once committed, replace SK-V13 attributions with SK-V14 same-source attributions where they materially diverge (none expected on `skinny/crates/` no-delta posture), and update PMU c/B against P1-D's SK-V14 capture.
 
 V14 contribution beyond carry-through: (1) per-row `audit_overlay_verdict` resolves every cell against the SK-V14 audit pack prune list (5 parse_only + 4 direct + 7 typed + 24 CSS = 40 rows AUDIT-FALSIFIED); (2) primitive classification per CH2 grammar-neutral vocabulary (`scan` / `number` / `string` / `unicode` / `structural` / `tape` / `dispatch`) replaces SK-V13's profile-only vocabulary; (3) the JSON-named `parse_object_value_at_direct` / `parse_array_element_at_direct` / `dispatch_value` envelopes are flagged as **Lock-14 mis-attribution** per CH2 — these are JSON-grammar names for what S-P2 must reclaim as the grammar-neutral dispatch primitive (one byte of input → one container-element-or-value parse step under the substrate union of Lock 1).
@@ -58,9 +60,22 @@ grep -n "fn unescape_string\|fn read_hex_unit_scalar" \
   skinny/crates/parse-that-regex/src/lib.rs
 # 718:pub fn unescape_string(raw_content: &str) -> Result<Cow<'_, str>, RegexError> {
 # 945:fn read_hex_unit_scalar(hex: &[u8]) -> Option<u16> {
+
+# V2 extension (closes CH1 V1 REVISE on typed-plane line drift) — extend grep
+# set to generated_real_typed.rs, the file V1 missed:
+grep -n "fn skip_value\|fn parse_option_scalar_string\|fn parse_type_mesh\|fn parse_type_marine_geometry_data\|fn parse_type_plugin" \
+  skinny/crates/bbnf-bench/src/generated_real_typed.rs
+# 516:fn parse_type_plugin<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::Plugin<'i>, DirectBuildError<'i>> {
+# 527:fn parse_type_plugin_generic<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::Plugin<'i>, DirectBuildError<'i>> {
+# 592:fn parse_type_plugin_ordered<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::Plugin<'i>, DirectBuildError<'i>> {
+# 1150:fn parse_type_mesh<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::Mesh, DirectBuildError<'i>> {
+# 1219:fn parse_type_mesh_batch<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::MeshBatch, DirectBuildError<'i>> {
+# 1330:fn parse_type_marine_geometry_data<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::MarineGeometryData, DirectBuildError<'i>> {
+# 2197:fn parse_option_scalar_string<'i>(parser: &mut DirectParser<'i>) -> Result<Option<Cow<'i, str>>, DirectBuildError<'i>> {
+# 2949:    fn skip_value(&mut self) -> Result<(), DirectBuildError<'i>> {
 ```
 
-All source line numbers cited in this artefact match HEAD `skinny/crates/` exactly.
+All source line numbers cited in this artefact match HEAD `skinny/crates/` exactly (verified at SK-V14 V2 dispatch via the four greps above; `generated_real_typed.rs` is 3056 lines at HEAD).
 
 ### §1.3 — CH2 primitive classification table (binding vocabulary)
 
@@ -137,16 +152,16 @@ Direct-to-struct summary: 14 of 17 rows attribute to `dispatch` envelopes (`pars
 
 | Corpus | Track 1 hot leaf (file:line) | % self-time | Primitive class | Lock-14 mis-attribution? | audit_overlay_verdict | Source ledger row id |
 |---|---|---:|---|---|---|---|
-| twitter | `DirectParser::skip_value` (`bbnf-bench/src/generated_real_typed.rs:1739`) | top rank-1 | `dispatch` (typed-product skip path) | yes — typed-product-name | AUDIT-SUSTAINED (A/GO V13 close) | `json/twitter/real_typed_struct/main` |
-| citm_catalog | `DirectParser::skip_value` (`bbnf-bench/src/generated_real_typed.rs:1739`) | rank-1 | `dispatch` | yes | AUDIT-SUSTAINED (A/GO) | `json/citm_catalog/real_typed_struct/main` |
+| twitter | `DirectParser::skip_value` (`bbnf-bench/src/generated_real_typed.rs:2949`) | top rank-1 | `dispatch` (typed-product skip path) | yes — typed-product-name | AUDIT-SUSTAINED (A/GO V13 close) | `json/twitter/real_typed_struct/main` |
+| citm_catalog | `DirectParser::skip_value` (`bbnf-bench/src/generated_real_typed.rs:2949`) | rank-1 | `dispatch` | yes | AUDIT-SUSTAINED (A/GO) | `json/citm_catalog/real_typed_struct/main` |
 | canada | n/a — typed product not generated for this corpus | n/a | `missing-product-surface` | n/a | AUDIT-PENDING (S-P1 newly observes absence) | `json/canada/real_typed_struct/main` |
-| apache_builds | `parse_option_scalar_string` (`bbnf-bench/src/generated_real_typed.rs:1199`) | rank-1 | `string` (optional scalar string) | partial — typed-product name | AUDIT-SUSTAINED (A/GO) | `json/apache_builds/real_typed_struct/main` |
-| github_events | `DirectParser::skip_value` (`bbnf-bench/src/generated_real_typed.rs:1740`) | rank-1 | `dispatch` | yes | **AUDIT-FALSIFIED** (W6 admit — audit pack lists 7 typed admits as "verify each"; admit not strictness-verified) | `json/github_events/real_typed_struct/main` |
-| update_center | `parse_type_plugin` (`bbnf-bench/src/generated_real_typed.rs:473`) | rank-1 | `dispatch` (typed monomorphization) | yes | **AUDIT-FALSIFIED** (W15.1 admit not verified) | `json/update_center/real_typed_struct/main` |
-| mesh | `parse_type_mesh` (`bbnf-bench/src/generated_real_typed.rs:828`) | rank-1 | `dispatch` (typed monomorphization) | yes | AUDIT-SUSTAINED (A/GO) | `json/mesh/real_typed_struct/main` |
+| apache_builds | `parse_option_scalar_string` (`bbnf-bench/src/generated_real_typed.rs:2197`) | rank-1 | `string` (optional scalar string) | partial — typed-product name | AUDIT-SUSTAINED (A/GO) | `json/apache_builds/real_typed_struct/main` |
+| github_events | `DirectParser::skip_value` (`bbnf-bench/src/generated_real_typed.rs:2949`) | rank-1 | `dispatch` | yes | **AUDIT-FALSIFIED** (W6 admit — audit pack lists 7 typed admits as "verify each"; admit not strictness-verified) | `json/github_events/real_typed_struct/main` |
+| update_center | `parse_type_plugin` (`bbnf-bench/src/generated_real_typed.rs:516`) | rank-1 | `dispatch` (typed monomorphization) | yes | **AUDIT-FALSIFIED** (W15.1 admit not verified) | `json/update_center/real_typed_struct/main` |
+| mesh | `parse_type_mesh` (`bbnf-bench/src/generated_real_typed.rs:1150`) | rank-1 | `dispatch` (typed monomorphization) | yes | AUDIT-SUSTAINED (A/GO) | `json/mesh/real_typed_struct/main` |
 | random | n/a — typed product not generated | n/a | `missing-product-surface` | n/a | **AUDIT-FALSIFIED** (W13.3 admit row exists; profile says product absent — contradiction; S-P2 must reconcile) | `json/random/real_typed_struct/main` |
 | gsoc-2018 | n/a — typed product not generated | n/a | `missing-product-surface` | n/a | AUDIT-PENDING (no admit; S-P1 observes absence) | `json/gsoc-2018/real_typed_struct/main` |
-| marine_ik | `parse_type_marine_geometry_data` (`bbnf-bench/src/generated_real_typed.rs:1015`) | rank-1 | `dispatch` (typed monomorphization) | yes | AUDIT-SUSTAINED (A/GO) | `json/marine_ik/real_typed_struct/main` |
+| marine_ik | `parse_type_marine_geometry_data` (`bbnf-bench/src/generated_real_typed.rs:1330`) | rank-1 | `dispatch` (typed monomorphization) | yes | AUDIT-SUSTAINED (A/GO) | `json/marine_ik/real_typed_struct/main` |
 | instruments | n/a — typed product not generated | n/a | `missing-product-surface` | n/a | **AUDIT-FALSIFIED** (W13.4 admit row exists; profile says product absent — contradiction) | `json/instruments/real_typed_struct/main` |
 | numbers | n/a — typed product not generated | n/a | `missing-product-surface` | n/a | **AUDIT-FALSIFIED** (W13.1 admit row exists; profile says product absent — contradiction) | `json/numbers/real_typed_struct/main` |
 | unicode_mixed | n/a — typed product not generated | n/a | `missing-product-surface` | n/a | AUDIT-PENDING | `json/unicode_mixed/real_typed_struct/main` |
@@ -293,7 +308,7 @@ The dispatch-envelope, tiny-string, unescape, and structural-SIMD signals in thi
 - `skinny/crates/runtime/src/grammars/json/generated.rs` (HEAD source for dispatch + direct envelope primitives; lines 45, 159, 169, 187, 213, 466, 506)
 - `skinny/crates/runtime/src/grammars/json/scan.rs` (HEAD source for scan primitives; lines 22, 32, 107, 131, 164)
 - `skinny/crates/parse-that-regex/src/lib.rs` (HEAD source for unicode primitives; lines 718, 945)
-- `skinny/crates/bbnf-bench/src/generated_real_typed.rs` (HEAD source for typed monomorphizations; lines 473, 828, 1015, 1199, 1739, 1740)
+- `skinny/crates/bbnf-bench/src/generated_real_typed.rs` (HEAD source for typed monomorphizations; lines 516 [`parse_type_plugin`], 527 [`_generic`], 592 [`_ordered`], 1150 [`parse_type_mesh`], 1219 [`_batch`], 1330 [`parse_type_marine_geometry_data`], 2197 [`parse_option_scalar_string`], 2949 [`DirectParser::skip_value`]; file is 3056 lines at HEAD per `wc -l`)
 
 ### §5.5 — V14 P1 sibling dispatch status (gap → V2 fold target per CHALLENGE-V2)
 

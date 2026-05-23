@@ -14,6 +14,15 @@ Host triple: aarch64-apple-darwin (cpu = Apple M5 Max; per-core nominal
 4.4 GHz used for the c/B column).
 Build flags: release profile + `debug=true` + `RUSTFLAGS="-C target-cpu=native"`;
 target dir `/tmp/skv14-p1c-target` (single-cargo-per-target discipline).
+build_flags_regime: `RUSTFLAGS="-C target-cpu=native"` explicitly pinned at
+build time (see §1.1 `RUSTFLAGS="-C target-cpu=native" cargo build` block).
+P1-C/D share this regime; P1-A/B do not (P1-A: RUSTFLAGS not set explicitly,
+native-CPU NOT pinned because Cargo.toml does not propagate target-cpu;
+P1-B: explicit `RUSTFLAGS unset` disclosure). Cross-artefact c/B comparison
+that spans regimes (e.g. P1-B twitter 11037 Mbps vs P1-D twitter 11627 Mbps,
+5.3% delta) must surface this column; consumer-side aggregators are required
+to refuse a cross-row delta where `build_flags_regime` does not match
+(per CH4 F-V2-METHODOLOGY-1 Option A binding).
 Profile tool: samply 0.13.1 (`samply record --save-only --no-open
 --rate 4000 --unstable-presymbolicate`); `.json.syms.json` sidecars
 carry full string/function/file/line tables — the `--save-only` flag here
@@ -258,10 +267,10 @@ binary; sidecar `probe-structural_scan.json.syms.json`):
 |---:|---:|---|---|---|
 | 49.44% | 684 110 | `runtime::generated_json::scan::scan_tail` | `scan.rs:107` | `simd_scan-e9e48792f0c6e621` |
 | 32.05% | 443 472 | `bbnf_bench::scan::structural_offsets_simd` (calls into NEON `scan_structurals`) | `scan.rs:5` | `simd_scan-e9e48792f0c6e621` |
-| 14.63% | 202 410 | `bbnf_simd::aarch64::bulk_emit_positions_64::bulk_emit_positions_64_neon` | `bulk_emit_positions_64.rs:3` | `simd_scan-e9e48792f0c6e621` |
+| 14.63% | 202 410 | `bbnf_simd::aarch64::bulk_emit_positions_64::bulk_emit_positions_64_neon` | `bulk_emit_positions_64.rs:2` (`fn` signature; `#[inline]` attribute at line 1) | `simd_scan-e9e48792f0c6e621` |
 | 1.52% | 21 019 | `criterion::analysis::common` | `mod.rs:83` | (criterion) |
-| 1.45% | 20 021 | `bbnf_simd::aarch64::bitmap_prefix_xor_64::bitmap_prefix_xor_64_neon` | `bitmap_prefix_xor_64.rs:3` | `simd_scan-e9e48792f0c6e621` |
-| 0.81% | 11 165 | `bbnf_simd::aarch64::eob_pad_clamp::eob_pad_clamp_neon` | `eob_pad_clamp.rs:5` | `simd_scan-e9e48792f0c6e621` |
+| 1.45% | 20 021 | `bbnf_simd::aarch64::bitmap_prefix_xor_64::bitmap_prefix_xor_64_neon` | `bitmap_prefix_xor_64.rs:2` (`fn` signature; `#[inline]` attribute at line 1) | `simd_scan-e9e48792f0c6e621` |
+| 0.81% | 11 165 | `bbnf_simd::aarch64::eob_pad_clamp::eob_pad_clamp_neon` | `eob_pad_clamp.rs:4` (`fn` signature; `#[inline]` attribute at line 3) | `simd_scan-e9e48792f0c6e621` |
 | 0.01% | 173 | `criterion::kde::sweep_and_estimate` | `kde.rs:20` | (criterion) |
 | 0.01% | 132 | `__open` | `(libsystem_kernel.dylib)` | system |
 | 0.01% | 115 | `sha2::sha256::compress256` | `sha256.rs:42` | (sha2) |
@@ -497,7 +506,7 @@ new optimization route; it is the existing path being measured.
 
 ### ANOM-6 — REDRESS-126 zero-orphan applies to ANOM-1/2/3
 
-Per `restart/skinny/REDRESS.md` REDRESS-126, any masking signal that
+Per `skinny/REDRESS.md` REDRESS-126, any masking signal that
 implies a new SIMD primitive needs scalar reference + parity/checkasm
 + feature-mask disclosure + same-wave consumer + zero-orphan
 disposition. ANOM-1's "implement actual Track 1 scalar alternate" and
@@ -587,7 +596,7 @@ For structural scan (17 corpora × {simd, scalar}):
 - `restart/skinny/tranches/sk-v14/HANDOFF.md` (tranche handoff; §3 honest baseline)
 - `restart/skinny/tranches/sk-v13/audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md` (PRUNE-1 5 parse_only revert list mapped to §2.1 audit-overlay)
 - `restart/skinny/tranches/sk-v13/research/p1/p1c-samply-mode-3.md` (prior SK iteration; §3.1 delta computed against this)
-- `restart/skinny/REDRESS.md` REDRESS-126 (zero-orphan guard; applies to ANOM-1/2/3)
+- `skinny/REDRESS.md` REDRESS-126 (zero-orphan guard; applies to ANOM-1/2/3)
 - `skinny/RESULTS.md` (bench-gate authority; §2.1 T1_Mbps reconciled exactly)
 - `skinny/crates/bbnf-bench/benches/json_parity.rs:381-438` (mode-III probe definitions)
 - `skinny/crates/bbnf-bench/benches/simd_scan.rs:9-40` (structural-scan-only bench)

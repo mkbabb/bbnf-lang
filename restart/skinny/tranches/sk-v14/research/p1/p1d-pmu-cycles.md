@@ -18,6 +18,17 @@ Build flags: `release` profile (`lto = "fat"`, `codegen-units = 1`,
 `RUSTFLAGS="-C target-cpu=native"`. Probes built under
 `CARGO_TARGET_DIR=/tmp/skv14-p1d-target` (parse + direct + typed) and
 `CARGO_TARGET_DIR=/tmp/skv14-p1d-mode3-target` (mode-III scratch crate).
+build_flags_regime: `RUSTFLAGS="-C target-cpu=native"` (Apple-Silicon-
+specialised codegen; pinned environment override since the workspace
+`[profile.release]` does not propagate `target-cpu`). Both `cargo build`
+invocations in §1.1 (`/tmp/skv14-p1d-target` parse+direct+typed at line
+41 and `/tmp/skv14-p1d-mode3-target` mode-III scratch crate at line 62)
+carry the same `RUSTFLAGS="-C target-cpu=native"` prefix verbatim — no
+build flag divergence across the two target dirs. This is the same
+regime as P1-C (`p1c-samply-mode-3.md:37, :606`); diverges from P1-B
+(`RUSTFLAGS unset`, `p1b-samply-mode-2.md:311`) per CH4 CF-1 cross-
+artefact drift. The cargo invocations are pinned to this regime;
+re-confirmed verbatim against §1.1 lines 41 + 62 this turn.
 Profile tool: `proc_pid_rusage(RUSAGE_INFO_V5)` for cycles +
 instructions (Apple-exposed kpc counters; no root required). `xctrace`
 26.0 (17A5241e) for the structural CPU Counters trace (process-level
@@ -66,6 +77,16 @@ cd /tmp/skv14-p1d/mode3-probe && \
 The scratch-crate placement keeps the `skinny/` source tree untouched
 per S-P1 §2 read-only discipline; only the existing `bbnf-bench` bin
 targets are reused.
+
+**Build-flags regime confirmation (F-V2-METHODOLOGY-1, Option A).**
+Both `cargo build` invocations above carry `RUSTFLAGS="-C target-cpu=
+native"` (lines 41 + 62) — the regime declared in the frontmatter
+`build_flags_regime` row. No third `cargo` invocation exists in this
+artefact; every PMU + xctrace capture in §1.2 + §1.3 launches a binary
+that originated from one of those two builds. The regime is therefore
+uniform across all 231 PMU rows + the xctrace mode-III capture.
+Confirmed by re-grep this turn: `grep -nE "cargo build" §1` matches
+exactly two lines (41 + 62), both carrying the same RUSTFLAGS prefix.
 
 ### §1.2 PMU capture loops
 

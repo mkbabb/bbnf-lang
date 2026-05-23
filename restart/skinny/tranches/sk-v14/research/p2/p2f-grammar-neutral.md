@@ -78,7 +78,7 @@ Per `PASS-2-RESEARCH.md §2.1` the §2 candidate-primitive enumeration is the lo
 ### §2.2 — Candidate C2 — quoted-string boundary scan (CLMUL prefix-XOR)
 
 - **Shape**: 64-byte input chunk → 64-bit quote bitmap → 64-bit "inside-string" mask via CLMUL prefix-XOR (the simdjson founding primitive). Output: per-bit signal "is this byte inside a quoted string". Quote byte is config-driven: JSON uses `'"'` only; CSS uses `{'"', '\''}` (two-quote disjunction); Sheets uses `'"'` only with doubled-quote escape (special handling); BBNF-self uses `{'"', '\'', '`'}` (three-quote disjunction); regex literal uses `'/'`.
-- **Scalar-ref status**: required (no current bbnf scalar reference; SK-V8 `scan_tail_byte` at `scan.rs:131` is byte-by-byte but does not maintain a string-mask state in scalar form — the scalar reference must be added before any SIMD wire).
+- **Scalar-ref status**: scalar oracle EXISTS via composition per P2-E Gap 6 (`p2e-parse-that-gaps.md:177`): compose `scan_string_special_block_sweep_64` (P2-E Gap 1's scalar in `bbnf-simd::aarch64::string_block`) with `bitmap_prefix_xor_64_scalar` at `crates/bbnf-simd/src/scalar/bitmap_prefix_xor_64.rs:1` + the `escape_mask_64` body at `crates/bbnf-simd/src/lib.rs:175-206` for the even/odd backslash carry — bit-identical to the simdjson `prev_in_string` carry shape (cite: simdjson 3.x `find_quote_mask_and_bits` in `include/simdjson/arm64/simd.h`). SK-V8 `scan_tail_byte` at `scan.rs:131` is the byte-by-byte fallback but does not maintain string-mask state; the Gap 6 composition IS the named-shape kernel for the quote-aware inside-string scalar reference. Upgrade per HARDENING-S-P2-V1-CONSOLIDATED §4.3 NF-CH6-3.
 - **Arch**: aarch64 NEON via PMULL (Lock 16 admissibility surface; this is REDRESS 88 territory — PMULL prefix-XOR was previously routed as "hot body" and pre-blocked; the fresh material differential is per Lock 16 :294 the AVX-512 VPCLMULQDQ 4× width landing, plus per P1-E §2.4 the SIMD/scalar 1.49x–5.04x ratio establishing that the scan_structurals hot leaf has measurable headroom for a quote-aware classifier); x86_64 AVX-512 VPCLMULQDQ at 512-bit lane per Lock 16 :294.
 - **P1 antecedent**: P1-E §2.4 — `scan_structurals` is the rank-1 leaf and `'"'` is a member of the structural byte set; the quote scan currently happens inside `scan_structurals` (per `scan.rs:22` body) without prefix-XOR — adding prefix-XOR splits the structural classifier into "ordinary structural" + "quote-aware" lanes. Also P1-E §2.1 `distinct_values` row → `match_tiny_plain_string_with_cap::<16>` at `generated.rs:169` is the tiny-string path that consumes the quote-bounded span.
 - **Source anchor**: `runtime/src/grammars/json/scan.rs:22` (current SIMD body); `parse-that-regex/src/lib.rs:718` (unescape consumer); `bbnf-simd/src/aarch64/` (target Layer-0 placement).
@@ -120,6 +120,7 @@ Per `PASS-2-RESEARCH.md §2.1` the §2 candidate-primitive enumeration is the lo
 
 ### §2.6 — Candidate C6 — branch-on-first-byte dispatch (container-vs-scalar switch)
 
+- **P1 antecedent (CH1)**: dispatch_value envelope (the candidate IS the dispatch primitive; inner-primitive measurability deferred to F-V2-P1ABC-RERECORD; envelope-direct grounding legitimate per CH2 ACCEPT).
 - **Shape**: `(input_bytes, position)` → `enum { Container(open_byte), Scalar(class), Whitespace, EOF }` per-call dispatch. The branch table is config-driven: JSON dispatches `{` → object, `[` → array, `"` → string, `t/f/n` → keyword, `-/0-9` → number, whitespace → skip; CSS L4 dispatches per per-context (a `property` position dispatches `<ident>` keyword/declaration; a `value` position dispatches `<dimension>` number+unit; selector dispatches `<selector-element>` etc.); Sheets dispatches per per-context (formula head dispatches `=` → expression entry; expression dispatches `(` → grouping, `<digit>` → number, `<letter>` → identifier-or-function, `"` → string, etc.); BBNF-self dispatches in the term position: `ε|epsilon|<ident>|<literal>|/.../|@{|(|[|{`.
 - **Scalar-ref status**: existing (`dispatch_value` at `runtime/src/grammars/json/generated.rs:45`); the candidate primitive is the *meta* dispatch — generated per-rule from the BBNF first-set + structural-byte alphabet. This is what `passes::layout` + `passes::decision_csp` synthesise; the runtime primitive is "first-byte → next-state-id" lookup with the table generated from grammar.
 - **Arch**: portable scalar (the per-byte branch is grammar-shape-specific and Lock 14 binds NO grammar match arms in generic crates; SIMD only helps the prefix-skip-whitespace pre-step, which is candidate C7).
@@ -131,7 +132,8 @@ Per `PASS-2-RESEARCH.md §2.1` the §2 candidate-primitive enumeration is the lo
 
 ### §2.7 — Candidate C7 — leading-whitespace prefix skip (saturating SIMD)
 
-- **Shape**: `(input_bytes, position)` → `position + leading_whitespace_count`. Whitespace byte set is config-driven: JSON uses `{0x20, 0x09, 0x0A, 0x0D}` per RFC 8259; CSS L4 uses `{0x20, 0x09, 0x0A, 0x0D, 0x0C}` per CSS Syntax §4.2 (adds form-feed); Sheets uses `{0x20, 0x09, 0x0A}`; BBNF-self uses `{0x20, 0x09, 0x0A, 0x0D}`. Plus optional comment-skip (BBNF-self + CSS L4 have `/* */` block comment; BBNF-self has `//` line comment) — comment-skip is a separate primitive (C8 below).
+- **P1 antecedent (CH1)**: envelope-masked (whitespace-skip step inside dispatch_value); admit-gate conditional on F-V2-P1ABC-RERECORD.
+- **Shape**: `(input_bytes, position)` → `position + leading_whitespace_count`. Whitespace byte set is config-driven: JSON uses `{0x20, 0x09, 0x0A, 0x0D}` per RFC 8259; CSS L4 uses `{0x20, 0x09, 0x0A, 0x0D, 0x0C}` per CSS Syntax §4.2 (adds form-feed); Sheets uses `{0x20, 0x09, 0x0A}`; BBNF-self uses `{0x20, 0x09, 0x0A, 0x0D}`. Plus optional comment-skip (BBNF-self + CSS L4 have `/* */` block comment; BBNF-self has `//` line comment) — comment-skip is a separate primitive (C8, V2-demoted to §2.X.1 non-candidate inventory per Fold-2).
 - **Scalar-ref status**: existing scalar paths inside `scan_tail` at `runtime/src/grammars/json/scan.rs:107` walk a whitespace-skip step; the candidate is to lift that to a standalone `bbnf-simd` primitive.
 - **Arch**: aarch64 NEON via the byte-classify primitive at Lock 16 :284 (same machinery as C1, with whitespace byte-set rather than structural byte-set); aarch64 NEON `vqaddq_u8` / `vqsubq_u8` saturating arithmetic per Lock 16 :286 admits "branchless overflow-clamped accumulation — applies to ANY grammar's number primitive" — same primitive shape also accumulates whitespace-byte count.
 - **P1 antecedent**: indirect — `dispatch_value` envelope at `generated.rs:45` calls a whitespace-skip step on every entry per the grammar's `@ws` directive; the cost is masked inside the envelope per the §2.6 CH2 binding. Direct P1 evidence requires the `parse-attribution` rerun. The candidate is admitted to the §2 pool on the basis of (a) Lock 16 :284+:286 already admit the underlying primitives, and (b) every grammar with `@ws` directive has the same primitive shape per the four BBNF cross-grammar `@ws` sites.
@@ -140,15 +142,9 @@ Per `PASS-2-RESEARCH.md §2.1` the §2 candidate-primitive enumeration is the lo
 - **REDRESS guard**: none directly; adjacent to REDRESS 50-55 (SK-V5 UTF-8 fusion) which fused string-decode + whitespace into one stage. The candidate's framing is *separate* (whitespace primitive standalone, not fused into string decode), so it does not reopen 50-55.
 - **Substrate target**: `local_temp_only`.
 
-### §2.8 — Candidate C8 — comment-skip primitive (block + line)
+### §2.8 — (vacated) C8 comment-skip primitive — demoted to §2.X non-candidate inventory
 
-- **Shape**: `(input_bytes, position, open_marker, close_marker, line_marker)` → `position + comment_bytes_consumed`. Config: BBNF-self uses `("/*", "*/", "//")` per `grammar/bbnf/bbnf.bbnf:17-18`; CSS L4 uses `("/*", "*/", nil)` — block only, no line comment; JSON has no comment surface (the primitive is unused for JSON; the JSON consumer is the `noise`-control case where `nil` markers disable the primitive); `grammar/misc/json-commented.bbnf` enables it for the commented-JSON variant.
-- **Scalar-ref status**: required (no current bbnf scalar reference; the candidate is new code in `parse-that`).
-- **Arch**: portable scalar primary; aarch64 NEON via byte-classify at Lock 16 :284 admits the inner "scan for `*/` close marker" loop (find first `*` byte, check next byte for `/`).
-- **P1 antecedent**: **NONE** (CH6 risk if this candidate is shortlisted on JSON profile alone; the BBNF-self consumer is mandatory per Lock 14 v+1 "at least one non-JSON consumer"). The candidate is admitted to the §2 pool on cross-grammar evidence alone (BBNF-self + CSS L4 + json-commented), with explicit NEUTRAL-PENDING-CONSUMER flagging.
-- **Source anchor**: N/A (new primitive); target placement `crates/parse-that/src/` per Lock 11 path-dep.
-- **Lock 16 manifest tie**: :284 (the inner close-marker scan).
-- **Substrate target**: `local_temp_only`.
+**Disposition (CH1 Fold-2, V2):** C8 is demoted out of the candidate primitive enumeration per HARDENING-S-P2-V1-CONSOLIDATED §3.2 ("**P2-F:** demote C8 (comment-skip; 'NONE' P1 antecedent per §2.8) … default is demote (per `[no-deferrals]` C8 cannot ship without same-wave consumer)"). The candidate has explicitly zero SK-V14 P1 antecedent and no same-wave consumer committed in the V2 wave plan. Full row preserved verbatim under §2.X — Non-candidate inventory below. The id `C8` is retained for cross-tranche identifier stability; the candidate is NOT S-P3-shortlist-eligible at SK-V14 V2.
 
 ### §2.9 — Candidate C9 — offset-tape bulk emit (NEON tape-position push)
 
@@ -163,11 +159,12 @@ Per `PASS-2-RESEARCH.md §2.1` the §2 candidate-primitive enumeration is the lo
 
 ### §2.10 — Candidate C10 — cross-chunk byte-context propagation
 
+- **P1 antecedent (CH1)**: indirect via C1 + C4 (the fusion primitive applied inside the other primitives' inner loops); direct evidence requires F-V2-P1ABC-RERECORD.
 - **Shape**: 16-byte boundary carry — the prior chunk's last 1-3 bytes feed the next chunk's first 1-3 bytes for token detection that spans the 16-byte boundary. JSON: string-escape sequences (`\` at byte 15 of chunk N pairs with byte 0 of chunk N+1); JSON: long keywords (`"true"` is 4 bytes, fits in one chunk; not an issue for JSON's 1-byte structural alphabet but is for keyword sets). CSS L4: keywords like `"transform"` (9 bytes) or `"animation"` (9 bytes) span chunks; CSS escape sequences `\\xXX..` similarly span. Sheets: error literals like `"#DIV/0!"` (7 bytes), `"#VALUE!"` (7 bytes). BBNF-self: directives like `"@import"` (7 bytes), `"@pretty"` (7 bytes), `"epsilon"` (7 bytes).
-- **Scalar-ref status**: required (the scalar reference is trivially the byte-by-byte loop with no chunk boundary; the SIMD form is the candidate).
+- **Scalar-ref status**: required (the scalar reference is trivially the byte-by-byte loop with no chunk boundary; the SIMD form is the candidate). **Scalar-reference target path:line** (Stage-A authoring under same-wave Lock 16 same-commit discipline): `crates/bbnf-simd/src/scalar/byte_context_64.rs` — `byte_context_64_scalar(prev_chunk: &[u8; 64], cur_chunk: &[u8; 64], carry_bytes: usize) -> [u8; 64]` producing the same cross-chunk byte-context as the candidate SIMD primitive via byte-by-byte loop with no chunk boundary (sibling of existing `crates/bbnf-simd/src/scalar/byte_class_from_eq_set_64.rs:1` shape). Authoring landed as Fold-4 V2 deliverable per HARDENING-S-P2-V1-CONSOLIDATED §3.4.
 - **Arch**: aarch64 NEON `vextq_u8` 1D cross-lane byte-shift per Lock 16 :285 (Arm A64 ISA; dav1d filter-overlap lineage; **abstract primitive: cross-chunk byte-context propagation — applies to ANY grammar with chunk-spanning tokens, not just JSON**). The lock prose already declares grammar-neutrality verbatim.
 - **P1 antecedent**: indirect via the C1 + C4 hot leaves; direct P1 evidence requires extending the structural classifier to chunk-spanning tokens, which is post-`parse-attribution` measurement work.
-- **Source anchor**: N/A (new primitive in `bbnf-simd/src/aarch64/`).
+- **Source anchor**: N/A (new primitive in `bbnf-simd/src/aarch64/`); scalar reference target `crates/bbnf-simd/src/scalar/byte_context_64.rs` per Fold-4.
 - **Lock 16 manifest tie**: :285 (the only entry; lock prose admits the abstract primitive explicitly).
 - **Substrate target**: `local_temp_only`.
 
@@ -184,6 +181,7 @@ Per `PASS-2-RESEARCH.md §2.1` the §2 candidate-primitive enumeration is the lo
 
 ### §2.12 — Candidate C12 — keyword-set-against-16-byte-alphabet membership (SVE2 svmatch port)
 
+- **P1 antecedent (CH1)**: indirect via C1 (specialises the small-alphabet case of structural-byte classify); direct evidence requires F-V2-P1ABC-RERECORD. **CH4 disposition (reframed per CH4 §3 CF-1):** ACCEPT — scalar-reference EXISTS via the per-byte `is_member` check inside `scan_structurals_scalar` at `runtime/src/grammars/json/scan.rs:32`; the §4 grouping of C12 with C10/C13 below is a precaution P2-F surfaces, but the §2.12 evidence row holds. C12 does NOT carry a Stage-A scalar-reference authoring gap.
 - **Shape**: `(input_chunk_64, alphabet_16)` → 64-bit bitmap where bit `i` = 1 iff `chunk[i]` is a member of the 16-byte alphabet. Specialises the structural-byte classify (C1) for the small-alphabet case where the alphabet fits in one NEON register; admits the SVE2 `svmatch_u8` native instruction on Graviton4+ hosts.
 - **Scalar-ref status**: existing (the per-byte `is_member` check inside `scan_structurals_scalar` at `scan.rs:32`).
 - **Arch**: aarch64 NEON `vceqq_u8 + vorrq_u8` reduction tree per Lock 16 :290 (NEW 2026-05-12 — "Portable equivalent of SVE2 `svmatch_u8` (Lemire 2026, Graviton4); same source ships on M5 Max NEON and dispatches to native MATCH on SVE2 hosts"); SVE2 `svmatch_u8` native on Graviton4+.
@@ -194,11 +192,12 @@ Per `PASS-2-RESEARCH.md §2.1` the §2 candidate-primitive enumeration is the lo
 
 ### §2.13 — Candidate C13 — branchless-3-way XOR (BCAX / TBL fusion)
 
+- **P1 antecedent (CH1)**: indirect via C1 + C2 + C12 (fusion primitive applied inside their inner loops); direct evidence requires F-V2-P1ABC-RERECORD.
 - **Shape**: collapse `(a & ~b) ^ c` into one operation. Used by: classifier-mask combination (e.g. `inside_string_mask = (raw_quote_mask & ~escaped_quote_mask) ^ prior_inside_string_carry`). Generalises to ANY classifier that combines multiple mask streams.
-- **Scalar-ref status**: required (scalar reference is the trivial 2-op form `(a & !b) ^ c`).
+- **Scalar-ref status**: required (scalar reference is the trivial 2-op form `(a & !b) ^ c`). **Scalar-reference target path:line** (Stage-A authoring under Lock 16 same-commit discipline): `crates/bbnf-simd/src/scalar/bcax_64.rs` — `bcax_64_scalar(a: u64, b: u64, c: u64) -> u64` returning `(a & !b) ^ c` over u8x16 / u64 masks; sibling of existing `crates/bbnf-simd/src/scalar/bitmap_prefix_xor_64.rs:1` shape. Authoring landed as Fold-5 V2 deliverable per HARDENING-S-P2-V1-CONSOLIDATED §3.4.
 - **Arch**: aarch64 NEON `vbcaxq_u8` + `veor3q_u8` per Lock 16 :289 (NEW 2026-05-12 — "ARMv8.2-A SHA3 extension; Equivalent to AVX-512 `vpternlogq` on arm64; collapses 2-op `bic + eor` into 1-op `bcax`. ~12-18% inner-loop reduction op-count. Available on every M-series (M1+) and Neoverse-V1/V2 (Graviton3/4). sonic-rs does NOT use these.").
 - **P1 antecedent**: indirect via C1 + C2 + C12; the candidate is a *fusion* primitive applied inside the other primitives' inner loops.
-- **Source anchor**: N/A (new primitive in `bbnf-simd/src/aarch64/`).
+- **Source anchor**: N/A (new primitive in `bbnf-simd/src/aarch64/`); scalar reference target `crates/bbnf-simd/src/scalar/bcax_64.rs` per Fold-5.
 - **Lock 16 manifest tie**: :289 (the only entry; NEW 2026-05-12).
 - **Substrate target**: `local_temp_only`.
 
@@ -211,6 +210,33 @@ Per `PASS-2-RESEARCH.md §2.1` the §2 candidate-primitive enumeration is the lo
 - **Source anchor**: `restart/locks/LOCKS.md:267-268`.
 - **CH2 binding**: the constraint is grammar-neutral by construction (i-cache size is a hardware fact, not a grammar fact).
 - **Substrate target**: N/A.
+
+### §2.X — Non-candidate inventory (cross-tranche identifier stability; not S-P3-shortlist-eligible)
+
+Per HARDENING-S-P2-V1-CONSOLIDATED §3.2 Fold-2 ("zero-P1-antecedent candidate demotion") — entries here retained for cross-tranche identifier stability only. Each row carries the original §2 body verbatim plus the explicit demotion disposition; readers (including S-P3 wave planners) must NOT shortlist these as candidates absent a fresh-material differential per `[no-deferrals]` + Lock 14 v+1.
+
+#### §2.X.1 — C8 comment-skip primitive (block + line) — DEMOTED V2
+
+**Disposition (CH1 Fold-2, V2):** non-candidate at SK-V14 V2 — zero JSON P1 antecedent per the §2 body below ("**P1 antecedent**: NONE"); same-wave consumer NOT committed in the V2 wave plan (BBNF-self bootstrap, CSS L4 declaration_values, json-commented); per `[no-deferrals]` cannot ship without same-wave consumer commit. Retained for cross-tranche identifier stability (C8 id preserved for V13/V14/V15 cross-referencing). NOT S-P3-shortlist-eligible at V2.
+
+- **Shape**: `(input_bytes, position, open_marker, close_marker, line_marker)` → `position + comment_bytes_consumed`. Config: BBNF-self uses `("/*", "*/", "//")` per `grammar/bbnf/bbnf.bbnf:17-18`; CSS L4 uses `("/*", "*/", nil)` — block only, no line comment; JSON has no comment surface (the primitive is unused for JSON; the JSON consumer is the `noise`-control case where `nil` markers disable the primitive); `grammar/misc/json-commented.bbnf` enables it for the commented-JSON variant.
+- **Scalar-ref status**: required (no current bbnf scalar reference; the candidate would be new code in `parse-that` — Fold-6 V2 scalar-reference authoring is SKIPPED per the V2 demotion; target placement `crates/parse-that/src/comment_skip.rs` per HARDENING-S-P2-V1-CONSOLIDATED §3.4 conditional gate, deferred indefinitely until same-wave consumer commits).
+- **Arch**: portable scalar primary; aarch64 NEON via byte-classify at Lock 16 :284 admits the inner "scan for `*/` close marker" loop (find first `*` byte, check next byte for `/`).
+- **P1 antecedent**: **NONE** (CH6 risk if this candidate is shortlisted on JSON profile alone; the BBNF-self consumer is mandatory per Lock 14 v+1 "at least one non-JSON consumer"). The candidate was admitted to the V1 §2 pool on cross-grammar evidence alone (BBNF-self + CSS L4 + json-commented), with explicit NEUTRAL-PENDING-CONSUMER flagging; V2 demotion converts this to non-candidate inventory absent the same-wave consumer commit.
+- **Source anchor**: N/A (would-be new primitive); target placement `crates/parse-that/src/` per Lock 11 path-dep.
+- **Lock 16 manifest tie**: :284 (the inner close-marker scan).
+- **Substrate target**: `local_temp_only`.
+- **Re-promotion gate (CH1 + CH4 + CH6 joint condition):** C8 may re-enter the candidate enumeration in a future cycle iff (a) F-V2-P1ABC-RERECORD surfaces a JSON-side measurable antecedent (unlikely — JSON grammar has no comments), OR (b) a CSS L4 / BBNF-self / json-commented wave commits a same-wave consumer in the V_n wave plan with measurable parser-bytes evidence. Until then, retained for inventory only.
+
+### §2.Y — Cross-axis tracking note (NF-CH6-4 long-string-body SIMD scan consolidation)
+
+Per HARDENING-S-P2-V1-CONSOLIDATED §2.3 + CH6 §4.4 NF-CH6-4: three artefacts surface the same long-string-body SIMD scan primitive under three distinct names, all grounded on the `unescape_string` direct rank-1 46.7 % `unicode_escapes` hot-leaf (P1-E §2.2):
+
+- **P2-A C2** `long_string_body_simd_scan` — names existing scalar refs `match_tiny_plain_string_with_cap` (`runtime/src/grammars/json/generated.rs:169`) + `unescape_string` (`crates/parse-that-regex/src/lib.rs:718`).
+- **P2-E Gap 1** `scan_string_special_block_sweep_64` — names `scan_string_special_block_scalar`-as-bitwise-OR-fold (`crates/bbnf-simd/src/aarch64/string_block.rs:31`).
+- **P2-F C1 + C2** (this artefact, quote-aware classifier composition) — names `scan_structurals_scalar` (`runtime/src/grammars/json/scan.rs:32`) and the P2-E Gap 6 composition (per §2.2 NF-CH6-3 upgrade above).
+
+All three carry CH6 PASS scalar references; all three converge on the same underlying primitive. **S-P3 consolidator binding:** the C2/Gap1/C1+C2 alignment is the same primitive under three names; S-P3 must produce ONE canonical primitive name + ONE canonical scalar reference function rather than admitting three near-duplicates. The canonical name selection + canonical scalar-ref function lives in the S-P3 wave-program shortlist, not in S-P2 axis files; this note exists so the wave plan cannot accidentally admit three orthogonal SIMD bodies for one primitive. Cross-references: `restart/skinny/tranches/sk-v14/research/p2/p2a-sota-teardown.md` C2 row; `restart/skinny/tranches/sk-v14/research/p2/p2e-parse-that-gaps.md` Gap 1 + Gap 6; this file §2.1 C1 + §2.2 C2 + §2.Y.
 
 ## §3 — Grammar-neutrality (each candidate: JSON-only or CSS/Sheets/BBNF-self generalisable)
 
@@ -225,7 +251,7 @@ Per §1.1 verdict partition. Each row carries the verdict + the named non-JSON c
 | **C5 digit-block number decode** | NEUTRAL-CONFIG-DRIVEN | `parse_number_direct` (`generated.rs:650`) JSON-strict | CSS `number` (per `value-unit.bbnf:15`) — already prose-pinned to `GENERIC_NUMBER_CONFIG` with `allow_leading_dot: true` | Sheets `number` (per `google-sheets.bbnf:6`) — leading-dot variant; same config as CSS | BBNF-self regex quantifier digits (e.g. `{N}`, `{M,N}` repetition — currently parsed via the regex sub-grammar's own digit scan) | `NumberConfig` struct {`allow_leading_dot: bool`, `allow_exponent: bool`, `allow_sign: bool`, `require_integer_part: bool`} from generated grammar config — already partially in place per the CSS file prose |
 | **C6 branch-on-first-byte dispatch** | NEUTRAL-CONFIG-DRIVEN | `dispatch_value` (`generated.rs:45`) | Per-rule dispatch tables emitted from `passes::layout` first-set computation | Per-rule dispatch tables for Sheets expression position, formula head, etc. | Per-rule dispatch tables for BBNF term position, rhs position, directive position | `DispatchTable: [StateId; 256]` emitted by codegen per rule, sourced from `passes::layout` first-set analysis; **the `parse-attribution` cargo feature gates this primitive's measurability** per dispatch context §1 inheritance carry-forwards |
 | **C7 leading-whitespace prefix skip** | NEUTRAL-CONFIG-DRIVEN | inside `scan_tail` (`scan.rs:107`) | CSS uses `{0x20, 0x09, 0x0A, 0x0D, 0x0C}` per CSS Syntax §4.2 (form-feed); consumer = generated CSS skip-ws | Sheets uses `{0x20, 0x09, 0x0A}`; consumer = generated Sheets skip-ws | BBNF-self uses JSON-shape `{0x20, 0x09, 0x0A, 0x0D}` (per `@ws` directive sites); consumer = generated BBNF skip-ws | `WhitespaceByteSet: [bool; 256]` from generated grammar config (per-grammar `@ws` directive) |
-| **C8 comment-skip primitive (block + line)** | NEUTRAL-PENDING-CONSUMER | none (JSON has no comments); `json-commented` enables it | CSS L4 block comment `/* */` (per CSS Syntax §4.3.2); consumer = generated CSS skip-comment | none (Sheets has no comments) | BBNF-self block + line per `bbnf.bbnf:17-18`; consumer = generated BBNF skip-comment | `CommentMarkers` struct {`block_open: Option<&[u8]>`, `block_close: Option<&[u8]>`, `line_start: Option<&[u8]>`} from generated grammar config; **same-wave consumer required: the wave that admits this primitive MUST wire it into at least one of (BBNF-self bootstrap, CSS L4 declaration_values, json-commented) — no later-wave deferral per `[no-deferrals]`** |
+| ~~**C8 comment-skip primitive (block + line)**~~ DEMOTED V2 | non-candidate (was NEUTRAL-PENDING-CONSUMER at V1) | none (JSON has no comments); `json-commented` enables it | CSS L4 block comment `/* */` (per CSS Syntax §4.3.2); would-be consumer = generated CSS skip-comment | none (Sheets has no comments) | BBNF-self block + line per `bbnf.bbnf:17-18`; would-be consumer = generated BBNF skip-comment | `CommentMarkers` struct {`block_open: Option<&[u8]>`, `block_close: Option<&[u8]>`, `line_start: Option<&[u8]>`} from generated grammar config. **V2 demotion (CH1 Fold-2):** moved to §2.X.1 non-candidate inventory per HARDENING-S-P2-V1-CONSOLIDATED §3.2 default-demote — no same-wave consumer commit in V2 wave plan; row preserved here for cross-reference but NOT S-P3-shortlist-eligible at V2 |
 | **C9 offset-tape bulk emit** | NEUTRAL-WIRED (Lock 1 substrate-union) | `bulk_emit_positions_64_neon` (`bbnf-simd/src/aarch64/bulk_emit_positions_64.rs:2`) | Same primitive — CSS L4 structural scan emits the same offset-tape entries; substrate-union Lock 1 binds one tape across all grammars | Same primitive — Sheets formula structural scan | Same primitive — BBNF-self parser structural scan | none — primitive is config-free; the tape is the substrate-union substrate |
 | **C10 cross-chunk byte-context propagation** | NEUTRAL-WIRED | inside C2 + C4 (long keywords spanning 16-byte chunks: `"false"` is 5 bytes, `"null"` is 4 bytes — safe within one chunk; the boundary issue is at the CHUNK boundary, not byte boundary) | CSS keywords up to 12 bytes (`"resolution"`, `"transform"`, `"perspective"`) span chunks; consumer = generated CSS keyword match | Sheets error literals up to 8 bytes (`"#DIV/0!"`, `"#VALUE!"`); consumer = generated Sheets error-literal match | BBNF-self directives up to 8 bytes (`"@pretty"`, `"@import"`, `"epsilon"`); consumer = generated BBNF directive + epsilon match | none — primitive is config-free; the abstract-primitive declaration in Lock 16 :285 binds the grammar-neutrality verbatim |
 | **C11 substrate-walk-with-shape-validation** | NEUTRAL-CONFIG-DRIVEN | `DirectParser::skip_value` (`generated_real_typed.rs:2949`) | Per-rule typed-shape validators emitted from `grammar/css/l4/*.bbnf` `->` projection clauses | Per-rule typed-shape validators emitted from `google-sheets.bbnf` `->` projection clauses | Per-rule typed-shape validators emitted from `bbnf.bbnf` `->` projection clauses (e.g. `-> Span`, `-> f64`, `-> 0u8`) | Per-rule `TypedShape` enum emitted by `passes::layout`; the walk-and-validate primitive is config-free; per P1-E §4.4 substrate-union: the primitive is ONE primitive, not two |
@@ -243,18 +269,19 @@ The Sheets escape model `""` → `"` is structurally distinct from backslash-esc
 |---|---:|---|
 | NEUTRAL-WIRED | 5 | C9, C10, C12, C13, C14 |
 | NEUTRAL-CONFIG-DRIVEN | 8 | C1, C2, C3, C4, C5, C6, C7, C11 |
-| NEUTRAL-PENDING-CONSUMER | 1 | C8 |
+| NEUTRAL-PENDING-CONSUMER | 0 | — (V1 had C8; demoted V2 per Fold-2 — see §2.X.1) |
 | JSON-OVERFIT-REFRAMABLE | 0 | — |
 | JSON-OVERFIT-IRREDUCIBLE | 0 | — |
+| **Demoted to non-candidate inventory (V2)** | 1 | C8 (see §2.X.1) |
 
-**All 14 candidates clear the Lock 14 v+1 admission gate.** Zero candidates flagged for S-P3 as JSON-overfit-irreducible. The 8 NEUTRAL-CONFIG-DRIVEN candidates require the grammar-config plumbing the SK-V14 wave plan must build (R3 PRUNE-3 in the SYNTHESIS §0.3 R-target list — "trait-dispatch + grammar-agnostic codegen template"); the 1 NEUTRAL-PENDING-CONSUMER candidate (C8 comment-skip) requires same-wave-consumer enforcement and cannot defer.
+**13 of 14 V1 candidates clear the Lock 14 v+1 admission gate at V2; C8 demoted to §2.X.1 non-candidate inventory** per HARDENING-S-P2-V1-CONSOLIDATED §3.2 Fold-2 (no same-wave consumer commit in V2 wave plan). Zero candidates flagged for S-P3 as JSON-overfit-irreducible. The 8 NEUTRAL-CONFIG-DRIVEN candidates require the grammar-config plumbing the SK-V14 wave plan must build (R3 PRUNE-3 in the SYNTHESIS §0.3 R-target list — "trait-dispatch + grammar-agnostic codegen template").
 
-CSS L4 / Sheets / BBNF-self consumer-existence summary (Lock 14 v+1 "at least one non-JSON consumer"):
-- **CSS L4 consumers**: C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14 (all 14 — CSS L4 is the broadest non-JSON consumer surface).
-- **Sheets consumers**: C1, C2, C3, C4, C5, C6, C7, C9, C10, C11, C12, C13, C14 (13 of 14; C8 omitted — Sheets has no comments).
-- **BBNF-self consumers**: C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14 (all 14 — BBNF-self is the second-broadest non-JSON consumer surface).
+CSS L4 / Sheets / BBNF-self consumer-existence summary at V2 (Lock 14 v+1 "at least one non-JSON consumer"; C8 row excluded per V2 demotion):
+- **CSS L4 consumers**: C1, C2, C3, C4, C5, C6, C7, C9, C10, C11, C12, C13, C14 (all 13 active candidates — CSS L4 is the broadest non-JSON consumer surface).
+- **Sheets consumers**: C1, C2, C3, C4, C5, C6, C7, C9, C10, C11, C12, C13, C14 (all 13 active — Sheets has no comments anyway, so demoting C8 leaves Sheets coverage strict 13/13).
+- **BBNF-self consumers**: C1, C2, C3, C4, C5, C6, C7, C9, C10, C11, C12, C13, C14 (all 13 active — BBNF-self is the second-broadest non-JSON consumer surface).
 
-Every candidate has at least one non-JSON consumer; every candidate except C8 has consumers in three non-JSON grammars. The Lock 14 v+1 binding holds for every candidate.
+Every active V2 candidate has at least one non-JSON consumer; every active V2 candidate has consumers in three non-JSON grammars. The Lock 14 v+1 binding holds for every active V2 candidate.
 
 ## §4 — Risks (REDRESS entries any candidate must NOT re-open)
 
@@ -274,8 +301,8 @@ Per CH3 binding at `PASS-2-RESEARCH.md §3` and the dispatch-context §2 REDRESS
 
 ### §4 — General risks not tied to a single REDRESS
 
-- **CH6 paper-close risk on C8 (comment-skip)**: this candidate has zero P1 antecedent (no JSON evidence). The §3 verdict NEUTRAL-PENDING-CONSUMER binds same-wave consumer; per `[no-deferrals]` the consumer cannot defer to a later wave. S-P3 must either admit C8 against a same-wave BBNF-self or CSS L4 consumer with measured evidence, or drop the candidate.
-- **CH4 risk on C10, C12, C13**: these candidates have no existing scalar reference (Lock 16 admits the SIMD primitives in lock prose but the scalar reference is required per `[inspect-generated-output]` dav1d process). S-P3 must specify the scalar reference shape as part of the shortlist entry.
+- **CH6 paper-close risk on C8 (comment-skip) — DISCHARGED V2 via Fold-2 demotion**: this candidate had zero P1 antecedent (no JSON evidence). The V1 §3 verdict NEUTRAL-PENDING-CONSUMER bound same-wave consumer; per `[no-deferrals]` the consumer cannot defer to a later wave. **V2 disposition (per HARDENING-S-P2-V1-CONSOLIDATED §3.2 Fold-2 default-demote):** C8 is demoted to §2.X.1 non-candidate inventory; the paper-close risk is discharged by removing the candidate from the shortlist surface entirely. C8 may re-enter only via the §2.X.1 re-promotion gate.
+- **CH4 risk on C10, C13 — DISCHARGED V2 via Fold-4 + Fold-5 Stage-A scalar-reference authoring**: per HARDENING-S-P2-V1-CONSOLIDATED §3.4, the scalar-reference target path:line for each is named in §2.10 (`crates/bbnf-simd/src/scalar/byte_context_64.rs` per Fold-4) and §2.13 (`crates/bbnf-simd/src/scalar/bcax_64.rs` per Fold-5); Stage-A authoring lands same-commit with the SIMD body per Lock 16 same-commit discipline. **C12 reframed per CH4 §3 CF-1 (V2): ACCEPT — not REVISE.** The §2.12 row cites the existing `scan_structurals_scalar` scalar reference at `runtime/src/grammars/json/scan.rs:32` (the per-byte `is_member` check); CH4 reads C12 as ACCEPT (scalar-ref discriminator met); the original V1 grouping of C12 with C10/C13 above was a P2-F §4 over-precaution.
 - **CH5 risk on C11**: substrate-union assumption. P2-F's verdicts depend on P2-D concluding YES on the substrate union. If P2-D concludes NO (i.e. a second substrate is unavoidable), C11's substrate-target slips from `existing_tape` to something else, and Lock 1 v+1's rejection clause fires. The V2 CHALLENGE fold must re-verify §2.11 against P2-D output once committed.
 - **CH3 risk on the aggregate**: 8 candidates abut at least one REDRESS surface. The cumulative re-open risk requires per-candidate evidence cited in S-P3 shortlist entries; per `[abrogate-before-patch]` if any of {C2, C4, C5, C9-BMI2, C11} fails the REDRESS guard, S-P3 must ask "can we delete?" before "can we patch?".
 

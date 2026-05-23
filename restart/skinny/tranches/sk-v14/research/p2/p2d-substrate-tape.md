@@ -1,6 +1,6 @@
 # SK-V14 P2-D: Substrate + Tape Design
 
-Pass: S-P2 Research. Cycle: V1.
+Pass: S-P2 Research. Cycle: V2 (V1 fold: C-P2D-3 demoted to §1.6(d) substrate-side observation per HARDENING-S-P2-V1-CONSOLIDATED §3.2 Fold-2).
 Date: 2026-05-23.
 Scope: interrogate the offset-tape substrate — lazy-materialisation counters per `skinny/RESULTS.md` Notes block, logical-vs-allocated tape ratios across 17 corpora, structural-projection union (Lock 1). Conclude whether tape + structural projection are one substrate; identify where a tape-shape change moves a hot leaf. No parallel substrate proposals.
 Output: this file.
@@ -91,9 +91,9 @@ The asymmetry is load-bearing: Track 1 (`parse_object_value_at_direct::<JsonDige
 
 **S-P2-D's substrate-union verdict** is therefore not "find a new union variant"; it is "**the substrate union holds at HEAD; tape + structural projection ARE one substrate; the producer asymmetry between Track 1 (writes tape) and Track 2 (skips, no tape write) is the projection-plane discriminant Lock 1 admits, not a substrate split.**" Per Pass Omega V1.1 / SK-V13 substrate receiver (`SUBSTRATE.md:33-41`), the receiver may be discharged by **architectural block** of a new union variant — and the substrate-walk-with-shape-validation framing IS that architectural block: there is no new union variant to admit; the two existing planes (retained-tape + direct-skip-with-shape) are substrate-union projections, not a third candidate.
 
-### §1.6 — Where a tape-shape change moves a hot leaf
+### §1.6 — Substrate-side observations
 
-Per the §1.2 census and §1.3 union, three concrete tape-shape perturbations are evaluable against the §1.4 hot leaves. Each is named here as a substrate-side observation, NOT a candidate primitive (P2-D scope is interrogation; primitive design is P2-B/C/E):
+Per the §1.2 census and §1.3 union, four concrete tape-shape perturbations are evaluable against the §1.4 hot leaves. Each is named here as a substrate-side observation, NOT a candidate primitive (P2-D scope is interrogation; primitive design is P2-B/C/E):
 
 (a) **Capacity-plan switch**. `CapacityPlan::GrowOnly` (the default; geometric grow at `assembler.rs:89-91`) vs `OneShotSimd` (one-shot reserve from `simd_count + 8` at `scan.rs:51`). The 17-corpus A/L band is 1.11–1.87× under `GrowOnly`; `OneShotSimd` would crush A/L to ~1.00× at the cost of a full SIMD pre-scan per parse. Hot-leaf consequence: `parse_object_value_at_direct` would see fewer `reserve_offsets_cold` jumps (`assembler.rs:87-91`) — but P1-A's `copy_nonoverlapping` 9.5-11.4 % rows (`p1a-samply-mode-1.md:142,143,150`) are the only tape-commit pressure currently visible, and that pressure is tape-write (the `unsafe { offsets.as_mut_ptr().add(len).write(...) }` at `assembler.rs:76-82`), not capacity-grow. **Moving A/L closer to 1× moves zero hot-leaf cycles** because the grow path is already cold (`#[cold] #[inline(never)]` at `assembler.rs:87-88`).
 
@@ -101,11 +101,13 @@ Per the §1.2 census and §1.3 union, three concrete tape-shape perturbations ar
 
 (c) **Tape elision under direct-only paths**. Per §1.3 asymmetry, the Track 2 direct-only path (Track 2 / `DirectParser::skip_value` / `JsonDigestSink`) does NOT write into a tape at all. The Track 1 direct-only path (`parse_direct` at `generated.rs:407`) builds a `ParserState` with a `TapeBuilder` AND walks the source. The `BackendShape::SinkOnly` value (per `restart/skinny/SUBSTRATE.md:286-293` and ARCH §7.3) is the formal name of this elision: "Sink-only direct-to-struct paths have no document identity because they do not retain a queryable document" (`SUBSTRATE.md:284`). At HEAD, the Track 1 direct path still constructs a `TapeBuilder` even when it will not be consulted — the `JsonDigestSink` consumer (`bbnf-bench/src/direct_struct.rs:48-110` per P1-B §1.4) never asks for `document.root_value()`. Hot-leaf consequence: `parse_object_value_at_direct::<JsonDigestSink>` (the 81.13 % twitter top-1 leaf per P1-B §2 direct row) would skip the `attach_structural_index` + `TapeBuilder::push_offset` calls if `SinkOnly` were the per-rule materialisation plan. **This is the single tape-shape perturbation that moves a P1 hot leaf** — and per Lock 10's auto-detect mandate (`LOCKS.md:164`), the perturbation is gated on the cost-model derivation of `LayoutFacts.backend_shape` per `BackendShape ∈ {EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage}` per ARCH §7.3. The substrate change is the existing five-shape taxonomy, not a new substrate.
 
+(d) **Sparse-flag-band gating on `Tape::flag_cursors`/`flag_values` construction** (V2-demoted; formerly C-P2D-3 in V1 §2 enumeration). Defer `Vec<u32>::new()` and `Vec<u8>::new()` allocations for `flag_cursors` / `flag_values` (`tape/mod.rs:97-98`) until the first `patch_flags` call writes a non-zero flag (`assembler.rs:94`). Per §1.2 census, 12 of 17 corpora have ≤ 25 bytes of flag pressure — the two `Vec` headers (48 bytes on 64-bit) plus their default reserve are zero-utility on those rows. The substrate primitive is `Option<(Vec<u32>, Vec<u8>)>` or a `SmallVec`-style inline-2 store; structurally a one-liner change at `TapeBuilder::new` (`assembler.rs:50-59`). The existing `patch_flags` (`assembler.rs:94-113`) is the scalar reference; the change is wrapping the `flag_*` field access in an `Option::get_or_insert_with(Default::default)`. The `binary_search` consumer at `tape/mod.rs:144-150` is unchanged (`Option::as_ref().map(|v| v.binary_search(...))`). Arch: substrate-side / allocation discipline; no SIMD/ASM. Architecture-independent. Grammar-neutrality: HIGH — the substrate field is already grammar-neutral; the gating is grammar-policy-free. **Disposition stamp: Demoted V2: zero hot-leaf consumer at SK-V14; re-elevate to candidate if S-P3 finds same-wave consumer.** Per (b) above the hot-leaf consequence is zero, restating the same finding from the allocation-side perspective; (b) is the load-bearing observation, (d) names the concrete substrate-edit shape that would actuate (b) if a same-wave consumer materialises (e.g. the C-2 reprofile re-attributes a non-trivial parser-state-init self-time on small corpora — currently absent).
+
 Translation: the substrate union holds; the *projection plane* (whether tape is materialised at all for a given parse) is the per-rule decision. Where a tape-shape change moves a hot leaf is **only at the per-rule `backend_shape` boundary** — and that boundary is already declared in the five-shape vocabulary. There is no second substrate to add.
 
 ## §2 — Candidate primitives (each: shape + scalar-ref status + arch + P1 antecedent)
 
-P2-D's scope is substrate interrogation, **not parallel substrate proposals**. The candidate-primitive list below is therefore **substrate-side primitives only**: observations + measurement hooks whose purpose is to keep the substrate union honest and to let S-P3 wire the per-rule `backend_shape` cost model against concrete substrate evidence. Per §1.5 + §1.6, the load-bearing substrate work is **per-rule `backend_shape` activation against the five-shape vocabulary**, not a sixth shape.
+P2-D's scope is substrate interrogation, **not parallel substrate proposals**. The candidate-primitive list below is therefore **substrate-side primitives only**: observations + measurement hooks whose purpose is to keep the substrate union honest and to let S-P3 wire the per-rule `backend_shape` cost model against concrete substrate evidence. Per §1.5 + §1.6, the load-bearing substrate work is **per-rule `backend_shape` activation against the five-shape vocabulary**, not a sixth shape. V2 cycle: C-P2D-3 (sparse-flag-band gating) demoted to §1.6(d) substrate-side observation per CH1 V1 §3.2 + CH4 V1 §3 CF-2; the identifier is held in a gap-note row below for cross-tranche reference stability.
 
 ### C-P2D-1 — `BackendShape::SinkOnly` activation on JSON `parse_direct` direct-to-struct path
 
@@ -123,13 +125,9 @@ P2-D's scope is substrate interrogation, **not parallel substrate proposals**. T
 - **P1 antecedent**: P1-A §4 (`p1a-samply-mode-1.md:318-321`) — the `copy_nonoverlapping` 9.5-11.4 % rows are the only currently-visible tape-commit signal, but per §1.6(a) above the grow path is `#[cold]`; the column-based gate would let the bench-harness refuse a row whose tape footprint grew between cycles (substrate-regression guard) without requiring re-profiling. Same primitive supports P1-D PMU c/B re-attribution against tape footprint.
 - **Grammar-neutrality**: HIGH — `OffsetTapeStats` is already grammar-neutral (lives in `runtime::tape::*`, not `runtime::generated_json::*`). The column primitive is a schema-level measurement, not a JSON-specific lever. CSS L4 / Sheets / BBNF-self all share the same tape substrate (the substrate is grammar-neutral per `SUBSTRATE.md:7`), so the same `OffsetTapeStats` column applies to every grammar that lowers to `OffsetTape` or `EagerTape`.
 
-### C-P2D-3 — Sparse-flag-band gating on `Tape::flag_cursors`/`flag_values` construction
+### C-P2D-3 — [DEMOTED V2 → §1.6(d) substrate-side observation]
 
-- **Shape**: defer `Vec<u32>::new()` and `Vec<u8>::new()` allocations for `flag_cursors` / `flag_values` (`tape/mod.rs:97-98`) until the first `patch_flags` call writes a non-zero flag (`assembler.rs:94`). Per §1.2 census, 12 of 17 corpora have ≤ 25 bytes of flag pressure — the two `Vec` headers (48 bytes on 64-bit) plus their default reserve are zero-utility on those rows. The substrate primitive is `Option<(Vec<u32>, Vec<u8>)>` or a `SmallVec`-style inline-2 store; structurally a one-liner change at `TapeBuilder::new` (`assembler.rs:50-59`).
-- **Scalar-reference status**: PRESENT. The existing `patch_flags` (`assembler.rs:94-113`) is the scalar reference; the change is wrapping the `flag_*` field access in an `Option::get_or_insert_with(Default::default)`. The `binary_search` consumer at `tape/mod.rs:144-150` is unchanged (`Option::as_ref().map(|v| v.binary_search(...))`).
-- **Arch**: substrate-side / allocation discipline; no SIMD/ASM. Architecture-independent.
-- **P1 antecedent**: not a P1 hot leaf (the flag-band cost is parser-state-init, not parse-time-loop). **This candidate is a CH4-pre-block falsifier** — per §1.6(b) above, the hot-leaf consequence is zero; CH4 should mark this REVISE-or-REJECT unless S-P3 finds a same-wave consumer (e.g. the C-2 reprofile re-attributes a non-trivial parser-state-init self-time on small corpora — currently absent). Listed here for completeness so CH4 can dispose it; named as a substrate-side observation, not advocated as primitive.
-- **Grammar-neutrality**: HIGH — the substrate field is already grammar-neutral; the gating is grammar-policy-free.
+Formerly *Sparse-flag-band gating on `Tape::flag_cursors`/`flag_values` construction*. Demoted V2: zero hot-leaf consumer at SK-V14; re-elevate to candidate if S-P3 finds same-wave consumer. Technical content preserved verbatim at §1.6(d). Candidate identifier retained as gap-note for cross-tranche reference stability (CH1 V1 §3.2 fold target; CH4 V1 §3 CF-2 ACCEPT-as-honest-completeness).
 
 ### C-P2D-4 — `BackendShape::EventTape` interrogation (NOT proposed; documented as pre-blocked by REDRESS 96/97/98)
 
@@ -141,7 +139,7 @@ P2-D's scope is substrate interrogation, **not parallel substrate proposals**. T
 
 ### Candidate-list discipline footnote
 
-P2-D's candidate enumeration is **3 active + 1 pre-blocked**. The dispatch prompt forbids parallel substrate proposals; the active candidates are (a) per-rule shape selection (re-using the existing `BackendShape` enum), (b) substrate-measurement plumbing, (c) sparse-flag allocation discipline. None of the three propose a new substrate, a new buffer, a new sidecar producer, or a renamed scanner. All three respect the substrate union per Lock 1.
+P2-D's candidate enumeration is **2 active + 1 demoted-to-§1.6(d) + 1 pre-blocked** (V2). The dispatch prompt forbids parallel substrate proposals; the active candidates are (a) per-rule shape selection (re-using the existing `BackendShape` enum), (b) substrate-measurement plumbing. Neither proposes a new substrate, a new buffer, a new sidecar producer, or a renamed scanner. Both respect the substrate union per Lock 1. The C-P2D-3 sparse-flag allocation discipline migrated to §1.6(d) at V2 because it had zero hot-leaf consumer at SK-V14 (the candidate's own §1.6(b) cross-reference; CH1 V1 §3.2 + CH4 V1 §3 CF-2 fold targets); the identifier is preserved as a gap-note for cross-tranche stability and may re-elevate to candidate status if S-P3 finds a same-wave consumer.
 
 ## §3 — Grammar-neutrality (each candidate: JSON-only or CSS/Sheets/BBNF-self generalisable)
 
@@ -149,10 +147,10 @@ P2-D's candidate enumeration is **3 active + 1 pre-blocked**. The dispatch promp
 |---|---|---|---|---|
 | C-P2D-1 (`BackendShape::SinkOnly` activation) | **YES** | none — `BackendShape` is the five-shape vocabulary at ARCH §7.3; per-rule derivation is auto from Grammar IR facts | CSS L4 declaration-values lowers to a fact-stream sink consumer; `SinkOnly` applies directly per `SUBSTRATE.md:284-292` | BBNF-self has fact-stream consumers (LSP/diagnostics); Sheets formulas have row-sink consumers — both admit `SinkOnly` |
 | C-P2D-2 (`OffsetTapeStats` column extension) | **YES** | none — `OffsetTapeStats` lives at `runtime::tape::*`, not `runtime::generated_json::*` | applies verbatim — any grammar lowering to `OffsetTape` or `EagerTape` emits the same stats | applies verbatim — substrate field is grammar-agnostic |
-| C-P2D-3 (sparse-flag gating) | **YES** | none — `flag_cursors`/`flag_values` are substrate fields; their semantics are per-grammar-policy (currently `needs_decode` for JSON, would be e.g. `selector_combinator` for CSS L4) | applies — CSS L4 selector-combinator annotations would benefit if sparse | applies — any grammar with sparse mid-parse annotations admits the gating |
+| C-P2D-3 (sparse-flag gating) | **N/A — DEMOTED V2 → §1.6(d)** | n/a (was: none — `flag_cursors`/`flag_values` are substrate fields; their semantics are per-grammar-policy) | n/a (was: CSS L4 selector-combinator annotations would benefit if sparse) | n/a (was: any grammar with sparse mid-parse annotations admits the gating) |
 | C-P2D-4 (`EventTape` — pre-blocked) | **N/A** (REJECT-by-REDRESS-96/97/98) | n/a — would have been grammar-neutral if admissible | n/a | n/a |
 
-Per CH2 / Lock 14: none of the active candidates carries a JSON-grammar match arm, JSON-named module, JSON-specific type in a generic-crate public API, or JSON-keyed feature flag. The substrate primitives are already grammar-neutral by construction; the candidate list is a per-substrate-mechanism activation/measurement set, not a per-grammar fork. CSS L4 spec evidence per CH2 F2 binding (zero CSS L4 grammar-neutral primitive evidence at SK-V14 profile — only `declaration_values` renders) is consistent: the substrate-side candidates apply to CSS L4 *by construction of the substrate*, not by per-grammar profile-derived admission.
+Per CH2 / Lock 14: none of the two active candidates carries a JSON-grammar match arm, JSON-named module, JSON-specific type in a generic-crate public API, or JSON-keyed feature flag. The substrate primitives are already grammar-neutral by construction; the candidate list is a per-substrate-mechanism activation/measurement set, not a per-grammar fork. CSS L4 spec evidence per CH2 F2 binding (zero CSS L4 grammar-neutral primitive evidence at SK-V14 profile — only `declaration_values` renders) is consistent: the substrate-side candidates apply to CSS L4 *by construction of the substrate*, not by per-grammar profile-derived admission.
 
 ## §4 — Risks (REDRESS entries any candidate must NOT re-open)
 
@@ -192,16 +190,15 @@ These are SIMD/instruction-class pre-blocks per P2-C's scope (host-arch ASM/SIMD
 
 ### §4.6 — Lock 1 substrate-union ceiling (the binding constraint)
 
-The dispatch prompt's binding: "No parallel substrate proposals." P2-D's three active candidates respect this:
+The dispatch prompt's binding: "No parallel substrate proposals." P2-D's two active candidates respect this:
 - C-P2D-1: re-uses existing `BackendShape::SinkOnly`; does not introduce a new shape.
 - C-P2D-2: re-uses existing `OffsetTapeStats`; does not introduce a new substrate field.
-- C-P2D-3: re-uses existing `flag_cursors`/`flag_values`; does not introduce a new substrate field.
 
-C-P2D-4 is explicitly REJECT-by-history and is listed as a paper-trail anchor for CH5 cross-checking, not as a candidate.
+C-P2D-3 (V2-demoted to §1.6(d)) re-uses existing `flag_cursors`/`flag_values`; even if re-elevated by a future same-wave consumer it does not introduce a new substrate field. C-P2D-4 is explicitly REJECT-by-history and is listed as a paper-trail anchor for CH5 cross-checking, not as a candidate.
 
 ### §4.7 — CH5 hidden-coupling cross-check
 
-Per dispatch context CH5 binding ("substrate union holds; P2-D concludes whether the tape + structural projection are one substrate"): §1.1 + §1.3 + §1.5 jointly conclude **YES, the substrate union holds at HEAD**. The Track 1 ≡ Track 2 dishonesty risk is closed by CH5 V3's two-cursor independence verification (`research/p1/hardening/V3/CH5.md:78-83`). The retained-cursor risk is closed by §1.1 + §1.6(c) — C-P2D-1's `SinkOnly` activation *removes* a retained-substrate path (elides `TapeBuilder` construction) rather than adding one. CH5 dispose: ACCEPT for all 3 active candidates; the pre-blocked C-P2D-4 documents the anti-pattern for cross-checking.
+Per dispatch context CH5 binding ("substrate union holds; P2-D concludes whether the tape + structural projection are one substrate"): §1.1 + §1.3 + §1.5 jointly conclude **YES, the substrate union holds at HEAD**. The Track 1 ≡ Track 2 dishonesty risk is closed by CH5 V3's two-cursor independence verification (`research/p1/hardening/V3/CH5.md:78-83`). The retained-cursor risk is closed by §1.1 + §1.6(c) — C-P2D-1's `SinkOnly` activation *removes* a retained-substrate path (elides `TapeBuilder` construction) rather than adding one. CH5 dispose: ACCEPT for both active candidates (C-P2D-1, C-P2D-2); the V2-demoted §1.6(d) sparse-flag observation (formerly C-P2D-3) is CH5-clean by construction (re-uses existing substrate field, no new sidecar); the pre-blocked C-P2D-4 documents the anti-pattern for cross-checking.
 
 ## §5 — Sources (every external citation — comparator source, ISA manual, prior tranche)
 

@@ -753,7 +753,7 @@ union-SIMD wave; non-decision-engine waves default to the 30-min cap):
 
 | Candidate / wave | Research | Plan | Redress |
 |---|---:|---:|---:|
-| C-1 sub-waves (8 grammars; per sub-wave) | 20 min | 15 min | 30 min |
+| C-1 sub-waves (per rostered grammar; per sub-wave) | 20 min | 15 min | 30 min |
 | C-2 | 20 min | 15 min | 30 min |
 | C-3 | 20 min | 15 min | 30 min |
 | C-4 (per CSP-selectable shape) | 20 min | 15 min | 45 min |
@@ -767,10 +767,11 @@ are not decision-engine waves and default to the 30-min cap. The C-4
 clarification), not per cluster — the C-4 cluster total is bounded by
 the number of CSP-selectable shapes the wave addresses (one shape per
 sub-wave), with each shape's redress windowed at 45 min. The C-1
-cluster total is 8 × 30 = 240 min of redress windows, run serialised
-per §9; the C-4 cluster total is N × 45 min where N is the number of
-shapes the wiring exercises (≥ 2 per E-8's two-grammar-family
-requirement).
+cluster total is N × 30 min of redress windows where N is the live
+rostered-grammar enumeration (`cargo metadata | jq` over the grammar
+roster at HEAD), run serialised per §9; the C-4 cluster total is
+M × 45 min where M is the number of shapes the wiring exercises
+(≥ 2 per E-8's two-grammar-family requirement).
 
 Telemetry per `PASS-ALPHA.md §4.3` (column set unchanged); per-iter
 equality column added by C-2; hot-leaf attribution column required for

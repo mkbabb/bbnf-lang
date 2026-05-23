@@ -359,14 +359,29 @@ detector per CH7-1 + CH7-4 binding (V1 CH7 §3.1 REJECT remediation):
   skinny/crates/runtime/src/grammars/css_l4_* && cargo xtask regen-css
   && git diff -- skinny/crates/runtime/src/grammars/css_l4_*` produces
   empty output.
-- **Round-trip (core tree, all 8 grammars).** For each of `{json,
-  css_l4, google_sheets, bbnf, csv, ebnf, bnf, math}`: `rm -rf
-  crates/core/src/runtime/<grammar>/ && cargo xtask regen-<grammar>
-  && git diff -- crates/core/src/runtime/<grammar>/` produces empty
-  output. (C-1's sub-wave structure owns the per-grammar xtask
+- **Round-trip (core tree, all rostered grammars).** For each grammar
+  name `<g>` enumerated under `workspace.metadata.bbnf.grammars` in the
+  top-level `Cargo.toml` (currently `{json, css_l4, google_sheets,
+  bbnf, csv, ebnf, bnf, math}` — the list is metadata-derived, not
+  source-of-truth at the gate site; the canonical shell form is `for g
+  in $(cargo metadata --format-version 1 | jq -r
+  '.workspace_metadata.bbnf.grammars | keys[]'); do rm -rf
+  "crates/core/src/runtime/${g}/" && cargo xtask "regen-${g}" && git
+  diff -- "crates/core/src/runtime/${g}/" || exit 1; done`): the loop
+  produces empty `git diff` output for every iterated grammar. The
+  gate enumerates from `workspace.metadata.bbnf.grammars` so that
+  adding a 9th grammar requires NO change to the gate's text — only an
+  addition under `workspace.metadata.bbnf.grammars` and a `regen-<g>`
+  xtask registration per C-1's forward invariant (`alpha-E-candidate-shortlist.md:170-176`).
+  This parity is binding: both gates (C-1 forward invariant and C-3
+  round-trip) derive grammar enumeration from the same workspace
+  metadata clause Lock 14 itself names (`LOCKS.md:220` "workspace
+  metadata declaring its strategy"), relocating the forward-blindness
+  catch from first-grammar-admission time (C-1) to gate-authoring time
+  (C-3). (C-1's sub-wave structure owns the per-grammar xtask
   emission; C-3's round-trip gate consumes those xtasks for CSS and
-  asserts byte-equivalence on every other grammar's tree as the
-  cross-grammar recurrence-vector check. A hand-patched
+  asserts byte-equivalence on every other rostered grammar's tree as
+  the cross-grammar recurrence-vector check. A hand-patched
   `crates/core/src/runtime/{grammar}/` file fails this gate; the
   Pattern H tarpit `alpha-D.md:486-495` flags collapses to ZERO
   hand-patched files under the gate's enforcement.)

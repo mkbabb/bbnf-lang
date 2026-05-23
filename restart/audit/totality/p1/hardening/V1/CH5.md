@@ -3,6 +3,7 @@ lens: CH5
 name: HIDDEN COUPLING
 pass: T-P1-excavation
 cycle: V1
+disposition: REVISE
 generated_at: 2026-05-21T00:00:00-04:00
 files_audited: [restart/audit/totality/p1/1A-substrate-evidence.md, restart/audit/totality/p1/1B-codegen-evidence.md, restart/audit/totality/p1/1C-runtime-evidence.md, restart/audit/totality/p1/1D-skinny-lessons.md, restart/audit/totality/p1/1E-locks-evidence.md, restart/audit/totality/p1/1F-coherence-scan.md, restart/audit/totality/p1/1F-anti-pattern.md, restart/audit/totality/p1/1F-past-corpora.md]
 live_truth_method: "nl -ba line reads plus rg over Lock 1, generated/direct JSON, CSS fact stream, StructuralIndex scanner, and Track 1/Track 2 call sites"

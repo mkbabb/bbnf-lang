@@ -150,7 +150,7 @@ Files audited:
   `regen-` and `css`).
 - `skinny/crates/codegen/src/lib.rs` (~780 lines; greps for
   `emit_runtime_profile`, `Json`, CSS provider names).
-- `skinny/crates/codegen/src/json_provider.rs` (full, 101 lines).
+- `skinny/crates/codegen/src/json_provider.rs` (full, 100 lines).
 - `skinny/crates/codegen/src/css_l4_visual_functions_provider.rs`
   (full, 51 lines).
 - `skinny/crates/codegen/src/css_l4_*_templates/*.rs` (full

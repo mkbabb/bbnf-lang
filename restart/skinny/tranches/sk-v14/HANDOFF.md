@@ -76,9 +76,17 @@ proof covers everything.
 - **5 JSON `parse_only` admits (W14.1–.5)** — gate-relabel only; source
   diffs touch `gate.rs` / `report.rs` / `lock14_baseline.rs` and not the
   parser; comparator misnamed (`v2 §1 + §2`).
-- **11 JSON direct + typed admits (4 + 7)** — REAL parsers, comparator
-  misbinding: `sonic_rs::from_slice::<Value>` eager DOM instead of
-  strict per-corpus struct deser (`v2 §3.2 + §4.2`; `v6 §3`).
+- **JSON direct + typed admits (dispatch §1 cites 4 + 7; α-A / α-D
+  measure 6 + 11 under the broader `ROLLING-SOTA-DELTA.md:13-93`
+  ledger)** — REAL parsers, comparator misbinding:
+  `sonic_rs::from_slice::<Value>` eager DOM instead of strict per-corpus
+  struct deser (`v2 §3.2 + §4.2`; `v6 §3`). Both populations
+  reclassify AUDIT-FALSIFIED under v6 §1 rows 3-4; PRUNE-1's ledger
+  revert binds the wider 6+11 population (direct +2: marine_ik,
+  instruments; typed +4: random, instruments, numbers, unicode_basic
+  via W13.1/.2/.3/.4 plus update_center W15.1 adjusted), not the
+  narrower 4+7 the dispatch summarises. Reconciliation captured at
+  α-A:117-122 + α-A:161-169 + α-D:281-291 + α-D:353-368.
 - **W8 per-grammar policy + W9 same-substrate union** — COSMETIC; zero
   runtime consumption (`v4 §4 + §5 + §6`).
 
@@ -107,10 +115,16 @@ Campaign at zero on numbers; non-zero on architecture. The
   - `ORCHESTRATOR-PROMPT.md` (commit `496a81417`).
   - `research/alpha/DISPATCH-CONTEXT.md` (commit `6ab711d77`).
   - `SYNTHESIS.md` + `HANDOFF.md` (this commit).
-- Pass Alpha α-A through α-E remain outstanding at α-F commit time;
-  α-F synthesised directly from raw sources per
-  `DISPATCH-CONTEXT.md §α-F` fall-through clause. CHALLENGE V1 catches
-  divergence; V2 reconciles.
+- Pass Alpha V1 α-A / α-C / α-D / α-F artefacts in tree were authored
+  by α-F under the `DISPATCH-CONTEXT.md §α-F` fall-through clause;
+  α-B and α-E carry their own peer commits (`e4870b201` and
+  `86dbd6b09` respectively). The V2 redispatch wave generates fresh
+  per-agent commits for α-A, α-C, α-E via the orchestrator's atomic
+  commit on V2 cycle close; the V1 staging-race ambiguity is resolved
+  by naming α-F as the sole V1 author of α-A / α-C / α-D and the
+  SYNTHESIS + HANDOFF pair, per CH6 §2.2 REJ-1 disposition (b)
+  (CONSOLIDATED §2.1 F-2). CHALLENGE V1 caught the divergence; V2
+  reconciles.
 - Audit pack is at the latest commit `b24232776` (cross-tranche stability
   + pattern emergence); validation pack is six files end-to-end.
 - USER PIN ADDENDUM 2026-05-21 + USER PIN W1 CSS L4 SOTA 2026-05-20 are
@@ -142,7 +156,13 @@ Campaign at zero on numbers; non-zero on architecture. The
 
 ## 6. Next-Move
 
-**Next-move:** `ready-for-CHALLENGE-V1 → G-Alpha → S-P0`.
+**Next-move:** `ready-for-CHALLENGE-V1 → G-Alpha → S-P0 →
+S-P1/S-P2/S-P3 ∥ Pass Omega → G-Omega → Wave 0 (PRUNE-1)`.
+
+Hard caps echoed per `[dispatch-hard-cap]`: 30-min lens-agent cap;
+research 20 min / plan 15 min / redress 30 min (45 min only for the
+addendum-amended decision-engine fold + C-4 per CONSOLIDATED §0.5 cap
+discipline).
 
 1. Dispatch Pass Alpha CHALLENGE V1 wave (CH1–CH6) over the SYNTHESIS +
    HANDOFF + α-A through α-E artefacts. CH5 reviews Track 1 ≡ Track 2
@@ -201,7 +221,16 @@ Return REVISE for any downstream plan that:
   (`SYNTHESIS.md §0.4`) — fake `@generated` header on hand-written
   output; mislabelled eager-DOM comparator; tiny-fixture Mbps inflation;
   gate-relabel as admit; scaffold-only as load-bearing; per-grammar
-  provider modules in generic codegen; Track 1 ≡ Track 2 plane collapse.
+  provider modules in generic codegen; Track 1 ≡ Track 2 plane collapse;
+- reopens W10.3 nested_layout a second time within a tranche without
+  user re-pin + intrinsic-block evidence; equivalently, admits any
+  future CSS feature whose claimed Mbps exceeds the same-plane SOTA
+  comparator by ≥ 50× without the same round-trip-rule trigger
+  (per `SYNTHESIS.md §0.4 P-1` + α-C §4);
+- proposes `UnionTape`, a second tape, a public substrate API, a
+  retained class/mask stream, or parser-owned cursor/list state; only
+  G-Omega may amend Lock 1's substrate-union closure
+  (`LOCKS.md:73-82`).
 
 ## 8. Pass Alpha Bracket V1 Disposition
 

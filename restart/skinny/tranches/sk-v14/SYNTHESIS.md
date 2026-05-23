@@ -70,6 +70,19 @@ recorded in `restart/skinny/ROLLING-SOTA-DELTA.md` at commit
 `653cdf795+w15.1-redress` are FALSIFIED by the audit pack. PRUNE-1 + PRUNE-2
 revert them.
 
+**Numeric-divergence reconciliation (per CH6 §2.2 REJ-2).** The dispatch
+context §1 cites 4 direct + 7 typed admits; α-A and α-D peer-measure
+6 direct + 11 typed under the broader `ROLLING-SOTA-DELTA.md:13-93`
+ledger (α-A:117-122 + :161-169; α-D:281-291 + :353-368). The +2 direct
+extension rows are **marine_ik** and **instruments**; the +4 typed
+extension rows are **random** (W13.3), **instruments** (W13.4),
+**numbers** (W13.1), **unicode_basic** (W13.2), with **update_center**
+adjusted under W15.1. Both populations reclassify AUDIT-FALSIFIED under
+v6 §1 rows 3-4 (same comparator-misbinding pattern:
+`sonic_rs::from_slice::<Value>` eager DOM, not strict per-corpus
+struct deser). The PRUNE-1 ledger revert binds the wider 6+11
+population — not the narrower 4+7 the dispatch summarises.
+
 ### 0.3 R-target goalset (the load-bearing layer)
 
 Pass Alpha binds the SK-V14 R-targets verbatim from
@@ -80,7 +93,7 @@ Pass Alpha binds the SK-V14 R-targets verbatim from
 | **R1** | comparator rebind: 3 plane-correct strict comparators | parse_only → sonic-rs Skipper-class (structural skip); direct → sonic-rs strict struct deser per corpus; typed → per-corpus typed struct deser. No row admits until its plane's comparator is strict-vs-strict. |
 | **R2** | per-iteration equality oracle | equality on EACH bench iter inside the timing region, not startup-only. The harness emits an equality-pass column per iter; `xtask gate-json` rejects rows whose equality column is empty. |
 | **R3** | PRUNE waves before any new admit attempt | PRUNE-1 revert W14.1–.5; PRUNE-2 delete 7 CSS templates + revert 24 CSS rows; PRUNE-3 trait-dispatch + grammar-agnostic codegen template; PRUNE-4 64 hand-written per-grammar runtime files in `crates/core/src/runtime/{grammar}/` refactored to emitted output (8 sub-waves); PRUNE-5 wire W8 + W9 from SCAFFOLD to LOAD-BEARING. |
-| **R4** | `cargo xtask regen-css` pipeline | consumes 15 `.bbnf` files at `/grammar/css/l4/`; emits CSS L4 runtime modules; round-trip clean (`delete generated → run xtask regen-css → diff empty`). |
+| **R4** | `cargo xtask regen-css` pipeline (first instance of the `regen-{grammar}` family; the xtask binary parametrises a grammar-neutral generator) | consumes 15 `.bbnf` files at `/grammar/css/l4/`; emits CSS L4 runtime modules; round-trip clean (`delete generated → run xtask regen-css → diff empty`). |
 | **R5** | production corpora `skinny/corpora/css-l4-sk-v14/` | Bootstrap + Tailwind + Material + Animate, ~960 KB. Tiny embedded fixtures unacceptable for admit. |
 | **R6** | CSS L4 re-admit (honest) | after R3+R4+R5, each CSS L4 row attempted via grammar-derived pipeline, real corpora, work-equivalent comparator (lightningcss full-parse; cssparser full-parse; no fact-stream vs full-AST asymmetry). |
 | **R7** | JSON direct + typed re-admit | after R1+R2, every JSON direct + typed row re-baselined against rebound strict comparators. Cells previously HOLDING under the misbound comparator hold again under the right comparator, or are reverted. |
@@ -99,7 +112,12 @@ this list; any SPEC clause that re-opens these patterns is REVISE:
   fabricated `@generated` marker. The recurrence vector for the entire CSS
   L4 fake-admit cluster. SK-V14 generated files post-PRUNE must round-trip
   through `cargo xtask regen-css` (R4) — hand-patching is forbidden per
-  `[clean-regen-discipline]`.
+  `[clean-regen-discipline]`. Per α-C §4, W10.3 nested_layout (124×
+  anomaly) carries a preemptive round-trip-rule trigger: any
+  second-in-tranche reopen of nested_layout requires user re-pin with
+  intrinsic-block evidence; any future CSS feature whose claimed Mbps
+  exceeds the same-plane SOTA comparator by ≥ 50× inherits the same
+  trigger.
 - **P-2 — `sonic_rs::from_slice::<Value>` mislabelled as strict
   comparator.** Per `v6-comparator-integrity.md §1 + §3`: a single
   eager-DOM API was bound for all three planes. SK-V14 binds three
@@ -173,11 +191,22 @@ These eight pillars hold under audit and continue into SK-V14 (per
 |---|---|---|
 | 25 CSS L4 admitted rows (incl. SK-V12 W1b 2.54× headline) | hand-written templates with fake `@generated`; no `regen-css` xtask | `v1 §1 + §2 + §5` |
 | 5 JSON `parse_only` admits (W14.1–.5) | gate-relabel only; parser unchanged; comparator misnamed | `v2 §1 + §2` |
-| 4 JSON direct admits | REAL parsers, comparator misbinding (eager DOM, not strict per-corpus struct deser) | `v2 §3.2 + v6 §3` |
-| 7 JSON typed admits | REAL parsers, comparator misbinding (eager DOM, not per-corpus typed deser) | `v2 §4.2 + v6 §3` |
+| 4 JSON direct admits (dispatch §1) / 6 under broader ledger | REAL parsers, comparator misbinding (eager DOM, not strict per-corpus struct deser) | `v2 §3.2 + v6 §3` |
+| 7 JSON typed admits (dispatch §1) / 11 under broader ledger | REAL parsers, comparator misbinding (eager DOM, not per-corpus typed deser) | `v2 §4.2 + v6 §3` |
 | W8 per-grammar policy | COSMETIC; zero runtime consumption | `v4 §4 + §6` |
 | W9 same-substrate union | COSMETIC; hardcoded constants | `v4 §5 + §6` |
 | 30 Lock 14 violations (11 CRITICAL + 7 HIGH + 5 MED + 7 LOW) | 8 hand-written per-grammar provider modules under `skinny/crates/codegen/` are the recurrence vector | `v3 §1` + Lock 14 (`LOCKS.md:220–238`) |
+
+**Reconciliation (per CH6 §2.2 REJ-2 + §0.2 above).** The direct + typed
+counts in the table reflect both the dispatch §1 bind (4 + 7) and the
+broader ROLLING-SOTA-DELTA ledger peer-measured by α-A and α-D
+(6 + 11). All 17 rows under the wider ledger reclassify
+AUDIT-FALSIFIED under v6 §1 rows 3-4; PRUNE-1 binds the wider 6+11
+population so the revert covers every comparator-misbinding row, not
+just the dispatch-narrowed 11. Per-row reconciliation sits at
+α-A:117-122 (direct +2: marine_ik, instruments) + α-A:161-169 (typed
++4: random, instruments, numbers, unicode_basic via W13.1/.2/.3/.4
+plus update_center W15.1 adjusted) + α-D:281-291 + α-D:353-368.
 
 ### 1.3 Honest rolling delta (the SK-V14 starting baseline)
 
@@ -208,6 +237,7 @@ audit-overlay columns. The bench harness must emit the schema verbatim;
 | `parse_utf8` / `escape_complete` / `flaw_probe` | required for JSON; CSS analogue names strictness + recovery mode |
 | `Output plane` | required; comparisons only count on same plane |
 | `Track 1 Mbps` / `Track 2 Mbps` | required for every row |
+| `track2_entry_point` | **NEW (CH5)** — symbol path of the Track 2 oracle entry point; `xtask gate-json` rejects any row where the Track 1 and Track 2 entry-point symbol paths share a common ancestor in `runtime::tape::` beyond the public `Tape` / `OffsetFlags` types |
 | `comparator_plane` | **NEW (R1)** — names the strict-mode comparator used per plane (parse_only/direct/typed); rejects any row whose comparator does work asymmetric to Track 1 |
 | `per_iter_equality` | **NEW (R2)** — boolean column emitted per iteration; PASS only if equality verified inside the timing region |
 | `sonic-rs strict Mbps` | required for every JSON row × plane (per R1) |
@@ -236,13 +266,18 @@ Five candidate slots map naturally onto the SK-V14 R-targets per
 `DISPATCH-CONTEXT.md §α-E`. These are the load-bearing candidates the
 skinny S-P3 wave plan consumes:
 
-| # | Scope | Falsifiability gate | Risk |
-|---|---|---|---|
-| **C-1** | R3 PRUNE-3 + PRUNE-4 (Lock-14 refactor cluster). Replace `RuntimeProvider` enum with trait-based dispatch in `skinny/crates/`. Collapse 8 per-grammar provider modules under `codegen/` into ONE grammar-agnostic generator template consuming grammar source + workspace metadata. Refactor 64 hand-written per-grammar files in `crates/core/src/runtime/{grammar}/` into emitted output (8 sub-waves). | `find skinny/crates -name '*.rs' \| xargs grep -l 'RuntimeProvider::Json\|JsonGrammar\|parse_json_grammar'` returns ZERO post-redress; `find crates/core/src/runtime -mindepth 1 -maxdepth 1 -type d` returns ZERO per-grammar dirs. | HIGH (architectural; multi-wave) |
-| **C-2** | R1 + R2 (comparator rebind + per-iter equality oracle). Three plane-correct strict comparators; per-iter equality inside the timing region. | bench harness emits an equality-pass column per iter; `xtask gate-json` rejects any row whose equality column is empty. | MED (harness-local) |
-| **C-3** | R4 + R5 (regen-css pipeline + production corpora). `cargo xtask regen-css` consuming the 15 `.bbnf` files at `/grammar/css/l4/`; `skinny/corpora/css-l4-sk-v14/` with Bootstrap + Tailwind + Material + Animate (~960 KB). | round-trip xtask check returns clean; corpora dir > 800 KB. | MED (xtask + corpora) |
-| **C-4** | R3 PRUNE-5 (W8 + W9 scaffold → load-bearing). CSP-chosen shape produces measurable runtime divergence on a named pre-wave row. | named row measurement shows runtime divergence keyed on CSP shape decision; no row admit cites W8/W9 without measured runtime consumption. | MED (wires existing scaffold) |
-| **C-5** | R3 PRUNE-1 + PRUNE-2 (clean revert of fake admits). PRUNE-1: revert W14.1–W14.5 in `RESULTS.md` + `ROLLING-SOTA-DELTA.md`; REDRESS per row cites `v2 §1–4`. PRUNE-2: delete 7 CSS hand-written template files + their `include_str!`'d `generated.rs`; revert 24 CSS L4 admitted rows; REDRESS per row cites `v1 §1–6`. | post-redress `git grep -l '@generated' crates/core/src/runtime` excludes any file produced by hand; `ROLLING-SOTA-DELTA.md` shows CSS L4 0/24 + parse_only 0/17. | LOW (revert + REDRESS scribe) |
+| # | Scope | Same-wave consumer | Falsifiability gate | LOC budget | Risk |
+|---|---|---|---|---:|---|
+| **C-1** | R3 PRUNE-3 + PRUNE-4 (Lock-14 refactor cluster). Replace `RuntimeProvider` enum with trait-based dispatch in `skinny/crates/`. Collapse 8 per-grammar provider modules under `codegen/` into ONE grammar-agnostic generator template consuming grammar source + workspace metadata. Refactor 64 hand-written per-grammar files in `crates/core/src/runtime/{grammar}/` into emitted output (8 sub-waves). | regen-derived runtime for every grammar emitted in the same waves; the per-sub-wave gate runs before commit. | `find skinny/crates -name '*.rs' \| xargs grep -l 'RuntimeProvider::Json\|JsonGrammar\|parse_json_grammar'` returns ZERO post-redress; `find crates/core/src/runtime -mindepth 1 -maxdepth 1 -type d` returns ZERO per-grammar dirs. Forward invariant (post-redress, permanent): any new grammar added under `workspace.metadata.bbnf.grammars.{name}` produces ZERO new `.rs` files in `skinny/crates/{codegen, runtime, passes, bbnf, grammar}/src/` and ZERO new directories in `crates/core/src/runtime/`; the Lock 14 baseline gate rejects any commit that violates this. | 2.8k – 3.4k | VERY HIGH (architectural; multi-wave) |
+| **C-2** | R1 + R2 (comparator rebind + per-iter equality oracle). Three plane-correct strict comparators; per-iter equality inside the timing region. | bench harness consumes the rebound comparators on every named JSON row; `xtask gate-json` enforces the schema. | bench harness emits an equality-pass column per iter; `xtask gate-json` rejects any row whose equality column is empty. | 600 – 1.08k | HIGH (harness + comparator surface) |
+| **C-3** | R4 + R5 (regen-css pipeline + production corpora; first instance of the `regen-{grammar}` family — the xtask binary parametrises a grammar-neutral generator). `cargo xtask regen-css` consuming the 15 `.bbnf` files at `/grammar/css/l4/`; `skinny/corpora/css-l4-sk-v14/` with Bootstrap + Tailwind + Material + Animate (~960 KB). | runtime regenerated from the 15 `.bbnf` files in the same wave; bench rows wired to the new corpora. | round-trip xtask check returns clean on both runtime trees (`rm -rf … && cargo xtask regen-css && git diff` empty on `skinny/crates/runtime/src/grammars/css_l4_*` AND on `crates/core/src/runtime/css_l4/`) + bypass-header detector empty (`git grep -l '@generated by skinny bbnf-codegen' -- skinny/crates/runtime crates/core/src/runtime` traces every match to a registered xtask emission); `du -sh skinny/corpora/css-l4-sk-v14` > 800 KB; see §5 + hardening V1 CH7 §3.1. | 1.2k – 2.0k | HIGH (xtask + corpora + dual-tree round-trip) |
+| **C-4** | R3 PRUNE-5 (W8 + W9 scaffold → load-bearing). CSP-chosen shape produces measurable runtime divergence on a named pre-wave row. | CSP-selected shape produces measurable runtime divergence on at least one named pre-wave row in the same wave. | named pre-wave row `json/numbers/direct_to_struct/main`: pre-wave hot leaf `parse_value_at`, post-wave hot leaf names the W11.1 number-specialised symbol explicitly in the samply trace; row hot leaf attribution changes in `RESULTS.md`; per-shape Lock-1 triad (`substrate_target`, `retention_lifetime`, `policy_owner`) declared in REDRESS; no row admit cites W8/W9 without measured runtime consumption. | 800 – 1.4k | VERY HIGH (Lock-1 substrate-ceiling surface) |
+| **C-5** | R3 PRUNE-1 + PRUNE-2 (clean revert of fake admits). PRUNE-1: revert W14.1–W14.5 in `RESULTS.md` + `ROLLING-SOTA-DELTA.md`; REDRESS per row cites `v2 §1–4`. PRUNE-2: delete 7 CSS hand-written template files + their `include_str!`'d `generated.rs`; revert 24 CSS L4 admitted rows; REDRESS per row cites `v1 §1–6`. | REDRESS per row cites the validation §reference; ROLLING-SOTA-DELTA rebases to the audit-zero baseline in the same commit set. | post-redress `git grep -l '@generated' crates/core/src/runtime` excludes any file produced by hand; `ROLLING-SOTA-DELTA.md` shows CSS L4 0/24 + parse_only 0/17; `skinny/REDRESS.md` carries 29 new row-keyed entries. | 250 – 500 (delete-heavy) | MED-LOW (revert + REDRESS scribe) |
+
+Total envelope ≈ 5.65k – 8.38k across the five candidates per α-E §2;
+C-1 dominates, C-5 is mostly deletion. Risk-weighted: C-1 + C-4 carry
+the architectural risk; C-2 + C-3 carry the throughput / reproducibility
+risk; C-5 carries audit-trail risk only.
 
 R6 / R7 / R8 (re-admit waves) are downstream CONSUMERS of C-1 through C-5
 and belong in the SK-V14 wave program after these candidates land; they
@@ -278,13 +313,35 @@ S-P3 owns the detailed wave plan; it is constrained by this contract:
   per `sk-v13/SYNTHESIS.md §4`: consuming-grammar quote/escape/control
   policy or no-string policy, scalar parity, checkasm/differential
   coverage, same-wave measured row consumption, no public substrate API,
-  no retained sidecar classifier state;
+  no retained sidecar classifier state. Every SIMD consumer wired by
+  C-4 declares `substrate_target`, `retention_lifetime`, and
+  `policy_owner` per `LOCKS.md:73-82`; `xtask gate-json` rejects any
+  row whose REDRESS lacks the triple.
 - after the decision-engine resolver lands (R3 PRUNE-5), the hardcoded
   P1–P8 cascade fails closed for JSON / CSS / Sheets / BBNF-self rows;
   silent fallback to the old cascade is not admission evidence;
 - the §1 audit overlay (`audit_overlay_verdict` column) is gate-enforced
   per row; any row currently AUDIT-FALSIFIED requires fresh material
-  differential evidence to re-admit, cited per REDRESS.
+  differential evidence to re-admit, cited per REDRESS;
+- S-P3 wave manifest inherits per-candidate LOC envelopes from α-E §2
+  (C-1 2.8k–3.4k; C-2 600–1.08k; C-3 1.2k–2.0k; C-4 800–1.4k; C-5
+  250–500; total ≈ 5.65k–8.38k); any wave exceeding its envelope by
+  > 20 % escalates per `[generated-size-budget]`;
+- C-1's forward invariant (no new `.rs` files in generic crates; no new
+  directories in `crates/core/src/runtime/`; Lock 14 baseline gate
+  rejects any commit that violates this) is permanent; S-P3 wave plans
+  MUST cite it as the pre-condition for any new grammar admission wave
+  (BBNF-self, Sheets, future grammars);
+- the C-4 shape consumer is exercised across at least two grammar
+  families before any C-4 admit cites runtime divergence as
+  load-bearing; one-grammar runtime divergence is wave evidence, not
+  admit evidence; the shape consumer in
+  `skinny/crates/codegen/src/lib.rs` MUST dispatch on the CSP-emitted
+  `BackendShape` enum alone — no `match grammar { Json => ..., CssL4
+  => ... }` arm may appear in the dispatch path;
+- every wave fans out as research → plan → redress in distinct commits
+  per `[triumvirate-discipline]` + ORCHESTRATOR §8; a wave that lands
+  a single research-plan-redress mega-commit fails the gate at S-P3.
 
 ## Section 5 — Pre-Blocked And Unblocked Routes
 

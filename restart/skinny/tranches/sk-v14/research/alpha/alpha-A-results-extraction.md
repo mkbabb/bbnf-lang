@@ -116,10 +116,22 @@ bind.)
 
 DISPATCH §1 enumerates "4 JSON direct admits" — the 6 actually marked
 ADMITTED in `ROLLING-SOTA-DELTA.md:13-93` are citm_catalog, apache_builds,
-marine_ik, instruments, numbers, unicode_basic. Two of these
-(instruments, numbers) carry SK-V12-W2 / SK-V13-W10 wave admission; the
-other four are SK-V12 carries. All six fall under the same comparator
-misbinding pattern.
+marine_ik, instruments, numbers, unicode_basic. All six fall under the
+same comparator misbinding pattern (v6 §1 row 3). PRUNE-1's revert scope
+must read the 6-row authoritative count, not the dispatch §1 "4" — the
+two are reconciled per the table below so a downstream agent enumerating
+the PRUNE-1 surface lands on a single number.
+
+**Direct-admit reconciliation (DISPATCH §1 "4" vs ROLLING-SOTA-DELTA "6"):**
+
+| Source | Count | Rows | Audit overlay |
+|---|---:|---|---|
+| DISPATCH-CONTEXT.md §1 line 47 | 4 | citm_catalog, apache_builds, numbers, unicode_basic (SK-V12 + W2/W10 carries the dispatch enumeration) | All AUDIT-FALSIFIED per v6 §1 row 3 |
+| ROLLING-SOTA-DELTA.md:13-93 (authoritative) | 6 | +2: **marine_ik**, **instruments** | Both AUDIT-FALSIFIED per v6 §1 row 3 (same comparator-misbinding pattern: `sonic_rs::from_slice::<Value>()` eager-typed DOM, not strict direct-struct deser per-corpus) |
+
+PRUNE-1 revert scope binds the 6-row count; the dispatch §1 "4" is a
+trace of the v2 §3-specifically-cited rows, not the full direct-admit
+ledger.
 
 ---
 
@@ -132,16 +144,16 @@ misbinding pattern.
 | canada | absent | n/a | n/a | n/a | n/a | n/a | n/a | typed direct | **MISSING** | MISSING-UNCHANGED | `ROLLING-SOTA-DELTA.md:22` |
 | apache_builds | A/GO | 8127 | 6756 | 8091 | +0.5% | -486 (vs 8613) | deferred | typed direct | **ADMITTED** | **AUDIT-FALSIFIED** | v2 §4; v6 §1 row 4 |
 | github_events | A/GO (W6) | 13040 | 12552 | 12627 | +3.3% | -58 (vs 13098) | strict (nominal) | typed direct | **ADMITTED** | **AUDIT-FALSIFIED** | v2 §4; v6 §1 row 4 |
-| update_center | A/GO (W15.1) | 13191 | 10417 | 12623 | +4.5% | +856 (vs 12335) | strict (nominal) | typed direct | **ADMITTED** | **AUDIT-FALSIFIED** | v2 §4; v6 §1 row 4 |
+| update_center [ext†] | A/GO (W15.1) | 13191 | 10417 | 12623 | +4.5% | +856 (vs 12335) | strict (nominal) | typed direct | **ADMITTED** | **AUDIT-FALSIFIED** | v2 §4; v6 §1 row 4 |
 | mesh | A/GO | 9686 | 7885 | 8867 | +9.2% | -135 (vs 9821) | deferred | typed direct | **ADMITTED** | **AUDIT-FALSIFIED** | v2 §4; v6 §1 row 4 |
-| random | A/GO (W13.3) | 8151 | 5384 | 7393 | +10.3% | n/a (new typed row) | strict (nominal) | typed direct | **ADMITTED** | **AUDIT-FALSIFIED** | v2 §4; v6 §1 row 4 |
+| random [ext†] | A/GO (W13.3) | 8151 | 5384 | 7393 | +10.3% | n/a (new typed row) | strict (nominal) | typed direct | **ADMITTED** | **AUDIT-FALSIFIED** | v2 §4; v6 §1 row 4 |
 | gsoc-2018 | absent | n/a | n/a | n/a | n/a | n/a | n/a | typed direct | **MISSING** | MISSING-UNCHANGED | `ROLLING-SOTA-DELTA.md:40` |
 | marine_ik | A/GO | 12164 | 10004 | 9198 | +32.2% | -50 (vs 12214) | deferred | typed direct | **ADMITTED** | **AUDIT-FALSIFIED** | v2 §4; v6 §1 row 4 |
-| instruments | A/GO (W13.4) | 21464 | 12262 | 16209 | +32.4% | n/a (new typed row) | strict (nominal) | typed direct | **ADMITTED** | **AUDIT-FALSIFIED** | v2 §4; v6 §1 row 4 |
-| numbers | A/GO (W13.1) | 13281 | 9765 | 12249 | +8.4% | n/a (new typed row) | strict (nominal) | typed direct | **ADMITTED** | **AUDIT-FALSIFIED** | v2 §4; v6 §1 row 4 |
+| instruments [ext†] | A/GO (W13.4) | 21464 | 12262 | 16209 | +32.4% | n/a (new typed row) | strict (nominal) | typed direct | **ADMITTED** | **AUDIT-FALSIFIED** | v2 §4; v6 §1 row 4 |
+| numbers [ext†] | A/GO (W13.1) | 13281 | 9765 | 12249 | +8.4% | n/a (new typed row) | strict (nominal) | typed direct | **ADMITTED** | **AUDIT-FALSIFIED** | v2 §4; v6 §1 row 4 |
 | unicode_mixed | absent | n/a | n/a | n/a | n/a | n/a | n/a | typed direct | **MISSING** | MISSING-UNCHANGED | `ROLLING-SOTA-DELTA.md:52` |
 | unicode_escapes | absent | n/a | n/a | n/a | n/a | n/a | n/a | typed direct | **MISSING** | MISSING-UNCHANGED | `ROLLING-SOTA-DELTA.md:55` |
-| unicode_basic | A/GO (W13.2) | 6753 | 4333 | 6044 | +11.7% | n/a (new typed row) | strict (nominal) | typed direct | **ADMITTED** | **AUDIT-FALSIFIED** | v2 §4; v6 §1 row 4 |
+| unicode_basic [ext†] | A/GO (W13.2) | 6753 | 4333 | 6044 | +11.7% | n/a (new typed row) | strict (nominal) | typed direct | **ADMITTED** | **AUDIT-FALSIFIED** | v2 §4; v6 §1 row 4 |
 | distinct_values | absent | n/a | n/a | n/a | n/a | n/a | n/a | typed direct | **MISSING** | MISSING-UNCHANGED | `ROLLING-SOTA-DELTA.md:61` |
 | y_string_unicode | absent | n/a | n/a | n/a | n/a | n/a | n/a | typed direct | **MISSING** | MISSING-UNCHANGED | `ROLLING-SOTA-DELTA.md:64` |
 
@@ -168,6 +180,27 @@ W15.1 newer typed admits (numbers, unicode_basic, random, instruments,
 update_center) are not separately traced in v2 but fall under the same
 v6 §1 row 4 comparator pattern. All 11 reclassify AUDIT-FALSIFIED;
 SUSPECT-PENDING-R1.
+
+**[ext†] extension-row legend:** The `[ext†]` marker on five rows above
+(`update_center`, `random`, `instruments`, `numbers`, `unicode_basic`)
+flags the SK-V13 wave-program typed extensions that lift the typed
+admit count from the dispatch §1 "7" to the ROLLING-SOTA-DELTA "11".
+Wave-id mapping per row:
+
+| Row | Wave id | Admit landing | Per-row v2/v6 binding |
+|---|---|---|---|
+| `numbers` | **W13.1** | New typed row (no SK-V12 baseline) | v2 §4 silent; v6 §1 row 4 (same comparator pattern) |
+| `unicode_basic` | **W13.2** | New typed row | v2 §4 silent; v6 §1 row 4 |
+| `random` | **W13.3** | New typed row | v2 §4 silent; v6 §1 row 4 |
+| `instruments` | **W13.4** | New typed row | v2 §4 silent; v6 §1 row 4 |
+| `update_center` | **W15.1 (adjusted)** | SK-V12 carry adjusted under W15.1 | v2 §4 traces SK-V12 baseline; W15.1 adjustment falls under v6 §1 row 4 |
+
+These five extension rows (4 W13.x new + 1 W15.1 adjustment) all
+reclassify under the same v6 §1 row 4 pattern as the 7 v2-traced
+SK-V12 carries; PRUNE-1's revert scope must enumerate the full 11-row
+count, while α-C §1's REOPEN-AUDIT scope for W13/W15 routes through R7
+per the same row-4 binding. The wave-id column above is the single
+source of truth for which rows extend the dispatch §1 enumeration.
 
 Six rows are MISSING per `ROLLING-SOTA-DELTA.md:22,40,52,55,61,64`
 (canada, gsoc-2018, unicode_mixed, unicode_escapes, distinct_values,
@@ -259,6 +292,31 @@ c/B remains schema-debt at the table-1 surface per the prior SK-V13
 alpha-A artefact `:92-95`. The audit does not contest the c/B
 substrate; it contests the comparator bindings and template
 provenance that the c/B sits beneath.
+
+**c/B column LOC budget (carry-with-C-2):** Closing the c/B schema
+debt is bounded by ≈ **80-120 LOC** total, decomposed as: (i) ~30-40
+LOC for `bbnf-bench/src/report.rs` table-1 column emission (header +
+per-row `ns_per_byte × cpu_freq_GHz` formatter + units suffix); (ii)
+~20-30 LOC for `cpu_freq_GHz` plumbing through the existing
+host-triple capture path (the `aarch64-apple-darwin` / Apple M5 Max
+detection at the report-init site already exists per
+`RESULTS.md:55`; the freq lookup is a new constant table or sysctl
+read); (iii) ~20-30 LOC for the `xtask gate-json` schema extension to
+validate the column's presence on every row (parallels the
+`comparator_plane` + `per_iter_equality` columns C-2 introduces); (iv)
+~10-20 LOC for downstream test fixtures + telemetry-manifest schema
+update at the `RESULTS.md:51-131` SK-V9 W0 manifest surface.
+
+This budget routes through **C-2's harness scope** in the same commit
+as the comparator rebind: C-2's owner path enumerates
+`bbnf-bench/src/report.rs` per α-E §4 (lines 234-240 of the candidate
+shortlist), and the c/B column add lands on the same file with no new
+owner-path expansion. The 80-120 LOC fits inside C-2's existing 600
+LOC lower-bound envelope (600-1.0k per α-E §2) without requiring an
+envelope-ceiling raise; the c/B add is folded into C-2's same-wave
+consumer rule per `[execute-planned-architecture]` so the column lands
+WITH its first consuming bench row in the same commit, not as a
+support-only landing.
 
 The lazy-tape materialisation lines at `RESULTS.md:137-180` record
 per-corpus offset / sparse-flag / allocated-tape / payload byte

@@ -345,11 +345,43 @@ harness must invoke them through separate API entry points. Per Lock 1, no
 renamed-scanner / shared-cursor / shared-tape implementation crosses the
 parity boundary.
 
-**Falsifiability:** Per-wave audit (S-P0 lens) inspects the bench harness
-for shared mutable state between Track 1 and Track 2 invocations; any
-shared sink, shared buffer, or shared dispatcher fails the gate. xtask
-`gate-json` reads a per-row column naming Track 2's distinct entry point and
-rejects rows where Track 1 and Track 2 entry points share a symbol.
+**Falsifiability (triple check per CH5 §2 REVISE #4, against `restart/locks/LOCKS.md:73-82`):**
+Per-wave audit (S-P0 lens) inspects the bench harness for shared mutable
+state between Track 1 and Track 2 invocations; any shared sink, shared
+buffer, or shared dispatcher fails the gate. The gate composes three
+mechanically independent checks — symbol identity, type identity, address
+identity — because each closes a slip the other two cannot detect.
+
+(a) **Distinct symbol paths.** xtask `gate-json` reads a per-row column
+naming Track 2's distinct entry point and rejects rows where Track 1 and
+Track 2 entry points share a symbol. This closes the shared-dispatcher
+pattern (one symbol invoked twice) but admits the renamed-scanner slip per
+the CH5 charge at `CHALLENGE-CONTEXT.md:160` — a fresh symbol path may still
+funnel into the same buffer.
+
+(b) **Distinct concrete `Sink` types (compile-time `TypeId` inequality).**
+The bench harness asserts `TypeId::of::<Track1::Sink>() != TypeId::of::<Track2::Sink>()`
+inside a `const _: () = assert!(...);` form (or `static_assertions::assert_type_ne_all!`
+where const-context is unavailable). This rejects at compile time any
+shape where Track 2 borrows Track 1's concrete sink under a fresh symbol —
+the type-identity check is orthogonal to the symbol-path check and catches
+the same-type-different-wrapper smuggle.
+
+(c) **Distinct buffer addresses at the first bench iter.** The per-iter
+equality column (per R2 of the SK-V14 close conditions) records
+`Track1::tape() as *const _ as usize` and `Track2::tape() as *const _ as usize`
+on iter 0; xtask `gate-json` rejects any row where the two addresses are
+equal. Address inequality is the runtime correlate of buffer-ownership
+inequality and detects shared `OffsetFlags` / shared `Tape` instances even
+when both symbol path and concrete type pass. Per Lock 1
+(`LOCKS.md:73-82`), Track 2's tape must declare `substrate_target ∈
+{existing_tape, direct_sink, admitted_fact_output}` distinct from Track 1's
+declaration; the address check is the mechanical correlate.
+
+All three checks must pass per row; any one failing rejects the row at
+`xtask gate-json` time before any admit attempt. The triple closes the
+renamed-shared-buffer pattern Lock 1's "no renamed-scanner / shared-cursor
+/ shared-tape implementation" clause names verbatim (`LOCKS.md:80-81`).
 
 ## §3 — Pattern-level summary
 

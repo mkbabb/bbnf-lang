@@ -80,16 +80,19 @@ The slate is exactly five.
 
 | ID | Candidate | R-target | Same-wave consumer | Falsifiability gate | LOC budget | Risk |
 |---|---|---|---|---|---:|---|
-| **C-1** | Lock-14 refactor cluster: provider trait + grammar-agnostic generator + 64-file Pattern H collapse | R3 PRUNE-3 + PRUNE-4 | regen-derived runtime for every grammar emitted in the same waves; gate run before commit | grep returns ZERO for `RuntimeProvider::Json`/`JsonGrammar`/`parse_json_grammar`; `find crates/core/src/runtime -mindepth 1 -maxdepth 1 -type d` returns ZERO; every generated file traces to a generator + grammar source | 2.1k – 3.4k | very high |
-| **C-2** | Comparator rebind + per-iteration equality oracle | R1 + R2 | bench harness consumes the rebound comparators on every named JSON row; `xtask gate-json` enforces the schema | three plane-correct strict comparators in `bbnf-bench`; per-iter equality column present in every emitted RESULTS row; `xtask gate-json` rejects rows whose equality column is empty | 600 – 1.0k | high |
-| **C-3** | `cargo xtask regen-css` + production corpora at `skinny/corpora/css-l4-sk-v14/` | R4 + R5 | runtime regenerated from the 15 `.bbnf` files in the same wave; bench rows wired to the new corpora | round-trip: `delete generated → cargo xtask regen-css → diff produces empty`; `du -sh skinny/corpora/css-l4-sk-v14` > 800 KB with Bootstrap + Tailwind + Material + Animate present | 1.2k – 2.0k | high |
-| **C-4** | W8 per-grammar policy + W9 same-substrate union scaffold → load-bearing | R3 PRUNE-5 | CSP-selected shape produces measurable runtime divergence on at least one named pre-wave row in the same wave | divergence proof: CSP solver chooses shape X on grammar Y, runtime executes the X path, samply trace shows the X symbols in the hot leaf; row hot leaf attribution changes in `RESULTS.md` per the new shape | 800 – 1.4k | very high |
-| **C-5** | Clean revert of W14.1–W14.5 + deletion of 7 CSS template providers + 24 CSS-row revert | R3 PRUNE-1 + PRUNE-2 | REDRESS per row cites the validation §reference; ROLLING-SOTA-DELTA rebases to the audit-zero baseline in the same commit set | `git grep -l '@generated' skinny/crates/runtime/src/grammars/css_l4_*` returns ZERO; `git grep -l 'include_str!' skinny/crates/codegen/src/css_l4_*_provider.rs` returns ZERO; ROLLING-SOTA-DELTA shows JSON parse_only 0/17 and CSS L4 0/24 | 250 – 500 (delete-heavy) | medium |
+| **C-1** | Lock-14 refactor cluster: provider trait + grammar-agnostic generator + 64-file Pattern H collapse | R3 PRUNE-3 + PRUNE-4 | regen-derived runtime for every grammar emitted in the same waves; gate run before commit | grep returns ZERO for `RuntimeProvider::Json`/`JsonGrammar`/`parse_json_grammar`; `find crates/core/src/runtime -mindepth 1 -maxdepth 1 -type d` returns ZERO; every generated file traces to a generator + grammar source (see §3 for full per-sub-wave gate + forward invariant) | 2.8k – 3.4k | very high |
+| **C-2** | Comparator rebind + per-iteration equality oracle | R1 + R2 | bench harness consumes the rebound comparators on every named JSON row; `xtask gate-json` enforces the schema | three plane-correct strict comparators in `bbnf-bench`; per-iter equality column present in every emitted RESULTS row; `xtask gate-json` rejects rows whose equality column is empty | 600 – 1.08k | high |
+| **C-3** | `cargo xtask regen-css` + production corpora at `skinny/corpora/css-l4-sk-v14/` (first instance of the `regen-{grammar}` family) | R4 + R5 | runtime regenerated from the 15 `.bbnf` files in the same wave; bench rows wired to the new corpora | round-trip: `rm -rf … && cargo xtask regen-css && git diff` empty on BOTH skinny and core runtime trees; bypass-header detector empty; `du -sh skinny/corpora/css-l4-sk-v14` > 800 KB with Bootstrap + Tailwind + Material + Animate present (see §5 + hardening V1 CH7 §3.1 for full three-part gate) | 1.2k – 2.0k | high |
+| **C-4** | W8 per-grammar policy + W9 same-substrate union scaffold → load-bearing | R3 PRUNE-5 | CSP-selected shape produces measurable runtime divergence on at least one named pre-wave row in the same wave | divergence proof on named row `json/numbers/direct_to_struct/main`: pre-wave hot leaf `parse_value_at`, post-wave hot leaf names the W11.1 number-specialised symbol explicitly in the samply trace; row hot leaf attribution changes in `RESULTS.md`; per-shape Lock-1 triad declared in REDRESS (see §6 for full owner-path discipline) | 800 – 1.4k | very high |
+| **C-5** | Clean revert of W14.1–W14.5 + deletion of 7 CSS template providers + 24 CSS-row revert | R3 PRUNE-1 + PRUNE-2 | REDRESS per row cites the validation §reference; ROLLING-SOTA-DELTA rebases to the audit-zero baseline in the same commit set | `git grep -l '@generated' skinny/crates/runtime/src/grammars/css_l4_*` returns ZERO; `git grep -l 'include_str!' skinny/crates/codegen/src/css_l4_*_provider.rs` returns ZERO; ROLLING-SOTA-DELTA shows JSON parse_only 0/17 and CSS L4 0/24; `skinny/REDRESS.md` carries 29 new row-keyed entries | 250 – 500 (delete-heavy) | medium |
 
-Total LOC envelope: 4.95k – 8.3k across the five candidates. C-1
-dominates; C-5 is mostly deletion. Risk-weighted: C-1 + C-4 carry the
-architectural risk; C-2 + C-3 carry the throughput / reproducibility
-risk; C-5 carries audit-trail risk only.
+Total LOC envelope: ≈ 5.65k – 8.38k across the five candidates (C-1
+lower bound raised to ≈ 2.8k per CH4 V1 to reflect 64-file refactor
+reality; C-2 ceiling raised by ≈ 80 LOC per CH4 V2 to cover the in-tree
+Skipper-class fallback path α-B §316 flags). C-1 dominates; C-5 is
+mostly deletion. Risk-weighted: C-1 + C-4 carry the architectural risk;
+C-2 + C-3 carry the throughput / reproducibility risk; C-5 carries
+audit-trail risk only.
 
 ## §3 — C-1 — Lock-14 refactor cluster
 
@@ -164,8 +167,17 @@ grammar PLUS the regen-derived runtime for that grammar, gated by:
   matches in non-generated source.
 - Lock 14 baseline gate (`bbnf-bench::lock14_baseline::validate`) passes
   for every grammar.
+- **Forward invariant (post-redress, permanent).** Any new grammar
+  added under `workspace.metadata.bbnf.grammars.{name}` produces ZERO
+  new `.rs` files in `skinny/crates/{codegen, runtime, passes, bbnf,
+  grammar}/src/` and ZERO new directories in
+  `crates/core/src/runtime/`. The Lock 14 baseline gate rejects any
+  commit that violates this invariant; the gate fires at every
+  sub-wave commit and at every future grammar-admission wave.
 
-**LOC budget.** 2.1k – 3.4k source/test envelope across the cluster.
+**LOC budget.** 2.8k – 3.4k source/test envelope across the cluster
+(lower bound raised per CH4 V1 to reflect the 64-file refactor + 8
+sub-wave structure).
 Generated LOC budget separately accounted under
 `[generated-size-budget]` feedback. 64-file refactor is delete-then-emit
 biased: net source LOC may decrease.
@@ -253,8 +265,13 @@ The wave is non-admittable if ANY named row's equality column is empty.
   comparator's strict Mbps; the gap between this and the prior misbound
   Mbps is the SUSPECT → HONEST recalibration documented in α-B.
 
-**LOC budget.** 600 – 1.0k including per-corpus typed structs (mostly
-declarations).
+**LOC budget.** 600 – 1.08k including per-corpus typed structs (mostly
+declarations). Ceiling raised by ≈ 80 LOC per CH4 V2 to cover the
+in-tree Skipper-class fallback path α-B §316-320 flags: if sonic-rs
+v0.5.8 lacks the `Skipper` public API, the wave authors a thin
+strict-mode parse_only adapter inside `bbnf-bench/src/` (≈ 80 LOC)
+rather than escalate. The adapter is gate-falsifiable against
+yyjson/simdjson skip-only as a cross-check oracle.
 
 **Risk class.** High. The dominant failure is sonic-rs API surface:
 `Skipper` may not exist as a public API at the current sonic-rs version
@@ -283,7 +300,13 @@ candidate downstream (R6 / R7 / R8).
 through the codegen pipeline. Stand up production corpora at
 `skinny/corpora/css-l4-sk-v14/` containing Bootstrap, Tailwind,
 Material, and Animate, totalling ≈ 960 KB per the SK-V13 scoping
-target (`v1-css-l4-validation.md §1 Claim 4`).
+target (`v1-css-l4-validation.md §1 Claim 4`). (First instance of the
+`regen-{grammar}` family; the xtask binary parametrises a
+grammar-neutral generator; the generic codegen entry it invokes is the
+same surface a future `regen-sheets` / `regen-bbnf-self` /
+`regen-{new}` binary will invoke. The CSS instance proves the family
+shape; subsequent grammars admit through the same surface without
+introducing per-grammar bespoke binaries.)
 
 **Owner paths.**
 
@@ -329,11 +352,35 @@ not C-3's.
 The wave is non-admittable if the round-trip fails on ANY of the 15
 grammars.
 
-**Falsifiability gate.**
+**Falsifiability gate.** Three-part round-trip + recurrence-vector
+detector per CH7-1 + CH7-4 binding (V1 CH7 §3.1 REJECT remediation):
 
-- Round-trip: `rm -rf skinny/crates/runtime/src/grammars/css_l4_* &&
-  cargo xtask regen-css && git diff --
-  skinny/crates/runtime/src/grammars/css_l4_*` produces empty output.
+- **Round-trip (skinny tree).** `rm -rf
+  skinny/crates/runtime/src/grammars/css_l4_* && cargo xtask regen-css
+  && git diff -- skinny/crates/runtime/src/grammars/css_l4_*` produces
+  empty output.
+- **Round-trip (core tree, all 8 grammars).** For each of `{json,
+  css_l4, google_sheets, bbnf, csv, ebnf, bnf, math}`: `rm -rf
+  crates/core/src/runtime/<grammar>/ && cargo xtask regen-<grammar>
+  && git diff -- crates/core/src/runtime/<grammar>/` produces empty
+  output. (C-1's sub-wave structure owns the per-grammar xtask
+  emission; C-3's round-trip gate consumes those xtasks for CSS and
+  asserts byte-equivalence on every other grammar's tree as the
+  cross-grammar recurrence-vector check. A hand-patched
+  `crates/core/src/runtime/{grammar}/` file fails this gate; the
+  Pattern H tarpit `alpha-D.md:486-495` flags collapses to ZERO
+  hand-patched files under the gate's enforcement.)
+- **Bypass-header detector.** Every file matching `git grep -l
+  '@generated by skinny bbnf-codegen' -- skinny/crates/runtime
+  crates/core/src/runtime` must be the byte-for-byte output of a
+  registered xtask emission; the round-trip succeeds on every such
+  file. Files asserting the header outside the registered xtask scope
+  are CH7-1 violations and reject the wave. The detector closes the
+  audit-confirmed CSS bypass-header pattern
+  (`alpha-D.md:185-200` cites the `// @generated by skinny
+  bbnf-codegen; do not edit by hand.` header rendered into hand-curated
+  content); post-PRUNE no `@generated` header may appear outside a
+  registered xtask's emission scope.
 - `du -sh skinny/corpora/css-l4-sk-v14` reports > 800 KB.
 - `ls skinny/corpora/css-l4-sk-v14/` contains
   `bootstrap.css`, `tailwind.css`, `material.css`, `animate.css` (or
@@ -409,6 +456,25 @@ least one named pre-wave row in the wave that lands the wiring.
 - `skinny/crates/bbnf-bench/src/report.rs` — hot-leaf attribution column
   per `PASS-ALPHA.md §4.3` reflects the chosen shape's symbol path.
 
+**Per-shape Lock-1 triad declaration (mandatory; CH5 §2 REJECT
+remediation, V1 hardening).** The same-wave consumer plan adds a
+`substrate_target=existing_tape | retention_lifetime=generated_function
+| policy_owner=generated_grammar` triple as a REQUIRED column in the
+wave's REDRESS entry for every CSP-selectable shape the wiring
+exercises. Allowed values per `LOCKS.md:73-82`: `substrate_target` ∈
+{`local_temp_only`, `existing_tape`, `direct_sink`,
+`admitted_fact_output`}; `retention_lifetime` ∈ {`local_loop`,
+`generated_function`, `output_row`}; `policy_owner` ∈
+{`generated_grammar`, `caller_data`, `none`}. Any shape whose triple
+cannot be declared at wave-plan time abrogates per
+`[abrogate-before-patch]` and falls under C-4's architectural-block
+escalation path (§11 below, lines reading "If C-4 cannot demonstrate
+hot-leaf attribution change on any named row…"). `xtask gate-json`
+rejects any REDRESS row that lacks the triple; the rejection wires
+through the same gate path that rejects empty equality columns from
+C-2. The triad discipline applies per CSP-selectable shape, not per
+wave aggregate — a wave admitting two shapes must declare two triples.
+
 **Scalar reference status.** Each per-grammar policy MUST have a scalar
 reference implementation in `bbnf-simd/src/scalar/` if a SIMD kernel is
 selected by the policy. Existing SURVIVES set covers JSON; new policies
@@ -430,18 +496,40 @@ must pass the policy gate per Lock 14.
 - The CSP-chosen shape's hot path consumes the selected primitive (or
   the selected layout / sink) in same-commit code, NOT a future
   promise.
+- **Post-wave hot-leaf module-path discipline (CH5 §2 REVISE #5, V1
+  hardening).** The post-wave hot leaf's module path traces to
+  `runtime::tape::` (an existing same-tape variant) or to a
+  generator-emitted module whose template provenance is named in
+  REDRESS; module paths under `runtime::ext::`,
+  `runtime::sidecar::`, `runtime::union::`, or `runtime::cursor::`
+  are REJECT pre-emptively. The discipline closes the
+  renamed-scanner-with-shared-buffer slip the CH5 charge names: a
+  symbol shift alone is not proof of decoupling; the module-path
+  trace must terminate at the sanctioned tape surface or at a
+  named generator template.
 
 A wave that ships the W8 / W9 wiring without a row-level hot-leaf
 attribution change is REJECT (proves the wiring is still cosmetic).
 
 **Falsifiability gate.**
 
-- Pick one pre-wave row (suggested: `json/numbers/direct_to_struct/main`
-  for the numeric-array dispatch divergence). Pre-wave: hot leaf is
-  `parse_value_at` per Lock 15 evidence. Post-wave: if W8 chooses a
-  number-specialised shape, hot leaf in samply trace is the
-  number-specialised symbol. If hot leaf is unchanged, the wave is
-  REJECT.
+- **Pre-wave row binding (CH1 REVISE-3 + CH6 REV-1, V1 hardening):**
+  the named pre-wave row is `json/numbers/direct_to_struct/main`. The
+  pre-wave hot-leaf citation binds to one of: (a) `RESULTS.md`
+  Hot-leaf column for `json/numbers/direct_to_struct/main` at HEAD
+  reading `parse_value_at`, or (b) `v2-json-validation.md §3.1`
+  numeric-array dispatch trace + the W11.1 commit SHA. Either
+  anchor makes the pre-wave baseline binary and the post-wave
+  assertion mechanically verifiable.
+- **Post-wave symbol naming.** If W8 chooses a number-specialised
+  shape, the samply trace's hot leaf names the W11.1-emitted
+  number-specialised symbol explicitly (e.g.
+  `parse_number_array_specialised` or the exact symbol the W11.1
+  emit produces — the wave plan names the symbol at S-P3 dispatch
+  time, not after redress). Hot leaf unchanged ⇒ REJECT. Hot leaf
+  changed but module path under `runtime::ext::` /
+  `runtime::sidecar::` / `runtime::union::` / `runtime::cursor::`
+  ⇒ REJECT pre-emptively per the consumer-plan discipline above.
 - `xtask gate-json` reports the hot-leaf column per row; the column
   value changes for the named pre-wave row.
 - `decision_csp` solve emits a CSP trace recording the chosen shape per
@@ -468,11 +556,27 @@ for); regression > 1% on any SURVIVES row rejects the wave.
 P-5); no parallel sidecar producer (P-7); no new BIR variant (per
 ORCHESTRATOR.md §8 non-negotiables); no W8/W9 admit on a research-only
 basis (per pre-block P-5 "scaffold-research counted as load-bearing").
+**No grammar-branched dispatch inside the CSP shape consumer (CH2
+Finding 3, V1 hardening).** The shape consumer in
+`skinny/crates/codegen/src/lib.rs` MUST dispatch on the CSP-emitted
+`BackendShape` enum alone; no `match grammar { Json => ..., CssL4 =>
+... }` arm may appear in the dispatch path. A grammar-branched arm in
+the consumer is a Lock 14 violation surfacing as a CSP-bypass and
+rejects the wave at S-P3. **Two-grammar-family exercise requirement
+(CH2 Finding 3, V1 hardening).** The C-4 shape consumer must be
+exercised across at least two grammar families before any C-4 admit
+cites runtime divergence as load-bearing; one-grammar runtime
+divergence is wave evidence, not admit evidence. The two families
+satisfy the polymorphism check the CSP-emitted dispatch promises;
+single-family divergence may still be a grammar-bespoke artefact.
 
 **Dependencies.** C-1 must land first (trait-based dispatch is the
-shape-consumer surface). C-2 must land first (the per-iteration
-equality oracle proves the new shape produces correct output). C-3 may
-land in parallel (CSS regen does not collide with CSP wiring).
+shape-consumer surface; the strict-serialisation reading is
+authoritative — C-4 may NOT parallelise with any C-1 JSON sub-wave per
+CH4 V3 V1 hardening; §9 matrix updates accordingly below). C-2 must
+land first (the per-iteration equality oracle proves the new shape
+produces correct output). C-3 may land in parallel (CSS regen does not
+collide with CSP wiring).
 
 ## §7 — C-5 — Clean revert of W14.1–W14.5 + CSS template deletion + 24-row revert
 
@@ -494,16 +598,20 @@ relevant validation §reference.
 - `restart/skinny/ROLLING-SOTA-DELTA.md` — replay table with the
   audit-zero deltas (JSON parse_only 0/17, JSON direct 0/17, JSON typed
   0/17, CSS L4 0/24).
-- `skinny/REDRESS.md` — append per-row REDRESS entries:
+- `skinny/REDRESS.md` — append **29 row-keyed REDRESS entries** (one
+  entry per reverted row, naming the row key + the validation
+  §reference), partitioned as 5 W14 row keys + 23 SK-V13 CSS row keys
+  + 1 SK-V12 W1b row key:
   - W14.1 (numbers) cites `v2-json-validation.md §1 W14.1`.
   - W14.2 (citm_catalog) cites `v2-json-validation.md §1 W14.2`.
   - W14.3 (canada) cites `v2-json-validation.md §1 W14.3`.
   - W14.4 (marine_ik) cites `v2-json-validation.md §1 W14.4`.
   - W14.5 (mesh) cites `v2-json-validation.md §1 W14.5`.
-  - 24 CSS rows cite `v1-css-l4-validation.md §§1-6` as appropriate per
-    row (declaration_values + 23 others; the SK-V12 `declaration_values`
-    row also reverts per `v5-cross-tranche-stability.md §1 SK-V12
-    PARTIAL`).
+  - 23 SK-V13 CSS row keys cite `v1-css-l4-validation.md §§1-6` as
+    appropriate per row (declaration_values + 22 others across the
+    sk-v13 CSS admit set).
+  - 1 SK-V12 W1b row key (`declaration_values` cross-tranche stability
+    revert) cites `v5-cross-tranche-stability.md §1 SK-V12 PARTIAL`.
 - `skinny/crates/codegen/src/{css_l4_at_rules_and_media,
   css_l4_declaration_values, css_l4_declaration_values_extended,
   css_l4_nested_layout, css_l4_stylesheet_selectors,
@@ -545,8 +653,9 @@ relevant validation §reference.
 - `ls skinny/crates/codegen/src/css_l4_*_templates/` returns ZERO
   directories.
 - `ROLLING-SOTA-DELTA.md` shows CSS L4 0/24 and JSON parse_only 0/17.
-- `skinny/REDRESS.md` carries 29 new entries (5 W14 + 24 CSS) with
-  validation §refs.
+- `skinny/REDRESS.md` carries 29 new row-keyed entries (5 W14 row keys
+  + 23 SK-V13 CSS row keys + 1 SK-V12 W1b row key) with validation
+  §refs per the owner-paths block above.
 - `cargo build --release --workspace` succeeds.
 
 **LOC budget.** 250 – 500 (delete-heavy + ledger edits + REDRESS
@@ -600,13 +709,21 @@ Carried from α-C's pattern-level pre-blocks (binding on every candidate):
 | C-5 | C-2, C-3 (disjoint file domains) | (none — runs first) |
 | C-2 | C-3, C-5 | (none) |
 | C-3 | C-2, C-5 | (none) |
-| C-1 (JSON sub-waves) | C-4 (post-C-1 generic surface) | C-2, C-5 |
+| C-1 (JSON sub-waves) | (one sub-wave at a time) | C-2, C-5 |
 | C-1 (CSS sub-waves) | (one CSS sub-wave at a time) | C-3, C-5 |
-| C-4 | (one shape at a time) | C-1, C-2 |
+| C-4 | (one shape at a time) | C-1 (ALL sub-waves), C-2 |
 
 Land order: C-5 + C-2 + C-3 in parallel as Wave Zero. C-1 sub-waves
-after C-5 and C-2 land; CSS sub-waves additionally after C-3. C-4 after
-C-1 lands the trait-based dispatch.
+after C-5 and C-2 land; CSS sub-waves additionally after C-3. **C-4
+strictly serialises after C-1 completes ALL sub-waves** — both JSON
+and CSS — per CH4 V3 V1 hardening. The §6 C-4 dependency declaration
+("C-1 must land first") is authoritative; an earlier matrix row read
+C-1 JSON sub-waves as parallelisable with C-4 on the assumption that
+post-C-1 generic surface admits C-4 wiring; the trait-based dispatch
++ no-grammar-branch discipline (E-8) and the per-shape Lock-1 triad
+(E-3) require the entire C-1 collapse to be complete before C-4
+exercises any shape, on either grammar family. Single-shape C-4
+wiring against a partially-collapsed C-1 surface is REJECT.
 
 `RESULTS.md`, `ROLLING-SOTA-DELTA.md`, and `REDRESS.md` are
 single-writer ledgers per the SK-V13 alpha-E concurrency matrix; all
@@ -614,20 +731,43 @@ ledger writes serialise even when redress worktrees run in parallel.
 
 ## §10 — Cost, caps, telemetry
 
-Hard caps per `ORCHESTRATOR-PROMPT.md §DISCIPLINE` + the addendum's
-45-min decision-engine redress amendment:
+Hard caps per `ORCHESTRATOR-PROMPT.md §DISCIPLINE` +
+`USER-PIN-ADDENDUM-2026-05-21-FULL-SOTA.md:129-134` (the 30→45-min
+redress uplift is bound to the W5–W9 decision-engine fold and the W12
+union-SIMD wave; non-decision-engine waves default to the 30-min cap):
 
 | Candidate / wave | Research | Plan | Redress |
 |---|---:|---:|---:|
-| C-1 sub-waves (8 grammars) | 20 min | 15 min | 45 min |
+| C-1 sub-waves (8 grammars; per sub-wave) | 20 min | 15 min | 30 min |
 | C-2 | 20 min | 15 min | 30 min |
-| C-3 | 20 min | 15 min | 45 min |
-| C-4 | 20 min | 15 min | 45 min |
+| C-3 | 20 min | 15 min | 30 min |
+| C-4 (per CSP-selectable shape) | 20 min | 15 min | 45 min |
 | C-5 | 20 min | 15 min | 30 min |
+
+**Cap discipline reconciliation (CH4 R3, V1 hardening).** Only C-4
+inherits the addendum's 45-min redress amendment — C-4 IS the W8 + W9
+decision-engine fold wiring the addendum names. C-1, C-2, C-3, C-5
+are not decision-engine waves and default to the 30-min cap. The C-4
+45-min cap is **per CSP-selectable shape** (per CH7 §3.3
+clarification), not per cluster — the C-4 cluster total is bounded by
+the number of CSP-selectable shapes the wave addresses (one shape per
+sub-wave), with each shape's redress windowed at 45 min. The C-1
+cluster total is 8 × 30 = 240 min of redress windows, run serialised
+per §9; the C-4 cluster total is N × 45 min where N is the number of
+shapes the wiring exercises (≥ 2 per E-8's two-grammar-family
+requirement).
 
 Telemetry per `PASS-ALPHA.md §4.3` (column set unchanged); per-iter
 equality column added by C-2; hot-leaf attribution column required for
-every row per C-4's gate.
+every row per C-4's gate. **The hot-leaf column reads as a
+grammar-keyed symbol path** (`{grammar}::parse_*` or equivalent); a
+stale inherited symbol name on a non-JSON row (e.g. a JSON-keyed
+symbol surfacing as the hot leaf for a CSS row) fails the per-row
+gate the same way it fails S-P1 (CH2 Finding 4, V1 hardening). The
+grammar-keying closes the under-specification where a row's
+attribution column could carry a generator-emitted symbol whose
+template provenance is from a different grammar — the gate now
+detects this mechanically through the column's `{grammar}::` prefix.
 
 ## §11 — Convergence + escalation
 

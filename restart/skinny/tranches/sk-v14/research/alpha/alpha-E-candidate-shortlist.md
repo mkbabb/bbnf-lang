@@ -361,18 +361,18 @@ detector per CH7-1 + CH7-4 binding (V1 CH7 §3.1 REJECT remediation):
   empty output.
 - **Round-trip (core tree, all rostered grammars).** For each grammar
   name `<g>` enumerated under `workspace.metadata.bbnf.grammars` in the
-  top-level `Cargo.toml` (currently `{json, css_l4, google_sheets,
-  bbnf, csv, ebnf, bnf, math}` — the list is metadata-derived, not
+  top-level `Cargo.toml` — the list is metadata-derived, not
   source-of-truth at the gate site; the canonical shell form is `for g
-  in $(cargo metadata --format-version 1 | jq -r
-  '.workspace_metadata.bbnf.grammars | keys[]'); do rm -rf
+  in $(cargo metadata --format-version 1 --no-deps | jq -r
+  '.metadata.bbnf.grammars[].ident'); do rm -rf
   "crates/core/src/runtime/${g}/" && cargo xtask "regen-${g}" && git
-  diff -- "crates/core/src/runtime/${g}/" || exit 1; done`): the loop
-  produces empty `git diff` output for every iterated grammar. The
-  gate enumerates from `workspace.metadata.bbnf.grammars` so that
-  adding a 9th grammar requires NO change to the gate's text — only an
-  addition under `workspace.metadata.bbnf.grammars` and a `regen-<g>`
-  xtask registration per C-1's forward invariant (`alpha-E-candidate-shortlist.md:170-176`).
+  diff --exit-code -- "crates/core/src/runtime/${g}/" || exit 1; done`:
+  the loop produces empty `git diff` output for every iterated
+  grammar. The gate enumerates from `workspace.metadata.bbnf.grammars`
+  so that admitting an additional grammar requires NO change to the
+  gate's text — only an addition under `workspace.metadata.bbnf.grammars`
+  and a `regen-<g>` xtask registration per C-1's forward invariant
+  (`alpha-E-candidate-shortlist.md:170-176`).
   This parity is binding: both gates (C-1 forward invariant and C-3
   round-trip) derive grammar enumeration from the same workspace
   metadata clause Lock 14 itself names (`LOCKS.md:220` "workspace

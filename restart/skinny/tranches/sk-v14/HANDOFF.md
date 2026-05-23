@@ -193,7 +193,7 @@ Return REVISE for any downstream plan that:
   + 6 direct + 11 typed = **47 rows** under the broader
   `ROLLING-SOTA-DELTA.md:13-93` ledger; the V1 dispatch §1 narrower
   bind of 4 direct + 7 typed is a strict subset per `SYNTHESIS.md
-  §1.3` reconciliation) as carry-over without fresh material
+  §0.2` reconciliation block (lines 73-84)) as carry-over without fresh material
   differential under rebound comparator;
 - counts lossy / permissive comparators (sonic-rs lossy / RapidJSON /
   asmjson SWAR) as SOTA anchor;

@@ -4,7 +4,7 @@
 
 Pass criterion (verbatim from `PASS-0-OVERFIT-AUDIT.md §Scope` row A3): *"Zero CRITICAL or HIGH violations in skinny generic crates."*
 
-- Findings: **CRITICAL = 11**, **HIGH = 7**, **MED = 5**, **LOW = 7** (total **30**).
+- Findings: **CRITICAL = 11**, **HIGH = 6**, **MED = 5**, **LOW = 8** (total **30**).
 - Verdict: **FAIL** — the SK-V13 v3 enumeration of 30 violations is reproduced verbatim at SK-V14 baseline; not a single line has moved.
 - Confirms / extends SK-V13 audit pack: **CONFIRMS in full**; one adjacent observation surfaced (`parse-that-regex::StringFlags::HAS_ESC` retains JSON-flavored naming, but the v3 audit explicitly classified `bbnf-simd` + `parse-that-regex` as CLEAN once the byte semantics were lifted to the generated config — treated below as DELTA-NOTE, not a new violation).
 - New findings (not in SK-V13 audit pack): **1 DELTA-NOTE** (see §2.E); a 9th `crates/core/src/runtime/` directory (`css_pretty`) is present alongside the 8 documented in §1 of the v13 scan — adds Pattern-H surface but A6 owns Pattern-H tally.
@@ -125,16 +125,15 @@ History verification (no SK-V14 commits land yet): ROLLING-SOTA-DELTA `git log -
 | C10 | CRITICAL | Hand-written `css_l4_at_rules_and_media_provider.rs` | `skinny/crates/codegen/src/css_l4_at_rules_and_media_provider.rs` | CONFIRMS V13 v3 §7 Gap-1 |
 | C11 | CRITICAL | Hand-written `css_l4_vendor_and_custom_atrules_provider.rs` + `css_l4_nested_layout_provider.rs` (collapsed to one row — 7th + 8th provider file) | `skinny/crates/codegen/src/css_l4_vendor_and_custom_atrules_provider.rs`, `…/css_l4_nested_layout_provider.rs` | CONFIRMS V13 v3 §7 Gap-1 |
 
-### §2.B — HIGH (7)
+### §2.B — HIGH (6)
 
 | # | Severity | Finding | Citation | Status |
 |---|---|---|---|---|
 | H1 | HIGH | `pub struct JsonGrammar` + `pub fn compile_json_source` + `pub fn compile_json_file` at generic crate root | `skinny/crates/bbnf/src/lib.rs:47-65` | CONFIRMS V13 v3 H1 |
 | H2 | HIGH | `pub fn parse_json_grammar` + `pub fn load_json_grammar` at generic crate root | `skinny/crates/grammar/src/lib.rs:16-27` | CONFIRMS V13 v3 H2 |
-| H3 | HIGH | `finalize_rule("json", RuleId(0), …)` hardcoded JSON entry-rule in nominally-generic decision engine | `skinny/crates/passes/src/decision_csp.rs:235` | CONFIRMS V13 v3 H3 |
 | H4 | HIGH | JSON codegen template hardcoded as `include_str!`-style hand-written module (`json_templates/{config,generated,parser,value,view,visitor}.rs`) | `skinny/crates/codegen/src/json_templates/` | CONFIRMS V13 v3 §7 Gap-2 |
 | H5 | HIGH | CSS L4 codegen templates hand-written (`css_l4_declaration_values_templates/{config,generated,mod,parser}.rs` + 6 sibling template dirs) | `skinny/crates/codegen/src/css_l4_*_templates/` | CONFIRMS V13 v3 §7 Gap-2 |
-| H6 | HIGH | CSP decision engine constraints are JSON-only (no CSS L4 entry-rule cited) — structural implication of H3 | `skinny/crates/passes/src/decision_csp.rs` (file-wide grep absence) | CONFIRMS V13 v3 §7 Gap-3 |
+| H6 | HIGH | CSS L4 entry-rule absence from acceptance-test surface of the decision engine (no CSS L4 entry-rule cited under `decision_csp` constraint set) — structural absence at the acceptance-test boundary; freestanding HIGH on its own merits (no longer derivative of H3, which has been LOW-reclassified per V2 fold F-V2-A3-1) | `skinny/crates/passes/src/decision_csp.rs` (file-wide grep absence) + `skinny/crates/passes/src/lib.rs:478` production call site `finalize_rule(&grammar.name, …)` is generic over grammar name; the acceptance-test surface is the gap | CONFIRMS V13 v3 §7 Gap-3 |
 | H7 | HIGH | `bbnf/src/lib.rs:67-89` re-exports `pub mod json { … }` namespace at generic crate root (JSON-named public module beside JsonGrammar) | `skinny/crates/bbnf/src/lib.rs:67-89` | CONFIRMS V13 v3 §7 Pre-Restart Pattern recurrence (#4 PARTIAL) |
 
 ### §2.C — MEDIUM (5)
@@ -147,7 +146,7 @@ History verification (no SK-V14 commits land yet): ROLLING-SOTA-DELTA `git log -
 | M4 | MEDIUM | `STRUCTURAL_BYTES: &[u8] = b"{}[],:\""` crate-scoped JSON alphabet in codegen | `skinny/crates/codegen/src/json_templates/config.rs:3` | CONFIRMS V13 |
 | M5 | MEDIUM | `RUNTIME_PROFILE: GrammarProfile = GrammarProfile::new("json", …)` static at private-but-resident scope in generic codegen | `skinny/crates/codegen/src/json_provider.rs:3-16` | CONFIRMS V13 |
 
-### §2.D — LOW (7)
+### §2.D — LOW (8)
 
 | # | Severity | Finding | Citation | Status |
 |---|---|---|---|---|
@@ -158,6 +157,7 @@ History verification (no SK-V14 commits land yet): ROLLING-SOTA-DELTA `git log -
 | L5 | LOW | Test fn `compiles_json_to_single_plan_bir` JSON-named | `skinny/crates/passes/src/lib.rs:1558` | CONFIRMS V13 |
 | L6 | LOW | Test fns `…1684, …1692` JSON-rooted | `skinny/crates/passes/src/lib.rs:1684, 1692` | CONFIRMS V13 |
 | L7 | LOW | `JSON_GRAMMAR` const + `parse_json_grammar(JSON_GRAMMAR)` test plumbing recurs across `passes/src/lib.rs:1559, 1588, 1643, 1673, 1685, 1693, 1797` (one ledger row for the file-wide pattern) | `skinny/crates/passes/src/lib.rs:1559-1797` | CONFIRMS V13 |
+| L8 | LOW | `finalize_rule("json", RuleId(0), …)` JSON-named test fixture inside `#[cfg(test)] mod tests { … }` block exercising the solver in isolation; production call site at `skinny/crates/passes/src/lib.rs:478` reads `finalize_rule(&grammar.name, …)` and is generic over grammar identity. Reclassified from HIGH (V1 H3) to LOW per V2 fold F-V2-A3-1: violation class is test-fixture name leak in generic crate's test surface (severity tier L6/L7), not production-path overfit; the production call site is grammar-neutral. H6 (CSS L4 entry-rule absence from the decision engine's acceptance-test surface) takes the HIGH bar on its own structural merits, with no derivation chain from H3. | `skinny/crates/passes/src/decision_csp.rs:235` (test-fixture call site, inside `#[cfg(test)] mod tests`); contrast with production call site `skinny/crates/passes/src/lib.rs:478` `finalize_rule(&grammar.name, …)` | CONFIRMS V13 v3 H3 (severity recalibrated HIGH → LOW per V2 fold F-V2-A3-1) |
 
 ### §2.E — DELTA-NOTE (new context, not a new violation)
 
@@ -171,7 +171,7 @@ DELTA-NOTE is reported per the SK-V13 v3 "deep-scan ⇒ deeper-scan" mandate; or
 
 Pass criterion (verbatim): *"Zero CRITICAL or HIGH violations in skinny generic crates."*
 
-Actual count: **11 CRITICAL + 7 HIGH = 18** violations in nominally-generic skinny crates (`runtime`, `codegen`, `bbnf`, `grammar`, `passes`) — every CRITICAL and HIGH from the v13 v3 enumeration reproduces, verbatim, at the same `file:line` coordinates. No new SK-V14 commits have touched these surfaces (verified via `git log --oneline restart/skinny/ROLLING-SOTA-DELTA.md` head = `7ec4a474c`, a SK-V13 W15.1 commit; nor have any of the cited files been re-edited post-`00181742e`).
+Actual count: **11 CRITICAL + 6 HIGH = 17** violations in nominally-generic skinny crates (`runtime`, `codegen`, `bbnf`, `grammar`, `passes`) — every CRITICAL and HIGH from the v13 v3 enumeration reproduces at the same `file:line` coordinates (V1 H3 reclassified HIGH → LOW per V2 fold F-V2-A3-1; H6 retains HIGH on its own structural merits; aggregate finding count unchanged at 30). No new SK-V14 commits have touched these surfaces (verified via `git log --oneline restart/skinny/ROLLING-SOTA-DELTA.md` head = `7ec4a474c`, a SK-V13 W15.1 commit; nor have any of the cited files been re-edited post-`00181742e`).
 
 **VERDICT: FAIL.**
 
@@ -190,13 +190,13 @@ Cross-reference to SK-V14 SYNTHESIS §3 candidate shortlist C-1..C-5 and SYNTHES
 | C4 (`lib.rs:167-209`) | **PRUNE-3** under C-1 | Collapse the 8 match arms into a single `profile.provider().emit_runtime_files(…)` virtual dispatch; the JSON `=> {}` empty arm at :209 is itself the residue of pre-restart hand-rolled JSON-special-case. |
 | C5..C11 (8 provider modules) | **PRUNE-3** + **PRUNE-2** under C-1 + C-2 | Each `*_provider.rs` is a hand-written grammar-specific backend in a generic crate. Convert to a **single grammar-agnostic provider generator** parameterised by grammar metadata + `.bbnf` schema. Delete all 8 files; the generator authors them. R4 (CSS-L4 grammar reactivation) is the natural pair to PRUNE-2 here — the 15 `.bbnf` grammars at `/grammar/css/l4/` become the SOLE source of CSS L4 codegen. |
 
-### Tier-2 (HIGH — 7 violations)
+### Tier-2 (HIGH — 6 violations)
 
 | Finding(s) | Recommended PRUNE | Mechanism |
 |---|---|---|
 | H1 + H7 (`bbnf/src/lib.rs:47-89`) | **PRUNE-3** | Move `JsonGrammar`, `compile_json_source`, `compile_json_file`, and `pub mod json` into a per-grammar facade crate (`bbnf-json` OR `bbnf/json/`). The generic `bbnf` crate keeps only `compile_from_source(grammar_name, source)` and `Grammar` trait. |
 | H2 (`grammar/src/lib.rs:16-27`) | **PRUNE-3** | Move `parse_json_grammar` + `load_json_grammar` to `grammar/json/` submodule OR delete and call `parse_grammar("json", …)` directly at consumer sites. The generic crate exports only `parse_grammar(name, source)`. |
-| H3 + H6 (`decision_csp.rs:235`) | **PRUNE-3** under C-1 | Query entry rule from `GrammarIr::entry_rule_id()`; the CSP solver must accept any grammar's entry rule. Add a CSS L4 entry-rule constraint test under R4 to close the H6 structural absence. |
+| H6 (`decision_csp.rs` file-wide grep absence; cf. production call at `passes/src/lib.rs:478`) | **PRUNE-3** under C-1 | Add a CSS L4 entry-rule constraint test under R4 to close the acceptance-test-surface absence; the production call site `finalize_rule(&grammar.name, …)` already accepts any grammar's entry rule generically, so the gap is in test coverage, not solver dispatch. (Companion L8 test-fixture rename — formerly H3 — folds into the bulk L1..L8 rename pass; see Tier-4.) |
 | H4 + H5 (`codegen/src/{json_templates,css_l4_*_templates}/`) | **PRUNE-2** | Delete the 6 JSON template files + 28 CSS L4 template files; generate them from `.bbnf` grammar metadata + a single shared template skeleton. The `@generated` headers must be *real* — produced by a `cargo xtask regen` command that takes `.bbnf` input and emits all per-grammar files. (A4 owns the round-trip enforcement.) |
 
 ### Tier-3 (MEDIUM — 5; cosmetic / W8-deferred)
@@ -205,9 +205,9 @@ M1 + M2: test-only; convert to generic-entry-rule assertions OR move to per-gram
 M3: number policy generalisation — fold into PRUNE-3 once `EmitProvider` trait lands (grammar-config gate at the consumer side).
 M4 + M5: crate-scoped JSON constants — acceptable post-PRUNE-3 IF they ride along with the JSON provider migration into a per-grammar location.
 
-### Tier-4 (LOW — 7; cleanup, no architectural cost)
+### Tier-4 (LOW — 8; cleanup, no architectural cost)
 
-L1..L7: test function renames; bulk-rename PR after PRUNE-3 lands the directory restructure. No standalone wave required.
+L1..L8: test function renames + test-fixture string-literal renames (L8 `finalize_rule("json", …)` test-fixture call site at `decision_csp.rs:235`); bulk-rename PR after PRUNE-3 lands the directory restructure. No standalone wave required.
 
 ### Cross-axis interlock
 

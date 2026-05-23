@@ -20,9 +20,9 @@ commit pattern from Pass Alpha V2-V5.
 | A2 | Admit-mechanism integrity (source-diff, comparator binding, per-iter oracle) | 4 | 3 | 1 | 1 | 9 | **FAIL** | YES (full) | 2 (F8 structural; F9 negative-drift) |
 | A3 | Lock 14 generic-crate scan | 11 | 7 | 5 | 7 | 30 | **FAIL** | YES (verbatim v3 reproduction) | 1 DELTA-NOTE (D1) |
 | A4 | Generator-vs-hand-curated | 9 | 4 | 2 | 1 | 16 | **FAIL** | YES + extends | 3 (JSON @generated fake; CSS scanners as fixture lookups; 14/15 .bbnf orphan) |
-| A5 | Decision-engine fold integrity | 0 | 2 | 1 | 1 | 4 | **PARTIAL PASS** (resolver clause PASS; scaffold-clause FAIL at v13 close, PASS at v14 starting baseline) | YES | 1 (gate-layer-only footprint quantified) |
+| A5 | Decision-engine fold integrity | 0 | 2 | 1 | 1 | 4 | **PARTIAL PASS** (resolver clause PASS; scaffold-clause FAIL at v13 close + at v14 HEAD; PASS conditioned on C-5 (PRUNE-1 + PRUNE-2) + C-4 (PRUNE-5) landing) | YES | 1 (gate-layer-only footprint quantified) |
 | A6 | Pre-restart pattern recurrence | 3 | 2 | 1 | 1 | 7 | **FAIL** | YES + extends | 4 (LegacyPath shim; substrate-doc opt-out enshrinement; pre-restart-API carry; asm bibliographic) |
-| **Aggregate** | — | **31** | **20** | **12** | **11** | **74** | **FAIL** | — | **11 NEW** |
+| **Aggregate** | — | **31** | **20** | **12** | **11** | **74** | **FAIL** | — | **20 NEW** |
 
 ### §0.2 Aggregate verdict
 
@@ -32,11 +32,15 @@ Five of six axes (A1, A2, A3, A4, A6) FAIL outright on their pass
 criteria. A5 returns a PARTIAL PASS — the W5/W6/W7 resolver clause is
 PASS (CSP+egraph+cost wired to lowering via five fail-closed checks at
 `crates/codegen/src/lower/rust.rs:37-89`), but the no-scaffold-only-
-admit clause failed at SK-V13 close and PASSES at SK-V14 starting
-baseline only because every scaffold-citing row (W14.1-5, W13.1-4,
-W15.1) is held under PRUNE-1 + PRUNE-2 revert and the audit-zero honest
-delta in `tranches/sk-v14/SYNTHESIS.md §0.2` reads `0/17 / 0/17 / 0/17
-/ 0/24` for parse_only / direct / typed / CSS L4 respectively.
+admit clause failed at SK-V13 close and remains FAIL at SK-V14 HEAD;
+the C-5 (PRUNE-1 + PRUNE-2) revert is the gating wave that converts
+FAIL → PASS by removing every scaffold-citing row (W14.1-5, W13.1-4,
+W15.1), and no row admit may cite W8 / W9 until C-4 (PRUNE-5) wires
+them load-bearing. The audit-corrected target in `tranches/sk-v14/
+SYNTHESIS.md §0.2` reads `0/17 / 0/17 / 0/17 / 0/24` for parse_only /
+direct / typed / CSS L4 post-PRUNE; the present-state at HEAD still
+carries the W14.1-5 + W13.* + W15.1 admit rows + 24 CSS L4 ADMITTED
+rows.
 
 The aggregate count of 31 CRITICAL + 20 HIGH violations triggers the
 `PASS-0-OVERFIT-AUDIT.md §Failure mode` clause:
@@ -57,14 +61,17 @@ disposition correctly.
 
 ### §1.1 Confirm-vs-NEW census
 
-Across the six per-axis files, 63 of 74 findings (85 %) CONFIRM the
-SK-V13 audit pack byte-for-byte; 11 of 74 are NEW (15 %). The CONFIRMS
-ratio is itself a finding: the SK-V14 starting baseline at HEAD
-`12ff0744e` reproduces the SK-V13 close-state pathologies verbatim
-because zero SK-V14 implementation commits have landed; the 17 doc /
-synthesis commits between `00181742e` (SK-V14 contract close) and
-`12ff0744e` (S-P0 dispatch seed) touched no parser, codegen, runtime,
-or grammar bytes.
+Across the six per-axis files, 54 of 74 findings (73 %) CONFIRM the
+SK-V13 audit pack byte-for-byte; 20 of 74 are NEW (27 %) on per-row
+count (per-axis table column-sum 8+7+29+4+3+3 = 54 CONFIRMS;
+0+2+1+12+1+4 = 20 NEW). The per-category count is 11 NEW conceptual
+clusters (enumerated §1.2 below) — every NEW row maps to one of
+those 11 categories. The CONFIRMS ratio is itself a finding: the
+SK-V14 starting baseline at HEAD `12ff0744e` reproduces the SK-V13
+close-state pathologies verbatim because zero SK-V14 implementation
+commits have landed; the 17 doc / synthesis commits between
+`00181742e` (SK-V14 contract close) and `12ff0744e` (S-P0 dispatch
+seed) touched no parser, codegen, runtime, or grammar bytes.
 
 | Axis | CONFIRMS | NEW | NEW finding cluster |
 | --- | ---: | ---: | --- |
@@ -77,7 +84,8 @@ or grammar bytes.
 
 ### §1.2 NEW finding enumeration (binding inputs to S-P3 wave manifest)
 
-The 11 NEW findings extending the V13 audit pack:
+The 11 NEW finding *categories* (= 20 NEW *rows* per-axis) extending
+the V13 audit pack:
 
 1. **A2 F8 (MED, structural)** — Single `sonic_rs_anchor` lane at
    `skinny/crates/bbnf-bench/benches/json_parity.rs:87-102` is the
@@ -111,10 +119,13 @@ The 11 NEW findings extending the V13 audit pack:
    grammar-derived (~15 % of the file). The hand-written / grammar-
    derived ratio in `generated.rs` is ~85 % / ~15 %.
 
-5. **A4 NEW-2 (CRIT, 3 findings: rows 3, 4, 5, 6 in A4 §2)** — Three
+5. **A4 NEW-2 (CRIT, 4 findings: rows 3, 4, 5, 6 in A4 §2)** — Four
    of the seven CSS L4 template generators (`nested_layout`,
    `at_rules_and_media`, `stylesheet_selectors`, `vendor_and_custom_
-   atrules`) are fixture-lookup tables. `css_l4_nested_layout_
+   atrules`) are fixture-lookup tables (3 CSS L4 `CANONICAL_FIXTURE`
+   short-circuits + 1 `CAPTURED_W2_INPUT` short-circuit; verified by
+   `grep -nE 'CANONICAL_FIXTURE|CAPTURED_W2_INPUT' skinny/crates/
+   codegen/src/css_l4_*_templates/generated.rs`). `css_l4_nested_layout_
    templates/generated.rs` is 49 lines total: `if input ==
    CANONICAL_FIXTURE { return Ok(CANONICAL_FACTS.to_string()); } …
    sink.unsupported(0)`. The fixture bytes are the exact 85-357 B
@@ -206,6 +217,19 @@ expanded **64 → 67** (+3 LOC delta from the `css_pretty` grammar). The
 A3 / A4 / A6 enumeration is consistent: PRUNE-4 has 9 sub-waves, not
 8, and the wave manifest must reflect this.
 
+**Co-derivation note (binding for S-P3 risk-weighting):** The +3 file
+delta (64 → 67) and the PRUNE-4 sub-wave count delta (8 → 9) are both
+attributable to the single `css_pretty` grammar addition between V13
+audit-pack landing and SK-V14 baseline; A3 §1, A5 §2.1, and A6 §1
+independently re-derive the count from the same evidence, so the three
+confirmations are evidentially **co-derived, not orthogonal**. The
+S-P3 wave manifest's risk-weighting for PRUNE-4 should treat the
+`css_pretty` delta as one piece of evidence with three cross-checks,
+not three independent regression signals. The R4-before-PRUNE-2
+sequencing constraint (§2.1) is similarly co-derived with the +3 /
++1 deltas via the `css_pretty` directory addition; A3/A5/A6 cross-
+confirms are co-derived, not three independent confirmations.
+
 ## §2 — Architectural sequencing constraints (S-P3 inputs)
 
 The synthesis surfaces three hard sequencing constraints binding on
@@ -280,8 +304,15 @@ mechanisms — neither is currently in SYNTHESIS §3 C-1..C-5:
 
 2. **Lock-14-companion lint.** Add a clippy-lint or pre-commit grep
    that REJECTS any new `// @generated by skinny bbnf-codegen` header
-   in `skinny/crates/runtime/src/grammars/**/*.rs` unless the matching
-   path appears in a recognized regen subcommand's emission roster.
+   in `skinny/crates/{runtime/src/grammars,codegen/src}/**/*.rs`
+   unless the matching path appears in a recognized regen subcommand's
+   emission roster. The glob MUST scope BOTH the runtime-side mirror
+   AND the codegen-side template/provider files — CH2 §3.5 verified
+   42 files carry the fake header including 8 codegen-side
+   template+provider files; a runtime-only lint would let the
+   codegen-side twin re-introduce the fake header silently (the
+   identical-content round-tripping vector A4 finding 15 enumerates
+   between codegen-side template and runtime-side `generated.rs`).
    Without this guard the fake-`@generated` recurrence (A4 NEW-1 +
    NEW-2 + the 7 CSS files + the JSON file) can re-introduce in any
    SK-V{N+1} wave. Recommend lifting to LOCKS.md as a Lock-14-companion
@@ -318,8 +349,9 @@ wave manifest should respect these co-fires when sequencing.
 ### §3.2 Orphan findings
 
 **None.** Every one of the 74 findings maps to at least one C-1..C-5
-candidate. The 11 NEW findings beyond V13 all fit within the existing
-slate's scope. No C-6 candidate is required.
+candidate. The 20 NEW per-row findings (= 11 NEW conceptual
+categories) beyond V13 all fit within the existing slate's scope. No
+C-6 candidate is required.
 
 The §2.4 CH7-companion extensions (round-trip subcommand pairing + Lock-
 14-companion lint) are *recommendations beyond the slate*, not findings
@@ -423,10 +455,11 @@ Per `ORCHESTRATOR.md §3W` + `PASS-0-OVERFIT-AUDIT.md §CH7`:
 - **CH1 Correctness:** every CRITICAL / HIGH finding is grounded in
   source citation + executable output; no claim relies on memory or
   prior-tranche citation alone. **READY.**
-- **CH2 Generality:** the 11 NEW findings are general patterns
-  (single-lane comparator fan-out, fixture-lookup scanners, orphan
-  `.bbnf`, gate-layer-only footprint, substrate-doc opt-out
-  enshrinement) — not single-row issues. **READY.**
+- **CH2 Generality:** the 11 NEW conceptual categories (= 20 NEW
+  per-row findings) are general patterns (single-lane comparator
+  fan-out, fixture-lookup scanners, orphan `.bbnf`, gate-layer-only
+  footprint, substrate-doc opt-out enshrinement) — not single-row
+  issues. **READY.**
 - **CH3 Regression:** the audit confirms zero regression vs V13
   (every finding either CONFIRMS or extends) + zero drift since the
   audit pack landed (A2 F9 negative finding). **READY.**
@@ -452,11 +485,14 @@ without pre-remediation.
 
 - Aggregate: 74 findings (31 CRIT + 20 HIGH + 12 MED + 11 LOW).
 - 5 of 6 axes FAIL outright (A1, A2, A3, A4, A6); 1 of 6 PARTIAL PASS
-  (A5: resolver clause PASS, scaffold-clause PASS at SK-V14 baseline
-  conditional on PRUNE-1 + PRUNE-2 + PRUNE-5 sequencing).
-- 11 NEW findings extending the SK-V13 audit pack (A2 ×2, A3 ×1
-  DELTA-NOTE, A4 ×3, A5 ×1, A6 ×4); 63 findings CONFIRM the V13
-  audit pack byte-for-byte at SK-V14 starting state (HEAD `12ff0744e`).
+  (A5: resolver clause PASS; scaffold-clause FAIL at HEAD, conditional
+  PASS upon PRUNE-1 + PRUNE-2 + PRUNE-5 landing per C-5 → C-4
+  sequencing).
+- 11 NEW conceptual categories (= 20 NEW per-row findings) extending
+  the SK-V13 audit pack (A2 ×2, A3 ×1 DELTA-NOTE, A4 ×3 categories /
+  12 rows, A5 ×1, A6 ×4); 54 findings CONFIRM the V13 audit pack
+  byte-for-byte (per per-axis table column-sum) at SK-V14 starting
+  state (HEAD `12ff0744e`).
 - Pattern H file count: 64 (V13) → 67 (SK-V14 baseline; +3 from
   `css_pretty`).
 - C-1..C-5 candidate slate covers all 74 findings (zero orphans). No

@@ -30,14 +30,34 @@ all eight roster files; only the trailing `json_sink_direct::render
 hand-written / grammar-derived ratio in `generated.rs` is ~85% / ~15%
 (391-line template vs ~70-line sink append).
 
+This delta is a **scope extension, not a reversal**, of the V13 §7.1
+row 1 'HONEST' verdict for `json_provider`. V13 correctly identified
+the grammar-derived `parse_direct` sink chunk (~70 LOC appended to
+`generated.rs` via `json_sink_direct::render` per
+`skinny/crates/codegen/src/lib.rs:215-217`) as honestly grammar-
+derived; V14 extends the scope to the **OTHER 5 emitted files**
+(`config.rs`, `parser.rs`, `view.rs`, `value.rs`, `visitor.rs`) plus
+the `include_str!()` template body of `generated.rs` itself, all of
+which are pass-through templates with only the prepended `//
+@generated` header added. V14 does not reverse V13's HONEST verdict on
+the sink-derived chunk; it observes that the chunk is the minority
+share (~15%) of the JSON provider's emitted bytes, while the pass-
+through majority (5 of 6 emitted files + the template body of the
+sixth) carries the same fake-`@generated` recurrence pattern as the
+CSS L4 providers.
+
 New findings (not enumerated in SK-V13 audit pack): **3.**
 
 1. JSON also uses `include_str!()` of hand-written templates with the
    same fake `@generated` prefix (only the appended sink chunk is
-   grammar-derived).
-2. Three of the seven CSS "scanners" short-circuit on a `const
+   grammar-derived). Per the disambiguation above, this is a scope
+   extension over V13's HONEST verdict (which addressed only the sink
+   chunk), not a reversal of it.
+2. Four of the seven CSS "scanners" short-circuit on a `const
    CANONICAL_FIXTURE` / `CAPTURED_W2_INPUT` byte-equality check and
-   return a precomputed `CANONICAL_FACTS` blob. `css_l4_nested_layout
+   return a precomputed `CANONICAL_FACTS` blob (`nested_layout`,
+   `at_rules_and_media`, `stylesheet_selectors`,
+   `vendor_and_custom_atrules`). `css_l4_nested_layout
    _templates/generated.rs` is **49 lines total** — a hash-table
    lookup with `unsupported(0)` for every non-canonical input.
 3. The 15 `grammar/css/l4/*.bbnf` files have **zero referents** from
@@ -130,7 +150,7 @@ Files audited:
   `regen-` and `css`).
 - `skinny/crates/codegen/src/lib.rs` (~780 lines; greps for
   `emit_runtime_profile`, `Json`, CSS provider names).
-- `skinny/crates/codegen/src/json_provider.rs` (full, 99 lines).
+- `skinny/crates/codegen/src/json_provider.rs` (full, 101 lines).
 - `skinny/crates/codegen/src/css_l4_visual_functions_provider.rs`
   (full, 51 lines).
 - `skinny/crates/codegen/src/css_l4_*_templates/*.rs` (full
@@ -186,10 +206,10 @@ Template byte counts:
 | 5 | CRITICAL | `css_l4_stylesheet_selectors_templates/generated.rs` uses `if input == CAPTURED_W2_INPUT { return Ok(CAPTURED_W2_FACTS.to_string()); }`. Same shortcut idiom under a "captured" rather than "canonical" name. | `skinny/crates/codegen/src/css_l4_stylesheet_selectors_templates/generated.rs:3-40` | NEW |
 | 6 | CRITICAL | `css_l4_vendor_and_custom_atrules_templates/generated.rs:33-36` ditto: `if input == CANONICAL_FIXTURE { return Ok(CANONICAL_FACTS.to_string()); }`. | `skinny/crates/codegen/src/css_l4_vendor_and_custom_atrules_templates/generated.rs:3-36` | NEW |
 | 7 | CRITICAL | Zero file-system references to `grammar/css/l4/*.bbnf` exist anywhere inside `skinny/` or root `xtask/`. The only reference in the repository is the totality-track root `Cargo.toml:22` line `{ ident = "css_l4", path = "grammar/css/l4/stylesheet.bbnf", … }`, which targets the totality root xtask + `crates/core/src/grammar/generated/` tree — orthogonal to the skinny providers under audit. 14 of 15 .bbnf files are orphaned from both tracks. | `Cargo.toml:18-29`; `grep -rn "grammar/css" skinny xtask` returns only string-literal / report comparator hits, no `include_str!` / `read_to_string` of the grammars | CONFIRMS V13 (v1 §6) |
-| 8 | CRITICAL | The fake `@generated` header is added by `render` at `skinny/crates/codegen/src/css_l4_visual_functions_provider.rs:47-51` even though the template body is hand-authored and grows by hand. Each subsequent edit lands as a template body edit, then a re-emit prepends the same header, perpetuating the false claim. The mechanism is the same for `json_provider::normalize` at `skinny/crates/codegen/src/json_provider.rs:85-99` — only the prepended header line is added; the body is `include_str!()` verbatim. | `skinny/crates/codegen/src/json_provider.rs:85-99`; `skinny/crates/codegen/src/css_l4_visual_functions_provider.rs:47-51` | NEW (V13 noted CSS only; A4 finds JSON shares the pattern) |
+| 8 | CRITICAL | The fake `@generated` header is added by `render` at `skinny/crates/codegen/src/css_l4_visual_functions_provider.rs:47-51` even though the template body is hand-authored and grows by hand. Each subsequent edit lands as a template body edit, then a re-emit prepends the same header, perpetuating the false claim. The mechanism is the same for `json_provider::normalize` at `skinny/crates/codegen/src/json_provider.rs:80-100` — only the prepended header line is added; the body is `include_str!()` verbatim. | `skinny/crates/codegen/src/json_provider.rs:80-100`; `skinny/crates/codegen/src/css_l4_visual_functions_provider.rs:47-51` | NEW (V13 noted CSS only; A4 finds JSON shares the pattern) |
 | 9 | CRITICAL | The seven CSS provider modules in `skinny/crates/codegen/src/css_l4_*_provider.rs` are themselves a Lock-14 recurrence vector — each is a per-grammar provider inside a nominally-generic crate (`codegen`), wired via a per-grammar `RuntimeProvider::CssL4*` enum variant match at `skinny/crates/codegen/src/lib.rs:166-209`. This is the "no per-grammar code in shared crates" failure A3 + A6 also indict; here it co-causes the generator-truth failure because the providers ARE the only "emission" path and they emit only template bytes. | `skinny/crates/codegen/src/lib.rs:166-209`; 7 `css_l4_*_provider.rs` siblings + `json_provider.rs` | CONFIRMS V13 (v3 + audit pack body) |
-| 10 | HIGH | JSON `generated.rs` is a mixed-source file: lines 1-(start-of-sink) come from `include_str!("json_templates/generated.rs")` (391 hand-written template lines), the trailing chunk comes from `json_sink_direct::render(sink_only)` consuming the grammar's lowered sink-only program. Only the trailing chunk passes the "grammar-derived" criterion. The whole file carries the `@generated` header, so the audit-grade truth is "partial round-trip" — round-trip would succeed only if the sink-emitter alone changed; any edit to template body would re-emit identically because nothing reads grammar for those lines. | `skinny/crates/codegen/src/lib.rs:211-227` (in particular line 215-217); `skinny/crates/codegen/src/json_provider.rs:62-84` | NEW |
-| 11 | HIGH | `json_provider::generated_rs` (line 62), `parser_rs` (66), `view_rs` (70), `value_rs` (74) and `config_rs` (50) all do `include_str!("json_templates/X.rs")` and pass-through. None of these consult any grammar or IR. Only `host_rs` and `mod_rs` are inline string constants. | `skinny/crates/codegen/src/json_provider.rs:50-84` | NEW |
+| 10 | HIGH | JSON `generated.rs` is a mixed-source file: lines 1-(start-of-sink) come from `include_str!("json_templates/generated.rs")` (391 hand-written template lines), the trailing chunk comes from `json_sink_direct::render(sink_only)` consuming the grammar's lowered sink-only program. Only the trailing chunk passes the "grammar-derived" criterion. The whole file carries the `@generated` header, so the audit-grade truth is "partial round-trip" — round-trip would succeed only if the sink-emitter alone changed; any edit to template body would re-emit identically because nothing reads grammar for those lines. | `skinny/crates/codegen/src/lib.rs:211-227` (in particular line 215-217); `skinny/crates/codegen/src/json_provider.rs:60-78` | NEW |
+| 11 | HIGH | `json_provider::generated_rs` (line 60), `parser_rs` (64), `view_rs` (68), `value_rs` (72) and `config_rs` (48) all do `include_str!("json_templates/X.rs")` and pass-through. None of these consult any grammar or IR. Only `host_rs` and `mod_rs` are inline string constants. | `skinny/crates/codegen/src/json_provider.rs:48-78` | NEW |
 | 12 | HIGH | The 7 CSS `*_templates/generated.rs` files total 3176 LOC of hand-authored code carrying the fake `@generated` header after `render`. Plus the JSON `json_templates/generated.rs` (391 LOC) + `view.rs` (460) + `parser.rs` (69) + `value.rs` (172) + `visitor.rs` (38) + `config.rs` (19) = 1149 hand-authored JSON template LOC. **Total ~4325 LOC of hand-written code shipped under a fake `@generated` header inside the codegen crate alone**, before counting the 1909 LOC of identical-content twins re-emitted into `skinny/crates/runtime/src/grammars/{css_l4_*,json}/`. | `wc -l skinny/crates/codegen/src/{css_l4_*_templates,json_templates}/*.rs` | NEW (quantification of V13 finding) |
 | 13 | HIGH | `cargo xtask regen-json` does run end-to-end and the codegen tests at `skinny/crates/codegen/src/lib.rs:338-349` assert determinism (`emission_is_deterministic`) and field-consumer overlap — but these tests verify only that the templates round-trip to themselves, not that any grammar input drives the template body. The "round-trip" thus passes trivially for JSON and **cannot pass at all for CSS** because no regen entry point exists. | `skinny/crates/codegen/src/lib.rs:338-349` | NEW |
 | 14 | MED | The seven CSS `*_templates/` directories are sibling modules of the seven `css_l4_*_provider.rs` files inside the codegen crate root. The naming convention `<grammar>_provider.rs` + `<grammar>_templates/<roster>.rs` is itself the Pattern H recurrence vector projected into the codegen crate (separate dispatch issue from A3 which audits the runtime crate). PRUNE-3 needs to delete the per-grammar provider modules, not refactor them. | `find skinny/crates/codegen/src -maxdepth 1 -type d -name '*_templates'` returns 8 entries (7 CSS + 1 JSON) | NEW |

@@ -33,7 +33,7 @@ The PRUNE-1 (JSON revert) leg of C-5 has no sequencing dependence on R4, so it c
 | W7 | C-4 PRUNE-5 | wire W8 per-grammar policy + W9 same-substrate union from SCAFFOLD-ONLY to LOAD-BEARING; CSP picks shapes; runtime honors selections | R3.PRUNE-5, R9 | — |
 | W8 | R6 | re-admit each CSS L4 feature via grammar-derived pipeline vs lightningcss/cssparser work-equivalent comparator | R6 | 24 (per feature) |
 | W9 | R7-direct fused R7-typed | re-admit each JSON `direct_to_struct` row vs sonic-rs strict per-corpus struct deser + each JSON `real_typed_struct` row vs per-corpus typed struct deser | R7 (direct + typed) | 17 + 17 (per corpus) |
-| W10 | R8 | stand up distinct `parse_only` code path in `generated_json` (no full-tape build); wire to sonic-rs Skipper-class comparator; admit; Stage-0 F-V2-P1ABC-RERECORD if any consumer-dependency primitive admitted | R8 | 17 (per corpus) |
+| W10 | R8 | stand up distinct `parse_only` code path in `generated_json` (no full-tape build); wire to sonic-rs Skipper-class comparator; admit; Stage-0 F-V2-P1ABC-RERECORD UNCONDITIONALLY per S-P2 V3 §6.3 (SPEC §13:982 binding) | R8 | 17 (per corpus) |
 | W11 | close ceremony | reconcile RESULTS/REDRESS/HANDOFF/SPEC; Alpha feedback; no implementation LOC | R10 close posture | — |
 
 R10 (indefatigable close) is a bracket-level condition (SYNTHESIS §0.1 + §6 close posture), discharged via the W11 close ceremony; SK-V14 closes when W0–W10 dispositions exit + every row family meets the §0.1 bar OR carries architectural-block proof.
@@ -420,7 +420,7 @@ Every gate below carries: (a) named corpus rows verbatim from `skinny/RESULTS.md
 5. NO full-tape allocation in the parse_only path (per ORCHESTRATOR-PROMPT R8 line 148): `cargo asm` shows no `Tape::push` calls in the parse_only emission.
 6. `audit_overlay_verdict=AUDIT-SUSTAINED` (graduated from W1 AUDIT-FALSIFIED).
 7. Track 2 oracle independent sonic_rs::Skipper invocation returns equality per iter.
-8. If admitting any of the 12 F-V2-P1ABC-RERECORD consumer-dependency primitives, Stage 0 rerun is shipped per S-P2 V3 §6.3.
+8. Stage-0 F-V2-P1ABC-RERECORD shipped UNCONDITIONALLY per S-P2 V3 §6.3 (SPEC §13:982 binding — W10 is the bound wave per the 5-step inheritance chain): cargo build + interactive samply record + cfg_attr flip at `generated.rs:33-237` 8 sites, in this wave's commit slice, BEFORE any parse_only admit lands.
 
 **Exit gate for W10 as a whole**:
 - All 17 parse_only rows either ADMIT OR carry architectural-block proof per SYNTHESIS §0.1.

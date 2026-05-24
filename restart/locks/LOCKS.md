@@ -41,6 +41,33 @@ Read also for context (do not audit, but use as ground truth):
 - `audit/RESTART-SKETCH-2026-05-03.md` — JSON parse trace + post-restart pipeline sketch
 - `docs/HARDENING-AUDIT-PROMPT.md` — codebase-audit prompt (for methodological symmetry)
 
+## CH7 Overfit-Prune lens binding
+
+Per `restart/prompts/skinny/PASS-0-OVERFIT-AUDIT.md:62`-`87`, every plan + every
+REDRESS entry + every audit + every hardening cycle at every CHALLENGE phase runs
+CH1-CH7, not CH1-CH6. CH7 (Overfit-Prune) is a first-class lens with the same
+blocking authority as CH1 (Correctness). A CH7 REJECT triggers (a) immediate plan
+revise for plan artefacts, OR (b) immediate redress revert with a new REDRESS
+entry for implementation artefacts. CH7 cannot be carried as
+"acknowledged but not blocking".
+
+The CH7 lens scans for: fabricated baselines; cited-but-absent surface text;
+counter-surface fabrication (asserting prose into a document that does not
+contain it; meta-CH7 collision pattern per
+`restart/audit/totality/p1/1F-coherence-scan.md:64,83,100,109,117` COH-012);
+SK-V14 cohort 32:69 = 31.7% refutation density preservation; anti-paper-close
+anchor enumeration. Authority: T-P1 V5 §6.1 disposition (carrier: in-preface
+clause, NOT Lock 17 — preserves the 16-lock count per
+`restart/prompts/totality/PASS-3-SYNTHESIS.md:210`).
+
+Evidence: `restart/audit/totality/p1/hardening/V1/CH7.md:64`,
+`restart/audit/totality/p1/hardening/V1/CH7.md:180`-`181`,
+`restart/audit/totality/p1/hardening/V1/CH7.md:208`,
+`restart/audit/totality/p1/hardening/V1/CH7.md:218`,
+`restart/audit/totality/p1/hardening/HARDENING-T-P1-V5-CONSOLIDATED.md:604`-`619`,
+`restart/audit/totality/p2/hardening/HARDENING-T-P2-V3-CONSOLIDATED.md:48` (CH7
+3-cycle LOCK in T-P2 cohort).
+
 ## Gestalt — sixteen locks
 
 The plan must reflect these sixteen architectural commitments faithfully. Any wave that violates one is a fault. Locks 1–14 are the original architectural commitments; Locks 15 and 16 land 2026-05-12 after the V9.2 lazy-tape refutation and the six-agent comparative-profile cohort (see `restart/skinny/tranches/shared/SOTA-BEAT-DESIGN.md` for the empirical synthesis).
@@ -70,6 +97,24 @@ The plan must reflect these sixteen architectural commitments faithfully. Any wa
     Evidence: `restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md:96`-`98`,
     `skinny/RESULTS.md:94`, `restart/audit/totality/p1/1A-substrate-evidence.md:45`-`46`.
 
+    **v+1 FactStream 5th substrate category (LAC-1E-14)**: `FactStream` is the
+    5th admitted-product category at the Lock 1 substrate manifest, alongside
+    `OffsetTape`, `EventTape`, `SinkOnly`, and `CollapsedStage`. A fact-stream
+    row carries `substrate_target = admitted_fact_output` per the manifest
+    vocabulary below; comparator/oracle provenance and gate-consumed telemetry
+    remain mandatory per the fact-stream paragraph above. The 5th category is a
+    substrate-manifest classification only; it is NOT a 6th `BackendShape`
+    variant. The 5-shape `BackendShape` search domain at Lock 10 holds:
+    `{EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage}`. Adding a
+    6th `BackendShape` variant remains G-Omega gated per Lock 10 v+1 and PASS-3
+    §8.1. This amendment resolves the CSS L4 declaration-values
+    substrate-classification gap surfaced at
+    `restart/audit/totality/p1/1C-runtime-evidence.md:102` (1C-D5) and
+    `restart/skinny/tranches/sk-v14/research/p1/hardening/V3/CH2.md:87` (F2
+    zero-profile-evidence carry). Evidence:
+    `restart/audit/totality/p1/1E-locks-evidence.md:124`,
+    `skinny/RESULTS.md:94`.
+
     Every e-graph candidate, backend rewrite, imported scanner plan, union
     candidate, and SIMD consumer must declare `substrate_target`,
     `retention_lifetime`, and `policy_owner`. Allowed targets are
@@ -88,6 +133,29 @@ The plan must reflect these sixteen architectural commitments faithfully. Any wa
     equality proof, same-wave consumer, strict row gate, rollback path, and
     abrogate threshold. Evidence: `skinny/REDRESS.md:2910`-`2940`,
     `restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md:120`-`137`.
+
+    **2026-05-23 v+1 substrate-union ELEVATION (LAC-2F-V5-02; T-P3 §3C
+    amendment surface)**: no cross-call retained classifier state. Period.
+    Quote-mask, escape-mask, structural-mask, class-stream, prev-state byte,
+    prefix-XOR carry word, or any prefix carry of any kind — none is admissible
+    under Lock 1 substrate-union. Carry MUST stay within a single chunk-call
+    boundary. The closure of REDRESS 96 / 97 / 98 (retained class-column /
+    streaming structural cursor / class-lane-only on M5 Max) generalises to ALL
+    transient classifier-state primitives, not just the three falsified shapes.
+    Every Layer 1 primitive declares
+    `retention_lifetime ∈ {transient-single-call, retained-within-chunk,
+    retained-across-call-boundary}`; the third value is the REJECT class under
+    Lock 1 v+1. Any future SIMD primitive that proposes cross-call
+    classifier-state retention is REJECT under Lock 1 v+1 without further
+    measurement. The per-call composed form (e.g. Gap PTG-PREV-IN-STRING-LOCK1,
+    `scan_string_with_carry_64`) is the admissible substrate-union-compatible
+    primitive; the per-call SIMD ceiling sits structurally below simdjson's
+    published 1 GB/s by construction. Evidence:
+    `restart/audit/totality/p2/2F-parse-that-gaps.md:519`,
+    `restart/audit/totality/p2/2F-parse-that-gaps.md:490`,
+    `restart/audit/totality/p2/2B-primitive-vocabulary.md:233`-`306`,
+    `restart/audit/totality/p2/hardening/HARDENING-T-P2-V3-CONSOLIDATED.md:182`-`192`
+    (cohort §4 row 4 STRONGEST AMENDMENT SURFACE).
 
 2. **Layout lowering is the canonical IR pass name**. The term replaces *type projection / type collapsing / type inference / type elaboration / TypeMap / StructLayout / TypeDesc / schema synthesis* everywhere. Old terms appear only in archived docs. The IR module is `passes::layout` (canonical unprefixed path under the `passes` crate per the README's workspace shape); the IR record is `Layout`; the trait that consumes it is `LayoutSink`. HM/CSP type checking is a subroutine of layout lowering, never a public peer pass; `LayoutFacts` is the public side-table. Any plan section referring to a retired term, to the stale `bbnf-ir/` prefix, or to `TypeFacts` as a public artefact is a fault.
 
@@ -114,6 +182,21 @@ The plan must reflect these sixteen architectural commitments faithfully. Any wa
 
 6. **xtask emits committed source artefacts**. No proc-macro façade. css_l4.rs at 107 K LOC is greppable on disk. Build is fast incremental because expansion is not at compile time. Any plan that proposes proc-macro for codegen output (other than the `path` / `path-ts` proc-macro shells, which are different) is a fault. **The egraph crate has no direct dependency on csp-solver; the bridge surface lives at `passes::bridge` and is invoked by passes that compose both crates. egraph and csp-solver compose by output-piping, never by import — Lock 4's per-domain orthogonality holds at the dependency-graph level as well as the algorithmic level.**
 
+    **v+1 regen round-trip discipline (LAC-1E-13)**: every file carrying
+    `// @generated by skinny bbnf-codegen` (or equivalent rostered header) MUST
+    (a) trace to a rostered xtask emission (`cargo xtask regen-{grammar}`); (b)
+    emit byte-equivalent output when regenerated from grammar source + workspace
+    metadata; (c) reject hand-patching per memory `[clean-regen-discipline]`.
+    The round-trip clean check distinguishes real codegen from fake `@generated`
+    `include_str!` templates (the SK-V13 W1b CSS L4 pathology). R4 CSS L4 is
+    the first instance; the family extends to JSON / Sheets / BBNF / EBNF / BNF
+    / CSV / Math. Evidence:
+    `restart/skinny/tranches/sk-v14/SYNTHESIS.md:96` R4,
+    `restart/skinny/tranches/sk-v14/SYNTHESIS.md:110`-`120` P-1 fake @generated
+    recurrence vector,
+    `restart/skinny/tranches/sk-v14/audit-overfit/sk-v14-audit-overfit-pre-restart-pattern.md:153,184`
+    (8 fake-codegen providers in `skinny/crates/codegen/src/`).
+
 7. **`crates/path/` is the consolidated path crate**. The runtime cursor engine merges INTO it; the existing `crates/core/src/path/` directory empties. The Rust `pointer!` proc-macro lives here. **`crates/path-core/` (non-proc-macro) exists as a published sibling crate at V1 J.W3, alongside `crates/path/` (the runtime + Rust proc-macro shell) and `crates/parse-that/` (the parser combinator + regex family) — `path-core` is the sole deduplication mechanism for the path-AST + compile logic. `crates/path-ts/` defers post-V1 alongside the TS-native parse+runtime fork.** Any plan that names `crates/bbnf-path/` (with prefix) is stale; any plan with three proc-macro shells is a fault.
 
 8. **Surpass sonic-rs / simdjson / lightning-css**. AU is never mentioned. Every perf gate names a specific competitor's number on a specific dataset on a specific platform. simdjson On-Demand 7 GB/s (JSON parse). sonic-rs M1 Pro twitter 436 µs (parse-to-typed-struct). lightning-css 4.16 ms Bootstrap (CSS). Plans that reference AU's bench numbers are stale. **V1 SOTA close gates measure the Rust-line only at H.W3 and H.W4; WASM SOTA defers post-V1. The H tranche carries five waves (H.W0-H.W4) after the V1-FOLD-CANDIDATES Tier 4 wave-count drop. No measurement-pending WASM anchor lands in V1; the WASM lower-and-bench programme awaits the V2 `WasmBackend: Backend` impl.**
@@ -126,6 +209,28 @@ The plan must reflect these sixteen architectural commitments faithfully. Any wa
     Evidence: `skinny/RESULTS.md:5`-`35`, `skinny/RESULTS.md:94`,
     `restart/skinny/tranches/sk-v13/SYNTHESIS.md:38`-`57`,
     `restart/skinny/tranches/sk-v13/SYNTHESIS.md:95`-`110`.
+
+    **v+1 audit-overlay column binding (LAC-1E-16)**: every gate-consumed
+    `skinny/RESULTS.md` row carries four required schema columns:
+    `track2_entry_point`, `comparator_plane`, `per_iter_equality`,
+    `audit_overlay_verdict`. `xtask gate-json` REJECTS any row missing any of
+    the four — an admitted row missing a required column is no admit at all.
+    Falsifiability gate companion to the row-plane accounting above. Evidence:
+    `restart/skinny/tranches/sk-v14/SYNTHESIS.md:240`-`255`,
+    `restart/skinny/tranches/sk-v14/SYNTHESIS.md:230`,
+    `restart/audit/totality/p1/1E-locks-evidence.md:126`.
+
+    **v+1 numeric abrogate-gate binding (T2A-LAC-V1-05; V3 F-V3-CH4-B
+    numeric-bound at `restart/audit/totality/p2/2D-cost-model.md:151`-`162`)**:
+    every gate-consumed comparator + bench run carries the 6 abrogate-gate
+    numerics from T2A-LAC-V1-05: e-graph saturation ≤50000 nodes / ≤10000
+    classes / ≤30 iter; CSP timeout ≤1 s/grammar; stale-cost ≤30%;
+    generated-LOC growth bound to `loc_budget`; row regression admit;
+    parity/checkasm failure. Any abrogate-gate trip rejects the wave; numbers
+    are uniform across cohort dossiers 2A:192 + 2C:303-305 + 2D:142-149.
+    Evidence:
+    `restart/audit/totality/p2/hardening/HARDENING-T-P2-V3-CONSOLIDATED.md:141`-`145`
+    (F-V3-CH4-B numeric-bind).
 
     Comparator-plane provenance is mandatory. Same-run Rust strict sonic rows
     can anchor current JSON gates; simdjson, yyjson, asmjson, lightningcss, and
@@ -187,6 +292,30 @@ The plan must reflect these sixteen architectural commitments faithfully. Any wa
     admitted-row regression, or any scalar/checkasm/equality failure.
     Evidence: `restart/audit/totality/p2/T-P2-V3-FOLD-ADDENDUM.md:103`-`115`.
 
+    **v+1 cohort-wide `BBNF_SIMD_STRICT=1` precondition (V3 F-V3-CH4-A)**:
+    SIMD admissibility under Lock 10 requires `BBNF_SIMD_STRICT=1` cohort-wide,
+    not merely per-primitive. Institutionalized at three load-bearing cohort
+    sites with mutual cross-references:
+    `restart/audit/totality/p2/2A-sota-landscape.md:192`,
+    `restart/audit/totality/p2/2C-grammar-neutrality.md:303`-`305`,
+    `restart/audit/totality/p2/2D-cost-model.md:142`-`149`. Non-strict parity is
+    exploratory only and cannot admit a primitive, route, or row at the
+    decision-engine layer (per Lock 16 v+1 admission checkasm rule). Evidence:
+    `restart/audit/totality/p2/hardening/HARDENING-T-P2-V3-CONSOLIDATED.md:74`
+    (F-V3-CH4-A discharge).
+
+    **v+1 regex/HIR fact mandate (LAC-2F-V5-04; strengthens V4 LAC-2F-03)**:
+    regex/HIR facts are MANDATORY inputs to CSP/egraph/cost selection. Opaque
+    pattern strings of the form `SinkOnlyExpr::RegexProgram { pattern: String }`
+    (`crates/codegen/src/lower/sink_only.rs:19`-`93`) are insufficient for
+    backend-shape or scanner selection. The decision-engine consumes
+    regex-engine HIR facts (state count, lazy-DFA viability, NFA branching,
+    Aho-Corasick eligibility) from the absorption-wave-resolved `bbnf-regex`
+    crate (LAC-2F-V5-01 Q1 + SK-V14 W11 absorption). Opaque-pattern-only
+    selection is non-admitting at the cost-model layer. Evidence:
+    `restart/audit/totality/p2/2F-parse-that-gaps.md:521`,
+    `restart/audit/totality/p2/2D-cost-model.md:120` (T2D-REGEX-NFA-DFA-PLAN).
+
 11. **Path-deps for incubating sister crates**. egraph + egraph-derive + csp-solver + parse-that (with `parse-that-regex` as its regex sub-crate) as path-deps in workspace until each API stabilises; promote to registry once stable. bbnf-simd + bootstrap + analysis + lsp stay workspace-internal. ser + gorgeous archive at `archive/<crate>/`, removed from workspace, source preserved. **`parse-that` is the canonical name for the published parser combinator + regex family; the legacy `bbnf-regex` crate renames to `parse-that-regex` and publishes as such. The `crates/bbnf-regex/` directory rename to `crates/parse-that-regex/` is a follow-up commit; documentation uses the new name now.**
 
     **Lock 11 v+1 workspace verification**: root legacy workspace drift is not
@@ -228,6 +357,14 @@ The plan must reflect these sixteen architectural commitments faithfully. Any wa
     mining. Evidence: `restart/audit/totality/p2/2C-grammar-neutrality.md:184`,
     `restart/audit/totality/p1/1C-runtime-evidence.md:79`-`85`.
 
+    The generated-output allowance is bound to the Lock 6 v+1 regen round-trip
+    clean check (LAC-1E-13). A file under `runtime/src/grammars/<name>/`
+    carrying `// @generated` survives Lock 14 only when `cargo xtask
+    regen-{grammar}` produces byte-equivalent output from grammar source +
+    workspace metadata; hand-patched generated files are Lock 14 violations.
+    Evidence: `restart/audit/totality/p1/1E-locks-evidence.md:123`,
+    `restart/skinny/tranches/sk-v14/SYNTHESIS.md:96`.
+
     Generic crates consume generated provider manifests, generated
     sink/fact/value/flag surfaces, and generated grammar facts. They may not
     hand-code `RuntimeProvider::{Json, CssL4DeclarationValues}`, JSON/CSS
@@ -261,6 +398,40 @@ The plan must reflect these sixteen architectural commitments faithfully. Any wa
     `restart/skinny/tranches/sk-v13/SYNTHESIS.md:226`-`230`,
     `restart/audit/totality/p2/2C-grammar-neutrality.md:188`,
     `restart/audit/totality/p2/2F-parse-that-gaps.md:249`.
+
+    **v+1 Pattern H per-tranche census (LAC-1E-15)**: every tranche commits a
+    Pattern H file-count transcript via `find crates/core/src/runtime
+    -mindepth 2 -type f -name '*.rs' \| wc -l` (and the skinny mirror
+    equivalent). The bound command MUST omit `-maxdepth 2` so the four files
+    living at depth 3 under `google_sheets/document/{path_query.rs, mod.rs,
+    canonical.rs, view.rs}` are counted; verified at HEAD `e12c5323d`: the
+    corrected command returns 67 (the asserted Pattern H total per
+    `restart/skinny/tranches/sk-v14/audit-overfit/sk-v14-audit-overfit-pre-restart-pattern.md:26`-`56`),
+    while the `-mindepth 2 -maxdepth 2` form returns 63 and contradicts the
+    asserted figure. Tranche +N over prior tranche MUST trace to (a) a
+    grammar-roster change (e.g. css_pretty +7 from SK-V13 to SK-V14) OR (b) a
+    sub-wave count update (e.g. PRUNE-4 9 sub-waves). Substrate templates at
+    `crates/core/src/runtime/builder_template.rs:13`-`31` and
+    `crates/core/src/runtime/arena_template.rs:1`-`31` MUST NOT enshrine
+    hot-grammar opt-outs in doc-comments — the opt-out doc-comment passages
+    are themselves Lock 14 violations under "any plan that introduces
+    grammar-specific code in a generic crate is a fault" per the lock body
+    above. Pattern H 67-file recurrence is the category-scale failure Lock 14
+    was authored to prevent. Evidence:
+    `restart/audit/totality/p1/1E-locks-evidence.md:125`,
+    `restart/skinny/tranches/sk-v14/audit-overfit/sk-v14-audit-overfit-pre-restart-pattern.md:10`-`12`,
+    `restart/skinny/tranches/sk-v14/audit-overfit/sk-v14-audit-overfit-pre-restart-pattern.md:41`-`56`,
+    `restart/skinny/tranches/sk-v14/audit-overfit/sk-v14-audit-overfit-pre-restart-pattern.md:153`-`157`.
+
+    **v+1 abstract-primitive sibling (LAC-2F-V5-03)**: `byte_class_from_range_64`
+    (PTG-RANGE-CLASS-PRIMITIVE) is pinned as a sibling of
+    `byte_class_from_eq_set_64` in the abstract-primitive declaration list.
+    The two-primitive split (set ≤8 vs inclusive range) is the load-bearing
+    grammar-neutral generalization vehicle for digit-run / UTF-8-continuation
+    / CSS hex / BBNF identifier classification. Per memory feedback
+    `[regex-generalized]`, the range primitive lives in `bbnf-simd`, not
+    `bbnf-lang`. Evidence:
+    `restart/audit/totality/p2/2F-parse-that-gaps.md:520`.
 
 15. **Build-profile discipline + fusion discipline + i-cache residency: LTO + codegen-units = 1 + force-inline hot leaves + ~20 KiB hot-function ceiling**. Every bbnf-generated runtime crate declares `[profile.release] lto = "fat"` (verify via `cargo build --release -v 2>&1 | grep '\-C lto'` returns `lto=fat`, not `lto=thin`; per `skinny/profile/skinny-expanded/PROFILE-REPORT.md` the binary built with `lto=thin` regressed twitter throughput 11780→5521 Mbps — Lock 15 enforcement gap), `codegen-units = 1`, `panic = "abort"` (or `"unwind"` only if the grammar carries `@error(recover = ...)`), `debug = true` (per `feedback_samply_symbols` for samply-resolvable profiles). Three co-load-bearing dimensions, each falsifiable:
     - **LTO + codegen-units = 1**: sonic-rs's INLINED hot-leaf count is 1-2 because LTO fuses the entire SIMD inner kernel into `parse_object`/`parse_array`; without LTO sonic-rs's NOINLINE wall-clock falls 2.1-3.2× on M5 Max (`skinny/profile/sonic-rs-v2/PROFILE-REPORT.md`). The codegen template inversion yields only half its gain without LTO.
@@ -345,8 +516,26 @@ The plan must reflect these sixteen architectural commitments faithfully. Any wa
     strategy with scalar reference, strict parity/checkasm, feature gate,
     local temporary lifetime, and same-wave measured consumer. AVX-512
     literature is x86 architecture pressure and cannot close M5/aarch64 rows.
-    Evidence: `restart/audit/totality/p2/2D-cost-model.md:191`,
-    `restart/skinny/tranches/sk-v13/SYNTHESIS.md:223`-`230`.
+
+    **v+1 predicate hardening (LAC-2D-06; CH5 F-CH5-V1-03)**: the live
+    `admits_collapsed_stage` predicate at `skinny/crates/passes/src/lib.rs:874`-`876`
+    MUST co-require `target.arch == x86` alongside `target.avx512bw` and
+    `Entry(_)`, refusing aarch64 admission via cross-build
+    `target.avx512bw` inheritance. Marker-string lowerers at
+    `skinny/crates/codegen/src/lower/collapsed_stage.rs:15`-`17` are not
+    admissible (P1-1B-D6). Every `BackendExpr` node / rewrite guard /
+    extraction result MUST declare
+    `substrate_target ∈ {local_temp_only, existing_tape, direct_sink,
+    admitted_fact_output}` per Lock 1 v+1 manifest. E-graph extraction MUST
+    reject plans whose `substrate_target` is not one of the four admitted
+    values. Until a generated aarch64 strategy lands (UNKNOWN-2D-05 +
+    2E source-backed aarch64 candidate), `CollapsedStage` admission is
+    mechanically refused on aarch64.
+    Evidence: `restart/audit/totality/p2/2D-cost-model.md:265`,
+    `restart/audit/totality/p2/2D-cost-model.md:123`,
+    `restart/audit/totality/p2/2D-cost-model.md:191`,
+    `restart/skinny/tranches/sk-v13/SYNTHESIS.md:223`-`230`,
+    `skinny/crates/passes/src/lib.rs:874`-`876`.
 
     Native `svmatch_u8` is SVE2-only. The existing Lock 16 NEON set-membership
     row remains a separate NEON reduction-tree port only if the manifest names
@@ -362,6 +551,32 @@ The plan must reflect these sixteen architectural commitments faithfully. Any wa
     `restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md:120`-`137`,
     `skinny/REDRESS.md:3766`-`3820`,
     `skinny/REDRESS.md:3864`-`3868`.
+
+    **v+1 `bbnf-regex::Dfa` admissibility (LAC-2F-V5-01)**: contingent on
+    absorption-wave Q1 resolution (SK-V14 W11), the manifest gains a
+    `bbnf-regex::Dfa` admissibility row. Admissibility requires (a) a scalar
+    reference (Hoehrmann/Thompson straightforward construction at
+    `regex-engine.md:28`-`44`); (b) checkasm-parity equivalence to
+    `regex_automata::meta::Regex::find` over the byte stream; (c) a same-wave
+    consumer (host-fn or leaf-parser dispatch site).
+
+    **CH3 pre-flight reflex (V6 F-CH3-2F-08, LOW prophylactic)**: before any
+    `bbnf-regex::Dfa` admissibility row dispatches, the absorption wave MUST
+    (i) execute a CH3-class REDRESS regression scan over `skinny/REDRESS.md`
+    and `restart/skinny/tranches/sk-v{1..14}/` for any prior DFA / NFA /
+    Aho-Corasick / regex-engine admission attempt, recording the result inline
+    as a precondition; (ii) the amendment MUST carry an explicit REDRESS
+    pre-block citation listing — at minimum the routes the forward absorption
+    MUST NOT re-open: REDRESS 96 (retained class-column substrate, falsified
+    per `skinny/REDRESS.md:2797`-`2848`), REDRESS 97 (streaming structural
+    cursor, falsified per `:2852`-`2906`), REDRESS 98
+    (`G-W3-UNION-SUBSTRATE` retired per `:2910`-`2950`), plus any prior
+    regex-shaped admission attempt surfaced by clause (i). This restores
+    parity with LAC-2A-V1-01 / LAC-2D-05 / LAC-2E-04 / LAC-2F-V5-02 /
+    LAC-2F-V5-04, which all carry the REDRESS pre-block citation inside
+    amendment text. Evidence:
+    `restart/audit/totality/p2/2F-parse-that-gaps.md:518`,
+    `restart/audit/totality/p2/2F-parse-that-gaps.md:23` (v6_fold F-CH3-2F-08).
 
 ## v+1 Governance Boundary
 

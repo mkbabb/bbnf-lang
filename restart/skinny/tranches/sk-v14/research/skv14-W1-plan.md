@@ -80,20 +80,72 @@ Forbidden paths:
    `v2 §1-4` for parse_only and `v6 §1 + §3` for direct/typed. Avoid the stale
    SPEC by-number mapping for direct rows.
 
+## 3.1 Challenge Addendum: V2 Binding
+
+The seven-lens challenge returned REVISE on correctness, ledger coverage,
+implementation scope, and hidden stale-evidence gates. W1 V2 is therefore
+stricter than the V1 plan:
+
+- Equality is not future-conditional. W1 must gate all 51 JSON manifest cells:
+  45 benchmarked cells require
+  `PASS:scope=criterion-timing;checks=<n>;mismatches=0`; the six typed cells
+  with no generated product surface must stay explicit
+  `INTRINSIC-BLOCK:missing-product-surface` rows and cannot be counted as
+  admitted, pending, or PASS evidence.
+- The W1 direct comparator target is `JsonDirectDigest` strict sink-shape
+  equivalence. This resolves the direct-plane ambiguity without pretending
+  per-corpus product structs exist for the direct workload. Per-corpus direct
+  strict product wrappers are a W9 re-admit concern, not a W1 prune/gate close.
+- The same-wave gate must parse all 32 manifest cells and reject stale evidence
+  in `comparator_evidence`, not just `comparator_plane`: DOM parse-only source
+  paths, `sonic_rs_anchor`, historical sidecar strict anchors, Track 2 pointing
+  to comparator functions, and W0 placeholder equality are all hard failures for
+  benchmarked JSON rows.
+- PRUNE-1 is gate-consumed. `xtask gate-json --check-results` must reject any
+  JSON rolling row with `ADMITTED` after W1, reject any JSON visible row with
+  `A | GO`, and require exactly 22 row-keyed REDRESS references continuing
+  after `REDRESS-160`.
+- Commands run from the skinny workspace. Use `cd skinny && cargo xtask ...` or
+  `cargo --manifest-path skinny/Cargo.toml xtask ...`; root `cargo xtask` is the
+  wrong binary for this gate.
+- Stale-anchor source grep is scoped to production comparator code. Tests may
+  contain constructed negative fixtures, but production files must have no
+  `sonic_rs_anchor` or `from_slice::<sonic_rs::Value>` parse-only comparator
+  hits.
+
+V2 LOC budget:
+
+| Slice | Cap |
+|---|---:|
+| Skipper wrapper + parse comparator lane | 180 LOC |
+| timed equality helpers and focused tests | 360 LOC |
+| gate/report manifest and comparator evidence fixes | 360 LOC |
+| `xtask` 32-cell parser and W1 gate rules | 320 LOC |
+| `RESULTS.md` / rolling rewrite | 250 table LOC |
+| `REDRESS.md` 22-row ledger | 250 doc LOC |
+
+Rollback checkpoint: if the Skipper wrapper plus manifest parser cannot pass
+focused tests before ledger edits begin, revert the source slice and record W1
+as rejected. Do not leave a partial relabel or a ledger prune without an
+executable consumer.
+
 ## 4. Falsifiability Gate
 
-- `rg "sonic_rs_anchor|from_slice::<sonic_rs::Value>" skinny/crates/bbnf-bench`
-  returns no W1 comparator source hits.
-- `cargo xtask gate-json --check-results --skv14-existing-results-capture`
+- `rg "sonic_rs_anchor|from_slice::<sonic_rs::Value>" skinny/crates/bbnf-bench/{benches,src}
+  -g '*.rs'` returns no production W1 comparator source hits.
+- `cd skinny && cargo xtask gate-json --check-results --skv14-existing-results-capture`
   rejects any post-W1 JSON admit with placeholder equality, stale DOM
   parse_only comparator evidence, hidden Track2=comparator coupling, or
-  `sidecar-same-run`.
-- `cargo xtask gate-json --with-cost-facts --check-results` passes.
-- `cargo test --profile ax-iter -p xtask -p bbnf-bench` passes.
-- `restart/skinny/ROLLING-SOTA-DELTA.md` has zero JSON `ADMITTED` rows after
-  W1.
-- `skinny/RESULTS.md` has no JSON visible-table `A | GO` rows after W1; CSS
-  rows remain W4 work.
+  historical sidecar strict-anchor evidence.
+- `cd skinny && cargo xtask gate-json --with-cost-facts --check-results` passes
+  if the local costfacts inputs remain compatible; otherwise the redress log
+  records the precise incompatibility and the non-costfacts gate remains
+  mandatory.
+- `cd skinny && cargo test --profile ax-iter -p xtask -p bbnf-bench` passes.
+- `restart/skinny/ROLLING-SOTA-DELTA.md` has zero JSON `ADMITTED` rows after W1,
+  and `cd skinny && cargo xtask gate-json --check-results` enforces that state.
+- `skinny/RESULTS.md` has no JSON visible-table `A | GO` rows after W1; CSS rows
+  remain W4 work, and `xtask` enforces the JSON zero-admit predicate.
 - Invariants remain: 16 locks; Pattern H runtime file count 67; no diff under
   `crates/core/src/runtime`, `skinny/crates/codegen`, or generated output.
 

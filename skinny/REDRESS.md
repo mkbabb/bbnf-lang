@@ -5039,3 +5039,50 @@ perturbation.
   `2a652e0b8e3ec3608ca2bdd4c1bf539557f337653112c58f7076c3ee37147112`;
   the retained redress note is
   `restart/skinny/tranches/sk-v13/research/w15.1/redress.md`.
+
+## SK-V14 Wave 1 PRUNE-1 JSON Comparator Equality Prune
+
+- Item 161 closes json/numbers/parse_only/main under `G-SK-V14-W1-PRUNE-1` as `PRUNE`.
+  The prior admission is audit-falsified by sk-v13/v2-json-validation:§1-2 and sk-v13/v6-comparator-integrity:§1+§3; W1 keeps the cold measurements only as gate evidence after rebinding the row to the sonic_rs::Skipper parse-only comparator and timed per-iteration equality.
+- Item 162 closes json/citm_catalog/parse_only/main under `G-SK-V14-W1-PRUNE-1` as `PRUNE`.
+  The prior admission is audit-falsified by sk-v13/v2-json-validation:§1-2 and sk-v13/v6-comparator-integrity:§1+§3; W1 keeps the cold measurements only as gate evidence after rebinding the row to the sonic_rs::Skipper parse-only comparator and timed per-iteration equality.
+- Item 163 closes json/canada/parse_only/main under `G-SK-V14-W1-PRUNE-1` as `PRUNE`.
+  The prior admission is audit-falsified by sk-v13/v2-json-validation:§1-2 and sk-v13/v6-comparator-integrity:§1+§3; W1 keeps the cold measurements only as gate evidence after rebinding the row to the sonic_rs::Skipper parse-only comparator and timed per-iteration equality.
+- Item 164 closes json/marine_ik/parse_only/main under `G-SK-V14-W1-PRUNE-1` as `PRUNE`.
+  The prior admission is audit-falsified by sk-v13/v2-json-validation:§1-2 and sk-v13/v6-comparator-integrity:§1+§3; W1 keeps the cold measurements only as gate evidence after rebinding the row to the sonic_rs::Skipper parse-only comparator and timed per-iteration equality.
+- Item 165 closes json/mesh/parse_only/main under `G-SK-V14-W1-PRUNE-1` as `PRUNE`.
+  The prior admission is audit-falsified by sk-v13/v2-json-validation:§1-2 and sk-v13/v6-comparator-integrity:§1+§3; W1 keeps the cold measurements only as gate evidence after rebinding the row to the sonic_rs::Skipper parse-only comparator and timed per-iteration equality.
+- Item 166 closes json/citm_catalog/direct_to_struct/main under `G-SK-V14-W1-PRUNE-1` as `PRUNE`.
+  The prior admission is audit-falsified by sk-v13/v6-comparator-integrity:§1+§3 and sk-v13/v2-json-validation:§3; W1 keeps the cold measurements only as gate evidence after rebinding the row to the strict direct digest comparator and timed per-iteration equality.
+- Item 167 closes json/apache_builds/direct_to_struct/main under `G-SK-V14-W1-PRUNE-1` as `PRUNE`.
+  The prior admission is audit-falsified by sk-v13/v6-comparator-integrity:§1+§3 and sk-v13/v2-json-validation:§3; W1 keeps the cold measurements only as gate evidence after rebinding the row to the strict direct digest comparator and timed per-iteration equality.
+- Item 168 closes json/marine_ik/direct_to_struct/main under `G-SK-V14-W1-PRUNE-1` as `PRUNE`.
+  The prior admission is audit-falsified by sk-v13/v6-comparator-integrity:§1+§3 and sk-v13/v2-json-validation:§3; W1 keeps the cold measurements only as gate evidence after rebinding the row to the strict direct digest comparator and timed per-iteration equality.
+- Item 169 closes json/instruments/direct_to_struct/main under `G-SK-V14-W1-PRUNE-1` as `PRUNE`.
+  The prior admission is audit-falsified by sk-v13/v6-comparator-integrity:§1+§3 and sk-v13/v2-json-validation:§3; W1 keeps the cold measurements only as gate evidence after rebinding the row to the strict direct digest comparator and timed per-iteration equality.
+- Item 170 closes json/numbers/direct_to_struct/main under `G-SK-V14-W1-PRUNE-1` as `PRUNE`.
+  The prior admission is audit-falsified by sk-v13/v6-comparator-integrity:§1+§3 and sk-v13/v2-json-validation:§3; W1 keeps the cold measurements only as gate evidence after rebinding the row to the strict direct digest comparator and timed per-iteration equality.
+- Item 171 closes json/unicode_basic/direct_to_struct/main under `G-SK-V14-W1-PRUNE-1` as `PRUNE`.
+  The prior admission is audit-falsified by sk-v13/v6-comparator-integrity:§1+§3 and sk-v13/v2-json-validation:§3; W1 keeps the cold measurements only as gate evidence after rebinding the row to the strict direct digest comparator and timed per-iteration equality.
+- Item 172 closes json/twitter/real_typed_struct/main under `G-SK-V14-W1-PRUNE-1` as `PRUNE`.
+  The prior admission is audit-falsified by sk-v13/v6-comparator-integrity:§1+§3 and sk-v13/v2-json-validation:§4; W1 keeps the cold measurements only as gate evidence after rebinding the row to the strict typed direct comparator and timed per-iteration equality.
+- Item 173 closes json/citm_catalog/real_typed_struct/main under `G-SK-V14-W1-PRUNE-1` as `PRUNE`.
+  The prior admission is audit-falsified by sk-v13/v6-comparator-integrity:§1+§3 and sk-v13/v2-json-validation:§4; W1 keeps the cold measurements only as gate evidence after rebinding the row to the strict typed direct comparator and timed per-iteration equality.
+- Item 174 closes json/apache_builds/real_typed_struct/main under `G-SK-V14-W1-PRUNE-1` as `PRUNE`.
+  The prior admission is audit-falsified by sk-v13/v6-comparator-integrity:§1+§3 and sk-v13/v2-json-validation:§4; W1 keeps the cold measurements only as gate evidence after rebinding the row to the strict typed direct comparator and timed per-iteration equality.
+- Item 175 closes json/github_events/real_typed_struct/main under `G-SK-V14-W1-PRUNE-1` as `PRUNE`.
+  The prior admission is audit-falsified by sk-v13/v6-comparator-integrity:§1+§3 and sk-v13/v2-json-validation:§4; W1 keeps the cold measurements only as gate evidence after rebinding the row to the strict typed direct comparator and timed per-iteration equality.
+- Item 176 closes json/update_center/real_typed_struct/main under `G-SK-V14-W1-PRUNE-1` as `PRUNE`.
+  The prior admission is audit-falsified by sk-v13/v6-comparator-integrity:§1+§3 and sk-v13/v2-json-validation:§4; W1 keeps the cold measurements only as gate evidence after rebinding the row to the strict typed direct comparator and timed per-iteration equality.
+- Item 177 closes json/mesh/real_typed_struct/main under `G-SK-V14-W1-PRUNE-1` as `PRUNE`.
+  The prior admission is audit-falsified by sk-v13/v6-comparator-integrity:§1+§3 and sk-v13/v2-json-validation:§4; W1 keeps the cold measurements only as gate evidence after rebinding the row to the strict typed direct comparator and timed per-iteration equality.
+- Item 178 closes json/random/real_typed_struct/main under `G-SK-V14-W1-PRUNE-1` as `PRUNE`.
+  The prior admission is audit-falsified by sk-v13/v6-comparator-integrity:§1+§3 and sk-v13/v2-json-validation:§4; W1 keeps the cold measurements only as gate evidence after rebinding the row to the strict typed direct comparator and timed per-iteration equality.
+- Item 179 closes json/marine_ik/real_typed_struct/main under `G-SK-V14-W1-PRUNE-1` as `PRUNE`.
+  The prior admission is audit-falsified by sk-v13/v6-comparator-integrity:§1+§3 and sk-v13/v2-json-validation:§4; W1 keeps the cold measurements only as gate evidence after rebinding the row to the strict typed direct comparator and timed per-iteration equality.
+- Item 180 closes json/instruments/real_typed_struct/main under `G-SK-V14-W1-PRUNE-1` as `PRUNE`.
+  The prior admission is audit-falsified by sk-v13/v6-comparator-integrity:§1+§3 and sk-v13/v2-json-validation:§4; W1 keeps the cold measurements only as gate evidence after rebinding the row to the strict typed direct comparator and timed per-iteration equality.
+- Item 181 closes json/numbers/real_typed_struct/main under `G-SK-V14-W1-PRUNE-1` as `PRUNE`.
+  The prior admission is audit-falsified by sk-v13/v6-comparator-integrity:§1+§3 and sk-v13/v2-json-validation:§4; W1 keeps the cold measurements only as gate evidence after rebinding the row to the strict typed direct comparator and timed per-iteration equality.
+- Item 182 closes json/unicode_basic/real_typed_struct/main under `G-SK-V14-W1-PRUNE-1` as `PRUNE`.
+  The prior admission is audit-falsified by sk-v13/v6-comparator-integrity:§1+§3 and sk-v13/v2-json-validation:§4; W1 keeps the cold measurements only as gate evidence after rebinding the row to the strict typed direct comparator and timed per-iteration equality.

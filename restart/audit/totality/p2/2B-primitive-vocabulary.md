@@ -1,407 +1,287 @@
 ---
 agent: 2B
 pass: T-P2-research
-cycle: V4
-generated_at: 2026-05-21T12:10:00Z
+cycle: V1
+generated_at: 2026-05-23T00:00:00Z
 t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F]
-primary_sources_cited: 24
-counted_source_ids: [T2B-SRC-FFMPEG-C, T2B-SRC-FFMPEG-H, T2B-SRC-VIDEOLAN-CHECKASM, T2B-SRC-ARM-ACLE, T2B-SRC-ARM-NEON, T2B-SRC-P2-PROMPT, T2B-SRC-T-P1-1D, T2B-SRC-T-P1-1E, T2B-SRC-T-P1-HARDENING, T2B-SRC-V2-FOLD, T2B-SRC-V3-FOLD, T2B-SRC-LOCKS, T2B-SRC-SK-V13-SYNTHESIS, T2B-SRC-SK-V13-HANDOFF, T2B-SRC-SIMD-SCOPING, T2B-SRC-P1-B, T2B-SRC-P1-C, T2B-SRC-P1-E, T2B-SRC-P1-LEDGER, T2B-SRC-P2-B, T2B-SRC-P2-C, T2B-SRC-RESULTS, T2B-SRC-REDRESS, T2B-SRC-BBNF-SIMD]
-techniques_grounded: 13
-techniques_refuted: 6
-v2_fold_authority: restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md
-v3_fold_authority: restart/audit/totality/p2/T-P2-V3-FOLD-ADDENDUM.md
-v4_fold_authority: restart/audit/totality/p2/T-P2-V4-FOLD-ADDENDUM.md
-v1_ch_lenses_folded: [CH1, CH2, CH3, CH4, CH5, CH6]
+primary_sources_cited: 18
+counted_source_ids: [SRC-DAV1D-HEAD, SRC-DAV1D-X86INC, SRC-X264-X86INC, SRC-FFMPEG-X86UTIL, SRC-FFMPEG-CHECKASM-C, SRC-FFMPEG-CHECKASM-H, SRC-VIDEOLAN-CHECKASM-PAGE, SRC-ARM-ACLE, SRC-ARM-NEON-INTR, SRC-SIMDJSON-PAPER, SRC-LOCKS-16, SRC-BBNF-ASM, SRC-BBNF-X86INC, SRC-BBNF-X86UTIL, SRC-BBNF-LICENSE-VENDOR, SRC-BBNF-SCALAR, SRC-BBNF-CHECKASM, SRC-S-P2-V3]
+techniques_grounded: 11
+techniques_refuted: 4
+techniques_partial: 3
 prior_cycle_dispositions_folded:
   accepted: []
   rejected: []
-  revised: [CH1-provenance, CH2-lock14-transfer, CH3-redress-material-differentials, CH4-cost-and-admission-ledger, CH5-substrate-kind-fields, CH6-anti-paper-close-state-machine]
-  first_cycle_additions: [2B-L0-vendored-macro-boundary, 2B-L1-primitive-contracts, 2B-checkasm-admission-loop, 2B-lock16-traceability-manifest, 2B-no-orphan-primitive-rule]
-  v2_additions: [2B-per-technique-admission-ledger, 2B-source-present-orphan-enum, 2B-lock16-manifest-retention-fields, 2B-redress-121-127-taxonomy, 2B-union-asm-material-differential-checklist]
-  v3_additions: [2B-executable-shared-ledger, 2B-normalized-admission-state, 2B-counted-source-ids]
-  v4_additions: [2B-non-shortlist-blockers, 2B-redress-slice-ownership]
-locks_amendment_candidates: 7
+  revised: []
+  first_cycle_additions:
+    - 2B-layer0-vendored-corpus-pin
+    - 2B-layer1-9-primitive-vocabulary
+    - 2B-one-directional-dependency
+    - 2B-admission-disciplne-per-lock-16
+    - 2B-fsm-frame-scalar-checkasm-gap
+locks_amendment_candidates: 5
 ---
 
-# T-P2 2B Primitive Vocabulary Research
+# T-P2 2B — Two-Layer SIMD/ASM Primitive Vocabulary
 
 ## Executive Summary
 
-V2 preserves the V1 layer split but makes it gate-consumable. Layer 0 remains
-vendored macro/process infrastructure plus the FFmpeg/VideoLAN checkasm loop:
-scalar reference, optimized implementation, differential parity, register /
-stack / signal discipline, and benchmark-after-correctness. Layer 1 remains the
-bbnf-authored vocabulary of byte-window, mask, carry, table, string, escape,
-digit, tail, and context primitives whose policy comes from generated grammar
-data or caller data.
-
-The V1 research correctly refused Lock 16 closure from skeleton presence. V2
-folds the hardening revise set into mechanical requirements: every candidate
-has an admission-ledger row, `BBNF_SIMD_STRICT=1` is mandatory for admission
-checkasm, source-present primitives close only as `wired`, `deleted`,
-`scalar-delegate-non-ASM`, or `architectural-block-with-REDRESS`, and every
-manifest row carries `substrate_target`, `retention_lifetime`, and
-`policy_owner`. Proof-only and inventory routes are explicitly downgraded until
-they wire a same-wave consumer that moves a JSON/CSS/Sheets/BBNF-self row or
-records measured rejection / architectural block.
-
-## V2 Fold Authority
-
-This dossier folds the V1 CH1-CH6 hardening set through
-`restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md`.
-
-| lens | V2 fold into 2B |
-|---|---|
-| CH1 correctness / provenance | Moving-source evidence is provenance only when pinned in the addendum register; the Sneller repository citation is removed from 2B authority; architecture-pressure sources do not admit primitives. |
-| CH2 generality / Lock 14 | Shared SIMD primitives must receive byte alphabets, delimiters, quote / escape / control, number, string, and no-string policy from generated grammar data or caller data. JSON/CSS policy embedded in Layer 1 is a blocker. |
-| CH3 regression / REDRESS | REDRESS 88/89/96/97/98/119/121-127 are folded as route facts; PMULL/CSSC/union labels require the material-differential checklist below before shortlist use. |
-| CH4 cost / implementation realism | Every candidate gets an admission-ledger row with LOC/risk/rollback/abrogate fields; proof-only primitives are not S-P3-eligible. |
-| CH5 hidden coupling / Lock 1 | Every primitive, union route, imported scanner plan, and consumer declares `substrate_target`, `retention_lifetime`, and `policy_owner`; retained class/mask sidecars remain blocked. |
-| CH6 anti-paper-close | "Grounded" means source-backed only. Admission requires scalar reference, strict checkasm/parity, same-wave production consumer, strict equality/oracle, and measured row movement or architectural-block evidence. |
+Ground the two-layer SIMD/ASM primitive vocabulary the V1 spec assumes.
+**Layer 0** is the vendored verbatim x86 macro corpus — `x86inc.asm` (72
+macros, x264 origin, also vendored by FFmpeg and dav1d at HEAD
+`1718ff9aded99f0a89f5c7940d6afb8948301e33`) plus `x86util.asm` (66 macros,
+FFmpeg origin). Layer 0 is build-time ABI / register / SIMD instruction
+abstraction only; it carries no grammar policy and no runtime state.
+**Layer 1** is `bbnf.asm`, bbnf-authored, grammar-neutral, declaring nine
+primitive contracts (`BYTE_CLASS_FROM_TABLE_64`, `BYTE_CLASS_FROM_EQ_SET_64`,
+`BITMAP_PREFIX_XOR_64`, `BITMAP_NEXT_SET_BIT`, `BULK_EMIT_COMPRESSED`,
+`EOB_PAD_CLAMP`, `FSM_DISPATCH_THREADED`, `FRAME_PUSH_BOUNDED`,
+`FRAME_POP_BOUNDED`). Layer 1 `%include`s Layer 0; dependency is strictly
+one-directional. Each Layer 1 primitive requires (a) a scalar reference in
+`crates/bbnf-simd/src/scalar/`, (b) a checkasm parity test in
+`crates/bbnf-simd/tests/checkasm_<name>.rs`, and (c) a named same-wave
+consumer per Lock 16. Audit at HEAD: 6/9 Layer-1 primitives have scalar
+references, 6/9 have checkasm tests; **3/9 (`FSM_DISPATCH_THREADED`,
+`FRAME_PUSH_BOUNDED`, `FRAME_POP_BOUNDED`) are skeleton contracts only**
+and are non-admissible until scalar oracle + checkasm parity land. P3-A's
+8-candidate shortlist consumes Layer 1 through the S-P2 V3 P2-B 5-stage
+admission process.
 
 ## Technique Grounding Table
 
-| spec-claim or T-P1-divergence-id | published source cited | grounded / refuted / partial | bbnf-specific note |
+| spec-claim / T-P1-divergence | published source cited | grounded / refuted / partial | bbnf-specific note |
 |---|---|---|---|
-| Layer 0 may vendor an established macro substrate instead of inventing ABI macros. | Local vendor attribution: `skinny/crates/bbnf-simd/ext/x86/LICENSE-VENDOR:5`-`13`; `x86inc.asm` header and calling-convention macro purpose at `skinny/crates/bbnf-simd/ext/x86/x86inc.asm:1`-`29`. | grounded | Layer 0 is build-time x86 macro machinery only. It must not become grammar policy or a runtime substrate. |
-| Layer 1 is bbnf-authored grammar-neutral primitive vocabulary. | `skinny/crates/bbnf-simd/ext/x86/bbnf.asm:1`-`12`, `:30`-`:44`, `:55`-`:60`. | grounded | `bbnf.asm` already names nine grammar-neutral contracts and states that per-grammar data lives outside the macro library. |
-| Scalar-reference plus optimized implementation plus result comparison before bench is the transferable checkasm process. | FFmpeg HEAD `085714182302333dd83dcb9c36cf828dc4eba929` per the V2 addendum, `tests/checkasm/checkasm.c` / `tests/checkasm/checkasm.h`, plus the VideoLAN checkasm process description at `https://www-test.videolan.org/projects/checkasm/`. | grounded | bbnf's admission loop must treat checkasm as a gate before Criterion row claims, not as an after-the-fact test. |
-| Register, stack, illegal-instruction, and failure diagnostics are part of process, not decoration. | VideoLAN checkasm supported-platform and failure-mode documentation at `https://www-test.videolan.org/projects/checkasm/`; local canary/register helpers at `skinny/crates/bbnf-simd/tests/checkasm_common.rs:49`-`71` and `:83`-`:111`. | grounded | Lock 16 should require stack/register/fault coverage for handwritten ASM and unsafe intrinsic kernels where applicable. |
-| bbnf local checkasm mirrors FFmpeg-style differential parity. | `skinny/crates/bbnf-simd/tests/checkasm_parity.rs:1`-`20`, `:57`-`:115`. | partial | The harness is strong, but broad parity is strict only when `BBNF_SIMD_STRICT=1`; admission commands must set it. |
-| `byte_class_from_eq_set_64` is a valid Layer 1 primitive. | Contract and scalar executable specification at `skinny/crates/bbnf-simd/src/lib.rs:259`-`271`, scalar/checkasm assertion at `skinny/crates/bbnf-simd/tests/checkasm_byte_class_from_eq_set_64.rs:1`-`17`, NEON body at `skinny/crates/bbnf-simd/src/aarch64/byte_class_from_eq_set_64.rs:27`-`72`. | grounded | Admissible only with caller-supplied byte set. A JSON structural alphabet embedded in shared code is a Lock 14 leak. |
-| TBL lookup is an admissible byte-class and escape-decode basis. | Arm Neon Intrinsics Reference maps `vqtbl4q_u8` / table lookup: https://arm-software.github.io/acle/neon_intrinsics/advsimd.html; local TBL classifier at `skinny/crates/bbnf-simd/src/aarch64/classify_tbl4.rs:16`-`43`; local hex decode at `skinny/crates/bbnf-simd/src/aarch64/unescape_uxxxx.rs:58`-`166`. | grounded | The TBL core is neutral; JSON `\uXXXX` and CSS variable-length escapes need separate grammar-owned wrappers. |
-| ASCII set run-skip is micro-proven but not admitted as production. | Local checkasm/microbench at `skinny/crates/bbnf-simd/tests/checkasm_ascii_set_member_find_64.rs:20`-`40`, `:103`-`:190`; REDRESS-126 at `skinny/REDRESS.md:3768`-`3820`. | partial | The primitive is a top production candidate only after a CSS scanner consumer lands in the same wave. |
-| Escape-mask correctness is a prerequisite, not a throughput primitive. | `skinny/crates/bbnf-simd/tests/checkasm_escape_mask_64.rs:6`-`33`, `:55`-`:123`; REDRESS-122 at `skinny/REDRESS.md:3603`-`3632`. | grounded | It should remain in the vocabulary as a correctness guard; it did not move CSS or JSON rows by itself. |
-| Structural scan speed implies a retained union substrate should be consumed. | P1 mode-III structural SIMD ratios at `restart/skinny/tranches/sk-v13/research/p1/p1c-samply-mode-3.md:71`-`87`; REDRESS 96/97/98 at `skinny/REDRESS.md:2795`-`2950`. | refuted for tested retained forms | Structural masks are valid transient primitives. Retained class-column and streaming-cursor substrates are measured failures unless a new route names a material differential. |
-| PMULL prefix-XOR and CSSC CTZ are automatically admissible once correct. | Arm ACLE feature gates PMULL through the AES/PMULL feature family, DOTPROD through `__ARM_FEATURE_DOTPROD`, SHA3 through `__ARM_FEATURE_SHA3`, and CSSC through `__ARM_FEATURE_CSSC`: https://arm-software.github.io/acle/main/acle.html; REDRESS 88/89 at `skinny/REDRESS.md:2510`-`2585`. | refuted as default hot-body substitutions | They are category-unblocked only with a new same-wave consumer and material differential; local replacement of scalar delegates is already measured as regressive. |
-| UDOT digit MAC is an admissible primitive family. | Arm ACLE documents dot-product availability through `__ARM_FEATURE_DOTPROD` at `https://arm-software.github.io/acle/main/acle.html`; local scalar and `udot` body at `skinny/crates/bbnf-simd/src/aarch64/digit_mac.rs:4`-`49`. | partial | The primitive has a scalar oracle and ISA name but no row consumer. It needs numeric-row attribution and checkasm expansion before shortlist. |
-| `byte_context` and `cache_hints` can stay as support primitives. | Local `vextq_u8` wrappers at `skinny/crates/bbnf-simd/src/aarch64/byte_context.rs:1`-`10`; local PRFM/STNP wrappers at `skinny/crates/bbnf-simd/src/aarch64/cache_hints.rs:1`-`32`; REDRESS-126 orphan disposition at `skinny/REDRESS.md:3806`-`3812`, `:3869`-`:3872`. | refuted for admission | They are inventory until consumed by a string/context or store/prefetch row, or deleted/demoted with evidence. |
-| `bbnf-simd` dispatch already gives one canonical primitive path. | Primitive table at `skinny/crates/bbnf-simd/src/dispatch.rs:49`-`74`; `prim::*` wrappers at `skinny/crates/bbnf-simd/src/lib.rs:231`-`271`. | partial | Dispatch exists, but several selected aarch64 entries are scalar delegates, and x86 `.asm`/intrinsic/direct module paths are not yet manifest-normalized. |
-| Producer-only SIMD, resolver, union, or codegen artifacts can close support waves. | SK-V13 pre-blocks producer-only artifacts at `restart/skinny/tranches/sk-v13/SYNTHESIS.md:239`-`263`; handoff REVISE rule at `restart/skinny/tranches/sk-v13/HANDOFF.md:153`-`165`. | refuted | Every primitive needs a same-wave measured consumer, or the wave is proof-only/reject. |
+| Layer 0 corpus may be vendored verbatim from upstream rather than re-authored. | `skinny/crates/bbnf-simd/ext/x86/LICENSE-VENDOR:5-31` (vendor attribution: x264 / FFmpeg, ISC + LGPL-2.1-or-later, build-time include only); upstream dav1d HEAD pin `1718ff9aded99f0a89f5c7940d6afb8948301e33` per `restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md:29`; upstream dav1d source at `https://code.videolan.org/videolan/dav1d/-/blob/1718ff9aded99f0a89f5c7940d6afb8948301e33/src/x86/x86inc.asm`. | grounded | The vendored corpus is build-time macro substrate only — calling conventions, ABI mechanics, register naming, SIMD instruction macros. Layer 0 carries zero grammar policy. |
+| `x86inc.asm` is the x264-origin / FFmpeg / dav1d-shared calling-convention abstraction. | `skinny/crates/bbnf-simd/ext/x86/x86inc.asm:1-22` (x264 copyright 2005-2024, ISC license), `:24-28` ("NASM/YASM syntax combined with a large number of macros to provide easy abstraction between different calling conventions (x86_32, win64, linux64). It also has various other useful features to simplify writing the kind of DSP functions that are most often used."). | grounded | 72 macros local count via `grep -cE "^%macro " ext/x86/x86inc.asm`; covers `cglobal`, `PROLOGUE`, `RET`, `DECLARE_REG`, `PUSH_IF_USED`, `INIT_XMM/YMM/ZMM`, `AVX_INSTR`, `EVEX_INSTR`, `WIN64_SPILL_XMM`, threadsafe RIP-relative addressing, and the AVX-512 mask-register helpers. |
+| `x86util.asm` is the FFmpeg DSP macro toolbox (transposes, butterflies, PALIGNR, splat). | `skinny/crates/bbnf-simd/ext/x86/LICENSE-VENDOR:34-43` (FFmpeg copyright 2008-2024, LGPL-2.1-or-later, header-only-include exception); `skinny/crates/bbnf-simd/ext/x86/x86util.asm` macro inventory (66 macros local count). | grounded | 66 macros: `SBUTTERFLY`, `TRANSPOSE4x4B..TRANSPOSE16x16W`, `PALIGNR`, `PSHUFLW`, `PABSW`, `HADDD`, `SPLATB_LOAD`, `VBROADCASTSS`, `PBLENDVB`, etc. Lock 14 risk: these are pixel/DSP-domain helpers; only the calling-convention subset is universally applicable to bbnf. |
+| Vendored macro library remains unmodified; bbnf does not patch Layer 0. | `skinny/crates/bbnf-simd/ext/x86/LICENSE-VENDOR:48-53` ("Vendoring keeps the build deterministic and avoids a runtime dependency on a system FFmpeg / x264"); no local diffs vs upstream recorded in `bbnf-simd` build configuration. | grounded | Lock 16 admissibility requires unmodified Layer 0; any local patch would invalidate the upstream-citation provenance and require an explicit lock amendment. |
+| Layer 1 is bbnf-authored, grammar-neutral, declares 9 primitive contracts. | `skinny/crates/bbnf-simd/ext/x86/bbnf.asm:1-12` (file purpose), `:30-44` (9-primitive macro inventory: BYTE_CLASS_FROM_TABLE_64, BYTE_CLASS_FROM_EQ_SET_64, BITMAP_PREFIX_XOR_64, BITMAP_NEXT_SET_BIT, BULK_EMIT_COMPRESSED, EOB_PAD_CLAMP, FSM_DISPATCH_THREADED, FRAME_PUSH_BOUNDED, FRAME_POP_BOUNDED), `:55-60` (per-grammar LUT data lives outside the macro library). | grounded | Local count via `grep -cE "^%macro " ext/x86/bbnf.asm` returns 9. Each contract names inputs / outputs / clobbers / ISA admissibility / citation; bodies live in `src/x86_64/*.asm` per `bbnf.asm:9-12`. |
+| Layer 1 → Layer 0 dependency is one-directional (`%include "x86inc.asm" ; %include "x86util.asm"`). | `skinny/crates/bbnf-simd/ext/x86/bbnf.asm:47-48` (`%include "x86inc.asm" ; %include "x86util.asm"`); Layer 0 files contain no reference back to `bbnf.asm`. | grounded | Cross-grep confirms: `grep -n "bbnf\|BYTE_CLASS_FROM\|BITMAP_PREFIX" ext/x86/x86inc.asm ext/x86/x86util.asm` returns zero hits. Layer 0 is unaware of Layer 1. |
+| Admissible Layer 1 primitive requires a scalar reference in `src/scalar/`. | Lock 16 closing clause at `restart/locks/LOCKS.md:307` ("Every SIMD primitive carries a unit-parity test against the scalar reference and a corpus-parity test against the expanded skinny corpus"); `bbnf.asm:9-12` ("Scalar reference implementations live in src/scalar/*.rs and serve as the executable specification per the checkasm admission gate"); local refs at `skinny/crates/bbnf-simd/src/scalar/byte_class_from_table_64.rs:2`, `byte_class_from_eq_set_64.rs:26`, `bitmap_prefix_xor_64.rs:2`, `bitmap_next_set_bit.rs:2`, `bulk_emit_positions_64.rs:2`, `eob_pad_clamp.rs:8`. | grounded | Scalar reference is the executable specification — checkasm differential parity compares optimized output to scalar output at every randomized input. |
+| Admissible Layer 1 primitive requires a checkasm parity test in `tests/checkasm_<name>.rs`. | Lock 16 closing clause at `restart/locks/LOCKS.md:307`; FFmpeg `checkasm_check_func` mechanism at `tests/checkasm/checkasm.c` (https://ffmpeg.org/doxygen/8.0/checkasm_8c_source.html); VideoLAN checkasm project page (https://www-test.videolan.org/projects/checkasm/); local tests at `skinny/crates/bbnf-simd/tests/checkasm_byte_class_from_table_64.rs`, `checkasm_byte_class_from_eq_set_64.rs`, `checkasm_bitmap_prefix_xor_64.rs`, `checkasm_bitmap_next_set_bit.rs`, `checkasm_bulk_emit_positions_64.rs`, `checkasm_eob_pad_clamp.rs`. | grounded | Sibling-template path is `bbnf-simd/tests/checkasm_<name>.rs`. Strict mode `BBNF_SIMD_STRICT=1` is mandatory for admission per `restart/locks/LOCKS.md:320-322`. |
+| Lock 16 admission requires a same-wave production consumer (no orphan kernels). | Lock 16 ext at `restart/locks/LOCKS.md:335-342` ("At close, every source-present primitive is exactly one of `wired`, `deleted`, `scalar-delegate-non-ASM`, or `architectural-block-with-REDRESS`. … Support-only hint modules, unconsumed prefix/next bitmap bodies, cache hints without exact caller placement, and orphan `asm!`/intrinsic files do not close Lock 16"); S-P2 V3 P2-B 5-stage admission at `restart/skinny/tranches/sk-v14/research/p2/p2b-dav1d-process.md:62-118` (Stage D = same-wave consumer). | grounded | `[no-deferrals]` memory entry confirms: no admission split across waves. The consumer commits in the same wave as the kernel. |
+| `BITMAP_PREFIX_XOR_64` lifts simdjson's quote-mask primitive at 512-bit width. | simdjson "Parsing Gigabytes of JSON per Second" §3.1 (Langdale & Lemire, Software: Practice & Experience 49(8), 2019) cited at `skinny/crates/bbnf-simd/ext/x86/bbnf.asm:174-175`; Lock 16 admissibility row at `restart/locks/LOCKS.md:294` (VPCLMULQDQ 512-bit; "Linux kernel CRC-32C reaches 45-60 GB/s vs ~7-8 GB/s SSE4.2 with this primitive — same multiplier on prefix-XOR"). | grounded | Lock 14 holds: prefix-XOR is a pure bit-parallel carry, valid for any toggle-based region (CSS string literals, BBNF rule-string content, JSON quote pairs). |
+| `BITMAP_NEXT_SET_BIT` is the dispatch-driver primitive. | `skinny/crates/bbnf-simd/ext/x86/bbnf.asm:206-217` ("Per asmjson src/lib.rs the inner classifier loop is dominated by ~18× tzcnt calls per chunk"); Intel/AMD ISA reference for `tzcnt` zero-operand behaviour returning operand width. | grounded | Two-instruction hot path: `shrx rcx, rdi, rsi ; tzcnt rax, rcx`. Universal on AVX-512 hosts (BMI1 baseline). |
+| `BULK_EMIT_COMPRESSED` uses VBMI2 `vpcompressb`. | `skinny/crates/bbnf-simd/ext/x86/bbnf.asm:241-261`; Lock 16 row at `restart/locks/LOCKS.md:292` ("`_mm512_mask_compressstoreu_epi8` (Lemire 2022; simdjson `icelake/simd.h:157` explicitly leaves unused for portability)"). | grounded | VBMI2 hardware gate (Ice Lake+ Intel, Zen 4+ AMD); without VBMI2 callers fall back to scalar tape-builder. |
+| `EOB_PAD_CLAMP` borrows dav1d msac tail-handling. | `skinny/crates/bbnf-simd/ext/x86/bbnf.asm:296-309`; dav1d msac at upstream HEAD `1718ff9aded99f0a89f5c7940d6afb8948301e33` `src/x86/msac.asm:80-220` (cross-chunk refill pattern cited in Lock 16 v+1 at `restart/locks/LOCKS.md:305`); local scalar ref at `skinny/crates/bbnf-simd/src/scalar/eob_pad_clamp.rs:8`. | grounded | The msac `cnt/buf/end` cross-chunk refill is the one genuinely transferable algorithmic insight beyond what simdjson/sonic-rs/yyjson demonstrate. |
+| `FRAME_PUSH_BOUNDED` / `FRAME_POP_BOUNDED` are asmjson's bounded frame stack. | `skinny/crates/bbnf-simd/ext/x86/bbnf.asm:404-418` (asmjson `frames_buf` / `open_buf` bounded stack); `:454-468` (companion pop with bracket validate); upstream asmjson `src/lib.rs` referenced. | partial | Contract declared but **no scalar reference and no checkasm test exist at HEAD** for either macro. `grep frame_push ext/x86/x86util.asm src/scalar/*.rs` returns zero hits. Admission requires building the scalar oracle (push/pop semantics with bounds check) + `checkasm_frame_push_bounded.rs` + `checkasm_frame_pop_bounded.rs` before any consumer can wire. |
+| `FSM_DISPATCH_THREADED` is the asmjson r10-PC threaded dispatch primitive. | `skinny/crates/bbnf-simd/ext/x86/bbnf.asm:355-363` ("asmjson src/lib.rs (jmp r10 dispatch core); 'Threaded Code' (Bell, 1973) — the originating ISA-level pattern"); baseline x86_64 indirect jump (no SIMD). | partial | Contract declared but **no scalar reference and no checkasm test exist at HEAD**. The "scalar" reference for a threaded dispatch is a switch-statement equivalent; the checkasm differential would test target-table traversal under random state sequences. Admission requires both artifacts. |
+| Layer 1 macros are grammar-neutral; per-grammar LUTs live in codegen-emitted `.data`. | `skinny/crates/bbnf-simd/ext/x86/bbnf.asm:55-60` ("Per-grammar .data sections — class LUTs, FSM transition tables, frame close-bracket maps — live in the corresponding per-grammar kernel .asm files emitted by codegen, NOT in this macro library"); Lock 14 zero-overfitting at `restart/locks/LOCKS.md:282` ("primitives are grammar-neutral; per-grammar variation lives in codegen-emitted .data tables"). | grounded | The dav1d primitive-lift discipline in full force: shared primitives + per-instance LUT data + shared dispatch spine. |
+| Layer 1 may encode JSON quote/escape/control constants directly. | Dispatch hardcodes JSON quote/backslash/control values at `skinny/crates/bbnf-simd/src/dispatch.rs:22-33` (Tbl4 selection); SK-V13 SYNTHESIS pre-block at `restart/skinny/tranches/sk-v13/SYNTHESIS.md:239-263`. | refuted | Lock 14 leak: shared `bbnf-simd` consumers cannot inherit JSON quote/escape/control constants into CSS, union, parse-only, or shared generated code. Per-grammar policy must come from generated grammar code or caller data. |
+| Source-present primitive can close as `inventory_demoted_with_evidence`. | Lock 16 v+1 at `restart/locks/LOCKS.md:335-342` ("`inventory_demoted_with_evidence` is historical evidence only"); SK-V12 close pattern at `skinny/REDRESS.md:3806-3812`. | refuted | Only four close states: `wired`, `deleted`, `scalar-delegate-non-ASM`, `architectural-block-with-REDRESS`. Inventory is not a close state under SK-V13/14. |
+| Vendoring the FFmpeg/dav1d *pixel-domain* kernels is admissible Layer 0. | dav1d motion compensation / IDCT / loop filter / film grain (T14-T17 of the catalog at `restart/locks/LOCKS.md:305`); they are pixel-domain. | refuted | Lock 16 v+1: "dav1d's pixel-arithmetic kernels do not translate to JSON. … But the *primitive operations* underneath them DO translate." Layer 0 vendors only the macro/ABI substrate (x86inc.asm, x86util.asm), not the kernel bodies. |
+| AVX-512 stubs in `bbnf.asm` are M5 Max admission-ready. | `bbnf.asm` declares only x86 macro contracts; SK-V13 implementation scope is aarch64 / Apple Silicon only. | refuted | Layer 1 x86 contracts inform the totality vocabulary but cannot drive SK-V14 wave selection or M5 Max benchmark claims. Per Lock 16 v+1 at `restart/locks/LOCKS.md:346-349`: "AVX-512 literature is x86 architecture pressure and cannot close M5/aarch64 rows." |
 
 ## Architectural Assertions Defended
 
-### A1 - Layer 0 Is Process And Macro Infrastructure
+### A1 — Layer 0 is vendored verbatim macro infrastructure, build-time only
 
-Layer 0 should stay small and boring: vendored x86 macro headers plus the
-checkasm discipline. Local vendor metadata says `x86inc.asm` originates from
-x264 and is also vendored by FFmpeg, while `x86util.asm` originates from
-FFmpeg (`skinny/crates/bbnf-simd/ext/x86/LICENSE-VENDOR:9`-`43`). The
-`x86inc.asm` header defines itself as a NASM/YASM abstraction layer for calling
-conventions and DSP-oriented macro ergonomics
-(`skinny/crates/bbnf-simd/ext/x86/x86inc.asm:24`-`28`). That is exactly the
-right Layer 0 boundary: it supplies ABI mechanics, register naming, stack
-rules, macro expansion, and deterministic assembly builds. It must not carry
-JSON, CSS, or Sheets policy.
+The Layer 0 corpus is `x86inc.asm` (72 `%macro` declarations, x264 origin
+2005-2024, ISC license) plus `x86util.asm` (66 `%macro` declarations,
+FFmpeg origin 2008-2024, LGPL-2.1-or-later, header-only-include
+exception). Vendor attribution lives at
+`skinny/crates/bbnf-simd/ext/x86/LICENSE-VENDOR:5-43`. The upstream pin
+is dav1d HEAD `1718ff9aded99f0a89f5c7940d6afb8948301e33` recorded in
+`restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md:29`. The macros
+provide calling-convention abstraction across `x86_32 / win64 / linux64`,
+register naming, stack alignment helpers, `cglobal` / `PROLOGUE` / `RET`
+function entry, `INIT_XMM` / `INIT_YMM` / `INIT_ZMM` SIMD-register
+initialization, `AVX_INSTR` and `EVEX_INSTR` instruction emission
+helpers, the AVX-512 mask-register permutation helpers, and the
+DSP-oriented butterflies / transposes / shuffles in `x86util.asm`. This
+is exactly the right Layer 0 boundary: ABI mechanics and instruction
+ergonomics, nothing more. Layer 0 must not carry JSON, CSS, or any
+grammar policy.
 
-The process half of Layer 0 is FFmpeg/VideoLAN checkasm. VideoLAN's public page
-states checkasm verifies assembly correctness and benchmarks performance, lists
-register/stack/state checks for ARM64 and x86, and shows the reference/new
-call, compare, then benchmark sequence. FFmpeg's `checkasm_check_func` records
-function versions and returns a reference implementation for comparison before
-`checkasm_bench_func` allows benchmarking. bbnf's local parity harness already
-mirrors that shape with bit-identical inputs, source-mutation checks,
-misalignment sweeps, signal trapping, a stack canary, and strict corpus parity
-(`skinny/crates/bbnf-simd/tests/checkasm_parity.rs:1`-`20`).
+### A2 — Layer 1 is a 9-primitive grammar-neutral contract vocabulary
 
-### A2 - Layer 1 Is A Grammar-Neutral Contract Vocabulary
+`bbnf.asm` declares exactly nine primitive contracts; the file is
+include-only and emits no code itself (`bbnf.asm:50-51`). The bodies live
+in `src/x86_64/*.asm` per the contract declarations. The nine primitives
+partition by function:
 
-`bbnf.asm` is the current Layer 1 contract. It declares nine primitives:
-`BYTE_CLASS_FROM_TABLE_64`, `BYTE_CLASS_FROM_EQ_SET_64`,
-`BITMAP_PREFIX_XOR_64`, `BITMAP_NEXT_SET_BIT`, `BULK_EMIT_COMPRESSED`,
-`EOB_PAD_CLAMP`, `FSM_DISPATCH_THREADED`, `FRAME_PUSH_BOUNDED`, and
-`FRAME_POP_BOUNDED` (`skinny/crates/bbnf-simd/ext/x86/bbnf.asm:30`-`44`).
-The same file states scalar references live under `src/scalar/*.rs` and are
-the executable specification for checkasm (`:9`-`:12`), while per-grammar LUTs
-and transition data live in generated per-grammar data, not in the macro
-library (`:55`-`:60`).
+| # | primitive | function | hardware gate | ISA citation |
+|---|---|---|---|---|
+| 1 | `BYTE_CLASS_FROM_TABLE_64` | 64B → k1 via 256-byte LUT (`vpermb` / GFNI) | AVX-512 BW + (VBMI \| BW-only fallback) + GFNI optional | asmjson per-state byte mask; dav1d film-grain classifier (`bbnf.asm:93-96`) |
+| 2 | `BYTE_CLASS_FROM_EQ_SET_64` | 64B → k1 via ≤8 char fan-out (`vpcmpeqb` + `korq`) | AVX-512 BW | asmjson `classify_chunk` inner loop (`bbnf.asm:134-137`) |
+| 3 | `BITMAP_PREFIX_XOR_64` | 64b bitmap → ripple-XOR via VPCLMULQDQ | VPCLMULQDQ (PCLMULQDQ-VEX256 fallback) | simdjson "Parsing Gigabytes of JSON per Second" §3.1 (`bbnf.asm:174-175`) |
+| 4 | `BITMAP_NEXT_SET_BIT` | 64b bitmap + cursor → next-set offset | BMI1 (universal on AVX-512 hosts) | asmjson `classify_chunk` dispatch loop (`bbnf.asm:215-217`) |
+| 5 | `BULK_EMIT_COMPRESSED` | 64B + k1 → compressed sink (`vpcompressb`) | AVX-512 VBMI2 | simdjson tape-builder VBMI2 fork (`bbnf.asm:256-261`) |
+| 6 | `EOB_PAD_CLAMP` | tail bytes → zero-padded 64B vector | AVX-512 BW + BMI2 | dav1d msac tail-handling; simdjson padded-buffer convention (`bbnf.asm:304-309`) |
+| 7 | `FSM_DISPATCH_THREADED` | state-as-PC threaded dispatch (`jmp [tbl+r10*8]`) | baseline x86_64 | asmjson r10-PC dispatch core; Bell 1973 "Threaded Code" (`bbnf.asm:357-363`) |
+| 8 | `FRAME_PUSH_BOUNDED` | push FrameKind onto open_buf with bounds check | baseline x86_64 | asmjson `frames_buf` / `open_buf` bounded stack (`bbnf.asm:411-417`) |
+| 9 | `FRAME_POP_BOUNDED` | pop FrameKind + close-bracket validate | baseline x86_64 | asmjson `open_buf` pop + bracket validate (`bbnf.asm:464-468`) |
 
-That contract is sound if T-P3 keeps the vocabulary at the byte/mask/carry
-level. The primitive owns a byte-window operation; the grammar owns quote,
-escape, control, delimiter, number, and tuple policy. This aligns with SK-V13's
-`G-SIMD-GRAMMAR-POLICY` pre-block: shared `bbnf-simd` consumers cannot inherit
-JSON quote/escape/control constants into CSS, union, parse-only, or shared
-generated code (`restart/skinny/tranches/sk-v13/SYNTHESIS.md:246`-`261`).
+Per `bbnf.asm:41-44`: primitive 7 is the sole FSM macro; it is consumed
+only by per-grammar `CollapsedStage` kernels emitted by codegen. The
+other eight are recursive-descent / scan-emit leaf primitives shared
+across all grammars. Per-grammar LUTs live in codegen-emitted `.data`
+sections; the macro library itself is grammar-neutral
+(`bbnf.asm:55-60`). This is the dav1d primitive-lift discipline: shared
+primitives + per-instance LUT data + shared dispatch spine.
 
-### A3 - The Existing Vocabulary Splits Into Admission States
+### A3 — Dependency is one-directional (Layer 1 → Layer 0)
 
-V2 replaces the V1 "admitted / candidate / inventory" shorthand with the
-shared state machine:
-
-```text
-source_backed -> scalar_backed -> checkasm_backed -> micro_proven ->
-production_wired -> row_admitted | measured_rejected | architectural_block
+`bbnf.asm:47-48` issues the dependency edge:
 ```
-
-`source_backed`, `scalar_backed`, `checkasm_backed`, and `micro_proven` are
-non-admitting states. A primitive can enter S-P3 only if the wave names the
-missing transition and the same-wave consumer that reaches
-`production_wired` plus row movement or measured rejection.
-
-#### Per-Technique Admission Ledger
-
-V4 fold note: the executable ledger with LOC, risk, rollback, abrogate
-thresholds, normalized `admissibility_state`, separate `disposition_or_blocker`
-fields, non-shortlist blockers, and REDRESS-slice ownership lives in
-`restart/audit/totality/p2/T-P2-V3-FOLD-ADDENDUM.md` plus
-`restart/audit/totality/p2/T-P2-V4-FOLD-ADDENDUM.md`. The local table below is
-retained as a compact owner summary and must not be used as the gate-consumed
-ledger if it disagrees with the V3/V4 addenda.
-
-| candidate_id | source / local status | BBNF_SIMD_STRICT_status | consumer and row/feature gate | substrate / lifetime / policy | V3 state / disposition |
-|---|---|---|---|---|---|
-| `ascii_set_member64_css_delimiter` | Scalar, NEON/checkasm, and 4.718x microbench in REDRESS-126; production CSS wiring deferred. | Mandatory for admission command; non-strict runs are exploratory. | CSS `scan_block` delimiter or `skip_ws_and_comments` consumer; strict lightningcss/cssparser equality and > lightningcss+1 row movement. | `local_temp_only` / `local_loop` / `generated_grammar`. | `micro_proven`; not admitted until CSS consumer lands. |
-| `escape_mask_64` | Scalar/checkasm correctness prerequisite; REDRESS-122 fixed the xorshift falsifier. | Mandatory; historical strict checkasm is prerequisite evidence only. | JSON/CSS string or escape row must consume it in production. | `local_temp_only` / `local_loop` / `generated_grammar` or `caller_data`. | `checkasm_backed`; prerequisite only. |
-| `tbl_tbx_escape_decode_batch` | TBL and `unescape_uxxxx` bodies exist; grammar policy split is incomplete for CSS escapes. | Mandatory once selected; checkasm must cover JSON fixed and CSS variable-width escapes separately. | JSON unicode direct/parse/typed row or CSS escaped identifier/string row. | `direct_sink` or `existing_tape` / `generated_function` / `generated_grammar`. | `scalar_backed`; CSS policy/checkasm blocker. |
-| `digit_run_accumulate` / UDOT | Local `digit_mac.rs` source and ISA support exist; row consumer and strict matrix are missing. | Missing before admission; must set strict mode in new checkasm. | JSON numeric direct/parse row or CSS number/dimension row. | `direct_sink` or `existing_tape` / `generated_function` / `generated_grammar`. | `source_backed`; scalar/checkasm/consumer blockers. |
-| `pmull_cssc_structural_union_emit64` | PMULL/CSSC categories are unblocked, but REDRESS 88/89/96/97/98 block replay. | Missing before shortlist; scalar carry/order oracle plus strict checkasm required. | Row-local union/structural consumer that deletes or bypasses old scalar cost in that row. | `existing_tape`, `direct_sink`, or `admitted_fact_output` / `local_loop` or `generated_function` / `generated_grammar`. | `source_backed`; high-risk REDRESS-differential blocker. |
-| `string_context_64` / `byte_context` | `vextq_u8` context helpers exist with no production caller. | Missing. | JSON/CSS string-context consumer with cross-chunk policy and row gate. | `local_temp_only` / `local_loop` / `generated_grammar`. | `source_backed`; source-present inventory blocker. |
-| `cache_hints` | PRFM/STNP wrappers exist with no row consumer. | Missing and likely not a parity primitive unless wrapped in measurable store/prefetch row. | Store/prefetch hot leaf with strict no-regression guards, or deletion. | `local_temp_only` / `local_loop` / `none` unless generated code owns policy. | `source_backed`; source-present inventory blocker. |
-| `bbnf-regex` extraction | Conditional import authority only; parse-that sibling worktree is pinned in the addendum but dirty. | Not a SIMD primitive; use parity/equality gates for scanner facts. | HIR-to-bbnf mapping consumed by resolver and generated parser rows. | `local_temp_only` compile-time facts / `generated_function` / `generated_grammar`. | `source_backed`; import/snapshot blocker. |
-| e-graph / CSP / cost resolver | Architecture candidate; not a primitive admission. | Not applicable. | JSON/CSS equality, bounded saturation/CSP report, and cascade fail-closed row guards. | extracted plan must declare `substrate_target` per node. | `source_backed`; abrogate caps in V3 addendum. |
-
-#### Source-Present SIMD / ASM Orphan State
-
-At close every source-present primitive is exactly one of:
-
-```text
-wired
-deleted
-scalar-delegate-non-ASM
-architectural-block-with-REDRESS
+%include "x86inc.asm"
+%include "x86util.asm"
 ```
+Layer 0 has no symbol or macro reference back to Layer 1
+(`grep -n "bbnf\|BYTE_CLASS_FROM\|BITMAP_PREFIX\|FRAME_PUSH" ext/x86/x86inc.asm ext/x86/x86util.asm` returns
+zero hits). The dependency is therefore unambiguously one-directional;
+Layer 1 may consume Layer 0 macros at expansion time but Layer 0 cannot
+reference any Layer 1 symbol. This protects the upstream-vendor
+provenance: any local Layer 0 patch would break the verbatim-copy
+attribution at `LICENSE-VENDOR:5-43`.
 
-`inventory_demoted_with_evidence` is historical REDRESS evidence only. It is
-not a V2 close state under the full-SOTA addendum.
+### A4 — Lock 16 admission discipline per primitive
 
-| primitive | local evidence | allowed V2 disposition |
-|---|---|---|
-| `bitmap_prefix_xor_64` aarch64 | Selected by dispatch but delegates to scalar (`skinny/crates/bbnf-simd/src/aarch64/bitmap_prefix_xor_64.rs:1`-`4`). | `scalar-delegate-non-ASM` unless a row-local PMULL route wires and admits/rejects. |
-| `bitmap_next_set_bit` aarch64 | Scalar delegate (`skinny/crates/bbnf-simd/src/aarch64/bitmap_next_set_bit.rs:1`-`4`). | `scalar-delegate-non-ASM` unless a row-local CSSC/CTZ route wires and admits/rejects. |
-| `bulk_emit_positions_64` aarch64 | Scalar delegate behind unsafe wrapper (`skinny/crates/bbnf-simd/src/aarch64/bulk_emit_positions_64.rs:1`-`4`). | `scalar-delegate-non-ASM` unless a row-local bulk consumer wires and admits/rejects. |
-| `byte_context` | `vextq_u8` helpers, no production caller. | `wired`, `deleted`, or `architectural-block-with-REDRESS`; no inventory close. |
-| `cache_hints` | PRFM/STNP wrappers, no production caller. | `wired`, `deleted`, or `architectural-block-with-REDRESS`; no inventory close. |
-| x86 `bbnf.asm` contracts | Valid Layer 1 vocabulary and macro contract, but SK-V13 implementation is aarch64 only. | totality vocabulary only; not SK-V13 production admission. |
+Per Lock 16 at `restart/locks/LOCKS.md:282-360` and the S-P2 V3 P2-B
+5-stage admission process at
+`restart/skinny/tranches/sk-v14/research/p2/p2b-dav1d-process.md:60-118`,
+each Layer 1 primitive must carry:
 
-### A4 - Lock 16 Needs Mechanical Traceability
+1. **Scalar reference** in `crates/bbnf-simd/src/scalar/<name>.rs` —
+   non-SIMD oracle, executable specification per `bbnf.asm:9-12`.
+2. **Checkasm parity test** in `crates/bbnf-simd/tests/checkasm_<name>.rs`
+   — differential parity vs scalar oracle for randomized inputs; strict
+   mode `BBNF_SIMD_STRICT=1` mandatory per `LOCKS.md:320-322`.
+3. **Same-wave consumer NAMED** — a runtime/codegen path that consumes
+   the primitive in production within the same commit/wave that admits
+   the kernel. Orphan kernels do not close Lock 16
+   (`LOCKS.md:335-342`).
+4. **Hardware gate** — explicit `target_feature` per primitive (BMI1,
+   VPCLMULQDQ, VBMI, VBMI2, GFNI, BW, etc.) with a scalar-delegate
+   fallback below the gate.
+5. **Published citation** — paper / library source path:line / named
+   technique. Confabulated citation = CH1 REJECT.
 
-T-P1 1E already recorded Lock 16 as partial because no artifact proves every
-`core::arch::*` and `asm!` site maps to an allowlist row plus scalar parity,
-corpus parity, and same-wave consumer evidence. This 2B pass confirms that
-finding. A grep over `skinny/crates/bbnf-simd/src` shows `asm!` in
-`digit_mac.rs` and `cache_hints.rs`, unsafe Neon intrinsics in classifier,
-unicode, movemask, string, and context modules, and x86 feature-gated stubs.
-Some are active, some are scalar delegates, and some are inventory.
+The 5-stage S-P2 process (Stage A scalar oracle, Stage B checkasm cell,
+Stage C microbench, Stage D same-wave consumer, Stage E wave-close
+disposition) gates every primitive admission. The P3-A 8-candidate
+shortlist at
+`restart/skinny/tranches/sk-v14/research/p3/p3a-candidate-shortlist.md:57-118`
+consumes Layer 1 primitives by binding the canonical primitive names to
+the 5-stage process — each shortlist row carries explicit (scalar-ref
+status / checkasm-parity expectation / same-wave-consumer NAMED) cells.
 
-T-P3 should require a generated or hand-audited primitive manifest with one row
-per primitive and per intrinsic/ASM use site:
+### A5 — Audit at HEAD: 6/9 admitted shape vs. 3/9 skeleton-only
 
-| field | purpose |
-|---|---|
-| `candidate_id` / `primitive_id` | Stable Layer 1 contract name, e.g. `BYTE_CLASS_FROM_EQ_SET_64`. |
-| `owner_dossier` | Owning T-P2 dossier or downstream wave plan. |
-| `source_paths_or_external_source` | Scalar, candidate, dispatch, checkasm, and pinned external source files. |
-| `isa_allowlist` / `hardware_gate` | Lock 16 row, target feature, and primary ISA/source citation. |
-| `scalar_reference` | Executable reference function. |
-| `checkasm_or_parity_command` | Strict command, adversarial classes, and parity corpus. |
-| `BBNF_SIMD_STRICT_status` | `required`, `not_applicable`, or `missing_before_admission`; broad non-strict parity may not admit. |
-| `corpus_or_equality_oracle` | CSS/lightningcss/cssparser, JSON/sonic strict/Track 2, or grammar-specific oracle. |
-| `same_wave_consumer_path` | Runtime/codegen path that consumes it in production. |
-| `expected_row_or_feature_gate` | JSON/CSS/Sheets/BBNF-self row moved, measured reject, or architectural block. |
-| `loc_budget` / `risk_class` | Implementation envelope and review risk. |
-| `rollback_path` / `abrogate_threshold` | Revert plan and fail-closed criteria. |
-| `admissibility_state` | One of the V2 state-machine values above. |
-| `substrate_target` | `local_temp_only`, `existing_tape`, `direct_sink`, or `admitted_fact_output`. |
-| `retention_lifetime` | `local_loop`, `generated_function`, or `output_row`. |
-| `policy_owner` | `generated_grammar`, `caller_data`, or `none`; shared primitive crates cannot own grammar policy. |
-| `source_present_orphan_state` | `wired`, `deleted`, `scalar-delegate-non-ASM`, or `architectural-block-with-REDRESS`. |
+Cross-grep of `bbnf.asm` macro names against `src/scalar/` and
+`tests/checkasm_*.rs` at HEAD:
 
-Without this manifest, Lock 16 remains an intention rather than an enforceable
-interface.
+| Layer 1 primitive | scalar ref at HEAD | checkasm test at HEAD | admission state |
+|---|---|---|---|
+| `BYTE_CLASS_FROM_TABLE_64` | `src/scalar/byte_class_from_table_64.rs:2` | `tests/checkasm_byte_class_from_table_64.rs` | scalar + checkasm present; same-wave consumer required for full admit |
+| `BYTE_CLASS_FROM_EQ_SET_64` | `src/scalar/byte_class_from_eq_set_64.rs:26` | `tests/checkasm_byte_class_from_eq_set_64.rs` | scalar + checkasm present; same-wave consumer required for full admit |
+| `BITMAP_PREFIX_XOR_64` | `src/scalar/bitmap_prefix_xor_64.rs:2` | `tests/checkasm_bitmap_prefix_xor_64.rs` | scalar + checkasm present; aarch64 dispatch delegates to scalar per `src/aarch64/bitmap_prefix_xor_64.rs:1-4` — `scalar-delegate-non-ASM` is its current close state |
+| `BITMAP_NEXT_SET_BIT` | `src/scalar/bitmap_next_set_bit.rs:2` | `tests/checkasm_bitmap_next_set_bit.rs` | scalar + checkasm present; aarch64 dispatch delegates to scalar per `src/aarch64/bitmap_next_set_bit.rs:1-4` — `scalar-delegate-non-ASM` is its current close state |
+| `BULK_EMIT_COMPRESSED` | `src/scalar/bulk_emit_positions_64.rs:2` (named `bulk_emit_positions_64_scalar`) | `tests/checkasm_bulk_emit_positions_64.rs` | scalar + checkasm present; aarch64 delegates to scalar per `src/aarch64/bulk_emit_positions_64.rs:1-4` — `scalar-delegate-non-ASM` is its current close state |
+| `EOB_PAD_CLAMP` | `src/scalar/eob_pad_clamp.rs:8` | `tests/checkasm_eob_pad_clamp.rs` | scalar + checkasm present; same-wave consumer required for full admit |
+| `FSM_DISPATCH_THREADED` | **absent** | **absent** | **skeleton-contract only** — non-admissible until scalar oracle (switch-equivalent) + checkasm cell (state-sequence differential) exist |
+| `FRAME_PUSH_BOUNDED` | **absent** | **absent** | **skeleton-contract only** — non-admissible until scalar oracle + `checkasm_frame_push_bounded.rs` exist |
+| `FRAME_POP_BOUNDED` | **absent** | **absent** | **skeleton-contract only** — non-admissible until scalar oracle + `checkasm_frame_pop_bounded.rs` exist |
 
-### A5 - REDRESS 121-127 Taxonomy
-
-V2 treats SK-V12 close entries as admission taxonomy, not shorthand for future
-closure.
-
-| REDRESS entry | V2 state | downstream meaning for 2B |
-|---|---|---|
-| 121 GrammarConfig legality | prerequisite / partial Lock 14 repair | does not close grammar-policy transfer for primitives alone. |
-| 122 escape-mask correctness | prerequisite only | no production scanner, no row admission, no SIMD throughput claim. |
-| 123 CSS scaffold | generated baseline/oracle scaffold | no SOTA admission. |
-| 124 lightningcss comparator | comparator/equality infrastructure | no SOTA admission. |
-| 125 CSS SOTA candidate | measured candidate | admitted only through 127 close record. |
-| 126 ASCII run-skip | microbench route-production split | not production SIMD admission. |
-| 127 SK-V12 close | CSS declaration-values row admit; union/ASM still routed | not full CSS parity, not zero-orphan perfection, not a future-work waiver. |
-
-### A6 - Union / ASM Material-Differential Checklist
-
-`Union-C`, `PMULL+CSSC`, `SIMD-first union`, `UDOT`, `TBL/TBX`, or any other
-ASM-gen label is not shortlist-safe unless the wave plan proves the checklist:
-
-1. Prior REDRESS route(s) are cited: 88, 89, 96, 97, 98, 119, 122, and/or 126
-   as applicable.
-2. The route does not globally replace `bitmap_prefix_xor_64` or
-   `bitmap_next_set_bit` default bodies.
-3. The route does not replay retained class-column, streaming cursor,
-   class-lane-only, parser-owned sidecar, or `UnionTape` shapes.
-4. The old scalar cost source is deleted or bypassed inside the named row
-   consumer, not merely renamed.
-5. The consumer owns masks/positions in one loop and emits into
-   `existing_tape`, `direct_sink`, or `admitted_fact_output`.
-6. Scalar reference, `BBNF_SIMD_STRICT=1` checkasm/parity command, feature gate,
-   and isolated microbench are named before S-P3 scoping.
-7. Strict row gate, guard rows, rollback path, and abort criteria are named.
-
-### A7 - Abrogate Gates For Primitive Routes
-
-Primitive, union, and resolver routes fail closed when:
-
-| gate | threshold |
-|---|---|
-| parity/checkasm | Any scalar/checkasm/equality failure. |
-| row regression | Any previously admitted JSON/CSS row silently demotes. |
-| generated LOC growth | Exceeds the candidate ledger `loc_budget` upper bound, or a stricter SPEC wave budget if S-P3 names one, without traced O(N) reason. |
-| stale cost evidence | More than 30 percent of candidate expressions use stale/static fallback. |
-| e-graph saturation | Node/iteration cap exceeded without equality-preserving extraction. |
-| CSP solve | More than 1 s per grammar or unresolved UNSAT cause. |
+**Layer 0 count**: 138 macros total (72 in `x86inc.asm` + 66 in
+`x86util.asm`). **Layer 1 count**: 9 contracts; 6/9 carry both
+scalar reference and checkasm test; 3/9 are skeleton declarations
+pending admission artefacts.
 
 ## Architectural Assertions Refuted
 
-### R1 - Primitive Parity Alone Is Not Admission
+### R1 — Layer 0 includes pixel-domain kernels
 
-REDRESS-122 fixed `escape_mask_64` and its historical falsifier, but explicitly
-made no production scanner, SIMD body, gate, `RESULTS.md`, or row admission
-change (`skinny/REDRESS.md:3603`-`3632`). REDRESS-126 proved
-`a64_ascii_set_run_skip` at 4.718x in microbench and still routed production
-wiring separately (`skinny/REDRESS.md:3768`-`3820`). Therefore T-P3 must reject
-any support-only or proof-only primitive wave unless it records a measured
-rejection or architectural block for the touched row family. "Grounded" in 2B
-means source-backed only; it is not an admission state.
+The dossier defends Layer 0 as `x86inc.asm` + `x86util.asm` only.
+Vendoring dav1d's motion-compensation, IDCT, loop-filter, or
+film-grain `.asm` files into Layer 0 would be a Lock 14 violation: these
+are pixel-domain kernels that do not transfer to byte-stream parsing.
+Per Lock 16 v+1 at `restart/locks/LOCKS.md:305`: "dav1d's
+pixel-arithmetic kernels do not translate to JSON (T14-T17 of the
+catalog: motion compensation, IDCT, loop filter, film grain — all are
+pixel-domain). But the *primitive operations* underneath them DO
+translate." The lifted primitives belong in Layer 1 (e.g.
+`BITMAP_PREFIX_XOR_64` is the VPCLMULQDQ primitive abstracted from
+simdjson's quote-mask shape, not the simdjson source verbatim).
 
-### R2 - Retained Structural Union Is Not Proven By Scanner Speed
+### R2 — Layer 1 may encode grammar-specific constants
 
-P1-C measured structural SIMD faster than scalar scans on every JSON corpus,
-but REDRESS 96 and 97 show two correctness-green retained-consumer
-implementations missed every target/guard row. REDRESS 98 names the empirical
-finding: the retained class/cursor substrate adds memory traffic and cursor
-indirection that the scalar loop does not pay on the host
-(`skinny/REDRESS.md:2910`-`2934`). Structural masks stay in the vocabulary as
-transient producer facts; they do not justify replaying class-column,
-streaming-cursor, parser-owned sidecar, or parallel `UnionTape` shapes.
+`byte_class_from_eq_set_64` is correctly neutral because it accepts a
+caller-supplied set and returns a mask. However, `classify_tbl4`'s
+dispatch hardcodes JSON quote / backslash / control values at
+`skinny/crates/bbnf-simd/src/dispatch.rs:22-33`. This is acceptable for
+the current JSON caller but not for shared CSS or arbitrary-grammar use.
+The SK-V13 `G-SIMD-GRAMMAR-POLICY` pre-block at
+`restart/skinny/tranches/sk-v13/SYNTHESIS.md:239-263` is binding: shared
+`bbnf-simd` consumers cannot inherit JSON constants into CSS, union,
+parse-only, or shared generated code. T-P3 must require generated
+grammar or caller-data policy at every non-JSON / shared call site, and
+the Lock 16 manifest must record `policy_owner`.
 
-### R3 - PMULL And CSSC Are Not Drop-In Fixes
+### R3 — Skeleton macro presence closes Lock 16
 
-REDRESS 88 rejected PMULL as a default `bitmap_prefix_xor_64` production body
-after JSON row regressions; REDRESS 89 rejected a narrowed CTZ/bulk consumer
-despite correctness and asm proof (`skinny/REDRESS.md:2510`-`2585`). The user
-pin unblocks the category, not the measured implementation. A future PMULL or
-CSSC wave needs a new body/consumer contract, e.g. SIMD-first union emission
-that deletes scalar structural consumption in the measured row, with the old
-REDRESS cited as material differential. If it cannot satisfy A6, it remains an
-inventory route no matter how strong the instruction-level source evidence is.
+`bbnf.asm` declares 9 primitive contracts. Three of those nine
+(`FSM_DISPATCH_THREADED`, `FRAME_PUSH_BOUNDED`, `FRAME_POP_BOUNDED`)
+have no scalar reference and no checkasm test at HEAD. The presence of
+a macro contract in `bbnf.asm` is *not* admission. Per Lock 16
+closing-state vocabulary at `LOCKS.md:335-342`: support-only modules,
+unconsumed bodies, and orphan `asm!`/intrinsic files do not close Lock
+16. The three skeleton contracts must either ship scalar oracle +
+checkasm cell + same-wave consumer in a single wave, or be deleted from
+`bbnf.asm` if no consumer is named within the SK-V14 horizon.
 
-### R4 - Layer 1 Cannot Encode Grammar Policy
+### R4 — x86-only Layer 1 contracts satisfy SK-V14 admission
 
-`byte_class_from_eq_set_64` is neutral because it accepts a caller-supplied set
-and returns a mask. `classify_tbl4` currently accepts `terminator`, `escape`,
-and `control_limit` parameters in its low-level function, but dispatch hardcodes
-JSON quote/backslash/control values when selecting `NeonTbl4`
-(`skinny/crates/bbnf-simd/src/dispatch.rs:22`-`33`). That is acceptable for
-the current JSON caller but not for shared CSS or arbitrary grammar use.
-T-P3 must require generated grammar or caller-data policy at every
-non-JSON/shared call site, and the manifest must record `policy_owner`.
-
-### R5 - Orphan Demotion Is Not Close By Deletion Of The Word "Orphan"
-
-SK-V12 closed five aarch64 orphans as `inventory_demoted_with_evidence`, and
-the files still exist. REDRESS-126 accounts them as final orphan count zero
-only because the close disposition demoted the inventory and separated
-`a64_ascii_set_run_skip` as a routed production split (`skinny/REDRESS.md:3806`
--`3812`, `:3869`-`:3872`). Under the SK-V13 addendum, this is not enough for
-perfection: each inventory primitive must be wired same-wave, deleted, or
-carried only as `scalar-delegate-non-ASM` or
-`architectural-block-with-REDRESS`. Historical
-`inventory_demoted_with_evidence` cannot satisfy the SK-V13 zero-orphan bar.
-
-### R6 - x86 Layer 0 Is Not SK-V13 Implementation Scope
-
-Layer 0 x86 macro vendoring is valid totality architecture, but SK-V13
-implementation is aarch64 / Apple Silicon only. x86 AVX-512 stubs and
-`bbnf.asm` x86 contracts should inform the primitive vocabulary, not drive
-SK-V13 wave selection or benchmark claims.
+`bbnf.asm` declares only x86 macro contracts; SK-V14 implementation
+scope is aarch64 / Apple M5 Max. The x86 contracts inform the totality
+primitive vocabulary but cannot close M5 Max admission rows. Per Lock
+16 v+1 at `LOCKS.md:346-349`: "AVX-512 literature is x86 architecture
+pressure and cannot close M5/aarch64 rows." The aarch64-counterpart
+implementation lives at `crates/bbnf-simd/src/aarch64/*.rs`; admission
+on aarch64 requires a NEON body for each Layer 1 primitive plus the
+same checkasm/scalar discipline. The aarch64 Layer 1 vocabulary inherits
+the same 9-primitive contract surface but is implementation-distinct.
 
 ## Open Research Questions
 
 | UNKNOWN | verify_action |
 |---|---|
-| Exact dav1d source-file anchors for the old internal checkasm copy and the macro corpus lineage. | If T-P3 wants dav1d file-level claims, fetch exact `code.videolan.org/videolan/dav1d` raw source anchors. Until then, cite VideoLAN checkasm lineage only at project level and use FFmpeg source for call/check/bench mechanics. |
-| Complete intrinsic/ASM manifest coverage. | Run `rg -n "core::arch|asm!|target_feature|cfg\\(target_arch" skinny/crates/bbnf-simd/src skinny/crates/bbnf-simd/tests`, then materialize the Lock 16 manifest row-by-row. |
-| Whether `a64_ascii_set_run_skip` moves a real CSS row after production wiring. | Wire the CSS `scan_block` delimiter loop or `skip_ws_and_comments` consumer in the same wave, then run strict lightningcss/cssparser equality plus Criterion on the CSS row. |
-| Whether UDOT digit MAC moves any JSON/CSS number row. | Add strict checkasm for signs, decimal/exponent boundaries, invalid lanes, and overflow; profile numeric row leaves after decision-engine changes; wire only with row consumer. |
-| Whether PMULL+CSSC can win as a SIMD-first union route. | Micro-prove a new matrix+rank-order emitter against scalar carry/order, then consume it in a generated row. Do not replace scalar delegates globally. |
-| Whether byte-context and cache-hint inventory should be deleted. | If no W13+ row names a string-context or store/prefetch hot leaf, remove the files or mark `architectural-block-with-REDRESS` rather than retaining support-only APIs. |
+| Does FSM_DISPATCH_THREADED admit a meaningful scalar oracle? | A switch-statement equivalent would behave identically to the indirect jump under random state-sequence inputs; build the oracle and the checkasm differential, then decide whether `FSM_DISPATCH_THREADED` admits or is replaced by codegen-emitted switch ladder. |
+| Are FRAME_PUSH_BOUNDED / FRAME_POP_BOUNDED still required given current scalar Rust open_buf? | Audit `skinny/crates/runtime/src/` for an open-frames stack consumer; if no consumer exists, mark both macros `deleted` rather than ship admission artifacts for a contract no production caller uses. |
+| Does the Layer 0 vendoring need a periodic upstream-resync gate? | Add a CI job that fetches dav1d HEAD and diffs `src/x86/x86inc.asm` against `skinny/crates/bbnf-simd/ext/x86/x86inc.asm`; failure surfaces a lock-amendment candidate to bump the pinned SHA. |
+| Are there `x86util.asm` macros bbnf will never use that should be deleted from Layer 0? | Static analysis of bbnf-bodies against `x86util.asm` macro inventory would identify dead helpers (e.g. `IDCT4_1D`, `STORE_DCT`); however Lock 16 vendor-verbatim discipline likely forbids selective subsetting. Confirm with T-P3. |
+| Should the aarch64 Layer 1 vocabulary have its own `.S` macro file equivalent to `bbnf.asm`? | The aarch64 path currently uses Rust `core::arch::aarch64::*` intrinsics rather than a NEON macro file; evaluate whether an `aarch64/bbnf_neon.S` macro library would improve discipline parity with the x86 path. |
 
 ## LOCKS-AMENDMENTS-CANDIDATE
 
-| candidate | lock(s) | proposed amendment candidate | supporting evidence |
+| candidate | lock(s) | proposed amendment | supporting evidence |
 |---|---|---|---|
-| LAC-2B-01 | Lock 16 | Add a primitive traceability manifest requirement: every intrinsic/`asm!` site maps to a stable primitive id, primary ISA/library citation, scalar reference, strict checkasm cell, corpus/equality parity where applicable, same-wave consumer, row gate, LOC/risk, rollback, and abrogate threshold. | T-P1 1E Lock 16 partial verdict; local `asm!` in `digit_mac.rs` and `cache_hints.rs`; dispatch selecting scalar delegates; CH4 V1 fold requirement. |
-| LAC-2B-02 | Lock 16 | Make `BBNF_SIMD_STRICT=1` mandatory for all admission checkasm commands; non-strict parity may be exploratory only. | `checkasm_parity.rs:16`-`20` says broad divergences are logged but non-failing unless strict is set; REDRESS-122 commands used strict mode. |
-| LAC-2B-03 | Lock 16 / Lock 14 | Add `G-SIMD-GRAMMAR-POLICY`: any shared `bbnf-simd` consumer must name quote, escape, control, delimiter, number, and no-string/no-number policy from GrammarConfig or generated grammar code. | SK-V13 SYNTHESIS pre-block for shared classifier dispatch; dispatch currently passes JSON quote/backslash/control constants. |
-| LAC-2B-04 | Lock 16 | Encode zero-orphan close as `wired`, `deleted`, `scalar-delegate-non-ASM`, or `architectural-block-with-REDRESS`; `inventory_demoted_with_evidence` is not a close state. | REDRESS-126 demoted five aarch64 files while leaving them in tree; user addendum requires zero orphans at close; CH6 requires terminology reconciliation. |
-| LAC-2B-05 | Lock 1 / Lock 16 | Distinguish transient mask primitives from retained substrate attempts: byte masks/positions may be consumed within a row, but any retained class column/cursor/vector must cite REDRESS 96/97/98 and name a new material differential. | REDRESS 96/97/98 falsified retained structural variants; P1-C still shows scanner micro-speed as useful antecedent. |
-| LAC-2B-06 | Lock 1 / Lock 16 | Add `substrate_target`, `retention_lifetime`, and `policy_owner` to every primitive / scanner / union manifest row; reject retained masks/classes outside `local_loop`, `generated_function`, or admitted output rows. | CH5 V1 fold requirement; V2 addendum Lock 1 substrate-kind contract. |
-| LAC-2B-07 | Lock 16 / REDRESS | Require the A6 material-differential checklist for PMULL/CSSC/union/ASM-gen reopen routes before S-P3 shortlist use. | CH3 and CH6 warned that broad "union" or "ASM" labels can replay REDRESS 88/89/96/97/98 without row-local consumer evidence. |
+| LAC-2B-01 | Lock 16 | Pin Layer 0 vendoring SHA explicitly in `LICENSE-VENDOR`: add a footer recording dav1d HEAD `1718ff9aded99f0a89f5c7940d6afb8948301e33` (per `T-P2-V2-FOLD-ADDENDUM.md:29`) so the verbatim-copy claim is traceable without grepping fold addenda. | `LICENSE-VENDOR:9-13` (x264/FFmpeg attribution); fold addendum SHA pin. |
+| LAC-2B-02 | Lock 16 | Require Layer 1 contracts to ship scalar reference + checkasm cell in the same commit they are declared in `bbnf.asm`. A contract with no scalar oracle and no checkasm test is non-admissible regardless of how complete the macro contract appears. | `bbnf.asm:30-44` (9 contracts); `src/scalar/` and `tests/checkasm_*` have only 6/9 backings; LOCKS.md:307. |
+| LAC-2B-03 | Lock 14 / Lock 16 | Require `policy_owner` field on every Layer 1 consumer call site: `generated_grammar` (codegen emits the LUT/constants), `caller_data` (consumer supplies at runtime), or `none` (truly grammar-neutral, e.g. `BITMAP_PREFIX_XOR_64`). Reject shared call sites with hardcoded JSON constants. | `dispatch.rs:22-33` (JSON-hardcoded Tbl4 dispatch); SYNTHESIS.md:239-263 (`G-SIMD-GRAMMAR-POLICY`). |
+| LAC-2B-04 | Lock 16 | Forbid Layer 0 modifications: any local diff vs upstream `x86inc.asm` / `x86util.asm` invalidates the verbatim-vendor provenance and requires an explicit lock amendment recording (a) the diff, (b) the upstream pin SHA, (c) the bbnf-specific reason. | LICENSE-VENDOR:48-53 (build determinism rationale); upstream pin in V2 addendum. |
+| LAC-2B-05 | Lock 16 | Require an aarch64 Layer 1 vocabulary parity manifest: each of the 9 Layer-1 contracts must list its aarch64 body (`src/aarch64/<name>.rs`) and admission state, since SK-V14 implementation scope is aarch64 / M5 Max while `bbnf.asm` declares only x86 contracts. | bbnf.asm is x86-only; LOCKS.md:346-349 forbids x86 literature closing aarch64 rows. |
 
 ## Sources
 
 Primary external sources:
-
-- FFmpeg `tests/checkasm/checkasm.c` source, `checkasm_check_func`,
-  `checkasm_bench_func`, and failure handling:
-  https://ffmpeg.org/doxygen/8.0/checkasm_8c_source.html.
-- FFmpeg `tests/checkasm/checkasm.h` source:
-  https://www.ffmpeg.org/doxygen/8.0/checkasm_8h_source.html.
-- VideoLAN checkasm project page, API example, supported platforms, benchmark
-  and failure examples, dav1d lineage note:
-  https://www-test.videolan.org/projects/checkasm/.
-- Arm C Language Extensions 2026Q1:
-  https://arm-software.github.io/acle/main/acle.html.
-- Arm Neon Intrinsics Reference:
-  https://arm-software.github.io/acle/neon_intrinsics/advsimd.html.
+- `SRC-DAV1D-HEAD`: dav1d upstream HEAD pin `1718ff9aded99f0a89f5c7940d6afb8948301e33` per `restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md:29`.
+- `SRC-DAV1D-X86INC`: `https://code.videolan.org/videolan/dav1d/-/blob/1718ff9aded99f0a89f5c7940d6afb8948301e33/src/x86/x86inc.asm` (vendored verbatim into bbnf-simd at `ext/x86/x86inc.asm`).
+- `SRC-X264-X86INC`: x264 project origin of `x86inc.asm` (https://www.videolan.org/developers/x264.html), ISC.
+- `SRC-FFMPEG-X86UTIL`: FFmpeg `libavutil/x86/x86util.asm` (LGPL-2.1-or-later, header-only-include exception).
+- `SRC-FFMPEG-CHECKASM-C`: https://ffmpeg.org/doxygen/8.0/checkasm_8c_source.html (`checkasm_check_func` / `checkasm_bench_func`).
+- `SRC-FFMPEG-CHECKASM-H`: https://www.ffmpeg.org/doxygen/8.0/checkasm_8h_source.html.
+- `SRC-VIDEOLAN-CHECKASM-PAGE`: https://www-test.videolan.org/projects/checkasm/.
+- `SRC-ARM-ACLE`: Arm C Language Extensions 2026Q1 — https://arm-software.github.io/acle/main/acle.html.
+- `SRC-ARM-NEON-INTR`: Arm NEON Intrinsics Reference — https://arm-software.github.io/acle/neon_intrinsics/advsimd.html.
+- `SRC-SIMDJSON-PAPER`: Langdale & Lemire, "Parsing Gigabytes of JSON per Second", Software: Practice & Experience 49(8):1109-1135 (2019), §3.1 quote-mask construction.
 
 Primary local sources:
-
-- `restart/prompts/totality/PASS-2-RESEARCH.md`.
-- `restart/audit/totality/p1/1D-skinny-lessons.md`.
-- `restart/audit/totality/p1/1E-locks-evidence.md`.
-- `restart/audit/totality/p1/hardening/HARDENING-T-P1-V5-CONSOLIDATED.md`.
-- `restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md`.
-- `restart/audit/totality/p2/hardening/V1/CH1.md`.
-- `restart/audit/totality/p2/hardening/V1/CH2.md`.
-- `restart/audit/totality/p2/hardening/V1/CH3.md`.
-- `restart/audit/totality/p2/hardening/V1/CH4.md`.
-- `restart/audit/totality/p2/hardening/V1/CH5.md`.
-- `restart/audit/totality/p2/hardening/V1/CH6.md`.
-- `restart/locks/LOCKS.md`.
-- `restart/skinny/tranches/sk-v13/SYNTHESIS.md`.
-- `restart/skinny/tranches/sk-v13/HANDOFF.md`.
-- `restart/skinny/tranches/sk-v13/scoping/sk-v13-scoping-simd-asm-union.md`.
-- `restart/skinny/tranches/sk-v13/research/p1/p1b-samply-mode-2.md`.
-- `restart/skinny/tranches/sk-v13/research/p1/p1c-samply-mode-3.md`.
-- `restart/skinny/tranches/sk-v13/research/p1/p1e-hot-leaf-attribution.md`.
-- `restart/skinny/tranches/sk-v13/research/p1/support/evidence-ledger-v3.md`.
-- `restart/skinny/tranches/sk-v13/research/p2/p2b-dav1d-process.md`.
-- `restart/skinny/tranches/sk-v13/research/p2/p2c-arch-esoterica.md`.
-- `skinny/RESULTS.md`.
-- `skinny/REDRESS.md`.
-- `skinny/crates/bbnf-simd/ext/x86/LICENSE-VENDOR`.
-- `skinny/crates/bbnf-simd/ext/x86/x86inc.asm`.
-- `skinny/crates/bbnf-simd/ext/x86/bbnf.asm`.
-- `skinny/crates/bbnf-simd/src/lib.rs`.
-- `skinny/crates/bbnf-simd/src/dispatch.rs`.
-- `skinny/crates/bbnf-simd/src/aarch64/*.rs`.
-- `skinny/crates/bbnf-simd/src/scalar/*.rs`.
-- `skinny/crates/bbnf-simd/tests/checkasm_*.rs`.
-- `skinny/crates/runtime/src/grammars/css_l4_declaration_values/generated.rs`.
+- `SRC-LOCKS-16`: `restart/locks/LOCKS.md:282-360` (Lock 16 SIMD/ASM admissibility allowlist).
+- `SRC-BBNF-ASM`: `skinny/crates/bbnf-simd/ext/x86/bbnf.asm:1-486` (Layer 1 contract declarations).
+- `SRC-BBNF-X86INC`: `skinny/crates/bbnf-simd/ext/x86/x86inc.asm:1-2030` (Layer 0, x264-origin).
+- `SRC-BBNF-X86UTIL`: `skinny/crates/bbnf-simd/ext/x86/x86util.asm:1-1100` (Layer 0, FFmpeg-origin).
+- `SRC-BBNF-LICENSE-VENDOR`: `skinny/crates/bbnf-simd/ext/x86/LICENSE-VENDOR:1-55` (vendor attribution).
+- `SRC-BBNF-SCALAR`: `skinny/crates/bbnf-simd/src/scalar/*.rs` (six scalar references at HEAD).
+- `SRC-BBNF-CHECKASM`: `skinny/crates/bbnf-simd/tests/checkasm_*.rs` (six checkasm parity tests at HEAD).
+- `SRC-S-P2-V3`: `restart/skinny/tranches/sk-v14/research/p2/p2b-dav1d-process.md:60-118` (5-stage admission process); `restart/skinny/tranches/sk-v14/research/p3/p3a-candidate-shortlist.md:57-118` (8-candidate shortlist consuming Layer 1).

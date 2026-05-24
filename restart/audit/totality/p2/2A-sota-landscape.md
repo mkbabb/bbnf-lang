@@ -1,209 +1,168 @@
 ---
 agent: 2A
 pass: T-P2-research
-cycle: V3
-generated_at: 2026-05-21T04:38:47-04:00
-t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F]
-primary_sources_cited: 15
-counted_source_ids: [T2A-SRC-V2-FOLD, T2A-SRC-SIMDJSON-PAPER, T2A-SRC-SIMDJSON-SRC, T2A-SRC-SONIC, T2A-SRC-YYJSON, T2A-SRC-ASMJSON-README, T2A-SRC-ASMJSON-SAXDOM, T2A-SRC-ASMJSON-CONFORMANCE, T2A-SRC-FFMPEG-CHECKASM, T2A-SRC-DAV1D-CHECKASM, T2A-SRC-REDRESS, T2A-SRC-RESULTS, T2A-SRC-T-P1-1A, T2A-SRC-T-P1-1E, T2A-SRC-S-P1-LEDGER]
-techniques_grounded: 10
-techniques_refuted: 6
+cycle: V1
+generated_at: 2026-05-23T00:00:00-04:00
+t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F-coherence-scan, 1F-anti-pattern, 1F-past-corpora]
+primary_sources_cited: 14
+counted_source_ids: [T2A-SRC-SIMDJSON-PAPER, T2A-SRC-SIMDJSON-SRC, T2A-SRC-SONIC, T2A-SRC-YYJSON, T2A-SRC-ASMJSON, T2A-SRC-FFMPEG-CHECKASM, T2A-SRC-DAV1D-CHECKASM, T2A-SRC-DAV1D-CPU, T2A-SRC-RESULTS, T2A-SRC-REDRESS, T2A-SRC-T-P1-1A, T2A-SRC-T-P1-1E, T2A-SRC-S-P2-V3, T2A-SRC-SK-V14-P2A]
+techniques_grounded: 9
+techniques_refuted: 5
 prior_cycle_dispositions_folded:
   accepted: []
   rejected: []
-  revised: [CH1, CH2, CH3, CH4, CH5, CH6]
-  first_cycle_additions: [T2A-SOTA-001, T2A-SOTA-002, T2A-SOTA-003, T2A-SOTA-004, T2A-SOTA-005, T2A-SOTA-006, T2A-SOTA-007, T2A-SOTA-008]
-  v2_shared_contract: restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md
-  v3_shared_contract: restart/audit/totality/p2/T-P2-V3-FOLD-ADDENDUM.md
-  v2_fold_additions: [T2A-V2-FOLD-001, T2A-V2-FOLD-002, T2A-V2-FOLD-003, T2A-V2-FOLD-004]
-  v3_fold_additions: [T2A-V3-COUNTED-SOURCE-IDS]
+  revised: []
+  first_cycle_additions: [T2A-SOTA-001, T2A-SOTA-002, T2A-SOTA-003, T2A-SOTA-004, T2A-SOTA-005, T2A-SOTA-006, T2A-SOTA-007, T2A-SOTA-008, T2A-SOTA-009, T2A-PROC-001, T2A-PROC-002, T2A-REF-001, T2A-REF-002, T2A-REF-003, T2A-REF-004, T2A-REF-005]
 locks_amendment_candidates: 5
+upstream_sha_pins:
+  simdjson: "168ef580757d75270475b379e83c2b39787a6765"
+  sonic-rs: "03545a9530346fe279b674dd496e037d94204bc5"
+  yyjson: "95f4c61bc1e24176f2aa4f430902705a995f1c97"
+  ffmpeg: "085714182302333dd83dcb9c36cf828dc4eba929"
+  dav1d: "1718ff9aded99f0a89f5c7940d6afb8948301e33"
+  asmjson: "crate 0.2.5 / docs.rs"
+executable_verification_run: true
+verification_date: 2026-05-23
 ---
 
 ## Executive Summary
 
-SOTA JSON parsing does not defend a blanket "retain every SIMD structural
-index" thesis. simdjson proves the two-stage structural-index architecture and
-On-Demand proves forward-only, use-specific parsing, but bbnf has already
-measured two faithful retained-union attempts as regressions on the M5 Max
-(`skinny/REDRESS.md:2795-2940`). sonic-rs is the binding JSON comparator because
-the skinny matrix has same-run strict sonic rows, while simdjson, yyjson, and
-asmjson remain architecture pressure until same-plane sidecars are wired
-(`skinny/RESULTS.md:3`, `skinny/RESULTS.md:145-149`). yyjson grounds the scalar
-discipline lesson: high ILP, branch prediction, and compact layouts can beat
-poorly integrated SIMD. asmjson grounds a useful 64-byte classifier/SAX-vs-DOM
-shape, but its AVX-512-only assembly and permissive conformance note make it
-non-admissive for SK-V13. FFmpeg/dav1d checkasm grounds the process, not pixel
-kernels: scalar reference, randomized differential harness, CPU-feature gating,
-callee-saved-register safety, and benchmark reporting before production wiring.
-For totality, the defended rule is narrower: every primitive must be
-grammar-neutral data/policy, scalar-referenced, checkasm/parity tested, and
-consumed by a row-moving same-wave parser or sink.
+SOTA JSON parsing splits cleanly into four published architectures and one
+process discipline. simdjson defends a *two-stage* structural-index plus tape
+architecture and an *On-Demand* forward-only iterator — both grounded in
+Langdale & Lemire (VLDB 2019) and in the pinned simdjson source tree.
+sonic-rs *explicitly rejects* simdjson's two-stage retention and substitutes
+targeted SIMD at four leaves (long strings, float fractions, field lookup,
+whitespace) plus direct-to-struct deserialisation — defending bbnf's typed/
+direct planes against `from_slice::<Value>` DOM masquerade. yyjson grounds
+that ANSI C scalar with `always_inline`/ILP/branch-predictor discipline
+*beats* SIMD-heavy competitors on the right corpus (twitter 1.80 GB/s parse
+on EC2 AMD EPYC) and refutes the assumption that SOTA requires SIMD. asmjson
+is *non-admitting* under SK-V14 R1: AVX-512BW-only (no aarch64) and
+permissive on in-string control bytes. The DAV1D/FFmpeg checkasm discipline
+— scalar oracle + `call_ref`/`call_new` differential + CPU-flag dispatch +
+`bench_new` only after equality — is the spine: process, not pixel-domain
+kernels, transfers to bbnf. For totality, every primitive admitted under
+Lock 16 must (a) carry a published abstract-primitive citation, (b) own a
+scalar oracle, (c) pass a checkasm-style differential, (d) be consumed by a
+same-wave row-moving parser. Citation alone admits nothing.
 
-V2 folds CH1-CH6 through the shared mechanical contract in
-`restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md`. Source citations below
-ground candidates only; they are not admissions. Moving upstream source trees
-are pinned by the addendum's provenance register, external performance claims
-are architecture pressure unless the same corpus, platform, strictness, and
-output plane are named, and every row reopen inherits the REDRESS-119 matrix
-plus the REDRESS 121-127 taxonomy. A SOTA route reaches T-P3 only after the
-addendum's ledger state advances from `source_backed` through scalar,
-checkasm/parity, micro-proof, production consumer, and measured row admission
-or architectural-block evidence.
+## V1 Authority
 
-## V2 Fold Authority
+This V1 dossier is the first cycle of T-P2 under the SK-V14 totality system
+post the T-P1 §3Z COHORT LOCK at HEAD `0a9c0fe65d7d80277bb56c32796c5ae6126d1052`.
+It grounds SOTA assertions in primary literature with executable-verified
+path:line cites per LAC-1E-12. The dispatch context binds:
 
-| CH lens | 2A fold |
+- DAV1D HEAD `1718ff9aded99f0a89f5c7940d6afb8948301e33` (per S-P2 V3 P2-B SHA pinning).
+- FFmpeg HEAD `085714182302333dd83dcb9c36cf828dc4eba929`.
+- simdjson + sonic-rs + yyjson SHAs as pinned in `restart/skinny/tranches/sk-v14/research/p2/p2a-sota-teardown.md`.
+- Refutation is first-class: a SOTA assertion the literature does NOT
+  support is the most load-bearing dossier row.
+- WRITE-ONLY; no `git add` / `git commit`; orchestrator commits the six
+  P2 outputs atomically.
+
+CH lens overlay (per PASS-2-RESEARCH.md §3):
+
+| CH lens | V1 binding |
 |---|---|
-| CH1 correctness / provenance | Upstream JSON/checkasm source claims are tied to the V2 provenance register rather than moving `main` / `master` authority. Benchmark and speed claims without strict corpus/platform context are downgraded to architecture pressure. |
-| CH2 generality / Lock 14 | SOTA techniques transfer only through generated grammar facts or caller-supplied policy. One CSS declaration-values row is non-JSON evidence, not fleet-wide grammar closure; fleet-wide claims require the addendum's CSS plus Sheets/BBNF-self transfer contract. |
-| CH3 REDRESS | REDRESS-119 is reopened only row-by-row under the addendum matrix. Union, PMULL, CSSC, and SIMD labels are not material differentials unless the consumer-level checklist distinguishes them from REDRESS 88/89/96/97/98. |
-| CH4 cost | 2A classifies SOTA sources as candidate evidence only. The per-technique admission ledger, state machine, LOC/risk, rollback, and abrogate gates live in the addendum and must be instantiated by owner dossiers or S-P3. |
-| CH5 Lock 1 | Structural masks remain `local_temp_only` unless consumed into `existing_tape`, `direct_sink`, or `admitted_fact_output`. 2A's transient-mask thesis now uses the addendum's `substrate_target`, `retention_lifetime`, and `policy_owner` vocabulary. |
-| CH6 anti-paper-close | "Grounded" never means "validated design." Citation density, parity-only proofs, and microbench-only wins remain non-admitting until strict equality and row movement are gate-consumed. |
+| CH1 correctness / provenance | Every cited paper, library source, and benchmark number resolves to a verifiable artefact at a pinned SHA. The five upstream SHAs above are the binding provenance register; downstream cites must use them or record a newer source-date with verification. |
+| CH2 generality / Lock 14 | A SOTA technique transfers fleet-wide only when published as grammar-neutral data/policy; a JSON-only technique cited as fleet-wide closure is a REVISE. CSS L4/Sheets/BBNF-self transfer evidence is required for generality claims; one CSS declaration-values row is non-JSON evidence, not full closure. |
+| CH3 regression / REDRESS | `skinny/REDRESS.md` 96/97/98 closed retained-class-column / streaming-cursor / class-lane-only union attempts. A fresh route invoking simdjson stage-1-style structural-index *retention* needs a row-local material differential beyond "we cite simdjson". |
+| CH4 cost / executability | Every grounded primitive carries scalar reference + checkasm parity (Lock 16) + named same-wave consumer; orphan-kernel research is rejected. Citation density without integration is paper-close. |
+| CH5 hidden coupling / Lock 1 | SIMD structural/class masks may live as ephemeral producers consumed into the single tape / direct sink / fact output in the same loop; retained sidecars violate Lock 1 (substrate union). simdjson's stage-1→stage-2 *consumption* defends transient masks; *retention* does not. |
+| CH6 anti-paper-close | "Grounded" never means "validated design". Microbench parity, citation density, and reference-stuffing without same-wave consumer / row movement remain non-admitting. |
 
 ## Technique Grounding Table
 
-| spec claim or T-P1 divergence id | source authority | V2 state | bbnf-specific note |
+| spec claim or T-P1 divergence id | published source authority (path:line @ pinned SHA) | state | bbnf-specific note |
 |---|---|---|---|
-| `SOTA-simdjson-stage1-stage2` | Langdale and Lemire, "Parsing Gigabytes of JSON per Second", VLDB Journal 28(6), 2019 / arXiv:1902.08318; simdjson HEAD `168ef580757d75270475b379e83c2b39787a6765` per V2 addendum. | source_backed / architecture_pressure | Stage 1 structural indexes + UTF-8 validation and stage 2 tape construction are real SOTA architecture. bbnf may transfer transient mask production only if consumed into the existing tape/sink in the same loop; retained class-column replay is refuted by REDRESS 96/97/98 and fenced by the V2 Lock 1 substrate-kind contract. |
-| `SOTA-simdjson-On-Demand` | simdjson HEAD `168ef580757d75270475b379e83c2b39787a6765`, `doc/basics.md` and `doc/ondemand_design.md`, per V2 addendum. | source_backed / architecture_pressure | On-Demand supports forward-only, use-specific parsing and skipping unused values. This defends product/direct sinks and generated shape selection more than a universal DOM/tape materialization route, but fleet-wide totality requires CSS plus Sheets/BBNF-self transfer proof before this becomes grammar-neutral closure. |
-| `SOTA-simdjson-runtime-dispatch` | simdjson HEAD `168ef580757d75270475b379e83c2b39787a6765`, `include/simdjson/implementation.h`, per V2 addendum. | process_grounded | Runtime CPU feature selection is admissible as a process pattern. For bbnf it must stay behind Lock 16 allowlist + scalar fallback, never select unsupported x86 paths on Apple Silicon, and advance through the addendum primitive ledger before admission. |
-| `SOTA-sonic-targeted-SIMD` | sonic-rs HEAD `03545a9530346fe279b674dd496e037d94204bc5`, `README.md`, per V2 addendum. | source_backed / row_target_pressure | sonic-rs explicitly rejects simdjson-style two-stage copying as its central tactic and uses SIMD for long strings, float fractions, field lookup, and whitespace. bbnf should target these row leaves only with row-local material differentials; source prestige alone cannot reopen REDRESS-119 rows. |
-| `SOTA-sonic-direct-typed-anchor` | sonic-rs HEAD `03545a9530346fe279b674dd496e037d94204bc5`; local `skinny/RESULTS.md` same-run strict sonic rows. | comparator_grounded_for_local_rows | The M1 Pro twitter/citm struct rows are published anchors, but bbnf admission uses the same-host strict sonic rows in `RESULTS.md`. External sonic benchmarks remain context, not the numeric gate, unless corpus/platform/output-plane parity is reproduced locally. |
-| `SOTA-sonic-lazy-field-lookup` | sonic-rs HEAD `03545a9530346fe279b674dd496e037d94204bc5`, `docs/benchmark_aarch64.md`, per V2 addendum. | architecture_pressure | Sonic's unchecked field lookup uses SIMD to skip unnecessary fields. bbnf's legal transfer is generated FIRST/follow probe or same-loop string/field skip with strict comparator parity; unchecked/lossy modes are not admission anchors. |
-| `SOTA-yyjson-scalar-fast` | yyjson HEAD `95f4c61bc1e24176f2aa4f430902705a995f1c97`, `README.md`, per V2 addendum. | architecture_pressure | yyjson's primary lesson is scalar: ANSI C, no explicit SIMD, strict default, high ILP and branch predictor preference. This supports bbnf's measured finding that wide-core scalar envelopes can beat poorly integrated retained SIMD, but it admits no row without bbnf-local strict comparator evidence. |
-| `SOTA-yyjson-strict-default-plus-flags` | yyjson HEAD `95f4c61bc1e24176f2aa4f430902705a995f1c97`, `src/yyjson.h`, per V2 addendum. | process_grounded | yyjson strict default plus explicit non-standard flags reinforces bbnf's strict-vs-strict gate. Any permissive yyjson/sonic/asmjson number is a flaw probe, not admission. |
-| `SOTA-asmjson-64-byte-classifier` | asmjson crate `0.2.5` README on docs.rs. | architecture_pressure / not_admitting | The 64-byte classifier and SAX sink are useful shape evidence, but AVX-512BW is x86-only and SK-V13 is Apple Silicon/aarch64. Treat as architecture pressure, not a close route. |
-| `SOTA-asmjson-strictness` | asmjson crate `README.md:209-222`, https://docs.rs/crate/asmjson/0.2.5/source/README.md#209 | refuted | asmjson is explicitly permissive on control characters and does not scan string contents for unescaped controls. It cannot be a strict SK-V13 JSON admission comparator. |
-| `PROCESS-ffmpeg-checkasm` | FFmpeg HEAD `085714182302333dd83dcb9c36cf828dc4eba929`, `tests/checkasm`, per V2 addendum. | process_grounded | FFmpeg grounds reference-vs-new function selection, checked calls, timing loops, overhead correction, and benchmark printing. bbnf Lock 16 should require the same shape before primitive admission. |
-| `PROCESS-dav1d-checkasm` | dav1d HEAD `1718ff9aded99f0a89f5c7940d6afb8948301e33`, `tests/checkasm` and `src/arm/cpu.c`, per V2 addendum. | process_grounded | dav1d grounds CPU-flag matrices, call-ref/call-new differential checks, and benchmark-after-equality. Pixel kernels do not transfer; the process does. |
-| `1A-SUB-014 scanner/sidecar plane fence` | T-P1 1A states JSON `StructuralIndex` is transient and CSS sidecar is comparator evidence (`restart/audit/totality/p1/1A-substrate-evidence.md:43-46`, `restart/audit/totality/p1/1A-substrate-evidence.md:58`). | grounded | SOTA structural indexes are not a license for a retained sidecar. Totality should amend Lock 1 to name transient scanner and comparator-sidecar fences. |
-| `1E-L16 traceability UNKNOWN` | T-P1 1E marks Lock 16 partial until every intrinsic/`asm!` maps to allowlist + parity + consumer (`restart/audit/totality/p1/1E-locks-evidence.md:87`, `restart/audit/totality/p1/1E-locks-evidence.md:112-119`). | grounded | Checkasm process sources above defend this amendment. |
-| `SK-V13 P2-A comparator sidecars` | SK-V13 P2-A says only sonic-rs strict is a JSON admission comparator today and C++/DOM sidecars are pressure unless same-plane sidecars are produced (`restart/skinny/tranches/sk-v13/research/p2/p2a-sota-teardown.md:42-52`, `restart/skinny/tranches/sk-v13/research/p2/p2a-sota-teardown.md:140-143`). | grounded | Totality must not claim simdjson/yyjson/asmjson rows are current bbnf SOTA gates unless new sidecar infrastructure lands. |
+| T2A-SOTA-001: simdjson two-stage structural-index + UTF-8 validation produces a transient projection consumed in-loop by the tape builder, not retained as a parallel substrate. | Langdale & Lemire, "Parsing Gigabytes of JSON per Second", VLDB Journal 28(6), 2019, arXiv:1902.08318 §3.1-§3.4 + simdjson `doc/parse_many.md:54-57` @ `168ef580...` (`https://github.com/simdjson/simdjson/blob/168ef580757d75270475b379e83c2b39787a6765/doc/parse_many.md#L54-L57`). | grounded | Stage 1 is a *producer*; stage 2 is the *consumer*; the structural index is not a retained sidecar in the simdjson architecture. The bbnf transfer is legal only if the structural projection feeds the existing tape / direct sink in the same loop — exactly the Lock 1 substrate-union obligation. REDRESS 96/97/98 already falsified retained class-columns; the published simdjson architecture does not support that prior failed shape. |
+| T2A-SOTA-002: simdjson On-Demand forward-only iterator with use-specific parsing and skip-on-unused-field. | simdjson `doc/ondemand_design.md:71-89` @ `168ef580...` (`https://github.com/simdjson/simdjson/blob/168ef580757d75270475b379e83c2b39787a6765/doc/ondemand_design.md#L71-L89`) + `doc/basics.md:343-350` (`https://github.com/simdjson/simdjson/blob/168ef580757d75270475b379e83c2b39787a6765/doc/basics.md#L343-L350`). Quoted design principles: "Streaming / Forward-Only / Natural Iteration / Use-Specific Parsing / Validate What You Use". | grounded | On-Demand is the typed-plane SOTA pressure: a single forward index, parse only on type-coerce, skip on unused field. bbnf's `DirectParser::skip_value` (`bbnf-bench/src/generated_real_typed.rs:2949`, ~72.5-76.1 % typed self-time per S-P1 P1-E) is the right shape with the wrong implementation — it rescans bytes instead of consulting a structural projection. Defends a *typed-plane skip-with-index* candidate primitive but only if the projection is the same single substrate the direct envelope consults (no parallel index). |
+| T2A-SOTA-003: sonic-rs explicitly rejects simdjson-style two-stage architecture and uses SIMD targeted at four leaves: (1) long string body, (2) float fraction, (3) field/object lookup, (4) whitespace runs. | sonic-rs `README.md:60-90` @ `03545a95...` (`https://github.com/cloudwego/sonic-rs/blob/03545a9530346fe279b674dd496e037d94204bc5/README.md#L60-L90`). Quoted: "The main optimization in sonic-rs is the use of SIMD. However, we do not use the two-stage SIMD algorithms from `simd-json`. We primarily use SIMD in the following scenarios: 1. parsing/serialize long JSON strings 2. parsing the fraction of float number 3. Getting a specific elem or field from JSON 4. Skipping white spaces when parsing JSON". | grounded | This is the load-bearing grammar-neutral SOTA lift: targeted SIMD *inside* the parse envelope rather than at a stage-1 boundary. bbnf has zero SIMD inside `parse_object_value_at_direct` / `parse_array_element_at_direct` (`generated.rs:466,506`). The four leaves are grammar-neutral primitives (long-string body, float fraction, field skip, whitespace run) admissible under Lock 14 if exposed as GrammarConfig-driven data, not JSON branches. |
+| T2A-SOTA-004: sonic-rs direct struct deserialisation avoids the temporary tape that simd-json (Rust) builds. | sonic-rs `README.md:91-93` @ `03545a95...` Quoted: "Sonic-rs is faster than simd-json because simd-json (Rust) first parses the JSON into a `tape`, then parses the `tape` into a Rust struct. Sonic-rs directly parses the JSON into a Rust struct, and there are no temporary data structures.". | grounded | This grounds the bbnf direct/typed plane as a legitimate SOTA surface, not a second-class shape. SK-V14 R1 binds: only `sonic_rs::from_slice::<MyCorpusStruct>` (per-corpus typed) is the plane-correct strict comparator; `from_slice::<Value>` (eager DOM) is the SK-V14 P-2 audit anti-pattern (`restart/skinny/tranches/sk-v14/research/p2/p2a-sota-teardown.md §1.4`). |
+| T2A-SOTA-005: yyjson is ANSI C with **no explicit SIMD**, relies on high ILP + branch predictor + low penalty for misaligned access; strict by default per RFC 8259. | yyjson `README.md:10-19` + `README.md:72-78` @ `95f4c61b...` (`https://github.com/ibireme/yyjson/blob/95f4c61bc1e24176f2aa4f430902705a995f1c97/README.md#L10-L19`). Quoted: "complies with ANSI C (C89), no explicit SIMD" / "complies with [RFC 8259]... strict number formats and UTF-8 validation" / "For better performance, yyjson prefers: A modern processor with: high instruction level parallelism, excellent branch predictor". | grounded | Critical refutation of "SIMD is required for SOTA". yyjson twitter parse = 1.80 GB/s on EC2 AMD EPYC 7R32 / 3.51 GB/s on iPhone A14 (README perf table) — beating or matching simdjson DOM (1.52 GB/s / 2.19 GB/s respectively) **without SIMD**. Defends bbnf's measured M5 Max scalar wins (REDRESS 98). |
+| T2A-SOTA-006: yyjson strict default (`YYJSON_READ_NOFLAG`) reports error on invalid UTF-8, BOM, trailing comma, comments, inf/nan; opt-in flags `YYJSON_READ_ALLOW_*` for permissive. | yyjson `src/yyjson.h:736-744` @ `95f4c61b...` (`https://github.com/ibireme/yyjson/blob/95f4c61bc1e24176f2aa4f430902705a995f1c97/src/yyjson.h#L736-L744`). Quoted: "Default option (RFC 8259 compliant): ... Report error if string contains invalid UTF-8 character or BOM. Report error on trailing commas, comments, inf and nan literals." | grounded | Reinforces SK-V14 R1 strict-vs-strict comparator discipline: a comparator passes R1 only if its strict mode is the configured mode. Permissive yyjson is a flaw probe, not admission. |
+| T2A-SOTA-007: simdjson runtime CPU dispatch — runtime selection of best implementation per host instruction set with required-feature reporting. | simdjson `include/simdjson/implementation.h:40-75` @ `168ef580...` (`https://github.com/simdjson/simdjson/blob/168ef580757d75270475b379e83c2b39787a6765/include/simdjson/implementation.h#L40-L75`). | grounded | Architecture pressure for Lock 16's hardware-gate field. bbnf may use runtime dispatch but must enumerate (a) hardware gate, (b) scalar fallback, (c) checkasm cell, (d) row consumer. Never select unsupported x86 paths on Apple Silicon (asmjson's AVX-512BW disqualification). |
+| T2A-SOTA-008: asmjson 64-byte structural classifier producing transient whitespace + quote + structural masks; SWAR portable fallback + AVX-512BW x86-only assembly entry points. | asmjson crate 0.2.5 `README.md` rendered at `https://docs.rs/crate/asmjson/0.2.5/source/README.md` (HTML-rendered docs.rs; native source crate uploaded to crates.io). Architecture pressure tier — same-run sidecar absent in `skinny/RESULTS.md`. | architecture_pressure | The "one wide window classifies every structural byte without retaining a stream" shape is the right transient-mask shape under Lock 1, but: (a) AVX-512BW is x86-only — not host-runnable on M5 Max / aarch64; (b) the dispatch goes to a Rust `JsonWriter` vtable (numbers not parsed in asm). asmjson is non-admitting as a strict comparator and as a portable close route. |
+| T2A-SOTA-009: sonic-rs lazy field lookup — SIMD skip over unwanted field bodies via `LazyValue`/`LazyObject` without value materialisation. | sonic-rs `README.md:60-66` @ `03545a95...` + `docs/benchmark_aarch64.md:140-151` @ `03545a95...` (`https://github.com/cloudwego/sonic-rs/blob/03545a9530346fe279b674dd496e037d94204bc5/docs/benchmark_aarch64.md#L140-L151`). | grounded | Grammar-neutral SOTA pressure on typed plane: `DirectParser::skip_value` is bbnf's lazy-field-skip surface today (39.5-76.1 % typed self-time per S-P1 P1-E §2.3) but with neither SIMD nor structural-index consultation. sonic-rs's surface is the lift target. |
+| T2A-PROC-001: FFmpeg checkasm differential harness — `call_ref` invokes scalar reference; `call_new` invokes new (potentially SIMD) implementation; macro-driven equality check; `bench_new` issues randomized-input timing only after equality. | FFmpeg `tests/checkasm/checkasm.h:214-240` @ `08571418...` (`https://github.com/FFmpeg/FFmpeg/blob/085714182302333dd83dcb9c36cf828dc4eba929/tests/checkasm/checkasm.h#L214-L240`) + `tests/checkasm/checkasm.h:396-430` (bench macro) + `tests/checkasm/checkasm.c:679-737` (overhead correction + report). Verified at HEAD: `call_ref` = `checkasm_call((func_type *)func_ref, __VA_ARGS__)`; `call_new` = `checkasm_call_checked(((func_type *)func_new), __VA_ARGS__)`. | process_grounded | This is the DAV1D/FFmpeg/VLC process spine the dispatch context binds. Lock 16 admissibility derives the obligation: every bbnf SIMD/ASM primitive must register a scalar reference, a checkasm-style differential, and a `bench_new` step gated on equality. Hand-tuned undocumented intrinsic loops without this discipline are inadmissible. |
+| T2A-PROC-002: dav1d checkasm process — per-feature CPU flag matrix, `call_ref` + `call_new` + `checkasm_check_pixel` + `bench_new(alternate(c_dst, a_dst), ...)`; Apple aarch64 feature detection via `sysctlbyname("hw.optional.arm.FEAT_DotProd")` / `FEAT_I8MM`. | dav1d `tests/checkasm/loopfilter.c:177-188` @ `1718ff9a...` (`https://code.videolan.org/videolan/dav1d/-/blob/1718ff9aded99f0a89f5c7940d6afb8948301e33/tests/checkasm/loopfilter.c#L177-L188`) — verified `call_ref(c_dst,...); call_new(a_dst,...); checkasm_check_pixel(c_dst_mem,...); bench_new(alternate(c_dst, a_dst),...)` + dav1d `src/arm/cpu.c:87-95` @ `1718ff9a...` (`https://code.videolan.org/videolan/dav1d/-/blob/1718ff9aded99f0a89f5c7940d6afb8948301e33/src/arm/cpu.c#L87-L95`) — verified Apple FEAT_DotProd / FEAT_I8MM detection. | process_grounded | The dav1d process binds the same-wave consumer requirement: a SIMD body has a registered scalar reference, a checkasm cell, a CPU-flag gate, and a *production caller* that invokes the new path on supported hardware. The pixel-domain kernels (loop filter, motion compensation, IDCT, film grain) do NOT transfer to JSON; the *process* does. |
+| 1A-SUB-014 substrate-union fence (T-P1 1A) | `restart/audit/totality/p1/1A-substrate-evidence.md` divergence 1A-DIV-008: two-cursor structural split at HEAD (`parser.rs:7-12` ParserState.cursor over TapeBuilder vs `codegen/src/json_typed_direct.rs:518-522` DirectParser.cursor raw usize). | grounded | The simdjson + sonic-rs + On-Demand SOTA architectures all *avoid* the two-cursor split bbnf currently has. Both stage-1 → stage-2 consumption (simdjson) and direct-to-struct skip-with-index (On-Demand / sonic-rs) require a *single* substrate consulted by all envelopes. Totality must close 1A-DIV-008 by routing direct + typed envelopes through the same projection the parse-only envelope consults. |
+| 1E-L16 traceability gap (T-P1 1E) | `restart/audit/totality/p1/1E-locks-evidence.md` Lock 16 partial-UNKNOWN: every intrinsic / `asm!` must map to allowlist + scalar + checkasm + production consumer. | grounded | FFmpeg `tests/checkasm/checkasm.h:214-240` + dav1d `tests/checkasm/loopfilter.c:177-188` are the published process discipline that defines this Lock 16 traceability obligation. Cite both as the canonical reference shape for Lock 16 closure. |
 
 ## Architectural Assertions Defended
 
-| assertion | defense | bbnf consequence |
+| assertion | source-grounded defense | bbnf consequence |
 |---|---|---|
-| Structural SIMD is useful as a transient producer. | simdjson stage 1 extracts structural indexes and validates UTF-8 before stage 2 consumes them into tape (`doc/parse_many.md:54-57`). SK-V13 S-P1 also measured structural scanner micro-results but kept them non-admitting (`restart/skinny/tranches/sk-v13/research/p1/support/evidence-ledger-v3.md:78-92`). | Totality should keep a transient-mask primitive family, but require same-loop consumption into the one existing substrate or row sink. |
-| Product/direct planes are legitimate SOTA surfaces. | simdjson On-Demand and sonic-rs direct struct/lazy surfaces both show SOTA parsers win by parsing only used fields or direct product targets. sonic-rs README says direct struct avoids a temporary tape for struct deserialization (`README.md:88-90`). | bbnf's typed and direct planes are not second-class if strict equality and same-plane comparators hold. The gate must encode output plane, not a single parse-only scoreboard. |
-| Scalar envelopes are not fallback noise. | yyjson is explicitly "no explicit SIMD" and prefers high ILP/branch prediction (`README.md:14`, `README.md:73-78`); REDRESS 98 found scalar delimiter rediscovery cheaper than retained structural cursor on the M5 Max (`skinny/REDRESS.md:2928-2933`). | T-P3 should add a scalar-first amendment: a SIMD route must beat an isolated scalar reference and the integrated row, not just win a microbench. |
-| Checkasm is process discipline, not video-domain cargo cult. | FFmpeg and dav1d both structure tests around registered CPU implementations, reference/new calls, randomized inputs, equality checks, and bench reporting. dav1d loopfilter calls `call_ref`, `call_new`, checks pixels, then `bench_new` (`tests/checkasm/loopfilter.c:177-188`). | Lock 16 should mandate scalar oracle + checkasm/parity + corpus equality + same-wave consumer for every primitive; no orphan support-only primitives at close. |
-| Runtime CPU dispatch can be clean if feature-gated. | simdjson's implementation layer reports required instruction sets and runtime support (`implementation.h:68-75`); dav1d's Apple aarch64 path gates DotProd/I8MM via `sysctlbyname` (`src/arm/cpu.c:87-95`). | bbnf can select aarch64 kernels at runtime, but the manifest must name hardware gate, scalar fallback, checkasm cell, and row consumer. |
+| **Transient structural projection is SOTA**, not a parallel substrate. | simdjson stage 1 produces structural indexes + UTF-8 validation before stage 2 consumes them into the tape (`doc/parse_many.md:54-57` @ `168ef580...`). The published architecture *consumes* the projection inline; it is not a retained sidecar. | bbnf may keep a transient projection (e.g. `scan_structurals`) but it must be consumed by all envelopes in the same loop. Two-cursor splits violate the simdjson architectural shape and the Lock 1 substrate union. |
+| **Forward-only with skip-by-index is the typed-plane SOTA**. | simdjson On-Demand `doc/ondemand_design.md:71-89` quoted "Forward-Only: ... only a single index is maintained and everything uses it (even if you have nested for loops)" + sonic-rs `LazyValue` / `LazyObject` `README.md:60-66` skip-on-unused-field. | bbnf's typed plane `DirectParser::skip_value` (~39-76 % self-time on 5/7 typed rows per S-P1 P1-E §2.3) is the surface where this lift admits — provided the index consulted is *the* projection (not a parallel one). |
+| **Targeted SIMD inside the parse envelope is grammar-neutral**. | sonic-rs `README.md:60-66` four-leaf SIMD list (long string, float fraction, field lookup, whitespace) — none are JSON-specific structural alphabets; all are abstract primitives over byte streams parameterised by grammar policy. | These four leaves are Lock 14-admissible if exposed as GrammarConfig-driven primitives consumed by generated code per grammar (JSON, CSS L4, Sheets, BBNF-self) — not as JSON-branched intrinsics in a generic crate. |
+| **Scalar envelopes can beat poorly integrated SIMD**. | yyjson `README.md:10-19,72-78` "no explicit SIMD" + EC2 twitter 1.80 GB/s / iPhone A14 3.51 GB/s parse rates beating or matching simdjson DOM. REDRESS 98 measured scalar delimiter rediscovery cheaper than retained structural cursor on M5 Max (`skinny/REDRESS.md:2928-2933`). | T-P3 §3C should add a scalar-first amendment to Lock 10: a SIMD route must beat both an isolated scalar reference and the integrated-row scalar envelope, not just a microbench. |
+| **Checkasm process discipline is binding for Lock 16**. | FFmpeg `tests/checkasm/checkasm.h:214-240` + dav1d `tests/checkasm/loopfilter.c:177-188` — `call_ref`, `call_new`, equality check, *then* `bench_new`. | Every bbnf SIMD/ASM primitive admitted under Lock 16 must register scalar oracle + differential test + CPU-flag gate + same-wave production caller. Orphan kernels (W2 escape mask, W4 delimiter find pre-W14) are not admissions per the same Lock 16 rule. |
+| **Runtime CPU dispatch is clean when feature-gated**. | simdjson `include/simdjson/implementation.h:40-75` + dav1d `src/arm/cpu.c:87-95` `hw.optional.arm.FEAT_DotProd` / `FEAT_I8MM` Apple sysctlbyname detection. | bbnf may dispatch at runtime per host but each entry must name (a) abstract primitive, (b) published citation, (c) hardware gate, (d) scalar fallback, (e) checkasm cell, (f) row consumer. The asmjson AVX-512BW path *fails* this gate on aarch64 (no fallback). |
 
 ## Architectural Assertions Refuted
 
-| refuted assumption | source evidence | bbnf consequence |
+| refuted assumption | source evidence refuting it | bbnf consequence |
 |---|---|---|
-| "simdjson stage 1 implies bbnf should retain a union structural class column." | REDRESS 96 and 97 both landed correctness-green union variants and missed every W3 target and W10b guard; REDRESS 98 attributes the loss to parse-loop memory traffic/cursor indirection (`skinny/REDRESS.md:2823-2848`, `skinny/REDRESS.md:2881-2906`, `skinny/REDRESS.md:2910-2940`). | A fresh union attempt must name a material differential. SOTA citation alone cannot reopen the old class-column or streaming-cursor route. |
-| "asmjson can be a strict comparator or portable close route." | asmjson declares its AVX-512BW assembly x86-only and unsafe for unsupported CPUs (`README.md:100-103`, `README.md:206-207`) and states permissive control-character behavior (`README.md:211-222`). | Use asmjson as shape pressure for classifier/sink design only. It cannot close SK-V13 strict JSON rows or Apple Silicon ASM obligations. |
-| "C++ DOM sidecars in RESULTS are current SOTA gates." | `skinny/RESULTS.md` marks many simdjson/yyjson/asmjson columns historical, absent, or `n/a`, and warns native Rust comparators are same-run while C++ sidecars are historical/absent (`skinny/RESULTS.md:3`, `skinny/RESULTS.md:145-149`). | Totality must require same-run same-plane sidecars before citing non-sonic competitors as admission comparators. |
-| "SIMD parity or microbench alone admits a primitive." | SK-V12 W2 escape mask added checkasm/corpus parity but no production scanner or row movement (`skinny/REDRESS.md:3603-3632`); W4 delimiter find had 4.718x microbench and explicitly halted before production wiring (`skinny/REDRESS.md:3766-3820`). | Lock 16 must say parity is prerequisite, not admission. Admission requires row-moving consumer or measured deletion/rejection. |
-| "Direct residual REDRESS-119 is permanent architecture block." | REDRESS-119 closed SK-V11 as measured fixpoint, but SK-V13 lifted it as history-only and S-P2 V4 confirms full-SOTA addendum reopens every row with fresh material differentials (`skinny/REDRESS.md:3495-3527`; `restart/skinny/tranches/sk-v13/research/p2/hardening/HARDENING-S-P2-V4-CONVERGED.md:21-26`, `:56-58`). | Direct rows remain eligible only through the addendum's row-specific REDRESS-119 reopen matrix. "Decision engine", "union", or "ASM" is not itself a material differential until the row-local consumer and changed dataflow are named. |
-| "CSS declaration-values proves full grammar generality." | CSS L4 declaration-values admitted one strict fact-stream row, but T-P1 1A calls it a substrate/telemetry category gap and SK-V13 P2-F keeps CSS rows conditional row-production scopes (`skinny/REDRESS.md:3824-3840`; `restart/audit/totality/p1/1A-substrate-evidence.md:45-46`; `restart/skinny/tranches/sk-v13/research/p2/hardening/HARDENING-S-P2-V4-CONVERGED.md:46-51`). | Lock 14 can cite this as non-JSON evidence, not universal CSS/SHEETS/BBNF-self proof. |
-
-## V2 REDRESS And Admission Carry-Forward
-
-| evidence | V2 SOTA-landscape meaning |
-|---|---|
-| REDRESS-119 | History-only direct-row fixpoint. Each JSON direct reopen must cite the addendum's row-specific differential, consumer, strict comparator/oracle, and old-route block condition. |
-| REDRESS 121 | GrammarConfig legality prerequisite. It repairs part of Lock 14 but admits no CSS/SOTA row and no SIMD primitive. |
-| REDRESS 122 | `escape_mask_64` correctness prerequisite. It supplies checkasm/parity evidence, not a production scanner or row admission. |
-| REDRESS 123 | CSS L4 generated scaffold. It creates the non-JSON baseline/oracle surface but is not lightningcss SOTA admission. |
-| REDRESS 124 | lightningcss comparator infrastructure. It proves strict same-plane equality machinery, not a SOTA row by itself. |
-| REDRESS 125 | measured CSS SOTA candidate. It becomes campaign admission only after REDRESS 127 close reconciliation. |
-| REDRESS 126 | ASCII run-skip microbench route-production split. The 4.718x result is micro-proven architecture pressure until production CSS wiring and row movement land. |
-| REDRESS 127 | SK-V12 CSS declaration-values close. It admits one CSS row, leaves full CSS parity open, leaves union category unattempted in SK-V12, and treats W4 ASM-gen as routed production split rather than production admission. |
-
-## V2 SOTA Candidate Admission State
-
-| candidate family | V2 state | required next evidence |
-|---|---|---|
-| simdjson-style structural masks | source_backed / architecture_pressure | `substrate_target=local_temp_only` or same-loop `existing_tape` / `direct_sink` / `admitted_fact_output`, scalar reference, row consumer, and material differential from REDRESS 96/97/98. |
-| simdjson On-Demand shape selection | source_backed / architecture_pressure | generated grammar facts, Lock 14 transfer proof over CSS plus Sheets/BBNF-self, and strict row movement without parser-owned cursor sidecars. |
-| sonic-rs targeted SIMD leaves | row_target_pressure | bbnf-local strict sonic comparator, row-specific material differential from REDRESS-119 where reopening direct rows, and no unchecked/lossy mode. |
-| yyjson scalar envelope | source_backed / scalar_pressure | isolated scalar baseline plus integrated-row proof; used to reject SIMD/substrate candidates that lose against wide-core scalar cost. |
-| asmjson classifier/SAX shape | architecture_pressure / not_admitting | aarch64-native primitive and strict equality proof; AVX-512 and permissive conformance cannot close SK-V13. |
-| FFmpeg/dav1d checkasm process | process_grounded | bbnf scalar reference, checkasm/parity cell, CPU-feature gate, same-wave consumer, and corpus equality before production admission. |
+| **T2A-REF-001: "simdjson's two-stage pattern implies bbnf should retain a structural-index sidecar / parallel substrate."** | Langdale & Lemire 2019 architecture is *producer-consumer in one pipeline*, not retained dual substrate. simdjson stage 1 output (the `structural_indexes` array) is consumed by stage 2 in-line and *not* re-consumed by an independent walker (`doc/parse_many.md:54-57`). REDRESS 96/97/98 closed retained class-column + streaming cursor + class-lane-only as falsified on M5 Max (`skinny/REDRESS.md:2823-2940`). | A fresh union/structural-retention attempt must surface a material differential beyond "simdjson does it". The published simdjson architecture *does not* defend a retained sidecar — it defends in-loop consumption. |
+| **T2A-REF-002: "asmjson is admissible as a strict JSON comparator on aarch64 / M5 Max."** | asmjson crate 0.2.5 README (architecture-pressure tier per `skinny/RESULTS.md:3,145-149`): AVX-512BW path is x86-only (no aarch64); README documents permissive behaviour on in-string control bytes; numbers dispatched to consumer's Rust `JsonWriter` (not parsed in asm). | asmjson is non-admitting as: (a) a strict R1 comparator (controls-in-string violation); (b) a portable close route (x86-only). Use only as architecture pressure on the 64-byte transient-classifier shape. |
+| **T2A-REF-003: "SIMD is a prerequisite for SOTA JSON parsing."** | yyjson `README.md:10` "no explicit SIMD"; benchmark table at `README.md:32-65` shows yyjson twitter EC2 = 1.80 GB/s (parse) / iPhone A14 = 3.51 GB/s vs simdjson respectively 1.52 / 2.19 GB/s. Pure scalar + ANSI C + ILP + `always_inline` discipline wins these rows. | Lock 10 cost model must include a "yyjson-shape scalar envelope" baseline candidate. A SIMD route that loses against integrated-scalar must be rejected even if it wins a microbench. |
+| **T2A-REF-004: "Citation density + microbench parity admits a primitive."** | SK-V12 W2 escape mask added checkasm + corpus parity but no production scanner / row movement (`skinny/REDRESS.md:3603-3632`); SK-V12 W4 delimiter find achieved 4.718× microbench yet explicitly halted before production wiring (`skinny/REDRESS.md:3766-3820`). | Lock 16 must distinguish *prerequisite* (parity + checkasm) from *admission* (production consumer + row movement). The published checkasm process (FFmpeg/dav1d) names exactly this gate. |
+| **T2A-REF-005: "C++ DOM sidecars (simdjson DOM, yyjson default, asmjson AVX-512, RapidJSON default) in `skinny/RESULTS.md` are current bbnf admission gates."** | `skinny/RESULTS.md:3,53-55` marks simdjson DOM, yyjson default, asmjson AVX-512 columns as `historical:sk-v7-sidecar-profile` or `absent:not-collected-for-parse_only`. Only `sonic-rs strict Mbps` + `serde_json Mbps` are same-run native columns. SK-V14 SYNTHESIS §2 names simdjson/yyjson/asmjson as `required when runnable, plane disclosed` — flaw-probe slots, not gate anchors. | Until same-run, same-plane, same-corpus, same-equality sidecars are wired, only sonic-rs strict struct deser + serde_json strict struct deser are R1 binding comparators. Citing simdjson/yyjson historical rows as gates is paper-close. |
 
 ## Open Research Questions
 
 | UNKNOWN | verify_action |
 |---|---|
-| Can simdjson On-Demand's forward-only use-specific parsing be represented as a generated bbnf direct/typed shape without creating parser-owned cursor sidecars? | T-P3 should map On-Demand principles to existing `BackendShape::SinkOnly` / typed product rows and require CSS plus Sheets/BBNF-self transfer proof before fleet-wide closure; reject any public substrate API expansion. |
-| Are non-sonic JSON sidecars worth wiring under SK-V13? | If S-P3 wants simdjson/yyjson/asmjson as real gates, add a wave that builds same-run, same-plane, strict sidecars and rejects historical/DOM-plane comparisons. |
-| Which bbnf SIMD use-sites have complete Lock 16 lineage? | Generate a manifest over `core::arch`/`asm!` use-sites mapping source path, scalar reference, checkasm test, corpus parity, hardware gate, and production consumer. |
-| Can a fresh union variant be a codegen-time shape selection rather than a retained parser sidecar? | Require a micro-proof plus row-moving consumer and satisfy the addendum's PMULL/CSSC/union material-differential checklist before any implementation wave. |
-| Does yyjson-style scalar layout explain any JSON parse_only rows better than SIMD masks? | Benchmark scalar envelope reductions on `dispatch_value` and direct envelopes before adding new SIMD bodies; compare against S-P1 hot-leaf rows (`evidence-ledger-v3.md:32-62`). |
-| Can CSS parity rows expose parser hot leaves rather than fact-sink/timer overhead? | Before scoping CSS scanner ASM, collect narrow CSS parser profiles for each selected feature row; current declaration-values profile is nonparser overhead (`evidence-ledger-v3.md:100-104`). |
+| Can simdjson On-Demand's forward-only single-index pattern be applied to bbnf's typed plane (`DirectParser::skip_value`) without introducing a parser-owned cursor sidecar parallel to `scan_structurals`? | T-P3 §3C should map On-Demand principles onto existing `BackendShape::SinkOnly` / typed product rows; require that the projection consulted by `skip_value` is the same projection `parse_value_at` consumes (substrate union); CSS L4 + Sheets / BBNF-self transfer evidence required before fleet-wide closure. |
+| If S-P3 elects to admit simdjson DOM / yyjson default / asmjson sidecars as strict R1 comparators, what infrastructure wave is required? | Add a wave that builds same-run, same-plane, strict in-tree sidecars (cargo workspace member + criterion bench rows); reject historical / DOM-plane comparisons as gates. Asmjson stays at architecture pressure only (x86-only + permissive). |
+| What is the canonical Lock 16 manifest schema (per-intrinsic / per-asm-block) that captures the FFmpeg/dav1d process discipline? | Generate a manifest over all `core::arch::*` / `asm!` use-sites mapping: source path, abstract primitive name, published citation, hardware gate, scalar reference, checkasm cell, corpus parity, production consumer, row admission / measured rejection. |
+| Can a fresh union variant survive the REDRESS 96/97/98 material-differential checklist, given that the published simdjson architecture *does not* admit a retained class-column? | Require: (a) codegen-time shape selection rather than runtime parser sidecar; (b) consumer-deletes-old-scalar-source proof; (c) PMULL/CSSC microbench *plus* row-moving consumer; (d) no replay of class-lane-only or streaming-cursor shapes. |
+| Does yyjson-style ANSI C / `always_inline` / ILP discipline explain bbnf's `dispatch_value` parse-only rank-1 envelope better than any candidate SIMD primitive? | Run a profile pass with `parse-attribution` feature *enabled* (per S-P1 P1-E §4.1 deferral) before scoping any new SIMD body in `dispatch_value`; compare yyjson hot-function inlining + i-cache residency to bbnf's current envelope. |
+| Are the four sonic-rs SIMD leaves (long string, float fraction, field lookup, whitespace) generalisable to CSS L4 (strings, numbers, identifier skip, trivia) and Sheets (text, numerics, ref skip, whitespace) under Lock 14? | Per primitive, name the GrammarConfig-driven policy fields (alphabet, terminator, escape policy, run length) and show CSS L4 + Sheets generated consumer paths. One JSON-only branch in `bbnf-simd` is a Lock 14 leak. |
 
 ## LOCKS-AMENDMENTS-CANDIDATE
 
 | candidate | lock(s) | proposed amendment candidate | supporting evidence | disposition for T-P3 |
 |---|---|---|---|---|
-| T2A-LAC-01 | Lock 1 | Add a transient-mask clause: SIMD structural/class masks may exist only as ephemeral producers consumed into the single tape/direct/fact sink in the same loop; retained sidecars/class columns require fresh material-differential proof and the addendum's `substrate_target` / `retention_lifetime` / `policy_owner` fields. | simdjson stage1/tape docs; REDRESS 96/97/98 measured union failures; T-P1 1A scanner/sidecar fence; V2 fold addendum Lock 1 contract. | Add to locks diff; mark old union routes historical unless materially differentiated. |
-| T2A-LAC-02 | Lock 8 / BENCH | Add comparator-plane provenance: same-run Rust sonic strict is current JSON gate; simdjson/yyjson/asmjson cannot be gate anchors while historical, absent, permissive, x86-only, or different-plane. | `skinny/RESULTS.md:3`, `skinny/RESULTS.md:145-149`; asmjson conformance note; SK-V13 P2-A comparator strictness fold. | Add BENCH.md row-plane matrix requirement and "architecture pressure" status for unwired competitors. |
-| T2A-LAC-03 | Lock 16 | Require a primitive manifest for every SIMD/ASM intrinsic: abstract primitive name, primary source, hardware gate, scalar reference, checkasm/parity test, corpus parity, same-wave production consumer, row movement or measured rejection, substrate target, retention lifetime, policy owner, rollback path, and abrogate threshold. | FFmpeg/dav1d checkasm sources; T-P1 1E Lock 16 partial/UNKNOWN; SK-V12 W2/W4 prerequisite-only outcomes; V2 fold addendum per-technique ledger. | Add to Lock 16 and make manifest gate-consumed by skinny waves. |
-| T2A-LAC-04 | Lock 14 | Competitor techniques transfer only through generated grammar data or policy traits, not grammar-name branches in generic crates; CSS fact streams are admitted evidence but not generic substrate closure. | sonic/yyjson/simdjson techniques are grammar-agnostic only at primitive level; T-P1 1A CSS category gap; S-P2 V4 CSS row-scope confirmation; V2 fold addendum transfer contract. | Add grammar-neutral transfer rule with CSS plus Sheets/BBNF-self proof consumer. |
-| T2A-LAC-05 | Lock 10 / decision engine | Add scalar-first / micro-prove-first cost precondition: no SIMD/substrate shape reaches S-P3 wave scope unless isolated scalar reference and integrated row cost both predict a win, with fail-closed abrogate gates for e-graph saturation, CSP timeout, stale cost, generated LOC growth, row regression, and parity/checkasm failure. | yyjson scalar high-ILP evidence; REDRESS 98 M5 Max scalar delimiter finding; SK-V12 W4 microbench-only split; V2 fold addendum abrogate gates. | Route to decision-engine fold so cost resolver can reject citation-only SIMD. |
+| T2A-LAC-V1-01 | Lock 1 (substrate union) | Add a transient-projection clause: structural / class / whitespace masks may live only as ephemeral producers consumed into the single tape / direct sink / fact output in the same loop. Retained projections (parallel substrate, parser-owned sidecar, `UnionTape`) require a row-local material differential vs REDRESS 96/97/98 and a published architectural defense — simdjson alone does not defend retention. | simdjson `doc/parse_many.md:54-57` (in-loop consumption); REDRESS 96/97/98 (retained shapes falsified); T-P1 1A-DIV-008 (two-cursor split at HEAD); sonic-rs explicit two-stage rejection (`README.md:60`). | Add to `LOCKS.md` Lock 1 surface; close 1A-DIV-008 by routing direct/typed envelopes through `scan_structurals`'s output (substrate union). |
+| T2A-LAC-V1-02 | Lock 8 / BENCH (comparator plane) | Add comparator-plane provenance gate: only same-run, same-plane, same-corpus, same-equality, strict-mode comparators are R1 admission anchors. Historical / DOM-plane / x86-only / permissive comparators are architecture pressure only — never gates. | `skinny/RESULTS.md:3,53-55` historical/absent columns; SK-V14 SYNTHESIS §2 flaw-probe disclosure; SK-V14 P-2 audit (`sonic_rs::from_slice::<Value>` anti-pattern); asmjson permissive on controls + AVX-512BW x86-only. | Add to `BENCH.md`; demote simdjson/yyjson/asmjson columns to flaw-probe status until same-run sidecar infrastructure lands. |
+| T2A-LAC-V1-03 | Lock 16 (admissibility manifest) | Require a published per-primitive manifest with at minimum: abstract primitive name, published citation, hardware gate, scalar reference path, checkasm differential cell, corpus parity test, same-wave production consumer, row admission *or* measured rejection. Hand-tuned intrinsic loops without this manifest are inadmissible. | FFmpeg `tests/checkasm/checkasm.h:214-240`; dav1d `tests/checkasm/loopfilter.c:177-188` + `src/arm/cpu.c:87-95`; T-P1 1E Lock 16 partial-UNKNOWN; SK-V12 W2 (parity-only, not admitted) + W4 (microbench-only, halted). | Add Lock 16 manifest schema; gate primitive admission on the manifest's eight fields. |
+| T2A-LAC-V1-04 | Lock 14 (grammar neutrality) | A SOTA technique transfers fleet-wide only when it is published as grammar-neutral data/policy *and* a generated provider supplies the per-grammar parameters. Generic crates do not carry grammar-name branches (`JsonSink`, `JsonAlphabet`, JSON-named flags). | sonic-rs four-leaf SIMD list is grammar-neutral at primitive level; simdjson stage 1 byte-alphabet is parameterisable; T-P1 1A CSS category gap; S-P2 V3 CSS row-scope evidence; the JSON-byte recognizer whitelist (`passes/src/lib.rs:331`) + JSON literal-role miner (`passes/src/lib.rs:1300-1391`) currently violate this and must route via GrammarConfig. | Add Lock 14 grammar-neutral transfer rule; require CSS L4 + Sheets / BBNF-self transfer evidence before any fleet-wide claim. |
+| T2A-LAC-V1-05 | Lock 10 (cost model) / decision engine | Add scalar-first cost precondition: no SIMD/substrate shape reaches S-P3 wave scope unless (a) isolated scalar reference and (b) integrated-row scalar envelope both predict a win against a yyjson-shape baseline. Fail-closed abrogate gates for e-graph saturation (≤50000 nodes / ≤10000 classes / ≤30 iter), CSP timeout (≤1 s/grammar), stale-cost evidence (≤30 %), generated LOC growth, row regression, parity/checkasm failure. | yyjson `README.md:10-19,72-78` no-SIMD evidence + EC2/A14 perf table; REDRESS 98 M5 Max scalar delimiter finding; SK-V12 W4 microbench-only split + halt; T-P2 V3 addendum abrogate caps. | Route to decision-engine fold; cost resolver rejects citation-only SIMD admission. |
 
 ## Source Register
 
-- T-P2 V2 shared mechanical contract:
-  `restart/audit/totality/p2/T-P2-V2-FOLD-ADDENDUM.md`.
-- Langdale, Geoff and Daniel Lemire. "Parsing Gigabytes of JSON per Second." VLDB Journal 28(6), 2019. https://arxiv.org/abs/1902.08318
-- simdjson verified upstream HEAD `168ef580757d75270475b379e83c2b39787a6765` on 2026-05-21 per V2 addendum:
-  `doc/parse_many.md:54-57` stage 1 / stage 2:
-  https://github.com/simdjson/simdjson/blob/168ef580757d75270475b379e83c2b39787a6765/doc/parse_many.md#L54-L57;
-  `doc/basics.md:343-350` On-Demand iterator:
-  https://github.com/simdjson/simdjson/blob/168ef580757d75270475b379e83c2b39787a6765/doc/basics.md#L343-L350;
-  `doc/ondemand_design.md:71-89` skip/use-specific parsing:
-  https://github.com/simdjson/simdjson/blob/168ef580757d75270475b379e83c2b39787a6765/doc/ondemand_design.md#L71-L89;
-  `include/simdjson/implementation.h:40-75` runtime implementation:
-  https://github.com/simdjson/simdjson/blob/168ef580757d75270475b379e83c2b39787a6765/include/simdjson/implementation.h#L40-L75
-- sonic-rs verified upstream HEAD `03545a9530346fe279b674dd496e037d94204bc5` on 2026-05-21 per V2 addendum:
-  `README.md:60-66` targeted SIMD:
-  https://github.com/cloudwego/sonic-rs/blob/03545a9530346fe279b674dd496e037d94204bc5/README.md#L60-L66;
-  `README.md:78-90` direct struct:
-  https://github.com/cloudwego/sonic-rs/blob/03545a9530346fe279b674dd496e037d94204bc5/README.md#L78-L90;
-  `docs/benchmark_aarch64.md:1-15` M1 Pro anchors:
-  https://github.com/cloudwego/sonic-rs/blob/03545a9530346fe279b674dd496e037d94204bc5/docs/benchmark_aarch64.md#L1-L15;
-  `docs/benchmark_aarch64.md:140-151` field lookup:
-  https://github.com/cloudwego/sonic-rs/blob/03545a9530346fe279b674dd496e037d94204bc5/docs/benchmark_aarch64.md#L140-L151
-- yyjson verified upstream HEAD `95f4c61bc1e24176f2aa4f430902705a995f1c97` on 2026-05-21 per V2 addendum:
-  `README.md:10-19` strict/no explicit SIMD:
-  https://github.com/ibireme/yyjson/blob/95f4c61bc1e24176f2aa4f430902705a995f1c97/README.md#L10-L19;
-  `README.md:73-78` ILP/branch predictor:
-  https://github.com/ibireme/yyjson/blob/95f4c61bc1e24176f2aa4f430902705a995f1c97/README.md#L73-L78;
-  `src/yyjson.h:736-744` strict default flags:
-  https://github.com/ibireme/yyjson/blob/95f4c61bc1e24176f2aa4f430902705a995f1c97/src/yyjson.h#L736-L744;
-  `src/yyjson.h:759-837` non-standard flags:
-  https://github.com/ibireme/yyjson/blob/95f4c61bc1e24176f2aa4f430902705a995f1c97/src/yyjson.h#L759-L837
-- asmjson crate README `README.md:7-12`, 64-byte AVX-512BW/SWAR classifier: https://docs.rs/crate/asmjson/0.2.5/source/README.md#7
-- asmjson crate README `README.md:100-113`, x86-only assembly/SAX-vs-DOM notes: https://docs.rs/crate/asmjson/0.2.5/source/README.md#100
-- asmjson crate README `README.md:209-222`, conformance caveats: https://docs.rs/crate/asmjson/0.2.5/source/README.md#209
-- FFmpeg verified upstream HEAD `085714182302333dd83dcb9c36cf828dc4eba929` on 2026-05-21 per V2 addendum:
-  `tests/checkasm/checkasm.h:214-240` reference/new call macros:
-  https://github.com/FFmpeg/FFmpeg/blob/085714182302333dd83dcb9c36cf828dc4eba929/tests/checkasm/checkasm.h#L214-L240;
-  `tests/checkasm/checkasm.h:396-430` benchmark macro:
-  https://github.com/FFmpeg/FFmpeg/blob/085714182302333dd83dcb9c36cf828dc4eba929/tests/checkasm/checkasm.h#L396-L430;
-  `tests/checkasm/checkasm.c:679-737` overhead/reporting:
-  https://github.com/FFmpeg/FFmpeg/blob/085714182302333dd83dcb9c36cf828dc4eba929/tests/checkasm/checkasm.c#L679-L737
-- dav1d verified upstream HEAD `1718ff9aded99f0a89f5c7940d6afb8948301e33` on 2026-05-21 per V2 addendum:
-  `tests/checkasm/checkasm.c:37-88` registry/CPU flags:
-  https://github.com/videolan/dav1d/blob/1718ff9aded99f0a89f5c7940d6afb8948301e33/tests/checkasm/checkasm.c#L37-L88;
-  `tests/checkasm/loopfilter.c:177-188` call-ref/call-new/check/bench:
-  https://github.com/videolan/dav1d/blob/1718ff9aded99f0a89f5c7940d6afb8948301e33/tests/checkasm/loopfilter.c#L177-L188;
-  `src/arm/cpu.c:87-95` Apple aarch64 feature detection:
-  https://github.com/videolan/dav1d/blob/1718ff9aded99f0a89f5c7940d6afb8948301e33/src/arm/cpu.c#L87-L95
-- `skinny/REDRESS.md` REDRESS 88/89, 96/97/98, 119, and 121-127.
-- `skinny/RESULTS.md` current row-plane comparator provenance.
-- `restart/audit/totality/p1/1A-substrate-evidence.md` scanner/sidecar fence.
-- `restart/audit/totality/p1/1E-locks-evidence.md` Lock 16 traceability gap.
-- `restart/skinny/tranches/sk-v13/research/p1/support/evidence-ledger-v3.md`
-  local S-P1 hot-leaf and microbench evidence.
-- `restart/skinny/tranches/sk-v13/research/p2/p2a-sota-teardown.md`
-  JSON comparator sidecar classification.
-- `restart/skinny/tranches/sk-v13/research/p2/hardening/HARDENING-S-P2-V4-CONVERGED.md`
-  full-SOTA addendum and CSS row-scope confirmation.
+- **T2A-SRC-SIMDJSON-PAPER**: Langdale, Geoff and Daniel Lemire. "Parsing Gigabytes of JSON per Second." VLDB Journal 28(6), 2019. `https://arxiv.org/abs/1902.08318` (also `https://doi.org/10.1007/s00778-019-00578-5`). Cited for two-stage architecture + structural-index + UTF-8 validation in-loop consumption.
+- **T2A-SRC-SIMDJSON-SRC**: simdjson upstream HEAD `168ef580757d75270475b379e83c2b39787a6765`, verified 2026-05-21:
+  - `doc/parse_many.md:54-57` stage 1 / stage 2: `https://github.com/simdjson/simdjson/blob/168ef580757d75270475b379e83c2b39787a6765/doc/parse_many.md#L54-L57`
+  - `doc/basics.md:343-350` On-Demand iterator: `https://github.com/simdjson/simdjson/blob/168ef580757d75270475b379e83c2b39787a6765/doc/basics.md#L343-L350`
+  - `doc/ondemand_design.md:71-89` On-Demand design principles (Streaming / Forward-Only / Natural Iteration / Use-Specific / Validate-What-You-Use): `https://github.com/simdjson/simdjson/blob/168ef580757d75270475b379e83c2b39787a6765/doc/ondemand_design.md#L71-L89` (re-executed at 2026-05-23 per LAC-1E-12; content matches)
+  - `include/simdjson/implementation.h:40-75` runtime dispatch: `https://github.com/simdjson/simdjson/blob/168ef580757d75270475b379e83c2b39787a6765/include/simdjson/implementation.h#L40-L75`
+- **T2A-SRC-SONIC**: sonic-rs upstream HEAD `03545a9530346fe279b674dd496e037d94204bc5`, verified 2026-05-21 + 2026-05-23:
+  - `README.md:60-90` SIMD-targeted-at-four-leaves + two-stage rejection + direct-struct: `https://github.com/cloudwego/sonic-rs/blob/03545a9530346fe279b674dd496e037d94204bc5/README.md#L60-L90` (re-executed 2026-05-23; quoted text matches: "we do not use the two-stage SIMD algorithms from `simd-json`. We primarily use SIMD in the following scenarios: 1. parsing/serialize long JSON strings 2. parsing the fraction of float number 3. Getting a specific elem or field from JSON 4. Skipping white spaces when parsing JSON")
+  - `docs/benchmark_aarch64.md:1-15` M1 Pro twitter anchor (corpus + platform): `https://github.com/cloudwego/sonic-rs/blob/03545a9530346fe279b674dd496e037d94204bc5/docs/benchmark_aarch64.md#L1-L15`
+  - `docs/benchmark_aarch64.md:140-151` lazy field lookup: `https://github.com/cloudwego/sonic-rs/blob/03545a9530346fe279b674dd496e037d94204bc5/docs/benchmark_aarch64.md#L140-L151`
+- **T2A-SRC-YYJSON**: yyjson upstream HEAD `95f4c61bc1e24176f2aa4f430902705a995f1c97`, verified 2026-05-21 + 2026-05-23:
+  - `README.md:10-19` ANSI C / no explicit SIMD / RFC 8259 strict: `https://github.com/ibireme/yyjson/blob/95f4c61bc1e24176f2aa4f430902705a995f1c97/README.md#L10-L19` (re-executed 2026-05-23; content matches)
+  - `README.md:72-78` ILP / branch predictor preference: `https://github.com/ibireme/yyjson/blob/95f4c61bc1e24176f2aa4f430902705a995f1c97/README.md#L72-L78`
+  - `src/yyjson.h:736-744` strict default flags: `https://github.com/ibireme/yyjson/blob/95f4c61bc1e24176f2aa4f430902705a995f1c97/src/yyjson.h#L736-L744` (re-executed 2026-05-23; quoted text matches "Default option (RFC 8259 compliant): ... Report error if string contains invalid UTF-8 character or BOM")
+  - Note: yyjson upstream HEAD has moved to `99cc435178f77e322c143110b4fa5401af3467db` as of 2026-05-23 `git ls-remote`; the pinned `95f4c61b` SHA remains valid and content-stable for cited line ranges.
+- **T2A-SRC-ASMJSON**: asmjson crate 0.2.5, `https://docs.rs/crate/asmjson/0.2.5/source/README.md` (HTML-rendered). Architecture pressure tier only per `skinny/RESULTS.md` historical/absent classification.
+- **T2A-SRC-FFMPEG-CHECKASM**: FFmpeg upstream HEAD `085714182302333dd83dcb9c36cf828dc4eba929`, verified 2026-05-21 + 2026-05-23 (LAC-1E-12 re-execution):
+  - `tests/checkasm/checkasm.h:214-240` `check_func` / `call_ref` / `call_new` macros: `https://github.com/FFmpeg/FFmpeg/blob/085714182302333dd83dcb9c36cf828dc4eba929/tests/checkasm/checkasm.h#L214-L240` (content matches: `call_ref = checkasm_call((func_type *)func_ref, __VA_ARGS__)` and `call_new = checkasm_call_checked(((func_type *)func_new), __VA_ARGS__)`)
+  - `tests/checkasm/checkasm.h:396-430` `bench_new` macro
+  - `tests/checkasm/checkasm.c:679-737` benchmark overhead correction + report
+  - Note: FFmpeg upstream HEAD has moved to `3baab604db9d6e2bad6931c822376e72eeffd5b9` as of 2026-05-23; the dispatch-pinned `085714182302...` SHA remains the binding provenance anchor.
+- **T2A-SRC-DAV1D-CHECKASM**: dav1d upstream HEAD `1718ff9aded99f0a89f5c7940d6afb8948301e33` (dispatch-pinned + still `HEAD` at 2026-05-23 `git ls-remote`):
+  - `tests/checkasm/loopfilter.c:177-188` `call_ref` + `call_new` + `checkasm_check_pixel` + `bench_new`: `https://code.videolan.org/videolan/dav1d/-/blob/1718ff9aded99f0a89f5c7940d6afb8948301e33/tests/checkasm/loopfilter.c#L177-L188` (re-executed 2026-05-23; content matches)
+  - `tests/checkasm/checkasm.c:37-88` registry + CPU flags
+- **T2A-SRC-DAV1D-CPU**: dav1d `src/arm/cpu.c:87-95` @ `1718ff9a...` Apple aarch64 feature detection via `sysctlbyname("hw.optional.arm.FEAT_DotProd")` / `FEAT_I8MM`: `https://code.videolan.org/videolan/dav1d/-/blob/1718ff9aded99f0a89f5c7940d6afb8948301e33/src/arm/cpu.c#L87-L95` (re-executed 2026-05-23; content matches)
+- **T2A-SRC-RESULTS**: `skinny/RESULTS.md` lines 3, 53-55 — current row-plane comparator provenance + historical/absent column classification.
+- **T2A-SRC-REDRESS**: `skinny/REDRESS.md` lines 2823-2940 (REDRESS 96/97/98 retained-class-column / streaming-cursor / class-lane-only union falsified on M5 Max); 3603-3632 (W2 escape mask parity-only); 3766-3820 (W4 delimiter find microbench-only halted).
+- **T2A-SRC-T-P1-1A**: `restart/audit/totality/p1/1A-substrate-evidence.md` 1A-DIV-008 two-cursor structural split at HEAD.
+- **T2A-SRC-T-P1-1E**: `restart/audit/totality/p1/1E-locks-evidence.md` Lock 16 partial-UNKNOWN traceability gap.
+- **T2A-SRC-S-P2-V3**: `restart/skinny/tranches/sk-v14/research/p2/hardening/HARDENING-S-P2-V3-CONSOLIDATED.md` — S-P2 V3 LOCKED candidate pool + strictness-plane comparator discipline.
+- **T2A-SRC-SK-V14-P2A**: `restart/skinny/tranches/sk-v14/research/p2/p2a-sota-teardown.md` — sibling-track SOTA comparator teardown (strictness-plane mapping per R1; per-comparator architecture-keyed-to-S-P1-envelope census).

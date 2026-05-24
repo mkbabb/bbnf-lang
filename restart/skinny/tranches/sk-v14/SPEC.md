@@ -419,6 +419,11 @@ Tasks:
 **PRUNE-1 (revert audit-falsified JSON admits):**
 
 6. Revert W14.1-.5 (5 parse_only) + the 4-6 direct + 7-11 typed audit-falsified admits in `skinny/RESULTS.md` + `skinny/ROLLING-SOTA-DELTA.md`. The wider 6+11 population per SYNTHESIS §0.2 numeric-divergence-reconciliation (NOT the narrower 4+7).
+6a. Enumerated 22-row revert manifest by REDRESS item id (per CH3 V1 §2.REVISE-3 prescription; discharges P3-E §3 per-wave audit-trail by-number requirement):
+   - **parse_only (5 items)**: REDRESS 154, 155, 156, 157, 158.
+   - **direct (6 items)**: REDRESS 131, 132, 133, 134, 135 + 141. Items 131-135 are the 5 SK-V13-W14 admit rows; item 141 is the broader-ledger direct admit row.
+   - **typed (11 items)**: REDRESS 143 + 145, 146, 147, 148, 149, 150, 151, 152, 153 + 160. Items 145-153 are 9 SK-V13-W14 typed admit rows; items 143 + 160 are 2 broader-ledger typed admit rows.
+   Total = 5 + 6 + 11 = 22 rows; matches the 22 REDRESS entries committed at exit gate.
 7. REDRESS per row cites the validation-pack §reference (`v2 §1-4` for parse_only; `v6 §1 + §3` for direct/typed misbindings).
 8. Set `audit_overlay_verdict=AUDIT-FALSIFIED` for all 22 reverted rows.
 
@@ -705,6 +710,8 @@ Entry gate:
 
 ### W6 sub-wave order (per substrate-before-consumer + guard-rows-before-risk-rows discipline):
 
+> **Cap footnote (per §2 manifest restated for dispatch-time clarity):** Each W6.N sub-wave carries the ≤90-min implementation/redress cap; the W6 aggregate cumulative cap across W6.1..W6.9 is ≤810 min per `SPEC.md:243`. Any sub-wave or aggregate overflow returns REVISE per `[generated-size-budget]`.
+
 | Sub-wave | Grammar | File count | Risk | Notes |
 |---|---|---:|---|---|
 | W6.1 | `math` | 7 | LOW | smallest non-trivial grammar; first proves the trait-dispatch + generic generator collapse contract works |
@@ -796,7 +803,7 @@ Entry gate:
 Tasks:
 
 1. Wire `per_grammar_policy` (W8 SCAFFOLD per ORCHESTRATOR-PROMPT.md:124) into compile + lower + runtime paths beyond the current 3 gate-layer-only consumers.
-2. Wire `same_substrate_union` (W9 SCAFFOLD per ORCHESTRATOR-PROMPT.md:124-126) into compile + lower + runtime paths.
+2. Wire `same_substrate_union` (W9 SCAFFOLD per ORCHESTRATOR-PROMPT.md:124-126) into compile + lower + runtime paths. The W7 `same_substrate_union` module is an ENFORCEMENT-LAYER pass that proves substrate-union compliance (every shape consumer reuses the existing `Tape` substrate — zero new retained surface); it is NOT the SK-V9 W3 retired retained-class-column-union data structure (PERMANENT-PRE-BLOCK per REDRESS 96/97/98). The naming proximity is incidental; the W7 module is a gate-pass over the W8/W9 emissions, not a runtime substrate.
 3. Make the CSP solver's selected shape produce measurable runtime divergence on the named pre-wave row; the resolver fails closed on stale cost > 30% / candidate expressions / order-dependent rewrites > 10% variance per `LOCKS.md:184-188` + ORCHESTRATOR-PROMPT.md:124-126.
 4. Hardcoded P1-P8 cascade must fail closed for JSON / CSS / Sheets / BBNF-self after the resolver lands; silent fallback to the old cascade is not admission evidence (per SYNTHESIS §4).
 5. The shape consumer in `skinny/crates/codegen/src/lib.rs` MUST dispatch on the CSP-emitted `BackendShape` enum alone — no `match grammar { Json => ..., CssL4 => ... }` arm may appear in the dispatch path per SYNTHESIS §4.
@@ -814,12 +821,12 @@ Same-wave consumer: the runtime divergence on the named pre-wave row
 is the consumer; the samply trace + REDRESS hot-leaf attribution
 shift is the gate evidence.
 
-Pre-blocked routes: silent fallback to the old P1-P8 cascade (P-5
-SCAFFOLD-as-load-bearing recurrence); grammar-name branches in
-the shape dispatcher (P-6 recurrence); telemetry-only row counts as
-W7 admit evidence; one-grammar runtime divergence as admit evidence
-(SYNTHESIS §4 binding — two-grammar minimum); REDRESS 96-98
-(UnionTape-style retained structures per Lock 1 v+1).
+Pre-blocked routes:
+- Silent fallback to the old P1-P8 cascade (P-5 SCAFFOLD-as-load-bearing recurrence).
+- Grammar-name branches in the shape dispatcher (P-6 recurrence).
+- Telemetry-only row counts as W7 admit evidence.
+- One-grammar runtime divergence as admit evidence (SYNTHESIS §4 binding — two-grammar minimum).
+- **REDRESS 96-98 PERMANENT-PRE-BLOCK** — full class-column vectors, streaming structural cursors, class-lane-only replays, parser-owned sidecars, UnionTape-style retained structures per Lock 1 v+1 substrate-ceiling history. The W7 `same_substrate_union` ENFORCEMENT module is NOT a re-opening of REDRESS 96/97/98; the SK-V9 W3 retired retained-class-column-union DATA STRUCTURE remains permanently blocked. Naming proximity to the W7 enforcement-pass module name is incidental.
 
 Revert protocol: revert PRUNE-5 wire-up changes + restore the
 SCAFFOLD-only state of W8 + W9; add REDRESS naming the failing CSP-
@@ -853,7 +860,7 @@ Entry gate:
 
 - W2 + W3 + W4 + W5 + W6 + W7 admitted (the full PRUNE chain + CSS L4 infrastructure).
 - W8 plan names exact CSS L4 feature rows + lightningcss strict-mode comparator + cssparser oracle + production-corpus parse path + Track 1 generated path + Track 2 oracle path + rollback boundaries.
-- W8 plan does NOT include Stage-0 F-V2-P1ABC-RERECORD UNLESS it admits one of the 12 consumer-dependency primitives (per S-P2 V3 §6.3).
+- W8 plan does NOT carry Stage-0 F-V2-P1ABC-RERECORD: Stage-0 binds UNCONDITIONALLY to W10 (per p3a:180 — first wave admitting any of {P3-A C1 long-string-body SIMD scan, C3 digit_block_simd_accumulate, C7 …} — resolves to W10 parse_only distinct path per R8). W8 admits CSS L4 grammar-derived rows; CSS L4 does NOT admit C1/C3/C7, therefore W8 inherits no Stage-0 obligation. Stage-0 inheritance chain (5-step): (1) Stage-0 trigger = first wave admitting C1/C3/C7 per S-P2 V3 §6.3 verbatim; (2) C1 = long-string-body SIMD scan primitive (queued for S-P3 same-wave admission per S-P2 V3 §6.2); (3) W10 is first wave consuming C1 via the parse_only distinct path per R8 (the parse_only-distinct-path admission is the first dispatch-envelope behavioral edit); (4) therefore W10 carries Stage-0 unconditionally; (5) W8 + W9 do NOT admit C1/C3/C7 → no Stage-0 obligation there.
 
 Tasks:
 
@@ -861,7 +868,7 @@ Tasks:
 2. Work-equivalent comparator: lightningcss full-parse + cssparser full-parse — no fact-stream vs full-AST asymmetry per ORCHESTRATOR-PROMPT.md:139-140.
 3. Per row: capture per-iter equality oracle (W1's R2 binding), populate audit-overlay-verdict transition AUDIT-FALSIFIED → AUDIT-SUSTAINED upon ADMIT.
 4. Honor the round-trip-rule trigger per SYNTHESIS §0.4 P-1: any second-in-tranche reopen of `nested_layout` requires user re-pin with intrinsic-block evidence; any CSS feature whose claimed Mbps exceeds the same-plane SOTA comparator by ≥50× inherits the same trigger.
-5. If admitting any of the 12 F-V2-P1ABC-RERECORD consumer-dependency primitives, ship the rerun as Stage 0 of the same wave per S-P2 V3 §6.3.
+5. NO F-V2-P1ABC-RERECORD Stage-0 work in W8: Stage-0 binds unconditionally to W10 per §11 entry-gate inheritance chain; CSS L4 admits do not exercise C1/C3/C7 and therefore inherit no Stage-0 obligation.
 
 Exit gate:
 
@@ -870,7 +877,7 @@ Exit gate:
 - `audit_overlay_verdict` column shifts to AUDIT-SUSTAINED for every ADMIT row.
 - Lock 14 + non-JSON proof pass; no grammar-name branches reintroduced.
 - Full-table maintain: ±1.0% on non-target rows; JSON cells stable; no GO row regression.
-- If wave admits any consumer-dependency primitive, F-V2-P1ABC-RERECORD Stage-0 shipped per S-P2 V3 §6.3.
+- F-V2-P1ABC-RERECORD Stage-0 is NOT a W8 obligation (binds unconditionally to W10 per §11 entry-gate inheritance chain); CSS L4 admits do not exercise C1/C3/C7.
 
 Same-wave consumer: every admitted CSS L4 row has a generated Track 1
 grammar-derived consumer + an independent lightningcss/cssparser oracle
@@ -913,7 +920,7 @@ Entry gate:
 
 - W1 admitted (R1 + R2 strict-comparator binding + per-iter equality oracle).
 - W9 plan selects 1-N JSON direct + typed rows for re-admit; names per-row plane-correct comparator instance + per-row Mbps threshold + Track 1 + Track 2 paths.
-- W9 plan does NOT include Stage-0 F-V2-P1ABC-RERECORD UNLESS it admits one of the 12 consumer-dependency primitives.
+- W9 plan does NOT carry Stage-0 F-V2-P1ABC-RERECORD: Stage-0 binds UNCONDITIONALLY to W10 (per p3a:180 — first wave admitting any of {C1, C3, C7}). W9 admits JSON direct + typed rows under the rebound R1 comparators; the JSON direct + typed planes do NOT admit C1/C3/C7 (C1 = long-string-body SIMD scan; the direct + typed planes consume full-tape parse, not the dispatch-envelope parse_only scan). Stage-0 inheritance chain (5-step): (1) Stage-0 trigger = first wave admitting C1/C3/C7 per S-P2 V3 §6.3 verbatim; (2) C1 = long-string-body SIMD scan primitive (queued for S-P3 same-wave admission); (3) W10 is first wave consuming C1 via parse_only distinct path per R8; (4) therefore W10 carries Stage-0 unconditionally; (5) W8 + W9 do NOT admit C1/C3/C7 → no Stage-0 obligation there.
 
 Tasks:
 
@@ -921,7 +928,7 @@ Tasks:
 2. Cells previously HOLDING under the misbound comparator either hold again under the right comparator (re-ADMIT) or are reverted (REDRESS + AUDIT-FALSIFIED carried).
 3. Per row: `comparator_plane=direct` or `comparator_plane=typed`; `per_iter_equality=PASS`; `audit_overlay_verdict` transition AUDIT-FALSIFIED → AUDIT-SUSTAINED upon ADMIT.
 4. Honor pre-block REDRESS 49-55, 60-72, 80, 82-84, 88, 89: no re-opening these without fresh material differential evidence.
-5. If admitting any of the 12 F-V2-P1ABC-RERECORD consumer-dependency primitives, ship the rerun as Stage 0 per S-P2 V3 §6.3.
+5. NO F-V2-P1ABC-RERECORD Stage-0 work in W9: Stage-0 binds unconditionally to W10 per §12 entry-gate inheritance chain; JSON direct + typed planes do not exercise C1/C3/C7 (those consume full-tape parse, not the dispatch-envelope parse_only scan).
 
 Exit gate:
 
@@ -930,7 +937,7 @@ Exit gate:
 - Track 2 does not call generated SinkOnly, generated typed helpers, generated Track 1, or a shared benchmark-private parser; `track2_entry_point` column verifies symbol-path divergence.
 - All non-target rows are no worse than -2.0% Track 1 + Track 2 vs `SK-V14-open`.
 - Lock 14 + non-JSON proof pass if generic code changed.
-- If wave admits any consumer-dependency primitive, F-V2-P1ABC-RERECORD Stage-0 shipped.
+- F-V2-P1ABC-RERECORD Stage-0 is NOT a W9 obligation (binds unconditionally to W10 per §12 entry-gate inheritance chain); JSON direct + typed planes do not exercise C1/C3/C7.
 
 Same-wave consumer: selected JSON direct + typed rows consume generated
 Track 1 direct or typed work + independent Track 2 proof in the same
@@ -972,7 +979,7 @@ Entry gate:
 
 - W1 + W9 admitted (R1 sonic_rs::Skipper comparator wired; W9's re-admit path exercises the comparator infrastructure).
 - W10 plan names: exact distinct parse_only path location in `generated_json`; the parse_only row threshold per corpus; Track 1 / Track 2 paths.
-- W10 plan does NOT include Stage-0 F-V2-P1ABC-RERECORD UNLESS it admits one of the 12 consumer-dependency primitives.
+- W10 plan MUST include Stage-0 F-V2-P1ABC-RERECORD UNCONDITIONALLY per S-P2 V3 §6.3 verbatim: W10 is the bound wave for Stage-0 (per p3a:180 — first wave admitting any of {C1 long-string-body SIMD scan, C3 digit_block_simd_accumulate, C7 …} resolves to W10 because the parse_only distinct path per R8 is the first dispatch-envelope behavioral edit that admits C1). Stage-0 = cargo build + interactive samply record + cfg_attr flip at `generated.rs:33-237` 8 sites (per `SPEC.md:221` non-negotiable). Stage-0 inheritance chain (5-step): (1) Stage-0 trigger = first wave admitting C1/C3/C7 per S-P2 V3 §6.3 verbatim; (2) C1 = long-string-body SIMD scan primitive (queued for S-P3 same-wave admission per S-P2 V3 §6.2); (3) W10 is first wave consuming C1 via parse_only distinct path per R8 (W8 + W9 do not admit C1/C3/C7); (4) therefore W10 carries Stage-0 unconditionally; (5) consumers (must-bind per `SPEC.md:221`): P2-A C6 + P2-C C-P2C-3 + C-P2C-8 + P2-E Gap 1/3/4/5 + P2-F C6/C7/C10/C12/C13.
 
 Tasks:
 
@@ -980,7 +987,7 @@ Tasks:
 2. Emit the parse_only path via the W5 grammar-agnostic generator template + workspace metadata `parse_only=true` shape (per `[no-orthogonal-codepaths]` — one collection strategy).
 3. Wire to `sonic_rs::Skipper`-class strict comparator (R1 binding).
 4. Re-attempt parse_only ADMIT per corpus: Track 1 > Skipper strict + 1 + same-plane / same-corpus / same-equality.
-5. If admitting any of the 12 F-V2-P1ABC-RERECORD consumer-dependency primitives, ship the rerun as Stage 0 per S-P2 V3 §6.3.
+5. Ship F-V2-P1ABC-RERECORD Stage-0 UNCONDITIONALLY per S-P2 V3 §6.3 (W10 is the bound wave per §13 entry-gate inheritance chain): cargo build + interactive samply record + cfg_attr flip at `generated.rs:33-237` 8 sites, in this wave's commit slice, BEFORE any parse_only admit lands. Consumer manifest verified: P2-A C6 + P2-C C-P2C-3 + C-P2C-8 + P2-E Gap 1/3/4/5 + P2-F C6/C7/C10/C12/C13.
 
 Exit gate:
 
@@ -990,7 +997,7 @@ Exit gate:
 - `audit_overlay_verdict` transition AUDIT-FALSIFIED → AUDIT-SUSTAINED upon ADMIT.
 - Track 1 / Track 2 structural independence proven; `track2_entry_point` populated.
 - Full-table maintain: ±1.0% on non-target rows.
-- If wave admits any consumer-dependency primitive, F-V2-P1ABC-RERECORD Stage-0 shipped.
+- F-V2-P1ABC-RERECORD Stage-0 SHIPPED UNCONDITIONALLY per S-P2 V3 §6.3 (W10 is the bound wave per the §13 entry-gate inheritance chain): cargo build + interactive samply record + cfg_attr flip at `generated.rs:33-237` 8 sites landed in this wave's commit slice; consumer manifest (P2-A C6 + P2-C C-P2C-3 + C-P2C-8 + P2-E Gap 1/3/4/5 + P2-F C6/C7/C10/C12/C13) verified.
 
 Same-wave consumer: the distinct parse_only path + the
 `sonic_rs::Skipper` comparator both consume the same generated_json
@@ -1100,6 +1107,7 @@ DELETEs rather than patches.
 - REDRESS 82-84: single-quartet Unicode classifier, StringBlock16 tiny probe, object-pair value-byte control compaction.
 - REDRESS 88-90: PMULL prefix-XOR default hot body, CTZ/bulk production consumer, B6 canary hardening as performance evidence.
 - REDRESS 96-98: full class-column vectors, streaming structural cursors, class-lane-only replays, parser-owned sidecars, UnionTape-style retained structures per Lock 1 v+1 substrate-ceiling history.
+- **REDRESS 102/103/106/108 PERMANENT-PRE-BLOCK (SK-V10 measured-rejected items)**: REDRESS 102 (parse_only fact-stream-as-admit) PERMANENT-PRE-BLOCK per P3-E §2.1; binding wave W10 (R8) — any parse_only re-admit through a fact-stream surface requires fresh material differential evidence. REDRESS 103/106/108 PERMANENT-PRE-BLOCK per P3-E §2.1; binding wave W9 (R7) for direct/typed re-admit — these are measured-rejected (NOT AUDIT-FALSIFIED), and the audit-overlay pre-block at §15 ("Audit-overlay pre-block") does NOT bind them; their PERMANENT status follows from measured-rejection history per SK-V10 close, not from audit-overlay.
 - REDRESS 119/120: LIFTED per addendum; HISTORY only — closing a JSON row through 119/120 history requires fresh SK-V14 evidence per SYNTHESIS §5.
 - REDRESS 126: per V3 §1.4 CH3 NF-CH6-3 C2 scalar-ref evidence upgrade carry-through; primitive consumption requires post-W7 runtime divergence.
 - Alpha-E bitmap density-gated route remains reserve research only; it is not in W0-W11 unless a future plan challenges it.
@@ -1110,6 +1118,48 @@ DELETEs rather than patches.
 - **Three orthogonal SIMD bodies for one primitive** per S-P2 V3 §6.2 / P2-F §2.Y. The three convergent identifiers `long_string_body_simd_scan` / `scan_string_special_block_sweep_64` / quote-aware classifier composition admit under ONE canonical primitive name + ONE canonical scalar-ref function at admission time.
 - **Past-perfect verb-tense claims on NOT-PRESENT path:line** per S-P2 V3 §3.2 CH6-E. Stage-A authoring targets `byte_context_64.rs` + `bcax_64.rs` must surface in present-future tense ("queued for", "lands same-commit at S-P3", "to be authored under Lock 16 same-commit") until the function body lands.
 - **Missing 3-gate CH4 cell on admission manifest** per S-P2 V3 §6.1 CF-3. Every shortlisted candidate's admission manifest carries the scalar-ref status / checkasm-parity expectation / same-wave-consumer NAMED cell.
+
+### AUDIT-FALSIFIED admit-row revert ledger (22 JSON items + 24 CSS L4 items = 46 by-number; dispatch headcount references the 22 JSON revert manifest):
+
+The SK-V13-cycle admit rows falsified by the audit-overlay pack are
+enumerated below by REDRESS item id with their binding R-target
+NAMED framing-change requirement (per CH3 V1 §2.REVISE-1 prescription;
+discharges P3-E §3 per-wave-falsifiability-gate `git grep -n
+"REDRESS-{N}"` requirement). The dispatch-referenced 22-item JSON
+revert manifest (131-135 + 141 + 143 + 145-153 + 154-158 + 160 = 22)
+binds the W1 PRUNE-1 revert; the 24 CSS L4 revert binds W4 PRUNE-2.
+
+- **JSON parse_only (5 items; W1 PRUNE-1 reverts; W10 R8 re-admit framing)**:
+  REDRESS 154, 155, 156, 157, 158 — single-lane `sonic_rs_anchor`
+  mislabelled as strict parse_only anchor; W1 (R1) deletes the
+  anchor; W10 (R8) re-admit requires `sonic_rs::Skipper` plane-correct
+  strict anchor + distinct parse_only path + Track 1/2 independence.
+- **JSON direct (6 items per SYNTHESIS §0.2 wider 6+11 count; W1 PRUNE-1 reverts; W9 R7 re-admit framing)**:
+  REDRESS 131, 132, 133, 134, 135 + 141 — `sonic_rs::from_slice::<Value>`
+  mislabelled as strict direct anchor (P-2 recurrence); W1 (R1)
+  rebinds direct → `sonic_rs::from_slice::<TargetStruct>()` per
+  corpus with strict mode; W9 (R7) re-admit requires per-corpus
+  strict struct deser + per-iter equality oracle.
+- **JSON typed (11 items per SYNTHESIS §0.2 wider 6+11 count; W1 PRUNE-1 reverts; W9 R7 re-admit framing)**:
+  REDRESS 143 + 145, 146, 147, 148, 149, 150, 151, 152, 153 + 160 —
+  comparator mislabelled as strict typed anchor; W1 (R1) rebinds
+  typed → per-corpus typed struct deser via existing
+  `real_typed_struct.rs:695-727` bindings promoted from parity-
+  assertion to anchor-row; W9 (R7) re-admit requires per-corpus
+  typed struct deser + per-iter equality oracle.
+- **CSS L4 features (binding to W8 R6 re-admit framing per SPEC §11)**:
+  the 24 CSS L4 audit-falsified admit rows revert at W4 PRUNE-2; the
+  validation-pack §reference `v1 §1-6` (fake `@generated` header on
+  hand-written templates; no regen-css xtask; CSS scanners as
+  fixture lookups) cites per row. W8 R6 re-admit requires grammar-
+  derived pipeline (W2 R4) + production corpora (W3 R5) + lightningcss
+  full-parse + cssparser full-parse comparator + per-iter equality
+  oracle.
+
+The 22 JSON revert rows (5 parse_only + 6 direct + 11 typed) +
+24 CSS L4 revert rows are gate-enforced by the audit-overlay column
+below; each row carries `audit_overlay_verdict=AUDIT-FALSIFIED` post-
+W1 / post-W4 with the validation-pack §reference cited.
 
 ### Audit-overlay pre-block:
 

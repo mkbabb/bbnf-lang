@@ -139,6 +139,28 @@ the lowerer in the SK-V14 horizon with concrete kernel + scalar oracle +
 checkasm cell + same-wave consumer per LAC-2D-04, or (b) amend Lock 10
 to retire the shape from the V1 candidate set.
 
+**Cohort-wide precondition (CH4 fold F-V3-CH4-A):** every bench /
+admission row populating this ledger (and the per-shape consumer rows
+named in the table below) executes under `BBNF_SIMD_STRICT=1` per
+`LOCKS.md:320-322` (cohort-wide flag binding propagated from 2A
+T2A-LAC-V1-03 at `2A-sota-landscape.md:192` and 2C closure-criteria
+header at `2C-grammar-neutrality.md:305`); rows recorded without this
+flag are NOT-VALIDATED and fail the same-wave consumer admission gate
+regardless of microbench parity.
+
+**Abrogate-gate numeric bind (CH4 fold F-V3-CH4-B, from 2A T2A-LAC-V1-05
+at `2A-sota-landscape.md:194`):** every candidate admitted via this
+ledger fails closed when (a) e-graph saturation exceeds `≤50000 nodes`
+/ `≤10000 classes` / `≤30 iter` (the bounded-scheduler caps already
+referenced by UNKNOWN-2D-03 at `:229`), (b) CSP timeout exceeds `≤1 s
+per grammar`, (c) stale-cost evidence exceeds `≤30 %`, (d) generated
+LOC growth exceeds the candidate's ledger `loc_budget` upper bound per
+`T-P2-V3-FOLD-ADDENDUM.md:113` (no row may exceed its declared budget
+without traced O(N) regression — stricter SPEC wave budget wins when
+later named), (e) any row regression, or (f) any parity/checkasm/
+equality failure. All six gates are numerically bound at this ledger;
+LAC-2D-06 below carries the schema into Lock 10 v+1.
+
 | BackendShape | abstract primitive | published citation | hardware gate | scalar oracle (HEAD) | checkasm cell (HEAD) | corpus parity (HEAD) | same-wave consumer (HEAD) | row admission / disposition |
 |---|---|---|---|---|---|---|---|---|
 | `SinkOnly` | Mison projection-aware parser (consumer-known direct sink) | Mison VLDB 2017 (SRC-07) | none (algorithmic) | `crates/codegen/src/lower/sink_only.rs:1-100` (substantive logic per CH7 V1 §2.5) | n/a (algorithmic shape, not SIMD primitive) | CSS L4 declaration-values strict comparator vs lightningcss / cssparser | `runtime/src/grammars/css_l4_declaration_values/` (per 2C V3 ledger `:291`) | **ADMITTED** — the lone present-shape candidate. CSS L4 declaration-values is the ADMITTED-EVIDENCE row. |

@@ -302,6 +302,8 @@ only with a same-wave row consumer and gate-consumed telemetry.
 
 ## Closure Criteria For Live Grammar Leaks
 
+**Cohort-wide precondition (CH4 fold F-V3-CH4-A):** every bench/admission row binding a 2C-grounded primitive (C3 byte-class checkasm, C4 fixed-4-nibble decode, escape_mask, byte-window MAC) executes under `BBNF_SIMD_STRICT=1`, which fails fast on any silent scalar fallback and binds same-wave consumer measurement to the SIMD path actually claimed; rows recorded without this flag are NOT-VALIDATED for grammar-neutral generality.
+
 | surface | closure criterion | not closure |
 |---|---|---|
 | `RuntimeProvider` (8-variant HEAD enum) | provider roster generated from workspace metadata or grammar manifests, with JSON/CSS/Sheets or BBNF-self onboarding without generic-code edits | adding enum variants or grammar-name branches in `codegen` (V3-V4 drift expanded the enum from 2 to 8 variants without converting to generation) |

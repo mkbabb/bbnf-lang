@@ -4,7 +4,7 @@ pass: T-P2-research
 cycle: V6
 generated_at: 2026-05-23T00:00:00Z
 t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F-coherence-scan, 1F-anti-pattern, 1F-past-corpora]
-primary_sources_cited: 24
+primary_sources_cited: 26
 counted_source_ids: [SRC-COX-REGEX, SRC-RE2, SRC-RUST-REGEX, SRC-MEMCHR, SRC-FASTFLOAT, SRC-FNF, SRC-CLINGER, SRC-SIMDJSON-PAPER, SRC-SIMDJSON-SRC, SRC-SIMDUTF, SRC-HOEHRMANN, SRC-MULA-LEMIRE, SRC-XXHASH, SRC-RFC3629, SRC-RFC8259, SRC-PARSE-THAT-REGEX, SRC-PARSE-THAT-DOCS, SRC-BBNF-REGEX, SRC-BBNF-SIMD, SRC-BBNF-CODEGEN, SRC-BBNF-RUNTIME, SRC-BBNF-DIGEST, SRC-REDRESS, SRC-S-P2-V3-CONSOL, SRC-S-P3-A-V1, SRC-T-P1]
 techniques_grounded: 14
 techniques_refuted: 6
@@ -468,19 +468,48 @@ emitted as an admitted output row.
 ## V5 Admission Ledger (per gap; per V4 + V3 fold addendum format)
 
 Every V5 candidate that reaches S-P3 carries the shared V2/V3/V4 ledger columns
-plus the V5 cross-binding to the S-P3 P3-A V1 LOCKED shortlist row.
+plus the V5 cross-binding to the S-P3 P3-A V1 LOCKED shortlist row. **V6 schema
+extension (F-CH5-V2-02):** the `crate_target` column is now load-bearing per
+LAC-2F-V5-02 elevation — see the Lock 1 manifest sub-section immediately
+following this table.
 
-| candidate_id | s-p3-row | scalar_ref | checkasm | same-wave consumer | substrate_target / lifetime / owner | F-V2-RERECORD dep | state |
-|---|---|---|---|---|---|---|---|
-| `bbnf_regex_hir_engine` | (none — not in P3-A V1 8/8 shortlist) | (Hoehrmann-style scalar at `regex-engine.md:28-44`) | (Wired only on absorption: equivalence to `regex-automata::meta::Regex::find` over byte stream) | (Q1 above; deferred until W11) | `local_temp_only` (compile-time facts) / `generated_function` / `generated_grammar` | NO | source_backed; blocker = absorption decision |
-| `regex_lazy_dfa_fallback` | (none) | (regex-automata::Regex compile-time scalar ref) | (state-limit-exceeding patterns; Cox 2007 algorithm) | (Q1 above) | `local_temp_only` (build-script only) / N/A / N/A | NO | source_backed; blocker = absorption decision |
-| `scan_string_special_block_sweep_64` | C1 (`p3a:61-73`) | `bbnf-simd/src/aarch64/string_block.rs:31 scan_string_special_block_scalar` (PRESENT) | EXTENSION at `bbnf-simd/tests/checkasm_scan_string_special_block_sweep_64.rs` | `parse-that-regex/src/lib.rs:547` + `runtime/src/grammars/json/generated.rs:466` | `local_temp_only` / `local_loop` / `generated_grammar` | **YES** (Gap 1 in 12-dep list per §6.3) | scalar_backed |
-| `scan_string_with_carry_64` | (S-P2 V3 Gap 6; absorbed into C1 canonical-name per §6.2) | `bbnf-simd/src/scalar/bitmap_prefix_xor_64.rs:1` + scalar `escape_mask_64` body (PRESENT) | EXTENSION sibling-shape | `runtime/src/grammars/json/scan.rs resolve_string_masks_64` | `local_temp_only` / `local_loop` / `generated_grammar` | YES | scalar_backed |
-| `utf8_validate_block_streaming` | (S-P2 V3 Gap 4; not in P3-A V1 8/8) | `parse-that-regex/src/unicode/utf8_hoehrmann.rs:1-87 validate_block` (PRESENT) | EXTENSION at `bbnf-simd/tests/` for streaming continuation-state carry | `parse-that-regex/src/lib.rs:489-505` | `local_temp_only` / `local_loop` / `generated_grammar` | YES (Gap 4 in 12-dep list per §6.3) | scalar_backed |
-| `byte_class_from_range_64` | C3 (sibling per `p3a:93` non-JSON exercise row) | `bbnf-simd/src/scalar/byte_class_from_range_64.rs` (sibling-shape template PRESENT at HEAD via `byte_class_from_eq_set_64.rs:1` per §2.10 of P2-E V3) | EXTENSION sibling at `bbnf-simd/tests/checkasm_byte_class_from_range_64.rs` | S-P3 P3-A C3 cell (c) — `parse-that-regex/src/number/scan_digit_run_simd.rs` (new) | `local_temp_only` / `local_loop` / `generated_grammar` | YES (paired with Gap 5) | scalar_backed |
-| `unescape_uxxxx_x8_neon` | C4 (`p3a:100-111`) | `bbnf-simd/src/aarch64/unescape_uxxxx.rs:40 unescape_uxxxx_scalar` (PRESENT) | EXTENSION at `bbnf-simd/tests/checkasm_unescape_uxxxx_x8.rs` | `parse-that-regex/src/lib.rs:718` `unescape_string` + `lib.rs:386` driver + BBNF-self literal-unescape per S-P3 V1 line 106 | `local_temp_only` / `output_row` / `generated_grammar` | NO (cleanly attributed in P1-E §2.1-§2.2) | scalar_backed |
-| `utf8_codepoint_scan_64` | (S-P2 V3 Gap 8; not in P3-A V1 8/8) | `parse-that-regex/src/unicode/utf8_hoehrmann.rs:1-87` (PRESENT) | EXTENSION at `bbnf-simd/tests/checkasm_utf8_width_scan_64.rs` | `parse-that-regex/src/unicode/utf8_block.rs:1-36` (file exists empty) | `local_temp_only` / `local_loop` / `generated_grammar` | NO | source_backed |
-| `parse_16_digits_dotprod` | C3 (`p3a:87-99`) | `parse-that-regex/src/number/mod.rs:214 parse_eight_digits` × 2 + `* 10_000_000_000` between (PRESENT) | EXTENSION at `bbnf-simd/tests/checkasm_digit_mac_x16.rs` | `parse-that-regex/src/number/mod.rs:106` ladder → 16-byte UDOT first-pass; `parse_array_element_at_direct` direct-plane consumer | `direct_sink` (mantissa emit) + `local_temp_only` (per-chunk accumulator) / `local_loop` / `generated_grammar` | **YES** (P2-C C-P2C-3 + P2-E Gap 5 both in 12-dep list per §6.3) | scalar_backed |
+| candidate_id | s-p3-row | scalar_ref | checkasm | same-wave consumer | crate_target | substrate_target / lifetime / owner | F-V2-RERECORD dep | state |
+|---|---|---|---|---|---|---|---|---|
+| `bbnf_regex_hir_engine` | (none — not in P3-A V1 8/8 shortlist) | (Hoehrmann-style scalar at `regex-engine.md:28-44`) | (Wired only on absorption: equivalence to `regex-automata::meta::Regex::find` over byte stream) | (Q1 above; deferred until W11) | `bbnf-regex` (upstream) | `local_temp_only` (compile-time facts) / `generated_function` / `generated_grammar` | NO | source_backed; blocker = absorption decision |
+| `regex_lazy_dfa_fallback` | (none) | (regex-automata::Regex compile-time scalar ref) | (state-limit-exceeding patterns; Cox 2007 algorithm) | (Q1 above) | `bbnf-regex` (build-script vendor; never runtime) | `local_temp_only` (build-script only) / N/A / N/A | NO | source_backed; blocker = absorption decision |
+| `scan_string_special_block_sweep_64` | C1 (`p3a:61-73`) | `bbnf-simd/src/aarch64/string_block.rs:31 scan_string_special_block_scalar` (PRESENT) | EXTENSION at `bbnf-simd/tests/checkasm_scan_string_special_block_sweep_64.rs` | `parse-that-regex/src/lib.rs:547` + `runtime/src/grammars/json/generated.rs:466` | `bbnf-simd` (kernel) + `parse-that-regex` (consumer) | `local_temp_only` / `local_loop` / `generated_grammar` | **YES** (Gap 1 in 12-dep list per §6.3) | scalar_backed |
+| `scan_string_with_carry_64` | (S-P2 V3 Gap 6; absorbed into C1 canonical-name per §6.2) | `bbnf-simd/src/scalar/bitmap_prefix_xor_64.rs:1` + scalar `escape_mask_64` body (PRESENT) | EXTENSION sibling-shape | `runtime/src/grammars/json/scan.rs resolve_string_masks_64` | `bbnf-simd` (kernel) + `runtime` (consumer) | `local_temp_only` / `local_loop` / `generated_grammar` | YES | scalar_backed |
+| `utf8_validate_block_streaming` | (S-P2 V3 Gap 4; not in P3-A V1 8/8) | `parse-that-regex/src/unicode/utf8_hoehrmann.rs:1-87 validate_block` (PRESENT) | EXTENSION at `bbnf-simd/tests/` for streaming continuation-state carry | `parse-that-regex/src/lib.rs:489-505` | `bbnf-simd` (kernel) + `parse-that-regex` (consumer) | `local_temp_only` / `local_loop` / `generated_grammar` | YES (Gap 4 in 12-dep list per §6.3) | scalar_backed |
+| `byte_class_from_range_64` | C3 (sibling per `p3a:93` non-JSON exercise row) | `bbnf-simd/src/scalar/byte_class_from_range_64.rs` (sibling-shape template PRESENT at HEAD via `byte_class_from_eq_set_64.rs:1` per §2.10 of P2-E V3) | EXTENSION sibling at `bbnf-simd/tests/checkasm_byte_class_from_range_64.rs` | S-P3 P3-A C3 cell (c) — `parse-that-regex/src/number/scan_digit_run_simd.rs` (new) | `bbnf-simd` (kernel) + `parse-that-regex` (consumer) | `local_temp_only` / `local_loop` / `generated_grammar` | YES (paired with Gap 5) | scalar_backed |
+| `unescape_uxxxx_x8_neon` | C4 (`p3a:100-111`) | `bbnf-simd/src/aarch64/unescape_uxxxx.rs:40 unescape_uxxxx_scalar` (PRESENT) | EXTENSION at `bbnf-simd/tests/checkasm_unescape_uxxxx_x8.rs` | `parse-that-regex/src/lib.rs:718` `unescape_string` + `lib.rs:386` driver + BBNF-self literal-unescape per S-P3 V1 line 106 | `bbnf-simd` (kernel) + `parse-that-regex` (consumer) | `local_temp_only` / `output_row` / `generated_grammar` | NO (cleanly attributed in P1-E §2.1-§2.2) | scalar_backed |
+| `utf8_codepoint_scan_64` | (S-P2 V3 Gap 8; not in P3-A V1 8/8) | `parse-that-regex/src/unicode/utf8_hoehrmann.rs:1-87` (PRESENT) | EXTENSION at `bbnf-simd/tests/checkasm_utf8_width_scan_64.rs` | `parse-that-regex/src/unicode/utf8_block.rs:1-36` (file exists empty) | `bbnf-simd` (kernel) + `parse-that-regex` (consumer) | `local_temp_only` / `local_loop` / `generated_grammar` | NO | source_backed |
+| `parse_16_digits_dotprod` | C3 (`p3a:87-99`) | `parse-that-regex/src/number/mod.rs:214 parse_eight_digits` × 2 + `* 10_000_000_000` between (PRESENT) | EXTENSION at `bbnf-simd/tests/checkasm_digit_mac_x16.rs` | `parse-that-regex/src/number/mod.rs:106` ladder → 16-byte UDOT first-pass; `parse_array_element_at_direct` direct-plane consumer | `bbnf-simd` (kernel) + `parse-that-regex` (consumer) | `direct_sink` (mantissa emit) + `local_temp_only` (per-chunk accumulator) / `local_loop` / `generated_grammar` | **YES** (P2-C C-P2C-3 + P2-E Gap 5 both in 12-dep list per §6.3) | scalar_backed |
+
+### Lock 1 manifest sub-section — `crate_target` as load-bearing field (V6 F-CH5-V2-02)
+
+Per LAC-2F-V5-02 elevation to T-P3 §3C amendment surface, the Lock 1
+substrate-union v+1 manifest schema requires `crate_target` as a load-bearing
+per-primitive field. Admissible values name the upstream-vs-vendor decision:
+
+| `crate_target` value | Use | Notes |
+|---|---|---|
+| `bbnf-regex` | Upstream absorption (compile-time facts; regex/HIR/DFA pipeline) | bbnf-authored; no external runtime deps; `regex-engine.md:9` forbids `regex-automata` at runtime. |
+| `bbnf-simd` | Vendor Layer-1 kernel (NEON/SWAR scalar-sibling primitive) | Same-commit `scalar/` reference per Lock 16; checkasm-parity row required per LAC-2B-02. |
+| `parse-that-regex` | Consumer-side wiring (front-load classifiers, drivers, leaf parsers) | Hot leaves at `lib.rs:718` `unescape_string`, `:813` `find_next_escape_or_control`, `:386` `unescape_four_unicode_escapes`, `:945` `read_hex_unit_scalar`. |
+| `runtime` | Generated-grammar direct consumer (JSON/CSS/BBNF leaf consumers) | E.g. `runtime/src/grammars/json/scan.rs resolve_string_masks_64`; `runtime/src/grammars/json/generated.rs:466`. |
+
+The `crate_target` field is load-bearing because it binds the upstream-vs-vendor
+admissibility decision per gap to a named workspace crate, preventing
+re-litigation of where a primitive lives. Combined with `substrate_target` (Lock
+1 transient-projection), `crate_target` fixes both **where the code lives** and
+**how its outputs flow**, closing the V5→V6 manifest schema gap surfaced at
+T-P2 V2 CH5.
+
+Cross-reference: the Technique Grounding Table above carries the same
+`Crate-target / upstream-vs-vendor` column at the gap level; the V5 Admission
+Ledger column above is the candidate-level executable disposition. Both fields
+are sourced from the same upstream-vs-vendor matrix and must remain consistent
+under Lock 1 v+1.
 
 ## LOCKS-AMENDMENTS-CANDIDATE
 

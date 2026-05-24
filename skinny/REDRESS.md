@@ -5086,3 +5086,8 @@ perturbation.
   The prior admission is audit-falsified by sk-v13/v6-comparator-integrity:§1+§3 and sk-v13/v2-json-validation:§4; W1 keeps the cold measurements only as gate evidence after rebinding the row to the strict typed direct comparator and timed per-iteration equality.
 - Item 182 closes json/unicode_basic/real_typed_struct/main under `G-SK-V14-W1-PRUNE-1` as `PRUNE`.
   The prior admission is audit-falsified by sk-v13/v6-comparator-integrity:§1+§3 and sk-v13/v2-json-validation:§4; W1 keeps the cold measurements only as gate evidence after rebinding the row to the strict typed direct comparator and timed per-iteration equality.
+
+## SK-V14 Wave 2 R4 Regen-CSS Round-Trip
+
+- Item 183 closes `G-W2-FULL-ROUNDTRIP` under `G-SK-V14-W2-R4` as `REJECTED`.
+  The skinny-side rostered `regen-css` command can be built for the seven existing CSS L4 runtime profiles, but the required destructive gate also deletes `crates/core/src/runtime/css_l4/`, and no current generator restores that Pattern H runtime tree. Root `cargo xtask regen --grammar css_l4` reproducibly emits only `crates/core/src/grammar/generated/css_l4.{rs,registry.json}`; `crates/core/src/runtime/css_l4/` remains seven hand-written runtime files routed to W6 PRUNE-4 by MIGRATION. The rejected source attempt is retained at `/tmp/skv14-waveW2-rejected-regen-css.patch`; the evidence packet is `restart/skinny/tranches/sk-v14/research/skv14-W2-redress.md`. W2 rejection blocks W3/W4/W5/W6/W7 and all new-admit waves by hard entry gates, so no later SK-V14 implementation wave is legally dispatchable from this state.

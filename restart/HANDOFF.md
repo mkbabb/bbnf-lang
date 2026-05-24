@@ -1,55 +1,137 @@
 # Handoff — bbnf-lang Greenfield Restart
 
-## Current Totality Override — 2026-05-22
+## Current Totality Override — 2026-05-24
 
-Status: **Pass Omega V1.1 is signed off and its CRUD receiver is applying.**
-`G-Omega` closed by explicit user sign-off at `2026-05-22T03:52:18Z`; the
-record is `restart/audit/totality/astral/V1/G-OMEGA-SIGNOFF.md`, and the
-receiver state is `restart/audit/totality/astral/V1/CRUD-LOG.md`. The
-historical body below remains useful for restart lineage, but it is not current
-dispatch authority.
+Status: **Pass Omega V2 CRUD IN PROGRESS.** SK-V14 T-P3 V4 COHORT §3Z LOCK
+DECLARED at `69eea1c5c` (full SK-V14 LOCK convergence; 5 of 5 cohorts §3Z
+LOCKED: S-P2 `4c70b6f193`, T-P1 `0a9c0fe65d`, S-P3 `626cb06cc1`, T-P2
+`34a28f5c15`, T-P3 `69eea1c5c`). **G-Omega CLOSED 2026-05-24** by explicit
+user sign-off this orchestration turn; Pass Omega V2 CRUD is now applying
+diffs to V1 spec surfaces (CRUD-3 LOCKS landed at `85a043224`; CRUD-4
+HANDOFF + MIGRATION lands this commit; CRUD-1/2/5/6 sequence per
+`restart/prompts/pass-contracts/PASS-OMEGA.md §4`).
 
-Current measured authority is `skinny/RESULTS.md` at SK-V13 head. Current skinny
-tranche authority is `restart/skinny/tranches/sk-v13/`. Current totality
-authority is the converged Pass Omega packet under
-`restart/audit/totality/astral/V1/`, plus the CRUD-applied V1.1 surfaces:
-`restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`,
-`restart/locks/LOCKS.md`, `restart/MIGRATION.md`, and this file.
+Sources of authority for this cycle:
+
+- T-P3 V4 LOCK CONSOLIDATED:
+  `restart/audit/totality/p3/hardening/HARDENING-T-P3-V4-CONSOLIDATED.md`.
+- T-P3 packet (3A..3F) under `restart/audit/totality/p3/`.
+- Ω-C LOCKS amendments applied:
+  `restart/audit/totality/astral/V2/ΩC-locks-amendments.md`.
+- This Ω-F MIGRATION + HANDOFF apply:
+  `restart/audit/totality/astral/V2/ΩF-migration-handoff.md`.
+
+Current measured authority is `skinny/RESULTS.md` at the SK-V14
+audit-corrected baseline: 0/17 × 3 JSON planes + 0/24 CSS L4 ADMITTED at
+audit-zero (`restart/skinny/tranches/sk-v14/SPEC.md:178-180`). 25 CSS + 5
+parse_only + 4 direct + 7 typed AUDIT-FALSIFIED admits revert at W1
+PRUNE-1 + W4 PRUNE-2 (`SPEC.md:191-198`). SK-V14 close requires
+PRUNE-1..PRUNE-5 dispatch BEFORE any new-admit wave (W8 R6 + W9 R7 +
+W10 R8).
+
+Current SK-V14 LOCKED contract surfaces:
+- `restart/skinny/tranches/sk-v14/SPEC.md` (1187 lines; 12 waves W0..W11;
+  PRUNE-1..PRUNE-5 at W1/W4/W5/W6/W7 dispatch BEFORE any new-admit wave).
+- `restart/skinny/tranches/sk-v14/SYNTHESIS.md` (R1..R10 + P-1..P-7).
+- `restart/skinny/tranches/sk-v14/DISPATCH-PROMPT.md` (344 lines).
+- `restart/skinny/tranches/sk-v14/research/p3/p3{a,b,c,d,e,f}-*.md`.
 
 Read in order for current work:
 
 1. `restart/prompts/ORCHESTRATOR.md`.
-2. `restart/prompts/pass-contracts/PASS-OMEGA.md`.
-3. `restart/audit/totality/p3/G3-totality-v1-synthesis.md`.
-4. `restart/audit/totality/p3/hardening/HARDENING-T-P3-V3-CONVERGED.md`.
-5. `restart/audit/totality/astral/V1/omega-hardening-consolidated.md`.
-6. `restart/audit/totality/astral/V1/G-OMEGA-SIGNOFF.md`.
-7. `restart/audit/totality/astral/V1/CRUD-LOG.md`.
-8. `restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`,
-   `restart/locks/LOCKS.md`, `restart/MIGRATION.md`, and this file.
-9. `restart/skinny/tranches/sk-v13/SYNTHESIS.md`.
-10. `restart/skinny/tranches/sk-v13/SPEC.md`.
-11. `restart/skinny/tranches/sk-v13/DISPATCH-PROMPT.md`.
-12. `restart/skinny/tranches/sk-v13/HANDOFF.md`.
+2. `restart/prompts/totality/PASS-3-SYNTHESIS.md`.
+3. `restart/prompts/pass-contracts/PASS-OMEGA.md`.
+4. `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`.
+5. `restart/audit/totality/p1/hardening/HARDENING-T-P1-V5-CONSOLIDATED.md`.
+6. `restart/audit/totality/p2/hardening/HARDENING-T-P2-V5-CONVERGED.md`.
+7. `restart/skinny/tranches/sk-v14/research/p3/hardening/HARDENING-S-P3-V3-CONSOLIDATED.md`.
+8. `restart/audit/totality/p3/hardening/HARDENING-T-P3-V4-CONSOLIDATED.md`.
+9. `restart/skinny/tranches/sk-v14/SPEC.md` + `SYNTHESIS.md` + `DISPATCH-PROMPT.md`.
+10. `restart/audit/totality/p3/3{A..F}-*.md` (T-P3 packet; 3F is the
+    Ω-F MIGRATION + HANDOFF source).
+11. `restart/audit/totality/astral/V2/ΩC-locks-amendments.md` +
+    `restart/audit/totality/astral/V2/ΩF-migration-handoff.md` (Pass
+    Omega V2 CRUD apply logs).
+12. `restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`,
+    `restart/locks/LOCKS.md`, `restart/MIGRATION.md`, and this file
+    (current V1 surfaces).
 13. `skinny/RESULTS.md` and `skinny/REDRESS.md`.
 
-The SK-V13 skinny bar is the user-pinned full-SOTA bar: every non-out-of-scope
-CSS L4 parity row must beat lightningcss with strict equality, every JSON row
-in every output plane must beat sonic-rs strict or carry an architectural block,
-decision-engine/union/SIMD/totality obligations must close, and no prior admit
-may silently demote. The SK-V12 single CSS row remains admitted evidence, not
-full CSS parity.
+The SK-V14 skinny bar is the audit-corrected baseline: every CSS L4 + JSON
+admit must clear R1 strict comparator + R2 per-iter equality oracle; W1
+PRUNE-1 + W4 PRUNE-2 revert audit-falsified admits; W5 PRUNE-3 + W6
+PRUNE-4 + W7 PRUNE-5 close Lock 14 + decision-engine surfaces BEFORE
+W8/W9/W10 R6/R7/R8 re-admit. The SK-V12 single CSS row that admitted
+under SK-V13 is now AUDIT-FALSIFIED-along-with-23-others; SK-V14 reopens.
 
-Grammar onboarding remains three declarative surfaces only: grammar source,
-workspace metadata, and an optional per-grammar declaration crate for host
-functions. Generated per-grammar names are allowed only as generator output from
-the rostered metadata. Generic crates must not grow grammar switches,
-grammar-named public APIs, or hand-written per-grammar runtime files.
+Grammar onboarding remains three declarative surfaces only: grammar
+source `.bbnf`, workspace metadata, and an optional per-grammar
+declaration crate for host functions. Generated per-grammar names are
+allowed only as generator output from the rostered metadata per LAC-1E-08
+V+1 generated-output allowance. Generic crates must not grow grammar
+switches, grammar-named public APIs, or hand-written per-grammar runtime
+files per LAC-1E-15 Pattern H census + substrate-doc cleanup (live
+Pattern H count = 67 hand-written runtime files under
+`crates/core/src/runtime/{bbnf, bnf, css_l4, css_pretty, csv, ebnf,
+google_sheets, json, math}/`; `find crates/core/src/runtime -mindepth 2
+-type f -name '*.rs' | wc -l` → 67).
 
-Dispatch rule: SK-V13 W0 and later source/gate/RESULTS/REDRESS edits are
-authorized only after the Pass Omega CRUD receiver log is complete and the
-worktree is clean. Until then, S-P3/SPEC text is planning authority but not
-implementation authority.
+Dispatch rule: SK-V14 W0 and later source/gate/RESULTS/REDRESS edits
+are authorized only after (a) Pass Omega V2 CRUD-1..CRUD-6 completes
+on the remaining surfaces (ARCHITECTURE, MASTER-PLAN, skinny/, audit
+nuke); (b) wave-triumvirate per `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md
+§1-§3` dispatches W0 first. G-Omega closed 2026-05-24 (the only
+mandatory relinquish per SK-V14 ORCHESTRATOR-PROMPT user-pin override).
+
+## Pass Omega V2 next-cycle dispatch directive (3F-DISPATCH-001)
+
+Per `restart/audit/totality/p3/3F-migration-handoff.md` §Next-Cycle
+Dispatch Directive, the sequence after G-Omega closure is:
+
+(a) Pass Omega V2 CRUD-1..CRUD-6 application completes (in progress);
+(b) wave-triumvirate dispatches SK-V14 W0 first per
+`restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md §1-§3`;
+(c) SK-V14 W1..W11 execute under PRUNE-then-rebuild sequencing per
+`restart/skinny/tranches/sk-v14/SPEC.md:237-247`;
+(d) post-R10 close → SK-V15 Pass Alpha re-entry per
+`restart/prompts/pass-contracts/PASS-ALPHA.md` (per F-V2-CH4-3E D06
+Option B non-budgeted handoff for the CSS L4 generated-fixture
+impl tail; LAC-1E-14 / LAC-1E-15 / LAC-1E-16 propagation as SK-V15
+SPEC entry conditions).
+
+The 7-gate measurable dispatch checklist (3F-DISPATCH-001):
+
+| gate | measurable condition | source |
+|---|---|---|
+| G3 (auto) | T-P3 cohort §3Z LOCK DECLARED at V4 close (V4 = 4/5 ceiling; 1-cycle margin). | `restart/audit/totality/p3/hardening/HARDENING-T-P3-V4-CONSOLIDATED.md:30-32` |
+| Pass Omega V2 entry | T-P1 V5 + T-P2 V5 + S-P3 V3 + T-P3 V4 LOCK packet + V1 surfaces cited in Ω source maps. | `restart/prompts/pass-contracts/PASS-OMEGA.md §1` |
+| Pass Omega V2 CHALLENGE convergence | Ω CHALLENGE ≥95% × 2 cycles + zero orphan REVISE + V≤5 ceiling. | `restart/prompts/pass-contracts/PASS-OMEGA.md §3` |
+| CRUD entry | Consolidated Ω verdict + per-surface CRUD instruction packets exist. | `restart/prompts/pass-contracts/PASS-OMEGA.md §4` |
+| G-Omega (user) | CLOSED 2026-05-24 by explicit user sign-off this orchestration turn. | this file §Current Totality Override |
+| SK-V14 W0 dispatch | G-Omega closed; CRUD-1..CRUD-6 complete; wave-triumvirate per `SKINNY-TRIUMVIRATE.md §1-§3` ready. | `restart/skinny/tranches/sk-v14/SPEC.md:237` |
+| SK-V14 close (R10) | RESULTS audit-zero baseline cleared by R6/R7/R8 re-admits under R1/R2 gates; W11 close per SYNTHESIS §0.1. | `restart/skinny/tranches/sk-v14/SYNTHESIS.md §0.1` |
+| SK-V15 Pass Alpha re-entry | SK-V14 close packet delivered; Pass Alpha dispatch per `PASS-ALPHA.md`. | `restart/prompts/pass-contracts/PASS-ALPHA.md` |
+
+Wave-triumvirate per-wave roles: **research-axis triumvirate** (~20 min
+cap research; ~15 min cap plan; ~30 min cap redress per
+`[dispatch-hard-cap]`); each wave runs (a) RESEARCH dispatch →
+(b) PLAN dispatch → (c) REDRESS dispatch with hard caps + commit at
+0.9N + halt at N.
+
+W10 carries the **F-V2-P1ABC-RERECORD Stage-0 UNCONDITIONAL** binding
+per S-P3 V3 §3C carry-forward (cargo build + interactive samply record
++ `cfg_attr` flip at `generated.rs:33-237` 8 sites; consumers
+P2-A C6 + P2-C C-P2C-3 + C-P2C-8 + P2-E Gap 1/3/4/5 + P2-F C6/C7/C10/C12/C13;
+`restart/skinny/tranches/sk-v14/SPEC.md:982-1000`). W10 cannot close
+without Stage-0.
+
+## Historical Pass Omega V1.1 close (not current authority)
+
+Pass Omega V1.1 closed at user sign-off `2026-05-22T03:52:18Z`; record at
+`restart/audit/totality/astral/V1/G-OMEGA-SIGNOFF.md`; CRUD-LOG at
+`restart/audit/totality/astral/V1/CRUD-LOG.md`. The V1.1 surface state
+seeded the SK-V14 reopening, which produced the audit-zero baseline that
+is now current authority. SK-V13 packet is historical lineage.
 
 ## Historical SK-V6 Handoff Body (not current authority)
 

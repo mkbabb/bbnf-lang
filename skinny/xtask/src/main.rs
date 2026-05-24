@@ -374,7 +374,9 @@ fn validate_w0_results_snapshot(root: &Path) -> Result<()> {
 struct Skv14ManifestRow {
     row_id: String,
     grammar_id: String,
+    domain: String,
     wave_id: String,
+    run_id: String,
     track1_entry_point: String,
     track2_entry_point: String,
     comparator_plane: String,
@@ -385,7 +387,10 @@ struct Skv14ManifestRow {
     substrate_target: String,
     retention_lifetime: String,
     policy_owner: String,
+    sample_count: u64,
+    redress_entry: String,
     sk_v14_open_delta: String,
+    comparator_evidence: String,
 }
 
 fn validate_skv14_w0_manifest(results_text: &str) -> Result<()> {
@@ -413,6 +418,8 @@ fn validate_skv14_w0_manifest(results_text: &str) -> Result<()> {
             other => bail!("{} has unsupported audit overlay {other}", row.row_id),
         }
     }
+    validate_skv14_w1_prune1_rows(&rows)?;
+    validate_skv14_w1_visible_zero_admits(results_text)?;
     for corpus in SKV13_JSON_CORPORA {
         for workload in SKV13_JSON_WORKLOADS {
             let row_id = format!("json/{corpus}/{workload}/main");
@@ -467,7 +474,9 @@ fn parse_skv14_w0_manifest(results_text: &str) -> Result<Vec<Skv14ManifestRow>> 
         rows.push(Skv14ManifestRow {
             row_id: cells[0].clone(),
             grammar_id: cells[1].clone(),
+            domain: cells[2].clone(),
             wave_id: cells[3].clone(),
+            run_id: cells[4].clone(),
             track1_entry_point: cells[5].clone(),
             track2_entry_point: cells[6].clone(),
             comparator_plane: cells[7].clone(),
@@ -478,7 +487,12 @@ fn parse_skv14_w0_manifest(results_text: &str) -> Result<Vec<Skv14ManifestRow>> 
             substrate_target: cells[12].clone(),
             retention_lifetime: cells[13].clone(),
             policy_owner: cells[14].clone(),
+            sample_count: cells[18].parse::<u64>().with_context(|| {
+                format!("{} has invalid SK-V14 sample count {}", cells[0], cells[18])
+            })?,
+            redress_entry: cells[23].clone(),
             sk_v14_open_delta: cells[24].clone(),
+            comparator_evidence: cells[31].clone(),
         });
     }
     if !in_manifest {
@@ -490,7 +504,9 @@ fn parse_skv14_w0_manifest(results_text: &str) -> Result<Vec<Skv14ManifestRow>> 
 fn validate_skv14_manifest_row(row: &Skv14ManifestRow) -> Result<()> {
     for (field, value) in [
         ("grammar_id", row.grammar_id.as_str()),
+        ("domain", row.domain.as_str()),
         ("wave_id", row.wave_id.as_str()),
+        ("run_id", row.run_id.as_str()),
         ("track1_entry_point", row.track1_entry_point.as_str()),
         ("track2_entry_point", row.track2_entry_point.as_str()),
         ("comparator_plane", row.comparator_plane.as_str()),
@@ -505,6 +521,7 @@ fn validate_skv14_manifest_row(row: &Skv14ManifestRow) -> Result<()> {
         ("retention_lifetime", row.retention_lifetime.as_str()),
         ("policy_owner", row.policy_owner.as_str()),
         ("sk_v14_open_delta", row.sk_v14_open_delta.as_str()),
+        ("comparator_evidence", row.comparator_evidence.as_str()),
     ] {
         if value.trim().is_empty() {
             bail!("{} missing SK-V14 {field}", row.row_id);
@@ -548,6 +565,9 @@ fn validate_skv14_manifest_row(row: &Skv14ManifestRow) -> Result<()> {
     if row.comparator_plane.contains("from_slice::<Value>") {
         bail!("{} reopens eager-DOM comparator plane", row.row_id);
     }
+    if row.row_id.starts_with("json/") {
+        validate_skv14_json_w1_row(row)?;
+    }
     if row.track1_entry_point == row.track2_entry_point {
         bail!(
             "{} has identical Track 1 and Track 2 entry points",
@@ -573,6 +593,109 @@ fn validate_skv14_manifest_row(row: &Skv14ManifestRow) -> Result<()> {
     Ok(())
 }
 
+fn validate_skv14_json_w1_row(row: &Skv14ManifestRow) -> Result<()> {
+    if row.sample_count > 0 && !valid_skv14_per_iter_pass(&row.per_iter_equality) {
+        bail!("{} lacks W1 timed per-iteration equality PASS", row.row_id);
+    }
+    if row.sample_count == 0 && row.per_iter_equality != "INTRINSIC-BLOCK:missing-product-surface" {
+        bail!("{} missing product row lacks intrinsic-block equality marker", row.row_id);
+    }
+    if row.comparator_evidence.contains("sonic_rs_anchor")
+        || row
+            .comparator_evidence
+            .contains("from_slice::<sonic_rs::Value>")
+        || row.comparator_evidence.contains("historical:sk-v7-sidecar-profile")
+        || row.comparator_evidence.contains("sidecar-profile:sk-v7-cpp")
+    {
+        bail!("{} carries stale comparator evidence", row.row_id);
+    }
+    if row.sidecar_freshness.starts_with("historical:") {
+        bail!("{} carries historical sidecar freshness", row.row_id);
+    }
+    if row.row_id.contains("/direct_to_struct/")
+        && row.track2_entry_point == "bbnf_bench::direct_struct::sonic_digest"
+    {
+        bail!("{} Track 2 points to sonic comparator", row.row_id);
+    }
+    if row.row_id.contains("/real_typed_struct/")
+        && row.track2_entry_point == "bbnf_bench::real_typed_struct::sonic_typed"
+    {
+        bail!("{} Track 2 points to sonic comparator", row.row_id);
+    }
+    Ok(())
+}
+
+fn valid_skv14_per_iter_pass(value: &str) -> bool {
+    if !value.starts_with("PASS:") {
+        return false;
+    }
+    let mut has_scope = false;
+    let mut has_checks = false;
+    let mut has_mismatches = false;
+    for field in value.trim_start_matches("PASS:").split(';') {
+        if field == "scope=criterion-timing" {
+            has_scope = true;
+        } else if let Some(checks) = field.strip_prefix("checks=") {
+            has_checks = checks.parse::<u64>().is_ok_and(|value| value > 0);
+        } else if field == "mismatches=0" {
+            has_mismatches = true;
+        }
+    }
+    has_scope && has_checks && has_mismatches
+}
+
+fn validate_skv14_w1_visible_zero_admits(results_text: &str) -> Result<()> {
+    for line in results_text.lines() {
+        let cells = markdown_cells(line);
+        if cells.len() < 4 {
+            continue;
+        }
+        if !SKV13_JSON_CORPORA.contains(&cells[0].as_str())
+            || !SKV13_JSON_WORKLOADS.contains(&cells[1].as_str())
+        {
+            continue;
+        }
+        if cells[2] == "A" && cells[3] == "GO" {
+            bail!(
+                "SK-V14 W1 PRUNE-1 requires zero visible JSON A/GO rows; {} {} remains admitted",
+                cells[0],
+                cells[1]
+            );
+        }
+    }
+    Ok(())
+}
+
+fn validate_skv14_w1_prune1_rows(rows: &[Skv14ManifestRow]) -> Result<()> {
+    let mut seen = BTreeSet::new();
+    for target in SKV14_W1_PRUNE1_ROWS {
+        let row = rows
+            .iter()
+            .find(|candidate| candidate.row_id == *target)
+            .with_context(|| format!("SK-V14 W1 PRUNE-1 missing {target}"))?;
+        if row.audit_overlay_verdict != "AUDIT-FALSIFIED" {
+            bail!("{target} is not AUDIT-FALSIFIED after PRUNE-1");
+        }
+        let Some(number) = row
+            .redress_entry
+            .strip_prefix("REDRESS-")
+            .and_then(|value| value.parse::<u32>().ok())
+        else {
+            bail!("{target} lacks row-keyed REDRESS entry");
+        };
+        if number <= 160 {
+            bail!("{target} reuses pre-W1 REDRESS entry {}", row.redress_entry);
+        }
+        if !seen.insert(number) {
+            bail!("duplicate W1 REDRESS entry REDRESS-{number}");
+        }
+    }
+    if seen.len() != SKV14_W1_PRUNE1_ROWS.len() {
+        bail!("SK-V14 W1 PRUNE-1 expected 22 REDRESS entries");
+    }
+    Ok(())
+}
+
 const SKV13_JSON_CORPORA: &[&str] = &[
     "twitter",
     "citm_catalog",
@@ -594,6 +717,31 @@ const SKV13_JSON_CORPORA: &[&str] = &[
 ];
 
 const SKV13_JSON_WORKLOADS: &[&str] = &["parse_only", "direct_to_struct", "real_typed_struct"];
+
+const SKV14_W1_PRUNE1_ROWS: &[&str] = &[
+    "json/numbers/parse_only/main",
+    "json/citm_catalog/parse_only/main",
+    "json/canada/parse_only/main",
+    "json/marine_ik/parse_only/main",
+    "json/mesh/parse_only/main",
+    "json/citm_catalog/direct_to_struct/main",
+    "json/apache_builds/direct_to_struct/main",
+    "json/marine_ik/direct_to_struct/main",
+    "json/instruments/direct_to_struct/main",
+    "json/numbers/direct_to_struct/main",
+    "json/unicode_basic/direct_to_struct/main",
+    "json/twitter/real_typed_struct/main",
+    "json/citm_catalog/real_typed_struct/main",
+    "json/apache_builds/real_typed_struct/main",
+    "json/github_events/real_typed_struct/main",
+    "json/update_center/real_typed_struct/main",
+    "json/mesh/real_typed_struct/main",
+    "json/random/real_typed_struct/main",
+    "json/marine_ik/real_typed_struct/main",
+    "json/instruments/real_typed_struct/main",
+    "json/numbers/real_typed_struct/main",
+    "json/unicode_basic/real_typed_struct/main",
+];
 
 const SKV13_CSS_FEATURES: &[&str] = &[
     "declaration_values",
@@ -687,6 +835,9 @@ fn validate_skv13_rolling_delta(results_text: &str, rolling_path: &Path) -> Resu
                 );
             }
             validate_rolling_status(row)?;
+            if row.tranche_admitted == "ADMITTED" {
+                bail!("{row_id} remains ADMITTED after SK-V14 W1 PRUNE-1");
+            }
             if let Some(metric) = result_metrics.get(&row_id) {
                 validate_numeric_rolling_row(row, *metric)?;
             } else {
@@ -1484,7 +1635,7 @@ mod tests {
                     "| {corpus} | {workload} | A | GO | strict | measured-row | yes | probe | {workload} | 200.00 | 190.00 | 100.00 |"
                 ));
                 rolling.push(format!(
-                    "| json/{corpus}/{workload}/main | {workload} | 200.00 | 101.00 | 99.00 | ADMITTED |"
+                    "| json/{corpus}/{workload}/main | {workload} | 200.00 | 101.00 | 99.00 | OPEN |"
                 ));
             }
         }
@@ -1508,8 +1659,8 @@ mod tests {
         validate_skv13_rolling_delta(&results.join("\n"), &rolling_path).unwrap();
 
         let malformed = std::fs::read_to_string(&rolling_path).unwrap().replace(
-            "| json/twitter/parse_only/main | parse_only | 200.00 | 101.00 | 99.00 | ADMITTED |",
-            "| json/twitter/parse_only/main | parse_only | 200.00 | 101.00 | 98.00 | ADMITTED |",
+            "| json/twitter/parse_only/main | parse_only | 200.00 | 101.00 | 99.00 | OPEN |",
+            "| json/twitter/parse_only/main | parse_only | 200.00 | 101.00 | 98.00 | OPEN |",
         );
         let bad_path = root.join("ROLLING-SOTA-DELTA.bad.md");
         std::fs::write(&bad_path, malformed).unwrap();

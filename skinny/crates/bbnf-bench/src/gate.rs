@@ -37,7 +37,7 @@ pub struct ThresholdInput {
     pub simd_floor_gbps: f64,
     pub track1_ns: f64,
     pub track2_ns: f64,
-    pub sonic_rs_anchor_ns: Option<f64>,
+    pub sonic_rs_skipper_ns: Option<f64>,
     pub simd_json_borrowed_ns: Option<f64>,
     pub simd_json_owned_ns: Option<f64>,
     pub readme_target_ns: f64,
@@ -287,7 +287,7 @@ pub fn worst_outcome(outcomes: impl IntoIterator<Item = Outcome>) -> Option<Outc
 
 fn fastest_anchor(input: &ThresholdInput) -> Option<f64> {
     [
-        input.sonic_rs_anchor_ns,
+        input.sonic_rs_skipper_ns,
         input.simd_json_borrowed_ns,
         input.simd_json_owned_ns,
     ]
@@ -340,7 +340,7 @@ mod tests {
             simd_floor_gbps: 5.0,
             track1_ns: 390.0,
             track2_ns: 360.0,
-            sonic_rs_anchor_ns: Some(436.0),
+            sonic_rs_skipper_ns: Some(436.0),
             simd_json_borrowed_ns: Some(424.0),
             simd_json_owned_ns: Some(450.0),
             readme_target_ns: 380.0,
@@ -381,7 +381,7 @@ mod tests {
     #[test]
     fn simd_json_can_be_fastest_anchor() {
         let mut input = base();
-        input.sonic_rs_anchor_ns = Some(500.0);
+        input.sonic_rs_skipper_ns = Some(500.0);
         input.simd_json_borrowed_ns = Some(300.0);
         input.simd_json_owned_ns = Some(420.0);
         input.readme_target_ns = f64::INFINITY;

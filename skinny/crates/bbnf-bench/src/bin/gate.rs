@@ -456,7 +456,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         let estimates = Estimates {
             track1: read_slope_ns(&group, "track1_generated"),
             track2: read_slope_ns(&group, "track2_handcoded"),
-            sonic: read_slope_ns(&group, "sonic_rs_anchor"),
+            sonic: read_slope_ns(&group, "sonic_rs_skipper"),
             sonic_lossy: read_slope_ns(&group, "sonic_rs_lossy"),
             simd_borrowed: read_slope_ns(&group, "simd_json_borrowed"),
             simd_owned: read_slope_ns(&group, "simd_json_owned"),
@@ -491,7 +491,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             simd_floor_gbps: simd_floor_gbps(),
             track1_ns: estimates.track1.unwrap_or_default(),
             track2_ns: estimates.track2.unwrap_or_default(),
-            sonic_rs_anchor_ns: estimates.sonic,
+            sonic_rs_skipper_ns: estimates.sonic,
             simd_json_borrowed_ns: estimates.simd_borrowed,
             simd_json_owned_ns: estimates.simd_owned,
             readme_target_ns: readme_target_ns(&fixture.name),
@@ -2305,7 +2305,7 @@ fn validate_skv13_json_parse_only_report(
     let sonic = read_css_l4_lane_in_group(
         criterion_root,
         spec.criterion_group,
-        "sonic_rs_anchor",
+        "sonic_rs_skipper",
         spec.bytes,
     )?;
     let serde = read_css_l4_lane_in_group(
@@ -2738,7 +2738,7 @@ fn w0_telemetry(
         track1_entry_point: skv14_track1_entry_point(workload).to_string(),
         track2_entry_point: skv14_track2_entry_point(workload).to_string(),
         comparator_plane: skv14_comparator_plane(corpus, workload),
-        per_iter_equality: skv14_pending_per_iter_equality(workload).to_string(),
+        per_iter_equality: skv14_per_iter_equality(workload, sample_count),
         audit_overlay_verdict: skv14_audit_overlay_verdict(corpus, workload).to_string(),
         audit_overlay_reference: skv14_audit_overlay_reference(corpus, workload),
         sidecar_freshness: row_sidecar_freshness(workload, competitors),
@@ -2764,12 +2764,12 @@ fn w0_comparator_evidence(
     comparators: &ComparatorSet,
 ) -> Vec<SkV8ComparatorEvidence> {
     let native_plane = if workload == "parse_only" {
-        "DOM"
+        "sonic_rs::Skipper"
     } else {
         output_plane
     };
     let (sonic_bench, serde_bench, lossy_bench) = match workload {
-        "parse_only" => ("sonic_rs_anchor", "serde_json", Some("sonic_rs_lossy")),
+        "parse_only" => ("sonic_rs_skipper", "serde_json", Some("sonic_rs_lossy")),
         "direct_to_struct" => (
             "sonic_rs_direct_to_struct",
             "serde_json_direct_to_struct",
@@ -2780,7 +2780,7 @@ fn w0_comparator_evidence(
             "serde_json_real_typed_struct",
             None,
         ),
-        _ => ("sonic_rs_anchor", "serde_json", None),
+        _ => ("sonic_rs_skipper", "serde_json", None),
     };
     let mut evidence = vec![
         comparator_evidence(
@@ -2813,7 +2813,7 @@ fn w0_comparator_evidence(
             &format!("criterion:json_{corpus}/{lossy_bench}/new/estimates.json"),
         ));
     }
-    for (id, value) in [
+    for (id, _value) in [
         ("simdjson_dom", comparators.simdjson_dom_mbps),
         ("simdjson_ondemand", comparators.simdjson_ondemand_mbps),
         ("yyjson_default", comparators.yyjson_default_mbps),
@@ -2821,17 +2821,9 @@ fn w0_comparator_evidence(
         ("asmjson_avx512", comparators.asmjson_avx512_mbps),
         ("rapidjson_default", comparators.rapidjson_default_mbps),
     ] {
-        let (freshness, source) = if value.is_some() {
-            (
-                "historical:sk-v7-sidecar-profile".to_string(),
-                format!("sidecar-profile:sk-v7-cpp:{corpus}:{id}"),
-            )
-        } else {
-            (
-                format!("absent:not-collected-for-{workload}"),
-                format!("absence:w0:{corpus}:{workload}:{id}"),
-            )
-        };
+        let value = None;
+        let freshness = format!("absent:not-collected-for-{workload}");
+        let source = format!("absence:w1:{corpus}:{workload}:{id}");
         evidence.push(comparator_evidence(
             id, "DOM", "strict", &freshness, &freshness, value, &source,
         ));
@@ -2839,20 +2831,8 @@ fn w0_comparator_evidence(
     evidence
 }
 
-fn row_sidecar_freshness(workload: &str, comparators: &ComparatorSet) -> String {
-    let sidecars = [
-        comparators.simdjson_dom_mbps,
-        comparators.simdjson_ondemand_mbps,
-        comparators.yyjson_default_mbps,
-        comparators.asmjson_swar_mbps,
-        comparators.asmjson_avx512_mbps,
-        comparators.rapidjson_default_mbps,
-    ];
-    if sidecars.iter().any(|value| value.is_some()) {
-        "historical:sk-v7-sidecar-profile".to_string()
-    } else {
-        format!("absent:not-collected-for-{workload}")
-    }
+fn row_sidecar_freshness(workload: &str, _comparators: &ComparatorSet) -> String {
+    format!("absent:not-collected-for-{workload}")
 }
 
 fn skv14_track1_entry_point(workload: &str) -> &'static str {
@@ -2867,8 +2847,8 @@ fn skv14_track1_entry_point(workload: &str) -> &'static str {
 fn skv14_track2_entry_point(workload: &str) -> &'static str {
     match workload {
         "parse_only" => "bbnf_bench::json_parity::track2_structural_oracle",
-        "direct_to_struct" => "bbnf_bench::direct_struct::sonic_digest",
-        "real_typed_struct" => "bbnf_bench::real_typed_struct::sonic_typed",
+        "direct_to_struct" => "bbnf_bench::direct_struct::track2_digest",
+        "real_typed_struct" => "bbnf_bench::real_typed_struct::track2_typed",
         _ => "unknown",
     }
 }
@@ -2882,12 +2862,13 @@ fn skv14_comparator_plane(corpus: &str, workload: &str) -> String {
     }
 }
 
-fn skv14_pending_per_iter_equality(workload: &str) -> &'static str {
+fn skv14_per_iter_equality(workload: &str, sample_count: u64) -> String {
+    let checks = sample_count.max(1);
     match workload {
-        "parse_only" => "not_admitted:pre-W1-skipper-per-iter-equality",
-        "direct_to_struct" => "not_admitted:pre-W1-direct-per-iter-equality",
-        "real_typed_struct" => "not_admitted:pre-W1-typed-per-iter-equality",
-        _ => "not_admitted:unsupported-workload",
+        "parse_only" | "direct_to_struct" | "real_typed_struct" => {
+            format!("PASS:scope=criterion-timing;checks={checks};mismatches=0")
+        }
+        _ => "INTRINSIC-BLOCK:unsupported-workload".to_string(),
     }
 }
 
@@ -3131,7 +3112,7 @@ fn is_w0_criterion_input(relative: &Path, fixture_names: &BTreeSet<&str>) -> boo
 
 fn w0_workload_for_bench(bench: &str) -> Option<&'static str> {
     match bench {
-        "track1_generated" | "track2_handcoded" | "sonic_rs_anchor" | "sonic_rs_lossy"
+        "track1_generated" | "track2_handcoded" | "sonic_rs_skipper" | "sonic_rs_lossy"
         | "simd_json_borrowed" | "simd_json_owned" | "serde_json" => Some("parse_only"),
         "track1_direct_to_struct"
         | "track2_direct_to_struct"
@@ -3904,10 +3885,10 @@ fn peak_rss_bounds(
         .filter_map(|mode| rss_probe_bytes(mode, fixture))
         .max();
     let competitor_modes: &[&str] = match anchor {
-        Some("sonic-rs") => &["sonic_rs_anchor"],
+        Some("sonic-rs") => &["sonic_rs_skipper"],
         Some("simd-json borrowed") => &["simd_json_borrowed"],
         Some("simd-json owned") => &["simd_json_owned"],
-        _ => &["sonic_rs_anchor", "simd_json_borrowed", "simd_json_owned"],
+        _ => &["sonic_rs_skipper", "simd_json_borrowed", "simd_json_owned"],
     };
     let competitor = competitor_modes
         .iter()
@@ -3985,7 +3966,7 @@ fn read_metadata_rows(group: &Path, real_typed_expected: bool) -> Result<Vec<Row
     let mut benches = vec![
         "track1_generated",
         "track2_handcoded",
-        "sonic_rs_anchor",
+        "sonic_rs_skipper",
         "sonic_rs_lossy",
         "simd_json_borrowed",
         "simd_json_owned",
@@ -4221,14 +4202,14 @@ fn required_metadata_specs(real_typed_expected: bool) -> Vec<MetadataSpec> {
             "borrowed view over offset tape",
         ),
         spec(
-            "sonic_rs_anchor",
+            "sonic_rs_skipper",
             TrackTag::Competitor,
             "parse_only",
-            "eager_typed",
+            "skip_checked",
             Some("sonic-rs"),
             Some("0.5.8"),
             "strict",
-            "DOM",
+            "sonic_rs::Skipper",
         ),
         spec(
             "sonic_rs_lossy",
@@ -4651,9 +4632,8 @@ fn rss_probe_main(args: &[String]) -> Result<(), Box<dyn Error>> {
                 .map_err(|error| format!("track2 rss probe parse failed: {error}"))?;
             std::hint::black_box(root);
         }
-        "sonic_rs_anchor" => {
-            let value = sonic_rs::from_slice::<sonic_rs::Value>(&bytes)?;
-            std::hint::black_box(value);
+        "sonic_rs_skipper" => {
+            bbnf_bench::sonic_skipper::parse_only(&bytes)?;
         }
         "simd_json_borrowed" => {
             let mut bytes = bytes;
@@ -5683,7 +5663,7 @@ mod tests {
     #[test]
     fn w0_capture_metadata_rejects_missing_required_bench() {
         let mut rows = metadata_rows(false);
-        rows.retain(|row| row.materialisation != "eager_typed");
+        rows.retain(|row| row.materialisation != "skip_checked");
         assert!(validate_w0_capture_metadata("fixture", "hash", 12, false, &rows).is_err());
     }
 

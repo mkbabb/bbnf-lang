@@ -10,4 +10,5 @@ pub mod probes;
 pub mod real_typed_struct;
 pub mod report;
 pub mod scan;
+pub mod sonic_skipper;
 pub mod track2;

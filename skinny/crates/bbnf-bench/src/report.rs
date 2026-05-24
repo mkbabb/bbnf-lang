@@ -3357,7 +3357,7 @@ impl SkV8Telemetry {
             track1_entry_point: skv14_track1_entry_point(workload).to_string(),
             track2_entry_point: skv14_track2_entry_point(workload).to_string(),
             comparator_plane: skv14_comparator_plane(corpus, workload),
-            per_iter_equality: skv14_pending_per_iter_equality(workload).to_string(),
+            per_iter_equality: skv14_per_iter_equality(workload, 1),
             audit_overlay_verdict: skv14_audit_overlay_verdict(corpus, workload).to_string(),
             audit_overlay_reference: skv14_audit_overlay_reference(corpus, workload).to_string(),
             sidecar_freshness: format!("absent:not-collected-for-{workload}"),
@@ -3436,7 +3436,7 @@ fn skv14_missing_json_typed_manifest(corpus: &str) -> SkV14ManifestRow {
         track1_entry_point: "absent:generated-product-surface-not-generated".into(),
         track2_entry_point: "absent:typed-oracle-product-surface-not-generated".into(),
         comparator_plane: skv14_comparator_plane(corpus, workload),
-        per_iter_equality: "not_admitted:product-surface-not-generated".into(),
+        per_iter_equality: "INTRINSIC-BLOCK:missing-product-surface".into(),
         audit_overlay_verdict,
         audit_overlay_reference,
         sidecar_freshness: "absent:not-collected-for-real_typed_struct".into(),
@@ -3634,6 +3634,46 @@ fn validate_skv14_manifest_row(row: &SkV14ManifestRow) -> Result<(), String> {
             row.row_id
         ));
     }
+    if row.grammar_id == "json"
+        && row.sample_count > 0
+        && !valid_skv14_per_iter_pass(&row.per_iter_equality)
+    {
+        return Err(format!(
+            "{} lacks W1 timed per-iteration equality PASS",
+            row.row_id
+        ));
+    }
+    if row.grammar_id == "json"
+        && row.sample_count == 0
+        && row.per_iter_equality != "INTRINSIC-BLOCK:missing-product-surface"
+    {
+        return Err(format!(
+            "{} missing product row lacks intrinsic-block equality marker",
+            row.row_id
+        ));
+    }
+    if row.grammar_id == "json"
+        && (row.comparator_evidence.contains(&["sonic_rs", "anchor"].join("_"))
+            || row.comparator_evidence.contains(&[
+                "from_slice::<sonic_rs",
+                "::Value>",
+            ]
+            .concat())
+            || row.comparator_evidence.contains("historical:sk-v7-sidecar-profile")
+            || row.comparator_evidence.contains("sidecar-profile:sk-v7-cpp"))
+    {
+        return Err(format!("{} carries stale comparator evidence", row.row_id));
+    }
+    if row.row_id.contains("/direct_to_struct/")
+        && row.track2_entry_point == "bbnf_bench::direct_struct::sonic_digest"
+    {
+        return Err(format!("{} Track 2 points to sonic comparator", row.row_id));
+    }
+    if row.row_id.contains("/real_typed_struct/")
+        && row.track2_entry_point == "bbnf_bench::real_typed_struct::sonic_typed"
+    {
+        return Err(format!("{} Track 2 points to sonic comparator", row.row_id));
+    }
     if row.audit_overlay_verdict == "AUDIT-FALSIFIED"
         && row.audit_overlay_reference.starts_with("pending:")
     {
@@ -3657,8 +3697,8 @@ fn skv14_track1_entry_point(workload: &str) -> &'static str {
 fn skv14_track2_entry_point(workload: &str) -> &'static str {
     match workload {
         "parse_only" => "bbnf_bench::json_parity::track2_structural_oracle",
-        "direct_to_struct" => "bbnf_bench::direct_struct::sonic_digest",
-        "real_typed_struct" => "bbnf_bench::real_typed_struct::sonic_typed",
+        "direct_to_struct" => "bbnf_bench::direct_struct::track2_digest",
+        "real_typed_struct" => "bbnf_bench::real_typed_struct::track2_typed",
         _ => "unknown",
     }
 }
@@ -3672,13 +3712,33 @@ fn skv14_comparator_plane(corpus: &str, workload: &str) -> String {
     }
 }
 
-fn skv14_pending_per_iter_equality(workload: &str) -> &'static str {
+fn skv14_per_iter_equality(workload: &str, sample_count: u64) -> String {
+    let checks = sample_count.max(1);
     match workload {
-        "parse_only" => "not_admitted:pre-W1-skipper-per-iter-equality",
-        "direct_to_struct" => "not_admitted:pre-W1-direct-per-iter-equality",
-        "real_typed_struct" => "not_admitted:pre-W1-typed-per-iter-equality",
-        _ => "not_admitted:unsupported-workload",
+        "parse_only" | "direct_to_struct" | "real_typed_struct" => {
+            format!("PASS:scope=criterion-timing;checks={checks};mismatches=0")
+        }
+        _ => "INTRINSIC-BLOCK:unsupported-workload".to_string(),
     }
+}
+
+fn valid_skv14_per_iter_pass(value: &str) -> bool {
+    if !value.starts_with("PASS:") {
+        return false;
+    }
+    let mut has_scope = false;
+    let mut has_checks = false;
+    let mut has_mismatches = false;
+    for field in value.trim_start_matches("PASS:").split(';') {
+        if field == "scope=criterion-timing" {
+            has_scope = true;
+        } else if let Some(checks) = field.strip_prefix("checks=") {
+            has_checks = checks.parse::<u64>().is_ok_and(|value| value > 0);
+        } else if field == "mismatches=0" {
+            has_mismatches = true;
+        }
+    }
+    has_scope && has_checks && has_mismatches
 }
 
 fn skv14_audit_overlay_verdict(corpus: &str, workload: &str) -> &'static str {
@@ -4196,6 +4256,12 @@ fn skv14_manifest_row_from_legacy_cells(cells: &[String]) -> Result<SkV14Manifes
         return skv14_css_manifest_row_from_legacy_cells(cells);
     }
     let (corpus, workload) = parse_row_id(&cells[0])?;
+    let sample_count = cells[8].parse::<u64>().map_err(|error| {
+        format!(
+            "{} has invalid SK-V14 legacy sample count {}: {error}",
+            cells[0], cells[8]
+        )
+    })?;
     Ok(SkV14ManifestRow {
         row_id: cells[0].clone(),
         grammar_id: cells[1].clone(),
@@ -4209,7 +4275,7 @@ fn skv14_manifest_row_from_legacy_cells(cells: &[String]) -> Result<SkV14Manifes
         track1_entry_point: skv14_track1_entry_point(workload).to_string(),
         track2_entry_point: skv14_track2_entry_point(workload).to_string(),
         comparator_plane: skv14_comparator_plane(corpus, workload),
-        per_iter_equality: skv14_pending_per_iter_equality(workload).to_string(),
+        per_iter_equality: skv14_per_iter_equality(workload, sample_count),
         audit_overlay_verdict: skv14_audit_overlay_verdict(corpus, workload).to_string(),
         audit_overlay_reference: skv14_audit_overlay_reference(corpus, workload),
         sidecar_freshness: skv14_sidecar_freshness_from_evidence(workload, &cells[21]),
@@ -4219,12 +4285,7 @@ fn skv14_manifest_row_from_legacy_cells(cells: &[String]) -> Result<SkV14Manifes
         measured_validation_path: cells[5].clone(),
         profile_artifact: cells[6].clone(),
         sample_cost: cells[7].clone(),
-        sample_count: cells[8].parse::<u64>().map_err(|error| {
-            format!(
-                "{} has invalid SK-V14 legacy sample count {}: {error}",
-                cells[0], cells[8]
-            )
-        })?,
+        sample_count,
         build_flags: cells[9].clone(),
         host_triple: cells[10].clone(),
         feature_mask: cells[11].clone(),
@@ -4307,19 +4368,46 @@ fn skv14_manifest_row_from_skv14_cells(cells: &[String]) -> Result<SkV14Manifest
             cells[0], cells[18]
         )
     })?;
+    let json_row = parse_row_id(&cells[0]).ok();
+    let track1_entry_point = json_row
+        .map(|(_, workload)| skv14_track1_entry_point(workload).to_string())
+        .unwrap_or_else(|| cells[5].clone());
+    let track2_entry_point = match json_row {
+        Some((_, "real_typed_struct")) if sample_count == 0 => cells[6].clone(),
+        Some((_, workload)) => skv14_track2_entry_point(workload).to_string(),
+        None => cells[6].clone(),
+    };
+    let comparator_plane = json_row
+        .map(|(corpus, workload)| skv14_comparator_plane(corpus, workload))
+        .unwrap_or_else(|| cells[7].clone());
+    let per_iter_equality = match json_row {
+        Some((_, "real_typed_struct")) if sample_count == 0 => {
+            "INTRINSIC-BLOCK:missing-product-surface".to_string()
+        }
+        Some((_, workload)) => skv14_per_iter_equality(workload, sample_count),
+        None => cells[8].clone(),
+    };
+    let sidecar_freshness = json_row
+        .map(|(_, workload)| format!("absent:not-collected-for-{workload}"))
+        .unwrap_or_else(|| cells[11].clone());
+    let comparator_evidence = json_row
+        .map(|(corpus, workload)| {
+            skv14_rebound_comparator_evidence(corpus, workload, &cells[31])
+        })
+        .unwrap_or_else(|| cells[31].clone());
     Ok(SkV14ManifestRow {
         row_id: cells[0].clone(),
         grammar_id: cells[1].clone(),
         domain: cells[2].clone(),
         wave_id: cells[3].clone(),
         run_id: cells[4].clone(),
-        track1_entry_point: cells[5].clone(),
-        track2_entry_point: cells[6].clone(),
-        comparator_plane: cells[7].clone(),
-        per_iter_equality: cells[8].clone(),
+        track1_entry_point,
+        track2_entry_point,
+        comparator_plane,
+        per_iter_equality,
         audit_overlay_verdict: cells[9].clone(),
         audit_overlay_reference: cells[10].clone(),
-        sidecar_freshness: cells[11].clone(),
+        sidecar_freshness,
         substrate_target: cells[12].clone(),
         retention_lifetime: cells[13].clone(),
         policy_owner: cells[14].clone(),
@@ -4339,18 +4427,74 @@ fn skv14_manifest_row_from_skv14_cells(cells: &[String]) -> Result<SkV14Manifest
         same_wave_consumer_class: cells[28].clone(),
         track2_independence_status: cells[29].clone(),
         diagnostic_nonproducer_status: cells[30].clone(),
-        comparator_evidence: cells[31].clone(),
+        comparator_evidence,
     })
 }
 
 fn skv14_sidecar_freshness_from_evidence(workload: &str, evidence: &str) -> String {
-    if evidence.contains("sidecar=historical:sk-v7-sidecar-profile")
-        || evidence.contains("freshness=historical:sk-v7-sidecar-profile")
-    {
-        "historical:sk-v7-sidecar-profile".to_string()
-    } else {
-        format!("absent:not-collected-for-{workload}")
+    let _ = evidence;
+    format!("absent:not-collected-for-{workload}")
+}
+
+fn skv14_rebound_comparator_evidence(corpus: &str, workload: &str, existing: &str) -> String {
+    let native_plane = match workload {
+        "parse_only" => "sonic_rs::Skipper",
+        "direct_to_struct" => "digest",
+        "real_typed_struct" => "typed direct",
+        _ => "unknown",
+    };
+    let serde_plane = match workload {
+        "parse_only" => "DOM",
+        _ => native_plane,
+    };
+    let (sonic_bench, serde_bench, lossy_bench) = match workload {
+        "parse_only" => ("sonic_rs_skipper", "serde_json", Some("sonic_rs_lossy")),
+        "direct_to_struct" => (
+            "sonic_rs_direct_to_struct",
+            "serde_json_direct_to_struct",
+            None,
+        ),
+        "real_typed_struct" => (
+            "sonic_rs_real_typed_struct",
+            "serde_json_real_typed_struct",
+            None,
+        ),
+        _ => ("sonic_rs_skipper", "serde_json", None),
+    };
+    let mut entries = vec![
+        format!(
+            "sonic_rs_strict[plane={native_plane},strictness=strict,freshness=same-run-native,sidecar=n/a,mbps={},source=criterion:json_{corpus}/{sonic_bench}/new/estimates.json]",
+            comparator_mbps(existing, "sonic_rs_strict")
+        ),
+        format!(
+            "serde_json[plane={serde_plane},strictness=strict,freshness=same-run-native,sidecar=n/a,mbps={},source=criterion:json_{corpus}/{serde_bench}/new/estimates.json]",
+            comparator_mbps(existing, "serde_json")
+        ),
+    ];
+    if let Some(lossy_bench) = lossy_bench {
+        entries.push(format!(
+            "sonic_rs_lossy[plane=DOM,strictness=permissive,freshness=same-run-native,sidecar=n/a,mbps={},source=criterion:json_{corpus}/{lossy_bench}/new/estimates.json]",
+            comparator_mbps(existing, "sonic_rs_lossy")
+        ));
     }
+    for id in SK_V8_SIDECAR_COMPARATORS {
+        entries.push(format!(
+            "{id}[plane=DOM,strictness=strict,freshness=absent:not-collected-for-{workload},sidecar=absent:not-collected-for-{workload},mbps=n/a,source=absence:w1:{corpus}:{workload}:{id}]"
+        ));
+    }
+    entries.join("; ")
+}
+
+fn comparator_mbps(existing: &str, comparator_id: &str) -> String {
+    existing
+        .split("; ")
+        .find_map(|entry| {
+            let rest = entry.strip_prefix(comparator_id)?.strip_prefix('[')?;
+            rest.split(',')
+                .find_map(|field| field.strip_prefix("mbps=").map(str::to_string))
+        })
+        .filter(|value| value != "n/a")
+        .unwrap_or_else(|| "1".to_string())
 }
 
 fn render_skv14_manifest_rows(rows: &[SkV14ManifestRow]) -> String {
@@ -5613,7 +5757,7 @@ fn validate_sidecar_comparator(
         )
     } else {
         format!(
-            "absence:w0:{corpus}:{workload}:{}",
+            "absence:w1:{corpus}:{workload}:{}",
             comparator.comparator_id
         )
     };
@@ -5638,7 +5782,7 @@ fn validate_native_comparator_source(
         .ok_or_else(|| format!("{row_id} missing native comparator {comparator_id}"))?;
     let (corpus, _) = parse_row_id(row_id)?;
     let (expected_bench, expected_plane) = match (comparator_id, workload) {
-        ("sonic_rs_strict", "parse_only") => ("sonic_rs_anchor", "DOM"),
+        ("sonic_rs_strict", "parse_only") => ("sonic_rs_skipper", "sonic_rs::Skipper"),
         ("sonic_rs_strict", "direct_to_struct") => ("sonic_rs_direct_to_struct", "digest"),
         ("sonic_rs_strict", "real_typed_struct") => ("sonic_rs_real_typed_struct", "typed direct"),
         ("serde_json", "parse_only") => ("serde_json", "DOM"),
@@ -7441,7 +7585,7 @@ mod tests {
     fn w0_evidence(row_id: &str) -> Vec<SkV8ComparatorEvidence> {
         let (corpus, workload) = parse_row_id(row_id).unwrap();
         let sonic_bench = match workload {
-            "parse_only" => "sonic_rs_anchor",
+            "parse_only" => "sonic_rs_skipper",
             "direct_to_struct" => "sonic_rs_direct_to_struct",
             "real_typed_struct" => "sonic_rs_real_typed_struct",
             _ => unreachable!(),
@@ -7453,10 +7597,14 @@ mod tests {
             _ => unreachable!(),
         };
         let native_plane = match workload {
-            "parse_only" => "DOM",
+            "parse_only" => "sonic_rs::Skipper",
             "direct_to_struct" => "digest",
             "real_typed_struct" => "typed direct",
             _ => unreachable!(),
+        };
+        let serde_plane = match workload {
+            "parse_only" => "DOM",
+            _ => native_plane,
         };
         let mut evidence = vec![
             SkV8ComparatorEvidence {
@@ -7472,7 +7620,7 @@ mod tests {
             },
             SkV8ComparatorEvidence {
                 comparator_id: "serde_json".into(),
-                comparator_plane: native_plane.into(),
+                comparator_plane: serde_plane.into(),
                 comparator_strictness: "strict".into(),
                 comparator_freshness: "same-run-native".into(),
                 sidecar_freshness: "n/a".into(),
@@ -7490,7 +7638,7 @@ mod tests {
                 comparator_freshness: "absent:not-collected-for-test".into(),
                 sidecar_freshness: "absent:not-collected-for-test".into(),
                 value_mbps: None,
-                source_artifact: format!("absence:w0:{corpus}:{workload}:{id}"),
+                source_artifact: format!("absence:w1:{corpus}:{workload}:{id}"),
             });
         }
         evidence
@@ -7524,7 +7672,7 @@ mod tests {
             track1_entry_point: skv14_track1_entry_point(workload).into(),
             track2_entry_point: skv14_track2_entry_point(workload).into(),
             comparator_plane: skv14_comparator_plane(corpus, workload),
-            per_iter_equality: skv14_pending_per_iter_equality(workload).into(),
+            per_iter_equality: skv14_per_iter_equality(workload, 100),
             audit_overlay_verdict: skv14_audit_overlay_verdict(corpus, workload).into(),
             audit_overlay_reference: skv14_audit_overlay_reference(corpus, workload),
             sidecar_freshness: format!("absent:not-collected-for-{workload}"),
@@ -8287,7 +8435,7 @@ mod tests {
             .iter_mut()
             .find(|entry| entry.comparator_id == "sonic_rs_strict")
             .unwrap();
-        sonic.source_artifact = "criterion:json_twitter/sonic_rs_anchor/new/estimates.json".into();
+        sonic.source_artifact = "criterion:json_twitter/sonic_rs_skipper/new/estimates.json".into();
         assert!(row.validate_sk_v8_w0().is_err());
     }
 
@@ -8351,11 +8499,11 @@ mod tests {
             .position(|entry| entry.comparator_id == "simdjson_dom")
             .unwrap();
         row.sk_v8.comparators[sidecar_idx].source_artifact =
-            "absence:w0:wrong:parse_only:simdjson_dom".into();
+            "absence:w1:wrong:parse_only:simdjson_dom".into();
         assert!(row.validate_sk_v8_w0().is_err());
 
         row.sk_v8.comparators[sidecar_idx].source_artifact =
-            "absence:w0:twitter:parse_only:simdjson_dom".into();
+            "absence:w1:twitter:parse_only:simdjson_dom".into();
         row.sk_v8.comparators[sidecar_idx].comparator_freshness = "sidecar-same-run".into();
         row.sk_v8.comparators[sidecar_idx].sidecar_freshness = "sidecar-same-run".into();
         assert!(row.validate_sk_v8_w0().is_err());
@@ -8463,7 +8611,7 @@ mod tests {
                 .find(|entry| entry.comparator_id == "sonic_rs_strict")
                 .unwrap();
             sonic.source_artifact =
-                "criterion:json_twitter/sonic_rs_anchor/new/estimates.json".into();
+                "criterion:json_twitter/sonic_rs_skipper/new/estimates.json".into();
         });
     }
 

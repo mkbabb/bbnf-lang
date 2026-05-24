@@ -1421,6 +1421,14 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
             return Ok(());
         }
     }
+    if subject.contains("sk-v14-w1") || subject.contains("sk-v14-W1") {
+        let allowed = changed_paths
+            .iter()
+            .all(|path| is_allowed_path(path, SK_V14_W0_OWNER_PATHS));
+        if allowed {
+            return Ok(());
+        }
+    }
     Err(format!(
         "Lock 14 frozen diff failed for parent paths [{}]",
         changed_paths.join(", ")

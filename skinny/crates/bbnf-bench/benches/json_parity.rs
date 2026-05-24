@@ -1,5 +1,6 @@
 use bbnf_bench::metadata::{BenchFacts, HostFacts, RowMetadata, TrackTag};
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
+use runtime::grammars::json::JsonRoot;
 use std::time::Duration;
 use std::{env, path::PathBuf};
 use test_fixtures::JsonFixture;
@@ -40,9 +41,12 @@ fn run_fixture(c: &mut Criterion, host: &HostFacts, fixture: &JsonFixture, input
     group.measurement_time(Duration::from_secs_f64(measurement_time_s));
     group.sample_size(sample_size);
 
+    let parse_expected = track2_tape_fingerprint(input).expect("track2 parse fingerprint");
     group.bench_function("track1_generated", |b| {
         b.iter(|| {
             let root = runtime::generated_json::parse(black_box(input)).unwrap();
+            let fingerprint = tape_fingerprint(&root);
+            assert_eq!(fingerprint, parse_expected);
             black_box(root);
         });
     });
@@ -84,19 +88,18 @@ fn run_fixture(c: &mut Criterion, host: &HostFacts, fixture: &JsonFixture, input
         ),
     );
 
-    group.bench_function("sonic_rs_anchor", |b| {
+    group.bench_function("sonic_rs_skipper", |b| {
         b.iter(|| {
-            let value = sonic_rs::from_slice::<sonic_rs::Value>(black_box(&fixture.bytes)).unwrap();
-            black_box(value);
+            bbnf_bench::sonic_skipper::parse_only(black_box(&fixture.bytes)).unwrap();
         });
     });
     write_competitor_row(
         host,
         fixture,
-        "sonic_rs_anchor",
+        "sonic_rs_skipper",
         "sonic-rs",
         "0.5.8",
-        "eager_typed",
+        "skip_checked",
         measurement_time_s,
         sample_size as u32,
     );
@@ -178,9 +181,12 @@ fn run_fixture(c: &mut Criterion, host: &HostFacts, fixture: &JsonFixture, input
         sample_size as u32,
     );
 
+    let direct_expected =
+        bbnf_bench::direct_struct::track2_digest(input).expect("track2 direct digest");
     group.bench_function("track1_direct_to_struct", |b| {
         b.iter(|| {
             let digest = bbnf_bench::direct_struct::track1_digest(black_box(input)).unwrap();
+            assert_eq!(digest, direct_expected);
             black_box(digest);
         });
     });
@@ -259,12 +265,19 @@ fn run_fixture(c: &mut Criterion, host: &HostFacts, fixture: &JsonFixture, input
     );
 
     if let Some(real_typed) = bbnf_bench::real_typed_struct::fixture_for_name(&fixture.name) {
+        let typed_expected = {
+            let output = bbnf_bench::real_typed_struct::track2_typed(real_typed, input)
+                .expect("track2 real typed");
+            bbnf_bench::real_typed_struct::typed_checksum(&output)
+        };
         group.bench_function("track1_real_typed_struct", |b| {
             b.iter(|| {
                 let output =
                     bbnf_bench::real_typed_struct::track1_typed(real_typed, black_box(input))
                         .unwrap();
-                black_box(bbnf_bench::real_typed_struct::typed_checksum(&output));
+                let checksum = bbnf_bench::real_typed_struct::typed_checksum(&output);
+                assert_eq!(checksum, typed_expected);
+                black_box(checksum);
             });
         });
         write_row(
@@ -512,6 +525,50 @@ fn metadata_path(corpus: &str, bench_name: &str) -> PathBuf {
         .join(format!("json_{corpus}"))
         .join(bench_name)
         .join("metadata.toml")
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct TapeFingerprint {
+    offsets: u64,
+    flag_cursors: u64,
+    flag_values: u64,
+    payload_writes: u64,
+    payload_allocations: u64,
+}
+
+fn track2_tape_fingerprint(input: &str) -> Result<TapeFingerprint, String> {
+    let root = bbnf_bench::track2::json::parse(input).map_err(|error| error.to_string())?;
+    Ok(tape_fingerprint(&root))
+}
+
+fn tape_fingerprint(root: &JsonRoot<'_>) -> TapeFingerprint {
+    TapeFingerprint {
+        offsets: fnv_u32(root.tape().offsets()),
+        flag_cursors: fnv_u32(root.tape().flag_cursors()),
+        flag_values: fnv_u8(root.tape().flag_values()),
+        payload_writes: root.tape().payloads().write_count() as u64,
+        payload_allocations: root.tape().payloads().allocation_count() as u64,
+    }
+}
+
+fn fnv_u32(values: &[u32]) -> u64 {
+    let mut hash = 0xcbf29ce484222325u64;
+    for value in values {
+        for byte in value.to_le_bytes() {
+            hash ^= u64::from(byte);
+            hash = hash.wrapping_mul(0x100000001b3);
+        }
+    }
+    hash
+}
+
+fn fnv_u8(values: &[u8]) -> u64 {
+    let mut hash = 0xcbf29ce484222325u64;
+    for value in values {
+        hash ^= u64::from(*value);
+        hash = hash.wrapping_mul(0x100000001b3);
+    }
+    hash
 }
 
 criterion_group! {

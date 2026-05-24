@@ -415,6 +415,7 @@ fn workload_for_materialisation(materialisation: &str) -> &str {
     match materialisation {
         "direct_to_struct" => "direct_to_struct",
         "real_typed_struct" => "real_typed_struct",
+        "skip_checked" => "parse_only",
         _ => "parse_only",
     }
 }
@@ -461,6 +462,7 @@ fn output_plane_for_competitor(materialisation: &str) -> &'static str {
     match materialisation {
         "direct_to_struct" | "direct_to_struct_lossy" => "digest",
         "real_typed_struct" | "real_typed_struct_lossy" => "typed direct",
+        "skip_checked" => "sonic_rs::Skipper",
         "borrowed" | "owned" | "eager_typed" | "eager_typed_lossy" => "DOM",
         _ => "DOM",
     }
@@ -477,6 +479,7 @@ fn feature_mask_for_competitor(crate_name: &str, _materialisation: &str) -> &'st
 
 fn api_symbol_for_competitor(crate_name: &str, materialisation: &str) -> &'static str {
     match (crate_name, materialisation) {
+        ("sonic-rs", "skip_checked") => "bbnf_bench::sonic_skipper::parse_only",
         ("sonic-rs", "eager_typed_lossy") => {
             "sonic_rs::Deserializer::from_slice(...).utf8_lossy().deserialize::<Value>()"
         }
@@ -489,7 +492,9 @@ fn api_symbol_for_competitor(crate_name: &str, materialisation: &str) -> &'stati
 }
 
 fn parse_mode_for_competitor(crate_name: &str, materialisation: &str) -> &'static str {
-    if crate_name == "sonic-rs" && materialisation.contains("lossy") {
+    if crate_name == "sonic-rs" && materialisation == "skip_checked" {
+        "skip_checked"
+    } else if crate_name == "sonic-rs" && materialisation.contains("lossy") {
         "from_slice_utf8_lossy"
     } else {
         "from_slice"

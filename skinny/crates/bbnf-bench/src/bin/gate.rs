@@ -4,14 +4,15 @@ use bbnf_bench::materialization::track_stats;
 use bbnf_bench::metadata::{current_peak_rss_bytes, RowMetadata, TrackTag};
 use bbnf_bench::report::{
     json_parse_only_admission_spec_for_corpus, json_parse_only_admission_spec_for_report,
-    sk_v8_open_baseline, ComparatorSet, JsonParseOnlyAdmissionSpec, NonJsonEvidenceReport, Report,
-    SkV12CssL4SotaReport, SkV12NonJsonReport, SkV13CssAtRulesAndMediaReport,
-    SkV13CssComparatorOracleReport, SkV13CssDeclarationValuesExtendedReport,
-    SkV13CssNestedLayoutReport, SkV13CssStylesheetSelectorsReport, SkV13CssVendorCustomReport,
-    SkV13CssVisualFunctionsReport, SkV13DecisionActiveCostReport, SkV13DecisionCspCascadeReport,
-    SkV13DecisionRegexReport, SkV13JsonDirectReopenReport, SkV13JsonParseOnlyReport,
-    SkV13PerGrammarPolicyReport, SkV13SameSubstrateUnionReport, SkV13SimdAsmProductionReport,
-    SkV13TypedProductReport, SkV8ComparatorEvidence, SkV8Telemetry, TelemetryRow,
+    sk_v8_open_baseline, skv14_existing_results_capture_markdown, ComparatorSet,
+    JsonParseOnlyAdmissionSpec, NonJsonEvidenceReport, Report, SkV12CssL4SotaReport,
+    SkV12NonJsonReport, SkV13CssAtRulesAndMediaReport, SkV13CssComparatorOracleReport,
+    SkV13CssDeclarationValuesExtendedReport, SkV13CssNestedLayoutReport,
+    SkV13CssStylesheetSelectorsReport, SkV13CssVendorCustomReport, SkV13CssVisualFunctionsReport,
+    SkV13DecisionActiveCostReport, SkV13DecisionCspCascadeReport, SkV13DecisionRegexReport,
+    SkV13JsonDirectReopenReport, SkV13JsonParseOnlyReport, SkV13PerGrammarPolicyReport,
+    SkV13SameSubstrateUnionReport, SkV13SimdAsmProductionReport, SkV13TypedProductReport,
+    SkV8ComparatorEvidence, SkV8Telemetry, TelemetryRow,
 };
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -32,6 +33,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         .iter()
         .skip(1)
         .any(|arg| matches!(arg.as_str(), "--update-results" | "--write-results"));
+    let skv14_existing_results_capture = args
+        .iter()
+        .skip(1)
+        .any(|arg| arg == "--skv14-existing-results-capture");
     let include_volatile_probes = args
         .iter()
         .skip(1)
@@ -382,6 +387,27 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let criterion_root = criterion_root();
     let results_path = workspace.join("RESULTS.md");
+    if skv14_existing_results_capture {
+        if include_volatile_probes {
+            return Err(
+                "--skv14-existing-results-capture cannot be combined with volatile probes".into(),
+            );
+        }
+        let existing_results = fs::read_to_string(&results_path)?;
+        let rendered = skv14_existing_results_capture_markdown(&existing_results)
+            .map_err(|error| format!("{}: {error}", results_path.display()))?;
+        if update_results {
+            fs::write(&results_path, &rendered)?;
+        } else if existing_results != rendered {
+            eprintln!(
+                "{} is stale; rerun `cargo xtask gate-json --update-results --skv14-existing-results-capture` to rewrite it.",
+                results_path.display()
+            );
+            std::process::exit(exit_code_for_verdict(Verdict::Invalid));
+        }
+        println!("{rendered}");
+        return Ok(());
+    }
     let fixtures = test_fixtures::load_available_bench_fixtures()?;
     let fixture_names = fixtures
         .iter()
@@ -714,7 +740,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             .to_string(),
     );
     report.notes.push(
-        "SK-V9 W0 telemetry: gate-json consumes the manifest below; native Rust comparators are same-run, C++ sidecars are historical or explicitly absent and never strict anchors in W0."
+        "SK-V14-open telemetry: gate-json consumes the manifest below; native Rust comparators are same-run, C++ sidecars are historical or explicitly absent and never strict anchors in W0."
             .to_string(),
     );
     if let Err(error) = report
@@ -2608,7 +2634,7 @@ impl RunFacts {
         let target_cpu = parse_target_cpu(&rustflags).unwrap_or_else(|| "default".to_string());
         Self {
             run_id: format!(
-                "sk-v9-open:criterion-fnv64-{}",
+                "SK-V14-open:criterion-fnv64-{}",
                 criterion_fingerprint(criterion_root, fixture_names)
             ),
             host_triple: host_triple.clone(),
@@ -2706,9 +2732,20 @@ fn w0_telemetry(
         costfacts_chosen_shape: "none:pre-W1".to_string(),
         costfacts_rejected_alternative_ids: vec!["none:pre-W1".to_string()],
         redress_entry: "none".to_string(),
-        wave_id: "SK-V9-open".to_string(),
+        wave_id: "SK-V14-open".to_string(),
         run_id: run_facts.run_id.clone(),
         sk_v9_open_delta: "baseline".to_string(),
+        track1_entry_point: skv14_track1_entry_point(workload).to_string(),
+        track2_entry_point: skv14_track2_entry_point(workload).to_string(),
+        comparator_plane: skv14_comparator_plane(corpus, workload),
+        per_iter_equality: skv14_pending_per_iter_equality(workload).to_string(),
+        audit_overlay_verdict: skv14_audit_overlay_verdict(corpus, workload).to_string(),
+        audit_overlay_reference: skv14_audit_overlay_reference(corpus, workload),
+        sidecar_freshness: row_sidecar_freshness(workload, competitors),
+        substrate_target: skv14_substrate_target(workload).to_string(),
+        retention_lifetime: skv14_retention_lifetime(workload).to_string(),
+        policy_owner: skv14_policy_owner(workload).to_string(),
+        sk_v14_open_delta: "baseline".to_string(),
         substrate_surface: substrate_surface.to_string(),
         structural_projection_status: structural_projection_status.to_string(),
         substrate_cardinality: substrate_cardinality.to_string(),
@@ -2800,6 +2837,134 @@ fn w0_comparator_evidence(
         ));
     }
     evidence
+}
+
+fn row_sidecar_freshness(workload: &str, comparators: &ComparatorSet) -> String {
+    let sidecars = [
+        comparators.simdjson_dom_mbps,
+        comparators.simdjson_ondemand_mbps,
+        comparators.yyjson_default_mbps,
+        comparators.asmjson_swar_mbps,
+        comparators.asmjson_avx512_mbps,
+        comparators.rapidjson_default_mbps,
+    ];
+    if sidecars.iter().any(|value| value.is_some()) {
+        "historical:sk-v7-sidecar-profile".to_string()
+    } else {
+        format!("absent:not-collected-for-{workload}")
+    }
+}
+
+fn skv14_track1_entry_point(workload: &str) -> &'static str {
+    match workload {
+        "parse_only" => "bbnf_bench::json_parity::track1_generated_parse",
+        "direct_to_struct" => "bbnf_bench::json_parity::track1_direct_to_struct",
+        "real_typed_struct" => "bbnf_bench::json_parity::track1_real_typed_struct",
+        _ => "unknown",
+    }
+}
+
+fn skv14_track2_entry_point(workload: &str) -> &'static str {
+    match workload {
+        "parse_only" => "bbnf_bench::json_parity::track2_structural_oracle",
+        "direct_to_struct" => "bbnf_bench::direct_struct::sonic_digest",
+        "real_typed_struct" => "bbnf_bench::real_typed_struct::sonic_typed",
+        _ => "unknown",
+    }
+}
+
+fn skv14_comparator_plane(corpus: &str, workload: &str) -> String {
+    match workload {
+        "parse_only" => "sonic_rs::Skipper".to_string(),
+        "direct_to_struct" => format!("{corpus}::strict_struct_deser"),
+        "real_typed_struct" => format!("{corpus}::typed_strict_struct_deser"),
+        _ => "unknown".to_string(),
+    }
+}
+
+fn skv14_pending_per_iter_equality(workload: &str) -> &'static str {
+    match workload {
+        "parse_only" => "not_admitted:pre-W1-skipper-per-iter-equality",
+        "direct_to_struct" => "not_admitted:pre-W1-direct-per-iter-equality",
+        "real_typed_struct" => "not_admitted:pre-W1-typed-per-iter-equality",
+        _ => "not_admitted:unsupported-workload",
+    }
+}
+
+fn skv14_audit_overlay_verdict(corpus: &str, workload: &str) -> &'static str {
+    if skv14_json_audit_falsified(corpus, workload) {
+        "AUDIT-FALSIFIED"
+    } else {
+        "AUDIT-PENDING"
+    }
+}
+
+fn skv14_audit_overlay_reference(corpus: &str, workload: &str) -> String {
+    if !skv14_json_audit_falsified(corpus, workload) {
+        return "pending:SK-V14-W1-rebind-or-maintain".to_string();
+    }
+    match workload {
+        "parse_only" => "sk-v13/v2-json-validation:§1-2;sk-v13/v6-comparator-integrity:§1+§3",
+        "direct_to_struct" => "sk-v13/v6-comparator-integrity:§1+§3;sk-v13/v2-json-validation:§3",
+        "real_typed_struct" => "sk-v13/v6-comparator-integrity:§1+§3;sk-v13/v2-json-validation:§4",
+        _ => "sk-v13/audit-overfit:unknown",
+    }
+    .to_string()
+}
+
+fn skv14_json_audit_falsified(corpus: &str, workload: &str) -> bool {
+    match workload {
+        "parse_only" => matches!(
+            corpus,
+            "numbers" | "citm_catalog" | "canada" | "marine_ik" | "mesh"
+        ),
+        "direct_to_struct" => matches!(
+            corpus,
+            "citm_catalog"
+                | "apache_builds"
+                | "marine_ik"
+                | "instruments"
+                | "numbers"
+                | "unicode_basic"
+        ),
+        "real_typed_struct" => matches!(
+            corpus,
+            "twitter"
+                | "citm_catalog"
+                | "apache_builds"
+                | "github_events"
+                | "update_center"
+                | "mesh"
+                | "random"
+                | "marine_ik"
+                | "instruments"
+                | "numbers"
+                | "unicode_basic"
+        ),
+        _ => false,
+    }
+}
+
+fn skv14_substrate_target(workload: &str) -> &'static str {
+    match workload {
+        "parse_only" => "existing_tape",
+        "direct_to_struct" | "real_typed_struct" => "direct_sink",
+        _ => "local_temp_only",
+    }
+}
+
+fn skv14_retention_lifetime(workload: &str) -> &'static str {
+    match workload {
+        "parse_only" | "direct_to_struct" | "real_typed_struct" => "generated_function",
+        _ => "local_loop",
+    }
+}
+
+fn skv14_policy_owner(workload: &str) -> &'static str {
+    match workload {
+        "parse_only" | "direct_to_struct" | "real_typed_struct" => "generated_grammar",
+        _ => "none",
+    }
 }
 
 fn comparator_evidence(

@@ -7,6 +7,57 @@ use std::path::Path;
 
 pub const SCHEMA_V3_HEADER: &str = "| Corpus | Workload | Outcome | Verdict | Strictness | parse_utf8 | escape_complete | flaw_probe | Output plane | Track 1 Mbps | Track 2 Mbps | sonic-rs strict Mbps | sonic-rs lossy Mbps | simdjson DOM Mbps | simdjson On Demand Mbps | yyjson default Mbps | asmjson SWAR Mbps | asmjson AVX-512 Mbps | RapidJSON default Mbps | serde_json Mbps | Δ vs SK-V6 | Δ vs sonic-strict | Δ vs simdjson DOM | Δ vs yyjson | Hot leaf | Signal |";
 const SCHEMA_V3_ALIGN: &str = "|---|---|---:|---|---|---|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---:|---:|---:|---|---|";
+pub const SKV14_W0_MANIFEST_HEADER: &str = "| Row id | Grammar | Domain | Wave | Run id | Track 1 entry | Track 2 entry | Comparator plane | Per-iter equality | Audit overlay | Audit reference | Sidecar freshness | Substrate target | Retention lifetime | Policy owner | Validation | Profile artifact | Sample cost | Sample count | Build flags | Host triple | Feature mask | CostFacts | Redress | SK-V14-open delta | Substrate | Structural projection | Cardinality | Consumer | Track 2 | Diagnostic nonproducer | Comparator evidence |";
+const SKV14_W0_MANIFEST_ALIGN: &str = "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---:|---|---|---|---|---|---|---|---|---|---|---|---|---|";
+
+const SKV14_JSON_CORPORA: &[&str] = &[
+    "twitter",
+    "citm_catalog",
+    "canada",
+    "apache_builds",
+    "github_events",
+    "update_center",
+    "mesh",
+    "random",
+    "gsoc-2018",
+    "marine_ik",
+    "instruments",
+    "numbers",
+    "unicode_mixed",
+    "unicode_escapes",
+    "unicode_basic",
+    "distinct_values",
+    "y_string_unicode",
+];
+
+const SKV14_JSON_WORKLOADS: &[&str] = &["parse_only", "direct_to_struct", "real_typed_struct"];
+
+const SKV14_CSS_FEATURES: &[&str] = &[
+    "declaration_values",
+    "declarations",
+    "stylesheet_root",
+    "selectors",
+    "at_rules_keyframes",
+    "nested_rules",
+    "css_variables",
+    "calc_expressions",
+    "var_url_functions",
+    "color_functions",
+    "gradients",
+    "transforms",
+    "filters",
+    "easing_functions",
+    "media_queries",
+    "vendor_prefixes",
+    "custom_at_rules",
+    "pseudo_classes",
+    "pseudo_elements",
+    "attribute_selectors",
+    "logical_properties",
+    "grid",
+    "flexbox",
+    "typed_property_groups",
+];
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
@@ -63,6 +114,28 @@ pub struct SkV8Telemetry {
     pub wave_id: String,
     pub run_id: String,
     pub sk_v9_open_delta: String,
+    #[serde(default = "legacy_skv14_telemetry_value")]
+    pub track1_entry_point: String,
+    #[serde(default = "legacy_skv14_telemetry_value")]
+    pub track2_entry_point: String,
+    #[serde(default = "legacy_skv14_telemetry_value")]
+    pub comparator_plane: String,
+    #[serde(default = "legacy_skv14_telemetry_value")]
+    pub per_iter_equality: String,
+    #[serde(default = "default_audit_pending")]
+    pub audit_overlay_verdict: String,
+    #[serde(default = "legacy_skv14_telemetry_value")]
+    pub audit_overlay_reference: String,
+    #[serde(default = "legacy_skv14_telemetry_value")]
+    pub sidecar_freshness: String,
+    #[serde(default = "default_local_temp_only")]
+    pub substrate_target: String,
+    #[serde(default = "default_local_loop")]
+    pub retention_lifetime: String,
+    #[serde(default = "default_no_policy_owner")]
+    pub policy_owner: String,
+    #[serde(default = "legacy_skv14_telemetry_value")]
+    pub sk_v14_open_delta: String,
     pub substrate_surface: String,
     pub structural_projection_status: String,
     pub substrate_cardinality: String,
@@ -94,6 +167,62 @@ pub struct TelemetryRow {
     pub hot_leaf: String,
     pub signal: String,
     pub sk_v8: SkV8Telemetry,
+}
+
+fn legacy_skv14_telemetry_value() -> String {
+    "legacy:pre-skv14-manifest".to_string()
+}
+
+fn default_audit_pending() -> String {
+    "AUDIT-PENDING".to_string()
+}
+
+fn default_local_temp_only() -> String {
+    "local_temp_only".to_string()
+}
+
+fn default_local_loop() -> String {
+    "local_loop".to_string()
+}
+
+fn default_no_policy_owner() -> String {
+    "none".to_string()
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct SkV14ManifestRow {
+    row_id: String,
+    grammar_id: String,
+    domain: String,
+    wave_id: String,
+    run_id: String,
+    track1_entry_point: String,
+    track2_entry_point: String,
+    comparator_plane: String,
+    per_iter_equality: String,
+    audit_overlay_verdict: String,
+    audit_overlay_reference: String,
+    sidecar_freshness: String,
+    substrate_target: String,
+    retention_lifetime: String,
+    policy_owner: String,
+    measured_validation_path: String,
+    profile_artifact: String,
+    sample_cost: String,
+    sample_count: u64,
+    build_flags: String,
+    host_triple: String,
+    feature_mask: String,
+    costfacts: String,
+    redress_entry: String,
+    sk_v14_open_delta: String,
+    substrate_surface: String,
+    structural_projection_status: String,
+    substrate_cardinality: String,
+    same_wave_consumer_class: String,
+    track2_independence_status: String,
+    diagnostic_nonproducer_status: String,
+    comparator_evidence: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -3094,6 +3223,23 @@ impl TelemetryRow {
             ("wave_id", telemetry.wave_id.as_str()),
             ("run_id", telemetry.run_id.as_str()),
             ("sk_v9_open_delta", telemetry.sk_v9_open_delta.as_str()),
+            ("track1_entry_point", telemetry.track1_entry_point.as_str()),
+            ("track2_entry_point", telemetry.track2_entry_point.as_str()),
+            ("comparator_plane", telemetry.comparator_plane.as_str()),
+            ("per_iter_equality", telemetry.per_iter_equality.as_str()),
+            (
+                "audit_overlay_verdict",
+                telemetry.audit_overlay_verdict.as_str(),
+            ),
+            (
+                "audit_overlay_reference",
+                telemetry.audit_overlay_reference.as_str(),
+            ),
+            ("sidecar_freshness", telemetry.sidecar_freshness.as_str()),
+            ("substrate_target", telemetry.substrate_target.as_str()),
+            ("retention_lifetime", telemetry.retention_lifetime.as_str()),
+            ("policy_owner", telemetry.policy_owner.as_str()),
+            ("sk_v14_open_delta", telemetry.sk_v14_open_delta.as_str()),
             ("substrate_surface", telemetry.substrate_surface.as_str()),
             (
                 "structural_projection_status",
@@ -3129,12 +3275,16 @@ impl TelemetryRow {
         }
         validate_w0_row_identity(self)?;
         validate_w0_outcome(&telemetry.row_id, &self.outcome_id)?;
-        if telemetry.wave_id != "SK-V9-open" || telemetry.sk_v9_open_delta != "baseline" {
+        if telemetry.wave_id != "SK-V14-open"
+            || telemetry.sk_v9_open_delta != "baseline"
+            || telemetry.sk_v14_open_delta != "baseline"
+        {
             return Err(format!(
-                "{} is not marked as SK-V9-open baseline",
+                "{} is not marked as SK-V14-open baseline",
                 telemetry.row_id
             ));
         }
+        validate_skv14_manifest_row(&self.skv14_manifest_row())?;
         if telemetry.diagnostic_nonproducer_status
             != "structural_scan+masking_probes+pmu+cycles:nonproducer"
         {
@@ -3145,7 +3295,7 @@ impl TelemetryRow {
         }
         if !is_skv9_open_run_id(&telemetry.run_id) {
             return Err(format!(
-                "{} has invalid SK-V9-open run_id {}",
+                "{} has invalid SK-V14-open run_id {}",
                 telemetry.row_id, telemetry.run_id
             ));
         }
@@ -3201,9 +3351,20 @@ impl SkV8Telemetry {
             costfacts_chosen_shape: "none:pre-W1".to_string(),
             costfacts_rejected_alternative_ids: vec!["none:pre-W1".to_string()],
             redress_entry: "none".to_string(),
-            wave_id: "SK-V9-open".to_string(),
+            wave_id: "SK-V14-open".to_string(),
             run_id: "test-run".to_string(),
             sk_v9_open_delta: "baseline".to_string(),
+            track1_entry_point: skv14_track1_entry_point(workload).to_string(),
+            track2_entry_point: skv14_track2_entry_point(workload).to_string(),
+            comparator_plane: skv14_comparator_plane(corpus, workload),
+            per_iter_equality: skv14_pending_per_iter_equality(workload).to_string(),
+            audit_overlay_verdict: skv14_audit_overlay_verdict(corpus, workload).to_string(),
+            audit_overlay_reference: skv14_audit_overlay_reference(corpus, workload).to_string(),
+            sidecar_freshness: format!("absent:not-collected-for-{workload}"),
+            substrate_target: skv14_substrate_target(workload).to_string(),
+            retention_lifetime: skv14_retention_lifetime(workload).to_string(),
+            policy_owner: skv14_policy_owner(workload).to_string(),
+            sk_v14_open_delta: "baseline".to_string(),
             substrate_surface: output_plane.to_string(),
             structural_projection_status: "n/a".to_string(),
             substrate_cardinality: "zero_or_inert".to_string(),
@@ -3213,6 +3374,388 @@ impl SkV8Telemetry {
                 .to_string(),
             comparators: Vec::new(),
         }
+    }
+}
+
+impl TelemetryRow {
+    fn skv14_manifest_row(&self) -> SkV14ManifestRow {
+        let telemetry = &self.sk_v8;
+        SkV14ManifestRow {
+            row_id: telemetry.row_id.clone(),
+            grammar_id: telemetry.grammar_id.clone(),
+            domain: telemetry.domain.clone(),
+            wave_id: telemetry.wave_id.clone(),
+            run_id: telemetry.run_id.clone(),
+            track1_entry_point: telemetry.track1_entry_point.clone(),
+            track2_entry_point: telemetry.track2_entry_point.clone(),
+            comparator_plane: telemetry.comparator_plane.clone(),
+            per_iter_equality: telemetry.per_iter_equality.clone(),
+            audit_overlay_verdict: telemetry.audit_overlay_verdict.clone(),
+            audit_overlay_reference: telemetry.audit_overlay_reference.clone(),
+            sidecar_freshness: telemetry.sidecar_freshness.clone(),
+            substrate_target: telemetry.substrate_target.clone(),
+            retention_lifetime: telemetry.retention_lifetime.clone(),
+            policy_owner: telemetry.policy_owner.clone(),
+            measured_validation_path: telemetry.measured_validation_path.clone(),
+            profile_artifact: telemetry.profile_artifact.clone(),
+            sample_cost: telemetry.sample_cost.clone(),
+            sample_count: telemetry.sample_count,
+            build_flags: telemetry.build_flags.clone(),
+            host_triple: telemetry.host_triple.clone(),
+            feature_mask: telemetry.feature_mask.clone(),
+            costfacts: format!(
+                "{}:{}:{}",
+                telemetry.costfacts_rule_id,
+                telemetry.costfacts_chosen_shape,
+                telemetry.costfacts_rejected_alternative_ids.join(",")
+            ),
+            redress_entry: telemetry.redress_entry.clone(),
+            sk_v14_open_delta: telemetry.sk_v14_open_delta.clone(),
+            substrate_surface: telemetry.substrate_surface.clone(),
+            structural_projection_status: telemetry.structural_projection_status.clone(),
+            substrate_cardinality: telemetry.substrate_cardinality.clone(),
+            same_wave_consumer_class: telemetry.same_wave_consumer_class.clone(),
+            track2_independence_status: telemetry.track2_independence_status.clone(),
+            diagnostic_nonproducer_status: telemetry.diagnostic_nonproducer_status.clone(),
+            comparator_evidence: format_comparator_evidence(&telemetry.comparators),
+        }
+    }
+}
+
+fn skv14_missing_json_typed_manifest(corpus: &str) -> SkV14ManifestRow {
+    let row_id = format!("json/{corpus}/real_typed_struct/main");
+    let workload = "real_typed_struct";
+    let audit_overlay_verdict = skv14_audit_overlay_verdict(corpus, workload).to_string();
+    let audit_overlay_reference = skv14_audit_overlay_reference(corpus, workload);
+    SkV14ManifestRow {
+        row_id,
+        grammar_id: "json".into(),
+        domain: "json_bench".into(),
+        wave_id: "SK-V14-open".into(),
+        run_id: "SK-V14-open:absent-product-surface-not-generated".into(),
+        track1_entry_point: "absent:generated-product-surface-not-generated".into(),
+        track2_entry_point: "absent:typed-oracle-product-surface-not-generated".into(),
+        comparator_plane: skv14_comparator_plane(corpus, workload),
+        per_iter_equality: "not_admitted:product-surface-not-generated".into(),
+        audit_overlay_verdict,
+        audit_overlay_reference,
+        sidecar_freshness: "absent:not-collected-for-real_typed_struct".into(),
+        substrate_target: skv14_substrate_target(workload).into(),
+        retention_lifetime: skv14_retention_lifetime(workload).into(),
+        policy_owner: skv14_policy_owner(workload).into(),
+        measured_validation_path: "absent:product-surface-not-generated".into(),
+        profile_artifact: "absent:product-surface-not-generated".into(),
+        sample_cost: "absent:product-surface-not-generated".into(),
+        sample_count: 0,
+        build_flags: "absent:product-surface-not-generated".into(),
+        host_triple: "absent:product-surface-not-generated".into(),
+        feature_mask: "absent:product-surface-not-generated".into(),
+        costfacts: "none:pre-W1:none:pre-W1:none:pre-W1".into(),
+        redress_entry: "none:missing-product-surface".into(),
+        sk_v14_open_delta: "absent:product-surface-not-generated".into(),
+        substrate_surface: "typed_direct_projection".into(),
+        structural_projection_status: "n/a".into(),
+        substrate_cardinality: "zero_or_inert".into(),
+        same_wave_consumer_class: "gate_only".into(),
+        track2_independence_status: "not_applicable:missing-product-surface".into(),
+        diagnostic_nonproducer_status: "not_applicable:missing-product-surface".into(),
+        comparator_evidence: "absent:product-surface-not-generated".into(),
+    }
+}
+
+fn skv14_css_manifest_row(feature: &str) -> SkV14ManifestRow {
+    let row_id = format!("css_l4/{feature}/direct_to_struct/main");
+    SkV14ManifestRow {
+        row_id,
+        grammar_id: "css_l4".into(),
+        domain: "css_l4_bench".into(),
+        wave_id: "SK-V14-open".into(),
+        run_id: "SK-V14-open:retained-css-l4-audit-overlay".into(),
+        track1_entry_point: format!("skinny::generated_css_l4::{feature}::parse"),
+        track2_entry_point: "cssparser::Parser::parse_entirely".into(),
+        comparator_plane: "lightningcss full-parse".into(),
+        per_iter_equality: "not_admitted:pre-W8-css-full-parse-equality".into(),
+        audit_overlay_verdict: "AUDIT-FALSIFIED".into(),
+        audit_overlay_reference: "sk-v13/v1-css-l4-validation:§1-6".into(),
+        sidecar_freshness: "absent:not-collected-for-css_l4".into(),
+        substrate_target: "admitted_fact_output".into(),
+        retention_lifetime: "output_row".into(),
+        policy_owner: "generated_grammar".into(),
+        measured_validation_path: "retained:pre-W4-audit-falsified-css-row".into(),
+        profile_artifact: "retained:pre-W4-css-l4-results-row".into(),
+        sample_cost: "retained:pre-W4-css-l4-results-row".into(),
+        sample_count: 0,
+        build_flags: "retained:pre-W4-css-l4-results-row".into(),
+        host_triple: "retained:pre-W4-css-l4-results-row".into(),
+        feature_mask: "retained:pre-W4-css-l4-results-row".into(),
+        costfacts: "none:pre-W8:none:pre-W8:none:pre-W8".into(),
+        redress_entry: "pending:W4-PRUNE-2".into(),
+        sk_v14_open_delta: "baseline".into(),
+        substrate_surface: "css_l4_fact_stream".into(),
+        structural_projection_status: "audit-falsified:fake-generated-template".into(),
+        substrate_cardinality: "one".into(),
+        same_wave_consumer_class: "gate_only".into(),
+        track2_independence_status: "pending:W8-cssparser-full-parse".into(),
+        diagnostic_nonproducer_status: "css-l4-audit-overlay:nonproducer".into(),
+        comparator_evidence: "lightningcss_strict[plane=full-parse,strictness=strict,freshness=historical:pre-W8,sidecar=absent:not-collected-for-css_l4,mbps=n/a,source=sk-v13/v1-css-l4-validation]".into(),
+    }
+}
+
+fn validate_skv14_manifest_rows(rows: &[SkV14ManifestRow]) -> Result<(), String> {
+    let mut seen = BTreeSet::new();
+    let mut falsified = 0usize;
+    let mut pending = 0usize;
+    let mut sustained = 0usize;
+    for row in rows {
+        validate_skv14_manifest_row(row)?;
+        if !seen.insert(row.row_id.as_str()) {
+            return Err(format!("duplicate SK-V14 manifest row {}", row.row_id));
+        }
+        match row.audit_overlay_verdict.as_str() {
+            "AUDIT-FALSIFIED" => falsified += 1,
+            "AUDIT-PENDING" => pending += 1,
+            "AUDIT-SUSTAINED" => sustained += 1,
+            other => {
+                return Err(format!(
+                    "{} has unsupported audit overlay {other}",
+                    row.row_id
+                ))
+            }
+        }
+    }
+    let expected = SKV14_JSON_CORPORA.len() * SKV14_JSON_WORKLOADS.len() + SKV14_CSS_FEATURES.len();
+    if rows.len() != expected {
+        return Err(format!(
+            "SK-V14 manifest expected {expected} rows, saw {}",
+            rows.len()
+        ));
+    }
+    for corpus in SKV14_JSON_CORPORA {
+        for workload in SKV14_JSON_WORKLOADS {
+            let row_id = format!("json/{corpus}/{workload}/main");
+            if !seen.contains(row_id.as_str()) {
+                return Err(format!("SK-V14 manifest missing {row_id}"));
+            }
+        }
+    }
+    for feature in SKV14_CSS_FEATURES {
+        let row_id = format!("css_l4/{feature}/direct_to_struct/main");
+        if !seen.contains(row_id.as_str()) {
+            return Err(format!("SK-V14 manifest missing {row_id}"));
+        }
+    }
+    if (falsified, pending, sustained) != (46, 29, 0) {
+        return Err(format!(
+            "SK-V14 audit overlay expected 46 falsified / 29 pending / 0 sustained, saw {falsified} / {pending} / {sustained}"
+        ));
+    }
+    Ok(())
+}
+
+fn validate_skv14_manifest_row(row: &SkV14ManifestRow) -> Result<(), String> {
+    for (field, value) in [
+        ("row_id", row.row_id.as_str()),
+        ("grammar_id", row.grammar_id.as_str()),
+        ("domain", row.domain.as_str()),
+        ("wave_id", row.wave_id.as_str()),
+        ("run_id", row.run_id.as_str()),
+        ("track1_entry_point", row.track1_entry_point.as_str()),
+        ("track2_entry_point", row.track2_entry_point.as_str()),
+        ("comparator_plane", row.comparator_plane.as_str()),
+        ("per_iter_equality", row.per_iter_equality.as_str()),
+        ("audit_overlay_verdict", row.audit_overlay_verdict.as_str()),
+        (
+            "audit_overlay_reference",
+            row.audit_overlay_reference.as_str(),
+        ),
+        ("sidecar_freshness", row.sidecar_freshness.as_str()),
+        ("substrate_target", row.substrate_target.as_str()),
+        ("retention_lifetime", row.retention_lifetime.as_str()),
+        ("policy_owner", row.policy_owner.as_str()),
+        ("sk_v14_open_delta", row.sk_v14_open_delta.as_str()),
+    ] {
+        if value.trim().is_empty() {
+            return Err(format!("{} missing SK-V14 {field}", row.row_id));
+        }
+    }
+    if !matches!(
+        row.substrate_target.as_str(),
+        "local_temp_only" | "existing_tape" | "direct_sink" | "admitted_fact_output"
+    ) {
+        return Err(format!(
+            "{} has invalid substrate_target {}",
+            row.row_id, row.substrate_target
+        ));
+    }
+    if !matches!(
+        row.retention_lifetime.as_str(),
+        "local_loop" | "generated_function" | "output_row"
+    ) {
+        return Err(format!(
+            "{} has invalid retention_lifetime {}",
+            row.row_id, row.retention_lifetime
+        ));
+    }
+    if !matches!(
+        row.policy_owner.as_str(),
+        "generated_grammar" | "caller_data" | "none"
+    ) {
+        return Err(format!(
+            "{} has invalid policy_owner {}",
+            row.row_id, row.policy_owner
+        ));
+    }
+    if row.sidecar_freshness == "sidecar-same-run" {
+        return Err(format!(
+            "{} claims sidecar-same-run without structured manifest",
+            row.row_id
+        ));
+    }
+    if row.comparator_plane.contains("from_slice::<Value>") {
+        return Err(format!(
+            "{} comparator_plane reopens eager DOM comparator",
+            row.row_id
+        ));
+    }
+    if row.track1_entry_point == row.track2_entry_point {
+        return Err(format!(
+            "{} has identical Track 1/Track 2 entry",
+            row.row_id
+        ));
+    }
+    if row.track2_entry_point.starts_with("runtime::tape::")
+        && !matches!(
+            row.track2_entry_point.as_str(),
+            "runtime::tape::Tape" | "runtime::tape::OffsetFlags"
+        )
+    {
+        return Err(format!(
+            "{} Track 2 reaches private runtime tape internals",
+            row.row_id
+        ));
+    }
+    if row.audit_overlay_verdict == "AUDIT-FALSIFIED"
+        && row.audit_overlay_reference.starts_with("pending:")
+    {
+        return Err(format!(
+            "{} falsified row lacks validation reference",
+            row.row_id
+        ));
+    }
+    Ok(())
+}
+
+fn skv14_track1_entry_point(workload: &str) -> &'static str {
+    match workload {
+        "parse_only" => "bbnf_bench::json_parity::track1_generated_parse",
+        "direct_to_struct" => "bbnf_bench::json_parity::track1_direct_to_struct",
+        "real_typed_struct" => "bbnf_bench::json_parity::track1_real_typed_struct",
+        _ => "unknown",
+    }
+}
+
+fn skv14_track2_entry_point(workload: &str) -> &'static str {
+    match workload {
+        "parse_only" => "bbnf_bench::json_parity::track2_structural_oracle",
+        "direct_to_struct" => "bbnf_bench::direct_struct::sonic_digest",
+        "real_typed_struct" => "bbnf_bench::real_typed_struct::sonic_typed",
+        _ => "unknown",
+    }
+}
+
+fn skv14_comparator_plane(corpus: &str, workload: &str) -> String {
+    match workload {
+        "parse_only" => "sonic_rs::Skipper".to_string(),
+        "direct_to_struct" => format!("{corpus}::strict_struct_deser"),
+        "real_typed_struct" => format!("{corpus}::typed_strict_struct_deser"),
+        _ => "unknown".to_string(),
+    }
+}
+
+fn skv14_pending_per_iter_equality(workload: &str) -> &'static str {
+    match workload {
+        "parse_only" => "not_admitted:pre-W1-skipper-per-iter-equality",
+        "direct_to_struct" => "not_admitted:pre-W1-direct-per-iter-equality",
+        "real_typed_struct" => "not_admitted:pre-W1-typed-per-iter-equality",
+        _ => "not_admitted:unsupported-workload",
+    }
+}
+
+fn skv14_audit_overlay_verdict(corpus: &str, workload: &str) -> &'static str {
+    if skv14_json_audit_falsified(corpus, workload) {
+        "AUDIT-FALSIFIED"
+    } else {
+        "AUDIT-PENDING"
+    }
+}
+
+fn skv14_audit_overlay_reference(corpus: &str, workload: &str) -> String {
+    if !skv14_json_audit_falsified(corpus, workload) {
+        return "pending:SK-V14-W1-rebind-or-maintain".to_string();
+    }
+    match workload {
+        "parse_only" => "sk-v13/v2-json-validation:§1-2;sk-v13/v6-comparator-integrity:§1+§3",
+        "direct_to_struct" => "sk-v13/v6-comparator-integrity:§1+§3;sk-v13/v2-json-validation:§3",
+        "real_typed_struct" => "sk-v13/v6-comparator-integrity:§1+§3;sk-v13/v2-json-validation:§4",
+        _ => "sk-v13/audit-overfit:unknown",
+    }
+    .to_string()
+}
+
+fn skv14_json_audit_falsified(corpus: &str, workload: &str) -> bool {
+    match workload {
+        "parse_only" => matches!(
+            corpus,
+            "numbers" | "citm_catalog" | "canada" | "marine_ik" | "mesh"
+        ),
+        "direct_to_struct" => matches!(
+            corpus,
+            "citm_catalog"
+                | "apache_builds"
+                | "marine_ik"
+                | "instruments"
+                | "numbers"
+                | "unicode_basic"
+        ),
+        "real_typed_struct" => matches!(
+            corpus,
+            "twitter"
+                | "citm_catalog"
+                | "apache_builds"
+                | "github_events"
+                | "update_center"
+                | "mesh"
+                | "random"
+                | "marine_ik"
+                | "instruments"
+                | "numbers"
+                | "unicode_basic"
+        ),
+        _ => false,
+    }
+}
+
+fn skv14_substrate_target(workload: &str) -> &'static str {
+    match workload {
+        "parse_only" => "existing_tape",
+        "direct_to_struct" | "real_typed_struct" => "direct_sink",
+        _ => "local_temp_only",
+    }
+}
+
+fn skv14_retention_lifetime(workload: &str) -> &'static str {
+    match workload {
+        "parse_only" => "generated_function",
+        "direct_to_struct" | "real_typed_struct" => "generated_function",
+        _ => "local_loop",
+    }
+}
+
+fn skv14_policy_owner(workload: &str) -> &'static str {
+    match workload {
+        "parse_only" => "generated_grammar",
+        "direct_to_struct" | "real_typed_struct" => "generated_grammar",
+        _ => "none",
     }
 }
 
@@ -3316,22 +3859,24 @@ impl Report {
             if !seen.insert(row_id) {
                 return Err(format!("duplicate SK-V9 W0 row_id {row_id}"));
             }
-            if row_id == W6_GITHUB_EVENTS_TYPED_ROW_ID {
+            if row_id == W6_GITHUB_EVENTS_TYPED_ROW_ID && row.sk_v8.wave_id != "SK-V14-open" {
                 validate_w6_github_events_typed_row(row)?;
                 w6_github_events_typed_seen = true;
-            } else if row_id == W13_NUMBERS_TYPED_ROW_ID {
+            } else if row_id == W13_NUMBERS_TYPED_ROW_ID && row.sk_v8.wave_id != "SK-V14-open" {
                 validate_w13_numbers_typed_row(row)?;
                 w13_numbers_typed_seen = true;
-            } else if row_id == W13_UNICODE_BASIC_TYPED_ROW_ID {
+            } else if row_id == W13_UNICODE_BASIC_TYPED_ROW_ID && row.sk_v8.wave_id != "SK-V14-open"
+            {
                 validate_w13_unicode_basic_typed_row(row)?;
                 w13_unicode_basic_typed_seen = true;
-            } else if row_id == W13_RANDOM_TYPED_ROW_ID {
+            } else if row_id == W13_RANDOM_TYPED_ROW_ID && row.sk_v8.wave_id != "SK-V14-open" {
                 validate_w13_random_typed_row(row)?;
                 w13_random_typed_seen = true;
-            } else if row_id == W13_INSTRUMENTS_TYPED_ROW_ID {
+            } else if row_id == W13_INSTRUMENTS_TYPED_ROW_ID && row.sk_v8.wave_id != "SK-V14-open" {
                 validate_w13_instruments_typed_row(row)?;
                 w13_instruments_typed_seen = true;
-            } else if row_id == W15_UPDATE_CENTER_TYPED_ROW_ID {
+            } else if row_id == W15_UPDATE_CENTER_TYPED_ROW_ID && row.sk_v8.wave_id != "SK-V14-open"
+            {
                 validate_w15_update_center_typed_row(row)?;
             } else if row.outcome_id == "A" {
                 if let Some(spec) = json_parse_only_admission_spec_for_row_id(row_id) {
@@ -3422,7 +3967,36 @@ impl Report {
             }
         }
         validate_existing_typed_maintain_floors(self)?;
+        validate_skv14_manifest_rows(&self.skv14_manifest_rows()?)?;
         Ok(())
+    }
+
+    fn skv14_manifest_rows(&self) -> Result<Vec<SkV14ManifestRow>, String> {
+        let mut rows = Vec::new();
+        let mut seen = BTreeSet::new();
+        for row in &self.rows {
+            let manifest = row.skv14_manifest_row();
+            seen.insert(manifest.row_id.clone());
+            rows.push(manifest);
+        }
+
+        for corpus in SKV14_JSON_CORPORA {
+            for workload in SKV14_JSON_WORKLOADS {
+                let row_id = format!("json/{corpus}/{workload}/main");
+                if seen.contains(&row_id) {
+                    continue;
+                }
+                if *workload != "real_typed_struct" {
+                    return Err(format!("SK-V14 manifest missing required {row_id}"));
+                }
+                seen.insert(row_id.clone());
+                rows.push(skv14_missing_json_typed_manifest(corpus));
+            }
+        }
+        for feature in SKV14_CSS_FEATURES {
+            rows.push(skv14_css_manifest_row(feature));
+        }
+        Ok(rows)
     }
 
     pub fn render_markdown(&self) -> String {
@@ -3466,42 +4040,14 @@ impl Report {
             ));
         }
         if !self.rows.is_empty() {
-            out.push_str("\n## SK-V9 W0 Telemetry Manifest\n\n");
-            out.push_str("| Row id | Grammar | Domain | Wave | Run id | Validation | Profile artifact | Sample cost | Sample count | Build flags | Host triple | Feature mask | CostFacts | Redress | SK-V9-open delta | Substrate | Structural projection | Cardinality | Consumer | Track 2 | Diagnostic nonproducer | Comparator evidence |\n");
-            out.push_str("|---|---|---|---|---|---|---|---|---:|---|---|---|---|---|---|---|---|---|---|---|---|---|\n");
-            for row in &self.rows {
-                let telemetry = &row.sk_v8;
-                out.push_str(&format!(
-                    "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |\n",
-                    cell(&telemetry.row_id),
-                    cell(&telemetry.grammar_id),
-                    cell(&telemetry.domain),
-                    cell(&telemetry.wave_id),
-                    cell(&telemetry.run_id),
-                    cell(&telemetry.measured_validation_path),
-                    cell(&telemetry.profile_artifact),
-                    cell(&telemetry.sample_cost),
-                    telemetry.sample_count,
-                    cell(&telemetry.build_flags),
-                    cell(&telemetry.host_triple),
-                    cell(&telemetry.feature_mask),
-                    cell(&format!(
-                        "{}:{}:{}",
-                        telemetry.costfacts_rule_id,
-                        telemetry.costfacts_chosen_shape,
-                        telemetry.costfacts_rejected_alternative_ids.join(",")
-                    )),
-                    cell(&telemetry.redress_entry),
-                    cell(&telemetry.sk_v9_open_delta),
-                    cell(&telemetry.substrate_surface),
-                    cell(&telemetry.structural_projection_status),
-                    cell(&telemetry.substrate_cardinality),
-                    cell(&telemetry.same_wave_consumer_class),
-                    cell(&telemetry.track2_independence_status),
-                    cell(&telemetry.diagnostic_nonproducer_status),
-                    cell(&format_comparator_evidence(&telemetry.comparators))
-                ));
-            }
+            let manifest_rows = self.skv14_manifest_rows().unwrap_or_else(|_| {
+                self.rows
+                    .iter()
+                    .map(TelemetryRow::skv14_manifest_row)
+                    .collect()
+            });
+            out.push('\n');
+            out.push_str(&render_skv14_manifest_rows(&manifest_rows));
         }
         if !self.probe_rows.is_empty() {
             out.push_str("\n## Masking Probes\n\n");
@@ -3538,6 +4084,363 @@ impl Report {
     }
 }
 
+pub fn skv14_existing_results_capture_markdown(results_text: &str) -> Result<String, String> {
+    let (section_start, section_end) = skv14_manifest_section_bounds(results_text)?;
+    let section = &results_text[section_start..section_end];
+    let mut rows = Vec::new();
+    let mut seen = BTreeSet::new();
+
+    for line in section.lines() {
+        let cells = report_markdown_cells(line);
+        if cells.is_empty()
+            || cells[0] == "Row id"
+            || cells[0] == "---"
+            || !(cells[0].starts_with("json/") || cells[0].starts_with("css_l4/"))
+        {
+            continue;
+        }
+        if cells[0].starts_with("css_l4/")
+            && cells.len() != 32
+            && !(cells.len() == 22 && cells[0].ends_with("/direct_to_struct/main"))
+        {
+            continue;
+        }
+        if cells[0].starts_with("css_l4/")
+            && cells.len() == 22
+            && !legacy_css_feature_from_row_id(&cells[0])
+                .is_some_and(|feature| SKV14_CSS_FEATURES.contains(&feature))
+        {
+            continue;
+        }
+        let row = match cells.len() {
+            22 => skv14_manifest_row_from_legacy_cells(&cells)?,
+            32 => skv14_manifest_row_from_skv14_cells(&cells)?,
+            other => {
+                return Err(format!(
+                    "SK-V14 capture row {} expected 22 or 32 cells, saw {other}",
+                    cells[0]
+                ))
+            }
+        };
+        if seen.insert(row.row_id.clone()) {
+            rows.push(row);
+        }
+    }
+
+    for corpus in SKV14_JSON_CORPORA {
+        for workload in SKV14_JSON_WORKLOADS {
+            let row_id = format!("json/{corpus}/{workload}/main");
+            if seen.contains(&row_id) {
+                continue;
+            }
+            if *workload != "real_typed_struct" {
+                return Err(format!("SK-V14 capture missing required {row_id}"));
+            }
+            let row = skv14_missing_json_typed_manifest(corpus);
+            seen.insert(row.row_id.clone());
+            rows.push(row);
+        }
+    }
+    for feature in SKV14_CSS_FEATURES {
+        let row_id = format!("css_l4/{feature}/direct_to_struct/main");
+        if seen.contains(&row_id) {
+            continue;
+        }
+        let row = skv14_css_manifest_row(feature);
+        seen.insert(row.row_id.clone());
+        rows.push(row);
+    }
+
+    rows.sort_by(|left, right| {
+        skv14_manifest_order(&left.row_id)
+            .cmp(&skv14_manifest_order(&right.row_id))
+            .then_with(|| left.row_id.cmp(&right.row_id))
+    });
+    validate_skv14_manifest_rows(&rows)?;
+    let mut output = String::new();
+    output.push_str(&results_text[..section_start]);
+    output.push_str(&render_skv14_manifest_rows(&rows));
+    output.push_str(&results_text[section_end..]);
+    Ok(ensure_trailing_newline(&output.replace(
+        "SK-V9 W0 telemetry: gate-json consumes the manifest below",
+        "SK-V14-open telemetry: gate-json consumes the manifest below",
+    )))
+}
+
+fn skv14_manifest_section_bounds(results_text: &str) -> Result<(usize, usize), String> {
+    let section_start = find_heading(results_text, "## SK-V14 W0 Telemetry Manifest")
+        .or_else(|| find_heading(results_text, "## SK-V9 W0 Telemetry Manifest"))
+        .ok_or_else(|| {
+            "RESULTS.md missing SK-V14/SK-V9 W0 Telemetry Manifest section".to_string()
+        })?;
+    let tail_start = results_text[section_start..]
+        .find('\n')
+        .map(|offset| section_start + offset)
+        .unwrap_or(results_text.len());
+    let section_end = results_text[tail_start..]
+        .find("\n## ")
+        .map(|offset| tail_start + offset)
+        .unwrap_or(results_text.len());
+    Ok((section_start, section_end))
+}
+
+fn find_heading(text: &str, heading: &str) -> Option<usize> {
+    if text.starts_with(heading) {
+        return Some(0);
+    }
+    text.find(&format!("\n{heading}")).map(|index| index + 1)
+}
+
+fn skv14_manifest_row_from_legacy_cells(cells: &[String]) -> Result<SkV14ManifestRow, String> {
+    if cells[0].starts_with("css_l4/") {
+        return skv14_css_manifest_row_from_legacy_cells(cells);
+    }
+    let (corpus, workload) = parse_row_id(&cells[0])?;
+    Ok(SkV14ManifestRow {
+        row_id: cells[0].clone(),
+        grammar_id: cells[1].clone(),
+        domain: cells[2].clone(),
+        wave_id: if cells[3] == "SK-V9-open" {
+            "SK-V14-open".to_string()
+        } else {
+            cells[3].clone()
+        },
+        run_id: cells[4].replacen("sk-v9-open:", "SK-V14-open:", 1),
+        track1_entry_point: skv14_track1_entry_point(workload).to_string(),
+        track2_entry_point: skv14_track2_entry_point(workload).to_string(),
+        comparator_plane: skv14_comparator_plane(corpus, workload),
+        per_iter_equality: skv14_pending_per_iter_equality(workload).to_string(),
+        audit_overlay_verdict: skv14_audit_overlay_verdict(corpus, workload).to_string(),
+        audit_overlay_reference: skv14_audit_overlay_reference(corpus, workload),
+        sidecar_freshness: skv14_sidecar_freshness_from_evidence(workload, &cells[21]),
+        substrate_target: skv14_substrate_target(workload).to_string(),
+        retention_lifetime: skv14_retention_lifetime(workload).to_string(),
+        policy_owner: skv14_policy_owner(workload).to_string(),
+        measured_validation_path: cells[5].clone(),
+        profile_artifact: cells[6].clone(),
+        sample_cost: cells[7].clone(),
+        sample_count: cells[8].parse::<u64>().map_err(|error| {
+            format!(
+                "{} has invalid SK-V14 legacy sample count {}: {error}",
+                cells[0], cells[8]
+            )
+        })?,
+        build_flags: cells[9].clone(),
+        host_triple: cells[10].clone(),
+        feature_mask: cells[11].clone(),
+        costfacts: cells[12].clone(),
+        redress_entry: cells[13].clone(),
+        sk_v14_open_delta: "baseline".to_string(),
+        substrate_surface: cells[15].clone(),
+        structural_projection_status: cells[16].clone(),
+        substrate_cardinality: cells[17].clone(),
+        same_wave_consumer_class: cells[18].clone(),
+        track2_independence_status: cells[19].clone(),
+        diagnostic_nonproducer_status: cells[20].clone(),
+        comparator_evidence: cells[21].clone(),
+    })
+}
+
+fn skv14_css_manifest_row_from_legacy_cells(cells: &[String]) -> Result<SkV14ManifestRow, String> {
+    let feature = legacy_css_feature_from_row_id(&cells[0])
+        .ok_or_else(|| format!("{} is not a valid CSS L4 manifest row", cells[0]))?;
+    if !SKV14_CSS_FEATURES.contains(&feature) {
+        return Err(format!("{} is not an SK-V14 CSS L4 feature row", cells[0]));
+    }
+    let mut row = skv14_css_manifest_row(feature);
+    row.measured_validation_path = cells[5].clone();
+    row.profile_artifact = cells[6].clone();
+    row.sample_cost = cells[7].clone();
+    row.sample_count = cells[8].parse::<u64>().map_err(|error| {
+        format!(
+            "{} has invalid SK-V14 legacy CSS sample count {}: {error}",
+            cells[0], cells[8]
+        )
+    })?;
+    row.build_flags = cells[9].clone();
+    row.host_triple = cells[10].clone();
+    row.feature_mask = cells[11].clone();
+    row.costfacts = cells[12].clone();
+    row.redress_entry = cells[13].clone();
+    row.substrate_surface = cells[15].clone();
+    row.structural_projection_status = cells[16].clone();
+    row.substrate_cardinality = cells[17].clone();
+    row.same_wave_consumer_class = cells[18].clone();
+    row.track2_independence_status = cells[19].clone();
+    row.diagnostic_nonproducer_status = cells[20].clone();
+    row.comparator_evidence = cells[21].clone();
+    Ok(row)
+}
+
+fn legacy_css_feature_from_row_id(row_id: &str) -> Option<&str> {
+    row_id
+        .strip_prefix("css_l4/")
+        .and_then(|tail| tail.strip_suffix("/direct_to_struct/main"))
+}
+
+fn skv14_manifest_order(row_id: &str) -> (usize, usize, usize) {
+    if let Ok((corpus, workload)) = parse_row_id(row_id) {
+        let corpus_index = SKV14_JSON_CORPORA
+            .iter()
+            .position(|candidate| *candidate == corpus)
+            .unwrap_or(usize::MAX);
+        let workload_index = SKV14_JSON_WORKLOADS
+            .iter()
+            .position(|candidate| *candidate == workload)
+            .unwrap_or(usize::MAX);
+        return (0, corpus_index, workload_index);
+    }
+    if let Some(feature) = legacy_css_feature_from_row_id(row_id) {
+        let feature_index = SKV14_CSS_FEATURES
+            .iter()
+            .position(|candidate| *candidate == feature)
+            .unwrap_or(usize::MAX);
+        return (1, feature_index, 0);
+    }
+    (usize::MAX, usize::MAX, usize::MAX)
+}
+
+fn skv14_manifest_row_from_skv14_cells(cells: &[String]) -> Result<SkV14ManifestRow, String> {
+    let sample_count = cells[18].parse::<u64>().map_err(|error| {
+        format!(
+            "{} has invalid SK-V14 sample count {}: {error}",
+            cells[0], cells[18]
+        )
+    })?;
+    Ok(SkV14ManifestRow {
+        row_id: cells[0].clone(),
+        grammar_id: cells[1].clone(),
+        domain: cells[2].clone(),
+        wave_id: cells[3].clone(),
+        run_id: cells[4].clone(),
+        track1_entry_point: cells[5].clone(),
+        track2_entry_point: cells[6].clone(),
+        comparator_plane: cells[7].clone(),
+        per_iter_equality: cells[8].clone(),
+        audit_overlay_verdict: cells[9].clone(),
+        audit_overlay_reference: cells[10].clone(),
+        sidecar_freshness: cells[11].clone(),
+        substrate_target: cells[12].clone(),
+        retention_lifetime: cells[13].clone(),
+        policy_owner: cells[14].clone(),
+        measured_validation_path: cells[15].clone(),
+        profile_artifact: cells[16].clone(),
+        sample_cost: cells[17].clone(),
+        sample_count,
+        build_flags: cells[19].clone(),
+        host_triple: cells[20].clone(),
+        feature_mask: cells[21].clone(),
+        costfacts: cells[22].clone(),
+        redress_entry: cells[23].clone(),
+        sk_v14_open_delta: cells[24].clone(),
+        substrate_surface: cells[25].clone(),
+        structural_projection_status: cells[26].clone(),
+        substrate_cardinality: cells[27].clone(),
+        same_wave_consumer_class: cells[28].clone(),
+        track2_independence_status: cells[29].clone(),
+        diagnostic_nonproducer_status: cells[30].clone(),
+        comparator_evidence: cells[31].clone(),
+    })
+}
+
+fn skv14_sidecar_freshness_from_evidence(workload: &str, evidence: &str) -> String {
+    if evidence.contains("sidecar=historical:sk-v7-sidecar-profile")
+        || evidence.contains("freshness=historical:sk-v7-sidecar-profile")
+    {
+        "historical:sk-v7-sidecar-profile".to_string()
+    } else {
+        format!("absent:not-collected-for-{workload}")
+    }
+}
+
+fn render_skv14_manifest_rows(rows: &[SkV14ManifestRow]) -> String {
+    let mut out = String::new();
+    out.push_str("## SK-V14 W0 Telemetry Manifest\n\n");
+    out.push_str(SKV14_W0_MANIFEST_HEADER);
+    out.push('\n');
+    out.push_str(SKV14_W0_MANIFEST_ALIGN);
+    out.push('\n');
+    for telemetry in rows {
+        out.push_str(&format!(
+            "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |\n",
+            cell(&telemetry.row_id),
+            cell(&telemetry.grammar_id),
+            cell(&telemetry.domain),
+            cell(&telemetry.wave_id),
+            cell(&telemetry.run_id),
+            cell(&telemetry.track1_entry_point),
+            cell(&telemetry.track2_entry_point),
+            cell(&telemetry.comparator_plane),
+            cell(&telemetry.per_iter_equality),
+            cell(&telemetry.audit_overlay_verdict),
+            cell(&telemetry.audit_overlay_reference),
+            cell(&telemetry.sidecar_freshness),
+            cell(&telemetry.substrate_target),
+            cell(&telemetry.retention_lifetime),
+            cell(&telemetry.policy_owner),
+            cell(&telemetry.measured_validation_path),
+            cell(&telemetry.profile_artifact),
+            cell(&telemetry.sample_cost),
+            telemetry.sample_count,
+            cell(&telemetry.build_flags),
+            cell(&telemetry.host_triple),
+            cell(&telemetry.feature_mask),
+            cell(&telemetry.costfacts),
+            cell(&telemetry.redress_entry),
+            cell(&telemetry.sk_v14_open_delta),
+            cell(&telemetry.substrate_surface),
+            cell(&telemetry.structural_projection_status),
+            cell(&telemetry.substrate_cardinality),
+            cell(&telemetry.same_wave_consumer_class),
+            cell(&telemetry.track2_independence_status),
+            cell(&telemetry.diagnostic_nonproducer_status),
+            cell(&telemetry.comparator_evidence)
+        ));
+    }
+    out
+}
+
+fn report_markdown_cells(line: &str) -> Vec<String> {
+    if !line.trim_start().starts_with('|') {
+        return Vec::new();
+    }
+    let inner = line.trim().trim_matches('|');
+    let mut cells = Vec::new();
+    let mut current = String::new();
+    let mut escaped = false;
+    for ch in inner.chars() {
+        if escaped {
+            if ch == '|' {
+                current.push('|');
+            } else {
+                current.push('\\');
+                current.push(ch);
+            }
+            escaped = false;
+            continue;
+        }
+        if ch == '\\' {
+            escaped = true;
+        } else if ch == '|' {
+            cells.push(current.trim().to_string());
+            current.clear();
+        } else {
+            current.push(ch);
+        }
+    }
+    if escaped {
+        current.push('\\');
+    }
+    cells.push(current.trim().to_string());
+    cells
+}
+
+fn ensure_trailing_newline(text: &str) -> String {
+    let mut out = text.trim_end().to_string();
+    out.push('\n');
+    out
+}
+
 pub struct SkV8OpenBaseline {
     pub row_id: &'static str,
     pub outcome_id: &'static str,
@@ -3546,7 +4449,7 @@ pub struct SkV8OpenBaseline {
     pub track2_mbps: f64,
 }
 
-pub const SK_V9_OPEN_RUN_ID_PREFIX: &str = "sk-v9-open:criterion-fnv64-";
+pub const SK_V9_OPEN_RUN_ID_PREFIX: &str = "SK-V14-open:criterion-fnv64-";
 
 fn is_skv9_open_run_id(run_id: &str) -> bool {
     let Some(suffix) = run_id.strip_prefix(SK_V9_OPEN_RUN_ID_PREFIX) else {
@@ -6515,7 +7418,7 @@ fn throughput_mbps(bytes: u64, ns: Option<f64>) -> Option<f64> {
 mod tests {
     use super::*;
 
-    const TEST_SK_V9_OPEN_RUN_ID: &str = "sk-v9-open:criterion-fnv64-0123456789abcdef";
+    const TEST_SK_V9_OPEN_RUN_ID: &str = "SK-V14-open:criterion-fnv64-0123456789abcdef";
 
     fn comparators() -> ComparatorSet {
         ComparatorSet {
@@ -6594,7 +7497,7 @@ mod tests {
     }
 
     fn w0_telemetry(row_id: &str, _output_plane: &str) -> SkV8Telemetry {
-        let (_, workload) = parse_row_id(row_id).unwrap();
+        let (corpus, workload) = parse_row_id(row_id).unwrap();
         let (substrate_surface, structural_projection_status, substrate_cardinality) =
             w0_substrate_tuple(workload).unwrap();
         SkV8Telemetry {
@@ -6615,9 +7518,20 @@ mod tests {
             costfacts_chosen_shape: "none:pre-W1".into(),
             costfacts_rejected_alternative_ids: vec!["none:pre-W1".into()],
             redress_entry: "none".into(),
-            wave_id: "SK-V9-open".into(),
+            wave_id: "SK-V14-open".into(),
             run_id: TEST_SK_V9_OPEN_RUN_ID.into(),
             sk_v9_open_delta: "baseline".into(),
+            track1_entry_point: skv14_track1_entry_point(workload).into(),
+            track2_entry_point: skv14_track2_entry_point(workload).into(),
+            comparator_plane: skv14_comparator_plane(corpus, workload),
+            per_iter_equality: skv14_pending_per_iter_equality(workload).into(),
+            audit_overlay_verdict: skv14_audit_overlay_verdict(corpus, workload).into(),
+            audit_overlay_reference: skv14_audit_overlay_reference(corpus, workload),
+            sidecar_freshness: format!("absent:not-collected-for-{workload}"),
+            substrate_target: skv14_substrate_target(workload).into(),
+            retention_lifetime: skv14_retention_lifetime(workload).into(),
+            policy_owner: skv14_policy_owner(workload).into(),
+            sk_v14_open_delta: "baseline".into(),
             substrate_surface: substrate_surface.into(),
             structural_projection_status: structural_projection_status.into(),
             substrate_cardinality: substrate_cardinality.into(),
@@ -7220,9 +8134,11 @@ mod tests {
         ));
         report.rows.push(row);
         let markdown = report.render_markdown();
-        assert!(markdown.contains("## SK-V9 W0 Telemetry Manifest"));
+        assert!(markdown.contains("## SK-V14 W0 Telemetry Manifest"));
         assert!(markdown.contains("json/twitter/parse_only/main"));
         assert!(markdown.contains("none:pre-W1"));
+        assert!(markdown.contains("sonic_rs::Skipper"));
+        assert!(markdown.contains("AUDIT-PENDING"));
         assert!(markdown.contains("absent:not-collected-for-test"));
     }
 
@@ -7505,7 +8421,7 @@ mod tests {
             .find(|row| row.sk_v8.row_id == "json/apache_builds/direct_to_struct/main")
             .unwrap();
         admit_direct_contract(direct);
-        assert!(report.validate_sk_v8_w0().is_ok());
+        assert_eq!(report.validate_sk_v8_w0(), Ok(()));
     }
 
     #[test]
@@ -7574,7 +8490,7 @@ mod tests {
             .find(|row| row.sk_v8.row_id == spec.row_id)
             .unwrap();
         admit_parse_only_contract(parse, spec);
-        assert!(report.validate_sk_v8_w0().is_ok());
+        assert_eq!(report.validate_sk_v8_w0(), Ok(()));
     }
 
     #[test]
@@ -7592,7 +8508,7 @@ mod tests {
         direct.sk_v8.same_wave_consumer_class = "direct_sink_stack_specialization".into();
         direct.sk_v8.redress_entry = "REDRESS-143".into();
         direct.sk_v8.wave_id = "SK-V13-W11.3".into();
-        assert!(report.validate_sk_v8_w0().is_ok());
+        assert_eq!(report.validate_sk_v8_w0(), Ok(()));
     }
 
     #[test]
@@ -7601,7 +8517,7 @@ mod tests {
         report
             .rows
             .push(w6_github_events_typed_row(12_000.0, 12_000.0));
-        assert!(report.validate_sk_v8_w0().is_ok());
+        assert_eq!(report.validate_sk_v8_w0(), Ok(()));
     }
 
     #[test]
@@ -7642,7 +8558,7 @@ mod tests {
     #[test]
     fn w0_report_accepts_exact_opening_baseline() {
         let report = opening_report();
-        assert!(report.validate_sk_v8_w0().is_ok());
+        assert_eq!(report.validate_sk_v8_w0(), Ok(()));
         let mut fresh_throughput = report.clone();
         fresh_throughput.rows[0].track1_mbps = Some(SK_V8_OPEN_BASELINE[0].track1_mbps * 1.37);
         fresh_throughput.rows[0].track2_mbps = Some(SK_V8_OPEN_BASELINE[0].track2_mbps * 0.72);

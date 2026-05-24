@@ -270,7 +270,8 @@ fn validate_gate_json_passthrough(args: &[String]) -> Result<()> {
             | "--check-results"
             | "--update-results"
             | "--write-results"
-            | "--include-volatile-probes" => index += 1,
+            | "--include-volatile-probes"
+            | "--skv14-existing-results-capture" => index += 1,
             "--w1a-non-json-report"
             | "--skv12-non-json-report"
             | "--skv12-css-l4-sota-report"
@@ -355,6 +356,7 @@ fn validate_cost_facts_flags(passthrough: &[String]) -> Result<bool> {
 fn validate_w0_results_snapshot(root: &Path) -> Result<()> {
     let text = std::fs::read_to_string(root.join("RESULTS.md"))
         .context("gate-json --with-cost-facts --check-results requires RESULTS.md")?;
+    validate_skv14_w0_manifest(&text)?;
     let rolling_path = root
         .parent()
         .context("skinny workspace has no parent")?
@@ -365,6 +367,209 @@ fn validate_w0_results_snapshot(root: &Path) -> Result<()> {
             rolling_path.display()
         )
     })?;
+    Ok(())
+}
+
+#[derive(Debug, Clone)]
+struct Skv14ManifestRow {
+    row_id: String,
+    grammar_id: String,
+    wave_id: String,
+    track1_entry_point: String,
+    track2_entry_point: String,
+    comparator_plane: String,
+    per_iter_equality: String,
+    audit_overlay_verdict: String,
+    audit_overlay_reference: String,
+    sidecar_freshness: String,
+    substrate_target: String,
+    retention_lifetime: String,
+    policy_owner: String,
+    sk_v14_open_delta: String,
+}
+
+fn validate_skv14_w0_manifest(results_text: &str) -> Result<()> {
+    let rows = parse_skv14_w0_manifest(results_text)?;
+    let expected = SKV13_JSON_CORPORA.len() * SKV13_JSON_WORKLOADS.len() + SKV13_CSS_FEATURES.len();
+    if rows.len() != expected {
+        bail!(
+            "SK-V14 W0 manifest expected {expected} rows, saw {}",
+            rows.len()
+        );
+    }
+    let mut seen = BTreeSet::new();
+    let mut falsified = 0usize;
+    let mut pending = 0usize;
+    let mut sustained = 0usize;
+    for row in &rows {
+        validate_skv14_manifest_row(row)?;
+        if !seen.insert(row.row_id.clone()) {
+            bail!("duplicate SK-V14 manifest row {}", row.row_id);
+        }
+        match row.audit_overlay_verdict.as_str() {
+            "AUDIT-FALSIFIED" => falsified += 1,
+            "AUDIT-PENDING" => pending += 1,
+            "AUDIT-SUSTAINED" => sustained += 1,
+            other => bail!("{} has unsupported audit overlay {other}", row.row_id),
+        }
+    }
+    for corpus in SKV13_JSON_CORPORA {
+        for workload in SKV13_JSON_WORKLOADS {
+            let row_id = format!("json/{corpus}/{workload}/main");
+            if !seen.contains(&row_id) {
+                bail!("SK-V14 W0 manifest missing {row_id}");
+            }
+        }
+    }
+    for feature in SKV13_CSS_FEATURES {
+        let row_id = format!("css_l4/{feature}/direct_to_struct/main");
+        if !seen.contains(&row_id) {
+            bail!("SK-V14 W0 manifest missing {row_id}");
+        }
+    }
+    if (falsified, pending, sustained) != (46, 29, 0) {
+        bail!(
+            "SK-V14 audit overlay expected 46 falsified / 29 pending / 0 sustained, saw {falsified} / {pending} / {sustained}"
+        );
+    }
+    Ok(())
+}
+
+fn parse_skv14_w0_manifest(results_text: &str) -> Result<Vec<Skv14ManifestRow>> {
+    let mut in_manifest = false;
+    let mut rows = Vec::new();
+    for line in results_text.lines() {
+        if line.trim() == "## SK-V14 W0 Telemetry Manifest" {
+            in_manifest = true;
+            continue;
+        }
+        if in_manifest && line.starts_with("## ") {
+            break;
+        }
+        if !in_manifest {
+            continue;
+        }
+        let cells = markdown_cells(line);
+        if cells.is_empty()
+            || cells[0] == "Row id"
+            || cells[0] == "---"
+            || !(cells[0].starts_with("json/") || cells[0].starts_with("css_l4/"))
+        {
+            continue;
+        }
+        if cells.len() != 32 {
+            bail!(
+                "SK-V14 W0 manifest row {} expected 32 cells, saw {}",
+                cells[0],
+                cells.len()
+            );
+        }
+        rows.push(Skv14ManifestRow {
+            row_id: cells[0].clone(),
+            grammar_id: cells[1].clone(),
+            wave_id: cells[3].clone(),
+            track1_entry_point: cells[5].clone(),
+            track2_entry_point: cells[6].clone(),
+            comparator_plane: cells[7].clone(),
+            per_iter_equality: cells[8].clone(),
+            audit_overlay_verdict: cells[9].clone(),
+            audit_overlay_reference: cells[10].clone(),
+            sidecar_freshness: cells[11].clone(),
+            substrate_target: cells[12].clone(),
+            retention_lifetime: cells[13].clone(),
+            policy_owner: cells[14].clone(),
+            sk_v14_open_delta: cells[24].clone(),
+        });
+    }
+    if !in_manifest {
+        bail!("RESULTS.md missing SK-V14 W0 Telemetry Manifest");
+    }
+    Ok(rows)
+}
+
+fn validate_skv14_manifest_row(row: &Skv14ManifestRow) -> Result<()> {
+    for (field, value) in [
+        ("grammar_id", row.grammar_id.as_str()),
+        ("wave_id", row.wave_id.as_str()),
+        ("track1_entry_point", row.track1_entry_point.as_str()),
+        ("track2_entry_point", row.track2_entry_point.as_str()),
+        ("comparator_plane", row.comparator_plane.as_str()),
+        ("per_iter_equality", row.per_iter_equality.as_str()),
+        ("audit_overlay_verdict", row.audit_overlay_verdict.as_str()),
+        (
+            "audit_overlay_reference",
+            row.audit_overlay_reference.as_str(),
+        ),
+        ("sidecar_freshness", row.sidecar_freshness.as_str()),
+        ("substrate_target", row.substrate_target.as_str()),
+        ("retention_lifetime", row.retention_lifetime.as_str()),
+        ("policy_owner", row.policy_owner.as_str()),
+        ("sk_v14_open_delta", row.sk_v14_open_delta.as_str()),
+    ] {
+        if value.trim().is_empty() {
+            bail!("{} missing SK-V14 {field}", row.row_id);
+        }
+    }
+    if row.wave_id.trim().is_empty() {
+        bail!("{} missing SK-V14 wave id", row.row_id);
+    }
+    if !matches!(
+        row.substrate_target.as_str(),
+        "local_temp_only" | "existing_tape" | "direct_sink" | "admitted_fact_output"
+    ) {
+        bail!(
+            "{} invalid substrate_target {}",
+            row.row_id,
+            row.substrate_target
+        );
+    }
+    if !matches!(
+        row.retention_lifetime.as_str(),
+        "local_loop" | "generated_function" | "output_row"
+    ) {
+        bail!(
+            "{} invalid retention_lifetime {}",
+            row.row_id,
+            row.retention_lifetime
+        );
+    }
+    if !matches!(
+        row.policy_owner.as_str(),
+        "generated_grammar" | "caller_data" | "none"
+    ) {
+        bail!("{} invalid policy_owner {}", row.row_id, row.policy_owner);
+    }
+    if row.sidecar_freshness == "sidecar-same-run" {
+        bail!(
+            "{} claims sidecar-same-run without structured manifest",
+            row.row_id
+        );
+    }
+    if row.comparator_plane.contains("from_slice::<Value>") {
+        bail!("{} reopens eager-DOM comparator plane", row.row_id);
+    }
+    if row.track1_entry_point == row.track2_entry_point {
+        bail!(
+            "{} has identical Track 1 and Track 2 entry points",
+            row.row_id
+        );
+    }
+    if row.track2_entry_point.starts_with("runtime::tape::")
+        && !matches!(
+            row.track2_entry_point.as_str(),
+            "runtime::tape::Tape" | "runtime::tape::OffsetFlags"
+        )
+    {
+        bail!(
+            "{} Track 2 reaches private runtime tape internals",
+            row.row_id
+        );
+    }
+    if row.audit_overlay_verdict == "AUDIT-FALSIFIED"
+        && row.audit_overlay_reference.starts_with("pending:")
+    {
+        bail!("{} falsified row lacks validation reference", row.row_id);
+    }
     Ok(())
 }
 
@@ -1097,6 +1302,11 @@ mod tests {
             "--skv13-simd-asm-production-report".into(),
             "skv13-w12.json".into(),
             "--check-results".into(),
+        ])
+        .unwrap();
+        validate_gate_json_passthrough(&[
+            "--update-results".into(),
+            "--skv14-existing-results-capture".into(),
         ])
         .unwrap();
         assert!(validate_gate_json_passthrough(&["--skv12-non-json-report".into()]).is_err());

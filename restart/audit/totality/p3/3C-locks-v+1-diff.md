@@ -66,7 +66,7 @@ Target: insert before `restart/locks/LOCKS.md:44` `## Gestalt — sixteen locks`
 +counter-surface fabrication (asserting prose into a document that does not
 +contain it; meta-CH7 collision pattern per
 +`restart/audit/totality/p1/1F-coherence-scan.md:64,83,100,109,117` COH-012);
-+SK-V14 cohort 31:69 = 31.7% refutation density preservation; anti-paper-close
++SK-V14 cohort 32:69 = 31.7% refutation density preservation; anti-paper-close
 +anchor enumeration. Authority: T-P1 V5 §6.1 disposition (carrier: in-preface
 +clause, NOT Lock 17 — preserves the 16-lock count per
 +`restart/prompts/totality/PASS-3-SYNTHESIS.md:210`).

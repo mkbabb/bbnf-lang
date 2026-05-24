@@ -38,21 +38,37 @@ C6 extends this cleanup to `parse-that-regex`: JSON-named string, number,
 whitespace, and Unicode helper APIs must become grammar-neutral primitive facts
 or generated compatibility wrappers, not generic crate surface.
 
-**Pass Omega V1.1 / SK-V13 compiler receiver (2026-05-22).** SK-V13 replaces
-the old "single-plan JSON cut" with an active decision-engine fold. The
-compiler receiver is: extract the regex family into the grammar-neutral
-`parse-that-regex` surface, wire `crates/egraph/` as the BackendExpr language
-with canonical rewrites, use `ir/cost.rs` as an active `egg::CostFunction`, and
-replace or gated-retire the hardcoded P1-P8 cascade with a CSP + egraph + cost
-resolver. This fold must preserve the five `BackendShape` values and cannot add
-a directive, BIR variant, `BackendShape` enum member, substrate, or
-grammar-specific branch in a generic crate.
+**Pass Omega V2 / SK-V14 compiler receiver (2026-05-24; post-CRUD-3 LOCKS
+v+1 at `85a043224`, 779 lines).** SK-V14 absorbs the SK-V13 decision-engine
+fold and adds the 5×15 CSS L4 sub-grammar matrix per 3E grammar-generalisation
+(15 sub-grammars: `color`, `easing`, `filters`, `func-body`, `gradients`,
+`keyframes`, `keywords`, `media`, `properties`, `selectors`, `stylesheet`,
+`tokens`, `transforms`, `value-unit`, `values`), the future-grammar 7-step
+onboarding test (grammar source + metadata only; regenerate rostered
+surfaces; grammar-name leak scan; grammar-shape leak scan; 5-shape eligibility
+fixture; primitive same-wave non-JSON consumer; telemetry/provenance
+consumed by gate per `restart/audit/totality/p2/2C-grammar-neutrality.md:344`-`405`),
+and the Lock 14 binding generalisation discipline (Pattern H = 67
+hand-written runtime files per live find `find crates/core/src/runtime
+-mindepth 2 -type f -name '*.rs' \| wc -l`; bound at LAC-1E-15 per-tranche
+census; `-mindepth 2` MUST omit `-maxdepth 2` so depth-3 files under
+`google_sheets/document/` are counted).
 
-Lock 14 cleanup uses V1.1 terms: generated provider manifests, generated
-sink/fact/value/flag surfaces, grammar-shape leak census, primitive policy
-ownership, CSS plus negative-control closure, and resolver-generated shape
-facts. Historical helpers such as `shapes_for_json` and `nominate_json` are
-waivers with deletion gates, not naming patterns for new compiler code.
+The compiler receiver preserves the 5-shape `BackendShape` canon at Lock 10
+(`{EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage}`); CSS fact
+streams classify under LAC-1E-14 FactStream as the 5th SUBSTRATE-manifest
+category, NOT as a 6th `BackendShape` variant. Adding a 6th `BackendShape`
+variant remains G-Omega gated.
+
+Lock 14 cleanup uses Pass Omega V2 terms: generated provider manifests
+(LAC-2C-01); generated sink/fact/value/flag surfaces (LAC-2C-03 FlagSchema
+generated table); grammar-shape leak census (LAC-2C-02 JSON-canonical label
+sites at `skinny/crates/passes/src/lib.rs:1059/1079/1102`); primitive policy
+ownership (LAC-2B-03 `policy_owner` field); CSS plus Sheets/BBNF-self
+negative-control closure; resolver-generated shape facts (LAC-2F-V5-04
+regex/HIR fact mandate). Historical helpers such as `shapes_for_json` and
+`nominate_json` are deletion targets, not naming patterns for new compiler
+code.
 
 ---
 

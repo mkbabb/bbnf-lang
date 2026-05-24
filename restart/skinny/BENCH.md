@@ -26,23 +26,45 @@ The historical SK-V6 implementation route was
 `restart/skinny/tranches/sk-v6/SPEC.md`; current authority is the SK-V13
 receiver below.
 
-**Pass Omega V1.1 / SK-V13 receiver (2026-05-22).** The active route is now
-`restart/skinny/tranches/sk-v13/SPEC.md` after G-Omega sign-off. Schema v3 is
-historical comparator-plane disclosure, not the current close schema. SK-V13
-bench rows use a common telemetry envelope across JSON and CSS: grammar id,
-output plane, strictness, oracle/comparator id, witness kind, generated policy
-source, row verdict, run id, host, wave id, and REDRESS provenance. JSON rows
-then extend that envelope with sonic-rs strict comparators; CSS L4 rows extend
-it with lightningcss plus an independent oracle such as cssparser or a golden
-table. Throughput, rolling deltas, hot-leaf attribution, PMU/samply signals,
-and primitive/checkasm state are workload extensions consumed by the owning
-SK-V13 gate. No `RESULTS.md` or gate-code mutation is authorized by this
-document alone.
+**Pass Omega V2 / SK-V14 receiver (2026-05-24; post-CRUD-3 LOCKS v+1 at
+`85a043224`, 779 lines).** The active route is now
+`restart/skinny/tranches/sk-v14/SPEC.md` (12-wave plan W0..W11 per the
+α-E candidate shortlist) after G-Omega sign-off authorises Pass Omega V2
+CRUD entry. SK-V14 bench rows use the common telemetry envelope across
+JSON and CSS: grammar id, output plane, strictness, oracle/comparator id,
+witness kind, generated policy source, row verdict, run id, host, wave id,
+REDRESS provenance, plus the four mandatory audit-overlay columns per
+LAC-1E-16 (`restart/locks/LOCKS.md:213`): `track2_entry_point`,
+`comparator_plane`, `per_iter_equality`, `audit_overlay_verdict`.
+`xtask gate-json` REJECTS any row missing any of the four. JSON rows
+extend the envelope with sonic-rs strict comparators; CSS L4 rows extend
+it with lightningcss plus an independent oracle (cssparser or a golden
+table). Per F-V3-CH4-A, SIMD admissibility runs under `BBNF_SIMD_STRICT=1`
+cohort-wide (`restart/locks/LOCKS.md:295`).
+
+T-P2 cohort refutation density anchor is **32:69 = 31.7%** (NOT 31:64);
+the canonical pair is aligned at 6 cohort touch-points
+(3C-diff:69 + 3F:71,:107,:131,:280,:315). SK-V14 W6 sub-wave budget is
+**≤2.0k C-1 part-B / ≤90 min sub-wave / ≤810 min aggregate** per SPEC
+§13:243. The six T2A-LAC-V1-05 abrogate-gate numerics
+(`restart/locks/LOCKS.md:225`) bind every gate-consumed comparator + bench
+run: e-graph saturation ≤50000 nodes / ≤10000 classes / ≤30 iter; CSP
+timeout ≤1 s/grammar; stale-cost ≤30%; generated-LOC growth bound to
+`loc_budget`; row regression admit; parity/checkasm failure.
+
+Cohort §3Z LOCK commits: S-P2 `4c70b6f193` + T-P1 `0a9c0fe65d` + S-P3
+`626cb06cc1` + T-P2 `34a28f5c15` + T-P3 `69eea1c5c`.
+
+Throughput, rolling deltas, hot-leaf attribution, PMU/samply signals, and
+primitive/checkasm state are workload extensions consumed by the owning
+SK-V14 wave-triumvirate gate. No `RESULTS.md` or gate-code mutation is
+authorized by this document alone.
 
 The full V1 spec lives at `restart/ARCHITECTURE.md` and `restart/MASTER-PLAN.md`.
-SOTA anchors live at `restart/corpora/SOTA.md` and Lock 8
-(`restart/locks/LOCKS.md:119`). This document binds the skinny bench harness
-to those anchors without reproducing them.
+SOTA anchors live at `restart/corpora/SOTA.md` and Lock 8 v+1
+(`restart/locks/LOCKS.md:202`; v+1 row-plane + LAC-1E-16 audit-overlay at
+`:213`). This document binds the skinny bench harness to those anchors
+without reproducing them.
 
 ---
 

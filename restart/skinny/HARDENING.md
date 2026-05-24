@@ -4,15 +4,43 @@ You are the hardening agent for the **skinny implementation spec**. The skinny e
 
 This prompt is parameterised by target. It composes with the existing greenfield-restart hardening apparatus rather than duplicating it.
 
-**Pass Omega V1.1 / SK-V13 receiver (2026-05-22).** The active skinny cycle is
-SK-V13, not SK-V1/SK-V6. A hardening run now reads the SK-V13
-`SYNTHESIS.md`, `HANDOFF.md`, converged S-P1/S-P2 hardening records, S-P3 plan
-artifacts, and the G-Omega sign-off before it treats any skinny surface as
-dispatch authority. Refuse W0-before-G-Omega, missing parse_only admission
-coverage, weak strict-vs-strict comparator anchors, support-only primitives,
-P1-P8 silent fallback, source-present SIMD/ASM orphans, and Lock 14 generic
-crate branches. This prompt still defines the lenses; it does not authorize
-source, gate, `RESULTS.md`, or `REDRESS.md` edits by itself.
+**Pass Omega V2 / SK-V14 receiver (2026-05-24; post-CRUD-3 LOCKS v+1 at
+`85a043224`, 779 lines).** The active skinny cycle is SK-V14, with full
+cohort §3Z LOCK convergence achieved across all 5 cohorts: S-P2 `4c70b6f193`
++ T-P1 `0a9c0fe65d` + S-P3 `626cb06cc1` + T-P2 `34a28f5c15` + T-P3
+`69eea1c5c`. The T-P3 7-lens CHALLENGE waves (CH1 CORRECTNESS, CH2
+GENERALITY, CH3 REGRESSION, CH4 COST, CH5 HIDDEN COUPLING, CH6
+ANTI-PAPER-CLOSE, CH7 OVERFIT-PRUNE) converged at V4 with the §3Z cohort
+LOCK criterion satisfied (≥95% × 2 consecutive cycles NO CAVEAT; zero
+orphan REVISEs; V≤5 ceiling consumed at V4 = 4/5 with 1-cycle margin).
+
+The §3Z convergence model: per-lens LOCK depth (4-cycle extensions for
+CH1/CH3/CH5; 3-cycle LOCK trigger for CH2; 3-cycle extension for CH6;
+4-cycle extension for CH4; 2-cycle LOCK trigger for CH7) feeds the cohort
+LOCK declaration when 7/7 lenses ACCEPT at 100% NO CAVEAT for two
+consecutive cycles. CH7 specifically scans for fabricated baselines,
+cited-but-absent surface text, counter-surface fabrication
+(meta-CH7 collision pattern), and the SK-V14 cohort 32:69 = 31.7%
+refutation density preservation. The Lock 1 v+1 substrate-ceiling fold +
+LAC-2F-V5-02 substrate-union ELEVATION + LAC-1E-14 FactStream 5th
+SUBSTRATE-manifest category are the cohort-discipline invariants that all
+T-P3 lens artefacts now cite verbatim.
+
+A hardening run now reads the SK-V14 `SPEC.md`, the cohort hardening
+consolidators (`HARDENING-S-P2-V2-CONSOLIDATED.md`,
+`HARDENING-T-P1-V5-CONSOLIDATED.md`, `HARDENING-S-P3-V3-CONSOLIDATED.md`,
+`HARDENING-T-P2-V3-CONSOLIDATED.md`,
+`HARDENING-T-P3-V4-CONSOLIDATED.md`), the G3 packet (3A through 3F per
+PASS-3-SYNTHESIS.md), and the G-Omega sign-off before it treats any
+skinny surface as dispatch authority. Refuse W0-before-G-Omega, missing
+parse_only admission coverage, weak strict-vs-strict comparator anchors,
+support-only primitives, P1-P8 silent fallback, source-present SIMD/ASM
+orphans, Lock 14 generic crate branches, missing audit-overlay column
+(LAC-1E-16), and `RESULTS.md` rows lacking executable verification
+(LAC-1E-12 mandate). NEW-CH2-V3-02 orphan-cell propagation guard requires
+pre/post-grep evidence on every cite-bearing micro-fold. This prompt
+still defines the lenses; it does not authorize source, gate, `RESULTS.md`,
+or `REDRESS.md` edits by itself.
 
 ## §1 — Purpose: why skinny hardening differs from V1 hardening
 

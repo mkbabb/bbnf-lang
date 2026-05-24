@@ -26,15 +26,41 @@ schema v3 comparator-plane rows before any SOTA decision. Remaining Lock 14
 cleanup includes splitting the `bbnf-simd` JSON god-module residue and
 removing JSON-name logic from generic pass/codegen crates.
 
-**Pass Omega V1.1 / SK-V13 workspace receiver (2026-05-22).** The active
-workspace boundary is no longer JSON-only validation. `bbnf-bench` owns the
-grammar-neutral common telemetry envelope, rolling SOTA delta production, JSON
-sonic-rs strict comparators, CSS lightningcss/cssparser comparators, PMU/samply
-capture references, and gate-consumed provenance. `bbnf-simd` owns source-
-present primitive inventory only when each primitive is wired, deleted,
-scalar-delegated, or architecturally blocked by the owning wave. CSS L4 and all
-51 JSON rows are SK-V13 close targets or architectural-block proofs, not V1-H
-caveats. This document records ownership and budget receivers only; it does not
+**Pass Omega V2 / SK-V14 workspace receiver (2026-05-24; post-CRUD-3 LOCKS
+v+1 at `85a043224`, 779 lines).** The active workspace boundary is no longer
+JSON-only validation; full cohort §3Z LOCK convergence (S-P2 `4c70b6f193` +
+T-P1 `0a9c0fe65d` + S-P3 `626cb06cc1` + T-P2 `34a28f5c15` + T-P3
+`69eea1c5c`) authorises the SK-V14 12-wave plan (W0..W11) per the α-E
+candidate shortlist. `bbnf-bench` owns the grammar-neutral common telemetry
+envelope (extended with four mandatory audit-overlay columns per LAC-1E-16:
+`track2_entry_point`, `comparator_plane`, `per_iter_equality`,
+`audit_overlay_verdict`), rolling SOTA delta production, JSON sonic-rs
+strict comparators, CSS lightningcss/cssparser comparators, PMU/samply
+capture references, and gate-consumed provenance. `bbnf-simd` owns
+source-present primitive inventory only when each primitive is wired,
+deleted, scalar-delegated, or architecturally blocked by the owning wave
+under `BBNF_SIMD_STRICT=1` cohort-wide (LAC-2D / F-V3-CH4-A;
+`restart/locks/LOCKS.md:295`). CSS L4 (15 sub-grammars per 3E
+grammar-generalisation: `color`, `easing`, `filters`, `func-body`,
+`gradients`, `keyframes`, `keywords`, `media`, `properties`, `selectors`,
+`stylesheet`, `tokens`, `transforms`, `value-unit`, `values`) and all 51
+JSON rows are SK-V14 close targets or architectural-block proofs, not
+V1-H caveats. Pattern H = 67 hand-written runtime files per LAC-1E-15
+per-tranche census (live find `find crates/core/src/runtime -mindepth 2
+-type f -name '*.rs' \| wc -l`); `runtime_profiles() -> [&'static
+GrammarProfile; 8]` static roster at `skinny/crates/codegen/src/grammar_profile.rs:100`-`110`
+must be deleted by the generated-provider manifest receiver wave per
+3E-D09.
+
+**Next-cycle dispatch posture** per 3F-DISPATCH-001 next-cycle directive:
+the wave-triumvirate W0 enters SK-V14 W0..W11 execution (PRUNE-then-rebuild)
+after Pass Omega V2 CRUD-4..CRUD-6 land and G-Omega authorises wave
+dispatch. **SK-V15 Pass Alpha re-entry handoff** per F-V2-CH4-3E D06: the
+generated-fixture impl tail for CSS L4 onboarding (5×15 sub-grammar
+matrix) enters as SK-V15 SPEC entry condition (non-budgeted at T-P3
+horizon; close anchor = SK-V14 W11 close per SPEC §13:248).
+
+This document records ownership and budget receivers only; it does not
 authorize telemetry implementation, source edits, gates, `RESULTS.md`, or
 `REDRESS.md` mutations.
 

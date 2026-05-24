@@ -30,15 +30,38 @@ supplies one instance; CSS, Sheets, and BBNF-self supply others. SIMD/ASM
 primitives are admitted only through Lock 16 scalar-oracle plus checkasm gates
 and a same-wave runtime or generated consumer.
 
-**Pass Omega V1.1 / SK-V13 substrate receiver (2026-05-22).** The active
-substrate obligations are stricter than the historical JSON-only split:
-one substrate remains binding, but SK-V13 must admit or architecturally block a
-new union variant distinct from REDRESS 96/97/98; every SIMD/ASM primitive must
-be wired, deleted, scalar-delegated, or architecturally blocked with same-wave
-measurement; and grammar-owned quote/escape/control policy must flow from
-generated policy/fact surfaces rather than generic JSON branches. A retained
-sidecar classifier, support-only primitive, or orphan source-present kernel is
-not a valid close state.
+**Pass Omega V2 / SK-V14 substrate receiver (2026-05-24; post-CRUD-3 LOCKS
+v+1 at `85a043224`, 779 lines).** The active substrate obligations are
+strengthened across three v+1 axes folded into Lock 1 by CRUD-3:
+
+1. **LAC-2F-V5-02 substrate-union ELEVATED at Lock 1
+   (`restart/locks/LOCKS.md:137`).** No cross-call retained classifier
+   state — period. Quote-mask, escape-mask, structural-mask, class-stream,
+   prev-state byte, prefix-XOR carry word, or any prefix carry of any kind
+   is inadmissible under Lock 1 substrate-union. The closure of REDRESS
+   96/97/98 (retained class-column / streaming structural cursor /
+   class-lane-only on M5 Max) generalises to ALL transient classifier-state
+   primitives, not just the three falsified shapes. Every Layer 1 primitive
+   declares `retention_lifetime ∈ {transient-single-call,
+   retained-within-chunk, retained-across-call-boundary}`; the third value
+   is the REJECT class.
+2. **LAC-1E-14 FactStream as 5th SUBSTRATE-manifest category
+   (`restart/locks/LOCKS.md:100`-`116`).** `FactStream` is the 5th
+   admitted-product category at the Lock 1 substrate manifest, alongside
+   `OffsetTape`, `EventTape`, `SinkOnly`, and `CollapsedStage`; a
+   fact-stream row carries `substrate_target = admitted_fact_output`. This
+   is a substrate-manifest classification only; it is NOT a 6th
+   `BackendShape` variant. The 5-shape `BackendShape` search domain at Lock
+   10 holds verbatim: `{EagerTape, OffsetTape, EventTape, SinkOnly,
+   CollapsedStage}`.
+3. **Every SIMD/ASM primitive must be wired, deleted, scalar-delegated, or
+   architecturally blocked with same-wave measurement;** grammar-owned
+   quote/escape/control policy must flow from generated policy/fact
+   surfaces rather than generic JSON branches; retained sidecar
+   classifiers, support-only primitives, and orphan source-present kernels
+   are not valid close states. The SK-V14 wave-triumvirate dispatches via
+   the 12-wave plan W0..W11 (PRUNE-then-rebuild) after Pass Omega V2 CRUD
+   completion and G-Omega user authorisation.
 
 Source authority (verbatim citations, not paraphrase):
 
@@ -47,8 +70,8 @@ Source authority (verbatim citations, not paraphrase):
 - `restart/audit/pass-3-runtime/PASS-3.md` §4 (lines 150-191) — illustrative `Tape<'input>` / `TapeToken` / `ValueRef<'doc, 'input, K>` shape; closure environment by `&'i Tape<'i>`.
 - `restart/ARCHITECTURE.md` §7.2 BIR rows for `TapeEmit`, `DirectBuild`, `ValueProject`, `SimdScan`, `SpanMark` (lines 920-963) — what the substrate is the receiver of.
 - `restart/audit/pass-2-codegen/PASS-2.md` §2 commitment 3 — TapeShape + ValueShape are one materialisation plan.
-- `restart/locks/LOCKS.md` Lock 1 (line 48) — tape is THE substrate; no parallel substrate; no OpenFrame clone.
-- `restart/locks/LOCKS.md` Lock 8 (line 119) — sonic-rs / simdjson / lightning-css anchors.
+- `restart/locks/LOCKS.md` Lock 1 (line 75; v+1 substrate-union ELEVATION at `:137` LAC-2F-V5-02; FactStream 5th substrate category at `:100`-`116` LAC-1E-14) — tape is THE substrate; no parallel substrate; no OpenFrame clone; no cross-call retained classifier state.
+- `restart/locks/LOCKS.md` Lock 8 (line 202; v+1 row-plane + audit-overlay LAC-1E-16 at `:213` 4-column gate) — sonic-rs / simdjson / lightning-css anchors with comparator-plane provenance and audit-overlay verdict per row.
 - `restart/ARCHITECTURE.md` §11 row `simd/structural_scan` (line 1519) — ≥56000 Mbps AVX2, ≥40000 Mbps NEON, scalar parity hash mandatory.
 
 The full-V1 spec PASS-3 §4 admits its layout is **illustrative, not mandatory** ("This layout is not a PASS-1 mandate; it is a user-surface contract. PASS-1 may pack differently if these semantics remain true." — `PASS-3.md:187`). The skinny pins one packing and measures it. If the bench fails parity, the packing is the variable to perturb, not the contract.

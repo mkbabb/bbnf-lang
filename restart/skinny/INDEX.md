@@ -2,22 +2,32 @@
 
 The skinny exists to validate the V1 architectural premise — specifically the SOTA-viability claim — before tranches A-J commit. **One grammar (JSON) end-to-end through 10 partial crates plus `xtask`, dual-track measured against sonic-rs / simd-json. Buildable in 2-4 weeks; ~32,000 handwritten LOC + ≤4,000 generated LOC.**
 
-**Pass Omega V1.1 / SK-V13 authority update (2026-05-22).** Current dispatch
-authority is `restart/skinny/tranches/sk-v13/SYNTHESIS.md`,
-`restart/skinny/tranches/sk-v13/HANDOFF.md`,
-`restart/skinny/tranches/sk-v13/SPEC.md`,
-`restart/skinny/tranches/sk-v13/DISPATCH-PROMPT.md`, the SK-V12 campaign close
-packet, the user pin addendum, `skinny/RESULTS.md`, and `skinny/REDRESS.md`
-through the current head. SK-V13 W0 is blocked until Pass Omega V1.1 CRUD is
-complete and the worktree is clean; after that, W0 and later waves dispatch
-only through the SK-V13 SPEC/DISPATCH contract.
+**Pass Omega V2 / SK-V14 authority update (2026-05-24).** Full SK-V14 LOCK
+convergence achieved — 5 of 5 cohorts §3Z LOCKED:
+S-P2 `4c70b6f193` + T-P1 `0a9c0fe65d` + S-P3 `626cb06cc1` + T-P2 `34a28f5c15`
++ T-P3 `69eea1c5c`. Pass Omega V2 CRUD is in progress: CRUD-3 LOCKS already
+committed at `85a043224` (21 hunks; 564→779 lines; 16-lock count preserved;
+38 ACCEPT + 13 MODIFY + 0 REJECT + 0 DEFER on 51 candidates). The current
+dispatch authority for live skinny iteration is the SK-V14 tranche
+(`restart/skinny/tranches/sk-v14/SPEC.md`, 12-wave plan W0..W11), with the
+SK-V13 packet retained as historical evidence. SK-V14 W0 is blocked until
+Pass Omega V2 CRUD-4..CRUD-6 land and the worktree is clean; thereafter
+wave-triumvirate W0 dispatches into the SK-V14 SPEC/DISPATCH contract.
 
 Historical SK-V5/SK-V6 cohorts remain evidence for rejected routes, primitive
 admission discipline, and strict same-plane comparator language. They are not
-the active dispatch anchor. The current close posture is SK-V13 G1-G7:
-full CSS L4 parity or architectural block, all 51 JSON rows above sonic-rs
-strict or architectural block, decision-engine fold, union route, zero SIMD/ASM
-orphans, totality V1.1 ratification, and no silent demotion.
+the active dispatch anchor. The current close posture is the SK-V14 12-wave
+plan (W0..W11) with PRUNE-then-rebuild sequencing per the α-E candidate
+shortlist: W0 Baseline Profile + Telemetry Lock; W1 Comparator Rebind +
+Per-Iter Equality + PRUNE-1; W2 regen-css xtask; W3 Production CSS Corpora;
+W4 PRUNE-2 delete 7 CSS templates + revert 24 CSS admits; W5 PRUNE-3 Lock-14
+refactor; W6 PRUNE-4 9 sub-waves per-grammar runtime collapse (≤2.0k C-1
+part-B / ≤90 min sub-wave / ≤810 min aggregate per SPEC §13:243);
+W7 PRUNE-5 wire W8 policy + W9 union; W8 CSS L4 Re-Admit; W9 JSON Direct +
+Typed Re-Admit; W10 JSON parse_only Distinct Path + Re-Admit with
+F-V2-P1ABC-RERECORD Stage-0 UNCONDITIONAL binding; W11 Close + Alpha
+Feedback. Refutation density 32:69 = 31.7% across cohort touch-points is
+the SK-V14 audit-overfit baseline.
 
 The full V1 spec lives at `restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`, `restart/MIGRATION.md`, plus the PASS surfaces. This skinny spec carves out a minimum-viable subset of that V1 contract.
 
@@ -163,9 +173,10 @@ The skinny is buildable, measurable, and falsifiable. It exists to update the SO
 
 ## Authority cross-references
 
-The four sibling slices ([SUBSTRATE.md](SUBSTRATE.md), [COMPILER.md](COMPILER.md), [BENCH.md](BENCH.md), [WORKSPACE.md](WORKSPACE.md), [HARDENING.md](HARDENING.md)) compose with the current SK-V13 tranche authority and keep older SK-V5/SK-V6 packets as historical evidence:
+The four sibling slices ([SUBSTRATE.md](SUBSTRATE.md), [COMPILER.md](COMPILER.md), [BENCH.md](BENCH.md), [WORKSPACE.md](WORKSPACE.md), [HARDENING.md](HARDENING.md)) compose with the current SK-V14 tranche authority and keep older SK-V5/SK-V6/SK-V13 packets as historical evidence:
 
-- [`tranches/sk-v13/SYNTHESIS.md`](tranches/sk-v13/SYNTHESIS.md), [`tranches/sk-v13/SPEC.md`](tranches/sk-v13/SPEC.md), [`tranches/sk-v13/DISPATCH-PROMPT.md`](tranches/sk-v13/DISPATCH-PROMPT.md), and [`tranches/sk-v13/HANDOFF.md`](tranches/sk-v13/HANDOFF.md) — active skinny dispatch authority after Pass Omega CRUD completion.
+- [`tranches/sk-v14/SPEC.md`](tranches/sk-v14/SPEC.md) and the SK-V14 12-wave plan (W0..W11) — active skinny dispatch authority after Pass Omega V2 CRUD-4..CRUD-6 completion; full cohort §3Z LOCK convergence at S-P2 `4c70b6f193` + T-P1 `0a9c0fe65d` + S-P3 `626cb06cc1` + T-P2 `34a28f5c15` + T-P3 `69eea1c5c`.
+- [`tranches/sk-v13/SYNTHESIS.md`](tranches/sk-v13/SYNTHESIS.md), [`tranches/sk-v13/SPEC.md`](tranches/sk-v13/SPEC.md), [`tranches/sk-v13/DISPATCH-PROMPT.md`](tranches/sk-v13/DISPATCH-PROMPT.md), [`tranches/sk-v13/HANDOFF.md`](tranches/sk-v13/HANDOFF.md) — historical SK-V13 dispatch packet (now evidence; superseded by SK-V14 12-wave plan).
 - [`audit/IMPLEMENTATION-AGENT-PROMPT-SK-V6.md`](audit/IMPLEMENTATION-AGENT-PROMPT-SK-V6.md) — historical SK-V6 evidence (2026-05-14): legacy purge, profile-first regression recovery, direct-string close discipline, strict workload matrix, and negative-route evidence.
 - [`audit/SOTA-BEAT-DESIGN.md`](audit/SOTA-BEAT-DESIGN.md) §6 — falsifiability matrix per pathology class; `checkasm` admission gate; Wave 2 re-baseline against S-anchors.
 - [`audit/GRAND-SYNTHESIS-SK-V5.md`](audit/GRAND-SYNTHESIS-SK-V5.md) — SK-V5 authority (2026-05-13; 417 LOC): corrected diagnoses (parse-attribution dishonesty, bench-private dishonesty, strictness honesty gap, BackendShape wiring gap, Lock 14 leak status, tape-union verdict) plus wave structure feeding the SK-V5 implementation packet.
@@ -176,4 +187,4 @@ The four sibling slices ([SUBSTRATE.md](SUBSTRATE.md), [COMPILER.md](COMPILER.md
 
 SK-V5 close condition (`audit/GRAND-SYNTHESIS-SK-V5.md` §12): `skinny/RESULTS.md` shows zero parse-G rows, zero parse-L rows, zero N-direct rows, and strictness/output-plane columns disclosed per row; Track 1 calls generated runtime `SinkOnly`, Track 2 calls a structurally-different hand-coded path, and direct source is emitted by the real BIR lowerer rather than the static JSON template. The previous Track 1 ≡ Track 2 ≡ bench-private dishonesty is corrected; the remaining close blockers are measured runtime/materialization gaps (`N-direct`, retained G rows, decoded strings, single-substrate event/tape consumption), not codegen template authority or the now-cleared Canada scan floor. Parse-time retained projection aux side tables, byte-class whitespace cursor wrappers, and parser-local structural-mask cursors are rejected by measurement and do not count as the event-consumption close. x86 `CollapsedStage` successor remains out of scope for SK-V5 close.
 
-External authority: [`../ARCHITECTURE.md`](../ARCHITECTURE.md) §7.3 (LayoutFacts.backend_shape 5-shape enum + cost-model derivation algorithm); [`../locks/LOCKS.md`](../locks/LOCKS.md) Lock 1 verbatim + clarification (structural projection IS the tape), Lock 15 (build-profile + force-inline + i-cache budget), Lock 16 (SIMD/ASM admissibility allowlist + checkasm gate).
+External authority: [`../ARCHITECTURE.md`](../ARCHITECTURE.md) §7.3 (LayoutFacts.backend_shape 5-shape canon `{EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage}` + cost-model derivation algorithm); [`../locks/LOCKS.md`](../locks/LOCKS.md) (779 lines post-CRUD-3) Lock 1 verbatim + clarification (structural projection IS the tape) + LAC-2F-V5-02 substrate-union v+1 ELEVATED ban on cross-call retained classifier state + LAC-1E-14 FactStream 5th SUBSTRATE-manifest category (NOT 6th BackendShape), Lock 10 5-shape canon (preserved verbatim; G-Omega-gated extension only), Lock 14 v+1 generated-output allowance + Pattern H 67 per-tranche census mandate + `byte_class_from_range_64` sibling, Lock 15 (build-profile + force-inline + i-cache budget), Lock 16 (SIMD/ASM admissibility allowlist + checkasm gate + bbnf-regex::Dfa admissibility row).

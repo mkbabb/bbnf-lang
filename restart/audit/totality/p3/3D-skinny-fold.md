@@ -1,12 +1,14 @@
 ---
 agent: 3D
 pass: T-P3-synthesis
-cycle: V4
+cycle: V2
 generated_at: 2026-05-23T22:30:00Z
 t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F]
 t_p2_dossiers_consumed: [2A, 2B, 2C, 2D, 2E, 2F]
 v1_surface_targeted: "n/a — fold doc"
 proposed_deltas_count: 14
+prior_cycle_normalisation:
+  note: "T-P3 cohort cycle counter normalised from V4 (V3-baseline + per-artefact increment carried from prior dispatches) to V2 (V1 dispatch + this V2 fold) for cohort coherence with 3A/3B/3F. Other artefacts: 3A/3B/3F at V1; 3C/3D/3E previously at V4 — now realigning under the T-P3 V1→V2 fresh-cycle convention per F-V2 V2 fold dispatch + CH1 §5 open question."
 delta_summary:
   carried_from_prior_cycle:
     - FOLD-3D-001
@@ -19,13 +21,13 @@ delta_summary:
     - FOLD-3D-008
     - FOLD-3D-009
     - FOLD-3D-010
-  removed: []
-  answered: []
-  newly_added:
     - FOLD-3D-011
     - FOLD-3D-012
     - FOLD-3D-013
     - FOLD-3D-014
+  removed: []
+  answered: []
+  newly_added: []
 prior_cycle_dispositions_folded:
   accepted:
     - G-T-P3-V3-CH1
@@ -38,7 +40,8 @@ prior_cycle_dispositions_folded:
     - G-T-P1-V5-LOCK
     - G-T-P2-V3-LOCK
   rejected: []
-  revised: []
+  revised:
+    - F-V2-CH6-3D
 ---
 
 ## Executive Summary
@@ -46,8 +49,13 @@ prior_cycle_dispositions_folded:
 3D distils the SK-V{1..14} skinny journey into a monotonic fold for the
 totality V1 spec amendment packet (`restart/prompts/totality/PASS-3-SYNTHESIS.md:53`
 + `:213`). Per §8.4 the direction is strict: skinny informs totality;
-totality never dictates back to a live skinny iteration. The V4 cycle
-absorbs the S-P3 §3Z COHORT LOCK at `867b0cd0b`
+totality never dictates back to a live skinny iteration. The V2 cycle
+(cohort-normalised from prior V4 per-artefact counter to V1+1 = V2,
+aligning with 3A/3B/3F) carries FOLD-3D-001..014 byte-identical forward
+and folds the F-V2-CH6-3D REVISE (SK-V12 W1a substrate-prerequisite vs
+SK-V13 W1b CSS L4 row-admit reconciliation cross-cite between §1 row 8
+and §2 row 3). The V1-cycle V4 (per-artefact counter) absorbed the
+S-P3 §3Z COHORT LOCK at `867b0cd0b`
 (`restart/skinny/tranches/sk-v14/research/p3/hardening/HARDENING-S-P3-V3-CONSOLIDATED.md:61`-`75`)
 which crystallises the SK-V14 SPEC 12-wave plan W0..W11
 (`restart/skinny/tranches/sk-v14/SPEC.md:237`-`248`), the 8-candidate
@@ -64,14 +72,15 @@ and the CH4 6-class cost-neutrality taxonomy
 6-class cost-neutrality discipline. 14 folds total; 0 removed; 0
 re-opened; 7 prior-cycle CHALLENGE dispositions folded ACCEPT.
 
-## V4 Delta Summary
+## V2 Delta Summary
 
 | disposition | count | notes |
 |---|---:|---|
-| Carried from prior T-P3 cycle | 10 | FOLD-3D-001..010 land byte-identical from V3; per §8.4 the fold direction is monotonic and prior wins are not re-litigated by totality. |
+| Carried from prior T-P3 cycle | 14 | FOLD-3D-001..014 all land byte-identical from V1 cycle (per-artefact V4 counter, now cohort-normalised to V2); per §8.4 the fold direction is monotonic and prior wins are not re-litigated by totality. |
 | Removed | 0 | No prior fold is removed; CH3 REGRESSION refused any rejected-route reopen (`PASS-3-SYNTHESIS.md:113`-`116`). |
 | Answered | 0 | Open questions route to 3C / 3E / 3F per `PASS-3-SYNTHESIS.md:86`-`90`; 3D is the evidence-fold, not the disposition surface. |
-| Newly added | 4 | FOLD-3D-011 absorbs the SK-V14 SPEC 12-wave plan W0..W11; FOLD-3D-012 absorbs the 8-candidate shortlist Stage-A/W10 binding + F-V2-P1ABC-RERECORD Stage-0 UNCONDITIONAL; FOLD-3D-013 absorbs the CH4 6-class cost-neutrality taxonomy; FOLD-3D-014 absorbs the SK-V14 audit-zero reversal (40-admit AUDIT-FALSIFIED + audit-overlay pre-block) inheritance. |
+| Revised | 1 | F-V2-CH6-3D REVISE folded: §1 row 8 (SK-V12 W1a substrate prerequisite) ↔ §2 row 3 (SK-V13 W1b CSS L4 row-admit AUDIT-FALSIFIED) reconciling cross-cite added so a downstream reader cannot cite §1 row 8 as forward authority while §2 row 3 marks it disproved. Both rows are correct under different framings: §1 row 8 carries the `escape_mask_64` prerequisite primitive substrate-target (`admitted_fact_output`); §2 row 3 disposes of the 7-provider hand-written CSS L4 admission attempt. Mirrors 3B Wave Classification Ledger CSS L4 row at `3B-master-plan-reconciliation.md:99` reseat-dependency wording. |
+| Newly added | 0 | V2 fold is a coherence/reconciliation pass; no new fold proposals. |
 
 ## §1 — Skinny wins → V1-spec-authoritative (audit pack v4 LOAD-BEARING confirmation)
 
@@ -89,7 +98,7 @@ disposition column points the consuming 3C/3E lock hunk.
 | Generated `parse_direct` + `parse_real_typed_*` JSON parsers (real codegen, not include_str). | PROVED per audit pack v4 §3.1 + §4.1. | `1D-skinny-lessons.md:132`; `SYNTHESIS.md:184`-`185`. | V1-AUTH: codegen output is the only legal per-grammar runtime; hand-written providers Lock 14 violation. | 3C-L14-generated-output-and-per-wave-gate (LAC-1E-08 + LAC-1E-11). |
 | `bbnf-simd` 52-file grammar-neutral primitive surface. | PROVED per audit pack v4 A3 §4; SK-V5 PC-008 verify-before-rederive obligation open. | `1D-skinny-lessons.md:131`; `SYNTHESIS.md:182`; `1F-past-corpora.md:74` + `:158`. | V1-AUTH: bbnf-simd is grammar-neutral primitive library; G-SIMD-GRAMMAR-POLICY gates non-JSON consumers. | 3C-L16-manifest-checkasm-orphans (LAC-2B-03 G-SIMD-GRAMMAR-POLICY); SPEC §1:228. |
 | Cold/lazy JSON payload arena (0/0 payload counters preserved through SK-V14). | PROVED JSON-empirical; non-JSON generalisation pending. | `1D-skinny-lessons.md:118`; `skinny/REDRESS.md:134`. | V1-AUTH: cold-materialisation rule generalises to all grammars via generated grammar-owned flags. | 3C-L01-substrate-ceiling-history; 3E-D05 (fact streams = output planes). |
-| SK-V12 CSS L4 `declaration_values_extended` admitted row (one strict same-plane fact-stream row). | ADMITTED-EVIDENCE per `RESULTS.md:94`; SK-V13 names it NOT full CSS parity. | `skinny/RESULTS.md:94`; `restart/skinny/CAMPAIGN-CLOSE-SK-V12-V12.md:50`; `1D-skinny-lessons.md:122`. | V1-AUTH: admitted evidence as fact-stream output plane; not a sixth BackendShape; not full CSS parity (24 rows AUDIT-FALSIFIED). | 3E-D05 (output plane); 3C-L08-row-plane-bench-feed. |
+| SK-V12 W1a `declaration_values_extended` admitted row (one strict same-plane fact-stream row) — historical-row-evidence carrying forward as the `escape_mask_64` prerequisite primitive. **Cross-cite: SEE §2 row 3 below** — the SK-V13 W1b CSS L4 admission attempt (7-provider hand-written + fake `@generated` header + fixture-lookup short-circuits) is AUDIT-FALSIFIED at SK-V14 audit-zero; the surviving carry-forward at THIS row is the W1a `escape_mask_64` checkasm-backed primitive substrate (see §1 row 9 below), NOT the SK-V13 W1b CSS L4 admission. | ADMITTED-EVIDENCE per `RESULTS.md:94` as **historical-row-evidence-at-SK-V13 + AUDIT-FALSIFIED-at-SK-V14-audit-zero + reseat dependency on SK-V14 SPEC W8 R6** (mirrors 3B Wave Classification Ledger CSS L4 row at `3B-master-plan-reconciliation.md:99` reseat-dependency wording for the other 54 pending waves); the carry-forward is the **prerequisite primitive** (`escape_mask_64` + substrate-target = `admitted_fact_output`), NOT a forward authority for CSS L4 row admission. | `skinny/RESULTS.md:94`; `restart/skinny/CAMPAIGN-CLOSE-SK-V12-V12.md:50`; `1D-skinny-lessons.md:122`; SK-V14 audit-zero reversal at `restart/skinny/tranches/sk-v14/SYNTHESIS.md:191`-`198`; reseat anchor `restart/skinny/tranches/sk-v14/SPEC.md` §11 W8 R6. | V1-AUTH: admitted evidence as **fact-stream prerequisite primitive substrate-target** (`admitted_fact_output`); NOT a sixth BackendShape; NOT full CSS parity (24 rows AUDIT-FALSIFIED at SK-V14 audit-zero — see §2 row 3); reader MUST NOT cite this row as forward authority for CSS L4 admission post-SK-V14 audit reversal. | 3E-D05 (output plane); 3C-L08-row-plane-bench-feed; 3B Wave Classification Ledger CSS L4 row at `:99` (reseat dependency on SK-V14 SPEC W8 R6). |
 | Generated `bbnf-simd::escape_mask_64` checkasm-backed primitive (correctness prerequisite). | PROVED prerequisite-only; not production admission until consumed. | `skinny/REDRESS.md:3603`-`3632`; `1D-skinny-lessons.md:131`. | V1-AUTH: Lock 16 prerequisite class; zero-orphan disposition required. | 3C-L16-manifest-checkasm-orphans (LAC-1E-10 + LAC-2B-04). |
 
 ## §2 — Skinny rejections → locks-strengthening evidence (cross-ref 3C)
@@ -106,7 +115,7 @@ forces DELETE rather than patch.
 |---|---|---|---|---|
 | SK-V9 W3 retired union-substrate hypothesis (REDRESS 96 retained class-column / 97 streaming structural cursor / 98 class-lane-only). | PERMANENT pre-block (audit pack v4 + S-P0 dispatch §0.3 §3Z LOCK ratification). | `skinny/REDRESS.md:2910`-`2940`; `SPEC.md:829` (REDRESS 96-98 PERMANENT-PRE-BLOCK top-level promotion); `SPEC.md:1109` (§15 global watch-list); `HARDENING-S-P3-V3-CONSOLIDATED.md:333`-`346`. | Lock 1 v+1 union material-differential rule: no union replay without (a) changed data movement, (b) changed consumer shape, (c) measured row outcome. | 3C-L01-substrate-ceiling-history (LAC-2B-05 + LAC-2B-07 + LAC-2D-05 + LAC-2E-04). |
 | SK-V11 W1b non-JSON codegen baseline rejected (grammar-name leak `backend.grammar_name == "json"`). | DISPROVED-AND-RECTIFIED-BUT-INCOMPLETE; A3 census shows 30 Lock-14 violations across 8 per-grammar provider modules. | `skinny/REDRESS.md:3311`-`3338`; `SYNTHESIS-AUDIT-OVERFIT.md:23` + `:141`-`:145`; `SYNTHESIS.md:198`; `1D-skinny-lessons.md:123`. | Lock 14 v+1 forward invariant: ZERO new `.rs` files in `skinny/crates/{codegen,runtime,passes,bbnf,grammar}/src/` per new grammar; per-wave name+shape leak gate. | 3C-L14-generated-output-and-per-wave-gate (LAC-1E-08 + LAC-2C-01/02/03/05). |
-| SK-V12 W1b CSS admission AUDIT-FALSIFIED (7/7 CSS L4 providers hand-written + fake `@generated` header + 4 fixture-lookup short-circuits). | DISPROVED (audit pack v4 §1 Claim 1). | `SYNTHESIS.md:191`-`192`; `SYNTHESIS-AUDIT-OVERFIT.md:122`-`134`; `1D-skinny-lessons.md:122`. | Lock 14 v+1 + R4 obligation: regen-css xtask + grammar-derived providers + production CSS L4 corpora (~960 KB). | 3C-L14 (LAC-1E-11 + T2A-LAC-04); SPEC §5 W2 + §6 W3. |
+| SK-V12 W1b CSS admission AUDIT-FALSIFIED (7/7 CSS L4 providers hand-written + fake `@generated` header + 4 fixture-lookup short-circuits). **Cross-cite: SEE §1 row 8 above** — this DISPROVED row is the SK-V13 W1b CSS L4 admission attempt under SK-V14 audit-zero; it does NOT retract the §1 row 8 SK-V12 W1a `escape_mask_64` prerequisite primitive carry-forward, which survives as fact-stream substrate evidence under different framing (admitted-as-substrate-prerequisite vs admitted-as-row-admit-for-CSS-parity). Both rows are correct: §1 row 8 carries the substrate-target prerequisite; §2 row 3 here disposes of the row-admit attempt. | DISPROVED (audit pack v4 §1 Claim 1) — **scope: the SK-V13 W1b CSS L4 row-admit attempt; NOT the SK-V12 W1a `escape_mask_64` substrate prerequisite preserved in §1 row 8 as fact-stream output-plane substrate-target evidence**. | `SYNTHESIS.md:191`-`192`; `SYNTHESIS-AUDIT-OVERFIT.md:122`-`134`; `1D-skinny-lessons.md:122`; cross-cite §1 row 8 above (substrate prerequisite preserved); 3B Wave Classification Ledger row `3B-master-plan-reconciliation.md:99` (B.W4 `refuted-at-HEAD` reseat dependency on SK-V14 SPEC W8 R6). | Lock 14 v+1 + R4 obligation: regen-css xtask + grammar-derived providers + production CSS L4 corpora (~960 KB); §1 row 8 substrate prerequisite (`escape_mask_64`) remains LOAD-BEARING for the future re-admission, but the row-admit itself MUST come from generated providers, not the hand-written 7-provider trap. | 3C-L14 (LAC-1E-11 + T2A-LAC-04); SPEC §5 W2 + §6 W3; 3B `:99` (reseat on SK-V14 SPEC W8 R6). |
 | SK-V13 W14.1-5 parse-only admits AUDIT-FALSIFIED as gate-relabel-only (parser unchanged). | DISPROVED baseline (strict REDRESS PASS-ADMIT cardinality: 5 parse_only + 4 direct + 7 typed + 24 CSS = 40 admit rows). | `skinny/REDRESS.md:4765`-`4917`; `SYNTHESIS.md:54`-`84`; `1D-skinny-lessons.md:119` + `:140`. | Lock 8 row-plane SOTA: parse_only requires distinct Skipper-class comparator + per-iter equality oracle; no gate-relabel admit. | 3C-L08-row-plane-bench-feed (LAC-1E-04 + T2A-LAC-02 + LAC-2F-04); SPEC §10 W7 + §13 W10. |
 | SK-V13 W11.1/W11.3 direct admits AUDIT-FALSIFIED (comparator misbinding: `sonic_rs::from_slice::<Value>` eager DOM, not strict per-corpus struct deser). | DISPROVED as currently bound; structural prospect retained pending R1+R2. | `SYNTHESIS-AUDIT-OVERFIT.md:90`-`97`; `1D-skinny-lessons.md:120` + `:146`. | Lock 8 row-plane SOTA + comparator-plane provenance rule per BENCH Section 8. | 3C-L08-row-plane-bench-feed; SPEC §4 W1. |
 | SK-V13 W13.1/W13.3/W13.4/W15.1 typed admits AUDIT-FALSIFIED (4 of 7 profile as `missing-product-surface`: admit row exists, no generated typed parser). | DISPROVED (admit-vs-profile contradiction). | `p1e-hot-leaf-attribution.md:162`-`169`; `1D-skinny-lessons.md:121` + `:153`. | Lock 8 row-plane SOTA: per-corpus typed struct deser comparator before any typed row admit. | 3C-L08-row-plane-bench-feed; SPEC §12 W9. |
@@ -233,18 +242,23 @@ V1-authoritative; skinny rejections become locks-strengthening
 evidence; the totality spec never dictates back to a live skinny
 iteration."
 
-This 3D V4 artefact:
+This 3D V2 artefact:
 
 1. Treats S-P3 §3Z COHORT LOCK at `867b0cd0b` as evidence input to the
    totality fold; does NOT propose any edit to live S-P3 V3-LOCKED
    artefacts (SPEC.md / DISPATCH-PROMPT.md / p3a..p3f / hardening
    consolidator).
-2. Carries forward FOLD-3D-001..010 byte-identical from V3; no
-   skinny-fold reversal.
-3. Adds FOLD-3D-011..014 as totality absorptions of skinny inputs
-   (12-wave plan / 8-candidate shortlist / CH4 6-class taxonomy /
-   audit-zero baseline); each routes to a 3C / 3B / 3F receiver, not
-   to skinny edits.
+2. Carries forward FOLD-3D-001..014 byte-identical from V1 cycle
+   (per-artefact V4 counter, cohort-normalised to V2); no skinny-fold
+   reversal.
+3. Folds the F-V2-CH6-3D REVISE: §1 row 8 (SK-V12 W1a substrate
+   prerequisite `escape_mask_64` ADMITTED-EVIDENCE) and §2 row 3
+   (SK-V13 W1b CSS L4 row-admit attempt DISPROVED) now carry an
+   explicit reconciling cross-cite per CH6 anti-paper-close
+   discipline; both rows are correct under distinct framings
+   (substrate-prerequisite-preserved vs row-admit-AUDIT-FALSIFIED)
+   and mirror 3B's substrate-pillar-vs-row-admit distinction at
+   `3B-master-plan-reconciliation.md:99` + `:194`.
 4. Per `[no-deferrals]` + LAC-1E-12 executable verification mandate,
    every cite in this fold is path:line + re-executable at HEAD
    `867b0cd0b` (S-P3) / `34a28f5c1` (T-P2) / `0a9c0fe65d` (T-P1) per
@@ -255,6 +269,12 @@ This 3D V4 artefact:
    reviving a refuted wave; zero proposed delta promotes a rejected
    route; zero proposed delta weakens a lock REDRESS evidence
    strengthened.
+6. Cycle-counter cohort-normalisation: frontmatter cycle field
+   migrated from V4 (per-artefact V3-baseline + per-cycle increment)
+   to V2 (V1 dispatch + this V2 fold) for cohort coherence with
+   3A/3B/3F. Other artefacts: 3A/3B/3F at V1; 3C/3D/3E previously at
+   V4 — realigning under T-P3 V1→V2 fresh-cycle convention per CH1
+   §5 open question.
 
 The skinny→totality fold direction holds. Totality V1.1 amendment
 packet flows forward to 3C disposition + 3B MASTER-PLAN reconciliation

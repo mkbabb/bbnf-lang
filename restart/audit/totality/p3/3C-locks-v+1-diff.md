@@ -11,13 +11,13 @@ diff_status: proposed-only
 
 This document is a line-level proposed diff only. T-P3 must not edit `restart/locks/LOCKS.md`; Pass Omega CRUD applies ratified edits after G3 and G-Omega. Evidence: `restart/prompts/totality/PASS-3-SYNTHESIS.md:21`-`24`, `restart/prompts/totality/PASS-3-SYNTHESIS.md:189`-`198`, `restart/prompts/ORCHESTRATOR.md:165`-`170`, `restart/HANDOFF.md:44`-`47`.
 
-V4 baseline: the 12 V3 hunks were merged into `restart/locks/LOCKS.md` post-V3 §3Z LOCK via Pass Omega CRUD (HEAD `34a28f5c1`); V4 layers 9 incremental hunks atop the V3-merged text without touching it. The disposition matrix in `3C-locks-crystallisation.md` enumerates V3 hunks as `already merged at HEAD; no v+1 delta` and V4 hunks as `V4-NEW`. ACCEPT/MODIFY in this diff remains a lock-text disposition only, never an implementation admission.
+V4 baseline: the 12 V3 hunks were merged into `restart/locks/LOCKS.md` post-V3 §3Z LOCK via Pass Omega CRUD-3 commit `e12c5323d docs(omega-crud3): apply locks v1.1 amendments` (verified via `git log --oneline -1 -- restart/locks/LOCKS.md` at HEAD); V4 layers 9 incremental hunks atop the V3-merged text without touching it. The prior V1 cite to `34a28f5c1` was the T-P2 V3 §3Z COHORT LOCK commit (which touches T-P2 hardening artefacts only, not LOCKS.md); the actual LOCKS amendment lands at `e12c5323d` per per-hunk re-execution transcripts below. The disposition matrix in `3C-locks-crystallisation.md` enumerates V3 hunks as `already merged at HEAD; no v+1 delta` and V4 hunks as `V4-NEW`. ACCEPT/MODIFY in this diff remains a lock-text disposition only, never an implementation admission.
 
 No lock is renumbered. The 16-lock count stays fixed. LAC-1E-12 lands as an in-preface CH7 binding clause (NOT Lock 17) per T-P1 V5 §6.1 disposition carrier. Any new lock, lock retirement, new directive, new BIR variant, public substrate API, retained sidecar, or `BackendShape` expansion remains user/G-Omega gated. Evidence: `restart/prompts/totality/PASS-3-SYNTHESIS.md:210`-`215`, `restart/audit/totality/p1/hardening/HARDENING-T-P1-V5-CONSOLIDATED.md:616`-`617`, `restart/audit/totality/p2/hardening/HARDENING-T-P2-V3-CONSOLIDATED.md:182`-`192`.
 
 ## V4 hunk index
 
-| # | Hunk | Target line(s) at HEAD `34a28f5c1` | Source LAC(s) |
+| # | Hunk | Target line(s) at HEAD `e12c5323d` (Pass Omega CRUD-3 LOCKS amendment commit) | Source LAC(s) |
 |---|---|---|---|
 | V4-1 | Preface CH7 Overfit-Prune binding clause | before `restart/locks/LOCKS.md:44` `## Gestalt — sixteen locks` | LAC-1E-12 (promoted) |
 | V4-2 | Lock 1 substrate-union v+1 elevation (no cross-call retention) | append after `restart/locks/LOCKS.md:90` | LAC-2F-V5-02 ELEVATED |
@@ -25,7 +25,7 @@ No lock is renumbered. The 16-lock count stays fixed. LAC-1E-12 lands as an in-p
 | V4-4 | Lock 6 + Lock 14 regen-roundtrip clean check | append to Lock 6 at `restart/locks/LOCKS.md:115` and Lock 14 v+1 generated-output allowance at `restart/locks/LOCKS.md:222`-`238` | LAC-1E-13 |
 | V4-5 | Lock 8 audit-overlay 4-column + numeric abrogate gates | append after `restart/locks/LOCKS.md:128` | LAC-1E-16 + T2A-LAC-V1-05 |
 | V4-6 | Lock 10 cohort-wide BBNF_SIMD_STRICT + regex/HIR mandate | append after `restart/locks/LOCKS.md:188` | LAC-2F-V5-04 + V3 F-V3-CH4-A |
-| V4-7 | Lock 14 Pattern H census + byte_class_from_range_64 sibling | append after `restart/locks/LOCKS.md:253` | LAC-1E-15 + LAC-2F-V5-03 |
+| V4-7 | Lock 14 Pattern H census + byte_class_from_range_64 sibling | append after `restart/locks/LOCKS.md:263` (grammar-neutral primitives paragraph close; was `:253` in V1, corrected to `:263` per HEAD `e12c5323d` verification — `:253` is mid-Lock 14 per-wave gate enforcement, `:263` is the close of the `Shared bbnf-simd...` paragraph) | LAC-1E-15 + LAC-2F-V5-03 |
 | V4-8 | Lock 16 CollapsedStage x86-only co-requirement | replace `restart/locks/LOCKS.md:344`-`349` | LAC-2D-06 |
 | V4-9 | Lock 16 bbnf-regex::Dfa admissibility + CH3 pre-flight reflex | append after `restart/locks/LOCKS.md:364` | LAC-2F-V5-01 |
 
@@ -144,9 +144,14 @@ Candidate coverage: LAC-1E-14.
 
 ## Hunk V4-4 — Lock 6 + Lock 14 `cargo xtask regen-{grammar}` Round-Trip Clean Check
 
-Target A: append to current Lock 6 paragraph after `restart/locks/LOCKS.md:115`.
+Target A: append a new paragraph after current Lock 6 line at `restart/locks/LOCKS.md:115`, before the blank line preceding Lock 7 at `:117`. Unified-diff hunk against HEAD `e12c5323d` (3 lines of leading context from `:113`-`:115` = Lock 5 / blank / Lock 6, 14 lines added, 2 lines of trailing context from `:116`-`:117` = blank / Lock 7):
 
 ```diff
+--- a/restart/locks/LOCKS.md
++++ b/restart/locks/LOCKS.md
+@@ -113,5 +113,19 @@ 5. **IR + per-backend lower**. Codegen emits a backend-agnostic typed IR; per-backend lowerers produce native source. There is no source-emit-per-backend duplication; there is no trait-based emitter walking grammar directly. The IR is the contract. Any plan whose Rust codegen and TS codegen do not share an IR is a fault. **TS and WASM backends defer post-V1; V1 ships the Rust impl only via the formal `Backend` trait at `restart/ARCHITECTURE.md` §7.5. The trait enforces this lock's per-backend boundary and enables seamless V2 addition of `WasmBackend` and `TsBackend` without re-architecting BIR or codegen.**
+ 
+ 6. **xtask emits committed source artefacts**. No proc-macro façade. css_l4.rs at 107 K LOC is greppable on disk. Build is fast incremental because expansion is not at compile time. Any plan that proposes proc-macro for codegen output (other than the `path` / `path-ts` proc-macro shells, which are different) is a fault. **The egraph crate has no direct dependency on csp-solver; the bridge surface lives at `passes::bridge` and is invoked by passes that compose both crates. egraph and csp-solver compose by output-piping, never by import — Lock 4's per-domain orthogonality holds at the dependency-graph level as well as the algorithmic level.**
 +
 +    **v+1 regen round-trip discipline (LAC-1E-13)**: every file carrying
 +    `// @generated by skinny bbnf-codegen` (or equivalent rostered header) MUST
@@ -162,12 +167,19 @@ Target A: append to current Lock 6 paragraph after `restart/locks/LOCKS.md:115`.
 +    recurrence vector,
 +    `restart/skinny/tranches/sk-v14/audit-overfit/sk-v14-audit-overfit-pre-restart-pattern.md:153,184`
 +    (8 fake-codegen providers in `skinny/crates/codegen/src/`).
+ 
+ 7. **`crates/path/` is the consolidated path crate**. The runtime cursor engine merges INTO it; the existing `crates/core/src/path/` directory empties. The Rust `pointer!` proc-macro lives here. **`crates/path-core/` (non-proc-macro) exists as a published sibling crate at V1 J.W3, alongside `crates/path/` (the runtime + Rust proc-macro shell) and `crates/parse-that/` (the parser combinator + regex family) — `path-core` is the sole deduplication mechanism for the path-AST + compile logic. `crates/path-ts/` defers post-V1 alongside the TS-native parse+runtime fork.** Any plan that names `crates/bbnf-path/` (with prefix) is stale; any plan with three proc-macro shells is a fault.
 ```
 
-Target B: append to current Lock 14 v+1 generated-output allowance paragraph after `restart/locks/LOCKS.md:229`, before the generic-crates consumption paragraph at `restart/locks/LOCKS.md:231`.
+Target B: append a new paragraph after current Lock 14 v+1 generated-output allowance paragraph closing at `restart/locks/LOCKS.md:229`, before the blank line at `:230` and the generic-crates consumption paragraph at `:231`. Unified-diff hunk against HEAD `e12c5323d` (4 lines of leading context from `:227`-`:230` = tests/proof / mining / 1C-runtime evidence / blank, 8 lines added, 3 lines of trailing context from `:231`-`:233` = Generic crates / sink-fact / hand-code):
 
 ```diff
-+
+--- a/restart/locks/LOCKS.md
++++ b/restart/locks/LOCKS.md
+@@ -227,7 +227,15 @@     tests/proof fixtures routed through generic roots, or grammar-shaped policy
+     mining. Evidence: `restart/audit/totality/p2/2C-grammar-neutrality.md:184`,
+     `restart/audit/totality/p1/1C-runtime-evidence.md:79`-`85`.
+ 
 +    The generated-output allowance is bound to the Lock 6 v+1 regen round-trip
 +    clean check (LAC-1E-13). A file under `runtime/src/grammars/<name>/`
 +    carrying `// @generated` survives Lock 14 only when `cargo xtask
@@ -175,7 +187,13 @@ Target B: append to current Lock 14 v+1 generated-output allowance paragraph aft
 +    workspace metadata; hand-patched generated files are Lock 14 violations.
 +    Evidence: `restart/audit/totality/p1/1E-locks-evidence.md:123`,
 +    `restart/skinny/tranches/sk-v14/SYNTHESIS.md:96`.
++
+     Generic crates consume generated provider manifests, generated
+     sink/fact/value/flag surfaces, and generated grammar facts. They may not
+     hand-code `RuntimeProvider::{Json, CssL4DeclarationValues}`, JSON/CSS
 ```
+
+Hunk-header arithmetic note: Target A header `@@ -113,5 +113,19 @@` reflects 5 lines of pre-image context (Lock 5 at `:113`, blank at `:114`, Lock 6 at `:115`, blank at `:116`, Lock 7 at `:117`) and 19 lines of post-image (same 5 lines + 14-line insertion). Target B header `@@ -227,7 +227,15 @@` reflects 7 lines of pre-image (tests/proof `:227` + mining `:228` + 1C-runtime evidence `:229` + blank `:230` + Generic crates `:231` + sink-fact `:232` + hand-code `:233`) and 15 lines of post-image (7 + 8 added, with a single trailing `+` blank line ending the new paragraph before the existing `:231` paragraph resumes). Pass Omega CRUD-3 should consume via `git apply --recount` if exact arithmetic drifts under future LOCKS.md edits prior to merge; the hunk-content + anchor context lines are byte-exact at HEAD `e12c5323d`.
 
 Candidate coverage: LAC-1E-13.
 
@@ -251,8 +269,14 @@ Target: append after Lock 14 grammar-neutral primitives paragraph closing at `re
 +
 +    **v+1 Pattern H per-tranche census (LAC-1E-15)**: every tranche commits a
 +    Pattern H file-count transcript via `find crates/core/src/runtime
-+    -mindepth 2 -maxdepth 2 -type f -name '*.rs' \| wc -l` (and the skinny
-+    mirror equivalent). Tranche +N over prior tranche MUST trace to (a) a
++    -mindepth 2 -type f -name '*.rs' \| wc -l` (and the skinny mirror
++    equivalent). The bound command MUST omit `-maxdepth 2` so the four files
++    living at depth 3 under `google_sheets/document/{path_query.rs, mod.rs,
++    canonical.rs, view.rs}` are counted; verified at HEAD `e12c5323d`: the
++    corrected command returns 67 (the asserted Pattern H total per
++    `restart/skinny/tranches/sk-v14/audit-overfit/sk-v14-audit-overfit-pre-restart-pattern.md:26`-`56`),
++    while the `-mindepth 2 -maxdepth 2` form returns 63 and contradicts the
++    asserted figure. Tranche +N over prior tranche MUST trace to (a) a
 +    grammar-roster change (e.g. css_pretty +7 from SK-V13 to SK-V14) OR (b) a
 +    sub-wave count update (e.g. PRUNE-4 9 sub-waves). Substrate templates at
 +    `crates/core/src/runtime/builder_template.rs:13`-`31` and
@@ -356,7 +380,7 @@ Candidate coverage: LAC-2F-V5-01 (V5-NEW; CH3 F-CH3-2F-08 pre-flight reflex).
 
 ## V4 Diff Application Notes
 
-- All V4 hunks are append-only or single-paragraph replacements; no V3-merged text is touched. The diff applies cleanly against `restart/locks/LOCKS.md` at HEAD `34a28f5c1`.
+- All V4 hunks are append-only or single-paragraph replacements; no V3-merged text is touched. The diff applies cleanly against `restart/locks/LOCKS.md` at HEAD `e12c5323d` (Pass Omega CRUD-3 LOCKS amendment commit; CH1 V1 §2 transcript verified `git apply --check --recount` exit:0 for six representative V4 hunks).
 - Total V4 incremental diff line count: ~250 lines (approx ~60 lines for hunk V4-1; ~25 each for V4-2/V4-3/V4-6/V4-7-second-block/V4-8/V4-9; ~20 each for V4-4-A/V4-4-B/V4-5/V4-7-first-block).
 - 16-lock count preserved: LAC-1E-12 lands as preface clause; LAC-1E-14 lands as Lock 1 substrate-category sub-paragraph (NOT a 6th `BackendShape`).
 - All diffs proposed-only per `restart/prompts/totality/PASS-3-SYNTHESIS.md:21`-`24`; Pass Omega CRUD applies post-G-Omega per `restart/prompts/totality/PASS-3-SYNTHESIS.md:189`-`198`.

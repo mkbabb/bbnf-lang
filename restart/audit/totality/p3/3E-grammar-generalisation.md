@@ -2,6 +2,8 @@
 agent: 3E
 pass: T-P3-synthesis
 cycle: V4
+v2_fold_amendments:
+  - F-V2-CH4-3E (3E-D06 generated-fixture cost tail wave-id pin; Option B non-budgeted handoff per CH6 anti-paper-close — receiver = SK-V15 Pass Alpha re-entry per 3F-DISPATCH-001 next-cycle directive `restart/audit/totality/p3/3F-migration-handoff.md:61, :113, :257`-`:259` post-SK-V14 W11 close `restart/skinny/tranches/sk-v14/SPEC.md:248`)
 generated_at: 2026-05-23T00:00:00Z
 t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F]
 t_p2_dossiers_consumed: [2A, 2B, 2C, 2D, 2E, 2F]
@@ -259,7 +261,7 @@ V3 ledger preserved verbatim; V4 appends D09..D12 rows.
 | 3E-D03 | 350-900 impl/docs in receiver wave | 4 | High | Lock 14 registry/runtime wave | Receiver: generated provider/sink/fact/value/flag manifest. | Block if generic crates hand-code provider arrays, root aliases, or grammar branches. |
 | 3E-D04 | 200-600 manifest/tooling in receiver wave | 4 | Medium-high | Lock 16 primitive-admission wave | Receiver: primitive policy manifest and same-wave consumer gate. | Block primitive-only imports without scalar oracle, checkasm, and row movement/rejection. |
 | 3E-D05 | 100-300 docs/report | 4 | Medium | Substrate taxonomy + BENCH feed | Receiver: CSS fact-output as output-plane evidence. | Block if fact streams become retained sidecars or a sixth shape. |
-| 3E-D06 | 120-260 docs/test now; receiver wave capped by S-P3 | 3 | Medium | Future-grammar onboarding gate | Receiver: S-P3 generated witness wave or explicit Omega handoff gate. | Abrogate prose-only generality; fixture must fail closed without generated facts. |
+| 3E-D06 | 120-260 docs/test now; impl tail not budgeted in this T-P3 delta (handoff gate at SK-V15 Pass Alpha entry per 3F-DISPATCH-001 next-cycle directive) | 3 | Medium | Future-grammar onboarding gate — handoff to SK-V15 Pass Alpha bracket per 3F next-cycle directive (`restart/audit/totality/p3/3F-migration-handoff.md:61, :113, :257`-`:259`) post-SK-V14 W11 close (`restart/skinny/tranches/sk-v14/SPEC.md:248`, `:1019`-`:1057`) | Receiver: SK-V15 Pass Alpha re-entry per `restart/prompts/pass-contracts/PASS-ALPHA.md`; generated-fixture impl tail enters as SK-V15 SPEC entry condition per 3F `:284` carry-forward (LAC-1E-14/LAC-1E-15/LAC-1E-16 propagation pattern). Per CH6 anti-paper-close discipline + carry-forward to next bracket without specific budget at T-P3 horizon. | Abrogate prose-only generality; fixture must fail closed without generated facts; SK-V15 Pass Alpha entry binds the implementation receiver as non-budgeted handoff (no S-P3 wave-id pinned at T-P3 horizon; close anchor = SK-V14 W11 close per SPEC `:248`). |
 | 3E-D07 | 80-180 docs | 4 | Medium | Lock 14 and MASTER wave criteria | Receiver: CSS plus Sheets/BBNF-self negative-control rule. | Block "fleet-wide grammar-neutral" wording until positive CSS row plus negative control are gate-consumed. |
 | 3E-D08 | 180-420 lint/report in receiver wave | 4 | High | Lock 14 census wave | Receiver: grammar-name and grammar-shape leak command set. | Block if validation only searches literal names and misses JSON-shaped policy. |
 | **3E-D09** | 80-160 docs + 350-700 impl | 3 | Medium-high | Lock 14 v+1 manifest amendment + generated-provider receiver wave | Receiver: generated provider manifest replacing hand-coded enum + static roster. | Block if any wave grows `RuntimeProvider` variant count without an emitter-source pair recorded in the manifest. |

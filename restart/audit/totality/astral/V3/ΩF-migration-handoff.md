@@ -82,9 +82,23 @@ After G-Omega authorizes W2R and CRUD applies the document patches:
 
 1. Re-dispatch SK-V14 W2 under the amended skinny-only gate.
 2. W2 proof must include the `regen-css` command, CSS L4 profile emissions
-   under skinny runtime, companion `check-css-l4-*` commands, skinny-only
+   under skinny runtime, the seven exact companion commands, skinny-only
    destructive round-trip, bypass-header ownership detector, no CSS row
-   movement, and no root runtime Pattern H claim.
+   movement, and no root runtime Pattern H claim:
+
+   ```sh
+   cargo xtask regen-css
+   cargo xtask check-css-l4-at-rules-and-media
+   cargo xtask check-css-l4-declaration-values
+   cargo xtask check-css-l4-declaration-values-extended
+   cargo xtask check-css-l4-nested-layout
+   cargo xtask check-css-l4-stylesheet-selectors
+   cargo xtask check-css-l4-vendor-and-custom-atrules
+   cargo xtask check-css-l4-visual-functions
+   rm -rf skinny/crates/runtime/src/grammars/css_l4_* &&
+     cargo xtask regen-css &&
+     git diff --exit-code -- skinny/crates/runtime/src/grammars
+   ```
 3. If W2 admits, proceed to W3, then W4, W5, W6.0..W6.8, W7.
 4. If W2 rejects again, W3+ remains blocked and REDRESS records the new
    disposition.

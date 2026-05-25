@@ -41,6 +41,35 @@ surface updates before W2 can rerun.
 | CRUD-5 | `restart/skinny/{INDEX,WORKSPACE,HARDENING}.md` plus tranche-local W2R pointers | Limited text alignment; BENCH/COMPILER/SUBSTRATE no-op; no RESULTS/REDRESS/source/generated movement. |
 | CRUD-6 | audit packet | Write post-authorization CRUD log and signoff; no legacy nuke needed for W2R. |
 | SPEC patch | `restart/skinny/tranches/sk-v14/SPEC.md`, `SYNTHESIS.md` | Apply amended dispatch authority under the same G-Omega authorization. |
+| Tranche dispatch patch | `restart/skinny/tranches/sk-v14/ORCHESTRATOR-PROMPT.md` | Update R4/PRUNE-4 wording to W2 skinny-only, W6.0 CSS L4 root-runtime collapse, and W6.1-W6.8 remaining Pattern H dirs. |
+| Tranche handoff patch | `restart/skinny/tranches/sk-v14/HANDOFF.md` | Record REDRESS-183, W2 rejected pending amended rerun, and W3+ blocked until amended W2 admits. |
+| Tranche dispatch-prompt patch | `restart/skinny/tranches/sk-v14/DISPATCH-PROMPT.md` | Add pre-dispatch verification that W2R G-Omega + CRUD landed and W2 admitted under the amended skinny-only gate before W3+ dispatch. |
+
+## Amended W2 Executable Companion Roster
+
+Post-CRUD W2 must author these exact companion commands and run them in the W2
+gate:
+
+```sh
+cargo xtask regen-css
+cargo xtask check-css-l4-at-rules-and-media
+cargo xtask check-css-l4-declaration-values
+cargo xtask check-css-l4-declaration-values-extended
+cargo xtask check-css-l4-nested-layout
+cargo xtask check-css-l4-stylesheet-selectors
+cargo xtask check-css-l4-vendor-and-custom-atrules
+cargo xtask check-css-l4-visual-functions
+rm -rf skinny/crates/runtime/src/grammars/css_l4_* &&
+  cargo xtask regen-css &&
+  git diff --exit-code -- skinny/crates/runtime/src/grammars
+```
+
+The roster derives from the seven current skinny CSS L4 runtime directories:
+`css_l4_at_rules_and_media`, `css_l4_declaration_values`,
+`css_l4_declaration_values_extended`, `css_l4_nested_layout`,
+`css_l4_stylesheet_selectors`, `css_l4_vendor_and_custom_atrules`, and
+`css_l4_visual_functions`. W2 may not touch or claim closure over
+`crates/core/src/runtime/css_l4/`.
 
 ## Gate Question
 

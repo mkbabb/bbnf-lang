@@ -82,7 +82,8 @@ W2R packet before any rerun:
   xtask-built posture with the W2R state: W2 is rejected pending amended rerun
   and W3+ is blocked.
 - `restart/skinny/tranches/sk-v14/DISPATCH-PROMPT.md`: strengthen pre-dispatch
-  verification to require amended W2 admit before W3+.
+  verification to require amended W2 admit before W3+ and name the exact seven
+  `check-css-l4-*` companion commands from the G-Omega packet.
 
 ## Explicit Non-Changes
 

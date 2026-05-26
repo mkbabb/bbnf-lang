@@ -73,8 +73,8 @@ Continue indefatigably per the USER PIN addendum.
                               path + Skipper comparator)
     JSON direct:     0 / 17  (4 cells need comparator rebind)
     JSON typed:      0 / 17  (7 cells need comparator rebind)
-    CSS L4:          0 / 24  (all OPEN; templates deleted +
-                              regen-css pipeline built)
+    CSS L4:          0 / 24  (all OPEN; templates pending PRUNE-2 +
+                              amended skinny-side regen-css pending W2)
 
   Campaign at zero on numbers; non-zero on architecture.
 
@@ -118,17 +118,20 @@ Continue indefatigably per the USER PIN addendum.
                  in codegen/ into ONE grammar-agnostic generator
                  template consuming grammar source + workspace
                  metadata.
-        PRUNE-4: Totality Pattern H — refactor 64 hand-written
+        PRUNE-4: Totality Pattern H — refactor 67 hand-written
                  per-grammar files in crates/core/src/runtime/{grammar}/
-                 into emitted output. Sub-divide by grammar (8 sub-waves).
+                 into emitted output. Sub-divide by grammar (9 sub-waves,
+                 W6.0..W6.8; W6.0 owns css_l4 root runtime per W2R).
         PRUNE-5: Wire W8 per-grammar policy + W9 same-substrate union
                  from SCAFFOLD-ONLY to LOAD-BEARING. CSP picks shapes;
                  runtime must honor selections.
 
   R4. REGEN-CSS PIPELINE. Build cargo xtask regen-css that consumes
       the 15 .bbnf files at /grammar/css/l4/ and emits CSS L4
-      runtime modules. Acceptance: `delete generated → run xtask
-      regen-css → diff produces empty`.
+      skinny runtime modules only. Acceptance: seven exact `check-css-l4-*`
+      companions pass and `delete skinny generated → run xtask regen-css →
+      skinny runtime diff produces empty`. Root `crates/core/src/runtime/css_l4/`
+      is W6.0 work after W5.
 
   R5. PRODUCTION CORPORA. Stand up `skinny/corpora/css-l4-sk-v14/`
       with Bootstrap + Tailwind + Material + Animate (~960 KB).

@@ -236,15 +236,15 @@ carry-forward additions + Lock 1 v+1 + Lock 14 v+1 + Lock 16 v+1:
 |---|---|---|---|---|---:|
 | W0 | Section 3 | Baseline Profile And Telemetry Lock (SK-V14-open) | Dispatchable only after G-Omega | 0 production behavior LOC; reauthorized telemetry gate/report/Lock14 scope per Section 3 accounting; ≤250 report/gate/test/doc LOC | ≤90 min |
 | W1 | Section 4 | Comparator Rebind + Per-Iter Equality + PRUNE-1 (R1 + R2 + R3 PRUNE-1) | Conditional on W0 close | ≤1.08k C-2 source/test LOC + ≤500 C-5 part-A revert (delete-heavy); total ≤1.58k | ≤90 min |
-| W2 | Section 5 | regen-css xtask (R4 — first instance of regen-{grammar} family) | Conditional on W1 close | ≤2.0k C-3 part-A source/test LOC; generated output named separately | ≤90 min |
+| W2 | Section 5 | regen-css xtask (R4 — first instance of regen-{grammar} family; skinny runtime tree only after Pass Omega V3 W2R) | Conditional on W1 close | ≤2.0k C-3 part-A source/test LOC; generated output named separately | ≤90 min |
 | W3 | Section 6 | Production CSS Corpora (R5; ~960 KB) | Conditional on W2 close | ≤200 corpora-staging LOC; corpora files are bytes-only, not source LOC | ≤90 min |
 | W4 | Section 7 | PRUNE-2 — delete 7 CSS templates + revert 24 CSS admits (R3 PRUNE-2) | Conditional on W2 + W3 close (R4 MUST precede per S-P0 §2.1) | ≤500 C-5 part-B revert + 7-template delete; LOC delta is negative | ≤90 min |
 | W5 | Section 8 | PRUNE-3 — Lock-14 refactor: trait dispatch + grammar-agnostic generator template (R3 PRUNE-3; C-1 part-A) | Conditional on W4 close | ≤1.4k C-1 part-A source/test LOC | ≤90 min |
-| W6 | Section 9 | PRUNE-4 — 9 sub-waves: per-grammar runtime collapse (R3 PRUNE-4; C-1 part-B) | Conditional on W5 close | ≤2.0k C-1 part-B aggregate across 9 sub-waves (avg ~220 LOC/grammar; generated output uncounted) | ≤90 min per sub-wave (W6.1..W6.9); aggregate ≤810 min |
+| W6 | Section 9 | PRUNE-4 — 9 sub-waves: W6.0 CSS L4 root-runtime collapse, then remaining per-grammar runtime collapses (R3 PRUNE-4; C-1 part-B) | Conditional on W5 close | ≤2.0k C-1 part-B aggregate across 9 sub-waves (avg ~220 LOC/grammar; generated output uncounted) | ≤90 min per sub-wave (W6.0..W6.8); aggregate ≤810 min |
 | W7 | Section 10 | PRUNE-5 — wire W8 policy + W9 union from SCAFFOLD to LOAD-BEARING (R3 PRUNE-5; C-4) | Conditional on W6 close (C-1 MUST precede C-4 per S-P0 §2.2) | ≤1.4k C-4 source/test LOC | ≤90 min |
 | W8 | Section 11 | CSS L4 Re-Admit (R6; grammar-derived pipeline + production corpora + work-equivalent comparator) | Conditional on W7 close | ≤650 source/test LOC; rows named in wave plan | ≤90 min |
-| W9 | Section 12 | JSON Direct + Typed Re-Admit (R7; under rebound R1 comparators) | Conditional on W1 close (depends only on R1+R2, not on PRUNE waves) | ≤450 source/test LOC; rows named in wave plan | ≤90 min |
-| W10 | Section 13 | JSON parse_only Distinct Path + Re-Admit (R8) | Conditional on W1 + W9 close | ≤650 source/test LOC; new generated_json parse_only path named separately | ≤90 min |
+| W9 | Section 12 | JSON Direct + Typed Re-Admit (R7; under rebound R1 comparators) | Conditional on W1 close locally; globally blocked until PRUNE-1..PRUNE-5 close | ≤450 source/test LOC; rows named in wave plan | ≤90 min |
+| W10 | Section 13 | JSON parse_only Distinct Path + Re-Admit (R8) | Conditional on W1 + W9 close locally; globally blocked until PRUNE-1..PRUNE-5 close | ≤650 source/test LOC; new generated_json parse_only path named separately | ≤90 min |
 | W11 | Section 14 | Close And Alpha Feedback | Conditional on W0-W10 dispositions | 0 source LOC; docs/RESULTS/REDRESS/HANDOFF/SPEC reconciliation only | ≤90 min |
 
 LOC budgets are conjunctive with the 90-minute cap and rerun ceilings.
@@ -278,11 +278,11 @@ Rerun ceilings:
 |---|---|---|
 | W0 | report/gate tests, malformed sidecar-evidence rejection, full-table schema validation incl. 4 SK-V14 columns | one gate refresh plus one confirm rerun if variance invalidates telemetry |
 | W1 | strict-comparator tests, per-iter-equality oracle test, revert audit, full-table maintain | one gate refresh |
-| W2 | `xtask regen-css` round-trip test (rm + regen + diff), generated-output diff audit | one gate refresh |
+| W2 | `xtask regen-css` skinny runtime round-trip test (rm + regen + diff), generated-output diff audit, seven exact companion checks | one gate refresh |
 | W3 | corpora-size validation (`du -sh ≥ 800 KB`), source-URL provenance check | no performance rerun |
 | W4 | post-PRUNE-2 gate: 24 CSS L4 rows = 0 ADMITTED; 7 template directories deleted; CSS L4 generated_css_l4.rs round-trip clean | one gate refresh |
 | W5 | trait-dispatch tests, generic-generator template tests, Lock-14 baseline grep (returns ZERO for grammar-named matches) | one gate refresh |
-| W6.1..W6.9 | per-grammar runtime collapse test, regen check, per-grammar parser tests, Lock-14 grep | one gate refresh per sub-wave |
+| W6.0..W6.8 | per-grammar runtime collapse test, regen check, per-grammar parser tests, Lock-14 grep | one gate refresh per sub-wave |
 | W7 | CSP-shape consumer test, named pre-wave row hot-leaf attribution shift in samply trace, Lock-1 triad declaration | one gate refresh; second rerun requires REDRESS cost note |
 | W8 | CSS L4 re-admit row tests, lightningcss equality, production-corpora parse tests, generated diff audit, full-table maintain | one full gate refresh; second rerun requires REDRESS cost note |
 | W9 | JSON direct/typed re-admit row tests, plane-correct strict comparator parity, Track 1/2 independence, full-table maintain | one full gate refresh; second rerun requires REDRESS cost note |
@@ -464,7 +464,8 @@ Owner paths:
 - `skinny/xtask/src/regen_css.rs` (new file; grammar-agnostic xtask generator parametrised by grammar name — first instance of `regen-{grammar}` family)
 - `skinny/xtask/src/regen.rs` (refactor: extract shared regen-{grammar} machinery; the xtask binary parametrises a grammar-neutral generator)
 - `skinny/crates/runtime/src/grammars/css_l4_*/` (generated output destination)
-- `crates/core/src/runtime/css_l4/` (dual-tree generated output destination per SYNTHESIS §3 C-3 verbatim)
+- `crates/core/src/runtime/css_l4/` is excluded from W2 and owned by W6.0
+  after W5.
 - `skinny/RESULTS.md` (W2 row attribution)
 - `skinny/REDRESS.md` if rejected.
 
@@ -477,42 +478,43 @@ Entry gate:
 
 - W1 admitted.
 - 15 `.bbnf` files at `grammar/css/l4/` present (14 of 15 currently orphan per S-P0 A4 NEW-3; only `stylesheet.bbnf` cited by totality `Cargo.toml:22`).
-- W2 plan names the `regen-css` USAGE entry; the parametrised generator's input contract (grammar-name + grammar-source + workspace-metadata); the output destination per workspace tree (dual-tree per SYNTHESIS §3 C-3).
+- W2 plan names the `regen-css` USAGE entry; the parametrised generator's input contract (grammar-name + grammar-source + workspace-metadata); the skinny runtime output destination; the seven exact `check-css-l4-*` companions. The plan explicitly states that root `crates/core/src/runtime/css_l4/` is W6.0 work.
 
 Tasks:
 
 1. Add `regen-css` subcommand to `skinny/xtask/src/main.rs:8` USAGE line.
-2. Author `regen_css.rs` consuming the 15 `.bbnf` files at `/grammar/css/l4/` + workspace metadata; emit CSS L4 runtime modules under `skinny/crates/runtime/src/grammars/css_l4_*/` AND `crates/core/src/runtime/css_l4/`.
+2. Author `regen_css.rs` consuming the 15 `.bbnf` files at `/grammar/css/l4/` + workspace metadata; emit CSS L4 runtime modules under `skinny/crates/runtime/src/grammars/css_l4_*/` only.
 3. The xtask binary parametrises a grammar-neutral generator per SYNTHESIS §0.3 R4 — `regen-css` is the first instance of the `regen-{grammar}` family. The generator's input contract is grammar-name + grammar-source + workspace-metadata; the output is byte-deterministic typed Rust under `runtime/src/grammars/<name>/`.
-4. Add `check-css-l4-<provider>` companion invocations per S-P0 §2.4(1): every `regen-X` subcommand has a matching `check-X` subcommand whose CI invocation reads the emitted bytes, re-runs `regen-X`, and diffs.
+4. Add the exact companion invocations per S-P0 §2.4(1): `cargo xtask check-css-l4-at-rules-and-media`, `cargo xtask check-css-l4-declaration-values`, `cargo xtask check-css-l4-declaration-values-extended`, `cargo xtask check-css-l4-nested-layout`, `cargo xtask check-css-l4-stylesheet-selectors`, `cargo xtask check-css-l4-vendor-and-custom-atrules`, and `cargo xtask check-css-l4-visual-functions`. Each companion reads the emitted bytes, re-runs `regen-css` for its covered profile, and diffs.
 
 Exit gate:
 
-- `cargo xtask regen-css` round-trip clean: `rm -rf skinny/crates/runtime/src/grammars/css_l4_* crates/core/src/runtime/css_l4/ && cargo xtask regen-css && git diff` returns empty on both runtime trees.
+- `cargo xtask regen-css` skinny-side round-trip clean:
+  `rm -rf skinny/crates/runtime/src/grammars/css_l4_* && cargo xtask regen-css && git diff --exit-code -- skinny/crates/runtime/src/grammars`.
 - `find skinny/xtask/src -name '*.rs' | xargs grep -l regen-css | wc -l > 0`.
-- `check-css-l4-<provider>` companion exists per S-P0 §2.4(1).
-- Bypass-header detector empty: `git grep -l '@generated by skinny bbnf-codegen' -- skinny/crates/runtime crates/core/src/runtime` traces every match to a registered xtask emission.
+- All seven exact `check-css-l4-*` companions exist and pass.
+- Bypass-header detector empty for W2-owned output: `git grep -l '@generated by skinny bbnf-codegen' -- skinny/crates/runtime crates/core/src/runtime` traces every skinny runtime match to a registered W2 xtask emission; root runtime matches fail this gate unless W6.0 owns them.
 - Lock 14 baseline gate: zero grammar-named branches in xtask itself; the `regen_css.rs` module name is the only css-named identifier in the xtask binary (per the first-instance discipline).
 - Full-table maintain: ±1.0% on JSON rows.
 
-Same-wave consumer: `cargo xtask regen-css` itself + `check-css-l4-*`
-CI invocations consume the emitted generated_css_l4 trees in W2's
-test suite.
+Same-wave consumer: `cargo xtask regen-css` itself + the seven exact
+`check-css-l4-*` CI invocations consume the emitted skinny CSS L4 trees in
+W2's test suite.
 
 Pre-blocked routes: hand-patching generated output (per `[clean-regen-
 discipline]`); shipping `regen-css` without a parametrised
 `regen-{grammar}` family contract (P-6 recurrence vector); CSS L4
 SOTA claim from W2 alone (xtask correctness is gate evidence, not
-admit evidence); fake `@generated` header (P-1).
+admit evidence); touching or claiming closure over
+`crates/core/src/runtime/css_l4/`; fake `@generated` header (P-1).
 
-Revert protocol: revert xtask/regen_css.rs changes + delete emitted
-output trees; add REDRESS naming the failing round-trip case or
-missing grammar-derived emission path.
+Revert protocol: revert xtask/regen_css.rs changes + delete emitted skinny
+output trees; add REDRESS naming the failing round-trip case or missing
+grammar-derived emission path.
 
-Downstream effect: W2 rejection blocks W4 (PRUNE-2 needs regen-css
-to recover the 7 hand-written CSS templates), W8 (CSS L4 re-admit
-needs grammar-derived pipeline). W3 + W5 + W6 + W7 + W9 + W10 may
-proceed independently.
+Downstream effect: W2 rejection blocks W3 and all later waves by hard entry
+gate. W4 needs W2 + W3; W8 needs the grammar-derived pipeline; W9/W10 remain
+globally blocked by PRUNE-before-new-admit until PRUNE-1..PRUNE-5 close.
 
 ## Section 6 — W3 Production CSS Corpora (R5)
 
@@ -529,7 +531,7 @@ Doc links: `restart/skinny/tranches/sk-v14/research/p3/p3a-candidate-shortlist.m
 
 Entry gate:
 
-- W2 admitted (regen-css subcommand exists).
+- W2 admitted under the amended skinny-only `regen-css` gate.
 - W3 plan names the four production sources (Bootstrap + Tailwind + Material + Animate) with stable source URLs + commit/version pins; ~960 KB target binding.
 
 Tasks:
@@ -560,8 +562,8 @@ Revert protocol: delete `skinny/corpora/css-l4-sk-v14/` + revert
 loader changes; add REDRESS naming the unattainable corpus target.
 
 Downstream effect: W3 rejection blocks W8 (CSS L4 re-admit needs
-production corpora). W4 + W5 + W6 + W7 + W9 + W10 may proceed
-independently.
+production corpora), and blocks W4/W5/W6/W7 by the PRUNE chain. W9/W10 remain
+globally blocked until PRUNE-1..PRUNE-5 close.
 
 ## Section 7 — W4 PRUNE-2 (Delete 7 CSS Templates + Revert 24 CSS L4 Admits)
 
@@ -582,7 +584,7 @@ Doc links: `restart/skinny/tranches/sk-v14/research/p3/p3a-candidate-shortlist.m
 
 Entry gate:
 
-- W2 admitted (R4 regen-css exists; gates W4 per S-P0 §2.1 sequencing constraint).
+- W2 admitted under the amended skinny-only R4 `regen-css` gate; gates W4 per S-P0 §2.1 sequencing constraint.
 - W3 admitted (production corpora exist; sets up post-PRUNE re-admit path).
 - W4 plan names exact files to delete (7 template directories + 7 provider modules + 7 runtime twins per S-P0 A4 NEW-1 + NEW-2 + finding 1-7) + the 24 CSS L4 row keys to revert + the validation-pack §reference per row.
 
@@ -621,7 +623,8 @@ the failing emission path.
 
 Downstream effect: W4 rejection blocks W8 (CSS L4 re-admit needs the
 hand-written templates GONE so the grammar-derived pipeline is the
-only emission path). W5 + W6 + W7 + W9 + W10 may proceed independently.
+only emission path), and blocks W5/W6/W7 by the PRUNE chain. W9/W10 remain
+globally blocked until PRUNE-1..PRUNE-5 close.
 
 ## Section 8 — W5 PRUNE-3 (Lock-14 Refactor: Trait Dispatch + Grammar-Agnostic Generator)
 
@@ -705,24 +708,24 @@ Doc links: `restart/skinny/tranches/sk-v14/research/p3/p3a-candidate-shortlist.m
 Entry gate:
 
 - W5 admitted (generic generator template exists; provides the collapse target).
-- W6 plan enumerates 9 sub-waves W6.1..W6.9 by grammar name: `bbnf, bnf, css_l4, css_pretty, csv, ebnf, google_sheets, json, math`. PRUNE-4 sub-wave count is 9 NOT 8 per S-P0 §2.3 (`css_pretty` is the +1 over the SK-V13 baseline's 8).
+- W6 plan enumerates 9 sub-waves W6.0..W6.8 by grammar name: `css_l4, math, csv, bnf, ebnf, css_pretty, google_sheets, bbnf, json`. PRUNE-4 sub-wave count is 9 NOT 8 per S-P0 §2.3 (`css_pretty` is the +1 over the SK-V13 baseline's 8). Pass Omega V3 W2R assigns CSS L4 root-runtime collapse to W6.0 after W5.
 - W6 plan names the per-grammar runtime file inventory: bbnf=8, bnf=7, css_l4=7, css_pretty=7, csv=7, ebnf=7, google_sheets=10, json=7, math=7 (total = 67 files per `SYNTHESIS-AUDIT-OVERFIT.md §1.3`).
 
 ### W6 sub-wave order (per substrate-before-consumer + guard-rows-before-risk-rows discipline):
 
-> **Cap footnote (per §2 manifest restated for dispatch-time clarity):** Each W6.N sub-wave carries the ≤90-min implementation/redress cap; the W6 aggregate cumulative cap across W6.1..W6.9 is ≤810 min per `SPEC.md:243`. Any sub-wave or aggregate overflow returns REVISE per `[generated-size-budget]`.
+> **Cap footnote (per §2 manifest restated for dispatch-time clarity):** Each W6.N sub-wave carries the ≤90-min implementation/redress cap; the W6 aggregate cumulative cap across W6.0..W6.8 is ≤810 min per `SPEC.md:243`. Any sub-wave or aggregate overflow returns REVISE per `[generated-size-budget]`.
 
 | Sub-wave | Grammar | File count | Risk | Notes |
 |---|---|---:|---|---|
-| W6.1 | `math` | 7 | LOW | smallest non-trivial grammar; first proves the trait-dispatch + generic generator collapse contract works |
+| W6.0 | `css_l4` | 7 | MED-HIGH | W2R-owned root-runtime collapse; proves W5 can emit or collapse `crates/core/src/runtime/css_l4/` without W2 touching that tree |
+| W6.1 | `math` | 7 | LOW | smallest non-trivial grammar after CSS L4 root handoff; proves the general collapse contract beyond W2R |
 | W6.2 | `csv` | 7 | LOW | second-smallest; minimal cross-dependency |
 | W6.3 | `bnf` | 7 | LOW-MED | grammar peer to ebnf; subset of bbnf |
 | W6.4 | `ebnf` | 7 | LOW-MED | grammar peer to bnf; superset coverage |
-| W6.5 | `css_pretty` | 7 | MED | the +1 over SK-V13 baseline; co-derived with W6.6 css_l4 |
-| W6.6 | `css_l4` | 7 | MED-HIGH | gated on W2 + W4 regen-css/PRUNE-2 having landed first |
-| W6.7 | `google_sheets` | 10 | HIGH | largest per-grammar (10 files); pre-restart-API carry at `document/canonical.rs:13-17` (S-P0 A6 NEW-MED) removed in this sub-wave |
-| W6.8 | `bbnf` | 8 | HIGH | self-hosting grammar; LegacyPath shim removal (S-P0 A6 NEW-HIGH-1) |
-| W6.9 | `json` | 7 | VERY HIGH | highest-throughput hot-path; collapsed last so the W6.1-.8 collapses establish the regression budget; also: builder_template.rs + arena_template.rs Pattern H opt-out enshrinement rewrite (S-P0 A6 NEW-HIGH-2) happens at this sub-wave |
+| W6.5 | `css_pretty` | 7 | MED | the +1 over SK-V13 baseline; co-derived with CSS L4 but independent of W2's skinny runtime tree |
+| W6.6 | `google_sheets` | 10 | HIGH | largest per-grammar (10 files); pre-restart-API carry at `document/canonical.rs:13-17` (S-P0 A6 NEW-MED) removed in this sub-wave |
+| W6.7 | `bbnf` | 8 | HIGH | self-hosting grammar; LegacyPath shim removal (S-P0 A6 NEW-HIGH-1) |
+| W6.8 | `json` | 7 | VERY HIGH | highest-throughput hot-path; collapsed last so the W6.0-.7 collapses establish the regression budget; also: builder_template.rs + arena_template.rs Pattern H opt-out enshrinement rewrite (S-P0 A6 NEW-HIGH-2) happens at this sub-wave |
 
 Each sub-wave is ONE triumvirate (research + plan + redress); 9 sub-
 waves × ~3 commits = ~27 commits within W6.
@@ -734,6 +737,9 @@ waves × ~3 commits = ~27 commits within W6.
 3. Validate the regen check: `cargo xtask regen-<G>` round-trip clean.
 4. Run the Lock 14 baseline gate: `find crates/core/src/runtime/<G> -name '*.rs' | wc -l == 0` post-collapse (all generated).
 5. Run the per-grammar parser test suite; full-table maintain ±1.0%.
+
+W6.0 additionally runs the CSS L4 root-runtime destructive gate:
+`rm -rf crates/core/src/runtime/css_l4 && cargo xtask regen-css && git diff --exit-code -- crates/core/src/runtime/css_l4`.
 
 ### Per-sub-wave exit gate (W6.N):
 
@@ -772,9 +778,8 @@ all 9 sub-waves; sub-wave-granular revert is the default.
 Downstream effect: W6 rejection blocks W7 (PRUNE-5 needs the collapsed
 runtime to consume W8 policy + W9 union shapes without re-deepening
 the Lock 14 violation per S-P0 §2.2 sequencing constraint). W8 + W9 +
-W10 may proceed independently of W6 incomplete (CSS / JSON re-admits
-can land before all 9 sub-waves close; they consume W6's emitted
-output for their respective grammars).
+W10 remain globally blocked until PRUNE-1..PRUNE-5 close. No new-admit wave
+may cite W6 output before the relevant PRUNE chain closes.
 
 ## Section 10 — W7 PRUNE-5 (Wire W8 + W9 from SCAFFOLD to LOAD-BEARING)
 
@@ -835,7 +840,8 @@ shape consumer or missing Lock-1 triad slot.
 Downstream effect: W7 rejection blocks W8 / W9 / W10 admit claims
 that cite W8/W9 runtime consumption (per P-5 pre-block: no row admit
 may cite W8 / W9 as evidence until the runtime consumer is measured).
-W8 / W9 / W10 may proceed independently if they do not cite W8/W9.
+W8 / W9 / W10 are new-admit waves and remain globally blocked until
+PRUNE-1..PRUNE-5 close.
 
 ## Section 11 — W8 CSS L4 Re-Admit (R6)
 

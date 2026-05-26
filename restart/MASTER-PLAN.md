@@ -318,7 +318,7 @@ css_pretty co-derivation). Any +N over the prior tranche must trace to
 grammar-roster change OR PRUNE-4 sub-wave count update (9 sub-waves not 8 per
 S-P0 §2.3). The W6 PRUNE-4 envelope binds at ≤2.0k LOC C-1 part-B aggregate
 across 9 sub-waves (avg ~220 LOC/grammar; generated output uncounted), ≤90
-min per sub-wave (W6.1..W6.9), aggregate ≤810 min, per SK-V14 SPEC §13 W6
+min per sub-wave (W6.0..W6.8), aggregate ≤810 min, per SK-V14 SPEC §13 W6
 authority at `restart/skinny/tranches/sk-v14/SPEC.md:243`.
 
 R4 `cargo xtask regen-{grammar}` round-trip discipline (per MP-3B-V1-D05 +
@@ -329,10 +329,12 @@ from grammar source + workspace metadata, (c) reject hand-patching per
 `[clean-regen-discipline]`. The CSS L4 fake `@generated` header on
 hand-written templates is the pattern S-P0 §1 identifies as the dominant
 recurrence vector; SK-V14 W2 lands `cargo xtask regen-css` round-trip clean
-as the first instance of the regen-{grammar} family. The family extends to
-JSON / Sheets / BBNF / EBNF / BNF / CSV / Math at later waves; A consumers
-inherit the R4 gate so future grammar onboarding inherits the round-trip
-check.
+as the first instance of the regen-{grammar} family for the skinny runtime
+tree only. Pass Omega V3 W2R assigns root `crates/core/src/runtime/css_l4/`
+collapse to W6.0 after W5's grammar-agnostic generator template exists. The
+family extends to JSON / Sheets / BBNF / EBNF / BNF / CSV / Math at later
+waves; A consumers inherit the R4 gate so future grammar onboarding inherits
+the round-trip check.
 
 ## 7. Tranche B - Runtime Substrate
 
@@ -763,15 +765,15 @@ canonical source of truth and this section refers by path).
 |---|---|---|---|---|---|
 | W0 | §3 | Baseline Profile + Telemetry Lock (SK-V14-open) | Dispatchable only after G-Omega | 0 production behavior LOC; ≤250 report/gate/test/doc LOC | ≤90 min |
 | W1 | §4 | Comparator Rebind + Per-Iter Equality + PRUNE-1 (R1 + R2 + R3 PRUNE-1) | Conditional on W0 close | ≤1.08k C-2 source/test + ≤500 C-5 part-A revert; total ≤1.58k | ≤90 min |
-| W2 | §5 | regen-css xtask (R4 — first instance of regen-{grammar} family) | Conditional on W1 close | ≤2.0k C-3 part-A source/test; generated output named separately | ≤90 min |
+| W2 | §5 | regen-css xtask (R4 — first instance of regen-{grammar} family; skinny runtime tree only after W2R) | Conditional on W1 close | ≤2.0k C-3 part-A source/test; generated output named separately | ≤90 min |
 | W3 | §6 | Production CSS Corpora (R5; ~960 KB) | Conditional on W2 close | ≤200 corpora-staging LOC; corpora files are bytes-only | ≤90 min |
 | W4 | §7 | PRUNE-2 — delete 7 CSS templates + revert 24 CSS admits (R3 PRUNE-2) | Conditional on W2 + W3 close (R4 MUST precede per S-P0 §2.1) | ≤500 C-5 part-B revert + 7-template delete; LOC delta is negative | ≤90 min |
 | W5 | §8 | PRUNE-3 — Lock-14 refactor: trait dispatch + grammar-agnostic generator template (R3 PRUNE-3; C-1 part-A) | Conditional on W4 close | ≤1.4k C-1 part-A source/test LOC | ≤90 min |
-| W6 | §9 | PRUNE-4 — 9 sub-waves: per-grammar runtime collapse (R3 PRUNE-4; C-1 part-B) | Conditional on W5 close | ≤2.0k C-1 part-B aggregate across 9 sub-waves (avg ~220 LOC/grammar; generated output uncounted) | ≤90 min per sub-wave (W6.1..W6.9); aggregate ≤810 min |
+| W6 | §9 | PRUNE-4 — 9 sub-waves: W6.0 CSS L4 root-runtime collapse, then remaining per-grammar runtime collapses (R3 PRUNE-4; C-1 part-B) | Conditional on W5 close | ≤2.0k C-1 part-B aggregate across 9 sub-waves (avg ~220 LOC/grammar; generated output uncounted) | ≤90 min per sub-wave (W6.0..W6.8); aggregate ≤810 min |
 | W7 | §10 | PRUNE-5 — wire W8 policy + W9 union from SCAFFOLD to LOAD-BEARING (R3 PRUNE-5; C-4) | Conditional on W6 close (C-1 MUST precede C-4 per S-P0 §2.2) | ≤1.4k C-4 source/test LOC | ≤90 min |
 | W8 | §11 | CSS L4 Re-Admit (R6; grammar-derived pipeline + production corpora + work-equivalent comparator) | Conditional on W7 close | ≤650 source/test LOC | ≤90 min |
-| W9 | §12 | JSON Direct + Typed Re-Admit (R7; under rebound R1 comparators) | Conditional on W1 close (depends only on R1+R2, not on PRUNE waves) | ≤450 source/test LOC | ≤90 min |
-| W10 | §13 | JSON parse_only Distinct Path + Re-Admit (R8) | Conditional on W1 + W9 close | ≤650 source/test LOC; F-V2-P1ABC-RERECORD Stage-0 binds UNCONDITIONALLY per MP-3B-V1-D11 + S-P3 V3 §3C | ≤90 min |
+| W9 | §12 | JSON Direct + Typed Re-Admit (R7; under rebound R1 comparators) | Conditional on W1 close locally, but globally blocked until PRUNE-1..PRUNE-5 close | ≤450 source/test LOC | ≤90 min |
+| W10 | §13 | JSON parse_only Distinct Path + Re-Admit (R8) | Conditional on W1 + W9 close locally, but globally blocked until PRUNE-1..PRUNE-5 close; F-V2-P1ABC-RERECORD Stage-0 binds UNCONDITIONALLY per MP-3B-V1-D11 + S-P3 V3 §3C | ≤650 source/test LOC | ≤90 min |
 | W11 | §14 | Close And Alpha Feedback | Conditional on W0-W10 dispositions | 0 source LOC; docs/RESULTS/REDRESS/HANDOFF/SPEC reconciliation only | ≤90 min |
 
 Total envelope across all candidates (per SPEC §2): C-1 2.8k-3.4k; C-2

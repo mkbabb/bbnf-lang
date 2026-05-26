@@ -2,7 +2,8 @@
 
 Date: 2026-05-23.
 
-Status: S-P3 V1 dispatch contract. This file is the orchestrator's
+Status: S-P3 V1 dispatch contract, amended by Pass Omega V3 W2R on
+2026-05-26. This file is the orchestrator's
 per-wave invocation contract for SK-V14 W0..W11. Every SK-V14 wave is
 dispatched as a research → plan → redress triumvirate per
 `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`. This contract
@@ -23,11 +24,12 @@ Read in order before dispatching any SK-V14 wave triumvirate:
 8. `restart/skinny/tranches/sk-v14/research/p3/p3{a..f}-*.md` (S-P3 V1 outputs; CHALLENGE V1 input ledger)
 9. `restart/skinny/tranches/sk-v14/research/p2/hardening/HARDENING-S-P2-V3-CONSOLIDATED.md` (S-P2 §3Z LOCK + §6 carry-forward packets)
 10. `restart/skinny/tranches/sk-v14/audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md` (74 findings; §2 sequencing constraints; §3 PRUNE-list)
-11. `skinny/RESULTS.md`, `skinny/REDRESS.md`, `skinny/ROLLING-SOTA-DELTA.md` (empirical floor)
+11. `restart/audit/totality/astral/V3/G-OMEGA-PACKET.md` + `restart/audit/totality/astral/V3/hardening/CONSOLIDATED.md` (W2R amendment: W2 skinny-only; W6.0 root CSS L4).
+12. `skinny/RESULTS.md`, `skinny/REDRESS.md`, `skinny/ROLLING-SOTA-DELTA.md` (empirical floor)
 
 ## §1 — Per-wave triumvirate contract (research → plan → redress)
 
-Every SK-V14 wave (W0..W11; W6 expanded into W6.1..W6.9 sub-waves)
+Every SK-V14 wave (W0..W11; W6 expanded into W6.0..W6.8 sub-waves)
 follows the `SKINNY-TRIUMVIRATE.md §1` three-phase structure:
 
 | Phase | Purpose | Agent count | Output | Source edits | Commit prefix |
@@ -82,7 +84,7 @@ carries "HARD CAP: N min. At 0.9N commit, at N halt"; defaults 30/30/75
 for research/plan/redress. The orchestrator surfaces extension
 decisions to the user.
 
-W6 has 9 sub-waves W6.1..W6.9 × ~3 commits each = ~27 commits within
+W6 has 9 sub-waves W6.0..W6.8 × ~3 commits each = ~27 commits within
 W6; aggregate wall-time ~24-32 hours. The SK-V14 bracket total wall-
 time estimate: 12 waves × 3-4h + W6 × 9 sub-waves = ~50-70 hours
 orchestrator-time per `SKINNY-TRIUMVIRATE.md §7`.
@@ -133,9 +135,10 @@ For each SK-V14 wave W ∈ {W0..W11}, the orchestrator's dispatch envelope is:
 Before dispatching the W{N} triumvirate:
 
 1. Verify W{N-1} closed (admitted, rejected, or routed).
-2. Verify W{N}'s entry gate per SPEC §X (W2 + W3 before W4; W5 + W6 before W7; W1 before W9/W10; W2+W3+W4+W5+W6+W7 before W8).
-3. Verify W{N}'s SPEC §X owner paths, tasks, exit gate, revert protocol exist and are current.
-4. Verify CHALLENGE acceptance if W{N} is first-of-class, substrate-touching, primitive, or high-risk (W5/W6/W7 mandatory; W1/W2/W4/W8/W9/W10 first-of-class recommendation).
+2. Verify W{N}'s entry gate per SPEC §X (W2 + W3 before W4; W5 + W6 before W7; W2+W3+W4+W5+W6+W7 before any new-admit W8/W9/W10 claim).
+3. If W{N} is W3 or later, verify Pass Omega V3 W2R CRUD landed and W2 admitted under the amended skinny-only gate; otherwise stop with REVISE.
+4. Verify W{N}'s SPEC §X owner paths, tasks, exit gate, revert protocol exist and are current.
+5. Verify CHALLENGE acceptance if W{N} is first-of-class, substrate-touching, primitive, or high-risk (W5/W6/W7 mandatory; W1/W2/W4/W8/W9/W10 first-of-class recommendation).
 
 ### §4.2 Research dispatch
 

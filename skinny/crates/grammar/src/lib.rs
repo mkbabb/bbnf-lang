@@ -89,6 +89,10 @@ pub struct RuntimeFrontendClosure {
     pub sources: Vec<RuntimeFrontendSource>,
     pub imports: Vec<RuntimeFrontendImport>,
     pub layout: RuntimeFrontendLayout,
+    pub pretty_directives: Vec<RuntimePrettyDirective>,
+    pub host_captures: Vec<RuntimeHostCapture>,
+    pub projections: Vec<RuntimeProjection>,
+    pub typed_projections: Vec<RuntimeTypedProjection>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -146,6 +150,56 @@ pub struct RuntimeDiscardOperator {
 pub enum RuntimeDiscardOperatorKind {
     Enter,
     Exit,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RuntimePrettyDirective {
+    pub path: String,
+    pub source_hash: String,
+    pub offset: usize,
+    pub end: usize,
+    pub target: String,
+    pub target_offset: usize,
+    pub target_end: usize,
+    pub payload: String,
+    pub payload_offset: usize,
+    pub payload_end: usize,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RuntimeHostCapture {
+    pub path: String,
+    pub source_hash: String,
+    pub offset: usize,
+    pub end: usize,
+    pub body: String,
+    pub body_offset: usize,
+    pub body_end: usize,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RuntimeProjection {
+    pub path: String,
+    pub source_hash: String,
+    pub offset: usize,
+    pub end: usize,
+    pub target: String,
+    pub target_offset: usize,
+    pub target_end: usize,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RuntimeTypedProjection {
+    pub path: String,
+    pub source_hash: String,
+    pub offset: usize,
+    pub end: usize,
+    pub target: String,
+    pub target_offset: usize,
+    pub target_end: usize,
+    pub type_text: String,
+    pub type_offset: usize,
+    pub type_end: usize,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -249,12 +303,20 @@ fn scan_runtime_sources(
         let mut constructs = Vec::new();
         let mut imports = Vec::new();
         let mut layout = RuntimeFrontendLayout::default();
+        let mut pretty_directives = Vec::new();
+        let mut host_captures = Vec::new();
+        let mut projections = Vec::new();
+        let mut typed_projections = Vec::new();
         scan_runtime_source(
             source,
             &source_hash,
             &mut constructs,
             &mut imports,
             &mut layout,
+            &mut pretty_directives,
+            &mut host_captures,
+            &mut projections,
+            &mut typed_projections,
         )?;
         scans.push(RuntimeSourceScan {
             path: source.path.to_string(),
@@ -262,6 +324,10 @@ fn scan_runtime_sources(
             constructs,
             imports,
             layout,
+            pretty_directives,
+            host_captures,
+            projections,
+            typed_projections,
         });
     }
     Ok((stable_hash(&digest), scans))
@@ -274,6 +340,10 @@ struct RuntimeSourceScan {
     constructs: Vec<RuntimeConstruct>,
     imports: Vec<RuntimeImportRef>,
     layout: RuntimeFrontendLayout,
+    pretty_directives: Vec<RuntimePrettyDirective>,
+    host_captures: Vec<RuntimeHostCapture>,
+    projections: Vec<RuntimeProjection>,
+    typed_projections: Vec<RuntimeTypedProjection>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -288,6 +358,10 @@ fn scan_runtime_source(
     constructs: &mut Vec<RuntimeConstruct>,
     imports: &mut Vec<RuntimeImportRef>,
     layout: &mut RuntimeFrontendLayout,
+    pretty_directives: &mut Vec<RuntimePrettyDirective>,
+    host_captures: &mut Vec<RuntimeHostCapture>,
+    projections: &mut Vec<RuntimeProjection>,
+    typed_projections: &mut Vec<RuntimeTypedProjection>,
 ) -> Result<(), GrammarError> {
     let bytes = input.source.as_bytes();
     let mut cursor = 0;
@@ -325,9 +399,35 @@ fn scan_runtime_source(
                     pattern_end: directive.pattern_end,
                 });
             Some((RuntimeConstructKind::WhitespaceDirective, 3))
-        } else if rest.starts_with("@pretty") {
-            Some((RuntimeConstructKind::PrettyDirective, 7))
+        } else if rest.starts_with("@pretty") && runtime_keyword_boundary(rest, 7) {
+            let directive = parse_runtime_pretty_directive(input.source, cursor, 7)?;
+            pretty_directives.push(RuntimePrettyDirective {
+                path: input.path.to_string(),
+                source_hash: source_hash.to_string(),
+                offset: cursor,
+                end: directive.end,
+                target: directive.target,
+                target_offset: directive.target_offset,
+                target_end: directive.target_end,
+                payload: directive.payload,
+                payload_offset: directive.payload_offset,
+                payload_end: directive.payload_end,
+            });
+            Some((
+                RuntimeConstructKind::PrettyDirective,
+                directive.end - cursor,
+            ))
         } else if rest.starts_with("@{") {
+            let capture = parse_runtime_host_capture(input.source, cursor)?;
+            host_captures.push(RuntimeHostCapture {
+                path: input.path.to_string(),
+                source_hash: source_hash.to_string(),
+                offset: cursor,
+                end: capture.end,
+                body: capture.body,
+                body_offset: capture.body_offset,
+                body_end: capture.body_end,
+            });
             Some((RuntimeConstructKind::HostCapture, 2))
         } else if rest.starts_with("?w")
             && runtime_keyword_boundary(rest, 2)
@@ -390,12 +490,37 @@ fn scan_runtime_source(
                 offset: cursor,
             });
         } else if rest.starts_with("->") {
-            let kind = if projection_has_type_suffix(rest) {
-                RuntimeConstructKind::TypedProjection
+            let projection = parse_runtime_projection(input.source, cursor)?;
+            let (kind, width) = if let Some(type_text) = projection.type_text {
+                typed_projections.push(RuntimeTypedProjection {
+                    path: input.path.to_string(),
+                    source_hash: source_hash.to_string(),
+                    offset: cursor,
+                    end: projection.end,
+                    target: projection.target,
+                    target_offset: projection.target_offset,
+                    target_end: projection.target_end,
+                    type_text,
+                    type_offset: projection.type_offset.unwrap(),
+                    type_end: projection.type_end.unwrap(),
+                });
+                (
+                    RuntimeConstructKind::TypedProjection,
+                    projection.end - cursor,
+                )
             } else {
-                RuntimeConstructKind::Projection
+                projections.push(RuntimeProjection {
+                    path: input.path.to_string(),
+                    source_hash: source_hash.to_string(),
+                    offset: cursor,
+                    end: projection.end,
+                    target: projection.target,
+                    target_offset: projection.target_offset,
+                    target_end: projection.target_end,
+                });
+                (RuntimeConstructKind::Projection, projection.end - cursor)
             };
-            Some((kind, 2))
+            Some((kind, width))
         } else if bytes[cursor] == b',' {
             Some((RuntimeConstructKind::Comma, 1))
         } else {
@@ -493,6 +618,17 @@ struct RuntimeWsDirective {
     end: usize,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct RuntimePrettyDirectiveScan {
+    target: String,
+    target_offset: usize,
+    target_end: usize,
+    payload: String,
+    payload_offset: usize,
+    payload_end: usize,
+    end: usize,
+}
+
 fn parse_runtime_ws_directive(
     source: &str,
     directive_offset: usize,
@@ -565,6 +701,225 @@ fn parse_runtime_ws_directive(
         message: "unterminated runtime @ws regex literal".to_string(),
         offset: directive_offset,
     })
+}
+
+fn parse_runtime_pretty_directive(
+    source: &str,
+    directive_offset: usize,
+    directive_width: usize,
+) -> Result<RuntimePrettyDirectiveScan, GrammarError> {
+    let mut cursor = directive_offset + directive_width;
+    runtime_skip_inline_whitespace(source, &mut cursor);
+    let (target, target_offset, target_end) = runtime_parse_target_or_star(source, cursor)
+        .ok_or_else(|| GrammarError::Parse {
+            code: "BBNF-RUNTIME-PRETTY-DIRECTIVE",
+            message: "runtime @pretty directive requires a target".to_string(),
+            offset: directive_offset,
+        })?;
+    cursor = target_end;
+    runtime_skip_inline_whitespace(source, &mut cursor);
+    let payload_offset = cursor;
+    let mut saw_hint = false;
+    loop {
+        runtime_skip_inline_whitespace(source, &mut cursor);
+        match source.as_bytes().get(cursor).copied() {
+            Some(b';') | Some(b'.') => {
+                if !saw_hint {
+                    return Err(GrammarError::Parse {
+                        code: "BBNF-RUNTIME-PRETTY-DIRECTIVE",
+                        message: "runtime @pretty directive requires at least one hint".to_string(),
+                        offset: directive_offset,
+                    });
+                }
+                let payload_end = source[..cursor].trim_end().len();
+                return Ok(RuntimePrettyDirectiveScan {
+                    target,
+                    target_offset,
+                    target_end,
+                    payload: source[payload_offset..payload_end].to_string(),
+                    payload_offset,
+                    payload_end,
+                    end: cursor + 1,
+                });
+            }
+            Some(b'\n') | None => {
+                return Err(GrammarError::Parse {
+                    code: "BBNF-RUNTIME-PRETTY-DIRECTIVE",
+                    message: "runtime @pretty directive requires a terminating semicolon"
+                        .to_string(),
+                    offset: directive_offset,
+                });
+            }
+            _ => {}
+        }
+
+        let Some((hint, _, hint_end)) = runtime_parse_ident(source, cursor) else {
+            return Err(GrammarError::Parse {
+                code: "BBNF-RUNTIME-PRETTY-DIRECTIVE",
+                message: "runtime @pretty directive has malformed hint payload".to_string(),
+                offset: directive_offset,
+            });
+        };
+        if !runtime_pretty_hint_allowed(&hint) {
+            return Err(GrammarError::Parse {
+                code: "BBNF-RUNTIME-PRETTY-DIRECTIVE",
+                message: format!("unknown runtime @pretty hint `{hint}`"),
+                offset: directive_offset,
+            });
+        }
+        cursor = hint_end;
+        if source.as_bytes().get(cursor).copied() == Some(b'(') {
+            cursor = runtime_skip_balanced(source, cursor, b'(', b')').ok_or_else(|| {
+                GrammarError::Parse {
+                    code: "BBNF-RUNTIME-PRETTY-DIRECTIVE",
+                    message: "unterminated runtime @pretty hint arguments".to_string(),
+                    offset: directive_offset,
+                }
+            })?;
+        }
+        saw_hint = true;
+    }
+}
+
+fn runtime_pretty_hint_allowed(hint: &str) -> bool {
+    matches!(
+        hint,
+        "blankline" | "block" | "compact" | "group" | "hardbreak" | "indent" | "sep"
+    )
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct RuntimeHostCaptureScan {
+    body: String,
+    body_offset: usize,
+    body_end: usize,
+    end: usize,
+}
+
+fn parse_runtime_host_capture(
+    source: &str,
+    capture_offset: usize,
+) -> Result<RuntimeHostCaptureScan, GrammarError> {
+    let body_offset = capture_offset + 2;
+    let Some(end) = runtime_skip_balanced(source, capture_offset + 1, b'{', b'}') else {
+        return Err(GrammarError::Parse {
+            code: "BBNF-RUNTIME-HOST-CAPTURE",
+            message: "unterminated runtime host capture".to_string(),
+            offset: capture_offset,
+        });
+    };
+    let body_end = end - 1;
+    Ok(RuntimeHostCaptureScan {
+        body: source[body_offset..body_end].to_string(),
+        body_offset,
+        body_end,
+        end,
+    })
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct RuntimeProjectionScan {
+    target: String,
+    target_offset: usize,
+    target_end: usize,
+    type_text: Option<String>,
+    type_offset: Option<usize>,
+    type_end: Option<usize>,
+    end: usize,
+}
+
+fn parse_runtime_projection(
+    source: &str,
+    projection_offset: usize,
+) -> Result<RuntimeProjectionScan, GrammarError> {
+    let mut target_offset = projection_offset + 2;
+    runtime_skip_inline_whitespace(source, &mut target_offset);
+    let mut cursor = target_offset;
+    let mut paren_depth = 0usize;
+    let mut bracket_depth = 0usize;
+    let mut brace_depth = 0usize;
+    let mut type_separator = None;
+
+    while cursor < source.len() {
+        let rest = &source[cursor..];
+        if rest.starts_with("//") {
+            break;
+        }
+        let byte = source.as_bytes()[cursor];
+        if matches!(byte, b'"' | b'\'') {
+            cursor = skip_quoted(source, cursor);
+            continue;
+        }
+        if byte == b'/' && !rest.starts_with("//") {
+            cursor = skip_regex(source, cursor);
+            continue;
+        }
+        if paren_depth == 0
+            && bracket_depth == 0
+            && brace_depth == 0
+            && matches!(byte, b'|' | b';' | b'\n' | b',')
+        {
+            break;
+        }
+        match byte {
+            b'(' => paren_depth += 1,
+            b')' => paren_depth = paren_depth.saturating_sub(1),
+            b'[' => bracket_depth += 1,
+            b']' => bracket_depth = bracket_depth.saturating_sub(1),
+            b'{' => brace_depth += 1,
+            b'}' => brace_depth = brace_depth.saturating_sub(1),
+            b':' if paren_depth == 0 && bracket_depth == 0 && brace_depth == 0 => {
+                let prev_colon = cursor > 0 && source.as_bytes()[cursor - 1] == b':';
+                let next_colon = source.as_bytes().get(cursor + 1).copied() == Some(b':');
+                if !prev_colon && !next_colon {
+                    type_separator = Some(cursor);
+                }
+            }
+            _ => {}
+        }
+        cursor += 1;
+    }
+
+    let end = source[..cursor].trim_end().len();
+    let target_end = type_separator.map_or(end, |separator| source[..separator].trim_end().len());
+    if target_offset >= target_end {
+        return Err(GrammarError::Parse {
+            code: "BBNF-RUNTIME-PROJECTION",
+            message: "runtime projection requires a target".to_string(),
+            offset: projection_offset,
+        });
+    }
+
+    if let Some(separator) = type_separator {
+        let mut type_offset = separator + 1;
+        runtime_skip_inline_whitespace(source, &mut type_offset);
+        if type_offset >= end {
+            return Err(GrammarError::Parse {
+                code: "BBNF-RUNTIME-TYPED-PROJECTION",
+                message: "runtime typed projection requires a type suffix".to_string(),
+                offset: projection_offset,
+            });
+        }
+        Ok(RuntimeProjectionScan {
+            target: source[target_offset..target_end].to_string(),
+            target_offset,
+            target_end,
+            type_text: Some(source[type_offset..end].to_string()),
+            type_offset: Some(type_offset),
+            type_end: Some(end),
+            end,
+        })
+    } else {
+        Ok(RuntimeProjectionScan {
+            target: source[target_offset..target_end].to_string(),
+            target_offset,
+            target_end,
+            type_text: None,
+            type_offset: None,
+            type_end: None,
+            end,
+        })
+    }
 }
 
 fn runtime_has_left_operand(source: &str, cursor: usize) -> bool {
@@ -658,6 +1013,10 @@ fn resolve_runtime_import_closure(
         })
         .collect::<Vec<_>>();
     let mut layout = RuntimeFrontendLayout::default();
+    let mut pretty_directives = Vec::new();
+    let mut host_captures = Vec::new();
+    let mut projections = Vec::new();
+    let mut typed_projections = Vec::new();
     for scan in scans {
         layout
             .whitespace_directives
@@ -668,12 +1027,20 @@ fn resolve_runtime_import_closure(
         layout
             .discard_operators
             .extend(scan.layout.discard_operators.clone());
+        pretty_directives.extend(scan.pretty_directives.clone());
+        host_captures.extend(scan.host_captures.clone());
+        projections.extend(scan.projections.clone());
+        typed_projections.extend(scan.typed_projections.clone());
     }
     Ok(RuntimeFrontendClosure {
         source_hash,
         sources,
         imports,
         layout,
+        pretty_directives,
+        host_captures,
+        projections,
+        typed_projections,
     })
 }
 
@@ -807,15 +1174,80 @@ fn skip_regex(source: &str, start: usize) -> usize {
     cursor
 }
 
-fn projection_has_type_suffix(rest: &str) -> bool {
-    rest.split(|ch: char| ch == '|' || ch == ';' || ch == '\n' || ch == ',')
-        .next()
-        .and_then(|projection| projection.rsplit_once(':').map(|(_, ty)| ty.trim()))
-        .is_some_and(|ty| {
-            ["u8", "u16", "u32", "u64", "i64", "f64"]
-                .iter()
-                .any(|suffix| ty.starts_with(suffix))
-        })
+fn runtime_skip_inline_whitespace(source: &str, cursor: &mut usize) {
+    while *cursor < source.len() {
+        let Some(ch) = source[*cursor..].chars().next() else {
+            break;
+        };
+        if matches!(ch, ' ' | '\t' | '\r') {
+            *cursor += ch.len_utf8();
+        } else {
+            break;
+        }
+    }
+}
+
+fn runtime_parse_target_or_star(source: &str, cursor: usize) -> Option<(String, usize, usize)> {
+    if source.as_bytes().get(cursor).copied() == Some(b'*') {
+        return Some(("*".to_string(), cursor, cursor + 1));
+    }
+    runtime_parse_ident(source, cursor)
+}
+
+fn runtime_parse_ident(source: &str, cursor: usize) -> Option<(String, usize, usize)> {
+    let mut chars = source[cursor..].char_indices();
+    let (_, first) = chars.next()?;
+    if !is_ident_start(first) {
+        return None;
+    }
+    let mut end = cursor + first.len_utf8();
+    for (relative, ch) in chars {
+        if is_ident_continue(ch) {
+            end = cursor + relative + ch.len_utf8();
+        } else {
+            break;
+        }
+    }
+    Some((source[cursor..end].to_string(), cursor, end))
+}
+
+fn runtime_skip_balanced(
+    source: &str,
+    open: usize,
+    open_byte: u8,
+    close_byte: u8,
+) -> Option<usize> {
+    if source.as_bytes().get(open).copied() != Some(open_byte) {
+        return None;
+    }
+    let mut cursor = open + 1;
+    let mut depth = 1usize;
+    while cursor < source.len() {
+        let rest = &source[cursor..];
+        if rest.starts_with("//") {
+            cursor += rest.find('\n').map_or(rest.len(), |index| index + 1);
+            continue;
+        }
+        let byte = source.as_bytes()[cursor];
+        if matches!(byte, b'"' | b'\'') {
+            cursor = skip_quoted(source, cursor);
+            continue;
+        }
+        if byte == b'/' && !rest.starts_with("//") {
+            cursor = skip_regex(source, cursor);
+            continue;
+        }
+        if byte == open_byte {
+            depth += 1;
+        } else if byte == close_byte {
+            depth -= 1;
+            if depth == 0 {
+                return Some(cursor + 1);
+            }
+        }
+        cursor += 1;
+    }
+    None
 }
 
 struct Parser<'a> {
@@ -1425,6 +1857,158 @@ fn w5b_frontend_malformed_discard_operator_fails_closed() {
         err,
         GrammarError::Parse {
             code: "BBNF-RUNTIME-DISCARD-OPERATOR",
+            ..
+        }
+    ));
+}
+
+#[cfg(test)]
+#[test]
+fn w5b_frontend_pretty_span_projection_lower_to_request_facts() {
+    let source = r#"
+@pretty ruleList blankline ;
+@pretty funcArgs group indent sep(", ") ;
+
+root = @{ "url" , "(" >> ident ?w , "," ?w , ident << ")" } ;
+tag = "from" -> 0u8 | "hex" -> crate::css_types::parse_hex_color(input) : u32 ;
+"#;
+    let facts =
+        parse_runtime_source_facts(&[RuntimeSource::new("grammar/css/l4/stylesheet.bbnf", source)])
+            .expect("pretty/span/projection facts lower");
+
+    assert_eq!(facts.count(RuntimeConstructKind::PrettyDirective), 2);
+    assert_eq!(facts.count(RuntimeConstructKind::HostCapture), 1);
+    assert_eq!(facts.count(RuntimeConstructKind::Projection), 1);
+    assert_eq!(facts.count(RuntimeConstructKind::TypedProjection), 1);
+    assert_eq!(facts.count(RuntimeConstructKind::ShiftRight), 1);
+    assert_eq!(facts.count(RuntimeConstructKind::ShiftLeft), 1);
+    assert_eq!(facts.count(RuntimeConstructKind::WhitespaceModifier), 2);
+
+    assert_eq!(facts.frontend.pretty_directives.len(), 2);
+    assert_eq!(
+        facts.frontend.pretty_directives[0],
+        RuntimePrettyDirective {
+            path: "grammar/css/l4/stylesheet.bbnf".to_string(),
+            source_hash: stable_hash(source),
+            offset: source.find("@pretty ruleList").unwrap(),
+            end: source.find("@pretty funcArgs").unwrap() - 1,
+            target: "ruleList".to_string(),
+            target_offset: source.find("ruleList").unwrap(),
+            target_end: source.find("ruleList").unwrap() + "ruleList".len(),
+            payload: "blankline".to_string(),
+            payload_offset: source.find("blankline").unwrap(),
+            payload_end: source.find("blankline").unwrap() + "blankline".len(),
+        }
+    );
+    assert_eq!(facts.frontend.pretty_directives[1].target, "funcArgs");
+    assert_eq!(
+        facts.frontend.pretty_directives[1].payload,
+        "group indent sep(\", \")"
+    );
+
+    assert_eq!(facts.frontend.host_captures.len(), 1);
+    let capture = &facts.frontend.host_captures[0];
+    assert_eq!(capture.offset, source.find("@{").unwrap());
+    assert_eq!(capture.end, source.find("} ;").unwrap() + 1);
+    assert!(capture.body.contains(">> ident ?w"));
+    assert!(capture.body.contains("ident <<"));
+
+    assert_eq!(
+        facts.frontend.projections,
+        vec![RuntimeProjection {
+            path: "grammar/css/l4/stylesheet.bbnf".to_string(),
+            source_hash: stable_hash(source),
+            offset: source.find("-> 0u8").unwrap(),
+            end: source.find(" |").unwrap(),
+            target: "0u8".to_string(),
+            target_offset: source.find("0u8").unwrap(),
+            target_end: source.find("0u8").unwrap() + "0u8".len(),
+        }]
+    );
+    assert_eq!(
+        facts.frontend.typed_projections,
+        vec![RuntimeTypedProjection {
+            path: "grammar/css/l4/stylesheet.bbnf".to_string(),
+            source_hash: stable_hash(source),
+            offset: source
+                .find("-> crate::css_types::parse_hex_color(input)")
+                .unwrap(),
+            end: source.rfind(" ;").unwrap(),
+            target: "crate::css_types::parse_hex_color(input)".to_string(),
+            target_offset: source
+                .find("crate::css_types::parse_hex_color(input)")
+                .unwrap(),
+            target_end: source.find(" : u32").unwrap(),
+            type_text: "u32".to_string(),
+            type_offset: source.find("u32").unwrap(),
+            type_end: source.find("u32").unwrap() + "u32".len(),
+        }]
+    );
+}
+
+#[cfg(test)]
+#[test]
+fn w5b_frontend_unknown_pretty_payload_fails_closed() {
+    let err = parse_runtime_source_facts(&[RuntimeSource::new(
+        "grammar/css/l4/stylesheet.bbnf",
+        "@pretty stylesheet vapor ;\nroot = \"x\" ;\n",
+    )])
+    .unwrap_err();
+    assert!(matches!(
+        err,
+        GrammarError::Parse {
+            code: "BBNF-RUNTIME-PRETTY-DIRECTIVE",
+            ..
+        }
+    ));
+}
+
+#[cfg(test)]
+#[test]
+fn w5b_frontend_host_capture_unterminated_fails_closed() {
+    let err = parse_runtime_source_facts(&[RuntimeSource::new(
+        "grammar/css/l4/stylesheet.bbnf",
+        "root = @{ \"url\" , \"(\" ;\n",
+    )])
+    .unwrap_err();
+    assert!(matches!(
+        err,
+        GrammarError::Parse {
+            code: "BBNF-RUNTIME-HOST-CAPTURE",
+            ..
+        }
+    ));
+}
+
+#[cfg(test)]
+#[test]
+fn w5b_frontend_projection_malformed_target_fails_closed() {
+    let err = parse_runtime_source_facts(&[RuntimeSource::new(
+        "grammar/css/l4/stylesheet.bbnf",
+        "root = \"x\" -> ;\n",
+    )])
+    .unwrap_err();
+    assert!(matches!(
+        err,
+        GrammarError::Parse {
+            code: "BBNF-RUNTIME-PROJECTION",
+            ..
+        }
+    ));
+}
+
+#[cfg(test)]
+#[test]
+fn w5b_frontend_typed_projection_malformed_type_fails_closed() {
+    let err = parse_runtime_source_facts(&[RuntimeSource::new(
+        "grammar/css/l4/stylesheet.bbnf",
+        "root = \"x\" -> input : ;\n",
+    )])
+    .unwrap_err();
+    assert!(matches!(
+        err,
+        GrammarError::Parse {
+            code: "BBNF-RUNTIME-TYPED-PROJECTION",
             ..
         }
     ));

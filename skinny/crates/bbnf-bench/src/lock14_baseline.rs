@@ -1112,6 +1112,16 @@ const SK_V14_W5A_OWNER_PATHS: &[&str] = &[
     "crates/bbnf-bench/src/lock14_baseline.rs",
 ];
 
+const SK_V14_W5B_FRONTEND_OWNER_PATHS: &[&str] = &[
+    "crates/grammar/src/lib.rs",
+    "crates/codegen/src/lib.rs",
+    "crates/codegen/src/grammar_provider.rs",
+    "xtask/src/regen.rs",
+    "xtask/src/regen_css.rs",
+    "xtask/src/main.rs",
+    "crates/bbnf-bench/src/lock14_baseline.rs",
+];
+
 fn current_lock14_owner_paths() -> Vec<&'static str> {
     let mut paths = Vec::with_capacity(
         SK_V12_W1A_OWNER_PATHS.len()
@@ -1139,7 +1149,8 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
             + SK_V14_W0_OWNER_PATHS.len()
             + SK_V14_W2_OWNER_PATHS.len()
             + SK_V14_W4_OWNER_PATHS.len()
-            + SK_V14_W5A_OWNER_PATHS.len(),
+            + SK_V14_W5A_OWNER_PATHS.len()
+            + SK_V14_W5B_FRONTEND_OWNER_PATHS.len(),
     );
     paths.extend_from_slice(SK_V12_W1A_OWNER_PATHS);
     paths.extend_from_slice(SK_V12_W1B1_OWNER_PATHS);
@@ -1167,6 +1178,7 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
     paths.extend_from_slice(SK_V14_W2_OWNER_PATHS);
     paths.extend_from_slice(&SK_V14_W4_OWNER_PATHS);
     paths.extend_from_slice(SK_V14_W5A_OWNER_PATHS);
+    paths.extend_from_slice(SK_V14_W5B_FRONTEND_OWNER_PATHS);
     paths
 }
 
@@ -1201,20 +1213,10 @@ fn validate_w5a_provider_template_topology(root: &Path) -> Result<(), String> {
             "W5A provider topology expected 8 legacy providers, saw {provider_count}"
         ));
     }
-    let template_count = std::fs::read_dir(&codegen_root)
-        .map_err(|error| format!("failed to read codegen root: {error}"))?
-        .filter_map(Result::ok)
-        .filter(|entry| {
-            entry.file_type().map(|ty| ty.is_dir()).unwrap_or(false)
-                && entry
-                    .file_name()
-                    .to_str()
-                    .is_some_and(|name| name.starts_with("css_l4_") && name.ends_with("_templates"))
-        })
-        .count();
-    if template_count != 7 {
+    let template_count = codegen_template_dir_count(&codegen_root)?;
+    if template_count != 8 {
         return Err(format!(
-            "W5A template topology expected 7 CSS template dirs, saw {template_count}"
+            "W5B frontend template topology expected 8 template dirs, saw {template_count}"
         ));
     }
     for (label, output) in [
@@ -1262,6 +1264,7 @@ fn validate_w5a_provider_template_status(label: &str, output: &str) -> Result<()
             continue;
         };
         let disallowed = status == "??"
+            || status.starts_with('M')
             || status.starts_with('A')
             || status.starts_with('D')
             || status.starts_with('R');
@@ -1279,6 +1282,20 @@ fn validate_w5a_provider_template_status(label: &str, output: &str) -> Result<()
         }
     }
     Ok(())
+}
+
+fn codegen_template_dir_count(codegen_root: &Path) -> Result<usize, String> {
+    Ok(std::fs::read_dir(codegen_root)
+        .map_err(|error| format!("failed to read codegen root: {error}"))?
+        .filter_map(Result::ok)
+        .filter(|entry| {
+            entry.file_type().map(|ty| ty.is_dir()).unwrap_or(false)
+                && entry
+                    .file_name()
+                    .to_str()
+                    .is_some_and(|name| name.ends_with("_templates"))
+        })
+        .count())
 }
 
 fn provider_template_status_paths(line: &str) -> Vec<String> {
@@ -1619,10 +1636,29 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
             return Ok(());
         }
     }
+    if is_w5b_frontend_subject(subject) {
+        let allowed = changed_paths
+            .iter()
+            .all(|path| is_allowed_path(path, SK_V14_W5B_FRONTEND_OWNER_PATHS));
+        if allowed {
+            return Ok(());
+        }
+    }
     Err(format!(
         "Lock 14 frozen diff failed for parent paths [{}]",
         changed_paths.join(", ")
     ))
+}
+
+fn is_w5b_frontend_subject(subject: &str) -> bool {
+    let subject = subject.to_ascii_lowercase();
+    if subject.contains("sk-v14-wavew5b-frontend") || subject.contains("sk-v14-w5b-frontend") {
+        return true;
+    }
+    (0..=4).any(|index| {
+        subject.contains(&format!("sk-v14-wavew5b{index}"))
+            || subject.contains(&format!("sk-v14-wavew5b.{index}"))
+    })
 }
 
 fn git_output(root: &Path, args: &[&str]) -> Result<String, String> {
@@ -2090,12 +2126,132 @@ mod tests {
     }
 
     #[test]
-    fn w5a_provider_template_status_allows_modify_and_grammar_provider() {
-        assert!(validate_w5a_provider_template_status(
-            "status",
-            " M crates/codegen/src/css_l4_declaration_values_provider.rs\nA  crates/codegen/src/grammar_provider.rs\n"
+    fn w5b_lock14_frontend_owner_paths_admit() {
+        let changed = SK_V14_W5B_FRONTEND_OWNER_PATHS
+            .iter()
+            .map(|path| (*path).to_string())
+            .collect::<Vec<_>>();
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v14-waveW5B-FRONTEND): add frontend closure"
         )
         .is_ok());
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v14-waveW5B0): add lock14 frontend gate"
+        )
+        .is_ok());
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v14-waveW5B.4): consume frontend request"
+        )
+        .is_ok());
+
+        let mut outside = changed;
+        outside.push("crates/codegen/src/json_provider.rs".into());
+        assert!(validate_authorized_parent_diff(
+            &outside,
+            "feat(sk-v14-waveW5B-FRONTEND): add frontend closure"
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn w5b_lock14_frontend_rejects_w5c_subject() {
+        let changed = SK_V14_W5B_FRONTEND_OWNER_PATHS
+            .iter()
+            .map(|path| (*path).to_string())
+            .collect::<Vec<_>>();
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v14-waveW5C-GEN): remove provider dispatch"
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn w5b_lock14_frontend_rejects_w5d_subject() {
+        let changed = SK_V14_W5B_FRONTEND_OWNER_PATHS
+            .iter()
+            .map(|path| (*path).to_string())
+            .collect::<Vec<_>>();
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v14-waveW5D-DELETE): delete provider mesh"
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn w5b_lock14_frontend_rejects_modified_provider() {
+        assert!(validate_w5a_provider_template_status(
+            "status",
+            " M crates/codegen/src/css_l4_declaration_values_provider.rs\n"
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn w5b_lock14_frontend_rejects_modified_template() {
+        assert!(validate_w5a_provider_template_status(
+            "diff",
+            "M\tcrates/codegen/src/json_templates/sink.rs\n"
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn w5b_lock14_frontend_all_templates_guard_counts_8() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let codegen_root = root.join("crates/codegen/src");
+        assert_eq!(codegen_template_dir_count(&codegen_root).unwrap(), 8);
+
+        let template_names = std::fs::read_dir(&codegen_root)
+            .unwrap()
+            .filter_map(Result::ok)
+            .filter(|entry| entry.file_type().map(|ty| ty.is_dir()).unwrap_or(false))
+            .filter_map(|entry| entry.file_name().into_string().ok())
+            .filter(|name| name.ends_with("_templates"))
+            .collect::<Vec<_>>();
+        assert_eq!(template_names.len(), 8);
+        assert!(template_names.iter().any(|name| name == "json_templates"));
+        assert_eq!(
+            template_names
+                .iter()
+                .filter(|name| name.starts_with("css_l4_"))
+                .count(),
+            7
+        );
+    }
+
+    #[test]
+    fn w5b_lock14_frontend_allows_grammar_provider_exception() {
+        assert!(validate_w5a_provider_template_status(
+            "status",
+            " M crates/codegen/src/grammar_provider.rs\nA  crates/codegen/src/grammar_provider.rs\nD  crates/codegen/src/grammar_provider.rs\n"
+        )
+        .is_ok());
+    }
+
+    #[test]
+    fn w5b_lock14_frontend_generic_owner_leak_census() {
+        for path in SK_V14_W5B_FRONTEND_OWNER_PATHS {
+            assert!(
+                !path.contains("_templates"),
+                "{path} leaks a template owner path into W5B-FRONTEND"
+            );
+            assert!(
+                !path.contains("crates/runtime/src/grammars/"),
+                "{path} leaks a generated runtime path into W5B-FRONTEND"
+            );
+            assert!(
+                !path.contains("css_l4_"),
+                "{path} leaks a grammar-specific CSS owner path into W5B-FRONTEND"
+            );
+            if path.ends_with("_provider.rs") {
+                assert_eq!(*path, "crates/codegen/src/grammar_provider.rs");
+            }
+        }
     }
 
     #[test]

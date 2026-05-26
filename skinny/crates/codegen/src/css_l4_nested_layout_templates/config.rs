@@ -1,3 +1,0 @@
-pub(crate) const ROW_ID: &str = "css_l4/nested_layout/direct_to_struct/main";
-pub(crate) const OUTPUT_PLANE: &str = "css_l4_nested_layout_fact_stream";
-pub(crate) const FACT_SCHEMA: &str = "css-l4-nested-layout-facts-v1";

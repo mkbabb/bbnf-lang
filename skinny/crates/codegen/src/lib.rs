@@ -325,6 +325,92 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
         request
     }
 
+    fn w5c_full_css_request(profile_id: &str) -> RuntimeGenerationRequest {
+        let sources = [
+            (
+                "grammar/css/l4/color.bbnf",
+                include_str!("../../../../grammar/css/l4/color.bbnf"),
+            ),
+            (
+                "grammar/css/l4/easing.bbnf",
+                include_str!("../../../../grammar/css/l4/easing.bbnf"),
+            ),
+            (
+                "grammar/css/l4/filters.bbnf",
+                include_str!("../../../../grammar/css/l4/filters.bbnf"),
+            ),
+            (
+                "grammar/css/l4/func-body.bbnf",
+                include_str!("../../../../grammar/css/l4/func-body.bbnf"),
+            ),
+            (
+                "grammar/css/l4/gradients.bbnf",
+                include_str!("../../../../grammar/css/l4/gradients.bbnf"),
+            ),
+            (
+                "grammar/css/l4/keyframes.bbnf",
+                include_str!("../../../../grammar/css/l4/keyframes.bbnf"),
+            ),
+            (
+                "grammar/css/l4/keywords.bbnf",
+                include_str!("../../../../grammar/css/l4/keywords.bbnf"),
+            ),
+            (
+                "grammar/css/l4/media.bbnf",
+                include_str!("../../../../grammar/css/l4/media.bbnf"),
+            ),
+            (
+                "grammar/css/l4/properties.bbnf",
+                include_str!("../../../../grammar/css/l4/properties.bbnf"),
+            ),
+            (
+                "grammar/css/l4/selectors.bbnf",
+                include_str!("../../../../grammar/css/l4/selectors.bbnf"),
+            ),
+            (
+                "grammar/css/l4/stylesheet.bbnf",
+                include_str!("../../../../grammar/css/l4/stylesheet.bbnf"),
+            ),
+            (
+                "grammar/css/l4/tokens.bbnf",
+                include_str!("../../../../grammar/css/l4/tokens.bbnf"),
+            ),
+            (
+                "grammar/css/l4/transforms.bbnf",
+                include_str!("../../../../grammar/css/l4/transforms.bbnf"),
+            ),
+            (
+                "grammar/css/l4/value-unit.bbnf",
+                include_str!("../../../../grammar/css/l4/value-unit.bbnf"),
+            ),
+            (
+                "grammar/css/l4/values.bbnf",
+                include_str!("../../../../grammar/css/l4/values.bbnf"),
+            ),
+        ]
+        .into_iter()
+        .map(|(rel_path, source)| RuntimeGrammarSource {
+            rel_path: rel_path.to_string(),
+            source: source.to_string(),
+        })
+        .collect();
+
+        RuntimeGenerationRequest {
+            grammar_name: "css_l4".to_string(),
+            profile_id: profile_id.to_string(),
+            entry_rule: "stylesheet".to_string(),
+            source_roots: vec!["grammar/css/l4/stylesheet.bbnf".to_string()],
+            sources,
+            workspace_metadata: w5a_metadata(),
+            output_dir: format!("crates/runtime/src/grammars/{profile_id}"),
+            expected_files: runtime_profile_expected_files(profile_id)
+                .unwrap()
+                .into_iter()
+                .map(str::to_string)
+                .collect(),
+        }
+    }
+
     #[test]
     fn emits_expected_file_set_in_order() {
         let emitted = emit_from_source("json", JSON_GRAMMAR).unwrap();
@@ -423,7 +509,7 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
     #[test]
     fn css_l4_generated_runtimes_reproducible_from_request() {
         for &profile_id in W5C_CSS_PROFILES {
-            let emitted = emit_runtime_from_request(w5c_css_request(profile_id, W5C_CSS_SOURCE))
+            let emitted = emit_runtime_from_request(w5c_full_css_request(profile_id))
                 .expect("request generated css runtime");
             let runtime_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
                 .join("../runtime/src/grammars")

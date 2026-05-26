@@ -1,3 +1,0 @@
-pub(crate) const FACT_SCHEMA: &str = "css-l4-visual-function-facts-v1";
-pub(crate) const ROW_ID: &str = "css_l4/visual_functions/direct_to_struct/main";
-pub(crate) const OUTPUT_PLANE: &str = "css_l4_visual_function_fact_stream";

@@ -9,21 +9,30 @@ rust-version.workspace = true
 
 [dependencies]
 anyhow.workspace = true
+blake3.workspace = true
 codegen.workspace = true
 serde_json.workspace = true
 toml.workspace = true
 
+[features]
+default = []
+runtime-tools = ["dep:runtime"]
+conformance = ["runtime-tools", "dep:test-fixtures"]
+
 [[bin]]
 name = "profile-lazy"
 path = "src/bin/profile_lazy.rs"
+required-features = ["runtime-tools"]
 
 [[bin]]
 name = "capacity-probe"
 path = "src/bin/capacity_probe.rs"
+required-features = ["runtime-tools"]
 
 [[bin]]
 name = "parity-oracle"
 path = "src/bin/parity_oracle.rs"
+required-features = ["runtime-tools"]
 
 [[bin]]
 name = "xtask"
@@ -31,6 +40,8 @@ path = "src/main.rs"
 
 [dependencies.runtime]
 path = "../crates/runtime"
+optional = true
 
 [dependencies.test-fixtures]
 path = "../crates/test-fixtures"
+optional = true

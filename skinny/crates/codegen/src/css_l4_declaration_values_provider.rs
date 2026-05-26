@@ -3,7 +3,13 @@ use std::collections::BTreeMap;
 
 static RUNTIME_PROFILE: GrammarProfile = GrammarProfile::new(
     "css_l4_declaration_values",
-    &["config.rs", "generated.rs", "mod.rs", "parser.rs"],
+    &[
+        "config.rs",
+        "generated.rs",
+        "mod.rs",
+        "parser.rs",
+        "sink.rs",
+    ],
     RuntimeProvider::CssL4DeclarationValues,
 );
 
@@ -34,6 +40,10 @@ pub(crate) fn emit_runtime_files() -> BTreeMap<String, String> {
             render(include_str!(
                 "css_l4_declaration_values_templates/parser.rs"
             )),
+        ),
+        (
+            "sink.rs".into(),
+            render(include_str!("css_l4_declaration_values_templates/sink.rs")),
         ),
     ])
 }

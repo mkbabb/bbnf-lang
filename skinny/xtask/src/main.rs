@@ -4,8 +4,10 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 mod real_typed_schema;
+mod regen;
+mod regen_css;
 
-const USAGE: &str = "usage: cargo xtask <regen-json|check-json|regen-real-typed|check-real-typed|check-conformance|lint-loc|bench-json|gate-json|primitive-checkasm>";
+const USAGE: &str = "usage: cargo xtask <regen-json|check-json|regen-css|check-css-l4-at-rules-and-media|check-css-l4-declaration-values|check-css-l4-declaration-values-extended|check-css-l4-nested-layout|check-css-l4-stylesheet-selectors|check-css-l4-vendor-and-custom-atrules|check-css-l4-visual-functions|regen-real-typed|check-real-typed|check-conformance|lint-loc|bench-json|gate-json|primitive-checkasm>";
 
 fn main() -> Result<()> {
     let mut args = std::env::args().skip(1);
@@ -17,9 +19,21 @@ fn main() -> Result<()> {
     match command.as_str() {
         "regen-json" => regen_json(&root),
         "check-json" => check_json(&root),
+        "regen-css" => regen_css::regen_css(&root),
+        "check-css-l4-at-rules-and-media" => regen_css::check_at_rules_and_media(&root),
+        "check-css-l4-declaration-values" => regen_css::check_declaration_values(&root),
+        "check-css-l4-declaration-values-extended" => {
+            regen_css::check_declaration_values_extended(&root)
+        }
+        "check-css-l4-nested-layout" => regen_css::check_nested_layout(&root),
+        "check-css-l4-stylesheet-selectors" => regen_css::check_stylesheet_selectors(&root),
+        "check-css-l4-vendor-and-custom-atrules" => {
+            regen_css::check_vendor_and_custom_atrules(&root)
+        }
+        "check-css-l4-visual-functions" => regen_css::check_visual_functions(&root),
         "regen-real-typed" => regen_real_typed(&root),
         "check-real-typed" => check_real_typed(&root),
-        "check-conformance" => check_conformance(),
+        "check-conformance" => check_conformance(&root),
         "lint-loc" => lint_loc(&root),
         "bench-json" => bench_json(&root, args.collect()),
         "gate-json" => gate_json(&root, args.collect()),
@@ -32,7 +46,8 @@ fn main() -> Result<()> {
     }
 }
 
-fn check_conformance() -> Result<()> {
+#[cfg(feature = "conformance")]
+fn check_conformance(_root: &Path) -> Result<()> {
     let suite = test_fixtures::load_json_suite()?;
     let mut failures = Vec::new();
     let mut valid_count = 0usize;
@@ -83,6 +98,22 @@ fn check_conformance() -> Result<()> {
     }
 }
 
+#[cfg(not(feature = "conformance"))]
+fn check_conformance(root: &Path) -> Result<()> {
+    let status = Command::new("cargo")
+        .current_dir(root)
+        .args(["run", "-p", "xtask", "--features", "conformance", "--"])
+        .arg("check-conformance")
+        .status()
+        .context("failed to spawn conformance-enabled xtask")?;
+    if status.success() {
+        Ok(())
+    } else {
+        bail!("conformance-enabled xtask failed with status {status}")
+    }
+}
+
+#[cfg(feature = "conformance")]
 fn check_float_bits(
     name: &str,
     value: runtime::generated_json::JsonValue<'_, '_>,

@@ -553,6 +553,7 @@ const GENERATED_HEADER_TOKEN_BASELINE: &[&str] = &[
     "crates/runtime/src/grammars/css_l4_declaration_values/generated.rs",
     "crates/runtime/src/grammars/css_l4_declaration_values/mod.rs",
     "crates/runtime/src/grammars/css_l4_declaration_values/parser.rs",
+    "crates/runtime/src/grammars/css_l4_declaration_values/sink.rs",
     "crates/runtime/src/grammars/css_l4_declaration_values_extended/config.rs",
     "crates/runtime/src/grammars/css_l4_declaration_values_extended/generated.rs",
     "crates/runtime/src/grammars/css_l4_declaration_values_extended/mod.rs",
@@ -1084,6 +1085,17 @@ const SK_V14_W0_OWNER_PATHS: &[&str] = &[
     "xtask/src/main.rs",
 ];
 
+const SK_V14_W2_OWNER_PATHS: &[&str] = &[
+    "Cargo.lock",
+    "crates/bbnf-bench/src/lock14_baseline.rs",
+    "crates/codegen/src/css_l4_declaration_values_provider.rs",
+    "crates/codegen/src/css_l4_declaration_values_templates/sink.rs",
+    "crates/runtime/src/grammars/css_l4_declaration_values/sink.rs",
+    "xtask/src/main.rs",
+    "xtask/src/regen.rs",
+    "xtask/src/regen_css.rs",
+];
+
 fn current_lock14_owner_paths() -> Vec<&'static str> {
     let mut paths = Vec::with_capacity(
         SK_V12_W1A_OWNER_PATHS.len()
@@ -1108,7 +1120,8 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
             + SK_V13_W13_4_OWNER_PATHS.len()
             + SK_V13_W14_OWNER_PATHS.len()
             + SK_V13_W15_1_OWNER_PATHS.len()
-            + SK_V14_W0_OWNER_PATHS.len(),
+            + SK_V14_W0_OWNER_PATHS.len()
+            + SK_V14_W2_OWNER_PATHS.len(),
     );
     paths.extend_from_slice(SK_V12_W1A_OWNER_PATHS);
     paths.extend_from_slice(SK_V12_W1B1_OWNER_PATHS);
@@ -1133,6 +1146,7 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
     paths.extend_from_slice(SK_V13_W14_OWNER_PATHS);
     paths.extend_from_slice(SK_V13_W15_1_OWNER_PATHS);
     paths.extend_from_slice(SK_V14_W0_OWNER_PATHS);
+    paths.extend_from_slice(SK_V14_W2_OWNER_PATHS);
     paths
 }
 
@@ -1425,6 +1439,14 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
         let allowed = changed_paths
             .iter()
             .all(|path| is_allowed_path(path, SK_V14_W0_OWNER_PATHS));
+        if allowed {
+            return Ok(());
+        }
+    }
+    if subject.contains("sk-v14-w2") || subject.contains("sk-v14-W2") {
+        let allowed = changed_paths
+            .iter()
+            .all(|path| is_allowed_path(path, SK_V14_W2_OWNER_PATHS));
         if allowed {
             return Ok(());
         }

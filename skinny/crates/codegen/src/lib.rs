@@ -344,15 +344,23 @@ mod tests {
     }
 
     fn w5a_css_request(source: &str) -> RuntimeGenerationRequest {
+        let mut sources = vec![RuntimeGrammarSource {
+            rel_path: "grammar/css/l4/stylesheet.bbnf".to_string(),
+            source: source.to_string(),
+        }];
+        if source.contains("@import \"tokens.bbnf\"") {
+            sources.push(RuntimeGrammarSource {
+                rel_path: "grammar/css/l4/tokens.bbnf".to_string(),
+                source: "ident = /[a-z]+/ ;\n".to_string(),
+            });
+        }
+
         RuntimeGenerationRequest {
             grammar_name: "css_l4".to_string(),
             profile_id: "css_l4_declaration_values".to_string(),
             entry_rule: "stylesheet".to_string(),
             source_roots: vec!["grammar/css/l4/stylesheet.bbnf".to_string()],
-            sources: vec![RuntimeGrammarSource {
-                rel_path: "grammar/css/l4/stylesheet.bbnf".to_string(),
-                source: source.to_string(),
-            }],
+            sources,
             workspace_metadata: w5a_metadata(),
             output_dir: "crates/runtime/src/grammars/css_l4_declaration_values".to_string(),
             expected_files: runtime_profile_expected_files("css_l4_declaration_values")

@@ -59,6 +59,7 @@ impl<'a> RuntimeSource<'a> {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RuntimeSourceFacts {
     pub source_hash: String,
+    pub frontend: RuntimeFrontendClosure,
     pub constructs: Vec<RuntimeConstruct>,
 }
 
@@ -83,6 +84,29 @@ impl RuntimeSourceFacts {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RuntimeFrontendClosure {
+    pub source_hash: String,
+    pub sources: Vec<RuntimeFrontendSource>,
+    pub imports: Vec<RuntimeFrontendImport>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RuntimeFrontendSource {
+    pub path: String,
+    pub source_hash: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RuntimeFrontendImport {
+    pub importer_path: String,
+    pub importer_source_hash: String,
+    pub offset: usize,
+    pub specifier: String,
+    pub resolved_path: String,
+    pub resolved_source_hash: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RuntimeConstruct {
     pub kind: RuntimeConstructKind,
     pub path: String,
@@ -93,7 +117,6 @@ pub struct RuntimeConstruct {
 impl RuntimeConstruct {
     fn unsupported(&self) -> Option<UnsupportedRuntimeConstruct> {
         let code = match self.kind {
-            RuntimeConstructKind::Import => "BBNF-UNSUPPORTED-IMPORT-RESOLUTION",
             RuntimeConstructKind::TokenDirective
             | RuntimeConstructKind::WhitespaceDirective
             | RuntimeConstructKind::PrettyDirective => "BBNF-UNSUPPORTED-DIRECTIVE",
@@ -103,6 +126,7 @@ impl RuntimeConstruct {
             }
             RuntimeConstructKind::HostCapture => "BBNF-UNSUPPORTED-HOST-CAPTURE",
             RuntimeConstructKind::Comma
+            | RuntimeConstructKind::Import
             | RuntimeConstructKind::ShiftRight
             | RuntimeConstructKind::ShiftLeft => return None,
         };
@@ -141,6 +165,29 @@ pub struct UnsupportedRuntimeConstruct {
 pub fn parse_runtime_source_facts(
     sources: &[RuntimeSource<'_>],
 ) -> Result<RuntimeSourceFacts, GrammarError> {
+    let (source_hash, scans) = scan_runtime_sources(sources)?;
+    let frontend = resolve_runtime_import_closure(source_hash.clone(), &scans)?;
+    let constructs = scans
+        .into_iter()
+        .flat_map(|scan| scan.constructs)
+        .collect::<Vec<_>>();
+    Ok(RuntimeSourceFacts {
+        source_hash,
+        frontend,
+        constructs,
+    })
+}
+
+pub fn parse_frontend_closure(
+    sources: &[RuntimeSource<'_>],
+) -> Result<RuntimeFrontendClosure, GrammarError> {
+    let (source_hash, scans) = scan_runtime_sources(sources)?;
+    resolve_runtime_import_closure(source_hash, &scans)
+}
+
+fn scan_runtime_sources(
+    sources: &[RuntimeSource<'_>],
+) -> Result<(String, Vec<RuntimeSourceScan>), GrammarError> {
     if sources.is_empty() {
         return Err(GrammarError::Parse {
             code: "BBNF-RUNTIME-SOURCE-MISSING",
@@ -149,26 +196,46 @@ pub fn parse_runtime_source_facts(
         });
     }
     let mut digest = String::new();
-    let mut constructs = Vec::new();
+    let mut scans = Vec::new();
     for source in sources {
         let source_hash = stable_hash(source.source);
         digest.push_str(source.path);
         digest.push(':');
         digest.push_str(&source_hash);
         digest.push(';');
-        scan_runtime_source(source, &source_hash, &mut constructs);
+        let mut constructs = Vec::new();
+        let mut imports = Vec::new();
+        scan_runtime_source(source, &source_hash, &mut constructs, &mut imports)?;
+        scans.push(RuntimeSourceScan {
+            path: source.path.to_string(),
+            source_hash,
+            constructs,
+            imports,
+        });
     }
-    Ok(RuntimeSourceFacts {
-        source_hash: stable_hash(&digest),
-        constructs,
-    })
+    Ok((stable_hash(&digest), scans))
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct RuntimeSourceScan {
+    path: String,
+    source_hash: String,
+    constructs: Vec<RuntimeConstruct>,
+    imports: Vec<RuntimeImportRef>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct RuntimeImportRef {
+    specifier: String,
+    offset: usize,
 }
 
 fn scan_runtime_source(
     input: &RuntimeSource<'_>,
     source_hash: &str,
     constructs: &mut Vec<RuntimeConstruct>,
-) {
+    imports: &mut Vec<RuntimeImportRef>,
+) -> Result<(), GrammarError> {
     let bytes = input.source.as_bytes();
     let mut cursor = 0;
     while cursor < bytes.len() {
@@ -185,7 +252,9 @@ fn scan_runtime_source(
             cursor = skip_regex(input.source, cursor);
             continue;
         }
-        let found = if rest.starts_with("@import") {
+        let found = if rest.starts_with("@import") && runtime_keyword_boundary(rest, 7) {
+            let target = parse_runtime_import_target(input.source, cursor, 7)?;
+            imports.push(target);
             Some((RuntimeConstructKind::Import, 7))
         } else if rest.starts_with("@token") {
             Some((RuntimeConstructKind::TokenDirective, 6))
@@ -225,6 +294,244 @@ fn scan_runtime_source(
             cursor += rest.chars().next().map(char::len_utf8).unwrap_or(1);
         }
     }
+    Ok(())
+}
+
+fn runtime_keyword_boundary(rest: &str, width: usize) -> bool {
+    match rest[width..].chars().next() {
+        Some(ch) => !is_ident_continue(ch),
+        None => true,
+    }
+}
+
+fn parse_runtime_import_target(
+    source: &str,
+    directive_offset: usize,
+    directive_width: usize,
+) -> Result<RuntimeImportRef, GrammarError> {
+    let mut cursor = directive_offset + directive_width;
+    while cursor < source.len() {
+        let byte = source.as_bytes()[cursor];
+        if matches!(byte, b';' | b'\n') {
+            return Err(runtime_import_error(
+                directive_offset,
+                "missing quoted import target",
+            ));
+        }
+        if matches!(byte, b'"' | b'\'') {
+            break;
+        }
+        cursor += 1;
+    }
+    if cursor >= source.len() {
+        return Err(runtime_import_error(
+            directive_offset,
+            "missing quoted import target",
+        ));
+    }
+    let quote = source.as_bytes()[cursor];
+    cursor += 1;
+    let target_start = cursor;
+    let mut escaped = false;
+    while cursor < source.len() {
+        let byte = source.as_bytes()[cursor];
+        if escaped {
+            escaped = false;
+            cursor += 1;
+            continue;
+        }
+        if byte == b'\\' {
+            escaped = true;
+            cursor += 1;
+            continue;
+        }
+        if byte == quote {
+            let specifier = source[target_start..cursor].to_string();
+            if specifier.trim().is_empty() {
+                return Err(runtime_import_error(
+                    directive_offset,
+                    "runtime import target is empty",
+                ));
+            }
+            return Ok(RuntimeImportRef {
+                specifier,
+                offset: directive_offset,
+            });
+        }
+        cursor += 1;
+    }
+    Err(runtime_import_error(
+        directive_offset,
+        "unterminated runtime import target",
+    ))
+}
+
+fn runtime_import_error(offset: usize, message: &str) -> GrammarError {
+    GrammarError::Parse {
+        code: "BBNF-RUNTIME-IMPORT",
+        message: message.to_string(),
+        offset,
+    }
+}
+
+fn resolve_runtime_import_closure(
+    source_hash: String,
+    scans: &[RuntimeSourceScan],
+) -> Result<RuntimeFrontendClosure, GrammarError> {
+    let mut path_to_index = std::collections::BTreeMap::new();
+    for (index, scan) in scans.iter().enumerate() {
+        if path_to_index.insert(scan.path.as_str(), index).is_some() {
+            return Err(GrammarError::Parse {
+                code: "BBNF-RUNTIME-SOURCE-DUPLICATE",
+                message: format!("runtime source `{}` appears more than once", scan.path),
+                offset: 0,
+            });
+        }
+    }
+
+    let mut adjacency = vec![Vec::new(); scans.len()];
+    let mut imports = Vec::new();
+    for (from_index, scan) in scans.iter().enumerate() {
+        for import in &scan.imports {
+            let resolved =
+                resolve_runtime_import_path(&scan.path, &import.specifier, &path_to_index);
+            let Some(&to_index) = path_to_index.get(resolved.as_str()) else {
+                return Err(GrammarError::Parse {
+                    code: "BBNF-RUNTIME-IMPORT-MISSING",
+                    message: format!(
+                        "runtime import `{}` from `{}` resolved to `{resolved}` but was not present in the request source map",
+                        import.specifier, scan.path
+                    ),
+                    offset: import.offset,
+                });
+            };
+            adjacency[from_index].push(RuntimeImportArc {
+                to_index,
+                offset: import.offset,
+            });
+            imports.push(RuntimeFrontendImport {
+                importer_path: scan.path.clone(),
+                importer_source_hash: scan.source_hash.clone(),
+                offset: import.offset,
+                specifier: import.specifier.clone(),
+                resolved_path: resolved,
+                resolved_source_hash: scans[to_index].source_hash.clone(),
+            });
+        }
+    }
+
+    let mut state = vec![RuntimeImportVisit::Unvisited; scans.len()];
+    let mut stack = Vec::new();
+    for index in 0..scans.len() {
+        visit_runtime_imports(index, scans, &adjacency, &mut state, &mut stack)?;
+    }
+    let sources = scans
+        .iter()
+        .map(|scan| RuntimeFrontendSource {
+            path: scan.path.clone(),
+            source_hash: scan.source_hash.clone(),
+        })
+        .collect::<Vec<_>>();
+    Ok(RuntimeFrontendClosure {
+        source_hash,
+        sources,
+        imports,
+    })
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct RuntimeImportArc {
+    to_index: usize,
+    offset: usize,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum RuntimeImportVisit {
+    Unvisited,
+    Visiting,
+    Visited,
+}
+
+fn visit_runtime_imports(
+    index: usize,
+    scans: &[RuntimeSourceScan],
+    adjacency: &[Vec<RuntimeImportArc>],
+    state: &mut [RuntimeImportVisit],
+    stack: &mut Vec<usize>,
+) -> Result<(), GrammarError> {
+    match state[index] {
+        RuntimeImportVisit::Visited => return Ok(()),
+        RuntimeImportVisit::Visiting => {
+            return Err(GrammarError::Parse {
+                code: "BBNF-RUNTIME-IMPORT-CYCLE",
+                message: format!("runtime import cycle entered at `{}`", scans[index].path),
+                offset: 0,
+            });
+        }
+        RuntimeImportVisit::Unvisited => {}
+    }
+
+    state[index] = RuntimeImportVisit::Visiting;
+    stack.push(index);
+    for edge in &adjacency[index] {
+        if state[edge.to_index] == RuntimeImportVisit::Visiting {
+            let cycle_start = stack
+                .iter()
+                .position(|stack_index| *stack_index == edge.to_index)
+                .unwrap_or(0);
+            let mut cycle = stack[cycle_start..]
+                .iter()
+                .map(|stack_index| scans[*stack_index].path.as_str())
+                .collect::<Vec<_>>();
+            cycle.push(scans[edge.to_index].path.as_str());
+            return Err(GrammarError::Parse {
+                code: "BBNF-RUNTIME-IMPORT-CYCLE",
+                message: format!("runtime import cycle: {}", cycle.join(" -> ")),
+                offset: edge.offset,
+            });
+        }
+        visit_runtime_imports(edge.to_index, scans, adjacency, state, stack)?;
+    }
+    stack.pop();
+    state[index] = RuntimeImportVisit::Visited;
+    Ok(())
+}
+
+fn resolve_runtime_import_path(
+    from_path: &str,
+    target: &str,
+    path_to_index: &std::collections::BTreeMap<&str, usize>,
+) -> String {
+    let mut parts = Vec::new();
+    if !target.starts_with('/') {
+        if let Some((base, _)) = from_path.rsplit_once('/') {
+            parts.extend(base.split('/').filter(|part| !part.is_empty()));
+        }
+    }
+    for part in target.split('/') {
+        match part {
+            "" | "." => {}
+            ".." => {
+                parts.pop();
+            }
+            _ => parts.push(part),
+        }
+    }
+    let resolved = parts.join("/");
+    if path_to_index.contains_key(resolved.as_str()) {
+        return resolved;
+    }
+    if !resolved
+        .rsplit('/')
+        .next()
+        .is_some_and(|segment| segment.contains('.'))
+    {
+        let with_bbnf = format!("{resolved}.bbnf");
+        if path_to_index.contains_key(with_bbnf.as_str()) {
+            return with_bbnf;
+        }
+    }
+    resolved
 }
 
 fn skip_quoted(source: &str, start: usize) -> usize {
@@ -667,8 +974,11 @@ fn w5a_css_l4_constructs_parse_as_source_facts() {
 root = @{ "url" , "(" >> ident ?w , "," ?w , ident << ")" } ;
 tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
 "#;
-    let facts = parse_runtime_source_facts(&[RuntimeSource::new("css-lite.bbnf", source)])
-        .expect("source facts parse");
+    let facts = parse_runtime_source_facts(&[
+        RuntimeSource::new("css-lite.bbnf", source),
+        RuntimeSource::new("tokens.bbnf", "ident = /[a-z]+/ ;\n"),
+    ])
+    .expect("source facts parse");
 
     assert_eq!(facts.count(RuntimeConstructKind::Import), 1);
     assert_eq!(facts.count(RuntimeConstructKind::TokenDirective), 1);
@@ -682,6 +992,77 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
     assert_eq!(facts.count(RuntimeConstructKind::TypedProjection), 1);
     assert_eq!(facts.count(RuntimeConstructKind::HostCapture), 1);
     assert!(!facts.source_hash.is_empty());
+}
+
+#[cfg(test)]
+#[test]
+fn w5b_frontend_import_graph_resolves_request_sources() {
+    let stylesheet = r#"
+@import "tokens.bbnf" ;
+root = ident ;
+"#;
+    let tokens = r#"
+@token ident ;
+ident = /[a-z]+/ ;
+"#;
+    let facts = parse_runtime_source_facts(&[
+        RuntimeSource::new("grammar/css/l4/stylesheet.bbnf", stylesheet),
+        RuntimeSource::new("grammar/css/l4/tokens.bbnf", tokens),
+    ])
+    .expect("request-local imports resolve");
+
+    assert_eq!(facts.frontend.sources.len(), 2);
+    assert!(facts.frontend.sources.iter().any(|hash| {
+        hash.path == "grammar/css/l4/stylesheet.bbnf" && hash.source_hash == stable_hash(stylesheet)
+    }));
+    assert_eq!(
+        facts.frontend.imports,
+        vec![RuntimeFrontendImport {
+            importer_path: "grammar/css/l4/stylesheet.bbnf".to_string(),
+            importer_source_hash: stable_hash(stylesheet),
+            offset: stylesheet.find("@import").unwrap(),
+            specifier: "tokens.bbnf".to_string(),
+            resolved_path: "grammar/css/l4/tokens.bbnf".to_string(),
+            resolved_source_hash: stable_hash(tokens),
+        }]
+    );
+}
+
+#[cfg(test)]
+#[test]
+fn w5b_frontend_missing_import_fails_closed() {
+    let source = "@import \"missing.bbnf\" ;\nroot = \"x\" ;\n";
+    let err =
+        parse_runtime_source_facts(&[RuntimeSource::new("grammar/css/l4/stylesheet.bbnf", source)])
+            .unwrap_err();
+
+    assert!(matches!(
+        err,
+        GrammarError::Parse {
+            code: "BBNF-RUNTIME-IMPORT-MISSING",
+            ..
+        }
+    ));
+}
+
+#[cfg(test)]
+#[test]
+fn w5b_frontend_import_cycle_fails_closed() {
+    let root = "@import \"tokens.bbnf\" ;\nroot = ident ;\n";
+    let tokens = "@import \"stylesheet.bbnf\" ;\nident = /[a-z]+/ ;\n";
+    let err = parse_runtime_source_facts(&[
+        RuntimeSource::new("grammar/css/l4/stylesheet.bbnf", root),
+        RuntimeSource::new("grammar/css/l4/tokens.bbnf", tokens),
+    ])
+    .unwrap_err();
+
+    assert!(matches!(
+        err,
+        GrammarError::Parse {
+            code: "BBNF-RUNTIME-IMPORT-CYCLE",
+            ..
+        }
+    ));
 }
 
 #[cfg(test)]

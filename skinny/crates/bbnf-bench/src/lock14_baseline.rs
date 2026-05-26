@@ -721,6 +721,7 @@ const FROZEN_ROOTS: &[&str] = &[
     "crates/bbnf-bench/src/scan.rs",
     "crates/bbnf-bench/src/materialization.rs",
     "../crates/core/src/runtime/css_l4",
+    "../xtask/runtime-projections/css_l4.toml",
     "../xtask/src/lib.rs",
     "../xtask/src/main.rs",
     "../xtask/src/regen.rs",
@@ -1153,6 +1154,7 @@ const SK_V14_W6_0_ROOT_CSS_OWNER_PATHS: &[&str] = &[
     "../crates/core/src/runtime/css_l4/parse_with.rs",
     "../crates/core/src/runtime/css_l4/value.rs",
     "../crates/core/src/runtime/css_l4/view.rs",
+    "../xtask/runtime-projections/css_l4.toml",
     "../xtask/src/lib.rs",
     "../xtask/src/main.rs",
     "../xtask/src/regen.rs",
@@ -2518,6 +2520,7 @@ mod tests {
         for outside in [
             "../crates/core/src/runtime/math/mod.rs",
             "../crates/core/src/runtime/json/mod.rs",
+            "../xtask/runtime-projections/json.toml",
             "../xtask/src/other.rs",
             "../Cargo.toml",
         ] {
@@ -2546,12 +2549,24 @@ mod tests {
             })
             .count();
         assert_eq!(css_runtime_files, 7, "W6.0 owns the seven CSS L4 runtime files");
+        let projection_sources = SK_V14_W6_0_ROOT_CSS_OWNER_PATHS
+            .iter()
+            .filter(|path| path.starts_with("../xtask/runtime-projections/"))
+            .count();
+        assert_eq!(
+            projection_sources, 1,
+            "W6.0 owns exactly the CSS L4 runtime projection source"
+        );
         for path in SK_V14_W6_0_ROOT_CSS_OWNER_PATHS {
             assert_ne!(
                 *path, "../crates/core/src/runtime/",
                 "W6.0 must not own the full root runtime"
             );
             assert_ne!(*path, "../xtask/src/", "W6.0 must not own all root xtask");
+            assert_ne!(
+                *path, "../xtask/runtime-projections/",
+                "W6.0 must not own all root runtime projections"
+            );
             assert!(
                 !path.contains("crates/runtime/src/grammars/css_l4_"),
                 "{path} leaks skinny CSS output into W6.0"

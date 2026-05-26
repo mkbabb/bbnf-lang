@@ -720,6 +720,11 @@ const FROZEN_ROOTS: &[&str] = &[
     "crates/bbnf-bench/src/parity.rs",
     "crates/bbnf-bench/src/scan.rs",
     "crates/bbnf-bench/src/materialization.rs",
+    "../crates/core/src/runtime/css_l4",
+    "../xtask/src/lib.rs",
+    "../xtask/src/main.rs",
+    "../xtask/src/regen.rs",
+    "../xtask/src/regen_css.rs",
     "xtask/src/real_typed_schema.rs",
     "xtask/src/main.rs",
     "Cargo.toml",
@@ -1139,6 +1144,21 @@ const SK_V14_W5D_DELETE_OWNER_PATHS: &[&str] = &[
     "crates/bbnf-bench/src/lock14_baseline.rs",
 ];
 
+const SK_V14_W6_0_ROOT_CSS_OWNER_PATHS: &[&str] = &[
+    "crates/bbnf-bench/src/lock14_baseline.rs",
+    "../crates/core/src/runtime/css_l4/arena.rs",
+    "../crates/core/src/runtime/css_l4/builder.rs",
+    "../crates/core/src/runtime/css_l4/document.rs",
+    "../crates/core/src/runtime/css_l4/mod.rs",
+    "../crates/core/src/runtime/css_l4/parse_with.rs",
+    "../crates/core/src/runtime/css_l4/value.rs",
+    "../crates/core/src/runtime/css_l4/view.rs",
+    "../xtask/src/lib.rs",
+    "../xtask/src/main.rs",
+    "../xtask/src/regen.rs",
+    "../xtask/src/regen_css.rs",
+];
+
 fn current_lock14_owner_paths() -> Vec<&'static str> {
     let mut paths = Vec::with_capacity(
         SK_V12_W1A_OWNER_PATHS.len()
@@ -1169,7 +1189,8 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
             + SK_V14_W5A_OWNER_PATHS.len()
             + SK_V14_W5B_FRONTEND_OWNER_PATHS.len()
             + SK_V14_W5C_GEN_OWNER_PATHS.len()
-            + SK_V14_W5D_DELETE_OWNER_PATHS.len(),
+            + SK_V14_W5D_DELETE_OWNER_PATHS.len()
+            + SK_V14_W6_0_ROOT_CSS_OWNER_PATHS.len(),
     );
     paths.extend_from_slice(SK_V12_W1A_OWNER_PATHS);
     paths.extend_from_slice(SK_V12_W1B1_OWNER_PATHS);
@@ -1200,6 +1221,7 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
     paths.extend_from_slice(SK_V14_W5B_FRONTEND_OWNER_PATHS);
     paths.extend_from_slice(SK_V14_W5C_GEN_OWNER_PATHS);
     paths.extend_from_slice(SK_V14_W5D_DELETE_OWNER_PATHS);
+    paths.extend_from_slice(SK_V14_W6_0_ROOT_CSS_OWNER_PATHS);
     paths
 }
 
@@ -1691,6 +1713,14 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
             return Ok(());
         }
     }
+    if is_w6_0_root_css_subject(subject) {
+        let allowed = changed_paths
+            .iter()
+            .all(|path| is_allowed_path(path, SK_V14_W6_0_ROOT_CSS_OWNER_PATHS));
+        if allowed {
+            return Ok(());
+        }
+    }
     Err(format!(
         "Lock 14 frozen diff failed for parent paths [{}]",
         changed_paths.join(", ")
@@ -1720,6 +1750,14 @@ fn is_w5d_delete_subject(subject: &str) -> bool {
     subject.contains("sk-v14-wavew5d-delete")
         || subject.contains("sk-v14-w5d-delete")
         || subject.contains("sk-v14-wavew5d_delete")
+}
+
+fn is_w6_0_root_css_subject(subject: &str) -> bool {
+    let subject = subject.to_ascii_lowercase();
+    subject.contains("sk-v14-wavew6.0")
+        || subject.contains("sk-v14-w6.0")
+        || subject.contains("sk-v14-wavew6_0")
+        || subject.contains("sk-v14-w6_0")
 }
 
 fn git_output(root: &Path, args: &[&str]) -> Result<String, String> {
@@ -2440,6 +2478,92 @@ mod tests {
     }
 
     #[test]
+    fn w6_0_root_css_owner_paths_admit() {
+        let changed = SK_V14_W6_0_ROOT_CSS_OWNER_PATHS
+            .iter()
+            .map(|path| (*path).to_string())
+            .collect::<Vec<_>>();
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v14-waveW6.0): collapse root css l4 runtime"
+        )
+        .is_ok());
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "docs(sk-v14-waveW6.0-redress): reject root css l4 collapse"
+        )
+        .is_ok());
+    }
+
+    #[test]
+    fn w6_0_root_css_rejects_broad_w6_subjects() {
+        let changed = SK_V14_W6_0_ROOT_CSS_OWNER_PATHS
+            .iter()
+            .map(|path| (*path).to_string())
+            .collect::<Vec<_>>();
+        for subject in [
+            "feat(sk-v14-waveW6): collapse root runtime cohort",
+            "feat(sk-v14-waveW6.1): collapse root math runtime",
+            "feat(sk-v14-waveW5D-DELETE): delete provider template residue",
+        ] {
+            assert!(
+                validate_authorized_parent_diff(&changed, subject).is_err(),
+                "{subject} must not authorize W6.0 root CSS paths"
+            );
+        }
+    }
+
+    #[test]
+    fn w6_0_root_css_rejects_sibling_root_runtime_and_xtask() {
+        for outside in [
+            "../crates/core/src/runtime/math/mod.rs",
+            "../crates/core/src/runtime/json/mod.rs",
+            "../xtask/src/other.rs",
+            "../Cargo.toml",
+        ] {
+            let mut changed = SK_V14_W6_0_ROOT_CSS_OWNER_PATHS
+                .iter()
+                .map(|path| (*path).to_string())
+                .collect::<Vec<_>>();
+            changed.push(outside.to_string());
+            assert!(
+                validate_authorized_parent_diff(
+                    &changed,
+                    "feat(sk-v14-waveW6.0): collapse root css l4 runtime"
+                )
+                .is_err(),
+                "{outside} must not be admitted by W6.0"
+            );
+        }
+    }
+
+    #[test]
+    fn w6_0_root_css_inventory_is_exact() {
+        let css_runtime_files = SK_V14_W6_0_ROOT_CSS_OWNER_PATHS
+            .iter()
+            .filter(|path| {
+                path.starts_with("../crates/core/src/runtime/css_l4/") && path.ends_with(".rs")
+            })
+            .count();
+        assert_eq!(css_runtime_files, 7, "W6.0 owns the seven CSS L4 runtime files");
+        for path in SK_V14_W6_0_ROOT_CSS_OWNER_PATHS {
+            assert_ne!(
+                *path, "../crates/core/src/runtime/",
+                "W6.0 must not own the full root runtime"
+            );
+            assert_ne!(*path, "../xtask/src/", "W6.0 must not own all root xtask");
+            assert!(
+                !path.contains("crates/runtime/src/grammars/css_l4_"),
+                "{path} leaks skinny CSS output into W6.0"
+            );
+            assert!(
+                !path.contains("_provider.rs") && !path.contains("_templates"),
+                "{path} leaks provider/template residue into W6.0"
+            );
+        }
+    }
+
+    #[test]
     fn admits_sk_v10_w5_root_typed_parent_diff_only_under_w5_scope() {
         let changed = SK_V10_W5_ROOT_TYPED_OWNER_PATHS
             .iter()
@@ -2884,6 +3008,11 @@ mod tests {
             "crates/bbnf-simd/build.rs",
             "crates/bbnf-simd/ext",
             "crates/parse-that-regex/src",
+            "../crates/core/src/runtime/css_l4",
+            "../xtask/src/lib.rs",
+            "../xtask/src/main.rs",
+            "../xtask/src/regen.rs",
+            "../xtask/src/regen_css.rs",
         ] {
             assert!(FROZEN_ROOTS.contains(&root), "{root} is not frozen");
         }
@@ -2891,6 +3020,7 @@ mod tests {
         assert!(status_args.contains("crates/grammar/src"));
         assert!(status_args.contains("crates/bbnf-simd/build.rs"));
         assert!(status_args.contains("crates/bbnf-simd/ext"));
+        assert!(status_args.contains("../crates/core/src/runtime/css_l4"));
     }
 
     #[test]

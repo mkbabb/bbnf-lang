@@ -1122,6 +1122,17 @@ const SK_V14_W5B_FRONTEND_OWNER_PATHS: &[&str] = &[
     "crates/bbnf-bench/src/lock14_baseline.rs",
 ];
 
+const SK_V14_W5C_GEN_OWNER_PATHS: &[&str] = &[
+    "crates/codegen/src/lib.rs",
+    "crates/codegen/src/grammar_profile.rs",
+    "crates/codegen/src/grammar_provider.rs",
+    "crates/codegen/src/runtime_generator.rs",
+    "xtask/src/main.rs",
+    "xtask/src/regen.rs",
+    "xtask/src/regen_css.rs",
+    "crates/bbnf-bench/src/lock14_baseline.rs",
+];
+
 fn current_lock14_owner_paths() -> Vec<&'static str> {
     let mut paths = Vec::with_capacity(
         SK_V12_W1A_OWNER_PATHS.len()
@@ -1150,7 +1161,8 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
             + SK_V14_W2_OWNER_PATHS.len()
             + SK_V14_W4_OWNER_PATHS.len()
             + SK_V14_W5A_OWNER_PATHS.len()
-            + SK_V14_W5B_FRONTEND_OWNER_PATHS.len(),
+            + SK_V14_W5B_FRONTEND_OWNER_PATHS.len()
+            + SK_V14_W5C_GEN_OWNER_PATHS.len(),
     );
     paths.extend_from_slice(SK_V12_W1A_OWNER_PATHS);
     paths.extend_from_slice(SK_V12_W1B1_OWNER_PATHS);
@@ -1179,6 +1191,7 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
     paths.extend_from_slice(&SK_V14_W4_OWNER_PATHS);
     paths.extend_from_slice(SK_V14_W5A_OWNER_PATHS);
     paths.extend_from_slice(SK_V14_W5B_FRONTEND_OWNER_PATHS);
+    paths.extend_from_slice(SK_V14_W5C_GEN_OWNER_PATHS);
     paths
 }
 
@@ -1644,6 +1657,14 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
             return Ok(());
         }
     }
+    if is_w5c_gen_subject(subject) {
+        let allowed = changed_paths
+            .iter()
+            .all(|path| is_allowed_path(path, SK_V14_W5C_GEN_OWNER_PATHS));
+        if allowed {
+            return Ok(());
+        }
+    }
     Err(format!(
         "Lock 14 frozen diff failed for parent paths [{}]",
         changed_paths.join(", ")
@@ -1659,6 +1680,13 @@ fn is_w5b_frontend_subject(subject: &str) -> bool {
         subject.contains(&format!("sk-v14-wavew5b{index}"))
             || subject.contains(&format!("sk-v14-wavew5b.{index}"))
     })
+}
+
+fn is_w5c_gen_subject(subject: &str) -> bool {
+    let subject = subject.to_ascii_lowercase();
+    subject.contains("sk-v14-wavew5c-gen")
+        || subject.contains("sk-v14-w5c-gen")
+        || subject.contains("sk-v14-wavew5c_gen")
 }
 
 fn git_output(root: &Path, args: &[&str]) -> Result<String, String> {
@@ -2252,6 +2280,68 @@ mod tests {
                 assert_eq!(*path, "crates/codegen/src/grammar_provider.rs");
             }
         }
+    }
+
+    #[test]
+    fn w5c_gen_owner_paths_admit() {
+        let changed = SK_V14_W5C_GEN_OWNER_PATHS
+            .iter()
+            .map(|path| (*path).to_string())
+            .collect::<Vec<_>>();
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v14-waveW5C-GEN): remove provider dispatch"
+        )
+        .is_ok());
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "docs(sk-v14-waveW5C-GEN-redress): reject provider-free body"
+        )
+        .is_ok());
+
+        let mut provider_delete = changed.clone();
+        provider_delete.push("crates/codegen/src/css_l4_declaration_values_provider.rs".into());
+        assert!(validate_authorized_parent_diff(
+            &provider_delete,
+            "feat(sk-v14-waveW5C-GEN): remove provider dispatch"
+        )
+        .is_err());
+
+        let mut template_delete = changed.clone();
+        template_delete
+            .push("crates/codegen/src/css_l4_declaration_values_templates/generated.rs".into());
+        assert!(validate_authorized_parent_diff(
+            &template_delete,
+            "feat(sk-v14-waveW5C-GEN): remove provider dispatch"
+        )
+        .is_err());
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v14-waveW5D-DELETE): delete provider mesh"
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn w5c_gen_owner_paths_exclude_provider_template_and_runtime_outputs() {
+        for path in SK_V14_W5C_GEN_OWNER_PATHS {
+            assert!(
+                !path.ends_with("_provider.rs")
+                    || *path == "crates/codegen/src/grammar_provider.rs",
+                "{path} leaks a provider owner path into W5C-GEN"
+            );
+            assert!(
+                !path.contains("_templates"),
+                "{path} leaks a template owner path into W5C-GEN"
+            );
+            assert!(
+                !path.contains("crates/runtime/src/grammars/"),
+                "{path} leaks a generated runtime output path into W5C-GEN"
+            );
+        }
+        assert!(SK_V14_W5C_GEN_OWNER_PATHS
+            .iter()
+            .any(|path| *path == "crates/codegen/src/runtime_generator.rs"));
     }
 
     #[test]

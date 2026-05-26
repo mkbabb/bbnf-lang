@@ -721,8 +721,10 @@ const FROZEN_ROOTS: &[&str] = &[
     "crates/bbnf-bench/src/scan.rs",
     "crates/bbnf-bench/src/materialization.rs",
     "../crates/core/src/runtime/css_l4",
+    "../crates/core/src/runtime/csv",
     "../crates/core/src/runtime/math",
     "../xtask/runtime-projections/css_l4.toml",
+    "../xtask/runtime-projections/csv.toml",
     "../xtask/runtime-projections/math.toml",
     "../xtask/src/lib.rs",
     "../xtask/src/main.rs",
@@ -1179,6 +1181,19 @@ const SK_V14_W6_1_ROOT_MATH_OWNER_PATHS: &[&str] = &[
     "../xtask/src/regen_simple_runtime.rs",
 ];
 
+const SK_V14_W6_2_ROOT_CSV_OWNER_PATHS: &[&str] = &[
+    "crates/bbnf-bench/src/lock14_baseline.rs",
+    "../crates/core/src/runtime/csv/arena.rs",
+    "../crates/core/src/runtime/csv/builder.rs",
+    "../crates/core/src/runtime/csv/document.rs",
+    "../crates/core/src/runtime/csv/kind.rs",
+    "../crates/core/src/runtime/csv/mod.rs",
+    "../crates/core/src/runtime/csv/value.rs",
+    "../crates/core/src/runtime/csv/view.rs",
+    "../xtask/runtime-projections/csv.toml",
+    "../xtask/src/main.rs",
+];
+
 fn current_lock14_owner_paths() -> Vec<&'static str> {
     let mut paths = Vec::with_capacity(
         SK_V12_W1A_OWNER_PATHS.len()
@@ -1211,7 +1226,8 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
             + SK_V14_W5C_GEN_OWNER_PATHS.len()
             + SK_V14_W5D_DELETE_OWNER_PATHS.len()
             + SK_V14_W6_0_ROOT_CSS_OWNER_PATHS.len()
-            + SK_V14_W6_1_ROOT_MATH_OWNER_PATHS.len(),
+            + SK_V14_W6_1_ROOT_MATH_OWNER_PATHS.len()
+            + SK_V14_W6_2_ROOT_CSV_OWNER_PATHS.len(),
     );
     paths.extend_from_slice(SK_V12_W1A_OWNER_PATHS);
     paths.extend_from_slice(SK_V12_W1B1_OWNER_PATHS);
@@ -1244,6 +1260,7 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
     paths.extend_from_slice(SK_V14_W5D_DELETE_OWNER_PATHS);
     paths.extend_from_slice(SK_V14_W6_0_ROOT_CSS_OWNER_PATHS);
     paths.extend_from_slice(SK_V14_W6_1_ROOT_MATH_OWNER_PATHS);
+    paths.extend_from_slice(SK_V14_W6_2_ROOT_CSV_OWNER_PATHS);
     paths
 }
 
@@ -1757,6 +1774,14 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
             return Ok(());
         }
     }
+    if is_w6_2_root_csv_subject(subject) {
+        let allowed = changed_paths
+            .iter()
+            .all(|path| is_allowed_path(path, SK_V14_W6_2_ROOT_CSV_OWNER_PATHS));
+        if allowed {
+            return Ok(());
+        }
+    }
     Err(format!(
         "Lock 14 frozen diff failed for parent paths [{}]",
         changed_paths.join(", ")
@@ -1802,6 +1827,14 @@ fn is_w6_1_root_math_subject(subject: &str) -> bool {
         || subject.contains("sk-v14-w6.1")
         || subject.contains("sk-v14-wavew6_1")
         || subject.contains("sk-v14-w6_1")
+}
+
+fn is_w6_2_root_csv_subject(subject: &str) -> bool {
+    let subject = subject.to_ascii_lowercase();
+    subject.contains("sk-v14-wavew6.2")
+        || subject.contains("sk-v14-w6.2")
+        || subject.contains("sk-v14-wavew6_2")
+        || subject.contains("sk-v14-w6_2")
 }
 
 fn git_output(root: &Path, args: &[&str]) -> Result<String, String> {
@@ -2548,6 +2581,7 @@ mod tests {
         for subject in [
             "feat(sk-v14-waveW6): collapse root runtime cohort",
             "feat(sk-v14-waveW6.1): collapse root math runtime",
+            "feat(sk-v14-waveW6.2): collapse root csv runtime",
             "feat(sk-v14-waveW5D-DELETE): delete provider template residue",
         ] {
             assert!(
@@ -2649,6 +2683,7 @@ mod tests {
             .collect::<Vec<_>>();
         for subject in [
             "feat(sk-v14-waveW6): collapse root runtime cohort",
+            "feat(sk-v14-waveW6.2): collapse root csv runtime",
             "feat(sk-v14-waveW6.0): collapse root css l4 runtime",
             "feat(sk-v14-waveW5D-DELETE): delete provider template residue",
         ] {
@@ -2726,6 +2761,115 @@ mod tests {
             assert!(
                 !path.contains("_provider.rs") && !path.contains("_templates"),
                 "{path} leaks provider/template residue into W6.1"
+            );
+        }
+    }
+
+    #[test]
+    fn w6_2_root_csv_owner_paths_admit() {
+        let changed = SK_V14_W6_2_ROOT_CSV_OWNER_PATHS
+            .iter()
+            .map(|path| (*path).to_string())
+            .collect::<Vec<_>>();
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v14-waveW6.2): collapse root csv runtime"
+        )
+        .is_ok());
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "docs(sk-v14-waveW6.2-redress): reject root csv collapse"
+        )
+        .is_ok());
+    }
+
+    #[test]
+    fn w6_2_root_csv_rejects_broad_w6_subjects() {
+        let changed = SK_V14_W6_2_ROOT_CSV_OWNER_PATHS
+            .iter()
+            .map(|path| (*path).to_string())
+            .collect::<Vec<_>>();
+        for subject in [
+            "feat(sk-v14-waveW6): collapse root runtime cohort",
+            "feat(sk-v14-waveW6.1): collapse root math runtime",
+            "feat(sk-v14-waveW6.0): collapse root css l4 runtime",
+            "feat(sk-v14-waveW5D-DELETE): delete provider template residue",
+        ] {
+            assert!(
+                validate_authorized_parent_diff(&changed, subject).is_err(),
+                "{subject} must not authorize W6.2 root CSV paths"
+            );
+        }
+    }
+
+    #[test]
+    fn w6_2_root_csv_rejects_sibling_root_runtime_and_xtask() {
+        for outside in [
+            "../crates/core/src/runtime/css_l4/mod.rs",
+            "../crates/core/src/runtime/math/mod.rs",
+            "../crates/core/src/runtime/json/mod.rs",
+            "../xtask/runtime-projections/math.toml",
+            "../xtask/runtime-projections/json.toml",
+            "../xtask/src/regen_simple_runtime.rs",
+            "../Cargo.toml",
+        ] {
+            let mut changed = SK_V14_W6_2_ROOT_CSV_OWNER_PATHS
+                .iter()
+                .map(|path| (*path).to_string())
+                .collect::<Vec<_>>();
+            changed.push(outside.to_string());
+            assert!(
+                validate_authorized_parent_diff(
+                    &changed,
+                    "feat(sk-v14-waveW6.2): collapse root csv runtime"
+                )
+                .is_err(),
+                "{outside} must not be admitted by W6.2"
+            );
+        }
+    }
+
+    #[test]
+    fn w6_2_root_csv_inventory_is_exact() {
+        let csv_runtime_files = SK_V14_W6_2_ROOT_CSV_OWNER_PATHS
+            .iter()
+            .filter(|path| {
+                path.starts_with("../crates/core/src/runtime/csv/") && path.ends_with(".rs")
+            })
+            .count();
+        assert_eq!(
+            csv_runtime_files, 7,
+            "W6.2 owns the seven CSV runtime files"
+        );
+        let projection_sources = SK_V14_W6_2_ROOT_CSV_OWNER_PATHS
+            .iter()
+            .filter(|path| path.starts_with("../xtask/runtime-projections/"))
+            .count();
+        assert_eq!(
+            projection_sources, 1,
+            "W6.2 owns exactly the CSV runtime projection source"
+        );
+        for path in SK_V14_W6_2_ROOT_CSV_OWNER_PATHS {
+            assert_ne!(
+                *path, "../crates/core/src/runtime/",
+                "W6.2 must not own the full root runtime"
+            );
+            assert_ne!(
+                *path, "../crates/core/src/runtime/csv/",
+                "W6.2 must enumerate CSV runtime files"
+            );
+            assert_ne!(*path, "../xtask/src/", "W6.2 must not own all root xtask");
+            assert_ne!(
+                *path, "../xtask/runtime-projections/",
+                "W6.2 must not own all root runtime projections"
+            );
+            assert!(
+                !path.contains("crates/runtime/src/grammars/"),
+                "{path} leaks skinny output into W6.2"
+            );
+            assert!(
+                !path.contains("_provider.rs") && !path.contains("_templates"),
+                "{path} leaks provider/template residue into W6.2"
             );
         }
     }
@@ -3071,12 +3215,20 @@ mod tests {
             "../crates/core/src/runtime/css_l4/value.rs"
         );
         assert_eq!(
+            normalize_git_path("crates/core/src/runtime/csv/value.rs"),
+            "../crates/core/src/runtime/csv/value.rs"
+        );
+        assert_eq!(
             normalize_git_path("crates/core/src/runtime/math/value.rs"),
             "../crates/core/src/runtime/math/value.rs"
         );
         assert_eq!(
             normalize_git_path("xtask/runtime-projections/css_l4.toml"),
             "../xtask/runtime-projections/css_l4.toml"
+        );
+        assert_eq!(
+            normalize_git_path("xtask/runtime-projections/csv.toml"),
+            "../xtask/runtime-projections/csv.toml"
         );
         assert_eq!(
             normalize_git_path("xtask/runtime-projections/math.toml"),

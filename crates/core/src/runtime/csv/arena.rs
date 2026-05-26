@@ -1,13 +1,7 @@
-//! AZ-IV.W5.3 — CSV parse arena. Thin newtype around
-//! [`CompoundSlabArena<CsvCompound<'p>>`]; slab discipline lives on
-//! the generic template.
-
 use crate::runtime::arena_template::CompoundSlabArena;
 use crate::runtime::csv::kind::CsvCompound;
-
 #[derive(Debug, Default)]
 pub struct CsvArena<'p>(CompoundSlabArena<CsvCompound<'p>>);
-
 impl<'p> CsvArena<'p> {
     #[inline]
     pub fn new() -> Self {
@@ -38,10 +32,8 @@ impl<'p> CsvArena<'p> {
         self.0.truncate(n);
     }
 }
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CsvCompoundId(u32);
-
 impl CsvCompoundId {
     pub const EMPTY: Self = Self(0);
     #[inline]

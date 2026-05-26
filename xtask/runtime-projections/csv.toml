@@ -1,0 +1,23 @@
+schema_version = 1
+grammar = "csv"
+grammar_source = "grammar/misc/csv.bbnf"
+entry_rule = "csv"
+runtime_module = "crate::runtime::csv"
+output_dir = "crates/core/src/runtime/csv"
+parser_type = "CsvParser"
+type_prefix = "Csv"
+module_name = "csv"
+
+[kind]
+default = "Other"
+layout_mode = "rule_routes"
+variants = [
+  "Record",
+  "Csv",
+  "Field",
+  "Other",
+]
+routes = [
+  { rule = "record", kind = "Record" },
+  { rule = "csv", kind = "Csv" },
+]

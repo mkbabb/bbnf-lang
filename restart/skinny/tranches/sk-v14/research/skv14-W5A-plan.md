@@ -41,7 +41,7 @@ Falsifiability gate:
 - JSON unchanged-output is captured by `cargo xtask check-json`, a before/after whole-directory hash or `git diff --exit-code -- skinny/crates/runtime/src/grammars/json`, and an in-code equality test comparing the new request path to current `emit_from_source("json", source)`.
 - Sheets and BBNF-self use the same request path and default to fail-closed witnesses with named source-located unsupported constructs such as `BBNF-UNSUPPORTED-PROJECTION`, `BBNF-UNSUPPORTED-WHITESPACE-MODIFIER`, `BBNF-UNSUPPORTED-IMPORT-RESOLUTION`, `BBNF-UNSUPPORTED-DIRECTIVE`, or `BBNF-UNSUPPORTED-HOST-CAPTURE`. Generated-role witnesses are allowed only if they reuse source-fact parser work already needed for CSS and remain inside the component LOC ledger.
 - Provider/template count does not increase, no CSS provider/template path is deleted or renamed in W5A, and `find skinny/crates/codegen/src -name '*_provider.rs' \! -name 'grammar_provider.rs' | wc -l` may remain `8` while `find skinny/crates/codegen/src -type d -name 'css_l4_*_templates' | wc -l` remains `7`.
-- Full-table maintain is enforced by `cargo xtask gate-json --check-results --skv14-existing-results-capture`; any refreshed W5A result must preserve every non-target row within +/-1.0% and must not downgrade correctness or audit overlay verdicts.
+- Full-table maintain is an exact no-diff proof for W5A: because W5A is generator-capability work, not an admit or benchmark-refresh wave, `skinny/RESULTS.md` and `restart/skinny/ROLLING-SOTA-DELTA.md` must remain byte-identical to `HEAD`. This is stricter than +/-1.0% and prevents correctness or audit-overlay downgrades. `cargo xtask gate-json --check-results --skv14-existing-results-capture` remains a companion shape/freshness gate, not the sole maintain proof.
 - W5A source/test LOC remains within the <=1.0k C-1 part-A cap and does not borrow from W5B or W6.
 
 W5A cost ledger:
@@ -78,6 +78,7 @@ cd skinny && cargo xtask check-css-l4-stylesheet-selectors
 cd skinny && cargo xtask check-css-l4-vendor-and-custom-atrules
 cd skinny && cargo xtask check-css-l4-visual-functions
 cd skinny && cargo xtask gate-json --check-results --skv14-existing-results-capture
+git diff --exit-code HEAD -- skinny/RESULTS.md restart/skinny/ROLLING-SOTA-DELTA.md
 ```
 
 Additional grep/count gates:
@@ -90,7 +91,8 @@ rg -n "RuntimeGenerationRequest|emit_runtime_from_request" \
   skinny/crates/codegen/src/grammar_provider.rs
 test "$(find skinny/crates/codegen/src -name '*_provider.rs' \! -name 'grammar_provider.rs' | wc -l | tr -d ' ')" = "8"
 test "$(find skinny/crates/codegen/src -type d -name 'css_l4_*_templates' | wc -l | tr -d ' ')" = "7"
-if git diff --name-status -- skinny/crates/codegen/src | rg '^(A|D|R[0-9]*)\\s+.*(_provider\\.rs|_templates)'; then exit 1; fi
+if git diff --name-status HEAD -- skinny/crates/codegen/src | rg '^(A|D|R[0-9]*)\\s+.*(_provider\\.rs|_templates)'; then exit 1; fi
+if git diff --cached --name-status -- skinny/crates/codegen/src | rg '^(A|D|R[0-9]*)\\s+.*(_provider\\.rs|_templates)'; then exit 1; fi
 W5A_LOC="$(git diff --numstat HEAD -- \
   skinny/crates/grammar/src \
   skinny/crates/codegen/src/lib.rs \

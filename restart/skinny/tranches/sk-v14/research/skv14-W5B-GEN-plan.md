@@ -40,7 +40,7 @@ directives. The CSS L4 grammar uses constructs that current `parse_grammar`
 does not parse into IR: `@ws` at `grammar/css/l4/stylesheet.bbnf:12`, `?w`,
 `>>`, and `<<` at `stylesheet.bbnf:15` through `stylesheet.bbnf:16`,
 `@pretty` at `stylesheet.bbnf:53` through `stylesheet.bbnf:60`, span capture at
-`grammar/css/l4/values.bbnf:67`, and typed host projections at
+`grammar/css/l4/values.bbnf:69`, and typed host projections at
 `grammar/css/l4/color.bbnf:190` and `color.bbnf:228`.
 
 Current HEAD still emits runtime bytes through the provider mesh:
@@ -51,13 +51,28 @@ neutral-looking module would be static centralization, not a provider-free
 generator body. Reading committed generated output as input is explicitly
 pre-blocked by `SPEC.md:752`.
 
+## Owner Paths
+
+This plan authorizes no source redress. REDRESS-211 closure may edit only:
+
+- `skinny/REDRESS.md`.
+- Optional rejection evidence under
+  `restart/skinny/tranches/sk-v14/research/`.
+
+W5B-GEN source owner paths named by SPEC §8B remain mutation-proof paths for
+this rejection: `skinny/crates/codegen/src/lib.rs`,
+`skinny/crates/codegen/src/grammar_provider.rs`,
+`skinny/xtask/src/regen.rs`, `skinny/xtask/src/regen_css.rs`, and
+`skinny/crates/bbnf-bench/src/lock14_baseline.rs`.
+
 ## Falsifiability Gate
 
-This rejection is closed by proving no W5B-GEN source slice was attempted or
-retained, while the old provider reachability remains as the failing evidence:
+This rejection will be closed only by REDRESS-211 after proving no W5B-GEN
+source slice was attempted or retained, while the old provider reachability
+remains as the failing evidence:
 
 ```sh
-git diff --exit-code -- \
+git diff --exit-code HEAD -- \
   skinny/crates/codegen/src/lib.rs \
   skinny/crates/codegen/src/grammar_provider.rs \
   skinny/crates/grammar/src/lib.rs \
@@ -65,7 +80,7 @@ git diff --exit-code -- \
   skinny/xtask/src/regen_css.rs \
   skinny/crates/bbnf-bench/src/lock14_baseline.rs
 
-git diff --exit-code -- skinny/RESULTS.md restart/skinny/ROLLING-SOTA-DELTA.md
+git diff --exit-code HEAD -- skinny/RESULTS.md restart/skinny/ROLLING-SOTA-DELTA.md
 
 cd skinny && rg -n '\b(render_runtime_profile|RuntimeProvider|GrammarProfile|json_provider|css_l4_.*provider)\b' crates/codegen/src/{lib.rs,grammar_provider.rs}
 
@@ -75,6 +90,13 @@ find crates/core/src/runtime -mindepth 2 -type f -name '*.rs' | wc -l | tr -d ' 
 
 Expected disposition: the first two diff commands are clean; the provider grep
 finds the live failing route; the lock count remains 16; Pattern H remains 67.
+
+## Hard Cap
+
+REDRESS-211 closure is documentation-only and bounded to the standard redress
+ceiling: 60 minutes implementation + 15 minutes measurement, 90 minutes hard
+ceiling. It cannot borrow W5C-DELETE or W6 budget, and it cannot add source
+edits under the current W5B-GEN shape.
 
 ## Rejected Routes
 
@@ -95,12 +117,23 @@ The proposed V7 split is:
 
 | Wave | Scope | Entry | Exit |
 |---|---|---|---|
-| W5B-FRONTEND | Real CSS L4 grammar-source frontend/import/IR support for constructs W5A only fact-scans today; no provider/template deletion. | W5A admitted + REDRESS-211. | CSS L4 sources compile through a request-owned frontend; no runtime/provider deletion. |
-| W5C-GEN | Provider-free runtime generator body consuming the frontend/request IR; no provider/template deletion. | W5B-FRONTEND admitted. | `regen-css`, seven companions, `check-json`, and provider-reachability grep pass with providers/templates only as unreachable residue. |
+| W5B-FRONTEND | Generic BBNF grammar-source frontend/import/IR closure for constructs W5A only fact-scans today; CSS L4 is the strict positive witness, not the architectural owner. No runtime/provider/template deletion. | W5A admitted + REDRESS-211. | CSS L4 source roots compile through the request-owned generic frontend; JSON remains on the same source path; Sheets/BBNF remain fail-closed or gain generated-role witnesses; provider/template counts unchanged. |
+| W5C-GEN | Provider-free runtime generator body consuming the same generic frontend/request IR for every admitted grammar. No provider/template deletion. | W5B-FRONTEND admitted. | `regen-css`, seven companions, `check-json`, `gate-json`, and provider-reachability grep pass with providers/templates only as unreachable residue; no grammar-name branches in generic crates. |
 | W5D-DELETE | Former W5C-DELETE provider/template deletion plus Lock 14 baseline close. | W5C-GEN admitted. | Provider/template counts zero, Lock 14 closes, same-wave consumers pass. |
 
 W6 moves to `W5D-DELETE admitted`; W7 and W8/W9/W10 remain globally blocked by
 the PRUNE chain.
+
+V7 must assign explicit LOC/time envelopes before dispatch. Proposed starting
+caps are W5B-FRONTEND ≤1.0k source/test LOC, W5C-GEN ≤1.0k source/test LOC, and
+W5D-DELETE ≤400 source/test LOC, each with a ≤90 minute redress ceiling. Any
+frontend/import/IR slice that cannot fit its envelope must split again before
+dispatch. Generated output is uncounted only when produced by fresh regen
+through the active generator and diff-audited.
+
+The V7 CRUD packet must also add explicit Lock 14 owner-path and parent-diff
+routing for W5B-FRONTEND and W5C-GEN before their redress commits; the current
+Lock 14 gate only routes the W5A shape.
 
 ## Revert Protocol
 
@@ -115,3 +148,11 @@ There is no admissible same-wave consumer under the current W5B-GEN shape. The
 planned consumer set remains the amended SPEC set (`regen-css`, seven CSS
 companions, `check-json`, and `gate-json`), but it cannot be wired honestly until
 V7 inserts the CSS L4 frontend work before provider-free generation.
+
+## Pre-Blocked Routes
+
+REDRESS-209 and REDRESS-210 must not be reopened. Static centralization,
+committed generated-output mining, compatibility provider dispatch,
+grammar-name branches in generic crates, provider/template deletion before the
+provider-free body is production-reachable, and W5C/W6 budget borrowing remain
+rejected.

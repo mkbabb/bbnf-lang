@@ -5243,3 +5243,30 @@ perturbation.
   witness, provider-free generator body, then provider/template deletion.
   W5C-DELETE, W6, W7, and W8/W9/W10 remain blocked until the PRUNE chain is
   rerouted and closed.
+
+## SK-V14 Wave W5B-FRONTEND PRUNE-3B Sub-Wave Authority Gap
+
+- Item 212 closes `G-SK-V14-W5B-FRONTEND-PRUNE-3B` as `REJECTED` under the
+  current SPEC shape. Pass Omega V7 correctly routed W5B-FRONTEND before
+  W5C-GEN, but the active SPEC still grants W5B-FRONTEND one capped wave slot
+  while the accepted target requires serial Lock 14 routing, import closure,
+  layout/discard lowering, pretty/span/projection lowering, and request-consumer
+  proof carry. The W5B-FRONTEND V2 plan tried to fit the dispatch-hard-cap
+  discipline with internal sub-slices, but the V2 CH4/CH6 challenge found that
+  informal slices need SPEC authority and that the maintain gate also conflicts
+  with the current +/-1.0% full-table wording. Narrowing to one cap-valid slice
+  would keep W5B-FRONTEND open and would not unblock W5C-GEN; forcing the whole
+  closure through one wave would violate the hard-cap discipline. Evidence: the
+  folded plan
+  `restart/skinny/tranches/sk-v14/research/skv14-W5B-FRONTEND-plan.md`, the V2
+  challenge archive
+  `restart/skinny/tranches/sk-v14/research/skv14-waveW5B-FRONTEND-challenge/V2/`,
+  the corrective packet
+  `restart/skinny/tranches/sk-v14/research/skv14-W5B-FRONTENDR-corrective-packet.md`,
+  and the proof bundle
+  `restart/skinny/tranches/sk-v14/research/skv14-W5B-FRONTEND-redress.md`.
+  Corrective route: Pass Omega V8 must formalize W5B-FRONTEND into capped
+  sub-waves W5B.0 LOCK14-GATE, W5B.1 IMPORT-CLOSURE, W5B.2 LAYOUT-DISCARD,
+  W5B.3 PRETTY-SPAN-PROJECTION, and W5B.4 REQUEST-CONSUMER, with W5C-GEN still
+  blocked until aggregate W5B-FRONTEND close. W5D-DELETE, W6, W7, and W8/W9/W10
+  remain blocked until the PRUNE chain is rerouted and closed.

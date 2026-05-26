@@ -5215,3 +5215,31 @@ perturbation.
   body followed by W5C-DELETE provider/template deletion and Lock 14 baseline
   close after W5B-GEN admits, per
   `restart/audit/totality/astral/V6/G-OMEGA-SIGNOFF.md`.
+
+## SK-V14 Wave W5B-GEN PRUNE-3B Provider-Free Generator Body Gap
+
+- Item 211 closes `G-SK-V14-W5B-GEN-PRUNE-3B` as `REJECTED` under the current
+  SPEC shape. W5A admitted the source-consuming request boundary at commit
+  `286233fa2`, but W5B-GEN requires a provider-free runtime generator body that
+  emits CSS L4 and JSON runtime bytes from grammar source plus workspace
+  metadata. Current HEAD still routes runtime emission through
+  `render_runtime_profile`, `RuntimeProvider`, `json_provider`, and the CSS
+  provider/template mesh. The W5A source-fact scanner does not compile CSS L4
+  source into IR, and the current skinny parser accepts only `@import` and
+  `@token`, not the CSS L4 constructs W5B-GEN must consume (`@ws`, `@pretty`,
+  `?w`, `>>`, `<<`, span capture, typed host projections). Static
+  centralization or reading committed generated output would be a workaround,
+  not an admit. Evidence: the W5B-GEN research packet
+  `restart/skinny/tranches/sk-v14/research/skv14-W5B-GEN-{A..E}-*.md`, the
+  folded plan `restart/skinny/tranches/sk-v14/research/skv14-W5B-GEN-plan.md`,
+  the corrective packet
+  `restart/skinny/tranches/sk-v14/research/skv14-W5B-GENR-corrective-packet.md`,
+  and the clean V2/V3 challenge convergence under
+  `restart/skinny/tranches/sk-v14/research/skv14-waveW5B-GEN-challenge/`.
+  The proof bundle is recorded in
+  `restart/skinny/tranches/sk-v14/research/skv14-W5B-GEN-redress.md`.
+  Corrective route: Pass Omega V7 W5B-GENR must split the current gate into
+  generic BBNF frontend/import/IR closure with CSS L4 as strict positive
+  witness, provider-free generator body, then provider/template deletion.
+  W5C-DELETE, W6, W7, and W8/W9/W10 remain blocked until the PRUNE chain is
+  rerouted and closed.

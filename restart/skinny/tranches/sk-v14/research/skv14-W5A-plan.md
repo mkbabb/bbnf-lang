@@ -37,17 +37,37 @@ Explicit non-owner paths:
 Falsifiability gate:
 
 - `regen-css` and every `check-css-l4-*` companion call the new request path and no longer call `codegen::emit_runtime_profile(target.profile)` at the `regen.rs` call boundary.
-- The parser/contract accepts the CSS L4 source constructs needed by runtime generation: import graph metadata, `@token`, `@ws`, `@pretty`, comma sequence, `?w`, `>>`, `<<`, `->` projection metadata, typed projection metadata, and `@{...}` span capture. These must parse without `grammar_id == "css_l4"` or equivalent profile-specific generic-branch behavior.
+- The parser/contract accepts the CSS L4 source constructs needed by runtime generation as source facts, not full CSS semantic generation: import graph metadata, `@token`, `@ws`, `@pretty`, comma sequence, `?w`, `>>`, `<<`, `->` projection metadata, typed projection metadata, raw host/value-expression spans, and `@{...}` span capture. These must parse without `grammar_id == "css_l4"` or equivalent profile-specific generic-branch behavior.
 - JSON unchanged-output is captured by `cargo xtask check-json`, a before/after whole-directory hash or `git diff --exit-code -- skinny/crates/runtime/src/grammars/json`, and an in-code equality test comparing the new request path to current `emit_from_source("json", source)`.
-- Sheets and BBNF-self use the same request path and either emit generated-role witnesses or fail closed with named source-located unsupported constructs such as `BBNF-UNSUPPORTED-PROJECTION`, `BBNF-UNSUPPORTED-WHITESPACE-MODIFIER`, `BBNF-UNSUPPORTED-IMPORT-RESOLUTION`, `BBNF-UNSUPPORTED-DIRECTIVE`, or `BBNF-UNSUPPORTED-HOST-CAPTURE`.
+- Sheets and BBNF-self use the same request path and default to fail-closed witnesses with named source-located unsupported constructs such as `BBNF-UNSUPPORTED-PROJECTION`, `BBNF-UNSUPPORTED-WHITESPACE-MODIFIER`, `BBNF-UNSUPPORTED-IMPORT-RESOLUTION`, `BBNF-UNSUPPORTED-DIRECTIVE`, or `BBNF-UNSUPPORTED-HOST-CAPTURE`. Generated-role witnesses are allowed only if they reuse source-fact parser work already needed for CSS and remain inside the component LOC ledger.
 - Provider/template count does not increase, no CSS provider/template path is deleted or renamed in W5A, and `find skinny/crates/codegen/src -name '*_provider.rs' \! -name 'grammar_provider.rs' | wc -l` may remain `8` while `find skinny/crates/codegen/src -type d -name 'css_l4_*_templates' | wc -l` remains `7`.
+- Full-table maintain is enforced by `cargo xtask gate-json --check-results --skv14-existing-results-capture`; any refreshed W5A result must preserve every non-target row within +/-1.0% and must not downgrade correctness or audit overlay verdicts.
 - W5A source/test LOC remains within the <=1.0k C-1 part-A cap and does not borrow from W5B or W6.
+
+W5A cost ledger:
+
+- Grammar runtime-source parser facts and parser tests: <=300 source/test LOC.
+- Codegen request contract, metadata consumption, and JSON equivalence test: <=300 source/test LOC.
+- `regen.rs` / `regen_css.rs` request construction and all-seven CSS routing: <=150 source/test LOC.
+- Temporary Lock 14 W5A guard: <=120 source/test LOC.
+- Sheets/BBNF-self named fail-closed tests: <=100 source/test LOC.
+- W5A admit/reject attribution edits counted as hand-written source/test-equivalent budget if they alter gate behavior: <=30 LOC.
+
+Generated runtime output is outside the C-1 source/test LOC count only when produced by `cargo xtask regen-css`, named in the redress log, byte-diff audited, and included in the revert slice. If the estimated implementation cannot fit the ledger or the 90-minute ceiling, return REVISE before source edits rather than borrowing W5B or W6 budget.
 
 Verification commands:
 
 ```sh
-cd skinny && cargo test -p grammar w5a_ -- --nocapture
-cd skinny && cargo test -p codegen w5a_ -- --nocapture
+cd skinny && cargo test -p grammar w5a_css_l4_constructs_parse_as_source_facts -- --exact --nocapture 2>&1 | tee /tmp/skv14-w5a-grammar-css.log
+rg "test result: ok\\. [1-9][0-9]* passed" /tmp/skv14-w5a-grammar-css.log
+cd skinny && cargo test -p grammar w5a_named_unsupported_constructs_are_source_located -- --exact --nocapture 2>&1 | tee /tmp/skv14-w5a-grammar-unsupported.log
+rg "test result: ok\\. [1-9][0-9]* passed" /tmp/skv14-w5a-grammar-unsupported.log
+cd skinny && cargo test -p codegen w5a_runtime_contract_consumes_source_and_metadata -- --exact --nocapture 2>&1 | tee /tmp/skv14-w5a-codegen-contract.log
+rg "test result: ok\\. [1-9][0-9]* passed" /tmp/skv14-w5a-codegen-contract.log
+cd skinny && cargo test -p codegen w5a_json_request_matches_emit_from_source -- --exact --nocapture 2>&1 | tee /tmp/skv14-w5a-codegen-json.log
+rg "test result: ok\\. [1-9][0-9]* passed" /tmp/skv14-w5a-codegen-json.log
+cd skinny && cargo test -p codegen w5a_sheets_bbnf_fail_closed_through_runtime_contract -- --exact --nocapture 2>&1 | tee /tmp/skv14-w5a-codegen-nonjson.log
+rg "test result: ok\\. [1-9][0-9]* passed" /tmp/skv14-w5a-codegen-nonjson.log
 cd skinny && cargo xtask check-json
 cd skinny && cargo xtask regen-css
 cd skinny && cargo xtask check-css-l4-at-rules-and-media
@@ -57,24 +77,40 @@ cd skinny && cargo xtask check-css-l4-nested-layout
 cd skinny && cargo xtask check-css-l4-stylesheet-selectors
 cd skinny && cargo xtask check-css-l4-vendor-and-custom-atrules
 cd skinny && cargo xtask check-css-l4-visual-functions
-cd skinny && cargo xtask gate-json --check-results
+cd skinny && cargo xtask gate-json --check-results --skv14-existing-results-capture
 ```
 
 Additional grep/count gates:
 
 ```sh
-rg -n "emit_runtime_profile\\(target\\.profile\\)" skinny/xtask/src/regen.rs
-find skinny/crates/codegen/src -name '*_provider.rs' \! -name 'grammar_provider.rs' | wc -l
-find skinny/crates/codegen/src -type d -name 'css_l4_*_templates' | wc -l
-git diff --name-status -- skinny/crates/codegen/src | rg '(_provider\\.rs|_templates)' || true
+if rg -n "emit_runtime_profile\\(target\\.profile\\)" skinny/xtask/src/regen.rs; then exit 1; fi
+rg -n "RuntimeGenerationRequest|emit_runtime_from_request" \
+  skinny/xtask/src/regen.rs \
+  skinny/crates/codegen/src/lib.rs \
+  skinny/crates/codegen/src/grammar_provider.rs
+test "$(find skinny/crates/codegen/src -name '*_provider.rs' \! -name 'grammar_provider.rs' | wc -l | tr -d ' ')" = "8"
+test "$(find skinny/crates/codegen/src -type d -name 'css_l4_*_templates' | wc -l | tr -d ' ')" = "7"
+if git diff --name-status -- skinny/crates/codegen/src | rg '^(A|D|R[0-9]*)\\s+.*(_provider\\.rs|_templates)'; then exit 1; fi
+W5A_LOC="$(git diff --numstat HEAD -- \
+  skinny/crates/grammar/src \
+  skinny/crates/codegen/src/lib.rs \
+  skinny/crates/codegen/src/grammar_provider.rs \
+  skinny/xtask/src/regen.rs \
+  skinny/xtask/src/regen_css.rs \
+  skinny/crates/bbnf-bench/src/lock14_baseline.rs \
+  | awk '$1 != "-" && $2 != "-" { total += $1 + $2 } END { print total + 0 }')"
+printf 'W5A source/test LOC delta=%s\n' "$W5A_LOC"
+test "$W5A_LOC" -le 1000
 git diff --exit-code -- crates/core/src/runtime/css_l4 grammar/css/l4
 ```
 
 Hard cap: 75 minutes redress wall time with a 90-minute ceiling; commit or reject at cap. Source/test delta must remain <=1.0k C-1 part-A.
 
-Revert protocol: revert `grammar_provider.rs`, parser/runtime-generation construct support, `lib.rs` request entrypoint edits, `regen.rs`/`regen_css.rs` routing, and the W5A Lock 14 guard as one slice; retain the existing provider/template mesh; write a new REDRESS entry naming the failed parser construct, source-consumption proof, metadata field, JSON equivalence proof, Sheets/BBNF witness, or Lock 14 guard.
+Revert protocol: save the rejected patch at `/tmp/skv14-waveW5A-rejected.patch`; revert `grammar_provider.rs`, parser/runtime-generation construct support, `lib.rs` request entrypoint edits, `regen.rs`/`regen_css.rs` routing, and the W5A Lock 14 guard as one slice; retain the existing provider/template mesh; write a new REDRESS entry naming the failed parser construct, source-consumption proof, metadata field, JSON equivalence proof, Sheets/BBNF witness, or Lock 14 guard.
 
 Same-wave consumer: `cargo xtask regen-css` and the seven `check-css-l4-*` companions exercise the source-consuming request in the W5A redress commit. JSON `check-json` and the Sheets/BBNF-self tests exercise the same request path as non-CSS proof consumers.
+
+Downstream route: W5A ADMIT unlocks W5B only. W5A REJECT blocks W5B, W6, W7, W8, W9, and W10 until the PRUNE chain is rerouted through a new plan or Pass Omega amendment.
 
 Pre-blocked routes:
 

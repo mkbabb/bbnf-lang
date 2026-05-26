@@ -53,7 +53,7 @@ must be replaced by W5C-GEN after W5B-FRONTEND closes frontend/import/IR
 lowering, then deleted by W5D-DELETE per the generated-provider manifest
 receiver wave.
 
-**Next-cycle dispatch posture** per Pass Omega V7 W5B-GENR: REDRESS-183 is
+**Next-cycle dispatch posture** per Pass Omega V8 W5B-FRONTENDR: REDRESS-183 is
 historical after W2 admitted as skinny-side `regen-css` at `45568e669`, and
 W3 production CSS corpus staging admitted at `b0a864f0b`. REDRESS-184 rejected
 the original W4 provider-deletion gate; after V4 CRUD, W4 reruns as
@@ -62,10 +62,12 @@ deletion. REDRESS-209 rejected the original monolithic W5 provider-collapse
 gate. After V5 CRUD, W5A admitted the source-consuming request boundary at
 `286233fa2`. REDRESS-210 rejected W5B deletion because live provider-backed
 generation remained. REDRESS-211 rejected W5B-GEN because the generic frontend
-closure was still missing. After V7 CRUD, W5B-FRONTEND owns frontend/import/IR
-closure, W5C-GEN owns the provider-free generator body only after
-W5B-FRONTEND is load-bearing, and W5D-DELETE owns CSS provider/template
-deletion only after W5C-GEN is load-bearing.
+closure was still missing. REDRESS-212 rejected the V7 one-shot W5B-FRONTEND
+cap shape. After V8 CRUD, W5B-FRONTEND runs as W5B.0 LOCK14-GATE, W5B.1
+IMPORT-CLOSURE, W5B.2 LAYOUT-DISCARD, W5B.3 PRETTY-SPAN-PROJECTION, and W5B.4
+REQUEST-CONSUMER. W5C-GEN owns the provider-free generator body only after
+aggregate W5B-FRONTEND is load-bearing, and W5D-DELETE owns CSS
+provider/template deletion only after W5C-GEN is load-bearing.
 `crates/core/src/runtime/css_l4/` remains Pattern H root-runtime work until
 W6.0 after W5D-DELETE closes. W8/W9/W10 remain globally
 blocked until PRUNE-1..PRUNE-5 close. **SK-V15 Pass Alpha re-entry handoff**

@@ -61,7 +61,14 @@ any W5B-FRONTEND plan that treats `@ws` or related compatibility syntax as new
 public syntax; reject any W5B-FRONTEND or W5C-GEN source redress before
 `lock14_baseline.rs` owner-path and parent-diff routing lands for that wave;
 reject any W5C-GEN plan before W5B-FRONTEND admits; reject provider/template
-deletion before W5D-DELETE after W5C-GEN admit.
+deletion before W5D-DELETE after W5C-GEN admit. Pass Omega V8
+W5B-FRONTENDR supersedes the active W5B refusal shape: reject any
+W5B.1..W5B.4 source redress before W5B.0 LOCK14-GATE admits; reject any
+W5C-GEN plan before all W5B.0..W5B.4 sub-waves admit; reject W5B.0 through
+W5B.3 as aggregate W5B close; reject wildcard aggregate log greps in place of
+dedicated `/tmp/skv14-w5b-<test-name>.log` plus dedicated nonzero `rg` proof;
+reject W5B provider/template deletion, provider-free generator-body
+replacement, public `@ws` revival, or grammar-name branches in generic crates.
 
 ## §1 — Purpose: why skinny hardening differs from V1 hardening
 

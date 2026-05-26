@@ -121,10 +121,16 @@ Continue indefatigably per the USER PIN addendum.
                  JSON/Sheets/BBNF-self non-JSON gates. No provider or
                  template deletion in PRUNE-3A.
         PRUNE-3B: Build the generic BBNF grammar-source frontend/import/IR
-                 closure only after PRUNE-3A is load-bearing. Lower CSS L4
-                 compatibility constructs such as @ws into canonical IR; do
-                 not create new public syntax, replace the provider-backed
-                 generator body, or delete providers/templates here.
+                 closure as the Pass Omega V8 W5B.0..W5B.4 aggregate only
+                 after PRUNE-3A is load-bearing. W5B.0 first admits the Lock 14
+                 owner-path/parent-diff gate; W5B.1 closes import resolution;
+                 W5B.2 lowers layout/discard facts; W5B.3 lowers pretty/span/
+                 projection facts; W5B.4 wires the request consumer and closes
+                 W5B-FRONTEND. Lower CSS L4 compatibility constructs such as
+                 @ws into canonical IR; do not create new public syntax,
+                 replace the provider-backed generator body, or delete
+                 providers/templates here. W5C-GEN remains blocked until all
+                 five W5B sub-waves admit.
         PRUNE-3C: Build the provider-free runtime generator body only after
                  PRUNE-3B is load-bearing. Remove live production dependency
                  on RuntimeProvider / GrammarProfile / render_runtime_profile
@@ -169,7 +175,7 @@ Continue indefatigably per the USER PIN addendum.
       code path (no full-tape build) in generated_json. Wire to
       Skipper-style comparator. Then attempt admit.
 
-  R9. CARRIED — pillars unchanged. W5A/W5B-FRONTEND/W5C-GEN/W5D-DELETE/W6/W7/
+  R9. CARRIED — pillars unchanged. W5A/W5B.0..W5B.4/W5C-GEN/W5D-DELETE/W6/W7/
       bbnf-simd/OffsetFlags/Tape stand. R3 must not regress them.
 
   R10. INDEFATIGABLE CAMPAIGN per addendum. SK-V14 closes when

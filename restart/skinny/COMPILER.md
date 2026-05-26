@@ -70,7 +70,7 @@ regex/HIR fact mandate). Historical helpers such as `shapes_for_json` and
 `nominate_json` are deletion targets, not naming patterns for new compiler
 code.
 
-**Pass Omega V7 / SK-V14 W5B-GENR compiler receiver (2026-05-26).** REDRESS-209
+**Pass Omega V8 / SK-V14 W5B-FRONTENDR compiler receiver (2026-05-26).** REDRESS-209
 split the old monolithic W5 into W5A and W5B; REDRESS-210 then rejected W5B
 deletion because W5A admitted the request boundary without a provider-free
 generator body; REDRESS-211 rejected W5B-GEN because the generic frontend/import
@@ -79,10 +79,12 @@ grammar source and workspace metadata enter codegen as semantic inputs,
 required V1 grammar-source constructs parse for runtime generation without
 grammar-id branches, and `regen-css` plus all seven CSS L4 companions consume
 that path with JSON unchanged-output and Sheets/BBNF-self fail-closed or
-generated-role proof. W5B-FRONTEND is now the compiler-side frontend/import/IR
-closure wave: lower CSS L4 compatibility constructs such as `@ws` into
+generated-role proof. W5B-FRONTEND is now the compiler-side aggregate
+frontend/import/IR closure sequence: W5B.0 LOCK14-GATE, W5B.1 IMPORT-CLOSURE,
+W5B.2 LAYOUT-DISCARD, W5B.3 PRETTY-SPAN-PROJECTION, and W5B.4
+REQUEST-CONSUMER. It lowers CSS L4 compatibility constructs such as `@ws` into
 canonical IR without new public syntax or grammar-name branches. W5C-GEN is the
-provider-free generator body wave after W5B-FRONTEND: retire live
+provider-free generator body wave after aggregate W5B-FRONTEND closes: retire live
 `RuntimeProvider` / `GrammarProfile` / `render_runtime_profile` production
 dispatch while preserving provider/template files as unreachable W5D residue.
 W5D-DELETE is deletion only after W5C-GEN is load-bearing: retire

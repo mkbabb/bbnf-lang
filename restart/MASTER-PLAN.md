@@ -519,11 +519,11 @@ cargo test -p runtime generated_grammars
 Pattern H per-tranche census (per MP-3B-V1-D03; mirrors Tranche A discipline).
 At F close, `find crates/core/src/runtime -mindepth 2 -type f -name '*.rs' |
 wc -l` must trend monotonically downward through W6 PRUNE-4 9 sub-waves
-(SK-V14 baseline = 67; F close target is determined by the W5A/W5B-FRONTEND/W5C-GEN/W5D-DELETE
-PRUNE-3 + W6 PRUNE-4 collapse plan per SK-V14 SPEC §13 W5A/W5B-FRONTEND/W5C-GEN/W5D-DELETE/W6
+(SK-V14 baseline = 67; F close target is determined by the W5A/W5B.0..W5B.4/W5C-GEN/W5D-DELETE
+PRUNE-3 + W6 PRUNE-4 collapse plan per SK-V14 SPEC §13 W5A/W5B.0..W5B.4/W5C-GEN/W5D-DELETE/W6
 at `restart/skinny/tranches/sk-v14/SPEC.md:242`-`244`). The combined
-W5A/W5B-FRONTEND/W5C-GEN/W5D-DELETE + W6 envelope binds at W5A closed 921 LOC,
-W5B-FRONTEND ≤1.0k LOC, W5C-GEN ≤1.0k LOC, W5D-DELETE ≤400 LOC
+W5A/W5B-FRONTEND aggregate/W5C-GEN/W5D-DELETE + W6 envelope binds at W5A closed 921 LOC,
+W5B-FRONTEND aggregate ≤1.0k LOC across W5B.0..W5B.4, W5C-GEN ≤1.0k LOC, W5D-DELETE ≤400 LOC
 (C-1 part-A) + ≤2.0k LOC (W6 C-1 part-B aggregate across 9 sub-waves; avg ~220
 LOC/grammar; generated output uncounted) per SK-V14 SPEC §13 authority. F.W5
 nine-seed regeneration consumes the R4
@@ -797,6 +797,17 @@ W5C-GEN must first add explicit `lock14_baseline.rs` owner-path and parent-diff
 subject routing before source redress. Compatibility syntax such as `@ws` is a
 frontend-lowering witness into canonical IR, not a new public directive.
 
+Pass Omega V8 W5B-FRONTENDR supersedes the V7 one-shot W5B-FRONTEND cap after
+REDRESS-212: W5B-FRONTEND is an aggregate PRUNE-3B sequence with W5B.0
+LOCK14-GATE, W5B.1 IMPORT-CLOSURE, W5B.2 LAYOUT-DISCARD, W5B.3
+PRETTY-SPAN-PROJECTION, and W5B.4 REQUEST-CONSUMER. Each W5B.N sub-wave carries
+HARD CAP 30 min, commit-safe evidence at 27 min, and halt at 30 min; aggregate
+W5B-FRONTEND cap is <=150 min. W5B-FRONTEND closes only after W5B.0 through
+W5B.4 all admit. W5C-GEN remains blocked until aggregate W5B-FRONTEND close,
+W5D-DELETE remains blocked until W5C-GEN close, and W6/W7/W8/W9/W10 remain
+blocked by the PRUNE chain. The W5B aggregate preserves the V7 <=1.0k C-1
+part-A LOC envelope unless a later CHALLENGE authorizes narrower partitions.
+
 | Wave | SPEC section | Scope | Entry gate | LOC budget (source + tests + gates + docs; generated output uncounted) | Time cap |
 |---|---|---|---|---|---|
 | W0 | §3 | Baseline Profile + Telemetry Lock (SK-V14-open) | Dispatchable only after G-Omega | 0 production behavior LOC; ≤250 report/gate/test/doc LOC | ≤90 min |
@@ -805,7 +816,7 @@ frontend-lowering witness into canonical IR, not a new public directive.
 | W3 | §6 | Production CSS Corpora (R5; ~960 KB) | Conditional on W2 close | ≤200 corpora-staging LOC; corpora files are bytes-only | ≤90 min |
 | W4 | §7 | PRUNE-2 — CSS L4 admit-ledger prune: restore rolling delta to 0/24 CSS L4 admitted and add 24 row-keyed REDRESS entries; no provider/template deletion until W5D-DELETE authorizes deletion. | Conditional on W2 + W3 close | ≤500 docs/ledger | ≤90 min |
 | W5A | §8 | PRUNE-3A — grammar-neutral source-consuming runtime generator contract: pass grammar source + workspace metadata into codegen, make required V1 grammar-source constructs parseable for runtime generation without grammar-id branches, migrate `regen-css` to the new path, prove CSS L4 plus JSON/Sheets/BBNF-self non-JSON gates; no provider/template deletion. | Conditional on W4 ledger close | ≤1.0k C-1 part-A source/test LOC | ≤90 min |
-| W5B-FRONTEND | §8B | PRUNE-3B — generic BBNF grammar-source frontend/import/IR closure: lower CSS L4 compatibility constructs into canonical IR; no provider/template deletion. | Conditional on W5A close + REDRESS-211 | ≤1.0k C-1 part-A source/test LOC | ≤90 min |
+| W5B-FRONTEND | §8B | PRUNE-3B aggregate — W5B.0 LOCK14-GATE; W5B.1 IMPORT-CLOSURE; W5B.2 LAYOUT-DISCARD; W5B.3 PRETTY-SPAN-PROJECTION; W5B.4 REQUEST-CONSUMER. Lower CSS L4 compatibility constructs into canonical IR; no provider/template deletion. | Conditional on W5A close + REDRESS-212 / Pass Omega V8 CRUD; W5B-FRONTEND closes only after W5B.0..W5B.4 all admit | aggregate ≤1.0k C-1 part-A source/test LOC; redress/report edits and reject-only `skinny/REDRESS.md` count | ≤30 min per W5B.N; aggregate ≤150 min |
 | W5C-GEN | §8C | PRUNE-3C — provider-free runtime generator body: replace the live `RuntimeProvider`/`render_runtime_profile` production path with one grammar-neutral generator body consuming W5A request facts plus W5B-FRONTEND IR; no provider/template deletion. | Conditional on W5B-FRONTEND close | ≤1.0k C-1 part-A source/test LOC | ≤90 min |
 | W5D-DELETE | §8D | PRUNE-3D — provider/template deletion and Lock 14 baseline close: delete old provider/template residue only after W5C-GEN is load-bearing; retire provider dispatch residue; run `regen-css`, companions, JSON, and non-JSON witnesses. | Conditional on W5C-GEN close | ≤400 C-1 part-A source/test LOC | ≤90 min |
 | W6 | §9 | PRUNE-4 — 9 sub-waves: W6.0 CSS L4 root-runtime collapse, then remaining per-grammar runtime collapses (R3 PRUNE-4; C-1 part-B) | Conditional on W5D-DELETE close | ≤2.0k C-1 part-B aggregate across 9 sub-waves (avg ~220 LOC/grammar; generated output uncounted) | ≤90 min per sub-wave (W6.0..W6.8); aggregate ≤810 min |
@@ -815,8 +826,8 @@ frontend-lowering witness into canonical IR, not a new public directive.
 | W10 | §13 | JSON parse_only Distinct Path + Re-Admit (R8) | Conditional on W1 + W9 close locally, but globally blocked until PRUNE-1..PRUNE-5 close; F-V2-P1ABC-RERECORD Stage-0 binds UNCONDITIONALLY per MP-3B-V1-D11 + S-P3 V3 §3C | ≤650 source/test LOC | ≤90 min |
 | W11 | §14 | Close And Alpha Feedback | Conditional on W0-W10 dispositions | 0 source LOC; docs/RESULTS/REDRESS/HANDOFF/SPEC reconciliation only | ≤90 min |
 
-Total envelope across all candidates (per SPEC §2 after V7 W5B-GENR): C-1 is W5A
-closed 921 LOC + W5B-FRONTEND ≤1.0k + W5C-GEN ≤1.0k + W5D-DELETE ≤400 + W6 ≤2.0k; C-2
+Total envelope across all candidates (per SPEC §2 after V8 W5B-FRONTENDR): C-1 is W5A
+closed 921 LOC + W5B-FRONTEND aggregate ≤1.0k across W5B.0..W5B.4 + W5C-GEN ≤1.0k + W5D-DELETE ≤400 + W6 ≤2.0k; C-2
 600-1.08k; C-3 1.2k-2.0k; C-4 800-1.4k; C-5 250-500. Aggregate
 ~5.65k-8.90k. Any wave exceeding its envelope by >20% escalates per
 `[generated-size-budget]`. R10 indefatigability clause: SK-V14 brackets

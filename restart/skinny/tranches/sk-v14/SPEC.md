@@ -38,7 +38,7 @@ Dispatch lock:
 - G-Omega user gate (per `ORCHESTRATOR-PROMPT.md:204`) is the only mandatory relinquish; S-P3 + T-P3 LOCK precedes.
 - Current dispatch authority covers W0 only.
 - W1-W11 are conditionally gated by this packet, but each remains blocked until W0 closes, the wave plan names exact owner paths and row gates, required CHALLENGE accepts, and the orchestrator/user dispatches that wave.
-- PRUNE waves (W1 PRUNE-1, W4 PRUNE-2, W5A PRUNE-3A, W5B-FRONTEND PRUNE-3B, W5C-GEN PRUNE-3C, W5D-DELETE PRUNE-3D, W6 PRUNE-4, W7 PRUNE-5) dispatch BEFORE any new-admit wave (W8 R6, W9 R7, W10 R8) per `ORCHESTRATOR-PROMPT.md:110` R3 + SYNTHESIS §4 constraint chain.
+- PRUNE waves (W1 PRUNE-1, W4 PRUNE-2, W5A PRUNE-3A, W5B.0..W5B.4 PRUNE-3B aggregate, W5C-GEN PRUNE-3C, W5D-DELETE PRUNE-3D, W6 PRUNE-4, W7 PRUNE-5) dispatch BEFORE any new-admit wave (W8 R6, W9 R7, W10 R8) per `ORCHESTRATOR-PROMPT.md:110` R3 + SYNTHESIS §4 constraint chain.
 
 ## Section 0 — Close Condition And Goalset
 
@@ -52,7 +52,7 @@ R10 verbatim into the SK-V8 §0.1 ten-clause shape):
 3. `xtask gate-json` rejects rows missing required SK-V14 telemetry (`comparator_plane`, `per_iter_equality`, `audit_overlay_verdict`, `track2_entry_point`).
 4. W1 makes plane-correct strict comparator evidence + per-iter equality oracle gate-consumed before any behavior wave can admit row quality.
 5. W2 + W3 stand up the CSS L4 grammar-derived pipeline (`cargo xtask regen-css` round-trip clean + `skinny/corpora/css-l4-sk-v14/` >=800 KB) BEFORE W4 (PRUNE-2) performs the CSS L4 admit-ledger prune.
-6. W5A + W5B-FRONTEND + W5C-GEN + W5D-DELETE + W6 (C-1 PRUNE-3A + PRUNE-3B + PRUNE-3C + PRUNE-3D + PRUNE-4) collapse the 8 per-grammar provider modules and 67 hand-written per-grammar runtime files into ONE generic generator template BEFORE W7 (C-4 PRUNE-5) wires W8 + W9 from SCAFFOLD-ONLY to LOAD-BEARING. Pass Omega V7 W5B-GENR splits W5 so W5A first proves the source-consuming request boundary, W5B-FRONTEND closes generic BBNF frontend/import/IR lowering, W5C-GEN builds the provider-free generator body, and W5D-DELETE deletes CSS provider/template clusters only after that replacement is load-bearing.
+6. W5A + W5B.0..W5B.4 + W5C-GEN + W5D-DELETE + W6 (C-1 PRUNE-3A + PRUNE-3B aggregate + PRUNE-3C + PRUNE-3D + PRUNE-4) collapse the 8 per-grammar provider modules and 67 hand-written per-grammar runtime files into ONE generic generator template BEFORE W7 (C-4 PRUNE-5) wires W8 + W9 from SCAFFOLD-ONLY to LOAD-BEARING. Pass Omega V8 W5B-FRONTENDR preserves the V7 semantic split and formalizes W5B-FRONTEND as W5B.0 LOCK14-GATE, W5B.1 IMPORT-CLOSURE, W5B.2 LAYOUT-DISCARD, W5B.3 PRETTY-SPAN-PROJECTION, and W5B.4 REQUEST-CONSUMER; W5C-GEN builds the provider-free generator body only after aggregate W5B-FRONTEND closes, and W5D-DELETE deletes CSS provider/template clusters only after W5C-GEN is load-bearing.
 7. Every JSON cell (51 = 17 corpora × 3 planes) and every CSS L4 feature (24 non-OUT_OF_SCOPE) either ADMITs > strict-vs-strict on the same plane / corpus / equality semantics OR carries an architectural-level intrinsic-block proof per row family. Implementation-limited misses are REOPEN, not close.
 8. No pre-blocked route (P-1..P-7 per §15 + REDRESS watch-list) reopens without fresh W0 evidence, same-wave consumer, REDRESS citation, no-regression gate, and CHALLENGE acceptance.
 9. Lock 1 (v+1 substrate-target/retention-lifetime/policy-owner triple), Lock 14 (v+1 generated-output allowance), and Lock 16 (v+1 primitive-manifest gating) gates pass at every wave close.
@@ -194,9 +194,9 @@ redress` are FALSIFIED by the audit pack. W1 (PRUNE-1) + W4 (PRUNE-2)
 revert them.
 
 The post-W0 carried-pillar floors (R9 per SYNTHESIS §0.3): W5A +
-W5B-FRONTEND + W5C-GEN + W5D-DELETE + W6 + W7 + `bbnf-simd` + OffsetFlags +
-Tape stand. C-1 (W5A + W5B-FRONTEND + W5C-GEN + W5D-DELETE + W6 PRUNE-3A +
-PRUNE-3B + PRUNE-3C + PRUNE-3D + PRUNE-4) must not regress them.
+W5B.0..W5B.4 + W5C-GEN + W5D-DELETE + W6 + W7 + `bbnf-simd` + OffsetFlags +
+Tape stand. C-1 (W5A + W5B.0..W5B.4 + W5C-GEN + W5D-DELETE + W6 PRUNE-3A +
+PRUNE-3B aggregate + PRUNE-3C + PRUNE-3D + PRUNE-4) must not regress them.
 
 ## Section 1 — Non-Negotiables
 
@@ -241,7 +241,7 @@ carry-forward additions + Lock 1 v+1 + Lock 14 v+1 + Lock 16 v+1:
 | W3 | Section 6 | Production CSS Corpora (R5; ~960 KB) | Conditional on W2 close | ≤200 corpora-staging LOC; corpora files are bytes-only, not source LOC | ≤90 min |
 | W4 | Section 7 | PRUNE-2 — CSS L4 admit-ledger prune: restore 0/24 CSS L4 admitted and add 24 row-keyed REDRESS entries; no provider/template deletion (R3 PRUNE-2 after W4R) | Conditional on W2 + W3 close (R4 MUST precede per S-P0 §2.1) | ≤500 C-5 part-B docs/ledger LOC | ≤90 min |
 | W5A | Section 8 | PRUNE-3A — grammar-neutral source-consuming runtime generator contract: source + metadata enter codegen; required V1 grammar-source constructs parse for runtime generation; `regen-css` migrates to the new path; no provider/template deletion | Conditional on W4 ledger close | Closed at 921 C-1 part-A source/test LOC; cannot borrow from W5B-FRONTEND, W5C-GEN, W5D-DELETE, or W6 | ≤90 min |
-| W5B-FRONTEND | Section 8B | PRUNE-3B — generic BBNF grammar-source frontend/import/IR closure: lower CSS L4 compatibility constructs into canonical IR before provider-free generation; no provider/template deletion | Conditional on W5A close + REDRESS-211 | ≤1.0k C-1 part-A source/test LOC; cannot borrow from W5C-GEN, W5D-DELETE, or W6 | ≤90 min |
+| W5B-FRONTEND | Section 8B | PRUNE-3B aggregate — W5B.0 LOCK14-GATE; W5B.1 IMPORT-CLOSURE; W5B.2 LAYOUT-DISCARD; W5B.3 PRETTY-SPAN-PROJECTION; W5B.4 REQUEST-CONSUMER. Lower CSS L4 compatibility constructs into canonical IR before provider-free generation; no provider/template deletion | Conditional on W5A close + REDRESS-212 / Pass Omega V8 CRUD; W5B-FRONTEND closes only after W5B.0..W5B.4 all admit | Aggregate ≤1.0k C-1 part-A source/test LOC; redress/report edits and reject-only `skinny/REDRESS.md` edits count; cannot borrow from W5C-GEN, W5D-DELETE, or W6 | ≤30 min per W5B.N; aggregate ≤150 min |
 | W5C-GEN | Section 8C | PRUNE-3C — provider-free runtime generator body: replace live `RuntimeProvider` / `render_runtime_profile` production dispatch with one source-request/frontend-IR-driven generator body; no provider/template deletion | Conditional on W5B-FRONTEND close | ≤1.0k C-1 part-A source/test LOC; cannot borrow from W5D-DELETE or W6 | ≤90 min |
 | W5D-DELETE | Section 8D | PRUNE-3D — provider/template deletion and Lock 14 baseline close after W5C-GEN: delete provider/template residue, retire old provider dispatch residue, run `regen-css` and companions | Conditional on W5C-GEN close | ≤400 C-1 part-A source/test LOC | ≤90 min |
 | W6 | Section 9 | PRUNE-4 — 9 sub-waves: W6.0 CSS L4 root-runtime collapse, then remaining per-grammar runtime collapses (R3 PRUNE-4; C-1 part-B) | Conditional on W5D-DELETE close | ≤2.0k C-1 part-B aggregate across 9 sub-waves (avg ~220 LOC/grammar; generated output uncounted) | ≤90 min per sub-wave (W6.0..W6.8); aggregate ≤810 min |
@@ -259,8 +259,8 @@ be named, diff-audited, and included in the revert slice. A wave plan
 that exceeds either its LOC budget or the 90-minute implementation /
 redress cap must split before dispatch or return REVISE.
 
-Total envelope across all candidates (per SYNTHESIS §3 after V7 W5B-GENR): C-1
-is W5A closed 921 LOC + W5B-FRONTEND ≤1.0k + W5C-GEN ≤1.0k + W5D-DELETE ≤400 + W6 ≤2.0k;
+Total envelope across all candidates (per SYNTHESIS §3 after V8 W5B-FRONTENDR): C-1
+is W5A closed 921 LOC + W5B-FRONTEND aggregate ≤1.0k across W5B.0..W5B.4 + W5C-GEN ≤1.0k + W5D-DELETE ≤400 + W6 ≤2.0k;
 C-2 600-1.08k; C-3 1.2k-2.0k; C-4 800-1.4k; C-5 250-500. Aggregate
 ~5.65k-8.90k. Any wave exceeding its envelope by >20% escalates per
 `[generated-size-budget]`.
@@ -287,7 +287,8 @@ Rerun ceilings:
 | W3 | corpora-size validation (`du -sh ≥ 800 KB`), source-URL provenance check | no performance rerun |
 | W4 | post-PRUNE-2 gate: 24 CSS L4 rows = 0 ADMITTED in `restart/skinny/ROLLING-SOTA-DELTA.md`; 24 row-keyed REDRESS entries land; no CSS source/generator/provider/template deletion | one gate refresh |
 | W5A | grammar-neutral source-consuming runtime generator tests, migrated `regen-css`, all seven CSS L4 companions through source-consuming path, JSON unchanged-output proof, Sheets/BBNF-self fail-closed or generated-role witnesses, no provider/template deletion | one gate refresh |
-| W5B-FRONTEND | generic BBNF frontend/import/IR closure, CSS L4 compatibility-lowering construct coverage (`@ws`, `@pretty`, `?w`, `>>`, `<<`, span capture, typed host projections, import graph) into canonical IR, JSON/Sheets/BBNF-self proof preserved, no provider/template deletion | one gate refresh |
+| W5B.0 LOCK14-GATE | Lock 14 owner-path roster, parent-diff routing, W5C/W5D subject rejection, modified-provider/template rejection, all-template guard, `grammar_provider.rs` exception, generic owner-path leak census; no grammar/codegen/xtask frontend source edits | one focused gate refresh |
+| W5B.1..W5B.4 | import closure, layout discard lowering, pretty/span/projection lowering, request consumer closure; exact construct rows with owner file/type, target representation, exact positive test, exact fail-closed test; dedicated per-test `/tmp/skv14-w5b-<test-name>.log` + dedicated nonzero `rg`; no provider/template deletion | one focused gate refresh per sub-wave |
 | W5C-GEN | provider-free runtime generator body, no live `RuntimeProvider` / `render_runtime_profile` production dispatch, CSS/JSON source+metadata emission proof through frontend IR, provider-reachability grep, `regen-css` plus seven companions, JSON unchanged-output proof, Sheets/BBNF-self proof preserved, no provider/template deletion | one gate refresh |
 | W5D-DELETE | CSS provider/template deletion, old provider-mesh retirement, Lock 14 baseline grep, `regen-css` plus seven `check-css-l4-*` companions, JSON unchanged-output proof, Sheets/BBNF-self proof preserved | one gate refresh |
 | W6.0..W6.8 | per-grammar runtime collapse test, regen check, per-grammar parser tests, Lock-14 grep | one gate refresh per sub-wave |
@@ -461,7 +462,7 @@ missing strict-comparator binding or oracle path.
 
 Downstream effect: W1 rejection blocks W7 (PRUNE-5 needs comparator
 integrity), W9 (JSON re-admit needs rebound comparators), W10 (parse_
-only needs Skipper-class anchor). W2 + W3 + W4 + W5A + W5B-FRONTEND +
+only needs Skipper-class anchor). W2 + W3 + W4 + W5A + W5B.0..W5B.4 +
 W5C-GEN + W5D-DELETE + W6 may proceed independently (CSS work does not depend
 on JSON comparator rebind).
 
@@ -707,7 +708,7 @@ dispatch path, or missing metadata field.
 Downstream effect: W5A rejection blocks W5B-FRONTEND, W5C-GEN, W5D-DELETE, W6, W7, and all new-admit waves.
 W8/W9/W10 remain globally blocked until PRUNE-1 through PRUNE-5 close.
 
-## Section 8B — W5B-FRONTEND PRUNE-3B (Generic BBNF Frontend/Import/IR Closure)
+## Section 8B — W5B-FRONTEND PRUNE-3B Aggregate (W5B.0..W5B.4)
 
 Owner paths:
 
@@ -715,27 +716,59 @@ Owner paths:
 - `skinny/crates/codegen/src/lib.rs` (consume frontend IR through the existing request boundary without provider/template deletion)
 - `skinny/crates/codegen/src/grammar_provider.rs` or exact successor neutral frontend module named by the plan
 - `skinny/xtask/src/main.rs`, `skinny/xtask/src/regen.rs`, and `skinny/xtask/src/regen_css.rs` (route `regen-css` through the frontend closure while preserving W5A proof carry)
-- `skinny/crates/bbnf-bench/src/lock14_baseline.rs` (add W5B-FRONTEND owner-path and parent-diff subject routing before source redress)
+- `skinny/crates/bbnf-bench/src/lock14_baseline.rs` (W5B.0 only: add W5B-FRONTEND owner-path and parent-diff subject routing before any W5B.1..W5B.4 source redress)
 - `skinny/RESULTS.md` (W5B-FRONTEND row attribution)
 - `skinny/REDRESS.md` if rejected.
 
 Entry gate:
 
 - W5A admitted.
-- REDRESS-211 closed and Pass Omega V7 G-Omega CRUD applied.
-- `skinny/crates/bbnf-bench/src/lock14_baseline.rs` has `SK_V14_W5B_FRONTEND_OWNER_PATHS`, parent-diff subject routing for `sk-v14-waveW5B-FRONTEND` / `sk-v14-waveW5B-FRONTEND-redress`, and a unit test proving the roster admits only those paths before W5B-FRONTEND source redress.
+- REDRESS-212 closed and Pass Omega V8 G-Omega CRUD applied.
+- W5B.0 must run first. W5B.1..W5B.4 remain blocked until W5B.0 admits the Lock 14 gate.
+- `skinny/crates/bbnf-bench/src/lock14_baseline.rs` has `SK_V14_W5B_FRONTEND_OWNER_PATHS`, parent-diff subject routing for `sk-v14-waveW5B-FRONTEND` / `sk-v14-waveW5B-FRONTEND-redress`, and exact W5B.0 tests proving the roster admits only W5B paths, rejects W5C/W5D subjects, rejects modified providers/templates, preserves the all-template guard, allows the `grammar_provider.rs` exception, and catches generic owner leaks before W5B.1..W5B.4 source redress.
 - W5B-FRONTEND plan names exact owner paths, including any new neutral module path. New neutral module paths are forbidden until the plan names them and the Lock 14 gate patch adds the exact path plus parent-diff unit test.
 - W5B-FRONTEND plan frames `@ws`, `?w`, `>>`, `<<`, span capture, typed host projections, and `@pretty` as compatibility/frontend lowering into canonical V1 IR, not as new public BBNF syntax.
 - W5B-FRONTEND plan explicitly forbids provider/template deletion and provider-free generator-body replacement; those belong to W5C-GEN and W5D-DELETE.
+- Every W5B.N sub-wave carries HARD CAP 30 min, commit-safe evidence at 27 min, halt at 30 min. W5B-FRONTEND closes only after W5B.0 through W5B.4 all admit. W5B.0 through W5B.3 are not W5B close.
 
 Tasks:
 
-1. Add the Lock 14 owner-path and parent-diff gate patch for W5B-FRONTEND before touching frontend source owner paths.
-2. Close generic BBNF source frontend/import/IR support for the constructs W5A only fact-scans today: `@ws`, `@pretty`, `?w`, `>>`, `<<`, span capture, typed host projections, and import graph consumption through W5A's request.
-3. Lower CSS L4 compatibility constructs into canonical V1 IR (`@ws` folds into the layout contract); do not add new public directives.
-4. Preserve JSON source path behavior and W5A JSON unchanged-output proof.
-5. Preserve Sheets and BBNF-self fail-closed or generated-role witnesses.
-6. Keep provider/template counts unchanged; no CSS provider/template deletion, no static centralization, no committed-generated-output mining.
+1. W5B.0 LOCK14-GATE: add the Lock 14 owner-path roster and parent-diff gate patch for W5B-FRONTEND before touching frontend source owner paths. Add exact tests:
+   - `w5b_lock14_frontend_owner_paths_admit`
+   - `w5b_lock14_frontend_rejects_w5c_subject`
+   - `w5b_lock14_frontend_rejects_w5d_subject`
+   - `w5b_lock14_frontend_rejects_modified_provider`
+   - `w5b_lock14_frontend_rejects_modified_template`
+   - `w5b_lock14_frontend_all_templates_guard_counts_8`
+   - `w5b_lock14_frontend_allows_grammar_provider_exception`
+   - `w5b_lock14_frontend_generic_owner_leak_census`
+2. W5B.1 IMPORT-CLOSURE: close request-local import DAG resolution, source-map closure, missing-import fail-closed test, and import-cycle fail-closed test.
+3. W5B.2 LAYOUT-DISCARD: lower `@ws`, `?w`, `>>`, and `<<` into request-local facts; public syntax remains retired.
+4. W5B.3 PRETTY-SPAN-PROJECTION: lower `@pretty`, `@{...}` span capture, `->` projection metadata, and typed projections into request-local facts.
+5. W5B.4 REQUEST-CONSUMER: make `emit_runtime_from_request` consume the frontend closure; preserve JSON unchanged-output proof, Sheets/BBNF-self proof, `regen-css`, seven CSS companions, provider/template topology checks, and final W5B maintain proof.
+6. Keep provider/template counts unchanged throughout W5B; no CSS provider/template deletion, no provider-free generator-body replacement, no static centralization, and no committed-generated-output mining.
+
+Exactness table:
+
+| Construct | Owner file/type | Target representation | Exact positive test | Exact fail-closed test |
+|---|---|---|---|---|
+| `@import` | `skinny/crates/grammar/src/lib.rs::FrontendClosure` | `imports` DAG keyed by request source path and stable source hash | `w5b_frontend_import_graph_resolves_request_sources` | `w5b_frontend_missing_import_fails_closed`; `w5b_frontend_import_cycle_fails_closed` |
+| `@ws` | `skinny/crates/grammar/src/lib.rs::FrontendClosure` | `layout.whitespace_directive` request fact | `w5b_frontend_layout_contract_lowers_to_request_facts` | `w5b_frontend_public_ws_remains_retired` |
+| `?w` | `skinny/crates/grammar/src/lib.rs::FrontendClosure` | `layout.whitespace_modifier` request fact attached to source span | `w5b_frontend_layout_contract_lowers_to_request_facts` | `w5b_frontend_malformed_whitespace_modifier_fails_closed` |
+| `>>` / `<<` | `skinny/crates/grammar/src/lib.rs::FrontendClosure` | `discard_operator` request facts attached to source spans | `w5b_frontend_discard_operators_lower_to_request_facts` | `w5b_frontend_malformed_discard_operator_fails_closed` |
+| `@pretty` | `skinny/crates/grammar/src/lib.rs::FrontendClosure` | `pretty_directive` request fact | `w5b_frontend_pretty_span_projection_lower_to_request_facts` | `w5b_frontend_unknown_pretty_payload_fails_closed` |
+| `@{...}` | `skinny/crates/grammar/src/lib.rs::FrontendClosure` | `host_capture` request span fact | `w5b_frontend_pretty_span_projection_lower_to_request_facts` | `w5b_frontend_host_capture_unterminated_fails_closed` |
+| `->` projection | `skinny/crates/grammar/src/lib.rs::FrontendClosure` | `projection` request fact preserving raw target text | `w5b_frontend_pretty_span_projection_lower_to_request_facts` | `w5b_frontend_projection_malformed_target_fails_closed` |
+| typed projection | `skinny/crates/grammar/src/lib.rs::FrontendClosure` | `typed_projection` request fact preserving raw type text | `w5b_frontend_pretty_span_projection_lower_to_request_facts` | `w5b_frontend_typed_projection_malformed_type_fails_closed` |
+
+Dedicated proof rule: every exact W5B test command must tee to a dedicated
+`/tmp/skv14-w5b-<test-name>.log` and must be paired with a dedicated
+`rg "test result: ok\\. [1-9][0-9]* passed" /tmp/skv14-w5b-<test-name>.log`.
+Wildcard aggregate log greps do not satisfy W5B close evidence.
+
+LOC accounting rule: touched redress reports and reject-only `skinny/REDRESS.md`
+edits count in W5B LOC accounting alongside source/test edits. Generated output
+is uncounted only when named, diff-audited, and included in the revert slice.
 
 Exit gate:
 
@@ -747,8 +780,8 @@ Exit gate:
   `find skinny/crates/codegen/src -name '*_provider.rs' \! -name 'grammar_provider.rs' | wc -l` remains non-zero and no provider/template add/delete/rename is allowed.
 - `cargo xtask regen-css` and all seven exact `check-css-l4-*` companions pass through the frontend closure without provider/template deletion.
 - Lock 14 parent-diff unit test covers W5B-FRONTEND owner paths.
-- Full-table maintain: ±1.0% on all rows.
-- W5B-FRONTEND source/test LOC cap is ≤1.0k C-1 part-A and cannot borrow from W5C-GEN, W5D-DELETE, or W6.
+- Non-admit maintain gate: `skinny/RESULTS.md` and `restart/skinny/ROLLING-SOTA-DELTA.md` are byte-identical to pre-redress HEAD unless W5B.4 explicitly chooses a fresh SK-V14-open full-table maintain run. Generated runtime outputs are byte-identical unless regenerated by the active request path and diff-audited. `cargo xtask gate-json --skv14-existing-results-capture` is schema/freshness evidence, not row-admission evidence.
+- W5B-FRONTEND aggregate source/test LOC cap is ≤1.0k C-1 part-A and cannot borrow from W5C-GEN, W5D-DELETE, W6, or new-admit waves.
 
 Same-wave consumer: frontend construct coverage, `cargo xtask regen-css`, the
 seven `check-css-l4-*` companions, JSON unchanged-output proof, Sheets/BBNF-self
@@ -764,7 +797,7 @@ W5D-DELETE, or W6 budget.
 Revert protocol: revert the W5B-FRONTEND frontend/IR closure plus Lock 14 gate
 patch as one slice; preserve W5A's request-boundary work and the old
 provider/template mesh; add REDRESS naming the failing source construct,
-dispatch path, or canonical-lowering proof.
+dispatch path, canonical-lowering proof, or W5B.N cap failure.
 
 Downstream effect: W5B-FRONTEND rejection blocks W5C-GEN, W5D-DELETE, W6, W7, and all
 new-admit waves. W8/W9/W10 remain globally blocked until PRUNE-1 through
@@ -1073,7 +1106,7 @@ Doc links: `restart/skinny/tranches/sk-v14/research/p3/p3a-candidate-shortlist.m
 
 Entry gate:
 
-- W2 + W3 + W4 + W5A + W5B-FRONTEND + W5C-GEN + W5D-DELETE + W6 + W7 admitted (the full PRUNE chain + CSS L4 infrastructure).
+- W2 + W3 + W4 + W5A + W5B.0..W5B.4 + W5C-GEN + W5D-DELETE + W6 + W7 admitted (the full PRUNE chain + CSS L4 infrastructure).
 - W8 plan names exact CSS L4 feature rows + lightningcss strict-mode comparator + cssparser oracle + production-corpus parse path + Track 1 generated path + Track 2 oracle path + rollback boundaries.
 - W8 plan does NOT carry Stage-0 F-V2-P1ABC-RERECORD: Stage-0 binds UNCONDITIONALLY to W10 (per p3a:180 — first wave admitting any of {P3-A C1 long-string-body SIMD scan, C3 digit_block_simd_accumulate, C7 …} — resolves to W10 parse_only distinct path per R8). W8 admits CSS L4 grammar-derived rows; CSS L4 does NOT admit C1/C3/C7, therefore W8 inherits no Stage-0 obligation. Stage-0 inheritance chain (5-step): (1) Stage-0 trigger = first wave admitting C1/C3/C7 per S-P2 V3 §6.3 verbatim; (2) C1 = long-string-body SIMD scan primitive (queued for S-P3 same-wave admission per S-P2 V3 §6.2); (3) W10 is first wave consuming C1 via the parse_only distinct path per R8 (the parse_only-distinct-path admission is the first dispatch-envelope behavioral edit); (4) therefore W10 carries Stage-0 unconditionally; (5) W8 + W9 do NOT admit C1/C3/C7 → no Stage-0 obligation there.
 
@@ -1395,7 +1428,7 @@ Dispatch scope:
 
 - W0 is authorized after G-Omega closes.
 - W1-W11 remain conditional. They require W0 closure + S-P3 LOCK + each preceding wave's closure per the sequencing constraints (R4 → PRUNE-2; C-1 → C-4; per-wave triumvirate per `SKINNY-TRIUMVIRATE.md §1-§3`) + required CHALLENGE acceptance + orchestrator/user dispatch before redress.
-- PRUNE waves (W1, W4, W5A, W5B-FRONTEND, W5C-GEN, W5D-DELETE, W6, W7) dispatch BEFORE any new-admit wave (W8, W9, W10) per `ORCHESTRATOR-PROMPT.md:110` R3 binding.
+- PRUNE waves (W1, W4, W5A, W5B.0..W5B.4, W5C-GEN, W5D-DELETE, W6, W7) dispatch BEFORE any new-admit wave (W8, W9, W10) per `ORCHESTRATOR-PROMPT.md:110` R3 binding.
 - No W7 implementation dispatches from S-P2 or S-P3 alone.
 
 The orchestrator's per-wave dispatch contract lives at

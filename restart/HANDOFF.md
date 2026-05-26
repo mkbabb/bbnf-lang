@@ -2,8 +2,8 @@
 
 ## Current Totality Override — 2026-05-26
 
-Status: **Pass Omega V7 W5B-GENR CRUD CLOSED; SK-V14 implementation dispatch
-resumes at W5B-FRONTEND PRUNE-3B frontend/import/IR closure.** SK-V14 T-P3 V4 COHORT §3Z LOCK
+Status: **Pass Omega V8 W5B-FRONTENDR CRUD CLOSED; SK-V14 implementation dispatch
+resumes at W5B.0 LOCK14-GATE under W5B-FRONTEND PRUNE-3B aggregate.** SK-V14 T-P3 V4 COHORT §3Z LOCK
 remains the last full-cycle LOCK at `69eea1c5c` (5 of 5 cohorts §3Z LOCKED:
 S-P2 `4c70b6f193`, T-P1 `0a9c0fe65d`, S-P3 `626cb06cc1`, T-P2
 `34a28f5c15`, T-P3 `69eea1c5c`). Pass Omega V2 G-Omega CLOSED 2026-05-24
@@ -21,7 +21,11 @@ baseline close, and W6.0 remains after W5C-DELETE. Pass Omega V7 G-Omega
 CLOSED 2026-05-26 for REDRESS-211 / W5B-GENR: W5B-GEN is split into
 W5B-FRONTEND frontend/import/IR closure, W5C-GEN provider-free generator body,
 and W5D-DELETE provider/template deletion plus Lock 14 baseline close; W6.0
-now remains after W5D-DELETE.
+now remains after W5D-DELETE. Pass Omega V8 G-Omega CLOSED 2026-05-26 for
+REDRESS-212 / W5B-FRONTENDR: the V7 one-shot W5B-FRONTEND gate is split into
+W5B.0 LOCK14-GATE, W5B.1 IMPORT-CLOSURE, W5B.2 LAYOUT-DISCARD, W5B.3
+PRETTY-SPAN-PROJECTION, and W5B.4 REQUEST-CONSUMER. W5C-GEN remains blocked
+until aggregate W5B-FRONTEND closes after all five W5B sub-waves admit.
 
 Sources of authority for this cycle:
 
@@ -57,6 +61,11 @@ Sources of authority for this cycle:
   `restart/audit/totality/astral/V7/master-plan-diff.md`,
   `restart/audit/totality/astral/V7/locks-diff.md`, and
   `restart/audit/totality/astral/V7/hardening/CONSOLIDATED.md`.
+- Pass Omega V8 W5B-FRONTENDR packet:
+  `restart/audit/totality/astral/V8/G-OMEGA-PACKET.md`,
+  `restart/audit/totality/astral/V8/master-plan-diff.md`,
+  `restart/audit/totality/astral/V8/locks-diff.md`, and
+  `restart/audit/totality/astral/V8/hardening/V2/CONSOLIDATED.md`.
 
 Current measured authority is `skinny/RESULTS.md` at the SK-V14
 audit-corrected baseline: 0/17 × 3 JSON planes + 0/24 CSS L4 ADMITTED at
@@ -68,7 +77,7 @@ W10 R8).
 
 Current SK-V14 LOCKED contract surfaces:
 - `restart/skinny/tranches/sk-v14/SPEC.md` (12 waves W0..W11;
-  PRUNE-1..PRUNE-5 at W1/W4/W5A/W5B-FRONTEND/W5C-GEN/W5D-DELETE/W6/W7 dispatch BEFORE any new-admit wave).
+  PRUNE-1..PRUNE-5 at W1/W4/W5A/W5B.0..W5B.4/W5C-GEN/W5D-DELETE/W6/W7 dispatch BEFORE any new-admit wave).
 - `restart/skinny/tranches/sk-v14/SYNTHESIS.md` (R1..R10 + P-1..P-7).
 - `restart/skinny/tranches/sk-v14/DISPATCH-PROMPT.md` (358 lines).
 - `restart/skinny/tranches/sk-v14/research/p3/p3{a,b,c,d,e,f}-*.md`.
@@ -90,8 +99,8 @@ Read in order for current work:
     `restart/audit/totality/astral/V2/ΩF-migration-handoff.md` (Pass
     Omega V2 CRUD apply logs), then
     `restart/audit/totality/astral/V3/{G-OMEGA-PACKET,master-plan-diff,locks-diff}.md`
-    through `restart/audit/totality/astral/V7/{G-OMEGA-PACKET,master-plan-diff,locks-diff}.md`
-    (Pass Omega V3 W2R through V7 W5B-GENR corrections).
+    through `restart/audit/totality/astral/V8/{G-OMEGA-PACKET,master-plan-diff,locks-diff}.md`
+    (Pass Omega V3 W2R through V8 W5B-FRONTENDR corrections).
 12. `restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`,
     `restart/locks/LOCKS.md`, `restart/MIGRATION.md`, and this file
     (current V1 surfaces).
@@ -100,7 +109,7 @@ Read in order for current work:
 The SK-V14 skinny bar is the audit-corrected baseline: every CSS L4 + JSON
 admit must clear R1 strict comparator + R2 per-iter equality oracle; W1
 PRUNE-1 + W4 PRUNE-2 revert audit-falsified admits; W5A PRUNE-3A +
-W5B-FRONTEND PRUNE-3B + W5C-GEN PRUNE-3C + W5D-DELETE PRUNE-3D + W6 PRUNE-4 + W7 PRUNE-5 close Lock 14 + decision-engine surfaces BEFORE
+W5B.0..W5B.4 PRUNE-3B aggregate + W5C-GEN PRUNE-3C + W5D-DELETE PRUNE-3D + W6 PRUNE-4 + W7 PRUNE-5 close Lock 14 + decision-engine surfaces BEFORE
 W8/W9/W10 R6/R7/R8 re-admit. The SK-V12 single CSS row that admitted
 under SK-V13 is now AUDIT-FALSIFIED-along-with-23-others; SK-V14 reopens.
 
@@ -129,22 +138,26 @@ boundary but not the provider-free generator body. Pass Omega V6 amends the
 remaining W5 receiver into W5B-GEN then W5C-DELETE. REDRESS-211 rejected
 W5B-GEN because the generic frontend/import/IR closure was still missing.
 Pass Omega V7 amends the receiver into W5B-FRONTEND, W5C-GEN, and
-W5D-DELETE. The next implementation move is W5B-FRONTEND. W5C-GEN inherits
-provider-free generator replacement only after W5B-FRONTEND admits, and
+W5D-DELETE. Pass Omega V8 amends W5B-FRONTEND into W5B.0 LOCK14-GATE,
+W5B.1 IMPORT-CLOSURE, W5B.2 LAYOUT-DISCARD, W5B.3
+PRETTY-SPAN-PROJECTION, and W5B.4 REQUEST-CONSUMER. The next implementation
+move is W5B.0 LOCK14-GATE. W5C-GEN inherits
+provider-free generator replacement only after aggregate W5B-FRONTEND admits, and
 W5D-DELETE inherits CSS provider/template deletion only after W5C-GEN admits;
 W8/W9/W10 remain globally blocked until PRUNE-1..PRUNE-5 close.
 
-## Pass Omega V7 next-cycle dispatch directive (W5B-GENR)
+## Pass Omega V8 next-cycle dispatch directive (W5B-FRONTENDR)
 
-Per `restart/audit/totality/astral/V7/G-OMEGA-PACKET.md`, the sequence after
-G-Omega V7 closure is:
+Per `restart/audit/totality/astral/V8/G-OMEGA-PACKET.md`, the sequence after
+G-Omega V8 closure is:
 
-(a) Pass Omega V7 W5B-GENR CRUD applies the local W5B-FRONTEND/W5C-GEN/W5D-DELETE wave-graph amendment;
-(b) wave-triumvirate dispatches SK-V14 W5B-FRONTEND under the generic frontend/import/IR closure gate;
-(c) W5C-GEN replaces live provider-backed runtime generation only after W5B-FRONTEND admits and first adds its Lock 14 owner-path / parent-diff routing;
-(d) W5D-DELETE deletes CSS provider/template clusters only after W5C-GEN admits CSS/JSON source+metadata emission and removes live provider-backed production dispatch;
-(e) W6.0..W6.8 execute after W5D-DELETE, with W6.0 retaining CSS L4 root-runtime collapse per Pass Omega V3 W2R;
-(f) post-R10 close -> SK-V15 Pass Alpha re-entry per
+(a) Pass Omega V8 W5B-FRONTENDR CRUD applies the local W5B.0..W5B.4 aggregate amendment;
+(b) wave-triumvirate dispatches SK-V14 W5B.0 LOCK14-GATE first;
+(c) W5B.1 IMPORT-CLOSURE, W5B.2 LAYOUT-DISCARD, W5B.3 PRETTY-SPAN-PROJECTION, and W5B.4 REQUEST-CONSUMER dispatch in order, each with <=30 min cap and dedicated exact-test nonzero proof;
+(d) W5C-GEN replaces live provider-backed runtime generation only after aggregate W5B-FRONTEND admits;
+(e) W5D-DELETE deletes CSS provider/template clusters only after W5C-GEN admits CSS/JSON source+metadata emission and removes live provider-backed production dispatch;
+(f) W6.0..W6.8 execute after W5D-DELETE, with W6.0 retaining CSS L4 root-runtime collapse per Pass Omega V3 W2R;
+(g) post-R10 close -> SK-V15 Pass Alpha re-entry per
 `restart/prompts/pass-contracts/PASS-ALPHA.md` (per F-V2-CH4-3E D06
 Option B non-budgeted handoff for the CSS L4 generated-fixture
 impl tail; LAC-1E-14 / LAC-1E-15 / LAC-1E-16 propagation as SK-V15
@@ -155,11 +168,11 @@ The 7-gate measurable dispatch checklist (3F-DISPATCH-001):
 | gate | measurable condition | source |
 |---|---|---|
 | G3 (auto) | T-P3 cohort §3Z LOCK DECLARED at V4 close (V4 = 4/5 ceiling; 1-cycle margin). | `restart/audit/totality/p3/hardening/HARDENING-T-P3-V4-CONSOLIDATED.md:30-32` |
-| Pass Omega V7 entry | REDRESS-211 + W5B-GENR corrective packet + V6 W5BR surfaces cited in Ω source maps. | `restart/audit/totality/astral/V7/G-OMEGA-PACKET.md` |
-| Pass Omega V7 CHALLENGE convergence | 6/6 ACCEPT after fold; zero LOCKS delta; W5B-GENR CRUD packet complete. | `restart/audit/totality/astral/V7/hardening/CONSOLIDATED.md` |
-| CRUD entry | G-Omega V7 authorization + per-surface receiver list in the V7 packet. | `restart/audit/totality/astral/V7/G-OMEGA-PACKET.md` |
+| Pass Omega V8 entry | REDRESS-212 + W5B-FRONTENDR corrective packet + V7 W5B-GENR surfaces cited in Ω source maps. | `restart/audit/totality/astral/V8/G-OMEGA-PACKET.md` |
+| Pass Omega V8 CHALLENGE convergence | 6/6 ACCEPT after fold; zero LOCKS delta; W5B-FRONTENDR CRUD packet complete. | `restart/audit/totality/astral/V8/hardening/V2/CONSOLIDATED.md` |
+| CRUD entry | G-Omega V8 authorization + per-surface receiver list in the V8 packet. | `restart/audit/totality/astral/V8/G-OMEGA-PACKET.md` |
 | G-Omega (user) | CLOSED 2026-05-26 by explicit user authorization to proceed. | this file §Current Totality Override |
-| SK-V14 W5B-FRONTEND dispatch | V7 CRUD complete; W5B-FRONTEND plan proves generic frontend/import/IR closure with no provider-free generator replacement or provider/template deletion. | `restart/skinny/tranches/sk-v14/SPEC.md §8B` |
+| SK-V14 W5B.0 dispatch | V8 CRUD complete; W5B.0 plan proves Lock 14 owner-path roster, parent-diff routing, W5C/W5D subject rejection, provider/template modification rejection, all-template guard, `grammar_provider.rs` exception, and generic owner-path leak census before source redress. | `restart/skinny/tranches/sk-v14/SPEC.md §8B` |
 | SK-V14 close (R10) | RESULTS audit-zero baseline cleared by R6/R7/R8 re-admits under R1/R2 gates; W11 close per SYNTHESIS §0.1. | `restart/skinny/tranches/sk-v14/SYNTHESIS.md §0.1` |
 | SK-V15 Pass Alpha re-entry | SK-V14 close packet delivered; Pass Alpha dispatch per `PASS-ALPHA.md`. | `restart/prompts/pass-contracts/PASS-ALPHA.md` |
 

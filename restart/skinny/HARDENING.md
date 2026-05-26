@@ -39,8 +39,12 @@ orphans, Lock 14 generic crate branches, missing audit-overlay column
 (LAC-1E-16), and `RESULTS.md` rows lacking executable verification
 (LAC-1E-12 mandate). NEW-CH2-V3-02 orphan-cell propagation guard requires
 pre/post-grep evidence on every cite-bearing micro-fold. This prompt
-still defines the lenses; it does not authorize source, gate, `RESULTS.md`,
-or `REDRESS.md` edits by itself.
+also refuses any W3-or-later SK-V14 plan before Pass Omega V3 W2R CRUD has
+landed and amended W2 has admitted under the skinny-only `regen-css` gate.
+Reject any W2 plan that touches or claims closure over
+`crates/core/src/runtime/css_l4/`; W6.0 owns that tree. This prompt still
+defines the lenses; it does not authorize source, gate, `RESULTS.md`, or
+`REDRESS.md` edits by itself.
 
 ## §1 — Purpose: why skinny hardening differs from V1 hardening
 

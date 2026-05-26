@@ -8,10 +8,16 @@ Inputs:
 - `restart/skinny/tranches/sk-v14/research/skv14-W5B-FRONTEND-A4-lock14-owner-routing.md:9`-`78`.
 - `restart/skinny/tranches/sk-v14/research/skv14-W5B-FRONTEND-A5-proof-carry.md:9`-`92`.
 - `restart/skinny/tranches/sk-v14/research/skv14-W5B-FRONTEND-A6-provider-template-topology.md:9`-`70`.
+- `restart/skinny/tranches/sk-v14/research/skv14-waveW5B-FRONTEND-challenge/V1/HARDENING-SKV14-W5B-FRONTEND-V1-CONSOLIDATED.md:1`-`73`.
 
-Intervention: add request-owned frontend/import/IR lowering for the CSS L4
-compatibility dialect, consumed by `emit_runtime_from_request` before provider
-rendering, while preserving W5A provider-backed runtime bytes.
+Intervention: add request-owned frontend/import/IR lowering for CSS L4
+compatibility constructs, consumed by `emit_runtime_from_request` before
+provider rendering, while preserving W5A provider-backed runtime bytes.
+
+V1 challenge returned REVISE. This V2 fold changes execution shape, not the
+wave goal: W5B-FRONTEND is executed as serial W5B-internal sub-slices under the
+same owner set. W5B does not close, and W5C-GEN remains blocked, until every
+sub-slice and the final gate pass. These are not future-tranche deferrals.
 
 ## Owner Paths
 
@@ -24,95 +30,170 @@ Redress is authorized to touch only:
 - `skinny/xtask/src/main.rs`
 - `skinny/xtask/src/regen.rs`
 - `skinny/xtask/src/regen_css.rs`
-- `restart/skinny/tranches/sk-v14/research/skv14-W5B-FRONTEND-redress.md`
+- `skinny/RESULTS.md` as SPEC row-attribution surface only; W5B admits no row
+  movement and the file must remain byte-identical to `HEAD`.
 - `skinny/REDRESS.md` only if the redress attempt rejects.
 
-No new neutral module path is selected for W5B-FRONTEND. Any later need for a
-new module returns REVISE because V7 requires the plan to name it before the
-Lock 14 owner-path gate can admit it.
+Redress report output path:
 
-## Redress Ordering
+- `restart/skinny/tranches/sk-v14/research/skv14-W5B-FRONTEND-redress.md`
 
-1. Patch `lock14_baseline.rs` first:
-   - Add `SK_V14_W5B_FRONTEND_OWNER_PATHS` with exactly:
+No new neutral module path is selected for W5B-FRONTEND. Any need for a new
+module returns REVISE because V7 requires the plan to name it before the Lock 14
+owner-path gate can admit it.
+
+## W5B Sub-Slice Order
+
+Each sub-slice is capped at 30 minutes with a 27-minute checkpoint. A sub-slice
+that cannot satisfy its exact tests under cap reverts its source slice and
+records REDRESS rather than borrowing from W5C-GEN, W5D-DELETE, or W6.
+
+1. **W5B.0 LOCK14-IMPORT-WS**:
+   - Add `SK_V14_W5B_FRONTEND_OWNER_PATHS` in `lock14_baseline.rs` with exactly
      `crates/grammar/src/lib.rs`, `crates/codegen/src/lib.rs`,
      `crates/codegen/src/grammar_provider.rs`, `xtask/src/main.rs`,
-     `xtask/src/regen.rs`, `xtask/src/regen_css.rs`, and
-     `crates/bbnf-bench/src/lock14_baseline.rs`.
+     `xtask/src/regen.rs`, `xtask/src/regen_css.rs`,
+     `crates/bbnf-bench/src/lock14_baseline.rs`, and `RESULTS.md`.
    - Add the roster to `current_lock14_owner_paths()`.
    - Add parent-diff routing for `sk-v14-waveW5B-FRONTEND`,
      `sk-v14-waveW5B-FRONTEND-redress`, and lowercase `sk-v14-w5b-frontend`.
-   - Add unit tests that admit only the W5B roster under those subjects and
-     reject provider/template paths or W5C/W5D subjects.
-2. Only after the Lock 14 patch compiles locally, add frontend lowering in
-   `skinny/crates/grammar/src/lib.rs`:
-   - Introduce a request-scoped frontend IR/facts artifact that resolves
-     `@import` from the request source map, fails closed on missing imports and
-     cycles, and records canonical lowering of `@ws`, `@pretty`, `?w`, `>>`,
-     `<<`, span capture `@{...}`, and typed projections.
-   - Keep `@ws` retired as public syntax: `parse_grammar` must still reject
-     standalone public `@ws` outside the request-owned compatibility lowering.
-3. Consume the frontend artifact in `skinny/crates/codegen/src/grammar_provider.rs`:
-   - `emit_runtime_from_request` must lower frontend/import/IR before
+   - Add tests that admit only the W5B roster and reject W5C/W5D subjects.
+   - Add request-local import DAG resolution from the request source map,
+     fail-closed missing-import and import-cycle errors, and public `@ws`
+     rejection outside compatibility lowering.
+2. **W5B.1 LAYOUT-DISCARD**:
+   - Lower `@ws`, `?w`, `>>`, and `<<` into request-local frontend facts.
+   - `@ws` remains retired public syntax: `parse_grammar` rejects standalone
+     public `@ws`; only request-owned compatibility closure may record it.
+3. **W5B.2 PRETTY-SPAN-PROJECTION**:
+   - Lower `@pretty`, `@{...}` span capture, `->` projection metadata, and typed
+     projections into request-local frontend facts.
+   - No `ir::ExprKind` variant is added. The lowering target is a request-local
+     `FrontendClosure`/facts structure in `grammar/src/lib.rs`, consumed by the
+     codegen request path and not emitted as public syntax or runtime state.
+4. **W5B.3 REQUEST-CONSUMER-GATE**:
+   - `emit_runtime_from_request` consumes the frontend closure before
      `validate_non_json_materiality`.
    - Non-JSON emission may still call `render_runtime_profile(profile, None)`;
      W5C-GEN owns provider-free generation.
-   - JSON must stay on the W5A request equality path.
-4. Touch `skinny/crates/codegen/src/lib.rs` and `skinny/xtask/src/*` only for
-   tests or proof plumbing needed to consume the frontend artifact through
-   `regen-css` and the seven CSS companion checks.
+   - JSON remains on the W5A request equality path.
+   - `regen-css` and all seven CSS companions pass through the request-owned
+     frontend closure while provider/template topology remains unchanged.
 
-## Falsifiability Gate
+## Lowering Contract
 
-W5B-FRONTEND admits only if all gates pass at HEAD:
+The request-owned closure is not a new public directive set, a public substrate,
+a parser-owned sidecar, or runtime-queryable state. It is local to the runtime
+generation request and may be dropped after codegen validation/emission.
 
-```sh
-cd /Users/mkbabb/Programming/bbnf-lang/skinny
-cargo test -p bbnf-bench lock14_baseline -- --nocapture
-cargo test -p grammar w5b_frontend_css_l4_compatibility_lowers_to_ir -- --exact --nocapture
-cargo test -p grammar w5b_frontend_import_graph_resolves_request_sources -- --exact --nocapture
-cargo test -p grammar w5b_frontend_public_ws_remains_retired -- --exact --nocapture
-cargo test -p codegen w5b_frontend_request_consumes_lowered_ir -- --exact --nocapture
-cargo test -p codegen w5a_json_request_matches_emit_from_source -- --exact --nocapture
-cargo test -p codegen w5a_sheets_bbnf_fail_closed_through_runtime_contract -- --exact --nocapture
-cargo test -p grammar w5a_named_unsupported_constructs_are_source_located -- --exact --nocapture
-cargo xtask check-json
-cargo xtask gate-json --check-results --skv14-existing-results-capture
-cargo xtask regen-css
-cargo xtask check-css-l4-at-rules-and-media
-cargo xtask check-css-l4-declaration-values
-cargo xtask check-css-l4-declaration-values-extended
-cargo xtask check-css-l4-nested-layout
-cargo xtask check-css-l4-stylesheet-selectors
-cargo xtask check-css-l4-vendor-and-custom-atrules
-cargo xtask check-css-l4-visual-functions
-```
+| Construct | Target representation | Required positive gate | Required fail-closed gate |
+|---|---|---|---|
+| `@import` | `FrontendClosure.imports` DAG keyed by request source path and stable source hash | `w5b_frontend_import_graph_resolves_request_sources` | `w5b_frontend_missing_import_fails_closed`, `w5b_frontend_import_cycle_fails_closed` |
+| `@ws` | `FrontendClosure.layout.whitespace_directive` fact | `w5b_frontend_layout_contract_lowers_to_request_facts` | `w5b_frontend_public_ws_remains_retired` |
+| `?w` | `FrontendClosure.layout.whitespace_modifier` fact attached to source span | `w5b_frontend_layout_contract_lowers_to_request_facts` | malformed placement rejects with source offset |
+| `>>` / `<<` | `FrontendClosure.discard_operator` facts attached to source spans | `w5b_frontend_discard_operators_lower_to_request_facts` | malformed operator placement rejects with source offset |
+| `@pretty` | `FrontendClosure.pretty_directive` fact | `w5b_frontend_pretty_span_projection_lower_to_request_facts` | unknown public directive still rejects |
+| `@{...}` | `FrontendClosure.host_capture` span fact | `w5b_frontend_pretty_span_projection_lower_to_request_facts` | unterminated capture rejects with source offset |
+| `->` projection | `FrontendClosure.projection` fact preserving raw target text | `w5b_frontend_pretty_span_projection_lower_to_request_facts` | malformed projection rejects with source offset |
+| typed projection | `FrontendClosure.typed_projection` fact preserving raw type text | `w5b_frontend_pretty_span_projection_lower_to_request_facts` | malformed typed projection rejects with source offset |
 
-Topology and no-row-movement gates:
-
-```sh
-test "$(find skinny/crates/codegen/src -name '*_provider.rs' ! -name 'grammar_provider.rs' | wc -l | tr -d ' ')" = 8
-test "$(find skinny/crates/codegen/src -type d -name 'css_l4_*_templates' | wc -l | tr -d ' ')" = 7
-git diff --name-status -- skinny/crates/codegen/src
-git diff --cached --name-status -- skinny/crates/codegen/src
-git diff --exit-code HEAD -- skinny/RESULTS.md restart/skinny/ROLLING-SOTA-DELTA.md
-git diff --exit-code -- crates/core/src/runtime/css_l4 grammar/css/l4
-```
-
-The `git diff --name-status` outputs must contain no provider/template add,
-delete, rename, or untracked protected path. W5B-FRONTEND is a capability wave,
-not an admit-row wave; `skinny/RESULTS.md` and
-`restart/skinny/ROLLING-SOTA-DELTA.md` remain byte-identical.
-
-## Hard Cap
-
-Redress cap: 30 minutes implementation, with the 0.9N checkpoint at 27 minutes.
-If the Lock 14 patch plus frontend lowering cannot satisfy the exact gates
-inside the cap, revert the source slice and record REDRESS rather than borrowing
-from W5C-GEN, W5D-DELETE, or W6.
+## LOC Budget
 
 W5B-FRONTEND source/test LOC cap: <=1.0k C-1 part-A. Generated output is
-uncounted, but W5B must not edit committed generated CSS/root runtime output.
+uncounted only if produced by `cargo xtask regen-css`, named in the redress log,
+byte-diff audited, and included in the revert slice.
+
+| File set | Cap |
+|---|---:|
+| `lock14_baseline.rs` roster, routing, and provider/template-modification tests | <=170 LOC |
+| `grammar/src/lib.rs` frontend closure, import DAG, construct lowering, and tests | <=430 LOC |
+| `grammar_provider.rs` / `codegen/src/lib.rs` request-consumer proof and tests | <=190 LOC |
+| `xtask/src/main.rs`, `regen.rs`, `regen_css.rs` proof plumbing only | <=120 LOC |
+| Redress report and reject-only REDRESS entry | <=90 LOC |
+
+## Falsifiability Gates
+
+Every command is cwd-explicit. `gate-json --skv14-existing-results-capture` is
+only shape/freshness evidence; full-table maintain for this capability wave is
+the exact no-diff proof on `RESULTS.md`, `ROLLING-SOTA-DELTA.md`, generated
+runtime outputs, and protected source/runtime inputs. Because W5B is not an
+admit or benchmark-refresh wave, byte-identical row and generated-runtime
+surfaces are stricter than the +/-1.0% table-maintain allowance.
+
+Required tests. In redress, run each command with `2>&1 | tee
+/tmp/skv14-w5b-<test-name>.log` before applying the nonzero-pass assertion.
+
+```sh
+( cd /Users/mkbabb/Programming/bbnf-lang/skinny && cargo test -p bbnf-bench lock14_baseline -- --nocapture )
+( cd /Users/mkbabb/Programming/bbnf-lang/skinny && cargo test -p grammar w5b_frontend_import_graph_resolves_request_sources -- --exact --nocapture )
+( cd /Users/mkbabb/Programming/bbnf-lang/skinny && cargo test -p grammar w5b_frontend_missing_import_fails_closed -- --exact --nocapture )
+( cd /Users/mkbabb/Programming/bbnf-lang/skinny && cargo test -p grammar w5b_frontend_import_cycle_fails_closed -- --exact --nocapture )
+( cd /Users/mkbabb/Programming/bbnf-lang/skinny && cargo test -p grammar w5b_frontend_public_ws_remains_retired -- --exact --nocapture )
+( cd /Users/mkbabb/Programming/bbnf-lang/skinny && cargo test -p grammar w5b_frontend_layout_contract_lowers_to_request_facts -- --exact --nocapture )
+( cd /Users/mkbabb/Programming/bbnf-lang/skinny && cargo test -p grammar w5b_frontend_discard_operators_lower_to_request_facts -- --exact --nocapture )
+( cd /Users/mkbabb/Programming/bbnf-lang/skinny && cargo test -p grammar w5b_frontend_pretty_span_projection_lower_to_request_facts -- --exact --nocapture )
+( cd /Users/mkbabb/Programming/bbnf-lang/skinny && cargo test -p codegen w5b_frontend_request_consumes_lowered_ir_before_provider_rendering -- --exact --nocapture )
+( cd /Users/mkbabb/Programming/bbnf-lang/skinny && cargo test -p codegen w5a_json_request_matches_emit_from_source -- --exact --nocapture )
+( cd /Users/mkbabb/Programming/bbnf-lang/skinny && cargo test -p codegen w5a_sheets_bbnf_fail_closed_through_runtime_contract -- --exact --nocapture )
+( cd /Users/mkbabb/Programming/bbnf-lang/skinny && cargo test -p grammar w5a_named_unsupported_constructs_are_source_located -- --exact --nocapture )
+```
+
+Every exact test command must be paired with a nonzero-pass assertion in the
+redress log:
+
+```sh
+rg "test result: ok\\. [1-9][0-9]* passed" /tmp/skv14-w5b-*.log
+```
+
+Xtask and companion gates:
+
+```sh
+( cd /Users/mkbabb/Programming/bbnf-lang/skinny && cargo xtask check-json )
+( cd /Users/mkbabb/Programming/bbnf-lang/skinny && cargo xtask gate-json --check-results --skv14-existing-results-capture )
+( cd /Users/mkbabb/Programming/bbnf-lang/skinny && cargo xtask regen-css )
+( cd /Users/mkbabb/Programming/bbnf-lang/skinny && cargo xtask check-css-l4-at-rules-and-media )
+( cd /Users/mkbabb/Programming/bbnf-lang/skinny && cargo xtask check-css-l4-declaration-values )
+( cd /Users/mkbabb/Programming/bbnf-lang/skinny && cargo xtask check-css-l4-declaration-values-extended )
+( cd /Users/mkbabb/Programming/bbnf-lang/skinny && cargo xtask check-css-l4-nested-layout )
+( cd /Users/mkbabb/Programming/bbnf-lang/skinny && cargo xtask check-css-l4-stylesheet-selectors )
+( cd /Users/mkbabb/Programming/bbnf-lang/skinny && cargo xtask check-css-l4-vendor-and-custom-atrules )
+( cd /Users/mkbabb/Programming/bbnf-lang/skinny && cargo xtask check-css-l4-visual-functions )
+```
+
+Topology, maintain, and hidden-coupling gates:
+
+```sh
+test "$(find /Users/mkbabb/Programming/bbnf-lang/skinny/crates/codegen/src -name '*_provider.rs' ! -name 'grammar_provider.rs' | wc -l | tr -d ' ')" = 8
+test "$(find /Users/mkbabb/Programming/bbnf-lang/skinny/crates/codegen/src -type d -name 'css_l4_*_templates' | wc -l | tr -d ' ')" = 7
+git -C /Users/mkbabb/Programming/bbnf-lang diff --exit-code HEAD -- skinny/RESULTS.md restart/skinny/ROLLING-SOTA-DELTA.md
+git -C /Users/mkbabb/Programming/bbnf-lang diff --exit-code HEAD -- skinny/crates/runtime/src/grammars crates/core/src/runtime/css_l4 grammar/css/l4
+git -C /Users/mkbabb/Programming/bbnf-lang diff --name-status HEAD -- skinny/crates/codegen/src | rg '(_provider\\.rs|css_l4_.*_templates)' | rg -v 'grammar_provider\\.rs' && exit 1 || true
+git -C /Users/mkbabb/Programming/bbnf-lang diff --cached --name-status -- skinny/crates/codegen/src | rg '(_provider\\.rs|css_l4_.*_templates)' | rg -v 'grammar_provider\\.rs' && exit 1 || true
+git -C /Users/mkbabb/Programming/bbnf-lang status --short -- skinny/crates/codegen/src | rg '(_provider\\.rs|css_l4_.*_templates)' | rg -v 'grammar_provider\\.rs' && exit 1 || true
+rg -n "RuntimeProvider" /Users/mkbabb/Programming/bbnf-lang/skinny/crates/codegen/src/grammar_profile.rs /Users/mkbabb/Programming/bbnf-lang/skinny/crates/codegen/src/grammar_provider.rs /Users/mkbabb/Programming/bbnf-lang/skinny/crates/codegen/src/lib.rs
+rg -n "GrammarProfile" /Users/mkbabb/Programming/bbnf-lang/skinny/crates/codegen/src
+rg -n "render_runtime_profile\\(profile, None\\)" /Users/mkbabb/Programming/bbnf-lang/skinny/crates/codegen/src/grammar_provider.rs
+```
+
+The provider/template path guards intentionally reject `M`, `A`, `D`, `R`, and
+`??` statuses for existing providers/templates. `grammar_provider.rs` is the
+only provider-adjacent file W5B may edit.
+
+LOC accounting:
+
+```sh
+git -C /Users/mkbabb/Programming/bbnf-lang diff --numstat HEAD -- \
+  skinny/crates/bbnf-bench/src/lock14_baseline.rs \
+  skinny/crates/grammar/src/lib.rs \
+  skinny/crates/codegen/src/grammar_provider.rs \
+  skinny/crates/codegen/src/lib.rs \
+  skinny/xtask/src/main.rs \
+  skinny/xtask/src/regen.rs \
+  skinny/xtask/src/regen_css.rs
+```
+
+The redress log must sum added+deleted source/test lines by file set and fail
+the slice if any per-file-set cap or the <=1.0k aggregate cap is exceeded.
 
 ## Revert Protocol
 
@@ -123,46 +204,61 @@ On gate failure:
    `codegen/src/grammar_provider.rs`, `codegen/src/lib.rs`, and any
    `xtask/src/*` W5B edits as one slice.
 3. Preserve W5A's request-boundary work and the existing provider/template mesh.
-4. Append a REDRESS entry naming the failing construct, import graph,
+4. Preserve `skinny/RESULTS.md` and `restart/skinny/ROLLING-SOTA-DELTA.md`
+   byte-identical to pre-redress `HEAD` unless recording a rejection entry in
+   `skinny/REDRESS.md`.
+5. Append a REDRESS entry naming the failing construct, import graph,
    canonical-lowering proof, Lock 14 owner routing, JSON/non-JSON proof carry,
-   or provider topology gate.
+   full-table maintain proof, provider-modification guard, or provider
+   reachability gate.
 
 ## Same-Wave Consumer
 
-The same redress commit must include:
+W5B closes only when the same redress commit set includes:
 
-- Lock 14 W5B owner-routing unit tests.
-- Frontend compatibility-lowering tests in the grammar crate.
+- Lock 14 W5B owner-routing unit tests, including modified-provider/template
+  rejection under W5B subjects.
+- Import DAG positive and negative tests for missing import and import cycles.
+- Frontend compatibility-lowering tests in the grammar crate for every construct
+  in the lowering table.
 - A codegen request-boundary test proving `emit_runtime_from_request` consumes
-  the lowered frontend artifact before provider rendering.
+  the lowered frontend closure before provider rendering.
 - `cargo xtask regen-css` and all seven `check-css-l4-*` companions through the
   request-owned frontend closure.
 - JSON unchanged-output proof and Sheets/BBNF-self fail-closed proof carry.
+- Provider-dispatch reachability proof for `RuntimeProvider`, `GrammarProfile`,
+  and `render_runtime_profile(profile, None)`.
 
 ## Pre-Blocked Routes
 
-- No provider/template deletion, rename, or add.
+- No provider/template deletion, rename, add, or modification, except edits to
+  `grammar_provider.rs`.
 - No provider-free generator body replacement; W5C-GEN owns that.
 - No `RuntimeProvider`/`GrammarProfile`/`render_runtime_profile` retirement.
-- No public `@ws` directive; it is compatibility lowering into canonical IR.
+- No public `@ws` directive; it is compatibility lowering into request-local
+  facts.
 - No grammar-name branch in generic crates.
 - No static centralization of hand-written CSS runtime bodies.
 - No committed-generated-output mining.
 - No `skinny/RESULTS.md` or `restart/skinny/ROLLING-SOTA-DELTA.md` row movement.
+- No parser-owned sidecar, emitted frontend-fact table, retained runtime query
+  surface, or public substrate API.
 - No new neutral module path unless a revised plan names it and Lock 14 admits
   it before source redress.
 
 ## Mandatory Challenge
 
-Dispatch seven-lens W5B-FRONTEND CHALLENGE before redress:
+Dispatch seven-lens W5B-FRONTEND CHALLENGE V2 before redress:
 
-- CH1: verify every path/line claim and the exact gate commands.
+- CH1: verify owner-path reconciliation, cwd-explicit gates, exact test names,
+  nonzero-pass assertions, and lowering-table falsifiability.
 - CH2: verify Lock 14 generality and non-JSON proof carry.
-- CH3: verify REDRESS-209/210/211 are not reopened and that W5B does not borrow
-  W5C/W5D deletion/replacement work.
-- CH4: verify <=1.0k LOC and 30-minute cap are realistic.
-- CH5: verify no hidden provider/template deletion, sidecar substrate, or
-  `render_runtime_profile` replacement.
-- CH6: verify same-wave consumers and revert protocol.
-- CH7: verify no P-1..P-7 recurrence, fake generated header, fixture lookup, or
-  gate relabeling as admit.
+- CH3: verify REDRESS-209/210/211 remain closed and the maintain gate is
+  executable for a non-admit capability wave.
+- CH4: verify sub-slice caps, per-file LOC budget, and no W5C/W5D/W6 borrowing.
+- CH5: verify modified provider/template paths are blocked, provider dispatch
+  stays reachable, and frontend facts are request-local only.
+- CH6: verify same-wave consumers, revert protocol, negative import tests, and
+  no paper frontend-IR.
+- CH7: verify no P-1..P-7 recurrence, fake generated header, fixture lookup,
+  public `@ws`, committed-output mining, or gate relabeling as admit.

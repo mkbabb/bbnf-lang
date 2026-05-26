@@ -331,7 +331,7 @@ hand-written templates is the pattern S-P0 §1 identifies as the dominant
 recurrence vector; SK-V14 W2 lands `cargo xtask regen-css` round-trip clean
 as the first instance of the regen-{grammar} family for the skinny runtime
 tree only. Pass Omega V3 W2R assigns root `crates/core/src/runtime/css_l4/`
-collapse to W6.0 after W5's grammar-agnostic generator template exists. The
+collapse to W6.0 after W5B closes over W5A's source-consuming generator path. The
 family extends to JSON / Sheets / BBNF / EBNF / BNF / CSV / Math at later
 waves; A consumers inherit the R4 gate so future grammar onboarding inherits
 the round-trip check.
@@ -519,12 +519,12 @@ cargo test -p runtime generated_grammars
 Pattern H per-tranche census (per MP-3B-V1-D03; mirrors Tranche A discipline).
 At F close, `find crates/core/src/runtime -mindepth 2 -type f -name '*.rs' |
 wc -l` must trend monotonically downward through W6 PRUNE-4 9 sub-waves
-(SK-V14 baseline = 67; F close target is determined by the W5 PRUNE-3 +
-W6 PRUNE-4 collapse plan per SK-V14 SPEC §13 W5/W6 at
-`restart/skinny/tranches/sk-v14/SPEC.md:242`-`243`). The W5 + W6 envelope
-binds at ≤1.4k LOC (W5 C-1 part-A) + ≤2.0k LOC (W6 C-1 part-B aggregate
+(SK-V14 baseline = 67; F close target is determined by the W5A/W5B PRUNE-3 +
+W6 PRUNE-4 collapse plan per SK-V14 SPEC §13 W5A/W5B/W6 at
+`restart/skinny/tranches/sk-v14/SPEC.md:242`-`243`). The W5A/W5B + W6 envelope
+binds at ≤1.4k LOC (W5A + W5B C-1 part-A) + ≤2.0k LOC (W6 C-1 part-B aggregate
 across 9 sub-waves; avg ~220 LOC/grammar; generated output uncounted) per
-SK-V14 SPEC §13 W5/W6 authority. F.W5 nine-seed regeneration consumes the R4
+SK-V14 SPEC §13 W5A/W5B/W6 authority. F.W5 nine-seed regeneration consumes the R4
 round-trip discipline (per MP-3B-V1-D05): every emitted file is byte-equal
 to its regenerated form from grammar source + workspace metadata; hand-patches
 return REVISE per `[clean-regen-discipline]`. R4 family covers
@@ -766,8 +766,17 @@ skinny-side `regen-css` gate admitted at `45568e669`, W3 production corpus
 staging admitted at `b0a864f0b`, and W4 reruns as CSS L4 admit-ledger prune
 only. CSS provider/template deletion moves to W5, where the deletion lands in
 the same replacement slice as the grammar-agnostic provider path and
-`regen_css.rs` migration. W6 remains the Pass Omega V3 W2R structure with W6.0
-owning CSS L4 root-runtime collapse after W5.
+`regen_css.rs` migration. Pass Omega V5 W5R refines that receiver into W5A
+source-consuming generator capability before W5B provider/template deletion.
+W6 remains the Pass Omega V3 W2R structure with W6.0 owning CSS L4
+root-runtime collapse after W5B.
+
+Pass Omega V5 W5R amends the W5 boundary after REDRESS-209: W5 splits into
+W5A generator capability and W5B provider/template deletion. W5A proves the
+grammar-neutral source-consuming runtime generator contract before any
+provider/template deletion. W5B deletes the old CSS provider/template mesh and
+closes the Lock 14 baseline only after W5A is load-bearing. W5A + W5B remain a
+split of the original W5 <=1.4k C-1 part-A budget, not a new budget.
 
 | Wave | SPEC section | Scope | Entry gate | LOC budget (source + tests + gates + docs; generated output uncounted) | Time cap |
 |---|---|---|---|---|---|
@@ -775,9 +784,10 @@ owning CSS L4 root-runtime collapse after W5.
 | W1 | §4 | Comparator Rebind + Per-Iter Equality + PRUNE-1 (R1 + R2 + R3 PRUNE-1) | Conditional on W0 close | ≤1.08k C-2 source/test + ≤500 C-5 part-A revert; total ≤1.58k | ≤90 min |
 | W2 | §5 | regen-css xtask (R4 — first instance of regen-{grammar} family; skinny runtime tree only after W2R) | Conditional on W1 close | ≤2.0k C-3 part-A source/test; generated output named separately | ≤90 min |
 | W3 | §6 | Production CSS Corpora (R5; ~960 KB) | Conditional on W2 close | ≤200 corpora-staging LOC; corpora files are bytes-only | ≤90 min |
-| W4 | §7 | PRUNE-2 — CSS L4 admit-ledger prune: restore rolling delta to 0/24 CSS L4 admitted and add 24 row-keyed REDRESS entries; no provider/template deletion until W5 replacement exists. | Conditional on W2 + W3 close | ≤500 docs/ledger | ≤90 min |
-| W5 | §8 | PRUNE-3 — Lock-14 refactor plus CSS provider/template deletion: trait dispatch + grammar-agnostic generator template; migrate `regen_css.rs`; delete seven CSS provider modules and seven template dirs in the same commit as the replacement; run `regen-css` and companions. | Conditional on W4 ledger close | ≤1.4k C-1 part-A source/test LOC | ≤90 min |
-| W6 | §9 | PRUNE-4 — 9 sub-waves: W6.0 CSS L4 root-runtime collapse, then remaining per-grammar runtime collapses (R3 PRUNE-4; C-1 part-B) | Conditional on W5 close | ≤2.0k C-1 part-B aggregate across 9 sub-waves (avg ~220 LOC/grammar; generated output uncounted) | ≤90 min per sub-wave (W6.0..W6.8); aggregate ≤810 min |
+| W4 | §7 | PRUNE-2 — CSS L4 admit-ledger prune: restore rolling delta to 0/24 CSS L4 admitted and add 24 row-keyed REDRESS entries; no provider/template deletion until W5A replacement exists and W5B authorizes deletion. | Conditional on W2 + W3 close | ≤500 docs/ledger | ≤90 min |
+| W5A | §8 | PRUNE-3A — grammar-neutral source-consuming runtime generator contract: pass grammar source + workspace metadata into codegen, make required V1 grammar-source constructs parseable for runtime generation without grammar-id branches, migrate `regen-css` to the new path, prove CSS L4 plus JSON/Sheets/BBNF-self non-JSON gates; no provider/template deletion. | Conditional on W4 ledger close | ≤1.0k C-1 part-A source/test LOC | ≤90 min |
+| W5B | §8B | PRUNE-3B — provider/template deletion and Lock 14 baseline close: delete seven CSS provider modules and seven template dirs only after W5A replacement is load-bearing; retire old provider mesh; run `regen-css` and companions. | Conditional on W5A close | ≤400 C-1 part-A source/test LOC | ≤90 min |
+| W6 | §9 | PRUNE-4 — 9 sub-waves: W6.0 CSS L4 root-runtime collapse, then remaining per-grammar runtime collapses (R3 PRUNE-4; C-1 part-B) | Conditional on W5B close | ≤2.0k C-1 part-B aggregate across 9 sub-waves (avg ~220 LOC/grammar; generated output uncounted) | ≤90 min per sub-wave (W6.0..W6.8); aggregate ≤810 min |
 | W7 | §10 | PRUNE-5 — wire W8 policy + W9 union from SCAFFOLD to LOAD-BEARING (R3 PRUNE-5; C-4) | Conditional on W6 close (C-1 MUST precede C-4 per S-P0 §2.2) | ≤1.4k C-4 source/test LOC | ≤90 min |
 | W8 | §11 | CSS L4 Re-Admit (R6; grammar-derived pipeline + production corpora + work-equivalent comparator) | Conditional on W7 close | ≤650 source/test LOC | ≤90 min |
 | W9 | §12 | JSON Direct + Typed Re-Admit (R7; under rebound R1 comparators) | Conditional on W1 close locally, but globally blocked until PRUNE-1..PRUNE-5 close | ≤450 source/test LOC | ≤90 min |
@@ -808,7 +818,7 @@ below with their wave-id, allocation, and same-wave consumer.
 | MP-NW-04 | §13.2 MP.NW3 | CSS declaration-values expansion (declarations, var(), calc(), colors, custom-property/value facts) | SK-V13 G1 feature rows; SK-V14 W8 |
 | MP-NW-05 | §13.2 MP.NW4 | CSS visual/rule expansion (gradients, transforms, filters, easing, at-rules, nesting) | SK-V13 G1 feature matrix; SK-V14 W8 |
 | MP-NW-06 | §13.2 MP.NW5 | JSON 51-row strict sonic matrix (17 corpora × parse_only/direct_to_struct/real_typed_struct); Stage-0 F-V2-P1ABC-RERECORD binds per MP-3B-V1-D11 | SK-V13 G5 and J.W1; SK-V14 W10 R8 parse_only distinct path |
-| MP-NW-07 | §13.2 MP.NW6 | Lock 14 generated provider/config/sink/fact/flag/schema repair; FactStream 5th substrate category per MP-3B-V1-D06; Lock 14 v+1 generic-crate forward invariant per MP-3B-V1-D09 | Lock 14 baseline gate; Lock 1 v+1 substrate manifest; SK-V14 W5/W6 |
+| MP-NW-07 | §13.2 MP.NW6 | Lock 14 generated provider/config/sink/fact/flag/schema repair; FactStream 5th substrate category per MP-3B-V1-D06; Lock 14 v+1 generic-crate forward invariant per MP-3B-V1-D09 | Lock 14 baseline gate; Lock 1 v+1 substrate manifest; SK-V14 W5A/W5B/W6 |
 | MP-NW-08 | §13.2 MP.NW7 | Regex/HIR fact extraction import boundary through `parse-that-regex` or equivalent | D/H regex fact consumer and generated parser/resolver row |
 | MP-NW-09 | §13.2 MP.NW8 | Decision-engine replacement: bbnf-regex extraction + egraph language + guarded rewrites + active cost + CSP feasibility + P1-P8 retirement; W7 PRUNE-5 SCAFFOLD-to-LOAD-BEARING per MP-3B-V1-D08 | SK-V13 G2; C.W4/C.W5; SK-V14 W7 PRUNE-5; backend-shape rows; bounded resolver reports |
 | MP-NW-10 | §13.2 MP.NW9 | AArch64 ASCII run-skip production split and zero-orphan disposition | SK-V13 G4; CSS scan-block consumer or measured rejection |

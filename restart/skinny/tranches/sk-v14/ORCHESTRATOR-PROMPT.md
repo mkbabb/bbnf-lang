@@ -113,14 +113,18 @@ Continue indefatigably per the USER PIN addendum.
                  delta and REDRESS ledger only. No CSS provider,
                  template, runtime, source, or generator deletion in
                  W4 after Pass Omega V4 W4R.
-        PRUNE-3: Refactor 11 CRITICAL + 7 HIGH Lock 14 violations.
-                 Replace RuntimeProvider enum with trait-based
-                 dispatch. Refactor 8 per-grammar provider modules
-                 in codegen/ into ONE grammar-agnostic generator
-                 template consuming grammar source + workspace
-                 metadata. Delete the seven CSS provider/template
-                 clusters only in this same replacement wave, after
-                 the generic provider path exists.
+        PRUNE-3A: Prove the grammar-neutral source-consuming runtime
+                 generator contract. Pass grammar source + workspace
+                 metadata into codegen; parse required V1 grammar-source
+                 constructs for runtime generation without grammar-id
+                 branches; migrate regen-css; prove CSS L4 plus
+                 JSON/Sheets/BBNF-self non-JSON gates. No provider or
+                 template deletion in PRUNE-3A.
+        PRUNE-3B: Delete the seven CSS provider/template clusters and
+                 retire the old provider mesh only after PRUNE-3A is
+                 load-bearing. Close the Lock 14 baseline with regen-css,
+                 seven CSS companions, JSON unchanged-output proof, and
+                 Sheets/BBNF-self proof.
         PRUNE-4: Totality Pattern H — refactor 67 hand-written
                  per-grammar files in crates/core/src/runtime/{grammar}/
                  into emitted output. Sub-divide by grammar (9 sub-waves,
@@ -134,7 +138,7 @@ Continue indefatigably per the USER PIN addendum.
       skinny runtime modules only. Acceptance: seven exact `check-css-l4-*`
       companions pass and `delete skinny generated → run xtask regen-css →
       skinny runtime diff produces empty`. Root `crates/core/src/runtime/css_l4/`
-      is W6.0 work after W5.
+      is W6.0 work after W5B.
 
   R5. PRODUCTION CORPORA. Stand up `skinny/corpora/css-l4-sk-v14/`
       with Bootstrap + Tailwind + Material + Animate (~960 KB).
@@ -154,7 +158,7 @@ Continue indefatigably per the USER PIN addendum.
       code path (no full-tape build) in generated_json. Wire to
       Skipper-style comparator. Then attempt admit.
 
-  R9. CARRIED — pillars unchanged. W5/W6/W7/bbnf-simd/OffsetFlags/
+  R9. CARRIED — pillars unchanged. W5A/W5B/W6/W7/bbnf-simd/OffsetFlags/
       Tape stand. R3 must not regress them.
 
   R10. INDEFATIGABLE CAMPAIGN per addendum. SK-V14 closes when

@@ -38,7 +38,7 @@ Dispatch lock:
 - G-Omega user gate (per `ORCHESTRATOR-PROMPT.md:204`) is the only mandatory relinquish; S-P3 + T-P3 LOCK precedes.
 - Current dispatch authority covers W0 only.
 - W1-W11 are conditionally gated by this packet, but each remains blocked until W0 closes, the wave plan names exact owner paths and row gates, required CHALLENGE accepts, and the orchestrator/user dispatches that wave.
-- PRUNE waves (W1 PRUNE-1, W4 PRUNE-2, W5 PRUNE-3, W6 PRUNE-4, W7 PRUNE-5) dispatch BEFORE any new-admit wave (W8 R6, W9 R7, W10 R8) per `ORCHESTRATOR-PROMPT.md:110` R3 + SYNTHESIS §4 constraint chain.
+- PRUNE waves (W1 PRUNE-1, W4 PRUNE-2, W5A PRUNE-3A, W5B PRUNE-3B, W6 PRUNE-4, W7 PRUNE-5) dispatch BEFORE any new-admit wave (W8 R6, W9 R7, W10 R8) per `ORCHESTRATOR-PROMPT.md:110` R3 + SYNTHESIS §4 constraint chain.
 
 ## Section 0 — Close Condition And Goalset
 
@@ -52,7 +52,7 @@ R10 verbatim into the SK-V8 §0.1 ten-clause shape):
 3. `xtask gate-json` rejects rows missing required SK-V14 telemetry (`comparator_plane`, `per_iter_equality`, `audit_overlay_verdict`, `track2_entry_point`).
 4. W1 makes plane-correct strict comparator evidence + per-iter equality oracle gate-consumed before any behavior wave can admit row quality.
 5. W2 + W3 stand up the CSS L4 grammar-derived pipeline (`cargo xtask regen-css` round-trip clean + `skinny/corpora/css-l4-sk-v14/` >=800 KB) BEFORE W4 (PRUNE-2) performs the CSS L4 admit-ledger prune.
-6. W5 + W6 (C-1 PRUNE-3 + PRUNE-4) collapse the 8 per-grammar provider modules and 67 hand-written per-grammar runtime files into ONE generic generator template BEFORE W7 (C-4 PRUNE-5) wires W8 + W9 from SCAFFOLD-ONLY to LOAD-BEARING. Pass Omega V4 W4R assigns CSS provider/template deletion to W5, in the same replacement slice as the generic provider path and `regen_css.rs` migration.
+6. W5A + W5B + W6 (C-1 PRUNE-3A + PRUNE-3B + PRUNE-4) collapse the 8 per-grammar provider modules and 67 hand-written per-grammar runtime files into ONE generic generator template BEFORE W7 (C-4 PRUNE-5) wires W8 + W9 from SCAFFOLD-ONLY to LOAD-BEARING. Pass Omega V5 W5R splits W5 so W5A first proves the grammar-neutral source-consuming generator path and W5B deletes CSS provider/template clusters only after that replacement is load-bearing.
 7. Every JSON cell (51 = 17 corpora × 3 planes) and every CSS L4 feature (24 non-OUT_OF_SCOPE) either ADMITs > strict-vs-strict on the same plane / corpus / equality semantics OR carries an architectural-level intrinsic-block proof per row family. Implementation-limited misses are REOPEN, not close.
 8. No pre-blocked route (P-1..P-7 per §15 + REDRESS watch-list) reopens without fresh W0 evidence, same-wave consumer, REDRESS citation, no-regression gate, and CHALLENGE acceptance.
 9. Lock 1 (v+1 substrate-target/retention-lifetime/policy-owner triple), Lock 14 (v+1 generated-output allowance), and Lock 16 (v+1 primitive-manifest gating) gates pass at every wave close.
@@ -193,9 +193,9 @@ in `restart/skinny/ROLLING-SOTA-DELTA.md` at commit `653cdf795+w15.1-
 redress` are FALSIFIED by the audit pack. W1 (PRUNE-1) + W4 (PRUNE-2)
 revert them.
 
-The post-W0 carried-pillar floors (R9 per SYNTHESIS §0.3): W5 +
-W6 + W7 + `bbnf-simd` + OffsetFlags + Tape stand. C-1 (W5 + W6
-PRUNE-3 + PRUNE-4) must not regress them.
+The post-W0 carried-pillar floors (R9 per SYNTHESIS §0.3): W5A +
+W5B + W6 + W7 + `bbnf-simd` + OffsetFlags + Tape stand. C-1
+(W5A + W5B + W6 PRUNE-3A + PRUNE-3B + PRUNE-4) must not regress them.
 
 ## Section 1 — Non-Negotiables
 
@@ -239,8 +239,9 @@ carry-forward additions + Lock 1 v+1 + Lock 14 v+1 + Lock 16 v+1:
 | W2 | Section 5 | regen-css xtask (R4 — first instance of regen-{grammar} family; skinny runtime tree only after Pass Omega V3 W2R) | Conditional on W1 close | ≤2.0k C-3 part-A source/test LOC; generated output named separately | ≤90 min |
 | W3 | Section 6 | Production CSS Corpora (R5; ~960 KB) | Conditional on W2 close | ≤200 corpora-staging LOC; corpora files are bytes-only, not source LOC | ≤90 min |
 | W4 | Section 7 | PRUNE-2 — CSS L4 admit-ledger prune: restore 0/24 CSS L4 admitted and add 24 row-keyed REDRESS entries; no provider/template deletion (R3 PRUNE-2 after W4R) | Conditional on W2 + W3 close (R4 MUST precede per S-P0 §2.1) | ≤500 C-5 part-B docs/ledger LOC | ≤90 min |
-| W5 | Section 8 | PRUNE-3 — Lock-14 refactor plus CSS provider/template deletion: trait dispatch + grammar-agnostic generator template; migrate `regen_css.rs`; delete CSS provider/template clusters in the same replacement slice (R3 PRUNE-3; C-1 part-A after W4R) | Conditional on W4 ledger close | ≤1.4k C-1 part-A source/test LOC | ≤90 min |
-| W6 | Section 9 | PRUNE-4 — 9 sub-waves: W6.0 CSS L4 root-runtime collapse, then remaining per-grammar runtime collapses (R3 PRUNE-4; C-1 part-B) | Conditional on W5 close | ≤2.0k C-1 part-B aggregate across 9 sub-waves (avg ~220 LOC/grammar; generated output uncounted) | ≤90 min per sub-wave (W6.0..W6.8); aggregate ≤810 min |
+| W5A | Section 8 | PRUNE-3A — grammar-neutral source-consuming runtime generator contract: source + metadata enter codegen; required V1 grammar-source constructs parse for runtime generation; `regen-css` migrates to the new path; no provider/template deletion | Conditional on W4 ledger close | ≤1.0k C-1 part-A source/test LOC; cannot borrow from W5B or W6 | ≤90 min |
+| W5B | Section 8B | PRUNE-3B — provider/template deletion and Lock 14 baseline close after W5A: delete CSS provider/template clusters, retire old provider mesh, run `regen-css` and companions | Conditional on W5A close | ≤400 C-1 part-A source/test LOC; W5A + W5B combined ≤1.4k | ≤90 min |
+| W6 | Section 9 | PRUNE-4 — 9 sub-waves: W6.0 CSS L4 root-runtime collapse, then remaining per-grammar runtime collapses (R3 PRUNE-4; C-1 part-B) | Conditional on W5B close | ≤2.0k C-1 part-B aggregate across 9 sub-waves (avg ~220 LOC/grammar; generated output uncounted) | ≤90 min per sub-wave (W6.0..W6.8); aggregate ≤810 min |
 | W7 | Section 10 | PRUNE-5 — wire W8 policy + W9 union from SCAFFOLD to LOAD-BEARING (R3 PRUNE-5; C-4) | Conditional on W6 close (C-1 MUST precede C-4 per S-P0 §2.2) | ≤1.4k C-4 source/test LOC | ≤90 min |
 | W8 | Section 11 | CSS L4 Re-Admit (R6; grammar-derived pipeline + production corpora + work-equivalent comparator) | Conditional on W7 close | ≤650 source/test LOC; rows named in wave plan | ≤90 min |
 | W9 | Section 12 | JSON Direct + Typed Re-Admit (R7; under rebound R1 comparators) | Conditional on W1 close locally; globally blocked until PRUNE-1..PRUNE-5 close | ≤450 source/test LOC; rows named in wave plan | ≤90 min |
@@ -281,7 +282,8 @@ Rerun ceilings:
 | W2 | `xtask regen-css` skinny runtime round-trip test (rm + regen + diff), generated-output diff audit, seven exact companion checks | one gate refresh |
 | W3 | corpora-size validation (`du -sh ≥ 800 KB`), source-URL provenance check | no performance rerun |
 | W4 | post-PRUNE-2 gate: 24 CSS L4 rows = 0 ADMITTED in `restart/skinny/ROLLING-SOTA-DELTA.md`; 24 row-keyed REDRESS entries land; no CSS source/generator/provider/template deletion | one gate refresh |
-| W5 | trait-dispatch tests, generic-generator template tests, migrated `regen_css.rs`, CSS provider/template deletion in the replacement slice, `regen-css` plus seven `check-css-l4-*` companions, Lock-14 baseline grep | one gate refresh |
+| W5A | grammar-neutral source-consuming runtime generator tests, migrated `regen-css`, all seven CSS L4 companions through source-consuming path, JSON unchanged-output proof, Sheets/BBNF-self fail-closed or generated-role witnesses, no provider/template deletion | one gate refresh |
+| W5B | CSS provider/template deletion, old provider-mesh retirement, Lock 14 baseline grep, `regen-css` plus seven `check-css-l4-*` companions, JSON unchanged-output proof, Sheets/BBNF-self proof preserved | one gate refresh |
 | W6.0..W6.8 | per-grammar runtime collapse test, regen check, per-grammar parser tests, Lock-14 grep | one gate refresh per sub-wave |
 | W7 | CSP-shape consumer test, named pre-wave row hot-leaf attribution shift in samply trace, Lock-1 triad declaration | one gate refresh; second rerun requires REDRESS cost note |
 | W8 | CSS L4 re-admit row tests, lightningcss equality, production-corpora parse tests, generated diff audit, full-table maintain | one full gate refresh; second rerun requires REDRESS cost note |
@@ -453,7 +455,7 @@ missing strict-comparator binding or oracle path.
 
 Downstream effect: W1 rejection blocks W7 (PRUNE-5 needs comparator
 integrity), W9 (JSON re-admit needs rebound comparators), W10 (parse_
-only needs Skipper-class anchor). W2 + W3 + W4 + W5 + W6 may proceed
+only needs Skipper-class anchor). W2 + W3 + W4 + W5A + W5B + W6 may proceed
 independently (CSS work does not depend on JSON comparator rebind).
 
 ## Section 5 — W2 regen-css xtask (R4)
@@ -465,7 +467,7 @@ Owner paths:
 - `skinny/xtask/src/regen.rs` (refactor: extract shared regen-{grammar} machinery; the xtask binary parametrises a grammar-neutral generator)
 - `skinny/crates/runtime/src/grammars/css_l4_*/` (generated output destination)
 - `crates/core/src/runtime/css_l4/` is excluded from W2 and owned by W6.0
-  after W5.
+  after W5B.
 - `skinny/RESULTS.md` (W2 row attribution)
 - `skinny/REDRESS.md` if rejected.
 
@@ -632,17 +634,15 @@ blocks W8 because CSS L4 re-admit requires the PRUNE ledger at 0/24.
 W5 inherits CSS provider/template deletion and replacement after W4
 ledger close. W9/W10 remain globally blocked until PRUNE-1..PRUNE-5 close.
 
-## Section 8 — W5 PRUNE-3 (Lock-14 Refactor: Trait Dispatch + Grammar-Agnostic Generator)
+## Section 8 — W5A PRUNE-3A (Source-Consuming Runtime Generator Contract)
 
 Owner paths:
 
-- `skinny/crates/passes/src/lib.rs` (replace `RuntimeProvider` enum with trait-based dispatch)
-- `skinny/crates/codegen/src/lib.rs:167-209` (replace 8 per-grammar `RuntimeProvider::*` match arms with trait-dispatch dispatcher)
-- `skinny/crates/codegen/src/grammar_provider.rs` (new; trait + per-grammar facade backing)
-- `skinny/crates/codegen/src/{json,css_l4_*,bbnf,google_sheets,csv,ebnf,math,bnf,css_pretty}_provider.rs` (replace 8 hand-written per-grammar provider modules with ONE generic generator template consuming grammar source + workspace metadata)
-- `skinny/crates/codegen/src/css_l4_*_templates/` (delete 7 CSS template directories in the same replacement slice)
-- `skinny/xtask/src/regen_css.rs` (migrate to the new `GrammarProvider` dispatch path)
-- `skinny/crates/bbnf-bench/src/lock14_baseline.rs` (extend Lock 14 baseline gate to include the post-PRUNE-3 forward invariant)
+- `skinny/crates/grammar/src/lib.rs` or a runtime-generation parser module under the same crate (make required V1 grammar-source constructs parseable for runtime generation without grammar-id branches)
+- `skinny/crates/codegen/src/lib.rs` (route runtime emission through source + workspace metadata rather than profile-only static dispatch)
+- `skinny/crates/codegen/src/grammar_provider.rs` or successor generator-contract module (ONE grammar-neutral source-consuming runtime generator contract)
+- `skinny/xtask/src/regen.rs` and `skinny/xtask/src/regen_css.rs` if present (migrate `regen-css` to pass grammar source + workspace metadata into codegen)
+- `skinny/crates/bbnf-bench/src/lock14_baseline.rs` (temporary W5A guard: provider/template deletion remains forbidden before W5B)
 - `skinny/RESULTS.md` (W5 row attribution)
 - `skinny/REDRESS.md` if rejected.
 
@@ -654,53 +654,103 @@ Doc links: `restart/skinny/tranches/sk-v14/research/p3/p3a-candidate-shortlist.m
 Entry gate:
 
 - W4 ledger admitted (CSS L4 0/24 + 24 REDRESS entries; no CSS provider/template deletion in W4).
-- W5 plan names the trait surface signature, the 8 per-grammar provider modules slated for collapse, the 7 CSS template directories slated for deletion, the generic-generator-template input contract (grammar source + workspace metadata -> typed Rust output), the `regen_css.rs` migration, and the Lock 14 baseline gate's post-W5 forward invariant.
-- W5 plan does NOT touch `runtime/` (W6's scope).
+- W5A plan names the grammar-neutral source + workspace metadata contract, the required V1 grammar-source constructs it will parse for runtime generation, the `regen-css` migration, the JSON unchanged-output proof, and the Sheets/BBNF-self fail-closed or generated-role witnesses.
+- W5A plan does NOT delete CSS provider modules, CSS template directories, or `crates/core/src/runtime/` (W5B and W6 scope).
 
 Tasks:
 
-1. Replace `RuntimeProvider` enum at `skinny/crates/passes/src/lib.rs` with trait-based dispatch (`trait GrammarProvider` consuming grammar source + workspace metadata).
-2. Replace the 8 per-grammar `RuntimeProvider::Json` / `RuntimeProvider::CssL4DeclarationValues` / etc. match arms at `skinny/crates/codegen/src/lib.rs:167-209` with trait-dispatch dispatcher.
-3. Collapse the 8 per-grammar provider modules under `skinny/crates/codegen/src/` into ONE grammar-agnostic generator template at `skinny/crates/codegen/src/grammar_provider.rs` consuming (grammar source + workspace metadata) per `LOCKS.md:220` Lock 14 binding.
-4. Delete the 7 CSS L4 provider modules and 7 CSS L4 template directories in the same commit as the replacement provider path, after the generic provider path exists.
-5. Migrate W2's `regen_css.rs` to consume the new `GrammarProvider` trait dispatch — `regen-{grammar}` family becomes the production binding of the new dispatch.
-6. Extend `skinny/crates/bbnf-bench/src/lock14_baseline.rs` to enforce the post-W5 forward invariant: any new grammar produces ZERO new `.rs` files in `skinny/crates/{codegen, runtime, passes, bbnf, grammar}/src/` AND ZERO new directories in `crates/core/src/runtime/`.
-7. Run `cargo xtask regen-css` and all seven exact `check-css-l4-*` companions through the migrated provider path.
+1. Pass grammar source plus workspace metadata into codegen for runtime emission; source and metadata must not remain freshness-only inputs.
+2. Make the required V1 grammar-source constructs parseable for runtime generation without `grammar_id == css_l4` or equivalent generic-branch behavior.
+3. Migrate `regen-css` so all seven CSS L4 profiles are emitted through the source-consuming path with no static provider/template dependency at the call boundary.
+4. Prove JSON unchanged-output through the same generator contract.
+5. Prove Sheets and BBNF-self either fail closed with named unsupported constructs or emit generated-role witnesses through the same parser/contract.
+6. Add a temporary W5A Lock 14 guard that forbids provider/template deletion until W5B and rejects new provider/template directories.
+7. Run `cargo xtask regen-css` and all seven exact `check-css-l4-*` companions through the migrated source-consuming path.
 
 Exit gate:
 
-- `find skinny/crates -name '*.rs' | xargs grep -l 'RuntimeProvider::Json\|JsonGrammar\|parse_json_grammar' | wc -l == 0` (per `SYNTHESIS.md:271` C-1 falsifiability gate).
-- `find skinny/crates/codegen/src -name '*_provider.rs' \! -name 'grammar_provider.rs' | wc -l == 0` (8 per-grammar providers collapsed).
-- `find skinny/crates/codegen/src -type d -name 'css_l4_*_templates' | wc -l == 0` (7 CSS template directories deleted).
-- Lock 14 baseline gate passes: grammar-name scan returns ZERO matches in generic crates per `LOCKS.md:220-238`.
-- Generic-crate Lock 14 grep returns ZERO matches per `rg -nE 'match\s+\w+\s*\{[^}]*Json\s*=>|CssL4\s*=>|Bbnf\w*\s*=>|GoogleSheets\w*\s*=>' crates/`.
-- Non-JSON proof per §2.1: CSS L4 + Sheets + BBNF-self compile via the new trait dispatch without grammar-name branches.
-- `cargo xtask regen-css` continues to produce byte-deterministic output via the new dispatch path.
-- All seven exact `check-css-l4-*` companions pass through the migrated provider path.
+- Codegen consumes grammar source + workspace metadata through a grammar-neutral runtime-generation parser/contract.
+- Required V1 grammar-source constructs needed by CSS L4 runtime generation parse without `grammar_id == css_l4` or equivalent generic-branch behavior.
+- All seven CSS L4 profiles are emitted through the source-consuming path with no static provider/template dependency at the call boundary.
+- `cargo xtask regen-css` and all seven exact `check-css-l4-*` companions pass through the migrated source-consuming path.
+- JSON unchanged-output proof is captured.
+- Sheets and BBNF-self fail closed with named unsupported constructs or emit generated-role witnesses through the same parser/contract.
+- `find skinny/crates/codegen/src -name '*_provider.rs' \! -name 'grammar_provider.rs' | wc -l` may remain non-zero in W5A, but no new provider module or template directory is added.
 - Full-table maintain: ±1.0% on all rows.
+- W5A source/test LOC cap is ≤1.0k C-1 part-A and cannot borrow from W5B or W6.
 
 Same-wave consumer: `cargo xtask regen-css` (W2-emitted) and the seven
 `check-css-l4-*` companions become the production consumers of the new
-`GrammarProvider` trait dispatch in W5's commit.
+source-consuming generator contract in W5A's commit.
 
 Pre-blocked routes: grammar-name branches in generic crates (Lock 14
-v+1 binding); per-grammar provider modules in generic codegen (P-6
-recurrence); deleting CSS providers/templates before replacement exists
-(REDRESS-184); JSON policy in generic crates; renamed JSON helpers
-(REDRESS 36-38, 85-86 watch-list); preserving the 8 provider modules
-"for compatibility" (per `[no-backward-compat]`).
+v+1 binding); deleting CSS providers/templates before replacement exists
+(REDRESS-184/REDRESS-209); static centralization of hand-written CSS runtime
+bodies (P-6 recurrence); JSON policy in generic crates; renamed JSON helpers
+(REDRESS 36-38, 85-86 watch-list); borrowing W5B/W6 budget to paper over a
+generator contract gap.
 
-Revert protocol: revert trait-dispatch + provider-collapse +
-`regen_css.rs` migration + CSS provider/template deletion changes as one
-slice; restore the 8 per-grammar provider modules and 7 CSS template
-directories; add REDRESS naming the failing dispatch path or missing
-input-contract field.
+Revert protocol: revert the source-consuming generator contract +
+runtime-generation parser support + `regen-css` migration as one slice; retain
+the old provider/template mesh; add REDRESS naming the failing source construct,
+dispatch path, or missing metadata field.
 
-Downstream effect: W5 rejection blocks W6 (PRUNE-4 needs the generic
-generator template to collapse the 67 per-grammar runtime files onto)
-AND W7 (PRUNE-5 needs the generic dispatcher to wire W8 + W9 against
-per S-P0 §2.2 sequencing constraint). W8 + W9 + W10 may proceed
-independently of W5.
+Downstream effect: W5A rejection blocks W5B, W6, W7, and all new-admit waves.
+W8/W9/W10 remain globally blocked until PRUNE-1 through PRUNE-5 close.
+
+## Section 8B — W5B PRUNE-3B (Provider/Template Deletion And Lock 14 Baseline Close)
+
+Owner paths:
+
+- `skinny/crates/codegen/src/{json,css_l4_*,bbnf,google_sheets,csv,ebnf,math,bnf,css_pretty}_provider.rs` (delete or retire old per-grammar provider mesh after W5A replacement is load-bearing)
+- `skinny/crates/codegen/src/css_l4_*_templates/` (delete 7 CSS template directories)
+- `skinny/crates/codegen/src/lib.rs` (remove old provider dispatch once no profile consumes it)
+- `skinny/xtask/src/regen.rs` and `skinny/xtask/src/regen_css.rs` (confirm `regen-css` consumes only the W5A path)
+- `skinny/crates/bbnf-bench/src/lock14_baseline.rs` (close post-W5 forward invariant)
+- `skinny/RESULTS.md` (W5B row attribution)
+- `skinny/REDRESS.md` if rejected.
+
+Entry gate:
+
+- W5A admitted.
+- W5B plan proves all seven CSS L4 profiles and companions already pass through the W5A source-consuming path.
+- W5B plan names the exact provider modules, template directories, old provider dispatch surfaces, Lock 14 baseline update, JSON unchanged-output proof, and Sheets/BBNF-self proof carry.
+
+Tasks:
+
+1. Delete the seven CSS L4 provider modules and seven CSS L4 template directories.
+2. Retire the old provider mesh once no profile consumes it; no compatibility alias period.
+3. Update `lock14_baseline.rs` to enforce the post-W5 forward invariant: any new grammar produces ZERO new `.rs` files in `skinny/crates/{codegen, runtime, passes, bbnf, grammar}/src/` and ZERO new directories in `crates/core/src/runtime/`.
+4. Run `cargo xtask regen-css` and all seven exact `check-css-l4-*` companions.
+5. Preserve JSON unchanged-output proof and Sheets/BBNF-self non-JSON proof from W5A.
+
+Exit gate:
+
+- `find skinny/crates/codegen/src -name '*_provider.rs' \! -name 'grammar_provider.rs' | wc -l == 0` (old per-grammar providers collapsed or retired).
+- `find skinny/crates/codegen/src -type d -name 'css_l4_*_templates' | wc -l == 0` (7 CSS template directories deleted).
+- Lock 14 baseline gate passes: grammar-name scan returns ZERO matches in generic crates per `LOCKS.md:220-238`.
+- Generic-crate Lock 14 grep returns ZERO matches per `rg -nE 'match\s+\w+\s*\{[^}]*Json\s*=>|CssL4\s*=>|Bbnf\w*\s*=>|GoogleSheets\w*\s*=>' crates/`.
+- `cargo xtask regen-css` remains byte-deterministic through the W5A source-consuming path.
+- All seven exact `check-css-l4-*` companions pass.
+- JSON unchanged-output proof still holds.
+- Sheets/BBNF-self proof remains fail-closed or generated-role-witnessed.
+- Full-table maintain: ±1.0% on all rows.
+- W5B source/test LOC cap is ≤400 C-1 part-A and W5A + W5B combined ≤1.4k.
+
+Same-wave consumer: `cargo xtask regen-css`, the seven `check-css-l4-*`
+companions, and the Lock 14 baseline gate consume the W5B deletion in the same
+commit.
+
+Pre-blocked routes: provider/template deletion before W5A admits; preserving
+old provider modules for compatibility; adding a new provider/template
+directory; grammar-name branches in generic crates; borrowing W6 budget.
+
+Revert protocol: revert provider/template deletion + old provider mesh
+retirement + Lock 14 baseline update as one slice; preserve the W5A generator
+contract; add REDRESS naming the failing deleted surface or missing consumer.
+
+Downstream effect: W5B rejection blocks W6 and W7. W8/W9/W10 remain globally
+blocked until PRUNE-1 through PRUNE-5 close.
 
 ## Section 9 — W6 PRUNE-4 (9 Sub-Waves: Per-Grammar Runtime Collapse)
 
@@ -722,8 +772,8 @@ Doc links: `restart/skinny/tranches/sk-v14/research/p3/p3a-candidate-shortlist.m
 
 Entry gate:
 
-- W5 admitted (generic generator template exists; provides the collapse target).
-- W6 plan enumerates 9 sub-waves W6.0..W6.8 by grammar name: `css_l4, math, csv, bnf, ebnf, css_pretty, google_sheets, bbnf, json`. PRUNE-4 sub-wave count is 9 NOT 8 per S-P0 §2.3 (`css_pretty` is the +1 over the SK-V13 baseline's 8). Pass Omega V3 W2R assigns CSS L4 root-runtime collapse to W6.0 after W5.
+- W5B admitted (W5A source-consuming generator path exists and W5B provider/template deletion plus Lock 14 baseline close has landed; provides the collapse target).
+- W6 plan enumerates 9 sub-waves W6.0..W6.8 by grammar name: `css_l4, math, csv, bnf, ebnf, css_pretty, google_sheets, bbnf, json`. PRUNE-4 sub-wave count is 9 NOT 8 per S-P0 §2.3 (`css_pretty` is the +1 over the SK-V13 baseline's 8). Pass Omega V3 W2R assigns CSS L4 root-runtime collapse to W6.0 after W5B.
 - W6 plan names the per-grammar runtime file inventory: bbnf=8, bnf=7, css_l4=7, css_pretty=7, csv=7, ebnf=7, google_sheets=10, json=7, math=7 (total = 67 files per `SYNTHESIS-AUDIT-OVERFIT.md §1.3`).
 
 ### W6 sub-wave order (per substrate-before-consumer + guard-rows-before-risk-rows discipline):
@@ -747,7 +797,7 @@ waves × ~3 commits = ~27 commits within W6.
 
 ### Per-sub-wave tasks (W6.N for grammar `<G>`):
 
-1. Refactor the per-grammar runtime files under `crates/core/src/runtime/<G>/` into emitted output via the W5 grammar-agnostic generator template consuming `<G>.bbnf` + workspace metadata.
+1. Refactor the per-grammar runtime files under `crates/core/src/runtime/<G>/` into emitted output via the W5A source-consuming generator contract consuming `<G>.bbnf` + workspace metadata.
 2. Remove the `LegacyPath` / `LegacySegment` rename shim at `<G>/parse_with.rs` (S-P0 A6 NEW-HIGH-1 fold).
 3. Validate the regen check: `cargo xtask regen-<G>` round-trip clean.
 4. Run the Lock 14 baseline gate: `find crates/core/src/runtime/<G> -name '*.rs' | wc -l == 0` post-collapse (all generated).
@@ -815,7 +865,7 @@ Doc links: `restart/skinny/tranches/sk-v14/research/p3/p3a-candidate-shortlist.m
 
 Entry gate:
 
-- W5 + W6 admitted (C-1 PRUNE-3 + PRUNE-4 BEFORE C-4 per S-P0 §2.2 sequencing constraint; the generic dispatcher + per-grammar runtime collapse must exist before W7 wires W8/W9 against the post-collapse mesh).
+- W5B + W6 admitted (C-1 PRUNE-3A + PRUNE-3B + PRUNE-4 BEFORE C-4 per S-P0 §2.2 sequencing constraint; the generic dispatcher + per-grammar runtime collapse must exist before W7 wires W8/W9 against the post-collapse mesh).
 - W7 plan names ONE pre-wave row whose hot-leaf attribution will shift in samply trace (per `SYNTHESIS.md:274` C-4 falsifiability gate: `json/numbers/direct_to_struct/main` pre-wave hot leaf `parse_value_at` → post-wave hot leaf the W11.1 number-specialised symbol per the samply trace).
 - W7 plan declares per-shape Lock-1 triad (`substrate_target` ∈ `local_temp_only`/`existing_tape`/`direct_sink`/`admitted_fact_output`; `retention_lifetime` ∈ `local_loop`/`generated_function`/`output_row`; `policy_owner` ∈ `generated_grammar`/`caller_data`/`none`) per `LOCKS.md:76-82`.
 - W7 plan exercises the shape consumer across at least two grammar families per SYNTHESIS §4 verbatim — one-grammar runtime divergence is wave evidence, not admit evidence.
@@ -879,7 +929,7 @@ Doc links: `restart/skinny/tranches/sk-v14/research/p3/p3a-candidate-shortlist.m
 
 Entry gate:
 
-- W2 + W3 + W4 + W5 + W6 + W7 admitted (the full PRUNE chain + CSS L4 infrastructure).
+- W2 + W3 + W4 + W5A + W5B + W6 + W7 admitted (the full PRUNE chain + CSS L4 infrastructure).
 - W8 plan names exact CSS L4 feature rows + lightningcss strict-mode comparator + cssparser oracle + production-corpus parse path + Track 1 generated path + Track 2 oracle path + rollback boundaries.
 - W8 plan does NOT carry Stage-0 F-V2-P1ABC-RERECORD: Stage-0 binds UNCONDITIONALLY to W10 (per p3a:180 — first wave admitting any of {P3-A C1 long-string-body SIMD scan, C3 digit_block_simd_accumulate, C7 …} — resolves to W10 parse_only distinct path per R8). W8 admits CSS L4 grammar-derived rows; CSS L4 does NOT admit C1/C3/C7, therefore W8 inherits no Stage-0 obligation. Stage-0 inheritance chain (5-step): (1) Stage-0 trigger = first wave admitting C1/C3/C7 per S-P2 V3 §6.3 verbatim; (2) C1 = long-string-body SIMD scan primitive (queued for S-P3 same-wave admission per S-P2 V3 §6.2); (3) W10 is first wave consuming C1 via the parse_only distinct path per R8 (the parse_only-distinct-path admission is the first dispatch-envelope behavioral edit); (4) therefore W10 carries Stage-0 unconditionally; (5) W8 + W9 do NOT admit C1/C3/C7 → no Stage-0 obligation there.
 
@@ -939,7 +989,7 @@ Doc links: `restart/skinny/tranches/sk-v14/research/p3/p3a-candidate-shortlist.m
 
 Entry gate:
 
-- W1 admitted (R1 + R2 strict-comparator binding + per-iter equality oracle).
+- W1 admitted (R1 + R2 strict-comparator binding + per-iter equality oracle; local prerequisite only, global PRUNE gate still applies).
 - W9 plan selects 1-N JSON direct + typed rows for re-admit; names per-row plane-correct comparator instance + per-row Mbps threshold + Track 1 + Track 2 paths.
 - W9 plan does NOT carry Stage-0 F-V2-P1ABC-RERECORD: Stage-0 binds UNCONDITIONALLY to W10 (per p3a:180 — first wave admitting any of {C1, C3, C7}). W9 admits JSON direct + typed rows under the rebound R1 comparators; the JSON direct + typed planes do NOT admit C1/C3/C7 (C1 = long-string-body SIMD scan; the direct + typed planes consume full-tape parse, not the dispatch-envelope parse_only scan). Stage-0 inheritance chain (5-step): (1) Stage-0 trigger = first wave admitting C1/C3/C7 per S-P2 V3 §6.3 verbatim; (2) C1 = long-string-body SIMD scan primitive (queued for S-P3 same-wave admission); (3) W10 is first wave consuming C1 via parse_only distinct path per R8; (4) therefore W10 carries Stage-0 unconditionally; (5) W8 + W9 do NOT admit C1/C3/C7 → no Stage-0 obligation there.
 
@@ -984,7 +1034,7 @@ Downstream effect: W9 disposition feeds W11 close ceremony.
 Owner paths:
 
 - `skinny/crates/runtime/src/grammars/json/parser.rs` (stand up distinct parse_only path — no full-tape build per ORCHESTRATOR-PROMPT.md:147-149)
-- `skinny/crates/codegen/src/` (emit parse_only path via the W5 grammar-agnostic generator template; per workspace metadata `parse_only` shape)
+- `skinny/crates/codegen/src/` (emit parse_only path via the W5A source-consuming generator contract; per workspace metadata `parse_only` shape)
 - `skinny/crates/bbnf-bench/benches/json_parity.rs` (parse_only row wiring; wire to `sonic_rs::Skipper` comparator)
 - generated JSON `parse_only` output named by the plan
 - `skinny/RESULTS.md` (W10 row attribution)
@@ -998,14 +1048,14 @@ Doc links: `restart/skinny/tranches/sk-v14/research/p3/p3a-candidate-shortlist.m
 
 Entry gate:
 
-- W1 + W9 admitted (R1 sonic_rs::Skipper comparator wired; W9's re-admit path exercises the comparator infrastructure).
+- W1 + W9 admitted (R1 sonic_rs::Skipper comparator wired; W9's re-admit path exercises the comparator infrastructure; local prerequisites only, global PRUNE gate still applies).
 - W10 plan names: exact distinct parse_only path location in `generated_json`; the parse_only row threshold per corpus; Track 1 / Track 2 paths.
 - W10 plan MUST include Stage-0 F-V2-P1ABC-RERECORD UNCONDITIONALLY per S-P2 V3 §6.3 verbatim: W10 is the bound wave for Stage-0 (per p3a:180 — first wave admitting any of {C1 long-string-body SIMD scan, C3 digit_block_simd_accumulate, C7 …} resolves to W10 because the parse_only distinct path per R8 is the first dispatch-envelope behavioral edit that admits C1). Stage-0 = cargo build + interactive samply record + cfg_attr flip at `generated.rs:33-237` 8 sites (per `SPEC.md:221` non-negotiable). Stage-0 inheritance chain (5-step): (1) Stage-0 trigger = first wave admitting C1/C3/C7 per S-P2 V3 §6.3 verbatim; (2) C1 = long-string-body SIMD scan primitive (queued for S-P3 same-wave admission per S-P2 V3 §6.2); (3) W10 is first wave consuming C1 via parse_only distinct path per R8 (W8 + W9 do not admit C1/C3/C7); (4) therefore W10 carries Stage-0 unconditionally; (5) consumers (must-bind per `SPEC.md:221`): P2-A C6 + P2-C C-P2C-3 + C-P2C-8 + P2-E Gap 1/3/4/5 + P2-F C6/C7/C10/C12/C13.
 
 Tasks:
 
 1. Stand up a distinct `parse_only` code path in `generated_json` (no full-tape build) per ORCHESTRATOR-PROMPT.md:147.
-2. Emit the parse_only path via the W5 grammar-agnostic generator template + workspace metadata `parse_only=true` shape (per `[no-orthogonal-codepaths]` — one collection strategy).
+2. Emit the parse_only path via the W5A source-consuming generator contract + workspace metadata `parse_only=true` shape (per `[no-orthogonal-codepaths]` — one collection strategy).
 3. Wire to `sonic_rs::Skipper`-class strict comparator (R1 binding).
 4. Re-attempt parse_only ADMIT per corpus: Track 1 > Skipper strict + 1 + same-plane / same-corpus / same-equality.
 5. Ship F-V2-P1ABC-RERECORD Stage-0 UNCONDITIONALLY per S-P2 V3 §6.3 (W10 is the bound wave per §13 entry-gate inheritance chain): cargo build + interactive samply record + cfg_attr flip at `generated.rs:33-237` 8 sites, in this wave's commit slice, BEFORE any parse_only admit lands. Consumer manifest verified: P2-A C6 + P2-C C-P2C-3 + C-P2C-8 + P2-E Gap 1/3/4/5 + P2-F C6/C7/C10/C12/C13.
@@ -1099,7 +1149,7 @@ no-regression gate, REDRESS citation, and CHALLENGE acceptance.
 - **P-3** — Tiny-fixture Criterion-overhead Mbps inflation. SK-V14 corpora pin (R5; W3) is ≥800 KB working set; rows measured on <1 KB fixtures cannot admit.
 - **P-4** — Gate-relabel as admit. W14.1-.5 source diffs touched only `gate.rs` / `report.rs` / `lock14_baseline.rs`; the parser was unchanged. SK-V14 admit requires a parser/codegen source delta cited per row + measurement evidence per REDRESS.
 - **P-5** — Scaffold-research counted as load-bearing. SK-V14 PRUNE-5 (W7) wires W8 + W9 end-to-end; no row admit may cite W8 / W9 as evidence until the runtime consumer is measured.
-- **P-6** — Per-grammar provider modules in generic codegen. SK-V14 PRUNE-3 (W5) collapses these to ONE grammar-agnostic generator template consuming grammar source + workspace metadata.
+- **P-6** — Per-grammar provider modules in generic codegen. SK-V14 PRUNE-3 splits into W5A source-consuming generator capability and W5B provider/template deletion; W5A proves ONE grammar-agnostic generator contract consuming grammar source + workspace metadata, and W5B deletes provider/template clusters only after the replacement path is load-bearing.
 - **P-7** — Track 1 ≡ Track 2 dishonesty. SK-V14 bench harness must keep Track 1 (generated) structurally distinct from Track 2 (independent oracle); any plane collapse fails gate. The `track2_entry_point` column (per §0.4) is the gate enforcement.
 
 Per memory `[abrogate-before-patch]`: any row family whose REDRESS
@@ -1201,7 +1251,7 @@ Dispatch scope:
 
 - W0 is authorized after G-Omega closes.
 - W1-W11 remain conditional. They require W0 closure + S-P3 LOCK + each preceding wave's closure per the sequencing constraints (R4 → PRUNE-2; C-1 → C-4; per-wave triumvirate per `SKINNY-TRIUMVIRATE.md §1-§3`) + required CHALLENGE acceptance + orchestrator/user dispatch before redress.
-- PRUNE waves (W1, W4, W5, W6, W7) dispatch BEFORE any new-admit wave (W8, W9, W10) per `ORCHESTRATOR-PROMPT.md:110` R3 binding.
+- PRUNE waves (W1, W4, W5A, W5B, W6, W7) dispatch BEFORE any new-admit wave (W8, W9, W10) per `ORCHESTRATOR-PROMPT.md:110` R3 binding.
 - No W7 implementation dispatches from S-P2 or S-P3 alone.
 
 The orchestrator's per-wave dispatch contract lives at

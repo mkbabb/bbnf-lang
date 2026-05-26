@@ -1,31 +1,24 @@
-//! AZ-II.cutover.E (Phase 2) — `BnfDocument` + view / value /
-//! path accessor surface. Mirror of `CsvDocument`.
-
 use crate::runtime::bnf::arena::{BnfArena, BnfCompoundId};
 use crate::runtime::bnf::kind::{BnfCompound, BnfCompoundKind};
 use crate::runtime::bnf::value::BnfValue;
 use crate::runtime::path::{Path, PathSegment};
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BnfKind {
     Span,
     Unit,
     Compound,
 }
-
 #[derive(Debug)]
 pub struct BnfDocument<'p> {
     pub arena: BnfArena<'p>,
     pub root: BnfValue<'p>,
     pub input: &'p str,
 }
-
 impl<'p> BnfDocument<'p> {
     #[inline]
     pub fn new(arena: BnfArena<'p>, root: BnfValue<'p>, input: &'p str) -> Self {
         Self { arena, root, input }
     }
-
     #[inline]
     pub fn root(&self) -> &BnfValue<'p> {
         &self.root
@@ -38,12 +31,10 @@ impl<'p> BnfDocument<'p> {
     pub fn input(&self) -> &'p str {
         self.input
     }
-
     #[inline]
     pub fn compound(&self, id: BnfCompoundId) -> &BnfCompound<'p> {
         self.arena.compound(id)
     }
-
     #[inline]
     pub fn view<'a>(&'a self) -> BnfView<'a, 'p> {
         BnfView {
@@ -51,30 +42,25 @@ impl<'p> BnfDocument<'p> {
             focus: self.root,
         }
     }
-
     #[inline]
     pub fn to_value(&self) -> &BnfValue<'p> {
         &self.root
     }
-
     #[inline]
     pub fn get<T: BnfPathQuery>(&self, path: Path<'_>) -> Option<T> {
         T::query(self, path)
     }
 }
-
 #[derive(Debug, Clone, Copy)]
 pub struct BnfView<'a, 'p: 'a> {
     pub(crate) doc: &'a BnfDocument<'p>,
     pub(crate) focus: BnfValue<'p>,
 }
-
 impl<'a, 'p: 'a> BnfView<'a, 'p> {
     #[inline]
     pub fn focused(doc: &'a BnfDocument<'p>, focus: BnfValue<'p>) -> Self {
         Self { doc, focus }
     }
-
     #[inline]
     pub fn document(&self) -> &'a BnfDocument<'p> {
         self.doc
@@ -91,12 +77,10 @@ impl<'a, 'p: 'a> BnfView<'a, 'p> {
     pub fn arena(&self) -> &'a BnfArena<'p> {
         &self.doc.arena
     }
-
     #[inline]
     pub fn compound(&self, id: BnfCompoundId) -> &'a BnfCompound<'p> {
         self.doc.compound(id)
     }
-
     #[inline]
     pub fn kind(&self) -> BnfKind {
         match &self.focus {
@@ -105,7 +89,6 @@ impl<'a, 'p: 'a> BnfView<'a, 'p> {
             BnfValue::Compound(_) => BnfKind::Compound,
         }
     }
-
     #[inline]
     pub fn is_compound(&self) -> bool {
         matches!(self.focus, BnfValue::Compound(_))
@@ -118,7 +101,6 @@ impl<'a, 'p: 'a> BnfView<'a, 'p> {
     pub fn input(&self) -> &'p str {
         self.doc.input
     }
-
     #[inline]
     pub fn compound_kind(&self) -> Option<BnfCompoundKind> {
         match self.focus {
@@ -127,13 +109,14 @@ impl<'a, 'p: 'a> BnfView<'a, 'p> {
         }
     }
 }
-
 pub trait BnfPathQuery: Sized {
     fn query<'p>(doc: &BnfDocument<'p>, path: Path<'_>) -> Option<Self>;
 }
-
 #[inline]
-fn walk_path<'a, 'p>(doc: &'a BnfDocument<'p>, path: Path<'_>) -> Option<&'a BnfValue<'p>> {
+fn walk_path<'a, 'p>(
+    doc: &'a BnfDocument<'p>,
+    path: Path<'_>,
+) -> Option<&'a BnfValue<'p>> {
     let mut current: &'a BnfValue<'p> = &doc.root;
     for segment in path.iter() {
         current = match (current, segment) {
@@ -147,7 +130,6 @@ fn walk_path<'a, 'p>(doc: &'a BnfDocument<'p>, path: Path<'_>) -> Option<&'a Bnf
     }
     Some(current)
 }
-
 impl BnfPathQuery for &str {
     #[inline]
     fn query<'p>(doc: &BnfDocument<'p>, path: Path<'_>) -> Option<Self> {
@@ -160,7 +142,6 @@ impl BnfPathQuery for &str {
         }
     }
 }
-
 impl BnfPathQuery for BnfValue<'_> {
     #[inline]
     fn query<'p>(doc: &BnfDocument<'p>, path: Path<'_>) -> Option<Self> {

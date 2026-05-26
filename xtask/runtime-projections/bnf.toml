@@ -1,0 +1,33 @@
+schema_version = 1
+grammar = "bnf"
+grammar_source = "grammar/bnf/bnf.bbnf"
+entry_rule = "grammar"
+runtime_module = "crate::runtime::bnf"
+output_dir = "crates/core/src/runtime/bnf"
+parser_type = "BnfParser"
+type_prefix = "Bnf"
+module_name = "bnf"
+
+[kind]
+default = "Other"
+layout_mode = "rule_routes"
+variants = [
+  "Identifier",
+  "Terminal",
+  "Nonterminal",
+  "Term",
+  "Expression",
+  "Alternation",
+  "Rhs",
+  "Lhs",
+  "Rule",
+  "Grammar",
+  "Other",
+]
+routes = [
+  { rule = "terminal", kind = "Terminal" },
+  { rule = "nonterminal", kind = "Nonterminal" },
+  { rule = "alternation", kind = "Alternation" },
+  { rule = "rule", kind = "Rule" },
+  { rule = "grammar", kind = "Grammar" },
+]

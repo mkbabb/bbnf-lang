@@ -1,13 +1,8 @@
-//! AZ-II.cutover.E (Phase 2) — [`crate::runtime::RuntimeView`] impl
-//! for [`super::BnfView`]. Mirror of `CsvView`'s impl.
-
 use crate::runtime::RuntimeView;
 use crate::runtime::bnf::document::{BnfDocument, BnfKind, BnfView};
 use crate::runtime::bnf::value::BnfValue;
-
 impl<'a, 'p: 'a> RuntimeView<'p> for BnfView<'a, 'p> {
     type Kind = BnfKind;
-
     #[inline]
     fn kind(&self) -> Self::Kind {
         match self.focus {
@@ -16,7 +11,6 @@ impl<'a, 'p: 'a> RuntimeView<'p> for BnfView<'a, 'p> {
             BnfValue::Compound(_) => BnfKind::Compound,
         }
     }
-
     #[inline]
     fn span(&self) -> Option<&'p str> {
         match self.focus {
@@ -24,12 +18,10 @@ impl<'a, 'p: 'a> RuntimeView<'p> for BnfView<'a, 'p> {
             _ => None,
         }
     }
-
     #[inline]
     fn input(&self) -> &'p str {
         self.doc.input
     }
-
     fn children(&self) -> impl Iterator<Item = Self> + '_ {
         let doc = self.doc;
         let focus = self.focus;
@@ -40,16 +32,13 @@ impl<'a, 'p: 'a> RuntimeView<'p> for BnfView<'a, 'p> {
         }
     }
 }
-
 pub struct BnfChildrenIter<'a, 'p: 'a> {
     doc: &'a BnfDocument<'p>,
     focus: BnfValue<'p>,
     index: usize,
 }
-
 impl<'a, 'p: 'a> Iterator for BnfChildrenIter<'a, 'p> {
     type Item = BnfView<'a, 'p>;
-
     fn next(&mut self) -> Option<Self::Item> {
         match self.focus {
             BnfValue::Compound(id) => {

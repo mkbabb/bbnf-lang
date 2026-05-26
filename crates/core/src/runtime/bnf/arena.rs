@@ -1,12 +1,7 @@
-//! AZ-IV.W5.3 — BNF parse arena. Thin newtype around
-//! [`CompoundSlabArena<BnfCompound<'p>>`].
-
 use crate::runtime::arena_template::CompoundSlabArena;
 use crate::runtime::bnf::kind::BnfCompound;
-
 #[derive(Debug, Default)]
 pub struct BnfArena<'p>(CompoundSlabArena<BnfCompound<'p>>);
-
 impl<'p> BnfArena<'p> {
     #[inline]
     pub fn new() -> Self {
@@ -37,10 +32,8 @@ impl<'p> BnfArena<'p> {
         self.0.truncate(n);
     }
 }
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct BnfCompoundId(u32);
-
 impl BnfCompoundId {
     pub const EMPTY: Self = Self(0);
     #[inline]

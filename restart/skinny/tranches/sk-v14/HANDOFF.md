@@ -8,7 +8,8 @@ the S-P3 SPEC/DISPATCH packet and amended by Pass Omega V3 W2R on
 admitted as skinny-side `regen-css` only at commit `45568e669`, while
 `crates/core/src/runtime/css_l4/` remains W6.0 work after W5. W3 admitted the
 production CSS L4 corpus loader on 2026-05-26. W4 PRUNE-2 is now the next
-executable wave.
+governance blocker: REDRESS-184 proves its provider-deletion exit gate is
+cyclic with W5.
 
 ## 1. Bracket Verdict
 
@@ -159,21 +160,23 @@ Campaign at zero on numbers; non-zero on architecture. The
 
 ## 6. Next-Move
 
-**Next-move:** W2R admitted amended W2 at commit `45568e669`, and W3 admitted
-the production CSS L4 corpus loader on 2026-05-26. Dispatch W4 PRUNE-2 in SPEC
-order, then continue W5..W11 only as each entry gate admits. W8/W9/W10 remain
-blocked until PRUNE-1..PRUNE-5 close.
+**Next-move:** W2R admitted amended W2 at commit `45568e669`, W3 admitted
+the production CSS L4 corpus loader on 2026-05-26, and W4 PRUNE-2 is rejected
+as currently specified by REDRESS-184. Dispatch Pass Omega V4 W4R before any
+W4/W5 source deletion; then continue only after G-Omega V4 authorizes the
+amended wave graph. W8/W9/W10 remain blocked until PRUNE-1..PRUNE-5 close.
 
 Hard caps echoed per `[dispatch-hard-cap]`: 30-min lens-agent cap;
 research 20 min / plan 15 min / redress 30 min (45 min only for the
 addendum-amended decision-engine fold + C-4 per CONSOLIDATED §0.5 cap
 discipline).
 
-1. Dispatch W4 research → plan → redress from `restart/skinny/tranches/sk-v14/SPEC.md`.
+1. Dispatch Pass Omega V4 using
+   `restart/skinny/tranches/sk-v14/research/skv14-W4R-corrective-packet.md`.
 2. Preserve W2/W3's root-runtime exclusion: `crates/core/src/runtime/css_l4/`
    remains W6.0 and must not be claimed before W6.0.
-3. Continue PRUNE-then-rebuild in SPEC order. W8/W9/W10 remain blocked until
-   PRUNE-1..PRUNE-5 close.
+3. Do not dispatch W5 or delete CSS provider/template directories until
+   G-Omega V4 closes and the SPEC/MASTER/HANDOFF surfaces are patched.
 
 ## 7. Refusal Conditions
 

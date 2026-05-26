@@ -5091,3 +5091,20 @@ perturbation.
 
 - Item 183 closes `G-W2-FULL-ROUNDTRIP` under `G-SK-V14-W2-R4` as `REJECTED`.
   The skinny-side rostered `regen-css` command can be built for the seven existing CSS L4 runtime profiles, but the required destructive gate also deletes `crates/core/src/runtime/css_l4/`, and no current generator restores that Pattern H runtime tree. Root `cargo xtask regen --grammar css_l4` reproducibly emits only `crates/core/src/grammar/generated/css_l4.{rs,registry.json}`; `crates/core/src/runtime/css_l4/` remains seven hand-written runtime files routed to W6 PRUNE-4 by MIGRATION. The rejected source attempt is retained at `/tmp/skv14-waveW2-rejected-regen-css.patch`; the evidence packet is `restart/skinny/tranches/sk-v14/research/skv14-W2-redress.md`. W2 rejection blocks W3/W4/W5/W6/W7 and all new-admit waves by hard entry gates, so no later SK-V14 implementation wave is legally dispatchable from this state.
+
+## SK-V14 Wave 4 PRUNE-2 Provider-Deletion Cycle
+
+- Item 184 closes `G-SK-V14-W4-PRUNE-2` as `REJECTED` under the current SPEC shape.
+  W4 must delete the seven CSS L4 provider modules and template directories, then
+  immediately run `cargo xtask regen-css` as the same-wave consumer. The live W2
+  `regen-css` path still compiles through those provider modules via
+  `skinny/xtask/src/regen.rs:18`, `skinny/crates/codegen/src/lib.rs:1-7`, and
+  `skinny/crates/codegen/src/lib.rs:166-208`; the generic replacement belongs to
+  W5, but W5 is gated by W4. A throwaway worktree deletion probe reproduced
+  `error[E0583]` for all seven `css_l4_*_provider` modules before regeneration
+  could run. The evidence packet is
+  `restart/skinny/tranches/sk-v14/research/skv14-W4-redress.md`, and the
+  corrective proposal is
+  `restart/skinny/tranches/sk-v14/research/skv14-W4R-corrective-packet.md`.
+  W5/W6/W7 remain blocked by the PRUNE chain, and W8/W9/W10 remain globally
+  blocked until PRUNE-1 through PRUNE-5 close.

@@ -39,6 +39,7 @@ pub fn emit_runtime_from_request(
         .map(|source| grammar::RuntimeSource::new(&source.rel_path, &source.source))
         .collect::<Vec<_>>();
     let facts = grammar::parse_runtime_source_facts(&source_refs)?;
+    validate_frontend_closure(&request, &facts)?;
     let profile = match grammar_profile::select_runtime_profile_for_name(&request.profile_id) {
         Ok(profile) => profile,
         Err(error) => {
@@ -74,7 +75,7 @@ pub fn emit_runtime_from_request(
         };
         return crate::emit_from_source(&request.grammar_name, &source.source);
     }
-    validate_non_json_materiality(&facts)?;
+    validate_non_json_frontend_materiality(&facts)?;
     render_runtime_profile(profile, None)
 }
 
@@ -122,17 +123,127 @@ fn validate_request_shape(request: &RuntimeGenerationRequest) -> Result<(), Code
     Ok(())
 }
 
-fn validate_non_json_materiality(facts: &grammar::RuntimeSourceFacts) -> Result<(), CodegenError> {
+fn validate_frontend_closure(
+    request: &RuntimeGenerationRequest,
+    facts: &grammar::RuntimeSourceFacts,
+) -> Result<(), CodegenError> {
+    let frontend = &facts.frontend;
+    if frontend.source_hash.trim().is_empty() || frontend.source_hash != facts.source_hash {
+        return Err(CodegenError::Lowering(
+            "runtime request frontend closure hash mismatch".to_string(),
+        ));
+    }
+    if frontend.sources.len() != request.sources.len() {
+        return Err(CodegenError::Lowering(format!(
+            "runtime request frontend closure saw {} sources but request supplied {}",
+            frontend.sources.len(),
+            request.sources.len()
+        )));
+    }
+    let mut source_hashes = std::collections::BTreeMap::new();
+    for source in &frontend.sources {
+        if source.path.trim().is_empty() || source.source_hash.trim().is_empty() {
+            return Err(CodegenError::Lowering(
+                "runtime request frontend closure contains an empty source identity".to_string(),
+            ));
+        }
+        if source_hashes
+            .insert(source.path.as_str(), source.source_hash.as_str())
+            .is_some()
+        {
+            return Err(CodegenError::Lowering(format!(
+                "runtime request frontend closure duplicated source `{}`",
+                source.path
+            )));
+        }
+    }
+    for source in &request.sources {
+        if !source_hashes.contains_key(source.rel_path.as_str()) {
+            return Err(CodegenError::Lowering(format!(
+                "runtime request frontend closure missing request source `{}`",
+                source.rel_path
+            )));
+        }
+    }
+    for root in &request.source_roots {
+        if !source_hashes.contains_key(root.as_str()) {
+            return Err(CodegenError::Lowering(format!(
+                "runtime request frontend closure missing source root `{root}`"
+            )));
+        }
+    }
+    for import in &frontend.imports {
+        if import.specifier.trim().is_empty()
+            || import.importer_source_hash.trim().is_empty()
+            || import.resolved_source_hash.trim().is_empty()
+        {
+            return Err(CodegenError::Lowering(
+                "runtime request frontend closure contains an empty import identity".to_string(),
+            ));
+        }
+        let importer_hash = source_hashes
+            .get(import.importer_path.as_str())
+            .ok_or_else(|| {
+                CodegenError::Lowering(format!(
+                    "runtime request frontend closure import source `{}` is outside the request",
+                    import.importer_path
+                ))
+            })?;
+        if *importer_hash != import.importer_source_hash {
+            return Err(CodegenError::Lowering(format!(
+                "runtime request frontend closure import source hash mismatch for `{}`",
+                import.importer_path
+            )));
+        }
+        let resolved_hash = source_hashes
+            .get(import.resolved_path.as_str())
+            .ok_or_else(|| {
+                CodegenError::Lowering(format!(
+                    "runtime request frontend closure import target `{}` is outside the request",
+                    import.resolved_path
+                ))
+            })?;
+        if *resolved_hash != import.resolved_source_hash {
+            return Err(CodegenError::Lowering(format!(
+                "runtime request frontend closure import target hash mismatch for `{}`",
+                import.resolved_path
+            )));
+        }
+    }
+    Ok(())
+}
+
+fn validate_non_json_frontend_materiality(
+    facts: &grammar::RuntimeSourceFacts,
+) -> Result<(), CodegenError> {
+    let frontend = &facts.frontend;
+    if frontend.imports.is_empty() {
+        return Err(frontend_missing("import closure"));
+    }
+    if frontend.layout.whitespace_directives.is_empty() {
+        return Err(frontend_missing("whitespace directive"));
+    }
+    if frontend.layout.whitespace_modifiers.is_empty() {
+        return Err(frontend_missing("whitespace modifier"));
+    }
+    if frontend.layout.discard_operators.is_empty() {
+        return Err(frontend_missing("discard operator"));
+    }
+    if frontend.pretty_directives.is_empty() {
+        return Err(frontend_missing("pretty directive"));
+    }
+    if frontend.host_captures.is_empty() {
+        return Err(frontend_missing("host capture"));
+    }
+    if frontend.projections.is_empty() {
+        return Err(frontend_missing("projection"));
+    }
+    if frontend.typed_projections.is_empty() {
+        return Err(frontend_missing("typed projection"));
+    }
     for kind in [
-        grammar::RuntimeConstructKind::Import,
         grammar::RuntimeConstructKind::TokenDirective,
-        grammar::RuntimeConstructKind::WhitespaceDirective,
-        grammar::RuntimeConstructKind::PrettyDirective,
         grammar::RuntimeConstructKind::Comma,
-        grammar::RuntimeConstructKind::WhitespaceModifier,
-        grammar::RuntimeConstructKind::ShiftRight,
-        grammar::RuntimeConstructKind::ShiftLeft,
-        grammar::RuntimeConstructKind::HostCapture,
     ] {
         if facts.count(kind) == 0 {
             return Err(CodegenError::Lowering(format!(
@@ -140,10 +251,9 @@ fn validate_non_json_materiality(facts: &grammar::RuntimeSourceFacts) -> Result<
             )));
         }
     }
-    if facts.projection_count() == 0 {
-        return Err(CodegenError::Lowering(
-            "runtime request source facts missing projection metadata".to_string(),
-        ));
-    }
     Ok(())
+}
+
+fn frontend_missing(fact: &str) -> CodegenError {
+    CodegenError::Lowering(format!("runtime request frontend closure missing {fact}"))
 }

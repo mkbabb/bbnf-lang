@@ -928,7 +928,13 @@ fn runtime_has_left_operand(source: &str, cursor: usize) -> bool {
         .rev()
         .find(|ch| !ch.is_whitespace())
         .is_some_and(|ch| {
-            ch == '"' || ch == '\'' || ch == '/' || ch == ')' || ch == ']' || is_ident_continue(ch)
+            ch == '"'
+                || ch == '\''
+                || ch == '/'
+                || ch == ')'
+                || ch == ']'
+                || matches!(ch, '?' | '*' | '+')
+                || is_ident_continue(ch)
         })
 }
 
@@ -1842,6 +1848,23 @@ fn w5b_frontend_discard_operators_lower_to_request_facts() {
                 end: source.find("<<").unwrap() + 2,
             },
         ]
+    );
+}
+
+#[cfg(test)]
+#[test]
+fn w5b_frontend_discard_operator_accepts_postfix_group_left_operand() {
+    let source = "root = (alphaSep >> colorValue)? << \")\" ;\n";
+    let facts =
+        parse_runtime_source_facts(&[RuntimeSource::new("grammar/css/l4/color.bbnf", source)])
+            .expect("discard facts lower after postfix group");
+
+    assert_eq!(facts.count(RuntimeConstructKind::ShiftRight), 1);
+    assert_eq!(facts.count(RuntimeConstructKind::ShiftLeft), 1);
+    assert_eq!(facts.frontend.layout.discard_operators.len(), 2);
+    assert_eq!(
+        facts.frontend.layout.discard_operators[1].offset,
+        source.find("<<").unwrap()
     );
 }
 

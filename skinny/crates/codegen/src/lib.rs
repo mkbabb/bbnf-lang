@@ -863,7 +863,45 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
         let missing_fact = w5a_css_request("@import \"tokens.bbnf\" ;\nroot = \"x\" ;\n");
         assert!(matches!(
             emit_runtime_from_request(missing_fact),
-            Err(CodegenError::Lowering(message)) if message.contains("source facts missing")
+            Err(CodegenError::Lowering(message)) if message.contains("frontend closure missing")
+        ));
+    }
+
+    pub(super) fn w5b_frontend_request_consumes_lowered_ir_before_provider_rendering() {
+        let source = r#"
+@import "tokens.bbnf" ;
+@token ident ;
+@ws /\s*/ ;
+@pretty stylesheet block ;
+root = @{ "url" , "(" >> ident ?w , "," ?w , ident << ")" } ;
+tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
+"#;
+        let emitted = emit_runtime_from_request(w5a_css_request(source)).unwrap();
+
+        assert!(emitted
+            .get("generated.rs")
+            .unwrap()
+            .contains(GENERATED_HEADER));
+        assert!(emitted
+            .get("generated.rs")
+            .unwrap()
+            .contains("emit_fact_stream"));
+    }
+
+    pub(super) fn w5b_frontend_request_rejects_missing_closure_materiality() {
+        let source = r#"
+@import "tokens.bbnf" ;
+@token ident ;
+@ws /\s*/ ;
+@pretty stylesheet block ;
+root = "(" >> ident ?w , ")" ;
+tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
+"#;
+
+        assert!(matches!(
+            emit_runtime_from_request(w5a_css_request(source)),
+            Err(CodegenError::Lowering(message))
+                if message.contains("frontend closure missing host capture")
         ));
     }
 
@@ -959,4 +997,16 @@ fn w5a_json_request_matches_emit_from_source() {
 #[test]
 fn w5a_sheets_bbnf_fail_closed_through_runtime_contract() {
     tests::w5a_sheets_bbnf_fail_closed_through_runtime_contract();
+}
+
+#[cfg(test)]
+#[test]
+fn w5b_frontend_request_consumes_lowered_ir_before_provider_rendering() {
+    tests::w5b_frontend_request_consumes_lowered_ir_before_provider_rendering();
+}
+
+#[cfg(test)]
+#[test]
+fn w5b_frontend_request_rejects_missing_closure_materiality() {
+    tests::w5b_frontend_request_rejects_missing_closure_materiality();
 }

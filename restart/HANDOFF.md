@@ -1,15 +1,16 @@
 # Handoff — bbnf-lang Greenfield Restart
 
-## Current Totality Override — 2026-05-24
+## Current Totality Override — 2026-05-26
 
-Status: **Pass Omega V2 CRUD IN PROGRESS.** SK-V14 T-P3 V4 COHORT §3Z LOCK
-DECLARED at `69eea1c5c` (full SK-V14 LOCK convergence; 5 of 5 cohorts §3Z
-LOCKED: S-P2 `4c70b6f193`, T-P1 `0a9c0fe65d`, S-P3 `626cb06cc1`, T-P2
-`34a28f5c15`, T-P3 `69eea1c5c`). **G-Omega CLOSED 2026-05-24** by explicit
-user sign-off this orchestration turn; Pass Omega V2 CRUD is now applying
-diffs to V1 spec surfaces (CRUD-3 LOCKS landed at `85a043224`; CRUD-4
-HANDOFF + MIGRATION lands this commit; CRUD-1/2/5/6 sequence per
-`restart/prompts/pass-contracts/PASS-OMEGA.md §4`).
+Status: **Pass Omega V3 W2R CRUD CLOSED; SK-V14 implementation dispatch is
+blocked until amended W2 re-admits.** SK-V14 T-P3 V4 COHORT §3Z LOCK remains
+the last full-cycle LOCK at `69eea1c5c` (5 of 5 cohorts §3Z LOCKED: S-P2
+`4c70b6f193`, T-P1 `0a9c0fe65d`, S-P3 `626cb06cc1`, T-P2 `34a28f5c15`,
+T-P3 `69eea1c5c`). Pass Omega V2 G-Omega CLOSED 2026-05-24 and landed the
+V1 surfaces. Pass Omega V3 G-Omega CLOSED 2026-05-26 for REDRESS-183 / W2R:
+W2 is amended to skinny-side `regen-css` only, and
+`crates/core/src/runtime/css_l4/` is now W6.0 root-runtime collapse work
+after W5.
 
 Sources of authority for this cycle:
 
@@ -20,6 +21,11 @@ Sources of authority for this cycle:
   `restart/audit/totality/astral/V2/ΩC-locks-amendments.md`.
 - This Ω-F MIGRATION + HANDOFF apply:
   `restart/audit/totality/astral/V2/ΩF-migration-handoff.md`.
+- Pass Omega V3 W2R packet:
+  `restart/audit/totality/astral/V3/G-OMEGA-PACKET.md`,
+  `restart/audit/totality/astral/V3/master-plan-diff.md`,
+  `restart/audit/totality/astral/V3/locks-diff.md`, and
+  `restart/audit/totality/astral/V3/hardening/CONSOLIDATED.md`.
 
 Current measured authority is `skinny/RESULTS.md` at the SK-V14
 audit-corrected baseline: 0/17 × 3 JSON planes + 0/24 CSS L4 ADMITTED at
@@ -51,7 +57,9 @@ Read in order for current work:
     Ω-F MIGRATION + HANDOFF source).
 11. `restart/audit/totality/astral/V2/ΩC-locks-amendments.md` +
     `restart/audit/totality/astral/V2/ΩF-migration-handoff.md` (Pass
-    Omega V2 CRUD apply logs).
+    Omega V2 CRUD apply logs), then
+    `restart/audit/totality/astral/V3/{G-OMEGA-PACKET,master-plan-diff,locks-diff}.md`
+    (Pass Omega V3 W2R correction).
 12. `restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`,
     `restart/locks/LOCKS.md`, `restart/MIGRATION.md`, and this file
     (current V1 surfaces).
@@ -76,22 +84,24 @@ Pattern H count = 67 hand-written runtime files under
 google_sheets, json, math}/`; `find crates/core/src/runtime -mindepth 2
 -type f -name '*.rs' | wc -l` → 67).
 
-Dispatch rule: SK-V14 W0 and later source/gate/RESULTS/REDRESS edits
-are authorized only after (a) Pass Omega V2 CRUD-1..CRUD-6 completes
-on the remaining surfaces (ARCHITECTURE, MASTER-PLAN, skinny/, audit
-nuke); (b) wave-triumvirate per `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md
-§1-§3` dispatches W0 first. G-Omega closed 2026-05-24 (the only
-mandatory relinquish per SK-V14 ORCHESTRATOR-PROMPT user-pin override).
+Dispatch rule: SK-V14 source/gate/RESULTS/REDRESS edits remain authorized
+only through the wave-triumvirate per
+`restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md §1-§3`. REDRESS-183
+rejected the original W2 full round-trip. The next implementation move is
+to rerun W2 under the amended skinny-only gate. W3 and all later waves remain
+blocked until that amended W2 admits; W8/W9/W10 remain globally blocked until
+PRUNE-1..PRUNE-5 close.
 
-## Pass Omega V2 next-cycle dispatch directive (3F-DISPATCH-001)
+## Pass Omega V3 next-cycle dispatch directive (W2R)
 
-Per `restart/audit/totality/p3/3F-migration-handoff.md` §Next-Cycle
-Dispatch Directive, the sequence after G-Omega closure is:
+Per `restart/audit/totality/astral/V3/G-OMEGA-PACKET.md` and
+`restart/audit/totality/astral/V3/ΩF-migration-handoff.md`, the sequence after
+G-Omega V3 closure is:
 
-(a) Pass Omega V2 CRUD-1..CRUD-6 application completes (in progress);
-(b) wave-triumvirate dispatches SK-V14 W0 first per
-`restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md §1-§3`;
-(c) SK-V14 W1..W11 execute under PRUNE-then-rebuild sequencing per
+(a) Pass Omega V3 W2R CRUD applies the local wave-graph amendment;
+(b) wave-triumvirate reruns SK-V14 W2 under the skinny-only `regen-css` gate;
+(c) SK-V14 W3..W11 execute only after amended W2 admits, under
+PRUNE-then-rebuild sequencing per
 `restart/skinny/tranches/sk-v14/SPEC.md:237-247`;
 (d) post-R10 close → SK-V15 Pass Alpha re-entry per
 `restart/prompts/pass-contracts/PASS-ALPHA.md` (per F-V2-CH4-3E D06
@@ -104,11 +114,11 @@ The 7-gate measurable dispatch checklist (3F-DISPATCH-001):
 | gate | measurable condition | source |
 |---|---|---|
 | G3 (auto) | T-P3 cohort §3Z LOCK DECLARED at V4 close (V4 = 4/5 ceiling; 1-cycle margin). | `restart/audit/totality/p3/hardening/HARDENING-T-P3-V4-CONSOLIDATED.md:30-32` |
-| Pass Omega V2 entry | T-P1 V5 + T-P2 V5 + S-P3 V3 + T-P3 V4 LOCK packet + V1 surfaces cited in Ω source maps. | `restart/prompts/pass-contracts/PASS-OMEGA.md §1` |
-| Pass Omega V2 CHALLENGE convergence | Ω CHALLENGE ≥95% × 2 cycles + zero orphan REVISE + V≤5 ceiling. | `restart/prompts/pass-contracts/PASS-OMEGA.md §3` |
-| CRUD entry | Consolidated Ω verdict + per-surface CRUD instruction packets exist. | `restart/prompts/pass-contracts/PASS-OMEGA.md §4` |
-| G-Omega (user) | CLOSED 2026-05-24 by explicit user sign-off this orchestration turn. | this file §Current Totality Override |
-| SK-V14 W0 dispatch | G-Omega closed; CRUD-1..CRUD-6 complete; wave-triumvirate per `SKINNY-TRIUMVIRATE.md §1-§3` ready. | `restart/skinny/tranches/sk-v14/SPEC.md:237` |
+| Pass Omega V3 entry | REDRESS-183 + W2R corrective packet + V2 LOCK surfaces cited in Ω source maps. | `restart/audit/totality/astral/V3/G-OMEGA-PACKET.md` |
+| Pass Omega V3 CHALLENGE convergence | 6/6 ACCEPT after CH6 fold; zero LOCKS delta; W2R CRUD packet complete. | `restart/audit/totality/astral/V3/hardening/CONSOLIDATED.md` |
+| CRUD entry | G-Omega V3 authorization + per-surface receiver list in the V3 packet. | `restart/audit/totality/astral/V3/G-OMEGA-PACKET.md` |
+| G-Omega (user) | CLOSED 2026-05-26 by explicit user instruction to continue indefatigably. | this file §Current Totality Override |
+| SK-V14 W2 rerun | V3 CRUD complete; W2 plan is skinny-only, with no `crates/core/src/runtime/css_l4/` touch or closure claim. | `restart/skinny/tranches/sk-v14/SPEC.md:237` |
 | SK-V14 close (R10) | RESULTS audit-zero baseline cleared by R6/R7/R8 re-admits under R1/R2 gates; W11 close per SYNTHESIS §0.1. | `restart/skinny/tranches/sk-v14/SYNTHESIS.md §0.1` |
 | SK-V15 Pass Alpha re-entry | SK-V14 close packet delivered; Pass Alpha dispatch per `PASS-ALPHA.md`. | `restart/prompts/pass-contracts/PASS-ALPHA.md` |
 

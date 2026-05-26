@@ -2,10 +2,12 @@
 
 Date: 2026-05-22.
 
-Status: Pass Alpha α-F contract handoff. Do not dispatch SK-V14 Wave 0
-from this file alone. `SPEC.md` and `DISPATCH-PROMPT.md` are intentionally
-absent and authored downstream by skinny pass S-P3 after the required
-G-Omega gate and the S-P0 Overfit Audit Pass for the new tranche.
+Status: Pass Alpha α-F contract handoff, superseded for active dispatch by
+the S-P3 SPEC/DISPATCH packet and amended by Pass Omega V3 W2R on
+2026-05-26. REDRESS-183 rejected the original W2 dual-tree round-trip; W2
+now reruns as skinny-side `regen-css` only, while
+`crates/core/src/runtime/css_l4/` is W6.0 work after W5. W3+ remains blocked
+until amended W2 admits.
 
 ## 1. Bracket Verdict
 
@@ -101,7 +103,7 @@ Lock 14 at `restart/locks/LOCKS.md:220–238`).
 JSON parse_only: 0 / 17  (all OPEN)
 JSON direct:     0 / 17  (4 comparator-rebind candidates; 13 fresh)
 JSON typed:      0 / 17  (7 comparator-rebind candidates; 10 fresh)
-CSS L4:          0 / 24  (all OPEN; templates deleted + xtask built)
+CSS L4:          0 / 24  (all OPEN; templates pending PRUNE-2; amended skinny-side xtask pending W2 rerun)
 ```
 
 Campaign at zero on numbers; non-zero on architecture. The
@@ -156,35 +158,30 @@ Campaign at zero on numbers; non-zero on architecture. The
 
 ## 6. Next-Move
 
-**Next-move:** `ready-for-CHALLENGE-V1 → G-Alpha → S-P0 →
-S-P1/S-P2/S-P3 ∥ Pass Omega → G-Omega → Wave 0 (PRUNE-1)`.
+**Next-move:** Pass Omega V3 W2R CRUD is the active overlay. After it lands,
+rerun SK-V14 W2 under the amended skinny-only gate, then resume W3..W11 in
+SPEC order. Do not dispatch W3+ until amended W2 admits.
 
 Hard caps echoed per `[dispatch-hard-cap]`: 30-min lens-agent cap;
 research 20 min / plan 15 min / redress 30 min (45 min only for the
 addendum-amended decision-engine fold + C-4 per CONSOLIDATED §0.5 cap
 discipline).
 
-1. Dispatch Pass Alpha CHALLENGE V1 wave (CH1–CH6) over the SYNTHESIS +
-   HANDOFF + α-A through α-E artefacts. CH5 reviews Track 1 ≡ Track 2
-   plane integrity; CH3 reviews the pre-block list against REDRESS;
-   CH2 verifies Lock 14 grammar-neutrality of every proposed candidate.
-2. Aggregator authors `restart/skinny/tranches/sk-v14/research/alpha-
-   hardening/V1/HARDENING-ALPHA-V1-CONSOLIDATED.md`.
-3. Fold dispositions into V2 if not converged; iterate to V ≤ 5.
-4. At convergence (≥95 % ACCEPT × 2 cycles), present SK-V14 contract for
-   G-Alpha sign-off.
-5. After G-Alpha, dispatch S-P0 Overfit Audit Pass for SK-V14 (6 fresh
-   agents in parallel; CH7 lens binding). The S-P0 pass is now a
-   permanent first phase of every skinny tranche per
-   `restart/prompts/skinny/PASS-0-OVERFIT-AUDIT.md`.
-6. Hold Wave 0 (PRUNE-1 dispatch) behind both G-S-P0-CONVERGED and
-   G-Omega.
+1. Verify V3 W2R CRUD touched only spec/handoff/skinny dispatch surfaces and
+   left LOCKS unchanged.
+2. Dispatch W2 research → plan → redress with W2 owner paths limited to
+   skinny runtime generation, exact companion checks, and W2 gate docs.
+3. Reject any W2 plan that touches `crates/core/src/runtime/css_l4/` or claims
+   Pattern H closure.
+4. After amended W2 admits, dispatch W3; continue PRUNE-then-rebuild in SPEC
+   order. W8/W9/W10 remain blocked until PRUNE-1..PRUNE-5 close.
 
 ## 7. Refusal Conditions
 
 Return REVISE for any downstream plan that:
 
-- dispatches any implementation wave before G-Omega + G-S-P0-CONVERGED;
+- dispatches any implementation wave before G-Omega + G-S-P0-CONVERGED, or
+  dispatches W3+ before Pass Omega V3 W2R CRUD and amended W2 admission;
 - skips PRUNE-1 / PRUNE-2 baseline revert in favour of new admit attempt;
 - counts a row as admitted under the misbound `sonic_rs::from_slice::<Value>`
   comparator (P-2);

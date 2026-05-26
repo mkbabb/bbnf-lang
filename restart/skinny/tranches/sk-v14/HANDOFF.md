@@ -7,10 +7,10 @@ the S-P3 SPEC/DISPATCH packet and amended by Pass Omega V3 W2R plus Pass
 Omega V4 W4R on 2026-05-26. REDRESS-183 rejected the original W2 dual-tree
 round-trip; W2 admitted as skinny-side `regen-css` only at commit
 `45568e669`, while `crates/core/src/runtime/css_l4/` remains W6.0 work after
-W5. W3 admitted the production CSS L4 corpus loader at `b0a864f0b`. REDRESS-184
-rejected the original W4 provider-deletion gate; after G-Omega V4 CRUD, W4
-reruns as ledger-only CSS L4 PRUNE and W5 owns CSS provider/template deletion
-in the replacement wave.
+W5. W3 admitted the production CSS L4 corpus loader at `b0a864f0b`.
+REDRESS-184 rejected the original W4 provider-deletion gate; W4R closed the
+ledger-only CSS L4 PRUNE with REDRESS-185..208, and W5 now owns CSS
+provider/template deletion in the replacement wave.
 
 ## 1. Bracket Verdict
 
@@ -161,24 +161,25 @@ Campaign at zero on numbers; non-zero on architecture. The
 
 ## 6. Next-Move
 
-**Next-move:** G-Omega V4 is authorized and W4R CRUD/SPEC patching closes the
-REDRESS-184 wave-graph correction. Re-dispatch W4 as ledger-only PRUNE-2:
-restore CSS L4 to 0/24 in `restart/skinny/ROLLING-SOTA-DELTA.md`, add 24
-row-keyed REDRESS entries citing validation `v1 §1-6`, preserve
-`skinny/RESULTS.md` AUDIT-FALSIFIED state, maintain JSON rows within +/-1.0%,
-and make no CSS source/generator/provider/template deletion. W8/W9/W10 remain
-blocked until PRUNE-1..PRUNE-5 close.
+**Next-move:** W4R ledger-only PRUNE-2 is closed. Dispatch W5 PRUNE-3 under
+amended SPEC §8: stand up the grammar-agnostic provider path, migrate
+`skinny/xtask/src/regen_css.rs`, delete the seven CSS L4 provider modules and
+seven CSS template directories in the same replacement slice, regenerate the
+skinny CSS L4 runtime twins, and run the seven `check-css-l4-*` companions.
+W6.0 keeps `crates/core/src/runtime/css_l4/`; W8/W9/W10 remain blocked until
+PRUNE-1..PRUNE-5 close.
 
 Hard caps echoed per `[dispatch-hard-cap]`: 30-min lens-agent cap;
 research 20 min / plan 15 min / redress 30 min (45 min only for the
 addendum-amended decision-engine fold + C-4 per CONSOLIDATED §0.5 cap
 discipline).
 
-1. Re-dispatch amended W4 using SPEC §7 after V4 CRUD closes.
-2. Preserve W2/W3/W4's root-runtime exclusion: `crates/core/src/runtime/css_l4/`
-   remains W6.0 and must not be claimed before W6.0.
-3. Do not dispatch W5 or delete CSS provider/template directories until
-   amended W4 ledger-only PRUNE closes.
+1. Dispatch W5 using SPEC §8 after W4R close.
+2. Preserve W2/W3/W4/W5 root-runtime exclusion:
+   `crates/core/src/runtime/css_l4/` remains W6.0 and must not be claimed
+   before W6.0.
+3. Delete CSS provider/template directories only with W5's replacement
+   provider-generation path and W5 verification gates.
 
 ## 7. Refusal Conditions
 

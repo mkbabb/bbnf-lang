@@ -1096,6 +1096,11 @@ const SK_V14_W2_OWNER_PATHS: &[&str] = &[
     "xtask/src/regen_css.rs",
 ];
 
+const SK_V14_W4_OWNER_PATHS: &[&str] = &[
+    "crates/bbnf-bench/src/lock14_baseline.rs",
+    "xtask/src/main.rs",
+];
+
 fn current_lock14_owner_paths() -> Vec<&'static str> {
     let mut paths = Vec::with_capacity(
         SK_V12_W1A_OWNER_PATHS.len()
@@ -1121,7 +1126,8 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
             + SK_V13_W14_OWNER_PATHS.len()
             + SK_V13_W15_1_OWNER_PATHS.len()
             + SK_V14_W0_OWNER_PATHS.len()
-            + SK_V14_W2_OWNER_PATHS.len(),
+            + SK_V14_W2_OWNER_PATHS.len()
+            + SK_V14_W4_OWNER_PATHS.len(),
     );
     paths.extend_from_slice(SK_V12_W1A_OWNER_PATHS);
     paths.extend_from_slice(SK_V12_W1B1_OWNER_PATHS);
@@ -1147,6 +1153,7 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
     paths.extend_from_slice(SK_V13_W15_1_OWNER_PATHS);
     paths.extend_from_slice(SK_V14_W0_OWNER_PATHS);
     paths.extend_from_slice(SK_V14_W2_OWNER_PATHS);
+    paths.extend_from_slice(&SK_V14_W4_OWNER_PATHS);
     paths
 }
 
@@ -1447,6 +1454,17 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
         let allowed = changed_paths
             .iter()
             .all(|path| is_allowed_path(path, SK_V14_W2_OWNER_PATHS));
+        if allowed {
+            return Ok(());
+        }
+    }
+    if subject.contains("sk-v14-w4")
+        || subject.contains("sk-v14-W4")
+        || subject.contains("sk-v14-waveW4")
+    {
+        let allowed = changed_paths
+            .iter()
+            .all(|path| is_allowed_path(path, &SK_V14_W4_OWNER_PATHS));
         if allowed {
             return Ok(());
         }
@@ -1863,6 +1881,23 @@ mod tests {
         )
         .is_ok());
         assert!(validate_authorized_parent_diff(&changed, "fix(other): isolate provider").is_err());
+    }
+
+    #[test]
+    fn admits_sk_v14_w4_gate_json_parent_diff_only_under_w4_scope() {
+        let changed = SK_V14_W4_OWNER_PATHS
+            .iter()
+            .map(|path| (*path).to_string())
+            .collect::<Vec<_>>();
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v14-waveW4-redress): prune css ledger"
+        )
+        .is_ok());
+        assert!(
+            validate_authorized_parent_diff(&changed, "feat(sk-v14-waveW5): provider path")
+                .is_err()
+        );
     }
 
     #[test]

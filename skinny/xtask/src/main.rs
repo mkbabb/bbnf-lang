@@ -815,6 +815,7 @@ struct RollingDeltaRow {
 struct ResultsMetric {
     track1_threshold_mbps: f64,
     threshold_mbps: f64,
+    css_audit_falsified_open_allowed: bool,
 }
 
 fn validate_skv13_rolling_delta(results_text: &str, rolling_path: &Path) -> Result<()> {
@@ -891,9 +892,11 @@ fn validate_skv13_rolling_delta(results_text: &str, rolling_path: &Path) -> Resu
         validate_rolling_status(row)?;
         if let Some(metric) = css_metrics.get(&row_id) {
             validate_numeric_rolling_row(row, *metric)?;
-            if row.tranche_admitted != "ADMITTED" {
+            let audit_pruned_open =
+                row.tranche_admitted == "OPEN" && metric.css_audit_falsified_open_allowed;
+            if row.tranche_admitted != "ADMITTED" && !audit_pruned_open {
                 bail!(
-                    "{row_id} has numeric CSS evidence but is {}",
+                    "{row_id} has numeric CSS evidence but is {} without not_admitted/AUDIT-FALSIFIED overlay",
                     row.tranche_admitted
                 );
             }
@@ -1023,6 +1026,7 @@ fn parse_results_metrics(
             ResultsMetric {
                 track1_threshold_mbps: track1,
                 threshold_mbps: sonic + 1.0,
+                css_audit_falsified_open_allowed: false,
             },
         );
     }
@@ -1052,6 +1056,8 @@ fn parse_css_results_metrics(
         let lightningcss = extract_mbps(line, "lightningcss_strict")?;
         let lightningcss_segment = extract_comparator_segment(line, "lightningcss_strict")?;
         let threshold = extract_keyed_f64(lightningcss_segment, "threshold_mbps=")?;
+        let css_audit_falsified_open_allowed = matches!(cells.get(8).map(String::as_str), Some(value) if value.starts_with("not_admitted:"))
+            && matches!(cells.get(9).map(String::as_str), Some("AUDIT-FALSIFIED"));
         require_close_delta(
             row_id,
             "lightningcss threshold",
@@ -1063,6 +1069,7 @@ fn parse_css_results_metrics(
             ResultsMetric {
                 track1_threshold_mbps: track1,
                 threshold_mbps: threshold,
+                css_audit_falsified_open_allowed,
             },
         );
     }
@@ -1688,6 +1695,19 @@ mod tests {
         std::fs::write(&rolling_path, rolling.join("\n")).unwrap();
 
         validate_skv13_rolling_delta(&results.join("\n"), &rolling_path).unwrap();
+
+        let audit_open_results = results.join("\n").replace(
+            "| css_l4/declaration_values/direct_to_struct/main | css_l4 | non_json_generated:css_l4:declaration_values | SK-V12-W1b-2b | run | equality | gate | samples | 30 | flags | host | features | schema | REDRESS-125 | delta | generated_css_l4_declaration_values | css_l4_declaration_value_fact_stream | one | companion_gate_css_l4_lightningcss_sota | independent | parity |",
+            "| css_l4/declaration_values/direct_to_struct/main | css_l4 | css_l4_bench | SK-V14-open | SK-V14-open:retained-css-l4-audit-overlay | track1 | track2 | lightningcss full-parse | not_admitted:pre-W8-css-full-parse-equality | AUDIT-FALSIFIED | sk-v13/v1-css-l4-validation:§1-6 | absent:not-collected-for-css_l4 | admitted_fact_output | output_row | generated_grammar | fixture | criterion | metrics | 30 | flags | host | target | schema | REDRESS-185 | pruned:SK-V14-W4-PRUNE-2 | generated_css_l4_declaration_values | css_l4_declaration_value_fact_stream | one | companion_gate_css_l4_lightningcss_sota | independent | parity |",
+        );
+        let audit_open_rolling = std::fs::read_to_string(&rolling_path).unwrap().replace(
+            "| css_l4/declaration_values/direct_to_struct/main | css_l4_parity | 429.34 | 169.93 | 259.41 | ADMITTED |",
+            "| css_l4/declaration_values/direct_to_struct/main | css_l4_parity | 429.34 | 169.93 | 259.41 | OPEN |",
+        );
+        let audit_open_path = root.join("ROLLING-SOTA-DELTA.audit-open.md");
+        std::fs::write(&audit_open_path, audit_open_rolling).unwrap();
+        validate_skv13_rolling_delta(&audit_open_results, &audit_open_path)
+            .expect("audit-falsified CSS numeric rows may remain OPEN after W4R prune");
 
         let malformed = std::fs::read_to_string(&rolling_path).unwrap().replace(
             "| json/twitter/parse_only/main | parse_only | 200.00 | 101.00 | 99.00 | OPEN |",

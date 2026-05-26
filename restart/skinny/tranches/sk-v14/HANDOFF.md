@@ -9,8 +9,10 @@ round-trip; W2 admitted as skinny-side `regen-css` only at commit
 `45568e669`, while `crates/core/src/runtime/css_l4/` remains W6.0 work after
 W5. W3 admitted the production CSS L4 corpus loader at `b0a864f0b`.
 REDRESS-184 rejected the original W4 provider-deletion gate; W4R closed the
-ledger-only CSS L4 PRUNE with REDRESS-185..208, and W5 now owns CSS
-provider/template deletion in the replacement wave.
+ledger-only CSS L4 PRUNE with REDRESS-185..208. REDRESS-209 now rejects W5's
+current provider-collapse gate because the source-consuming generic generator
+does not yet exist; Pass Omega V5 W5R is the active blocker before any W5
+replacement/deletion implementation.
 
 ## 1. Bracket Verdict
 
@@ -161,25 +163,28 @@ Campaign at zero on numbers; non-zero on architecture. The
 
 ## 6. Next-Move
 
-**Next-move:** W4R ledger-only PRUNE-2 is closed. Dispatch W5 PRUNE-3 under
-amended SPEC §8: stand up the grammar-agnostic provider path, migrate
-`skinny/xtask/src/regen_css.rs`, delete the seven CSS L4 provider modules and
-seven CSS template directories in the same replacement slice, regenerate the
-skinny CSS L4 runtime twins, and run the seven `check-css-l4-*` companions.
-W6.0 keeps `crates/core/src/runtime/css_l4/`; W8/W9/W10 remain blocked until
-PRUNE-1..PRUNE-5 close.
+**Next-move:** W5 PRUNE-3 is rejected under the current SPEC shape. Dispatch
+Pass Omega V5 W5R using REDRESS-209,
+`research/skv14-W5-plan.md`, `research/skv14-W5-redress.md`, and
+`research/skv14-W5R-corrective-packet.md` as inputs. Proposed amendment:
+split W5 into a source-consuming generator-capability wave and a follow-on
+provider/template deletion wave, then keep W6.0
+`crates/core/src/runtime/css_l4/`, W7, and W8/W9/W10 blocked until the amended
+PRUNE-3/4/5 chain closes.
 
 Hard caps echoed per `[dispatch-hard-cap]`: 30-min lens-agent cap;
 research 20 min / plan 15 min / redress 30 min (45 min only for the
 addendum-amended decision-engine fold + C-4 per CONSOLIDATED §0.5 cap
 discipline).
 
-1. Dispatch W5 using SPEC §8 after W4R close.
+1. Dispatch Pass Omega V5 W5R; do not dispatch another W5 implementation
+   attempt until G-Omega V5 closes and CRUD/SPEC patches land.
 2. Preserve W2/W3/W4/W5 root-runtime exclusion:
    `crates/core/src/runtime/css_l4/` remains W6.0 and must not be claimed
    before W6.0.
-3. Delete CSS provider/template directories only with W5's replacement
-   provider-generation path and W5 verification gates.
+3. Delete CSS provider/template directories only after the source-consuming
+   provider-generation path exists and the amended W5B verification gates
+   authorise the deletion.
 
 ## 7. Refusal Conditions
 

@@ -5167,3 +5167,22 @@ perturbation.
   The prior CSS L4 admission is audit-falsified by `sk-v13/v1-css-l4-validation:§1-6`, including §1 C5's nested-rule regex shortcut; W4 reclassifies the row to AUDIT-FALSIFIED/OPEN as ledger state only. No CSS source, generator, provider, template, runtime-twin, or `regen_css` deletion is performed in W4; deletion remains routed to W5 after replacement provider generation exists.
 - Item 208 closes `css_l4/typed_property_groups/direct_to_struct/main` under `G-SK-V14-W4-PRUNE-2` as `PRUNE`.
   The prior CSS L4 admission is audit-falsified by `sk-v13/v1-css-l4-validation:§1-6`, including §1 C5's nested-rule regex shortcut; W4 reclassifies the row to AUDIT-FALSIFIED/OPEN as ledger state only. No CSS source, generator, provider, template, runtime-twin, or `regen_css` deletion is performed in W4; deletion remains routed to W5 after replacement provider generation exists.
+
+## SK-V14 Wave 5 PRUNE-3 Lock 14 Generator Capability Gap
+
+- Item 209 closes `G-SK-V14-W5-PRUNE-3` as `REJECTED` under the current SPEC
+  shape. W5 requires the eight per-grammar provider modules to collapse into one
+  grammar-agnostic generator template consuming grammar source plus workspace
+  metadata, then requires the seven CSS provider modules and seven CSS template
+  directories to be deleted in the same replacement slice. Current HEAD still
+  emits `regen-css` through `codegen::emit_runtime_profile(target.profile)` and
+  the static provider/template mesh; the CSS source and metadata inputs are
+  hashed for freshness only, not passed into codegen. The skinny grammar parser
+  also rejects the CSS L4 source surface (`->` value projections and `@{...}`
+  span capture). Static centralization would hide the same hand-written
+  per-profile runtime bodies in one file, not satisfy Lock 14. The evidence
+  packet is `restart/skinny/tranches/sk-v14/research/skv14-W5-redress.md`, and
+  the corrective proposal is
+  `restart/skinny/tranches/sk-v14/research/skv14-W5R-corrective-packet.md`.
+  W6/W7 remain blocked by the PRUNE chain, and W8/W9/W10 remain globally blocked
+  until PRUNE-1 through PRUNE-5 close.

@@ -42,7 +42,12 @@ pre/post-grep evidence on every cite-bearing micro-fold. This prompt
 also refuses any W3-or-later SK-V14 plan before Pass Omega V3 W2R CRUD has
 landed and amended W2 has admitted under the skinny-only `regen-css` gate.
 Reject any W2 plan that touches or claims closure over
-`crates/core/src/runtime/css_l4/`; W6.0 owns that tree. This prompt still
+`crates/core/src/runtime/css_l4/`; W6.0 owns that tree. Pass Omega V4 W4R
+adds the next refusal: reject any W4/W5 plan before V4 G-Omega + SPEC/HANDOFF/
+INDEX/WORKSPACE patching lands; reject any W4 plan that deletes CSS provider,
+template, runtime, source, or generator paths; reject any W5 plan that deletes
+CSS provider/template paths without landing the generic provider replacement
+and `regen_css.rs` migration in the same source slice. This prompt still
 defines the lenses; it does not authorize source, gate, `RESULTS.md`, or
 `REDRESS.md` edits by itself.
 

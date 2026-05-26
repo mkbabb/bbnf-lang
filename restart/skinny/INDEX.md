@@ -2,16 +2,18 @@
 
 The skinny exists to validate the V1 architectural premise — specifically the SOTA-viability claim — before tranches A-J commit. **One grammar (JSON) end-to-end through 10 partial crates plus `xtask`, dual-track measured against sonic-rs / simd-json. Buildable in 2-4 weeks; ~32,000 handwritten LOC + ≤4,000 generated LOC.**
 
-**Pass Omega V3 / SK-V14 W2R authority update (2026-05-26).** Full SK-V14 LOCK
-convergence remains the base — 5 of 5 cohorts §3Z LOCKED:
+**Pass Omega V4 / SK-V14 W4R authority update (2026-05-26).** Full SK-V14 LOCK
+convergence remains the base - 5 of 5 cohorts §3Z LOCKED:
 S-P2 `4c70b6f193` + T-P1 `0a9c0fe65d` + S-P3 `626cb06cc1` + T-P2 `34a28f5c15`
 + T-P3 `69eea1c5c`. Pass Omega V2 CRUD is complete; Pass Omega V3 W2R closed
-the REDRESS-183 wave-graph correction without a LOCKS delta. The current
-dispatch authority for live skinny iteration is the SK-V14 tranche
-(`restart/skinny/tranches/sk-v14/SPEC.md`, 12-wave plan W0..W11), amended so
-W2 is skinny-side `regen-css` only and `crates/core/src/runtime/css_l4/` is
-W6.0 work after W5. SK-V14 W3+ is blocked until amended W2 re-admits; W8/W9/W10
-remain globally blocked until PRUNE-1..PRUNE-5 close.
+REDRESS-183 without a LOCKS delta, and Pass Omega V4 W4R closes REDRESS-184
+without a LOCKS delta. The current dispatch authority for live skinny iteration
+is the SK-V14 tranche (`restart/skinny/tranches/sk-v14/SPEC.md`, 12-wave plan
+W0..W11), amended so W2 is skinny-side `regen-css` only,
+`crates/core/src/runtime/css_l4/` is W6.0 work after W5, W4 is CSS L4
+ledger-only PRUNE, and W5 owns CSS provider/template deletion in the same
+replacement wave as the grammar-agnostic provider path. W8/W9/W10 remain
+globally blocked until PRUNE-1..PRUNE-5 close.
 
 Historical SK-V5/SK-V6 cohorts remain evidence for rejected routes, primitive
 admission discipline, and strict same-plane comparator language. They are not
@@ -19,8 +21,8 @@ the active dispatch anchor. The current close posture is the SK-V14 12-wave
 plan (W0..W11) with PRUNE-then-rebuild sequencing per the α-E candidate
 shortlist: W0 Baseline Profile + Telemetry Lock; W1 Comparator Rebind +
 Per-Iter Equality + PRUNE-1; W2 skinny-side regen-css xtask; W3 Production CSS Corpora;
-W4 PRUNE-2 delete 7 CSS templates + revert 24 CSS admits; W5 PRUNE-3 Lock-14
-refactor; W6 PRUNE-4 9 sub-waves beginning with W6.0 CSS L4 root-runtime
+W4 PRUNE-2 CSS L4 admit-ledger prune; W5 PRUNE-3 Lock-14 refactor plus CSS
+provider/template deletion in the replacement slice; W6 PRUNE-4 9 sub-waves beginning with W6.0 CSS L4 root-runtime
 collapse (≤2.0k C-1 part-B / ≤90 min sub-wave / ≤810 min aggregate per
 SPEC §13:243);
 W7 PRUNE-5 wire W8 policy + W9 union; W8 CSS L4 Re-Admit; W9 JSON Direct +
@@ -175,7 +177,7 @@ The skinny is buildable, measurable, and falsifiable. It exists to update the SO
 
 The four sibling slices ([SUBSTRATE.md](SUBSTRATE.md), [COMPILER.md](COMPILER.md), [BENCH.md](BENCH.md), [WORKSPACE.md](WORKSPACE.md), [HARDENING.md](HARDENING.md)) compose with the current SK-V14 tranche authority and keep older SK-V5/SK-V6/SK-V13 packets as historical evidence:
 
-- [`tranches/sk-v14/SPEC.md`](tranches/sk-v14/SPEC.md) and the SK-V14 12-wave plan (W0..W11) — active skinny dispatch authority after Pass Omega V3 W2R CRUD, with W2 rerun required under the amended skinny-only gate before W3+; full cohort §3Z LOCK convergence at S-P2 `4c70b6f193` + T-P1 `0a9c0fe65d` + S-P3 `626cb06cc1` + T-P2 `34a28f5c15` + T-P3 `69eea1c5c`.
+- [`tranches/sk-v14/SPEC.md`](tranches/sk-v14/SPEC.md) and the SK-V14 12-wave plan (W0..W11) - active skinny dispatch authority after Pass Omega V3 W2R and Pass Omega V4 W4R CRUD, with W2/W3 admitted and amended W4 next; full cohort §3Z LOCK convergence at S-P2 `4c70b6f193` + T-P1 `0a9c0fe65d` + S-P3 `626cb06cc1` + T-P2 `34a28f5c15` + T-P3 `69eea1c5c`.
 - [`tranches/sk-v13/SYNTHESIS.md`](tranches/sk-v13/SYNTHESIS.md), [`tranches/sk-v13/SPEC.md`](tranches/sk-v13/SPEC.md), [`tranches/sk-v13/DISPATCH-PROMPT.md`](tranches/sk-v13/DISPATCH-PROMPT.md), [`tranches/sk-v13/HANDOFF.md`](tranches/sk-v13/HANDOFF.md) — historical SK-V13 dispatch packet (now evidence; superseded by SK-V14 12-wave plan).
 - [`audit/IMPLEMENTATION-AGENT-PROMPT-SK-V6.md`](audit/IMPLEMENTATION-AGENT-PROMPT-SK-V6.md) — historical SK-V6 evidence (2026-05-14): legacy purge, profile-first regression recovery, direct-string close discipline, strict workload matrix, and negative-route evidence.
 - [`audit/SOTA-BEAT-DESIGN.md`](audit/SOTA-BEAT-DESIGN.md) §6 — falsifiability matrix per pathology class; `checkasm` admission gate; Wave 2 re-baseline against S-anchors.

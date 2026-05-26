@@ -32,8 +32,9 @@ commit `bf957ef03`; CRUD should align it with the final G-Omega packet.
 Append a Pass Omega V5 receiver after the V4 W4R receiver:
 
 - W5 current shape rejected by REDRESS-209.
-- W5A owns source-consuming runtime emission request, CSS L4 source-parser
-  capability, and `regen-css` migration.
+- W5A owns grammar-neutral source-consuming runtime emission request, parser
+  capability for V1 grammar-source constructs, JSON/Sheets/BBNF-self non-JSON
+  proof, all-seven CSS companion coverage, and `regen-css` migration.
 - W5B owns provider/template deletion and Lock 14 baseline closure.
 - W6.0 remains CSS L4 root-runtime collapse after W5B.
 - W8/W9/W10 remain globally blocked until PRUNE-1 through PRUNE-5 close.

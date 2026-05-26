@@ -15,10 +15,15 @@ provider/template deletion.
 Replace W5/W6 row intent with:
 
 ```text
-| W5A | §8 | PRUNE-3A — source-consuming runtime generator contract: pass grammar source + workspace metadata into codegen, make CSS L4 source parseable for runtime generation, migrate regen-css to the new path; no provider/template deletion. | Conditional on W4 ledger close | <=1.4k C-1 part-A source/test LOC unless split narrower in SPEC | <=90 min |
-| W5B | §8B | PRUNE-3B — provider/template deletion and Lock 14 baseline close: delete seven CSS provider modules and seven template dirs only after W5A replacement is load-bearing; retire old provider mesh; run regen-css and companions. | Conditional on W5A close | source/test LOC named by SPEC | <=90 min |
+| W5A | §8 | PRUNE-3A — grammar-neutral source-consuming runtime generator contract: pass grammar source + workspace metadata into codegen, make required V1 grammar-source constructs parseable for runtime generation without grammar-id branches, migrate regen-css to the new path, prove CSS L4 plus JSON/Sheets/BBNF-self non-JSON gates; no provider/template deletion. | Conditional on W4 ledger close | <=1.0k C-1 part-A source/test LOC | <=90 min |
+| W5B | §8B | PRUNE-3B — provider/template deletion and Lock 14 baseline close: delete seven CSS provider modules and seven template dirs only after W5A replacement is load-bearing; retire old provider mesh; run regen-css and companions. | Conditional on W5A close | <=400 C-1 part-A source/test LOC | <=90 min |
 | W6 | §9 | PRUNE-4 — 9 sub-waves: W6.0 CSS L4 root-runtime collapse, then remaining Pattern H collapses. | Conditional on W5B close | <=2.0k C-1 part-B aggregate | <=90 min per sub-wave; aggregate <=810 min |
 ```
+
+W5A + W5B remain a split of the original W5 <=1.4k C-1 part-A source/test LOC
+budget, not a new budget. W6 keeps the existing <=2.0k C-1 part-B aggregate, so
+the total C-1 envelope remains <=3.4k. Any W5A or W5B plan that cannot fit its
+sub-cap, or that requires borrowing from W6, returns REVISE before dispatch.
 
 ## `restart/skinny/tranches/sk-v14/SPEC.md`
 
@@ -28,11 +33,16 @@ Section 8 W5 changes:
 - Keep owner paths to codegen, grammar parser/runtime-generation parser,
   `regen_css.rs`, and Lock 14 baseline temporary W5A guard.
 - Remove provider/template deletion from W5A.
-- Exit gate becomes source/metadata consumed by codegen, CSS L4 source surface
-  parseable for runtime generation, at least one CSS L4 profile emitted through
-  the source-consuming path with no static provider/template dependency,
-  `regen-css` and seven companions passing through the migrated path, and no new
-  provider/template directories added.
+- Exit gate becomes source/metadata consumed by codegen through a
+  grammar-neutral runtime-generation parser/contract; required V1
+  grammar-source constructs are parseable without `grammar_id == css_l4` or
+  equivalent generic-branch behavior; all seven CSS L4 profiles are emitted
+  through the source-consuming path with no static provider/template dependency;
+  `regen-css` and all seven companions pass through the migrated path; JSON has
+  unchanged-output proof; Sheets and BBNF-self fail closed or emit generated-role
+  witnesses through the same parser/contract; no new provider/template
+  directories are added.
+- W5A source/test LOC cap is <=1.0k and cannot borrow from W5B or W6.
 
 Add Section 8B W5B:
 
@@ -43,7 +53,11 @@ Add Section 8B W5B:
   provider mesh once no profile consumes it, update Lock 14 baseline to post-W5
   forward invariant, run `regen-css` and all seven companions.
 - Exit gate: provider count zero, CSS template dir count zero, Lock 14 grep
-  clean, `regen-css` clean, all seven companions pass.
+  clean, `regen-css` clean, all seven companions pass, JSON unchanged-output
+  proof holds, and Sheets/BBNF-self non-JSON proof remains fail-closed or
+  generated-role-witnessed.
+- W5B source/test LOC cap is <=400 and W5A + W5B combined must remain <=1.4k
+  C-1 part-A.
 
 Section 9 W6 changes:
 
@@ -74,8 +88,9 @@ centralization of hand-written CSS runtime bodies is rejected as P-6 recurrence.
 
 R3 PRUNE-3 wording follows the same split:
 
-- PRUNE-3A = source-consuming generator contract + CSS source parser support +
-  `regen-css` migration.
+- PRUNE-3A = grammar-neutral source-consuming generator contract + V1
+  grammar-source parser support + `regen-css` migration + JSON/Sheets/BBNF-self
+  non-JSON proof.
 - PRUNE-3B = provider/template deletion + Lock 14 baseline close.
 
 ## `restart/skinny/tranches/sk-v14/DISPATCH-PROMPT.md`
@@ -84,8 +99,10 @@ Add a W5R guard:
 
 ```text
 Before W5A, W5B, W6, W7, W8, W9, or W10 dispatch, verify Pass Omega V5
-G-Omega closed, CRUD applied, and amended W5A/W5B sequencing is in SPEC.
-Provider/template deletion is forbidden before W5A admits.
+G-Omega closed, `G-OMEGA-SIGNOFF.md` and `CRUD-LOG.md` exist, CRUD applied, and
+amended W5A/W5B sequencing is in SPEC. Provider/template deletion is forbidden
+before W5A admits all-seven CSS companion coverage plus JSON/Sheets/BBNF-self
+non-JSON proof.
 ```
 
 Add the forward procedural addenda:

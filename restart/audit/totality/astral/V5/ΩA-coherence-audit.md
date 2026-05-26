@@ -11,10 +11,10 @@ artifact.
 ACCEPT-WITH-REQUIRED-SURFACE-AMENDMENTS.
 
 W5R resolves the current W5 contradiction by splitting generator capability
-from provider/template deletion. W5A becomes the source-consuming runtime
-generator contract and CSS source parser wave. W5B becomes the provider/template
-deletion and Lock 14 baseline-close wave. W6 remains the Pattern H runtime
-collapse after W5B.
+from provider/template deletion. W5A becomes the grammar-neutral
+source-consuming runtime generator contract and parser-capability wave. W5B
+becomes the provider/template deletion and Lock 14 baseline-close wave. W6
+remains the Pattern H runtime collapse after W5B.
 
 ## Pre-Amendment Gap
 

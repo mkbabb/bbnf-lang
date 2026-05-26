@@ -6,8 +6,9 @@ Status: Pass Alpha α-F contract handoff, superseded for active dispatch by
 the S-P3 SPEC/DISPATCH packet and amended by Pass Omega V3 W2R on
 2026-05-26. REDRESS-183 rejected the original W2 dual-tree round-trip; W2
 admitted as skinny-side `regen-css` only at commit `45568e669`, while
-`crates/core/src/runtime/css_l4/` remains W6.0 work after W5. W3 is now the
-next executable wave.
+`crates/core/src/runtime/css_l4/` remains W6.0 work after W5. W3 admitted the
+production CSS L4 corpus loader on 2026-05-26. W4 PRUNE-2 is now the next
+executable wave.
 
 ## 1. Bracket Verdict
 
@@ -158,18 +159,19 @@ Campaign at zero on numbers; non-zero on architecture. The
 
 ## 6. Next-Move
 
-**Next-move:** W2R admitted amended W2 at commit `45568e669`. Dispatch W3 in
-SPEC order, then continue W4..W11 only as each entry gate admits. W8/W9/W10
-remain blocked until PRUNE-1..PRUNE-5 close.
+**Next-move:** W2R admitted amended W2 at commit `45568e669`, and W3 admitted
+the production CSS L4 corpus loader on 2026-05-26. Dispatch W4 PRUNE-2 in SPEC
+order, then continue W5..W11 only as each entry gate admits. W8/W9/W10 remain
+blocked until PRUNE-1..PRUNE-5 close.
 
 Hard caps echoed per `[dispatch-hard-cap]`: 30-min lens-agent cap;
 research 20 min / plan 15 min / redress 30 min (45 min only for the
 addendum-amended decision-engine fold + C-4 per CONSOLIDATED §0.5 cap
 discipline).
 
-1. Dispatch W3 research → plan → redress from `restart/skinny/tranches/sk-v14/SPEC.md`.
-2. Preserve W2's root-runtime exclusion: `crates/core/src/runtime/css_l4/`
-   remains W6.0 and must not be claimed by W3.
+1. Dispatch W4 research → plan → redress from `restart/skinny/tranches/sk-v14/SPEC.md`.
+2. Preserve W2/W3's root-runtime exclusion: `crates/core/src/runtime/css_l4/`
+   remains W6.0 and must not be claimed before W6.0.
 3. Continue PRUNE-then-rebuild in SPEC order. W8/W9/W10 remain blocked until
    PRUNE-1..PRUNE-5 close.
 

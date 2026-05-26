@@ -51,13 +51,17 @@ W5B plan before W5A admits all seven CSS companions plus JSON/Sheets/BBNF-self
 proof through the source-consuming generator path; reject static centralization
 of hand-written CSS runtime bodies as P-6 recurrence. This prompt still defines
 the lenses; it does not authorize source, gate, `RESULTS.md`, or `REDRESS.md`
-edits by itself. Pass Omega V6 W5BR adds the next refusal: reject any W5B-GEN
-plan that deletes provider/template paths; reject any W5C-DELETE plan before
-W5B-GEN proves the provider-free generator body and removes live
+edits by itself. Pass Omega V6 W5BR added the historical refusal: reject any
+W5B-GEN plan that deletes provider/template paths; reject any W5C-DELETE plan
+before W5B-GEN proves the provider-free generator body and removes live
 `RuntimeProvider`, `GrammarProfile`, `render_runtime_profile`, provider-module,
 generated-output fixture lookup, and grammar-name branch reachability from
-generic production code. W5C-DELETE requires W5B-GEN admit before deletion can
-proceed.
+generic production code. Pass Omega V7 W5B-GENR adds the active refusal: reject
+any W5B-FRONTEND plan that treats `@ws` or related compatibility syntax as new
+public syntax; reject any W5B-FRONTEND or W5C-GEN source redress before
+`lock14_baseline.rs` owner-path and parent-diff routing lands for that wave;
+reject any W5C-GEN plan before W5B-FRONTEND admits; reject provider/template
+deletion before W5D-DELETE after W5C-GEN admit.
 
 ## §1 — Purpose: why skinny hardening differs from V1 hardening
 

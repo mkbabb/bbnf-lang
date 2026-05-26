@@ -70,21 +70,25 @@ regex/HIR fact mandate). Historical helpers such as `shapes_for_json` and
 `nominate_json` are deletion targets, not naming patterns for new compiler
 code.
 
-**Pass Omega V6 / SK-V14 W5BR compiler receiver (2026-05-26).** REDRESS-209
+**Pass Omega V7 / SK-V14 W5B-GENR compiler receiver (2026-05-26).** REDRESS-209
 split the old monolithic W5 into W5A and W5B; REDRESS-210 then rejected W5B
 deletion because W5A admitted the request boundary without a provider-free
-generator body. W5A remains the closed compiler-side request-boundary wave:
+generator body; REDRESS-211 rejected W5B-GEN because the generic frontend/import
+IR closure was missing. W5A remains the closed compiler-side request-boundary wave:
 grammar source and workspace metadata enter codegen as semantic inputs,
 required V1 grammar-source constructs parse for runtime generation without
 grammar-id branches, and `regen-css` plus all seven CSS L4 companions consume
 that path with JSON unchanged-output and Sheets/BBNF-self fail-closed or
-generated-role proof. W5B-GEN is now the compiler-side provider-free generator
-body wave: retire live `RuntimeProvider` / `GrammarProfile` /
-`render_runtime_profile` production dispatch while preserving provider/template
-files as unreachable W5C residue. W5C-DELETE is deletion only after W5B-GEN is
-load-bearing: retire provider/template clusters and close the Lock 14 baseline.
-Static centralization of hand-written CSS runtime bodies is not a compiler
-receiver; it is the P-6 recurrence vector.
+generated-role proof. W5B-FRONTEND is now the compiler-side frontend/import/IR
+closure wave: lower CSS L4 compatibility constructs such as `@ws` into
+canonical IR without new public syntax or grammar-name branches. W5C-GEN is the
+provider-free generator body wave after W5B-FRONTEND: retire live
+`RuntimeProvider` / `GrammarProfile` / `render_runtime_profile` production
+dispatch while preserving provider/template files as unreachable W5D residue.
+W5D-DELETE is deletion only after W5C-GEN is load-bearing: retire
+provider/template clusters and close the Lock 14 baseline. Static
+centralization of hand-written CSS runtime bodies is not a compiler receiver;
+it is the P-6 recurrence vector.
 
 ---
 

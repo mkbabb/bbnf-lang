@@ -3,7 +3,8 @@
 Date: 2026-05-23.
 
 Status: S-P3 V1 dispatch contract, amended by Pass Omega V3 W2R,
-Pass Omega V4 W4R, and Pass Omega V5 W5R on 2026-05-26. This file is the orchestrator's
+Pass Omega V4 W4R, Pass Omega V5 W5R, Pass Omega V6 W5BR, and Pass Omega V7
+W5B-GENR on 2026-05-26. This file is the orchestrator's
 per-wave invocation contract for SK-V14 W0..W11. Every SK-V14 wave is
 dispatched as a research → plan → redress triumvirate per
 `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`. This contract
@@ -27,13 +28,14 @@ Read in order before dispatching any SK-V14 wave triumvirate:
 11. `restart/audit/totality/astral/V3/G-OMEGA-PACKET.md` + `restart/audit/totality/astral/V3/hardening/CONSOLIDATED.md` (W2R amendment: W2 skinny-only; W6.0 root CSS L4).
 12. `restart/audit/totality/astral/V4/G-OMEGA-PACKET.md` + `restart/audit/totality/astral/V4/hardening/CONSOLIDATED.md` (W4R amendment: W4 ledger-only; CSS provider/template deletion moved out of W4).
 13. `restart/audit/totality/astral/V5/G-OMEGA-PACKET.md` + `restart/audit/totality/astral/V5/hardening/CONSOLIDATED.md` (W5R amendment: W5A source-consuming generator capability; W5B provider/template deletion).
-14. `restart/audit/totality/astral/V6/G-OMEGA-PACKET.md` + `restart/audit/totality/astral/V6/hardening/CONSOLIDATED.md` (W5BR amendment: W5B-GEN provider-free generator body; W5C-DELETE provider/template deletion).
-15. `skinny/RESULTS.md`, `skinny/REDRESS.md`, `restart/skinny/ROLLING-SOTA-DELTA.md` (empirical floor)
+14. `restart/audit/totality/astral/V6/G-OMEGA-PACKET.md` + `restart/audit/totality/astral/V6/hardening/CONSOLIDATED.md` (historical W5BR amendment: W5B-GEN provider-free generator body; W5C-DELETE provider/template deletion).
+15. `restart/audit/totality/astral/V7/G-OMEGA-PACKET.md` + `restart/audit/totality/astral/V7/hardening/CONSOLIDATED.md` (W5B-GENR amendment: W5B-FRONTEND frontend/import/IR closure; W5C-GEN provider-free generator body; W5D-DELETE provider/template deletion).
+16. `skinny/RESULTS.md`, `skinny/REDRESS.md`, `restart/skinny/ROLLING-SOTA-DELTA.md` (empirical floor)
 
 ## §1 — Per-wave triumvirate contract (research → plan → redress)
 
 Every SK-V14 wave (W0..W11; W6 expanded into W6.0..W6.8 sub-waves, with W5
-expanded into W5A, W5B-GEN, and W5C-DELETE under V6 W5BR)
+expanded into W5A, W5B-FRONTEND, W5C-GEN, and W5D-DELETE under V7 W5B-GENR)
 follows the `SKINNY-TRIUMVIRATE.md §1` three-phase structure:
 
 | Phase | Purpose | Agent count | Output | Source edits | Commit prefix |
@@ -139,13 +141,14 @@ For each SK-V14 wave W ∈ {W0..W11}, the orchestrator's dispatch envelope is:
 Before dispatching the W{N} triumvirate:
 
 1. Verify W{N-1} closed (admitted, rejected, or routed).
-2. Verify W{N}'s entry gate per SPEC §X (W2 + W3 before W4; W5A before W5B-GEN; W5B-GEN before W5C-DELETE; W5C-DELETE + W6 before W7; W2+W3+W4+W5A+W5B-GEN+W5C-DELETE+W6+W7 before any new-admit W8/W9/W10 claim).
+2. Verify W{N}'s entry gate per SPEC §X (W2 + W3 before W4; W5A before W5B-FRONTEND; W5B-FRONTEND before W5C-GEN; W5C-GEN before W5D-DELETE; W5D-DELETE + W6 before W7; W2+W3+W4+W5A+W5B-FRONTEND+W5C-GEN+W5D-DELETE+W6+W7 before any new-admit W8/W9/W10 claim).
 3. If W{N} is W3 or later, verify Pass Omega V3 W2R CRUD landed and W2 admitted under the amended skinny-only gate; otherwise stop with REVISE.
-4. Before W5A, W5B-GEN, W5C-DELETE, or any CSS provider/template deletion, verify Pass Omega V4 G-Omega closed, V4 CRUD landed, and amended W4 ledger-only PRUNE closed; otherwise stop with REVISE.
-5. Before W5A, W5B-GEN, W5C-DELETE, W6, W7, W8, W9, or W10 dispatch, verify Pass Omega V5 G-Omega closed, `restart/audit/totality/astral/V5/G-OMEGA-SIGNOFF.md` and `restart/audit/totality/astral/V5/CRUD-LOG.md` exist, CRUD applied, and amended W5A/W5B sequencing is in SPEC.
-6. Before W5B-GEN, W5C-DELETE, W6, W7, W8, W9, or W10 dispatch, verify Pass Omega V6 G-Omega closed, `restart/audit/totality/astral/V6/G-OMEGA-SIGNOFF.md` and `restart/audit/totality/astral/V6/CRUD-LOG.md` exist, CRUD applied, and amended W5B-GEN/W5C-DELETE sequencing is in SPEC. Provider/template deletion is forbidden before W5C-DELETE; W5B-GEN must build the provider-free generator body first.
-7. Verify W{N}'s SPEC §X owner paths, tasks, exit gate, revert protocol exist and are current.
-8. Verify CHALLENGE acceptance if W{N} is first-of-class, substrate-touching, primitive, or high-risk (W5A/W5B-GEN/W5C-DELETE/W6/W7 mandatory; W1/W2/W4/W8/W9/W10 first-of-class recommendation).
+4. Before W5A, W5B-FRONTEND, W5C-GEN, W5D-DELETE, or any CSS provider/template deletion, verify Pass Omega V4 G-Omega closed, V4 CRUD landed, and amended W4 ledger-only PRUNE closed; otherwise stop with REVISE.
+5. Before W5A, W5B-FRONTEND, W5C-GEN, W5D-DELETE, W6, W7, W8, W9, or W10 dispatch, verify Pass Omega V5 G-Omega closed, `restart/audit/totality/astral/V5/G-OMEGA-SIGNOFF.md` and `restart/audit/totality/astral/V5/CRUD-LOG.md` exist, CRUD applied, and amended W5A/W5B sequencing is in SPEC.
+6. Before W5B-FRONTEND, W5C-GEN, W5D-DELETE, W6, W7, W8, W9, or W10 dispatch, verify Pass Omega V6 G-Omega closed, `restart/audit/totality/astral/V6/G-OMEGA-SIGNOFF.md` and `restart/audit/totality/astral/V6/CRUD-LOG.md` exist, CRUD applied, and amended W5B-GEN/W5C-DELETE sequencing is superseded by V7 in SPEC. Provider/template deletion remains forbidden before W5D-DELETE.
+7. Before W5B-FRONTEND, W5C-GEN, W5D-DELETE, W6, W7, W8, W9, or W10 dispatch, verify Pass Omega V7 G-Omega closed, `restart/audit/totality/astral/V7/G-OMEGA-SIGNOFF.md` and `restart/audit/totality/astral/V7/CRUD-LOG.md` exist, CRUD applied, and amended W5B-FRONTEND/W5C-GEN/W5D-DELETE sequencing is in SPEC. W5B-FRONTEND and W5C-GEN must add explicit `lock14_baseline.rs` owner-path and parent-diff routing before source redress; `@ws` is compatibility-lowering evidence into canonical IR, not new public syntax.
+8. Verify W{N}'s SPEC §X owner paths, tasks, exit gate, revert protocol exist and are current.
+9. Verify CHALLENGE acceptance if W{N} is first-of-class, substrate-touching, primitive, or high-risk (W5A/W5B-FRONTEND/W5C-GEN/W5D-DELETE/W6/W7 mandatory; W1/W2/W4/W8/W9/W10 first-of-class recommendation).
 
 ### §4.2 Research dispatch
 
@@ -158,7 +161,7 @@ Output: research/skv14-{wave-letter}{agent-id}-{topic}.md per agent
 Commit: docs(sk-v14-wave{W}-research): archive {scope} cohort reports
 ```
 
-### §4.3 CHALLENGE dispatch (optional but recommended; mandatory for substrate-touching waves W5A/W5B-GEN/W5C-DELETE/W6/W7)
+### §4.3 CHALLENGE dispatch (optional but recommended; mandatory for substrate-touching waves W5A/W5B-FRONTEND/W5C-GEN/W5D-DELETE/W6/W7)
 
 ```
 Dispatch: SK-V14 W{N} CHALLENGE V{cycle}
@@ -182,6 +185,8 @@ Per `SKINNY-TRIUMVIRATE.md §4` lens specialisations:
 - NEW-CH5-V4-01: CH5 must treat provider/template/runtime deletion as coupled to the code path compiling the same-wave consumer.
 - NEW-CH3-V6-01: CH3 must distinguish a source-consuming request boundary from a provider-free generator body; deletion-target providers/templates cannot be removed until the provider-free body is production-reachable.
 - NEW-CH5-V6-01: CH5 must grep live `RuntimeProvider` / `GrammarProfile` / `render_runtime_profile` reachability before accepting any provider/template deletion plan.
+- NEW-CH3-V7-01: CH3 must distinguish frontend/import/IR closure from provider-free generation; compatibility syntax such as `@ws` lowers into canonical IR and cannot be counted as a new directive.
+- NEW-CH5-V7-01: CH5 must verify Lock 14 owner-path and parent-diff routing exists before W5B-FRONTEND or W5C-GEN touches source owner paths.
 
 Convergence: ≥95% ACCEPT × 2 cycles + zero orphan REVISE; V ≤ 5
 ceiling per `PASS-3-SYNTHESIS-PLAN.md §4`.
@@ -228,7 +233,7 @@ CHALLENGE may be interposed:
 
 Per `SKINNY-TRIUMVIRATE.md §4`:
 
-- **Mandatory** for: W5A (PRUNE-3A source-consuming request boundary — substrate-touching), W5B-GEN (PRUNE-3B provider-free generator body — substrate-touching), W5C-DELETE (PRUNE-3C provider/template deletion and Lock 14 close — substrate-touching), W6 (PRUNE-4 per-grammar runtime collapse — substrate-touching), W7 (PRUNE-5 W8+W9 wire-up — first-of-class CSP-shape consumer), any wave admitting any of the 12 F-V2-P1ABC-RERECORD consumer-dependency primitives, any wave admitting the three convergent long-string-body SIMD scan identifiers per S-P2 V3 §6.2.
+- **Mandatory** for: W5A (PRUNE-3A source-consuming request boundary — substrate-touching), W5B-FRONTEND (PRUNE-3B frontend/import/IR closure — substrate-touching), W5C-GEN (PRUNE-3C provider-free generator body — substrate-touching), W5D-DELETE (PRUNE-3D provider/template deletion and Lock 14 close — substrate-touching), W6 (PRUNE-4 per-grammar runtime collapse — substrate-touching), W7 (PRUNE-5 W8+W9 wire-up — first-of-class CSP-shape consumer), any wave admitting any of the 12 F-V2-P1ABC-RERECORD consumer-dependency primitives, any wave admitting the three convergent long-string-body SIMD scan identifiers per S-P2 V3 §6.2.
 - **Recommended** for: W0 (telemetry schema first-of-class), W1 (comparator rebind + per-iter equality oracle — bench-harness substrate), W4 (PRUNE-2 — ledger-only CSS L4 audit prune after REDRESS-184), W8 (CSS L4 re-admit — first-of-class production-corpus admit), W10 (parse_only distinct path — first-of-class).
 - **Optional** for: W2 (R4 regen-css; mechanical refactor with clear contract), W3 (R5 corpora; data-staging), W9 (JSON direct/typed re-admit; well-understood pattern post-W1), W11 (close; documentary).
 

@@ -4,10 +4,10 @@ Date: 2026-05-22.
 
 Status: Pass Alpha α-F contract handoff, superseded for active dispatch by
 the S-P3 SPEC/DISPATCH packet and amended by Pass Omega V3 W2R, Pass
-Omega V4 W4R, Pass Omega V5 W5R, and Pass Omega V6 W5BR on 2026-05-26. REDRESS-183 rejected the original W2 dual-tree
+Omega V4 W4R, Pass Omega V5 W5R, Pass Omega V6 W5BR, and Pass Omega V7 W5B-GENR on 2026-05-26. REDRESS-183 rejected the original W2 dual-tree
 round-trip; W2 admitted as skinny-side `regen-css` only at commit
 `45568e669`, while `crates/core/src/runtime/css_l4/` remains W6.0 work after
-W5C-DELETE. W3 admitted the production CSS L4 corpus loader at `b0a864f0b`.
+W5D-DELETE. W3 admitted the production CSS L4 corpus loader at `b0a864f0b`.
 REDRESS-184 rejected the original W4 provider-deletion gate; W4R closed the
 ledger-only CSS L4 PRUNE with REDRESS-185..208. REDRESS-209 now rejects W5's
 current provider-collapse gate because the source-consuming generic generator
@@ -15,8 +15,11 @@ does not yet exist; Pass Omega V5 W5R closed the correction by splitting W5
 into W5A source-consuming generator capability and W5B provider/template
 deletion. REDRESS-210 rejected W5B deletion because W5A admitted only the
 request boundary while live provider-backed generation remained; Pass Omega V6
-W5BR splits the remaining receiver into W5B-GEN provider-free generator body
-and W5C-DELETE provider/template deletion.
+W5BR split the remaining receiver into W5B-GEN provider-free generator body
+and W5C-DELETE provider/template deletion. REDRESS-211 rejected W5B-GEN under
+that shape; Pass Omega V7 W5B-GENR now splits the receiver into W5B-FRONTEND
+frontend/import/IR closure, W5C-GEN provider-free generator body, and
+W5D-DELETE provider/template deletion plus Lock 14 baseline close.
 
 ## 1. Bracket Verdict
 
@@ -24,7 +27,7 @@ SK-V13 closed under audit reversal. The six-agent S-P0 audit pack
 (`restart/skinny/tranches/sk-v13/audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md`
 + `validation/v{1..6}-*.md`) falsified the SK-V13 admit story: 0 / 43
 admitted rows survive strict-vs-strict audit. The architectural
-skeleton (W5A / W5B-GEN / W5C-DELETE / W6 / W7 / `bbnf-simd` / OffsetFlags / Tape /
+skeleton (W5A / W5B-FRONTEND / W5C-GEN / W5D-DELETE / W6 / W7 / `bbnf-simd` / OffsetFlags / Tape /
 `generated_json::parse_direct` / `generated_real_typed::parse_*` / 15
 unwired CSS `.bbnf` grammars) holds. The admit machinery does not.
 
@@ -167,27 +170,31 @@ Campaign at zero on numbers; non-zero on architecture. The
 
 ## 6. Next-Move
 
-**Next-move:** Dispatch W5B-GEN PRUNE-3B under the amended SPEC §8B. W5A
-admitted the source-consuming request boundary at `286233fa2`; W5B-GEN now
-builds the provider-free runtime generator body, removes live production
-dependency on `RuntimeProvider` / `GrammarProfile` / `render_runtime_profile`,
-proves CSS L4 and JSON source+metadata emission, preserves the W5A
-Sheets/BBNF-self proof, and forbids provider/template deletion. W5C-DELETE
-inherits deletion only after W5B-GEN admits; W6.0 `crates/core/src/runtime/css_l4/`,
-W7, and W8/W9/W10 remain blocked until the amended PRUNE-3/4/5 chain closes.
+**Next-move:** Dispatch W5B-FRONTEND PRUNE-3B under the amended SPEC §8B. W5A
+admitted the source-consuming request boundary at `286233fa2`; W5B-FRONTEND
+now closes generic BBNF grammar-source frontend/import/IR lowering, with CSS L4
+compatibility constructs such as `@ws`, `@pretty`, `?w`, `>>`, `<<`, span
+capture, typed host projections, and imports lowering into canonical IR rather
+than new public syntax. W5C-GEN inherits provider-free generator body
+replacement only after W5B-FRONTEND admits, W5D-DELETE inherits deletion only
+after W5C-GEN admits, and W6.0 `crates/core/src/runtime/css_l4/`, W7, and
+W8/W9/W10 remain blocked until the amended PRUNE-3/4/5 chain closes.
 
 Hard caps echoed per `[dispatch-hard-cap]`: 30-min lens-agent cap;
 research 20 min / plan 15 min / redress 30 min (45 min only for the
 addendum-amended decision-engine fold + C-4 per CONSOLIDATED §0.5 cap
 discipline).
 
-1. Dispatch W5B-GEN research; Pass Omega V6 G-Omega is closed and CRUD/SPEC
-   patches have landed.
-2. Preserve W2/W3/W4/W5A/W5B-GEN/W5C-DELETE root-runtime exclusion:
+1. Dispatch W5B-FRONTEND research; Pass Omega V7 G-Omega is closed and
+   CRUD/SPEC patches have landed.
+2. Before W5B-FRONTEND source redress, add explicit
+   `lock14_baseline.rs` owner-path and parent-diff subject routing for
+   `sk-v14-waveW5B-FRONTEND` / `sk-v14-waveW5B-FRONTEND-redress`.
+3. Preserve W2/W3/W4/W5A/W5B-FRONTEND/W5C-GEN/W5D-DELETE root-runtime exclusion:
    `crates/core/src/runtime/css_l4/` remains W6.0 and must not be claimed
    before W6.0.
-3. Delete CSS provider/template directories only in W5C-DELETE, after W5B-GEN
-   admits the provider-free generator body and the amended W5C-DELETE
+4. Delete CSS provider/template directories only in W5D-DELETE, after W5C-GEN
+   admits the provider-free generator body and the amended W5D-DELETE
    verification gates authorise the deletion.
 
 ## 7. Refusal Conditions
@@ -197,8 +204,8 @@ Return REVISE for any downstream plan that:
 - dispatches any implementation wave before G-Omega + G-S-P0-CONVERGED, or
   dispatches W3+ before Pass Omega V3 W2R CRUD and amended W2 admission, or
   dispatches W5 before Pass Omega V4 W4R CRUD and amended W4 ledger close, or
-  dispatches W5B-GEN before Pass Omega V6 W5BR CRUD and amended SPEC close, or
-  deletes providers/templates before W5C-DELETE;
+  dispatches W5B-FRONTEND before Pass Omega V7 W5B-GENR CRUD and amended SPEC
+  close, or deletes providers/templates before W5D-DELETE;
 - skips PRUNE-1 / PRUNE-2 baseline revert in favour of new admit attempt;
 - counts a row as admitted under the misbound `sonic_rs::from_slice::<Value>`
   comparator (P-2);

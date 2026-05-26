@@ -120,8 +120,14 @@ Continue indefatigably per the USER PIN addendum.
                  branches; migrate regen-css; prove CSS L4 plus
                  JSON/Sheets/BBNF-self non-JSON gates. No provider or
                  template deletion in PRUNE-3A.
-        PRUNE-3B: Delete the seven CSS provider/template clusters and
-                 retire the old provider mesh only after PRUNE-3A is
+        PRUNE-3B: Build the provider-free runtime generator body only
+                 after PRUNE-3A is load-bearing. Remove live production
+                 dependency on RuntimeProvider / GrammarProfile /
+                 render_runtime_profile and prove regen-css, seven CSS
+                 companions, JSON, and non-JSON witnesses through the
+                 source request. Do not delete providers/templates here.
+        PRUNE-3C: Delete the seven CSS provider/template clusters and
+                 retire the old provider mesh only after PRUNE-3B is
                  load-bearing. Close the Lock 14 baseline with regen-css,
                  seven CSS companions, JSON unchanged-output proof, and
                  Sheets/BBNF-self proof.
@@ -138,7 +144,7 @@ Continue indefatigably per the USER PIN addendum.
       skinny runtime modules only. Acceptance: seven exact `check-css-l4-*`
       companions pass and `delete skinny generated → run xtask regen-css →
       skinny runtime diff produces empty`. Root `crates/core/src/runtime/css_l4/`
-      is W6.0 work after W5B.
+      is W6.0 work after W5C-DELETE.
 
   R5. PRODUCTION CORPORA. Stand up `skinny/corpora/css-l4-sk-v14/`
       with Bootstrap + Tailwind + Material + Animate (~960 KB).
@@ -158,7 +164,7 @@ Continue indefatigably per the USER PIN addendum.
       code path (no full-tape build) in generated_json. Wire to
       Skipper-style comparator. Then attempt admit.
 
-  R9. CARRIED — pillars unchanged. W5A/W5B/W6/W7/bbnf-simd/OffsetFlags/
+  R9. CARRIED — pillars unchanged. W5A/W5B-GEN/W5C-DELETE/W6/W7/bbnf-simd/OffsetFlags/
       Tape stand. R3 must not regress them.
 
   R10. INDEFATIGABLE CAMPAIGN per addendum. SK-V14 closes when

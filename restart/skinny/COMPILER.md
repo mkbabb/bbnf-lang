@@ -70,16 +70,21 @@ regex/HIR fact mandate). Historical helpers such as `shapes_for_json` and
 `nominate_json` are deletion targets, not naming patterns for new compiler
 code.
 
-**Pass Omega V5 / SK-V14 W5R compiler receiver (2026-05-26).** REDRESS-209
-splits the old monolithic W5 into W5A and W5B. W5A is the compiler-side
-generator-capability wave: grammar source and workspace metadata must enter
-codegen as semantic inputs, required V1 grammar-source constructs must parse
-for runtime generation without grammar-id branches, and `regen-css` plus all
-seven CSS L4 companions must consume that path with JSON unchanged-output and
-Sheets/BBNF-self fail-closed or generated-role proof. W5B is deletion only
-after W5A is load-bearing: retire provider/template clusters and close the
-Lock 14 baseline. Static centralization of hand-written CSS runtime bodies is
-not a compiler receiver; it is the P-6 recurrence vector.
+**Pass Omega V6 / SK-V14 W5BR compiler receiver (2026-05-26).** REDRESS-209
+split the old monolithic W5 into W5A and W5B; REDRESS-210 then rejected W5B
+deletion because W5A admitted the request boundary without a provider-free
+generator body. W5A remains the closed compiler-side request-boundary wave:
+grammar source and workspace metadata enter codegen as semantic inputs,
+required V1 grammar-source constructs parse for runtime generation without
+grammar-id branches, and `regen-css` plus all seven CSS L4 companions consume
+that path with JSON unchanged-output and Sheets/BBNF-self fail-closed or
+generated-role proof. W5B-GEN is now the compiler-side provider-free generator
+body wave: retire live `RuntimeProvider` / `GrammarProfile` /
+`render_runtime_profile` production dispatch while preserving provider/template
+files as unreachable W5C residue. W5C-DELETE is deletion only after W5B-GEN is
+load-bearing: retire provider/template clusters and close the Lock 14 baseline.
+Static centralization of hand-written CSS runtime bodies is not a compiler
+receiver; it is the P-6 recurrence vector.
 
 ---
 

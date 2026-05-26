@@ -2,19 +2,22 @@
 
 ## Current Totality Override — 2026-05-26
 
-Status: **Pass Omega V5 W5R CRUD CLOSED; SK-V14 implementation dispatch
-resumes at W5A PRUNE-3A source-consuming generator capability.** SK-V14 T-P3 V4 COHORT §3Z LOCK
+Status: **Pass Omega V6 W5BR CRUD CLOSED; SK-V14 implementation dispatch
+resumes at W5B-GEN PRUNE-3B provider-free runtime generator body.** SK-V14 T-P3 V4 COHORT §3Z LOCK
 remains the last full-cycle LOCK at `69eea1c5c` (5 of 5 cohorts §3Z LOCKED:
 S-P2 `4c70b6f193`, T-P1 `0a9c0fe65d`, S-P3 `626cb06cc1`, T-P2
 `34a28f5c15`, T-P3 `69eea1c5c`). Pass Omega V2 G-Omega CLOSED 2026-05-24
 and landed the V1 surfaces. Pass Omega V3 G-Omega CLOSED 2026-05-26 for
 REDRESS-183 / W2R: W2 is amended to skinny-side `regen-css` only, and
 `crates/core/src/runtime/css_l4/` is now W6.0 root-runtime collapse work
-after W5B. Pass Omega V4 G-Omega CLOSED 2026-05-26 for REDRESS-184 / W4R:
+after W5C-DELETE. Pass Omega V4 G-Omega CLOSED 2026-05-26 for REDRESS-184 / W4R:
 W4 is amended to CSS L4 admit-ledger prune only, moving CSS provider/template
 deletion out of W4. Pass Omega V5 G-Omega CLOSED 2026-05-26 for REDRESS-209 / W5R:
 W5 is split into W5A source-consuming generator capability and W5B
-provider/template deletion; W6.0 remains after W5B.
+provider/template deletion. Pass Omega V6 G-Omega CLOSED 2026-05-26 for
+REDRESS-210 / W5BR: W5A remains admitted, W5B-GEN owns the provider-free
+runtime generator body, W5C-DELETE owns provider/template deletion and Lock 14
+baseline close, and W6.0 remains after W5C-DELETE.
 
 Sources of authority for this cycle:
 
@@ -40,6 +43,11 @@ Sources of authority for this cycle:
   `restart/audit/totality/astral/V5/master-plan-diff.md`,
   `restart/audit/totality/astral/V5/locks-diff.md`, and
   `restart/audit/totality/astral/V5/hardening/CONSOLIDATED.md`.
+- Pass Omega V6 W5BR packet:
+  `restart/audit/totality/astral/V6/G-OMEGA-PACKET.md`,
+  `restart/audit/totality/astral/V6/master-plan-diff.md`,
+  `restart/audit/totality/astral/V6/locks-diff.md`, and
+  `restart/audit/totality/astral/V6/hardening/CONSOLIDATED.md`.
 
 Current measured authority is `skinny/RESULTS.md` at the SK-V14
 audit-corrected baseline: 0/17 × 3 JSON planes + 0/24 CSS L4 ADMITTED at
@@ -50,10 +58,10 @@ PRUNE-1..PRUNE-5 dispatch BEFORE any new-admit wave (W8 R6 + W9 R7 +
 W10 R8).
 
 Current SK-V14 LOCKED contract surfaces:
-- `restart/skinny/tranches/sk-v14/SPEC.md` (1208 lines; 12 waves W0..W11;
-  PRUNE-1..PRUNE-5 at W1/W4/W5/W6/W7 dispatch BEFORE any new-admit wave).
+- `restart/skinny/tranches/sk-v14/SPEC.md` (1330 lines; 12 waves W0..W11;
+  PRUNE-1..PRUNE-5 at W1/W4/W5A/W5B-GEN/W5C-DELETE/W6/W7 dispatch BEFORE any new-admit wave).
 - `restart/skinny/tranches/sk-v14/SYNTHESIS.md` (R1..R10 + P-1..P-7).
-- `restart/skinny/tranches/sk-v14/DISPATCH-PROMPT.md` (349 lines).
+- `restart/skinny/tranches/sk-v14/DISPATCH-PROMPT.md` (358 lines).
 - `restart/skinny/tranches/sk-v14/research/p3/p3{a,b,c,d,e,f}-*.md`.
 
 Read in order for current work:
@@ -82,7 +90,7 @@ Read in order for current work:
 The SK-V14 skinny bar is the audit-corrected baseline: every CSS L4 + JSON
 admit must clear R1 strict comparator + R2 per-iter equality oracle; W1
 PRUNE-1 + W4 PRUNE-2 revert audit-falsified admits; W5A PRUNE-3A +
-W5B PRUNE-3B + W6 PRUNE-4 + W7 PRUNE-5 close Lock 14 + decision-engine surfaces BEFORE
+W5B-GEN PRUNE-3B + W5C-DELETE PRUNE-3C + W6 PRUNE-4 + W7 PRUNE-5 close Lock 14 + decision-engine surfaces BEFORE
 W8/W9/W10 R6/R7/R8 re-admit. The SK-V12 single CSS row that admitted
 under SK-V13 is now AUDIT-FALSIFIED-along-with-23-others; SK-V14 reopens.
 
@@ -105,23 +113,26 @@ rejected the original W2 full round-trip and is superseded for dispatch by
 amended W2 admission plus W3 corpus admission. REDRESS-184 rejected the
 original W4 provider-deletion gate; Pass Omega V4 amends W4 to ledger-only
 CSS L4 PRUNE. REDRESS-209 rejected the original monolithic W5
-provider-collapse gate; Pass Omega V5 amends W5 into W5A then W5B. The next
-implementation move is W5A. W5B inherits CSS provider/template deletion only
-after W5A admits the source-consuming generator path; W8/W9/W10 remain
-globally blocked until PRUNE-1..PRUNE-5 close.
+provider-collapse gate; Pass Omega V5 amended W5 into W5A then W5B. REDRESS-210
+rejected the W5B deletion gate because W5A admitted the source-consuming request
+boundary but not the provider-free generator body. Pass Omega V6 amends the
+remaining W5 receiver into W5B-GEN then W5C-DELETE. The next implementation
+move is W5B-GEN. W5C-DELETE inherits CSS provider/template deletion only after
+W5B-GEN admits the provider-free generator body; W8/W9/W10 remain globally
+blocked until PRUNE-1..PRUNE-5 close.
 
-## Pass Omega V5 next-cycle dispatch directive (W5R)
+## Pass Omega V6 next-cycle dispatch directive (W5BR)
 
-Per `restart/audit/totality/astral/V5/G-OMEGA-PACKET.md` and
-`restart/audit/totality/astral/V5/ΩF-migration-handoff.md`, the sequence after
-G-Omega V5 closure is:
+Per `restart/audit/totality/astral/V6/G-OMEGA-PACKET.md`, the sequence after
+G-Omega V6 closure is:
 
-(a) Pass Omega V5 W5R CRUD applies the local W5A/W5B wave-graph amendment;
-(b) wave-triumvirate dispatches SK-V14 W5A under the source-consuming
-generator-capability gate;
-(c) W5B deletes CSS provider/template clusters only after W5A admits all seven
-CSS companions plus JSON/Sheets/BBNF-self non-JSON proof through the new path;
-(d) W6.0..W6.8 execute after W5B, with W6.0 retaining CSS L4 root-runtime
+(a) Pass Omega V6 W5BR CRUD applies the local W5B-GEN/W5C-DELETE wave-graph amendment;
+(b) wave-triumvirate dispatches SK-V14 W5B-GEN under the provider-free runtime
+generator-body gate;
+(c) W5C-DELETE deletes CSS provider/template clusters only after W5B-GEN admits
+CSS/JSON source+metadata emission and removes live provider-backed production
+dispatch;
+(d) W6.0..W6.8 execute after W5C-DELETE, with W6.0 retaining CSS L4 root-runtime
 collapse per Pass Omega V3 W2R;
 (e) post-R10 close -> SK-V15 Pass Alpha re-entry per
 `restart/prompts/pass-contracts/PASS-ALPHA.md` (per F-V2-CH4-3E D06
@@ -134,11 +145,11 @@ The 7-gate measurable dispatch checklist (3F-DISPATCH-001):
 | gate | measurable condition | source |
 |---|---|---|
 | G3 (auto) | T-P3 cohort §3Z LOCK DECLARED at V4 close (V4 = 4/5 ceiling; 1-cycle margin). | `restart/audit/totality/p3/hardening/HARDENING-T-P3-V4-CONSOLIDATED.md:30-32` |
-| Pass Omega V5 entry | REDRESS-209 + W5R corrective packet + V4 W4R surfaces cited in Ω source maps. | `restart/audit/totality/astral/V5/G-OMEGA-PACKET.md` |
-| Pass Omega V5 CHALLENGE convergence | 6/6 ACCEPT after fold; zero LOCKS delta; W5R CRUD packet complete. | `restart/audit/totality/astral/V5/hardening/CONSOLIDATED.md` |
-| CRUD entry | G-Omega V5 authorization + per-surface receiver list in the V5 packet. | `restart/audit/totality/astral/V5/G-OMEGA-PACKET.md` |
+| Pass Omega V6 entry | REDRESS-210 + W5BR corrective packet + V5 W5R surfaces cited in Ω source maps. | `restart/audit/totality/astral/V6/G-OMEGA-PACKET.md` |
+| Pass Omega V6 CHALLENGE convergence | 6/6 ACCEPT after fold; zero LOCKS delta; W5BR CRUD packet complete. | `restart/audit/totality/astral/V6/hardening/CONSOLIDATED.md` |
+| CRUD entry | G-Omega V6 authorization + per-surface receiver list in the V6 packet. | `restart/audit/totality/astral/V6/G-OMEGA-PACKET.md` |
 | G-Omega (user) | CLOSED 2026-05-26 by explicit user authorization to proceed. | this file §Current Totality Override |
-| SK-V14 W5A dispatch | V5 CRUD complete; W5A plan proves source-consuming generator capability with no provider/template deletion. | `restart/skinny/tranches/sk-v14/SPEC.md §8` |
+| SK-V14 W5B-GEN dispatch | V6 CRUD complete; W5B-GEN plan proves provider-free generator body with no provider/template deletion. | `restart/skinny/tranches/sk-v14/SPEC.md §8B` |
 | SK-V14 close (R10) | RESULTS audit-zero baseline cleared by R6/R7/R8 re-admits under R1/R2 gates; W11 close per SYNTHESIS §0.1. | `restart/skinny/tranches/sk-v14/SYNTHESIS.md §0.1` |
 | SK-V15 Pass Alpha re-entry | SK-V14 close packet delivered; Pass Alpha dispatch per `PASS-ALPHA.md`. | `restart/prompts/pass-contracts/PASS-ALPHA.md` |
 

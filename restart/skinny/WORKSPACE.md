@@ -49,19 +49,22 @@ V1-H caveats. Pattern H = 67 hand-written runtime files per LAC-1E-15
 per-tranche census (live find `find crates/core/src/runtime -mindepth 2
 -type f -name '*.rs' \| wc -l`); `runtime_profiles() -> [&'static
 GrammarProfile; 8]` static roster at `skinny/crates/codegen/src/grammar_profile.rs:100`-`110`
-must be deleted by the generated-provider manifest receiver wave per
-3E-D09.
+must be replaced by W5B-GEN and deleted by W5C-DELETE per the
+generated-provider manifest receiver wave.
 
-**Next-cycle dispatch posture** per Pass Omega V5 W5R: REDRESS-183 is
+**Next-cycle dispatch posture** per Pass Omega V6 W5BR: REDRESS-183 is
 historical after W2 admitted as skinny-side `regen-css` at `45568e669`, and
 W3 production CSS corpus staging admitted at `b0a864f0b`. REDRESS-184 rejected
 the original W4 provider-deletion gate; after V4 CRUD, W4 reruns as
 ledger-only CSS L4 PRUNE with no CSS source/generator/provider/template
 deletion. REDRESS-209 rejected the original monolithic W5 provider-collapse
-gate. After V5 CRUD, W5A owns the source-consuming generator capability and
-W5B owns CSS provider/template deletion only after W5A is load-bearing.
+gate. After V5 CRUD, W5A admitted the source-consuming request boundary at
+`286233fa2`. REDRESS-210 rejected W5B deletion because live provider-backed
+generation remained. After V6 CRUD, W5B-GEN owns the provider-free generator
+body and W5C-DELETE owns CSS provider/template deletion only after W5B-GEN is
+load-bearing.
 `crates/core/src/runtime/css_l4/` remains Pattern H root-runtime work until
-W6.0 after W5B closes. W8/W9/W10 remain globally
+W6.0 after W5C-DELETE closes. W8/W9/W10 remain globally
 blocked until PRUNE-1..PRUNE-5 close. **SK-V15 Pass Alpha re-entry handoff**
 per F-V2-CH4-3E D06: the generated-fixture impl tail for CSS L4 onboarding
 (5×15 sub-grammar matrix) enters as SK-V15 SPEC entry condition only if

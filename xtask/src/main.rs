@@ -18,6 +18,7 @@ use clap::{Parser, Subcommand};
 #[cfg(feature = "grammar-regen")]
 use xtask::regen;
 use xtask::regen_css;
+use xtask::regen_simple_runtime;
 
 #[derive(Parser)]
 #[command(name = "xtask", about = "bbnf-lang workspace build-time codegen")]
@@ -61,6 +62,9 @@ enum Cmd {
     /// Regenerate the root CSS L4 runtime projection under
     /// `crates/core/src/runtime/css_l4/`.
     RegenCss,
+    /// Regenerate the root math runtime projection under
+    /// `crates/core/src/runtime/math/`.
+    RegenMath,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -73,6 +77,7 @@ fn main() -> anyhow::Result<()> {
             output,
         } => run_regen(grammar.as_deref(), check, staged, output.as_deref()),
         Cmd::RegenCss => regen_css::run(),
+        Cmd::RegenMath => regen_simple_runtime::run("math"),
     }
 }
 

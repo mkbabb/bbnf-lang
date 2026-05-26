@@ -1,12 +1,7 @@
-//! AZ-IV.W5.3 — Math parse arena. Thin newtype around
-//! [`CompoundSlabArena<MathCompound<'p>>`].
-
 use crate::runtime::arena_template::CompoundSlabArena;
 use crate::runtime::math::kind::MathCompound;
-
 #[derive(Debug, Default)]
 pub struct MathArena<'p>(CompoundSlabArena<MathCompound<'p>>);
-
 impl<'p> MathArena<'p> {
     #[inline]
     pub fn new() -> Self {
@@ -37,10 +32,8 @@ impl<'p> MathArena<'p> {
         self.0.truncate(n);
     }
 }
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MathCompoundId(u32);
-
 impl MathCompoundId {
     pub const EMPTY: Self = Self(0);
     #[inline]

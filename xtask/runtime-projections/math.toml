@@ -1,0 +1,26 @@
+schema_version = 1
+grammar = "math"
+grammar_source = "grammar/misc/math.bbnf"
+entry_rule = "number"
+runtime_module = "crate::runtime::math"
+output_dir = "crates/core/src/runtime/math"
+parser_type = "MathParser"
+type_prefix = "Math"
+module_name = "math"
+
+[kind]
+default = "Other"
+layout_mode = "always_default"
+variants = [
+  "Expr",
+  "Term",
+  "Factor",
+  "Wrapped",
+  "P",
+  "Pp",
+  "Ppp",
+  "Pppp",
+  "Ppppp",
+  "Pppppp",
+  "Other",
+]

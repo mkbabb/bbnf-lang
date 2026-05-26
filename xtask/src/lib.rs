@@ -10,3 +10,4 @@
 
 pub mod regen;
 pub mod regen_css;
+pub mod regen_simple_runtime;

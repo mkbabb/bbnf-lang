@@ -1,13 +1,8 @@
-//! AZ-II.cutover.E (Phase 2) — [`crate::runtime::RuntimeView`] impl
-//! for [`super::MathView`]. Mirror of `CsvView`'s impl.
-
 use crate::runtime::RuntimeView;
 use crate::runtime::math::document::{MathDocument, MathKind, MathView};
 use crate::runtime::math::value::MathValue;
-
 impl<'a, 'p: 'a> RuntimeView<'p> for MathView<'a, 'p> {
     type Kind = MathKind;
-
     #[inline]
     fn kind(&self) -> Self::Kind {
         match self.focus {
@@ -16,7 +11,6 @@ impl<'a, 'p: 'a> RuntimeView<'p> for MathView<'a, 'p> {
             MathValue::Compound(_) => MathKind::Compound,
         }
     }
-
     #[inline]
     fn span(&self) -> Option<&'p str> {
         match self.focus {
@@ -24,12 +18,10 @@ impl<'a, 'p: 'a> RuntimeView<'p> for MathView<'a, 'p> {
             _ => None,
         }
     }
-
     #[inline]
     fn input(&self) -> &'p str {
         self.doc.input
     }
-
     fn children(&self) -> impl Iterator<Item = Self> + '_ {
         let doc = self.doc;
         let focus = self.focus;
@@ -40,17 +32,13 @@ impl<'a, 'p: 'a> RuntimeView<'p> for MathView<'a, 'p> {
         }
     }
 }
-
-/// Child iterator for math views.
 pub struct MathChildrenIter<'a, 'p: 'a> {
     doc: &'a MathDocument<'p>,
     focus: MathValue<'p>,
     index: usize,
 }
-
 impl<'a, 'p: 'a> Iterator for MathChildrenIter<'a, 'p> {
     type Item = MathView<'a, 'p>;
-
     fn next(&mut self) -> Option<Self::Item> {
         match self.focus {
             MathValue::Compound(id) => {

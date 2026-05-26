@@ -5186,3 +5186,8 @@ perturbation.
   `restart/skinny/tranches/sk-v14/research/skv14-W5R-corrective-packet.md`.
   W6/W7 remain blocked by the PRUNE chain, and W8/W9/W10 remain globally blocked
   until PRUNE-1 through PRUNE-5 close.
+  Supersession note: Pass Omega V5 G-Omega closed on 2026-05-26 and amends the
+  dispatch route only. REDRESS-209 remains the historical rejection of the
+  original monolithic W5; current dispatch is W5A source-consuming generator
+  capability followed by W5B provider/template deletion after W5A admits, per
+  `restart/audit/totality/astral/V5/G-OMEGA-SIGNOFF.md`.

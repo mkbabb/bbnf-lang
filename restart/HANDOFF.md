@@ -2,18 +2,19 @@
 
 ## Current Totality Override — 2026-05-26
 
-Status: **Pass Omega V4 W4R CRUD CLOSED; SK-V14 implementation dispatch
-resumes at amended W4 ledger-only PRUNE.** SK-V14 T-P3 V4 COHORT §3Z LOCK
+Status: **Pass Omega V5 W5R CRUD CLOSED; SK-V14 implementation dispatch
+resumes at W5A PRUNE-3A source-consuming generator capability.** SK-V14 T-P3 V4 COHORT §3Z LOCK
 remains the last full-cycle LOCK at `69eea1c5c` (5 of 5 cohorts §3Z LOCKED:
 S-P2 `4c70b6f193`, T-P1 `0a9c0fe65d`, S-P3 `626cb06cc1`, T-P2
 `34a28f5c15`, T-P3 `69eea1c5c`). Pass Omega V2 G-Omega CLOSED 2026-05-24
 and landed the V1 surfaces. Pass Omega V3 G-Omega CLOSED 2026-05-26 for
 REDRESS-183 / W2R: W2 is amended to skinny-side `regen-css` only, and
 `crates/core/src/runtime/css_l4/` is now W6.0 root-runtime collapse work
-after W5. Pass Omega V4 G-Omega CLOSED 2026-05-26 for REDRESS-184 / W4R:
-W4 is amended to CSS L4 admit-ledger prune only, and W5 owns CSS
-provider/template deletion in the same commit as the generic provider
-replacement.
+after W5B. Pass Omega V4 G-Omega CLOSED 2026-05-26 for REDRESS-184 / W4R:
+W4 is amended to CSS L4 admit-ledger prune only, moving CSS provider/template
+deletion out of W4. Pass Omega V5 G-Omega CLOSED 2026-05-26 for REDRESS-209 / W5R:
+W5 is split into W5A source-consuming generator capability and W5B
+provider/template deletion; W6.0 remains after W5B.
 
 Sources of authority for this cycle:
 
@@ -34,6 +35,11 @@ Sources of authority for this cycle:
   `restart/audit/totality/astral/V4/master-plan-diff.md`,
   `restart/audit/totality/astral/V4/locks-diff.md`, and
   `restart/audit/totality/astral/V4/hardening/CONSOLIDATED.md`.
+- Pass Omega V5 W5R packet:
+  `restart/audit/totality/astral/V5/G-OMEGA-PACKET.md`,
+  `restart/audit/totality/astral/V5/master-plan-diff.md`,
+  `restart/audit/totality/astral/V5/locks-diff.md`, and
+  `restart/audit/totality/astral/V5/hardening/CONSOLIDATED.md`.
 
 Current measured authority is `skinny/RESULTS.md` at the SK-V14
 audit-corrected baseline: 0/17 × 3 JSON planes + 0/24 CSS L4 ADMITTED at
@@ -75,8 +81,8 @@ Read in order for current work:
 
 The SK-V14 skinny bar is the audit-corrected baseline: every CSS L4 + JSON
 admit must clear R1 strict comparator + R2 per-iter equality oracle; W1
-PRUNE-1 + W4 PRUNE-2 revert audit-falsified admits; W5 PRUNE-3 + W6
-PRUNE-4 + W7 PRUNE-5 close Lock 14 + decision-engine surfaces BEFORE
+PRUNE-1 + W4 PRUNE-2 revert audit-falsified admits; W5A PRUNE-3A +
+W5B PRUNE-3B + W6 PRUNE-4 + W7 PRUNE-5 close Lock 14 + decision-engine surfaces BEFORE
 W8/W9/W10 R6/R7/R8 re-admit. The SK-V12 single CSS row that admitted
 under SK-V13 is now AUDIT-FALSIFIED-along-with-23-others; SK-V14 reopens.
 
@@ -98,23 +104,26 @@ only through the wave-triumvirate per
 rejected the original W2 full round-trip and is superseded for dispatch by
 amended W2 admission plus W3 corpus admission. REDRESS-184 rejected the
 original W4 provider-deletion gate; Pass Omega V4 amends W4 to ledger-only
-CSS L4 PRUNE. The next implementation move is amended W4. W5 inherits CSS
-provider/template deletion only after W4 ledger close; W8/W9/W10 remain
+CSS L4 PRUNE. REDRESS-209 rejected the original monolithic W5
+provider-collapse gate; Pass Omega V5 amends W5 into W5A then W5B. The next
+implementation move is W5A. W5B inherits CSS provider/template deletion only
+after W5A admits the source-consuming generator path; W8/W9/W10 remain
 globally blocked until PRUNE-1..PRUNE-5 close.
 
-## Pass Omega V4 next-cycle dispatch directive (W4R)
+## Pass Omega V5 next-cycle dispatch directive (W5R)
 
-Per `restart/audit/totality/astral/V4/G-OMEGA-PACKET.md` and
-`restart/audit/totality/astral/V4/ΩF-migration-handoff.md`, the sequence after
-G-Omega V4 closure is:
+Per `restart/audit/totality/astral/V5/G-OMEGA-PACKET.md` and
+`restart/audit/totality/astral/V5/ΩF-migration-handoff.md`, the sequence after
+G-Omega V5 closure is:
 
-(a) Pass Omega V4 W4R CRUD applies the local W4/W5 wave-graph amendment;
-(b) wave-triumvirate reruns SK-V14 W4 under the ledger-only CSS L4 PRUNE gate;
-(c) W5 deletes CSS provider/template clusters only in the same commit as
-the generic provider replacement and migrated `regen_css.rs`;
-(d) W6.0..W6.8 execute after W5, with W6.0 retaining CSS L4 root-runtime
+(a) Pass Omega V5 W5R CRUD applies the local W5A/W5B wave-graph amendment;
+(b) wave-triumvirate dispatches SK-V14 W5A under the source-consuming
+generator-capability gate;
+(c) W5B deletes CSS provider/template clusters only after W5A admits all seven
+CSS companions plus JSON/Sheets/BBNF-self non-JSON proof through the new path;
+(d) W6.0..W6.8 execute after W5B, with W6.0 retaining CSS L4 root-runtime
 collapse per Pass Omega V3 W2R;
-(e) post-R10 close → SK-V15 Pass Alpha re-entry per
+(e) post-R10 close -> SK-V15 Pass Alpha re-entry per
 `restart/prompts/pass-contracts/PASS-ALPHA.md` (per F-V2-CH4-3E D06
 Option B non-budgeted handoff for the CSS L4 generated-fixture
 impl tail; LAC-1E-14 / LAC-1E-15 / LAC-1E-16 propagation as SK-V15
@@ -125,11 +134,11 @@ The 7-gate measurable dispatch checklist (3F-DISPATCH-001):
 | gate | measurable condition | source |
 |---|---|---|
 | G3 (auto) | T-P3 cohort §3Z LOCK DECLARED at V4 close (V4 = 4/5 ceiling; 1-cycle margin). | `restart/audit/totality/p3/hardening/HARDENING-T-P3-V4-CONSOLIDATED.md:30-32` |
-| Pass Omega V4 entry | REDRESS-184 + W4R corrective packet + V3 W2R surfaces cited in Ω source maps. | `restart/audit/totality/astral/V4/G-OMEGA-PACKET.md` |
-| Pass Omega V4 CHALLENGE convergence | 6/6 ACCEPT after CH6 fold; zero LOCKS delta; W4R CRUD packet complete. | `restart/audit/totality/astral/V4/hardening/CONSOLIDATED.md` |
-| CRUD entry | G-Omega V4 authorization + per-surface receiver list in the V4 packet. | `restart/audit/totality/astral/V4/G-OMEGA-PACKET.md` |
+| Pass Omega V5 entry | REDRESS-209 + W5R corrective packet + V4 W4R surfaces cited in Ω source maps. | `restart/audit/totality/astral/V5/G-OMEGA-PACKET.md` |
+| Pass Omega V5 CHALLENGE convergence | 6/6 ACCEPT after fold; zero LOCKS delta; W5R CRUD packet complete. | `restart/audit/totality/astral/V5/hardening/CONSOLIDATED.md` |
+| CRUD entry | G-Omega V5 authorization + per-surface receiver list in the V5 packet. | `restart/audit/totality/astral/V5/G-OMEGA-PACKET.md` |
 | G-Omega (user) | CLOSED 2026-05-26 by explicit user authorization to proceed. | this file §Current Totality Override |
-| SK-V14 W4 rerun | V4 CRUD complete; W4 plan is ledger-only, with no CSS source/generator/provider deletion. | `restart/skinny/tranches/sk-v14/SPEC.md:568` |
+| SK-V14 W5A dispatch | V5 CRUD complete; W5A plan proves source-consuming generator capability with no provider/template deletion. | `restart/skinny/tranches/sk-v14/SPEC.md §8` |
 | SK-V14 close (R10) | RESULTS audit-zero baseline cleared by R6/R7/R8 re-admits under R1/R2 gates; W11 close per SYNTHESIS §0.1. | `restart/skinny/tranches/sk-v14/SYNTHESIS.md §0.1` |
 | SK-V15 Pass Alpha re-entry | SK-V14 close packet delivered; Pass Alpha dispatch per `PASS-ALPHA.md`. | `restart/prompts/pass-contracts/PASS-ALPHA.md` |
 

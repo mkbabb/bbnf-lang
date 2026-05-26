@@ -45,11 +45,13 @@ Reject any W2 plan that touches or claims closure over
 `crates/core/src/runtime/css_l4/`; W6.0 owns that tree. Pass Omega V4 W4R
 adds the next refusal: reject any W4/W5 plan before V4 G-Omega + SPEC/HANDOFF/
 INDEX/WORKSPACE patching lands; reject any W4 plan that deletes CSS provider,
-template, runtime, source, or generator paths; reject any W5 plan that deletes
-CSS provider/template paths without landing the generic provider replacement
-and `regen_css.rs` migration in the same source slice. This prompt still
-defines the lenses; it does not authorize source, gate, `RESULTS.md`, or
-`REDRESS.md` edits by itself.
+template, runtime, source, or generator paths. Pass Omega V5 W5R adds the next
+refusal: reject any W5A plan that deletes provider/template paths; reject any
+W5B plan before W5A admits all seven CSS companions plus JSON/Sheets/BBNF-self
+proof through the source-consuming generator path; reject static centralization
+of hand-written CSS runtime bodies as P-6 recurrence. This prompt still defines
+the lenses; it does not authorize source, gate, `RESULTS.md`, or `REDRESS.md`
+edits by itself.
 
 ## §1 — Purpose: why skinny hardening differs from V1 hardening
 

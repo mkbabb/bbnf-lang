@@ -52,15 +52,16 @@ GrammarProfile; 8]` static roster at `skinny/crates/codegen/src/grammar_profile.
 must be deleted by the generated-provider manifest receiver wave per
 3E-D09.
 
-**Next-cycle dispatch posture** per Pass Omega V4 W4R: REDRESS-183 is
+**Next-cycle dispatch posture** per Pass Omega V5 W5R: REDRESS-183 is
 historical after W2 admitted as skinny-side `regen-css` at `45568e669`, and
 W3 production CSS corpus staging admitted at `b0a864f0b`. REDRESS-184 rejected
 the original W4 provider-deletion gate; after V4 CRUD, W4 reruns as
 ledger-only CSS L4 PRUNE with no CSS source/generator/provider/template
-deletion. W5 owns CSS provider/template deletion in the same replacement slice
-as the grammar-agnostic provider path and `regen_css.rs` migration.
+deletion. REDRESS-209 rejected the original monolithic W5 provider-collapse
+gate. After V5 CRUD, W5A owns the source-consuming generator capability and
+W5B owns CSS provider/template deletion only after W5A is load-bearing.
 `crates/core/src/runtime/css_l4/` remains Pattern H root-runtime work until
-W6.0 after W5's generic generator template exists. W8/W9/W10 remain globally
+W6.0 after W5B closes. W8/W9/W10 remain globally
 blocked until PRUNE-1..PRUNE-5 close. **SK-V15 Pass Alpha re-entry handoff**
 per F-V2-CH4-3E D06: the generated-fixture impl tail for CSS L4 onboarding
 (5×15 sub-grammar matrix) enters as SK-V15 SPEC entry condition only if

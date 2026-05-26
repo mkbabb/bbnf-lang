@@ -3,16 +3,17 @@
 Date: 2026-05-22.
 
 Status: Pass Alpha α-F contract handoff, superseded for active dispatch by
-the S-P3 SPEC/DISPATCH packet and amended by Pass Omega V3 W2R plus Pass
-Omega V4 W4R on 2026-05-26. REDRESS-183 rejected the original W2 dual-tree
+the S-P3 SPEC/DISPATCH packet and amended by Pass Omega V3 W2R, Pass
+Omega V4 W4R, and Pass Omega V5 W5R on 2026-05-26. REDRESS-183 rejected the original W2 dual-tree
 round-trip; W2 admitted as skinny-side `regen-css` only at commit
 `45568e669`, while `crates/core/src/runtime/css_l4/` remains W6.0 work after
-W5. W3 admitted the production CSS L4 corpus loader at `b0a864f0b`.
+W5B. W3 admitted the production CSS L4 corpus loader at `b0a864f0b`.
 REDRESS-184 rejected the original W4 provider-deletion gate; W4R closed the
 ledger-only CSS L4 PRUNE with REDRESS-185..208. REDRESS-209 now rejects W5's
 current provider-collapse gate because the source-consuming generic generator
-does not yet exist; Pass Omega V5 W5R is the active blocker before any W5
-replacement/deletion implementation.
+does not yet exist; Pass Omega V5 W5R closed the correction by splitting W5
+into W5A source-consuming generator capability and W5B provider/template
+deletion.
 
 ## 1. Bracket Verdict
 
@@ -163,27 +164,27 @@ Campaign at zero on numbers; non-zero on architecture. The
 
 ## 6. Next-Move
 
-**Next-move:** W5 PRUNE-3 is rejected under the current SPEC shape. Dispatch
-Pass Omega V5 W5R using REDRESS-209,
-`research/skv14-W5-plan.md`, `research/skv14-W5-redress.md`, and
-`research/skv14-W5R-corrective-packet.md` as inputs. Proposed amendment:
-split W5 into a source-consuming generator-capability wave and a follow-on
-provider/template deletion wave, then keep W6.0
-`crates/core/src/runtime/css_l4/`, W7, and W8/W9/W10 blocked until the amended
-PRUNE-3/4/5 chain closes.
+**Next-move:** Dispatch W5A PRUNE-3A under the amended SPEC §8. W5A proves the
+source-consuming generator-capability path: grammar source + workspace metadata
+enter codegen, required V1 grammar-source constructs parse without grammar-id
+branches, `regen-css` and all seven CSS companions run through the new path,
+JSON unchanged-output proof is captured, and Sheets/BBNF-self fail closed or
+emit generated-role witnesses. W5A does not delete provider/template surfaces.
+W5B inherits deletion only after W5A admits; W6.0 `crates/core/src/runtime/css_l4/`,
+W7, and W8/W9/W10 remain blocked until the amended PRUNE-3/4/5 chain closes.
 
 Hard caps echoed per `[dispatch-hard-cap]`: 30-min lens-agent cap;
 research 20 min / plan 15 min / redress 30 min (45 min only for the
 addendum-amended decision-engine fold + C-4 per CONSOLIDATED §0.5 cap
 discipline).
 
-1. Dispatch Pass Omega V5 W5R; do not dispatch another W5 implementation
-   attempt until G-Omega V5 closes and CRUD/SPEC patches land.
-2. Preserve W2/W3/W4/W5 root-runtime exclusion:
+1. Dispatch W5A research; Pass Omega V5 G-Omega is closed and CRUD/SPEC patches
+   have landed.
+2. Preserve W2/W3/W4/W5A/W5B root-runtime exclusion:
    `crates/core/src/runtime/css_l4/` remains W6.0 and must not be claimed
    before W6.0.
-3. Delete CSS provider/template directories only after the source-consuming
-   provider-generation path exists and the amended W5B verification gates
+3. Delete CSS provider/template directories only in W5B, after W5A admits the
+   source-consuming generator path and the amended W5B verification gates
    authorise the deletion.
 
 ## 7. Refusal Conditions

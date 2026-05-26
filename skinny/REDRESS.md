@@ -5191,3 +5191,21 @@ perturbation.
   original monolithic W5; current dispatch is W5A source-consuming generator
   capability followed by W5B provider/template deletion after W5A admits, per
   `restart/audit/totality/astral/V5/G-OMEGA-SIGNOFF.md`.
+
+## SK-V14 Wave 5B PRUNE-3B Provider Deletion Gate Gap
+
+- Item 210 closes `G-SK-V14-W5B-PRUNE-3B` as `REJECTED` under the current SPEC
+  shape. W5A admitted the source-consuming request boundary at commit
+  `286233fa2`, but the actual runtime bytes are still produced by
+  `render_runtime_profile`, `RuntimeProvider`, and the CSS/JSON provider
+  modules inside `skinny/crates/codegen/src/`. W5B's deletion exit gate requires
+  the provider count to fall to zero before a provider-free generator body
+  exists. Deleting those files now would either fail to compile or reintroduce
+  REDRESS-209 as static centralization under a new file name. The SPEC's
+  generic-crate grep is also ripgrep-inaccurate as written (`rg -E` is an
+  encoding flag) and over-broad when aimed at root `crates/`. The evidence
+  packet is `restart/skinny/tranches/sk-v14/research/skv14-W5B-plan.md`, and
+  the corrective proposal is
+  `restart/skinny/tranches/sk-v14/research/skv14-W5BR-corrective-packet.md`.
+  W6/W7 remain blocked by the PRUNE chain, and W8/W9/W10 remain globally blocked
+  until PRUNE-1 through PRUNE-5 close.

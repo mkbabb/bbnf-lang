@@ -1133,6 +1133,25 @@ const SK_V14_W5C_GEN_OWNER_PATHS: &[&str] = &[
     "crates/bbnf-bench/src/lock14_baseline.rs",
 ];
 
+const SK_V14_W5D_DELETE_OWNER_PATHS: &[&str] = &[
+    "crates/codegen/src/css_l4_at_rules_and_media_provider.rs",
+    "crates/codegen/src/css_l4_declaration_values_extended_provider.rs",
+    "crates/codegen/src/css_l4_declaration_values_provider.rs",
+    "crates/codegen/src/css_l4_nested_layout_provider.rs",
+    "crates/codegen/src/css_l4_stylesheet_selectors_provider.rs",
+    "crates/codegen/src/css_l4_vendor_and_custom_atrules_provider.rs",
+    "crates/codegen/src/css_l4_visual_functions_provider.rs",
+    "crates/codegen/src/json_provider.rs",
+    "crates/codegen/src/css_l4_at_rules_and_media_templates/",
+    "crates/codegen/src/css_l4_declaration_values_extended_templates/",
+    "crates/codegen/src/css_l4_declaration_values_templates/",
+    "crates/codegen/src/css_l4_nested_layout_templates/",
+    "crates/codegen/src/css_l4_stylesheet_selectors_templates/",
+    "crates/codegen/src/css_l4_vendor_and_custom_atrules_templates/",
+    "crates/codegen/src/css_l4_visual_functions_templates/",
+    "crates/bbnf-bench/src/lock14_baseline.rs",
+];
+
 fn current_lock14_owner_paths() -> Vec<&'static str> {
     let mut paths = Vec::with_capacity(
         SK_V12_W1A_OWNER_PATHS.len()
@@ -1162,7 +1181,8 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
             + SK_V14_W4_OWNER_PATHS.len()
             + SK_V14_W5A_OWNER_PATHS.len()
             + SK_V14_W5B_FRONTEND_OWNER_PATHS.len()
-            + SK_V14_W5C_GEN_OWNER_PATHS.len(),
+            + SK_V14_W5C_GEN_OWNER_PATHS.len()
+            + SK_V14_W5D_DELETE_OWNER_PATHS.len(),
     );
     paths.extend_from_slice(SK_V12_W1A_OWNER_PATHS);
     paths.extend_from_slice(SK_V12_W1B1_OWNER_PATHS);
@@ -1192,6 +1212,7 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
     paths.extend_from_slice(SK_V14_W5A_OWNER_PATHS);
     paths.extend_from_slice(SK_V14_W5B_FRONTEND_OWNER_PATHS);
     paths.extend_from_slice(SK_V14_W5C_GEN_OWNER_PATHS);
+    paths.extend_from_slice(SK_V14_W5D_DELETE_OWNER_PATHS);
     paths
 }
 
@@ -1665,6 +1686,14 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
             return Ok(());
         }
     }
+    if is_w5d_delete_subject(subject) {
+        let allowed = changed_paths
+            .iter()
+            .all(|path| is_allowed_path(path, SK_V14_W5D_DELETE_OWNER_PATHS));
+        if allowed {
+            return Ok(());
+        }
+    }
     Err(format!(
         "Lock 14 frozen diff failed for parent paths [{}]",
         changed_paths.join(", ")
@@ -1687,6 +1716,13 @@ fn is_w5c_gen_subject(subject: &str) -> bool {
     subject.contains("sk-v14-wavew5c-gen")
         || subject.contains("sk-v14-w5c-gen")
         || subject.contains("sk-v14-wavew5c_gen")
+}
+
+fn is_w5d_delete_subject(subject: &str) -> bool {
+    let subject = subject.to_ascii_lowercase();
+    subject.contains("sk-v14-wavew5d-delete")
+        || subject.contains("sk-v14-w5d-delete")
+        || subject.contains("sk-v14-wavew5d_delete")
 }
 
 fn git_output(root: &Path, args: &[&str]) -> Result<String, String> {
@@ -2342,6 +2378,48 @@ mod tests {
         assert!(SK_V14_W5C_GEN_OWNER_PATHS
             .iter()
             .any(|path| *path == "crates/codegen/src/runtime_generator.rs"));
+    }
+
+    #[test]
+    fn w5d_delete_owner_paths_admit() {
+        let changed = SK_V14_W5D_DELETE_OWNER_PATHS
+            .iter()
+            .map(|path| {
+                if path.ends_with('/') {
+                    format!("{path}generated.rs")
+                } else {
+                    (*path).to_string()
+                }
+            })
+            .collect::<Vec<_>>();
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v14-waveW5D-DELETE): delete provider template residue"
+        )
+        .is_ok());
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "docs(sk-v14-waveW5D-DELETE-redress): reject deletion residue"
+        )
+        .is_ok());
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v14-waveW5C-GEN): remove provider dispatch"
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn w5d_delete_owner_paths_preserve_json_templates() {
+        assert!(!SK_V14_W5D_DELETE_OWNER_PATHS
+            .iter()
+            .any(|path| path.contains("json_templates")));
+        assert!(SK_V14_W5D_DELETE_OWNER_PATHS
+            .iter()
+            .any(|path| *path == "crates/codegen/src/json_provider.rs"));
+        assert!(SK_V14_W5D_DELETE_OWNER_PATHS
+            .iter()
+            .any(|path| path.ends_with("css_l4_declaration_values_templates/")));
     }
 
     #[test]

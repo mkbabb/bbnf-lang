@@ -5270,3 +5270,24 @@ perturbation.
   W5B.3 PRETTY-SPAN-PROJECTION, and W5B.4 REQUEST-CONSUMER, with W5C-GEN still
   blocked until aggregate W5B-FRONTEND close. W5D-DELETE, W6, W7, and W8/W9/W10
   remain blocked until the PRUNE chain is rerouted and closed.
+
+## SK-V14 Wave W6.0 CSS L4 Root Runtime Projection Gap
+
+- Item 213 closes `G-SK-V14-W6.0-CSS-L4-ROOT-RUNTIME-COLLAPSE` as `REJECTED`
+  under the current SPEC shape. W6.0 requires `cargo xtask regen-css` to
+  destructively restore `crates/core/src/runtime/css_l4/` from grammar/registry
+  inputs, but the root workspace has no `regen-css` subcommand and root
+  `cargo xtask regen --grammar css_l4 --output /tmp/w6-css-parser-proof`
+  reproducibly emits only `css_l4.rs` and `css_l4.registry.json`. The emitted
+  registry is structural; it does not carry the CSS domain projection data
+  required to regenerate `CssColor` constructors, unit enums, arena-family
+  placement, recursive color references, document focus/path traversal, or the
+  `CssStructBuilder` rule-id frame routing. Static centralization of the
+  current seven runtime files would reintroduce the fake-generated-template
+  failure class, so no source workaround was landed. Evidence is recorded in
+  `restart/skinny/tranches/sk-v14/research/skv14-W6.0-redress.md`; the narrow
+  corrective packet is
+  `restart/skinny/tranches/sk-v14/research/skv14-W6.0R-corrective-packet.md`.
+  W6.1..W6.8, W7, and W8/W9/W10 remain blocked by the PRUNE-4 order until a
+  real runtime projection source and emitter can make the W6.0 destructive
+  gate pass.

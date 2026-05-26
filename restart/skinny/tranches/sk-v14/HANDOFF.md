@@ -24,7 +24,13 @@ W5D-DELETE provider/template deletion plus Lock 14 baseline close. REDRESS-212
 rejected the V7 one-shot W5B-FRONTEND cap shape; Pass Omega V8
 W5B-FRONTENDR now splits W5B-FRONTEND into W5B.0 LOCK14-GATE, W5B.1
 IMPORT-CLOSURE, W5B.2 LAYOUT-DISCARD, W5B.3 PRETTY-SPAN-PROJECTION, and W5B.4
-REQUEST-CONSUMER. The next implementation move is W5B.0.
+REQUEST-CONSUMER. W5B.0..W5B.4, W5C-GEN, and W5D-DELETE have now admitted.
+W6.0 admitted only its Lock 14 route gate at `e3c8c8706`; REDRESS-213 rejects
+the CSS L4 root-runtime collapse because the root workspace has no generator
+that can regenerate `crates/core/src/runtime/css_l4/` from grammar/registry
+inputs without hiding hand-written runtime bodies. The next admissible move is
+the W6.0R runtime-projection correction packet; W6.1..W6.8, W7, and W8/W9/W10
+remain blocked until W6.0 admits.
 
 ## 1. Bracket Verdict
 
@@ -192,17 +198,18 @@ research 20 min / plan 15 min / redress 30 min (45 min only for the
 addendum-amended decision-engine fold + C-4 per CONSOLIDATED §0.5 cap
 discipline).
 
-1. Dispatch W5B.0 LOCK14-GATE research; Pass Omega V8 G-Omega is closed and
-   CRUD/SPEC patches have landed.
-2. W5B.0 adds explicit `lock14_baseline.rs` owner-path and parent-diff subject
-   routing for `sk-v14-waveW5B-FRONTEND` / `sk-v14-waveW5B-FRONTEND-redress`
-   plus exact W5B.0 tests before W5B.1..W5B.4 touch frontend source paths.
-3. Preserve W2/W3/W4/W5A/W5B.0..W5B.4/W5C-GEN/W5D-DELETE root-runtime exclusion:
-   `crates/core/src/runtime/css_l4/` remains W6.0 and must not be claimed
-   before W6.0.
-4. Delete CSS provider/template directories only in W5D-DELETE, after W5C-GEN
-   admits the provider-free generator body and the amended W5D-DELETE
-   verification gates authorise the deletion.
+1. W6.0 route-gate evidence is admitted at `e3c8c8706`; preserve that narrow
+   owner scope for root CSS runtime and root xtask files.
+2. W6.0 root-runtime collapse is rejected by REDRESS-213. Do not claim
+   generated ownership of `crates/core/src/runtime/css_l4/` until a real
+   runtime projection source and emitter can destructively regenerate the seven
+   files.
+3. The corrective packet is
+   `restart/skinny/tranches/sk-v14/research/skv14-W6.0R-corrective-packet.md`.
+   It requires declarative runtime projection data for CSS values, arenas,
+   builder frame routing, document path/walker/view traversal, and exports.
+4. W6.1..W6.8, W7, and W8/W9/W10 remain blocked by the W6 sub-wave order until
+   W6.0 admits. Dispatching W6.1 while W6.0 is rejected is a REVISE.
 
 ## 7. Refusal Conditions
 

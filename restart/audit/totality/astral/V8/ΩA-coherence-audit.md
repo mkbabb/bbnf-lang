@@ -104,6 +104,8 @@ CHALLENGE finds new contradictory evidence.
   the request consumer and proof-carry gate exists.
 - If the maintain gate is not clarified, CH6 will reopen the exact no-diff vs.
   +/-1.0% full-table conflict.
+- If the CH1 exactness fold is omitted, W5B can still paper-close with prose
+  fail-closed cells, wildcard log greps, or unaccounted redress docs.
 - If `@ws` is described as public syntax rather than compatibility lowering into
   canonical layout facts, V8 conflicts with the V1 directive canon.
 
@@ -113,7 +115,9 @@ CHALLENGE finds new contradictory evidence.
   BackendShape delta.
 - CRUD-2 MASTER-PLAN: update Section 13.3 W5B rows to mirror W5B.0 through
   W5B.4, keep W5C-GEN blocked until aggregate W5B-FRONTEND close, and preserve
-  W5D/W6/W7/new-admit blocking.
+  W5D/W6/W7/new-admit blocking. Carry the CH1 exactness fold: owner file/type,
+  exact positive/fail-closed tests per construct, exact W5B.0 Lock 14 tests,
+  per-test/per-log nonzero assertions, and redress/REDRESS LOC accounting.
 - CRUD-3 LOCKS: read/no-op; retain zero-delta locks diff and verify 16 locks.
 - CRUD-4 HANDOFF + MIGRATION: record REDRESS-212 / Pass Omega V8 state and next
   dispatch W5B.0 LOCK14-GATE.
@@ -123,7 +127,8 @@ CHALLENGE finds new contradictory evidence.
   `restart/skinny/tranches/sk-v14/DISPATCH-PROMPT.md`, and
   `restart/skinny/tranches/sk-v14/HANDOFF.md`; align
   `restart/skinny/{INDEX,WORKSPACE,HARDENING,COMPILER}.md` only where they still
-  present W5B-FRONTEND as one-shot active authority. `restart/skinny/{BENCH,SUBSTRATE}.md`
+  present W5B-FRONTEND as one-shot active authority or omit CH1's exact W5B
+  test/nonzero/LOC gates. `restart/skinny/{BENCH,SUBSTRATE}.md`
   are read/no-op.
 - CRUD-6 AUDIT + CLEANUP: keep the V2 challenge archive and REDRESS-212 as
   cited authority. No deletion is required by Omega-A.

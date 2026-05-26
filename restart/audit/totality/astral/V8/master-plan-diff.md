@@ -65,6 +65,39 @@ blocked until the aggregate W5B-FRONTEND close.
     closure; JSON unchanged-output proof, Sheets/BBNF-self proof, `regen-css`,
     seven CSS companions, provider/template topology checks, and final maintain
     proof close W5B-FRONTEND.
+- Add the CH1 exactness table to Section 8B. Every construct row must carry
+  owner file/type, target representation, exact positive test, and exact
+  fail-closed test. Prose fail-closed cells are not sufficient:
+
+| Construct | Owner file/type | Target representation | Exact positive test | Exact fail-closed test |
+|---|---|---|---|---|
+| `@import` | `skinny/crates/grammar/src/lib.rs::FrontendClosure` | `imports` DAG keyed by request source path and stable source hash | `w5b_frontend_import_graph_resolves_request_sources` | `w5b_frontend_missing_import_fails_closed`; `w5b_frontend_import_cycle_fails_closed` |
+| `@ws` | `skinny/crates/grammar/src/lib.rs::FrontendClosure` | `layout.whitespace_directive` request fact | `w5b_frontend_layout_contract_lowers_to_request_facts` | `w5b_frontend_public_ws_remains_retired` |
+| `?w` | `skinny/crates/grammar/src/lib.rs::FrontendClosure` | `layout.whitespace_modifier` request fact attached to source span | `w5b_frontend_layout_contract_lowers_to_request_facts` | `w5b_frontend_malformed_whitespace_modifier_fails_closed` |
+| `>>` / `<<` | `skinny/crates/grammar/src/lib.rs::FrontendClosure` | `discard_operator` request facts attached to source spans | `w5b_frontend_discard_operators_lower_to_request_facts` | `w5b_frontend_malformed_discard_operator_fails_closed` |
+| `@pretty` | `skinny/crates/grammar/src/lib.rs::FrontendClosure` | `pretty_directive` request fact | `w5b_frontend_pretty_span_projection_lower_to_request_facts` | `w5b_frontend_unknown_pretty_payload_fails_closed` |
+| `@{...}` | `skinny/crates/grammar/src/lib.rs::FrontendClosure` | `host_capture` request span fact | `w5b_frontend_pretty_span_projection_lower_to_request_facts` | `w5b_frontend_host_capture_unterminated_fails_closed` |
+| `->` projection | `skinny/crates/grammar/src/lib.rs::FrontendClosure` | `projection` request fact preserving raw target text | `w5b_frontend_pretty_span_projection_lower_to_request_facts` | `w5b_frontend_projection_malformed_target_fails_closed` |
+| typed projection | `skinny/crates/grammar/src/lib.rs::FrontendClosure` | `typed_projection` request fact preserving raw type text | `w5b_frontend_pretty_span_projection_lower_to_request_facts` | `w5b_frontend_typed_projection_malformed_type_fails_closed` |
+
+- Add exact W5B.0 Lock 14 tests:
+  - `w5b_lock14_frontend_owner_paths_admit`
+  - `w5b_lock14_frontend_rejects_w5c_subject`
+  - `w5b_lock14_frontend_rejects_w5d_subject`
+  - `w5b_lock14_frontend_rejects_modified_provider`
+  - `w5b_lock14_frontend_rejects_modified_template`
+  - `w5b_lock14_frontend_all_templates_guard_counts_8`
+  - `w5b_lock14_frontend_allows_grammar_provider_exception`
+  - `w5b_lock14_frontend_generic_owner_leak_census`
+- Add the CH1 nonzero-proof rule: every exact W5B test command must tee to a
+  dedicated `/tmp/skv14-w5b-<test-name>.log` and must be paired with a
+  dedicated `rg "test result: ok\\. [1-9][0-9]* passed"
+  /tmp/skv14-w5b-<test-name>.log`. Wildcard aggregate log greps do not satisfy
+  W5B close evidence.
+- Add the CH1 LOC-accounting rule: any touched redress report and reject-only
+  `skinny/REDRESS.md` edits count in W5B LOC accounting alongside source/test
+  edits. Generated output remains uncounted only when named, diff-audited, and
+  included in the revert slice.
 - Replace W5B's full-table maintain gate with exact no-diff for this non-admit
   capability wave:
   - `skinny/RESULTS.md` byte-identical to pre-redress HEAD.

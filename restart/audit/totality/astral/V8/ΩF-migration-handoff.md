@@ -48,6 +48,42 @@ grammar/source inputs is the controlling maintain evidence. `gate-json
 Omega V8 retains the older +/-1.0% full-table wording, W5B.4 must instead run
 fresh SK-V14-open maintain evidence; prose substitution is not sufficient.
 
+## Correctness Gate Fold
+
+V8 must carry CH1's exactness requirements into the next dispatch authority.
+
+W5B.0 LOCK14-GATE exact tests:
+
+- `w5b_lock14_frontend_owner_paths_admit`
+- `w5b_lock14_frontend_rejects_w5c_subject`
+- `w5b_lock14_frontend_rejects_w5d_subject`
+- `w5b_lock14_frontend_rejects_modified_provider`
+- `w5b_lock14_frontend_rejects_modified_template`
+- `w5b_lock14_frontend_all_templates_guard_counts_8`
+- `w5b_lock14_frontend_allows_grammar_provider_exception`
+- `w5b_lock14_frontend_generic_owner_leak_census`
+
+W5B.1 through W5B.4 must retain an exact construct table with owner file/type,
+target representation, exact positive test, and exact fail-closed test. The
+minimum table is:
+
+| Construct | Owner file/type | Exact positive test | Exact fail-closed test |
+|---|---|---|---|
+| `@import` | `skinny/crates/grammar/src/lib.rs::FrontendClosure` | `w5b_frontend_import_graph_resolves_request_sources` | `w5b_frontend_missing_import_fails_closed`; `w5b_frontend_import_cycle_fails_closed` |
+| `@ws` | `skinny/crates/grammar/src/lib.rs::FrontendClosure` | `w5b_frontend_layout_contract_lowers_to_request_facts` | `w5b_frontend_public_ws_remains_retired` |
+| `?w` | `skinny/crates/grammar/src/lib.rs::FrontendClosure` | `w5b_frontend_layout_contract_lowers_to_request_facts` | `w5b_frontend_malformed_whitespace_modifier_fails_closed` |
+| `>>` / `<<` | `skinny/crates/grammar/src/lib.rs::FrontendClosure` | `w5b_frontend_discard_operators_lower_to_request_facts` | `w5b_frontend_malformed_discard_operator_fails_closed` |
+| `@pretty` | `skinny/crates/grammar/src/lib.rs::FrontendClosure` | `w5b_frontend_pretty_span_projection_lower_to_request_facts` | `w5b_frontend_unknown_pretty_payload_fails_closed` |
+| `@{...}` | `skinny/crates/grammar/src/lib.rs::FrontendClosure` | `w5b_frontend_pretty_span_projection_lower_to_request_facts` | `w5b_frontend_host_capture_unterminated_fails_closed` |
+| `->` projection | `skinny/crates/grammar/src/lib.rs::FrontendClosure` | `w5b_frontend_pretty_span_projection_lower_to_request_facts` | `w5b_frontend_projection_malformed_target_fails_closed` |
+| typed projection | `skinny/crates/grammar/src/lib.rs::FrontendClosure` | `w5b_frontend_pretty_span_projection_lower_to_request_facts` | `w5b_frontend_typed_projection_malformed_type_fails_closed` |
+
+Each exact test command must tee to a dedicated
+`/tmp/skv14-w5b-<test-name>.log` and must be paired with a dedicated
+`rg "test result: ok\\. [1-9][0-9]* passed" /tmp/skv14-w5b-<test-name>.log`.
+Wildcard aggregate log greps remain rejected. Redress report edits and
+reject-only `skinny/REDRESS.md` edits count in LOC accounting when touched.
+
 ## Handoff Directive
 
 After V8 G-Omega closure and CRUD:

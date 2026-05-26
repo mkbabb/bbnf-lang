@@ -131,6 +131,24 @@ W5B.0 unlocks only W5B.1 IMPORT-CLOSURE. It does not close W5B-FRONTEND and
 does not unblock W5C-GEN.
 ```
 
+W5B.0 exact test names must be preserved in HARDENING / DISPATCH alignment:
+
+```text
+w5b_lock14_frontend_owner_paths_admit
+w5b_lock14_frontend_rejects_w5c_subject
+w5b_lock14_frontend_rejects_w5d_subject
+w5b_lock14_frontend_rejects_modified_provider
+w5b_lock14_frontend_rejects_modified_template
+w5b_lock14_frontend_all_templates_guard_counts_8
+w5b_lock14_frontend_allows_grammar_provider_exception
+w5b_lock14_frontend_generic_owner_leak_census
+```
+
+Every W5B source/consumer sub-wave must preserve per-test/per-log nonzero
+assertions. A wildcard `/tmp/skv14-w5b-*.log` grep is not W5B close evidence.
+Any touched redress report or reject-only `skinny/REDRESS.md` edit counts in
+LOC accounting.
+
 Do not change Lens L/M/N definitions, SK-V14 convergence history, or existing
 V5/V6/V7 refusal lessons except to supersede the one-shot W5B-FRONTEND cap
 shape.
@@ -157,6 +175,10 @@ state. W5B.4 owns same-wave request-consumer proof through
 CSS companions, provider/template topology checks, and W5B maintain evidence.
 W5C-GEN remains blocked until W5B.4 closes aggregate W5B-FRONTEND.
 ```
+
+The compiler alignment must retain owner file/type and exact test naming for
+the W5B construct table. Construct rows without owner file/type or exact
+fail-closed test names remain CH1 REVISE.
 
 Keep the existing no-public-syntax and no-static-centralization constraints.
 Do not add compiler recommendations that imply provider-free generation in

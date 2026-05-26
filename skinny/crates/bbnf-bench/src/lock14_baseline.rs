@@ -599,6 +599,7 @@ const GENERATED_HEADER_RECOGNIZED_EMISSION_ROSTER: &[&str] = &[
 pub fn validate(root: &Path) -> Result<(), String> {
     validate_entries(ALLOWLIST, root, true)?;
     validate_generated_header_companion_lint(root)?;
+    validate_w5a_provider_template_topology(root)?;
     validate_git_freeze(root)?;
     validate_backend_shape_surface(root)?;
     validate_generic_crate_neutrality(root)?;
@@ -1101,6 +1102,16 @@ const SK_V14_W4_OWNER_PATHS: &[&str] = &[
     "xtask/src/main.rs",
 ];
 
+const SK_V14_W5A_OWNER_PATHS: &[&str] = &[
+    "crates/grammar/src/lib.rs",
+    "crates/codegen/src/lib.rs",
+    "crates/codegen/src/grammar_provider.rs",
+    "xtask/src/regen.rs",
+    "xtask/src/regen_css.rs",
+    "xtask/src/main.rs",
+    "crates/bbnf-bench/src/lock14_baseline.rs",
+];
+
 fn current_lock14_owner_paths() -> Vec<&'static str> {
     let mut paths = Vec::with_capacity(
         SK_V12_W1A_OWNER_PATHS.len()
@@ -1127,7 +1138,8 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
             + SK_V13_W15_1_OWNER_PATHS.len()
             + SK_V14_W0_OWNER_PATHS.len()
             + SK_V14_W2_OWNER_PATHS.len()
-            + SK_V14_W4_OWNER_PATHS.len(),
+            + SK_V14_W4_OWNER_PATHS.len()
+            + SK_V14_W5A_OWNER_PATHS.len(),
     );
     paths.extend_from_slice(SK_V12_W1A_OWNER_PATHS);
     paths.extend_from_slice(SK_V12_W1B1_OWNER_PATHS);
@@ -1154,6 +1166,7 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
     paths.extend_from_slice(SK_V14_W0_OWNER_PATHS);
     paths.extend_from_slice(SK_V14_W2_OWNER_PATHS);
     paths.extend_from_slice(&SK_V14_W4_OWNER_PATHS);
+    paths.extend_from_slice(SK_V14_W5A_OWNER_PATHS);
     paths
 }
 
@@ -1169,6 +1182,132 @@ fn validate_git_freeze(root: &Path) -> Result<(), String> {
         validate_parent_frozen_diff(root)?;
     }
     Ok(())
+}
+
+fn validate_w5a_provider_template_topology(root: &Path) -> Result<(), String> {
+    let codegen_root = root.join("crates/codegen/src");
+    let provider_count = std::fs::read_dir(&codegen_root)
+        .map_err(|error| format!("failed to read codegen root: {error}"))?
+        .filter_map(Result::ok)
+        .filter(|entry| {
+            entry
+                .file_name()
+                .to_str()
+                .is_some_and(|name| name.ends_with("_provider.rs") && name != "grammar_provider.rs")
+        })
+        .count();
+    if provider_count != 8 {
+        return Err(format!(
+            "W5A provider topology expected 8 legacy providers, saw {provider_count}"
+        ));
+    }
+    let template_count = std::fs::read_dir(&codegen_root)
+        .map_err(|error| format!("failed to read codegen root: {error}"))?
+        .filter_map(Result::ok)
+        .filter(|entry| {
+            entry.file_type().map(|ty| ty.is_dir()).unwrap_or(false)
+                && entry
+                    .file_name()
+                    .to_str()
+                    .is_some_and(|name| name.starts_with("css_l4_") && name.ends_with("_templates"))
+        })
+        .count();
+    if template_count != 7 {
+        return Err(format!(
+            "W5A template topology expected 7 CSS template dirs, saw {template_count}"
+        ));
+    }
+    for (label, output) in [
+        (
+            "status",
+            git_output(root, &["status", "--porcelain", "--", "crates/codegen/src"])?,
+        ),
+        (
+            "diff",
+            git_output(root, &["diff", "--name-status", "--", "crates/codegen/src"])?,
+        ),
+        (
+            "cached",
+            git_output(
+                root,
+                &[
+                    "diff",
+                    "--cached",
+                    "--name-status",
+                    "--",
+                    "crates/codegen/src",
+                ],
+            )?,
+        ),
+    ] {
+        validate_w5a_provider_template_status(label, &output)?;
+    }
+    if git_quiet(root, &["rev-parse", "--verify", "HEAD^"]).is_ok() {
+        let parent = git_output(
+            root,
+            &["diff", "--name-status", "HEAD^", "--", "crates/codegen/src"],
+        )?;
+        validate_w5a_provider_template_status("parent", &parent)?;
+    }
+    Ok(())
+}
+
+fn validate_w5a_provider_template_status(label: &str, output: &str) -> Result<(), String> {
+    for line in output
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+    {
+        let Some(status) = line.split_whitespace().next() else {
+            continue;
+        };
+        let disallowed = status == "??"
+            || status.starts_with('A')
+            || status.starts_with('D')
+            || status.starts_with('R');
+        if !disallowed {
+            continue;
+        }
+        let paths = provider_template_status_paths(line);
+        if let Some(path) = paths
+            .iter()
+            .find(|path| is_w5a_protected_topology_path(path))
+        {
+            return Err(format!(
+                "W5A provider/template topology rejects {label} {status} on {path}"
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn provider_template_status_paths(line: &str) -> Vec<String> {
+    let path = if line.as_bytes().get(2) == Some(&b' ') {
+        line.get(3..).unwrap_or(line)
+    } else if line.as_bytes().get(1) == Some(&b' ') {
+        line.get(2..).unwrap_or(line)
+    } else {
+        line.split_once(char::is_whitespace)
+            .map(|(_, rest)| rest)
+            .unwrap_or("")
+    }
+    .trim();
+    if let Some((old, new)) = path.split_once(" -> ") {
+        vec![normalize_git_path(old), normalize_git_path(new)]
+    } else {
+        line.split_whitespace()
+            .skip(1)
+            .map(normalize_git_path)
+            .collect()
+    }
+}
+
+fn is_w5a_protected_topology_path(path: &str) -> bool {
+    let path = normalize_git_path(path);
+    if path == "crates/codegen/src/grammar_provider.rs" {
+        return false;
+    }
+    path.ends_with("_provider.rs") || path.contains("_templates")
 }
 
 fn git_path_args(
@@ -1195,14 +1334,14 @@ fn validate_parent_frozen_diff(root: &Path) -> Result<(), String> {
     let subject = git_output(root, &["log", "-1", "--format=%s"])?;
     validate_authorized_parent_diff(&changed_paths, &subject).map_err(|error| {
         format!(
-            "{error}: git diff --quiet HEAD^ -- {}",
+            "{error}: git diff --quiet HEAD^ HEAD -- {}",
             FROZEN_ROOTS.join(" ")
         )
     })
 }
 
 fn git_parent_changed_paths(root: &Path) -> Result<Vec<String>, String> {
-    let mut args = vec!["diff", "--name-only", "HEAD^", "--"];
+    let mut args = vec!["diff", "--name-only", "HEAD^", "HEAD", "--"];
     args.extend_from_slice(FROZEN_ROOTS);
     let output = git_output(root, &args)?;
     Ok(output
@@ -1465,6 +1604,17 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
         let allowed = changed_paths
             .iter()
             .all(|path| is_allowed_path(path, &SK_V14_W4_OWNER_PATHS));
+        if allowed {
+            return Ok(());
+        }
+    }
+    if subject.contains("sk-v14-w5a")
+        || subject.contains("sk-v14-W5A")
+        || subject.contains("sk-v14-waveW5A")
+    {
+        let allowed = changed_paths
+            .iter()
+            .all(|path| is_allowed_path(path, SK_V14_W5A_OWNER_PATHS));
         if allowed {
             return Ok(());
         }
@@ -1898,6 +2048,54 @@ mod tests {
             validate_authorized_parent_diff(&changed, "feat(sk-v14-waveW5): provider path")
                 .is_err()
         );
+    }
+
+    #[test]
+    fn admits_sk_v14_w5a_parent_diff_under_w5a_scope() {
+        let changed = SK_V14_W5A_OWNER_PATHS
+            .iter()
+            .map(|path| (*path).to_string())
+            .collect::<Vec<_>>();
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v14-waveW5A-redress): route runtime request"
+        )
+        .is_ok());
+        let mut outside = changed;
+        outside.push("crates/codegen/src/css_l4_declaration_values_provider.rs".into());
+        assert!(validate_authorized_parent_diff(
+            &outside,
+            "feat(sk-v14-waveW5A-redress): route runtime request"
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn w5a_provider_template_status_rejects_add_delete_rename() {
+        assert!(validate_w5a_provider_template_status(
+            "status",
+            "A  crates/codegen/src/css_l4_new_provider.rs\n"
+        )
+        .is_err());
+        assert!(validate_w5a_provider_template_status(
+            "diff",
+            "D\tcrates/codegen/src/css_l4_visual_functions_templates/sink.rs\n"
+        )
+        .is_err());
+        assert!(validate_w5a_provider_template_status(
+            "diff",
+            "R100\tcrates/codegen/src/css_l4_old_provider.rs\tcrates/codegen/src/css_l4_new_provider.rs\n"
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn w5a_provider_template_status_allows_modify_and_grammar_provider() {
+        assert!(validate_w5a_provider_template_status(
+            "status",
+            " M crates/codegen/src/css_l4_declaration_values_provider.rs\nA  crates/codegen/src/grammar_provider.rs\n"
+        )
+        .is_ok());
     }
 
     #[test]

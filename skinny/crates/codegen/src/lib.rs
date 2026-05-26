@@ -7,6 +7,7 @@ mod css_l4_vendor_and_custom_atrules_provider;
 mod css_l4_visual_functions_provider;
 pub mod direct_schema;
 mod grammar_profile;
+pub mod grammar_provider;
 mod json_provider;
 mod json_sink_direct;
 mod json_typed_direct;
@@ -17,6 +18,11 @@ use ir::{BackendIr, BackendShape, CostFacts, RuleId};
 use std::collections::BTreeMap;
 use std::path::Path;
 use thiserror::Error;
+
+pub use grammar_provider::{
+    emit_runtime_from_request, RuntimeGenerationRequest, RuntimeGrammarSource,
+    RuntimeWorkspaceMetadata,
+};
 
 #[derive(Debug, Error)]
 pub enum CodegenError {
@@ -32,6 +38,13 @@ pub enum CodegenError {
     UnexpectedFile(String),
     #[error("lowering failed: {0}")]
     Lowering(String),
+    #[error("{code}: {path}@{offset} source_hash={source_hash}")]
+    UnsupportedRuntimeConstruct {
+        code: &'static str,
+        path: String,
+        offset: usize,
+        source_hash: String,
+    },
     #[error(transparent)]
     Io(#[from] std::io::Error),
 }
@@ -119,6 +132,11 @@ pub fn emit_runtime_profile(grammar_name: &str) -> Result<EmittedSource, Codegen
     render_runtime_profile(profile, None)
 }
 
+pub fn runtime_profile_expected_files(profile_id: &str) -> Result<Vec<&'static str>, CodegenError> {
+    let profile = grammar_profile::select_runtime_profile_for_name(profile_id)?;
+    Ok(profile.generated_runtime_files().to_vec())
+}
+
 pub fn emit_typed_from_source(
     grammar_name: &str,
     source: &str,
@@ -159,7 +177,7 @@ fn emit_with_layout(
     render_runtime_profile(profile, Some(sink_only))
 }
 
-fn render_runtime_profile(
+pub(crate) fn render_runtime_profile(
     profile: &grammar_profile::GrammarProfile,
     sink_only: Option<&lower::sink_only::SinkOnlyProgram>,
 ) -> Result<EmittedSource, CodegenError> {
@@ -313,6 +331,37 @@ mod tests {
     use ir::BackendExpr;
 
     const JSON_GRAMMAR: &str = include_str!("../../../grammars/json.bbnf");
+
+    fn w5a_metadata() -> RuntimeWorkspaceMetadata {
+        RuntimeWorkspaceMetadata {
+            repo_manifest_path: "Cargo.toml".to_string(),
+            skinny_manifest_path: "skinny/Cargo.toml".to_string(),
+            grammar_manifest_path: "grammar/css/l4/stylesheet.bbnf".to_string(),
+            generated_root: "crates/runtime/src/grammars".to_string(),
+            host_registry: "skinny-none".to_string(),
+            profile: "balanced".to_string(),
+        }
+    }
+
+    fn w5a_css_request(source: &str) -> RuntimeGenerationRequest {
+        RuntimeGenerationRequest {
+            grammar_name: "css_l4".to_string(),
+            profile_id: "css_l4_declaration_values".to_string(),
+            entry_rule: "stylesheet".to_string(),
+            source_roots: vec!["grammar/css/l4/stylesheet.bbnf".to_string()],
+            sources: vec![RuntimeGrammarSource {
+                rel_path: "grammar/css/l4/stylesheet.bbnf".to_string(),
+                source: source.to_string(),
+            }],
+            workspace_metadata: w5a_metadata(),
+            output_dir: "crates/runtime/src/grammars/css_l4_declaration_values".to_string(),
+            expected_files: runtime_profile_expected_files("css_l4_declaration_values")
+                .unwrap()
+                .into_iter()
+                .map(str::to_string)
+                .collect(),
+        }
+    }
 
     #[test]
     fn emits_expected_file_set_in_order() {
@@ -781,6 +830,85 @@ mod tests {
         assert!(!generated.contains("serde_json::Value"));
     }
 
+    pub(super) fn w5a_runtime_contract_consumes_source_and_metadata() {
+        let source = r#"
+@import "tokens.bbnf" ;
+@token ident ;
+@ws /\s*/ ;
+@pretty stylesheet block ;
+root = @{ "url" , "(" >> ident ?w , "," ?w , ident << ")" } ;
+tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
+"#;
+        let emitted = emit_runtime_from_request(w5a_css_request(source)).unwrap();
+        assert!(emitted
+            .get("generated.rs")
+            .unwrap()
+            .contains("emit_fact_stream"));
+
+        let mut missing_metadata = w5a_css_request(source);
+        missing_metadata.workspace_metadata.generated_root.clear();
+        assert!(matches!(
+            emit_runtime_from_request(missing_metadata),
+            Err(CodegenError::Lowering(message)) if message.contains("generated_root")
+        ));
+
+        let missing_fact = w5a_css_request("@import \"tokens.bbnf\" ;\nroot = \"x\" ;\n");
+        assert!(matches!(
+            emit_runtime_from_request(missing_fact),
+            Err(CodegenError::Lowering(message)) if message.contains("source facts missing")
+        ));
+    }
+
+    pub(super) fn w5a_json_request_matches_emit_from_source() {
+        let old = emit_from_source("json", JSON_GRAMMAR).unwrap();
+        let request = RuntimeGenerationRequest {
+            grammar_name: "json".to_string(),
+            profile_id: "json".to_string(),
+            entry_rule: "json".to_string(),
+            source_roots: vec!["skinny/grammars/json.bbnf".to_string()],
+            sources: vec![RuntimeGrammarSource {
+                rel_path: "skinny/grammars/json.bbnf".to_string(),
+                source: JSON_GRAMMAR.to_string(),
+            }],
+            workspace_metadata: w5a_metadata(),
+            output_dir: "crates/runtime/src/grammars/json".to_string(),
+            expected_files: runtime_profile_expected_files("json")
+                .unwrap()
+                .into_iter()
+                .map(str::to_string)
+                .collect(),
+        };
+        let new = emit_runtime_from_request(request).unwrap();
+
+        assert_eq!(old, new);
+    }
+
+    pub(super) fn w5a_sheets_bbnf_fail_closed_through_runtime_contract() {
+        for grammar_name in ["google_sheets", "bbnf"] {
+            let request = RuntimeGenerationRequest {
+                grammar_name: grammar_name.to_string(),
+                profile_id: grammar_name.to_string(),
+                entry_rule: "root".to_string(),
+                source_roots: vec![format!("grammar/{grammar_name}/root.bbnf")],
+                sources: vec![RuntimeGrammarSource {
+                    rel_path: format!("grammar/{grammar_name}/root.bbnf"),
+                    source: "root = \"x\" -> 0u8 ;".to_string(),
+                }],
+                workspace_metadata: w5a_metadata(),
+                output_dir: format!("crates/runtime/src/grammars/{grammar_name}"),
+                expected_files: vec!["mod.rs".to_string()],
+            };
+
+            assert!(matches!(
+                emit_runtime_from_request(request),
+                Err(CodegenError::UnsupportedRuntimeConstruct {
+                    code: "BBNF-UNSUPPORTED-PROJECTION",
+                    ..
+                })
+            ));
+        }
+    }
+
     fn strip_direct_builds(expr: &mut BackendExpr) {
         match expr {
             BackendExpr::Entry(inner)
@@ -805,4 +933,22 @@ mod tests {
             | BackendExpr::Return => {}
         }
     }
+}
+
+#[cfg(test)]
+#[test]
+fn w5a_runtime_contract_consumes_source_and_metadata() {
+    tests::w5a_runtime_contract_consumes_source_and_metadata();
+}
+
+#[cfg(test)]
+#[test]
+fn w5a_json_request_matches_emit_from_source() {
+    tests::w5a_json_request_matches_emit_from_source();
+}
+
+#[cfg(test)]
+#[test]
+fn w5a_sheets_bbnf_fail_closed_through_runtime_contract() {
+    tests::w5a_sheets_bbnf_fail_closed_through_runtime_contract();
 }

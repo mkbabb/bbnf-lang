@@ -44,6 +44,235 @@ fn stable_hash(source: &str) -> String {
     format!("{hash:016x}")
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct RuntimeSource<'a> {
+    pub path: &'a str,
+    pub source: &'a str,
+}
+
+impl<'a> RuntimeSource<'a> {
+    pub fn new(path: &'a str, source: &'a str) -> Self {
+        Self { path, source }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RuntimeSourceFacts {
+    pub source_hash: String,
+    pub constructs: Vec<RuntimeConstruct>,
+}
+
+impl RuntimeSourceFacts {
+    pub fn count(&self, kind: RuntimeConstructKind) -> usize {
+        self.constructs
+            .iter()
+            .filter(|construct| construct.kind == kind)
+            .count()
+    }
+
+    pub fn projection_count(&self) -> usize {
+        self.count(RuntimeConstructKind::Projection)
+            + self.count(RuntimeConstructKind::TypedProjection)
+    }
+
+    pub fn first_unsupported(&self) -> Option<UnsupportedRuntimeConstruct> {
+        self.constructs
+            .iter()
+            .find_map(RuntimeConstruct::unsupported)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RuntimeConstruct {
+    pub kind: RuntimeConstructKind,
+    pub path: String,
+    pub offset: usize,
+    pub source_hash: String,
+}
+
+impl RuntimeConstruct {
+    fn unsupported(&self) -> Option<UnsupportedRuntimeConstruct> {
+        let code = match self.kind {
+            RuntimeConstructKind::Import => "BBNF-UNSUPPORTED-IMPORT-RESOLUTION",
+            RuntimeConstructKind::TokenDirective
+            | RuntimeConstructKind::WhitespaceDirective
+            | RuntimeConstructKind::PrettyDirective => "BBNF-UNSUPPORTED-DIRECTIVE",
+            RuntimeConstructKind::WhitespaceModifier => "BBNF-UNSUPPORTED-WHITESPACE-MODIFIER",
+            RuntimeConstructKind::Projection | RuntimeConstructKind::TypedProjection => {
+                "BBNF-UNSUPPORTED-PROJECTION"
+            }
+            RuntimeConstructKind::HostCapture => "BBNF-UNSUPPORTED-HOST-CAPTURE",
+            RuntimeConstructKind::Comma
+            | RuntimeConstructKind::ShiftRight
+            | RuntimeConstructKind::ShiftLeft => return None,
+        };
+        Some(UnsupportedRuntimeConstruct {
+            code,
+            path: self.path.clone(),
+            offset: self.offset,
+            source_hash: self.source_hash.clone(),
+        })
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RuntimeConstructKind {
+    Import,
+    TokenDirective,
+    WhitespaceDirective,
+    PrettyDirective,
+    Comma,
+    WhitespaceModifier,
+    ShiftRight,
+    ShiftLeft,
+    Projection,
+    TypedProjection,
+    HostCapture,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct UnsupportedRuntimeConstruct {
+    pub code: &'static str,
+    pub path: String,
+    pub offset: usize,
+    pub source_hash: String,
+}
+
+pub fn parse_runtime_source_facts(
+    sources: &[RuntimeSource<'_>],
+) -> Result<RuntimeSourceFacts, GrammarError> {
+    if sources.is_empty() {
+        return Err(GrammarError::Parse {
+            code: "BBNF-RUNTIME-SOURCE-MISSING",
+            message: "runtime generation requires at least one grammar source".to_string(),
+            offset: 0,
+        });
+    }
+    let mut digest = String::new();
+    let mut constructs = Vec::new();
+    for source in sources {
+        let source_hash = stable_hash(source.source);
+        digest.push_str(source.path);
+        digest.push(':');
+        digest.push_str(&source_hash);
+        digest.push(';');
+        scan_runtime_source(source, &source_hash, &mut constructs);
+    }
+    Ok(RuntimeSourceFacts {
+        source_hash: stable_hash(&digest),
+        constructs,
+    })
+}
+
+fn scan_runtime_source(
+    input: &RuntimeSource<'_>,
+    source_hash: &str,
+    constructs: &mut Vec<RuntimeConstruct>,
+) {
+    let bytes = input.source.as_bytes();
+    let mut cursor = 0;
+    while cursor < bytes.len() {
+        let rest = &input.source[cursor..];
+        if rest.starts_with("//") {
+            cursor += rest.find('\n').map_or(rest.len(), |index| index + 1);
+            continue;
+        }
+        if matches!(bytes[cursor], b'"' | b'\'') {
+            cursor = skip_quoted(input.source, cursor);
+            continue;
+        }
+        if bytes[cursor] == b'/' && !rest.starts_with("//") {
+            cursor = skip_regex(input.source, cursor);
+            continue;
+        }
+        let found = if rest.starts_with("@import") {
+            Some((RuntimeConstructKind::Import, 7))
+        } else if rest.starts_with("@token") {
+            Some((RuntimeConstructKind::TokenDirective, 6))
+        } else if rest.starts_with("@ws") {
+            Some((RuntimeConstructKind::WhitespaceDirective, 3))
+        } else if rest.starts_with("@pretty") {
+            Some((RuntimeConstructKind::PrettyDirective, 7))
+        } else if rest.starts_with("@{") {
+            Some((RuntimeConstructKind::HostCapture, 2))
+        } else if rest.starts_with("?w") {
+            Some((RuntimeConstructKind::WhitespaceModifier, 2))
+        } else if rest.starts_with(">>") {
+            Some((RuntimeConstructKind::ShiftRight, 2))
+        } else if rest.starts_with("<<") {
+            Some((RuntimeConstructKind::ShiftLeft, 2))
+        } else if rest.starts_with("->") {
+            let kind = if projection_has_type_suffix(rest) {
+                RuntimeConstructKind::TypedProjection
+            } else {
+                RuntimeConstructKind::Projection
+            };
+            Some((kind, 2))
+        } else if bytes[cursor] == b',' {
+            Some((RuntimeConstructKind::Comma, 1))
+        } else {
+            None
+        };
+        if let Some((kind, width)) = found {
+            constructs.push(RuntimeConstruct {
+                kind,
+                path: input.path.to_string(),
+                offset: cursor,
+                source_hash: source_hash.to_string(),
+            });
+            cursor += width;
+        } else {
+            cursor += rest.chars().next().map(char::len_utf8).unwrap_or(1);
+        }
+    }
+}
+
+fn skip_quoted(source: &str, start: usize) -> usize {
+    let quote = source.as_bytes()[start];
+    let mut cursor = start + 1;
+    let mut escaped = false;
+    while cursor < source.len() {
+        let byte = source.as_bytes()[cursor];
+        cursor += 1;
+        if escaped {
+            escaped = false;
+        } else if byte == b'\\' {
+            escaped = true;
+        } else if byte == quote {
+            break;
+        }
+    }
+    cursor
+}
+
+fn skip_regex(source: &str, start: usize) -> usize {
+    let mut cursor = start + 1;
+    let mut escaped = false;
+    while cursor < source.len() {
+        let byte = source.as_bytes()[cursor];
+        cursor += 1;
+        if escaped {
+            escaped = false;
+        } else if byte == b'\\' {
+            escaped = true;
+        } else if byte == b'/' {
+            break;
+        }
+    }
+    cursor
+}
+
+fn projection_has_type_suffix(rest: &str) -> bool {
+    rest.split(|ch: char| ch == '|' || ch == ';' || ch == '\n' || ch == ',')
+        .next()
+        .and_then(|projection| projection.rsplit_once(':').map(|(_, ty)| ty.trim()))
+        .is_some_and(|ty| {
+            ["u8", "u16", "u32", "u64", "i64", "f64"]
+                .iter()
+                .any(|suffix| ty.starts_with(suffix))
+        })
+}
+
 struct Parser<'a> {
     source: &'a str,
     cursor: usize,
@@ -424,4 +653,47 @@ mod tests {
             GrammarError::Validation(ValidationError::UnresolvedRef { .. })
         ));
     }
+}
+
+#[cfg(test)]
+#[test]
+fn w5a_css_l4_constructs_parse_as_source_facts() {
+    let source = r#"
+@import "tokens.bbnf" ;
+@token ident ;
+@ws /\s*/ ;
+@pretty stylesheet block ;
+
+root = @{ "url" , "(" >> ident ?w , "," ?w , ident << ")" } ;
+tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
+"#;
+    let facts = parse_runtime_source_facts(&[RuntimeSource::new("css-lite.bbnf", source)])
+        .expect("source facts parse");
+
+    assert_eq!(facts.count(RuntimeConstructKind::Import), 1);
+    assert_eq!(facts.count(RuntimeConstructKind::TokenDirective), 1);
+    assert_eq!(facts.count(RuntimeConstructKind::WhitespaceDirective), 1);
+    assert_eq!(facts.count(RuntimeConstructKind::PrettyDirective), 1);
+    assert_eq!(facts.count(RuntimeConstructKind::Comma), 3);
+    assert_eq!(facts.count(RuntimeConstructKind::WhitespaceModifier), 2);
+    assert_eq!(facts.count(RuntimeConstructKind::ShiftRight), 1);
+    assert_eq!(facts.count(RuntimeConstructKind::ShiftLeft), 1);
+    assert_eq!(facts.count(RuntimeConstructKind::Projection), 1);
+    assert_eq!(facts.count(RuntimeConstructKind::TypedProjection), 1);
+    assert_eq!(facts.count(RuntimeConstructKind::HostCapture), 1);
+    assert!(!facts.source_hash.is_empty());
+}
+
+#[cfg(test)]
+#[test]
+fn w5a_named_unsupported_constructs_are_source_located() {
+    let source = "root = \"x\" -> 0u8 ;";
+    let facts = parse_runtime_source_facts(&[RuntimeSource::new("bbnf-self.bbnf", source)])
+        .expect("source facts parse");
+    let unsupported = facts.first_unsupported().expect("unsupported construct");
+
+    assert_eq!(unsupported.code, "BBNF-UNSUPPORTED-PROJECTION");
+    assert_eq!(unsupported.path, "bbnf-self.bbnf");
+    assert_eq!(unsupported.offset, source.find("->").unwrap());
+    assert!(!unsupported.source_hash.is_empty());
 }

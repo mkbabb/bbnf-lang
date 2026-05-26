@@ -149,16 +149,28 @@ fn check_float_bits(
     }
 }
 
+const JSON_SOURCES: &[&str] = &["skinny/grammars/json.bbnf"];
+const JSON_ROOTS: &[&str] = &["skinny/grammars/json.bbnf"];
+const WORKSPACE_METADATA: &[&str] = &["Cargo.toml", "skinny/Cargo.toml"];
+const JSON_TARGET: regen::RuntimeTarget = regen::RuntimeTarget {
+    grammar_name: "json",
+    profile: "json",
+    entry_rule: "json",
+    source_roots: JSON_ROOTS,
+    output_dir: "crates/runtime/src/grammars/json",
+    check_command: "check-json",
+    source_inputs: JSON_SOURCES,
+    metadata_inputs: WORKSPACE_METADATA,
+};
+
 fn regen_json(root: &Path) -> Result<()> {
-    let source = std::fs::read_to_string(root.join("grammars/json.bbnf"))?;
-    let emitted = codegen::emit_from_source("json", &source)?;
+    let emitted = codegen::emit_runtime_from_request(regen::runtime_request(root, &JSON_TARGET)?)?;
     emitted.write_to_dir(root.join("crates/runtime/src/grammars/json"))?;
     Ok(())
 }
 
 fn check_json(root: &Path) -> Result<()> {
-    let source = std::fs::read_to_string(root.join("grammars/json.bbnf"))?;
-    let emitted = codegen::emit_from_source("json", &source)?;
+    let emitted = codegen::emit_runtime_from_request(regen::runtime_request(root, &JSON_TARGET)?)?;
     emitted
         .check_dir(root.join("crates/runtime/src/grammars/json"))
         .context("generated JSON runtime is stale; run `cargo xtask regen-json`")
@@ -629,14 +641,21 @@ fn validate_skv14_json_w1_row(row: &Skv14ManifestRow) -> Result<()> {
         bail!("{} lacks W1 timed per-iteration equality PASS", row.row_id);
     }
     if row.sample_count == 0 && row.per_iter_equality != "INTRINSIC-BLOCK:missing-product-surface" {
-        bail!("{} missing product row lacks intrinsic-block equality marker", row.row_id);
+        bail!(
+            "{} missing product row lacks intrinsic-block equality marker",
+            row.row_id
+        );
     }
     if row.comparator_evidence.contains("sonic_rs_anchor")
         || row
             .comparator_evidence
             .contains("from_slice::<sonic_rs::Value>")
-        || row.comparator_evidence.contains("historical:sk-v7-sidecar-profile")
-        || row.comparator_evidence.contains("sidecar-profile:sk-v7-cpp")
+        || row
+            .comparator_evidence
+            .contains("historical:sk-v7-sidecar-profile")
+        || row
+            .comparator_evidence
+            .contains("sidecar-profile:sk-v7-cpp")
     {
         bail!("{} carries stale comparator evidence", row.row_id);
     }

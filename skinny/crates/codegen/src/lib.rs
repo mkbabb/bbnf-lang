@@ -1,17 +1,10 @@
-mod css_l4_at_rules_and_media_provider;
-mod css_l4_declaration_values_extended_provider;
-mod css_l4_declaration_values_provider;
-mod css_l4_nested_layout_provider;
-mod css_l4_stylesheet_selectors_provider;
-mod css_l4_vendor_and_custom_atrules_provider;
-mod css_l4_visual_functions_provider;
 pub mod direct_schema;
 mod grammar_profile;
 pub mod grammar_provider;
-mod json_provider;
 mod json_sink_direct;
 mod json_typed_direct;
 pub(crate) mod lower;
+pub(crate) mod runtime_generator;
 
 use direct_schema::DirectSchemaSet;
 use ir::{BackendIr, BackendShape, CostFacts, RuleId};
@@ -129,7 +122,7 @@ pub fn emit(backend: &BackendIr) -> Result<EmittedSource, CodegenError> {
 
 pub fn emit_runtime_profile(grammar_name: &str) -> Result<EmittedSource, CodegenError> {
     let profile = grammar_profile::select_runtime_profile_for_name(grammar_name)?;
-    render_runtime_profile(profile, None)
+    runtime_generator::emit_profile_only(profile)
 }
 
 pub fn runtime_profile_expected_files(profile_id: &str) -> Result<Vec<&'static str>, CodegenError> {
@@ -174,77 +167,7 @@ fn emit_with_layout(
             "BackendIr did not contain DirectBuild sink-only program".to_string(),
         )
     })?;
-    render_runtime_profile(profile, Some(sink_only))
-}
-
-pub(crate) fn render_runtime_profile(
-    profile: &grammar_profile::GrammarProfile,
-    sink_only: Option<&lower::sink_only::SinkOnlyProgram>,
-) -> Result<EmittedSource, CodegenError> {
-    match profile.provider() {
-        grammar_profile::RuntimeProvider::CssL4DeclarationValues => {
-            let files = css_l4_declaration_values_provider::emit_runtime_files();
-            grammar_profile::validate_generated_roster(profile, files.keys().map(String::as_str))
-                .map_err(CodegenError::Lowering)?;
-            return Ok(EmittedSource { files });
-        }
-        grammar_profile::RuntimeProvider::CssL4DeclarationValuesExtended => {
-            let files = css_l4_declaration_values_extended_provider::emit_runtime_files();
-            grammar_profile::validate_generated_roster(profile, files.keys().map(String::as_str))
-                .map_err(CodegenError::Lowering)?;
-            return Ok(EmittedSource { files });
-        }
-        grammar_profile::RuntimeProvider::CssL4StylesheetSelectors => {
-            let files = css_l4_stylesheet_selectors_provider::emit_runtime_files();
-            grammar_profile::validate_generated_roster(profile, files.keys().map(String::as_str))
-                .map_err(CodegenError::Lowering)?;
-            return Ok(EmittedSource { files });
-        }
-        grammar_profile::RuntimeProvider::CssL4VisualFunctions => {
-            let files = css_l4_visual_functions_provider::emit_runtime_files();
-            grammar_profile::validate_generated_roster(profile, files.keys().map(String::as_str))
-                .map_err(CodegenError::Lowering)?;
-            return Ok(EmittedSource { files });
-        }
-        grammar_profile::RuntimeProvider::CssL4AtRulesAndMedia => {
-            let files = css_l4_at_rules_and_media_provider::emit_runtime_files();
-            grammar_profile::validate_generated_roster(profile, files.keys().map(String::as_str))
-                .map_err(CodegenError::Lowering)?;
-            return Ok(EmittedSource { files });
-        }
-        grammar_profile::RuntimeProvider::CssL4VendorAndCustomAtRules => {
-            let files = css_l4_vendor_and_custom_atrules_provider::emit_runtime_files();
-            grammar_profile::validate_generated_roster(profile, files.keys().map(String::as_str))
-                .map_err(CodegenError::Lowering)?;
-            return Ok(EmittedSource { files });
-        }
-        grammar_profile::RuntimeProvider::CssL4NestedLayout => {
-            let files = css_l4_nested_layout_provider::emit_runtime_files();
-            grammar_profile::validate_generated_roster(profile, files.keys().map(String::as_str))
-                .map_err(CodegenError::Lowering)?;
-            return Ok(EmittedSource { files });
-        }
-        grammar_profile::RuntimeProvider::Json => {}
-    }
-    let sink_only = sink_only.ok_or_else(|| {
-        CodegenError::Lowering("JSON runtime profile requires sink-only lowering".to_string())
-    })?;
-    let mut files = BTreeMap::new();
-    let mut generated = json_provider::generated_rs();
-    generated.push('\n');
-    generated.push_str(&json_sink_direct::render(sink_only).map_err(CodegenError::Lowering)?);
-
-    files.insert("config.rs".to_string(), json_provider::config_rs());
-    files.insert("generated.rs".to_string(), generated);
-    files.insert("host.rs".to_string(), json_provider::host_rs());
-    files.insert("mod.rs".to_string(), json_provider::mod_rs());
-    files.insert("parser.rs".to_string(), json_provider::parser_rs());
-    files.insert("value.rs".to_string(), json_provider::value_rs());
-    files.insert("view.rs".to_string(), json_provider::view_rs());
-    files.insert("visitor.rs".to_string(), json_provider::visitor_rs());
-    grammar_profile::validate_generated_roster(profile, files.keys().map(String::as_str))
-        .map_err(CodegenError::Lowering)?;
-    Ok(EmittedSource { files })
+    runtime_generator::emit_compiled(profile, sink_only)
 }
 
 fn emit_typed_with_layout(
@@ -371,6 +294,37 @@ mod tests {
         }
     }
 
+    const W5C_CSS_PROFILES: &[&str] = &[
+        "css_l4_declaration_values",
+        "css_l4_declaration_values_extended",
+        "css_l4_stylesheet_selectors",
+        "css_l4_visual_functions",
+        "css_l4_at_rules_and_media",
+        "css_l4_vendor_and_custom_atrules",
+        "css_l4_nested_layout",
+    ];
+
+    const W5C_CSS_SOURCE: &str = r#"
+@import "tokens.bbnf" ;
+@token ident ;
+@ws /\s*/ ;
+@pretty stylesheet block ;
+root = @{ "url" , "(" >> ident ?w , "," ?w , ident << ")" } ;
+tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
+"#;
+
+    fn w5c_css_request(profile_id: &str, source: &str) -> RuntimeGenerationRequest {
+        let mut request = w5a_css_request(source);
+        request.profile_id = profile_id.to_string();
+        request.output_dir = format!("crates/runtime/src/grammars/{profile_id}");
+        request.expected_files = runtime_profile_expected_files(profile_id)
+            .unwrap()
+            .into_iter()
+            .map(str::to_string)
+            .collect();
+        request
+    }
+
     #[test]
     fn emits_expected_file_set_in_order() {
         let emitted = emit_from_source("json", JSON_GRAMMAR).unwrap();
@@ -444,174 +398,38 @@ mod tests {
     }
 
     #[test]
-    fn css_l4_declaration_values_profile_fields_are_consumed() {
-        let profile = grammar_profile::select_runtime_profile_for_name("css_l4_declaration_values")
-            .expect("css profile");
-        let emitted = emit_runtime_profile("css_l4_declaration_values").unwrap();
-        let names = emitted.files().map(|(name, _)| name).collect::<Vec<_>>();
+    fn css_l4_frontend_profiles_are_request_generated() {
+        for &profile_id in W5C_CSS_PROFILES {
+            let profile =
+                grammar_profile::select_runtime_profile_for_name(profile_id).expect("css profile");
+            let emitted = emit_runtime_from_request(w5c_css_request(profile_id, W5C_CSS_SOURCE))
+                .expect("request generated css runtime");
+            let names = emitted.files().map(|(name, _)| name).collect::<Vec<_>>();
 
-        assert_eq!(profile.id(), "css_l4_declaration_values");
-        assert_eq!(names, profile.generated_runtime_files());
-        assert!(emitted
-            .get("generated.rs")
-            .unwrap()
-            .contains("emit_fact_stream"));
-        assert!(emitted.get("parser.rs").unwrap().contains("parse_bytes"));
+            assert_eq!(profile.id(), profile_id);
+            assert_eq!(names, profile.generated_runtime_files());
+            assert!(emitted
+                .get("config.rs")
+                .unwrap()
+                .contains("FRONTEND_SOURCE_HASH"));
+            assert!(emitted
+                .get("generated.rs")
+                .unwrap()
+                .contains("emit_fact_stream"));
+            assert!(emitted.get("parser.rs").unwrap().contains("parse_bytes"));
+        }
     }
 
     #[test]
-    fn css_l4_stylesheet_selectors_profile_fields_are_consumed() {
-        let profile =
-            grammar_profile::select_runtime_profile_for_name("css_l4_stylesheet_selectors")
-                .expect("css profile");
-        let emitted = emit_runtime_profile("css_l4_stylesheet_selectors").unwrap();
-        let names = emitted.files().map(|(name, _)| name).collect::<Vec<_>>();
-
-        assert_eq!(profile.id(), "css_l4_stylesheet_selectors");
-        assert_eq!(names, profile.generated_runtime_files());
-        assert!(emitted
-            .get("generated.rs")
-            .unwrap()
-            .contains("emit_fact_stream"));
-        assert!(emitted.get("parser.rs").unwrap().contains("parse_bytes"));
-    }
-
-    #[test]
-    fn css_l4_declaration_values_extended_profile_fields_are_consumed() {
-        let profile =
-            grammar_profile::select_runtime_profile_for_name("css_l4_declaration_values_extended")
-                .expect("css profile");
-        let emitted = emit_runtime_profile("css_l4_declaration_values_extended").unwrap();
-        let names = emitted.files().map(|(name, _)| name).collect::<Vec<_>>();
-
-        assert_eq!(profile.id(), "css_l4_declaration_values_extended");
-        assert_eq!(names, profile.generated_runtime_files());
-        assert!(emitted
-            .get("generated.rs")
-            .unwrap()
-            .contains("emit_fact_stream"));
-        assert!(emitted.get("parser.rs").unwrap().contains("parse_bytes"));
-    }
-
-    #[test]
-    fn css_l4_visual_functions_profile_fields_are_consumed() {
-        let profile = grammar_profile::select_runtime_profile_for_name("css_l4_visual_functions")
-            .expect("css profile");
-        let emitted = emit_runtime_profile("css_l4_visual_functions").unwrap();
-        let names = emitted.files().map(|(name, _)| name).collect::<Vec<_>>();
-
-        assert_eq!(profile.id(), "css_l4_visual_functions");
-        assert_eq!(names, profile.generated_runtime_files());
-        assert!(emitted
-            .get("generated.rs")
-            .unwrap()
-            .contains("emit_fact_stream"));
-        assert!(emitted.get("parser.rs").unwrap().contains("parse_bytes"));
-    }
-
-    #[test]
-    fn css_l4_at_rules_and_media_profile_fields_are_consumed() {
-        let profile = grammar_profile::select_runtime_profile_for_name("css_l4_at_rules_and_media")
-            .expect("css profile");
-        let emitted = emit_runtime_profile("css_l4_at_rules_and_media").unwrap();
-        let names = emitted.files().map(|(name, _)| name).collect::<Vec<_>>();
-
-        assert_eq!(profile.id(), "css_l4_at_rules_and_media");
-        assert_eq!(names, profile.generated_runtime_files());
-        assert!(emitted
-            .get("generated.rs")
-            .unwrap()
-            .contains("emit_fact_stream"));
-        assert!(emitted.get("parser.rs").unwrap().contains("parse_bytes"));
-    }
-
-    #[test]
-    fn css_l4_vendor_and_custom_atrules_profile_fields_are_consumed() {
-        let profile =
-            grammar_profile::select_runtime_profile_for_name("css_l4_vendor_and_custom_atrules")
-                .expect("css profile");
-        let emitted = emit_runtime_profile("css_l4_vendor_and_custom_atrules").unwrap();
-        let names = emitted.files().map(|(name, _)| name).collect::<Vec<_>>();
-
-        assert_eq!(profile.id(), "css_l4_vendor_and_custom_atrules");
-        assert_eq!(names, profile.generated_runtime_files());
-        assert!(emitted
-            .get("generated.rs")
-            .unwrap()
-            .contains("emit_fact_stream"));
-        assert!(emitted.get("parser.rs").unwrap().contains("parse_bytes"));
-    }
-
-    #[test]
-    fn css_l4_nested_layout_profile_fields_are_consumed() {
-        let profile = grammar_profile::select_runtime_profile_for_name("css_l4_nested_layout")
-            .expect("css profile");
-        let emitted = emit_runtime_profile("css_l4_nested_layout").unwrap();
-        let names = emitted.files().map(|(name, _)| name).collect::<Vec<_>>();
-
-        assert_eq!(profile.id(), "css_l4_nested_layout");
-        assert_eq!(names, profile.generated_runtime_files());
-        assert!(emitted
-            .get("generated.rs")
-            .unwrap()
-            .contains("emit_fact_stream"));
-        assert!(emitted.get("parser.rs").unwrap().contains("parse_bytes"));
-    }
-
-    #[test]
-    fn css_l4_declaration_values_generated_runtime_reproducible() {
-        let emitted = emit_runtime_profile("css_l4_declaration_values").unwrap();
-        let runtime_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../runtime/src/grammars/css_l4_declaration_values");
-        emitted.check_dir(runtime_dir).unwrap();
-    }
-
-    #[test]
-    fn css_l4_stylesheet_selectors_generated_runtime_reproducible() {
-        let emitted = emit_runtime_profile("css_l4_stylesheet_selectors").unwrap();
-        let runtime_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../runtime/src/grammars/css_l4_stylesheet_selectors");
-        emitted.check_dir(runtime_dir).unwrap();
-    }
-
-    #[test]
-    fn css_l4_declaration_values_extended_generated_runtime_reproducible() {
-        let emitted = emit_runtime_profile("css_l4_declaration_values_extended").unwrap();
-        let runtime_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../runtime/src/grammars/css_l4_declaration_values_extended");
-        emitted.check_dir(runtime_dir).unwrap();
-    }
-
-    #[test]
-    fn css_l4_visual_functions_generated_runtime_reproducible() {
-        let emitted = emit_runtime_profile("css_l4_visual_functions").unwrap();
-        let runtime_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../runtime/src/grammars/css_l4_visual_functions");
-        emitted.check_dir(runtime_dir).unwrap();
-    }
-
-    #[test]
-    fn css_l4_at_rules_and_media_generated_runtime_reproducible() {
-        let emitted = emit_runtime_profile("css_l4_at_rules_and_media").unwrap();
-        let runtime_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../runtime/src/grammars/css_l4_at_rules_and_media");
-        emitted.check_dir(runtime_dir).unwrap();
-    }
-
-    #[test]
-    fn css_l4_vendor_and_custom_atrules_generated_runtime_reproducible() {
-        let emitted = emit_runtime_profile("css_l4_vendor_and_custom_atrules").unwrap();
-        let runtime_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../runtime/src/grammars/css_l4_vendor_and_custom_atrules");
-        emitted.check_dir(runtime_dir).unwrap();
-    }
-
-    #[test]
-    fn css_l4_nested_layout_generated_runtime_reproducible() {
-        let emitted = emit_runtime_profile("css_l4_nested_layout").unwrap();
-        let runtime_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../runtime/src/grammars/css_l4_nested_layout");
-        emitted.check_dir(runtime_dir).unwrap();
+    fn css_l4_generated_runtimes_reproducible_from_request() {
+        for &profile_id in W5C_CSS_PROFILES {
+            let emitted = emit_runtime_from_request(w5c_css_request(profile_id, W5C_CSS_SOURCE))
+                .expect("request generated css runtime");
+            let runtime_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../runtime/src/grammars")
+                .join(profile_id);
+            emitted.check_dir(runtime_dir).unwrap();
+        }
     }
 
     #[test]
@@ -955,6 +773,35 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
         }
     }
 
+    pub(super) fn w5c_gen_rejects_profile_only_css_emission() {
+        assert!(matches!(
+            emit_runtime_profile("css_l4_declaration_values"),
+            Err(CodegenError::Lowering(message))
+                if message.contains("requires RuntimeGenerationRequest")
+        ));
+    }
+
+    pub(super) fn w5c_gen_css_runtime_output_depends_on_frontend_source_hash() {
+        let first =
+            emit_runtime_from_request(w5c_css_request("css_l4_declaration_values", W5C_CSS_SOURCE))
+                .unwrap();
+        let changed = format!("{W5C_CSS_SOURCE}\nextra = ident ;\n");
+        let second =
+            emit_runtime_from_request(w5c_css_request("css_l4_declaration_values", &changed))
+                .unwrap();
+
+        assert_ne!(first.get("config.rs"), second.get("config.rs"));
+        assert!(first
+            .get("config.rs")
+            .unwrap()
+            .contains("FRONTEND_SOURCE_HASH"));
+        assert!(second
+            .get("config.rs")
+            .unwrap()
+            .contains("FRONTEND_SOURCE_HASH"));
+        assert_eq!(first.get("generated.rs"), second.get("generated.rs"));
+    }
+
     fn strip_direct_builds(expr: &mut BackendExpr) {
         match expr {
             BackendExpr::Entry(inner)
@@ -1009,4 +856,16 @@ fn w5b_frontend_request_consumes_lowered_ir_before_provider_rendering() {
 #[test]
 fn w5b_frontend_request_rejects_missing_closure_materiality() {
     tests::w5b_frontend_request_rejects_missing_closure_materiality();
+}
+
+#[cfg(test)]
+#[test]
+fn w5c_gen_rejects_profile_only_css_emission() {
+    tests::w5c_gen_rejects_profile_only_css_emission();
+}
+
+#[cfg(test)]
+#[test]
+fn w5c_gen_css_runtime_output_depends_on_frontend_source_hash() {
+    tests::w5c_gen_css_runtime_output_depends_on_frontend_source_hash();
 }

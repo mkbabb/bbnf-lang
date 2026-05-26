@@ -2,3 +2,10 @@
 pub(crate) const FACT_SCHEMA: &str = "css-l4-vendor-custom-facts-v1";
 pub(crate) const ROW_ID: &str = "css_l4/vendor_and_custom_atrules/direct_to_struct/main";
 pub(crate) const OUTPUT_PLANE: &str = "css_l4_vendor_custom_fact_stream";
+pub(crate) const REQUEST_PROFILE: &str = "css_l4_vendor_and_custom_atrules";
+pub(crate) const ENTRY_RULE: &str = "stylesheet";
+pub(crate) const FRONTEND_SOURCE_HASH: &str = "2d7df4eb87fb2304";
+pub(crate) const REQUEST_SOURCE_COUNT: usize = 15;
+pub(crate) const IMPORT_COUNT: usize = 24;
+pub(crate) const LAYOUT_DIRECTIVE_COUNT: usize = 1;
+pub(crate) const DISCARD_OPERATOR_COUNT: usize = 107;

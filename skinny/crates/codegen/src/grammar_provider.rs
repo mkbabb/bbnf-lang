@@ -1,4 +1,4 @@
-use crate::{grammar_profile, render_runtime_profile, CodegenError, EmittedSource};
+use crate::{grammar_profile, runtime_generator, CodegenError, EmittedSource};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RuntimeGenerationRequest {
@@ -67,16 +67,10 @@ pub fn emit_runtime_from_request(
             expected.join(", ")
         )));
     }
-    if profile.provider() == grammar_profile::RuntimeProvider::Json {
-        let Some(source) = request.sources.first() else {
-            return Err(CodegenError::Lowering(
-                "JSON runtime request requires a source".to_string(),
-            ));
-        };
-        return crate::emit_from_source(&request.grammar_name, &source.source);
+    if profile.mode() == grammar_profile::RuntimeGenerationMode::FrontendFacts {
+        validate_non_json_frontend_materiality(&facts)?;
     }
-    validate_non_json_frontend_materiality(&facts)?;
-    render_runtime_profile(profile, None)
+    runtime_generator::emit_from_request(profile, &request, &facts)
 }
 
 fn validate_metadata(metadata: &RuntimeWorkspaceMetadata) -> Result<(), CodegenError> {

@@ -2,91 +2,10 @@
 pub(crate) const FACT_SCHEMA: &str = "css-l4-declaration-value-extended-facts-v1";
 pub(crate) const ROW_ID: &str = "css_l4/declaration_values_extended/direct_to_struct/main";
 pub(crate) const OUTPUT_PLANE: &str = "css_l4_declaration_value_extended_fact_stream";
-pub(crate) const MAX_VALUE_RECURSION: u32 = 8;
-pub(crate) const TOKEN_FLAGS_NORMALIZED: &str = "normalized";
-pub(crate) const TOKEN_HASH: &str = "hash";
-pub(crate) const TOKEN_STRING: &str = "string";
-pub(crate) const TOKEN_PERCENTAGE: &str = "percentage";
-pub(crate) const TOKEN_DIMENSION: &str = "dimension";
-pub(crate) const TOKEN_NUMBER: &str = "number";
-pub(crate) const TOKEN_FUNCTION: &str = "function";
-pub(crate) const TOKEN_URL: &str = "url";
-pub(crate) const TOKEN_IDENT: &str = "ident";
-pub(crate) const TOKEN_PAREN_OPEN: &str = "paren_open";
-pub(crate) const TOKEN_PAREN_CLOSE: &str = "paren_close";
-pub(crate) const TOKEN_COMMA: &str = "comma";
-pub(crate) const TOKEN_BRACKET_OPEN: &str = "bracket_open";
-pub(crate) const TOKEN_BRACKET_CLOSE: &str = "bracket_close";
-pub(crate) const TOKEN_DELIM: &str = "delim";
-pub(crate) const UNION_PROJECTION_NORMALIZED_ASCII: &str = "normalized_ascii_token";
-pub(crate) const UNION_PROJECTION_RAW_BYTES: &str = "raw_byte_token";
-pub(crate) const CSS_ESCAPE_BYTE: u8 = b'\\';
-pub(crate) const CSS_HEX_ESCAPE_MAX_DIGITS: usize = 6;
-pub(crate) const IMPORTANT_KEYWORD: &[u8] = b"important";
-
-#[inline(always)]
-pub(crate) fn is_quote_byte(byte: u8) -> bool {
-    matches!(byte, b'"' | b'\'')
-}
-
-#[inline(always)]
-pub(crate) fn is_escape_byte(byte: u8) -> bool {
-    byte == CSS_ESCAPE_BYTE
-}
-
-#[inline(always)]
-pub(crate) fn is_trivia_byte(byte: u8) -> bool {
-    byte.is_ascii_whitespace()
-}
-
-#[inline(always)]
-pub(crate) fn starts_block_comment(bytes: &[u8], pos: usize, end: usize) -> bool {
-    pos + 1 < end && bytes[pos] == b'/' && bytes[pos + 1] == b'*'
-}
-
-#[inline(always)]
-pub(crate) fn ends_block_comment(bytes: &[u8], pos: usize, end: usize) -> bool {
-    pos + 1 < end && bytes[pos] == b'*' && bytes[pos + 1] == b'/'
-}
-
-#[inline(always)]
-pub(crate) fn is_ident_start(byte: u8) -> bool {
-    byte.is_ascii_alphabetic() || byte == b'_' || byte == b'-' || is_escape_byte(byte)
-}
-
-#[inline(always)]
-pub(crate) fn is_ident_byte(byte: u8) -> bool {
-    is_ident_start(byte) || byte.is_ascii_digit()
-}
-
-#[inline(always)]
-pub(crate) fn is_url_function(name: &str) -> bool {
-    name.len() == TOKEN_URL.len()
-        && name
-            .bytes()
-            .zip(TOKEN_URL.bytes())
-            .all(|(a, b)| a.eq_ignore_ascii_case(&b))
-}
-
-#[inline(always)]
-pub(crate) fn token_uses_ascii_lower_hex(kind: &str) -> bool {
-    matches!(
-        kind,
-        TOKEN_IDENT | TOKEN_FUNCTION | TOKEN_HASH | TOKEN_DIMENSION | TOKEN_URL
-    )
-}
-
-#[inline(always)]
-pub(crate) fn token_union_projection(kind: &str, depth: u32) -> &'static str {
-    let _ = depth;
-    if token_uses_ascii_lower_hex(kind) {
-        UNION_PROJECTION_NORMALIZED_ASCII
-    } else {
-        UNION_PROJECTION_RAW_BYTES
-    }
-}
-
-#[inline(always)]
-pub(crate) fn projection_uses_ascii_lower_hex(projection: &str) -> bool {
-    projection == UNION_PROJECTION_NORMALIZED_ASCII
-}
+pub(crate) const REQUEST_PROFILE: &str = "css_l4_declaration_values_extended";
+pub(crate) const ENTRY_RULE: &str = "stylesheet";
+pub(crate) const FRONTEND_SOURCE_HASH: &str = "2d7df4eb87fb2304";
+pub(crate) const REQUEST_SOURCE_COUNT: usize = 15;
+pub(crate) const IMPORT_COUNT: usize = 24;
+pub(crate) const LAYOUT_DIRECTIVE_COUNT: usize = 1;
+pub(crate) const DISCARD_OPERATOR_COUNT: usize = 107;

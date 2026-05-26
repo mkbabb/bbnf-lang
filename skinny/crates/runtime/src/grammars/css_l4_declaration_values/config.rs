@@ -2,3 +2,10 @@
 pub(crate) const FACT_SCHEMA: &str = "css-l4-declaration-value-facts-v1";
 pub(crate) const ROW_ID: &str = "css_l4/declaration_values/direct_to_struct/main";
 pub(crate) const OUTPUT_PLANE: &str = "css_l4_declaration_value_fact_stream";
+pub(crate) const REQUEST_PROFILE: &str = "css_l4_declaration_values";
+pub(crate) const ENTRY_RULE: &str = "stylesheet";
+pub(crate) const FRONTEND_SOURCE_HASH: &str = "2d7df4eb87fb2304";
+pub(crate) const REQUEST_SOURCE_COUNT: usize = 15;
+pub(crate) const IMPORT_COUNT: usize = 24;
+pub(crate) const LAYOUT_DIRECTIVE_COUNT: usize = 1;
+pub(crate) const DISCARD_OPERATOR_COUNT: usize = 107;

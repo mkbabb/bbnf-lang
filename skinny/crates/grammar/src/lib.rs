@@ -88,6 +88,7 @@ pub struct RuntimeFrontendClosure {
     pub source_hash: String,
     pub sources: Vec<RuntimeFrontendSource>,
     pub imports: Vec<RuntimeFrontendImport>,
+    pub layout: RuntimeFrontendLayout,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -106,6 +107,47 @@ pub struct RuntimeFrontendImport {
     pub resolved_source_hash: String,
 }
 
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct RuntimeFrontendLayout {
+    pub whitespace_directives: Vec<RuntimeWhitespaceDirective>,
+    pub whitespace_modifiers: Vec<RuntimeWhitespaceModifier>,
+    pub discard_operators: Vec<RuntimeDiscardOperator>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RuntimeWhitespaceDirective {
+    pub path: String,
+    pub source_hash: String,
+    pub offset: usize,
+    pub end: usize,
+    pub pattern: String,
+    pub pattern_offset: usize,
+    pub pattern_end: usize,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RuntimeWhitespaceModifier {
+    pub path: String,
+    pub source_hash: String,
+    pub offset: usize,
+    pub end: usize,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RuntimeDiscardOperator {
+    pub kind: RuntimeDiscardOperatorKind,
+    pub path: String,
+    pub source_hash: String,
+    pub offset: usize,
+    pub end: usize,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RuntimeDiscardOperatorKind {
+    Enter,
+    Exit,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RuntimeConstruct {
     pub kind: RuntimeConstructKind,
@@ -117,16 +159,17 @@ pub struct RuntimeConstruct {
 impl RuntimeConstruct {
     fn unsupported(&self) -> Option<UnsupportedRuntimeConstruct> {
         let code = match self.kind {
-            RuntimeConstructKind::TokenDirective
-            | RuntimeConstructKind::WhitespaceDirective
-            | RuntimeConstructKind::PrettyDirective => "BBNF-UNSUPPORTED-DIRECTIVE",
-            RuntimeConstructKind::WhitespaceModifier => "BBNF-UNSUPPORTED-WHITESPACE-MODIFIER",
+            RuntimeConstructKind::TokenDirective | RuntimeConstructKind::PrettyDirective => {
+                "BBNF-UNSUPPORTED-DIRECTIVE"
+            }
             RuntimeConstructKind::Projection | RuntimeConstructKind::TypedProjection => {
                 "BBNF-UNSUPPORTED-PROJECTION"
             }
             RuntimeConstructKind::HostCapture => "BBNF-UNSUPPORTED-HOST-CAPTURE",
             RuntimeConstructKind::Comma
             | RuntimeConstructKind::Import
+            | RuntimeConstructKind::WhitespaceDirective
+            | RuntimeConstructKind::WhitespaceModifier
             | RuntimeConstructKind::ShiftRight
             | RuntimeConstructKind::ShiftLeft => return None,
         };
@@ -205,12 +248,20 @@ fn scan_runtime_sources(
         digest.push(';');
         let mut constructs = Vec::new();
         let mut imports = Vec::new();
-        scan_runtime_source(source, &source_hash, &mut constructs, &mut imports)?;
+        let mut layout = RuntimeFrontendLayout::default();
+        scan_runtime_source(
+            source,
+            &source_hash,
+            &mut constructs,
+            &mut imports,
+            &mut layout,
+        )?;
         scans.push(RuntimeSourceScan {
             path: source.path.to_string(),
             source_hash,
             constructs,
             imports,
+            layout,
         });
     }
     Ok((stable_hash(&digest), scans))
@@ -222,6 +273,7 @@ struct RuntimeSourceScan {
     source_hash: String,
     constructs: Vec<RuntimeConstruct>,
     imports: Vec<RuntimeImportRef>,
+    layout: RuntimeFrontendLayout,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -235,6 +287,7 @@ fn scan_runtime_source(
     source_hash: &str,
     constructs: &mut Vec<RuntimeConstruct>,
     imports: &mut Vec<RuntimeImportRef>,
+    layout: &mut RuntimeFrontendLayout,
 ) -> Result<(), GrammarError> {
     let bytes = input.source.as_bytes();
     let mut cursor = 0;
@@ -258,18 +311,84 @@ fn scan_runtime_source(
             Some((RuntimeConstructKind::Import, 7))
         } else if rest.starts_with("@token") {
             Some((RuntimeConstructKind::TokenDirective, 6))
-        } else if rest.starts_with("@ws") {
+        } else if rest.starts_with("@ws") && runtime_keyword_boundary(rest, 3) {
+            let directive = parse_runtime_ws_directive(input.source, cursor, 3)?;
+            layout
+                .whitespace_directives
+                .push(RuntimeWhitespaceDirective {
+                    path: input.path.to_string(),
+                    source_hash: source_hash.to_string(),
+                    offset: cursor,
+                    end: directive.end,
+                    pattern: directive.pattern,
+                    pattern_offset: directive.pattern_offset,
+                    pattern_end: directive.pattern_end,
+                });
             Some((RuntimeConstructKind::WhitespaceDirective, 3))
         } else if rest.starts_with("@pretty") {
             Some((RuntimeConstructKind::PrettyDirective, 7))
         } else if rest.starts_with("@{") {
             Some((RuntimeConstructKind::HostCapture, 2))
-        } else if rest.starts_with("?w") {
+        } else if rest.starts_with("?w")
+            && runtime_keyword_boundary(rest, 2)
+            && runtime_has_left_operand(input.source, cursor)
+            && runtime_has_layout_boundary_after(input.source, cursor + 2)
+        {
+            layout.whitespace_modifiers.push(RuntimeWhitespaceModifier {
+                path: input.path.to_string(),
+                source_hash: source_hash.to_string(),
+                offset: cursor,
+                end: cursor + 2,
+            });
             Some((RuntimeConstructKind::WhitespaceModifier, 2))
-        } else if rest.starts_with(">>") {
+        } else if rest.starts_with("?w") {
+            return Err(GrammarError::Parse {
+                code: "BBNF-RUNTIME-WHITESPACE-MODIFIER",
+                message: "malformed whitespace modifier; expected standalone ?w".to_string(),
+                offset: cursor,
+            });
+        } else if rest.starts_with(">>>") || rest.starts_with("<<<") {
+            return Err(GrammarError::Parse {
+                code: "BBNF-RUNTIME-DISCARD-OPERATOR",
+                message: "malformed discard operator; expected >> or <<".to_string(),
+                offset: cursor,
+            });
+        } else if rest.starts_with(">>")
+            && runtime_has_left_operand(input.source, cursor)
+            && runtime_has_right_operand(input.source, cursor + 2)
+        {
+            layout.discard_operators.push(RuntimeDiscardOperator {
+                kind: RuntimeDiscardOperatorKind::Enter,
+                path: input.path.to_string(),
+                source_hash: source_hash.to_string(),
+                offset: cursor,
+                end: cursor + 2,
+            });
             Some((RuntimeConstructKind::ShiftRight, 2))
-        } else if rest.starts_with("<<") {
+        } else if rest.starts_with(">>") {
+            return Err(GrammarError::Parse {
+                code: "BBNF-RUNTIME-DISCARD-OPERATOR",
+                message: "malformed discard operator; expected operands around >>".to_string(),
+                offset: cursor,
+            });
+        } else if rest.starts_with("<<")
+            && runtime_has_left_operand(input.source, cursor)
+            && runtime_has_right_operand(input.source, cursor + 2)
+        {
+            layout.discard_operators.push(RuntimeDiscardOperator {
+                kind: RuntimeDiscardOperatorKind::Exit,
+                path: input.path.to_string(),
+                source_hash: source_hash.to_string(),
+                offset: cursor,
+                end: cursor + 2,
+            });
             Some((RuntimeConstructKind::ShiftLeft, 2))
+        } else if rest.starts_with("<<") {
+            return Err(GrammarError::Parse {
+                code: "BBNF-RUNTIME-DISCARD-OPERATOR",
+                message: "malformed discard operator; expected operands around <<".to_string(),
+                offset: cursor,
+            });
         } else if rest.starts_with("->") {
             let kind = if projection_has_type_suffix(rest) {
                 RuntimeConstructKind::TypedProjection
@@ -366,6 +485,112 @@ fn parse_runtime_import_target(
     ))
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct RuntimeWsDirective {
+    pattern: String,
+    pattern_offset: usize,
+    pattern_end: usize,
+    end: usize,
+}
+
+fn parse_runtime_ws_directive(
+    source: &str,
+    directive_offset: usize,
+    directive_width: usize,
+) -> Result<RuntimeWsDirective, GrammarError> {
+    let mut cursor = directive_offset + directive_width;
+    while cursor < source.len() {
+        let Some(ch) = source[cursor..].chars().next() else {
+            break;
+        };
+        if matches!(ch, ' ' | '\t' | '\r' | '\n') {
+            cursor += ch.len_utf8();
+        } else {
+            break;
+        }
+    }
+    if source.as_bytes().get(cursor).copied() != Some(b'/') {
+        return Err(GrammarError::Parse {
+            code: "BBNF-RUNTIME-WHITESPACE-DIRECTIVE",
+            message: "runtime @ws directive requires a regex literal".to_string(),
+            offset: directive_offset,
+        });
+    }
+    let pattern_start = cursor + 1;
+    cursor = pattern_start;
+    let mut escaped = false;
+    while cursor < source.len() {
+        let byte = source.as_bytes()[cursor];
+        if escaped {
+            escaped = false;
+            cursor += 1;
+            continue;
+        }
+        if byte == b'\\' {
+            escaped = true;
+            cursor += 1;
+            continue;
+        }
+        if byte == b'/' {
+            let pattern_end = cursor;
+            cursor += 1;
+            while cursor < source.len() {
+                let Some(ch) = source[cursor..].chars().next() else {
+                    break;
+                };
+                if matches!(ch, ' ' | '\t' | '\r') {
+                    cursor += ch.len_utf8();
+                } else {
+                    break;
+                }
+            }
+            if source.as_bytes().get(cursor).copied() != Some(b';') {
+                return Err(GrammarError::Parse {
+                    code: "BBNF-RUNTIME-WHITESPACE-DIRECTIVE",
+                    message: "runtime @ws directive requires a terminating semicolon".to_string(),
+                    offset: directive_offset,
+                });
+            }
+            return Ok(RuntimeWsDirective {
+                pattern: source[pattern_start..pattern_end].to_string(),
+                pattern_offset: pattern_start,
+                pattern_end,
+                end: cursor + 1,
+            });
+        }
+        cursor += 1;
+    }
+    Err(GrammarError::Parse {
+        code: "BBNF-RUNTIME-WHITESPACE-DIRECTIVE",
+        message: "unterminated runtime @ws regex literal".to_string(),
+        offset: directive_offset,
+    })
+}
+
+fn runtime_has_left_operand(source: &str, cursor: usize) -> bool {
+    source[..cursor]
+        .chars()
+        .rev()
+        .find(|ch| !ch.is_whitespace())
+        .is_some_and(|ch| {
+            ch == '"' || ch == '\'' || ch == '/' || ch == ')' || ch == ']' || is_ident_continue(ch)
+        })
+}
+
+fn runtime_has_right_operand(source: &str, cursor: usize) -> bool {
+    source[cursor..]
+        .chars()
+        .find(|ch| !ch.is_whitespace())
+        .is_some_and(|ch| matches!(ch, '"' | '\'' | '/' | '(') || is_ident_start(ch))
+}
+
+fn runtime_has_layout_boundary_after(source: &str, cursor: usize) -> bool {
+    match source[cursor..].chars().next() {
+        Some(ch) => ch.is_whitespace() || matches!(ch, ',' | ';' | '|' | ')' | ']' | '}'),
+        None => true,
+    }
+}
+
 fn runtime_import_error(offset: usize, message: &str) -> GrammarError {
     GrammarError::Parse {
         code: "BBNF-RUNTIME-IMPORT",
@@ -432,10 +657,23 @@ fn resolve_runtime_import_closure(
             source_hash: scan.source_hash.clone(),
         })
         .collect::<Vec<_>>();
+    let mut layout = RuntimeFrontendLayout::default();
+    for scan in scans {
+        layout
+            .whitespace_directives
+            .extend(scan.layout.whitespace_directives.clone());
+        layout
+            .whitespace_modifiers
+            .extend(scan.layout.whitespace_modifiers.clone());
+        layout
+            .discard_operators
+            .extend(scan.layout.discard_operators.clone());
+    }
     Ok(RuntimeFrontendClosure {
         source_hash,
         sources,
         imports,
+        layout,
     })
 }
 
@@ -707,6 +945,14 @@ impl<'a> Parser<'a> {
                     );
                 }
                 '?' => {
+                    if self.source[self.cursor..].starts_with("?w") {
+                        return Err(self.error_at(
+                            "BBNF-DIRECTIVE-NOT-IN-SKINNY",
+                            self.cursor,
+                            "whitespace modifier ?w is not available in the skinny compiler"
+                                .to_string(),
+                        ));
+                    }
                     self.bump_char();
                     expr = self.grammar.add_expr(
                         ExprKind::Optional(expr),
@@ -1060,6 +1306,125 @@ fn w5b_frontend_import_cycle_fails_closed() {
         err,
         GrammarError::Parse {
             code: "BBNF-RUNTIME-IMPORT-CYCLE",
+            ..
+        }
+    ));
+}
+
+#[cfg(test)]
+#[test]
+fn w5b_frontend_layout_contract_lowers_to_request_facts() {
+    let source = "@ws /\\s*/ ;\nroot = ident ?w ;\n";
+    let facts =
+        parse_runtime_source_facts(&[RuntimeSource::new("grammar/css/l4/stylesheet.bbnf", source)])
+            .expect("layout facts lower");
+
+    assert_eq!(facts.count(RuntimeConstructKind::WhitespaceDirective), 1);
+    assert_eq!(facts.count(RuntimeConstructKind::WhitespaceModifier), 1);
+    assert!(facts.first_unsupported().is_none());
+    assert_eq!(facts.frontend.layout.whitespace_directives.len(), 1);
+    let directive = &facts.frontend.layout.whitespace_directives[0];
+    assert_eq!(directive.path, "grammar/css/l4/stylesheet.bbnf");
+    assert_eq!(directive.source_hash, stable_hash(source));
+    assert_eq!(directive.offset, source.find("@ws").unwrap());
+    assert_eq!(directive.end, source.find(';').unwrap() + 1);
+    assert_eq!(directive.pattern, "\\s*");
+    assert_eq!(directive.pattern_offset, source.find("\\s*").unwrap());
+    assert_eq!(directive.pattern_end, directive.pattern_offset + 3);
+
+    assert_eq!(
+        facts.frontend.layout.whitespace_modifiers,
+        vec![RuntimeWhitespaceModifier {
+            path: "grammar/css/l4/stylesheet.bbnf".to_string(),
+            source_hash: stable_hash(source),
+            offset: source.find("?w").unwrap(),
+            end: source.find("?w").unwrap() + 2,
+        }]
+    );
+}
+
+#[cfg(test)]
+#[test]
+fn w5b_frontend_public_ws_remains_retired() {
+    let err = parse_grammar("bad", "@ws /\\s*/ ;\nroot = \"x\" ;").unwrap_err();
+    assert!(matches!(
+        err,
+        GrammarError::Parse {
+            code: "BBNF-DIRECTIVE-NOT-IN-SKINNY",
+            ..
+        }
+    ));
+
+    let err = parse_grammar("bad", "w = \" \" ;\nroot = ident ?w ;\nident = \"x\" ;").unwrap_err();
+    assert!(matches!(
+        err,
+        GrammarError::Parse {
+            code: "BBNF-DIRECTIVE-NOT-IN-SKINNY",
+            ..
+        }
+    ));
+}
+
+#[cfg(test)]
+#[test]
+fn w5b_frontend_malformed_whitespace_modifier_fails_closed() {
+    let err = parse_runtime_source_facts(&[RuntimeSource::new(
+        "grammar/css/l4/stylesheet.bbnf",
+        "root = ident ?word ;\n",
+    )])
+    .unwrap_err();
+    assert!(matches!(
+        err,
+        GrammarError::Parse {
+            code: "BBNF-RUNTIME-WHITESPACE-MODIFIER",
+            ..
+        }
+    ));
+}
+
+#[cfg(test)]
+#[test]
+fn w5b_frontend_discard_operators_lower_to_request_facts() {
+    let source = "root = \"(\" >> ident << \")\" ;\n";
+    let facts =
+        parse_runtime_source_facts(&[RuntimeSource::new("grammar/css/l4/stylesheet.bbnf", source)])
+            .expect("discard facts lower");
+
+    assert_eq!(facts.count(RuntimeConstructKind::ShiftRight), 1);
+    assert_eq!(facts.count(RuntimeConstructKind::ShiftLeft), 1);
+    assert_eq!(
+        facts.frontend.layout.discard_operators,
+        vec![
+            RuntimeDiscardOperator {
+                kind: RuntimeDiscardOperatorKind::Enter,
+                path: "grammar/css/l4/stylesheet.bbnf".to_string(),
+                source_hash: stable_hash(source),
+                offset: source.find(">>").unwrap(),
+                end: source.find(">>").unwrap() + 2,
+            },
+            RuntimeDiscardOperator {
+                kind: RuntimeDiscardOperatorKind::Exit,
+                path: "grammar/css/l4/stylesheet.bbnf".to_string(),
+                source_hash: stable_hash(source),
+                offset: source.find("<<").unwrap(),
+                end: source.find("<<").unwrap() + 2,
+            },
+        ]
+    );
+}
+
+#[cfg(test)]
+#[test]
+fn w5b_frontend_malformed_discard_operator_fails_closed() {
+    let err = parse_runtime_source_facts(&[RuntimeSource::new(
+        "grammar/css/l4/stylesheet.bbnf",
+        "root = \"(\" >>> ident ;\n",
+    )])
+    .unwrap_err();
+    assert!(matches!(
+        err,
+        GrammarError::Parse {
+            code: "BBNF-RUNTIME-DISCARD-OPERATOR",
             ..
         }
     ));

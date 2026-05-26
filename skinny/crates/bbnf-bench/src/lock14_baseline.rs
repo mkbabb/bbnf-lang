@@ -1425,7 +1425,13 @@ fn git_parent_changed_paths(root: &Path) -> Result<Vec<String>, String> {
 }
 
 fn normalize_git_path(path: &str) -> String {
-    path.strip_prefix("skinny/").unwrap_or(path).to_string()
+    if let Some(path) = path.strip_prefix("skinny/") {
+        return path.to_string();
+    }
+    if path.starts_with("crates/core/") || path.starts_with("xtask/") {
+        return format!("../{path}");
+    }
+    path.to_string()
 }
 
 fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> Result<(), String> {
@@ -2913,6 +2919,18 @@ mod tests {
         assert_eq!(
             normalize_git_path("crates/runtime/src/lib.rs"),
             "crates/runtime/src/lib.rs"
+        );
+        assert_eq!(
+            normalize_git_path("crates/core/src/runtime/css_l4/value.rs"),
+            "../crates/core/src/runtime/css_l4/value.rs"
+        );
+        assert_eq!(
+            normalize_git_path("xtask/runtime-projections/css_l4.toml"),
+            "../xtask/runtime-projections/css_l4.toml"
+        );
+        assert_eq!(
+            normalize_git_path("xtask/src/regen_css.rs"),
+            "../xtask/src/regen_css.rs"
         );
     }
 

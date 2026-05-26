@@ -60,14 +60,14 @@ Owner paths:
 
 Falsifiability gate:
 
-- `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench w5b_lock14_frontend_owner_paths_admit --profile ax-iter -- --exact`
-- `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench w5b_lock14_frontend_rejects_w5c_subject --profile ax-iter -- --exact`
-- `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench w5b_lock14_frontend_rejects_w5d_subject --profile ax-iter -- --exact`
-- `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench w5b_lock14_frontend_rejects_modified_provider --profile ax-iter -- --exact`
-- `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench w5b_lock14_frontend_rejects_modified_template --profile ax-iter -- --exact`
-- `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench w5b_lock14_frontend_all_templates_guard_counts_8 --profile ax-iter -- --exact`
-- `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench w5b_lock14_frontend_allows_grammar_provider_exception --profile ax-iter -- --exact`
-- `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench w5b_lock14_frontend_generic_owner_leak_census --profile ax-iter -- --exact`
+- `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench lock14_baseline::tests::w5b_lock14_frontend_owner_paths_admit --profile ax-iter -- --exact`
+- `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench lock14_baseline::tests::w5b_lock14_frontend_rejects_w5c_subject --profile ax-iter -- --exact`
+- `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench lock14_baseline::tests::w5b_lock14_frontend_rejects_w5d_subject --profile ax-iter -- --exact`
+- `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench lock14_baseline::tests::w5b_lock14_frontend_rejects_modified_provider --profile ax-iter -- --exact`
+- `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench lock14_baseline::tests::w5b_lock14_frontend_rejects_modified_template --profile ax-iter -- --exact`
+- `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench lock14_baseline::tests::w5b_lock14_frontend_all_templates_guard_counts_8 --profile ax-iter -- --exact`
+- `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench lock14_baseline::tests::w5b_lock14_frontend_allows_grammar_provider_exception --profile ax-iter -- --exact`
+- `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench lock14_baseline::tests::w5b_lock14_frontend_generic_owner_leak_census --profile ax-iter -- --exact`
 
 Each command tees to its matching `/tmp/skv14-w5b-<test-name>.log`, and each log
 is paired with a dedicated

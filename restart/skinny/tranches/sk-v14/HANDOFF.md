@@ -3,13 +3,14 @@
 Date: 2026-05-22.
 
 Status: Pass Alpha α-F contract handoff, superseded for active dispatch by
-the S-P3 SPEC/DISPATCH packet and amended by Pass Omega V3 W2R on
-2026-05-26. REDRESS-183 rejected the original W2 dual-tree round-trip; W2
-admitted as skinny-side `regen-css` only at commit `45568e669`, while
-`crates/core/src/runtime/css_l4/` remains W6.0 work after W5. W3 admitted the
-production CSS L4 corpus loader on 2026-05-26. W4 PRUNE-2 is now the next
-governance blocker: REDRESS-184 proves its provider-deletion exit gate is
-cyclic with W5.
+the S-P3 SPEC/DISPATCH packet and amended by Pass Omega V3 W2R plus Pass
+Omega V4 W4R on 2026-05-26. REDRESS-183 rejected the original W2 dual-tree
+round-trip; W2 admitted as skinny-side `regen-css` only at commit
+`45568e669`, while `crates/core/src/runtime/css_l4/` remains W6.0 work after
+W5. W3 admitted the production CSS L4 corpus loader at `b0a864f0b`. REDRESS-184
+rejected the original W4 provider-deletion gate; after G-Omega V4 CRUD, W4
+reruns as ledger-only CSS L4 PRUNE and W5 owns CSS provider/template deletion
+in the replacement wave.
 
 ## 1. Bracket Verdict
 
@@ -160,30 +161,32 @@ Campaign at zero on numbers; non-zero on architecture. The
 
 ## 6. Next-Move
 
-**Next-move:** W2R admitted amended W2 at commit `45568e669`, W3 admitted
-the production CSS L4 corpus loader on 2026-05-26, and W4 PRUNE-2 is rejected
-as currently specified by REDRESS-184. Dispatch Pass Omega V4 W4R before any
-W4/W5 source deletion; then continue only after G-Omega V4 authorizes the
-amended wave graph. W8/W9/W10 remain blocked until PRUNE-1..PRUNE-5 close.
+**Next-move:** G-Omega V4 is authorized and W4R CRUD/SPEC patching closes the
+REDRESS-184 wave-graph correction. Re-dispatch W4 as ledger-only PRUNE-2:
+restore CSS L4 to 0/24 in `restart/skinny/ROLLING-SOTA-DELTA.md`, add 24
+row-keyed REDRESS entries citing validation `v1 §1-6`, preserve
+`skinny/RESULTS.md` AUDIT-FALSIFIED state, maintain JSON rows within +/-1.0%,
+and make no CSS source/generator/provider/template deletion. W8/W9/W10 remain
+blocked until PRUNE-1..PRUNE-5 close.
 
 Hard caps echoed per `[dispatch-hard-cap]`: 30-min lens-agent cap;
 research 20 min / plan 15 min / redress 30 min (45 min only for the
 addendum-amended decision-engine fold + C-4 per CONSOLIDATED §0.5 cap
 discipline).
 
-1. Dispatch Pass Omega V4 using
-   `restart/skinny/tranches/sk-v14/research/skv14-W4R-corrective-packet.md`.
-2. Preserve W2/W3's root-runtime exclusion: `crates/core/src/runtime/css_l4/`
+1. Re-dispatch amended W4 using SPEC §7 after V4 CRUD closes.
+2. Preserve W2/W3/W4's root-runtime exclusion: `crates/core/src/runtime/css_l4/`
    remains W6.0 and must not be claimed before W6.0.
 3. Do not dispatch W5 or delete CSS provider/template directories until
-   G-Omega V4 closes and the SPEC/MASTER/HANDOFF surfaces are patched.
+   amended W4 ledger-only PRUNE closes.
 
 ## 7. Refusal Conditions
 
 Return REVISE for any downstream plan that:
 
 - dispatches any implementation wave before G-Omega + G-S-P0-CONVERGED, or
-  dispatches W3+ before Pass Omega V3 W2R CRUD and amended W2 admission;
+  dispatches W3+ before Pass Omega V3 W2R CRUD and amended W2 admission, or
+  dispatches W5 before Pass Omega V4 W4R CRUD and amended W4 ledger close;
 - skips PRUNE-1 / PRUNE-2 baseline revert in favour of new admit attempt;
 - counts a row as admitted under the misbound `sonic_rs::from_slice::<Value>`
   comparator (P-2);

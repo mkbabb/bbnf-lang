@@ -9,9 +9,15 @@
 //! rationale (T3: xtask + checked-in generation).
 
 use std::path::PathBuf;
+#[cfg(not(feature = "grammar-regen"))]
+use std::process::Command;
 
+#[cfg(not(feature = "grammar-regen"))]
+use anyhow::{Context, bail};
 use clap::{Parser, Subcommand};
+#[cfg(feature = "grammar-regen")]
 use xtask::regen;
+use xtask::regen_css;
 
 #[derive(Parser)]
 #[command(name = "xtask", about = "bbnf-lang workspace build-time codegen")]
@@ -52,6 +58,9 @@ enum Cmd {
         #[arg(long)]
         output: Option<PathBuf>,
     },
+    /// Regenerate the root CSS L4 runtime projection under
+    /// `crates/core/src/runtime/css_l4/`.
+    RegenCss,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -62,6 +71,57 @@ fn main() -> anyhow::Result<()> {
             check,
             staged,
             output,
-        } => regen::run(grammar.as_deref(), check, staged, output.as_deref()),
+        } => run_regen(grammar.as_deref(), check, staged, output.as_deref()),
+        Cmd::RegenCss => regen_css::run(),
     }
+}
+
+#[cfg(feature = "grammar-regen")]
+fn run_regen(
+    grammar: Option<&str>,
+    check: bool,
+    staged: bool,
+    output: Option<&std::path::Path>,
+) -> anyhow::Result<()> {
+    regen::run(grammar, check, staged, output)
+}
+
+#[cfg(not(feature = "grammar-regen"))]
+fn run_regen(
+    grammar: Option<&str>,
+    check: bool,
+    staged: bool,
+    output: Option<&std::path::Path>,
+) -> anyhow::Result<()> {
+    let mut cmd = Command::new("cargo");
+    cmd.args([
+        "run",
+        "-p",
+        "xtask",
+        "--profile",
+        "ax-iter",
+        "--features",
+        "grammar-regen",
+        "--",
+        "regen",
+    ]);
+    if let Some(grammar) = grammar {
+        cmd.args(["--grammar", grammar]);
+    }
+    if check {
+        cmd.arg("--check");
+    }
+    if staged {
+        cmd.arg("--staged");
+    }
+    if let Some(output) = output {
+        cmd.arg("--output").arg(output);
+    }
+    let status = cmd
+        .status()
+        .context("failed to launch grammar-regeneration xtask")?;
+    if !status.success() {
+        bail!("grammar-regeneration xtask exited with {status}");
+    }
+    Ok(())
 }

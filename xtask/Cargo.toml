@@ -8,9 +8,10 @@ publish = false
 # 17-pass IR pipeline + emission once per regen invocation, writing
 # per-grammar source files to `crates/core/src/grammar/generated/`.
 #
-# The xtask runs the IR pipeline directly via `bbnf::pipeline::
-# compile_paths_request` + `bbnf::generate::generate_all`, so it carries
-# path-deps on `bbnf-ir` and `bbnf` (lib-only).
+# The grammar-regeneration path runs the IR pipeline directly via
+# `bbnf::pipeline::compile_paths_request` + `bbnf::generate::generate_all`.
+# `bbnf` is feature-gated so runtime-output regenerators can run with
+# their generated output tree absent.
 
 # AZ-IV.W0.5 — lib + bin layout. The bin entrypoint stays at
 # `src/main.rs`; the regen + manifest logic lives in `src/lib.rs` so
@@ -28,7 +29,7 @@ path = "src/main.rs"
 # Workspace path-deps. Versions match the workspace's existing pins
 # verified against Cargo.lock at B2.W0.a authorship.
 bbnf-ir         = { path = "../crates/ir" }
-bbnf            = { path = "../crates/core" }
+bbnf            = { path = "../crates/core", optional = true }
 parse_that      = "0.4"
 pprint          = "0.3"
 
@@ -60,3 +61,7 @@ toml            = "0.8"
 # against checked-in `crates/core/src/grammar/generated/<ident>.rs`,
 # exit non-zero on drift.
 tempfile        = "3"
+
+[features]
+default = []
+grammar-regen = ["dep:bbnf"]

@@ -19,16 +19,25 @@
 //! `prettyplease::unparse(&syn::parse2(stream)?)` and written to
 //! disk — survives here verbatim as the canonical execution surface.
 
+#[cfg(feature = "grammar-regen")]
 use std::collections::BTreeSet;
+#[cfg(feature = "grammar-regen")]
 use std::path::{Path, PathBuf};
+#[cfg(feature = "grammar-regen")]
 use std::process::Command;
 
-use anyhow::{Context, Result, anyhow, bail};
+#[cfg(feature = "grammar-regen")]
+use anyhow::{Context, anyhow};
+use anyhow::{Result, bail};
+#[cfg(feature = "grammar-regen")]
 use bbnf::ParserAttributes;
+#[cfg(feature = "grammar-regen")]
 use bbnf::pipeline::{
     CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_paths_request,
 };
+#[cfg(feature = "grammar-regen")]
 use proc_macro2::TokenStream;
+#[cfg(feature = "grammar-regen")]
 use quote::{format_ident, quote};
 
 /// Known feature flags accepted on a `[workspace.metadata.bbnf.grammars]`
@@ -60,6 +69,7 @@ pub struct GrammarEntry {
 
 impl GrammarEntry {
     /// Resolve the manifest's relative `path` against the workspace root.
+    #[cfg(feature = "grammar-regen")]
     fn grammar_source(&self, workspace_root: &Path) -> PathBuf {
         workspace_root.join(&self.path)
     }
@@ -74,6 +84,7 @@ impl GrammarEntry {
     /// `entry.ident` PascalCased: `json` → `JsonParser`, etc. — but
     /// only BBNF emits at W0.c so the rest of the table is
     /// declarative-only here.
+    #[cfg(feature = "grammar-regen")]
     fn marker_ident(&self) -> syn::Ident {
         match self.ident.as_str() {
             "bbnf" => format_ident!("BbnfBootstrap"),
@@ -105,6 +116,7 @@ impl GrammarEntry {
     /// unknown feature implies the validation gate was bypassed.
     /// The per-feature `match` keeps a final defensive `bail!` to
     /// uphold the fail-closed invariant even under direct reuse.
+    #[cfg(feature = "grammar-regen")]
     fn parser_attributes(&self, grammar_path: PathBuf) -> Result<ParserAttributes> {
         let mut attrs = ParserAttributes::default();
         attrs.paths.push(grammar_path);
@@ -158,6 +170,7 @@ pub fn validate_grammar_features(entries: &[GrammarEntry]) -> Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "grammar-regen")]
 fn pascal_case(input: &str) -> String {
     let mut out = String::with_capacity(input.len());
     let mut upper_next = true;
@@ -187,6 +200,7 @@ fn pascal_case(input: &str) -> String {
 /// reproducibility CI gate to capture successive regen outputs into a
 /// tempdir without disturbing the checked-in
 /// `crates/core/src/grammar/generated/` tree.
+#[cfg(feature = "grammar-regen")]
 pub fn run(
     grammar: Option<&str>,
     check: bool,
@@ -225,6 +239,7 @@ pub fn run(
 /// Read `[workspace.metadata.bbnf.grammars]` from the workspace
 /// `Cargo.toml` via `cargo_metadata`. Returns the workspace root +
 /// the parsed grammar list.
+#[cfg(feature = "grammar-regen")]
 fn load_manifest() -> Result<(PathBuf, Vec<GrammarEntry>)> {
     let metadata = cargo_metadata::MetadataCommand::new()
         .no_deps()
@@ -257,6 +272,7 @@ fn load_manifest() -> Result<(PathBuf, Vec<GrammarEntry>)> {
 }
 
 /// Output path for a grammar's per-grammar emission.
+#[cfg(feature = "grammar-regen")]
 fn output_path(workspace_root: &Path, ident: &str) -> PathBuf {
     workspace_root
         .join("crates")
@@ -277,6 +293,7 @@ fn output_path(workspace_root: &Path, ident: &str) -> PathBuf {
 /// `crates/core/src/grammar/generated/<ident>.registry.json`; the
 /// proc-macro resolves it via its own `CARGO_MANIFEST_DIR` + a stable
 /// workspace-relative offset.
+#[cfg(feature = "grammar-regen")]
 fn registry_sidecar_path(workspace_root: &Path, ident: &str) -> PathBuf {
     workspace_root
         .join("crates")
@@ -314,6 +331,7 @@ pub struct GrammarRegistrySidecar {
 /// 17-pass IR pipeline, runs `generate_all`, writes the formatted
 /// output to `target_path`. AZ-IV.W5 T4 — also writes the
 /// `<ident>.registry.json` sidecar consumed by `bbnf-path`.
+#[cfg(feature = "grammar-regen")]
 fn regen_grammar(workspace_root: &Path, entry: &GrammarEntry, target_path: &Path) -> Result<usize> {
     let grammar_path = entry.grammar_source(workspace_root);
     if !grammar_path.exists() {
@@ -483,6 +501,7 @@ fn regen_grammar(workspace_root: &Path, entry: &GrammarEntry, target_path: &Path
 /// expansion time and dispatches each path-segment validation through
 /// the production registry instead of the synthetic fixture it
 /// previously carried.
+#[cfg(feature = "grammar-regen")]
 fn write_registry_sidecar(ir: &bbnf_ir::GrammarIR, target_path: &Path, ident: &str) -> Result<()> {
     let sidecar_path = target_path.with_file_name(format!("{ident}.registry.json"));
 
@@ -527,6 +546,7 @@ fn write_registry_sidecar(ir: &bbnf_ir::GrammarIR, target_path: &Path, ident: &s
 /// `Regenerate:` line points at `cargo xtask regen --grammar <ident>`,
 /// the canonical entrypoint post-B2.W3 (the pre-B2
 /// `scripts/bootstrap-bbnf.sh` retired with the proc-macro contract).
+#[cfg(feature = "grammar-regen")]
 fn file_header(ident: &str) -> String {
     format!(
         "//! AUTO-GENERATED from `[workspace.metadata.bbnf.grammars]` — do not edit manually.\n\
@@ -550,6 +570,7 @@ fn file_header(ident: &str) -> String {
 }
 
 /// Regenerate every grammar enumerated in the workspace manifest.
+#[cfg(feature = "grammar-regen")]
 fn regen_all(workspace_root: &Path, grammars: &[GrammarEntry]) -> Result<()> {
     for entry in grammars {
         let target = output_path(workspace_root, &entry.ident);
@@ -569,6 +590,7 @@ fn regen_all(workspace_root: &Path, grammars: &[GrammarEntry]) -> Result<()> {
 
 /// Regenerate to a tempdir; diff against the checked-in tree; exit
 /// non-zero on drift. Used by CI + pre-commit hook.
+#[cfg(feature = "grammar-regen")]
 fn regen_check(workspace_root: &Path, grammars: &[GrammarEntry]) -> Result<()> {
     regen_check_filtered(workspace_root, grammars, grammars.len())
 }
@@ -577,6 +599,7 @@ fn regen_check(workspace_root: &Path, grammars: &[GrammarEntry]) -> Result<()> {
 /// list. `total_count` is the original (unfiltered) workspace grammar
 /// count; the success message reports it so a `--staged`-filtered
 /// run that touched 1 of 9 grammars prints "matched 1 of 9".
+#[cfg(feature = "grammar-regen")]
 fn regen_check_filtered(
     workspace_root: &Path,
     grammars: &[GrammarEntry],
@@ -676,6 +699,7 @@ fn regen_check_filtered(
 /// gate against xtask logic changes; the staged path's contract is
 /// strictly to fail when a *staged grammar* drifts from its
 /// regenerated form.
+#[cfg(feature = "grammar-regen")]
 fn regen_check_staged(workspace_root: &Path, grammars: &[GrammarEntry]) -> Result<()> {
     let staged = staged_paths(workspace_root)?;
 
@@ -724,6 +748,7 @@ fn regen_check_staged(workspace_root: &Path, grammars: &[GrammarEntry]) -> Resul
 /// path set. Empty set when nothing is staged. Errors propagate so a
 /// missing git binary / non-repo invocation fails loudly rather than
 /// silently regenerating nothing.
+#[cfg(feature = "grammar-regen")]
 fn staged_paths(workspace_root: &Path) -> Result<BTreeSet<String>> {
     let output = Command::new("git")
         .arg("-C")
@@ -757,6 +782,7 @@ fn staged_paths(workspace_root: &Path) -> Result<BTreeSet<String>> {
 /// `^(grammar/|crates/core/src/grammar/generated/|xtask/src/regen)`.
 /// Centralising the pattern in xtask keeps a single source of truth
 /// for what "grammar-relevant" means.
+#[cfg(feature = "grammar-regen")]
 fn staged_has_grammar_relevant(staged: &BTreeSet<String>) -> bool {
     staged.iter().any(|p| {
         p.starts_with("grammar/")
@@ -771,6 +797,7 @@ fn staged_has_grammar_relevant(staged: &BTreeSet<String>) -> bool {
 /// in that form, and the output path is reconstructed via the same
 /// `crates/core/src/grammar/generated/<ident>.rs` convention as
 /// `output_path`.
+#[cfg(feature = "grammar-regen")]
 fn grammar_overlaps_staged(entry: &GrammarEntry, staged: &BTreeSet<String>) -> bool {
     let source = entry.path.replace('\\', "/");
     let generated = format!("crates/core/src/grammar/generated/{}.rs", entry.ident);
@@ -795,6 +822,7 @@ fn grammar_overlaps_staged(entry: &GrammarEntry, staged: &BTreeSet<String>) -> b
 /// HEAD missing (initial commit / orphan worktree) is treated as
 /// "no prior subtree" — any staged `[workspace.metadata.bbnf]`
 /// flips the trigger.
+#[cfg(feature = "grammar-regen")]
 fn cargo_toml_diff_touches_grammar_metadata(workspace_root: &Path) -> Result<bool> {
     let staged = git_show_blob(workspace_root, ":Cargo.toml")?;
     let head = git_show_blob(workspace_root, "HEAD:Cargo.toml").unwrap_or_default();
@@ -807,6 +835,7 @@ fn cargo_toml_diff_touches_grammar_metadata(workspace_root: &Path) -> Result<boo
 
 /// `git show <revspec>` returning UTF-8 contents, or `Err` when the
 /// revspec is missing (HEAD doesn't exist, blob absent, etc.).
+#[cfg(feature = "grammar-regen")]
 fn git_show_blob(workspace_root: &Path, revspec: &str) -> Result<String> {
     let output = Command::new("git")
         .arg("-C")
@@ -832,6 +861,7 @@ fn git_show_blob(workspace_root: &Path, revspec: &str) -> Result<String> {
 /// semantically-equal subtrees compare byte-equal regardless of
 /// whitespace or comment wandering. `None`-equivalent (subtree
 /// absent) is encoded as the empty string.
+#[cfg(feature = "grammar-regen")]
 fn extract_bbnf_metadata_subtree(cargo_toml: &str) -> Result<String> {
     if cargo_toml.is_empty() {
         return Ok(String::new());

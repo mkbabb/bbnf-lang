@@ -1,0 +1,589 @@
+schema_version = 1
+grammar = "css_l4"
+entry_rule = "stylesheet"
+runtime_module = "crate::runtime::css_l4"
+output_dir = "crates/core/src/runtime/css_l4"
+parser_type = "CssL4Parser"
+parser_entry = "parse_CssL4Parser_stylesheet"
+shape_support = "__shape_support_CssL4Parser"
+marker = "CssL4"
+builder_type = "CssStructBuilder"
+document = "CssDocument"
+
+[module]
+modules = ["arena", "builder", "document", "parse_with", "value", "view"]
+arena_exports = [
+  "CssArena",
+  "CssDeclListId",
+  "CssKeyframeListId",
+  "CssRuleListId",
+  "CssSelectorListId",
+  "CssValueListId",
+]
+document_exports = [
+  "CssDeclWalk",
+  "CssDocument",
+  "CssDocumentKind",
+  "CssFocus",
+  "CssPathQuery",
+  "CssView",
+]
+value_exports = [
+  "CssAngle",
+  "CssAngleUnit",
+  "CssColor",
+  "CssColorFunction",
+  "CssColorMix",
+  "CssColorPredefined",
+  "CssColorSpace",
+  "CssColorType",
+  "CssDimension",
+  "CssFlex",
+  "CssFrequency",
+  "CssFrequencyUnit",
+  "CssFunction",
+  "CssGlobalKeyword",
+  "CssHueMethod",
+  "CssLength",
+  "CssLengthUnit",
+  "CssMathOperator",
+  "CssPercentage",
+  "CssResolution",
+  "CssResolutionUnit",
+  "CssTime",
+  "CssTimeUnit",
+  "CssTypedValue",
+  "Declaration",
+  "GenericAtRule",
+  "KeyframeBlock",
+  "KeyframesRule",
+  "MediaRule",
+  "Selector",
+  "StyleRule",
+  "StyleSheet",
+]
+
+[[repr_enums]]
+name = "CssLengthUnit"
+decode = "self"
+unknown = { name = "Other", payload = "u8" }
+variants = [
+  { name = "Px", value = 0 },
+  { name = "Em", value = 1 },
+  { name = "Rem", value = 2 },
+  { name = "Vh", value = 3 },
+  { name = "Vw", value = 4 },
+  { name = "Vmin", value = 5 },
+  { name = "Vmax", value = 6 },
+  { name = "Ch", value = 7 },
+  { name = "Ex", value = 8 },
+  { name = "Cm", value = 9 },
+  { name = "Mm", value = 10 },
+  { name = "In", value = 11 },
+  { name = "Pt", value = 12 },
+  { name = "Pc", value = 13 },
+  { name = "Lh", value = 14 },
+  { name = "Rlh", value = 15 },
+  { name = "Svw", value = 16 },
+  { name = "Svh", value = 17 },
+  { name = "Dvw", value = 18 },
+  { name = "Dvh", value = 19 },
+  { name = "Lvw", value = 20 },
+  { name = "Lvh", value = 21 },
+  { name = "Cqw", value = 22 },
+  { name = "Cqh", value = 23 },
+  { name = "Cqi", value = 24 },
+  { name = "Cqb", value = 25 },
+  { name = "Q", value = 26 },
+]
+
+[[repr_enums]]
+name = "CssAngleUnit"
+decode = "option"
+variants = [
+  { name = "Deg", value = 0 },
+  { name = "Rad", value = 1 },
+  { name = "Grad", value = 2 },
+  { name = "Turn", value = 3 },
+]
+
+[[repr_enums]]
+name = "CssTimeUnit"
+decode = "option"
+variants = [
+  { name = "Ms", value = 0 },
+  { name = "S", value = 1 },
+]
+
+[[repr_enums]]
+name = "CssFrequencyUnit"
+decode = "option"
+variants = [
+  { name = "Hz", value = 0 },
+  { name = "KHz", value = 1 },
+]
+
+[[repr_enums]]
+name = "CssResolutionUnit"
+decode = "option"
+variants = [
+  { name = "Dpi", value = 0 },
+  { name = "Dpcm", value = 1 },
+  { name = "Dppx", value = 2 },
+  { name = "X", value = 3 },
+]
+
+[[repr_enums]]
+name = "CssColorType"
+decode = "option"
+variants = [
+  { name = "Rgb", value = 0 },
+  { name = "Rgba", value = 1 },
+  { name = "Hsl", value = 2 },
+  { name = "Hsla", value = 3 },
+  { name = "Hwb", value = 4 },
+  { name = "Lab", value = 5 },
+  { name = "Lch", value = 6 },
+  { name = "Oklab", value = 7 },
+  { name = "Oklch", value = 8 },
+]
+
+[[repr_enums]]
+name = "CssColorSpace"
+decode = "option"
+variants = [
+  { name = "Srgb", value = 0 },
+  { name = "SrgbLinear", value = 1 },
+  { name = "DisplayP3", value = 2 },
+  { name = "A98Rgb", value = 3 },
+  { name = "ProphotoRgb", value = 4 },
+  { name = "Rec2020", value = 5 },
+  { name = "XyzD50", value = 6 },
+  { name = "XyzD65", value = 7 },
+  { name = "Xyz", value = 8 },
+  { name = "Lch", value = 9 },
+  { name = "Lab", value = 10 },
+  { name = "Oklab", value = 11 },
+  { name = "Oklch", value = 12 },
+  { name = "Hsl", value = 13 },
+  { name = "Hwb", value = 14 },
+]
+
+[[repr_enums]]
+name = "CssHueMethod"
+decode = "option"
+variants = [
+  { name = "Shorter", value = 0 },
+  { name = "Longer", value = 1 },
+  { name = "Increasing", value = 2 },
+  { name = "Decreasing", value = 3 },
+]
+
+[[repr_enums]]
+name = "CssMathOperator"
+decode = "option"
+variants = [
+  { name = "Add", value = 0 },
+  { name = "Sub", value = 1 },
+  { name = "Mul", value = 2 },
+  { name = "Div", value = 3 },
+]
+
+[[repr_enums]]
+name = "CssGlobalKeyword"
+decode = "option"
+variants = [
+  { name = "RevertLayer", value = 0 },
+  { name = "Inherit", value = 1 },
+  { name = "Initial", value = 2 },
+  { name = "Unset", value = 3 },
+  { name = "Revert", value = 4 },
+]
+
+[[records]]
+name = "CssLength"
+fields = [
+  { name = "value", ty = "f64" },
+  { name = "unit", ty = "CssLengthUnit" },
+]
+
+[[records]]
+name = "CssAngle"
+fields = [
+  { name = "value", ty = "f64" },
+  { name = "unit", ty = "CssAngleUnit" },
+]
+
+[[records]]
+name = "CssTime"
+fields = [
+  { name = "value", ty = "f64" },
+  { name = "unit", ty = "CssTimeUnit" },
+]
+
+[[records]]
+name = "CssFrequency"
+fields = [
+  { name = "value", ty = "f64" },
+  { name = "unit", ty = "CssFrequencyUnit" },
+]
+
+[[records]]
+name = "CssResolution"
+fields = [
+  { name = "value", ty = "f64" },
+  { name = "unit", ty = "CssResolutionUnit" },
+]
+
+[[records]]
+name = "CssFlex"
+fields = [{ name = "value", ty = "f64" }]
+
+[[records]]
+name = "CssPercentage"
+fields = [{ name = "value", ty = "f64" }]
+
+[[records]]
+name = "CssColorFunction"
+fields = [
+  { name = "kind", ty = "CssColorType" },
+  { name = "c1", ty = "f64" },
+  { name = "c2", ty = "f64" },
+  { name = "c3", ty = "f64" },
+  { name = "alpha", ty = "Option<f64>" },
+]
+
+[[records]]
+name = "CssColorPredefined"
+fields = [
+  { name = "space", ty = "CssColorSpace" },
+  { name = "c1", ty = "f64" },
+  { name = "c2", ty = "f64" },
+  { name = "c3", ty = "f64" },
+  { name = "alpha", ty = "Option<f64>" },
+]
+
+[[records]]
+name = "CssColorMix"
+lifetime = true
+fields = [
+  { name = "mix_space", ty = "CssColorSpace" },
+  { name = "hue_method", ty = "Option<CssHueMethod>" },
+  { name = "left", ty = "&'p CssColor<'p>" },
+  { name = "left_pct", ty = "Option<f64>" },
+  { name = "right", ty = "&'p CssColor<'p>" },
+  { name = "right_pct", ty = "Option<f64>" },
+]
+
+[[records]]
+name = "Declaration"
+lifetime = true
+fields = [
+  { name = "property", ty = "&'p str" },
+  { name = "value", ty = "CssTypedValue<'p>" },
+  { name = "important", ty = "bool" },
+]
+
+[[records]]
+name = "StyleRule"
+lifetime = true
+fields = [
+  { name = "selectors", ty = "CssSelectorListId" },
+  { name = "declarations", ty = "CssDeclListId" },
+  { name = "span", ty = "&'p str" },
+]
+
+[[records]]
+name = "MediaRule"
+lifetime = true
+fields = [
+  { name = "query", ty = "&'p str" },
+  { name = "rules", ty = "CssRuleListId" },
+]
+
+[[records]]
+name = "KeyframeBlock"
+lifetime = true
+fields = [
+  { name = "selector", ty = "&'p str" },
+  { name = "declarations", ty = "CssDeclListId" },
+]
+
+[[records]]
+name = "KeyframesRule"
+lifetime = true
+fields = [
+  { name = "name", ty = "&'p str" },
+  { name = "blocks", ty = "CssKeyframeListId" },
+]
+
+[[records]]
+name = "GenericAtRule"
+lifetime = true
+fields = [
+  { name = "name", ty = "&'p str" },
+  { name = "prelude", ty = "&'p str" },
+  { name = "body", ty = "&'p str" },
+]
+
+[[records]]
+name = "StyleSheet"
+fields = [{ name = "rules", ty = "CssRuleListId" }]
+
+[[sum_enums]]
+name = "CssDimension"
+variants = [
+  { name = "Length", payload = "CssLength" },
+  { name = "Angle", payload = "CssAngle" },
+  { name = "Time", payload = "CssTime" },
+  { name = "Frequency", payload = "CssFrequency" },
+  { name = "Resolution", payload = "CssResolution" },
+  { name = "Flex", payload = "CssFlex" },
+  { name = "Percentage", payload = "CssPercentage" },
+  { name = "Unitless", payload = "f64" },
+]
+
+[[sum_enums]]
+name = "CssColor"
+lifetime = true
+variants = [
+  { name = "Hex", payload = "u32" },
+  { name = "Named", fields = [{ name = "name", ty = "&'p str" }, { name = "packed", ty = "u32" }] },
+  { name = "Function", payload = "CssColorFunction" },
+  { name = "Predefined", payload = "CssColorPredefined" },
+  { name = "Mix", payload = "CssColorMix<'p>" },
+]
+
+[[sum_enums]]
+name = "CssFunction"
+lifetime = true
+variants = [
+  { name = "Calc", fields = [{ name = "args", ty = "CssValueListId" }] },
+  { name = "Min", fields = [{ name = "args", ty = "CssValueListId" }] },
+  { name = "Max", fields = [{ name = "args", ty = "CssValueListId" }] },
+  { name = "Clamp", fields = [{ name = "args", ty = "CssValueListId" }] },
+  { name = "Var", fields = [{ name = "name", ty = "&'p str" }, { name = "fallback", ty = "CssValueListId" }] },
+  { name = "Env", fields = [{ name = "name", ty = "&'p str" }, { name = "fallback", ty = "CssValueListId" }] },
+  { name = "Url", fields = [{ name = "raw", ty = "&'p str" }] },
+  { name = "Gradient", fields = [{ name = "name", ty = "&'p str" }, { name = "args", ty = "CssValueListId" }] },
+  { name = "Generic", fields = [{ name = "name", ty = "&'p str" }, { name = "args", ty = "CssValueListId" }] },
+]
+
+[[sum_enums]]
+name = "Selector"
+lifetime = true
+variants = [
+  { name = "Universal" },
+  { name = "Type", payload = "&'p str" },
+  { name = "Class", payload = "&'p str" },
+  { name = "Id", payload = "&'p str" },
+  { name = "Attribute", payload = "&'p str" },
+  { name = "PseudoClass", payload = "&'p str" },
+  { name = "PseudoElement", payload = "&'p str" },
+  { name = "Combinator", payload = "&'p str" },
+  { name = "Span", payload = "&'p str" },
+]
+
+[[sum_enums]]
+name = "CssRule"
+lifetime = true
+variants = [
+  { name = "Style", payload = "StyleRule<'p>" },
+  { name = "Media", payload = "MediaRule<'p>" },
+  { name = "Keyframes", payload = "KeyframesRule<'p>" },
+  { name = "GenericAt", payload = "GenericAtRule<'p>" },
+]
+
+[[sum_enums]]
+name = "CssTypedValue"
+lifetime = true
+variants = [
+  { name = "Dimension", payload = "CssDimension" },
+  { name = "Number", payload = "f64" },
+  { name = "Integer", payload = "i64" },
+  { name = "String", payload = "&'p str" },
+  { name = "Ident", payload = "&'p str" },
+  { name = "GlobalKeyword", payload = "CssGlobalKeyword" },
+  { name = "Color", payload = "CssColor<'p>" },
+  { name = "Function", payload = "CssFunction<'p>" },
+  { name = "List", payload = "CssValueListId" },
+  { name = "Span", payload = "&'p str" },
+]
+
+[[arena.slabs]]
+field = "rules"
+handle = "CssRuleListId"
+item = "CssRule<'p>"
+push = "push_rules"
+resolve = "rules"
+count = "rule_slab_count"
+capacity_arg = "rules"
+
+[[arena.slabs]]
+field = "decls"
+handle = "CssDeclListId"
+item = "Declaration<'p>"
+push = "push_decls"
+resolve = "decls"
+count = "decl_slab_count"
+capacity_arg = "decls"
+
+[[arena.slabs]]
+field = "selectors"
+handle = "CssSelectorListId"
+item = "Selector<'p>"
+push = "push_selectors"
+resolve = "selectors"
+count = "selector_slab_count"
+capacity_arg = "selectors"
+
+[[arena.slabs]]
+field = "values"
+handle = "CssValueListId"
+item = "CssTypedValue<'p>"
+push = "push_values"
+resolve = "values"
+count = "value_slab_count"
+capacity_arg = "values"
+
+[[arena.slabs]]
+field = "keyframes"
+handle = "CssKeyframeListId"
+item = "KeyframeBlock<'p>"
+push = "push_keyframes"
+resolve = "keyframes"
+count = "keyframe_slab_count"
+capacity_arg = "keyframes"
+
+[arena.colors]
+field = "colors"
+item = "CssColor<'p>"
+push = "push_color"
+count = "color_count"
+
+[builder]
+declaration_rules = [
+  "customPropertyDecl",
+  "genericDecl",
+  "colorDecl",
+  "sizeDecl",
+  "spacingDecl",
+  "fontDecl",
+  "bgDecl",
+  "transformDecl",
+  "transitionDecl",
+  "listTableDecl",
+  "displayDecl",
+  "positionDecl",
+  "overflowDecl",
+  "visibilityDecl",
+  "flexDirDecl",
+  "flexWrapDecl",
+  "alignDecl",
+  "flexNumDecl",
+  "fontSizeDecl",
+  "fontWeightDecl",
+  "lineHeightDecl",
+  "borderWidthDecl",
+  "borderStyleDecl",
+  "borderRadiusDecl",
+  "opacityDecl",
+  "textAlignDecl",
+  "boxSizingDecl",
+  "cursorDecl",
+  "declaration",
+]
+selector_rules = ["selectorList", "complexSelector", "compoundSelector"]
+wrap_rules = ["ruleBlock"]
+
+[[builder.aggregate_routes]]
+rule = "ruleList"
+frame = "StyleSheet"
+
+[[builder.aggregate_routes]]
+rule = "hex"
+frame = "HexColor"
+
+[[builder.aggregate_routes]]
+rule = "qualifiedRule"
+frame = "StyleRule"
+
+[[builder.aggregate_routes]]
+rule = "mediaRule"
+frame = "MediaRule"
+
+[[builder.aggregate_routes]]
+rule = "keyframesRule"
+frame = "KeyframesRule"
+
+[[builder.aggregate_routes]]
+rule = "genericAtRule"
+frame = "GenericAtRule"
+
+[[builder.aggregate_routes]]
+rule = "dirPseudo"
+frame = "DirPseudo"
+
+[[builder.numeric_routes]]
+rule = "length"
+kind = "Length"
+
+[[builder.numeric_routes]]
+rule = "angle"
+kind = "Angle"
+
+[[builder.numeric_routes]]
+rule = "time"
+kind = "Time"
+
+[[builder.numeric_routes]]
+rule = "frequency"
+kind = "Frequency"
+
+[[builder.numeric_routes]]
+rule = "resolution"
+kind = "Resolution"
+
+[[builder.numeric_routes]]
+rule = "flex"
+kind = "Flex"
+
+[[builder.numeric_routes]]
+rule = "percentage"
+kind = "Percentage"
+
+[[builder.function_routes]]
+rule = "calcFunction"
+kind = "Calc"
+
+[[builder.function_routes]]
+rule = "minFunction"
+kind = "Min"
+
+[[builder.function_routes]]
+rule = "maxFunction"
+kind = "Max"
+
+[[builder.function_routes]]
+rule = "clampFunction"
+kind = "Clamp"
+
+[[builder.function_routes]]
+rule = "varFunction"
+kind = "Var"
+
+[[builder.function_routes]]
+rule = "envFunction"
+kind = "Env"
+
+[[builder.function_routes]]
+rule = "urlFunction"
+kind = "Url"
+
+[[builder.function_routes]]
+rule = "genericFunction"
+kind = "Generic"
+
+[[builder.color_routes]]
+rule = "colorFn"
+frame = "ColorFunction"

@@ -761,14 +761,22 @@ as a MASTER receiver-block reference (verbatim absorption would risk drift
 as SK-V14 SPEC updates; per CH1 receiver routing the SPEC remains the
 canonical source of truth and this section refers by path).
 
+Pass Omega V4 W4R amends the W4/W5 boundary after REDRESS-184: W2's
+skinny-side `regen-css` gate admitted at `45568e669`, W3 production corpus
+staging admitted at `b0a864f0b`, and W4 reruns as CSS L4 admit-ledger prune
+only. CSS provider/template deletion moves to W5, where the deletion lands in
+the same replacement slice as the grammar-agnostic provider path and
+`regen_css.rs` migration. W6 remains the Pass Omega V3 W2R structure with W6.0
+owning CSS L4 root-runtime collapse after W5.
+
 | Wave | SPEC section | Scope | Entry gate | LOC budget (source + tests + gates + docs; generated output uncounted) | Time cap |
 |---|---|---|---|---|---|
 | W0 | §3 | Baseline Profile + Telemetry Lock (SK-V14-open) | Dispatchable only after G-Omega | 0 production behavior LOC; ≤250 report/gate/test/doc LOC | ≤90 min |
 | W1 | §4 | Comparator Rebind + Per-Iter Equality + PRUNE-1 (R1 + R2 + R3 PRUNE-1) | Conditional on W0 close | ≤1.08k C-2 source/test + ≤500 C-5 part-A revert; total ≤1.58k | ≤90 min |
 | W2 | §5 | regen-css xtask (R4 — first instance of regen-{grammar} family; skinny runtime tree only after W2R) | Conditional on W1 close | ≤2.0k C-3 part-A source/test; generated output named separately | ≤90 min |
 | W3 | §6 | Production CSS Corpora (R5; ~960 KB) | Conditional on W2 close | ≤200 corpora-staging LOC; corpora files are bytes-only | ≤90 min |
-| W4 | §7 | PRUNE-2 — delete 7 CSS templates + revert 24 CSS admits (R3 PRUNE-2) | Conditional on W2 + W3 close (R4 MUST precede per S-P0 §2.1) | ≤500 C-5 part-B revert + 7-template delete; LOC delta is negative | ≤90 min |
-| W5 | §8 | PRUNE-3 — Lock-14 refactor: trait dispatch + grammar-agnostic generator template (R3 PRUNE-3; C-1 part-A) | Conditional on W4 close | ≤1.4k C-1 part-A source/test LOC | ≤90 min |
+| W4 | §7 | PRUNE-2 — CSS L4 admit-ledger prune: restore rolling delta to 0/24 CSS L4 admitted and add 24 row-keyed REDRESS entries; no provider/template deletion until W5 replacement exists. | Conditional on W2 + W3 close | ≤500 docs/ledger | ≤90 min |
+| W5 | §8 | PRUNE-3 — Lock-14 refactor plus CSS provider/template deletion: trait dispatch + grammar-agnostic generator template; migrate `regen_css.rs`; delete seven CSS provider modules and seven template dirs in the same commit as the replacement; run `regen-css` and companions. | Conditional on W4 ledger close | ≤1.4k C-1 part-A source/test LOC | ≤90 min |
 | W6 | §9 | PRUNE-4 — 9 sub-waves: W6.0 CSS L4 root-runtime collapse, then remaining per-grammar runtime collapses (R3 PRUNE-4; C-1 part-B) | Conditional on W5 close | ≤2.0k C-1 part-B aggregate across 9 sub-waves (avg ~220 LOC/grammar; generated output uncounted) | ≤90 min per sub-wave (W6.0..W6.8); aggregate ≤810 min |
 | W7 | §10 | PRUNE-5 — wire W8 policy + W9 union from SCAFFOLD to LOAD-BEARING (R3 PRUNE-5; C-4) | Conditional on W6 close (C-1 MUST precede C-4 per S-P0 §2.2) | ≤1.4k C-4 source/test LOC | ≤90 min |
 | W8 | §11 | CSS L4 Re-Admit (R6; grammar-derived pipeline + production corpora + work-equivalent comparator) | Conditional on W7 close | ≤650 source/test LOC | ≤90 min |

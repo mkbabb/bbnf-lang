@@ -110,7 +110,10 @@ direct and typed rows through a decoded value scalar plus closed token product,
 so direct and typed each stood at 15 / 17 admitted. W11O then admitted
 `gsoc-2018` direct and typed rows through numeric root keys, closed Schema.org
 token constants, and decoded string fact products, so direct and typed each
-stand at 16 / 17 admitted.
+stand at 16 / 17 admitted. W11P then rejected the materially distinct
+`unicode_escapes` decoded codepoint-fact product under REDRESS-243; the source
+patch was reverted, no row moved, and that scalar-fact shape is pre-blocked
+without a fresh material differential.
 W8R closed the CSS residual before W11L; continue actual implementation against
 the remaining JSON residual queue, not
 another Omega or Alpha pass unless a future source attempt exposes a real
@@ -290,7 +293,9 @@ state is:
   `unicode_escapes` decoded-string typed scalar product despite a real material
   differential over W11B, while W11N admits the separate `unicode_mixed`
   decoded value scalar plus closed token product and W11O admits the separate
-  `gsoc-2018` numeric-key decoded token product.
+  `gsoc-2018` numeric-key decoded token product. REDRESS-243 rejects the
+  materially distinct `unicode_escapes` decoded codepoint-fact product without
+  moving the remaining row.
 - JSON real_typed_struct: 16 / 17 ADMITTED, 1 MISSING product surface after
   W11O; REDRESS-226 rejects the earlier generated `y_string_unicode` root and
   REDRESS-229 rejects the generated `gsoc-2018` numeric-key root without
@@ -302,7 +307,8 @@ state is:
   `unicode_escapes` decoded-string typed scalar root, while W11N admits the
   materially distinct `unicode_mixed` decoded value scalar plus closed token
   product and W11O admits the materially distinct `gsoc-2018` numeric-key
-  decoded token product.
+  decoded token product. REDRESS-243 rejects and reverts the transient
+  `unicode_escapes` decoded codepoint-fact root.
 - CSS L4: 24 / 24 ADMITTED after W8R. REDRESS-215 remains historical as the
   initial fact-stream-plane rejection, superseded by generated full-parse
   release-native evidence.
@@ -372,6 +378,10 @@ discipline).
 12. W11O admits `gsoc-2018` direct and typed rows through numeric root keys,
     closed Schema.org token constants, and decoded string fact products from
     cold native `profile_direct` evidence.
+13. W11P rejects `unicode_escapes` direct and typed decoded codepoint-fact
+    products under REDRESS-243. The route avoided decoded string
+    materialization and folded Unicode scalar facts directly, but Track 1 still
+    missed same-run sonic in both strict-product planes.
 
 ## 7. Refusal Conditions
 
@@ -461,4 +471,5 @@ route for `y_string_unicode`. REDRESS-242 pre-blocks `unicode_escapes`
 decoded-string typed scalar products without a fresh material differential,
 while W11N admits the materially distinct `unicode_mixed` decoded value scalar
 plus closed token product and W11O admits the materially distinct `gsoc-2018`
-numeric-key decoded token product.
+numeric-key decoded token product. REDRESS-243 pre-blocks `unicode_escapes`
+decoded codepoint-fact products without a fresh material differential.

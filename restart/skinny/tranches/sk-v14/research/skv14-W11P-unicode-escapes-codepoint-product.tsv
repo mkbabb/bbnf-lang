@@ -1,0 +1,9 @@
+corpus	mode	mbps	checksum	cold_iters	warmup_iters
+unicode_escapes	real_typed_track1	4211.977	0	400	0
+unicode_escapes	real_typed_track2	2809.477	0	400	0
+unicode_escapes	real_typed_sonic	6908.358	0	400	0
+unicode_escapes	real_typed_serde	2830.573	0	400	0
+unicode_escapes	direct_strict_track1	4186.323	0	400	0
+unicode_escapes	direct_strict_track2	2862.631	0	400	0
+unicode_escapes	direct_strict_sonic	7217.462	0	400	0
+unicode_escapes	direct_strict_serde	2853.434	0	400	0

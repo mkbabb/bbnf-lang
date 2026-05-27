@@ -35,14 +35,17 @@ instead of materialized decoded strings. W11N then admitted `unicode_mixed`
 direct and typed rows by combining a decoded value scalar with closed token
 products for the finite side fields. W11O then admitted `gsoc-2018` direct
 and typed rows through numeric root keys, closed Schema.org token constants,
-and decoded string fact products for the variable text fields.
+and decoded string fact products for the variable text fields. W11P then
+tested a decoded codepoint-fact product route for `unicode_escapes` and
+rejected it on same-run cold evidence without landing the transient source
+patch.
 
 ## Authority
 
 - `restart/skinny/tranches/sk-v14/SPEC.md` Section 14.
 - `restart/skinny/tranches/sk-v14/SYNTHESIS.md` R10.
 - `skinny/RESULTS.md`.
-- `skinny/REDRESS.md` items 215 through 242 plus the W11O admit packet.
+- `skinny/REDRESS.md` items 215 through 243 plus the W11O admit packet.
 - `restart/skinny/ROLLING-SOTA-DELTA.md`.
 - `restart/skinny/tranches/sk-v14/HANDOFF.md`.
 
@@ -93,6 +96,7 @@ and decoded string fact products for the variable text fields.
 | W11M | REJECTED | REDRESS-242: transient `unicode_escapes` decoded-string typed product scalar passed correctness but missed same-run sonic for typed and direct strict products; no source patch landed and no row moved. |
 | W11N | ADMITTED | Decoded value scalar plus closed token product admits `unicode_mixed/direct_to_struct` and `unicode_mixed/real_typed_struct` from cold native `profile_direct` evidence. |
 | W11O | ADMITTED | Numeric-key map entries plus closed Schema.org tokens and decoded string fact products admit `gsoc-2018/direct_to_struct` and `gsoc-2018/real_typed_struct` from cold native `profile_direct` evidence. |
+| W11P | REJECTED | REDRESS-243: transient `unicode_escapes` decoded codepoint-fact product passed correctness but missed same-run sonic for typed and direct strict products; no source patch landed and no row moved. |
 
 ## Close-State Counts
 
@@ -100,7 +104,7 @@ and decoded string fact products for the variable text fields.
 |---|---:|---:|---:|---|
 | JSON parse_only | 11 | 6 | 0 | W10/W10R/W10S/W10T/W10V/W10W cold `profile_direct` evidence and REDRESS-217/218/219/220/222/223. |
 | JSON direct_to_struct | 16 | 1 | 0 | W11A cold strict product evidence plus W11L/W11N/W11O decoded token-product evidence; remaining row lacks an admitted differential. |
-| JSON real_typed_struct | 16 | 0 | 1 | W9 cold typed evidence plus W9AA/W9AB generated products for `distinct_values` and `canada`, plus W11L/W11N/W11O decoded token-product evidence; remaining missing product is governed by REDRESS-216/232/242. |
+| JSON real_typed_struct | 16 | 0 | 1 | W9 cold typed evidence plus W9AA/W9AB generated products for `distinct_values` and `canada`, plus W11L/W11N/W11O decoded token-product evidence; remaining missing product is governed by REDRESS-216/232/242/243. |
 | CSS L4 | 24 | 0 | 0 | W8R generated full-parse release-native evidence and REDRESS-215 supersession. |
 
 No residual row has an architectural-level intrinsic-block proof. The
@@ -118,14 +122,17 @@ remaining rows are implementation residuals, not closeable proof blocks.
    insufficient for `y_string_unicode`, and W11L then admitted a materially
    different decoded enum-token product for that row. W11O then admitted a
    materially different `gsoc-2018` route through numeric root keys, closed
-   Schema.org tokens, and decoded string fact products.
+   Schema.org tokens, and decoded string fact products. W11P then proved that
+   decoded codepoint-fact products are also insufficient for
+   `unicode_escapes`.
 2. Missing JSON typed products remain for `unicode_escapes`; W11B's unicode
    products were reverted after measured rejection, and W11C's `gsoc-2018`
    products were also reverted after measured rejection. W11K's
    `y_string_unicode` product root was likewise reverted after measured
    rejection, then W11L admitted the decoded enum-token root, W11N admitted the
    `unicode_mixed` decoded value scalar plus closed token root, and W11O
-   admitted the `gsoc-2018` numeric-key decoded token product.
+   admitted the `gsoc-2018` numeric-key decoded token product. W11P rejected
+   and reverted the transient `unicode_escapes` decoded codepoint-fact root.
 3. JSON parse_only residuals remain for `twitter`, `github_events`,
    `update_center`, `random`, `gsoc-2018`, and
    `distinct_values`. W11D proved that context-threaded delimiter consumption
@@ -151,8 +158,8 @@ remaining rows are implementation residuals, not closeable proof blocks.
   REDRESS-222, REDRESS-223, REDRESS-224, REDRESS-225, REDRESS-226,
   REDRESS-227, REDRESS-228, REDRESS-229, REDRESS-230, REDRESS-231,
   REDRESS-232, REDRESS-233, REDRESS-234, REDRESS-235, REDRESS-236,
-  REDRESS-237, REDRESS-238, REDRESS-239, REDRESS-240, REDRESS-241, and
-  REDRESS-242.
+  REDRESS-237, REDRESS-238, REDRESS-239, REDRESS-240, REDRESS-241,
+  REDRESS-242, and REDRESS-243.
   REDRESS-215 remains in history as the initial CSS W8 rejection and is
   superseded by W8R admission evidence.
 - `skinny/RESULTS.md` now renders CSS L4 rows as current
@@ -612,6 +619,39 @@ exposes a spec-level amendment that truly requires G-Omega.
 - Current JSON direct_to_struct state is 16 / 17 ADMITTED and 1 OPEN:
   `unicode_escapes`. Current JSON real_typed_struct state is 16 / 17
   ADMITTED and 1 MISSING: `unicode_escapes`.
+
+## SK-V14 W11P JSON unicode_escapes Codepoint Product Reject
+
+- Item 243 closes
+  `G-SK-V14-W11P-JSON-UNICODE-ESCAPES-CODEPOINT-PRODUCT` as `REJECT`.
+  No source patch lands, no `RESULTS.md` row moves, and
+  `restart/skinny/ROLLING-SOTA-DELTA.md` remains unchanged.
+- The transient route added a generated
+  `DirectScalar::DecodedJsonCodepoints` product and generated
+  `parse_unicode_escapes` root. Track 1 decoded JSON string escapes directly
+  into Unicode scalar fingerprints and scalar counts, validating surrogate
+  pairs and malformed escapes without materializing decoded strings. Track 2,
+  serde_json, and sonic-rs independently produced the same semantic facts from
+  decoded strings. The route did not use generic `parse_only`,
+  `JsonDigestSink`, `JsonDirectDigest`, skipped payloads, or an aggregate
+  document checksum.
+- Correctness gates passed before measurement: `cargo run --profile ax-iter -p
+  xtask -- regen-real-typed`, `cargo run --profile ax-iter -p xtask --
+  check-real-typed`, `cargo test --profile ax-iter -p codegen typed_direct --
+  --nocapture`, `cargo test --profile ax-iter -p bbnf-bench unicode_escapes
+  -- --nocapture`, and focused direct strict-product parity.
+- Cold release-native `profile_direct` evidence rejects both rows:
+  `unicode_escapes/real_typed_struct` Track 1 `4211.977` Mbps versus typed
+  sonic `6908.358` Mbps, margin `-2696.381` Mbps; and
+  `unicode_escapes/direct_to_struct` Track 1 `4186.323` Mbps versus strict
+  sonic `7217.462` Mbps, margin `-3031.139` Mbps. Retained evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W11P-unicode-escapes-codepoint-product.md`,
+  `.tsv`, and `.raw.log`.
+- W11P pre-blocks retries of this decoded codepoint-fact product shape for
+  `unicode_escapes` without a fresh material differential. Current JSON
+  direct_to_struct state remains 16 / 17 ADMITTED and 1 OPEN:
+  `unicode_escapes`; JSON real_typed_struct state remains 16 / 17 ADMITTED
+  and 1 MISSING: `unicode_escapes`.
 
 ## SK-V14 W11E JSON parse_only 64-Byte Whitespace Reject
 

@@ -6058,3 +6058,42 @@ perturbation.
   `gsoc-2018`, `unicode_mixed`, and `unicode_escapes`. Current JSON
   real_typed_struct state remains 14 / 17 ADMITTED and 3 MISSING:
   `gsoc-2018`, `unicode_mixed`, and `unicode_escapes`.
+
+## SK-V14 W11P unicode_escapes Codepoint Product Reject
+
+- Item 243 closes
+  `G-SK-V14-W11P-JSON-UNICODE-ESCAPES-CODEPOINT-PRODUCT` as `REJECT`.
+  No source patch lands, no `RESULTS.md` row moves, and
+  `restart/skinny/ROLLING-SOTA-DELTA.md` remains unchanged.
+- The measured candidate added a generated
+  `DirectScalar::DecodedJsonCodepoints` product and generated
+  `parse_unicode_escapes` root. Track 1 decoded JSON string escapes directly
+  into Unicode scalar fingerprints and scalar counts, validating surrogate
+  pairs and malformed escapes without materializing decoded strings. Track 2,
+  serde_json, and sonic-rs independently produced the same semantic facts from
+  decoded Rust strings. It did not use generic `parse_only`,
+  `JsonDigestSink`, `JsonDirectDigest`, skipped payloads, or an aggregate
+  document checksum.
+- The route is materially distinct from REDRESS-242 because it folds decoded
+  scalar values rather than UTF-8 bytes and avoids W11M's borrowed/raw-source
+  product boundary. It still failed the cold gate:
+  `unicode_escapes/real_typed_struct` measured Track 1 `4211.977` Mbps versus
+  sonic `6908.358` Mbps, margin `-2696.381` Mbps, and
+  `unicode_escapes/direct_to_struct` measured Track 1 `4186.323` Mbps versus
+  strict sonic `7217.462` Mbps, margin `-3031.139` Mbps.
+- Correctness gates passed before measurement: `cargo run --profile ax-iter -p
+  xtask -- regen-real-typed`, `cargo run --profile ax-iter -p xtask --
+  check-real-typed`, focused `unicode_escapes` product tests including
+  malformed escape and surrogate rejection, `cargo test --profile ax-iter -p
+  codegen typed_direct -- --nocapture`, and focused direct strict-product
+  parity.
+- The source patch was reverted after measurement and retained as
+  `/tmp/skv14-W11P-unicode-escapes-codepoint-product-rejected.patch` with
+  SHA-256
+  `68e11bbad6c6708fb34b8ee83566707899c6e50325477afbd831bc10b913bfb1`.
+  Retained evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W11P-unicode-escapes-codepoint-product.md`,
+  `.tsv`, and `.raw.log`.
+- Current JSON direct_to_struct state remains 16 / 17 ADMITTED and 1 OPEN:
+  `unicode_escapes`. Current JSON real_typed_struct state remains 16 / 17
+  ADMITTED and 1 MISSING: `unicode_escapes`.

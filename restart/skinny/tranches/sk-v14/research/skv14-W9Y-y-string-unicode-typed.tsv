@@ -1,0 +1,5 @@
+corpus	mode	corpus_bytes	iters	warmup_iters	mbps	ns_per_byte	cycles	instructions	cycles_per_byte	cpi	user_ns	system_ns	checksum
+y_string_unicode	real_typed_track1	35601	400	0	3661.016	2.185186	130972633	845234085	9.197258	0.154954	735636	5686	0
+y_string_unicode	real_typed_track2	35601	400	0	3590.583	2.228051	133170580	854452741	9.351604	0.155855	743714	8320	0
+y_string_unicode	real_typed_sonic	35601	400	0	3906.865	2.047678	121961691	784428660	8.564485	0.155478	680984	8938	0
+y_string_unicode	real_typed_serde	35601	400	0	3453.282	2.316637	135000909	854828898	9.480135	0.157927	759714	13376	0

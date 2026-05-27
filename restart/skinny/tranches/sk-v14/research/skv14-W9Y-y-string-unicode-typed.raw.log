@@ -1,0 +1,24 @@
+# SK-V14 W9Y y_string_unicode real_typed cold profile
+# command: profile_direct 400 y_string_unicode real_typed_{track1,track2,sonic,serde} 0
+# cwd: /Users/mkbabb/Programming/bbnf-lang/skinny
+# built: CARGO_TARGET_DIR=/tmp/skv14-ystr-typed-target RUSTFLAGS="-C target-cpu=native" cargo build --manifest-path skinny/Cargo.toml --release -p bbnf-bench --bin profile_direct
+profile-direct: corpus=y_string_unicode mode=real_typed_track1 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/y_string_unicode.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 35601 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.03s -> 3661 Mbps (digest cksum 0)
+PROBE_RESULT corpus=y_string_unicode corpus_bytes=35601 iters=400 mode=real_typed_track1 warmup_iters=0 elapsed_s=0.031118 ns_per_byte=2.185186 mbps=3661.016 cycles=130972633 instructions=845234085 cycles_per_byte=9.197258 cpi=0.154954 user_ns=735636 system_ns=5686 checksum=0
+profile-direct: corpus=y_string_unicode mode=real_typed_track2 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/y_string_unicode.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 35601 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.03s -> 3591 Mbps (digest cksum 0)
+PROBE_RESULT corpus=y_string_unicode corpus_bytes=35601 iters=400 mode=real_typed_track2 warmup_iters=0 elapsed_s=0.031728 ns_per_byte=2.228051 mbps=3590.583 cycles=133170580 instructions=854452741 cycles_per_byte=9.351604 cpi=0.155855 user_ns=743714 system_ns=8320 checksum=0
+profile-direct: corpus=y_string_unicode mode=real_typed_sonic path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/y_string_unicode.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 35601 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.03s -> 3907 Mbps (digest cksum 0)
+PROBE_RESULT corpus=y_string_unicode corpus_bytes=35601 iters=400 mode=real_typed_sonic warmup_iters=0 elapsed_s=0.029160 ns_per_byte=2.047678 mbps=3906.865 cycles=121961691 instructions=784428660 cycles_per_byte=8.564485 cpi=0.155478 user_ns=680984 system_ns=8938 checksum=0
+profile-direct: corpus=y_string_unicode mode=real_typed_serde path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/y_string_unicode.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 35601 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.03s -> 3453 Mbps (digest cksum 0)
+PROBE_RESULT corpus=y_string_unicode corpus_bytes=35601 iters=400 mode=real_typed_serde warmup_iters=0 elapsed_s=0.032990 ns_per_byte=2.316637 mbps=3453.282 cycles=135000909 instructions=854828898 cycles_per_byte=9.480135 cpi=0.157927 user_ns=759714 system_ns=13376 checksum=0

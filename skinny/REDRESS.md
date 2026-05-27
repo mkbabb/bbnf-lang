@@ -5551,3 +5551,29 @@ perturbation.
   `distinct_values`. Evidence:
   `restart/skinny/tranches/sk-v14/research/skv14-W10Y-W10Z-parse-only-rejects.md`
   plus the two retained raw logs named there.
+
+## SK-V14 W9Y JSON real_typed y_string_unicode Generated Root Reject
+
+- Item 226 closes `G-SK-V14-W9Y-JSON-TYPED-Y-STRING-UNICODE` as `REJECT`.
+  No source patch lands, no `RESULTS.md` row moves, and
+  `restart/skinny/ROLLING-SOTA-DELTA.md` remains unchanged.
+- The measured candidate used the valid generated DirectBuild route: a
+  transient `parse_y_string_unicode -> Vec<Cow<'i, str>>` root in
+  `skinny/xtask/src/real_typed_schema.rs`, regenerated
+  `skinny/crates/bbnf-bench/src/generated_real_typed.rs`, and temporary
+  `real_typed_struct` dispatch/checksum/parity wiring. The earlier
+  bench-private hand parser route is rejected as invalid for W9 Track 1
+  generated-source discipline.
+- Correctness gates passed before measurement:
+  `cargo xtask regen-real-typed`, `cargo xtask check-real-typed`, and
+  `cargo test --manifest-path skinny/Cargo.toml --profile ax-iter -p
+  bbnf-bench y_string_unicode_typed -- --nocapture`.
+- Cold `profile_direct` evidence rejects the row: generated Track 1 measured
+  `3661.016` Mbps against strict `sonic-rs` typed at `3906.865` Mbps. The
+  admission floor is `sonic + 1.0 = 3907.865` Mbps, so the margin is
+  `-246.849` Mbps. Retained evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W9Y-y-string-unicode-typed.md`,
+  `.tsv`, and `.raw.log`.
+- Current JSON real_typed_struct state remains 11 / 17 ADMITTED and 6 MISSING:
+  `canada`, `gsoc-2018`, `unicode_mixed`, `unicode_escapes`,
+  `distinct_values`, and `y_string_unicode`.

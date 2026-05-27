@@ -12,7 +12,7 @@ live-looking admission fragments in generated `RESULTS.md`.
 - `restart/skinny/tranches/sk-v14/SPEC.md` Section 14.
 - `restart/skinny/tranches/sk-v14/SYNTHESIS.md` R10.
 - `skinny/RESULTS.md`.
-- `skinny/REDRESS.md` items 215 through 223.
+- `skinny/REDRESS.md` items 215 through 226.
 - `restart/skinny/ROLLING-SOTA-DELTA.md`.
 - `restart/skinny/tranches/sk-v14/HANDOFF.md`.
 
@@ -35,12 +35,15 @@ live-looking admission fragments in generated `RESULTS.md`.
 | W7 | ADMITTED | Policy/union runtime wiring closed at `672b927d5`; REDRESS-214 marks the numbers direct row as prune-consumed, not admitted. |
 | W8 | REJECTED | REDRESS-215: 0 / 24 CSS L4 rows admitted; generated Track 1 remains fact-stream, not full-parse equality plane. |
 | W9 | MIXED | REDRESS-216: 11 / 17 JSON typed rows admitted; 17 / 17 direct rows remain open; 6 / 17 typed product surfaces remain missing. |
+| W9Y | REJECTED | REDRESS-226: generated `y_string_unicode/real_typed_struct` root measured below strict sonic typed; no row moved. |
 | W10 | MIXED | REDRESS-217: 6 / 17 JSON parse_only rows admitted; 11 / 17 parse_only rows remain open. |
 | W10R | MIXED | REDRESS-218: `canada/parse_only` admitted by parse-only prefix continuation; parse_only state is now 7 / 17 admitted and 10 / 17 open. |
 | W10S | MIXED | REDRESS-219: `unicode_mixed/parse_only` admitted by string-end prefix scan; parse_only state is now 8 / 17 admitted and 9 / 17 open. |
 | W10T | MIXED | REDRESS-220: `instruments/parse_only` admitted by the cold open-row sweep after W10S; parse_only state is now 9 / 17 admitted and 8 / 17 open. |
 | W10V | MIXED | REDRESS-222: `citm_catalog/parse_only` admitted by the current-HEAD cold resweep after W10U; parse_only state is now 10 / 17 admitted and 7 / 17 open. |
 | W10W | MIXED | REDRESS-223: `apache_builds/parse_only` admitted by the generated parse-only iterative stack; parse_only state is now 11 / 17 admitted and 6 / 17 open. |
+| W10X | REJECTED | REDRESS-224: inline frame stack, 64-byte trusted string scan, and trusted syntax-mask residual routes admitted no parse_only rows. |
+| W10Y/W10Z | REJECTED | REDRESS-225: plain-string structural fast path and cursor-return helper ABI admitted no parse_only residual rows. |
 
 ## Close-State Counts
 
@@ -74,8 +77,8 @@ remaining rows are implementation residuals, not closeable proof blocks.
   eleven parse_only admits, seventeen direct opens, eleven typed admits plus six
   missing typed products, and twenty-four CSS L4 opens.
 - `skinny/REDRESS.md` carries the live residuals as REDRESS-215,
-  REDRESS-216, REDRESS-217, REDRESS-218, REDRESS-219, REDRESS-220, and
-  REDRESS-222, and REDRESS-223.
+  REDRESS-216, REDRESS-217, REDRESS-218, REDRESS-219, REDRESS-220,
+  REDRESS-222, REDRESS-223, REDRESS-224, REDRESS-225, and REDRESS-226.
 - `skinny/RESULTS.md` now renders CSS L4 legacy CostFacts as historical claims
   with current `AUDIT-FALSIFIED_OPEN` status, so the manifest no longer embeds
   live-looking `A` / `GO` / `ADMITTED-PARITY` fragments for OPEN CSS rows.
@@ -97,7 +100,8 @@ remaining rows are implementation residuals, not closeable proof blocks.
 ## W11 Disposition
 
 W11/W10R/W10S/W10T/W10V/W10W close SK-V14 as a mixed tranche, with admitted rows preserved and all
-unmet rows routed to implementation residuals. Under the latest user
-instruction, the next work is implementation against the residual queue, not a
-new Omega or Alpha pass unless a future source attempt exposes a spec-level
-amendment that truly requires G-Omega.
+unmet rows routed to implementation residuals. W10X, W10Y/W10Z, and W9Y add
+post-close residual rejection evidence without changing close-state counts.
+Under the latest user instruction, the next work is implementation against the
+residual queue, not a new Omega or Alpha pass unless a future source attempt
+exposes a spec-level amendment that truly requires G-Omega.

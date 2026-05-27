@@ -51,7 +51,11 @@ open. W10V then admitted `citm_catalog/parse_only` from the current-HEAD cold
 resweep under REDRESS-222, so parse_only now stands at 10 / 17 admitted and
 7 / 17 open. W10W then admitted `apache_builds/parse_only` through the
 generated parse-only iterative stack under REDRESS-223, so parse_only now
-stands at 11 / 17 admitted and 6 / 17 open.
+stands at 11 / 17 admitted and 6 / 17 open. W10X and W10Y/W10Z then rejected
+additional parse_only residual routes under REDRESS-224 and REDRESS-225 with
+no row movement. W9Y then rejected a generated
+`y_string_unicode/real_typed_struct` root under REDRESS-226, so typed remains
+11 / 17 admitted and 6 / 17 missing.
 W11 closed the SK-V14 reconciliation packet on 2026-05-27. The next move is
 actual implementation against the residual queue, not another Omega or Alpha
 pass unless a future source attempt exposes a real spec-level amendment.
@@ -213,7 +217,8 @@ state is:
 - JSON parse_only: 11 / 17 ADMITTED, 6 OPEN under REDRESS-223.
 - JSON direct_to_struct: 0 / 17 ADMITTED, 17 OPEN under REDRESS-216.
 - JSON real_typed_struct: 11 / 17 ADMITTED, 6 MISSING product surfaces under
-  REDRESS-216.
+  REDRESS-216; REDRESS-226 rejects the generated `y_string_unicode` root
+  without moving the row.
 - CSS L4: 0 / 24 ADMITTED, 24 OPEN under REDRESS-215.
 
 Per the latest user instruction, do not spend another cycle on Omega/Alpha
@@ -237,13 +242,15 @@ discipline).
    admit must provide generated Track 1 CSS full-parse output on the same plane
    as lightningcss/cssparser, not fact-stream output.
 4. W9 is closed mixed: 11 typed admits, 17 direct blocks, 6 typed missing
-   product blocks.
+   product blocks. W9Y rejects the generated `y_string_unicode` typed root
+   under REDRESS-226, so `y_string_unicode` remains missing.
 5. W10 is closed mixed: 6 parse_only admits and 11 parse_only open rows under
    REDRESS-217. W10R then admits `canada/parse_only`, W10S admits
    `unicode_mixed/parse_only`, W10T admits `instruments/parse_only`, W10V
    admits `citm_catalog/parse_only`, and W10W admits
    `apache_builds/parse_only`, leaving 6 parse_only open rows under
-   REDRESS-223.
+   REDRESS-223. W10X and W10Y/W10Z reject additional residual routes under
+   REDRESS-224 and REDRESS-225 without changing the count.
 6. W11 is closed as reconciliation-only. It authorizes implementation against
    residual rows; it does not authorize paper-close claims for non-admits.
 

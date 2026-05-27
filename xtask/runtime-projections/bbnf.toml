@@ -1,0 +1,89 @@
+schema_version = 1
+grammar = "bbnf"
+grammar_source = "grammar/bbnf/bbnf.bbnf"
+entry_rule = "grammar"
+runtime_module = "crate::runtime::bbnf"
+output_dir = "crates/core/src/runtime/bbnf"
+parser_type = "BbnfBootstrap"
+type_prefix = "Bbnf"
+module_name = "bbnf"
+runtime_style = "typed_bbnf"
+
+[kind]
+default = "Other"
+layout_mode = "rule_routes"
+variants = [
+  "Rule",
+  "Term",
+  "Factor",
+  "MappedFactor",
+  "BinaryFactor",
+  "Concatenation",
+  "Alternation",
+  "Closure",
+  "Rhs",
+  "Lhs",
+  "CallArg",
+  "ImportPath",
+  "ImportItems",
+  "ImportDirective",
+  "RecoverDirective",
+  "PrettyHint",
+  "PrettyDirective",
+  "WsDirective",
+  "TokenDirective",
+  "DebugDirective",
+  "HostDirective",
+  "Directive",
+  "GrammarItem",
+  "Grammar",
+  "ValueExpr",
+  "ValueClosure",
+  "ValueOr",
+  "ValueAnd",
+  "ValueCmp",
+  "ValueAdd",
+  "ValueMul",
+  "ValueUnary",
+  "ValueAtom",
+  "ValuePath",
+  "ValueInput",
+  "ValueFnCall",
+  "TypeAnnotation",
+  "Other",
+]
+routes = [
+  { rule = "import_path", kind = "ImportPath" },
+  { rule = "import_items", kind = "ImportItems" },
+  { rule = "pretty_hint", kind = "PrettyHint" },
+  { rule = "token_directive", kind = "TokenDirective" },
+  { rule = "debug_directive", kind = "DebugDirective" },
+  { rule = "host_directive", kind = "HostDirective" },
+  { rule = "ws_directive", kind = "WsDirective" },
+  { rule = "import_directive", kind = "ImportDirective" },
+  { rule = "pretty_directive", kind = "PrettyDirective" },
+  { rule = "alternation", kind = "Alternation" },
+  { rule = "call_arg", kind = "CallArg" },
+  { rule = "concatenation", kind = "Concatenation" },
+  { rule = "closure", kind = "Closure" },
+  { rule = "term", kind = "Term" },
+  { rule = "binary_factor", kind = "BinaryFactor" },
+  { rule = "factor", kind = "Factor" },
+  { rule = "mapped_factor", kind = "MappedFactor" },
+  { rule = "rule", kind = "Rule" },
+  { rule = "recover_directive", kind = "RecoverDirective" },
+  { rule = "grammar_item", kind = "GrammarItem" },
+  { rule = "grammar", kind = "Grammar" },
+  { rule = "value_path", kind = "ValuePath" },
+  { rule = "value_input", kind = "ValueInput" },
+  { rule = "type_annotation", kind = "TypeAnnotation" },
+  { rule = "value_mul", kind = "ValueMul" },
+  { rule = "value_or", kind = "ValueOr" },
+  { rule = "value_add", kind = "ValueAdd" },
+  { rule = "value_cmp", kind = "ValueCmp" },
+  { rule = "value_and", kind = "ValueAnd" },
+  { rule = "value_closure", kind = "ValueClosure" },
+  { rule = "value_fn_call", kind = "ValueFnCall" },
+  { rule = "value_atom", kind = "ValueAtom" },
+  { rule = "value_unary", kind = "ValueUnary" },
+]

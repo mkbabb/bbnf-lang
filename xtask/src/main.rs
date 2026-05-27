@@ -68,6 +68,9 @@ enum Cmd {
     /// Regenerate the root CSV runtime projection under
     /// `crates/core/src/runtime/csv/`.
     RegenCsv,
+    /// Regenerate the root BBNF runtime projection under
+    /// `crates/core/src/runtime/bbnf/`.
+    RegenBbnf,
     /// Regenerate the root BNF runtime projection under
     /// `crates/core/src/runtime/bnf/`.
     RegenBnf,
@@ -94,6 +97,7 @@ fn main() -> anyhow::Result<()> {
         Cmd::RegenCss => regen_css::run(),
         Cmd::RegenMath => regen_simple_runtime::run("math"),
         Cmd::RegenCsv => regen_simple_runtime::run("csv"),
+        Cmd::RegenBbnf => regen_simple_runtime::run("bbnf"),
         Cmd::RegenBnf => regen_simple_runtime::run("bnf"),
         Cmd::RegenEbnf => regen_simple_runtime::run("ebnf"),
         Cmd::RegenCssPretty => regen_simple_runtime::run("css_pretty"),

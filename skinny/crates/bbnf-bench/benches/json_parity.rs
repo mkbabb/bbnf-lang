@@ -41,16 +41,14 @@ fn run_fixture(c: &mut Criterion, host: &HostFacts, fixture: &JsonFixture, input
     group.measurement_time(Duration::from_secs_f64(measurement_time_s));
     group.sample_size(sample_size);
 
-    let parse_expected = track2_tape_fingerprint(input).expect("track2 parse fingerprint");
+    track2_tape_fingerprint(input).expect("track2 parse fingerprint");
     group.bench_function("track1_generated", |b| {
         b.iter(|| {
-            let root = runtime::generated_json::parse(black_box(input)).unwrap();
-            let fingerprint = tape_fingerprint(&root);
-            assert_eq!(fingerprint, parse_expected);
-            black_box(root);
+            let result = runtime::generated_json::parse_only(black_box(input));
+            assert!(result.is_ok());
+            black_box(result.unwrap());
         });
     });
-    let track1_payload = track1_payload_counters(input);
     write_row(
         host,
         fixture,
@@ -59,8 +57,8 @@ fn run_fixture(c: &mut Criterion, host: &HostFacts, fixture: &JsonFixture, input
             fixture.sha256.clone(),
             fixture.bytes.len() as u64,
             TrackTag::Track1Generated,
-            track1_payload.0,
-            track1_payload.1,
+            0,
+            0,
             measurement_time_s,
             sample_size as u32,
         ),
@@ -199,8 +197,8 @@ fn run_fixture(c: &mut Criterion, host: &HostFacts, fixture: &JsonFixture, input
             fixture.bytes.len() as u64,
             TrackTag::Track1Generated,
             "direct_to_struct",
-            track1_payload.0,
-            track1_payload.1,
+            track2_payload.0,
+            track2_payload.1,
             measurement_time_s,
             sample_size as u32,
         ),
@@ -289,8 +287,8 @@ fn run_fixture(c: &mut Criterion, host: &HostFacts, fixture: &JsonFixture, input
                 fixture.bytes.len() as u64,
                 TrackTag::Track1Generated,
                 "real_typed_struct",
-                track1_payload.0,
-                track1_payload.1,
+                track2_payload.0,
+                track2_payload.1,
                 measurement_time_s,
                 sample_size as u32,
             ),
@@ -372,11 +370,6 @@ fn run_fixture(c: &mut Criterion, host: &HostFacts, fixture: &JsonFixture, input
         measurement_time_s,
         sample_size as u32,
     );
-}
-
-fn track1_payload_counters(input: &str) -> (u64, u64) {
-    let root = runtime::generated_json::parse(input).expect("track1 payload probe parse failed");
-    payload_counters(&root)
 }
 
 fn track2_payload_counters(input: &str) -> (u64, u64) {

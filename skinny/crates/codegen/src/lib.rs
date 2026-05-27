@@ -586,6 +586,37 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
     }
 
     #[test]
+    fn emits_distinct_json_parse_only_path_without_tape_builder() {
+        let emitted = emit_from_source("json", JSON_GRAMMAR).unwrap();
+        let parser = emitted.get("parser.rs").unwrap();
+        let generated = emitted.get("generated.rs").unwrap();
+        let start = generated
+            .find("struct ParseOnlyState")
+            .expect("parse_only state emitted");
+        let end = generated
+            .find("// sink-only lowered from BackendIr")
+            .unwrap_or(generated.len());
+        let parse_only_section = &generated[start..end];
+
+        assert!(parser.contains("pub fn parse_only"));
+        assert!(parser.contains("generated::parse_only(input)"));
+        assert!(emitted
+            .get("mod.rs")
+            .unwrap()
+            .contains("parse_only, parse_only_bytes"));
+        assert!(generated.contains("pub fn parse_only"));
+        assert!(parse_only_section.contains("fn parse_only_value_at"));
+        assert!(parse_only_section.contains("fn parse_only_string"));
+        assert!(!parse_only_section.contains("TapeBuilder"));
+        assert!(!parse_only_section.contains("emit_plain_offset"));
+        assert!(generated.contains(
+            "#[cfg_attr(feature = \"parse-attribution\", inline(never))]\n\
+             #[cfg_attr(not(feature = \"parse-attribution\"), inline(always))]\n\
+             pub fn parse_only"
+        ));
+    }
+
+    #[test]
     fn bare_emit_fails_closed_without_pass_facts() {
         let grammar = grammar::parse_grammar("json", JSON_GRAMMAR).unwrap();
         let output = passes::compile(&grammar).unwrap();

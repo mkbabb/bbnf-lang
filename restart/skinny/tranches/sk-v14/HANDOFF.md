@@ -37,8 +37,10 @@ generated CSS Track 1 profiles still emit fact streams rather than a CSS
 full-parse equality plane. W9 then closed mixed under REDRESS-216: 11 / 17
 JSON typed rows admit from cold `profile_direct` evidence, all 17 direct rows
 remain blocked on digest-plane evidence, and 6 / 17 typed rows remain missing
-typed product surfaces. The next implementation move is W10 JSON parse_only
-distinct-path re-admit with unconditional Stage-0.
+typed product surfaces. W10 then closed mixed under REDRESS-217: 6 / 17 JSON
+parse_only rows admit from a distinct no-tape `generated_json::parse_only`
+path and cold `profile_direct` evidence; 11 / 17 parse_only rows remain open.
+The next implementation move is W11 close and Alpha feedback.
 
 ## 1. Bracket Verdict
 
@@ -131,7 +133,7 @@ Lock 14 at `restart/locks/LOCKS.md:220–238`).
 ### Honest rolling delta (SK-V14 starting baseline)
 
 ```
-JSON parse_only: 0 / 17  (all OPEN)
+JSON parse_only: 6 / 17  (11 OPEN after W10 mixed close)
 JSON direct:     0 / 17  (4 comparator-rebind candidates; 13 fresh)
 JSON typed:      0 / 17  (7 comparator-rebind candidates; 10 fresh)
 CSS L4:          0 / 24  (all OPEN; templates pending PRUNE-2; amended skinny-side xtask pending W2 rerun)
@@ -189,15 +191,14 @@ Campaign at zero on numbers; non-zero on architecture. The
 
 ## 6. Next-Move
 
-**Next-move:** Dispatch W10 JSON parse_only distinct-path re-admit under SPEC
-§13. W9 has an executable mixed close packet (`skv14-W9-redress.md`,
-REDRESS-216): admitted W9 typed rows may be cited only as typed-row evidence,
-while all W9 direct rows and the six missing typed product rows remain routed
-blocks. W10 must ship the unconditional Stage-0 F-V2-P1ABC-RERECORD obligation
-before any parse_only admission, then select the 17 parse_only rows, bind them
-to the rebound `sonic_rs::Skipper` strict comparator, prove per-iteration
-equality, and update `skinny/RESULTS.md` plus
-`restart/skinny/ROLLING-SOTA-DELTA.md` only for rows that honestly re-admit.
+**Next-move:** Dispatch W11 close and Alpha feedback under SPEC §14. W10 has
+an executable mixed close packet (`skv14-W10-redress.md`, REDRESS-217):
+`mesh`, `marine_ik`, `numbers`, `unicode_escapes`, `unicode_basic`, and
+`y_string_unicode` parse_only rows admit from cold distinct-path evidence; the
+other eleven parse_only rows remain open and routed in REDRESS-217. W11 must
+reconcile `RESULTS.md`, `ROLLING-SOTA-DELTA.md`, REDRESS, HANDOFF, and SPEC
+against the W0-W10 admitted/rejected/routed state without reopening
+implementation work.
 
 Hard caps echoed per `[dispatch-hard-cap]`: 30-min lens-agent cap;
 research 20 min / plan 15 min / redress 30 min (45 min only for the
@@ -213,8 +214,9 @@ discipline).
    admit must provide generated Track 1 CSS full-parse output on the same plane
    as lightningcss/cssparser, not fact-stream output.
 4. W9 is closed mixed: 11 typed admits, 17 direct blocks, 6 typed missing
-   product blocks. W10 is the active wave. W11 waits for W0-W10 to have
-   admitted, rejected, or routed status.
+   product blocks.
+5. W10 is closed mixed: 6 parse_only admits and 11 parse_only open rows under
+   REDRESS-217. W11 is now unblocked.
 
 ## 7. Refusal Conditions
 

@@ -5,7 +5,7 @@ run_id: SK-V13-open
 g_omega_status: signed
 consumer_gate: cargo xtask gate-json --check-results
 source_results: skinny/RESULTS.md
-source_commit: 591eafb07+w1-prune1
+source_commit: 591eafb07+w10-mixed-close
 
 ## JSON Targets
 
@@ -29,7 +29,7 @@ source_commit: 591eafb07+w1-prune1
 | json/update_center/parse_only/main | parse_only | 11791.00 | 19662.00 | -7871.00 | OPEN |
 | json/update_center/direct_to_struct/main | direct_to_struct | 8546.00 | 11184.00 | -2638.00 | OPEN |
 | json/update_center/real_typed_struct/main | real_typed_struct | 6776.28 | 5846.38 | 929.90 | ADMITTED |
-| json/mesh/parse_only/main | parse_only | 12987.00 | 11759.00 | 1228.00 | OPEN |
+| json/mesh/parse_only/main | parse_only | 11669.30 | 6590.82 | 5078.48 | ADMITTED |
 | json/mesh/direct_to_struct/main | direct_to_struct | 9661.00 | 9758.00 | -97.00 | OPEN |
 | json/mesh/real_typed_struct/main | real_typed_struct | 4580.29 | 4344.22 | 236.07 | ADMITTED |
 | json/random/parse_only/main | parse_only | 9946.00 | 15666.00 | -5720.00 | OPEN |
@@ -38,28 +38,28 @@ source_commit: 591eafb07+w1-prune1
 | json/gsoc-2018/parse_only/main | parse_only | 23587.00 | 50364.00 | -26777.00 | OPEN |
 | json/gsoc-2018/direct_to_struct/main | direct_to_struct | 15385.00 | 23881.00 | -8496.00 | OPEN |
 | json/gsoc-2018/real_typed_struct/main | real_typed_struct | absent:product-surface-not-generated | absent:product-surface-not-generated | absent:product-surface-not-generated | MISSING |
-| json/marine_ik/parse_only/main | parse_only | 12357.00 | 9903.00 | 2454.00 | OPEN |
+| json/marine_ik/parse_only/main | parse_only | 9505.49 | 5339.94 | 4165.55 | ADMITTED |
 | json/marine_ik/direct_to_struct/main | direct_to_struct | 10513.00 | 8455.00 | 2058.00 | OPEN |
 | json/marine_ik/real_typed_struct/main | real_typed_struct | 5515.10 | 5241.98 | 273.12 | ADMITTED |
 | json/instruments/parse_only/main | parse_only | 17468.00 | 19631.00 | -2163.00 | OPEN |
 | json/instruments/direct_to_struct/main | direct_to_struct | 12060.00 | 12732.00 | -672.00 | OPEN |
 | json/instruments/real_typed_struct/main | real_typed_struct | 9550.11 | 7780.12 | 1769.99 | ADMITTED |
-| json/numbers/parse_only/main | parse_only | 19267.00 | 13667.00 | 5600.00 | OPEN |
+| json/numbers/parse_only/main | parse_only | 14472.31 | 7453.77 | 7018.53 | ADMITTED |
 | json/numbers/direct_to_struct/main | direct_to_struct | 14125.00 | 12748.00 | 1377.00 | OPEN |
 | json/numbers/real_typed_struct/main | real_typed_struct | 6608.57 | 6023.91 | 584.66 | ADMITTED |
 | json/unicode_mixed/parse_only/main | parse_only | 9294.00 | 18859.00 | -9565.00 | OPEN |
 | json/unicode_mixed/direct_to_struct/main | direct_to_struct | 5062.00 | 10654.00 | -5592.00 | OPEN |
 | json/unicode_mixed/real_typed_struct/main | real_typed_struct | absent:product-surface-not-generated | absent:product-surface-not-generated | absent:product-surface-not-generated | MISSING |
-| json/unicode_escapes/parse_only/main | parse_only | 13550.00 | 19274.00 | -5724.00 | OPEN |
+| json/unicode_escapes/parse_only/main | parse_only | 7897.45 | 2985.08 | 4912.37 | ADMITTED |
 | json/unicode_escapes/direct_to_struct/main | direct_to_struct | 5523.00 | 14299.00 | -8776.00 | OPEN |
 | json/unicode_escapes/real_typed_struct/main | real_typed_struct | absent:product-surface-not-generated | absent:product-surface-not-generated | absent:product-surface-not-generated | MISSING |
-| json/unicode_basic/parse_only/main | parse_only | 12041.00 | 16126.00 | -4085.00 | OPEN |
+| json/unicode_basic/parse_only/main | parse_only | 9445.73 | 7060.90 | 2384.83 | ADMITTED |
 | json/unicode_basic/direct_to_struct/main | direct_to_struct | 9317.00 | 8977.00 | 340.00 | OPEN |
 | json/unicode_basic/real_typed_struct/main | real_typed_struct | 3221.33 | 2481.52 | 739.81 | ADMITTED |
 | json/distinct_values/parse_only/main | parse_only | 9920.00 | 18161.00 | -8241.00 | OPEN |
 | json/distinct_values/direct_to_struct/main | direct_to_struct | 6540.00 | 11949.00 | -5409.00 | OPEN |
 | json/distinct_values/real_typed_struct/main | real_typed_struct | absent:product-surface-not-generated | absent:product-surface-not-generated | absent:product-surface-not-generated | MISSING |
-| json/y_string_unicode/parse_only/main | parse_only | 6590.00 | 13861.00 | -7271.00 | OPEN |
+| json/y_string_unicode/parse_only/main | parse_only | 3169.90 | 2418.91 | 750.99 | ADMITTED |
 | json/y_string_unicode/direct_to_struct/main | direct_to_struct | 5061.00 | 8999.00 | -3938.00 | OPEN |
 | json/y_string_unicode/real_typed_struct/main | real_typed_struct | absent:product-surface-not-generated | absent:product-surface-not-generated | absent:product-surface-not-generated | MISSING |
 

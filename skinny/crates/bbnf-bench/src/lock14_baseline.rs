@@ -704,7 +704,10 @@ const FROZEN_ROOTS: &[&str] = &[
     "crates/passes/src",
     "crates/codegen/Cargo.toml",
     "crates/codegen/src",
+    "crates/bbnf-bench/benches/json_parity.rs",
     "crates/bbnf-bench/src/bin/gate.rs",
+    "crates/bbnf-bench/src/bin/profile_direct.rs",
+    "crates/bbnf-bench/src/metadata.rs",
     "crates/bbnf-bench/src/report.rs",
     "crates/bbnf-bench/src/lock14_baseline.rs",
     "crates/grammar/src",
@@ -1326,6 +1329,29 @@ const SK_V14_W7_OWNER_PATHS: &[&str] = &[
     "xtask/src/main.rs",
 ];
 
+const SK_V14_W9_OWNER_PATHS: &[&str] = &[
+    "crates/bbnf-bench/src/json_w9.rs",
+    "crates/bbnf-bench/src/lib.rs",
+    "crates/bbnf-bench/src/report.rs",
+    "xtask/src/main.rs",
+];
+
+const SK_V14_W10_OWNER_PATHS: &[&str] = &[
+    "crates/codegen/src/lib.rs",
+    "crates/codegen/src/runtime_generator.rs",
+    "crates/runtime/src/grammars/json/generated.rs",
+    "crates/runtime/src/grammars/json/mod.rs",
+    "crates/runtime/src/grammars/json/parser.rs",
+    "crates/runtime/src/lib.rs",
+    "crates/bbnf-bench/benches/json_parity.rs",
+    "crates/bbnf-bench/src/bin/gate.rs",
+    "crates/bbnf-bench/src/bin/profile_direct.rs",
+    "crates/bbnf-bench/src/lock14_baseline.rs",
+    "crates/bbnf-bench/src/metadata.rs",
+    "crates/bbnf-bench/src/report.rs",
+    "xtask/src/main.rs",
+];
+
 fn current_lock14_owner_paths() -> Vec<&'static str> {
     let mut paths = Vec::with_capacity(
         SK_V12_W1A_OWNER_PATHS.len()
@@ -1366,7 +1392,9 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
             + SK_V14_W6_6_ROOT_GOOGLE_SHEETS_OWNER_PATHS.len()
             + SK_V14_W6_7_ROOT_BBNF_OWNER_PATHS.len()
             + SK_V14_W6_8_ROOT_JSON_OWNER_PATHS.len()
-            + SK_V14_W7_OWNER_PATHS.len(),
+            + SK_V14_W7_OWNER_PATHS.len()
+            + SK_V14_W9_OWNER_PATHS.len()
+            + SK_V14_W10_OWNER_PATHS.len(),
     );
     paths.extend_from_slice(SK_V12_W1A_OWNER_PATHS);
     paths.extend_from_slice(SK_V12_W1B1_OWNER_PATHS);
@@ -1407,6 +1435,8 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
     paths.extend_from_slice(SK_V14_W6_7_ROOT_BBNF_OWNER_PATHS);
     paths.extend_from_slice(SK_V14_W6_8_ROOT_JSON_OWNER_PATHS);
     paths.extend_from_slice(SK_V14_W7_OWNER_PATHS);
+    paths.extend_from_slice(SK_V14_W9_OWNER_PATHS);
+    paths.extend_from_slice(SK_V14_W10_OWNER_PATHS);
     paths
 }
 
@@ -1984,10 +2014,36 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
             return Ok(());
         }
     }
+    if is_w9_json_typed_subject(subject) {
+        let allowed = changed_paths
+            .iter()
+            .all(|path| is_allowed_path(path, SK_V14_W9_OWNER_PATHS));
+        if allowed {
+            return Ok(());
+        }
+    }
+    if is_w10_json_parse_only_subject(subject) {
+        let allowed = changed_paths
+            .iter()
+            .all(|path| is_allowed_path(path, SK_V14_W10_OWNER_PATHS));
+        if allowed {
+            return Ok(());
+        }
+    }
     Err(format!(
         "Lock 14 frozen diff failed for parent paths [{}]",
         changed_paths.join(", ")
     ))
+}
+
+fn is_w9_json_typed_subject(subject: &str) -> bool {
+    let subject = subject.to_ascii_lowercase();
+    subject.contains("sk-v14-wavew9") || subject.contains("sk-v14-w9")
+}
+
+fn is_w10_json_parse_only_subject(subject: &str) -> bool {
+    let subject = subject.to_ascii_lowercase();
+    subject.contains("sk-v14-wavew10") || subject.contains("sk-v14-w10")
 }
 
 fn is_w5b_frontend_subject(subject: &str) -> bool {

@@ -46,7 +46,8 @@ pub mod grammars {
 #[cfg(test)]
 mod tests {
     use crate::grammars::json::{
-        parse, parse_bytes, parse_direct, JsonNodeKind, JsonSink, JsonValue,
+        parse, parse_bytes, parse_direct, parse_only, parse_only_bytes, JsonNodeKind, JsonSink,
+        JsonValue,
     };
 
     #[test]
@@ -211,6 +212,31 @@ mod tests {
             assert!(parse(invalid).is_err(), "{invalid}");
         }
         assert!(parse_bytes(b"[\"\xC3\x28\"]").is_err());
+    }
+
+    #[test]
+    fn generated_parse_only_accepts_and_rejects_json() {
+        for valid in [
+            "0",
+            r#""plain""#,
+            r#"{"name":"bbnf","values":[1,true,false,null,"\u0041"]}"#,
+            "[[],{},-0,5e-324]",
+        ] {
+            parse_only(valid).unwrap();
+        }
+
+        for invalid in [
+            "",
+            "[1,]",
+            r#"{"a":}"#,
+            r#"{"a" 1}"#,
+            r#""bad\uZZZZ""#,
+            "01",
+            "true false",
+        ] {
+            assert!(parse_only(invalid).is_err(), "{invalid}");
+        }
+        assert!(parse_only_bytes(b"[\"\xC3\x28\"]").is_err());
     }
 
     #[test]

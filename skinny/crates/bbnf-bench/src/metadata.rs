@@ -145,18 +145,18 @@ impl BenchFacts {
             parse_utf8: "view-boundary".to_string(),
             escape_complete: "yes".to_string(),
             flaw_probe: "invalid UTF-8 rejected outside hot scan".to_string(),
-            output_plane: "borrowed view over offset tape".to_string(),
+            output_plane: "parse_only".to_string(),
             feature_mask: "n/a".to_string(),
             api_symbol: match track {
-                TrackTag::Track1Generated => "runtime::generated_json::parse",
+                TrackTag::Track1Generated => "runtime::generated_json::parse_only",
                 TrackTag::Track2Handcoded => "bbnf_bench::track2::json::parse",
                 _ => "bbnf",
             }
             .to_string(),
             sidecar_freshness: "same-run".to_string(),
-            primitive_status: "runtime path".to_string(),
+            primitive_status: "distinct parse_only runtime path".to_string(),
             hot_leaf: "unprofiled in W0b".to_string(),
-            materialisation: "typed_root_over_tape".to_string(),
+            materialisation: "parse_only_validator".to_string(),
             parse_mode: "parse_str_prevalidate".to_string(),
             source_ownership: "borrowed".to_string(),
             plan_variant: runtime::tape::CapacityPlan::from_env().label().to_string(),
@@ -194,6 +194,7 @@ impl BenchFacts {
         facts.materialisation = materialisation.to_string();
         facts.workload = materialisation.to_string();
         facts.output_plane = match materialisation {
+            "parse_only_validator" => "parse_only",
             "direct_to_struct" => "digest",
             "real_typed_struct" => "typed direct",
             _ => "borrowed view over offset tape",
@@ -462,7 +463,7 @@ fn output_plane_for_competitor(materialisation: &str) -> &'static str {
     match materialisation {
         "direct_to_struct" | "direct_to_struct_lossy" => "digest",
         "real_typed_struct" | "real_typed_struct_lossy" => "typed direct",
-        "skip_checked" => "sonic_rs::Skipper",
+        "skip_checked" => "parse_only/sonic_rs::Skipper",
         "borrowed" | "owned" | "eager_typed" | "eager_typed_lossy" => "DOM",
         _ => "DOM",
     }

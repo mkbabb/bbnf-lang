@@ -332,6 +332,7 @@ fn validate_gate_json_passthrough(args: &[String]) -> Result<()> {
             | "--skv13-same-substrate-union-report"
             | "--skv13-json-direct-reopen-report"
             | "--skv13-json-parse-only-report"
+            | "--skv14-json-parse-only-report"
             | "--skv13-typed-product-report"
             | "--skv13-simd-asm-production-report" => {
                 if index + 1 >= args.len() {
@@ -477,6 +478,8 @@ struct Skv14ManifestRow {
     sample_count: u64,
     redress_entry: String,
     sk_v14_open_delta: String,
+    same_wave_consumer_class: String,
+    track2_independence_status: String,
     comparator_evidence: String,
 }
 
@@ -490,23 +493,19 @@ fn validate_skv14_w0_manifest(results_text: &str) -> Result<()> {
         );
     }
     let mut seen = BTreeSet::new();
-    let mut falsified = 0usize;
-    let mut pending = 0usize;
-    let mut sustained = 0usize;
     for row in &rows {
         validate_skv14_manifest_row(row)?;
         if !seen.insert(row.row_id.clone()) {
             bail!("duplicate SK-V14 manifest row {}", row.row_id);
         }
         match row.audit_overlay_verdict.as_str() {
-            "AUDIT-FALSIFIED" => falsified += 1,
-            "AUDIT-PENDING" => pending += 1,
-            "AUDIT-SUSTAINED" => sustained += 1,
+            "AUDIT-FALSIFIED" | "AUDIT-PENDING" => {}
+            "AUDIT-SUSTAINED" => validate_skv14_sustained_row(row)?,
             other => bail!("{} has unsupported audit overlay {other}", row.row_id),
         }
     }
     validate_skv14_w1_prune1_rows(&rows)?;
-    validate_skv14_w1_visible_zero_admits(results_text)?;
+    validate_skv14_visible_admits(results_text, &rows)?;
     for corpus in SKV13_JSON_CORPORA {
         for workload in SKV13_JSON_WORKLOADS {
             let row_id = format!("json/{corpus}/{workload}/main");
@@ -520,11 +519,6 @@ fn validate_skv14_w0_manifest(results_text: &str) -> Result<()> {
         if !seen.contains(&row_id) {
             bail!("SK-V14 W0 manifest missing {row_id}");
         }
-    }
-    if !matches!((falsified, pending, sustained), (46, 29, 0) | (35, 29, 11)) {
-        bail!(
-            "SK-V14 audit overlay expected W1 zero-admit 46/29/0 or W9 typed-readmit 35/29/11, saw {falsified} / {pending} / {sustained}"
-        );
     }
     Ok(())
 }
@@ -579,6 +573,8 @@ fn parse_skv14_w0_manifest(results_text: &str) -> Result<Vec<Skv14ManifestRow>> 
             })?,
             redress_entry: cells[23].clone(),
             sk_v14_open_delta: cells[24].clone(),
+            same_wave_consumer_class: cells[28].clone(),
+            track2_independence_status: cells[29].clone(),
             comparator_evidence: cells[31].clone(),
         });
     }
@@ -619,7 +615,11 @@ fn validate_skv14_manifest_row(row: &Skv14ManifestRow) -> Result<()> {
     }
     if !matches!(
         row.substrate_target.as_str(),
-        "local_temp_only" | "existing_tape" | "direct_sink" | "admitted_fact_output"
+        "local_temp_only"
+            | "existing_tape"
+            | "parse_only_validator"
+            | "direct_sink"
+            | "admitted_fact_output"
     ) {
         bail!(
             "{} invalid substrate_target {}",
@@ -719,6 +719,46 @@ fn validate_skv14_json_w1_row(row: &Skv14ManifestRow) -> Result<()> {
     Ok(())
 }
 
+fn validate_skv14_sustained_row(row: &Skv14ManifestRow) -> Result<()> {
+    if SKV14_W9_TYPED_ADMIT_ROWS.contains(&row.row_id.as_str()) {
+        if row.wave_id != "SK-V14-W9"
+            || row.same_wave_consumer_class != "gate_json_typed_contract"
+            || row.track2_independence_status != "independent_verified"
+        {
+            bail!(
+                "{} is not a valid SK-V14 W9 sustained typed row",
+                row.row_id
+            );
+        }
+        return Ok(());
+    }
+    if is_skv14_w10_parse_row(&row.row_id) {
+        if row.wave_id != "SK-V14-W10"
+            || row.track1_entry_point != "runtime::generated_json::parse_only"
+            || row.track2_entry_point != "bbnf_bench::json_parity::track2_structural_oracle"
+            || row.comparator_plane != "parse_only/sonic_rs::Skipper"
+            || row.same_wave_consumer_class != "generated_json_parse_only_contract"
+            || row.track2_independence_status != "independent_verified"
+            || row.substrate_target != "parse_only_validator"
+            || row.redress_entry != "none:SK-V14-W10-admit"
+            || row.sk_v14_open_delta != "admitted:SK-V14-W10-parse-only-distinct"
+        {
+            bail!(
+                "{} is not a valid SK-V14 W10 sustained parse_only row",
+                row.row_id
+            );
+        }
+        if !valid_skv14_per_iter_pass(&row.per_iter_equality) {
+            bail!("{} lacks W10 timed per-iteration equality PASS", row.row_id);
+        }
+        return Ok(());
+    }
+    bail!(
+        "{} is AUDIT-SUSTAINED without W9 typed or W10 parse_only authority",
+        row.row_id
+    )
+}
+
 fn valid_skv14_per_iter_pass(value: &str) -> bool {
     if !value.starts_with("PASS:") {
         return false;
@@ -727,7 +767,7 @@ fn valid_skv14_per_iter_pass(value: &str) -> bool {
     let mut has_checks = false;
     let mut has_mismatches = false;
     for field in value.trim_start_matches("PASS:").split(';') {
-        if field == "scope=criterion-timing" {
+        if field == "scope=criterion-timing" || field == "scope=profile-direct-cold" {
             has_scope = true;
         } else if let Some(checks) = field.strip_prefix("checks=") {
             has_checks = checks.parse::<u64>().is_ok_and(|value| value > 0);
@@ -738,7 +778,10 @@ fn valid_skv14_per_iter_pass(value: &str) -> bool {
     has_scope && has_checks && has_mismatches
 }
 
-fn validate_skv14_w1_visible_zero_admits(results_text: &str) -> Result<()> {
+fn validate_skv14_visible_admits(
+    results_text: &str,
+    manifest_rows: &[Skv14ManifestRow],
+) -> Result<()> {
     for line in results_text.lines() {
         let cells = markdown_cells(line);
         if cells.len() < 4 {
@@ -752,10 +795,10 @@ fn validate_skv14_w1_visible_zero_admits(results_text: &str) -> Result<()> {
         let row_id = format!("json/{}/{}/main", cells[0], cells[1]);
         if cells[2] == "A"
             && cells[3] == "GO"
-            && !SKV14_W9_TYPED_ADMIT_ROWS.contains(&row_id.as_str())
+            && !skv14_visible_admit_allowed(&row_id, manifest_rows)
         {
             bail!(
-                "SK-V14 W1 PRUNE-1 requires zero visible JSON A/GO rows; {} {} remains admitted",
+                "SK-V14 visible JSON A/GO row lacks W9 typed or W10 parse authority; {} {} remains admitted",
                 cells[0],
                 cells[1]
             );
@@ -764,18 +807,24 @@ fn validate_skv14_w1_visible_zero_admits(results_text: &str) -> Result<()> {
     Ok(())
 }
 
+fn skv14_visible_admit_allowed(row_id: &str, manifest_rows: &[Skv14ManifestRow]) -> bool {
+    manifest_rows
+        .iter()
+        .find(|row| row.row_id == row_id)
+        .is_some_and(|row| validate_skv14_sustained_row(row).is_ok())
+}
+
 fn validate_skv14_w1_prune1_rows(rows: &[Skv14ManifestRow]) -> Result<()> {
     let mut seen = BTreeSet::new();
-    let mut w9_typed_admits = 0usize;
+    let mut authorized_admits = 0usize;
     for target in SKV14_W1_PRUNE1_ROWS {
         let row = rows
             .iter()
             .find(|candidate| candidate.row_id == *target)
             .with_context(|| format!("SK-V14 W1 PRUNE-1 missing {target}"))?;
-        if SKV14_W9_TYPED_ADMIT_ROWS.contains(target)
-            && row.audit_overlay_verdict == "AUDIT-SUSTAINED"
-        {
-            w9_typed_admits += 1;
+        if row.audit_overlay_verdict == "AUDIT-SUSTAINED" {
+            validate_skv14_sustained_row(row)?;
+            authorized_admits += 1;
             continue;
         }
         if row.audit_overlay_verdict != "AUDIT-FALSIFIED" {
@@ -795,10 +844,10 @@ fn validate_skv14_w1_prune1_rows(rows: &[Skv14ManifestRow]) -> Result<()> {
             bail!("duplicate W1 REDRESS entry REDRESS-{number}");
         }
     }
-    let expected_remaining_prune_entries = SKV14_W1_PRUNE1_ROWS.len() - w9_typed_admits;
+    let expected_remaining_prune_entries = SKV14_W1_PRUNE1_ROWS.len() - authorized_admits;
     if seen.len() != expected_remaining_prune_entries {
         bail!(
-            "SK-V14 W1 PRUNE-1 expected {expected_remaining_prune_entries} remaining REDRESS entries after W9 typed readmit"
+            "SK-V14 W1 PRUNE-1 expected {expected_remaining_prune_entries} remaining REDRESS entries after authorized readmits"
         );
     }
     Ok(())
@@ -864,6 +913,12 @@ const SKV14_W9_TYPED_ADMIT_ROWS: &[&str] = &[
     "json/numbers/real_typed_struct/main",
     "json/unicode_basic/real_typed_struct/main",
 ];
+
+fn is_skv14_w10_parse_row(row_id: &str) -> bool {
+    SKV13_JSON_CORPORA
+        .iter()
+        .any(|corpus| row_id == format!("json/{corpus}/parse_only/main"))
+}
 
 const SKV13_CSS_FEATURES: &[&str] = &[
     "declaration_values",
@@ -960,8 +1015,9 @@ fn validate_skv13_rolling_delta(results_text: &str, rolling_path: &Path) -> Resu
             validate_rolling_status(row)?;
             if row.tranche_admitted == "ADMITTED"
                 && !SKV14_W9_TYPED_ADMIT_ROWS.contains(&row_id.as_str())
+                && !is_skv14_w10_parse_row(&row_id)
             {
-                bail!("{row_id} remains ADMITTED after SK-V14 W1 PRUNE-1");
+                bail!("{row_id} is ADMITTED without W9 typed or W10 parse authority");
             }
             if let Some(metric) = result_metrics.get(&row_id) {
                 validate_numeric_rolling_row(row, *metric)?;
@@ -1660,6 +1716,16 @@ mod tests {
         validate_gate_json_passthrough(&[
             "--skv13-json-parse-only-report".into(),
             "skv13-w14-1.json".into(),
+            "--check-results".into(),
+        ])
+        .unwrap();
+    }
+
+    #[test]
+    fn gate_json_passthrough_accepts_skv14_json_parse_only_report_flag() {
+        validate_gate_json_passthrough(&[
+            "--skv14-json-parse-only-report".into(),
+            "skv14-w10.json".into(),
             "--check-results".into(),
         ])
         .unwrap();

@@ -390,6 +390,338 @@ fn error<'i>(state: &ParserState<'i>, kind: ParseErrorKind) -> ParseError<'i> {
     }
 }
 
+struct ParseOnlyState<'i> {
+    input: &'i str,
+    bytes: &'i [u8],
+    cursor: usize,
+}
+
+impl<'i> ParseOnlyState<'i> {
+    #[inline(always)]
+    fn new(input: &'i str) -> Self {
+        Self {
+            input,
+            bytes: input.as_bytes(),
+            cursor: 0,
+        }
+    }
+}
+
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
+pub fn parse_only<'i>(input: &'i str) -> Result<(), ParseError<'i>> {
+    let mut state = ParseOnlyState::new(input);
+    parse_only_value(&mut state)?;
+    parse_only_skip_ws(&mut state);
+    if state.cursor != state.bytes.len() {
+        return Err(parse_only_error(&state, ParseErrorKind::TrailingCharacters));
+    }
+    Ok(())
+}
+
+#[inline(always)]
+fn parse_only_value<'i>(state: &mut ParseOnlyState<'i>) -> Result<(), ParseError<'i>> {
+    parse_only_skip_ws(state);
+    parse_only_value_at(state)
+}
+
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
+fn parse_only_value_at<'i>(state: &mut ParseOnlyState<'i>) -> Result<(), ParseError<'i>> {
+    if state.cursor >= state.bytes.len() {
+        return Err(parse_only_error(state, ParseErrorKind::ExpectedValue));
+    }
+    let byte = unsafe { *state.bytes.get_unchecked(state.cursor) };
+    parse_only_dispatch_value(state, byte)
+}
+
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
+fn parse_only_dispatch_value<'i>(
+    state: &mut ParseOnlyState<'i>,
+    byte: u8,
+) -> Result<(), ParseError<'i>> {
+    match byte {
+        b'{' => parse_only_object(state),
+        b'[' => parse_only_array(state),
+        b'"' => parse_only_string(state),
+        b'-' | b'0'..=b'9' => parse_only_number(state, byte),
+        b't' => parse_only_literal(state, config::TRUE_LITERAL),
+        b'f' => parse_only_literal(state, config::FALSE_LITERAL),
+        b'n' => parse_only_literal(state, config::NULL_LITERAL),
+        _ => Err(parse_only_error(state, ParseErrorKind::ExpectedValue)),
+    }
+}
+
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
+fn parse_only_object<'i>(state: &mut ParseOnlyState<'i>) -> Result<(), ParseError<'i>> {
+    if !parse_only_take_structural(state, b'{') {
+        return Err(parse_only_error(state, ParseErrorKind::ExpectedValue));
+    }
+    parse_only_skip_ws(state);
+
+    if parse_only_consume(state, b'}') {
+        return Ok(());
+    }
+
+    loop {
+        parse_only_pair(state)?;
+        if parse_only_consume_container_next(state, b'}', ParseErrorKind::ExpectedCommaOrObjectEnd)?
+        {
+            continue;
+        }
+        return Ok(());
+    }
+}
+
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
+fn parse_only_pair<'i>(state: &mut ParseOnlyState<'i>) -> Result<(), ParseError<'i>> {
+    parse_only_key_colon(state)?;
+    parse_only_value_at(state)
+}
+
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
+fn parse_only_key_colon<'i>(state: &mut ParseOnlyState<'i>) -> Result<(), ParseError<'i>> {
+    parse_only_string(state)?;
+
+    let colon = if state.cursor < state.bytes.len()
+        && unsafe { *state.bytes.get_unchecked(state.cursor) } == b':'
+    {
+        state.cursor
+    } else {
+        skip_ascii_whitespace(state.bytes, state.cursor)
+    };
+    if colon >= state.bytes.len() || unsafe { *state.bytes.get_unchecked(colon) } != b':' {
+        return Err(parse_only_error(state, ParseErrorKind::ExpectedColon));
+    }
+    state.cursor = skip_ascii_whitespace(state.bytes, colon + 1);
+    Ok(())
+}
+
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
+fn parse_only_array<'i>(state: &mut ParseOnlyState<'i>) -> Result<(), ParseError<'i>> {
+    if !parse_only_take_structural(state, b'[') {
+        return Err(parse_only_error(state, ParseErrorKind::ExpectedValue));
+    }
+    parse_only_skip_ws(state);
+
+    if parse_only_consume(state, b']') {
+        return Ok(());
+    }
+
+    parse_only_value_at(state)?;
+    loop {
+        match parse_only_consume_array_next(state)? {
+            ParseOnlyContainerNext::Next(byte) => parse_only_dispatch_value(state, byte)?,
+            ParseOnlyContainerNext::Done => return Ok(()),
+        }
+    }
+}
+
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
+fn parse_only_string<'i>(state: &mut ParseOnlyState<'i>) -> Result<(), ParseError<'i>> {
+    let start = state.cursor;
+    if state.bytes.get(start) != Some(&b'"') {
+        return Err(parse_only_error(state, ParseErrorKind::ExpectedValue));
+    }
+    if let Some(raw_end) = match_tiny_plain_string_direct(state.bytes, start) {
+        state.cursor = raw_end;
+        return Ok(());
+    }
+    let span =
+        match_string_at_quote_trusted_utf8(state.bytes, start).map_err(|err| ParseError {
+            input: state.input,
+            offset: err.offset,
+            kind: match err.kind {
+                RegexErrorKind::ExpectedString => ParseErrorKind::ExpectedValue,
+                _ => ParseErrorKind::InvalidString,
+            },
+        })?;
+    state.cursor = span.raw_end;
+    Ok(())
+}
+
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
+fn parse_only_number<'i>(state: &mut ParseOnlyState<'i>, first: u8) -> Result<(), ParseError<'i>> {
+    let number = match_number_at_digit(state.bytes, state.cursor, first)
+        .ok_or_else(|| parse_only_error(state, ParseErrorKind::InvalidNumber))?;
+    state.cursor = number.end;
+    Ok(())
+}
+
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
+fn parse_only_literal<'i>(
+    state: &mut ParseOnlyState<'i>,
+    literal: &'static [u8],
+) -> Result<(), ParseError<'i>> {
+    let start = state.cursor;
+    if state.bytes.get(start..start + literal.len()) != Some(literal) {
+        return Err(parse_only_error(
+            state,
+            ParseErrorKind::InvalidLiteral(std::str::from_utf8(literal).expect("literal is UTF-8")),
+        ));
+    }
+    state.cursor += literal.len();
+    Ok(())
+}
+
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
+fn parse_only_skip_ws(state: &mut ParseOnlyState<'_>) {
+    state.cursor = skip_ascii_whitespace(state.bytes, state.cursor);
+}
+
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
+fn parse_only_consume_delimiter(state: &mut ParseOnlyState<'_>, byte: u8) -> bool {
+    let offset = if state.cursor < state.bytes.len()
+        && unsafe { *state.bytes.get_unchecked(state.cursor) } == byte
+    {
+        state.cursor
+    } else {
+        skip_ascii_whitespace(state.bytes, state.cursor)
+    };
+    if offset >= state.bytes.len() || unsafe { *state.bytes.get_unchecked(offset) } != byte {
+        return false;
+    }
+    state.cursor = offset + 1;
+    true
+}
+
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
+fn parse_only_consume(state: &mut ParseOnlyState<'_>, byte: u8) -> bool {
+    if matches!(byte, b':' | b',') {
+        return parse_only_consume_delimiter(state, byte);
+    }
+    if matches!(byte, b'{' | b'}' | b'[' | b']' | b':' | b',' | b'"') {
+        return parse_only_take_structural(state, byte);
+    }
+    if parse_only_peek(state) == Some(byte) {
+        state.cursor += 1;
+        true
+    } else {
+        false
+    }
+}
+
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
+fn parse_only_take_structural(state: &mut ParseOnlyState<'_>, byte: u8) -> bool {
+    let offset = if state.cursor < state.bytes.len()
+        && unsafe { *state.bytes.get_unchecked(state.cursor) } == byte
+    {
+        state.cursor
+    } else {
+        skip_ascii_whitespace(state.bytes, state.cursor)
+    };
+    if offset >= state.bytes.len() || unsafe { *state.bytes.get_unchecked(offset) } != byte {
+        return false;
+    }
+    state.cursor = offset + 1;
+    true
+}
+
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
+fn parse_only_consume_container_next<'i>(
+    state: &mut ParseOnlyState<'i>,
+    close: u8,
+    error_kind: ParseErrorKind,
+) -> Result<bool, ParseError<'i>> {
+    let current = if state.cursor < state.bytes.len() {
+        Some(unsafe { *state.bytes.get_unchecked(state.cursor) })
+    } else {
+        None
+    };
+    let offset = if current == Some(b',') || current == Some(close) {
+        state.cursor
+    } else {
+        skip_ascii_whitespace(state.bytes, state.cursor)
+    };
+    if offset >= state.bytes.len() {
+        return Err(parse_only_error(state, error_kind));
+    }
+    let byte = unsafe { *state.bytes.get_unchecked(offset) };
+    if byte == b',' {
+        state.cursor = skip_ascii_whitespace(state.bytes, offset + 1);
+        return Ok(true);
+    }
+    if byte == close {
+        state.cursor = offset + 1;
+        return Ok(false);
+    }
+    Err(parse_only_error(state, error_kind))
+}
+
+enum ParseOnlyContainerNext {
+    Next(u8),
+    Done,
+}
+
+#[cfg_attr(feature = "parse-attribution", inline(never))]
+#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
+fn parse_only_consume_array_next<'i>(
+    state: &mut ParseOnlyState<'i>,
+) -> Result<ParseOnlyContainerNext, ParseError<'i>> {
+    let current = if state.cursor < state.bytes.len() {
+        Some(unsafe { *state.bytes.get_unchecked(state.cursor) })
+    } else {
+        None
+    };
+    let offset = if current == Some(b',') || current == Some(b']') {
+        state.cursor
+    } else {
+        skip_ascii_whitespace(state.bytes, state.cursor)
+    };
+    if offset >= state.bytes.len() {
+        return Err(parse_only_error(
+            state,
+            ParseErrorKind::ExpectedCommaOrArrayEnd,
+        ));
+    }
+    let byte = unsafe { *state.bytes.get_unchecked(offset) };
+    if byte == b',' {
+        let next = skip_ascii_whitespace(state.bytes, offset + 1);
+        state.cursor = next;
+        if next >= state.bytes.len() {
+            return Err(parse_only_error(state, ParseErrorKind::ExpectedValue));
+        }
+        let next_byte = unsafe { *state.bytes.get_unchecked(next) };
+        return Ok(ParseOnlyContainerNext::Next(next_byte));
+    }
+    if byte == b']' {
+        state.cursor = offset + 1;
+        return Ok(ParseOnlyContainerNext::Done);
+    }
+    Err(parse_only_error(
+        state,
+        ParseErrorKind::ExpectedCommaOrArrayEnd,
+    ))
+}
+
+#[inline(always)]
+fn parse_only_peek(state: &ParseOnlyState<'_>) -> Option<u8> {
+    state.bytes.get(state.cursor).copied()
+}
+
+#[cold]
+#[inline(never)]
+fn parse_only_error<'i>(state: &ParseOnlyState<'i>, kind: ParseErrorKind) -> ParseError<'i> {
+    ParseError {
+        input: state.input,
+        offset: state.cursor,
+        kind,
+    }
+}
+
 // sink-only lowered from BackendIr: entry=json direct_shapes=JsonArray,JsonBool,JsonNull,JsonNumber,JsonObject,JsonPair,JsonString dispatch_alt_count=8
 
 use super::sink::JsonSink;

@@ -1,8 +1,8 @@
-//! Profiling binary for the direct-to-struct workload gate.
+//! Cold profiling binary for direct, typed, and parse-only workload gates.
 //!
 //! Invocation:
 //!     cargo build --release -p bbnf-bench --bin profile_direct
-//!     samply record --save-only -o profile.json.gz ./target/release/profile_direct 10000 twitter track1
+//!     samply record ./target/release/profile_direct 10000 twitter parse_only_track1
 
 use std::env;
 use std::path::PathBuf;
@@ -79,6 +79,7 @@ fn main() {
         .cloned()
         .unwrap_or_else(|| "twitter".to_string());
     let mode = args.get(3).map(String::as_str).unwrap_or("track1");
+    let warmup_iters: usize = args.get(4).and_then(|s| s.parse().ok()).unwrap_or(0);
     let path = if corpus.contains('/') || corpus.ends_with(".json") {
         PathBuf::from(&corpus)
     } else if mode.starts_with("real_typed_") {
@@ -87,12 +88,14 @@ fn main() {
         locate_fixture(&corpus)
     };
 
-    eprintln!("profile-direct: corpus={corpus} mode={mode} path={path:?} iters={iters}");
+    eprintln!(
+        "profile-direct: corpus={corpus} mode={mode} path={path:?} iters={iters} warmup_iters={warmup_iters}"
+    );
     let bytes = std::fs::read(&path).expect("failed to read fixture");
     let input = std::str::from_utf8(&bytes).expect("fixture is not UTF-8");
     eprintln!("profile-direct: fixture size = {} bytes", bytes.len());
 
-    for _ in 0..16 {
+    for _ in 0..warmup_iters {
         run_once(mode, &corpus, input, &bytes);
     }
 
@@ -129,11 +132,12 @@ fn main() {
         mbps
     );
     println!(
-        "PROBE_RESULT corpus={} corpus_bytes={} iters={} mode={} elapsed_s={:.6} ns_per_byte={:.6} mbps={:.3} cycles={} instructions={} cycles_per_byte={:.6} cpi={:.6} user_ns={} system_ns={} checksum={}",
+        "PROBE_RESULT corpus={} corpus_bytes={} iters={} mode={} warmup_iters={} elapsed_s={:.6} ns_per_byte={:.6} mbps={:.3} cycles={} instructions={} cycles_per_byte={:.6} cpi={:.6} user_ns={} system_ns={} checksum={}",
         corpus,
         bytes.len(),
         iters,
         mode,
+        warmup_iters,
         elapsed.as_secs_f64(),
         ns_per_byte,
         mbps,
@@ -156,8 +160,11 @@ fn run_once(mode: &str, corpus: &str, input: &str, bytes: &[u8]) -> u64 {
         "real_typed_track1" | "real_typed_track2" | "real_typed_sonic" | "real_typed_serde" => {
             return real_typed_checksum(corpus, mode, input, bytes);
         }
+        "parse_only_track1" | "parse_only_track2" | "parse_only_sonic" | "parse_only_serde" => {
+            return parse_only_checksum(mode, input, bytes);
+        }
         other => panic!(
-            "unknown mode {other}; expected track1|track2|sonic|serde|real_typed_track1|real_typed_track2|real_typed_sonic|real_typed_serde"
+            "unknown mode {other}; expected track1|track2|sonic|serde|real_typed_track1|real_typed_track2|real_typed_sonic|real_typed_serde|parse_only_track1|parse_only_track2|parse_only_sonic|parse_only_serde"
         ),
     }
     .expect("direct digest failed");
@@ -185,6 +192,66 @@ fn real_typed_checksum(corpus: &str, mode: &str, input: &str, bytes: &[u8]) -> u
     std::hint::black_box(bbnf_bench::real_typed_struct::typed_checksum(&output))
 }
 
+fn parse_only_checksum(mode: &str, input: &str, bytes: &[u8]) -> u64 {
+    match mode {
+        "parse_only_track1" => {
+            runtime::generated_json::parse_only(input).expect("generated parse_only failed");
+            std::hint::black_box(bytes.len() as u64)
+        }
+        "parse_only_track2" => {
+            let root = bbnf_bench::track2::json::parse(input).expect("track2 parse failed");
+            std::hint::black_box(
+                fnv_u32(root.tape().offsets())
+                    ^ fnv_u32(root.tape().flag_cursors())
+                    ^ fnv_u8(root.tape().flag_values())
+                    ^ root.tape().payloads().write_count() as u64
+                    ^ root.tape().payloads().allocation_count() as u64,
+            )
+        }
+        "parse_only_sonic" => {
+            bbnf_bench::sonic_skipper::parse_only(bytes).expect("sonic skipper failed");
+            std::hint::black_box(bytes.len() as u64)
+        }
+        "parse_only_serde" => {
+            let value =
+                serde_json::from_slice::<serde_json::Value>(bytes).expect("serde_json failed");
+            std::hint::black_box(value_type_tag(&value) ^ bytes.len() as u64)
+        }
+        _ => unreachable!("parse_only_checksum called for non-parse-only mode"),
+    }
+}
+
+fn value_type_tag(value: &serde_json::Value) -> u64 {
+    match value {
+        serde_json::Value::Null => 0x00,
+        serde_json::Value::Bool(value) => u64::from(*value),
+        serde_json::Value::Number(_) => 0x02,
+        serde_json::Value::String(value) => 0x53 ^ value.len() as u64,
+        serde_json::Value::Array(values) => 0x5b ^ values.len() as u64,
+        serde_json::Value::Object(values) => 0x7b ^ values.len() as u64,
+    }
+}
+
+fn fnv_u32(values: &[u32]) -> u64 {
+    let mut hash = 0xcbf29ce484222325u64;
+    for value in values {
+        for byte in value.to_le_bytes() {
+            hash ^= u64::from(byte);
+            hash = hash.wrapping_mul(0x100000001b3);
+        }
+    }
+    hash
+}
+
+fn fnv_u8(values: &[u8]) -> u64 {
+    let mut hash = 0xcbf29ce484222325u64;
+    for value in values {
+        hash ^= u64::from(*value);
+        hash = hash.wrapping_mul(0x100000001b3);
+    }
+    hash
+}
+
 fn locate_fixture(name: &str) -> PathBuf {
     let manifest = env::var("CARGO_MANIFEST_DIR")
         .map(PathBuf::from)
@@ -197,6 +264,12 @@ fn locate_fixture(name: &str) -> PathBuf {
             return candidate;
         }
         let candidate = dir.join("test_data").join(format!("{name}.json"));
+        if candidate.exists() {
+            return candidate;
+        }
+        let candidate = dir
+            .join("test_data")
+            .join(format!("{}.json", name.replace('_', "-")));
         if candidate.exists() {
             return candidate;
         }

@@ -347,6 +347,24 @@ fn main() -> Result<(), Box<dyn Error>> {
         );
         drop(report);
     }
+    if let Some(path) = skv14_json_parse_only_report_path(&args[1..])? {
+        if !has_explicit_json_check {
+            return Err(format!("{} requires --check-results", path.display()).into());
+        }
+        let text = fs::read_to_string(&path)?;
+        let report = SkV13JsonParseOnlyReport::from_json_str(&text)
+            .and_then(|report| report.validate_gate().map(|_| report))
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        validate_skv13_json_parse_only_report(&report, &criterion_root(), &workspace)
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        println!(
+            "{} {} {}",
+            report.consumer_gate,
+            report.row_move_toward_sota_status,
+            path.display()
+        );
+        drop(report);
+    }
     if let Some(path) = skv13_typed_product_report_path(&args[1..])? {
         if !has_explicit_json_check {
             return Err(format!("{} requires --check-results", path.display()).into());
@@ -535,7 +553,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         let parse_telemetry = w0_telemetry(
             &fixture.name,
             "parse_only",
-            "borrowed view over offset tape vs DOM",
+            "parse_only",
             fixture.bytes.len() as u64,
             estimates.track1,
             &parse_comparators,
@@ -922,6 +940,10 @@ fn skv13_json_parse_only_report_path(args: &[String]) -> Result<Option<PathBuf>,
     companion_report_path(args, "--skv13-json-parse-only-report")
 }
 
+fn skv14_json_parse_only_report_path(args: &[String]) -> Result<Option<PathBuf>, Box<dyn Error>> {
+    companion_report_path(args, "--skv14-json-parse-only-report")
+}
+
 fn skv13_typed_product_report_path(args: &[String]) -> Result<Option<PathBuf>, Box<dyn Error>> {
     companion_report_path(args, "--skv13-typed-product-report")
 }
@@ -1001,6 +1023,7 @@ fn is_companion_report_flag(arg: &str) -> bool {
             | "--skv13-same-substrate-union-report"
             | "--skv13-json-direct-reopen-report"
             | "--skv13-json-parse-only-report"
+            | "--skv14-json-parse-only-report"
             | "--skv13-typed-product-report"
             | "--skv13-simd-asm-production-report"
     )
@@ -2764,9 +2787,14 @@ fn w0_comparator_evidence(
     comparators: &ComparatorSet,
 ) -> Vec<SkV8ComparatorEvidence> {
     let native_plane = if workload == "parse_only" {
-        "sonic_rs::Skipper"
+        "parse_only/sonic_rs::Skipper"
     } else {
         output_plane
+    };
+    let serde_plane = if workload == "parse_only" {
+        "DOM"
+    } else {
+        native_plane
     };
     let (sonic_bench, serde_bench, lossy_bench) = match workload {
         "parse_only" => ("sonic_rs_skipper", "serde_json", Some("sonic_rs_lossy")),
@@ -2794,7 +2822,7 @@ fn w0_comparator_evidence(
         ),
         comparator_evidence(
             "serde_json",
-            native_plane,
+            serde_plane,
             "strict",
             "same-run-native",
             "n/a",
@@ -2805,7 +2833,7 @@ fn w0_comparator_evidence(
     if let Some(lossy_bench) = lossy_bench.filter(|_| comparators.sonic_lossy_mbps.is_some()) {
         evidence.push(comparator_evidence(
             "sonic_rs_lossy",
-            native_plane,
+            "DOM",
             "permissive",
             "same-run-native",
             "n/a",
@@ -2837,7 +2865,7 @@ fn row_sidecar_freshness(workload: &str, _comparators: &ComparatorSet) -> String
 
 fn skv14_track1_entry_point(workload: &str) -> &'static str {
     match workload {
-        "parse_only" => "bbnf_bench::json_parity::track1_generated_parse",
+        "parse_only" => "runtime::generated_json::parse_only",
         "direct_to_struct" => "bbnf_bench::json_parity::track1_direct_to_struct",
         "real_typed_struct" => "bbnf_bench::json_parity::track1_real_typed_struct",
         _ => "unknown",
@@ -2855,7 +2883,7 @@ fn skv14_track2_entry_point(workload: &str) -> &'static str {
 
 fn skv14_comparator_plane(corpus: &str, workload: &str) -> String {
     match workload {
-        "parse_only" => "sonic_rs::Skipper".to_string(),
+        "parse_only" => "parse_only/sonic_rs::Skipper".to_string(),
         "direct_to_struct" => format!("{corpus}::strict_struct_deser"),
         "real_typed_struct" => format!("{corpus}::typed_strict_struct_deser"),
         _ => "unknown".to_string(),
@@ -2928,7 +2956,7 @@ fn skv14_json_audit_falsified(corpus: &str, workload: &str) -> bool {
 
 fn skv14_substrate_target(workload: &str) -> &'static str {
     match workload {
-        "parse_only" => "existing_tape",
+        "parse_only" => "parse_only_validator",
         "direct_to_struct" | "real_typed_struct" => "direct_sink",
         _ => "local_temp_only",
     }
@@ -2970,11 +2998,7 @@ fn comparator_evidence(
 
 fn substrate_facts(workload: &str) -> (&'static str, &'static str, &'static str) {
     match workload {
-        "parse_only" => (
-            "borrowed_view_over_offset_tape",
-            "discarded_after_capacity",
-            "one",
-        ),
+        "parse_only" => ("parse_only_validator", "n/a", "zero_or_inert"),
         "direct_to_struct" => ("sink_only_digest", "n/a", "zero_or_inert"),
         "real_typed_struct" => ("typed_direct_projection", "n/a", "zero_or_inert"),
         _ => ("unknown", "unknown", "unknown"),
@@ -3637,12 +3661,12 @@ fn mark_w13_numbers_typed_admission(row: &mut TelemetryRow) {
 fn mark_json_parse_only_admission(row: &mut TelemetryRow, spec: &JsonParseOnlyAdmissionSpec) {
     row.strictness = "strict".to_string();
     row.parse_utf8 = "measured-row".to_string();
-    row.output_plane = "DOM".to_string();
+    row.output_plane = "parse_only".to_string();
     row.flaw_probe =
-        "generated Track 1 DOM parse contract vs independent hand Track 2/oracle; UTF-8 measured in row"
+        "generated Track 1 distinct parse_only contract vs independent hand Track 2/oracle; UTF-8 measured in row"
             .to_string();
     row.signal = format!(
-        "PASS {} {} parse-only admission; Track 1 {}, Track 2 oracle {}, sonic {} Mbps",
+        "PASS {} {} parse-only distinct-path admission; Track 1 {}, Track 2 oracle {}, sonic {} Mbps",
         spec.label,
         spec.corpus,
         format_mbps(row.track1_mbps),
@@ -3650,10 +3674,18 @@ fn mark_json_parse_only_admission(row: &mut TelemetryRow, spec: &JsonParseOnlyAd
         format_mbps(row.competitors.sonic_strict_mbps)
     );
     row.sk_v8.measured_validation_path = "measured-row".to_string();
+    row.sk_v8.run_id = row
+        .sk_v8
+        .run_id
+        .replacen("SK-V14-open:", spec.run_id_prefix, 1);
     row.sk_v8.same_wave_consumer_class = "generated_json_parse_only_contract".to_string();
     row.sk_v8.redress_entry = spec.redress_entry.to_string();
     row.sk_v8.wave_id = spec.wave_id.to_string();
-    row.sk_v8.sk_v9_open_delta = "parse-row-added".to_string();
+    row.sk_v8.audit_overlay_verdict = "AUDIT-SUSTAINED".to_string();
+    row.sk_v8.audit_overlay_reference =
+        "sk-v14-W10:distinct-parse-only;sk-v13/v6-comparator-integrity:§1+§3".to_string();
+    row.sk_v8.sk_v9_open_delta = "admitted:SK-V14-W10-parse-only-distinct".to_string();
+    row.sk_v8.sk_v14_open_delta = "admitted:SK-V14-W10-parse-only-distinct".to_string();
 }
 
 fn mark_w13_unicode_basic_typed_admission(row: &mut TelemetryRow) {
@@ -4185,21 +4217,21 @@ fn required_metadata_specs(real_typed_expected: bool) -> Vec<MetadataSpec> {
             "track1_generated",
             TrackTag::Track1Generated,
             "parse_only",
-            "typed_root_over_tape",
+            "parse_only_validator",
             None,
             None,
             "deferred",
-            "borrowed view over offset tape",
+            "parse_only",
         ),
         spec(
             "track2_handcoded",
             TrackTag::Track2Handcoded,
             "parse_only",
-            "typed_root_over_tape",
+            "parse_only_validator",
             None,
             None,
             "deferred",
-            "borrowed view over offset tape",
+            "parse_only",
         ),
         spec(
             "sonic_rs_skipper",
@@ -4209,7 +4241,7 @@ fn required_metadata_specs(real_typed_expected: bool) -> Vec<MetadataSpec> {
             Some("sonic-rs"),
             Some("0.5.8"),
             "strict",
-            "sonic_rs::Skipper",
+            "parse_only/sonic_rs::Skipper",
         ),
         spec(
             "sonic_rs_lossy",
@@ -5094,92 +5126,53 @@ mod tests {
     }
 
     #[test]
-    fn json_parse_only_admission_passes_configured_corpora_only() {
+    fn json_parse_only_admission_passes_all_w10_corpora() {
         assert_eq!(
-            json_parse_only_admission_passes(
-                "numbers",
-                150_124,
-                Some(62_870.0),
-                Some(62_800.0),
-                Some(87_880.0),
-            )
-            .map(|spec| spec.label),
-            Some("W14.1")
+            bbnf_bench::report::JSON_PARSE_ONLY_ADMISSION_SPECS.len(),
+            17
         );
-        assert_eq!(
-            json_parse_only_admission_passes(
-                "citm_catalog",
-                1_727_204,
-                Some(466_600.0),
-                Some(662_654.0),
-                Some(540_294.0),
-            )
-            .map(|spec| spec.label),
-            Some("W14.2")
-        );
-        assert_eq!(
-            json_parse_only_admission_passes(
-                "canada",
-                2_251_051,
-                Some(1_063_228.0),
-                Some(1_104_942.0),
-                Some(1_293_055.0),
-            )
-            .map(|spec| spec.label),
-            Some("W14.3")
-        );
-        assert_eq!(
-            json_parse_only_admission_passes(
-                "marine_ik",
-                2_983_466,
-                Some(1_853_123.0),
-                Some(1_946_287.0),
-                Some(2_354_509.0),
-            )
-            .map(|spec| spec.label),
-            Some("W14.4")
-        );
-        assert_eq!(
-            json_parse_only_admission_passes(
-                "mesh",
-                723_597,
-                Some(448_144.0),
-                Some(477_309.0),
-                Some(489_184.0),
-            )
-            .map(|spec| spec.label),
-            Some("W14.5")
-        );
+        for spec in bbnf_bench::report::JSON_PARSE_ONLY_ADMISSION_SPECS {
+            assert_eq!(
+                json_parse_only_admission_passes(
+                    spec.corpus,
+                    spec.bytes,
+                    Some(1.0),
+                    Some(1.0),
+                    Some(2.0),
+                )
+                .map(|spec| spec.label),
+                Some(spec.label),
+                "{} did not admit {}",
+                spec.label,
+                spec.row_id
+            );
+        }
         assert!(json_parse_only_admission_passes(
-            "random",
+            "not_a_w10_corpus",
             510_476,
-            Some(410_582.0),
-            Some(500_000.0),
-            Some(260_000.0),
+            Some(1.0),
+            Some(1.0),
+            Some(2.0),
         )
         .is_none());
-        assert!(json_parse_only_admission_passes(
-            "mesh",
-            723_598,
-            Some(447_500.0),
-            Some(450_000.0),
-            Some(500_000.0),
-        )
-        .is_none());
+        assert!(
+            json_parse_only_admission_passes("mesh", 723_598, Some(1.0), Some(1.0), Some(2.0),)
+                .is_none()
+        );
         assert!(json_parse_only_admission_passes(
             "marine_ik",
             3_025_084,
-            Some(1_879_276.0),
-            Some(1_946_287.0),
-            Some(2_354_509.0),
+            Some(1.0),
+            Some(1.0),
+            Some(2.0),
         )
         .is_none());
         assert!(json_parse_only_admission_passes(
             "numbers",
             150_124,
-            Some(87_880.0),
-            Some(62_800.0),
-            Some(62_870.0),
+            Some(2.0),
+            Some(1.0),
+            Some(1.0),
         )
         .is_none());
     }

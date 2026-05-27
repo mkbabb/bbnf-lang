@@ -51,10 +51,30 @@ pub fn parse<'i>(input: &'i str) -> Result<JsonRoot<'i>, ParseError<'i>> {
     Ok(state.finish())
 }
 
+#[inline(always)]
+pub fn parse_only<'i>(input: &'i str) -> Result<(), ParseError<'i>> {
+    generated::parse_only(input)
+}
+
 #[inline]
 pub fn parse_bytes(input: &[u8]) -> Result<JsonRoot<'_>, ParseError<'_>> {
     match std::str::from_utf8(input) {
         Ok(input) => parse(input),
+        Err(error) => {
+            let offset = error.valid_up_to();
+            Err(ParseError {
+                input: "",
+                offset,
+                kind: ParseErrorKind::InvalidUtf8,
+            })
+        }
+    }
+}
+
+#[inline]
+pub fn parse_only_bytes(input: &[u8]) -> Result<(), ParseError<'_>> {
+    match std::str::from_utf8(input) {
+        Ok(input) => parse_only(input),
         Err(error) => {
             let offset = error.valid_up_to();
             Err(ParseError {

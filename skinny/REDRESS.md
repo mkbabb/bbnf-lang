@@ -5355,3 +5355,32 @@ perturbation.
   remainder: W10 may dispatch, but it must not cite W9 direct rows or missing
   typed rows as admitted evidence, and it still carries the unconditional
   Stage-0 F-V2-P1ABC-RERECORD obligation.
+
+## SK-V14 Wave W10 JSON parse_only Distinct Path Re-Admit
+
+- Item 217 closes `G-SK-V14-W10-JSON-PARSE-ONLY-READMIT` as `MIXED`. W10
+  shipped the unconditional Stage-0 F-V2-P1ABC-RERECORD evidence before row
+  admission: release build under native target CPU and retained interactive
+  samply profile at
+  `restart/skinny/tranches/sk-v14/research/skv14-W10-stage0-profile.json.gz`.
+  The implementation adds a distinct generated JSON `parse_only` path that
+  returns `Result<(), ParseError>` without building a full offset tape and
+  wires `json_parity` Track 1 to `runtime::generated_json::parse_only`.
+- Six parse_only rows admit from cold `profile_direct` evidence retained at
+  `restart/skinny/tranches/sk-v14/research/skv14-W10-profile-direct.tsv`:
+  `mesh`, `marine_ik`, `numbers`, `unicode_escapes`, `unicode_basic`, and
+  `y_string_unicode`. Each admitted row has Track 1 distinct-path output,
+  independent Track 2 structural-oracle output, `parse_only/sonic_rs::Skipper`
+  strict comparator evidence, `Track 1 > Skipper + 1.0 Mbps`, no warmup
+  iterations, and per-iteration equality PASS.
+- Eleven parse_only rows remain open because the cold distinct path did not
+  clear the Skipper + 1.0 Mbps threshold: `twitter`, `citm_catalog`, `canada`,
+  `apache_builds`, `github_events`, `update_center`, `random`, `gsoc-2018`,
+  `instruments`, `unicode_mixed`, and `distinct_values`. These rows are routed
+  as measured residuals; they must not be cited as admitted W10 evidence.
+  Evidence: `cargo test -p runtime generated_parse_only_accepts_and_rejects_json
+  -- --nocapture`, `cargo test -p codegen
+  emits_distinct_json_parse_only_path_without_tape_builder -- --nocapture`,
+  `cargo test -p bbnf-bench skv14_json_parse_only_report_accepts -- --nocapture`,
+  `cargo test -p xtask -- --nocapture`, and the retained W10 redress/close
+  packets under `restart/skinny/tranches/sk-v14/research/`.

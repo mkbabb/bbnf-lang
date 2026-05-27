@@ -9,7 +9,7 @@ pub mod value;
 pub mod view;
 pub mod visitor;
 
-pub use parser::{parse, parse_bytes, RECOGNIZER_COUNT};
+pub use parser::{parse, parse_bytes, parse_only, parse_only_bytes, RECOGNIZER_COUNT};
 pub use generated::parse_direct;
 pub use sink::JsonSink;
 pub use value::{JsonNodeKind, JsonToken, JsonValue, ParseError, ParseErrorKind};
@@ -18,4 +18,3 @@ pub use view::{
     JsonRoot, JsonString,
 };
 pub use visitor::JsonVisitor;
-

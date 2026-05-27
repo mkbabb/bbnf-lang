@@ -1,31 +1,24 @@
-//! AZ-II.cutover.E (Phase 2) — `EbnfDocument` + view / value /
-//! path accessor surface. Mirror of `CsvDocument`.
-
 use crate::runtime::ebnf::arena::{EbnfArena, EbnfCompoundId};
 use crate::runtime::ebnf::kind::{EbnfCompound, EbnfCompoundKind};
 use crate::runtime::ebnf::value::EbnfValue;
 use crate::runtime::path::{Path, PathSegment};
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum EbnfKind {
     Span,
     Unit,
     Compound,
 }
-
 #[derive(Debug)]
 pub struct EbnfDocument<'p> {
     pub arena: EbnfArena<'p>,
     pub root: EbnfValue<'p>,
     pub input: &'p str,
 }
-
 impl<'p> EbnfDocument<'p> {
     #[inline]
     pub fn new(arena: EbnfArena<'p>, root: EbnfValue<'p>, input: &'p str) -> Self {
         Self { arena, root, input }
     }
-
     #[inline]
     pub fn root(&self) -> &EbnfValue<'p> {
         &self.root
@@ -38,12 +31,10 @@ impl<'p> EbnfDocument<'p> {
     pub fn input(&self) -> &'p str {
         self.input
     }
-
     #[inline]
     pub fn compound(&self, id: EbnfCompoundId) -> &EbnfCompound<'p> {
         self.arena.compound(id)
     }
-
     #[inline]
     pub fn view<'a>(&'a self) -> EbnfView<'a, 'p> {
         EbnfView {
@@ -51,30 +42,25 @@ impl<'p> EbnfDocument<'p> {
             focus: self.root,
         }
     }
-
     #[inline]
     pub fn to_value(&self) -> &EbnfValue<'p> {
         &self.root
     }
-
     #[inline]
     pub fn get<T: EbnfPathQuery>(&self, path: Path<'_>) -> Option<T> {
         T::query(self, path)
     }
 }
-
 #[derive(Debug, Clone, Copy)]
 pub struct EbnfView<'a, 'p: 'a> {
     pub(crate) doc: &'a EbnfDocument<'p>,
     pub(crate) focus: EbnfValue<'p>,
 }
-
 impl<'a, 'p: 'a> EbnfView<'a, 'p> {
     #[inline]
     pub fn focused(doc: &'a EbnfDocument<'p>, focus: EbnfValue<'p>) -> Self {
         Self { doc, focus }
     }
-
     #[inline]
     pub fn document(&self) -> &'a EbnfDocument<'p> {
         self.doc
@@ -91,12 +77,10 @@ impl<'a, 'p: 'a> EbnfView<'a, 'p> {
     pub fn arena(&self) -> &'a EbnfArena<'p> {
         &self.doc.arena
     }
-
     #[inline]
     pub fn compound(&self, id: EbnfCompoundId) -> &'a EbnfCompound<'p> {
         self.doc.compound(id)
     }
-
     #[inline]
     pub fn kind(&self) -> EbnfKind {
         match &self.focus {
@@ -105,7 +89,6 @@ impl<'a, 'p: 'a> EbnfView<'a, 'p> {
             EbnfValue::Compound(_) => EbnfKind::Compound,
         }
     }
-
     #[inline]
     pub fn is_compound(&self) -> bool {
         matches!(self.focus, EbnfValue::Compound(_))
@@ -118,7 +101,6 @@ impl<'a, 'p: 'a> EbnfView<'a, 'p> {
     pub fn input(&self) -> &'p str {
         self.doc.input
     }
-
     #[inline]
     pub fn compound_kind(&self) -> Option<EbnfCompoundKind> {
         match self.focus {
@@ -127,13 +109,14 @@ impl<'a, 'p: 'a> EbnfView<'a, 'p> {
         }
     }
 }
-
 pub trait EbnfPathQuery: Sized {
     fn query<'p>(doc: &EbnfDocument<'p>, path: Path<'_>) -> Option<Self>;
 }
-
 #[inline]
-fn walk_path<'a, 'p>(doc: &'a EbnfDocument<'p>, path: Path<'_>) -> Option<&'a EbnfValue<'p>> {
+fn walk_path<'a, 'p>(
+    doc: &'a EbnfDocument<'p>,
+    path: Path<'_>,
+) -> Option<&'a EbnfValue<'p>> {
     let mut current: &'a EbnfValue<'p> = &doc.root;
     for segment in path.iter() {
         current = match (current, segment) {
@@ -147,7 +130,6 @@ fn walk_path<'a, 'p>(doc: &'a EbnfDocument<'p>, path: Path<'_>) -> Option<&'a Eb
     }
     Some(current)
 }
-
 impl EbnfPathQuery for &str {
     #[inline]
     fn query<'p>(doc: &EbnfDocument<'p>, path: Path<'_>) -> Option<Self> {
@@ -160,7 +142,6 @@ impl EbnfPathQuery for &str {
         }
     }
 }
-
 impl EbnfPathQuery for EbnfValue<'_> {
     #[inline]
     fn query<'p>(doc: &EbnfDocument<'p>, path: Path<'_>) -> Option<Self> {

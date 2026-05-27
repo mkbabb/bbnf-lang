@@ -1,13 +1,8 @@
-//! AZ-II.cutover.E (Phase 2) — [`crate::runtime::RuntimeView`] impl
-//! for [`super::EbnfView`]. Mirror of `CsvView`'s impl.
-
 use crate::runtime::RuntimeView;
 use crate::runtime::ebnf::document::{EbnfDocument, EbnfKind, EbnfView};
 use crate::runtime::ebnf::value::EbnfValue;
-
 impl<'a, 'p: 'a> RuntimeView<'p> for EbnfView<'a, 'p> {
     type Kind = EbnfKind;
-
     #[inline]
     fn kind(&self) -> Self::Kind {
         match self.focus {
@@ -16,7 +11,6 @@ impl<'a, 'p: 'a> RuntimeView<'p> for EbnfView<'a, 'p> {
             EbnfValue::Compound(_) => EbnfKind::Compound,
         }
     }
-
     #[inline]
     fn span(&self) -> Option<&'p str> {
         match self.focus {
@@ -24,12 +18,10 @@ impl<'a, 'p: 'a> RuntimeView<'p> for EbnfView<'a, 'p> {
             _ => None,
         }
     }
-
     #[inline]
     fn input(&self) -> &'p str {
         self.doc.input
     }
-
     fn children(&self) -> impl Iterator<Item = Self> + '_ {
         let doc = self.doc;
         let focus = self.focus;
@@ -40,16 +32,13 @@ impl<'a, 'p: 'a> RuntimeView<'p> for EbnfView<'a, 'p> {
         }
     }
 }
-
 pub struct EbnfChildrenIter<'a, 'p: 'a> {
     doc: &'a EbnfDocument<'p>,
     focus: EbnfValue<'p>,
     index: usize,
 }
-
 impl<'a, 'p: 'a> Iterator for EbnfChildrenIter<'a, 'p> {
     type Item = EbnfView<'a, 'p>;
-
     fn next(&mut self) -> Option<Self::Item> {
         match self.focus {
             EbnfValue::Compound(id) => {

@@ -1,12 +1,7 @@
-//! AZ-IV.W5.3 — EBNF parse arena. Thin newtype around
-//! [`CompoundSlabArena<EbnfCompound<'p>>`].
-
 use crate::runtime::arena_template::CompoundSlabArena;
 use crate::runtime::ebnf::kind::EbnfCompound;
-
 #[derive(Debug, Default)]
 pub struct EbnfArena<'p>(CompoundSlabArena<EbnfCompound<'p>>);
-
 impl<'p> EbnfArena<'p> {
     #[inline]
     pub fn new() -> Self {
@@ -37,10 +32,8 @@ impl<'p> EbnfArena<'p> {
         self.0.truncate(n);
     }
 }
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct EbnfCompoundId(u32);
-
 impl EbnfCompoundId {
     pub const EMPTY: Self = Self(0);
     #[inline]

@@ -1,9 +1,5 @@
-//! AZ-IV.W5.3 — EBNF compound kind discriminator + arena entry shape.
-
-use bbnf_ir::registry::{StructLayout, StructRegistry};
-
+use bbnf_ir::registry::StructLayout;
 use crate::runtime::ebnf::value::EbnfValue;
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum EbnfCompoundKind {
     Letter,
@@ -24,32 +20,29 @@ pub enum EbnfCompoundKind {
     Grammar,
     Other,
 }
-
 impl EbnfCompoundKind {
     pub fn from_layout(layout: &StructLayout) -> Self {
-        match StructRegistry::compound_kind_for_layout(layout) {
-            "letter" => Self::Letter,
-            "symbol" => Self::Symbol,
-            "identifier" => Self::Identifier,
-            "character" => Self::Character,
-            "concatenation" => Self::Concatenation,
-            "alternation" => Self::Alternation,
-            "term" => Self::Term,
-            "factor" => Self::Factor,
-            "rule" => Self::Rule,
-            "grammar" => Self::Grammar,
+        match layout.rule_id {
+            0 => Self::Letter,
+            2 => Self::Symbol,
+            3 => Self::Identifier,
+            4 => Self::Character,
+            6 => Self::Concatenation,
+            7 => Self::Alternation,
+            9 => Self::Term,
+            10 => Self::Factor,
+            11 => Self::Rule,
+            12 => Self::Grammar,
             _ => Self::Other,
         }
     }
 }
-
 #[derive(Debug, Clone)]
 pub struct EbnfCompound<'p> {
     pub kind: EbnfCompoundKind,
     pub branch_tag: Option<u32>,
     pub children: Vec<EbnfValue<'p>>,
 }
-
 impl<'p> Default for EbnfCompound<'p> {
     fn default() -> Self {
         Self {

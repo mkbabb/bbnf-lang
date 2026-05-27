@@ -1,0 +1,44 @@
+schema_version = 1
+grammar = "ebnf"
+grammar_source = "grammar/ebnf/ebnf.bbnf"
+entry_rule = "grammar"
+runtime_module = "crate::runtime::ebnf"
+output_dir = "crates/core/src/runtime/ebnf"
+parser_type = "EbnfParser"
+type_prefix = "Ebnf"
+module_name = "ebnf"
+
+[kind]
+default = "Other"
+layout_mode = "rule_routes"
+variants = [
+  "Letter",
+  "Digit",
+  "Symbol",
+  "Character",
+  "Identifier",
+  "S",
+  "Terminal",
+  "Terminator",
+  "Term",
+  "Factor",
+  "Concatenation",
+  "Alternation",
+  "Rhs",
+  "Lhs",
+  "Rule",
+  "Grammar",
+  "Other",
+]
+routes = [
+  { rule = "letter", kind = "Letter" },
+  { rule = "symbol", kind = "Symbol" },
+  { rule = "identifier", kind = "Identifier" },
+  { rule = "character", kind = "Character" },
+  { rule = "concatenation", kind = "Concatenation" },
+  { rule = "alternation", kind = "Alternation" },
+  { rule = "term", kind = "Term" },
+  { rule = "factor", kind = "Factor" },
+  { rule = "rule", kind = "Rule" },
+  { rule = "grammar", kind = "Grammar" },
+]

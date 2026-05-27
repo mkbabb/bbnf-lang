@@ -5749,6 +5749,38 @@ perturbation.
   `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
   `distinct_values`.
 
+## SK-V14 W11J JSON parse_only Object Key Specialization Reject
+
+- Item 240 closes `G-SK-V14-W11J-JSON-PARSE-ONLY-OBJECT-KEY-SPECIALIZATION` as
+  `REJECT`. No source patch lands, no `RESULTS.md` row moves, and
+  `restart/skinny/ROLLING-SOTA-DELTA.md` remains unchanged.
+- The measured candidate split the generated object delimiter state so an
+  object comma path skipped following whitespace, required the next key quote,
+  and dispatched directly into key parsing instead of returning through
+  generic `ObjectExpectKey`. It did not fuse key-string plus colon handling,
+  carry object value bytes, thread value context, add object-member
+  string/object fast arms, carry array value bytes, use a structural pre-scan,
+  use a cursor-return ABI, or reuse W10AA object-loop cleanup. The source patch
+  was reverted after measurement and retained as
+  `/tmp/skv14-W11J-parse-only-object-key-specialization-rejected.patch` with
+  SHA-256
+  `a1428c1561d4baaaff5dc8049796aaa87a6aa5cdcbef95199f557a8b075ecb5b`.
+- Correctness gates passed before measurement: `cargo xtask regen-json`,
+  `cargo xtask check-json`, `cargo test --profile ax-iter -p runtime
+  generated_parse_only_accepts_and_rejects_json -- --nocapture`, and
+  `cargo test --profile ax-iter -p codegen
+  emits_distinct_json_parse_only_path_without_tape_builder -- --nocapture`.
+- Cold `profile_direct` evidence rejects all six open parse_only rows:
+  `twitter` margin `-3649.409` Mbps, `github_events` margin `-3417.568` Mbps,
+  `update_center` margin `-3998.806` Mbps, `random` margin `-2157.062` Mbps,
+  `gsoc-2018` margin `-13774.879` Mbps, and `distinct_values` margin
+  `-5257.476` Mbps versus the `sonic + 1.0` floor. Retained evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W11J-parse-only-object-key-specialization.md`,
+  `.tsv`, and `.raw.log`.
+- Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
+  `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
+  `distinct_values`.
+
 ## SK-V14 W11G JSON parse_only Key-Colon Fusion Reject
 
 - Item 237 closes `G-SK-V14-W11G-JSON-PARSE-ONLY-KEY-COLON-FUSION` as

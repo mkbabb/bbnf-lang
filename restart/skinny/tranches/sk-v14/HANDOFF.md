@@ -91,7 +91,10 @@ under REDRESS-238; the source patch was reverted, no row moved, and key-colon
 value-byte carry is pre-blocked without a fresh material differential. W11I
 then rejected array comma-to-next-value byte carry under REDRESS-239; the
 source patch was reverted, no row moved, and array value-byte carry is
-pre-blocked without a fresh material differential.
+pre-blocked without a fresh material differential. W11J then rejected object
+comma-to-next-key specialization under REDRESS-240; the source patch was
+reverted, no row moved, and object key-start specialization is pre-blocked
+without a fresh material differential.
 Continue actual implementation against the remaining residual queue, not
 another Omega or Alpha pass unless a future source attempt exposes a real
 spec-level amendment.
@@ -258,6 +261,7 @@ state is:
   without moving any row. REDRESS-237 rejects key-string plus colon fusion
   without moving any row. REDRESS-238 rejects object-member value-byte carry
   without moving any row. REDRESS-239 rejects array value-byte carry without
+  moving any row. REDRESS-240 rejects object key-start specialization without
   moving any row.
 - JSON direct_to_struct: 13 / 17 ADMITTED, 4 OPEN under REDRESS-231; remaining
   rows lack generated strict product surfaces. REDRESS-232 rejects
@@ -397,4 +401,5 @@ material differential. REDRESS-237 pre-blocks parse_only key-colon fusion
 without a fresh material differential. REDRESS-238 pre-blocks parse_only
 object-member value-byte carry without a fresh material differential.
 REDRESS-239 pre-blocks parse_only array value-byte carry without a fresh
-material differential.
+material differential. REDRESS-240 pre-blocks parse_only object key-start
+specialization without a fresh material differential.

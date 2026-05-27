@@ -215,7 +215,7 @@ Lock 14 at `restart/locks/LOCKS.md:220–238`).
 ### Honest rolling delta (SK-V14 starting baseline)
 
 ```
-JSON parse_only: 11 / 17 (6 OPEN after W10W residual implementation)
+JSON parse_only: 11 / 17 (6 OPEN after W10W residual implementation; W11S attribution pins parse_only_string and REDRESS-246 rejects structural-stream driving)
 JSON direct:     16 / 17 (1 OPEN after W11O; unicode_escapes lacks admitted strict product)
 JSON typed:      16 / 17 (1 MISSING product surface after W11O)
 CSS L4:          24 / 24 (ADMITTED after W8R; generated full-parse plane beats lightningcss floor)
@@ -288,8 +288,9 @@ state is:
   without moving any row. REDRESS-239 rejects array value-byte carry without
   moving any row. REDRESS-240 rejects object key-start specialization without
   moving any row. REDRESS-244 rejects indexed plain-string skipping without
-  moving any row. REDRESS-245 rejects the fixed-shape `unicode_escapes`
-  decoded payload floor parser without moving any row.
+  moving any row. W11S attributes all six residual rows to
+  `parse_only_string`, and REDRESS-246 rejects the scanner-backed
+  structural-stream parse_only driver without moving any row.
 - JSON direct_to_struct: 16 / 17 ADMITTED, 1 OPEN after W11O; the remaining
   row lacks an admitted strict product differential. REDRESS-232 rejects
   product-surface-only unicode strict products for `unicode_mixed` and
@@ -464,7 +465,7 @@ Return REVISE for any downstream plan that:
 
 ## 8. W11 Close Disposition
 
-SK-V14 closes as a mixed implementation tranche. It preserves 39 admitted JSON
+SK-V14 closes as a mixed implementation tranche. It preserves 43 admitted JSON
 cells and 24 admitted CSS L4 cells, and routes the remaining JSON rows to
 implementation residuals.
 No residual row has an architectural-level intrinsic-block proof. Subsequent
@@ -484,6 +485,8 @@ REDRESS-239 pre-blocks parse_only array value-byte carry without a fresh
 material differential. REDRESS-240 pre-blocks parse_only object key-start
 specialization without a fresh material differential. REDRESS-244 pre-blocks
 parse_only indexed plain-string skipping without a fresh material differential.
+REDRESS-246 pre-blocks parse_only structural-stream driver retries without a
+fresh material differential.
 REDRESS-241 pre-blocks
 `y_string_unicode` product-plus-fused-materializer retries without a fresh
 material differential, while W11L admits the separate decoded token-product

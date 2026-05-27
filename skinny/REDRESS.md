@@ -6172,3 +6172,40 @@ perturbation.
 - Current JSON direct_to_struct state remains 16 / 17 ADMITTED and 1 OPEN:
   `unicode_escapes`. Current JSON real_typed_struct state remains 16 / 17
   ADMITTED and 1 MISSING: `unicode_escapes`.
+
+## SK-V14 W11T Parse-Only Structural Stream Reject
+
+- Item 246 closes `G-SK-V14-W11T-JSON-PARSE-ONLY-STRUCTURAL-STREAM` as
+  `REJECT`. No source patch lands, no `RESULTS.md` row moves, and
+  `restart/skinny/ROLLING-SOTA-DELTA.md` remains unchanged.
+- The measured candidate changed the JSON scanner to emit punctuation plus
+  real quote positions and a scanner-owned risky-string-start side table.
+  Generated parse_only then used the structural stream as the parser driver
+  for containers, delimiters, and string boundaries, while preserving fallback
+  validation for escaped or control-bearing strings. This is materially
+  distinct from W11Q indexed plain-string skipping because W11T replaced the
+  parse_only driver instead of decorating the old byte-loop string validator.
+- Correctness gates passed before measurement: `cargo run --profile ax-iter -p
+  xtask -- regen-json`, `cargo run --profile ax-iter -p xtask -- check-json`,
+  `cargo test --profile ax-iter -p runtime
+  generated_parse_only_accepts_and_rejects_json -- --nocapture`, `cargo test
+  --profile ax-iter -p codegen
+  emits_distinct_json_parse_only_path_without_tape_builder -- --nocapture`,
+  and `cargo test --profile ax-iter -p runtime match_scalar -- --nocapture`.
+- Cold `profile_direct` evidence rejects all six open parse_only rows against
+  the `sonic + 1.0` floor: `twitter` margin `-2136.592` Mbps,
+  `github_events` margin `-4010.756` Mbps, `update_center` margin
+  `-3479.153` Mbps, `random` margin `-2791.399` Mbps, `gsoc-2018` margin
+  `-4349.073` Mbps, and `distinct_values` margin `-2483.550` Mbps. Guard rows
+  also failed the same floor: `canada` margin `-883.804` Mbps, `instruments`
+  margin `-824.606` Mbps, `apache_builds` margin `-1395.578` Mbps, and
+  `citm_catalog` margin `-7206.933` Mbps.
+- The source patch was reverted after measurement and retained as
+  `/tmp/skv14-W11T-parse-only-structural-stream-rejected.patch` with SHA-256
+  `fb7788d2b376efb91f61c08eae030c55613e355e368e884c820731de245da25b`.
+  Retained evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W11T-parse-only-structural-stream.md`,
+  `.tsv`, and `.raw.log`.
+- Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
+  `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
+  `distinct_values`.

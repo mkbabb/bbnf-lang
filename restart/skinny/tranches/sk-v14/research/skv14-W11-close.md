@@ -42,14 +42,17 @@ patch. W11Q then tested parse_only indexed plain-string skipping and rejected
 it on same-run cold evidence without landing the transient source patch. W11R
 then tested a fixed-shape `unicode_escapes` decoded payload floor parser and
 rejected it on same-run cold evidence without landing the transient source
-patch.
+patch. W11S then attributed all six remaining parse_only residual rows to
+`parse_only_string` as the dominant hot leaf. W11T then tested a structural
+stream parse_only driver and rejected it on same-run cold evidence without
+landing the transient source patch.
 
 ## Authority
 
 - `restart/skinny/tranches/sk-v14/SPEC.md` Section 14.
 - `restart/skinny/tranches/sk-v14/SYNTHESIS.md` R10.
 - `skinny/RESULTS.md`.
-- `skinny/REDRESS.md` items 215 through 245 plus the W11O admit packet.
+- `skinny/REDRESS.md` items 215 through 246 plus the W11O admit packet.
 - `restart/skinny/ROLLING-SOTA-DELTA.md`.
 - `restart/skinny/tranches/sk-v14/HANDOFF.md`.
 
@@ -103,6 +106,8 @@ patch.
 | W11P | REJECTED | REDRESS-243: transient `unicode_escapes` decoded codepoint-fact product passed correctness but missed same-run sonic for typed and direct strict products; no source patch landed and no row moved. |
 | W11Q | REJECTED | REDRESS-244: transient parse_only indexed plain-string skipping passed correctness but missed same-run sonic for all six residual rows; no source patch landed and no row moved. |
 | W11R | REJECTED | REDRESS-245: transient fixed-shape `unicode_escapes` decoded payload floor parser passed correctness but missed same-run sonic for typed and direct strict products; no source patch landed and no row moved. |
+| W11S | ATTRIBUTION | Stage-0 parse-attribution proved `parse_only_string` is the rank-1 hot leaf for every remaining parse_only residual row; no source patch landed and no row moved. |
+| W11T | REJECTED | REDRESS-246: transient scanner-backed structural-stream parse_only driver passed correctness but missed same-run sonic on all six residual rows; no source patch landed and no row moved. |
 
 ## Close-State Counts
 
@@ -155,7 +160,9 @@ remaining rows are implementation residuals, not closeable proof blocks.
    proved that carrying array comma next-value bytes is also insufficient.
    W11J proved that specializing object comma-to-next-key dispatch is also
    insufficient. W11Q proved that scanner-indexed plain-string skipping is
-   also insufficient.
+   also insufficient. W11S then proved the dominant remaining hot leaf is
+   `parse_only_string`, and W11T proved that replacing the byte-loop driver
+   with a scanner-backed structural stream is also insufficient.
 
 ## Reconciliation
 
@@ -169,7 +176,7 @@ remaining rows are implementation residuals, not closeable proof blocks.
   REDRESS-227, REDRESS-228, REDRESS-229, REDRESS-230, REDRESS-231,
   REDRESS-232, REDRESS-233, REDRESS-234, REDRESS-235, REDRESS-236,
   REDRESS-237, REDRESS-238, REDRESS-239, REDRESS-240, REDRESS-241,
-  REDRESS-242, REDRESS-243, REDRESS-244, and REDRESS-245.
+  REDRESS-242, REDRESS-243, REDRESS-244, REDRESS-245, and REDRESS-246.
   REDRESS-215 remains in history as the initial CSS W8 rejection and is
   superseded by W8R admission evidence.
 - `skinny/RESULTS.md` now renders CSS L4 rows as current
@@ -248,6 +255,16 @@ remaining rows are implementation residuals, not closeable proof blocks.
   parse-that-regex/codegen/real-typed/direct-strict tests, plus cold reject
   evidence retained at
   `restart/skinny/tranches/sk-v14/research/skv14-W11K-y-string-fused-materializer.md`.
+- W11S local attribution evidence after this close packet update:
+  release-native `profile_direct` with `runtime/parse-attribution`, six
+  `samply` profiles for the remaining parse_only residual rows, and hot-leaf
+  extraction retained at
+  `restart/skinny/tranches/sk-v14/research/skv14-W11S-parse-only-stage0-attribution.md`.
+- W11T local evidence after this close packet update: `cargo run --profile
+  ax-iter -p xtask -- regen-json`, `cargo run --profile ax-iter -p xtask --
+  check-json`, focused scanner/runtime/codegen parse_only tests, plus cold
+  reject evidence retained at
+  `restart/skinny/tranches/sk-v14/research/skv14-W11T-parse-only-structural-stream.md`.
 - W11L local evidence after this close packet update: `cargo run --profile
   ax-iter -p xtask -- check-real-typed`, focused codegen typed-direct tests,
   focused `y_string_unicode` real-typed tests, focused direct strict-product
@@ -286,7 +303,8 @@ W11/W10R/W10S/W10T/W10V/W10W plus W8R close SK-V14 as a mixed tranche, with
 admitted rows preserved and all unmet JSON rows routed to implementation
 residuals. W10X,
 W10Y/W10Z, W10AA, W9Y, W9AC, W11B, W11C, W11D, W11E, W11F, W11G, W11H, W11I,
-W11J, and W11K add post-close residual rejection evidence; W9AA and W9AB add
+W11J, W11K, W11P, W11Q, W11R, and W11T add post-close residual rejection
+evidence; W11S adds parse_only attribution evidence; W9AA and W9AB add
 post-close typed admits for
 `distinct_values/real_typed_struct` and `canada/real_typed_struct`, W11L adds
 `y_string_unicode` typed and direct decoded token-product admits, W11N adds

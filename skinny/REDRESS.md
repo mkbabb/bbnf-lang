@@ -5458,3 +5458,21 @@ perturbation.
   skv14_json_parse_only_report_accepts -- --nocapture`, `cargo test -p xtask
   -- --nocapture`, and `cargo xtask gate-json --check-results
   --skv14-existing-results-capture`.
+
+## SK-V14 W10U JSON parse_only Number-End Scanner Reject
+
+- Item 221 closes `G-SK-V14-W10U-JSON-PARSE-ONLY-NUMBER-END` as `REJECTED`.
+  The attempted source change added a parse-only number matcher that returned
+  only the end offset rather than building `NumberSpan`. It was abrogated after
+  measurement and is not present in HEAD.
+- No open parse_only row admitted under the W10U cold same-binary evidence.
+  Worse, the same binary regressed existing admits: `instruments/parse_only`
+  measured Track 1 `4161.964` Mbps against Skipper `4517.452` Mbps, and
+  `unicode_mixed/parse_only` measured Track 1 `2686.532` Mbps against Skipper
+  `4886.333` Mbps.
+- Disposition: keep the current full `NumberSpan` matcher canonical for
+  generated JSON `parse_only`. Do not reattempt a standalone end-offset number
+  scanner unless it beats same-run strict evidence and preserves existing
+  admits. Evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W10U-parse-only-number-end-reject.md`,
+  `.tsv`, and `.raw.log`.

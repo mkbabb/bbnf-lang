@@ -5825,3 +5825,34 @@ perturbation.
 - Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
   `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
   `distinct_values`.
+
+## SK-V14 W11F JSON parse_only Object-Member Fast Arm Reject
+
+- Item 236 closes `G-SK-V14-W11F-JSON-PARSE-ONLY-OBJECT-MEMBER-FAST-ARM` as
+  `REJECT`. No source patch lands, no `RESULTS.md` row moves, and
+  `restart/skinny/ROLLING-SOTA-DELTA.md` remains unchanged.
+- The measured candidate added a generated parse_only object-member fast arm:
+  after `parse_only_key_colon`, values beginning with a string or object
+  dispatch directly to the string parser or object opener, while arrays,
+  numbers, literals, and other values fall back to the generic value
+  dispatcher. It retains the existing `ObjectAfterValue` delimiter state, so
+  it is not W11D value-context delimiter threading; it also carries no value
+  byte from key-colon and does not use a structural pre-scan or cursor-return
+  ABI. The source patch was reverted after measurement and retained as
+  `/tmp/skv14-W11F-parse-only-object-member-fast-arm-rejected.patch` with
+  SHA-256 `78e72f694a683de1a54c4f877205ada36e37e2376e89b904eaf541b28dee9aee`.
+- Correctness gates passed before measurement: `cargo xtask regen-json`,
+  `cargo xtask check-json`, `cargo test --profile ax-iter -p runtime
+  generated_parse_only_accepts_and_rejects_json -- --nocapture`, and
+  `cargo test --profile ax-iter -p codegen
+  emits_distinct_json_parse_only_path_without_tape_builder -- --nocapture`.
+- Cold `profile_direct` evidence rejects all six open parse_only rows:
+  `twitter` margin `-3437.756` Mbps, `github_events` margin `-3356.062` Mbps,
+  `update_center` margin `-4089.845` Mbps, `random` margin `-2441.619` Mbps,
+  `gsoc-2018` margin `-14105.227` Mbps, and `distinct_values` margin
+  `-5342.646` Mbps versus the `sonic + 1.0` floor. Retained evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W11F-parse-only-object-member-fast-arm.md`,
+  `.tsv`, and `.raw.log`.
+- Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
+  `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
+  `distinct_values`.

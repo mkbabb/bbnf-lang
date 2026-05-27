@@ -48,6 +48,22 @@ const SKV14_W9_TYPED_ADMIT_ROWS: &[&str] = &[
     "json/distinct_values/real_typed_struct/main",
 ];
 
+const SKV14_W11A_DIRECT_STRICT_ADMIT_ROWS: &[&str] = &[
+    "json/twitter/direct_to_struct/main",
+    "json/citm_catalog/direct_to_struct/main",
+    "json/canada/direct_to_struct/main",
+    "json/apache_builds/direct_to_struct/main",
+    "json/github_events/direct_to_struct/main",
+    "json/update_center/direct_to_struct/main",
+    "json/mesh/direct_to_struct/main",
+    "json/random/direct_to_struct/main",
+    "json/marine_ik/direct_to_struct/main",
+    "json/instruments/direct_to_struct/main",
+    "json/numbers/direct_to_struct/main",
+    "json/unicode_basic/direct_to_struct/main",
+    "json/distinct_values/direct_to_struct/main",
+];
+
 const SKV14_CSS_FEATURES: &[&str] = &[
     "declaration_values",
     "declarations",
@@ -3763,9 +3779,9 @@ fn validate_skv14_manifest_rows(rows: &[SkV14ManifestRow]) -> Result<(), String>
             return Err(format!("SK-V14 manifest missing {row_id}"));
         }
     }
-    if pending != 21 || falsified + sustained != 54 {
+    if pending != 14 || falsified + sustained != 61 {
         return Err(format!(
-            "SK-V14 audit overlay expected pending=21 and falsified+sustained=54 after authorized W9/W9AA/W9AB/W10/W10R/W10S/W10T/W10V/W10W admits, saw {falsified} / {pending} / {sustained}"
+            "SK-V14 audit overlay expected pending=14 and falsified+sustained=61 after authorized W9/W9AA/W9AB/W10/W10R/W10S/W10T/W10V/W10W/W11A admits, saw {falsified} / {pending} / {sustained}"
         ));
     }
     Ok(())
@@ -3786,6 +3802,32 @@ fn validate_skv14_sustained_row(row: &SkV14ManifestRow) -> Result<(), String> {
         {
             return Err(format!(
                 "{} is not a valid SK-V14 W9 sustained typed row",
+                row.row_id
+            ));
+        }
+        return Ok(());
+    }
+    if SKV14_W11A_DIRECT_STRICT_ADMIT_ROWS.contains(&row.row_id.as_str()) {
+        let (corpus, _) = parse_row_id(&row.row_id)?;
+        if row.wave_id != "SK-V14-W11A"
+            || row.track1_entry_point != "bbnf_bench::json_parity::track1_direct_to_struct"
+            || row.track2_entry_point != "bbnf_bench::direct_struct::track2_strict_product"
+            || row.comparator_plane != format!("{corpus}::strict_struct_deser")
+            || row.same_wave_consumer_class != "gate_json_direct_strict_product_contract"
+            || row.track2_independence_status != "independent_verified"
+            || row.substrate_target != "direct_sink"
+            || row.substrate_surface != "direct_strict_product"
+            || row.redress_entry != "none:SK-V14-W11A-admit"
+            || row.sk_v14_open_delta != "admitted:SK-V14-W11A-direct-strict-product"
+        {
+            return Err(format!(
+                "{} is not a valid SK-V14 W11A sustained direct strict-product row",
+                row.row_id
+            ));
+        }
+        if !valid_skv14_per_iter_pass(&row.per_iter_equality) {
+            return Err(format!(
+                "{} lacks SK-V14 timed per-iteration equality PASS",
                 row.row_id
             ));
         }
@@ -3818,7 +3860,7 @@ fn validate_skv14_sustained_row(row: &SkV14ManifestRow) -> Result<(), String> {
         return Ok(());
     }
     Err(format!(
-        "{} is AUDIT-SUSTAINED without W9 typed or W10/W10R/W10S/W10T/W10V/W10W parse_only authority",
+        "{} is AUDIT-SUSTAINED without W9 typed, W10/W10R/W10S/W10T/W10V/W10W parse_only, or W11A direct strict-product authority",
         row.row_id
     ))
 }
@@ -3993,7 +4035,7 @@ fn skv14_track1_entry_point(workload: &str) -> &'static str {
 fn skv14_track2_entry_point(workload: &str) -> &'static str {
     match workload {
         "parse_only" => "bbnf_bench::json_parity::track2_structural_oracle",
-        "direct_to_struct" => "bbnf_bench::direct_struct::track2_digest",
+        "direct_to_struct" => "bbnf_bench::direct_struct::track2_strict_product",
         "real_typed_struct" => "bbnf_bench::real_typed_struct::track2_typed",
         _ => "unknown",
     }
@@ -4678,7 +4720,9 @@ fn skv14_manifest_row_from_skv14_cells(cells: &[String]) -> Result<SkV14Manifest
         .map(|(_, workload)| skv14_track1_entry_point(workload).to_string())
         .unwrap_or_else(|| cells[5].clone());
     let track2_entry_point = match json_row {
-        Some((_, "real_typed_struct")) if sample_count == 0 => cells[6].clone(),
+        Some((_, "direct_to_struct" | "real_typed_struct")) if sample_count == 0 => {
+            cells[6].clone()
+        }
         Some((_, workload)) => skv14_track2_entry_point(workload).to_string(),
         None => cells[6].clone(),
     };
@@ -4687,6 +4731,9 @@ fn skv14_manifest_row_from_skv14_cells(cells: &[String]) -> Result<SkV14Manifest
         .unwrap_or_else(|| cells[7].clone());
     let per_iter_equality = match json_row {
         Some((_, "real_typed_struct")) if sample_count == 0 => {
+            "INTRINSIC-BLOCK:missing-product-surface".to_string()
+        }
+        Some((_, "direct_to_struct")) if sample_count == 0 => {
             "INTRINSIC-BLOCK:missing-product-surface".to_string()
         }
         Some((_, "parse_only"))
@@ -4708,6 +4755,13 @@ fn skv14_manifest_row_from_skv14_cells(cells: &[String]) -> Result<SkV14Manifest
         }
         Some((_, "real_typed_struct"))
             if cells[4].starts_with("SK-V14-W9:") || cells[31].contains("profile_direct:") =>
+        {
+            cells[31].clone()
+        }
+        Some((_, "direct_to_struct"))
+            if sample_count == 0
+                || cells[4].starts_with("SK-V14-W11A:")
+                || cells[31].contains("profile_direct:") =>
         {
             cells[31].clone()
         }
@@ -4762,7 +4816,7 @@ fn skv14_sidecar_freshness_from_evidence(workload: &str, evidence: &str) -> Stri
 fn skv14_rebound_comparator_evidence(corpus: &str, workload: &str, existing: &str) -> String {
     let native_plane = match workload {
         "parse_only" => "parse_only/sonic_rs::Skipper",
-        "direct_to_struct" => "digest",
+        "direct_to_struct" => "direct strict product",
         "real_typed_struct" => "typed direct",
         _ => "unknown",
     };
@@ -5922,7 +5976,7 @@ fn validate_w0_manifest_semantics(row: &TelemetryRow) -> Result<(), String> {
 fn w0_substrate_tuple(workload: &str) -> Option<(&'static str, &'static str, &'static str)> {
     Some(match workload {
         "parse_only" => ("parse_only_validator", "n/a", "zero_or_inert"),
-        "direct_to_struct" => ("sink_only_digest", "n/a", "zero_or_inert"),
+        "direct_to_struct" => ("direct_strict_product", "n/a", "zero_or_inert"),
         "real_typed_struct" => ("typed_direct_projection", "n/a", "zero_or_inert"),
         _ => return None,
     })
@@ -6158,10 +6212,14 @@ fn validate_native_comparator_source(
     let (corpus, _) = parse_row_id(row_id)?;
     let (expected_bench, expected_plane) = match (comparator_id, workload) {
         ("sonic_rs_strict", "parse_only") => ("sonic_rs_skipper", "parse_only/sonic_rs::Skipper"),
-        ("sonic_rs_strict", "direct_to_struct") => ("sonic_rs_direct_to_struct", "digest"),
+        ("sonic_rs_strict", "direct_to_struct") => {
+            ("sonic_rs_direct_to_struct", "direct strict product")
+        }
         ("sonic_rs_strict", "real_typed_struct") => ("sonic_rs_real_typed_struct", "typed direct"),
         ("serde_json", "parse_only") => ("serde_json", "DOM"),
-        ("serde_json", "direct_to_struct") => ("serde_json_direct_to_struct", "digest"),
+        ("serde_json", "direct_to_struct") => {
+            ("serde_json_direct_to_struct", "direct strict product")
+        }
         ("serde_json", "real_typed_struct") => ("serde_json_real_typed_struct", "typed direct"),
         _ => {
             return Err(format!(
@@ -7994,7 +8052,7 @@ mod tests {
         };
         let native_plane = match workload {
             "parse_only" => "parse_only/sonic_rs::Skipper",
-            "direct_to_struct" => "digest",
+            "direct_to_struct" => "direct strict product",
             "real_typed_struct" => "typed direct",
             _ => unreachable!(),
         };

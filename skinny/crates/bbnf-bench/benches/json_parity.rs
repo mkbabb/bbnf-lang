@@ -18,6 +18,14 @@ fn bench_json_parity(c: &mut Criterion) {
         bbnf_bench::parity::assert_parity(input).expect("parity oracle failed");
         bbnf_bench::direct_struct::assert_direct_struct_parity(input, &fixture.bytes)
             .expect("direct-to-struct parity oracle failed");
+        if bbnf_bench::direct_struct::supports_strict_product(&fixture.name) {
+            bbnf_bench::direct_struct::assert_direct_strict_product_parity(
+                &fixture.name,
+                input,
+                &fixture.bytes,
+            )
+            .expect("direct strict-product parity oracle failed");
+        }
         if let Some(real_typed) = bbnf_bench::real_typed_struct::fixture_for_name(&fixture.name) {
             bbnf_bench::real_typed_struct::assert_real_typed_parity(
                 input,
@@ -179,15 +187,38 @@ fn run_fixture(c: &mut Criterion, host: &HostFacts, fixture: &JsonFixture, input
         sample_size as u32,
     );
 
-    let direct_expected =
-        bbnf_bench::direct_struct::track2_digest(input).expect("track2 direct digest");
-    group.bench_function("track1_direct_to_struct", |b| {
-        b.iter(|| {
-            let digest = bbnf_bench::direct_struct::track1_digest(black_box(input)).unwrap();
-            assert_eq!(digest, direct_expected);
-            black_box(digest);
+    let direct_strict = bbnf_bench::direct_struct::supports_strict_product(&fixture.name);
+    let direct_materialisation = if direct_strict {
+        "direct_strict_product"
+    } else {
+        "direct_to_struct"
+    };
+    if direct_strict {
+        let direct_expected =
+            bbnf_bench::direct_struct::track2_strict_product(&fixture.name, input)
+                .expect("track2 direct strict product");
+        group.bench_function("track1_direct_to_struct", |b| {
+            b.iter(|| {
+                let checksum = bbnf_bench::direct_struct::track1_strict_product(
+                    &fixture.name,
+                    black_box(input),
+                )
+                .unwrap();
+                assert_eq!(checksum, direct_expected);
+                black_box(checksum);
+            });
         });
-    });
+    } else {
+        let direct_expected =
+            bbnf_bench::direct_struct::track2_digest(input).expect("track2 direct digest");
+        group.bench_function("track1_direct_to_struct", |b| {
+            b.iter(|| {
+                let digest = bbnf_bench::direct_struct::track1_digest(black_box(input)).unwrap();
+                assert_eq!(digest, direct_expected);
+                black_box(digest);
+            });
+        });
+    }
     write_row(
         host,
         fixture,
@@ -196,7 +227,7 @@ fn run_fixture(c: &mut Criterion, host: &HostFacts, fixture: &JsonFixture, input
             fixture.sha256.clone(),
             fixture.bytes.len() as u64,
             TrackTag::Track1Generated,
-            "direct_to_struct",
+            direct_materialisation,
             track2_payload.0,
             track2_payload.1,
             measurement_time_s,
@@ -204,12 +235,25 @@ fn run_fixture(c: &mut Criterion, host: &HostFacts, fixture: &JsonFixture, input
         ),
     );
 
-    group.bench_function("track2_direct_to_struct", |b| {
-        b.iter(|| {
-            let digest = bbnf_bench::direct_struct::track2_digest(black_box(input)).unwrap();
-            black_box(digest);
+    if direct_strict {
+        group.bench_function("track2_direct_to_struct", |b| {
+            b.iter(|| {
+                let checksum = bbnf_bench::direct_struct::track2_strict_product(
+                    &fixture.name,
+                    black_box(input),
+                )
+                .unwrap();
+                black_box(checksum);
+            });
         });
-    });
+    } else {
+        group.bench_function("track2_direct_to_struct", |b| {
+            b.iter(|| {
+                let digest = bbnf_bench::direct_struct::track2_digest(black_box(input)).unwrap();
+                black_box(digest);
+            });
+        });
+    }
     write_row(
         host,
         fixture,
@@ -218,7 +262,7 @@ fn run_fixture(c: &mut Criterion, host: &HostFacts, fixture: &JsonFixture, input
             fixture.sha256.clone(),
             fixture.bytes.len() as u64,
             TrackTag::Track2Handcoded,
-            "direct_to_struct",
+            direct_materialisation,
             track2_payload.0,
             track2_payload.1,
             measurement_time_s,
@@ -226,38 +270,64 @@ fn run_fixture(c: &mut Criterion, host: &HostFacts, fixture: &JsonFixture, input
         ),
     );
 
-    group.bench_function("sonic_rs_direct_to_struct", |b| {
-        b.iter(|| {
-            let digest =
-                bbnf_bench::direct_struct::sonic_digest(black_box(&fixture.bytes)).unwrap();
-            black_box(digest);
+    if direct_strict {
+        group.bench_function("sonic_rs_direct_to_struct", |b| {
+            b.iter(|| {
+                let checksum = bbnf_bench::direct_struct::sonic_strict_product(
+                    &fixture.name,
+                    black_box(&fixture.bytes),
+                )
+                .unwrap();
+                black_box(checksum);
+            });
         });
-    });
+    } else {
+        group.bench_function("sonic_rs_direct_to_struct", |b| {
+            b.iter(|| {
+                let digest =
+                    bbnf_bench::direct_struct::sonic_digest(black_box(&fixture.bytes)).unwrap();
+                black_box(digest);
+            });
+        });
+    }
     write_competitor_row(
         host,
         fixture,
         "sonic_rs_direct_to_struct",
         "sonic-rs",
         "0.5.8",
-        "direct_to_struct",
+        direct_materialisation,
         measurement_time_s,
         sample_size as u32,
     );
 
-    group.bench_function("serde_json_direct_to_struct", |b| {
-        b.iter(|| {
-            let digest =
-                bbnf_bench::direct_struct::serde_digest(black_box(&fixture.bytes)).unwrap();
-            black_box(digest);
+    if direct_strict {
+        group.bench_function("serde_json_direct_to_struct", |b| {
+            b.iter(|| {
+                let checksum = bbnf_bench::direct_struct::serde_strict_product(
+                    &fixture.name,
+                    black_box(&fixture.bytes),
+                )
+                .unwrap();
+                black_box(checksum);
+            });
         });
-    });
+    } else {
+        group.bench_function("serde_json_direct_to_struct", |b| {
+            b.iter(|| {
+                let digest =
+                    bbnf_bench::direct_struct::serde_digest(black_box(&fixture.bytes)).unwrap();
+                black_box(digest);
+            });
+        });
+    }
     write_competitor_row(
         host,
         fixture,
         "serde_json_direct_to_struct",
         "serde_json",
         "workspace",
-        "direct_to_struct",
+        direct_materialisation,
         measurement_time_s,
         sample_size as u32,
     );

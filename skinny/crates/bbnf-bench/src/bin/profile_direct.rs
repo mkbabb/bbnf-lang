@@ -82,7 +82,7 @@ fn main() {
     let warmup_iters: usize = args.get(4).and_then(|s| s.parse().ok()).unwrap_or(0);
     let path = if corpus.contains('/') || corpus.ends_with(".json") {
         PathBuf::from(&corpus)
-    } else if mode.starts_with("real_typed_") {
+    } else if mode.starts_with("real_typed_") || mode.starts_with("direct_strict_") {
         bbnf_bench::real_typed_struct::locate_fixture(&corpus)
     } else {
         locate_fixture(&corpus)
@@ -160,11 +160,17 @@ fn run_once(mode: &str, corpus: &str, input: &str, bytes: &[u8]) -> u64 {
         "real_typed_track1" | "real_typed_track2" | "real_typed_sonic" | "real_typed_serde" => {
             return real_typed_checksum(corpus, mode, input, bytes);
         }
+        "direct_strict_track1"
+        | "direct_strict_track2"
+        | "direct_strict_sonic"
+        | "direct_strict_serde" => {
+            return direct_strict_checksum(corpus, mode, input, bytes);
+        }
         "parse_only_track1" | "parse_only_track2" | "parse_only_sonic" | "parse_only_serde" => {
             return parse_only_checksum(mode, input, bytes);
         }
         other => panic!(
-            "unknown mode {other}; expected track1|track2|sonic|serde|real_typed_track1|real_typed_track2|real_typed_sonic|real_typed_serde|parse_only_track1|parse_only_track2|parse_only_sonic|parse_only_serde"
+            "unknown mode {other}; expected track1|track2|sonic|serde|real_typed_track1|real_typed_track2|real_typed_sonic|real_typed_serde|direct_strict_track1|direct_strict_track2|direct_strict_sonic|direct_strict_serde|parse_only_track1|parse_only_track2|parse_only_sonic|parse_only_serde"
         ),
     }
     .expect("direct digest failed");
@@ -190,6 +196,18 @@ fn real_typed_checksum(corpus: &str, mode: &str, input: &str, bytes: &[u8]) -> u
     }
     .expect("real typed parse failed");
     std::hint::black_box(bbnf_bench::real_typed_struct::typed_checksum(&output))
+}
+
+fn direct_strict_checksum(corpus: &str, mode: &str, input: &str, bytes: &[u8]) -> u64 {
+    let checksum = match mode {
+        "direct_strict_track1" => bbnf_bench::direct_struct::track1_strict_product(corpus, input),
+        "direct_strict_track2" => bbnf_bench::direct_struct::track2_strict_product(corpus, input),
+        "direct_strict_sonic" => bbnf_bench::direct_struct::sonic_strict_product(corpus, bytes),
+        "direct_strict_serde" => bbnf_bench::direct_struct::serde_strict_product(corpus, bytes),
+        _ => unreachable!("direct_strict_checksum called for non-direct-strict mode"),
+    }
+    .expect("direct strict product failed");
+    std::hint::black_box(checksum)
 }
 
 fn parse_only_checksum(mode: &str, input: &str, bytes: &[u8]) -> u64 {

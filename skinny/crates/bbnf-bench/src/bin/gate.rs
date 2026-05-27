@@ -584,15 +584,26 @@ fn main() -> Result<(), Box<dyn Error>> {
             direct_decision.w2_reclaimed,
             direct_decision.w10_residual,
             direct_decision.w11_3_reopened,
+            direct_decision.w11a_strict_product,
             fixture.bytes.len() as u64,
             estimates.direct_track1,
             estimates.direct_track2,
             estimates.direct_sonic,
         );
+        let direct_output_plane = if direct_decision.w11a_strict_product {
+            "direct strict product"
+        } else {
+            "digest"
+        };
+        let direct_flaw_probe = if direct_decision.w11a_strict_product {
+            "generated Track 1 strict product vs independent serde Track 2/oracle; UTF-8 measured in row"
+        } else {
+            "generated Track 1 SinkOnly vs independent hand Track 2 SinkOnly; UTF-8 remains view-boundary"
+        };
         let direct_telemetry = w0_telemetry(
             &fixture.name,
             "direct_to_struct",
-            "digest",
+            direct_output_plane,
             fixture.bytes.len() as u64,
             estimates.direct_track1,
             &direct_comparators,
@@ -608,8 +619,8 @@ fn main() -> Result<(), Box<dyn Error>> {
             estimates.direct_track1,
             estimates.direct_track2,
             direct_comparators,
-            "digest",
-            "generated Track 1 SinkOnly vs independent hand Track 2 SinkOnly; UTF-8 remains view-boundary",
+            direct_output_plane,
+            direct_flaw_probe,
             direct_signal,
             w0_hot_leaf(&fixture.name, "track1_direct_to_struct"),
         )
@@ -620,6 +631,8 @@ fn main() -> Result<(), Box<dyn Error>> {
             mark_w10_direct_residual(&mut direct_row);
         } else if direct_decision.w11_3_reopened {
             mark_w11_3_direct_reopen(&mut direct_row);
+        } else if direct_decision.w11a_strict_product {
+            mark_w11a_direct_strict_product(&mut direct_row);
         }
         report.rows.push(direct_row);
         if direct_outcome == Some(Outcome::NDirectProjectionFailure) {
@@ -2876,7 +2889,7 @@ fn skv14_track1_entry_point(workload: &str) -> &'static str {
 fn skv14_track2_entry_point(workload: &str) -> &'static str {
     match workload {
         "parse_only" => "bbnf_bench::json_parity::track2_structural_oracle",
-        "direct_to_struct" => "bbnf_bench::direct_struct::track2_digest",
+        "direct_to_struct" => "bbnf_bench::direct_struct::track2_strict_product",
         "real_typed_struct" => "bbnf_bench::real_typed_struct::track2_typed",
         _ => "unknown",
     }
@@ -3000,7 +3013,7 @@ fn comparator_evidence(
 fn substrate_facts(workload: &str) -> (&'static str, &'static str, &'static str) {
     match workload {
         "parse_only" => ("parse_only_validator", "n/a", "zero_or_inert"),
-        "direct_to_struct" => ("sink_only_digest", "n/a", "zero_or_inert"),
+        "direct_to_struct" => ("direct_strict_product", "n/a", "zero_or_inert"),
         "real_typed_struct" => ("typed_direct_projection", "n/a", "zero_or_inert"),
         _ => ("unknown", "unknown", "unknown"),
     }
@@ -3169,6 +3182,7 @@ fn direct_workload_signal(
     w2_reclaimed: bool,
     w10_residual: bool,
     w11_3_reopened: bool,
+    w11a_strict_product: bool,
     bytes: u64,
     track1_ns: Option<f64>,
     track2_ns: Option<f64>,
@@ -3176,6 +3190,17 @@ fn direct_workload_signal(
 ) -> String {
     if !correctness_ok {
         return "FAIL digest mismatch".to_string();
+    }
+    if w11a_strict_product {
+        let track1 = throughput_mbps(bytes, track1_ns);
+        let track2 = throughput_mbps(bytes, track2_ns);
+        let sonic = throughput_mbps(bytes, sonic_ns);
+        return format!(
+            "PASS W11A direct strict-product admission; Track 1 {}, Track 2 {}, sonic strict {} Mbps",
+            format_mbps(track1),
+            format_mbps(track2),
+            format_mbps(sonic)
+        );
     }
     if w2_reclaimed {
         let track1 = throughput_mbps(bytes, track1_ns);
@@ -3243,6 +3268,7 @@ struct DirectRowDecision {
     w2_reclaimed: bool,
     w10_residual: bool,
     w11_3_reopened: bool,
+    w11a_strict_product: bool,
 }
 
 fn direct_row_decision(
@@ -3254,6 +3280,18 @@ fn direct_row_decision(
     sonic_ns: Option<f64>,
 ) -> DirectRowDecision {
     let row_id = format!("json/{corpus}/direct_to_struct/main");
+    if skv14_w11a_direct_strict_corpus(corpus)
+        && direct_strict_product_sota_passes(bytes, track1_ns, sonic_ns)
+    {
+        return DirectRowDecision {
+            outcome: None,
+            w0_clamped: false,
+            w2_reclaimed: false,
+            w10_residual: false,
+            w11_3_reopened: false,
+            w11a_strict_product: true,
+        };
+    }
     if sk_v8_open_baseline(&row_id).is_some_and(|baseline| baseline.verdict == "NO-GO") {
         if classified.is_none() && w2_direct_reclamation_passes(corpus, bytes, track1_ns, track2_ns)
         {
@@ -3263,6 +3301,7 @@ fn direct_row_decision(
                 w2_reclaimed: true,
                 w10_residual: false,
                 w11_3_reopened: false,
+                w11a_strict_product: false,
             };
         }
         if matches!(classified, None | Some(Outcome::NDirectProjectionFailure))
@@ -3274,6 +3313,7 @@ fn direct_row_decision(
                 w2_reclaimed: false,
                 w10_residual: true,
                 w11_3_reopened: false,
+                w11a_strict_product: false,
             };
         }
         if matches!(classified, None | Some(Outcome::NDirectProjectionFailure))
@@ -3285,6 +3325,7 @@ fn direct_row_decision(
                 w2_reclaimed: false,
                 w10_residual: false,
                 w11_3_reopened: true,
+                w11a_strict_product: false,
             };
         }
         if classified.is_none() {
@@ -3294,6 +3335,7 @@ fn direct_row_decision(
                 w2_reclaimed: false,
                 w10_residual: false,
                 w11_3_reopened: false,
+                w11a_strict_product: false,
             };
         }
     }
@@ -3303,7 +3345,41 @@ fn direct_row_decision(
         w2_reclaimed: false,
         w10_residual: false,
         w11_3_reopened: false,
+        w11a_strict_product: false,
     }
+}
+
+fn skv14_w11a_direct_strict_corpus(corpus: &str) -> bool {
+    matches!(
+        corpus,
+        "twitter"
+            | "citm_catalog"
+            | "canada"
+            | "apache_builds"
+            | "github_events"
+            | "update_center"
+            | "mesh"
+            | "random"
+            | "marine_ik"
+            | "instruments"
+            | "numbers"
+            | "unicode_basic"
+            | "distinct_values"
+    )
+}
+
+fn direct_strict_product_sota_passes(
+    bytes: u64,
+    track1_ns: Option<f64>,
+    sonic_ns: Option<f64>,
+) -> bool {
+    let (Some(track1), Some(sonic)) = (
+        throughput_mbps(bytes, track1_ns),
+        throughput_mbps(bytes, sonic_ns),
+    ) else {
+        return false;
+    };
+    track1 > sonic + 1.0
 }
 
 fn w2_direct_reclamation_passes(
@@ -3415,6 +3491,25 @@ fn mark_w11_3_direct_reopen(row: &mut TelemetryRow) {
     row.sk_v8.redress_entry = "REDRESS-143".to_string();
     row.sk_v8.wave_id = "SK-V13-W11.3".to_string();
     row.sk_v8.sk_v9_open_delta = "direct-sink-stack-specialization".to_string();
+}
+
+fn mark_w11a_direct_strict_product(row: &mut TelemetryRow) {
+    row.strictness = "strict".to_string();
+    row.parse_utf8 = "measured-row".to_string();
+    row.flaw_probe =
+        "generated Track 1 strict product vs independent serde Track 2/oracle; UTF-8 measured in row"
+            .to_string();
+    row.sk_v8.measured_validation_path = "measured-row".to_string();
+    row.sk_v8.track2_entry_point = "bbnf_bench::direct_struct::track2_strict_product".to_string();
+    row.sk_v8.same_wave_consumer_class = "gate_json_direct_strict_product_contract".to_string();
+    row.sk_v8.redress_entry = "none:SK-V14-W11A-admit".to_string();
+    row.sk_v8.wave_id = "SK-V14-W11A".to_string();
+    row.sk_v8.run_id = format!(
+        "SK-V14-W11A:{}-direct-strict-product",
+        row.corpus.replace('_', "-")
+    );
+    row.sk_v8.sk_v9_open_delta = "admitted:SK-V14-W11A-direct-strict-product".to_string();
+    row.sk_v8.substrate_surface = "direct_strict_product".to_string();
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -4212,6 +4307,16 @@ fn same_f64(left: f64, right: f64) -> bool {
 }
 
 fn required_metadata_specs(real_typed_expected: bool) -> Vec<MetadataSpec> {
+    let direct_materialisation = if real_typed_expected {
+        "direct_strict_product"
+    } else {
+        "direct_to_struct"
+    };
+    let direct_output_plane = if real_typed_expected {
+        "direct strict product"
+    } else {
+        "digest"
+    };
     let mut specs = vec![
         spec(
             "track1_generated",
@@ -4287,41 +4392,41 @@ fn required_metadata_specs(real_typed_expected: bool) -> Vec<MetadataSpec> {
             "track1_direct_to_struct",
             TrackTag::Track1Generated,
             "direct_to_struct",
-            "direct_to_struct",
+            direct_materialisation,
             None,
             None,
             "deferred",
-            "digest",
+            direct_output_plane,
         ),
         spec(
             "track2_direct_to_struct",
             TrackTag::Track2Handcoded,
             "direct_to_struct",
-            "direct_to_struct",
+            direct_materialisation,
             None,
             None,
             "deferred",
-            "digest",
+            direct_output_plane,
         ),
         spec(
             "sonic_rs_direct_to_struct",
             TrackTag::Competitor,
             "direct_to_struct",
-            "direct_to_struct",
+            direct_materialisation,
             Some("sonic-rs"),
             Some("0.5.8"),
             "strict",
-            "digest",
+            direct_output_plane,
         ),
         spec(
             "serde_json_direct_to_struct",
             TrackTag::Competitor,
             "direct_to_struct",
-            "direct_to_struct",
+            direct_materialisation,
             Some("serde_json"),
             Some("workspace"),
             "strict",
-            "digest",
+            direct_output_plane,
         ),
     ];
     if real_typed_expected {
@@ -5194,6 +5299,7 @@ mod tests {
                 w2_reclaimed: true,
                 w10_residual: false,
                 w11_3_reopened: false,
+                w11a_strict_product: false,
             }
         );
         assert_eq!(
@@ -5211,6 +5317,7 @@ mod tests {
                 w2_reclaimed: false,
                 w10_residual: false,
                 w11_3_reopened: false,
+                w11a_strict_product: false,
             }
         );
         assert_eq!(
@@ -5228,6 +5335,7 @@ mod tests {
                 w2_reclaimed: false,
                 w10_residual: false,
                 w11_3_reopened: false,
+                w11a_strict_product: false,
             }
         );
         assert_eq!(
@@ -5245,6 +5353,7 @@ mod tests {
                 w2_reclaimed: false,
                 w10_residual: false,
                 w11_3_reopened: false,
+                w11a_strict_product: false,
             }
         );
     }
@@ -5266,6 +5375,7 @@ mod tests {
                 w2_reclaimed: false,
                 w10_residual: true,
                 w11_3_reopened: false,
+                w11a_strict_product: false,
             }
         );
         assert_eq!(
@@ -5283,6 +5393,7 @@ mod tests {
                 w2_reclaimed: false,
                 w10_residual: false,
                 w11_3_reopened: false,
+                w11a_strict_product: false,
             }
         );
         assert_eq!(
@@ -5300,6 +5411,7 @@ mod tests {
                 w2_reclaimed: false,
                 w10_residual: false,
                 w11_3_reopened: false,
+                w11a_strict_product: false,
             }
         );
     }
@@ -5320,7 +5432,8 @@ mod tests {
                 w0_clamped: false,
                 w2_reclaimed: false,
                 w10_residual: false,
-                w11_3_reopened: true,
+                w11_3_reopened: false,
+                w11a_strict_product: true,
             }
         );
     }

@@ -36,7 +36,7 @@ lightningcss/cssparser full-parse probes are available, but all seven post-W7
 generated CSS Track 1 profiles still emit fact streams rather than a CSS
 full-parse equality plane. W9 then closed mixed under REDRESS-216: 11 / 17
 JSON typed rows admit from cold `profile_direct` evidence, all 17 direct rows
-remain blocked on digest-plane evidence, and 6 / 17 typed rows remain missing
+were blocked on digest-plane evidence, and 6 / 17 typed rows remained missing
 typed product surfaces. W10 then closed mixed under REDRESS-217: 6 / 17 JSON
 parse_only rows admit from a distinct no-tape `generated_json::parse_only`
 path and cold `profile_direct` evidence; 11 / 17 parse_only rows remained open.
@@ -64,10 +64,12 @@ and 4 / 17 missing. W9AC then rejected the generated
 `gsoc-2018/real_typed_struct` numeric-key route under REDRESS-229, so typed
 remains 13 / 17 admitted and 4 / 17 missing. W10AA then rejected a generated
 parse_only fused string/object-loop source route under REDRESS-230, so
-parse_only remains 11 / 17 admitted and 6 / 17 open.
-W11 closed the SK-V14 reconciliation packet on 2026-05-27. The next move is
-actual implementation against the residual queue, not another Omega or Alpha
-pass unless a future source attempt exposes a real spec-level amendment.
+parse_only remains 11 / 17 admitted and 6 / 17 open. W11A then admitted
+thirteen `direct_to_struct` rows through strict product evidence under
+REDRESS-231, so direct now stands at 13 / 17 admitted and 4 / 17 open.
+Continue actual implementation against the remaining residual queue, not
+another Omega or Alpha pass unless a future source attempt exposes a real
+spec-level amendment.
 
 ## 1. Bracket Verdict
 
@@ -225,7 +227,8 @@ state is:
 
 - JSON parse_only: 11 / 17 ADMITTED, 6 OPEN under REDRESS-223; REDRESS-230
   rejects the fused string/object-loop residual route without moving any row.
-- JSON direct_to_struct: 0 / 17 ADMITTED, 17 OPEN under REDRESS-216.
+- JSON direct_to_struct: 13 / 17 ADMITTED, 4 OPEN under REDRESS-231; remaining
+  rows lack generated strict product surfaces.
 - JSON real_typed_struct: 13 / 17 ADMITTED, 4 MISSING product surfaces under
   REDRESS-216/227/228; REDRESS-226 rejects the generated `y_string_unicode`
   root and REDRESS-229 rejects the generated `gsoc-2018` numeric-key root
@@ -267,8 +270,9 @@ discipline).
    `apache_builds/parse_only`, leaving 6 parse_only open rows under
    REDRESS-223. W10X, W10Y/W10Z, and W10AA reject additional residual routes
    under REDRESS-224, REDRESS-225, and REDRESS-230 without changing the count.
-6. W11 is closed as reconciliation-only. It authorizes implementation against
-   residual rows; it does not authorize paper-close claims for non-admits.
+6. W11A admits thirteen strict-product JSON direct rows under REDRESS-231.
+   The remaining direct rows are `gsoc-2018`, `unicode_mixed`,
+   `unicode_escapes`, and `y_string_unicode`.
 
 ## 7. Refusal Conditions
 

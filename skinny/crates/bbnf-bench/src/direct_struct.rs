@@ -36,12 +36,21 @@ pub enum DirectStructError {
     Serde(String),
     #[error("sonic-rs direct struct failed: {0}")]
     Sonic(String),
+    #[error("direct-to-struct strict product does not support corpus: {0}")]
+    UnsupportedStrictProduct(String),
     #[error("direct-to-struct digest mismatch: track1={track1:?} track2={track2:?} serde={serde:?} sonic={sonic:?}")]
     Mismatch {
         track1: JsonDirectDigest,
         track2: JsonDirectDigest,
         serde: JsonDirectDigest,
         sonic: JsonDirectDigest,
+    },
+    #[error("direct-to-struct strict product mismatch: track1={track1} track2={track2} serde={serde} sonic={sonic}")]
+    StrictProductMismatch {
+        track1: u64,
+        track2: u64,
+        serde: u64,
+        sonic: u64,
     },
 }
 
@@ -445,6 +454,62 @@ pub fn assert_direct_struct_parity(input: &str, bytes: &[u8]) -> Result<(), Dire
     }
 }
 
+pub fn supports_strict_product(corpus: &str) -> bool {
+    crate::real_typed_struct::fixture_for_name(corpus).is_some()
+}
+
+pub fn track1_strict_product(corpus: &str, input: &str) -> Result<u64, DirectStructError> {
+    let fixture = strict_product_fixture(corpus)?;
+    let output = crate::real_typed_struct::track1_typed(fixture, input)?;
+    Ok(crate::real_typed_struct::typed_checksum(&output))
+}
+
+pub fn track2_strict_product(corpus: &str, input: &str) -> Result<u64, DirectStructError> {
+    let fixture = strict_product_fixture(corpus)?;
+    let output = crate::real_typed_struct::track2_typed(fixture, input)?;
+    Ok(crate::real_typed_struct::typed_checksum(&output))
+}
+
+pub fn serde_strict_product(corpus: &str, bytes: &[u8]) -> Result<u64, DirectStructError> {
+    let fixture = strict_product_fixture(corpus)?;
+    let output = crate::real_typed_struct::serde_typed(fixture, bytes)?;
+    Ok(crate::real_typed_struct::typed_checksum(&output))
+}
+
+pub fn sonic_strict_product(corpus: &str, bytes: &[u8]) -> Result<u64, DirectStructError> {
+    let fixture = strict_product_fixture(corpus)?;
+    let output = crate::real_typed_struct::sonic_typed(fixture, bytes)?;
+    Ok(crate::real_typed_struct::typed_checksum(&output))
+}
+
+pub fn assert_direct_strict_product_parity(
+    corpus: &str,
+    input: &str,
+    bytes: &[u8],
+) -> Result<(), DirectStructError> {
+    let track1 = track1_strict_product(corpus, input)?;
+    let track2 = track2_strict_product(corpus, input)?;
+    let serde = serde_strict_product(corpus, bytes)?;
+    let sonic = sonic_strict_product(corpus, bytes)?;
+    if track1 == track2 && track1 == serde && track1 == sonic {
+        Ok(())
+    } else {
+        Err(DirectStructError::StrictProductMismatch {
+            track1,
+            track2,
+            serde,
+            sonic,
+        })
+    }
+}
+
+fn strict_product_fixture(
+    corpus: &str,
+) -> Result<crate::real_typed_struct::RealTypedFixture, DirectStructError> {
+    crate::real_typed_struct::fixture_for_name(corpus)
+        .ok_or_else(|| DirectStructError::UnsupportedStrictProduct(corpus.to_string()))
+}
+
 mod hand {
     use super::*;
 
@@ -825,6 +890,15 @@ mod tests {
                 expected,
                 "{raw}"
             );
+        }
+    }
+
+    #[test]
+    fn direct_strict_product_reuses_generated_products_without_digest_plane() {
+        for corpus in ["apache_builds", "citm_catalog", "canada", "distinct_values"] {
+            let bytes = std::fs::read(crate::real_typed_struct::locate_fixture(corpus)).unwrap();
+            let input = std::str::from_utf8(&bytes).unwrap();
+            assert_direct_strict_product_parity(corpus, input, &bytes).unwrap();
         }
     }
 }

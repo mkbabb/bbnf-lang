@@ -1,4 +1,4 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -739,6 +739,35 @@ fn validate_skv14_sustained_row(row: &Skv14ManifestRow) -> Result<()> {
         }
         return Ok(());
     }
+    if SKV14_W11A_DIRECT_STRICT_ADMIT_ROWS.contains(&row.row_id.as_str()) {
+        let corpus = row
+            .row_id
+            .strip_prefix("json/")
+            .and_then(|tail| tail.strip_suffix("/direct_to_struct/main"))
+            .ok_or_else(|| anyhow!("{} is not a direct_to_struct row", row.row_id))?;
+        if row.wave_id != "SK-V14-W11A"
+            || row.track1_entry_point != "bbnf_bench::json_parity::track1_direct_to_struct"
+            || row.track2_entry_point != "bbnf_bench::direct_struct::track2_strict_product"
+            || row.comparator_plane != format!("{corpus}::strict_struct_deser")
+            || row.same_wave_consumer_class != "gate_json_direct_strict_product_contract"
+            || row.track2_independence_status != "independent_verified"
+            || row.substrate_target != "direct_sink"
+            || row.redress_entry != "none:SK-V14-W11A-admit"
+            || row.sk_v14_open_delta != "admitted:SK-V14-W11A-direct-strict-product"
+        {
+            bail!(
+                "{} is not a valid SK-V14 W11A sustained direct strict-product row",
+                row.row_id
+            );
+        }
+        if !valid_skv14_per_iter_pass(&row.per_iter_equality) {
+            bail!(
+                "{} lacks SK-V14 timed per-iteration equality PASS",
+                row.row_id
+            );
+        }
+        return Ok(());
+    }
     if is_skv14_w10_parse_row(&row.row_id) {
         let (wave_id, redress_entry, open_delta) = skv14_parse_only_admit_fields(&row.row_id);
         if row.wave_id != wave_id
@@ -765,7 +794,7 @@ fn validate_skv14_sustained_row(row: &Skv14ManifestRow) -> Result<()> {
         return Ok(());
     }
     bail!(
-        "{} is AUDIT-SUSTAINED without W9 typed or W10/W10R/W10S/W10T/W10V/W10W parse_only authority",
+        "{} is AUDIT-SUSTAINED without W9 typed, W10/W10R/W10S/W10T/W10V/W10W parse_only, or W11A direct strict-product authority",
         row.row_id
     )
 }
@@ -809,7 +838,7 @@ fn validate_skv14_visible_admits(
             && !skv14_visible_admit_allowed(&row_id, manifest_rows)
         {
             bail!(
-                "SK-V14 visible JSON A/GO row lacks W9 typed or W10 parse authority; {} {} remains admitted",
+                "SK-V14 visible JSON A/GO row lacks W9 typed, W10 parse, or W11A direct authority; {} {} remains admitted",
                 cells[0],
                 cells[1]
             );
@@ -926,6 +955,22 @@ const SKV14_W9_TYPED_ADMIT_ROWS: &[&str] = &[
     "json/numbers/real_typed_struct/main",
     "json/unicode_basic/real_typed_struct/main",
     "json/distinct_values/real_typed_struct/main",
+];
+
+const SKV14_W11A_DIRECT_STRICT_ADMIT_ROWS: &[&str] = &[
+    "json/twitter/direct_to_struct/main",
+    "json/citm_catalog/direct_to_struct/main",
+    "json/canada/direct_to_struct/main",
+    "json/apache_builds/direct_to_struct/main",
+    "json/github_events/direct_to_struct/main",
+    "json/update_center/direct_to_struct/main",
+    "json/mesh/direct_to_struct/main",
+    "json/random/direct_to_struct/main",
+    "json/marine_ik/direct_to_struct/main",
+    "json/instruments/direct_to_struct/main",
+    "json/numbers/direct_to_struct/main",
+    "json/unicode_basic/direct_to_struct/main",
+    "json/distinct_values/direct_to_struct/main",
 ];
 
 fn is_skv14_w10_parse_row(row_id: &str) -> bool {
@@ -1070,8 +1115,9 @@ fn validate_skv13_rolling_delta(results_text: &str, rolling_path: &Path) -> Resu
             if row.tranche_admitted == "ADMITTED"
                 && !SKV14_W9_TYPED_ADMIT_ROWS.contains(&row_id.as_str())
                 && !is_skv14_w10_parse_row(&row_id)
+                && !SKV14_W11A_DIRECT_STRICT_ADMIT_ROWS.contains(&row_id.as_str())
             {
-                bail!("{row_id} is ADMITTED without W9 typed or W10 parse authority");
+                bail!("{row_id} is ADMITTED without W9 typed, W10 parse, or W11A direct authority");
             }
             if let Some(metric) = result_metrics.get(&row_id) {
                 validate_numeric_rolling_row(row, *metric)?;

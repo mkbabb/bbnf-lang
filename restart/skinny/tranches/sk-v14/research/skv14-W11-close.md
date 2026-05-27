@@ -2,10 +2,10 @@
 
 Date: 2026-05-27.
 
-Status: W11 closed as reconciliation-only. No parser, runtime, generated
-grammar output, benchmark measurement behavior, or row verdict changed in this
-wave. The report renderer was tightened so OPEN CSS rows cannot carry stale
-live-looking admission fragments in generated `RESULTS.md`.
+Status: W11 reconciliation was followed by W11A direct strict-product
+implementation. W11A moved supported JSON `direct_to_struct` rows off the
+digest plane and admitted thirteen strict product rows from cold native
+`profile_direct` evidence.
 
 ## Authority
 
@@ -48,13 +48,14 @@ live-looking admission fragments in generated `RESULTS.md`.
 | W10X | REJECTED | REDRESS-224: inline frame stack, 64-byte trusted string scan, and trusted syntax-mask residual routes admitted no parse_only rows. |
 | W10Y/W10Z | REJECTED | REDRESS-225: plain-string structural fast path and cursor-return helper ABI admitted no parse_only residual rows. |
 | W10AA | REJECTED | REDRESS-230: fused trusted string-end helper plus object-loop cleanup admitted no parse_only residual rows. |
+| W11A | ADMITTED | REDRESS-231: strict product `direct_to_struct` route admitted 13 / 17 JSON direct rows; 4 rows remain open for missing generated product surfaces. |
 
 ## Close-State Counts
 
 | Family | ADMITTED | OPEN | MISSING / blocked | Governing evidence |
 |---|---:|---:|---:|---|
 | JSON parse_only | 11 | 6 | 0 | W10/W10R/W10S/W10T/W10V/W10W cold `profile_direct` evidence and REDRESS-217/218/219/220/222/223. |
-| JSON direct_to_struct | 0 | 17 | 0 | W9 digest-plane rejection and REDRESS-216. |
+| JSON direct_to_struct | 13 | 4 | 0 | W11A cold strict product evidence and REDRESS-231; remaining rows lack generated product surfaces. |
 | JSON real_typed_struct | 13 | 0 | 4 | W9 cold typed evidence plus W9AA/W9AB generated products for `distinct_values` and `canada`; remaining missing products listed in REDRESS-216/227/228/229. |
 | CSS L4 | 0 | 24 | 0 | W8 production corpus rejection and REDRESS-215. |
 
@@ -66,8 +67,9 @@ remaining rows are implementation residuals, not closeable proof blocks.
 1. CSS L4 must gain generated Track 1 CSS full-parse output on the same
    equality plane as lightningcss/cssparser. Fact-stream adapters, tiny
    fixtures, and profile-template shortcuts remain rejected by REDRESS-215.
-2. JSON direct rows must replace digest-plane evidence with per-corpus strict
-   struct deserialization products before any direct row can admit.
+2. JSON direct residuals remain only where generated strict product surfaces
+   are absent: `gsoc-2018`, `unicode_mixed`, `unicode_escapes`, and
+   `y_string_unicode`.
 3. Missing JSON typed products remain for `gsoc-2018`, `unicode_mixed`,
    `unicode_escapes`, and `y_string_unicode`.
 4. JSON parse_only residuals remain for `twitter`, `github_events`,
@@ -77,12 +79,13 @@ remaining rows are implementation residuals, not closeable proof blocks.
 ## Reconciliation
 
 - `skinny/RESULTS.md` and `restart/skinny/ROLLING-SOTA-DELTA.md` agree on
-  eleven parse_only admits, seventeen direct opens, thirteen typed admits plus
-  four missing typed products, and twenty-four CSS L4 opens.
+  eleven parse_only admits, thirteen direct admits plus four direct opens,
+  thirteen typed admits plus four missing typed products, and twenty-four CSS
+  L4 opens.
 - `skinny/REDRESS.md` carries the live residuals as REDRESS-215,
   REDRESS-216, REDRESS-217, REDRESS-218, REDRESS-219, REDRESS-220,
   REDRESS-222, REDRESS-223, REDRESS-224, REDRESS-225, REDRESS-226,
-  REDRESS-227, and REDRESS-228.
+  REDRESS-227, REDRESS-228, REDRESS-229, REDRESS-230, and REDRESS-231.
 - `skinny/RESULTS.md` now renders CSS L4 legacy CostFacts as historical claims
   with current `AUDIT-FALSIFIED_OPEN` status, so the manifest no longer embeds
   live-looking `A` / `GO` / `ADMITTED-PARITY` fragments for OPEN CSS rows.

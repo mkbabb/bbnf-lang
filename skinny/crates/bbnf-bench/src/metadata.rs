@@ -192,9 +192,10 @@ impl BenchFacts {
             sample_size,
         );
         facts.materialisation = materialisation.to_string();
-        facts.workload = materialisation.to_string();
+        facts.workload = workload_for_materialisation(materialisation).to_string();
         facts.output_plane = match materialisation {
             "parse_only_validator" => "parse_only",
+            "direct_strict_product" => "direct strict product",
             "direct_to_struct" => "digest",
             "real_typed_struct" => "typed direct",
             _ => "borrowed view over offset tape",
@@ -414,7 +415,7 @@ impl RowMetadata {
 
 fn workload_for_materialisation(materialisation: &str) -> &str {
     match materialisation {
-        "direct_to_struct" => "direct_to_struct",
+        "direct_to_struct" | "direct_strict_product" => "direct_to_struct",
         "real_typed_struct" => "real_typed_struct",
         "skip_checked" => "parse_only",
         _ => "parse_only",
@@ -461,6 +462,7 @@ fn flaw_probe_for_competitor(crate_name: &str, materialisation: &str) -> &'stati
 
 fn output_plane_for_competitor(materialisation: &str) -> &'static str {
     match materialisation {
+        "direct_strict_product" => "direct strict product",
         "direct_to_struct" | "direct_to_struct_lossy" => "digest",
         "real_typed_struct" | "real_typed_struct_lossy" => "typed direct",
         "skip_checked" => "parse_only/sonic_rs::Skipper",

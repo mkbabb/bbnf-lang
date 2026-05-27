@@ -5685,3 +5685,24 @@ perturbation.
 - Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
   `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
   `distinct_values`.
+
+## SK-V14 W11A JSON direct_to_struct Strict Product Admit
+
+- Item 231 closes `G-SK-V14-W11A-JSON-DIRECT-STRICT-PRODUCT` as `ADMIT`.
+  The source patch adds an explicit strict-product direct route over the
+  generated DirectBuild typed products and keeps the public workload as
+  `direct_to_struct`; no digest-plane result is re-admitted.
+- Thirteen direct rows admit from cold native `profile_direct` evidence:
+  `twitter`, `citm_catalog`, `canada`, `apache_builds`, `github_events`,
+  `update_center`, `mesh`, `random`, `marine_ik`, `instruments`, `numbers`,
+  `unicode_basic`, and `distinct_values`.
+- Four direct rows remain open because they still lack generated strict product
+  surfaces at HEAD: `gsoc-2018`, `unicode_mixed`, `unicode_escapes`, and
+  `y_string_unicode`.
+- Correctness and compile gates passed before ledger movement:
+  `cargo test --manifest-path skinny/Cargo.toml --profile ax-iter -p
+  bbnf-bench direct_strict_product -- --nocapture`.
+- Cold evidence is retained at
+  `restart/skinny/tranches/sk-v14/research/skv14-W11A-direct-strict-product.md`,
+  `.tsv`, and `.raw.log`. Current JSON direct_to_struct state is 13 / 17
+  ADMITTED and 4 OPEN.

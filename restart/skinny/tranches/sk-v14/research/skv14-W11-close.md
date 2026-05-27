@@ -38,6 +38,7 @@ live-looking admission fragments in generated `RESULTS.md`.
 | W9Y | REJECTED | REDRESS-226: generated `y_string_unicode/real_typed_struct` root measured below strict sonic typed; no row moved. |
 | W9AA | ADMITTED | REDRESS-227: `distinct_values/real_typed_struct` admitted through generated dynamic string-entry capture; typed state is now 12 / 17 admitted and 5 / 17 missing. |
 | W9AB | ADMITTED | REDRESS-228: `canada/real_typed_struct` admitted through generated numeric lexeme capture; typed state is now 13 / 17 admitted and 4 / 17 missing. |
+| W9AC | REJECTED | REDRESS-229: generated `gsoc-2018/real_typed_struct` numeric-key route measured below strict sonic typed; no row moved. |
 | W10 | MIXED | REDRESS-217: 6 / 17 JSON parse_only rows admitted; 11 / 17 parse_only rows remain open. |
 | W10R | MIXED | REDRESS-218: `canada/parse_only` admitted by parse-only prefix continuation; parse_only state is now 7 / 17 admitted and 10 / 17 open. |
 | W10S | MIXED | REDRESS-219: `unicode_mixed/parse_only` admitted by string-end prefix scan; parse_only state is now 8 / 17 admitted and 9 / 17 open. |
@@ -53,7 +54,7 @@ live-looking admission fragments in generated `RESULTS.md`.
 |---|---:|---:|---:|---|
 | JSON parse_only | 11 | 6 | 0 | W10/W10R/W10S/W10T/W10V/W10W cold `profile_direct` evidence and REDRESS-217/218/219/220/222/223. |
 | JSON direct_to_struct | 0 | 17 | 0 | W9 digest-plane rejection and REDRESS-216. |
-| JSON real_typed_struct | 13 | 0 | 4 | W9 cold typed evidence plus W9AA/W9AB generated products for `distinct_values` and `canada`; remaining missing products listed in REDRESS-216/227/228. |
+| JSON real_typed_struct | 13 | 0 | 4 | W9 cold typed evidence plus W9AA/W9AB generated products for `distinct_values` and `canada`; remaining missing products listed in REDRESS-216/227/228/229. |
 | CSS L4 | 0 | 24 | 0 | W8 production corpus rejection and REDRESS-215. |
 
 No residual row has an architectural-level intrinsic-block proof. The
@@ -105,6 +106,11 @@ remaining rows are implementation residuals, not closeable proof blocks.
   and `emits_typed_direct_number_string_capture` tests, plus cold
   `profile_direct` evidence retained at
   `restart/skinny/tranches/sk-v14/research/skv14-W9AB-canada-typed.tsv`.
+- W9AC local evidence before this close packet update: `cargo xtask
+  regen-real-typed`, `cargo xtask check-real-typed`, focused
+  `gsoc_2018_typed` and `emits_typed_direct_u32_keyed_map_entries` tests, plus
+  cold reject evidence retained at
+  `restart/skinny/tranches/sk-v14/research/skv14-W9AC-gsoc-2018-typed.tsv`.
 - Close invariants remain: 16 locks, Pattern H count 67, Lock 10 five-shape
   `BackendShape` canon preserved, and generated JSON parse_only remains
   distinct from the tape-building path.
@@ -112,8 +118,8 @@ remaining rows are implementation residuals, not closeable proof blocks.
 ## W11 Disposition
 
 W11/W10R/W10S/W10T/W10V/W10W close SK-V14 as a mixed tranche, with admitted rows preserved and all
-unmet rows routed to implementation residuals. W10X, W10Y/W10Z, and W9Y add
-post-close residual rejection evidence; W9AA and W9AB add post-close typed
+unmet rows routed to implementation residuals. W10X, W10Y/W10Z, W9Y, and W9AC
+add post-close residual rejection evidence; W9AA and W9AB add post-close typed
 admits for `distinct_values/real_typed_struct` and
 `canada/real_typed_struct`.
 Under the latest user instruction, the next work is implementation against the

@@ -5631,3 +5631,29 @@ perturbation.
   `.tsv`, and `.raw.log`.
 - Current JSON real_typed_struct state is now 13 / 17 ADMITTED and 4 MISSING:
   `gsoc-2018`, `unicode_mixed`, `unicode_escapes`, and `y_string_unicode`.
+
+## SK-V14 W9AC JSON real_typed gsoc-2018 Numeric-Key Reject
+
+- Item 229 closes `G-SK-V14-W9AC-JSON-TYPED-GSOC-2018` as `REJECT`.
+  No source patch lands, no `RESULTS.md` row moves, and
+  `restart/skinny/ROLLING-SOTA-DELTA.md` remains unchanged.
+- The measured candidate used a valid generated DirectBuild route with a fresh
+  material differential over W13.5: `gsoc-2018` root object keys were parsed as
+  `u32` via transient `MapU32EntriesVec` codegen and a generated
+  `parse_gsoc_2018 -> Vec<GsocProposalEntry<'i>>` root. The product preserved
+  the numeric key plus every nested proposal, sponsor, and author string field.
+- Correctness gates passed before measurement:
+  `cargo xtask regen-real-typed`, `cargo xtask check-real-typed`,
+  `cargo test --manifest-path skinny/Cargo.toml --profile ax-iter -p codegen
+  emits_typed_direct_u32_keyed_map_entries -- --nocapture`, and
+  `cargo test --manifest-path skinny/Cargo.toml --profile ax-iter -p
+  bbnf-bench gsoc_2018_typed -- --nocapture`.
+- Cold `profile_direct` evidence rejects the row: generated Track 1 measured
+  `5711.366` Mbps against strict `sonic-rs` typed at `6017.313` Mbps. The
+  admission floor is `sonic + 1.0 = 6018.313` Mbps, so the margin is
+  `-306.947` Mbps. Independent Track 2 measured `5631.957` Mbps and
+  serde_json measured `5639.270` Mbps. Retained evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W9AC-gsoc-2018-typed.md`,
+  `.tsv`, and `.raw.log`.
+- Current JSON real_typed_struct state remains 13 / 17 ADMITTED and 4 MISSING:
+  `gsoc-2018`, `unicode_mixed`, `unicode_escapes`, and `y_string_unicode`.

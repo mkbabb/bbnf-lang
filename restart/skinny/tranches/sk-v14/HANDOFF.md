@@ -60,7 +60,9 @@ no row movement. W9Y then rejected a generated
 capture under REDRESS-227, raising typed to 12 / 17 admitted and 5 / 17
 missing. W9AB then admitted `canada/real_typed_struct` through generated
 numeric lexeme capture under REDRESS-228, raising typed to 13 / 17 admitted
-and 4 / 17 missing.
+and 4 / 17 missing. W9AC then rejected the generated
+`gsoc-2018/real_typed_struct` numeric-key route under REDRESS-229, so typed
+remains 13 / 17 admitted and 4 / 17 missing.
 W11 closed the SK-V14 reconciliation packet on 2026-05-27. The next move is
 actual implementation against the residual queue, not another Omega or Alpha
 pass unless a future source attempt exposes a real spec-level amendment.
@@ -223,7 +225,8 @@ state is:
 - JSON direct_to_struct: 0 / 17 ADMITTED, 17 OPEN under REDRESS-216.
 - JSON real_typed_struct: 13 / 17 ADMITTED, 4 MISSING product surfaces under
   REDRESS-216/227/228; REDRESS-226 rejects the generated `y_string_unicode`
-  root without moving that row.
+  root and REDRESS-229 rejects the generated `gsoc-2018` numeric-key root
+  without moving either row.
 - CSS L4: 0 / 24 ADMITTED, 24 OPEN under REDRESS-215.
 
 Per the latest user instruction, do not spend another cycle on Omega/Alpha
@@ -251,7 +254,9 @@ discipline).
    under REDRESS-226, so `y_string_unicode` remains missing. W9AA admits
    `distinct_values/real_typed_struct` under REDRESS-227, so typed now stands
    at 12 admitted and 5 missing. W9AB admits `canada/real_typed_struct` under
-   REDRESS-228, so typed now stands at 13 admitted and 4 missing.
+   REDRESS-228, so typed now stands at 13 admitted and 4 missing. W9AC rejects
+   `gsoc-2018/real_typed_struct` under REDRESS-229, so `gsoc-2018` remains
+   missing.
 5. W10 is closed mixed: 6 parse_only admits and 11 parse_only open rows under
    REDRESS-217. W10R then admits `canada/parse_only`, W10S admits
    `unicode_mixed/parse_only`, W10T admits `instruments/parse_only`, W10V

@@ -2,7 +2,7 @@
 
 Date: 2026-05-22.
 
-Status: Pass Alpha α-F contract handoff, superseded for active dispatch by
+Status: Pass Alpha alpha-F contract handoff, superseded for active dispatch by
 the S-P3 SPEC/DISPATCH packet and amended by Pass Omega V3 W2R, Pass
 Omega V4 W4R, Pass Omega V5 W5R, Pass Omega V6 W5BR, Pass Omega V7 W5B-GENR,
 and Pass Omega V8 W5B-FRONTENDR on 2026-05-26. REDRESS-183 rejected the original W2 dual-tree
@@ -40,7 +40,9 @@ remain blocked on digest-plane evidence, and 6 / 17 typed rows remain missing
 typed product surfaces. W10 then closed mixed under REDRESS-217: 6 / 17 JSON
 parse_only rows admit from a distinct no-tape `generated_json::parse_only`
 path and cold `profile_direct` evidence; 11 / 17 parse_only rows remain open.
-The next implementation move is W11 close and Alpha feedback.
+W11 closed the SK-V14 reconciliation packet on 2026-05-27. The next move is
+actual implementation against the residual queue, not another Omega or Alpha
+pass unless a future source attempt exposes a real spec-level amendment.
 
 ## 1. Bracket Verdict
 
@@ -134,14 +136,15 @@ Lock 14 at `restart/locks/LOCKS.md:220–238`).
 
 ```
 JSON parse_only: 6 / 17  (11 OPEN after W10 mixed close)
-JSON direct:     0 / 17  (4 comparator-rebind candidates; 13 fresh)
-JSON typed:      0 / 17  (7 comparator-rebind candidates; 10 fresh)
-CSS L4:          0 / 24  (all OPEN; templates pending PRUNE-2; amended skinny-side xtask pending W2 rerun)
+JSON direct:     0 / 17  (17 OPEN after W9; digest-plane evidence is not strict per-corpus product evidence)
+JSON typed:      11 / 17 (6 MISSING product surfaces after W9)
+CSS L4:          0 / 24  (all OPEN after W8; Track 1 still emits fact streams, not full-parse equality)
 ```
 
-Campaign at zero on numbers; non-zero on architecture. The
-`restart/skinny/ROLLING-SOTA-DELTA.md` table currently at commit
-`653cdf795+w15.1-redress` requires re-baseline through PRUNE-1 + PRUNE-2.
+Opening baseline was zero admitted after audit prune. W11 close-state is
+mixed: 17 JSON cells are admitted, CSS L4 remains 0 / 24, and all residual
+rows are routed to implementation work because no architectural-block proof
+closes them.
 
 ## 4. Pre-S-P0 Readiness
 
@@ -191,14 +194,22 @@ Campaign at zero on numbers; non-zero on architecture. The
 
 ## 6. Next-Move
 
-**Next-move:** Dispatch W11 close and Alpha feedback under SPEC §14. W10 has
-an executable mixed close packet (`skv14-W10-redress.md`, REDRESS-217):
-`mesh`, `marine_ik`, `numbers`, `unicode_escapes`, `unicode_basic`, and
-`y_string_unicode` parse_only rows admit from cold distinct-path evidence; the
-other eleven parse_only rows remain open and routed in REDRESS-217. W11 must
-reconcile `RESULTS.md`, `ROLLING-SOTA-DELTA.md`, REDRESS, HANDOFF, and SPEC
-against the W0-W10 admitted/rejected/routed state without reopening
-implementation work.
+**Next-move:** implement against the W11 residual queue captured in
+`restart/skinny/tranches/sk-v14/research/skv14-W11-close.md`. The live row
+state is:
+
+- JSON parse_only: 6 / 17 ADMITTED, 11 OPEN under REDRESS-217.
+- JSON direct_to_struct: 0 / 17 ADMITTED, 17 OPEN under REDRESS-216.
+- JSON real_typed_struct: 11 / 17 ADMITTED, 6 MISSING product surfaces under
+  REDRESS-216.
+- CSS L4: 0 / 24 ADMITTED, 24 OPEN under REDRESS-215.
+
+Per the latest user instruction, do not spend another cycle on Omega/Alpha
+governance before implementation. The next implementation packet should select
+one residual family and produce source, evidence, RESULTS/DELTA updates, and
+REDRESS reconciliation. If that implementation discovers a true spec-level
+amendment, route that amendment through the required gate; otherwise keep
+moving in implementation mode.
 
 Hard caps echoed per `[dispatch-hard-cap]`: 30-min lens-agent cap;
 research 20 min / plan 15 min / redress 30 min (45 min only for the
@@ -216,7 +227,9 @@ discipline).
 4. W9 is closed mixed: 11 typed admits, 17 direct blocks, 6 typed missing
    product blocks.
 5. W10 is closed mixed: 6 parse_only admits and 11 parse_only open rows under
-   REDRESS-217. W11 is now unblocked.
+   REDRESS-217.
+6. W11 is closed as reconciliation-only. It authorizes implementation against
+   residual rows; it does not authorize paper-close claims for non-admits.
 
 ## 7. Refusal Conditions
 
@@ -263,7 +276,7 @@ Return REVISE for any downstream plan that:
 - allows source / gate edits without telemetry and rolling delta
   updates;
 - closes a tranche with implementation-limited misses instead of full
-  ADMIT, architectural-block proof, or immediate bracket to SK-V15;
+  ADMIT, architectural-block proof, or a W11 residual implementation route;
 - introduces any of patterns P-1 through P-7
   (`SYNTHESIS.md §0.4`) — fake `@generated` header on hand-written
   output; mislabelled eager-DOM comparator; tiny-fixture Mbps inflation;
@@ -279,11 +292,11 @@ Return REVISE for any downstream plan that:
   G-Omega may amend Lock 1's substrate-union closure
   (`LOCKS.md:73-82`).
 
-## 8. Pass Alpha Bracket V1 Disposition
+## 8. W11 Close Disposition
 
-V1 disposition is **PENDING** until CHALLENGE V1 returns and convergence
-holds per §3Z. The SK-V14 contract is a draft until G-Alpha closes.
-
-After G-Alpha, the contract is binding through SK-V14 close. Subsequent
-brackets to SK-V15+ inherit R1–R10 verbatim unless a row family achieves
-admit or proves architectural-level intrinsic-block.
+SK-V14 closes as a mixed implementation tranche. It preserves 17 admitted JSON
+cells and routes the remaining JSON and CSS rows to implementation residuals.
+No residual row has an architectural-level intrinsic-block proof. Subsequent
+work inherits R1-R10 until a row family achieves admission or proves an
+architectural block, but the immediate continuation is source implementation
+against the W11 residual queue.

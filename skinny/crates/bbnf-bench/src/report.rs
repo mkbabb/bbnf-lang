@@ -3680,6 +3680,19 @@ fn skv14_css_manifest_row(feature: &str) -> SkV14ManifestRow {
     }
 }
 
+fn skv14_css_reconciled_costfacts(costfacts: &str) -> String {
+    let mut value = costfacts.to_string();
+    value = value.replace(
+        "outcome=A;verdict=GO;gate=pass;admission=PASS-ADMIT-CANDIDATE",
+        "historical_claim=A_GO_PASS_ADMIT_CANDIDATE;current_status=AUDIT-FALSIFIED_OPEN;current_reason=REDRESS-215_fact_stream_not_full_parse",
+    );
+    value = value.replace(
+        "outcome=A;verdict=GO;gate=pass;feature_status=ADMITTED-PARITY",
+        "historical_claim=A_GO_ADMITTED_PARITY;current_status=AUDIT-FALSIFIED_OPEN;current_reason=REDRESS-215_fact_stream_not_full_parse",
+    );
+    value
+}
+
 fn validate_skv14_manifest_rows(rows: &[SkV14ManifestRow]) -> Result<(), String> {
     let mut seen = BTreeSet::new();
     let mut falsified = 0usize;
@@ -3919,6 +3932,16 @@ fn validate_skv14_manifest_row(row: &SkV14ManifestRow) -> Result<(), String> {
     {
         return Err(format!(
             "{} falsified row lacks validation reference",
+            row.row_id
+        ));
+    }
+    if row.row_id.starts_with("css_l4/")
+        && row.audit_overlay_verdict == "AUDIT-FALSIFIED"
+        && (row.costfacts.contains("outcome=A;verdict=GO")
+            || row.costfacts.contains("feature_status=ADMITTED-PARITY"))
+    {
+        return Err(format!(
+            "{} embeds live-looking admitted CSS CostFacts after W11 close",
             row.row_id
         ));
     }
@@ -4569,7 +4592,7 @@ fn skv14_css_manifest_row_from_legacy_cells(cells: &[String]) -> Result<SkV14Man
     row.build_flags = cells[9].clone();
     row.host_triple = cells[10].clone();
     row.feature_mask = cells[11].clone();
-    row.costfacts = cells[12].clone();
+    row.costfacts = skv14_css_reconciled_costfacts(&cells[12]);
     row.redress_entry = cells[13].clone();
     row.substrate_surface = cells[15].clone();
     row.structural_projection_status = cells[16].clone();
@@ -4680,7 +4703,11 @@ fn skv14_manifest_row_from_skv14_cells(cells: &[String]) -> Result<SkV14Manifest
         build_flags: cells[19].clone(),
         host_triple: cells[20].clone(),
         feature_mask: cells[21].clone(),
-        costfacts: cells[22].clone(),
+        costfacts: if cells[0].starts_with("css_l4/") {
+            skv14_css_reconciled_costfacts(&cells[22])
+        } else {
+            cells[22].clone()
+        },
         redress_entry: cells[23].clone(),
         sk_v14_open_delta: cells[24].clone(),
         substrate_surface: cells[25].clone(),

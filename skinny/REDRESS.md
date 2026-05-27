@@ -5384,3 +5384,30 @@ perturbation.
   `cargo test -p bbnf-bench skv14_json_parse_only_report_accepts -- --nocapture`,
   `cargo test -p xtask -- --nocapture`, and the retained W10 redress/close
   packets under `restart/skinny/tranches/sk-v14/research/`.
+
+## SK-V14 W10R JSON parse_only Prefix Continuation
+
+- Item 218 closes `G-SK-V14-W10R-JSON-PARSE-ONLY-PREFIX` as `MIXED`.
+  The source implementation adds
+  `parse_that_regex::match_string_at_quote_after_plain_prefix_trusted_utf8`
+  and regenerates the JSON runtime so the generated parse-only path keeps its
+  tiny-string fast path but resumes the trusted SIMD string matcher after the
+  already-scanned plain prefix for longer strings. This is a terminal scanner
+  improvement, not a tape build, hidden DOM path, or comparator relabel.
+- One additional parse_only row admits from cold `profile_direct` evidence
+  retained at
+  `restart/skinny/tranches/sk-v14/research/skv14-W10R-parse-only-profile-direct.tsv`:
+  `canada`. The row has Track 1 `16709.901` Mbps, independent Track 2
+  `8631.499` Mbps, `parse_only/sonic_rs::Skipper` strict comparator
+  `12970.929` Mbps, no warmup iterations, and per-iteration equality PASS.
+- Ten parse_only rows remain open because the W10R cold run did not clear
+  Skipper + 1.0 Mbps: `twitter`, `citm_catalog`, `apache_builds`,
+  `github_events`, `update_center`, `random`, `gsoc-2018`, `instruments`,
+  `unicode_mixed`, and `distinct_values`. Current parse_only state is 7 / 17
+  admitted and 10 / 17 open. Evidence:
+  `cargo xtask check-json`, `cargo test -p parse-that-regex
+  trusted_string_matcher_continues_after_plain_prefix -- --nocapture`,
+  `cargo test -p runtime generated_parse_only_accepts_and_rejects_json
+  -- --nocapture`, `cargo test -p codegen
+  emits_distinct_json_parse_only_path_without_tape_builder -- --nocapture`,
+  and `restart/skinny/tranches/sk-v14/research/skv14-W10R-parse-only-prefix-continuation.md`.

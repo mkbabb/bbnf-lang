@@ -733,28 +733,32 @@ fn validate_skv14_sustained_row(row: &Skv14ManifestRow) -> Result<()> {
         return Ok(());
     }
     if is_skv14_w10_parse_row(&row.row_id) {
-        if row.wave_id != "SK-V14-W10"
+        let (wave_id, redress_entry, open_delta) = skv14_parse_only_admit_fields(&row.row_id);
+        if row.wave_id != wave_id
             || row.track1_entry_point != "runtime::generated_json::parse_only"
             || row.track2_entry_point != "bbnf_bench::json_parity::track2_structural_oracle"
             || row.comparator_plane != "parse_only/sonic_rs::Skipper"
             || row.same_wave_consumer_class != "generated_json_parse_only_contract"
             || row.track2_independence_status != "independent_verified"
             || row.substrate_target != "parse_only_validator"
-            || row.redress_entry != "none:SK-V14-W10-admit"
-            || row.sk_v14_open_delta != "admitted:SK-V14-W10-parse-only-distinct"
+            || row.redress_entry != redress_entry
+            || row.sk_v14_open_delta != open_delta
         {
             bail!(
-                "{} is not a valid SK-V14 W10 sustained parse_only row",
+                "{} is not a valid SK-V14 sustained parse_only row",
                 row.row_id
             );
         }
         if !valid_skv14_per_iter_pass(&row.per_iter_equality) {
-            bail!("{} lacks W10 timed per-iteration equality PASS", row.row_id);
+            bail!(
+                "{} lacks SK-V14 timed per-iteration equality PASS",
+                row.row_id
+            );
         }
         return Ok(());
     }
     bail!(
-        "{} is AUDIT-SUSTAINED without W9 typed or W10 parse_only authority",
+        "{} is AUDIT-SUSTAINED without W9 typed or W10/W10R parse_only authority",
         row.row_id
     )
 }
@@ -918,6 +922,22 @@ fn is_skv14_w10_parse_row(row_id: &str) -> bool {
     SKV13_JSON_CORPORA
         .iter()
         .any(|corpus| row_id == format!("json/{corpus}/parse_only/main"))
+}
+
+fn skv14_parse_only_admit_fields(row_id: &str) -> (&'static str, &'static str, &'static str) {
+    if row_id == "json/canada/parse_only/main" {
+        (
+            "SK-V14-W10R",
+            "none:SK-V14-W10R-admit",
+            "admitted:SK-V14-W10R-parse-only-prefix-continuation",
+        )
+    } else {
+        (
+            "SK-V14-W10",
+            "none:SK-V14-W10-admit",
+            "admitted:SK-V14-W10-parse-only-distinct",
+        )
+    }
 }
 
 const SKV13_CSS_FEATURES: &[&str] = &[

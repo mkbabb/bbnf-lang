@@ -4,9 +4,10 @@ use bbnf_bench::materialization::track_stats;
 use bbnf_bench::metadata::{current_peak_rss_bytes, RowMetadata, TrackTag};
 use bbnf_bench::report::{
     json_parse_only_admission_spec_for_corpus, json_parse_only_admission_spec_for_report,
-    sk_v8_open_baseline, skv14_existing_results_capture_markdown, ComparatorSet,
-    JsonParseOnlyAdmissionSpec, NonJsonEvidenceReport, Report, SkV12CssL4SotaReport,
-    SkV12NonJsonReport, SkV13CssAtRulesAndMediaReport, SkV13CssComparatorOracleReport,
+    json_parse_only_audit_reference, json_parse_only_open_delta, sk_v8_open_baseline,
+    skv14_existing_results_capture_markdown, ComparatorSet, JsonParseOnlyAdmissionSpec,
+    NonJsonEvidenceReport, Report, SkV12CssL4SotaReport, SkV12NonJsonReport,
+    SkV13CssAtRulesAndMediaReport, SkV13CssComparatorOracleReport,
     SkV13CssDeclarationValuesExtendedReport, SkV13CssNestedLayoutReport,
     SkV13CssStylesheetSelectorsReport, SkV13CssVendorCustomReport, SkV13CssVisualFunctionsReport,
     SkV13DecisionActiveCostReport, SkV13DecisionCspCascadeReport, SkV13DecisionRegexReport,
@@ -3682,10 +3683,9 @@ fn mark_json_parse_only_admission(row: &mut TelemetryRow, spec: &JsonParseOnlyAd
     row.sk_v8.redress_entry = spec.redress_entry.to_string();
     row.sk_v8.wave_id = spec.wave_id.to_string();
     row.sk_v8.audit_overlay_verdict = "AUDIT-SUSTAINED".to_string();
-    row.sk_v8.audit_overlay_reference =
-        "sk-v14-W10:distinct-parse-only;sk-v13/v6-comparator-integrity:§1+§3".to_string();
-    row.sk_v8.sk_v9_open_delta = "admitted:SK-V14-W10-parse-only-distinct".to_string();
-    row.sk_v8.sk_v14_open_delta = "admitted:SK-V14-W10-parse-only-distinct".to_string();
+    row.sk_v8.audit_overlay_reference = json_parse_only_audit_reference(spec).to_string();
+    row.sk_v8.sk_v9_open_delta = json_parse_only_open_delta(spec).to_string();
+    row.sk_v8.sk_v14_open_delta = json_parse_only_open_delta(spec).to_string();
 }
 
 fn mark_w13_unicode_basic_typed_admission(row: &mut TelemetryRow) {

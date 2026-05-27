@@ -39,7 +39,10 @@ JSON typed rows admit from cold `profile_direct` evidence, all 17 direct rows
 remain blocked on digest-plane evidence, and 6 / 17 typed rows remain missing
 typed product surfaces. W10 then closed mixed under REDRESS-217: 6 / 17 JSON
 parse_only rows admit from a distinct no-tape `generated_json::parse_only`
-path and cold `profile_direct` evidence; 11 / 17 parse_only rows remain open.
+path and cold `profile_direct` evidence; 11 / 17 parse_only rows remained open.
+W10R then admitted `canada/parse_only` through the parse-only prefix
+continuation source improvement under REDRESS-218, so parse_only now stands at
+7 / 17 admitted and 10 / 17 open.
 W11 closed the SK-V14 reconciliation packet on 2026-05-27. The next move is
 actual implementation against the residual queue, not another Omega or Alpha
 pass unless a future source attempt exposes a real spec-level amendment.
@@ -135,14 +138,14 @@ Lock 14 at `restart/locks/LOCKS.md:220–238`).
 ### Honest rolling delta (SK-V14 starting baseline)
 
 ```
-JSON parse_only: 6 / 17  (11 OPEN after W10 mixed close)
+JSON parse_only: 7 / 17  (10 OPEN after W10R residual implementation)
 JSON direct:     0 / 17  (17 OPEN after W9; digest-plane evidence is not strict per-corpus product evidence)
 JSON typed:      11 / 17 (6 MISSING product surfaces after W9)
 CSS L4:          0 / 24  (all OPEN after W8; Track 1 still emits fact streams, not full-parse equality)
 ```
 
 Opening baseline was zero admitted after audit prune. W11 close-state is
-mixed: 17 JSON cells are admitted, CSS L4 remains 0 / 24, and all residual
+mixed: 18 JSON cells are admitted, CSS L4 remains 0 / 24, and all residual
 rows are routed to implementation work because no architectural-block proof
 closes them.
 
@@ -198,7 +201,7 @@ closes them.
 `restart/skinny/tranches/sk-v14/research/skv14-W11-close.md`. The live row
 state is:
 
-- JSON parse_only: 6 / 17 ADMITTED, 11 OPEN under REDRESS-217.
+- JSON parse_only: 7 / 17 ADMITTED, 10 OPEN under REDRESS-218.
 - JSON direct_to_struct: 0 / 17 ADMITTED, 17 OPEN under REDRESS-216.
 - JSON real_typed_struct: 11 / 17 ADMITTED, 6 MISSING product surfaces under
   REDRESS-216.
@@ -227,7 +230,8 @@ discipline).
 4. W9 is closed mixed: 11 typed admits, 17 direct blocks, 6 typed missing
    product blocks.
 5. W10 is closed mixed: 6 parse_only admits and 11 parse_only open rows under
-   REDRESS-217.
+   REDRESS-217. W10R then admits `canada/parse_only` and leaves 10 parse_only
+   open rows under REDRESS-218.
 6. W11 is closed as reconciliation-only. It authorizes implementation against
    residual rows; it does not authorize paper-close claims for non-admits.
 

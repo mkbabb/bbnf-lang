@@ -1339,6 +1339,7 @@ const SK_V14_W9_OWNER_PATHS: &[&str] = &[
 const SK_V14_W10_OWNER_PATHS: &[&str] = &[
     "crates/codegen/src/lib.rs",
     "crates/codegen/src/runtime_generator.rs",
+    "crates/parse-that-regex/src/lib.rs",
     "crates/runtime/src/grammars/json/generated.rs",
     "crates/runtime/src/grammars/json/mod.rs",
     "crates/runtime/src/grammars/json/parser.rs",

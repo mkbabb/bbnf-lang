@@ -319,17 +319,17 @@ pub const JSON_PARSE_ONLY_ADMISSION_SPECS: &[JsonParseOnlyAdmissionSpec] = &[
         prior_redress_citation: "102",
     },
     JsonParseOnlyAdmissionSpec {
-        label: "W10.3",
-        wave_id: "SK-V14-W10",
-        run_id_prefix: "SK-V14-W10:",
-        consumer_gate: "G-W10-JSON-PARSE-ONLY",
+        label: "W10R.1",
+        wave_id: "SK-V14-W10R",
+        run_id_prefix: "SK-V14-W10R:",
+        consumer_gate: "G-SK-V14-W10R-JSON-PARSE-ONLY-PREFIX",
         row_id: "json/canada/parse_only/main",
         corpus: "canada",
         criterion_group: "json_canada",
         bytes: 2_251_051,
-        route_id: "generated-json-parse-only-distinct-path",
-        redress_entry: "none:SK-V14-W10-admit",
-        prior_redress_citation: "102",
+        route_id: "generated-json-parse-only-prefix-continuation",
+        redress_entry: "none:SK-V14-W10R-admit",
+        prior_redress_citation: "217",
     },
     JsonParseOnlyAdmissionSpec {
         label: "W10.4",
@@ -548,6 +548,22 @@ pub fn json_parse_only_admission_spec_for_corpus(
     JSON_PARSE_ONLY_ADMISSION_SPECS
         .iter()
         .find(|spec| spec.corpus == corpus && spec.bytes == bytes)
+}
+
+pub fn json_parse_only_audit_reference(spec: &JsonParseOnlyAdmissionSpec) -> &'static str {
+    if spec.wave_id == "SK-V14-W10R" {
+        "sk-v14-W10R:parse-only-prefix-continuation;sk-v14-W10:distinct-parse-only;sk-v13/v6-comparator-integrity:§1+§3"
+    } else {
+        "sk-v14-W10:distinct-parse-only;sk-v13/v6-comparator-integrity:§1+§3"
+    }
+}
+
+pub fn json_parse_only_open_delta(spec: &JsonParseOnlyAdmissionSpec) -> &'static str {
+    if spec.wave_id == "SK-V14-W10R" {
+        "admitted:SK-V14-W10R-parse-only-prefix-continuation"
+    } else {
+        "admitted:SK-V14-W10-parse-only-distinct"
+    }
 }
 
 const SKV13_CSS_FEATURES: &[&str] = &[
@@ -3741,7 +3757,7 @@ fn validate_skv14_manifest_rows(rows: &[SkV14ManifestRow]) -> Result<(), String>
     }
     if pending != 26 || falsified + sustained != 49 {
         return Err(format!(
-            "SK-V14 audit overlay expected pending=26 and falsified+sustained=49 after authorized W9/W10 admits, saw {falsified} / {pending} / {sustained}"
+            "SK-V14 audit overlay expected pending=26 and falsified+sustained=49 after authorized W9/W10/W10R admits, saw {falsified} / {pending} / {sustained}"
         ));
     }
     Ok(())
@@ -3761,31 +3777,33 @@ fn validate_skv14_sustained_row(row: &SkV14ManifestRow) -> Result<(), String> {
         return Ok(());
     }
     if is_skv14_w10_parse_row(&row.row_id) {
-        if row.wave_id != "SK-V14-W10"
+        let spec = json_parse_only_admission_spec_for_row_id(&row.row_id)
+            .ok_or_else(|| format!("{} lacks SK-V14 parse_only spec", row.row_id))?;
+        if row.wave_id != spec.wave_id
             || row.track1_entry_point != "runtime::generated_json::parse_only"
             || row.track2_entry_point != "bbnf_bench::json_parity::track2_structural_oracle"
             || row.comparator_plane != "parse_only/sonic_rs::Skipper"
             || row.same_wave_consumer_class != "generated_json_parse_only_contract"
             || row.track2_independence_status != "independent_verified"
             || row.substrate_target != "parse_only_validator"
-            || row.redress_entry != "none:SK-V14-W10-admit"
-            || row.sk_v14_open_delta != "admitted:SK-V14-W10-parse-only-distinct"
+            || row.redress_entry != spec.redress_entry
+            || row.sk_v14_open_delta != json_parse_only_open_delta(spec)
         {
             return Err(format!(
-                "{} is not a valid SK-V14 W10 sustained parse_only row",
+                "{} is not a valid SK-V14 sustained parse_only row",
                 row.row_id
             ));
         }
         if !valid_skv14_per_iter_pass(&row.per_iter_equality) {
             return Err(format!(
-                "{} lacks W10 timed per-iteration equality PASS",
+                "{} lacks SK-V14 timed per-iteration equality PASS",
                 row.row_id
             ));
         }
         return Ok(());
     }
     Err(format!(
-        "{} is AUDIT-SUSTAINED without W9 typed or W10 parse_only authority",
+        "{} is AUDIT-SUSTAINED without W9 typed or W10/W10R parse_only authority",
         row.row_id
     ))
 }
@@ -5722,11 +5740,15 @@ fn direct_track1_sota_reopen_passes(row: &TelemetryRow, track1: f64) -> bool {
 
 fn validate_w0_profile_artifact(row_id: &str, profile_artifact: &str) -> Result<(), String> {
     if let Some(rest) = profile_artifact.strip_prefix("profile_direct-cold:") {
-        if rest == "restart/skinny/tranches/sk-v14/research/skv14-W10-profile-direct.tsv" {
+        if matches!(
+            rest,
+            "restart/skinny/tranches/sk-v14/research/skv14-W10-profile-direct.tsv"
+                | "restart/skinny/tranches/sk-v14/research/skv14-W10R-parse-only-profile-direct.tsv"
+        ) {
             return Ok(());
         }
         return Err(format!(
-            "{row_id} profile_direct artifact {rest} does not match W10 profile_direct TSV"
+            "{row_id} profile_direct artifact {rest} does not match an authorized SK-V14 parse_only profile_direct TSV"
         ));
     }
     let Some(rest) = profile_artifact.strip_prefix("criterion-slope-profile:") else {
@@ -5750,10 +5772,16 @@ fn validate_w0_hot_leaf(
         return Err(format!("{row_id} still has placeholder hot leaf"));
     }
     if profile_artifact.starts_with("profile_direct-cold:") {
-        let expected = format!("{profile_artifact};hot-leaf=not-collected-in-W10-row;row={row_id}");
+        let hot_leaf_marker =
+            if profile_artifact.contains("skv14-W10R-parse-only-profile-direct.tsv") {
+                "not-collected-in-W10R-row"
+            } else {
+                "not-collected-in-W10-row"
+            };
+        let expected = format!("{profile_artifact};hot-leaf={hot_leaf_marker};row={row_id}");
         if hot_leaf != expected {
             return Err(format!(
-                "{row_id} hot leaf does not match W10 profile_direct artifact"
+                "{row_id} hot leaf does not match SK-V14 profile_direct artifact"
             ));
         }
         return Ok(());
@@ -6142,10 +6170,14 @@ fn validate_native_comparator_source(
             "serde_json" => "parse_only_serde",
             _ => "",
         };
-        let expected = format!(
-            "profile_direct:restart/skinny/tranches/sk-v14/research/skv14-W10-profile-direct.tsv,mode={mode}"
-        );
-        if comparator.source_artifact == expected {
+        let accepted_profile = [
+            "restart/skinny/tranches/sk-v14/research/skv14-W10-profile-direct.tsv",
+            "restart/skinny/tranches/sk-v14/research/skv14-W10R-parse-only-profile-direct.tsv",
+        ]
+        .into_iter()
+        .map(|path| format!("profile_direct:{path},mode={mode}"))
+        .any(|expected| comparator.source_artifact == expected);
+        if accepted_profile {
             return Ok(());
         }
     }
@@ -8343,10 +8375,9 @@ mod tests {
         row.sk_v8.run_id =
             TEST_SK_V9_OPEN_RUN_ID.replacen(SK_V9_OPEN_RUN_ID_PREFIX, spec.run_id_prefix, 1);
         row.sk_v8.audit_overlay_verdict = "AUDIT-SUSTAINED".into();
-        row.sk_v8.audit_overlay_reference =
-            "sk-v14-W10:distinct-parse-only;sk-v13/v6-comparator-integrity:§1+§3".into();
-        row.sk_v8.sk_v9_open_delta = "admitted:SK-V14-W10-parse-only-distinct".into();
-        row.sk_v8.sk_v14_open_delta = "admitted:SK-V14-W10-parse-only-distinct".into();
+        row.sk_v8.audit_overlay_reference = json_parse_only_audit_reference(spec).into();
+        row.sk_v8.sk_v9_open_delta = json_parse_only_open_delta(spec).into();
+        row.sk_v8.sk_v14_open_delta = json_parse_only_open_delta(spec).into();
     }
 
     fn w6_github_events_typed_row(track1_mbps: f64, track2_mbps: f64) -> TelemetryRow {

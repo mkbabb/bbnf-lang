@@ -164,7 +164,26 @@ pub fn match_string_at_quote_trusted_utf8(
     offset: usize,
 ) -> Result<StringMatch, RegexError> {
     debug_assert_eq!(input.get(offset), Some(&b'"'));
-    let mut cursor = skip_string_plain_trusted(input, offset + 1);
+    match_string_at_quote_after_plain_prefix_trusted_utf8(input, offset, offset + 1)
+}
+
+/// Continues matching a JSON string whose already-scanned prefix is known to
+/// contain no quote, escape, or control byte.
+///
+/// `cursor` must be the first unscanned byte after the opening quote. This
+/// lets generated parsers keep their tiny-string fast path without rescanning
+/// the same prefix when a string is longer than the tiny cap.
+#[inline(always)]
+pub fn match_string_at_quote_after_plain_prefix_trusted_utf8(
+    input: &[u8],
+    offset: usize,
+    cursor: usize,
+) -> Result<StringMatch, RegexError> {
+    debug_assert_eq!(input.get(offset), Some(&b'"'));
+    debug_assert!(cursor >= offset + 1);
+    debug_assert!(cursor <= input.len());
+
+    let mut cursor = skip_string_plain_trusted(input, cursor);
     let mut needs_unescape = false;
 
     loop {
@@ -999,6 +1018,20 @@ mod tests {
 
         let escaped = match_string(br#""a\nb\u0041""#, 0, StringMode::Utf8).unwrap();
         assert!(escaped.needs_decode());
+    }
+
+    #[test]
+    fn trusted_string_matcher_continues_after_plain_prefix() {
+        let input = br#""abcdefghijklmnopqrstuvwxyz""#;
+        let full = match_string_at_quote_trusted_utf8(input, 0).unwrap();
+        let continued = match_string_at_quote_after_plain_prefix_trusted_utf8(input, 0, 9).unwrap();
+        assert_eq!(continued, full);
+
+        let escaped_input = br#""abcdefghij\n""#;
+        let escaped =
+            match_string_at_quote_after_plain_prefix_trusted_utf8(escaped_input, 0, 9).unwrap();
+        assert!(escaped.needs_decode());
+        assert_eq!(escaped.raw_end, escaped_input.len());
     }
 
     #[test]

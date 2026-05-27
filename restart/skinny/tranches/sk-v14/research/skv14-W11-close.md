@@ -36,12 +36,13 @@ live-looking admission fragments in generated `RESULTS.md`.
 | W8 | REJECTED | REDRESS-215: 0 / 24 CSS L4 rows admitted; generated Track 1 remains fact-stream, not full-parse equality plane. |
 | W9 | MIXED | REDRESS-216: 11 / 17 JSON typed rows admitted; 17 / 17 direct rows remain open; 6 / 17 typed product surfaces remain missing. |
 | W10 | MIXED | REDRESS-217: 6 / 17 JSON parse_only rows admitted; 11 / 17 parse_only rows remain open. |
+| W10R | MIXED | REDRESS-218: `canada/parse_only` admitted by parse-only prefix continuation; parse_only state is now 7 / 17 admitted and 10 / 17 open. |
 
 ## Close-State Counts
 
 | Family | ADMITTED | OPEN | MISSING / blocked | Governing evidence |
 |---|---:|---:|---:|---|
-| JSON parse_only | 6 | 11 | 0 | W10 cold `profile_direct` evidence and REDRESS-217. |
+| JSON parse_only | 7 | 10 | 0 | W10/W10R cold `profile_direct` evidence and REDRESS-217/218. |
 | JSON direct_to_struct | 0 | 17 | 0 | W9 digest-plane rejection and REDRESS-216. |
 | JSON real_typed_struct | 11 | 0 | 6 | W9 cold typed evidence; missing products listed in REDRESS-216. |
 | CSS L4 | 0 | 24 | 0 | W8 production corpus rejection and REDRESS-215. |
@@ -59,17 +60,17 @@ remaining rows are implementation residuals, not closeable proof blocks.
 3. Missing JSON typed products remain for `canada`, `gsoc-2018`,
    `unicode_mixed`, `unicode_escapes`, `distinct_values`, and
    `y_string_unicode`.
-4. JSON parse_only residuals remain for `twitter`, `citm_catalog`, `canada`,
+4. JSON parse_only residuals remain for `twitter`, `citm_catalog`,
    `apache_builds`, `github_events`, `update_center`, `random`, `gsoc-2018`,
    `instruments`, `unicode_mixed`, and `distinct_values`.
 
 ## Reconciliation
 
 - `skinny/RESULTS.md` and `restart/skinny/ROLLING-SOTA-DELTA.md` agree on
-  six parse_only admits, seventeen direct opens, eleven typed admits plus six
+  seven parse_only admits, seventeen direct opens, eleven typed admits plus six
   missing typed products, and twenty-four CSS L4 opens.
 - `skinny/REDRESS.md` carries the live residuals as REDRESS-215,
-  REDRESS-216, and REDRESS-217.
+  REDRESS-216, REDRESS-217, and REDRESS-218.
 - `skinny/RESULTS.md` now renders CSS L4 legacy CostFacts as historical claims
   with current `AUDIT-FALSIFIED_OPEN` status, so the manifest no longer embeds
   live-looking `A` / `GO` / `ADMITTED-PARITY` fragments for OPEN CSS rows.
@@ -90,7 +91,7 @@ remaining rows are implementation residuals, not closeable proof blocks.
 
 ## W11 Disposition
 
-W11 closes SK-V14 as a mixed tranche, with admitted rows preserved and all
+W11/W10R close SK-V14 as a mixed tranche, with admitted rows preserved and all
 unmet rows routed to implementation residuals. Under the latest user
 instruction, the next work is implementation against the residual queue, not a
 new Omega or Alpha pass unless a future source attempt exposes a spec-level

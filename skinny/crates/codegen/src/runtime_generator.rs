@@ -46,8 +46,7 @@ pub(crate) fn emit_compiled(
     generated.push_str(&json_sink_direct::render(sink_only).map_err(CodegenError::Lowering)?);
     let mut host = normalize(JSON_HOST_RS);
     host.push('\n');
-    let mut module = normalize(JSON_MOD_RS);
-    module.push('\n');
+    let module = normalize(JSON_MOD_RS);
     let mut parser = include_str!("json_templates/parser.rs").to_string();
     parser.push('\n');
     parser.push_str(JSON_PARSE_ONLY_PARSER_RS.trim_start_matches('\n'));
@@ -391,21 +390,32 @@ fn parse_only_string<'i>(state: &mut ParseOnlyState<'i>) -> Result<(), ParseErro
     if state.bytes.get(start) != Some(&b'"') {
         return Err(parse_only_error(state, ParseErrorKind::ExpectedValue));
     }
-    if let Some(raw_end) = match_tiny_plain_string_direct(state.bytes, start) {
-        state.cursor = raw_end;
-        return Ok(());
-    }
-    let span =
-        match_string_at_quote_trusted_utf8(state.bytes, start).map_err(|err| ParseError {
-            input: state.input,
-            offset: err.offset,
-            kind: match err.kind {
-                RegexErrorKind::ExpectedString => ParseErrorKind::ExpectedValue,
-                _ => ParseErrorKind::InvalidString,
-            },
-        })?;
-    state.cursor = span.raw_end;
+    state.cursor = parse_only_string_end(state.bytes, start).map_err(|err| ParseError {
+        input: state.input,
+        offset: err.offset,
+        kind: match err.kind {
+            RegexErrorKind::ExpectedString => ParseErrorKind::ExpectedValue,
+            _ => ParseErrorKind::InvalidString,
+        },
+    })?;
     Ok(())
+}
+
+#[inline(always)]
+fn parse_only_string_end(input: &[u8], offset: usize) -> Result<usize, parse_that_regex::RegexError> {
+    let mut cursor = offset + 1;
+    let limit = (cursor + config::DIRECT_TINY_STRING_CAP).min(input.len());
+    while cursor < limit {
+        match input[cursor] {
+            b'"' => return Ok(cursor + 1),
+            b'\\' | 0x00..=0x1f => {
+                return match_string_at_quote_trusted_utf8(input, offset).map(|span| span.raw_end);
+            }
+            _ => cursor += 1,
+        }
+    }
+    parse_that_regex::match_string_at_quote_after_plain_prefix_trusted_utf8(input, offset, cursor)
+        .map(|span| span.raw_end)
 }
 
 #[cfg_attr(feature = "parse-attribution", inline(never))]
@@ -587,6 +597,7 @@ fn parse_only_error<'i>(state: &ParseOnlyState<'i>, kind: ParseErrorKind) -> Par
 "#;
 
 const JSON_PARSE_ONLY_PARSER_RS: &str = r#"
+#[inline(always)]
 pub fn parse_only<'i>(input: &'i str) -> Result<(), ParseError<'i>> {
     generated::parse_only(input)
 }

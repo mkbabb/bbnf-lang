@@ -1,0 +1,24 @@
+### twitter parse_only_track1
+PROBE_RESULT corpus=twitter corpus_bytes=631515 iters=1000 mode=parse_only_track1 warmup_iters=0 elapsed_s=0.404905 ns_per_byte=0.641165 mbps=12477.296 cycles=1666056823 instructions=4573410935 cycles_per_byte=2.638190 cpi=0.364292 user_ns=9500204 system_ns=78028 checksum=0
+### twitter parse_only_sonic
+PROBE_RESULT corpus=twitter corpus_bytes=631515 iters=1000 mode=parse_only_sonic warmup_iters=0 elapsed_s=0.310568 ns_per_byte=0.491783 mbps=16267.349 cycles=1300592516 instructions=4676641219 cycles_per_byte=2.059480 cpi=0.278104 user_ns=7349568 system_ns=40452 checksum=0
+### github_events parse_only_track1
+PROBE_RESULT corpus=github_events corpus_bytes=65132 iters=1000 mode=parse_only_track1 warmup_iters=0 elapsed_s=0.037040 ns_per_byte=0.568699 mbps=14067.197 cycles=155835512 instructions=449721453 cycles_per_byte=2.392611 cpi=0.346516 user_ns=877478 system_ns=5067 checksum=0
+### github_events parse_only_sonic
+PROBE_RESULT corpus=github_events corpus_bytes=65132 iters=1000 mode=parse_only_sonic warmup_iters=0 elapsed_s=0.030417 ns_per_byte=0.467012 mbps=17130.163 cycles=127721858 instructions=421638062 cycles_per_byte=1.960969 cpi=0.302918 user_ns=719196 system_ns=4635 checksum=0
+### update_center parse_only_track1
+PROBE_RESULT corpus=update_center corpus_bytes=533178 iters=1000 mode=parse_only_track1 warmup_iters=0 elapsed_s=0.413049 ns_per_byte=0.774692 mbps=10326.688 cycles=1733027964 instructions=4295228303 cycles_per_byte=3.250374 cpi=0.403477 user_ns=9762158 system_ns=62312 checksum=0
+### update_center parse_only_sonic
+PROBE_RESULT corpus=update_center corpus_bytes=533178 iters=1000 mode=parse_only_sonic warmup_iters=0 elapsed_s=0.291418 ns_per_byte=0.546568 mbps=14636.777 cycles=1227172166 instructions=3569788572 cycles_per_byte=2.301618 cpi=0.343766 user_ns=6903754 system_ns=37658 checksum=0
+### random parse_only_track1
+PROBE_RESULT corpus=random corpus_bytes=510476 iters=1000 mode=parse_only_track1 warmup_iters=0 elapsed_s=0.474962 ns_per_byte=0.930429 mbps=8598.184 cycles=1999581306 instructions=5952979627 cycles_per_byte=3.917092 cpi=0.335896 user_ns=11258702 system_ns=56677 checksum=0
+### random parse_only_sonic
+PROBE_RESULT corpus=random corpus_bytes=510476 iters=1000 mode=parse_only_sonic warmup_iters=0 elapsed_s=0.378698 ns_per_byte=0.741853 mbps=10783.814 cycles=1592315451 instructions=6044963506 cycles_per_byte=3.119276 cpi=0.263412 user_ns=8965697 system_ns=47392 checksum=0
+### gsoc-2018 parse_only_track1
+PROBE_RESULT corpus=gsoc-2018 corpus_bytes=3327831 iters=1000 mode=parse_only_track1 warmup_iters=0 elapsed_s=1.169560 ns_per_byte=0.351448 mbps=22762.956 cycles=4925460734 instructions=17257739913 cycles_per_byte=1.480081 cpi=0.285406 user_ns=27697774 system_ns=150867 checksum=0
+### gsoc-2018 parse_only_sonic
+PROBE_RESULT corpus=gsoc-2018 corpus_bytes=3327831 iters=1000 mode=parse_only_sonic warmup_iters=0 elapsed_s=0.735009 ns_per_byte=0.220867 mbps=36220.848 cycles=3100504328 instructions=10740378896 cycles_per_byte=0.931689 cpi=0.288677 user_ns=17395988 system_ns=103198 checksum=0
+### distinct_values parse_only_track1
+PROBE_RESULT corpus=distinct_values corpus_bytes=153630 iters=1000 mode=parse_only_track1 warmup_iters=0 elapsed_s=0.182719 ns_per_byte=1.189344 mbps=6726.396 cycles=770827542 instructions=1590436362 cycles_per_byte=5.017429 cpi=0.484664 user_ns=4323246 system_ns=26399 checksum=0
+### distinct_values parse_only_sonic
+PROBE_RESULT corpus=distinct_values corpus_bytes=153630 iters=1000 mode=parse_only_sonic warmup_iters=0 elapsed_s=0.103941 ns_per_byte=0.676569 mbps=11824.367 cycles=437568565 instructions=1384676036 cycles_per_byte=2.848197 cpi=0.316008 user_ns=2456225 system_ns=15820 checksum=0

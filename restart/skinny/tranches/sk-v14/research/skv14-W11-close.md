@@ -19,14 +19,16 @@ evidence without landing the transient source patch. W11G then tested a
 generated key-string plus colon fusion with no value-byte carry and rejected it
 on same-run cold evidence without landing the transient source patch. W11H
 then tested a generated object-member value-byte carry route and rejected it on
-same-run cold evidence without landing the transient source patch.
+same-run cold evidence without landing the transient source patch. W11I then
+tested a generated array comma-to-next-value byte carry route and rejected it
+on same-run cold evidence without landing the transient source patch.
 
 ## Authority
 
 - `restart/skinny/tranches/sk-v14/SPEC.md` Section 14.
 - `restart/skinny/tranches/sk-v14/SYNTHESIS.md` R10.
 - `skinny/RESULTS.md`.
-- `skinny/REDRESS.md` items 215 through 238.
+- `skinny/REDRESS.md` items 215 through 239.
 - `restart/skinny/ROLLING-SOTA-DELTA.md`.
 - `restart/skinny/tranches/sk-v14/HANDOFF.md`.
 
@@ -70,6 +72,7 @@ same-run cold evidence without landing the transient source patch.
 | W11F | REJECTED | REDRESS-236: transient object-member string/object fast arm passed correctness but missed strict sonic on all six residual rows; no source patch landed and no row moved. |
 | W11G | REJECTED | REDRESS-237: transient key-string plus colon fusion passed correctness but missed strict sonic on all six residual rows; no source patch landed and no row moved. |
 | W11H | REJECTED | REDRESS-238: transient object-member value-byte carry passed correctness but missed strict sonic on all six residual rows; no source patch landed and no row moved. |
+| W11I | REJECTED | REDRESS-239: transient array value-byte carry passed correctness but missed strict sonic on all six residual rows; no source patch landed and no row moved. |
 
 ## Close-State Counts
 
@@ -106,7 +109,8 @@ remaining rows are implementation residuals, not closeable proof blocks.
    without value-byte carry is not enough to move any row. W11G proved that
    fusing key-string validation with colon consumption, still without
    value-byte carry, is also insufficient. W11H proved that carrying the
-   post-colon value byte into all value arms is likewise insufficient.
+   post-colon value byte into all value arms is likewise insufficient. W11I
+   proved that carrying array comma next-value bytes is also insufficient.
 
 ## Reconciliation
 
@@ -118,8 +122,8 @@ remaining rows are implementation residuals, not closeable proof blocks.
   REDRESS-216, REDRESS-217, REDRESS-218, REDRESS-219, REDRESS-220,
   REDRESS-222, REDRESS-223, REDRESS-224, REDRESS-225, REDRESS-226,
   REDRESS-227, REDRESS-228, REDRESS-229, REDRESS-230, REDRESS-231,
-  REDRESS-232, REDRESS-233, REDRESS-234, REDRESS-235, REDRESS-236, and
-  REDRESS-237, and REDRESS-238.
+  REDRESS-232, REDRESS-233, REDRESS-234, REDRESS-235, REDRESS-236,
+  REDRESS-237, REDRESS-238, and REDRESS-239.
 - `skinny/RESULTS.md` now renders CSS L4 legacy CostFacts as historical claims
   with current `AUDIT-FALSIFIED_OPEN` status, so the manifest no longer embeds
   live-looking `A` / `GO` / `ADMITTED-PARITY` fragments for OPEN CSS rows.
@@ -184,6 +188,10 @@ remaining rows are implementation residuals, not closeable proof blocks.
   regen-json`, `cargo xtask check-json`, focused runtime/codegen parse_only
   tests, plus cold reject evidence retained at
   `restart/skinny/tranches/sk-v14/research/skv14-W11H-parse-only-value-byte-carry.md`.
+- W11I local evidence before this close packet update: `cargo xtask
+  regen-json`, `cargo xtask check-json`, focused runtime/codegen parse_only
+  tests, plus cold reject evidence retained at
+  `restart/skinny/tranches/sk-v14/research/skv14-W11I-parse-only-array-value-carry.md`.
 - Close invariants remain: 16 locks, Pattern H count 67, Lock 10 five-shape
   `BackendShape` canon preserved, and generated JSON parse_only remains
   distinct from the tape-building path.
@@ -192,7 +200,7 @@ remaining rows are implementation residuals, not closeable proof blocks.
 
 W11/W10R/W10S/W10T/W10V/W10W close SK-V14 as a mixed tranche, with admitted
 rows preserved and all unmet rows routed to implementation residuals. W10X,
-W10Y/W10Z, W10AA, W9Y, W9AC, W11B, W11C, W11D, W11E, W11F, W11G, and W11H add post-close residual
+W10Y/W10Z, W10AA, W9Y, W9AC, W11B, W11C, W11D, W11E, W11F, W11G, W11H, and W11I add post-close residual
 rejection evidence; W9AA and W9AB add post-close typed admits for
 `distinct_values/real_typed_struct` and `canada/real_typed_struct`.
 Under the latest user instruction, the next work is implementation against the
@@ -334,6 +342,33 @@ exposes a spec-level amendment that truly requires G-Omega.
   `gsoc-2018` margin `-13566.659` Mbps, and `distinct_values` margin
   `-5371.352` Mbps versus the `sonic + 1.0` floor. Retained evidence:
   `restart/skinny/tranches/sk-v14/research/skv14-W11H-parse-only-value-byte-carry.md`,
+  `.tsv`, and `.raw.log`.
+- Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
+  `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
+  `distinct_values`.
+
+## SK-V14 W11I JSON parse_only Array Value-Byte Carry Reject
+
+- Item 239 closes `G-SK-V14-W11I-JSON-PARSE-ONLY-ARRAY-VALUE-BYTE-CARRY` as
+  `REJECT`. No source patch lands, no `RESULTS.md` row moves, and
+  `restart/skinny/ROLLING-SOTA-DELTA.md` remains unchanged.
+- The measured candidate returned the next value byte from
+  `parse_only_consume_array_next` after comma whitespace and dispatched it
+  through `parse_only_begin_value_with_byte`. The patch was reverted after
+  measurement and retained as
+  `/tmp/skv14-W11I-parse-only-array-value-carry-rejected.patch` with SHA-256
+  `2ad5a499b1f4deae57aa0fd2cdf4ea733bd49627a5efbf89c02066090c185c64`.
+- Correctness gates passed before measurement: `cargo xtask regen-json`,
+  `cargo xtask check-json`, `cargo test --profile ax-iter -p runtime
+  generated_parse_only_accepts_and_rejects_json -- --nocapture`, and
+  `cargo test --profile ax-iter -p codegen
+  emits_distinct_json_parse_only_path_without_tape_builder -- --nocapture`.
+- Cold `profile_direct` evidence rejects all six open parse_only rows:
+  `twitter` margin `-3791.053` Mbps, `github_events` margin `-3063.966` Mbps,
+  `update_center` margin `-4311.089` Mbps, `random` margin `-2186.630` Mbps,
+  `gsoc-2018` margin `-13458.892` Mbps, and `distinct_values` margin
+  `-5098.971` Mbps versus the `sonic + 1.0` floor. Retained evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W11I-parse-only-array-value-carry.md`,
   `.tsv`, and `.raw.log`.
 - Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
   `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and

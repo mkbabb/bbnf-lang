@@ -725,12 +725,14 @@ const FROZEN_ROOTS: &[&str] = &[
     "../crates/core/src/runtime/css_pretty",
     "../crates/core/src/runtime/csv",
     "../crates/core/src/runtime/ebnf",
+    "../crates/core/src/runtime/google_sheets",
     "../crates/core/src/runtime/math",
     "../xtask/runtime-projections/bnf.toml",
     "../xtask/runtime-projections/css_l4.toml",
     "../xtask/runtime-projections/css_pretty.toml",
     "../xtask/runtime-projections/csv.toml",
     "../xtask/runtime-projections/ebnf.toml",
+    "../xtask/runtime-projections/google_sheets.toml",
     "../xtask/runtime-projections/math.toml",
     "../xtask/src/lib.rs",
     "../xtask/src/main.rs",
@@ -1239,6 +1241,23 @@ const SK_V14_W6_5_ROOT_CSS_PRETTY_OWNER_PATHS: &[&str] = &[
     "../xtask/src/main.rs",
 ];
 
+const SK_V14_W6_6_ROOT_GOOGLE_SHEETS_OWNER_PATHS: &[&str] = &[
+    "crates/bbnf-bench/src/lock14_baseline.rs",
+    "../crates/core/src/runtime/google_sheets/arena.rs",
+    "../crates/core/src/runtime/google_sheets/builder.rs",
+    "../crates/core/src/runtime/google_sheets/document/canonical.rs",
+    "../crates/core/src/runtime/google_sheets/document/mod.rs",
+    "../crates/core/src/runtime/google_sheets/document/path_query.rs",
+    "../crates/core/src/runtime/google_sheets/document/view.rs",
+    "../crates/core/src/runtime/google_sheets/mod.rs",
+    "../crates/core/src/runtime/google_sheets/parse_with.rs",
+    "../crates/core/src/runtime/google_sheets/value.rs",
+    "../crates/core/src/runtime/google_sheets/view.rs",
+    "../xtask/runtime-projections/google_sheets.toml",
+    "../xtask/src/main.rs",
+    "../xtask/src/regen_simple_runtime.rs",
+];
+
 fn current_lock14_owner_paths() -> Vec<&'static str> {
     let mut paths = Vec::with_capacity(
         SK_V12_W1A_OWNER_PATHS.len()
@@ -1275,7 +1294,8 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
             + SK_V14_W6_2_ROOT_CSV_OWNER_PATHS.len()
             + SK_V14_W6_3_ROOT_BNF_OWNER_PATHS.len()
             + SK_V14_W6_4_ROOT_EBNF_OWNER_PATHS.len()
-            + SK_V14_W6_5_ROOT_CSS_PRETTY_OWNER_PATHS.len(),
+            + SK_V14_W6_5_ROOT_CSS_PRETTY_OWNER_PATHS.len()
+            + SK_V14_W6_6_ROOT_GOOGLE_SHEETS_OWNER_PATHS.len(),
     );
     paths.extend_from_slice(SK_V12_W1A_OWNER_PATHS);
     paths.extend_from_slice(SK_V12_W1B1_OWNER_PATHS);
@@ -1312,6 +1332,7 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
     paths.extend_from_slice(SK_V14_W6_3_ROOT_BNF_OWNER_PATHS);
     paths.extend_from_slice(SK_V14_W6_4_ROOT_EBNF_OWNER_PATHS);
     paths.extend_from_slice(SK_V14_W6_5_ROOT_CSS_PRETTY_OWNER_PATHS);
+    paths.extend_from_slice(SK_V14_W6_6_ROOT_GOOGLE_SHEETS_OWNER_PATHS);
     paths
 }
 
@@ -1857,6 +1878,14 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
             return Ok(());
         }
     }
+    if is_w6_6_root_google_sheets_subject(subject) {
+        let allowed = changed_paths
+            .iter()
+            .all(|path| is_allowed_path(path, SK_V14_W6_6_ROOT_GOOGLE_SHEETS_OWNER_PATHS));
+        if allowed {
+            return Ok(());
+        }
+    }
     Err(format!(
         "Lock 14 frozen diff failed for parent paths [{}]",
         changed_paths.join(", ")
@@ -1934,6 +1963,14 @@ fn is_w6_5_root_css_pretty_subject(subject: &str) -> bool {
         || subject.contains("sk-v14-w6.5")
         || subject.contains("sk-v14-wavew6_5")
         || subject.contains("sk-v14-w6_5")
+}
+
+fn is_w6_6_root_google_sheets_subject(subject: &str) -> bool {
+    let subject = subject.to_ascii_lowercase();
+    subject.contains("sk-v14-wavew6.6")
+        || subject.contains("sk-v14-w6.6")
+        || subject.contains("sk-v14-wavew6_6")
+        || subject.contains("sk-v14-w6_6")
 }
 
 fn git_output(root: &Path, args: &[&str]) -> Result<String, String> {
@@ -2679,6 +2716,7 @@ mod tests {
             .collect::<Vec<_>>();
         for subject in [
             "feat(sk-v14-waveW6): collapse root runtime cohort",
+            "feat(sk-v14-waveW6.6): collapse root google sheets runtime",
             "feat(sk-v14-waveW6.5): collapse root css pretty runtime",
             "feat(sk-v14-waveW6.4): collapse root ebnf runtime",
             "feat(sk-v14-waveW6.3): collapse root bnf runtime",
@@ -2698,8 +2736,10 @@ mod tests {
         for outside in [
             "../crates/core/src/runtime/css_pretty/mod.rs",
             "../crates/core/src/runtime/math/mod.rs",
+            "../crates/core/src/runtime/google_sheets/mod.rs",
             "../crates/core/src/runtime/json/mod.rs",
             "../xtask/runtime-projections/css_pretty.toml",
+            "../xtask/runtime-projections/google_sheets.toml",
             "../xtask/runtime-projections/json.toml",
             "../xtask/src/other.rs",
             "../Cargo.toml",
@@ -2787,6 +2827,7 @@ mod tests {
             .collect::<Vec<_>>();
         for subject in [
             "feat(sk-v14-waveW6): collapse root runtime cohort",
+            "feat(sk-v14-waveW6.6): collapse root google sheets runtime",
             "feat(sk-v14-waveW6.5): collapse root css pretty runtime",
             "feat(sk-v14-waveW6.4): collapse root ebnf runtime",
             "feat(sk-v14-waveW6.3): collapse root bnf runtime",
@@ -2806,9 +2847,11 @@ mod tests {
         for outside in [
             "../crates/core/src/runtime/css_l4/mod.rs",
             "../crates/core/src/runtime/css_pretty/mod.rs",
+            "../crates/core/src/runtime/google_sheets/mod.rs",
             "../crates/core/src/runtime/json/mod.rs",
             "../xtask/runtime-projections/css_l4.toml",
             "../xtask/runtime-projections/css_pretty.toml",
+            "../xtask/runtime-projections/google_sheets.toml",
             "../xtask/runtime-projections/json.toml",
             "../xtask/src/regen_css.rs",
             "../Cargo.toml",
@@ -2900,6 +2943,7 @@ mod tests {
             .collect::<Vec<_>>();
         for subject in [
             "feat(sk-v14-waveW6): collapse root runtime cohort",
+            "feat(sk-v14-waveW6.6): collapse root google sheets runtime",
             "feat(sk-v14-waveW6.5): collapse root css pretty runtime",
             "feat(sk-v14-waveW6.4): collapse root ebnf runtime",
             "feat(sk-v14-waveW6.3): collapse root bnf runtime",
@@ -2919,9 +2963,11 @@ mod tests {
         for outside in [
             "../crates/core/src/runtime/css_l4/mod.rs",
             "../crates/core/src/runtime/css_pretty/mod.rs",
+            "../crates/core/src/runtime/google_sheets/mod.rs",
             "../crates/core/src/runtime/math/mod.rs",
             "../crates/core/src/runtime/json/mod.rs",
             "../xtask/runtime-projections/css_pretty.toml",
+            "../xtask/runtime-projections/google_sheets.toml",
             "../xtask/runtime-projections/math.toml",
             "../xtask/runtime-projections/json.toml",
             "../xtask/src/regen_simple_runtime.rs",
@@ -3014,6 +3060,7 @@ mod tests {
             .collect::<Vec<_>>();
         for subject in [
             "feat(sk-v14-waveW6): collapse root runtime cohort",
+            "feat(sk-v14-waveW6.6): collapse root google sheets runtime",
             "feat(sk-v14-waveW6.5): collapse root css pretty runtime",
             "feat(sk-v14-waveW6.4): collapse root ebnf runtime",
             "feat(sk-v14-waveW6.2): collapse root csv runtime",
@@ -3034,11 +3081,13 @@ mod tests {
             "../crates/core/src/runtime/css_l4/mod.rs",
             "../crates/core/src/runtime/css_pretty/mod.rs",
             "../crates/core/src/runtime/csv/mod.rs",
+            "../crates/core/src/runtime/google_sheets/mod.rs",
             "../crates/core/src/runtime/math/mod.rs",
             "../crates/core/src/runtime/json/mod.rs",
             "../crates/core/src/runtime/bbnf/mod.rs",
             "../xtask/runtime-projections/css_pretty.toml",
             "../xtask/runtime-projections/csv.toml",
+            "../xtask/runtime-projections/google_sheets.toml",
             "../xtask/runtime-projections/math.toml",
             "../xtask/runtime-projections/json.toml",
             "../xtask/src/regen_simple_runtime.rs",
@@ -3132,6 +3181,7 @@ mod tests {
             .collect::<Vec<_>>();
         for subject in [
             "feat(sk-v14-waveW6): collapse root runtime cohort",
+            "feat(sk-v14-waveW6.6): collapse root google sheets runtime",
             "feat(sk-v14-waveW6.5): collapse root css pretty runtime",
             "feat(sk-v14-waveW6.3): collapse root bnf runtime",
             "feat(sk-v14-waveW6.2): collapse root csv runtime",
@@ -3152,6 +3202,7 @@ mod tests {
             "../crates/core/src/runtime/css_l4/mod.rs",
             "../crates/core/src/runtime/css_pretty/mod.rs",
             "../crates/core/src/runtime/csv/mod.rs",
+            "../crates/core/src/runtime/google_sheets/mod.rs",
             "../crates/core/src/runtime/math/mod.rs",
             "../crates/core/src/runtime/bnf/mod.rs",
             "../crates/core/src/runtime/json/mod.rs",
@@ -3159,6 +3210,7 @@ mod tests {
             "../xtask/runtime-projections/bnf.toml",
             "../xtask/runtime-projections/css_pretty.toml",
             "../xtask/runtime-projections/csv.toml",
+            "../xtask/runtime-projections/google_sheets.toml",
             "../xtask/runtime-projections/math.toml",
             "../xtask/runtime-projections/json.toml",
             "../xtask/src/regen_simple_runtime.rs",
@@ -3252,6 +3304,7 @@ mod tests {
             .collect::<Vec<_>>();
         for subject in [
             "feat(sk-v14-waveW6): collapse root runtime cohort",
+            "feat(sk-v14-waveW6.6): collapse root google sheets runtime",
             "feat(sk-v14-waveW6.4): collapse root ebnf runtime",
             "feat(sk-v14-waveW6.3): collapse root bnf runtime",
             "feat(sk-v14-waveW6.2): collapse root csv runtime",
@@ -3274,11 +3327,13 @@ mod tests {
             "../crates/core/src/runtime/math/mod.rs",
             "../crates/core/src/runtime/bnf/mod.rs",
             "../crates/core/src/runtime/ebnf/mod.rs",
+            "../crates/core/src/runtime/google_sheets/mod.rs",
             "../crates/core/src/runtime/json/mod.rs",
             "../crates/core/src/runtime/bbnf/mod.rs",
             "../xtask/runtime-projections/bnf.toml",
             "../xtask/runtime-projections/csv.toml",
             "../xtask/runtime-projections/ebnf.toml",
+            "../xtask/runtime-projections/google_sheets.toml",
             "../xtask/runtime-projections/math.toml",
             "../xtask/runtime-projections/json.toml",
             "../xtask/src/regen_simple_runtime.rs",
@@ -3342,6 +3397,129 @@ mod tests {
             assert!(
                 !path.contains("_provider.rs") && !path.contains("_templates"),
                 "{path} leaks provider/template residue into W6.5"
+            );
+        }
+    }
+
+    #[test]
+    fn w6_6_root_google_sheets_owner_paths_admit() {
+        let changed = SK_V14_W6_6_ROOT_GOOGLE_SHEETS_OWNER_PATHS
+            .iter()
+            .map(|path| (*path).to_string())
+            .collect::<Vec<_>>();
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v14-waveW6.6): collapse root google sheets runtime"
+        )
+        .is_ok());
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "docs(sk-v14-waveW6.6-redress): reject root google sheets collapse"
+        )
+        .is_ok());
+    }
+
+    #[test]
+    fn w6_6_root_google_sheets_rejects_broad_w6_subjects() {
+        let changed = SK_V14_W6_6_ROOT_GOOGLE_SHEETS_OWNER_PATHS
+            .iter()
+            .map(|path| (*path).to_string())
+            .collect::<Vec<_>>();
+        for subject in [
+            "feat(sk-v14-waveW6): collapse root runtime cohort",
+            "feat(sk-v14-waveW6.5): collapse root css pretty runtime",
+            "feat(sk-v14-waveW6.4): collapse root ebnf runtime",
+            "feat(sk-v14-waveW6.3): collapse root bnf runtime",
+            "feat(sk-v14-waveW6.2): collapse root csv runtime",
+            "feat(sk-v14-waveW6.1): collapse root math runtime",
+            "feat(sk-v14-waveW6.0): collapse root css l4 runtime",
+            "feat(sk-v14-waveW5D-DELETE): delete provider template residue",
+        ] {
+            assert!(
+                validate_authorized_parent_diff(&changed, subject).is_err(),
+                "{subject} must not authorize W6.6 root Google Sheets paths"
+            );
+        }
+    }
+
+    #[test]
+    fn w6_6_root_google_sheets_rejects_sibling_root_runtime_and_xtask() {
+        for outside in [
+            "../crates/core/src/runtime/css_l4/mod.rs",
+            "../crates/core/src/runtime/css_pretty/mod.rs",
+            "../crates/core/src/runtime/csv/mod.rs",
+            "../crates/core/src/runtime/math/mod.rs",
+            "../crates/core/src/runtime/bnf/mod.rs",
+            "../crates/core/src/runtime/ebnf/mod.rs",
+            "../crates/core/src/runtime/json/mod.rs",
+            "../crates/core/src/runtime/bbnf/mod.rs",
+            "../xtask/runtime-projections/bnf.toml",
+            "../xtask/runtime-projections/css_pretty.toml",
+            "../xtask/runtime-projections/csv.toml",
+            "../xtask/runtime-projections/ebnf.toml",
+            "../xtask/runtime-projections/math.toml",
+            "../xtask/runtime-projections/json.toml",
+            "../xtask/src/lib.rs",
+            "../Cargo.toml",
+        ] {
+            let mut changed = SK_V14_W6_6_ROOT_GOOGLE_SHEETS_OWNER_PATHS
+                .iter()
+                .map(|path| (*path).to_string())
+                .collect::<Vec<_>>();
+            changed.push(outside.to_string());
+            assert!(
+                validate_authorized_parent_diff(
+                    &changed,
+                    "feat(sk-v14-waveW6.6): collapse root google sheets runtime"
+                )
+                .is_err(),
+                "{outside} must not be admitted by W6.6"
+            );
+        }
+    }
+
+    #[test]
+    fn w6_6_root_google_sheets_inventory_is_exact() {
+        let google_sheets_runtime_files = SK_V14_W6_6_ROOT_GOOGLE_SHEETS_OWNER_PATHS
+            .iter()
+            .filter(|path| {
+                path.starts_with("../crates/core/src/runtime/google_sheets/")
+                    && path.ends_with(".rs")
+            })
+            .count();
+        assert_eq!(
+            google_sheets_runtime_files, 10,
+            "W6.6 owns the ten Google Sheets runtime files"
+        );
+        let projection_sources = SK_V14_W6_6_ROOT_GOOGLE_SHEETS_OWNER_PATHS
+            .iter()
+            .filter(|path| path.starts_with("../xtask/runtime-projections/"))
+            .count();
+        assert_eq!(
+            projection_sources, 1,
+            "W6.6 owns exactly the Google Sheets runtime projection source"
+        );
+        for path in SK_V14_W6_6_ROOT_GOOGLE_SHEETS_OWNER_PATHS {
+            assert_ne!(
+                *path, "../crates/core/src/runtime/",
+                "W6.6 must not own the full root runtime"
+            );
+            assert_ne!(
+                *path, "../crates/core/src/runtime/google_sheets/",
+                "W6.6 must enumerate Google Sheets runtime files"
+            );
+            assert_ne!(*path, "../xtask/src/", "W6.6 must not own all root xtask");
+            assert_ne!(
+                *path, "../xtask/runtime-projections/",
+                "W6.6 must not own all root runtime projections"
+            );
+            assert!(
+                !path.contains("crates/runtime/src/grammars/"),
+                "{path} leaks skinny output into W6.6"
+            );
+            assert!(
+                !path.contains("_provider.rs") && !path.contains("_templates"),
+                "{path} leaks provider/template residue into W6.6"
             );
         }
     }
@@ -3703,6 +3881,10 @@ mod tests {
             "../crates/core/src/runtime/math/value.rs"
         );
         assert_eq!(
+            normalize_git_path("crates/core/src/runtime/google_sheets/value.rs"),
+            "../crates/core/src/runtime/google_sheets/value.rs"
+        );
+        assert_eq!(
             normalize_git_path("xtask/runtime-projections/css_l4.toml"),
             "../xtask/runtime-projections/css_l4.toml"
         );
@@ -3717,6 +3899,10 @@ mod tests {
         assert_eq!(
             normalize_git_path("xtask/runtime-projections/ebnf.toml"),
             "../xtask/runtime-projections/ebnf.toml"
+        );
+        assert_eq!(
+            normalize_git_path("xtask/runtime-projections/google_sheets.toml"),
+            "../xtask/runtime-projections/google_sheets.toml"
         );
         assert_eq!(
             normalize_git_path("xtask/runtime-projections/math.toml"),

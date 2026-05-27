@@ -8,7 +8,7 @@
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::{anyhow, bail, Context, Result};
 use bbnf_ir::registry::StructRegistry;
 
 #[derive(Debug, serde::Deserialize)]
@@ -22,7 +22,17 @@ struct RuntimeProjection {
     parser_type: String,
     type_prefix: String,
     module_name: String,
+    #[serde(default)]
+    runtime_style: RuntimeStyle,
     kind: KindProjection,
+}
+
+#[derive(Debug, Default, serde::Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+enum RuntimeStyle {
+    #[default]
+    Simple,
+    TypedFormula,
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -32,6 +42,8 @@ struct KindProjection {
     variants: Vec<String>,
     #[serde(default)]
     routes: Vec<KindRoute>,
+    #[serde(default)]
+    transparent: Vec<String>,
 }
 
 #[derive(Debug, serde::Deserialize, PartialEq, Eq)]
@@ -62,26 +74,32 @@ pub fn run(grammar: &str) -> Result<()> {
     let registry = load_registry(&workspace_root, &projection)?;
     let kind_routes = resolve_kind_routes(&projection, &registry)?;
 
-    let output_dir = workspace_root.join(&projection.output_dir);
-    std::fs::create_dir_all(&output_dir)
-        .with_context(|| format!("create `{}`", output_dir.display()))?;
+    let files = match projection.runtime_style {
+        RuntimeStyle::Simple => emit_simple_runtime(&projection, &kind_routes),
+        RuntimeStyle::TypedFormula => emit_typed_formula_runtime(&projection, &kind_routes),
+    };
 
-    let files = [
-        ("arena.rs", emit_arena(&projection)),
-        ("builder.rs", emit_builder(&projection)),
-        ("document.rs", emit_document(&projection)),
-        ("kind.rs", emit_kind(&projection, &kind_routes)),
-        ("mod.rs", emit_mod(&projection)),
-        ("value.rs", emit_value(&projection)),
-        ("view.rs", emit_view(&projection)),
-    ];
-
-    for (name, source) in files {
-        let path = output_dir.join(name);
+    for (relative, source) in files {
+        let path = workspace_root.join(&projection.output_dir).join(relative);
         write_if_changed(&path, &format_rust(&source, &path)?)?;
     }
 
     Ok(())
+}
+
+fn emit_simple_runtime(
+    projection: &RuntimeProjection,
+    kind_routes: &[ResolvedKindRoute],
+) -> Vec<(String, String)> {
+    vec![
+        ("arena.rs".into(), emit_arena(projection)),
+        ("builder.rs".into(), emit_builder(projection)),
+        ("document.rs".into(), emit_document(projection)),
+        ("kind.rs".into(), emit_kind(projection, kind_routes)),
+        ("mod.rs".into(), emit_mod(projection)),
+        ("value.rs".into(), emit_value(projection)),
+        ("view.rs".into(), emit_view(projection)),
+    ]
 }
 
 fn workspace_root() -> Result<PathBuf> {
@@ -167,14 +185,6 @@ fn validate_projection(projection: &RuntimeProjection) -> Result<()> {
             projection.module_name
         );
     }
-    let expected_parser = format!("{}Parser", projection.type_prefix);
-    if projection.parser_type != expected_parser {
-        bail!(
-            "simple runtime projection `{}` has parser_type `{}`, expected `{expected_parser}`",
-            projection.grammar,
-            projection.parser_type
-        );
-    }
     validate_ident(&projection.type_prefix, "type_prefix")?;
     validate_ident(&projection.module_name, "module_name")?;
     validate_ident(&projection.parser_type, "parser_type")?;
@@ -193,6 +203,12 @@ fn validate_projection(projection: &RuntimeProjection) -> Result<()> {
             "default compound-kind variant `{}` is not declared",
             projection.kind.default
         );
+    }
+    for variant in &projection.kind.transparent {
+        validate_ident(variant, "transparent compound-kind variant")?;
+        if !seen.contains(variant) {
+            bail!("transparent compound-kind variant `{variant}` is not declared");
+        }
     }
     match projection.kind.layout_mode {
         LayoutMode::AlwaysDefault if !projection.kind.routes.is_empty() => {
@@ -291,6 +307,1184 @@ fn write_if_changed(path: &Path, source: &str) -> Result<()> {
             .with_context(|| format!("create parent dir for `{}`", path.display()))?;
     }
     std::fs::write(path, source).with_context(|| format!("write `{}`", path.display()))
+}
+
+fn emit_typed_formula_runtime(
+    projection: &RuntimeProjection,
+    routes: &[ResolvedKindRoute],
+) -> Vec<(String, String)> {
+    vec![
+        (
+            "arena.rs".into(),
+            emit_typed_formula_arena(projection, routes),
+        ),
+        ("builder.rs".into(), emit_typed_formula_builder(projection)),
+        (
+            "document/canonical.rs".into(),
+            emit_typed_formula_document_canonical(projection),
+        ),
+        (
+            "document/mod.rs".into(),
+            emit_typed_formula_document_mod(projection),
+        ),
+        (
+            "document/path_query.rs".into(),
+            emit_typed_formula_document_path_query(projection),
+        ),
+        (
+            "document/view.rs".into(),
+            emit_typed_formula_document_view(projection),
+        ),
+        ("mod.rs".into(), emit_typed_formula_mod(projection)),
+        (
+            "parse_with.rs".into(),
+            emit_typed_formula_parse_with(projection),
+        ),
+        ("value.rs".into(), emit_typed_formula_value(projection)),
+        ("view.rs".into(), emit_typed_formula_view(projection)),
+    ]
+}
+
+fn runtime_template(source: &str, projection: &RuntimeProjection) -> String {
+    source
+        .replace("__P__", &projection.type_prefix)
+        .replace("__MODULE__", &projection.runtime_module)
+        .replace("__PARSER__", &projection.parser_type)
+        .replace("__ENTRY__", &projection.entry_rule)
+}
+
+fn emit_typed_formula_arena(
+    projection: &RuntimeProjection,
+    routes: &[ResolvedKindRoute],
+) -> String {
+    let variants = projection
+        .kind
+        .variants
+        .iter()
+        .map(|variant| format!("    {variant},"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    let arms = routes
+        .iter()
+        .map(|route| format!("            {} => Self::{},", route.rule_id, route.kind))
+        .collect::<Vec<_>>()
+        .join("\n");
+    let transparent = if projection.kind.transparent.is_empty() {
+        "false".to_string()
+    } else {
+        format!(
+            "matches!(self, {})",
+            projection
+                .kind
+                .transparent
+                .iter()
+                .map(|variant| format!("Self::{variant}"))
+                .collect::<Vec<_>>()
+                .join(" | ")
+        )
+    };
+    runtime_template(
+        &format!(
+            r#"
+use bbnf_ir::registry::StructLayout;
+
+use __MODULE__::value::__P__Value;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum __P__CompoundKind {{
+__VARIANTS__
+}}
+
+impl __P__CompoundKind {{
+    #[inline]
+    pub fn is_transparent_wrap(self) -> bool {{
+        __TRANSPARENT__
+    }}
+
+    #[inline]
+    pub fn from_layout(layout: &StructLayout) -> Self {{
+        match layout.rule_id {{
+__ARMS__
+            _ => Self::__DEFAULT__,
+        }}
+    }}
+}}
+
+#[derive(Debug, Clone)]
+pub struct __P__Compound<'p> {{
+    pub kind: __P__CompoundKind,
+    pub children: Vec<__P__Value<'p>>,
+}}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct __P__CompoundId(u32);
+
+impl __P__CompoundId {{
+    pub const EMPTY: Self = Self(0);
+
+    #[inline]
+    pub const fn is_empty(self) -> bool {{
+        self.0 == 0
+    }}
+
+    #[inline]
+    fn slab_index(self) -> Option<usize> {{
+        if self.0 == 0 {{
+            None
+        }} else {{
+            Some((self.0 - 1) as usize)
+        }}
+    }}
+}}
+
+#[derive(Debug, Default)]
+pub struct __P__Arena<'p> {{
+    compounds: Vec<__P__Compound<'p>>,
+}}
+
+impl<'p> __P__Arena<'p> {{
+    #[inline]
+    pub fn new() -> Self {{
+        Self::default()
+    }}
+
+    #[inline]
+    pub fn with_capacity(compounds: usize) -> Self {{
+        Self {{
+            compounds: Vec::with_capacity(compounds),
+        }}
+    }}
+
+    #[inline]
+    pub fn push_compound(
+        &mut self,
+        kind: __P__CompoundKind,
+        children: Vec<__P__Value<'p>>,
+    ) -> __P__CompoundId {{
+        self.compounds.push(__P__Compound {{ kind, children }});
+        __P__CompoundId(self.compounds.len() as u32)
+    }}
+
+    #[inline]
+    pub fn compound(&self, id: __P__CompoundId) -> __P__CompoundView<'_, 'p> {{
+        match id.slab_index() {{
+            None => __P__CompoundView {{
+                kind: __P__CompoundKind::Wrap,
+                children: &[],
+            }},
+            Some(i) => {{
+                let entry = &self.compounds[i];
+                __P__CompoundView {{
+                    kind: entry.kind,
+                    children: entry.children.as_slice(),
+                }}
+            }}
+        }}
+    }}
+
+    #[inline]
+    pub fn compound_count(&self) -> usize {{
+        self.compounds.len()
+    }}
+
+    #[inline]
+    pub fn truncate(&mut self, compounds: usize) {{
+        self.compounds.truncate(compounds);
+    }}
+}}
+
+#[derive(Debug, Clone, Copy)]
+pub struct __P__CompoundView<'a, 'p: 'a> {{
+    pub kind: __P__CompoundKind,
+    pub children: &'a [__P__Value<'p>],
+}}
+"#,
+        )
+        .replace("__VARIANTS__", &variants)
+        .replace("__ARMS__", &arms)
+        .replace("__DEFAULT__", &projection.kind.default)
+        .replace("__TRANSPARENT__", &transparent),
+        projection,
+    )
+}
+
+fn emit_typed_formula_builder(projection: &RuntimeProjection) -> String {
+    runtime_template(
+        r#"
+use bbnf_ir::registry::StructLayout;
+
+use crate::runtime::builder::StructBuilder;
+use crate::runtime::handle::CompoundHandle;
+use __MODULE__::arena::{__P__Arena, __P__CompoundKind};
+use __MODULE__::document::__P__Document;
+use __MODULE__::value::__P__Value;
+
+#[derive(Debug, Clone)]
+struct Frame<'p> {
+    kind: __P__CompoundKind,
+    children: Vec<__P__Value<'p>>,
+    #[allow(dead_code)]
+    handle_token: u64,
+}
+
+#[derive(Debug)]
+pub struct __P__StructBuilder<'p> {
+    arena: __P__Arena<'p>,
+    stack: Vec<Frame<'p>>,
+    root: Option<__P__Value<'p>>,
+    next_handle: u64,
+}
+
+#[derive(Debug, Clone)]
+pub struct __P__StructCheckpoint<'p> {
+    compounds: usize,
+    stack: Vec<Frame<'p>>,
+    root: Option<__P__Value<'p>>,
+    next_handle: u64,
+}
+
+impl<'p> Default for __P__StructBuilder<'p> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<'p> __P__StructBuilder<'p> {
+    #[inline]
+    pub fn new() -> Self {
+        Self {
+            arena: __P__Arena::new(),
+            stack: Vec::with_capacity(8),
+            root: None,
+            next_handle: 0,
+        }
+    }
+
+    #[inline]
+    pub fn with_capacity(compounds: usize) -> Self {
+        Self {
+            arena: __P__Arena::with_capacity(compounds),
+            stack: Vec::with_capacity(8),
+            root: None,
+            next_handle: 0,
+        }
+    }
+
+    #[inline]
+    pub fn finalise(mut self, input: &'p str) -> __P__Document<'p> {
+        debug_assert!(
+            self.stack.is_empty(),
+            "__P__StructBuilder::finalise called with open frames"
+        );
+        let root = self
+            .root
+            .take()
+            .expect("__P__StructBuilder::finalise called before value emission");
+        __P__Document::new(self.arena, root, input)
+    }
+
+    #[inline]
+    fn deposit(&mut self, value: __P__Value<'p>) {
+        match self.stack.last_mut() {
+            None => self.root = Some(value),
+            Some(frame) => frame.children.push(value),
+        }
+    }
+}
+
+impl<'p> StructBuilder for __P__StructBuilder<'p> {
+    type Checkpoint = __P__StructCheckpoint<'p>;
+
+    #[inline]
+    fn checkpoint(&self) -> Self::Checkpoint {
+        __P__StructCheckpoint {
+            compounds: self.arena.compound_count(),
+            stack: self.stack.clone(),
+            root: self.root,
+            next_handle: self.next_handle,
+        }
+    }
+
+    #[inline]
+    fn rollback(&mut self, checkpoint: Self::Checkpoint) {
+        self.arena.truncate(checkpoint.compounds);
+        self.stack = checkpoint.stack;
+        self.root = checkpoint.root;
+        self.next_handle = checkpoint.next_handle;
+    }
+
+    fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
+        let kind = __P__CompoundKind::from_layout(layout);
+        self.next_handle = self.next_handle.wrapping_add(1);
+        let handle_token = self.next_handle;
+        self.stack.push(Frame {
+            kind,
+            children: Vec::new(),
+            handle_token,
+        });
+        CompoundHandle::new(handle_token, 0)
+    }
+
+    fn end_compound(&mut self, _handle: CompoundHandle) {
+        let frame = self
+            .stack
+            .pop()
+            .expect("__P__StructBuilder::end_compound on empty stack");
+        let value = if frame.kind.is_transparent_wrap() && frame.children.len() == 1 {
+            frame.children[0]
+        } else {
+            let id = self.arena.push_compound(frame.kind, frame.children);
+            __P__Value::Compound(id)
+        };
+        self.deposit(value);
+    }
+
+    #[inline]
+    fn push_leaf_with_f64(&mut self, value: f64) {
+        self.deposit(__P__Value::Number(value));
+    }
+
+    #[inline]
+    fn push_leaf_with_i64(&mut self, value: i64) {
+        self.deposit(__P__Value::Number(value as f64));
+    }
+
+    #[inline]
+    fn push_leaf_with_u64(&mut self, value: u64) {
+        self.deposit(__P__Value::Number(value as f64));
+    }
+
+    #[inline]
+    fn push_leaf_with_bool(&mut self, value: bool) {
+        self.deposit(__P__Value::Bool(value));
+    }
+
+    #[inline]
+    fn push_leaf_with_str(&mut self, value: &str) {
+        let extended: &'p str = unsafe { core::mem::transmute(value) };
+        self.deposit(__P__Value::String(extended));
+    }
+
+    #[inline]
+    fn push_leaf_with_unit(&mut self) {
+        self.deposit(__P__Value::Tag(0));
+    }
+
+    #[inline]
+    fn push_branch_tag(&mut self, branch_index: u32) {
+        debug_assert!(branch_index < 256);
+        self.deposit(__P__Value::Tag(branch_index as u8));
+    }
+}
+
+impl<'p> __P__StructBuilder<'p> {
+    #[inline]
+    pub fn push_leaf_cell_ref(&mut self, value: &str) {
+        let extended: &'p str = unsafe { core::mem::transmute(value) };
+        self.deposit(__P__Value::CellRef(extended));
+    }
+
+    #[inline]
+    pub fn push_leaf_identifier(&mut self, value: &str) {
+        let extended: &'p str = unsafe { core::mem::transmute(value) };
+        self.deposit(__P__Value::Identifier(extended));
+    }
+
+    #[inline]
+    pub fn push_leaf_sheet_prefix(&mut self, tag: u8, value: &str) {
+        let extended: &'p str = unsafe { core::mem::transmute(value) };
+        self.deposit(__P__Value::SheetPrefix {
+            tag,
+            text: extended,
+        });
+    }
+
+    #[inline]
+    pub fn push_leaf_error(&mut self, value: u8) {
+        self.deposit(__P__Value::Error(value));
+    }
+}
+"#,
+        projection,
+    )
+}
+
+fn emit_typed_formula_document_mod(projection: &RuntimeProjection) -> String {
+    runtime_template(
+        r#"
+pub mod canonical;
+pub mod path_query;
+pub mod view;
+
+use __MODULE__::arena::{__P__Arena, __P__CompoundId, __P__CompoundView};
+use __MODULE__::value::__P__Value;
+use crate::runtime::path::Path;
+
+pub use self::path_query::__P__PathQuery;
+pub use self::view::{__P__Kind, __P__View};
+
+#[derive(Debug)]
+pub struct __P__Document<'p> {
+    pub arena: __P__Arena<'p>,
+    pub root: __P__Value<'p>,
+    pub input: &'p str,
+}
+
+impl<'p> __P__Document<'p> {
+    #[inline]
+    pub fn new(arena: __P__Arena<'p>, root: __P__Value<'p>, input: &'p str) -> Self {
+        Self { arena, root, input }
+    }
+
+    #[inline]
+    pub fn root(&self) -> &__P__Value<'p> {
+        &self.root
+    }
+
+    #[inline]
+    pub fn arena(&self) -> &__P__Arena<'p> {
+        &self.arena
+    }
+
+    #[inline]
+    pub fn input(&self) -> &'p str {
+        self.input
+    }
+
+    #[inline]
+    pub fn compound(&self, id: __P__CompoundId) -> __P__CompoundView<'_, 'p> {
+        self.arena.compound(id)
+    }
+
+    #[inline]
+    pub fn view<'a>(&'a self) -> __P__View<'a, 'p> {
+        __P__View::focused(self, self.root)
+    }
+
+    #[inline]
+    pub fn to_value(&self) -> &__P__Value<'p> {
+        &self.root
+    }
+
+    #[inline]
+    pub fn get<T: __P__PathQuery>(&self, path: Path<'_>) -> Option<T> {
+        T::query(self, path)
+    }
+
+    pub fn serialize_compact(&self) -> String {
+        canonical::serialize_compact(self)
+    }
+}
+"#,
+        projection,
+    )
+}
+
+fn emit_typed_formula_document_path_query(projection: &RuntimeProjection) -> String {
+    runtime_template(
+        r#"
+use __MODULE__::value::__P__Value;
+use crate::runtime::path::{Path, PathSegment};
+
+use super::__P__Document;
+
+pub trait __P__PathQuery: Sized {
+    fn query<'p>(doc: &__P__Document<'p>, path: Path<'_>) -> Option<Self>;
+}
+
+#[inline]
+fn walk_path<'a, 'p>(doc: &'a __P__Document<'p>, path: Path<'_>) -> Option<&'a __P__Value<'p>> {
+    let mut current: &'a __P__Value<'p> = &doc.root;
+    for segment in path.iter() {
+        current = match (current, segment) {
+            (__P__Value::Compound(id), PathSegment::Index(idx)) => {
+                let entry = doc.compound(*id);
+                entry.children.get(*idx)?
+            }
+            _ => return None,
+        };
+    }
+    Some(current)
+}
+
+impl __P__PathQuery for f64 {
+    #[inline]
+    fn query<'p>(doc: &__P__Document<'p>, path: Path<'_>) -> Option<Self> {
+        match walk_path(doc, path)? {
+            __P__Value::Number(n) => Some(*n),
+            _ => None,
+        }
+    }
+}
+
+impl __P__PathQuery for bool {
+    #[inline]
+    fn query<'p>(doc: &__P__Document<'p>, path: Path<'_>) -> Option<Self> {
+        match walk_path(doc, path)? {
+            __P__Value::Bool(b) => Some(*b),
+            _ => None,
+        }
+    }
+}
+
+impl __P__PathQuery for u8 {
+    #[inline]
+    fn query<'p>(doc: &__P__Document<'p>, path: Path<'_>) -> Option<Self> {
+        match walk_path(doc, path)? {
+            __P__Value::Tag(t) | __P__Value::Error(t) => Some(*t),
+            __P__Value::SheetPrefix { tag, .. } => Some(*tag),
+            _ => None,
+        }
+    }
+}
+
+impl __P__PathQuery for &str {
+    #[inline]
+    fn query<'p>(doc: &__P__Document<'p>, path: Path<'_>) -> Option<Self> {
+        let value = walk_path(doc, path)?;
+        match value {
+            __P__Value::String(s)
+            | __P__Value::CellRef(s)
+            | __P__Value::Identifier(s)
+            | __P__Value::SheetPrefix { text: s, .. } => {
+                let extended: &'p str = *s;
+                Some(unsafe { core::mem::transmute::<&'p str, &str>(extended) })
+            }
+            _ => None,
+        }
+    }
+}
+
+impl __P__PathQuery for __P__Value<'_> {
+    #[inline]
+    fn query<'p>(doc: &__P__Document<'p>, path: Path<'_>) -> Option<Self> {
+        let value = walk_path(doc, path)?;
+        let copied: __P__Value<'p> = *value;
+        Some(unsafe { core::mem::transmute::<__P__Value<'p>, __P__Value<'_>>(copied) })
+    }
+}
+"#,
+        projection,
+    )
+}
+
+fn emit_typed_formula_document_view(projection: &RuntimeProjection) -> String {
+    runtime_template(
+        r#"
+use __MODULE__::arena::{__P__Arena, __P__CompoundId, __P__CompoundView};
+use __MODULE__::value::__P__Value;
+
+use super::__P__Document;
+
+#[derive(Debug, Clone, Copy)]
+pub struct __P__View<'a, 'p: 'a> {
+    pub(crate) doc: &'a __P__Document<'p>,
+    pub(crate) focus: __P__Value<'p>,
+}
+
+impl<'a, 'p: 'a> __P__View<'a, 'p> {
+    #[inline]
+    pub fn focused(doc: &'a __P__Document<'p>, focus: __P__Value<'p>) -> Self {
+        Self { doc, focus }
+    }
+
+    #[inline]
+    pub fn document(&self) -> &'a __P__Document<'p> {
+        self.doc
+    }
+
+    #[inline]
+    pub fn focus(&self) -> __P__Value<'p> {
+        self.focus
+    }
+
+    #[inline]
+    pub fn root(&self) -> &'a __P__Value<'p> {
+        &self.doc.root
+    }
+
+    #[inline]
+    pub fn arena(&self) -> &'a __P__Arena<'p> {
+        &self.doc.arena
+    }
+
+    #[inline]
+    pub fn compound(&self, id: __P__CompoundId) -> __P__CompoundView<'a, 'p> {
+        self.doc.compound(id)
+    }
+
+    #[inline]
+    pub fn kind(&self) -> __P__Kind {
+        match &self.focus {
+            __P__Value::Number(_) => __P__Kind::Number,
+            __P__Value::String(_) => __P__Kind::String,
+            __P__Value::Bool(_) => __P__Kind::Bool,
+            __P__Value::Error(_) => __P__Kind::Error,
+            __P__Value::CellRef(_) => __P__Kind::CellRef,
+            __P__Value::Identifier(_) => __P__Kind::Identifier,
+            __P__Value::SheetPrefix { .. } => __P__Kind::SheetPrefix,
+            __P__Value::Tag(_) => __P__Kind::Tag,
+            __P__Value::Compound(_) => __P__Kind::Compound,
+        }
+    }
+
+    #[inline]
+    pub fn is_compound(&self) -> bool {
+        matches!(self.focus, __P__Value::Compound(_))
+    }
+
+    #[inline]
+    pub fn is_number(&self) -> bool {
+        matches!(self.focus, __P__Value::Number(_))
+    }
+
+    #[inline]
+    pub fn is_string(&self) -> bool {
+        matches!(
+            self.focus,
+            __P__Value::String(_)
+                | __P__Value::CellRef(_)
+                | __P__Value::Identifier(_)
+                | __P__Value::SheetPrefix { .. }
+        )
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum __P__Kind {
+    Number,
+    String,
+    Bool,
+    Error,
+    CellRef,
+    Identifier,
+    SheetPrefix,
+    Tag,
+    Compound,
+}
+"#,
+        projection,
+    )
+}
+
+fn emit_typed_formula_value(projection: &RuntimeProjection) -> String {
+    runtime_template(
+        r#"
+use __MODULE__::arena::__P__CompoundId;
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum __P__Value<'p> {
+    Number(f64),
+    String(&'p str),
+    Bool(bool),
+    Error(u8),
+    CellRef(&'p str),
+    Identifier(&'p str),
+    SheetPrefix { tag: u8, text: &'p str },
+    Tag(u8),
+    Compound(__P__CompoundId),
+}
+
+impl<'p> __P__Value<'p> {
+    #[inline]
+    pub fn is_number(&self) -> bool {
+        matches!(self, __P__Value::Number(_))
+    }
+
+    #[inline]
+    pub fn is_string(&self) -> bool {
+        matches!(self, __P__Value::String(_))
+    }
+
+    #[inline]
+    pub fn is_compound(&self) -> bool {
+        matches!(self, __P__Value::Compound(_))
+    }
+
+    #[inline]
+    pub fn as_f64(&self) -> Option<f64> {
+        match *self {
+            __P__Value::Number(n) => Some(n),
+            _ => None,
+        }
+    }
+
+    #[inline]
+    pub fn as_str(&self) -> Option<&'p str> {
+        match *self {
+            __P__Value::String(s)
+            | __P__Value::CellRef(s)
+            | __P__Value::Identifier(s)
+            | __P__Value::SheetPrefix { text: s, .. } => Some(s),
+            _ => None,
+        }
+    }
+
+    #[inline]
+    pub fn as_bool(&self) -> Option<bool> {
+        match *self {
+            __P__Value::Bool(b) => Some(b),
+            _ => None,
+        }
+    }
+
+    #[inline]
+    pub fn as_u8(&self) -> Option<u8> {
+        match *self {
+            __P__Value::Tag(t) | __P__Value::Error(t) => Some(t),
+            __P__Value::SheetPrefix { tag, .. } => Some(tag),
+            _ => None,
+        }
+    }
+}
+"#,
+        projection,
+    )
+}
+
+fn emit_typed_formula_document_canonical(projection: &RuntimeProjection) -> String {
+    runtime_template(
+        r##"
+use __MODULE__::arena::{__P__CompoundId, __P__CompoundKind, __P__CompoundView};
+use __MODULE__::value::__P__Value;
+
+use super::__P__Document;
+
+pub(super) fn serialize_compact(doc: &__P__Document<'_>) -> String {
+    let mut out = String::with_capacity(doc.input.len());
+    let __P__Value::Compound(_) = doc.root else {
+        write_value(doc, &doc.root, __P__CompoundKind::Wrap, &mut out);
+        return out;
+    };
+    out.push('=');
+    if let __P__Value::Compound(id) = doc.root {
+        write_compound(doc, id, &mut out);
+    }
+    out
+}
+
+fn write_value<'p>(
+    doc: &__P__Document<'p>,
+    value: &__P__Value<'p>,
+    parent_kind: __P__CompoundKind,
+    out: &mut String,
+) {
+    use core::fmt::Write;
+    match *value {
+        __P__Value::Number(n) => {
+            if n.fract() == 0.0 && n.is_finite() && n.abs() < 1e16 {
+                write!(out, "{}", n as i64).unwrap();
+            } else {
+                write!(out, "{}", n).unwrap();
+            }
+        }
+        __P__Value::String(s)
+        | __P__Value::CellRef(s)
+        | __P__Value::Identifier(s)
+        | __P__Value::SheetPrefix { text: s, .. } => out.push_str(s),
+        __P__Value::Bool(b) => out.push_str(if b { "TRUE" } else { "FALSE" }),
+        __P__Value::Error(n) => out.push_str(error_lexeme(n)),
+        __P__Value::Tag(n) => out.push_str(tag_lexeme(parent_kind, n)),
+        __P__Value::Compound(id) => write_compound(doc, id, out),
+    }
+}
+
+fn write_compound<'p>(doc: &__P__Document<'p>, id: __P__CompoundId, out: &mut String) {
+    let entry = doc.compound(id);
+    let kind = entry.kind;
+    match kind {
+        __P__CompoundKind::ParenExpr => {
+            out.push('(');
+            for child in entry.children {
+                write_value(doc, child, kind, out);
+            }
+            out.push(')');
+        }
+        __P__CompoundKind::FuncCall => write_func_call(doc, &entry, out),
+        __P__CompoundKind::FuncOpen => {
+            for child in entry.children {
+                write_value(doc, child, kind, out);
+            }
+            out.push('(');
+        }
+        __P__CompoundKind::FuncArgs | __P__CompoundKind::LetArgs => {
+            for (i, child) in entry.children.iter().enumerate() {
+                if i > 0 {
+                    out.push(',');
+                }
+                write_value(doc, child, kind, out);
+            }
+        }
+        __P__CompoundKind::Arg => {
+            for child in entry.children {
+                write_value(doc, child, kind, out);
+            }
+        }
+        __P__CompoundKind::LetCall => {
+            out.push_str("LET(");
+            for (i, child) in entry.children.iter().enumerate() {
+                if i > 0 {
+                    out.push(',');
+                }
+                write_value(doc, child, kind, out);
+            }
+            out.push(')');
+        }
+        __P__CompoundKind::LetBinding => {
+            for (i, child) in entry.children.iter().enumerate() {
+                if i > 0 {
+                    out.push(',');
+                }
+                write_value(doc, child, kind, out);
+            }
+        }
+        __P__CompoundKind::LambdaCall => {
+            out.push_str("LAMBDA(");
+            for (i, child) in entry.children.iter().enumerate() {
+                if i > 0 {
+                    out.push(',');
+                }
+                write_value(doc, child, kind, out);
+            }
+            out.push(')');
+        }
+        __P__CompoundKind::LambdaParams => {
+            for (i, child) in entry.children.iter().enumerate() {
+                if i > 0 {
+                    out.push(',');
+                }
+                write_value(doc, child, kind, out);
+            }
+        }
+        __P__CompoundKind::ArrayLiteral => {
+            out.push('{');
+            for child in entry.children {
+                write_value(doc, child, kind, out);
+            }
+            out.push('}');
+        }
+        __P__CompoundKind::ArrayRows => {
+            let mut emitted = 0usize;
+            for child in entry.children {
+                if matches!(child, __P__Value::Tag(_)) {
+                    continue;
+                }
+                if emitted > 0 {
+                    out.push(';');
+                }
+                write_value(doc, child, kind, out);
+                emitted += 1;
+            }
+        }
+        __P__CompoundKind::ArrayRow => {
+            let mut emitted = 0usize;
+            for child in entry.children {
+                if matches!(child, __P__Value::Tag(_)) {
+                    continue;
+                }
+                if emitted > 0 {
+                    out.push(',');
+                }
+                write_value(doc, child, kind, out);
+                emitted += 1;
+            }
+        }
+        __P__CompoundKind::RangeRef => {
+            let n = entry.children.len();
+            for (i, child) in entry.children.iter().enumerate() {
+                if i == n.saturating_sub(1) && n >= 2 {
+                    out.push(':');
+                }
+                write_value(doc, child, kind, out);
+            }
+        }
+        __P__CompoundKind::Cell
+        | __P__CompoundKind::PostfixExpr
+        | __P__CompoundKind::UnaryExpr
+        | __P__CompoundKind::AddExpr
+        | __P__CompoundKind::MulExpr
+        | __P__CompoundKind::ExpExpr
+        | __P__CompoundKind::ConcatExpr
+        | __P__CompoundKind::ComparisonExpr
+        | __P__CompoundKind::CompareOp
+        | __P__CompoundKind::AddOp
+        | __P__CompoundKind::MulOp
+        | __P__CompoundKind::UnaryPrefix
+        | __P__CompoundKind::SheetPrefix
+        | __P__CompoundKind::Formula
+        | __P__CompoundKind::Expression
+        | __P__CompoundKind::Primary
+        | __P__CompoundKind::Wrap
+        | __P__CompoundKind::RangeEnd
+        | __P__CompoundKind::CellOrRange
+        | __P__CompoundKind::Unknown => {
+            for child in entry.children {
+                write_value(doc, child, kind, out);
+            }
+        }
+        __P__CompoundKind::ErrorLiteral => {
+            for child in entry.children {
+                match *child {
+                    __P__Value::Tag(n) | __P__Value::Error(n) => out.push_str(error_lexeme(n)),
+                    _ => write_value(doc, child, kind, out),
+                }
+            }
+        }
+    }
+}
+
+fn write_func_call<'p>(
+    doc: &__P__Document<'p>,
+    entry: &__P__CompoundView<'_, 'p>,
+    out: &mut String,
+) {
+    let mut iter = entry.children.iter();
+    if let Some(head) = iter.next() {
+        write_value(doc, head, __P__CompoundKind::FuncCall, out);
+    }
+    if !out.ends_with('(') {
+        out.push('(');
+    }
+    let mut first_arg = true;
+    for arg in iter {
+        if !first_arg {
+            out.push(',');
+        }
+        first_arg = false;
+        write_value(doc, arg, __P__CompoundKind::FuncCall, out);
+    }
+    out.push(')');
+}
+
+fn error_lexeme(n: u8) -> &'static str {
+    match n {
+        0 => "#N/A",
+        1 => "#VALUE!",
+        2 => "#REF!",
+        3 => "#DIV/0!",
+        4 => "#NULL!",
+        5 => "#NAME?",
+        6 => "#NUM!",
+        7 => "#ERROR!",
+        8 => "#SPILL!",
+        _ => "",
+    }
+}
+
+fn tag_lexeme(parent: __P__CompoundKind, n: u8) -> &'static str {
+    match (parent, n) {
+        (__P__CompoundKind::AddExpr, 0) | (__P__CompoundKind::UnaryExpr, 0) => "+",
+        (__P__CompoundKind::AddExpr, 1) | (__P__CompoundKind::UnaryExpr, 1) => "-",
+        (__P__CompoundKind::MulExpr, 0) => "*",
+        (__P__CompoundKind::MulExpr, 1) => "/",
+        (__P__CompoundKind::ExpExpr, _) => "^",
+        (__P__CompoundKind::ConcatExpr, _) => "&",
+        (__P__CompoundKind::ComparisonExpr, 0) => "<>",
+        (__P__CompoundKind::ComparisonExpr, 1) => "<=",
+        (__P__CompoundKind::ComparisonExpr, 2) => ">=",
+        (__P__CompoundKind::ComparisonExpr, 3) => "<",
+        (__P__CompoundKind::ComparisonExpr, 4) => ">",
+        (__P__CompoundKind::ComparisonExpr, 5) => "=",
+        (__P__CompoundKind::AddOp, 0) | (__P__CompoundKind::UnaryPrefix, 0) => "+",
+        (__P__CompoundKind::AddOp, 1) | (__P__CompoundKind::UnaryPrefix, 1) => "-",
+        (__P__CompoundKind::MulOp, 0) => "*",
+        (__P__CompoundKind::MulOp, 1) => "/",
+        (__P__CompoundKind::CompareOp, 0) => "<>",
+        (__P__CompoundKind::CompareOp, 1) => "<=",
+        (__P__CompoundKind::CompareOp, 2) => ">=",
+        (__P__CompoundKind::CompareOp, 3) => "=",
+        (__P__CompoundKind::CompareOp, 4) => "<",
+        (__P__CompoundKind::CompareOp, 5) => ">",
+        _ => "",
+    }
+}
+"##,
+        projection,
+    )
+}
+
+fn emit_typed_formula_mod(projection: &RuntimeProjection) -> String {
+    runtime_template(
+        r#"
+pub mod arena;
+pub mod builder;
+pub mod document;
+pub mod parse_with;
+pub mod value;
+pub mod view;
+
+pub use arena::{
+    __P__Arena, __P__Compound, __P__CompoundId, __P__CompoundKind, __P__CompoundView,
+};
+pub use builder::__P__StructBuilder;
+pub use document::{__P__Document, __P__Kind, __P__PathQuery, __P__View};
+pub use parse_with::parse_with;
+pub use value::__P__Value;
+"#,
+        projection,
+    )
+}
+
+fn emit_typed_formula_parse_with(projection: &RuntimeProjection) -> String {
+    runtime_template(
+        r#"
+use super::document::{__P__Document, __P__PathQuery};
+use crate::grammar::generated::google_sheets::{
+    __path_plan, __shape_support___PARSER__, parse___PARSER_____ENTRY__,
+};
+use crate::path::cursor::Decision;
+use crate::path::executor::PathExecutor;
+use crate::path::ir::{PathSegment as TypedSegment, TypedPath};
+use crate::path::markers::Sheets;
+use crate::runtime::google_sheets::__P__StructBuilder;
+use crate::runtime::path::{Path, PathSegment};
+
+fn lower<'a>(seg: &TypedSegment<'a>) -> Option<PathSegment<'a>> {
+    match seg {
+        TypedSegment::Field(s) => Some(PathSegment::Field(s)),
+        TypedSegment::Index(i) => Some(PathSegment::Index(*i)),
+        TypedSegment::VariantName(s) => Some(PathSegment::Field(s)),
+        TypedSegment::Wildcard => None,
+    }
+}
+
+pub fn parse_with<T>(input: &str, path: &TypedPath<Sheets, T>) -> Option<T>
+where
+    T: __P__PathQuery,
+{
+    PathExecutor::execute(
+        input,
+        path,
+        |rule_id, kind, _idx| {
+            __path_plan::lookup(rule_id, kind)
+                .map(|e| e.decision)
+                .unwrap_or(Decision::ParseFully)
+        },
+        |src, cursor| {
+            let mut state = __shape_support___PARSER__::ScanState::new();
+            let mut builder = __P__StructBuilder::new();
+            let mut pos: usize = 0;
+            parse___PARSER_____ENTRY__(
+                src.as_bytes(),
+                &mut pos,
+                &mut state,
+                &mut builder,
+                cursor,
+            )
+            .ok()?;
+            let doc: __P__Document<'_> = builder.finalise(src);
+            let mut segments: Vec<PathSegment<'_>> = Vec::with_capacity(path.len());
+            for owned in path.owned_segments() {
+                segments.push(lower(&owned.as_borrowed())?);
+            }
+            doc.get::<T>(Path::new(&segments))
+        },
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::path::ir::OwnedPathSegment;
+
+    #[test]
+    #[ignore = "Flat-shape lazy honoring: formula is a flat compound."]
+    fn parse_with_resolves_number_leaf() {
+        let src = "=42";
+        let path: TypedPath<Sheets, f64> =
+            TypedPath::from_owned(vec![OwnedPathSegment::Index(0), OwnedPathSegment::Index(0)]);
+        let lazy = parse_with::<f64>(src, &path);
+        assert_eq!(lazy, Some(42.0));
+    }
+
+    #[test]
+    fn parse_with_returns_none_on_invalid_input() {
+        let path: TypedPath<Sheets, f64> = TypedPath::from_owned(Vec::new());
+        let out = parse_with::<f64>("not a formula @@@", &path);
+        assert!(out.is_none());
+    }
+}
+"#,
+        projection,
+    )
+}
+
+fn emit_typed_formula_view(projection: &RuntimeProjection) -> String {
+    runtime_template(
+        r#"
+use crate::runtime::RuntimeView;
+use __MODULE__::document::{__P__Kind, __P__View};
+use __MODULE__::value::__P__Value;
+
+impl<'a, 'p: 'a> RuntimeView<'p> for __P__View<'a, 'p> {
+    type Kind = __P__Kind;
+
+    #[inline]
+    fn kind(&self) -> Self::Kind {
+        match self.focus {
+            __P__Value::Number(_) => __P__Kind::Number,
+            __P__Value::String(_) => __P__Kind::String,
+            __P__Value::Bool(_) => __P__Kind::Bool,
+            __P__Value::Error(_) => __P__Kind::Error,
+            __P__Value::CellRef(_) => __P__Kind::CellRef,
+            __P__Value::Identifier(_) => __P__Kind::Identifier,
+            __P__Value::SheetPrefix { .. } => __P__Kind::SheetPrefix,
+            __P__Value::Tag(_) => __P__Kind::Tag,
+            __P__Value::Compound(_) => __P__Kind::Compound,
+        }
+    }
+
+    #[inline]
+    fn span(&self) -> Option<&'p str> {
+        match self.focus {
+            __P__Value::String(s)
+            | __P__Value::CellRef(s)
+            | __P__Value::Identifier(s)
+            | __P__Value::SheetPrefix { text: s, .. } => Some(s),
+            _ => None,
+        }
+    }
+
+    #[inline]
+    fn input(&self) -> &'p str {
+        self.doc.input
+    }
+
+    fn children(&self) -> impl Iterator<Item = Self> + '_ {
+        let doc = self.doc;
+        let focus = self.focus;
+        __P__ChildrenIter {
+            doc,
+            focus,
+            index: 0,
+        }
+    }
+}
+
+pub struct __P__ChildrenIter<'a, 'p: 'a> {
+    doc: &'a __MODULE__::__P__Document<'p>,
+    focus: __P__Value<'p>,
+    index: usize,
+}
+
+impl<'a, 'p: 'a> Iterator for __P__ChildrenIter<'a, 'p> {
+    type Item = __P__View<'a, 'p>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.focus {
+            __P__Value::Compound(id) => {
+                let entry = self.doc.compound(id);
+                let item = entry.children.get(self.index)?;
+                self.index += 1;
+                Some(__P__View::focused(self.doc, *item))
+            }
+            _ => None,
+        }
+    }
+}
+"#,
+        projection,
+    )
 }
 
 fn emit_arena(projection: &RuntimeProjection) -> String {

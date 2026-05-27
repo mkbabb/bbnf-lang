@@ -5735,3 +5735,32 @@ perturbation.
 - Current JSON direct_to_struct state remains 13 / 17 ADMITTED and 4 OPEN.
   Current JSON real_typed_struct state remains 13 / 17 ADMITTED and 4 MISSING:
   `gsoc-2018`, `unicode_mixed`, `unicode_escapes`, and `y_string_unicode`.
+
+## SK-V14 W11C JSON GSoC Product Probe Reject
+
+- Item 233 closes `G-SK-V14-W11C-JSON-GSOC-PRODUCTS` as `REJECT`. No source
+  patch lands, no `RESULTS.md` row moves, and
+  `restart/skinny/ROLLING-SOTA-DELTA.md` remains unchanged.
+- The measured candidates added transient generated strict product surfaces for
+  `gsoc-2018`: numeric top-level object keys, ordered fixed-member parsing for
+  the Schema.org proposal/sponsor/author objects, identity-product and
+  full-product variants, plus required-field full-product parsing. The patch
+  was reverted after measurement and retained as
+  `/tmp/skv14-W11C-gsoc-products-rejected.patch` with SHA-256
+  `258bdb69a286b0e60b57543f127be7c57ca0561a5657454d0ce5d7639a74faa9`.
+- Correctness gates passed before measurement: `cargo run --profile ax-iter -p
+  xtask -- regen-real-typed`, `cargo run --profile ax-iter -p xtask --
+  check-real-typed`, `cargo test --profile ax-iter -p codegen typed_direct_ --
+  --nocapture`, `cargo test --profile ax-iter -p bbnf-bench
+  gsoc_2018_typed -- --nocapture`, and `cargo test --profile ax-iter -p
+  bbnf-bench direct_strict_product -- --nocapture`.
+- Cold `profile_direct` evidence rejects the closest full-product route:
+  `gsoc-2018/real_typed_struct` measured `5789.034` Mbps against strict sonic
+  `6482.407` Mbps, and `gsoc-2018/direct_to_struct` strict product measured
+  `5834.269` Mbps against strict sonic `6111.175` Mbps. The identity-product
+  route reached higher absolute Track 1 throughput (`19909.635` typed,
+  `19938.076` direct-strict) but widened the strict sonic gap
+  (`24783.657` typed sonic, `24927.218` direct-strict sonic).
+- Current JSON direct_to_struct state remains 13 / 17 ADMITTED and 4 OPEN.
+  Current JSON real_typed_struct state remains 13 / 17 ADMITTED and 4 MISSING:
+  `gsoc-2018`, `unicode_mixed`, `unicode_escapes`, and `y_string_unicode`.

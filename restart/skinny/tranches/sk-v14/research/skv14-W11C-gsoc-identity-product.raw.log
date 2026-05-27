@@ -1,0 +1,16 @@
+## gsoc-2018 real_typed_track1
+PROBE_RESULT corpus=gsoc-2018 corpus_bytes=3327831 iters=400 mode=real_typed_track1 warmup_iters=0 elapsed_s=0.570858 ns_per_byte=0.428851 mbps=18654.479 cycles=2386710751 instructions=10467717138 cycles_per_byte=1.792993 cpi=0.228007 user_ns=13460028 system_ns=98207 checksum=0
+## gsoc-2018 real_typed_track2
+PROBE_RESULT corpus=gsoc-2018 corpus_bytes=3327831 iters=400 mode=real_typed_track2 warmup_iters=0 elapsed_s=0.479316 ns_per_byte=0.360081 mbps=22217.221 cycles=2031750796 instructions=8809766326 cycles_per_byte=1.526333 cpi=0.230625 user_ns=11394716 system_ns=52942 checksum=0
+## gsoc-2018 real_typed_sonic
+PROBE_RESULT corpus=gsoc-2018 corpus_bytes=3327831 iters=400 mode=real_typed_sonic warmup_iters=0 elapsed_s=0.428699 ns_per_byte=0.322056 mbps=24840.387 cycles=1814730500 instructions=7037092273 cycles_per_byte=1.363298 cpi=0.257881 user_ns=10180022 system_ns=49569 checksum=0
+## gsoc-2018 real_typed_serde
+PROBE_RESULT corpus=gsoc-2018 corpus_bytes=3327831 iters=400 mode=real_typed_serde warmup_iters=0 elapsed_s=0.489411 ns_per_byte=0.367665 mbps=21758.938 cycles=2057281522 instructions=8812378531 cycles_per_byte=1.545512 cpi=0.233454 user_ns=11584936 system_ns=67923 checksum=0
+## gsoc-2018 direct_strict_track1
+PROBE_RESULT corpus=gsoc-2018 corpus_bytes=3327831 iters=400 mode=direct_strict_track1 warmup_iters=0 elapsed_s=0.570787 ns_per_byte=0.428798 mbps=18656.802 cycles=2411765565 instructions=10468243507 cycles_per_byte=1.811815 cpi=0.230389 user_ns=13536405 system_ns=72593 checksum=0
+## gsoc-2018 direct_strict_track2
+PROBE_RESULT corpus=gsoc-2018 corpus_bytes=3327831 iters=400 mode=direct_strict_track2 warmup_iters=0 elapsed_s=0.490350 ns_per_byte=0.368371 mbps=21717.260 cycles=2058874667 instructions=8819456919 cycles_per_byte=1.546709 cpi=0.233447 user_ns=11545292 system_ns=91943 checksum=0
+## gsoc-2018 direct_strict_sonic
+PROBE_RESULT corpus=gsoc-2018 corpus_bytes=3327831 iters=400 mode=direct_strict_sonic warmup_iters=0 elapsed_s=0.429956 ns_per_byte=0.323000 mbps=24767.798 cycles=1818398502 instructions=7041570524 cycles_per_byte=1.366054 cpi=0.258238 user_ns=10202281 system_ns=51236 checksum=0
+## gsoc-2018 direct_strict_serde
+PROBE_RESULT corpus=gsoc-2018 corpus_bytes=3327831 iters=400 mode=direct_strict_serde warmup_iters=0 elapsed_s=0.481711 ns_per_byte=0.361881 mbps=22106.723 cycles=2039940129 instructions=8816135294 cycles_per_byte=1.532485 cpi=0.231387 user_ns=11433915 system_ns=58773 checksum=0

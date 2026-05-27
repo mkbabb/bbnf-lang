@@ -70,7 +70,11 @@ REDRESS-231, so direct now stands at 13 / 17 admitted and 4 / 17 open. W11B
 then rejected transient unicode strict products for `unicode_mixed` and
 `unicode_escapes` under REDRESS-232; the source patch was reverted, no row
 moved, and product-surface-only unicode routes are pre-blocked without a fresh
-material differential.
+material differential. W11C then rejected transient `gsoc-2018` strict
+products under REDRESS-233 across numeric-key, ordered, identity, full, and
+required-full variants; the source patch was reverted, no row moved, and
+product-surface-only `gsoc-2018` routes are likewise pre-blocked without a
+fresh material differential.
 Continue actual implementation against the remaining residual queue, not
 another Omega or Alpha pass unless a future source attempt exposes a real
 spec-level amendment.
@@ -234,12 +238,14 @@ state is:
 - JSON direct_to_struct: 13 / 17 ADMITTED, 4 OPEN under REDRESS-231; remaining
   rows lack generated strict product surfaces. REDRESS-232 rejects
   product-surface-only unicode strict products for `unicode_mixed` and
-  `unicode_escapes`.
+  `unicode_escapes`, and REDRESS-233 rejects product-surface-only
+  `gsoc-2018` strict products.
 - JSON real_typed_struct: 13 / 17 ADMITTED, 4 MISSING product surfaces under
   REDRESS-216/227/228; REDRESS-226 rejects the generated `y_string_unicode`
   root and REDRESS-229 rejects the generated `gsoc-2018` numeric-key root
   without moving either row. REDRESS-232 rejects and reverts transient
-  `unicode_mixed` and `unicode_escapes` products.
+  `unicode_mixed` and `unicode_escapes` products; REDRESS-233 rejects and
+  reverts transient `gsoc-2018` products.
 - CSS L4: 0 / 24 ADMITTED, 24 OPEN under REDRESS-215.
 
 Per the latest user instruction, do not spend another cycle on Omega/Alpha
@@ -283,6 +289,10 @@ discipline).
 7. W11B rejects transient `unicode_mixed` and `unicode_escapes` strict product
    routes under REDRESS-232. The products were correct but missed strict sonic
    by at least 2014.202 Mbps, so no source patch lands and no row moves.
+8. W11C rejects transient `gsoc-2018` strict product routes under REDRESS-233.
+   Numeric-key, ordered, identity, full, and required-full products were
+   correct but all missed strict sonic, so no source patch lands and no row
+   moves.
 
 ## 7. Refusal Conditions
 
@@ -353,4 +363,5 @@ No residual row has an architectural-level intrinsic-block proof. Subsequent
 work inherits R1-R10 until a row family achieves admission or proves an
 architectural block, but the immediate continuation is source implementation
 against the W11 residual queue. REDRESS-232 makes unicode product-surface-only
-retries non-viable without a fresh material differential.
+retries non-viable without a fresh material differential; REDRESS-233 applies
+the same pre-block to `gsoc-2018` product-surface-only retries.

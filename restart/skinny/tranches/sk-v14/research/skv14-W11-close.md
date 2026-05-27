@@ -7,14 +7,16 @@ implementation. W11A moved supported JSON `direct_to_struct` rows off the
 digest plane and admitted thirteen strict product rows from cold native
 `profile_direct` evidence. W11B then tested unicode strict products and
 rejected them on same-run cold evidence without landing the transient source
-patch.
+patch. W11C then tested `gsoc-2018` strict products across numeric-key,
+ordered, identity, full, and required-full variants, rejecting them on
+same-run cold evidence without landing the transient source patch.
 
 ## Authority
 
 - `restart/skinny/tranches/sk-v14/SPEC.md` Section 14.
 - `restart/skinny/tranches/sk-v14/SYNTHESIS.md` R10.
 - `skinny/RESULTS.md`.
-- `skinny/REDRESS.md` items 215 through 232.
+- `skinny/REDRESS.md` items 215 through 233.
 - `restart/skinny/ROLLING-SOTA-DELTA.md`.
 - `restart/skinny/tranches/sk-v14/HANDOFF.md`.
 
@@ -52,6 +54,7 @@ patch.
 | W10AA | REJECTED | REDRESS-230: fused trusted string-end helper plus object-loop cleanup admitted no parse_only residual rows. |
 | W11A | ADMITTED | REDRESS-231: strict product `direct_to_struct` route admitted 13 / 17 JSON direct rows; 4 rows remain open for missing generated product surfaces. |
 | W11B | REJECTED | REDRESS-232: transient unicode strict products for `unicode_mixed` and `unicode_escapes` passed correctness but missed strict sonic by at least 2014.202 Mbps; no source patch landed and no row moved. |
+| W11C | REJECTED | REDRESS-233: transient `gsoc-2018` strict products passed correctness but missed strict sonic in every numeric-key, ordered, identity, full, and required-full variant; no source patch landed and no row moved. |
 
 ## Close-State Counts
 
@@ -73,10 +76,12 @@ remaining rows are implementation residuals, not closeable proof blocks.
 2. JSON direct residuals remain only where generated strict product surfaces
    are absent at HEAD: `gsoc-2018`, `unicode_mixed`, `unicode_escapes`, and
    `y_string_unicode`. W11B proved that product-surface-only unicode routes
-   are not enough for `unicode_mixed` or `unicode_escapes`.
+   are not enough for `unicode_mixed` or `unicode_escapes`; W11C proved that
+   product-surface-only `gsoc-2018` routes are also insufficient.
 3. Missing JSON typed products remain for `gsoc-2018`, `unicode_mixed`,
    `unicode_escapes`, and `y_string_unicode`; W11B's unicode products were
-   reverted after measured rejection.
+   reverted after measured rejection, and W11C's `gsoc-2018` products were
+   also reverted after measured rejection.
 4. JSON parse_only residuals remain for `twitter`, `github_events`,
    `update_center`, `random`, `gsoc-2018`, and
    `distinct_values`.
@@ -90,8 +95,8 @@ remaining rows are implementation residuals, not closeable proof blocks.
 - `skinny/REDRESS.md` carries the live residuals as REDRESS-215,
   REDRESS-216, REDRESS-217, REDRESS-218, REDRESS-219, REDRESS-220,
   REDRESS-222, REDRESS-223, REDRESS-224, REDRESS-225, REDRESS-226,
-  REDRESS-227, REDRESS-228, REDRESS-229, REDRESS-230, REDRESS-231, and
-  REDRESS-232.
+  REDRESS-227, REDRESS-228, REDRESS-229, REDRESS-230, REDRESS-231,
+  REDRESS-232, and REDRESS-233.
 - `skinny/RESULTS.md` now renders CSS L4 legacy CostFacts as historical claims
   with current `AUDIT-FALSIFIED_OPEN` status, so the manifest no longer embeds
   live-looking `A` / `GO` / `ADMITTED-PARITY` fragments for OPEN CSS rows.
@@ -130,17 +135,52 @@ remaining rows are implementation residuals, not closeable proof blocks.
   ax-iter -p xtask -- check-real-typed`, focused `unicode_` and
   `direct_strict_product` tests, plus cold reject evidence retained at
   `restart/skinny/tranches/sk-v14/research/skv14-W11B-unicode-products.tsv`.
+- W11C local evidence before this close packet update: `cargo run
+  --profile ax-iter -p xtask -- regen-real-typed`, `cargo run --profile
+  ax-iter -p xtask -- check-real-typed`, focused `typed_direct_`,
+  `gsoc_2018_typed`, and `direct_strict_product` tests, plus cold reject
+  evidence retained at
+  `restart/skinny/tranches/sk-v14/research/skv14-W11C-gsoc-products.md`.
 - Close invariants remain: 16 locks, Pattern H count 67, Lock 10 five-shape
   `BackendShape` canon preserved, and generated JSON parse_only remains
   distinct from the tape-building path.
 
 ## W11 Disposition
 
-W11/W10R/W10S/W10T/W10V/W10W close SK-V14 as a mixed tranche, with admitted rows preserved and all
-unmet rows routed to implementation residuals. W10X, W10Y/W10Z, W10AA, W9Y,
-W9AC, and W11B add post-close residual rejection evidence; W9AA and W9AB add post-close typed
-admits for `distinct_values/real_typed_struct` and
-`canada/real_typed_struct`.
+W11/W10R/W10S/W10T/W10V/W10W close SK-V14 as a mixed tranche, with admitted
+rows preserved and all unmet rows routed to implementation residuals. W10X,
+W10Y/W10Z, W10AA, W9Y, W9AC, W11B, and W11C add post-close residual rejection
+evidence; W9AA and W9AB add post-close typed admits for
+`distinct_values/real_typed_struct` and `canada/real_typed_struct`.
 Under the latest user instruction, the next work is implementation against the
 residual queue, not a new Omega or Alpha pass unless a future source attempt
 exposes a spec-level amendment that truly requires G-Omega.
+
+## SK-V14 W11C JSON GSoC Product Probe Reject
+
+- Item 233 closes `G-SK-V14-W11C-JSON-GSOC-PRODUCTS` as `REJECT`. No source
+  patch lands, no `RESULTS.md` row moves, and
+  `restart/skinny/ROLLING-SOTA-DELTA.md` remains unchanged.
+- The measured candidates added transient generated strict product surfaces for
+  `gsoc-2018`: numeric top-level object keys, ordered fixed-member parsing for
+  the Schema.org proposal/sponsor/author objects, identity-product and
+  full-product variants, plus required-field full-product parsing. The patch
+  was reverted after measurement and retained as
+  `/tmp/skv14-W11C-gsoc-products-rejected.patch` with SHA-256
+  `258bdb69a286b0e60b57543f127be7c57ca0561a5657454d0ce5d7639a74faa9`.
+- Correctness gates passed before measurement: `cargo run --profile ax-iter -p
+  xtask -- regen-real-typed`, `cargo run --profile ax-iter -p xtask --
+  check-real-typed`, `cargo test --profile ax-iter -p codegen typed_direct_ --
+  --nocapture`, `cargo test --profile ax-iter -p bbnf-bench
+  gsoc_2018_typed -- --nocapture`, and `cargo test --profile ax-iter -p
+  bbnf-bench direct_strict_product -- --nocapture`.
+- Cold `profile_direct` evidence rejects the closest full-product route:
+  `gsoc-2018/real_typed_struct` measured `5789.034` Mbps against strict sonic
+  `6482.407` Mbps, and `gsoc-2018/direct_to_struct` strict product measured
+  `5834.269` Mbps against strict sonic `6111.175` Mbps. The identity-product
+  route reached higher absolute Track 1 throughput (`19909.635` typed,
+  `19938.076` direct-strict) but widened the strict sonic gap
+  (`24783.657` typed sonic, `24927.218` direct-strict sonic).
+- Current JSON direct_to_struct state remains 13 / 17 ADMITTED and 4 OPEN.
+  Current JSON real_typed_struct state remains 13 / 17 ADMITTED and 4 MISSING:
+  `gsoc-2018`, `unicode_mixed`, `unicode_escapes`, and `y_string_unicode`.

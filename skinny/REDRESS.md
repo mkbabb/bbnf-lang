@@ -5476,3 +5476,24 @@ perturbation.
   admits. Evidence:
   `restart/skinny/tranches/sk-v14/research/skv14-W10U-parse-only-number-end-reject.md`,
   `.tsv`, and `.raw.log`.
+
+## SK-V14 W10V JSON parse_only Current-HEAD Resweep
+
+- Item 222 closes `G-SK-V14-W10V-JSON-PARSE-ONLY-CURRENT-HEAD-RESWEEP` as
+  `MIXED`. No source patch landed. The W10V source candidates were abrogated
+  before ledger movement: REDRESS-84-adjacent object value-byte carry, a
+  constant-width literal matcher, a container entry cleanup, and a parse-only
+  string-tail scalar finish whose A/B showed the admitted row was already
+  admitted on current HEAD.
+- One additional parse_only row admits from cold current-HEAD `profile_direct`
+  evidence retained at
+  `restart/skinny/tranches/sk-v14/research/skv14-W10V-parse-only-current-head-resweep.tsv`:
+  `citm_catalog`. The row has Track 1 `9079.838` Mbps, independent Track 2
+  `13566.569` Mbps, strict `parse_only/sonic_rs::Skipper` comparator
+  `8335.772` Mbps, `serde_json` `5121.472` Mbps, no warmup iterations, and
+  per-iteration equality PASS.
+- Seven parse_only rows remain open after W10V because the cold evidence still
+  does not clear Skipper + 1.0 Mbps: `twitter`, `apache_builds`,
+  `github_events`, `update_center`, `random`, `gsoc-2018`, and
+  `distinct_values`. Current parse_only state is 10 / 17 admitted and 7 / 17
+  open.

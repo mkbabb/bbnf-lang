@@ -306,17 +306,17 @@ pub const JSON_PARSE_ONLY_ADMISSION_SPECS: &[JsonParseOnlyAdmissionSpec] = &[
         prior_redress_citation: "102",
     },
     JsonParseOnlyAdmissionSpec {
-        label: "W10.2",
-        wave_id: "SK-V14-W10",
-        run_id_prefix: "SK-V14-W10:",
-        consumer_gate: "G-W10-JSON-PARSE-ONLY",
+        label: "W10V.1",
+        wave_id: "SK-V14-W10V",
+        run_id_prefix: "SK-V14-W10V:",
+        consumer_gate: "G-SK-V14-W10V-JSON-PARSE-ONLY-CURRENT-HEAD-RESWEEP",
         row_id: "json/citm_catalog/parse_only/main",
         corpus: "citm_catalog",
         criterion_group: "json_citm_catalog",
         bytes: 1_727_204,
-        route_id: "generated-json-parse-only-distinct-path",
-        redress_entry: "none:SK-V14-W10-admit",
-        prior_redress_citation: "102",
+        route_id: "generated-json-parse-only-current-head-resweep",
+        redress_entry: "none:SK-V14-W10V-admit",
+        prior_redress_citation: "221",
     },
     JsonParseOnlyAdmissionSpec {
         label: "W10R.1",
@@ -555,6 +555,7 @@ pub fn json_parse_only_audit_reference(spec: &JsonParseOnlyAdmissionSpec) -> &'s
         "SK-V14-W10R" => "sk-v14-W10R:parse-only-prefix-continuation;sk-v14-W10:distinct-parse-only;sk-v13/v6-comparator-integrity:§1+§3",
         "SK-V14-W10S" => "sk-v14-W10S:parse-only-string-end-prefix-scan;sk-v14-W10R:parse-only-prefix-continuation;sk-v14-W10:distinct-parse-only;sk-v13/v6-comparator-integrity:§1+§3",
         "SK-V14-W10T" => "sk-v14-W10T:parse-only-open-sweep;sk-v14-W10S:parse-only-string-end-prefix-scan;sk-v14-W10R:parse-only-prefix-continuation;sk-v14-W10:distinct-parse-only;sk-v13/v6-comparator-integrity:§1+§3",
+        "SK-V14-W10V" => "sk-v14-W10V:parse-only-current-head-resweep;sk-v14-W10U:number-end-reject;sk-v14-W10T:parse-only-open-sweep;sk-v14-W10S:parse-only-string-end-prefix-scan;sk-v14-W10R:parse-only-prefix-continuation;sk-v14-W10:distinct-parse-only;sk-v13/v6-comparator-integrity:§1+§3",
         _ => "sk-v14-W10:distinct-parse-only;sk-v13/v6-comparator-integrity:§1+§3",
     }
 }
@@ -564,6 +565,7 @@ pub fn json_parse_only_open_delta(spec: &JsonParseOnlyAdmissionSpec) -> &'static
         "SK-V14-W10R" => "admitted:SK-V14-W10R-parse-only-prefix-continuation",
         "SK-V14-W10S" => "admitted:SK-V14-W10S-parse-only-string-end-prefix-scan",
         "SK-V14-W10T" => "admitted:SK-V14-W10T-parse-only-open-sweep",
+        "SK-V14-W10V" => "admitted:SK-V14-W10V-current-head-resweep",
         _ => "admitted:SK-V14-W10-parse-only-distinct",
     }
 }
@@ -3759,7 +3761,7 @@ fn validate_skv14_manifest_rows(rows: &[SkV14ManifestRow]) -> Result<(), String>
     }
     if pending != 24 || falsified + sustained != 51 {
         return Err(format!(
-            "SK-V14 audit overlay expected pending=24 and falsified+sustained=51 after authorized W9/W10/W10R/W10S/W10T admits, saw {falsified} / {pending} / {sustained}"
+            "SK-V14 audit overlay expected pending=24 and falsified+sustained=51 after authorized W9/W10/W10R/W10S/W10T/W10V admits, saw {falsified} / {pending} / {sustained}"
         ));
     }
     Ok(())
@@ -3805,7 +3807,7 @@ fn validate_skv14_sustained_row(row: &SkV14ManifestRow) -> Result<(), String> {
         return Ok(());
     }
     Err(format!(
-        "{} is AUDIT-SUSTAINED without W9 typed or W10/W10R/W10S/W10T parse_only authority",
+        "{} is AUDIT-SUSTAINED without W9 typed or W10/W10R/W10S/W10T/W10V parse_only authority",
         row.row_id
     ))
 }
@@ -5748,6 +5750,7 @@ fn validate_w0_profile_artifact(row_id: &str, profile_artifact: &str) -> Result<
                 | "restart/skinny/tranches/sk-v14/research/skv14-W10R-parse-only-profile-direct.tsv"
                 | "restart/skinny/tranches/sk-v14/research/skv14-W10S-parse-only-string-end-profile-direct.tsv"
                 | "restart/skinny/tranches/sk-v14/research/skv14-W10T-parse-only-open-sweep.tsv"
+                | "restart/skinny/tranches/sk-v14/research/skv14-W10V-parse-only-current-head-resweep.tsv"
         ) {
             return Ok(());
         }
@@ -5784,6 +5787,8 @@ fn validate_w0_hot_leaf(
             "not-collected-in-W10S-row"
         } else if profile_artifact.contains("skv14-W10T-parse-only-open-sweep.tsv") {
             "not-collected-in-W10T-row"
+        } else if profile_artifact.contains("skv14-W10V-parse-only-current-head-resweep.tsv") {
+            "not-collected-in-W10V-row"
         } else {
             "not-collected-in-W10-row"
         };
@@ -6184,6 +6189,7 @@ fn validate_native_comparator_source(
             "restart/skinny/tranches/sk-v14/research/skv14-W10R-parse-only-profile-direct.tsv",
             "restart/skinny/tranches/sk-v14/research/skv14-W10S-parse-only-string-end-profile-direct.tsv",
             "restart/skinny/tranches/sk-v14/research/skv14-W10T-parse-only-open-sweep.tsv",
+            "restart/skinny/tranches/sk-v14/research/skv14-W10V-parse-only-current-head-resweep.tsv",
         ]
         .into_iter()
         .map(|path| format!("profile_direct:{path},mode={mode}"))
@@ -9691,19 +9697,19 @@ mod tests {
     fn skv14_json_parse_only_report_accepts_configured_corpus_admit() {
         let report = SkV13JsonParseOnlyReport {
             schema_version: SKV14_JSON_PARSE_ONLY_REPORT_SCHEMA.into(),
-            wave_id: "SK-V14-W10".into(),
-            run_id: "SK-V14-W10:citm-catalog-parse-fnv64-0000000000000000".into(),
-            source_commit: "64e1f8431".into(),
+            wave_id: "SK-V14-W10V".into(),
+            run_id: "SK-V14-W10V:citm-catalog-current-head-fnv64-0000000000000000".into(),
+            source_commit: "209fb0363".into(),
             host_triple: "aarch64-apple-darwin".into(),
             build_flags: "RUSTFLAGS=-C target-cpu=native".into(),
             feature_mask: "arch=aarch64;target_cpu=native".into(),
-            consumer_gate: "G-W10-JSON-PARSE-ONLY".into(),
+            consumer_gate: "G-SK-V14-W10V-JSON-PARSE-ONLY-CURRENT-HEAD-RESWEEP".into(),
             g_omega_status: "not-applicable:wave-implementation".into(),
             row_id: "json/citm_catalog/parse_only/main".into(),
             corpus: "citm_catalog".into(),
             workload: "parse_only".into(),
             output_plane: "parse_only".into(),
-            route_id: "generated-json-parse-only-distinct-path".into(),
+            route_id: "generated-json-parse-only-current-head-resweep".into(),
             same_wave_consumer_path: "runtime::generated_json::parse_only".into(),
             same_wave_consumer_class: "generated_json_parse_only_contract".into(),
             strict_equality_status: "pass".into(),
@@ -9718,13 +9724,13 @@ mod tests {
             escape_complete: "yes".into(),
             json_guard_state: "maintain".into(),
             css_guard_state: "maintain".into(),
-            track1_mbps_before: 30035.0,
-            track1_mbps_after: 30035.0,
-            track2_mbps_after: 20867.0,
-            sonic_strict_mbps_after: 25545.0,
-            serde_mbps_after: 7587.0,
-            threshold_mbps: 25546.0,
-            admission_margin_mbps: 4489.0,
+            track1_mbps_before: 8037.394,
+            track1_mbps_after: 9079.838,
+            track2_mbps_after: 13566.569,
+            sonic_strict_mbps_after: 8335.772,
+            serde_mbps_after: 5121.472,
+            threshold_mbps: 8336.772,
+            admission_margin_mbps: 743.066,
             row_move_toward_sota_status: "admitted".into(),
             lock14_status: "pass".into(),
             lock14_owner_path_status: "pass".into(),
@@ -9736,11 +9742,11 @@ mod tests {
                 "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef".into(),
             affected_row_ids: vec!["json/citm_catalog/parse_only/main".into()],
             block_id: None,
-            prior_redress_citations: vec!["102".into()],
+            prior_redress_citations: vec!["221".into()],
             material_differential:
-                "REDRESS 102 classified parse-only as view-boundary; W10 admits distinct parse_only evidence"
+                "REDRESS 221 abrogated the number-end scanner; W10V admits current-HEAD parse_only evidence without a source patch"
                     .into(),
-            redress_entry: "none:SK-V14-W10-admit".into(),
+            redress_entry: "none:SK-V14-W10V-admit".into(),
         };
         assert!(report.validate_gate().is_ok());
         let mut wrong_row = report.clone();

@@ -758,7 +758,7 @@ fn validate_skv14_sustained_row(row: &Skv14ManifestRow) -> Result<()> {
         return Ok(());
     }
     bail!(
-        "{} is AUDIT-SUSTAINED without W9 typed or W10/W10R/W10S/W10T parse_only authority",
+        "{} is AUDIT-SUSTAINED without W9 typed or W10/W10R/W10S/W10T/W10V parse_only authority",
         row.row_id
     )
 }
@@ -925,7 +925,13 @@ fn is_skv14_w10_parse_row(row_id: &str) -> bool {
 }
 
 fn skv14_parse_only_admit_fields(row_id: &str) -> (&'static str, &'static str, &'static str) {
-    if row_id == "json/canada/parse_only/main" {
+    if row_id == "json/citm_catalog/parse_only/main" {
+        (
+            "SK-V14-W10V",
+            "none:SK-V14-W10V-admit",
+            "admitted:SK-V14-W10V-current-head-resweep",
+        )
+    } else if row_id == "json/canada/parse_only/main" {
         (
             "SK-V14-W10R",
             "none:SK-V14-W10R-admit",

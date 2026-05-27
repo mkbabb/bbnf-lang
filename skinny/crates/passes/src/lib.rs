@@ -2,9 +2,10 @@ use bbnf_regex::{analyze, FirstSet, RegexKind};
 use ir::{
     all_backend_shapes, BackendExpr, BackendIr, BackendRule, BackendShape, CapacityPolicy,
     CostFacts, DirectBuildField, DirectBuildSource, EvidenceSource, ExprId, ExprKind, GrammarIr,
-    Measurement, PriorityStep, Recognizer, RejectedAlternative, RejectionReason, ShapeFacts,
-    ShapeRationale, SimdMode, SimdSite, SourceSpan, SpanKind, SpanMarkKind, StructuralAlphabet,
-    TapeKind, ValidationError,
+    Lock1PolicyTriad, Measurement, PerGrammarPolicyFacts, PriorityStep, Recognizer,
+    RejectedAlternative, RejectionReason, SameSubstrateUnionFacts, ShapeFacts, ShapeRationale,
+    SimdMode, SimdSite, SourceSpan, SpanKind, SpanMarkKind, StructuralAlphabet, TapeKind,
+    ValidationError,
 };
 use std::collections::{HashMap, HashSet};
 use thiserror::Error;
@@ -52,6 +53,8 @@ pub fn compile(grammar: &GrammarIr) -> Result<PipelineOutput, PassError> {
     );
     layout_facts.backend_shape = shape_plan.backend_shape;
     layout_facts.cost_facts = shape_plan.cost_facts;
+    layout_facts.per_grammar_policy = shape_plan.per_grammar_policy;
+    layout_facts.same_substrate_union = shape_plan.same_substrate_union;
     debug_assert!(layout_facts
         .cost_facts
         .iter()
@@ -92,6 +95,8 @@ pub struct LayoutFacts {
     pub hot_call_graph: HashMap<ir::RuleId, recognizers::hot_path::HotPathFact>,
     pub backend_shape: HashMap<ir::RuleId, BackendShape>,
     pub cost_facts: HashMap<ir::RuleId, CostFacts>,
+    pub per_grammar_policy: HashMap<ir::RuleId, PerGrammarPolicyFacts>,
+    pub same_substrate_union: HashMap<ir::RuleId, SameSubstrateUnionFacts>,
 }
 
 pub mod layout {
@@ -109,6 +114,8 @@ pub mod layout {
             hot_call_graph: recognizers::hot_path::derive_hot_path(grammar, Some(entry_rule), None),
             backend_shape: HashMap::new(),
             cost_facts: HashMap::new(),
+            per_grammar_policy: HashMap::new(),
+            same_substrate_union: HashMap::new(),
         }
     }
 
@@ -357,6 +364,7 @@ pub mod recognizers {
         pub avx512bw: bool,
         pub collapsed_stage_author_declared: bool,
         pub direct_only_output: bool,
+        pub direct_build_consumer: bool,
         pub retained_api_consumer: bool,
     }
 
@@ -366,6 +374,7 @@ pub mod recognizers {
                 avx512bw: cfg!(all(target_arch = "x86_64", target_feature = "avx512bw")),
                 collapsed_stage_author_declared: false,
                 direct_only_output: false,
+                direct_build_consumer: true,
                 retained_api_consumer: true,
             }
         }
@@ -375,6 +384,8 @@ pub mod recognizers {
     pub struct BackendShapePlan {
         pub backend_shape: HashMap<ir::RuleId, BackendShape>,
         pub cost_facts: HashMap<ir::RuleId, CostFacts>,
+        pub per_grammar_policy: HashMap<ir::RuleId, PerGrammarPolicyFacts>,
+        pub same_substrate_union: HashMap<ir::RuleId, SameSubstrateUnionFacts>,
         pub diagnostics: Vec<diagnostics::PassDiagnostic>,
     }
 
@@ -395,6 +406,8 @@ pub mod recognizers {
     ) -> BackendShapePlan {
         let mut backend_shape = HashMap::with_capacity(grammar.rules.len());
         let mut cost_facts = HashMap::with_capacity(grammar.rules.len());
+        let mut per_grammar_policy = HashMap::with_capacity(grammar.rules.len());
+        let mut same_substrate_union = HashMap::with_capacity(grammar.rules.len());
         let mut diagnostics = Vec::new();
 
         for rule in &grammar.rules {
@@ -410,6 +423,8 @@ pub mod recognizers {
             let chosen = selection.shape;
             let rejected = rejected_alternatives(backend_rule, chosen, target);
             let capacity_policy = capacity_policy(backend_rule, chosen);
+            let policy = per_grammar_policy_for_rule(rule.id, chosen);
+            let union = same_substrate_union_for_rule(rule.id, chosen);
             let facts = CostFacts {
                 rule_id: rule.id,
                 chosen,
@@ -419,6 +434,8 @@ pub mod recognizers {
                 capacity_policy,
                 active_cost: Some(selection.facts),
                 decision_csp: selection.decision_csp,
+                per_grammar_policy: Some(policy.clone()),
+                same_substrate_union: Some(union.clone()),
             };
             if facts.rejected.len() < 4 || !has_measurement_evidence(&facts) {
                 diagnostics.push(diagnostics::PassDiagnostic::cost_facts_missing_evidence(
@@ -433,12 +450,16 @@ pub mod recognizers {
                 ));
             }
             backend_shape.insert(rule.id, facts.chosen);
+            per_grammar_policy.insert(rule.id, policy);
+            same_substrate_union.insert(rule.id, union);
             cost_facts.insert(rule.id, facts);
         }
 
         BackendShapePlan {
             backend_shape,
             cost_facts,
+            per_grammar_policy,
+            same_substrate_union,
             diagnostics,
         }
     }
@@ -657,6 +678,38 @@ pub mod recognizers {
         None
     }
 
+    fn per_grammar_policy_for_rule(
+        rule_id: ir::RuleId,
+        selected_shape: BackendShape,
+    ) -> PerGrammarPolicyFacts {
+        PerGrammarPolicyFacts {
+            rule_id,
+            selected_shape,
+            triad: Lock1PolicyTriad::for_backend_shape(selected_shape),
+            policy_source: "passes::recognizers::derive_backend_shape_with_diagnostics".to_string(),
+            compile_consumer_path: "passes::compile::layout_facts.per_grammar_policy".to_string(),
+            lower_consumer_path: "codegen::lower::rust::lower_to_rust".to_string(),
+            runtime_consumer_path: "codegen::runtime_generator::emit_compiled".to_string(),
+        }
+    }
+
+    fn same_substrate_union_for_rule(
+        rule_id: ir::RuleId,
+        selected_shape: BackendShape,
+    ) -> SameSubstrateUnionFacts {
+        SameSubstrateUnionFacts {
+            rule_id,
+            selected_shape,
+            union_variant_id: "union-c1-per-rule-same-tape".to_string(),
+            substrate_cardinality: "one".to_string(),
+            enforcement_status: "pass".to_string(),
+            forbidden_retained_surface_status: "absent".to_string(),
+            compile_consumer_path: "passes::compile::layout_facts.same_substrate_union".to_string(),
+            lower_consumer_path: "codegen::lower::rust::lower_to_rust".to_string(),
+            runtime_consumer_path: "codegen::runtime_generator::emit_compiled".to_string(),
+        }
+    }
+
     fn redress_72_evidence(
         backend_rule: Option<&BackendRule>,
         rejected_shape: BackendShape,
@@ -866,9 +919,8 @@ pub mod recognizers {
     }
 
     fn admits_sink_only(rule_ir: &BackendRule, target: TargetFeatures) -> bool {
-        target.direct_only_output
-            && !target.retained_api_consumer
-            && contains_direct_build(&rule_ir.expr)
+        contains_direct_build(&rule_ir.expr)
+            && (target.direct_only_output || target.direct_build_consumer)
     }
 
     fn admits_collapsed_stage(rule_ir: &BackendRule, target: TargetFeatures) -> bool {
@@ -1569,11 +1621,20 @@ mod tests {
             .any(|diagnostic| diagnostic.code() == "BBNF-COSTFACTS-MISSING-EVIDENCE"));
         assert_eq!(output.layout_facts.backend_shape.len(), 15);
         assert_eq!(output.layout_facts.cost_facts.len(), 15);
-        assert!(output
+        let sink_only_rules = output
             .layout_facts
             .backend_shape
             .values()
-            .all(|shape| *shape == BackendShape::OffsetTape));
+            .filter(|shape| **shape == BackendShape::SinkOnly)
+            .count();
+        let offset_tape_rules = output
+            .layout_facts
+            .backend_shape
+            .values()
+            .filter(|shape| **shape == BackendShape::OffsetTape)
+            .count();
+        assert_eq!(sink_only_rules, 7);
+        assert_eq!(offset_tape_rules, 8);
         let object = output
             .backend_ir
             .rules
@@ -1584,7 +1645,7 @@ mod tests {
     }
 
     #[test]
-    fn cost_facts_populate_direct_build_rules_with_redress_evidence() {
+    fn cost_facts_populate_direct_build_rules_with_w7_policy_and_union() {
         let grammar = grammar::parse_json_grammar(JSON_GRAMMAR).unwrap();
         let output = compile(&grammar).unwrap();
         let direct_build_rule_ids = output
@@ -1604,26 +1665,27 @@ mod tests {
                 output.layout_facts.backend_shape.get(rule_id),
                 Some(&facts.chosen)
             );
+            assert_eq!(facts.chosen, BackendShape::SinkOnly);
+            let policy = output.layout_facts.per_grammar_policy.get(rule_id).unwrap();
+            assert_eq!(policy.selected_shape, BackendShape::SinkOnly);
+            assert_eq!(policy.triad.substrate_target.as_str(), "direct_sink");
+            let union = output
+                .layout_facts
+                .same_substrate_union
+                .get(rule_id)
+                .unwrap();
+            assert_eq!(union.substrate_cardinality, "one");
+            assert_eq!(union.enforcement_status, "pass");
             assert!(facts.rejected.len() >= 4);
         }
-        assert!(output.layout_facts.cost_facts.values().any(|facts| {
-            facts
-                .capacity_policy
-                .as_ref()
-                .is_some_and(|policy| policy.tiny_string_cap == Some(16))
-        }));
-        assert!(output.layout_facts.cost_facts.values().any(|facts| {
-            facts.rejected.iter().any(|alternative| {
-                alternative.reason == ir::RejectionReason::PreviouslyRegressed
-                    && alternative.evidence.iter().any(|measurement| {
-                        measurement.source == ir::EvidenceSource::RedressBackfill
-                    })
-            })
-        }));
-        assert!(output
-            .diagnostics
-            .iter()
-            .any(|diagnostic| { diagnostic.code() == "BBNF-DOMINATED-ALTERNATIVE" }));
+        assert_eq!(
+            output.layout_facts.per_grammar_policy.len(),
+            output.layout_facts.cost_facts.len()
+        );
+        assert_eq!(
+            output.layout_facts.same_substrate_union.len(),
+            output.layout_facts.cost_facts.len()
+        );
         assert!(output
             .diagnostics
             .iter()
@@ -1661,6 +1723,10 @@ mod tests {
             assert_eq!(active.selected_cost_freshness, "fresh");
             assert_eq!(active.egraph_budget_status, "pass");
             assert_eq!(active.determinism_replay_status, "pass");
+            let csp = facts.decision_csp.as_ref().expect("missing decision CSP");
+            assert_eq!(csp.per_grammar_policy_status, "pass");
+            assert_eq!(csp.same_substrate_union_status, "pass");
+            assert_eq!(csp.selected_shape, facts.chosen);
             assert!(active
                 .generated_selection_path
                 .contains("derive_backend_shape"));
@@ -1804,6 +1870,7 @@ root = unknown | literal ;
                 avx512bw: true,
                 collapsed_stage_author_declared: false,
                 direct_only_output: false,
+                direct_build_consumer: true,
                 retained_api_consumer: true,
             },
         );

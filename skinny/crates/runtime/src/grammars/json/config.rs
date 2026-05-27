@@ -18,3 +18,14 @@ pub(crate) fn needs_decode_flags() -> OffsetFlags {
 pub(crate) fn string_needs_decode(flags: OffsetFlags) -> bool {
     flags.contains(STRING_NEEDS_DECODE)
 }
+
+pub(crate) const W7_DIRECT_BACKEND_SHAPE: &str = "SinkOnly";
+pub(crate) const W7_SUBSTRATE_TARGET: &str = "direct_sink";
+pub(crate) const W7_RETENTION_LIFETIME: &str = "generated_function";
+pub(crate) const W7_POLICY_OWNER: &str = "generated_grammar";
+pub(crate) const W7_SAME_SUBSTRATE_UNION: &str = "pass";
+
+#[inline(always)]
+pub(crate) fn w7_direct_policy_triad() -> (&'static str, &'static str, &'static str) {
+(W7_SUBSTRATE_TARGET, W7_RETENTION_LIFETIME, W7_POLICY_OWNER)
+}

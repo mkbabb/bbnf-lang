@@ -400,6 +400,7 @@ fn validate_w0_results_snapshot(root: &Path) -> Result<()> {
     let text = std::fs::read_to_string(root.join("RESULTS.md"))
         .context("gate-json --with-cost-facts --check-results requires RESULTS.md")?;
     validate_skv14_w0_manifest(&text)?;
+    validate_skv14_w7_redress_triads(root, &text)?;
     let rolling_path = root
         .parent()
         .context("skinny workspace has no parent")?
@@ -410,6 +411,49 @@ fn validate_w0_results_snapshot(root: &Path) -> Result<()> {
             rolling_path.display()
         )
     })?;
+    Ok(())
+}
+
+fn validate_skv14_w7_redress_triads(root: &Path, results_text: &str) -> Result<()> {
+    let rows = parse_skv14_w0_manifest(results_text)?;
+    let w7_rows = rows
+        .iter()
+        .filter(|row| row.wave_id == "SK-V14-W7")
+        .collect::<Vec<_>>();
+    if w7_rows.is_empty() {
+        return Ok(());
+    }
+    let redress_text = std::fs::read_to_string(root.join("REDRESS.md"))
+        .context("gate-json --check-results requires REDRESS.md for SK-V14-W7 rows")?;
+    for row in w7_rows {
+        let item = row
+            .redress_entry
+            .strip_prefix("REDRESS-")
+            .context("SK-V14-W7 row lacks REDRESS-* entry")?;
+        let block = redress_text
+            .split("\n\n")
+            .find(|block| {
+                block.contains(&format!("Item {item}")) || block.contains(&row.redress_entry)
+            })
+            .with_context(|| {
+                format!("{} missing {} in REDRESS.md", row.row_id, row.redress_entry)
+            })?;
+        for required in [
+            row.row_id.clone(),
+            format!("substrate_target={}", row.substrate_target),
+            format!("retention_lifetime={}", row.retention_lifetime),
+            format!("policy_owner={}", row.policy_owner),
+        ] {
+            if !block.contains(&required) {
+                bail!(
+                    "{} {} missing Lock-1 triad field `{}` in REDRESS.md",
+                    row.row_id,
+                    row.redress_entry,
+                    required
+                );
+            }
+        }
+    }
     Ok(())
 }
 

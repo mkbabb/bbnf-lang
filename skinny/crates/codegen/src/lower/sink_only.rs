@@ -1,7 +1,7 @@
 use super::{LowerCtx, ShapeLowering};
 use ir::{
     AltMode, BackendExpr, BackendIr, BackendRule, BackendShape, CostFacts, DirectBuildField,
-    SpanKind,
+    RetentionLifetime, SpanKind, SubstrateTarget,
 };
 use std::collections::BTreeSet;
 
@@ -24,6 +24,7 @@ pub struct SinkOnlyProgram {
     pub span_kinds: BTreeSet<SinkOnlySpanKind>,
     pub literals: BTreeSet<Vec<u8>>,
     pub dispatch_alt_count: usize,
+    pub policy_summary: RuntimePolicySummary,
 }
 
 impl SinkOnlyProgram {
@@ -40,6 +41,15 @@ impl SinkOnlyProgram {
     pub fn has_literal(&self, literal: &[u8]) -> bool {
         self.literals.contains(literal)
     }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RuntimePolicySummary {
+    pub backend_shape: BackendShape,
+    pub substrate_target: SubstrateTarget,
+    pub retention_lifetime: RetentionLifetime,
+    pub policy_owner: ir::PolicyOwner,
+    pub same_substrate_union: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -109,14 +119,31 @@ pub fn lower_rule(rule: &BackendRule) -> String {
     )
 }
 
-pub fn lower_program(backend: &BackendIr) -> Option<SinkOnlyProgram> {
+pub fn lower_program(backend: &BackendIr, ctx: &LowerCtx<'_>) -> Option<SinkOnlyProgram> {
     let mut program_facts = SinkOnlyFacts::default();
     let mut rules = Vec::with_capacity(backend.rules.len());
+    let mut policy_summary = None;
 
-    for rule in &backend.rules {
+    for (index, rule) in backend.rules.iter().enumerate() {
         let mut rule_facts = SinkOnlyFacts::default();
         let expr = lower_expr(&rule.expr, &mut rule_facts);
         let direct_shape = direct_shape(&expr);
+        if direct_shape.is_some() && policy_summary.is_none() {
+            let rule_id = ir::RuleId(index);
+            if let Some(policy) = ctx.per_grammar_policy.get(&rule_id) {
+                policy_summary = Some(RuntimePolicySummary {
+                    backend_shape: policy.selected_shape,
+                    substrate_target: policy.triad.substrate_target,
+                    retention_lifetime: policy.triad.retention_lifetime,
+                    policy_owner: policy.triad.policy_owner,
+                    same_substrate_union: ctx
+                        .same_substrate_union
+                        .get(&rule_id)
+                        .map(|union| union.enforcement_status.clone())
+                        .unwrap_or_else(|| "missing".to_string()),
+                });
+            }
+        }
         program_facts.merge(rule_facts);
         rules.push(SinkOnlyRule {
             name: rule.name.clone(),
@@ -136,6 +163,7 @@ pub fn lower_program(backend: &BackendIr) -> Option<SinkOnlyProgram> {
         span_kinds: program_facts.span_kinds,
         literals: program_facts.literals,
         dispatch_alt_count: program_facts.dispatch_alt_count,
+        policy_summary: policy_summary?,
     })
 }
 

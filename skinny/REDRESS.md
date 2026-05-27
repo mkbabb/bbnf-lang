@@ -5291,3 +5291,22 @@ perturbation.
   W6.1..W6.8, W7, and W8/W9/W10 remain blocked by the PRUNE-4 order until a
   real runtime projection source and emitter can make the W6.0 destructive
   gate pass.
+
+## SK-V14 Wave W7 PRUNE-5 Policy/Union Runtime Wiring
+
+- Item 214 closes `json/numbers/direct_to_struct/main` under
+  `G-SK-V14-W7-PRUNE-5` as `PRUNE-CONSUMED`. W7 moves the W8/W9 policy and
+  same-substrate union surfaces out of report-only evidence and into the
+  compiler spine: `passes::compile` now emits per-rule `per_grammar_policy`
+  and `same_substrate_union` facts, `codegen::lower::rust::lower_to_rust`
+  fails closed when either is missing or stale, and generated JSON/CSS runtime
+  outputs consume the resulting policy constants. Lock-1 triad:
+  substrate_target=direct_sink; retention_lifetime=generated_function;
+  policy_owner=generated_grammar. The named W7 hot-leaf handoff is
+  pre=parse_value_at and post=parse_w11_1_number_array_direct for the
+  generated direct numbers row. CSS L4 fact-stream generation consumes the
+  second-family triad
+  substrate_target=admitted_fact_output; retention_lifetime=output_row;
+  policy_owner=generated_grammar without adding a sixth BackendShape or any
+  UnionTape/class-lane retained substrate. The row remains AUDIT-FALSIFIED/NO-GO
+  because W7 is a load-bearing policy/union prune wave, not a direct admission.

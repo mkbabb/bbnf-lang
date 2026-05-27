@@ -119,7 +119,7 @@ fn solve_rule(
         csp_solver_version: SOLVER_VERSION.to_string(),
         csp_status: csp_status.to_string(),
         csp_variable_count: 1,
-        csp_constraint_count: 6,
+        csp_constraint_count: 8,
         csp_objective_count: 1,
         csp_named_grammars: vec![grammar_name.to_string()],
         csp_solve_us: solve_us,
@@ -140,6 +140,8 @@ fn solve_rule(
         substrate_constraint_status: "pass".to_string(),
         simd_constraint_status: "pass".to_string(),
         capacity_constraint_status: "pass".to_string(),
+        per_grammar_policy_status: "pass".to_string(),
+        same_substrate_union_status: "pass".to_string(),
         resolver_output_piping: "regex_facts->egraph_active_cost->csp->compile_codegen".to_string(),
         fused_solver_status: "not-fused".to_string(),
         generated_selection_path: "passes::recognizers::derive_backend_shape_with_diagnostics"

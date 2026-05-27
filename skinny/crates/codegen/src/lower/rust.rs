@@ -1,4 +1,7 @@
-use ir::{BackendIr, BackendRule, BackendShape, CostFacts, RuleId};
+use ir::{
+    BackendIr, BackendRule, BackendShape, CostFacts, Lock1PolicyTriad, PerGrammarPolicyFacts,
+    RuleId, SameSubstrateUnionFacts,
+};
 use passes::diagnostics::PassDiagnostic;
 use std::collections::HashMap;
 
@@ -21,6 +24,8 @@ pub struct RuleLoweringPlan {
 pub struct LowerCtx<'a> {
     pub backend_shape: &'a HashMap<RuleId, BackendShape>,
     pub cost_facts: &'a HashMap<RuleId, CostFacts>,
+    pub per_grammar_policy: &'a HashMap<RuleId, PerGrammarPolicyFacts>,
+    pub same_substrate_union: &'a HashMap<RuleId, SameSubstrateUnionFacts>,
     pub diagnostics: &'a [PassDiagnostic],
 }
 
@@ -48,6 +53,8 @@ pub fn lower_to_rust(backend: &BackendIr, ctx: &LowerCtx<'_>) -> Result<LoweredR
                     Some(csp)
                         if csp.csp_status == "sat"
                             && csp.csp_budget_status == "pass"
+                            && csp.per_grammar_policy_status == "pass"
+                            && csp.same_substrate_union_status == "pass"
                             && csp.selected_rule_count > 0
                             && csp.csp_solve_us <= csp.csp_timeout_ms.saturating_mul(1_000) => {}
                     Some(csp) => {
@@ -66,6 +73,7 @@ pub fn lower_to_rust(backend: &BackendIr, ctx: &LowerCtx<'_>) -> Result<LoweredR
                         ));
                     }
                 }
+                validate_policy_facts(ctx, rule_id, rule, shape, cost)?;
                 rule_plans.push(lower_rule(ctx, rule, cost));
             }
             None => {
@@ -79,7 +87,7 @@ pub fn lower_to_rust(backend: &BackendIr, ctx: &LowerCtx<'_>) -> Result<LoweredR
 
     Ok(LoweredRust {
         rule_plans,
-        sink_only_program: sink_only::lower_program(backend),
+        sink_only_program: sink_only::lower_program(backend, ctx),
     })
 }
 
@@ -99,4 +107,64 @@ fn lower_rule(ctx: &LowerCtx<'_>, rule: &BackendRule, cost: &CostFacts) -> RuleL
         shape: cost.chosen,
         body,
     }
+}
+
+fn validate_policy_facts(
+    ctx: &LowerCtx<'_>,
+    rule_id: RuleId,
+    rule: &BackendRule,
+    shape: BackendShape,
+    cost: &CostFacts,
+) -> Result<(), String> {
+    let policy = ctx.per_grammar_policy.get(&rule_id).ok_or_else(|| {
+        format!(
+            "W7 fail-closed: missing per-grammar policy facts for rule {}",
+            rule.name
+        )
+    })?;
+    if cost.per_grammar_policy.as_ref() != Some(policy) {
+        return Err(format!(
+            "W7 fail-closed: cost facts disagree with per-grammar policy for rule {}",
+            rule.name
+        ));
+    }
+    if policy.rule_id != rule_id
+        || policy.selected_shape != shape
+        || policy.triad != Lock1PolicyTriad::for_backend_shape(shape)
+        || policy.compile_consumer_path.trim().is_empty()
+        || policy.lower_consumer_path != "codegen::lower::rust::lower_to_rust"
+        || policy.runtime_consumer_path.trim().is_empty()
+    {
+        return Err(format!(
+            "W7 fail-closed: invalid per-grammar policy facts for rule {}",
+            rule.name
+        ));
+    }
+
+    let union = ctx.same_substrate_union.get(&rule_id).ok_or_else(|| {
+        format!(
+            "W7 fail-closed: missing same-substrate union facts for rule {}",
+            rule.name
+        )
+    })?;
+    if cost.same_substrate_union.as_ref() != Some(union) {
+        return Err(format!(
+            "W7 fail-closed: cost facts disagree with same-substrate union for rule {}",
+            rule.name
+        ));
+    }
+    if union.rule_id != rule_id
+        || union.selected_shape != shape
+        || union.union_variant_id != "union-c1-per-rule-same-tape"
+        || union.substrate_cardinality != "one"
+        || union.enforcement_status != "pass"
+        || union.forbidden_retained_surface_status != "absent"
+        || union.lower_consumer_path != "codegen::lower::rust::lower_to_rust"
+    {
+        return Err(format!(
+            "W7 fail-closed: invalid same-substrate union facts for rule {}",
+            rule.name
+        ));
+    }
+    Ok(())
 }

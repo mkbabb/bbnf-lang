@@ -2,6 +2,11 @@
 pub(crate) const FACT_SCHEMA: &str = "css-l4-declaration-value-extended-facts-v1";
 pub(crate) const ROW_ID: &str = "css_l4/declaration_values_extended/direct_to_struct/main";
 pub(crate) const OUTPUT_PLANE: &str = "css_l4_declaration_value_extended_fact_stream";
+pub(crate) const W7_POLICY_BACKEND_SHAPE: &str = "admitted_fact_output";
+pub(crate) const W7_SUBSTRATE_TARGET: &str = "admitted_fact_output";
+pub(crate) const W7_RETENTION_LIFETIME: &str = "output_row";
+pub(crate) const W7_POLICY_OWNER: &str = "generated_grammar";
+pub(crate) const W7_SAME_SUBSTRATE_UNION: &str = "pass";
 pub(crate) const REQUEST_PROFILE: &str = "css_l4_declaration_values_extended";
 pub(crate) const ENTRY_RULE: &str = "stylesheet";
 pub(crate) const FRONTEND_SOURCE_HASH: &str = "2d7df4eb87fb2304";

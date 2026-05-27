@@ -11,6 +11,17 @@ pub fn emit_fact_stream(input: &str) -> Result<String, CssFactError> {
     out.push_str("\tplane=");
     out.push_str(config::OUTPUT_PLANE);
     out.push('\n');
+    out.push_str("policy\tbackend_shape=");
+    out.push_str(config::W7_POLICY_BACKEND_SHAPE);
+    out.push_str("\tsubstrate_target=");
+    out.push_str(config::W7_SUBSTRATE_TARGET);
+    out.push_str("\tretention_lifetime=");
+    out.push_str(config::W7_RETENTION_LIFETIME);
+    out.push_str("\tpolicy_owner=");
+    out.push_str(config::W7_POLICY_OWNER);
+    out.push_str("\tsame_substrate_union=");
+    out.push_str(config::W7_SAME_SUBSTRATE_UNION);
+    out.push('\n');
     out.push_str("source\tinput_fnv64=");
     push_hex64(&mut out, fnv64(input.as_bytes()));
     out.push_str("\tinput_bytes=");

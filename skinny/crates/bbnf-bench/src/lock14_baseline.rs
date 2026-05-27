@@ -1295,6 +1295,37 @@ const SK_V14_W6_8_ROOT_JSON_OWNER_PATHS: &[&str] = &[
     "../xtask/src/regen_simple_runtime.rs",
 ];
 
+const SK_V14_W7_OWNER_PATHS: &[&str] = &[
+    "crates/ir/src/cost.rs",
+    "crates/ir/src/lib.rs",
+    "crates/passes/src/decision_csp.rs",
+    "crates/passes/src/lib.rs",
+    "crates/codegen/src/lib.rs",
+    "crates/codegen/src/lower/rust.rs",
+    "crates/codegen/src/lower/sink_only.rs",
+    "crates/codegen/src/runtime_generator.rs",
+    "crates/codegen/src/json_sink_direct.rs",
+    "crates/codegen/src/json_templates/config.rs",
+    "crates/runtime/src/grammars/json/config.rs",
+    "crates/runtime/src/grammars/json/generated.rs",
+    "crates/runtime/src/grammars/css_l4_at_rules_and_media/config.rs",
+    "crates/runtime/src/grammars/css_l4_at_rules_and_media/generated.rs",
+    "crates/runtime/src/grammars/css_l4_declaration_values/config.rs",
+    "crates/runtime/src/grammars/css_l4_declaration_values/generated.rs",
+    "crates/runtime/src/grammars/css_l4_declaration_values_extended/config.rs",
+    "crates/runtime/src/grammars/css_l4_declaration_values_extended/generated.rs",
+    "crates/runtime/src/grammars/css_l4_nested_layout/config.rs",
+    "crates/runtime/src/grammars/css_l4_nested_layout/generated.rs",
+    "crates/runtime/src/grammars/css_l4_stylesheet_selectors/config.rs",
+    "crates/runtime/src/grammars/css_l4_stylesheet_selectors/generated.rs",
+    "crates/runtime/src/grammars/css_l4_vendor_and_custom_atrules/config.rs",
+    "crates/runtime/src/grammars/css_l4_vendor_and_custom_atrules/generated.rs",
+    "crates/runtime/src/grammars/css_l4_visual_functions/config.rs",
+    "crates/runtime/src/grammars/css_l4_visual_functions/generated.rs",
+    "crates/bbnf-bench/src/lock14_baseline.rs",
+    "xtask/src/main.rs",
+];
+
 fn current_lock14_owner_paths() -> Vec<&'static str> {
     let mut paths = Vec::with_capacity(
         SK_V12_W1A_OWNER_PATHS.len()
@@ -1334,7 +1365,8 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
             + SK_V14_W6_5_ROOT_CSS_PRETTY_OWNER_PATHS.len()
             + SK_V14_W6_6_ROOT_GOOGLE_SHEETS_OWNER_PATHS.len()
             + SK_V14_W6_7_ROOT_BBNF_OWNER_PATHS.len()
-            + SK_V14_W6_8_ROOT_JSON_OWNER_PATHS.len(),
+            + SK_V14_W6_8_ROOT_JSON_OWNER_PATHS.len()
+            + SK_V14_W7_OWNER_PATHS.len(),
     );
     paths.extend_from_slice(SK_V12_W1A_OWNER_PATHS);
     paths.extend_from_slice(SK_V12_W1B1_OWNER_PATHS);
@@ -1374,6 +1406,7 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
     paths.extend_from_slice(SK_V14_W6_6_ROOT_GOOGLE_SHEETS_OWNER_PATHS);
     paths.extend_from_slice(SK_V14_W6_7_ROOT_BBNF_OWNER_PATHS);
     paths.extend_from_slice(SK_V14_W6_8_ROOT_JSON_OWNER_PATHS);
+    paths.extend_from_slice(SK_V14_W7_OWNER_PATHS);
     paths
 }
 
@@ -1943,6 +1976,14 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
             return Ok(());
         }
     }
+    if is_w7_policy_union_subject(subject) {
+        let allowed = changed_paths
+            .iter()
+            .all(|path| is_allowed_path(path, SK_V14_W7_OWNER_PATHS));
+        if allowed {
+            return Ok(());
+        }
+    }
     Err(format!(
         "Lock 14 frozen diff failed for parent paths [{}]",
         changed_paths.join(", ")
@@ -2044,6 +2085,16 @@ fn is_w6_8_root_json_subject(subject: &str) -> bool {
         || subject.contains("sk-v14-w6.8")
         || subject.contains("sk-v14-wavew6_8")
         || subject.contains("sk-v14-w6_8")
+}
+
+fn is_w7_policy_union_subject(subject: &str) -> bool {
+    let subject = subject.to_ascii_lowercase();
+    subject.contains("sk-v14-wavew7")
+        || subject.contains("sk-v14-w7")
+        || subject.contains("sk-v14-wavew7-prune-5")
+        || subject.contains("sk-v14-w7-prune-5")
+        || subject.contains("sk-v14-wavew7-prune5")
+        || subject.contains("sk-v14-w7-prune5")
 }
 
 fn git_output(root: &Path, args: &[&str]) -> Result<String, String> {
@@ -3947,6 +3998,69 @@ mod tests {
             assert!(
                 !arena.contains(needle),
                 "arena_template.rs retained forbidden W6.8 phrase `{needle}`"
+            );
+        }
+    }
+
+    #[test]
+    fn w7_policy_union_owner_paths_admit() {
+        let changed = SK_V14_W7_OWNER_PATHS
+            .iter()
+            .map(|path| (*path).to_string())
+            .collect::<Vec<_>>();
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v14-waveW7): wire policy union runtime consumer"
+        )
+        .is_ok());
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v14-w7-prune5): wire policy union runtime consumer"
+        )
+        .is_ok());
+    }
+
+    #[test]
+    fn w7_policy_union_rejects_prior_wave_subjects() {
+        let changed = SK_V14_W7_OWNER_PATHS
+            .iter()
+            .map(|path| (*path).to_string())
+            .collect::<Vec<_>>();
+        for subject in [
+            "feat(sk-v13-waveW7): admit CSP cascade fail-closed finalizer",
+            "feat(sk-v14-waveW6.8): collapse root json runtime",
+            "feat(sk-v14-waveW6): collapse root runtime cohort",
+            "feat(sk-v14-waveW5D-DELETE): delete provider template residue",
+            "feat(sk-v14-waveW8): readmit css l4",
+        ] {
+            assert!(
+                validate_authorized_parent_diff(&changed, subject).is_err(),
+                "{subject} must not authorize SK-V14 W7 policy/union paths"
+            );
+        }
+    }
+
+    #[test]
+    fn w7_policy_union_rejects_outside_substrates() {
+        for outside in [
+            "crates/runtime/src/tape/mod.rs",
+            "crates/bbnf-simd/src/lib.rs",
+            "crates/codegen/src/css_l4_declaration_values_provider.rs",
+            "crates/codegen/src/css_l4_declaration_values_templates/",
+            "../crates/core/src/runtime/json/mod.rs",
+        ] {
+            let mut changed = SK_V14_W7_OWNER_PATHS
+                .iter()
+                .map(|path| (*path).to_string())
+                .collect::<Vec<_>>();
+            changed.push(outside.to_string());
+            assert!(
+                validate_authorized_parent_diff(
+                    &changed,
+                    "feat(sk-v14-waveW7): wire policy union runtime consumer"
+                )
+                .is_err(),
+                "{outside} must not be admitted by W7"
             );
         }
     }

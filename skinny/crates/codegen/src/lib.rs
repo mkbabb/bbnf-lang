@@ -7,7 +7,9 @@ pub(crate) mod lower;
 pub(crate) mod runtime_generator;
 
 use direct_schema::DirectSchemaSet;
-use ir::{BackendIr, BackendShape, CostFacts, RuleId};
+use ir::{
+    BackendIr, BackendShape, CostFacts, PerGrammarPolicyFacts, RuleId, SameSubstrateUnionFacts,
+};
 use std::collections::BTreeMap;
 use std::path::Path;
 use thiserror::Error;
@@ -108,6 +110,8 @@ pub fn emit_from_source(grammar_name: &str, source: &str) -> Result<EmittedSourc
         &output.backend_ir,
         &output.layout_facts.backend_shape,
         &output.layout_facts.cost_facts,
+        &output.layout_facts.per_grammar_policy,
+        &output.layout_facts.same_substrate_union,
         &output.diagnostics,
     )
 }
@@ -141,6 +145,8 @@ pub fn emit_typed_from_source(
         &output.backend_ir,
         &output.layout_facts.backend_shape,
         &output.layout_facts.cost_facts,
+        &output.layout_facts.per_grammar_policy,
+        &output.layout_facts.same_substrate_union,
         &output.diagnostics,
         schema,
     )
@@ -150,6 +156,8 @@ fn emit_with_layout(
     backend: &BackendIr,
     backend_shape: &std::collections::HashMap<RuleId, BackendShape>,
     cost_facts: &std::collections::HashMap<RuleId, CostFacts>,
+    per_grammar_policy: &std::collections::HashMap<RuleId, PerGrammarPolicyFacts>,
+    same_substrate_union: &std::collections::HashMap<RuleId, SameSubstrateUnionFacts>,
     diagnostics: &[passes::diagnostics::PassDiagnostic],
 ) -> Result<EmittedSource, CodegenError> {
     let profile = grammar_profile::select_runtime_profile(backend)?;
@@ -158,6 +166,8 @@ fn emit_with_layout(
         &lower::LowerCtx {
             backend_shape,
             cost_facts,
+            per_grammar_policy,
+            same_substrate_union,
             diagnostics,
         },
     )
@@ -174,6 +184,8 @@ fn emit_typed_with_layout(
     backend: &BackendIr,
     backend_shape: &std::collections::HashMap<RuleId, BackendShape>,
     cost_facts: &std::collections::HashMap<RuleId, CostFacts>,
+    per_grammar_policy: &std::collections::HashMap<RuleId, PerGrammarPolicyFacts>,
+    same_substrate_union: &std::collections::HashMap<RuleId, SameSubstrateUnionFacts>,
     diagnostics: &[passes::diagnostics::PassDiagnostic],
     schema: &DirectSchemaSet,
 ) -> Result<EmittedSource, CodegenError> {
@@ -183,6 +195,8 @@ fn emit_typed_with_layout(
         &lower::LowerCtx {
             backend_shape,
             cost_facts,
+            per_grammar_policy,
+            same_substrate_union,
             diagnostics,
         },
     )
@@ -507,6 +521,29 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
     }
 
     #[test]
+    fn json_and_css_runtime_outputs_consume_w7_policy() {
+        let json = emit_from_source("json", JSON_GRAMMAR).unwrap();
+        let json_config = json.get("config.rs").unwrap();
+        let json_generated = json.get("generated.rs").unwrap();
+
+        assert!(json_config.contains("W7_DIRECT_BACKEND_SHAPE"));
+        assert!(json_config.contains("W7_SUBSTRATE_TARGET: &str = \"direct_sink\""));
+        assert!(json_generated.contains("config::w7_direct_policy_triad"));
+        assert!(json_generated.contains("parse_w11_1_number_array_direct"));
+
+        let css = emit_runtime_from_request(w5c_css_request(
+            "css_l4_declaration_values_extended",
+            W5C_CSS_SOURCE,
+        ))
+        .unwrap();
+        let css_config = css.get("config.rs").unwrap();
+        let css_generated = css.get("generated.rs").unwrap();
+
+        assert!(css_config.contains("W7_SUBSTRATE_TARGET: &str = \"admitted_fact_output\""));
+        assert!(css_generated.contains("config::W7_SAME_SUBSTRATE_UNION"));
+    }
+
+    #[test]
     fn css_l4_generated_runtimes_reproducible_from_request() {
         for &profile_id in W5C_CSS_PROFILES {
             let emitted = emit_runtime_from_request(w5c_full_css_request(profile_id))
@@ -527,6 +564,8 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
             &lower::LowerCtx {
                 backend_shape: &output.layout_facts.backend_shape,
                 cost_facts: &output.layout_facts.cost_facts,
+                per_grammar_policy: &output.layout_facts.per_grammar_policy,
+                same_substrate_union: &output.layout_facts.same_substrate_union,
                 diagnostics: &output.diagnostics,
             },
         )
@@ -571,12 +610,35 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
             &lower::LowerCtx {
                 backend_shape: &output.layout_facts.backend_shape,
                 cost_facts: &output.layout_facts.cost_facts,
+                per_grammar_policy: &output.layout_facts.per_grammar_policy,
+                same_substrate_union: &output.layout_facts.same_substrate_union,
                 diagnostics: &output.diagnostics,
             },
         )
         .unwrap_err();
 
         assert!(err.contains("W7 fail-closed: decision-CSP status unsat"));
+    }
+
+    #[test]
+    fn lowering_rejects_missing_w7_policy_facts() {
+        let grammar = grammar::parse_grammar("json", JSON_GRAMMAR).unwrap();
+        let output = passes::compile(&grammar).unwrap();
+        let empty_policy = std::collections::HashMap::new();
+
+        let err = lower::lower_to_rust(
+            &output.backend_ir,
+            &lower::LowerCtx {
+                backend_shape: &output.layout_facts.backend_shape,
+                cost_facts: &output.layout_facts.cost_facts,
+                per_grammar_policy: &empty_policy,
+                same_substrate_union: &output.layout_facts.same_substrate_union,
+                diagnostics: &output.diagnostics,
+            },
+        )
+        .unwrap_err();
+
+        assert!(err.contains("W7 fail-closed: missing per-grammar policy facts"));
     }
 
     #[test]
@@ -591,6 +653,8 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
             &output.backend_ir,
             &output.layout_facts.backend_shape,
             &output.layout_facts.cost_facts,
+            &output.layout_facts.per_grammar_policy,
+            &output.layout_facts.same_substrate_union,
             &output.diagnostics,
         )
         .unwrap_err();
@@ -624,6 +688,8 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
             &output.backend_ir,
             &output.layout_facts.backend_shape,
             &output.layout_facts.cost_facts,
+            &output.layout_facts.per_grammar_policy,
+            &output.layout_facts.same_substrate_union,
             &output.diagnostics,
             &schema,
         )

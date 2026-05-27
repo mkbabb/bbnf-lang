@@ -2,6 +2,7 @@ use crate::grammar_profile::{GrammarProfile, RuntimeGenerationMode};
 use crate::grammar_provider::RuntimeGenerationRequest;
 use crate::{grammar_profile, json_sink_direct, lower, CodegenError, EmittedSource};
 use std::collections::BTreeMap;
+use std::fmt::Write;
 
 pub(crate) fn emit_profile_only(profile: &GrammarProfile) -> Result<EmittedSource, CodegenError> {
     Err(CodegenError::Lowering(format!(
@@ -49,7 +50,7 @@ pub(crate) fn emit_compiled(
     let files = BTreeMap::from([
         (
             "config.rs".to_string(),
-            normalize(include_str!("json_templates/config.rs")),
+            render_json_config(&sink_only.policy_summary),
         ),
         ("generated.rs".to_string(), generated),
         ("host.rs".to_string(), host),
@@ -155,10 +156,16 @@ fn render_css_config(
     request: &RuntimeGenerationRequest,
     facts: &grammar::RuntimeSourceFacts,
 ) -> String {
+    let policy = ir::Lock1PolicyTriad::fact_stream();
     format!(
         "{header}\npub(crate) const FACT_SCHEMA: &str = {fact_schema:?};\n\
          pub(crate) const ROW_ID: &str = {row_id:?};\n\
          pub(crate) const OUTPUT_PLANE: &str = {output_plane:?};\n\
+         pub(crate) const W7_POLICY_BACKEND_SHAPE: &str = \"admitted_fact_output\";\n\
+         pub(crate) const W7_SUBSTRATE_TARGET: &str = {substrate_target:?};\n\
+         pub(crate) const W7_RETENTION_LIFETIME: &str = {retention_lifetime:?};\n\
+         pub(crate) const W7_POLICY_OWNER: &str = {policy_owner:?};\n\
+         pub(crate) const W7_SAME_SUBSTRATE_UNION: &str = \"pass\";\n\
          pub(crate) const REQUEST_PROFILE: &str = {profile:?};\n\
          pub(crate) const ENTRY_RULE: &str = {entry:?};\n\
          pub(crate) const FRONTEND_SOURCE_HASH: &str = {source_hash:?};\n\
@@ -170,6 +177,9 @@ fn render_css_config(
         fact_schema = config.fact_schema,
         row_id = config.row_id,
         output_plane = config.output_plane,
+        substrate_target = policy.substrate_target.as_str(),
+        retention_lifetime = policy.retention_lifetime.as_str(),
+        policy_owner = policy.policy_owner.as_str(),
         profile = request.profile_id,
         entry = request.entry_rule,
         source_hash = facts.source_hash,
@@ -178,6 +188,42 @@ fn render_css_config(
         layout_count = facts.frontend.layout.whitespace_directives.len(),
         discard_count = facts.frontend.layout.discard_operators.len(),
     )
+}
+
+fn render_json_config(policy: &lower::sink_only::RuntimePolicySummary) -> String {
+    let mut out = normalize(include_str!("json_templates/config.rs"));
+    let _ = writeln!(
+        out,
+        "\npub(crate) const W7_DIRECT_BACKEND_SHAPE: &str = {:?};",
+        format!("{:?}", policy.backend_shape)
+    );
+    let _ = writeln!(
+        out,
+        "pub(crate) const W7_SUBSTRATE_TARGET: &str = {:?};",
+        policy.substrate_target.as_str()
+    );
+    let _ = writeln!(
+        out,
+        "pub(crate) const W7_RETENTION_LIFETIME: &str = {:?};",
+        policy.retention_lifetime.as_str()
+    );
+    let _ = writeln!(
+        out,
+        "pub(crate) const W7_POLICY_OWNER: &str = {:?};",
+        policy.policy_owner.as_str()
+    );
+    let _ = writeln!(
+        out,
+        "pub(crate) const W7_SAME_SUBSTRATE_UNION: &str = {:?};",
+        policy.same_substrate_union
+    );
+    out.push_str(
+        "\n#[inline(always)]\n\
+         pub(crate) fn w7_direct_policy_triad() -> (&'static str, &'static str, &'static str) {\n\
+             (W7_SUBSTRATE_TARGET, W7_RETENTION_LIFETIME, W7_POLICY_OWNER)\n\
+         }\n",
+    );
+    out
 }
 
 fn normalize(source: &str) -> String {
@@ -286,6 +332,17 @@ const CSS_GENERATED_RS: &str = r#"
         out.push_str(config::ROW_ID);
         out.push_str("\tplane=");
         out.push_str(config::OUTPUT_PLANE);
+        out.push('\n');
+        out.push_str("policy\tbackend_shape=");
+        out.push_str(config::W7_POLICY_BACKEND_SHAPE);
+        out.push_str("\tsubstrate_target=");
+        out.push_str(config::W7_SUBSTRATE_TARGET);
+        out.push_str("\tretention_lifetime=");
+        out.push_str(config::W7_RETENTION_LIFETIME);
+        out.push_str("\tpolicy_owner=");
+        out.push_str(config::W7_POLICY_OWNER);
+        out.push_str("\tsame_substrate_union=");
+        out.push_str(config::W7_SAME_SUBSTRATE_UNION);
         out.push('\n');
         out.push_str("source\tinput_fnv64=");
         push_hex64(&mut out, fnv64(input.as_bytes()));

@@ -14,6 +14,10 @@ pub struct CostFacts {
     pub active_cost: Option<ActiveCostFacts>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub decision_csp: Option<DecisionCspFacts>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub per_grammar_policy: Option<PerGrammarPolicyFacts>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub same_substrate_union: Option<SameSubstrateUnionFacts>,
 }
 
 impl CostFacts {
@@ -42,8 +46,127 @@ impl CostFacts {
             capacity_policy: None,
             active_cost: None,
             decision_csp: None,
+            per_grammar_policy: None,
+            same_substrate_union: None,
         }
     }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SubstrateTarget {
+    LocalTempOnly,
+    ExistingTape,
+    DirectSink,
+    AdmittedFactOutput,
+}
+
+impl SubstrateTarget {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::LocalTempOnly => "local_temp_only",
+            Self::ExistingTape => "existing_tape",
+            Self::DirectSink => "direct_sink",
+            Self::AdmittedFactOutput => "admitted_fact_output",
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum RetentionLifetime {
+    LocalLoop,
+    GeneratedFunction,
+    OutputRow,
+}
+
+impl RetentionLifetime {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::LocalLoop => "local_loop",
+            Self::GeneratedFunction => "generated_function",
+            Self::OutputRow => "output_row",
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PolicyOwner {
+    GeneratedGrammar,
+    CallerData,
+    None,
+}
+
+impl PolicyOwner {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::GeneratedGrammar => "generated_grammar",
+            Self::CallerData => "caller_data",
+            Self::None => "none",
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct Lock1PolicyTriad {
+    pub substrate_target: SubstrateTarget,
+    pub retention_lifetime: RetentionLifetime,
+    pub policy_owner: PolicyOwner,
+}
+
+impl Lock1PolicyTriad {
+    pub fn for_backend_shape(shape: BackendShape) -> Self {
+        match shape {
+            BackendShape::EagerTape | BackendShape::OffsetTape | BackendShape::EventTape => Self {
+                substrate_target: SubstrateTarget::ExistingTape,
+                retention_lifetime: RetentionLifetime::GeneratedFunction,
+                policy_owner: PolicyOwner::GeneratedGrammar,
+            },
+            BackendShape::SinkOnly => Self {
+                substrate_target: SubstrateTarget::DirectSink,
+                retention_lifetime: RetentionLifetime::GeneratedFunction,
+                policy_owner: PolicyOwner::GeneratedGrammar,
+            },
+            BackendShape::CollapsedStage => Self {
+                substrate_target: SubstrateTarget::LocalTempOnly,
+                retention_lifetime: RetentionLifetime::LocalLoop,
+                policy_owner: PolicyOwner::GeneratedGrammar,
+            },
+        }
+    }
+
+    pub fn fact_stream() -> Self {
+        Self {
+            substrate_target: SubstrateTarget::AdmittedFactOutput,
+            retention_lifetime: RetentionLifetime::OutputRow,
+            policy_owner: PolicyOwner::GeneratedGrammar,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PerGrammarPolicyFacts {
+    pub rule_id: RuleId,
+    pub selected_shape: BackendShape,
+    pub triad: Lock1PolicyTriad,
+    pub policy_source: String,
+    pub compile_consumer_path: String,
+    pub lower_consumer_path: String,
+    pub runtime_consumer_path: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SameSubstrateUnionFacts {
+    pub rule_id: RuleId,
+    pub selected_shape: BackendShape,
+    pub union_variant_id: String,
+    pub substrate_cardinality: String,
+    pub enforcement_status: String,
+    pub forbidden_retained_surface_status: String,
+    pub compile_consumer_path: String,
+    pub lower_consumer_path: String,
+    pub runtime_consumer_path: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -98,6 +221,8 @@ pub struct DecisionCspFacts {
     pub substrate_constraint_status: String,
     pub simd_constraint_status: String,
     pub capacity_constraint_status: String,
+    pub per_grammar_policy_status: String,
+    pub same_substrate_union_status: String,
     pub resolver_output_piping: String,
     pub fused_solver_status: String,
     pub generated_selection_path: String,

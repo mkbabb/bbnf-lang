@@ -1,0 +1,220 @@
+profile-direct: corpus=twitter mode=parse_only_track1 path="/Users/mkbabb/Programming/bbnf-lang/skinny/crates/test-fixtures/corpus/json/twitter.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 631515 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.16s -> 12757 Mbps (digest cksum 0)
+PROBE_RESULT corpus=twitter corpus_bytes=631515 iters=400 mode=parse_only_track1 warmup_iters=0 elapsed_s=0.158413 ns_per_byte=0.627116 mbps=12756.805 cycles=664298417 instructions=1828594043 cycles_per_byte=2.629781 cpi=0.363284 user_ns=3722574 system_ns=30608 checksum=0
+profile-direct: corpus=twitter mode=parse_only_track2 path="/Users/mkbabb/Programming/bbnf-lang/skinny/crates/test-fixtures/corpus/json/twitter.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 631515 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.22s -> 9264 Mbps (digest cksum 0)
+PROBE_RESULT corpus=twitter corpus_bytes=631515 iters=400 mode=parse_only_track2 warmup_iters=0 elapsed_s=0.218131 ns_per_byte=0.863524 mbps=9264.364 cycles=918513798 instructions=2959794355 cycles_per_byte=3.636152 cpi=0.310330 user_ns=5138384 system_ns=40600 checksum=0
+profile-direct: corpus=twitter mode=parse_only_sonic path="/Users/mkbabb/Programming/bbnf-lang/skinny/crates/test-fixtures/corpus/json/twitter.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 631515 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.12s -> 16217 Mbps (digest cksum 0)
+PROBE_RESULT corpus=twitter corpus_bytes=631515 iters=400 mode=parse_only_sonic warmup_iters=0 elapsed_s=0.124610 ns_per_byte=0.493298 mbps=16217.377 cycles=522690778 instructions=1871544625 cycles_per_byte=2.069194 cpi=0.279283 user_ns=2928791 system_ns=26376 checksum=0
+profile-direct: corpus=twitter mode=parse_only_serde path="/Users/mkbabb/Programming/bbnf-lang/skinny/crates/test-fixtures/corpus/json/twitter.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 631515 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.48s -> 4185 Mbps (digest cksum 0)
+PROBE_RESULT corpus=twitter corpus_bytes=631515 iters=400 mode=parse_only_serde warmup_iters=0 elapsed_s=0.482915 ns_per_byte=1.911733 mbps=4184.685 cycles=2016928334 instructions=10214767069 cycles_per_byte=7.984483 cpi=0.197452 user_ns=11346289 system_ns=104028 checksum=0
+profile-direct: corpus=github_events mode=parse_only_track1 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/github_events.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 65132 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.01s -> 14101 Mbps (digest cksum 0)
+PROBE_RESULT corpus=github_events corpus_bytes=65132 iters=400 mode=parse_only_track1 warmup_iters=0 elapsed_s=0.014781 ns_per_byte=0.567340 mbps=14100.895 cycles=62151465 instructions=179704751 cycles_per_byte=2.385596 cpi=0.345853 user_ns=348903 system_ns=1824 checksum=0
+profile-direct: corpus=github_events mode=parse_only_track2 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/github_events.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 65132 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.02s -> 10216 Mbps (digest cksum 0)
+PROBE_RESULT corpus=github_events corpus_bytes=65132 iters=400 mode=parse_only_track2 warmup_iters=0 elapsed_s=0.020401 ns_per_byte=0.783070 mbps=10216.200 cycles=86438835 instructions=295272619 cycles_per_byte=3.317833 cpi=0.292742 user_ns=484551 system_ns=2229 checksum=0
+profile-direct: corpus=github_events mode=parse_only_sonic path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/github_events.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 65132 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.01s -> 17205 Mbps (digest cksum 0)
+PROBE_RESULT corpus=github_events corpus_bytes=65132 iters=400 mode=parse_only_sonic warmup_iters=0 elapsed_s=0.012114 ns_per_byte=0.464972 mbps=17205.322 cycles=51109341 instructions=168681204 cycles_per_byte=1.961760 cpi=0.302994 user_ns=285906 system_ns=1948 checksum=0
+profile-direct: corpus=github_events mode=parse_only_serde path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/github_events.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 65132 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.04s -> 4862 Mbps (digest cksum 0)
+PROBE_RESULT corpus=github_events corpus_bytes=65132 iters=400 mode=parse_only_serde warmup_iters=0 elapsed_s=0.042872 ns_per_byte=1.645576 mbps=4861.518 cycles=181032576 instructions=960884687 cycles_per_byte=6.948680 cpi=0.188402 user_ns=1010626 system_ns=8182 checksum=0
+profile-direct: corpus=update_center mode=parse_only_track1 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/update-center.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 533178 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.17s -> 10318 Mbps (digest cksum 0)
+PROBE_RESULT corpus=update_center corpus_bytes=533178 iters=400 mode=parse_only_track1 warmup_iters=0 elapsed_s=0.165355 ns_per_byte=0.775330 mbps=10318.193 cycles=695374247 instructions=1713579719 cycles_per_byte=3.260516 cpi=0.405802 user_ns=3893525 system_ns=30461 checksum=0
+profile-direct: corpus=update_center mode=parse_only_track2 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/update-center.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 533178 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.25s -> 6954 Mbps (digest cksum 0)
+PROBE_RESULT corpus=update_center corpus_bytes=533178 iters=400 mode=parse_only_track2 warmup_iters=0 elapsed_s=0.245364 ns_per_byte=1.150477 mbps=6953.637 cycles=1031505339 instructions=3230760991 cycles_per_byte=4.836590 cpi=0.319276 user_ns=5773705 system_ns=48860 checksum=0
+profile-direct: corpus=update_center mode=parse_only_sonic path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/update-center.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 533178 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.12s -> 14428 Mbps (digest cksum 0)
+PROBE_RESULT corpus=update_center corpus_bytes=533178 iters=400 mode=parse_only_sonic warmup_iters=0 elapsed_s=0.118252 ns_per_byte=0.554467 mbps=14428.272 cycles=496052707 instructions=1428622939 cycles_per_byte=2.325924 cpi=0.347224 user_ns=2783145 system_ns=21647 checksum=0
+profile-direct: corpus=update_center mode=parse_only_serde path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/update-center.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 533178 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.59s -> 2871 Mbps (digest cksum 0)
+PROBE_RESULT corpus=update_center corpus_bytes=533178 iters=400 mode=parse_only_serde warmup_iters=0 elapsed_s=0.594352 ns_per_byte=2.786839 mbps=2870.636 cycles=2495267638 instructions=12293417619 cycles_per_byte=11.699975 cpi=0.202976 user_ns=13987469 system_ns=120077 checksum=0
+profile-direct: corpus=random mode=parse_only_track1 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/random.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 510476 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.19s -> 8562 Mbps (digest cksum 0)
+PROBE_RESULT corpus=random corpus_bytes=510476 iters=400 mode=parse_only_track1 warmup_iters=0 elapsed_s=0.190780 ns_per_byte=0.934325 mbps=8562.327 cycles=801297349 instructions=2368286404 cycles_per_byte=3.924266 cpi=0.338345 user_ns=4497343 system_ns=31649 checksum=0
+profile-direct: corpus=random mode=parse_only_track2 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/random.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 510476 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.28s -> 5740 Mbps (digest cksum 0)
+PROBE_RESULT corpus=random corpus_bytes=510476 iters=400 mode=parse_only_track2 warmup_iters=0 elapsed_s=0.284578 ns_per_byte=1.393688 mbps=5740.167 cycles=1195794266 instructions=4102612742 cycles_per_byte=5.856271 cpi=0.291471 user_ns=6709768 system_ns=49534 checksum=0
+profile-direct: corpus=random mode=parse_only_sonic path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/random.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 510476 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.15s -> 10620 Mbps (digest cksum 0)
+PROBE_RESULT corpus=random corpus_bytes=510476 iters=400 mode=parse_only_sonic warmup_iters=0 elapsed_s=0.153815 ns_per_byte=0.753292 mbps=10620.057 cycles=640258289 instructions=2419373069 cycles_per_byte=3.135594 cpi=0.264638 user_ns=3607272 system_ns=35860 checksum=0
+profile-direct: corpus=random mode=parse_only_serde path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/random.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 510476 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.68s -> 2417 Mbps (digest cksum 0)
+PROBE_RESULT corpus=random corpus_bytes=510476 iters=400 mode=parse_only_serde warmup_iters=0 elapsed_s=0.675879 ns_per_byte=3.310045 mbps=2416.886 cycles=2823965036 instructions=15853418226 cycles_per_byte=13.830058 cpi=0.178130 user_ns=15885362 system_ns=131266 checksum=0
+profile-direct: corpus=gsoc-2018 mode=parse_only_track1 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/gsoc-2018.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 3327831 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.47s -> 22684 Mbps (digest cksum 0)
+PROBE_RESULT corpus=gsoc-2018 corpus_bytes=3327831 iters=400 mode=parse_only_track1 warmup_iters=0 elapsed_s=0.469461 ns_per_byte=0.352678 mbps=22683.564 cycles=1976473587 instructions=6898552244 cycles_per_byte=1.484806 cpi=0.286506 user_ns=11083863 system_ns=77754 checksum=0
+profile-direct: corpus=gsoc-2018 mode=parse_only_track2 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/gsoc-2018.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 3327831 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.58s -> 18438 Mbps (digest cksum 0)
+PROBE_RESULT corpus=gsoc-2018 corpus_bytes=3327831 iters=400 mode=parse_only_track2 warmup_iters=0 elapsed_s=0.577568 ns_per_byte=0.433892 mbps=18437.765 cycles=2428121636 instructions=9252256828 cycles_per_byte=1.824102 cpi=0.262436 user_ns=13624900 system_ns=95141 checksum=0
+profile-direct: corpus=gsoc-2018 mode=parse_only_sonic path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/gsoc-2018.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 3327831 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.30s -> 36040 Mbps (digest cksum 0)
+PROBE_RESULT corpus=gsoc-2018 corpus_bytes=3327831 iters=400 mode=parse_only_sonic warmup_iters=0 elapsed_s=0.295482 ns_per_byte=0.221978 mbps=36039.646 cycles=1241518099 instructions=4297518869 cycles_per_byte=0.932678 cpi=0.288892 user_ns=6959111 system_ns=53750 checksum=0
+profile-direct: corpus=gsoc-2018 mode=parse_only_serde path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/gsoc-2018.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 3327831 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.93s -> 11463 Mbps (digest cksum 0)
+PROBE_RESULT corpus=gsoc-2018 corpus_bytes=3327831 iters=400 mode=parse_only_serde warmup_iters=0 elapsed_s=0.928974 ns_per_byte=0.697882 mbps=11463.251 cycles=3903947516 instructions=19442021437 cycles_per_byte=2.932802 cpi=0.200799 user_ns=21884731 system_ns=171823 checksum=0
+profile-direct: corpus=distinct_values mode=parse_only_track1 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/distinct_values.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 153630 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.07s -> 6696 Mbps (digest cksum 0)
+PROBE_RESULT corpus=distinct_values corpus_bytes=153630 iters=400 mode=parse_only_track1 warmup_iters=0 elapsed_s=0.073425 ns_per_byte=1.194831 mbps=6695.508 cycles=307542492 instructions=634646876 cycles_per_byte=5.004597 cpi=0.484588 user_ns=1728484 system_ns=13717 checksum=0
+profile-direct: corpus=distinct_values mode=parse_only_track2 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/distinct_values.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 153630 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.10s -> 4912 Mbps (digest cksum 0)
+PROBE_RESULT corpus=distinct_values corpus_bytes=153630 iters=400 mode=parse_only_track2 warmup_iters=0 elapsed_s=0.100079 ns_per_byte=1.628564 mbps=4912.304 cycles=418968018 instructions=1246683899 cycles_per_byte=6.817809 cpi=0.336066 user_ns=2358619 system_ns=19465 checksum=0
+profile-direct: corpus=distinct_values mode=parse_only_sonic path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/distinct_values.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 153630 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.04s -> 11935 Mbps (digest cksum 0)
+PROBE_RESULT corpus=distinct_values corpus_bytes=153630 iters=400 mode=parse_only_sonic warmup_iters=0 elapsed_s=0.041190 ns_per_byte=0.670273 mbps=11935.433 cycles=173857225 instructions=553909092 cycles_per_byte=2.829155 cpi=0.313873 user_ns=974044 system_ns=6152 checksum=0
+profile-direct: corpus=distinct_values mode=parse_only_serde path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/distinct_values.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 153630 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.18s -> 2707 Mbps (digest cksum 0)
+PROBE_RESULT corpus=distinct_values corpus_bytes=153630 iters=400 mode=parse_only_serde warmup_iters=0 elapsed_s=0.181584 ns_per_byte=2.954893 mbps=2707.374 cycles=765059221 instructions=4315845258 cycles_per_byte=12.449704 cpi=0.177268 user_ns=4287859 system_ns=31043 checksum=0
+profile-direct: corpus=apache_builds mode=parse_only_track1 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/apache_builds.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 127275 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.03s -> 13317 Mbps (digest cksum 0)
+PROBE_RESULT corpus=apache_builds corpus_bytes=127275 iters=400 mode=parse_only_track1 warmup_iters=0 elapsed_s=0.030584 ns_per_byte=0.600755 mbps=13316.568 cycles=128658096 instructions=386620718 cycles_per_byte=2.527167 cpi=0.332776 user_ns=722103 system_ns=5484 checksum=0
+profile-direct: corpus=apache_builds mode=parse_only_track2 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/apache_builds.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 127275 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.04s -> 9100 Mbps (digest cksum 0)
+PROBE_RESULT corpus=apache_builds corpus_bytes=127275 iters=400 mode=parse_only_track2 warmup_iters=0 elapsed_s=0.044755 ns_per_byte=0.879100 mbps=9100.221 cycles=188478230 instructions=656642672 cycles_per_byte=3.702185 cpi=0.287033 user_ns=1057621 system_ns=7324 checksum=0
+profile-direct: corpus=apache_builds mode=parse_only_sonic path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/apache_builds.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 127275 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.03s -> 12797 Mbps (digest cksum 0)
+PROBE_RESULT corpus=apache_builds corpus_bytes=127275 iters=400 mode=parse_only_sonic warmup_iters=0 elapsed_s=0.031826 ns_per_byte=0.625134 mbps=12797.252 cycles=133448668 instructions=450419457 cycles_per_byte=2.621266 cpi=0.296276 user_ns=747819 system_ns=6851 checksum=0
+profile-direct: corpus=apache_builds mode=parse_only_serde path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/apache_builds.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 127275 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.10s -> 3972 Mbps (digest cksum 0)
+PROBE_RESULT corpus=apache_builds corpus_bytes=127275 iters=400 mode=parse_only_serde warmup_iters=0 elapsed_s=0.102543 ns_per_byte=2.014203 mbps=3971.794 cycles=431859301 instructions=2367867515 cycles_per_byte=8.482799 cpi=0.182383 user_ns=2418296 system_ns=19814 checksum=0
+profile-direct: corpus=citm_catalog mode=parse_only_track1 path="/Users/mkbabb/Programming/bbnf-lang/skinny/crates/test-fixtures/corpus/json/citm_catalog.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 1727204 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.24s -> 22951 Mbps (digest cksum 0)
+PROBE_RESULT corpus=citm_catalog corpus_bytes=1727204 iters=400 mode=parse_only_track1 warmup_iters=0 elapsed_s=0.240817 ns_per_byte=0.348565 mbps=22951.225 cycles=1012527559 instructions=4027074996 cycles_per_byte=1.465559 cpi=0.251430 user_ns=5680794 system_ns=41237 checksum=0
+profile-direct: corpus=citm_catalog mode=parse_only_track2 path="/Users/mkbabb/Programming/bbnf-lang/skinny/crates/test-fixtures/corpus/json/citm_catalog.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 1727204 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.40s -> 13713 Mbps (digest cksum 0)
+PROBE_RESULT corpus=citm_catalog corpus_bytes=1727204 iters=400 mode=parse_only_track2 warmup_iters=0 elapsed_s=0.403059 ns_per_byte=0.583399 mbps=13712.751 cycles=1694972085 instructions=6024120099 cycles_per_byte=2.453347 cpi=0.281364 user_ns=9509244 system_ns=66671 checksum=0
+profile-direct: corpus=citm_catalog mode=parse_only_sonic path="/Users/mkbabb/Programming/bbnf-lang/skinny/crates/test-fixtures/corpus/json/citm_catalog.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 1727204 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.26s -> 21660 Mbps (digest cksum 0)
+PROBE_RESULT corpus=citm_catalog corpus_bytes=1727204 iters=400 mode=parse_only_sonic warmup_iters=0 elapsed_s=0.255170 ns_per_byte=0.369340 mbps=21660.270 cycles=1073873263 instructions=4483953214 cycles_per_byte=1.554352 cpi=0.239493 user_ns=6019037 system_ns=43308 checksum=0
+profile-direct: corpus=citm_catalog mode=parse_only_serde path="/Users/mkbabb/Programming/bbnf-lang/skinny/crates/test-fixtures/corpus/json/citm_catalog.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 1727204 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.99s -> 5609 Mbps (digest cksum 0)
+PROBE_RESULT corpus=citm_catalog corpus_bytes=1727204 iters=400 mode=parse_only_serde warmup_iters=0 elapsed_s=0.985386 ns_per_byte=1.426273 mbps=5609.026 cycles=4142878740 instructions=24310323210 cycles_per_byte=5.996510 cpi=0.170416 user_ns=23219725 system_ns=174871 checksum=0
+profile-direct: corpus=canada mode=parse_only_track1 path="/Users/mkbabb/Programming/bbnf-lang/skinny/crates/test-fixtures/corpus/json/canada.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 2251051 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.39s -> 18471 Mbps (digest cksum 0)
+PROBE_RESULT corpus=canada corpus_bytes=2251051 iters=400 mode=parse_only_track1 warmup_iters=0 elapsed_s=0.389972 ns_per_byte=0.433100 mbps=18471.478 cycles=1631803349 instructions=12586989743 cycles_per_byte=1.812268 cpi=0.129642 user_ns=9175035 system_ns=68486 checksum=0
+profile-direct: corpus=canada mode=parse_only_track2 path="/Users/mkbabb/Programming/bbnf-lang/skinny/crates/test-fixtures/corpus/json/canada.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 2251051 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.78s -> 9275 Mbps (digest cksum 0)
+PROBE_RESULT corpus=canada corpus_bytes=2251051 iters=400 mode=parse_only_track2 warmup_iters=0 elapsed_s=0.776680 ns_per_byte=0.862574 mbps=9274.563 cycles=3278110821 instructions=16333214199 cycles_per_byte=3.640645 cpi=0.200702 user_ns=18370785 system_ns=114250 checksum=0
+profile-direct: corpus=canada mode=parse_only_sonic path="/Users/mkbabb/Programming/bbnf-lang/skinny/crates/test-fixtures/corpus/json/canada.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 2251051 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.56s -> 12839 Mbps (digest cksum 0)
+PROBE_RESULT corpus=canada corpus_bytes=2251051 iters=400 mode=parse_only_sonic warmup_iters=0 elapsed_s=0.561065 ns_per_byte=0.623115 mbps=12838.731 cycles=2365357150 instructions=10606923126 cycles_per_byte=2.626948 cpi=0.223001 user_ns=13249194 system_ns=86424 checksum=0
+profile-direct: corpus=canada mode=parse_only_serde path="/Users/mkbabb/Programming/bbnf-lang/skinny/crates/test-fixtures/corpus/json/canada.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 2251051 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 1.49s -> 4845 Mbps (digest cksum 0)
+PROBE_RESULT corpus=canada corpus_bytes=2251051 iters=400 mode=parse_only_serde warmup_iters=0 elapsed_s=1.486809 ns_per_byte=1.651238 mbps=4844.849 cycles=6272596311 instructions=36990062709 cycles_per_byte=6.966297 cpi=0.169575 user_ns=35060079 system_ns=306553 checksum=0
+profile-direct: corpus=unicode_mixed mode=parse_only_track1 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_mixed.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 1053086 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.41s -> 8130 Mbps (digest cksum 0)
+PROBE_RESULT corpus=unicode_mixed corpus_bytes=1053086 iters=400 mode=parse_only_track1 warmup_iters=0 elapsed_s=0.414508 ns_per_byte=0.984032 mbps=8129.820 cycles=1747023661 instructions=3967839924 cycles_per_byte=4.147391 cpi=0.440296 user_ns=9784003 system_ns=67092 checksum=0
+profile-direct: corpus=unicode_mixed mode=parse_only_track2 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_mixed.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 1053086 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.52s -> 6445 Mbps (digest cksum 0)
+PROBE_RESULT corpus=unicode_mixed corpus_bytes=1053086 iters=400 mode=parse_only_track2 warmup_iters=0 elapsed_s=0.522859 ns_per_byte=1.241255 mbps=6445.091 cycles=2207132173 instructions=5286892944 cycles_per_byte=5.239677 cpi=0.417472 user_ns=12356566 system_ns=78752 checksum=0
+profile-direct: corpus=unicode_mixed mode=parse_only_sonic path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_mixed.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 1053086 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.42s -> 7997 Mbps (digest cksum 0)
+PROBE_RESULT corpus=unicode_mixed corpus_bytes=1053086 iters=400 mode=parse_only_sonic warmup_iters=0 elapsed_s=0.421372 ns_per_byte=1.000327 mbps=7997.383 cycles=1766827831 instructions=4593727862 cycles_per_byte=4.194405 cpi=0.384617 user_ns=9905784 system_ns=89868 checksum=0
+profile-direct: corpus=unicode_mixed mode=parse_only_serde path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_mixed.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 1053086 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 1.05s -> 3210 Mbps (digest cksum 0)
+PROBE_RESULT corpus=unicode_mixed corpus_bytes=1053086 iters=400 mode=parse_only_serde warmup_iters=0 elapsed_s=1.049916 ns_per_byte=2.492476 mbps=3209.660 cycles=4417339375 instructions=18525469401 cycles_per_byte=10.486654 cpi=0.238447 user_ns=24776206 system_ns=177901 checksum=0
+profile-direct: corpus=instruments mode=parse_only_track1 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/instruments.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 220346 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.06s -> 12808 Mbps (digest cksum 0)
+PROBE_RESULT corpus=instruments corpus_bytes=220346 iters=400 mode=parse_only_track1 warmup_iters=0 elapsed_s=0.055053 ns_per_byte=0.624624 mbps=12807.702 cycles=232850722 instructions=786038078 cycles_per_byte=2.641876 cpi=0.296233 user_ns=1302016 system_ns=9043 checksum=0
+profile-direct: corpus=instruments mode=parse_only_track2 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/instruments.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 220346 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.08s -> 8418 Mbps (digest cksum 0)
+PROBE_RESULT corpus=instruments corpus_bytes=220346 iters=400 mode=parse_only_track2 warmup_iters=0 elapsed_s=0.083759 ns_per_byte=0.950308 mbps=8418.328 cycles=354501048 instructions=1212188855 cycles_per_byte=4.022095 cpi=0.292447 user_ns=1985039 system_ns=11857 checksum=0
+profile-direct: corpus=instruments mode=parse_only_sonic path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/instruments.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 220346 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.05s -> 15088 Mbps (digest cksum 0)
+PROBE_RESULT corpus=instruments corpus_bytes=220346 iters=400 mode=parse_only_sonic warmup_iters=0 elapsed_s=0.046733 ns_per_byte=0.530228 mbps=15087.845 cycles=197656607 instructions=936842656 cycles_per_byte=2.242571 cpi=0.210982 user_ns=1107515 system_ns=6515 checksum=0
+profile-direct: corpus=instruments mode=parse_only_serde path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/instruments.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 220346 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.19s -> 3679 Mbps (digest cksum 0)
+PROBE_RESULT corpus=instruments corpus_bytes=220346 iters=400 mode=parse_only_serde warmup_iters=0 elapsed_s=0.191657 ns_per_byte=2.174504 mbps=3679.000 cycles=811349616 instructions=4566092171 cycles_per_byte=9.205404 cpi=0.177690 user_ns=4543104 system_ns=26771 checksum=0

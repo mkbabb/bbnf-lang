@@ -5519,3 +5519,18 @@ perturbation.
   does not clear Skipper + 1.0 Mbps: `twitter`, `github_events`,
   `update_center`, `random`, `gsoc-2018`, and `distinct_values`. Current
   parse_only state is 11 / 17 admitted and 6 / 17 open.
+
+## SK-V14 W10X JSON parse_only Residual Rejects
+
+- Item 224 closes `G-SK-V14-W10X-JSON-PARSE-ONLY-RESIDUAL-REJECTS` as
+  `REJECT`. No source patch lands.
+- Three source candidates were tested after W10W and rejected by cold
+  `profile_direct` evidence:
+  inline parse-only frame stack, 64-byte trusted string-special sweep, and
+  trusted string syntax-mask scan. All held correctness during local tests, but
+  none admitted any of the six remaining parse_only residual rows.
+- Current parse_only state remains 11 / 17 admitted and 6 / 17 open:
+  `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
+  `distinct_values`. Evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W10X-parse-only-residual-rejects.md`
+  plus the three retained raw logs named there.

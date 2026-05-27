@@ -60,6 +60,11 @@ pub fn schema() -> DirectSchemaSet {
                 "Vec<crate::real_typed_struct::UnicodeBasicRecord<'i>>",
                 vec_with_capacity(ty("UnicodeBasicRecord"), 5_759),
             ),
+            DirectRootSchema::struct_root(
+                "parse_unicode_mixed",
+                "crate::real_typed_struct::UnicodeMixedDocument<'i>",
+                "UnicodeMixedDocument",
+            ),
             DirectRootSchema::typed_root(
                 "parse_distinct_values",
                 "Vec<crate::real_typed_struct::DistinctValue<'i>>",
@@ -329,6 +334,54 @@ pub fn schema() -> DirectSchemaSet {
                     default("text", "text", opt(string())),
                     default("len", "len", opt(u64_ty())),
                     default("tags", "tags", vec_with_capacity(string(), 3)),
+                ],
+            ),
+            struct_ty(
+                "UnicodeMixedDocument",
+                "crate::real_typed_struct::UnicodeMixedDocument<'i>",
+                vec![
+                    default("metadata", "metadata", opt(ty("UnicodeMixedMetadata"))),
+                    default(
+                        "records",
+                        "records",
+                        vec_with_capacity(ty("UnicodeMixedRecord"), 4_185),
+                    ),
+                ],
+            ),
+            struct_ty(
+                "UnicodeMixedMetadata",
+                "crate::real_typed_struct::UnicodeMixedMetadata<'i>",
+                vec![
+                    default("purpose", "purpose", opt(string())),
+                    default(
+                        "classes",
+                        "classes",
+                        vec_with_capacity(
+                            string_enum(
+                                "crate::real_typed_struct::UnicodeMixedClass",
+                                unicode_mixed_class_variants(),
+                            ),
+                            5,
+                        ),
+                    ),
+                    default("count", "count", opt(u64_ty())),
+                ],
+            ),
+            struct_ty(
+                "UnicodeMixedRecord",
+                "crate::real_typed_struct::UnicodeMixedRecord<'i>",
+                vec![
+                    default("id", "id", opt(u64_ty())),
+                    default(
+                        "type",
+                        "class",
+                        opt(string_enum(
+                            "crate::real_typed_struct::UnicodeMixedRecordType",
+                            unicode_mixed_record_type_variants(),
+                        )),
+                    ),
+                    default("value", "value", opt(decoded_json_string())),
+                    default("n", "n", opt(u64_ty())),
                 ],
             ),
             struct_ty(
@@ -730,6 +783,10 @@ fn string() -> DirectTypeRef {
     DirectTypeRef::Scalar(DirectScalar::String)
 }
 
+fn decoded_json_string() -> DirectTypeRef {
+    DirectTypeRef::Scalar(DirectScalar::DecodedJsonString)
+}
+
 fn u64_ty() -> DirectTypeRef {
     DirectTypeRef::Scalar(DirectScalar::U64)
 }
@@ -762,6 +819,26 @@ fn enum_variant(variant: &str, decoded: &str) -> DirectStringEnumVariant {
         variant: variant.to_string(),
         decoded: decoded.to_string(),
     }
+}
+
+fn unicode_mixed_class_variants() -> Vec<DirectStringEnumVariant> {
+    vec![
+        enum_variant("Ascii", "ascii"),
+        enum_variant("Latin1", "latin1"),
+        enum_variant("Cjk", "cjk"),
+        enum_variant("Emoji", "emoji"),
+        enum_variant("MixedEscapes", "mixed_escapes"),
+    ]
+}
+
+fn unicode_mixed_record_type_variants() -> Vec<DirectStringEnumVariant> {
+    vec![
+        enum_variant("Ascii", "ascii"),
+        enum_variant("Latin1", "latin1"),
+        enum_variant("Cjk", "cjk"),
+        enum_variant("Emoji", "emoji"),
+        enum_variant("Mixed", "mixed"),
+    ]
 }
 
 fn vec(inner: DirectTypeRef) -> DirectTypeRef {

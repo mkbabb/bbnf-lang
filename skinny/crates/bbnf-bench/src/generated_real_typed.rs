@@ -149,6 +149,17 @@ pub fn parse_unicode_basic<'i>(input: &'i str) -> Result<Vec<crate::real_typed_s
     }
 }
 
+pub fn parse_unicode_mixed<'i>(input: &'i str) -> Result<crate::real_typed_struct::UnicodeMixedDocument<'i>, DirectBuildError<'i>> {
+    let mut parser = DirectParser::new(input);
+    let output = parse_type_unicode_mixed_document(&mut parser)?;
+    parser.ws();
+    if parser.cursor == parser.bytes.len() {
+        Ok(output)
+    } else {
+        Err(parser.error("trailing characters"))
+    }
+}
+
 pub fn parse_distinct_values<'i>(input: &'i str) -> Result<Vec<crate::real_typed_struct::DistinctValue<'i>>, DirectBuildError<'i>> {
     let mut parser = DirectParser::new(input);
     let output = parse_vec_cap_440_type_distinct_value(&mut parser)?;
@@ -1143,6 +1154,141 @@ fn parse_type_unicode_basic_record<'i>(parser: &mut DirectParser<'i>) -> Result<
             text: text.unwrap_or_default(),
             len: len.unwrap_or_default(),
             tags: tags.unwrap_or_default(),
+        });
+    }
+}
+
+fn parse_type_unicode_mixed_document<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::UnicodeMixedDocument<'i>, DirectBuildError<'i>> {
+    parser.ws();
+    parser.expect(b'{')?;
+    let mut metadata: Option<Option<crate::real_typed_struct::UnicodeMixedMetadata<'i>>> = None;
+    let mut records: Option<Vec<crate::real_typed_struct::UnicodeMixedRecord<'i>>> = None;
+    parser.ws();
+    if parser.take(b'}') {
+        return Ok(crate::real_typed_struct::UnicodeMixedDocument {
+            metadata: metadata.unwrap_or_default(),
+            records: records.unwrap_or_default(),
+        });
+    }
+    loop {
+        let key = parser.parse_string()?;
+        parser.ws();
+        parser.expect(b':')?;
+        parser.ws();
+        match key.as_ref() {
+            "metadata" => {
+                metadata = Some(parse_option_type_unicode_mixed_metadata(parser)?);
+            }
+            "records" => {
+                records = Some(parse_vec_cap_4185_type_unicode_mixed_record(parser)?);
+            }
+            _ => parser.skip_value()?,
+        }
+        parser.ws();
+        if parser.take(b',') {
+            parser.ws();
+            continue;
+        }
+        parser.expect(b'}')?;
+        return Ok(crate::real_typed_struct::UnicodeMixedDocument {
+            metadata: metadata.unwrap_or_default(),
+            records: records.unwrap_or_default(),
+        });
+    }
+}
+
+fn parse_type_unicode_mixed_metadata<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::UnicodeMixedMetadata<'i>, DirectBuildError<'i>> {
+    parser.ws();
+    parser.expect(b'{')?;
+    let mut purpose: Option<Option<Cow<'i, str>>> = None;
+    let mut classes: Option<Vec<crate::real_typed_struct::UnicodeMixedClass>> = None;
+    let mut count: Option<Option<u64>> = None;
+    parser.ws();
+    if parser.take(b'}') {
+        return Ok(crate::real_typed_struct::UnicodeMixedMetadata {
+            purpose: purpose.unwrap_or_default(),
+            classes: classes.unwrap_or_default(),
+            count: count.unwrap_or_default(),
+        });
+    }
+    loop {
+        let key = parser.parse_string()?;
+        parser.ws();
+        parser.expect(b':')?;
+        parser.ws();
+        match key.as_ref() {
+            "purpose" => {
+                purpose = Some(parse_option_scalar_string(parser)?);
+            }
+            "classes" => {
+                classes = Some(parse_vec_cap_5_string_enum_crate_real_typed_struct_unicode_mixed_class(parser)?);
+            }
+            "count" => {
+                count = Some(parse_option_scalar_u64(parser)?);
+            }
+            _ => parser.skip_value()?,
+        }
+        parser.ws();
+        if parser.take(b',') {
+            parser.ws();
+            continue;
+        }
+        parser.expect(b'}')?;
+        return Ok(crate::real_typed_struct::UnicodeMixedMetadata {
+            purpose: purpose.unwrap_or_default(),
+            classes: classes.unwrap_or_default(),
+            count: count.unwrap_or_default(),
+        });
+    }
+}
+
+fn parse_type_unicode_mixed_record<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::UnicodeMixedRecord<'i>, DirectBuildError<'i>> {
+    parser.ws();
+    parser.expect(b'{')?;
+    let mut id: Option<Option<u64>> = None;
+    let mut class: Option<Option<crate::real_typed_struct::UnicodeMixedRecordType>> = None;
+    let mut value: Option<Option<crate::real_typed_struct::DecodedJsonString<'i>>> = None;
+    let mut n: Option<Option<u64>> = None;
+    parser.ws();
+    if parser.take(b'}') {
+        return Ok(crate::real_typed_struct::UnicodeMixedRecord {
+            id: id.unwrap_or_default(),
+            class: class.unwrap_or_default(),
+            value: value.unwrap_or_default(),
+            n: n.unwrap_or_default(),
+        });
+    }
+    loop {
+        let key = parser.parse_string()?;
+        parser.ws();
+        parser.expect(b':')?;
+        parser.ws();
+        match key.as_ref() {
+            "id" => {
+                id = Some(parse_option_scalar_u64(parser)?);
+            }
+            "type" => {
+                class = Some(parse_option_string_enum_crate_real_typed_struct_unicode_mixed_record_type(parser)?);
+            }
+            "value" => {
+                value = Some(parse_option_scalar_decoded_json_string(parser)?);
+            }
+            "n" => {
+                n = Some(parse_option_scalar_u64(parser)?);
+            }
+            _ => parser.skip_value()?,
+        }
+        parser.ws();
+        if parser.take(b',') {
+            parser.ws();
+            continue;
+        }
+        parser.expect(b'}')?;
+        return Ok(crate::real_typed_struct::UnicodeMixedRecord {
+            id: id.unwrap_or_default(),
+            class: class.unwrap_or_default(),
+            value: value.unwrap_or_default(),
+            n: n.unwrap_or_default(),
         });
     }
 }
@@ -2689,6 +2835,66 @@ fn parse_vec_cap_3_scalar_string<'i>(parser: &mut DirectParser<'i>) -> Result<Ve
     }
 }
 
+fn parse_option_type_unicode_mixed_metadata<'i>(parser: &mut DirectParser<'i>) -> Result<Option<crate::real_typed_struct::UnicodeMixedMetadata<'i>>, DirectBuildError<'i>> {
+    parser.ws();
+    if parser.peek_literal(b"null") {
+        parser.consume_literal(b"null")?;
+        Ok(None)
+    } else {
+        Ok(Some(parse_type_unicode_mixed_metadata(parser)?))
+    }
+}
+
+fn parse_vec_cap_4185_type_unicode_mixed_record<'i>(parser: &mut DirectParser<'i>) -> Result<Vec<crate::real_typed_struct::UnicodeMixedRecord<'i>>, DirectBuildError<'i>> {
+    let mut out: Vec<crate::real_typed_struct::UnicodeMixedRecord<'i>> = Vec::with_capacity(4185);
+    parser.ws();
+    parser.expect(b'[')?;
+    parser.ws();
+    if parser.take(b']') { return Ok(out); }
+    loop {
+        out.push(parse_type_unicode_mixed_record(parser)?);
+        parser.ws();
+        if parser.take(b',') { parser.ws(); continue; }
+        parser.expect(b']')?;
+        return Ok(out);
+    }
+}
+
+fn parse_vec_cap_5_string_enum_crate_real_typed_struct_unicode_mixed_class<'i>(parser: &mut DirectParser<'i>) -> Result<Vec<crate::real_typed_struct::UnicodeMixedClass>, DirectBuildError<'i>> {
+    let mut out: Vec<crate::real_typed_struct::UnicodeMixedClass> = Vec::with_capacity(5);
+    parser.ws();
+    parser.expect(b'[')?;
+    parser.ws();
+    if parser.take(b']') { return Ok(out); }
+    loop {
+        out.push(parse_string_enum_crate_real_typed_struct_unicode_mixed_class(parser)?);
+        parser.ws();
+        if parser.take(b',') { parser.ws(); continue; }
+        parser.expect(b']')?;
+        return Ok(out);
+    }
+}
+
+fn parse_option_string_enum_crate_real_typed_struct_unicode_mixed_record_type<'i>(parser: &mut DirectParser<'i>) -> Result<Option<crate::real_typed_struct::UnicodeMixedRecordType>, DirectBuildError<'i>> {
+    parser.ws();
+    if parser.peek_literal(b"null") {
+        parser.consume_literal(b"null")?;
+        Ok(None)
+    } else {
+        Ok(Some(parse_string_enum_crate_real_typed_struct_unicode_mixed_record_type(parser)?))
+    }
+}
+
+fn parse_option_scalar_decoded_json_string<'i>(parser: &mut DirectParser<'i>) -> Result<Option<crate::real_typed_struct::DecodedJsonString<'i>>, DirectBuildError<'i>> {
+    parser.ws();
+    if parser.peek_literal(b"null") {
+        parser.consume_literal(b"null")?;
+        Ok(None)
+    } else {
+        Ok(Some(parser.parse_decoded_json_string()?))
+    }
+}
+
 fn parse_vec_cap_1000_type_random_user<'i>(parser: &mut DirectParser<'i>) -> Result<Vec<crate::real_typed_struct::RandomUser<'i>>, DirectBuildError<'i>> {
     let mut out: Vec<crate::real_typed_struct::RandomUser<'i>> = Vec::with_capacity(1000);
     parser.ws();
@@ -3089,8 +3295,32 @@ fn parse_option_vec_cap_1_type_instrument_pattern_event<'i>(parser: &mut DirectP
     }
 }
 
+fn parse_string_enum_crate_real_typed_struct_unicode_mixed_class<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::UnicodeMixedClass, DirectBuildError<'i>> {
+    let (fingerprint, len) = parser.parse_decoded_string_fingerprint()?;
+    match (fingerprint, len) {
+        (16613279378904195770u64, 5u64) => Ok(crate::real_typed_struct::UnicodeMixedClass::Ascii),
+        (11378156805971612201u64, 6u64) => Ok(crate::real_typed_struct::UnicodeMixedClass::Latin1),
+        (9493707473875419039u64, 3u64) => Ok(crate::real_typed_struct::UnicodeMixedClass::Cjk),
+        (16613279377277712860u64, 5u64) => Ok(crate::real_typed_struct::UnicodeMixedClass::Emoji),
+        (15453197220255692060u64, 13u64) => Ok(crate::real_typed_struct::UnicodeMixedClass::MixedEscapes),
+        _ => Err(parser.error("unexpected string enum value")),
+    }
+}
+
+fn parse_string_enum_crate_real_typed_struct_unicode_mixed_record_type<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::UnicodeMixedRecordType, DirectBuildError<'i>> {
+    let (fingerprint, len) = parser.parse_decoded_string_fingerprint()?;
+    match (fingerprint, len) {
+        (16613279378904195770u64, 5u64) => Ok(crate::real_typed_struct::UnicodeMixedRecordType::Ascii),
+        (11378156805971612201u64, 6u64) => Ok(crate::real_typed_struct::UnicodeMixedRecordType::Latin1),
+        (9493707473875419039u64, 3u64) => Ok(crate::real_typed_struct::UnicodeMixedRecordType::Cjk),
+        (16613279377277712860u64, 5u64) => Ok(crate::real_typed_struct::UnicodeMixedRecordType::Emoji),
+        (16613279376870814100u64, 5u64) => Ok(crate::real_typed_struct::UnicodeMixedRecordType::Mixed),
+        _ => Err(parser.error("unexpected string enum value")),
+    }
+}
+
 fn parse_string_enum_crate_real_typed_struct_y_string_unicode_token<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::YStringUnicodeToken, DirectBuildError<'i>> {
-    let (fingerprint, len) = parser.parse_string_enum_fingerprint()?;
+    let (fingerprint, len) = parser.parse_decoded_string_fingerprint()?;
     match (fingerprint, len) {
         (3207357828540018061u64, 4u64) => Ok(crate::real_typed_struct::YStringUnicodeToken::AWithCombiningTilde),
         (444104803186503013u64, 1u64) => Ok(crate::real_typed_struct::YStringUnicodeToken::Quote),
@@ -3249,13 +3479,44 @@ impl<'i> DirectParser<'i> {
     }
 
     #[inline(always)]
-    fn parse_string_enum_fingerprint(&mut self) -> Result<(u64, u64), DirectBuildError<'i>> {
+    fn parse_decoded_json_string(
+        &mut self,
+    ) -> Result<crate::real_typed_struct::DecodedJsonString<'i>, DirectBuildError<'i>> {
+        let content_start = self.cursor + 1;
+        let (fingerprint, len, raw_end, needs_decode) = self.parse_decoded_string_facts()?;
+        let raw = unsafe {
+            std::str::from_utf8_unchecked(&self.bytes[content_start..raw_end - 1])
+        };
+        if needs_decode {
+            Ok(crate::real_typed_struct::DecodedJsonString::from_raw_escaped(
+                raw,
+                fingerprint,
+                len,
+            ))
+        } else {
+            Ok(crate::real_typed_struct::DecodedJsonString::from_decoded_borrowed(
+                raw,
+                fingerprint,
+                len,
+            ))
+        }
+    }
+
+    #[inline(always)]
+    fn parse_decoded_string_fingerprint(&mut self) -> Result<(u64, u64), DirectBuildError<'i>> {
+        let (fingerprint, len, _, _) = self.parse_decoded_string_facts()?;
+        Ok((fingerprint, len))
+    }
+
+    #[inline(always)]
+    fn parse_decoded_string_facts(&mut self) -> Result<(u64, u64, usize, bool), DirectBuildError<'i>> {
         if self.bytes.get(self.cursor) != Some(&b'"') {
             return Err(self.error("expected string"));
         }
         let mut cursor = self.cursor + 1;
         let mut hash = 0xcbf29ce484222325u64;
         let mut len = 0u64;
+        let mut needs_decode = false;
         loop {
             let Some(byte) = self.bytes.get(cursor).copied() else {
                 return Err(self.error("invalid string"));
@@ -3263,9 +3524,10 @@ impl<'i> DirectParser<'i> {
             match byte {
                 b'"' => {
                     self.cursor = cursor + 1;
-                    return Ok((hash, len));
+                    return Ok((hash, len, cursor + 1, needs_decode));
                 }
                 b'\\' => {
+                    needs_decode = true;
                     cursor += 1;
                     let Some(escape) = self.bytes.get(cursor).copied() else {
                         return Err(self.error("invalid string escape"));

@@ -115,6 +115,7 @@ pub enum DirectTypeRef {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum DirectScalar {
     String,
+    DecodedJsonString,
     Bool,
     I64,
     U64,

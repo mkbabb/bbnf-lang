@@ -3,6 +3,7 @@ use serde::{Deserialize, Deserializer};
 use serde_json::value::RawValue;
 use std::borrow::Cow;
 use std::fmt;
+use std::marker::PhantomData;
 use std::path::PathBuf;
 
 use crate::direct_struct::DirectStructError;
@@ -20,6 +21,7 @@ pub enum RealTypedFixture {
     Canada,
     Numbers,
     UnicodeBasic,
+    UnicodeMixed,
     DistinctValues,
     YStringUnicode,
     Random,
@@ -289,6 +291,251 @@ pub struct UnicodeBasicRecord<'a> {
     pub len: Option<u64>,
     #[serde(default, borrow)]
     pub tags: Vec<Cow<'a, str>>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct UnicodeMixedDocument<'a> {
+    #[serde(default, borrow)]
+    pub metadata: Option<UnicodeMixedMetadata<'a>>,
+    #[serde(default, borrow)]
+    pub records: Vec<UnicodeMixedRecord<'a>>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct UnicodeMixedMetadata<'a> {
+    #[serde(default, borrow)]
+    pub purpose: Option<Cow<'a, str>>,
+    #[serde(default)]
+    pub classes: Vec<UnicodeMixedClass>,
+    #[serde(default)]
+    pub count: Option<u64>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct UnicodeMixedRecord<'a> {
+    #[serde(default)]
+    pub id: Option<u64>,
+    #[serde(default, rename = "type")]
+    pub class: Option<UnicodeMixedRecordType>,
+    #[serde(default, borrow)]
+    pub value: Option<DecodedJsonString<'a>>,
+    #[serde(default)]
+    pub n: Option<u64>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum UnicodeMixedClass {
+    Ascii,
+    Latin1,
+    Cjk,
+    Emoji,
+    MixedEscapes,
+}
+
+impl UnicodeMixedClass {
+    fn id(self) -> u64 {
+        match self {
+            Self::Ascii => 1,
+            Self::Latin1 => 2,
+            Self::Cjk => 3,
+            Self::Emoji => 4,
+            Self::MixedEscapes => 5,
+        }
+    }
+
+    fn from_decoded(value: &str) -> Option<Self> {
+        match value {
+            "ascii" => Some(Self::Ascii),
+            "latin1" => Some(Self::Latin1),
+            "cjk" => Some(Self::Cjk),
+            "emoji" => Some(Self::Emoji),
+            "mixed_escapes" => Some(Self::MixedEscapes),
+            _ => None,
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for UnicodeMixedClass {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct UnicodeMixedClassVisitor;
+
+        impl Visitor<'_> for UnicodeMixedClassVisitor {
+            type Value = UnicodeMixedClass;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                formatter.write_str("a unicode_mixed class string")
+            }
+
+            fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                UnicodeMixedClass::from_decoded(value).ok_or_else(|| {
+                    E::invalid_value(serde::de::Unexpected::Str(value), &"known class")
+                })
+            }
+        }
+
+        deserializer.deserialize_str(UnicodeMixedClassVisitor)
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum UnicodeMixedRecordType {
+    Ascii,
+    Latin1,
+    Cjk,
+    Emoji,
+    Mixed,
+}
+
+impl UnicodeMixedRecordType {
+    fn id(self) -> u64 {
+        match self {
+            Self::Ascii => 1,
+            Self::Latin1 => 2,
+            Self::Cjk => 3,
+            Self::Emoji => 4,
+            Self::Mixed => 5,
+        }
+    }
+
+    fn from_decoded(value: &str) -> Option<Self> {
+        match value {
+            "ascii" => Some(Self::Ascii),
+            "latin1" => Some(Self::Latin1),
+            "cjk" => Some(Self::Cjk),
+            "emoji" => Some(Self::Emoji),
+            "mixed" => Some(Self::Mixed),
+            _ => None,
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for UnicodeMixedRecordType {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct UnicodeMixedRecordTypeVisitor;
+
+        impl Visitor<'_> for UnicodeMixedRecordTypeVisitor {
+            type Value = UnicodeMixedRecordType;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                formatter.write_str("a unicode_mixed record type string")
+            }
+
+            fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                UnicodeMixedRecordType::from_decoded(value).ok_or_else(|| {
+                    E::invalid_value(serde::de::Unexpected::Str(value), &"known record type")
+                })
+            }
+        }
+
+        deserializer.deserialize_str(UnicodeMixedRecordTypeVisitor)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct DecodedJsonString<'a> {
+    repr: DecodedJsonStringRepr<'a>,
+    fingerprint: u64,
+    len: u64,
+}
+
+#[derive(Debug, Clone)]
+enum DecodedJsonStringRepr<'a> {
+    Decoded(Cow<'a, str>),
+    RawEscaped(&'a str),
+}
+
+impl<'a> DecodedJsonString<'a> {
+    pub fn from_decoded_borrowed(value: &'a str, fingerprint: u64, len: u64) -> Self {
+        Self {
+            repr: DecodedJsonStringRepr::Decoded(Cow::Borrowed(value)),
+            fingerprint,
+            len,
+        }
+    }
+
+    fn from_decoded_owned(value: String) -> Self {
+        let (fingerprint, len) = decoded_json_string_fingerprint(&value);
+        Self {
+            repr: DecodedJsonStringRepr::Decoded(Cow::Owned(value)),
+            fingerprint,
+            len,
+        }
+    }
+
+    pub fn from_raw_escaped(raw: &'a str, fingerprint: u64, len: u64) -> Self {
+        Self {
+            repr: DecodedJsonStringRepr::RawEscaped(raw),
+            fingerprint,
+            len,
+        }
+    }
+
+    fn fingerprint(&self) -> u64 {
+        self.fingerprint
+    }
+
+    fn decoded_len(&self) -> u64 {
+        self.len
+    }
+
+    pub fn representation_len(&self) -> u64 {
+        match &self.repr {
+            DecodedJsonStringRepr::Decoded(value) => value.len() as u64,
+            DecodedJsonStringRepr::RawEscaped(raw) => raw.len() as u64,
+        }
+    }
+
+    pub fn is_raw_escaped(&self) -> bool {
+        matches!(self.repr, DecodedJsonStringRepr::RawEscaped(_))
+    }
+}
+
+impl<'de: 'a, 'a> Deserialize<'de> for DecodedJsonString<'a> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct DecodedJsonStringVisitor<'a>(PhantomData<&'a ()>);
+
+        impl<'de: 'a, 'a> Visitor<'de> for DecodedJsonStringVisitor<'a> {
+            type Value = DecodedJsonString<'a>;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                formatter.write_str("a JSON string")
+            }
+
+            fn visit_borrowed_str<E>(self, value: &'de str) -> Result<Self::Value, E> {
+                let (fingerprint, len) = decoded_json_string_fingerprint(value);
+                Ok(DecodedJsonString::from_decoded_borrowed(
+                    value,
+                    fingerprint,
+                    len,
+                ))
+            }
+
+            fn visit_str<E>(self, value: &str) -> Result<Self::Value, E> {
+                Ok(DecodedJsonString::from_decoded_owned(value.to_string()))
+            }
+
+            fn visit_string<E>(self, value: String) -> Result<Self::Value, E> {
+                Ok(DecodedJsonString::from_decoded_owned(value))
+            }
+        }
+
+        deserializer.deserialize_str(DecodedJsonStringVisitor(PhantomData))
+    }
 }
 
 #[derive(Debug)]
@@ -736,6 +983,7 @@ pub enum RealTypedOutput<'a> {
     Canada(CanadaFeatureCollection<'a>),
     Numbers(Vec<f64>),
     UnicodeBasic(Vec<UnicodeBasicRecord<'a>>),
+    UnicodeMixed(UnicodeMixedDocument<'a>),
     DistinctValues(Vec<DistinctValue<'a>>),
     YStringUnicode(Vec<YStringUnicodeToken>),
     Random(RandomDocument<'a>),
@@ -754,6 +1002,7 @@ pub fn fixture_for_name(name: &str) -> Option<RealTypedFixture> {
         "canada" => Some(RealTypedFixture::Canada),
         "numbers" => Some(RealTypedFixture::Numbers),
         "unicode_basic" | "unicode-basic" => Some(RealTypedFixture::UnicodeBasic),
+        "unicode_mixed" | "unicode-mixed" => Some(RealTypedFixture::UnicodeMixed),
         "distinct_values" | "distinct-values" => Some(RealTypedFixture::DistinctValues),
         "y_string_unicode" | "y-string-unicode" => Some(RealTypedFixture::YStringUnicode),
         "random" => Some(RealTypedFixture::Random),
@@ -788,6 +1037,8 @@ fn candidate_names(name: &str) -> [&str; 2] {
         "update-center" => ["update-center", "update_center"],
         "marine_ik" => ["marine_ik", "marine-ik"],
         "marine-ik" => ["marine_ik", "marine-ik"],
+        "unicode_mixed" => ["unicode_mixed", "unicode-mixed"],
+        "unicode-mixed" => ["unicode_mixed", "unicode-mixed"],
         "y_string_unicode" => ["y_string_unicode", "y-string-unicode"],
         "y-string-unicode" => ["y_string_unicode", "y-string-unicode"],
         _ => [name, name],
@@ -898,6 +1149,9 @@ pub fn track1_typed<'a>(
         RealTypedFixture::UnicodeBasic => crate::generated_real_typed::parse_unicode_basic(input)
             .map(RealTypedOutput::UnicodeBasic)
             .map_err(|error| DirectStructError::Parse(error.to_string())),
+        RealTypedFixture::UnicodeMixed => crate::generated_real_typed::parse_unicode_mixed(input)
+            .map(RealTypedOutput::UnicodeMixed)
+            .map_err(|error| DirectStructError::Parse(error.to_string())),
         RealTypedFixture::DistinctValues => {
             crate::generated_real_typed::parse_distinct_values(input)
                 .map(RealTypedOutput::DistinctValues)
@@ -964,6 +1218,9 @@ pub fn serde_typed<'a>(
                 .map(RealTypedOutput::UnicodeBasic)
                 .map_err(|error| DirectStructError::Serde(error.to_string()))
         }
+        RealTypedFixture::UnicodeMixed => serde_json::from_slice::<UnicodeMixedDocument<'a>>(bytes)
+            .map(RealTypedOutput::UnicodeMixed)
+            .map_err(|error| DirectStructError::Serde(error.to_string())),
         RealTypedFixture::DistinctValues => serde_json::from_slice::<Vec<DistinctValue<'a>>>(bytes)
             .map(RealTypedOutput::DistinctValues)
             .map_err(|error| DirectStructError::Serde(error.to_string())),
@@ -1019,6 +1276,9 @@ pub fn sonic_typed<'a>(
                 .map(RealTypedOutput::UnicodeBasic)
                 .map_err(|error| DirectStructError::Sonic(error.to_string()))
         }
+        RealTypedFixture::UnicodeMixed => sonic_rs::from_slice::<UnicodeMixedDocument<'a>>(bytes)
+            .map(RealTypedOutput::UnicodeMixed)
+            .map_err(|error| DirectStructError::Sonic(error.to_string())),
         RealTypedFixture::DistinctValues => sonic_rs::from_slice::<Vec<DistinctValue<'a>>>(bytes)
             .map(RealTypedOutput::DistinctValues)
             .map_err(|error| DirectStructError::Sonic(error.to_string())),
@@ -1060,6 +1320,7 @@ pub fn typed_checksum(output: &RealTypedOutput<'_>) -> u64 {
         RealTypedOutput::Canada(value) => checksum_canada(value),
         RealTypedOutput::Numbers(value) => checksum_numbers(value),
         RealTypedOutput::UnicodeBasic(value) => checksum_unicode_basic(value),
+        RealTypedOutput::UnicodeMixed(value) => checksum_unicode_mixed(value),
         RealTypedOutput::DistinctValues(value) => checksum_distinct_values(value),
         RealTypedOutput::YStringUnicode(value) => checksum_y_string_unicode(value),
         RealTypedOutput::Random(value) => checksum_random(value),
@@ -1286,6 +1547,30 @@ fn checksum_unicode_basic_record(value: &UnicodeBasicRecord<'_>) -> u64 {
     hash = fold_opt_str(hash, &value.text);
     hash = fold_opt_u64(hash, value.len);
     fold_str_slice(hash, &value.tags)
+}
+
+fn checksum_unicode_mixed(value: &UnicodeMixedDocument<'_>) -> u64 {
+    let mut hash = 0x756e696d69786564;
+    if let Some(metadata) = &value.metadata {
+        hash = fold_opt_str(hash, &metadata.purpose);
+        hash = fold_class_slice(hash, &metadata.classes);
+        hash = fold_opt_u64(hash, metadata.count);
+    } else {
+        hash = mix(hash, 0);
+    }
+    hash = mix(hash, value.records.len() as u64);
+    for record in &value.records {
+        hash = mix(hash, checksum_unicode_mixed_record(record));
+    }
+    hash
+}
+
+fn checksum_unicode_mixed_record(value: &UnicodeMixedRecord<'_>) -> u64 {
+    let mut hash = 0x756e696d69787265;
+    hash = fold_opt_u64(hash, value.id);
+    hash = fold_opt_record_type(hash, value.class);
+    hash = fold_opt_decoded_json_string(hash, &value.value);
+    fold_opt_u64(hash, value.n)
 }
 
 fn checksum_distinct_values(values: &[DistinctValue<'_>]) -> u64 {
@@ -1538,6 +1823,28 @@ fn fold_opt_str(hash: u64, value: &Option<Cow<'_, str>>) -> u64 {
     }
 }
 
+fn fold_opt_decoded_json_string(hash: u64, value: &Option<DecodedJsonString<'_>>) -> u64 {
+    match value {
+        Some(value) => {
+            let hash = mix(hash, value.fingerprint());
+            mix(hash, value.decoded_len())
+        }
+        None => mix(hash, 0),
+    }
+}
+
+fn fold_opt_record_type(hash: u64, value: Option<UnicodeMixedRecordType>) -> u64 {
+    value.map_or_else(|| mix(hash, 0), |value| mix(hash, value.id()))
+}
+
+fn fold_class_slice(mut hash: u64, values: &[UnicodeMixedClass]) -> u64 {
+    hash = mix(hash, values.len() as u64);
+    for value in values {
+        hash = mix(hash, value.id());
+    }
+    hash
+}
+
 fn fold_opt_u64(hash: u64, value: Option<u64>) -> u64 {
     value.map_or_else(|| mix(hash, 0), |value| mix(hash, value))
 }
@@ -1649,6 +1956,14 @@ fn hash_str(value: &str) -> u64 {
         hash = mix(hash, *byte as u64);
     }
     hash
+}
+
+fn decoded_json_string_fingerprint(value: &str) -> (u64, u64) {
+    let mut hash = 0xcbf29ce484222325u64;
+    for byte in value.as_bytes() {
+        hash = mix(hash, *byte as u64);
+    }
+    (hash, value.len() as u64)
 }
 
 fn mix(seed: u64, value: u64) -> u64 {
@@ -1851,6 +2166,36 @@ mod tests {
         let bytes = std::fs::read(locate_fixture("unicode_basic")).unwrap();
         let text = std::str::from_utf8(&bytes).unwrap();
         assert_real_typed_parity(text, &bytes, RealTypedFixture::UnicodeBasic);
+    }
+
+    #[test]
+    fn generated_unicode_mixed_typed_parser_matches_sidecars() {
+        let input = br#"{"metadata":{"purpose":"Unicode + escape stress corpus for skinny JSON parser","classes":["ascii","latin1","cjk","emoji","mixed_escapes"],"count":2},"records":[{"id":0,"type":"ascii","value":"plain","n":7},{"id":1,"type":"mixed","value":"a\uD83D\uDE80\nb","n":8}]}"#;
+        let text = std::str::from_utf8(input).unwrap();
+        let parsed = crate::generated_real_typed::parse_unicode_mixed(text).unwrap();
+        assert!(!parsed.records[0].value.as_ref().unwrap().is_raw_escaped());
+        assert!(parsed.records[1].value.as_ref().unwrap().is_raw_escaped());
+        assert_real_typed_parity(text, input, RealTypedFixture::UnicodeMixed);
+    }
+
+    #[test]
+    fn generated_unicode_mixed_rejects_bad_tokens_and_strings() {
+        for input in [
+            br#"{"metadata":{"classes":["mixed"]},"records":[]}"#.as_slice(),
+            br#"{"metadata":{"classes":["ascii"]},"records":[{"id":0,"type":"mixed_escapes","value":"x","n":1}]}"#.as_slice(),
+            br#"{"metadata":{"classes":["ascii"]},"records":[{"id":0,"type":"ascii","value":"\uD800","n":1}]}"#.as_slice(),
+            br#"{"metadata":{"classes":["ascii"]},"records":[{"id":0,"type":"ascii","value":"\q","n":1}]}"#.as_slice(),
+        ] {
+            let text = std::str::from_utf8(input).unwrap();
+            assert!(crate::generated_real_typed::parse_unicode_mixed(text).is_err());
+        }
+    }
+
+    #[test]
+    fn w14_full_unicode_mixed_typed_fixture_matches_sidecars() {
+        let bytes = std::fs::read(locate_fixture("unicode_mixed")).unwrap();
+        let text = std::str::from_utf8(&bytes).unwrap();
+        assert_real_typed_parity(text, &bytes, RealTypedFixture::UnicodeMixed);
     }
 
     #[test]

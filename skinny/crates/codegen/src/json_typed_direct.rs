@@ -214,6 +214,9 @@ impl<'a> Renderer<'a> {
                 .map(|ty| (*ty).to_string())
                 .ok_or_else(|| format!("missing type `{type_id}`")),
             DirectTypeRef::Scalar(DirectScalar::String) => Ok("Cow<'i, str>".to_string()),
+            DirectTypeRef::Scalar(DirectScalar::DecodedJsonString) => {
+                Ok("crate::real_typed_struct::DecodedJsonString<'i>".to_string())
+            }
             DirectTypeRef::Scalar(DirectScalar::Bool) => Ok("bool".to_string()),
             DirectTypeRef::Scalar(DirectScalar::I64) => Ok("i64".to_string()),
             DirectTypeRef::Scalar(DirectScalar::U64) => Ok("u64".to_string()),
@@ -241,6 +244,9 @@ impl<'a> Renderer<'a> {
         match ty {
             DirectTypeRef::Type(type_id) => Ok(format!("{}({parser})", self.type_fn(type_id)?)),
             DirectTypeRef::Scalar(DirectScalar::String) => Ok(format!("{parser}.parse_string()")),
+            DirectTypeRef::Scalar(DirectScalar::DecodedJsonString) => {
+                Ok(format!("{parser}.parse_decoded_json_string()"))
+            }
             DirectTypeRef::Scalar(DirectScalar::Bool) => Ok(format!("{parser}.parse_bool()")),
             DirectTypeRef::Scalar(DirectScalar::I64) => Ok(format!("{parser}.parse_i64()")),
             DirectTypeRef::Scalar(DirectScalar::U64) => Ok(format!("{parser}.parse_u64()")),
@@ -538,7 +544,7 @@ impl<'a> Renderer<'a> {
         out.push_str(&format!(
             "fn {fn_name}<'i>(parser: &mut DirectParser<'i>) -> Result<{enum_type}, DirectBuildError<'i>> {{\n"
         ));
-        out.push_str("    let (fingerprint, len) = parser.parse_string_enum_fingerprint()?;\n");
+        out.push_str("    let (fingerprint, len) = parser.parse_decoded_string_fingerprint()?;\n");
         out.push_str("    match (fingerprint, len) {\n");
         for variant in variants {
             let (fingerprint, len) = string_enum_fingerprint(&variant.decoded);
@@ -768,13 +774,44 @@ impl<'i> DirectParser<'i> {
     }
 
     #[inline(always)]
-    fn parse_string_enum_fingerprint(&mut self) -> Result<(u64, u64), DirectBuildError<'i>> {
+    fn parse_decoded_json_string(
+        &mut self,
+    ) -> Result<crate::real_typed_struct::DecodedJsonString<'i>, DirectBuildError<'i>> {
+        let content_start = self.cursor + 1;
+        let (fingerprint, len, raw_end, needs_decode) = self.parse_decoded_string_facts()?;
+        let raw = unsafe {
+            std::str::from_utf8_unchecked(&self.bytes[content_start..raw_end - 1])
+        };
+        if needs_decode {
+            Ok(crate::real_typed_struct::DecodedJsonString::from_raw_escaped(
+                raw,
+                fingerprint,
+                len,
+            ))
+        } else {
+            Ok(crate::real_typed_struct::DecodedJsonString::from_decoded_borrowed(
+                raw,
+                fingerprint,
+                len,
+            ))
+        }
+    }
+
+    #[inline(always)]
+    fn parse_decoded_string_fingerprint(&mut self) -> Result<(u64, u64), DirectBuildError<'i>> {
+        let (fingerprint, len, _, _) = self.parse_decoded_string_facts()?;
+        Ok((fingerprint, len))
+    }
+
+    #[inline(always)]
+    fn parse_decoded_string_facts(&mut self) -> Result<(u64, u64, usize, bool), DirectBuildError<'i>> {
         if self.bytes.get(self.cursor) != Some(&b'"') {
             return Err(self.error("expected string"));
         }
         let mut cursor = self.cursor + 1;
         let mut hash = 0xcbf29ce484222325u64;
         let mut len = 0u64;
+        let mut needs_decode = false;
         loop {
             let Some(byte) = self.bytes.get(cursor).copied() else {
                 return Err(self.error("invalid string"));
@@ -782,9 +819,10 @@ impl<'i> DirectParser<'i> {
             match byte {
                 b'"' => {
                     self.cursor = cursor + 1;
-                    return Ok((hash, len));
+                    return Ok((hash, len, cursor + 1, needs_decode));
                 }
                 b'\\' => {
+                    needs_decode = true;
                     cursor += 1;
                     let Some(escape) = self.bytes.get(cursor).copied() else {
                         return Err(self.error("invalid string escape"));

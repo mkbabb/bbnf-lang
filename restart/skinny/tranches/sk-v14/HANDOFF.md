@@ -105,7 +105,9 @@ typed rows through a decoded string enum token product, so direct and typed
 each stand at 14 / 17 admitted. W11M then rejected the materially distinct
 `unicode_escapes` decoded-string typed scalar product under REDRESS-242; the
 source patch was reverted, no row moved, and that scalar shape is pre-blocked
-without a fresh material differential.
+without a fresh material differential. W11N then admitted `unicode_mixed`
+direct and typed rows through a decoded value scalar plus closed token product,
+so direct and typed each stand at 15 / 17 admitted.
 W8R closed the CSS residual before W11L; continue actual implementation against
 the remaining JSON residual queue, not
 another Omega or Alpha pass unless a future source attempt exposes a real
@@ -203,13 +205,13 @@ Lock 14 at `restart/locks/LOCKS.md:220–238`).
 
 ```
 JSON parse_only: 11 / 17 (6 OPEN after W10W residual implementation)
-JSON direct:     14 / 17 (3 OPEN after W11M; remaining rows lack admitted strict products)
-JSON typed:      14 / 17 (3 MISSING product surfaces after W11M)
+JSON direct:     15 / 17 (2 OPEN after W11N; remaining rows lack admitted strict products)
+JSON typed:      15 / 17 (2 MISSING product surfaces after W11N)
 CSS L4:          24 / 24 (ADMITTED after W8R; generated full-parse plane beats lightningcss floor)
 ```
 
 Opening baseline was zero admitted after audit prune. W11 close-state is
-mixed: 39 JSON cells and 24 CSS L4 cells are admitted, and all remaining JSON
+mixed: 41 JSON cells and 24 CSS L4 cells are admitted, and all remaining JSON
 residual rows are routed to implementation work because no architectural-block
 proof closes them.
 
@@ -275,7 +277,7 @@ state is:
   without moving any row. REDRESS-239 rejects array value-byte carry without
   moving any row. REDRESS-240 rejects object key-start specialization without
   moving any row.
-- JSON direct_to_struct: 14 / 17 ADMITTED, 3 OPEN after W11M; remaining
+- JSON direct_to_struct: 15 / 17 ADMITTED, 2 OPEN after W11N; remaining
   rows lack generated strict product surfaces. REDRESS-232 rejects
   product-surface-only unicode strict products for `unicode_mixed` and
   `unicode_escapes`, and REDRESS-233 rejects product-surface-only
@@ -283,16 +285,19 @@ state is:
   `y_string_unicode` product-plus-fused-materializer strict products, while
   W11L admits the separate decoded token product. REDRESS-242 rejects the
   `unicode_escapes` decoded-string typed scalar product despite a real material
-  differential over W11B.
-- JSON real_typed_struct: 14 / 17 ADMITTED, 3 MISSING product surfaces after
-  W11M; REDRESS-226 rejects the earlier generated `y_string_unicode` root and
+  differential over W11B, while W11N admits the separate `unicode_mixed`
+  decoded value scalar plus closed token product.
+- JSON real_typed_struct: 15 / 17 ADMITTED, 2 MISSING product surfaces after
+  W11N; REDRESS-226 rejects the earlier generated `y_string_unicode` root and
   REDRESS-229 rejects the generated `gsoc-2018` numeric-key root without
   moving either row. REDRESS-232 rejects and reverts transient
   `unicode_mixed` and `unicode_escapes` products; REDRESS-233 rejects and
   reverts transient `gsoc-2018` products. REDRESS-241 rejects and reverts the
   fused-materializer `y_string_unicode` product root, while W11L admits the
   decoded token product. REDRESS-242 rejects and reverts the transient
-  `unicode_escapes` decoded-string typed scalar root.
+  `unicode_escapes` decoded-string typed scalar root, while W11N admits the
+  materially distinct `unicode_mixed` decoded value scalar plus closed token
+  product.
 - CSS L4: 24 / 24 ADMITTED after W8R. REDRESS-215 remains historical as the
   initial fact-stream-plane rejection, superseded by generated full-parse
   release-native evidence.
@@ -325,8 +330,9 @@ discipline).
    at 12 admitted and 5 missing. W9AB admits `canada/real_typed_struct` under
    REDRESS-228, so typed now stands at 13 admitted and 4 missing. W9AC rejects
    `gsoc-2018/real_typed_struct` under REDRESS-229, so `gsoc-2018` remains
-   missing. W11L later admits `y_string_unicode/real_typed_struct`, so the
-   current typed state is 14 admitted and 3 missing.
+   missing. W11L later admits `y_string_unicode/real_typed_struct`, and W11N
+   later admits `unicode_mixed/real_typed_struct`, so the current typed state
+   is 15 admitted and 2 missing.
 5. W10 is closed mixed: 6 parse_only admits and 11 parse_only open rows under
    REDRESS-217. W10R then admits `canada/parse_only`, W10S admits
    `unicode_mixed/parse_only`, W10T admits `instruments/parse_only`, W10V
@@ -335,9 +341,9 @@ discipline).
    REDRESS-223. W10X, W10Y/W10Z, and W10AA reject additional residual routes
    under REDRESS-224, REDRESS-225, and REDRESS-230 without changing the count.
 6. W11A admits thirteen strict-product JSON direct rows under REDRESS-231.
-   W11L later admits `y_string_unicode/direct_to_struct`, so the current
-   direct state is 14 admitted and 3 open: `gsoc-2018`, `unicode_mixed`, and
-   `unicode_escapes`.
+   W11L later admits `y_string_unicode/direct_to_struct`, and W11N later
+   admits `unicode_mixed/direct_to_struct`, so the current direct state is 15
+   admitted and 2 open: `gsoc-2018` and `unicode_escapes`.
 7. W11B rejects transient `unicode_mixed` and `unicode_escapes` strict product
    routes under REDRESS-232. The products were correct but missed strict sonic
    by at least 2014.202 Mbps, so no source patch lands and no row moves.
@@ -353,6 +359,8 @@ discipline).
     products under REDRESS-242. The route avoided parse_only, direct digest,
     and sink-local string fact hashing, but Track 1 still missed same-run sonic
     in both strict-product planes.
+11. W11N admits `unicode_mixed` direct and typed decoded value scalar plus
+    closed token products from cold native `profile_direct` evidence.
 
 ## 7. Refusal Conditions
 
@@ -439,4 +447,6 @@ specialization without a fresh material differential. REDRESS-241 pre-blocks
 `y_string_unicode` product-plus-fused-materializer retries without a fresh
 material differential, while W11L admits the separate decoded token-product
 route for `y_string_unicode`. REDRESS-242 pre-blocks `unicode_escapes`
-decoded-string typed scalar products without a fresh material differential.
+decoded-string typed scalar products without a fresh material differential,
+while W11N admits the materially distinct `unicode_mixed` decoded value scalar
+plus closed token product.

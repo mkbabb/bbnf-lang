@@ -70,6 +70,12 @@ const SKV14_W11L_TOKEN_PRODUCT_TYPED_ROWS: &[&str] =
 const SKV14_W11L_TOKEN_PRODUCT_DIRECT_ROWS: &[&str] =
     &["json/y_string_unicode/direct_to_struct/main"];
 
+const SKV14_W11N_UNICODE_MIXED_TYPED_ROWS: &[&str] =
+    &["json/unicode_mixed/real_typed_struct/main"];
+
+const SKV14_W11N_UNICODE_MIXED_DIRECT_ROWS: &[&str] =
+    &["json/unicode_mixed/direct_to_struct/main"];
+
 const SKV14_CSS_FEATURES: &[&str] = &[
     "declaration_values",
     "declarations",
@@ -3785,9 +3791,9 @@ fn validate_skv14_manifest_rows(rows: &[SkV14ManifestRow]) -> Result<(), String>
             return Err(format!("SK-V14 manifest missing {row_id}"));
         }
     }
-    if pending != 12 || falsified + sustained != 63 {
+    if pending != 10 || falsified + sustained != 65 {
         return Err(format!(
-            "SK-V14 audit overlay expected pending=12 and falsified+sustained=63 after authorized W9/W9AA/W9AB/W10/W10R/W10S/W10T/W10V/W10W/W11A/W11L admits, saw {falsified} / {pending} / {sustained}"
+            "SK-V14 audit overlay expected pending=10 and falsified+sustained=65 after authorized W9/W9AA/W9AB/W10/W10R/W10S/W10T/W10V/W10W/W11A/W11L/W11N admits, saw {falsified} / {pending} / {sustained}"
         ));
     }
     Ok(())
@@ -3835,6 +3841,60 @@ fn validate_skv14_sustained_row(row: &SkV14ManifestRow) -> Result<(), String> {
         {
             return Err(format!(
                 "{} is not a valid SK-V14 W11L sustained direct token-product row",
+                row.row_id
+            ));
+        }
+        if !valid_skv14_per_iter_pass(&row.per_iter_equality) {
+            return Err(format!(
+                "{} lacks SK-V14 timed per-iteration equality PASS",
+                row.row_id
+            ));
+        }
+        return Ok(());
+    }
+    if SKV14_W11N_UNICODE_MIXED_TYPED_ROWS.contains(&row.row_id.as_str()) {
+        let (corpus, _) = parse_row_id(&row.row_id)?;
+        if row.wave_id != "SK-V14-W11N"
+            || row.track1_entry_point != "bbnf_bench::json_parity::track1_real_typed_struct"
+            || row.track2_entry_point != "bbnf_bench::real_typed_struct::track2_typed"
+            || row.comparator_plane != format!("{corpus}::typed_strict_struct_deser")
+            || row.same_wave_consumer_class != "gate_json_typed_contract"
+            || row.track2_independence_status != "independent_verified"
+            || row.substrate_target != "direct_sink"
+            || row.redress_entry != "none:SK-V14-W11N-admit"
+            || row.sk_v14_open_delta
+                != "admitted:SK-V14-W11N-unicode-mixed-decoded-token-product"
+            || row.substrate_surface != "typed_direct_projection"
+        {
+            return Err(format!(
+                "{} is not a valid SK-V14 W11N sustained unicode_mixed typed token-product row",
+                row.row_id
+            ));
+        }
+        if !valid_skv14_per_iter_pass(&row.per_iter_equality) {
+            return Err(format!(
+                "{} lacks SK-V14 timed per-iteration equality PASS",
+                row.row_id
+            ));
+        }
+        return Ok(());
+    }
+    if SKV14_W11N_UNICODE_MIXED_DIRECT_ROWS.contains(&row.row_id.as_str()) {
+        let (corpus, _) = parse_row_id(&row.row_id)?;
+        if row.wave_id != "SK-V14-W11N"
+            || row.track1_entry_point != "bbnf_bench::json_parity::track1_direct_to_struct"
+            || row.track2_entry_point != "bbnf_bench::direct_struct::track2_strict_product"
+            || row.comparator_plane != format!("{corpus}::strict_struct_deser")
+            || row.same_wave_consumer_class != "gate_json_direct_strict_product_contract"
+            || row.track2_independence_status != "independent_verified"
+            || row.substrate_target != "direct_sink"
+            || row.redress_entry != "none:SK-V14-W11N-admit"
+            || row.sk_v14_open_delta
+                != "admitted:SK-V14-W11N-unicode-mixed-decoded-token-product"
+            || row.substrate_surface != "direct_strict_product"
+        {
+            return Err(format!(
+                "{} is not a valid SK-V14 W11N sustained unicode_mixed direct token-product row",
                 row.row_id
             ));
         }
@@ -3955,7 +4015,7 @@ fn validate_skv14_sustained_row(row: &SkV14ManifestRow) -> Result<(), String> {
         return Ok(());
     }
     Err(format!(
-        "{} is AUDIT-SUSTAINED without W9 typed, W10/W10R/W10S/W10T/W10V/W10W parse_only, W11A direct strict-product, W11L token-product, or W8R CSS full-parse authority",
+        "{} is AUDIT-SUSTAINED without W9 typed, W10/W10R/W10S/W10T/W10V/W10W parse_only, W11A direct strict-product, W11L/W11N token-product, or W8R CSS full-parse authority",
         row.row_id
     ))
 }
@@ -4358,12 +4418,18 @@ impl Report {
         let mut w13_random_typed_seen = false;
         let mut w13_instruments_typed_seen = false;
         let mut w11l_y_string_typed_seen = false;
+        let mut w11n_unicode_mixed_typed_seen = false;
         for row in &self.rows {
             let row_id = row.sk_v8.row_id.as_str();
             if !seen.insert(row_id) {
                 return Err(format!("duplicate SK-V9 W0 row_id {row_id}"));
             }
-            if row_id == W11L_Y_STRING_TYPED_ROW_ID && row.sk_v8.wave_id != "SK-V14-open" {
+            if row_id == W11N_UNICODE_MIXED_TYPED_ROW_ID
+                && row.sk_v8.wave_id != "SK-V14-open"
+            {
+                validate_w11n_unicode_mixed_typed_row(row)?;
+                w11n_unicode_mixed_typed_seen = true;
+            } else if row_id == W11L_Y_STRING_TYPED_ROW_ID && row.sk_v8.wave_id != "SK-V14-open" {
                 validate_w11l_y_string_typed_row(row)?;
                 w11l_y_string_typed_seen = true;
             } else if row_id == W6_GITHUB_EVENTS_TYPED_ROW_ID && row.sk_v8.wave_id != "SK-V14-open"
@@ -4391,6 +4457,8 @@ impl Report {
                     validate_json_parse_only_admission_row(row, spec)?;
                 } else if row_id == W11L_Y_STRING_DIRECT_ROW_ID {
                     validate_w11l_y_string_direct_row(row)?;
+                } else if row_id == W11N_UNICODE_MIXED_DIRECT_ROW_ID {
+                    validate_w11n_unicode_mixed_direct_row(row)?;
                 } else {
                     let Some(baseline) = sk_v8_open_baseline(row_id) else {
                         return Err(format!("unknown SK-V8 comparison row_id {row_id}"));
@@ -4470,7 +4538,8 @@ impl Report {
             + usize::from(w13_unicode_basic_typed_seen)
             + usize::from(w13_random_typed_seen)
             + usize::from(w13_instruments_typed_seen)
-            + usize::from(w11l_y_string_typed_seen);
+            + usize::from(w11l_y_string_typed_seen)
+            + usize::from(w11n_unicode_mixed_typed_seen);
         if self.rows.len() != expected_rows {
             return Err(format!(
                 "SK-V9 W0 expected {expected_rows} main rows, saw {}",
@@ -5501,6 +5570,10 @@ const W13_INSTRUMENTS_TYPED_ROW_ID: &str = "json/instruments/real_typed_struct/m
 const W15_UPDATE_CENTER_TYPED_ROW_ID: &str = "json/update_center/real_typed_struct/main";
 const W11L_Y_STRING_TYPED_ROW_ID: &str = "json/y_string_unicode/real_typed_struct/main";
 const W11L_Y_STRING_DIRECT_ROW_ID: &str = "json/y_string_unicode/direct_to_struct/main";
+const W11N_UNICODE_MIXED_TYPED_ROW_ID: &str =
+    "json/unicode_mixed/real_typed_struct/main";
+const W11N_UNICODE_MIXED_DIRECT_ROW_ID: &str =
+    "json/unicode_mixed/direct_to_struct/main";
 fn validate_json_parse_only_admission_row(
     row: &TelemetryRow,
     spec: &JsonParseOnlyAdmissionSpec,
@@ -5856,6 +5929,83 @@ fn validate_w11l_y_string_direct_row(row: &TelemetryRow) -> Result<(), String> {
     Ok(())
 }
 
+fn validate_w11n_unicode_mixed_typed_row(row: &TelemetryRow) -> Result<(), String> {
+    validate_w13_typed_row(
+        row,
+        "unicode_mixed",
+        "none:SK-V14-W11N-admit",
+        "SK-V14-W11N",
+        "W11N",
+        "admitted:SK-V14-W11N-unicode-mixed-decoded-token-product",
+    )
+}
+
+fn validate_w11n_unicode_mixed_direct_row(row: &TelemetryRow) -> Result<(), String> {
+    let row_id = row.sk_v8.row_id.as_str();
+    row.validate_schema_v3()?;
+    validate_w0_row_identity(row)?;
+    validate_w0_outcome(row_id, &row.outcome_id)?;
+    if row.outcome_id != "A" || row.verdict != "GO" {
+        return Err(format!(
+            "{row_id} W11N direct token product admits only A / GO, saw {} / {}",
+            row.outcome_id, row.verdict
+        ));
+    }
+    if row.corpus != "unicode_mixed" || row.workload != "direct_to_struct" {
+        return Err(format!(
+            "{row_id} is not the W11N unicode_mixed direct row"
+        ));
+    }
+    if row.output_plane != "direct strict product" {
+        return Err(format!(
+            "{row_id} W11N direct output plane {} is not direct strict product",
+            row.output_plane
+        ));
+    }
+    if row.strictness != "strict"
+        || row.parse_utf8 != "measured-row"
+        || row.sk_v8.measured_validation_path != "measured-row"
+        || row.escape_complete != "yes"
+    {
+        return Err(format!(
+            "{row_id} W11N direct row lacks strict measured validation"
+        ));
+    }
+    if row.sk_v8.track2_independence_status != "independent_verified"
+        || row.sk_v8.same_wave_consumer_class != "gate_json_direct_strict_product_contract"
+    {
+        return Err(format!(
+            "{row_id} W11N direct row lacks independent strict-product consumer"
+        ));
+    }
+    if row.sk_v8.redress_entry != "none:SK-V14-W11N-admit"
+        || row.sk_v8.wave_id != "SK-V14-W11N"
+        || row.sk_v8.sk_v9_open_delta
+            != "admitted:SK-V14-W11N-unicode-mixed-decoded-token-product"
+    {
+        return Err(format!("{row_id} W11N direct row lacks W11N provenance"));
+    }
+    let (Some(track1), Some(track2), Some(sonic)) = (
+        row.track1_mbps,
+        row.track2_mbps,
+        row.competitors.sonic_strict_mbps,
+    ) else {
+        return Err(format!(
+            "{row_id} W11N direct row lacks Track 1, Track 2, or sonic Mbps"
+        ));
+    };
+    if track1 <= sonic + 1.0 || !track2.is_finite() {
+        return Err(format!(
+            "{row_id} W11N direct floor miss: Track 1 {track1:.0}, Track 2 {track2:.0}, sonic+1 {:.0}",
+            sonic + 1.0
+        ));
+    }
+    validate_w0_profile_artifact(row_id, &row.sk_v8.profile_artifact)?;
+    validate_w0_hot_leaf(row_id, &row.hot_leaf, &row.sk_v8.profile_artifact)?;
+    validate_comparator_evidence(row_id, &row.workload, &row.sk_v8.comparators)?;
+    Ok(())
+}
+
 fn validate_w13_typed_row(
     row: &TelemetryRow,
     corpus: &str,
@@ -6011,6 +6161,7 @@ fn validate_w0_profile_artifact(row_id: &str, profile_artifact: &str) -> Result<
                 | "restart/skinny/tranches/sk-v14/research/skv14-W9AA-distinct-values-typed.tsv"
                 | "restart/skinny/tranches/sk-v14/research/skv14-W9AB-canada-typed.tsv"
                 | "restart/skinny/tranches/sk-v14/research/skv14-W11L-y-string-token-product.tsv"
+                | "restart/skinny/tranches/sk-v14/research/skv14-W11N-unicode-mixed-decoded-token-product.tsv"
         ) {
             return Ok(());
         }
@@ -6057,6 +6208,10 @@ fn validate_w0_hot_leaf(
             "not-collected-in-W9AB-row"
         } else if profile_artifact.contains("skv14-W11L-y-string-token-product.tsv") {
             "not-collected-in-W11L-row"
+        } else if profile_artifact
+            .contains("skv14-W11N-unicode-mixed-decoded-token-product.tsv")
+        {
+            "not-collected-in-W11N-row"
         } else {
             "not-collected-in-W10-row"
         };
@@ -6469,6 +6624,7 @@ fn validate_native_comparator_source(
         "restart/skinny/tranches/sk-v14/research/skv14-W9AA-distinct-values-typed.tsv",
         "restart/skinny/tranches/sk-v14/research/skv14-W9AB-canada-typed.tsv",
         "restart/skinny/tranches/sk-v14/research/skv14-W11L-y-string-token-product.tsv",
+        "restart/skinny/tranches/sk-v14/research/skv14-W11N-unicode-mixed-decoded-token-product.tsv",
     ]
     .into_iter()
     .map(|path| format!("profile_direct:{path},mode={mode}"))

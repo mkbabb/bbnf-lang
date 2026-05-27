@@ -31,14 +31,16 @@ admitted all twenty-four CSS L4 rows with generated `parse_full` output on the
 `css_l4_full_parse` plane, beating the same-run lightningcss full-parse floor
 in release-native measurement. W11L then admitted `y_string_unicode` direct
 and typed rows by changing that row to a decoded string enum token product
-instead of materialized decoded strings.
+instead of materialized decoded strings. W11N then admitted `unicode_mixed`
+direct and typed rows by combining a decoded value scalar with closed token
+products for the finite side fields.
 
 ## Authority
 
 - `restart/skinny/tranches/sk-v14/SPEC.md` Section 14.
 - `restart/skinny/tranches/sk-v14/SYNTHESIS.md` R10.
 - `skinny/RESULTS.md`.
-- `skinny/REDRESS.md` items 215 through 241.
+- `skinny/REDRESS.md` items 215 through 242.
 - `restart/skinny/ROLLING-SOTA-DELTA.md`.
 - `restart/skinny/tranches/sk-v14/HANDOFF.md`.
 
@@ -87,14 +89,15 @@ instead of materialized decoded strings.
 | W11K | REJECTED | REDRESS-241: transient `y_string_unicode` fused materializer product route passed correctness but missed strict sonic for typed and direct strict products; no source patch landed and no row moved. |
 | W11L | ADMITTED | Decoded string enum token product admits `y_string_unicode/direct_to_struct` and `y_string_unicode/real_typed_struct` from cold native `profile_direct` evidence. |
 | W11M | REJECTED | REDRESS-242: transient `unicode_escapes` decoded-string typed product scalar passed correctness but missed same-run sonic for typed and direct strict products; no source patch landed and no row moved. |
+| W11N | ADMITTED | Decoded value scalar plus closed token product admits `unicode_mixed/direct_to_struct` and `unicode_mixed/real_typed_struct` from cold native `profile_direct` evidence. |
 
 ## Close-State Counts
 
 | Family | ADMITTED | OPEN | MISSING / blocked | Governing evidence |
 |---|---:|---:|---:|---|
 | JSON parse_only | 11 | 6 | 0 | W10/W10R/W10S/W10T/W10V/W10W cold `profile_direct` evidence and REDRESS-217/218/219/220/222/223. |
-| JSON direct_to_struct | 14 | 3 | 0 | W11A cold strict product evidence plus W11L decoded token-product evidence; remaining rows lack generated product surfaces. |
-| JSON real_typed_struct | 14 | 0 | 3 | W9 cold typed evidence plus W9AA/W9AB generated products for `distinct_values` and `canada`, plus W11L decoded token-product evidence; remaining missing products listed in REDRESS-216/227/228/229. |
+| JSON direct_to_struct | 15 | 2 | 0 | W11A cold strict product evidence plus W11L/W11N decoded token-product evidence; remaining rows lack generated product surfaces or admitted differentials. |
+| JSON real_typed_struct | 15 | 0 | 2 | W9 cold typed evidence plus W9AA/W9AB generated products for `distinct_values` and `canada`, plus W11L/W11N decoded token-product evidence; remaining missing products listed in REDRESS-216/227/228/229/242. |
 | CSS L4 | 24 | 0 | 0 | W8R generated full-parse release-native evidence and REDRESS-215 supersession. |
 
 No residual row has an architectural-level intrinsic-block proof. The
@@ -102,20 +105,22 @@ remaining rows are implementation residuals, not closeable proof blocks.
 
 ## Residual Queue
 
-1. JSON direct residuals remain only where generated strict product surfaces
-   are absent at HEAD: `gsoc-2018`, `unicode_mixed`, and
-   `unicode_escapes`. W11B proved that product-surface-only unicode routes
-   are not enough for `unicode_mixed` or `unicode_escapes`; W11C proved that
+1. JSON direct residuals remain for `gsoc-2018` and `unicode_escapes`.
+   W11B proved that product-surface-only unicode routes
+   are not enough for `unicode_mixed` or `unicode_escapes`; W11N then admitted
+   a materially different decoded value scalar plus closed token product for
+   `unicode_mixed`; W11C proved that
    product-surface-only `gsoc-2018` routes are also insufficient. W11K
    proved that product-surface plus fused string materialization was
    insufficient for `y_string_unicode`, and W11L then admitted a materially
    different decoded enum-token product for that row.
-2. Missing JSON typed products remain for `gsoc-2018`, `unicode_mixed`, and
+2. Missing JSON typed products remain for `gsoc-2018` and
    `unicode_escapes`; W11B's unicode products were
    reverted after measured rejection, and W11C's `gsoc-2018` products were
    also reverted after measured rejection. W11K's `y_string_unicode` product
    root was likewise reverted after measured rejection, then W11L admitted the
-   decoded enum-token root.
+   decoded enum-token root and W11N admitted the `unicode_mixed` decoded value
+   scalar plus closed token root.
 3. JSON parse_only residuals remain for `twitter`, `github_events`,
    `update_center`, `random`, `gsoc-2018`, and
    `distinct_values`. W11D proved that context-threaded delimiter consumption
@@ -228,6 +233,16 @@ remaining rows are implementation residuals, not closeable proof blocks.
   The admitted direct row measured Track 1 `5493.522` Mbps against strict sonic
   `4263.646` Mbps, and the admitted typed row measured Track 1 `5361.584` Mbps
   against typed sonic `4266.896` Mbps.
+- W11N local evidence after this close packet update: `cargo run --profile
+  ax-iter -p xtask -- regen-real-typed`, `cargo run --profile ax-iter -p
+  xtask -- check-real-typed`, focused codegen typed-direct tests, focused
+  `unicode_mixed` real-typed tests, focused direct strict-product parity
+  tests, and release-native cold `profile_direct` evidence retained at
+  `restart/skinny/tranches/sk-v14/research/skv14-W11N-unicode-mixed-decoded-token-product.tsv`.
+  The admitted direct row measured Track 1 `5903.562` Mbps against strict
+  sonic `5340.219` Mbps, margin `562.343` Mbps; the admitted typed row
+  measured Track 1 `5837.942` Mbps against typed sonic `5309.589` Mbps, margin
+  `527.353` Mbps.
 - W8R local evidence after this close packet update: `cargo run --profile
   ax-iter -p xtask -- regen-css`, all seven `check-css-l4-*` commands,
   focused codegen/runtime CSS checks, `cargo test --profile ax-iter -p
@@ -251,7 +266,8 @@ W10Y/W10Z, W10AA, W9Y, W9AC, W11B, W11C, W11D, W11E, W11F, W11G, W11H, W11I,
 W11J, and W11K add post-close residual rejection evidence; W9AA and W9AB add
 post-close typed admits for
 `distinct_values/real_typed_struct` and `canada/real_typed_struct`, W11L adds
-`y_string_unicode` typed and direct decoded token-product admits, and W8R adds
+`y_string_unicode` typed and direct decoded token-product admits, W11N adds
+`unicode_mixed` typed and direct decoded token-product admits, and W8R adds
 twenty-four CSS L4 full-parse admits.
 Under the latest user instruction, the next work is implementation against the
 residual queue, not a new Omega or Alpha pass unless a future source attempt
@@ -504,9 +520,9 @@ exposes a spec-level amendment that truly requires G-Omega.
   `y_string_unicode/real_typed_struct` Track 1 `5361.584` Mbps versus typed
   sonic `4266.896` Mbps, margin `1093.688` Mbps. Retained evidence:
   `restart/skinny/tranches/sk-v14/research/skv14-W11L-y-string-token-product.tsv`.
-- Current JSON direct_to_struct state is 14 / 17 ADMITTED and 3 OPEN:
-  `gsoc-2018`, `unicode_mixed`, and `unicode_escapes`. Current JSON
-  real_typed_struct state is 14 / 17 ADMITTED and 3 MISSING:
+- After W11L, JSON direct_to_struct state was 14 / 17 ADMITTED and 3 OPEN:
+  `gsoc-2018`, `unicode_mixed`, and `unicode_escapes`. JSON
+  real_typed_struct state was 14 / 17 ADMITTED and 3 MISSING:
   `gsoc-2018`, `unicode_mixed`, and `unicode_escapes`.
 
 ## SK-V14 W11M JSON unicode_escapes Decoded Product Reject
@@ -536,9 +552,34 @@ exposes a spec-level amendment that truly requires G-Omega.
 - W11M pre-blocks retries of this decoded-string typed scalar shape for
   `unicode_escapes` without a fresh material differential. It does not
   pre-block closed token products such as W11L and does not alter the generic
-  parse_only contract. Current JSON direct_to_struct state remains 14 / 17
-  ADMITTED and 3 OPEN; current JSON real_typed_struct state remains 14 / 17
-  ADMITTED and 3 MISSING.
+  parse_only contract. At W11M close before W11N, JSON direct_to_struct state
+  remained 14 / 17 ADMITTED and 3 OPEN; JSON real_typed_struct state remained
+  14 / 17 ADMITTED and 3 MISSING.
+
+## SK-V14 W11N JSON unicode_mixed Decoded Token Product Admit
+
+- `G-SK-V14-W11N-JSON-UNICODE-MIXED-DECODED-TOKEN-PRODUCT` closes as `ADMIT`
+  for `json/unicode_mixed/direct_to_struct/main` and
+  `json/unicode_mixed/real_typed_struct/main`.
+- The retained source change keeps `records[*].value` as a per-field
+  decoded JSON string product scalar and maps `records[*].type` plus
+  `metadata.classes[*]` to closed token products. Track 1 avoids decoded
+  `String` allocation for escaped value strings while preserving strict
+  product equality against independent Track 2, sonic, and serde products.
+- Correctness gates passed before admission: `cargo run --profile ax-iter -p
+  xtask -- regen-real-typed`, `cargo run --profile ax-iter -p xtask --
+  check-real-typed`, `cargo test --profile ax-iter -p bbnf-bench
+  unicode_mixed -- --nocapture`, `cargo test --profile ax-iter -p codegen
+  emits_typed_direct -- --nocapture`, and focused direct strict-product parity.
+- Cold release-native `profile_direct` evidence admits both rows:
+  `unicode_mixed/direct_to_struct` Track 1 `5903.562` Mbps versus strict
+  sonic `5340.219` Mbps, margin `562.343` Mbps; and
+  `unicode_mixed/real_typed_struct` Track 1 `5837.942` Mbps versus typed
+  sonic `5309.589` Mbps, margin `527.353` Mbps. Retained evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W11N-unicode-mixed-decoded-token-product.tsv`.
+- Current JSON direct_to_struct state is 15 / 17 ADMITTED and 2 OPEN:
+  `gsoc-2018` and `unicode_escapes`. Current JSON real_typed_struct state is
+  15 / 17 ADMITTED and 2 MISSING: `gsoc-2018` and `unicode_escapes`.
 
 ## SK-V14 W11E JSON parse_only 64-Byte Whitespace Reject
 

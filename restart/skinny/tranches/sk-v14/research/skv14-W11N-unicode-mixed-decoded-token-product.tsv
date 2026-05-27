@@ -1,0 +1,9 @@
+corpus	mode	mbps	ns_per_byte	cycles_per_byte	cpi	iters	bytes	warmup_iters	checksum
+unicode_mixed	real_typed_track1	5837.942	1.370346	5.751143	0.265671	400	1053086	0	0
+unicode_mixed	real_typed_track2	3247.472	2.463455	10.413897	0.392837	400	1053086	0	0
+unicode_mixed	real_typed_sonic	5309.589	1.506708	6.353091	0.331423	400	1053086	0	0
+unicode_mixed	real_typed_serde	3356.572	2.383384	10.100380	0.381116	400	1053086	0	0
+unicode_mixed	direct_strict_track1	5903.562	1.355114	5.646094	0.260767	400	1053086	0	0
+unicode_mixed	direct_strict_track2	3275.337	2.442497	10.277146	0.387509	400	1053086	0	0
+unicode_mixed	direct_strict_sonic	5340.219	1.498066	6.363342	0.332045	400	1053086	0	0
+unicode_mixed	direct_strict_serde	3355.287	2.384297	10.119718	0.381871	400	1053086	0	0

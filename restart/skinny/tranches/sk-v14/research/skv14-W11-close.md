@@ -47,6 +47,7 @@ live-looking admission fragments in generated `RESULTS.md`.
 | W10W | MIXED | REDRESS-223: `apache_builds/parse_only` admitted by the generated parse-only iterative stack; parse_only state is now 11 / 17 admitted and 6 / 17 open. |
 | W10X | REJECTED | REDRESS-224: inline frame stack, 64-byte trusted string scan, and trusted syntax-mask residual routes admitted no parse_only rows. |
 | W10Y/W10Z | REJECTED | REDRESS-225: plain-string structural fast path and cursor-return helper ABI admitted no parse_only residual rows. |
+| W10AA | REJECTED | REDRESS-230: fused trusted string-end helper plus object-loop cleanup admitted no parse_only residual rows. |
 
 ## Close-State Counts
 
@@ -111,6 +112,10 @@ remaining rows are implementation residuals, not closeable proof blocks.
   `gsoc_2018_typed` and `emits_typed_direct_u32_keyed_map_entries` tests, plus
   cold reject evidence retained at
   `restart/skinny/tranches/sk-v14/research/skv14-W9AC-gsoc-2018-typed.tsv`.
+- W10AA local evidence before this close packet update: `cargo xtask
+  regen-json`, `cargo xtask check-json`, focused parse-that-regex/runtime/codegen
+  parse_only tests, plus cold reject evidence retained at
+  `restart/skinny/tranches/sk-v14/research/skv14-W10AA-parse-only-fused-string-object-loop.tsv`.
 - Close invariants remain: 16 locks, Pattern H count 67, Lock 10 five-shape
   `BackendShape` canon preserved, and generated JSON parse_only remains
   distinct from the tape-building path.
@@ -118,8 +123,8 @@ remaining rows are implementation residuals, not closeable proof blocks.
 ## W11 Disposition
 
 W11/W10R/W10S/W10T/W10V/W10W close SK-V14 as a mixed tranche, with admitted rows preserved and all
-unmet rows routed to implementation residuals. W10X, W10Y/W10Z, W9Y, and W9AC
-add post-close residual rejection evidence; W9AA and W9AB add post-close typed
+unmet rows routed to implementation residuals. W10X, W10Y/W10Z, W10AA, W9Y,
+and W9AC add post-close residual rejection evidence; W9AA and W9AB add post-close typed
 admits for `distinct_values/real_typed_struct` and
 `canada/real_typed_struct`.
 Under the latest user instruction, the next work is implementation against the

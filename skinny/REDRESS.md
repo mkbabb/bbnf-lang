@@ -5657,3 +5657,31 @@ perturbation.
   `.tsv`, and `.raw.log`.
 - Current JSON real_typed_struct state remains 13 / 17 ADMITTED and 4 MISSING:
   `gsoc-2018`, `unicode_mixed`, `unicode_escapes`, and `y_string_unicode`.
+
+## SK-V14 W10AA JSON parse_only Fused String/Object-Loop Reject
+
+- Item 230 closes `G-SK-V14-W10AA-JSON-PARSE-ONLY-FUSED-STRING-OBJECT-LOOP`
+  as `REJECT`. No source patch lands, no `RESULTS.md` row moves, and
+  `restart/skinny/ROLLING-SOTA-DELTA.md` remains unchanged.
+- The measured candidate was a generated parse_only source route with a fresh
+  material differential over W10X/W10Y/W10Z: a fused trusted-UTF-8 string-end
+  helper plus removal of the redundant initial object-key-or-end frame after
+  the non-empty object case had already checked for `}`.
+- Correctness gates passed before measurement:
+  `cargo xtask regen-json`, `cargo xtask check-json`,
+  `cargo test --manifest-path skinny/Cargo.toml --profile ax-iter -p
+  parse-that-regex trusted_ -- --nocapture`,
+  `cargo test --manifest-path skinny/Cargo.toml --profile ax-iter -p runtime
+  generated_parse_only_accepts_and_rejects_json -- --nocapture`, and
+  `cargo test --manifest-path skinny/Cargo.toml --profile ax-iter -p codegen
+  emits_distinct_json_parse_only_path_without_tape_builder -- --nocapture`.
+- Cold `profile_direct` evidence rejects all six open parse_only rows:
+  `twitter` margin `-3027.426` Mbps, `github_events` margin `-2894.566` Mbps,
+  `update_center` margin `-4022.023` Mbps, `random` margin `-2263.534` Mbps,
+  `gsoc-2018` margin `-13180.314` Mbps, and `distinct_values` margin
+  `-5027.487` Mbps versus the `sonic + 1.0` floor. Retained evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W10AA-parse-only-fused-string-object-loop.md`,
+  `.tsv`, and `.raw.log`.
+- Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
+  `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
+  `distinct_values`.

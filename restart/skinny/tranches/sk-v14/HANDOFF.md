@@ -62,7 +62,9 @@ missing. W9AB then admitted `canada/real_typed_struct` through generated
 numeric lexeme capture under REDRESS-228, raising typed to 13 / 17 admitted
 and 4 / 17 missing. W9AC then rejected the generated
 `gsoc-2018/real_typed_struct` numeric-key route under REDRESS-229, so typed
-remains 13 / 17 admitted and 4 / 17 missing.
+remains 13 / 17 admitted and 4 / 17 missing. W10AA then rejected a generated
+parse_only fused string/object-loop source route under REDRESS-230, so
+parse_only remains 11 / 17 admitted and 6 / 17 open.
 W11 closed the SK-V14 reconciliation packet on 2026-05-27. The next move is
 actual implementation against the residual queue, not another Omega or Alpha
 pass unless a future source attempt exposes a real spec-level amendment.
@@ -221,7 +223,8 @@ closes them.
 `restart/skinny/tranches/sk-v14/research/skv14-W11-close.md`. The live row
 state is:
 
-- JSON parse_only: 11 / 17 ADMITTED, 6 OPEN under REDRESS-223.
+- JSON parse_only: 11 / 17 ADMITTED, 6 OPEN under REDRESS-223; REDRESS-230
+  rejects the fused string/object-loop residual route without moving any row.
 - JSON direct_to_struct: 0 / 17 ADMITTED, 17 OPEN under REDRESS-216.
 - JSON real_typed_struct: 13 / 17 ADMITTED, 4 MISSING product surfaces under
   REDRESS-216/227/228; REDRESS-226 rejects the generated `y_string_unicode`
@@ -262,8 +265,8 @@ discipline).
    `unicode_mixed/parse_only`, W10T admits `instruments/parse_only`, W10V
    admits `citm_catalog/parse_only`, and W10W admits
    `apache_builds/parse_only`, leaving 6 parse_only open rows under
-   REDRESS-223. W10X and W10Y/W10Z reject additional residual routes under
-   REDRESS-224 and REDRESS-225 without changing the count.
+   REDRESS-223. W10X, W10Y/W10Z, and W10AA reject additional residual routes
+   under REDRESS-224, REDRESS-225, and REDRESS-230 without changing the count.
 6. W11 is closed as reconciliation-only. It authorizes implementation against
    residual rows; it does not authorize paper-close claims for non-admits.
 

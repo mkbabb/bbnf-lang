@@ -11,14 +11,16 @@ patch. W11C then tested `gsoc-2018` strict products across numeric-key,
 ordered, identity, full, and required-full variants, rejecting them on
 same-run cold evidence without landing the transient source patch. W11D then
 tested a generated parse_only context-threaded delimiter route and rejected it
-on same-run cold evidence without landing the transient source patch.
+on same-run cold evidence without landing the transient source patch. W11E
+then tested a 64-byte whitespace skip primitive and rejected it on same-run
+cold evidence without landing the transient source patch.
 
 ## Authority
 
 - `restart/skinny/tranches/sk-v14/SPEC.md` Section 14.
 - `restart/skinny/tranches/sk-v14/SYNTHESIS.md` R10.
 - `skinny/RESULTS.md`.
-- `skinny/REDRESS.md` items 215 through 234.
+- `skinny/REDRESS.md` items 215 through 235.
 - `restart/skinny/ROLLING-SOTA-DELTA.md`.
 - `restart/skinny/tranches/sk-v14/HANDOFF.md`.
 
@@ -58,6 +60,7 @@ on same-run cold evidence without landing the transient source patch.
 | W11B | REJECTED | REDRESS-232: transient unicode strict products for `unicode_mixed` and `unicode_escapes` passed correctness but missed strict sonic by at least 2014.202 Mbps; no source patch landed and no row moved. |
 | W11C | REJECTED | REDRESS-233: transient `gsoc-2018` strict products passed correctness but missed strict sonic in every numeric-key, ordered, identity, full, and required-full variant; no source patch landed and no row moved. |
 | W11D | REJECTED | REDRESS-234: transient parse_only value-context delimiter threading passed correctness but missed strict sonic on all six residual rows; no source patch landed and no row moved. |
+| W11E | REJECTED | REDRESS-235: transient 64-byte JSON whitespace skip passed primitive parity but regressed all six parse_only residual rows; no source patch landed and no row moved. |
 
 ## Close-State Counts
 
@@ -88,7 +91,9 @@ remaining rows are implementation residuals, not closeable proof blocks.
 4. JSON parse_only residuals remain for `twitter`, `github_events`,
    `update_center`, `random`, `gsoc-2018`, and
    `distinct_values`. W11D proved that context-threaded delimiter consumption
-   is not enough to move any of these rows.
+   is not enough to move any of these rows, and W11E proved that a shared
+   64-byte JSON whitespace skip is a broad regression rather than an
+   admission route.
 
 ## Reconciliation
 
@@ -100,7 +105,7 @@ remaining rows are implementation residuals, not closeable proof blocks.
   REDRESS-216, REDRESS-217, REDRESS-218, REDRESS-219, REDRESS-220,
   REDRESS-222, REDRESS-223, REDRESS-224, REDRESS-225, REDRESS-226,
   REDRESS-227, REDRESS-228, REDRESS-229, REDRESS-230, REDRESS-231,
-  REDRESS-232, REDRESS-233, and REDRESS-234.
+  REDRESS-232, REDRESS-233, REDRESS-234, and REDRESS-235.
 - `skinny/RESULTS.md` now renders CSS L4 legacy CostFacts as historical claims
   with current `AUDIT-FALSIFIED_OPEN` status, so the manifest no longer embeds
   live-looking `A` / `GO` / `ADMITTED-PARITY` fragments for OPEN CSS rows.
@@ -149,6 +154,10 @@ remaining rows are implementation residuals, not closeable proof blocks.
   regen-json`, `cargo xtask check-json`, focused runtime/codegen parse_only
   tests, plus cold reject evidence retained at
   `restart/skinny/tranches/sk-v14/research/skv14-W11D-parse-only-threaded-context.md`.
+- W11E local evidence before this close packet update: focused
+  parse-that-regex/runtime/checkasm tests, plus cold reject evidence retained
+  at
+  `restart/skinny/tranches/sk-v14/research/skv14-W11E-parse-only-whitespace64.md`.
 - Close invariants remain: 16 locks, Pattern H count 67, Lock 10 five-shape
   `BackendShape` canon preserved, and generated JSON parse_only remains
   distinct from the tape-building path.
@@ -157,7 +166,7 @@ remaining rows are implementation residuals, not closeable proof blocks.
 
 W11/W10R/W10S/W10T/W10V/W10W close SK-V14 as a mixed tranche, with admitted
 rows preserved and all unmet rows routed to implementation residuals. W10X,
-W10Y/W10Z, W10AA, W9Y, W9AC, W11B, W11C, and W11D add post-close residual
+W10Y/W10Z, W10AA, W9Y, W9AC, W11B, W11C, W11D, and W11E add post-close residual
 rejection evidence; W9AA and W9AB add post-close typed admits for
 `distinct_values/real_typed_struct` and `canada/real_typed_struct`.
 Under the latest user instruction, the next work is implementation against the
@@ -215,6 +224,34 @@ exposes a spec-level amendment that truly requires G-Omega.
   `gsoc-2018` margin `-13844.268` Mbps, and `distinct_values` margin
   `-5258.386` Mbps versus the `sonic + 1.0` floor. Retained evidence:
   `restart/skinny/tranches/sk-v14/research/skv14-W11D-parse-only-threaded-context.md`,
+  `.tsv`, and `.raw.log`.
+- Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
+  `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
+  `distinct_values`.
+
+## SK-V14 W11E JSON parse_only 64-Byte Whitespace Reject
+
+- Item 235 closes `G-SK-V14-W11E-JSON-PARSE-ONLY-WHITESPACE64` as `REJECT`.
+  No source patch lands, no `RESULTS.md` row moves, and
+  `restart/skinny/ROLLING-SOTA-DELTA.md` remains unchanged.
+- The measured candidate replaced `parse-that-regex::skip_ascii_whitespace`
+  with a grammar-neutral 64-byte set-member skip over JSON whitespace using
+  the existing `bbnf-simd` `byte_class_from_eq_set_64` primitive. The patch
+  was reverted after measurement and retained as
+  `/tmp/skv14-W11E-parse-only-whitespace64-rejected.patch` with SHA-256
+  `0d07dd3120d54cbf2424c90ba861f134b85081f10840d5df254049ecbad4d47f`.
+- Correctness and primitive gates passed before measurement: `cargo test
+  --profile ax-iter -p parse-that-regex
+  ascii_whitespace_skip_matches_json_space_set -- --nocapture`, `cargo test
+  --profile ax-iter -p runtime generated_parse_only_accepts_and_rejects_json
+  -- --nocapture`, and `cargo test --profile ax-iter -p bbnf-simd --test
+  checkasm_byte_class_from_eq_set_64 -- --nocapture`.
+- Cold `profile_direct` evidence rejects all six open parse_only rows:
+  `twitter` margin `-8114.740` Mbps, `github_events` margin `-7174.497` Mbps,
+  `update_center` margin `-4343.837` Mbps, `random` margin `-5973.598` Mbps,
+  `gsoc-2018` margin `-17949.627` Mbps, and `distinct_values` margin
+  `-7026.793` Mbps versus the `sonic + 1.0` floor. Retained evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W11E-parse-only-whitespace64.md`,
   `.tsv`, and `.raw.log`.
 - Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
   `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and

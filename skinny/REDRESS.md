@@ -5796,3 +5796,32 @@ perturbation.
 - Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
   `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
   `distinct_values`.
+
+## SK-V14 W11E JSON parse_only 64-Byte Whitespace Reject
+
+- Item 235 closes `G-SK-V14-W11E-JSON-PARSE-ONLY-WHITESPACE64` as `REJECT`.
+  No source patch lands, no `RESULTS.md` row moves, and
+  `restart/skinny/ROLLING-SOTA-DELTA.md` remains unchanged.
+- The measured candidate replaced `parse-that-regex::skip_ascii_whitespace`
+  with a grammar-neutral 64-byte set-member skip over JSON whitespace using
+  the existing `bbnf-simd` `byte_class_from_eq_set_64` primitive. The patch
+  was reverted after measurement and retained as
+  `/tmp/skv14-W11E-parse-only-whitespace64-rejected.patch` with SHA-256
+  `0d07dd3120d54cbf2424c90ba861f134b85081f10840d5df254049ecbad4d47f`.
+- Correctness and primitive gates passed before measurement: `cargo test
+  --profile ax-iter -p parse-that-regex
+  ascii_whitespace_skip_matches_json_space_set -- --nocapture`, `cargo test
+  --profile ax-iter -p runtime generated_parse_only_accepts_and_rejects_json
+  -- --nocapture`, and `cargo test --profile ax-iter -p bbnf-simd --test
+  checkasm_byte_class_from_eq_set_64 -- --nocapture`.
+- Cold `profile_direct` evidence rejects all six open parse_only rows and
+  regresses the shared primitive route: `twitter` margin `-8114.740` Mbps,
+  `github_events` margin `-7174.497` Mbps, `update_center` margin
+  `-4343.837` Mbps, `random` margin `-5973.598` Mbps, `gsoc-2018` margin
+  `-17949.627` Mbps, and `distinct_values` margin `-7026.793` Mbps versus
+  the `sonic + 1.0` floor. Retained evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W11E-parse-only-whitespace64.md`,
+  `.tsv`, and `.raw.log`.
+- Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
+  `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
+  `distinct_values`.

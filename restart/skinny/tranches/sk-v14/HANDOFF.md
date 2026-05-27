@@ -77,6 +77,9 @@ product-surface-only `gsoc-2018` routes are likewise pre-blocked without a
 fresh material differential. W11D then rejected a generated parse_only
 value-context delimiter-threading route under REDRESS-234; the source patch
 was reverted, no row moved, and context-threaded delimiter consumption is
+pre-blocked without a fresh material differential. W11E then rejected a
+shared 64-byte JSON whitespace skip route under REDRESS-235; the source patch
+was reverted, no row moved, and that full set-member whitespace shape is
 pre-blocked without a fresh material differential.
 Continue actual implementation against the remaining residual queue, not
 another Omega or Alpha pass unless a future source attempt exposes a real
@@ -239,7 +242,8 @@ state is:
 - JSON parse_only: 11 / 17 ADMITTED, 6 OPEN under REDRESS-223; REDRESS-230
   rejects the fused string/object-loop residual route without moving any row,
   and REDRESS-234 rejects value-context delimiter threading without moving any
-  row.
+  row. REDRESS-235 rejects a shared 64-byte JSON whitespace skip without
+  moving any row.
 - JSON direct_to_struct: 13 / 17 ADMITTED, 4 OPEN under REDRESS-231; remaining
   rows lack generated strict product surfaces. REDRESS-232 rejects
   product-surface-only unicode strict products for `unicode_mixed` and
@@ -371,4 +375,5 @@ against the W11 residual queue. REDRESS-232 makes unicode product-surface-only
 retries non-viable without a fresh material differential; REDRESS-233 applies
 the same pre-block to `gsoc-2018` product-surface-only retries. REDRESS-234
 pre-blocks parse_only context-threaded delimiter consumption without a fresh
-material differential.
+material differential. REDRESS-235 pre-blocks full 64-byte JSON whitespace
+set-member skipping without a fresh material differential.

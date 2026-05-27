@@ -1,0 +1,30 @@
+Command:
+
+  cargo build --release -p bbnf-bench --bin profile_direct
+  for corpus in twitter github_events update_center random gsoc-2018 distinct_values; do for mode in track1 sonic; do ./target/release/profile_direct 1000 "$corpus" "parse_only_$mode" 0; done; done
+
+Source patch:
+
+  /tmp/skv14-W11E-parse-only-whitespace64-rejected.patch
+  sha256 0d07dd3120d54cbf2424c90ba861f134b85081f10840d5df254049ecbad4d47f
+
+Correctness and primitive gates before measurement:
+
+  cargo test --profile ax-iter -p parse-that-regex ascii_whitespace_skip_matches_json_space_set -- --nocapture
+  cargo test --profile ax-iter -p runtime generated_parse_only_accepts_and_rejects_json -- --nocapture
+  cargo test --profile ax-iter -p bbnf-simd --test checkasm_byte_class_from_eq_set_64 -- --nocapture
+
+Measurement output:
+
+PROBE_RESULT corpus=twitter corpus_bytes=631515 iters=1000 mode=parse_only_track1 warmup_iters=0 elapsed_s=0.694020 ns_per_byte=1.098977 mbps=7279.499 cycles=2699587588 instructions=6330247471 cycles_per_byte=4.274780 cpi=0.426458 user_ns=16224376 system_ns=147327 checksum=0
+PROBE_RESULT corpus=twitter corpus_bytes=631515 iters=1000 mode=parse_only_sonic warmup_iters=0 elapsed_s=0.328204 ns_per_byte=0.519709 mbps=15393.239 cycles=1317936585 instructions=4679821078 cycles_per_byte=2.086944 cpi=0.281621 user_ns=7693590 system_ns=64969 checksum=0
+PROBE_RESULT corpus=github_events corpus_bytes=65132 iters=1000 mode=parse_only_track1 warmup_iters=0 elapsed_s=0.059626 ns_per_byte=0.915462 mbps=8738.756 cycles=243735470 instructions=608561993 cycles_per_byte=3.742177 cpi=0.400511 user_ns=1402462 system_ns=11094 checksum=0
+PROBE_RESULT corpus=github_events corpus_bytes=65132 iters=1000 mode=parse_only_sonic warmup_iters=0 elapsed_s=0.032746 ns_per_byte=0.502757 mbps=15912.253 cycles=136178534 instructions=421890816 cycles_per_byte=2.090808 cpi=0.322781 user_ns=769640 system_ns=6399 checksum=0
+PROBE_RESULT corpus=update_center corpus_bytes=533178 iters=1000 mode=parse_only_track1 warmup_iters=0 elapsed_s=0.428385 ns_per_byte=0.803456 mbps=9956.990 cycles=1741350168 instructions=4369078672 cycles_per_byte=3.265983 cpi=0.398562 user_ns=10071907 system_ns=80646 checksum=0
+PROBE_RESULT corpus=update_center corpus_bytes=533178 iters=1000 mode=parse_only_sonic warmup_iters=0 elapsed_s=0.298285 ns_per_byte=0.559447 mbps=14299.827 cycles=1230552135 instructions=3572146483 cycles_per_byte=2.307957 cpi=0.344485 user_ns=7015953 system_ns=52972 checksum=0
+PROBE_RESULT corpus=random corpus_bytes=510476 iters=1000 mode=parse_only_track1 warmup_iters=0 elapsed_s=0.908996 ns_per_byte=1.780683 mbps=4492.659 cycles=3720958906 instructions=9029316148 cycles_per_byte=7.289195 cpi=0.412098 user_ns=21366431 system_ns=169938 checksum=0
+PROBE_RESULT corpus=random corpus_bytes=510476 iters=1000 mode=parse_only_sonic warmup_iters=0 elapsed_s=0.390225 ns_per_byte=0.764434 mbps=10465.257 cycles=1609240663 instructions=6047294011 cycles_per_byte=3.152432 cpi=0.266109 user_ns=9194481 system_ns=74120 checksum=0
+PROBE_RESULT corpus=gsoc-2018 corpus_bytes=3327831 iters=1000 mode=parse_only_track1 warmup_iters=0 elapsed_s=1.644639 ns_per_byte=0.494207 mbps=16187.535 cycles=6581683811 instructions=20054669245 cycles_per_byte=1.977770 cpi=0.328187 user_ns=38243875 system_ns=502072 checksum=0
+PROBE_RESULT corpus=gsoc-2018 corpus_bytes=3327831 iters=1000 mode=parse_only_sonic warmup_iters=0 elapsed_s=0.779896 ns_per_byte=0.234356 mbps=34136.162 cycles=3156333907 instructions=10756143062 cycles_per_byte=0.948466 cpi=0.293445 user_ns=18177354 system_ns=215136 checksum=0
+PROBE_RESULT corpus=distinct_values corpus_bytes=153630 iters=1000 mode=parse_only_track1 warmup_iters=0 elapsed_s=0.286864 ns_per_byte=1.867238 mbps=4284.404 cycles=1186005507 instructions=2354437344 cycles_per_byte=7.719882 cpi=0.503732 user_ns=6768237 system_ns=48311 checksum=0
+PROBE_RESULT corpus=distinct_values corpus_bytes=153630 iters=1000 mode=parse_only_sonic warmup_iters=0 elapsed_s=0.108667 ns_per_byte=0.707326 mbps=11310.197 cycles=433379526 instructions=1385707284 cycles_per_byte=2.820930 cpi=0.312750 user_ns=2548035 system_ns=21279 checksum=0

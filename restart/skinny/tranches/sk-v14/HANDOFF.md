@@ -86,7 +86,9 @@ source patch was reverted, no row moved, and that no-carry fast-arm shape is
 pre-blocked without a fresh material differential. W11G then rejected a
 generated key-string plus colon fusion under REDRESS-237; the source patch was
 reverted, no row moved, and no-carry key-colon fusion is pre-blocked without a
-fresh material differential.
+fresh material differential. W11H then rejected object-member value-byte carry
+under REDRESS-238; the source patch was reverted, no row moved, and key-colon
+value-byte carry is pre-blocked without a fresh material differential.
 Continue actual implementation against the remaining residual queue, not
 another Omega or Alpha pass unless a future source attempt exposes a real
 spec-level amendment.
@@ -251,6 +253,7 @@ state is:
   row. REDRESS-235 rejects a shared 64-byte JSON whitespace skip without
   moving any row. REDRESS-236 rejects object-member string/object fast arms
   without moving any row. REDRESS-237 rejects key-string plus colon fusion
+  without moving any row. REDRESS-238 rejects object-member value-byte carry
   without moving any row.
 - JSON direct_to_struct: 13 / 17 ADMITTED, 4 OPEN under REDRESS-231; remaining
   rows lack generated strict product surfaces. REDRESS-232 rejects
@@ -387,4 +390,5 @@ material differential. REDRESS-235 pre-blocks full 64-byte JSON whitespace
 set-member skipping without a fresh material differential. REDRESS-236
 pre-blocks parse_only object-member string/object fast arms without a fresh
 material differential. REDRESS-237 pre-blocks parse_only key-colon fusion
-without a fresh material differential.
+without a fresh material differential. REDRESS-238 pre-blocks parse_only
+object-member value-byte carry without a fresh material differential.

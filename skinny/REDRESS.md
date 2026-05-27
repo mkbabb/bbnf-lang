@@ -5686,6 +5686,37 @@ perturbation.
   `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
   `distinct_values`.
 
+## SK-V14 W11H JSON parse_only Value-Byte Carry Reject
+
+- Item 238 closes `G-SK-V14-W11H-JSON-PARSE-ONLY-VALUE-BYTE-CARRY` as
+  `REJECT`. No source patch lands, no `RESULTS.md` row moves, and
+  `restart/skinny/ROLLING-SOTA-DELTA.md` remains unchanged.
+- The measured candidate extended W11G into a generated value-byte carry:
+  `parse_only_key_colon` validated the key, consumed the colon, skipped
+  post-colon whitespace, returned the first value byte, and object member
+  parsing fed that byte into a new `parse_only_begin_value_with_byte` helper
+  covering all value arms. It was not W11F's string/object-only fast arm and
+  did not use W11D delimiter threading, array comma carry, object comma key
+  carry, structural pre-scans, cursor-return ABI changes, or W10AA object-loop
+  cleanup. The source patch was reverted after measurement and retained as
+  `/tmp/skv14-W11H-parse-only-value-byte-carry-rejected.patch` with SHA-256
+  `eb79dd2154f972812478f2b191583b8a457fb8740fc4d14979fddb2dd81f08d8`.
+- Correctness gates passed before measurement: `cargo xtask regen-json`,
+  `cargo xtask check-json`, `cargo test --profile ax-iter -p runtime
+  generated_parse_only_accepts_and_rejects_json -- --nocapture`, and
+  `cargo test --profile ax-iter -p codegen
+  emits_distinct_json_parse_only_path_without_tape_builder -- --nocapture`.
+- Cold `profile_direct` evidence rejects all six open parse_only rows:
+  `twitter` margin `-3592.480` Mbps, `github_events` margin `-3339.155` Mbps,
+  `update_center` margin `-4266.445` Mbps, `random` margin `-2326.277` Mbps,
+  `gsoc-2018` margin `-13566.659` Mbps, and `distinct_values` margin
+  `-5371.352` Mbps versus the `sonic + 1.0` floor. Retained evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W11H-parse-only-value-byte-carry.md`,
+  `.tsv`, and `.raw.log`.
+- Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
+  `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
+  `distinct_values`.
+
 ## SK-V14 W11G JSON parse_only Key-Colon Fusion Reject
 
 - Item 237 closes `G-SK-V14-W11G-JSON-PARSE-ONLY-KEY-COLON-FUSION` as

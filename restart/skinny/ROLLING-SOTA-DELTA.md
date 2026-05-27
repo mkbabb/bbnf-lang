@@ -1,11 +1,11 @@
 # Rolling SOTA Delta
 
 schema_version: sk-v13-rolling-sota-delta-v1
-run_id: SK-V13-open
+run_id: SK-V14-W8R-current
 g_omega_status: signed
 consumer_gate: cargo xtask gate-json --check-results
 source_results: skinny/RESULTS.md
-source_commit: pending-sk-v14-w8r-css-full-parse
+source_commit: 15a61bcbb
 
 ## JSON Targets
 
@@ -67,33 +67,33 @@ source_commit: pending-sk-v14-w8r-css-full-parse
 
 | row | plane | T1_current | T1_sota | margin | tranche_admitted |
 |---|---|---:|---:|---:|---|
-| css_l4/declaration_values/direct_to_struct/main | css_l4_full_parse | 2319.04 | 929.28 | 1388.76 | ADMITTED |
-| css_l4/declarations/direct_to_struct/main | css_l4_full_parse | 2319.04 | 929.28 | 1388.76 | ADMITTED |
-| css_l4/stylesheet_root/direct_to_struct/main | css_l4_full_parse | 2319.04 | 929.28 | 1388.76 | ADMITTED |
-| css_l4/selectors/direct_to_struct/main | css_l4_full_parse | 2319.04 | 929.28 | 1388.76 | ADMITTED |
-| css_l4/at_rules_keyframes/direct_to_struct/main | css_l4_full_parse | 2319.04 | 929.28 | 1388.76 | ADMITTED |
-| css_l4/nested_rules/direct_to_struct/main | css_l4_full_parse | 2319.04 | 929.28 | 1388.76 | ADMITTED |
-| css_l4/css_variables/direct_to_struct/main | css_l4_full_parse | 2319.04 | 929.28 | 1388.76 | ADMITTED |
-| css_l4/calc_expressions/direct_to_struct/main | css_l4_full_parse | 2319.04 | 929.28 | 1388.76 | ADMITTED |
-| css_l4/var_url_functions/direct_to_struct/main | css_l4_full_parse | 2319.04 | 929.28 | 1388.76 | ADMITTED |
-| css_l4/color_functions/direct_to_struct/main | css_l4_full_parse | 2319.04 | 929.28 | 1388.76 | ADMITTED |
-| css_l4/gradients/direct_to_struct/main | css_l4_full_parse | 2319.04 | 929.28 | 1388.76 | ADMITTED |
-| css_l4/transforms/direct_to_struct/main | css_l4_full_parse | 2319.04 | 929.28 | 1388.76 | ADMITTED |
-| css_l4/filters/direct_to_struct/main | css_l4_full_parse | 2319.04 | 929.28 | 1388.76 | ADMITTED |
-| css_l4/easing_functions/direct_to_struct/main | css_l4_full_parse | 2319.04 | 929.28 | 1388.76 | ADMITTED |
-| css_l4/media_queries/direct_to_struct/main | css_l4_full_parse | 2319.04 | 929.28 | 1388.76 | ADMITTED |
-| css_l4/vendor_prefixes/direct_to_struct/main | css_l4_full_parse | 2319.04 | 929.28 | 1388.76 | ADMITTED |
-| css_l4/custom_at_rules/direct_to_struct/main | css_l4_full_parse | 2319.04 | 929.28 | 1388.76 | ADMITTED |
-| css_l4/pseudo_classes/direct_to_struct/main | css_l4_full_parse | 2319.04 | 929.28 | 1388.76 | ADMITTED |
-| css_l4/pseudo_elements/direct_to_struct/main | css_l4_full_parse | 2319.04 | 929.28 | 1388.76 | ADMITTED |
-| css_l4/attribute_selectors/direct_to_struct/main | css_l4_full_parse | 2319.04 | 929.28 | 1388.76 | ADMITTED |
-| css_l4/logical_properties/direct_to_struct/main | css_l4_full_parse | 2319.04 | 929.28 | 1388.76 | ADMITTED |
-| css_l4/grid/direct_to_struct/main | css_l4_full_parse | 2319.04 | 929.28 | 1388.76 | ADMITTED |
-| css_l4/flexbox/direct_to_struct/main | css_l4_full_parse | 2319.04 | 929.28 | 1388.76 | ADMITTED |
-| css_l4/typed_property_groups/direct_to_struct/main | css_l4_full_parse | 2319.04 | 929.28 | 1388.76 | ADMITTED |
+| css_l4/declaration_values/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
+| css_l4/declarations/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
+| css_l4/stylesheet_root/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
+| css_l4/selectors/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
+| css_l4/at_rules_keyframes/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
+| css_l4/nested_rules/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
+| css_l4/css_variables/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
+| css_l4/calc_expressions/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
+| css_l4/var_url_functions/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
+| css_l4/color_functions/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
+| css_l4/gradients/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
+| css_l4/transforms/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
+| css_l4/filters/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
+| css_l4/easing_functions/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
+| css_l4/media_queries/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
+| css_l4/vendor_prefixes/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
+| css_l4/custom_at_rules/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
+| css_l4/pseudo_classes/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
+| css_l4/pseudo_elements/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
+| css_l4/attribute_selectors/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
+| css_l4/logical_properties/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
+| css_l4/grid/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
+| css_l4/flexbox/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
+| css_l4/typed_property_groups/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
 
 ## Gate Notes
 
 - `T1_sota` is the pinned admission threshold: `sonic-rs strict + 1 Mbps` for JSON rows and `lightningcss + 1 Mbps` for CSS rows.
-- `tranche_admitted` records current strict admission status only; positive diagnostic parse margins remain `OPEN` until a SK-V13 wave lands the required equality and gate provenance.
+- `tranche_admitted` records current strict admission status only; positive diagnostic parse margins remain `OPEN` until a same-wave implementation lands the required equality and gate provenance.
 - Missing real typed rows are explicit `MISSING` rows so the 51-row JSON universe cannot silently shrink.

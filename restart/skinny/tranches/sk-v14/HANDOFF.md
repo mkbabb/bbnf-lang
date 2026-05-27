@@ -397,8 +397,9 @@ Return REVISE for any downstream plan that:
 
 ## 8. W11 Close Disposition
 
-SK-V14 closes as a mixed implementation tranche. It preserves 17 admitted JSON
-cells and routes the remaining JSON and CSS rows to implementation residuals.
+SK-V14 closes as a mixed implementation tranche. It preserves 37 admitted JSON
+cells and 24 admitted CSS L4 cells, and routes the remaining JSON rows to
+implementation residuals.
 No residual row has an architectural-level intrinsic-block proof. Subsequent
 work inherits R1-R10 until a row family achieves admission or proves an
 architectural block, but the immediate continuation is source implementation

@@ -619,6 +619,7 @@ fn validate_skv14_manifest_row(row: &Skv14ManifestRow) -> Result<()> {
             | "existing_tape"
             | "parse_only_validator"
             | "direct_sink"
+            | "css_l4_full_parse"
             | "admitted_fact_output"
     ) {
         bail!(
@@ -629,7 +630,7 @@ fn validate_skv14_manifest_row(row: &Skv14ManifestRow) -> Result<()> {
     }
     if !matches!(
         row.retention_lifetime.as_str(),
-        "local_loop" | "generated_function" | "output_row"
+        "local_loop" | "generated_function" | "full_parse_summary" | "output_row"
     ) {
         bail!(
             "{} invalid retention_lifetime {}",
@@ -768,6 +769,40 @@ fn validate_skv14_sustained_row(row: &Skv14ManifestRow) -> Result<()> {
         }
         return Ok(());
     }
+    if is_skv14_w8r_css_row(&row.row_id) {
+        if row.wave_id != "SK-V14-W8R"
+            || !row
+                .track1_entry_point
+                .starts_with("runtime::generated_css_l4_")
+            || !row.track1_entry_point.ends_with("::parser::parse_full")
+            || row.track2_entry_point != "cssparser::StyleSheetParser full-parse probe"
+            || row.comparator_plane != "lightningcss full-parse"
+            || !valid_skv14_per_iter_pass(&row.per_iter_equality)
+            || !row
+                .audit_overlay_reference
+                .contains("sk-v14-W8R:css-full-parse-same-plane")
+            || row.sidecar_freshness != "same-run:production-corpus-full-parse"
+            || row.substrate_target != "css_l4_full_parse"
+            || row.retention_lifetime != "full_parse_summary"
+            || row.policy_owner != "generated_grammar"
+            || row.redress_entry != "REDRESS-215-superseded-by-W8R"
+            || row.sk_v14_open_delta != "admitted:SK-V14-W8R-full-parse"
+            || row.same_wave_consumer_class != "gate_css_l4_w8_full_parse_contract"
+            || !row
+                .track2_independence_status
+                .starts_with("independent_verified:lightningcss+cssparser")
+            || !row
+                .comparator_evidence
+                .contains("strict_equality[status=pass")
+            || !row.comparator_evidence.contains("wrong_plane_outputs=0")
+        {
+            bail!(
+                "{} is not a valid SK-V14 W8R sustained CSS full-parse row",
+                row.row_id
+            );
+        }
+        return Ok(());
+    }
     if is_skv14_w10_parse_row(&row.row_id) {
         let (wave_id, redress_entry, open_delta) = skv14_parse_only_admit_fields(&row.row_id);
         if row.wave_id != wave_id
@@ -794,7 +829,7 @@ fn validate_skv14_sustained_row(row: &Skv14ManifestRow) -> Result<()> {
         return Ok(());
     }
     bail!(
-        "{} is AUDIT-SUSTAINED without W9 typed, W10/W10R/W10S/W10T/W10V/W10W parse_only, or W11A direct strict-product authority",
+        "{} is AUDIT-SUSTAINED without W9 typed, W10/W10R/W10S/W10T/W10V/W10W parse_only, W11A direct strict-product, or W8R CSS full-parse authority",
         row.row_id
     )
 }
@@ -807,7 +842,10 @@ fn valid_skv14_per_iter_pass(value: &str) -> bool {
     let mut has_checks = false;
     let mut has_mismatches = false;
     for field in value.trim_start_matches("PASS:").split(';') {
-        if field == "scope=criterion-timing" || field == "scope=profile-direct-cold" {
+        if matches!(
+            field,
+            "scope=criterion-timing" | "scope=profile-direct-cold" | "scope=css_l4_w8_full_parse"
+        ) {
             has_scope = true;
         } else if let Some(checks) = field.strip_prefix("checks=") {
             has_checks = checks.parse::<u64>().is_ok_and(|value| value > 0);
@@ -979,6 +1017,13 @@ fn is_skv14_w10_parse_row(row_id: &str) -> bool {
         .any(|corpus| row_id == format!("json/{corpus}/parse_only/main"))
 }
 
+fn is_skv14_w8r_css_row(row_id: &str) -> bool {
+    row_id
+        .strip_prefix("css_l4/")
+        .and_then(|tail| tail.strip_suffix("/direct_to_struct/main"))
+        .is_some_and(|feature| SKV13_CSS_FEATURES.contains(&feature))
+}
+
 fn skv14_parse_only_admit_fields(row_id: &str) -> (&'static str, &'static str, &'static str) {
     if row_id == "json/citm_catalog/parse_only/main" {
         (
@@ -1072,13 +1117,17 @@ fn validate_skv13_rolling_delta(results_text: &str, rolling_path: &Path) -> Resu
     })?;
     for required in [
         "schema_version: sk-v13-rolling-sota-delta-v1",
-        "run_id: SK-V13-open",
         "g_omega_status: signed",
         "consumer_gate: cargo xtask gate-json --check-results",
     ] {
         if !rolling_text.contains(required) {
             bail!("ROLLING-SOTA-DELTA.md missing `{required}`");
         }
+    }
+    if !rolling_text.contains("run_id: SK-V13-open")
+        && !rolling_text.contains("run_id: SK-V14-W8R-current")
+    {
+        bail!("ROLLING-SOTA-DELTA.md missing supported `run_id:`");
     }
 
     let json_rows = parse_rolling_rows(&rolling_text, "json/")?;
@@ -1135,8 +1184,11 @@ fn validate_skv13_rolling_delta(results_text: &str, rolling_path: &Path) -> Resu
         if !seen_css.insert(row_id.clone()) {
             bail!("duplicate CSS rolling row {row_id}");
         }
-        if row.plane != "css_l4_parity" {
-            bail!("{row_id} rolling plane {} is not css_l4_parity", row.plane);
+        if row.plane != "css_l4_parity" && row.plane != "css_l4_full_parse" {
+            bail!(
+                "{row_id} rolling plane {} is not css_l4_parity or css_l4_full_parse",
+                row.plane
+            );
         }
         validate_rolling_status(row)?;
         if let Some(metric) = css_metrics.get(&row_id) {

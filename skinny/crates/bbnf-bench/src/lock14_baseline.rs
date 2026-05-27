@@ -1329,6 +1329,27 @@ const SK_V14_W7_OWNER_PATHS: &[&str] = &[
     "xtask/src/main.rs",
 ];
 
+const SK_V14_W8R_OWNER_PATHS: &[&str] = &[
+    "crates/codegen/src/runtime_generator.rs",
+    "crates/runtime/src/grammars/css_l4_at_rules_and_media/generated.rs",
+    "crates/runtime/src/grammars/css_l4_at_rules_and_media/parser.rs",
+    "crates/runtime/src/grammars/css_l4_declaration_values/generated.rs",
+    "crates/runtime/src/grammars/css_l4_declaration_values/parser.rs",
+    "crates/runtime/src/grammars/css_l4_declaration_values_extended/generated.rs",
+    "crates/runtime/src/grammars/css_l4_declaration_values_extended/parser.rs",
+    "crates/runtime/src/grammars/css_l4_nested_layout/generated.rs",
+    "crates/runtime/src/grammars/css_l4_nested_layout/parser.rs",
+    "crates/runtime/src/grammars/css_l4_stylesheet_selectors/generated.rs",
+    "crates/runtime/src/grammars/css_l4_stylesheet_selectors/parser.rs",
+    "crates/runtime/src/grammars/css_l4_vendor_and_custom_atrules/generated.rs",
+    "crates/runtime/src/grammars/css_l4_vendor_and_custom_atrules/parser.rs",
+    "crates/runtime/src/grammars/css_l4_visual_functions/generated.rs",
+    "crates/runtime/src/grammars/css_l4_visual_functions/parser.rs",
+    "crates/bbnf-bench/src/lock14_baseline.rs",
+    "crates/bbnf-bench/src/report.rs",
+    "xtask/src/main.rs",
+];
+
 const SK_V14_W9_OWNER_PATHS: &[&str] = &[
     "crates/codegen/src/direct_schema.rs",
     "crates/codegen/src/json_typed_direct.rs",
@@ -1412,6 +1433,7 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
             + SK_V14_W6_7_ROOT_BBNF_OWNER_PATHS.len()
             + SK_V14_W6_8_ROOT_JSON_OWNER_PATHS.len()
             + SK_V14_W7_OWNER_PATHS.len()
+            + SK_V14_W8R_OWNER_PATHS.len()
             + SK_V14_W9_OWNER_PATHS.len()
             + SK_V14_W10_OWNER_PATHS.len()
             + SK_V14_W11A_OWNER_PATHS.len(),
@@ -1455,6 +1477,7 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
     paths.extend_from_slice(SK_V14_W6_7_ROOT_BBNF_OWNER_PATHS);
     paths.extend_from_slice(SK_V14_W6_8_ROOT_JSON_OWNER_PATHS);
     paths.extend_from_slice(SK_V14_W7_OWNER_PATHS);
+    paths.extend_from_slice(SK_V14_W8R_OWNER_PATHS);
     paths.extend_from_slice(SK_V14_W9_OWNER_PATHS);
     paths.extend_from_slice(SK_V14_W10_OWNER_PATHS);
     paths.extend_from_slice(SK_V14_W11A_OWNER_PATHS);
@@ -2035,6 +2058,14 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
             return Ok(());
         }
     }
+    if is_w8r_css_full_parse_subject(subject) {
+        let allowed = changed_paths
+            .iter()
+            .all(|path| is_allowed_path(path, SK_V14_W8R_OWNER_PATHS));
+        if allowed {
+            return Ok(());
+        }
+    }
     if is_w9_json_typed_subject(subject) {
         let allowed = changed_paths
             .iter()
@@ -2068,6 +2099,11 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
 fn is_w9_json_typed_subject(subject: &str) -> bool {
     let subject = subject.to_ascii_lowercase();
     subject.contains("sk-v14-wavew9") || subject.contains("sk-v14-w9")
+}
+
+fn is_w8r_css_full_parse_subject(subject: &str) -> bool {
+    let subject = subject.to_ascii_lowercase();
+    subject.contains("sk-v14-wavew8r") || subject.contains("sk-v14-w8r")
 }
 
 fn is_w10_json_parse_only_subject(subject: &str) -> bool {

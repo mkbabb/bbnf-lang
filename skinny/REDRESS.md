@@ -5534,3 +5534,20 @@ perturbation.
   `distinct_values`. Evidence:
   `restart/skinny/tranches/sk-v14/research/skv14-W10X-parse-only-residual-rejects.md`
   plus the three retained raw logs named there.
+
+## SK-V14 W10Y/W10Z JSON parse_only Residual Rejects
+
+- Item 225 closes `G-SK-V14-W10Y-W10Z-JSON-PARSE-ONLY-RESIDUAL-REJECTS` as
+  `REJECT`. No source patch lands.
+- Two materially distinct generated parse-only source candidates were tested
+  after W10X and rejected by cold `profile_direct` evidence: a plain-string
+  structural fast path and a cursor-return helper ABI. Both held correctness
+  during local tests, but neither admitted any of the six remaining
+  `parse_only` residual rows. The structural fast path also regressed guard
+  rows, so the route is explicitly abrogated rather than retained as a support
+  primitive.
+- Current parse_only state remains 11 / 17 admitted and 6 / 17 open:
+  `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
+  `distinct_values`. Evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W10Y-W10Z-parse-only-rejects.md`
+  plus the two retained raw logs named there.

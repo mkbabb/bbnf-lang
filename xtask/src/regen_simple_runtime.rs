@@ -34,6 +34,7 @@ enum RuntimeStyle {
     Simple,
     TypedFormula,
     TypedBbnf,
+    TypedJson,
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -80,6 +81,7 @@ pub fn run(grammar: &str) -> Result<()> {
         RuntimeStyle::Simple => emit_simple_runtime(&projection, &kind_routes),
         RuntimeStyle::TypedFormula => emit_typed_formula_runtime(&projection, &kind_routes),
         RuntimeStyle::TypedBbnf => emit_typed_bbnf_runtime(&projection, &kind_routes),
+        RuntimeStyle::TypedJson => emit_typed_json_runtime(&projection, &kind_routes),
     };
 
     for (relative, source) in files {
@@ -1508,6 +1510,876 @@ fn emit_typed_bbnf_runtime(
         ("value.rs".into(), emit_typed_bbnf_value(projection)),
         ("view.rs".into(), emit_typed_bbnf_view(projection)),
     ]
+}
+
+fn emit_typed_json_runtime(
+    projection: &RuntimeProjection,
+    routes: &[ResolvedKindRoute],
+) -> Vec<(String, String)> {
+    vec![
+        ("arena.rs".into(), emit_typed_json_arena(projection)),
+        (
+            "builder.rs".into(),
+            emit_typed_json_builder(projection, routes),
+        ),
+        ("document.rs".into(), emit_typed_json_document(projection)),
+        ("mod.rs".into(), emit_typed_json_mod(projection)),
+        (
+            "parse_with.rs".into(),
+            emit_typed_json_parse_with(projection),
+        ),
+        ("value.rs".into(), emit_typed_json_value(projection)),
+        ("view.rs".into(), emit_typed_json_view(projection)),
+    ]
+}
+
+fn json_rule_id(routes: &[ResolvedKindRoute], rule: &str) -> u32 {
+    routes
+        .iter()
+        .find(|route| route.rule_name == rule)
+        .unwrap_or_else(|| panic!("typed_json projection missing `{rule}` route"))
+        .rule_id
+}
+
+fn emit_typed_json_arena(projection: &RuntimeProjection) -> String {
+    runtime_template(
+        r#"
+use __MODULE__::value::{__P__Pair, __P__Value};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct __P__ArrayId(u32);
+
+impl __P__ArrayId {
+    pub const EMPTY: Self = Self(0);
+
+    #[inline]
+    pub const fn is_empty(self) -> bool {
+        self.0 == 0
+    }
+
+    #[inline]
+    fn slab_index(self) -> Option<usize> {
+        if self.0 == 0 {
+            None
+        } else {
+            Some((self.0 - 1) as usize)
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct __P__ObjectId(u32);
+
+impl __P__ObjectId {
+    pub const EMPTY: Self = Self(0);
+
+    #[inline]
+    pub const fn is_empty(self) -> bool {
+        self.0 == 0
+    }
+
+    #[inline]
+    fn slab_index(self) -> Option<usize> {
+        if self.0 == 0 {
+            None
+        } else {
+            Some((self.0 - 1) as usize)
+        }
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct __P__Arena<'p> {
+    arrays: Vec<Vec<__P__Value<'p>>>,
+    objects: Vec<Vec<__P__Pair<'p>>>,
+}
+
+impl<'p> __P__Arena<'p> {
+    #[inline]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    #[inline]
+    pub fn with_capacity(arrays: usize, objects: usize) -> Self {
+        Self {
+            arrays: Vec::with_capacity(arrays),
+            objects: Vec::with_capacity(objects),
+        }
+    }
+
+    #[inline]
+    pub fn push_array(&mut self, items: Vec<__P__Value<'p>>) -> __P__ArrayId {
+        if items.is_empty() {
+            return __P__ArrayId::EMPTY;
+        }
+        self.arrays.push(items);
+        __P__ArrayId(self.arrays.len() as u32)
+    }
+
+    #[inline]
+    pub fn push_object(&mut self, pairs: Vec<__P__Pair<'p>>) -> __P__ObjectId {
+        if pairs.is_empty() {
+            return __P__ObjectId::EMPTY;
+        }
+        self.objects.push(pairs);
+        __P__ObjectId(self.objects.len() as u32)
+    }
+
+    #[inline]
+    pub fn array(&self, id: __P__ArrayId) -> &[__P__Value<'p>] {
+        match id.slab_index() {
+            None => &[],
+            Some(i) => self.arrays[i].as_slice(),
+        }
+    }
+
+    #[inline]
+    pub fn object(&self, id: __P__ObjectId) -> &[__P__Pair<'p>] {
+        match id.slab_index() {
+            None => &[],
+            Some(i) => self.objects[i].as_slice(),
+        }
+    }
+
+    #[inline]
+    pub fn array_count(&self) -> usize {
+        self.arrays.len()
+    }
+
+    #[inline]
+    pub fn object_count(&self) -> usize {
+        self.objects.len()
+    }
+
+    #[inline]
+    pub fn truncate(&mut self, arrays: usize, objects: usize) {
+        self.arrays.truncate(arrays);
+        self.objects.truncate(objects);
+    }
+}
+"#,
+        projection,
+    )
+}
+
+fn emit_typed_json_builder(projection: &RuntimeProjection, routes: &[ResolvedKindRoute]) -> String {
+    let object_rule = json_rule_id(routes, "object");
+    let array_rule = json_rule_id(routes, "array");
+    let pair_rule = json_rule_id(routes, "pair");
+    runtime_template(
+        &format!(
+            r#"
+use bbnf_ir::registry::{{LayoutKind, StructLayout}};
+
+use crate::runtime::builder::StructBuilder;
+use crate::runtime::handle::CompoundHandle;
+use __MODULE__::arena::__P__Arena;
+use __MODULE__::document::__P__Document;
+use __MODULE__::value::{{__P__Number, __P__Pair, __P__Value}};
+
+#[derive(Debug, Clone)]
+enum OpenFrame<'p> {{
+    Array {{ items: Vec<__P__Value<'p>> }},
+    Object {{
+        pairs: Vec<__P__Pair<'p>>,
+        pending_key: Option<&'p str>,
+    }},
+    Pair {{
+        key: Option<&'p str>,
+        value: Option<__P__Value<'p>>,
+    }},
+    Wrap {{ value: Option<__P__Value<'p>> }},
+}}
+
+#[derive(Debug)]
+pub struct __P__StructBuilder<'p> {{
+    arena: __P__Arena<'p>,
+    stack: Vec<OpenFrame<'p>>,
+    root: Option<__P__Value<'p>>,
+    next_handle: u64,
+}}
+
+#[derive(Debug, Clone)]
+pub struct __P__StructCheckpoint<'p> {{
+    arrays: usize,
+    objects: usize,
+    stack: Vec<OpenFrame<'p>>,
+    root: Option<__P__Value<'p>>,
+    next_handle: u64,
+}}
+
+impl<'p> Default for __P__StructBuilder<'p> {{
+    fn default() -> Self {{
+        Self::new()
+    }}
+}}
+
+impl<'p> __P__StructBuilder<'p> {{
+    #[inline]
+    pub fn new() -> Self {{
+        Self {{
+            arena: __P__Arena::new(),
+            stack: Vec::with_capacity(8),
+            root: None,
+            next_handle: 0,
+        }}
+    }}
+
+    #[inline]
+    pub fn with_capacity(arrays: usize, objects: usize) -> Self {{
+        Self {{
+            arena: __P__Arena::with_capacity(arrays, objects),
+            stack: Vec::with_capacity(8),
+            root: None,
+            next_handle: 0,
+        }}
+    }}
+
+    #[inline]
+    pub fn finalise(mut self, input: &'p str) -> __P__Document<'p> {{
+        debug_assert!(
+            self.stack.is_empty(),
+            "__P__StructBuilder::finalise called with {{}} open frame(s)",
+            self.stack.len()
+        );
+        let root = self
+            .root
+            .take()
+            .expect("__P__StructBuilder::finalise called before any value emission");
+        __P__Document::new(self.arena, root, input)
+    }}
+
+    #[inline]
+    fn deposit(&mut self, value: __P__Value<'p>) {{
+        match self.stack.last_mut() {{
+            None => self.root = Some(value),
+            Some(OpenFrame::Array {{ items }}) => items.push(value),
+            Some(OpenFrame::Object {{ pairs, pending_key }}) => {{
+                if pending_key.is_none() {{
+                    if let __P__Value::String(s) = value {{
+                        *pending_key = Some(s);
+                        return;
+                    }}
+                }}
+                debug_assert!(
+                    pending_key.is_some(),
+                    "Object value pushed without pending key"
+                );
+                if let Some(key) = pending_key.take() {{
+                    pairs.push(__P__Pair {{ key, value }});
+                }}
+            }}
+            Some(OpenFrame::Pair {{ key, value: slot }}) => {{
+                if key.is_none() {{
+                    if let __P__Value::String(s) = value {{
+                        *key = Some(s);
+                    }} else {{
+                        debug_assert!(false, "Pair key slot received non-string {{:?}}", value);
+                    }}
+                }} else {{
+                    *slot = Some(value);
+                }}
+            }}
+            Some(OpenFrame::Wrap {{ value: slot }}) => {{
+                *slot = Some(value);
+            }}
+        }}
+    }}
+}}
+
+impl<'p> StructBuilder for __P__StructBuilder<'p> {{
+    type Checkpoint = __P__StructCheckpoint<'p>;
+
+    #[inline]
+    fn checkpoint(&self) -> Self::Checkpoint {{
+        __P__StructCheckpoint {{
+            arrays: self.arena.array_count(),
+            objects: self.arena.object_count(),
+            stack: self.stack.clone(),
+            root: self.root,
+            next_handle: self.next_handle,
+        }}
+    }}
+
+    #[inline]
+    fn rollback(&mut self, checkpoint: Self::Checkpoint) {{
+        self.arena.truncate(checkpoint.arrays, checkpoint.objects);
+        self.stack = checkpoint.stack;
+        self.root = checkpoint.root;
+        self.next_handle = checkpoint.next_handle;
+    }}
+
+    fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {{
+        let frame = match (layout.kind, layout.rule_id) {{
+            (LayoutKind::Struct, {array_rule})
+            | (LayoutKind::TaggedEnum, {array_rule})
+            | (LayoutKind::UntaggedEnum, {array_rule}) => OpenFrame::Array {{ items: Vec::new() }},
+            (LayoutKind::Struct, {object_rule})
+            | (LayoutKind::TaggedEnum, {object_rule})
+            | (LayoutKind::UntaggedEnum, {object_rule}) => OpenFrame::Object {{
+                pairs: Vec::new(),
+                pending_key: None,
+            }},
+            (LayoutKind::Struct, {pair_rule}) => OpenFrame::Pair {{
+                key: None,
+                value: None,
+            }},
+            _ => OpenFrame::Wrap {{ value: None }},
+        }};
+        self.stack.push(frame);
+        self.next_handle = self.next_handle.wrapping_add(1);
+        CompoundHandle::new(self.next_handle, 0)
+    }}
+
+    fn end_compound(&mut self, _handle: CompoundHandle) {{
+        let frame = self
+            .stack
+            .pop()
+            .expect("__P__StructBuilder::end_compound on empty stack");
+        let value = match frame {{
+            OpenFrame::Array {{ items }} => {{
+                let id = self.arena.push_array(items);
+                __P__Value::Array(id)
+            }}
+            OpenFrame::Object {{ pairs, pending_key }} => {{
+                debug_assert!(
+                    pending_key.is_none(),
+                    "Object closed with dangling pending_key"
+                );
+                let id = self.arena.push_object(pairs);
+                __P__Value::Object(id)
+            }}
+            OpenFrame::Pair {{ key, value }} => {{
+                let key = key.expect("Pair closed without key");
+                let value = value.expect("Pair closed without value");
+                if let Some(OpenFrame::Object {{ pairs, .. }}) = self.stack.last_mut() {{
+                    pairs.push(__P__Pair {{ key, value }});
+                    return;
+                }}
+                debug_assert!(false, "Pair closed outside Object context");
+                __P__Value::String(key)
+            }}
+            OpenFrame::Wrap {{ value }} => value.expect("Wrap closed without forwarded value"),
+        }};
+        self.deposit(value);
+    }}
+
+    #[inline]
+    fn push_leaf_with_f64(&mut self, value: f64) {{
+        self.deposit(__P__Value::Number(__P__Number::Float(value)));
+    }}
+
+    #[inline]
+    fn push_leaf_with_i64(&mut self, value: i64) {{
+        self.deposit(__P__Value::Number(__P__Number::Int(value)));
+    }}
+
+    #[inline]
+    fn push_leaf_with_u64(&mut self, value: u64) {{
+        self.deposit(__P__Value::Number(__P__Number::UInt(value)));
+    }}
+
+    #[inline]
+    fn push_leaf_with_bool(&mut self, value: bool) {{
+        self.deposit(__P__Value::Bool(value));
+    }}
+
+    #[inline]
+    fn push_leaf_with_str(&mut self, value: &str) {{
+        let lifetime_extended: &'p str = unsafe {{ std::mem::transmute(value) }};
+        self.deposit(__P__Value::String(lifetime_extended));
+    }}
+
+    #[inline]
+    fn push_leaf_with_unit(&mut self) {{
+        self.deposit(__P__Value::Null);
+    }}
+
+    #[inline]
+    fn push_branch_tag(&mut self, _branch_index: u32) {{}}
+}}
+"#
+        ),
+        projection,
+    )
+}
+
+fn emit_typed_json_value(projection: &RuntimeProjection) -> String {
+    runtime_template(
+        r#"
+use __MODULE__::arena::{__P__ArrayId, __P__ObjectId};
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum __P__Value<'p> {
+    Null,
+    Bool(bool),
+    Number(__P__Number),
+    String(&'p str),
+    Array(__P__ArrayId),
+    Object(__P__ObjectId),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum __P__Number {
+    Int(i64),
+    UInt(u64),
+    Float(f64),
+}
+
+impl __P__Number {
+    #[inline]
+    pub fn as_f64(&self) -> f64 {
+        match *self {
+            __P__Number::Int(v) => v as f64,
+            __P__Number::UInt(v) => v as f64,
+            __P__Number::Float(v) => v,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct __P__Pair<'p> {
+    pub key: &'p str,
+    pub value: __P__Value<'p>,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct __P__Array<'p> {
+    pub items: &'p [__P__Value<'p>],
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct __P__Object<'p> {
+    pub pairs: &'p [__P__Pair<'p>],
+}
+"#,
+        projection,
+    )
+}
+
+fn emit_typed_json_document(projection: &RuntimeProjection) -> String {
+    runtime_template(
+        r#"
+use __MODULE__::arena::{__P__Arena, __P__ArrayId, __P__ObjectId};
+use __MODULE__::value::{__P__Pair, __P__Value};
+use crate::runtime::path::{Path, PathSegment};
+
+#[derive(Debug)]
+pub struct __P__Document<'p> {
+    pub arena: __P__Arena<'p>,
+    pub root: __P__Value<'p>,
+    pub input: &'p str,
+}
+
+impl<'p> __P__Document<'p> {
+    #[inline]
+    pub fn new(arena: __P__Arena<'p>, root: __P__Value<'p>, input: &'p str) -> Self {
+        Self { arena, root, input }
+    }
+
+    #[inline]
+    pub fn root(&self) -> &__P__Value<'p> {
+        &self.root
+    }
+
+    #[inline]
+    pub fn arena(&self) -> &__P__Arena<'p> {
+        &self.arena
+    }
+
+    #[inline]
+    pub fn input(&self) -> &'p str {
+        self.input
+    }
+
+    #[inline]
+    pub fn array(&self, id: __P__ArrayId) -> &[__P__Value<'p>] {
+        self.arena.array(id)
+    }
+
+    #[inline]
+    pub fn object(&self, id: __P__ObjectId) -> &[__P__Pair<'p>] {
+        self.arena.object(id)
+    }
+
+    #[inline]
+    pub fn view<'a>(&'a self) -> __P__View<'a, 'p> {
+        __P__View {
+            doc: self,
+            focus: self.root,
+        }
+    }
+
+    #[inline]
+    pub fn to_value(&self) -> &__P__Value<'p> {
+        &self.root
+    }
+
+    #[inline]
+    pub fn get<T: __P__PathQuery>(&self, path: Path<'_>) -> Option<T> {
+        T::query(self, path)
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct __P__View<'a, 'p: 'a> {
+    pub(crate) doc: &'a __P__Document<'p>,
+    pub(crate) focus: __P__Value<'p>,
+}
+
+impl<'a, 'p: 'a> __P__View<'a, 'p> {
+    #[inline]
+    pub fn focused(doc: &'a __P__Document<'p>, focus: __P__Value<'p>) -> Self {
+        Self { doc, focus }
+    }
+
+    #[inline]
+    pub fn document(&self) -> &'a __P__Document<'p> {
+        self.doc
+    }
+
+    #[inline]
+    pub fn focus(&self) -> __P__Value<'p> {
+        self.focus
+    }
+
+    #[inline]
+    pub fn root(&self) -> &'a __P__Value<'p> {
+        &self.doc.root
+    }
+
+    #[inline]
+    pub fn arena(&self) -> &'a __P__Arena<'p> {
+        &self.doc.arena
+    }
+
+    #[inline]
+    pub fn array(&self, id: __P__ArrayId) -> &'a [__P__Value<'p>] {
+        self.doc.array(id)
+    }
+
+    #[inline]
+    pub fn object(&self, id: __P__ObjectId) -> &'a [__P__Pair<'p>] {
+        self.doc.object(id)
+    }
+
+    #[inline]
+    pub fn kind(&self) -> __P__Kind {
+        match &self.focus {
+            __P__Value::Null => __P__Kind::Null,
+            __P__Value::Bool(_) => __P__Kind::Bool,
+            __P__Value::Number(_) => __P__Kind::Number,
+            __P__Value::String(_) => __P__Kind::String,
+            __P__Value::Array(_) => __P__Kind::Array,
+            __P__Value::Object(_) => __P__Kind::Object,
+        }
+    }
+
+    #[inline]
+    pub fn is_object(&self) -> bool {
+        matches!(self.focus, __P__Value::Object(_))
+    }
+
+    #[inline]
+    pub fn is_array(&self) -> bool {
+        matches!(self.focus, __P__Value::Array(_))
+    }
+
+    #[inline]
+    pub fn is_string(&self) -> bool {
+        matches!(self.focus, __P__Value::String(_))
+    }
+
+    #[inline]
+    pub fn is_number(&self) -> bool {
+        matches!(self.focus, __P__Value::Number(_))
+    }
+
+    #[inline]
+    pub fn is_bool(&self) -> bool {
+        matches!(self.focus, __P__Value::Bool(_))
+    }
+
+    #[inline]
+    pub fn is_null(&self) -> bool {
+        matches!(self.focus, __P__Value::Null)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum __P__Kind {
+    Null,
+    Bool,
+    Number,
+    String,
+    Array,
+    Object,
+}
+
+pub trait __P__PathQuery: Sized {
+    fn query<'p>(doc: &__P__Document<'p>, path: Path<'_>) -> Option<Self>;
+}
+
+#[inline]
+fn walk_path<'a, 'p>(
+    doc: &'a __P__Document<'p>,
+    path: Path<'_>,
+) -> Option<&'a __P__Value<'p>> {
+    let mut current: &'a __P__Value<'p> = &doc.root;
+    for segment in path.iter() {
+        current = match (current, segment) {
+            (__P__Value::Object(id), PathSegment::Field(name)) => {
+                let pairs = doc.object(*id);
+                let pair = pairs.iter().find(|p| p.key == *name)?;
+                &pair.value
+            }
+            (__P__Value::Array(id), PathSegment::Index(idx)) => {
+                let items = doc.array(*id);
+                items.get(*idx)?
+            }
+            _ => return None,
+        };
+    }
+    Some(current)
+}
+
+impl __P__PathQuery for &str {
+    #[inline]
+    fn query<'p>(doc: &__P__Document<'p>, path: Path<'_>) -> Option<Self> {
+        let value = walk_path(doc, path)?;
+        match value {
+            __P__Value::String(s) => {
+                let extended: &'p str = *s;
+                Some(unsafe { core::mem::transmute::<&'p str, &str>(extended) })
+            }
+            _ => None,
+        }
+    }
+}
+
+impl __P__PathQuery for f64 {
+    #[inline]
+    fn query<'p>(doc: &__P__Document<'p>, path: Path<'_>) -> Option<Self> {
+        match walk_path(doc, path)? {
+            __P__Value::Number(n) => Some(n.as_f64()),
+            _ => None,
+        }
+    }
+}
+
+impl __P__PathQuery for bool {
+    #[inline]
+    fn query<'p>(doc: &__P__Document<'p>, path: Path<'_>) -> Option<Self> {
+        match walk_path(doc, path)? {
+            __P__Value::Bool(b) => Some(*b),
+            _ => None,
+        }
+    }
+}
+
+impl __P__PathQuery for __P__Value<'_> {
+    #[inline]
+    fn query<'p>(doc: &__P__Document<'p>, path: Path<'_>) -> Option<Self> {
+        let value = walk_path(doc, path)?;
+        let copied: __P__Value<'p> = *value;
+        Some(unsafe { core::mem::transmute::<__P__Value<'p>, __P__Value<'_>>(copied) })
+    }
+}
+"#,
+        projection,
+    )
+}
+
+fn emit_typed_json_parse_with(projection: &RuntimeProjection) -> String {
+    runtime_template(
+        &r##"
+use super::document::{__P__Document, __P__PathQuery};
+use crate::grammar::generated::json::{
+    __path_plan, __shape_support___PARSER__, parse___PARSER_____ENTRY__,
+};
+use crate::path::cursor::Decision;
+use crate::path::executor::PathExecutor;
+use crate::path::ir::{PathSegment as TypedSegment, TypedPath};
+use crate::path::markers::__P__;
+use crate::runtime::path::{Path, PathSegment};
+use crate::runtime::__MODULE__::__P__StructBuilder;
+
+fn lower<'a>(seg: &TypedSegment<'a>) -> Option<PathSegment<'a>> {
+    match seg {
+        TypedSegment::Field(s) => Some(PathSegment::Field(s)),
+        TypedSegment::Index(i) => Some(PathSegment::Index(*i)),
+        TypedSegment::VariantName(s) => Some(PathSegment::Field(s)),
+        TypedSegment::Wildcard => None,
+    }
+}
+
+pub fn parse_with<T>(input: &str, path: &TypedPath<__P__, T>) -> Option<T>
+where
+    T: __P__PathQuery,
+{
+    PathExecutor::execute(
+        input,
+        path,
+        |rule_id, kind, _idx| {
+            __path_plan::lookup(rule_id, kind)
+                .map(|e| e.decision)
+                .unwrap_or(Decision::ParseFully)
+        },
+        |src, cursor| {
+            let mut state = __shape_support___PARSER__::ScanState::new();
+            let mut builder = __P__StructBuilder::new();
+            let mut pos: usize = 0;
+            parse___PARSER_____ENTRY__(
+                src.as_bytes(),
+                &mut pos,
+                &mut state,
+                &mut builder,
+                cursor,
+            )
+            .ok()?;
+            let doc: __P__Document<'_> = builder.finalise(src);
+            let mut segments: Vec<PathSegment<'_>> = Vec::with_capacity(path.len());
+            for owned in path.owned_segments() {
+                segments.push(lower(&owned.as_borrowed())?);
+            }
+            doc.get::<T>(Path::new(&segments))
+        },
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::path::ir::OwnedPathSegment;
+
+    #[test]
+    fn parse_with_resolves_string_leaf() {
+        let path: TypedPath<__P__, &str> =
+            TypedPath::from_owned(vec![OwnedPathSegment::Field("title".to_owned())]);
+        let out = parse_with::<&str>(r#"{"title":"hi"}"#, &path);
+        assert_eq!(out, Some("hi"));
+    }
+
+    #[test]
+    fn parse_with_resolves_number_leaf() {
+        let path: TypedPath<__P__, f64> =
+            TypedPath::from_owned(vec![OwnedPathSegment::Field("count".to_owned())]);
+        let out = parse_with::<f64>(r#"{"count":42}"#, &path);
+        assert_eq!(out, Some(42.0));
+    }
+
+    #[test]
+    fn parse_with_returns_none_on_missing_field() {
+        let path: TypedPath<__P__, &str> =
+            TypedPath::from_owned(vec![OwnedPathSegment::Field("absent".to_owned())]);
+        let out = parse_with::<&str>(r#"{"title":"hi"}"#, &path);
+        assert!(out.is_none());
+    }
+}
+"##
+        .replace("runtime::__MODULE__", "runtime::json"),
+        projection,
+    )
+}
+
+fn emit_typed_json_mod(projection: &RuntimeProjection) -> String {
+    runtime_template(
+        r#"
+pub mod arena;
+pub mod builder;
+pub mod document;
+pub mod parse_with;
+pub mod value;
+pub mod view;
+
+pub use arena::{__P__Arena, __P__ArrayId, __P__ObjectId};
+pub use builder::__P__StructBuilder;
+pub use document::{__P__Document, __P__Kind, __P__PathQuery, __P__View};
+pub use parse_with::parse_with;
+pub use value::{__P__Array, __P__Number, __P__Object, __P__Pair, __P__Value};
+"#,
+        projection,
+    )
+}
+
+fn emit_typed_json_view(projection: &RuntimeProjection) -> String {
+    runtime_template(
+        &r#"
+use crate::runtime::RuntimeView;
+use __MODULE__::document::{__P__Kind, __P__View};
+use __MODULE__::value::__P__Value;
+
+impl<'a, 'p: 'a> RuntimeView<'p> for __P__View<'a, 'p> {
+    type Kind = __P__Kind;
+
+    #[inline]
+    fn kind(&self) -> Self::Kind {
+        match self.focus {
+            __P__Value::Null => __P__Kind::Null,
+            __P__Value::Bool(_) => __P__Kind::Bool,
+            __P__Value::Number(_) => __P__Kind::Number,
+            __P__Value::String(_) => __P__Kind::String,
+            __P__Value::Array(_) => __P__Kind::Array,
+            __P__Value::Object(_) => __P__Kind::Object,
+        }
+    }
+
+    #[inline]
+    fn span(&self) -> Option<&'p str> {
+        match self.focus {
+            __P__Value::String(s) => Some(s),
+            _ => None,
+        }
+    }
+
+    #[inline]
+    fn input(&self) -> &'p str {
+        self.doc.input
+    }
+
+    fn children(&self) -> impl Iterator<Item = Self> + '_ {
+        let doc = self.doc;
+        let focus = self.focus;
+        __P__ChildrenIter {
+            doc,
+            focus,
+            index: 0,
+        }
+    }
+}
+
+pub struct __P__ChildrenIter<'a, 'p: 'a> {
+    doc: &'a crate::runtime::__MODULE__::__P__Document<'p>,
+    focus: __P__Value<'p>,
+    index: usize,
+}
+
+impl<'a, 'p: 'a> Iterator for __P__ChildrenIter<'a, 'p> {
+    type Item = __P__View<'a, 'p>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.focus {
+            __P__Value::Array(id) => {
+                let items = self.doc.array(id);
+                let item = items.get(self.index)?;
+                self.index += 1;
+                Some(__P__View::focused(self.doc, *item))
+            }
+            __P__Value::Object(id) => {
+                let pairs = self.doc.object(id);
+                let pair = pairs.get(self.index)?;
+                self.index += 1;
+                Some(__P__View::focused(self.doc, pair.value))
+            }
+            _ => None,
+        }
+    }
+}
+"#
+        .replace("runtime::__MODULE__", "runtime::json"),
+        projection,
+    )
 }
 
 fn typed_bbnf_kind_variants(projection: &RuntimeProjection) -> String {

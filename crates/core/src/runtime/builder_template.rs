@@ -12,25 +12,17 @@
 //! type-name substitutions and module-doc comments differ) — five
 //! ≈165-LOC files that landed identical [`StructBuilder`] semantics.
 //!
-//! # Outliers
+//! # Scope
 //!
-//! - JSON's builder dispatches eight `OpenFrame` variants per the
-//!   `array` / `object` / `pair` / `value` rules; the deposit logic is
-//!   per-variant. Distinct shape → distinct module (no template
-//!   instantiation).
-//! - CSS L4's builder dispatches fourteen `OpenFrame` variants
-//!   collecting typed-numeric / colour-function / colour-mix /
-//!   selector-list / declaration / hex-colour / dir-pseudo state. The
-//!   deposit logic projects through grammar-specific typed values.
-//!   Distinct shape → distinct module.
-//! - BBNF's builder records compound bounds per AZ-IV.W1.9; that adds a
-//!   fourth field on the open frame and requires a builder-side
-//!   `record_compound_bounds_*` impl. Single-extension difference but
-//!   structurally cohesive — kept distinct so the template stays
-//!   single-purpose.
-//! - Sheets' builder owns specialised leaf-deposit entry points
-//!   (`push_leaf_cell_ref`, `push_leaf_identifier`,
-//!   `push_leaf_sheet_prefix`, `push_leaf_error`) — distinct surface.
+//! This template is the shared implementation for runtimes whose
+//! builder shape is exactly one compound stack plus a uniform
+//! span/unit/compound value alphabet. Typed-value runtimes now arrive
+//! through generated per-grammar projection output, so this module no
+//! longer documents a grammar-by-grammar exception roster. The
+//! invariant is structural: if a grammar needs additional open-frame
+//! state, specialised leaf deposition, or compound-bound recording, its
+//! runtime projection emits that shape directly from metadata instead
+//! of expanding this template's contract.
 //!
 //! # Wire contract via [`SimpleValue`] trait
 //!

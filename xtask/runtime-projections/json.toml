@@ -1,0 +1,34 @@
+schema_version = 1
+grammar = "json"
+grammar_source = "grammar/json/json.bbnf"
+entry_rule = "value"
+runtime_module = "crate::runtime::json"
+output_dir = "crates/core/src/runtime/json"
+parser_type = "JsonParser"
+type_prefix = "Json"
+module_name = "json"
+runtime_style = "typed_json"
+
+[kind]
+default = "Value"
+layout_mode = "rule_routes"
+variants = [
+  "Null",
+  "Bool",
+  "Number",
+  "String",
+  "Object",
+  "Array",
+  "Pair",
+  "Value",
+]
+routes = [
+  { rule = "null", kind = "Null" },
+  { rule = "bool", kind = "Bool" },
+  { rule = "number", kind = "Number" },
+  { rule = "string", kind = "String" },
+  { rule = "object", kind = "Object" },
+  { rule = "array", kind = "Array" },
+  { rule = "pair", kind = "Pair" },
+  { rule = "value", kind = "Value" },
+]

@@ -722,11 +722,14 @@ const FROZEN_ROOTS: &[&str] = &[
     "crates/bbnf-bench/src/materialization.rs",
     "../crates/core/src/runtime/bnf",
     "../crates/core/src/runtime/bbnf",
+    "../crates/core/src/runtime/arena_template.rs",
+    "../crates/core/src/runtime/builder_template.rs",
     "../crates/core/src/runtime/css_l4",
     "../crates/core/src/runtime/css_pretty",
     "../crates/core/src/runtime/csv",
     "../crates/core/src/runtime/ebnf",
     "../crates/core/src/runtime/google_sheets",
+    "../crates/core/src/runtime/json",
     "../crates/core/src/runtime/math",
     "../xtask/runtime-projections/bnf.toml",
     "../xtask/runtime-projections/bbnf.toml",
@@ -735,6 +738,7 @@ const FROZEN_ROOTS: &[&str] = &[
     "../xtask/runtime-projections/csv.toml",
     "../xtask/runtime-projections/ebnf.toml",
     "../xtask/runtime-projections/google_sheets.toml",
+    "../xtask/runtime-projections/json.toml",
     "../xtask/runtime-projections/math.toml",
     "../xtask/src/lib.rs",
     "../xtask/src/main.rs",
@@ -1275,6 +1279,22 @@ const SK_V14_W6_7_ROOT_BBNF_OWNER_PATHS: &[&str] = &[
     "../xtask/src/regen_simple_runtime.rs",
 ];
 
+const SK_V14_W6_8_ROOT_JSON_OWNER_PATHS: &[&str] = &[
+    "crates/bbnf-bench/src/lock14_baseline.rs",
+    "../crates/core/src/runtime/arena_template.rs",
+    "../crates/core/src/runtime/builder_template.rs",
+    "../crates/core/src/runtime/json/arena.rs",
+    "../crates/core/src/runtime/json/builder.rs",
+    "../crates/core/src/runtime/json/document.rs",
+    "../crates/core/src/runtime/json/mod.rs",
+    "../crates/core/src/runtime/json/parse_with.rs",
+    "../crates/core/src/runtime/json/value.rs",
+    "../crates/core/src/runtime/json/view.rs",
+    "../xtask/runtime-projections/json.toml",
+    "../xtask/src/main.rs",
+    "../xtask/src/regen_simple_runtime.rs",
+];
+
 fn current_lock14_owner_paths() -> Vec<&'static str> {
     let mut paths = Vec::with_capacity(
         SK_V12_W1A_OWNER_PATHS.len()
@@ -1313,7 +1333,8 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
             + SK_V14_W6_4_ROOT_EBNF_OWNER_PATHS.len()
             + SK_V14_W6_5_ROOT_CSS_PRETTY_OWNER_PATHS.len()
             + SK_V14_W6_6_ROOT_GOOGLE_SHEETS_OWNER_PATHS.len()
-            + SK_V14_W6_7_ROOT_BBNF_OWNER_PATHS.len(),
+            + SK_V14_W6_7_ROOT_BBNF_OWNER_PATHS.len()
+            + SK_V14_W6_8_ROOT_JSON_OWNER_PATHS.len(),
     );
     paths.extend_from_slice(SK_V12_W1A_OWNER_PATHS);
     paths.extend_from_slice(SK_V12_W1B1_OWNER_PATHS);
@@ -1352,6 +1373,7 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
     paths.extend_from_slice(SK_V14_W6_5_ROOT_CSS_PRETTY_OWNER_PATHS);
     paths.extend_from_slice(SK_V14_W6_6_ROOT_GOOGLE_SHEETS_OWNER_PATHS);
     paths.extend_from_slice(SK_V14_W6_7_ROOT_BBNF_OWNER_PATHS);
+    paths.extend_from_slice(SK_V14_W6_8_ROOT_JSON_OWNER_PATHS);
     paths
 }
 
@@ -1913,6 +1935,14 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
             return Ok(());
         }
     }
+    if is_w6_8_root_json_subject(subject) {
+        let allowed = changed_paths
+            .iter()
+            .all(|path| is_allowed_path(path, SK_V14_W6_8_ROOT_JSON_OWNER_PATHS));
+        if allowed {
+            return Ok(());
+        }
+    }
     Err(format!(
         "Lock 14 frozen diff failed for parent paths [{}]",
         changed_paths.join(", ")
@@ -2006,6 +2036,14 @@ fn is_w6_7_root_bbnf_subject(subject: &str) -> bool {
         || subject.contains("sk-v14-w6.7")
         || subject.contains("sk-v14-wavew6_7")
         || subject.contains("sk-v14-w6_7")
+}
+
+fn is_w6_8_root_json_subject(subject: &str) -> bool {
+    let subject = subject.to_ascii_lowercase();
+    subject.contains("sk-v14-wavew6.8")
+        || subject.contains("sk-v14-w6.8")
+        || subject.contains("sk-v14-wavew6_8")
+        || subject.contains("sk-v14-w6_8")
 }
 
 fn git_output(root: &Path, args: &[&str]) -> Result<String, String> {
@@ -2751,6 +2789,7 @@ mod tests {
             .collect::<Vec<_>>();
         for subject in [
             "feat(sk-v14-waveW6): collapse root runtime cohort",
+            "feat(sk-v14-waveW6.8): collapse root json runtime",
             "feat(sk-v14-waveW6.7): collapse root bbnf runtime",
             "feat(sk-v14-waveW6.6): collapse root google sheets runtime",
             "feat(sk-v14-waveW6.5): collapse root css pretty runtime",
@@ -2774,6 +2813,8 @@ mod tests {
             "../crates/core/src/runtime/math/mod.rs",
             "../crates/core/src/runtime/google_sheets/mod.rs",
             "../crates/core/src/runtime/json/mod.rs",
+            "../crates/core/src/runtime/arena_template.rs",
+            "../crates/core/src/runtime/builder_template.rs",
             "../crates/core/src/runtime/bbnf/mod.rs",
             "../xtask/runtime-projections/bbnf.toml",
             "../xtask/runtime-projections/css_pretty.toml",
@@ -2865,6 +2906,7 @@ mod tests {
             .collect::<Vec<_>>();
         for subject in [
             "feat(sk-v14-waveW6): collapse root runtime cohort",
+            "feat(sk-v14-waveW6.8): collapse root json runtime",
             "feat(sk-v14-waveW6.7): collapse root bbnf runtime",
             "feat(sk-v14-waveW6.6): collapse root google sheets runtime",
             "feat(sk-v14-waveW6.5): collapse root css pretty runtime",
@@ -2888,6 +2930,8 @@ mod tests {
             "../crates/core/src/runtime/css_pretty/mod.rs",
             "../crates/core/src/runtime/google_sheets/mod.rs",
             "../crates/core/src/runtime/json/mod.rs",
+            "../crates/core/src/runtime/arena_template.rs",
+            "../crates/core/src/runtime/builder_template.rs",
             "../crates/core/src/runtime/bbnf/mod.rs",
             "../xtask/runtime-projections/bbnf.toml",
             "../xtask/runtime-projections/css_l4.toml",
@@ -2984,6 +3028,7 @@ mod tests {
             .collect::<Vec<_>>();
         for subject in [
             "feat(sk-v14-waveW6): collapse root runtime cohort",
+            "feat(sk-v14-waveW6.8): collapse root json runtime",
             "feat(sk-v14-waveW6.7): collapse root bbnf runtime",
             "feat(sk-v14-waveW6.6): collapse root google sheets runtime",
             "feat(sk-v14-waveW6.5): collapse root css pretty runtime",
@@ -3008,6 +3053,8 @@ mod tests {
             "../crates/core/src/runtime/google_sheets/mod.rs",
             "../crates/core/src/runtime/math/mod.rs",
             "../crates/core/src/runtime/json/mod.rs",
+            "../crates/core/src/runtime/arena_template.rs",
+            "../crates/core/src/runtime/builder_template.rs",
             "../crates/core/src/runtime/bbnf/mod.rs",
             "../xtask/runtime-projections/bbnf.toml",
             "../xtask/runtime-projections/css_pretty.toml",
@@ -3104,6 +3151,7 @@ mod tests {
             .collect::<Vec<_>>();
         for subject in [
             "feat(sk-v14-waveW6): collapse root runtime cohort",
+            "feat(sk-v14-waveW6.8): collapse root json runtime",
             "feat(sk-v14-waveW6.7): collapse root bbnf runtime",
             "feat(sk-v14-waveW6.6): collapse root google sheets runtime",
             "feat(sk-v14-waveW6.5): collapse root css pretty runtime",
@@ -3129,6 +3177,8 @@ mod tests {
             "../crates/core/src/runtime/google_sheets/mod.rs",
             "../crates/core/src/runtime/math/mod.rs",
             "../crates/core/src/runtime/json/mod.rs",
+            "../crates/core/src/runtime/arena_template.rs",
+            "../crates/core/src/runtime/builder_template.rs",
             "../crates/core/src/runtime/bbnf/mod.rs",
             "../xtask/runtime-projections/bbnf.toml",
             "../xtask/runtime-projections/css_pretty.toml",
@@ -3227,6 +3277,7 @@ mod tests {
             .collect::<Vec<_>>();
         for subject in [
             "feat(sk-v14-waveW6): collapse root runtime cohort",
+            "feat(sk-v14-waveW6.8): collapse root json runtime",
             "feat(sk-v14-waveW6.7): collapse root bbnf runtime",
             "feat(sk-v14-waveW6.6): collapse root google sheets runtime",
             "feat(sk-v14-waveW6.5): collapse root css pretty runtime",
@@ -3253,6 +3304,8 @@ mod tests {
             "../crates/core/src/runtime/math/mod.rs",
             "../crates/core/src/runtime/bnf/mod.rs",
             "../crates/core/src/runtime/json/mod.rs",
+            "../crates/core/src/runtime/arena_template.rs",
+            "../crates/core/src/runtime/builder_template.rs",
             "../crates/core/src/runtime/bbnf/mod.rs",
             "../xtask/runtime-projections/bbnf.toml",
             "../xtask/runtime-projections/bnf.toml",
@@ -3352,6 +3405,7 @@ mod tests {
             .collect::<Vec<_>>();
         for subject in [
             "feat(sk-v14-waveW6): collapse root runtime cohort",
+            "feat(sk-v14-waveW6.8): collapse root json runtime",
             "feat(sk-v14-waveW6.7): collapse root bbnf runtime",
             "feat(sk-v14-waveW6.6): collapse root google sheets runtime",
             "feat(sk-v14-waveW6.4): collapse root ebnf runtime",
@@ -3378,6 +3432,8 @@ mod tests {
             "../crates/core/src/runtime/ebnf/mod.rs",
             "../crates/core/src/runtime/google_sheets/mod.rs",
             "../crates/core/src/runtime/json/mod.rs",
+            "../crates/core/src/runtime/arena_template.rs",
+            "../crates/core/src/runtime/builder_template.rs",
             "../crates/core/src/runtime/bbnf/mod.rs",
             "../xtask/runtime-projections/bbnf.toml",
             "../xtask/runtime-projections/bnf.toml",
@@ -3477,6 +3533,7 @@ mod tests {
             .collect::<Vec<_>>();
         for subject in [
             "feat(sk-v14-waveW6): collapse root runtime cohort",
+            "feat(sk-v14-waveW6.8): collapse root json runtime",
             "feat(sk-v14-waveW6.7): collapse root bbnf runtime",
             "feat(sk-v14-waveW6.5): collapse root css pretty runtime",
             "feat(sk-v14-waveW6.4): collapse root ebnf runtime",
@@ -3503,6 +3560,8 @@ mod tests {
             "../crates/core/src/runtime/bnf/mod.rs",
             "../crates/core/src/runtime/ebnf/mod.rs",
             "../crates/core/src/runtime/json/mod.rs",
+            "../crates/core/src/runtime/arena_template.rs",
+            "../crates/core/src/runtime/builder_template.rs",
             "../crates/core/src/runtime/bbnf/mod.rs",
             "../xtask/runtime-projections/bbnf.toml",
             "../xtask/runtime-projections/bnf.toml",
@@ -3602,6 +3661,7 @@ mod tests {
             .collect::<Vec<_>>();
         for subject in [
             "feat(sk-v14-waveW6): collapse root runtime cohort",
+            "feat(sk-v14-waveW6.8): collapse root json runtime",
             "feat(sk-v14-waveW6.6): collapse root google sheets runtime",
             "feat(sk-v14-waveW6.5): collapse root css pretty runtime",
             "feat(sk-v14-waveW6.4): collapse root ebnf runtime",
@@ -3629,6 +3689,8 @@ mod tests {
             "../crates/core/src/runtime/ebnf/mod.rs",
             "../crates/core/src/runtime/google_sheets/mod.rs",
             "../crates/core/src/runtime/json/mod.rs",
+            "../crates/core/src/runtime/arena_template.rs",
+            "../crates/core/src/runtime/builder_template.rs",
             "../xtask/runtime-projections/bnf.toml",
             "../xtask/runtime-projections/css_l4.toml",
             "../xtask/runtime-projections/css_pretty.toml",
@@ -3700,6 +3762,191 @@ mod tests {
             assert!(
                 !path.contains("_provider.rs") && !path.contains("_templates"),
                 "{path} leaks provider/template residue into W6.7"
+            );
+        }
+    }
+
+    #[test]
+    fn w6_8_root_json_owner_paths_admit() {
+        let changed = SK_V14_W6_8_ROOT_JSON_OWNER_PATHS
+            .iter()
+            .map(|path| (*path).to_string())
+            .collect::<Vec<_>>();
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v14-waveW6.8): collapse root json runtime"
+        )
+        .is_ok());
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "docs(sk-v14-waveW6.8-redress): reject root json collapse"
+        )
+        .is_ok());
+    }
+
+    #[test]
+    fn w6_8_root_json_rejects_broad_w6_subjects() {
+        let changed = SK_V14_W6_8_ROOT_JSON_OWNER_PATHS
+            .iter()
+            .map(|path| (*path).to_string())
+            .collect::<Vec<_>>();
+        for subject in [
+            "feat(sk-v14-waveW6): collapse root runtime cohort",
+            "feat(sk-v14-waveW6.7): collapse root bbnf runtime",
+            "feat(sk-v14-waveW6.6): collapse root google sheets runtime",
+            "feat(sk-v14-waveW6.5): collapse root css pretty runtime",
+            "feat(sk-v14-waveW6.4): collapse root ebnf runtime",
+            "feat(sk-v14-waveW6.3): collapse root bnf runtime",
+            "feat(sk-v14-waveW6.2): collapse root csv runtime",
+            "feat(sk-v14-waveW6.1): collapse root math runtime",
+            "feat(sk-v14-waveW6.0): collapse root css l4 runtime",
+            "feat(sk-v14-waveW5D-DELETE): delete provider template residue",
+        ] {
+            assert!(
+                validate_authorized_parent_diff(&changed, subject).is_err(),
+                "{subject} must not authorize W6.8 root JSON paths"
+            );
+        }
+    }
+
+    #[test]
+    fn w6_8_root_json_rejects_sibling_root_runtime_and_xtask() {
+        for outside in [
+            "../crates/core/src/runtime/css_l4/mod.rs",
+            "../crates/core/src/runtime/css_pretty/mod.rs",
+            "../crates/core/src/runtime/csv/mod.rs",
+            "../crates/core/src/runtime/math/mod.rs",
+            "../crates/core/src/runtime/bnf/mod.rs",
+            "../crates/core/src/runtime/ebnf/mod.rs",
+            "../crates/core/src/runtime/google_sheets/mod.rs",
+            "../crates/core/src/runtime/bbnf/mod.rs",
+            "../xtask/runtime-projections/bbnf.toml",
+            "../xtask/runtime-projections/bnf.toml",
+            "../xtask/runtime-projections/css_l4.toml",
+            "../xtask/runtime-projections/css_pretty.toml",
+            "../xtask/runtime-projections/csv.toml",
+            "../xtask/runtime-projections/ebnf.toml",
+            "../xtask/runtime-projections/google_sheets.toml",
+            "../xtask/runtime-projections/math.toml",
+            "../xtask/src/lib.rs",
+            "../xtask/src/regen.rs",
+            "../xtask/src/regen_css.rs",
+            "../Cargo.toml",
+            "crates/codegen/src/css_l4_declaration_values_provider.rs",
+            "crates/codegen/src/css_l4_declaration_values_templates/",
+        ] {
+            let mut changed = SK_V14_W6_8_ROOT_JSON_OWNER_PATHS
+                .iter()
+                .map(|path| (*path).to_string())
+                .collect::<Vec<_>>();
+            changed.push(outside.to_string());
+            assert!(
+                validate_authorized_parent_diff(
+                    &changed,
+                    "feat(sk-v14-waveW6.8): collapse root json runtime"
+                )
+                .is_err(),
+                "{outside} must not be admitted by W6.8"
+            );
+        }
+    }
+
+    #[test]
+    fn w6_8_root_json_inventory_is_exact() {
+        let json_runtime_files = SK_V14_W6_8_ROOT_JSON_OWNER_PATHS
+            .iter()
+            .filter(|path| {
+                path.starts_with("../crates/core/src/runtime/json/") && path.ends_with(".rs")
+            })
+            .count();
+        assert_eq!(
+            json_runtime_files, 7,
+            "W6.8 owns the seven JSON runtime files"
+        );
+        let template_files = SK_V14_W6_8_ROOT_JSON_OWNER_PATHS
+            .iter()
+            .filter(|path| {
+                matches!(
+                    **path,
+                    "../crates/core/src/runtime/arena_template.rs"
+                        | "../crates/core/src/runtime/builder_template.rs"
+                )
+            })
+            .count();
+        assert_eq!(
+            template_files, 2,
+            "W6.8 owns the two Pattern H template documentation rewrites"
+        );
+        let projection_sources = SK_V14_W6_8_ROOT_JSON_OWNER_PATHS
+            .iter()
+            .filter(|path| path.starts_with("../xtask/runtime-projections/"))
+            .count();
+        assert_eq!(
+            projection_sources, 1,
+            "W6.8 owns exactly the JSON runtime projection source"
+        );
+        for path in SK_V14_W6_8_ROOT_JSON_OWNER_PATHS {
+            assert_ne!(
+                *path, "../crates/core/src/runtime/",
+                "W6.8 must not own the full root runtime"
+            );
+            assert_ne!(
+                *path, "../crates/core/src/runtime/json/",
+                "W6.8 must enumerate JSON runtime files"
+            );
+            assert_ne!(*path, "../xtask/src/", "W6.8 must not own all root xtask");
+            assert_ne!(
+                *path, "../xtask/runtime-projections/",
+                "W6.8 must not own all root runtime projections"
+            );
+            assert!(
+                !path.contains("crates/runtime/src/grammars/"),
+                "{path} leaks skinny output into W6.8"
+            );
+            assert!(
+                !path.contains("_provider.rs") && !path.contains("_templates"),
+                "{path} leaks provider/template residue into W6.8"
+            );
+        }
+    }
+
+    #[test]
+    fn w6_8_template_rewrite_removes_pattern_h_opt_out_language() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let builder =
+            std::fs::read_to_string(root.join("../crates/core/src/runtime/builder_template.rs"))
+                .unwrap();
+        for needle in [
+            "# Outliers",
+            "opt out",
+            "opt-out",
+            "Distinct shape",
+            "no template instantiation",
+            "JSON's builder",
+            "CSS L4's builder",
+            "BBNF's builder",
+            "Sheets' builder",
+        ] {
+            assert!(
+                !builder.contains(needle),
+                "builder_template.rs retained forbidden W6.8 phrase `{needle}`"
+            );
+        }
+        let arena =
+            std::fs::read_to_string(root.join("../crates/core/src/runtime/arena_template.rs"))
+                .unwrap();
+        for needle in [
+            "# Entries that opt out",
+            "opt out",
+            "opt-out",
+            "Distinct shape",
+            "JSON's arena",
+            "CSS L4's arena",
+            "Google Sheets' arena",
+        ] {
+            assert!(
+                !arena.contains(needle),
+                "arena_template.rs retained forbidden W6.8 phrase `{needle}`"
             );
         }
     }
@@ -4069,6 +4316,18 @@ mod tests {
             "../crates/core/src/runtime/google_sheets/value.rs"
         );
         assert_eq!(
+            normalize_git_path("crates/core/src/runtime/json/value.rs"),
+            "../crates/core/src/runtime/json/value.rs"
+        );
+        assert_eq!(
+            normalize_git_path("crates/core/src/runtime/arena_template.rs"),
+            "../crates/core/src/runtime/arena_template.rs"
+        );
+        assert_eq!(
+            normalize_git_path("crates/core/src/runtime/builder_template.rs"),
+            "../crates/core/src/runtime/builder_template.rs"
+        );
+        assert_eq!(
             normalize_git_path("xtask/runtime-projections/css_l4.toml"),
             "../xtask/runtime-projections/css_l4.toml"
         );
@@ -4095,6 +4354,10 @@ mod tests {
         assert_eq!(
             normalize_git_path("xtask/runtime-projections/math.toml"),
             "../xtask/runtime-projections/math.toml"
+        );
+        assert_eq!(
+            normalize_git_path("xtask/runtime-projections/json.toml"),
+            "../xtask/runtime-projections/json.toml"
         );
         assert_eq!(
             normalize_git_path("xtask/src/regen_css.rs"),
@@ -4213,6 +4476,9 @@ mod tests {
             "../crates/core/src/runtime/css_pretty",
             "../crates/core/src/runtime/bnf",
             "../crates/core/src/runtime/ebnf",
+            "../crates/core/src/runtime/json",
+            "../crates/core/src/runtime/arena_template.rs",
+            "../crates/core/src/runtime/builder_template.rs",
             "../xtask/src/lib.rs",
             "../xtask/src/main.rs",
             "../xtask/src/regen.rs",
@@ -4220,6 +4486,7 @@ mod tests {
             "../xtask/runtime-projections/bnf.toml",
             "../xtask/runtime-projections/css_pretty.toml",
             "../xtask/runtime-projections/ebnf.toml",
+            "../xtask/runtime-projections/json.toml",
         ] {
             assert!(FROZEN_ROOTS.contains(&root), "{root} is not frozen");
         }
@@ -4231,7 +4498,11 @@ mod tests {
         assert!(status_args.contains("../crates/core/src/runtime/css_pretty"));
         assert!(status_args.contains("../crates/core/src/runtime/bnf"));
         assert!(status_args.contains("../crates/core/src/runtime/ebnf"));
+        assert!(status_args.contains("../crates/core/src/runtime/json"));
+        assert!(status_args.contains("../crates/core/src/runtime/arena_template.rs"));
+        assert!(status_args.contains("../crates/core/src/runtime/builder_template.rs"));
         assert!(status_args.contains("../xtask/runtime-projections/css_pretty.toml"));
+        assert!(status_args.contains("../xtask/runtime-projections/json.toml"));
     }
 
     #[test]

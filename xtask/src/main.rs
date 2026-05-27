@@ -83,6 +83,9 @@ enum Cmd {
     /// Regenerate the root Google Sheets runtime projection under
     /// `crates/core/src/runtime/google_sheets/`.
     RegenGoogleSheets,
+    /// Regenerate the root JSON runtime projection under
+    /// `crates/core/src/runtime/json/`.
+    RegenJson,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -102,6 +105,7 @@ fn main() -> anyhow::Result<()> {
         Cmd::RegenEbnf => regen_simple_runtime::run("ebnf"),
         Cmd::RegenCssPretty => regen_simple_runtime::run("css_pretty"),
         Cmd::RegenGoogleSheets => regen_simple_runtime::run("google_sheets"),
+        Cmd::RegenJson => regen_simple_runtime::run("json"),
     }
 }
 

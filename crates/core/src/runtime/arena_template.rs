@@ -30,19 +30,15 @@
 //! `children` Vec's element type) survives unchanged on the per-grammar
 //! arena's `arena.rs` file.
 //!
-//! # Entries that opt out
+//! # Scope
 //!
-//! - JSON's arena owns two slabs (arrays + objects) under separate
-//!   handles; its rollback signature differs (two counts). Distinct
-//!   shape → distinct module.
-//! - CSS L4's arena owns six slabs (rules, decls, selectors, values,
-//!   keyframes, colors) plus a recursive colour DAG; its
-//!   `with_capacity` / `truncate` signatures take six counts.
-//!   Distinct shape → distinct module.
-//! - Google Sheets' arena owns one slab but the entry shape includes a
-//!   transparent-wrap collapse decision driven by the runtime compound
-//!   kind; the seam straddles the kind enum's interface. Routes through
-//!   the simple template only after a follow-up cohesion pass.
+//! This template is the shared implementation for single-compound-slab
+//! runtimes. Multi-slab and typed-value runtimes now live in generated
+//! per-grammar projection output, so this module no longer records the
+//! grammar-specific roster. The invariant is structural: when a
+//! grammar's arena needs more than one slab family or a non-uniform
+//! entry payload, its runtime projection emits that shape directly
+//! from metadata instead of extending this template's responsibilities.
 //!
 //! # Lifetimes
 //!

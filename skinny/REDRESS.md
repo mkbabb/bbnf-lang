@@ -5313,24 +5313,35 @@ perturbation.
 
 ## SK-V14 Wave W8 CSS L4 Production Re-Admit
 
-- Item 215 closes all 24 CSS L4 rows under `G-SK-V14-W8-CSS-L4-READMIT` as
-  `REJECTED` for this tranche attempt. The executable probe in
-  `skinny/crates/bbnf-bench/src/css_l4_w8.rs` loads the SK-V14 production CSS
-  corpus (`979638` bytes), verifies lightningcss full-parse over all four
-  files, verifies a cssparser stylesheet probe over all four files, and runs
-  all seven post-W7 generated CSS runtime profiles over every corpus. The
-  generated Track 1 outputs are fact streams in all 28 profile/corpus runs:
-  W7 policy and frontend metadata are present, but the output plane remains
-  `*_fact_stream`, not a CSS full-parse equality plane. W8 therefore admits
-  0 / 24 rows and leaves `skinny/RESULTS.md` plus
-  `restart/skinny/ROLLING-SOTA-DELTA.md` at their existing
-  `AUDIT-FALSIFIED` / `OPEN` CSS posture. Evidence:
-  `cargo test -p bbnf-bench css_l4_w8 -- --nocapture` and
-  `restart/skinny/tranches/sk-v14/research/skv14-W8-redress.md`. Corrective
-  route: a future CSS re-admit wave needs generated Track 1 CSS full-parse
-  output on the same plane as lightningcss/cssparser; fact-stream adapters,
-  tiny fixtures, and CANONICAL_FIXTURE/profile-template shortcuts remain
-  rejected.
+- Item 215 initially closed all 24 CSS L4 rows under
+  `G-SK-V14-W8-CSS-L4-READMIT` as `REJECTED` for the first tranche attempt.
+  The executable probe in `skinny/crates/bbnf-bench/src/css_l4_w8.rs` loaded
+  the SK-V14 production CSS corpus (`979638` bytes), verified lightningcss
+  full-parse over all four files, verified a cssparser stylesheet probe over
+  all four files, and ran all seven post-W7 generated CSS runtime profiles
+  over every corpus. The generated Track 1 outputs were fact streams in all 28
+  profile/corpus runs: W7 policy and frontend metadata were present, but the
+  output plane remained `*_fact_stream`, not a CSS full-parse equality plane.
+  Initial evidence: `cargo test -p bbnf-bench css_l4_w8 -- --nocapture` and
+  `restart/skinny/tranches/sk-v14/research/skv14-W8-redress.md`.
+
+- W8R supersedes that rejection without erasing it. The generator now emits an
+  additive `parser::parse_full` / `generated::emit_full_parse` route for every
+  CSS L4 runtime profile, the W8 harness rejects fact-stream leakage, and
+  `skinny/RESULTS.md` plus `restart/skinny/ROLLING-SOTA-DELTA.md` move all 24
+  CSS L4 rows to `AUDIT-SUSTAINED` / `ADMITTED` on the
+  `css_l4_full_parse` plane. Release-native retained evidence:
+  `track1_mbps=2319.041`, `lightningcss_mbps=929.281`,
+  `cssparser_mbps=2362.037`, `profiled_bytes=54859728`,
+  `profile_iters=8`, and `margin_mbps=1388.760` from
+  `cargo test --release -p bbnf-bench css_l4_w8 -- --nocapture` with
+  `RUSTFLAGS="-C target-cpu=native"`. Retained files:
+  `restart/skinny/tranches/sk-v14/research/skv14-redress-215-css-full-parse-prototype.md`,
+  `restart/skinny/tranches/sk-v14/research/skv14-redress-215-css-full-parse-profile.tsv`,
+  and
+  `restart/skinny/tranches/sk-v14/research/skv14-redress-215-css-full-parse-profile.raw.log`.
+  Fact-stream adapters, tiny fixtures, and CANONICAL_FIXTURE/profile-template
+  shortcuts remain rejected.
 
 ## SK-V14 Wave W9 JSON Direct + Typed Re-Admit
 

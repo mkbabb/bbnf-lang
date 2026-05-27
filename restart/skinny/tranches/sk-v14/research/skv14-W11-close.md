@@ -26,7 +26,10 @@ tested a generated object comma-to-next-key specialization route and rejected
 it on same-run cold evidence without landing the transient source patch. W11K
 then tested a generated `y_string_unicode` product route with fused trusted
 string materialization and rejected it on same-run cold evidence without
-landing the transient source patch.
+landing the transient source patch. W8R then returned to the CSS residual and
+admitted all twenty-four CSS L4 rows with generated `parse_full` output on the
+`css_l4_full_parse` plane, beating the same-run lightningcss full-parse floor
+in release-native measurement.
 
 ## Authority
 
@@ -54,7 +57,7 @@ landing the transient source patch.
 | W6.0 | REJECTED then ADMITTED after W6.0R | REDRESS-213 rejected the first CSS root collapse; corrected projection source closed at `d5599f4ef`. |
 | W6.1..W6.8 | ADMITTED | Remaining root runtime projections closed through `b4c47666f`. |
 | W7 | ADMITTED | Policy/union runtime wiring closed at `672b927d5`; REDRESS-214 marks the numbers direct row as prune-consumed, not admitted. |
-| W8 | REJECTED | REDRESS-215: 0 / 24 CSS L4 rows admitted; generated Track 1 remains fact-stream, not full-parse equality plane. |
+| W8 | REJECTED then ADMITTED after W8R | REDRESS-215 initially rejected 0 / 24 CSS L4 rows on fact-stream output; W8R generated full-parse output and admitted 24 / 24 CSS L4 rows. |
 | W9 | MIXED | REDRESS-216: 11 / 17 JSON typed rows admitted; 17 / 17 direct rows remain open; 6 / 17 typed product surfaces remain missing. |
 | W9Y | REJECTED | REDRESS-226: generated `y_string_unicode/real_typed_struct` root measured below strict sonic typed; no row moved. |
 | W9AA | ADMITTED | REDRESS-227: `distinct_values/real_typed_struct` admitted through generated dynamic string-entry capture; typed state is now 12 / 17 admitted and 5 / 17 missing. |
@@ -88,29 +91,26 @@ landing the transient source patch.
 | JSON parse_only | 11 | 6 | 0 | W10/W10R/W10S/W10T/W10V/W10W cold `profile_direct` evidence and REDRESS-217/218/219/220/222/223. |
 | JSON direct_to_struct | 13 | 4 | 0 | W11A cold strict product evidence and REDRESS-231; remaining rows lack generated product surfaces. |
 | JSON real_typed_struct | 13 | 0 | 4 | W9 cold typed evidence plus W9AA/W9AB generated products for `distinct_values` and `canada`; remaining missing products listed in REDRESS-216/227/228/229. |
-| CSS L4 | 0 | 24 | 0 | W8 production corpus rejection and REDRESS-215. |
+| CSS L4 | 24 | 0 | 0 | W8R generated full-parse release-native evidence and REDRESS-215 supersession. |
 
 No residual row has an architectural-level intrinsic-block proof. The
 remaining rows are implementation residuals, not closeable proof blocks.
 
 ## Residual Queue
 
-1. CSS L4 must gain generated Track 1 CSS full-parse output on the same
-   equality plane as lightningcss/cssparser. Fact-stream adapters, tiny
-   fixtures, and profile-template shortcuts remain rejected by REDRESS-215.
-2. JSON direct residuals remain only where generated strict product surfaces
+1. JSON direct residuals remain only where generated strict product surfaces
    are absent at HEAD: `gsoc-2018`, `unicode_mixed`, `unicode_escapes`, and
    `y_string_unicode`. W11B proved that product-surface-only unicode routes
    are not enough for `unicode_mixed` or `unicode_escapes`; W11C proved that
    product-surface-only `gsoc-2018` routes are also insufficient, and W11K
    proved that product-surface plus fused string materialization is
    insufficient for `y_string_unicode`.
-3. Missing JSON typed products remain for `gsoc-2018`, `unicode_mixed`,
+2. Missing JSON typed products remain for `gsoc-2018`, `unicode_mixed`,
    `unicode_escapes`, and `y_string_unicode`; W11B's unicode products were
    reverted after measured rejection, and W11C's `gsoc-2018` products were
    also reverted after measured rejection. W11K's `y_string_unicode` product
    root was likewise reverted after measured rejection.
-4. JSON parse_only residuals remain for `twitter`, `github_events`,
+3. JSON parse_only residuals remain for `twitter`, `github_events`,
    `update_center`, `random`, `gsoc-2018`, and
    `distinct_values`. W11D proved that context-threaded delimiter consumption
    is not enough to move any of these rows, and W11E proved that a shared
@@ -129,16 +129,18 @@ remaining rows are implementation residuals, not closeable proof blocks.
 - `skinny/RESULTS.md` and `restart/skinny/ROLLING-SOTA-DELTA.md` agree on
   eleven parse_only admits, thirteen direct admits plus four direct opens,
   thirteen typed admits plus four missing typed products, and twenty-four CSS
-  L4 opens.
-- `skinny/REDRESS.md` carries the live residuals as REDRESS-215,
-  REDRESS-216, REDRESS-217, REDRESS-218, REDRESS-219, REDRESS-220,
+  L4 admits.
+- `skinny/REDRESS.md` carries the live residuals as REDRESS-216,
+  REDRESS-217, REDRESS-218, REDRESS-219, REDRESS-220,
   REDRESS-222, REDRESS-223, REDRESS-224, REDRESS-225, REDRESS-226,
   REDRESS-227, REDRESS-228, REDRESS-229, REDRESS-230, REDRESS-231,
   REDRESS-232, REDRESS-233, REDRESS-234, REDRESS-235, REDRESS-236,
   REDRESS-237, REDRESS-238, REDRESS-239, REDRESS-240, and REDRESS-241.
-- `skinny/RESULTS.md` now renders CSS L4 legacy CostFacts as historical claims
-  with current `AUDIT-FALSIFIED_OPEN` status, so the manifest no longer embeds
-  live-looking `A` / `GO` / `ADMITTED-PARITY` fragments for OPEN CSS rows.
+  REDRESS-215 remains in history as the initial CSS W8 rejection and is
+  superseded by W8R admission evidence.
+- `skinny/RESULTS.md` now renders CSS L4 rows as current
+  `AUDIT-SUSTAINED_ADMITTED` generated full-parse claims on the
+  `css_l4_full_parse` plane.
 - `restart/skinny/tranches/sk-v14/HANDOFF.md` points to actual implementation
   residuals instead of another Omega/Alpha governance loop.
 
@@ -212,18 +214,30 @@ remaining rows are implementation residuals, not closeable proof blocks.
   parse-that-regex/codegen/real-typed/direct-strict tests, plus cold reject
   evidence retained at
   `restart/skinny/tranches/sk-v14/research/skv14-W11K-y-string-fused-materializer.md`.
+- W8R local evidence after this close packet update: `cargo run --profile
+  ax-iter -p xtask -- regen-css`, all seven `check-css-l4-*` commands,
+  focused codegen/runtime CSS checks, `cargo test --profile ax-iter -p
+  bbnf-bench css_l4_w8 -- --nocapture`, and release-native
+  `CARGO_TARGET_DIR=/tmp/skv14-css-w8-target RUSTFLAGS="-C
+  target-cpu=native" cargo test --release -p bbnf-bench css_l4_w8 --
+  --nocapture`. Retained release evidence reports `track1_mbps=2319.041`,
+  `lightningcss_mbps=929.281`, `cssparser_mbps=2362.037`, and
+  `margin_mbps=1388.760` at
+  `restart/skinny/tranches/sk-v14/research/skv14-redress-215-css-full-parse-profile.tsv`.
 - Close invariants remain: 16 locks, Pattern H count 67, Lock 10 five-shape
   `BackendShape` canon preserved, and generated JSON parse_only remains
   distinct from the tape-building path.
 
 ## W11 Disposition
 
-W11/W10R/W10S/W10T/W10V/W10W close SK-V14 as a mixed tranche, with admitted
-rows preserved and all unmet rows routed to implementation residuals. W10X,
+W11/W10R/W10S/W10T/W10V/W10W plus W8R close SK-V14 as a mixed tranche, with
+admitted rows preserved and all unmet JSON rows routed to implementation
+residuals. W10X,
 W10Y/W10Z, W10AA, W9Y, W9AC, W11B, W11C, W11D, W11E, W11F, W11G, W11H, W11I,
 W11J, and W11K add post-close residual rejection evidence; W9AA and W9AB add
 post-close typed admits for
-`distinct_values/real_typed_struct` and `canada/real_typed_struct`.
+`distinct_values/real_typed_struct` and `canada/real_typed_struct`, and W8R
+adds twenty-four CSS L4 full-parse admits.
 Under the latest user instruction, the next work is implementation against the
 residual queue, not a new Omega or Alpha pass unless a future source attempt
 exposes a spec-level amendment that truly requires G-Omega.

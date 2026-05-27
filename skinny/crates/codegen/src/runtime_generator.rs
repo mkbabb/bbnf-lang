@@ -678,6 +678,18 @@ const CSS_PARSER_RS: &str = r#"
         })?;
         parse(input)
     }
+
+    pub fn parse_full(input: &str) -> Result<String, CssFactError> {
+        generated::emit_full_parse(input)
+    }
+
+    pub fn parse_full_bytes(input: &[u8]) -> Result<String, CssFactError> {
+        let input = std::str::from_utf8(input).map_err(|error| CssFactError {
+            offset: error.valid_up_to(),
+            message: "invalid UTF-8",
+        })?;
+        parse_full(input)
+    }
 "#;
 
 const CSS_SINK_RS: &str = r#"
@@ -745,6 +757,369 @@ const CSS_GENERATED_RS: &str = r#"
         emit_declarations(input, &mut out);
         emit_profile_witnesses(&mut out);
         Ok(out)
+    }
+
+    const FULL_PARSE_SCHEMA: &str = "css-l4-full-parse-v1";
+    const FULL_PARSE_OUTPUT_PLANE: &str = "css_l4_full_parse";
+
+    #[derive(Default)]
+    struct CssFullParseSummary {
+        rules: usize,
+        at_rules: usize,
+        qualified_rules: usize,
+        declarations: usize,
+    }
+
+    pub fn emit_full_parse(input: &str) -> Result<String, CssFactError> {
+        let summary = CssFullParser::new(input).parse_stylesheet()?;
+        let mut out = String::new();
+        out.push_str(FULL_PARSE_SCHEMA);
+        out.push('\n');
+        out.push_str("row\tid=");
+        out.push_str(config::ROW_ID);
+        out.push_str("\tplane=");
+        out.push_str(FULL_PARSE_OUTPUT_PLANE);
+        out.push('\n');
+        out.push_str("source\tinput_fnv64=");
+        push_hex64(&mut out, fnv64(input.as_bytes()));
+        out.push_str("\tinput_bytes=");
+        out.push_str(&input.len().to_string());
+        out.push('\n');
+        out.push_str("frontend\tsource_hash=");
+        out.push_str(config::FRONTEND_SOURCE_HASH);
+        out.push_str("\tprofile=");
+        out.push_str(config::REQUEST_PROFILE);
+        out.push_str("\tentry=");
+        out.push_str(config::ENTRY_RULE);
+        out.push_str("\tsources=");
+        out.push_str(&config::REQUEST_SOURCE_COUNT.to_string());
+        out.push_str("\timports=");
+        out.push_str(&config::IMPORT_COUNT.to_string());
+        out.push_str("\tlayout=");
+        out.push_str(&config::LAYOUT_DIRECTIVE_COUNT.to_string());
+        out.push_str("\tdiscard=");
+        out.push_str(&config::DISCARD_OPERATOR_COUNT.to_string());
+        out.push('\n');
+        out.push_str("full_parse\tstatus=accepted\trules=");
+        out.push_str(&summary.rules.to_string());
+        out.push_str("\tat_rules=");
+        out.push_str(&summary.at_rules.to_string());
+        out.push_str("\tqualified_rules=");
+        out.push_str(&summary.qualified_rules.to_string());
+        out.push_str("\tdeclarations=");
+        out.push_str(&summary.declarations.to_string());
+        out.push('\n');
+        Ok(out)
+    }
+
+    struct CssFullParser<'i> {
+        bytes: &'i [u8],
+        pos: usize,
+        summary: CssFullParseSummary,
+    }
+
+    impl<'i> CssFullParser<'i> {
+        fn new(input: &'i str) -> Self {
+            Self {
+                bytes: input.as_bytes(),
+                pos: 0,
+                summary: CssFullParseSummary::default(),
+            }
+        }
+
+        fn parse_stylesheet(mut self) -> Result<CssFullParseSummary, CssFactError> {
+            loop {
+                self.skip_ws_comments()?;
+                if self.skip_top_level_legacy_marker() {
+                    continue;
+                }
+                if self.pos >= self.bytes.len() {
+                    return Ok(self.summary);
+                }
+                if self.bytes[self.pos] == b'@' {
+                    self.parse_at_rule()?;
+                } else if self.bytes[self.pos] == b';' {
+                    self.pos += 1;
+                } else {
+                    self.parse_qualified_rule()?;
+                }
+            }
+        }
+
+        fn parse_at_rule(&mut self) -> Result<(), CssFactError> {
+            self.pos += 1;
+            let name_start = self.pos;
+            while self.pos < self.bytes.len() && is_name_byte(self.bytes[self.pos]) {
+                if self.bytes[self.pos] == b'\\' {
+                    self.pos = self.consume_escape_at(self.pos)?;
+                } else {
+                    self.pos += 1;
+                }
+            }
+            if self.pos == name_start {
+                return Err(css_full_error(name_start, "expected at-rule name"));
+            }
+
+            match self.find_component_delim(self.pos, b";{}")? {
+                Some((b';', end)) => {
+                    self.pos = end + 1;
+                    self.summary.rules += 1;
+                    self.summary.at_rules += 1;
+                    Ok(())
+                }
+                Some((b'{', end)) => {
+                    self.pos = end + 1;
+                    self.summary.rules += 1;
+                    self.summary.at_rules += 1;
+                    self.parse_block()
+                }
+                Some((b'}', end)) => Err(css_full_error(end, "unexpected closing delimiter")),
+                Some((_, end)) => Err(css_full_error(end, "expected at-rule terminator")),
+                None => Err(css_full_error(self.pos, "expected at-rule terminator")),
+            }
+        }
+
+        fn parse_qualified_rule(&mut self) -> Result<(), CssFactError> {
+            let start = self.pos;
+            match self.find_component_delim(self.pos, b"{};")? {
+                Some((b'{', end)) if has_non_ws(self.bytes, start, end) => {
+                    self.pos = end + 1;
+                    self.summary.rules += 1;
+                    self.summary.qualified_rules += 1;
+                    self.parse_block()
+                }
+                Some((b';', end)) if !has_non_ws(self.bytes, start, end) => {
+                    self.pos = end + 1;
+                    Ok(())
+                }
+                Some((b'}', end)) => Err(css_full_error(end, "unexpected closing delimiter")),
+                Some((_, end)) => Err(css_full_error(end, "expected rule block")),
+                None => Err(css_full_error(start, "expected rule block")),
+            }
+        }
+
+        fn parse_block(&mut self) -> Result<(), CssFactError> {
+            loop {
+                self.skip_ws_comments()?;
+                if self.pos >= self.bytes.len() {
+                    return Err(css_full_error(self.pos, "unclosed block"));
+                }
+                if self.bytes[self.pos] == b'}' {
+                    self.pos += 1;
+                    return Ok(());
+                }
+                if self.bytes[self.pos] == b'@' {
+                    self.parse_at_rule()?;
+                } else if self.bytes[self.pos] == b';' {
+                    self.pos += 1;
+                } else {
+                    self.parse_block_item()?;
+                }
+            }
+        }
+
+        fn parse_block_item(&mut self) -> Result<(), CssFactError> {
+            let start = self.pos;
+            match self.find_component_delim(self.pos, b"{};")? {
+                Some((b'{', end)) if has_non_ws(self.bytes, start, end) => {
+                    self.pos = end + 1;
+                    self.summary.rules += 1;
+                    self.summary.qualified_rules += 1;
+                    self.parse_block()
+                }
+                Some((b';', end)) => {
+                    if let Some(colon) = self.find_colon_before(start, end)? {
+                        self.parse_declaration(start, colon)
+                    } else if !has_non_ws(self.bytes, start, end) {
+                        self.pos = end + 1;
+                        Ok(())
+                    } else {
+                        Err(css_full_error(end, "expected declaration or nested rule"))
+                    }
+                }
+                Some((b'}', end)) => {
+                    if let Some(colon) = self.find_colon_before(start, end)? {
+                        self.parse_declaration(start, colon)
+                    } else if !has_non_ws(self.bytes, start, end) {
+                        Ok(())
+                    } else {
+                        Err(css_full_error(end, "expected declaration or nested rule"))
+                    }
+                }
+                Some((_, end)) => Err(css_full_error(end, "expected declaration or nested rule")),
+                None => Err(css_full_error(start, "unclosed block")),
+            }
+        }
+
+        fn parse_declaration(&mut self, start: usize, colon: usize) -> Result<(), CssFactError> {
+            if !has_non_ws(self.bytes, start, colon) {
+                return Err(css_full_error(start, "expected declaration name"));
+            }
+            self.pos = colon + 1;
+            match self.find_component_delim(self.pos, b";}")? {
+                Some((b';', end)) => {
+                    self.pos = end + 1;
+                    self.summary.declarations += 1;
+                    Ok(())
+                }
+                Some((b'}', end)) => {
+                    self.pos = end;
+                    self.summary.declarations += 1;
+                    Ok(())
+                }
+                Some((_, end)) => Err(css_full_error(end, "expected declaration terminator")),
+                None => Err(css_full_error(self.pos, "unclosed block")),
+            }
+        }
+
+        fn skip_ws_comments(&mut self) -> Result<(), CssFactError> {
+            loop {
+                while self.pos < self.bytes.len() && self.bytes[self.pos].is_ascii_whitespace() {
+                    self.pos += 1;
+                }
+                if self.starts_with_at(self.pos, b"/*") {
+                    self.pos = self.consume_comment_at(self.pos)?;
+                    continue;
+                }
+                return Ok(());
+            }
+        }
+
+        fn skip_top_level_legacy_marker(&mut self) -> bool {
+            if self.starts_with_at(self.pos, b"<!--") {
+                self.pos += 4;
+                true
+            } else if self.starts_with_at(self.pos, b"-->") {
+                self.pos += 3;
+                true
+            } else {
+                false
+            }
+        }
+
+        fn find_component_delim(
+            &self,
+            mut pos: usize,
+            delimiters: &[u8],
+        ) -> Result<Option<(u8, usize)>, CssFactError> {
+            while pos < self.bytes.len() {
+                let byte = self.bytes[pos];
+                if delimiters.contains(&byte) {
+                    return Ok(Some((byte, pos)));
+                }
+                pos = match byte {
+                    b'\'' | b'"' => self.consume_string_at(pos)?,
+                    b'/' if self.byte_at(pos + 1) == Some(b'*') => self.consume_comment_at(pos)?,
+                    b'(' => self.consume_balanced_at(pos, b')')?,
+                    b'[' => self.consume_balanced_at(pos, b']')?,
+                    b'{' => self.consume_balanced_at(pos, b'}')?,
+                    b')' | b']' | b'}' => {
+                        return Err(css_full_error(pos, "unexpected closing delimiter"));
+                    }
+                    _ => pos + 1,
+                };
+            }
+            Ok(None)
+        }
+
+        fn find_colon_before(
+            &self,
+            start: usize,
+            end: usize,
+        ) -> Result<Option<usize>, CssFactError> {
+            match self.find_component_delim(start, b":{};")? {
+                Some((b':', colon)) if colon < end => Ok(Some(colon)),
+                _ => Ok(None),
+            }
+        }
+
+        fn consume_balanced_at(&self, start: usize, close: u8) -> Result<usize, CssFactError> {
+            let mut pos = start + 1;
+            while pos < self.bytes.len() {
+                let byte = self.bytes[pos];
+                if byte == close {
+                    return Ok(pos + 1);
+                }
+                pos = match byte {
+                    b'\'' | b'"' => self.consume_string_at(pos)?,
+                    b'/' if self.byte_at(pos + 1) == Some(b'*') => self.consume_comment_at(pos)?,
+                    b'(' => self.consume_balanced_at(pos, b')')?,
+                    b'[' => self.consume_balanced_at(pos, b']')?,
+                    b'{' => self.consume_balanced_at(pos, b'}')?,
+                    b')' | b']' | b'}' => {
+                        return Err(css_full_error(pos, "unexpected closing delimiter"));
+                    }
+                    _ => pos + 1,
+                };
+            }
+            Err(css_full_error(start, "unclosed component block"))
+        }
+
+        fn consume_comment_at(&self, start: usize) -> Result<usize, CssFactError> {
+            let mut pos = start + 2;
+            while pos + 1 < self.bytes.len() {
+                if self.bytes[pos] == b'*' && self.bytes[pos + 1] == b'/' {
+                    return Ok(pos + 2);
+                }
+                pos += 1;
+            }
+            Err(css_full_error(start, "unclosed comment"))
+        }
+
+        fn consume_string_at(&self, start: usize) -> Result<usize, CssFactError> {
+            let quote = self.bytes[start];
+            let mut pos = start + 1;
+            while pos < self.bytes.len() {
+                match self.bytes[pos] {
+                    byte if byte == quote => return Ok(pos + 1),
+                    b'\\' => {
+                        pos += 1;
+                        if pos >= self.bytes.len() {
+                            return Err(css_full_error(start, "unclosed string"));
+                        }
+                        if self.bytes[pos] == b'\r' && self.byte_at(pos + 1) == Some(b'\n') {
+                            pos += 2;
+                        } else {
+                            pos += 1;
+                        }
+                    }
+                    b'\n' | b'\r' | 0x0c => {
+                        return Err(css_full_error(pos, "unescaped newline in string"));
+                    }
+                    _ => pos += 1,
+                }
+            }
+            Err(css_full_error(start, "unclosed string"))
+        }
+
+        fn consume_escape_at(&self, start: usize) -> Result<usize, CssFactError> {
+            if start + 1 >= self.bytes.len() {
+                return Err(css_full_error(start, "unterminated escape"));
+            }
+            Ok(start + 2)
+        }
+
+        fn starts_with_at(&self, pos: usize, needle: &[u8]) -> bool {
+            self.bytes
+                .get(pos..pos.saturating_add(needle.len()))
+                .is_some_and(|bytes| bytes == needle)
+        }
+
+        fn byte_at(&self, pos: usize) -> Option<u8> {
+            self.bytes.get(pos).copied()
+        }
+    }
+
+    fn has_non_ws(bytes: &[u8], start: usize, end: usize) -> bool {
+        bytes[start..end].iter().any(|byte| !byte.is_ascii_whitespace())
+    }
+
+    fn is_name_byte(byte: u8) -> bool {
+        byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'\\') || byte >= 0x80
+    }
+
+    fn css_full_error(offset: usize, message: &'static str) -> CssFactError {
+        CssFactError { offset, message }
     }
 
     fn emit_declarations(input: &str, out: &mut String) {

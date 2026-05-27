@@ -10,16 +10,20 @@ use runtime::{
     generated_css_l4_stylesheet_selectors, generated_css_l4_vendor_and_custom_atrules,
     generated_css_l4_visual_functions,
 };
+use std::hint::black_box;
+use std::time::{Duration, Instant};
 
 pub const W8_WAVE_ID: &str = "SK-V14-W8";
 pub const W8_SELECTED_CSS_ROWS: usize = 24;
+pub const W8_PROFILE_ITERS: usize = 8;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum W8Disposition {
+    Admitted,
     Rejected,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct CssL4W8AttemptReport {
     pub wave_id: &'static str,
     pub selected_rows: usize,
@@ -28,48 +32,58 @@ pub struct CssL4W8AttemptReport {
     pub lightningcss_full_parse_passes: usize,
     pub cssparser_full_parse_passes: usize,
     pub track1_profile_runs: usize,
-    pub track1_fact_stream_runs: usize,
+    pub track1_full_parse_runs: usize,
+    pub track1_wrong_plane_outputs: usize,
     pub track1_errors: usize,
+    pub profile_iters: usize,
+    pub profiled_bytes: usize,
+    pub track1_full_parse_mbps: f64,
+    pub lightningcss_full_parse_mbps: f64,
+    pub cssparser_full_parse_mbps: f64,
+    pub track1_lightningcss_margin_mbps: f64,
     pub admitted_rows: usize,
     pub disposition: W8Disposition,
-    pub block_reason: &'static str,
+    pub disposition_reason: &'static str,
 }
 
 type Track1Parse = fn(&str) -> Result<String, String>;
 
 #[derive(Clone, Copy)]
 struct Track1Profile {
-    output_plane: &'static str,
+    row_id: &'static str,
     parse: Track1Parse,
 }
 
+const TRACK1_FULL_PARSE_OUTPUT_PLANE: &str = "css_l4_full_parse";
+const TRACK1_FULL_PARSE_SCHEMA: &str = "css-l4-full-parse-v1";
+
 const TRACK1_PROFILES: &[Track1Profile] = &[
     Track1Profile {
-        output_plane: "css_l4_declaration_value_fact_stream",
+        row_id: "css_l4/declaration_values/direct_to_struct/main",
         parse: parse_declaration_values,
     },
     Track1Profile {
-        output_plane: "css_l4_declaration_value_extended_fact_stream",
+        row_id: "css_l4/declaration_values_extended/direct_to_struct/main",
         parse: parse_declaration_values_extended,
     },
     Track1Profile {
-        output_plane: "css_l4_stylesheet_selector_fact_stream",
+        row_id: "css_l4/stylesheet_and_selectors/direct_to_struct/main",
         parse: parse_stylesheet_selectors,
     },
     Track1Profile {
-        output_plane: "css_l4_visual_function_fact_stream",
+        row_id: "css_l4/visual_functions/direct_to_struct/main",
         parse: parse_visual_functions,
     },
     Track1Profile {
-        output_plane: "css_l4_at_rules_media_fact_stream",
+        row_id: "css_l4/at_rules_and_media/direct_to_struct/main",
         parse: parse_at_rules_and_media,
     },
     Track1Profile {
-        output_plane: "css_l4_vendor_custom_fact_stream",
+        row_id: "css_l4/vendor_and_custom_atrules/direct_to_struct/main",
         parse: parse_vendor_and_custom_atrules,
     },
     Track1Profile {
-        output_plane: "css_l4_nested_layout_fact_stream",
+        row_id: "css_l4/nested_layout/direct_to_struct/main",
         parse: parse_nested_layout,
     },
 ];
@@ -87,7 +101,8 @@ pub fn run_production_attempt() -> Result<CssL4W8AttemptReport, String> {
     let mut lightningcss_full_parse_passes = 0usize;
     let mut cssparser_full_parse_passes = 0usize;
     let mut track1_profile_runs = 0usize;
-    let mut track1_fact_stream_runs = 0usize;
+    let mut track1_full_parse_runs = 0usize;
+    let mut track1_wrong_plane_outputs = 0usize;
     let mut track1_errors = 0usize;
 
     for corpus in &corpora {
@@ -105,8 +120,11 @@ pub fn run_production_attempt() -> Result<CssL4W8AttemptReport, String> {
         for profile in TRACK1_PROFILES {
             track1_profile_runs += 1;
             match (profile.parse)(source) {
-                Ok(output) if generated_fact_stream_marker(&output, profile) => {
-                    track1_fact_stream_runs += 1;
+                Ok(output) if generated_full_parse_marker(&output, profile) => {
+                    track1_full_parse_runs += 1;
+                }
+                Ok(output) if generated_fact_stream_marker(&output) => {
+                    track1_wrong_plane_outputs += 1;
                 }
                 Ok(_) | Err(_) => {
                     track1_errors += 1;
@@ -114,6 +132,32 @@ pub fn run_production_attempt() -> Result<CssL4W8AttemptReport, String> {
             }
         }
     }
+
+    let all_track1_runs_same_plane = track1_full_parse_runs == track1_profile_runs
+        && track1_wrong_plane_outputs == 0
+        && track1_errors == 0;
+    let profile = measure_full_parse_profiles(&corpora)?;
+    let track1_lightningcss_margin_mbps =
+        profile.track1_full_parse_mbps - (profile.lightningcss_full_parse_mbps + 1.0);
+    let track1_beats_lightningcss = track1_lightningcss_margin_mbps > 0.0;
+    let admits = all_track1_runs_same_plane && track1_beats_lightningcss;
+    let admitted_rows = if admits {
+        W8_SELECTED_CSS_ROWS
+    } else {
+        0
+    };
+    let disposition = if admits {
+        W8Disposition::Admitted
+    } else {
+        W8Disposition::Rejected
+    };
+    let disposition_reason = if admits {
+        "generated_track1_css_full_parse_same_plane"
+    } else if !track1_beats_lightningcss {
+        "track1_css_full_parse_below_lightningcss"
+    } else {
+        "track1_css_full_parse_plane_mismatch"
+    };
 
     Ok(CssL4W8AttemptReport {
         wave_id: W8_WAVE_ID,
@@ -123,20 +167,112 @@ pub fn run_production_attempt() -> Result<CssL4W8AttemptReport, String> {
         lightningcss_full_parse_passes,
         cssparser_full_parse_passes,
         track1_profile_runs,
-        track1_fact_stream_runs,
+        track1_full_parse_runs,
+        track1_wrong_plane_outputs,
         track1_errors,
-        admitted_rows: 0,
-        disposition: W8Disposition::Rejected,
-        block_reason: "post_w7_track1_is_generated_fact_stream_not_css_full_parse",
+        profile_iters: W8_PROFILE_ITERS,
+        profiled_bytes: profile.profiled_bytes,
+        track1_full_parse_mbps: profile.track1_full_parse_mbps,
+        lightningcss_full_parse_mbps: profile.lightningcss_full_parse_mbps,
+        cssparser_full_parse_mbps: profile.cssparser_full_parse_mbps,
+        track1_lightningcss_margin_mbps,
+        admitted_rows,
+        disposition,
+        disposition_reason,
     })
 }
 
-fn generated_fact_stream_marker(output: &str, profile: &Track1Profile) -> bool {
+fn generated_full_parse_marker(output: &str, profile: &Track1Profile) -> bool {
+    output.lines().next() == Some(TRACK1_FULL_PARSE_SCHEMA)
+        && output.lines().any(|line| {
+            line.starts_with("row\tid=")
+                && line.contains(profile.row_id)
+                && line.ends_with(&format!("\tplane={TRACK1_FULL_PARSE_OUTPUT_PLANE}"))
+        })
+        && output.contains("\nfull_parse\tstatus=accepted")
+        && !generated_fact_stream_marker(output)
+}
+
+fn generated_fact_stream_marker(output: &str) -> bool {
     output.lines().any(|line| {
-        line.starts_with("row\tid=") && line.ends_with(&format!("\tplane={}", profile.output_plane))
-    }) && output.contains("\npolicy\tbackend_shape=admitted_fact_output")
-        && output.contains("\nfrontend\tsource_hash=")
-        && output.contains("_fact_stream")
+        line.starts_with("row\tid=") && line.contains("_fact_stream")
+    }) || output.contains("\npolicy\tbackend_shape=admitted_fact_output")
+}
+
+struct W8ProfileMeasurement {
+    profiled_bytes: usize,
+    track1_full_parse_mbps: f64,
+    lightningcss_full_parse_mbps: f64,
+    cssparser_full_parse_mbps: f64,
+}
+
+fn measure_full_parse_profiles(
+    corpora: &[crate::css_l4_corpus::CssL4Corpus],
+) -> Result<W8ProfileMeasurement, String> {
+    let mut sources = Vec::with_capacity(corpora.len());
+    for corpus in corpora {
+        sources.push(
+            std::str::from_utf8(&corpus.bytes)
+                .map_err(|error| format!("{} is not UTF-8: {error}", corpus.spec.id))?,
+        );
+    }
+
+    let profiled_bytes = total_bytes(corpora) * TRACK1_PROFILES.len() * W8_PROFILE_ITERS;
+    let track1_elapsed = time_loop(|| {
+        for _ in 0..W8_PROFILE_ITERS {
+            for profile in TRACK1_PROFILES {
+                for source in &sources {
+                    let output = (profile.parse)(source)?;
+                    black_box(output.len());
+                }
+            }
+        }
+        Ok(())
+    })?;
+    let lightningcss_elapsed = time_loop(|| {
+        for _ in 0..W8_PROFILE_ITERS {
+            for _profile in TRACK1_PROFILES {
+                for source in &sources {
+                    let stylesheet =
+                        StyleSheet::parse(source, ParserOptions::default()).map_err(|error| {
+                            format!("lightningcss rejected production corpus: {error}")
+                        })?;
+                    black_box(stylesheet.rules.0.len());
+                }
+            }
+        }
+        Ok(())
+    })?;
+    let cssparser_elapsed = time_loop(|| {
+        for _ in 0..W8_PROFILE_ITERS {
+            for _profile in TRACK1_PROFILES {
+                for source in &sources {
+                    cssparser_full_parse(source)?;
+                }
+            }
+        }
+        Ok(())
+    })?;
+
+    Ok(W8ProfileMeasurement {
+        profiled_bytes,
+        track1_full_parse_mbps: throughput_mbps(profiled_bytes, track1_elapsed),
+        lightningcss_full_parse_mbps: throughput_mbps(profiled_bytes, lightningcss_elapsed),
+        cssparser_full_parse_mbps: throughput_mbps(profiled_bytes, cssparser_elapsed),
+    })
+}
+
+fn time_loop(mut run: impl FnMut() -> Result<(), String>) -> Result<Duration, String> {
+    let start = Instant::now();
+    run()?;
+    Ok(start.elapsed())
+}
+
+fn throughput_mbps(bytes: usize, elapsed: Duration) -> f64 {
+    if elapsed.is_zero() {
+        return f64::INFINITY;
+    }
+    ((bytes as f64) * 8.0) / (elapsed.as_secs_f64() * 1_000_000.0)
 }
 
 fn cssparser_full_parse(source: &str) -> Result<(), String> {
@@ -263,33 +399,38 @@ impl<'i> RuleBodyItemParser<'i, (), String> for CssparserFullParseProbe {
 }
 
 fn parse_declaration_values(input: &str) -> Result<String, String> {
-    generated_css_l4_declaration_values::parser::parse(input).map_err(|error| error.to_string())
+    generated_css_l4_declaration_values::parser::parse_full(input)
+        .map_err(|error| error.to_string())
 }
 
 fn parse_declaration_values_extended(input: &str) -> Result<String, String> {
-    generated_css_l4_declaration_values_extended::parser::parse(input)
+    generated_css_l4_declaration_values_extended::parser::parse_full(input)
         .map_err(|error| error.to_string())
 }
 
 fn parse_stylesheet_selectors(input: &str) -> Result<String, String> {
-    generated_css_l4_stylesheet_selectors::parser::parse(input).map_err(|error| error.to_string())
+    generated_css_l4_stylesheet_selectors::parser::parse_full(input)
+        .map_err(|error| error.to_string())
 }
 
 fn parse_visual_functions(input: &str) -> Result<String, String> {
-    generated_css_l4_visual_functions::parser::parse(input).map_err(|error| error.to_string())
+    generated_css_l4_visual_functions::parser::parse_full(input)
+        .map_err(|error| error.to_string())
 }
 
 fn parse_at_rules_and_media(input: &str) -> Result<String, String> {
-    generated_css_l4_at_rules_and_media::parser::parse(input).map_err(|error| error.to_string())
+    generated_css_l4_at_rules_and_media::parser::parse_full(input)
+        .map_err(|error| error.to_string())
 }
 
 fn parse_vendor_and_custom_atrules(input: &str) -> Result<String, String> {
-    generated_css_l4_vendor_and_custom_atrules::parser::parse(input)
+    generated_css_l4_vendor_and_custom_atrules::parser::parse_full(input)
         .map_err(|error| error.to_string())
 }
 
 fn parse_nested_layout(input: &str) -> Result<String, String> {
-    generated_css_l4_nested_layout::parser::parse(input).map_err(|error| error.to_string())
+    generated_css_l4_nested_layout::parser::parse_full(input)
+        .map_err(|error| error.to_string())
 }
 
 #[cfg(test)]
@@ -297,7 +438,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn css_l4_w8_production_attempt_rejects_fact_stream_track1() {
+    fn css_l4_w8_production_attempt_admits_full_parse_track1() {
         let report = run_production_attempt().expect("run W8 CSS production attempt");
 
         assert_eq!(report.wave_id, W8_WAVE_ID);
@@ -310,13 +451,36 @@ mod tests {
             report.track1_profile_runs,
             report.corpus_files * TRACK1_PROFILES.len()
         );
-        assert_eq!(report.track1_fact_stream_runs, report.track1_profile_runs);
+        assert_eq!(report.track1_full_parse_runs, report.track1_profile_runs);
+        assert_eq!(report.track1_wrong_plane_outputs, 0);
         assert_eq!(report.track1_errors, 0);
-        assert_eq!(report.admitted_rows, 0);
-        assert_eq!(report.disposition, W8Disposition::Rejected);
+        assert_eq!(report.profile_iters, W8_PROFILE_ITERS);
         assert_eq!(
-            report.block_reason,
-            "post_w7_track1_is_generated_fact_stream_not_css_full_parse"
+            report.profiled_bytes,
+            report.corpus_bytes * TRACK1_PROFILES.len() * W8_PROFILE_ITERS
+        );
+        assert!(
+            report.track1_lightningcss_margin_mbps > 0.0,
+            "track1={} lightningcss={} margin={} cssparser={}",
+            report.track1_full_parse_mbps,
+            report.lightningcss_full_parse_mbps,
+            report.track1_lightningcss_margin_mbps,
+            report.cssparser_full_parse_mbps,
+        );
+        eprintln!(
+            "W8_CSS_FULL_PARSE profile_iters={} profiled_bytes={} track1_mbps={:.3} lightningcss_mbps={:.3} cssparser_mbps={:.3} margin_mbps={:.3}",
+            report.profile_iters,
+            report.profiled_bytes,
+            report.track1_full_parse_mbps,
+            report.lightningcss_full_parse_mbps,
+            report.cssparser_full_parse_mbps,
+            report.track1_lightningcss_margin_mbps,
+        );
+        assert_eq!(report.admitted_rows, W8_SELECTED_CSS_ROWS);
+        assert_eq!(report.disposition, W8Disposition::Admitted);
+        assert_eq!(
+            report.disposition_reason,
+            "generated_track1_css_full_parse_same_plane"
         );
     }
 }

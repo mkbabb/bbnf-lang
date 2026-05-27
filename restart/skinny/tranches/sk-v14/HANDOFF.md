@@ -31,10 +31,12 @@ runtime projection emitter for `crates/core/src/runtime/css_l4/`. W6.0R then
 landed the runtime projection correction through `63ec1f0b5`, `7e6e12e9c`,
 and `d5599f4ef`. W6.1..W6.8 admitted the remaining root runtime projections
 through `b4c47666f`. W7 admitted policy/union runtime wiring at `672b927d5`.
-W8 is now rejected by REDRESS-215: the production CSS corpus and
-lightningcss/cssparser full-parse probes are available, but all seven post-W7
-generated CSS Track 1 profiles still emit fact streams rather than a CSS
-full-parse equality plane. W9 then closed mixed under REDRESS-216: 11 / 17
+W8 initially rejected under REDRESS-215 because all seven post-W7 generated
+CSS Track 1 profiles still emitted fact streams rather than a CSS full-parse
+equality plane. W8R then admitted all 24 CSS L4 rows by generating
+`parser::parse_full` output on the `css_l4_full_parse` plane and beating the
+same-run lightningcss full-parse floor in release-native measurement. W9 then
+closed mixed under REDRESS-216: 11 / 17
 JSON typed rows admit from cold `profile_direct` evidence, all 17 direct rows
 were blocked on digest-plane evidence, and 6 / 17 typed rows remained missing
 typed product surfaces. W10 then closed mixed under REDRESS-217: 6 / 17 JSON
@@ -99,7 +101,8 @@ without a fresh material differential. W11K then rejected a generated
 under REDRESS-241; the source patch was reverted, no row moved, and
 `y_string_unicode` product-plus-materializer retries are pre-blocked without a
 fresh material differential.
-Continue actual implementation against the remaining residual queue, not
+W8R closed the CSS residual after W11K; continue actual implementation against
+the remaining JSON residual queue, not
 another Omega or Alpha pass unless a future source attempt exposes a real
 spec-level amendment.
 
@@ -195,15 +198,15 @@ Lock 14 at `restart/locks/LOCKS.md:220–238`).
 
 ```
 JSON parse_only: 11 / 17 (6 OPEN after W10W residual implementation)
-JSON direct:     0 / 17  (17 OPEN after W9; digest-plane evidence is not strict per-corpus product evidence)
+JSON direct:     13 / 17 (4 OPEN after W11A; remaining rows lack admitted strict products)
 JSON typed:      13 / 17 (4 MISSING product surfaces after W9AB)
-CSS L4:          0 / 24  (all OPEN after W8; Track 1 still emits fact streams, not full-parse equality)
+CSS L4:          24 / 24 (ADMITTED after W8R; generated full-parse plane beats lightningcss floor)
 ```
 
 Opening baseline was zero admitted after audit prune. W11 close-state is
-mixed: 19 JSON cells are admitted, CSS L4 remains 0 / 24, and all residual
-rows are routed to implementation work because no architectural-block proof
-closes them.
+mixed: 37 JSON cells and 24 CSS L4 cells are admitted, and all remaining JSON
+residual rows are routed to implementation work because no architectural-block
+proof closes them.
 
 ## 4. Pre-S-P0 Readiness
 
@@ -280,7 +283,9 @@ state is:
   `unicode_mixed` and `unicode_escapes` products; REDRESS-233 rejects and
   reverts transient `gsoc-2018` products. REDRESS-241 rejects and reverts the
   fused-materializer `y_string_unicode` product root.
-- CSS L4: 0 / 24 ADMITTED, 24 OPEN under REDRESS-215.
+- CSS L4: 24 / 24 ADMITTED after W8R. REDRESS-215 remains historical as the
+  initial fact-stream-plane rejection, superseded by generated full-parse
+  release-native evidence.
 
 Per the latest user instruction, do not spend another cycle on Omega/Alpha
 governance before implementation. The next implementation packet should select
@@ -299,9 +304,10 @@ discipline).
 2. W7 has admitted the Lock-1 policy/union consumer wiring; W8/W9/W10 may cite
    those generated runtime policy facts but may not cite W7 as row-admit
    evidence.
-3. W8 has rejected 0 / 24 CSS L4 rows under REDRESS-215. Any future CSS L4
-   admit must provide generated Track 1 CSS full-parse output on the same plane
-   as lightningcss/cssparser, not fact-stream output.
+3. W8R has admitted 24 / 24 CSS L4 rows after the initial REDRESS-215
+   rejection. Do not reopen CSS L4 unless a later executable gate fails; any
+   future CSS change must preserve generated Track 1 CSS full-parse output on
+   the same plane as lightningcss/cssparser, not fact-stream output.
 4. W9 is closed mixed: 11 typed admits, 17 direct blocks, 6 typed missing
    product blocks. W9Y rejects the generated `y_string_unicode` typed root
    under REDRESS-226, so `y_string_unicode` remains missing. W9AA admits

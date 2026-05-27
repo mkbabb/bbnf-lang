@@ -13,3 +13,15 @@ pub fn parse_bytes(input: &[u8]) -> Result<String, CssFactError> {
     })?;
     parse(input)
 }
+
+pub fn parse_full(input: &str) -> Result<String, CssFactError> {
+    generated::emit_full_parse(input)
+}
+
+pub fn parse_full_bytes(input: &[u8]) -> Result<String, CssFactError> {
+    let input = std::str::from_utf8(input).map_err(|error| CssFactError {
+        offset: error.valid_up_to(),
+        message: "invalid UTF-8",
+    })?;
+    parse_full(input)
+}

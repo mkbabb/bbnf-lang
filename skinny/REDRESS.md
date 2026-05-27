@@ -5310,3 +5310,24 @@ perturbation.
   policy_owner=generated_grammar without adding a sixth BackendShape or any
   UnionTape/class-lane retained substrate. The row remains AUDIT-FALSIFIED/NO-GO
   because W7 is a load-bearing policy/union prune wave, not a direct admission.
+
+## SK-V14 Wave W8 CSS L4 Production Re-Admit
+
+- Item 215 closes all 24 CSS L4 rows under `G-SK-V14-W8-CSS-L4-READMIT` as
+  `REJECTED` for this tranche attempt. The executable probe in
+  `skinny/crates/bbnf-bench/src/css_l4_w8.rs` loads the SK-V14 production CSS
+  corpus (`979638` bytes), verifies lightningcss full-parse over all four
+  files, verifies a cssparser stylesheet probe over all four files, and runs
+  all seven post-W7 generated CSS runtime profiles over every corpus. The
+  generated Track 1 outputs are fact streams in all 28 profile/corpus runs:
+  W7 policy and frontend metadata are present, but the output plane remains
+  `*_fact_stream`, not a CSS full-parse equality plane. W8 therefore admits
+  0 / 24 rows and leaves `skinny/RESULTS.md` plus
+  `restart/skinny/ROLLING-SOTA-DELTA.md` at their existing
+  `AUDIT-FALSIFIED` / `OPEN` CSS posture. Evidence:
+  `cargo test -p bbnf-bench css_l4_w8 -- --nocapture` and
+  `restart/skinny/tranches/sk-v14/research/skv14-W8-redress.md`. Corrective
+  route: a future CSS re-admit wave needs generated Track 1 CSS full-parse
+  output on the same plane as lightningcss/cssparser; fact-stream adapters,
+  tiny fixtures, and CANONICAL_FIXTURE/profile-template shortcuts remain
+  rejected.

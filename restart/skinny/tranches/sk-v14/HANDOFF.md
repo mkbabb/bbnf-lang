@@ -25,12 +25,17 @@ rejected the V7 one-shot W5B-FRONTEND cap shape; Pass Omega V8
 W5B-FRONTENDR now splits W5B-FRONTEND into W5B.0 LOCK14-GATE, W5B.1
 IMPORT-CLOSURE, W5B.2 LAYOUT-DISCARD, W5B.3 PRETTY-SPAN-PROJECTION, and W5B.4
 REQUEST-CONSUMER. W5B.0..W5B.4, W5C-GEN, and W5D-DELETE have now admitted.
-W6.0 admitted only its Lock 14 route gate at `e3c8c8706`; REDRESS-213 rejects
-the CSS L4 root-runtime collapse because the root workspace has no generator
-that can regenerate `crates/core/src/runtime/css_l4/` from grammar/registry
-inputs without hiding hand-written runtime bodies. The next admissible move is
-the W6.0R runtime-projection correction packet; W6.1..W6.8, W7, and W8/W9/W10
-remain blocked until W6.0 admits.
+W6.0 admitted only its Lock 14 route gate at `e3c8c8706`; REDRESS-213 rejected
+the first CSS L4 root-runtime collapse because the root workspace had no
+runtime projection emitter for `crates/core/src/runtime/css_l4/`. W6.0R then
+landed the runtime projection correction through `63ec1f0b5`, `7e6e12e9c`,
+and `d5599f4ef`. W6.1..W6.8 admitted the remaining root runtime projections
+through `b4c47666f`. W7 admitted policy/union runtime wiring at `672b927d5`.
+W8 is now rejected by REDRESS-215: the production CSS corpus and
+lightningcss/cssparser full-parse probes are available, but all seven post-W7
+generated CSS Track 1 profiles still emit fact streams rather than a CSS
+full-parse equality plane. The next implementation move is W9 JSON direct +
+typed re-admit.
 
 ## 1. Bracket Verdict
 
@@ -181,35 +186,30 @@ Campaign at zero on numbers; non-zero on architecture. The
 
 ## 6. Next-Move
 
-**Next-move:** Dispatch W5B.0 LOCK14-GATE under the amended SPEC §8B. W5A
-admitted the source-consuming request boundary at `286233fa2`; W5B-FRONTEND
-now closes as an aggregate sequence: W5B.0 LOCK14-GATE, W5B.1 IMPORT-CLOSURE,
-W5B.2 LAYOUT-DISCARD, W5B.3 PRETTY-SPAN-PROJECTION, and W5B.4
-REQUEST-CONSUMER. CSS L4 compatibility constructs such as `@ws`, `@pretty`,
-`?w`, `>>`, `<<`, span capture, typed host projections, and imports lower into
-canonical IR rather than new public syntax. W5C-GEN inherits provider-free
-generator body replacement only after aggregate W5B-FRONTEND admits,
-W5D-DELETE inherits deletion only after W5C-GEN admits, and W6.0
-`crates/core/src/runtime/css_l4/`, W7, and W8/W9/W10 remain blocked until the
-amended PRUNE-3/4/5 chain closes.
+**Next-move:** Dispatch W9 JSON direct + typed re-admit under SPEC §12. W8 has
+an executable rejection packet (`skv14-W8-redress.md`, REDRESS-215), so the CSS
+L4 rows stay `AUDIT-FALSIFIED` / `OPEN` and do not block W9 dispatch. W9 must
+select exact JSON direct and typed rows, bind each row to the rebound
+plane-correct strict comparator, prove per-iteration equality, and update
+`skinny/RESULTS.md` plus `restart/skinny/ROLLING-SOTA-DELTA.md` only for rows
+that honestly re-admit. W10 remains gated on W9 admission per SPEC §13 and
+carries the unconditional Stage-0 obligation.
 
 Hard caps echoed per `[dispatch-hard-cap]`: 30-min lens-agent cap;
 research 20 min / plan 15 min / redress 30 min (45 min only for the
 addendum-amended decision-engine fold + C-4 per CONSOLIDATED §0.5 cap
 discipline).
 
-1. W6.0 route-gate evidence is admitted at `e3c8c8706`; preserve that narrow
-   owner scope for root CSS runtime and root xtask files.
-2. W6.0 root-runtime collapse is rejected by REDRESS-213. Do not claim
-   generated ownership of `crates/core/src/runtime/css_l4/` until a real
-   runtime projection source and emitter can destructively regenerate the seven
-   files.
-3. The corrective packet is
-   `restart/skinny/tranches/sk-v14/research/skv14-W6.0R-corrective-packet.md`.
-   It requires declarative runtime projection data for CSS values, arenas,
-   builder frame routing, document path/walker/view traversal, and exports.
-4. W6.1..W6.8, W7, and W8/W9/W10 remain blocked by the W6 sub-wave order until
-   W6.0 admits. Dispatching W6.1 while W6.0 is rejected is a REVISE.
+1. W6.0R and W6.1..W6.8 have admitted; do not reopen the PRUNE-4 root runtime
+   projection chain unless a later executable gate fails.
+2. W7 has admitted the Lock-1 policy/union consumer wiring; W8/W9/W10 may cite
+   those generated runtime policy facts but may not cite W7 as row-admit
+   evidence.
+3. W8 has rejected 0 / 24 CSS L4 rows under REDRESS-215. Any future CSS L4
+   admit must provide generated Track 1 CSS full-parse output on the same plane
+   as lightningcss/cssparser, not fact-stream output.
+4. W9 is the active wave. W10 dispatch waits for W9 disposition; W11 waits for
+   W0-W10 to have admitted, rejected, or routed status.
 
 ## 7. Refusal Conditions
 

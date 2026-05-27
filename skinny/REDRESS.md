@@ -6020,3 +6020,41 @@ perturbation.
 - Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
   `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
   `distinct_values`.
+
+## SK-V14 W11M unicode_escapes Decoded Product Reject
+
+- Item 242 closes
+  `G-SK-V14-W11M-JSON-UNICODE-ESCAPES-DECODED-PRODUCT` as `REJECT`.
+  No source patch lands, no `RESULTS.md` row moves, and
+  `restart/skinny/ROLLING-SOTA-DELTA.md` remains unchanged.
+- The measured candidate added a generic typed
+  `DirectScalar::DecodedJsonString` and generated `parse_unicode_escapes`
+  root. Track 1 returned a per-field product carrying raw escaped source for
+  escaped strings, borrowed decoded source for plain strings, and decoded
+  semantic facts `(fingerprint, len)`; Track 2, serde_json, and sonic-rs
+  independently produced the same semantic product from decoded strings. It did
+  not use generic `parse_only`, `JsonDigestSink`, `JsonDirectDigest`, or an
+  aggregate document checksum.
+- The route is materially distinct from REDRESS-54/55, REDRESS-66/67/68/69,
+  and REDRESS-117/118 because it changes the typed product surface rather than
+  feeding decoded string facts into the direct digest representation. It still
+  failed the cold gate: `unicode_escapes/real_typed_struct` measured Track 1
+  `5824.372` Mbps versus sonic `7073.230` Mbps, margin `-1249.858` Mbps, and
+  `unicode_escapes/direct_to_struct` measured Track 1 `5707.469` Mbps versus
+  strict sonic `7620.832` Mbps, margin `-1914.363` Mbps.
+- Correctness gates passed before measurement: `cargo run --profile ax-iter -p
+  xtask -- regen-real-typed`, `cargo run --profile ax-iter -p xtask --
+  check-real-typed`, focused `unicode_escapes` product tests including
+  malformed escape/control/surrogate rejection, `cargo test --profile ax-iter
+  -p codegen emits_typed_direct -- --nocapture`, and focused direct
+  strict-product parity.
+- The source patch was reverted after measurement and retained as
+  `/tmp/skv14-W11M-unicode-escapes-rejected.patch` with SHA-256
+  `a774358440dd49ae6a46762a2ef5cbd848a5e1e8684f34f954dc2eb34b53d090`.
+  Retained evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W11M-unicode-escapes-decoded-product.md`,
+  `.tsv`, and `.raw.log`.
+- Current JSON direct_to_struct state remains 14 / 17 ADMITTED and 3 OPEN:
+  `gsoc-2018`, `unicode_mixed`, and `unicode_escapes`. Current JSON
+  real_typed_struct state remains 14 / 17 ADMITTED and 3 MISSING:
+  `gsoc-2018`, `unicode_mixed`, and `unicode_escapes`.

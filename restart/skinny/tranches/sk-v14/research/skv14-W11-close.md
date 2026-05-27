@@ -86,6 +86,7 @@ instead of materialized decoded strings.
 | W11J | REJECTED | REDRESS-240: transient object comma-to-next-key specialization passed correctness but missed strict sonic on all six residual rows; no source patch landed and no row moved. |
 | W11K | REJECTED | REDRESS-241: transient `y_string_unicode` fused materializer product route passed correctness but missed strict sonic for typed and direct strict products; no source patch landed and no row moved. |
 | W11L | ADMITTED | Decoded string enum token product admits `y_string_unicode/direct_to_struct` and `y_string_unicode/real_typed_struct` from cold native `profile_direct` evidence. |
+| W11M | REJECTED | REDRESS-242: transient `unicode_escapes` decoded-string typed product scalar passed correctness but missed same-run sonic for typed and direct strict products; no source patch landed and no row moved. |
 
 ## Close-State Counts
 
@@ -507,6 +508,37 @@ exposes a spec-level amendment that truly requires G-Omega.
   `gsoc-2018`, `unicode_mixed`, and `unicode_escapes`. Current JSON
   real_typed_struct state is 14 / 17 ADMITTED and 3 MISSING:
   `gsoc-2018`, `unicode_mixed`, and `unicode_escapes`.
+
+## SK-V14 W11M JSON unicode_escapes Decoded Product Reject
+
+- Item 242 closes `G-SK-V14-W11M-JSON-UNICODE-ESCAPES-DECODED-PRODUCT` as
+  `REJECT`. No source patch lands, no `RESULTS.md` row moves, and
+  `restart/skinny/ROLLING-SOTA-DELTA.md` remains unchanged.
+- The transient route added a generic typed decoded-string scalar and generated
+  `parse_unicode_escapes` product root. Track 1 carried raw escaped source for
+  escaped strings, borrowed decoded source for plain strings, and decoded
+  `(fingerprint, len)` facts; Track 2, serde_json, and sonic-rs independently
+  produced the same semantic product from decoded strings. The route did not
+  use generic `parse_only`, `JsonDigestSink`, `JsonDirectDigest`, or an
+  aggregate document checksum.
+- Correctness gates passed before measurement: `cargo run --profile ax-iter -p
+  xtask -- regen-real-typed`, `cargo run --profile ax-iter -p xtask --
+  check-real-typed`, `cargo test --profile ax-iter -p bbnf-bench
+  unicode_escapes -- --nocapture`, `cargo test --profile ax-iter -p codegen
+  emits_typed_direct -- --nocapture`, and focused direct strict-product parity.
+- Cold release-native `profile_direct` evidence rejects both rows:
+  `unicode_escapes/real_typed_struct` Track 1 `5824.372` Mbps versus typed
+  sonic `7073.230` Mbps, margin `-1249.858` Mbps; and
+  `unicode_escapes/direct_to_struct` Track 1 `5707.469` Mbps versus strict
+  sonic `7620.832` Mbps, margin `-1914.363` Mbps. Retained evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W11M-unicode-escapes-decoded-product.md`,
+  `.tsv`, and `.raw.log`.
+- W11M pre-blocks retries of this decoded-string typed scalar shape for
+  `unicode_escapes` without a fresh material differential. It does not
+  pre-block closed token products such as W11L and does not alter the generic
+  parse_only contract. Current JSON direct_to_struct state remains 14 / 17
+  ADMITTED and 3 OPEN; current JSON real_typed_struct state remains 14 / 17
+  ADMITTED and 3 MISSING.
 
 ## SK-V14 W11E JSON parse_only 64-Byte Whitespace Reject
 

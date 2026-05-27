@@ -49,7 +49,9 @@ open. W10T then admitted `instruments/parse_only` from the cold open-row sweep
 under REDRESS-220, so parse_only now stands at 9 / 17 admitted and 8 / 17
 open. W10V then admitted `citm_catalog/parse_only` from the current-HEAD cold
 resweep under REDRESS-222, so parse_only now stands at 10 / 17 admitted and
-7 / 17 open.
+7 / 17 open. W10W then admitted `apache_builds/parse_only` through the
+generated parse-only iterative stack under REDRESS-223, so parse_only now
+stands at 11 / 17 admitted and 6 / 17 open.
 W11 closed the SK-V14 reconciliation packet on 2026-05-27. The next move is
 actual implementation against the residual queue, not another Omega or Alpha
 pass unless a future source attempt exposes a real spec-level amendment.
@@ -145,14 +147,14 @@ Lock 14 at `restart/locks/LOCKS.md:220–238`).
 ### Honest rolling delta (SK-V14 starting baseline)
 
 ```
-JSON parse_only: 10 / 17 (7 OPEN after W10V residual implementation)
+JSON parse_only: 11 / 17 (6 OPEN after W10W residual implementation)
 JSON direct:     0 / 17  (17 OPEN after W9; digest-plane evidence is not strict per-corpus product evidence)
 JSON typed:      11 / 17 (6 MISSING product surfaces after W9)
 CSS L4:          0 / 24  (all OPEN after W8; Track 1 still emits fact streams, not full-parse equality)
 ```
 
 Opening baseline was zero admitted after audit prune. W11 close-state is
-mixed: 18 JSON cells are admitted, CSS L4 remains 0 / 24, and all residual
+mixed: 19 JSON cells are admitted, CSS L4 remains 0 / 24, and all residual
 rows are routed to implementation work because no architectural-block proof
 closes them.
 
@@ -208,7 +210,7 @@ closes them.
 `restart/skinny/tranches/sk-v14/research/skv14-W11-close.md`. The live row
 state is:
 
-- JSON parse_only: 10 / 17 ADMITTED, 7 OPEN under REDRESS-222.
+- JSON parse_only: 11 / 17 ADMITTED, 6 OPEN under REDRESS-223.
 - JSON direct_to_struct: 0 / 17 ADMITTED, 17 OPEN under REDRESS-216.
 - JSON real_typed_struct: 11 / 17 ADMITTED, 6 MISSING product surfaces under
   REDRESS-216.
@@ -238,9 +240,10 @@ discipline).
    product blocks.
 5. W10 is closed mixed: 6 parse_only admits and 11 parse_only open rows under
    REDRESS-217. W10R then admits `canada/parse_only`, W10S admits
-   `unicode_mixed/parse_only`, W10T admits `instruments/parse_only`, and W10V
-   admits `citm_catalog/parse_only`, leaving 7 parse_only open rows under
-   REDRESS-222.
+   `unicode_mixed/parse_only`, W10T admits `instruments/parse_only`, W10V
+   admits `citm_catalog/parse_only`, and W10W admits
+   `apache_builds/parse_only`, leaving 6 parse_only open rows under
+   REDRESS-223.
 6. W11 is closed as reconciliation-only. It authorizes implementation against
    residual rows; it does not authorize paper-close claims for non-admits.
 

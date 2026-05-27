@@ -605,7 +605,8 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
             .unwrap()
             .contains("parse_only, parse_only_bytes"));
         assert!(generated.contains("pub fn parse_only"));
-        assert!(parse_only_section.contains("fn parse_only_value_at"));
+        assert!(parse_only_section.contains("fn parse_only_value_iterative"));
+        assert!(parse_only_section.contains("enum ParseOnlyFrame"));
         assert!(parse_only_section.contains("fn parse_only_string"));
         assert!(!parse_only_section.contains("TapeBuilder"));
         assert!(!parse_only_section.contains("emit_plain_offset"));

@@ -5497,3 +5497,25 @@ perturbation.
   `github_events`, `update_center`, `random`, `gsoc-2018`, and
   `distinct_values`. Current parse_only state is 10 / 17 admitted and 7 / 17
   open.
+
+## SK-V14 W10W JSON parse_only Iterative Stack
+
+- Item 223 closes `G-SK-V14-W10W-JSON-PARSE-ONLY-ITERATIVE-STACK` as
+  `MIXED`. The source patch replaces the recursive generated JSON
+  `parse_only` container walk with an explicit generated iterative stack for
+  objects and arrays. The cap-16 tiny-string candidate was abrogated because
+  it did not robustly admit any open row.
+- One additional parse_only row admits from cold `profile_direct` evidence
+  retained at
+  `restart/skinny/tranches/sk-v14/research/skv14-W10W-parse-only-iterative-stack.tsv`:
+  `apache_builds`. The admitted 4000-iteration row has Track 1 `13129.331`
+  Mbps, independent Track 2 `9065.855` Mbps, strict
+  `parse_only/sonic_rs::Skipper` comparator `12951.668` Mbps, `serde_json`
+  `3964.266` Mbps, no warmup iterations, and per-iteration equality PASS.
+  Two further same-binary 4000-iteration repeats also cleared Skipper + 1.0
+  Mbps with Track 1 `13285.106` and `13305.497` Mbps against Skipper
+  `13007.626` and `12868.672` Mbps.
+- Six parse_only rows remain open after W10W because the cold evidence still
+  does not clear Skipper + 1.0 Mbps: `twitter`, `github_events`,
+  `update_center`, `random`, `gsoc-2018`, and `distinct_values`. Current
+  parse_only state is 11 / 17 admitted and 6 / 17 open.

@@ -332,17 +332,17 @@ pub const JSON_PARSE_ONLY_ADMISSION_SPECS: &[JsonParseOnlyAdmissionSpec] = &[
         prior_redress_citation: "217",
     },
     JsonParseOnlyAdmissionSpec {
-        label: "W10.4",
-        wave_id: "SK-V14-W10",
-        run_id_prefix: "SK-V14-W10:",
-        consumer_gate: "G-W10-JSON-PARSE-ONLY",
+        label: "W10W.1",
+        wave_id: "SK-V14-W10W",
+        run_id_prefix: "SK-V14-W10W:",
+        consumer_gate: "G-SK-V14-W10W-JSON-PARSE-ONLY-ITERATIVE-STACK",
         row_id: "json/apache_builds/parse_only/main",
         corpus: "apache_builds",
         criterion_group: "json_apache_builds",
         bytes: 127_275,
-        route_id: "generated-json-parse-only-distinct-path",
-        redress_entry: "none:SK-V14-W10-admit",
-        prior_redress_citation: "102",
+        route_id: "generated-json-parse-only-iterative-stack",
+        redress_entry: "none:SK-V14-W10W-admit",
+        prior_redress_citation: "222",
     },
     JsonParseOnlyAdmissionSpec {
         label: "W10.5",
@@ -556,6 +556,7 @@ pub fn json_parse_only_audit_reference(spec: &JsonParseOnlyAdmissionSpec) -> &'s
         "SK-V14-W10S" => "sk-v14-W10S:parse-only-string-end-prefix-scan;sk-v14-W10R:parse-only-prefix-continuation;sk-v14-W10:distinct-parse-only;sk-v13/v6-comparator-integrity:§1+§3",
         "SK-V14-W10T" => "sk-v14-W10T:parse-only-open-sweep;sk-v14-W10S:parse-only-string-end-prefix-scan;sk-v14-W10R:parse-only-prefix-continuation;sk-v14-W10:distinct-parse-only;sk-v13/v6-comparator-integrity:§1+§3",
         "SK-V14-W10V" => "sk-v14-W10V:parse-only-current-head-resweep;sk-v14-W10U:number-end-reject;sk-v14-W10T:parse-only-open-sweep;sk-v14-W10S:parse-only-string-end-prefix-scan;sk-v14-W10R:parse-only-prefix-continuation;sk-v14-W10:distinct-parse-only;sk-v13/v6-comparator-integrity:§1+§3",
+        "SK-V14-W10W" => "sk-v14-W10W:parse-only-iterative-stack;sk-v14-W10V:parse-only-current-head-resweep;sk-v14-W10U:number-end-reject;sk-v14-W10T:parse-only-open-sweep;sk-v14-W10S:parse-only-string-end-prefix-scan;sk-v14-W10R:parse-only-prefix-continuation;sk-v14-W10:distinct-parse-only;sk-v13/v6-comparator-integrity:§1+§3",
         _ => "sk-v14-W10:distinct-parse-only;sk-v13/v6-comparator-integrity:§1+§3",
     }
 }
@@ -566,6 +567,7 @@ pub fn json_parse_only_open_delta(spec: &JsonParseOnlyAdmissionSpec) -> &'static
         "SK-V14-W10S" => "admitted:SK-V14-W10S-parse-only-string-end-prefix-scan",
         "SK-V14-W10T" => "admitted:SK-V14-W10T-parse-only-open-sweep",
         "SK-V14-W10V" => "admitted:SK-V14-W10V-current-head-resweep",
+        "SK-V14-W10W" => "admitted:SK-V14-W10W-parse-only-iterative-stack",
         _ => "admitted:SK-V14-W10-parse-only-distinct",
     }
 }
@@ -3759,9 +3761,9 @@ fn validate_skv14_manifest_rows(rows: &[SkV14ManifestRow]) -> Result<(), String>
             return Err(format!("SK-V14 manifest missing {row_id}"));
         }
     }
-    if pending != 24 || falsified + sustained != 51 {
+    if pending != 23 || falsified + sustained != 52 {
         return Err(format!(
-            "SK-V14 audit overlay expected pending=24 and falsified+sustained=51 after authorized W9/W10/W10R/W10S/W10T/W10V admits, saw {falsified} / {pending} / {sustained}"
+            "SK-V14 audit overlay expected pending=23 and falsified+sustained=52 after authorized W9/W10/W10R/W10S/W10T/W10V/W10W admits, saw {falsified} / {pending} / {sustained}"
         ));
     }
     Ok(())
@@ -3807,7 +3809,7 @@ fn validate_skv14_sustained_row(row: &SkV14ManifestRow) -> Result<(), String> {
         return Ok(());
     }
     Err(format!(
-        "{} is AUDIT-SUSTAINED without W9 typed or W10/W10R/W10S/W10T/W10V parse_only authority",
+        "{} is AUDIT-SUSTAINED without W9 typed or W10/W10R/W10S/W10T/W10V/W10W parse_only authority",
         row.row_id
     ))
 }
@@ -5751,6 +5753,7 @@ fn validate_w0_profile_artifact(row_id: &str, profile_artifact: &str) -> Result<
                 | "restart/skinny/tranches/sk-v14/research/skv14-W10S-parse-only-string-end-profile-direct.tsv"
                 | "restart/skinny/tranches/sk-v14/research/skv14-W10T-parse-only-open-sweep.tsv"
                 | "restart/skinny/tranches/sk-v14/research/skv14-W10V-parse-only-current-head-resweep.tsv"
+                | "restart/skinny/tranches/sk-v14/research/skv14-W10W-parse-only-iterative-stack.tsv"
         ) {
             return Ok(());
         }
@@ -5789,6 +5792,8 @@ fn validate_w0_hot_leaf(
             "not-collected-in-W10T-row"
         } else if profile_artifact.contains("skv14-W10V-parse-only-current-head-resweep.tsv") {
             "not-collected-in-W10V-row"
+        } else if profile_artifact.contains("skv14-W10W-parse-only-iterative-stack.tsv") {
+            "not-collected-in-W10W-row"
         } else {
             "not-collected-in-W10-row"
         };
@@ -6190,6 +6195,7 @@ fn validate_native_comparator_source(
             "restart/skinny/tranches/sk-v14/research/skv14-W10S-parse-only-string-end-profile-direct.tsv",
             "restart/skinny/tranches/sk-v14/research/skv14-W10T-parse-only-open-sweep.tsv",
             "restart/skinny/tranches/sk-v14/research/skv14-W10V-parse-only-current-head-resweep.tsv",
+            "restart/skinny/tranches/sk-v14/research/skv14-W10W-parse-only-iterative-stack.tsv",
         ]
         .into_iter()
         .map(|path| format!("profile_direct:{path},mode={mode}"))

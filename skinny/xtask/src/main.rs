@@ -758,7 +758,7 @@ fn validate_skv14_sustained_row(row: &Skv14ManifestRow) -> Result<()> {
         return Ok(());
     }
     bail!(
-        "{} is AUDIT-SUSTAINED without W9 typed or W10/W10R/W10S/W10T/W10V parse_only authority",
+        "{} is AUDIT-SUSTAINED without W9 typed or W10/W10R/W10S/W10T/W10V/W10W parse_only authority",
         row.row_id
     )
 }
@@ -930,6 +930,12 @@ fn skv14_parse_only_admit_fields(row_id: &str) -> (&'static str, &'static str, &
             "SK-V14-W10V",
             "none:SK-V14-W10V-admit",
             "admitted:SK-V14-W10V-current-head-resweep",
+        )
+    } else if row_id == "json/apache_builds/parse_only/main" {
+        (
+            "SK-V14-W10W",
+            "none:SK-V14-W10W-admit",
+            "admitted:SK-V14-W10W-parse-only-iterative-stack",
         )
     } else if row_id == "json/canada/parse_only/main" {
         (

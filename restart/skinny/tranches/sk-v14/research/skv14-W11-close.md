@@ -12,7 +12,7 @@ live-looking admission fragments in generated `RESULTS.md`.
 - `restart/skinny/tranches/sk-v14/SPEC.md` Section 14.
 - `restart/skinny/tranches/sk-v14/SYNTHESIS.md` R10.
 - `skinny/RESULTS.md`.
-- `skinny/REDRESS.md` items 215, 216, and 217.
+- `skinny/REDRESS.md` items 215 through 223.
 - `restart/skinny/ROLLING-SOTA-DELTA.md`.
 - `restart/skinny/tranches/sk-v14/HANDOFF.md`.
 
@@ -40,12 +40,13 @@ live-looking admission fragments in generated `RESULTS.md`.
 | W10S | MIXED | REDRESS-219: `unicode_mixed/parse_only` admitted by string-end prefix scan; parse_only state is now 8 / 17 admitted and 9 / 17 open. |
 | W10T | MIXED | REDRESS-220: `instruments/parse_only` admitted by the cold open-row sweep after W10S; parse_only state is now 9 / 17 admitted and 8 / 17 open. |
 | W10V | MIXED | REDRESS-222: `citm_catalog/parse_only` admitted by the current-HEAD cold resweep after W10U; parse_only state is now 10 / 17 admitted and 7 / 17 open. |
+| W10W | MIXED | REDRESS-223: `apache_builds/parse_only` admitted by the generated parse-only iterative stack; parse_only state is now 11 / 17 admitted and 6 / 17 open. |
 
 ## Close-State Counts
 
 | Family | ADMITTED | OPEN | MISSING / blocked | Governing evidence |
 |---|---:|---:|---:|---|
-| JSON parse_only | 10 | 7 | 0 | W10/W10R/W10S/W10T/W10V cold `profile_direct` evidence and REDRESS-217/218/219/220/222. |
+| JSON parse_only | 11 | 6 | 0 | W10/W10R/W10S/W10T/W10V/W10W cold `profile_direct` evidence and REDRESS-217/218/219/220/222/223. |
 | JSON direct_to_struct | 0 | 17 | 0 | W9 digest-plane rejection and REDRESS-216. |
 | JSON real_typed_struct | 11 | 0 | 6 | W9 cold typed evidence; missing products listed in REDRESS-216. |
 | CSS L4 | 0 | 24 | 0 | W8 production corpus rejection and REDRESS-215. |
@@ -63,18 +64,18 @@ remaining rows are implementation residuals, not closeable proof blocks.
 3. Missing JSON typed products remain for `canada`, `gsoc-2018`,
    `unicode_mixed`, `unicode_escapes`, `distinct_values`, and
    `y_string_unicode`.
-4. JSON parse_only residuals remain for `twitter`, `apache_builds`,
-   `github_events`, `update_center`, `random`, `gsoc-2018`, and
+4. JSON parse_only residuals remain for `twitter`, `github_events`,
+   `update_center`, `random`, `gsoc-2018`, and
    `distinct_values`.
 
 ## Reconciliation
 
 - `skinny/RESULTS.md` and `restart/skinny/ROLLING-SOTA-DELTA.md` agree on
-  ten parse_only admits, seventeen direct opens, eleven typed admits plus six
+  eleven parse_only admits, seventeen direct opens, eleven typed admits plus six
   missing typed products, and twenty-four CSS L4 opens.
 - `skinny/REDRESS.md` carries the live residuals as REDRESS-215,
   REDRESS-216, REDRESS-217, REDRESS-218, REDRESS-219, REDRESS-220, and
-  REDRESS-222.
+  REDRESS-222, and REDRESS-223.
 - `skinny/RESULTS.md` now renders CSS L4 legacy CostFacts as historical claims
   with current `AUDIT-FALSIFIED_OPEN` status, so the manifest no longer embeds
   live-looking `A` / `GO` / `ADMITTED-PARITY` fragments for OPEN CSS rows.
@@ -86,16 +87,16 @@ remaining rows are implementation residuals, not closeable proof blocks.
 - `cargo xtask gate-json --check-results --skv14-existing-results-capture`
   is the row/report consumer for this W11 reconciliation.
 - `cargo test -p bbnf-bench skv14_json_parse_only_report_accepts -- --nocapture`
-  passed after the report-renderer reconciliation.
+  passed after the report-renderer reconciliation and W10W row movement.
 - `cargo test -p xtask -- --nocapture` passed after the generated report
   check.
 - Close invariants remain: 16 locks, Pattern H count 67, Lock 10 five-shape
-  `BackendShape` canon preserved, and `skinny/crates/codegen/src/json_templates`
-  diff clean.
+  `BackendShape` canon preserved, and generated JSON parse_only remains
+  distinct from the tape-building path.
 
 ## W11 Disposition
 
-W11/W10R/W10S/W10T/W10V close SK-V14 as a mixed tranche, with admitted rows preserved and all
+W11/W10R/W10S/W10T/W10V/W10W close SK-V14 as a mixed tranche, with admitted rows preserved and all
 unmet rows routed to implementation residuals. Under the latest user
 instruction, the next work is implementation against the residual queue, not a
 new Omega or Alpha pass unless a future source attempt exposes a spec-level

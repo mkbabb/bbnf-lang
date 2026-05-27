@@ -721,6 +721,64 @@ fn validate_skv14_json_w1_row(row: &Skv14ManifestRow) -> Result<()> {
 }
 
 fn validate_skv14_sustained_row(row: &Skv14ManifestRow) -> Result<()> {
+    if SKV14_W11L_TOKEN_PRODUCT_TYPED_ROWS.contains(&row.row_id.as_str()) {
+        let corpus = row
+            .row_id
+            .strip_prefix("json/")
+            .and_then(|tail| tail.strip_suffix("/real_typed_struct/main"))
+            .ok_or_else(|| anyhow!("{} is not a real_typed_struct row", row.row_id))?;
+        if row.wave_id != "SK-V14-W11L"
+            || row.track1_entry_point != "bbnf_bench::json_parity::track1_real_typed_struct"
+            || row.track2_entry_point != "bbnf_bench::real_typed_struct::track2_typed"
+            || row.comparator_plane != format!("{corpus}::typed_strict_struct_deser")
+            || row.same_wave_consumer_class != "gate_json_typed_contract"
+            || row.track2_independence_status != "independent_verified"
+            || row.substrate_target != "direct_sink"
+            || row.redress_entry != "none:SK-V14-W11L-admit"
+            || row.sk_v14_open_delta != "admitted:SK-V14-W11L-decoded-token-product"
+        {
+            bail!(
+                "{} is not a valid SK-V14 W11L sustained typed token-product row",
+                row.row_id
+            );
+        }
+        if !valid_skv14_per_iter_pass(&row.per_iter_equality) {
+            bail!(
+                "{} lacks SK-V14 timed per-iteration equality PASS",
+                row.row_id
+            );
+        }
+        return Ok(());
+    }
+    if SKV14_W11L_TOKEN_PRODUCT_DIRECT_ROWS.contains(&row.row_id.as_str()) {
+        let corpus = row
+            .row_id
+            .strip_prefix("json/")
+            .and_then(|tail| tail.strip_suffix("/direct_to_struct/main"))
+            .ok_or_else(|| anyhow!("{} is not a direct_to_struct row", row.row_id))?;
+        if row.wave_id != "SK-V14-W11L"
+            || row.track1_entry_point != "bbnf_bench::json_parity::track1_direct_to_struct"
+            || row.track2_entry_point != "bbnf_bench::direct_struct::track2_strict_product"
+            || row.comparator_plane != format!("{corpus}::strict_struct_deser")
+            || row.same_wave_consumer_class != "gate_json_direct_strict_product_contract"
+            || row.track2_independence_status != "independent_verified"
+            || row.substrate_target != "direct_sink"
+            || row.redress_entry != "none:SK-V14-W11L-admit"
+            || row.sk_v14_open_delta != "admitted:SK-V14-W11L-decoded-token-product"
+        {
+            bail!(
+                "{} is not a valid SK-V14 W11L sustained direct token-product row",
+                row.row_id
+            );
+        }
+        if !valid_skv14_per_iter_pass(&row.per_iter_equality) {
+            bail!(
+                "{} lacks SK-V14 timed per-iteration equality PASS",
+                row.row_id
+            );
+        }
+        return Ok(());
+    }
     if SKV14_W9_TYPED_ADMIT_ROWS.contains(&row.row_id.as_str()) {
         let expected_wave = if row.row_id == "json/distinct_values/real_typed_struct/main" {
             "SK-V14-W9AA"
@@ -829,7 +887,7 @@ fn validate_skv14_sustained_row(row: &Skv14ManifestRow) -> Result<()> {
         return Ok(());
     }
     bail!(
-        "{} is AUDIT-SUSTAINED without W9 typed, W10/W10R/W10S/W10T/W10V/W10W parse_only, W11A direct strict-product, or W8R CSS full-parse authority",
+        "{} is AUDIT-SUSTAINED without W9 typed, W10/W10R/W10S/W10T/W10V/W10W parse_only, W11A direct strict-product, W11L token-product, or W8R CSS full-parse authority",
         row.row_id
     )
 }
@@ -1011,6 +1069,12 @@ const SKV14_W11A_DIRECT_STRICT_ADMIT_ROWS: &[&str] = &[
     "json/distinct_values/direct_to_struct/main",
 ];
 
+const SKV14_W11L_TOKEN_PRODUCT_TYPED_ROWS: &[&str] =
+    &["json/y_string_unicode/real_typed_struct/main"];
+
+const SKV14_W11L_TOKEN_PRODUCT_DIRECT_ROWS: &[&str] =
+    &["json/y_string_unicode/direct_to_struct/main"];
+
 fn is_skv14_w10_parse_row(row_id: &str) -> bool {
     SKV13_JSON_CORPORA
         .iter()
@@ -1126,6 +1190,7 @@ fn validate_skv13_rolling_delta(results_text: &str, rolling_path: &Path) -> Resu
     }
     if !rolling_text.contains("run_id: SK-V13-open")
         && !rolling_text.contains("run_id: SK-V14-W8R-current")
+        && !rolling_text.contains("run_id: SK-V14-W11L-current")
     {
         bail!("ROLLING-SOTA-DELTA.md missing supported `run_id:`");
     }
@@ -1163,10 +1228,12 @@ fn validate_skv13_rolling_delta(results_text: &str, rolling_path: &Path) -> Resu
             validate_rolling_status(row)?;
             if row.tranche_admitted == "ADMITTED"
                 && !SKV14_W9_TYPED_ADMIT_ROWS.contains(&row_id.as_str())
+                && !SKV14_W11L_TOKEN_PRODUCT_TYPED_ROWS.contains(&row_id.as_str())
                 && !is_skv14_w10_parse_row(&row_id)
                 && !SKV14_W11A_DIRECT_STRICT_ADMIT_ROWS.contains(&row_id.as_str())
+                && !SKV14_W11L_TOKEN_PRODUCT_DIRECT_ROWS.contains(&row_id.as_str())
             {
-                bail!("{row_id} is ADMITTED without W9 typed, W10 parse, or W11A direct authority");
+                bail!("{row_id} is ADMITTED without W9 typed, W10 parse, W11A direct, or W11L token-product authority");
             }
             if let Some(metric) = result_metrics.get(&row_id) {
                 validate_numeric_rolling_row(row, *metric)?;

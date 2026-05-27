@@ -160,6 +160,17 @@ pub fn parse_distinct_values<'i>(input: &'i str) -> Result<Vec<crate::real_typed
     }
 }
 
+pub fn parse_y_string_unicode<'i>(input: &'i str) -> Result<Vec<crate::real_typed_struct::YStringUnicodeToken>, DirectBuildError<'i>> {
+    let mut parser = DirectParser::new(input);
+    let output = parse_vec_cap_2200_string_enum_crate_real_typed_struct_y_string_unicode_token(&mut parser)?;
+    parser.ws();
+    if parser.cursor == parser.bytes.len() {
+        Ok(output)
+    } else {
+        Err(parser.error("trailing characters"))
+    }
+}
+
 pub fn parse_random<'i>(input: &'i str) -> Result<crate::real_typed_struct::RandomDocument<'i>, DirectBuildError<'i>> {
     let mut parser = DirectParser::new(input);
     let output = parse_type_random_document(&mut parser)?;
@@ -2378,6 +2389,21 @@ fn parse_vec_cap_440_type_distinct_value<'i>(parser: &mut DirectParser<'i>) -> R
     }
 }
 
+fn parse_vec_cap_2200_string_enum_crate_real_typed_struct_y_string_unicode_token<'i>(parser: &mut DirectParser<'i>) -> Result<Vec<crate::real_typed_struct::YStringUnicodeToken>, DirectBuildError<'i>> {
+    let mut out: Vec<crate::real_typed_struct::YStringUnicodeToken> = Vec::with_capacity(2200);
+    parser.ws();
+    parser.expect(b'[')?;
+    parser.ws();
+    if parser.take(b']') { return Ok(out); }
+    loop {
+        out.push(parse_string_enum_crate_real_typed_struct_y_string_unicode_token(parser)?);
+        parser.ws();
+        if parser.take(b',') { parser.ws(); continue; }
+        parser.expect(b']')?;
+        return Ok(out);
+    }
+}
+
 fn parse_vec_cap_2_type_w5_array_event<'i>(parser: &mut DirectParser<'i>) -> Result<Vec<crate::real_typed_struct::W5ArrayEvent<'i>>, DirectBuildError<'i>> {
     let mut out: Vec<crate::real_typed_struct::W5ArrayEvent<'i>> = Vec::with_capacity(2);
     parser.ws();
@@ -3063,6 +3089,24 @@ fn parse_option_vec_cap_1_type_instrument_pattern_event<'i>(parser: &mut DirectP
     }
 }
 
+fn parse_string_enum_crate_real_typed_struct_y_string_unicode_token<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::YStringUnicodeToken, DirectBuildError<'i>> {
+    let (fingerprint, len) = parser.parse_string_enum_fingerprint()?;
+    match (fingerprint, len) {
+        (3207357828540018061u64, 4u64) => Ok(crate::real_typed_struct::YStringUnicodeToken::AWithCombiningTilde),
+        (444104803186503013u64, 1u64) => Ok(crate::real_typed_struct::YStringUnicodeToken::Quote),
+        (3207357828655808488u64, 4u64) => Ok(crate::real_typed_struct::YStringUnicodeToken::Plane16Noncharacter),
+        (3207357828669503278u64, 4u64) => Ok(crate::real_typed_struct::YStringUnicodeToken::Plane1Noncharacter),
+        (9493707473873853069u64, 3u64) => Ok(crate::real_typed_struct::YStringUnicodeToken::InvisiblePlus),
+        (9493707473873836070u64, 3u64) => Ok(crate::real_typed_struct::YStringUnicodeToken::BmpNoncharacter),
+        (11700859919493020584u64, 7u64) => Ok(crate::real_typed_struct::YStringUnicodeToken::EuroAndGclef),
+        (9493707473875839666u64, 3u64) => Ok(crate::real_typed_struct::YStringUnicodeToken::SamaritanLetter),
+        (3207357828669499928u64, 4u64) => Ok(crate::real_typed_struct::YStringUnicodeToken::Rocket),
+        (3207357828669440900u64, 4u64) => Ok(crate::real_typed_struct::YStringUnicodeToken::PartyPopper),
+        (8160446500076121357u64, 25u64) => Ok(crate::real_typed_struct::YStringUnicodeToken::Family),
+        _ => Err(parser.error("unexpected string enum value")),
+    }
+}
+
 struct DirectParser<'i> {
     input: &'i str,
     bytes: &'i [u8],
@@ -3202,6 +3246,113 @@ impl<'i> DirectParser<'i> {
         } else {
             Ok(Cow::Borrowed(raw))
         }
+    }
+
+    #[inline(always)]
+    fn parse_string_enum_fingerprint(&mut self) -> Result<(u64, u64), DirectBuildError<'i>> {
+        if self.bytes.get(self.cursor) != Some(&b'"') {
+            return Err(self.error("expected string"));
+        }
+        let mut cursor = self.cursor + 1;
+        let mut hash = 0xcbf29ce484222325u64;
+        let mut len = 0u64;
+        loop {
+            let Some(byte) = self.bytes.get(cursor).copied() else {
+                return Err(self.error("invalid string"));
+            };
+            match byte {
+                b'"' => {
+                    self.cursor = cursor + 1;
+                    return Ok((hash, len));
+                }
+                b'\\' => {
+                    cursor += 1;
+                    let Some(escape) = self.bytes.get(cursor).copied() else {
+                        return Err(self.error("invalid string escape"));
+                    };
+                    match escape {
+                        b'"' => {
+                            fold_string_enum_byte(&mut hash, &mut len, b'"');
+                            cursor += 1;
+                        }
+                        b'\\' => {
+                            fold_string_enum_byte(&mut hash, &mut len, b'\\');
+                            cursor += 1;
+                        }
+                        b'/' => {
+                            fold_string_enum_byte(&mut hash, &mut len, b'/');
+                            cursor += 1;
+                        }
+                        b'b' => {
+                            fold_string_enum_byte(&mut hash, &mut len, 0x08);
+                            cursor += 1;
+                        }
+                        b'f' => {
+                            fold_string_enum_byte(&mut hash, &mut len, 0x0c);
+                            cursor += 1;
+                        }
+                        b'n' => {
+                            fold_string_enum_byte(&mut hash, &mut len, b'\n');
+                            cursor += 1;
+                        }
+                        b'r' => {
+                            fold_string_enum_byte(&mut hash, &mut len, b'\r');
+                            cursor += 1;
+                        }
+                        b't' => {
+                            fold_string_enum_byte(&mut hash, &mut len, b'\t');
+                            cursor += 1;
+                        }
+                        b'u' => {
+                            let unit = self.hex4(cursor + 1)?;
+                            cursor += 5;
+                            let codepoint = if (0xd800..=0xdbff).contains(&unit) {
+                                if self.bytes.get(cursor) != Some(&b'\\')
+                                    || self.bytes.get(cursor + 1) != Some(&b'u')
+                                {
+                                    return Err(self.error("invalid unicode surrogate"));
+                                }
+                                let trail = self.hex4(cursor + 2)?;
+                                if !(0xdc00..=0xdfff).contains(&trail) {
+                                    return Err(self.error("invalid unicode surrogate"));
+                                }
+                                cursor += 6;
+                                0x10000
+                                    + ((((unit as u32) - 0xd800) << 10)
+                                        | ((trail as u32) - 0xdc00))
+                            } else if (0xdc00..=0xdfff).contains(&unit) {
+                                return Err(self.error("invalid unicode surrogate"));
+                            } else {
+                                unit as u32
+                            };
+                            fold_string_enum_codepoint(&mut hash, &mut len, codepoint)
+                                .map_err(|_| self.error("invalid unicode codepoint"))?;
+                        }
+                        _ => return Err(self.error("invalid string escape")),
+                    }
+                }
+                0x00..=0x1f => return Err(self.error("invalid string")),
+                _ => {
+                    fold_string_enum_byte(&mut hash, &mut len, byte);
+                    cursor += 1;
+                }
+            }
+        }
+    }
+
+    #[inline(always)]
+    fn hex4(&self, offset: usize) -> Result<u16, DirectBuildError<'i>> {
+        let Some(digits) = self.bytes.get(offset..offset + 4) else {
+            return Err(self.error("invalid unicode escape"));
+        };
+        let mut value = 0u16;
+        for digit in digits {
+            let Some(nibble) = hex_nibble(*digit) else {
+                return Err(self.error("invalid unicode escape"));
+            };
+            value = (value << 4) | nibble;
+        }
+        Ok(value)
     }
 
     #[allow(dead_code)]
@@ -3386,4 +3537,44 @@ impl<'i> DirectParser<'i> {
             message,
         }
     }
+}
+
+#[inline(always)]
+fn fold_string_enum_byte(hash: &mut u64, len: &mut u64, byte: u8) {
+    *hash = string_enum_mix(*hash, byte as u64);
+    *len += 1;
+}
+
+#[inline(always)]
+fn fold_string_enum_codepoint(
+    hash: &mut u64,
+    len: &mut u64,
+    codepoint: u32,
+) -> Result<(), ()> {
+    let Some(ch) = char::from_u32(codepoint) else {
+        return Err(());
+    };
+    let mut buf = [0u8; 4];
+    for byte in ch.encode_utf8(&mut buf).as_bytes() {
+        fold_string_enum_byte(hash, len, *byte);
+    }
+    Ok(())
+}
+
+#[inline(always)]
+fn hex_nibble(byte: u8) -> Option<u16> {
+    match byte {
+        b'0'..=b'9' => Some((byte - b'0') as u16),
+        b'a'..=b'f' => Some((byte - b'a' + 10) as u16),
+        b'A'..=b'F' => Some((byte - b'A' + 10) as u16),
+        _ => None,
+    }
+}
+
+#[inline(always)]
+fn string_enum_mix(seed: u64, value: u64) -> u64 {
+    seed ^ value
+        .wrapping_add(0x9e3779b97f4a7c15)
+        .wrapping_add(seed << 6)
+        .wrapping_add(seed >> 2)
 }

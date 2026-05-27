@@ -21,6 +21,7 @@ pub enum RealTypedFixture {
     Numbers,
     UnicodeBasic,
     DistinctValues,
+    YStringUnicode,
     Random,
 }
 
@@ -302,6 +303,90 @@ pub struct DistinctValue<'a> {
 pub struct DistinctField<'a> {
     pub key: Cow<'a, str>,
     pub value: Cow<'a, str>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum YStringUnicodeToken {
+    AWithCombiningTilde,
+    Quote,
+    Plane16Noncharacter,
+    Plane1Noncharacter,
+    InvisiblePlus,
+    BmpNoncharacter,
+    EuroAndGclef,
+    SamaritanLetter,
+    Rocket,
+    PartyPopper,
+    Family,
+}
+
+impl YStringUnicodeToken {
+    fn id(self) -> u64 {
+        match self {
+            Self::AWithCombiningTilde => 1,
+            Self::Quote => 2,
+            Self::Plane16Noncharacter => 3,
+            Self::Plane1Noncharacter => 4,
+            Self::InvisiblePlus => 5,
+            Self::BmpNoncharacter => 6,
+            Self::EuroAndGclef => 7,
+            Self::SamaritanLetter => 8,
+            Self::Rocket => 9,
+            Self::PartyPopper => 10,
+            Self::Family => 11,
+        }
+    }
+
+    fn from_decoded(value: &str) -> Option<Self> {
+        match value {
+            "\u{00e0}\u{0303}" => Some(Self::AWithCombiningTilde),
+            "\"" => Some(Self::Quote),
+            "\u{10fffe}" => Some(Self::Plane16Noncharacter),
+            "\u{1fffe}" => Some(Self::Plane1Noncharacter),
+            "\u{2064}" => Some(Self::InvisiblePlus),
+            "\u{fffe}" => Some(Self::BmpNoncharacter),
+            "\u{20ac}\u{1d11e}" => Some(Self::EuroAndGclef),
+            "\u{0821}" => Some(Self::SamaritanLetter),
+            "\u{1f680}" => Some(Self::Rocket),
+            "\u{1f389}" => Some(Self::PartyPopper),
+            "\u{1f468}\u{200d}\u{1f469}\u{200d}\u{1f467}\u{200d}\u{1f466}" => Some(Self::Family),
+            _ => None,
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for YStringUnicodeToken {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct YStringUnicodeTokenVisitor;
+
+        impl<'de> Visitor<'de> for YStringUnicodeTokenVisitor {
+            type Value = YStringUnicodeToken;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                formatter.write_str("a y_string_unicode token")
+            }
+
+            fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                YStringUnicodeToken::from_decoded(value)
+                    .ok_or_else(|| E::custom("unexpected y_string_unicode token"))
+            }
+
+            fn visit_borrowed_str<E>(self, value: &'de str) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                self.visit_str(value)
+            }
+        }
+
+        deserializer.deserialize_str(YStringUnicodeTokenVisitor)
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -652,6 +737,7 @@ pub enum RealTypedOutput<'a> {
     Numbers(Vec<f64>),
     UnicodeBasic(Vec<UnicodeBasicRecord<'a>>),
     DistinctValues(Vec<DistinctValue<'a>>),
+    YStringUnicode(Vec<YStringUnicodeToken>),
     Random(RandomDocument<'a>),
 }
 
@@ -669,6 +755,7 @@ pub fn fixture_for_name(name: &str) -> Option<RealTypedFixture> {
         "numbers" => Some(RealTypedFixture::Numbers),
         "unicode_basic" | "unicode-basic" => Some(RealTypedFixture::UnicodeBasic),
         "distinct_values" | "distinct-values" => Some(RealTypedFixture::DistinctValues),
+        "y_string_unicode" | "y-string-unicode" => Some(RealTypedFixture::YStringUnicode),
         "random" => Some(RealTypedFixture::Random),
         _ => None,
     }
@@ -701,6 +788,8 @@ fn candidate_names(name: &str) -> [&str; 2] {
         "update-center" => ["update-center", "update_center"],
         "marine_ik" => ["marine_ik", "marine-ik"],
         "marine-ik" => ["marine_ik", "marine-ik"],
+        "y_string_unicode" => ["y_string_unicode", "y-string-unicode"],
+        "y-string-unicode" => ["y_string_unicode", "y-string-unicode"],
         _ => [name, name],
     }
 }
@@ -814,6 +903,11 @@ pub fn track1_typed<'a>(
                 .map(RealTypedOutput::DistinctValues)
                 .map_err(|error| DirectStructError::Parse(error.to_string()))
         }
+        RealTypedFixture::YStringUnicode => {
+            crate::generated_real_typed::parse_y_string_unicode(input)
+                .map(RealTypedOutput::YStringUnicode)
+                .map_err(|error| DirectStructError::Parse(error.to_string()))
+        }
         RealTypedFixture::Random => crate::generated_real_typed::parse_random(input)
             .map(RealTypedOutput::Random)
             .map_err(|error| DirectStructError::Parse(error.to_string())),
@@ -873,6 +967,11 @@ pub fn serde_typed<'a>(
         RealTypedFixture::DistinctValues => serde_json::from_slice::<Vec<DistinctValue<'a>>>(bytes)
             .map(RealTypedOutput::DistinctValues)
             .map_err(|error| DirectStructError::Serde(error.to_string())),
+        RealTypedFixture::YStringUnicode => {
+            serde_json::from_slice::<Vec<YStringUnicodeToken>>(bytes)
+                .map(RealTypedOutput::YStringUnicode)
+                .map_err(|error| DirectStructError::Serde(error.to_string()))
+        }
         RealTypedFixture::Random => serde_json::from_slice::<RandomDocument<'a>>(bytes)
             .map(RealTypedOutput::Random)
             .map_err(|error| DirectStructError::Serde(error.to_string())),
@@ -923,6 +1022,9 @@ pub fn sonic_typed<'a>(
         RealTypedFixture::DistinctValues => sonic_rs::from_slice::<Vec<DistinctValue<'a>>>(bytes)
             .map(RealTypedOutput::DistinctValues)
             .map_err(|error| DirectStructError::Sonic(error.to_string())),
+        RealTypedFixture::YStringUnicode => sonic_rs::from_slice::<Vec<YStringUnicodeToken>>(bytes)
+            .map(RealTypedOutput::YStringUnicode)
+            .map_err(|error| DirectStructError::Sonic(error.to_string())),
         RealTypedFixture::Random => sonic_rs::from_slice::<RandomDocument<'a>>(bytes)
             .map(RealTypedOutput::Random)
             .map_err(|error| DirectStructError::Sonic(error.to_string())),
@@ -959,6 +1061,7 @@ pub fn typed_checksum(output: &RealTypedOutput<'_>) -> u64 {
         RealTypedOutput::Numbers(value) => checksum_numbers(value),
         RealTypedOutput::UnicodeBasic(value) => checksum_unicode_basic(value),
         RealTypedOutput::DistinctValues(value) => checksum_distinct_values(value),
+        RealTypedOutput::YStringUnicode(value) => checksum_y_string_unicode(value),
         RealTypedOutput::Random(value) => checksum_random(value),
     }
 }
@@ -1189,6 +1292,14 @@ fn checksum_distinct_values(values: &[DistinctValue<'_>]) -> u64 {
     let mut hash = mix(0x6469737476616c, values.len() as u64);
     for value in values {
         hash = mix(hash, checksum_distinct_value(value));
+    }
+    hash
+}
+
+fn checksum_y_string_unicode(values: &[YStringUnicodeToken]) -> u64 {
+    let mut hash = mix(0x795f737472696e67, values.len() as u64);
+    for value in values {
+        hash = mix(hash, value.id());
     }
     hash
 }
@@ -1755,6 +1866,20 @@ mod tests {
         let bytes = std::fs::read(locate_fixture("distinct_values")).unwrap();
         let text = std::str::from_utf8(&bytes).unwrap();
         assert_real_typed_parity(text, &bytes, RealTypedFixture::DistinctValues);
+    }
+
+    #[test]
+    fn generated_y_string_unicode_typed_parser_matches_sidecars() {
+        let input = br#"["\u00e0\u0303","\"","\uDBFF\uDFFE","\uD83F\uDFFE","\u2064","\uFFFE","\u20AC\uD834\uDD1E","\u0821","\uD83D\uDE80","\uD83C\uDF89","\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67\u200D\uD83D\uDC66"]"#;
+        let text = std::str::from_utf8(input).unwrap();
+        assert_real_typed_parity(text, input, RealTypedFixture::YStringUnicode);
+    }
+
+    #[test]
+    fn w14_full_y_string_unicode_typed_fixture_matches_sidecars() {
+        let bytes = std::fs::read(locate_fixture("y_string_unicode")).unwrap();
+        let text = std::str::from_utf8(&bytes).unwrap();
+        assert_real_typed_parity(text, &bytes, RealTypedFixture::YStringUnicode);
     }
 
     #[test]

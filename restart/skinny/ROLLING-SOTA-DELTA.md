@@ -1,11 +1,11 @@
 # Rolling SOTA Delta
 
 schema_version: sk-v13-rolling-sota-delta-v1
-run_id: SK-V14-W8R-current
+run_id: SK-V14-W11L-current
 g_omega_status: signed
 consumer_gate: cargo xtask gate-json --check-results
 source_results: skinny/RESULTS.md
-source_commit: 15a61bcbb
+source_commit: pending:SK-V14-W11L-admission-commit
 
 ## JSON Targets
 
@@ -60,8 +60,8 @@ source_commit: 15a61bcbb
 | json/distinct_values/direct_to_struct/main | direct_to_struct | 8755.197 | 3908.274 | 4846.923 | ADMITTED |
 | json/distinct_values/real_typed_struct/main | real_typed_struct | 8827.520 | 3896.064 | 4931.456 | ADMITTED |
 | json/y_string_unicode/parse_only/main | parse_only | 3169.90 | 2418.91 | 750.99 | ADMITTED |
-| json/y_string_unicode/direct_to_struct/main | direct_to_struct | 5061.00 | 8999.00 | -3938.00 | OPEN |
-| json/y_string_unicode/real_typed_struct/main | real_typed_struct | absent:product-surface-not-generated | absent:product-surface-not-generated | absent:product-surface-not-generated | MISSING |
+| json/y_string_unicode/direct_to_struct/main | direct_to_struct | 5493.522 | 4264.646 | 1228.876 | ADMITTED |
+| json/y_string_unicode/real_typed_struct/main | real_typed_struct | 5361.584 | 4267.896 | 1093.688 | ADMITTED |
 
 ## CSS L4 Targets
 

@@ -72,6 +72,12 @@ pub struct DirectIgnoredFieldSchema {
     pub skip: DirectSkipKind,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DirectStringEnumVariant {
+    pub variant: String,
+    pub decoded: String,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum DirectSkipKind {
     Any,
@@ -98,6 +104,10 @@ pub enum DirectTypeRef {
         value_field: String,
         capacity_hint: Option<usize>,
         value: Box<DirectTypeRef>,
+    },
+    StringEnum {
+        enum_type: String,
+        variants: Vec<DirectStringEnumVariant>,
     },
     Option(Box<DirectTypeRef>),
 }
@@ -288,7 +298,46 @@ fn validate_type_ref(
         | DirectTypeRef::MapString(inner)
         | DirectTypeRef::MapEntriesVec { value: inner, .. }
         | DirectTypeRef::Option(inner) => validate_type_ref(inner, types),
+        DirectTypeRef::StringEnum {
+            enum_type,
+            variants,
+        } => validate_string_enum_ref(enum_type, variants),
     }
+}
+
+fn validate_string_enum_ref(
+    enum_type: &str,
+    variants: &[DirectStringEnumVariant],
+) -> Result<(), String> {
+    if enum_type.trim().is_empty() {
+        return Err("string enum has empty enum type".to_string());
+    }
+    if variants.is_empty() {
+        return Err(format!("string enum `{enum_type}` has no variants"));
+    }
+    let mut variant_names = BTreeSet::new();
+    let mut decoded_values = BTreeSet::new();
+    for variant in variants {
+        if !is_ident(&variant.variant) {
+            return Err(format!(
+                "string enum `{enum_type}` has invalid variant `{}`",
+                variant.variant
+            ));
+        }
+        if !variant_names.insert(variant.variant.as_str()) {
+            return Err(format!(
+                "string enum `{enum_type}` has duplicate variant `{}`",
+                variant.variant
+            ));
+        }
+        if !decoded_values.insert(variant.decoded.as_str()) {
+            return Err(format!(
+                "string enum `{enum_type}` has duplicate decoded value for `{}`",
+                variant.variant
+            ));
+        }
+    }
+    Ok(())
 }
 
 fn is_ident(value: &str) -> bool {

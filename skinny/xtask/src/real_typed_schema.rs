@@ -1,7 +1,7 @@
 use codegen::direct_schema::{
     DirectFieldSchema, DirectIgnoredFieldSchema, DirectRootSchema, DirectScalar, DirectSchemaSet,
-    DirectSkipKind, DirectTypeKind, DirectTypeRef, DirectTypeSchema, DuplicatePolicy,
-    PresencePolicy, UnknownFieldPolicy,
+    DirectSkipKind, DirectStringEnumVariant, DirectTypeKind, DirectTypeRef, DirectTypeSchema,
+    DuplicatePolicy, PresencePolicy, UnknownFieldPolicy,
 };
 
 pub fn schema() -> DirectSchemaSet {
@@ -64,6 +64,32 @@ pub fn schema() -> DirectSchemaSet {
                 "parse_distinct_values",
                 "Vec<crate::real_typed_struct::DistinctValue<'i>>",
                 vec_with_capacity(ty("DistinctValue"), 440),
+            ),
+            DirectRootSchema::typed_root(
+                "parse_y_string_unicode",
+                "Vec<crate::real_typed_struct::YStringUnicodeToken>",
+                vec_with_capacity(
+                    string_enum(
+                        "crate::real_typed_struct::YStringUnicodeToken",
+                        vec![
+                            enum_variant("AWithCombiningTilde", "\u{00e0}\u{0303}"),
+                            enum_variant("Quote", "\""),
+                            enum_variant("Plane16Noncharacter", "\u{10fffe}"),
+                            enum_variant("Plane1Noncharacter", "\u{1fffe}"),
+                            enum_variant("InvisiblePlus", "\u{2064}"),
+                            enum_variant("BmpNoncharacter", "\u{fffe}"),
+                            enum_variant("EuroAndGclef", "\u{20ac}\u{1d11e}"),
+                            enum_variant("SamaritanLetter", "\u{0821}"),
+                            enum_variant("Rocket", "\u{1f680}"),
+                            enum_variant("PartyPopper", "\u{1f389}"),
+                            enum_variant(
+                                "Family",
+                                "\u{1f468}\u{200d}\u{1f469}\u{200d}\u{1f467}\u{200d}\u{1f466}",
+                            ),
+                        ],
+                    ),
+                    2_200,
+                ),
             ),
             DirectRootSchema::struct_root(
                 "parse_random",
@@ -722,6 +748,20 @@ fn f64_ty() -> DirectTypeRef {
 
 fn number_string() -> DirectTypeRef {
     DirectTypeRef::Scalar(DirectScalar::NumberString)
+}
+
+fn string_enum(enum_type: &str, variants: Vec<DirectStringEnumVariant>) -> DirectTypeRef {
+    DirectTypeRef::StringEnum {
+        enum_type: enum_type.to_string(),
+        variants,
+    }
+}
+
+fn enum_variant(variant: &str, decoded: &str) -> DirectStringEnumVariant {
+    DirectStringEnumVariant {
+        variant: variant.to_string(),
+        decoded: decoded.to_string(),
+    }
 }
 
 fn vec(inner: DirectTypeRef) -> DirectTypeRef {

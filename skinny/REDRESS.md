@@ -5686,6 +5686,37 @@ perturbation.
   `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
   `distinct_values`.
 
+## SK-V14 W11G JSON parse_only Key-Colon Fusion Reject
+
+- Item 237 closes `G-SK-V14-W11G-JSON-PARSE-ONLY-KEY-COLON-FUSION` as
+  `REJECT`. No source patch lands, no `RESULTS.md` row moves, and
+  `restart/skinny/ROLLING-SOTA-DELTA.md` remains unchanged.
+- The measured candidate fused generated key-string validation and colon
+  consumption inside `parse_only_key_colon`: it called
+  `parse_only_string_end` directly, checked the post-key colon or intervening
+  whitespace, and then stopped after colon whitespace. It deliberately carried
+  no next value byte, retained the existing `ObjectAfterValue` delimiter path,
+  and did not use W11D context-threading, W11F object-member fast arms,
+  structural pre-scans, cursor-return ABI changes, or W10AA object-loop
+  cleanup. The source patch was reverted after measurement and retained as
+  `/tmp/skv14-W11G-parse-only-key-colon-fusion-rejected.patch` with SHA-256
+  `c538adcc2abd703d7fc77a39e546dcfff0e12a15f9ba9edc7d9a21826d42f210`.
+- Correctness gates passed before measurement: `cargo xtask regen-json`,
+  `cargo xtask check-json`, `cargo test --profile ax-iter -p runtime
+  generated_parse_only_accepts_and_rejects_json -- --nocapture`, and
+  `cargo test --profile ax-iter -p codegen
+  emits_distinct_json_parse_only_path_without_tape_builder -- --nocapture`.
+- Cold `profile_direct` evidence rejects all six open parse_only rows:
+  `twitter` margin `-3661.483` Mbps, `github_events` margin `-3343.328` Mbps,
+  `update_center` margin `-4020.596` Mbps, `random` margin `-2248.300` Mbps,
+  `gsoc-2018` margin `-13483.416` Mbps, and `distinct_values` margin
+  `-5365.590` Mbps versus the `sonic + 1.0` floor. Retained evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W11G-parse-only-key-colon-fusion.md`,
+  `.tsv`, and `.raw.log`.
+- Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
+  `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
+  `distinct_values`.
+
 ## SK-V14 W11A JSON direct_to_struct Strict Product Admit
 
 - Item 231 closes `G-SK-V14-W11A-JSON-DIRECT-STRICT-PRODUCT` as `ADMIT`.

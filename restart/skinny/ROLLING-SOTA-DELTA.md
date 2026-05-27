@@ -5,7 +5,7 @@ run_id: SK-V13-open
 g_omega_status: signed
 consumer_gate: cargo xtask gate-json --check-results
 source_results: skinny/RESULTS.md
-source_commit: c013ddd38+w9aa-distinct-values
+source_commit: 189e7519d+w9ab-canada
 
 ## JSON Targets
 
@@ -19,7 +19,7 @@ source_commit: c013ddd38+w9aa-distinct-values
 | json/citm_catalog/real_typed_struct/main | real_typed_struct | 20512.60 | 12663.29 | 7849.31 | ADMITTED |
 | json/canada/parse_only/main | parse_only | 16709.901 | 12971.929 | 3737.972 | ADMITTED |
 | json/canada/direct_to_struct/main | direct_to_struct | 10962.00 | 12206.00 | -1244.00 | OPEN |
-| json/canada/real_typed_struct/main | real_typed_struct | absent:product-surface-not-generated | absent:product-surface-not-generated | absent:product-surface-not-generated | MISSING |
+| json/canada/real_typed_struct/main | real_typed_struct | 4761.909 | 2737.418 | 2024.491 | ADMITTED |
 | json/apache_builds/parse_only/main | parse_only | 13129.331 | 12952.668 | 176.663 | ADMITTED |
 | json/apache_builds/direct_to_struct/main | direct_to_struct | 11428.00 | 11106.00 | 322.00 | OPEN |
 | json/apache_builds/real_typed_struct/main | real_typed_struct | 4352.26 | 3391.81 | 960.45 | ADMITTED |

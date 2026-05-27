@@ -1,5 +1,6 @@
 use serde::de::{MapAccess, Visitor};
 use serde::{Deserialize, Deserializer};
+use serde_json::value::RawValue;
 use std::borrow::Cow;
 use std::fmt;
 use std::path::PathBuf;
@@ -16,6 +17,7 @@ pub enum RealTypedFixture {
     Mesh,
     MarineIk,
     Instruments,
+    Canada,
     Numbers,
     UnicodeBasic,
     DistinctValues,
@@ -184,6 +186,94 @@ pub struct GithubPayload<'a> {
     pub description: Option<Cow<'a, str>>,
     #[serde(default, borrow)]
     pub master_branch: Option<Cow<'a, str>>,
+}
+
+#[derive(Debug)]
+pub struct CanadaFeatureCollection<'a> {
+    pub collection_type: Option<Cow<'a, str>>,
+    pub features: Vec<CanadaFeature<'a>>,
+}
+
+#[derive(Debug)]
+pub struct CanadaFeature<'a> {
+    pub feature_type: Option<Cow<'a, str>>,
+    pub properties: Option<CanadaProperties<'a>>,
+    pub geometry: Option<CanadaGeometry<'a>>,
+}
+
+#[derive(Debug)]
+pub struct CanadaProperties<'a> {
+    pub name: Option<Cow<'a, str>>,
+}
+
+#[derive(Debug)]
+pub struct CanadaGeometry<'a> {
+    pub geometry_type: Option<Cow<'a, str>>,
+    pub coordinates: Vec<Vec<Vec<Cow<'a, str>>>>,
+}
+
+#[derive(Debug, Deserialize)]
+struct CanadaSerdeFeatureCollection<'a> {
+    #[serde(default, borrow, rename = "type")]
+    collection_type: Option<Cow<'a, str>>,
+    #[serde(default, borrow)]
+    features: Vec<CanadaSerdeFeature<'a>>,
+}
+
+#[derive(Debug, Deserialize)]
+struct CanadaSerdeFeature<'a> {
+    #[serde(default, borrow, rename = "type")]
+    feature_type: Option<Cow<'a, str>>,
+    #[serde(default, borrow)]
+    properties: Option<CanadaSerdeProperties<'a>>,
+    #[serde(default, borrow)]
+    geometry: Option<CanadaSerdeGeometry<'a>>,
+}
+
+#[derive(Debug, Deserialize)]
+struct CanadaSerdeProperties<'a> {
+    #[serde(default, borrow)]
+    name: Option<Cow<'a, str>>,
+}
+
+#[derive(Debug, Deserialize)]
+struct CanadaSerdeGeometry<'a> {
+    #[serde(default, borrow, rename = "type")]
+    geometry_type: Option<Cow<'a, str>>,
+    #[serde(default, borrow)]
+    coordinates: Vec<Vec<Vec<&'a RawValue>>>,
+}
+
+#[derive(Debug, Deserialize)]
+struct CanadaSonicFeatureCollection<'a> {
+    #[serde(default, borrow, rename = "type")]
+    collection_type: Option<Cow<'a, str>>,
+    #[serde(default, borrow)]
+    features: Vec<CanadaSonicFeature<'a>>,
+}
+
+#[derive(Debug, Deserialize)]
+struct CanadaSonicFeature<'a> {
+    #[serde(default, borrow, rename = "type")]
+    feature_type: Option<Cow<'a, str>>,
+    #[serde(default, borrow)]
+    properties: Option<CanadaSonicProperties<'a>>,
+    #[serde(default, borrow)]
+    geometry: Option<CanadaSonicGeometry<'a>>,
+}
+
+#[derive(Debug, Deserialize)]
+struct CanadaSonicProperties<'a> {
+    #[serde(default, borrow)]
+    name: Option<Cow<'a, str>>,
+}
+
+#[derive(Debug, Deserialize)]
+struct CanadaSonicGeometry<'a> {
+    #[serde(default, borrow, rename = "type")]
+    geometry_type: Option<Cow<'a, str>>,
+    #[serde(default)]
+    coordinates: Vec<Vec<Vec<sonic_rs::RawNumber>>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -558,6 +648,7 @@ pub enum RealTypedOutput<'a> {
     Mesh(Mesh),
     MarineIk(MarineIk),
     Instruments(InstrumentsDocument<'a>),
+    Canada(CanadaFeatureCollection<'a>),
     Numbers(Vec<f64>),
     UnicodeBasic(Vec<UnicodeBasicRecord<'a>>),
     DistinctValues(Vec<DistinctValue<'a>>),
@@ -574,6 +665,7 @@ pub fn fixture_for_name(name: &str) -> Option<RealTypedFixture> {
         "mesh" => Some(RealTypedFixture::Mesh),
         "marine_ik" | "marine-ik" => Some(RealTypedFixture::MarineIk),
         "instruments" => Some(RealTypedFixture::Instruments),
+        "canada" => Some(RealTypedFixture::Canada),
         "numbers" => Some(RealTypedFixture::Numbers),
         "unicode_basic" | "unicode-basic" => Some(RealTypedFixture::UnicodeBasic),
         "distinct_values" | "distinct-values" => Some(RealTypedFixture::DistinctValues),
@@ -613,6 +705,72 @@ fn candidate_names(name: &str) -> [&str; 2] {
     }
 }
 
+fn canada_from_serde<'a>(value: CanadaSerdeFeatureCollection<'a>) -> CanadaFeatureCollection<'a> {
+    CanadaFeatureCollection {
+        collection_type: value.collection_type,
+        features: value
+            .features
+            .into_iter()
+            .map(|feature| CanadaFeature {
+                feature_type: feature.feature_type,
+                properties: feature.properties.map(|properties| CanadaProperties {
+                    name: properties.name,
+                }),
+                geometry: feature.geometry.map(|geometry| CanadaGeometry {
+                    geometry_type: geometry.geometry_type,
+                    coordinates: geometry
+                        .coordinates
+                        .into_iter()
+                        .map(|ring| {
+                            ring.into_iter()
+                                .map(|point| {
+                                    point
+                                        .into_iter()
+                                        .map(|number| Cow::Borrowed(number.get()))
+                                        .collect()
+                                })
+                                .collect()
+                        })
+                        .collect(),
+                }),
+            })
+            .collect(),
+    }
+}
+
+fn canada_from_sonic<'a>(value: CanadaSonicFeatureCollection<'a>) -> CanadaFeatureCollection<'a> {
+    CanadaFeatureCollection {
+        collection_type: value.collection_type,
+        features: value
+            .features
+            .into_iter()
+            .map(|feature| CanadaFeature {
+                feature_type: feature.feature_type,
+                properties: feature.properties.map(|properties| CanadaProperties {
+                    name: properties.name,
+                }),
+                geometry: feature.geometry.map(|geometry| CanadaGeometry {
+                    geometry_type: geometry.geometry_type,
+                    coordinates: geometry
+                        .coordinates
+                        .into_iter()
+                        .map(|ring| {
+                            ring.into_iter()
+                                .map(|point| {
+                                    point
+                                        .into_iter()
+                                        .map(|number| Cow::Owned(number.as_str().to_string()))
+                                        .collect()
+                                })
+                                .collect()
+                        })
+                        .collect(),
+                }),
+            })
+            .collect(),
+    }
+}
+
 pub fn track1_typed<'a>(
     fixture: RealTypedFixture,
     input: &'a str,
@@ -641,6 +799,9 @@ pub fn track1_typed<'a>(
             .map_err(|error| DirectStructError::Parse(error.to_string())),
         RealTypedFixture::Instruments => crate::generated_real_typed::parse_instruments(input)
             .map(RealTypedOutput::Instruments)
+            .map_err(|error| DirectStructError::Parse(error.to_string())),
+        RealTypedFixture::Canada => crate::generated_real_typed::parse_canada(input)
+            .map(RealTypedOutput::Canada)
             .map_err(|error| DirectStructError::Parse(error.to_string())),
         RealTypedFixture::Numbers => crate::generated_real_typed::parse_numbers(input)
             .map(RealTypedOutput::Numbers)
@@ -695,6 +856,12 @@ pub fn serde_typed<'a>(
         RealTypedFixture::Instruments => serde_json::from_slice::<InstrumentsDocument<'a>>(bytes)
             .map(RealTypedOutput::Instruments)
             .map_err(|error| DirectStructError::Serde(error.to_string())),
+        RealTypedFixture::Canada => {
+            serde_json::from_slice::<CanadaSerdeFeatureCollection<'a>>(bytes)
+                .map(canada_from_serde)
+                .map(RealTypedOutput::Canada)
+                .map_err(|error| DirectStructError::Serde(error.to_string()))
+        }
         RealTypedFixture::Numbers => serde_json::from_slice::<Vec<f64>>(bytes)
             .map(RealTypedOutput::Numbers)
             .map_err(|error| DirectStructError::Serde(error.to_string())),
@@ -741,6 +908,10 @@ pub fn sonic_typed<'a>(
         RealTypedFixture::Instruments => sonic_rs::from_slice::<InstrumentsDocument<'a>>(bytes)
             .map(RealTypedOutput::Instruments)
             .map_err(|error| DirectStructError::Sonic(error.to_string())),
+        RealTypedFixture::Canada => sonic_rs::from_slice::<CanadaSonicFeatureCollection<'a>>(bytes)
+            .map(canada_from_sonic)
+            .map(RealTypedOutput::Canada)
+            .map_err(|error| DirectStructError::Sonic(error.to_string())),
         RealTypedFixture::Numbers => sonic_rs::from_slice::<Vec<f64>>(bytes)
             .map(RealTypedOutput::Numbers)
             .map_err(|error| DirectStructError::Sonic(error.to_string())),
@@ -784,6 +955,7 @@ pub fn typed_checksum(output: &RealTypedOutput<'_>) -> u64 {
         RealTypedOutput::Mesh(value) => checksum_mesh(value),
         RealTypedOutput::MarineIk(value) => checksum_marine_ik(value),
         RealTypedOutput::Instruments(value) => checksum_instruments(value),
+        RealTypedOutput::Canada(value) => checksum_canada(value),
         RealTypedOutput::Numbers(value) => checksum_numbers(value),
         RealTypedOutput::UnicodeBasic(value) => checksum_unicode_basic(value),
         RealTypedOutput::DistinctValues(value) => checksum_distinct_values(value),
@@ -929,6 +1101,39 @@ fn checksum_github_payload(value: &GithubPayload<'_>) -> u64 {
     hash = fold_opt_str(hash, &value.before);
     hash = fold_opt_str(hash, &value.description);
     fold_opt_str(hash, &value.master_branch)
+}
+
+fn checksum_canada(value: &CanadaFeatureCollection<'_>) -> u64 {
+    let mut hash = 0x63616e616461;
+    hash = fold_opt_str(hash, &value.collection_type);
+    hash = mix(hash, value.features.len() as u64);
+    for feature in &value.features {
+        hash = mix(hash, checksum_canada_feature(feature));
+    }
+    hash
+}
+
+fn checksum_canada_feature(value: &CanadaFeature<'_>) -> u64 {
+    let mut hash = 0x636166656174;
+    hash = fold_opt_str(hash, &value.feature_type);
+    hash = value.properties.as_ref().map_or_else(
+        || mix(hash, 0),
+        |value| mix(hash, checksum_canada_properties(value)),
+    );
+    value.geometry.as_ref().map_or_else(
+        || mix(hash, 0),
+        |value| mix(hash, checksum_canada_geometry(value)),
+    )
+}
+
+fn checksum_canada_properties(value: &CanadaProperties<'_>) -> u64 {
+    fold_opt_str(0x636170726f70, &value.name)
+}
+
+fn checksum_canada_geometry(value: &CanadaGeometry<'_>) -> u64 {
+    let mut hash = 0x636167656f6d;
+    hash = fold_opt_str(hash, &value.geometry_type);
+    fold_three_deep_str_slice(hash, &value.coordinates)
 }
 
 fn checksum_mesh(value: &Mesh) -> u64 {
@@ -1254,6 +1459,17 @@ fn fold_nested_f64_slice(mut hash: u64, values: &[Vec<f64>]) -> u64 {
     hash
 }
 
+fn fold_three_deep_str_slice(mut hash: u64, values: &[Vec<Vec<Cow<'_, str>>>]) -> u64 {
+    hash = mix(hash, values.len() as u64);
+    for value in values {
+        hash = mix(hash, value.len() as u64);
+        for point in value {
+            hash = fold_str_slice(hash, point);
+        }
+    }
+    hash
+}
+
 fn fold_f64_slice(mut hash: u64, values: &[f64]) -> u64 {
     hash = mix(hash, values.len() as u64);
     for value in values {
@@ -1528,7 +1744,8 @@ mod tests {
 
     #[test]
     fn generated_distinct_values_typed_parser_matches_sidecars() {
-        let input = br#"[{"key_0_0":"ignored","timestamp":"2026-05-12T00:00:00Z","seq":0,"status":"ok"}]"#;
+        let input =
+            br#"[{"key_0_0":"ignored","timestamp":"2026-05-12T00:00:00Z","seq":0,"status":"ok"}]"#;
         let text = std::str::from_utf8(input).unwrap();
         assert_real_typed_parity(text, input, RealTypedFixture::DistinctValues);
     }
@@ -1566,5 +1783,19 @@ mod tests {
         let bytes = std::fs::read(locate_fixture("instruments")).unwrap();
         let text = std::str::from_utf8(&bytes).unwrap();
         assert_real_typed_parity(text, &bytes, RealTypedFixture::Instruments);
+    }
+
+    #[test]
+    fn generated_canada_typed_parser_matches_sidecars() {
+        let input = br#"{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"name":"Canada"},"geometry":{"type":"Polygon","coordinates":[[[-65.61361699999998,43.420273],[-65.61972,43.418053]]]}}]}"#;
+        let text = std::str::from_utf8(input).unwrap();
+        assert_real_typed_parity(text, input, RealTypedFixture::Canada);
+    }
+
+    #[test]
+    fn w14_full_canada_typed_fixture_matches_sidecars() {
+        let bytes = std::fs::read(locate_fixture("canada")).unwrap();
+        let text = std::str::from_utf8(&bytes).unwrap();
+        assert_real_typed_parity(text, &bytes, RealTypedFixture::Canada);
     }
 }

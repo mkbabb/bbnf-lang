@@ -110,6 +110,7 @@ pub enum DirectScalar {
     U64,
     U32,
     F64,
+    NumberString,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

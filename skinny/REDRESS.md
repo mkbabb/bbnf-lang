@@ -5605,3 +5605,29 @@ perturbation.
 - Current JSON real_typed_struct state is now 12 / 17 ADMITTED and 5 MISSING:
   `canada`, `gsoc-2018`, `unicode_mixed`, `unicode_escapes`, and
   `y_string_unicode`.
+
+## SK-V14 W9AB JSON real_typed canada Numeric Lexeme Admit
+
+- Item 228 closes `G-SK-V14-W9AB-JSON-TYPED-CANADA` as `ADMIT`. The source
+  patch extends generated DirectBuild typed schemas with a `NumberString`
+  scalar and routes `canada/real_typed_struct` through the regenerated
+  `parse_canada` root.
+- The admitted product preserves exact coordinate numeric lexemes as
+  `Cow<'i, str>` rather than f64 values. The f64 route was rejected before
+  admission because serde and sonic round long GeoJSON coordinate literals
+  differently; exact lexeme parity is the stable typed product surface.
+- Correctness gates passed before measurement:
+  `cargo xtask regen-real-typed`, `cargo xtask check-real-typed`,
+  `cargo test --manifest-path skinny/Cargo.toml --profile ax-iter -p
+  bbnf-bench canada_typed -- --nocapture`, and
+  `cargo test --manifest-path skinny/Cargo.toml --profile ax-iter -p codegen
+  emits_typed_direct_number_string_capture -- --nocapture`.
+- Cold `profile_direct` evidence admits the row: generated Track 1 measured
+  `4761.909` Mbps against strict `sonic-rs` typed at `2736.418` Mbps. The
+  admission floor is `sonic + 1.0 = 2737.418` Mbps, so the margin is
+  `2024.491` Mbps. Independent Track 2 measured `3397.878` Mbps and
+  serde_json measured `3383.986` Mbps. Retained evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W9AB-canada-typed.md`,
+  `.tsv`, and `.raw.log`.
+- Current JSON real_typed_struct state is now 13 / 17 ADMITTED and 4 MISSING:
+  `gsoc-2018`, `unicode_mixed`, `unicode_escapes`, and `y_string_unicode`.

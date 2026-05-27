@@ -723,6 +723,8 @@ fn validate_skv14_sustained_row(row: &Skv14ManifestRow) -> Result<()> {
     if SKV14_W9_TYPED_ADMIT_ROWS.contains(&row.row_id.as_str()) {
         let expected_wave = if row.row_id == "json/distinct_values/real_typed_struct/main" {
             "SK-V14-W9AA"
+        } else if row.row_id == "json/canada/real_typed_struct/main" {
+            "SK-V14-W9AB"
         } else {
             "SK-V14-W9"
         };
@@ -898,6 +900,7 @@ const SKV14_W1_PRUNE1_ROWS: &[&str] = &[
     "json/unicode_basic/direct_to_struct/main",
     "json/twitter/real_typed_struct/main",
     "json/citm_catalog/real_typed_struct/main",
+    "json/canada/real_typed_struct/main",
     "json/apache_builds/real_typed_struct/main",
     "json/github_events/real_typed_struct/main",
     "json/update_center/real_typed_struct/main",
@@ -912,6 +915,7 @@ const SKV14_W1_PRUNE1_ROWS: &[&str] = &[
 const SKV14_W9_TYPED_ADMIT_ROWS: &[&str] = &[
     "json/twitter/real_typed_struct/main",
     "json/citm_catalog/real_typed_struct/main",
+    "json/canada/real_typed_struct/main",
     "json/apache_builds/real_typed_struct/main",
     "json/github_events/real_typed_struct/main",
     "json/update_center/real_typed_struct/main",

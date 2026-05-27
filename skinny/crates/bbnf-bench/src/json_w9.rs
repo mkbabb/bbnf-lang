@@ -25,7 +25,6 @@ const SELECTED_CORPORA: &[&str] = &[
 ];
 
 const MISSING_TYPED_SURFACES: &[&str] = &[
-    "canada",
     "gsoc-2018",
     "unicode_mixed",
     "unicode_escapes",
@@ -143,10 +142,10 @@ mod tests {
         assert_eq!(report.selected_typed_rows, 17);
         assert_eq!(report.direct_parity_passes, 17);
         assert_eq!(report.direct_required_plane_blocks, 17);
-        assert_eq!(report.typed_surface_rows, 12);
-        assert_eq!(report.typed_missing_product_surface_rows, 5);
-        assert_eq!(report.typed_parity_passes, 12);
-        assert_eq!(report.typed_measurement_candidate_rows, 12);
+        assert_eq!(report.typed_surface_rows, 13);
+        assert_eq!(report.typed_missing_product_surface_rows, 4);
+        assert_eq!(report.typed_parity_passes, 13);
+        assert_eq!(report.typed_measurement_candidate_rows, 13);
         assert_eq!(
             report.disposition,
             W9SurfaceDisposition::MeasurementRequired
@@ -158,7 +157,6 @@ mod tests {
         assert_eq!(
             missing_typed_surfaces(),
             &[
-                "canada",
                 "gsoc-2018",
                 "unicode_mixed",
                 "unicode_escapes",

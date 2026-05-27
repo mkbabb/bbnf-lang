@@ -7,7 +7,7 @@ use codegen::direct_schema::{
 pub fn schema() -> DirectSchemaSet {
     DirectSchemaSet {
         module_name: "generated_real_typed".to_string(),
-        schema_hash: "sk-v14-w9aa-distinct-values".to_string(),
+        schema_hash: "sk-v14-w9ab-canada".to_string(),
         roots: vec![
             DirectRootSchema::struct_root(
                 "parse_twitter_search",
@@ -44,6 +44,11 @@ pub fn schema() -> DirectSchemaSet {
                 "parse_instruments",
                 "crate::real_typed_struct::InstrumentsDocument<'i>",
                 "InstrumentsDocument",
+            ),
+            DirectRootSchema::struct_root(
+                "parse_canada",
+                "crate::real_typed_struct::CanadaFeatureCollection<'i>",
+                "CanadaFeatureCollection",
             ),
             DirectRootSchema::typed_root(
                 "parse_numbers",
@@ -246,6 +251,47 @@ pub fn schema() -> DirectSchemaSet {
                     default("before", "before", opt(string())),
                     default("description", "description", opt(string())),
                     default("master_branch", "master_branch", opt(string())),
+                ],
+            ),
+            struct_ty(
+                "CanadaFeatureCollection",
+                "crate::real_typed_struct::CanadaFeatureCollection<'i>",
+                vec![
+                    default("type", "collection_type", opt(string())),
+                    default(
+                        "features",
+                        "features",
+                        vec_with_capacity(ty("CanadaFeature"), 1),
+                    ),
+                ],
+            ),
+            struct_ty(
+                "CanadaFeature",
+                "crate::real_typed_struct::CanadaFeature<'i>",
+                vec![
+                    default("type", "feature_type", opt(string())),
+                    default("properties", "properties", opt(ty("CanadaProperties"))),
+                    default("geometry", "geometry", opt(ty("CanadaGeometry"))),
+                ],
+            ),
+            struct_ty(
+                "CanadaProperties",
+                "crate::real_typed_struct::CanadaProperties<'i>",
+                vec![default("name", "name", opt(string()))],
+            ),
+            struct_ty(
+                "CanadaGeometry",
+                "crate::real_typed_struct::CanadaGeometry<'i>",
+                vec![
+                    default("type", "geometry_type", opt(string())),
+                    default(
+                        "coordinates",
+                        "coordinates",
+                        vec_with_capacity(
+                            vec_with_capacity(vec_with_capacity(number_string(), 2), 256),
+                            480,
+                        ),
+                    ),
                 ],
             ),
             struct_ty(
@@ -672,6 +718,10 @@ fn bool_ty() -> DirectTypeRef {
 
 fn f64_ty() -> DirectTypeRef {
     DirectTypeRef::Scalar(DirectScalar::F64)
+}
+
+fn number_string() -> DirectTypeRef {
+    DirectTypeRef::Scalar(DirectScalar::NumberString)
 }
 
 fn vec(inner: DirectTypeRef) -> DirectTypeRef {

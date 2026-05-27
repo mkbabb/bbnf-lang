@@ -37,6 +37,7 @@ live-looking admission fragments in generated `RESULTS.md`.
 | W9 | MIXED | REDRESS-216: 11 / 17 JSON typed rows admitted; 17 / 17 direct rows remain open; 6 / 17 typed product surfaces remain missing. |
 | W9Y | REJECTED | REDRESS-226: generated `y_string_unicode/real_typed_struct` root measured below strict sonic typed; no row moved. |
 | W9AA | ADMITTED | REDRESS-227: `distinct_values/real_typed_struct` admitted through generated dynamic string-entry capture; typed state is now 12 / 17 admitted and 5 / 17 missing. |
+| W9AB | ADMITTED | REDRESS-228: `canada/real_typed_struct` admitted through generated numeric lexeme capture; typed state is now 13 / 17 admitted and 4 / 17 missing. |
 | W10 | MIXED | REDRESS-217: 6 / 17 JSON parse_only rows admitted; 11 / 17 parse_only rows remain open. |
 | W10R | MIXED | REDRESS-218: `canada/parse_only` admitted by parse-only prefix continuation; parse_only state is now 7 / 17 admitted and 10 / 17 open. |
 | W10S | MIXED | REDRESS-219: `unicode_mixed/parse_only` admitted by string-end prefix scan; parse_only state is now 8 / 17 admitted and 9 / 17 open. |
@@ -52,7 +53,7 @@ live-looking admission fragments in generated `RESULTS.md`.
 |---|---:|---:|---:|---|
 | JSON parse_only | 11 | 6 | 0 | W10/W10R/W10S/W10T/W10V/W10W cold `profile_direct` evidence and REDRESS-217/218/219/220/222/223. |
 | JSON direct_to_struct | 0 | 17 | 0 | W9 digest-plane rejection and REDRESS-216. |
-| JSON real_typed_struct | 12 | 0 | 5 | W9 cold typed evidence plus W9AA generated dynamic capture for `distinct_values`; remaining missing products listed in REDRESS-216/227. |
+| JSON real_typed_struct | 13 | 0 | 4 | W9 cold typed evidence plus W9AA/W9AB generated products for `distinct_values` and `canada`; remaining missing products listed in REDRESS-216/227/228. |
 | CSS L4 | 0 | 24 | 0 | W8 production corpus rejection and REDRESS-215. |
 
 No residual row has an architectural-level intrinsic-block proof. The
@@ -65,8 +66,8 @@ remaining rows are implementation residuals, not closeable proof blocks.
    fixtures, and profile-template shortcuts remain rejected by REDRESS-215.
 2. JSON direct rows must replace digest-plane evidence with per-corpus strict
    struct deserialization products before any direct row can admit.
-3. Missing JSON typed products remain for `canada`, `gsoc-2018`,
-   `unicode_mixed`, `unicode_escapes`, and `y_string_unicode`.
+3. Missing JSON typed products remain for `gsoc-2018`, `unicode_mixed`,
+   `unicode_escapes`, and `y_string_unicode`.
 4. JSON parse_only residuals remain for `twitter`, `github_events`,
    `update_center`, `random`, `gsoc-2018`, and
    `distinct_values`.
@@ -74,12 +75,12 @@ remaining rows are implementation residuals, not closeable proof blocks.
 ## Reconciliation
 
 - `skinny/RESULTS.md` and `restart/skinny/ROLLING-SOTA-DELTA.md` agree on
-  eleven parse_only admits, seventeen direct opens, twelve typed admits plus
-  five missing typed products, and twenty-four CSS L4 opens.
+  eleven parse_only admits, seventeen direct opens, thirteen typed admits plus
+  four missing typed products, and twenty-four CSS L4 opens.
 - `skinny/REDRESS.md` carries the live residuals as REDRESS-215,
   REDRESS-216, REDRESS-217, REDRESS-218, REDRESS-219, REDRESS-220,
-  REDRESS-222, REDRESS-223, REDRESS-224, REDRESS-225, REDRESS-226, and
-  REDRESS-227.
+  REDRESS-222, REDRESS-223, REDRESS-224, REDRESS-225, REDRESS-226,
+  REDRESS-227, and REDRESS-228.
 - `skinny/RESULTS.md` now renders CSS L4 legacy CostFacts as historical claims
   with current `AUDIT-FALSIFIED_OPEN` status, so the manifest no longer embeds
   live-looking `A` / `GO` / `ADMITTED-PARITY` fragments for OPEN CSS rows.
@@ -99,6 +100,11 @@ remaining rows are implementation residuals, not closeable proof blocks.
   `distinct_values_typed` and `unknown_string_capture` tests, plus cold
   `profile_direct` evidence retained at
   `restart/skinny/tranches/sk-v14/research/skv14-W9AA-distinct-values-typed.tsv`.
+- W9AB local evidence before this close packet update: `cargo xtask
+  regen-real-typed`, `cargo xtask check-real-typed`, focused `canada_typed`
+  and `emits_typed_direct_number_string_capture` tests, plus cold
+  `profile_direct` evidence retained at
+  `restart/skinny/tranches/sk-v14/research/skv14-W9AB-canada-typed.tsv`.
 - Close invariants remain: 16 locks, Pattern H count 67, Lock 10 five-shape
   `BackendShape` canon preserved, and generated JSON parse_only remains
   distinct from the tape-building path.
@@ -107,8 +113,9 @@ remaining rows are implementation residuals, not closeable proof blocks.
 
 W11/W10R/W10S/W10T/W10V/W10W close SK-V14 as a mixed tranche, with admitted rows preserved and all
 unmet rows routed to implementation residuals. W10X, W10Y/W10Z, and W9Y add
-post-close residual rejection evidence; W9AA adds one post-close typed admit
-for `distinct_values/real_typed_struct`.
+post-close residual rejection evidence; W9AA and W9AB add post-close typed
+admits for `distinct_values/real_typed_struct` and
+`canada/real_typed_struct`.
 Under the latest user instruction, the next work is implementation against the
 residual queue, not a new Omega or Alpha pass unless a future source attempt
 exposes a spec-level amendment that truly requires G-Omega.

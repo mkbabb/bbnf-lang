@@ -1,0 +1,24 @@
+# mode=real_typed_track1
+profile-direct: corpus=canada mode=real_typed_track1 path="/Users/mkbabb/Programming/bbnf-lang/skinny/crates/test-fixtures/corpus/json/canada.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 2251051 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 1.51s -> 4762 Mbps (digest cksum 0)
+PROBE_RESULT corpus=canada corpus_bytes=2251051 iters=400 mode=real_typed_track1 warmup_iters=0 elapsed_s=1.512705 ns_per_byte=1.679998 mbps=4761.909 cycles=6338023463 instructions=37258600475 cycles_per_byte=7.038960 cpi=0.170109 user_ns=35621643 system_ns=292675 checksum=0
+# mode=real_typed_track2
+profile-direct: corpus=canada mode=real_typed_track2 path="/Users/mkbabb/Programming/bbnf-lang/skinny/crates/test-fixtures/corpus/json/canada.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 2251051 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 2.12s -> 3398 Mbps (digest cksum 0)
+PROBE_RESULT corpus=canada corpus_bytes=2251051 iters=400 mode=real_typed_track2 warmup_iters=0 elapsed_s=2.119959 ns_per_byte=2.354411 mbps=3397.878 cycles=8922043772 instructions=50952945963 cycles_per_byte=9.908753 cpi=0.175104 user_ns=50019945 system_ns=374887 checksum=0
+# mode=real_typed_sonic
+profile-direct: corpus=canada mode=real_typed_sonic path="/Users/mkbabb/Programming/bbnf-lang/skinny/crates/test-fixtures/corpus/json/canada.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 2251051 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 2.63s -> 2736 Mbps (digest cksum 0)
+PROBE_RESULT corpus=canada corpus_bytes=2251051 iters=400 mode=real_typed_sonic warmup_iters=0 elapsed_s=2.632406 ns_per_byte=2.923530 mbps=2736.418 cycles=11080998008 instructions=67152056356 cycles_per_byte=12.306472 cpi=0.165014 user_ns=62120553 system_ns=465124 checksum=0
+# mode=real_typed_serde
+profile-direct: corpus=canada mode=real_typed_serde path="/Users/mkbabb/Programming/bbnf-lang/skinny/crates/test-fixtures/corpus/json/canada.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 2251051 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 2.13s -> 3384 Mbps (digest cksum 0)
+PROBE_RESULT corpus=canada corpus_bytes=2251051 iters=400 mode=real_typed_serde warmup_iters=0 elapsed_s=2.128663 ns_per_byte=2.364076 mbps=3383.986 cycles=8937404972 instructions=50959051634 cycles_per_byte=9.925814 cpi=0.175384 user_ns=50152942 system_ns=403899 checksum=0

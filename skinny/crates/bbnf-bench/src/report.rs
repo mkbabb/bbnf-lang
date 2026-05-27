@@ -35,6 +35,7 @@ const SKV14_JSON_WORKLOADS: &[&str] = &["parse_only", "direct_to_struct", "real_
 const SKV14_W9_TYPED_ADMIT_ROWS: &[&str] = &[
     "json/twitter/real_typed_struct/main",
     "json/citm_catalog/real_typed_struct/main",
+    "json/canada/real_typed_struct/main",
     "json/apache_builds/real_typed_struct/main",
     "json/github_events/real_typed_struct/main",
     "json/update_center/real_typed_struct/main",
@@ -3762,9 +3763,9 @@ fn validate_skv14_manifest_rows(rows: &[SkV14ManifestRow]) -> Result<(), String>
             return Err(format!("SK-V14 manifest missing {row_id}"));
         }
     }
-    if pending != 22 || falsified + sustained != 53 {
+    if pending != 21 || falsified + sustained != 54 {
         return Err(format!(
-            "SK-V14 audit overlay expected pending=22 and falsified+sustained=53 after authorized W9/W9AA/W10/W10R/W10S/W10T/W10V/W10W admits, saw {falsified} / {pending} / {sustained}"
+            "SK-V14 audit overlay expected pending=21 and falsified+sustained=54 after authorized W9/W9AA/W9AB/W10/W10R/W10S/W10T/W10V/W10W admits, saw {falsified} / {pending} / {sustained}"
         ));
     }
     Ok(())
@@ -3774,6 +3775,8 @@ fn validate_skv14_sustained_row(row: &SkV14ManifestRow) -> Result<(), String> {
     if SKV14_W9_TYPED_ADMIT_ROWS.contains(&row.row_id.as_str()) {
         let expected_wave = if row.row_id == "json/distinct_values/real_typed_struct/main" {
             "SK-V14-W9AA"
+        } else if row.row_id == "json/canada/real_typed_struct/main" {
+            "SK-V14-W9AB"
         } else {
             "SK-V14-W9"
         };
@@ -5762,6 +5765,7 @@ fn validate_w0_profile_artifact(row_id: &str, profile_artifact: &str) -> Result<
                 | "restart/skinny/tranches/sk-v14/research/skv14-W10V-parse-only-current-head-resweep.tsv"
                 | "restart/skinny/tranches/sk-v14/research/skv14-W10W-parse-only-iterative-stack.tsv"
                 | "restart/skinny/tranches/sk-v14/research/skv14-W9AA-distinct-values-typed.tsv"
+                | "restart/skinny/tranches/sk-v14/research/skv14-W9AB-canada-typed.tsv"
         ) {
             return Ok(());
         }
@@ -5804,6 +5808,8 @@ fn validate_w0_hot_leaf(
             "not-collected-in-W10W-row"
         } else if profile_artifact.contains("skv14-W9AA-distinct-values-typed.tsv") {
             "not-collected-in-W9AA-row"
+        } else if profile_artifact.contains("skv14-W9AB-canada-typed.tsv") {
+            "not-collected-in-W9AB-row"
         } else {
             "not-collected-in-W10-row"
         };

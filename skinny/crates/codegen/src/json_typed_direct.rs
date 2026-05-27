@@ -213,6 +213,7 @@ impl<'a> Renderer<'a> {
             DirectTypeRef::Scalar(DirectScalar::U64) => Ok("u64".to_string()),
             DirectTypeRef::Scalar(DirectScalar::U32) => Ok("u32".to_string()),
             DirectTypeRef::Scalar(DirectScalar::F64) => Ok("f64".to_string()),
+            DirectTypeRef::Scalar(DirectScalar::NumberString) => Ok("Cow<'i, str>".to_string()),
             DirectTypeRef::Vec { inner, .. } => Ok(format!("Vec<{}>", self.rust_type(inner)?)),
             DirectTypeRef::MapString(inner) => Ok(format!(
                 "BTreeMap<Cow<'i, str>, {}>",
@@ -238,6 +239,9 @@ impl<'a> Renderer<'a> {
             DirectTypeRef::Scalar(DirectScalar::U64) => Ok(format!("{parser}.parse_u64()")),
             DirectTypeRef::Scalar(DirectScalar::U32) => Ok(format!("{parser}.parse_u32()")),
             DirectTypeRef::Scalar(DirectScalar::F64) => Ok(format!("{parser}.parse_f64()")),
+            DirectTypeRef::Scalar(DirectScalar::NumberString) => {
+                Ok(format!("{parser}.parse_number_string()"))
+            }
             DirectTypeRef::Vec { .. }
             | DirectTypeRef::MapString(_)
             | DirectTypeRef::MapEntriesVec { .. }
@@ -739,6 +743,15 @@ impl<'i> DirectParser<'i> {
     fn parse_f64(&mut self) -> Result<f64, DirectBuildError<'i>> {
         let span = self.number_span()?;
         materialize_f64(self.bytes, &span).map_err(|_| self.error("float range"))
+    }
+
+    #[allow(dead_code)]
+    #[inline(always)]
+    fn parse_number_string(&mut self) -> Result<Cow<'i, str>, DirectBuildError<'i>> {
+        let span = self.number_span()?;
+        let raw = std::str::from_utf8(&self.bytes[span.start..span.end])
+            .map_err(|_| self.error("invalid number"))?;
+        Ok(Cow::Borrowed(raw))
     }
 
     #[inline(always)]

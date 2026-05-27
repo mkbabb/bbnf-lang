@@ -58,7 +58,9 @@ no row movement. W9Y then rejected a generated
 11 / 17 admitted and 6 / 17 missing. W9AA then admitted
 `distinct_values/real_typed_struct` through generated dynamic string-entry
 capture under REDRESS-227, raising typed to 12 / 17 admitted and 5 / 17
-missing.
+missing. W9AB then admitted `canada/real_typed_struct` through generated
+numeric lexeme capture under REDRESS-228, raising typed to 13 / 17 admitted
+and 4 / 17 missing.
 W11 closed the SK-V14 reconciliation packet on 2026-05-27. The next move is
 actual implementation against the residual queue, not another Omega or Alpha
 pass unless a future source attempt exposes a real spec-level amendment.
@@ -156,7 +158,7 @@ Lock 14 at `restart/locks/LOCKS.md:220–238`).
 ```
 JSON parse_only: 11 / 17 (6 OPEN after W10W residual implementation)
 JSON direct:     0 / 17  (17 OPEN after W9; digest-plane evidence is not strict per-corpus product evidence)
-JSON typed:      12 / 17 (5 MISSING product surfaces after W9AA)
+JSON typed:      13 / 17 (4 MISSING product surfaces after W9AB)
 CSS L4:          0 / 24  (all OPEN after W8; Track 1 still emits fact streams, not full-parse equality)
 ```
 
@@ -219,9 +221,9 @@ state is:
 
 - JSON parse_only: 11 / 17 ADMITTED, 6 OPEN under REDRESS-223.
 - JSON direct_to_struct: 0 / 17 ADMITTED, 17 OPEN under REDRESS-216.
-- JSON real_typed_struct: 12 / 17 ADMITTED, 5 MISSING product surfaces under
-  REDRESS-216/227; REDRESS-226 rejects the generated `y_string_unicode` root
-  without moving that row.
+- JSON real_typed_struct: 13 / 17 ADMITTED, 4 MISSING product surfaces under
+  REDRESS-216/227/228; REDRESS-226 rejects the generated `y_string_unicode`
+  root without moving that row.
 - CSS L4: 0 / 24 ADMITTED, 24 OPEN under REDRESS-215.
 
 Per the latest user instruction, do not spend another cycle on Omega/Alpha
@@ -248,7 +250,8 @@ discipline).
    product blocks. W9Y rejects the generated `y_string_unicode` typed root
    under REDRESS-226, so `y_string_unicode` remains missing. W9AA admits
    `distinct_values/real_typed_struct` under REDRESS-227, so typed now stands
-   at 12 admitted and 5 missing.
+   at 12 admitted and 5 missing. W9AB admits `canada/real_typed_struct` under
+   REDRESS-228, so typed now stands at 13 admitted and 4 missing.
 5. W10 is closed mixed: 6 parse_only admits and 11 parse_only open rows under
    REDRESS-217. W10R then admits `canada/parse_only`, W10S admits
    `unicode_mixed/parse_only`, W10T admits `instruments/parse_only`, W10V

@@ -841,6 +841,42 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
     }
 
     #[test]
+    fn emits_typed_direct_number_string_capture() {
+        let schema = DirectSchemaSet {
+            module_name: "numeric_typed".to_string(),
+            schema_hash: "test-number-string-schema".to_string(),
+            roots: vec![DirectRootSchema::struct_root(
+                "parse_numeric",
+                "crate::NumericRoot<'i>",
+                "NumericRoot",
+            )],
+            types: vec![DirectTypeSchema {
+                type_id: "NumericRoot".to_string(),
+                rust_type: "crate::NumericRoot<'i>".to_string(),
+                kind: DirectTypeKind::Struct {
+                    unknown_fields: UnknownFieldPolicy::Skip,
+                    ignored_fields: Vec::new(),
+                    fields: vec![DirectFieldSchema {
+                        key_literal: "coordinate".to_string(),
+                        rust_field: "coordinate".to_string(),
+                        ty: DirectTypeRef::Scalar(DirectScalar::NumberString),
+                        presence: PresencePolicy::Required,
+                        duplicate: DuplicatePolicy::Reject,
+                    }],
+                },
+            }],
+        };
+
+        let emitted = emit_typed_from_source("json", JSON_GRAMMAR, &schema).unwrap();
+        let generated = emitted.get("numeric_typed.rs").unwrap();
+
+        assert!(generated.contains("let mut coordinate: Option<Cow<'i, str>> = None;"));
+        assert!(generated.contains("parser.parse_number_string()?"));
+        assert!(generated.contains("Ok(Cow::Borrowed(raw))"));
+        assert!(!generated.contains("parse_f64()?"));
+    }
+
+    #[test]
     fn emits_typed_direct_unknown_string_capture() {
         let schema = DirectSchemaSet {
             module_name: "capture_typed".to_string(),
@@ -876,13 +912,12 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
         let emitted = emit_typed_from_source("json", JSON_GRAMMAR, &schema).unwrap();
         let generated = emitted.get("capture_typed.rs").unwrap();
 
-        assert!(generated.contains(
-            "let mut dynamic: Vec<crate::CapturedField<'i>> = Vec::with_capacity(4);"
-        ));
+        assert!(generated
+            .contains("let mut dynamic: Vec<crate::CapturedField<'i>> = Vec::with_capacity(4);"));
         assert!(generated.contains("let value = parser.parse_string()?;"));
-        assert!(generated.contains(
-            "dynamic.push(crate::CapturedField { key: key, value: value });"
-        ));
+        assert!(
+            generated.contains("dynamic.push(crate::CapturedField { key: key, value: value });")
+        );
         assert!(generated.contains("dynamic,"));
     }
 

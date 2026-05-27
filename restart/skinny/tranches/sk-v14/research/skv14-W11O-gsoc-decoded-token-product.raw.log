@@ -1,0 +1,40 @@
+profile-direct: corpus=gsoc-2018 mode=real_typed_track1 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/gsoc-2018.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 3327831 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 1.48s -> 7177 Mbps (digest cksum 0)
+PROBE_RESULT corpus=gsoc-2018 corpus_bytes=3327831 iters=400 mode=real_typed_track1 warmup_iters=0 elapsed_s=1.483829 ns_per_byte=1.114712 mbps=7176.742 cycles=6308293354 instructions=26637079942 cycles_per_byte=4.739043 cpi=0.236824 user_ns=35009755 system_ns=464070 checksum=0
+profile-direct: corpus=gsoc-2018 mode=real_typed_track2 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/gsoc-2018.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 3327831 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 1.71s -> 6234 Mbps (digest cksum 0)
+PROBE_RESULT corpus=gsoc-2018 corpus_bytes=3327831 iters=400 mode=real_typed_track2 warmup_iters=0 elapsed_s=1.708242 ns_per_byte=1.283300 mbps=6233.927 cycles=7299435413 instructions=17743250413 cycles_per_byte=5.483628 cpi=0.411392 user_ns=40355976 system_ns=518152 checksum=0
+profile-direct: corpus=gsoc-2018 mode=real_typed_sonic path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/gsoc-2018.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 3327831 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 1.61s -> 6628 Mbps (digest cksum 0)
+PROBE_RESULT corpus=gsoc-2018 corpus_bytes=3327831 iters=400 mode=real_typed_sonic warmup_iters=0 elapsed_s=1.606762 ns_per_byte=1.207064 mbps=6627.652 cycles=6850850933 instructions=15635603803 cycles_per_byte=5.146634 cpi=0.438157 user_ns=37821282 system_ns=587855 checksum=0
+profile-direct: corpus=gsoc-2018 mode=real_typed_serde path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/gsoc-2018.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 3327831 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 1.75s -> 6101 Mbps (digest cksum 0)
+PROBE_RESULT corpus=gsoc-2018 corpus_bytes=3327831 iters=400 mode=real_typed_serde warmup_iters=0 elapsed_s=1.745427 ns_per_byte=1.311235 mbps=6101.119 cycles=7380663802 instructions=17754443057 cycles_per_byte=5.544650 cpi=0.415708 user_ns=40909621 system_ns=693678 checksum=0
+profile-direct: corpus=gsoc-2018 mode=direct_strict_track1 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/gsoc-2018.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 3327831 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 1.47s -> 7228 Mbps (digest cksum 0)
+PROBE_RESULT corpus=gsoc-2018 corpus_bytes=3327831 iters=400 mode=direct_strict_track1 warmup_iters=0 elapsed_s=1.473266 ns_per_byte=1.106776 mbps=7228.198 cycles=6315159751 instructions=26636136609 cycles_per_byte=4.744201 cpi=0.237090 user_ns=34871908 system_ns=413105 checksum=0
+profile-direct: corpus=gsoc-2018 mode=direct_strict_track2 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/gsoc-2018.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 3327831 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 1.76s -> 6036 Mbps (digest cksum 0)
+PROBE_RESULT corpus=gsoc-2018 corpus_bytes=3327831 iters=400 mode=direct_strict_track2 warmup_iters=0 elapsed_s=1.764155 ns_per_byte=1.325304 mbps=6036.352 cycles=7431290012 instructions=17764276869 cycles_per_byte=5.582683 cpi=0.418328 user_ns=41246682 system_ns=692342 checksum=0
+profile-direct: corpus=gsoc-2018 mode=direct_strict_sonic path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/gsoc-2018.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 3327831 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 1.60s -> 6670 Mbps (digest cksum 0)
+PROBE_RESULT corpus=gsoc-2018 corpus_bytes=3327831 iters=400 mode=direct_strict_sonic warmup_iters=0 elapsed_s=1.596622 ns_per_byte=1.199447 mbps=6669.742 cycles=6801470092 instructions=15630675805 cycles_per_byte=5.109537 cpi=0.435136 user_ns=37826802 system_ns=370414 checksum=0
+profile-direct: corpus=gsoc-2018 mode=direct_strict_serde path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/gsoc-2018.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 3327831 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 1.69s -> 6283 Mbps (digest cksum 0)
+PROBE_RESULT corpus=gsoc-2018 corpus_bytes=3327831 iters=400 mode=direct_strict_serde warmup_iters=0 elapsed_s=1.694770 ns_per_byte=1.273180 mbps=6283.482 cycles=7253294396 instructions=17740993949 cycles_per_byte=5.448965 cpi=0.408844 user_ns=40234732 system_ns=346087 checksum=0

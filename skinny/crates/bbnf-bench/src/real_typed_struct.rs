@@ -13,6 +13,7 @@ pub enum RealTypedFixture {
     Twitter,
     ApacheBuilds,
     CitmCatalog,
+    Gsoc2018,
     GithubEvents,
     UpdateCenter,
     Mesh,
@@ -77,6 +78,258 @@ pub struct CitmEvent<'a> {
     pub sub_topic_ids: Vec<u64>,
     #[serde(default, rename = "topicIds")]
     pub topic_ids: Vec<u64>,
+}
+
+#[derive(Debug)]
+pub struct GsocProposalEntry<'a> {
+    pub key: u32,
+    pub value: GsocProposal<'a>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GsocProposal<'a> {
+    #[serde(rename = "@context")]
+    pub context: GsocContext,
+    #[serde(rename = "@type")]
+    pub proposal_type: GsocProposalType,
+    #[serde(borrow)]
+    pub name: DecodedJsonString<'a>,
+    #[serde(borrow)]
+    pub description: DecodedJsonString<'a>,
+    #[serde(borrow)]
+    pub sponsor: GsocSponsor<'a>,
+    #[serde(borrow)]
+    pub author: GsocAuthor<'a>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GsocSponsor<'a> {
+    #[serde(rename = "@type")]
+    pub sponsor_type: GsocSponsorType,
+    #[serde(borrow)]
+    pub name: DecodedJsonString<'a>,
+    #[serde(borrow, rename = "disambiguatingDescription")]
+    pub disambiguating_description: DecodedJsonString<'a>,
+    #[serde(borrow)]
+    pub description: DecodedJsonString<'a>,
+    #[serde(borrow)]
+    pub url: DecodedJsonString<'a>,
+    #[serde(borrow)]
+    pub logo: DecodedJsonString<'a>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GsocAuthor<'a> {
+    #[serde(rename = "@type")]
+    pub author_type: GsocAuthorType,
+    #[serde(borrow)]
+    pub name: DecodedJsonString<'a>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum GsocContext {
+    SchemaOrg,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum GsocProposalType {
+    SoftwareSourceCode,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum GsocSponsorType {
+    Organization,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum GsocAuthorType {
+    Person,
+}
+
+impl GsocContext {
+    fn id(self) -> u64 {
+        match self {
+            Self::SchemaOrg => 1,
+        }
+    }
+}
+
+impl GsocProposalType {
+    fn id(self) -> u64 {
+        match self {
+            Self::SoftwareSourceCode => 2,
+        }
+    }
+}
+
+impl GsocSponsorType {
+    fn id(self) -> u64 {
+        match self {
+            Self::Organization => 3,
+        }
+    }
+}
+
+impl GsocAuthorType {
+    fn id(self) -> u64 {
+        match self {
+            Self::Person => 4,
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for GsocContext {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct GsocContextVisitor;
+
+        impl Visitor<'_> for GsocContextVisitor {
+            type Value = GsocContext;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                formatter.write_str("the Schema.org context token")
+            }
+
+            fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                match value {
+                    "http://schema.org" => Ok(GsocContext::SchemaOrg),
+                    _ => Err(E::custom("unexpected GSoC context token")),
+                }
+            }
+        }
+
+        deserializer.deserialize_str(GsocContextVisitor)
+    }
+}
+
+impl<'de> Deserialize<'de> for GsocProposalType {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct GsocProposalTypeVisitor;
+
+        impl Visitor<'_> for GsocProposalTypeVisitor {
+            type Value = GsocProposalType;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                formatter.write_str("the GSoC proposal type token")
+            }
+
+            fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                match value {
+                    "SoftwareSourceCode" => Ok(GsocProposalType::SoftwareSourceCode),
+                    _ => Err(E::custom("unexpected GSoC proposal type token")),
+                }
+            }
+        }
+
+        deserializer.deserialize_str(GsocProposalTypeVisitor)
+    }
+}
+
+impl<'de> Deserialize<'de> for GsocSponsorType {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct GsocSponsorTypeVisitor;
+
+        impl Visitor<'_> for GsocSponsorTypeVisitor {
+            type Value = GsocSponsorType;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                formatter.write_str("the GSoC sponsor type token")
+            }
+
+            fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                match value {
+                    "Organization" => Ok(GsocSponsorType::Organization),
+                    _ => Err(E::custom("unexpected GSoC sponsor type token")),
+                }
+            }
+        }
+
+        deserializer.deserialize_str(GsocSponsorTypeVisitor)
+    }
+}
+
+impl<'de> Deserialize<'de> for GsocAuthorType {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct GsocAuthorTypeVisitor;
+
+        impl Visitor<'_> for GsocAuthorTypeVisitor {
+            type Value = GsocAuthorType;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                formatter.write_str("the GSoC author type token")
+            }
+
+            fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                match value {
+                    "Person" => Ok(GsocAuthorType::Person),
+                    _ => Err(E::custom("unexpected GSoC author type token")),
+                }
+            }
+        }
+
+        deserializer.deserialize_str(GsocAuthorTypeVisitor)
+    }
+}
+
+#[derive(Debug)]
+struct GsocProposalEntries<'a>(Vec<GsocProposalEntry<'a>>);
+
+impl<'de> Deserialize<'de> for GsocProposalEntries<'de> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct GsocProposalEntriesVisitor;
+
+        impl<'de> Visitor<'de> for GsocProposalEntriesVisitor {
+            type Value = GsocProposalEntries<'de>;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                formatter.write_str("a GSoC proposal map")
+            }
+
+            fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+            where
+                A: MapAccess<'de>,
+            {
+                let mut entries = Vec::with_capacity(map.size_hint().unwrap_or(0));
+                while let Some((key, value)) =
+                    map.next_entry::<Cow<'de, str>, GsocProposal<'de>>()?
+                {
+                    let key = key
+                        .parse::<u32>()
+                        .map_err(|_| serde::de::Error::custom("invalid GSoC numeric key"))?;
+                    entries.push(GsocProposalEntry { key, value });
+                }
+                Ok(GsocProposalEntries(entries))
+            }
+        }
+
+        deserializer.deserialize_map(GsocProposalEntriesVisitor)
+    }
 }
 
 #[derive(Debug)]
@@ -975,6 +1228,7 @@ pub enum RealTypedOutput<'a> {
     Twitter(TwitterSearch<'a>),
     ApacheBuilds(ApacheBuilds<'a>),
     CitmCatalog(CitmCatalog<'a>),
+    Gsoc2018(Vec<GsocProposalEntry<'a>>),
     GithubEvents(Vec<GithubEvent<'a>>),
     UpdateCenter(UpdateCenter<'a>),
     Mesh(Mesh),
@@ -994,6 +1248,7 @@ pub fn fixture_for_name(name: &str) -> Option<RealTypedFixture> {
         "twitter" => Some(RealTypedFixture::Twitter),
         "apache_builds" | "apache-builds" => Some(RealTypedFixture::ApacheBuilds),
         "citm_catalog" | "citm-catalog" => Some(RealTypedFixture::CitmCatalog),
+        "gsoc-2018" | "gsoc_2018" => Some(RealTypedFixture::Gsoc2018),
         "github_events" | "github-events" => Some(RealTypedFixture::GithubEvents),
         "update_center" | "update-center" => Some(RealTypedFixture::UpdateCenter),
         "mesh" => Some(RealTypedFixture::Mesh),
@@ -1037,6 +1292,8 @@ fn candidate_names(name: &str) -> [&str; 2] {
         "update-center" => ["update-center", "update_center"],
         "marine_ik" => ["marine_ik", "marine-ik"],
         "marine-ik" => ["marine_ik", "marine-ik"],
+        "gsoc_2018" => ["gsoc-2018", "gsoc_2018"],
+        "gsoc-2018" => ["gsoc-2018", "gsoc_2018"],
         "unicode_mixed" => ["unicode_mixed", "unicode-mixed"],
         "unicode-mixed" => ["unicode_mixed", "unicode-mixed"],
         "y_string_unicode" => ["y_string_unicode", "y-string-unicode"],
@@ -1125,6 +1382,9 @@ pub fn track1_typed<'a>(
         RealTypedFixture::CitmCatalog => crate::generated_real_typed::parse_citm_catalog(input)
             .map(RealTypedOutput::CitmCatalog)
             .map_err(|error| DirectStructError::Parse(error.to_string())),
+        RealTypedFixture::Gsoc2018 => crate::generated_real_typed::parse_gsoc_2018(input)
+            .map(RealTypedOutput::Gsoc2018)
+            .map_err(|error| DirectStructError::Parse(error.to_string())),
         RealTypedFixture::GithubEvents => crate::generated_real_typed::parse_github_events(input)
             .map(RealTypedOutput::GithubEvents)
             .map_err(|error| DirectStructError::Parse(error.to_string())),
@@ -1189,6 +1449,10 @@ pub fn serde_typed<'a>(
         RealTypedFixture::CitmCatalog => serde_json::from_slice::<CitmCatalog<'a>>(bytes)
             .map(RealTypedOutput::CitmCatalog)
             .map_err(|error| DirectStructError::Serde(error.to_string())),
+        RealTypedFixture::Gsoc2018 => serde_json::from_slice::<GsocProposalEntries<'a>>(bytes)
+            .map(|entries| entries.0)
+            .map(RealTypedOutput::Gsoc2018)
+            .map_err(|error| DirectStructError::Serde(error.to_string())),
         RealTypedFixture::GithubEvents => serde_json::from_slice::<Vec<GithubEvent<'a>>>(bytes)
             .map(RealTypedOutput::GithubEvents)
             .map_err(|error| DirectStructError::Serde(error.to_string())),
@@ -1248,6 +1512,10 @@ pub fn sonic_typed<'a>(
             .map_err(|error| DirectStructError::Sonic(error.to_string())),
         RealTypedFixture::CitmCatalog => sonic_rs::from_slice::<CitmCatalog<'a>>(bytes)
             .map(RealTypedOutput::CitmCatalog)
+            .map_err(|error| DirectStructError::Sonic(error.to_string())),
+        RealTypedFixture::Gsoc2018 => sonic_rs::from_slice::<GsocProposalEntries<'a>>(bytes)
+            .map(|entries| entries.0)
+            .map(RealTypedOutput::Gsoc2018)
             .map_err(|error| DirectStructError::Sonic(error.to_string())),
         RealTypedFixture::GithubEvents => sonic_rs::from_slice::<Vec<GithubEvent<'a>>>(bytes)
             .map(RealTypedOutput::GithubEvents)
@@ -1312,6 +1580,7 @@ pub fn typed_checksum(output: &RealTypedOutput<'_>) -> u64 {
         RealTypedOutput::Twitter(value) => checksum_twitter(value),
         RealTypedOutput::ApacheBuilds(value) => checksum_apache_builds(value),
         RealTypedOutput::CitmCatalog(value) => checksum_citm_catalog(value),
+        RealTypedOutput::Gsoc2018(value) => checksum_gsoc_2018(value),
         RealTypedOutput::GithubEvents(value) => checksum_github_events(value),
         RealTypedOutput::UpdateCenter(value) => checksum_update_center(value),
         RealTypedOutput::Mesh(value) => checksum_mesh(value),
@@ -1374,6 +1643,41 @@ fn checksum_citm_event(value: &CitmEvent<'_>) -> u64 {
     hash = fold_opt_str(hash, &value.name);
     hash = fold_u64_slice(hash, &value.sub_topic_ids);
     fold_u64_slice(hash, &value.topic_ids)
+}
+
+fn checksum_gsoc_2018(values: &[GsocProposalEntry<'_>]) -> u64 {
+    let mut hash = mix(0x67736f6332303138, values.len() as u64);
+    for entry in values {
+        hash = mix(hash, entry.key as u64);
+        hash = mix(hash, checksum_gsoc_proposal(&entry.value));
+    }
+    hash
+}
+
+fn checksum_gsoc_proposal(value: &GsocProposal<'_>) -> u64 {
+    let mut hash = 0x67736f6370726f70;
+    hash = mix(hash, value.context.id());
+    hash = mix(hash, value.proposal_type.id());
+    hash = fold_decoded_json_string(hash, &value.name);
+    hash = fold_decoded_json_string(hash, &value.description);
+    hash = mix(hash, checksum_gsoc_sponsor(&value.sponsor));
+    mix(hash, checksum_gsoc_author(&value.author))
+}
+
+fn checksum_gsoc_sponsor(value: &GsocSponsor<'_>) -> u64 {
+    let mut hash = 0x67736f6373706f6e;
+    hash = mix(hash, value.sponsor_type.id());
+    hash = fold_decoded_json_string(hash, &value.name);
+    hash = fold_decoded_json_string(hash, &value.disambiguating_description);
+    hash = fold_decoded_json_string(hash, &value.description);
+    hash = fold_decoded_json_string(hash, &value.url);
+    fold_decoded_json_string(hash, &value.logo)
+}
+
+fn checksum_gsoc_author(value: &GsocAuthor<'_>) -> u64 {
+    let mut hash = 0x67736f6361757468;
+    hash = mix(hash, value.author_type.id());
+    fold_decoded_json_string(hash, &value.name)
 }
 
 fn checksum_update_center(value: &UpdateCenter<'_>) -> u64 {
@@ -1823,12 +2127,14 @@ fn fold_opt_str(hash: u64, value: &Option<Cow<'_, str>>) -> u64 {
     }
 }
 
+fn fold_decoded_json_string(hash: u64, value: &DecodedJsonString<'_>) -> u64 {
+    let hash = mix(hash, value.fingerprint());
+    mix(hash, value.decoded_len())
+}
+
 fn fold_opt_decoded_json_string(hash: u64, value: &Option<DecodedJsonString<'_>>) -> u64 {
     match value {
-        Some(value) => {
-            let hash = mix(hash, value.fingerprint());
-            mix(hash, value.decoded_len())
-        }
+        Some(value) => fold_decoded_json_string(hash, value),
         None => mix(hash, 0),
     }
 }
@@ -2064,6 +2370,21 @@ mod tests {
     }
 
     #[test]
+    fn generated_gsoc_2018_typed_parser_matches_sidecars() {
+        let input = br#"{"0":{"@context":"http://schema.org","@type":"SoftwareSourceCode","name":"Project","description":"Line one\nLine two","sponsor":{"@type":"Organization","name":"Org","disambiguatingDescription":"Open source org","description":"Builds things","url":"https://example.org","logo":"//example.org/logo.png"},"author":{"@type":"Person","name":"Ada"}}}"#;
+        let text = std::str::from_utf8(input).unwrap();
+        assert_real_typed_parity(text, input, RealTypedFixture::Gsoc2018);
+    }
+
+    #[test]
+    fn generated_gsoc_2018_rejects_bad_tokens_and_keys() {
+        let bad_token = r#"{"0":{"@context":"http://schema.org","@type":"Article","name":"Project","description":"Text","sponsor":{"@type":"Organization","name":"Org","disambiguatingDescription":"Org","description":"Text","url":"https://example.org","logo":"//example.org/logo.png"},"author":{"@type":"Person","name":"Ada"}}}"#;
+        assert!(crate::generated_real_typed::parse_gsoc_2018(bad_token).is_err());
+        let bad_key = r#"{"x":{"@context":"http://schema.org","@type":"SoftwareSourceCode","name":"Project","description":"Text","sponsor":{"@type":"Organization","name":"Org","disambiguatingDescription":"Org","description":"Text","url":"https://example.org","logo":"//example.org/logo.png"},"author":{"@type":"Person","name":"Ada"}}}"#;
+        assert!(crate::generated_real_typed::parse_gsoc_2018(bad_key).is_err());
+    }
+
+    #[test]
     fn generated_github_events_typed_parser_matches_sidecars() {
         let input = br#"[{"type":"PushEvent","created_at":"2013-01-10T07:58:30Z","actor":{"id":138052,"login":"jathanism","url":"https://api.github.com/users/jathanism","avatar_url":"https://secure.gravatar.com/avatar/a"},"repo":{"id":6357414,"name":"jathanism/trigger","url":"https://api.github.com/repos/jathanism/trigger"},"public":true,"payload":{"distinct_size":1,"ref":"refs/heads/main","push_id":134107894,"head":"05570a","before":"000000","size":1},"id":"1234567890","org":{"id":1,"login":"org","url":"https://api.github.com/orgs/org","avatar_url":"https://secure.gravatar.com/avatar/o"}}]"#;
         let text = std::str::from_utf8(input).unwrap();
@@ -2075,6 +2396,7 @@ mod tests {
         for (name, fixture) in [
             ("apache_builds", RealTypedFixture::ApacheBuilds),
             ("citm_catalog", RealTypedFixture::CitmCatalog),
+            ("gsoc-2018", RealTypedFixture::Gsoc2018),
         ] {
             let bytes = std::fs::read(locate_fixture(name)).unwrap();
             let text = std::str::from_utf8(&bytes).unwrap();

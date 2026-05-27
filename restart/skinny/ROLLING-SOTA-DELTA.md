@@ -1,11 +1,11 @@
 # Rolling SOTA Delta
 
 schema_version: sk-v13-rolling-sota-delta-v1
-run_id: SK-V14-W11N-current
+run_id: SK-V14-W11O-current
 g_omega_status: signed
 consumer_gate: cargo xtask gate-json --check-results
 source_results: skinny/RESULTS.md
-source_commit: bb8a516f4
+source_commit: daad7f29c
 
 ## JSON Targets
 
@@ -36,8 +36,8 @@ source_commit: bb8a516f4
 | json/random/direct_to_struct/main | direct_to_struct | 7977.902 | 5755.672 | 2222.230 | ADMITTED |
 | json/random/real_typed_struct/main | real_typed_struct | 4354.29 | 3042.02 | 1312.27 | ADMITTED |
 | json/gsoc-2018/parse_only/main | parse_only | 23587.00 | 50364.00 | -26777.00 | OPEN |
-| json/gsoc-2018/direct_to_struct/main | direct_to_struct | 15385.00 | 23881.00 | -8496.00 | OPEN |
-| json/gsoc-2018/real_typed_struct/main | real_typed_struct | absent:product-surface-not-generated | absent:product-surface-not-generated | absent:product-surface-not-generated | MISSING |
+| json/gsoc-2018/direct_to_struct/main | direct_to_struct | 7228.198 | 6670.742 | 557.456 | ADMITTED |
+| json/gsoc-2018/real_typed_struct/main | real_typed_struct | 7176.742 | 6628.652 | 548.090 | ADMITTED |
 | json/marine_ik/parse_only/main | parse_only | 9505.49 | 5339.94 | 4165.55 | ADMITTED |
 | json/marine_ik/direct_to_struct/main | direct_to_struct | 11162.218 | 8831.443 | 2330.775 | ADMITTED |
 | json/marine_ik/real_typed_struct/main | real_typed_struct | 5515.10 | 5241.98 | 273.12 | ADMITTED |

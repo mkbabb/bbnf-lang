@@ -231,6 +231,9 @@ impl<'a> Renderer<'a> {
             DirectTypeRef::MapEntriesVec {
                 entry_rust_type, ..
             } => Ok(format!("Vec<{entry_rust_type}>")),
+            DirectTypeRef::MapU32EntriesVec {
+                entry_rust_type, ..
+            } => Ok(format!("Vec<{entry_rust_type}>")),
             DirectTypeRef::StringEnum { enum_type, .. } => Ok(enum_type.clone()),
             DirectTypeRef::Option(inner) => Ok(format!("Option<{}>", self.rust_type(inner)?)),
         }
@@ -261,6 +264,7 @@ impl<'a> Renderer<'a> {
             DirectTypeRef::Vec { .. }
             | DirectTypeRef::MapString(_)
             | DirectTypeRef::MapEntriesVec { .. }
+            | DirectTypeRef::MapU32EntriesVec { .. }
             | DirectTypeRef::Option(_) => Ok(format!("{}({parser})", self.helper_name(ty)?)),
         }
     }
@@ -278,6 +282,7 @@ impl<'a> Renderer<'a> {
             DirectTypeRef::Vec { inner, .. }
             | DirectTypeRef::MapString(inner)
             | DirectTypeRef::MapEntriesVec { value: inner, .. }
+            | DirectTypeRef::MapU32EntriesVec { value: inner, .. }
             | DirectTypeRef::Option(inner) => {
                 self.collect_helpers(inner);
                 let key = type_key(ty);
@@ -508,6 +513,23 @@ impl<'a> Renderer<'a> {
                     "    let mut out: {return_ty} = Vec::with_capacity({capacity});\n    parser.ws();\n    parser.expect(b'{{')?;\n    parser.ws();\n    if parser.take(b'}}') {{ return Ok(out); }}\n    loop {{\n        let key = parser.parse_string()?;\n        parser.ws();\n        parser.expect(b':')?;\n        parser.ws();\n        let value = {value_expr}?;\n        out.push({entry_construct} {{ {key_field}: key, {value_field}: value }});\n        parser.ws();\n        if parser.take(b',') {{ parser.ws(); continue; }}\n        parser.expect(b'}}')?;\n        return Ok(out);\n    }}\n}}\n\n"
                 ));
             }
+            DirectTypeRef::MapU32EntriesVec {
+                entry_rust_type,
+                key_field,
+                value_field,
+                capacity_hint,
+                value,
+            } => {
+                let value_expr = self.parse_expr(value)?;
+                let entry_construct = construct_path(entry_rust_type);
+                let capacity = capacity_hint.unwrap_or(0);
+                out.push_str(&format!(
+                    "fn {name}<'i>(parser: &mut DirectParser<'i>) -> Result<{return_ty}, DirectBuildError<'i>> {{\n"
+                ));
+                out.push_str(&format!(
+                    "    let mut out: {return_ty} = Vec::with_capacity({capacity});\n    parser.ws();\n    parser.expect(b'{{')?;\n    parser.ws();\n    if parser.take(b'}}') {{ return Ok(out); }}\n    loop {{\n        let key = parser.parse_u32_key()?;\n        parser.ws();\n        parser.expect(b':')?;\n        parser.ws();\n        let value = {value_expr}?;\n        out.push({entry_construct} {{ {key_field}: key, {value_field}: value }});\n        parser.ws();\n        if parser.take(b',') {{ parser.ws(); continue; }}\n        parser.expect(b'}}')?;\n        return Ok(out);\n    }}\n}}\n\n"
+                ));
+            }
             DirectTypeRef::Option(inner) => {
                 let inner_expr = self.parse_expr(inner)?;
                 out.push_str(&format!(
@@ -580,6 +602,11 @@ fn type_key(ty: &DirectTypeRef) -> String {
             value,
             ..
         } => format!("map_entries_{}_{}", entry_rust_type, type_key(value)),
+        DirectTypeRef::MapU32EntriesVec {
+            entry_rust_type,
+            value,
+            ..
+        } => format!("map_u32_entries_{}_{}", entry_rust_type, type_key(value)),
         DirectTypeRef::StringEnum { enum_type, .. } => {
             format!("string_enum_{}", snake(enum_type))
         }
@@ -770,6 +797,63 @@ impl<'i> DirectParser<'i> {
             unescape_string(raw).map_err(|_| self.error("invalid string escape"))
         } else {
             Ok(Cow::Borrowed(raw))
+        }
+    }
+
+    #[inline(always)]
+    fn parse_u32_key(&mut self) -> Result<u32, DirectBuildError<'i>> {
+        if self.bytes.get(self.cursor) != Some(&b'"') {
+            return Err(self.error("expected object key"));
+        }
+        let mut cursor = self.cursor + 1;
+        let mut value = 0u32;
+        let mut has_digit = false;
+        loop {
+            let Some(byte) = self.bytes.get(cursor).copied() else {
+                return Err(self.error("invalid object key"));
+            };
+            match byte {
+                b'"' if has_digit => {
+                    self.cursor = cursor + 1;
+                    return Ok(value);
+                }
+                b'0'..=b'9' => {
+                    has_digit = true;
+                    value = value
+                        .checked_mul(10)
+                        .and_then(|value| value.checked_add((byte - b'0') as u32))
+                        .ok_or_else(|| self.error("integer range"))?;
+                    cursor += 1;
+                }
+                b'\\' => {
+                    if self.bytes.get(cursor + 1) != Some(&b'u') {
+                        return Err(self.error("invalid numeric object key"));
+                    }
+                    let Some(a) = self.bytes.get(cursor + 2).and_then(|byte| hex_nibble(*byte)) else {
+                        return Err(self.error("invalid unicode escape"));
+                    };
+                    let Some(b) = self.bytes.get(cursor + 3).and_then(|byte| hex_nibble(*byte)) else {
+                        return Err(self.error("invalid unicode escape"));
+                    };
+                    let Some(c) = self.bytes.get(cursor + 4).and_then(|byte| hex_nibble(*byte)) else {
+                        return Err(self.error("invalid unicode escape"));
+                    };
+                    let Some(d) = self.bytes.get(cursor + 5).and_then(|byte| hex_nibble(*byte)) else {
+                        return Err(self.error("invalid unicode escape"));
+                    };
+                    let unit = (a << 12) | (b << 8) | (c << 4) | d;
+                    if !(b'0' as u16..=b'9' as u16).contains(&unit) {
+                        return Err(self.error("invalid numeric object key"));
+                    }
+                    has_digit = true;
+                    value = value
+                        .checked_mul(10)
+                        .and_then(|value| value.checked_add((unit as u8 - b'0') as u32))
+                        .ok_or_else(|| self.error("integer range"))?;
+                    cursor += 6;
+                }
+                _ => return Err(self.error("invalid numeric object key")),
+            }
         }
     }
 

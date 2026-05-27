@@ -105,6 +105,13 @@ pub enum DirectTypeRef {
         capacity_hint: Option<usize>,
         value: Box<DirectTypeRef>,
     },
+    MapU32EntriesVec {
+        entry_rust_type: String,
+        key_field: String,
+        value_field: String,
+        capacity_hint: Option<usize>,
+        value: Box<DirectTypeRef>,
+    },
     StringEnum {
         enum_type: String,
         variants: Vec<DirectStringEnumVariant>,
@@ -298,6 +305,7 @@ fn validate_type_ref(
         DirectTypeRef::Vec { inner, .. }
         | DirectTypeRef::MapString(inner)
         | DirectTypeRef::MapEntriesVec { value: inner, .. }
+        | DirectTypeRef::MapU32EntriesVec { value: inner, .. }
         | DirectTypeRef::Option(inner) => validate_type_ref(inner, types),
         DirectTypeRef::StringEnum {
             enum_type,

@@ -30,6 +30,17 @@ pub fn schema() -> DirectSchemaSet {
                 "CitmCatalog",
             ),
             DirectRootSchema::typed_root(
+                "parse_gsoc_2018",
+                "Vec<crate::real_typed_struct::GsocProposalEntry<'i>>",
+                map_u32_entries(
+                    "crate::real_typed_struct::GsocProposalEntry<'i>",
+                    "key",
+                    "value",
+                    1_264,
+                    ty("GsocProposal"),
+                ),
+            ),
+            DirectRootSchema::typed_root(
                 "parse_github_events",
                 "Vec<crate::real_typed_struct::GithubEvent<'i>>",
                 vec_with_capacity(ty("GithubEvent"), 30),
@@ -173,6 +184,70 @@ pub fn schema() -> DirectSchemaSet {
                     default("name", "name", opt(string())),
                     default("subTopicIds", "sub_topic_ids", vec(u64_ty())),
                     default("topicIds", "topic_ids", vec(u64_ty())),
+                ],
+            ),
+            struct_ty(
+                "GsocProposal",
+                "crate::real_typed_struct::GsocProposal<'i>",
+                vec![
+                    required(
+                        "@context",
+                        "context",
+                        string_enum(
+                            "crate::real_typed_struct::GsocContext",
+                            vec![enum_variant("SchemaOrg", "http://schema.org")],
+                        ),
+                    ),
+                    required(
+                        "@type",
+                        "proposal_type",
+                        string_enum(
+                            "crate::real_typed_struct::GsocProposalType",
+                            vec![enum_variant("SoftwareSourceCode", "SoftwareSourceCode")],
+                        ),
+                    ),
+                    required("name", "name", decoded_json_string()),
+                    required("description", "description", decoded_json_string()),
+                    required("sponsor", "sponsor", ty("GsocSponsor")),
+                    required("author", "author", ty("GsocAuthor")),
+                ],
+            ),
+            struct_ty(
+                "GsocSponsor",
+                "crate::real_typed_struct::GsocSponsor<'i>",
+                vec![
+                    required(
+                        "@type",
+                        "sponsor_type",
+                        string_enum(
+                            "crate::real_typed_struct::GsocSponsorType",
+                            vec![enum_variant("Organization", "Organization")],
+                        ),
+                    ),
+                    required("name", "name", decoded_json_string()),
+                    required(
+                        "disambiguatingDescription",
+                        "disambiguating_description",
+                        decoded_json_string(),
+                    ),
+                    required("description", "description", decoded_json_string()),
+                    required("url", "url", decoded_json_string()),
+                    required("logo", "logo", decoded_json_string()),
+                ],
+            ),
+            struct_ty(
+                "GsocAuthor",
+                "crate::real_typed_struct::GsocAuthor<'i>",
+                vec![
+                    required(
+                        "@type",
+                        "author_type",
+                        string_enum(
+                            "crate::real_typed_struct::GsocAuthorType",
+                            vec![enum_variant("Person", "Person")],
+                        ),
+                    ),
+                    required("name", "name", decoded_json_string()),
                 ],
             ),
             struct_ty(
@@ -768,6 +843,16 @@ fn default(key_literal: &str, rust_field: &str, ty: DirectTypeRef) -> DirectFiel
     }
 }
 
+fn required(key_literal: &str, rust_field: &str, ty: DirectTypeRef) -> DirectFieldSchema {
+    DirectFieldSchema {
+        key_literal: key_literal.to_string(),
+        rust_field: rust_field.to_string(),
+        ty,
+        presence: PresencePolicy::Required,
+        duplicate: DuplicatePolicy::Reject,
+    }
+}
+
 fn ignored(key_literal: &str, skip: DirectSkipKind) -> DirectIgnoredFieldSchema {
     DirectIgnoredFieldSchema {
         key_literal: key_literal.to_string(),
@@ -863,6 +948,22 @@ fn map_entries(
     value: DirectTypeRef,
 ) -> DirectTypeRef {
     DirectTypeRef::MapEntriesVec {
+        entry_rust_type: entry_rust_type.to_string(),
+        key_field: key_field.to_string(),
+        value_field: value_field.to_string(),
+        capacity_hint: Some(capacity_hint),
+        value: Box::new(value),
+    }
+}
+
+fn map_u32_entries(
+    entry_rust_type: &str,
+    key_field: &str,
+    value_field: &str,
+    capacity_hint: usize,
+    value: DirectTypeRef,
+) -> DirectTypeRef {
+    DirectTypeRef::MapU32EntriesVec {
         entry_rust_type: entry_rust_type.to_string(),
         key_field: key_field.to_string(),
         value_field: value_field.to_string(),

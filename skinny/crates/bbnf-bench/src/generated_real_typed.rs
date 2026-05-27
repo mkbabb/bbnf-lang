@@ -72,6 +72,17 @@ pub fn parse_citm_catalog<'i>(input: &'i str) -> Result<crate::real_typed_struct
     }
 }
 
+pub fn parse_gsoc_2018<'i>(input: &'i str) -> Result<Vec<crate::real_typed_struct::GsocProposalEntry<'i>>, DirectBuildError<'i>> {
+    let mut parser = DirectParser::new(input);
+    let output = parse_map_u32_entries_crate_real_typed_struct_gsoc_proposal_entry_i_type_gsoc_proposal(&mut parser)?;
+    parser.ws();
+    if parser.cursor == parser.bytes.len() {
+        Ok(output)
+    } else {
+        Err(parser.error("trailing characters"))
+    }
+}
+
 pub fn parse_github_events<'i>(input: &'i str) -> Result<Vec<crate::real_typed_struct::GithubEvent<'i>>, DirectBuildError<'i>> {
     let mut parser = DirectParser::new(input);
     let output = parse_vec_cap_30_type_github_event(&mut parser)?;
@@ -457,6 +468,185 @@ fn parse_type_citm_event<'i>(parser: &mut DirectParser<'i>) -> Result<crate::rea
             name: name.unwrap_or_default(),
             sub_topic_ids: sub_topic_ids.unwrap_or_default(),
             topic_ids: topic_ids.unwrap_or_default(),
+        });
+    }
+}
+
+fn parse_type_gsoc_proposal<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::GsocProposal<'i>, DirectBuildError<'i>> {
+    parser.ws();
+    parser.expect(b'{')?;
+    let mut context: Option<crate::real_typed_struct::GsocContext> = None;
+    let mut proposal_type: Option<crate::real_typed_struct::GsocProposalType> = None;
+    let mut name: Option<crate::real_typed_struct::DecodedJsonString<'i>> = None;
+    let mut description: Option<crate::real_typed_struct::DecodedJsonString<'i>> = None;
+    let mut sponsor: Option<crate::real_typed_struct::GsocSponsor<'i>> = None;
+    let mut author: Option<crate::real_typed_struct::GsocAuthor<'i>> = None;
+    parser.ws();
+    if parser.take(b'}') {
+        return Ok(crate::real_typed_struct::GsocProposal {
+            context: context.ok_or_else(|| parser.error("missing required field"))?,
+            proposal_type: proposal_type.ok_or_else(|| parser.error("missing required field"))?,
+            name: name.ok_or_else(|| parser.error("missing required field"))?,
+            description: description.ok_or_else(|| parser.error("missing required field"))?,
+            sponsor: sponsor.ok_or_else(|| parser.error("missing required field"))?,
+            author: author.ok_or_else(|| parser.error("missing required field"))?,
+        });
+    }
+    loop {
+        let key = parser.parse_string()?;
+        parser.ws();
+        parser.expect(b':')?;
+        parser.ws();
+        match key.as_ref() {
+            "@context" => {
+                if context.is_some() { return Err(parser.error("duplicate field")); }
+                context = Some(parse_string_enum_crate_real_typed_struct_gsoc_context(parser)?);
+            }
+            "@type" => {
+                if proposal_type.is_some() { return Err(parser.error("duplicate field")); }
+                proposal_type = Some(parse_string_enum_crate_real_typed_struct_gsoc_proposal_type(parser)?);
+            }
+            "name" => {
+                if name.is_some() { return Err(parser.error("duplicate field")); }
+                name = Some(parser.parse_decoded_json_string()?);
+            }
+            "description" => {
+                if description.is_some() { return Err(parser.error("duplicate field")); }
+                description = Some(parser.parse_decoded_json_string()?);
+            }
+            "sponsor" => {
+                if sponsor.is_some() { return Err(parser.error("duplicate field")); }
+                sponsor = Some(parse_type_gsoc_sponsor(parser)?);
+            }
+            "author" => {
+                if author.is_some() { return Err(parser.error("duplicate field")); }
+                author = Some(parse_type_gsoc_author(parser)?);
+            }
+            _ => parser.skip_value()?,
+        }
+        parser.ws();
+        if parser.take(b',') {
+            parser.ws();
+            continue;
+        }
+        parser.expect(b'}')?;
+        return Ok(crate::real_typed_struct::GsocProposal {
+            context: context.ok_or_else(|| parser.error("missing required field"))?,
+            proposal_type: proposal_type.ok_or_else(|| parser.error("missing required field"))?,
+            name: name.ok_or_else(|| parser.error("missing required field"))?,
+            description: description.ok_or_else(|| parser.error("missing required field"))?,
+            sponsor: sponsor.ok_or_else(|| parser.error("missing required field"))?,
+            author: author.ok_or_else(|| parser.error("missing required field"))?,
+        });
+    }
+}
+
+fn parse_type_gsoc_sponsor<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::GsocSponsor<'i>, DirectBuildError<'i>> {
+    parser.ws();
+    parser.expect(b'{')?;
+    let mut sponsor_type: Option<crate::real_typed_struct::GsocSponsorType> = None;
+    let mut name: Option<crate::real_typed_struct::DecodedJsonString<'i>> = None;
+    let mut disambiguating_description: Option<crate::real_typed_struct::DecodedJsonString<'i>> = None;
+    let mut description: Option<crate::real_typed_struct::DecodedJsonString<'i>> = None;
+    let mut url: Option<crate::real_typed_struct::DecodedJsonString<'i>> = None;
+    let mut logo: Option<crate::real_typed_struct::DecodedJsonString<'i>> = None;
+    parser.ws();
+    if parser.take(b'}') {
+        return Ok(crate::real_typed_struct::GsocSponsor {
+            sponsor_type: sponsor_type.ok_or_else(|| parser.error("missing required field"))?,
+            name: name.ok_or_else(|| parser.error("missing required field"))?,
+            disambiguating_description: disambiguating_description.ok_or_else(|| parser.error("missing required field"))?,
+            description: description.ok_or_else(|| parser.error("missing required field"))?,
+            url: url.ok_or_else(|| parser.error("missing required field"))?,
+            logo: logo.ok_or_else(|| parser.error("missing required field"))?,
+        });
+    }
+    loop {
+        let key = parser.parse_string()?;
+        parser.ws();
+        parser.expect(b':')?;
+        parser.ws();
+        match key.as_ref() {
+            "@type" => {
+                if sponsor_type.is_some() { return Err(parser.error("duplicate field")); }
+                sponsor_type = Some(parse_string_enum_crate_real_typed_struct_gsoc_sponsor_type(parser)?);
+            }
+            "name" => {
+                if name.is_some() { return Err(parser.error("duplicate field")); }
+                name = Some(parser.parse_decoded_json_string()?);
+            }
+            "disambiguatingDescription" => {
+                if disambiguating_description.is_some() { return Err(parser.error("duplicate field")); }
+                disambiguating_description = Some(parser.parse_decoded_json_string()?);
+            }
+            "description" => {
+                if description.is_some() { return Err(parser.error("duplicate field")); }
+                description = Some(parser.parse_decoded_json_string()?);
+            }
+            "url" => {
+                if url.is_some() { return Err(parser.error("duplicate field")); }
+                url = Some(parser.parse_decoded_json_string()?);
+            }
+            "logo" => {
+                if logo.is_some() { return Err(parser.error("duplicate field")); }
+                logo = Some(parser.parse_decoded_json_string()?);
+            }
+            _ => parser.skip_value()?,
+        }
+        parser.ws();
+        if parser.take(b',') {
+            parser.ws();
+            continue;
+        }
+        parser.expect(b'}')?;
+        return Ok(crate::real_typed_struct::GsocSponsor {
+            sponsor_type: sponsor_type.ok_or_else(|| parser.error("missing required field"))?,
+            name: name.ok_or_else(|| parser.error("missing required field"))?,
+            disambiguating_description: disambiguating_description.ok_or_else(|| parser.error("missing required field"))?,
+            description: description.ok_or_else(|| parser.error("missing required field"))?,
+            url: url.ok_or_else(|| parser.error("missing required field"))?,
+            logo: logo.ok_or_else(|| parser.error("missing required field"))?,
+        });
+    }
+}
+
+fn parse_type_gsoc_author<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::GsocAuthor<'i>, DirectBuildError<'i>> {
+    parser.ws();
+    parser.expect(b'{')?;
+    let mut author_type: Option<crate::real_typed_struct::GsocAuthorType> = None;
+    let mut name: Option<crate::real_typed_struct::DecodedJsonString<'i>> = None;
+    parser.ws();
+    if parser.take(b'}') {
+        return Ok(crate::real_typed_struct::GsocAuthor {
+            author_type: author_type.ok_or_else(|| parser.error("missing required field"))?,
+            name: name.ok_or_else(|| parser.error("missing required field"))?,
+        });
+    }
+    loop {
+        let key = parser.parse_string()?;
+        parser.ws();
+        parser.expect(b':')?;
+        parser.ws();
+        match key.as_ref() {
+            "@type" => {
+                if author_type.is_some() { return Err(parser.error("duplicate field")); }
+                author_type = Some(parse_string_enum_crate_real_typed_struct_gsoc_author_type(parser)?);
+            }
+            "name" => {
+                if name.is_some() { return Err(parser.error("duplicate field")); }
+                name = Some(parser.parse_decoded_json_string()?);
+            }
+            _ => parser.skip_value()?,
+        }
+        parser.ws();
+        if parser.take(b',') {
+            parser.ws();
+            continue;
+        }
+        parser.expect(b'}')?;
+        return Ok(crate::real_typed_struct::GsocAuthor {
+            author_type: author_type.ok_or_else(|| parser.error("missing required field"))?,
+            name: name.ok_or_else(|| parser.error("missing required field"))?,
         });
     }
 }
@@ -2475,6 +2665,26 @@ fn parse_type_w5_map_metric<'i>(parser: &mut DirectParser<'i>) -> Result<crate::
     }
 }
 
+fn parse_map_u32_entries_crate_real_typed_struct_gsoc_proposal_entry_i_type_gsoc_proposal<'i>(parser: &mut DirectParser<'i>) -> Result<Vec<crate::real_typed_struct::GsocProposalEntry<'i>>, DirectBuildError<'i>> {
+    let mut out: Vec<crate::real_typed_struct::GsocProposalEntry<'i>> = Vec::with_capacity(1264);
+    parser.ws();
+    parser.expect(b'{')?;
+    parser.ws();
+    if parser.take(b'}') { return Ok(out); }
+    loop {
+        let key = parser.parse_u32_key()?;
+        parser.ws();
+        parser.expect(b':')?;
+        parser.ws();
+        let value = parse_type_gsoc_proposal(parser)?;
+        out.push(crate::real_typed_struct::GsocProposalEntry { key: key, value: value });
+        parser.ws();
+        if parser.take(b',') { parser.ws(); continue; }
+        parser.expect(b'}')?;
+        return Ok(out);
+    }
+}
+
 fn parse_vec_cap_30_type_github_event<'i>(parser: &mut DirectParser<'i>) -> Result<Vec<crate::real_typed_struct::GithubEvent<'i>>, DirectBuildError<'i>> {
     let mut out: Vec<crate::real_typed_struct::GithubEvent<'i>> = Vec::with_capacity(30);
     parser.ws();
@@ -3295,6 +3505,38 @@ fn parse_option_vec_cap_1_type_instrument_pattern_event<'i>(parser: &mut DirectP
     }
 }
 
+fn parse_string_enum_crate_real_typed_struct_gsoc_author_type<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::GsocAuthorType, DirectBuildError<'i>> {
+    let (fingerprint, len) = parser.parse_decoded_string_fingerprint()?;
+    match (fingerprint, len) {
+        (11378156739681535999u64, 6u64) => Ok(crate::real_typed_struct::GsocAuthorType::Person),
+        _ => Err(parser.error("unexpected string enum value")),
+    }
+}
+
+fn parse_string_enum_crate_real_typed_struct_gsoc_context<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::GsocContext, DirectBuildError<'i>> {
+    let (fingerprint, len) = parser.parse_decoded_string_fingerprint()?;
+    match (fingerprint, len) {
+        (13164649695616475400u64, 17u64) => Ok(crate::real_typed_struct::GsocContext::SchemaOrg),
+        _ => Err(parser.error("unexpected string enum value")),
+    }
+}
+
+fn parse_string_enum_crate_real_typed_struct_gsoc_proposal_type<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::GsocProposalType, DirectBuildError<'i>> {
+    let (fingerprint, len) = parser.parse_decoded_string_fingerprint()?;
+    match (fingerprint, len) {
+        (16509359685473117854u64, 18u64) => Ok(crate::real_typed_struct::GsocProposalType::SoftwareSourceCode),
+        _ => Err(parser.error("unexpected string enum value")),
+    }
+}
+
+fn parse_string_enum_crate_real_typed_struct_gsoc_sponsor_type<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::GsocSponsorType, DirectBuildError<'i>> {
+    let (fingerprint, len) = parser.parse_decoded_string_fingerprint()?;
+    match (fingerprint, len) {
+        (10190594246113683164u64, 12u64) => Ok(crate::real_typed_struct::GsocSponsorType::Organization),
+        _ => Err(parser.error("unexpected string enum value")),
+    }
+}
+
 fn parse_string_enum_crate_real_typed_struct_unicode_mixed_class<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::UnicodeMixedClass, DirectBuildError<'i>> {
     let (fingerprint, len) = parser.parse_decoded_string_fingerprint()?;
     match (fingerprint, len) {
@@ -3475,6 +3717,63 @@ impl<'i> DirectParser<'i> {
             unescape_string(raw).map_err(|_| self.error("invalid string escape"))
         } else {
             Ok(Cow::Borrowed(raw))
+        }
+    }
+
+    #[inline(always)]
+    fn parse_u32_key(&mut self) -> Result<u32, DirectBuildError<'i>> {
+        if self.bytes.get(self.cursor) != Some(&b'"') {
+            return Err(self.error("expected object key"));
+        }
+        let mut cursor = self.cursor + 1;
+        let mut value = 0u32;
+        let mut has_digit = false;
+        loop {
+            let Some(byte) = self.bytes.get(cursor).copied() else {
+                return Err(self.error("invalid object key"));
+            };
+            match byte {
+                b'"' if has_digit => {
+                    self.cursor = cursor + 1;
+                    return Ok(value);
+                }
+                b'0'..=b'9' => {
+                    has_digit = true;
+                    value = value
+                        .checked_mul(10)
+                        .and_then(|value| value.checked_add((byte - b'0') as u32))
+                        .ok_or_else(|| self.error("integer range"))?;
+                    cursor += 1;
+                }
+                b'\\' => {
+                    if self.bytes.get(cursor + 1) != Some(&b'u') {
+                        return Err(self.error("invalid numeric object key"));
+                    }
+                    let Some(a) = self.bytes.get(cursor + 2).and_then(|byte| hex_nibble(*byte)) else {
+                        return Err(self.error("invalid unicode escape"));
+                    };
+                    let Some(b) = self.bytes.get(cursor + 3).and_then(|byte| hex_nibble(*byte)) else {
+                        return Err(self.error("invalid unicode escape"));
+                    };
+                    let Some(c) = self.bytes.get(cursor + 4).and_then(|byte| hex_nibble(*byte)) else {
+                        return Err(self.error("invalid unicode escape"));
+                    };
+                    let Some(d) = self.bytes.get(cursor + 5).and_then(|byte| hex_nibble(*byte)) else {
+                        return Err(self.error("invalid unicode escape"));
+                    };
+                    let unit = (a << 12) | (b << 8) | (c << 4) | d;
+                    if !(b'0' as u16..=b'9' as u16).contains(&unit) {
+                        return Err(self.error("invalid numeric object key"));
+                    }
+                    has_digit = true;
+                    value = value
+                        .checked_mul(10)
+                        .and_then(|value| value.checked_add((unit as u8 - b'0') as u32))
+                        .ok_or_else(|| self.error("integer range"))?;
+                    cursor += 6;
+                }
+                _ => return Err(self.error("invalid numeric object key")),
+            }
         }
     }
 

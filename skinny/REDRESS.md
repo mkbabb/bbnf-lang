@@ -5435,3 +5435,26 @@ perturbation.
   generated_parse_only_accepts_and_rejects_json -- --nocapture`, `cargo test
   -p codegen emits_distinct_json_parse_only_path_without_tape_builder --
   --nocapture`, and the retained W10S profile artifacts.
+
+## SK-V14 W10T JSON parse_only Open-Row Sweep
+
+- Item 220 closes `G-SK-V14-W10T-JSON-PARSE-ONLY-OPEN-SWEEP` as `MIXED`.
+  No new source patch landed in W10T; it is the cold same-binary open-row
+  sweep after the W10S source implementation. The sweep preserves the strict
+  parse_only plane: generated Track 1 `runtime::generated_json::parse_only`,
+  independent Track 2 structural oracle, and `sonic_rs::Skipper` as the strict
+  comparator.
+- One additional parse_only row admits from cold `profile_direct` evidence
+  retained at
+  `restart/skinny/tranches/sk-v14/research/skv14-W10T-parse-only-open-sweep.tsv`:
+  `instruments`. The row has Track 1 `4281.770` Mbps, independent Track 2
+  `2748.324` Mbps, `parse_only/sonic_rs::Skipper` strict comparator
+  `3457.276` Mbps, no warmup iterations, and per-iteration equality PASS.
+- Eight parse_only rows remain open because the W10T cold evidence still does
+  not clear Skipper + 1.0 Mbps: `twitter`, `citm_catalog`, `apache_builds`,
+  `github_events`, `update_center`, `random`, `gsoc-2018`, and
+  `distinct_values`. Current parse_only state is 9 / 17 admitted and 8 / 17
+  open. Evidence: retained W10T raw log + TSV, `cargo test -p bbnf-bench
+  skv14_json_parse_only_report_accepts -- --nocapture`, `cargo test -p xtask
+  -- --nocapture`, and `cargo xtask gate-json --check-results
+  --skv14-existing-results-capture`.

@@ -74,6 +74,9 @@ enum Cmd {
     /// Regenerate the root EBNF runtime projection under
     /// `crates/core/src/runtime/ebnf/`.
     RegenEbnf,
+    /// Regenerate the root CSS Pretty runtime projection under
+    /// `crates/core/src/runtime/css_pretty/`.
+    RegenCssPretty,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -90,6 +93,7 @@ fn main() -> anyhow::Result<()> {
         Cmd::RegenCsv => regen_simple_runtime::run("csv"),
         Cmd::RegenBnf => regen_simple_runtime::run("bnf"),
         Cmd::RegenEbnf => regen_simple_runtime::run("ebnf"),
+        Cmd::RegenCssPretty => regen_simple_runtime::run("css_pretty"),
     }
 }
 

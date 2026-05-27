@@ -1,13 +1,10 @@
-//! AZ-II.cutover.E (Phase 2) — [`crate::runtime::RuntimeView`] impl
-//! for [`super::CssPrettyView`]. Mirror of `CsvView`'s impl.
-
 use crate::runtime::RuntimeView;
-use crate::runtime::css_pretty::document::{CssPrettyDocument, CssPrettyKind, CssPrettyView};
+use crate::runtime::css_pretty::document::{
+    CssPrettyDocument, CssPrettyKind, CssPrettyView,
+};
 use crate::runtime::css_pretty::value::CssPrettyValue;
-
 impl<'a, 'p: 'a> RuntimeView<'p> for CssPrettyView<'a, 'p> {
     type Kind = CssPrettyKind;
-
     #[inline]
     fn kind(&self) -> Self::Kind {
         match self.focus {
@@ -16,7 +13,6 @@ impl<'a, 'p: 'a> RuntimeView<'p> for CssPrettyView<'a, 'p> {
             CssPrettyValue::Compound(_) => CssPrettyKind::Compound,
         }
     }
-
     #[inline]
     fn span(&self) -> Option<&'p str> {
         match self.focus {
@@ -24,12 +20,10 @@ impl<'a, 'p: 'a> RuntimeView<'p> for CssPrettyView<'a, 'p> {
             _ => None,
         }
     }
-
     #[inline]
     fn input(&self) -> &'p str {
         self.doc.input
     }
-
     fn children(&self) -> impl Iterator<Item = Self> + '_ {
         let doc = self.doc;
         let focus = self.focus;
@@ -40,16 +34,13 @@ impl<'a, 'p: 'a> RuntimeView<'p> for CssPrettyView<'a, 'p> {
         }
     }
 }
-
 pub struct CssPrettyChildrenIter<'a, 'p: 'a> {
     doc: &'a CssPrettyDocument<'p>,
     focus: CssPrettyValue<'p>,
     index: usize,
 }
-
 impl<'a, 'p: 'a> Iterator for CssPrettyChildrenIter<'a, 'p> {
     type Item = CssPrettyView<'a, 'p>;
-
     fn next(&mut self) -> Option<Self::Item> {
         match self.focus {
             CssPrettyValue::Compound(id) => {

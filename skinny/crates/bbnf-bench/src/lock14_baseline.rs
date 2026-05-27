@@ -722,11 +722,13 @@ const FROZEN_ROOTS: &[&str] = &[
     "crates/bbnf-bench/src/materialization.rs",
     "../crates/core/src/runtime/bnf",
     "../crates/core/src/runtime/css_l4",
+    "../crates/core/src/runtime/css_pretty",
     "../crates/core/src/runtime/csv",
     "../crates/core/src/runtime/ebnf",
     "../crates/core/src/runtime/math",
     "../xtask/runtime-projections/bnf.toml",
     "../xtask/runtime-projections/css_l4.toml",
+    "../xtask/runtime-projections/css_pretty.toml",
     "../xtask/runtime-projections/csv.toml",
     "../xtask/runtime-projections/ebnf.toml",
     "../xtask/runtime-projections/math.toml",
@@ -1224,6 +1226,19 @@ const SK_V14_W6_4_ROOT_EBNF_OWNER_PATHS: &[&str] = &[
     "../xtask/src/main.rs",
 ];
 
+const SK_V14_W6_5_ROOT_CSS_PRETTY_OWNER_PATHS: &[&str] = &[
+    "crates/bbnf-bench/src/lock14_baseline.rs",
+    "../crates/core/src/runtime/css_pretty/arena.rs",
+    "../crates/core/src/runtime/css_pretty/builder.rs",
+    "../crates/core/src/runtime/css_pretty/document.rs",
+    "../crates/core/src/runtime/css_pretty/kind.rs",
+    "../crates/core/src/runtime/css_pretty/mod.rs",
+    "../crates/core/src/runtime/css_pretty/value.rs",
+    "../crates/core/src/runtime/css_pretty/view.rs",
+    "../xtask/runtime-projections/css_pretty.toml",
+    "../xtask/src/main.rs",
+];
+
 fn current_lock14_owner_paths() -> Vec<&'static str> {
     let mut paths = Vec::with_capacity(
         SK_V12_W1A_OWNER_PATHS.len()
@@ -1259,7 +1274,8 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
             + SK_V14_W6_1_ROOT_MATH_OWNER_PATHS.len()
             + SK_V14_W6_2_ROOT_CSV_OWNER_PATHS.len()
             + SK_V14_W6_3_ROOT_BNF_OWNER_PATHS.len()
-            + SK_V14_W6_4_ROOT_EBNF_OWNER_PATHS.len(),
+            + SK_V14_W6_4_ROOT_EBNF_OWNER_PATHS.len()
+            + SK_V14_W6_5_ROOT_CSS_PRETTY_OWNER_PATHS.len(),
     );
     paths.extend_from_slice(SK_V12_W1A_OWNER_PATHS);
     paths.extend_from_slice(SK_V12_W1B1_OWNER_PATHS);
@@ -1295,6 +1311,7 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
     paths.extend_from_slice(SK_V14_W6_2_ROOT_CSV_OWNER_PATHS);
     paths.extend_from_slice(SK_V14_W6_3_ROOT_BNF_OWNER_PATHS);
     paths.extend_from_slice(SK_V14_W6_4_ROOT_EBNF_OWNER_PATHS);
+    paths.extend_from_slice(SK_V14_W6_5_ROOT_CSS_PRETTY_OWNER_PATHS);
     paths
 }
 
@@ -1832,6 +1849,14 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
             return Ok(());
         }
     }
+    if is_w6_5_root_css_pretty_subject(subject) {
+        let allowed = changed_paths
+            .iter()
+            .all(|path| is_allowed_path(path, SK_V14_W6_5_ROOT_CSS_PRETTY_OWNER_PATHS));
+        if allowed {
+            return Ok(());
+        }
+    }
     Err(format!(
         "Lock 14 frozen diff failed for parent paths [{}]",
         changed_paths.join(", ")
@@ -1901,6 +1926,14 @@ fn is_w6_4_root_ebnf_subject(subject: &str) -> bool {
         || subject.contains("sk-v14-w6.4")
         || subject.contains("sk-v14-wavew6_4")
         || subject.contains("sk-v14-w6_4")
+}
+
+fn is_w6_5_root_css_pretty_subject(subject: &str) -> bool {
+    let subject = subject.to_ascii_lowercase();
+    subject.contains("sk-v14-wavew6.5")
+        || subject.contains("sk-v14-w6.5")
+        || subject.contains("sk-v14-wavew6_5")
+        || subject.contains("sk-v14-w6_5")
 }
 
 fn git_output(root: &Path, args: &[&str]) -> Result<String, String> {
@@ -2646,6 +2679,7 @@ mod tests {
             .collect::<Vec<_>>();
         for subject in [
             "feat(sk-v14-waveW6): collapse root runtime cohort",
+            "feat(sk-v14-waveW6.5): collapse root css pretty runtime",
             "feat(sk-v14-waveW6.4): collapse root ebnf runtime",
             "feat(sk-v14-waveW6.3): collapse root bnf runtime",
             "feat(sk-v14-waveW6.1): collapse root math runtime",
@@ -2662,8 +2696,10 @@ mod tests {
     #[test]
     fn w6_0_root_css_rejects_sibling_root_runtime_and_xtask() {
         for outside in [
+            "../crates/core/src/runtime/css_pretty/mod.rs",
             "../crates/core/src/runtime/math/mod.rs",
             "../crates/core/src/runtime/json/mod.rs",
+            "../xtask/runtime-projections/css_pretty.toml",
             "../xtask/runtime-projections/json.toml",
             "../xtask/src/other.rs",
             "../Cargo.toml",
@@ -2751,6 +2787,7 @@ mod tests {
             .collect::<Vec<_>>();
         for subject in [
             "feat(sk-v14-waveW6): collapse root runtime cohort",
+            "feat(sk-v14-waveW6.5): collapse root css pretty runtime",
             "feat(sk-v14-waveW6.4): collapse root ebnf runtime",
             "feat(sk-v14-waveW6.3): collapse root bnf runtime",
             "feat(sk-v14-waveW6.2): collapse root csv runtime",
@@ -2768,8 +2805,10 @@ mod tests {
     fn w6_1_root_math_rejects_sibling_root_runtime_and_xtask() {
         for outside in [
             "../crates/core/src/runtime/css_l4/mod.rs",
+            "../crates/core/src/runtime/css_pretty/mod.rs",
             "../crates/core/src/runtime/json/mod.rs",
             "../xtask/runtime-projections/css_l4.toml",
+            "../xtask/runtime-projections/css_pretty.toml",
             "../xtask/runtime-projections/json.toml",
             "../xtask/src/regen_css.rs",
             "../Cargo.toml",
@@ -2861,6 +2900,7 @@ mod tests {
             .collect::<Vec<_>>();
         for subject in [
             "feat(sk-v14-waveW6): collapse root runtime cohort",
+            "feat(sk-v14-waveW6.5): collapse root css pretty runtime",
             "feat(sk-v14-waveW6.4): collapse root ebnf runtime",
             "feat(sk-v14-waveW6.3): collapse root bnf runtime",
             "feat(sk-v14-waveW6.1): collapse root math runtime",
@@ -2878,8 +2918,10 @@ mod tests {
     fn w6_2_root_csv_rejects_sibling_root_runtime_and_xtask() {
         for outside in [
             "../crates/core/src/runtime/css_l4/mod.rs",
+            "../crates/core/src/runtime/css_pretty/mod.rs",
             "../crates/core/src/runtime/math/mod.rs",
             "../crates/core/src/runtime/json/mod.rs",
+            "../xtask/runtime-projections/css_pretty.toml",
             "../xtask/runtime-projections/math.toml",
             "../xtask/runtime-projections/json.toml",
             "../xtask/src/regen_simple_runtime.rs",
@@ -2972,6 +3014,7 @@ mod tests {
             .collect::<Vec<_>>();
         for subject in [
             "feat(sk-v14-waveW6): collapse root runtime cohort",
+            "feat(sk-v14-waveW6.5): collapse root css pretty runtime",
             "feat(sk-v14-waveW6.4): collapse root ebnf runtime",
             "feat(sk-v14-waveW6.2): collapse root csv runtime",
             "feat(sk-v14-waveW6.1): collapse root math runtime",
@@ -2989,10 +3032,12 @@ mod tests {
     fn w6_3_root_bnf_rejects_sibling_root_runtime_and_xtask() {
         for outside in [
             "../crates/core/src/runtime/css_l4/mod.rs",
+            "../crates/core/src/runtime/css_pretty/mod.rs",
             "../crates/core/src/runtime/csv/mod.rs",
             "../crates/core/src/runtime/math/mod.rs",
             "../crates/core/src/runtime/json/mod.rs",
             "../crates/core/src/runtime/bbnf/mod.rs",
+            "../xtask/runtime-projections/css_pretty.toml",
             "../xtask/runtime-projections/csv.toml",
             "../xtask/runtime-projections/math.toml",
             "../xtask/runtime-projections/json.toml",
@@ -3087,6 +3132,7 @@ mod tests {
             .collect::<Vec<_>>();
         for subject in [
             "feat(sk-v14-waveW6): collapse root runtime cohort",
+            "feat(sk-v14-waveW6.5): collapse root css pretty runtime",
             "feat(sk-v14-waveW6.3): collapse root bnf runtime",
             "feat(sk-v14-waveW6.2): collapse root csv runtime",
             "feat(sk-v14-waveW6.1): collapse root math runtime",
@@ -3104,12 +3150,14 @@ mod tests {
     fn w6_4_root_ebnf_rejects_sibling_root_runtime_and_xtask() {
         for outside in [
             "../crates/core/src/runtime/css_l4/mod.rs",
+            "../crates/core/src/runtime/css_pretty/mod.rs",
             "../crates/core/src/runtime/csv/mod.rs",
             "../crates/core/src/runtime/math/mod.rs",
             "../crates/core/src/runtime/bnf/mod.rs",
             "../crates/core/src/runtime/json/mod.rs",
             "../crates/core/src/runtime/bbnf/mod.rs",
             "../xtask/runtime-projections/bnf.toml",
+            "../xtask/runtime-projections/css_pretty.toml",
             "../xtask/runtime-projections/csv.toml",
             "../xtask/runtime-projections/math.toml",
             "../xtask/runtime-projections/json.toml",
@@ -3174,6 +3222,126 @@ mod tests {
             assert!(
                 !path.contains("_provider.rs") && !path.contains("_templates"),
                 "{path} leaks provider/template residue into W6.4"
+            );
+        }
+    }
+
+    #[test]
+    fn w6_5_root_css_pretty_owner_paths_admit() {
+        let changed = SK_V14_W6_5_ROOT_CSS_PRETTY_OWNER_PATHS
+            .iter()
+            .map(|path| (*path).to_string())
+            .collect::<Vec<_>>();
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v14-waveW6.5): collapse root css pretty runtime"
+        )
+        .is_ok());
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "docs(sk-v14-waveW6.5-redress): reject root css pretty collapse"
+        )
+        .is_ok());
+    }
+
+    #[test]
+    fn w6_5_root_css_pretty_rejects_broad_w6_subjects() {
+        let changed = SK_V14_W6_5_ROOT_CSS_PRETTY_OWNER_PATHS
+            .iter()
+            .map(|path| (*path).to_string())
+            .collect::<Vec<_>>();
+        for subject in [
+            "feat(sk-v14-waveW6): collapse root runtime cohort",
+            "feat(sk-v14-waveW6.4): collapse root ebnf runtime",
+            "feat(sk-v14-waveW6.3): collapse root bnf runtime",
+            "feat(sk-v14-waveW6.2): collapse root csv runtime",
+            "feat(sk-v14-waveW6.1): collapse root math runtime",
+            "feat(sk-v14-waveW6.0): collapse root css l4 runtime",
+            "feat(sk-v14-waveW5D-DELETE): delete provider template residue",
+        ] {
+            assert!(
+                validate_authorized_parent_diff(&changed, subject).is_err(),
+                "{subject} must not authorize W6.5 root CSS Pretty paths"
+            );
+        }
+    }
+
+    #[test]
+    fn w6_5_root_css_pretty_rejects_sibling_root_runtime_and_xtask() {
+        for outside in [
+            "../crates/core/src/runtime/css_l4/mod.rs",
+            "../crates/core/src/runtime/csv/mod.rs",
+            "../crates/core/src/runtime/math/mod.rs",
+            "../crates/core/src/runtime/bnf/mod.rs",
+            "../crates/core/src/runtime/ebnf/mod.rs",
+            "../crates/core/src/runtime/json/mod.rs",
+            "../crates/core/src/runtime/bbnf/mod.rs",
+            "../xtask/runtime-projections/bnf.toml",
+            "../xtask/runtime-projections/csv.toml",
+            "../xtask/runtime-projections/ebnf.toml",
+            "../xtask/runtime-projections/math.toml",
+            "../xtask/runtime-projections/json.toml",
+            "../xtask/src/regen_simple_runtime.rs",
+            "../xtask/src/lib.rs",
+            "../Cargo.toml",
+        ] {
+            let mut changed = SK_V14_W6_5_ROOT_CSS_PRETTY_OWNER_PATHS
+                .iter()
+                .map(|path| (*path).to_string())
+                .collect::<Vec<_>>();
+            changed.push(outside.to_string());
+            assert!(
+                validate_authorized_parent_diff(
+                    &changed,
+                    "feat(sk-v14-waveW6.5): collapse root css pretty runtime"
+                )
+                .is_err(),
+                "{outside} must not be admitted by W6.5"
+            );
+        }
+    }
+
+    #[test]
+    fn w6_5_root_css_pretty_inventory_is_exact() {
+        let css_pretty_runtime_files = SK_V14_W6_5_ROOT_CSS_PRETTY_OWNER_PATHS
+            .iter()
+            .filter(|path| {
+                path.starts_with("../crates/core/src/runtime/css_pretty/") && path.ends_with(".rs")
+            })
+            .count();
+        assert_eq!(
+            css_pretty_runtime_files, 7,
+            "W6.5 owns the seven CSS Pretty runtime files"
+        );
+        let projection_sources = SK_V14_W6_5_ROOT_CSS_PRETTY_OWNER_PATHS
+            .iter()
+            .filter(|path| path.starts_with("../xtask/runtime-projections/"))
+            .count();
+        assert_eq!(
+            projection_sources, 1,
+            "W6.5 owns exactly the CSS Pretty runtime projection source"
+        );
+        for path in SK_V14_W6_5_ROOT_CSS_PRETTY_OWNER_PATHS {
+            assert_ne!(
+                *path, "../crates/core/src/runtime/",
+                "W6.5 must not own the full root runtime"
+            );
+            assert_ne!(
+                *path, "../crates/core/src/runtime/css_pretty/",
+                "W6.5 must enumerate CSS Pretty runtime files"
+            );
+            assert_ne!(*path, "../xtask/src/", "W6.5 must not own all root xtask");
+            assert_ne!(
+                *path, "../xtask/runtime-projections/",
+                "W6.5 must not own all root runtime projections"
+            );
+            assert!(
+                !path.contains("crates/runtime/src/grammars/"),
+                "{path} leaks skinny output into W6.5"
+            );
+            assert!(
+                !path.contains("_provider.rs") && !path.contains("_templates"),
+                "{path} leaks provider/template residue into W6.5"
             );
         }
     }
@@ -3668,6 +3836,7 @@ mod tests {
             "crates/bbnf-simd/ext",
             "crates/parse-that-regex/src",
             "../crates/core/src/runtime/css_l4",
+            "../crates/core/src/runtime/css_pretty",
             "../crates/core/src/runtime/bnf",
             "../crates/core/src/runtime/ebnf",
             "../xtask/src/lib.rs",
@@ -3675,6 +3844,7 @@ mod tests {
             "../xtask/src/regen.rs",
             "../xtask/src/regen_css.rs",
             "../xtask/runtime-projections/bnf.toml",
+            "../xtask/runtime-projections/css_pretty.toml",
             "../xtask/runtime-projections/ebnf.toml",
         ] {
             assert!(FROZEN_ROOTS.contains(&root), "{root} is not frozen");
@@ -3684,8 +3854,10 @@ mod tests {
         assert!(status_args.contains("crates/bbnf-simd/build.rs"));
         assert!(status_args.contains("crates/bbnf-simd/ext"));
         assert!(status_args.contains("../crates/core/src/runtime/css_l4"));
+        assert!(status_args.contains("../crates/core/src/runtime/css_pretty"));
         assert!(status_args.contains("../crates/core/src/runtime/bnf"));
         assert!(status_args.contains("../crates/core/src/runtime/ebnf"));
+        assert!(status_args.contains("../xtask/runtime-projections/css_pretty.toml"));
     }
 
     #[test]

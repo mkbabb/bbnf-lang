@@ -1,12 +1,7 @@
-//! AZ-IV.W5.3 — CssPretty parse arena. Thin newtype around
-//! [`CompoundSlabArena<CssPrettyCompound<'p>>`].
-
 use crate::runtime::arena_template::CompoundSlabArena;
 use crate::runtime::css_pretty::kind::CssPrettyCompound;
-
 #[derive(Debug, Default)]
 pub struct CssPrettyArena<'p>(CompoundSlabArena<CssPrettyCompound<'p>>);
-
 impl<'p> CssPrettyArena<'p> {
     #[inline]
     pub fn new() -> Self {
@@ -37,10 +32,8 @@ impl<'p> CssPrettyArena<'p> {
         self.0.truncate(n);
     }
 }
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CssPrettyCompoundId(u32);
-
 impl CssPrettyCompoundId {
     pub const EMPTY: Self = Self(0);
     #[inline]

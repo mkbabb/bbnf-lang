@@ -5,7 +5,7 @@ run_id: SK-V14-W11O-current
 g_omega_status: signed
 consumer_gate: cargo xtask gate-json --check-results
 source_results: skinny/RESULTS.md
-source_commit: daad7f29c
+source_commit: 77c5dfd6c
 
 ## JSON Targets
 

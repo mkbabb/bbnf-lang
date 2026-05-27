@@ -119,8 +119,10 @@ and indexed plain-string skipping is pre-blocked without a fresh material
 differential. W11R then rejected a fixed-shape `unicode_escapes` decoded
 payload floor parser under REDRESS-245; no direct or typed row moved, and that
 fixed-shape floor route is pre-blocked without a fresh material differential.
-W8R closed the CSS residual before W11L; continue actual implementation against
-the remaining JSON residual queue, not
+W11U then admitted `unicode_escapes` direct and typed rows through a generated
+raw JSON string lexeme product, so direct and typed each stand at 17 / 17
+admitted. W8R closed the CSS residual before W11L; continue actual
+implementation against the remaining parse_only residual queue, not
 another Omega or Alpha pass unless a future source attempt exposes a real
 spec-level amendment.
 
@@ -216,15 +218,15 @@ Lock 14 at `restart/locks/LOCKS.md:220–238`).
 
 ```
 JSON parse_only: 11 / 17 (6 OPEN after W10W residual implementation; W11S attribution pins parse_only_string and REDRESS-246 rejects structural-stream driving)
-JSON direct:     16 / 17 (1 OPEN after W11O; unicode_escapes lacks admitted strict product)
-JSON typed:      16 / 17 (1 MISSING product surface after W11O)
+JSON direct:     17 / 17 (ADMITTED after W11U raw-lexeme product)
+JSON typed:      17 / 17 (ADMITTED after W11U raw-lexeme product)
 CSS L4:          24 / 24 (ADMITTED after W8R; generated full-parse plane beats lightningcss floor)
 ```
 
 Opening baseline was zero admitted after audit prune. W11 close-state is
-mixed: 43 JSON cells and 24 CSS L4 cells are admitted, and all remaining JSON
-residual rows are routed to implementation work because no architectural-block
-proof closes them.
+mixed: 45 JSON cells and 24 CSS L4 cells are admitted, and all remaining JSON
+parse_only residual rows are routed to implementation work because no
+architectural-block proof closes them.
 
 ## 4. Pre-S-P0 Readiness
 
@@ -291,34 +293,15 @@ state is:
   moving any row. W11S attributes all six residual rows to
   `parse_only_string`, and REDRESS-246 rejects the scanner-backed
   structural-stream parse_only driver without moving any row.
-- JSON direct_to_struct: 16 / 17 ADMITTED, 1 OPEN after W11O; the remaining
-  row lacks an admitted strict product differential. REDRESS-232 rejects
+- JSON direct_to_struct: 17 / 17 ADMITTED after W11U. REDRESS-232 rejects
   product-surface-only unicode strict products for `unicode_mixed` and
-  `unicode_escapes`, and REDRESS-233 rejects product-surface-only
-  `gsoc-2018` strict products. REDRESS-241 rejects the earlier
-  `y_string_unicode` product-plus-fused-materializer strict products, while
-  W11L admits the separate decoded token product. REDRESS-242 rejects the
-  `unicode_escapes` decoded-string typed scalar product despite a real material
-  differential over W11B, while W11N admits the separate `unicode_mixed`
-  decoded value scalar plus closed token product and W11O admits the separate
-  `gsoc-2018` numeric-key decoded token product. REDRESS-243 rejects the
-  materially distinct `unicode_escapes` decoded codepoint-fact product without
-  moving the remaining row. REDRESS-245 rejects a fixed-shape decoded payload
-  floor parser without moving the remaining row.
-- JSON real_typed_struct: 16 / 17 ADMITTED, 1 MISSING product surface after
-  W11O; REDRESS-226 rejects the earlier generated `y_string_unicode` root and
-  REDRESS-229 rejects the generated `gsoc-2018` numeric-key root without
-  moving either row. REDRESS-232 rejects and reverts transient
-  `unicode_mixed` and `unicode_escapes` products; REDRESS-233 rejects and
-  reverts transient `gsoc-2018` products. REDRESS-241 rejects and reverts the
-  fused-materializer `y_string_unicode` product root, while W11L admits the
-  decoded token product. REDRESS-242 rejects and reverts the transient
-  `unicode_escapes` decoded-string typed scalar root, while W11N admits the
-  materially distinct `unicode_mixed` decoded value scalar plus closed token
-  product and W11O admits the materially distinct `gsoc-2018` numeric-key
-  decoded token product. REDRESS-243 rejects and reverts the transient
-  `unicode_escapes` decoded codepoint-fact root. REDRESS-245 rejects and
-  reverts the transient fixed-shape decoded payload floor parser.
+  `unicode_escapes`, REDRESS-242 rejects the decoded-string `unicode_escapes`
+  scalar shape, REDRESS-243 rejects decoded codepoint facts, and REDRESS-245
+  rejects the fixed-shape decoded payload floor; W11U admits the distinct raw
+  JSON string lexeme product.
+- JSON real_typed_struct: 17 / 17 ADMITTED after W11U. The same
+  `unicode_escapes` reject history applies, and W11U closes the missing typed
+  surface through the generated raw lexeme product.
 - CSS L4: 24 / 24 ADMITTED after W8R. REDRESS-215 remains historical as the
   initial fact-stream-plane rejection, superseded by generated full-parse
   release-native evidence.
@@ -401,6 +384,10 @@ discipline).
     fixture shape, decoded every string payload unit, and matched strict
     serde_json/sonic sidecar products, but Track 1 still missed same-run sonic
     for both direct and typed planes.
+16. W11U admits `unicode_escapes` direct and typed rows through a generated raw
+    JSON string lexeme product. Track 1 preserves quoted raw string lexemes;
+    serde uses `RawValue`, sonic uses `LazyValue`, and both strict rows beat
+    same-run sonic + 1 Mbps.
 
 ## 7. Refusal Conditions
 
@@ -465,9 +452,9 @@ Return REVISE for any downstream plan that:
 
 ## 8. W11 Close Disposition
 
-SK-V14 closes as a mixed implementation tranche. It preserves 43 admitted JSON
-cells and 24 admitted CSS L4 cells, and routes the remaining JSON rows to
-implementation residuals.
+SK-V14 closes as a mixed implementation tranche. It preserves 45 admitted JSON
+cells and 24 admitted CSS L4 cells, and routes the remaining JSON parse_only
+rows to implementation residuals.
 No residual row has an architectural-level intrinsic-block proof. Subsequent
 work inherits R1-R10 until a row family achieves admission or proves an
 architectural block, but the immediate continuation is source implementation
@@ -497,4 +484,5 @@ plus closed token product and W11O admits the materially distinct `gsoc-2018`
 numeric-key decoded token product. REDRESS-243 pre-blocks `unicode_escapes`
 decoded codepoint-fact products without a fresh material differential.
 REDRESS-245 pre-blocks fixed-shape `unicode_escapes` decoded payload floor
-parsers without a fresh material differential.
+parsers without a fresh material differential. W11U admits the distinct
+generated raw lexeme product for `unicode_escapes`.

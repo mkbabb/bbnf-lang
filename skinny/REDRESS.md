@@ -6094,9 +6094,9 @@ perturbation.
   Retained evidence:
   `restart/skinny/tranches/sk-v14/research/skv14-W11P-unicode-escapes-codepoint-product.md`,
   `.tsv`, and `.raw.log`.
-- Current JSON direct_to_struct state remains 16 / 17 ADMITTED and 1 OPEN:
-  `unicode_escapes`. Current JSON real_typed_struct state remains 16 / 17
-  ADMITTED and 1 MISSING: `unicode_escapes`.
+- At W11P close, JSON direct_to_struct state remained 16 / 17 ADMITTED and
+  1 OPEN: `unicode_escapes`. JSON real_typed_struct state remained
+  16 / 17 ADMITTED and 1 MISSING: `unicode_escapes`.
 
 ## SK-V14 W11Q Parse-Only Indexed Strings Reject
 
@@ -6169,9 +6169,9 @@ perturbation.
   Retained evidence:
   `restart/skinny/tranches/sk-v14/research/skv14-W11R-unicode-escapes-fixed-shape-floor.md`,
   `.tsv`, and `.raw.log`.
-- Current JSON direct_to_struct state remains 16 / 17 ADMITTED and 1 OPEN:
-  `unicode_escapes`. Current JSON real_typed_struct state remains 16 / 17
-  ADMITTED and 1 MISSING: `unicode_escapes`.
+- At W11R close before W11U, JSON direct_to_struct state remained
+  16 / 17 ADMITTED and 1 OPEN: `unicode_escapes`. JSON real_typed_struct
+  state remained 16 / 17 ADMITTED and 1 MISSING: `unicode_escapes`.
 
 ## SK-V14 W11T Parse-Only Structural Stream Reject
 
@@ -6209,3 +6209,12 @@ perturbation.
 - Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
   `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
   `distinct_values`.
+
+## SK-V14 W11U unicode_escapes Supersession Note
+
+W11U admits `unicode_escapes/direct_to_struct` and
+`unicode_escapes/real_typed_struct` through a generated raw JSON string lexeme
+product. This supersedes the W11R/W11P live-row status while preserving
+REDRESS-242, REDRESS-243, and REDRESS-245 as pre-blocks for decoded-string,
+decoded-codepoint, and fixed-shape decoded floor retries without a fresh
+material differential.

@@ -76,6 +76,11 @@ pub fn schema() -> DirectSchemaSet {
                 "crate::real_typed_struct::UnicodeMixedDocument<'i>",
                 "UnicodeMixedDocument",
             ),
+            DirectRootSchema::struct_root(
+                "parse_unicode_escapes",
+                "crate::real_typed_struct::UnicodeEscapesDocument<'i>",
+                "UnicodeEscapesDocument",
+            ),
             DirectRootSchema::typed_root(
                 "parse_distinct_values",
                 "Vec<crate::real_typed_struct::DistinctValue<'i>>",
@@ -457,6 +462,34 @@ pub fn schema() -> DirectSchemaSet {
                     ),
                     default("value", "value", opt(decoded_json_string())),
                     default("n", "n", opt(u64_ty())),
+                ],
+            ),
+            struct_ty(
+                "UnicodeEscapesDocument",
+                "crate::real_typed_struct::UnicodeEscapesDocument<'i>",
+                vec![
+                    default("meta", "meta", opt(ty("UnicodeEscapesMeta"))),
+                    default(
+                        "records",
+                        "records",
+                        vec_with_capacity(ty("UnicodeEscapesRecord"), 1_877),
+                    ),
+                ],
+            ),
+            struct_ty(
+                "UnicodeEscapesMeta",
+                "crate::real_typed_struct::UnicodeEscapesMeta<'i>",
+                vec![
+                    default("mode", "mode", opt(string())),
+                    default("ensure_ascii", "ensure_ascii", opt(bool_ty())),
+                ],
+            ),
+            struct_ty(
+                "UnicodeEscapesRecord",
+                "crate::real_typed_struct::UnicodeEscapesRecord<'i>",
+                vec![
+                    default("id", "id", opt(u64_ty())),
+                    default("v", "v", opt(raw_json_string())),
                 ],
             ),
             struct_ty(
@@ -870,6 +903,10 @@ fn string() -> DirectTypeRef {
 
 fn decoded_json_string() -> DirectTypeRef {
     DirectTypeRef::Scalar(DirectScalar::DecodedJsonString)
+}
+
+fn raw_json_string() -> DirectTypeRef {
+    DirectTypeRef::Scalar(DirectScalar::RawJsonString)
 }
 
 fn u64_ty() -> DirectTypeRef {

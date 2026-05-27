@@ -45,14 +45,17 @@ rejected it on same-run cold evidence without landing the transient source
 patch. W11S then attributed all six remaining parse_only residual rows to
 `parse_only_string` as the dominant hot leaf. W11T then tested a structural
 stream parse_only driver and rejected it on same-run cold evidence without
-landing the transient source patch.
+landing the transient source patch. W11U then admitted the remaining
+`unicode_escapes` direct and typed rows through a generated raw JSON string
+lexeme product.
 
 ## Authority
 
 - `restart/skinny/tranches/sk-v14/SPEC.md` Section 14.
 - `restart/skinny/tranches/sk-v14/SYNTHESIS.md` R10.
 - `skinny/RESULTS.md`.
-- `skinny/REDRESS.md` items 215 through 246 plus the W11O admit packet.
+- `skinny/REDRESS.md` items 215 through 246 plus the W11O and W11U admit
+  packets.
 - `restart/skinny/ROLLING-SOTA-DELTA.md`.
 - `restart/skinny/tranches/sk-v14/HANDOFF.md`.
 
@@ -108,68 +111,50 @@ landing the transient source patch.
 | W11R | REJECTED | REDRESS-245: transient fixed-shape `unicode_escapes` decoded payload floor parser passed correctness but missed same-run sonic for typed and direct strict products; no source patch landed and no row moved. |
 | W11S | ATTRIBUTION | Stage-0 parse-attribution proved `parse_only_string` is the rank-1 hot leaf for every remaining parse_only residual row; no source patch landed and no row moved. |
 | W11T | REJECTED | REDRESS-246: transient scanner-backed structural-stream parse_only driver passed correctness but missed same-run sonic on all six residual rows; no source patch landed and no row moved. |
+| W11U | ADMITTED | Generated raw JSON string lexeme product admits `unicode_escapes/direct_to_struct` and `unicode_escapes/real_typed_struct` from cold native `profile_direct` evidence. |
 
 ## Close-State Counts
 
 | Family | ADMITTED | OPEN | MISSING / blocked | Governing evidence |
 |---|---:|---:|---:|---|
 | JSON parse_only | 11 | 6 | 0 | W10/W10R/W10S/W10T/W10V/W10W cold `profile_direct` evidence and REDRESS-217/218/219/220/222/223. |
-| JSON direct_to_struct | 16 | 1 | 0 | W11A cold strict product evidence plus W11L/W11N/W11O decoded token-product evidence; remaining row lacks an admitted differential. |
-| JSON real_typed_struct | 16 | 0 | 1 | W9 cold typed evidence plus W9AA/W9AB generated products for `distinct_values` and `canada`, plus W11L/W11N/W11O decoded token-product evidence; remaining missing product is governed by REDRESS-216/232/242/243/245. |
+| JSON direct_to_struct | 17 | 0 | 0 | W11A cold strict product evidence plus W11L/W11N/W11O decoded token-product evidence and W11U raw-lexeme evidence. |
+| JSON real_typed_struct | 17 | 0 | 0 | W9 cold typed evidence plus W9AA/W9AB generated products for `distinct_values` and `canada`, plus W11L/W11N/W11O decoded token-product evidence and W11U raw-lexeme evidence. |
 | CSS L4 | 24 | 0 | 0 | W8R generated full-parse release-native evidence and REDRESS-215 supersession. |
 
 No residual row has an architectural-level intrinsic-block proof. The
-remaining rows are implementation residuals, not closeable proof blocks.
+remaining parse_only rows are implementation residuals, not closeable proof
+blocks.
 
 ## Residual Queue
 
-1. JSON direct residuals remain for `unicode_escapes`.
-   W11B proved that product-surface-only unicode routes
-   are not enough for `unicode_mixed` or `unicode_escapes`; W11N then admitted
-   a materially different decoded value scalar plus closed token product for
-   `unicode_mixed`; W11C proved that
-   product-surface-only `gsoc-2018` routes are also insufficient. W11K
-   proved that product-surface plus fused string materialization was
-   insufficient for `y_string_unicode`, and W11L then admitted a materially
-   different decoded enum-token product for that row. W11O then admitted a
-   materially different `gsoc-2018` route through numeric root keys, closed
-   Schema.org tokens, and decoded string fact products. W11P then proved that
-   decoded codepoint-fact products are also insufficient for
-   `unicode_escapes`. W11R then proved that a fixed-shape decoded payload
-   floor parser is also insufficient for `unicode_escapes`.
-2. Missing JSON typed products remain for `unicode_escapes`; W11B's unicode
-   products were reverted after measured rejection, and W11C's `gsoc-2018`
-   products were also reverted after measured rejection. W11K's
-   `y_string_unicode` product root was likewise reverted after measured
-   rejection, then W11L admitted the decoded enum-token root, W11N admitted the
-   `unicode_mixed` decoded value scalar plus closed token root, and W11O
-   admitted the `gsoc-2018` numeric-key decoded token product. W11P rejected
-   and reverted the transient `unicode_escapes` decoded codepoint-fact root.
-   W11R rejected and reverted the transient fixed-shape decoded payload floor
-   parser.
+1. No JSON direct_to_struct residual remains. W11U admits the final
+   `unicode_escapes` direct row through a generated raw JSON string lexeme
+   product.
+2. No JSON real_typed_struct residual remains. W11U admits the final
+   `unicode_escapes` typed row through the same raw lexeme product surface.
 3. JSON parse_only residuals remain for `twitter`, `github_events`,
-   `update_center`, `random`, `gsoc-2018`, and
-   `distinct_values`. W11D proved that context-threaded delimiter consumption
-   is not enough to move any of these rows, and W11E proved that a shared
-   64-byte JSON whitespace skip is a broad regression rather than an
-   admission route. W11F proved that a string/object object-member fast arm
-   without value-byte carry is not enough to move any row. W11G proved that
-   fusing key-string validation with colon consumption, still without
-   value-byte carry, is also insufficient. W11H proved that carrying the
-   post-colon value byte into all value arms is likewise insufficient. W11I
-   proved that carrying array comma next-value bytes is also insufficient.
-   W11J proved that specializing object comma-to-next-key dispatch is also
-   insufficient. W11Q proved that scanner-indexed plain-string skipping is
-   also insufficient. W11S then proved the dominant remaining hot leaf is
-   `parse_only_string`, and W11T proved that replacing the byte-loop driver
-   with a scanner-backed structural stream is also insufficient.
+   `update_center`, `random`, `gsoc-2018`, and `distinct_values`.
+   W11D proved that context-threaded delimiter consumption is not enough to
+   move any of these rows, and W11E proved that a shared 64-byte JSON
+   whitespace skip is a broad regression rather than an admission route. W11F
+   proved that a string/object object-member fast arm without value-byte carry
+   is not enough to move any row. W11G proved that fusing key-string
+   validation with colon consumption, still without value-byte carry, is also
+   insufficient. W11H proved that carrying the post-colon value byte into all
+   value arms is likewise insufficient. W11I proved that carrying array comma
+   next-value bytes is also insufficient. W11J proved that specializing object
+   comma-to-next-key dispatch is also insufficient. W11Q proved that
+   scanner-indexed plain-string skipping is also insufficient. W11S then
+   proved the dominant remaining hot leaf is `parse_only_string`, and W11T
+   proved that replacing the byte-loop driver with a scanner-backed structural
+   stream is also insufficient.
 
 ## Reconciliation
 
 - `skinny/RESULTS.md` and `restart/skinny/ROLLING-SOTA-DELTA.md` agree on
-  eleven parse_only admits, sixteen direct admits plus one direct open,
-  sixteen typed admits plus one missing typed product, and twenty-four CSS
-  L4 admits.
+  eleven parse_only admits plus six parse_only open rows, seventeen direct
+  admits, seventeen typed admits, and twenty-four CSS L4 admits.
 - `skinny/REDRESS.md` carries the live residuals and historical pre-blocks as REDRESS-216,
   REDRESS-217, REDRESS-218, REDRESS-219, REDRESS-220,
   REDRESS-222, REDRESS-223, REDRESS-224, REDRESS-225, REDRESS-226,
@@ -644,9 +629,9 @@ exposes a spec-level amendment that truly requires G-Omega.
   `gsoc-2018/real_typed_struct` Track 1 `7176.742` Mbps versus typed sonic
   `6627.652` Mbps, margin `548.090` Mbps. Retained evidence:
   `restart/skinny/tranches/sk-v14/research/skv14-W11O-gsoc-decoded-token-product.tsv`.
-- Current JSON direct_to_struct state is 16 / 17 ADMITTED and 1 OPEN:
-  `unicode_escapes`. Current JSON real_typed_struct state is 16 / 17
-  ADMITTED and 1 MISSING: `unicode_escapes`.
+- At W11O close before W11P, JSON direct_to_struct state was 16 / 17
+  ADMITTED and 1 OPEN: `unicode_escapes`. JSON real_typed_struct state was
+  16 / 17 ADMITTED and 1 MISSING: `unicode_escapes`.
 
 ## SK-V14 W11P JSON unicode_escapes Codepoint Product Reject
 
@@ -676,9 +661,9 @@ exposes a spec-level amendment that truly requires G-Omega.
   `restart/skinny/tranches/sk-v14/research/skv14-W11P-unicode-escapes-codepoint-product.md`,
   `.tsv`, and `.raw.log`.
 - W11P pre-blocks retries of this decoded codepoint-fact product shape for
-  `unicode_escapes` without a fresh material differential. Current JSON
-  direct_to_struct state remains 16 / 17 ADMITTED and 1 OPEN:
-  `unicode_escapes`; JSON real_typed_struct state remains 16 / 17 ADMITTED
+  `unicode_escapes` without a fresh material differential. At W11P close,
+  JSON direct_to_struct state remained 16 / 17 ADMITTED and 1 OPEN:
+  `unicode_escapes`; JSON real_typed_struct state remained 16 / 17 ADMITTED
   and 1 MISSING: `unicode_escapes`.
 
 ## SK-V14 W11Q JSON parse_only Indexed Strings Reject
@@ -736,10 +721,34 @@ exposes a spec-level amendment that truly requires G-Omega.
   `restart/skinny/tranches/sk-v14/research/skv14-W11R-unicode-escapes-fixed-shape-floor.md`,
   `.tsv`, and `.raw.log`.
 - W11R pre-blocks retries of this fixed-shape decoded payload floor route for
-  `unicode_escapes` without a fresh material differential. Current JSON
-  direct_to_struct state remains 16 / 17 ADMITTED and 1 OPEN:
-  `unicode_escapes`; JSON real_typed_struct state remains 16 / 17 ADMITTED
-  and 1 MISSING: `unicode_escapes`.
+  `unicode_escapes` without a fresh material differential. At W11R close
+  before W11U, JSON direct_to_struct state remained 16 / 17 ADMITTED and
+  1 OPEN: `unicode_escapes`; JSON real_typed_struct state remained
+  16 / 17 ADMITTED and 1 MISSING: `unicode_escapes`.
+
+## SK-V14 W11U unicode_escapes Raw Lexeme Product Admit
+
+- W11U lands a generated raw JSON string lexeme product for
+  `unicode_escapes`. Track 1 validates JSON string syntax, preserves the
+  quoted raw lexeme, and folds raw lexeme fingerprint + length. The serde
+  sidecar uses `serde_json::value::RawValue`; the sonic sidecar uses
+  `sonic_rs::LazyValue`.
+- Correctness gates passed: `cargo run --profile ax-iter -p xtask --
+  regen-real-typed`, `cargo run --profile ax-iter -p xtask --
+  check-real-typed`, `cargo test --profile ax-iter -p codegen typed_direct --
+  --nocapture`, `cargo test --profile ax-iter -p bbnf-bench unicode_escapes
+  -- --nocapture`, and `cargo test --profile ax-iter -p bbnf-bench
+  direct_strict_product -- --nocapture`.
+- Cold release-native `profile_direct` evidence admits both rows:
+  `unicode_escapes/direct_to_struct` Track 1 `2357.459` Mbps versus strict
+  sonic `1852.453` Mbps, margin `504.006` Mbps; and
+  `unicode_escapes/real_typed_struct` Track 1 `2244.473` Mbps versus typed
+  sonic `2036.703` Mbps, margin `206.770` Mbps. Retained evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W11U-unicode-escapes-raw-lexeme-product.md`,
+  `.tsv`, and `.raw.log`.
+- Current JSON direct_to_struct state is 17 / 17 ADMITTED. Current JSON
+  real_typed_struct state is 17 / 17 ADMITTED. JSON parse_only remains
+  11 / 17 ADMITTED and 6 OPEN.
 
 ## SK-V14 W11E JSON parse_only 64-Byte Whitespace Reject
 

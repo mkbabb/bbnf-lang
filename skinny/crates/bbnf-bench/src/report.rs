@@ -78,6 +78,12 @@ const SKV14_W11O_GSOC_TYPED_ROWS: &[&str] = &["json/gsoc-2018/real_typed_struct/
 
 const SKV14_W11O_GSOC_DIRECT_ROWS: &[&str] = &["json/gsoc-2018/direct_to_struct/main"];
 
+const SKV14_W11U_UNICODE_ESCAPES_TYPED_ROWS: &[&str] =
+    &["json/unicode_escapes/real_typed_struct/main"];
+
+const SKV14_W11U_UNICODE_ESCAPES_DIRECT_ROWS: &[&str] =
+    &["json/unicode_escapes/direct_to_struct/main"];
+
 const SKV14_CSS_FEATURES: &[&str] = &[
     "declaration_values",
     "declarations",
@@ -3793,9 +3799,9 @@ fn validate_skv14_manifest_rows(rows: &[SkV14ManifestRow]) -> Result<(), String>
             return Err(format!("SK-V14 manifest missing {row_id}"));
         }
     }
-    if pending != 8 || falsified + sustained != 67 {
+    if pending != 6 || falsified + sustained != 69 {
         return Err(format!(
-            "SK-V14 audit overlay expected pending=8 and falsified+sustained=67 after authorized W9/W9AA/W9AB/W10/W10R/W10S/W10T/W10V/W10W/W11A/W11L/W11N/W11O admits, saw {falsified} / {pending} / {sustained}"
+            "SK-V14 audit overlay expected pending=6 and falsified+sustained=69 after authorized W9/W9AA/W9AB/W10/W10R/W10S/W10T/W10V/W10W/W11A/W11L/W11N/W11O/W11U admits, saw {falsified} / {pending} / {sustained}"
         ));
     }
     Ok(())
@@ -3947,6 +3953,58 @@ fn validate_skv14_sustained_row(row: &SkV14ManifestRow) -> Result<(), String> {
         {
             return Err(format!(
                 "{} is not a valid SK-V14 W11O sustained gsoc-2018 direct token-product row",
+                row.row_id
+            ));
+        }
+        if !valid_skv14_per_iter_pass(&row.per_iter_equality) {
+            return Err(format!(
+                "{} lacks SK-V14 timed per-iteration equality PASS",
+                row.row_id
+            ));
+        }
+        return Ok(());
+    }
+    if SKV14_W11U_UNICODE_ESCAPES_TYPED_ROWS.contains(&row.row_id.as_str()) {
+        let (corpus, _) = parse_row_id(&row.row_id)?;
+        if row.wave_id != "SK-V14-W11U"
+            || row.track1_entry_point != "bbnf_bench::json_parity::track1_real_typed_struct"
+            || row.track2_entry_point != "bbnf_bench::real_typed_struct::track2_typed"
+            || row.comparator_plane != format!("{corpus}::typed_strict_struct_deser")
+            || row.same_wave_consumer_class != "gate_json_typed_contract"
+            || row.track2_independence_status != "independent_verified"
+            || row.substrate_target != "direct_sink"
+            || row.redress_entry != "none:SK-V14-W11U-admit"
+            || row.sk_v14_open_delta != "admitted:SK-V14-W11U-unicode-escapes-raw-lexeme-product"
+            || row.substrate_surface != "typed_direct_projection"
+        {
+            return Err(format!(
+                "{} is not a valid SK-V14 W11U sustained unicode_escapes typed raw-lexeme row",
+                row.row_id
+            ));
+        }
+        if !valid_skv14_per_iter_pass(&row.per_iter_equality) {
+            return Err(format!(
+                "{} lacks SK-V14 timed per-iteration equality PASS",
+                row.row_id
+            ));
+        }
+        return Ok(());
+    }
+    if SKV14_W11U_UNICODE_ESCAPES_DIRECT_ROWS.contains(&row.row_id.as_str()) {
+        let (corpus, _) = parse_row_id(&row.row_id)?;
+        if row.wave_id != "SK-V14-W11U"
+            || row.track1_entry_point != "bbnf_bench::json_parity::track1_direct_to_struct"
+            || row.track2_entry_point != "bbnf_bench::direct_struct::track2_strict_product"
+            || row.comparator_plane != format!("{corpus}::strict_struct_deser")
+            || row.same_wave_consumer_class != "gate_json_direct_strict_product_contract"
+            || row.track2_independence_status != "independent_verified"
+            || row.substrate_target != "direct_sink"
+            || row.redress_entry != "none:SK-V14-W11U-admit"
+            || row.sk_v14_open_delta != "admitted:SK-V14-W11U-unicode-escapes-raw-lexeme-product"
+            || row.substrate_surface != "direct_strict_product"
+        {
+            return Err(format!(
+                "{} is not a valid SK-V14 W11U sustained unicode_escapes direct raw-lexeme row",
                 row.row_id
             ));
         }
@@ -4472,6 +4530,7 @@ impl Report {
         let mut w11l_y_string_typed_seen = false;
         let mut w11n_unicode_mixed_typed_seen = false;
         let mut w11o_gsoc_typed_seen = false;
+        let mut w11u_unicode_escapes_typed_seen = false;
         for row in &self.rows {
             let row_id = row.sk_v8.row_id.as_str();
             if !seen.insert(row_id) {
@@ -4480,6 +4539,11 @@ impl Report {
             if row_id == W11O_GSOC_TYPED_ROW_ID && row.sk_v8.wave_id != "SK-V14-open" {
                 validate_w11o_gsoc_typed_row(row)?;
                 w11o_gsoc_typed_seen = true;
+            } else if row_id == W11U_UNICODE_ESCAPES_TYPED_ROW_ID
+                && row.sk_v8.wave_id != "SK-V14-open"
+            {
+                validate_w11u_unicode_escapes_typed_row(row)?;
+                w11u_unicode_escapes_typed_seen = true;
             } else if row_id == W11N_UNICODE_MIXED_TYPED_ROW_ID
                 && row.sk_v8.wave_id != "SK-V14-open"
             {
@@ -4517,6 +4581,8 @@ impl Report {
                     validate_w11n_unicode_mixed_direct_row(row)?;
                 } else if row_id == W11O_GSOC_DIRECT_ROW_ID {
                     validate_w11o_gsoc_direct_row(row)?;
+                } else if row_id == W11U_UNICODE_ESCAPES_DIRECT_ROW_ID {
+                    validate_w11u_unicode_escapes_direct_row(row)?;
                 } else {
                     let Some(baseline) = sk_v8_open_baseline(row_id) else {
                         return Err(format!("unknown SK-V8 comparison row_id {row_id}"));
@@ -4598,7 +4664,8 @@ impl Report {
             + usize::from(w13_instruments_typed_seen)
             + usize::from(w11l_y_string_typed_seen)
             + usize::from(w11n_unicode_mixed_typed_seen)
-            + usize::from(w11o_gsoc_typed_seen);
+            + usize::from(w11o_gsoc_typed_seen)
+            + usize::from(w11u_unicode_escapes_typed_seen);
         if self.rows.len() != expected_rows {
             return Err(format!(
                 "SK-V9 W0 expected {expected_rows} main rows, saw {}",
@@ -5633,6 +5700,8 @@ const W11N_UNICODE_MIXED_TYPED_ROW_ID: &str = "json/unicode_mixed/real_typed_str
 const W11N_UNICODE_MIXED_DIRECT_ROW_ID: &str = "json/unicode_mixed/direct_to_struct/main";
 const W11O_GSOC_TYPED_ROW_ID: &str = "json/gsoc-2018/real_typed_struct/main";
 const W11O_GSOC_DIRECT_ROW_ID: &str = "json/gsoc-2018/direct_to_struct/main";
+const W11U_UNICODE_ESCAPES_TYPED_ROW_ID: &str = "json/unicode_escapes/real_typed_struct/main";
+const W11U_UNICODE_ESCAPES_DIRECT_ROW_ID: &str = "json/unicode_escapes/direct_to_struct/main";
 fn validate_json_parse_only_admission_row(
     row: &TelemetryRow,
     spec: &JsonParseOnlyAdmissionSpec,
@@ -6127,6 +6196,82 @@ fn validate_w11o_gsoc_direct_row(row: &TelemetryRow) -> Result<(), String> {
     if track1 <= sonic + 1.0 || !track2.is_finite() {
         return Err(format!(
             "{row_id} W11O direct floor miss: Track 1 {track1:.0}, Track 2 {track2:.0}, sonic+1 {:.0}",
+            sonic + 1.0
+        ));
+    }
+    validate_w0_profile_artifact(row_id, &row.sk_v8.profile_artifact)?;
+    validate_w0_hot_leaf(row_id, &row.hot_leaf, &row.sk_v8.profile_artifact)?;
+    validate_comparator_evidence(row_id, &row.workload, &row.sk_v8.comparators)?;
+    Ok(())
+}
+
+fn validate_w11u_unicode_escapes_typed_row(row: &TelemetryRow) -> Result<(), String> {
+    validate_w13_typed_row(
+        row,
+        "unicode_escapes",
+        "none:SK-V14-W11U-admit",
+        "SK-V14-W11U",
+        "W11U",
+        "admitted:SK-V14-W11U-unicode-escapes-raw-lexeme-product",
+    )
+}
+
+fn validate_w11u_unicode_escapes_direct_row(row: &TelemetryRow) -> Result<(), String> {
+    let row_id = row.sk_v8.row_id.as_str();
+    row.validate_schema_v3()?;
+    validate_w0_row_identity(row)?;
+    validate_w0_outcome(row_id, &row.outcome_id)?;
+    if row.outcome_id != "A" || row.verdict != "GO" {
+        return Err(format!(
+            "{row_id} W11U direct raw-lexeme product admits only A / GO, saw {} / {}",
+            row.outcome_id, row.verdict
+        ));
+    }
+    if row.corpus != "unicode_escapes" || row.workload != "direct_to_struct" {
+        return Err(format!(
+            "{row_id} is not the W11U unicode_escapes direct row"
+        ));
+    }
+    if row.output_plane != "direct strict product" {
+        return Err(format!(
+            "{row_id} W11U direct output plane {} is not direct strict product",
+            row.output_plane
+        ));
+    }
+    if row.strictness != "strict"
+        || row.parse_utf8 != "measured-row"
+        || row.sk_v8.measured_validation_path != "measured-row"
+        || row.escape_complete != "yes"
+    {
+        return Err(format!(
+            "{row_id} W11U direct row lacks strict measured validation"
+        ));
+    }
+    if row.sk_v8.track2_independence_status != "independent_verified"
+        || row.sk_v8.same_wave_consumer_class != "gate_json_direct_strict_product_contract"
+    {
+        return Err(format!(
+            "{row_id} W11U direct row lacks independent strict-product consumer"
+        ));
+    }
+    if row.sk_v8.redress_entry != "none:SK-V14-W11U-admit"
+        || row.sk_v8.wave_id != "SK-V14-W11U"
+        || row.sk_v8.sk_v9_open_delta != "admitted:SK-V14-W11U-unicode-escapes-raw-lexeme-product"
+    {
+        return Err(format!("{row_id} W11U direct row lacks W11U provenance"));
+    }
+    let (Some(track1), Some(track2), Some(sonic)) = (
+        row.track1_mbps,
+        row.track2_mbps,
+        row.competitors.sonic_strict_mbps,
+    ) else {
+        return Err(format!(
+            "{row_id} W11U direct row lacks Track 1, Track 2, or sonic Mbps"
+        ));
+    };
+    if track1 <= sonic + 1.0 || !track2.is_finite() {
+        return Err(format!(
+            "{row_id} W11U direct floor miss: Track 1 {track1:.0}, Track 2 {track2:.0}, sonic+1 {:.0}",
             sonic + 1.0
         ));
     }

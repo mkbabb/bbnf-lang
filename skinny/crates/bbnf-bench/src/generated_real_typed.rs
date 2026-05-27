@@ -171,6 +171,17 @@ pub fn parse_unicode_mixed<'i>(input: &'i str) -> Result<crate::real_typed_struc
     }
 }
 
+pub fn parse_unicode_escapes<'i>(input: &'i str) -> Result<crate::real_typed_struct::UnicodeEscapesDocument<'i>, DirectBuildError<'i>> {
+    let mut parser = DirectParser::new(input);
+    let output = parse_type_unicode_escapes_document(&mut parser)?;
+    parser.ws();
+    if parser.cursor == parser.bytes.len() {
+        Ok(output)
+    } else {
+        Err(parser.error("trailing characters"))
+    }
+}
+
 pub fn parse_distinct_values<'i>(input: &'i str) -> Result<Vec<crate::real_typed_struct::DistinctValue<'i>>, DirectBuildError<'i>> {
     let mut parser = DirectParser::new(input);
     let output = parse_vec_cap_440_type_distinct_value(&mut parser)?;
@@ -1479,6 +1490,123 @@ fn parse_type_unicode_mixed_record<'i>(parser: &mut DirectParser<'i>) -> Result<
             class: class.unwrap_or_default(),
             value: value.unwrap_or_default(),
             n: n.unwrap_or_default(),
+        });
+    }
+}
+
+fn parse_type_unicode_escapes_document<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::UnicodeEscapesDocument<'i>, DirectBuildError<'i>> {
+    parser.ws();
+    parser.expect(b'{')?;
+    let mut meta: Option<Option<crate::real_typed_struct::UnicodeEscapesMeta<'i>>> = None;
+    let mut records: Option<Vec<crate::real_typed_struct::UnicodeEscapesRecord<'i>>> = None;
+    parser.ws();
+    if parser.take(b'}') {
+        return Ok(crate::real_typed_struct::UnicodeEscapesDocument {
+            meta: meta.unwrap_or_default(),
+            records: records.unwrap_or_default(),
+        });
+    }
+    loop {
+        let key = parser.parse_string()?;
+        parser.ws();
+        parser.expect(b':')?;
+        parser.ws();
+        match key.as_ref() {
+            "meta" => {
+                meta = Some(parse_option_type_unicode_escapes_meta(parser)?);
+            }
+            "records" => {
+                records = Some(parse_vec_cap_1877_type_unicode_escapes_record(parser)?);
+            }
+            _ => parser.skip_value()?,
+        }
+        parser.ws();
+        if parser.take(b',') {
+            parser.ws();
+            continue;
+        }
+        parser.expect(b'}')?;
+        return Ok(crate::real_typed_struct::UnicodeEscapesDocument {
+            meta: meta.unwrap_or_default(),
+            records: records.unwrap_or_default(),
+        });
+    }
+}
+
+fn parse_type_unicode_escapes_meta<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::UnicodeEscapesMeta<'i>, DirectBuildError<'i>> {
+    parser.ws();
+    parser.expect(b'{')?;
+    let mut mode: Option<Option<Cow<'i, str>>> = None;
+    let mut ensure_ascii: Option<Option<bool>> = None;
+    parser.ws();
+    if parser.take(b'}') {
+        return Ok(crate::real_typed_struct::UnicodeEscapesMeta {
+            mode: mode.unwrap_or_default(),
+            ensure_ascii: ensure_ascii.unwrap_or_default(),
+        });
+    }
+    loop {
+        let key = parser.parse_string()?;
+        parser.ws();
+        parser.expect(b':')?;
+        parser.ws();
+        match key.as_ref() {
+            "mode" => {
+                mode = Some(parse_option_scalar_string(parser)?);
+            }
+            "ensure_ascii" => {
+                ensure_ascii = Some(parse_option_scalar_bool(parser)?);
+            }
+            _ => parser.skip_value()?,
+        }
+        parser.ws();
+        if parser.take(b',') {
+            parser.ws();
+            continue;
+        }
+        parser.expect(b'}')?;
+        return Ok(crate::real_typed_struct::UnicodeEscapesMeta {
+            mode: mode.unwrap_or_default(),
+            ensure_ascii: ensure_ascii.unwrap_or_default(),
+        });
+    }
+}
+
+fn parse_type_unicode_escapes_record<'i>(parser: &mut DirectParser<'i>) -> Result<crate::real_typed_struct::UnicodeEscapesRecord<'i>, DirectBuildError<'i>> {
+    parser.ws();
+    parser.expect(b'{')?;
+    let mut id: Option<Option<u64>> = None;
+    let mut v: Option<Option<crate::real_typed_struct::RawJsonString<'i>>> = None;
+    parser.ws();
+    if parser.take(b'}') {
+        return Ok(crate::real_typed_struct::UnicodeEscapesRecord {
+            id: id.unwrap_or_default(),
+            v: v.unwrap_or_default(),
+        });
+    }
+    loop {
+        let key = parser.parse_string()?;
+        parser.ws();
+        parser.expect(b':')?;
+        parser.ws();
+        match key.as_ref() {
+            "id" => {
+                id = Some(parse_option_scalar_u64(parser)?);
+            }
+            "v" => {
+                v = Some(parse_option_scalar_raw_json_string(parser)?);
+            }
+            _ => parser.skip_value()?,
+        }
+        parser.ws();
+        if parser.take(b',') {
+            parser.ws();
+            continue;
+        }
+        parser.expect(b'}')?;
+        return Ok(crate::real_typed_struct::UnicodeEscapesRecord {
+            id: id.unwrap_or_default(),
+            v: v.unwrap_or_default(),
         });
     }
 }
@@ -3105,6 +3233,41 @@ fn parse_option_scalar_decoded_json_string<'i>(parser: &mut DirectParser<'i>) ->
     }
 }
 
+fn parse_option_type_unicode_escapes_meta<'i>(parser: &mut DirectParser<'i>) -> Result<Option<crate::real_typed_struct::UnicodeEscapesMeta<'i>>, DirectBuildError<'i>> {
+    parser.ws();
+    if parser.peek_literal(b"null") {
+        parser.consume_literal(b"null")?;
+        Ok(None)
+    } else {
+        Ok(Some(parse_type_unicode_escapes_meta(parser)?))
+    }
+}
+
+fn parse_vec_cap_1877_type_unicode_escapes_record<'i>(parser: &mut DirectParser<'i>) -> Result<Vec<crate::real_typed_struct::UnicodeEscapesRecord<'i>>, DirectBuildError<'i>> {
+    let mut out: Vec<crate::real_typed_struct::UnicodeEscapesRecord<'i>> = Vec::with_capacity(1877);
+    parser.ws();
+    parser.expect(b'[')?;
+    parser.ws();
+    if parser.take(b']') { return Ok(out); }
+    loop {
+        out.push(parse_type_unicode_escapes_record(parser)?);
+        parser.ws();
+        if parser.take(b',') { parser.ws(); continue; }
+        parser.expect(b']')?;
+        return Ok(out);
+    }
+}
+
+fn parse_option_scalar_raw_json_string<'i>(parser: &mut DirectParser<'i>) -> Result<Option<crate::real_typed_struct::RawJsonString<'i>>, DirectBuildError<'i>> {
+    parser.ws();
+    if parser.peek_literal(b"null") {
+        parser.consume_literal(b"null")?;
+        Ok(None)
+    } else {
+        Ok(Some(parser.parse_raw_json_string()?))
+    }
+}
+
 fn parse_vec_cap_1000_type_random_user<'i>(parser: &mut DirectParser<'i>) -> Result<Vec<crate::real_typed_struct::RandomUser<'i>>, DirectBuildError<'i>> {
     let mut out: Vec<crate::real_typed_struct::RandomUser<'i>> = Vec::with_capacity(1000);
     parser.ws();
@@ -3775,6 +3938,23 @@ impl<'i> DirectParser<'i> {
                 _ => return Err(self.error("invalid numeric object key")),
             }
         }
+    }
+
+    #[inline(always)]
+    fn parse_raw_json_string(
+        &mut self,
+    ) -> Result<crate::real_typed_struct::RawJsonString<'i>, DirectBuildError<'i>> {
+        if self.bytes.get(self.cursor) != Some(&b'"') {
+            return Err(self.error("expected string"));
+        }
+        let span = match_string_at_quote_trusted_utf8(self.bytes, self.cursor)
+            .map_err(|_| self.error("invalid string"))?;
+        let raw = unsafe {
+            std::str::from_utf8_unchecked(&self.bytes[self.cursor..span.raw_end])
+        };
+        self.cursor = span.raw_end;
+        crate::real_typed_struct::RawJsonString::from_validated_raw_quoted(raw)
+            .map_err(|_| self.error("invalid raw string"))
     }
 
     #[inline(always)]

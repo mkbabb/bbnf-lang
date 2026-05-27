@@ -123,6 +123,7 @@ pub enum DirectTypeRef {
 pub enum DirectScalar {
     String,
     DecodedJsonString,
+    RawJsonString,
     Bool,
     I64,
     U64,

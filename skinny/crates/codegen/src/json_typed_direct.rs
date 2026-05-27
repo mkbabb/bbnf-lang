@@ -217,6 +217,9 @@ impl<'a> Renderer<'a> {
             DirectTypeRef::Scalar(DirectScalar::DecodedJsonString) => {
                 Ok("crate::real_typed_struct::DecodedJsonString<'i>".to_string())
             }
+            DirectTypeRef::Scalar(DirectScalar::RawJsonString) => {
+                Ok("crate::real_typed_struct::RawJsonString<'i>".to_string())
+            }
             DirectTypeRef::Scalar(DirectScalar::Bool) => Ok("bool".to_string()),
             DirectTypeRef::Scalar(DirectScalar::I64) => Ok("i64".to_string()),
             DirectTypeRef::Scalar(DirectScalar::U64) => Ok("u64".to_string()),
@@ -249,6 +252,9 @@ impl<'a> Renderer<'a> {
             DirectTypeRef::Scalar(DirectScalar::String) => Ok(format!("{parser}.parse_string()")),
             DirectTypeRef::Scalar(DirectScalar::DecodedJsonString) => {
                 Ok(format!("{parser}.parse_decoded_json_string()"))
+            }
+            DirectTypeRef::Scalar(DirectScalar::RawJsonString) => {
+                Ok(format!("{parser}.parse_raw_json_string()"))
             }
             DirectTypeRef::Scalar(DirectScalar::Bool) => Ok(format!("{parser}.parse_bool()")),
             DirectTypeRef::Scalar(DirectScalar::I64) => Ok(format!("{parser}.parse_i64()")),
@@ -855,6 +861,23 @@ impl<'i> DirectParser<'i> {
                 _ => return Err(self.error("invalid numeric object key")),
             }
         }
+    }
+
+    #[inline(always)]
+    fn parse_raw_json_string(
+        &mut self,
+    ) -> Result<crate::real_typed_struct::RawJsonString<'i>, DirectBuildError<'i>> {
+        if self.bytes.get(self.cursor) != Some(&b'"') {
+            return Err(self.error("expected string"));
+        }
+        let span = match_string_at_quote_trusted_utf8(self.bytes, self.cursor)
+            .map_err(|_| self.error("invalid string"))?;
+        let raw = unsafe {
+            std::str::from_utf8_unchecked(&self.bytes[self.cursor..span.raw_end])
+        };
+        self.cursor = span.raw_end;
+        crate::real_typed_struct::RawJsonString::from_validated_raw_quoted(raw)
+            .map_err(|_| self.error("invalid raw string"))
     }
 
     #[inline(always)]

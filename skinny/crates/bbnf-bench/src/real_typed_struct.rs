@@ -23,6 +23,7 @@ pub enum RealTypedFixture {
     Numbers,
     UnicodeBasic,
     UnicodeMixed,
+    UnicodeEscapes,
     DistinctValues,
     YStringUnicode,
     Random,
@@ -576,6 +577,58 @@ pub struct UnicodeMixedRecord<'a> {
     pub n: Option<u64>,
 }
 
+#[derive(Debug)]
+pub struct UnicodeEscapesDocument<'a> {
+    pub meta: Option<UnicodeEscapesMeta<'a>>,
+    pub records: Vec<UnicodeEscapesRecord<'a>>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct UnicodeEscapesMeta<'a> {
+    #[serde(default, borrow)]
+    pub mode: Option<Cow<'a, str>>,
+    #[serde(default)]
+    pub ensure_ascii: Option<bool>,
+}
+
+#[derive(Debug)]
+pub struct UnicodeEscapesRecord<'a> {
+    pub id: Option<u64>,
+    pub v: Option<RawJsonString<'a>>,
+}
+
+#[derive(Debug, Deserialize)]
+struct UnicodeEscapesSerdeDocument<'a> {
+    #[serde(default, borrow)]
+    meta: Option<UnicodeEscapesMeta<'a>>,
+    #[serde(default, borrow)]
+    records: Vec<UnicodeEscapesSerdeRecord<'a>>,
+}
+
+#[derive(Debug, Deserialize)]
+struct UnicodeEscapesSerdeRecord<'a> {
+    #[serde(default)]
+    id: Option<u64>,
+    #[serde(default, borrow)]
+    v: Option<&'a RawValue>,
+}
+
+#[derive(Debug, Deserialize)]
+struct UnicodeEscapesSonicDocument<'a> {
+    #[serde(default, borrow)]
+    meta: Option<UnicodeEscapesMeta<'a>>,
+    #[serde(default, borrow)]
+    records: Vec<UnicodeEscapesSonicRecord<'a>>,
+}
+
+#[derive(Debug, Deserialize)]
+struct UnicodeEscapesSonicRecord<'a> {
+    #[serde(default)]
+    id: Option<u64>,
+    #[serde(default, borrow)]
+    v: Option<sonic_rs::LazyValue<'a>>,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum UnicodeMixedClass {
     Ascii,
@@ -788,6 +841,55 @@ impl<'de: 'a, 'a> Deserialize<'de> for DecodedJsonString<'a> {
         }
 
         deserializer.deserialize_str(DecodedJsonStringVisitor(PhantomData))
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct RawJsonString<'a> {
+    raw_quoted: Cow<'a, str>,
+    fingerprint: u64,
+    len: u64,
+}
+
+impl<'a> RawJsonString<'a> {
+    pub fn from_validated_raw_quoted(raw_quoted: &'a str) -> Result<Self, &'static str> {
+        Self::from_cow_raw_quoted(Cow::Borrowed(raw_quoted))
+    }
+
+    fn from_owned_raw_quoted(raw_quoted: String) -> Result<Self, &'static str> {
+        Self::from_cow_raw_quoted(Cow::Owned(raw_quoted))
+    }
+
+    fn from_raw_value(raw: &'a RawValue) -> Result<Self, &'static str> {
+        Self::from_validated_raw_quoted(raw.get())
+    }
+
+    fn from_sonic_lazy(value: sonic_rs::LazyValue<'a>) -> Result<Self, &'static str> {
+        Self::from_owned_raw_quoted(value.as_raw_str().to_string())
+    }
+
+    fn from_cow_raw_quoted(raw_quoted: Cow<'a, str>) -> Result<Self, &'static str> {
+        let raw = raw_quoted.as_ref();
+        if raw.len() < 2 || !raw.starts_with('"') || !raw.ends_with('"') {
+            return Err("expected raw JSON string lexeme");
+        }
+        Ok(Self {
+            fingerprint: hash_str(raw),
+            len: raw.len() as u64,
+            raw_quoted,
+        })
+    }
+
+    pub fn raw_quoted(&self) -> &str {
+        self.raw_quoted.as_ref()
+    }
+
+    fn fingerprint(&self) -> u64 {
+        self.fingerprint
+    }
+
+    fn raw_len(&self) -> u64 {
+        self.len
     }
 }
 
@@ -1238,6 +1340,7 @@ pub enum RealTypedOutput<'a> {
     Numbers(Vec<f64>),
     UnicodeBasic(Vec<UnicodeBasicRecord<'a>>),
     UnicodeMixed(UnicodeMixedDocument<'a>),
+    UnicodeEscapes(UnicodeEscapesDocument<'a>),
     DistinctValues(Vec<DistinctValue<'a>>),
     YStringUnicode(Vec<YStringUnicodeToken>),
     Random(RandomDocument<'a>),
@@ -1258,6 +1361,7 @@ pub fn fixture_for_name(name: &str) -> Option<RealTypedFixture> {
         "numbers" => Some(RealTypedFixture::Numbers),
         "unicode_basic" | "unicode-basic" => Some(RealTypedFixture::UnicodeBasic),
         "unicode_mixed" | "unicode-mixed" => Some(RealTypedFixture::UnicodeMixed),
+        "unicode_escapes" | "unicode-escapes" => Some(RealTypedFixture::UnicodeEscapes),
         "distinct_values" | "distinct-values" => Some(RealTypedFixture::DistinctValues),
         "y_string_unicode" | "y-string-unicode" => Some(RealTypedFixture::YStringUnicode),
         "random" => Some(RealTypedFixture::Random),
@@ -1296,6 +1400,8 @@ fn candidate_names(name: &str) -> [&str; 2] {
         "gsoc-2018" => ["gsoc-2018", "gsoc_2018"],
         "unicode_mixed" => ["unicode_mixed", "unicode-mixed"],
         "unicode-mixed" => ["unicode_mixed", "unicode-mixed"],
+        "unicode_escapes" => ["unicode_escapes", "unicode-escapes"],
+        "unicode-escapes" => ["unicode_escapes", "unicode-escapes"],
         "y_string_unicode" => ["y_string_unicode", "y-string-unicode"],
         "y-string-unicode" => ["y_string_unicode", "y-string-unicode"],
         _ => [name, name],
@@ -1368,6 +1474,46 @@ fn canada_from_sonic<'a>(value: CanadaSonicFeatureCollection<'a>) -> CanadaFeatu
     }
 }
 
+fn unicode_escapes_from_serde<'a>(
+    value: UnicodeEscapesSerdeDocument<'a>,
+) -> Result<UnicodeEscapesDocument<'a>, String> {
+    let mut records = Vec::with_capacity(value.records.len());
+    for record in value.records {
+        records.push(UnicodeEscapesRecord {
+            id: record.id,
+            v: record
+                .v
+                .map(RawJsonString::from_raw_value)
+                .transpose()
+                .map_err(|error| error.to_string())?,
+        });
+    }
+    Ok(UnicodeEscapesDocument {
+        meta: value.meta,
+        records,
+    })
+}
+
+fn unicode_escapes_from_sonic<'a>(
+    value: UnicodeEscapesSonicDocument<'a>,
+) -> Result<UnicodeEscapesDocument<'a>, String> {
+    let mut records = Vec::with_capacity(value.records.len());
+    for record in value.records {
+        records.push(UnicodeEscapesRecord {
+            id: record.id,
+            v: record
+                .v
+                .map(RawJsonString::from_sonic_lazy)
+                .transpose()
+                .map_err(|error| error.to_string())?,
+        });
+    }
+    Ok(UnicodeEscapesDocument {
+        meta: value.meta,
+        records,
+    })
+}
+
 pub fn track1_typed<'a>(
     fixture: RealTypedFixture,
     input: &'a str,
@@ -1412,6 +1558,11 @@ pub fn track1_typed<'a>(
         RealTypedFixture::UnicodeMixed => crate::generated_real_typed::parse_unicode_mixed(input)
             .map(RealTypedOutput::UnicodeMixed)
             .map_err(|error| DirectStructError::Parse(error.to_string())),
+        RealTypedFixture::UnicodeEscapes => {
+            crate::generated_real_typed::parse_unicode_escapes(input)
+                .map(RealTypedOutput::UnicodeEscapes)
+                .map_err(|error| DirectStructError::Parse(error.to_string()))
+        }
         RealTypedFixture::DistinctValues => {
             crate::generated_real_typed::parse_distinct_values(input)
                 .map(RealTypedOutput::DistinctValues)
@@ -1485,6 +1636,15 @@ pub fn serde_typed<'a>(
         RealTypedFixture::UnicodeMixed => serde_json::from_slice::<UnicodeMixedDocument<'a>>(bytes)
             .map(RealTypedOutput::UnicodeMixed)
             .map_err(|error| DirectStructError::Serde(error.to_string())),
+        RealTypedFixture::UnicodeEscapes => {
+            serde_json::from_slice::<UnicodeEscapesSerdeDocument<'a>>(bytes)
+                .map_err(|error| DirectStructError::Serde(error.to_string()))
+                .and_then(|value| {
+                    unicode_escapes_from_serde(value)
+                        .map(RealTypedOutput::UnicodeEscapes)
+                        .map_err(DirectStructError::Serde)
+                })
+        }
         RealTypedFixture::DistinctValues => serde_json::from_slice::<Vec<DistinctValue<'a>>>(bytes)
             .map(RealTypedOutput::DistinctValues)
             .map_err(|error| DirectStructError::Serde(error.to_string())),
@@ -1547,6 +1707,15 @@ pub fn sonic_typed<'a>(
         RealTypedFixture::UnicodeMixed => sonic_rs::from_slice::<UnicodeMixedDocument<'a>>(bytes)
             .map(RealTypedOutput::UnicodeMixed)
             .map_err(|error| DirectStructError::Sonic(error.to_string())),
+        RealTypedFixture::UnicodeEscapes => {
+            sonic_rs::from_slice::<UnicodeEscapesSonicDocument<'a>>(bytes)
+                .map_err(|error| DirectStructError::Sonic(error.to_string()))
+                .and_then(|value| {
+                    unicode_escapes_from_sonic(value)
+                        .map(RealTypedOutput::UnicodeEscapes)
+                        .map_err(DirectStructError::Sonic)
+                })
+        }
         RealTypedFixture::DistinctValues => sonic_rs::from_slice::<Vec<DistinctValue<'a>>>(bytes)
             .map(RealTypedOutput::DistinctValues)
             .map_err(|error| DirectStructError::Sonic(error.to_string())),
@@ -1590,6 +1759,7 @@ pub fn typed_checksum(output: &RealTypedOutput<'_>) -> u64 {
         RealTypedOutput::Numbers(value) => checksum_numbers(value),
         RealTypedOutput::UnicodeBasic(value) => checksum_unicode_basic(value),
         RealTypedOutput::UnicodeMixed(value) => checksum_unicode_mixed(value),
+        RealTypedOutput::UnicodeEscapes(value) => checksum_unicode_escapes(value),
         RealTypedOutput::DistinctValues(value) => checksum_distinct_values(value),
         RealTypedOutput::YStringUnicode(value) => checksum_y_string_unicode(value),
         RealTypedOutput::Random(value) => checksum_random(value),
@@ -1877,6 +2047,27 @@ fn checksum_unicode_mixed_record(value: &UnicodeMixedRecord<'_>) -> u64 {
     fold_opt_u64(hash, value.n)
 }
 
+fn checksum_unicode_escapes(value: &UnicodeEscapesDocument<'_>) -> u64 {
+    let mut hash = 0x756e6965736361;
+    if let Some(meta) = &value.meta {
+        hash = fold_opt_str(hash, &meta.mode);
+        hash = fold_opt_bool(hash, meta.ensure_ascii);
+    } else {
+        hash = mix(hash, 0);
+    }
+    hash = mix(hash, value.records.len() as u64);
+    for record in &value.records {
+        hash = mix(hash, checksum_unicode_escapes_record(record));
+    }
+    hash
+}
+
+fn checksum_unicode_escapes_record(value: &UnicodeEscapesRecord<'_>) -> u64 {
+    let mut hash = 0x756e696573637265;
+    hash = fold_opt_u64(hash, value.id);
+    fold_opt_raw_json_string(hash, &value.v)
+}
+
 fn checksum_distinct_values(values: &[DistinctValue<'_>]) -> u64 {
     let mut hash = mix(0x6469737476616c, values.len() as u64);
     for value in values {
@@ -2135,6 +2326,18 @@ fn fold_decoded_json_string(hash: u64, value: &DecodedJsonString<'_>) -> u64 {
 fn fold_opt_decoded_json_string(hash: u64, value: &Option<DecodedJsonString<'_>>) -> u64 {
     match value {
         Some(value) => fold_decoded_json_string(hash, value),
+        None => mix(hash, 0),
+    }
+}
+
+fn fold_raw_json_string(hash: u64, value: &RawJsonString<'_>) -> u64 {
+    let hash = mix(hash, value.fingerprint());
+    mix(hash, value.raw_len())
+}
+
+fn fold_opt_raw_json_string(hash: u64, value: &Option<RawJsonString<'_>>) -> u64 {
+    match value {
+        Some(value) => fold_raw_json_string(hash, value),
         None => mix(hash, 0),
     }
 }
@@ -2518,6 +2721,37 @@ mod tests {
         let bytes = std::fs::read(locate_fixture("unicode_mixed")).unwrap();
         let text = std::str::from_utf8(&bytes).unwrap();
         assert_real_typed_parity(text, &bytes, RealTypedFixture::UnicodeMixed);
+    }
+
+    #[test]
+    fn generated_unicode_escapes_typed_parser_matches_sidecars() {
+        let input = br#"{"meta":{"mode":"escapes","ensure_ascii":true},"records":[{"id":0,"v":"plain"},{"id":1,"v":"a\uD83D\uDE80\nb"}]}"#;
+        let text = std::str::from_utf8(input).unwrap();
+        let parsed = crate::generated_real_typed::parse_unicode_escapes(text).unwrap();
+        assert_eq!(
+            parsed.records[1].v.as_ref().unwrap().raw_quoted(),
+            r#""a\uD83D\uDE80\nb""#
+        );
+        assert_real_typed_parity(text, input, RealTypedFixture::UnicodeEscapes);
+    }
+
+    #[test]
+    fn generated_unicode_escapes_rejects_bad_strings() {
+        for input in [
+            br#"{"records":[{"id":0,"v":"\uD800"}]}"#.as_slice(),
+            br#"{"records":[{"id":0,"v":"\q"}]}"#.as_slice(),
+            br#"{"records":[{"id":0,"v":1}]}"#.as_slice(),
+        ] {
+            let text = std::str::from_utf8(input).unwrap();
+            assert!(crate::generated_real_typed::parse_unicode_escapes(text).is_err());
+        }
+    }
+
+    #[test]
+    fn w14_full_unicode_escapes_typed_fixture_matches_sidecars() {
+        let bytes = std::fs::read(locate_fixture("unicode_escapes")).unwrap();
+        let text = std::str::from_utf8(&bytes).unwrap();
+        assert_real_typed_parity(text, &bytes, RealTypedFixture::UnicodeEscapes);
     }
 
     #[test]

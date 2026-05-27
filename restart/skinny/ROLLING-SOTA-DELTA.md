@@ -1,7 +1,7 @@
 # Rolling SOTA Delta
 
 schema_version: sk-v13-rolling-sota-delta-v1
-run_id: SK-V14-W11O-current
+run_id: SK-V14-W11U-current
 g_omega_status: signed
 consumer_gate: cargo xtask gate-json --check-results
 source_results: skinny/RESULTS.md
@@ -51,8 +51,8 @@ source_commit: 77c5dfd6c
 | json/unicode_mixed/direct_to_struct/main | direct_to_struct | 5903.562 | 5341.219 | 562.343 | ADMITTED |
 | json/unicode_mixed/real_typed_struct/main | real_typed_struct | 5837.942 | 5310.589 | 527.353 | ADMITTED |
 | json/unicode_escapes/parse_only/main | parse_only | 7897.45 | 2985.08 | 4912.37 | ADMITTED |
-| json/unicode_escapes/direct_to_struct/main | direct_to_struct | 5523.00 | 14299.00 | -8776.00 | OPEN |
-| json/unicode_escapes/real_typed_struct/main | real_typed_struct | absent:product-surface-not-generated | absent:product-surface-not-generated | absent:product-surface-not-generated | MISSING |
+| json/unicode_escapes/direct_to_struct/main | direct_to_struct | 2357.459 | 1853.453 | 504.006 | ADMITTED |
+| json/unicode_escapes/real_typed_struct/main | real_typed_struct | 2244.473 | 2037.703 | 206.770 | ADMITTED |
 | json/unicode_basic/parse_only/main | parse_only | 9445.73 | 7060.90 | 2384.83 | ADMITTED |
 | json/unicode_basic/direct_to_struct/main | direct_to_struct | 6177.340 | 4693.661 | 1483.679 | ADMITTED |
 | json/unicode_basic/real_typed_struct/main | real_typed_struct | 3221.33 | 2481.52 | 739.81 | ADMITTED |

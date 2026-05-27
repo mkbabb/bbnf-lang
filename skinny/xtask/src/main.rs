@@ -521,9 +521,9 @@ fn validate_skv14_w0_manifest(results_text: &str) -> Result<()> {
             bail!("SK-V14 W0 manifest missing {row_id}");
         }
     }
-    if (falsified, pending, sustained) != (46, 29, 0) {
+    if !matches!((falsified, pending, sustained), (46, 29, 0) | (35, 29, 11)) {
         bail!(
-            "SK-V14 audit overlay expected 46 falsified / 29 pending / 0 sustained, saw {falsified} / {pending} / {sustained}"
+            "SK-V14 audit overlay expected W1 zero-admit 46/29/0 or W9 typed-readmit 35/29/11, saw {falsified} / {pending} / {sustained}"
         );
     }
     Ok(())
@@ -749,7 +749,11 @@ fn validate_skv14_w1_visible_zero_admits(results_text: &str) -> Result<()> {
         {
             continue;
         }
-        if cells[2] == "A" && cells[3] == "GO" {
+        let row_id = format!("json/{}/{}/main", cells[0], cells[1]);
+        if cells[2] == "A"
+            && cells[3] == "GO"
+            && !SKV14_W9_TYPED_ADMIT_ROWS.contains(&row_id.as_str())
+        {
             bail!(
                 "SK-V14 W1 PRUNE-1 requires zero visible JSON A/GO rows; {} {} remains admitted",
                 cells[0],
@@ -762,11 +766,18 @@ fn validate_skv14_w1_visible_zero_admits(results_text: &str) -> Result<()> {
 
 fn validate_skv14_w1_prune1_rows(rows: &[Skv14ManifestRow]) -> Result<()> {
     let mut seen = BTreeSet::new();
+    let mut w9_typed_admits = 0usize;
     for target in SKV14_W1_PRUNE1_ROWS {
         let row = rows
             .iter()
             .find(|candidate| candidate.row_id == *target)
             .with_context(|| format!("SK-V14 W1 PRUNE-1 missing {target}"))?;
+        if SKV14_W9_TYPED_ADMIT_ROWS.contains(target)
+            && row.audit_overlay_verdict == "AUDIT-SUSTAINED"
+        {
+            w9_typed_admits += 1;
+            continue;
+        }
         if row.audit_overlay_verdict != "AUDIT-FALSIFIED" {
             bail!("{target} is not AUDIT-FALSIFIED after PRUNE-1");
         }
@@ -784,8 +795,11 @@ fn validate_skv14_w1_prune1_rows(rows: &[Skv14ManifestRow]) -> Result<()> {
             bail!("duplicate W1 REDRESS entry REDRESS-{number}");
         }
     }
-    if seen.len() != SKV14_W1_PRUNE1_ROWS.len() {
-        bail!("SK-V14 W1 PRUNE-1 expected 22 REDRESS entries");
+    let expected_remaining_prune_entries = SKV14_W1_PRUNE1_ROWS.len() - w9_typed_admits;
+    if seen.len() != expected_remaining_prune_entries {
+        bail!(
+            "SK-V14 W1 PRUNE-1 expected {expected_remaining_prune_entries} remaining REDRESS entries after W9 typed readmit"
+        );
     }
     Ok(())
 }
@@ -824,6 +838,20 @@ const SKV14_W1_PRUNE1_ROWS: &[&str] = &[
     "json/instruments/direct_to_struct/main",
     "json/numbers/direct_to_struct/main",
     "json/unicode_basic/direct_to_struct/main",
+    "json/twitter/real_typed_struct/main",
+    "json/citm_catalog/real_typed_struct/main",
+    "json/apache_builds/real_typed_struct/main",
+    "json/github_events/real_typed_struct/main",
+    "json/update_center/real_typed_struct/main",
+    "json/mesh/real_typed_struct/main",
+    "json/random/real_typed_struct/main",
+    "json/marine_ik/real_typed_struct/main",
+    "json/instruments/real_typed_struct/main",
+    "json/numbers/real_typed_struct/main",
+    "json/unicode_basic/real_typed_struct/main",
+];
+
+const SKV14_W9_TYPED_ADMIT_ROWS: &[&str] = &[
     "json/twitter/real_typed_struct/main",
     "json/citm_catalog/real_typed_struct/main",
     "json/apache_builds/real_typed_struct/main",
@@ -930,7 +958,9 @@ fn validate_skv13_rolling_delta(results_text: &str, rolling_path: &Path) -> Resu
                 );
             }
             validate_rolling_status(row)?;
-            if row.tranche_admitted == "ADMITTED" {
+            if row.tranche_admitted == "ADMITTED"
+                && !SKV14_W9_TYPED_ADMIT_ROWS.contains(&row_id.as_str())
+            {
                 bail!("{row_id} remains ADMITTED after SK-V14 W1 PRUNE-1");
             }
             if let Some(metric) = result_metrics.get(&row_id) {

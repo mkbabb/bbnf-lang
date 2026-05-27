@@ -34,8 +34,11 @@ through `b4c47666f`. W7 admitted policy/union runtime wiring at `672b927d5`.
 W8 is now rejected by REDRESS-215: the production CSS corpus and
 lightningcss/cssparser full-parse probes are available, but all seven post-W7
 generated CSS Track 1 profiles still emit fact streams rather than a CSS
-full-parse equality plane. The next implementation move is W9 JSON direct +
-typed re-admit.
+full-parse equality plane. W9 then closed mixed under REDRESS-216: 11 / 17
+JSON typed rows admit from cold `profile_direct` evidence, all 17 direct rows
+remain blocked on digest-plane evidence, and 6 / 17 typed rows remain missing
+typed product surfaces. The next implementation move is W10 JSON parse_only
+distinct-path re-admit with unconditional Stage-0.
 
 ## 1. Bracket Verdict
 
@@ -186,14 +189,15 @@ Campaign at zero on numbers; non-zero on architecture. The
 
 ## 6. Next-Move
 
-**Next-move:** Dispatch W9 JSON direct + typed re-admit under SPEC §12. W8 has
-an executable rejection packet (`skv14-W8-redress.md`, REDRESS-215), so the CSS
-L4 rows stay `AUDIT-FALSIFIED` / `OPEN` and do not block W9 dispatch. W9 must
-select exact JSON direct and typed rows, bind each row to the rebound
-plane-correct strict comparator, prove per-iteration equality, and update
-`skinny/RESULTS.md` plus `restart/skinny/ROLLING-SOTA-DELTA.md` only for rows
-that honestly re-admit. W10 remains gated on W9 admission per SPEC §13 and
-carries the unconditional Stage-0 obligation.
+**Next-move:** Dispatch W10 JSON parse_only distinct-path re-admit under SPEC
+§13. W9 has an executable mixed close packet (`skv14-W9-redress.md`,
+REDRESS-216): admitted W9 typed rows may be cited only as typed-row evidence,
+while all W9 direct rows and the six missing typed product rows remain routed
+blocks. W10 must ship the unconditional Stage-0 F-V2-P1ABC-RERECORD obligation
+before any parse_only admission, then select the 17 parse_only rows, bind them
+to the rebound `sonic_rs::Skipper` strict comparator, prove per-iteration
+equality, and update `skinny/RESULTS.md` plus
+`restart/skinny/ROLLING-SOTA-DELTA.md` only for rows that honestly re-admit.
 
 Hard caps echoed per `[dispatch-hard-cap]`: 30-min lens-agent cap;
 research 20 min / plan 15 min / redress 30 min (45 min only for the
@@ -208,8 +212,9 @@ discipline).
 3. W8 has rejected 0 / 24 CSS L4 rows under REDRESS-215. Any future CSS L4
    admit must provide generated Track 1 CSS full-parse output on the same plane
    as lightningcss/cssparser, not fact-stream output.
-4. W9 is the active wave. W10 dispatch waits for W9 disposition; W11 waits for
-   W0-W10 to have admitted, rejected, or routed status.
+4. W9 is closed mixed: 11 typed admits, 17 direct blocks, 6 typed missing
+   product blocks. W10 is the active wave. W11 waits for W0-W10 to have
+   admitted, rejected, or routed status.
 
 ## 7. Refusal Conditions
 

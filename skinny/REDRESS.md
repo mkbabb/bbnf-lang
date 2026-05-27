@@ -5331,3 +5331,27 @@ perturbation.
   output on the same plane as lightningcss/cssparser; fact-stream adapters,
   tiny fixtures, and CANONICAL_FIXTURE/profile-template shortcuts remain
   rejected.
+
+## SK-V14 Wave W9 JSON Direct + Typed Re-Admit
+
+- Item 216 closes `G-SK-V14-W9-JSON-DIRECT-TYPED-READMIT` as `MIXED`. The W9
+  executable probe selected all 17 JSON direct rows and all 17 JSON typed rows.
+  Eleven typed rows admit from cold `profile_direct` evidence retained at
+  `restart/skinny/tranches/sk-v14/research/skv14-W9-profile-direct.tsv`:
+  `twitter`, `citm_catalog`, `apache_builds`, `github_events`,
+  `update_center`, `mesh`, `random`, `marine_ik`, `instruments`, `numbers`,
+  and `unicode_basic`. Each row has Track 1 typed product output, independent
+  Track 2/serde typed output, sonic typed strict comparator evidence, and
+  `Track 1 > sonic + 1.0 Mbps` in the cold run. All 17 direct rows remain open
+  because their executable plane is still `direct_struct::{track1,track2,
+  sonic}_digest`, not a per-corpus `<corpus>::strict_struct_deser` product.
+  Six typed rows remain missing product surfaces: `canada`, `gsoc-2018`,
+  `unicode_mixed`, `unicode_escapes`, `distinct_values`, and
+  `y_string_unicode`. Evidence: `cargo test --profile ax-iter -p bbnf-bench
+  json_w9 -- --nocapture`, `cargo test --profile ax-iter -p bbnf-bench
+  direct_struct -- --nocapture`, `cargo test --profile ax-iter -p bbnf-bench
+  real_typed_struct -- --nocapture`, and
+  `restart/skinny/tranches/sk-v14/research/skv14-W9-redress.md`. Routed
+  remainder: W10 may dispatch, but it must not cite W9 direct rows or missing
+  typed rows as admitted evidence, and it still carries the unconditional
+  Stage-0 F-V2-P1ABC-RERECORD obligation.

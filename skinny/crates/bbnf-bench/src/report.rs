@@ -3544,9 +3544,9 @@ fn validate_skv14_manifest_rows(rows: &[SkV14ManifestRow]) -> Result<(), String>
             return Err(format!("SK-V14 manifest missing {row_id}"));
         }
     }
-    if (falsified, pending, sustained) != (46, 29, 0) {
+    if !matches!((falsified, pending, sustained), (46, 29, 0) | (35, 29, 11)) {
         return Err(format!(
-            "SK-V14 audit overlay expected 46 falsified / 29 pending / 0 sustained, saw {falsified} / {pending} / {sustained}"
+            "SK-V14 audit overlay expected W1 zero-admit 46/29/0 or W9 typed-readmit 35/29/11, saw {falsified} / {pending} / {sustained}"
         ));
     }
     Ok(())
@@ -3653,14 +3653,18 @@ fn validate_skv14_manifest_row(row: &SkV14ManifestRow) -> Result<(), String> {
         ));
     }
     if row.grammar_id == "json"
-        && (row.comparator_evidence.contains(&["sonic_rs", "anchor"].join("_"))
-            || row.comparator_evidence.contains(&[
-                "from_slice::<sonic_rs",
-                "::Value>",
-            ]
-            .concat())
-            || row.comparator_evidence.contains("historical:sk-v7-sidecar-profile")
-            || row.comparator_evidence.contains("sidecar-profile:sk-v7-cpp"))
+        && (row
+            .comparator_evidence
+            .contains(&["sonic_rs", "anchor"].join("_"))
+            || row
+                .comparator_evidence
+                .contains(&["from_slice::<sonic_rs", "::Value>"].concat())
+            || row
+                .comparator_evidence
+                .contains("historical:sk-v7-sidecar-profile")
+            || row
+                .comparator_evidence
+                .contains("sidecar-profile:sk-v7-cpp"))
     {
         return Err(format!("{} carries stale comparator evidence", row.row_id));
     }
@@ -4390,11 +4394,15 @@ fn skv14_manifest_row_from_skv14_cells(cells: &[String]) -> Result<SkV14Manifest
     let sidecar_freshness = json_row
         .map(|(_, workload)| format!("absent:not-collected-for-{workload}"))
         .unwrap_or_else(|| cells[11].clone());
-    let comparator_evidence = json_row
-        .map(|(corpus, workload)| {
-            skv14_rebound_comparator_evidence(corpus, workload, &cells[31])
-        })
-        .unwrap_or_else(|| cells[31].clone());
+    let comparator_evidence = match json_row {
+        Some((_, "real_typed_struct"))
+            if cells[4].starts_with("SK-V14-W9:") || cells[31].contains("profile_direct:") =>
+        {
+            cells[31].clone()
+        }
+        Some((corpus, workload)) => skv14_rebound_comparator_evidence(corpus, workload, &cells[31]),
+        None => cells[31].clone(),
+    };
     Ok(SkV14ManifestRow {
         row_id: cells[0].clone(),
         grammar_id: cells[1].clone(),

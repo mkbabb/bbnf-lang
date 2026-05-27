@@ -124,10 +124,11 @@ raw JSON string lexeme product, so direct and typed each stand at 17 / 17
 admitted. W11V then rejected a 64-byte aarch64 trusted string-special
 parse_only scanner under REDRESS-247; no parse_only row moved, and that exact
 string64 trusted-skip route is pre-blocked without a fresh material
-differential. W8R closed the CSS residual before W11L; continue actual
-implementation against the remaining parse_only residual queue, not another
-Omega or Alpha pass unless a future source attempt exposes a real spec-level
-amendment.
+differential. W11W then admitted the final six parse_only rows with a memchr
+trusted-string split in `parse-that-regex`, so JSON parse_only stands at
+17 / 17 admitted and SK-V14 has no residual implementation queue. W8R closed
+the CSS residual before W11L; W11W closes the last JSON residual without a new
+Omega or Alpha pass.
 
 ## 1. Bracket Verdict
 
@@ -220,20 +221,21 @@ Lock 14 at `restart/locks/LOCKS.md:220–238`).
 ### Honest rolling delta (SK-V14 starting baseline)
 
 ```
-JSON parse_only: 11 / 17 (6 OPEN after W10W residual implementation; W11S attribution pins parse_only_string, REDRESS-246 rejects structural-stream driving, and REDRESS-247 rejects the string64 trusted-skip route)
+JSON parse_only: 17 / 17 (ADMITTED after W11W memchr trusted-string split)
 JSON direct:     17 / 17 (ADMITTED after W11U raw-lexeme product)
 JSON typed:      17 / 17 (ADMITTED after W11U raw-lexeme product)
 CSS L4:          24 / 24 (ADMITTED after W8R; generated full-parse plane beats lightningcss floor)
 ```
 
 Opening baseline was zero admitted after audit prune. W11 close-state is
-mixed: 45 JSON cells and 24 CSS L4 cells are admitted, and all remaining JSON
-parse_only residual rows are routed to implementation work because no
-architectural-block proof closes them.
+full admission: 51 JSON cells and 24 CSS L4 cells are admitted, and no
+architectural-block proof is needed for SK-V14 close.
 
 ## 4. Pre-S-P0 Readiness
 
-- Working tree clean (SK-V14 doc seeds + audit JSONL edits only).
+- Historical seed state was a clean working tree with SK-V14 doc seeds and
+  audit JSONL edits only. The active W11W close state is represented by the
+  current working tree until the W11W commit lands.
 - `restart/skinny/tranches/sk-v14/` seeded:
   - `ORCHESTRATOR-PROMPT.md` (commit `496a81417`).
   - `research/alpha/DISPATCH-CONTEXT.md` (commit `6ab711d77`).
@@ -279,24 +281,15 @@ architectural-block proof closes them.
 
 ## 6. Next-Move
 
-**Next-move:** implement against the W11 residual queue captured in
+**Next-move:** close SK-V14 from the W11W full-admission packet captured in
 `restart/skinny/tranches/sk-v14/research/skv14-W11-close.md`. The live row
 state is:
 
-- JSON parse_only: 11 / 17 ADMITTED, 6 OPEN under REDRESS-223; REDRESS-230
-  rejects the fused string/object-loop residual route without moving any row,
-  and REDRESS-234 rejects value-context delimiter threading without moving any
-  row. REDRESS-235 rejects a shared 64-byte JSON whitespace skip without
-  moving any row. REDRESS-236 rejects object-member string/object fast arms
-  without moving any row. REDRESS-237 rejects key-string plus colon fusion
-  without moving any row. REDRESS-238 rejects object-member value-byte carry
-  without moving any row. REDRESS-239 rejects array value-byte carry without
-  moving any row. REDRESS-240 rejects object key-start specialization without
-  moving any row. REDRESS-244 rejects indexed plain-string skipping without
-  moving any row. W11S attributes all six residual rows to
-  `parse_only_string`, and REDRESS-246 rejects the scanner-backed
-  structural-stream parse_only driver without moving any row. REDRESS-247
-  rejects the 64-byte trusted string-special scanner without moving any row.
+- JSON parse_only: 17 / 17 ADMITTED after W11W. REDRESS-230, REDRESS-234,
+  REDRESS-235, REDRESS-236, REDRESS-237, REDRESS-238, REDRESS-239,
+  REDRESS-240, REDRESS-244, REDRESS-246, and REDRESS-247 remain historical
+  pre-blocks for their exact rejected shapes without a fresh material
+  differential.
 - JSON direct_to_struct: 17 / 17 ADMITTED after W11U. REDRESS-232 rejects
   product-surface-only unicode strict products for `unicode_mixed` and
   `unicode_escapes`, REDRESS-242 rejects the decoded-string `unicode_escapes`
@@ -311,11 +304,9 @@ state is:
   release-native evidence.
 
 Per the latest user instruction, do not spend another cycle on Omega/Alpha
-governance before implementation. The next implementation packet should select
-one residual family and produce source, evidence, RESULTS/DELTA updates, and
-REDRESS reconciliation. If that implementation discovers a true spec-level
-amendment, route that amendment through the required gate; otherwise keep
-moving in implementation mode.
+governance. W11W is the implementation packet that closes the final residual;
+only a later executable failure or true spec-level amendment should reopen
+governance.
 
 Hard caps echoed per `[dispatch-hard-cap]`: 30-min lens-agent cap;
 research 20 min / plan 15 min / redress 30 min (45 min only for the
@@ -341,8 +332,9 @@ discipline).
    missing under the numeric-key-only route. W11L later admits
    `y_string_unicode/real_typed_struct`, W11N later admits
    `unicode_mixed/real_typed_struct`, and W11O later admits
-   `gsoc-2018/real_typed_struct`, so the current typed state is 16 admitted
-   and 1 missing.
+   `gsoc-2018/real_typed_struct`; W11U then admits
+   `unicode_escapes/real_typed_struct`, so the current typed state is
+   17 admitted and 0 missing.
 5. W10 is closed mixed: 6 parse_only admits and 11 parse_only open rows under
    REDRESS-217. W10R then admits `canada/parse_only`, W10S admits
    `unicode_mixed/parse_only`, W10T admits `instruments/parse_only`, W10V
@@ -350,11 +342,14 @@ discipline).
    `apache_builds/parse_only`, leaving 6 parse_only open rows under
    REDRESS-223. W10X, W10Y/W10Z, and W10AA reject additional residual routes
    under REDRESS-224, REDRESS-225, and REDRESS-230 without changing the count.
+   W11W later admits the final six parse_only rows, so the current parse_only
+   state is 17 admitted and 0 open.
 6. W11A admits thirteen strict-product JSON direct rows under REDRESS-231.
    W11L later admits `y_string_unicode/direct_to_struct`, W11N later admits
    `unicode_mixed/direct_to_struct`, and W11O later admits
-   `gsoc-2018/direct_to_struct`, so the current direct state is 16 admitted
-   and 1 open: `unicode_escapes`.
+   `gsoc-2018/direct_to_struct`; W11U then admits
+   `unicode_escapes/direct_to_struct`, so the current direct state is
+   17 admitted and 0 open.
 7. W11B rejects transient `unicode_mixed` and `unicode_escapes` strict product
    routes under REDRESS-232. The products were correct but missed strict sonic
    by at least 2014.202 Mbps, so no source patch lands and no row moves.
@@ -456,13 +451,11 @@ Return REVISE for any downstream plan that:
 
 ## 8. W11 Close Disposition
 
-SK-V14 closes as a mixed implementation tranche. It preserves 45 admitted JSON
-cells and 24 admitted CSS L4 cells, and routes the remaining JSON parse_only
-rows to implementation residuals.
-No residual row has an architectural-level intrinsic-block proof. Subsequent
-work inherits R1-R10 until a row family achieves admission or proves an
-architectural block, but the immediate continuation is source implementation
-against the W11 residual queue. REDRESS-232 makes unicode product-surface-only
+SK-V14 closes as a fully admitted implementation tranche. It preserves
+51 admitted JSON cells and 24 admitted CSS L4 cells, with no remaining JSON
+parse_only residual queue.
+No residual row needs an architectural-level intrinsic-block proof.
+REDRESS-232 makes unicode product-surface-only
 retries non-viable without a fresh material differential; REDRESS-233 applies
 the same pre-block to `gsoc-2018` product-surface-only retries. REDRESS-234
 pre-blocks parse_only context-threaded delimiter consumption without a fresh
@@ -490,4 +483,5 @@ numeric-key decoded token product. REDRESS-243 pre-blocks `unicode_escapes`
 decoded codepoint-fact products without a fresh material differential.
 REDRESS-245 pre-blocks fixed-shape `unicode_escapes` decoded payload floor
 parsers without a fresh material differential. W11U admits the distinct
-generated raw lexeme product for `unicode_escapes`.
+generated raw lexeme product for `unicode_escapes`. W11W admits the distinct
+memchr trusted-string split for the final six parse_only rows.

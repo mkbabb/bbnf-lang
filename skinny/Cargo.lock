@@ -893,6 +893,7 @@ name = "parse-that-regex"
 version = "0.1.0"
 dependencies = [
  "bbnf-simd",
+ "memchr",
  "thiserror 1.0.69",
 ]
 

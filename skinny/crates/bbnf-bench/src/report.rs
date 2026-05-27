@@ -331,17 +331,17 @@ pub struct JsonParseOnlyAdmissionSpec {
 
 pub const JSON_PARSE_ONLY_ADMISSION_SPECS: &[JsonParseOnlyAdmissionSpec] = &[
     JsonParseOnlyAdmissionSpec {
-        label: "W10.1",
-        wave_id: "SK-V14-W10",
-        run_id_prefix: "SK-V14-W10:",
-        consumer_gate: "G-W10-JSON-PARSE-ONLY",
+        label: "W11W.1",
+        wave_id: "SK-V14-W11W",
+        run_id_prefix: "SK-V14-W11W:",
+        consumer_gate: "G-SK-V14-W11W-JSON-PARSE-ONLY-MEMCHR",
         row_id: "json/twitter/parse_only/main",
         corpus: "twitter",
         criterion_group: "json_twitter",
         bytes: 631_515,
-        route_id: "generated-json-parse-only-distinct-path",
-        redress_entry: "none:SK-V14-W10-admit",
-        prior_redress_citation: "102",
+        route_id: "generated-json-parse-only-memchr-trusted-string-split",
+        redress_entry: "none:SK-V14-W11W-admit",
+        prior_redress_citation: "247",
     },
     JsonParseOnlyAdmissionSpec {
         label: "W10V.1",
@@ -383,30 +383,30 @@ pub const JSON_PARSE_ONLY_ADMISSION_SPECS: &[JsonParseOnlyAdmissionSpec] = &[
         prior_redress_citation: "222",
     },
     JsonParseOnlyAdmissionSpec {
-        label: "W10.5",
-        wave_id: "SK-V14-W10",
-        run_id_prefix: "SK-V14-W10:",
-        consumer_gate: "G-W10-JSON-PARSE-ONLY",
+        label: "W11W.2",
+        wave_id: "SK-V14-W11W",
+        run_id_prefix: "SK-V14-W11W:",
+        consumer_gate: "G-SK-V14-W11W-JSON-PARSE-ONLY-MEMCHR",
         row_id: "json/github_events/parse_only/main",
         corpus: "github_events",
         criterion_group: "json_github_events",
         bytes: 65_132,
-        route_id: "generated-json-parse-only-distinct-path",
-        redress_entry: "none:SK-V14-W10-admit",
-        prior_redress_citation: "102",
+        route_id: "generated-json-parse-only-memchr-trusted-string-split",
+        redress_entry: "none:SK-V14-W11W-admit",
+        prior_redress_citation: "247",
     },
     JsonParseOnlyAdmissionSpec {
-        label: "W10.6",
-        wave_id: "SK-V14-W10",
-        run_id_prefix: "SK-V14-W10:",
-        consumer_gate: "G-W10-JSON-PARSE-ONLY",
+        label: "W11W.3",
+        wave_id: "SK-V14-W11W",
+        run_id_prefix: "SK-V14-W11W:",
+        consumer_gate: "G-SK-V14-W11W-JSON-PARSE-ONLY-MEMCHR",
         row_id: "json/update_center/parse_only/main",
         corpus: "update_center",
         criterion_group: "json_update_center",
         bytes: 533_178,
-        route_id: "generated-json-parse-only-distinct-path",
-        redress_entry: "none:SK-V14-W10-admit",
-        prior_redress_citation: "102",
+        route_id: "generated-json-parse-only-memchr-trusted-string-split",
+        redress_entry: "none:SK-V14-W11W-admit",
+        prior_redress_citation: "247",
     },
     JsonParseOnlyAdmissionSpec {
         label: "W10.7",
@@ -422,30 +422,30 @@ pub const JSON_PARSE_ONLY_ADMISSION_SPECS: &[JsonParseOnlyAdmissionSpec] = &[
         prior_redress_citation: "102",
     },
     JsonParseOnlyAdmissionSpec {
-        label: "W10.8",
-        wave_id: "SK-V14-W10",
-        run_id_prefix: "SK-V14-W10:",
-        consumer_gate: "G-W10-JSON-PARSE-ONLY",
+        label: "W11W.4",
+        wave_id: "SK-V14-W11W",
+        run_id_prefix: "SK-V14-W11W:",
+        consumer_gate: "G-SK-V14-W11W-JSON-PARSE-ONLY-MEMCHR",
         row_id: "json/random/parse_only/main",
         corpus: "random",
         criterion_group: "json_random",
         bytes: 510_476,
-        route_id: "generated-json-parse-only-distinct-path",
-        redress_entry: "none:SK-V14-W10-admit",
-        prior_redress_citation: "102",
+        route_id: "generated-json-parse-only-memchr-trusted-string-split",
+        redress_entry: "none:SK-V14-W11W-admit",
+        prior_redress_citation: "247",
     },
     JsonParseOnlyAdmissionSpec {
-        label: "W10.9",
-        wave_id: "SK-V14-W10",
-        run_id_prefix: "SK-V14-W10:",
-        consumer_gate: "G-W10-JSON-PARSE-ONLY",
+        label: "W11W.5",
+        wave_id: "SK-V14-W11W",
+        run_id_prefix: "SK-V14-W11W:",
+        consumer_gate: "G-SK-V14-W11W-JSON-PARSE-ONLY-MEMCHR",
         row_id: "json/gsoc-2018/parse_only/main",
         corpus: "gsoc-2018",
         criterion_group: "json_gsoc-2018",
         bytes: 3_327_831,
-        route_id: "generated-json-parse-only-distinct-path",
-        redress_entry: "none:SK-V14-W10-admit",
-        prior_redress_citation: "102",
+        route_id: "generated-json-parse-only-memchr-trusted-string-split",
+        redress_entry: "none:SK-V14-W11W-admit",
+        prior_redress_citation: "247",
     },
     JsonParseOnlyAdmissionSpec {
         label: "W10.10",
@@ -526,17 +526,17 @@ pub const JSON_PARSE_ONLY_ADMISSION_SPECS: &[JsonParseOnlyAdmissionSpec] = &[
         prior_redress_citation: "102",
     },
     JsonParseOnlyAdmissionSpec {
-        label: "W10.16",
-        wave_id: "SK-V14-W10",
-        run_id_prefix: "SK-V14-W10:",
-        consumer_gate: "G-W10-JSON-PARSE-ONLY",
+        label: "W11W.6",
+        wave_id: "SK-V14-W11W",
+        run_id_prefix: "SK-V14-W11W:",
+        consumer_gate: "G-SK-V14-W11W-JSON-PARSE-ONLY-MEMCHR",
         row_id: "json/distinct_values/parse_only/main",
         corpus: "distinct_values",
         criterion_group: "json_distinct_values",
         bytes: 153_630,
-        route_id: "generated-json-parse-only-distinct-path",
-        redress_entry: "none:SK-V14-W10-admit",
-        prior_redress_citation: "102",
+        route_id: "generated-json-parse-only-memchr-trusted-string-split",
+        redress_entry: "none:SK-V14-W11W-admit",
+        prior_redress_citation: "247",
     },
     JsonParseOnlyAdmissionSpec {
         label: "W10.17",
@@ -595,6 +595,7 @@ pub fn json_parse_only_audit_reference(spec: &JsonParseOnlyAdmissionSpec) -> &'s
         "SK-V14-W10T" => "sk-v14-W10T:parse-only-open-sweep;sk-v14-W10S:parse-only-string-end-prefix-scan;sk-v14-W10R:parse-only-prefix-continuation;sk-v14-W10:distinct-parse-only;sk-v13/v6-comparator-integrity:§1+§3",
         "SK-V14-W10V" => "sk-v14-W10V:parse-only-current-head-resweep;sk-v14-W10U:number-end-reject;sk-v14-W10T:parse-only-open-sweep;sk-v14-W10S:parse-only-string-end-prefix-scan;sk-v14-W10R:parse-only-prefix-continuation;sk-v14-W10:distinct-parse-only;sk-v13/v6-comparator-integrity:§1+§3",
         "SK-V14-W10W" => "sk-v14-W10W:parse-only-iterative-stack;sk-v14-W10V:parse-only-current-head-resweep;sk-v14-W10U:number-end-reject;sk-v14-W10T:parse-only-open-sweep;sk-v14-W10S:parse-only-string-end-prefix-scan;sk-v14-W10R:parse-only-prefix-continuation;sk-v14-W10:distinct-parse-only;sk-v13/v6-comparator-integrity:§1+§3",
+        "SK-V14-W11W" => "sk-v14-W11W:parse-only-memchr-trusted-string-split;sk-v14-W11V:string64-reject;sk-v14-W11T:structural-stream-reject;sk-v14-W11S:parse-only-stage0-attribution;sk-v14-W10W:parse-only-iterative-stack;sk-v14-W10V:parse-only-current-head-resweep;sk-v14-W10T:parse-only-open-sweep;sk-v14-W10S:parse-only-string-end-prefix-scan;sk-v14-W10R:parse-only-prefix-continuation;sk-v14-W10:distinct-parse-only;sk-v13/v6-comparator-integrity:§1+§3",
         _ => "sk-v14-W10:distinct-parse-only;sk-v13/v6-comparator-integrity:§1+§3",
     }
 }
@@ -606,6 +607,7 @@ pub fn json_parse_only_open_delta(spec: &JsonParseOnlyAdmissionSpec) -> &'static
         "SK-V14-W10T" => "admitted:SK-V14-W10T-parse-only-open-sweep",
         "SK-V14-W10V" => "admitted:SK-V14-W10V-current-head-resweep",
         "SK-V14-W10W" => "admitted:SK-V14-W10W-parse-only-iterative-stack",
+        "SK-V14-W11W" => "admitted:SK-V14-W11W-parse-only-memchr",
         _ => "admitted:SK-V14-W10-parse-only-distinct",
     }
 }
@@ -3799,9 +3801,9 @@ fn validate_skv14_manifest_rows(rows: &[SkV14ManifestRow]) -> Result<(), String>
             return Err(format!("SK-V14 manifest missing {row_id}"));
         }
     }
-    if pending != 6 || falsified + sustained != 69 {
+    if pending != 0 || falsified + sustained != 75 {
         return Err(format!(
-            "SK-V14 audit overlay expected pending=6 and falsified+sustained=69 after authorized W9/W9AA/W9AB/W10/W10R/W10S/W10T/W10V/W10W/W11A/W11L/W11N/W11O/W11U admits, saw {falsified} / {pending} / {sustained}"
+            "SK-V14 audit overlay expected pending=0 and falsified+sustained=75 after authorized W9/W9AA/W9AB/W10/W10R/W10S/W10T/W10V/W10W/W11A/W11L/W11N/W11O/W11U/W11W admits, saw {falsified} / {pending} / {sustained}"
         ));
     }
     Ok(())
@@ -4125,7 +4127,7 @@ fn validate_skv14_sustained_row(row: &SkV14ManifestRow) -> Result<(), String> {
         return Ok(());
     }
     Err(format!(
-        "{} is AUDIT-SUSTAINED without W9 typed, W10/W10R/W10S/W10T/W10V/W10W parse_only, W11A direct strict-product, W11L/W11N token-product, or W8R CSS full-parse authority",
+        "{} is AUDIT-SUSTAINED without W9 typed, W10/W10R/W10S/W10T/W10V/W10W/W11W parse_only, W11A direct strict-product, W11L/W11N/W11O token-product, W11U raw-lexeme product, or W8R CSS full-parse authority",
         row.row_id
     ))
 }
@@ -6433,6 +6435,7 @@ fn validate_w0_profile_artifact(row_id: &str, profile_artifact: &str) -> Result<
                 | "restart/skinny/tranches/sk-v14/research/skv14-W10T-parse-only-open-sweep.tsv"
                 | "restart/skinny/tranches/sk-v14/research/skv14-W10V-parse-only-current-head-resweep.tsv"
                 | "restart/skinny/tranches/sk-v14/research/skv14-W10W-parse-only-iterative-stack.tsv"
+                | "restart/skinny/tranches/sk-v14/research/skv14-W11W-parse-only-memchr.tsv"
                 | "restart/skinny/tranches/sk-v14/research/skv14-W9AA-distinct-values-typed.tsv"
                 | "restart/skinny/tranches/sk-v14/research/skv14-W9AB-canada-typed.tsv"
                 | "restart/skinny/tranches/sk-v14/research/skv14-W11L-y-string-token-product.tsv"
@@ -6478,6 +6481,8 @@ fn validate_w0_hot_leaf(
             "not-collected-in-W10V-row"
         } else if profile_artifact.contains("skv14-W10W-parse-only-iterative-stack.tsv") {
             "not-collected-in-W10W-row"
+        } else if profile_artifact.contains("skv14-W11W-parse-only-memchr.tsv") {
+            "not-collected-in-W11W-row"
         } else if profile_artifact.contains("skv14-W9AA-distinct-values-typed.tsv") {
             "not-collected-in-W9AA-row"
         } else if profile_artifact.contains("skv14-W9AB-canada-typed.tsv") {
@@ -9719,16 +9724,18 @@ mod tests {
 
     #[test]
     fn validate_sk_v8_w0_accepts_configured_parse_only_admission_rows() {
-        let mut report = opening_report();
-        let spec =
-            json_parse_only_admission_spec_for_row_id("json/citm_catalog/parse_only/main").unwrap();
-        let parse = report
-            .rows
-            .iter_mut()
-            .find(|row| row.sk_v8.row_id == spec.row_id)
-            .unwrap();
-        admit_parse_only_contract(parse, spec);
-        assert_eq!(report.validate_sk_v8_w0(), Ok(()));
+        for spec in JSON_PARSE_ONLY_ADMISSION_SPECS {
+            let mut report = opening_report();
+            let parse = report
+                .rows
+                .iter_mut()
+                .find(|row| row.sk_v8.row_id == spec.row_id)
+                .unwrap();
+            admit_parse_only_contract(parse, spec);
+            let manifest = parse.skv14_manifest_row();
+            validate_skv14_manifest_row(&manifest).unwrap();
+            validate_skv14_sustained_row(&manifest).unwrap();
+        }
     }
 
     #[test]

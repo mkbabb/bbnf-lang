@@ -1061,7 +1061,7 @@ fn validate_skv14_sustained_row(row: &Skv14ManifestRow) -> Result<()> {
         return Ok(());
     }
     bail!(
-        "{} is AUDIT-SUSTAINED without W9 typed, W10/W10R/W10S/W10T/W10V/W10W parse_only, W11A direct strict-product, W11L/W11N/W11O token-product, W11U raw-lexeme product, or W8R CSS full-parse authority",
+        "{} is AUDIT-SUSTAINED without W9 typed, W10/W10R/W10S/W10T/W10V/W10W/W11W parse_only, W11A direct strict-product, W11L/W11N/W11O token-product, W11U raw-lexeme product, or W8R CSS full-parse authority",
         row.row_id
     )
 }
@@ -1277,7 +1277,21 @@ fn is_skv14_w8r_css_row(row_id: &str) -> bool {
 }
 
 fn skv14_parse_only_admit_fields(row_id: &str) -> (&'static str, &'static str, &'static str) {
-    if row_id == "json/citm_catalog/parse_only/main" {
+    if matches!(
+        row_id,
+        "json/twitter/parse_only/main"
+            | "json/github_events/parse_only/main"
+            | "json/update_center/parse_only/main"
+            | "json/random/parse_only/main"
+            | "json/gsoc-2018/parse_only/main"
+            | "json/distinct_values/parse_only/main"
+    ) {
+        (
+            "SK-V14-W11W",
+            "none:SK-V14-W11W-admit",
+            "admitted:SK-V14-W11W-parse-only-memchr",
+        )
+    } else if row_id == "json/citm_catalog/parse_only/main" {
         (
             "SK-V14-W10V",
             "none:SK-V14-W10V-admit",
@@ -1382,6 +1396,7 @@ fn validate_skv13_rolling_delta(results_text: &str, rolling_path: &Path) -> Resu
         && !rolling_text.contains("run_id: SK-V14-W11N-current")
         && !rolling_text.contains("run_id: SK-V14-W11O-current")
         && !rolling_text.contains("run_id: SK-V14-W11U-current")
+        && !rolling_text.contains("run_id: SK-V14-W11W-current")
     {
         bail!("ROLLING-SOTA-DELTA.md missing supported `run_id:`");
     }
@@ -1430,7 +1445,7 @@ fn validate_skv13_rolling_delta(results_text: &str, rolling_path: &Path) -> Resu
                 && !SKV14_W11O_GSOC_DIRECT_ROWS.contains(&row_id.as_str())
                 && !SKV14_W11U_UNICODE_ESCAPES_DIRECT_ROWS.contains(&row_id.as_str())
             {
-                bail!("{row_id} is ADMITTED without W9 typed, W10 parse, W11A direct, W11L/W11N/W11O token-product, or W11U raw-lexeme authority");
+                bail!("{row_id} is ADMITTED without W9 typed, W10/W11W parse, W11A direct, W11L/W11N/W11O token-product, or W11U raw-lexeme authority");
             }
             if let Some(metric) = result_metrics.get(&row_id) {
                 validate_numeric_rolling_row(row, *metric)?;

@@ -1,17 +1,17 @@
 # Rolling SOTA Delta
 
 schema_version: sk-v13-rolling-sota-delta-v1
-run_id: SK-V14-W11U-current
+run_id: SK-V14-W11W-current
 g_omega_status: signed
 consumer_gate: cargo xtask gate-json --check-results
 source_results: skinny/RESULTS.md
-source_commit: 77c5dfd6c
+source_commit: pending:SK-V14-W11W-close-commit
 
 ## JSON Targets
 
 | row | plane | T1_current | T1_sota | margin | tranche_admitted |
 |---|---|---:|---:|---:|---|
-| json/twitter/parse_only/main | parse_only | 15561.00 | 21014.00 | -5453.00 | OPEN |
+| json/twitter/parse_only/main | parse_only | 8349.290 | 4914.095 | 3435.195 | ADMITTED |
 | json/twitter/direct_to_struct/main | direct_to_struct | 17585.679 | 14858.624 | 2727.055 | ADMITTED |
 | json/twitter/real_typed_struct/main | real_typed_struct | 10705.05 | 8953.25 | 1751.80 | ADMITTED |
 | json/citm_catalog/parse_only/main | parse_only | 9079.838 | 8336.772 | 743.066 | ADMITTED |
@@ -23,19 +23,19 @@ source_commit: 77c5dfd6c
 | json/apache_builds/parse_only/main | parse_only | 13129.331 | 12952.668 | 176.663 | ADMITTED |
 | json/apache_builds/direct_to_struct/main | direct_to_struct | 7483.813 | 6328.769 | 1155.044 | ADMITTED |
 | json/apache_builds/real_typed_struct/main | real_typed_struct | 4352.26 | 3391.81 | 960.45 | ADMITTED |
-| json/github_events/parse_only/main | parse_only | 14966.00 | 23010.00 | -8044.00 | OPEN |
+| json/github_events/parse_only/main | parse_only | 8148.582 | 5015.433 | 3133.149 | ADMITTED |
 | json/github_events/direct_to_struct/main | direct_to_struct | 12501.469 | 11013.854 | 1487.615 | ADMITTED |
 | json/github_events/real_typed_struct/main | real_typed_struct | 6643.66 | 5976.17 | 667.49 | ADMITTED |
-| json/update_center/parse_only/main | parse_only | 11791.00 | 19662.00 | -7871.00 | OPEN |
+| json/update_center/parse_only/main | parse_only | 5671.345 | 4708.613 | 962.732 | ADMITTED |
 | json/update_center/direct_to_struct/main | direct_to_struct | 12820.158 | 10888.271 | 1931.887 | ADMITTED |
 | json/update_center/real_typed_struct/main | real_typed_struct | 6776.28 | 5846.38 | 929.90 | ADMITTED |
 | json/mesh/parse_only/main | parse_only | 11669.30 | 6590.82 | 5078.48 | ADMITTED |
 | json/mesh/direct_to_struct/main | direct_to_struct | 9036.398 | 7876.325 | 1160.073 | ADMITTED |
 | json/mesh/real_typed_struct/main | real_typed_struct | 4580.29 | 4344.22 | 236.07 | ADMITTED |
-| json/random/parse_only/main | parse_only | 9946.00 | 15666.00 | -5720.00 | OPEN |
+| json/random/parse_only/main | parse_only | 3093.724 | 2938.264 | 155.460 | ADMITTED |
 | json/random/direct_to_struct/main | direct_to_struct | 7977.902 | 5755.672 | 2222.230 | ADMITTED |
 | json/random/real_typed_struct/main | real_typed_struct | 4354.29 | 3042.02 | 1312.27 | ADMITTED |
-| json/gsoc-2018/parse_only/main | parse_only | 23587.00 | 50364.00 | -26777.00 | OPEN |
+| json/gsoc-2018/parse_only/main | parse_only | 13213.304 | 11356.449 | 1856.855 | ADMITTED |
 | json/gsoc-2018/direct_to_struct/main | direct_to_struct | 7228.198 | 6670.742 | 557.456 | ADMITTED |
 | json/gsoc-2018/real_typed_struct/main | real_typed_struct | 7176.742 | 6628.652 | 548.090 | ADMITTED |
 | json/marine_ik/parse_only/main | parse_only | 9505.49 | 5339.94 | 4165.55 | ADMITTED |
@@ -56,7 +56,7 @@ source_commit: 77c5dfd6c
 | json/unicode_basic/parse_only/main | parse_only | 9445.73 | 7060.90 | 2384.83 | ADMITTED |
 | json/unicode_basic/direct_to_struct/main | direct_to_struct | 6177.340 | 4693.661 | 1483.679 | ADMITTED |
 | json/unicode_basic/real_typed_struct/main | real_typed_struct | 3221.33 | 2481.52 | 739.81 | ADMITTED |
-| json/distinct_values/parse_only/main | parse_only | 9920.00 | 18161.00 | -8241.00 | OPEN |
+| json/distinct_values/parse_only/main | parse_only | 5155.207 | 3234.781 | 1920.426 | ADMITTED |
 | json/distinct_values/direct_to_struct/main | direct_to_struct | 8755.197 | 3908.274 | 4846.923 | ADMITTED |
 | json/distinct_values/real_typed_struct/main | real_typed_struct | 8827.520 | 3896.064 | 4931.456 | ADMITTED |
 | json/y_string_unicode/parse_only/main | parse_only | 3169.90 | 2418.91 | 750.99 | ADMITTED |

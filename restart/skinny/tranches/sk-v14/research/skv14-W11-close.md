@@ -49,15 +49,17 @@ landing the transient source patch. W11U then admitted the remaining
 `unicode_escapes` direct and typed rows through a generated raw JSON string
 lexeme product. W11V then tested a 64-byte aarch64 trusted string-special
 scanner against the remaining parse_only residual rows and rejected it on
-same-run cold evidence without landing the transient source patch.
+same-run cold evidence without landing the transient source patch. W11W then
+landed a memchr trusted-string split in `parse-that-regex` and admitted all
+six remaining JSON `parse_only` rows from cold same-run evidence.
 
 ## Authority
 
 - `restart/skinny/tranches/sk-v14/SPEC.md` Section 14.
 - `restart/skinny/tranches/sk-v14/SYNTHESIS.md` R10.
 - `skinny/RESULTS.md`.
-- `skinny/REDRESS.md` items 215 through 247 plus the W11O and W11U admit
-  packets.
+- `skinny/REDRESS.md` items 215 through 247 plus the W11O, W11U, and W11W
+  admit packets.
 - `restart/skinny/ROLLING-SOTA-DELTA.md`.
 - `restart/skinny/tranches/sk-v14/HANDOFF.md`.
 
@@ -115,19 +117,19 @@ same-run cold evidence without landing the transient source patch.
 | W11T | REJECTED | REDRESS-246: transient scanner-backed structural-stream parse_only driver passed correctness but missed same-run sonic on all six residual rows; no source patch landed and no row moved. |
 | W11U | ADMITTED | Generated raw JSON string lexeme product admits `unicode_escapes/direct_to_struct` and `unicode_escapes/real_typed_struct` from cold native `profile_direct` evidence. |
 | W11V | REJECTED | REDRESS-247: transient 64-byte aarch64 trusted string-special scanner improved Track 1 but missed same-run sonic on all six residual rows and failed one guard row; no source patch landed and no row moved. |
+| W11W | ADMITTED | Memchr trusted-string split admits `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and `distinct_values` parse_only rows from cold native `profile_direct` evidence; parse_only state is now 17 / 17 admitted and 0 open. |
 
 ## Close-State Counts
 
 | Family | ADMITTED | OPEN | MISSING / blocked | Governing evidence |
 |---|---:|---:|---:|---|
-| JSON parse_only | 11 | 6 | 0 | W10/W10R/W10S/W10T/W10V/W10W cold `profile_direct` evidence and REDRESS-217/218/219/220/222/223. |
+| JSON parse_only | 17 | 0 | 0 | W10/W10R/W10S/W10T/W10V/W10W cold `profile_direct` evidence plus W11W memchr trusted-string split evidence. |
 | JSON direct_to_struct | 17 | 0 | 0 | W11A cold strict product evidence plus W11L/W11N/W11O decoded token-product evidence and W11U raw-lexeme evidence. |
 | JSON real_typed_struct | 17 | 0 | 0 | W9 cold typed evidence plus W9AA/W9AB generated products for `distinct_values` and `canada`, plus W11L/W11N/W11O decoded token-product evidence and W11U raw-lexeme evidence. |
 | CSS L4 | 24 | 0 | 0 | W8R generated full-parse release-native evidence and REDRESS-215 supersession. |
 
-No residual row has an architectural-level intrinsic-block proof. The
-remaining parse_only rows are implementation residuals, not closeable proof
-blocks.
+No residual row remains open and no architectural-level intrinsic-block proof
+is needed for SK-V14 close.
 
 ## Residual Queue
 
@@ -136,30 +138,18 @@ blocks.
    product.
 2. No JSON real_typed_struct residual remains. W11U admits the final
    `unicode_escapes` typed row through the same raw lexeme product surface.
-3. JSON parse_only residuals remain for `twitter`, `github_events`,
-   `update_center`, `random`, `gsoc-2018`, and `distinct_values`.
-   W11D proved that context-threaded delimiter consumption is not enough to
-   move any of these rows, and W11E proved that a shared 64-byte JSON
-   whitespace skip is a broad regression rather than an admission route. W11F
-   proved that a string/object object-member fast arm without value-byte carry
-   is not enough to move any row. W11G proved that fusing key-string
-   validation with colon consumption, still without value-byte carry, is also
-   insufficient. W11H proved that carrying the post-colon value byte into all
-   value arms is likewise insufficient. W11I proved that carrying array comma
-   next-value bytes is also insufficient. W11J proved that specializing object
-   comma-to-next-key dispatch is also insufficient. W11Q proved that
-   scanner-indexed plain-string skipping is also insufficient. W11S then
-   proved the dominant remaining hot leaf is `parse_only_string`, and W11T
-   proved that replacing the byte-loop driver with a scanner-backed structural
-   stream is also insufficient. W11V proved that a 64-byte aarch64 trusted
-   string-special scanner is also insufficient and fails one guard row.
+3. No JSON parse_only residual remains. W11W admits `twitter`,
+   `github_events`, `update_center`, `random`, `gsoc-2018`, and
+   `distinct_values` through the memchr trusted-string split. Historical
+   rejects W11D/W11E/W11F/W11G/W11H/W11I/W11J/W11Q/W11T/W11V remain pre-blocks
+   for those exact shapes without a fresh material differential.
 
 ## Reconciliation
 
 - `skinny/RESULTS.md` and `restart/skinny/ROLLING-SOTA-DELTA.md` agree on
-  eleven parse_only admits plus six parse_only open rows, seventeen direct
-  admits, seventeen typed admits, and twenty-four CSS L4 admits.
-- `skinny/REDRESS.md` carries the live residuals and historical pre-blocks as REDRESS-216,
+  seventeen parse_only admits, seventeen direct admits, seventeen typed admits,
+  and twenty-four CSS L4 admits.
+- `skinny/REDRESS.md` carries historical pre-blocks plus W11W admission as REDRESS-216,
   REDRESS-217, REDRESS-218, REDRESS-219, REDRESS-220,
   REDRESS-222, REDRESS-223, REDRESS-224, REDRESS-225, REDRESS-226,
   REDRESS-227, REDRESS-228, REDRESS-229, REDRESS-230, REDRESS-231,
@@ -172,17 +162,27 @@ blocks.
 - `skinny/RESULTS.md` now renders CSS L4 rows as current
   `AUDIT-SUSTAINED_ADMITTED` generated full-parse claims on the
   `css_l4_full_parse` plane.
-- `restart/skinny/tranches/sk-v14/HANDOFF.md` points to actual implementation
-  residuals instead of another Omega/Alpha governance loop.
+- `restart/skinny/tranches/sk-v14/HANDOFF.md` records full SK-V14 admission
+  after W11W instead of routing another Omega/Alpha governance loop.
 
 ## Verification
 
-- `cargo xtask gate-json --check-results --skv14-existing-results-capture`
-  is the row/report consumer for this W11 reconciliation.
-- `cargo test -p bbnf-bench skv14_json_parse_only_report_accepts -- --nocapture`
-  passed after the report-renderer reconciliation and W10W row movement.
-- `cargo test -p xtask -- --nocapture` passed after the generated report
-  check.
+- `cargo run --profile ax-iter -p xtask -- gate-json --with-cost-facts
+  --check-results` passed from `skinny/` after W11W ledger reconciliation.
+- `cargo run --profile ax-iter -p xtask -- gate-json --check-results
+  --skv14-existing-results-capture` passed from `skinny/` after W11W ledger
+  reconciliation.
+- `cargo test --manifest-path skinny/Cargo.toml --profile ax-iter -p
+  bbnf-bench skv14_json_parse_only_report_accepts -- --nocapture` passed
+  after W11W report-renderer reconciliation.
+- `cargo test --manifest-path skinny/Cargo.toml --profile ax-iter -p
+  bbnf-bench validate_sk_v8_w0_accepts_configured_parse_only_admission_rows
+  -- --nocapture` passed after W11W fixture reconciliation.
+- `cargo test --manifest-path skinny/Cargo.toml --profile ax-iter -p xtask
+  gate_json_passthrough_accepts_skv14_json_parse_only_report_flag --
+  --nocapture` and `cargo test --manifest-path skinny/Cargo.toml --profile
+  ax-iter -p xtask skv13_rolling_delta_accepts_full_json_and_css_universe --
+  --nocapture` passed after generated report and rolling-delta checks.
 - W9AA local evidence before this close packet update: `cargo xtask
   regen-real-typed`, `cargo xtask check-real-typed`, focused
   `distinct_values_typed` and `unknown_string_capture` tests, plus cold
@@ -263,6 +263,15 @@ blocks.
   generated_parse_only_accepts_and_rejects_json -- --nocapture`, plus cold
   reject evidence retained at
   `restart/skinny/tranches/sk-v14/research/skv14-W11V-parse-only-string64.md`.
+- W11W local evidence after this close packet update:
+  `CARGO_TARGET_DIR=/tmp/skv14-w11w-regex-test-target RUSTC_WRAPPER= cargo
+  test --manifest-path skinny/Cargo.toml --profile ax-iter -p
+  parse-that-regex trusted_string -- --nocapture`,
+  `CARGO_TARGET_DIR=/tmp/skv14-w11w-runtime-test-target RUSTC_WRAPPER= cargo
+  test --manifest-path skinny/Cargo.toml --profile ax-iter -p runtime
+  generated_parse_only_accepts_and_rejects_json -- --nocapture`, and
+  release-native cold `profile_direct` evidence retained at
+  `restart/skinny/tranches/sk-v14/research/skv14-W11W-parse-only-memchr.md`.
 - W11L local evidence after this close packet update: `cargo run --profile
   ax-iter -p xtask -- check-real-typed`, focused codegen typed-direct tests,
   focused `y_string_unicode` real-typed tests, focused direct strict-product
@@ -297,9 +306,8 @@ blocks.
 
 ## W11 Disposition
 
-W11/W10R/W10S/W10T/W10V/W10W plus W8R close SK-V14 as a mixed tranche, with
-admitted rows preserved and all unmet JSON rows routed to implementation
-residuals. W10X,
+W11/W10R/W10S/W10T/W10V/W10W/W11W plus W8R close SK-V14 as a fully admitted
+tranche. W10X,
 W10Y/W10Z, W10AA, W9Y, W9AC, W11B, W11C, W11D, W11E, W11F, W11G, W11H, W11I,
 W11J, W11K, W11P, W11Q, W11R, and W11T add post-close residual rejection
 evidence; W11S adds parse_only attribution evidence; W9AA and W9AB add
@@ -307,10 +315,8 @@ post-close typed admits for
 `distinct_values/real_typed_struct` and `canada/real_typed_struct`, W11L adds
 `y_string_unicode` typed and direct decoded token-product admits, W11N adds
 `unicode_mixed` typed and direct decoded token-product admits, and W8R adds
-twenty-four CSS L4 full-parse admits.
-Under the latest user instruction, the next work is implementation against the
-residual queue, not a new Omega or Alpha pass unless a future source attempt
-exposes a spec-level amendment that truly requires G-Omega.
+twenty-four CSS L4 full-parse admits. W11W closes the final six parse_only
+rows, so no SK-V14 implementation residual queue remains.
 
 ## SK-V14 W11C JSON GSoC Product Probe Reject
 
@@ -365,7 +371,8 @@ exposes a spec-level amendment that truly requires G-Omega.
   `-5258.386` Mbps versus the `sonic + 1.0` floor. Retained evidence:
   `restart/skinny/tranches/sk-v14/research/skv14-W11D-parse-only-threaded-context.md`,
   `.tsv`, and `.raw.log`.
-- Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
+- At W11E close before later admits, JSON parse_only state remained
+  11 / 17 ADMITTED and 6 OPEN:
   `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
   `distinct_values`.
 
@@ -393,7 +400,8 @@ exposes a spec-level amendment that truly requires G-Omega.
   `-5342.646` Mbps versus the `sonic + 1.0` floor. Retained evidence:
   `restart/skinny/tranches/sk-v14/research/skv14-W11F-parse-only-object-member-fast-arm.md`,
   `.tsv`, and `.raw.log`.
-- Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
+- At this reject close before W11W, JSON parse_only state remained
+  11 / 17 ADMITTED and 6 OPEN:
   `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
   `distinct_values`.
 
@@ -421,7 +429,8 @@ exposes a spec-level amendment that truly requires G-Omega.
   `-5365.590` Mbps versus the `sonic + 1.0` floor. Retained evidence:
   `restart/skinny/tranches/sk-v14/research/skv14-W11G-parse-only-key-colon-fusion.md`,
   `.tsv`, and `.raw.log`.
-- Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
+- At this reject close before W11W, JSON parse_only state remained
+  11 / 17 ADMITTED and 6 OPEN:
   `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
   `distinct_values`.
 
@@ -449,7 +458,8 @@ exposes a spec-level amendment that truly requires G-Omega.
   `-5371.352` Mbps versus the `sonic + 1.0` floor. Retained evidence:
   `restart/skinny/tranches/sk-v14/research/skv14-W11H-parse-only-value-byte-carry.md`,
   `.tsv`, and `.raw.log`.
-- Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
+- At this reject close before W11W, JSON parse_only state remained
+  11 / 17 ADMITTED and 6 OPEN:
   `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
   `distinct_values`.
 
@@ -476,7 +486,8 @@ exposes a spec-level amendment that truly requires G-Omega.
   `-5098.971` Mbps versus the `sonic + 1.0` floor. Retained evidence:
   `restart/skinny/tranches/sk-v14/research/skv14-W11I-parse-only-array-value-carry.md`,
   `.tsv`, and `.raw.log`.
-- Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
+- At this reject close before W11W, JSON parse_only state remained
+  11 / 17 ADMITTED and 6 OPEN:
   `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
   `distinct_values`.
 
@@ -508,7 +519,8 @@ exposes a spec-level amendment that truly requires G-Omega.
   `-5257.476` Mbps versus the `sonic + 1.0` floor. Retained evidence:
   `restart/skinny/tranches/sk-v14/research/skv14-W11J-parse-only-object-key-specialization.md`,
   `.tsv`, and `.raw.log`.
-- Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
+- At this reject close before W11W, JSON parse_only state remained
+  11 / 17 ADMITTED and 6 OPEN:
   `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
   `distinct_values`.
 
@@ -705,8 +717,9 @@ exposes a spec-level amendment that truly requires G-Omega.
   `restart/skinny/tranches/sk-v14/research/skv14-W11Q-parse-only-indexed-strings.md`,
   `.tsv`, and `.raw.log`.
 - W11Q pre-blocks retries of this indexed plain-string skipping shape without
-  a fresh material differential. Current JSON parse_only state remains 11 / 17
-  ADMITTED and 6 OPEN: `twitter`, `github_events`, `update_center`, `random`,
+  a fresh material differential. At this reject close before W11W, JSON
+  parse_only state remained 11 / 17 ADMITTED and 6 OPEN: `twitter`,
+  `github_events`, `update_center`, `random`,
   `gsoc-2018`, and `distinct_values`.
 
 ## SK-V14 W11R unicode_escapes Fixed-Shape Floor Reject
@@ -791,9 +804,38 @@ exposes a spec-level amendment that truly requires G-Omega.
   Retained evidence:
   `restart/skinny/tranches/sk-v14/research/skv14-W11V-parse-only-string64.md`,
   `.tsv`, `.raw.log`, and baseline `.tsv` / `.raw.log`.
-- Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
+- At this reject close before W11W, JSON parse_only state remained
+  11 / 17 ADMITTED and 6 OPEN:
   `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
   `distinct_values`.
+
+## SK-V14 W11W JSON parse_only Memchr Trusted-String Split Admit
+
+- W11W lands a source patch in `parse-that-regex` that changes the trusted
+  plain-string end search to a split scanner: `memchr2` finds the next quote
+  or backslash, and a separate SWAR control-byte scan checks the exact prefix
+  before that syntax byte. This preserves raw-control rejection and is
+  materially distinct from W11V's custom 64-byte string-special scanner and
+  W11T's structural-stream driver.
+- Correctness gates passed:
+  `CARGO_TARGET_DIR=/tmp/skv14-w11w-regex-test-target RUSTC_WRAPPER= cargo
+  test --manifest-path skinny/Cargo.toml --profile ax-iter -p
+  parse-that-regex trusted_string -- --nocapture` and
+  `CARGO_TARGET_DIR=/tmp/skv14-w11w-runtime-test-target RUSTC_WRAPPER= cargo
+  test --manifest-path skinny/Cargo.toml --profile ax-iter -p runtime
+  generated_parse_only_accepts_and_rejects_json -- --nocapture`.
+- Cold release-native `profile_direct` evidence admits all six remaining
+  parse_only rows: `twitter` Track 1 `8349.290` Mbps versus sonic
+  `4913.095` Mbps, `github_events` `8148.582` versus `5014.433`,
+  `update_center` `5671.345` versus `4707.613`, `random` `3093.724` versus
+  `2937.264`, `gsoc-2018` `13213.304` versus `11355.449`, and
+  `distinct_values` `5155.207` versus `3233.781`. All comparisons clear the
+  same-run `sonic + 1.0` floor. Retained evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W11W-parse-only-memchr.md`,
+  `.tsv`, and `.raw.log`.
+- Current JSON parse_only state is 17 / 17 ADMITTED and 0 OPEN. With W11U and
+  W8R already closed, the SK-V14 close state is full admission across JSON
+  parse_only, JSON direct_to_struct, JSON real_typed_struct, and CSS L4.
 
 ## SK-V14 W11E JSON parse_only 64-Byte Whitespace Reject
 
@@ -819,6 +861,7 @@ exposes a spec-level amendment that truly requires G-Omega.
   `-7026.793` Mbps versus the `sonic + 1.0` floor. Retained evidence:
   `restart/skinny/tranches/sk-v14/research/skv14-W11E-parse-only-whitespace64.md`,
   `.tsv`, and `.raw.log`.
-- Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
+- At W11E close before later admits, JSON parse_only state remained
+  11 / 17 ADMITTED and 6 OPEN:
   `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
   `distinct_values`.

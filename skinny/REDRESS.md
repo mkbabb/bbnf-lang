@@ -6250,3 +6250,35 @@ material differential.
 - Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
   `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
   `distinct_values`.
+
+## SK-V14 W11W Parse-Only Memchr Trusted-String Split Admit
+
+- W11W closes `G-SK-V14-W11W-JSON-PARSE-ONLY-MEMCHR` as `ADMIT`. The source
+  patch lands, `skinny/RESULTS.md` moves the six remaining JSON `parse_only`
+  rows, and `restart/skinny/ROLLING-SOTA-DELTA.md` records full JSON
+  `parse_only` admission.
+- The measured route changes the trusted plain-string scanner in
+  `parse-that-regex`: `memchr2` finds the next quote or backslash, and a
+  separate SWAR control-byte scan checks the exact prefix before that syntax
+  byte. It preserves raw-control rejection and is materially distinct from
+  REDRESS-247's custom 64-byte string-special scanner and REDRESS-246's
+  structural-stream driver.
+- Correctness gates passed before admission: `CARGO_TARGET_DIR=/tmp/skv14-w11w-regex-test-target
+  RUSTC_WRAPPER= cargo test --manifest-path skinny/Cargo.toml --profile
+  ax-iter -p parse-that-regex trusted_string -- --nocapture` and
+  `CARGO_TARGET_DIR=/tmp/skv14-w11w-runtime-test-target RUSTC_WRAPPER= cargo
+  test --manifest-path skinny/Cargo.toml --profile ax-iter -p runtime
+  generated_parse_only_accepts_and_rejects_json -- --nocapture`.
+- Cold release-native `profile_direct` evidence admits all six remaining
+  rows against the same-run `sonic + 1.0` floor: `twitter` margin
+  `3435.195` Mbps, `github_events` margin `3133.149` Mbps,
+  `update_center` margin `962.732` Mbps, `random` margin `155.460` Mbps,
+  `gsoc-2018` margin `1856.855` Mbps, and `distinct_values` margin
+  `1920.426` Mbps. Previously admitted guard rows also stay above the same
+  floor under the W11W binary: `canada` margin `822.009` Mbps, `instruments`
+  margin `788.838` Mbps, `apache_builds` margin `2051.664` Mbps, and
+  `citm_catalog` margin `1318.103` Mbps.
+- Retained evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W11W-parse-only-memchr.md`,
+  `.tsv`, and `.raw.log`.
+- Current JSON parse_only state is 17 / 17 ADMITTED and 0 OPEN.

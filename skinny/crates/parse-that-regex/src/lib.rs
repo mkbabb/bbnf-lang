@@ -683,33 +683,37 @@ fn skip_string_plain(
 }
 
 #[inline(always)]
-fn skip_string_plain_trusted(input: &[u8], mut cursor: usize) -> usize {
-    #[cfg(target_arch = "aarch64")]
-    unsafe {
-        while cursor + 16 <= input.len() {
-            let block = bbnf_simd::aarch64::string_block::scan_string_special_block(
-                input.as_ptr().add(cursor),
-                b'"',
-                b'\\',
-                0x20,
-            );
-            let special_mask = block.terminator_mask | block.escape_mask | block.control_mask;
-            if special_mask != 0 {
-                return cursor + special_mask.trailing_zeros() as usize;
-            }
-            cursor += 16;
-        }
+fn skip_string_plain_trusted(input: &[u8], cursor: usize) -> usize {
+    let special = match memchr::memchr2(b'"', b'\\', &input[cursor..]) {
+        Some(index) => cursor + index,
+        None => input.len(),
+    };
+
+    if let Some(control) = first_control_byte(input, cursor, special) {
+        return control;
     }
 
-    while cursor + 8 <= input.len() {
+    special
+}
+
+#[inline(always)]
+fn first_control_byte(input: &[u8], mut cursor: usize, end: usize) -> Option<usize> {
+    debug_assert!(cursor <= end && end <= input.len());
+    while cursor + 8 <= end {
         let block = unsafe { std::ptr::read_unaligned(input.as_ptr().add(cursor).cast::<u64>()) };
-        let special = string_special_mask(block);
-        if special != 0 {
-            return cursor + (special.trailing_zeros() as usize / 8);
+        let control = control_byte_mask(block);
+        if control != 0 {
+            return Some(cursor + control.trailing_zeros() as usize / 8);
         }
         cursor += 8;
     }
-    cursor
+    while cursor < end {
+        if input[cursor] < 0x20 {
+            return Some(cursor);
+        }
+        cursor += 1;
+    }
+    None
 }
 
 #[inline(always)]
@@ -726,6 +730,12 @@ fn string_special_mask(block: u64) -> u64 {
 }
 
 const HIGH_BITS: u64 = 0x8080_8080_8080_8080;
+
+#[inline(always)]
+fn control_byte_mask(block: u64) -> u64 {
+    const CONTROL_LIMITS: u64 = 0x2020_2020_2020_2020;
+    block.wrapping_sub(CONTROL_LIMITS) & !block & HIGH_BITS
+}
 
 #[inline(always)]
 fn first_non_ascii_before(mask: u16, byte_index: usize) -> bool {
@@ -1161,6 +1171,22 @@ mod tests {
         let end = match_string_end_at_quote_after_plain_prefix_trusted_utf8(input, 0, 1).unwrap();
         assert_eq!(end, full.raw_end);
         assert_eq!(end, input.len());
+    }
+
+    #[test]
+    fn trusted_string_end_matcher_rejects_raw_controls_before_syntax() {
+        for control in [0x00u8, 0x08, 0x0a, 0x1f] {
+            let mut input = Vec::new();
+            input.push(b'"');
+            input.extend(std::iter::repeat(b'a').take(31));
+            input.push(control);
+            input.extend(std::iter::repeat(b'b').take(31));
+            input.push(b'"');
+            let error = match_string_end_at_quote_after_plain_prefix_trusted_utf8(&input, 0, 1)
+                .unwrap_err();
+            assert_eq!(error.offset, 32, "control={control:#04x}");
+            assert_eq!(error.kind, RegexErrorKind::ControlCharacter);
+        }
     }
 
     #[test]

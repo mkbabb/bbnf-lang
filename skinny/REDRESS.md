@@ -5781,6 +5781,33 @@ perturbation.
   `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
   `distinct_values`.
 
+## SK-V14 W11K JSON y_string_unicode Fused Materializer Reject
+
+- Item 241 closes `G-SK-V14-W11K-JSON-Y-STRING-FUSED-MATERIALIZER` as
+  `REJECT`. No source patch lands, no `RESULTS.md` row moves, and
+  `restart/skinny/ROLLING-SOTA-DELTA.md` remains unchanged.
+- The measured candidate added a fused trusted-UTF-8 JSON string materializer
+  in `parse-that-regex`, generated `parse_y_string_unicode`, and routed
+  `y_string_unicode` through typed and direct strict products. It preserved the
+  tiny plain-string borrowed fast path and decoded escaped strings while
+  scanning. The source patch was reverted after measurement and retained as
+  `/tmp/skv14-W11K-y-string-fused-materializer-rejected.patch` with SHA-256
+  `f12d67fea15eaff2fbfcc212cb78b37fc8db674e79dbd769e7ad4f2365fadb4d`.
+- Correctness gates passed before measurement: focused parse-that-regex
+  materializer tests, focused codegen typed-direct tests, `cargo run --profile
+  ax-iter -p xtask -- regen-real-typed`, `cargo run --profile ax-iter -p xtask
+  -- check-real-typed`, focused `y_string_unicode_typed` tests, and focused
+  direct strict-product parity tests.
+- Cold `profile_direct` evidence rejects both attempted rows:
+  `y_string_unicode/real_typed_struct` margin `-1978.443` Mbps and
+  `y_string_unicode/direct_to_struct` margin `-2352.255` Mbps versus the
+  `sonic + 1.0` floor. Retained evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W11K-y-string-fused-materializer.md`,
+  `.tsv`, and `.raw.log`.
+- Current JSON direct_to_struct state remains 13 / 17 ADMITTED and 4 OPEN.
+  Current JSON real_typed_struct state remains 13 / 17 ADMITTED and 4 MISSING:
+  `gsoc-2018`, `unicode_mixed`, `unicode_escapes`, and `y_string_unicode`.
+
 ## SK-V14 W11G JSON parse_only Key-Colon Fusion Reject
 
 - Item 237 closes `G-SK-V14-W11G-JSON-PARSE-ONLY-KEY-COLON-FUSION` as

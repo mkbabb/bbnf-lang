@@ -1,0 +1,16 @@
+### real_typed_track1
+PROBE_RESULT corpus=y_string_unicode corpus_bytes=35601 iters=1000 mode=real_typed_track1 warmup_iters=0 elapsed_s=0.158411 ns_per_byte=4.449629 mbps=1797.903 cycles=663856813 instructions=2853055375 cycles_per_byte=18.647139 cpi=0.232683 user_ns=3695291 system_ns=64471 checksum=0
+### real_typed_track2
+PROBE_RESULT corpus=y_string_unicode corpus_bytes=35601 iters=1000 mode=real_typed_track2 warmup_iters=0 elapsed_s=0.082881 ns_per_byte=2.328060 mbps=3436.338 cycles=343327248 instructions=2170340156 cycles_per_byte=9.643753 cpi=0.158191 user_ns=1928863 system_ns=18480 checksum=0
+### real_typed_sonic
+PROBE_RESULT corpus=y_string_unicode corpus_bytes=35601 iters=1000 mode=real_typed_sonic warmup_iters=0 elapsed_s=0.075439 ns_per_byte=2.119011 mbps=3775.346 cycles=313258069 instructions=1959784100 cycles_per_byte=8.799137 cpi=0.159843 user_ns=1780384 system_ns=15238 checksum=0
+### real_typed_serde
+PROBE_RESULT corpus=y_string_unicode corpus_bytes=35601 iters=1000 mode=real_typed_serde warmup_iters=0 elapsed_s=0.082024 ns_per_byte=2.303986 mbps=3472.243 cycles=343335130 instructions=2169365185 cycles_per_byte=9.643974 cpi=0.158265 user_ns=1944594 system_ns=11234 checksum=0
+### direct_strict_track1
+PROBE_RESULT corpus=y_string_unicode corpus_bytes=35601 iters=1000 mode=direct_strict_track1 warmup_iters=0 elapsed_s=0.164898 ns_per_byte=4.631840 mbps=1727.175 cycles=654525071 instructions=2851856283 cycles_per_byte=18.385019 cpi=0.229508 user_ns=3871627 system_ns=56235 checksum=0
+### direct_strict_track2
+PROBE_RESULT corpus=y_string_unicode corpus_bytes=35601 iters=1000 mode=direct_strict_track2 warmup_iters=0 elapsed_s=0.082973 ns_per_byte=2.330629 mbps=3432.550 cycles=335071157 instructions=2170013784 cycles_per_byte=9.411847 cpi=0.154410 user_ns=1949458 system_ns=15206 checksum=0
+### direct_strict_sonic
+PROBE_RESULT corpus=y_string_unicode corpus_bytes=35601 iters=1000 mode=direct_strict_sonic warmup_iters=0 elapsed_s=0.069833 ns_per_byte=1.961539 mbps=4078.430 cycles=289652936 instructions=1953651330 cycles_per_byte=8.136090 cpi=0.148262 user_ns=1650164 system_ns=12209 checksum=0
+### direct_strict_serde
+PROBE_RESULT corpus=y_string_unicode corpus_bytes=35601 iters=1000 mode=direct_strict_serde warmup_iters=0 elapsed_s=0.081252 ns_per_byte=2.282307 mbps=3505.225 cycles=334663843 instructions=2169222436 cycles_per_byte=9.400406 cpi=0.154278 user_ns=1928974 system_ns=10113 checksum=0

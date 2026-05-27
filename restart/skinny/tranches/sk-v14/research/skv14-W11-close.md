@@ -23,14 +23,17 @@ same-run cold evidence without landing the transient source patch. W11I then
 tested a generated array comma-to-next-value byte carry route and rejected it
 on same-run cold evidence without landing the transient source patch. W11J then
 tested a generated object comma-to-next-key specialization route and rejected
-it on same-run cold evidence without landing the transient source patch.
+it on same-run cold evidence without landing the transient source patch. W11K
+then tested a generated `y_string_unicode` product route with fused trusted
+string materialization and rejected it on same-run cold evidence without
+landing the transient source patch.
 
 ## Authority
 
 - `restart/skinny/tranches/sk-v14/SPEC.md` Section 14.
 - `restart/skinny/tranches/sk-v14/SYNTHESIS.md` R10.
 - `skinny/RESULTS.md`.
-- `skinny/REDRESS.md` items 215 through 240.
+- `skinny/REDRESS.md` items 215 through 241.
 - `restart/skinny/ROLLING-SOTA-DELTA.md`.
 - `restart/skinny/tranches/sk-v14/HANDOFF.md`.
 
@@ -76,6 +79,7 @@ it on same-run cold evidence without landing the transient source patch.
 | W11H | REJECTED | REDRESS-238: transient object-member value-byte carry passed correctness but missed strict sonic on all six residual rows; no source patch landed and no row moved. |
 | W11I | REJECTED | REDRESS-239: transient array value-byte carry passed correctness but missed strict sonic on all six residual rows; no source patch landed and no row moved. |
 | W11J | REJECTED | REDRESS-240: transient object comma-to-next-key specialization passed correctness but missed strict sonic on all six residual rows; no source patch landed and no row moved. |
+| W11K | REJECTED | REDRESS-241: transient `y_string_unicode` fused materializer product route passed correctness but missed strict sonic for typed and direct strict products; no source patch landed and no row moved. |
 
 ## Close-State Counts
 
@@ -98,11 +102,14 @@ remaining rows are implementation residuals, not closeable proof blocks.
    are absent at HEAD: `gsoc-2018`, `unicode_mixed`, `unicode_escapes`, and
    `y_string_unicode`. W11B proved that product-surface-only unicode routes
    are not enough for `unicode_mixed` or `unicode_escapes`; W11C proved that
-   product-surface-only `gsoc-2018` routes are also insufficient.
+   product-surface-only `gsoc-2018` routes are also insufficient, and W11K
+   proved that product-surface plus fused string materialization is
+   insufficient for `y_string_unicode`.
 3. Missing JSON typed products remain for `gsoc-2018`, `unicode_mixed`,
    `unicode_escapes`, and `y_string_unicode`; W11B's unicode products were
    reverted after measured rejection, and W11C's `gsoc-2018` products were
-   also reverted after measured rejection.
+   also reverted after measured rejection. W11K's `y_string_unicode` product
+   root was likewise reverted after measured rejection.
 4. JSON parse_only residuals remain for `twitter`, `github_events`,
    `update_center`, `random`, `gsoc-2018`, and
    `distinct_values`. W11D proved that context-threaded delimiter consumption
@@ -128,7 +135,7 @@ remaining rows are implementation residuals, not closeable proof blocks.
   REDRESS-222, REDRESS-223, REDRESS-224, REDRESS-225, REDRESS-226,
   REDRESS-227, REDRESS-228, REDRESS-229, REDRESS-230, REDRESS-231,
   REDRESS-232, REDRESS-233, REDRESS-234, REDRESS-235, REDRESS-236,
-  REDRESS-237, REDRESS-238, REDRESS-239, and REDRESS-240.
+  REDRESS-237, REDRESS-238, REDRESS-239, REDRESS-240, and REDRESS-241.
 - `skinny/RESULTS.md` now renders CSS L4 legacy CostFacts as historical claims
   with current `AUDIT-FALSIFIED_OPEN` status, so the manifest no longer embeds
   live-looking `A` / `GO` / `ADMITTED-PARITY` fragments for OPEN CSS rows.
@@ -201,6 +208,10 @@ remaining rows are implementation residuals, not closeable proof blocks.
   regen-json`, `cargo xtask check-json`, focused runtime/codegen parse_only
   tests, plus cold reject evidence retained at
   `restart/skinny/tranches/sk-v14/research/skv14-W11J-parse-only-object-key-specialization.md`.
+- W11K local evidence before this close packet update: focused
+  parse-that-regex/codegen/real-typed/direct-strict tests, plus cold reject
+  evidence retained at
+  `restart/skinny/tranches/sk-v14/research/skv14-W11K-y-string-fused-materializer.md`.
 - Close invariants remain: 16 locks, Pattern H count 67, Lock 10 five-shape
   `BackendShape` canon preserved, and generated JSON parse_only remains
   distinct from the tape-building path.
@@ -210,7 +221,7 @@ remaining rows are implementation residuals, not closeable proof blocks.
 W11/W10R/W10S/W10T/W10V/W10W close SK-V14 as a mixed tranche, with admitted
 rows preserved and all unmet rows routed to implementation residuals. W10X,
 W10Y/W10Z, W10AA, W9Y, W9AC, W11B, W11C, W11D, W11E, W11F, W11G, W11H, W11I,
-and W11J add post-close residual rejection evidence; W9AA and W9AB add
+W11J, and W11K add post-close residual rejection evidence; W9AA and W9AB add
 post-close typed admits for
 `distinct_values/real_typed_struct` and `canada/real_typed_struct`.
 Under the latest user instruction, the next work is implementation against the
@@ -415,6 +426,33 @@ exposes a spec-level amendment that truly requires G-Omega.
 - Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
   `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
   `distinct_values`.
+
+## SK-V14 W11K JSON y_string_unicode Fused Materializer Reject
+
+- Item 241 closes `G-SK-V14-W11K-JSON-Y-STRING-FUSED-MATERIALIZER` as
+  `REJECT`. No source patch lands, no `RESULTS.md` row moves, and
+  `restart/skinny/ROLLING-SOTA-DELTA.md` remains unchanged.
+- The measured candidate added a fused trusted-UTF-8 JSON string materializer
+  in `parse-that-regex`, generated `parse_y_string_unicode`, and routed
+  `y_string_unicode` through typed and direct strict products. It preserved the
+  tiny plain-string borrowed fast path and decoded escaped strings while
+  scanning. The source patch was reverted after measurement and retained as
+  `/tmp/skv14-W11K-y-string-fused-materializer-rejected.patch` with SHA-256
+  `f12d67fea15eaff2fbfcc212cb78b37fc8db674e79dbd769e7ad4f2365fadb4d`.
+- Correctness gates passed before measurement: focused parse-that-regex
+  materializer tests, focused codegen typed-direct tests, `cargo run --profile
+  ax-iter -p xtask -- regen-real-typed`, `cargo run --profile ax-iter -p xtask
+  -- check-real-typed`, focused `y_string_unicode_typed` tests, and focused
+  direct strict-product parity tests.
+- Cold `profile_direct` evidence rejects both attempted rows:
+  `y_string_unicode/real_typed_struct` margin `-1978.443` Mbps and
+  `y_string_unicode/direct_to_struct` margin `-2352.255` Mbps versus the
+  `sonic + 1.0` floor. Retained evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W11K-y-string-fused-materializer.md`,
+  `.tsv`, and `.raw.log`.
+- Current JSON direct_to_struct state remains 13 / 17 ADMITTED and 4 OPEN.
+  Current JSON real_typed_struct state remains 13 / 17 ADMITTED and 4 MISSING:
+  `gsoc-2018`, `unicode_mixed`, `unicode_escapes`, and `y_string_unicode`.
 
 ## SK-V14 W11E JSON parse_only 64-Byte Whitespace Reject
 

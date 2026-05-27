@@ -94,7 +94,11 @@ source patch was reverted, no row moved, and array value-byte carry is
 pre-blocked without a fresh material differential. W11J then rejected object
 comma-to-next-key specialization under REDRESS-240; the source patch was
 reverted, no row moved, and object key-start specialization is pre-blocked
-without a fresh material differential.
+without a fresh material differential. W11K then rejected a generated
+`y_string_unicode` product route with fused trusted string materialization
+under REDRESS-241; the source patch was reverted, no row moved, and
+`y_string_unicode` product-plus-materializer retries are pre-blocked without a
+fresh material differential.
 Continue actual implementation against the remaining residual queue, not
 another Omega or Alpha pass unless a future source attempt exposes a real
 spec-level amendment.
@@ -267,13 +271,15 @@ state is:
   rows lack generated strict product surfaces. REDRESS-232 rejects
   product-surface-only unicode strict products for `unicode_mixed` and
   `unicode_escapes`, and REDRESS-233 rejects product-surface-only
-  `gsoc-2018` strict products.
+  `gsoc-2018` strict products. REDRESS-241 rejects `y_string_unicode`
+  product-plus-fused-materializer strict products.
 - JSON real_typed_struct: 13 / 17 ADMITTED, 4 MISSING product surfaces under
   REDRESS-216/227/228; REDRESS-226 rejects the generated `y_string_unicode`
   root and REDRESS-229 rejects the generated `gsoc-2018` numeric-key root
   without moving either row. REDRESS-232 rejects and reverts transient
   `unicode_mixed` and `unicode_escapes` products; REDRESS-233 rejects and
-  reverts transient `gsoc-2018` products.
+  reverts transient `gsoc-2018` products. REDRESS-241 rejects and reverts the
+  fused-materializer `y_string_unicode` product root.
 - CSS L4: 0 / 24 ADMITTED, 24 OPEN under REDRESS-215.
 
 Per the latest user instruction, do not spend another cycle on Omega/Alpha
@@ -402,4 +408,6 @@ without a fresh material differential. REDRESS-238 pre-blocks parse_only
 object-member value-byte carry without a fresh material differential.
 REDRESS-239 pre-blocks parse_only array value-byte carry without a fresh
 material differential. REDRESS-240 pre-blocks parse_only object key-start
-specialization without a fresh material differential.
+specialization without a fresh material differential. REDRESS-241 pre-blocks
+`y_string_unicode` product-plus-fused-materializer retries without a fresh
+material differential.

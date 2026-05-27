@@ -5,7 +5,7 @@ run_id: SK-V13-open
 g_omega_status: signed
 consumer_gate: cargo xtask gate-json --check-results
 source_results: skinny/RESULTS.md
-source_commit: 0292000b7+w10w-iterative-stack
+source_commit: c013ddd38+w9aa-distinct-values
 
 ## JSON Targets
 
@@ -58,7 +58,7 @@ source_commit: 0292000b7+w10w-iterative-stack
 | json/unicode_basic/real_typed_struct/main | real_typed_struct | 3221.33 | 2481.52 | 739.81 | ADMITTED |
 | json/distinct_values/parse_only/main | parse_only | 9920.00 | 18161.00 | -8241.00 | OPEN |
 | json/distinct_values/direct_to_struct/main | direct_to_struct | 6540.00 | 11949.00 | -5409.00 | OPEN |
-| json/distinct_values/real_typed_struct/main | real_typed_struct | absent:product-surface-not-generated | absent:product-surface-not-generated | absent:product-surface-not-generated | MISSING |
+| json/distinct_values/real_typed_struct/main | real_typed_struct | 8827.520 | 3896.064 | 4931.456 | ADMITTED |
 | json/y_string_unicode/parse_only/main | parse_only | 3169.90 | 2418.91 | 750.99 | ADMITTED |
 | json/y_string_unicode/direct_to_struct/main | direct_to_struct | 5061.00 | 8999.00 | -3938.00 | OPEN |
 | json/y_string_unicode/real_typed_struct/main | real_typed_struct | absent:product-surface-not-generated | absent:product-surface-not-generated | absent:product-surface-not-generated | MISSING |

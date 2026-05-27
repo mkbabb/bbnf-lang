@@ -18,6 +18,7 @@ pub enum RealTypedFixture {
     Instruments,
     Numbers,
     UnicodeBasic,
+    DistinctValues,
     Random,
 }
 
@@ -197,6 +198,20 @@ pub struct UnicodeBasicRecord<'a> {
     pub len: Option<u64>,
     #[serde(default, borrow)]
     pub tags: Vec<Cow<'a, str>>,
+}
+
+#[derive(Debug)]
+pub struct DistinctValue<'a> {
+    pub timestamp: Option<Cow<'a, str>>,
+    pub seq: Option<u64>,
+    pub status: Option<Cow<'a, str>>,
+    pub dynamic: Vec<DistinctField<'a>>,
+}
+
+#[derive(Debug)]
+pub struct DistinctField<'a> {
+    pub key: Cow<'a, str>,
+    pub value: Cow<'a, str>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -545,6 +560,7 @@ pub enum RealTypedOutput<'a> {
     Instruments(InstrumentsDocument<'a>),
     Numbers(Vec<f64>),
     UnicodeBasic(Vec<UnicodeBasicRecord<'a>>),
+    DistinctValues(Vec<DistinctValue<'a>>),
     Random(RandomDocument<'a>),
 }
 
@@ -560,6 +576,7 @@ pub fn fixture_for_name(name: &str) -> Option<RealTypedFixture> {
         "instruments" => Some(RealTypedFixture::Instruments),
         "numbers" => Some(RealTypedFixture::Numbers),
         "unicode_basic" | "unicode-basic" => Some(RealTypedFixture::UnicodeBasic),
+        "distinct_values" | "distinct-values" => Some(RealTypedFixture::DistinctValues),
         "random" => Some(RealTypedFixture::Random),
         _ => None,
     }
@@ -631,6 +648,11 @@ pub fn track1_typed<'a>(
         RealTypedFixture::UnicodeBasic => crate::generated_real_typed::parse_unicode_basic(input)
             .map(RealTypedOutput::UnicodeBasic)
             .map_err(|error| DirectStructError::Parse(error.to_string())),
+        RealTypedFixture::DistinctValues => {
+            crate::generated_real_typed::parse_distinct_values(input)
+                .map(RealTypedOutput::DistinctValues)
+                .map_err(|error| DirectStructError::Parse(error.to_string()))
+        }
         RealTypedFixture::Random => crate::generated_real_typed::parse_random(input)
             .map(RealTypedOutput::Random)
             .map_err(|error| DirectStructError::Parse(error.to_string())),
@@ -681,6 +703,9 @@ pub fn serde_typed<'a>(
                 .map(RealTypedOutput::UnicodeBasic)
                 .map_err(|error| DirectStructError::Serde(error.to_string()))
         }
+        RealTypedFixture::DistinctValues => serde_json::from_slice::<Vec<DistinctValue<'a>>>(bytes)
+            .map(RealTypedOutput::DistinctValues)
+            .map_err(|error| DirectStructError::Serde(error.to_string())),
         RealTypedFixture::Random => serde_json::from_slice::<RandomDocument<'a>>(bytes)
             .map(RealTypedOutput::Random)
             .map_err(|error| DirectStructError::Serde(error.to_string())),
@@ -724,6 +749,9 @@ pub fn sonic_typed<'a>(
                 .map(RealTypedOutput::UnicodeBasic)
                 .map_err(|error| DirectStructError::Sonic(error.to_string()))
         }
+        RealTypedFixture::DistinctValues => sonic_rs::from_slice::<Vec<DistinctValue<'a>>>(bytes)
+            .map(RealTypedOutput::DistinctValues)
+            .map_err(|error| DirectStructError::Sonic(error.to_string())),
         RealTypedFixture::Random => sonic_rs::from_slice::<RandomDocument<'a>>(bytes)
             .map(RealTypedOutput::Random)
             .map_err(|error| DirectStructError::Sonic(error.to_string())),
@@ -758,6 +786,7 @@ pub fn typed_checksum(output: &RealTypedOutput<'_>) -> u64 {
         RealTypedOutput::Instruments(value) => checksum_instruments(value),
         RealTypedOutput::Numbers(value) => checksum_numbers(value),
         RealTypedOutput::UnicodeBasic(value) => checksum_unicode_basic(value),
+        RealTypedOutput::DistinctValues(value) => checksum_distinct_values(value),
         RealTypedOutput::Random(value) => checksum_random(value),
     }
 }
@@ -949,6 +978,27 @@ fn checksum_unicode_basic_record(value: &UnicodeBasicRecord<'_>) -> u64 {
     hash = fold_opt_str(hash, &value.text);
     hash = fold_opt_u64(hash, value.len);
     fold_str_slice(hash, &value.tags)
+}
+
+fn checksum_distinct_values(values: &[DistinctValue<'_>]) -> u64 {
+    let mut hash = mix(0x6469737476616c, values.len() as u64);
+    for value in values {
+        hash = mix(hash, checksum_distinct_value(value));
+    }
+    hash
+}
+
+fn checksum_distinct_value(value: &DistinctValue<'_>) -> u64 {
+    let mut hash = 0x646973747661;
+    hash = fold_opt_str(hash, &value.timestamp);
+    hash = fold_opt_u64(hash, value.seq);
+    hash = fold_opt_str(hash, &value.status);
+    hash = mix(hash, value.dynamic.len() as u64);
+    for field in &value.dynamic {
+        hash = mix(hash, hash_str(field.key.as_ref()));
+        hash = mix(hash, hash_str(field.value.as_ref()));
+    }
+    hash
 }
 
 fn checksum_random(value: &RandomDocument<'_>) -> u64 {
@@ -1212,6 +1262,52 @@ fn fold_f64_slice(mut hash: u64, values: &[f64]) -> u64 {
     hash
 }
 
+impl<'de> Deserialize<'de> for DistinctValue<'de> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct DistinctValueVisitor;
+
+        impl<'de> Visitor<'de> for DistinctValueVisitor {
+            type Value = DistinctValue<'de>;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                formatter.write_str("a distinct_values object")
+            }
+
+            fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+            where
+                A: MapAccess<'de>,
+            {
+                let mut timestamp = None;
+                let mut seq = None;
+                let mut status = None;
+                let mut dynamic = Vec::with_capacity(map.size_hint().unwrap_or(0));
+                while let Some(key) = map.next_key::<Cow<'de, str>>()? {
+                    match key.as_ref() {
+                        "timestamp" => timestamp = map.next_value::<Option<Cow<'de, str>>>()?,
+                        "seq" => seq = map.next_value::<Option<u64>>()?,
+                        "status" => status = map.next_value::<Option<Cow<'de, str>>>()?,
+                        _ => {
+                            let value = map.next_value::<Cow<'de, str>>()?;
+                            dynamic.push(DistinctField { key, value });
+                        }
+                    }
+                }
+                Ok(DistinctValue {
+                    timestamp,
+                    seq,
+                    status,
+                    dynamic,
+                })
+            }
+        }
+
+        deserializer.deserialize_map(DistinctValueVisitor)
+    }
+}
+
 fn fold_u32_slice(mut hash: u64, values: &[u32]) -> u64 {
     hash = mix(hash, values.len() as u64);
     for value in values {
@@ -1428,6 +1524,20 @@ mod tests {
         let bytes = std::fs::read(locate_fixture("unicode_basic")).unwrap();
         let text = std::str::from_utf8(&bytes).unwrap();
         assert_real_typed_parity(text, &bytes, RealTypedFixture::UnicodeBasic);
+    }
+
+    #[test]
+    fn generated_distinct_values_typed_parser_matches_sidecars() {
+        let input = br#"[{"key_0_0":"ignored","timestamp":"2026-05-12T00:00:00Z","seq":0,"status":"ok"}]"#;
+        let text = std::str::from_utf8(input).unwrap();
+        assert_real_typed_parity(text, input, RealTypedFixture::DistinctValues);
+    }
+
+    #[test]
+    fn w14_full_distinct_values_typed_fixture_matches_sidecars() {
+        let bytes = std::fs::read(locate_fixture("distinct_values")).unwrap();
+        let text = std::str::from_utf8(&bytes).unwrap();
+        assert_real_typed_parity(text, &bytes, RealTypedFixture::DistinctValues);
     }
 
     #[test]

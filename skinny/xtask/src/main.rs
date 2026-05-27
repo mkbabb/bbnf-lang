@@ -721,7 +721,12 @@ fn validate_skv14_json_w1_row(row: &Skv14ManifestRow) -> Result<()> {
 
 fn validate_skv14_sustained_row(row: &Skv14ManifestRow) -> Result<()> {
     if SKV14_W9_TYPED_ADMIT_ROWS.contains(&row.row_id.as_str()) {
-        if row.wave_id != "SK-V14-W9"
+        let expected_wave = if row.row_id == "json/distinct_values/real_typed_struct/main" {
+            "SK-V14-W9AA"
+        } else {
+            "SK-V14-W9"
+        };
+        if row.wave_id != expected_wave
             || row.same_wave_consumer_class != "gate_json_typed_contract"
             || row.track2_independence_status != "independent_verified"
         {
@@ -916,6 +921,7 @@ const SKV14_W9_TYPED_ADMIT_ROWS: &[&str] = &[
     "json/instruments/real_typed_struct/main",
     "json/numbers/real_typed_struct/main",
     "json/unicode_basic/real_typed_struct/main",
+    "json/distinct_values/real_typed_struct/main",
 ];
 
 fn is_skv14_w10_parse_row(row_id: &str) -> bool {

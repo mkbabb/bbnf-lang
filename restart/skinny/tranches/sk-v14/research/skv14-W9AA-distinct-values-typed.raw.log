@@ -1,0 +1,24 @@
+# SK-V14 W9AA distinct_values real_typed cold profile
+# command: profile_direct 400 distinct_values real_typed_{track1,track2,sonic,serde} 0
+# cwd: /Users/mkbabb/Programming/bbnf-lang/skinny
+# built: CARGO_TARGET_DIR=/tmp/skv14-distinct-typed-target RUSTFLAGS="-C target-cpu=native" cargo build --manifest-path skinny/Cargo.toml --release -p bbnf-bench --bin profile_direct
+profile-direct: corpus=distinct_values mode=real_typed_track1 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/distinct_values.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 153630 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.06s -> 8828 Mbps (digest cksum 0)
+PROBE_RESULT corpus=distinct_values corpus_bytes=153630 iters=400 mode=real_typed_track1 warmup_iters=0 elapsed_s=0.055691 ns_per_byte=0.906257 mbps=8827.520 cycles=231611508 instructions=1339306363 cycles_per_byte=3.768982 cpi=0.172934 user_ns=1305528 system_ns=13781 checksum=0
+profile-direct: corpus=distinct_values mode=real_typed_track2 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/distinct_values.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 153630 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.15s -> 3245 Mbps (digest cksum 0)
+PROBE_RESULT corpus=distinct_values corpus_bytes=153630 iters=400 mode=real_typed_track2 warmup_iters=0 elapsed_s=0.151491 ns_per_byte=2.465192 mbps=3245.184 cycles=629347883 instructions=3541661160 cycles_per_byte=10.241292 cpi=0.177699 user_ns=3540747 system_ns=41622 checksum=0
+profile-direct: corpus=distinct_values mode=real_typed_sonic path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/distinct_values.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 153630 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.13s -> 3895 Mbps (digest cksum 0)
+PROBE_RESULT corpus=distinct_values corpus_bytes=153630 iters=400 mode=real_typed_sonic warmup_iters=0 elapsed_s=0.126215 ns_per_byte=2.053881 mbps=3895.064 cycles=528947311 instructions=3203692468 cycles_per_byte=8.607487 cpi=0.165106 user_ns=2970880 system_ns=27280 checksum=0
+profile-direct: corpus=distinct_values mode=real_typed_serde path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/distinct_values.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 153630 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.15s -> 3335 Mbps (digest cksum 0)
+PROBE_RESULT corpus=distinct_values corpus_bytes=153630 iters=400 mode=real_typed_serde warmup_iters=0 elapsed_s=0.147431 ns_per_byte=2.399123 mbps=3334.552 cycles=618171004 instructions=3539818112 cycles_per_byte=10.059412 cpi=0.174634 user_ns=3469270 system_ns=29635 checksum=0

@@ -54,8 +54,11 @@ generated parse-only iterative stack under REDRESS-223, so parse_only now
 stands at 11 / 17 admitted and 6 / 17 open. W10X and W10Y/W10Z then rejected
 additional parse_only residual routes under REDRESS-224 and REDRESS-225 with
 no row movement. W9Y then rejected a generated
-`y_string_unicode/real_typed_struct` root under REDRESS-226, so typed remains
-11 / 17 admitted and 6 / 17 missing.
+`y_string_unicode/real_typed_struct` root under REDRESS-226, so typed remained
+11 / 17 admitted and 6 / 17 missing. W9AA then admitted
+`distinct_values/real_typed_struct` through generated dynamic string-entry
+capture under REDRESS-227, raising typed to 12 / 17 admitted and 5 / 17
+missing.
 W11 closed the SK-V14 reconciliation packet on 2026-05-27. The next move is
 actual implementation against the residual queue, not another Omega or Alpha
 pass unless a future source attempt exposes a real spec-level amendment.
@@ -153,7 +156,7 @@ Lock 14 at `restart/locks/LOCKS.md:220–238`).
 ```
 JSON parse_only: 11 / 17 (6 OPEN after W10W residual implementation)
 JSON direct:     0 / 17  (17 OPEN after W9; digest-plane evidence is not strict per-corpus product evidence)
-JSON typed:      11 / 17 (6 MISSING product surfaces after W9)
+JSON typed:      12 / 17 (5 MISSING product surfaces after W9AA)
 CSS L4:          0 / 24  (all OPEN after W8; Track 1 still emits fact streams, not full-parse equality)
 ```
 
@@ -216,9 +219,9 @@ state is:
 
 - JSON parse_only: 11 / 17 ADMITTED, 6 OPEN under REDRESS-223.
 - JSON direct_to_struct: 0 / 17 ADMITTED, 17 OPEN under REDRESS-216.
-- JSON real_typed_struct: 11 / 17 ADMITTED, 6 MISSING product surfaces under
-  REDRESS-216; REDRESS-226 rejects the generated `y_string_unicode` root
-  without moving the row.
+- JSON real_typed_struct: 12 / 17 ADMITTED, 5 MISSING product surfaces under
+  REDRESS-216/227; REDRESS-226 rejects the generated `y_string_unicode` root
+  without moving that row.
 - CSS L4: 0 / 24 ADMITTED, 24 OPEN under REDRESS-215.
 
 Per the latest user instruction, do not spend another cycle on Omega/Alpha
@@ -243,7 +246,9 @@ discipline).
    as lightningcss/cssparser, not fact-stream output.
 4. W9 is closed mixed: 11 typed admits, 17 direct blocks, 6 typed missing
    product blocks. W9Y rejects the generated `y_string_unicode` typed root
-   under REDRESS-226, so `y_string_unicode` remains missing.
+   under REDRESS-226, so `y_string_unicode` remains missing. W9AA admits
+   `distinct_values/real_typed_struct` under REDRESS-227, so typed now stands
+   at 12 admitted and 5 missing.
 5. W10 is closed mixed: 6 parse_only admits and 11 parse_only open rows under
    REDRESS-217. W10R then admits `canada/parse_only`, W10S admits
    `unicode_mixed/parse_only`, W10T admits `instruments/parse_only`, W10V

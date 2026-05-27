@@ -29,7 +29,6 @@ const MISSING_TYPED_SURFACES: &[&str] = &[
     "gsoc-2018",
     "unicode_mixed",
     "unicode_escapes",
-    "distinct_values",
     "y_string_unicode",
 ];
 
@@ -144,10 +143,10 @@ mod tests {
         assert_eq!(report.selected_typed_rows, 17);
         assert_eq!(report.direct_parity_passes, 17);
         assert_eq!(report.direct_required_plane_blocks, 17);
-        assert_eq!(report.typed_surface_rows, 11);
-        assert_eq!(report.typed_missing_product_surface_rows, 6);
-        assert_eq!(report.typed_parity_passes, 11);
-        assert_eq!(report.typed_measurement_candidate_rows, 11);
+        assert_eq!(report.typed_surface_rows, 12);
+        assert_eq!(report.typed_missing_product_surface_rows, 5);
+        assert_eq!(report.typed_parity_passes, 12);
+        assert_eq!(report.typed_measurement_candidate_rows, 12);
         assert_eq!(
             report.disposition,
             W9SurfaceDisposition::MeasurementRequired
@@ -163,7 +162,6 @@ mod tests {
                 "gsoc-2018",
                 "unicode_mixed",
                 "unicode_escapes",
-                "distinct_values",
                 "y_string_unicode",
             ]
         );

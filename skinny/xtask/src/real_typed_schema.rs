@@ -7,7 +7,7 @@ use codegen::direct_schema::{
 pub fn schema() -> DirectSchemaSet {
     DirectSchemaSet {
         module_name: "generated_real_typed".to_string(),
-        schema_hash: "sk-v13-w13.4-instruments".to_string(),
+        schema_hash: "sk-v14-w9aa-distinct-values".to_string(),
         roots: vec![
             DirectRootSchema::struct_root(
                 "parse_twitter_search",
@@ -54,6 +54,11 @@ pub fn schema() -> DirectSchemaSet {
                 "parse_unicode_basic",
                 "Vec<crate::real_typed_struct::UnicodeBasicRecord<'i>>",
                 vec_with_capacity(ty("UnicodeBasicRecord"), 5_759),
+            ),
+            DirectRootSchema::typed_root(
+                "parse_distinct_values",
+                "Vec<crate::real_typed_struct::DistinctValue<'i>>",
+                vec_with_capacity(ty("DistinctValue"), 440),
             ),
             DirectRootSchema::struct_root(
                 "parse_random",
@@ -253,6 +258,22 @@ pub fn schema() -> DirectSchemaSet {
                     default("len", "len", opt(u64_ty())),
                     default("tags", "tags", vec_with_capacity(string(), 3)),
                 ],
+            ),
+            struct_ty(
+                "DistinctValue",
+                "crate::real_typed_struct::DistinctValue<'i>",
+                vec![
+                    default("timestamp", "timestamp", opt(string())),
+                    default("seq", "seq", opt(u64_ty())),
+                    default("status", "status", opt(string())),
+                ],
+            )
+            .with_unknown_string_entries(
+                "dynamic",
+                "crate::real_typed_struct::DistinctField<'i>",
+                "key",
+                "value",
+                11,
             ),
             struct_ty(
                 "RandomDocument",
@@ -566,6 +587,14 @@ fn struct_ty(type_id: &str, rust_type: &str, fields: Vec<DirectFieldSchema>) -> 
 
 trait DirectTypeSchemaExt {
     fn with_ignored_fields(self, ignored_fields: Vec<DirectIgnoredFieldSchema>) -> Self;
+    fn with_unknown_string_entries(
+        self,
+        rust_field: &str,
+        entry_rust_type: &str,
+        key_field: &str,
+        value_field: &str,
+        capacity_hint: usize,
+    ) -> Self;
 }
 
 impl DirectTypeSchemaExt for DirectTypeSchema {
@@ -576,6 +605,28 @@ impl DirectTypeSchemaExt for DirectTypeSchema {
                 ..
             } => {
                 *target = ignored_fields;
+            }
+        }
+        self
+    }
+
+    fn with_unknown_string_entries(
+        mut self,
+        rust_field: &str,
+        entry_rust_type: &str,
+        key_field: &str,
+        value_field: &str,
+        capacity_hint: usize,
+    ) -> Self {
+        match &mut self.kind {
+            DirectTypeKind::Struct { unknown_fields, .. } => {
+                *unknown_fields = UnknownFieldPolicy::CaptureStringEntries {
+                    rust_field: rust_field.to_string(),
+                    entry_rust_type: entry_rust_type.to_string(),
+                    key_field: key_field.to_string(),
+                    value_field: value_field.to_string(),
+                    capacity_hint: Some(capacity_hint),
+                };
             }
         }
         self

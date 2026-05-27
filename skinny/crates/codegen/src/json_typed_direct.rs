@@ -94,8 +94,20 @@ impl std::error::Error for DirectBuildError<'_> {}
                         renderer.rust_type(&field.ty)?
                     ));
                 }
+                if let UnknownFieldPolicy::CaptureStringEntries {
+                    rust_field,
+                    entry_rust_type,
+                    capacity_hint,
+                    ..
+                } = unknown_fields
+                {
+                    let capacity = capacity_hint.unwrap_or(0);
+                    out.push_str(&format!(
+                        "    let mut {rust_field}: Vec<{entry_rust_type}> = Vec::with_capacity({capacity});\n"
+                    ));
+                }
                 out.push_str("    parser.ws();\n    if parser.take(b'}') {\n        return Ok(");
-                renderer.render_construct(&mut out, type_name, fields)?;
+                renderer.render_construct(&mut out, type_name, fields, unknown_fields)?;
                 out.push_str(");\n    }\n    loop {\n");
                 out.push_str(
                     "        let key = parser.parse_string()?;\n        parser.ws();\n        parser.expect(b':')?;\n        parser.ws();\n        match key.as_ref() {\n",
@@ -115,11 +127,23 @@ impl std::error::Error for DirectBuildError<'_> {}
                             "            _ => return Err(parser.error(\"unexpected field\")),\n",
                         );
                     }
+                    UnknownFieldPolicy::CaptureStringEntries {
+                        rust_field,
+                        entry_rust_type,
+                        key_field,
+                        value_field,
+                        ..
+                    } => {
+                        let entry_construct = construct_path(entry_rust_type);
+                        out.push_str(&format!(
+                            "            _ => {{\n                let value = parser.parse_string()?;\n                {rust_field}.push({entry_construct} {{ {key_field}: key, {value_field}: value }});\n            }}\n"
+                        ));
+                    }
                 }
                 out.push_str(
                     "        }\n        parser.ws();\n        if parser.take(b',') {\n            parser.ws();\n            continue;\n        }\n        parser.expect(b'}')?;\n        return Ok(",
                 );
-                renderer.render_construct(&mut out, type_name, fields)?;
+                renderer.render_construct(&mut out, type_name, fields, unknown_fields)?;
                 out.push_str(");\n    }\n}\n\n");
                 if type_id == "Plugin" {
                     renderer.render_plugin_ordered(&mut out, type_name)?;
@@ -252,6 +276,7 @@ impl<'a> Renderer<'a> {
         out: &mut String,
         type_name: &str,
         fields: &[DirectFieldSchema],
+        unknown_fields: &UnknownFieldPolicy,
     ) -> Result<(), String> {
         out.push_str(&construct_path(type_name));
         out.push_str(" {\n");
@@ -273,6 +298,11 @@ impl<'a> Renderer<'a> {
             };
             out.push_str("            ");
             out.push_str(&value);
+            out.push_str(",\n");
+        }
+        if let UnknownFieldPolicy::CaptureStringEntries { rust_field, .. } = unknown_fields {
+            out.push_str("            ");
+            out.push_str(rust_field);
             out.push_str(",\n");
         }
         out.push_str("        }");

@@ -5577,3 +5577,31 @@ perturbation.
 - Current JSON real_typed_struct state remains 11 / 17 ADMITTED and 6 MISSING:
   `canada`, `gsoc-2018`, `unicode_mixed`, `unicode_escapes`,
   `distinct_values`, and `y_string_unicode`.
+
+## SK-V14 W9AA JSON real_typed distinct_values Dynamic Payload Admit
+
+- Item 227 closes `G-SK-V14-W9AA-JSON-TYPED-DISTINCT-VALUES` as `ADMIT`.
+  The source patch extends generated DirectBuild typed schemas with an
+  unknown-field string-entry capture policy and routes
+  `distinct_values/real_typed_struct` through the regenerated
+  `parse_distinct_values` root.
+- The admitted product is full row payload materialization, not a fixed-field
+  shortcut: each object retains `timestamp`, `seq`, `status`, and every
+  dynamic `key_*` string/value pair as `DistinctField { key, value }`, with
+  serde and sonic sidecars using the same typed product for equality.
+- Correctness gates passed before measurement:
+  `cargo xtask regen-real-typed`, `cargo xtask check-real-typed`,
+  `cargo test --manifest-path skinny/Cargo.toml --profile ax-iter -p
+  bbnf-bench distinct_values_typed -- --nocapture`, and
+  `cargo test --manifest-path skinny/Cargo.toml --profile ax-iter -p codegen
+  unknown_string_capture -- --nocapture`.
+- Cold `profile_direct` evidence admits the row: generated Track 1 measured
+  `8827.520` Mbps against strict `sonic-rs` typed at `3895.064` Mbps. The
+  admission floor is `sonic + 1.0 = 3896.064` Mbps, so the margin is
+  `4931.456` Mbps. Independent Track 2 measured `3245.184` Mbps and
+  serde_json measured `3334.552` Mbps. Retained evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W9AA-distinct-values-typed.md`,
+  `.tsv`, and `.raw.log`.
+- Current JSON real_typed_struct state is now 12 / 17 ADMITTED and 5 MISSING:
+  `canada`, `gsoc-2018`, `unicode_mixed`, `unicode_escapes`, and
+  `y_string_unicode`.

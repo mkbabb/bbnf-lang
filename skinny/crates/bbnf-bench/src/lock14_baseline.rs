@@ -1330,9 +1330,16 @@ const SK_V14_W7_OWNER_PATHS: &[&str] = &[
 ];
 
 const SK_V14_W9_OWNER_PATHS: &[&str] = &[
+    "crates/codegen/src/direct_schema.rs",
+    "crates/codegen/src/json_typed_direct.rs",
+    "crates/codegen/src/lib.rs",
+    "crates/bbnf-bench/src/generated_real_typed.rs",
     "crates/bbnf-bench/src/json_w9.rs",
     "crates/bbnf-bench/src/lib.rs",
+    "crates/bbnf-bench/src/lock14_baseline.rs",
+    "crates/bbnf-bench/src/real_typed_struct.rs",
     "crates/bbnf-bench/src/report.rs",
+    "xtask/src/real_typed_schema.rs",
     "xtask/src/main.rs",
 ];
 

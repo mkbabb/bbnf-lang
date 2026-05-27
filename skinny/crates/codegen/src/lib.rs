@@ -840,6 +840,52 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
         assert!(!generated.contains("serde_json::Value"));
     }
 
+    #[test]
+    fn emits_typed_direct_unknown_string_capture() {
+        let schema = DirectSchemaSet {
+            module_name: "capture_typed".to_string(),
+            schema_hash: "test-capture-schema".to_string(),
+            roots: vec![DirectRootSchema::struct_root(
+                "parse_capture",
+                "crate::CaptureRoot<'i>",
+                "CaptureRoot",
+            )],
+            types: vec![DirectTypeSchema {
+                type_id: "CaptureRoot".to_string(),
+                rust_type: "crate::CaptureRoot<'i>".to_string(),
+                kind: DirectTypeKind::Struct {
+                    unknown_fields: UnknownFieldPolicy::CaptureStringEntries {
+                        rust_field: "dynamic".to_string(),
+                        entry_rust_type: "crate::CapturedField<'i>".to_string(),
+                        key_field: "key".to_string(),
+                        value_field: "value".to_string(),
+                        capacity_hint: Some(4),
+                    },
+                    ignored_fields: Vec::new(),
+                    fields: vec![DirectFieldSchema {
+                        key_literal: "status".to_string(),
+                        rust_field: "status".to_string(),
+                        ty: DirectTypeRef::Scalar(DirectScalar::String),
+                        presence: PresencePolicy::Default,
+                        duplicate: DuplicatePolicy::LastWins,
+                    }],
+                },
+            }],
+        };
+
+        let emitted = emit_typed_from_source("json", JSON_GRAMMAR, &schema).unwrap();
+        let generated = emitted.get("capture_typed.rs").unwrap();
+
+        assert!(generated.contains(
+            "let mut dynamic: Vec<crate::CapturedField<'i>> = Vec::with_capacity(4);"
+        ));
+        assert!(generated.contains("let value = parser.parse_string()?;"));
+        assert!(generated.contains(
+            "dynamic.push(crate::CapturedField { key: key, value: value });"
+        ));
+        assert!(generated.contains("dynamic,"));
+    }
+
     pub(super) fn w5a_runtime_contract_consumes_source_and_metadata() {
         let source = r#"
 @import "tokens.bbnf" ;

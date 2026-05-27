@@ -113,7 +113,10 @@ token constants, and decoded string fact products, so direct and typed each
 stand at 16 / 17 admitted. W11P then rejected the materially distinct
 `unicode_escapes` decoded codepoint-fact product under REDRESS-243; the source
 patch was reverted, no row moved, and that scalar-fact shape is pre-blocked
-without a fresh material differential.
+without a fresh material differential. W11Q then rejected a generated
+parse_only indexed-string route under REDRESS-244; no parse_only row moved,
+and indexed plain-string skipping is pre-blocked without a fresh material
+differential.
 W8R closed the CSS residual before W11L; continue actual implementation against
 the remaining JSON residual queue, not
 another Omega or Alpha pass unless a future source attempt exposes a real
@@ -282,6 +285,7 @@ state is:
   without moving any row. REDRESS-238 rejects object-member value-byte carry
   without moving any row. REDRESS-239 rejects array value-byte carry without
   moving any row. REDRESS-240 rejects object key-start specialization without
+  moving any row. REDRESS-244 rejects indexed plain-string skipping without
   moving any row.
 - JSON direct_to_struct: 16 / 17 ADMITTED, 1 OPEN after W11O; the remaining
   row lacks an admitted strict product differential. REDRESS-232 rejects
@@ -382,6 +386,10 @@ discipline).
     products under REDRESS-243. The route avoided decoded string
     materialization and folded Unicode scalar facts directly, but Track 1 still
     missed same-run sonic in both strict-product planes.
+14. W11Q rejects parse_only indexed plain-string skipping under REDRESS-244.
+    The route used scanner-produced structural positions plus risky-string
+    side tables, but Track 1 still missed same-run sonic on all six parse_only
+    residual rows.
 
 ## 7. Refusal Conditions
 
@@ -464,7 +472,9 @@ without a fresh material differential. REDRESS-238 pre-blocks parse_only
 object-member value-byte carry without a fresh material differential.
 REDRESS-239 pre-blocks parse_only array value-byte carry without a fresh
 material differential. REDRESS-240 pre-blocks parse_only object key-start
-specialization without a fresh material differential. REDRESS-241 pre-blocks
+specialization without a fresh material differential. REDRESS-244 pre-blocks
+parse_only indexed plain-string skipping without a fresh material differential.
+REDRESS-241 pre-blocks
 `y_string_unicode` product-plus-fused-materializer retries without a fresh
 material differential, while W11L admits the separate decoded token-product
 route for `y_string_unicode`. REDRESS-242 pre-blocks `unicode_escapes`

@@ -6097,3 +6097,39 @@ perturbation.
 - Current JSON direct_to_struct state remains 16 / 17 ADMITTED and 1 OPEN:
   `unicode_escapes`. Current JSON real_typed_struct state remains 16 / 17
   ADMITTED and 1 MISSING: `unicode_escapes`.
+
+## SK-V14 W11Q Parse-Only Indexed Strings Reject
+
+- Item 244 closes `G-SK-V14-W11Q-JSON-PARSE-ONLY-INDEXED-STRINGS` as
+  `REJECT`. No source patch lands, no `RESULTS.md` row moves, and
+  `restart/skinny/ROLLING-SOTA-DELTA.md` remains unchanged.
+- The measured candidate extended the JSON structural scan to produce
+  quote/punctuation positions plus a risky-string-start side table. Generated
+  `parse_only` used the index to skip full string validation for scanner-proven
+  plain strings and kept the existing validator for strings with escapes or
+  control bytes. UTF-8 validation stayed in `parse_only_bytes`; number,
+  literal, delimiter, and EOF validation stayed on the existing generated
+  parse_only path.
+- The route is materially distinct from REDRESS-224 through REDRESS-240 and
+  W10Y/W10Z because it does not rely on delimiter threading, whitespace64,
+  value-byte carry, object specialization, or a global plain-string assumption.
+  It still failed the cold gate for every parse_only residual row against the
+  `sonic + 1.0` floor: `twitter` margin `-3125.119` Mbps,
+  `github_events` margin `-2629.482` Mbps, `update_center` margin
+  `-5513.509` Mbps, `random` margin `-2456.138` Mbps, `gsoc-2018` margin
+  `-16725.001` Mbps, and `distinct_values` margin `-1516.426` Mbps.
+- Correctness gates passed before measurement: `cargo run --profile ax-iter -p
+  xtask -- regen-json`, `cargo run --profile ax-iter -p xtask -- check-json`,
+  `cargo test --profile ax-iter -p runtime
+  generated_parse_only_accepts_and_rejects_json -- --nocapture`, and
+  `cargo test --profile ax-iter -p codegen
+  emits_distinct_json_parse_only_path_without_tape_builder -- --nocapture`.
+- The source patch was reverted after measurement and retained as
+  `/tmp/skv14-W11Q-parse-only-indexed-strings-rejected.patch` with SHA-256
+  `cd8620ba8f53caa51851069eb83d114ce73968f1edfff6231d32b5d422436a52`.
+  Retained evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W11Q-parse-only-indexed-strings.md`,
+  `.tsv`, and `.raw.log`.
+- Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
+  `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
+  `distinct_values`.

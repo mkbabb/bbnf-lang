@@ -38,14 +38,15 @@ and typed rows through numeric root keys, closed Schema.org token constants,
 and decoded string fact products for the variable text fields. W11P then
 tested a decoded codepoint-fact product route for `unicode_escapes` and
 rejected it on same-run cold evidence without landing the transient source
-patch.
+patch. W11Q then tested parse_only indexed plain-string skipping and rejected
+it on same-run cold evidence without landing the transient source patch.
 
 ## Authority
 
 - `restart/skinny/tranches/sk-v14/SPEC.md` Section 14.
 - `restart/skinny/tranches/sk-v14/SYNTHESIS.md` R10.
 - `skinny/RESULTS.md`.
-- `skinny/REDRESS.md` items 215 through 243 plus the W11O admit packet.
+- `skinny/REDRESS.md` items 215 through 244 plus the W11O admit packet.
 - `restart/skinny/ROLLING-SOTA-DELTA.md`.
 - `restart/skinny/tranches/sk-v14/HANDOFF.md`.
 
@@ -97,6 +98,7 @@ patch.
 | W11N | ADMITTED | Decoded value scalar plus closed token product admits `unicode_mixed/direct_to_struct` and `unicode_mixed/real_typed_struct` from cold native `profile_direct` evidence. |
 | W11O | ADMITTED | Numeric-key map entries plus closed Schema.org tokens and decoded string fact products admit `gsoc-2018/direct_to_struct` and `gsoc-2018/real_typed_struct` from cold native `profile_direct` evidence. |
 | W11P | REJECTED | REDRESS-243: transient `unicode_escapes` decoded codepoint-fact product passed correctness but missed same-run sonic for typed and direct strict products; no source patch landed and no row moved. |
+| W11Q | REJECTED | REDRESS-244: transient parse_only indexed plain-string skipping passed correctness but missed same-run sonic for all six residual rows; no source patch landed and no row moved. |
 
 ## Close-State Counts
 
@@ -145,7 +147,8 @@ remaining rows are implementation residuals, not closeable proof blocks.
    post-colon value byte into all value arms is likewise insufficient. W11I
    proved that carrying array comma next-value bytes is also insufficient.
    W11J proved that specializing object comma-to-next-key dispatch is also
-   insufficient.
+   insufficient. W11Q proved that scanner-indexed plain-string skipping is
+   also insufficient.
 
 ## Reconciliation
 
@@ -159,7 +162,7 @@ remaining rows are implementation residuals, not closeable proof blocks.
   REDRESS-227, REDRESS-228, REDRESS-229, REDRESS-230, REDRESS-231,
   REDRESS-232, REDRESS-233, REDRESS-234, REDRESS-235, REDRESS-236,
   REDRESS-237, REDRESS-238, REDRESS-239, REDRESS-240, REDRESS-241,
-  REDRESS-242, and REDRESS-243.
+  REDRESS-242, REDRESS-243, and REDRESS-244.
   REDRESS-215 remains in history as the initial CSS W8 rejection and is
   superseded by W8R admission evidence.
 - `skinny/RESULTS.md` now renders CSS L4 rows as current
@@ -652,6 +655,36 @@ exposes a spec-level amendment that truly requires G-Omega.
   direct_to_struct state remains 16 / 17 ADMITTED and 1 OPEN:
   `unicode_escapes`; JSON real_typed_struct state remains 16 / 17 ADMITTED
   and 1 MISSING: `unicode_escapes`.
+
+## SK-V14 W11Q JSON parse_only Indexed Strings Reject
+
+- Item 244 closes `G-SK-V14-W11Q-JSON-PARSE-ONLY-INDEXED-STRINGS` as
+  `REJECT`. No source patch lands, no `RESULTS.md` row moves, and
+  `restart/skinny/ROLLING-SOTA-DELTA.md` remains unchanged.
+- The transient route extended the JSON structural scanner to produce
+  quote/punctuation positions plus risky string starts. Generated parse_only
+  used those facts to skip full string validation for scanner-proven plain
+  strings while retaining the existing validator for strings with escapes or
+  control bytes. Number, literal, delimiter, EOF, and UTF-8 validation stayed
+  on the existing strict paths.
+- Correctness gates passed before measurement: `cargo run --profile ax-iter -p
+  xtask -- regen-json`, `cargo run --profile ax-iter -p xtask -- check-json`,
+  `cargo test --profile ax-iter -p runtime
+  generated_parse_only_accepts_and_rejects_json -- --nocapture`, and
+  `cargo test --profile ax-iter -p codegen
+  emits_distinct_json_parse_only_path_without_tape_builder -- --nocapture`.
+- Cold release-native `profile_direct` evidence rejects all six parse_only
+  residual rows against the `sonic + 1.0` floor: `twitter` margin
+  `-3125.119` Mbps, `github_events` margin `-2629.482` Mbps,
+  `update_center` margin `-5513.509` Mbps, `random` margin `-2456.138` Mbps,
+  `gsoc-2018` margin `-16725.001` Mbps, and `distinct_values` margin
+  `-1516.426` Mbps. Retained evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W11Q-parse-only-indexed-strings.md`,
+  `.tsv`, and `.raw.log`.
+- W11Q pre-blocks retries of this indexed plain-string skipping shape without
+  a fresh material differential. Current JSON parse_only state remains 11 / 17
+  ADMITTED and 6 OPEN: `twitter`, `github_events`, `update_center`, `random`,
+  `gsoc-2018`, and `distinct_values`.
 
 ## SK-V14 W11E JSON parse_only 64-Byte Whitespace Reject
 

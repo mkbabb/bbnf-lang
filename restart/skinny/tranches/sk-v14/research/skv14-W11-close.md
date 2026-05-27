@@ -5,14 +5,16 @@ Date: 2026-05-27.
 Status: W11 reconciliation was followed by W11A direct strict-product
 implementation. W11A moved supported JSON `direct_to_struct` rows off the
 digest plane and admitted thirteen strict product rows from cold native
-`profile_direct` evidence.
+`profile_direct` evidence. W11B then tested unicode strict products and
+rejected them on same-run cold evidence without landing the transient source
+patch.
 
 ## Authority
 
 - `restart/skinny/tranches/sk-v14/SPEC.md` Section 14.
 - `restart/skinny/tranches/sk-v14/SYNTHESIS.md` R10.
 - `skinny/RESULTS.md`.
-- `skinny/REDRESS.md` items 215 through 227.
+- `skinny/REDRESS.md` items 215 through 232.
 - `restart/skinny/ROLLING-SOTA-DELTA.md`.
 - `restart/skinny/tranches/sk-v14/HANDOFF.md`.
 
@@ -49,6 +51,7 @@ digest plane and admitted thirteen strict product rows from cold native
 | W10Y/W10Z | REJECTED | REDRESS-225: plain-string structural fast path and cursor-return helper ABI admitted no parse_only residual rows. |
 | W10AA | REJECTED | REDRESS-230: fused trusted string-end helper plus object-loop cleanup admitted no parse_only residual rows. |
 | W11A | ADMITTED | REDRESS-231: strict product `direct_to_struct` route admitted 13 / 17 JSON direct rows; 4 rows remain open for missing generated product surfaces. |
+| W11B | REJECTED | REDRESS-232: transient unicode strict products for `unicode_mixed` and `unicode_escapes` passed correctness but missed strict sonic by at least 2014.202 Mbps; no source patch landed and no row moved. |
 
 ## Close-State Counts
 
@@ -68,10 +71,12 @@ remaining rows are implementation residuals, not closeable proof blocks.
    equality plane as lightningcss/cssparser. Fact-stream adapters, tiny
    fixtures, and profile-template shortcuts remain rejected by REDRESS-215.
 2. JSON direct residuals remain only where generated strict product surfaces
-   are absent: `gsoc-2018`, `unicode_mixed`, `unicode_escapes`, and
-   `y_string_unicode`.
+   are absent at HEAD: `gsoc-2018`, `unicode_mixed`, `unicode_escapes`, and
+   `y_string_unicode`. W11B proved that product-surface-only unicode routes
+   are not enough for `unicode_mixed` or `unicode_escapes`.
 3. Missing JSON typed products remain for `gsoc-2018`, `unicode_mixed`,
-   `unicode_escapes`, and `y_string_unicode`.
+   `unicode_escapes`, and `y_string_unicode`; W11B's unicode products were
+   reverted after measured rejection.
 4. JSON parse_only residuals remain for `twitter`, `github_events`,
    `update_center`, `random`, `gsoc-2018`, and
    `distinct_values`.
@@ -85,7 +90,8 @@ remaining rows are implementation residuals, not closeable proof blocks.
 - `skinny/REDRESS.md` carries the live residuals as REDRESS-215,
   REDRESS-216, REDRESS-217, REDRESS-218, REDRESS-219, REDRESS-220,
   REDRESS-222, REDRESS-223, REDRESS-224, REDRESS-225, REDRESS-226,
-  REDRESS-227, REDRESS-228, REDRESS-229, REDRESS-230, and REDRESS-231.
+  REDRESS-227, REDRESS-228, REDRESS-229, REDRESS-230, REDRESS-231, and
+  REDRESS-232.
 - `skinny/RESULTS.md` now renders CSS L4 legacy CostFacts as historical claims
   with current `AUDIT-FALSIFIED_OPEN` status, so the manifest no longer embeds
   live-looking `A` / `GO` / `ADMITTED-PARITY` fragments for OPEN CSS rows.
@@ -119,6 +125,11 @@ remaining rows are implementation residuals, not closeable proof blocks.
   regen-json`, `cargo xtask check-json`, focused parse-that-regex/runtime/codegen
   parse_only tests, plus cold reject evidence retained at
   `restart/skinny/tranches/sk-v14/research/skv14-W10AA-parse-only-fused-string-object-loop.tsv`.
+- W11B local evidence before this close packet update: `cargo run
+  --profile ax-iter -p xtask -- regen-real-typed`, `cargo run --profile
+  ax-iter -p xtask -- check-real-typed`, focused `unicode_` and
+  `direct_strict_product` tests, plus cold reject evidence retained at
+  `restart/skinny/tranches/sk-v14/research/skv14-W11B-unicode-products.tsv`.
 - Close invariants remain: 16 locks, Pattern H count 67, Lock 10 five-shape
   `BackendShape` canon preserved, and generated JSON parse_only remains
   distinct from the tape-building path.
@@ -127,7 +138,7 @@ remaining rows are implementation residuals, not closeable proof blocks.
 
 W11/W10R/W10S/W10T/W10V/W10W close SK-V14 as a mixed tranche, with admitted rows preserved and all
 unmet rows routed to implementation residuals. W10X, W10Y/W10Z, W10AA, W9Y,
-and W9AC add post-close residual rejection evidence; W9AA and W9AB add post-close typed
+W9AC, and W11B add post-close residual rejection evidence; W9AA and W9AB add post-close typed
 admits for `distinct_values/real_typed_struct` and
 `canada/real_typed_struct`.
 Under the latest user instruction, the next work is implementation against the

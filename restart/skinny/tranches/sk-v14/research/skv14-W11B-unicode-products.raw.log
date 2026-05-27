@@ -1,0 +1,96 @@
+## unicode_mixed real_typed_track1
+profile-direct: corpus=unicode_mixed mode=real_typed_track1 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_mixed.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 1053086 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 1.10s -> 3075 Mbps (digest cksum 0)
+PROBE_RESULT corpus=unicode_mixed corpus_bytes=1053086 iters=400 mode=real_typed_track1 warmup_iters=0 elapsed_s=1.095922 ns_per_byte=2.601692 mbps=3074.922 cycles=4617128841 instructions=9650387009 cycles_per_byte=10.960949 cpi=0.478440 user_ns=25958632 system_ns=149236 checksum=0
+## unicode_mixed real_typed_track2
+profile-direct: corpus=unicode_mixed mode=real_typed_track2 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_mixed.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 1053086 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 1.03s -> 3284 Mbps (digest cksum 0)
+PROBE_RESULT corpus=unicode_mixed corpus_bytes=1053086 iters=400 mode=real_typed_track2 warmup_iters=0 elapsed_s=1.026092 ns_per_byte=2.435917 mbps=3284.184 cycles=4356263967 instructions=12085868897 cycles_per_byte=10.341662 cpi=0.360443 user_ns=24386314 system_ns=113002 checksum=0
+## unicode_mixed real_typed_sonic
+profile-direct: corpus=unicode_mixed mode=real_typed_sonic path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_mixed.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 1053086 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.65s -> 5166 Mbps (digest cksum 0)
+PROBE_RESULT corpus=unicode_mixed corpus_bytes=1053086 iters=400 mode=real_typed_sonic warmup_iters=0 elapsed_s=0.652267 ns_per_byte=1.548466 mbps=5166.402 cycles=2769839915 instructions=9019477816 cycles_per_byte=6.575531 cpi=0.307095 user_ns=15503249 system_ns=75436 checksum=0
+## unicode_mixed real_typed_serde
+profile-direct: corpus=unicode_mixed mode=real_typed_serde path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_mixed.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 1053086 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 1.02s -> 3299 Mbps (digest cksum 0)
+PROBE_RESULT corpus=unicode_mixed corpus_bytes=1053086 iters=400 mode=real_typed_serde warmup_iters=0 elapsed_s=1.021334 ns_per_byte=2.424622 mbps=3299.484 cycles=4334450606 instructions=12086145517 cycles_per_byte=10.289878 cpi=0.358630 user_ns=24266556 system_ns=114554 checksum=0
+## unicode_mixed direct_strict_track1
+profile-direct: corpus=unicode_mixed mode=direct_strict_track1 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_mixed.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 1053086 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 1.08s -> 3131 Mbps (digest cksum 0)
+PROBE_RESULT corpus=unicode_mixed corpus_bytes=1053086 iters=400 mode=direct_strict_track1 warmup_iters=0 elapsed_s=1.076319 ns_per_byte=2.555155 mbps=3130.925 cycles=4568979600 instructions=9645395232 cycles_per_byte=10.846644 cpi=0.473695 user_ns=25574030 system_ns=122157 checksum=0
+## unicode_mixed direct_strict_track2
+profile-direct: corpus=unicode_mixed mode=direct_strict_track2 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_mixed.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 1053086 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 1.03s -> 3256 Mbps (digest cksum 0)
+PROBE_RESULT corpus=unicode_mixed corpus_bytes=1053086 iters=400 mode=direct_strict_track2 warmup_iters=0 elapsed_s=1.034911 ns_per_byte=2.456853 mbps=3256.198 cycles=4380411944 instructions=12087813230 cycles_per_byte=10.398989 cpi=0.362382 user_ns=24559749 system_ns=126770 checksum=0
+## unicode_mixed direct_strict_sonic
+profile-direct: corpus=unicode_mixed mode=direct_strict_sonic path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_mixed.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 1053086 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.66s -> 5144 Mbps (digest cksum 0)
+PROBE_RESULT corpus=unicode_mixed corpus_bytes=1053086 iters=400 mode=direct_strict_sonic warmup_iters=0 elapsed_s=0.655092 ns_per_byte=1.555172 mbps=5144.127 cycles=2774111140 instructions=9019458252 cycles_per_byte=6.585671 cpi=0.307570 user_ns=15505033 system_ns=91645 checksum=0
+## unicode_mixed direct_strict_serde
+profile-direct: corpus=unicode_mixed mode=direct_strict_serde path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_mixed.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 1053086 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 1.02s -> 3299 Mbps (digest cksum 0)
+PROBE_RESULT corpus=unicode_mixed corpus_bytes=1053086 iters=400 mode=direct_strict_serde warmup_iters=0 elapsed_s=1.021449 ns_per_byte=2.424893 mbps=3299.114 cycles=4322537043 instructions=12090019968 cycles_per_byte=10.261596 cpi=0.357529 user_ns=24199649 system_ns=146480 checksum=0
+## unicode_escapes real_typed_track1
+profile-direct: corpus=unicode_escapes mode=real_typed_track1 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_escapes.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 1050797 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.87s -> 3870 Mbps (digest cksum 0)
+PROBE_RESULT corpus=unicode_escapes corpus_bytes=1050797 iters=400 mode=real_typed_track1 warmup_iters=0 elapsed_s=0.868851 ns_per_byte=2.067125 mbps=3870.109 cycles=3685998183 instructions=12835134260 cycles_per_byte=8.769530 cpi=0.287180 user_ns=20637201 system_ns=99301 checksum=0
+## unicode_escapes real_typed_track2
+profile-direct: corpus=unicode_escapes mode=real_typed_track2 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_escapes.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 1050797 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.88s -> 3833 Mbps (digest cksum 0)
+PROBE_RESULT corpus=unicode_escapes corpus_bytes=1050797 iters=400 mode=real_typed_track2 warmup_iters=0 elapsed_s=0.877357 ns_per_byte=2.087360 mbps=3832.592 cycles=3722145664 instructions=13724555086 cycles_per_byte=8.855530 cpi=0.271203 user_ns=20836540 system_ns=95327 checksum=0
+## unicode_escapes real_typed_sonic
+profile-direct: corpus=unicode_escapes mode=real_typed_sonic path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_escapes.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 1050797 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.44s -> 7650 Mbps (digest cksum 0)
+PROBE_RESULT corpus=unicode_escapes corpus_bytes=1050797 iters=400 mode=real_typed_sonic warmup_iters=0 elapsed_s=0.439552 ns_per_byte=1.045758 mbps=7649.956 cycles=1865503604 instructions=7996932511 cycles_per_byte=4.438306 cpi=0.233277 user_ns=10445563 system_ns=49693 checksum=0
+## unicode_escapes real_typed_serde
+profile-direct: corpus=unicode_escapes mode=real_typed_serde path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_escapes.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 1050797 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.88s -> 3822 Mbps (digest cksum 0)
+PROBE_RESULT corpus=unicode_escapes corpus_bytes=1050797 iters=400 mode=real_typed_serde warmup_iters=0 elapsed_s=0.879811 ns_per_byte=2.093200 mbps=3821.899 cycles=3721278243 instructions=13726763862 cycles_per_byte=8.853466 cpi=0.271097 user_ns=20865682 system_ns=109828 checksum=0
+## unicode_escapes direct_strict_track1
+profile-direct: corpus=unicode_escapes mode=direct_strict_track1 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_escapes.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 1050797 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.88s -> 3830 Mbps (digest cksum 0)
+PROBE_RESULT corpus=unicode_escapes corpus_bytes=1050797 iters=400 mode=direct_strict_track1 warmup_iters=0 elapsed_s=0.878007 ns_per_byte=2.088907 mbps=3829.754 cycles=3719216741 instructions=12835292098 cycles_per_byte=8.848561 cpi=0.289765 user_ns=20853532 system_ns=102858 checksum=0
+## unicode_escapes direct_strict_track2
+profile-direct: corpus=unicode_escapes mode=direct_strict_track2 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_escapes.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 1050797 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.87s -> 3846 Mbps (digest cksum 0)
+PROBE_RESULT corpus=unicode_escapes corpus_bytes=1050797 iters=400 mode=direct_strict_track2 warmup_iters=0 elapsed_s=0.874294 ns_per_byte=2.080073 mbps=3846.018 cycles=3713181711 instructions=13724273410 cycles_per_byte=8.834203 cpi=0.270556 user_ns=20781502 system_ns=95854 checksum=0
+## unicode_escapes direct_strict_sonic
+profile-direct: corpus=unicode_escapes mode=direct_strict_sonic path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_escapes.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 1050797 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.43s -> 7762 Mbps (digest cksum 0)
+PROBE_RESULT corpus=unicode_escapes corpus_bytes=1050797 iters=400 mode=direct_strict_sonic warmup_iters=0 elapsed_s=0.433187 ns_per_byte=1.030615 mbps=7762.353 cycles=1840971331 instructions=7996405609 cycles_per_byte=4.379940 cpi=0.230225 user_ns=10302924 system_ns=45535 checksum=0
+## unicode_escapes direct_strict_serde
+profile-direct: corpus=unicode_escapes mode=direct_strict_serde path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_escapes.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 1050797 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.87s -> 3864 Mbps (digest cksum 0)
+PROBE_RESULT corpus=unicode_escapes corpus_bytes=1050797 iters=400 mode=direct_strict_serde warmup_iters=0 elapsed_s=0.870156 ns_per_byte=2.070230 mbps=3864.306 cycles=3692229910 instructions=13724925535 cycles_per_byte=8.784356 cpi=0.269016 user_ns=20660825 system_ns=106020 checksum=0

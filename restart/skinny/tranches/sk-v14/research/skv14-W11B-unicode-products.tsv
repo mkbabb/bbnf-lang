@@ -1,0 +1,17 @@
+corpus	mode	mbps	checksum	iters	bytes	warmup_iters
+unicode_mixed	real_typed_track1	3074.922	0	400	1053086	0
+unicode_mixed	real_typed_track2	3284.184	0	400	1053086	0
+unicode_mixed	real_typed_sonic	5166.402	0	400	1053086	0
+unicode_mixed	real_typed_serde	3299.484	0	400	1053086	0
+unicode_mixed	direct_strict_track1	3130.925	0	400	1053086	0
+unicode_mixed	direct_strict_track2	3256.198	0	400	1053086	0
+unicode_mixed	direct_strict_sonic	5144.127	0	400	1053086	0
+unicode_mixed	direct_strict_serde	3299.114	0	400	1053086	0
+unicode_escapes	real_typed_track1	3870.109	0	400	1050797	0
+unicode_escapes	real_typed_track2	3832.592	0	400	1050797	0
+unicode_escapes	real_typed_sonic	7649.956	0	400	1050797	0
+unicode_escapes	real_typed_serde	3821.899	0	400	1050797	0
+unicode_escapes	direct_strict_track1	3829.754	0	400	1050797	0
+unicode_escapes	direct_strict_track2	3846.018	0	400	1050797	0
+unicode_escapes	direct_strict_sonic	7762.353	0	400	1050797	0
+unicode_escapes	direct_strict_serde	3864.306	0	400	1050797	0

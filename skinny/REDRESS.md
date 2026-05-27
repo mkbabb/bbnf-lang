@@ -5706,3 +5706,32 @@ perturbation.
   `restart/skinny/tranches/sk-v14/research/skv14-W11A-direct-strict-product.md`,
   `.tsv`, and `.raw.log`. Current JSON direct_to_struct state is 13 / 17
   ADMITTED and 4 OPEN.
+
+## SK-V14 W11B JSON Unicode Product Probe Reject
+
+- Item 232 closes `G-SK-V14-W11B-JSON-UNICODE-PRODUCTS` as `REJECT`. No source
+  patch lands, no `RESULTS.md` row moves, and
+  `restart/skinny/ROLLING-SOTA-DELTA.md` remains unchanged.
+- The measured candidate added transient generated strict product surfaces for
+  `unicode_mixed` and `unicode_escapes`, then routed both
+  `real_typed_struct` and W11A-style `direct_to_struct` strict-product
+  consumers over those products. The patch was reverted after measurement and
+  retained as `/tmp/skv14-W11B-unicode-products-rejected.patch` with SHA-256
+  `6fa6aa72ee5afd1fc701a17aa3871ed003b5ba9d3a46e2ce456167bba8b72aa5`.
+- Correctness gates passed before measurement:
+  `cargo run --profile ax-iter -p xtask -- regen-real-typed`, `cargo run
+  --profile ax-iter -p xtask -- check-real-typed`, `cargo test
+  --manifest-path skinny/Cargo.toml --profile ax-iter -p bbnf-bench unicode_
+  -- --nocapture`, and `cargo test --manifest-path skinny/Cargo.toml
+  --profile ax-iter -p bbnf-bench direct_strict_product -- --nocapture`.
+- Cold `profile_direct` evidence rejects both products and both direct-strict
+  rows: `unicode_mixed/real_typed_struct` measured `3074.922` Mbps against
+  strict sonic `5166.402` Mbps, `unicode_mixed/direct_to_struct` strict product
+  measured `3130.925` Mbps against strict sonic `5144.127` Mbps,
+  `unicode_escapes/real_typed_struct` measured `3870.109` Mbps against strict
+  sonic `7649.956` Mbps, and `unicode_escapes/direct_to_struct` strict product
+  measured `3829.754` Mbps against strict sonic `7762.353` Mbps. Each row
+  misses the `sonic + 1.0` floor by at least `2014.202` Mbps.
+- Current JSON direct_to_struct state remains 13 / 17 ADMITTED and 4 OPEN.
+  Current JSON real_typed_struct state remains 13 / 17 ADMITTED and 4 MISSING:
+  `gsoc-2018`, `unicode_mixed`, `unicode_escapes`, and `y_string_unicode`.

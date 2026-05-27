@@ -66,7 +66,11 @@ remains 13 / 17 admitted and 4 / 17 missing. W10AA then rejected a generated
 parse_only fused string/object-loop source route under REDRESS-230, so
 parse_only remains 11 / 17 admitted and 6 / 17 open. W11A then admitted
 thirteen `direct_to_struct` rows through strict product evidence under
-REDRESS-231, so direct now stands at 13 / 17 admitted and 4 / 17 open.
+REDRESS-231, so direct now stands at 13 / 17 admitted and 4 / 17 open. W11B
+then rejected transient unicode strict products for `unicode_mixed` and
+`unicode_escapes` under REDRESS-232; the source patch was reverted, no row
+moved, and product-surface-only unicode routes are pre-blocked without a fresh
+material differential.
 Continue actual implementation against the remaining residual queue, not
 another Omega or Alpha pass unless a future source attempt exposes a real
 spec-level amendment.
@@ -228,11 +232,14 @@ state is:
 - JSON parse_only: 11 / 17 ADMITTED, 6 OPEN under REDRESS-223; REDRESS-230
   rejects the fused string/object-loop residual route without moving any row.
 - JSON direct_to_struct: 13 / 17 ADMITTED, 4 OPEN under REDRESS-231; remaining
-  rows lack generated strict product surfaces.
+  rows lack generated strict product surfaces. REDRESS-232 rejects
+  product-surface-only unicode strict products for `unicode_mixed` and
+  `unicode_escapes`.
 - JSON real_typed_struct: 13 / 17 ADMITTED, 4 MISSING product surfaces under
   REDRESS-216/227/228; REDRESS-226 rejects the generated `y_string_unicode`
   root and REDRESS-229 rejects the generated `gsoc-2018` numeric-key root
-  without moving either row.
+  without moving either row. REDRESS-232 rejects and reverts transient
+  `unicode_mixed` and `unicode_escapes` products.
 - CSS L4: 0 / 24 ADMITTED, 24 OPEN under REDRESS-215.
 
 Per the latest user instruction, do not spend another cycle on Omega/Alpha
@@ -273,6 +280,9 @@ discipline).
 6. W11A admits thirteen strict-product JSON direct rows under REDRESS-231.
    The remaining direct rows are `gsoc-2018`, `unicode_mixed`,
    `unicode_escapes`, and `y_string_unicode`.
+7. W11B rejects transient `unicode_mixed` and `unicode_escapes` strict product
+   routes under REDRESS-232. The products were correct but missed strict sonic
+   by at least 2014.202 Mbps, so no source patch lands and no row moves.
 
 ## 7. Refusal Conditions
 
@@ -342,4 +352,5 @@ cells and routes the remaining JSON and CSS rows to implementation residuals.
 No residual row has an architectural-level intrinsic-block proof. Subsequent
 work inherits R1-R10 until a row family achieves admission or proves an
 architectural block, but the immediate continuation is source implementation
-against the W11 residual queue.
+against the W11 residual queue. REDRESS-232 makes unicode product-surface-only
+retries non-viable without a fresh material differential.

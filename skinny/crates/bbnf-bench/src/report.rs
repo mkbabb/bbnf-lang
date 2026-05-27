@@ -449,17 +449,17 @@ pub const JSON_PARSE_ONLY_ADMISSION_SPECS: &[JsonParseOnlyAdmissionSpec] = &[
         prior_redress_citation: "102",
     },
     JsonParseOnlyAdmissionSpec {
-        label: "W10.13",
-        wave_id: "SK-V14-W10",
-        run_id_prefix: "SK-V14-W10:",
-        consumer_gate: "G-W10-JSON-PARSE-ONLY",
+        label: "W10S.1",
+        wave_id: "SK-V14-W10S",
+        run_id_prefix: "SK-V14-W10S:",
+        consumer_gate: "G-SK-V14-W10S-JSON-PARSE-ONLY-STRING-END",
         row_id: "json/unicode_mixed/parse_only/main",
         corpus: "unicode_mixed",
         criterion_group: "json_unicode_mixed",
         bytes: 1_053_086,
-        route_id: "generated-json-parse-only-distinct-path",
-        redress_entry: "none:SK-V14-W10-admit",
-        prior_redress_citation: "102",
+        route_id: "generated-json-parse-only-string-end-prefix-scan",
+        redress_entry: "none:SK-V14-W10S-admit",
+        prior_redress_citation: "218",
     },
     JsonParseOnlyAdmissionSpec {
         label: "W10.14",
@@ -551,18 +551,18 @@ pub fn json_parse_only_admission_spec_for_corpus(
 }
 
 pub fn json_parse_only_audit_reference(spec: &JsonParseOnlyAdmissionSpec) -> &'static str {
-    if spec.wave_id == "SK-V14-W10R" {
-        "sk-v14-W10R:parse-only-prefix-continuation;sk-v14-W10:distinct-parse-only;sk-v13/v6-comparator-integrity:§1+§3"
-    } else {
-        "sk-v14-W10:distinct-parse-only;sk-v13/v6-comparator-integrity:§1+§3"
+    match spec.wave_id {
+        "SK-V14-W10R" => "sk-v14-W10R:parse-only-prefix-continuation;sk-v14-W10:distinct-parse-only;sk-v13/v6-comparator-integrity:§1+§3",
+        "SK-V14-W10S" => "sk-v14-W10S:parse-only-string-end-prefix-scan;sk-v14-W10R:parse-only-prefix-continuation;sk-v14-W10:distinct-parse-only;sk-v13/v6-comparator-integrity:§1+§3",
+        _ => "sk-v14-W10:distinct-parse-only;sk-v13/v6-comparator-integrity:§1+§3",
     }
 }
 
 pub fn json_parse_only_open_delta(spec: &JsonParseOnlyAdmissionSpec) -> &'static str {
-    if spec.wave_id == "SK-V14-W10R" {
-        "admitted:SK-V14-W10R-parse-only-prefix-continuation"
-    } else {
-        "admitted:SK-V14-W10-parse-only-distinct"
+    match spec.wave_id {
+        "SK-V14-W10R" => "admitted:SK-V14-W10R-parse-only-prefix-continuation",
+        "SK-V14-W10S" => "admitted:SK-V14-W10S-parse-only-string-end-prefix-scan",
+        _ => "admitted:SK-V14-W10-parse-only-distinct",
     }
 }
 
@@ -3755,9 +3755,9 @@ fn validate_skv14_manifest_rows(rows: &[SkV14ManifestRow]) -> Result<(), String>
             return Err(format!("SK-V14 manifest missing {row_id}"));
         }
     }
-    if pending != 26 || falsified + sustained != 49 {
+    if pending != 25 || falsified + sustained != 50 {
         return Err(format!(
-            "SK-V14 audit overlay expected pending=26 and falsified+sustained=49 after authorized W9/W10/W10R admits, saw {falsified} / {pending} / {sustained}"
+            "SK-V14 audit overlay expected pending=25 and falsified+sustained=50 after authorized W9/W10/W10R/W10S admits, saw {falsified} / {pending} / {sustained}"
         ));
     }
     Ok(())
@@ -3803,7 +3803,7 @@ fn validate_skv14_sustained_row(row: &SkV14ManifestRow) -> Result<(), String> {
         return Ok(());
     }
     Err(format!(
-        "{} is AUDIT-SUSTAINED without W9 typed or W10/W10R parse_only authority",
+        "{} is AUDIT-SUSTAINED without W9 typed or W10/W10R/W10S parse_only authority",
         row.row_id
     ))
 }
@@ -5386,9 +5386,9 @@ fn validate_json_parse_only_admission_row(
             spec.label, row.sk_v8.audit_overlay_verdict
         ));
     }
-    if row.sk_v8.sk_v9_open_delta != "admitted:SK-V14-W10-parse-only-distinct" {
+    if row.sk_v8.sk_v9_open_delta != json_parse_only_open_delta(spec) {
         return Err(format!(
-            "{row_id} {} parse row delta {} is not W10 parse-only admission",
+            "{row_id} {} parse row delta {} is not authorized SK-V14 parse-only admission",
             spec.label, row.sk_v8.sk_v9_open_delta
         ));
     }
@@ -5744,6 +5744,7 @@ fn validate_w0_profile_artifact(row_id: &str, profile_artifact: &str) -> Result<
             rest,
             "restart/skinny/tranches/sk-v14/research/skv14-W10-profile-direct.tsv"
                 | "restart/skinny/tranches/sk-v14/research/skv14-W10R-parse-only-profile-direct.tsv"
+                | "restart/skinny/tranches/sk-v14/research/skv14-W10S-parse-only-string-end-profile-direct.tsv"
         ) {
             return Ok(());
         }
@@ -5772,12 +5773,15 @@ fn validate_w0_hot_leaf(
         return Err(format!("{row_id} still has placeholder hot leaf"));
     }
     if profile_artifact.starts_with("profile_direct-cold:") {
-        let hot_leaf_marker =
-            if profile_artifact.contains("skv14-W10R-parse-only-profile-direct.tsv") {
-                "not-collected-in-W10R-row"
-            } else {
-                "not-collected-in-W10-row"
-            };
+        let hot_leaf_marker = if profile_artifact
+            .contains("skv14-W10R-parse-only-profile-direct.tsv")
+        {
+            "not-collected-in-W10R-row"
+        } else if profile_artifact.contains("skv14-W10S-parse-only-string-end-profile-direct.tsv") {
+            "not-collected-in-W10S-row"
+        } else {
+            "not-collected-in-W10-row"
+        };
         let expected = format!("{profile_artifact};hot-leaf={hot_leaf_marker};row={row_id}");
         if hot_leaf != expected {
             return Err(format!(
@@ -6173,6 +6177,7 @@ fn validate_native_comparator_source(
         let accepted_profile = [
             "restart/skinny/tranches/sk-v14/research/skv14-W10-profile-direct.tsv",
             "restart/skinny/tranches/sk-v14/research/skv14-W10R-parse-only-profile-direct.tsv",
+            "restart/skinny/tranches/sk-v14/research/skv14-W10S-parse-only-string-end-profile-direct.tsv",
         ]
         .into_iter()
         .map(|path| format!("profile_direct:{path},mode={mode}"))

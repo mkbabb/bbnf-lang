@@ -1,0 +1,20 @@
+profile-direct: corpus=unicode_mixed mode=parse_only_track1 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_mixed.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 1053086 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.46s -> 7379 Mbps (digest cksum 0)
+PROBE_RESULT corpus=unicode_mixed corpus_bytes=1053086 iters=400 mode=parse_only_track1 warmup_iters=0 elapsed_s=0.456663 ns_per_byte=1.084108 mbps=7379.340 cycles=1895603017 instructions=4382921633 cycles_per_byte=4.500114 cpi=0.432498 user_ns=10857559 system_ns=44367 checksum=0
+profile-direct: corpus=unicode_mixed mode=parse_only_track2 path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_mixed.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 1053086 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.60s -> 5657 Mbps (digest cksum 0)
+PROBE_RESULT corpus=unicode_mixed corpus_bytes=1053086 iters=400 mode=parse_only_track2 warmup_iters=0 elapsed_s=0.595709 ns_per_byte=1.414198 mbps=5656.917 cycles=2248799407 instructions=5285583715 cycles_per_byte=5.338594 cpi=0.425459 user_ns=14101621 system_ns=82129 checksum=0
+profile-direct: corpus=unicode_mixed mode=parse_only_sonic path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_mixed.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 1053086 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 0.48s -> 7011 Mbps (digest cksum 0)
+PROBE_RESULT corpus=unicode_mixed corpus_bytes=1053086 iters=400 mode=parse_only_sonic warmup_iters=0 elapsed_s=0.480637 ns_per_byte=1.141020 mbps=7011.268 cycles=1756893498 instructions=4589556858 cycles_per_byte=4.170822 cpi=0.382802 user_ns=11414421 system_ns=53531 checksum=0
+profile-direct: corpus=unicode_mixed mode=parse_only_serde path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_mixed.json" iters=400 warmup_iters=0
+profile-direct: fixture size = 1053086 bytes
+profile-direct: starting timed loop
+profile-direct: 400 iters in 1.20s -> 2817 Mbps (digest cksum 0)
+PROBE_RESULT corpus=unicode_mixed corpus_bytes=1053086 iters=400 mode=parse_only_serde warmup_iters=0 elapsed_s=1.196344 ns_per_byte=2.840090 mbps=2816.812 cycles=4338350015 instructions=18498786235 cycles_per_byte=10.299135 cpi=0.234521 user_ns=28493251 system_ns=100628 checksum=0

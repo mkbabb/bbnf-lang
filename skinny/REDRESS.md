@@ -5411,3 +5411,27 @@ perturbation.
   -- --nocapture`, `cargo test -p codegen
   emits_distinct_json_parse_only_path_without_tape_builder -- --nocapture`,
   and `restart/skinny/tranches/sk-v14/research/skv14-W10R-parse-only-prefix-continuation.md`.
+
+## SK-V14 W10S JSON parse_only String-End Prefix Scan
+
+- Item 219 closes `G-SK-V14-W10S-JSON-PARSE-ONLY-STRING-END` as `MIXED`.
+  The source implementation adds a raw-end trusted string matcher plus a
+  word-mask tiny-string prefix scan for generated JSON `parse_only`, and
+  regenerates the JSON runtime from `runtime_generator.rs`. This is still the
+  strict parse_only plane: no tape construction, no DOM path, and no comparator
+  relabel.
+- One additional parse_only row admits from cold `profile_direct` evidence
+  retained at
+  `restart/skinny/tranches/sk-v14/research/skv14-W10S-parse-only-string-end-profile-direct.tsv`:
+  `unicode_mixed`. The row has Track 1 `7379.340` Mbps, independent Track 2
+  `5656.917` Mbps, `parse_only/sonic_rs::Skipper` strict comparator
+  `7011.268` Mbps, no warmup iterations, and per-iteration equality PASS.
+- Nine parse_only rows remain open because the current cold evidence has not
+  cleared Skipper + 1.0 Mbps: `twitter`, `citm_catalog`, `apache_builds`,
+  `github_events`, `update_center`, `random`, `gsoc-2018`, `instruments`, and
+  `distinct_values`. Current parse_only state is 8 / 17 admitted and 9 / 17
+  open. Evidence: `cargo xtask check-json`, `cargo test -p parse-that-regex
+  trusted_ -- --nocapture`, `cargo test -p runtime
+  generated_parse_only_accepts_and_rejects_json -- --nocapture`, `cargo test
+  -p codegen emits_distinct_json_parse_only_path_without_tape_builder --
+  --nocapture`, and the retained W10S profile artifacts.

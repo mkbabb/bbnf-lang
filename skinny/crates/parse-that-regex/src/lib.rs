@@ -109,6 +109,12 @@ impl StringMatch {
     }
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub struct TinyStringPrefix {
+    pub cursor: usize,
+    pub raw_end: Option<usize>,
+}
+
 #[inline]
 pub fn skip_ascii_whitespace(input: &[u8], mut offset: usize) -> usize {
     while offset < input.len() {
@@ -167,6 +173,66 @@ pub fn match_string_at_quote_trusted_utf8(
     match_string_at_quote_after_plain_prefix_trusted_utf8(input, offset, offset + 1)
 }
 
+/// Returns the raw end offset for a JSON string whose input buffer has already
+/// been validated as UTF-8.
+#[inline(always)]
+pub fn match_string_end_at_quote_trusted_utf8(
+    input: &[u8],
+    offset: usize,
+) -> Result<usize, RegexError> {
+    debug_assert_eq!(input.get(offset), Some(&b'"'));
+    match_string_end_at_quote_after_plain_prefix_trusted_utf8(input, offset, offset + 1)
+}
+
+/// Scans up to `CAP` bytes after a JSON string's opening quote and returns
+/// either the raw end for a tiny plain string or the first unconsumed byte.
+#[inline(always)]
+pub fn scan_tiny_string_prefix_trusted_utf8<const CAP: usize>(
+    input: &[u8],
+    offset: usize,
+) -> TinyStringPrefix {
+    debug_assert_eq!(input.get(offset), Some(&b'"'));
+    let mut cursor = offset + 1;
+    let limit = (cursor + CAP).min(input.len());
+
+    while cursor + 8 <= limit {
+        let block = unsafe { std::ptr::read_unaligned(input.as_ptr().add(cursor).cast::<u64>()) };
+        let special = string_special_mask(block);
+        if special != 0 {
+            let index = special.trailing_zeros() as usize / 8;
+            let special_cursor = cursor + index;
+            return TinyStringPrefix {
+                cursor: special_cursor,
+                raw_end: (input[special_cursor] == b'"').then_some(special_cursor + 1),
+            };
+        }
+        cursor += 8;
+    }
+
+    while cursor < limit {
+        match input[cursor] {
+            b'"' => {
+                return TinyStringPrefix {
+                    cursor,
+                    raw_end: Some(cursor + 1),
+                };
+            }
+            b'\\' | 0x00..=0x1f => {
+                return TinyStringPrefix {
+                    cursor,
+                    raw_end: None,
+                };
+            }
+            _ => cursor += 1,
+        }
+    }
+
+    TinyStringPrefix {
+        cursor: limit,
+        raw_end: None,
+    }
+}
+
 /// Continues matching a JSON string whose already-scanned prefix is known to
 /// contain no quote, escape, or control byte.
 ///
@@ -206,7 +272,49 @@ pub fn match_string_at_quote_after_plain_prefix_trusted_utf8(
             }
             b'\\' => {
                 needs_unescape = true;
-                cursor = validate_string_escape(input, cursor)?;
+                cursor = validate_string_escape_run(input, cursor)?;
+            }
+            0x00..=0x1f => {
+                return Err(RegexError {
+                    offset: cursor,
+                    kind: RegexErrorKind::ControlCharacter,
+                });
+            }
+            _ => {
+                cursor += 1;
+                cursor = skip_string_plain_trusted(input, cursor);
+            }
+        }
+    }
+
+    Err(RegexError {
+        offset,
+        kind: RegexErrorKind::UnterminatedString,
+    })
+}
+
+/// Continues a parse-only JSON string scan from a known-plain prefix and
+/// returns only the raw end offset.
+#[inline(always)]
+pub fn match_string_end_at_quote_after_plain_prefix_trusted_utf8(
+    input: &[u8],
+    offset: usize,
+    cursor: usize,
+) -> Result<usize, RegexError> {
+    debug_assert_eq!(input.get(offset), Some(&b'"'));
+    debug_assert!(cursor >= offset + 1);
+    debug_assert!(cursor <= input.len());
+
+    let mut cursor = skip_string_plain_trusted(input, cursor);
+
+    loop {
+        let Some(byte) = input.get(cursor).copied() else {
+            break;
+        };
+        match byte {
+            b'"' => return Ok(cursor + 1),
+            b'\\' => {
+                cursor = validate_string_escape_run(input, cursor)?;
             }
             0x00..=0x1f => {
                 return Err(RegexError {
@@ -309,6 +417,18 @@ fn validate_string_escape(input: &[u8], slash: usize) -> Result<usize, RegexErro
             offset: slash,
             kind: RegexErrorKind::InvalidEscape,
         }),
+    }
+}
+
+#[inline(always)]
+fn validate_string_escape_run(input: &[u8], mut slash: usize) -> Result<usize, RegexError> {
+    loop {
+        let cursor = validate_string_escape(input, slash)?;
+        if input.get(cursor) == Some(&b'\\') {
+            slash = cursor;
+        } else {
+            return Ok(cursor);
+        }
     }
 }
 
@@ -1032,6 +1152,32 @@ mod tests {
             match_string_at_quote_after_plain_prefix_trusted_utf8(escaped_input, 0, 9).unwrap();
         assert!(escaped.needs_decode());
         assert_eq!(escaped.raw_end, escaped_input.len());
+    }
+
+    #[test]
+    fn trusted_string_end_matcher_consumes_simple_escape_runs() {
+        let input = br#""\n\t\\\"plain""#;
+        let full = match_string_at_quote_trusted_utf8(input, 0).unwrap();
+        let end = match_string_end_at_quote_after_plain_prefix_trusted_utf8(input, 0, 1).unwrap();
+        assert_eq!(end, full.raw_end);
+        assert_eq!(end, input.len());
+    }
+
+    #[test]
+    fn trusted_tiny_string_prefix_reports_end_or_first_special() {
+        let tiny = br#""small",0"#;
+        let tiny_scan = scan_tiny_string_prefix_trusted_utf8::<8>(tiny, 0);
+        assert_eq!(tiny_scan.raw_end, Some(7));
+
+        let escaped = br#""abc\n",0"#;
+        let escaped_scan = scan_tiny_string_prefix_trusted_utf8::<8>(escaped, 0);
+        assert_eq!(escaped_scan.raw_end, None);
+        assert_eq!(escaped[escaped_scan.cursor], b'\\');
+
+        let long = br#""abcdefghijkl",0"#;
+        let long_scan = scan_tiny_string_prefix_trusted_utf8::<8>(long, 0);
+        assert_eq!(long_scan.raw_end, None);
+        assert_eq!(long_scan.cursor, 9);
     }
 
     #[test]

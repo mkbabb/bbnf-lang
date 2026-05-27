@@ -5,7 +5,7 @@ run_id: SK-V13-open
 g_omega_status: signed
 consumer_gate: cargo xtask gate-json --check-results
 source_results: skinny/RESULTS.md
-source_commit: 6ff6be79a+w10r-parse-only-prefix-continuation
+source_commit: 70377e7ba+w10s-parse-only-string-end-prefix-scan
 
 ## JSON Targets
 
@@ -47,7 +47,7 @@ source_commit: 6ff6be79a+w10r-parse-only-prefix-continuation
 | json/numbers/parse_only/main | parse_only | 14472.31 | 7453.77 | 7018.53 | ADMITTED |
 | json/numbers/direct_to_struct/main | direct_to_struct | 14125.00 | 12748.00 | 1377.00 | OPEN |
 | json/numbers/real_typed_struct/main | real_typed_struct | 6608.57 | 6023.91 | 584.66 | ADMITTED |
-| json/unicode_mixed/parse_only/main | parse_only | 9294.00 | 18859.00 | -9565.00 | OPEN |
+| json/unicode_mixed/parse_only/main | parse_only | 7379.340 | 7012.268 | 367.072 | ADMITTED |
 | json/unicode_mixed/direct_to_struct/main | direct_to_struct | 5062.00 | 10654.00 | -5592.00 | OPEN |
 | json/unicode_mixed/real_typed_struct/main | real_typed_struct | absent:product-surface-not-generated | absent:product-surface-not-generated | absent:product-surface-not-generated | MISSING |
 | json/unicode_escapes/parse_only/main | parse_only | 7897.45 | 2985.08 | 4912.37 | ADMITTED |

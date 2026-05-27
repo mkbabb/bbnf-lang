@@ -758,7 +758,7 @@ fn validate_skv14_sustained_row(row: &Skv14ManifestRow) -> Result<()> {
         return Ok(());
     }
     bail!(
-        "{} is AUDIT-SUSTAINED without W9 typed or W10/W10R parse_only authority",
+        "{} is AUDIT-SUSTAINED without W9 typed or W10/W10R/W10S parse_only authority",
         row.row_id
     )
 }
@@ -930,6 +930,12 @@ fn skv14_parse_only_admit_fields(row_id: &str) -> (&'static str, &'static str, &
             "SK-V14-W10R",
             "none:SK-V14-W10R-admit",
             "admitted:SK-V14-W10R-parse-only-prefix-continuation",
+        )
+    } else if row_id == "json/unicode_mixed/parse_only/main" {
+        (
+            "SK-V14-W10S",
+            "none:SK-V14-W10S-admit",
+            "admitted:SK-V14-W10S-parse-only-string-end-prefix-scan",
         )
     } else {
         (

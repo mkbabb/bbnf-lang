@@ -542,19 +542,17 @@ fn parse_only_string<'i>(state: &mut ParseOnlyState<'i>) -> Result<(), ParseErro
 
 #[inline(always)]
 fn parse_only_string_end(input: &[u8], offset: usize) -> Result<usize, parse_that_regex::RegexError> {
-    let mut cursor = offset + 1;
-    let limit = (cursor + config::DIRECT_TINY_STRING_CAP).min(input.len());
-    while cursor < limit {
-        match input[cursor] {
-            b'"' => return Ok(cursor + 1),
-            b'\\' | 0x00..=0x1f => {
-                return match_string_at_quote_trusted_utf8(input, offset).map(|span| span.raw_end);
-            }
-            _ => cursor += 1,
-        }
+    let prefix = parse_that_regex::scan_tiny_string_prefix_trusted_utf8::<{ config::DIRECT_TINY_STRING_CAP }>(
+        input, offset,
+    );
+    if let Some(raw_end) = prefix.raw_end {
+        return Ok(raw_end);
     }
-    parse_that_regex::match_string_at_quote_after_plain_prefix_trusted_utf8(input, offset, cursor)
-        .map(|span| span.raw_end)
+    parse_that_regex::match_string_end_at_quote_after_plain_prefix_trusted_utf8(
+        input,
+        offset,
+        prefix.cursor,
+    )
 }
 
 #[cfg_attr(feature = "parse-attribution", inline(never))]

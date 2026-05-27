@@ -1,0 +1,5 @@
+corpus	mode	mbps	ns_per_byte	cycles_per_byte	cpi	iters	bytes	warmup_iters	checksum
+unicode_mixed	parse_only_track1	7379.340	1.084108	4.500114	0.432498	400	1053086	0	0
+unicode_mixed	parse_only_track2	5656.917	1.414198	5.338594	0.425459	400	1053086	0	0
+unicode_mixed	parse_only_sonic	7011.268	1.141020	4.170822	0.382802	400	1053086	0	0
+unicode_mixed	parse_only_serde	2816.812	2.840090	10.299135	0.234521	400	1053086	0	0

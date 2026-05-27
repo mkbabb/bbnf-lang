@@ -9,14 +9,16 @@ digest plane and admitted thirteen strict product rows from cold native
 rejected them on same-run cold evidence without landing the transient source
 patch. W11C then tested `gsoc-2018` strict products across numeric-key,
 ordered, identity, full, and required-full variants, rejecting them on
-same-run cold evidence without landing the transient source patch.
+same-run cold evidence without landing the transient source patch. W11D then
+tested a generated parse_only context-threaded delimiter route and rejected it
+on same-run cold evidence without landing the transient source patch.
 
 ## Authority
 
 - `restart/skinny/tranches/sk-v14/SPEC.md` Section 14.
 - `restart/skinny/tranches/sk-v14/SYNTHESIS.md` R10.
 - `skinny/RESULTS.md`.
-- `skinny/REDRESS.md` items 215 through 233.
+- `skinny/REDRESS.md` items 215 through 234.
 - `restart/skinny/ROLLING-SOTA-DELTA.md`.
 - `restart/skinny/tranches/sk-v14/HANDOFF.md`.
 
@@ -55,6 +57,7 @@ same-run cold evidence without landing the transient source patch.
 | W11A | ADMITTED | REDRESS-231: strict product `direct_to_struct` route admitted 13 / 17 JSON direct rows; 4 rows remain open for missing generated product surfaces. |
 | W11B | REJECTED | REDRESS-232: transient unicode strict products for `unicode_mixed` and `unicode_escapes` passed correctness but missed strict sonic by at least 2014.202 Mbps; no source patch landed and no row moved. |
 | W11C | REJECTED | REDRESS-233: transient `gsoc-2018` strict products passed correctness but missed strict sonic in every numeric-key, ordered, identity, full, and required-full variant; no source patch landed and no row moved. |
+| W11D | REJECTED | REDRESS-234: transient parse_only value-context delimiter threading passed correctness but missed strict sonic on all six residual rows; no source patch landed and no row moved. |
 
 ## Close-State Counts
 
@@ -84,7 +87,8 @@ remaining rows are implementation residuals, not closeable proof blocks.
    also reverted after measured rejection.
 4. JSON parse_only residuals remain for `twitter`, `github_events`,
    `update_center`, `random`, `gsoc-2018`, and
-   `distinct_values`.
+   `distinct_values`. W11D proved that context-threaded delimiter consumption
+   is not enough to move any of these rows.
 
 ## Reconciliation
 
@@ -96,7 +100,7 @@ remaining rows are implementation residuals, not closeable proof blocks.
   REDRESS-216, REDRESS-217, REDRESS-218, REDRESS-219, REDRESS-220,
   REDRESS-222, REDRESS-223, REDRESS-224, REDRESS-225, REDRESS-226,
   REDRESS-227, REDRESS-228, REDRESS-229, REDRESS-230, REDRESS-231,
-  REDRESS-232, and REDRESS-233.
+  REDRESS-232, REDRESS-233, and REDRESS-234.
 - `skinny/RESULTS.md` now renders CSS L4 legacy CostFacts as historical claims
   with current `AUDIT-FALSIFIED_OPEN` status, so the manifest no longer embeds
   live-looking `A` / `GO` / `ADMITTED-PARITY` fragments for OPEN CSS rows.
@@ -141,6 +145,10 @@ remaining rows are implementation residuals, not closeable proof blocks.
   `gsoc_2018_typed`, and `direct_strict_product` tests, plus cold reject
   evidence retained at
   `restart/skinny/tranches/sk-v14/research/skv14-W11C-gsoc-products.md`.
+- W11D local evidence before this close packet update: `cargo xtask
+  regen-json`, `cargo xtask check-json`, focused runtime/codegen parse_only
+  tests, plus cold reject evidence retained at
+  `restart/skinny/tranches/sk-v14/research/skv14-W11D-parse-only-threaded-context.md`.
 - Close invariants remain: 16 locks, Pattern H count 67, Lock 10 five-shape
   `BackendShape` canon preserved, and generated JSON parse_only remains
   distinct from the tape-building path.
@@ -149,8 +157,8 @@ remaining rows are implementation residuals, not closeable proof blocks.
 
 W11/W10R/W10S/W10T/W10V/W10W close SK-V14 as a mixed tranche, with admitted
 rows preserved and all unmet rows routed to implementation residuals. W10X,
-W10Y/W10Z, W10AA, W9Y, W9AC, W11B, and W11C add post-close residual rejection
-evidence; W9AA and W9AB add post-close typed admits for
+W10Y/W10Z, W10AA, W9Y, W9AC, W11B, W11C, and W11D add post-close residual
+rejection evidence; W9AA and W9AB add post-close typed admits for
 `distinct_values/real_typed_struct` and `canada/real_typed_struct`.
 Under the latest user instruction, the next work is implementation against the
 residual queue, not a new Omega or Alpha pass unless a future source attempt
@@ -184,3 +192,30 @@ exposes a spec-level amendment that truly requires G-Omega.
 - Current JSON direct_to_struct state remains 13 / 17 ADMITTED and 4 OPEN.
   Current JSON real_typed_struct state remains 13 / 17 ADMITTED and 4 MISSING:
   `gsoc-2018`, `unicode_mixed`, `unicode_escapes`, and `y_string_unicode`.
+
+## SK-V14 W11D JSON parse_only Threaded Context Reject
+
+- Item 234 closes `G-SK-V14-W11D-JSON-PARSE-ONLY-THREADED-CONTEXT` as
+  `REJECT`. No source patch lands, no `RESULTS.md` row moves, and
+  `restart/skinny/ROLLING-SOTA-DELTA.md` remains unchanged.
+- The measured candidate threaded value context through the generated
+  parse_only iterative parser so completed scalar values and empty containers
+  immediately consumed their object/array delimiters. The patch was reverted
+  after measurement and retained as
+  `/tmp/skv14-W11D-parse-only-threaded-context-rejected.patch` with SHA-256
+  `98b9494008e0d810699788c1ed8c667b2de29727301be6d27b3f6cf65d2b7146`.
+- Correctness gates passed before measurement: `cargo xtask regen-json`,
+  `cargo xtask check-json`, `cargo test --profile ax-iter -p runtime
+  generated_parse_only_accepts_and_rejects_json -- --nocapture`, and
+  `cargo test --profile ax-iter -p codegen
+  emits_distinct_json_parse_only_path_without_tape_builder -- --nocapture`.
+- Cold `profile_direct` evidence rejects all six open parse_only rows:
+  `twitter` margin `-3898.964` Mbps, `github_events` margin `-3216.303` Mbps,
+  `update_center` margin `-4231.665` Mbps, `random` margin `-2333.190` Mbps,
+  `gsoc-2018` margin `-13844.268` Mbps, and `distinct_values` margin
+  `-5258.386` Mbps versus the `sonic + 1.0` floor. Retained evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W11D-parse-only-threaded-context.md`,
+  `.tsv`, and `.raw.log`.
+- Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
+  `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
+  `distinct_values`.

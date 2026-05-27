@@ -1,0 +1,31 @@
+Command:
+
+  cargo build --release -p bbnf-bench --bin profile_direct
+  for corpus in twitter github_events update_center random gsoc-2018 distinct_values; do for mode in track1 sonic; do ./target/release/profile_direct 1000 "$corpus" "parse_only_$mode" 0; done; done
+
+Source patch:
+
+  /tmp/skv14-W11D-parse-only-threaded-context-rejected.patch
+  sha256 98b9494008e0d810699788c1ed8c667b2de29727301be6d27b3f6cf65d2b7146
+
+Correctness and generation gates before measurement:
+
+  cargo xtask regen-json
+  cargo xtask check-json
+  cargo test --profile ax-iter -p runtime generated_parse_only_accepts_and_rejects_json -- --nocapture
+  cargo test --profile ax-iter -p codegen emits_distinct_json_parse_only_path_without_tape_builder -- --nocapture
+
+Measurement output:
+
+PROBE_RESULT corpus=twitter corpus_bytes=631515 iters=1000 mode=parse_only_track1 warmup_iters=0 elapsed_s=0.402672 ns_per_byte=0.637628 mbps=12546.497 cycles=1685561896 instructions=4591214863 cycles_per_byte=2.669077 cpi=0.367128 user_ns=9448056 system_ns=89410 checksum=0
+PROBE_RESULT corpus=twitter corpus_bytes=631515 iters=1000 mode=parse_only_sonic warmup_iters=0 elapsed_s=0.307223 ns_per_byte=0.486486 mbps=16444.461 cycles=1301428594 instructions=4675854481 cycles_per_byte=2.060804 cpi=0.278330 user_ns=7282110 system_ns=42784 checksum=0
+PROBE_RESULT corpus=github_events corpus_bytes=65132 iters=1000 mode=parse_only_track1 warmup_iters=0 elapsed_s=0.037153 ns_per_byte=0.570428 mbps=14024.554 cycles=158106206 instructions=452652831 cycles_per_byte=2.427474 cpi=0.349288 user_ns=884607 system_ns=3922 checksum=0
+PROBE_RESULT corpus=github_events corpus_bytes=65132 iters=1000 mode=parse_only_sonic warmup_iters=0 elapsed_s=0.030224 ns_per_byte=0.464041 mbps=17239.857 cycles=128040143 instructions=421509604 cycles_per_byte=1.965856 cpi=0.303766 user_ns=717770 system_ns=3622 checksum=0
+PROBE_RESULT corpus=update_center corpus_bytes=533178 iters=1000 mode=parse_only_track1 warmup_iters=0 elapsed_s=0.412873 ns_per_byte=0.774363 mbps=10331.072 cycles=1751163449 instructions=4281322465 cycles_per_byte=3.284388 cpi=0.409024 user_ns=9802627 system_ns=49677 checksum=0
+PROBE_RESULT corpus=update_center corpus_bytes=533178 iters=1000 mode=parse_only_sonic warmup_iters=0 elapsed_s=0.292920 ns_per_byte=0.549385 mbps=14561.737 cycles=1241689670 instructions=3569397093 cycles_per_byte=2.328846 cpi=0.347871 user_ns=6952199 system_ns=38734 checksum=0
+PROBE_RESULT corpus=random corpus_bytes=510476 iters=1000 mode=parse_only_track1 warmup_iters=0 elapsed_s=0.484647 ns_per_byte=0.949403 mbps=8426.348 cycles=2057720888 instructions=5911585541 cycles_per_byte=4.030985 cpi=0.348083 user_ns=11517081 system_ns=54554 checksum=0
+PROBE_RESULT corpus=random corpus_bytes=510476 iters=1000 mode=parse_only_sonic warmup_iters=0 elapsed_s=0.379588 ns_per_byte=0.743595 mbps=10758.538 cycles=1611825683 instructions=6044034066 cycles_per_byte=3.157496 cpi=0.266680 user_ns=9015343 system_ns=45657 checksum=0
+PROBE_RESULT corpus=gsoc-2018 corpus_bytes=3327831 iters=1000 mode=parse_only_track1 warmup_iters=0 elapsed_s=1.194526 ns_per_byte=0.358950 mbps=22287.200 cycles=5064478838 instructions=17804867441 cycles_per_byte=1.521856 cpi=0.284444 user_ns=28364775 system_ns=139770 checksum=0
+PROBE_RESULT corpus=gsoc-2018 corpus_bytes=3327831 iters=1000 mode=parse_only_sonic warmup_iters=0 elapsed_s=0.736848 ns_per_byte=0.221420 mbps=36130.468 cycles=3105595802 instructions=10740029927 cycles_per_byte=0.933219 cpi=0.289161 user_ns=17450731 system_ns=100477 checksum=0
+PROBE_RESULT corpus=distinct_values corpus_bytes=153630 iters=1000 mode=parse_only_track1 warmup_iters=0 elapsed_s=0.185226 ns_per_byte=1.205663 mbps=6635.355 cycles=785290173 instructions=1573231887 cycles_per_byte=5.111568 cpi=0.499157 user_ns=4396174 system_ns=23935 checksum=0
+PROBE_RESULT corpus=distinct_values corpus_bytes=153630 iters=1000 mode=parse_only_sonic warmup_iters=0 elapsed_s=0.103344 ns_per_byte=0.672679 mbps=11892.741 cycles=439200109 instructions=1384030766 cycles_per_byte=2.858817 cpi=0.317334 user_ns=2459198 system_ns=10937 checksum=0

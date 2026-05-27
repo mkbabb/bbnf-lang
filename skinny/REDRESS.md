@@ -5764,3 +5764,35 @@ perturbation.
 - Current JSON direct_to_struct state remains 13 / 17 ADMITTED and 4 OPEN.
   Current JSON real_typed_struct state remains 13 / 17 ADMITTED and 4 MISSING:
   `gsoc-2018`, `unicode_mixed`, `unicode_escapes`, and `y_string_unicode`.
+
+## SK-V14 W11D JSON parse_only Threaded Context Reject
+
+- Item 234 closes `G-SK-V14-W11D-JSON-PARSE-ONLY-THREADED-CONTEXT` as
+  `REJECT`. No source patch lands, no `RESULTS.md` row moves, and
+  `restart/skinny/ROLLING-SOTA-DELTA.md` remains unchanged.
+- The measured candidate was a generated parse_only source route with a fresh
+  material differential over W10AA: value context was threaded through the
+  iterative parser so completed scalar values and empty containers consumed
+  their enclosing object/array delimiter immediately instead of returning
+  through the generic after-value frame first. The candidate retained the
+  existing key-colon stop after colon whitespace, carried no next value byte,
+  and did not use a structural pre-scan, cursor-return ABI, or the W10AA fused
+  string/object-loop cleanup route. The source patch was reverted after
+  measurement and retained as
+  `/tmp/skv14-W11D-parse-only-threaded-context-rejected.patch` with SHA-256
+  `98b9494008e0d810699788c1ed8c667b2de29727301be6d27b3f6cf65d2b7146`.
+- Correctness gates passed before measurement: `cargo xtask regen-json`,
+  `cargo xtask check-json`, `cargo test --profile ax-iter -p runtime
+  generated_parse_only_accepts_and_rejects_json -- --nocapture`, and
+  `cargo test --profile ax-iter -p codegen
+  emits_distinct_json_parse_only_path_without_tape_builder -- --nocapture`.
+- Cold `profile_direct` evidence rejects all six open parse_only rows:
+  `twitter` margin `-3898.964` Mbps, `github_events` margin `-3216.303` Mbps,
+  `update_center` margin `-4231.665` Mbps, `random` margin `-2333.190` Mbps,
+  `gsoc-2018` margin `-13844.268` Mbps, and `distinct_values` margin
+  `-5258.386` Mbps versus the `sonic + 1.0` floor. Retained evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W11D-parse-only-threaded-context.md`,
+  `.tsv`, and `.raw.log`.
+- Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
+  `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
+  `distinct_values`.

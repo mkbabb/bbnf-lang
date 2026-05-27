@@ -121,10 +121,13 @@ payload floor parser under REDRESS-245; no direct or typed row moved, and that
 fixed-shape floor route is pre-blocked without a fresh material differential.
 W11U then admitted `unicode_escapes` direct and typed rows through a generated
 raw JSON string lexeme product, so direct and typed each stand at 17 / 17
-admitted. W8R closed the CSS residual before W11L; continue actual
-implementation against the remaining parse_only residual queue, not
-another Omega or Alpha pass unless a future source attempt exposes a real
-spec-level amendment.
+admitted. W11V then rejected a 64-byte aarch64 trusted string-special
+parse_only scanner under REDRESS-247; no parse_only row moved, and that exact
+string64 trusted-skip route is pre-blocked without a fresh material
+differential. W8R closed the CSS residual before W11L; continue actual
+implementation against the remaining parse_only residual queue, not another
+Omega or Alpha pass unless a future source attempt exposes a real spec-level
+amendment.
 
 ## 1. Bracket Verdict
 
@@ -217,7 +220,7 @@ Lock 14 at `restart/locks/LOCKS.md:220–238`).
 ### Honest rolling delta (SK-V14 starting baseline)
 
 ```
-JSON parse_only: 11 / 17 (6 OPEN after W10W residual implementation; W11S attribution pins parse_only_string and REDRESS-246 rejects structural-stream driving)
+JSON parse_only: 11 / 17 (6 OPEN after W10W residual implementation; W11S attribution pins parse_only_string, REDRESS-246 rejects structural-stream driving, and REDRESS-247 rejects the string64 trusted-skip route)
 JSON direct:     17 / 17 (ADMITTED after W11U raw-lexeme product)
 JSON typed:      17 / 17 (ADMITTED after W11U raw-lexeme product)
 CSS L4:          24 / 24 (ADMITTED after W8R; generated full-parse plane beats lightningcss floor)
@@ -292,7 +295,8 @@ state is:
   moving any row. REDRESS-244 rejects indexed plain-string skipping without
   moving any row. W11S attributes all six residual rows to
   `parse_only_string`, and REDRESS-246 rejects the scanner-backed
-  structural-stream parse_only driver without moving any row.
+  structural-stream parse_only driver without moving any row. REDRESS-247
+  rejects the 64-byte trusted string-special scanner without moving any row.
 - JSON direct_to_struct: 17 / 17 ADMITTED after W11U. REDRESS-232 rejects
   product-surface-only unicode strict products for `unicode_mixed` and
   `unicode_escapes`, REDRESS-242 rejects the decoded-string `unicode_escapes`
@@ -473,7 +477,8 @@ material differential. REDRESS-240 pre-blocks parse_only object key-start
 specialization without a fresh material differential. REDRESS-244 pre-blocks
 parse_only indexed plain-string skipping without a fresh material differential.
 REDRESS-246 pre-blocks parse_only structural-stream driver retries without a
-fresh material differential.
+fresh material differential. REDRESS-247 pre-blocks parse_only string64
+trusted-skip retries without a fresh material differential.
 REDRESS-241 pre-blocks
 `y_string_unicode` product-plus-fused-materializer retries without a fresh
 material differential, while W11L admits the separate decoded token-product

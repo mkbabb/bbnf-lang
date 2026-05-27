@@ -47,14 +47,16 @@ patch. W11S then attributed all six remaining parse_only residual rows to
 stream parse_only driver and rejected it on same-run cold evidence without
 landing the transient source patch. W11U then admitted the remaining
 `unicode_escapes` direct and typed rows through a generated raw JSON string
-lexeme product.
+lexeme product. W11V then tested a 64-byte aarch64 trusted string-special
+scanner against the remaining parse_only residual rows and rejected it on
+same-run cold evidence without landing the transient source patch.
 
 ## Authority
 
 - `restart/skinny/tranches/sk-v14/SPEC.md` Section 14.
 - `restart/skinny/tranches/sk-v14/SYNTHESIS.md` R10.
 - `skinny/RESULTS.md`.
-- `skinny/REDRESS.md` items 215 through 246 plus the W11O and W11U admit
+- `skinny/REDRESS.md` items 215 through 247 plus the W11O and W11U admit
   packets.
 - `restart/skinny/ROLLING-SOTA-DELTA.md`.
 - `restart/skinny/tranches/sk-v14/HANDOFF.md`.
@@ -112,6 +114,7 @@ lexeme product.
 | W11S | ATTRIBUTION | Stage-0 parse-attribution proved `parse_only_string` is the rank-1 hot leaf for every remaining parse_only residual row; no source patch landed and no row moved. |
 | W11T | REJECTED | REDRESS-246: transient scanner-backed structural-stream parse_only driver passed correctness but missed same-run sonic on all six residual rows; no source patch landed and no row moved. |
 | W11U | ADMITTED | Generated raw JSON string lexeme product admits `unicode_escapes/direct_to_struct` and `unicode_escapes/real_typed_struct` from cold native `profile_direct` evidence. |
+| W11V | REJECTED | REDRESS-247: transient 64-byte aarch64 trusted string-special scanner improved Track 1 but missed same-run sonic on all six residual rows and failed one guard row; no source patch landed and no row moved. |
 
 ## Close-State Counts
 
@@ -148,7 +151,8 @@ blocks.
    scanner-indexed plain-string skipping is also insufficient. W11S then
    proved the dominant remaining hot leaf is `parse_only_string`, and W11T
    proved that replacing the byte-loop driver with a scanner-backed structural
-   stream is also insufficient.
+   stream is also insufficient. W11V proved that a 64-byte aarch64 trusted
+   string-special scanner is also insufficient and fails one guard row.
 
 ## Reconciliation
 
@@ -161,7 +165,8 @@ blocks.
   REDRESS-227, REDRESS-228, REDRESS-229, REDRESS-230, REDRESS-231,
   REDRESS-232, REDRESS-233, REDRESS-234, REDRESS-235, REDRESS-236,
   REDRESS-237, REDRESS-238, REDRESS-239, REDRESS-240, REDRESS-241,
-  REDRESS-242, REDRESS-243, REDRESS-244, REDRESS-245, and REDRESS-246.
+  REDRESS-242, REDRESS-243, REDRESS-244, REDRESS-245, REDRESS-246, and
+  REDRESS-247.
   REDRESS-215 remains in history as the initial CSS W8 rejection and is
   superseded by W8R admission evidence.
 - `skinny/RESULTS.md` now renders CSS L4 rows as current
@@ -250,6 +255,14 @@ blocks.
   check-json`, focused scanner/runtime/codegen parse_only tests, plus cold
   reject evidence retained at
   `restart/skinny/tranches/sk-v14/research/skv14-W11T-parse-only-structural-stream.md`.
+- W11V local evidence after this close packet update:
+  `BBNF_SIMD_STRICT=1 cargo test --profile ax-iter -p bbnf-simd
+  sk_v3_intrinsic_parity_aarch64 --test checkasm_parity -- --nocapture`,
+  `cargo test --profile ax-iter -p parse-that-regex trusted_string --
+  --nocapture`, `cargo test --profile ax-iter -p runtime
+  generated_parse_only_accepts_and_rejects_json -- --nocapture`, plus cold
+  reject evidence retained at
+  `restart/skinny/tranches/sk-v14/research/skv14-W11V-parse-only-string64.md`.
 - W11L local evidence after this close packet update: `cargo run --profile
   ax-iter -p xtask -- check-real-typed`, focused codegen typed-direct tests,
   focused `y_string_unicode` real-typed tests, focused direct strict-product
@@ -749,6 +762,38 @@ exposes a spec-level amendment that truly requires G-Omega.
 - Current JSON direct_to_struct state is 17 / 17 ADMITTED. Current JSON
   real_typed_struct state is 17 / 17 ADMITTED. JSON parse_only remains
   11 / 17 ADMITTED and 6 OPEN.
+
+## SK-V14 W11V JSON parse_only String64 Reject
+
+- Item 247 closes `G-SK-V14-W11V-JSON-PARSE-ONLY-STRING64` as `REJECT`.
+  No source patch lands, no `RESULTS.md` row moves, and
+  `restart/skinny/ROLLING-SOTA-DELTA.md` remains unchanged.
+- The measured candidate added a 64-byte aarch64 JSON string-special mask
+  primitive to `bbnf-simd` and routed the trusted parse-only string-end path
+  through it in `parse-that-regex`. This is materially distinct from W11T:
+  it does not add a structural stream, side table, or replacement parse_only
+  driver. It targets the W11S rank-1 `parse_only_string` hot leaf directly.
+- Correctness gates passed before measurement:
+  `BBNF_SIMD_STRICT=1 cargo test --profile ax-iter -p bbnf-simd
+  sk_v3_intrinsic_parity_aarch64 --test checkasm_parity -- --nocapture`,
+  `cargo test --profile ax-iter -p parse-that-regex trusted_string --
+  --nocapture`, and `cargo test --profile ax-iter -p runtime
+  generated_parse_only_accepts_and_rejects_json -- --nocapture`.
+- Cold `profile_direct` evidence rejects all six open parse_only rows against
+  the `sonic + 1.0` floor: `twitter` margin `-2696.309` Mbps,
+  `github_events` margin `-1943.020` Mbps, `update_center` margin
+  `-4316.162` Mbps, `random` margin `-2239.792` Mbps, `gsoc-2018` margin
+  `-10542.039` Mbps, and `distinct_values` margin `-3130.596` Mbps. One
+  guard row also failed the floor: `instruments` margin `-1184.010` Mbps.
+- The source patch was reverted after measurement and retained as
+  `/tmp/skv14-W11V-string64-rejected.patch` with SHA-256
+  `74bd6832bfc243e7a44ba6584ff316e44f8fccc99eb032dbec3b1f3c06ee163c`.
+  Retained evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W11V-parse-only-string64.md`,
+  `.tsv`, `.raw.log`, and baseline `.tsv` / `.raw.log`.
+- Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
+  `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
+  `distinct_values`.
 
 ## SK-V14 W11E JSON parse_only 64-Byte Whitespace Reject
 

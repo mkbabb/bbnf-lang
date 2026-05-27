@@ -6218,3 +6218,35 @@ product. This supersedes the W11R/W11P live-row status while preserving
 REDRESS-242, REDRESS-243, and REDRESS-245 as pre-blocks for decoded-string,
 decoded-codepoint, and fixed-shape decoded floor retries without a fresh
 material differential.
+
+## SK-V14 W11V Parse-Only String64 Reject
+
+- Item 247 closes `G-SK-V14-W11V-JSON-PARSE-ONLY-STRING64` as `REJECT`.
+  No source patch lands, no `RESULTS.md` row moves, and
+  `restart/skinny/ROLLING-SOTA-DELTA.md` remains unchanged.
+- The measured candidate added a 64-byte aarch64 JSON string-special mask
+  primitive to `bbnf-simd` and routed the trusted parse-only string-end path
+  through it in `parse-that-regex`. This is materially distinct from W11T:
+  it does not add a structural stream, side table, or replacement parse_only
+  driver. It targets the W11S rank-1 `parse_only_string` hot leaf directly.
+- Correctness gates passed before measurement:
+  `BBNF_SIMD_STRICT=1 cargo test --profile ax-iter -p bbnf-simd
+  sk_v3_intrinsic_parity_aarch64 --test checkasm_parity -- --nocapture`,
+  `cargo test --profile ax-iter -p parse-that-regex trusted_string --
+  --nocapture`, and `cargo test --profile ax-iter -p runtime
+  generated_parse_only_accepts_and_rejects_json -- --nocapture`.
+- Cold `profile_direct` evidence rejects all six open parse_only rows against
+  the `sonic + 1.0` floor: `twitter` margin `-2696.309` Mbps,
+  `github_events` margin `-1943.020` Mbps, `update_center` margin
+  `-4316.162` Mbps, `random` margin `-2239.792` Mbps, `gsoc-2018` margin
+  `-10542.039` Mbps, and `distinct_values` margin `-3130.596` Mbps. One
+  guard row also failed the floor: `instruments` margin `-1184.010` Mbps.
+- The source patch was reverted after measurement and retained as
+  `/tmp/skv14-W11V-string64-rejected.patch` with SHA-256
+  `74bd6832bfc243e7a44ba6584ff316e44f8fccc99eb032dbec3b1f3c06ee163c`.
+  Retained evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W11V-parse-only-string64.md`,
+  `.tsv`, `.raw.log`, and baseline `.tsv` / `.raw.log`.
+- Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
+  `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
+  `distinct_values`.

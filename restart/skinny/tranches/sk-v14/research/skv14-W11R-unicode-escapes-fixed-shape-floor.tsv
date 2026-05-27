@@ -1,0 +1,5 @@
+corpus	mode	mbps	checksum	cold_iters	warmup_iters
+unicode_escapes	unicode_escapes_floor_direct	751.889	0	1000	0
+unicode_escapes	unicode_escapes_floor_typed	819.515	0	1000	0
+unicode_escapes	unicode_escapes_floor_sonic	1191.214	0	1000	0
+unicode_escapes	unicode_escapes_floor_serde	901.515	0	1000	0

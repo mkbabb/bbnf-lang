@@ -1,0 +1,24 @@
+== unicode_escapes unicode_escapes_floor_direct ==
+profile-direct: corpus=unicode_escapes mode=unicode_escapes_floor_direct path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_escapes.json" iters=1000 warmup_iters=0
+profile-direct: fixture size = 1050797 bytes
+profile-direct: starting timed loop
+PROBE_RESULT corpus=unicode_escapes corpus_bytes=1050797 iters=1000 mode=unicode_escapes_floor_direct warmup_iters=0 elapsed_s=11.180347 ns_per_byte=10.639874 mbps=751.889 cycles=8544849403 instructions=22636895175 cycles_per_byte=8.131779 cpi=0.377474 user_ns=144501000 system_ns=7818902 checksum=0
+profile-direct: 1000 iters in 11.18s -> 752 Mbps (digest cksum 0)
+== unicode_escapes unicode_escapes_floor_typed ==
+profile-direct: corpus=unicode_escapes mode=unicode_escapes_floor_typed path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_escapes.json" iters=1000 warmup_iters=0
+profile-direct: fixture size = 1050797 bytes
+profile-direct: starting timed loop
+PROBE_RESULT corpus=unicode_escapes corpus_bytes=1050797 iters=1000 mode=unicode_escapes_floor_typed warmup_iters=0 elapsed_s=10.257746 ns_per_byte=9.761872 mbps=819.515 cycles=8504236301 instructions=22593649822 cycles_per_byte=8.093130 cpi=0.376399 user_ns=143375681 system_ns=7141310 checksum=0
+profile-direct: 1000 iters in 10.26s -> 820 Mbps (digest cksum 0)
+== unicode_escapes unicode_escapes_floor_sonic ==
+profile-direct: corpus=unicode_escapes mode=unicode_escapes_floor_sonic path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_escapes.json" iters=1000 warmup_iters=0
+profile-direct: fixture size = 1050797 bytes
+profile-direct: starting timed loop
+PROBE_RESULT corpus=unicode_escapes corpus_bytes=1050797 iters=1000 mode=unicode_escapes_floor_sonic warmup_iters=0 elapsed_s=7.056981 ns_per_byte=6.715836 mbps=1191.214 cycles=5509523505 instructions=19542088400 cycles_per_byte=5.243185 cpi=0.281931 user_ns=76867782 system_ns=4018046 checksum=0
+profile-direct: 1000 iters in 7.06s -> 1191 Mbps (digest cksum 0)
+== unicode_escapes unicode_escapes_floor_serde ==
+profile-direct: corpus=unicode_escapes mode=unicode_escapes_floor_serde path="/Users/mkbabb/Programming/bbnf-lang/skinny/test_data/unicode_escapes.json" iters=1000 warmup_iters=0
+profile-direct: fixture size = 1050797 bytes
+profile-direct: starting timed loop
+profile-direct: 1000 iters in 9.32s -> 902 Mbps (digest cksum 0)
+PROBE_RESULT corpus=unicode_escapes corpus_bytes=1050797 iters=1000 mode=unicode_escapes_floor_serde warmup_iters=0 elapsed_s=9.324726 ns_per_byte=8.873956 mbps=901.515 cycles=10512262220 instructions=33486705012 cycles_per_byte=10.004085 cpi=0.313923 user_ns=182554115 system_ns=4999687 checksum=0

@@ -6133,3 +6133,42 @@ perturbation.
 - Current JSON parse_only state remains 11 / 17 ADMITTED and 6 OPEN:
   `twitter`, `github_events`, `update_center`, `random`, `gsoc-2018`, and
   `distinct_values`.
+
+## SK-V14 W11R unicode_escapes Fixed-Shape Floor Reject
+
+- Item 245 closes
+  `G-SK-V14-W11R-JSON-UNICODE-ESCAPES-FIXED-SHAPE-FLOOR` as `REJECT`.
+  No source patch lands, no `RESULTS.md` row moves, and
+  `restart/skinny/ROLLING-SOTA-DELTA.md` remains unchanged.
+- The measured candidate added a transient fixed-shape `unicode_escapes`
+  floor parser to `profile_direct`. Track 1 consumed the concrete
+  `{meta, records}` fixture shape, verified `mode == "escapes"` and
+  `ensure_ascii == true`, validated every record id, decoded string escape,
+  surrogate pair, and raw-control rejection, and folded every decoded payload
+  UTF-8 byte into a strict semantic product. serde_json and sonic-rs sidecars
+  independently produced the same product through a matching strict struct.
+- The route is materially distinct from REDRESS-242 and REDRESS-243 because it
+  removes generated typed/direct product-surface overhead and tests a
+  fixed-shape minimum floor while still consuming every decoded payload unit.
+  It still failed the cold gate: `unicode_escapes/direct_to_struct` measured
+  Track 1 `751.889` Mbps versus sonic `1191.214` Mbps, margin `-439.325`
+  Mbps, and `unicode_escapes/real_typed_struct` measured Track 1 `819.515`
+  Mbps versus the same strict sonic sidecar `1191.214` Mbps, margin
+  `-371.699` Mbps. Against the required `sonic + 1.0` floor, the deficits are
+  `-440.325` Mbps and `-372.699` Mbps.
+- Correctness gates passed before measurement: `cargo fmt --manifest-path
+  skinny/Cargo.toml --package bbnf-bench` and `CARGO_TARGET_DIR=/tmp/skv14-w11r-test-target
+  RUSTC_WRAPPER= cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench
+  --bin profile_direct unicode_escapes_floor -- --nocapture`. The focused test
+  suite covered full-fixture parity against serde_json and sonic-rs,
+  surrogate-pair acceptance, invalid escape and surrogate rejection, wrong
+  mode rejection, and raw control-character rejection.
+- The source patch was reverted after measurement and retained as
+  `/tmp/skv14-W11R-unicode-escapes-floor-rejected.patch` with SHA-256
+  `268b3d5207b9d252df10cdab37319eafeb11a197d4e72e75d4b3a2e85f471f16`.
+  Retained evidence:
+  `restart/skinny/tranches/sk-v14/research/skv14-W11R-unicode-escapes-fixed-shape-floor.md`,
+  `.tsv`, and `.raw.log`.
+- Current JSON direct_to_struct state remains 16 / 17 ADMITTED and 1 OPEN:
+  `unicode_escapes`. Current JSON real_typed_struct state remains 16 / 17
+  ADMITTED and 1 MISSING: `unicode_escapes`.

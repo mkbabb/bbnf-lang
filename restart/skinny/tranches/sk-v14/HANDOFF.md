@@ -116,7 +116,9 @@ patch was reverted, no row moved, and that scalar-fact shape is pre-blocked
 without a fresh material differential. W11Q then rejected a generated
 parse_only indexed-string route under REDRESS-244; no parse_only row moved,
 and indexed plain-string skipping is pre-blocked without a fresh material
-differential.
+differential. W11R then rejected a fixed-shape `unicode_escapes` decoded
+payload floor parser under REDRESS-245; no direct or typed row moved, and that
+fixed-shape floor route is pre-blocked without a fresh material differential.
 W8R closed the CSS residual before W11L; continue actual implementation against
 the remaining JSON residual queue, not
 another Omega or Alpha pass unless a future source attempt exposes a real
@@ -286,7 +288,8 @@ state is:
   without moving any row. REDRESS-239 rejects array value-byte carry without
   moving any row. REDRESS-240 rejects object key-start specialization without
   moving any row. REDRESS-244 rejects indexed plain-string skipping without
-  moving any row.
+  moving any row. REDRESS-245 rejects the fixed-shape `unicode_escapes`
+  decoded payload floor parser without moving any row.
 - JSON direct_to_struct: 16 / 17 ADMITTED, 1 OPEN after W11O; the remaining
   row lacks an admitted strict product differential. REDRESS-232 rejects
   product-surface-only unicode strict products for `unicode_mixed` and
@@ -299,7 +302,8 @@ state is:
   decoded value scalar plus closed token product and W11O admits the separate
   `gsoc-2018` numeric-key decoded token product. REDRESS-243 rejects the
   materially distinct `unicode_escapes` decoded codepoint-fact product without
-  moving the remaining row.
+  moving the remaining row. REDRESS-245 rejects a fixed-shape decoded payload
+  floor parser without moving the remaining row.
 - JSON real_typed_struct: 16 / 17 ADMITTED, 1 MISSING product surface after
   W11O; REDRESS-226 rejects the earlier generated `y_string_unicode` root and
   REDRESS-229 rejects the generated `gsoc-2018` numeric-key root without
@@ -312,7 +316,8 @@ state is:
   materially distinct `unicode_mixed` decoded value scalar plus closed token
   product and W11O admits the materially distinct `gsoc-2018` numeric-key
   decoded token product. REDRESS-243 rejects and reverts the transient
-  `unicode_escapes` decoded codepoint-fact root.
+  `unicode_escapes` decoded codepoint-fact root. REDRESS-245 rejects and
+  reverts the transient fixed-shape decoded payload floor parser.
 - CSS L4: 24 / 24 ADMITTED after W8R. REDRESS-215 remains historical as the
   initial fact-stream-plane rejection, superseded by generated full-parse
   release-native evidence.
@@ -390,6 +395,11 @@ discipline).
     The route used scanner-produced structural positions plus risky-string
     side tables, but Track 1 still missed same-run sonic on all six parse_only
     residual rows.
+15. W11R rejects a fixed-shape `unicode_escapes` decoded payload floor parser
+    under REDRESS-245. The route validated the concrete `{meta, records}`
+    fixture shape, decoded every string payload unit, and matched strict
+    serde_json/sonic sidecar products, but Track 1 still missed same-run sonic
+    for both direct and typed planes.
 
 ## 7. Refusal Conditions
 
@@ -483,3 +493,5 @@ while W11N admits the materially distinct `unicode_mixed` decoded value scalar
 plus closed token product and W11O admits the materially distinct `gsoc-2018`
 numeric-key decoded token product. REDRESS-243 pre-blocks `unicode_escapes`
 decoded codepoint-fact products without a fresh material differential.
+REDRESS-245 pre-blocks fixed-shape `unicode_escapes` decoded payload floor
+parsers without a fresh material differential.

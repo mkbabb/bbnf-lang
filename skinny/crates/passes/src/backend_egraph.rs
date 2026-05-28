@@ -1,12 +1,12 @@
 use egraph::{
-    BackoffScheduler, CostModel, EGraph, Extractor, Id, Language, Lattice, NoAnalysis, RewriteFn,
-    Scheduler,
+    BackoffScheduler, CostModel, EGraph, Extractor, Id, Language, Lattice, NoAnalysis, Rewrite,
+    RewriteFn, Scheduler,
 };
 use ir::{ActiveCostFacts, BackendShape, DecisionCspFacts, PriorityStep, RuleId, ShapeRationale};
 
 const SCHEMA: &str = "sk-v13-decision-active-cost-v1";
 const FORMULA: &str = "sk-v13-w6-integer-v1";
-const REWRITE_SET: &str = "sk-v13-w6-conservative-shape-v1";
+const REWRITE_SET: &str = "sk-v15-w7-direct-sink-normalization-v1";
 const GENERATED_SELECTION: &str = "passes::recognizers::derive_backend_shape_with_diagnostics";
 const SAME_WAVE_CONSUMER: &str = "codegen::lower::rust::lower_to_rust";
 
@@ -34,6 +34,14 @@ pub(crate) struct ActiveSelection {
 }
 
 pub(crate) fn select(rule_id: RuleId, candidates: Vec<BackendCandidate>) -> ActiveSelection {
+    select_with_rewrite_policy(rule_id, candidates, true)
+}
+
+fn select_with_rewrite_policy(
+    rule_id: RuleId,
+    candidates: Vec<BackendCandidate>,
+    enable_rewrites: bool,
+) -> ActiveSelection {
     let total_count = candidates.len() as u32;
     let hard_pruned_count = candidates
         .iter()
@@ -63,8 +71,14 @@ pub(crate) fn select(rule_id: RuleId, candidates: Vec<BackendCandidate>) -> Acti
     graph.rebuild();
 
     let scheduler = BackoffScheduler::default();
-    let rules: [&dyn RewriteFn<DecisionNode, NoAnalysis>; 0] = [];
-    let report = scheduler.run(&mut graph, &rules);
+    let report = if enable_rewrites {
+        let normalize = NormalizeDirectSinkCost;
+        let rules: [&dyn RewriteFn<DecisionNode, NoAnalysis>; 1] = [&normalize];
+        scheduler.run(&mut graph, &rules)
+    } else {
+        let rules: [&dyn RewriteFn<DecisionNode, NoAnalysis>; 0] = [];
+        scheduler.run(&mut graph, &rules)
+    };
     let root = root.expect("ranked candidates are nonempty");
     let cost_model = DecisionCostModel;
     let extractor = Extractor::new(&graph, &cost_model);
@@ -119,6 +133,7 @@ pub(crate) fn select(rule_id: RuleId, candidates: Vec<BackendCandidate>) -> Acti
             egraph_node_count: graph.total_nodes() as u32,
             egraph_eclass_count: graph.classes().count() as u32,
             egraph_iteration_count: report.iterations as u32,
+            egraph_rewrite_count: report.total_applied as u32,
             egraph_memory_peak_bytes: memory_estimate as u64,
             egraph_budget_status: budget_status.to_string(),
             determinism_replay_status: "pass".to_string(),
@@ -170,6 +185,54 @@ impl Language for DecisionNode {
 
     fn children_mut(&mut self) -> &mut [Id] {
         &mut self.children
+    }
+}
+
+struct NormalizeDirectSinkCost;
+
+impl Rewrite<DecisionNode, NoAnalysis> for NormalizeDirectSinkCost {
+    type Match = DecisionNode;
+
+    fn name(&self) -> &str {
+        "normalize-direct-sink-cost"
+    }
+
+    fn search(&self, egraph: &EGraph<DecisionNode, NoAnalysis>) -> Vec<(Id, Self::Match)> {
+        let mut matches = Vec::new();
+        for class in egraph.classes() {
+            if class
+                .iter()
+                .any(|node| node.id.ends_with("#direct-sink-normalized"))
+            {
+                continue;
+            }
+            for node in class.iter() {
+                if node.shape != BackendShape::SinkOnly
+                    || node.rationale != ShapeRationale::DirectBuildNoConsumer
+                    || (node.score.static_size_cost == 0 && node.score.shape_rank == 0)
+                {
+                    continue;
+                }
+                let mut normalized = node.clone();
+                normalized.id = format!("{}#direct-sink-normalized", node.id);
+                normalized.score.static_size_cost = 0;
+                normalized.score.shape_rank = 0;
+                normalized.score.candidate_hash = stable_hash(&normalized.id);
+                matches.push((class.id, normalized));
+                break;
+            }
+        }
+        matches
+    }
+
+    fn apply(
+        &self,
+        egraph: &mut EGraph<DecisionNode, NoAnalysis>,
+        class_id: Id,
+        matched: Self::Match,
+    ) {
+        let normalized = egraph.add(matched);
+        egraph.union(class_id, normalized);
     }
 }
 

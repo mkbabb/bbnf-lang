@@ -1724,6 +1724,9 @@ mod tests {
             assert_eq!(active.egraph_budget_status, "pass");
             assert_eq!(active.determinism_replay_status, "pass");
             let csp = facts.decision_csp.as_ref().expect("missing decision CSP");
+            if facts.chosen == BackendShape::SinkOnly {
+                assert!(active.egraph_rewrite_count >= 1);
+            }
             assert_eq!(csp.per_grammar_policy_status, "pass");
             assert_eq!(csp.same_substrate_union_status, "pass");
             assert_eq!(csp.selected_shape, facts.chosen);
@@ -1933,4 +1936,90 @@ root = unknown | literal ;
             _ => None,
         }
     }
+}
+
+#[cfg(test)]
+#[test]
+fn decision_egraph_rewrite_changes_selected_shape() {
+    let candidates = vec![
+        backend_egraph::BackendCandidate {
+            id: "rule-0-shape-EagerTape-priority-P1EagerForced".into(),
+            shape: BackendShape::EagerTape,
+            rationale: ShapeRationale::FirstSetOverlap,
+            priority_fired: PriorityStep::P1EagerForced,
+            hard_pruned: false,
+            stale: false,
+            perf_cost: 0,
+            capacity_cost: 0,
+            static_size_cost: 0,
+            shape_rank: 5,
+        },
+        backend_egraph::BackendCandidate {
+            id: "rule-0-shape-SinkOnly-priority-P2SinkOnlyConsumer".into(),
+            shape: BackendShape::SinkOnly,
+            rationale: ShapeRationale::DirectBuildNoConsumer,
+            priority_fired: PriorityStep::P2SinkOnlyConsumer,
+            hard_pruned: false,
+            stale: false,
+            perf_cost: 0,
+            capacity_cost: 0,
+            static_size_cost: 1,
+            shape_rank: 10,
+        },
+    ];
+
+    let selected = backend_egraph::select(ir::RuleId(0), candidates);
+
+    assert_eq!(selected.shape, BackendShape::SinkOnly);
+    assert!(selected.facts.egraph_rewrite_count >= 1);
+    assert!(selected
+        .facts
+        .selected_candidate_id
+        .ends_with("#direct-sink-normalized"));
+}
+
+#[cfg(test)]
+#[test]
+fn decision_csp_rejects_missing_required_fact() {
+    let admitted = vec![backend_egraph::BackendCandidate {
+        id: "rule-0-shape-OffsetTape-capacity-present".into(),
+        shape: BackendShape::OffsetTape,
+        rationale: ShapeRationale::DefaultOffsetTape,
+        priority_fired: PriorityStep::P7OffsetTapeDefault,
+        hard_pruned: false,
+        stale: false,
+        perf_cost: 0,
+        capacity_cost: 0,
+        static_size_cost: 2,
+        shape_rank: 40,
+    }];
+    let admitted_active = backend_egraph::select(ir::RuleId(0), admitted.clone());
+    let admitted_resolved =
+        decision_csp::finalize_rule("grammar", ir::RuleId(0), admitted, admitted_active);
+    let admitted_csp = admitted_resolved.decision_csp.expect("admitted csp");
+
+    assert_eq!(admitted_csp.csp_status, "sat");
+    assert_eq!(admitted_csp.selected_rule_count, 1);
+    assert_eq!(admitted_csp.capacity_constraint_status, "pass");
+
+    let missing_capacity = vec![backend_egraph::BackendCandidate {
+        id: "rule-0-shape-OffsetTape-capacity-missing".into(),
+        shape: BackendShape::OffsetTape,
+        rationale: ShapeRationale::DefaultOffsetTape,
+        priority_fired: PriorityStep::P7OffsetTapeDefault,
+        hard_pruned: false,
+        stale: false,
+        perf_cost: 0,
+        capacity_cost: 2,
+        static_size_cost: 2,
+        shape_rank: 40,
+    }];
+    let missing_active = backend_egraph::select(ir::RuleId(0), missing_capacity.clone());
+    let missing_resolved =
+        decision_csp::finalize_rule("grammar", ir::RuleId(0), missing_capacity, missing_active);
+    let missing_csp = missing_resolved.decision_csp.expect("missing csp");
+
+    assert_eq!(missing_csp.csp_status, "unsat");
+    assert_eq!(missing_csp.selected_rule_count, 0);
+    assert_eq!(missing_csp.capacity_constraint_status, "fail");
 }

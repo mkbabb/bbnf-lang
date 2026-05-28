@@ -6322,3 +6322,33 @@ material differential.
   `DEP-W1-CSS-BROADCAST` as diagnostic-only. W7 may proceed against the fresh
   measured rejection; any future CSS admission must be a new typed
   same-workload row.
+
+## SK-V15 W7 Decision Engine Spine Admit
+
+- Item 249 closes `G-SK-V15-W7-DECISION-SPINE` as `ADMIT-W7`. W7 consumes
+  `DEP-W7-DECISION-SPINE` by replacing the zero-rule e-graph and tautological
+  CSP record with an executable decision spine and generated-selection
+  consumer.
+- The e-graph route adds `NormalizeDirectSinkCost`, a scheduled rewrite that
+  asserts an equivalent normalized direct-sink candidate only after
+  `SinkOnly` with `DirectBuildNoConsumer` is already eligible. `ActiveCostFacts`
+  now records `egraph_rewrite_count`, sourced from `RunReport.total_applied`.
+- The CSP route removes the tautological parity predicate and makes capacity a
+  falsifiable generic requirement. The W7 exact CSP test proves the same
+  selected `OffsetTape` candidate is `sat` with `capacity_cost=0` and `unsat`
+  with `capacity_cost=2`.
+- Grammar-named generic decision records are retired from the live spine:
+  `csp_named_grammars`, `static_css_provider_status`,
+  `json_sink_only_status`, and the `JSON-CSS-W7-*` block id no longer exist in
+  the `DecisionCspFacts` path.
+- Required evidence passed:
+  `cargo test --manifest-path skinny/Cargo.toml -p passes decision_egraph_rewrite_changes_selected_shape -- --exact`,
+  `cargo test --manifest-path skinny/Cargo.toml -p passes decision_csp_rejects_missing_required_fact -- --exact`, and
+  `cargo test --manifest-path skinny/Cargo.toml -p codegen decision_spine_changes_generated_selection_fixture -- --exact`.
+  Broader `cargo test --manifest-path skinny/Cargo.toml -p passes` passed 13
+  tests.
+- Broader `cargo test --manifest-path skinny/Cargo.toml -p codegen` is still
+  blocked by pre-existing dirty CSS generated runtime files:
+  `tests::css_l4_generated_runtimes_reproducible_from_request` reports
+  `DifferentFile("generated.rs")`. Those generated files are not part of W7's
+  staged slice.

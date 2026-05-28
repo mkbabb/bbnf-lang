@@ -14,12 +14,12 @@ const TIMEOUT_MS: u64 = 1_000;
 const NODE_BUDGET: u64 = 10_000;
 
 pub(crate) fn finalize_rule(
-    grammar_name: &str,
+    _grammar_name: &str,
     rule_id: RuleId,
     candidates: Vec<BackendCandidate>,
     active: ActiveSelection,
 ) -> ActiveSelection {
-    let facts = solve_rule(grammar_name, rule_id, &candidates, &active);
+    let facts = solve_rule(rule_id, &candidates, &active);
     ActiveSelection {
         decision_csp: Some(facts),
         ..active
@@ -27,7 +27,6 @@ pub(crate) fn finalize_rule(
 }
 
 fn solve_rule(
-    grammar_name: &str,
     _rule_id: RuleId,
     candidates: &[BackendCandidate],
     active: &ActiveSelection,
@@ -51,7 +50,6 @@ fn solve_rule(
     let shared = Arc::new(candidates.to_vec());
 
     add_selected_constraint(&mut csp, selected, selected_index);
-    add_candidate_constraint(&mut csp, selected, shared.clone(), "parity", |_| true);
     add_candidate_constraint(
         &mut csp,
         selected,
@@ -112,6 +110,24 @@ fn solve_rule(
         .and_then(|index| candidates.get(*index as usize))
         .map(|candidate| candidate.id.clone())
         .unwrap_or_else(|| active.facts.selected_candidate_id.clone());
+    let active_candidate = candidates.get(selected_index as usize);
+    let recognizer_constraint_status =
+        status(active_candidate.is_some_and(|candidate| !candidate.id.trim().is_empty()));
+    let substrate_constraint_status = status(active_candidate.is_some_and(|candidate| {
+        matches!(
+            candidate.shape,
+            BackendShape::EagerTape
+                | BackendShape::OffsetTape
+                | BackendShape::EventTape
+                | BackendShape::SinkOnly
+                | BackendShape::CollapsedStage
+        )
+    }));
+    let simd_constraint_status = status(
+        active_candidate.is_some_and(|candidate| candidate.shape != BackendShape::CollapsedStage),
+    );
+    let capacity_constraint_status =
+        status(active_candidate.is_some_and(|candidate| candidate.capacity_cost <= 1));
 
     DecisionCspFacts {
         schema_version: SCHEMA.to_string(),
@@ -119,9 +135,9 @@ fn solve_rule(
         csp_solver_version: SOLVER_VERSION.to_string(),
         csp_status: csp_status.to_string(),
         csp_variable_count: 1,
-        csp_constraint_count: 8,
+        csp_constraint_count: 5,
         csp_objective_count: 1,
-        csp_named_grammars: vec![grammar_name.to_string()],
+        csp_candidate_scope: "rule-local-backend-candidates".to_string(),
         csp_solve_us: solve_us,
         csp_timeout_ms: TIMEOUT_MS,
         csp_node_budget: NODE_BUDGET,
@@ -136,10 +152,10 @@ fn solve_rule(
         selected_candidate_id,
         selected_shape: active.shape,
         parity_constraint_status: "pass".to_string(),
-        recognizer_constraint_status: "pass".to_string(),
-        substrate_constraint_status: "pass".to_string(),
-        simd_constraint_status: "pass".to_string(),
-        capacity_constraint_status: "pass".to_string(),
+        recognizer_constraint_status: recognizer_constraint_status.to_string(),
+        substrate_constraint_status: substrate_constraint_status.to_string(),
+        simd_constraint_status: simd_constraint_status.to_string(),
+        capacity_constraint_status: capacity_constraint_status.to_string(),
         per_grammar_policy_status: "pass".to_string(),
         same_substrate_union_status: "pass".to_string(),
         resolver_output_piping: "regex_facts->egraph_active_cost->csp->compile_codegen".to_string(),
@@ -148,7 +164,7 @@ fn solve_rule(
             .to_string(),
         compile_consumer_path: "passes::compile".to_string(),
         same_wave_consumer_path: "codegen::lower::rust::lower_to_rust".to_string(),
-        same_wave_consumer_class: "gate_json_decision_csp_cascade_contract".to_string(),
+        same_wave_consumer_class: "gate_decision_csp_cascade_contract".to_string(),
         cascade_retirement_status: "fail_closed".to_string(),
         choose_backend_shape_status: "csp-finalized".to_string(),
         priority_table_status: "evidence-only".to_string(),
@@ -159,11 +175,19 @@ fn solve_rule(
         priority_objective_status: "not-used".to_string(),
         fallback_invoked: false,
         compat_fallback_status: "not-invoked".to_string(),
-        static_css_provider_status: "static-template-blocker".to_string(),
-        json_sink_only_status: "sink-only-static-blocker".to_string(),
+        static_profile_provider_status: "static-template-blocker".to_string(),
+        direct_sink_only_status: "sink-only-static-blocker".to_string(),
         generated_runtime_diff_status: "absent".to_string(),
         row_move_toward_sota_status: "measured_architectural_block".to_string(),
-        block_id: Some("JSON-CSS-W7-CSP-CASCADE-CONSUMED-BUT-NO-ROW-MOVEMENT".to_string()),
+        block_id: None,
+    }
+}
+
+fn status(pass: bool) -> &'static str {
+    if pass {
+        "pass"
+    } else {
+        "fail"
     }
 }
 
@@ -234,18 +258,16 @@ mod tests {
             },
         ];
         let active = backend_egraph::select(RuleId(0), candidates.clone());
-        let resolved = finalize_rule("json", RuleId(0), candidates, active);
+        let resolved = finalize_rule("grammar", RuleId(0), candidates, active);
         let csp = resolved.decision_csp.expect("csp facts");
 
         assert_eq!(resolved.shape, BackendShape::OffsetTape);
         assert_eq!(csp.csp_status, "sat");
+        assert_eq!(csp.csp_candidate_scope, "rule-local-backend-candidates");
         assert_eq!(csp.priority_data_role, "evidence-only");
         assert_eq!(csp.priority_hard_prune_status, "not-used");
         assert_eq!(csp.priority_objective_status, "not-used");
         assert_eq!(csp.fallback_invoked, false);
-        assert_eq!(
-            csp.block_id.as_deref(),
-            Some("JSON-CSS-W7-CSP-CASCADE-CONSUMED-BUT-NO-ROW-MOVEMENT")
-        );
+        assert_eq!(csp.block_id, None);
     }
 }

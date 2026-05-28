@@ -1153,6 +1153,90 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
 
 #[cfg(test)]
 #[test]
+fn decision_spine_changes_generated_selection_fixture() {
+    const JSON_GRAMMAR: &str = include_str!("../../../grammars/json.bbnf");
+
+    let grammar = grammar::parse_grammar("json", JSON_GRAMMAR).unwrap();
+    let output = passes::compile(&grammar).unwrap();
+    let direct_lowered = lower::lower_to_rust(
+        &output.backend_ir,
+        &lower::LowerCtx {
+            backend_shape: &output.layout_facts.backend_shape,
+            cost_facts: &output.layout_facts.cost_facts,
+            per_grammar_policy: &output.layout_facts.per_grammar_policy,
+            same_substrate_union: &output.layout_facts.same_substrate_union,
+            diagnostics: &output.diagnostics,
+        },
+    )
+    .unwrap();
+
+    let retained_plan = passes::recognizers::derive_backend_shape_with_diagnostics(
+        &output.grammar,
+        &output.backend_ir,
+        &output.layout_facts,
+        passes::recognizers::TargetFeatures {
+            avx512bw: false,
+            collapsed_stage_author_declared: false,
+            direct_only_output: false,
+            direct_build_consumer: false,
+            retained_api_consumer: true,
+        },
+    );
+    let retained_lowered = lower::lower_to_rust(
+        &output.backend_ir,
+        &lower::LowerCtx {
+            backend_shape: &retained_plan.backend_shape,
+            cost_facts: &retained_plan.cost_facts,
+            per_grammar_policy: &retained_plan.per_grammar_policy,
+            same_substrate_union: &retained_plan.same_substrate_union,
+            diagnostics: &retained_plan.diagnostics,
+        },
+    )
+    .unwrap();
+
+    let object_id = output
+        .backend_ir
+        .rules
+        .iter()
+        .position(|rule| rule.name == "object")
+        .map(RuleId)
+        .expect("object rule");
+    let direct_rule = direct_lowered
+        .rule_plans
+        .iter()
+        .find(|rule| rule.rule == "object")
+        .expect("direct object plan");
+    let retained_rule = retained_lowered
+        .rule_plans
+        .iter()
+        .find(|rule| rule.rule == "object")
+        .expect("retained object plan");
+    let direct_facts = output.layout_facts.cost_facts.get(&object_id).unwrap();
+    let retained_facts = retained_plan.cost_facts.get(&object_id).unwrap();
+
+    assert_eq!(direct_rule.shape, BackendShape::SinkOnly);
+    assert_eq!(retained_rule.shape, BackendShape::OffsetTape);
+    assert_ne!(direct_rule.body, retained_rule.body);
+    assert!(
+        direct_facts
+            .active_cost
+            .as_ref()
+            .expect("direct active cost")
+            .egraph_rewrite_count
+            >= 1
+    );
+    assert_eq!(
+        retained_facts
+            .active_cost
+            .as_ref()
+            .expect("retained active cost")
+            .egraph_rewrite_count,
+        0
+    );
+}
+
+#[cfg(test)]
+#[test]
 fn w5a_runtime_contract_consumes_source_and_metadata() {
     tests::w5a_runtime_contract_consumes_source_and_metadata();
 }

@@ -8,6 +8,20 @@ mod regen;
 mod regen_css;
 
 const USAGE: &str = "usage: cargo xtask <regen-json|check-json|regen-css|check-css-l4-at-rules-and-media|check-css-l4-declaration-values|check-css-l4-declaration-values-extended|check-css-l4-nested-layout|check-css-l4-stylesheet-selectors|check-css-l4-vendor-and-custom-atrules|check-css-l4-visual-functions|regen-real-typed|check-real-typed|check-conformance|lint-loc|bench-json|gate-json|primitive-checkasm>";
+const SKV15_W2_LOCK_GATES_ONLY_FLAG: &str = "--skv15-w2-lock-gates-only";
+const PRIMITIVE_CHECKASM_TESTS: &[&str] = &[
+    "checkasm_ascii_set_member_find_64",
+    "checkasm_byte_class_from_eq_set_64",
+    "checkasm_byte_class_from_table_64",
+    "checkasm_bulk_emit_positions_64",
+    "checkasm_structural_terminator_64",
+    "checkasm_bitmap_prefix_xor_64",
+    "checkasm_bitmap_next_set_bit",
+    "checkasm_escape_mask_64",
+    "checkasm_eob_pad_clamp",
+    "checkasm_parity",
+    "checkasm_utf8_block",
+];
 
 fn main() -> Result<()> {
     let mut args = std::env::args().skip(1);
@@ -291,6 +305,7 @@ fn gate_json(root: &Path, passthrough: Vec<String>) -> Result<()> {
     if passthrough.iter().any(|arg| arg == "--check-results") {
         validate_w0_results_snapshot(root)?;
         if results_only_check {
+            run_lock_gates_only(root)?;
             return Ok(());
         }
     }
@@ -306,6 +321,24 @@ fn gate_json(root: &Path, passthrough: Vec<String>) -> Result<()> {
         Ok(())
     } else {
         bail!("bench gate failed with status {status}")
+    }
+}
+
+fn run_lock_gates_only(root: &Path) -> Result<()> {
+    let mut command = Command::new("cargo");
+    command
+        .current_dir(root)
+        .args(["run", "-p", "bbnf-bench", "--bin", "gate"])
+        .arg("--")
+        .arg(SKV15_W2_LOCK_GATES_ONLY_FLAG);
+    apply_bench_output_env(&mut command, root);
+    let status = command
+        .status()
+        .context("failed to spawn SK-V15 W2 lock gate")?;
+    if status.success() {
+        Ok(())
+    } else {
+        bail!("SK-V15 W2 lock gate failed with status {status}")
     }
 }
 
@@ -376,6 +409,7 @@ fn gate_json_cost_facts(root: &Path, passthrough: Vec<String>) -> Result<()> {
     if check_results {
         validate_w0_results_snapshot(root)?;
     }
+    run_lock_gates_only(root)?;
     let source = std::fs::read_to_string(root.join("grammars/json.bbnf"))?;
     let snapshot = codegen::cost_facts_from_source("json", &source)?;
     let report = cost_facts_gate_report(&snapshot)?;
@@ -1843,18 +1877,7 @@ fn nonempty_json_array<'a>(
 }
 
 fn primitive_checkasm(root: &Path) -> Result<()> {
-    for test in [
-        "checkasm_ascii_set_member_find_64",
-        "checkasm_byte_class_from_eq_set_64",
-        "checkasm_byte_class_from_table_64",
-        "checkasm_bulk_emit_positions_64",
-        "checkasm_structural_terminator_64",
-        "checkasm_bitmap_prefix_xor_64",
-        "checkasm_bitmap_next_set_bit",
-        "checkasm_eob_pad_clamp",
-        "checkasm_parity",
-        "checkasm_utf8_block",
-    ] {
+    for test in PRIMITIVE_CHECKASM_TESTS {
         let status = Command::new("cargo")
             .current_dir(root)
             .env("BBNF_SIMD_STRICT", "1")

@@ -589,6 +589,7 @@ pub fn validate(root: &Path) -> Result<(), String> {
     validate_git_freeze(root)?;
     validate_backend_shape_surface(root)?;
     validate_generic_crate_neutrality(root)?;
+    validate_skv15_w2_coverage(root)?;
     Ok(())
 }
 
@@ -2397,6 +2398,33 @@ const FORBIDDEN_GENERIC_TOKENS: &[(&str, &str)] = &[
     ("json_literal_branch", "grammar_name == \"json\""),
 ];
 
+const SKV15_W2_FORBIDDEN_FINDING_TOKENS: &str = "Json,CssL4,Sheets,BBNF,json_,css_,RuntimeProvider,static_css_provider_status,json_sink_only_status,JSON-CSS";
+const SKV15_W2_REQUIRED_REPORT_COLUMNS: &str = "included_roots,excluded_roots,reason,owner,self_scan_status,primitive_status,gate_consumer,affected_rows,disposition,source_path,finding_kind,strict_command,scalar_reference,rollback_or_redress,dependency_row,non_json_receiver,proof_command,generated_output_expectation,json_guard_command,fail_action";
+
+const SKV15_W2_EXTRA_COVERAGE_ROOTS: &[&str] = &[
+    "crates/codegen/src/runtime_generator.rs",
+    "crates/codegen/src/grammar_provider.rs",
+    "crates/codegen/src/json_sink_direct.rs",
+    "crates/codegen/src/json_typed_direct.rs",
+    "crates/codegen/src/json_templates",
+    "crates/bbnf-bench/src/report.rs",
+    "crates/bbnf-bench/src/bin/gate.rs",
+    "crates/bbnf-bench/src/lock14_baseline.rs",
+    "xtask/src/main.rs",
+    "xtask/src/skv15_w0.rs",
+];
+
+const SKV15_W2_PRIMITIVE_CLASS_ROOTS: &[(&str, &str)] = &[
+    ("crates/bbnf-simd/src/aarch64", "strict-checkasm-admitted"),
+    ("crates/bbnf-simd/src/dispatch.rs", "wired"),
+    ("crates/bbnf-simd/src/lib.rs", "wired"),
+    (
+        "crates/bbnf-simd/tests/checkasm_parity.rs",
+        "strict-checkasm-admitted",
+    ),
+    ("crates/bbnf-simd/src/x86_64", "diagnostic-x86"),
+];
+
 fn validate_generic_crate_neutrality(root: &Path) -> Result<(), String> {
     for scan_root in GENERIC_SCAN_ROOTS {
         for file in rust_files_under(&root.join(scan_root))? {
@@ -2406,6 +2434,188 @@ fn validate_generic_crate_neutrality(root: &Path) -> Result<(), String> {
             let production = strip_test_code(&source);
             validate_generic_source(file.strip_prefix(root).unwrap_or(&file), production)?;
         }
+    }
+    Ok(())
+}
+
+fn validate_skv15_w2_coverage(root: &Path) -> Result<(), String> {
+    validate_skv15_w2_report_columns()?;
+    validate_skv15_w2_forbidden_tokens()?;
+    validate_skv15_w2_root_coverage(root)?;
+    validate_skv15_w2_primitive_inventory(root)?;
+    Ok(())
+}
+
+fn validate_skv15_w2_report_columns() -> Result<(), String> {
+    let mut seen = BTreeSet::new();
+    for column in SKV15_W2_REQUIRED_REPORT_COLUMNS.split(',') {
+        if column.trim().is_empty() || !seen.insert(column) {
+            return Err(format!("invalid SK-V15 W2 report column `{column}`"));
+        }
+    }
+    Ok(())
+}
+
+fn validate_skv15_w2_forbidden_tokens() -> Result<(), String> {
+    if SKV15_W2_FORBIDDEN_FINDING_TOKENS
+        .split(',')
+        .any(|token| token.trim().is_empty())
+    {
+        return Err("invalid SK-V15 W2 forbidden finding token".to_string());
+    }
+    Ok(())
+}
+
+fn validate_skv15_w2_root_coverage(root: &Path) -> Result<(), String> {
+    for required in GENERIC_SCAN_ROOTS
+        .iter()
+        .copied()
+        .chain(SKV15_W2_EXTRA_COVERAGE_ROOTS.iter().copied())
+    {
+        if !root.join(required).exists() {
+            return Err(format!("SK-V15 W2 coverage root {required} is absent"));
+        }
+    }
+    for path in SKV15_W2_EXTRA_COVERAGE_ROOTS
+        .iter()
+        .copied()
+        .chain(["crates/ir/src/cost.rs"])
+    {
+        let (owner, dependency_row, non_json_receiver) = skv15_w2_root_binding(path);
+        if !root.join(path).exists() {
+            return Err(format!("SK-V15 W2 reported root {path} is absent"));
+        }
+        validate_w2_value("owner", owner)?;
+        validate_w2_value("dependency_row", dependency_row)?;
+        validate_w2_value("non_json_receiver", non_json_receiver)?;
+    }
+    for value in [
+        "self_scan_status:source-derived",
+        "gate_consumer:cargo xtask gate-json --check-results",
+        "generated_output_expectation:report-only/no-delete",
+        "fail_action:reject-route-or-redress",
+    ] {
+        validate_w2_value("coverage_default", value)?;
+    }
+    Ok(())
+}
+
+fn skv15_w2_root_binding(path: &str) -> (&'static str, &'static str, &'static str) {
+    match path {
+        "crates/codegen/src/runtime_generator.rs" => (
+            "SK-V15-W3/W6",
+            "DEP-W3-W6-CSS-PROVIDER-TEMPLATE",
+            "CSS L4 plus Sheets/BBNF-self/CSV/math",
+        ),
+        "crates/codegen/src/grammar_provider.rs" => (
+            "SK-V15-W3",
+            "DEP-W3-W6-CSS-PROVIDER-TEMPLATE",
+            "CSS L4 plus Sheets or BBNF-self",
+        ),
+        "crates/bbnf-bench/src/report.rs" | "crates/bbnf-bench/src/bin/gate.rs" => (
+            "SK-V15-W2",
+            "DEP-W1-CSS-BROADCAST",
+            "JSON guard plus CSS L4 diagnostic/typed rows",
+        ),
+        "xtask/src/main.rs" => (
+            "SK-V15-W2",
+            "DEP-W11-CLOSE-NO-ORPHANS",
+            "CSS L4 plus one non-CSS generated receiver",
+        ),
+        "crates/ir/src/cost.rs" => (
+            "SK-V15-W7",
+            "DEP-W7-DECISION-SPINE",
+            "CSS L4 plus Sheets or BBNF-self",
+        ),
+        _ => (
+            "SK-V15-W2",
+            "DEP-W11-CLOSE-NO-ORPHANS",
+            "JSON guard plus CSS L4 diagnostic/typed rows",
+        ),
+    }
+}
+
+fn validate_skv15_w2_primitive_inventory(root: &Path) -> Result<(), String> {
+    for path in [
+        "crates/bbnf-simd/src/aarch64/mod.rs",
+        "crates/bbnf-simd/src/dispatch.rs",
+        "crates/bbnf-simd/src/lib.rs",
+        "xtask/src/main.rs",
+    ] {
+        if !root.join(path).exists() {
+            return Err(format!("SK-V15 W2 primitive source {path} is absent"));
+        }
+    }
+    let dispatch = std::fs::read_to_string(root.join("crates/bbnf-simd/src/dispatch.rs"))
+        .map_err(|error| format!("failed to read primitive dispatch: {error}"))?;
+    for token in [
+        "PrimitiveKernels",
+        "select_primitive_kernels",
+        "target_arch = \"aarch64\"",
+    ] {
+        if !dispatch.contains(token) {
+            return Err(format!("SK-V15 W2 primitive dispatch missing `{token}`"));
+        }
+    }
+    let lib = std::fs::read_to_string(root.join("crates/bbnf-simd/src/lib.rs"))
+        .map_err(|error| format!("failed to read primitive public wrappers: {error}"))?;
+    for wrapper in [
+        "pub mod prim",
+        "byte_class_from_table_64",
+        "bitmap_prefix_xor_64",
+        "bitmap_next_set_bit",
+        "bulk_emit_positions_64",
+        "eob_pad_clamp",
+        "byte_class_from_eq_set_64",
+    ] {
+        if !lib.contains(wrapper) {
+            return Err(format!("SK-V15 W2 primitive wrapper missing `{wrapper}`"));
+        }
+    }
+    let xtask = std::fs::read_to_string(root.join("xtask/src/main.rs"))
+        .map_err(|error| format!("failed to read xtask primitive gate: {error}"))?;
+    if !xtask.contains("\"checkasm_escape_mask_64\"") {
+        return Err("SK-V15 W2 primitive-checkasm omits checkasm_escape_mask_64".to_string());
+    }
+    validate_skv15_w2_native_hits(root)
+}
+
+fn validate_skv15_w2_native_hits(root: &Path) -> Result<(), String> {
+    let mut hits = Vec::new();
+    for scan_root in [
+        "crates/bbnf-simd/src",
+        "crates/bbnf-simd/tests/checkasm_parity.rs",
+    ] {
+        for file in rust_files_under(&root.join(scan_root))? {
+            let source = std::fs::read_to_string(&file)
+                .map_err(|error| format!("failed to read native-token source: {error}"))?;
+            if source.contains("core::arch")
+                || source.contains("#[target_feature")
+                || source.contains("asm!")
+            {
+                hits.push(relative_source_path(root, &file)?);
+            }
+        }
+    }
+    if hits.is_empty() {
+        return Err("SK-V15 W2 primitive inventory found no native-token sources".to_string());
+    }
+    for hit in hits {
+        let class = SKV15_W2_PRIMITIVE_CLASS_ROOTS
+            .iter()
+            .find_map(|(prefix, status)| hit.starts_with(prefix).then_some(*status))
+            .ok_or_else(|| format!("SK-V15 W2 primitive hit {hit} has no status row"))?;
+        validate_w2_value("primitive_status", class)?;
+    }
+    Ok(())
+}
+
+fn validate_w2_value(field: &str, value: &str) -> Result<(), String> {
+    if value.trim().is_empty() {
+        return Err(format!("SK-V15 W2 coverage has empty {field}"));
+    }
+    if value.contains("self-exempting") || value.contains("diagnostic:pre-W2-incomplete") {
+        return Err(format!("SK-V15 W2 coverage rejects {field}={value}"));
     }
     Ok(())
 }
@@ -4667,6 +4877,17 @@ mod tests {
         ] {
             assert!(GENERIC_SCAN_ROOTS.contains(&root), "{root} is not scanned");
         }
+    }
+
+    #[test]
+    fn skv15_w2_coverage_rejects_self_exemptions() {
+        validate_skv15_w2_report_columns().unwrap();
+        assert!(SKV15_W2_FORBIDDEN_FINDING_TOKENS.contains("RuntimeProvider"));
+        assert!(SKV15_W2_PRIMITIVE_CLASS_ROOTS
+            .iter()
+            .any(|(prefix, _)| *prefix == "crates/bbnf-simd/src/aarch64"));
+        assert!(validate_w2_value("self_scan_status", "self-exempting").is_err());
+        assert!(validate_w2_value("disposition", "diagnostic:pre-W2-incomplete").is_err());
     }
 
     #[test]

@@ -24,6 +24,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+const SKV15_W2_LOCK_GATES_ONLY_FLAG: &str = "--skv15-w2-lock-gates-only";
+
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = env::args().collect();
     if args.get(1).is_some_and(|arg| arg == "--rss-probe") {
@@ -51,6 +53,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     let workspace = workspace_root();
     if let Err(error) = lock14_baseline::validate(&workspace) {
         return Err(format!("Lock 14 baseline validation failed: {error}").into());
+    }
+    if lock_gates_only_requested(&args[1..])? {
+        println!("G-SK-V15-W2-LOCK-GATES-ONLY PASS");
+        return Ok(());
     }
     let has_explicit_json_check = companion_report_runs_json_check(&args[1..]);
     if let Some(path) = w1a_non_json_report_path(&args[1..])? {
@@ -1046,6 +1052,20 @@ fn is_companion_report_flag(arg: &str) -> bool {
 fn companion_report_runs_json_check(args: &[String]) -> bool {
     args.iter()
         .any(|arg| matches!(arg.as_str(), "--check-results" | "--with-cost-facts"))
+}
+
+fn lock_gates_only_requested(args: &[String]) -> Result<bool, Box<dyn Error>> {
+    let count = args
+        .iter()
+        .filter(|arg| arg.as_str() == SKV15_W2_LOCK_GATES_ONLY_FLAG)
+        .count();
+    if count == 0 {
+        return Ok(false);
+    }
+    if count > 1 || args.len() != 1 {
+        return Err(format!("{SKV15_W2_LOCK_GATES_ONLY_FLAG} cannot be combined").into());
+    }
+    Ok(true)
 }
 
 struct CssL4Lane {

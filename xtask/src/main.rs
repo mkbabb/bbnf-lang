@@ -8,12 +8,12 @@
 //! AUDIT-D-architectural-transposition.md` for the architectural
 //! rationale (T3: xtask + checked-in generation).
 
-use std::path::PathBuf;
+use std::collections::BTreeSet;
+use std::path::{Path, PathBuf};
 #[cfg(not(feature = "grammar-regen"))]
 use std::process::Command;
 
-#[cfg(not(feature = "grammar-regen"))]
-use anyhow::{bail, Context};
+use anyhow::{Context, bail};
 use clap::{Parser, Subcommand};
 #[cfg(feature = "grammar-regen")]
 use xtask::regen;
@@ -86,6 +86,13 @@ enum Cmd {
     /// Regenerate the root JSON runtime projection under
     /// `crates/core/src/runtime/json/`.
     RegenJson,
+    /// Check root runtime projections without writing generated files.
+    CheckRuntime {
+        /// Check only one runtime projection. The full no-arg command is the
+        /// W4 close gate; this flag is diagnostic.
+        #[arg(long)]
+        grammar: Option<String>,
+    },
 }
 
 fn main() -> anyhow::Result<()> {
@@ -106,7 +113,120 @@ fn main() -> anyhow::Result<()> {
         Cmd::RegenCssPretty => regen_simple_runtime::run("css_pretty"),
         Cmd::RegenGoogleSheets => regen_simple_runtime::run("google_sheets"),
         Cmd::RegenJson => regen_simple_runtime::run("json"),
+        Cmd::CheckRuntime { grammar } => run_check_runtime(grammar.as_deref()),
     }
+}
+
+const ROOT_RUNTIME_GRAMMARS: &[&str] = &[
+    "css_l4",
+    "math",
+    "csv",
+    "bbnf",
+    "bnf",
+    "ebnf",
+    "css_pretty",
+    "google_sheets",
+    "json",
+];
+
+fn run_check_runtime(grammar: Option<&str>) -> anyhow::Result<()> {
+    if let Some(grammar) = grammar {
+        check_runtime_grammar(grammar)?;
+        return Ok(());
+    }
+
+    let workspace_root = workspace_root()?;
+    validate_runtime_projection_set(&workspace_root)?;
+
+    let mut expected = BTreeSet::new();
+    for grammar in ROOT_RUNTIME_GRAMMARS {
+        for path in check_runtime_grammar(grammar)? {
+            if !expected.insert(path) {
+                bail!("duplicate root runtime generated path for `{grammar}`");
+            }
+        }
+    }
+
+    let actual = collect_pattern_h_paths(&workspace_root)?;
+    if expected != actual {
+        let missing = expected.difference(&actual).collect::<Vec<_>>();
+        let extra = actual.difference(&expected).collect::<Vec<_>>();
+        bail!("root runtime generated path set mismatch; missing={missing:?}; extra={extra:?}");
+    }
+    Ok(())
+}
+
+fn check_runtime_grammar(grammar: &str) -> anyhow::Result<Vec<PathBuf>> {
+    match grammar {
+        "css_l4" => regen_css::check(),
+        "math" | "csv" | "bbnf" | "bnf" | "ebnf" | "css_pretty" | "google_sheets" | "json" => {
+            regen_simple_runtime::check(grammar)
+        }
+        other => bail!("unknown root runtime projection `{other}`"),
+    }
+}
+
+fn workspace_root() -> anyhow::Result<PathBuf> {
+    let metadata = cargo_metadata::MetadataCommand::new()
+        .no_deps()
+        .exec()
+        .context("cargo_metadata: failed to read workspace manifest")?;
+    Ok(metadata.workspace_root.into_std_path_buf())
+}
+
+fn validate_runtime_projection_set(workspace_root: &Path) -> anyhow::Result<()> {
+    let expected = runtime_grammar_set();
+    let projection_dir = workspace_root.join("xtask/runtime-projections");
+    let mut actual = BTreeSet::new();
+    for entry in std::fs::read_dir(&projection_dir)
+        .with_context(|| format!("read `{}`", projection_dir.display()))?
+    {
+        let path = entry?.path();
+        if path.extension().and_then(|ext| ext.to_str()) == Some("toml") {
+            let Some(stem) = path.file_stem().and_then(|stem| stem.to_str()) else {
+                bail!(
+                    "runtime projection has non-utf8 filename `{}`",
+                    path.display()
+                );
+            };
+            actual.insert(stem.to_string());
+        }
+    }
+    if actual != expected {
+        let missing = expected.difference(&actual).collect::<Vec<_>>();
+        let extra = actual.difference(&expected).collect::<Vec<_>>();
+        bail!("runtime projection set mismatch; missing={missing:?}; extra={extra:?}");
+    }
+    Ok(())
+}
+
+fn runtime_grammar_set() -> BTreeSet<String> {
+    ROOT_RUNTIME_GRAMMARS
+        .iter()
+        .map(|grammar| (*grammar).to_string())
+        .collect()
+}
+
+fn collect_pattern_h_paths(workspace_root: &Path) -> anyhow::Result<BTreeSet<PathBuf>> {
+    let runtime_root = workspace_root.join("crates/core/src/runtime");
+    let mut paths = BTreeSet::new();
+    for grammar in ROOT_RUNTIME_GRAMMARS {
+        collect_rs_files(&runtime_root.join(grammar), &mut paths)?;
+    }
+    Ok(paths)
+}
+
+fn collect_rs_files(dir: &Path, paths: &mut BTreeSet<PathBuf>) -> anyhow::Result<()> {
+    for entry in std::fs::read_dir(dir).with_context(|| format!("read `{}`", dir.display()))? {
+        let entry = entry?;
+        let path = entry.path();
+        if entry.file_type()?.is_dir() {
+            collect_rs_files(&path, paths)?;
+        } else if path.extension().and_then(|ext| ext.to_str()) == Some("rs") {
+            paths.insert(path);
+        }
+    }
+    Ok(())
 }
 
 #[cfg(feature = "grammar-regen")]

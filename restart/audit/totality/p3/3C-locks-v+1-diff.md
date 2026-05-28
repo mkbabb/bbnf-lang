@@ -1,8 +1,8 @@
 ---
 agent: 3C
 pass: T-P3-synthesis
-cycle: V2
-generated_at: 2026-05-28T07:50:49Z
+cycle: V3
+generated_at: 2026-05-28T08:13:36Z
 t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F]
 t_p2_dossiers_consumed: [2A, 2B, 2C, 2D, 2E, 2F]
 v1_surface_targeted: LOCKS.md
@@ -17,6 +17,7 @@ prior_cycle_dispositions_folded:
   rejected: []
   revised:
     - "CH1-V1-001: proposed hunk context now anchors on the v+1 governance boundary instead of repeating an inherited out-of-range 2F citation."
+    - "CH4-V2-002: V3 records per-clause hard-cap fit and fail-action coverage in the companion 3C crystallisation artifact; the extractable hunk remains unchanged."
     - "CH5-V1-01: Lock 16 owner wording now names canonical parse-that-regex and treats skinny/crates/bbnf-regex as legacy path-only."
     - "CH5-V1-02: runtime regex/DFA now requires prior G-Omega Lock 1 amendment; manifest and consumer proof are necessary but not sufficient."
 ---
@@ -25,7 +26,7 @@ prior_cycle_dispositions_folded:
 
 ## Executive Summary
 
-This is a proposed-only line-level diff for `restart/locks/LOCKS.md`. It adds one SK-V15 T-P3 crystallisation addendum immediately before the existing `## v+1 Governance Boundary`. The V2 hunk anchors on the boundary heading and does not restate inherited stale citation context above it. The hunk preserves the 16 numbered locks, preserves the five `BackendShape` variants, and adds no new directive, BIR variant, substrate, public substrate API, retained sidecar, lock, lock retirement, or sixth shape. Candidate coverage, per-row dispositions, and per-clause costs are in `3C-locks-crystallisation.md`.
+This is a proposed-only line-level diff for `restart/locks/LOCKS.md`. It adds one SK-V15 T-P3 crystallisation addendum immediately before the existing `## v+1 Governance Boundary`. The V3 hunk anchors on the boundary heading and does not restate inherited stale citation context above it. V3 folds CH4-V2-002 in the companion 3C cost matrix; the extractable `LOCKS.md` hunk remains unchanged. The hunk preserves the 16 numbered locks, preserves the five `BackendShape` variants, and adds no new directive, BIR variant, substrate, public substrate API, retained sidecar, lock, lock retirement, or sixth shape. Candidate coverage, per-row dispositions, and per-clause costs are in `3C-locks-crystallisation.md`.
 
 ## Proposed Unified Diff
 

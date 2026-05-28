@@ -1,8 +1,8 @@
 ---
 agent: 3D
 pass: T-P3-synthesis
-cycle: V2
-generated_at: 2026-05-28T07:50:31Z
+cycle: V3
+generated_at: 2026-05-28T08:13:08Z
 t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F]
 t_p2_dossiers_consumed: [2A, 2B, 2C, 2D, 2E, 2F]
 v1_surface_targeted: n/a
@@ -13,6 +13,7 @@ delta_summary:
   removed: []
   answered:
     - CH4-COST-01/02/04 cost fold added for W4, W5/W6, and W7-W9 receiver language
+    - CH4-V2-001 compact CH4 coverage matrix added for every carried 3D delta
     - CH6-V1-01 Open Questions table now carries receiver/blocker/gate on every row
   newly_added: []
 prior_cycle_dispositions_folded:
@@ -25,21 +26,22 @@ prior_cycle_dispositions_folded:
     - CH4-COST-01 W7-W9 cost language now mirrors T-P2 costed bands and expected 3B V2 reconciliation instead of skinny narrow bands
     - CH4-COST-02 W4 Pattern H cost language now names provenance, generator/check, projection, destructive deletion, and close-transcript sub-costs
     - CH4-COST-04 W5/W6 CSS language now keeps typed CSS provider scoped and routes broad CSSOM parity outside cap-fit scope
+    - CH4-V2-001 every carried 3D delta now states LOC, numeric propagation count, risk, wave alignment, consumer/gate, hard-cap fit, and fail action
     - CH6-V1-01 open questions now route by receiver, blocker, and gate
 ---
 
 ## Executive Summary
 
-3D folds skinny into totality in one direction only: skinny lessons inform V1 proposal inputs, and totality does not dictate live skinny mid-iteration (`restart/prompts/ORCHESTRATOR.md:67`-`72`; `restart/audit/totality/p3/T-P3-DISPATCH-CONTEXT.md:110`-`112`). The durable win is JSON as a scoped guard baseline: 51 rows are strict same-plane proof-of-concept evidence, not blanket CSS or fleet generalization (`restart/audit/totality/p1/1D-skinny-lessons.md:101`-`103`; `restart/skinny/tranches/sk-v15/SPEC.md:51`-`53`). The durable rejections are lock-strengthening inputs: CSS L4 is audit-demoted by broadcast timing, wrong comparator plane, string-literal generation, and missing Value API; Lock 14/16 gates have holes; Pattern H remains 67 hand-written files; the Decision Engine is scaffold; FNV closed-enum rows stay bench-only (`restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:21`-`65`). SK-V15 must prune before rebuild, with W1-W11 dependency rows preventing delete-before-provider and paper close (`restart/audit/totality/p3/T-P3-DISPATCH-CONTEXT.md:55`-`57`; `restart/skinny/tranches/sk-v15/SPEC.md:31`-`43`, `restart/skinny/tranches/sk-v15/SPEC.md:187`-`204`). V2 folds CH4/CH6 hardening by binding W4 and W7-W9 to the T-P1/T-P2 cost carriers expected to be reconciled in 3B V2, and by forbidding W12 overflow: a non-fit row must become intrinsic-block, REDRESS/revert, or G-Omega wave-graph amendment.
+3D folds skinny into totality in one direction only: skinny lessons inform V1 proposal inputs, and totality does not dictate live skinny mid-iteration (`restart/prompts/ORCHESTRATOR.md:67`-`72`; `restart/audit/totality/p3/T-P3-DISPATCH-CONTEXT.md:110`-`112`). The durable win is JSON as a scoped guard baseline: 51 rows are strict same-plane proof-of-concept evidence, not blanket CSS or fleet generalization (`restart/audit/totality/p1/1D-skinny-lessons.md:101`-`103`; `restart/skinny/tranches/sk-v15/SPEC.md:51`-`53`). The durable rejections are lock-strengthening inputs: CSS L4 is audit-demoted by broadcast timing, wrong comparator plane, string-literal generation, and missing Value API; Lock 14/16 gates have holes; Pattern H remains 67 hand-written files; the Decision Engine is scaffold; FNV closed-enum rows stay bench-only (`restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:21`-`65`). SK-V15 must prune before rebuild, with W1-W11 dependency rows preventing delete-before-provider and paper close (`restart/audit/totality/p3/T-P3-DISPATCH-CONTEXT.md:55`-`57`; `restart/skinny/tranches/sk-v15/SPEC.md:31`-`43`, `restart/skinny/tranches/sk-v15/SPEC.md:187`-`204`). V2 folded CH4/CH6 hardening by binding W4 and W7-W9 to T-P1/T-P2 cost carriers and forbidding W12 overflow; V3 folds `CH4-V2-001` by adding row-level LOC, numeric propagation count, risk, wave alignment, consumer/gate, hard-cap fit, and fail action for every carried 3D delta.
 
-## V2 Delta Summary
+## V3 Delta Summary
 
 | bucket | disposition |
 |---|---|
 | carried from prior cycle | `3D-D01` through `3D-D10` remain the proposal-only skinny fold set; no live V1 spec surface is edited by 3D (`restart/audit/totality/p3/T-P3-DISPATCH-CONTEXT.md:63`-`66`). |
-| removed | None. V2 revises receiver wording only. |
-| answered | CH4-COST-01/02/04 are folded into W4/W5/W6/W7-W9 cost and non-fit language; CH6-V1-01 is folded into the routed Open Questions table. |
-| newly added | None. V2 carries the same ten proposed deltas with hardening corrections. |
+| removed | None. V3 extends CH4 coverage only. |
+| answered | CH4-COST-01/02/04 remain folded into W4/W5/W6/W7-W9 cost and non-fit language; CH4-V2-001 is folded by the compact coverage matrix; CH6-V1-01 remains folded into routed Open Questions. |
+| newly added | None. V3 carries the same ten proposed deltas with hardening corrections. |
 
 ## Monotonic Fold Register
 
@@ -65,24 +67,24 @@ prior_cycle_dispositions_folded:
 | `3D-D09-non-json-receiver-onboarding`: Add a V1 proposal that generic claims touching providers, generators, lowerers, egraph/CSP/cost, xtask, gates, or reports require CSS L4 plus Sheets or BBNF-self, or an intrinsic-block record, before fleet-wide wording. | T-P1 `G-10` (`restart/audit/totality/p1/1D-skinny-lessons.md:147`); T-P2 generator/onboarding findings (`restart/audit/totality/p2/2C-grammar-neutrality.md:47`-`55`, `restart/audit/totality/p2/2C-grammar-neutrality.md:72`-`75`); SK-V15 receiver matrix (`restart/skinny/tranches/sk-v15/SPEC.md:206`-`217`). | `LOCKS.md` Lock 14 future-grammar gate (`restart/locks/LOCKS.md:377`-`400`); `ARCHITECTURE.md` generated runtime target (`restart/ARCHITECTURE.md:1944`-`1958`); `MIGRATION.md` generated-provider receiver (`restart/MIGRATION.md:44`). | This is the monotonic generalization bridge: JSON success is preserved, CSS is repaired, and future grammar claims require non-JSON negative controls rather than generic-code grammar switches (`restart/audit/totality/p2/2C-grammar-neutrality.md:35`-`55`; `restart/skinny/tranches/sk-v15/SPEC.md:219`-`244`). |
 | `3D-D10-prune-before-rebuild-sequencing`: Add a V1 receiver constraint that SK-V15 remains PRUNE-before-REBUILD: W0 baseline, W1 demotion, W2 gates, W3 codegen leaks, W4 Pattern H, W5/W6 CSS rebuild/retime, W7-W9 Decision/lowerers, W10 FNV, W11 no-orphans. T-P3 proposes only and does not dispatch implementation waves. | Dispatch constraint (`restart/audit/totality/p3/T-P3-DISPATCH-CONTEXT.md:55`-`57`, `restart/audit/totality/p3/T-P3-DISPATCH-CONTEXT.md:61`-`68`); SK-V15 wave order (`restart/skinny/tranches/sk-v15/SPEC.md:31`-`43`); dependency rows (`restart/skinny/tranches/sk-v15/SPEC.md:187`-`204`). | `MASTER-PLAN.md` wave reconciliation surface (`restart/MASTER-PLAN.md:115`-`132`); `MIGRATION.md` proposal boundary (`restart/MIGRATION.md:30`-`52`); SK-V15 receiver goalset (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:70`-`80`). | This prevents totality prose from paper-closing live skinny. Deletes, retirements, diagnostic demotions, and rebuilds must consume dependency rows and show provider proof no later than the retire/delete wave. There is no W12 overflow route; non-fit work is intrinsic-block, REDRESS/revert, or G-Omega wave-graph amendment (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:91`-`110`; `restart/prompts/ORCHESTRATOR.md:67`-`72`). |
 
-## Consequences
+## Consequences And CH4 Coverage
 
-| delta | positive consequence | cost / risk / wave alignment | propagation count |
-|---|---|---|---|
-| `3D-D01` | Preserves honest JSON wins while blocking overgeneralization to CSS/fleet claims (`restart/audit/totality/p1/1D-skinny-lessons.md:101`-`103`). | 0-120 doc LOC; medium risk if wording overgeneralizes; W0/W11 guard alignment (`restart/audit/totality/p1/1D-skinny-lessons.md:163`-`165`; `restart/skinny/tranches/sk-v15/SPEC.md:51`-`53`). | 3 surfaces: ARCHITECTURE, LOCKS, MASTER/HANDOFF guard summaries. |
-| `3D-D02` | Makes CSS broadcast dishonesty gate-detectable and turns W8R into diagnostic evidence only (`restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:21`-`29`). | 80-200 LOC, high risk, W1, cap 250 (`restart/audit/totality/p1/1D-skinny-lessons.md:174`). | 4 surfaces: RESULTS schema, gate/report, LOCKS, MIGRATION/HANDOFF. |
-| `3D-D03` | Prevents delete-before-provider and wrong-plane CSS close (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:91`-`96`). | 300-900 LOC W5 scoped typed CSS provider plus 160-340 LOC W6 retime, high risk; broad CSSOM parity is out of scope unless intrinsic-blocked or routed through G-Omega (`restart/audit/totality/p1/1D-skinny-lessons.md:175`-`176`). | 4 surfaces: ARCHITECTURE, LOCKS, MASTER, MIGRATION. |
-| `3D-D04` | Converts gate omissions into first-class failures and ties primitive status to strict reports (`restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:45`-`47`). | 120-420 LOC, high risk, W2 (`restart/audit/totality/p1/1D-skinny-lessons.md:177`). | 3 surfaces: LOCKS, MASTER, SK-V15 gates/HANDOFF. |
-| `3D-D05` | Keeps Pattern H repair concrete: 67 files, line-1 provenance, regen/check proof (`restart/ARCHITECTURE.md:1800`-`1825`). | T-P1 carrier: 1,500-3,000 generator/provenance LOC, 700-1,200 per named runtime projection, and 600-1,200 close transcript; high risk; W4 cap 3,600; gate-only work cannot close projection/transcript debt (`restart/audit/totality/p1/1D-skinny-lessons.md:178`). | 4 surfaces: ARCHITECTURE, LOCKS, MASTER, MIGRATION. |
-| `3D-D06` | Prevents zero-rule egraph, tautological CSP, and marker lowerers from closing Decision claims (`restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:49`-`55`). | Expected 3B V2 must reconcile T-P1 W7-W9 carrier against T-P2 bands: W7 900-1400, W8 700-1100, W9 850-1300; lower bands are only gate-only/intrinsic-block scope, with consumer/gate, fail action, hard-cap fit, and no-W12 route (`restart/audit/totality/p1/1D-skinny-lessons.md:179`; `restart/audit/totality/p2/2D-cost-model.md:70`-`76`). | 4 surfaces: LOCKS, MASTER, ARCHITECTURE, MIGRATION. |
-| `3D-D07` | Stops bench-only FNV closed-enum products from becoming production correctness proof (`restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:60`-`65`). | 80-220 LOC, medium risk, W10 cap 320 (`restart/audit/totality/p1/1D-skinny-lessons.md:181`). | 3 surfaces: LOCKS, MIGRATION, gate/report. |
-| `3D-D08` | Preserves the tape/direct/fact-output contract and blocks sidecar/substrate drift (`restart/ARCHITECTURE.md:1777`-`1798`; `restart/locks/LOCKS.md:75`-`126`). | 80-350 LOC per named primitive/consumer row if code opens; high risk; owning wave must name consumer (`restart/audit/totality/p1/1D-skinny-lessons.md:184`; `restart/audit/totality/p2/2B-primitive-vocabulary.md:67`-`68`). | 3 surfaces: ARCHITECTURE, LOCKS, primitive/gate manifests. |
-| `3D-D09` | Gives Lock 14 a falsifiable non-JSON route through CSS plus Sheets or BBNF-self (`restart/skinny/tranches/sk-v15/SPEC.md:206`-`217`). | 120-400 LOC per receiver/gate, high risk for Sheets/BBNF-self; W3/W5/W7 depending owner (`restart/audit/totality/p2/2C-grammar-neutrality.md:72`-`75`). | 4 surfaces: LOCKS, ARCHITECTURE, MASTER, MIGRATION. |
-| `3D-D10` | Aligns totality receivers with SK-V15 prune-before-rebuild and no-orphans close (`restart/skinny/tranches/sk-v15/SPEC.md:31`-`43`, `restart/skinny/tranches/sk-v15/SPEC.md:187`-`204`). | 0 implementation LOC for T-P3; receiving implementation costs are D02-D07; high regression risk if dependency rows are skipped (`restart/audit/totality/p3/T-P3-DISPATCH-CONTEXT.md:55`-`68`; `restart/skinny/tranches/sk-v15/SYNTHESIS.md:70`-`80`). | 3 surfaces: MASTER, MIGRATION, HANDOFF/dispatch. |
+| delta | LOC | propagation count | risk | wave alignment | consumer/gate | hard-cap fit | fail action |
+|---|---:|---:|---|---|---|---|---|
+| `3D-D01` | 0-120 doc | 3 | medium | W0/W11 guard | Pass Omega CRUD guard review plus W11 close guard | Fits doc-only T-P3; no W12 or implementation overflow. | Pass Omega blocks overgeneralized wording; G-Omega amends before CRUD. |
+| `3D-D02` | 80-200 | 4 | high | W1 | W1 diagnostic demotion gate/report; LOCKS and MIGRATION receivers | Fits W1 cap 250. | Keep CSS rows diagnostic; intrinsic-block admission or REDRESS/revert any live touch. |
+| `3D-D03` | 300-900 W5 + 160-340 W6 | 4 | high | W5/W6 | Typed CSS provider proof and same-workload cssparser retime gates | Fits only scoped W5/W6; broad CSSOM parity is non-fit without G-Omega. | Intrinsic-block CSS close, REDRESS/revert premature deletion, or G-Omega wave amendment. |
+| `3D-D04` | 120-420 | 3 | high | W2 | Lock 14/16 gate report with included/excluded roots and primitive status | Fits W2 gate/report scope only; no hidden runtime repair. | Self-exempting scan rejects; intrinsic-block or G-Omega gate amendment. |
+| `3D-D05` | 1,500-3,000 + 700-1,200/projection + 600-1,200 transcript | 4 | high | W4 | Pattern H provenance, regen/check, runtime projection, deletion, and close-transcript gates | Conditional W4 cap 3,600 fit only by split sub-rows; gate-only evidence cannot close projection/transcript debt. | Non-fit sub-row becomes intrinsic-block, REDRESS/revert live deletes, or G-Omega wave amendment. |
+| `3D-D06` | 900-1,400 W7 + 700-1,100 W8 + 850-1,300 W9 | 4 | high | W7/W8/W9 | Decision spine, EagerTape/OffsetTape, EventTape/SinkOnly/CollapsedStage/all-five gates | Fits only as split W7/W8/W9 units with lowerers excluded from W7 and no W12. | Gate-consumed rejection, intrinsic-block, or G-Omega wave amendment. |
+| `3D-D07` | 80-220 | 3 | medium | W10 | Lock 16 primitive manifest plus production-root scan and adversarial equality fixtures | Fits W10 cap 320. | FNV remains bench-only; block production equality use or REDRESS/revert live touch. |
+| `3D-D08` | 80-350 per primitive/consumer row | 3 | high | Owning primitive wave | Lock 1 substrate gate and Lock 16 primitive manifest | Fits only per named primitive/consumer; no sixth shape or retained sidecar route. | Intrinsic-block retained sidecar/substrate drift or REDRESS/revert live touch. |
+| `3D-D09` | 120-400 per receiver/gate | 4 | high | W3/W5/W7 by owner | Lock 14 future-grammar gate requiring CSS plus Sheets or BBNF-self, or intrinsic-block | Fits per receiver/gate; fleet-wide generic wording waits for witnesses. | Intrinsic-block fleet claim or G-Omega receiver/wave amendment. |
+| `3D-D10` | 0 T-P3 implementation | 3 | high regression | W0-W11 sequencing | Pass Omega CRUD, G-Omega dispatch, and SK-V15 no-orphans/dependency gates | Fits proposal-only T-P3; implementation cost remains in D02-D07 with no W12. | Dependency gate blocks dispatch; REDRESS/revert skipped retire/delete proof. |
 
-## V2 Cost And Non-Fit Fold
+## Cost And Non-Fit Fold
 
-| receiver | V2 cost posture | non-fit disposition |
+| receiver | cost posture | non-fit disposition |
 |---|---|---|
 | W4 Pattern H | Use the T-P1 `RC-05` carrier: 1,500-3,000 LOC for generator/provenance, 700-1,200 LOC for any named runtime projection, and 600-1,200 LOC for close transcript. The expected 3B V2 reconciliation must split provenance gate, generator/check proof, runtime projection, destructive deletion, and close transcript, with a same-wave consumer or gate for each sub-row (`restart/audit/totality/p1/1D-skinny-lessons.md:178`; `restart/audit/totality/p3/hardening/V1/CH4.md:118`-`119`, `restart/audit/totality/p3/hardening/V1/CH4.md:158`-`160`). | Gate-only W4 work may record evidence but cannot close generator/projection/transcript debt. A non-fit sub-row becomes intrinsic-block, REDRESS/revert if it already touched live paths, or G-Omega wave-graph amendment. |
 | W7-W9 Decision/lowerers | Use T-P2 costed units as the receiver floor: W7 Decision spine 900-1400 LOC, W8 EagerTape/OffsetTape 700-1100 LOC, and W9 EventTape/SinkOnly/CollapsedStage/all-five guard 850-1300 LOC. 3B V2 must reconcile these with the T-P1 `RC-06` carrier and state consumer/gate, hard-cap fit, and fail action per wave (`restart/audit/totality/p2/2D-cost-model.md:70`-`76`; `restart/audit/totality/p1/1D-skinny-lessons.md:179`). | A row that cannot fit by excluding lowerers from W7, deferring EventTape to W9, or keeping CollapsedStage diagnostic-only is gate-consumed rejection or intrinsic-block. No W12, silent overflow, or doc-only close is available. |

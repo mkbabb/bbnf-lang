@@ -1,8 +1,8 @@
 ---
 agent: 3C
 pass: T-P3-synthesis
-cycle: V2
-generated_at: 2026-05-28T07:50:49Z
+cycle: V3
+generated_at: 2026-05-28T08:13:36Z
 t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F]
 t_p2_dossiers_consumed: [2A, 2B, 2C, 2D, 2E, 2F]
 v1_surface_targeted: LOCKS.md
@@ -18,6 +18,7 @@ prior_cycle_dispositions_folded:
   revised:
     - "CH1-V1-001: proposed LOCKS hunk context regenerated without the inherited out-of-range 2F line citation."
     - "CH4-COST-03: every D-L* clause now carries doc LOC, risk, affected waves, consumer/gate, and propagation count."
+    - "CH4-V2-002: V3 adds per-clause hard-cap fit and fail action columns, with Pass Omega doc-only status, wave consumption, and exact non-fit route for every D-L*."
     - "CH5-V1-01: regex ownership now uses canonical parse-that-regex wording; legacy bbnf-regex is path-only and non-admissible as a future owner."
     - "CH5-V1-02: runtime regex/DFA manifest and consumer proof are necessary but never sufficient without prior G-Omega Lock 1 amendment."
     - "CH6-V1-01: Open Questions now route receiver, blocker, and gate."
@@ -29,11 +30,11 @@ prior_cycle_dispositions_folded:
 
 This packet disposes every live 1E and 2A-2F `LOCKS-AMENDMENTS-CANDIDATE`: 42 rows total, with 23 `ACCEPT`, 19 `MODIFY`, 0 `REJECT`, and 0 `DEFER`. The proposed `LOCKS.md` delta is an addendum, not an edit to the live governance file. It preserves the 16 numbered locks, preserves the five `BackendShape` variants, and creates no new directive, BIR variant, substrate, public substrate API, retained sidecar, or sixth shape. T-P1 is carried honestly as clean-final / G1-auto-pinned rather than a normal two-clean-cycle lock (`restart/audit/totality/p1/hardening/HARDENING-T-P1-V5-CONSOLIDATED.md:21`-`28`). T-P2 is carried as a normal Section 3Z lock (`restart/audit/totality/p2/hardening/HARDENING-T-P2-V3-CONSOLIDATED.md:15`-`19`). The line-level proposed diff is emitted separately in `3C-locks-v+1-diff.md`.
 
-## V2 Delta Summary
+## V3 Delta Summary
 
 | class | count | notes |
 |---|---:|---|
-| carried | 1 | V1 proposed addendum carried forward with CH1/CH4/CH5/CH6 repairs folded. |
+| carried | 1 | V1 proposed addendum carried forward with CH1/CH4/CH5/CH6 repairs and V2 CH4-V2-002 folded. |
 | removed | 0 | No live LAC is silently dropped. |
 | answered | 42 | Every 1E and 2A-2F LAC receives a disposition below. |
 | newly added | 12 | The 42 LACs are folded into 12 lock-addendum clauses. |
@@ -59,20 +60,20 @@ This packet disposes every live 1E and 2A-2F `LOCKS-AMENDMENTS-CANDIDATE`: 42 ro
 
 This matrix costs the proposed `LOCKS.md` addendum text and its governance propagation only. It authorizes no implementation work, and any wave that cannot consume a clause inside its cap must record intrinsic-block, REDRESS, or G-Omega wave-graph amendment rather than hiding overflow.
 
-| proposed delta | doc LOC | risk | affected waves | consumer/gate | propagation count |
-|---|---:|---|---|---|---:|
-| D-L01-substrate-factstream-sidecar | 4-6 | high | W0/W1/W5/W7/W11 | Lock 1 substrate manifest plus runtime-regex G-Omega gate | 5 |
-| D-L02-layout-live-state | 2-3 | medium | W7/W8/W9/W11 | Lock 2 closure review over `Layout` / `LayoutSink` evidence | 3 |
-| D-L03-empty-path-proof | 2-3 | medium | W3/W11 | Generated-code empty-path unit/golden gate | 3 |
-| D-L04-solver-bridge | 2-4 | medium | W7/W11 | egraph/CSP dependency split-or-exception gate | 3 |
-| D-L06-regeneration-delete-provider | 4-6 | high | W3/W4/W5/W6/W11 | generator provenance, non-writing regen/check, provider-before-delete gates | 5 |
-| D-L08-row-plane-broadcast | 5-8 | high | W0/W1/W5/W6/W11 | telemetry duplicate-signature, CSS typed provider, and same-workload retime gates | 6 |
-| D-L09-borrow-surface | 2-3 | medium | W8/W11 | generated API tests for `parse_in` / `parse_owned` lifetime discipline | 3 |
-| D-L10-decision-five-shape | 5-8 | high | W7/W8/W9/W11 | Decision Engine, lowerer output, and exact all-five `BackendShape` gates | 5 |
-| D-L11-L12-topology-archive | 3-5 | medium | Pass Omega CRUD/W11 | root topology, legacy-name routing, and archive-inventory gate | 4 |
-| D-L14-generated-provider-generalisation | 5-8 | high | W2/W3/W5/W6/W7/W11 | Lock 14 scan, generated provider manifest, CSS typed semantic gate | 6 |
-| D-L15-profile-scope | 2-3 | medium | W0/W11 | root profile and host-bound row admission gate | 3 |
-| D-L16-primitive-manifest | 6-10 | high | W2/W5/W7/W8/W9/W11 | Lock 16 manifest, strict parity/checkasm, aarch64, same-wave consumer gate | 6 |
+| proposed delta | doc LOC | risk | affected waves | consumer/gate | propagation count | hard-cap fit | fail action |
+|---|---:|---|---|---|---:|---|---|
+| D-L01-substrate-factstream-sidecar | 4-6 | high | W0/W1/W5/W7/W11 | Lock 1 substrate manifest plus runtime-regex G-Omega gate | 5 | Yes; Pass Omega doc-only, consumed by W0/W1/W5/W7/W11 governance gates only. | G-Omega wave-graph amendment for any runtime-regex or substrate expansion; no W12 or challenge-time implementation. |
+| D-L02-layout-live-state | 2-3 | medium | W7/W8/W9/W11 | Lock 2 closure review over `Layout` / `LayoutSink` evidence | 3 | Yes; Pass Omega doc-only, consumed by W7/W8/W9/W11 closure review. | REDRESS/revert any Lock 2 close or narrowing claim without live names or Pass Omega text change; no W12 or challenge-time implementation. |
+| D-L03-empty-path-proof | 2-3 | medium | W3/W11 | Generated-code empty-path unit/golden gate | 3 | Yes; Pass Omega doc-only, consumed by W3/W11 generated-code proof gate. | intrinsic-block if empty-path proof is absent; no W12 or challenge-time implementation. |
+| D-L04-solver-bridge | 2-4 | medium | W7/W11 | egraph/CSP dependency split-or-exception gate | 3 | Yes; Pass Omega doc-only, consumed by W7/W11 dependency split-or-exception gate. | G-Omega wave-graph amendment for any bridge exception that cannot fit W7/W11; no W12 or challenge-time implementation. |
+| D-L06-regeneration-delete-provider | 4-6 | high | W3/W4/W5/W6/W11 | generator provenance, non-writing regen/check, provider-before-delete gates | 5 | Yes; Pass Omega doc-only, consumed by W3/W4/W5/W6/W11 sequencing gates. | REDRESS/revert any delete-before-provider or header-only closure; no W12 or challenge-time implementation. |
+| D-L08-row-plane-broadcast | 5-8 | high | W0/W1/W5/W6/W11 | telemetry duplicate-signature, CSS typed provider, and same-workload retime gates | 6 | Yes; Pass Omega doc-only, consumed by W0/W1/W5/W6/W11 telemetry and CSS gates. | intrinsic-block for broadcast row movement without independent row evidence; no W12 or challenge-time implementation. |
+| D-L09-borrow-surface | 2-3 | medium | W8/W11 | generated API tests for `parse_in` / `parse_owned` lifetime discipline | 3 | Yes; Pass Omega doc-only, consumed by W8/W11 API test gate. | intrinsic-block if `parse_in` / `parse_owned` tests do not fit W8/W11; no W12 or challenge-time implementation. |
+| D-L10-decision-five-shape | 5-8 | high | W7/W8/W9/W11 | Decision Engine, lowerer output, and exact all-five `BackendShape` gates | 5 | Yes; Pass Omega doc-only, consumed by W7/W8/W9/W11 Decision Engine gates. | G-Omega wave-graph amendment for sixth-shape, directive, BIR, or over-cap Decision Engine work; no W12 or challenge-time implementation. |
+| D-L11-L12-topology-archive | 3-5 | medium | Pass Omega CRUD/W11 | root topology, legacy-name routing, and archive-inventory gate | 4 | Yes; Pass Omega doc-only, consumed by Pass Omega CRUD/W11 archive review. | REDRESS/revert any topology or archive close by skinny-only evidence; no W12 or challenge-time implementation. |
+| D-L14-generated-provider-generalisation | 5-8 | high | W2/W3/W5/W6/W7/W11 | Lock 14 scan, generated provider manifest, CSS typed semantic gate | 6 | Yes; Pass Omega doc-only, consumed by W2/W3/W5/W6/W7/W11 provider and generalisation gates. | intrinsic-block for generic branches, excluded-root leaks, or CSS semantic reuse outside typed provider proof; no W12 or challenge-time implementation. |
+| D-L15-profile-scope | 2-3 | medium | W0/W11 | root profile and host-bound row admission gate | 3 | Yes; Pass Omega doc-only, consumed by W0/W11 profile gate. | intrinsic-block for root or host-bound profile closure without proof; no W12 or challenge-time implementation. |
+| D-L16-primitive-manifest | 6-10 | high | W2/W5/W7/W8/W9/W11 | Lock 16 manifest, strict parity/checkasm, aarch64, same-wave consumer gate | 6 | Yes; Pass Omega doc-only, consumed by W2/W5/W7/W8/W9/W11 primitive gates. | intrinsic-block for primitive admission without manifest, parity, aarch64, and same-wave consumer proof; no W12 or challenge-time implementation. |
 
 ## Disposition Matrix
 

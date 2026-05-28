@@ -1,8 +1,8 @@
 ---
 agent: 3B
 pass: T-P3-synthesis
-cycle: V2
-generated_at: 2026-05-28T07:51:00Z
+cycle: V3
+generated_at: 2026-05-28T08:13:05Z
 t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F]
 t_p2_dossiers_consumed: [2A, 2B, 2C, 2D, 2E, 2F]
 v1_surface_targeted: MASTER-PLAN.md
@@ -10,7 +10,7 @@ proposed_deltas_count: 11
 delta_summary:
   carried_from_prior_cycle: [MP-3B-V1-D01, MP-3B-V1-D02, MP-3B-V1-D03, MP-3B-V1-D04, MP-3B-V1-D05, MP-3B-V1-D06, MP-3B-V1-D07, MP-3B-V1-D08, MP-3B-V1-D09, MP-3B-V1-D10, MP-3B-V1-D11]
   removed: []
-  answered: [CH4-COST-01, CH4-COST-02, CH4-COST-04, CH6-V1-01]
+  answered: [CH4-COST-01, CH4-COST-02, CH4-COST-04, CH6-V1-01, CH4-V2-001]
   newly_added: []
 prior_cycle_dispositions_folded:
   accepted: []
@@ -20,6 +20,7 @@ prior_cycle_dispositions_folded:
     - "CH4-COST-02: W4 Pattern H is split into provenance gate, generator/check proof, runtime projection, destructive deletion, and close transcript sub-rows."
     - "CH4-COST-04: W5/W6 CSS typed provider rows are explicitly scoped; broad CSSOM rewrite is not hidden in either wave."
     - "CH6-V1-01: Open Questions table now carries receiver, blocker, and gate fields for every row."
+    - "CH4-V2-001: Every carried 3B delta now has row-level LOC, numeric propagation count, risk, wave alignment, consumer/gate, hard-cap fit, and fail action."
 ---
 
 ## Executive Summary
@@ -39,19 +40,19 @@ FNV quarantine, and PASS-IMPL V2 to W0-W11 with explicit LOC/risk/wave
 alignment. T-P3 only proposes these MASTER deltas; Pass Omega CRUD must apply
 any accepted text after G-Omega.
 
-V2 folds the V1 hardening REVISE findings that affect this MASTER proposal. The
-fold remains proposal-only: it changes no live V1 spec surface and only narrows
-the proposed receiver map, cap routing, and question routing that Pass Omega may
-later apply.
+V3 folds the V1 hardening REVISE findings and the V2 `CH4-V2-001` row-field
+coverage finding that affect this MASTER proposal. The fold remains
+proposal-only: it changes no live V1 spec surface and only narrows the proposed
+receiver map, cap routing, and question routing that Pass Omega may later apply.
 
-## V2 Delta Summary
+## V3 Delta Summary
 
 | bucket | ids | note |
 |---|---|---|
-| carried | MP-3B-V1-D01..D11 | V2 keeps the same proposed MASTER delta set and revises cost/gate wording inside D03, D05, D07, D08, and the Open Questions table. |
+| carried | MP-3B-V1-D01..D11 | V3 keeps the same proposed MASTER delta set and revises cost/gate wording inside D03, D05, D07, D08, and the Open Questions table. |
 | removed | none | No prior proposed MASTER delta is removed. |
-| answered | CH4-COST-01, CH4-COST-02, CH4-COST-04, CH6-V1-01 | W7-W9 use 2D costed bands; W4 is split; W5/W6 CSS scope is explicit; every open question has receiver, blocker, and gate. |
-| newly added | none | V2 adds no new MASTER delta id; it folds V1 REVISE findings into the existing proposal-only slice. |
+| answered | CH4-COST-01, CH4-COST-02, CH4-COST-04, CH6-V1-01, CH4-V2-001 | W7-W9 use 2D costed bands; W4 is split; W5/W6 CSS scope is explicit; every open question has receiver, blocker, and gate; every carried 3B delta has row-level CH4 cap/fail coverage. |
+| newly added | none | V3 adds no new MASTER delta id; it folds V1 and V2 REVISE findings into the existing proposal-only slice. |
 
 ## Wave Classification Ledger
 
@@ -133,7 +134,7 @@ caps and forbids W12 overflow (`restart/skinny/tranches/sk-v15/SPEC.md:155-170`;
 | MP.SK15.W10 FNV quarantine | new pending | 80-220 / 100-240 / 80-180 | medium | J.W1/J.W5/bench-only guard | W10 production FNV scan and adversarial strict-product fixtures | Fits SPEC cap; production FNV correctness migration is blocked or deleted, no W12. | `restart/skinny/tranches/sk-v15/SPEC.md:172-185`; `restart/skinny/tranches/sk-v15/SPEC.md:430-445` |
 | MP.SK15.W11 Close and PASS-IMPL V2 handoff | new pending | 0-80 / none / 120-420 | medium | J.W5 / Master close | PASS-IMPL V2 accepts each axis or records row-level intrinsic block proof | Fits only as audit/handoff over prior evidence; orphan dependency rows block SK-V16 routing, no W12. | `restart/skinny/tranches/sk-v15/SPEC.md:172-185`; `restart/skinny/tranches/sk-v15/SPEC.md:447-465` |
 
-### W4 Pattern H V2 Split
+### W4 Pattern H Budget Split
 
 W4 is not a single 120-280 LOC implementation claim. That band is only the
 MASTER gate-row proposal. Any accepted MASTER text must preserve these sub-rows
@@ -164,21 +165,21 @@ work cannot hide inside one cap.
 | MP-3B-V1-D10: Add W10 FNV quarantine row and bench-only guard to MASTER. | PASS-IMPL flags W11L/W11N/W11O FNV closed-enum products as bench-only (`restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:60-65`); T-P1 COH-016 routes generated CSS FNV hashes to W10 quarantine (`restart/audit/totality/p1/1F-coherence-scan.md:154-177`). | Sections 13, 23, 24, J.W1/J.W5. | W10 80-220 manual plus 100-240 bench fixture/report LOC, medium risk. No production FNV arbiter or correctness proof. |
 | MP-3B-V1-D11: Update implementation order from stale SK-V13/SK-V14 language to SK-V15 Pass Omega/G-Omega then W0. | MASTER currently says G-Omega before SK-V13 W0 and blocks SK-V13 waves (`restart/MASTER-PLAN.md:1222-1242`); T-P3 dispatch says synthesis proposes and Pass Omega applies spec surfaces, with G-Omega mandatory (`restart/audit/totality/p3/T-P3-DISPATCH-CONTEXT.md:27-40`). | Section 25 Implementation Order and Section 24 Carry Ledger. | 40-100 doc LOC, medium governance risk, no implementation wave. Aligns with T-P3 proposal-only boundary. |
 
-## Consequences
+## CH4 Coverage Matrix
 
-| delta | positive consequence | cost and propagation |
-|---|---|---|
-| D01 | MASTER stops routing readers through stale SK-V14 authority. | 60-120 MASTER doc LOC; propagation count 3 surfaces: MASTER direct, HANDOFF/INDEX cross-references by 3F/Pass Omega. |
-| D02 | A-J and H scoped achievements become auditable without overstating close. | 80-160 doc LOC; propagation count 1 direct surface plus J close-report reference. |
-| D03 | SK-V15 W0-W11 becomes the visible current receiver map with LOC/risk/wave alignment. | 220-420 doc LOC; propagation count 4 surfaces: MASTER, HANDOFF, MIGRATION, SK-V15 handoff/dispatch references. |
-| D04 | Old SK-V14/MP.NW rows remain useful as history and REDRESS pre-blocks without dispatch authority. | 120-240 doc LOC; propagation count 2 surfaces: MASTER and REDRESS/RESULTS references. |
-| D05 | CSS fake parity and broadcast admission cannot re-enter J.W1/H.W6. | Implementation allocation is W1/W5/W6, with W5 scoped to typed provider output and W6 scoped to same-workload retime/retirement; propagation count 5 surfaces: MASTER, BENCH/RESULTS, REDRESS, HANDOFF, MIGRATION. |
-| D06 | Gate/schema obligations become receiver-visible, not hidden in skinny S-P3 only. | W0/W1/W2 gate/doc cost 80-220 LOC; propagation count 4 surfaces: MASTER, RESULTS schema, gate/report, LOCKS candidates via 3C. |
-| D07 | Lock 14, codegen, and Pattern H work are sequenced prune-before-delete. | W2/W3 remain 270-600 manual LOC; W4 is split into 120-280 gate, 1,500-3,000 generator/check, 700-1,200 per projection, 0-160 deletion, and 600-1,200 transcript rows; propagation count 4 surfaces: MASTER, LOCKS, MIGRATION, runtime/codegen wave plans. |
-| D08 | Decision Engine/lowerer proof gets cap-valid split and no all-five paper close. | W7/W8/W9 allocation is 900-1400, 700-1100, and 850-1300 LOC respectively, with explicit gate consumers, fail actions, and no-W12 route; propagation count 3 surfaces: MASTER, ARCHITECTURE, LOCKS. |
-| D09 | Primitive admission is tied to scalar/checkasm/consumer/row movement. | W2 manifest cost 120-280 plus per-primitive future slices; propagation count 3 surfaces: MASTER, LOCKS, SK-V15 dispatch. |
-| D10 | FNV stays a bench quarantine concern, not a runtime equality mechanism. | W10 80-220 manual plus 100-240 generated/fixture LOC; propagation count 3 surfaces: MASTER, BENCH, REDRESS. |
-| D11 | Implementation order matches active T-P3/Pass Omega governance. | 40-100 doc LOC; propagation count 3 surfaces: MASTER, HANDOFF, MIGRATION. |
+| delta | LOC | propagation count | risk | wave alignment | consumer / gate | hard-cap fit | fail action |
+|---|---:|---:|---|---|---|---|---|
+| D01 | 60-120 doc | 3 | high routing | Pass Omega/G-Omega before W0 | Pass Omega CRUD and G-Omega acceptance gate | Fits as doc-only authority repair; no implementation cap claim. | Reject CRUD or record REDRESS; block SK-V15 W0 dispatch until authority is current. |
+| D02 | 80-160 doc | 2 | medium regression | No implementation wave; H/J close evidence only | Pass Omega CRUD plus J close-report reference gate | Fits as classification text only; no scoped landing becomes V1/root close. | Reject overclaim, keep rows scoped/partial/refuted, and block paper close. |
+| D03 | 220-420 doc | 4 | high routing | MP.SK15.W0..W11 | Pass Omega CRUD plus each MP.SK15 same-wave gate | Fits as receiver-map documentation; implementation cap remains per W0-W11 row. | Missing row fields block CRUD; non-fit wave work routes intrinsic block, REDRESS/revert, or G-Omega amendment, no W12. |
+| D04 | 120-240 doc | 2 | high CH3 regression | MP.SK15.W0..W11 supersedes SK-V14/MP-NW history | Pass Omega CRUD and W0 dispatch-authority gate | Fits as historical/pre-block marking only; old rows gain no dispatch cap. | Reject live reuse of stale rows; keep pre-block evidence or route REDRESS before W0. |
+| D05 | W1 80-200; W5 300-900 plus 220-440 generated; W6 160-340 | 5 | critical/high | W1/W5/W6 | W1 CSS demotion, W5 typed provider tests/generated consumer, W6 retime/retirement gate | Fits only as scoped typed-provider and retime work; broad CSSOM/value parity is non-fit. | Record intrinsic block or G-Omega wave-graph amendment before redress; no hidden W5/W6 overflow and no W12. |
+| D06 | 80-220 gate/doc | 4 | high | W0/W1/W2 | W0 telemetry lock plus W1/W2 anti-broadcast and exclusion gates | Fits as consumed telemetry/gate schema work only. | Reject self-exempting or producer-only gates; block dependent W1/W2 rows or REDRESS/revert, no W12. |
+| D07 | W2 120-280; W3 150-320; W4 120-280 gate, 1,500-3,000 generator, 700-1,200/projection, 0-160 deletion, 600-1,200 transcript | 4 | high | W2/W3/W4 | W2 Lock gate, W3 codegen consumer, W4 provenance/generator/projection/deletion/transcript gates | Fits only through the preserved W4 sub-row split; delete-before-provider and header-only close are non-fit. | Revert or REDRESS delete-before-provider; otherwise intrinsic block or G-Omega amendment, no W12. |
+| D08 | W7 900-1400; W8 700-1100; W9 850-1300 | 3 | high | W7/W8/W9 | `DEP-W7-DECISION-SPINE`, `DEP-W8-LOWERERS-A`, and `DEP-W9-LOWERERS-B` gates | Fits only with W7 excluding lowerers, W8 excluding EventTape, and W9 preserving the all-five gate. | Intrinsic block, REDRESS/revert, or G-Omega wave-graph amendment before redress; no W12. |
+| D09 | W2 120-280 plus 80-350 per selected future primitive | 3 | high | W2 then selected consumer waves | W2 primitive manifest and future scalar/checkasm/same-wave consumer gates | Fits as manifest plus selected consumed slices only; source-present inventory is non-fit. | Block/demote unwired primitives, require row movement or REDRESS, no W12. |
+| D10 | W10 80-220 plus 100-240 fixture/report | 3 | medium | W10 | W10 production FNV scan and adversarial strict-product fixture gate | Fits as bench quarantine and scan/report work only; production FNV correctness migration is non-fit. | Delete/block production FNV migration or REDRESS quarantine evidence, no W12. |
+| D11 | 40-100 doc | 3 | medium governance | Pass Omega/G-Omega then W0 | Pass Omega CRUD, G-Omega authorization, and W0 entry gate | Fits as implementation-order governance text only. | Block SK-V15 W0 until order is accepted; route unresolved remainder to REDRESS or intrinsic block, no W12. |
 
 ## Open Questions
 

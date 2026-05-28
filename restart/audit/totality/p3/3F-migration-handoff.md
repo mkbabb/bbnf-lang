@@ -1,8 +1,8 @@
 ---
 agent: 3F
 pass: T-P3-synthesis
-cycle: V2
-generated_at: 2026-05-28T07:51:21Z
+cycle: V3
+generated_at: 2026-05-28T08:13:04Z
 t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F-coherence-scan, 1F-anti-pattern, 1F-past-corpora]
 t_p2_dossiers_consumed: [2A, 2B, 2C, 2D, 2E, 2F]
 v1_surface_targeted: "MIGRATION.md + HANDOFF.md"
@@ -10,28 +10,28 @@ proposed_deltas_count: 7
 delta_summary:
   carried_from_prior_cycle: [3F-MH-001, 3F-MH-002, 3F-MH-003, 3F-MH-004, 3F-MH-005, 3F-MH-006, 3F-MH-007]
   removed: []
-  answered: [CH1-V1-002, CH4-COST-05, CH6-V1-02]
+  answered: [CH1-V1-002, CH4-COST-05, CH6-V1-02, CH4-V2-001]
   newly_added: []
 prior_cycle_dispositions_folded:
   accepted: []
   rejected: []
-  revised: [CH1-V1-002, CH4-COST-05, CH6-V1-02]
+  revised: [CH1-V1-002, CH4-COST-05, CH6-V1-02, CH4-V2-001]
 ---
 
 # 3F - MIGRATION + HANDOFF + Next-Cycle Dispatch
 
 ## Executive Summary
 
-This artifact proposes only. It does not amend `restart/MIGRATION.md` or `restart/HANDOFF.md`. The top-level V1 surfaces still present SK-V14 Pass Omega V8 W5B-FRONTENDR as current authority (`restart/HANDOFF.md:5`, `restart/HANDOFF.md:70`) while the live SK-V15 packet says JSON is honest, CSS L4 is contrived, Pattern H is not collapsed, and Decision Engine is scaffold (`restart/skinny/tranches/sk-v15/HANDOFF.md:8`-`11`). T-P1 must be carried as CLEAN-FINAL / G1-AUTO-PINNED rather than normal two-clean-cycle 3Z (`restart/audit/totality/p1/hardening/HARDENING-T-P1-V5-CONSOLIDATED.md:21`-`28`); T-P2 is a normal 3Z lock (`restart/audit/totality/p2/hardening/HARDENING-T-P2-V3-CONSOLIDATED.md:15`-`19`). V2 folds the V1 3F REVISE findings by routing current SK-V15 authority to the extant `restart/skinny/tranches/sk-v15/DISPATCH-PROMPT.md` and by making CRUD-4 cap handling executable. The next directive is therefore: T-P3 locks, Pass Omega V5 runs, CRUD-4 applies the authorized MIGRATION/HANDOFF current-state cleanup or records a blocked/extension decision with exact remainder/receiver/blocker/gate, G-Omega closes, and only then SK-V15 W0 implementation dispatch may begin.
+This artifact proposes only. It does not amend `restart/MIGRATION.md` or `restart/HANDOFF.md`. The top-level V1 surfaces still present SK-V14 Pass Omega V8 W5B-FRONTENDR as current authority (`restart/HANDOFF.md:5`, `restart/HANDOFF.md:70`) while the live SK-V15 packet says JSON is honest, CSS L4 is contrived, Pattern H is not collapsed, and Decision Engine is scaffold (`restart/skinny/tranches/sk-v15/HANDOFF.md:8`-`11`). T-P1 must be carried as CLEAN-FINAL / G1-AUTO-PINNED rather than normal two-clean-cycle 3Z (`restart/audit/totality/p1/hardening/HARDENING-T-P1-V5-CONSOLIDATED.md:21`-`28`); T-P2 is a normal 3Z lock (`restart/audit/totality/p2/hardening/HARDENING-T-P2-V3-CONSOLIDATED.md:15`-`19`). V2 folds the V1 3F REVISE findings by routing current SK-V15 authority to the extant `restart/skinny/tranches/sk-v15/DISPATCH-PROMPT.md` and by making CRUD-4 cap handling executable. V3 folds `CH4-V2-001` by adding row-level CH4 coverage for every carried 3F delta. The next directive is therefore: T-P3 locks, G3 auto-passes under the active pin, Pass Omega V5 runs, CRUD-4 applies the authorized MIGRATION/HANDOFF current-state cleanup or records a blocked/extension decision with exact remainder/receiver/blocker/gate, G-Omega closes, and only then SK-V15 W0 implementation dispatch may begin.
 
-## V2 Delta Summary
+## V3 Delta Summary
 
 | bucket | delta ids | note |
 |---|---|---|
 | Carried from prior cycle | 3F-MH-001..3F-MH-007 | All seven V1 proposal deltas remain proposal-only. V2 revises 3F-MH-005 and 3F-MH-007 to fold CH1/CH4/CH6 REVISE findings. |
 | Removed | none | No prior 3F delta is removed. |
-| Answered | CH1-V1-002, CH4-COST-05, CH6-V1-02 | The absent skinny companion-prompt route is answered by the extant `DISPATCH-PROMPT.md`, and CRUD-4 follow-up cleanup is replaced with a blocked/extension protocol. |
-| Newly added | none | V2 folds hardening dispositions into the existing seven deltas rather than creating new proposal IDs. |
+| Answered | CH1-V1-002, CH4-COST-05, CH6-V1-02, CH4-V2-001 | The absent skinny companion-prompt route is answered by the extant `DISPATCH-PROMPT.md`, CRUD-4 follow-up cleanup is replaced with a blocked/extension protocol, and V3 adds per-delta CH4 coverage fields. |
+| Newly added | none | V3 folds hardening dispositions into the existing seven deltas rather than creating new proposal IDs. |
 
 ## Proposed Delta Table
 
@@ -110,9 +110,21 @@ rows and stopping on any unresolved invariant.
 | 3F-MH-006 | Blockers become executable next-work rows, not prose. | 60-110 doc LOC; low-medium risk. | 2 surfaces: HANDOFF and SK-V15 SPEC references. |
 | 3F-MH-007 | Prevents implementation waves from starting before V1 patch authorization or before current-state cleanup is closed/extension-routed. | 45-90 doc LOC; low risk. | 3 surfaces: HANDOFF, MIGRATION, Pass Omega V5 CRUD-4. |
 
+## CH4 V3 Coverage Matrix
+
+| delta id | LOC | propagation count | risk | wave alignment | consumer / gate | hard-cap fit | fail action |
+|---|---:|---:|---|---|---|---|---|
+| 3F-MH-001 | 25-45 doc LOC | 1 | low | Pass Omega V5 CRUD-4 before G-Omega. | Pass Omega V5 CRUD-4 / G-Omega plus CRUD log. | Fits as doc-only current receiver insertion; no implementation wave work. | If current MIGRATION receiver cannot fit, record blocked/extension remainder with receiver/blocker/gate and block W0. |
+| 3F-MH-002 | 80-140 doc LOC | 2 | medium | Pass Omega V5 CRUD-4 for docs; W0-W11 consume after G-Omega. | SK-V15 dependency table and wave exit gates. | Fits as compact receiver table plus HANDOFF cross-link; no W12 overflow. | If dependency mapping cannot fit, route G-Omega wave-graph amendment or blocked/extension with exact missing rows. |
+| 3F-MH-003 | 20-40 doc LOC | 3 | medium | Pass Omega V5 CRUD-4; enforced by delete/retirement waves. | W3/W4/W6 provider-proof gates and SK-V15 dependency rows. | Fits as one migration gate clause; provider work remains in owning waves. | If provider proof is absent, fail closed by blocking delete/retirement and recording REDRESS/revert route. |
+| 3F-MH-004 | 10-25 doc LOC | 2 | low | Pass Omega V5 CRUD-4 governance patch before G-Omega. | G-Omega sign-off on T-P1/T-P2 governance text. | Fits as doc-only governance paragraph. | If T-P1 is rewritten as normal 3Z, reject the CRUD hunk and block G-Omega. |
+| 3F-MH-005 | 125-230 doc LOC | 2 | medium | Pass Omega V5 CRUD-4 before G-Omega; W0 verifies after closure. | HANDOFF current override / G-Omega plus W0 pre-dispatch verification. | Fits only as replacement of stale current-state block, not broad rewrite. | If stale SK-V14 or missing-prompt authority remains, record blocked/extension remainder and keep W0 blocked. |
+| 3F-MH-006 | 60-110 doc LOC | 2 | low-medium | Pass Omega V5 CRUD-4; W0-W11 consume blocker rows. | SK-V15 wave exit gates for W0-W11 blockers. | Fits as compact HANDOFF blocker matrix; implementation stays in waves. | If any blocker row lacks a gate, block that wave entry or route G-Omega amendment. |
+| 3F-MH-007 | 45-90 doc LOC | 3 | low | T-P3 lock -> G3 auto-pass -> Pass Omega V5 CRUD-4 -> G-Omega -> W0. | CRUD-4, G-Omega, then SK-V15 W0 entry gate. | Fits as directive replacement; no silent deferral or challenge-time implementation. | If CRUD-4 or G-Omega is incomplete, record blocked/extension remainder and keep W0 blocked. |
+
 ## Next-Cycle Dispatch Directive
 
-1. T-P3 V2 cohort completes 3A..3F, then CH1..CH7 hardening iterates until T-P3 lock or V5 ceiling. The active dispatch context says G3 auto-passes on cohort lock and only G-Omega requires user relinquish (`restart/audit/totality/p3/T-P3-DISPATCH-CONTEXT.md:9`-`11`, `restart/audit/totality/p3/T-P3-DISPATCH-CONTEXT.md:123`-`129`).
+1. T-P3 V3 cohort completes 3A..3F, then CH1..CH7 hardening iterates until T-P3 lock or V5 ceiling. The active dispatch context says G3 auto-passes on cohort lock and only G-Omega requires user relinquish (`restart/audit/totality/p3/T-P3-DISPATCH-CONTEXT.md:9`-`11`, `restart/audit/totality/p3/T-P3-DISPATCH-CONTEXT.md:123`-`129`).
 2. On T-P3 lock, dispatch Pass Omega V5. Pass Omega consumes the latest totality cycle and skinny REDRESS/RESULTS into V1 spec surfaces (`restart/prompts/pass-contracts/PASS-OMEGA.md:3`-`5`) and specifically assigns HANDOFF+MIGRATION to CRUD-4 (`restart/prompts/pass-contracts/PASS-OMEGA.md:63`-`69`).
 3. Pass Omega V5 CHALLENGE must converge before CRUD. CRUD must stay within the consolidated authorization; no CRUD agent edits beyond what CHALLENGE authorizes (`restart/prompts/pass-contracts/PASS-OMEGA.md:72`-`74`, `restart/prompts/pass-contracts/PASS-OMEGA.md:92`-`94`).
 4. CRUD-4 resolves current-state HANDOFF/MIGRATION cleanup before G-Omega. If the cap blocks that cleanup, CRUD-4 records a blocked/extension decision naming the exact remainder, receiver, blocker, and gate; any remainder touching current dispatch truth blocks SK-V15 W0 until complete (`restart/prompts/totality/PASS-3-SYNTHESIS.md:202`-`206`, `restart/prompts/ORCHESTRATOR.md:224`-`227`).

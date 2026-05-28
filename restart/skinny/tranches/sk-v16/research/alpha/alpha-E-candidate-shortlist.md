@@ -22,9 +22,15 @@ Output: this file.
 - No full-codegen close while pre-existing dirty generated files remain.
 - No FNV production migration.
 - No x86 or AVX-512 implementation scope.
-- No tiny-string/StringBlock replay, retained parse shortcuts, retained class
-  columns, Track 1 == Track 2 sidecars, global cap changes, one-quartet
-  promotion, PMULL/CSSC promotion from ISA alone, or old string64 framing.
+- The full inherited REDRESS semantics in `SYNTHESIS.md` and
+  `alpha-C-redress-digest.md` are binding. In particular, no
+  tiny-string/StringBlock replay, retained parse shortcuts, retained cursor/list,
+  retained sidecar tables, cursor streams, parser-owned structural streams,
+  aux density/projection tables, retained class columns, Track 1 == Track 2
+  sidecars, wrong-plane comparator admission, global direct/Track 2 cap changes,
+  numeric/digit route without fresh P1 BBNF-side hot leaf, one-quartet
+  promotion, PMULL/CSSC promotion from ISA alone, decoded-string retry,
+  structural-stream retry, fixed-shape Unicode retry, or old string64 framing.
 
 ## Budget Discipline
 

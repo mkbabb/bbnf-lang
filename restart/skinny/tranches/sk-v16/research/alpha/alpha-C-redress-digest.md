@@ -59,15 +59,18 @@ Pre-blocked REDRESS families carried from SK-V15:
 
 `28+33, 50-55, 60-72, 80, 82-84, 88, 89, 96-98, 183/184/209-213, 215, 242-247, FNV closed-enum production migration`.
 
-These block parser-owned structural projection, retained sidecar/cursor
-streams, sidecar event vectors, parallel source passes, second tapes, public
-`UnionTape`, new substrate APIs, sixth `BackendShape`, alternate document
-projection, provider/runtime/template deletion before replacement proof,
-production FNV arbiters, and production hash-correctness proof.
+These block parser-owned structural projections, retained cursor/list,
+aux density/projection tables, retained sidecar tables, retained sidecar/cursor
+streams, parser-owned structural streams, sidecar event vectors, parallel source
+passes, second tapes, public `UnionTape`, new substrate APIs, sixth
+`BackendShape`, alternate document projection, provider/runtime/template
+deletion before replacement proof, production FNV arbiters, and production hash
+correctness proof.
 
 They also block tiny-string/StringBlock replay, retained parse shortcuts,
-retained class columns, Track 1 == Track 2 sidecars, global direct/Track 2 cap
-changes, numeric/digit routes without fresh P1 BBNF hot-leaf evidence,
-one-quartet Unicode/object-pair promotion, PMULL/CSSC production promotion from
-ISA or checkasm alone, and decoded-string/structural-stream/string64/fixed-shape
-Unicode retries under old framing.
+retained class columns, Track 1 == Track 2 sidecars, wrong-plane comparator
+admission, global direct/Track 2 cap changes, numeric/digit routes without
+fresh P1 BBNF-side hot-leaf evidence, one-quartet Unicode/object-pair
+promotion, PMULL/CSSC production promotion from ISA or checkasm alone, and
+decoded-string, structural-stream, string64, or fixed-shape Unicode retries
+under old framing.

@@ -72,17 +72,19 @@ The inherited REDRESS pre-block families are:
 `28+33, 50-55, 60-72, 80, 82-84, 88, 89, 96-98, 183/184/209-213, 215, 242-247, FNV closed-enum production migration`.
 
 Hidden-coupling escapes are also pre-blocked unless routed through Pass Omega
-and G-Omega: retained sidecars, sidecar event vectors, parallel source passes,
-second tapes, public `UnionTape`, new substrate APIs, sixth `BackendShape`,
-production FNV arbiters, and production hash-correctness proof.
+and G-Omega: retained sidecars, retained sidecar tables, sidecar event vectors,
+retained cursor/list, cursor streams, aux density/projection tables, parser-owned
+structural projections or streams, parallel source passes, second tapes, public
+`UnionTape`, new substrate APIs, sixth `BackendShape`, production FNV arbiters,
+and production hash-correctness proof.
 
 The REDRESS family meanings are carried forward, not just their ids: no
 tiny-string/StringBlock replay, retained parse shortcuts, retained class
-columns, Track 1 == Track 2 sidecars, global direct/Track 2 cap changes,
-numeric/digit route without fresh P1 BBNF hot-leaf evidence, one-quartet
-Unicode/object-pair promotion, PMULL/CSSC production promotion from ISA or
-checkasm alone, or decoded-string/structural-stream/string64/fixed-shape
-Unicode retry under old framing.
+columns, Track 1 == Track 2 sidecars, wrong-plane comparator admission, global
+direct/Track 2 cap changes, numeric/digit route without fresh P1 BBNF-side
+hot-leaf evidence, one-quartet Unicode/object-pair promotion, PMULL/CSSC
+production promotion from ISA or checkasm alone, or decoded-string,
+structural-stream, string64, or fixed-shape Unicode retry under old framing.
 
 ## Section 1 - Validated And Invalidated Ledger
 

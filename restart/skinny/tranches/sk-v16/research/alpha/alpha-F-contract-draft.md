@@ -73,9 +73,13 @@ and same-commit consumer callsite before redress. Generated output cannot hide
 manual scope.
 
 Hidden-coupling escapes are forbidden unless routed through Pass Omega and
-G-Omega: retained sidecars, sidecar event vectors, parallel source passes,
-second tapes, public `UnionTape`, new substrate APIs, sixth `BackendShape`,
-production FNV arbiters, and production hash-correctness proof.
+G-Omega: retained sidecars, retained sidecar tables, sidecar event vectors,
+retained cursor/list, cursor streams, aux density/projection tables,
+parser-owned structural projections or streams, parallel source passes, second
+tapes, public `UnionTape`, new substrate APIs, sixth `BackendShape`, production
+FNV arbiters, production hash-correctness proof, and wrong-plane comparator
+admission. The full inherited REDRESS pre-block semantics in `SYNTHESIS.md` and
+`alpha-C-redress-digest.md` are binding on S-P0 through S-P3.
 
 ## Gate Posture
 

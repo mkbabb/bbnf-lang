@@ -1,0 +1,41 @@
+# SK-V15 S-P2 V3 CH3 REGRESSION
+
+Pass: S-P2 Research. Cycle: V3 confirmation.
+Agent: S-P2 CH3 REGRESSION.
+Scope: current `p2a`-`p2f`, V2 CH3, V2 consolidated hardening, `ORCHESTRATOR.md` §3W/§3Z, S-P2 CH3 prompt, SK-V15 `SYNTHESIS.md` §0.5, and `skinny/REDRESS.md`.
+Disposition vocabulary: ACCEPT / REVISE / REJECT.
+
+## Verdict
+
+Overall CH3 verdict: ACCEPT.
+
+V3 confirms the V2 CH3 result. No surviving S-P2 candidate reopens a REDRESS-blocked route, no CSS broadcast or Lock 14 / Lock 16 gate-exclusion defect is used as proof, and rejected or diagnostic rows remain blocked. This is a confirmation audit over the same folded packet: V2 consolidated hardening already reported 7/7 ACCEPT, no open REVISE/REJECT list, and instructed a V3 confirmation before S-P3 handoff (`restart/skinny/tranches/sk-v15/research/p2/hardening/HARDENING-S-P2-V2-CONSOLIDATED.md:10`-`12`, `:26`-`:41`).
+
+## Governing Checks
+
+The universal CH3 lens is regression-specific: no proposal may reopen a `skinny/REDRESS.md` route, the pre-block list must be identified, and no admitted row may silently regress (`restart/prompts/ORCHESTRATOR.md:74`-`88`). The S-P2 CH3 specialization names the active block surface: REDRESS 28+33, 50-55, 60-72, 80, 82-84, 88, 89, and historical blocked routes; any reopening without fresh P1 evidence and new framing is REJECT (`restart/prompts/skinny/PASS-2-RESEARCH.md:109`-`117`).
+
+The V3 role is confirmation, not new fold work: §3Z requires each pass cycle to dispatch hardening, consolidate, fold dispositions into the next cycle, and converge only after the required ACCEPT cycles with no critical or orphan REVISE defects (`restart/prompts/ORCHESTRATOR.md:104`-`123`).
+
+SK-V15 adds two regression-relevant procedural gates. CSS admits require distinct measurements unless explicitly aggregate, and Lock 14 / Lock 16 gates must scan and report their own exclusion lists (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:98`-`110`). The telemetry schema also requires anti-broadcast and gate-exclusion fields, and the gate must reject hidden one-to-N measurement stamps or self-exempting exclusion reports (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:121`-`127`).
+
+## Confirmation Findings
+
+| ID | Surface | Disposition | Finding |
+|---|---|---|---|
+| CH3-V3-1 | Candidate ledger closure | ACCEPT | P2-F remains the effective candidate ledger: it closes over P2-B/C/D/E, introduces no new primitive, and maps every P2-A comparator-context row to ACCEPT-alias, REVISE, or REJECT so no candidate wording escapes without a verdict (`restart/skinny/tranches/sk-v15/research/p2/p2f-grammar-neutral.md:12`, `:24`-`:69`). |
+| CH3-V3-2 | Tiny-string and StringBlock replay | ACCEPT | REDRESS 28/33 reject active 16-byte tiny-string/Class A wiring after measured parser regressions or wrong-boundary attribution (`skinny/REDRESS.md:324`-`:337`, `:394`-`:412`), and REDRESS 83 rejects generated-retained StringBlock16 wiring (`skinny/REDRESS.md:2320`-`:2356`). Current candidates keep literal/string work parameterized, scalar-first, same-call, or explicitly reject retained tiny/string replay (`restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md:90`-`:121`; `restart/skinny/tranches/sk-v15/research/p2/p2f-grammar-neutral.md:36`, `:54`, `:112`, `:125`). |
+| CH3-V3-3 | UTF-8 fusion and decoded materializers | ACCEPT | REDRESS 50-55 reject aux side tables, event cursors, parser-local structural cursors, decoded stats, and quote-source materializers (`skinny/REDRESS.md:715`-`:879`); REDRESS 66-69 reject direct source-hook folding, parser-owned scratch, byte-output materialization, and semantic string fact hashing (`skinny/REDRESS.md:1688`-`:1886`). V3 finds no reopen: `decode_escape_run`, unicode batch, escape-mask, and escaped-segment surfaces are BLOCKED/REVISE until materially different scalar proof and same-wave consumers exist (`restart/skinny/tranches/sk-v15/research/p2/p2a-sota-teardown.md:51`, `:74`; `restart/skinny/tranches/sk-v15/research/p2/p2f-grammar-neutral.md:33`-`:35`, `:57`, `:79`, `:127`-`:129`). |
+| CH3-V3-4 | Retained sidecars, second scanners, and union substrate | ACCEPT | REDRESS 51/53 block byte-class and parser-local structural cursors, and REDRESS 96/97/98 retires the union-substrate thesis after class-column and streaming-cursor implementations regressed (`skinny/REDRESS.md:742`-`:767`, `:784`-`:813`, `:2852`-`:2950`). Current P2-D and P2-F require existing-tape or direct-sink consumption and reject retained `StructuralIndex`, class vectors, cursors, whitespace bitmaps, density tables, cross-call carry, public `UnionTape`, and second tapes (`restart/skinny/tranches/sk-v15/research/p2/p2d-substrate-tape.md:38`-`:41`, `:52`-`:58`; `restart/skinny/tranches/sk-v15/research/p2/p2f-grammar-neutral.md:18`, `:51`, `:113`, `:139`). |
+| CH3-V3-5 | PMULL and CSSC hot-body promotion | ACCEPT | REDRESS 88 rejected PMULL prefix-XOR as a production hot body despite correctness/checkasm, and REDRESS 89 rejected CSSC CTZ/bulk consumption after parse-row regressions (`skinny/REDRESS.md:2510`-`:2540`, `:2544`-`:2585`). P2-B/C/F keep PMULL and CSSC as rejected promotion routes, not S-P3 shortlist items (`restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:49`-`:50`; `restart/skinny/tranches/sk-v15/research/p2/p2c-arch-esoterica.md:33`-`:34`; `restart/skinny/tranches/sk-v15/research/p2/p2f-grammar-neutral.md:45`-`:46`, `:110`-`:111`, `:135`-`:137`). |
+| CH3-V3-6 | Numeric, EOB, schema, harness, and x86 diagnostics | ACCEPT | Rejected/diagnostic rows remain blocked. REDRESS 80 rejects the `canada` mantissa-widen/f64 fallback route because the fallback pool was zero (`skinny/REDRESS.md:2217`-`:2248`). P2-F rejects numeric/digit surfaces because current P1 evidence is schema/comparator diagnostic, keeps `EOB_PAD_CLAMP` as support inventory only, rejects schema-shaped builders and harness hashes, and rejects x86 diagnostic routes as SK-V15 admission paths (`restart/skinny/tranches/sk-v15/research/p2/p2f-grammar-neutral.md:32`, `:39`, `:43`, `:47`, `:56`, `:104`-`:115`, `:131`). |
+| CH3-V3-7 | CSS broadcast and stale CSS proof | ACCEPT | SK-V15 close conditions require no 24-row CSS broadcast admit, typed CSS output before independent feature admits, and repaired Lock 14 / Lock 16 gate coverage (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:39`-`:45`, `:74`-`:80`). Current S-P2 does not cite CSS rows as admission evidence: P2-D says CSS broadcast rows cannot prove tape candidates, and P2-F says CSS is only a future repaired witness after provider/comparator rebuild (`restart/skinny/tranches/sk-v15/research/p2/p2d-substrate-tape.md:55`; `restart/skinny/tranches/sk-v15/research/p2/p2f-grammar-neutral.md:22`, `:85`-`:91`, `:117`, `:141`). |
+| CH3-V3-8 | Gate-exclusion defects | ACCEPT | No candidate relies on a self-exempting Lock 14 / Lock 16 scan or hidden exclusion list. P2-F requires generated grammar ownership, forbids generic grammar-name branching, and lists rejected/diagnostic rows instead of omitting them (`restart/skinny/tranches/sk-v15/research/p2/p2f-grammar-neutral.md:16`-`:22`, `:83`-`:102`, `:104`-`:115`). V2 CH7 independently confirmed the same reported-exclusion discipline, and V2 consolidation preserved it as a no-open-item condition for V3 (`restart/skinny/tranches/sk-v15/research/p2/hardening/V2/CH7.md:21`-`:41`; `restart/skinny/tranches/sk-v15/research/p2/hardening/HARDENING-S-P2-V2-CONSOLIDATED.md:20`-`:28`). |
+
+## Orphan Regression Check
+
+The V2 CH3 guardrails remain intact: local masks only, no retained sidecars or cross-call classifier state, no PMULL/CSSC hot-body promotion, no numeric/fallback reopen without fresh P1 evidence, no CSS broadcast proof, and no self-exempting Lock 14 / Lock 16 gate exclusions (`restart/skinny/tranches/sk-v15/research/p2/hardening/V2/CH3.md:46`-`:48`). V3 finds no orphan REVISE or REJECT from CH3.
+
+## Overall CH3 Verdict
+
+ACCEPT. S-P2 V3 passes the regression lens. S-P3 may consume the S-P2 research packet only with the preserved CH3 boundaries: REDRESS-blocked routes stay blocked unless a future pass supplies fresh P1 evidence plus materially new framing, CSS rows remain non-proof until broadcast and provider/comparator defects are repaired, and every rejected or diagnostic row stays visible rather than becoming an implicit admission.

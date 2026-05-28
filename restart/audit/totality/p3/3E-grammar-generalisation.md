@@ -1,0 +1,145 @@
+---
+agent: 3E
+pass: T-P3-synthesis
+cycle: V1
+generated_at: 2026-05-28T07:23:52Z
+t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F]
+t_p2_dossiers_consumed: [2A, 2B, 2C, 2D, 2E, 2F]
+v1_surface_targeted: n/a
+proposed_deltas_count: 11
+delta_summary:
+  carried_from_prior_cycle: []
+  removed: []
+  answered: []
+  newly_added:
+    - 3E-D01-non-json-proof-receiver-matrix
+    - 3E-D02-css-typed-provider-close-boundary
+    - 3E-D03-css-broadcast-negative-control
+    - 3E-D04-generated-provider-manifest-no-grammar-switch
+    - 3E-D05-per-grammar-backendshape-matrix
+    - 3E-D06-primitive-transfer-manifest
+    - 3E-D07-sheets-negative-control
+    - 3E-D08-bbnf-self-negative-control
+    - 3E-D09-future-grammar-onboarding-test
+    - 3E-D10-full-surface-lock14-scan
+    - 3E-D11-pattern-h-provenance-before-deletion
+prior_cycle_dispositions_folded:
+  accepted: []
+  rejected: []
+  revised: []
+---
+
+## Executive Summary
+
+The non-JSON generality story is source-owned generation plus negative-control
+proof, not JSON success with wider prose. T-P2 locked that JSON remains an
+honest guard line but cannot generalize into CSS, Sheets, BBNF-self, or future
+user grammars by itself (`restart/audit/totality/p2/hardening/HARDENING-T-P2-V3-CONSOLIDATED.md:48`, `restart/audit/totality/p2/hardening/HARDENING-T-P2-V3-CONSOLIDATED.md:52`).
+CSS L4 is the positive non-JSON receiver only after W5 emits generated typed
+value/document/view/visitor output and W6 retimes it against same-workload
+`cssparser` (`restart/skinny/tranches/sk-v15/SPEC.md:336`, `restart/skinny/tranches/sk-v15/SPEC.md:376`). Sheets and
+BBNF-self are mandatory falsifiers for provider manifests, shape facts, and
+primitive policies because their grammar forms exercise references, functions,
+operators, directives, imports, and recursive grammar ownership
+(`restart/audit/totality/p2/2C-grammar-neutrality.md:72`, `restart/audit/totality/p2/2C-grammar-neutrality.md:75`).
+
+This packet proposes no JSON narrowing, no grammar switch, no new directive, no
+new BIR variant, no new substrate, and no sixth `BackendShape`; it preserves the
+five-shape canon and routes Lock 14 hardening to 3C/Pass Omega only
+(`restart/prompts/totality/PASS-3-SYNTHESIS.md:208`, `restart/prompts/totality/PASS-3-SYNTHESIS.md:215`).
+
+## V1 Delta Summary
+
+| class | delta ids | status |
+|---|---|---|
+| carried | none | First 3E cycle. |
+| removed | none | First 3E cycle. |
+| answered | none | First 3E cycle. |
+| newly added | 3E-D01..3E-D11 | Eleven proposal-only deltas synthesize 2C, PASS-IMPL V1, SK-V15 SPEC, T-P1 inventories, and T-P2 companion dossiers. |
+
+## Proposed Delta Table
+
+| proposed delta | source T-P1/T-P2 finding-id cited | affected V1-surface section | rationale |
+|---|---|---|---|
+| 3E-D01-non-json-proof-receiver-matrix: add a grammar-generalisation receiver matrix requiring CSS L4 plus Sheets or BBNF-self for any generic surface claim. | 2C `SK-V15-2C-METADATA-GRAMMAR-OWNERSHIP` says CSS-only metadata is partial and must add Sheets or BBNF-self (`restart/audit/totality/p2/2C-grammar-neutrality.md:62`); SK-V15 SPEC requires CSS plus non-CSS receivers across provider, generator, lowerer, e-graph, CSP, facts, xtask, and gate surfaces (`restart/skinny/tranches/sk-v15/SPEC.md:206`, `restart/skinny/tranches/sk-v15/SPEC.md:217`). | `restart/ARCHITECTURE.md:1204`, `restart/ARCHITECTURE.md:1248` grammar-generality matrix and `restart/locks/LOCKS.md:349` Lock 14. | This prevents JSON-only or CSS-only proof from masquerading as fleet proof. LOC 120-180 docs/gate rows; risk medium; wave alignment W5/W7/W8/W9; propagation 2 surfaces plus 3C Lock 14 disposition. |
+| 3E-D02-css-typed-provider-close-boundary: CSS close evidence requires generated typed value/document/view/visitor output, row-local equality, and `cssparser` same-workload retime; fact streams and brace counters stay diagnostic. | 2C `SK-V15-2C-CSS-VALUE-API-SURFACE` marks root typed CSS as partial until generated and same-workload measured (`restart/audit/totality/p2/2C-grammar-neutrality.md:64`); 2A refutes fact-stream and four-counter CSS as Value API proof (`restart/audit/totality/p2/2A-sota-landscape.md:59`, `restart/audit/totality/p2/2A-sota-landscape.md:62`). | `restart/ARCHITECTURE.md:1778`, `restart/ARCHITECTURE.md:1790` CSS fact-stream boundary, `restart/locks/LOCKS.md:202`, `restart/locks/LOCKS.md:258` Lock 8, and `restart/locks/LOCKS.md:349` Lock 14. | CSS must become the typed non-JSON proof lane without accepting `CSS_GENERATED_RS`, `CssFullParseSummary`, or current fact-stream `parse()` as close evidence (`restart/skinny/tranches/sk-v15/SPEC.md:54`, `restart/skinny/tranches/sk-v15/SPEC.md:63`). LOC 450-700 provider + 120-220 retime; risk high; wave W5/W6; propagation 3 surfaces. |
+| 3E-D03-css-broadcast-negative-control: every repeated CSS throughput tuple across distinct row ids is non-admit unless each row supplies independent command/input/equality/timing and measurement identity. | PASS-IMPL says all 24 CSS row admits are one measurement broadcast (`restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:21`, `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:31`); 2C `LAC-2C-SK15-03` requires a duplicate gate (`restart/audit/totality/p2/2C-grammar-neutrality.md:146`). | `restart/locks/LOCKS.md:202`, `restart/locks/LOCKS.md:258` Lock 8, `restart/locks/LOCKS.md:349` Lock 14, and SK-V15 telemetry fields at `restart/skinny/tranches/sk-v15/SPEC.md:100`, `restart/skinny/tranches/sk-v15/SPEC.md:122`. | Broadcast demotion is the negative control that keeps CSS retime honest before primitive, provider, or BackendShape claims cite CSS rows (`restart/skinny/tranches/sk-v15/SPEC.md:194`). LOC 40-80; risk low implementation / critical if omitted; wave W1; propagation 2 surfaces. |
+| 3E-D04-generated-provider-manifest-no-grammar-switch: replace hand-coded `RuntimeGenerationMode`, static profile arrays, CSS match arms, and JSON/CSS runtime families with generated provider manifests. | 2C `SK-V15-2C-GENERIC-GRAMMAR-SWITCH` refutes the current mode/profile/match-arm route (`restart/audit/totality/p2/2C-grammar-neutrality.md:70`); P1-1B-D8 records grammar-profile hardcoding and JSON/CSS renderer branches (`restart/audit/totality/p1/1B-codegen-evidence.md:52`). | `restart/ARCHITECTURE.md:1284`, `restart/ARCHITECTURE.md:1294` leak census and `restart/locks/LOCKS.md:368`, `restart/locks/LOCKS.md:390` generated-provider / gate clauses. | Future grammar onboarding is source/metadata plus generated manifest output, not "add enum arm and pass" (`restart/audit/totality/p2/2C-grammar-neutrality.md:144`). LOC 180-260 docs/gate + generated manifest fixture; risk medium; wave W7; propagation 2 surfaces plus generated gate rows. |
+| 3E-D05-per-grammar-backendshape-matrix: preserve the five-shape canon and add per-grammar shape expectations for CSS L4, Sheets, and BBNF-self with generated facts required per row. | P1-1B verifies exactly five `BackendShape` variants and no sixth live IR variant (`restart/audit/totality/p1/1B-codegen-evidence.md:41`); 2D `T2D-SKV15-FIVE-SHAPE-CANON` requires all-five classification without adding a sixth shape (`restart/audit/totality/p2/2D-cost-model.md:62`). | `restart/ARCHITECTURE.md:1088`, `restart/ARCHITECTURE.md:1115` five-shape canon and `restart/ARCHITECTURE.md:1204`, `restart/ARCHITECTURE.md:1248` grammar-generality matrix. | The matrix must cover CSS tokens/selectors/values/stylesheet, Sheets formulas/references/functions, and BBNF-self grammar/directives without adding FactStream as a `BackendShape` (`restart/ARCHITECTURE.md:1204`, `restart/ARCHITECTURE.md:1248`). LOC 180-320 docs/tests; risk high; waves W8/W9; propagation 2 surfaces. |
+| 3E-D06-primitive-transfer-manifest: shared primitives transfer only when generated grammar data supplies alphabets, delimiters, quote/escape/control policy, scalar oracle, strict parity/checkasm, hardware gate, same-wave consumer, and row movement. | 2B defines the primitive manifest cells and scalar/checkasm/hardware/consumer/row-movement gates (`restart/audit/totality/p2/2B-primitive-vocabulary.md:101`, `restart/audit/totality/p2/2B-primitive-vocabulary.md:115`); 2F blocks CSS value parsing through JSON-shaped `parse-that-regex` (`restart/audit/totality/p2/2F-parse-that-gaps.md:78`). | `restart/ARCHITECTURE.md:1251`, `restart/ARCHITECTURE.md:1268` primitive transfer bridge, `restart/locks/LOCKS.md:349` Lock 14, and `restart/locks/LOCKS.md:453`, `restart/locks/LOCKS.md:491` Lock 16. | Byte-set, string/escape, direct sink, BackendShape resolver, cross-chunk context, and SIMD/ASM primitives need policy ownership from generated grammar facts, not JSON structural bytes (`restart/ARCHITECTURE.md:1251`, `restart/ARCHITECTURE.md:1268`). LOC 200-600 for manifest/gate rows; risk high; waves W2/W5/W7; propagation 3 surfaces. |
+| 3E-D07-sheets-negative-control: Sheets onboarding fixture must materialize number/string/error literal, reference/range/operator, function-call, LET/LAMBDA, and array-literal facts from grammar source and metadata only. | 2C `SK-V15-2C-SHEETS-FUTURE-GRAMMAR` identifies Sheets as the anti-JSON falsifier (`restart/audit/totality/p2/2C-grammar-neutrality.md:72`); the grammar includes references, operators, functions, LET/LAMBDA, and arrays (`grammar/google-sheets/google-sheets.bbnf:97`, `grammar/google-sheets/google-sheets.bbnf:160`). | `restart/ARCHITECTURE.md:2065`, `restart/ARCHITECTURE.md:2112` future grammar test and `restart/locks/LOCKS.md:349` Lock 14 receiver rule. | Sheets proves provider and primitive policies are not object/array/pair or JSON sink callbacks in disguise (`grammar/google-sheets/google-sheets.bbnf:34`, `grammar/google-sheets/google-sheets.bbnf:84`). LOC 250-400; risk high; wave W7; propagation 2 surfaces. |
+| 3E-D08-bbnf-self-negative-control: BBNF-self onboarding fixture must parse imports, literals, regexes, closures, alternation, directives, and grammar items without a generic `Bbnf` branch. | 2C `SK-V15-2C-BBNF-SELF-FUTURE-GRAMMAR` requires recursive grammar-source ownership without a new directive or BIR variant (`restart/audit/totality/p2/2C-grammar-neutrality.md:73`); BBNF-self grammar covers imports, mapped factors, closures, directives, and grammar items (`grammar/bbnf/bbnf.bbnf:4`, `grammar/bbnf/bbnf.bbnf:15`, `grammar/bbnf/bbnf.bbnf:41`, `grammar/bbnf/bbnf.bbnf:85`). | `restart/ARCHITECTURE.md:2065`, `restart/ARCHITECTURE.md:2112` future grammar test and `restart/locks/LOCKS.md:349` Lock 14. | BBNF-self proves the generator can consume its own surface through the same contract instead of special generic code or a new language feature. LOC 220-360; risk high; wave W7; propagation 2 surfaces. |
+| 3E-D09-future-grammar-onboarding-test: adding a future grammar must be source/metadata-only, with generic-owner diffs empty or generated-manifest-only and no new directive, BIR, substrate, public API, or sixth shape. | 2C `SK-V15-2C-FUTURE-GRAMMAR-ONBOARDING-TEST` defines the source/metadata-only close test (`restart/audit/totality/p2/2C-grammar-neutrality.md:75`); Lock 14 says adding a grammar is config plus grammar source with no generic crate code change (`restart/locks/LOCKS.md:349`). | `restart/ARCHITECTURE.md:2065`, `restart/ARCHITECTURE.md:2112` future grammar test and `restart/locks/LOCKS.md:349` Lock 14. | This is the greenfield proof that grammar-neutrality survives arbitrary user grammars and catches enum-arm/profile-array onboarding. LOC 120-180 gate + 220-400 receiver; risk high; wave W7; propagation 2 surfaces plus 3C. |
+| 3E-D10-full-surface-lock14-scan: Lock 14 gates must print included roots, excluded roots, owner, reason, self-scan status, primitive status, gate consumer, affected rows, and disposition; same-change leak roots cannot be excluded silently. | PASS-IMPL names explicit allowlist holes in the Lock 14 gate (`restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:45`, `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:47`); 2C `SK-V15-2C-GATE-EXCLUSION` refutes current scan proof (`restart/audit/totality/p2/2C-grammar-neutrality.md:74`). | `restart/locks/LOCKS.md:377`, `restart/locks/LOCKS.md:390` Lock 14 per-wave enforcement and `restart/locks/LOCKS.md:453`, `restart/locks/LOCKS.md:491` Lock 16 primitive evidence. | A gate that omits `runtime_generator.rs`, `grammar_provider.rs`, direct JSON generators, or templates is non-evidence; SK-V15 SPEC already requires exclusion reports and self-exempting scan rejection (`restart/skinny/tranches/sk-v15/SPEC.md:219`, `restart/skinny/tranches/sk-v15/SPEC.md:244`). LOC 120-180; risk medium; wave W2; propagation 2 surfaces. |
+| 3E-D11-pattern-h-provenance-before-deletion: Pattern H collapse means 67/67 line-1 generated provenance plus non-writing regen/check proof, while destructive deletion is blocked until same-wave replacement proof exists. | PASS-IMPL records 5/9 true template, 4/9 bespoke, and 0/67 generated headers (`restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:37`, `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:43`); 2C `LAC-2C-SK15-04` requires provenance before deletion (`restart/audit/totality/p2/2C-grammar-neutrality.md:147`). | `restart/locks/LOCKS.md:185`, `restart/locks/LOCKS.md:196` generated-source proof and `restart/locks/LOCKS.md:402`, `restart/locks/LOCKS.md:420` Pattern H census. | This preserves delete-before-provider sequencing and prevents fake generated headers from closing Lock 14 (`restart/skinny/tranches/sk-v15/SPEC.md:198`, `restart/skinny/tranches/sk-v15/SPEC.md:199`; `skinny/REDRESS.md:5090`, `skinny/REDRESS.md:5118`). LOC 160-240 provenance gate plus larger runtime projection waves; risk high; wave W4/W6; propagation 3 surfaces. |
+
+## Non-JSON Proof Matrix
+
+| surface | CSS L4 positive receiver | negative-control receiver | required proof |
+|---|---|---|---|
+| Generated provider manifest | CSS L4 metadata/source manifests from `grammar/css/l4/*.bbnf` (`restart/audit/totality/p2/2C-grammar-neutrality.md:62`, `restart/audit/totality/p2/2C-grammar-neutrality.md:64`). | Sheets or BBNF-self source/metadata-only addition (`restart/audit/totality/p2/2C-grammar-neutrality.md:72`, `restart/audit/totality/p2/2C-grammar-neutrality.md:75`). | No generic owner edit except generated manifest output; full-surface Lock 14 scan (`restart/skinny/tranches/sk-v15/SPEC.md:206`, `restart/skinny/tranches/sk-v15/SPEC.md:217`). |
+| CSS typed provider | Typed values, document, view, and visitor comparable to JSON capability (`restart/skinny/tranches/sk-v15/SPEC.md:336`, `restart/skinny/tranches/sk-v15/SPEC.md:355`). | Sheets value/function/reference provider or BBNF import/directive provider. | Generated provenance, row-local equality, same-workload `cssparser` retime, no fact-stream close (`restart/audit/totality/p2/2A-sota-landscape.md:56`, `restart/audit/totality/p2/2A-sota-landscape.md:62`). |
+| BackendShape resolver | CSS token/selector/value/property facts drive the existing five shapes (`restart/ARCHITECTURE.md:1204`, `restart/ARCHITECTURE.md:1231`). | Sheets formulas and BBNF-self expressions/directives exercise OffsetTape, EagerTape, EventTape, and SinkOnly (`restart/ARCHITECTURE.md:1234`, `restart/ARCHITECTURE.md:1244`). | Exactly five variants, generated facts, no sixth shape or sidecar (`restart/audit/totality/p2/2D-cost-model.md:62`). |
+| Primitive policy | CSS comments, identifiers, strings, escaped code points, values, and delimiters are generated facts (`grammar/css/l4/tokens.bbnf:1`, `grammar/css/l4/tokens.bbnf:9`; `grammar/css/l4/values.bbnf:31`, `grammar/css/l4/values.bbnf:63`). | Sheets doubled quotes/references/operators or BBNF literals/directives (`grammar/google-sheets/google-sheets.bbnf:6`, `grammar/google-sheets/google-sheets.bbnf:18`; `grammar/bbnf/bbnf.bbnf:56`, `grammar/bbnf/bbnf.bbnf:85`). | Scalar oracle, strict parity/checkasm, Apple-M5-Max/aarch64 gate, same-wave consumer, row movement (`restart/audit/totality/p2/2B-primitive-vocabulary.md:101`, `restart/audit/totality/p2/2B-primitive-vocabulary.md:115`). |
+| Future onboarding | CSS remains the mandatory positive non-JSON lane after W5/W6. | At least one of Sheets or BBNF-self is added without generic-code changes. | Fixture fails on generic grammar branch, new directive, new BIR, new substrate, or sixth `BackendShape` (`restart/audit/totality/p2/2C-grammar-neutrality.md:149`). |
+
+## Per-Grammar BackendShape Matrix
+
+| grammar family / rule class | dominant shape | secondary / blocked shape | generated facts required | evidence |
+|---|---|---|---|---|
+| CSS `tokens.bbnf`, `stylesheet.bbnf`, `media.bbnf`, `keyframes.bbnf` | `OffsetTape` | `EventTape` where at-rule/recovery/layout payloads must be retained | CSS byte alphabet, comment/whitespace policy, at-rule starts, FIRST/follow and layout facts | ARCH already frames CSS L4 as 15 sub-grammars and assigns these rows to Offset/Event shape facts (`restart/ARCHITECTURE.md:1204`, `restart/ARCHITECTURE.md:1215`, `restart/ARCHITECTURE.md:1227`, `restart/ARCHITECTURE.md:1231`). |
+| CSS `selectors.bbnf`, pseudo/attribute/combinator selectors | `EagerTape` | `EventTape` for pseudo payloads and recovery | selector FIRST/follow, combinator policy, pseudo payload facts, selector-list equality | Selector grammar covers namespaces, attributes, pseudo-classes, pseudo-elements, combinators, and lists (`grammar/css/l4/selectors.bbnf:12`, `grammar/css/l4/selectors.bbnf:106`). |
+| CSS `values.bbnf`, units, color, gradients, transforms, filters, func body | `EagerTape` | `EventTape` when payload/recovery side facts must be retained | number/dimension policy, var/calc/min/max/clamp/env, color/function families, quote/escape policy | Value grammar encodes calc/min/max/clamp/var/env and dimension/value forms (`grammar/css/l4/values.bbnf:31`, `grammar/css/l4/values.bbnf:101`). |
+| Sheets `formula`, `cell_ref`, `range_ref`, operator tower | `OffsetTape` and `EagerTape` | `EventTape` for function and array payloads | reference/range facts, operator precedence, quote policy, function names, array literal facts | Sheets grammar covers cell/range references, operators, functions, LET/LAMBDA, and arrays (`grammar/google-sheets/google-sheets.bbnf:54`, `grammar/google-sheets/google-sheets.bbnf:84`, `grammar/google-sheets/google-sheets.bbnf:97`, `grammar/google-sheets/google-sheets.bbnf:160`). |
+| BBNF-self grammar/directives/terms | `OffsetTape` and `EventTape` | `SinkOnly` for generated grammar-fact outputs | directive-kind enum, import/path facts, literal/regex policy, alternation/repetition/closure facts | BBNF-self grammar covers imports, literals, regexes, closures, directives, rules, and grammar items (`grammar/bbnf/bbnf.bbnf:4`, `grammar/bbnf/bbnf.bbnf:15`, `grammar/bbnf/bbnf.bbnf:41`, `grammar/bbnf/bbnf.bbnf:85`). |
+| Any current SK-V15 grammar on M5 Max/aarch64 | no `CollapsedStage` admission | x86 diagnostic only unless future aarch64 strategy lands | scalar reference, parity/checkasm, hardware gate, same-wave consumer, row movement | 2D and 2E keep CollapsedStage in the five-shape canon but block x86/AVX-512 close on M5 Max (`restart/audit/totality/p2/2D-cost-model.md:65`; `restart/audit/totality/p2/2E-host-arch-esoterica.md:68`, `restart/audit/totality/p2/2E-host-arch-esoterica.md:82`). |
+
+## Primitive Transfer Matrix
+
+| primitive family | CSS transfer | Sheets transfer | BBNF-self transfer | hard gate |
+|---|---|---|---|---|
+| Byte-set classify / run-skip | comments, identifiers, at-rule starts, hash/function starts | separators, operators, references, quotes | punctuation, directive starts, identifiers | Alphabet and policy come from generated grammar data, not JSON structural bytes (`restart/ARCHITECTURE.md:1258`, `restart/ARCHITECTURE.md:1261`). |
+| String / escape scan | CSS strings, URL text, escaped identifiers, comments | doubled-quote string policy | literal and regex escape spans | CSS must map to CSS scalar oracle before JSON string kernels transfer (`restart/audit/totality/p2/2F-parse-that-gaps.md:76`, `restart/audit/totality/p2/2F-parse-that-gaps.md:101`, `restart/audit/totality/p2/2F-parse-that-gaps.md:102`). |
+| Direct/fact sink | declaration/selector/stylesheet/value facts | formula/function/reference facts | directive/grammar facts | Sink callbacks and fact schema are generated per grammar; `JsonSink` is not a generic contract (`restart/ARCHITECTURE.md:1264`). |
+| BackendShape resolver | selector/value/declaration shape facts | formula/reference/Pratt facts | rule/expression/directive facts | Resolver consumes generated FIRST/follow, layout, host, recovery, output mode, and cost facts (`restart/ARCHITECTURE.md:1266`). |
+| SIMD / ASM primitives | scan-block or value-row consumers after W5/W6 | numeric/reference consumers after Sheets receiver exists | token/literal consumers after BBNF-self receiver exists | Every primitive row needs scalar reference, strict parity/checkasm, hardware gate, same-wave consumer, and row movement (`restart/audit/totality/p2/2B-primitive-vocabulary.md:144`, `restart/audit/totality/p2/2B-primitive-vocabulary.md:155`). |
+
+## Lock 14 Hardening Clauses For 3C
+
+| clause | proposed 3C disposition input | evidence |
+|---|---|---|
+| L14-HC-01 input-surface rule | ACCEPT/MODIFY: only grammar source, workspace metadata, and optional fenced per-grammar declaration crate may feed generic generation. | Lock 14 zero-overfit text (`restart/locks/LOCKS.md:349`, `restart/locks/LOCKS.md:366`); 2C generator input row (`restart/audit/totality/p2/2C-grammar-neutrality.md:61`). |
+| L14-HC-02 generated-provider manifest | ACCEPT: generated provider manifests replace hand-coded runtime modes, profile arrays, and CSS/JSON renderer branches. | 2C `LAC-2C-SK15-01` (`restart/audit/totality/p2/2C-grammar-neutrality.md:144`); P1-1C D1/D2 (`restart/audit/totality/p1/1C-runtime-evidence.md:118`, `restart/audit/totality/p1/1C-runtime-evidence.md:120`). |
+| L14-HC-03 CSS typed close boundary | ACCEPT: fact streams/four-counter summaries are diagnostic until generated typed provider and same-workload retime land. | 2C `LAC-2C-SK15-02` (`restart/audit/totality/p2/2C-grammar-neutrality.md:145`); SK-V15 close condition (`restart/skinny/tranches/sk-v15/SPEC.md:54`, `restart/skinny/tranches/sk-v15/SPEC.md:63`). |
+| L14-HC-04 duplicate measurement rejection | ACCEPT: repeated throughput tuple cannot admit multiple row ids without independent row evidence. | PASS-IMPL broadcast finding (`restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:21`, `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:31`); 2A LAC-02 (`restart/audit/totality/p2/2A-sota-landscape.md:107`, `restart/audit/totality/p2/2A-sota-landscape.md:109`). |
+| L14-HC-05 Pattern H provenance | ACCEPT/MODIFY: 67/67 generated provenance plus regen/check proof before deletion; root and skinny scope must be named. | P1-1E LAC-1E-V1-05 / V1-12 (`restart/audit/totality/p1/1E-locks-evidence.md:134`, `restart/audit/totality/p1/1E-locks-evidence.md:141`); SK-V15 dependency rows (`restart/skinny/tranches/sk-v15/SPEC.md:198`, `restart/skinny/tranches/sk-v15/SPEC.md:199`). |
+| L14-HC-06 full-surface scan and exclusions | ACCEPT: scan roots and exclusions are emitted and self-scanned; self-exempting exclusions fail. | P1-1E gate-exclusion carrier (`restart/audit/totality/p1/1E-locks-evidence.md:195`, `restart/audit/totality/p1/1E-locks-evidence.md:200`); 2C full scan LAC (`restart/audit/totality/p2/2C-grammar-neutrality.md:148`). |
+| L14-HC-07 future grammar onboarding | ACCEPT: source/metadata-only Sheets or BBNF-self fixture must fail on generic branches, new directive/BIR/substrate, or sixth shape. | 2C future onboarding LAC (`restart/audit/totality/p2/2C-grammar-neutrality.md:149`); PASS-3 bbnf-specific axes (`restart/prompts/totality/PASS-3-SYNTHESIS.md:210`, `restart/prompts/totality/PASS-3-SYNTHESIS.md:214`). |
+
+## Consequences
+
+| delta | positive | cost | propagation |
+|---|---|---|---|
+| 3E-D01 | Makes CSS plus one negative control the minimum generality proof. | 120-180 docs/gate rows; medium risk. | Touches ARCH matrix, Lock 14, SK-V15 proof gates. |
+| 3E-D02 | Establishes the CSS typed provider as the non-JSON close lane. | 450-700 provider LOC plus 120-220 retime LOC; high risk. | Touches ARCH, Lock 8/14, SPEC W5/W6, RESULTS. |
+| 3E-D03 | Blocks broadcast laundering before retime or primitives. | 40-80 telemetry/gate LOC; low direct cost. | Touches Lock 8/14, RESULTS/gate schema. |
+| 3E-D04 | Removes generic grammar switches without inventing new surface syntax. | 180-260 manifest/gate LOC; medium risk. | Touches ARCH leak census, Lock 14, W7 generated provider work. |
+| 3E-D05 | Keeps all grammar work inside the existing five-shape canon. | 180-320 docs/tests; high if lowerers remain stubs. | Touches ARCH §7.3, Lock 10/14, W8/W9 all-five gate. |
+| 3E-D06 | Gives primitive reuse a grammar-neutral admission contract. | 200-600 manifest/gate LOC; high risk if coupled to row movement. | Touches ARCH primitive bridge, Lock 14/16, W2/W5/W7. |
+| 3E-D07 | Forces anti-JSON proof through Sheets references/functions/operators. | 250-400 receiver LOC; high risk. | Touches ARCH future grammar test and provider manifests. |
+| 3E-D08 | Forces recursive grammar-source ownership without a `Bbnf` branch. | 220-360 receiver LOC; high risk. | Touches ARCH future grammar test and Lock 14. |
+| 3E-D09 | Turns future grammar onboarding into an executable fail-closed test. | 120-180 gate LOC plus chosen receiver; high risk. | Touches ARCH §11, Lock 14, 3C LOCKS diff. |
+| 3E-D10 | Makes Lock 14 gates non-self-exempting. | 120-180 scan/report LOC; medium risk. | Touches Lock 14/16, gate/report code, SK-V15 telemetry. |
+| 3E-D11 | Prevents header-only or delete-before-provider closes. | 160-240 provenance gate LOC plus larger projection waves. | Touches Lock 6/14, SPEC dependency rows, REDRESS routing. |
+
+## Open Questions
+
+| lens | open question | receiving gate |
+|---|---|---|
+| CH1 | Which exact line-level `LOCKS.md` amendments will 3C accept for 2C LAC-01..06 and overlapping 1E LACs? | 3C disposition matrix; no 3E-only LOCKS edit. |
+| CH2 | Should the first negative-control receiver be Sheets or BBNF-self if only one fits the W7 cap? | W7 plan gate; 2C recommends Sheets for function/reference/value materialization and BBNF-self for import/directive recursion (`restart/audit/totality/p2/2C-grammar-neutrality.md:138`). |
+| CH3 | Should current `skinny/RESULTS.md` CSS rows be immediately demoted in governance prose or retained as audit-falsified history until W1 writes the ledger change? | 3B/3D/3F coordination plus W1 telemetry gate; 1E flags this timing question (`restart/audit/totality/p1/1E-locks-evidence.md:206`). |
+| CH4 | Can CSS typed provider, cssparser retime, and generated provenance fit W5/W6 without becoming a broad CSSOM rewrite? | W5/W6 plan gates; 2C limits hard-cap fit to scoped typed provider, not full CSSOM (`restart/audit/totality/p2/2C-grammar-neutrality.md:64`). |
+| CH5 | Which root Pattern H files are intended generated artifacts versus hand-owned generic helpers, and does root require a separate closure track from skinny? | W4/W6 dependency table and 1E open question (`restart/audit/totality/p1/1E-locks-evidence.md:209`). |
+| CH6 | If a receiver cannot fit, what intrinsic-block evidence is sufficient without weakening future onboarding? | W7 gate must name blocker, owner path, and re-entry trigger; engineered defer is disallowed by PASS-3 (`restart/prompts/totality/PASS-3-SYNTHESIS.md:127`, `restart/prompts/totality/PASS-3-SYNTHESIS.md:131`). |
+| CH7 | What automated scan proves no new grammar switch, directive, BIR variant, substrate API, sidecar, FNV arbiter, or sixth shape was introduced by the receiver work? | Full-surface Lock 14/16 gate plus CH7 overfit-prune checks (`restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:144`, `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:150`). |

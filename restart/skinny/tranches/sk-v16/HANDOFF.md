@@ -56,9 +56,14 @@ and cannot be folded into CH6 or deferred to S-P0.
    reporting. PMULL/CSSC production promotion, x86 scope, sidecars, FNV/checksum
    proof, CSS legacy fact streams, old Unicode/string64/tiny/numeric shortcuts,
    and dirty generated state remain blocked.
-3. Dispatch S-P3 synthesis-plan. Behavior/admission waves remain blocked until
-   S-P3 authors legal prune-first waves and executable consumers.
-4. Run totality passes and Pass Omega only where the loop requires them or a
+3. S-P3 synthesis-plan is converged after V1/V2 CH1-CH7 hardening. The locked
+   wave program is `restart/skinny/tranches/sk-v16/SPEC.md` and dispatch
+   contract is `restart/skinny/tranches/sk-v16/DISPATCH-PROMPT.md`.
+4. Next move: dispatch SK-V16 W0 baseline/report-consumer wave through the
+   SKINNY triumvirate. W0 is gate/report only: capture `SK-V16-open`, bind
+   SK-V16 CSS typed, dirty-generated, Pattern H, and native SIMD report
+   consumers, and prove no behavior drift.
+5. Run totality passes and Pass Omega only where the loop requires them or a
    spec-class amendment surfaces. Stop only at G-Omega.
-5. Execute the SK-V16 wave program after S-P3/Pass Omega gating, preserving the
-   no-contrivance, no-x86, profile-first aarch64 SIMD discipline.
+6. Execute W0-W11 in order, preserving the no-contrivance, no-x86,
+   profile-first aarch64 SIMD discipline.

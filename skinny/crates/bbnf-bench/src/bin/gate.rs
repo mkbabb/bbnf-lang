@@ -772,7 +772,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             .to_string(),
     );
     report.notes.push(
-        "SK-V14-open telemetry: gate-json consumes the manifest below; native Rust comparators are same-run, C++ sidecars are historical or explicitly absent and never strict anchors in W0."
+        "SK-V15-open telemetry: gate-json consumes the manifest below; native Rust comparators are same-run, C++ sidecars are historical or explicitly absent and never strict anchors in W0."
             .to_string(),
     );
     if let Err(error) = report

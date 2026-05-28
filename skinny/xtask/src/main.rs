@@ -286,10 +286,14 @@ fn gate_json(root: &Path, passthrough: Vec<String>) -> Result<()> {
     if passthrough.iter().any(|arg| arg == "--with-cost-facts") {
         return gate_json_cost_facts(root, passthrough);
     }
+    validate_gate_json_passthrough(&passthrough)?;
+    let results_only_check = passthrough.len() == 1 && passthrough[0] == "--check-results";
     if passthrough.iter().any(|arg| arg == "--check-results") {
         validate_w0_results_snapshot(root)?;
+        if results_only_check {
+            return Ok(());
+        }
     }
-    validate_gate_json_passthrough(&passthrough)?;
     let mut command = Command::new("cargo");
     command
         .current_dir(root)
@@ -400,6 +404,7 @@ fn validate_cost_facts_flags(passthrough: &[String]) -> Result<bool> {
 fn validate_w0_results_snapshot(root: &Path) -> Result<()> {
     let text = std::fs::read_to_string(root.join("RESULTS.md"))
         .context("gate-json --with-cost-facts --check-results requires RESULTS.md")?;
+    xtask::skv15_w0::validate_results(&text)?;
     validate_skv14_w0_manifest(&text)?;
     validate_skv14_w7_redress_triads(root, &text)?;
     let rolling_path = root
@@ -527,7 +532,9 @@ fn parse_skv14_w0_manifest(results_text: &str) -> Result<Vec<Skv14ManifestRow>> 
     let mut in_manifest = false;
     let mut rows = Vec::new();
     for line in results_text.lines() {
-        if line.trim() == "## SK-V14 W0 Telemetry Manifest" {
+        if line.trim() == "## SK-V15 W0 Telemetry Manifest"
+            || line.trim() == "## SK-V14 W0 Telemetry Manifest"
+        {
             in_manifest = true;
             continue;
         }
@@ -545,9 +552,9 @@ fn parse_skv14_w0_manifest(results_text: &str) -> Result<Vec<Skv14ManifestRow>> 
         {
             continue;
         }
-        if cells.len() != 32 {
+        if cells.len() != 32 && cells.len() != 42 {
             bail!(
-                "SK-V14 W0 manifest row {} expected 32 cells, saw {}",
+                "SK-V14/SK-V15 W0 manifest row {} expected 32 or 42 cells, saw {}",
                 cells[0],
                 cells.len()
             );
@@ -579,7 +586,7 @@ fn parse_skv14_w0_manifest(results_text: &str) -> Result<Vec<Skv14ManifestRow>> 
         });
     }
     if !in_manifest {
-        bail!("RESULTS.md missing SK-V14 W0 Telemetry Manifest");
+        bail!("RESULTS.md missing SK-V15/SK-V14 W0 Telemetry Manifest");
     }
     Ok(rows)
 }

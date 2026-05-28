@@ -8,7 +8,8 @@ use std::path::Path;
 pub const SCHEMA_V3_HEADER: &str = "| Corpus | Workload | Outcome | Verdict | Strictness | parse_utf8 | escape_complete | flaw_probe | Output plane | Track 1 Mbps | Track 2 Mbps | sonic-rs strict Mbps | sonic-rs lossy Mbps | simdjson DOM Mbps | simdjson On Demand Mbps | yyjson default Mbps | asmjson SWAR Mbps | asmjson AVX-512 Mbps | RapidJSON default Mbps | serde_json Mbps | Δ vs SK-V6 | Δ vs sonic-strict | Δ vs simdjson DOM | Δ vs yyjson | Hot leaf | Signal |";
 const SCHEMA_V3_ALIGN: &str = "|---|---|---:|---|---|---|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---:|---:|---:|---|---|";
 pub const SKV14_W0_MANIFEST_HEADER: &str = "| Row id | Grammar | Domain | Wave | Run id | Track 1 entry | Track 2 entry | Comparator plane | Per-iter equality | Audit overlay | Audit reference | Sidecar freshness | Substrate target | Retention lifetime | Policy owner | Validation | Profile artifact | Sample cost | Sample count | Build flags | Host triple | Feature mask | CostFacts | Redress | SK-V14-open delta | Substrate | Structural projection | Cardinality | Consumer | Track 2 | Diagnostic nonproducer | Comparator evidence |";
-const SKV14_W0_MANIFEST_ALIGN: &str = "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---:|---|---|---|---|---|---|---|---|---|---|---|---|---|";
+pub const SKV15_W0_MANIFEST_HEADER: &str = "| Row id | Grammar | Domain | Wave | Run id | Track 1 entry | Track 2 entry | Comparator plane | Per-iter equality | Audit overlay | Audit reference | Sidecar freshness | Substrate target | Retention lifetime | Policy owner | Validation | Profile artifact | Sample cost | Sample count | Build flags | Host triple | Feature mask | CostFacts | Redress | SK-V14-open delta | Substrate | Structural projection | Cardinality | Consumer | Track 2 | Diagnostic nonproducer | Comparator evidence | measurement_row_id | measurement_origin | value_plane | css_comparator_workload | generator_source | lock14_scan_scope | lock16_status | checkasm_or_parity_status | gate_exclusion_report | broadcast_group_id |";
+const SKV15_W0_MANIFEST_ALIGN: &str = "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---:|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|";
 
 const SKV14_JSON_CORPORA: &[&str] = &[
     "twitter",
@@ -275,6 +276,28 @@ struct SkV14ManifestRow {
     track2_independence_status: String,
     diagnostic_nonproducer_status: String,
     comparator_evidence: String,
+    sk_v15: SkV15ManifestFields,
+}
+
+#[derive(Debug, Clone, Default, PartialEq)]
+struct SkV15ManifestFields {
+    measurement_row_id: String,
+    measurement_origin: String,
+    value_plane: String,
+    css_comparator_workload: String,
+    generator_source: String,
+    lock14_scan_scope: String,
+    lock16_status: String,
+    checkasm_or_parity_status: String,
+    gate_exclusion_report: String,
+    broadcast_group_id: String,
+}
+
+impl SkV14ManifestRow {
+    fn with_skv15_defaults(mut self) -> Self {
+        self.sk_v15 = skv15_fields_for_manifest_row(&self);
+        self
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -3659,7 +3682,9 @@ impl TelemetryRow {
             track2_independence_status: telemetry.track2_independence_status.clone(),
             diagnostic_nonproducer_status: telemetry.diagnostic_nonproducer_status.clone(),
             comparator_evidence: format_comparator_evidence(&telemetry.comparators),
+            sk_v15: SkV15ManifestFields::default(),
         }
+        .with_skv15_defaults()
     }
 }
 
@@ -3701,7 +3726,9 @@ fn skv14_missing_json_typed_manifest(corpus: &str) -> SkV14ManifestRow {
         track2_independence_status: "not_applicable:missing-product-surface".into(),
         diagnostic_nonproducer_status: "not_applicable:missing-product-surface".into(),
         comparator_evidence: "absent:product-surface-not-generated".into(),
+        sk_v15: SkV15ManifestFields::default(),
     }
+    .with_skv15_defaults()
 }
 
 fn skv14_css_manifest_row(feature: &str) -> SkV14ManifestRow {
@@ -3739,7 +3766,9 @@ fn skv14_css_manifest_row(feature: &str) -> SkV14ManifestRow {
         track2_independence_status: "pending:W8-cssparser-full-parse".into(),
         diagnostic_nonproducer_status: "css-l4-audit-overlay:nonproducer".into(),
         comparator_evidence: "lightningcss_strict[plane=full-parse,strictness=strict,freshness=historical:pre-W8,sidecar=absent:not-collected-for-css_l4,mbps=n/a,source=sk-v13/v1-css-l4-validation]".into(),
+        sk_v15: SkV15ManifestFields::default(),
     }
+    .with_skv15_defaults()
 }
 
 fn skv14_css_reconciled_costfacts(costfacts: &str) -> String {
@@ -3755,6 +3784,87 @@ fn skv14_css_reconciled_costfacts(costfacts: &str) -> String {
     value
 }
 
+fn skv15_fields_for_manifest_row(row: &SkV14ManifestRow) -> SkV15ManifestFields {
+    if row.row_id.starts_with("css_l4/") {
+        return SkV15ManifestFields {
+            measurement_row_id: "SK-V14-W8R-css-full-parse-profile-cold-8".into(),
+            measurement_origin: format!(
+                "diagnostic-broadcast:restart/skinny/tranches/sk-v14/research/skv14-redress-215-css-full-parse-profile.tsv;run={};profile={}",
+                row.run_id, row.profile_artifact
+            ),
+            value_plane: "full_parse_summary".into(),
+            css_comparator_workload:
+                "mismatch:track1_full_parse_summary_vs_lightningcss_cssom;cssparser=stylesheet_full_parse"
+                    .into(),
+            generator_source:
+                "diagnostic:CSS_GENERATED_RS-string-literal;path=skinny/crates/codegen/src/runtime_generator.rs"
+                    .into(),
+            lock14_scan_scope:
+                "diagnostic:pre-W2-incomplete;included=legacy-lock14;excluded=known-leak-roots;owner=SK-V15-W2"
+                    .into(),
+            lock16_status: "not-applicable:no-simd-or-asm".into(),
+            checkasm_or_parity_status: "pass:cssparser_full_parse_diagnostic".into(),
+            gate_exclusion_report:
+                "diagnostic:pre-W2-exclusions-reported;owner=SK-V15-W2;disposition=non-admission"
+                    .into(),
+            broadcast_group_id: "SK-V14-W8R-css-l4-full-parse".into(),
+        };
+    }
+
+    let value_plane = parse_row_id(&row.row_id)
+        .map(|(_, workload)| match workload {
+            "parse_only" => "json_parse_only",
+            "direct_to_struct" => "json_direct_strict_product",
+            "real_typed_struct" => "json_typed_direct",
+            _ => "json_unknown",
+        })
+        .unwrap_or("json_unknown");
+
+    SkV15ManifestFields {
+        measurement_row_id: row.row_id.clone(),
+        measurement_origin: format!(
+            "row={};run={};profile={};sample_count={};sample_cost={}",
+            row.row_id, row.run_id, row.profile_artifact, row.sample_count, row.sample_cost
+        ),
+        value_plane: value_plane.into(),
+        css_comparator_workload: "n/a:not-css".into(),
+        generator_source: "grammar=skinny/grammars/json.bbnf;generator=skinny-json-runtime".into(),
+        lock14_scan_scope:
+            "included=json-runtime+bench+gate;excluded=none:full-surface-scan;owner=SK-V15-W0"
+                .into(),
+        lock16_status: "not-applicable:no-simd-or-asm".into(),
+        checkasm_or_parity_status: "pass:json_same_run_parity".into(),
+        gate_exclusion_report: "none:full-surface-scan".into(),
+        broadcast_group_id: "none:independent".into(),
+    }
+}
+
+fn apply_skv15_css_broadcast_diagnostic(row: &mut SkV14ManifestRow) {
+    if !row.row_id.starts_with("css_l4/") {
+        return;
+    }
+    row.per_iter_equality = "not_admitted:SK-V15-W0-broadcast-diagnostic".into();
+    row.audit_overlay_verdict = "AUDIT-FALSIFIED".into();
+    row.audit_overlay_reference =
+        "sk-v15-W0:broadcast-diagnostic;sk-v13/v1-css-l4-validation:§1-6".into();
+    row.substrate_target = "css_l4_full_parse".into();
+    row.retention_lifetime = "full_parse_summary".into();
+    row.costfacts = skv14_css_reconciled_costfacts(&row.costfacts)
+        .replace("AUDIT-SUSTAINED_ADMITTED", "AUDIT-FALSIFIED_OPEN")
+        .replace(
+            "SK-V14-W8R_full_parse_same_plane",
+            "SK-V15-W0_broadcast_diagnostic",
+        );
+    row.redress_entry = "pending:SK-V15-W1-CSS-BROADCAST".into();
+    row.sk_v14_open_delta = "diagnostic:SK-V15-W0-broadcast".into();
+    row.same_wave_consumer_class = "gate_json_skv15_broadcast_diagnostic".into();
+    row.track2_independence_status = "diagnostic:cssparser+lightningcss-workload-mismatch".into();
+    row.diagnostic_nonproducer_status =
+        "scalar_reference=diagnostic:cssparser_full_parse;checkasm_or_parity=pass:cssparser_full_parse_diagnostic;json_guard_state=maintain:sk-v15"
+            .into();
+    row.sk_v15 = skv15_fields_for_manifest_row(row);
+}
+
 fn validate_skv14_manifest_rows(rows: &[SkV14ManifestRow]) -> Result<(), String> {
     let mut seen = BTreeSet::new();
     let mut falsified = 0usize;
@@ -3762,6 +3872,7 @@ fn validate_skv14_manifest_rows(rows: &[SkV14ManifestRow]) -> Result<(), String>
     let mut sustained = 0usize;
     for row in rows {
         validate_skv14_manifest_row(row)?;
+        validate_skv15_manifest_fields(row)?;
         if !seen.insert(row.row_id.as_str()) {
             return Err(format!("duplicate SK-V14 manifest row {}", row.row_id));
         }
@@ -3804,6 +3915,71 @@ fn validate_skv14_manifest_rows(rows: &[SkV14ManifestRow]) -> Result<(), String>
     if pending != 0 || falsified + sustained != 75 {
         return Err(format!(
             "SK-V14 audit overlay expected pending=0 and falsified+sustained=75 after authorized W9/W9AA/W9AB/W10/W10R/W10S/W10T/W10V/W10W/W11A/W11L/W11N/W11O/W11U/W11W admits, saw {falsified} / {pending} / {sustained}"
+        ));
+    }
+    Ok(())
+}
+
+fn validate_skv15_manifest_fields(row: &SkV14ManifestRow) -> Result<(), String> {
+    for (field, value) in [
+        ("measurement_row_id", row.sk_v15.measurement_row_id.as_str()),
+        ("measurement_origin", row.sk_v15.measurement_origin.as_str()),
+        ("value_plane", row.sk_v15.value_plane.as_str()),
+        (
+            "css_comparator_workload",
+            row.sk_v15.css_comparator_workload.as_str(),
+        ),
+        ("generator_source", row.sk_v15.generator_source.as_str()),
+        ("lock14_scan_scope", row.sk_v15.lock14_scan_scope.as_str()),
+        ("lock16_status", row.sk_v15.lock16_status.as_str()),
+        (
+            "checkasm_or_parity_status",
+            row.sk_v15.checkasm_or_parity_status.as_str(),
+        ),
+        (
+            "gate_exclusion_report",
+            row.sk_v15.gate_exclusion_report.as_str(),
+        ),
+        ("broadcast_group_id", row.sk_v15.broadcast_group_id.as_str()),
+    ] {
+        if value.trim().is_empty() {
+            return Err(format!("{} missing SK-V15 W0 {field}", row.row_id));
+        }
+        if value.contains("self-exempting") {
+            return Err(format!(
+                "{} has self-exempting SK-V15 W0 {field}",
+                row.row_id
+            ));
+        }
+    }
+
+    if row.row_id.starts_with("json/") {
+        let (_, workload) = parse_row_id(&row.row_id)?;
+        let expected_plane = match workload {
+            "parse_only" => "json_parse_only",
+            "direct_to_struct" => "json_direct_strict_product",
+            "real_typed_struct" => "json_typed_direct",
+            _ => "json_unknown",
+        };
+        if row.sk_v15.measurement_row_id != row.row_id
+            || row.sk_v15.value_plane != expected_plane
+            || row.sk_v15.css_comparator_workload != "n/a:not-css"
+            || row.sk_v15.broadcast_group_id != "none:independent"
+        {
+            return Err(format!("{} has stale SK-V15 JSON telemetry", row.row_id));
+        }
+    }
+
+    if row.row_id.starts_with("css_l4/")
+        && (row.sk_v15.measurement_row_id != "SK-V14-W8R-css-full-parse-profile-cold-8"
+            || row.sk_v15.broadcast_group_id != "SK-V14-W8R-css-l4-full-parse"
+            || row.sk_v15.value_plane != "full_parse_summary"
+            || !row.sk_v15.css_comparator_workload.starts_with("mismatch:")
+            || !row.sk_v15.generator_source.contains("CSS_GENERATED_RS"))
+    {
+        return Err(format!(
+            "{} has stale SK-V15 CSS diagnostic telemetry",
+            row.row_id
         ));
     }
     Ok(())
@@ -4817,6 +4993,7 @@ pub fn skv14_existing_results_capture_markdown(results_text: &str) -> Result<Str
         }
         if cells[0].starts_with("css_l4/")
             && cells.len() != 32
+            && cells.len() != 42
             && !(cells.len() == 22 && cells[0].ends_with("/direct_to_struct/main"))
         {
             continue;
@@ -4828,16 +5005,17 @@ pub fn skv14_existing_results_capture_markdown(results_text: &str) -> Result<Str
         {
             continue;
         }
-        let row = match cells.len() {
+        let mut row = match cells.len() {
             22 => skv14_manifest_row_from_legacy_cells(&cells)?,
-            32 => skv14_manifest_row_from_skv14_cells(&cells)?,
+            32 | 42 => skv14_manifest_row_from_skv14_cells(&cells)?,
             other => {
                 return Err(format!(
-                    "SK-V14 capture row {} expected 22 or 32 cells, saw {other}",
+                    "SK-V15 capture row {} expected 22, 32, or 42 cells, saw {other}",
                     cells[0]
                 ))
             }
         };
+        apply_skv15_css_broadcast_diagnostic(&mut row);
         if seen.insert(row.row_id.clone()) {
             rows.push(row);
         }
@@ -4877,17 +5055,37 @@ pub fn skv14_existing_results_capture_markdown(results_text: &str) -> Result<Str
     output.push_str(&results_text[..section_start]);
     output.push_str(&render_skv14_manifest_rows(&rows));
     output.push_str(&results_text[section_end..]);
-    Ok(ensure_trailing_newline(&output.replace(
-        "SK-V9 W0 telemetry: gate-json consumes the manifest below",
-        "SK-V14-open telemetry: gate-json consumes the manifest below",
-    )))
+    Ok(ensure_trailing_newline(
+        &output
+            .replace(
+                "SK-V9 W0 telemetry: gate-json consumes the manifest below",
+                "SK-V15-open telemetry: gate-json consumes the manifest below",
+            )
+            .replace(
+                "SK-V14-open telemetry: gate-json consumes the manifest below",
+                "SK-V15-open telemetry: gate-json consumes the manifest below",
+            )
+            .replace(
+                "and CSS L4 24 / 24 ADMITTED.",
+                "and CSS L4 24 / 24 retained as SK-V15 W0 diagnostic broadcast evidence pending W1.",
+            )
+            .replace(
+                "strict typed product rows. CSS L4 rows are generated full-parse rows on the\n  `css_l4_full_parse` plane.",
+                "strict typed product rows. CSS L4 rows are diagnostic full-parse\n  summary broadcast rows and are not live admissions until W1/W6 proof lands.",
+            )
+            .replace(
+                "`gate-json --check-results --skv14-existing-results-capture` consumes the\n  manifest above; native Rust comparators are same-run strict anchors, and\n  absent C++ sidecars are never used as SK-V14 strict anchors.",
+                "`gate-json --check-results` consumes the SK-V15 W0 manifest above; native\n  Rust JSON comparators are same-run strict anchors, and CSS W8R rows are\n  diagnostic non-admission evidence.",
+            ),
+    ))
 }
 
 fn skv14_manifest_section_bounds(results_text: &str) -> Result<(usize, usize), String> {
-    let section_start = find_heading(results_text, "## SK-V14 W0 Telemetry Manifest")
+    let section_start = find_heading(results_text, "## SK-V15 W0 Telemetry Manifest")
+        .or_else(|| find_heading(results_text, "## SK-V14 W0 Telemetry Manifest"))
         .or_else(|| find_heading(results_text, "## SK-V9 W0 Telemetry Manifest"))
         .ok_or_else(|| {
-            "RESULTS.md missing SK-V14/SK-V9 W0 Telemetry Manifest section".to_string()
+            "RESULTS.md missing SK-V15/SK-V14/SK-V9 W0 Telemetry Manifest section".to_string()
         })?;
     let tail_start = results_text[section_start..]
         .find('\n')
@@ -4918,7 +5116,7 @@ fn skv14_manifest_row_from_legacy_cells(cells: &[String]) -> Result<SkV14Manifes
             cells[0], cells[8]
         )
     })?;
-    Ok(SkV14ManifestRow {
+    let mut row = SkV14ManifestRow {
         row_id: cells[0].clone(),
         grammar_id: cells[1].clone(),
         domain: cells[2].clone(),
@@ -4955,7 +5153,10 @@ fn skv14_manifest_row_from_legacy_cells(cells: &[String]) -> Result<SkV14Manifes
         track2_independence_status: cells[19].clone(),
         diagnostic_nonproducer_status: cells[20].clone(),
         comparator_evidence: cells[21].clone(),
-    })
+        sk_v15: SkV15ManifestFields::default(),
+    };
+    row.sk_v15 = skv15_fields_for_manifest_row(&row);
+    Ok(row)
 }
 
 fn skv14_css_manifest_row_from_legacy_cells(cells: &[String]) -> Result<SkV14ManifestRow, String> {
@@ -5077,7 +5278,7 @@ fn skv14_manifest_row_from_skv14_cells(cells: &[String]) -> Result<SkV14Manifest
         Some((corpus, workload)) => skv14_rebound_comparator_evidence(corpus, workload, &cells[31]),
         None => cells[31].clone(),
     };
-    Ok(SkV14ManifestRow {
+    let mut row = SkV14ManifestRow {
         row_id: cells[0].clone(),
         grammar_id: cells[1].clone(),
         domain: cells[2].clone(),
@@ -5114,7 +5315,10 @@ fn skv14_manifest_row_from_skv14_cells(cells: &[String]) -> Result<SkV14Manifest
         track2_independence_status: cells[29].clone(),
         diagnostic_nonproducer_status: cells[30].clone(),
         comparator_evidence,
-    })
+        sk_v15: SkV15ManifestFields::default(),
+    };
+    row.sk_v15 = skv15_fields_for_manifest_row(&row);
+    Ok(row)
 }
 
 fn skv14_sidecar_freshness_from_evidence(workload: &str, evidence: &str) -> String {
@@ -5185,14 +5389,14 @@ fn comparator_mbps(existing: &str, comparator_id: &str) -> String {
 
 fn render_skv14_manifest_rows(rows: &[SkV14ManifestRow]) -> String {
     let mut out = String::new();
-    out.push_str("## SK-V14 W0 Telemetry Manifest\n\n");
-    out.push_str(SKV14_W0_MANIFEST_HEADER);
+    out.push_str("## SK-V15 W0 Telemetry Manifest\n\n");
+    out.push_str(SKV15_W0_MANIFEST_HEADER);
     out.push('\n');
-    out.push_str(SKV14_W0_MANIFEST_ALIGN);
+    out.push_str(SKV15_W0_MANIFEST_ALIGN);
     out.push('\n');
     for telemetry in rows {
         out.push_str(&format!(
-            "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |\n",
+            "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |\n",
             cell(&telemetry.row_id),
             cell(&telemetry.grammar_id),
             cell(&telemetry.domain),
@@ -5224,7 +5428,17 @@ fn render_skv14_manifest_rows(rows: &[SkV14ManifestRow]) -> String {
             cell(&telemetry.same_wave_consumer_class),
             cell(&telemetry.track2_independence_status),
             cell(&telemetry.diagnostic_nonproducer_status),
-            cell(&telemetry.comparator_evidence)
+            cell(&telemetry.comparator_evidence),
+            cell(&telemetry.sk_v15.measurement_row_id),
+            cell(&telemetry.sk_v15.measurement_origin),
+            cell(&telemetry.sk_v15.value_plane),
+            cell(&telemetry.sk_v15.css_comparator_workload),
+            cell(&telemetry.sk_v15.generator_source),
+            cell(&telemetry.sk_v15.lock14_scan_scope),
+            cell(&telemetry.sk_v15.lock16_status),
+            cell(&telemetry.sk_v15.checkasm_or_parity_status),
+            cell(&telemetry.sk_v15.gate_exclusion_report),
+            cell(&telemetry.sk_v15.broadcast_group_id)
         ));
     }
     out
@@ -9377,12 +9591,40 @@ mod tests {
         ));
         report.rows.push(row);
         let markdown = report.render_markdown();
-        assert!(markdown.contains("## SK-V14 W0 Telemetry Manifest"));
+        assert!(markdown.contains("## SK-V15 W0 Telemetry Manifest"));
         assert!(markdown.contains("json/twitter/parse_only/main"));
         assert!(markdown.contains("none:pre-W1"));
         assert!(markdown.contains("sonic_rs::Skipper"));
         assert!(markdown.contains("AUDIT-PENDING"));
         assert!(markdown.contains("absent:not-collected-for-test"));
+    }
+
+    #[test]
+    fn skv15_w0_manifest_rejects_blank_appended_telemetry() {
+        let mut row = skv14_css_manifest_row("declaration_values");
+        apply_skv15_css_broadcast_diagnostic(&mut row);
+        validate_skv15_manifest_fields(&row).unwrap();
+        row.sk_v15.measurement_origin.clear();
+        assert!(validate_skv15_manifest_fields(&row).is_err());
+    }
+
+    #[test]
+    fn skv15_w0_existing_results_capture_demotes_css_notes_and_fields() {
+        let rendered =
+            skv14_existing_results_capture_markdown(include_str!("../../../RESULTS.md")).unwrap();
+        assert!(rendered.contains("## SK-V15 W0 Telemetry Manifest"));
+        assert!(!rendered.contains("and CSS L4 24 / 24 ADMITTED."));
+        assert!(rendered.contains(
+            "CSS L4 24 / 24 retained as SK-V15 W0 diagnostic broadcast evidence pending W1"
+        ));
+        assert!(rendered.contains("pending:SK-V15-W1-CSS-BROADCAST"));
+        assert!(rendered.contains("SK-V14-W8R-css-l4-full-parse"));
+
+        let css_row = rendered
+            .lines()
+            .find(|line| line.starts_with("| css_l4/declaration_values/direct_to_struct/main |"))
+            .unwrap();
+        assert_eq!(report_markdown_cells(css_row).len(), 42);
     }
 
     #[test]

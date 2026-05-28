@@ -1,0 +1,23 @@
+Command:
+sysctl -n machdep.cpu.brand_string hw.optional.arm.FEAT_CSSC hw.optional.arm.FEAT_DotProd hw.optional.arm.FEAT_PMULL hw.optional.neon
+
+Captured: 2026-05-28.
+Host: Apple M5 Max / aarch64.
+
+Output:
+Apple M5 Max
+1
+1
+1
+1
+
+Interpretation:
+- `hw.optional.arm.FEAT_CSSC=1`
+- `hw.optional.arm.FEAT_DotProd=1`
+- `hw.optional.arm.FEAT_PMULL=1`
+- `hw.optional.neon=1`
+
+Admission note:
+This host probe proves feature presence only. It does not admit any primitive
+without scalar reference, strict checkasm/parity, same-wave consumer, and
+row-level measurement.

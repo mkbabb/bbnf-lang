@@ -151,7 +151,7 @@ Grammar-neutrality: PASS because UTF-8 validity is an input encoding fact, not J
 
 REDRESS blocks: REDRESS 50-55 block fused parse-time decoded stats, quote-source materializers, and parser-owned sidecar routes; Lock 1 v+1 blocks cross-call continuation state. The admissible material differential is validate-only within one call.
 
-### PTG-DIGIT-RUN-ACCUMULATE - `digit_run_span_accumulate`
+### PTG-DIGIT-RUN-ACCUMULATE - `digit_run_span_accumulate` (REJECTED for this S-P2 cycle)
 
 Missing primitive shape:
 
@@ -166,23 +166,23 @@ pub struct DigitRun {
 pub fn digit_run_span_accumulate(input: &[u8], offset: usize, max_accum_digits: u8) -> DigitRun
 ```
 
-It consumes only ASCII digits. Sign, leading-dot, decimal point, exponent, suffix/unit, and JSON leading-zero policy stay in generated grammar or the existing full number layer.
+It consumes only ASCII digits. Sign, leading-dot, decimal point, exponent, suffix/unit, and JSON leading-zero policy stay in generated grammar or the existing full number layer. V1 CH1 rejected this row as an implementation candidate because the current SK-V15 P1 ledger does not name a surviving BBNF-side numeric hot leaf: `mesh` Track 1 is a schema-shaped generated wrapper and comparator decimal parsing is diagnostic comparator work (`restart/skinny/tranches/sk-v15/research/p1/evidence/p1e-normalized-attribution.tsv:45`, `restart/skinny/tranches/sk-v15/research/p1/evidence/p1e-normalized-attribution.tsv:46`, `restart/skinny/tranches/sk-v15/research/p1/evidence/p1e-normalized-attribution.tsv:48`).
 
 Scalar reference sketch: factor the private `scan_digit_run` plus `parse_two_digits`, `parse_four_digits`, and `parse_eight_digits` into a public grammar-neutral oracle (`skinny/crates/parse-that-regex/src/number/mod.rs:105-223`). It must preserve `NumberSpan` semantics when used by `match_number_span_from_first` (`skinny/crates/parse-that-regex/src/number/mod.rs:31-103`) and materializers (`skinny/crates/parse-that-regex/src/number/mod.rs:225-271`).
 
-Layer placement: Layer 1 in `parse-that-regex`; optional Layer-0 helpers are `byte_class_from_range_64` (currently missing as a sibling to `byte_class_from_eq_set_64`) and AArch64 digit MAC / UDOT. The existing 4-digit AArch64 smoke helper is not a production primitive by itself (`skinny/crates/bbnf-simd/src/aarch64/digit_mac.rs:4-49`).
+Layer placement: diagnostic only in this cycle. If a later P1 reopens numeric work with a BBNF-side hot leaf, the Layer 1 home would be `parse-that-regex`; optional Layer-0 helpers would be `byte_class_from_range_64` and AArch64 digit MAC / UDOT. The existing 4-digit AArch64 smoke helper is not a production primitive by itself (`skinny/crates/bbnf-simd/src/aarch64/digit_mac.rs:4-49`).
 
 Arch: scalar first. AArch64 DotProd / UDOT is admissible only for fixed-width chunks after a scalar oracle and checkasm; x86 VNNI/AVX variants remain diagnostic for SK-V15.
 
 Checkasm expectation: scalar parity for lengths 0..128, offsets, non-digit terminators, tails, mantissa truncation, overflow, fractional/exponent caller compositions, and CSS/Sheets leading-dot cases. Any UDOT body needs a dedicated strict checkasm beyond `aarch64_primitives::digit_mac_parses_four_digit_blocks`.
 
-Same-wave consumer: JSON direct numeric rows (`mesh`, `canada`, `numbers`) plus non-JSON generated numeric consumers: CSS number/dimension grammar (`grammar/css/l4/value-unit.bbnf:8-16`, `grammar/css/l4/value-unit.bbnf:62-72`), Sheets numbers (`grammar/google-sheets/google-sheets.bbnf:6`), or BBNF numeric literals (`grammar/bbnf/expressions.bbnf:6-7`).
+Same-wave consumer: none for SK-V15 S-P2. JSON direct numeric rows are not valid antecedents in the current ledger, and non-JSON numeric consumers cannot manufacture a missing P1 hot leaf.
 
-P1 antecedent: `mesh` direct c/B miss and comparator decimal parse pressure; `numbers` allocation/tape rows; `canada` numeric/UTF-8 direct pressure.
+P1 antecedent: none accepted for implementation in this cycle. `mesh` direct c/B miss and comparator decimal parse pressure are diagnostic; `numbers` and `canada` are routed to allocation/tape or unicode/string pressure, not digit-run admission.
 
-Grammar-neutrality: PASS if the primitive is only digit-run plus bounded accumulation. REJECT if JSON number grammar, f64 fallback policy, CSS unit policy, or Sheets leading-dot policy moves into the generic primitive.
+Grammar-neutrality: REJECT for S-P2 candidate status despite the grammar-neutral shape. A future retry must first arrive through fresh P1 evidence, then keep JSON number grammar, f64 fallback policy, CSS unit policy, and Sheets leading-dot policy outside the generic primitive.
 
-REDRESS blocks: REDRESS 80 blocks mantissa-widen/f64-fallback routes without a same-wave consumer; REDRESS 81 admits capacity hints for typed Vec consumers but does not authorize number-parser policy changes.
+REDRESS blocks: REDRESS 80 blocks mantissa-widen/f64-fallback routes without a same-wave consumer; REDRESS 81 admits capacity hints for typed Vec consumers but does not authorize number-parser policy changes. This row is diagnostic inventory only until reopened by P1.
 
 ### PTG-ESCAPED-SEGMENTS - `escaped_literal_segments`
 
@@ -230,7 +230,7 @@ All live candidates must be expressed as byte-set, range, literal-span, digit-ru
 | `classify_local_block_64` | PASS if alphabet is generated data and masks are transient-single-call. | CSS selector/value FIRST sets, Sheets formula delimiters, or BBNF punctuation. |
 | `bounded_plain_literal_span` | PASS if delimiter/escape/control/cap are parameters. | CSS strings, Sheets strings, or BBNF literal/regex spans. |
 | `validate_utf8_run` | PASS; UTF-8 is encoding validation, not grammar policy. | Any non-JSON byte-backed literal path, or negative-control proof that generated Rust `&str` already owns validation. |
-| `digit_run_span_accumulate` | PASS if limited to digit run plus bounded accumulation. | CSS numbers/dimensions, Sheets numbers, BBNF int/float literals. |
+| `digit_run_span_accumulate` | REJECT as a current S-P2 candidate because the P1 bridge is missing. | CSS numbers/dimensions, Sheets numbers, and BBNF int/float literals remain future witnesses only after fresh P1 evidence. |
 | `escaped_literal_segments` | PASS if escape table and surrogate policy are caller-owned. | CSS escaped strings/hex colors, Sheets doubled quotes, BBNF literals. |
 
 JSON-only wording is rejected. A JSON row may be the first measured consumer, but S-P3 must pair it with a generated non-JSON consumer, a negative-control witness, or a scoped claim that avoids fleet-wide language.

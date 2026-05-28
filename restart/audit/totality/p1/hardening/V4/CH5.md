@@ -4,102 +4,120 @@ name: HIDDEN COUPLING
 pass: T-P1-excavation
 cycle: V4
 disposition: ACCEPT
-generated_at: 2026-05-23T23:00:00-04:00
+generated_at: 2026-05-28T06:12:11Z
 files_audited:
+  - restart/prompts/totality/PASS-1-EXCAVATION.md
+  - restart/prompts/ORCHESTRATOR.md
+  - restart/audit/totality/p1/hardening/V4/CHALLENGE-CONTEXT.md
+  - restart/audit/totality/p1/hardening/HARDENING-T-P1-V3-CONSOLIDATED.md
+  - restart/audit/totality/p1/hardening/V3/CH5.md
   - restart/audit/totality/p1/1A-substrate-evidence.md
   - restart/audit/totality/p1/1B-codegen-evidence.md
   - restart/audit/totality/p1/1C-runtime-evidence.md
   - restart/audit/totality/p1/1D-skinny-lessons.md
   - restart/audit/totality/p1/1E-locks-evidence.md
   - restart/audit/totality/p1/1F-coherence-scan.md
-  - restart/audit/totality/p1/1F-anti-pattern.md
-  - restart/audit/totality/p1/1F-past-corpora.md
-  - restart/audit/totality/p1/hardening/V2/CH5.md
-  - restart/audit/totality/p1/hardening/V3/CH5.md
-  - restart/audit/totality/p1/hardening/HARDENING-T-P1-V3-CONSOLIDATED.md
-prior_cycle_review:
-  - "V2 CH5 ACCEPT (12/12, 100 %; CH5-V2-008 ACCEPT-with-caveat cite-staleness across three sub-cases: Track 2 off-by-2, proof-witness drift, CSS source-sidecar fabricated)"
-  - "V3 CH5 ACCEPT (9/9, 100 %; CH5-V3-008 housekeeping caveat for 1D row 117 sub-case enumeration carrying pre-rebind cite list verbatim)"
-  - "V4 atomic micro-fold packet per HARDENING-T-P1-V3-CONSOLIDATED §3.1: F-V4-CH5-1 (1D row 117 sub-case cite refresh discharging CH5-V3-008 housekeeping caveat + 1A row-100→117 cross-cite refresh in 1A-SUB-014 t_p1_v1_hardening_fold_note + 1A-DIV-008 row 84)"
-live_truth_method: "grep + line-anchored Read at V4 HEAD commit 8f4756113; verification of V3 CH5-V3-008 housekeeping caveat discharge via 1D row 117 sub-case enumeration refresh; cross-cite check of V4 row-100→117 refresh against 1A amended inventory (2 lines, 6 substitutions); substantive cite re-verification at HEAD (skinny/crates/bbnf-bench/src/track2/json.rs:7,26,34,45 verified live: line 7 `tape::{CapacityPlan, OffsetFlags, TapeBuilder}` import; line 26 `runtime::grammars::json::scan::structural_capacity_for` call; line 34 `TapeBuilder::new`; line 45 `JsonRoot::from_tape`); CSS sidecar cite re-verification (nonjson_css_l4.rs:648 fixture_sidecar_facts callsite; :2691 definition; :1082, 1203, 1354, 1511, 1661, 1815, 1964 seven same-plane-source-sidecar literals); proof-witness re-verification (runtime/src/lib.rs:29 pub mod json_event_grammar_witness under cfg gate :27; :33 pub mod sheets_witness under cfg gate :31); lightningcss_facts hit-count re-verification (live grep -c returns 27 hits at HEAD, matching AP-009 :69 narrative — confirms F-V4-CH1-1 cosmetic refresh discharged); residual orphan grep for `row 100`/`:100`/`row-100` returns zero hits at HEAD across 1A/1D/1F-anti-pattern; residual orphan grep for pre-rebind cites `:222`/`:234`/`:299`/`:504`/`track2/json.rs:5` returns zero hits at HEAD; 1A-DIV-008 substrate-union nuance + T-P3 §3C ratify-or-unify disposition rule preservation verified verbatim"
+score: "5/5 ACCEPT"
 ---
 
-## Executive Summary
+# CH5 Hidden Coupling - SK-V15 T-P1 V4
 
-CH5 returns **ACCEPT** on this V4 LOCK-eligible cycle. V3 closed 100 % ACCEPT (9/9) on the V2 amendment baseline with one non-blocking ACCEPT-carrying-housekeeping-caveat (CH5-V3-008) flagging the 1D row 117 sub-case enumeration note column for V4 micro-fold refresh: the row's note column carried the V2 pre-rebind cite list verbatim (Track 2 `:5,24,43` at the CH5-005 sub-case position; CSS `:222,234,299,504` at the CH5-004 sub-case position) even though the substantive binding rows on the cite-of-record inventories (1A-SUB-014, 1F-anti-pattern AP-009/010/011/020) all carried V3-rebound cites. The V4 atomic micro-fold packet (F-V4-CH5-1) discharges the housekeeping caveat exactly per V3's V4 flag wording.
+## Verdict
 
-**Discharge verification at V4 HEAD (8f4756113).** The V4 F-V4-CH5-1 fold lands two related edits per the V4 dispatch context: (1) **1D row 117 sub-case enumeration refresh** — direct Read at `restart/audit/totality/p1/1D-skinny-lessons.md:117` confirms the row's note column now reads `bbnf-bench/src/track2/json.rs:7,26,34,45` (rebound from V2 `:5,24,43`) for the CH5-005 sub-case position and `nonjson_css_l4.rs:648, 1082, 1203, 1354, 1511, 1661, 1815, 1964, 2691` (rebound from V2 `:222,234,299,504`) for the CH5-004 sub-case position; the `scan.rs:1,22,51` CH5-002 sub-case cite remains accurate at HEAD; the `runtime/src/lib.rs:29-33` CH5-007 sub-case cite remains rebound to V3 values. (2) **1A row-100→117 cross-cite refresh** — direct Read at `1A-substrate-evidence.md:10` (frontmatter `t_p1_v1_hardening_fold_note`) and `:84` (1A-DIV-008 row) confirms all instances of "1D `:100`" are now refreshed to "1D `:117`" (six total substitutions across two lines per dispatch context). The two refreshes are mutually reinforcing: 1D row 117 carries the rebound sub-case cite cluster AND 1A's cross-cite to that row uses the correct line number 117.
+ACCEPT.
 
-**Residual-orphan grep verification at V4 HEAD.** Live grep across 1A/1D/1F-anti-pattern returns zero hits for residual orphan patterns:
-- `row 100` / `row-100` / `1D \`:100\`` / `1D :100` — zero hits (1A row-100→117 refresh confirmed complete).
-- `track2/json.rs:5,24,43` — zero hits (Track 2 pre-rebind cite eliminated).
-- `nonjson_css_l4.rs:222` / `:234` / `:299` / `:504` as routing cites — zero hits; the V3 explicit-fabrication-disclosure narrative at AP-009 :69, AP-020 :80, and 1A-SUB-014 t_p1_v1_hardening_fold_note :10 preserves these in-text only as fabrication disclosure (the CH6 ANTI-PAPER-CLOSE attestation), not as live cites.
+V4 discharges the V3 CH5 fold. The live `1F-coherence-scan.md` now carries a
+current-source FNV production/hash coupling row for generated CSS runtimes and
+the codegen template, and it classifies that surface as hash-sidecar /
+telemetry coupling, not CSS Value API proof, retained document identity,
+same-substrate evidence, or a production equality arbiter
+(`restart/audit/totality/p1/1F-coherence-scan.md:89`). The expanded sidecar
+guard includes `input_fnv64`, `stream_fnv64`, `fn fnv64`, and `fnv64(` before
+any substrate or CH5 close claim (`restart/audit/totality/p1/1F-coherence-scan.md:128`,
+`restart/audit/totality/p1/1F-coherence-scan.md:173`,
+`restart/audit/totality/p1/1F-coherence-scan.md:184`).
 
-**Substantive cite re-verification at V4 HEAD.** Per the LAC-1E-12 + NEW-CH2-V3-02 executable-verification mandate (institutionalized at V4 for LOCK-eligibility), every CH5-bearing cite was re-grep-verified at HEAD:
-1. Track 2 substrate-helper sharing — `skinny/crates/bbnf-bench/src/track2/json.rs:7` carries `tape::{CapacityPlan, OffsetFlags, TapeBuilder}` (verified); `:26` carries `runtime::grammars::json::scan::structural_capacity_for(` call (verified); `:34` carries `tape: TapeBuilder::new(input.as_bytes(), capacity)` (verified); `:45` carries `Ok(JsonRoot::from_tape(self.input, self.tape.finish()))` (verified) — four lines match exactly.
-2. CSS source-sidecar — `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:648` carries `fixture_sidecar_facts(input)` callsite (verified); `:2691` carries `fn fixture_sidecar_facts(input: &str) -> Result<String, CssOracleError>` definition (verified); `:1082, 1203, 1354, 1511, 1661, 1815, 1964` carry seven `comparator=lightningcss-1.0.0-alpha.71:same-plane-source-sidecar` writer literals (one per CSS L4 sub-grammar wave, verified) — nine lines match exactly.
-3. Proof-witness exports — `skinny/crates/runtime/src/lib.rs:27` carries `#[cfg(any(test, feature = "proof"))]` gate; `:29` carries `pub mod json_event_grammar_witness`; `:31` carries `#[cfg(any(test, feature = "proof"))]` gate; `:33` carries `pub mod sheets_witness` — four lines match exactly.
-4. AP-009 hit-count refresh (F-V4-CH1-1 cosmetic) — live `grep -c 'lightningcss_facts' skinny/crates/bbnf-bench/src/nonjson_css_l4.rs` returns 27 hits at HEAD, matching the AP-009 :69 narrative ("returns 27 hits") that V4 F-V4-CH1-1 refreshed from V3's "24 hits" — confirmed.
+This is an ACCEPT because the coupling is no longer hidden or laundered. It is
+not a closure proof: W10 still owns the quarantine and production guard work
+(`restart/audit/totality/p1/1D-skinny-lessons.md:181`,
+`restart/audit/totality/p1/1D-skinny-lessons.md:230`).
 
-**Substrate-union nuance + T-P3 §3C disposition rule preservation.** The 1A-DIV-008 row at `1A-substrate-evidence.md:84` carries the two-cursor structural split at HEAD verbatim from V3: `ParserState.cursor` over `TapeBuilder<'i>` at `runtime/src/grammars/json/parser.rs:7-12` vs `DirectParser.cursor` raw `usize` at `codegen/src/json_typed_direct.rs:518-522`. The substrate-union nuance disposition rule reads: "T-P3 §3C must either ratify the two-cursor shape AS the V1 substrate-union (1D `:117` reads correctly under ratified definition) OR mandate unification (1D `:117` downgrades to 'disproved at HEAD; obligation deferred to T-P2 unification')." The row's cross-cite to 1D was refreshed `:100` → `:117` in four places within the row (substrate-union nuance pending clause + same-wave consumer clause). Per `1A-UNK-005` verify_action. No paper-close; both readings carry forward with binding T-P3 §3C ratification rule.
+## Evidence
 
-**AP-011 substrate-coupling classification preservation.** The Track 2 cite cluster at AP-011 :71 + :96 preserves the classification "independent parser authority with shared runtime substrate helpers" and the 0 LOC tax verbatim from V3 (which preserved verbatim from V2). The CH5-V2-005 Lock 1 union sub-case framing ("Independence holds for parser implementation; substrate helpers are deliberately shared and that sharing is Lock 1 union sub-case, not Track-independence violation") carries through unchanged through V4. Per CH5 firewall: Track 2 substrate-helper sharing is Lock 1 union sub-case (T-P3 §3C disposition pending), NOT Track-independence violation — V4 preserves that reading.
+- CH5 authority is Lock 1 / hidden-coupling review: no parallel substrate,
+  sidecar producer, renamed-scanner violation, or Track 1 == Track 2
+  dishonesty may pass uncatalogued (`restart/prompts/totality/PASS-1-EXCAVATION.md:125`,
+  `restart/prompts/ORCHESTRATOR.md:87`).
 
-**1A-SUB-016/017/018 SK-V14 binding rows.** All three rows preserve CH5 firewall reading through V4. 1A-SUB-016 (`:69`) carries "partial / diverged — substrate-union is two parallel cursor types" (preserved); 1A-SUB-017 (`:70`) carries `dispatch_value` LTO-fused envelope as Lock-14-mis-attributed by name (preserved); 1A-SUB-018 (`:71`) carries S-P1 CH2 13/17 parse_only + 14/17 direct rank-1 envelope mis-attribution census (preserved). CH5 firewall reading intact: the JSON-named envelope hides the grammar-neutral `dispatch` primitive across offset and direct paths — exactly the hidden coupling CH5 is authored to surface. V4 fold made no edit to these rows.
+- The V4 dispatch specifically asks CH5 to verify the FNV current-source census
+  and expanded sidecar/hash grep guard against generated CSS runtimes and
+  codegen template sites without laundering hashes into CSS Value API,
+  substrate, or equality proof
+  (`restart/audit/totality/p1/hardening/V4/CHALLENGE-CONTEXT.md:65`-`68`).
 
-The CH5 hidden-coupling firewall holds at V4. V3 ACCEPT-carrying-housekeeping-caveat (CH5-V3-008) is fully discharged via F-V4-CH5-1. The substrate-coupling classifications (AP-011 independent-parser-with-shared-helpers; AP-020 CSS comparator-sidecar coupling fence-required; AP-010 Lock 14 leak under unverified proof gate; 1A-SUB-014 transient scanner side plane live) are all preserved verbatim through V4 — the V4 rebinds are pure freshness folds. V4 introduces no new hidden-coupling violations.
+- V3 required exactly this fold: add a current-source FNV production-coupling
+  row for generated CSS runtime `input_fnv64` / `fnv64` surfaces and template
+  sites, classify the fields, and extend the guard to
+  `input_fnv64|stream_fnv64|fn fnv64|fnv64(`
+  (`restart/audit/totality/p1/hardening/V3/CH5.md:149`,
+  `restart/audit/totality/p1/hardening/V3/CH5.md:153`-`169`;
+  `restart/audit/totality/p1/hardening/HARDENING-T-P1-V3-CONSOLIDATED.md:29`,
+  `restart/audit/totality/p1/hardening/HARDENING-T-P1-V3-CONSOLIDATED.md:40`-`41`).
 
-## Dispositions
+- `1F` records the V4 fold in frontmatter and table state:
+  `CH5-V3-F04` / `COH-016-current-CSS-FNV-runtime-hash-coupling`
+  (`restart/audit/totality/p1/1F-coherence-scan.md:40`,
+  `restart/audit/totality/p1/1F-coherence-scan.md:57`) and later states the
+  fold landed (`restart/audit/totality/p1/1F-coherence-scan.md:183`-`184`).
 
-| ID | Disposition | Finding | Evidence |
+- The current-source census resolves across all seven generated CSS runtime
+  files and the template:
+
+  | surface | `input_fnv64` rows | `fnv64` helper |
+  |---|---|---|
+  | `skinny/crates/runtime/src/grammars/css_l4_at_rules_and_media/generated.rs` | `skinny/crates/runtime/src/grammars/css_l4_at_rules_and_media/generated.rs:25`, `skinny/crates/runtime/src/grammars/css_l4_at_rules_and_media/generated.rs:71` | `skinny/crates/runtime/src/grammars/css_l4_at_rules_and_media/generated.rs:619` |
+  | `skinny/crates/runtime/src/grammars/css_l4_declaration_values/generated.rs` | `skinny/crates/runtime/src/grammars/css_l4_declaration_values/generated.rs:25`, `skinny/crates/runtime/src/grammars/css_l4_declaration_values/generated.rs:71` | `skinny/crates/runtime/src/grammars/css_l4_declaration_values/generated.rs:619` |
+  | `skinny/crates/runtime/src/grammars/css_l4_declaration_values_extended/generated.rs` | `skinny/crates/runtime/src/grammars/css_l4_declaration_values_extended/generated.rs:25`, `skinny/crates/runtime/src/grammars/css_l4_declaration_values_extended/generated.rs:71` | `skinny/crates/runtime/src/grammars/css_l4_declaration_values_extended/generated.rs:619` |
+  | `skinny/crates/runtime/src/grammars/css_l4_nested_layout/generated.rs` | `skinny/crates/runtime/src/grammars/css_l4_nested_layout/generated.rs:25`, `skinny/crates/runtime/src/grammars/css_l4_nested_layout/generated.rs:71` | `skinny/crates/runtime/src/grammars/css_l4_nested_layout/generated.rs:619` |
+  | `skinny/crates/runtime/src/grammars/css_l4_stylesheet_selectors/generated.rs` | `skinny/crates/runtime/src/grammars/css_l4_stylesheet_selectors/generated.rs:25`, `skinny/crates/runtime/src/grammars/css_l4_stylesheet_selectors/generated.rs:71` | `skinny/crates/runtime/src/grammars/css_l4_stylesheet_selectors/generated.rs:619` |
+  | `skinny/crates/runtime/src/grammars/css_l4_vendor_and_custom_atrules/generated.rs` | `skinny/crates/runtime/src/grammars/css_l4_vendor_and_custom_atrules/generated.rs:25`, `skinny/crates/runtime/src/grammars/css_l4_vendor_and_custom_atrules/generated.rs:71` | `skinny/crates/runtime/src/grammars/css_l4_vendor_and_custom_atrules/generated.rs:619` |
+  | `skinny/crates/runtime/src/grammars/css_l4_visual_functions/generated.rs` | `skinny/crates/runtime/src/grammars/css_l4_visual_functions/generated.rs:25`, `skinny/crates/runtime/src/grammars/css_l4_visual_functions/generated.rs:71` | `skinny/crates/runtime/src/grammars/css_l4_visual_functions/generated.rs:619` |
+  | template | `skinny/crates/codegen/src/runtime_generator.rs:737`, `skinny/crates/codegen/src/runtime_generator.rs:783` | `skinny/crates/codegen/src/runtime_generator.rs:1331` |
+
+- The widened guard reaches the source paths that matter. Running
+  `rg -n "input_fnv64|stream_fnv64|fn fnv64|fnv64\\(" skinny/crates/runtime/src/grammars skinny/crates/codegen/src/runtime_generator.rs`
+  finds the generated runtime and template lines above. Running the broader
+  `1F` guard over `skinny/crates crates/core/src` also catches comparator
+  source-sidecars at `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:648`,
+  `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:1082`, and
+  `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:2691`, plus hash fixture
+  / stream surfaces such as
+  `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:131`,
+  `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:144`,
+  `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:2994`,
+  `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:3072`, and
+  `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:3412`.
+
+- The inventories do not launder the hash surface into a CSS admit. CSS typed
+  value/document/view/visitor remains unimplemented
+  (`restart/audit/totality/p1/1D-skinny-lessons.md:157`), 1C keeps CSS as a
+  partial admitted output plane with unresolved schema rather than a value API
+  (`restart/audit/totality/p1/1C-runtime-evidence.md:65`,
+  `restart/audit/totality/p1/1C-runtime-evidence.md:112`), and 1E keeps Lock 1
+  partial / JSON-tape-only while saying string-only CSS fact streams are not
+  value API evidence (`restart/audit/totality/p1/1E-locks-evidence.md:90`,
+  `restart/audit/totality/p1/1E-locks-evidence.md:130`).
+
+## Findings
+
+| id | disposition | finding | evidence |
 |---|---|---|---|
-| CH5-V4-001 | ACCEPT | V3 CH5-V3-008 housekeeping caveat (1D row 117 sub-case enumeration carrying pre-rebind cite list verbatim) DISCHARGED via F-V4-CH5-1 1D row 117 sub-case cite refresh. | V4 HEAD direct Read at `restart/audit/totality/p1/1D-skinny-lessons.md:117` confirms the row's note column now reads: "Renamed `StructuralIndex` scanner (CH5-002 / `scan.rs:1,22,51` — transient capacity/proof input, fenced), Track 2 substrate-helper sharing (CH5-005 / `bbnf-bench/src/track2/json.rs:7,26,34,45`), CSS source-sidecar (CH5-004 / `nonjson_css_l4.rs:648, 1082, 1203, 1354, 1511, 1661, 1815, 1964, 2691`), and proof-witness generic-runtime exports (CH5-007 / `runtime/src/lib.rs:29-33`)". All four sub-case cites carry V3-rebound values. Live grep at HEAD returns zero hits for the pre-rebind orphans `track2/json.rs:5,24,43` and `nonjson_css_l4.rs:222,234,299,504` as routing cites. The row's T-P3 §3C PENDING flag, substrate-cardinality verdict, and cross-cite-to-1A-DIV-008 are preserved verbatim from V3. |
-| CH5-V4-002 | ACCEPT | V4 F-V4-CH5-1 1A row-100→117 cross-cite refresh discharged in full (6 substitutions across 2 lines per dispatch context). | V4 HEAD direct Read at `restart/audit/totality/p1/1A-substrate-evidence.md:10` (frontmatter `t_p1_v1_hardening_fold_note` clause `(c) 1A-DIV-008 note augmented with substrate-union nuance disambiguation`) carries "1D `:117` records 'Single substrate proved as substrate cardinality' (REDRESS attribution); 1A-DIV-008 records two structurally independent cursors at HEAD. Both can hold under different definitions — T-P3 §3C must either ratify two-cursor shape as V1 substrate-union or mandate unification" + "Cross-fold to 1D `:117` added per T-P1 V1 CONSOLIDATED §1.2 substrate-coupling convergence" — both cites refreshed from V3 `:100` to V4 `:117`. Direct Read at `1A-substrate-evidence.md:84` (1A-DIV-008 evidence column) carries "**Substrate-union nuance pending T-P3 §3C disposition:** 1D `:117` records 'Single substrate proved as substrate cardinality' (REDRESS attribution); 1A-DIV-008 records two structurally independent cursors at HEAD. Both can hold under different definitions — T-P3 §3C must either ratify the two-cursor shape as the V1 substrate-union (1D `:117` reads correctly under ratified definition) or mandate unification (1D `:117` downgrades to 'disproved at HEAD; obligation deferred to T-P2 unification')" — four cites refreshed from V3 `:100` to V4 `:117`; the same-wave consumer clause "1D `:117` cross-fold" also refreshed. Total six substitutions across two lines matches dispatch context exactly. Live grep returns zero residual `row 100`/`:100` orphans at HEAD across 1A/1D/1F-anti-pattern. |
-| CH5-V4-003 | ACCEPT | Substrate-union nuance + T-P3 §3C ratify-or-unify disposition rule preserved verbatim through V4. | 1A-DIV-008 row at `1A-substrate-evidence.md:84` carries the two-cursor structural split at HEAD verbatim from V3: `ParserState.cursor` over `TapeBuilder<'i>` at `runtime/src/grammars/json/parser.rs:7-12` (verified live: line 7 `struct Parser<'i>`; line 11 `cursor: usize`; line 12 `tape: TapeBuilder<'i>`) vs `DirectParser.cursor` with raw `usize` only at `codegen/src/json_typed_direct.rs:518-522`. The substrate-union nuance disposition rule reads exactly as V3 (only the cross-cite line number `:117` was refreshed from `:100`; the prose, T-P3 §3C ratify-or-unify framing, two-reading carry-forward, and `1A-UNK-005` verify_action route are all preserved verbatim). 1D row 117 row at `1D-skinny-lessons.md:117` carries the V2 "proved historically; SK-V14 1A-DIV-008 records two-cursor structural split at HEAD pending T-P3 §3C disposition" verdict + T-P3 §3C PENDING flag + CH5-002/004/005/007 sub-case enumeration (refreshed cites) in the note column + cross-cite to 1A-DIV-008. No paper-close; both readings carry forward with binding T-P3 §3C ratification rule. |
-| CH5-V4-004 | ACCEPT | Track 2 + CSS sidecar + proof-witness cites all re-verified executable-valid at V4 HEAD (LAC-1E-12 + NEW-CH2-V3-02 executable verification mandate). | Track 2: `skinny/crates/bbnf-bench/src/track2/json.rs:7` carries `tape::{CapacityPlan, OffsetFlags, TapeBuilder}` (verified live); `:26` carries `runtime::grammars::json::scan::structural_capacity_for(` call (verified); `:34` carries `tape: TapeBuilder::new(input.as_bytes(), capacity)` (verified); `:45` carries `Ok(JsonRoot::from_tape(self.input, self.tape.finish()))` (verified). CSS sidecar: `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:648` carries `fixture_sidecar_facts(input)` callsite (verified); `:2691` carries `fn fixture_sidecar_facts(input: &str) -> Result<String, CssOracleError>` definition (verified); `:1082, 1203, 1354, 1511, 1661, 1815, 1964` carry seven `comparator=lightningcss-1.0.0-alpha.71:same-plane-source-sidecar` writer literals (one per CSS L4 sub-grammar wave, verified). Proof-witness: `skinny/crates/runtime/src/lib.rs:27` carries `#[cfg(any(test, feature = "proof"))]`; `:29` carries `pub mod json_event_grammar_witness`; `:31` carries `#[cfg(any(test, feature = "proof"))]`; `:33` carries `pub mod sheets_witness`. All cites match exactly at HEAD; no drift introduced by V4 micro-fold. |
-| CH5-V4-005 | ACCEPT | AP-011 substrate-coupling classification preserved verbatim through V4 (no semantic drift from V4 micro-fold). | 1F-anti-pattern AP-011 evidence column at `restart/audit/totality/p1/1F-anti-pattern.md:71` reads "independent parser authority with shared runtime substrate helpers" verdict + "0 LOC classification; low" risk + "Preserve classification while keeping helper sharing visible" note — identical V3 framing (which was identical V2 framing). Planning metadata row at `:96` carries "0 LOC classification | low | Track 2 evidence-accounting wave | 0 LOC | benchmark report classification | `skinny/crates/bbnf-bench/src/track2/json.rs:7, 26, 34, 45` (V3 cite-rebind; V2 `:5,24,43` off-by-2 per HARDENING-T-P1-V2-CONSOLIDATED §3.1 F-V3-CH5-1)" — identical V3 framing. The V4 dispatch context confirms AP-011 was not touched by V4 micro-fold (1F-anti-pattern was amended only for F-V4-CH1-1 AP-009 24→27 hits cosmetic). The CH5-V2-005 Lock 1 union sub-case framing carries through unchanged through V4. |
-| CH5-V4-006 | ACCEPT | AP-020 CSS comparator-sidecar fence + AP-010 proof-witness Lock 14 leak classifications preserved verbatim through V4. | AP-020 at `1F-anti-pattern.md:80` carries "comparator-sidecar coupling; fence required (non-runtime-authoritative; not retained document identity)" verdict + V3 rebind note with explicit fabrication disclosure ("V2 cite cluster `:222,234,299,504` was fabricated (provenance V1 CH5-004; HEAD verifies `:222, :234` are CSS token hex literals inside an `EXPECTED_FACTS` fixture array, `:299` is a `decl…property_hex=…` fixture literal, `:504` is `impl fmt::Display for CssOracleError`)") + the explicit verification command — all preserved verbatim. AP-020 planning metadata at `:105` carries identical V3 framing. AP-010 carries the proof-witness cite `runtime/src/lib.rs:29-33` under proof gates + "Lock 14 leak under unverified proof gate" verdict — V4 dispatch context confirms AP-010 was not touched by V4 micro-fold. AP-009 was touched only for the 24→27 hits cosmetic refresh (F-V4-CH1-1; live grep -c confirms 27 hits at HEAD); the cite cluster `:648, :2691, :1082, 1203, 1354, 1511, 1661, 1815, 1964` is preserved verbatim from V3. |
-| CH5-V4-007 | ACCEPT | 1A-SUB-016/017/018 SK-V14 binding rows preserve CH5 firewall reading through V4 (JSON-named dispatch envelopes hide grammar-neutral `dispatch` primitive across two cursor types). | 1A-SUB-016 at `1A-substrate-evidence.md:69` carries verdict "partial / diverged — substrate-union is two parallel cursor types" (preserved verbatim from V3); 1A-SUB-017 at `:70` carries `dispatch_value`/`parse_object_value_at_direct`/`parse_array_element_at_direct` envelope census + `Alt { Dispatch }` shape attribution + LTO-fuse production-build observation (preserved verbatim); 1A-SUB-018 at `:71` carries S-P1 CH2 13/17 parse_only + 14/17 direct rank-1 + 5/7 typed-product rank-1 to `DirectParser::skip_value` census (preserved verbatim). CH5 firewall reading intact: the JSON-named envelopes hide the grammar-neutral `dispatch` primitive across offset and direct paths — exactly the hidden coupling CH5 is authored to surface. V4 fold made no edit to these rows per V4 dispatch context. |
-| CH5-V4-008 | ACCEPT | V4 micro-fold introduces no new hidden-coupling violations; row-117 cite refresh + row-100→117 cross-cite refresh are documentation cohesion truth-up, not substrate admissions. | V4 fold replaces V3 pre-rebind orphan cites with executable-verified HEAD positions in 1D row 117 sub-case enumeration AND refreshes 1A's cross-cite-to-1D line number in 1A-SUB-014 t_p1_v1_hardening_fold_note (1 line) + 1A-DIV-008 row evidence column (1 line). No new row added; no classification weakened; no T-P3 §3C disposition pre-empted; no Lock 1 substrate-union ratification implied. The CSS source-sidecar plane remains classified as "comparator-sidecar coupling; fence required" + comparator-only evidence plane; the Track 2 substrate-helper sharing remains classified as Lock 1 union sub-case (not Track-independence violation); the proof-witness exports remain classified as Lock 14 leak under unverified proof gate. The V3 explicit-fabrication-disclosure narrative at AP-009 :69, AP-020 :80, and 1A-SUB-014 t_p1_v1_hardening_fold_note :10 is preserved verbatim through V4 — the anti-paper-close attestation is not weakened by V4 micro-fold. |
+| CH5-V4-001 | ACCEPT | The V3 current-source FNV census fold landed in the live V4 inventory. | `1F` adds `COH-016` and cites generated CSS runtime `input_fnv64` / `fnv64` plus template sites (`restart/audit/totality/p1/1F-coherence-scan.md:89`). Source verification finds all seven generated CSS `generated.rs` files with `input_fnv64` at `:25` and `:71` and `fn fnv64` at `:619`, plus template sites `skinny/crates/codegen/src/runtime_generator.rs:737`, `:783`, and `:1331`. |
+| CH5-V4-002 | ACCEPT | The sidecar/hash grep guard is expanded far enough to catch generated CSS runtime hashes, codegen template hashes, comparator source-sidecars, and stream-hash fixtures. | `1F` requires `rg -n 'EventCursor|generated_eventcursor|structural_offsets|TapeAssembler|fixture_sidecar_facts|same-plane-source-sidecar|input_fnv64|stream_fnv64|fn fnv64|fnv64\\(' skinny/crates crates/core/src` before CH5/substrate close (`restart/audit/totality/p1/1F-coherence-scan.md:128`, `restart/audit/totality/p1/1F-coherence-scan.md:173`, `restart/audit/totality/p1/1F-coherence-scan.md:184`). That scope includes both `skinny/crates/runtime/src/grammars/.../generated.rs` and `skinny/crates/codegen/src/runtime_generator.rs`. |
+| CH5-V4-003 | ACCEPT | The FNV hashes are not laundered into CSS Value API, retained document identity, same-substrate evidence, or production equality proof. | `1F` states those negatives explicitly (`restart/audit/totality/p1/1F-coherence-scan.md:89`) and routes the owner/receiver to W10 quarantine (`restart/audit/totality/p1/1F-coherence-scan.md:142`, `restart/audit/totality/p1/1F-coherence-scan.md:165`). `1D` requires production scan plus adversarial strict-product fixtures and says the disposition is bench-only quarantine or delete, with no production equality arbiter (`restart/audit/totality/p1/1D-skinny-lessons.md:181`, `restart/audit/totality/p1/1D-skinny-lessons.md:211`). |
+| CH5-V4-004 | ACCEPT | Lock 1 / substrate-union coupling remains scoped and open where evidence is partial; no inventory claims FNV or CSS fact-stream hashes prove the substrate union. | 1A keeps the direct/tape union partial and shared schedule UNKNOWN (`restart/audit/totality/p1/1A-substrate-evidence.md:67`, `restart/audit/totality/p1/1A-substrate-evidence.md:84`, `restart/audit/totality/p1/1A-substrate-evidence.md:172`-`174`). EventTape remains unimplemented and fenced against retained sidecar resurrection (`restart/audit/totality/p1/1A-substrate-evidence.md:76`-`77`; `restart/audit/totality/p1/1C-runtime-evidence.md:64`, `restart/audit/totality/p1/1C-runtime-evidence.md:110`). |
+| CH5-V4-005 | ACCEPT | The live 1F scan catches current sidecar families instead of relying on superseded 1F auxiliaries. | The V4 context says `1F-anti-pattern.md` and `1F-past-corpora.md` are historical only (`restart/audit/totality/p1/hardening/V4/CHALLENGE-CONTEXT.md:19`-`22`). Live 1F owns root structural sidecar, CSS comparator sidecar, and CSS FNV runtime-hash rows (`restart/audit/totality/p1/1F-coherence-scan.md:87`-`89`) and states no new retained substrate is proven while CSS fact-stream/hash telemetry still needs fences (`restart/audit/totality/p1/1F-coherence-scan.md:128`). |
 
-## Convergence Check
+No Required Fold.
 
-| Cycle | Total findings | ACCEPT | REVISE | REJECT | ACCEPT-rate |
-|---|---:|---:|---:|---:|---:|
-| V1 | 7 | 3 | 4 | 0 | 42.9 % |
-| V2 | 12 | 12 (1 ACCEPT-with-caveat for documentation drift) | 0 | 0 | 100.0 % |
-| V3 | 9 | 9 (1 ACCEPT carrying residual-housekeeping caveat for V4 micro-fold) | 0 | 0 | 100.0 % |
-| V4 | 8 | 8 (V3 housekeeping caveat discharged; zero orphans) | 0 | 0 | 100.0 % |
-
-V4 CH5 ACCEPT-rate is **100 % (8/8)**. V2 + V3 + V4 represent **three consecutive ≥95 % cycles** for CH5 on the V2 amendment baseline — the §4 convergence criterion (≥95 % × 2 consecutive cycles) was already satisfied at V3; V4 extends to three. The CH5-V3-008 housekeeping caveat is fully discharged at V4; no carry-forward caveat remains. V4 CH5 reads CLOSED for cohort §3Z LOCK on this lens.
-
-## §3Z Gate Evaluation
-
-Per V4 dispatch context: V4 is the **first LOCK-eligible cohort cycle for T-P1** (V3 closed 97.3 % sub-axis / 97.2 % per-lens, V4 fold discharged the 2 single-cell orphan REVISEs from CH2 + CH3, V5 confirming required for cohort §3Z LOCK).
-
-CH5 trajectory through V4:
-- **V2 → V3:** two consecutive ≥95 % cycles satisfied for CH5 on the V2 amendment baseline.
-- **V3 → V4:** three consecutive ≥95 % cycles for CH5; V3 housekeeping caveat (CH5-V3-008) DISCHARGED via F-V4-CH5-1; this V4 cycle is the **3-cycle LOCK extension** expected per dispatch.
-- **V4 → V5 (predicted):** CH5 should carry through V5 unchanged at 100 % ACCEPT unless new SK-V14 P3 evidence surfaces a fresh hidden-coupling vector (none anticipated from the V4→V5 fold packet; V4 micro-fold contains only freshness rebinds, not new substrate admissions). Cohort §3Z LOCK at V5 ceiling expected on the predicted trajectory.
-
-CH5 is LOCK-ready at V4. Cohort §3Z LOCK gate awaits V5 confirming cycle for the cohort as a whole (per §3Z dual-cycle ≥95 % rule + V≤5 ceiling).
-
-## Anti-Paper-Close Self-Audit
-
-V4 CH5 explicitly tests for the CH7 V2 failure mode (V→V+1 cite-carry without re-verification). All cite rebinds and cross-cite refreshes in this V4 LOCK-eligible cycle were re-verified at V4 HEAD via direct grep/Read on the cited files. This V4 self-audit honours the **executable verification mandate institutionalized** per LAC-1E-12 + NEW-CH2-V3-02 at the V4 cycle:
-
-1. **Track 2 cites `:7,26,34,45`** — re-verified at HEAD by direct grep of `skinny/crates/bbnf-bench/src/track2/json.rs`; the four lines carry the imported tape types, `structural_capacity_for` call, `TapeBuilder::new` construction, and `JsonRoot::from_tape` seal respectively.
-2. **CSS sidecar cites `:648, 1082, 1203, 1354, 1511, 1661, 1815, 1964, 2691`** — re-verified at HEAD by direct grep of `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs` for `fixture_sidecar_facts` + `same-plane-source-sidecar` patterns; all nine lines carry the expected content; the `lightningcss_facts` hit-count refreshed at AP-009 (24→27) matches live `grep -c` at HEAD.
-3. **Proof-witness `:29, 33` under cfg gates `:27, 31`** — re-verified at HEAD by direct grep of `skinny/crates/runtime/src/lib.rs`; the four lines carry the proof-cfg gate + `json_event_grammar_witness` module declaration + proof-cfg gate + `sheets_witness` module declaration.
-4. **1A row-100→117 cross-cite refresh** — re-verified at HEAD by direct Read of 1A-substrate-evidence.md frontmatter (line 10) + 1A-DIV-008 row (line 84); both lines carry the refreshed `:117` cross-cite to 1D; live grep returns zero residual `row 100`/`:100` orphans at HEAD across 1A/1D/1F-anti-pattern.
-5. **1D row 117 sub-case enumeration refresh** — re-verified at HEAD by direct Read of 1D-skinny-lessons.md row 117; the note column carries the four V3-rebound sub-case cites; live grep returns zero residual pre-rebind orphan patterns at HEAD.
-
-V4 CH5 carries this self-audit because CH6 ANTI-PAPER-CLOSE explicitly flagged the CH7-V2-failure-mode discipline at maximum strength for the V4 LOCK-eligible cycle, AND because the V4 dispatch context elevated executable verification to "institutionalized mandate" per LAC-1E-12 + NEW-CH2-V3-02. The V4 fold packet honoured the discipline; this CH5 report attests it. The V3 explicit-fabrication-disclosure narrative (AP-009 / AP-020 / 1A-SUB-014 t_p1_v1_hardening_fold_note) is preserved verbatim through V4 — V4 does not paper over V3's disclosure.
-
-## Closing Posture
-
-CH5 hidden-coupling firewall holds at V4. The V3 housekeeping caveat (CH5-V3-008) is **fully discharged** via the V4 atomic micro-fold (F-V4-CH5-1: 1D row 117 sub-case cite refresh + 1A row-100→117 cross-cite refresh at 1A-SUB-014 t_p1_v1_hardening_fold_note + 1A-DIV-008). The substrate-coupling classifications (AP-011 independent-parser-with-shared-helpers; AP-020 CSS comparator-sidecar coupling fence-required; AP-010 Lock 14 leak under unverified proof gate; 1A-SUB-014 transient scanner side plane live) are all preserved verbatim through V4 — the V4 rebinds are pure freshness folds. The substrate-union nuance (1A-DIV-008 two-cursor structural split + 1D row 117 substrate-cardinality T-P3 §3C pending) carries through unchanged with binding ratification rule intact; the `:117` cross-cite refresh is documentation cohesion, not a re-disposition. The SK-V14 binding (1A-SUB-016/017/018 dispatch-envelope mis-attribution census) reads correctly under CH5 — the JSON-named envelopes hide the grammar-neutral `dispatch` primitive across two cursor types.
-
-Zero residual housekeeping caveats carry forward to V5. The 1D row 117 sub-case enumeration cites match the substantive binding rows on the cite-of-record inventories (1A-SUB-014, 1F-anti-pattern AP-009/010/011/020) byte-for-byte. The 1A row-100→117 cross-cite refresh discharges the V3 dispatch-context-flagged cross-cite drift.
-
-V4 CH5 is **ACCEPT**. V2 + V3 + V4 represent three consecutive ≥95 % cycles for CH5 on the V2 amendment baseline; the §4 convergence criterion is satisfied with margin. **Cohort §3Z LOCK candidacy for CH5 reads CLOSED at V4** pending V5 cohort confirming cycle — this is the **3-cycle LOCK extension** the V4 dispatch anticipated.
+No source edit, inventory edit, staging, or commit was performed for this CH5 report.

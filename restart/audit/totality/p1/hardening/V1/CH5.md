@@ -4,27 +4,79 @@ name: HIDDEN COUPLING
 pass: T-P1-excavation
 cycle: V1
 disposition: REVISE
-generated_at: 2026-05-21T00:00:00-04:00
-files_audited: [restart/audit/totality/p1/1A-substrate-evidence.md, restart/audit/totality/p1/1B-codegen-evidence.md, restart/audit/totality/p1/1C-runtime-evidence.md, restart/audit/totality/p1/1D-skinny-lessons.md, restart/audit/totality/p1/1E-locks-evidence.md, restart/audit/totality/p1/1F-coherence-scan.md, restart/audit/totality/p1/1F-anti-pattern.md, restart/audit/totality/p1/1F-past-corpora.md]
-live_truth_method: "nl -ba line reads plus rg over Lock 1, generated/direct JSON, CSS fact stream, StructuralIndex scanner, and Track 1/Track 2 call sites"
+generated_at: 2026-05-28T00:00:00-04:00
+files_audited:
+  - restart/prompts/ORCHESTRATOR.md
+  - restart/prompts/totality/PASS-1-EXCAVATION.md
+  - restart/skinny/tranches/sk-v15/SYNTHESIS.md
+  - restart/locks/LOCKS.md
+  - restart/audit/totality/p1/1A-substrate-evidence.md
+  - restart/audit/totality/p1/1B-codegen-evidence.md
+  - restart/audit/totality/p1/1C-runtime-evidence.md
+  - restart/audit/totality/p1/1D-skinny-lessons.md
+  - restart/audit/totality/p1/1E-locks-evidence.md
+  - restart/audit/totality/p1/1F-coherence-scan.md
+  - restart/audit/totality/p1/1F-anti-pattern.md
+  - restart/audit/totality/p1/1F-past-corpora.md
+live_truth_method: "nl -ba line reads of required prompts, Lock 1, inventories, 1F auxiliary files, and focused rg/nl reads for StructuralIndex, sidecar, Track 1/Track 2, and broadcast-admission code paths; no build/test/source edit."
 ---
 
-## Executive Summary
+## Verdict
 
-CH5 returns **REVISE**. The V1 inventories catch the central Lock 1 danger: generated JSON retained parsing and generated JSON direct parsing are separate code paths, CSS declaration-values emits a fact stream outside tape, and EventTape is absent. Those findings are valid and should remain. The hardening gap is narrower but important: 1F did not fully catch renamed scanner/sidecar couplings, and several rows over-compress Track 1/Track 2 independence or report "no old parallel substrate names" as implemented when live code still carries a `StructuralIndex` scan plane and source-sidecar CSS comparator artifacts. These are not automatic REJECTs because the scanner appears capacity-only and not retained document identity, and Track 2 is structurally independent where claimed for direct JSON. V2 must classify them explicitly so Lock 1 does not paper-close around renamed sidecars.
+**REVISE.** CH5 cannot accept V1 as-is. The inventories correctly preserve the
+central Lock 1 warning: retained tape, direct sink, fact stream, and transient
+scanner planes must not become parallel retained substrates. However, the V1
+packet still under-catalogues hidden coupling in two places: root generated
+`crates/core` code carries a lazy `OnceCell<StructuralIndex>` sidecar that the
+main inventories do not classify, and SK-V15's `NEW-CH5-V5-02` broadcast-admit
+rule is present in 1D/1E/1F but must be folded into CH5 as a Track/substrate
+honesty gate.
 
-## Dispositions
+Governing scope is explicit: ORCHESTRATOR CH5 rejects parallel substrate,
+sidecar producer, renamed scanner, Track 1 == Track 2 dishonesty, and substrate
+union failure (`restart/prompts/ORCHESTRATOR.md:87`). T-P1 CH5 requires 1A and
+1F to catch the live couplings (`restart/prompts/totality/PASS-1-EXCAVATION.md:125`-`128`).
+Lock 1 rejects retained class/mask streams, parser-owned cursor/list state,
+public substrate APIs, `UnionTape`, or a second tape without G-Omega
+(`restart/locks/LOCKS.md:118`-`127`) and rejects cross-call classifier state
+(`restart/locks/LOCKS.md:137`-`149`).
 
-| ID | Disposition | Finding | Evidence |
-|---|---|---|---|
-| CH5-001 | ACCEPT | 1A correctly flags that JSON retained and direct materialization are not auditable as one scheduled Lock 1 union path. | Lock 1 requires one materialisation surface at `restart/locks/LOCKS.md:52`. 1A marks the direct union as partial/diverged at `restart/audit/totality/p1/1A-substrate-evidence.md:30` and diverged at `restart/audit/totality/p1/1A-substrate-evidence.md:39`. Live retained parse constructs `ParserState` with `TapeBuilder` at `skinny/crates/runtime/src/grammars/json/parser.rs:7` and returns `JsonRoot::from_tape` at `skinny/crates/runtime/src/grammars/json/parser.rs:47`; live direct parse accepts `JsonSink`, local `bytes`, and local `cursor` at `skinny/crates/runtime/src/grammars/json/generated.rs:407`. |
-| CH5-002 | REVISE | 1A-SUB-014 is too strong as "implemented" because it only greps old substrate names and does not classify the renamed structural scanner plane. | 1A says no old parallel substrate names appear and marks the row implemented at `restart/audit/totality/p1/1A-substrate-evidence.md:43`, while its own UNKNOWN asks whether `StructuralIndex` can become a retained sidecar at `restart/audit/totality/p1/1A-substrate-evidence.md:75`. Live `scan.rs` is explicitly "JSON-owned structural scan source" at `skinny/crates/runtime/src/grammars/json/scan.rs:1`, returns `StructuralIndex` at `skinny/crates/runtime/src/grammars/json/scan.rs:22`, and `OneShotSimd` computes capacity from scanned positions at `skinny/crates/runtime/src/grammars/json/scan.rs:51`. V2 should change the row to partial/unknown: no retained `StructuralIndex` identity found, but the renamed scanner side plane is live and must stay fenced as transient capacity/proof input. |
-| CH5-003 | ACCEPT | 1C correctly identifies CSS declaration-values as a fact-stream outlier rather than treating it as Lock 1 substrate closure. | 1C says CSS has no tape/view/value module at `restart/audit/totality/p1/1C-runtime-evidence.md:31`, catalogs the fact-stream divergence at `restart/audit/totality/p1/1C-runtime-evidence.md:80`, and leaves classification open at `restart/audit/totality/p1/1C-runtime-evidence.md:96`. Live CSS generated code returns `String` from `emit_fact_stream` at `skinny/crates/runtime/src/grammars/css_l4_declaration_values/generated.rs:4`, owns scanner state at `skinny/crates/runtime/src/grammars/css_l4_declaration_values/generated.rs:8`, and writes rows through `FactSink { out: String }` at `skinny/crates/runtime/src/grammars/css_l4_declaration_values/sink.rs:18`. |
-| CH5-004 | REVISE | 1F's anti-pattern scan misses the CSS source-sidecar coupling, so it has not fully caught the live sidecar implications required by CH5. | 1F anti-patterns list grammar profiles, runtime root aliases, and event witness residue at `restart/audit/totality/p1/1F-anti-pattern.md:32` through `restart/audit/totality/p1/1F-anti-pattern.md:47`, but no CSS source-sidecar row. Live CSS comparator code routes lightningcss evidence through `fixture_sidecar_facts` at `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:222` and `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:234`, writes a `same-plane-source-sidecar` artifact at `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:299`, and validates hardcoded fixture spans in `fixture_sidecar_facts` at `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:504`. V2 should add a 1F row classifying this as comparator-sidecar evidence, not runtime substrate, and requiring the same fenced treatment 1A gives CSS fact streams. |
-| CH5-005 | REVISE | Track 1/Track 2 independence wording is mostly true for parser authority, but V1 inventories need to distinguish "independent parser" from "shared runtime substrate helpers." | 1D says Track 1 and Track 2 share `TapeBuilder` and direct views project over sealed tape at `restart/audit/totality/p1/1D-skinny-lessons.md:30`, while 1E summarizes Lock 1 as honoured from REDRESS Track 1/2 same-`TapeBuilder` evidence at `restart/audit/totality/p1/1E-locks-evidence.md:32`. Live retained Track 2 is hand parser code but imports runtime JSON types, `CapacityPlan`, `OffsetFlags`, and `TapeBuilder` at `skinny/crates/bbnf-bench/src/track2/json.rs:5`, computes capacity through `runtime::grammars::json::scan::structural_capacity_for` at `skinny/crates/bbnf-bench/src/track2/json.rs:24`, and seals `JsonRoot::from_tape` at `skinny/crates/bbnf-bench/src/track2/json.rs:43`. V2 should keep the independence claim for parser implementation while adding this coupling caveat; otherwise "independent Track 2" can be misread as substrate-independent. |
-| CH5-006 | ACCEPT | The old Track 1 == Track 2 bench-private dishonesty appears closed for JSON direct, and 1F correctly keeps it as a pre-block rather than re-opening it. | 1F records generated `parse_direct` as current Track 1 and prior bench-private SinkParser dishonesty as closed at `restart/audit/totality/p1/1F-past-corpora.md:34`. Live direct Track 1 calls `runtime::generated_json::parse_direct` at `skinny/crates/bbnf-bench/src/direct_struct.rs:401`, Track 2 calls `hand::sink_digest` at `skinny/crates/bbnf-bench/src/direct_struct.rs:408`, and the hand parser is a separate `HandParser` over bytes/cursor at `skinny/crates/bbnf-bench/src/direct_struct.rs:454`. |
-| CH5-007 | REVISE | 1F's anti-pattern scan catches event witness residue but under-names the generic-runtime coupling: proof witnesses are generic root exports, not just harmless tests. | 1F notes proof code imports `JsonEventGrammar` and `SheetsEventGrammar` at `restart/audit/totality/p1/1F-anti-pattern.md:34`; 1C more precisely identifies root proof aliases at `restart/audit/totality/p1/1C-runtime-evidence.md:67`. Live runtime root exposes `json_event_grammar_witness` and `sheets_witness` under cfg gates at `skinny/crates/runtime/src/lib.rs:9`. V2 1F should promote this from "residue" to a hidden-coupling row because CH5 is about substrate union proof surfaces as well as production parser surfaces. |
+## Findings
 
-## Required V2 Fold
+| ID | Disposition | Finding | Evidence | Fold directive |
+|---|---|---|---|---|
+| CH5-V1-01 | ACCEPT | 1A correctly says Lock 1 is only partly honored: JSON retained tape exists, but direct/fact/transient planes are not proven as one typed event-cursor schedule. | 1A shows retained `Tape` / `ValueRef` / `JsonDocument` evidence (`restart/audit/totality/p1/1A-substrate-evidence.md:104`-`111`), then says JSON direct owns raw bytes and local cursor and no shared event cursor is shown (`restart/audit/totality/p1/1A-substrate-evidence.md:113`-`121`). 1A's net conclusion is partial Lock 1 closure, not acceptance (`restart/audit/totality/p1/1A-substrate-evidence.md:141`-`143`). | Preserve the partial closure. Do not let 1A-SUB-003/004 wording be read as universal substrate-union acceptance. |
+| CH5-V1-02 | REVISE | 1A/1F do not fully catch the live renamed-scanner/sidecar surface in root generated code: `crates/core` emits and checks in a lazy `OnceCell<StructuralIndex>` on generated `ScanState`, with at least Google Sheets consuming it. | The emitter says any non-empty structural alphabet gets a `OnceCell<StructuralIndex>` field (`crates/core/src/backend/rust/emitter/shapes/dispatcher/support.rs:43`-`49`) and emits that field at `crates/core/src/backend/rust/emitter/shapes/dispatcher/support.rs:445`-`456`. The helper initializes via `scan_structural` (`crates/core/src/backend/rust/emitter/shapes/dispatcher/support.rs:472`-`484`). Checked-in generated JSON carries the field (`crates/core/src/grammar/generated/json.rs:695`-`703`), and generated Google Sheets defines and consumes it in `skip_space_slow` (`crates/core/src/grammar/generated/google_sheets.rs:3542`-`3560`, `crates/core/src/grammar/generated/google_sheets.rs:3582`-`3605`). 1F's sidecar scan asks for `EventCursor`, `structural_offsets`, `TapeAssembler`, and CSS sidecar terms, but not `OnceCell<StructuralIndex>` / `scan_structural` (`restart/audit/totality/p1/1F-coherence-scan.md:132`). | Add a V2 1A/1F row for root `OnceCell<StructuralIndex>`: classify `substrate_target`, `retention_lifetime`, and `policy_owner`. If it is only per-parse generated scratch, fence as `local_temp_only` / generated-function. If retained across document identity, public API, or cross-call boundary, reject under Lock 1. Expand scans to `OnceCell<StructuralIndex>|scan_structural|ensure_structural_index|next_structural_at_or_after`. |
+| CH5-V1-03 | ACCEPT | JSON Track 1 == Track 2 dishonesty is not currently reopened, but V2 must keep the shared-runtime-helper caveat visible. | 1F-past-corpora keeps the prior Track 1 == Track 2 dishonesty as a pre-block (`restart/audit/totality/p1/1F-past-corpora.md:80`-`81`). Live direct Track 1 calls generated `parse_direct` (`skinny/crates/bbnf-bench/src/direct_struct.rs:421`-`423`), while Track 2 uses the hand path (`skinny/crates/bbnf-bench/src/direct_struct.rs:428`). Four-way strict product compares Track 1, Track 2, serde, and sonic (`skinny/crates/bbnf-bench/src/direct_struct.rs:490`-`494`). For retained Track 2, 1F auxiliary correctly notes shared runtime tape helpers (`restart/audit/totality/p1/1F-anti-pattern.md:71`). | Keep the distinction: Track 2 may be an independent parser authority while sharing runtime tape helpers. It must not be cited as substrate-independent or as Track 1 closure. |
+| CH5-V1-04 | REVISE | CSS fact streams and source-sidecar comparator evidence are mostly catalogued, but the main V1 1F row is too weak unless it imports the auxiliary AP-020 classification. | 1A classifies CSS fact output as a substrate target, not a backend shape, and flags metadata drift (`restart/audit/totality/p1/1A-substrate-evidence.md:123`-`130`). The 1F auxiliary AP-020 names the CSS comparator sidecar and corrected line anchors (`restart/audit/totality/p1/1F-anti-pattern.md:80`). Live `lightningcss_facts` returns `fixture_sidecar_facts(input)` (`skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:636`-`648`), `fixture_sidecar_facts` starts at `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:2691`, and seven equality artifacts label `same-plane-source-sidecar` (`skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:1080`-`1085`, `:1200`-`:1206`, `:1351`-`:1357`, `:1508`-`:1514`, `:1658`-`:1664`, `:1812`-`:1818`, `:1961`-`:1967`). | Re-emit the CSS sidecar row in the current V2 1F packet, not only in stale-cycle auxiliary context. Fence it as comparator/output-plane evidence only; never as retained runtime substrate or CSS value API proof. |
+| CH5-V1-05 | REVISE | SK-V15 broadcast-admission detection is not missed, but it is not yet folded as a CH5-specific honesty directive. | SK-V15 adds `NEW-CH5-V5-02`: N admits require N distinct measurement rows unless explicitly aggregate (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:107`-`108`). 1D marks CSS 24-row admit as one broadcast aggregate, not 24 independent measurements (`restart/audit/totality/p1/1D-skinny-lessons.md:143`-`148`). 1E proposes LAC-1E-V1-07 with the same rule (`restart/audit/totality/p1/1E-locks-evidence.md:128`). Live CSS code hardcodes `W8_SELECTED_CSS_ROWS = 24` (`skinny/crates/bbnf-bench/src/css_l4_w8.rs:16`-`17`) and sets `admitted_rows` to that constant from one aggregate admit decision (`skinny/crates/bbnf-bench/src/css_l4_w8.rs:139`-`145`). | V2 CH5 must carry an explicit broadcast row: one aggregate timing may produce one aggregate diagnostic row only. Any future 24 CSS admits need 24 distinct `measurement_row_id` / `broadcast_group_id` evidence or fail CH5 as Track/admission-plane dishonesty. |
 
-V2 should preserve the accepted Lock 1 divergences from 1A/1C, then add three explicit classifications: renamed structural scanner plane, CSS source-sidecar comparator plane, and Track 2 shared-substrate-helper caveat. The revised wording should not claim these are retained parallel substrates unless evidence shows retained document identity; it should say they are live coupling planes that must remain transient, fenced, and non-authoritative.
+## Fold Directives
+
+1. **F-CH5-V1-01 - root structural-index sidecar census.** Add the
+   `OnceCell<StructuralIndex>` / `scan_structural` / `ensure_structural_index`
+   scan to 1A and 1F. Classify every hit under Lock 1's target/lifetime/owner
+   vocabulary; do not close substrate union while any retained structural index
+   is unclassified.
+2. **F-CH5-V1-02 - current-cycle CSS sidecar fold.** Import AP-020's corrected
+   CSS `same-plane-source-sidecar` evidence into the current V2 1F inventory.
+   Treat it as comparator evidence only.
+3. **F-CH5-V1-03 - Track 1/Track 2 caveat.** Preserve JSON direct Track 1/Track
+   2 separation, but state that retained Track 2 shares runtime tape helpers and
+   is not substrate-independent evidence.
+4. **F-CH5-V1-04 - broadcast admission.** Fold `NEW-CH5-V5-02` into CH5:
+   broadcast row multiplication is Track/admission-plane dishonesty unless
+   explicitly aggregate; N admits need N distinct measurement rows.
+5. **F-CH5-V1-05 - fact-stream vocabulary.** Keep `FactStream` as
+   `admitted_fact_output` / output-plane evidence only. Fix or route the CSS
+   `W7_POLICY_BACKEND_SHAPE = "admitted_fact_output"` drift before any
+   BackendShape-close wording.
+
+## Non-Findings
+
+- No evidence in this pass proves a second retained JSON document identity in
+  skinny runtime. The known skinny `StructuralIndex` in `json/scan.rs` is still
+  catalogued by 1A as transient capacity/proof input (`restart/audit/totality/p1/1A-substrate-evidence.md:132`-`139`).
+- No evidence in this pass reopens the old direct Track 1 == Track 2 bench-private
+  parser dishonesty; current direct Track 1 and Track 2 use separate generated
+  and hand paths, with strict-product parity checks.

@@ -1,8 +1,8 @@
 ---
 agent: 1D
 pass: T-P1-excavation
-cycle: V1
-generated_at: 2026-05-28T03:01:09Z
+cycle: V2
+generated_at: 2026-05-28T04:19:00Z
 spec_surfaces_audited:
   - restart/prompts/totality/PASS-1-EXCAVATION.md
   - skinny/REDRESS.md
@@ -39,7 +39,11 @@ live_truth_method: "nl -ba on PASS-1-EXCAVATION, REDRESS, RESULTS, PASS-IMPL V1 
 prior_cycle_dispositions_folded:
   accepted: []
   rejected: []
-  revised: []
+  revised:
+    - CH2-FOLD-004 added pass-layer JSON-shape leak citations P1-1B-D9/P1-1B-D10
+    - CH3-V1-005 added explicit REDRESS-183/184/209..213 wave-graph pre-block row
+    - CH4-V1-002 added LOC/risk fields for divergence buckets
+    - CH5-V1-04 and CH5-V1-05 added CSS sidecar and broadcast-admission handling
   first_cycle_additions:
     - SKV15-J-JSON-51-GUARD
     - SKV15-J-PARSEONLY-MEMCHR
@@ -146,15 +150,26 @@ PRUNE-WAVE-A and REBUILD-WAVE-E before any CSS >SOTA claim returns.
 | C-4 | disproved | CSS equality oracle is marker/status checking, not equivalent CSS value equality. | `restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A2-admit-mechanism-integrity.md:46`; `restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A2-admit-mechanism-integrity.md:74-78` |
 | C-5 | spec_claims_unimplemented | CSS typed value/document/view/visitor API is missing and blocks CSS >SOTA admission. | `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:56-58`; `restart/skinny/tranches/sk-v15/SYNTHESIS.md:40-42` |
 | C-6 | pending | CSS parser retirement is coupled to typed CSS rebuild proof; deletion/retirement cannot outrun provider proof. | `restart/skinny/tranches/sk-v15/SYNTHESIS.md:91-96`; `restart/skinny/tranches/sk-v15/research/alpha/alpha-F-contract-draft.md:64-69` |
+| C-7 | pre-blocked | REDRESS-183, REDRESS-184, REDRESS-209, REDRESS-210, REDRESS-211, REDRESS-212, and REDRESS-213 are the SK-V14 wave-graph-cycle precedent: a delete or retirement wave cannot close unless the rebuild provider for that artefact has already landed or lands in the same wave. | `skinny/REDRESS.md:5090-5118`; `skinny/REDRESS.md:5171-5293`; `restart/skinny/tranches/sk-v15/SYNTHESIS.md:102-106`; `restart/skinny/tranches/sk-v15/research/alpha/alpha-F-contract-draft.md:64-69` |
 
 ## Divergences Catalogued
 
-| divergence | count bucket | evidence | V1 impact |
-|---|---:|---|---|
-| Proved/currently implemented skinny lessons that V1 may cite with scope qualifiers: JSON 51-row guard, W11W parse_only, strict product rows, hot-leaf attribution discipline, same tape substrate, aarch64 admission pin, root candidate process discipline. | 7 implemented | `skinny/RESULTS.md:139-149`; `skinny/REDRESS.md:6254-6284`; `restart/skinny/tranches/sk-v15/research/p1/p1e-hot-leaf-attribution.md:31-35`; `restart/skinny/tranches/sk-v15/research/p2/p2d-substrate-tape.md:12-15`; `restart/skinny/tranches/sk-v15/HANDOFF.md:16-18`; `restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:22-32` | Scope these as JSON-empirical or process/substrate, not proof of CSS/generalized codegen. |
-| Disproved/unimplemented claims: CSS broadcast, CSS generated string, CSS comparator/equality mismatch, CSS Value API absence, Lock 14/16 gate holes, Pattern H ownership gap, Decision Engine scaffold, codegen grammar-family leaks, retained sidecars, harness/hash primitive misuse. | 10 unimplemented | `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:21-58`; `restart/skinny/tranches/sk-v15/audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md:16-24`; `restart/skinny/tranches/sk-v15/research/p2/p2d-substrate-tape.md:50-58`; `restart/skinny/tranches/sk-v15/research/p1/p1e-hot-leaf-attribution.md:31-35` | V1 must not describe SK-V15 as at generalisation inflection until these close. |
-| Implementation/evidence exceeds old totality schema: CSS anti-broadcast telemetry fields, new CH3/CH5/CH7 addenda, and P1/P2 normalized evidence surfaces. | 3 impl_exceeds_spec | `restart/skinny/tranches/sk-v15/SYNTHESIS.md:98-127`; `restart/skinny/tranches/sk-v15/research/alpha/alpha-A-results-extraction.md:48-62`; `restart/skinny/tranches/sk-v15/research/p1/p1e-hot-leaf-attribution.md:31-35` | V1 schema should absorb anti-broadcast fields, gate-exclusion reporting, and normalized hot-leaf evidence. |
-| Unknown/pending close surfaces: FNV quarantine, JSON c/B misses, CSS typed API/re-timing, Lock 14/16 gate restoration, Pattern H round-trip, Decision Engine emission diffs, grammar-neutral parse-that vocabulary, primitive same-wave consumers. | 8 unknown | `restart/skinny/tranches/sk-v15/SYNTHESIS.md:70-80`; `restart/skinny/tranches/sk-v15/research/p1/p1d-pmu-cycles.md:70-73`; `restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md:27-29`; `restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:24-32` | These are S-P3 / T-P3 routing inputs, not close evidence. |
+| divergence | count bucket | loc_delta_estimate | risk | evidence | V1 impact |
+|---|---:|---:|---|---|---|
+| Proved/currently implemented skinny lessons that V1 may cite with scope qualifiers: JSON 51-row guard, W11W parse_only, strict product rows, hot-leaf attribution discipline, same tape substrate, aarch64 admission pin, root candidate process discipline. | 7 implemented | 0-120 doc LOC | medium if overgeneralized | `skinny/RESULTS.md:139-149`; `skinny/REDRESS.md:6254-6284`; `restart/skinny/tranches/sk-v15/research/p1/p1e-hot-leaf-attribution.md:31-35`; `restart/skinny/tranches/sk-v15/research/p2/p2d-substrate-tape.md:12-15`; `restart/skinny/tranches/sk-v15/HANDOFF.md:16-18`; `restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:22-32` | Scope these as JSON-empirical or process/substrate, not proof of CSS/generalized codegen. |
+| Disproved/unimplemented claims: CSS broadcast, CSS generated string, CSS comparator/equality mismatch, CSS Value API absence, Lock 14/16 gate holes, Pattern H ownership gap, Decision Engine scaffold, codegen grammar-family leaks, retained sidecars, harness/hash primitive misuse. | 10 unimplemented | 1,500-8,000 implementation LOC plus gate work | high | `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:21-58`; `restart/skinny/tranches/sk-v15/audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md:16-24`; `restart/skinny/tranches/sk-v15/research/p2/p2d-substrate-tape.md:50-58`; `restart/skinny/tranches/sk-v15/research/p1/p1e-hot-leaf-attribution.md:31-35` | V1 must not describe SK-V15 as at generalisation inflection until these close. |
+| Implementation/evidence exceeds old totality schema: CSS anti-broadcast telemetry fields, new CH3/CH5/CH7 addenda, and P1/P2 normalized evidence surfaces. | 3 impl_exceeds_spec | 200-600 doc/gate LOC | medium | `restart/skinny/tranches/sk-v15/SYNTHESIS.md:98-127`; `restart/skinny/tranches/sk-v15/research/alpha/alpha-A-results-extraction.md:48-62`; `restart/skinny/tranches/sk-v15/research/p1/p1e-hot-leaf-attribution.md:31-35` | V1 schema should absorb anti-broadcast fields, gate-exclusion reporting, and normalized hot-leaf evidence. |
+| Unknown/pending close surfaces: FNV quarantine, JSON c/B misses, CSS typed API/re-timing, Lock 14/16 gate restoration, Pattern H round-trip, Decision Engine emission diffs, grammar-neutral parse-that vocabulary, primitive same-wave consumers. | 8 unknown | 400-3,000 implementation LOC per receiver | high | `restart/skinny/tranches/sk-v15/SYNTHESIS.md:70-80`; `restart/skinny/tranches/sk-v15/research/p1/p1d-pmu-cycles.md:70-73`; `restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md:27-29`; `restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:24-32` | These are S-P3 / T-P3 routing inputs, not close evidence. |
+
+## V2 Hardening Fold
+
+| fold | disposition |
+|---|---|
+| CH2-FOLD-004 | 1B pass-layer leaks `P1-1B-D9` and `P1-1B-D10` are now carried as grammar-neutral Lock 14 failures: recognizer mining and materialization role mining are JSON-shaped generic pass logic, not JSON-only empirical lessons. |
+| CH3-V1-005 | Added `C-7` wave-graph-cycle pre-block naming REDRESS-183/184/209..213 and binding `NEW-CH3-V5-01` dependency-table logic. |
+| CH4-V1-002 | Added LOC and risk fields to the divergence table. |
+| CH5-V1-05 | Broadcast CSS admits are treated as admission-plane dishonesty unless rows are explicitly aggregate or carry distinct `measurement_row_id` / `broadcast_group_id`. |
+| CH5-V1-04 | CSS source-sidecar comparator evidence is comparator-only and cannot be used as runtime substrate or CSS Value API proof. |
 
 ## Gaps / Missing Primitives
 

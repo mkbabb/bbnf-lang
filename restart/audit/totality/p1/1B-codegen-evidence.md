@@ -1,15 +1,17 @@
 ---
 agent: 1B
 pass: T-P1-excavation
-cycle: V1
-generated_at: 2026-05-28T02:59:56Z
+cycle: V2
+generated_at: 2026-05-28T04:18:00Z
 spec_surfaces_audited: [PASS-1-EXCAVATION.md, ORCHESTRATOR.md, ARCHITECTURE.md, MASTER-PLAN.md, LOCKS.md]
 files_audited_count: 23
 live_truth_method: "end-to-end PASS-1 prompt read; ORCHESTRATOR §3W/§3Z line read; nl -ba line reads of ARCHITECTURE/MASTER-PLAN/LOCKS; rg symbol scans; wc -l preflight; static line reads of skinny/crates/codegen/src/lower/*.rs, codegen/src/{lib.rs,grammar_profile.rs,grammar_provider.rs,runtime_generator.rs}, passes/src/*.rs, ir/src/*.rs; no cargo test"
 prior_cycle_dispositions_folded:
   accepted: []
   rejected: []
-  revised: []
+  revised:
+    - CH3-V1-007 and CH7-FOLD-003 added EventTape / typed-event cursor REDRESS fences
+    - CH2-FOLD-004 routed pass-layer JSON-shape leaks P1-1B-D9/P1-1B-D10 into 1D
   first_cycle_additions: [P1-1B-D1, P1-1B-D2, P1-1B-D3, P1-1B-D4, P1-1B-D5, P1-1B-D6, P1-1B-D7, P1-1B-D8, P1-1B-D9, P1-1B-D10, P1-1B-D11]
 divergence_count:
   spec_claims_implemented: 8
@@ -58,6 +60,14 @@ The material gaps are in concrete lowering and grammar neutrality. Four retained
 | `SinkOnly` | Direct typed-field writes with no retained queryable document (`restart/ARCHITECTURE.md:1104`-`1108`, `restart/ARCHITECTURE.md:1185`). | `admits_sink_only` checks `DirectBuild` plus direct/direct-build consumer flags (`skinny/crates/passes/src/lib.rs:921`-`924`). | `lower_program` emits `SinkOnlyProgram` and captures direct shapes/spans/literals/policy summary (`skinny/crates/codegen/src/lower/sink_only.rs:19`-`28`, `skinny/crates/codegen/src/lower/sink_only.rs:122`-`168`, `skinny/crates/codegen/src/lower/sink_only.rs:170`-`227`). | Only concrete shape lowerer; runtime renderer remains JSON/CSS-specific. |
 | `CollapsedStage` | AVX-512/x86, byte-disjoint hub, concrete transient ASM strategy (`restart/ARCHITECTURE.md:1109`-`1114`, `restart/ARCHITECTURE.md:1171`, `restart/locks/LOCKS.md:515`-`538`). | Predicate checks only AVX512BW and `Entry(_)` (`skinny/crates/passes/src/lib.rs:926`-`928`); `decision_csp` currently rejects collapsed-stage candidates in the SIMD constraint (`skinny/crates/passes/src/decision_csp.rs:78`-`80`). | Marker only (`skinny/crates/codegen/src/lower/collapsed_stage.rs:15`-`17`). | Selector underimplemented/non-admitting; lowerer stub/absent concrete impl. |
 
+## V2 Hardening Fold
+
+| fold | disposition |
+|---|---|
+| EventTape REDRESS fence | `EventTape` rows remain valid totality gaps, but any implementation route must be a generated same-substrate lowering. It must not reopen EventCursor sidecars, retained structural streams, retained class lanes, parser-owned cursor lists, or cross-call classifier state under Lock 1. |
+| Pass-layer JSON-shape leaks | P1-1B-D9 recognizer mining and P1-1B-D10 materialization role mining are grammar-neutral Lock 14 leaks caused by JSON-shaped pass logic, not JSON-only empirical lessons. 1D V2 must cite these rows directly. |
+| Shorthand citation repair | Lowerer sibling references remain readable in this file, but downstream CH1 citation checks should use the fully qualified paths already present in `P1-1B-D7`: `skinny/crates/codegen/src/lower/{eager_tape,offset_tape,event_tape,collapsed_stage}.rs:15`-`17`. |
+
 ## Derive Backend Shape: Eight-Step Diagnostic Vocabulary
 
 | Step | Spec claim | Live evidence | Verdict |
@@ -81,7 +91,7 @@ The material gaps are in concrete lowering and grammar neutrality. Four retained
 | P1-1B-D4 | `SinkOnly` admissibility does not enforce "no post-parse traversal"; retained API consumer defaults true. | Spec `restart/ARCHITECTURE.md:1170`; live flags `skinny/crates/passes/src/lib.rs:362`-`379`; predicate `skinny/crates/passes/src/lib.rs:921`-`924`. | 120-260 | high | Negative fixture with retained path/value consumer plus `DirectBuild` must not select/admit `SinkOnly`. |
 | P1-1B-D5 | `CollapsedStage` predicate lacks explicit `target.arch == x86` and ≥4 byte-disjoint hub checks. | Spec `restart/ARCHITECTURE.md:1171`; Lock `restart/locks/LOCKS.md:520`-`538`; live `skinny/crates/passes/src/lib.rs:926`-`928`. | 180-360 | high | Cross-target fixture with inherited `avx512bw` and non-hub `Entry` must fail closed with `BBNF-COLLAPSEDSTAGE-NOT-VIABLE`. |
 | P1-1B-D6 | `EventTape` selection uses alt density instead of retained payload/recovery/layout side facts. | Spec `restart/ARCHITECTURE.md:1172`; live `skinny/crates/passes/src/lib.rs:930`-`932`. | 120-260 | medium | Fixture side-fact retention without 8 alt branches must select or rank `EventTape`; 8-arm no-side-fact rule must not be admitted solely on density. |
-| P1-1B-D7 | Four of five shape lowerers are marker strings, not concrete source/ASM artefact emitters. | Spec `restart/ARCHITECTURE.md:1178`-`1187`; live stubs `skinny/crates/codegen/src/lower/eager_tape.rs:15`-`17`, `offset_tape.rs:15`-`17`, `event_tape.rs:15`-`17`, `collapsed_stage.rs:15`-`17`. | 800-1600 | high | Golden generated-source tests for Eager/Offset/Event and checkasm/parity harness for CollapsedStage. |
+| P1-1B-D7 | Four of five shape lowerers are marker strings, not concrete source/ASM artefact emitters. | Spec `restart/ARCHITECTURE.md:1178`-`1187`; live stubs `skinny/crates/codegen/src/lower/eager_tape.rs:15`-`17`, `skinny/crates/codegen/src/lower/offset_tape.rs:15`-`17`, `skinny/crates/codegen/src/lower/event_tape.rs:15`-`17`, `skinny/crates/codegen/src/lower/collapsed_stage.rs:15`-`17`. | 800-1600 | high | Golden generated-source tests for Eager/Offset/Event and checkasm/parity harness for CollapsedStage. |
 | P1-1B-D8 | Runtime generation remains grammar-name/profile hardcoded even after provider-module collapse. | Lock `restart/locks/LOCKS.md:368`-`375`; live roster `skinny/crates/codegen/src/grammar_profile.rs:89`-`99`; JSON/CSS render branches `skinny/crates/codegen/src/runtime_generator.rs:32`-`153`. | 450-1000 | high | Add non-JSON/non-CSS grammar by grammar source + metadata only; no new codegen `.rs` branch or profile constant. |
 | P1-1B-D9 | Recognizer mining is JSON-punctuation-coded. | Lock `restart/locks/LOCKS.md:269`-`286`; live whitelist `skinny/crates/passes/src/lib.rs:332`-`359`. | 250-500 | medium-high | Sheets/BBNF-self/CSS fixture must derive recognizer alphabet from generated facts with no pass-crate edit. |
 | P1-1B-D10 | Materialization role mining is JSON-role-coded. | Lock `restart/locks/LOCKS.md:368`-`375`; live role mining `skinny/crates/passes/src/lib.rs:1354`-`1435`. | 250-500 | medium-high | Non-JSON role facts fixture must derive from generated metadata rather than `{}`, `[]`, `:`, `true`, `false`, `null`. |
@@ -110,5 +120,5 @@ The material gaps are in concrete lowering and grammar neutrality. Four retained
 | Candidate | Target | Supporting evidence | Disposition boundary |
 |---|---|---|---|
 | Register or retire the live extra diagnostics `BBNF-DOMINATED-ALTERNATIVE` and `BBNF-COSTFACTS-MISSING-EVIDENCE`. | ARCH §7.5 / Lock 10 diagnostic vocabulary. | Live diagnostics at `skinny/crates/passes/src/diagnostics.rs:48`-`64`; emission at `skinny/crates/passes/src/lib.rs:440`-`451`; ARCH only names backend-shape inconsistent and collapsed-stage viability at `restart/ARCHITECTURE.md:1471`-`1472`. | Candidate only; 1E/3C decides. |
-| Update stale ARCH leak census text that still refers to a `RuntimeProvider` enum at `grammar_profile.rs:17`-`26`; live leak is an eight-profile static roster plus renderer branches, not an enum. | ARCH §7.4 / Lock 14 evidence wording. | Spec census `restart/ARCHITECTURE.md:1283`-`1293`; live roster `skinny/crates/codegen/src/grammar_profile.rs:89`-`99`; `find skinny/crates/codegen/src -maxdepth 1 -name '*_provider.rs'` returns only `grammar_provider.rs`. | Candidate only; 1E/3C decides. |
+| Update stale ARCH leak census text that still refers to a removed runtime-provider enum at `restart/ARCHITECTURE.md:1283`-`1293`; live leak is an eight-profile static roster plus renderer branches, not an enum. | ARCH §7.4 / Lock 14 evidence wording. | Spec census `restart/ARCHITECTURE.md:1283`-`1293`; live roster `skinny/crates/codegen/src/grammar_profile.rs:89`-`99`; `find skinny/crates/codegen/src -maxdepth 1 -name '*_provider.rs'` returns only `grammar_provider.rs`. | Candidate only; 1E/3C decides. |
 | Clarify Lock 10's "8-priority decision tree" wording against current ARCH pipeline wording: P1-P8 is diagnostic-only, while egraph+CSP+active cost owns selection. | Lock 10 / ARCH §7.3. | Lock text still says `ARCHITECTURE.md §7.3's 8-priority decision tree` (`restart/locks/LOCKS.md:269`); ARCH says pipeline, not fixed cascade (`restart/ARCHITECTURE.md:1118`-`1128`, `restart/ARCHITECTURE.md:1165`-`1176`); live code uses egraph+CSP (`skinny/crates/passes/src/lib.rs:497`-`500`). | Candidate only; 1E/3C decides. |

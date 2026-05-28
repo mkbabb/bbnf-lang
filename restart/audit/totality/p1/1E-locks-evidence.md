@@ -1,8 +1,8 @@
 ---
 agent: 1E
 pass: T-P1-excavation
-cycle: V1
-generated_at: 2026-05-27T23:07:29-04:00
+cycle: V2
+generated_at: 2026-05-28T04:19:00Z
 spec_surfaces_audited:
   - restart/prompts/totality/PASS-1-EXCAVATION.md
   - restart/locks/LOCKS.md
@@ -37,6 +37,9 @@ prior_cycle_dispositions_folded:
     - PASS-IMPL-V1-pattern-h-67-current-baseline-not-success
     - PASS-IMPL-V1-lock14-gate-exclusion-self-scan-required
     - PASS-IMPL-V1-backendshape-stubs-block-decision-engine-closure
+    - CH3-V1-006 added delete/rebuild dependency LAC
+    - CH4-V1-003/004 added LOC/risk/wave metadata carriers
+    - CH6-V1-1E-UNKNOWN-TABLE converted open questions into UNKNOWN/verify_action table
   first_cycle_additions:
     - L01-factstream-schema-without-sixth-backendshape
     - L08-broadcast-admission-detector
@@ -46,7 +49,7 @@ divergence_count:
   spec_claims_unimplemented: 10
   impl_exceeds_spec: 2
   unknown: 2
-locks_amendment_candidates: 14
+locks_amendment_candidates: 15
 ---
 
 # Totality T-P1 1E Locks Evidence
@@ -103,7 +106,7 @@ amend locks.
 | D-1E-V1-01 | L08, L14 | CSS L4 admits are currently over-stated: 24 conceptual rows reuse one full-parse measurement. | `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:19-34`; `skinny/RESULTS.md:139-149`. |
 | D-1E-V1-02 | L08 | CSS comparator plane is workload-mismatched; cssparser beats Track 1 in the same measurement while lightning-css builds a fuller CSSOM. | `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:29`; CSS rows expose `track1_mbps=2319.041;cssparser_mbps=2362.037;lightningcss_mbps=929.281` around `skinny/RESULTS.md:112-135`. |
 | D-1E-V1-03 | L01, L08, L14 | CSS `FactStream` is a string-returning runtime path, not a typed value API. | `skinny/crates/codegen/src/runtime_generator.rs:670-717`; PASS-IMPL no-CSS-value finding at `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:56-58`. |
-| D-1E-V1-04 | L10 | Four `BackendShape` lowerers are stubs, so 5-shape canon is not the same as 5-shape implementation. | PASS-IMPL `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:49-54`; `skinny/crates/codegen/src/lower/eager_tape.rs:15-17`; `offset_tape.rs:15-17`; `event_tape.rs:15-17`; `collapsed_stage.rs:15-17`. |
+| D-1E-V1-04 | L10 | Four `BackendShape` lowerers are stubs, so 5-shape canon is not the same as 5-shape implementation. | PASS-IMPL `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:49-54`; `skinny/crates/codegen/src/lower/eager_tape.rs:15-17`; `skinny/crates/codegen/src/lower/offset_tape.rs:15-17`; `skinny/crates/codegen/src/lower/event_tape.rs:15-17`; `skinny/crates/codegen/src/lower/collapsed_stage.rs:15-17`. |
 | D-1E-V1-05 | L04, L10 | Decision engine is wired but not load-bearing. | `skinny/crates/passes/src/backend_egraph.rs:66`; `skinny/crates/passes/src/decision_csp.rs:162-166`; PASS-IMPL `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:49-54`. |
 | D-1E-V1-06 | L13, L14 | Pattern H remains 67 files with 0 generated headers in root core runtime. | PASS-IMPL `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:37-43`; live `find`/`rg` transcript captured in Verified Invariants above. |
 | D-1E-V1-07 | L14 | Lock 14 gate has an exclusion list that hides runtime generator and JSON template surfaces. | `skinny/crates/bbnf-bench/src/lock14_baseline.rs:2370-2379`; PASS-IMPL `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:45-47`. |
@@ -133,6 +136,44 @@ amend locks.
 | LAC-1E-V1-12 | refinement | L13, L14 | Treat Pattern H `67` as a recurring current-count invariant, not a success metric; success requires `67/67` generated headers or documented per-file exceptions. | `restart/locks/LOCKS.md:402-419`; PASS-IMPL `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:37-43`; live count transcript in this artifact. |
 | LAC-1E-V1-13 | refinement | L15 | Distinguish skinny profile compliance from root profile compliance, and annotate `target-cpu=native` rows as host-bound admission evidence. | `restart/locks/LOCKS.md:436-451`; `skinny/Cargo.toml:78-83`; `Cargo.toml:80-82`; PASS-IMPL `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:71-73`. |
 | LAC-1E-V1-14 | refinement | L16 | Require a primitive traceability manifest plus cohort-wide `BBNF_SIMD_STRICT=1` evidence for SIMD/ASM admission; non-strict local parity runs are diagnostic only. | `restart/locks/LOCKS.md:453-491`; `skinny/crates/bbnf-simd/src/dispatch.rs:50-63`; `skinny/crates/bbnf-simd/tests/checkasm_parity.rs:16-18`; `skinny/crates/bbnf-simd/tests/checkasm_parity.rs:114`. |
+| LAC-1E-V2-15 | addition | L08, L14 | Add delete/rebuild dependency proof: any wave deleting or retiring artefact X must prove the rebuild provider for X has landed no later than that same wave. | `restart/skinny/tranches/sk-v15/SYNTHESIS.md:102-106`; `restart/skinny/tranches/sk-v15/research/alpha/alpha-F-contract-draft.md:64-69`; REDRESS wave-cycle precedent in `skinny/REDRESS.md:5090-5118` and `skinny/REDRESS.md:5171-5293`. |
+
+## V2 Cost / Wave Alignment Carrier
+
+| row | loc_delta_estimate | risk | wave_hint | hard_cap | evidence note |
+|---|---:|---|---|---:|---|
+| D-1E-V1-01 | 300-900 | high | REBUILD-WAVE-E / T-P3 3C | 1200 LOC | CSS fact-stream schema and typed Value API routing. |
+| D-1E-V1-02 | 50-160 | medium | T-P3 3C | 240 LOC | Layout naming/spec narrowing. |
+| D-1E-V1-03 | 80-220 | medium | T-P3 3C + codegen proof wave | 300 LOC | Requires captured `rg -n '__EAGER_EMPTY_PATH'` negative transcript before amendment closure. |
+| D-1E-V1-04 | 120-260 | medium | T-P3 3C | 360 LOC | egraph/CSP bridge disposition. |
+| D-1E-V1-05 | 300-900 | high | PRUNE-WAVE-D | 1200 LOC | Pattern H generated header and regen proof. |
+| D-1E-V1-06 | 200-600 | medium | T-P3 3C / archive-topology wave | 800 LOC | Requires captured `find crates -maxdepth 1` and `test -d archive` transcript. |
+| D-1E-V1-07 | 120-300 | high | PRUNE-WAVE-A / telemetry gate | 400 LOC | Broadcast-admission detection. |
+| D-1E-V1-08 | 200-600 | high | REBUILD-WAVE-E | 800 LOC | CSS comparator workload parity. |
+| D-1E-V1-09 | 200-600 | medium | REBUILD typed API wave | 800 LOC | Borrow/Cow plus `parse_in` / `parse_owned`. |
+| D-1E-V1-10 | 800-1800 | high | REBUILD-WAVE-F | 2200 LOC | Load-bearing BackendShape evidence. |
+| D-1E-V1-11 | 120-320 | high | PRUNE-WAVE-B | 420 LOC | Lock 14/16 exclusion self-reporting. |
+| D-1E-V1-12 | 1,500-3,000 | high | PRUNE-WAVE-D | 3600 LOC | Pattern H 67 generated ownership. |
+| D-1E-V1-13 | 80-220 | medium | T-P3 3C / bench profile wave | 300 LOC | Profile compliance split. |
+| D-1E-V1-14 | 200-600 | high | REBUILD-WAVE-F / primitive manifest wave | 800 LOC | SIMD strictness and primitive manifest. |
+| LAC-1E-V2-15 | 60-180 | high | S-P3 dependency table + T-P3 3C | 240 LOC | Delete/rebuild wave-cycle guard. |
+
+## V2 Lock 14 / 16 Gate-Exclusion Carrier
+
+| gate | included roots required | currently excluded / suspect roots | exclusion-report proof |
+|---|---|---|---|
+| Lock 14 generic scan | `skinny/crates/codegen/src`, `skinny/crates/passes/src`, `skinny/crates/runtime/src`, `skinny/crates/ir/src`, `xtask/src`, root `crates/core/src/runtime` Pattern H surfaces | `runtime_generator.rs`, `grammar_provider.rs`, JSON direct/typed templates, `json_templates/`, generated root runtime files, and any explicit exclusion list in `lock14_baseline.rs` | Gate output must print included roots, excluded roots, reason for exclusion, and fail if the exclusion list itself contains unreported grammar names. |
+| Lock 16 SIMD manifest | `skinny/crates/bbnf-simd`, runtime call sites, checkasm tests, primitive dispatch tables | scalar-delegate-only primitives, feature-gated aarch64 dispatch, bench-only FNV strict-product scaffolding | Gate output must report every source-present primitive as wired, deleted, scalar-delegate non-ASM, or architecture-blocked with REDRESS. |
+
+## V2 UNKNOWN / Verify-Action Table
+
+| UNKNOWN | why unknown | verify_action |
+|---|---|---|
+| 1E-U1 CSS result demotion timing | Governance timing, not a source fact. | T-P3 should decide whether CSS rows are demoted in spec surfaces immediately or carried as audit-falsified history until replacement rows land. |
+| 1E-U2 FactStream schema vs CSS Value API | The lock can either require typed fact schema or retire fact streams from admission. | T-P3 3C / Omega must choose the schema language; REBUILD-WAVE-E supplies executable evidence. |
+| 1E-U3 egraph/CSP bridge topology | Root dependency may be accepted or split. | `cargo metadata` / `rg -n 'csp_solver|csp-solver' crates/egraph skinny/crates/passes` transcript before amendment. |
+| 1E-U4 root vs skinny Pattern H scope | Root and skinny may need separate closure tracks. | Re-run `find crates/core/src/runtime -mindepth 2 -type f -name '*.rs' | wc -l` and skinny generated-runtime census at T-P3. |
+| 1E-U5 Lock 15 root profile scope | Skinny release and root release differ. | Re-read `Cargo.toml` and `skinny/Cargo.toml` profile sections at T-P3 and decide lock scope. |
 
 ## Gaps / Missing Primitives
 

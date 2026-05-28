@@ -1,123 +1,30 @@
 ---
 agent: 1F
 pass: T-P1-excavation
-cycle: V6
-generated_at: 2026-05-23T00:00:00-04:00
-spec_surfaces_audited:
-  - restart/ARCHITECTURE.md
-  - restart/MASTER-PLAN.md
-  - restart/locks/LOCKS.md
-  - restart/skinny/INDEX.md
-  - skinny/REDRESS.md
-  - skinny/RESULTS.md
-  - restart/skinny/tranches/sk-v14/SYNTHESIS.md
-  - restart/skinny/tranches/sk-v14/audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md
-  - restart/skinny/tranches/sk-v14/audit-overfit/sk-v14-audit-overfit-lock14-scan.md
-  - restart/skinny/tranches/sk-v14/audit-overfit/sk-v14-audit-overfit-generator-truth.md
-  - restart/skinny/tranches/sk-v14/audit-overfit/sk-v14-audit-overfit-pre-restart-pattern.md
-files_audited_count: 67
-live_truth_method: "wc -l + grep -n + find against live skinny/ and crates/core/ source trees; SK-V14 S-P0 audit pack rows cited verbatim for axis A3/A4/A6 findings"
-prior_cycle_dispositions_folded:
-  accepted:
-    - AP-001  # Lock 13 god files (>500 LOC) census kept; specific files refreshed against live wc -l
-    - AP-003  # codegen RuntimeProvider hardcoded grammar enum (refreshed: 8 variants now, not 2)
-    - AP-004  # runtime root grammar-named exports kept
-    - AP-006  # codegen SinkOnly authority closed (impl-exceeds-spec retained)
-    - AP-007  # bench-private SinkParser closed
-    - AP-011  # Track 2 shared-helper classification kept
-  rejected: []
-  revised:
-    - AP-002  # mixed-concern child-count claim deferred to UNKNOWN; live evidence does not separate cohesive fanout
-    - AP-005  # generic grammar parser JSON helper claim refreshed
-    - AP-008  # structural scanner plane kept as transient
-    - AP-009  # CSS lightningcss comparator sidecar classification kept
-    - AP-010  # runtime root proof witness coupling refreshed against current runtime/src/lib.rs:29-33
-  first_cycle_additions:
-    - AP-012  # 8 hand-written per-grammar provider modules under skinny/crates/codegen/ (Pattern P-6)
-    - AP-013  # json_provider::normalize fake @generated header (Pattern P-1 mirror to JSON)
-    - AP-014  # 4 of 7 CSS L4 template generators are CANONICAL_FIXTURE short-circuits (Pattern P-1)
-    - AP-015  # 14 of 15 .bbnf files at /grammar/css/l4/ orphaned (no regen-css subcommand)
-    - AP-016  # 67 hand-written per-grammar runtime files at crates/core/src/runtime/ (Pattern H, V13 64→67)
-    - AP-017  # W8/W9 SCAFFOLD-ONLY: identifiers exist in 3 bench files only (zero in passes/codegen/runtime/ir)
-    - AP-018  # LegacyPath rename shims in 4 parse_with.rs files
-    - AP-019  # builder_template.rs / arena_template.rs doc-comments enshrine Pattern H opt-out as design-of-record
-    - AP-020  # CSS source-sidecar comparator plane at bbnf-bench/src/nonjson_css_l4.rs (V2 CH5-004 binding fold)
-divergence_count:
-  spec_claims_implemented: 3
-  spec_claims_unimplemented: 13
-  impl_exceeds_spec: 1
-  unknown: 3
-locks_amendment_candidates: 0
+cycle: V2
+generated_at: 2026-05-28T04:20:00Z
+status: superseded-historical-auxiliary
+authoritative_live_inventory: restart/audit/totality/p1/1F-coherence-scan.md
 ---
 
-## Executive Summary
+# 1F Anti-Pattern Auxiliary - Superseded For SK-V15 V2
 
-The SK-V14 S-P0 audit pack reproduces the SK-V13 audit-overfit baseline verbatim (54 of 74 findings CONFIRM byte-for-byte; 20 NEW per axis) and quantifies live anti-patterns the V1 spec must register. The live skinny code still violates Locks 13 and 14: `bbnf-bench/src/report.rs` is 8,403 LOC and `bbnf-bench/src/bin/gate.rs` is 5,698 LOC against the Lock 13 500-LOC ceiling; `skinny/crates/codegen/src/grammar_profile.rs:11-25` hand-enumerates eight `RuntimeProvider` variants (`Json` + seven CSS L4 sub-grammars) and `runtime_profiles()` returns those eight providers at `skinny/crates/codegen/src/grammar_profile.rs:101-110`; `skinny/crates/runtime/src/lib.rs:4-25` exports eight `generated_<grammar>` modules from the runtime crate root; and the totality `crates/core/src/runtime/` tree carries 67 hand-written per-grammar files across 9 grammar dirs (up +3 from the V13 baseline of 64 due to the `css_pretty` addition). New rows AP-012..AP-020 cover the SK-V14-binding anti-patterns: per-grammar provider modules (Pattern P-6); JSON `json_provider::normalize` fake `@generated` header mirroring the CSS fake pattern (Pattern P-1 extension); four of seven CSS L4 template generators are `CANONICAL_FIXTURE`/`CAPTURED_W2_INPUT` byte-equality short-circuits (Pattern P-1); 14 of 15 `.bbnf` files at `/grammar/css/l4/` orphaned (no `regen-css` xtask); 67 hand-written per-grammar runtime files (Pattern H, breakdown `bbnf=8, bnf=7, css_l4=7, css_pretty=7, csv=7, ebnf=7, google_sheets=10, json=7, math=7 = 67`); W8/W9 SCAFFOLD-ONLY footprint quantified at 3 bench files; `LegacyPath` rename shims in four `parse_with.rs` files; `builder_template.rs` / `arena_template.rs` doc-comments that enshrine the Pattern H hot-grammar opt-out as design-of-record; and the CSS source-sidecar comparator plane at `bbnf-bench/src/nonjson_css_l4.rs:648` (`fixture_sidecar_facts` callsite), `:2691` (definition), and `:1082, 1203, 1354, 1511, 1661, 1815, 1964` (seven `same-plane-source-sidecar` writer literals) lifted as a separately classifiable anti-pattern row (V2 fold of V1 CH5-004; V3 cite-rebind per HARDENING-T-P1-V2-CONSOLIDATED §3.1 F-V3-CH7-1, replacing fabricated V1 CH5-004 cite cluster `:222,234,299,504` — those line numbers are CSS hex token literals inside an `EXPECTED_FACTS` fixture array and an `impl fmt::Display`, not routing sites; HEAD verified `grep -n 'fixture_sidecar_facts\|same-plane-source-sidecar' skinny/crates/bbnf-bench/src/nonjson_css_l4.rs`).
+This file is no longer an authoritative live SK-V15 T-P1 inventory. The prior contents were a stale SK-V14 anti-pattern ledger and failed SK-V15 V1 CH1, CH2, CH6, and CH7 freshness checks.
 
-## Spec-Claim ↔ Implementation Table
+Use `restart/audit/totality/p1/1F-coherence-scan.md` for current SK-V15 live coherence and anti-pattern evidence.
 
-| ID | Spec claim (path:line) | Impl evidence (path:line) | Verdict | LOC / risk | Note |
-|---|---|---|---|---|---|
-| AP-001 | Lock 13 forbids non-generated files >500 LOC at `restart/locks/LOCKS.md:220` block tail; MASTER `restart/MASTER-PLAN.md:127`. | Live `wc -l`: `bbnf-bench/src/report.rs=8403`, `bbnf-bench/src/bin/gate.rs=5698`, `bbnf-bench/src/nonjson_css_l4.rs=3644`, `bbnf-bench/src/generated_real_typed.rs=3056`, `bbnf-bench/src/lock14_baseline.rs=2119`, `passes/src/lib.rs=1869`, `bbnf-bench/src/real_typed_struct.rs=1460`, `parse-that-regex/src/lib.rs=1214`, `runtime/src/grammars/json/generated.rs=842`, `codegen/src/json_typed_direct.rs=833`, `bbnf-bench/src/direct_struct.rs=830`, `codegen/src/lib.rs=808`, `ir/src/lib.rs=650`. | unimplemented | 500-1200 LOC movement; medium-high | Bench harness may warrant Lock 13 exemption; `passes`, `parse-that-regex`, `ir`, `runtime/grammars/json/generated.rs` are generic source. |
-| AP-002 | Lock 13 also bars directories with >10 children mixing concerns at `restart/locks/LOCKS.md:220`. | UNKNOWN; child-count alone is not a violation. | UNKNOWN mixed-concern status | 80-220 LOC inventory first; medium | Candidate mixed-concern targets: `skinny/crates/bbnf-bench/src/` (carries gate, report, lock14_baseline, real_typed_struct, generated_real_typed, direct_struct, nonjson_css_l4, metadata side by side); cohesive partitions like `bbnf-simd/src/aarch64/` are not violations. |
-| AP-003 | Lock 14 bars grammar enums in generic crates at `restart/locks/LOCKS.md:220`. | `skinny/crates/codegen/src/grammar_profile.rs:17-25` defines `RuntimeProvider::{Json, CssL4DeclarationValues, CssL4DeclarationValuesExtended, CssL4StylesheetSelectors, CssL4VisualFunctions, CssL4AtRulesAndMedia, CssL4VendorAndCustomAtRules, CssL4NestedLayout}` — 8 variants, not 2 as the prior cycle recorded; `runtime_profiles()` returns all 8 providers at `skinny/crates/codegen/src/grammar_profile.rs:101-110`. | unimplemented | 300-700 LOC; high | Explicit grammar-name enum + matching provider modules; PRUNE-3 closure path. |
-| AP-004 | ARCH says generated grammar-specific surface belongs under runtime grammars and metadata, not generic siblings, at `restart/ARCHITECTURE.md:65,69`. | `skinny/crates/runtime/src/lib.rs:4-25` exports `generated_json` + 7 `generated_css_l4_*` modules by name from the runtime crate root. | unimplemented | 150-350 LOC; medium-high | Generated content may live in the runtime, but the root-level `pub mod generated_<grammar>` aliases are the leak. |
-| AP-005 | Lock 14 says generic crates carry zero grammar-named modules / types / features at `restart/locks/LOCKS.md:220`. | `skinny/crates/grammar/src/lib.rs:16-27` and JSON-named tests at `skinny/crates/grammar/src/lib.rs:386-394` still expose JSON-flavored helpers (prior cycle finding refreshed; no live regen). | unimplemented | 80-180 LOC; medium | Per SK-V14 PRUNE-3, this is collapsed into the grammar-agnostic generator template wave. |
-| AP-006 | ARCH §10 says lowerers never inspect Grammar IR at `restart/ARCHITECTURE.md:1017-1020`. | `skinny/crates/codegen/src/lib.rs:92-100` parses grammar source, runs passes, then emits from `BackendIr`; direct renderer requires a lowered `SinkOnlyProgram` at `skinny/crates/codegen/src/lib.rs:145-150`. | implemented | 0 LOC | Codegen authority is no longer purely decorative for SinkOnly. |
-| AP-007 | REDRESS records Track 1 generated direct now calls generated runtime, not bench-private parser, at `skinny/REDRESS.md:535-557`. | `skinny/crates/runtime/src/grammars/json/generated.rs:393-407` contains generated `parse_direct`; `skinny/crates/codegen/src/lib.rs:413-416` asserts emitted direct source contains the BackendIr marker and `parse_direct`. | implemented | 0 LOC | Prior bench-private dishonesty stays closed. |
-| AP-008 | Lock 1 + ARCH require transient scanner planes not to become retained sidecars at `restart/ARCHITECTURE.md:1571-1580`. | `skinny/crates/runtime/src/grammars/json/scan.rs:1-52` exposes JSON-owned `StructuralIndex` producer; no retained document identity proven. | transient scanner plane; UNKNOWN retained identity | 40-120 LOC audit/fencing; medium | Classify and fence as capacity/proof input. |
-| AP-009 | CSS same-plane evidence must not hide comparator sidecars as runtime substrate. | `lightningcss_facts` definition at `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:636` (calls `StyleSheet::parse` + funnels through `fixture_sidecar_facts(input)` at `:648`); `fixture_sidecar_facts` definition at `:2691`; `same-plane-source-sidecar` writer literals at `:1082, 1203, 1354, 1511, 1661, 1815, 1964` (one per CSS L4 sub-grammar wave). V3 cite-rebind per HARDENING-T-P1-V2-CONSOLIDATED §3.1 F-V3-CH7-2: V2 cite `:222-234, :298-303` was fabricated (HEAD verifies those line ranges are CSS hex token literals inside `EXPECTED_FACTS` fixture arrays, not routing sites); CH7 V2 dispatch assertion "lightningcss_facts has zero hits" was itself off — `grep -n 'lightningcss_facts' skinny/crates/bbnf-bench/src/nonjson_css_l4.rs` returns 27 hits (definition + 7 per-grammar siblings + call sites). | comparator-sidecar evidence plane | 60-160 LOC classification; medium-high | Preserve CSS admission evidence; classify comparator-only and non-runtime-authoritative. |
-| AP-010 | ARCH says EventCursor sidecar prepasses are rejected at `restart/ARCHITECTURE.md:1571-1580`. | `skinny/crates/runtime/src/lib.rs:29-33` exposes `json_event_grammar_witness` and `sheets_witness` under proof gates; `skinny/crates/runtime/src/tape/event_grammar_tests.rs:12-20` imports `JsonEventGrammar` and `SheetsEventGrammar`. | Lock 14 leak under unverified proof gate (pending captured `cargo build` evidence to confirm proof-cfg fully fences witnesses from production builds; if proof gates verify, restate as "proof-cfg fenced; production absent") | 80-180 LOC relocation/generation; medium | Proof witnesses need proof-crate or generated routing; verdict-strengthen per CH5-007 + CH6-row-15. |
-| AP-011 | Track 2 benchmark parsers may be independent parser authority only if shared runtime substrate helpers are explicit and non-retained. | `skinny/crates/bbnf-bench/src/track2/json.rs:7` imports `tape::{CapacityPlan, OffsetFlags, TapeBuilder}` from the runtime; `:26` calls `runtime::grammars::json::scan::structural_capacity_for(CapacityPlan::from_env(), …)`; `:34` constructs `TapeBuilder::new(input.as_bytes(), capacity)`; `:45` seals through `JsonRoot::from_tape(self.input, self.tape.finish())`. V3 cite-rebind per HARDENING-T-P1-V2-CONSOLIDATED §3.1 F-V3-CH5-1: V2 `:5,24,43` off-by-2 from HEAD (per CH5 V2 ACCEPT-with-caveat CH5-V2-008). | independent parser authority with shared runtime substrate helpers | 0 LOC classification; low | Preserve classification while keeping helper sharing visible. |
-| AP-012 | NEW. SK-V14 axis A4 `v3-lock14-deep-scan.md §1` flags 8 hand-written per-grammar provider modules under `skinny/crates/codegen/` as the Lock-14 recurrence vector. | Live `find /Users/mkbabb/Programming/bbnf-lang/skinny/crates/codegen/src -maxdepth 1 -name '*_provider.rs'` returns 8 files: `json_provider.rs`, `css_l4_at_rules_and_media_provider.rs`, `css_l4_declaration_values_extended_provider.rs`, `css_l4_declaration_values_provider.rs`, `css_l4_nested_layout_provider.rs`, `css_l4_stylesheet_selectors_provider.rs`, `css_l4_vendor_and_custom_atrules_provider.rs`, `css_l4_visual_functions_provider.rs`. | unimplemented (Pattern P-6) | 400-900 LOC PRUNE-3 collapse; high | 8 provider modules + matching `*_templates/` directories; PRUNE-3 closes this into ONE grammar-agnostic generator. |
-| AP-013 | NEW. SK-V14 axis A4 §1 NEW-1: `json_provider::normalize` mirrors the CSS fake-`@generated` pattern. | `skinny/crates/codegen/src/json_provider.rs:85-99` `include_str!()`s 5 of 6 emitted files; only the `json_sink_direct::render(sink_only)` chunk is grammar-derived (~15% of `generated.rs`). | unimplemented (Pattern P-1 extension to JSON) | 150-400 LOC; high | Hand-written / grammar-derived ratio in `generated.rs` is ~85% / ~15%. |
-| AP-014 | NEW. SK-V14 axis A4 §1 NEW-2: 4 of 7 CSS L4 template generators short-circuit on `CANONICAL_FIXTURE`/`CAPTURED_W2_INPUT` byte-equality. | `skinny/crates/codegen/src/css_l4_nested_layout_templates/generated.rs` (49 LOC) is one example: `if input == CANONICAL_FIXTURE { return Ok(CANONICAL_FACTS.to_string()); } … sink.unsupported(0)`; same pattern in `at_rules_and_media`, `stylesheet_selectors`, `vendor_and_custom_atrules`. | unimplemented (Pattern P-1) | 300-600 LOC; high | Hash-table lookup dressed as parser; PRUNE-2 deletes; PRUNE-2 must run AFTER R4 lands `regen-css` xtask or the rows become unrecoverable. |
-| AP-015 | NEW. SK-V14 axis A4 §1 NEW-3: 14 of 15 `.bbnf` files at `/grammar/css/l4/` are orphaned; no `regen-css*` subcommand in `skinny/xtask/src/main.rs:8`. | Only `Cargo.toml:22` (totality root) cites `grammar/css/l4/stylesheet.bbnf` for the `css_l4` ident; 0 cites in skinny. | unimplemented | 80-160 LOC xtask + harness; medium | R4 lands `cargo xtask regen-css` (the first instance of the `regen-{grammar}` family); R4 must land BEFORE PRUNE-2. |
-| AP-016 | NEW. SK-V14 audit-overfit §1.3: 67 hand-written per-grammar runtime files in `crates/core/src/runtime/{bbnf, bnf, css_l4, css_pretty, csv, ebnf, google_sheets, json, math}/` (Pattern H baseline). | Live: 9 dirs, per-grammar census `bbnf=8, bnf=7, css_l4=7, css_pretty=7, csv=7, ebnf=7, google_sheets=10, json=7, math=7` = 67 (verified `find crates/core/src/runtime/google_sheets -type f -name '*.rs' \| wc -l` returns 10; breakdown `8+7+7+7+7+7+10+7+7 = 67` arithmetically reconciles the asserted total; V13 baseline was 64; +3 from `css_pretty` addition). | unimplemented (Pattern H) | 1500-3000 LOC PRUNE-4 with 9 sub-waves; high | PRUNE-4 collapses all 67 files into the grammar-agnostic generator template output. |
-| AP-017 | NEW. SK-V14 axis A5 NEW-MED: W8 per-grammar policy + W9 same-substrate union footprint quantified at 3 bench files only. | `per_grammar_policy` / `same_substrate_union` / `GrammarConfig` identifiers exist in `skinny/crates/bbnf-bench/src/bin/gate.rs` (14 hits), `skinny/crates/bbnf-bench/src/lock14_baseline.rs` (2 hits inside W1a admit-string literals), `skinny/crates/bbnf-bench/src/report.rs` (4 hits — schema validator). Zero matches in `passes/`, `codegen/`, `runtime/`, `ir/`. | unimplemented (Pattern P-5; SCAFFOLD-ONLY) | 100-200 LOC PRUNE-5 wire; high | PRUNE-5 wires W8 + W9 from SCAFFOLD to LOAD-BEARING; no row admit cites W8/W9 until PRUNE-5 lands. |
-| AP-018 | NEW. SK-V14 axis A6 NEW-HIGH-1: backwards-compat shims via `LegacyPath` aliases. | `crates/core/src/runtime/{json,css_l4,bbnf,google_sheets}/parse_with.rs` (4 files) alias `Path`/`PathSegment` to `LegacyPath`/`LegacySegment` at the `use` site, then lower `TypedSegment` onto `LegacySegment` inside `lower(...)`. | unimplemented (backwards-compat workaround per `[no-backward-compat]`) | 80-180 LOC; medium | Pick canonical path representation; delete the bridge. |
-| AP-019 | NEW. SK-V14 axis A6 NEW-HIGH-2: `builder_template.rs` / `arena_template.rs` doc-comments enshrine Pattern H hot-grammar opt-out as design-of-record. | `crates/core/src/runtime/builder_template.rs:13-31` documents JSON, CSS L4, BBNF as "Distinct shape → distinct module (no template instantiation)"; `arena_template.rs:1-31` documents the same shape: 5 grammars instantiate the template, the rest are hand-written. | unimplemented (substrate doc enshrines opt-out) | 60-160 LOC rewrite; medium-high | Either hot-grammar bodies become genuine codegen output, or the substrate doc is rewritten with a deletion plan; per `[no-workarounds-arch]`. |
-| AP-020 | NEW (V2 fold of V1 CH5-004; V3 cite-rebind per HARDENING-T-P1-V2-CONSOLIDATED §3.1 F-V3-CH7-1). CSS comparator evidence at `bbnf-bench/src/nonjson_css_l4.rs` routes lightningcss facts through a source-sidecar plane that must be classified — same fenced treatment as 1A gives CSS fact streams — to prevent the sidecar from drifting into runtime substrate authority. | Live `bbnf-bench/src/nonjson_css_l4.rs:648` is the `fixture_sidecar_facts(input)` callsite at the tail of `lightningcss_facts`; `:2691` is the `fixture_sidecar_facts` definition; `:1082, 1203, 1354, 1511, 1661, 1815, 1964` are the seven `same-plane-source-sidecar` writer literals (one per CSS L4 sub-grammar wave). Companion classification: AP-009 records the same file at the same comparator-sidecar surface; AP-020 lifts the sidecar-as-anti-pattern row separately so it is not collapsed into AP-009's classification-only entry. **V3 rebind note:** V2 cite cluster `:222,234,299,504` was fabricated (provenance V1 CH5-004; HEAD verifies `:222, :234` are CSS token hex literals inside an `EXPECTED_FACTS` fixture array, `:299` is a `decl…property_hex=…` fixture literal, `:504` is `impl fmt::Display for CssOracleError`). Real cites verified by `grep -n 'fixture_sidecar_facts\|same-plane-source-sidecar' skinny/crates/bbnf-bench/src/nonjson_css_l4.rs`. | comparator-sidecar coupling; fence required (non-runtime-authoritative; not retained document identity) | 40-120 LOC fencing/classification; medium-high | Fence as comparator-only evidence plane; never accept as runtime substrate; pair with 1A CSS fact-stream fencing; cite-target for any future "runtime CSS substrate" admit. |
+## Carry-Forward Rules
 
-## V2 Planning Metadata (authoritative CH4 carrier)
+| rule | binding |
+|---|---|
+| Historical evidence | Prior REDRESS or audit findings may be cited only when the current artifact re-anchors them to live HEAD evidence. |
+| Live LOC / symbol claims | This file carries none. Do not cite it for current LOC counts, provider-module counts, runtime profile rosters, or codegen symbols. |
+| Current anti-pattern rows | Current rows are COH-004 through COH-015 in `1F-coherence-scan.md`, especially Lock 14/16 gate exclusions, Pattern H provenance, Decision Engine scaffold, root `OnceCell<StructuralIndex>`, and CSS source-sidecar comparator coupling. |
+| Gate-exclusion discipline | Current Lock 14 / Lock 16 gate-exclusion carrier is in `1F-coherence-scan.md` V2. |
 
-| ID | loc_budget | risk | wave | hard_cap | same_wave_consumer | evidence_basis |
-|---|---:|---|---|---:|---|---|
-| AP-001 | 500-1200 LOC movement | medium-high | Lock 13 source-split wave | 1500 LOC | Lock 13 lint/report consumer | live `wc -l` summary above |
-| AP-002 | 80-220 LOC inventory | medium | Lock 13 source-split wave (post-inventory) | 300 LOC | mixed-concern child inventory | `restart/locks/LOCKS.md:220`; child-list capture required first |
-| AP-003 | 300-700 LOC | high | SK-V14 PRUNE-3 | 900 LOC | grammar-agnostic generator template consumer | `skinny/crates/codegen/src/grammar_profile.rs:17-25,101-110` |
-| AP-004 | 150-350 LOC | medium-high | SK-V14 PRUNE-3 + Lock 14 runtime-root wave | 500 LOC | generated root export strategy | `skinny/crates/runtime/src/lib.rs:4-25` |
-| AP-005 | 80-180 LOC | medium | SK-V14 PRUNE-3 | 250 LOC | grammar-agnostic generic-crate scan | `skinny/crates/grammar/src/lib.rs:16-27,386-394` |
-| AP-006 | 0 LOC | low | closed authority | 0 LOC | none | `skinny/crates/codegen/src/lib.rs:92-100,145-150` |
-| AP-007 | 0 LOC | low | closed authority | 0 LOC | none | `skinny/REDRESS.md:535-557`; `skinny/crates/runtime/src/grammars/json/generated.rs:393-407` |
-| AP-008 | 40-120 LOC audit/fence | medium | substrate-fencing wave | 180 LOC | retained-substrate audit consumer | `skinny/crates/runtime/src/grammars/json/scan.rs:1-52` |
-| AP-009 | 60-160 LOC classification | medium-high | CSS evidence-accounting wave | 220 LOC | CSS row-plane report consumer | `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:636 (lightningcss_facts def), :648 (fixture_sidecar_facts callsite), :2691 (fixture_sidecar_facts def), :1082, 1203, 1354, 1511, 1661, 1815, 1964 (same-plane-source-sidecar writer literals)` (V3 cite-rebind; V2 `:222-234,298-303` fabricated per HARDENING-T-P1-V2-CONSOLIDATED §3.1 F-V3-CH7-2) |
-| AP-010 | 80-180 LOC relocation | medium | proof-surface wave | 240 LOC | proof-crate or generated witness consumer | `skinny/crates/runtime/src/lib.rs:29-33`; `skinny/crates/runtime/src/tape/event_grammar_tests.rs:12-20` |
-| AP-011 | 0 LOC classification | low | Track 2 evidence-accounting wave | 0 LOC | benchmark report classification | `skinny/crates/bbnf-bench/src/track2/json.rs:7, 26, 34, 45` (V3 cite-rebind; V2 `:5,24,43` off-by-2 per HARDENING-T-P1-V2-CONSOLIDATED §3.1 F-V3-CH5-1) |
-| AP-012 | 400-900 LOC | high | SK-V14 PRUNE-3 | 1200 LOC | grammar-agnostic generator template | `skinny/crates/codegen/src/grammar_profile.rs:17-25`; live `find *_provider.rs` |
-| AP-013 | 150-400 LOC | high | SK-V14 PRUNE-3 / PRUNE-4 | 600 LOC | JSON codegen template consumer | `skinny/crates/codegen/src/json_provider.rs:85-99` |
-| AP-014 | 300-600 LOC delete | high | SK-V14 PRUNE-2 (gated by R4) | 800 LOC | regen-css xtask consumer | `skinny/crates/codegen/src/css_l4_nested_layout_templates/generated.rs` |
-| AP-015 | 80-160 LOC xtask | medium | SK-V14 R4 (before PRUNE-2) | 240 LOC | xtask regen-css subcommand | `skinny/xtask/src/main.rs:8`; 15 `.bbnf` files at `/grammar/css/l4/` |
-| AP-016 | 1500-3000 LOC | high | SK-V14 PRUNE-4 (9 sub-waves) | 4000 LOC | per-grammar generator template consumer | `audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md:194-211`; live per-grammar census |
-| AP-017 | 100-200 LOC wire | high | SK-V14 PRUNE-5 | 280 LOC | runtime consumer of per_grammar_policy / same_substrate_union | `audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md` axis A5 |
-| AP-018 | 80-180 LOC | medium | SK-V14 PRUNE-3 follow-up | 220 LOC | canonical path representation consumer | `crates/core/src/runtime/{json,css_l4,bbnf,google_sheets}/parse_with.rs` |
-| AP-019 | 60-160 LOC | medium-high | SK-V14 PRUNE-4 substrate-doc rewrite | 220 LOC | substrate-template consumer | `crates/core/src/runtime/builder_template.rs:13-31`; `arena_template.rs:1-31` |
-| AP-020 | 40-120 LOC fence/classification | medium-high | CSS evidence-accounting wave (co-wave with AP-009) | 160 LOC | CSS comparator-sidecar fence consumer | `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:648, 2691, 1082, 1203, 1354, 1511, 1661, 1815, 1964` (V3 cite-rebind; V2 `:222,234,299,504` fabricated per HARDENING-T-P1-V2-CONSOLIDATED §3.1 F-V3-CH7-1) |
+## Superseded Claims Not To Reuse As Live Evidence
 
-## Gaps / Missing Primitives
-
-| Gap | Evidence | LOC / risk |
-|---|---|---|
-| No generated registry abstraction for runtime profiles. | `skinny/crates/codegen/src/grammar_profile.rs:101-110` is a static hand-coded 8-profile array. | 200-400 LOC; high |
-| No `cargo xtask regen-css` subcommand. | `skinny/xtask/src/main.rs:8` subcommand list omits any `regen-{grammar}` family member. | 80-160 LOC; medium |
-| No generic root module export strategy for runtime grammars. | `skinny/crates/runtime/src/lib.rs:23-25` aliases grammar names by hand. | 150-350 LOC; medium-high |
-| Lock 13 LOC ceiling does not align with the actual bench-harness footprint. | `bbnf-bench/src/report.rs=8403`, `bbnf-bench/src/bin/gate.rs=5698`; `skinny/REDRESS.md:384-392` flags budget cliffs already. | 150-300 LOC lint/policy; medium |
-| `builder_template.rs` / `arena_template.rs` documentation enshrines hot-grammar opt-out as design-of-record. | `crates/core/src/runtime/builder_template.rs:13-31`; `arena_template.rs:1-31`. | 60-160 LOC rewrite or deletion plan; medium-high |
-
-## Open Questions
-
-| UNKNOWN | Blocking question | verify_action |
-|---|---|---|
-| U-AP-001 | Are bench/report files exempt from the 500-LOC Lock 13 ceiling, or do `bbnf-bench/src/report.rs` (8403) and `bin/gate.rs` (5698) require split before totality synthesis? | 1E proposes Lock 13 bench-harness exception or normal-violation classification; T-P3 disposes. |
-| U-AP-002 | Which `bbnf-bench/src/` children both exceed the fanout threshold and mix concerns under Lock 13? | Capture child list + classify each by concern (admit gate, results renderer, lock14 ledger, real_typed_struct, generated typed, direct struct, nonjson CSS, metadata); only then mark AP-002 implemented/unimplemented. |
-| U-AP-003 | Are negative/no-match searches for `EventCursor` and old sidecar names still true on the current SK-V14 tree? | Capture exact `rg -n 'EventCursor|generated_eventcursor'` output before using absence as closure evidence. |
+- Stale provider-enum and eight provider-module claims.
+- Stale LOC counts for `report.rs`, `gate.rs`, `generated_real_typed.rs`, `lock14_baseline.rs`, and runtime generated files.
+- SK-V14-only CSS sidecar line anchors unless re-anchored by the V2 coherence rows.
+- Any prior-cycle claim as current SK-V15 evidence.

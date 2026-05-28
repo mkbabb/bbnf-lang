@@ -26,7 +26,9 @@ document_exports = [
   "CssDocumentKind",
   "CssFocus",
   "CssPathQuery",
+  "CssVisitor",
   "CssView",
+  "visit_document",
 ]
 value_exports = [
   "CssAngle",
@@ -53,6 +55,7 @@ value_exports = [
   "CssTime",
   "CssTimeUnit",
   "CssTypedValue",
+  "CssRule",
   "Declaration",
   "GenericAtRule",
   "KeyframeBlock",
@@ -62,7 +65,6 @@ value_exports = [
   "StyleRule",
   "StyleSheet",
 ]
-
 [[repr_enums]]
 name = "CssLengthUnit"
 decode = "self"

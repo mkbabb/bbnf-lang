@@ -39,8 +39,8 @@ pub use css_l4::{
     CssFlex, CssFrequency, CssFrequencyUnit, CssFunction, CssGlobalKeyword, CssHueMethod,
     CssKeyframeListId, CssLength, CssLengthUnit, CssMathOperator, CssPathQuery, CssPercentage,
     CssResolution, CssResolutionUnit, CssRuleListId, CssSelectorListId, CssStructBuilder, CssTime,
-    CssTimeUnit, CssTypedValue, CssValueListId, CssView, GenericAtRule, KeyframeBlock,
-    KeyframesRule, MediaRule, StyleRule, StyleSheet,
+    CssTimeUnit, CssTypedValue, CssValueListId, CssView, CssVisitor, GenericAtRule, KeyframeBlock,
+    KeyframesRule, MediaRule, StyleRule, StyleSheet, visit_document as visit_css_document,
 };
 pub use css_pretty::{
     CssPrettyArena, CssPrettyCompound, CssPrettyCompoundId, CssPrettyCompoundKind,

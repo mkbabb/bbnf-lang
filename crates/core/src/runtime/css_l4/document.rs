@@ -4,7 +4,8 @@ use crate::runtime::css_l4::arena::{
     CssValueListId,
 };
 use crate::runtime::css_l4::value::{
-    CssRule, CssTypedValue, Declaration, KeyframeBlock, Selector, StyleSheet,
+    CssColor, CssFunction, CssRule, CssTypedValue, Declaration, GenericAtRule,
+    KeyframeBlock, KeyframesRule, MediaRule, Selector, StyleRule, StyleSheet,
 };
 use crate::runtime::path::{Path, PathSegment};
 #[derive(Debug)]
@@ -207,6 +208,141 @@ pub enum CssDocumentKind {
 }
 pub trait CssPathQuery: Sized {
     fn query<'p>(doc: &CssDocument<'p>, path: Path<'_>) -> Option<Self>;
+}
+pub trait CssVisitor<'p> {
+    fn visit_stylesheet(&mut self, _sheet: &StyleSheet) {}
+    fn visit_rule(&mut self, _rule: &CssRule<'p>) {}
+    fn visit_style_rule(&mut self, _rule: &StyleRule<'p>) {}
+    fn visit_media_rule(&mut self, _rule: &MediaRule<'p>) {}
+    fn visit_keyframes_rule(&mut self, _rule: &KeyframesRule<'p>) {}
+    fn visit_generic_at_rule(&mut self, _rule: &GenericAtRule<'p>) {}
+    fn visit_keyframe_block(&mut self, _block: &KeyframeBlock<'p>) {}
+    fn visit_selector(&mut self, _selector: &Selector<'p>) {}
+    fn visit_declaration(&mut self, _declaration: &Declaration<'p>) {}
+    fn visit_value(&mut self, _value: &CssTypedValue<'p>) {}
+    fn visit_color(&mut self, _color: &CssColor<'p>) {}
+    fn visit_function(&mut self, _function: &CssFunction<'p>) {}
+}
+pub fn visit_document<'p, V>(doc: &CssDocument<'p>, visitor: &mut V)
+where
+    V: CssVisitor<'p> + ?Sized,
+{
+    walk_stylesheet(doc, doc.root(), visitor);
+}
+fn walk_stylesheet<'p, V>(doc: &CssDocument<'p>, sheet: &StyleSheet, visitor: &mut V)
+where
+    V: CssVisitor<'p> + ?Sized,
+{
+    visitor.visit_stylesheet(sheet);
+    walk_rule_list(doc, sheet.rules, visitor);
+}
+fn walk_rule_list<'p, V>(doc: &CssDocument<'p>, id: CssRuleListId, visitor: &mut V)
+where
+    V: CssVisitor<'p> + ?Sized,
+{
+    for rule in doc.rules(id) {
+        walk_rule(doc, rule, visitor);
+    }
+}
+fn walk_rule<'p, V>(doc: &CssDocument<'p>, rule: &CssRule<'p>, visitor: &mut V)
+where
+    V: CssVisitor<'p> + ?Sized,
+{
+    visitor.visit_rule(rule);
+    match rule {
+        CssRule::Style(style) => {
+            visitor.visit_style_rule(style);
+            for selector in doc.selectors(style.selectors) {
+                visitor.visit_selector(selector);
+            }
+            walk_decl_list(doc, style.declarations, visitor);
+        }
+        CssRule::Media(media) => {
+            visitor.visit_media_rule(media);
+            walk_rule_list(doc, media.rules, visitor);
+        }
+        CssRule::Keyframes(keyframes) => {
+            visitor.visit_keyframes_rule(keyframes);
+            for block in doc.keyframes(keyframes.blocks) {
+                visitor.visit_keyframe_block(block);
+                walk_decl_list(doc, block.declarations, visitor);
+            }
+        }
+        CssRule::GenericAt(generic) => visitor.visit_generic_at_rule(generic),
+    }
+}
+fn walk_decl_list<'p, V>(doc: &CssDocument<'p>, id: CssDeclListId, visitor: &mut V)
+where
+    V: CssVisitor<'p> + ?Sized,
+{
+    for declaration in doc.decls(id) {
+        visitor.visit_declaration(declaration);
+        walk_value(doc, &declaration.value, visitor);
+    }
+}
+fn walk_value_list<'p, V>(doc: &CssDocument<'p>, id: CssValueListId, visitor: &mut V)
+where
+    V: CssVisitor<'p> + ?Sized,
+{
+    for value in doc.values(id) {
+        walk_value(doc, value, visitor);
+    }
+}
+fn walk_value<'p, V>(doc: &CssDocument<'p>, value: &CssTypedValue<'p>, visitor: &mut V)
+where
+    V: CssVisitor<'p> + ?Sized,
+{
+    visitor.visit_value(value);
+    match value {
+        CssTypedValue::Color(color) => walk_color(color, visitor),
+        CssTypedValue::Function(function) => walk_function(doc, function, visitor),
+        CssTypedValue::List(id) => walk_value_list(doc, *id, visitor),
+        CssTypedValue::Dimension(_)
+        | CssTypedValue::Number(_)
+        | CssTypedValue::Integer(_)
+        | CssTypedValue::String(_)
+        | CssTypedValue::Ident(_)
+        | CssTypedValue::GlobalKeyword(_)
+        | CssTypedValue::Span(_) => {}
+    }
+}
+fn walk_color<'p, V>(color: &CssColor<'p>, visitor: &mut V)
+where
+    V: CssVisitor<'p> + ?Sized,
+{
+    visitor.visit_color(color);
+    match color {
+        CssColor::Mix(mix) => {
+            walk_color(mix.left, visitor);
+            walk_color(mix.right, visitor);
+        }
+        CssColor::Hex(_)
+        | CssColor::Named { .. }
+        | CssColor::Function(_)
+        | CssColor::Predefined(_) => {}
+    }
+}
+fn walk_function<'p, V>(
+    doc: &CssDocument<'p>,
+    function: &CssFunction<'p>,
+    visitor: &mut V,
+)
+where
+    V: CssVisitor<'p> + ?Sized,
+{
+    visitor.visit_function(function);
+    match function {
+        CssFunction::Calc { args }
+        | CssFunction::Min { args }
+        | CssFunction::Max { args }
+        | CssFunction::Clamp { args }
+        | CssFunction::Gradient { args, .. }
+        | CssFunction::Generic { args, .. } => walk_value_list(doc, *args, visitor),
+        CssFunction::Var { fallback, .. } | CssFunction::Env { fallback, .. } => {
+            walk_value_list(doc, *fallback, visitor);
+        }
+        CssFunction::Url { .. } => {}
+    }
 }
 enum CssWalkCursor<'a, 'p> {
     Sheet(&'a StyleSheet, &'a CssArena<'p>),

@@ -11,7 +11,8 @@ pub use arena::{
 };
 pub use builder::CssStructBuilder;
 pub use document::{
-    CssDeclWalk, CssDocument, CssDocumentKind, CssFocus, CssPathQuery, CssView,
+    CssDeclWalk, CssDocument, CssDocumentKind, CssFocus, CssPathQuery, CssVisitor,
+    CssView, visit_document,
 };
 pub use parse_with::parse_with;
 pub use value::{
@@ -19,6 +20,6 @@ pub use value::{
     CssColorSpace, CssColorType, CssDimension, CssFlex, CssFrequency, CssFrequencyUnit,
     CssFunction, CssGlobalKeyword, CssHueMethod, CssLength, CssLengthUnit,
     CssMathOperator, CssPercentage, CssResolution, CssResolutionUnit, CssTime,
-    CssTimeUnit, CssTypedValue, Declaration, GenericAtRule, KeyframeBlock, KeyframesRule,
-    MediaRule, Selector, StyleRule, StyleSheet,
+    CssTimeUnit, CssTypedValue, CssRule, Declaration, GenericAtRule, KeyframeBlock,
+    KeyframesRule, MediaRule, Selector, StyleRule, StyleSheet,
 };

@@ -793,3 +793,81 @@ fn struct_direct_document_projection_surface_per_grammar() {
     };
     assert!(!bbnf.compound(*bbnf_root).children.is_empty());
 }
+
+#[test]
+fn css_l4_document_visitor_reaches_typed_values() {
+    use bbnf::runtime::css_l4::{
+        CssDimension, CssRule, CssTypedValue, CssVisitor, Declaration, visit_document,
+    };
+
+    #[derive(Default)]
+    struct Counts {
+        stylesheets: usize,
+        style_rules: usize,
+        declarations: usize,
+        values: usize,
+        percentage: bool,
+        color: bool,
+    }
+
+    impl<'p> CssVisitor<'p> for Counts {
+        fn visit_stylesheet(&mut self, _sheet: &bbnf::runtime::css_l4::StyleSheet) {
+            self.stylesheets += 1;
+        }
+
+        fn visit_rule(&mut self, rule: &CssRule<'p>) {
+            if matches!(rule, CssRule::Style(_)) {
+                self.style_rules += 1;
+            }
+        }
+
+        fn visit_declaration(&mut self, _declaration: &Declaration<'p>) {
+            self.declarations += 1;
+        }
+
+        fn visit_value(&mut self, value: &CssTypedValue<'p>) {
+            self.values += 1;
+            match value {
+                CssTypedValue::Dimension(CssDimension::Percentage(percentage))
+                    if (percentage.value - 50.0).abs() < 1e-9 =>
+                {
+                    self.percentage = true;
+                }
+                CssTypedValue::Color(_) => {
+                    self.color = true;
+                }
+                _ => {}
+            }
+        }
+    }
+
+    let doc =
+        CssL4Parser::parse("a { color: #FF00FF; width: 50%; }").expect("CSS typed visitor parse");
+    let mut counts = Counts::default();
+    visit_document(&doc, &mut counts);
+
+    assert_eq!(
+        counts.stylesheets, 1,
+        "visitor should enter stylesheet once"
+    );
+    assert!(
+        counts.style_rules >= 1,
+        "visitor should reach the stylesheet style rule"
+    );
+    assert!(
+        counts.declarations >= 2,
+        "visitor should reach both style declarations"
+    );
+    assert!(
+        counts.values >= 2,
+        "visitor should traverse document-owned typed declaration values"
+    );
+    assert!(
+        counts.color,
+        "visitor should reach the typed color value, not fact-stream text"
+    );
+    assert!(
+        counts.percentage,
+        "visitor should reach width: 50% as CssDimension::Percentage"
+    );
+}

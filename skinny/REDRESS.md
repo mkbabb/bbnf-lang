@@ -6412,3 +6412,33 @@ material differential.
 - Full codegen package testing remains blocked by the same pre-existing dirty
   CSS generated runtime files recorded in W7 and W8. Those files are not part
   of the W9 staged slice.
+
+## SK-V15 W10 FNV Quarantine Admit
+
+- Item 252 closes `G-SK-V15-W10-FNV-QUARANTINE` as `ADMIT-W10`. W10 consumes
+  `DEP-W10-FNV-QUARANTINE` by making the W11L/W11N/W11O closed-enum/FNV
+  evidence bench-only metadata, not a runtime selector, production arbiter, or
+  correctness proof.
+- The bench quarantine witness rejects a hash-equal typed-semantic mismatch and
+  rejects any sidecar declared to share the same closed enum. Hash metadata is
+  accepted only after all Track 1, Track 2, serde, and sonic typed checksums are
+  already equal under an independent typed-semantic sidecar domain.
+- `cargo xtask gate-json --check-results --skv15-fnv-quarantine-report
+  restart/skinny/tranches/sk-v15/research/w10/skv15-W10-fnv-quarantine-report.json`
+  consumes schema `sk-v15-fnv-quarantine-v1`, the exact six W11L/W11N/W11O
+  row ids, adversarial fixture statuses, production migration block status, and
+  non-absent production FNV scan classifications.
+- Production scan evidence is non-empty by design:
+  `crates/core/src/generate/regex/emit/dfa/accel.rs` uses an FNV-1a-style hash
+  for compile-time DFA structure interning/canonical hashing; this is
+  codegen-internal and not an admission or runtime-correctness proof.
+  `skinny/crates/codegen/src/runtime_generator.rs` and the dirty
+  `skinny/crates/runtime/src/grammars/css_l4_*/generated.rs` files emit
+  `input_fnv64` as old CSS diagnostic fact-stream metadata, already outside live
+  CSS admission after W6.
+- Required evidence passed:
+  `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench fnv_quarantine::tests::fnv_quarantine_rejects_matching_hash_with_mismatched_typed_semantics -- --exact`,
+  `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench fnv_quarantine::tests::fnv_quarantine_rejects_shared_closed_enum_sidecar -- --exact`,
+  `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench fnv_quarantine::tests::fnv_quarantine_report_accepts_bench_only_metadata -- --exact`,
+  the W10 `gate-json` report command above, and
+  `rg -n "fnv|FNV" crates/core/src/runtime crates/core/src/backend crates/core/src/generate skinny/crates/runtime/src skinny/crates/codegen/src`.

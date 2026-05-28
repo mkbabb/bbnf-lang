@@ -18,9 +18,9 @@ Owner paths:
 
 Falsifiability gate:
 
-- `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench fnv_quarantine_rejects_matching_hash_with_mismatched_typed_semantics -- --exact`
-- `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench fnv_quarantine_rejects_shared_closed_enum_sidecar -- --exact`
-- `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench fnv_quarantine_report_accepts_bench_only_metadata -- --exact`
+- `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench fnv_quarantine::tests::fnv_quarantine_rejects_matching_hash_with_mismatched_typed_semantics -- --exact`
+- `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench fnv_quarantine::tests::fnv_quarantine_rejects_shared_closed_enum_sidecar -- --exact`
+- `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench fnv_quarantine::tests::fnv_quarantine_report_accepts_bench_only_metadata -- --exact`
 - `cargo xtask gate-json --check-results --skv15-fnv-quarantine-report restart/skinny/tranches/sk-v15/research/w10/skv15-W10-fnv-quarantine-report.json`
 - `rg -n "fnv|FNV" crates/core/src/runtime crates/core/src/backend crates/core/src/generate skinny/crates/runtime/src skinny/crates/codegen/src`
 

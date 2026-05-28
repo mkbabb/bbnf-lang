@@ -1,0 +1,58 @@
+{
+  "schema_version": "sk-v15-fnv-quarantine-v1",
+  "wave_id": "SK-V15-W10",
+  "dep_row": "DEP-W10-FNV-QUARANTINE",
+  "disposition": "ADMIT-W10",
+  "fnv_scope_status": "bench_or_diagnostic_metadata_only",
+  "production_migration_status": "blocked",
+  "runtime_selector_status": "absent",
+  "production_arbiter_status": "absent",
+  "production_hash_correctness_proof_status": "absent",
+  "closed_enum_rows": [
+    "json/y_string_unicode/direct_to_struct/main",
+    "json/y_string_unicode/real_typed_struct/main",
+    "json/unicode_mixed/direct_to_struct/main",
+    "json/unicode_mixed/real_typed_struct/main",
+    "json/gsoc-2018/direct_to_struct/main",
+    "json/gsoc-2018/real_typed_struct/main"
+  ],
+  "adversarial_fixtures": [
+    {
+      "name": "matching_hash_mismatched_typed_semantics",
+      "status": "pass",
+      "consumer": "bbnf_bench::fnv_quarantine::validate_strict_product_witness"
+    },
+    {
+      "name": "shared_closed_enum_sidecar",
+      "status": "pass",
+      "consumer": "bbnf_bench::fnv_quarantine::validate_strict_product_witness"
+    }
+  ],
+  "production_scan": {
+    "command": "rg -n \"fnv|FNV\" crates/core/src/runtime crates/core/src/backend crates/core/src/generate skinny/crates/runtime/src skinny/crates/codegen/src",
+    "hits": [
+      {
+        "path": "crates/core/src/generate/regex/emit/dfa/accel.rs",
+        "classification": "codegen_internal_content_hash",
+        "disposition": "routed_to_REDRESS_252:not_runtime_selector_or_correctness_proof"
+      },
+      {
+        "path": "skinny/crates/codegen/src/runtime_generator.rs",
+        "classification": "css_diagnostic_fact_stream_metadata",
+        "disposition": "routed_to_REDRESS_252:diagnostic_only_old_css_proof"
+      },
+      {
+        "path": "skinny/crates/runtime/src/grammars/css_l4_*/generated.rs",
+        "classification": "generated_css_diagnostic_metadata",
+        "disposition": "routed_to_REDRESS_252:pre_existing_dirty_generated_css_diagnostic_metadata"
+      }
+    ]
+  },
+  "commands": [
+    "cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench fnv_quarantine::tests::fnv_quarantine_rejects_matching_hash_with_mismatched_typed_semantics -- --exact",
+    "cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench fnv_quarantine::tests::fnv_quarantine_rejects_shared_closed_enum_sidecar -- --exact",
+    "cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench fnv_quarantine::tests::fnv_quarantine_report_accepts_bench_only_metadata -- --exact",
+    "cargo xtask gate-json --check-results --skv15-fnv-quarantine-report restart/skinny/tranches/sk-v15/research/w10/skv15-W10-fnv-quarantine-report.json",
+    "rg -n \"fnv|FNV\" crates/core/src/runtime crates/core/src/backend crates/core/src/generate skinny/crates/runtime/src skinny/crates/codegen/src"
+  ]
+}

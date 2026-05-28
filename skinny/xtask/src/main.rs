@@ -10,6 +10,7 @@ mod regen_css;
 const USAGE: &str = "usage: cargo xtask <regen-json|check-json|regen-css|check-css-l4-at-rules-and-media|check-css-l4-declaration-values|check-css-l4-declaration-values-extended|check-css-l4-nested-layout|check-css-l4-stylesheet-selectors|check-css-l4-vendor-and-custom-atrules|check-css-l4-visual-functions|regen-real-typed|check-real-typed|check-conformance|lint-loc|bench-json|gate-json|primitive-checkasm>";
 const SKV15_W2_LOCK_GATES_ONLY_FLAG: &str = "--skv15-w2-lock-gates-only";
 const SKV15_BACKEND_LOWERERS_REPORT_FLAG: &str = "--skv15-backend-lowerers-report";
+const SKV15_FNV_QUARANTINE_REPORT_FLAG: &str = "--skv15-fnv-quarantine-report";
 const PRIMITIVE_CHECKASM_TESTS: &[&str] = &[
     "checkasm_ascii_set_member_find_64",
     "checkasm_byte_class_from_eq_set_64",
@@ -326,6 +327,15 @@ fn gate_json(root: &Path, passthrough: Vec<String>) -> Result<()> {
         validate_skv15_backend_lowerers_report(root, &report_path)?;
         return Ok(());
     }
+    if let Some(report_path) = extract_report_path(&passthrough, SKV15_FNV_QUARANTINE_REPORT_FLAG)?
+    {
+        if !passthrough.iter().any(|arg| arg == "--check-results") {
+            bail!("{SKV15_FNV_QUARANTINE_REPORT_FLAG} requires --check-results");
+        }
+        validate_w0_results_snapshot(root)?;
+        validate_skv15_fnv_quarantine_report(root, &report_path)?;
+        return Ok(());
+    }
     let results_only_check = passthrough.len() == 1 && passthrough[0] == "--check-results";
     if passthrough.iter().any(|arg| arg == "--check-results") {
         validate_w0_results_snapshot(root)?;
@@ -397,7 +407,8 @@ fn validate_gate_json_passthrough(args: &[String]) -> Result<()> {
             | "--skv14-json-parse-only-report"
             | "--skv13-typed-product-report"
             | "--skv13-simd-asm-production-report"
-            | SKV15_BACKEND_LOWERERS_REPORT_FLAG => {
+            | SKV15_BACKEND_LOWERERS_REPORT_FLAG
+            | SKV15_FNV_QUARANTINE_REPORT_FLAG => {
                 if index + 1 >= args.len() {
                     bail!("{} expects one path argument", args[index]);
                 }
@@ -548,6 +559,146 @@ fn validate_skv15_backend_lowerers_report_value(value: &serde_json::Value) -> Re
         "lower_sink_only_emits_runtime_relevant_diff",
         "lower_collapsed_stage_emits_runtime_relevant_diff",
         SKV15_BACKEND_LOWERERS_REPORT_FLAG,
+    ] {
+        if !commands
+            .iter()
+            .filter_map(serde_json::Value::as_str)
+            .any(|command| command.contains(required))
+        {
+            bail!("commands missing `{required}`");
+        }
+    }
+
+    Ok(())
+}
+
+fn validate_skv15_fnv_quarantine_report(root: &Path, report_path: &Path) -> Result<()> {
+    let path = resolve_report_path(root, report_path);
+    let text = std::fs::read_to_string(&path).with_context(|| {
+        format!(
+            "{SKV15_FNV_QUARANTINE_REPORT_FLAG} requires {}",
+            path.display()
+        )
+    })?;
+    let value: serde_json::Value = serde_json::from_str(&text)
+        .with_context(|| format!("{} is not valid JSON", path.display()))?;
+    validate_skv15_fnv_quarantine_report_value(&value).with_context(|| {
+        format!(
+            "{} failed SK-V15 W10 FNV quarantine report validation",
+            path.display()
+        )
+    })
+}
+
+fn validate_skv15_fnv_quarantine_report_value(value: &serde_json::Value) -> Result<()> {
+    require_json_str(value, "schema_version", "sk-v15-fnv-quarantine-v1")?;
+    require_json_str(value, "wave_id", "SK-V15-W10")?;
+    require_json_str(value, "dep_row", "DEP-W10-FNV-QUARANTINE")?;
+    require_json_str(value, "disposition", "ADMIT-W10")?;
+    require_json_str(
+        value,
+        "fnv_scope_status",
+        "bench_or_diagnostic_metadata_only",
+    )?;
+    require_json_str(value, "production_migration_status", "blocked")?;
+    require_json_str(value, "runtime_selector_status", "absent")?;
+    require_json_str(value, "production_arbiter_status", "absent")?;
+    require_json_str(value, "production_hash_correctness_proof_status", "absent")?;
+
+    let expected_rows = [
+        "json/y_string_unicode/direct_to_struct/main",
+        "json/y_string_unicode/real_typed_struct/main",
+        "json/unicode_mixed/direct_to_struct/main",
+        "json/unicode_mixed/real_typed_struct/main",
+        "json/gsoc-2018/direct_to_struct/main",
+        "json/gsoc-2018/real_typed_struct/main",
+    ];
+    let closed_enum_rows = value
+        .get("closed_enum_rows")
+        .and_then(serde_json::Value::as_array)
+        .ok_or_else(|| anyhow!("closed_enum_rows must be an array"))?;
+    let actual_rows = closed_enum_rows
+        .iter()
+        .map(|row| {
+            row.as_str()
+                .ok_or_else(|| anyhow!("closed_enum_rows entries must be strings"))
+        })
+        .collect::<Result<Vec<_>>>()?;
+    if actual_rows != expected_rows {
+        bail!("closed_enum_rows {actual_rows:?} != {expected_rows:?}");
+    }
+
+    let adversarial = value
+        .get("adversarial_fixtures")
+        .and_then(serde_json::Value::as_array)
+        .ok_or_else(|| anyhow!("adversarial_fixtures must be an array"))?;
+    for required in [
+        "matching_hash_mismatched_typed_semantics",
+        "shared_closed_enum_sidecar",
+    ] {
+        let Some(entry) = adversarial
+            .iter()
+            .find(|entry| entry.get("name").and_then(serde_json::Value::as_str) == Some(required))
+        else {
+            bail!("adversarial_fixtures missing {required}");
+        };
+        if entry.get("status").and_then(serde_json::Value::as_str) != Some("pass") {
+            bail!("adversarial fixture {required} must pass");
+        }
+    }
+
+    let production_scan = value
+        .get("production_scan")
+        .and_then(serde_json::Value::as_object)
+        .ok_or_else(|| anyhow!("production_scan must be an object"))?;
+    let command = production_scan
+        .get("command")
+        .and_then(serde_json::Value::as_str)
+        .ok_or_else(|| anyhow!("production_scan.command must be a string"))?;
+    if !command.contains("rg -n \"fnv|FNV\"") {
+        bail!("production_scan.command must include the FNV scan");
+    }
+    let hits = production_scan
+        .get("hits")
+        .and_then(serde_json::Value::as_array)
+        .ok_or_else(|| anyhow!("production_scan.hits must be an array"))?;
+    if hits.is_empty() {
+        bail!("production_scan must record non-absent hits or an explicit route");
+    }
+    for hit in hits {
+        let path = hit
+            .get("path")
+            .and_then(serde_json::Value::as_str)
+            .ok_or_else(|| anyhow!("production_scan hit missing path"))?;
+        let classification = hit
+            .get("classification")
+            .and_then(serde_json::Value::as_str)
+            .ok_or_else(|| anyhow!("production_scan hit {path} missing classification"))?;
+        if matches!(
+            classification,
+            "runtime_selector" | "production_arbiter" | "production_hash_correctness_proof"
+        ) {
+            bail!("production_scan hit {path} has forbidden classification {classification}");
+        }
+        let disposition = hit
+            .get("disposition")
+            .and_then(serde_json::Value::as_str)
+            .ok_or_else(|| anyhow!("production_scan hit {path} missing disposition"))?;
+        if disposition.is_empty() {
+            bail!("production_scan hit {path} has empty disposition");
+        }
+    }
+
+    let commands = value
+        .get("commands")
+        .and_then(serde_json::Value::as_array)
+        .ok_or_else(|| anyhow!("commands must be an array"))?;
+    for required in [
+        "fnv_quarantine_rejects_matching_hash_with_mismatched_typed_semantics",
+        "fnv_quarantine_rejects_shared_closed_enum_sidecar",
+        "fnv_quarantine_report_accepts_bench_only_metadata",
+        SKV15_FNV_QUARANTINE_REPORT_FLAG,
+        "rg -n \"fnv|FNV\"",
     ] {
         if !commands
             .iter()

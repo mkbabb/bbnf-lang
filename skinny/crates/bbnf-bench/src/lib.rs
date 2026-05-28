@@ -1,6 +1,7 @@
 pub mod css_l4_corpus;
 pub mod css_l4_w8;
 pub mod direct_struct;
+pub mod fnv_quarantine;
 pub mod gate;
 pub mod generated_real_typed;
 pub mod json_w9;

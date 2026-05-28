@@ -1,119 +1,151 @@
-# CH3 REGRESSION - T-P1 V5 (SK-V14 Totality)
+# CH3 REGRESSION - T-P1 V5 (SK-V15)
 
-## Lens Contract
+## Verdict
 
-CH3 (per `restart/prompts/totality/PASS-1-EXCAVATION.md §3` line 116-119 + V5 `CHALLENGE-CONTEXT.md §2` CH3 REGRESSION line 27) verifies:
-1. No T-P1 V5 inventory edit re-opens a REDRESS route already rejected, blocked, or admitted-then-falsified.
-2. The 1D PASS-ADMIT vs MEASURED-REJECT vs CORRECTNESS-REJECT taxonomy (V2 fold §2.9 split rows `:140` + `:141` with V4 F-V4-CH3-1 W13.9 sub-label refinement) survives V5 bit-for-bit.
-3. No admitted REDRESS row is silently demoted or mis-catalogued as unimplemented in V5 1D or 1E.
-4. The pre-block list (`skinny/REDRESS.md` rejected categories: REDRESS-16/17/18, W3-W9 SK-V9 union/streaming-cursor REDRESS, W11.4 direct cursor REJECT) remains pre-blocked at V5.
+ACCEPT.
 
-V5 disposition focus (V5 `CHALLENGE-CONTEXT.md §2` line 27): "no V5 edit re-opens REDRESS routes; PASS-ADMIT vs MEASURED-REJECT vs CORRECTNESS-REJECT taxonomy preserved bit-for-bit from V4."
+The SK-V15 V5 citation fold does not weaken the CH3 regression floor. The
+folded inventory commit `af809cf27` touched `1A`, `1B`, and `1F` only; `1D`
+and `1E` were not modified by the fold, and the `1F` change expands FNV
+citations while keeping hash evidence quarantined as telemetry/UNKNOWN. The
+delete/rebuild guard, REDRESS-183/184/209-213 pre-blocks, broader pre-block
+ledger, and V4 CH3 accepted surfaces all remain load-bearing.
 
-V5 is the **LOCK-TRIGGER cycle for T-P1 CH3** — V1 66.7%, V2 100% (first ≥95%), V3 88.9% (1 LOW REVISE: CH3-V3-003 W13.9 label drift), V4 100% (first ≥95% since V2; F-V4-CH3-1 discharged V3 REVISE bit-for-bit), V5 expected 100% (second consecutive ≥95% → COHORT-LOCK-ENABLING under `ORCHESTRATOR.md §3Z` ≥95% × 2 consecutive cycles).
+This is a CH3 lens verdict only. V5 hard-ceiling governance remains an
+aggregator/orchestrator matter: the V5 context states that a clean V5 can close
+known orphan REVISEs but does not by itself create two consecutive clean cycles
+because V4 was REVISE (`restart/audit/totality/p1/hardening/V5/CHALLENGE-CONTEXT.md:26-31`).
 
-## Evidence Base — V5 amended HEAD (commit 9833295d5)
+## Evidence
 
-V5 fold packet (per commit message body) amended **exactly one inventory file** for a single-cell trivial cosmetic anchor refresh:
-- 1E: F-V5-CH6-1 self-cite `:126-128` → `:128-130` at 1E:35 (V4 paragraph insertion shifted LAC-1E-12 block by 2 lines; sed-verified LAC-1E-12 heading now at `:128` + body at `:130`; NEW-CH2-V3-02 propagation guard: pre 1 hit → post 0 hits).
+- CH3 authority is unchanged: the totality prompt requires no inventory to
+  reopen a `skinny/REDRESS.md` route, requires 1D and 1E to identify the
+  rejected-route pre-block list, and forbids mis-cataloguing admitted REDRESS
+  rows as unimplemented (`restart/prompts/totality/PASS-1-EXCAVATION.md:116-119`).
+  The orchestrator repeats the CH3 contract at
+  `restart/prompts/ORCHESTRATOR.md:85` and requires hardening folds before
+  advance at `restart/prompts/ORCHESTRATOR.md:112-120`.
+- V5 context says the existing V5 CH files were stale SK-V14 material and must
+  be superseded by SK-V15 V5 outputs
+  (`restart/audit/totality/p1/hardening/V5/CHALLENGE-CONTEXT.md:3-7`). It
+  scopes CH3 V5 to verifying that the citation fold does not weaken
+  delete/rebuild guards, REDRESS-183/184/209-213, or the broader pre-block
+  ledger (`restart/audit/totality/p1/hardening/V5/CHALLENGE-CONTEXT.md:72-73`).
+- The V5 fold roster is citation/prose-only: F01 expands JSON scan/sink
+  citations in 1A, F02 expands COH-016 FNV citations in 1F, and F03 repairs
+  stale V3 self-description in 1A/1B
+  (`restart/audit/totality/p1/hardening/V5/CHALLENGE-CONTEXT.md:45-52`). The
+  same context requires V4 ACCEPT surfaces to remain intact, including bounded
+  receiver rows, non-admitting primitive rows, telemetry-only FNV/hash evidence,
+  and generated-header-as-file-state treatment
+  (`restart/audit/totality/p1/hardening/V5/CHALLENGE-CONTEXT.md:54-61`).
+- The actual fold diff matches that scope. `git diff --name-only
+  0c79c2b43..af809cf27 -- restart/audit/totality/p1/1{A..F}*.md` reports only
+  `1A-substrate-evidence.md`, `1B-codegen-evidence.md`, and
+  `1F-coherence-scan.md`; `1D-skinny-lessons.md` and `1E-locks-evidence.md`
+  are not in the V5 fold diff. The visible line-level receivers are the 1A
+  stale-prose repair at `restart/audit/totality/p1/1A-substrate-evidence.md:56`,
+  the 1A scan/sink root citation at
+  `restart/audit/totality/p1/1A-substrate-evidence.md:83`, the 1B stale-prose
+  repair at `restart/audit/totality/p1/1B-codegen-evidence.md:37`, and the 1F
+  COH-016 citation expansion at
+  `restart/audit/totality/p1/1F-coherence-scan.md:89-101`.
+- The live delete/rebuild guard remains explicit in 1D: CSS parser retirement
+  cannot outrun typed rebuild proof
+  (`restart/audit/totality/p1/1D-skinny-lessons.md:158`), and REDRESS-183,
+  REDRESS-184, and REDRESS-209 through REDRESS-213 remain the wave-graph-cycle
+  precedent requiring rebuild-provider proof no later than the delete/retire
+  wave (`restart/audit/totality/p1/1D-skinny-lessons.md:159`). The V2 fold
+  ledger keeps `NEW-CH3-V5-01` bound to that pre-block row
+  (`restart/audit/totality/p1/1D-skinny-lessons.md:191`).
+- The lock receiver remains explicit in 1E: LAC-1E-V2-15 requires any
+  deleting/retiring wave to prove the rebuild provider for that artifact has
+  landed no later than the same wave
+  (`restart/audit/totality/p1/1E-locks-evidence.md:144`), and its cost/wave
+  carrier remains high-risk and routed to "S-P3 dependency table + T-P3 3C"
+  (`restart/audit/totality/p1/1E-locks-evidence.md:183`).
+- The independent 1F coherence carrier remains explicit: COH-003 names
+  `NEW-CH3-V5-01` and blocks deletion unless rebuild-provider proof lands no
+  later than the delete wave (`restart/audit/totality/p1/1F-coherence-scan.md:76`);
+  COH-010 records the broader pre-block ledger as implemented
+  (`restart/audit/totality/p1/1F-coherence-scan.md:83`), and the past-corpora
+  ledger repeats that REDRESS-183/184/209..212/213 remain pre-blocked
+  (`restart/audit/totality/p1/1F-coherence-scan.md:161`).
+- Source REDRESS truth still resolves: REDRESS-183 rejects dual-tree W2 before
+  root CSS runtime regeneration (`skinny/REDRESS.md:5092-5101`), REDRESS-184
+  rejects provider/template deletion before replacement generation
+  (`skinny/REDRESS.md:5105-5118`), REDRESS-209 rejects monolithic W5
+  provider/template deletion before a valid generator
+  (`skinny/REDRESS.md:5173-5193`), REDRESS-210 rejects W5B deletion before a
+  provider-free generator (`skinny/REDRESS.md:5197-5217`), REDRESS-211 rejects
+  the provider-free-generator body gap (`skinny/REDRESS.md:5221-5245`),
+  REDRESS-212 rejects the overpacked W5B-FRONTEND authority shape
+  (`skinny/REDRESS.md:5249-5272`), and REDRESS-213 rejects destructive root CSS
+  runtime regeneration without root `regen-css` capability
+  (`skinny/REDRESS.md:5276-5293`).
+- SK-V15 source governance matches the inventory guard: CSS parser retirement is
+  coupled to typed rebuild capability
+  (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:91-96`), `NEW-CH3-V5-01`
+  requires a dependency table proving rebuild capability no later than deletion
+  (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:100-106`), and Alpha-F repeats
+  the same dependency-table columns and same-wave proof requirement
+  (`restart/skinny/tranches/sk-v15/research/alpha/alpha-F-contract-draft.md:64-69`).
+- The broader pre-block ledger remains live. Alpha-C names the wave-graph
+  cycles at `restart/skinny/tranches/sk-v15/research/alpha/alpha-C-redress-digest.md:26-33`,
+  lists the route patterns SK-V15 must not reopen at
+  `restart/skinny/tranches/sk-v15/research/alpha/alpha-C-redress-digest.md:50-62`,
+  and states that any deletion/retirement wave remains blocked until its rebuild
+  provider is proven no later than that wave at
+  `restart/skinny/tranches/sk-v15/research/alpha/alpha-C-redress-digest.md:64-69`.
+  1F carries the same list at `restart/audit/totality/p1/1F-coherence-scan.md:131`
+  and expands it through the past-corpora ledger at
+  `restart/audit/totality/p1/1F-coherence-scan.md:162-166`.
+- Admitted rows are not silently regressed. JSON remains the validated guard
+  baseline in 1D (`restart/audit/totality/p1/1D-skinny-lessons.md:101-105`),
+  in 1F (`restart/audit/totality/p1/1F-coherence-scan.md:84`), in RESULTS
+  (`skinny/RESULTS.md:139-149`), and in Alpha-D
+  (`restart/skinny/tranches/sk-v15/research/alpha/alpha-D-validated-invalidated.md:10-21`).
+  CSS is separately audit-demoted, not treated as a clean unimplemented reopen,
+  in 1D (`restart/audit/totality/p1/1D-skinny-lessons.md:107-110`) and Alpha-D
+  (`restart/skinny/tranches/sk-v15/research/alpha/alpha-D-validated-invalidated.md:25-31`).
+- V4 CH3 accepted these same surfaces: the V4 consolidator records CH3 ACCEPT
+  with `NEW-CH3-V5-01`, REDRESS-183/184/209..213, and delete/rebuild guards
+  load-bearing (`restart/audit/totality/p1/hardening/HARDENING-T-P1-V4-CONSOLIDATED.md:27-29`).
+  V4 CH3's accepted findings cover the live `NEW-CH3-V5-01` carriers, the
+  REDRESS-183/184 block, the REDRESS-209..213 block, bounded receiver rows, the
+  primitive/kernel non-admission table, admitted-row preservation, and the
+  broader pre-block list (`restart/audit/totality/p1/hardening/V4/CH3.md:84-92`).
 
-7 inventories V4-LOCKED unchanged at V5 (per commit message): 1A, 1B, 1C, 1D, 1F-coherence, 1F-anti-pattern, 1F-past-corpora. **1D is V4-LOCKED at V5** — the entire CH3 substantive evidence surface (divergence table, PASS-ADMIT/MEASURED-REJECT/CORRECTNESS-REJECT taxonomy, split rows :140 + :141, sub-case cite refresh at :117) is bit-identical to V4 HEAD.
+Material checks run:
 
-Live truth probed at V5 HEAD (commit 9833295d5, 2026-05-23):
+```sh
+git diff --name-only 0c79c2b43..af809cf27 -- restart/audit/totality/p1/1A-substrate-evidence.md restart/audit/totality/p1/1B-codegen-evidence.md restart/audit/totality/p1/1C-runtime-evidence.md restart/audit/totality/p1/1D-skinny-lessons.md restart/audit/totality/p1/1E-locks-evidence.md restart/audit/totality/p1/1F-coherence-scan.md
 
-| Probe | Source | Result | Verifies |
-|---|---|---|---|
-| V5 commit scope (1 inventory file; CH3 surface untouched) | `git show 9833295d5 --stat` | 2 files / +44 / -1 (`1E-locks-evidence.md` 1 line modified — 1E:35 anchor refresh; `V5/CHALLENGE-CONTEXT.md` 43 new lines) | V5 scope is exactly the 1E:35 single-cell cosmetic — NO 1D edit, NO 1E LAC-table edit, NO 1F edit, NO 1A/1B/1C edit; CH3 substantive surface (1D + 1E LAC ledger + 1F-past-corpora + REDRESS pre-block list) is V4-LOCKED at V5 |
-| REDRESS W13.5-W13.9 verdict labels at V5 HEAD | `sed -n '4621p;4645p;4674p;4704p;4734p' skinny/REDRESS.md` | W13.5=`MEASURED-REJECT`, W13.6=`MEASURED-REJECT`, W13.7=`MEASURED-REJECT`, W13.8=`MEASURED-REJECT`, **W13.9=`CORRECTNESS-REJECT`** | F-V4-CH3-1 byte-target preserved at V5; W13.5-8 MEASURED-REJECT cluster + W13.9 CORRECTNESS-REJECT split byte-confirmed against live REDRESS at V5 HEAD |
-| V5 1D :140 amended evidence_basis cell (V4-LOCKED) | `sed -n '140p' restart/audit/totality/p1/1D-skinny-lessons.md` | Reads "...V2 fold (CH3-005 split #1): **W13.5-W13.8 MEASURED-REJECT at `REDRESS.md:4621/4645/4674/4704`; W13.9 CORRECTNESS-REJECT at `:4734`** — NOT PASS-ADMIT, NOT part of the audit-falsified admit tally..." | V5 1D :140 is bit-identical to V4 1D :140 (1D is V4-LOCKED; commit 9833295d5 touches zero 1D bytes); the F-V4-CH3-1 W13.9 label split sub-cell refinement carries forward unaltered |
-| V5 1D :140 + 1D :141 split rows still both present | `awk 'NR==140 || NR==141' 1D-skinny-lessons.md` | Row 140 = PASS-ADMIT strict cardinality + W13.5-9 fencing (with W13.9 CORRECTNESS-REJECT sub-label from V4); Row 141 = ROLLING-SOTA-DELTA broader overlay (unchanged from V3) | V2 fold §2.9 split rows survive V5 bit-for-bit (both rows V4-LOCKED at V5; V4 1D :140 amended W13.9 sub-cell + V4 1D :117 sub-case cite refresh are both V4-LOCKED at V5 HEAD); no V5 edit reaches 1D |
-| V5 1D divergence-table row count | `awk '/^## Divergences Catalogued/,/^## Gaps/' 1D-skinny-lessons.md \| grep -cE '^\|'` | 21 lines (header + sep + 19 data) → 19 data rows | Matches V5 1D frontmatter `total_divergence_rows: 19` (V4-LOCKED; identical to V4) |
-| REDRESS PASS-ADMIT typed cardinality at V5 HEAD | `grep -nE 'closes W13\.[1-9]' skinny/REDRESS.md` | W13.1=4463 PASS-ADMIT, W13.2=4503 PASS-ADMIT, W13.3=4542 PASS-ADMIT, W13.4=4580 PASS-ADMIT; W13.5-8 MEASURED-REJECT; **W13.9=CORRECTNESS-REJECT** | 4 typed PASS-ADMIT exact (W13.1-4); W15.1=4994 ADMIT separate; W13.9 byte-confirmed as CORRECTNESS-REJECT at V5 |
-| REDRESS PASS-ADMIT direct cardinality at V5 HEAD | `grep -nE 'closes W11\.[1-4]' skinny/REDRESS.md` | W11.1=4292 PASS-ADMIT, W11.2=4349 REJECTED-MEASURED, W11.3=4376 PASS-ADMIT, W11.4=4962 REJECT | 2 direct PASS-ADMIT exact (W11.1, W11.3); W11.4 REJECT pre-block preserved at V5 |
-| REDRESS ADMIT parse_only cardinality at V5 HEAD | `grep -nE 'closes W14\.[1-5]' skinny/REDRESS.md` | W14.1=4767, W14.2=4802, W14.3=4838, W14.4=4874, W14.5=4917, all ADMIT | 5 parse_only ADMIT exact at V5 |
-| REDRESS PASS-ADMIT W5 CSS L4 at V5 HEAD | `grep -nE 'closes W5\b' skinny/REDRESS.md` | W5=3824 PASS-ADMIT (item 127); W5=4081 PASS-BLOCKED (item 136 bbnf-regex extraction) | 1 W5 lineage; 24 CSS L4 row cohort downstream preserved at V5 |
-| Total AUDIT-FALSIFIED admit cardinality at V5 HEAD | 5 + 2 + 5 + 24 | = 36 | Matches V5 1D `:140` cardinality exact (V4-LOCKED; preserved from V3) |
-| V5 1D row 117 substrate-union sub-case cites at HEAD | `sed -n '117p' restart/audit/totality/p1/1D-skinny-lessons.md` | Track 2 cites read `bbnf-bench/src/track2/json.rs:7,26,34,45`; CSS sidecar reads `nonjson_css_l4.rs:648, 1082, 1203, 1354, 1511, 1661, 1815, 1964, 2691` (F-V4-CH5-1 refresh, V4-LOCKED at V5) | V4 F-V4-CH5-1 sub-case cite refresh lands at V5 HEAD bit-identical to V4; substrate-union sub-case framing + T-P3 §3C PENDING flag preserved (substance per V3 CH3-V3-008 + CH3-V3-009 → V4 CH3-V4-008 + CH3-V4-009 → V5) |
-| V5 1E sustained-UNKNOWN paragraph (F-V4-CH6-1 + V5 anchor refresh) | `sed -n '35p' restart/audit/totality/p1/1E-locks-evidence.md` | Paragraph at :35 names 4 UNKNOWNs (L03 cursor elision, L16 full allowlist, NEW audit-overlay column gap, NEW Lock 1 fact-stream taxonomy) each with executable verify_action at :161, :162, :163, :164; self-cite refreshed `:126-128` → `:128-130` | F-V4-CH6-1 anti-paper-close anchor preserved at V5; F-V5-CH6-1 self-cite refresh discharges the V4 non-blocking cosmetic; LAC-1E-12 heading sed-verified at :128 (`### LAC-1E-12 promotion candidacy (T-P1 V2 fold — §1.5 governance signal)`); body at :130 |
-| F-V5-CH6-1 NEW-CH2-V3-02 propagation guard satisfaction | `grep -c ':126-128' restart/audit/totality/p1/1E-locks-evidence.md` | 0 (post-V5); pre-V5 was 1 hit at :35 | NEW-CH2-V3-02 orphan-cell propagation guard SATISFIED: zero stale `:126-128` references survive at V5 HEAD; the single inline self-cite at 1E:35 mechanically refreshes to live truth |
-| V5 1E LAC ledger contiguity (V4-LOCKED for table) | `grep -nE '^### LAC-1E-(0[1-9]\|1[0-6])' 1E-locks-evidence.md` | 16 LAC headings contiguous (LAC-1E-01 through LAC-1E-16; V4-LOCKED at V5) | LAC-1E-01..LAC-1E-16 contiguous at V5; no V5 LAC removed, no V5 LAC verdict-flipped; the V5 edit is the inline cross-cite cosmetic at :35 only, NOT a LAC-ledger edit |
-| V5 1F-past PC-001/002/004 verdict parity (V3-LOCKED → V5-LOCKED) | `sed -n '67p;68p;69p;70p' 1F-past-corpora.md` | `:67` (PC-001 "Route to verify_action (parity with PC-003)"), `:68` (PC-002 same), `:70` (PC-004 same); `:69` (PC-003 anchor) | V1 CH6-row-19 PC parity sustained at V5 (1F-past-corpora is V3-LOCKED through V4 and V5; V2 fold carry; V3 CH3-V3-005 ACCEPT → V4 CH3-V4-005 ACCEPT → V5) |
-| REDRESS rejected categories pre-blocked at V5 HEAD | `sed -n '209p;216p;226p' skinny/REDRESS.md` + W11.4 REJECT (`:4962`) sample | Pair-token fusion REDRESS-16 (:209), dispatch-table alternate REDRESS-17 (:216), skipless tape tokens REDRESS-18 (:226), W11.4 REJECT (:4962) all carry rejected-route labels unchanged at V5 HEAD | Pre-block list correctness preserved at V5; no V5 edit promotes a pre-blocked category (V5 edit is 1E:35 cosmetic anchor refresh only — never touches REDRESS classifications) |
-| V5 1F-anti-pattern AP-009 live count (V4-LOCKED) | `grep -c 'lightningcss_facts' skinny/crates/bbnf-bench/src/nonjson_css_l4.rs` | 27 | 1F-anti-pattern V4 AP-009 24→27 cosmetic refresh preserved at V5 (V4-LOCKED); AP-009 stays comparator-sidecar evidence, not a runtime-substrate admission |
+git diff --unified=0 0c79c2b43..af809cf27 -- restart/audit/totality/p1/1D-skinny-lessons.md restart/audit/totality/p1/1E-locks-evidence.md restart/audit/totality/p1/1F-coherence-scan.md
+
+rg -n "NEW-CH3|REDRESS-183|REDRESS-184|REDRESS-209|REDRESS-210|REDRESS-211|REDRESS-212|REDRESS-213|delete/rebuild|rebuild provider|provider proof|wave-graph|pre-block" restart/audit/totality/p1/1D-skinny-lessons.md restart/audit/totality/p1/1E-locks-evidence.md restart/audit/totality/p1/1F-coherence-scan.md
+
+nl -ba skinny/REDRESS.md | sed -n '5088,5296p'
+```
+
+Result: the V5 fold touched no 1D or 1E bytes, changed 1F only to expand
+root-resolving FNV citations, and left the delete/rebuild guard hits live in
+1D, 1E, and 1F. The REDRESS source rows still resolve to rejected or
+pre-blocking delete-before-provider, provider-free-generator, sub-wave-authority,
+and destructive-regeneration precedents.
 
 ## Findings
 
-| ID | Disposition | Inventory finding | Evidence | Required V6 action |
+| id | disposition | finding | evidence | required fold |
 |---|---|---|---|---|
-| CH3-V5-001 | ACCEPT | V5 fold packet introduces no REDRESS-route reopen. The single V5-amended file (1E) carries a mechanical anchor refresh only — the self-cite at 1E:35 updates `:126-128` → `:128-130` to track the V4 paragraph-insertion-induced 2-line offset for the LAC-1E-12 heading + body. NOT a verdict-cell flip, NOT a divergence-row's wave routing change, NOT a pre-block disposition change. The five rejected categories (pair-token fusion REDRESS-16 at `:209`, dispatch-table alternate REDRESS-17 at `:216`, skipless tape tokens REDRESS-18 at `:226`, union event-model class-column/streaming-cursor REDRESS items in W3-W9 SK-V9 at `:2795-2906`, W11.4 direct cursor byte-fetch REJECT at `:4962-4990`) stay pre-blocked at V5 HEAD. 1D + 1F-past-corpora + 1F-anti-pattern are V4-LOCKED at V5 — zero CH3 substantive surface touched by V5 edit. | V5 commit `9833295d5` message body (1-file scope: 1E only; 2-file total with V5 CHALLENGE-CONTEXT); `skinny/REDRESS.md:209,216,226,2795-2906,4962-4990` (rejected categories — disposition labels unchanged at V5 HEAD); V5 1D divergence-table `:140-158` (19 rows; V4-LOCKED; identical wave routings as V4); `git show 9833295d5 --stat` (2 files / +44 / -1). | None. CH3 invariant 1 carried forward through V5 unchanged. |
-| CH3-V5-002 | ACCEPT | 1D PASS-ADMIT vs MEASURED-REJECT vs CORRECTNESS-REJECT taxonomy survives V5 bit-for-bit. V5 1D row `:140` is byte-identical to V4 1D :140 (1D is V4-LOCKED at V5; V5 commit touches zero 1D bytes), carrying the V2 split #1 plus the F-V4-CH3-1 W13.9 sub-label refinement verbatim: "5 parse_only W14.1-5 + 2 direct PASS-ADMIT [W11.1, W11.3] + 5 typed PASS-ADMIT [W13.1, W13.2, W13.3, W13.4, W15.1] + 24 CSS L4 W5 PASS-ADMIT lineage = 36 admit rows" + "W13.5-W13.8 MEASURED-REJECT at `REDRESS.md:4621/4645/4674/4704`; W13.9 CORRECTNESS-REJECT at `:4734` — NOT PASS-ADMIT, NOT part of the audit-falsified admit tally, and MUST NOT be treated as reopen candidates. W11.2 (`:4350`) and W11.4 (`:4962-4990`) are REJECT/MEASURED-REJECT, also not PASS-ADMIT." V5 1D row `:141` (ROLLING-SOTA-DELTA broader overlay) is bit-identical to V4. The split row structure (`:140` strict + `:141` broader) is V4-LOCKED at V5. | V5 1D `:140` (PASS-ADMIT strict cardinality row + W13.5-8 MEASURED-REJECT + W13.9 CORRECTNESS-REJECT fencing note; V4-LOCKED at V5); V5 1D `:141` (ROLLING-SOTA-DELTA broader overlay row; V4-LOCKED at V5); `git show 9833295d5 -- restart/audit/totality/p1/1D-skinny-lessons.md` (empty diff at V5; 1D is V4-LOCKED); live REDRESS W13.5-9 verdict labels byte-confirmed at V5 per Evidence Base table. | None. CH3 invariant 2 — taxonomy preserved bit-for-bit from V4 to V5 via 1D V4-LOCK. |
-| CH3-V5-003 | ACCEPT | No V5 inventory edit silently demotes an admitted REDRESS row. V5 1D row `:122` is V4-LOCKED at V5 (preserves CSS L4 W5 PASS-ADMIT history; `disproved` verdict applies to the implementation-claim "7 of 7 CSS L4 providers were `include_str!()` hand-written templates", not to the row's PASS-ADMIT history). V5 1E LAC-1E-04 + LAC-1E-14 are V4-LOCKED at V5 (preserves admission per the V4 sustained-UNKNOWN paragraph at :35, which explicitly routes CSS L4 fact-stream taxonomy to T-P3 §3C as Lock 1 amendment candidacy). CSS L4 W5 PASS-ADMIT at `REDRESS.md:3824` remains a historical close, not silently demoted — the V5 anchor refresh at 1E:35 only updates the self-referential cross-cite to LAC-1E-12 (now at :128-130 instead of :126-128); the LAC-1E-04 / LAC-1E-14 substance is V4-LOCKED. V5 1D `:117` substrate-union row (V4-LOCKED at V5) retains the `T-P3 §3C PENDING` flag and the F-V4-CH5-1 sub-case cite refresh — Track 2 `:7,26,34,45` + CSS sidecar `:648, 1082, 1203, 1354, 1511, 1661, 1815, 1964, 2691` all byte-verified at V5 HEAD. | `skinny/REDRESS.md:3824` (W5 PASS-ADMIT close, label intact at V5); V5 1D `:122` (CSS L4 row carries admit context + R4+R5+R6 forward obligations; V4-LOCKED); V5 1D `:117` (substrate-union row with `T-P3 §3C PENDING` flag; F-V4-CH5-1 cite refresh V4-LOCKED at V5); V5 1E `:35` sustained-UNKNOWN paragraph (F-V4-CH6-1 substance unchanged; F-V5-CH6-1 anchor refresh only) + `:65,99,112,122` LAC-1E-04 + LAC-1E-14 preserve admission. | None. CH3 invariant 3 carried forward through V5 unchanged. |
-| CH3-V5-004 | ACCEPT | V5 1F-past-corpora is V3-LOCKED (zero V4 edits, zero V5 edits per commits `8f4756113` and `9833295d5` scope — 1F-past-corpora not in either scope), so the V1 CH6-row-19 PC-001/002/004 verdict parity discharge from V2 CH3-V2-003 (carried through V3 CH3-V3-005 + V4 CH3-V4-005) carries unaltered into V5. PC-001 (dispatch-table) at `:67`, PC-002 (12-byte token) at `:68`, PC-004 (tiny-string NEON) at `:70` each carry "accepted historical pre-block; current absence UNKNOWN" + verify_action note "Route to verify_action (parity with PC-003)" in parity with PC-003 (`:69`). Historical pre-block status remains binding; the verify_action gates promotion to "live absence" claim. No V5 edit perturbs the pre-block ledger. | V5 1F-past-corpora `:67,68,69,70` (PC-001/002/003/004 verdict cells in parity, V3-LOCKED at V5); V5 commit `9833295d5` scope excludes 1F-past-corpora; V3 CH3-V3-005 + V4 CH3-V4-005 ACCEPT carried. | None. V1 CH6-row-19 stays closed through V5. |
-| CH3-V5-005 | ACCEPT | V5 dispatch text alignment with V5 1D taxonomy split. V5 `CHALLENGE-CONTEXT.md §2 CH3 REGRESSION` (line 27) reads "no V5 edit re-opens REDRESS routes; PASS-ADMIT vs MEASURED-REJECT vs CORRECTNESS-REJECT taxonomy preserved bit-for-bit from V4." The V5 dispatch is correctly conservative: V5 is a confirming-cycle dispatch for the LOCK-trigger event, NOT a substantive-fold dispatch, so the dispatch text correctly characterizes V5 as a taxonomy-preservation cycle rather than a taxonomy-refinement cycle. The V5 dispatch + V5 1D `:140` / `:141` (V4-LOCKED) + REDRESS truth align on the 5+2+5+24=36 cardinality with W13.5-8 MEASURED-REJECT + W13.9 CORRECTNESS-REJECT label distinction byte-correct at V5 HEAD. The precision-nit per V3 CH3-V3-003 stays closed at V5 via V4 F-V4-CH3-1 carry-forward through V4-LOCK on 1D. | V5 `CHALLENGE-CONTEXT.md §2 CH3 REGRESSION` line 27 (dispatch); V5 1D `:140-141` (split rows; V4-LOCKED at V5); REDRESS cardinality byte-verified at lines per Evidence Base table. | None. V1 CH3-008 + V2 CH3-V2-006 + V3 CH3-V3-006 + V4 CH3-V4-006 closed at dispatch + inventory level through V5. |
-| CH3-V5-006 | ACCEPT | V5 1E LAC ledger integrity carried forward unchanged. LAC-1E-01..LAC-1E-16 contiguous at V5; no SK-V14 NEW LAC reopens a REDRESS-rejected route. LAC-1E-08 (Lock 14 generic-crate fences) + LAC-1E-13 (R4 regen-css round-trip) continue to honour the SK-V11 W1b rejection by demanding C-1 PRUNE-3 + PRUNE-4 collapse as forward work, not by reopening any of the 8 hardcoded `RuntimeProvider` arms or 8 hand-written providers as legitimate. The V4 sustained-UNKNOWN paragraph at 1E :35 (F-V4-CH6-1) is preserved at V5 with the F-V5-CH6-1 anchor refresh as the only edit (substance unchanged) — the 4 cited UNKNOWNs (L03 cursor elision, L16 full allowlist, NEW SK-V14 audit-overlay column gap, NEW SK-V14 Lock 1 fact-stream taxonomy) all still route to T-P3 §3C disposition or V+1 SK-V14 audit-overlay disposition, never to a rejected REDRESS reopen. The V5 1E edit was a 1-byte cosmetic refresh (single anchor) — no LAC removed, no LAC verdict-flipped, no LAC heading line-numbers altered as substantive table edits (LAC-1E-12 still anchors the table even though its physical line numbers shifted +2 from V3 due to V4 paragraph insertion; the V5 fix accurately tracks live truth). | V5 1E `:35` sustained-UNKNOWN paragraph (F-V4-CH6-1 substance; F-V5-CH6-1 anchor refresh `:126-128` → `:128-130`); V5 1E `:128` LAC-1E-12 heading + `:130` body (sed-verified live truth); V5 1E `:161-164` (4 executable verify_actions; table V4-LOCKED at V5); V5 1E `:155` (LAC-1E-16 audit-overlay column binding NEW SK-V14 LAC routed to T-P3 §3C; V4-LOCKED at V5); `skinny/REDRESS.md:3311-3338` (SK-V11 W1b rejection honoured by LAC-1E-13 round-trip-clean obligation). | None. CH3 invariant 1 for LAC ledger carried forward through V5 unchanged. |
-| CH3-V5-007 | ACCEPT | V5 1D row `:117` Track 2 + CSS sidecar sub-case cite refresh (F-V4-CH5-1) carries forward to V5 unchanged (1D is V4-LOCKED at V5). The row clarifies that Track 2 retained-JSON bench harness imports `runtime::grammars::json::scan::structural_capacity_for` + `TapeBuilder` + `OffsetFlags` + `CapacityPlan` from generic runtime at `skinny/crates/bbnf-bench/src/track2/json.rs:7,26,34,45` (preserved from V4), and CSS sidecar at `nonjson_css_l4.rs:648, 1082, 1203, 1354, 1511, 1661, 1815, 1964, 2691` (preserved from V4). Verdict `spec_unimplemented (taxonomy caveat)` unchanged from V4; routes to T-P3 §3C disposition; substrate-helper sharing reclassified as Lock 1 union sub-case, not as Track-independence violation. Bench-private SinkParser dishonesty (PC-005 closed at `REDRESS.md:420-438`) is unaffected. The V5 edit (1E:35 cosmetic) never touches 1D :117. | V5 1D `:117` (V4-LOCKED at V5; sub-case cites V4-LOCKED); live `skinny/crates/bbnf-bench/src/track2/json.rs:7,26,34,45` + `nonjson_css_l4.rs:648,1082,1203,1354,1511,1661,1815,1964,2691` (cites land at V5 HEAD unchanged); `skinny/REDRESS.md:420-438` (PC-005 bench-private SinkParser closure unchanged). | None. V5 cite-truth preserved via 1D V4-LOCK; regression-discipline-clean. |
-| CH3-V5-008 | ACCEPT | V5 1D row `:117` substrate-union row carries the explicit `T-P3 §3C PENDING` flag with two conditional dispositions (ratify two-cursor shape as substrate-union OR mandate unification + downgrade to "disproved at HEAD") unchanged from V4 (V4-LOCKED at V5). The four sub-cases (renamed `StructuralIndex` scanner / Track 2 substrate-helper sharing / CSS source-sidecar / proof-witness generic-runtime exports) are all referenced as sub-cases of the same T-P3 §3C disposition, not REDRESS-rejected route reopens. V5 1A frontmatter `t_p1_v1_hardening_fold_note` companion cross-cite (1A row 100→117 refresh per F-V4-CH5-1) is V4-LOCKED at V5 (preserves the 1A↔1D cross-fold anchor). | V5 1D `:117` (substrate-union row with `T-P3 §3C PENDING` flag; V4-LOCKED at V5); V5 1A `:10` + `:84` (1A row-100→117 cross-cite refresh; V4-LOCKED at V5); V5 1A 1A-DIV-008 (live two-cursor evidence; V4-LOCKED at V5). | None. T-P3 §3C disposition is the correct routing target; no REDRESS reopen at V5. |
-| CH3-V5-009 | ACCEPT | F-V5-CH6-1 anchor refresh at 1E:35 (`:126-128` → `:128-130`) is regression-discipline-clean for CH3. The refresh is purely a self-referential cross-cite tracking the V4-paragraph-insertion-induced 2-line offset for the LAC-1E-12 promotion-candidacy block heading + body. NOT a verdict change. NOT an admit-row demotion. NOT a REDRESS reopen. NOT a pre-block label change. NOT a divergence-table edit. NOT a LAC-table edit. The substance of the LAC-1E-12 promotion-candidacy block at 1E :128-130 is bit-identical to V4 (the block is V4-LOCKED; only its physical line numbers shifted due to V4's :35 paragraph insertion two lines earlier). NEW-CH2-V3-02 propagation guard (orphan-cell propagation discipline) is satisfied: pre-V5 was 1 stale `:126-128` hit at :35; post-V5 is 0 hits. CH3-V5-009 specifically validates that the V5 fold mechanism (single-cell trivial cosmetic) does NOT introduce CH3 regression risk — the discipline is empirically clean. | V5 commit `9833295d5` message body (F-V5-CH6-1 enumeration); V5 1E `:35` (refreshed self-cite); V5 1E `:128` (LAC-1E-12 heading sed-verified at live truth); V5 1E `:130` (LAC-1E-12 body); `grep -c ':126-128' restart/audit/totality/p1/1E-locks-evidence.md` = 0 (NEW-CH2-V3-02 guard satisfied). | None. V5 cosmetic-fold mechanism is CH3-regression-discipline-clean by construction; no carry-forward required. |
+| CH3-V5-001 | ACCEPT | The V5 citation fold did not edit the substantive CH3 guard carriers in 1D or 1E. | Fold roster at `restart/audit/totality/p1/hardening/V5/CHALLENGE-CONTEXT.md:45-52`; diff scope excludes 1D/1E; live changed receivers are 1A citation/prose at `restart/audit/totality/p1/1A-substrate-evidence.md:56` and `restart/audit/totality/p1/1A-substrate-evidence.md:83`, 1B prose at `restart/audit/totality/p1/1B-codegen-evidence.md:37`, and 1F COH-016 citation expansion at `restart/audit/totality/p1/1F-coherence-scan.md:89-101`. | None. |
+| CH3-V5-002 | ACCEPT | `NEW-CH3-V5-01` and the delete/rebuild dependency proof guard remain load-bearing. | 1D C-6/C-7 at `restart/audit/totality/p1/1D-skinny-lessons.md:158-159`; 1D fold ledger at `restart/audit/totality/p1/1D-skinny-lessons.md:191`; 1E LAC at `restart/audit/totality/p1/1E-locks-evidence.md:144` and cost carrier at `restart/audit/totality/p1/1E-locks-evidence.md:183`; 1F COH-003 at `restart/audit/totality/p1/1F-coherence-scan.md:76`; source rule at `restart/skinny/tranches/sk-v15/SYNTHESIS.md:100-106`. | None. |
+| CH3-V5-003 | ACCEPT | REDRESS-183, REDRESS-184, and REDRESS-209 through REDRESS-213 remain pre-blocked and are not reopened by V5. | Source rows at `skinny/REDRESS.md:5092-5118` and `skinny/REDRESS.md:5173-5293`; Alpha-C summary at `restart/skinny/tranches/sk-v15/research/alpha/alpha-C-redress-digest.md:26-33`; live carriers at `restart/audit/totality/p1/1D-skinny-lessons.md:159` and `restart/audit/totality/p1/1F-coherence-scan.md:161`. | None. |
+| CH3-V5-004 | ACCEPT | The broader pre-block ledger remains intact: CSS broadcast, CSSOM mismatch, string-literal generation, silent gate exclusions, Pattern H header-only close, Decision Engine scaffold, and FNV production migration are still blocked. | Alpha-C route list at `restart/skinny/tranches/sk-v15/research/alpha/alpha-C-redress-digest.md:50-62`; Alpha-C receiver block at `restart/skinny/tranches/sk-v15/research/alpha/alpha-C-redress-digest.md:64-69`; 1F COH-010 at `restart/audit/totality/p1/1F-coherence-scan.md:83`; 1F divergence ledger at `restart/audit/totality/p1/1F-coherence-scan.md:131`; 1F past-corpora ledger at `restart/audit/totality/p1/1F-coherence-scan.md:162-166`. | None. |
+| CH3-V5-005 | ACCEPT | The FNV citation fold strengthens source coverage without laundering hashes into admission evidence. | COH-016 remains `unknown` and says FNV hashes are telemetry-only unless W10 proves otherwise at `restart/audit/totality/p1/1F-coherence-scan.md:89`; the seven-profile transcript is root-resolving at `restart/audit/totality/p1/1F-coherence-scan.md:91-101`; the gap row still requires production FNV/hash-sidecar quarantine proof at `restart/audit/totality/p1/1F-coherence-scan.md:177`. | None. |
+| CH3-V5-006 | ACCEPT | No admitted REDRESS row is silently demoted. JSON remains guard evidence; CSS remains audit-demoted as its own invalidated class, not recast as a clean implementation gap. | JSON guard evidence in 1D at `restart/audit/totality/p1/1D-skinny-lessons.md:101-105`, RESULTS at `skinny/RESULTS.md:139-149`, and Alpha-D at `restart/skinny/tranches/sk-v15/research/alpha/alpha-D-validated-invalidated.md:10-21`; CSS demotion is explicit in 1D at `restart/audit/totality/p1/1D-skinny-lessons.md:107-110` and Alpha-D at `restart/skinny/tranches/sk-v15/research/alpha/alpha-D-validated-invalidated.md:25-31`; 1E says JSON rows are credible while CSS close is over-stated at `restart/audit/totality/p1/1E-locks-evidence.md:97`. | None. |
+| CH3-V5-007 | ACCEPT | V4 CH3 accepted surfaces are preserved: bounded receivers, non-admitting primitive/kernel rows, and the broader pre-block ledger remain unchanged by the V5 fold. | V4 consolidator accepted CH3 at `restart/audit/totality/p1/hardening/HARDENING-T-P1-V4-CONSOLIDATED.md:27-29`; V5 context requires preserving the same surfaces at `restart/audit/totality/p1/hardening/V5/CHALLENGE-CONTEXT.md:54-61`; live receiver rows remain at `restart/audit/totality/p1/1D-skinny-lessons.md:170-184`; live primitive/kernel rows remain at `restart/audit/totality/p1/1D-skinny-lessons.md:196-217`; V4 CH3 accepted the same classes at `restart/audit/totality/p1/hardening/V4/CH3.md:84-92`. | None. |
 
-## Tally Verification Summary (V5)
+## Required Fold
 
-| Source | Claim | Live evidence | Match? |
-|---|---|---|---|
-| V5 1D frontmatter `divergence_count.total_divergence_rows: 19` | 19 rows in divergence-catalogued table | `awk '/Divergences Catalogued/,/Gaps/' 1D-skinny-lessons.md \| grep -cE '^\|'` = 21 (header + sep + 19 data) | YES |
-| V5 1D frontmatter `spec_unimplemented: 13` | 13 rows with spec_unimplemented verdict (or variants) | Inline scan of divergence-table verdict column reproduces 13 spec_unimplemented variants | YES |
-| V5 1D frontmatter `impl_unimplemented: 3` | 3 impl_unimplemented rows | Divergence table W8, W9, Pattern H = 3 | YES |
-| V5 1D frontmatter `impl_exceeds_spec: 1` | 1 impl_exceeds_spec row | Divergence table `DirectParser::skip_value typed-plane structural-skip dominance` = 1 | YES |
-| V5 1D frontmatter `disproved_baseline_strict: 1` + `disproved_baseline_overlay: 1` | 2 disproved rows (strict + overlay split per V2 §2.9 CH3-005 fold; W13.9 sub-label refinement preserved from V4) | Divergence-table rows `:140` + `:141` (V4-LOCKED at V5) | YES |
-| V5 1D frontmatter `unknown_open_questions: 7` + `unknown_gaps: 7` | 7 Open Questions + 7 Gaps | Open Questions table = 7 rows; Gaps table = 7 rows (V4-LOCKED at V5) | YES |
-| V5 1D `:140` PASS-ADMIT cardinality | 5 parse_only + 2 direct + 5 typed + 24 CSS = 36 | REDRESS PASS-ADMIT lines verified byte-for-byte at `REDRESS.md:4292/4376/4463/4503/4542/4580/4994` (typed+direct=7) + `:4767/4802/4838/4874/4917` (parse_only=5) + `:3824` (W5 CSS lineage = 24 cohort); 5+2+5+24 = 36 | YES |
-| V5 1D `:140` W13.5-9 label split (V4-LOCKED) | "W13.5-W13.8 MEASURED-REJECT at `:4621/4645/4674/4704`; W13.9 CORRECTNESS-REJECT at `:4734`" | W13.5-W13.8 all `MEASURED-REJECT` byte-confirmed via `sed -n '4621p;4645p;4674p;4704p' skinny/REDRESS.md`; W13.9 `CORRECTNESS-REJECT` byte-confirmed via `sed -n '4734p' skinny/REDRESS.md` | **YES (V4 F-V4-CH3-1 discharge of V3 CH3-V3-003 LOW REVISE persists at V5 via 1D V4-LOCK; precision-drift closed for second consecutive cycle)** |
-| V5 1D `:141` ROLLING-SOTA-DELTA range | 7-11 typed + 4-6 direct broader overlay | `SYNTHESIS.md:75-84` reconciliation honoured; row V4-LOCKED at V5 | YES |
-| V5 1F-past PC-001/002/004 verdict parity | "current absence UNKNOWN" parity with PC-003 | `1F-past-corpora.md:67,68,69,70` all four cells in parity (V3-LOCKED at V5) | YES |
-| V5 1E `locks_amendment_candidates: 16` | 16 LACs unchanged at V5 | (V5 1E edit is single-byte anchor refresh at :35 only; LAC table V4-LOCKED at V5; LAC-1E-01..LAC-1E-16 contiguous) | YES |
-| V5 1E sustained-UNKNOWN paragraph (F-V4-CH6-1 substance; F-V5-CH6-1 anchor refresh) | 4 UNKNOWNs (L03, L16, audit-overlay column gap, Lock 1 fact-stream taxonomy) each with executable verify_action; self-cite refreshed to `:128-130` | 1E `:35` paragraph cites 4 UNKNOWN sources with refreshed `:128-130` self-cite; 1E `:161-164` Open Questions table carries 4 corresponding verify_action cells; 1E `:128` LAC-1E-12 heading sed-verified at live truth; `grep -c ':126-128' 1E-locks-evidence.md` = 0 (NEW-CH2-V3-02 propagation guard satisfied) | YES |
-| V5 dispatch + V5 1D + REDRESS truth alignment | All three sources cite identical "5+2+5+24=36" cardinality + identical W13.5-8 MEASURED-REJECT / W13.9 CORRECTNESS-REJECT label split | V5 `CHALLENGE-CONTEXT.md §2 CH3` line 27 (dispatch); V5 1D `:140` (V4-LOCKED); REDRESS verified lines | **YES (full alignment preserved at V5 HEAD; V3 precision-nit stays closed at V5 via 1D V4-LOCK)** |
-
-## Cycle Verdict
-
-Disposition counts: **ACCEPT 9, REVISE 0, REJECT 0**.
-Cycle ACCEPT-rate: **9/9 = 100%**.
-
-**CH3 V5 verdict: ACCEPT.**
-
-The V5 CH3 lens meets the §3Z ≥95% threshold with a 100% ACCEPT-rate. V5 is a verification-pass cycle for CH3 — the entire CH3 substantive surface (1D divergence table, 1D PASS-ADMIT/MEASURED-REJECT/CORRECTNESS-REJECT taxonomy, 1D split rows :140/:141, 1D row 117 sub-case cites, 1E LAC ledger, 1F-past-corpora PC parity, REDRESS pre-block list) is V4-LOCKED at V5 HEAD, and the V5 single-cell trivial cosmetic edit (1E:35 self-cite refresh `:126-128` → `:128-130`) is regression-discipline-clean by construction. The V3 precision-nit (W13.9 label drift) stays closed at V5 via F-V4-CH3-1 carry-forward through 1D V4-LOCK; the V5 1D :140 cell continues to read "W13.5-W13.8 MEASURED-REJECT at `REDRESS.md:4621/4645/4674/4704`; W13.9 CORRECTNESS-REJECT at `:4734`" byte-identical to V4. The 5+2+5+24=36 admit cardinality is byte-verified at V5 HEAD; no V5 edit re-opens a REDRESS route; the V2 split row pair (`:140` strict + `:141` broader) is preserved with V4 W13.9 sub-label refinement intact.
-
-The substantive CH3 invariants all hold at V5 HEAD:
-- **No REDRESS reopen** (CH3-V5-001, CH3-V5-004, CH3-V5-006, CH3-V5-007, CH3-V5-008, CH3-V5-009 ACCEPT).
-- **PASS-ADMIT vs MEASURED-REJECT vs CORRECTNESS-REJECT taxonomy preserved bit-for-bit** (CH3-V5-002 ACCEPT; 1D V4-LOCKED at V5; row-level structure + sub-cell W13.9 label split intact).
-- **F-V4-CH3-1 mechanical discharge persists** (CH3-V5-002 + CH3-V5-005 ACCEPT; precision-drift closure carries forward through second consecutive cycle).
-- **No admitted-row demotion** (CH3-V5-003 ACCEPT; W5 PASS-ADMIT and CSS L4 admission preserved; LAC-1E-14 sustained-UNKNOWN routes CSS L4 fact-stream to T-P3 §3C taxonomy disposition not demotion; 1D V4-LOCKED).
-- **Pre-block list correctness** (CH3-V5-001 ACCEPT; 5 rejected categories pre-blocked at V5 HEAD).
-- **16-LAC ledger integrity** (CH3-V5-006 ACCEPT; LAC-1E-01..LAC-1E-16 contiguous; V5 anchor refresh is single-byte cosmetic, not LAC-table edit).
-- **Dispatch + inventory + REDRESS alignment** (CH3-V5-005 ACCEPT on cardinality AND sub-label; V5 dispatch correctly characterizes V5 as taxonomy-preservation cycle).
-- **V5 cosmetic-fold mechanism CH3-clean** (CH3-V5-009 ACCEPT; single-cell trivial cosmetic edit introduces zero CH3 regression risk; NEW-CH2-V3-02 propagation guard satisfied).
-
-## §3Z Gate Evaluation — COHORT-LOCK ENABLEMENT
-
-Per `ORCHESTRATOR.md §3Z` (≥95% × 2 consecutive cycles, zero orphan REVISEs):
-
-- **V1 CH3:** 66.7% (6/9 ACCEPT), 3 REVISEs.
-- **V2 CH3:** 100% (9/9 ACCEPT), 0 REVISEs. First ≥95% cycle on CH3.
-- **V3 CH3:** 88.9% (8/9 ACCEPT), 1 LOW REVISE (CH3-V3-003 W13.9 label precision-nit). **Below the 95% threshold by one finding.**
-- **V4 CH3:** 100% (9/9 ACCEPT), 0 REVISEs. **First ≥95% cycle since V2; F-V4-CH3-1 discharged V3 REVISE bit-for-bit.**
-- **V5 CH3:** **100% (9/9 ACCEPT), 0 REVISEs.** **Second consecutive ≥95% cycle on CH3 — COHORT-LOCK enablement contribution confirmed.**
-
-**V5 is the second consecutive ≥95% cycle on CH3 since V2's first ≥95% close** (V3 broke the streak at 88.9% via the W13.9 sub-label precision-nit; V4 reset the streak with 100% via F-V4-CH3-1 mechanical discharge; V5 confirms the second consecutive cycle for cohort §3Z LOCK trigger).
-
-**CH3 §3Z close path: V1 (66.7%) → V2 (100% — first ≥95%) → V3 (88.9% — precision-nit surfaced) → V4 (100% — precision-nit discharged) → V5 (100% — confirming, second consecutive ≥95%) → COHORT-LOCK ENABLEMENT.** CH3 contributes to cohort §3Z LOCK as one of seven lenses required to meet ≥95% × 2 consecutive at V5 close.
-
-**COHORT-LOCK ENABLEMENT CONFIRMED for CH3 at V5 close.** The V4 + V5 pair both deliver 100% ACCEPT-rate with zero REVISEs, satisfying the §3Z ≥95% × 2 consecutive cycles gate for the CH3 lens contribution to cohort LOCK at V≤5 ceiling EXACTLY.
-
-The V5 cycle exhibits the §3Z LOCK-enablement discipline working as designed: V4 mechanically discharged the V3 precision-nit via F-V4-CH3-1; V5 confirms the discharge persists across an additional cycle via 1D V4-LOCK propagation (1D is bit-identical V4↔V5; the V5 single-cell cosmetic at 1E:35 does not touch 1D); V5 lens reproduces the V4 100% disposition with the W13.9 label refinement now byte-bound through two consecutive cycles. The CH3 path now satisfies the §3Z cohort-LOCK gate condition.
-
-**Reading alignment (high confidence):** The V5 1D `:140` cell carries the W13.5-8 MEASURED-REJECT + W13.9 CORRECTNESS-REJECT label split byte-identical to V4 (1D V4-LOCKED at V5); no sub-cell drift surfaces under V5 CH3 lens application; the 36-row PASS-ADMIT cardinality reads correctly under both strict (`:140`) and broader-overlay (`:141`) row interpretations; the V5 fold mechanism (single-cell trivial cosmetic at 1E:35) is regression-discipline-clean for CH3 by construction (no verdict change, no admit demotion, no pre-block flip, no LAC-table edit, no divergence-row edit).
-
-## New Findings vs V4 CH3
-
-This V5 CH3 lens introduces ZERO new REVISEs. The V4 CH3 closure (9/9 ACCEPT; precision-nit discharged via F-V4-CH3-1) persists at V5 via 1D V4-LOCK and 1F-past-corpora V3-LOCK. The 9 V5 CH3 findings (CH3-V5-001 through CH3-V5-009) all ACCEPT — V5 reproduces the V4 CH3 substantive dispositions with the W13.9 sub-label byte-bound for second consecutive cycle. No new REDRESS-route reopen, no new admit-row mis-catalogue, no new tally drift, no new sub-cell precision drift surfaces under V5 CH3. The single V5 edit (F-V5-CH6-1 anchor refresh at 1E:35) is substance-preserving for CH3 invariants and routinely-discharges the V4 non-blocking cosmetic that V4 CH6 flagged.
-
-The CH3 V5 lens stance is **confirming with COHORT-LOCK enablement** — the V4 mechanical discharge of the V3 surface event persists bit-for-bit at V5; the §3Z LOCK trajectory is now complete at V5 close (V4 + V5 both ≥95% with 0 REVISEs, satisfying the two-consecutive-cycle gate); the CH3 regression-discipline floor holds firm at 100% ACCEPT-rate at V5 HEAD; the cohort §3Z LOCK at V≤5 ceiling is enabled by CH3's V5 contribution.
+None.

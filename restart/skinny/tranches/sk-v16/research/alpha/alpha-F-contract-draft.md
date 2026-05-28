@@ -17,7 +17,11 @@ SK-V16 closes only when all of these hold:
 4. CSS SOTA is measured on Apple M5 Max / aarch64 and beats cssparser on the
    same typed workload; lightningcss remains diagnostic until CSSOM/value parity.
 5. Dirty generated CSS and generated real-typed state is either retired, cleanly
-   regenerated, or intrinsically blocked with row-level proof.
+   regenerated, or intrinsically blocked with row-level proof. The proof floor
+   is an exact dirty-file manifest, `git status --short`, broad command result,
+   owner/disposition per file, and a rule that consumed dirty generated files
+   block close unless they are external to the wave and covered by intrinsic
+   proof.
 6. Pattern H advances from line-1 provenance to generator-owned collapse; count
    remains 67 and no header-only close is accepted.
 7. Lock 14 / Lock 16 gates report their own exclusions and reject silent
@@ -58,6 +62,21 @@ Alpha does not author `SPEC.md` or `DISPATCH-PROMPT.md`. Those files are S-P3
 outputs after S-P0/S-P1/S-P2 convergence. Alpha supplies only the measurable
 goalset, telemetry binding, and pre-blocked routes.
 
+S-P3 must bind executable gate consumers for the new report classes:
+`--skv16-css-typed-report`, `--skv16-dirty-generated-report`,
+`--skv16-pattern-h-roundtrip-report`, and, if native SIMD is in scope,
+`--skv16-native-simd-report`.
+
+S-P3 must also quote each package's manual source/test LOC budget,
+generated-output status, docs/ledger LOC budget, phase hard cap, split trigger,
+and same-commit consumer callsite before redress. Generated output cannot hide
+manual scope.
+
+Hidden-coupling escapes are forbidden unless routed through Pass Omega and
+G-Omega: retained sidecars, sidecar event vectors, parallel source passes,
+second tapes, public `UnionTape`, new substrate APIs, sixth `BackendShape`,
+production FNV arbiters, and production hash-correctness proof.
+
 ## Gate Posture
 
 `PASS-ALPHA.md` and `ORCHESTRATOR.md` describe G-Alpha as mandatory. The active
@@ -65,3 +84,6 @@ user pin says only G-Omega is mandatory and every other gate auto-passes. SK-V16
 records the conflict plainly and follows the active user pin: do not stop for
 G-Alpha. Stop only at G-Omega, unrepaired invariant violation, or completed
 SK-V17 close.
+
+Alpha hardening runs CH1-CH7. CH7 overfit-prune cannot be deferred to S-P0 or
+folded into CH6.

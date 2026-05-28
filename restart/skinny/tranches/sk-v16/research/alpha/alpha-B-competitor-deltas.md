@@ -64,6 +64,16 @@ admission sources, retired legacy proof count, Track 1 pass/error counts,
 cssparser pass/error counts, typed summaries, typed-summary equality, Track 1
 Mbps, cssparser Mbps, threshold, margin, admitted row count, and disposition.
 
+S-P3 must name or author the executable consumer. The expected gate shape is:
+
+- `cargo xtask gate-json --check-results --skv16-css-typed-report <path>`;
+- `cargo xtask gate-json --check-results --skv16-dirty-generated-report <path>`;
+- `cargo xtask gate-json --check-results --skv16-pattern-h-roundtrip-report <path>`;
+- `cargo xtask gate-json --check-results --skv16-native-simd-report <path>` when native SIMD is in scope.
+
+These are skinny xtask consumers; S-P3 must write them with `(cd skinny && ...)`
+or `--manifest-path skinny/Cargo.toml` qualification.
+
 Legacy proof sources that must fail a live CSS admission report:
 `CSS_GENERATED_RS`, `emit_fact_stream`, `CssFullParseSummary`, `parse_full`,
 brace-counter summaries, fact-stream-only output, and W8R broadcast rows.

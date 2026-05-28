@@ -33,7 +33,7 @@ SK-V16 closes only when the following are all true:
 | CSS typed API | CSS exposes typed document/value/view/visitor surfaces |
 | CSS equality | Track 1 typed CSS summary equals cssparser same-workload typed summary before speed counts |
 | CSS SOTA | Track 1 beats cssparser on the same typed workload on Apple M5 Max / aarch64 |
-| Dirty generated state | pre-existing dirty generated CSS and real-typed files are retired, cleanly regenerated, or intrinsically blocked with row-level proof |
+| Dirty generated state | pre-existing dirty generated CSS and real-typed files are retired, cleanly regenerated, or intrinsically blocked with manifest-backed row-level proof |
 | Pattern H | count remains 67 and provenance advances to generator-owned collapse, not header-only status |
 | Lock 14 / 16 | gates report their own exclusions and reject silent self-exemption |
 | Decision Engine | W7-W9 proof remains load-bearing and grammar-neutral |
@@ -60,7 +60,7 @@ SK-V16 closes only when the following are all true:
 | CSS typed equality and SOTA | prove typed equality against cssparser before measuring speed, then beat cssparser on M5 Max |
 | Dirty generated retirement | make broad generated checks usable again by cleaning or intrinsically blocking dirty generated state |
 | Pattern H collapse | move from provenance-only to generator-owned grammar-id template collapse |
-| Native aarch64 SIMD | profile first, then implement only proven hot leaves with scalar and parity |
+| Native aarch64 SIMD | conditional profile candidate only; S-P1 must nominate a fresh hot leaf before S-P3 may scope work |
 
 ### 0.4 Pre-blocks
 
@@ -70,6 +70,19 @@ dirty generated files as close proof, or x86 implementation scope.
 
 The inherited REDRESS pre-block families are:
 `28+33, 50-55, 60-72, 80, 82-84, 88, 89, 96-98, 183/184/209-213, 215, 242-247, FNV closed-enum production migration`.
+
+Hidden-coupling escapes are also pre-blocked unless routed through Pass Omega
+and G-Omega: retained sidecars, sidecar event vectors, parallel source passes,
+second tapes, public `UnionTape`, new substrate APIs, sixth `BackendShape`,
+production FNV arbiters, and production hash-correctness proof.
+
+The REDRESS family meanings are carried forward, not just their ids: no
+tiny-string/StringBlock replay, retained parse shortcuts, retained class
+columns, Track 1 == Track 2 sidecars, global direct/Track 2 cap changes,
+numeric/digit route without fresh P1 BBNF hot-leaf evidence, one-quartet
+Unicode/object-pair promotion, PMULL/CSSC production promotion from ISA or
+checkasm alone, or decoded-string/structural-stream/string64/fixed-shape
+Unicode retry under old framing.
 
 ## Section 1 - Validated And Invalidated Ledger
 
@@ -96,10 +109,19 @@ manifest, pass/error counts, typed summaries, equality boolean, Track 1 Mbps,
 cssparser Mbps, threshold, margin, admitted row count, live admission sources,
 and retired legacy proof count.
 
+S-P3 must bind executable consumers for `(cd skinny && cargo xtask gate-json --check-results --skv16-css-typed-report <path>)`,
+`(cd skinny && cargo xtask gate-json --check-results --skv16-dirty-generated-report <path>)`,
+`(cd skinny && cargo xtask gate-json --check-results --skv16-pattern-h-roundtrip-report <path>)`,
+and `(cd skinny && cargo xtask gate-json --check-results --skv16-native-simd-report <path>)`
+when native SIMD is in scope. Dirty generated state proof must include an exact
+dirty-file manifest, `git status --short`, a broad command result, and
+owner/disposition per file.
+
 ## Section 3 - Trajectory
 
 SK-V16 is the grammar-derived CSS and Pattern H collapse tranche unless S-P0
 finds a new contrivance that must be pruned first. If SK-V16 closes with CSS
 typed equality and >SOTA, SK-V17 can become the broader grammar-driven
-generalization tranche. If SK-V16 surfaces new contrivances, PASS-IMPL V3
-routes them as SK-V17 prune inputs.
+generalization tranche. Any contrivance that affects SK-V16 close criteria
+blocks or redresses inside SK-V16; only unrelated broader generalization may
+route to SK-V17.

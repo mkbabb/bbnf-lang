@@ -42,9 +42,9 @@ Fresh W11 evidence recorded:
 
 W11 routes broad checks blocked by pre-existing dirty files:
 
-- full `cargo test -p codegen` consumes dirty
+- `(cd skinny && cargo test -p codegen)` consumes dirty
   `skinny/crates/runtime/src/grammars/css_l4_*/generated.rs`;
-- `cargo xtask check-real-typed` consumes dirty
+- `(cd skinny && cargo xtask check-real-typed)` consumes dirty
   `skinny/crates/bbnf-bench/src/generated_real_typed.rs`.
 
 Evidence:

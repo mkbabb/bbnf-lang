@@ -64,3 +64,10 @@ streams, sidecar event vectors, parallel source passes, second tapes, public
 `UnionTape`, new substrate APIs, sixth `BackendShape`, alternate document
 projection, provider/runtime/template deletion before replacement proof,
 production FNV arbiters, and production hash-correctness proof.
+
+They also block tiny-string/StringBlock replay, retained parse shortcuts,
+retained class columns, Track 1 == Track 2 sidecars, global direct/Track 2 cap
+changes, numeric/digit routes without fresh P1 BBNF hot-leaf evidence,
+one-quartet Unicode/object-pair promotion, PMULL/CSSC production promotion from
+ISA or checkasm alone, and decoded-string/structural-stream/string64/fixed-shape
+Unicode retries under old framing.

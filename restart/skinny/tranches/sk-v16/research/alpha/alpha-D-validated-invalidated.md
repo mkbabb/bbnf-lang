@@ -10,7 +10,7 @@ Output: this file.
 | Surface | Validated state |
 |---|---|
 | JSON | 51 / 51 strict measured rows sustained. |
-| Lock gates | default `cargo xtask gate-json --check-results` passes after W11 Lock 14 accounting repair. |
+| Lock gates | default `(cd skinny && cargo xtask gate-json --check-results)` passes after W11 Lock 14 accounting repair. |
 | Pattern H provenance | 67 runtime files and line-1 provenance scan pass. |
 | Decision Engine | W7 e-graph/CSP/generated-selection proof admitted. |
 | BackendShape lowerers | all five lowerer proofs admitted. |
@@ -39,7 +39,7 @@ Evidence:
 | CSS >SOTA | beat cssparser after typed equality on Apple M5 Max / aarch64. |
 | Dirty generated state | retire or regenerate cleanly before broad codegen gates close. |
 | Pattern H collapse | replace provenance-only state with generator-owned grammar-id template. |
-| Deep native SIMD | profile-first, scalar-reference, checkasm/parity, same-wave consumer. |
+| Deep native SIMD | conditional only after S-P1 profiles a fresh hot leaf; scalar-reference, checkasm/parity, same-wave consumer. |
 
 ## Ledger Text
 

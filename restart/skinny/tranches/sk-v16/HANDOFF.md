@@ -17,8 +17,11 @@ SK-V16 opens from routed remainder:
 - typed CSS same-workload equality and cssparser >SOTA retime;
 - retirement or intrinsic block of dirty generated CSS / real-typed state;
 - Pattern H generator-owned collapse beyond provenance;
-- native aarch64 SIMD only after profile, scalar reference, and parity;
 - FNV production migration remains blocked.
+
+Native aarch64 SIMD is not a W11 routed remainder. It is a conditional SK-V16
+candidate only if S-P1 profiles a fresh hot leaf and S-P3 binds scalar
+reference, parity/checkasm, same-wave consumer, and cold measurement.
 
 ## Authority
 
@@ -35,6 +38,9 @@ SK-V16 opens from routed remainder:
 `PASS-ALPHA.md` and `ORCHESTRATOR.md` describe G-Alpha as mandatory, but the
 active user pin says only G-Omega is mandatory and every other gate auto-passes.
 SK-V16 follows the active user pin. Do not stop for G-Alpha.
+
+Alpha hardening still runs CH1-CH7 before S-P0. CH7 overfit-prune is binding
+and cannot be folded into CH6 or deferred to S-P0.
 
 ## Next Move
 

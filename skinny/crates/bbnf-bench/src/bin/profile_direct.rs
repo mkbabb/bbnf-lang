@@ -169,8 +169,15 @@ fn run_once(mode: &str, corpus: &str, input: &str, bytes: &[u8]) -> u64 {
         "parse_only_track1" | "parse_only_track2" | "parse_only_sonic" | "parse_only_serde" => {
             return parse_only_checksum(mode, input, bytes);
         }
+        "host_call_dispatch_overhead"
+        | "host_call_eager_decode"
+        | "alternate_scalar_plan"
+        | "cold_first_parse"
+        | "structural_scan_only" => {
+            return masking_probe_checksum(mode, input, bytes);
+        }
         other => panic!(
-            "unknown mode {other}; expected track1|track2|sonic|serde|real_typed_track1|real_typed_track2|real_typed_sonic|real_typed_serde|direct_strict_track1|direct_strict_track2|direct_strict_sonic|direct_strict_serde|parse_only_track1|parse_only_track2|parse_only_sonic|parse_only_serde"
+            "unknown mode {other}; expected track1|track2|sonic|serde|real_typed_track1|real_typed_track2|real_typed_sonic|real_typed_serde|direct_strict_track1|direct_strict_track2|direct_strict_sonic|direct_strict_serde|parse_only_track1|parse_only_track2|parse_only_sonic|parse_only_serde|host_call_dispatch_overhead|host_call_eager_decode|alternate_scalar_plan|cold_first_parse|structural_scan_only"
         ),
     }
     .expect("direct digest failed");
@@ -237,6 +244,54 @@ fn parse_only_checksum(mode: &str, input: &str, bytes: &[u8]) -> u64 {
         }
         _ => unreachable!("parse_only_checksum called for non-parse-only mode"),
     }
+}
+
+fn masking_probe_checksum(mode: &str, input: &str, bytes: &[u8]) -> u64 {
+    match mode {
+        "host_call_dispatch_overhead" => {
+            let registry_call: fn(&str) -> usize = |s| s.len();
+            std::hint::black_box(registry_call)(std::hint::black_box(input)) as u64
+        }
+        "host_call_eager_decode" => {
+            let root = runtime::generated_json::parse(std::hint::black_box(input))
+                .expect("generated parse failed");
+            std::hint::black_box(eager_decode_strings(&root) as u64)
+        }
+        "alternate_scalar_plan" => {
+            let value = serde_json::from_str::<serde_json::Value>(std::hint::black_box(input))
+                .expect("serde_json failed");
+            std::hint::black_box(value_type_tag(&value) ^ bytes.len() as u64)
+        }
+        "cold_first_parse" => {
+            let owned = std::hint::black_box(bytes).to_vec();
+            let cold_input = std::str::from_utf8(&owned).expect("fixture is not UTF-8");
+            let root = runtime::generated_json::parse(std::hint::black_box(cold_input))
+                .expect("generated parse failed");
+            std::hint::black_box(eager_decode_strings(&root) as u64 ^ owned.len() as u64)
+        }
+        "structural_scan_only" => {
+            let offsets = bbnf_bench::scan::structural_offsets_scalar(std::hint::black_box(bytes));
+            std::hint::black_box(fnv_u32(&offsets))
+        }
+        _ => unreachable!("masking_probe_checksum called for non-masking mode"),
+    }
+}
+
+fn eager_decode_strings(root: &runtime::grammars::json::JsonRoot<'_>) -> usize {
+    fn walk(value: &runtime::grammars::json::JsonValue<'_, '_>) -> usize {
+        match value {
+            runtime::grammars::json::JsonValue::Object(object) => object
+                .pairs()
+                .map(|pair| pair.key().as_str().len() + walk(&pair.value()))
+                .sum(),
+            runtime::grammars::json::JsonValue::Array(array) => {
+                array.values().map(|value| walk(&value)).sum()
+            }
+            runtime::grammars::json::JsonValue::String(string) => string.as_str().len(),
+            _ => 0,
+        }
+    }
+    walk(&root.value())
 }
 
 fn value_type_tag(value: &serde_json::Value) -> u64 {

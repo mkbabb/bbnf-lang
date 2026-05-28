@@ -1,127 +1,133 @@
 ---
 agent: 1F
 pass: T-P1-excavation
-cycle: V6
-generated_at: 2026-05-23T00:00:00-04:00
+cycle: V1
+generated_at: 2026-05-27T23:05:32-04:00
 spec_surfaces_audited:
   - restart/ARCHITECTURE.md
   - restart/MASTER-PLAN.md
   - restart/locks/LOCKS.md
   - restart/HANDOFF.md
+  - restart/MIGRATION.md
   - restart/skinny/INDEX.md
-  - skinny/REDRESS.md
-  - skinny/RESULTS.md
-  - restart/skinny/tranches/sk-v14/SYNTHESIS.md
-  - restart/skinny/tranches/sk-v14/audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md
-  - restart/skinny/tranches/sk-v14/research/alpha/alpha-C-redress-digest.md
-  - restart/skinny/tranches/sk-v14/research/p1/p1e-hot-leaf-attribution.md
-files_audited_count: 3974
-live_truth_method: "wc -l + grep -n + find for spec-surface anchors; SK-V14 audit-overfit synthesis as binding ground-truth for the audit-corrected baseline; no recalled LOC"
+  - restart/skinny/SUBSTRATE.md
+  - restart/skinny/COMPILER.md
+  - restart/skinny/BENCH.md
+  - restart/skinny/WORKSPACE.md
+  - restart/skinny/HARDENING.md
+  - restart/skinny/ROLLING-SOTA-DELTA.md
+  - restart/skinny/USER-PIN-ADDENDUM-2026-05-21-FULL-SOTA.md
+  - restart/skinny/tranches/sk-v15/SYNTHESIS.md
+  - restart/skinny/tranches/sk-v15/HANDOFF.md
+  - restart/skinny/tranches/sk-v15/audit-overfit/*.md
+  - restart/skinny/tranches/sk-v15/research/**/*.md
+  - restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md
+files_audited_count: 3031
+live_truth_method: "sed/nl path:line reads over V1 spec surfaces; rg scans over restart/skinny/tranches/sk-v15 and prior totality reports; find counts: skinny/crates *.rs/*.toml=665, root crates/core/src/runtime *.rs=75, SK-V15 markdown=46, prior tranche research markdown=2227; wc -l largest-file census; no cargo/build mutation"
 prior_cycle_dispositions_folded:
   accepted:
-    - COH-001  # HANDOFF/INDEX vs RESULTS authority drift (extended to SK-V14 binding)
-    - COH-002  # 2-vs-3-surface grammar onboarding drift
-    - COH-004  # BackendShape 8-step derivation surface vs tests
-    - COH-005  # ARCH self-acknowledged JSON-shape pass leaks
+    - SKV14-PATTERN-H-67
+    - SKV14-LOCK14-ROOT-LEAKS
+    - SKV14-CSS-AUDIT-ZERO-AND-PRUNE-CHAIN
   rejected: []
   revised:
-    - COH-003  # H-wave gate drift retained but evidence anchors refreshed against SK-V14 audit pack
-    - COH-006  # INDEX SK-V12-vs-SK-V14 lag rewritten as SK-V13/SK-V14-vs-spec lag
+    - SKV14-W2-W4-W5-W6-W7-WAVE-GRAPH-CYCLES -> SKV15-NEW-CH3-V5-01
+    - SKV14-CSS-ADMIT-CLOSURE -> SKV15-CSS-AUDIT-DEMOTED
+    - SKV14-GATE-CLEANNESS -> SKV15-GATE-EXCLUSION-REQUIRED
   first_cycle_additions:
-    - COH-007  # spec-surface vs SK-V14 audit-zero baseline (0/17 + 0/24) drift
-    - COH-008  # 30 Lock-14-violation census not reflected in LOCKS or ARCH
-    - COH-009  # PRUNE-1..PRUNE-5 wave sequencing absent from MASTER-PLAN wave manifest
-    - COH-010  # P-1..P-7 pattern pre-blocks absent from MASTER/ARCH/LOCKS
-    - COH-011  # nine-grammar `crates/core/src/runtime/` census vs ARCH/spec
-    - COH-012  # CH7 Overfit-Prune lens not registered in PASS-1-EXCAVATION.md §3
+    - COH-001-SKV15-authority-drift
+    - COH-002-CSS-broadcast-admission-drift
+    - COH-003-wave-graph-cycle-detection-gap
+    - COH-004-gate-exclusion-detection-gap
+    - COH-005-Lock14-root-token-scan-gap
+    - COH-006-Pattern-H-provenance-gap
+    - COH-007-Decision-Engine-scaffold-gap
+    - COH-008-BackendShape-depth-gap
+    - COH-009-CSS_GENERATED_RS-contrivance
+    - COH-010-past-corpora-preblock-ledger
+    - COH-011-JSON-guard-baseline
+    - COH-012-G-Alpha-G-Omega-conflict
 divergence_count:
-  # Reconciled to the 12-row Spec-Claim ↔ Implementation Table below.
-  # spec_surface_drift = spec-vs-impl wording lags (COH-001/002/003/006/012) = 5
-  # partially_implemented = surface exists, evidence partial (COH-004) = 1
-  # unimplemented_cleanup = spec-acknowledged debt (COH-005) = 1
-  # silent_must_add = SK-V14 binding facts absent from V1 surfaces (COH-007/008/009/010) = 4
-  # impl_exceeds_spec = live impl above spec baseline (COH-011) = 1
-  # Total rows: 12 (sum = 5+1+1+4+1 = 12).
-  spec_surface_drift: 5
-  partially_implemented: 1
-  unimplemented_cleanup: 1
-  silent_must_add: 4
-  impl_exceeds_spec: 1
-  unknown_open_questions: 3   # U-COH-007, U-COH-011, U-COH-012 (see Open Questions table)
-  total_rows: 12
+  spec_claims_implemented: 2
+  spec_claims_unimplemented: 9
+  impl_exceeds_spec: 0
+  unknown: 1
 locks_amendment_candidates: 0
 ---
 
 ## Executive Summary
 
-The cross-document coherence picture is dominated by a single rupture: the SK-V14 audit pack and its 74-finding S-P0 prune list reset the empirical baseline to JSON `parse_only` 0/17, JSON `direct_to_struct` 0/17, JSON `real_typed_struct` 0/17, CSS L4 0/24, yet none of the four V1 governance surfaces (`ARCHITECTURE.md`, `MASTER-PLAN.md`, `LOCKS.md`, `HANDOFF.md`) reflect this restated floor. `restart/HANDOFF.md:12` still claims `skinny/RESULTS.md` at SK-V13 head is the current measured authority; `restart/skinny/INDEX.md:5-13` still routes through SK-V13 W0; `restart/MASTER-PLAN.md:512-575` still keys H.W4/H.W6 receivers off SK-V13 G1-G7 without an SK-V14 PRUNE prelude; `restart/ARCHITECTURE.md:1166` cites the SK-V13 reopen ledger without naming the SK-V14 audit-falsification overlay. Twelve catalogued coherence rows fall out: six are inherited from the prior cycle (COH-001..006 refreshed against the SK-V14 binding); six are new (COH-007..012 — audit-zero baseline absence, 30-Lock-14-violation census silence, PRUNE-1..PRUNE-5 wave-sequencing gap, P-1..P-7 pattern pre-block silence, the nine-grammar `crates/core/src/runtime/` totality census, and the CH7 Overfit-Prune lens not registered in PASS-1-EXCAVATION.md §3). Companion outputs are warranted: `1F-anti-pattern.md` carries the live-code anti-pattern evidence (with SK-V14 P-list classification); `1F-past-corpora.md` carries the prior-corpora pre-block ledger including the SK-V13/SK-V14 audit-pack pre-blocks.
+SK-V15 starts from a split truth: JSON is a validated guard baseline, while CSS L4 is audit-demoted and Pattern H, Lock 14/16 gates, codegen neutrality, and the Decision Engine remain prune/rebuild obligations. The current top-level V1 surfaces still mostly narrate SK-V14 W5B-FRONTENDR and the SK-V14 audit-corrected baseline (`restart/HANDOFF.md:5`, `restart/HANDOFF.md:70`, `restart/skinny/INDEX.md:5`), while SK-V15 now declares a PRUNE-then-REBUILD tranche (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:5`, `restart/skinny/tranches/sk-v15/HANDOFF.md:8`). The most material drift is not a new architecture disagreement; it is stale authority routing and evidence-gate incompleteness. Live scans confirm the known risks: 24 CSS admits are one broadcast measurement; `CSS_GENERATED_RS` is a relocated hand-curated parser body; Lock 14/16 gates omit or self-exempt known leak roots; Pattern H remains 67 root runtime files with 0 generated headers; the Decision Engine has zero e-graph rewrites, non-driving CSP, and four stub lowerers. Past-corpora findings that SK-V15 must not re-derive are already named in Alpha-C, especially REDRESS-183/184/209..213 and the seven pre-blocked route patterns.
 
 ## Spec-Claim ↔ Implementation Table
 
-| ID | Spec / authority claim (path:line) | Counter-surface / SK-V14 binding (path:line) | Verdict | LOC / risk | Note |
+| ID | Spec / corpus claim (path:line) | Live / counter-surface evidence (path:line) | Verdict | Divergence count class | Note |
 |---|---|---|---|---|---|
-| COH-001 | `restart/HANDOFF.md:12` declares "Current measured authority is `skinny/RESULTS.md` at SK-V13 head". | `restart/skinny/tranches/sk-v14/SYNTHESIS.md:54-65` declares the SK-V13 totals AUDIT-FALSIFIED and the SK-V14 obligation is `0/17` + `0/24` reopens; `audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md:25-43` records aggregate 74-finding FAIL with 31 CRIT + 20 HIGH. | spec-surface drift | 120-220 LOC doc reconciliation; high orchestration risk | The current-cycle authority page is two tranches stale. |
-| COH-002 | `restart/HANDOFF.md:17` says onboarding a grammar requires two declarative surfaces (`.bbnf` + workspace metadata). | `restart/locks/LOCKS.md:220` says three surfaces, including optional per-grammar declaration crate; `restart/ARCHITECTURE.md:37` calls the declaration crate a rare escape valve. | spec-surface drift | 20-40 LOC doc edit; medium Lock 14 onboarding risk | Two-surface and three-surface wording must be normalised. |
-| COH-003 | `restart/MASTER-PLAN.md:512-575` keys H.W4/H.W6 close gates off the SK-V13 G1-G7 receiver map. | `restart/skinny/tranches/sk-v14/SYNTHESIS.md:88-103` re-binds the close gates to SK-V14 R1-R10 PRUNE waves before any new admit. | spec-surface drift | 60-120 LOC doc edit; high gate-routing risk | The R-target goalset is not visible in MASTER. |
-| COH-004 | `restart/ARCHITECTURE.md:1090-1098` defines the 8-step `BackendShape` derivation; `restart/locks/LOCKS.md:164` says Pratt + SIMD auto-detect through the cost model. | `skinny/crates/passes/src/lib.rs:44-45` calls shape derivation but unit tests pin every JSON rule to `OffsetTape` at `skinny/crates/passes/src/lib.rs:1497-1503`; `skinny/crates/codegen/src/grammar_profile.rs:11-25` hand-enumerates two `RuntimeProvider` variants then seven CSS variants. | partially implemented | 150-300 LOC + tests; high cost-model risk | Selection surface exists; measured per-rule selection is not proven by current tests. |
-| COH-005 | `restart/ARCHITECTURE.md:1129-1131` itself states remaining generic-pass grammar-specific mining must be removed. | `skinny/crates/passes/src/lib.rs` is 1869 LOC; `restart/skinny/tranches/sk-v14/audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md` (axis A3) certifies 30 Lock-14 violations still resident. | unimplemented cleanup | 300-600 LOC; high Lock 14 risk | Spec debt = live code debt; the SK-V14 PRUNE-3 wave is the closure path. |
-| COH-006 | `restart/skinny/INDEX.md:5-17` keys the current dispatch posture on SK-V13 SYNTHESIS / SK-V13 DISPATCH-PROMPT and the SK-V12 close packet. | `restart/skinny/tranches/sk-v14/SYNTHESIS.md:1-8` is the active SK-V14 contract draft (date 2026-05-22); SK-V14 PRUNE waves invalidate every SK-V13 nominal close `audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md:25-43`. | spec-surface drift | 80-160 LOC doc/authority update; high gate risk | INDEX is the entry-page; it must point to SK-V14, not SK-V13. |
-| COH-007 | NEW. No V1 governance surface restates the audit-zero baseline `0/17 + 0/17 + 0/17 + 0/24`. | `restart/skinny/tranches/sk-v14/SYNTHESIS.md:54-65` is the only surface carrying it; `restart/skinny/tranches/sk-v14/audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md:40-43` confirms. | spec-claims-unimplemented (silent-must-add) | 40-80 LOC doc edit (one row each in HANDOFF + MASTER + INDEX); high orchestration risk | Empirical floor must be stated everywhere the spec claims a working SK-V13 receiver. |
-| COH-008 | NEW. `restart/locks/LOCKS.md:220` text bans grammar-name leaks in generic crates; no surface tracks the live 30-violation census. | `restart/skinny/tranches/sk-v14/audit-overfit/sk-v14-audit-overfit-lock14-scan.md` (axis A3) records 11 CRIT + 7 HIGH + 5 MED + 7 LOW = 30 violations; the 8 hand-written per-grammar provider modules under `skinny/crates/codegen/` are the recurrence vector. | spec-claims-unimplemented (silent-must-add) | 60-120 LOC LOCKS / ARCH addendum; high enforcement risk | The lock requires `rg`-verifiable invariants and Pattern H is uncited. |
-| COH-009 | NEW. `restart/MASTER-PLAN.md:564-575` enumerates MP.NW0..MP.NW10 receivers; no entry sequences SK-V14 PRUNE-1..PRUNE-5. | `restart/skinny/tranches/sk-v14/SYNTHESIS.md:88-103` binds R3 PRUNE-1..PRUNE-5 + R4 + R5 as the gating wave-prelude; `audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md:53-59` recites the `PASS-0-OVERFIT-AUDIT.md §Failure mode` clause halting the campaign until prune converges. | spec-claims-unimplemented | 100-200 LOC MASTER amendment; high wave-routing risk | The wave manifest cannot dispatch new admit waves until PRUNE is enumerated. |
-| COH-010 | NEW. P-1..P-7 pattern-level pre-blocks are absent from MASTER / ARCH / LOCKS. | `restart/skinny/tranches/sk-v14/SYNTHESIS.md:106-149` enumerates seven pattern pre-blocks (fake `@generated`, sonic-rs eager-DOM, tiny-fixture inflation, gate-relabel, scaffold-as-load-bearing, per-grammar provider modules, Track 1 ≡ Track 2). | spec-claims-unimplemented (silent-must-add) | 80-160 LOC pre-block ledger (one anchor each in MASTER + LOCKS); high regression risk | Without P-list registration, future tranches re-derive the same fake-patterns. |
-| COH-011 | NEW. `restart/ARCHITECTURE.md:764-765` cites the nine-grammar set `(bbnf, bnf, csv, css_l4, css_pretty, ebnf, google_sheets, json, math)` but is not authoritative on per-grammar file counts. | Live `find /Users/mkbabb/Programming/bbnf-lang/crates/core/src/runtime -mindepth 1 -maxdepth 1 -type d \| wc -l` returns 9; per-grammar census `bbnf=8, bnf=7, css_l4=7, css_pretty=7, csv=7, ebnf=7, google_sheets=10, json=7, math=7 = 67 hand-written files` (live `find crates/core/src/runtime/google_sheets -type f \| wc -l` returns 10; verified at HEAD 2026-05-23) confirmed at `restart/skinny/tranches/sk-v14/audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md:194-211` and S-P0 A6 baseline `sk-v14-audit-overfit-pre-restart-pattern.md:53`. | impl-exceeds-spec (drift +3 vs V13 baseline of 64) | 0 LOC for census; 600-1200 LOC for PRUNE-4 generator rollout | The +3 delta comes from the `css_pretty` directory addition; PRUNE-4 sub-wave count is 9 not 8. |
-| COH-012 | NEW. `restart/prompts/totality/PASS-1-EXCAVATION.md:91-138` registers six lenses CH1..CH6; no CH7 line. | `restart/locks/LOCKS.md` carries no CH7 binding clause (verified `grep -n "CH7\|Overfit" restart/locks/LOCKS.md` returns zero hits at HEAD 2026-05-23); `restart/prompts/skinny/PASS-0-OVERFIT-AUDIT.md:62-87` is the de facto CH7 lens authority that the SK-V14 contract relies on; `restart/skinny/tranches/sk-v14/SYNTHESIS.md:22` cites the CH7 binding via the SK-V14 audit-corrected baseline. 1E LAC-1E-12 at `1E-locks-evidence.md:120` carries the anti-fabrication phrasing `LOCKS.md (no CH7 mention)` as the canonical template. | spec-surface drift (impl ahead of spec) | 30-60 LOC `PASS-1-EXCAVATION.md §3` extension | The CHALLENGE wave omits the Overfit-Prune lens the SK-V14 contract relies on. |
+| COH-001 | Main handoff says current authority is SK-V14 W5B-FRONTENDR / audit-zero baseline (`restart/HANDOFF.md:5`, `restart/HANDOFF.md:70`). INDEX likewise names SK-V14 as live dispatch authority (`restart/skinny/INDEX.md:5`, `restart/skinny/INDEX.md:13`). | SK-V15 handoff says PASS-IMPL V1 reclassified JSON honest / CSS contrived / Pattern H not collapsed / Decision Engine scaffold (`restart/skinny/tranches/sk-v15/HANDOFF.md:8`-`11`) and SK-V15 is open (`restart/skinny/tranches/sk-v15/HANDOFF.md:13`). | spec-surface drift | unimplemented | Update authority surfaces before downstream agents route from stale SK-V14 text. |
+| COH-002 | SK-V14 INDEX still routes W8/W9/W10 as blocked behind PRUNE-1..5 (`restart/skinny/INDEX.md:35`-`40`). | SK-V15 close requires no 24-row CSS broadcast, typed CSS value output, and no CSS contrivance (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:39`-`42`); CSS is explicitly audit-demoted (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:62`-`68`). | spec-surface drift | unimplemented | The older block is directionally right but lacks the SK-V15 anti-broadcast and typed-value conditions. |
+| COH-003 | MASTER and MIGRATION encode the Omega V8 W5B sequence and downstream blocks (`restart/MASTER-PLAN.md:800`-`823`, `restart/MIGRATION.md:138`-`144`). | SK-V15 adds NEW-CH3-V5-01 requiring delete/rebuild dependency tables for every retirement (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:100`-`106`) and Alpha-F repeats the dependency-table requirement (`restart/skinny/tranches/sk-v15/research/alpha/alpha-F-contract-draft.md:64`-`69`). | spec-surface drift | unimplemented | This is the V3/V4 wave-graph-cycle miss: deletion is blocked unless rebuild provider proof lands no later than delete wave. |
+| COH-004 | Lock 14 mandates per-wave gate enforcement over generic roots and decision-engine facts (`restart/locks/LOCKS.md:377`-`390`); Lock 16 requires strict checkasm and source-present primitive manifest closure (`restart/locks/LOCKS.md:480`-`506`). | SK-V15 close adds self-exempting gate rejection and exclusion reporting (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:44`, `restart/skinny/tranches/sk-v15/SYNTHESIS.md:109`-`110`); A3 finds omitted scan roots and self-exempting legacy gates (`restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A3-lock14-lock16-generic-scan.md:26`-`31`). | spec-to-live drift | unimplemented | Gate-exclusion misses are live, not hypothetical. |
+| COH-005 | Lock 14 forbids grammar switches, grammar-named public APIs, feature flags, and hand-written per-grammar runtime files (`restart/locks/LOCKS.md:349`). | A3 shows the live Lock 14 roots omit leak-bearing codegen roots (`skinny/crates/bbnf-bench/src/lock14_baseline.rs:2370`-`2379`) and the forbidden token universe is JSON-shaped only (`skinny/crates/bbnf-bench/src/lock14_baseline.rs:2381`-`2395`). | spec-to-live drift | unimplemented | Lock text is strong; executable scan is too narrow. |
+| COH-006 | Lock 14 v+1 requires a Pattern H per-tranche count and treats the 67-file recurrence as category-scale failure (`restart/locks/LOCKS.md:402`-`424`); MASTER repeats the 67 baseline and 9-sub-wave PRUNE-4 (`restart/MASTER-PLAN.md:311`-`322`). | A4 reports Pattern H is 67 files with 0 generated headers (`restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A4-generator-roundtrip.md:17`-`18`, `:29`); A6 repeats 9 dirs / 67 files / 0 headers (`restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A6-pattern-recurrence.md:23`-`27`, `:35`). | spec-to-live drift | unimplemented | Pattern H is counted but not collapsed; provenance is the missing close primitive. |
+| COH-007 | ARCH describes active cost facts, DecisionCspFacts, and `lower_to_rust` admission only with satisfying CSP (`restart/ARCHITECTURE.md:1081`); SK-V15 close requires rewrite count >=1 and real lowerers (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:47`). | A5 finds zero e-graph rewrites (`skinny/crates/passes/src/backend_egraph.rs:65`-`67`), selected-index CSP preservation (`skinny/crates/passes/src/decision_csp.rs:35`-`54`), grammar-named decision facts (`skinny/crates/passes/src/decision_csp.rs:162`-`166`), and four stub lowerers (`skinny/crates/codegen/src/lower/eager_tape.rs:15`-`17`). | spec-to-live drift | unimplemented | Decision Engine is scaffold, not load-bearing. |
+| COH-008 | ARCH and HANDOFF preserve the five `BackendShape` variants and per-rule derivation (`restart/ARCHITECTURE.md:1088`-`1115`, `restart/HANDOFF.md:352`-`371`). | The enum/dispatcher covers all five (`skinny/crates/codegen/src/lower/mod.rs:17`-`24`), but four lowerers return label strings (`skinny/crates/codegen/src/lower/offset_tape.rs:15`-`17`, `skinny/crates/codegen/src/lower/event_tape.rs:15`-`17`, `skinny/crates/codegen/src/lower/collapsed_stage.rs:15`-`17`). | partially implemented | unimplemented | Five-shape canon is intact; implementation depth is not. |
+| COH-009 | Generated-output allowance survives only when emitted from grammar source + workspace metadata (`restart/locks/LOCKS.md:351`-`366`). | CSS generation emits `normalize(CSS_GENERATED_RS)` (`skinny/crates/codegen/src/runtime_generator.rs:81`-`104`) where `CSS_GENERATED_RS` is the embedded full parser body (`skinny/crates/codegen/src/runtime_generator.rs:713`-`830`); A4 says all seven CSS generated files share one hash and are generated from a relocated hand-curated string (`restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A4-generator-roundtrip.md:16`, `:24`). | spec-to-live drift | unimplemented | CSS contrivance remains live. |
+| COH-010 | Alpha-C says SK-V15 waves must not reopen broadcast CSS admits, mismatched CSSOM comparisons, moved string-literal parsers, silent exclusions, Pattern H without generated ownership, scaffold Decision Engine, or FNV closed-enum production migration (`restart/skinny/tranches/sk-v15/research/alpha/alpha-C-redress-digest.md:50`-`62`). | The pre-blocks are also routed to PRUNE/REBUILD receivers (`restart/skinny/tranches/sk-v15/research/alpha/alpha-C-redress-digest.md:64`-`69`). | implemented ledger | implemented | Past-corpora guard exists; main surfaces need cross-links. |
+| COH-011 | SK-V15 validates JSON as guard baseline: 51/51 remains admitted (`restart/skinny/tranches/sk-v15/research/alpha/alpha-D-validated-invalidated.md:10`-`12`). | A2 finds JSON parse/direct/typed guard rows clean except FNV bench-only quarantine (`restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A2-admit-mechanism-integrity.md:11`-`16`, `:47`-`48`). | implemented | implemented | Do not re-derive JSON guard as if CSS invalidation invalidated JSON. |
+| COH-012 | PASS-ALPHA / ORCHESTRATOR still describe G-Alpha as mandatory per Alpha-F (`restart/skinny/tranches/sk-v15/research/alpha/alpha-F-contract-draft.md:71`-`80`). | SK-V15 handoff says only G-Omega is mandatory under the active user pin (`restart/skinny/tranches/sk-v15/HANDOFF.md:46`-`50`). | open conflict | unknown | Governance conflict is documented but not reconciled in V1 surfaces. |
 
 ## Divergences Catalogued
 
-The ID-keyed `V2 Planning Metadata` table is the authoritative CH4 carrier; this index is structural only.
-
 | ID | Divergence | Evidence | LOC / risk |
 |---|---|---|---|
-| COH-001 | HANDOFF stale against SK-V14 audit-corrected baseline. | `restart/HANDOFF.md:12`; `restart/skinny/tranches/sk-v14/SYNTHESIS.md:54-65` | 120-220 LOC; high |
-| COH-002 | Two-surface vs three-surface grammar onboarding wording. | `restart/HANDOFF.md:17`; `restart/locks/LOCKS.md:220`; `restart/ARCHITECTURE.md:37` | 20-40 LOC; medium |
-| COH-003 | MASTER H.W-wave receivers key on SK-V13 G1-G7, not SK-V14 R1-R10. | `restart/MASTER-PLAN.md:512-575`; `restart/skinny/tranches/sk-v14/SYNTHESIS.md:88-103` | 60-120 LOC; high |
-| COH-004 | BackendShape selection surface exists; tests pin every JSON rule to OffsetTape. | `restart/ARCHITECTURE.md:1090-1098`; `skinny/crates/passes/src/lib.rs:1497-1503`; `skinny/crates/codegen/src/grammar_profile.rs:11-25` | 150-300 LOC; high |
-| COH-005 | Spec acknowledges generic-pass grammar leaks; SK-V14 axis A3 confirms 30 unresolved Lock-14 violations. | `restart/ARCHITECTURE.md:1129-1131`; `audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md` (axis A3); `skinny/crates/passes/src/lib.rs:324-349` | 300-600 LOC; high |
-| COH-006 | INDEX still routes through SK-V13 SYNTHESIS / SK-V12 close packet. | `restart/skinny/INDEX.md:5-17`; `restart/skinny/tranches/sk-v14/SYNTHESIS.md:1-50` | 80-160 LOC; high |
-| COH-007 | Audit-zero baseline (`0/17 + 0/17 + 0/17 + 0/24`) not stated on any V1 surface. | `restart/skinny/tranches/sk-v14/SYNTHESIS.md:54-65`; absent in HANDOFF/MASTER/INDEX/LOCKS/ARCH | 40-80 LOC; high |
-| COH-008 | 30 Lock-14 violations census uncited on LOCKS/ARCH. | `audit-overfit/sk-v14-audit-overfit-lock14-scan.md`; `restart/locks/LOCKS.md:220` | 60-120 LOC; high |
-| COH-009 | PRUNE-1..PRUNE-5 wave sequencing absent from MASTER wave manifest. | `restart/skinny/tranches/sk-v14/SYNTHESIS.md:88-103`; `restart/MASTER-PLAN.md:564-575` | 100-200 LOC; high |
-| COH-010 | P-1..P-7 pattern pre-blocks unregistered in MASTER/ARCH/LOCKS. | `restart/skinny/tranches/sk-v14/SYNTHESIS.md:106-149` | 80-160 LOC; high |
-| COH-011 | Nine-grammar `crates/core/src/runtime/` census (67 files; `bbnf=8, bnf=7, css_l4=7, css_pretty=7, csv=7, ebnf=7, google_sheets=10, json=7, math=7 = 67`) drifts +3 vs prior baseline; PRUNE-4 sub-waves 9 not 8. | live `find` output (`google_sheets` = 10 verified at HEAD); `audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md:194-211`; S-P0 A6 `sk-v14-audit-overfit-pre-restart-pattern.md:53` | 0 LOC census; 600-1200 LOC PRUNE-4 | medium-high |
-| COH-012 | CH7 Overfit-Prune lens missing from PASS-1-EXCAVATION.md §3 registry; LOCKS.md silent on CH7 binding. | `restart/prompts/totality/PASS-1-EXCAVATION.md:91-138`; `restart/locks/LOCKS.md` (no CH7 mention; `grep -n "CH7\|Overfit"` returns zero); `restart/prompts/skinny/PASS-0-OVERFIT-AUDIT.md:62-87` (lens authority); 1E LAC-1E-12 template | 30-60 LOC; medium |
+| COH-001 | Main authority pages are one tranche stale: they still route from SK-V14 after SK-V15 opened. | `restart/HANDOFF.md:5`-`13`; `restart/skinny/INDEX.md:5`-`23`; `restart/skinny/tranches/sk-v15/HANDOFF.md:8`-`18` | 80-160 LOC docs; high routing risk |
+| COH-002 | CSS 24-row broadcast remains invalidated while older surfaces still carry SK-V14 dispatch posture. | `restart/skinny/tranches/sk-v15/SYNTHESIS.md:39`-`42`; A1 broadcast row at `restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A1-measurement-integrity.md:11` | 100-250 LOC ledger/gate; critical |
+| COH-003 | Wave-graph cycle detection is SK-V15-local, not folded into MASTER/MIGRATION. | `restart/MASTER-PLAN.md:800`-`823`; `restart/MIGRATION.md:138`-`144`; `restart/skinny/tranches/sk-v15/SYNTHESIS.md:100`-`106` | 60-140 LOC docs/gates; high |
+| COH-004 | Gate-exclusion and self-exempting-gate misses are live. | `restart/skinny/tranches/sk-v15/SYNTHESIS.md:109`-`110`; `skinny/crates/bbnf-bench/src/bin/gate.rs:63`-`75`; `skinny/xtask/src/main.rs:285`-`292` | 80-220 LOC gate hardening; high |
+| COH-005 | Lock 14 root/token scan misses codegen and non-JSON grammar leaks. | `skinny/crates/bbnf-bench/src/lock14_baseline.rs:2370`-`2395`; `restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A3-lock14-lock16-generic-scan.md:44`-`52` | 120-300 LOC scan expansion; high |
+| COH-006 | Pattern H count is stable at 67, but generated ownership is 0/67. | `restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A4-generator-roundtrip.md:17`-`18`; `restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A6-pattern-recurrence.md:35` | 1.5k-3k LOC PRUNE-D; critical |
+| COH-007 | Decision Engine is ceremonial: zero rewrite rules, non-driving CSP, stub lowerers. | `skinny/crates/passes/src/backend_egraph.rs:65`-`67`; `skinny/crates/passes/src/decision_csp.rs:53`-`83`; `skinny/crates/codegen/src/lower/eager_tape.rs:15`-`17` | 600-1.4k LOC split REBUILD-F; critical |
+| COH-008 | BackendShape exists but only `SinkOnly` is materially lowered. | `skinny/crates/codegen/src/lower/mod.rs:17`-`24`; `restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A5-decision-engine-fold.md:14` | 400-1.2k LOC lowerer work; high |
+| COH-009 | CSS "generated" path is a grammar-header facade over a hand-curated string body. | `skinny/crates/codegen/src/runtime_generator.rs:97`; `skinny/crates/codegen/src/runtime_generator.rs:713`; `restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A4-generator-roundtrip.md:49`-`53` | 300-900 LOC PRUNE/REBUILD; critical |
+| COH-010 | Prior route pre-blocks are captured and must be treated as ledger constraints. | `restart/skinny/tranches/sk-v15/research/alpha/alpha-C-redress-digest.md:26`-`33`, `:50`-`62` | 0 LOC if respected; high if reopened |
+| COH-011 | JSON guard baseline remains valid and should not be re-derived. | `restart/skinny/tranches/sk-v15/research/alpha/alpha-D-validated-invalidated.md:8`-`21`; `restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A2-admit-mechanism-integrity.md:47`-`48` | 0 LOC guard; low |
+| COH-012 | G-Alpha vs G-Omega gate posture is documented but not reconciled in V1 governance surfaces. | `restart/skinny/tranches/sk-v15/research/alpha/alpha-F-contract-draft.md:71`-`80`; `restart/skinny/tranches/sk-v15/HANDOFF.md:46`-`50` | 20-60 LOC governance note; medium |
 
-## V2 Planning Metadata (authoritative CH4 carrier)
+## Anti-Pattern Scan
 
-| ID | loc_budget | risk | wave | hard_cap | same_wave_consumer | evidence_basis |
-|---|---:|---|---|---:|---|---|
-| COH-001 | 120-220 LOC docs | high | T-P3 governance (Pass Omega CRUD) | 280 LOC | totality HANDOFF + SK-V14 contract consumers | `restart/HANDOFF.md:12`; `restart/skinny/tranches/sk-v14/SYNTHESIS.md:54-65` |
-| COH-002 | 20-40 LOC docs | medium | T-P3 governance | 60 LOC | grammar onboarding docs | `restart/HANDOFF.md:17`; `restart/locks/LOCKS.md:220`; `restart/ARCHITECTURE.md:37` |
-| COH-003 | 60-120 LOC docs | high | T-P3 governance | 160 LOC | H.W wave manifest reconciler | `restart/MASTER-PLAN.md:512-575`; `restart/skinny/tranches/sk-v14/SYNTHESIS.md:88-103` |
-| COH-004 | 150-300 LOC code+tests | high | pass-hardening wave (SK-V14 PRUNE-3 sub-wave) | 400 LOC | codegen BackendShape selection tests | `restart/ARCHITECTURE.md:1090-1098`; `skinny/crates/passes/src/lib.rs:1497-1503`; `skinny/crates/codegen/src/grammar_profile.rs:11-25` |
-| COH-005 | 300-600 LOC code+tests | high | Lock 14 wave (PRUNE-3) | 800 LOC | CSS/Sheets/BBNF-self recognizer fixtures | `restart/ARCHITECTURE.md:1129-1131`; `audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md` axis A3 |
-| COH-006 | 80-160 LOC docs | high | T-P3 governance | 220 LOC | INDEX consumer page | `restart/skinny/INDEX.md:5-17`; `restart/skinny/tranches/sk-v14/SYNTHESIS.md:1-50` |
-| COH-007 | 40-80 LOC docs | high | T-P3 governance | 120 LOC | HANDOFF/MASTER/INDEX/LOCKS audit-zero anchors | `restart/skinny/tranches/sk-v14/SYNTHESIS.md:54-65` |
-| COH-008 | 60-120 LOC docs | high | T-P3 governance + Lock 14 lint wave | 180 LOC | Lock 14 lint consumer + LOCKS amendment | `audit-overfit/sk-v14-audit-overfit-lock14-scan.md`; `restart/locks/LOCKS.md:220` |
-| COH-009 | 100-200 LOC docs | high | T-P3 governance | 260 LOC | S-P3 wave manifest | `restart/skinny/tranches/sk-v14/SYNTHESIS.md:88-103` |
-| COH-010 | 80-160 LOC docs | high | T-P3 governance + LOCKS amendment | 220 LOC | pattern pre-block ledger consumer | `restart/skinny/tranches/sk-v14/SYNTHESIS.md:106-149` |
-| COH-011 | 0 LOC census; 600-1200 LOC PRUNE-4 | medium-high | PRUNE-4 (9 sub-waves) | 1400 LOC for code | per-grammar generator template consumer | live `find` + `audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md:194-211` |
-| COH-012 | 30-60 LOC docs | medium | T-P3 governance | 80 LOC | PASS-1-EXCAVATION §3 amendment; CH7 author | `restart/prompts/totality/PASS-1-EXCAVATION.md:91-138`; `restart/locks/LOCKS.md` (no CH7 mention; `grep -n "CH7\|Overfit"` returns zero hits); `restart/prompts/skinny/PASS-0-OVERFIT-AUDIT.md:62-87`; 1E LAC-1E-12 |
+| Anti-pattern | Live evidence | Verdict | verify_action |
+|---|---|---|---|
+| God modules | Live `wc -l` over skinny Rust files reports `bbnf-bench/src/report.rs=10564`, `bbnf-bench/src/bin/gate.rs=5949`, `bbnf-bench/src/generated_real_typed.rs=4941`, `bbnf-bench/src/lock14_baseline.rs=4796`, `bbnf-bench/src/nonjson_css_l4.rs=3644`; Lock 13 permits bench/report/gate over 500 LOC only under explicit gate-surface budget (`restart/locks/LOCKS.md:340`-`344`). | open; bench may be exempt, production-like reports need budget transcript | Emit a Lock 13 transcript naming each >500 LOC file and its exemption or split receiver. |
+| Parallel substrates / sidecars | Lock 1/ARCH treat mask streams as transient producers, not retained sidecars (`restart/ARCHITECTURE.md:1088`); Track 2 uses runtime tape helpers (`skinny/crates/runtime/src/lib.rs:1`, `skinny/crates/runtime/src/grammars/json/parser.rs:5` per prior 1F evidence), while CSS facts are comparator/fact-stream outputs. | no new retained substrate proven in this pass; CSS fact-stream still needs fence | Re-run `rg -n 'EventCursor|generated_eventcursor|structural_offsets|TapeAssembler' skinny/crates crates/core/src` before any close claim. |
+| Grammar-name leaks | Runtime root exports JSON and seven CSS modules by name (`skinny/crates/runtime/src/lib.rs:3`-`25`); codegen profiles hardcode eight profiles (`skinny/crates/codegen/src/grammar_profile.rs:89`-`99`); A3 sees CSS/JSON decision facts (`skinny/crates/passes/src/decision_csp.rs:162`-`166`). | live Lock 14 violation | PRUNE-WAVE-B expands scan; PRUNE-WAVE-C removes codegen/runtime family branches. |
+| Self-exempting gates | Legacy gate paths return `Ok(())` without explicit JSON/results check (`skinny/crates/bbnf-bench/src/bin/gate.rs:63`-`75`, `:91`-`92`); `xtask gate_json` only validates results when `--check-results` is present (`skinny/xtask/src/main.rs:285`-`292`). | live close risk | Gate close must reject missing `--check-results` or emit a non-close diagnostic; no silent pass. |
+
+## Past-Corpora Do-Not-Redrive Ledger
+
+| Finding family | Prior-corpora evidence | SK-V15 implication |
+|---|---|---|
+| Wave-graph cycles | REDRESS-183, 184, 209..212, and 213 remain pre-blocked (`restart/skinny/tranches/sk-v15/research/alpha/alpha-C-redress-digest.md:26`-`33`). | No delete/retire wave without rebuild-provider proof table; this is NEW-CH3-V5-01. |
+| CSS broadcast admission | Alpha-C pre-blocks one CSS timing tuple projected into N conceptual admits (`restart/skinny/tranches/sk-v15/research/alpha/alpha-C-redress-digest.md:54`); A1 records the 24-row duplicate tuple (`restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A1-measurement-integrity.md:11`). | Do not re-admit CSS by row multiplication; require one aggregate diagnostic or N distinct measurements. |
+| CSS comparator mismatch | Alpha-D invalidates CSS because a brace-counter summary was compared against lightningcss CSSOM (`restart/skinny/tranches/sk-v15/research/alpha/alpha-D-validated-invalidated.md:25`-`34`). | cssparser is near-term same-workload comparator; lightningcss waits for CSSOM/value parity. |
+| Lock 14/16 gate holes | Alpha-C pre-blocks silent exclusion lists (`restart/skinny/tranches/sk-v15/research/alpha/alpha-C-redress-digest.md:57`); A3 details omitted roots and non-strict report coverage (`restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A3-lock14-lock16-generic-scan.md:36`-`84`). | No gate can close without exclusion report and strict primitive manifest. |
+| Pattern H | Alpha-C pre-blocks Pattern H collapse without generated headers and ownership (`restart/skinny/tranches/sk-v15/research/alpha/alpha-C-redress-digest.md:58`); A6 finds 67 files / 0 headers (`restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A6-pattern-recurrence.md:23`-`27`). | Reheader-only or per-grammar workaround is not closure. |
+| Decision Engine scaffold | Alpha-C pre-blocks zero-rule e-graph, non-driving CSP, and label-string lowerers (`restart/skinny/tranches/sk-v15/research/alpha/alpha-C-redress-digest.md:59`-`60`). | REBUILD-WAVE-F needs emitted runtime diffs, not fact strings. |
 
 ## Gaps / Missing Primitives
 
-| Gap | Evidence | LOC / risk |
+| Gap | Evidence | Receiver |
 |---|---|---|
-| No single current-state authority surface spans SK-V13 close → SK-V14 audit overlay → SK-V14 R-targets. | HANDOFF SK-V13 head at `restart/HANDOFF.md:12`; SK-V14 SYNTHESIS active contract at `restart/skinny/tranches/sk-v14/SYNTHESIS.md:1`. | 120-220 LOC; high |
-| Lock 14 verification commands at `restart/locks/LOCKS.md:220` do not include the SK-V14 generic-codegen-provider census command (audit-overfit/sk-v14-audit-overfit-lock14-scan.md axis A3). | Verification command list at `restart/locks/LOCKS.md:220` ends at three `rg/find/rg` commands; the per-grammar `RuntimeProvider` variant scan is missing. | 30-60 LOC; medium |
-| MASTER-PLAN MP.NW-receiver enumeration has no PRUNE-prelude row. | `restart/MASTER-PLAN.md:564-575`. | 100-200 LOC; high |
-| PASS-1-EXCAVATION CH-lens registry omits CH7 Overfit-Prune; LOCKS.md silent on the binding. | `restart/prompts/totality/PASS-1-EXCAVATION.md:91-138` lists CH1..CH6 only; `restart/locks/LOCKS.md` carries no CH7 clause (`grep -n "CH7\|Overfit" restart/locks/LOCKS.md` returns zero hits at HEAD); `restart/prompts/skinny/PASS-0-OVERFIT-AUDIT.md:62-87` is the de facto lens authority the SK-V14 contract relies on. | 30-60 LOC; medium |
+| No current top-level SK-V15 authority anchor in HANDOFF/INDEX/MASTER. | SK-V15 authority exists at `restart/skinny/tranches/sk-v15/SYNTHESIS.md:10`-`25`; top-level HANDOFF/INDEX still start from SK-V14 (`restart/HANDOFF.md:5`, `restart/skinny/INDEX.md:5`). | T-P3/Omega docs fold |
+| No gate-exclusion-report field enforced by the current Lock 14/16 close gates. | SK-V15 telemetry requires `gate_exclusion_report` (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:121`-`127`); A3 shows current gates omit/exempt roots (`restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A3-lock14-lock16-generic-scan.md:66`-`76`). | PRUNE-WAVE-B |
+| No typed CSS value/document/view API. | SK-V15 close requires CSS Value API (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:41`); A4 finds CSS output is summary/fact-stream text (`restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A4-generator-roundtrip.md:24`-`25`). | REBUILD-WAVE-E |
+| No generated root runtime provenance for Pattern H. | A4/A6 report 67 root runtime files and 0 generated headers (`restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A4-generator-roundtrip.md:17`-`18`; `restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A6-pattern-recurrence.md:35`). | PRUNE-WAVE-D |
+| No load-bearing e-graph/CSP/lowerer decision loop. | A5 verdict table rows CRITICAL/HIGH (`restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A5-decision-engine-fold.md:10`-`16`). | REBUILD-WAVE-F |
 
 ## Open Questions
 
 | UNKNOWN | Blocking question | verify_action |
 |---|---|---|
-| U-COH-007 | Which surface is authoritative for the audit-zero baseline restatement: HANDOFF, MASTER, or INDEX? | T-P3 disposes; Pass Omega CRUD adds the audit-zero anchor to all three; 1E proposes LOCKS-amendment candidate L-AUDIT-ZERO. |
-| U-COH-011 | Does the nine-grammar `crates/core/src/runtime/` census require a Lock 14 amendment to admit `css_pretty` and acknowledge the 9-sub-wave PRUNE-4 partitioning, or is the existing Lock 14 prohibition sufficient? | 1E proposes amendment candidate; T-P3 disposes; PRUNE-4 implementation order independent of amendment. |
-| U-COH-012 | Should CH7 register in `PASS-1-EXCAVATION.md §3` (per `PASS-0-OVERFIT-AUDIT.md:62-87` lens authority and 1E LAC-1E-12 promotion candidate) or only in the SK-V14 totality-pass overlay? Note: LOCKS.md is silent on CH7 binding (verified zero hits) — the SK-V14 contract relies on `PASS-0-OVERFIT-AUDIT.md:62-87` as the de facto authority. | T-P3 disposes; the SK-V14 dispatch context already cites "CHALLENGE V1 (CH1-CH7 + aggregator)" — implementation lags only the lens prose. |
+| U-COH-001 | Which top-level surface becomes the canonical SK-V15 entry: `restart/HANDOFF.md`, `restart/skinny/INDEX.md`, or SK-V15 tranche handoff only? | T-P3/Omega fold should add one SK-V15 authority row to HANDOFF and INDEX, then cite SK-V15 SYNTHESIS/HANDOFF as current tranche authority. |
+| U-COH-002 | Should Lock 14/16 text itself gain explicit "report all exclusions" language, or is SK-V15 telemetry sufficient? | 1E/T-P3 should compare `restart/locks/LOCKS.md:377`-`390` and `:480`-`:506` against `restart/skinny/tranches/sk-v15/SYNTHESIS.md:109`-`127`, then decide whether to amend LOCKS or only gate schema. |
+| U-COH-003 | Are all claimed sidecar absences still true in the current dirty tree? | Capture exact `rg -n 'EventCursor|generated_eventcursor|structural_offsets|TapeAssembler|fixture_sidecar_facts|same-plane-source-sidecar' skinny/crates crates/core/src` output before any CH5 or substrate-close claim. |
+| U-COH-004 | Does the G-Alpha auto-pass user pin need a durable V1 governance note? | Reconcile Alpha-F gate conflict (`restart/skinny/tranches/sk-v15/research/alpha/alpha-F-contract-draft.md:71`-`80`) with SK-V15 HANDOFF (`restart/skinny/tranches/sk-v15/HANDOFF.md:46`-`50`) in the next Omega/governance fold. |

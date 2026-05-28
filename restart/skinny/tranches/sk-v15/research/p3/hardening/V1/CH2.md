@@ -1,40 +1,52 @@
-# SK-V15 S-P3 V1 CH2 Generality
+# SK-V15 S-P3 V1 CH2 GENERALITY
 
-Verdict: REVISE
+Pass: S-P3 Synthesis-Plan. Cycle: V1. Lens: CH2.
+Date: 2026-05-28.
+Input packet: commit `4fe37c042` plus current V1 hardening outputs.
 
-Scope reviewed: current HEAD/working tree surfaces for
-`restart/skinny/tranches/sk-v15/research/p3/p3a..p3f`,
-`restart/skinny/tranches/sk-v15/SPEC.md`,
-`restart/skinny/tranches/sk-v15/DISPATCH-PROMPT.md`,
-`restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md`,
-`restart/prompts/ORCHESTRATOR.md`, and
-`restart/skinny/tranches/sk-v15/research/p2/hardening/HARDENING-S-P2-V3-CONSOLIDATED.md`.
+## Verdict
 
-## CH2 Check Summary
+REVISE.
 
-| Check | Result | Evidence |
-|---|---|---|
-| S-P2 survivor boundary stays grammar-neutral | ACCEPT WITH FOLD | P3-A carries the locked S-P2 survivor families and excludes the rejected numeric, EOB, PMULL, CSSC, x86, retained sidecar, schema-builder, harness-hash, and CSS-broadcast routes (`restart/skinny/tranches/sk-v15/research/p3/p3a-candidate-shortlist.md:7`-`:14`, `:20`-`:29`). Preserve that boundary while reindexing/splitting waves. |
-| Lock 14 / generic-crate generality gate is executable | REVISE | PASS-3 requires a SPEC `Section 2.1 generality + Lock 14 gate` and requires every generic-crate edit to carry non-JSON proof (`restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md:94`-`:120`). SPEC has Section 2 caps/manifest but no Section 2.1 generality gate (`restart/skinny/tranches/sk-v15/SPEC.md:142`-`:166`). |
-| Generic-code waves require non-JSON proof receivers | REVISE | Findings CH2-01 through CH2-04. |
-| CSS-specific work is kept out of generic policy | REVISE | W5 permits generic `runtime_generator.rs` / `grammar_provider.rs` edits for a CSS Value API without a non-CSS no-drift proof when those generic files change (`restart/skinny/tranches/sk-v15/research/p3/p3b-wave-sequencing.md:52`; `restart/skinny/tranches/sk-v15/SPEC.md:281`-`:305`). |
+The S-P3 packet preserves the S-P2 survivor boundary and repeatedly states
+that generic work must not close on JSON-only evidence. V1 still fails CH2
+because the final executable surfaces do not consistently bind non-JSON proof
+receivers to generic-crate edits, W6/W7 generic Decision Engine and lowerer
+work can still close on abstract scaffold tests, and the telemetry/gate
+language can hide grammar-specific exceptions behind aliases or incomplete
+exclusion reports.
 
 ## Findings
 
-| ID | Severity | Finding | Evidence | Required fold |
+| ID | Disposition | Surface | Finding | Required fold |
 |---|---|---|---|---|
-| CH2-01 | Blocker | The S-P3 SPEC does not contain the required generality / Lock 14 gate, so Lock 14 is present as intent but not as an executable per-wave admission rule. | PASS-3 says the SPEC shape includes `Section 2.1 generality + Lock 14 gate` (`restart/prompts/skinny/PASS-3-SYNTHESIS-PLAN.md:94`-`:100`) and CH2 requires every generic-crate edit to prove a non-JSON receiver (`:116`-`:120`). ORCHESTRATOR binds CH2 to "no grammar-name leak" and no JSON code in generic crates (`restart/prompts/ORCHESTRATOR.md:83`-`:84`, `:201`-`:204`). SPEC Section 2 jumps from phase caps to the wave table and never adds the gate matrix (`restart/skinny/tranches/sk-v15/SPEC.md:142`-`:166`). | Add SPEC Section 2.1 and mirror it in DISPATCH: every wave plan that touches `skinny/crates/codegen`, `skinny/crates/passes`, `skinny/crates/ir`, generic runtime generator/provider files, or SIMD/parser-helper crates must list generic owner path, forbidden grammar tokens, non-JSON receiver (`CSS L4`, `Sheets`, or `BBNF-self`), proof command, generated-output/no-diff expectation, and fail action. |
-| CH2-02 | Blocker | W3 loses the non-JSON proof receiver that P3-C correctly requires for generic codegen changes. | P3-C says any generated runtime diff must pass same-wave non-JSON proof for CSS L4, Sheets, or BBNF-self as applicable (`restart/skinny/tranches/sk-v15/research/p3/p3c-falsifiability-gates.md:106`-`:110`). P3-B and SPEC W3 own generic codegen, provider, passes, IR, and xtask files (`restart/skinny/tranches/sk-v15/research/p3/p3b-wave-sequencing.md:50`; `restart/skinny/tranches/sk-v15/SPEC.md:238`-`:255`). SPEC W3 only requires no grammar branches and a JSON rerun if JSON-adjacent, and DISPATCH W3 only requires leak grep, generated-output proof, and JSON guard rerun (`restart/skinny/tranches/sk-v15/SPEC.md:250`-`:255`; `restart/skinny/tranches/sk-v15/DISPATCH-PROMPT.md:102`-`:111`). | Fold P3-C's non-JSON receiver rule into SPEC/DISPATCH W3. A W3 redress cannot close with JSON-only guard proof; it must exercise the changed generic code path with CSS L4 and at least one structurally different non-JSON receiver when feasible, or record an intrinsic block explaining why no such receiver exists. |
-| CH2-03 | Blocker | W5 can put CSS-specific policy into generic generator/provider code without proving the generic path remains grammar-neutral for non-CSS receivers. | W5 owns `runtime_generator.rs` and `grammar_provider.rs` as part of CSS Value rebuild (`restart/skinny/tranches/sk-v15/research/p3/p3b-wave-sequencing.md:52`; `restart/skinny/tranches/sk-v15/SPEC.md:281`-`:305`). W5 exit proves typed CSS output and JSON guard maintain, but it does not require a Sheets or BBNF-self no-diff/regen proof when those generic files change (`restart/skinny/tranches/sk-v15/SPEC.md:294`-`:301`; `restart/skinny/tranches/sk-v15/DISPATCH-PROMPT.md:123`-`:131`). | Add a W5 generic-edit branch: if only CSS runtime/provider files change, CSS typed proof is sufficient; if generic generator/provider/codegen files change, the plan must also prove non-CSS receiver stability for Sheets or BBNF-self and reject `CssL4`/profile branches in generic code. |
-| CH2-04 | Blocker | W6/W7 Decision Engine and BackendShape lowerer waves touch generic selection/lowering surfaces but do not name non-JSON proof receivers. | W6 owns generic passes/IR Decision Engine files and W7 owns generic lowerer/codegen fixtures (`restart/skinny/tranches/sk-v15/research/p3/p3b-wave-sequencing.md:53`-`:54`; `restart/skinny/tranches/sk-v15/SPEC.md:307`-`:343`). SPEC requires grammar-neutral facts and real lowerers, but the evidence can be a generic generated diff or test without CSS/Sheets/BBNF-self receiver proof (`restart/skinny/tranches/sk-v15/SPEC.md:318`-`:323`, `:338`-`:343`; `restart/skinny/tranches/sk-v15/DISPATCH-PROMPT.md:133`-`:151`). | Add W6/W7 receiver matrices. W6 must prove the e-graph/CSP fact set changes selection for at least one non-JSON receiver or fail closed as non-driving. W7 must prove lowerer output through generated fixtures for CSS L4 and one of Sheets or BBNF-self, with EventTape bound to the existing BackendShape and not to a sidecar event stream. |
-| CH2-05 | Major | The packet has multiple generality vocabularies, which creates room for alias-only compliance. | P3-B W0 names `sample_count`, `row_claim_scope`, `comparator_workload_id`, `producer_path`, `generator_source_id`, `semantic_output_kind`, and `strictness_source` (`restart/skinny/tranches/sk-v15/research/p3/p3b-wave-sequencing.md:47`), while P3-D/SPEC require `measurement_row_id`, `measurement_origin`, `value_plane`, `css_comparator_workload`, `generator_source`, `lock14_scan_scope`, `lock16_status`, `checkasm_or_parity_status`, `gate_exclusion_report`, and `broadcast_group_id` (`restart/skinny/tranches/sk-v15/research/p3/p3d-telemetry-schema.md:21`-`:50`; `restart/skinny/tranches/sk-v15/SPEC.md:94`-`:116`). | Normalize to the P3-D/SPEC field names. Aliases must reject unless the schema is deliberately bumped and the gate consumes the mapping. |
+| CH2-V1-01 | ACCEPT WITH FOLD | P3-A / S-P2 boundary | The shortlist excludes S-P2 rejects and keeps only grammar-neutral byte-set/classifier, literal/string/UTF-8, escape/segment, same-tape, and FIRST-set/template families. | Preserve the eight-candidate ceiling and rejected-route list through the W0-W11 reindex. |
+| CH2-V1-02 | REVISE | SPEC / DISPATCH generic-crate gates | Generic-crate waves do not name exact non-JSON receivers. W3, W7, and W8/W9 after reindex can close by saying generic leaks/lowerers are fixed without proving CSS L4 plus Sheets or BBNF-self behavior. | Add a non-JSON receiver table for every generic surface: codegen provider/runtime generator, lowerers, backend e-graph, decision CSP, cost facts, xtask regen, and gate/report code. JSON-only proof rejects. |
+| CH2-V1-03 | REVISE | W5 CSS typed rebuild | W5 is the only active non-JSON product receiver, but V1 still lets old CSS W8R broadcast numbers appear as typed floors. That collapses generality into a CSS-specific historical measurement rather than a grammar-neutral same-workload proof. | Remove W8R metrics from live CSS thresholds. W5/W6 must use fresh typed CSS value/document output and same-run cssparser comparator data. |
+| CH2-V1-04 | REVISE | W6/W7 Decision Engine and lowerers | The packet requires grammar-neutral facts, but final gates do not require non-JSON fixtures that fail against JSON-shaped decision/lowerer scaffolds. | For W7 Decision spine and W8/W9 lowerers after reindex, require CSS L4 plus BBNF-self or Sheets fixtures, or a gate-consumed rejected alternative that states why no non-JSON consumer exists. |
+| CH2-V1-05 | REVISE | Lock 14 / telemetry aliases | P3-B W0 alias fields can replace the canonical telemetry fields that detect broadcast, generator provenance, and gate exclusions. Alias-only telemetry can make a JSON/CSS exception look schema-neutral. | Normalize to P3-D/SPEC canonical fields and reject aliases unless a schema bump is consumed by the gate before verdict. |
+| CH2-V1-06 | REVISE | Lock 14 / Lock 16 gate reporting | V1 says exclusions should report, but SPEC and DISPATCH do not carry a table requiring included roots, excluded roots, reasons, self-scan status, primitive status, gate consumer, and affected rows. Without that, generic cleanliness can be defined by omission. | Promote the exclusion-report schema into SPEC and DISPATCH; every generic cleanliness or primitive admission row must consume it. |
 
 ## Required Folds
 
-1. Add SPEC Section 2.1 and DISPATCH mirror language for Lock 14 generality: every generic-crate edit must name a non-JSON receiver, proof command, forbidden grammar-name tokens, and fail action.
-2. Fold P3-C's non-JSON proof rule into W3 so generic codegen leak repair cannot close on JSON guard proof alone.
-3. Add W5 generic-edit branching: CSS-only owner paths may close with CSS typed proof; generic generator/provider edits additionally require Sheets or BBNF-self stability proof.
-4. Add W6/W7 receiver matrices for Decision Engine facts and BackendShape lowerers, with CSS L4 plus Sheets or BBNF-self generated fixture proof before any generic close.
-5. Normalize telemetry/generalization vocabulary to the exact P3-D/SPEC field names and reject alias-only compliance.
+1. Add a generic-surface receiver table binding every generic edit to CSS L4
+   and one of BBNF-self, Google Sheets, CSV, or Math where an executable
+   receiver exists. If none exists, the wave records intrinsic block rather
+   than closing on JSON.
+2. Normalize telemetry vocabulary to the ten canonical SK-V15 fields:
+   `measurement_row_id`, `measurement_origin`, `value_plane`,
+   `css_comparator_workload`, `generator_source`, `lock14_scan_scope`,
+   `lock16_status`, `checkasm_or_parity_status`,
+   `gate_exclusion_report`, and `broadcast_group_id`.
+3. Require W7 Decision spine and W8/W9 lowerer gates after reindex to prove
+   non-JSON behavior or a gate-consumed rejected alternative; abstract
+   scaffold tests are not enough.
+4. Remove CSS W8R broadcast numbers from live CSS typed-admission floors.
+5. Promote Lock 14/16 exclusion reporting into dispatch surfaces so generic
+   cleanliness cannot be achieved by omitted roots or self-exempting gates.
 
-CH2 remains REVISE until those folds make the non-JSON receiver proof executable in SPEC and DISPATCH, not only present in upstream planning prose.
+## Close Condition For V2
+
+CH2 can accept only when generic-crate edits have named non-JSON receivers,
+CSS typed proof is fresh and same-workload, telemetry aliases reject, and
+gate-exclusion reports are consumed before generic cleanliness verdicts.

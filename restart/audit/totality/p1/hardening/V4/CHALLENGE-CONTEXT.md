@@ -1,40 +1,99 @@
-# T-P1 CHALLENGE V4 Dispatch Context — SK-V14 Totality Excavation Pass
+# T-P1 CHALLENGE V4 Dispatch Context - SK-V15 Totality Excavation Pass
 
-Authored by SK-V14 orchestrator after T-P1 V4 atomic micro-fold commit (5 amended inventory files: 1A row-100→117 cross-cite refresh, 1C exec summary 126→127, 1D W13.9 CORRECTNESS-REJECT label + sub-case cite refresh, 1E sustained-UNKNOWN paragraph, 1F-anti-pattern AP-009 27 hits cosmetic).
+Authored after SK-V15 T-P1 V4 inventory fold commit `0c79c2b43`
+(`docs(sk-v15-t-p1): fold V3 hardening into V4 excavation packet`).
+The existing `hardening/V4/CH*.md` files in git history belonged to the
+prior SK-V14 T-P1 campaign and are superseded in place by this SK-V15 V4
+cycle per `ORCHESTRATOR.md` §3Z cycle protocol.
 
-**V4 is the FIRST LOCK-eligible cohort cycle for T-P1.** V3 closed sub-axis 97.3% / per-lens 97.2% above ≥95% floor with 2 single-cell orphan REVISEs (CH2:1, CH3:1). V4 fold discharged both. V5 confirming required for cohort §3Z LOCK (≥95% × 2 consecutive cycles; V≤5 ceiling).
+V3 returned 3 / 7 ACCEPT and no REJECT. V4 reviews the six live inventories
+after the V3 fold:
 
-## §0 — Authority
-1. `restart/prompts/totality/PASS-1-EXCAVATION.md` §3 (CH1-CH7)
-2. `restart/prompts/ORCHESTRATOR.md` §3W + §3Z (cohort LOCK = ≥95% × 2 consecutive cycles; V≤5 ceiling)
-3. `restart/prompts/skinny/PASS-0-OVERFIT-AUDIT.md` §CH7
-4. `restart/audit/totality/p1/hardening/HARDENING-T-P1-V3-CONSOLIDATED.md` — V3 aggregator + V4 fold-packet authority
-5. `restart/audit/totality/p1/hardening/V3/CH{1..7}.md` — V3 lens reports (carry-forward)
-6. `restart/ARCHITECTURE.md` + `restart/MASTER-PLAN.md` + `restart/locks/LOCKS.md` (read-only governance)
+- `1A-substrate-evidence.md`
+- `1B-codegen-evidence.md`
+- `1C-runtime-evidence.md`
+- `1D-skinny-lessons.md`
+- `1E-locks-evidence.md`
+- `1F-coherence-scan.md`
 
-## §1 — Artefacts under review (8 T-P1 inventories at V4 cycle)
-- `1A-substrate-evidence.md` (V4 amended; 113 lines; F-V4-CH5-1 row 100→117 cross-cite refresh at 6 substitutions across 2 lines; pre/post grep confirms zero residual `row 100`/`:100` orphans)
-- `1B-codegen-evidence.md` (V3-LOCKED; no V4 edits)
-- `1C-runtime-evidence.md` (V4 amended; F-V4-CH2-1 exec summary 126→127 single-token; pre/post grep confirms 2 preserved tokens with justification, zero in grammar-named-reexport-count context)
-- `1D-skinny-lessons.md` (V4 amended; F-V4-CH3-1 W13.9 CORRECTNESS-REJECT label split + F-V4-CH5-1 sub-case cite refresh at row 117; REDRESS verdict labels verified via sed)
-- `1E-locks-evidence.md` (V4 amended; 166→168 lines; F-V4-CH6-1 sustained-UNKNOWN paragraph at 1E:35 listing L03 + L16 + 2 NEW SK-V14 UNKNOWNs with cited verify_actions at 1E:161-164)
-- `1F-coherence-scan.md` (V3-LOCKED; no V4 edits)
-- `1F-anti-pattern.md` (V4 amended; F-V4-CH1-1 AP-009 24→27 hits cosmetic; live grep -c confirms 27)
-- `1F-past-corpora.md` (V3-LOCKED; no V4 edits)
+The two 1F auxiliaries remain historical and superseded:
 
-## §2 — V4 disposition focus per `PASS-1-EXCAVATION.md §3` (LOCK-eligible cycle)
-- **CH1 CORRECTNESS:** verify F-V4-CH1-1 (AP-009 24→27) at HEAD; confirm zero drift on V3-LOCKED axes (1B, 1F-coherence, 1F-past-corpora); F-V4-CH5-1 row 117 cite refresh resolves all V3 housekeeping.
-- **CH2 GENERALITY:** verify F-V4-CH2-1 1C:40 orphan discharged; live mechanical re-extraction reproduces 127 exactly at HEAD; pre/post grep confirms NEW-CH2-V3-02 orphan-cell propagation guard satisfied.
-- **CH3 REGRESSION:** verify F-V4-CH3-1 1D:140 W13.9 CORRECTNESS-REJECT label split via REDRESS sed; W13.5-W13.8 MEASURED-REJECT and W13.9 CORRECTNESS-REJECT both bound; no REDRESS route re-opened.
-- **CH4 COST:** verify all V4 folds cost-neutral per CH4 V3 cite-rebind cost-neutrality discipline.
-- **CH5 HIDDEN COUPLING:** verify F-V4-CH5-1 row 117 + 1A row-100→117 refresh; substrate-union T-P3 §3C disposition rule preserved.
-- **CH6 ANTI-PAPER-CLOSE:** verify F-V4-CH6-1 sustained-UNKNOWN paragraph at 1E:35 closes V1 CH6 REVISE #4 + CH1 V3 finding 7 carry-forward; 4 cited UNKNOWN sources (L03 :161, L16 :162, audit-overlay :163, Lock 1 fact-stream :164) all executable-verifiable at HEAD.
-- **CH7 OVERFIT-PRUNE:** verify NO new fabrication introduced by V4 itself; NEW-CH2-V3-02 orphan-cell propagation guard applied at every V4 fold (each fold-author captured pre/post grep evidence per LAC-1E-12 procedural addendum).
+- `1F-anti-pattern.md`
+- `1F-past-corpora.md`
 
-## §3 — Discipline (LOCK-eligible cycle — stricter)
-- HARD CAP 25 min/lens (LOCK-eligible cycle; reduced cap).
-- WRITE-ONLY (no git add/commit). Aggregator commits 8 atomically.
-- **Executable verification mandate institutionalized** (LAC-1E-12 + NEW-CH2-V3-02): every cite must be re-verified at V4 HEAD before ACCEPT.
-- §3Z: V4 is first cohort-wide ≥95% cycle (after V3's 97.3% surface aggregate but with 2 below-floor lens REVISEs); V5 confirming required for second consecutive cycle → cohort LOCK at V5 ceiling.
+V4 can become the first clean T-P1 cycle if all seven lenses ACCEPT. It cannot
+lock T-P1 alone because V3 was REVISE; a confirming V5 clean cycle would still
+be required for §3Z.
 
-## §4 — Output: `restart/audit/totality/p1/hardening/V4/CH{N}.md` per V3 §4 structure. Aggregator at `HARDENING-T-P1-V4-CONSOLIDATED.md`.
+## §0 - Authority
+
+1. `restart/prompts/totality/PASS-1-EXCAVATION.md`
+2. `restart/prompts/ORCHESTRATOR.md` §3W and §3Z
+3. `restart/audit/totality/p1/hardening/HARDENING-T-P1-V3-CONSOLIDATED.md`
+4. `restart/audit/totality/p1/hardening/V3/CH{1..7}.md`
+5. `restart/skinny/tranches/sk-v15/research/p3/hardening/HARDENING-S-P3-V4-CONSOLIDATED.md`
+6. `restart/skinny/tranches/sk-v15/SPEC.md`
+7. `restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`, and `restart/locks/LOCKS.md` as read-only governance surfaces
+
+## §1 - V4 Fold Roster Under Review
+
+The V4 inventory fold is expected to discharge the V3 fold roster:
+
+| fold | expected receiver |
+|---|---|
+| T-P1-V4-F01 root-resolving citation repair | `1B-codegen-evidence.md`, `1C-runtime-evidence.md` |
+| T-P1-V4-F02 bounded receiver cost carrier | `1D-skinny-lessons.md` |
+| T-P1-V4-F03 primitive/kernel receiver enumeration | `1D-skinny-lessons.md` |
+| T-P1-V4-F04 current-source FNV production-coupling census | `1F-coherence-scan.md` and `1D-skinny-lessons.md` |
+| T-P1-V4-F05 sidecar/hash grep guard extension | `1F-coherence-scan.md` |
+| T-P1-V4-F06 Lock 5 closure wording downgrade | `1E-locks-evidence.md` |
+| T-P1-V4-F07 CSS fact-stream status downgrade | `1C-runtime-evidence.md` |
+| T-P1-V4-F08 no-op 1A carry-forward | `1A-substrate-evidence.md` |
+
+## §2 - Lens Focus
+
+- CH1 CORRECTNESS: verify all six live inventories are V4; root-resolving
+  citation greps return zero residual shorthand or brace-path cites; 1A and 1F
+  count tables still match frontmatter after V4 additions.
+- CH2 GENERALITY: verify V4 receiver tables remain grammar-neutral and do not
+  demote `P1-1B-D9` / `P1-1B-D10` or primitive rows into JSON-only lessons.
+- CH3 REGRESSION: verify delete/rebuild guards and REDRESS-183/184/209-213
+  remain load-bearing after cost/primitive table edits.
+- CH4 COST: verify the V4 receiver cost carrier and primitive/kernel receiver
+  table remove the V3 class-level cost gaps; no unbounded, paper-only, or
+  non-enumerated primitive route survives.
+- CH5 HIDDEN COUPLING: verify the FNV current-source census and expanded
+  sidecar/hash grep guard cover generated CSS runtimes and codegen template
+  sites without laundering hashes into CSS Value API, substrate, or equality
+  proof.
+- CH6 ANTI-PAPER-CLOSE: verify 1E L05 and 1C CSS fact-stream wording are
+  scoped partials, generated provenance and UNKNOWN routes remain open, and no
+  new implemented/honoured claim exceeds evidence.
+- CH7 OVERFIT-PRUNE / GATE-EXCLUSION: verify no V4 fold introduces stale W8R,
+  x86, PMULL/CSSC, FNV, sidecar, gate-exclusion, primitive, or header-only
+  close proof. The S-P3 CH7 posture must remain intact.
+
+## §3 - Discipline
+
+- Hard cap: 30 minutes per lens.
+- Write scope: each CH agent writes exactly one file under
+  `restart/audit/totality/p1/hardening/V4/CH{N}.md`.
+- Do not edit inventories, spec surfaces, or implementation files during
+  CHALLENGE.
+- Do not stage or commit from lens agents.
+- The aggregator commits V4 CH files and the V4 consolidator atomically.
+
+## §4 - Output
+
+Write:
+
+- `restart/audit/totality/p1/hardening/V4/CH1.md`
+- `restart/audit/totality/p1/hardening/V4/CH2.md`
+- `restart/audit/totality/p1/hardening/V4/CH3.md`
+- `restart/audit/totality/p1/hardening/V4/CH4.md`
+- `restart/audit/totality/p1/hardening/V4/CH5.md`
+- `restart/audit/totality/p1/hardening/V4/CH6.md`
+- `restart/audit/totality/p1/hardening/V4/CH7.md`
+
+The aggregator writes
+`restart/audit/totality/p1/hardening/HARDENING-T-P1-V4-CONSOLIDATED.md`.

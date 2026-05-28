@@ -27,7 +27,41 @@ This synthesis inventory counted 834 current Rust files with `find crates -name
 '*.rs' -type f`, so tranche gates must use the live count, not only the prior
 corpus.
 
-## 0.1 Pass Omega V2 Migration Receiver
+## 0.1 Current SK-V15 V9 Migration Receiver
+
+Pass Omega V9 G-Omega is authorized and V9 CRUD is being applied. This
+receiver is the current implementation migration authority before the
+historical Pass Omega V2..V8 receivers below. The active implementation route
+is SK-V15 W0-W11 through `restart/skinny/tranches/sk-v15/SPEC.md` and
+`restart/skinny/tranches/sk-v15/DISPATCH-PROMPT.md`.
+
+V9 CRUD is a document-authority migration. It does not authorize source,
+generated output, gate implementation, `skinny/RESULTS.md`, `skinny/REDRESS.md`,
+or SK-V15 SPEC/DISPATCH edits. Those remain blocked until the owning SK-V15
+wave dispatches through the skinny triumvirate.
+
+| Receiver | Migration rule | Blocker | Gate |
+|---|---|---|---|
+| Current SK-V15 authority | SK-V15 W0-W11 supersedes stale SK-V14 W5B/Omega V8 dispatch text as the current implementation route. | Any current-authority text still routing next dispatch through SK-V14 W5B. | G-Omega V9 plus CRUD-4. |
+| W0 baseline/telemetry | Capture `SK-V15-open`; JSON 51/51 guard remains strict; CSS broadcast evidence is diagnostic only. | Missing gate-consumed SK-V15 telemetry. | W0 exit gate. |
+| W1 CSS honesty | Demote or collapse the 24-row CSS broadcast; no live CSS admit from the W8R shared tuple. | Reused broadcast measurement as admit evidence. | `DEP-W1-CSS-BROADCAST`. |
+| W2 Lock 14 / Lock 16 restoration | Gates scan previously excluded roots, report their exclusions, and classify source-present primitives. | Self-exempting scan or source-present primitive with no status. | W2 exit gate. |
+| W3 codegen leaks | Remove one coherent generic leak family with same-wave generator/check consumer and non-JSON receiver proof. | Grammar-family branch, profile roster, or JSON/CSS recognizer left in generic path. | `DEP-W3-W6-CSS-PROVIDER-TEMPLATE`. |
+| W4 Pattern H provenance | Keep Pattern H at 67 root runtime files while proving true generated provenance at line 1 with regen/check evidence. | Header-only generated claim or destructive delete without provider proof. | `DEP-W4-PATTERN-H-PROVENANCE`. |
+| W5 CSS typed provider | Build typed CSS value/document/view/visitor capability comparable to JSON; old CSS proof remains diagnostic. | Fact-stream-only or brace-counter path treated as live proof. | W5 exit gate. |
+| W6 CSS retime and old-proof retirement | Retime against same-workload typed `cssparser`; retire `CSS_GENERATED_RS`, `CssFullParseSummary`, fact-stream-only `parse()`, and brace-counter proof from live admission. | CSS floor based on W8R, lightningcss wrong-plane proof, or missing typed comparator. | `DEP-W6-CSS-GENERATED-RS` and `DEP-W6-CSS-SUMMARY-FACT-STREAM`. |
+| W7 Decision Engine spine | E-graph rewrite count is nonzero, CSP is non-tautological, and grammar-named facts are removed. | Zero-rule e-graph, marker CSP, or advisory-only cost facts. | `DEP-W7-DECISION-SPINE`. |
+| W8/W9 BackendShape lowerers | EagerTape, OffsetTape, EventTape, SinkOnly, and CollapsedStage lowerers are real or gate-rejected; exactly five shapes remain. | Label-string lowerer, pass-through scaffold, sixth shape, sidecar EventTape. | `DEP-W8-LOWERERS-A` and `DEP-W9-LOWERERS-B`. |
+| W10 FNV quarantine | FNV closed-enum products stay bench-only and cannot migrate into production correctness proof. | Production FNV arbiter, production hash correctness proof, or runtime leakage. | `DEP-W10-FNV-QUARANTINE`. |
+| W11 close | PASS-IMPL V2 consumes every dependency row and accepts every axis or records row-level intrinsic-block proof. | Any orphan dependency row, doc-only close, or implementation-limited miss. | `DEP-W11-CLOSE-NO-ORPHANS`. |
+
+Migration gate clause: no delete, retirement, provider/template removal,
+old CSS proof retirement, runtime-shim deletion, primitive promotion, SIMD/ASM
+admission, or lowerer close may proceed unless the SK-V15 dependency row proves
+the rebuild provider lands no later than the delete/retire wave, or the row is
+explicitly diagnostic-demotion-only.
+
+## 0.2 Historical Pass Omega V2 Migration Receiver
 
 Pass Omega V2 updates the migration receiver per the T-P3 V4 LOCK
 packet (`restart/audit/totality/p3/hardening/HARDENING-T-P3-V4-CONSOLIDATED.md`).
@@ -49,9 +83,9 @@ binds those waves to SK-V14 PRUNE-3/4/5 receivers (W5/W6/W7).
 | dispatch_value → dispatch + SKELETON triple DELETE refusal (3F-MIG-007) | **`RuntimeProvider::dispatch_value` enum arm renames to trait-method `dispatch`** under W5C-GEN PRUNE-3C / W5D-DELETE PRUNE-3D after W5A's source-consuming request boundary and W5B-FRONTEND IR closure are load-bearing (8 hardcoded match arms; `skinny/crates/codegen/src/lib.rs:167-209`); rename is migration-full per `[no-backward-compat]`. **SKELETON triple DELETE proposal** (FSM_DISPATCH_THREADED + FRAME_PUSH_BOUNDED + FRAME_POP_BOUNDED) is **REJECTED** per T-P2 V3 LOCK cohort **refutation density 32:69 = 31.7%** (1:2 anti-paper-close pattern; canonical T-P2 V3 figure at `restart/audit/totality/p2/hardening/HARDENING-T-P2-V3-CONSOLIDATED.md:76,172,187,295`); the three primitives remain non-shortlist-blocker support under SRC-V2-FOLD. Re-proposal requires same-wave consumer + first consumer path + executable command per T-P2 V4 non-shortlist criteria. |
 | LAC-1E-12 preface promotion | LAC-1E-12 (CH7 Overfit-Prune binding) is **promoted to LOCKS preface, NOT Lock 17** — the 16-lock count is preserved per `restart/prompts/totality/PASS-3-SYNTHESIS.md:210`. Live verify: `grep -cE "^[0-9]+\. \*\*" restart/locks/LOCKS.md` → 16. |
 | LAC-2F-V5-02 substrate-union ELEVATION | Lock 1 v+1 substrate-union ELEVATION (`restart/locks/LOCKS.md:137-158`): no cross-call retained classifier state. Quote-mask, escape-mask, structural-mask, class-stream, prev-state byte, prefix-XOR carry word, or any prefix carry of any kind — none is admissible under Lock 1 substrate-union. Carry MUST stay within a single chunk-call boundary. REDRESS 96/97/98 generalises to ALL transient classifier-state primitives. The third value `retained-across-call-boundary` in `retention_lifetime` is the REJECT class under Lock 1 v+1. |
-| Proposal boundary | Pass Omega CRUD artefacts at `restart/audit/totality/astral/V2/` are application logs; they record CRUD operations under G-Omega authorization (closed 2026-05-24). They do not authorize source, generated, gate, `RESULTS.md`, or `REDRESS.md` edits without the owning wave-triumvirate dispatch. |
+| Proposal boundary | Pass Omega CRUD artefacts at `restart/audit/totality/astral/V2/` are application logs; they record CRUD operations under G-Omega authorization (closed 2026-05-24). They do not authorize source, generated, gate, `RESULTS.md`, or `REDRESS.md` edits without the owning wave-triumvirate dispatch. This receiver is historical after the current SK-V15 V9 receiver above. |
 
-## 0.2 Pass Omega V3 W2R Migration Receiver
+## 0.3 Historical Pass Omega V3 W2R Migration Receiver
 
 Pass Omega V3 W2R consumes REDRESS-183 and the W2R corrective packet. It
 changes the SK-V14 wave graph only. It does not amend LOCKS, architecture,
@@ -65,7 +99,7 @@ already-landed W2 rejection record.
 | Core-runtime CSS L4 receiver | `crates/core/src/runtime/css_l4/` remains Pattern H runtime-root work. It moves to W6.0 after W5D-DELETE closes over W5C-GEN's provider-free generator body. W6.0 emits or collapses the CSS L4 root-runtime tree from grammar source + workspace metadata, then passes the destructive root-runtime round-trip for that tree. |
 | Dispatch block | Historical for W2R. W2 admitted at `45568e669` and W3 admitted at `b0a864f0b`; the current block is REDRESS-184 / W4R until Pass Omega V4 CRUD applies. W8/W9/W10 remain globally blocked until PRUNE-1..PRUNE-5 close. Stale notes saying W5/W6/W7/W9/W10 may proceed independently after W2 or W4 rejection are non-controlling; hard entry gates, REDRESS-183/184, and the PRUNE-before-new-admit chain control. |
 
-## 0.3 Pass Omega V4 W4R Migration Receiver
+## 0.4 Historical Pass Omega V4 W4R Migration Receiver
 
 Pass Omega V4 W4R consumes REDRESS-184 and the W4R corrective packet. It
 changes the SK-V14 W4/W5 wave graph only. It does not amend LOCKS,
@@ -77,11 +111,11 @@ note.
 |---|---|
 | REDRESS-184 / W4 rejection | `G-SK-V14-W4-PRUNE-2` is REJECTED under the original W4 shape. Deleting CSS provider modules before W5's replacement provider path exists removes the live `regen-css` emitter and fails compilation before regeneration can run. |
 | W4 amended receiver | After G-Omega V4 + CRUD, rerun W4 as CSS L4 admit-ledger PRUNE only: restore `restart/skinny/ROLLING-SOTA-DELTA.md` to 0/24 CSS L4 admitted, add 24 row-keyed REDRESS entries citing `restart/skinny/tranches/sk-v13/audit-overfit/validation/v1-css-l4-validation.md` §1-6, preserve `skinny/RESULTS.md` AUDIT-FALSIFIED state, maintain JSON rows within +/-1.0%, and do not delete CSS source, providers, templates, runtime twins, or generator code in W4. |
-| W5 amended receiver | Current after V8 W5B-FRONTENDR. V4 moved CSS provider/template deletion out of W4; V5 split that receiver into W5A source-consuming request boundary and W5B deletion; V6 superseded W5B into W5B-GEN plus W5C-DELETE; V7 split that into W5B-FRONTEND, W5C-GEN, and W5D-DELETE; V8 splits W5B-FRONTEND into W5B.0 LOCK14-GATE, W5B.1 IMPORT-CLOSURE, W5B.2 LAYOUT-DISCARD, W5B.3 PRETTY-SPAN-PROJECTION, and W5B.4 REQUEST-CONSUMER. |
+| W5 amended receiver | Historical after V8 W5B-FRONTENDR. V4 moved CSS provider/template deletion out of W4; V5 split that receiver into W5A source-consuming request boundary and W5B deletion; V6 superseded W5B into W5B-GEN plus W5C-DELETE; V7 split that into W5B-FRONTEND, W5C-GEN, and W5D-DELETE; V8 split W5B-FRONTEND into W5B.0 LOCK14-GATE, W5B.1 IMPORT-CLOSURE, W5B.2 LAYOUT-DISCARD, W5B.3 PRETTY-SPAN-PROJECTION, and W5B.4 REQUEST-CONSUMER. |
 | Core-runtime CSS L4 receiver | Unchanged from V3 W2R except sequencing: `crates/core/src/runtime/css_l4/` remains W6.0 after W5D-DELETE closes over W5C-GEN's provider-free generator body. |
-| Dispatch block | Historical for W4R after W4 admission. W5A admitted at `286233fa2`; current dispatch is W5B.0 LOCK14-GATE after V8 CRUD; W5B.1..W5B.4 remain blocked until preceding W5B sub-waves admit; W5C-GEN remains blocked until aggregate W5B-FRONTEND closes; W5D-DELETE remains blocked until W5C-GEN closes; W6 remains blocked until W5D-DELETE closes; W8/W9/W10 remain globally blocked until PRUNE-1..PRUNE-5 close. |
+| Dispatch block | Historical for W4R after W4 admission. W5A admitted at `286233fa2`; the V8 dispatch route was W5B.0 LOCK14-GATE after V8 CRUD; W5B.1..W5B.4 remained blocked until preceding W5B sub-waves admitted; W5C-GEN remained blocked until aggregate W5B-FRONTEND closed; W5D-DELETE remained blocked until W5C-GEN closed; W6 remained blocked until W5D-DELETE closed; W8/W9/W10 remained globally blocked until PRUNE-1..PRUNE-5 close. |
 
-## 0.4 Pass Omega V5 W5R Migration Receiver
+## 0.5 Historical Pass Omega V5 W5R Migration Receiver
 
 Pass Omega V5 W5R consumes REDRESS-209 and the W5R corrective packet. It
 changes the SK-V14 W5 wave graph only. It does not amend LOCKS, architecture,
@@ -92,11 +126,11 @@ REDRESS-209 supersession note.
 |---|---|
 | REDRESS-209 / W5 rejection | `G-SK-V14-W5-PRUNE-3` is REJECTED under the original W5 shape. Current `regen-css` emits through static providers/templates while grammar source and metadata are freshness-only inputs, and the parser rejects CSS L4 constructs needed by runtime generation. Provider/template deletion before a source-consuming replacement would sever the live emitter. |
 | W5A amended receiver | Dispatch W5A as PRUNE-3A: pass grammar source + workspace metadata into codegen; make required V1 grammar-source constructs parseable without grammar-id branches; migrate `regen-css`; prove all seven CSS L4 companions plus JSON unchanged-output and Sheets/BBNF-self fail-closed or generated-role witnesses; do not delete provider/template surfaces. |
-| W5B amended receiver | Historical after V6 W5BR. V5 routed deletion to W5B only after W5A; REDRESS-210 rejects that shape and §0.5 supersedes it with W5B-GEN before W5C-DELETE. |
+| W5B amended receiver | Historical after V6 W5BR. V5 routed deletion to W5B only after W5A; REDRESS-210 rejects that shape and §0.6 supersedes it with W5B-GEN before W5C-DELETE. |
 | Core-runtime CSS L4 receiver | Historical after V6 W5BR. `crates/core/src/runtime/css_l4/` remains W6.0 after W5C-DELETE, not after the rejected V5 W5B deletion gate. |
-| Dispatch block | Historical after V7 W5B-GENR, superseded by V8. W5A admitted at `286233fa2`; W5B.0 LOCK14-GATE is the next dispatch; W5B.1..W5B.4 remain blocked until preceding W5B sub-waves admit; W5C-GEN remains blocked until aggregate W5B-FRONTEND closes; W5D-DELETE remains blocked until W5C-GEN closes; W6 remains blocked until W5D-DELETE closes; W8/W9/W10 remain globally blocked until PRUNE-1..PRUNE-5 close. |
+| Dispatch block | Historical after V7 W5B-GENR, superseded by V8 and then V9. W5A admitted at `286233fa2`; W5B.0 LOCK14-GATE was the V8 next dispatch before SK-V15 supersession; W5B.1..W5B.4 remained blocked until preceding W5B sub-waves admitted; W5C-GEN remained blocked until aggregate W5B-FRONTEND closed; W5D-DELETE remained blocked until W5C-GEN closed; W6 remained blocked until W5D-DELETE closed; W8/W9/W10 remained globally blocked until PRUNE-1..PRUNE-5 close. |
 
-## 0.5 Pass Omega V6 W5BR Migration Receiver
+## 0.6 Historical Pass Omega V6 W5BR Migration Receiver
 
 Pass Omega V6 W5BR consumes REDRESS-210 and the W5BR corrective packet. It
 changes the SK-V14 W5B/W6 wave graph only. It does not amend LOCKS,
@@ -111,7 +145,7 @@ beyond the REDRESS-210 supersession note.
 | Core-runtime CSS L4 receiver | `crates/core/src/runtime/css_l4/` remains W6.0 after W5C-DELETE. W6.0 emits or collapses the CSS L4 root-runtime tree from grammar source + workspace metadata and passes the destructive root-runtime round-trip for that tree. |
 | Dispatch block | Historical after V7 W5B-GENR. V6 unblocked W5B-GEN, but V7 supersedes that route. W5B-FRONTEND now unblocks after V7 CRUD; W5C-GEN remains blocked until W5B-FRONTEND close; W5D-DELETE remains blocked until W5C-GEN close; W6 remains blocked until W5D-DELETE close; W7 remains blocked until W6 close; W8/W9/W10 remain globally blocked until PRUNE-1..PRUNE-5 close. |
 
-## 0.6 Pass Omega V7 W5B-GENR Migration Receiver
+## 0.7 Historical Pass Omega V7 W5B-GENR Migration Receiver
 
 Pass Omega V7 W5B-GENR consumes REDRESS-211 and the W5B-GENR corrective packet.
 It changes the SK-V14 W5B/W5C/W5D/W6 wave graph only. It does not amend LOCKS,
@@ -126,12 +160,13 @@ architecture, source, generated output, gates, `RESULTS.md`, or `REDRESS.md`.
 | Core-runtime CSS L4 receiver | `crates/core/src/runtime/css_l4/` remains W6.0 after W5D-DELETE. W6.0 emits or collapses the CSS L4 root-runtime tree from grammar source + workspace metadata through W5B-FRONTEND IR and the W5C-GEN generator body, then passes the destructive root-runtime round-trip for that tree. |
 | Dispatch block | W5B-FRONTEND unblocks after V7 CRUD. W5C-GEN remains blocked until W5B-FRONTEND close; W5D-DELETE remains blocked until W5C-GEN close; W6 remains blocked until W5D-DELETE close; W7 remains blocked until W6 close; W8/W9/W10 remain globally blocked until PRUNE-1..PRUNE-5 close. |
 
-## 0.7 Pass Omega V8 W5B-FRONTENDR Migration Receiver
+## 0.8 Historical Pass Omega V8 W5B-FRONTENDR Migration Receiver
 
-Pass Omega V8 W5B-FRONTENDR consumes REDRESS-212 and the W5B-FRONTENDR
+Pass Omega V8 W5B-FRONTENDR consumed REDRESS-212 and the W5B-FRONTENDR
 corrective packet. It changes the SK-V14 W5B/W5C/W5D/W6 wave graph only. It
 does not amend LOCKS, architecture, source, generated output, gates,
-`RESULTS.md`, or `REDRESS.md`.
+`RESULTS.md`, or `REDRESS.md`. It is historical after the current SK-V15 V9
+receiver above.
 
 | Receiver | V8 W5B-FRONTENDR migration rule |
 |---|---|

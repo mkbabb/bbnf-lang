@@ -30,38 +30,35 @@ supplies one instance; CSS, Sheets, and BBNF-self supply others. SIMD/ASM
 primitives are admitted only through Lock 16 scalar-oracle plus checkasm gates
 and a same-wave runtime or generated consumer.
 
-**Pass Omega V2 / SK-V14 substrate receiver (2026-05-24; post-CRUD-3 LOCKS
-v+1 at `85a043224`, 779 lines).** The active substrate obligations are
-strengthened across three v+1 axes folded into Lock 1 by CRUD-3:
+**Pass Omega V9 / SK-V15 substrate receiver (2026-05-28).** No substrate
+amendment follows from SK-V15 totality closure. Lock 1 substrate union, no
+parallel substrate, no cross-call retained classifier state, and the exact
+five-shape `BackendShape` canon remain binding. The active implementation route
+is SK-V15 W0-W11, not SK-V14 W5B/W5C/W5D.
 
-1. **LAC-2F-V5-02 substrate-union ELEVATED at Lock 1
-   (`restart/locks/LOCKS.md:137`).** No cross-call retained classifier
-   state — period. Quote-mask, escape-mask, structural-mask, class-stream,
-   prev-state byte, prefix-XOR carry word, or any prefix carry of any kind
-   is inadmissible under Lock 1 substrate-union. The closure of REDRESS
-   96/97/98 (retained class-column / streaming structural cursor /
-   class-lane-only on M5 Max) generalises to ALL transient classifier-state
-   primitives, not just the three falsified shapes. Every Layer 1 primitive
-   declares `retention_lifetime ∈ {transient-single-call,
-   retained-within-chunk, retained-across-call-boundary}`; the third value
-   is the REJECT class.
-2. **LAC-1E-14 FactStream as 5th SUBSTRATE-manifest category
-   (`restart/locks/LOCKS.md:100`-`116`).** `FactStream` is the 5th
-   admitted-product category at the Lock 1 substrate manifest, alongside
-   `OffsetTape`, `EventTape`, `SinkOnly`, and `CollapsedStage`; a
-   fact-stream row carries `substrate_target = admitted_fact_output`. This
-   is a substrate-manifest classification only; it is NOT a 6th
-   `BackendShape` variant. The 5-shape `BackendShape` search domain at Lock
-   10 holds verbatim: `{EagerTape, OffsetTape, EventTape, SinkOnly,
-   CollapsedStage}`.
-3. **Every SIMD/ASM primitive must be wired, deleted, scalar-delegated, or
-   architecturally blocked with same-wave measurement;** grammar-owned
-   quote/escape/control policy must flow from generated policy/fact
-   surfaces rather than generic JSON branches; retained sidecar
-   classifiers, support-only primitives, and orphan source-present kernels
-   are not valid close states. The SK-V14 wave-triumvirate dispatches via
-   the 12-wave plan W0..W11 (PRUNE-then-rebuild) after Pass Omega V2 CRUD
-   completion and G-Omega user authorisation.
+1. **Lock 1 substrate-union boundary remains elevated.** Quote-mask,
+   escape-mask, structural-mask, class-stream, prev-state byte, prefix-XOR
+   carry word, or any prefix carry of any kind may be transient producers, but
+   cross-call retained classifier state remains inadmissible. Transient masks
+   and local classifiers may write existing tape/sink/fact output; they do not
+   create a retained sidecar, second tape, public `UnionTape`, alternate
+   document projection, or public substrate API.
+2. **FactStream remains substrate-manifest classification only.** FactStream is
+   not a sixth `BackendShape`, and EventTape is not a retained sidecar stream.
+   Fact-stream-only CSS output is diagnostic after W1 and must retire from live
+   admission by W6 typed CSS proof. `CSS_GENERATED_RS`,
+   `CssFullParseSummary`, and brace-counter proof cannot close CSS admission.
+3. **SK-V15 W2 restores Lock 14 / Lock 16 gate coverage and exclusion
+   reporting.** Every gate must print included roots, excluded roots, reasons,
+   self-scan status, primitive status, gate consumer, affected rows, and
+   disposition. Every SIMD/ASM primitive must be wired, deleted,
+   scalar-delegated, or architecturally blocked with scalar oracle/reference,
+   strict parity/checkasm where relevant, same-wave consumer, and native Apple
+   M5 Max / aarch64 admission evidence. x86/AVX/AVX-512 rows are diagnostic.
+4. **SK-V15 W8/W9 prove lowerers for the existing five shapes only.** The
+   search domain at Lock 10 holds verbatim: `{EagerTape, OffsetTape,
+   EventTape, SinkOnly, CollapsedStage}`. A sixth shape, retained EventTape
+   sidecar, or production FNV route remains blocked.
 
 Source authority (verbatim citations, not paraphrase):
 

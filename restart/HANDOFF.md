@@ -1,117 +1,68 @@
 # Handoff — bbnf-lang Greenfield Restart
 
-## Current Totality Override — 2026-05-26
+## Current Totality Override - 2026-05-28
 
-Status: **Pass Omega V8 W5B-FRONTENDR CRUD CLOSED; SK-V14 implementation dispatch
-resumes at W5B.0 LOCK14-GATE under W5B-FRONTEND PRUNE-3B aggregate.** SK-V14 T-P3 V4 COHORT §3Z LOCK
-remains the last full-cycle LOCK at `69eea1c5c` (5 of 5 cohorts §3Z LOCKED:
-S-P2 `4c70b6f193`, T-P1 `0a9c0fe65d`, S-P3 `626cb06cc1`, T-P2
-`34a28f5c15`, T-P3 `69eea1c5c`). Pass Omega V2 G-Omega CLOSED 2026-05-24
-and landed the V1 surfaces. Pass Omega V3 G-Omega CLOSED 2026-05-26 for
-REDRESS-183 / W2R: W2 is amended to skinny-side `regen-css` only, and
-`crates/core/src/runtime/css_l4/` is now W6.0 root-runtime collapse work
-after W5C-DELETE. Pass Omega V4 G-Omega CLOSED 2026-05-26 for REDRESS-184 / W4R:
-W4 is amended to CSS L4 admit-ledger prune only, moving CSS provider/template
-deletion out of W4. Pass Omega V5 G-Omega CLOSED 2026-05-26 for REDRESS-209 / W5R:
-W5 is split into W5A source-consuming generator capability and W5B
-provider/template deletion. Pass Omega V6 G-Omega CLOSED 2026-05-26 for
-REDRESS-210 / W5BR: W5A remains admitted, W5B-GEN owns the provider-free
-runtime generator body, W5C-DELETE owns provider/template deletion and Lock 14
-baseline close, and W6.0 remains after W5C-DELETE. Pass Omega V7 G-Omega
-CLOSED 2026-05-26 for REDRESS-211 / W5B-GENR: W5B-GEN is split into
-W5B-FRONTEND frontend/import/IR closure, W5C-GEN provider-free generator body,
-and W5D-DELETE provider/template deletion plus Lock 14 baseline close; W6.0
-now remains after W5D-DELETE. Pass Omega V8 G-Omega CLOSED 2026-05-26 for
-REDRESS-212 / W5B-FRONTENDR: the V7 one-shot W5B-FRONTEND gate is split into
-W5B.0 LOCK14-GATE, W5B.1 IMPORT-CLOSURE, W5B.2 LAYOUT-DISCARD, W5B.3
-PRETTY-SPAN-PROJECTION, and W5B.4 REQUEST-CONSUMER. W5C-GEN remains blocked
-until aggregate W5B-FRONTEND closes after all five W5B sub-waves admit.
+Status: **G-Omega V9 is authorized and V9 CRUD is being applied. Current
+implementation authority is SK-V15 W0-W11.** The locked SK-V15
+PRUNE-then-REBUILD contract is `restart/skinny/tranches/sk-v15/SPEC.md`
+plus `restart/skinny/tranches/sk-v15/DISPATCH-PROMPT.md`. SK-V14 W5B /
+Pass Omega V8 remains historical/pre-block evidence only.
+
+Next implementation dispatch after authorized CRUD is **SK-V15 W0 Baseline
+and telemetry lock** through
+`restart/skinny/tranches/sk-v15/DISPATCH-PROMPT.md`. Continue W1 through
+W11 in strict `SPEC.md` order. Do not run routine Alpha/Omega churn before
+W0; another Alpha/Omega loop is justified only by a concrete unrepaired
+invariant or REDRESS route requiring a V1 surface, LOCKS, or wave-graph
+amendment.
 
 Sources of authority for this cycle:
 
-- T-P3 V4 LOCK CONSOLIDATED:
-  `restart/audit/totality/p3/hardening/HARDENING-T-P3-V4-CONSOLIDATED.md`.
-- T-P3 packet (3A..3F) under `restart/audit/totality/p3/`.
-- Ω-C LOCKS amendments applied:
-  `restart/audit/totality/astral/V2/ΩC-locks-amendments.md`.
-- This Ω-F MIGRATION + HANDOFF apply:
-  `restart/audit/totality/astral/V2/ΩF-migration-handoff.md`.
-- Pass Omega V3 W2R packet:
-  `restart/audit/totality/astral/V3/G-OMEGA-PACKET.md`,
-  `restart/audit/totality/astral/V3/master-plan-diff.md`,
-  `restart/audit/totality/astral/V3/locks-diff.md`, and
-  `restart/audit/totality/astral/V3/hardening/CONSOLIDATED.md`.
-- Pass Omega V4 W4R packet:
-  `restart/audit/totality/astral/V4/G-OMEGA-PACKET.md`,
-  `restart/audit/totality/astral/V4/master-plan-diff.md`,
-  `restart/audit/totality/astral/V4/locks-diff.md`, and
-  `restart/audit/totality/astral/V4/hardening/CONSOLIDATED.md`.
-- Pass Omega V5 W5R packet:
-  `restart/audit/totality/astral/V5/G-OMEGA-PACKET.md`,
-  `restart/audit/totality/astral/V5/master-plan-diff.md`,
-  `restart/audit/totality/astral/V5/locks-diff.md`, and
-  `restart/audit/totality/astral/V5/hardening/CONSOLIDATED.md`.
-- Pass Omega V6 W5BR packet:
-  `restart/audit/totality/astral/V6/G-OMEGA-PACKET.md`,
-  `restart/audit/totality/astral/V6/master-plan-diff.md`,
-  `restart/audit/totality/astral/V6/locks-diff.md`, and
-  `restart/audit/totality/astral/V6/hardening/CONSOLIDATED.md`.
-- Pass Omega V7 W5B-GENR packet:
-  `restart/audit/totality/astral/V7/G-OMEGA-PACKET.md`,
-  `restart/audit/totality/astral/V7/master-plan-diff.md`,
-  `restart/audit/totality/astral/V7/locks-diff.md`, and
-  `restart/audit/totality/astral/V7/hardening/CONSOLIDATED.md`.
-- Pass Omega V8 W5B-FRONTENDR packet:
-  `restart/audit/totality/astral/V8/G-OMEGA-PACKET.md`,
-  `restart/audit/totality/astral/V8/master-plan-diff.md`,
-  `restart/audit/totality/astral/V8/locks-diff.md`, and
-  `restart/audit/totality/astral/V8/hardening/V2/CONSOLIDATED.md`.
-
-Current measured authority is `skinny/RESULTS.md` at the SK-V14
-audit-corrected baseline: 0/17 × 3 JSON planes + 0/24 CSS L4 ADMITTED at
-audit-zero (`restart/skinny/tranches/sk-v14/SPEC.md:178-180`). 25 CSS + 5
-parse_only + 4 direct + 7 typed AUDIT-FALSIFIED admits revert at W1
-PRUNE-1 + W4 PRUNE-2 (`SPEC.md:191-198`). SK-V14 close requires
-PRUNE-1..PRUNE-5 dispatch BEFORE any new-admit wave (W8 R6 + W9 R7 +
-W10 R8).
-
-Current SK-V14 LOCKED contract surfaces:
-- `restart/skinny/tranches/sk-v14/SPEC.md` (12 waves W0..W11;
-  PRUNE-1..PRUNE-5 at W1/W4/W5A/W5B.0..W5B.4/W5C-GEN/W5D-DELETE/W6/W7 dispatch BEFORE any new-admit wave).
-- `restart/skinny/tranches/sk-v14/SYNTHESIS.md` (R1..R10 + P-1..P-7).
-- `restart/skinny/tranches/sk-v14/DISPATCH-PROMPT.md` (358 lines).
-- `restart/skinny/tranches/sk-v14/research/p3/p3{a,b,c,d,e,f}-*.md`.
+- Pass Omega V9 G-Omega packet:
+  `restart/audit/totality/astral/V9/G-OMEGA-PACKET.md`.
+- Pass Omega V9 coherence and migration handoff:
+  `restart/audit/totality/astral/V9/ΩA-coherence-audit.md` and
+  `restart/audit/totality/astral/V9/ΩF-migration-handoff.md`.
+- Pass Omega V9 master-plan operation list:
+  `restart/audit/totality/astral/V9/master-plan-diff.md`.
+- SK-V15 locked skinny surfaces:
+  `restart/skinny/tranches/sk-v15/SPEC.md`,
+  `restart/skinny/tranches/sk-v15/DISPATCH-PROMPT.md`, and
+  `restart/skinny/tranches/sk-v15/HANDOFF.md`.
+- T-P1 current authority:
+  `restart/audit/totality/p1/hardening/HARDENING-T-P1-V5-CONSOLIDATED.md`
+  (clean-final / G1-auto-pinned, not normal two-clean-cycle 3Z).
+- T-P2 current authority:
+  `restart/audit/totality/p2/hardening/HARDENING-T-P2-V3-CONSOLIDATED.md`
+  (normal 3Z LOCK / G2-auto-passed).
+- T-P3 current authority:
+  `restart/audit/totality/p3/hardening/HARDENING-T-P3-V5-CONSOLIDATED.md`
+  (final convergence / G3 auto-passed).
+- PASS-IMPL V1 blocker map:
+  `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md`.
+- Historical Pass Omega V2..V8 correction packets remain provenance only;
+  they no longer define current dispatch.
 
 Read in order for current work:
 
 1. `restart/prompts/ORCHESTRATOR.md`.
-2. `restart/prompts/totality/PASS-3-SYNTHESIS.md`.
+2. `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`.
 3. `restart/prompts/pass-contracts/PASS-OMEGA.md`.
-4. `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`.
-5. `restart/audit/totality/p1/hardening/HARDENING-T-P1-V5-CONSOLIDATED.md`.
-6. `restart/audit/totality/p2/hardening/HARDENING-T-P2-V5-CONVERGED.md`.
-7. `restart/skinny/tranches/sk-v14/research/p3/hardening/HARDENING-S-P3-V3-CONSOLIDATED.md`.
-8. `restart/audit/totality/p3/hardening/HARDENING-T-P3-V4-CONSOLIDATED.md`.
-9. `restart/skinny/tranches/sk-v14/SPEC.md` + `SYNTHESIS.md` + `DISPATCH-PROMPT.md`.
-10. `restart/audit/totality/p3/3{A..F}-*.md` (T-P3 packet; 3F is the
-    Ω-F MIGRATION + HANDOFF source).
-11. `restart/audit/totality/astral/V2/ΩC-locks-amendments.md` +
-    `restart/audit/totality/astral/V2/ΩF-migration-handoff.md` (Pass
-    Omega V2 CRUD apply logs), then
-    `restart/audit/totality/astral/V3/{G-OMEGA-PACKET,master-plan-diff,locks-diff}.md`
-    through `restart/audit/totality/astral/V8/{G-OMEGA-PACKET,master-plan-diff,locks-diff}.md`
-    (Pass Omega V3 W2R through V8 W5B-FRONTENDR corrections).
-12. `restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`,
+4. `restart/audit/totality/astral/V9/G-OMEGA-PACKET.md`.
+5. `restart/audit/totality/astral/V9/ΩA-coherence-audit.md`.
+6. `restart/audit/totality/astral/V9/ΩF-migration-handoff.md`.
+7. `restart/audit/totality/astral/V9/master-plan-diff.md`.
+8. `restart/audit/totality/p1/hardening/HARDENING-T-P1-V5-CONSOLIDATED.md`.
+9. `restart/audit/totality/p2/hardening/HARDENING-T-P2-V3-CONSOLIDATED.md`.
+10. `restart/audit/totality/p3/hardening/HARDENING-T-P3-V5-CONSOLIDATED.md`.
+11. `restart/skinny/tranches/sk-v15/SPEC.md`.
+12. `restart/skinny/tranches/sk-v15/DISPATCH-PROMPT.md`.
+13. `restart/skinny/tranches/sk-v15/HANDOFF.md`.
+14. `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md`.
+15. `restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`,
     `restart/locks/LOCKS.md`, `restart/MIGRATION.md`, and this file
     (current V1 surfaces).
-13. `skinny/RESULTS.md` and `skinny/REDRESS.md`.
-
-The SK-V14 skinny bar is the audit-corrected baseline: every CSS L4 + JSON
-admit must clear R1 strict comparator + R2 per-iter equality oracle; W1
-PRUNE-1 + W4 PRUNE-2 revert audit-falsified admits; W5A PRUNE-3A +
-W5B.0..W5B.4 PRUNE-3B aggregate + W5C-GEN PRUNE-3C + W5D-DELETE PRUNE-3D + W6 PRUNE-4 + W7 PRUNE-5 close Lock 14 + decision-engine surfaces BEFORE
-W8/W9/W10 R6/R7/R8 re-admit. The SK-V12 single CSS row that admitted
-under SK-V13 is now AUDIT-FALSIFIED-along-with-23-others; SK-V14 reopens.
+16. `skinny/RESULTS.md` and `skinny/REDRESS.md`.
 
 Grammar onboarding remains three declarative surfaces only: grammar
 source `.bbnf`, workspace metadata, and an optional per-grammar
@@ -125,69 +76,46 @@ Pattern H count = 67 hand-written runtime files under
 google_sheets, json, math}/`; `find crates/core/src/runtime -mindepth 2
 -type f -name '*.rs' | wc -l` → 67).
 
-Dispatch rule: SK-V14 source/gate/RESULTS/REDRESS edits remain authorized
-only through the wave-triumvirate per
-`restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md §1-§3`. REDRESS-183
-rejected the original W2 full round-trip and is superseded for dispatch by
-amended W2 admission plus W3 corpus admission. REDRESS-184 rejected the
-original W4 provider-deletion gate; Pass Omega V4 amends W4 to ledger-only
-CSS L4 PRUNE. REDRESS-209 rejected the original monolithic W5
-provider-collapse gate; Pass Omega V5 amended W5 into W5A then W5B. REDRESS-210
-rejected the W5B deletion gate because W5A admitted the source-consuming request
-boundary but not the provider-free generator body. Pass Omega V6 amends the
-remaining W5 receiver into W5B-GEN then W5C-DELETE. REDRESS-211 rejected
-W5B-GEN because the generic frontend/import/IR closure was still missing.
-Pass Omega V7 amends the receiver into W5B-FRONTEND, W5C-GEN, and
-W5D-DELETE. Pass Omega V8 amends W5B-FRONTEND into W5B.0 LOCK14-GATE,
-W5B.1 IMPORT-CLOSURE, W5B.2 LAYOUT-DISCARD, W5B.3
-PRETTY-SPAN-PROJECTION, and W5B.4 REQUEST-CONSUMER. The next implementation
-move is W5B.0 LOCK14-GATE. W5C-GEN inherits
-provider-free generator replacement only after aggregate W5B-FRONTEND admits, and
-W5D-DELETE inherits CSS provider/template deletion only after W5C-GEN admits;
-W8/W9/W10 remain globally blocked until PRUNE-1..PRUNE-5 close.
+Dispatch rule: SK-V15 source/generated/gate/RESULTS/REDRESS edits remain
+blocked until V9 CRUD completes and SK-V15 W0 dispatches through the skinny
+wave-triumvirate. Every SK-V15 wave runs research -> plan -> redress under
+`restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`; delete, retirement,
+diagnostic demotion, or neutralization work must cite the matching SK-V15
+dependency row before redress.
 
-## Pass Omega V8 next-cycle dispatch directive (W5B-FRONTENDR)
+## Pass Omega V9 SK-V15 dispatch directive
 
-Per `restart/audit/totality/astral/V8/G-OMEGA-PACKET.md`, the sequence after
-G-Omega V8 closure is:
+Per `restart/audit/totality/astral/V9/G-OMEGA-PACKET.md`, the sequence after
+G-Omega V9 authorization is:
 
-(a) Pass Omega V8 W5B-FRONTENDR CRUD applies the local W5B.0..W5B.4 aggregate amendment;
-(b) wave-triumvirate dispatches SK-V14 W5B.0 LOCK14-GATE first;
-(c) W5B.1 IMPORT-CLOSURE, W5B.2 LAYOUT-DISCARD, W5B.3 PRETTY-SPAN-PROJECTION, and W5B.4 REQUEST-CONSUMER dispatch in order, each with <=30 min cap and dedicated exact-test nonzero proof;
-(d) W5C-GEN replaces live provider-backed runtime generation only after aggregate W5B-FRONTEND admits;
-(e) W5D-DELETE deletes CSS provider/template clusters only after W5C-GEN admits CSS/JSON source+metadata emission and removes live provider-backed production dispatch;
-(f) W6.0..W6.8 execute after W5D-DELETE, with W6.0 retaining CSS L4 root-runtime collapse per Pass Omega V3 W2R;
-(g) post-R10 close -> SK-V15 Pass Alpha re-entry per
-`restart/prompts/pass-contracts/PASS-ALPHA.md` (per F-V2-CH4-3E D06
-Option B non-budgeted handoff for the CSS L4 generated-fixture
-impl tail; LAC-1E-14 / LAC-1E-15 / LAC-1E-16 propagation as SK-V15
-SPEC entry conditions).
+(a) apply authorized V9 CRUD only on the approved restart surfaces;
+(b) keep source, generated output, gates, `skinny/RESULTS.md`,
+    `skinny/REDRESS.md`, and SK-V15 SPEC/DISPATCH read-only during CRUD;
+(c) stop routine Omega/Alpha churn for this SK-V15 implementation authority;
+(d) dispatch SK-V15 W0 through
+    `restart/skinny/tranches/sk-v15/DISPATCH-PROMPT.md`;
+(e) continue W1 -> W2 -> W3 -> W4 -> W5 -> W6 -> W7 -> W8 -> W9 -> W10
+    -> W11 in strict `SPEC.md` order;
+(f) do not close SK-V15 with doc-only proof, implementation-limited misses,
+    stale CSS broadcast evidence, Pattern H deletion without provenance proof,
+    scaffold Decision/lowerer claims, production FNV, or planned SK-V16
+    handoff.
 
-The 7-gate measurable dispatch checklist (3F-DISPATCH-001):
+The current dispatch checklist:
 
 | gate | measurable condition | source |
 |---|---|---|
-| G3 (auto) | T-P3 cohort §3Z LOCK DECLARED at V4 close (V4 = 4/5 ceiling; 1-cycle margin). | `restart/audit/totality/p3/hardening/HARDENING-T-P3-V4-CONSOLIDATED.md:30-32` |
-| Pass Omega V8 entry | REDRESS-212 + W5B-FRONTENDR corrective packet + V7 W5B-GENR surfaces cited in Ω source maps. | `restart/audit/totality/astral/V8/G-OMEGA-PACKET.md` |
-| Pass Omega V8 CHALLENGE convergence | 6/6 ACCEPT after fold; zero LOCKS delta; W5B-FRONTENDR CRUD packet complete. | `restart/audit/totality/astral/V8/hardening/V2/CONSOLIDATED.md` |
-| CRUD entry | G-Omega V8 authorization + per-surface receiver list in the V8 packet. | `restart/audit/totality/astral/V8/G-OMEGA-PACKET.md` |
-| G-Omega (user) | CLOSED 2026-05-26 by explicit user authorization to proceed. | this file §Current Totality Override |
-| SK-V14 W5B.0 dispatch | V8 CRUD complete; W5B.0 plan proves Lock 14 owner-path roster, parent-diff routing, W5C/W5D subject rejection, provider/template modification rejection, all-template guard, `grammar_provider.rs` exception, and generic owner-path leak census before source redress. | `restart/skinny/tranches/sk-v14/SPEC.md §8B` |
-| SK-V14 close (R10) | RESULTS audit-zero baseline cleared by R6/R7/R8 re-admits under R1/R2 gates; W11 close per SYNTHESIS §0.1. | `restart/skinny/tranches/sk-v14/SYNTHESIS.md §0.1` |
-| SK-V15 Pass Alpha re-entry | SK-V14 close packet delivered; Pass Alpha dispatch per `PASS-ALPHA.md`. | `restart/prompts/pass-contracts/PASS-ALPHA.md` |
+| G-Omega V9 | Authorized; V9 CRUD is being applied before SK-V15 W0. | `restart/audit/totality/astral/V9/G-OMEGA-PACKET.md` |
+| T-P1 | CLEAN-FINAL / G1-AUTO-PINNED; not rewritten as normal two-clean-cycle 3Z. | `restart/audit/totality/p1/hardening/HARDENING-T-P1-V5-CONSOLIDATED.md` |
+| T-P2 | Normal 3Z LOCK / G2-AUTO-PASSED from V2 and V3 clean cycles. | `restart/audit/totality/p2/hardening/HARDENING-T-P2-V3-CONSOLIDATED.md` |
+| T-P3 | Final V5 convergence; G3 auto-passes. | `restart/audit/totality/p3/hardening/HARDENING-T-P3-V5-CONSOLIDATED.md` |
+| SK-V15 W0 dispatch | V9 CRUD complete; dispatch W0 through SK-V15 `DISPATCH-PROMPT.md`. | `restart/skinny/tranches/sk-v15/DISPATCH-PROMPT.md` |
+| SK-V15 close | W11 plus PASS-IMPL V2 accepts every axis or records row-level intrinsic-block proof at HEAD. | `restart/skinny/tranches/sk-v15/SPEC.md §14` |
 
-Wave-triumvirate per-wave roles: **research-axis triumvirate** (~20 min
-cap research; ~15 min cap plan; ~30 min cap redress per
-`[dispatch-hard-cap]`); each wave runs (a) RESEARCH dispatch →
-(b) PLAN dispatch → (c) REDRESS dispatch with hard caps + commit at
-0.9N + halt at N.
-
-W10 carries the **F-V2-P1ABC-RERECORD Stage-0 UNCONDITIONAL** binding
-per S-P3 V3 §3C carry-forward (cargo build + interactive samply record
-+ `cfg_attr` flip at `generated.rs:33-237` 8 sites; consumers
-P2-A C6 + P2-C C-P2C-3 + C-P2C-8 + P2-E Gap 1/3/4/5 + P2-F C6/C7/C10/C12/C13;
-`restart/skinny/tranches/sk-v14/SPEC.md:982-1000`). W10 cannot close
-without Stage-0.
+Gate posture: G-Omega is the only mandatory user gate under the active pin.
+G1, G2, G3, G-Alpha, challenge confirmation gates, and wave-internal gates
+auto-pass unless an unrepaired invariant violation or REDRESS route requires
+G-Omega.
 
 ## Historical Pass Omega V1.1 close (not current authority)
 

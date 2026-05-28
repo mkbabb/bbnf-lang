@@ -2,44 +2,38 @@
 
 The skinny exists to validate the V1 architectural premise — specifically the SOTA-viability claim — before tranches A-J commit. **One grammar (JSON) end-to-end through 10 partial crates plus `xtask`, dual-track measured against sonic-rs / simd-json. Buildable in 2-4 weeks; ~32,000 handwritten LOC + ≤4,000 generated LOC.**
 
-**Pass Omega V8 / SK-V14 W5B-FRONTENDR authority update (2026-05-26).** Full SK-V14 LOCK
-convergence remains the base - 5 of 5 cohorts §3Z LOCKED:
-S-P2 `4c70b6f193` + T-P1 `0a9c0fe65d` + S-P3 `626cb06cc1` + T-P2 `34a28f5c15`
-+ T-P3 `69eea1c5c`. Pass Omega V2 CRUD is complete; Pass Omega V3 W2R closed
-REDRESS-183 without a LOCKS delta, and Pass Omega V4 W4R closes REDRESS-184
-without a LOCKS delta. Pass Omega V5 W5R closes REDRESS-209 without a LOCKS
-delta. Pass Omega V6 W5BR closes REDRESS-210 without a LOCKS delta. Pass
-Omega V7 W5B-GENR closes REDRESS-211 without a LOCKS delta. Pass Omega V8
-W5B-FRONTENDR closes REDRESS-212 without a LOCKS delta. The current dispatch authority for live skinny iteration
-is the SK-V14 tranche (`restart/skinny/tranches/sk-v14/SPEC.md`, 12-wave plan
-W0..W11), amended so W2 is skinny-side `regen-css` only,
-`crates/core/src/runtime/css_l4/` is W6.0 work after W5D-DELETE, W4 is CSS L4
-ledger-only PRUNE, W5A owns the source-consuming request boundary,
-W5B-FRONTEND now runs as W5B.0 LOCK14-GATE, W5B.1 IMPORT-CLOSURE,
-W5B.2 LAYOUT-DISCARD, W5B.3 PRETTY-SPAN-PROJECTION, and W5B.4
-REQUEST-CONSUMER; W5C-GEN owns the provider-free generator body only after
-aggregate W5B-FRONTEND closes, and W5D-DELETE owns CSS provider/template deletion only after
-W5C-GEN is load-bearing. W8/W9/W10
-remain globally blocked until PRUNE-1..PRUNE-5 close.
+**Pass Omega V9 / SK-V15 authority update (2026-05-28).** SK-V14 remains
+historical row-ledger evidence, but it no longer dispatches live skinny work.
+PASS-IMPL V1 reclassified the CSS L4 leg as contrived and reopened CSS,
+Pattern H, Lock 14/16, Decision Engine, lowerers, and FNV as SK-V15
+overfit-prune work. The active skinny implementation contract is
+`restart/skinny/tranches/sk-v15/SPEC.md` plus
+`restart/skinny/tranches/sk-v15/DISPATCH-PROMPT.md`, W0-W11. W0 Baseline and
+Telemetry Lock is the first legal implementation wave after G-Omega V9
+authorization.
 
-Historical SK-V5/SK-V6 cohorts remain evidence for rejected routes, primitive
-admission discipline, and strict same-plane comparator language. They are not
-the active dispatch anchor. The current close posture is the SK-V14 12-wave
-plan (W0..W11) with PRUNE-then-rebuild sequencing per the α-E candidate
-shortlist: W0 Baseline Profile + Telemetry Lock; W1 Comparator Rebind +
-Per-Iter Equality + PRUNE-1; W2 skinny-side regen-css xtask; W3 Production CSS Corpora;
-W4 PRUNE-2 CSS L4 admit-ledger prune; W5A PRUNE-3A source-consuming request
-boundary; W5B.0..W5B.4 PRUNE-3B aggregate frontend/import/IR closure; W5C-GEN PRUNE-3C
-provider-free generator body; W5D-DELETE PRUNE-3D provider/template deletion
-and Lock 14 baseline close;
-W6 PRUNE-4 9 sub-waves beginning with W6.0 CSS L4 root-runtime
-collapse (≤2.0k C-1 part-B / ≤90 min sub-wave / ≤810 min aggregate per
-SPEC §13:243);
-W7 PRUNE-5 wire W8 policy + W9 union; W8 CSS L4 Re-Admit; W9 JSON Direct +
-Typed Re-Admit; W10 JSON parse_only Distinct Path + Re-Admit with
-F-V2-P1ABC-RERECORD Stage-0 UNCONDITIONAL binding; W11 Close + Alpha
-Feedback. Refutation density 32:69 = 31.7% across cohort touch-points is
-the SK-V14 audit-overfit baseline.
+Historical SK-V5/SK-V6/SK-V13/SK-V14 cohorts remain evidence for rejected
+routes, primitive admission discipline, strict same-plane comparator language,
+and the closed JSON guard rows. They are not the active dispatch anchor. The
+current close posture is the SK-V15 PRUNE-then-REBUILD sequence: W0 baseline
+telemetry; W1 CSS admission honesty and 24-row broadcast demotion/collapse; W2
+Lock 14 / Lock 16 gate restoration with consumed exclusion reports; W3 one
+coherent generic codegen leak abrogation; W4 Pattern H line-1 generated
+provenance and non-writing regen/check proof for the 67 root runtime files; W5
+typed CSS Value/document/view/visitor provider; W6 same-workload typed CSS
+`cssparser` retime plus retirement of `CSS_GENERATED_RS`,
+`CssFullParseSummary`, fact-stream-only CSS `parse()`, and brace-counter proof
+from live admission; W7 executable Decision Engine spine; W8/W9 real or
+gate-rejected lowerers for the exact five `BackendShape` variants; W10
+bench-only FNV quarantine and production-root scan; W11 PASS-IMPL V2 close
+with no orphan dependency rows. No W12 escape hatch is available.
+
+JSON parse_only / direct_to_struct / real_typed_struct remain 51/51 strict
+same-plane guard rows. CSS L4's 24 SK-V14 rows are audit-demoted until W1
+demotes or collapses the broadcast evidence and W5/W6 provide typed CSS output
+plus same-workload `cssparser` comparison. `lightningcss` remains diagnostic
+until Track 1 emits comparable CSSOM/value output. SK-V16 routing is remainder
+only; it cannot substitute for SK-V15 close evidence.
 
 The full V1 spec lives at `restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`, `restart/MIGRATION.md`, plus the PASS surfaces. This skinny spec carves out a minimum-viable subset of that V1 contract.
 
@@ -81,12 +75,13 @@ correctness is green. The `semantic_full_digest_stressor` pass rows are
 `update_center` pass under the host/API output-schema plane. Tranche dispatch
 must treat the expanded corpus plus both direct workload planes as the current
 SOTA-BEAT block.
-SK-V13 is the active dispatch anchor via
-`restart/skinny/tranches/sk-v13/SPEC.md` and
-`restart/skinny/tranches/sk-v13/DISPATCH-PROMPT.md`. Older SK-V6 prompt text is
-legacy evidence only. REDRESS 50-55, 72, 96/97/98, 119, and 120 remain
-negative-route evidence that a new wave must cite with material differential;
-they are not close waivers under the SK-V13 addendum.
+SK-V15 is the active dispatch anchor via
+`restart/skinny/tranches/sk-v15/SPEC.md` and
+`restart/skinny/tranches/sk-v15/DISPATCH-PROMPT.md`. Older SK-V6/SK-V13/SK-V14
+prompt text is legacy evidence only. REDRESS 50-55, 72, 96/97/98, 119, 120,
+183, 184, 209-212, and PASS-IMPL V1 remain negative-route evidence that a new
+wave must cite with material differential; they are not close waivers under
+SK-V15.
 Generated direct string lowering now preserves raw spans to the sink boundary
 through `JsonSink::*_source`; the first no-allocation decoded visitor consumer
 and a later exact decoded-stats sink were measured and rejected, so the current
@@ -116,7 +111,7 @@ Threshold preview notation: `BEAT_BOUND = min(S × 0.95, T_README)`, where `T_RE
 | Multi-grammar generation (CSS L4, Sheets, BBNF-self) | Skinny is JSON-only | Tranches D, F, H |
 | LSP / DAP / incremental parse | Editor surface, not throughput | Tranche I |
 | GADT / DK13 / OutsideIn / CSP | JSON's grammar is monomorphic | Tranche D |
-| Cost-model + e-graph rewrites | Skinny pre-selects one canonical plan and bounds that cut with non-egraph alternate-plan stubs. The `alternate_dispatch_table_plan` candidate was invalidated empirically per `skinny/REDRESS.md` item 17 (duplicate probe + measured function-pointer table regression). The remaining alternate `scalar_plan` confirmed canonical wins by 38-52% on M1 Pro per `skinny/RESULTS.md`. | H.W2/H.W3 cost-driven rewrite and recognizer tuning body; legality/normalization rewrites remain V1 correctness work in `passes::normalize` |
+| Cost-model + e-graph rewrites | Skinny pre-selects one canonical plan and bounds that cut with non-egraph alternate-plan stubs. The `alternate_dispatch_table_plan` candidate was invalidated empirically per `skinny/REDRESS.md` item 17 (duplicate probe + measured function-pointer table regression). The remaining alternate `scalar_plan` confirmed canonical wins by 38-52% on M1 Pro per `skinny/RESULTS.md`. PASS-IMPL V1 classifies the current Decision Engine as scaffold: zero executable e-graph rewrites, tautological CSP, grammar-named facts, and label-string lowerers cannot admit. | SK-V15 W7-W9 own executable Decision Engine activation and real or gate-rejected lowerers for `EagerTape`, `OffsetTape`, `EventTape`, `SinkOnly`, and `CollapsedStage`; legality/normalization rewrites remain V1 correctness work in `passes::normalize` |
 | Pratt auto-detection | JSON has no operator precedence | Tranche H |
 | Recovery / `@error` directives | SOTA inputs are valid | Tranche I |
 | WASM / TS backends | V2 territory per Lock 5 amendment | V2 |
@@ -176,8 +171,8 @@ The skinny is the prior-validation step. Dispatch order:
 5. Hand-code the JSON parallel against the same substrate per BENCH.md §1.2 (substrate-API correspondence-gated inside `bbnf-bench`, not a separate runtime crate).
 6. Run the parity matrix per BENCH.md §6.
 7. Write `skinny/RESULTS.md` recording the verdict, Mbps table, reproducibility schema rows, arena counters, and tape-materialization notes. The `restart/skinny/` tree remains the spec authority.
-8. If SK-V13 G1-G7 are fully admitted or architecturally blocked, Pass Alpha brackets close and records the campaign disposition.
-9. If any SK-V13 row or CSS feature remains implementation-blocked, Pass Alpha brackets the next skinny tranche immediately; do not claim tranche close by deferral.
+8. Dispatch SK-V15 W0 first after G-Omega V9 authorization; continue W1 through W11 in strict SPEC order.
+9. If any SK-V15 dependency row remains implementation-blocked, W11 records row-level intrinsic-block proof, revert/REDRESS, or fail-closed status; do not claim tranche close by deferral or SK-V16 routing.
 10. If instrumentation is INVALID, re-run instrumentation; do not dispatch from that bench.
 11. If a row fails twice in-tranche, surface the round-trip rule with architectural-block evidence or a fresh material differential, then continue under the user pin.
 
@@ -185,10 +180,11 @@ The skinny is buildable, measurable, and falsifiable. It exists to update the SO
 
 ## Authority cross-references
 
-The four sibling slices ([SUBSTRATE.md](SUBSTRATE.md), [COMPILER.md](COMPILER.md), [BENCH.md](BENCH.md), [WORKSPACE.md](WORKSPACE.md), [HARDENING.md](HARDENING.md)) compose with the current SK-V14 tranche authority and keep older SK-V5/SK-V6/SK-V13 packets as historical evidence:
+The four sibling slices ([SUBSTRATE.md](SUBSTRATE.md), [COMPILER.md](COMPILER.md), [BENCH.md](BENCH.md), [WORKSPACE.md](WORKSPACE.md), [HARDENING.md](HARDENING.md)) compose with the current SK-V15 tranche authority and keep older SK-V5/SK-V6/SK-V13/SK-V14 packets as historical evidence:
 
-- [`tranches/sk-v14/SPEC.md`](tranches/sk-v14/SPEC.md) and the SK-V14 12-wave plan (W0..W11) - active skinny dispatch authority after Pass Omega V8 W5B-FRONTENDR CRUD, with W5A admitted and W5B.0 LOCK14-GATE next; full cohort §3Z LOCK convergence at S-P2 `4c70b6f193` + T-P1 `0a9c0fe65d` + S-P3 `626cb06cc1` + T-P2 `34a28f5c15` + T-P3 `69eea1c5c`.
-- [`tranches/sk-v13/SYNTHESIS.md`](tranches/sk-v13/SYNTHESIS.md), [`tranches/sk-v13/SPEC.md`](tranches/sk-v13/SPEC.md), [`tranches/sk-v13/DISPATCH-PROMPT.md`](tranches/sk-v13/DISPATCH-PROMPT.md), [`tranches/sk-v13/HANDOFF.md`](tranches/sk-v13/HANDOFF.md) — historical SK-V13 dispatch packet (now evidence; superseded by SK-V14 12-wave plan).
+- [`tranches/sk-v15/SPEC.md`](tranches/sk-v15/SPEC.md) and [`tranches/sk-v15/DISPATCH-PROMPT.md`](tranches/sk-v15/DISPATCH-PROMPT.md) - active skinny implementation authority after G-Omega V9 CRUD alignment, W0-W11 strict order.
+- [`tranches/sk-v14/SPEC.md`](tranches/sk-v14/SPEC.md) and the SK-V14 12-wave plan (W0..W11) - historical row-ledger evidence after the V8 W5B-FRONTENDR close; JSON remains a guard baseline, while CSS and generic infrastructure are audit-demoted by PASS-IMPL V1.
+- [`tranches/sk-v13/SYNTHESIS.md`](tranches/sk-v13/SYNTHESIS.md), [`tranches/sk-v13/SPEC.md`](tranches/sk-v13/SPEC.md), [`tranches/sk-v13/DISPATCH-PROMPT.md`](tranches/sk-v13/DISPATCH-PROMPT.md), [`tranches/sk-v13/HANDOFF.md`](tranches/sk-v13/HANDOFF.md) — historical SK-V13 dispatch packet (now evidence; superseded by SK-V14 and SK-V15).
 - [`audit/IMPLEMENTATION-AGENT-PROMPT-SK-V6.md`](audit/IMPLEMENTATION-AGENT-PROMPT-SK-V6.md) — historical SK-V6 evidence (2026-05-14): legacy purge, profile-first regression recovery, direct-string close discipline, strict workload matrix, and negative-route evidence.
 - [`audit/SOTA-BEAT-DESIGN.md`](audit/SOTA-BEAT-DESIGN.md) §6 — falsifiability matrix per pathology class; `checkasm` admission gate; Wave 2 re-baseline against S-anchors.
 - [`audit/GRAND-SYNTHESIS-SK-V5.md`](audit/GRAND-SYNTHESIS-SK-V5.md) — SK-V5 authority (2026-05-13; 417 LOC): corrected diagnoses (parse-attribution dishonesty, bench-private dishonesty, strictness honesty gap, BackendShape wiring gap, Lock 14 leak status, tape-union verdict) plus wave structure feeding the SK-V5 implementation packet.

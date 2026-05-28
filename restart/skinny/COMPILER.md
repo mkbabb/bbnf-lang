@@ -38,59 +38,34 @@ C6 extends this cleanup to `parse-that-regex`: JSON-named string, number,
 whitespace, and Unicode helper APIs must become grammar-neutral primitive facts
 or generated compatibility wrappers, not generic crate surface.
 
-**Pass Omega V2 / SK-V14 compiler receiver (2026-05-24; post-CRUD-3 LOCKS
-v+1 at `85a043224`, 779 lines).** SK-V14 absorbs the SK-V13 decision-engine
-fold and adds the 5×15 CSS L4 sub-grammar matrix per 3E grammar-generalisation
-(15 sub-grammars: `color`, `easing`, `filters`, `func-body`, `gradients`,
-`keyframes`, `keywords`, `media`, `properties`, `selectors`, `stylesheet`,
-`tokens`, `transforms`, `value-unit`, `values`), the future-grammar 7-step
-onboarding test (grammar source + metadata only; regenerate rostered
-surfaces; grammar-name leak scan; grammar-shape leak scan; 5-shape eligibility
-fixture; primitive same-wave non-JSON consumer; telemetry/provenance
-consumed by gate per `restart/audit/totality/p2/2C-grammar-neutrality.md:344`-`405`),
-and the Lock 14 binding generalisation discipline (Pattern H = 67
-hand-written runtime files per live find `find crates/core/src/runtime
--mindepth 2 -type f -name '*.rs' \| wc -l`; bound at LAC-1E-15 per-tranche
-census; `-mindepth 2` MUST omit `-maxdepth 2` so depth-3 files under
-`google_sheets/document/` are counted).
+**Pass Omega V9 / SK-V15 compiler receiver (2026-05-28).** SK-V14
+W5B/W5C/W5D is historical REDRESS evidence, not current dispatch. The active
+compiler obligations are SK-V15 W3, W5, W7, W8, and W9. W3 removes one coherent
+generic codegen leak family with same-wave generator/check consumer and
+non-JSON receiver proof. W5 builds typed CSS Value/document/view/visitor output
+before old CSS parser proof retires. W7 makes the Decision Engine executable:
+at least one asserted e-graph rewrite, non-tautological CSP, grammar-neutral
+facts, and generated selection impact. W8 implements or gate-rejects
+`EagerTape`/`OffsetTape` lowerers; W9 implements or gate-rejects
+`EventTape`/`SinkOnly`/`CollapsedStage` and proves the all-five BackendShape
+gate.
 
-The compiler receiver preserves the 5-shape `BackendShape` canon at Lock 10
-(`{EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage}`); CSS fact
-streams classify under LAC-1E-14 FactStream as the 5th SUBSTRATE-manifest
-category, NOT as a 6th `BackendShape` variant. Adding a 6th `BackendShape`
-variant remains G-Omega gated.
+The compiler receiver preserves the exact 5-shape `BackendShape` canon at Lock
+10 (`{EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage}`). FactStream
+is a substrate-manifest category, not a sixth `BackendShape`, and EventTape is
+not a retained sidecar stream. CSS fact streams may be diagnostic evidence or
+historical substrate-manifest classification, but fact-stream-only CSS
+`parse()`, `CssFullParseSummary`, `CSS_GENERATED_RS`, and brace-counter proof
+are not live CSS admission after SK-V15 W6.
 
-Lock 14 cleanup uses Pass Omega V2 terms: generated provider manifests
-(LAC-2C-01); generated sink/fact/value/flag surfaces (LAC-2C-03 FlagSchema
-generated table); grammar-shape leak census (LAC-2C-02 JSON-canonical label
-sites at `skinny/crates/passes/src/lib.rs:1059/1079/1102`); primitive policy
-ownership (LAC-2B-03 `policy_owner` field); CSS plus Sheets/BBNF-self
-negative-control closure; resolver-generated shape facts (LAC-2F-V5-04
-regex/HIR fact mandate). Historical helpers such as `shapes_for_json` and
-`nominate_json` are deletion targets, not naming patterns for new compiler
-code.
-
-**Pass Omega V8 / SK-V14 W5B-FRONTENDR compiler receiver (2026-05-26).** REDRESS-209
-split the old monolithic W5 into W5A and W5B; REDRESS-210 then rejected W5B
-deletion because W5A admitted the request boundary without a provider-free
-generator body; REDRESS-211 rejected W5B-GEN because the generic frontend/import
-IR closure was missing. W5A remains the closed compiler-side request-boundary wave:
-grammar source and workspace metadata enter codegen as semantic inputs,
-required V1 grammar-source constructs parse for runtime generation without
-grammar-id branches, and `regen-css` plus all seven CSS L4 companions consume
-that path with JSON unchanged-output and Sheets/BBNF-self fail-closed or
-generated-role proof. W5B-FRONTEND is now the compiler-side aggregate
-frontend/import/IR closure sequence: W5B.0 LOCK14-GATE, W5B.1 IMPORT-CLOSURE,
-W5B.2 LAYOUT-DISCARD, W5B.3 PRETTY-SPAN-PROJECTION, and W5B.4
-REQUEST-CONSUMER. It lowers CSS L4 compatibility constructs such as `@ws` into
-canonical IR without new public syntax or grammar-name branches. W5C-GEN is the
-provider-free generator body wave after aggregate W5B-FRONTEND closes: retire live
-`RuntimeProvider` / `GrammarProfile` / `render_runtime_profile` production
-dispatch while preserving provider/template files as unreachable W5D residue.
-W5D-DELETE is deletion only after W5C-GEN is load-bearing: retire
-provider/template clusters and close the Lock 14 baseline. Static
-centralization of hand-written CSS runtime bodies is not a compiler receiver;
-it is the P-6 recurrence vector.
+Generated status now requires grammar-derived generation, line-1 provenance,
+and a non-writing regen/check route. Header-only changes, byte-identical replay
+of a hand-written string literal, static CSS profile rosters, JSON/CSS runtime
+mode splits, and grammar-family branches in generic code fail SK-V15. Pattern H
+remains a 67 root-runtime-file repair surface until W4 proves true generated
+provenance and regen/check coverage. Historical helpers such as
+`shapes_for_json`, `nominate_json`, and static CSS provider/profile rosters are
+deletion or quarantine targets, not naming patterns for new compiler code.
 
 ---
 
@@ -912,8 +887,8 @@ Authority: `restart/skinny/tranches/sk-v5/SPEC.md` §2.3 and
 | V1 crate | Skinny status | Per-skip impact on SOTA measurement |
 |---|---|---|
 | `cost-model` | **Stubbed in the current runnable skinny.** The skinny treats every BIR construction as constant-cost. No `CostFacts`, no `CostDecision`, no scalar score, no Pareto frontier. | The expanded corpus refutes the prior "cost-model is not a recovery lever" reading. `skinny/RESULTS.md` is overall `N-direct / NoGo`: retained parse has 13 G rows and four A rows, while the `semantic_full_digest_stressor` is correctness-green with four pass rows (`citm_catalog`, `apache_builds`, `github_events`, `instruments`) and 13 red rows. The representative `real_typed_struct` host/API output rows pass after REDRESS 71. SK-V5 redress item 56 is folded into the full matrix and clears Canada structural scan, and REDRESS 72 admits a generated-retained-only cap-16 probe while rejecting global/direct/Track 2 widening. SOTA-BEAT still requires a grammar-neutral cost model over materialization plan (`OffsetTape` / `EventTape` / `SinkOnly` / `CollapsedStage`), hot-rule inline selection, byte-class primitive choice, generated source-hook SinkOnly emission, and fused exact float/string/Unicode materialization. Lens L verdict: **MASKING until those choices are measured as alternatives, not constants**. |
-| `egraph` | **Stubbed.** No e-class, no rewrite, no saturation, no fixpoint. ARCH §10.1 `legality-rewrites` and `normalization-rewrites` (LOAD-BEARING for V1 correctness) are inlined as pre-extraction passes in `passes::normalize`; `cost-driven-rewrites` is omitted from the runnable skinny. | JSON's grammar can be extracted without rewrite search, but SOTA-BEAT cannot claim the omitted rewrite/cost axis is orthogonal. The refined skinny keeps e-graph saturation out of the prototype, but BENCH must carry explicit plan probes for materialization mode, dispatch form, primitive kernel, and capacity strategy before the cut can be FAITHFUL. |
-| `csp-solver` | **Stubbed.** No constraint store, no propagation, no improvement, no Implication discharge. | None for JSON. Every CSP axis has zero choice on JSON (§4.2). |
+| `egraph` | **Stubbed.** No e-class, no rewrite, no saturation, no fixpoint. ARCH §10.1 `legality-rewrites` and `normalization-rewrites` (LOAD-BEARING for V1 correctness) are inlined as pre-extraction passes in `passes::normalize`; `cost-driven-rewrites` is omitted from the runnable skinny. | JSON's grammar can be extracted without rewrite search, but SOTA-BEAT cannot claim the omitted rewrite/cost axis is orthogonal. PASS-IMPL V1 makes this an SK-V15 W7 activation requirement: at least one real rewrite plus generated selection impact, not an advisory scaffold. |
+| `csp-solver` | **Stubbed.** No constraint store, no propagation, no improvement, no Implication discharge. | None for JSON. Every CSP axis has zero choice on JSON (§4.2). SK-V15 W7 must still remove tautological CSP close claims and prove grammar-neutral facts before Decision Engine evidence is load-bearing. |
 | `vm` | **Stubbed.** No interpreter, no replay, no debug trace. | None for SOTA. VM is a debug/test artefact. The skinny does not have the `vm::replay` golden gate. |
 | `bbnf-language-server` | **Stubbed.** No LSP, no editor integration. | None for SOTA. LSP is a developer-experience artefact. |
 | `path` / `path-core` | **Stubbed.** No `path!` macro, no path schema, no typed selector. | None for SOTA. Path queries are user-facing; SOTA measures parse-only throughput. The emitted runtime exposes `JsonRoot<'i>` directly without path glue. |

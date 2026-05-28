@@ -4,71 +4,35 @@ You are the hardening agent for the **skinny implementation spec**. The skinny e
 
 This prompt is parameterised by target. It composes with the existing greenfield-restart hardening apparatus rather than duplicating it.
 
-**Pass Omega V2 / SK-V14 receiver (2026-05-24; post-CRUD-3 LOCKS v+1 at
-`85a043224`, 779 lines).** The active skinny cycle is SK-V14, with full
-cohort §3Z LOCK convergence achieved across all 5 cohorts: S-P2 `4c70b6f193`
-+ T-P1 `0a9c0fe65d` + S-P3 `626cb06cc1` + T-P2 `34a28f5c15` + T-P3
-`69eea1c5c`. The T-P3 7-lens CHALLENGE waves (CH1 CORRECTNESS, CH2
-GENERALITY, CH3 REGRESSION, CH4 COST, CH5 HIDDEN COUPLING, CH6
-ANTI-PAPER-CLOSE, CH7 OVERFIT-PRUNE) converged at V4 with the §3Z cohort
-LOCK criterion satisfied (≥95% × 2 consecutive cycles NO CAVEAT; zero
-orphan REVISEs; V≤5 ceiling consumed at V4 = 4/5 with 1-cycle margin).
+**Pass Omega V9 / SK-V15 receiver (2026-05-28).** A hardening run now reads
+the locked SK-V15 `SPEC.md`, `DISPATCH-PROMPT.md`, `SYNTHESIS.md`, and
+`HANDOFF.md`; PASS-IMPL V1 consolidated audit; T-P1 V5, T-P2 V3, and T-P3 V5
+consolidated packets; and G-Omega V9 authorization before it treats any skinny
+surface as current. SK-V14 W5B-FRONTENDR and older Pass Omega V2..V8 receivers
+remain historical evidence only.
 
-The §3Z convergence model: per-lens LOCK depth (4-cycle extensions for
-CH1/CH3/CH5; 3-cycle LOCK trigger for CH2; 3-cycle extension for CH6;
-4-cycle extension for CH4; 2-cycle LOCK trigger for CH7) feeds the cohort
-LOCK declaration when 7/7 lenses ACCEPT at 100% NO CAVEAT for two
-consecutive cycles. CH7 specifically scans for fabricated baselines,
-cited-but-absent surface text, counter-surface fabrication
-(meta-CH7 collision pattern), and the SK-V14 cohort 32:69 = 31.7%
-refutation density preservation. The Lock 1 v+1 substrate-ceiling fold +
-LAC-2F-V5-02 substrate-union ELEVATION + LAC-1E-14 FactStream 5th
-SUBSTRATE-manifest category are the cohort-discipline invariants that all
-T-P3 lens artefacts now cite verbatim.
+Refuse implementation before G-Omega V9. Refuse SK-V15 close from
+documentation-only evidence, warm benches, x86/AVX/AVX-512 anchors, W8R CSS
+metric floors, hidden broadcast measurements, self-exempting Lock 14/16
+exclusions, header-only Pattern H provenance, source-present unwired
+primitives, Decision Engine advisory-only facts, label-string BackendShape
+lowerers, and production FNV arbiter/hash-correctness routes. CSS fact streams,
+`CSS_GENERATED_RS`, `CssFullParseSummary`, and brace-counter proof are
+diagnostic after W1 and cannot remain live admission after W6. Typed CSS
+Value/document/view/visitor output belongs to W5; fresh same-workload typed
+`cssparser` retime belongs to W6.
 
-A hardening run now reads the SK-V14 `SPEC.md`, the cohort hardening
-consolidators (`HARDENING-S-P2-V2-CONSOLIDATED.md`,
-`HARDENING-T-P1-V5-CONSOLIDATED.md`, `HARDENING-S-P3-V3-CONSOLIDATED.md`,
-`HARDENING-T-P2-V3-CONSOLIDATED.md`,
-`HARDENING-T-P3-V4-CONSOLIDATED.md`), the G3 packet (3A through 3F per
-PASS-3-SYNTHESIS.md), and the G-Omega sign-off before it treats any
-skinny surface as dispatch authority. Refuse W0-before-G-Omega, missing
-parse_only admission coverage, weak strict-vs-strict comparator anchors,
-support-only primitives, P1-P8 silent fallback, source-present SIMD/ASM
-orphans, Lock 14 generic crate branches, missing audit-overlay column
-(LAC-1E-16), and `RESULTS.md` rows lacking executable verification
-(LAC-1E-12 mandate). NEW-CH2-V3-02 orphan-cell propagation guard requires
-pre/post-grep evidence on every cite-bearing micro-fold. This prompt
-also refuses any W3-or-later SK-V14 plan before Pass Omega V3 W2R CRUD has
-landed and amended W2 has admitted under the skinny-only `regen-css` gate.
-Reject any W2 plan that touches or claims closure over
-`crates/core/src/runtime/css_l4/`; W6.0 owns that tree. Pass Omega V4 W4R
-adds the next refusal: reject any W4/W5 plan before V4 G-Omega + SPEC/HANDOFF/
-INDEX/WORKSPACE patching lands; reject any W4 plan that deletes CSS provider,
-template, runtime, source, or generator paths. Pass Omega V5 W5R adds the next
-refusal: reject any W5A plan that deletes provider/template paths; reject any
-W5B plan before W5A admits all seven CSS companions plus JSON/Sheets/BBNF-self
-proof through the source-consuming generator path; reject static centralization
-of hand-written CSS runtime bodies as P-6 recurrence. This prompt still defines
-the lenses; it does not authorize source, gate, `RESULTS.md`, or `REDRESS.md`
-edits by itself. Pass Omega V6 W5BR added the historical refusal: reject any
-W5B-GEN plan that deletes provider/template paths; reject any W5C-DELETE plan
-before W5B-GEN proves the provider-free generator body and removes live
-`RuntimeProvider`, `GrammarProfile`, `render_runtime_profile`, provider-module,
-generated-output fixture lookup, and grammar-name branch reachability from
-generic production code. Pass Omega V7 W5B-GENR adds the active refusal: reject
-any W5B-FRONTEND plan that treats `@ws` or related compatibility syntax as new
-public syntax; reject any W5B-FRONTEND or W5C-GEN source redress before
-`lock14_baseline.rs` owner-path and parent-diff routing lands for that wave;
-reject any W5C-GEN plan before W5B-FRONTEND admits; reject provider/template
-deletion before W5D-DELETE after W5C-GEN admit. Pass Omega V8
-W5B-FRONTENDR supersedes the active W5B refusal shape: reject any
-W5B.1..W5B.4 source redress before W5B.0 LOCK14-GATE admits; reject any
-W5C-GEN plan before all W5B.0..W5B.4 sub-waves admit; reject W5B.0 through
-W5B.3 as aggregate W5B close; reject wildcard aggregate log greps in place of
-dedicated `/tmp/skv14-w5b-<test-name>.log` plus dedicated nonzero `rg` proof;
-reject W5B provider/template deletion, provider-free generator-body
-replacement, public `@ws` revival, or grammar-name branches in generic crates.
+W2-W10 are mandatory seven-lens CHALLENGE candidates unless the plan proves
+the redress is ledger-only and non-behavioral. The lenses are CH1 correctness,
+CH2 generality, CH3 regression, CH4 cost, CH5 hidden coupling,
+CH6 anti-paper-close, and CH7 overfit-prune/gate-exclusion. CH3 now includes
+wave-graph cycle detection for delete-before-rebuild paths. CH5 includes
+broadcast-admission detection: N admitted rows require N distinct measurement
+rows, not one row broadcast across conceptual features. CH7 includes gate
+exclusion detection: every Lock 14 / Lock 16 gate must report included roots,
+excluded roots, reasons, self-scan status, primitive status, gate consumer,
+affected rows, and disposition. This prompt still defines the lenses; it does
+not authorize source, gate, `RESULTS.md`, or `REDRESS.md` edits by itself.
 
 ## §1 — Purpose: why skinny hardening differs from V1 hardening
 
@@ -105,13 +69,15 @@ Per-quadrant authority sources are colocated; orchestration sources are inherite
 
 1. `restart/skinny/INDEX.md` — cross-quadrant invariants + decision protocol + flagged contradictions.
 2. The target file(s) per §2.
-3. `restart/prompts/audit-specs/HARDENING-LENS-SET.md` — the V1 lens contract (Lenses A-K). **Read in full**; this skinny prompt does not duplicate the lens definitions.
-4. `restart/prompts/ORCHESTRATOR.md` — dispatch protocol; phase-type table; cycle naming canon.
-5. `restart/ARCHITECTURE.md` — V1 architecture authority (the skinny is a subset of this; deviations must be documented).
-6. `restart/MASTER-PLAN.md` §4 (Hard Architectural Gates, lines 108-169) — V1 SOTA gate definitions.
-7. `restart/locks/LOCKS.md` — settled commitments; particularly Lock 1 (tape substrate), Lock 5 (Backend trait), Lock 8 (SOTA anchors), Lock 13 (directory discipline), Lock 14 (Lock 14 onboarding).
-8. `restart/corpora/SOTA.md` lines 50-89 + 130-136 — competitor baselines.
-9. `docs/precepts/instructions/STYLE.md` + `LESSONS-LEARNED.md` — voice + discipline.
+3. `restart/skinny/tranches/sk-v15/SPEC.md` and `DISPATCH-PROMPT.md` — W0-W11 implementation authority.
+4. `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md` — PASS-IMPL V1 overfit findings.
+5. `restart/prompts/audit-specs/HARDENING-LENS-SET.md` — the V1 lens contract (Lenses A-K). **Read in full**; this skinny prompt does not duplicate the lens definitions.
+6. `restart/prompts/ORCHESTRATOR.md` — dispatch protocol; phase-type table; cycle naming canon.
+7. `restart/ARCHITECTURE.md` — V1 architecture authority (the skinny is a subset of this; deviations must be documented).
+8. `restart/MASTER-PLAN.md` §4 (Hard Architectural Gates, lines 108-169) — V1 SOTA gate definitions.
+9. `restart/locks/LOCKS.md` — settled commitments; particularly Lock 1 (tape substrate), Lock 5 (Backend trait), Lock 8 (SOTA anchors), Lock 13 (directory discipline), Lock 14 (generated-output/onboarding), and Lock 16 (SIMD/ASM scalar-oracle + parity/checkasm admission).
+10. `restart/corpora/SOTA.md` lines 50-89 + 130-136 — competitor baselines.
+11. `docs/precepts/instructions/STYLE.md` + `LESSONS-LEARNED.md` — voice + discipline.
 
 The agent does NOT read pass-1/pass-2/pass-3 V1 audits unless a contradiction in the skinny target cites them. The skinny is graphically separate; over-reading the V1 corpus dilutes the skinny-specific signal.
 

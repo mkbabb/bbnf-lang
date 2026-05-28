@@ -23,42 +23,36 @@ plane, feature mask, API symbol, corpus hash, hardware, build flags, sidecar
 freshness, and primitive/checkasm status. asmjson is an architectural reference
 for x86 `CollapsedStage`, but permissive asmjson rows are flaw probes only.
 The historical SK-V6 implementation route was
-`restart/skinny/tranches/sk-v6/SPEC.md`; current authority is the SK-V13
+`restart/skinny/tranches/sk-v6/SPEC.md`; current authority is the SK-V15
 receiver below.
 
-**Pass Omega V2 / SK-V14 receiver (2026-05-24; post-CRUD-3 LOCKS v+1 at
-`85a043224`, 779 lines).** The active route is now
-`restart/skinny/tranches/sk-v14/SPEC.md` (12-wave plan W0..W11 per the
-α-E candidate shortlist) after G-Omega sign-off authorises Pass Omega V2
-CRUD entry. SK-V14 bench rows use the common telemetry envelope across
-JSON and CSS: grammar id, output plane, strictness, oracle/comparator id,
-witness kind, generated policy source, row verdict, run id, host, wave id,
-REDRESS provenance, plus the four mandatory audit-overlay columns per
-LAC-1E-16 (`restart/locks/LOCKS.md:213`): `track2_entry_point`,
-`comparator_plane`, `per_iter_equality`, `audit_overlay_verdict`.
-`xtask gate-json` REJECTS any row missing any of the four. JSON rows
-extend the envelope with sonic-rs strict comparators; CSS L4 rows extend
-it with lightningcss plus an independent oracle (cssparser or a golden
-table). Per F-V3-CH4-A, SIMD admissibility runs under `BBNF_SIMD_STRICT=1`
-cohort-wide (`restart/locks/LOCKS.md:295`).
+**Pass Omega V9 / SK-V15 bench receiver (2026-05-28).** BENCH consumes SK-V15
+W0, W1, W5, W6, and W10. CSS W8R 24-row evidence is diagnostic or NO-GO until
+W1 demotes/collapses the broadcast and W5/W6 provide typed CSS Value output
+with fresh same-workload `cssparser` comparison. `lightningcss` is a
+diagnostic planning signal before comparable CSSOM/value output; it is not an
+admission floor for fact-stream or brace-counter output. No CSS broadcast
+admit, no `CSS_GENERATED_RS` / `CssFullParseSummary` / fact-stream-only
+`parse()` / brace-counter live proof, and no warm-only bench evidence may close
+SK-V15.
 
-T-P2 cohort refutation density anchor is **32:69 = 31.7%** (NOT 31:64);
-the canonical pair is aligned at 6 cohort touch-points
-(3C-diff:69 + 3F:71,:107,:131,:280,:315). SK-V14 W6 sub-wave budget is
-**≤2.0k C-1 part-B / ≤90 min sub-wave / ≤810 min aggregate** per SPEC
-§13:243. The six T2A-LAC-V1-05 abrogate-gate numerics
-(`restart/locks/LOCKS.md:225`) bind every gate-consumed comparator + bench
-run: e-graph saturation ≤50000 nodes / ≤10000 classes / ≤30 iter; CSP
-timeout ≤1 s/grammar; stale-cost ≤30%; generated-LOC growth bound to
-`loc_budget`; row regression admit; parity/checkasm failure.
+SK-V15 rows require `measurement_row_id`, `measurement_origin`, `value_plane`,
+`css_comparator_workload`, `generator_source`, `lock14_scan_scope`,
+`lock16_status`, `checkasm_or_parity_status`, `gate_exclusion_report`, and
+`broadcast_group_id`, alongside the existing strictness/output-plane columns.
+Missing fields, hidden one-to-N measurement stamps, self-exempting gate
+exclusions, source-present unwired primitives, non-native admission hosts, and
+producer-only telemetry reject close. Admission evidence is native Apple M5
+Max / aarch64 unless a future authorized packet amends the host policy;
+x86/AVX/AVX-512 rows remain diagnostic.
 
-Cohort §3Z LOCK commits: S-P2 `4c70b6f193` + T-P1 `0a9c0fe65d` + S-P3
-`626cb06cc1` + T-P2 `34a28f5c15` + T-P3 `69eea1c5c`.
-
-Throughput, rolling deltas, hot-leaf attribution, PMU/samply signals, and
-primitive/checkasm state are workload extensions consumed by the owning
-SK-V14 wave-triumvirate gate. No `RESULTS.md` or gate-code mutation is
-authorized by this document alone.
+W11L/W11N/W11O FNV closed-enum products are bench-only quarantine inputs.
+Strict-product comparators must catch closed-enum sidecar coupling. No
+production runtime/generic-codegen FNV arbiter, selector, or hash correctness
+proof is admissible in SK-V15. Throughput, rolling deltas, hot-leaf
+attribution, PMU/samply signals, and primitive/checkasm state are workload
+extensions consumed by the owning SK-V15 wave gate. No `RESULTS.md` or
+gate-code mutation is authorized by this document alone.
 
 The full V1 spec lives at `restart/ARCHITECTURE.md` and `restart/MASTER-PLAN.md`.
 SOTA anchors live at `restart/corpora/SOTA.md` and Lock 8 v+1
@@ -314,9 +308,11 @@ in generic crates.
   cross-language noise that defeats the controlled comparison. The simdjson
   number anchors the structural-scan microbenchmark target (§4) but does not
   appear as a parse-time competitor row.
-- **lightning-css:** CSS L4 comparator for SK-V13 CSS rows. It is not a JSON
-  parse-time competitor, but it is now an active skinny SOTA comparator for CSS
-  feature rows.
+- **lightning-css:** CSS L4 comparator for historical SK-V13/SK-V14 rows and
+  an SK-V15 diagnostic planning signal. It is not a JSON parse-time competitor
+  and it is not an admission floor until Track 1 emits comparable CSSOM/value
+  output; W5 owns typed CSS Value output and W6 owns same-workload typed
+  `cssparser` retime.
 - **tree-sitter:** different output shape (CST vs typed root). Defers to V1
   diagnostic ledger only.
 - **jq, oj, json-parser-c:** not architecturally adjacent.
@@ -444,9 +440,9 @@ test-fail signal, not a regression.
 The user's skinny target table (provided in the prompt) sets BEAT and PARITY
 floors. PARITY is the V1-correctness floor (matches sonic-rs envelope per
 ARCHITECTURE.md §4 amendment); BEAT is the J.W1 audacious target. The skinny
-gates against PARITY for GO. Current SK-V13 JSON/CSS rows override this
-historical triad framing: each row must beat its same-plane strict comparator
-or record an architectural block.
+gates against PARITY for GO. Current SK-V15 JSON guard rows preserve
+same-plane strict comparator discipline; CSS rows remain diagnostic until W5/W6
+provide typed output and same-workload comparator evidence.
 
 | Corpus | Beat target (Track 2) | Parity floor (Track 2) | sonic-rs anchor | simd-json anchor |
 |---|---|---|---|---|
@@ -1632,14 +1628,17 @@ graduates, this workflow renames or absorbs into J.W1.
 The skinny intentionally does NOT measure several axes that V1 does. Each
 omission has an explicit impact statement on the SOTA-viability conclusion.
 
-### 9.1 CSS L4 receiver — current gate, historical prior probe
+### 9.1 CSS L4 receiver — SK-V15 diagnostic until typed retime
 
-Full lightning-css comparison no longer defers to a V1 H-tranche as an active
-skinny caveat. Under SK-V13, CSS L4 rows are close targets: each non-out-of-
-scope feature must match lightningcss coverage for the production, pass strict
-equality on the same corpus/output plane/host, carry an independent oracle, and
-beat lightningcss Track 1 by at least 1 Mbps or record an architectural block.
-The old substrate-only probe below remains historical evidence only.
+Full lightning-css comparison does not close current CSS admission. PASS-IMPL
+V1 demoted the SK-V14 CSS W8R rows because one aggregate tuple was broadcast
+across 24 conceptual rows, `cssparser` beat Track 1 on the same aggregate
+workload, and `lightningcss` lived on a different output plane. Under SK-V15,
+CSS rows are diagnostic or NO-GO until W1 demotes/collapses the broadcast, W5
+emits typed CSS Value/document/view/visitor output, and W6 reruns a fresh
+same-workload typed `cssparser` comparison. `lightningcss` counts only after
+Track 1 emits comparable CSSOM/value output. The old substrate-only probe below
+remains historical evidence only.
 
 There was a **CSS prior probe** intended to sharpen the earlier
 SOTA-viability conclusion:
@@ -1667,9 +1666,11 @@ SOTA-beat-on-CSS probability update. A skinny that hits JSON outcome A
 but degrades 3× on CSS bootstrap should *lower* the V1 SOTA-beat
 probability for the CSS row, not assume JSON parity transfers.
 
-If an SK-V13 CSS row is not implemented, that is an implementation block until
-the owning wave records an architectural block. Do not record a V1 H-tranche
-deferral as close evidence.
+If an SK-V15 CSS dependency row is not implemented, that is an implementation
+block until the owning wave records proof, revert/REDRESS, or row-level
+intrinsic-block evidence. Do not record a future tranche deferral, broadcast
+measurement, fact-stream-only parse, or brace-counter equality as close
+evidence.
 
 ### 9.2 No incremental parsing bench
 
@@ -1872,11 +1873,11 @@ Outcome: <ID>
 | cold_first_parse | citm | <us> | <us> | <ratio>x | <PASS \| INCONCLUSIVE \| FAIL> |
 | cold_first_parse | canada | <us> | <us> | <ratio>x | <PASS \| INCONCLUSIVE \| FAIL> |
 
-### CSS prior probe (per §9.1; report-only if implemented)
+### CSS prior probe (per §9.1; diagnostic/report-only if implemented)
 
 | Probe | Result | Threshold | Pass |
 |---|---:|---|---|
-| css_prior bootstrap.css | <ms> | ≤ lightning-css × 1.5 | <yes|no|deferred> |
+| css_prior bootstrap.css | <ms> | diagnostic only until W5/W6 typed CSS retime | <yes|no|deferred> |
 
 ## Action
 
@@ -2082,7 +2083,8 @@ rows.
 
 **Mitigation:** the bench command pre-runs a 30-second warmup loop on
 `canada.json` to bring the CPU into thermal steady state before timed
-measurement begins. The warmup is documented but not gated.
+measurement begins. The warmup is documented but not gated, and SK-V15 close
+cannot cite warmup or warm-only rows as admission evidence.
 
 ### 12.3 RUSTFLAGS drift
 
@@ -2235,8 +2237,8 @@ head -1 skinny/RESULTS.md
 | Is the single-plan extraction masking cost-model wins? | open on event/tape consumption | scalar alternate passes (canonical wins); dispatch-table alternate INVALID per `skinny/REDRESS.md` item 17; byte-class whitespace EventCursor INVALID per item 51; parser-local structural-mask cursor INVALID per item 53; the remaining admissible alternate is single-substrate event/tape consumption |
 | Is cold-cache parse latency acceptable? | report-only | cold_first_parse probe per corpus |
 | Is the substrate viable for concurrent-parse workloads? | yes | peak RSS gated at outcome M (≤ 3× competitor on canada) |
-| Does the substrate generalise beyond JSON? | gate-owned by SK-V13 CSS rows | CSS prior probe is historical; current proof is generated CSS L4 strict parity |
-| Are CSS SOTA gates cleared? | SK-V13 close target | each non-out-of-scope CSS row must beat lightningcss or carry architectural-block evidence |
+| Does the substrate generalise beyond JSON? | SK-V15 open | CSS prior probe is historical; current proof requires W5 typed CSS output plus W6 same-workload `cssparser` retime |
+| Are CSS SOTA gates cleared? | NO | SK-V14 CSS rows are audit-demoted; no broadcast, fact-stream-only, brace-counter, or `CSS_GENERATED_RS` evidence can close CSS admission |
 | Is incremental parsing performance acceptable? | NO (defers to V1 I) | n/a — committed tape is private and immutable; mutable reuse belongs to the V1 I `TapeBuilder` path documented in INDEX.md deviation ledger |
 | Is generated JSON LOC inside budget? | yes | `xtask lint-loc` / gate metadata; V1 nine-grammar scale defers to F.W3 |
 | Is WASM lower path measured? | NO (defers to V2) | n/a — see §9.4 |

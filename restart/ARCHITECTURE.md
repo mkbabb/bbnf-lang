@@ -16,24 +16,24 @@ alone (`restart/README.md:3`). Legacy plans remain inheritance, not governing
 truth; the inheritance index says BA/BB/BC/BD are to be mined and cited, not
 resumed as-is (`restart/inheritance/INDEX.md:1-5`).
 
-**SK-V14 totality-status (2026-05-24, ARCH-3A-D01).** T-P1 V5/V6 LOCKED
-inventories + T-P2 V5 CONVERGED dossiers + T-P3 V4 §3Z COHORT LOCK
-(`restart/audit/totality/p3/hardening/HARDENING-T-P3-V4-CONSOLIDATED.md`) are
-the current architecture authority; G-Omega CLOSED at Pass Omega V2 (this
-cycle). T-P3 proposed deltas only — no T-P3 surface edit; Pass Omega CRUD
-applies them. The five-cohort SK-V14 LOCK convergence: S-P2 LOCKED
-`4c70b6f193`, T-P1 LOCKED `0a9c0fe65d`, S-P3 LOCKED `626cb06cc1`, T-P2
-LOCKED `34a28f5c15`, T-P3 LOCKED `69eea1c5c`. Any new directive, new BIR
-variant, new public substrate, or `BackendShape` expansion (beyond the
-5-shape canon `{EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage}`)
-remains G-Omega-gated per PASS-3-SYNTHESIS §8.5 (the SK-V6 fold-back framing
-in prior surfaces is superseded; the asmjson/DAV1D synthesis at
-`restart/skinny/tranches/sk-v6/SYNTHESIS.md` remains historical evidence,
-not governing). Settled architecture remains unchanged: no new directives,
-no new BIR variants, no parallel substrate. Same-plane SOTA rows are
-required; asmjson is an x86 DPDA reference/flaw probe unless strict
-comparator planes match; DAV1D/FFmpeg/VLC discipline governs SIMD/ASM
-admission; grammar-specific performance behavior flows through generated
+**SK-V15 current authority (2026-05-28, G-Omega V9 CRUD-1).** The active
+implementation authority is SK-V15 W0-W11: T-P1 V5 is clean-final /
+G1-auto-pinned and is not normal two-clean-cycle §3Z; T-P2 V3 is the normal
+§3Z lock; T-P3 V5 is the final-convergence lock; and SK-V15 S-P3 V4 locks
+`restart/skinny/tranches/sk-v15/SPEC.md` plus `DISPATCH-PROMPT.md` as the
+implementation contract. SK-V14 W5B / Pass Omega V8, T-P3 V4, and earlier
+cohort-lock prose are historical/pre-block evidence only. PASS-IMPL V1 blocks
+current closure on CSS L4 broadcast/wrong-plane/string-literal proof, missing
+CSS Value API, Pattern H 67-file generated provenance, Lock 14/16 gate holes,
+Decision Engine scaffold status, lowerer stubs, and FNV bench-only quarantine.
+Any new directive, BIR variant, substrate, public substrate API, retained
+sidecar, or `BackendShape` expansion remains G-Omega-gated; the 16 locks and
+5-shape canon `{EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage}`
+remain preserved. Admission evidence for SK-V15 is Apple M5 Max / aarch64
+only; x86 and AVX/AVX-512 evidence is diagnostic unless a future authorized
+gate says otherwise. Settled architecture remains unchanged: no new
+directives, no new BIR variants, no parallel substrate. Same-plane SOTA rows
+are required; grammar-specific performance behavior flows through generated
 data and side tables, not generic crate branches.
 
 | Topic | Settled architecture | Superseded material | Resolution |
@@ -1078,7 +1078,7 @@ tables and internal fact logs are:
 | `EGraphFacts` | Egraph bridge. | Cost extraction. | Public; keys stable e-class/node facts, not chosen representatives. |
 | `BridgeJustification` | `passes::bridge`, with egraph and CSP explanation refs. | Cost extraction, diagnostics, bridge tests. | Public proof reference; does not expose pass-local bridge terms from generic crates. |
 | `CspSolution` | CSP solver (when called by `passes::layout` or other clients). | Cost extraction, layout, host chain typing. | Public when produced for extraction legality; internal when produced inside layout lowering. |
-| `CostFacts` | Cost model. | Backend IR extraction, benchmark report. | Public; stores `CostDecision` records, objective vectors, Pareto/frontier membership, scalarization profile, selected alternative, rejected alternatives, dominated alternatives, and extraction method. **ARCH-3A-D04 active fields (P1-1B-D2 revised + P1-1B-D11/D12; LAC-2D-02):** `ActiveCostFacts` (egraph candidate counts, selection trace hash, rewrite-order variance, cascade-fallback marker) and `DecisionCspFacts` (CSP solver status/budget/parity, choose-backend-shape status, evidence freshness, stale/static fallback marker). `lower_to_rust` admits closed only when both ActiveCostFacts and a satisfying CSP solution are present (skinny W7 admission gate at `skinny/crates/codegen/src/lower/rust.rs:27-77`). |
+| `CostFacts` | Cost model. | Backend IR extraction, benchmark report. | Public; stores `CostDecision` records, objective vectors, Pareto/frontier membership, scalarization profile, selected alternative, rejected alternatives, dominated alternatives, and extraction method. **ARCH-3A-D04 active fields (P1-1B-D2 revised + P1-1B-D11/D12; LAC-2D-02):** `ActiveCostFacts` (egraph candidate counts, selection trace hash, rewrite-order variance, cascade-fallback marker) and `DecisionCspFacts` (CSP solver status/budget/parity, choose-backend-shape status, evidence freshness, stale/static fallback marker). SK-V15 keeps `lower_to_rust` closure gated on both ActiveCostFacts and a satisfying CSP solution, but PASS-IMPL V1 classifies the current Decision Engine as scaffold/open until W7 makes it load-bearing. |
 | `DirectFieldFacts` | Shape/host API schema bridge. | `DirectBuild`, `SinkOnly`, generated typed materializers, diagnostics. | Public; stores field id/path/type, cardinality, duplicate/unknown policy, null/default policy, representation policy, materializer, and diagnostic context. |
 | `PrimitiveFacts` | `bbnf-simd` admission harness plus codegen verifier. | CPUID dispatch, primitive consumers, bench report, diagnostics. | Public; stores scalar oracle, target feature mask, ABI/checkasm status, same-wave consumer, and corpus-row impact. **ARCH-3A-D10 8-cell PrimitiveFacts manifest (LAC-1E-12; 2B Layer-0/Layer-1 contract; 2E aarch64 PRIMARY 13 entries; 2F 9 primitive gaps; LAC-2D-04; Lock 16 close-state vocabulary at `restart/locks/LOCKS.md:506-513`):** every Lock 16 primitive row carries (1) abstract primitive name + published citation; (2) hardware gate (ISA / feature macro); (3) scalar oracle path; (4) checkasm parity command; (5) corpus-parity evidence; (6) same-wave consumer (path + measured row); (7) `substrate_target ∈ {local_temp_only, existing_tape, direct_sink, admitted_fact_output}` (Lock 1 v+1); (8) close state ∈ {wired, deleted, scalar-delegate-non-ASM, architectural-block-with-REDRESS}. SKELETON triple (`FSM_DISPATCH_THREADED` / `FRAME_PUSH_BOUNDED` / `FRAME_POP_BOUNDED`) DELETED per 2B §R3. Also register `policy_owner ∈ {generated_grammar, caller_data, none}` (LAC-2B-03) and Lock 16 atomic close-state vocabulary (LAC-2B-07). |
 | `RecoveryFacts` | Error pass. | `ErrorRecover`, LSP diagnostics. | Public. |
@@ -1188,33 +1188,38 @@ Per-shape lowering output. Each `BackendShape` value resolves to a concrete arte
 **Live BackendShape Admission Ledger (ARCH-3A-D05; P1-1B-D6; 2D admission
 ledger at `restart/audit/totality/p2/2D-cost-model.md:164-179`; 2B
 Executive Summary §R3; T2A-REF-002; LAC-2D-04 + LAC-2D-06).** The
-five-shape canon is architectural target; live admission at HEAD is 1/5.
-Every non-admitted shape must either resolve into a kernel implementation
-per LAC-2D-04 (with scalar oracle + checkasm + same-wave consumer + corpus
-parity) or retire via Lock 10 amendment.
+five-shape canon is the architectural target. PASS-IMPL V1 reopens the prior
+1/5 SinkOnly admission as diagnostic only: the CSS evidence was broadcast /
+wrong-plane, CSS has no typed Value API, and the current all-shape lowerer
+surface includes label-string scaffolds. SK-V15 W8/W9 are the active authority
+for real all-five lowerer proof or gate-consumed rejection, while W5/W6 own
+typed CSS output and same-workload retiming. Every non-admitted shape must
+either resolve into a kernel implementation per LAC-2D-04 (with scalar oracle +
+checkasm + same-wave consumer + corpus parity) or retire via Lock 10 amendment.
 
 | Shape | Abstract primitive | Published citation | Hardware gate | Scalar oracle | Checkasm cell | Corpus parity | Same-wave consumer | Admission disposition |
 |---|---|---|---|---|---|---|---|---|
 | `EagerTape` | recursive-descent eager dispatch | — (Rust LLVM contract) | any | scalar reference equivalence | n/a (no Layer-1 primitive in skinny path) | n/a | absent in skinny | **NOT-ADMITTED**: marker-string lowerer (`skinny/crates/codegen/src/lower/rust.rs`); resolves into per-rule lower per LAC-2D-04 or retires under Lock 10 amendment |
 | `OffsetTape` | event-cursor over retained offsets | — (sonic-rs lazy-value lineage) | any | scalar reference equivalence | n/a | n/a | absent in skinny | **NOT-ADMITTED**: same disposition class as EagerTape |
 | `EventTape` | event-cursor over event cells with payload/recovery facts | — | any | scalar reference equivalence | n/a | n/a | absent in skinny | **NOT-ADMITTED**: same disposition |
-| `SinkOnly` | direct typed-field sink, no retained document | SK-V12 CSS L4 declaration-values | any | scalar reference equivalence | `cargo test -p skinny-codegen sink_only` | `css_l4/declaration_values/direct_to_struct/main` admitted row | `skinny/crates/codegen/src/lower/sink_only.rs:112-140` (CSS L4 declaration-values consumer) | **ADMITTED**: 1/5 admission rate; only shape with same-wave consumer + measured row movement (`skinny/RESULTS.md:94`) |
+| `SinkOnly` | direct typed-field sink, no retained document | SK-V12 CSS L4 declaration-values, audit-demoted by PASS-IMPL V1 | any | scalar reference equivalence | `cargo test -p skinny-codegen sink_only` | CSS fact-stream row is diagnostic until SK-V15 W5/W6 | `skinny/crates/codegen/src/lower/sink_only.rs:112-140` exists, but CSS fact-stream-only proof does not close SK-V15 | **OPEN / AUDIT-DEMOTED**: substantive path exists, but CSS/SinkOnly admission cannot close until typed CSS Value output, same-workload retime, and W8/W9 lowerer gates produce executable evidence |
 | `CollapsedStage` | x86 AVX-512 collapsed-stage FSM | asmjson AVX-512 (Lemire 2023 ICPP), Sneller branchless-AVX-512 (T2A-REF-002) | **`target.arch == x86` + `target.avx512bw` + `Entry(_)`** (LAC-2D-06; aarch64 mechanically refused) | scalar reference required pre-admit | absent in skinny | absent in skinny | absent in skinny | **NOT-ADMITTED**: x86-only; aarch64 candidate is UNKNOWN-2D-05 (requires 2E source-backed aarch64 strategy before any aarch64 admission); marker-string lowerer at `skinny/crates/codegen/src/lower/collapsed_stage.rs:15-17` per P1-1B-D6 |
 
 **Grammar-Generality BackendShape Matrix (3E-D01 / 3E-D02; 2C V4 §Executive
 Summary 15 CSS L4 sub-grammars; LAC-2C-04 resolver-generated shape facts;
 3E-D07 CSS L4 + Sheets/BBNF-self negative-control mandate).** The
 five-shape canon is non-JSON-companion to §7.3; selection is by the
-pipeline above, not by literal cascade. CSS L4 (15 sub-grammars at
-`grammar/css/l4/`) is the positive proof lane; Sheets and BBNF-self are
-negative controls; EBNF/BNF/CSV/math defer per 2C V4 selection table.
+pipeline above, not by literal cascade. Under SK-V15, CSS L4 (15
+sub-grammars at `grammar/css/l4/`) is the audit-demoted repair lane, not a
+closed proof lane; Sheets and BBNF-self are negative controls; EBNF/BNF/CSV/math
+defer per 2C V4 selection table.
 
 | css_l4 sub-grammar | dominant `BackendShape` | secondary | generated facts required | evidence |
 |---|---|---|---|---|
 | `tokens.bbnf` | `OffsetTape` | `EventTape` | byte alphabet (CSS Syntax §4.3); comment/whitespace policy; string-quote/escape policy | 2C V4 grounded; CSS Syntax §4.3 |
 | `stylesheet.bbnf` | `OffsetTape` | `EventTape` | dispatch-hub FIRST/follow; layout policy; at-rule starts | HEAD provider `CssL4StylesheetSelectors` |
 | `selectors.bbnf` | `EagerTape` | `EventTape` | selector FIRST/follow; combinator policy; pseudo payload facts; recovery | 2C-CSS-SELECTOR-SCOPE refuted as JSON role-mining target |
-| `properties.bbnf` | `EventTape` | `SinkOnly` (admitted CSS fact-stream) | property-name payload enum; important flag; strict comparator provenance | 2C-CSS-FACT-STREAM grounded; SK-V12 admitted row |
+| `properties.bbnf` | `EventTape` | `SinkOnly` (diagnostic CSS fact-stream) | property-name payload enum; important flag; strict comparator provenance | 2C-CSS-FACT-STREAM grounded; SK-V12 row audit-demoted by PASS-IMPL V1 pending SK-V15 W5/W6 |
 | `values.bbnf` | `EagerTape` | `EventTape` | number/dimension policy; function-family facts; custom-property and substitution policy | 2C-CSS-CALC-VAR grounded |
 | `value-unit.bbnf` | `EagerTape` | — | unit suffix policy; percentage policy; CSS Values L4 dimensional rules | CSS Values L4 |
 | `keywords.bbnf` | `OffsetTape` | — | keyword set per class; case sensitivity | 2C V4 token-alphabet grounding |
@@ -1276,9 +1281,9 @@ close-state vocabulary at `restart/locks/LOCKS.md:506-513`. The aarch64
 admission; until then aarch64 admission is mechanically refused at the
 `admits_collapsed_stage` predicate per LAC-2D-06.
 
-The bifurcation is load-bearing for LLVM compatibility. Recursive-descent Rust compiles to an implicit automaton through LLVM's optimiser — the call-stack-as-parse-state lowering fuses with force-inlined hot leaves under Lock 15's `lto = "fat"` + `codegen-units = 1` + ~20 KiB hot-function ceiling, and yyjson's reference C body demonstrates the same shape stays in i-cache. Codegen-emitted *explicit* Rust automatons do not survive this lowering: LLVM cannot fold an indirect-dispatch state walk back into PC-as-state form, and the overhead asmjson eliminates via `jmp [r10 + state*8]` reappears as branch-misprediction taxa in any LLVM-emitted equivalent. The lone exception — `CollapsedStage` — therefore consumes hand-written NASM where direct control over generated-code addresses is available (asmjson's PC-as-state pattern; Lock 16's `FSM_DISPATCH_THREADED` primitive in `skinny/crates/bbnf-simd/ext/x86/bbnf.asm`). All four other shapes stay in LLVM's territory and consume Layer-1 primitives from the same `ext/x86/bbnf.asm` vocabulary only at scan-shaped inner loops where the primitive's grammar-neutral signature (`BYTE_CLASS_FROM_TABLE_64`, `BYTE_CLASS_FROM_EQ_SET_64`, `BITMAP_PREFIX_XOR_64`, `BITMAP_NEXT_SET_BIT`, `BULK_EMIT_COMPRESSED`, `EOB_PAD_CLAMP`, `FRAME_PUSH_BOUNDED`, `FRAME_POP_BOUNDED`) admits a direct FFI binding. The Rust per-shape lowerer surface now exists in the skinny prototype at `skinny/crates/codegen/src/lower/rust.rs`; its `SinkOnly` path lowers Backend IR into a grammar-neutral `SinkOnlyProgram` consumed by the JSON runtime renderer. The two-layer reusable vocabulary — Layer 0 vendored from dav1d at `skinny/crates/bbnf-simd/ext/x86/x86inc.asm` (1,978 LOC, BSD-2), Layer 1 grammar-neutral macros at `skinny/crates/bbnf-simd/ext/x86/bbnf.asm` — is the dav1d / asmjson factoring elaborated at `restart/skinny/tranches/shared/SOTA-BEAT-DESIGN.md` §5.2; Lock 1 governs the substrate union that admits all five shapes, Lock 14 governs the zero-grammar-overfitting discipline that keeps `bbnf.asm` grammar-neutral, Lock 15 governs the i-cache residency budget that bounds the recursive-descent shapes, and Lock 16 governs the admissibility allowlist that bounds the primitive vocabulary. The same-wave-consumer rule at `docs/precepts/instructions/LESSONS-LEARNED.md:17-26` constrains admission: a `CollapsedStage` lowering target lands only when a per-grammar kernel author is in flight (no substrate-without-consumer); a primitive lands in `bbnf.asm` only when at least one shape consumes it through codegen at the same wave.
+The bifurcation is load-bearing for LLVM compatibility. Recursive-descent Rust compiles to an implicit automaton through LLVM's optimiser — the call-stack-as-parse-state lowering fuses with force-inlined hot leaves under Lock 15's `lto = "fat"` + `codegen-units = 1` + ~20 KiB hot-function ceiling, and yyjson's reference C body demonstrates the same shape stays in i-cache. Codegen-emitted *explicit* Rust automatons do not survive this lowering: LLVM cannot fold an indirect-dispatch state walk back into PC-as-state form, and the overhead asmjson eliminates via `jmp [r10 + state*8]` reappears as branch-misprediction taxa in any LLVM-emitted equivalent. The lone exception — `CollapsedStage` — therefore consumes hand-written NASM where direct control over generated-code addresses is available (asmjson's PC-as-state pattern; Lock 16's `FSM_DISPATCH_THREADED` primitive in `skinny/crates/bbnf-simd/ext/x86/bbnf.asm`). All four other shapes stay in LLVM's territory and consume Layer-1 primitives from the same `ext/x86/bbnf.asm` vocabulary only at scan-shaped inner loops where the primitive's grammar-neutral signature (`BYTE_CLASS_FROM_TABLE_64`, `BYTE_CLASS_FROM_EQ_SET_64`, `BITMAP_PREFIX_XOR_64`, `BITMAP_NEXT_SET_BIT`, `BULK_EMIT_COMPRESSED`, `EOB_PAD_CLAMP`, `FRAME_PUSH_BOUNDED`, `FRAME_POP_BOUNDED`) admits a direct FFI binding. The Rust per-shape lowerer surface exists as a skinny prototype at `skinny/crates/codegen/src/lower/rust.rs`, not as SK-V15 closure: PASS-IMPL V1 found four label-string lowerer scaffolds and a `SinkOnly` path whose CSS proof is diagnostic until typed CSS output and same-workload retiming land. The two-layer reusable vocabulary — Layer 0 vendored from dav1d at `skinny/crates/bbnf-simd/ext/x86/x86inc.asm` (1,978 LOC, BSD-2), Layer 1 grammar-neutral macros at `skinny/crates/bbnf-simd/ext/x86/bbnf.asm` — is the dav1d / asmjson factoring elaborated at `restart/skinny/tranches/shared/SOTA-BEAT-DESIGN.md` §5.2; Lock 1 governs the substrate union that admits all five shapes, Lock 14 governs the zero-grammar-overfitting discipline that keeps `bbnf.asm` grammar-neutral, Lock 15 governs the i-cache residency budget that bounds the recursive-descent shapes, and Lock 16 governs the admissibility allowlist that bounds the primitive vocabulary. The same-wave-consumer rule at `docs/precepts/instructions/LESSONS-LEARNED.md:17-26` constrains admission: a `CollapsedStage` lowering target lands only when a per-grammar kernel author is in flight (no substrate-without-consumer); a primitive lands in `bbnf.asm` only when at least one shape consumes it through codegen at the same wave.
 
-### 7.4 SK-V5 Through SK-V14 Implementation Status
+### 7.4 SK-V5 Through SK-V15 Implementation Status
 
 **Generic-Crate Grammar-Name Leak Surface (ARCH-3A-D09; P1-1B-D7 revised +
 P1-1B-D8 + P1-1B-D10 + P1-1B-D13; 1B Generic-Crate Census; 1C Lock 14 Leak
@@ -1312,16 +1317,19 @@ selects the per-shape lowerer. The blocker is now measured cost selection,
 runtime materialization quality, and row movement across retained, direct, and
 generated non-JSON outputs.
 
-**T-P3 V4 §3Z COHORT LOCK status (2026-05-24).** SK-V14 LOCK convergence
-achieved across all 5 cohorts: S-P2 LOCKED `4c70b6f193`, T-P1 LOCKED
-`0a9c0fe65d`, S-P3 LOCKED `626cb06cc1`, T-P2 LOCKED `34a28f5c15`, T-P3
-LOCKED `69eea1c5c`. Pass Omega V2 G-Omega CLOSED at user sign-off; CRUD-3
-LOCKS amendments applied at `85a043224` (21 hunks; 16-lock preserved;
-LAC-1E-14 FactStream as 5th-SUBSTRATE manifest classification, NOT 6th
-BackendShape; LAC-2F-V5-02 substrate-union ELEVATED). Pattern H live
-verification: `find crates/core/src/runtime -mindepth 2 -type f -name '*.rs' | wc -l`
-returns 67 at HEAD per LAC-1E-15. 5-shape canon `{EagerTape, OffsetTape,
-EventTape, SinkOnly, CollapsedStage}` preserved verbatim at Lock 10.
+**SK-V15 implementation-status authority (2026-05-28).** SK-V14 T-P3 V4 /
+Pass Omega V8 status is historical evidence only. Current authority is T-P1 V5
+clean-final / G1-auto-pinned (not normal two-clean-cycle §3Z), T-P2 V3 normal
+§3Z, and T-P3 V5 final convergence, with Pass Omega V9 / authorized CRUD moving
+active implementation to SK-V15 W0-W11. PASS-IMPL V1 keeps JSON as honest
+evidence but blocks fleet closure on CSS L4 contrivance, Pattern H provenance,
+Lock 14/16 scan holes, Decision Engine scaffold, lowerer stubs, and FNV
+bench-only quarantine. CRUD-3 at `5705a55e6` preserves the 16 locks, keeps
+FactStream outside `BackendShape`, and preserves the 5-shape canon
+`{EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage}`. Pattern H live
+verification remains 67 root runtime files with generated provenance still open
+for SK-V15 W4. Admission evidence is Apple M5 Max / aarch64 only; x86 and
+AVX/AVX-512 evidence is diagnostic.
 
 SK-V6 fold-back (2026-05-14): Wave 1 substrate state is **LANDED** in
 `603308b3` (`BackendShape`, `LayoutFacts.backend_shape`,
@@ -1335,16 +1343,19 @@ longer an architectural prescription. SK-V6 requires fresh PC-level
 kernel or substrate intervention is selected.
 
 The codegen text-emission step is split. Retained parser/view scaffolding still
-uses historical template surfaces, but the direct `SinkOnly` entry is no longer
-a decorative pass-through. `skinny/crates/codegen/src/lower/sink_only.rs`
-lowers `BackendIr` into a `SinkOnlyProgram`; `DirectBuild` carries a
-field/source roster; and codegen refuses direct emission if the backend lacks
-direct field facts. REDRESS 72 additionally admits a generated-retained-only
-cap-16 tiny string probe while rejecting global/direct/Track 2 widening; V1
-models that as a cost decision, not as a grammar directive. The BIR
-construction remains non-decorative: `extract::single_plan` walks the grammar,
-projects `materialize_rule` per rule, and emits a `BackendIr` whose recognizers,
-rules, shape facts, and direct field rosters drive the renderer tests.
+uses historical template surfaces, and the direct `SinkOnly` entry has a real
+prototype path, but PASS-IMPL V1 bars treating it as closed SK-V15 evidence.
+`skinny/crates/codegen/src/lower/sink_only.rs` lowers `BackendIr` into a
+`SinkOnlyProgram`; `DirectBuild` carries a field/source roster; and codegen
+refuses direct emission if the backend lacks direct field facts. The open work
+is typed CSS output, grammar-neutral renderer selection, and all-five lowerer
+proof through SK-V15 W5/W6/W8/W9. REDRESS 72 additionally admits a
+generated-retained-only cap-16 tiny string probe while rejecting global/direct
+and Track 2 widening; V1 models that as a cost decision, not as a grammar
+directive. The BIR construction remains non-decorative:
+`extract::single_plan` walks the grammar, projects `materialize_rule` per rule,
+and emits a `BackendIr` whose recognizers, rules, shape facts, and direct field
+rosters drive the renderer tests.
 
 The stale SK-V6 note that `passes::compile` still called `shapes_for_json()`,
 `nominate_json()`, or `materialization_for_rule()` is retired. Current
@@ -1358,14 +1369,16 @@ has provider-specific compatibility points such as
 generated-provider/manifest receiver rather than to a SPEC-local exception
 (`restart/locks/LOCKS.md:220`).
 
-Current skinny row-plane truth is explicit and plane-specific:
+Current skinny row-plane truth is explicit and plane-specific; SK-V15 consumes
+these rows as historical inputs plus PASS-IMPL V1 blockers, not as CSS or
+lowerer close authority:
 
-| plane | current status | V1.1 consequence |
+| plane | current status | SK-V15 consequence |
 |---|---|---|
-| CSS L4 declaration-values | `css_l4/declaration_values/direct_to_struct/main` is a scoped SK-V12 `PASS-ADMIT` row on `css_l4_declaration_value_fact_stream`: Track 1 429.34420791225705 Mbps, cssparser 217.42665242186035 Mbps, lightningcss 168.92962215656692 Mbps, strict equality pass, fact-stream SHA-256 `caf97bee6e413157e6114985bc1108bc3a8fbf597a1e519b3ccff905d2e5236c` (`skinny/REDRESS.md:3824`-`3840`, `skinny/RESULTS.md:94`). | Scoped evidence only: not full CSS parity, not universal grammar closure, and not SK-V13 close authority (`restart/skinny/tranches/sk-v13/SYNTHESIS.md:38`-`57`). |
-| JSON `parse_only` | 17 rows reopen under SK-V13 full-SOTA; prior diagnostic/no-go labels are history (`restart/skinny/tranches/sk-v13/SYNTHESIS.md:95`-`110`). | Same-plane strict sonic-rs comparator or architectural-block proof is required. |
-| JSON `direct_to_struct` | REDRESS 119/120 record SK-V11 fixpoint history; SK-V13 lifts that fixpoint and reopens every direct row (`skinny/REDRESS.md:3497`, `skinny/REDRESS.md:3531`, `restart/skinny/tranches/sk-v13/SYNTHESIS.md:105`). | Every row must exceed strict sonic-rs on the same plane or carry architectural-block proof. |
-| JSON `real_typed_struct` | Typed-plane wins remain admitted evidence, but SK-V13 treats all 17 corpora x 3 planes as the JSON target set (`restart/skinny/tranches/sk-v13/SYNTHESIS.md:95`). | Prior A/GO rows cannot silently demote; missing rows remain work. |
+| CSS L4 declaration-values | Historical SK-V12 scoped `PASS-ADMIT` row on `css_l4_declaration_value_fact_stream`: Track 1 429.34420791225705 Mbps, cssparser 217.42665242186035 Mbps, lightningcss 168.92962215656692 Mbps, strict equality pass, fact-stream SHA-256 `caf97bee6e413157e6114985bc1108bc3a8fbf597a1e519b3ccff905d2e5236c` (`skinny/REDRESS.md:3824`-`3840`, `skinny/RESULTS.md:94`). PASS-IMPL V1 audit-demotes this evidence because CSS L4 rows were broadcast/wrong-plane, had no CSS Value API, and relied on a string-literal generator. | Diagnostic only until SK-V15 W1/W5/W6 demote the broadcast, build typed CSS value/document/view/visitor output, and retime against same-workload `cssparser`; it cannot close CSS, SinkOnly, or fleet grammar-neutrality. |
+| JSON `parse_only` | PASS-IMPL V1 accepts JSON as honest proof: 51/51 admit with measurement-valid same-plane evidence. | Keep as the SK-V15 JSON guard; not a substitute for CSS, Pattern H, lowerer, or Decision Engine proof. |
+| JSON `direct_to_struct` | REDRESS 119/120 record SK-V11 fixpoint history; SK-V13 lifts that fixpoint and reopens every direct row (`skinny/REDRESS.md:3497`, `skinny/REDRESS.md:3531`, `restart/skinny/tranches/sk-v13/SYNTHESIS.md:105`). | Every row must exceed strict sonic-rs on the same plane or carry architectural-block proof; FNV closed-enum products stay bench-only until SK-V15 W10 quarantine. |
+| JSON `real_typed_struct` | Typed-plane wins remain admitted evidence, with PASS-IMPL V1 flagging W11L/W11N/W11O FNV closed-enum products as bench-only. | Prior A/GO rows cannot silently demote; FNV cannot become a production selector, arbiter, or correctness proof. |
 
 Measured REDRESS history is part of the architecture contract:
 
@@ -1787,7 +1800,7 @@ verbatim.
 |---|---|---|---|
 | (1) Retained tape | `EagerTape`, `OffsetTape`, `EventTape` | Retained substrate; queryable document identity `(TapeId, cursor, event_kind_or_payload_class)`. | `existing_tape` |
 | (2) Direct sink | `SinkOnly` | No retained document identity after parse; typed-field writes during parse. | `direct_sink` |
-| (3) Admitted fact-stream output | CSS L4 declaration-values (SK-V12); generated grammar-shape fact streams emitted as same-plane evidence with strict comparator/oracle provenance and gate-consumed telemetry. **NOT a 6th `BackendShape`; NOT retained substrate; NOT full CSS closure.** Per LAC-1E-14 this is the 5th SUBSTRATE-manifest category, not a 6th BackendShape variant. | `admitted_fact_output` |
+| (3) Fact-stream output | CSS L4 declaration-values are historical SK-V12 evidence now diagnostic/audit-demoted by PASS-IMPL V1 until SK-V15 W5/W6 typed CSS proof; future generated grammar-shape fact streams require same-plane strict comparator/oracle provenance and gate-consumed telemetry. **NOT a 6th `BackendShape`; NOT retained substrate; NOT full CSS closure.** Per LAC-1E-14 this is the 5th SUBSTRATE-manifest category, not a 6th BackendShape variant. | `admitted_fact_output` |
 | (4) Transient scanner/capacity plane | `StructuralIndex` mask streams, comparator sidecars (lightningcss source sidecar), CPUID scanner output. | Transient producer; never a retained sidecar; if structural offsets are retained, the structural projection IS the tape per Lock 1. | `local_temp_only` |
 
 Per Lock 1 v+1 manifest, every e-graph candidate, backend rewrite, imported
@@ -1800,8 +1813,8 @@ Lock 1 (`restart/locks/LOCKS.md:117-127`).
 **Live Pattern H Status (ARCH-3A-D08; 1C executive summary + Pattern H
 census; 1C-D1/D2/D6/D10/D11; LAC-1E-15 Pattern H 67-file recurrence
 vector).** The §9 generated runtime template prose below states the V1
-target; live HEAD has zero generated runtime files. The Lock 14 PRUNE-3 /
-PRUNE-4 wave surface is the named 67-file roster, not a 63-file inventory
+target; live HEAD has zero generated runtime files. SK-V15 W4 owns the named
+67-file generated-provenance roster, not a 63-file inventory
 (the `-mindepth 2 -maxdepth 2` form returns 63 and contradicts the
 asserted figure; the corrected per-LAC-1E-15 verification command at
 `restart/locks/LOCKS.md:402-405` returns 67, the asserted Pattern H total).
@@ -2105,9 +2118,10 @@ future grammar passes this test before any fleet-wide generality claim:
 
 Fail closed if onboarding requires a new directive, BIR variant,
 `BackendShape`, public substrate API, retained sidecar, or hand-coded
-generic behavior. For SK-V14, CSS L4 (15 sub-grammars, full step 1-7
-cycle) is mandatory per 2C V4 §CSS L4 mandatory; Sheets and BBNF-self are
-negative controls. With only one of Sheets or BBNF-self, the claim is
+generic behavior. For SK-V15, CSS L4 is mandatory as the repair proof lane:
+W1 demotes/collapses the broadcast evidence, W5 builds typed CSS value output,
+and W6 retimes the same workload before CSS proof can be live again; Sheets
+and BBNF-self remain negative controls. With only one of Sheets or BBNF-self, the claim is
 scoped to the witnessed grammars and may not use fleet-wide
 grammar-neutral wording (3E-D07).
 

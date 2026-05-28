@@ -26,55 +26,34 @@ schema v3 comparator-plane rows before any SOTA decision. Remaining Lock 14
 cleanup includes splitting the `bbnf-simd` JSON god-module residue and
 removing JSON-name logic from generic pass/codegen crates.
 
-**Pass Omega V2 / SK-V14 workspace receiver (2026-05-24; post-CRUD-3 LOCKS
-v+1 at `85a043224`, 779 lines).** The active workspace boundary is no longer
-JSON-only validation; full cohort §3Z LOCK convergence (S-P2 `4c70b6f193` +
-T-P1 `0a9c0fe65d` + S-P3 `626cb06cc1` + T-P2 `34a28f5c15` + T-P3
-`69eea1c5c`) authorises the SK-V14 12-wave plan (W0..W11) per the α-E
-candidate shortlist. `bbnf-bench` owns the grammar-neutral common telemetry
-envelope (extended with four mandatory audit-overlay columns per LAC-1E-16:
-`track2_entry_point`, `comparator_plane`, `per_iter_equality`,
-`audit_overlay_verdict`), rolling SOTA delta production, JSON sonic-rs
-strict comparators, CSS lightningcss/cssparser comparators, PMU/samply
-capture references, and gate-consumed provenance. `bbnf-simd` owns
-source-present primitive inventory only when each primitive is wired,
-deleted, scalar-delegated, or architecturally blocked by the owning wave
-under `BBNF_SIMD_STRICT=1` cohort-wide (LAC-2D / F-V3-CH4-A;
-`restart/locks/LOCKS.md:295`). CSS L4 (15 sub-grammars per 3E
-grammar-generalisation: `color`, `easing`, `filters`, `func-body`,
-`gradients`, `keyframes`, `keywords`, `media`, `properties`, `selectors`,
-`stylesheet`, `tokens`, `transforms`, `value-unit`, `values`) and all 51
-JSON rows are SK-V14 close targets or architectural-block proofs, not
-V1-H caveats. Pattern H = 67 hand-written runtime files per LAC-1E-15
-per-tranche census (live find `find crates/core/src/runtime -mindepth 2
--type f -name '*.rs' \| wc -l`); `runtime_profiles() -> [&'static
-GrammarProfile; 8]` static roster at `skinny/crates/codegen/src/grammar_profile.rs:100`-`110`
-must be replaced by W5C-GEN after W5B-FRONTEND closes frontend/import/IR
-lowering, then deleted by W5D-DELETE per the generated-provider manifest
-receiver wave.
+**Pass Omega V9 / SK-V15 workspace receiver (2026-05-28).** SK-V15 is no
+longer conditional on SK-V14 R10. The active workspace receiver is the locked
+SK-V15 W0-W11 contract: W0 telemetry baseline; W1 CSS admission honesty and
+24-row broadcast demotion/collapse; W2 Lock 14 / Lock 16 gate restoration; W3
+codegen leak abrogation; W4 Pattern H generated discipline for the 67 root
+runtime files; W5 CSS typed Value provider; W6 CSS same-workload typed
+`cssparser` retime and old-proof retirement; W7 Decision Engine spine; W8/W9
+BackendShape lowerers for exactly `EagerTape`, `OffsetTape`, `EventTape`,
+`SinkOnly`, and `CollapsedStage`; W10 FNV quarantine; and W11 close /
+PASS-IMPL V2 handoff. The SK-V14 W5B/W5C/W5D graph remains historical
+REDRESS evidence only and no longer dispatches workspace work.
 
-**Next-cycle dispatch posture** per Pass Omega V8 W5B-FRONTENDR: REDRESS-183 is
-historical after W2 admitted as skinny-side `regen-css` at `45568e669`, and
-W3 production CSS corpus staging admitted at `b0a864f0b`. REDRESS-184 rejected
-the original W4 provider-deletion gate; after V4 CRUD, W4 reruns as
-ledger-only CSS L4 PRUNE with no CSS source/generator/provider/template
-deletion. REDRESS-209 rejected the original monolithic W5 provider-collapse
-gate. After V5 CRUD, W5A admitted the source-consuming request boundary at
-`286233fa2`. REDRESS-210 rejected W5B deletion because live provider-backed
-generation remained. REDRESS-211 rejected W5B-GEN because the generic frontend
-closure was still missing. REDRESS-212 rejected the V7 one-shot W5B-FRONTEND
-cap shape. After V8 CRUD, W5B-FRONTEND runs as W5B.0 LOCK14-GATE, W5B.1
-IMPORT-CLOSURE, W5B.2 LAYOUT-DISCARD, W5B.3 PRETTY-SPAN-PROJECTION, and W5B.4
-REQUEST-CONSUMER. W5C-GEN owns the provider-free generator body only after
-aggregate W5B-FRONTEND is load-bearing, and W5D-DELETE owns CSS
-provider/template deletion only after W5C-GEN is load-bearing.
-`crates/core/src/runtime/css_l4/` remains Pattern H root-runtime work until
-W6.0 after W5D-DELETE closes. W8/W9/W10 remain globally
-blocked until PRUNE-1..PRUNE-5 close. **SK-V15 Pass Alpha re-entry handoff**
-per F-V2-CH4-3E D06: the generated-fixture impl tail for CSS L4 onboarding
-(5×15 sub-grammar matrix) enters as SK-V15 SPEC entry condition only if
-SK-V14 R10 does not close it first (close anchor = SK-V14 W11 close per SPEC
-§13:248).
+`bbnf-bench` / gate/report code must consume SK-V15 fields:
+`measurement_row_id`, `measurement_origin`, `value_plane`,
+`css_comparator_workload`, `generator_source`, `lock14_scan_scope`,
+`lock16_status`, `checkasm_or_parity_status`, `gate_exclusion_report`, and
+`broadcast_group_id`. Producer-only telemetry, hidden one-to-N measurement
+stamps, self-exempting gate exclusions, source-present unwired primitives, and
+warm-only bench evidence reject close.
+
+`bbnf-simd` remains grammar-neutral and Lock-16-governed: each primitive must
+have a scalar oracle/reference, strict parity/checkasm where relevant,
+same-wave consumer, and native Apple M5 Max / aarch64 admission evidence.
+x86/AVX/AVX-512 rows are diagnostic only unless a future authorized host policy
+amends the admission surface. Pattern H remains a 67-file repair surface until
+W4 proves line-1 generated provenance plus non-writing regen/check evidence.
+CSS fact streams, `CSS_GENERATED_RS`, `CssFullParseSummary`, and brace-counter
+proof are diagnostic after W1 and cannot remain live admission after W6.
 
 This document records ownership and budget receivers only; it does not
 authorize telemetry implementation, source edits, gates, `RESULTS.md`, or
@@ -714,7 +693,7 @@ The skinny explicitly omits the following V1 mechanisms. Each omission's impact 
 | Per-grammar declaration crates (Lock 14 escape valve) | Main JSON grammar has no `@host fn`; declaration crates are V1's rare-exception form. | Low JSON impact only if BOTH BENCH.md host-call probes pass (per BENCH.md §7.8.1): dispatch overhead ≤50ns AND eager-decode bands within their target envelope. The split adopted in REDRESS §19 ratifies the two-probe shape. |
 | LSP / DAP / incremental parse | Editor surfaces don't influence parse throughput. | Zero impact on SOTA-beat. |
 | GADT / DK13 / OutsideIn / CSP type-system | JSON's grammar is monomorphic; HM-only suffices. Carried into V1 at tranche D (receiver: tranche D type-system body per INDEX cross-references). | Risk: V1 grammars (CSS L4, Sheets) carry generics + GADTs; the JSON SOTA-beat number does not validate that the type system layer adds zero perf cost. The BENCH agent must mark the JSON number as a *necessary but insufficient* SOTA-viability signal. |
-| Cost-model + e-graph + CSP optimization graph | Skinny pre-selects optimization choices for JSON. | Risk: V1 optimization mining might shift parse plans away from skinny's hand-tuned baseline. Mitigation: BENCH.md's alternate-plan probes bound whether the canonical plan is hiding a missing cost-model win; a probe win routes to H.W2/H.W3 instead of being called free. |
+| Cost-model + e-graph + CSP optimization graph | Skinny pre-selects optimization choices for JSON. | Risk: V1 optimization mining might shift parse plans away from skinny's hand-tuned baseline. Mitigation: BENCH.md's alternate-plan probes bound whether the canonical plan is hiding a missing cost-model win. PASS-IMPL V1 keeps the Decision Engine scaffold non-admitting until SK-V15 W7 proves real e-graph rewrite, non-tautological CSP, grammar-neutral facts, and generated selection impact. |
 | Pratt auto-detection | JSON has no operator precedence. | Zero impact on JSON; risk for CSS / math grammars is V1-territory. |
 | SIMD auto-detection | Skinny pre-wires SIMD for JSON structural. | Zero impact: the V1 auto-detector would also choose SIMD for JSON. |
 | WASM / TS backends | V2 territory per Lock 5 amendment. | Zero impact on V1 SOTA-beat (V1 is Rust-line only per `restart/MASTER-PLAN.md:140-143`). |
@@ -722,8 +701,8 @@ The skinny explicitly omits the following V1 mechanisms. Each omission's impact 
 | Host fns + chains | Main JSON grammar has none. | JSON-FAITHFUL only after BOTH host-call probes pass: dispatch ≤50ns AND eager-decode bands per BENCH §7.8.1. REDRESS §19: eager-decode currently exceeds expected bands (57.6%/77.2%/81.9% of Track 1 ns for twitter/citm/canada) — the host-fn-free cut is FAITHFUL only for a V1 path that keeps string decode lazy. CSS / Sheets carry host calls and the V1 must measure their cost separately. |
 | Direct decoded-string sink delivery | Skinny now passes raw string spans plus decode flags through generated `JsonSink::*_source` hooks. | The source-hook seam is JSON-FAITHFUL and grammar-general; the attempted generic no-allocation decoded visitor, exact decoded-stats sink, and quote-source streaming hasher are not. V1 closure must land a measured field-layout decode+sink materializer for grammars that need decoded direct fields, preserving lazy retained views and avoiding parser-side eager decode or sink-local decoded hash helpers. |
 | Recovery / `@error` directives | Skinny tests on valid + minimally malformed corpus only. | Zero impact on twitter / citm / canada SOTA rows; recovery is its own gate (tranche I). |
-| Multiple grammars | Historical skinny was JSON-only; SK-V13 makes CSS L4 an active generated row family. | Risk: SIMD-beat for JSON does not imply SIMD-beat for CSS L4. Current mitigation is no longer deferral: CSS L4 rows must admit against lightningcss/cssparser or record architectural-block evidence. |
-| CSS prior probe | Historical anti-overfit lever in BENCH.md §9.1 / §11.1. | Historical only. SK-V13 closes non-JSON generality through generated CSS L4 strict parity rows, not an optional substrate-only probe. |
+| Multiple grammars | Historical skinny was JSON-only; SK-V14 attempted CSS L4 active rows, but PASS-IMPL V1 demoted that CSS evidence. | Risk: SIMD-beat for JSON does not imply SIMD-beat for CSS L4. Current mitigation is SK-V15 W1/W5/W6: demote/collapse broadcast rows, build typed CSS Value output, and retime same-workload typed `cssparser`; `lightningcss` is diagnostic until comparable CSSOM/value output exists. |
+| CSS prior probe | Historical anti-overfit lever in BENCH.md §9.1 / §11.1. | Historical only. SK-V15 closes non-JSON generality through typed CSS proof and same-workload comparator rows, not an optional substrate-only probe or the SK-V14 broadcast ledger. |
 | Lazy-offset tape route | Measured canonical JSON substrate for the historical triad (REDRESS §20-§25). The expanded parse gate still has 5 G rows plus D/E codegen-gap rows, and the full gate is N-direct / NoGo; misses concentrate in event-cursor dispatch, string/Unicode-shaped rows, SinkOnly digest stressor rows, and exact float/string/Unicode materialization inside typed sinks. Canada structural scan is no longer the floor blocker after SK-V5 redress item 56. | Risk: V1 may overgeneralize the triad result to grammars with recovery, layout, eager host materialization, or different token alphabets. Mitigation: keep grammar-specific materialization gates and require before/after bench proof for rejected alternates. |
 | `egraph-derive` / proc-macro infrastructure | Not invoked in skinny. | Zero impact. |
 | Workspace metadata cross-grammar coherence | One grammar entry only. | Zero impact for JSON. |

@@ -1,89 +1,40 @@
-# CH3 REGRESSION - T-P1 V2 (SK-V14 Totality)
+# CH3 REGRESSION - T-P1 V2 (SK-V15)
 
-## Lens Contract
+## Verdict
 
-CH3 (per `restart/prompts/totality/PASS-1-EXCAVATION.md §3` + V2 `CHALLENGE-CONTEXT.md §2`) verifies:
-1. No T-P1 V2 inventory re-opens a REDRESS route already rejected, blocked, or admitted-then-falsified.
-2. The 1D pre-block ledger + the 1E LAC ledger correctly identify the SK-V14 pre-block list.
-3. No row admitted in `skinny/REDRESS.md` is mis-catalogued as unimplemented in V2 1D or 1E.
+ACCEPT.
 
-V2 disposition focus (from V2 `CHALLENGE-CONTEXT.md §2`):
-- 1D §2.9 PASS-ADMIT vs ROLLING-SOTA-DELTA split discharges V1 CH3-005 — verify cardinalities (5 parse_only W14.1-5 + 2 direct + 5 typed + 24 CSS L4 = 36 AUDIT-FALSIFIED; W13.5-9 fenced as MEASURED-REJECT, not reopen candidates).
-- 1D frontmatter tally reconciled to divergence-table totals (19 rows); dual-table axis split (epistemic vs presence) documented in frontmatter comment.
-- 1F-past-corpora PC-001/002/004 verdict parity with PC-003 ("current absence UNKNOWN; route to verify_action").
-- No V2 edit re-opens REDRESS routes.
-
-This V2 CH3 supersedes the prior CH3 stub (which audited SK-V13-era SinkOnly/CSS wording — out of scope for the V2 SK-V14 dispatch). V2 CH3 scope is REDRESS-route regression discipline + V2 tally/parity verification.
-
-## Evidence Base — V2 amended HEAD (commit 87816a2cd)
-
-V1 CH3 ledger surfaced 3 REVISEs (CH3-004 tally drift; CH3-005 admit-vs-reject conflation; CH3-008 dispatch axis cross). V1 CH6-row-19 surfaced PC-001/002/004 verdict-cell parity gap with PC-003. V2 dispatch claims discharge per V1-CONSOLIDATED §2.8 + §2.9 + §2.11 #5 fold packets.
-
-Live truth probed at V2 HEAD (commit 87816a2cd, 2026-05-23):
-
-| Probe | Source | Result | Verifies |
-|---|---|---|---|
-| REDRESS PASS-ADMIT cardinality (typed) | `grep -nE 'closes W13\.[1-9]' skinny/REDRESS.md` | W13.1=4463 PASS-ADMIT, W13.2≈4504 PASS-ADMIT, W13.3=4542 PASS-ADMIT, W13.4≈4581 PASS-ADMIT; W13.5-9=4622/4646/4675/4705/4734 MEASURED-REJECT; W15.1=4995 ADMIT | 5 typed PASS-ADMIT (W13.1-4 + W15.1) exact |
-| REDRESS PASS-ADMIT cardinality (direct) | `grep -nE 'closes W11\.[1-4]' skinny/REDRESS.md` | W11.1=4293 PASS-ADMIT, W11.2=4350 REJECTED-MEASURED, W11.3=4377 PASS-ADMIT, W11.4=4962 REJECT | 2 direct PASS-ADMIT (W11.1, W11.3) exact |
-| REDRESS ADMIT cardinality (parse_only) | `grep -nE 'closes W14\.[1-5]' skinny/REDRESS.md` | W14.1=4767, W14.2=4803, W14.3=4838, W14.4=4874, W14.5=4917, all ADMIT | 5 parse_only W14.1-5 exact |
-| REDRESS PASS-ADMIT (CSS L4) | `grep -nE 'closes W5\b' skinny/REDRESS.md` | W5=3824 PASS-ADMIT | 1 W5 lineage; 24 CSS L4 row cohort downstream |
-| Total AUDIT-FALSIFIED admit | 5 + 2 + 5 + 24 | = 36 | Matches V2 1D :140 row exact |
-| V2 1D divergence-table row count | `awk '/^## Divergences Catalogued/,/^## Gaps/' 1D-skinny-lessons.md \| grep -cE '^\|'` minus header+sep | 19 data rows | Matches V2 1D frontmatter `total_divergence_rows: 19` |
-| V2 1D verdict distribution | inline scan of divergence-table verdict column | 13 spec_unimplemented + 3 impl_unimplemented + 1 impl_exceeds_spec + 1 disproved_baseline_strict + 1 disproved_baseline_overlay = 19 | Matches V2 frontmatter integer keys verbatim |
-| V2 1F-past PC-001/002/004 verdict cells | `1F-past-corpora.md:67,68,70` | All three carry "accepted historical pre-block; current absence UNKNOWN" + parity rg verify_action with PC-003 (`:69`) | V1 CH6-row-19 discharged |
-| V2 1E LAC ledger integrity | LAC table unchanged at V2 HEAD | LAC-1E-01..LAC-1E-16 contiguous; no SK-V14 NEW LAC reopens REDRESS-rejected route | V1 CH3-001 carried forward |
+The current T-P1 V2 packet is a fresh SK-V15 inventory fold at commit
+`2fcbc1dc8`, not the historical SK-V14 V2 hardening surface previously at
+this path. CH3 accepts the packet for regression, wave-graph, and REDRESS
+discipline: it identifies the delete-before-rebuild failure class, binds
+REDRESS-183/184/209..213 as pre-blocks, fences EventTape and typed-event
+cursor work against sidecar resurrection, and keeps CSS source-sidecar
+evidence comparator-only.
 
 ## Findings
 
-| ID | Disposition | Inventory finding | Evidence | Required V3 action |
+| ID | Disposition | Finding | Evidence | Required action |
 |---|---|---|---|---|
-| CH3-V2-001 | ACCEPT | V1 CH3-005 admit-vs-reject split discharged. V2 1D row at `:140` now reads "exact REDRESS cardinality (5 parse_only W14.1-5 + 2 direct PASS-ADMIT [W11.1, W11.3] + 5 typed PASS-ADMIT [W13.1, W13.2, W13.3, W13.4, W15.1] + 24 CSS L4 W5 PASS-ADMIT lineage = 36 admit rows)" with explicit fencing of W13.5-9 MEASURED-REJECT + W11.2 REJECTED-MEASURED + W11.4 REJECT inside the note column. Companion row at `:141` carries the ROLLING-SOTA-DELTA broader audit-overlay (7-11 typed + 4-6 direct) with `SYNTHESIS.md:75-84` cite. Future agents reading the split cannot conflate MEASURED-REJECT with reopen candidates. | `1D-skinny-lessons.md:140` (split #1: strict PASS-ADMIT cardinality + W13.5-9/W11.2/W11.4 fencing in note); `:141` (split #2: ROLLING-SOTA-DELTA broader overlay); REDRESS PASS-ADMIT vs MEASURED-REJECT byte-verified at `REDRESS.md:4293,4377,4463,4504,4542,4581,4995` (ADMIT) vs `:4622,4646,4675,4705,4734` (MEASURED-REJECT) vs `:4350` (REJECTED-MEASURED) vs `:4962` (REJECT). | None. V1 CH3-005 closed. |
-| CH3-V2-002 | ACCEPT | V1 CH3-004 + CH3-008 tally reconciliation discharged. V2 1D frontmatter at `:53-75` carries explicit V2-fold comment naming both axes: (a) divergence-table 19-row totals load-bearing for T-P3 §3C amendment routing (spec_unimplemented:13 + impl_unimplemented:3 + impl_exceeds_spec:1 + disproved_baseline_strict:1 + disproved_baseline_overlay:1 = 19); (b) separate spec-claim-table 18-row epistemic-verdict axis (7 proved-class + 7 disproved-class + 4 impl_unimplemented-class) acknowledged as DISTINCT axis; (c) Open Questions = 7; Gaps = 7. Live awk on the divergence table reproduces 19 data rows exactly; verdict sum 13+3+1+1+1 = 19 matches frontmatter integer keys cell-for-cell. | `1D-skinny-lessons.md:53-75` (V2 frontmatter with comment); `:140-158` (19 divergence rows). V2 `CHALLENGE-CONTEXT.md §2 CH3` dispatch text reads exact cardinality "5 parse_only W14.1-5 + 2 direct + 5 typed + 24 CSS L4 = 36 AUDIT-FALSIFIED" — drops the V1 "5 proved / 11 disproved" axis-crossing phrasing. | None. V1 CH3-004 + CH3-008 closed at frontmatter + dispatch both. |
-| CH3-V2-003 | ACCEPT | V1 CH6-row-19 PC-001/002/004 verdict parity discharged. V2 1F-past-corpora rows at `:67` PC-001, `:68` PC-002, `:70` PC-004 each carry "accepted historical pre-block; current absence UNKNOWN" verdict tag + `Route to verify_action (parity with PC-003): capture exact \`rg -n ...\` output before promoting to live absence` note. Verdict cells now read in parity with PC-003 (`:69`). Historical pre-block status remains binding (no reopen); the verify_action gates promotion to "live absence" claim. | `1F-past-corpora.md:67` (PC-001: dispatch-table/function-pointer rg verify_action `function_pointer\|dispatch_table`); `:68` (PC-002: 12-byte token rg verify_action `Token12\|skipless_token`); `:70` (PC-004: tiny-string NEON rg verify_action `match_tiny_plain_string\|tiny_string_neon`); `:69` (PC-003: EventCursor rg verify_action — parity anchor). | None. V1 CH6-row-19 closed. |
-| CH3-V2-004 | ACCEPT | No V2 inventory edit re-opens a REDRESS-rejected route. The five rejected categories (pair-token fusion REDRESS-16 at `:209`, dispatch-table alternate REDRESS-17 at `:216`, skipless tape tokens REDRESS-18 at `:226`, union event-model class-column/streaming-cursor REDRESS items in W3-W9 SK-V9 at `:2795-2906`, W11.4 direct cursor byte-fetch REJECT at `:4960-4990`) stay pre-blocked. V2 fold packets §2.1-§2.11 are mechanical (citation corrections, count fixes, row splits, verdict-cell alignments) — none introduces an SK-V14 R-route or C-route that conflicts with a REDRESS-rejected route. V2 1F-past-corpora additions (CH3-V2-003) explicitly REINFORCE pre-block status by demanding rg artefact before live-absence promotion. | `skinny/REDRESS.md:209,216,226,2795-2906,4960-4990` (rejected categories); `1D-skinny-lessons.md:140-158` (divergence ledger carries forward-work routes only); `1E-locks-evidence.md` LAC ledger unchanged (per V1 CH3-007 ACCEPT carried forward). | None. CH3 invariant 1 carried forward through V2 unchanged. |
-| CH3-V2-005 | ACCEPT | No V2 admit-row mis-cataloguing. V2 1D row at `:122` continues to preserve the CSS L4 W5 PASS-ADMIT history (verdict `disproved` applies to the implementation-claim `7 of 7 CSS L4 providers were include_str!() hand-written templates`, not to the row's PASS-ADMIT history). 1E LAC-1E-04 + LAC-1E-14 unchanged at V2 — admission preserved, reclassified as evidence-not-close-authority. CSS L4 W5 PASS-ADMIT at `REDRESS.md:3824` remains a historical close, not silently demoted; the SK-V14 audit overlay reverses the implementation-claim attached to the row, not the admission record. | `skinny/REDRESS.md:3824-3840` (W5 PASS-ADMIT close); `1D-skinny-lessons.md:122` (CSS row carries admit context + R4+R5+R6 forward obligations); `1E-locks-evidence.md:65,99,112,122` (LAC-1E-04 + LAC-1E-14 preserve admission). | None. CH3 invariant 3 carried forward through V2 unchanged. |
-| CH3-V2-006 | ACCEPT | V2 dispatch text alignment with V2 1D. V2 `CHALLENGE-CONTEXT.md §2 CH3 REGRESSION` explicitly cites "5 parse_only W14.1-5 + 2 direct + 5 typed + 24 CSS L4 = 36 AUDIT-FALSIFIED; W13.5-9 fenced as MEASURED-REJECT not reopen candidates" — drops V1 dispatch's axis-crossing "5 proved / 11 disproved" phrasing and binds to exact REDRESS cardinality of V2 1D split rows. Dispatch + inventory + REDRESS-truth align on a single load-bearing schema. | V2 `CHALLENGE-CONTEXT.md §2 CH3 REGRESSION` (dispatch); `1D-skinny-lessons.md:140-141` (split rows); REDRESS verified cardinalities (see Evidence Base table). | None. V1 CH3-008 closed at dispatch + inventory level both. |
-| CH3-V2-007 | ACCEPT | V2 1E LAC ledger integrity carried forward unchanged. LAC-1E-01..LAC-1E-16 contiguous (V1 CH3-001 ACCEPT remains valid; no V2 fold packet touches the LAC ID sequence). LAC-1E-08 (Lock 14 generic-crate fences) + LAC-1E-13 (R4 regen-css round-trip) continue to honour the SK-V11 W1b rejection by demanding C-1 PRUNE-3 + PRUNE-4 collapse as forward work, not by reopening any of the 8 hardcoded `RuntimeProvider` arms or 8 hand-written providers as legitimate. V2 §2.11 #4 fold (1E :89 sustained-UNKNOWN paragraph for L03 + L16 + the two SK-V14 NEW UNKNOWNs) is paper-close defence work, not REDRESS reopen. | `1E-locks-evidence.md` LAC table preserved at V2 commit 87816a2cd; `skinny/REDRESS.md:3311-3338` (SK-V11 W1b rejection honoured by LAC-1E-13's round-trip-clean obligation). | None. CH3 invariant 1 for LAC ledger carried forward through V2 unchanged. |
-| CH3-V2-008 | ACCEPT | V2 1D row at `:157` Track 1/Track 2 caveat — added per V1 CH5-005 fold (V2 §2.10 #3) — does not reopen a REDRESS route. The row clarifies that Track 2 retained-JSON bench harness imports `runtime::grammars::json::scan::structural_capacity_for` + `TapeBuilder` + `OffsetFlags` + `CapacityPlan` from generic runtime at `skinny/crates/bbnf-bench/src/track2/json.rs:5,24,43`, then seals through `JsonRoot::from_tape`. Verdict `spec_unimplemented (taxonomy caveat)` routes to T-P3 §3C disposition (folds into row 100 substrate-union ratification), explicitly noting "substrate-helper sharing reclassified as Lock 1 union sub-case, not as Track-independence violation". Taxonomy clarification, not re-admit of bench-private dishonesty (PC-005 closed at `REDRESS.md:420-438`). | `1D-skinny-lessons.md:157` (V2 fold CH5-005 row); `restart/audit/totality/p1/hardening/V1/CH5.md` CH5-005 (source disposition); `skinny/REDRESS.md:420-438` (bench-private SinkParser closure unchanged). | None. V2 substrate-caveat addition is regression-discipline-clean. |
-| CH3-V2-009 | ACCEPT | V2 1D row at `:117` substrate-union row carries explicit `T-P3 §3C PENDING` flag with two conditional dispositions (ratify two-cursor shape as substrate-union OR mandate unification + downgrade to "disproved at HEAD"). This is V1 CH6-row-7 + V1-CONSOLIDATED §1.2 fold per V2 §2.11 #3. The conditional-route framing does not reopen any REDRESS row; it routes the substrate-union ratification to T-P3 §3C disposition, citing the live 1A-DIV-008 two-cursor evidence (`runtime/src/grammars/json/parser.rs:7-12` vs `codegen/src/json_typed_direct.rs:518-522`). Renamed `StructuralIndex` scanner + Track 2 substrate-helper + CSS source-sidecar + proof-witness exports all referenced as sub-cases of the same T-P3 §3C disposition, not REDRESS-rejected route reopens. | `1D-skinny-lessons.md:117` (substrate-union row with `T-P3 §3C PENDING` flag); `restart/audit/totality/p1/hardening/V1/CH6.md` row-7 (source); `1A-substrate-evidence.md` 1A-DIV-008 (live two-cursor evidence). | None. T-P3 §3C disposition is the correct routing target; no REDRESS reopen. |
+| CH3-V2-001 | ACCEPT | V2 folded the V1 CH3 requirement to add NEW-CH3-V5-01 delete/rebuild dependency language. The fold is visible in the packet rather than left as hardening prose. | V1 consolidated requires the fold at `restart/audit/totality/p1/hardening/HARDENING-T-P1-V1-CONSOLIDATED.md:32-34`; V2 1D records `CH3-V1-005` at `1D-skinny-lessons.md:43-45` and fold disposition at `1D-skinny-lessons.md:168-170`; 1E records `CH3-V1-006` at `1E-locks-evidence.md:40`. | None. |
+| CH3-V2-002 | ACCEPT | V3 W2R / V4 W4R-style wave-graph cycles are captured as the active precedent: destructive CSS/runtime work cannot outrun a rebuild provider. | REDRESS-183 records W2 dual-tree deletion before root CSS runtime generation existed and notes W2R supersession at `skinny/REDRESS.md:5090-5101`; REDRESS-184 records W4 provider/template deletion before replacement generation at `skinny/REDRESS.md:5103-5118`; 1D C-7 cites the whole cluster at `1D-skinny-lessons.md:152-153`. | None. |
+| CH3-V2-003 | ACCEPT | REDRESS-209..213 remain pre-blocked for provider/template deletion, provider-free generator body gaps, sub-wave authority gaps, and destructive root runtime regeneration. | `skinny/REDRESS.md:5171-5293` records REDRESS-209 through REDRESS-213; Alpha-C summarizes them at `restart/skinny/tranches/sk-v15/research/alpha/alpha-C-redress-digest.md:26-33`; 1F carries the same do-not-redrive ledger at `1F-coherence-scan.md:126-135`. | None. |
+| CH3-V2-004 | ACCEPT | The packet would not allow deletion before same-wave or prior-wave rebuild proof. It permits diagnostic demotion before rebuild only when no live provider is deleted. | SK-V15 synthesis couples CSS parser retirement to typed CSS proof at `restart/skinny/tranches/sk-v15/SYNTHESIS.md:91-96`; NEW-CH3-V5-01 requires a dependency table at `SYNTHESIS.md:102-106`; handoff blocks deletion/retirement until provider proof at `restart/skinny/tranches/sk-v15/HANDOFF.md:64-67`; 1E adds LAC-1E-V2-15 at `1E-locks-evidence.md:139` with wave/cost carrier at `1E-locks-evidence.md:159`; 1F COH-003 marks top-level omission as drift at `1F-coherence-scan.md:71` and `1F-coherence-scan.md:106`. | None for T-P1 V2. S-P3 must still emit the actual dependency table before implementation waves execute. |
+| CH3-V2-005 | ACCEPT | EventTape and typed-event cursor rows are regression-fenced and do not reopen rejected EventCursor, retained stream, class-lane, parser-owned cursor, or cross-call classifier routes. | 1A folded the fence at `1A-substrate-evidence.md:14` and applies it to typed-event cursor and EventTape rows at `1A-substrate-evidence.md:72-73`; 1B applies the same EventTape fence at `1B-codegen-evidence.md:67`; 1C fences EventTape proof-witness state at `1C-runtime-evidence.md:62` and `1C-runtime-evidence.md:98-100`. | None. |
+| CH3-V2-006 | ACCEPT | CSS source-sidecar coupling is current-cycle fenced as comparator/output-plane evidence only, not runtime substrate, CSS Value API proof, or a route to re-admit broadcast CSS rows. | 1D treats CSS typed API as missing and deletion-coupled at `1D-skinny-lessons.md:151-153`; 1C says CSS fact streams are output-plane evidence only and sends comparator sidecars to current 1F at `1C-runtime-evidence.md:98-100`; 1F COH-015 re-anchors `fixture_sidecar_facts` and `same-plane-source-sidecar` line cites at `1F-coherence-scan.md:83`; auxiliary files are explicitly superseded at `1F-anti-pattern.md:6-14` and `1F-past-corpora.md:6-19`. | None. |
+| CH3-V2-007 | ACCEPT | No admitted REDRESS row is silently demoted. JSON remains guard evidence, CSS is audit-demoted as implementation truth, and historical CSS admits are treated as history rather than independent current SOTA proof. | 1D preserves JSON guard status at `1D-skinny-lessons.md:72-90` and `1D-skinny-lessons.md:121-127`; CSS audit demotion and Value API gap are separated at `1D-skinny-lessons.md:147-153`; 1E states JSON evidence is stronger than CSS and CSS 24 admits are over-stated at `1E-locks-evidence.md:59-70`; 1F COH-011 preserves JSON guard baseline at `1F-coherence-scan.md:79`. | None. |
 
-## Tally Verification Summary (V2)
+## NEW-CH3-V5-01 Coverage Judgment
 
-| Source | Claim | Live evidence | Match? |
-|---|---|---|---|
-| V2 1D frontmatter `divergence_count.total_divergence_rows: 19` | 19 rows in divergence-catalogued table | `awk '/Divergences Catalogued/,/Gaps/' 1D-skinny-lessons.md \| grep -cE '^\|'` = 21 (header + sep + 19 data) | YES |
-| V2 1D frontmatter `spec_unimplemented: 13` | 13 rows with spec_unimplemented verdict (or variants) | Inline scan of divergence-table verdict column: 13 spec_unimplemented variants (Lock-14 mis-attribution + Comparator misbinding + Generator-vs-hand + 14/15 .bbnf orphan + R4→PRUNE-2 + C-1→C-4 + PRUNE-4=9 + 4 typed missing-product + CSS L4 zero-profile + Indefatigable close + LegacyPath + Track 1/2 caveat + builder/arena template = 13) | YES |
-| V2 1D frontmatter `impl_unimplemented: 3` | 3 impl_unimplemented rows | Divergence table: W8, W9, Pattern H = 3 | YES |
-| V2 1D frontmatter `impl_exceeds_spec: 1` | 1 impl_exceeds_spec row | Divergence table: `DirectParser::skip_value typed-plane structural-skip dominance` | YES |
-| V2 1D frontmatter `disproved_baseline_strict: 1` + `disproved_baseline_overlay: 1` | 2 disproved rows (strict + overlay split per CH3-005 fold) | Divergence-table rows `:140` + `:141` | YES |
-| V2 1D frontmatter `unknown_open_questions: 7` + `unknown_gaps: 7` | 7 Open Questions + 7 Gaps | Open Questions table = 7 rows; Gaps table = 7 rows (V1 CH3 cited 8 gaps; V2 corrected) | YES |
-| V2 1D `:140` PASS-ADMIT cardinality | 5 parse_only + 2 direct + 5 typed + 24 CSS = 36 | REDRESS PASS-ADMIT lines verified byte-for-byte at `REDRESS.md:4293/4377/4463/4504/4542/4581/4995` (typed+direct=7) + `:4767/4803/4838/4874/4917` (parse_only=5) + `:3824` (W5 CSS lineage = 24 cohort); 5+2+5+24 = 36 | YES |
-| V2 1D `:141` ROLLING-SOTA-DELTA range | 7-11 typed + 4-6 direct broader overlay; W13.5-9 fenced as MEASURED-REJECT | `SYNTHESIS.md:75-84` reconciliation honoured; W13.5-9 at `REDRESS.md:4622/4646/4675/4705/4734` all MEASURED-REJECT | YES |
-| V2 1F-past PC-001/002/004 verdict parity | "current absence UNKNOWN" parity with PC-003 | `1F-past-corpora.md:67,68,69,70` all four verdict cells now read in parity | YES |
-| V2 1E `locks_amendment_candidates: 16` | 16 LACs unchanged at V2 | (per V1 CH3-001 ACCEPT) carried forward | YES |
-| V2 dispatch + V2 1D + REDRESS truth alignment | All three sources cite identical "5+2+5+24=36" cardinality | V2 `CHALLENGE-CONTEXT.md §2 CH3` + V2 1D `:140` + REDRESS verified lines | YES |
+Coverage is ACCEPT for T-P1 V2. The packet fully carries the NEW-CH3-V5-01
+rule at the evidence/governance layer: every delete or retirement wave must
+name the retired artefact, delete/retire wave, rebuild provider wave, proof
+command, and evidence that the provider lands no later than the delete/retire
+wave. T-P1 V2 does not itself owe the S-P3 implementation dependency table;
+it correctly makes that table a blocker for later wave execution.
 
-## Cycle Verdict
-
-Disposition counts: **ACCEPT 9, REVISE 0, REJECT 0**.
-Cycle ACCEPT-rate: **9/9 = 100 %**.
-
-CH3 V2 verdict: **ACCEPT**. All three V1 CH3 REVISEs (CH3-004 tally drift, CH3-005 admit-vs-reject conflation, CH3-008 dispatch axis cross) are mechanically discharged by V2 §2.8 + §2.9 + §2.11 #5 + V2 dispatch rewording. The V1 CH6-row-19 PC-001/002/004 verdict parity gap is mechanically discharged by V2 §2.11 #5. No V2 fold packet introduces a new REDRESS-route reopen, a new admit-row mis-catalogue, or a new tally drift. The V2 1D divergence-table 19-row total reconciles cell-for-cell with the V2 frontmatter integer keys. The PASS-ADMIT cardinality of 36 (5+2+5+24) is byte-verified against `skinny/REDRESS.md`, with W13.5-9 MEASURED-REJECT, W11.2 REJECTED-MEASURED, and W11.4 REJECT all explicitly fenced inside the V2 1D `:140` note column.
-
-The substantive CH3 invariants — no REDRESS reopen, no admitted-row demotion, pre-block list correctness, 16-LAC ledger integrity — continue to hold unchanged from V1. The V1 REVISEs were tally-accounting and oracle-drift findings; V2's mechanical folds close them without altering the underlying regression-discipline posture.
-
-## §3Z Gate Evaluation
-
-Per `ORCHESTRATOR.md §3Z` (≥95 % × 2 consecutive cycles, zero orphan REVISEs):
-
-- **V1 CH3:** 66.7 % (6/9 ACCEPT), 3 REVISEs.
-- **V2 CH3:** 100 % (9/9 ACCEPT), 0 REVISEs. **First ≥95 % cycle achieved on CH3 lens.**
-- **V3 forecast:** V3 inherits V2's 100 % CH3 ACCEPT-rate. V3 work surface: re-verify the V2 split rows + verdict parity edits land cleanly at V3 HEAD; reconfirm REDRESS PASS-ADMIT cardinality byte-verification. Expected V3 CH3 outcome: 100 % (9/9 ACCEPT). **V3 then discharges §3Z "≥95 % × 2 consecutive cycles" for CH3.**
-
-**Predicted CH3 §3Z close path: V2 (100 %, this cycle) → V3 (≥95 % verification re-pass) → LOCK.** CH3 is on the predicted V1-CONSOLIDATED §4.3 trajectory.
-
-## New Findings vs V1 CH3
-
-This V2 CH3 lens supersedes V1 CH3's REVISE verdict (6 ACCEPT, 3 REVISE, 66.7 %) with an ACCEPT verdict (9 ACCEPT, 0 REVISE, 100 %). All V1 REVISEs are mechanically closed by V2 fold packets §2.8 (tally reconciliation) + §2.9 (admit-vs-reject split) + §2.11 #5 (PC-001/002/004 parity) + V2 dispatch rewording. The V2 1D divergence-table 19-row total carries forward the V1 invariant set (regression discipline holds; no REDRESS reopen; no admit demotion; LAC ledger integrity) plus V1 fold packet additions (substrate-union T-P3 §3C routing; Track 1/Track 2 substrate-helper caveat; SK-V14 R-route forward-work obligations). No new REVISE surfaces this cycle.
-
-This V2 CH3 also supersedes a prior V2 CH3 stub at this path that audited SK-V13-era SinkOnly/CSS-admission wording in 1A/1C (those concerns are CH1/CH5/CH6 territory under the V2 SK-V14 dispatch). The CH3-authoritative scope per V2 `CHALLENGE-CONTEXT.md §2` + `PASS-1-EXCAVATION.md §3` is REDRESS-route regression discipline + V2 tally/parity verification, which this revision addresses directly.
+The packet therefore does not permit deletion before same-wave rebuild proof.
+Any later plan that deletes CSS providers/templates, `CSS_GENERATED_RS`,
+`CssFullParseSummary`, fact-stream parser contracts, root Pattern H runtime
+files, or CSS runtime shims without the dependency-table proof would violate
+this accepted CH3 finding and reopen REDRESS-183/184/209..213.

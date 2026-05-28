@@ -22,13 +22,11 @@ returning before Lock 14 / Lock 16 coverage runs.
 
 - `skinny/crates/bbnf-bench/src/lock14_baseline.rs`
 - `skinny/crates/bbnf-bench/src/bin/gate.rs`
-- `skinny/crates/bbnf-bench/src/report.rs` only if typed report structs are
-  needed after CHALLENGE
+- `skinny/crates/bbnf-bench/src/report.rs` only if typed report structs are needed
 - `skinny/xtask/src/main.rs`
-- `skinny/xtask/src/skv15_w0.rs` only if W0 telemetry rejection must parse the
-  W2 schema
-- `skinny/crates/bbnf-simd/tests/checkasm_parity.rs` only if strict checkasm
-  behavior must be tightened in the shared harness
+- `skinny/xtask/src/skv15_w0.rs` only if W0 telemetry must parse W2 schema
+- `skinny/crates/bbnf-simd/tests/checkasm_parity.rs` only if strict shared
+  checkasm behavior must tighten
 - `restart/skinny/tranches/sk-v15/research/w2/skv15-W2-challenge.md`
 - `restart/skinny/tranches/sk-v15/research/w2/skv15-W2-redress.md`
 
@@ -37,25 +35,19 @@ runtime Pattern H edits, no generated CSS runtime rewrites, and no Decision
 Engine cleanup are authorized in W2.
 
 ## Scan Roots And Exclusion Schema
-
 The W2 coverage report must carry these columns:
 
 `included_roots`, `excluded_roots`, `reason`, `owner`, `self_scan_status`,
-`primitive_status`, `gate_consumer`, `affected_rows`, and `disposition`.
+`primitive_status`, `gate_consumer`, `affected_rows`, `disposition`,
+`source_path`, `finding_kind`, `strict_command`, `scalar_reference`,
+`rollback_or_redress`, `dependency_row`, `non_json_receiver`,
+`proof_command`, `generated_output_expectation`, `json_guard_command`, and
+`fail_action`.
 
-Required Lock 14 coverage roots:
-
-- existing `GENERIC_SCAN_ROOTS`
-- `crates/codegen/src/runtime_generator.rs`
-- `crates/codegen/src/grammar_provider.rs`
-- `crates/codegen/src/json_sink_direct.rs`
-- `crates/codegen/src/json_typed_direct.rs`
-- `crates/codegen/src/json_templates/`
-- `crates/bbnf-bench/src/report.rs`
-- `crates/bbnf-bench/src/bin/gate.rs`
-- `crates/bbnf-bench/src/lock14_baseline.rs`
-- `xtask/src/main.rs`
-- `xtask/src/skv15_w0.rs`
+Required Lock 14 coverage roots: existing `GENERIC_SCAN_ROOTS`,
+`runtime_generator.rs`, `grammar_provider.rs`, `json_sink_direct.rs`,
+`json_typed_direct.rs`, `json_templates/`, `report.rs`, `bin/gate.rs`,
+`lock14_baseline.rs`, `xtask/src/main.rs`, and `xtask/src/skv15_w0.rs`.
 
 Known provider/template/CSS leaks in those roots are not deleted in W2. They
 must be reported with owner `SK-V15-W3` or `SK-V15-W6`, dependency row
@@ -63,43 +55,65 @@ must be reported with owner `SK-V15-W3` or `SK-V15-W6`, dependency row
 `DEP-W6-CSS-SUMMARY-FACT-STREAM`, and disposition `routed`. Unknown or
 self-exempting exclusions fail.
 
+Receiver bindings are load-bearing:
+
+| Owner path | Non-JSON receiver | Proof / fail action |
+|---|---|---|
+| `grammar_provider.rs` | CSS L4 plus Sheets or BBNF-self | report provider roots; route missing receiver to W3 block |
+| `runtime_generator.rs` | CSS L4 plus Sheets, BBNF-self, CSV, or math | report generator roots; route committed-template replay to W3/W6 block |
+| `xtask` regen/check | CSS L4 plus one non-CSS generated receiver | report commands; fail if hidden provider branch is silent |
+| `gate.rs` / `report.rs` | JSON guard plus CSS L4 diagnostic/typed rows | gate consumes schema; fail producer-only telemetry |
+| CostFacts / Decision findings | CSS L4 plus Sheets or BBNF-self | route grammar-named facts to `DEP-W7-DECISION-SPINE` |
+
+Forbidden-token findings include `Json`, `CssL4`, Sheets/corpus names, JSON
+structural roles, CSS profile names, `json_`, `css_`, `RuntimeProvider`,
+`static_css_provider_status`, `json_sink_only_status`, and `JSON-CSS`.
+
 ## Primitive Status Classification
-
 Lock 16 must report every source-present `core::arch`, `target_feature`, and
-`asm!` primitive as one of:
-
-- `wired`
-- `scalar-delegated`
-- `deleted`
-- `strict-checkasm-admitted`
-- `architectural-block-with-REDRESS`
-- `diagnostic-x86`
+`asm!` primitive as one of `wired`, `scalar-delegated`, `deleted`,
+`strict-checkasm-admitted`, `architectural-block-with-REDRESS`, or
+`diagnostic-x86`.
 
 The same-wave change adds `checkasm_escape_mask_64` to
 `xtask primitive-checkasm`. Admission evidence must be native Apple M5
-Max/aarch64 with `BBNF_SIMD_STRICT=1`; x86/AVX files remain diagnostic-only.
+Max/aarch64 with `BBNF_SIMD_STRICT=1`; x86/AVX files remain
+non-admission diagnostic-only.
+
+The primitive report is validated from source inventory, not declarations
+alone. It must cover `aarch64/mod.rs`, dispatch `PrimitiveKernels`, public
+`prim` wrappers, and every `core::arch`, `target_feature`, and `asm!` hit.
+Row-count or source-path mismatch fails.
 
 ## Gate Consumption
-
 `cargo xtask gate-json --check-results` must validate the W0/W1 results
-snapshot and then invoke a lock-gates-only bench-gate path that runs the W2
-Lock 14 / Lock 16 consumer. It must no longer return before lock coverage.
+snapshot and then invoke a named lock-gates-only bench-gate path that runs the
+W2 Lock 14 / Lock 16 consumer. It must no longer return before lock coverage,
+and the lock-only path must not update results, read Criterion, render the
+full report, or stale-fail on benchmark artifacts.
 
 Direct bench-gate companion report paths must either validate all requested
 reports before returning or require `--check-results` and run the lock-gate
-consumer. `--with-cost-facts` must not be a lock-gate bypass.
+consumer. `--with-cost-facts` is never a substitute for `--check-results` or
+W2 lock-gate consumption; with or without `--check-results`, it must invoke
+the same consumer or emit non-close diagnostic output.
 
 ## Falsifiability Gate
 
 - Required W2 roots are present in the coverage report.
 - Required report columns are non-empty and parseable.
 - Missing required roots reject.
-- Any `self-exempting` or `diagnostic:pre-W2-incomplete` exclusion rejects.
+- Any `self-exempting` or `diagnostic:pre-W2-incomplete` value in the W2
+  coverage report rejects. Legacy W0 manifest cells keep their current meaning
+  unless W2 updates capture output and verifies it in the same wave.
 - Known leak-bearing provider/template roots are routed, not silently passed.
 - `checkasm_escape_mask_64` is in the strict `primitive-checkasm` list.
 - Source-present aarch64 primitives have strict checkasm/parity or routed
   block status; x86 rows are diagnostic-only.
 - `gate-json --check-results` runs lock-gate coverage.
+- `--skv14-existing-results-capture`, one legacy companion fail-closed case,
+  one companion `--check-results` pass case, and `--with-cost-facts`
+  non-bypass behavior are covered by tests or command output.
 - JSON 51/51 guard rows remain accepted.
 
 Required commands:
@@ -107,8 +121,10 @@ Required commands:
 ```sh
 cargo fmt --manifest-path skinny/Cargo.toml --all --check
 RUSTFLAGS="-C target-cpu=native" cargo test --profile ax-iter -p bbnf-bench lock14_baseline
+RUSTFLAGS="-C target-cpu=native" cargo test --profile ax-iter -p bbnf-bench gate
 RUSTFLAGS="-C target-cpu=native" cargo test --profile ax-iter -p xtask skv15_w0
 RUSTFLAGS="-C target-cpu=native" cargo run --profile ax-iter -p xtask -- gate-json --check-results
+RUSTFLAGS="-C target-cpu=native" cargo run --profile ax-iter -p xtask -- gate-json --check-results --skv14-existing-results-capture
 RUSTFLAGS="-C target-cpu=native" cargo run --profile ax-iter -p xtask -- primitive-checkasm
 ```
 
@@ -141,6 +157,9 @@ redress rejects and routes instead of widening scope.
 - If primitive status coverage cannot close on Apple M5/aarch64 within budget,
   record row-level intrinsic block with source-present inventory and strict
   checkasm evidence.
+- If CostFacts / Decision grammar-named findings cannot be gate-reported
+  without W7 implementation, route them as `DEP-W7-DECISION-SPINE` blocks; do
+  not solve Decision Engine in W2.
 
 ## Same-Wave Consumer
 
@@ -156,4 +175,6 @@ producer consumed by the W2 primitive status report.
 - `DEP-W6-CSS-GENERATED-RS`: report in W2; delete only after W5 typed CSS
   proof and W6 old-proof retirement.
 - `DEP-W6-CSS-SUMMARY-FACT-STREAM`: report in W2; retire in W6.
+- `DEP-W7-DECISION-SPINE`: report CostFacts / Decision grammar-named findings
+  in W2; activate or remove scaffold in W7.
 - Decision Engine scaffold and BackendShape lowerers remain W7-W9 work.

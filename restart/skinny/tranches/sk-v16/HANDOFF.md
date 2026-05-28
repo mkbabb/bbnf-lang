@@ -44,10 +44,11 @@ and cannot be folded into CH6 or deferred to S-P0.
 
 ## Next Move
 
-1. Dispatch SK-V16 S-P0 overfit audit against the Alpha V1 goalset and the
-   SK-V15 W11 close packet.
-2. Fold S-P0 findings into S-P1, S-P2, and S-P3. S-P3 authors the exact SK-V16
-   `SPEC.md` wave plan; do not invent waves before S-P3.
+1. S-P0 overfit audit is converged at `dafe288dd`; S-P1 profile is converged
+   after V1/V2 CH1-CH7 hardening with two clean ACCEPT cycles.
+2. Dispatch S-P2 research. S-P2 must consume the S-P1 hot-leaf floor and the
+   S-P0 prune list; behavior/admission waves remain blocked until S-P3 authors
+   legal prune-first waves and executable consumers.
 3. Run totality passes and Pass Omega only where the loop requires them or a
    spec-class amendment surfaces. Stop only at G-Omega.
 4. Execute the SK-V16 wave program after S-P3/Pass Omega gating, preserving the

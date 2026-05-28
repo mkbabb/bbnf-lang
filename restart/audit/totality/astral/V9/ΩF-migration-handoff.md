@@ -21,7 +21,8 @@ convergence and mandatory G-Omega V9 authorization.
 The next executable sequence is:
 
 1. Pass Omega V9 converges and presents G-Omega V9.
-2. After G-Omega V9 closes, apply the authorized CRUD/SPEC patches.
+2. After G-Omega V9 closes, apply the authorized V1 corpus CRUD patches;
+   SK-V15 SPEC/DISPATCH stay read-only for V9.
 3. Stop Omega/Alpha churn for this SK-V15 implementation authority.
 4. Dispatch actual SK-V15 implementation waves W0 through W11 in order through
    the SKINNY triumvirate, with G-Omega as the only mandatory user gate and all
@@ -64,7 +65,7 @@ Governance facts to preserve:
 Omega-F V9 is a document-authority migration. It does not directly authorize
 source edits, generated output movement, `RESULTS.md`, `REDRESS.md`, gate
 implementation changes, or runtime deletion. Those belong to SK-V15 W0-W11
-after G-Omega V9 and CRUD/SPEC application.
+after G-Omega V9 and authorized V1 corpus CRUD application.
 
 ### Proposed MIGRATION Receiver
 
@@ -130,7 +131,8 @@ Proposed top-level blocker matrix:
 
 ## Correctness Gate Fold
 
-CRUD/SPEC patches after G-Omega V9 should preserve these exact guardrails:
+Authorized V1 corpus CRUD patches after G-Omega V9 should preserve these exact
+guardrails:
 
 - Apply only the V9 authorized surface patches before W0.
 - Do not edit source, generated output, `RESULTS.md`, `REDRESS.md`, or gates
@@ -159,7 +161,7 @@ Proposed CRUD receiver map after G-Omega V9:
 | CRUD | Surface | V9 operation |
 |---|---|---|
 | CRUD-1 ARCHITECTURE | `restart/ARCHITECTURE.md` | Apply only authorized implementation-status alignment if Omega-A/Omega-D require it. Preserve no new substrate, public API, directive, BIR variant, or `BackendShape` variant unless separately authorized. |
-| CRUD-2 MASTER-PLAN + SPEC authority | `restart/MASTER-PLAN.md`, SK-V15 SPEC/dispatch surfaces if authorized | Mark SK-V15 W0-W11 as current implementation route; ensure W0 is first dispatch after G-Omega and no W12 overflow exists. |
+| CRUD-2 MASTER-PLAN | `restart/MASTER-PLAN.md` | Mark SK-V15 W0-W11 as current implementation route; ensure W0 is first dispatch after G-Omega and no W12 overflow exists. SK-V15 SPEC/DISPATCH are read-only for V9. |
 | CRUD-3 LOCKS | `restart/locks/LOCKS.md` | G-Omega-gated. Preserve 16 locks and five-shape canon unless Omega-C V9 locks diff authorizes a concrete amendment. |
 | CRUD-4 HANDOFF + MIGRATION | `restart/HANDOFF.md`, `restart/MIGRATION.md` | Replace stale SK-V14 W5B/Omega V8 current authority with SK-V15 W0-W11 implementation authority and the blocker/receiver/gate tables above. |
 | CRUD-5 SKINNY CORPUS | `restart/skinny/{INDEX,WORKSPACE,HARDENING,COMPILER,BENCH,SUBSTRATE}.md` | Align only where these surfaces still route current work through SK-V14 or omit SK-V15 overfit-prune constraints. |
@@ -170,9 +172,10 @@ Proposed CRUD receiver map after G-Omega V9:
 After Pass Omega V9 CHALLENGE convergence:
 
 1. Present G-Omega V9 with the cycle summary, consolidated verdict, locks diff,
-   master/spec diff, and CRUD operation list.
+   master-plan edit operations, and CRUD operation list.
 2. If G-Omega V9 is held, stop at the gate.
-3. If G-Omega V9 authorizes, apply the CRUD/SPEC patches exactly as authorized.
+3. If G-Omega V9 authorizes, apply the authorized V1 corpus CRUD patches
+   exactly as authorized; do not edit SK-V15 SPEC/DISPATCH.
 4. Verify top-level HANDOFF/MIGRATION now route current work to SK-V15 W0-W11,
    not SK-V14 W5B.0 or Omega V8.
 5. Stop Omega/Alpha churn for this SK-V15 implementation authority.

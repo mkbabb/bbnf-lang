@@ -40,9 +40,9 @@ CSS >SOTA until the SK-V15 W0-W11 gates produce executable evidence.
 | `restart/locks/LOCKS.md:491-533` | Lock 16 strict/aarch64/CollapsedStage close-state constraints. |
 
 Commit anchors checked with `git rev-parse --verify`: `8e7378025`,
-`cbafeb566`, `cafb95682`, `77b6e9fd7`, and `6f1dd8aae` resolve.
-`restart/audit/totality/p2/hardening/HARDENING-T-P2-V5-CONVERGED.md` does not
-exist; current T-P2 authority is `HARDENING-T-P2-V3-CONSOLIDATED.md`.
+`cbafeb566`, `cafb95682`, `77b6e9fd7`, and `6f1dd8aae` resolve. The current
+T-P2 authority is
+`restart/audit/totality/p2/hardening/HARDENING-T-P2-V3-CONSOLIDATED.md`.
 
 Live source checks:
 
@@ -78,14 +78,14 @@ Evidence:
 Disposition: update required.
 Proposed CRUD owner: CRUD-4 HANDOFF + MIGRATION.
 
-### OA-02 - HANDOFF reading order cites a nonexistent T-P2 V5 authority
+### OA-02 - HANDOFF reading order cites an absent T-P2 authority file
 
 Target surface: `restart/HANDOFF.md`.
 
 Evidence:
-- `restart/HANDOFF.md:91-94` names
-  `HARDENING-T-P2-V5-CONVERGED.md` and T-P3 V4 as current reads.
-- `HARDENING-T-P2-V5-CONVERGED.md` is absent; T-P2 current authority is V3
+- `restart/HANDOFF.md:91-94` names an absent T-P2 authority file and T-P3 V4
+  as current reads.
+- T-P2 current authority is V3
   (`restart/audit/totality/p2/hardening/HARDENING-T-P2-V3-CONSOLIDATED.md:15-19`).
 - T-P3 current authority is V5 final convergence, not V4
   (`restart/audit/totality/p3/hardening/HARDENING-T-P3-V5-CONSOLIDATED.md:16-21`).
@@ -321,7 +321,7 @@ Proposed CRUD owner: CRUD-6 AUDIT + CLEANUP.
 | CRUD-1 ARCHITECTURE | Replace SK-V14 authority ledger with SK-V15 T-P1/T-P2/T-P3 state; downgrade CSS/SinkOnly and lowerer claims; preserve 16 locks and five BackendShape canon; add FNV quarantine/current blockers where implementation status is discussed. |
 | CRUD-2 MASTER-PLAN | Replace SK-V14 W5/W6/W7 receiver block as current with SK-V15 W0-W11 receiver; revise CSS comparator/host/SOTA rows; route Pattern H, Decision Engine, lowerers, Lock14/16, and FNV to SK-V15 waves. |
 | CRUD-3 LOCKS | No immediate lock-count or lock-text amendment found by Omega-A. Preserve 16 locks, FactStream-as-substrate-manifest-only, five BackendShape canon, Lock 14, and Lock 16 aarch64/strict constraints. |
-| CRUD-4 HANDOFF + MIGRATION | Update current override, read order, next dispatch, and migration receivers to SK-V15 / Pass Omega V9; remove nonexistent T-P2 V5 authority; stop saying SK-V14 W5B.0 is next. |
+| CRUD-4 HANDOFF + MIGRATION | Update current override, read order, next dispatch, and migration receivers to SK-V15 / Pass Omega V9; remove the absent T-P2 authority reference; stop saying SK-V14 W5B.0 is next. |
 | CRUD-5 SKINNY CORPUS | No Omega-A direct finding against skinny packet; SK-V15 skinny surfaces are the current authority. |
 | CRUD-6 AUDIT + CLEANUP | Run citation scrub for stale LOCKS line numbers and corrected Lock 14 gate source path; verify commit anchors and no orphan V8-only source maps in V9 CRUD logs. |
 

@@ -96,8 +96,9 @@ Apply only after Pass Omega V9 hardening and G-Omega authorization:
 3. Insert new MASTER Section 13.5, `SK-V15 PRUNE-then-REBUILD Receiver Block`.
 4. Update MASTER Section 25 item 2 and its blocking paragraph from SK-V13 to
    SK-V15 W0-W11.
-5. Leave `restart/skinny/tranches/sk-v15/SPEC.md` unchanged; it is the locked
-   source of truth consumed by the new MASTER block.
+5. Leave `restart/skinny/tranches/sk-v15/SPEC.md` and
+   `restart/skinny/tranches/sk-v15/DISPATCH-PROMPT.md` unchanged; they are the
+   locked implementation graph consumed by the new MASTER block.
 
 ## Refused Routes
 
@@ -120,5 +121,5 @@ Apply only after Pass Omega V9 hardening and G-Omega authorization:
 ## Close State
 
 Omega-D V9 is ready for CHALLENGE review. The required live edits are limited to
-MASTER-PLAN CRUD after G-Omega; SK-V15 SPEC is already locked and should remain
-the active canonical wave graph.
+MASTER-PLAN CRUD after G-Omega; SK-V15 SPEC/DISPATCH are already locked and
+should remain the active canonical wave graph.

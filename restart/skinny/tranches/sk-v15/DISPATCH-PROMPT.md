@@ -2,7 +2,7 @@
 
 Date: 2026-05-28.
 
-Status: S-P3 V2 dispatch contract for SK-V15 W0-W11. Every SK-V15 wave
+Status: S-P3 V4 LOCKED dispatch contract for SK-V15 W0-W11. Every SK-V15 wave
 is dispatched as a research -> plan -> redress triumvirate per
 `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`.
 
@@ -20,10 +20,11 @@ Read in this order before dispatching any SK-V15 wave:
 8. `restart/skinny/tranches/sk-v15/research/p3/p3d-telemetry-schema.md`
 9. `restart/skinny/tranches/sk-v15/research/p3/p3e-preblocked-ledger.md`
 10. `restart/skinny/tranches/sk-v15/research/p3/p3f-spec-draft.md`
-11. `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`
-12. `restart/prompts/ORCHESTRATOR.md`
-13. `restart/locks/LOCKS.md`
-14. `skinny/RESULTS.md`, `skinny/REDRESS.md`, `restart/skinny/ROLLING-SOTA-DELTA.md`
+11. `restart/skinny/tranches/sk-v15/research/p3/hardening/HARDENING-S-P3-V4-CONSOLIDATED.md`
+12. `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`
+13. `restart/prompts/ORCHESTRATOR.md`
+14. `restart/locks/LOCKS.md`
+15. `skinny/RESULTS.md`, `skinny/REDRESS.md`, `restart/skinny/ROLLING-SOTA-DELTA.md`
 
 ## Section 1 - Triumvirate Contract
 

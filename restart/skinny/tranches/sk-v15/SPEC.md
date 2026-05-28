@@ -2,12 +2,11 @@
 
 Date: 2026-05-28.
 
-Status: S-P3 V2 planning packet. This file is not an implementation
+Status: S-P3 V4 LOCKED planning packet. This file is not an implementation
 dispatch. It folds Pass Alpha's SK-V15 goalset, PASS-IMPL V1, S-P2 V3
-locked survivor boundaries, and S-P3 P3-A through P3-F into a conditional
-W0-W11 wave plan. The shape preserves SK-V15 prune-before-rebuild
-direction and the V2 hardening split of CSS provider/retime and
-Decision/lowerer work.
+locked survivor boundaries, and S-P3 P3-A through P3-F into the W0-W11
+wave plan. The shape preserves SK-V15 prune-before-rebuild direction and
+the hardening-locked split of CSS provider/retime and Decision/lowerer work.
 
 Authority:
 
@@ -21,6 +20,7 @@ Authority:
 - `restart/skinny/tranches/sk-v15/research/p3/p3d-telemetry-schema.md`
 - `restart/skinny/tranches/sk-v15/research/p3/p3e-preblocked-ledger.md`
 - `restart/skinny/tranches/sk-v15/research/p3/p3f-spec-draft.md`
+- `restart/skinny/tranches/sk-v15/research/p3/hardening/HARDENING-S-P3-V4-CONSOLIDATED.md`
 - `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`
 - `restart/locks/LOCKS.md`
 - `skinny/RESULTS.md`

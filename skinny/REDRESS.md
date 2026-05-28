@@ -6290,3 +6290,35 @@ material differential.
   `restart/skinny/tranches/sk-v14/research/skv14-W11W-parse-only-memchr.md`,
   `.tsv`, and `.raw.log`.
 - Current JSON parse_only state is 17 / 17 ADMITTED and 0 OPEN.
+
+## SK-V15 W6 CSS L4 Typed Same-Workload Retime Reject
+
+- Item 248 closes `G-SK-V15-W6-CSS-L4-TYPED-RETIME` as `ROUTE-W6-REJECT`.
+  No CSS result row moves, no CSS floor is admitted, and every CSS L4 row
+  remains `AUDIT-FALSIFIED` / `OPEN`.
+- The measured route is materially distinct from REDRESS-215 and the W8R
+  diagnostic broadcast: Track 1 is root `CssL4Parser::parse` producing a typed
+  `CssDocument` plus `CssVisitor` traversal; Track 2 is a same-run
+  `cssparser::StyleSheetParser` typed-summary walk over the same 979638-byte
+  CSS corpus. Live W6 admission sources exclude W8R, `CSS_GENERATED_RS`,
+  fact-stream output, `CssFullParseSummary`, `parse_full`, brace-counter proof,
+  and `lightningcss`.
+- The executable retime landed at `cec47b56e`. Evidence command:
+  `SKV15_W6_REPORT_OUT=/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v15/research/w6/skv15-W6-css-typed-retime.json RUSTFLAGS='-C target-cpu=native' cargo test -p bbnf --test css_l4_w6_typed_retime --release -- --nocapture`.
+  The generated report SHA-256 is
+  `31439e588849f557abf79e84ce35bf371e89c5b1c7467b01b5a271c88b0ba37e`.
+- W6 rejects on both correctness and speed: Track 1 parses `2/4` corpus files,
+  cssparser parses `4/4`, typed-summary equality is false, Track 1 measures
+  `4.317` Mbps, cssparser measures `2051.911` Mbps, and the `cssparser + 1`
+  margin is `-2048.594` Mbps. `admitted_rows=0`.
+- The planned skinny `bbnf-bench` integration was not committed because adding
+  the root typed parser crate to the skinny workspace causes a Cargo lockfile
+  package-identity collision. The implementation moved to the root test
+  surface where the typed CSS provider and direct `cssparser` dev-dependency
+  already coexist. That is a routed correction, not a compatibility shim.
+- W6 consumes `DEP-W6-CSS-GENERATED-RS`,
+  `DEP-W6-CSS-SUMMARY-FACT-STREAM`, `DEP-W3-W6-CSS-PROVIDER-TEMPLATE`,
+  `DEP-W4-W6-CSS-LEGACY-RUNTIME-SHIM`, and re-attests
+  `DEP-W1-CSS-BROADCAST` as diagnostic-only. W7 may proceed against the fresh
+  measured rejection; any future CSS admission must be a new typed
+  same-workload row.

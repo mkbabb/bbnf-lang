@@ -94,6 +94,6 @@ source_commit: bae430dcf
 
 ## Gate Notes
 
-- `T1_sota` is the pinned admission threshold: `sonic-rs strict + 1 Mbps` for JSON rows and `lightningcss + 1 Mbps` for CSS rows.
+- `T1_sota` is the pinned admission threshold: `sonic-rs strict + 1 Mbps` for JSON rows. CSS table values remain retained W8R diagnostic full-parse evidence only; SK-V15 W6 supersedes live CSS admission with a typed same-workload rejection (`Track1=4.317 Mbps`, `cssparser=2051.911 Mbps`, margin `-2048.594 Mbps`, Track1 `2/4` corpus passes), so CSS stays `OPEN` until a fresh typed row beats `cssparser` with typed-summary equality.
 - `tranche_admitted` records current strict admission status only; positive diagnostic parse margins remain `OPEN` until a same-wave implementation lands the required equality and gate provenance.
 - Missing real typed rows are explicit `MISSING` rows so the 51-row JSON universe cannot silently shrink.

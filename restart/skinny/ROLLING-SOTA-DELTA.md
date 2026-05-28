@@ -67,30 +67,30 @@ source_commit: bae430dcf
 
 | row | plane | T1_current | T1_sota | margin | tranche_admitted |
 |---|---|---:|---:|---:|---|
-| css_l4/declaration_values/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
-| css_l4/declarations/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
-| css_l4/stylesheet_root/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
-| css_l4/selectors/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
-| css_l4/at_rules_keyframes/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
-| css_l4/nested_rules/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
-| css_l4/css_variables/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
-| css_l4/calc_expressions/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
-| css_l4/var_url_functions/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
-| css_l4/color_functions/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
-| css_l4/gradients/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
-| css_l4/transforms/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
-| css_l4/filters/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
-| css_l4/easing_functions/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
-| css_l4/media_queries/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
-| css_l4/vendor_prefixes/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
-| css_l4/custom_at_rules/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
-| css_l4/pseudo_classes/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
-| css_l4/pseudo_elements/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
-| css_l4/attribute_selectors/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
-| css_l4/logical_properties/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
-| css_l4/grid/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
-| css_l4/flexbox/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
-| css_l4/typed_property_groups/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | ADMITTED |
+| css_l4/declaration_values/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | OPEN |
+| css_l4/declarations/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | OPEN |
+| css_l4/stylesheet_root/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | OPEN |
+| css_l4/selectors/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | OPEN |
+| css_l4/at_rules_keyframes/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | OPEN |
+| css_l4/nested_rules/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | OPEN |
+| css_l4/css_variables/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | OPEN |
+| css_l4/calc_expressions/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | OPEN |
+| css_l4/var_url_functions/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | OPEN |
+| css_l4/color_functions/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | OPEN |
+| css_l4/gradients/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | OPEN |
+| css_l4/transforms/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | OPEN |
+| css_l4/filters/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | OPEN |
+| css_l4/easing_functions/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | OPEN |
+| css_l4/media_queries/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | OPEN |
+| css_l4/vendor_prefixes/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | OPEN |
+| css_l4/custom_at_rules/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | OPEN |
+| css_l4/pseudo_classes/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | OPEN |
+| css_l4/pseudo_elements/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | OPEN |
+| css_l4/attribute_selectors/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | OPEN |
+| css_l4/logical_properties/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | OPEN |
+| css_l4/grid/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | OPEN |
+| css_l4/flexbox/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | OPEN |
+| css_l4/typed_property_groups/direct_to_struct/main | css_l4_full_parse | 2319.04 | 930.28 | 1388.76 | OPEN |
 
 ## Gate Notes
 

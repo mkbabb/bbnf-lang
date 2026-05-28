@@ -1009,38 +1009,10 @@ fn validate_skv14_sustained_row(row: &Skv14ManifestRow) -> Result<()> {
         return Ok(());
     }
     if is_skv14_w8r_css_row(&row.row_id) {
-        if row.wave_id != "SK-V14-W8R"
-            || !row
-                .track1_entry_point
-                .starts_with("runtime::generated_css_l4_")
-            || !row.track1_entry_point.ends_with("::parser::parse_full")
-            || row.track2_entry_point != "cssparser::StyleSheetParser full-parse probe"
-            || row.comparator_plane != "lightningcss full-parse"
-            || !valid_skv14_per_iter_pass(&row.per_iter_equality)
-            || !row
-                .audit_overlay_reference
-                .contains("sk-v14-W8R:css-full-parse-same-plane")
-            || row.sidecar_freshness != "same-run:production-corpus-full-parse"
-            || row.substrate_target != "css_l4_full_parse"
-            || row.retention_lifetime != "full_parse_summary"
-            || row.policy_owner != "generated_grammar"
-            || row.redress_entry != "REDRESS-215-superseded-by-W8R"
-            || row.sk_v14_open_delta != "admitted:SK-V14-W8R-full-parse"
-            || row.same_wave_consumer_class != "gate_css_l4_w8_full_parse_contract"
-            || !row
-                .track2_independence_status
-                .starts_with("independent_verified:lightningcss+cssparser")
-            || !row
-                .comparator_evidence
-                .contains("strict_equality[status=pass")
-            || !row.comparator_evidence.contains("wrong_plane_outputs=0")
-        {
-            bail!(
-                "{} is not a valid SK-V14 W8R sustained CSS full-parse row",
-                row.row_id
-            );
-        }
-        return Ok(());
+        bail!(
+            "{} cannot be AUDIT-SUSTAINED from SK-V14 W8R broadcast evidence after SK-V15 W1",
+            row.row_id
+        );
     }
     if is_skv14_w10_parse_row(&row.row_id) {
         let (wave_id, redress_entry, open_delta) = skv14_parse_only_admit_fields(&row.row_id);
@@ -1068,7 +1040,7 @@ fn validate_skv14_sustained_row(row: &Skv14ManifestRow) -> Result<()> {
         return Ok(());
     }
     bail!(
-        "{} is AUDIT-SUSTAINED without W9 typed, W10/W10R/W10S/W10T/W10V/W10W/W11W parse_only, W11A direct strict-product, W11L/W11N/W11O token-product, W11U raw-lexeme product, or W8R CSS full-parse authority",
+        "{} is AUDIT-SUSTAINED without W9 typed, W10/W10R/W10S/W10T/W10V/W10W/W11W parse_only, W11A direct strict-product, W11L/W11N/W11O token-product, or W11U raw-lexeme product authority",
         row.row_id
     )
 }
@@ -1479,9 +1451,14 @@ fn validate_skv13_rolling_delta(results_text: &str, rolling_path: &Path) -> Resu
         validate_rolling_status(row)?;
         if let Some(metric) = css_metrics.get(&row_id) {
             validate_numeric_rolling_row(row, *metric)?;
-            let audit_pruned_open =
-                row.tranche_admitted == "OPEN" && metric.css_audit_falsified_open_allowed;
-            if row.tranche_admitted != "ADMITTED" && !audit_pruned_open {
+            if metric.css_audit_falsified_open_allowed {
+                if row.tranche_admitted != "OPEN" {
+                    bail!(
+                        "{row_id} has audit-falsified CSS diagnostic evidence but is {} instead of OPEN",
+                        row.tranche_admitted
+                    );
+                }
+            } else if row.tranche_admitted != "ADMITTED" {
                 bail!(
                     "{row_id} has numeric CSS evidence but is {} without not_admitted/AUDIT-FALSIFIED overlay",
                     row.tranche_admitted
@@ -2305,6 +2282,10 @@ mod tests {
         std::fs::write(&audit_open_path, audit_open_rolling).unwrap();
         validate_skv13_rolling_delta(&audit_open_results, &audit_open_path)
             .expect("audit-falsified CSS numeric rows may remain OPEN after W4R prune");
+        assert!(
+            validate_skv13_rolling_delta(&audit_open_results, &rolling_path).is_err(),
+            "audit-falsified CSS diagnostic rows must not remain ADMITTED"
+        );
 
         let malformed = std::fs::read_to_string(&rolling_path).unwrap().replace(
             "| json/twitter/parse_only/main | parse_only | 200.00 | 101.00 | 99.00 | OPEN |",

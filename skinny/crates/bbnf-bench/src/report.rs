@@ -4266,44 +4266,13 @@ fn validate_skv14_sustained_row(row: &SkV14ManifestRow) -> Result<(), String> {
         return Ok(());
     }
     if is_skv14_w8r_css_row(&row.row_id) {
-        if row.wave_id != "SK-V14-W8R"
-            || !row
-                .track1_entry_point
-                .starts_with("runtime::generated_css_l4_")
-            || !row.track1_entry_point.ends_with("::parser::parse_full")
-            || row.track2_entry_point != "cssparser::StyleSheetParser full-parse probe"
-            || row.comparator_plane != "lightningcss full-parse"
-            || !valid_skv14_per_iter_pass(&row.per_iter_equality)
-            || !row
-                .audit_overlay_reference
-                .contains("sk-v14-W8R:css-full-parse-same-plane")
-            || row.sidecar_freshness != "same-run:production-corpus-full-parse"
-            || row.substrate_target != "css_l4_full_parse"
-            || row.retention_lifetime != "full_parse_summary"
-            || row.policy_owner != "generated_grammar"
-            || row.redress_entry != "REDRESS-215-superseded-by-W8R"
-            || row.sk_v14_open_delta != "admitted:SK-V14-W8R-full-parse"
-            || !row.substrate_surface.starts_with("generated_css_l4_")
-            || row.structural_projection_status != "css_l4_full_parse"
-            || row.substrate_cardinality != "one"
-            || row.same_wave_consumer_class != "gate_css_l4_w8_full_parse_contract"
-            || !row
-                .track2_independence_status
-                .starts_with("independent_verified:lightningcss+cssparser")
-            || !row
-                .comparator_evidence
-                .contains("strict_equality[status=pass")
-            || !row.comparator_evidence.contains("wrong_plane_outputs=0")
-        {
-            return Err(format!(
-                "{} is not a valid SK-V14 W8R sustained CSS full-parse row",
-                row.row_id
-            ));
-        }
-        return Ok(());
+        return Err(format!(
+            "{} cannot be AUDIT-SUSTAINED from SK-V14 W8R broadcast evidence after SK-V15 W1",
+            row.row_id
+        ));
     }
     Err(format!(
-        "{} is AUDIT-SUSTAINED without W9 typed, W10/W10R/W10S/W10T/W10V/W10W/W11W parse_only, W11A direct strict-product, W11L/W11N/W11O token-product, W11U raw-lexeme product, or W8R CSS full-parse authority",
+        "{} is AUDIT-SUSTAINED without W9 typed, W10/W10R/W10S/W10T/W10V/W10W/W11W parse_only, W11A direct strict-product, W11L/W11N/W11O token-product, or W11U raw-lexeme product authority",
         row.row_id
     ))
 }

@@ -5340,6 +5340,14 @@ perturbation.
   `restart/skinny/tranches/sk-v14/research/skv14-redress-215-css-full-parse-profile.tsv`,
   and
   `restart/skinny/tranches/sk-v14/research/skv14-redress-215-css-full-parse-profile.raw.log`.
+
+- SK-V15 W1 supersedes the W8R admission posture without deleting the retained
+  evidence. The W8R tuple is diagnostic broadcast evidence only: zero CSS rows
+  may close as live admits from the shared `SK-V14-W8R-css-full-parse-profile-cold-8`
+  measurement, rolling delta keeps the numeric margin as `OPEN`, legacy
+  sustained validators reject W8R CSS rows, and the W8 harness reports
+  diagnostic disposition with `admitted_rows=0`. Typed CSS provider proof and
+  same-workload retiming remain routed to SK-V15 W5/W6.
   Fact-stream adapters, tiny fixtures, and CANONICAL_FIXTURE/profile-template
   shortcuts remain rejected.
 

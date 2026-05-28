@@ -19,7 +19,7 @@ pub const W8_PROFILE_ITERS: usize = 8;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum W8Disposition {
-    Admitted,
+    Diagnostic,
     Rejected,
 }
 
@@ -141,18 +141,14 @@ pub fn run_production_attempt() -> Result<CssL4W8AttemptReport, String> {
         profile.track1_full_parse_mbps - (profile.lightningcss_full_parse_mbps + 1.0);
     let track1_beats_lightningcss = track1_lightningcss_margin_mbps > 0.0;
     let admits = all_track1_runs_same_plane && track1_beats_lightningcss;
-    let admitted_rows = if admits {
-        W8_SELECTED_CSS_ROWS
-    } else {
-        0
-    };
+    let admitted_rows = 0;
     let disposition = if admits {
-        W8Disposition::Admitted
+        W8Disposition::Diagnostic
     } else {
         W8Disposition::Rejected
     };
     let disposition_reason = if admits {
-        "generated_track1_css_full_parse_same_plane"
+        "SK-V15-W1-diagnostic-broadcast-demotion"
     } else if !track1_beats_lightningcss {
         "track1_css_full_parse_below_lightningcss"
     } else {
@@ -194,9 +190,10 @@ fn generated_full_parse_marker(output: &str, profile: &Track1Profile) -> bool {
 }
 
 fn generated_fact_stream_marker(output: &str) -> bool {
-    output.lines().any(|line| {
-        line.starts_with("row\tid=") && line.contains("_fact_stream")
-    }) || output.contains("\npolicy\tbackend_shape=admitted_fact_output")
+    output
+        .lines()
+        .any(|line| line.starts_with("row\tid=") && line.contains("_fact_stream"))
+        || output.contains("\npolicy\tbackend_shape=admitted_fact_output")
 }
 
 struct W8ProfileMeasurement {
@@ -414,8 +411,7 @@ fn parse_stylesheet_selectors(input: &str) -> Result<String, String> {
 }
 
 fn parse_visual_functions(input: &str) -> Result<String, String> {
-    generated_css_l4_visual_functions::parser::parse_full(input)
-        .map_err(|error| error.to_string())
+    generated_css_l4_visual_functions::parser::parse_full(input).map_err(|error| error.to_string())
 }
 
 fn parse_at_rules_and_media(input: &str) -> Result<String, String> {
@@ -429,8 +425,7 @@ fn parse_vendor_and_custom_atrules(input: &str) -> Result<String, String> {
 }
 
 fn parse_nested_layout(input: &str) -> Result<String, String> {
-    generated_css_l4_nested_layout::parser::parse_full(input)
-        .map_err(|error| error.to_string())
+    generated_css_l4_nested_layout::parser::parse_full(input).map_err(|error| error.to_string())
 }
 
 #[cfg(test)]
@@ -438,7 +433,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn css_l4_w8_production_attempt_admits_full_parse_track1() {
+    fn css_l4_w8_production_attempt_is_diagnostic_full_parse_track1() {
         let report = run_production_attempt().expect("run W8 CSS production attempt");
 
         assert_eq!(report.wave_id, W8_WAVE_ID);
@@ -476,11 +471,11 @@ mod tests {
             report.cssparser_full_parse_mbps,
             report.track1_lightningcss_margin_mbps,
         );
-        assert_eq!(report.admitted_rows, W8_SELECTED_CSS_ROWS);
-        assert_eq!(report.disposition, W8Disposition::Admitted);
+        assert_eq!(report.admitted_rows, 0);
+        assert_eq!(report.disposition, W8Disposition::Diagnostic);
         assert_eq!(
             report.disposition_reason,
-            "generated_track1_css_full_parse_same_plane"
+            "SK-V15-W1-diagnostic-broadcast-demotion"
         );
     }
 }

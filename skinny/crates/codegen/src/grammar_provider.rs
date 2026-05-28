@@ -1,4 +1,4 @@
-use crate::{grammar_profile, runtime_generator, CodegenError, EmittedSource};
+use crate::{runtime_generator, CodegenError, EmittedSource};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RuntimeGenerationRequest {
@@ -9,7 +9,7 @@ pub struct RuntimeGenerationRequest {
     pub sources: Vec<RuntimeGrammarSource>,
     pub workspace_metadata: RuntimeWorkspaceMetadata,
     pub output_dir: String,
-    pub expected_files: Vec<String>,
+    pub profile_contract: RuntimeProfileContract,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -28,6 +28,73 @@ pub struct RuntimeWorkspaceMetadata {
     pub profile: String,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RuntimeProfileContract {
+    pub emitter: RuntimeEmitterKind,
+    pub expected_files: &'static [&'static str],
+    pub frontend_requirements: RuntimeFrontendRequirements,
+    pub output_labels: Option<RuntimeOutputLabels>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RuntimeEmitterKind {
+    CompiledLowering,
+    RequestFacts,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct RuntimeFrontendRequirements {
+    pub import_closure: bool,
+    pub whitespace_directive: bool,
+    pub whitespace_modifier: bool,
+    pub discard_operator: bool,
+    pub pretty_directive: bool,
+    pub host_capture: bool,
+    pub projection: bool,
+    pub typed_projection: bool,
+    pub token_directive: bool,
+    pub comma: bool,
+}
+
+impl RuntimeFrontendRequirements {
+    pub const fn none() -> Self {
+        Self {
+            import_closure: false,
+            whitespace_directive: false,
+            whitespace_modifier: false,
+            discard_operator: false,
+            pretty_directive: false,
+            host_capture: false,
+            projection: false,
+            typed_projection: false,
+            token_directive: false,
+            comma: false,
+        }
+    }
+
+    pub const fn full_request_facts() -> Self {
+        Self {
+            import_closure: true,
+            whitespace_directive: true,
+            whitespace_modifier: true,
+            discard_operator: true,
+            pretty_directive: true,
+            host_capture: true,
+            projection: true,
+            typed_projection: true,
+            token_directive: true,
+            comma: true,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct RuntimeOutputLabels {
+    pub fact_schema: &'static str,
+    pub row_id: &'static str,
+    pub output_plane: &'static str,
+}
+
 pub fn emit_runtime_from_request(
     request: RuntimeGenerationRequest,
 ) -> Result<EmittedSource, CodegenError> {
@@ -40,37 +107,18 @@ pub fn emit_runtime_from_request(
         .collect::<Vec<_>>();
     let facts = grammar::parse_runtime_source_facts(&source_refs)?;
     validate_frontend_closure(&request, &facts)?;
-    let profile = match grammar_profile::select_runtime_profile_for_name(&request.profile_id) {
-        Ok(profile) => profile,
-        Err(error) => {
-            if let Some(unsupported) = facts.first_unsupported() {
-                return Err(CodegenError::UnsupportedRuntimeConstruct {
-                    code: unsupported.code,
-                    path: unsupported.path,
-                    offset: unsupported.offset,
-                    source_hash: unsupported.source_hash,
-                });
-            }
-            return Err(error);
+    if request.profile_contract.emitter != RuntimeEmitterKind::RequestFacts {
+        if let Some(unsupported) = facts.first_unsupported() {
+            return Err(CodegenError::UnsupportedRuntimeConstruct {
+                code: unsupported.code,
+                path: unsupported.path,
+                offset: unsupported.offset,
+                source_hash: unsupported.source_hash,
+            });
         }
-    };
-    let expected = profile
-        .generated_runtime_files()
-        .iter()
-        .map(|path| (*path).to_string())
-        .collect::<Vec<_>>();
-    if request.expected_files != expected {
-        return Err(CodegenError::Lowering(format!(
-            "runtime request expected files [{}], profile `{}` requires [{}]",
-            request.expected_files.join(", "),
-            profile.id(),
-            expected.join(", ")
-        )));
     }
-    if profile.mode() == grammar_profile::RuntimeGenerationMode::FrontendFacts {
-        validate_non_json_frontend_materiality(&facts)?;
-    }
-    runtime_generator::emit_from_request(profile, &request, &facts)
+    validate_frontend_requirements(&request.profile_contract.frontend_requirements, &facts)?;
+    runtime_generator::emit_from_request(&request, &facts)
 }
 
 fn validate_metadata(metadata: &RuntimeWorkspaceMetadata) -> Result<(), CodegenError> {
@@ -207,38 +255,45 @@ fn validate_frontend_closure(
     Ok(())
 }
 
-fn validate_non_json_frontend_materiality(
+fn validate_frontend_requirements(
+    requirements: &RuntimeFrontendRequirements,
     facts: &grammar::RuntimeSourceFacts,
 ) -> Result<(), CodegenError> {
     let frontend = &facts.frontend;
-    if frontend.imports.is_empty() {
+    if requirements.import_closure && frontend.imports.is_empty() {
         return Err(frontend_missing("import closure"));
     }
-    if frontend.layout.whitespace_directives.is_empty() {
+    if requirements.whitespace_directive && frontend.layout.whitespace_directives.is_empty() {
         return Err(frontend_missing("whitespace directive"));
     }
-    if frontend.layout.whitespace_modifiers.is_empty() {
+    if requirements.whitespace_modifier && frontend.layout.whitespace_modifiers.is_empty() {
         return Err(frontend_missing("whitespace modifier"));
     }
-    if frontend.layout.discard_operators.is_empty() {
+    if requirements.discard_operator && frontend.layout.discard_operators.is_empty() {
         return Err(frontend_missing("discard operator"));
     }
-    if frontend.pretty_directives.is_empty() {
+    if requirements.pretty_directive && frontend.pretty_directives.is_empty() {
         return Err(frontend_missing("pretty directive"));
     }
-    if frontend.host_captures.is_empty() {
+    if requirements.host_capture && frontend.host_captures.is_empty() {
         return Err(frontend_missing("host capture"));
     }
-    if frontend.projections.is_empty() {
+    if requirements.projection && frontend.projections.is_empty() {
         return Err(frontend_missing("projection"));
     }
-    if frontend.typed_projections.is_empty() {
+    if requirements.typed_projection && frontend.typed_projections.is_empty() {
         return Err(frontend_missing("typed projection"));
     }
-    for kind in [
-        grammar::RuntimeConstructKind::TokenDirective,
-        grammar::RuntimeConstructKind::Comma,
+    for (required, kind) in [
+        (
+            requirements.token_directive,
+            grammar::RuntimeConstructKind::TokenDirective,
+        ),
+        (requirements.comma, grammar::RuntimeConstructKind::Comma),
     ] {
+        if !required {
+            continue;
+        }
         if facts.count(kind) == 0 {
             return Err(CodegenError::Lowering(format!(
                 "runtime request source facts missing {kind:?}"

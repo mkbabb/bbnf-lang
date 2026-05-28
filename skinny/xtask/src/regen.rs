@@ -12,6 +12,10 @@ pub(crate) struct RuntimeTarget {
     pub(crate) check_command: &'static str,
     pub(crate) source_inputs: &'static [&'static str],
     pub(crate) metadata_inputs: &'static [&'static str],
+    pub(crate) emitter: codegen::RuntimeEmitterKind,
+    pub(crate) expected_files: &'static [&'static str],
+    pub(crate) frontend_requirements: codegen::RuntimeFrontendRequirements,
+    pub(crate) output_labels: Option<codegen::RuntimeOutputLabels>,
 }
 
 pub(crate) fn write_targets(root: &Path, targets: &[RuntimeTarget]) -> Result<()> {
@@ -62,10 +66,6 @@ pub(crate) fn runtime_request(
             })
         })
         .collect::<Result<Vec<_>>>()?;
-    let expected_files = codegen::runtime_profile_expected_files(target.profile)?
-        .into_iter()
-        .map(str::to_string)
-        .collect();
     Ok(codegen::RuntimeGenerationRequest {
         grammar_name: target.grammar_name.to_string(),
         profile_id: target.profile.to_string(),
@@ -78,7 +78,12 @@ pub(crate) fn runtime_request(
         sources,
         workspace_metadata: workspace_metadata(root, target.grammar_name)?,
         output_dir: target.output_dir.to_string(),
-        expected_files,
+        profile_contract: codegen::RuntimeProfileContract {
+            emitter: target.emitter,
+            expected_files: target.expected_files,
+            frontend_requirements: target.frontend_requirements,
+            output_labels: target.output_labels,
+        },
     })
 }
 

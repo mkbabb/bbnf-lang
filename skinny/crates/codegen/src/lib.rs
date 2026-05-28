@@ -15,7 +15,8 @@ use std::path::Path;
 use thiserror::Error;
 
 pub use grammar_provider::{
-    emit_runtime_from_request, RuntimeGenerationRequest, RuntimeGrammarSource,
+    emit_runtime_from_request, RuntimeEmitterKind, RuntimeFrontendRequirements,
+    RuntimeGenerationRequest, RuntimeGrammarSource, RuntimeOutputLabels, RuntimeProfileContract,
     RuntimeWorkspaceMetadata,
 };
 
@@ -125,13 +126,11 @@ pub fn emit(backend: &BackendIr) -> Result<EmittedSource, CodegenError> {
 }
 
 pub fn emit_runtime_profile(grammar_name: &str) -> Result<EmittedSource, CodegenError> {
-    let profile = grammar_profile::select_runtime_profile_for_name(grammar_name)?;
-    runtime_generator::emit_profile_only(profile)
+    runtime_generator::emit_profile_only(grammar_name)
 }
 
 pub fn runtime_profile_expected_files(profile_id: &str) -> Result<Vec<&'static str>, CodegenError> {
-    let profile = grammar_profile::select_runtime_profile_for_name(profile_id)?;
-    Ok(profile.generated_runtime_files().to_vec())
+    Err(grammar_profile::expected_files_for_error(profile_id))
 }
 
 pub fn emit_typed_from_source(
@@ -160,7 +159,6 @@ fn emit_with_layout(
     same_substrate_union: &std::collections::HashMap<RuleId, SameSubstrateUnionFacts>,
     diagnostics: &[passes::diagnostics::PassDiagnostic],
 ) -> Result<EmittedSource, CodegenError> {
-    let profile = grammar_profile::select_runtime_profile(backend)?;
     let lowered = lower::lower_to_rust(
         backend,
         &lower::LowerCtx {
@@ -177,7 +175,7 @@ fn emit_with_layout(
             "BackendIr did not contain DirectBuild sink-only program".to_string(),
         )
     })?;
-    runtime_generator::emit_compiled(profile, sink_only)
+    runtime_generator::emit_compiled(&backend.grammar_name, sink_only)
 }
 
 fn emit_typed_with_layout(
@@ -189,7 +187,6 @@ fn emit_typed_with_layout(
     diagnostics: &[passes::diagnostics::PassDiagnostic],
     schema: &DirectSchemaSet,
 ) -> Result<EmittedSource, CodegenError> {
-    grammar_profile::select_runtime_profile(backend)?;
     let lowered = lower::lower_to_rust(
         backend,
         &lower::LowerCtx {
@@ -280,6 +277,32 @@ mod tests {
         }
     }
 
+    fn compiled_contract() -> RuntimeProfileContract {
+        RuntimeProfileContract {
+            emitter: RuntimeEmitterKind::CompiledLowering,
+            expected_files: grammar_profile::COMPILED_RUNTIME_FILES,
+            frontend_requirements: RuntimeFrontendRequirements::none(),
+            output_labels: None,
+        }
+    }
+
+    fn request_facts_contract(profile_id: &str) -> RuntimeProfileContract {
+        RuntimeProfileContract {
+            emitter: RuntimeEmitterKind::RequestFacts,
+            expected_files: grammar_profile::REQUEST_FACTS_RUNTIME_FILES,
+            frontend_requirements: RuntimeFrontendRequirements::full_request_facts(),
+            output_labels: Some(request_facts_labels(profile_id)),
+        }
+    }
+
+    fn request_facts_labels(profile_id: &str) -> RuntimeOutputLabels {
+        W5C_REQUEST_FACT_PROFILES
+            .iter()
+            .find(|profile| profile.profile_id == profile_id)
+            .map(|profile| profile.labels)
+            .unwrap_or_else(|| panic!("missing request-facts profile {profile_id}"))
+    }
+
     fn w5a_css_request(source: &str) -> RuntimeGenerationRequest {
         let mut sources = vec![RuntimeGrammarSource {
             rel_path: "grammar/css/l4/stylesheet.bbnf".to_string(),
@@ -300,22 +323,73 @@ mod tests {
             sources,
             workspace_metadata: w5a_metadata(),
             output_dir: "crates/runtime/src/grammars/css_l4_declaration_values".to_string(),
-            expected_files: runtime_profile_expected_files("css_l4_declaration_values")
-                .unwrap()
-                .into_iter()
-                .map(str::to_string)
-                .collect(),
+            profile_contract: request_facts_contract("css_l4_declaration_values"),
         }
     }
 
-    const W5C_CSS_PROFILES: &[&str] = &[
-        "css_l4_declaration_values",
-        "css_l4_declaration_values_extended",
-        "css_l4_stylesheet_selectors",
-        "css_l4_visual_functions",
-        "css_l4_at_rules_and_media",
-        "css_l4_vendor_and_custom_atrules",
-        "css_l4_nested_layout",
+    #[derive(Clone, Copy)]
+    struct RequestFactsProfile {
+        profile_id: &'static str,
+        labels: RuntimeOutputLabels,
+    }
+
+    const W5C_REQUEST_FACT_PROFILES: &[RequestFactsProfile] = &[
+        RequestFactsProfile {
+            profile_id: "css_l4_declaration_values",
+            labels: RuntimeOutputLabels {
+                fact_schema: "css-l4-declaration-value-facts-v1",
+                row_id: "css_l4/declaration_values/direct_to_struct/main",
+                output_plane: "css_l4_declaration_value_fact_stream",
+            },
+        },
+        RequestFactsProfile {
+            profile_id: "css_l4_declaration_values_extended",
+            labels: RuntimeOutputLabels {
+                fact_schema: "css-l4-declaration-value-extended-facts-v1",
+                row_id: "css_l4/declaration_values_extended/direct_to_struct/main",
+                output_plane: "css_l4_declaration_value_extended_fact_stream",
+            },
+        },
+        RequestFactsProfile {
+            profile_id: "css_l4_stylesheet_selectors",
+            labels: RuntimeOutputLabels {
+                fact_schema: "css-l4-stylesheet-selector-facts-v1",
+                row_id: "css_l4/stylesheet_and_selectors/direct_to_struct/main",
+                output_plane: "css_l4_stylesheet_selector_fact_stream",
+            },
+        },
+        RequestFactsProfile {
+            profile_id: "css_l4_visual_functions",
+            labels: RuntimeOutputLabels {
+                fact_schema: "css-l4-visual-function-facts-v1",
+                row_id: "css_l4/visual_functions/direct_to_struct/main",
+                output_plane: "css_l4_visual_function_fact_stream",
+            },
+        },
+        RequestFactsProfile {
+            profile_id: "css_l4_at_rules_and_media",
+            labels: RuntimeOutputLabels {
+                fact_schema: "css-l4-at-rules-media-facts-v1",
+                row_id: "css_l4/at_rules_and_media/direct_to_struct/main",
+                output_plane: "css_l4_at_rules_media_fact_stream",
+            },
+        },
+        RequestFactsProfile {
+            profile_id: "css_l4_vendor_and_custom_atrules",
+            labels: RuntimeOutputLabels {
+                fact_schema: "css-l4-vendor-custom-facts-v1",
+                row_id: "css_l4/vendor_and_custom_atrules/direct_to_struct/main",
+                output_plane: "css_l4_vendor_custom_fact_stream",
+            },
+        },
+        RequestFactsProfile {
+            profile_id: "css_l4_nested_layout",
+            labels: RuntimeOutputLabels {
+                fact_schema: "css-l4-nested-layout-facts-v1",
+                row_id: "css_l4/nested_layout/direct_to_struct/main",
+                output_plane: "css_l4_nested_layout_fact_stream",
+            },
+        },
     ];
 
     const W5C_CSS_SOURCE: &str = r#"
@@ -331,11 +405,7 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
         let mut request = w5a_css_request(source);
         request.profile_id = profile_id.to_string();
         request.output_dir = format!("crates/runtime/src/grammars/{profile_id}");
-        request.expected_files = runtime_profile_expected_files(profile_id)
-            .unwrap()
-            .into_iter()
-            .map(str::to_string)
-            .collect();
+        request.profile_contract = request_facts_contract(profile_id);
         request
     }
 
@@ -417,11 +487,7 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
             sources,
             workspace_metadata: w5a_metadata(),
             output_dir: format!("crates/runtime/src/grammars/{profile_id}"),
-            expected_files: runtime_profile_expected_files(profile_id)
-                .unwrap()
-                .into_iter()
-                .map(str::to_string)
-                .collect(),
+            profile_contract: request_facts_contract(profile_id),
         }
     }
 
@@ -485,29 +551,26 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
 
     #[test]
     fn grammar_profile_fields_are_consumed() {
-        let grammar = grammar::parse_grammar("json", JSON_GRAMMAR).unwrap();
-        let output = passes::compile(&grammar).unwrap();
-        let profile =
-            grammar_profile::select_runtime_profile(&output.backend_ir).expect("json profile");
         let emitted = emit_from_source("json", JSON_GRAMMAR).unwrap();
         let names = emitted.files().map(|(name, _)| name).collect::<Vec<_>>();
 
-        assert_eq!(profile.id(), "json");
-        assert_eq!(names, profile.generated_runtime_files());
-        assert!(grammar_profile::select_runtime_profile_for_name("css_l4").is_err());
+        assert_eq!(names, grammar_profile::COMPILED_RUNTIME_FILES);
+        assert!(matches!(
+            runtime_profile_expected_files("css_l4"),
+            Err(CodegenError::Lowering(message))
+                if message.contains("RuntimeGenerationRequest profile contract")
+        ));
     }
 
     #[test]
     fn css_l4_frontend_profiles_are_request_generated() {
-        for &profile_id in W5C_CSS_PROFILES {
-            let profile =
-                grammar_profile::select_runtime_profile_for_name(profile_id).expect("css profile");
+        for profile in W5C_REQUEST_FACT_PROFILES {
+            let profile_id = profile.profile_id;
             let emitted = emit_runtime_from_request(w5c_css_request(profile_id, W5C_CSS_SOURCE))
                 .expect("request generated css runtime");
             let names = emitted.files().map(|(name, _)| name).collect::<Vec<_>>();
 
-            assert_eq!(profile.id(), profile_id);
-            assert_eq!(names, profile.generated_runtime_files());
+            assert_eq!(names, grammar_profile::REQUEST_FACTS_RUNTIME_FILES);
             assert!(emitted
                 .get("config.rs")
                 .unwrap()
@@ -545,7 +608,8 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
 
     #[test]
     fn css_l4_generated_runtimes_reproducible_from_request() {
-        for &profile_id in W5C_CSS_PROFILES {
+        for profile in W5C_REQUEST_FACT_PROFILES {
+            let profile_id = profile.profile_id;
             let emitted = emit_runtime_from_request(w5c_full_css_request(profile_id))
                 .expect("request generated css runtime");
             let runtime_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -1001,11 +1065,7 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
             }],
             workspace_metadata: w5a_metadata(),
             output_dir: "crates/runtime/src/grammars/json".to_string(),
-            expected_files: runtime_profile_expected_files("json")
-                .unwrap()
-                .into_iter()
-                .map(str::to_string)
-                .collect(),
+            profile_contract: compiled_contract(),
         };
         let new = emit_runtime_from_request(request).unwrap();
 
@@ -1025,15 +1085,13 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
                 }],
                 workspace_metadata: w5a_metadata(),
                 output_dir: format!("crates/runtime/src/grammars/{grammar_name}"),
-                expected_files: vec!["mod.rs".to_string()],
+                profile_contract: request_facts_contract("css_l4_declaration_values"),
             };
 
             assert!(matches!(
                 emit_runtime_from_request(request),
-                Err(CodegenError::UnsupportedRuntimeConstruct {
-                    code: "BBNF-UNSUPPORTED-PROJECTION",
-                    ..
-                })
+                Err(CodegenError::Lowering(message))
+                    if message.contains("frontend closure missing import closure")
             ));
         }
     }

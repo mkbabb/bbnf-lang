@@ -166,6 +166,16 @@ fn check_float_bits(
 const JSON_SOURCES: &[&str] = &["skinny/grammars/json.bbnf"];
 const JSON_ROOTS: &[&str] = &["skinny/grammars/json.bbnf"];
 const WORKSPACE_METADATA: &[&str] = &["Cargo.toml", "skinny/Cargo.toml"];
+const COMPILED_RUNTIME_FILES: &[&str] = &[
+    "config.rs",
+    "generated.rs",
+    "host.rs",
+    "mod.rs",
+    "parser.rs",
+    "value.rs",
+    "view.rs",
+    "visitor.rs",
+];
 const JSON_TARGET: regen::RuntimeTarget = regen::RuntimeTarget {
     grammar_name: "json",
     profile: "json",
@@ -175,6 +185,10 @@ const JSON_TARGET: regen::RuntimeTarget = regen::RuntimeTarget {
     check_command: "check-json",
     source_inputs: JSON_SOURCES,
     metadata_inputs: WORKSPACE_METADATA,
+    emitter: codegen::RuntimeEmitterKind::CompiledLowering,
+    expected_files: COMPILED_RUNTIME_FILES,
+    frontend_requirements: codegen::RuntimeFrontendRequirements::none(),
+    output_labels: None,
 };
 
 fn regen_json(root: &Path) -> Result<()> {

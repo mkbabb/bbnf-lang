@@ -1,23 +1,20 @@
-use crate::grammar_profile::{GrammarProfile, RuntimeGenerationMode};
-use crate::grammar_provider::RuntimeGenerationRequest;
+use crate::grammar_provider::{RuntimeEmitterKind, RuntimeGenerationRequest, RuntimeOutputLabels};
 use crate::{grammar_profile, json_sink_direct, lower, CodegenError, EmittedSource};
 use std::collections::BTreeMap;
 use std::fmt::Write;
 
-pub(crate) fn emit_profile_only(profile: &GrammarProfile) -> Result<EmittedSource, CodegenError> {
+pub(crate) fn emit_profile_only(profile_id: &str) -> Result<EmittedSource, CodegenError> {
     Err(CodegenError::Lowering(format!(
-        "runtime profile `{}` requires RuntimeGenerationRequest after W5C-GEN",
-        profile.id()
+        "runtime profile `{profile_id}` requires RuntimeGenerationRequest after W5C-GEN",
     )))
 }
 
 pub(crate) fn emit_from_request(
-    profile: &GrammarProfile,
     request: &RuntimeGenerationRequest,
     facts: &grammar::RuntimeSourceFacts,
 ) -> Result<EmittedSource, CodegenError> {
-    match profile.mode() {
-        RuntimeGenerationMode::PassCompiled => {
+    match request.profile_contract.emitter {
+        RuntimeEmitterKind::CompiledLowering => {
             let Some(source) = request.sources.first() else {
                 return Err(CodegenError::Lowering(
                     "compiled runtime request requires a source".to_string(),
@@ -25,20 +22,14 @@ pub(crate) fn emit_from_request(
             };
             crate::emit_from_source(&request.grammar_name, &source.source)
         }
-        RuntimeGenerationMode::FrontendFacts => emit_frontend_facts(profile, request, facts),
+        RuntimeEmitterKind::RequestFacts => emit_request_facts(request, facts),
     }
 }
 
 pub(crate) fn emit_compiled(
-    profile: &GrammarProfile,
+    profile_id: &str,
     sink_only: &lower::sink_only::SinkOnlyProgram,
 ) -> Result<EmittedSource, CodegenError> {
-    if profile.mode() != RuntimeGenerationMode::PassCompiled {
-        return Err(CodegenError::Lowering(format!(
-            "runtime profile `{}` requires request frontend facts",
-            profile.id()
-        )));
-    }
     let mut generated = include_str!("json_templates/generated.rs").to_string();
     generated.push('\n');
     generated.push_str(JSON_PARSE_ONLY_GENERATED_RS.trim_start_matches('\n'));
@@ -73,87 +64,46 @@ pub(crate) fn emit_compiled(
             normalize(include_str!("json_templates/visitor.rs")),
         ),
     ]);
-    grammar_profile::validate_generated_roster(profile, files.keys().map(String::as_str))
-        .map_err(CodegenError::Lowering)?;
+    grammar_profile::validate_generated_roster(
+        profile_id,
+        grammar_profile::COMPILED_RUNTIME_FILES,
+        files.keys().map(String::as_str),
+    )
+    .map_err(CodegenError::Lowering)?;
     Ok(EmittedSource { files })
 }
 
-fn emit_frontend_facts(
-    profile: &GrammarProfile,
+fn emit_request_facts(
     request: &RuntimeGenerationRequest,
     facts: &grammar::RuntimeSourceFacts,
 ) -> Result<EmittedSource, CodegenError> {
-    let config = css_profile_config(profile.id()).ok_or_else(|| {
+    let labels = request.profile_contract.output_labels.ok_or_else(|| {
         CodegenError::Lowering(format!(
-            "runtime profile `{}` is not a frontend-facts runtime",
-            profile.id()
+            "runtime profile `{}` requires request-facts output labels",
+            request.profile_id
         ))
     })?;
     let files = BTreeMap::from([
         (
             "config.rs".to_string(),
-            render_css_config(config, request, facts),
+            render_request_facts_config(labels, request, facts),
         ),
         ("generated.rs".to_string(), normalize(CSS_GENERATED_RS)),
         ("mod.rs".to_string(), normalize(CSS_MOD_RS)),
         ("parser.rs".to_string(), normalize(CSS_PARSER_RS)),
         ("sink.rs".to_string(), normalize(CSS_SINK_RS)),
     ]);
-    grammar_profile::validate_generated_roster(profile, files.keys().map(String::as_str))
-        .map_err(CodegenError::Lowering)?;
+    grammar_profile::validate_generated_roster(
+        &request.profile_id,
+        request.profile_contract.expected_files,
+        files.keys().map(String::as_str),
+    )
+    .map_err(CodegenError::Lowering)?;
     Ok(EmittedSource { files })
 }
 
-#[derive(Clone, Copy)]
-struct CssProfileConfig {
-    fact_schema: &'static str,
-    row_id: &'static str,
-    output_plane: &'static str,
-}
-
-fn css_profile_config(profile_id: &str) -> Option<CssProfileConfig> {
-    match profile_id {
-        "css_l4_declaration_values" => Some(CssProfileConfig {
-            fact_schema: "css-l4-declaration-value-facts-v1",
-            row_id: "css_l4/declaration_values/direct_to_struct/main",
-            output_plane: "css_l4_declaration_value_fact_stream",
-        }),
-        "css_l4_declaration_values_extended" => Some(CssProfileConfig {
-            fact_schema: "css-l4-declaration-value-extended-facts-v1",
-            row_id: "css_l4/declaration_values_extended/direct_to_struct/main",
-            output_plane: "css_l4_declaration_value_extended_fact_stream",
-        }),
-        "css_l4_stylesheet_selectors" => Some(CssProfileConfig {
-            fact_schema: "css-l4-stylesheet-selector-facts-v1",
-            row_id: "css_l4/stylesheet_and_selectors/direct_to_struct/main",
-            output_plane: "css_l4_stylesheet_selector_fact_stream",
-        }),
-        "css_l4_visual_functions" => Some(CssProfileConfig {
-            fact_schema: "css-l4-visual-function-facts-v1",
-            row_id: "css_l4/visual_functions/direct_to_struct/main",
-            output_plane: "css_l4_visual_function_fact_stream",
-        }),
-        "css_l4_at_rules_and_media" => Some(CssProfileConfig {
-            fact_schema: "css-l4-at-rules-media-facts-v1",
-            row_id: "css_l4/at_rules_and_media/direct_to_struct/main",
-            output_plane: "css_l4_at_rules_media_fact_stream",
-        }),
-        "css_l4_vendor_and_custom_atrules" => Some(CssProfileConfig {
-            fact_schema: "css-l4-vendor-custom-facts-v1",
-            row_id: "css_l4/vendor_and_custom_atrules/direct_to_struct/main",
-            output_plane: "css_l4_vendor_custom_fact_stream",
-        }),
-        "css_l4_nested_layout" => Some(CssProfileConfig {
-            fact_schema: "css-l4-nested-layout-facts-v1",
-            row_id: "css_l4/nested_layout/direct_to_struct/main",
-            output_plane: "css_l4_nested_layout_fact_stream",
-        }),
-        _ => None,
-    }
-}
-
-fn render_css_config(
-    config: CssProfileConfig,
+fn render_request_facts_config(
+    labels: RuntimeOutputLabels,
     request: &RuntimeGenerationRequest,
     facts: &grammar::RuntimeSourceFacts,
 ) -> String {
@@ -175,9 +125,9 @@ fn render_css_config(
          pub(crate) const LAYOUT_DIRECTIVE_COUNT: usize = {layout_count};\n\
          pub(crate) const DISCARD_OPERATOR_COUNT: usize = {discard_count};\n",
         header = crate::GENERATED_HEADER,
-        fact_schema = config.fact_schema,
-        row_id = config.row_id,
-        output_plane = config.output_plane,
+        fact_schema = labels.fact_schema,
+        row_id = labels.row_id,
+        output_plane = labels.output_plane,
         substrate_target = policy.substrate_target.as_str(),
         retention_lifetime = policy.retention_lifetime.as_str(),
         policy_owner = policy.policy_owner.as_str(),

@@ -22,6 +22,15 @@ const CSS_L4_SOURCES: &[&str] = &[
 
 const WORKSPACE_METADATA: &[&str] = &["Cargo.toml", "skinny/Cargo.toml"];
 const CSS_L4_ROOTS: &[&str] = &["grammar/css/l4/stylesheet.bbnf"];
+const REQUEST_FACTS_RUNTIME_FILES: &[&str] = &[
+    "config.rs",
+    "generated.rs",
+    "mod.rs",
+    "parser.rs",
+    "sink.rs",
+];
+const REQUEST_FACTS_REQUIREMENTS: codegen::RuntimeFrontendRequirements =
+    codegen::RuntimeFrontendRequirements::full_request_facts();
 
 const TARGETS: &[RuntimeTarget] = &[
     RuntimeTarget {
@@ -33,6 +42,14 @@ const TARGETS: &[RuntimeTarget] = &[
         check_command: "check-css-l4-at-rules-and-media",
         source_inputs: CSS_L4_SOURCES,
         metadata_inputs: WORKSPACE_METADATA,
+        emitter: codegen::RuntimeEmitterKind::RequestFacts,
+        expected_files: REQUEST_FACTS_RUNTIME_FILES,
+        frontend_requirements: REQUEST_FACTS_REQUIREMENTS,
+        output_labels: Some(codegen::RuntimeOutputLabels {
+            fact_schema: "css-l4-at-rules-media-facts-v1",
+            row_id: "css_l4/at_rules_and_media/direct_to_struct/main",
+            output_plane: "css_l4_at_rules_media_fact_stream",
+        }),
     },
     RuntimeTarget {
         grammar_name: "css_l4",
@@ -43,6 +60,14 @@ const TARGETS: &[RuntimeTarget] = &[
         check_command: "check-css-l4-declaration-values",
         source_inputs: CSS_L4_SOURCES,
         metadata_inputs: WORKSPACE_METADATA,
+        emitter: codegen::RuntimeEmitterKind::RequestFacts,
+        expected_files: REQUEST_FACTS_RUNTIME_FILES,
+        frontend_requirements: REQUEST_FACTS_REQUIREMENTS,
+        output_labels: Some(codegen::RuntimeOutputLabels {
+            fact_schema: "css-l4-declaration-value-facts-v1",
+            row_id: "css_l4/declaration_values/direct_to_struct/main",
+            output_plane: "css_l4_declaration_value_fact_stream",
+        }),
     },
     RuntimeTarget {
         grammar_name: "css_l4",
@@ -53,6 +78,14 @@ const TARGETS: &[RuntimeTarget] = &[
         check_command: "check-css-l4-declaration-values-extended",
         source_inputs: CSS_L4_SOURCES,
         metadata_inputs: WORKSPACE_METADATA,
+        emitter: codegen::RuntimeEmitterKind::RequestFacts,
+        expected_files: REQUEST_FACTS_RUNTIME_FILES,
+        frontend_requirements: REQUEST_FACTS_REQUIREMENTS,
+        output_labels: Some(codegen::RuntimeOutputLabels {
+            fact_schema: "css-l4-declaration-value-extended-facts-v1",
+            row_id: "css_l4/declaration_values_extended/direct_to_struct/main",
+            output_plane: "css_l4_declaration_value_extended_fact_stream",
+        }),
     },
     RuntimeTarget {
         grammar_name: "css_l4",
@@ -63,6 +96,14 @@ const TARGETS: &[RuntimeTarget] = &[
         check_command: "check-css-l4-nested-layout",
         source_inputs: CSS_L4_SOURCES,
         metadata_inputs: WORKSPACE_METADATA,
+        emitter: codegen::RuntimeEmitterKind::RequestFacts,
+        expected_files: REQUEST_FACTS_RUNTIME_FILES,
+        frontend_requirements: REQUEST_FACTS_REQUIREMENTS,
+        output_labels: Some(codegen::RuntimeOutputLabels {
+            fact_schema: "css-l4-nested-layout-facts-v1",
+            row_id: "css_l4/nested_layout/direct_to_struct/main",
+            output_plane: "css_l4_nested_layout_fact_stream",
+        }),
     },
     RuntimeTarget {
         grammar_name: "css_l4",
@@ -73,6 +114,14 @@ const TARGETS: &[RuntimeTarget] = &[
         check_command: "check-css-l4-stylesheet-selectors",
         source_inputs: CSS_L4_SOURCES,
         metadata_inputs: WORKSPACE_METADATA,
+        emitter: codegen::RuntimeEmitterKind::RequestFacts,
+        expected_files: REQUEST_FACTS_RUNTIME_FILES,
+        frontend_requirements: REQUEST_FACTS_REQUIREMENTS,
+        output_labels: Some(codegen::RuntimeOutputLabels {
+            fact_schema: "css-l4-stylesheet-selector-facts-v1",
+            row_id: "css_l4/stylesheet_and_selectors/direct_to_struct/main",
+            output_plane: "css_l4_stylesheet_selector_fact_stream",
+        }),
     },
     RuntimeTarget {
         grammar_name: "css_l4",
@@ -83,6 +132,14 @@ const TARGETS: &[RuntimeTarget] = &[
         check_command: "check-css-l4-vendor-and-custom-atrules",
         source_inputs: CSS_L4_SOURCES,
         metadata_inputs: WORKSPACE_METADATA,
+        emitter: codegen::RuntimeEmitterKind::RequestFacts,
+        expected_files: REQUEST_FACTS_RUNTIME_FILES,
+        frontend_requirements: REQUEST_FACTS_REQUIREMENTS,
+        output_labels: Some(codegen::RuntimeOutputLabels {
+            fact_schema: "css-l4-vendor-custom-facts-v1",
+            row_id: "css_l4/vendor_and_custom_atrules/direct_to_struct/main",
+            output_plane: "css_l4_vendor_custom_fact_stream",
+        }),
     },
     RuntimeTarget {
         grammar_name: "css_l4",
@@ -93,6 +150,14 @@ const TARGETS: &[RuntimeTarget] = &[
         check_command: "check-css-l4-visual-functions",
         source_inputs: CSS_L4_SOURCES,
         metadata_inputs: WORKSPACE_METADATA,
+        emitter: codegen::RuntimeEmitterKind::RequestFacts,
+        expected_files: REQUEST_FACTS_RUNTIME_FILES,
+        frontend_requirements: REQUEST_FACTS_REQUIREMENTS,
+        output_labels: Some(codegen::RuntimeOutputLabels {
+            fact_schema: "css-l4-visual-function-facts-v1",
+            row_id: "css_l4/visual_functions/direct_to_struct/main",
+            output_plane: "css_l4_visual_function_fact_stream",
+        }),
     },
 ];
 

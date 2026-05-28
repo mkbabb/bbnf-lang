@@ -13,7 +13,8 @@ use bbnf_bench::report::{
     SkV13DecisionActiveCostReport, SkV13DecisionCspCascadeReport, SkV13DecisionRegexReport,
     SkV13JsonDirectReopenReport, SkV13JsonParseOnlyReport, SkV13PerGrammarPolicyReport,
     SkV13SameSubstrateUnionReport, SkV13SimdAsmProductionReport, SkV13TypedProductReport,
-    SkV8ComparatorEvidence, SkV8Telemetry, TelemetryRow,
+    SkV16CssTypedReport, SkV16DirtyGeneratedReport, SkV16NativeSimdReport,
+    SkV16PatternHRoundtripReport, SkV8ComparatorEvidence, SkV8Telemetry, TelemetryRow,
 };
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -59,6 +60,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
     let has_explicit_json_check = companion_report_runs_json_check(&args[1..]);
+    let has_skv16_report = skv16_report_flags_supplied(&args[1..]);
+    validate_skv16_report_check_results(&args[1..])?;
     if let Some(path) = w1a_non_json_report_path(&args[1..])? {
         let text = fs::read_to_string(&path)?;
         let report = NonJsonEvidenceReport::from_json_str(&text)
@@ -408,6 +411,70 @@ fn main() -> Result<(), Box<dyn Error>> {
             path.display()
         );
         drop(report);
+    }
+    if let Some(path) = skv16_css_typed_report_path(&args[1..])? {
+        if !has_explicit_json_check {
+            return Err(format!("{} requires --check-results", path.display()).into());
+        }
+        let text = fs::read_to_string(&path)?;
+        let report = SkV16CssTypedReport::from_json_str(&text)
+            .and_then(|report| report.validate_gate().map(|_| report))
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        println!(
+            "G-SK-V16-W0-CSS-TYPED-OPEN PASS open_rows={} {}",
+            report.css_open_row_count,
+            path.display()
+        );
+        drop(report);
+    }
+    if let Some(path) = skv16_dirty_generated_report_path(&args[1..])? {
+        if !has_explicit_json_check {
+            return Err(format!("{} requires --check-results", path.display()).into());
+        }
+        let text = fs::read_to_string(&path)?;
+        let report = SkV16DirtyGeneratedReport::from_json_str(&text)
+            .and_then(|report| report.validate_gate().map(|_| report))
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        println!(
+            "G-SK-V16-W0-DIRTY-GENERATED PASS generated_paths={} {}",
+            report.generated_manifest.len(),
+            path.display()
+        );
+        drop(report);
+    }
+    if let Some(path) = skv16_pattern_h_roundtrip_report_path(&args[1..])? {
+        if !has_explicit_json_check {
+            return Err(format!("{} requires --check-results", path.display()).into());
+        }
+        let text = fs::read_to_string(&path)?;
+        let report = SkV16PatternHRoundtripReport::from_json_str(&text)
+            .and_then(|report| report.validate_gate().map(|_| report))
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        println!(
+            "G-SK-V16-W0-PATTERN-H PASS count={} {}",
+            report.pattern_h_count,
+            path.display()
+        );
+        drop(report);
+    }
+    if let Some(path) = skv16_native_simd_report_path(&args[1..])? {
+        if !has_explicit_json_check {
+            return Err(format!("{} requires --check-results", path.display()).into());
+        }
+        let text = fs::read_to_string(&path)?;
+        let report = SkV16NativeSimdReport::from_json_str(&text)
+            .and_then(|report| report.validate_gate().map(|_| report))
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        println!(
+            "G-SK-V16-W0-NATIVE-SIMD PASS status={} {}",
+            report.native_simd_status,
+            path.display()
+        );
+        drop(report);
+    }
+    if has_skv16_report {
+        println!("G-SK-V16-W0-JSON-GUARD PASS delegated-to-xtask-snapshot");
+        return Ok(());
     }
 
     let criterion_root = criterion_root();
@@ -974,6 +1041,24 @@ fn skv13_simd_asm_production_report_path(
     companion_report_path(args, "--skv13-simd-asm-production-report")
 }
 
+fn skv16_css_typed_report_path(args: &[String]) -> Result<Option<PathBuf>, Box<dyn Error>> {
+    companion_report_path(args, "--skv16-css-typed-report")
+}
+
+fn skv16_dirty_generated_report_path(args: &[String]) -> Result<Option<PathBuf>, Box<dyn Error>> {
+    companion_report_path(args, "--skv16-dirty-generated-report")
+}
+
+fn skv16_pattern_h_roundtrip_report_path(
+    args: &[String],
+) -> Result<Option<PathBuf>, Box<dyn Error>> {
+    companion_report_path(args, "--skv16-pattern-h-roundtrip-report")
+}
+
+fn skv16_native_simd_report_path(args: &[String]) -> Result<Option<PathBuf>, Box<dyn Error>> {
+    companion_report_path(args, "--skv16-native-simd-report")
+}
+
 fn companion_report_path(args: &[String], flag: &str) -> Result<Option<PathBuf>, Box<dyn Error>> {
     let flag_positions = args
         .iter()
@@ -1046,12 +1131,34 @@ fn is_companion_report_flag(arg: &str) -> bool {
             | "--skv14-json-parse-only-report"
             | "--skv13-typed-product-report"
             | "--skv13-simd-asm-production-report"
+            | "--skv16-css-typed-report"
+            | "--skv16-dirty-generated-report"
+            | "--skv16-pattern-h-roundtrip-report"
+            | "--skv16-native-simd-report"
     )
 }
 
 fn companion_report_runs_json_check(args: &[String]) -> bool {
     args.iter()
         .any(|arg| matches!(arg.as_str(), "--check-results" | "--with-cost-facts"))
+}
+
+fn validate_skv16_report_check_results(args: &[String]) -> Result<(), Box<dyn Error>> {
+    if skv16_report_flags_supplied(args) && !companion_report_runs_json_check(args) {
+        return Err("SK-V16 report flags require --check-results".into());
+    }
+    Ok(())
+}
+
+fn skv16_report_flags_supplied(args: &[String]) -> bool {
+    [
+        "--skv16-css-typed-report",
+        "--skv16-dirty-generated-report",
+        "--skv16-pattern-h-roundtrip-report",
+        "--skv16-native-simd-report",
+    ]
+    .iter()
+    .any(|flag| args.iter().any(|arg| arg == flag))
 }
 
 fn lock_gates_only_requested(args: &[String]) -> Result<bool, Box<dyn Error>> {
@@ -5092,6 +5199,105 @@ mod tests {
             "--write-results".to_string(),
         ];
         assert!(skv13_css_comparator_oracle_report_path(&write).is_err());
+    }
+
+    #[test]
+    fn skv16_report_arg_allows_multiple_read_only_reports() {
+        let mixed = vec![
+            "--skv16-css-typed-report".to_string(),
+            "skv16-css.json".to_string(),
+            "--skv16-dirty-generated-report".to_string(),
+            "skv16-dirty.json".to_string(),
+            "--skv16-pattern-h-roundtrip-report".to_string(),
+            "skv16-pattern.json".to_string(),
+            "--skv16-native-simd-report".to_string(),
+            "skv16-native.json".to_string(),
+            "--check-results".to_string(),
+        ];
+        assert_eq!(
+            skv16_css_typed_report_path(&mixed).unwrap(),
+            Some(PathBuf::from("skv16-css.json"))
+        );
+        assert_eq!(
+            skv16_dirty_generated_report_path(&mixed).unwrap(),
+            Some(PathBuf::from("skv16-dirty.json"))
+        );
+        assert_eq!(
+            skv16_pattern_h_roundtrip_report_path(&mixed).unwrap(),
+            Some(PathBuf::from("skv16-pattern.json"))
+        );
+        assert_eq!(
+            skv16_native_simd_report_path(&mixed).unwrap(),
+            Some(PathBuf::from("skv16-native.json"))
+        );
+        validate_skv16_report_check_results(&mixed).unwrap();
+    }
+
+    #[test]
+    fn skv16_report_arg_rejects_write_probe_and_flag_paths() {
+        let write = vec![
+            "--skv16-css-typed-report".to_string(),
+            "skv16-css.json".to_string(),
+            "--write-results".to_string(),
+        ];
+        assert!(skv16_css_typed_report_path(&write).is_err());
+        let probe = vec![
+            "--skv16-dirty-generated-report".to_string(),
+            "skv16-dirty.json".to_string(),
+            "--include-volatile-probes".to_string(),
+        ];
+        assert!(skv16_dirty_generated_report_path(&probe).is_err());
+        let flag_path = vec![
+            "--skv16-pattern-h-roundtrip-report".to_string(),
+            "--check-results".to_string(),
+        ];
+        assert!(skv16_pattern_h_roundtrip_report_path(&flag_path).is_err());
+    }
+
+    #[test]
+    fn skv16_report_flags_require_check_results() {
+        let args = vec![
+            "--skv16-css-typed-report".to_string(),
+            "skv16-css.json".to_string(),
+        ];
+        assert!(validate_skv16_report_check_results(&args).is_err());
+        let args = vec![
+            "--skv16-css-typed-report".to_string(),
+            "skv16-css.json".to_string(),
+            "--check-results".to_string(),
+        ];
+        validate_skv16_report_check_results(&args).unwrap();
+    }
+
+    #[test]
+    fn skv16_pattern_h_roundtrip_report_arg_allows_json_check_only() {
+        let args = vec![
+            "--skv16-pattern-h-roundtrip-report".to_string(),
+            "skv16-pattern.json".to_string(),
+            "--check-results".to_string(),
+        ];
+        assert_eq!(
+            skv16_pattern_h_roundtrip_report_path(&args).unwrap(),
+            Some(PathBuf::from("skv16-pattern.json"))
+        );
+        assert!(companion_report_runs_json_check(&args));
+    }
+
+    #[test]
+    fn skv16_native_simd_report_arg_is_optional_but_validates_when_present() {
+        let absent = vec!["--check-results".to_string()];
+        assert_eq!(skv16_native_simd_report_path(&absent).unwrap(), None);
+        validate_skv16_report_check_results(&absent).unwrap();
+        let present = vec![
+            "--skv16-native-simd-report".to_string(),
+            "skv16-native.json".to_string(),
+            "--check-results".to_string(),
+        ];
+        assert_eq!(
+            skv16_native_simd_report_path(&present).unwrap(),
+            Some(PathBuf::from("skv16-native.json"))
+        );
+        validate_skv16_report_check_results(&present).unwrap();
     }
 
     #[test]

@@ -59,11 +59,15 @@ and cannot be folded into CH6 or deferred to S-P0.
 3. S-P3 synthesis-plan is converged after V1/V2 CH1-CH7 hardening. The locked
    wave program is `restart/skinny/tranches/sk-v16/SPEC.md` and dispatch
    contract is `restart/skinny/tranches/sk-v16/DISPATCH-PROMPT.md`.
-4. Next move: dispatch SK-V16 W0 baseline/report-consumer wave through the
-   SKINNY triumvirate. W0 is gate/report only: capture `SK-V16-open`, bind
+4. W0 baseline/report-consumer wave is admitted. Research, plan, and redress
+   are filed under `restart/skinny/tranches/sk-v16/research/w0/`; W0 bound the
    SK-V16 CSS typed, dirty-generated, Pattern H, and native SIMD report
-   consumers, and prove no behavior drift.
-5. Run totality passes and Pass Omega only where the loop requires them or a
+   consumers while preserving inherited dirty generated files for W1.
+5. Next move: dispatch SK-V16 W1 dirty-generated disposition through the
+   SKINNY triumvirate. W1 must choose clean regen, retirement, or intrinsic
+   block per manifested dirty generated file and close only when the gate
+   consumes owner/disposition proof.
+6. Run totality passes and Pass Omega only where the loop requires them or a
    spec-class amendment surfaces. Stop only at G-Omega.
-6. Execute W0-W11 in order, preserving the no-contrivance, no-x86,
+7. Execute W1-W11 in order, preserving the no-contrivance, no-x86,
    profile-first aarch64 SIMD discipline.

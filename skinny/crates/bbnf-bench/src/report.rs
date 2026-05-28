@@ -662,6 +662,37 @@ const SKV13_CSS_FEATURES: &[&str] = &[
     "typed_property_groups",
 ];
 
+const SKV16_CSS_TYPED_SCHEMA: &str = "sk-v16-css-typed-report-v1";
+const SKV16_DIRTY_GENERATED_SCHEMA: &str = "sk-v16-dirty-generated-report-v1";
+const SKV16_PATTERN_H_SCHEMA: &str = "sk-v16-pattern-h-roundtrip-v1";
+const SKV16_NATIVE_SIMD_SCHEMA: &str = "sk-v16-native-simd-report-v1";
+
+const SKV16_DIRTY_GENERATED_PATHS: &[&str] = &[
+    "skinny/crates/bbnf-bench/src/generated_real_typed.rs",
+    "skinny/crates/runtime/src/grammars/css_l4_at_rules_and_media/generated.rs",
+    "skinny/crates/runtime/src/grammars/css_l4_declaration_values/generated.rs",
+    "skinny/crates/runtime/src/grammars/css_l4_declaration_values_extended/generated.rs",
+    "skinny/crates/runtime/src/grammars/css_l4_nested_layout/generated.rs",
+    "skinny/crates/runtime/src/grammars/css_l4_stylesheet_selectors/generated.rs",
+    "skinny/crates/runtime/src/grammars/css_l4_vendor_and_custom_atrules/generated.rs",
+    "skinny/crates/runtime/src/grammars/css_l4_visual_functions/generated.rs",
+];
+
+const SKV16_PATTERN_H_CENSUS_COMMAND: &str =
+    "find crates/core/src/runtime -mindepth 2 -type f -name '*.rs' | wc -l";
+const SKV16_PATTERN_H_FORBIDDEN_MAXDEPTH_COMMAND: &str =
+    "find crates/core/src/runtime -mindepth 2 -maxdepth 2 -type f -name '*.rs' | wc -l";
+const SKV16_PATTERN_H_DEPTH3_PATHS: &[&str] = &[
+    "crates/core/src/runtime/google_sheets/document/canonical.rs",
+    "crates/core/src/runtime/google_sheets/document/mod.rs",
+    "crates/core/src/runtime/google_sheets/document/path_query.rs",
+    "crates/core/src/runtime/google_sheets/document/view.rs",
+];
+
+fn skv16_expected_css_row_id(feature: &str) -> String {
+    format!("css_l4/{feature}/direct_to_struct/main")
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct NonJsonEvidenceReport {
@@ -1101,6 +1132,561 @@ pub struct SkV13SimdAsmProductionReport {
     pub block_id: Option<String>,
     pub material_differential: String,
     pub redress_entry: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct SkV16CssTypedReport {
+    pub schema_version: String,
+    pub wave_id: String,
+    pub run_id: String,
+    pub host_triple: String,
+    pub feature_mask: String,
+    pub build_flags: String,
+    pub dirty_generated_state: String,
+    pub json_guard_state: String,
+    pub native_simd_status: String,
+    pub css_admitted_row_count: u32,
+    pub css_open_row_count: u32,
+    pub rows: Vec<SkV16CssTypedRow>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct SkV16CssTypedRow {
+    pub row_id: String,
+    pub css_feature_id: String,
+    pub grammar_id: String,
+    pub workload: String,
+    pub output_plane: String,
+    pub typed_api_status: String,
+    pub css_track1_typed_passes: u32,
+    pub css_cssparser_typed_passes: u32,
+    pub css_track1_typed_errors: u32,
+    pub css_cssparser_typed_errors: u32,
+    pub css_typed_summary_equal: bool,
+    pub css_provider_source: String,
+    pub provider_derivation_status: String,
+    pub typed_materialization_invariant: String,
+    pub comparator_source: String,
+    pub comparator_plane: String,
+    pub comparator_strictness: String,
+    pub legacy_source_quarantine: String,
+    pub admission_status: String,
+    pub same_wave_consumer_class: String,
+    pub track1_typed_mbps: Option<f64>,
+    pub cssparser_typed_mbps: Option<f64>,
+    pub threshold_mbps: Option<f64>,
+    pub admission_margin_mbps: Option<f64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct SkV16DirtyGeneratedReport {
+    pub schema_version: String,
+    pub wave_id: String,
+    pub run_id: String,
+    pub source_commit: String,
+    pub dirty_generated_state: String,
+    pub git_status_short: Vec<String>,
+    pub generated_manifest: Vec<SkV16DirtyGeneratedEntry>,
+    pub excluded_dirty_state: Vec<SkV16ExcludedDirtyEntry>,
+    pub broad_commands: Vec<SkV16DirtyBroadCommand>,
+    pub gate_consumer: String,
+    pub behavior_drift_status: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct SkV16DirtyGeneratedEntry {
+    pub path: String,
+    pub git_status: String,
+    pub generated_header_present: bool,
+    pub diff_numstat: String,
+    pub generated_kind: String,
+    pub owner_path: String,
+    pub generator_command: String,
+    pub check_command: String,
+    pub check_status: String,
+    pub failure_kind: String,
+    pub disposition_owner: String,
+    pub disposition: String,
+    pub disposition_proof_command: String,
+    pub replacement_or_block_proof: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct SkV16ExcludedDirtyEntry {
+    pub path: String,
+    pub git_status: String,
+    pub disposition: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct SkV16DirtyBroadCommand {
+    pub command: String,
+    pub status: String,
+    pub expected_failure: bool,
+    pub owner_path: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct SkV16PatternHRoundtripReport {
+    pub schema_version: String,
+    pub wave_id: String,
+    pub run_id: String,
+    pub census_command: String,
+    pub pattern_h_count: u32,
+    pub forbidden_maxdepth_command: String,
+    pub forbidden_maxdepth_count: u32,
+    pub depth3_required_paths: Vec<String>,
+    pub line1_provenance_count: u32,
+    pub roundtrip_command: String,
+    pub roundtrip_status: String,
+    pub generator_owner_status: String,
+    pub header_only_proof: bool,
+    pub generated_source_edits_in_w0: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct SkV16NativeSimdReport {
+    pub schema_version: String,
+    pub wave_id: String,
+    pub run_id: String,
+    pub native_simd_status: String,
+    pub native_simd_scope_reason: String,
+    pub host_arch: String,
+    pub x86_touched: bool,
+    pub avx_evidence_cited: bool,
+    pub selected_primitive: Option<String>,
+    pub s_p1_hot_leaf_artifact: Option<String>,
+    pub s_p2_survivor_artifact: Option<String>,
+    pub scalar_reference_path: Option<String>,
+    pub scalar_reference_status: Option<String>,
+    pub checkasm_command: Option<String>,
+    pub checkasm_status: Option<String>,
+    pub same_wave_consumer_path: Option<String>,
+    pub same_wave_consumer_status: Option<String>,
+    pub cold_measurement_row_ids: Option<Vec<String>>,
+    pub lock14_status: Option<String>,
+    pub lock16_status: Option<String>,
+    pub orphan_count_after: Option<u32>,
+    pub admission_evidence: Option<String>,
+}
+
+impl SkV16CssTypedReport {
+    pub fn from_json_str(text: &str) -> Result<Self, String> {
+        serde_json::from_str(text)
+            .map_err(|error| format!("invalid SK-V16 CSS typed report: {error}"))
+    }
+
+    pub fn validate_gate(&self) -> Result<(), String> {
+        if self.schema_version != SKV16_CSS_TYPED_SCHEMA {
+            return Err(format!(
+                "unsupported SK-V16 CSS typed schema {}",
+                self.schema_version
+            ));
+        }
+        if self.wave_id != "SK-V16-W0" || !self.run_id.starts_with("sk-v16-w0:") {
+            return Err(format!(
+                "invalid SK-V16 CSS typed identity {}/{}",
+                self.wave_id, self.run_id
+            ));
+        }
+        if self.host_triple.trim().is_empty()
+            || self.feature_mask.trim().is_empty()
+            || self.build_flags.trim().is_empty()
+        {
+            return Err("SK-V16 CSS typed report missing build provenance".into());
+        }
+        if self.dirty_generated_state != "inherited_and_manifested"
+            || self.json_guard_state != "json_51_guarded"
+            || self.native_simd_status != "not_in_scope"
+            || self.css_admitted_row_count != 0
+            || self.css_open_row_count != 24
+            || self.rows.len() != SKV13_CSS_FEATURES.len()
+        {
+            return Err("SK-V16 CSS typed report opening counts/status invalid".into());
+        }
+
+        let mut seen = BTreeSet::new();
+        for row in &self.rows {
+            if !seen.insert(row.css_feature_id.as_str()) {
+                return Err(format!("duplicate CSS feature {}", row.css_feature_id));
+            }
+            if !SKV13_CSS_FEATURES
+                .iter()
+                .any(|feature| *feature == row.css_feature_id)
+            {
+                return Err(format!("unexpected CSS feature {}", row.css_feature_id));
+            }
+            if row.row_id != skv16_expected_css_row_id(&row.css_feature_id)
+                || row.grammar_id != "css_l4"
+                || row.workload != "direct_to_struct"
+                || row.output_plane != "css_l4_typed_summary"
+                || row.typed_api_status != "not_built:w5"
+                || row.css_track1_typed_passes != 0
+                || row.css_cssparser_typed_passes != 0
+                || row.css_track1_typed_errors != 0
+                || row.css_cssparser_typed_errors != 0
+                || row.css_typed_summary_equal
+                || row.css_provider_source != "not_built:w4"
+                || row.provider_derivation_status != "not_built:w4"
+                || row.typed_materialization_invariant != "not_built:w5"
+                || row.comparator_source != "cssparser:not_built:w5"
+                || row.comparator_plane != "css_l4_typed_summary"
+                || row.comparator_strictness != "strict"
+                || row.legacy_source_quarantine != "diagnostic_only"
+                || row.admission_status != "OPEN"
+                || row.same_wave_consumer_class != "gate_json_skv16_css_typed_open_contract"
+            {
+                return Err(format!(
+                    "SK-V16 CSS typed row {} is not W0-open",
+                    row.row_id
+                ));
+            }
+            for (label, value) in [
+                ("output_plane", row.output_plane.as_str()),
+                ("css_provider_source", row.css_provider_source.as_str()),
+                (
+                    "provider_derivation_status",
+                    row.provider_derivation_status.as_str(),
+                ),
+                ("comparator_source", row.comparator_source.as_str()),
+                (
+                    "legacy_source_quarantine",
+                    row.legacy_source_quarantine.as_str(),
+                ),
+            ] {
+                if contains_forbidden_css_admission_source(value) {
+                    return Err(format!(
+                        "SK-V16 CSS typed row {} has forbidden {label} source {value}",
+                        row.row_id
+                    ));
+                }
+            }
+            if row.track1_typed_mbps.is_some()
+                || row.cssparser_typed_mbps.is_some()
+                || row.threshold_mbps.is_some()
+                || row.admission_margin_mbps.is_some()
+            {
+                return Err(format!(
+                    "SK-V16 CSS typed row {} has pre-W6 speed fields",
+                    row.row_id
+                ));
+            }
+        }
+        let expected = SKV13_CSS_FEATURES.iter().copied().collect::<BTreeSet<_>>();
+        if seen != expected {
+            return Err("SK-V16 CSS typed report feature set mismatch".into());
+        }
+        Ok(())
+    }
+}
+
+fn contains_forbidden_css_admission_source(value: &str) -> bool {
+    [
+        "fact_stream",
+        "full_parse",
+        "full_parse_summary",
+        "css_l4_full_parse",
+        "CSS_GENERATED_RS",
+        "runtime_generator.rs",
+        "skinny/crates/runtime/src/grammars/css_l4_",
+        "generated.rs",
+        "fnv",
+        "FNV",
+        "checksum",
+        "fact_stream_sha256",
+        "input_fnv64",
+        "stream_fnv64",
+        "lightningcss",
+        "W8R",
+        "broadcast",
+        "sk-v15-W0:broadcast-diagnostic",
+    ]
+    .iter()
+    .any(|needle| value.contains(needle))
+}
+
+impl SkV16DirtyGeneratedReport {
+    pub fn from_json_str(text: &str) -> Result<Self, String> {
+        serde_json::from_str(text)
+            .map_err(|error| format!("invalid SK-V16 dirty-generated report: {error}"))
+    }
+
+    pub fn validate_gate(&self) -> Result<(), String> {
+        if self.schema_version != SKV16_DIRTY_GENERATED_SCHEMA {
+            return Err(format!(
+                "unsupported SK-V16 dirty-generated schema {}",
+                self.schema_version
+            ));
+        }
+        if self.wave_id != "SK-V16-W0" || !self.run_id.starts_with("sk-v16-w0:") {
+            return Err("SK-V16 dirty-generated identity invalid".into());
+        }
+        if self.source_commit.trim().is_empty()
+            || self.dirty_generated_state != "inherited_and_manifested"
+            || self.gate_consumer != "cargo xtask gate-json --check-results"
+            || self.behavior_drift_status != "no_w0_behavior_drift"
+        {
+            return Err("SK-V16 dirty-generated top-level status invalid".into());
+        }
+
+        let expected = SKV16_DIRTY_GENERATED_PATHS
+            .iter()
+            .copied()
+            .collect::<BTreeSet<_>>();
+        let mut actual = BTreeSet::new();
+        for entry in &self.generated_manifest {
+            actual.insert(entry.path.as_str());
+            if !expected.contains(entry.path.as_str()) {
+                return Err(format!(
+                    "SK-V16 dirty-generated unexpected generated path {}",
+                    entry.path
+                ));
+            }
+            if entry.git_status != "M"
+                || !entry.generated_header_present
+                || entry.diff_numstat.trim().is_empty()
+                || entry.generated_kind.trim().is_empty()
+                || entry.owner_path.trim().is_empty()
+                || entry.generator_command.trim().is_empty()
+                || entry.check_command.trim().is_empty()
+                || entry.check_status != "fail:expected_stale_generated"
+                || entry.failure_kind != "generated_byte_mismatch"
+                || entry.disposition_owner != "SK-V16-W1"
+                || entry.disposition != "w1_pending"
+                || entry.disposition_proof_command.trim().is_empty()
+                || entry.replacement_or_block_proof != "routed_to_w1"
+            {
+                return Err(format!(
+                    "SK-V16 dirty-generated entry {} status invalid",
+                    entry.path
+                ));
+            }
+        }
+        if actual != expected {
+            return Err(format!(
+                "SK-V16 dirty-generated manifest {actual:?} != {expected:?}"
+            ));
+        }
+        for excluded in &self.excluded_dirty_state {
+            if expected.contains(excluded.path.as_str()) {
+                return Err(format!(
+                    "SK-V16 dirty-generated path {} cannot be excluded",
+                    excluded.path
+                ));
+            }
+            if excluded.git_status.trim().is_empty()
+                || excluded.disposition != "preserve_unmodified_unrelated"
+            {
+                return Err(format!(
+                    "SK-V16 excluded dirty path {} disposition invalid",
+                    excluded.path
+                ));
+            }
+        }
+        for required in [
+            "cargo xtask check-real-typed",
+            "cargo xtask check-css-l4-at-rules-and-media",
+            "cargo xtask check-css-l4-declaration-values",
+            "cargo xtask check-css-l4-declaration-values-extended",
+            "cargo xtask check-css-l4-nested-layout",
+            "cargo xtask check-css-l4-stylesheet-selectors",
+            "cargo xtask check-css-l4-vendor-and-custom-atrules",
+            "cargo xtask check-css-l4-visual-functions",
+            "cargo test -p codegen css_l4_generated_runtimes_reproducible_from_request",
+        ] {
+            let Some(command) = self
+                .broad_commands
+                .iter()
+                .find(|command| command.command.contains(required))
+            else {
+                return Err(format!(
+                    "SK-V16 dirty-generated missing broad command {required}"
+                ));
+            };
+            if command.status != "fail:expected_stale_generated"
+                || !command.expected_failure
+                || command.owner_path.trim().is_empty()
+            {
+                return Err(format!(
+                    "SK-V16 dirty-generated broad command {} status invalid",
+                    command.command
+                ));
+            }
+        }
+        Ok(())
+    }
+}
+
+impl SkV16PatternHRoundtripReport {
+    pub fn from_json_str(text: &str) -> Result<Self, String> {
+        serde_json::from_str(text)
+            .map_err(|error| format!("invalid SK-V16 Pattern H report: {error}"))
+    }
+
+    pub fn validate_gate(&self) -> Result<(), String> {
+        if self.schema_version != SKV16_PATTERN_H_SCHEMA {
+            return Err(format!(
+                "unsupported SK-V16 Pattern H schema {}",
+                self.schema_version
+            ));
+        }
+        if self.wave_id != "SK-V16-W0" || !self.run_id.starts_with("sk-v16-w0:") {
+            return Err("SK-V16 Pattern H identity invalid".into());
+        }
+        if self.census_command != SKV16_PATTERN_H_CENSUS_COMMAND
+            || self.pattern_h_count != 67
+            || self.forbidden_maxdepth_command != SKV16_PATTERN_H_FORBIDDEN_MAXDEPTH_COMMAND
+            || self.forbidden_maxdepth_count != 63
+            || self.line1_provenance_count != 67
+            || self.roundtrip_command != "cargo xtask check-runtime"
+            || self.roundtrip_status != "pass"
+            || self.generator_owner_status != "roundtrip_proven"
+            || self.header_only_proof
+            || self.generated_source_edits_in_w0
+        {
+            return Err("SK-V16 Pattern H census/roundtrip status invalid".into());
+        }
+        let expected = SKV16_PATTERN_H_DEPTH3_PATHS
+            .iter()
+            .copied()
+            .collect::<BTreeSet<_>>();
+        let actual = self
+            .depth3_required_paths
+            .iter()
+            .map(String::as_str)
+            .collect::<BTreeSet<_>>();
+        if actual != expected {
+            return Err(format!(
+                "SK-V16 Pattern H depth-3 paths {actual:?} != {expected:?}"
+            ));
+        }
+        Ok(())
+    }
+}
+
+impl SkV16NativeSimdReport {
+    pub fn from_json_str(text: &str) -> Result<Self, String> {
+        serde_json::from_str(text)
+            .map_err(|error| format!("invalid SK-V16 native SIMD report: {error}"))
+    }
+
+    pub fn validate_gate(&self) -> Result<(), String> {
+        if self.schema_version != SKV16_NATIVE_SIMD_SCHEMA {
+            return Err(format!(
+                "unsupported SK-V16 native SIMD schema {}",
+                self.schema_version
+            ));
+        }
+        if self.wave_id == "SK-V16-W10-or-scoped-wave"
+            || self.wave_id.trim().is_empty()
+            || !self.wave_id.starts_with("SK-V16-W")
+            || !self.run_id.starts_with("sk-v16-")
+        {
+            return Err("SK-V16 native SIMD identity invalid".into());
+        }
+        if self.host_arch != "aarch64" || self.x86_touched || self.avx_evidence_cited {
+            return Err("SK-V16 native SIMD host/evidence status invalid".into());
+        }
+        if let Some(evidence) = &self.admission_evidence {
+            if contains_x86_or_avx(evidence) {
+                return Err("SK-V16 native SIMD cites x86/AVX admission evidence".into());
+            }
+        }
+        match self.native_simd_status.as_str() {
+            "not_in_scope" => {
+                if self.wave_id != "SK-V16-W0"
+                    || !self.native_simd_scope_reason.starts_with("W0 ")
+                    || self.selected_primitive.is_some()
+                    || self.s_p1_hot_leaf_artifact.is_some()
+                    || self.s_p2_survivor_artifact.is_some()
+                    || self.scalar_reference_path.is_some()
+                    || self.scalar_reference_status.is_some()
+                    || self.checkasm_command.is_some()
+                    || self.checkasm_status.is_some()
+                    || self.same_wave_consumer_path.is_some()
+                    || self.same_wave_consumer_status.is_some()
+                    || self.cold_measurement_row_ids.is_some()
+                    || self.lock14_status.is_some()
+                    || self.lock16_status.is_some()
+                    || self.orphan_count_after.is_some()
+                {
+                    return Err("SK-V16 native SIMD W0 non-scope fields invalid".into());
+                }
+            }
+            "profile_first_scalar_ref_checkasm_same_wave" => {
+                let required = [
+                    self.selected_primitive.as_deref(),
+                    self.s_p1_hot_leaf_artifact.as_deref(),
+                    self.s_p2_survivor_artifact.as_deref(),
+                    self.scalar_reference_path.as_deref(),
+                    self.checkasm_command.as_deref(),
+                    self.same_wave_consumer_path.as_deref(),
+                    self.lock14_status.as_deref(),
+                    self.lock16_status.as_deref(),
+                ];
+                if required
+                    .iter()
+                    .any(|value| value.is_none_or(|value| value.trim().is_empty()))
+                    || self.scalar_reference_status.as_deref() != Some("pass")
+                    || self.checkasm_status.as_deref() != Some("pass")
+                    || self.same_wave_consumer_status.as_deref() != Some("measured")
+                    || self.lock14_status.as_deref() != Some("pass")
+                    || self.lock16_status.as_deref() != Some("pass")
+                    || self.orphan_count_after != Some(0)
+                    || self
+                        .cold_measurement_row_ids
+                        .as_ref()
+                        .is_none_or(Vec::is_empty)
+                {
+                    return Err("SK-V16 native SIMD scoped tuple invalid".into());
+                }
+                for value in [
+                    self.selected_primitive.as_deref(),
+                    self.s_p1_hot_leaf_artifact.as_deref(),
+                    self.s_p2_survivor_artifact.as_deref(),
+                    self.scalar_reference_path.as_deref(),
+                    self.checkasm_command.as_deref(),
+                    self.same_wave_consumer_path.as_deref(),
+                    self.same_wave_consumer_status.as_deref(),
+                    self.admission_evidence.as_deref(),
+                ]
+                .into_iter()
+                .flatten()
+                {
+                    if contains_x86_or_avx(value) || value == "wired_and_measured" {
+                        return Err("SK-V16 native SIMD scoped evidence invalid".into());
+                    }
+                }
+            }
+            other => return Err(format!("unsupported SK-V16 native SIMD status {other}")),
+        }
+        Ok(())
+    }
+}
+
+fn contains_x86_or_avx(value: &str) -> bool {
+    [
+        "x86",
+        "x86_64",
+        "AVX",
+        "avx",
+        "PEXT",
+        "pdep",
+        "target_feature",
+        "_mm",
+        "ymm",
+        "zmm",
+    ]
+    .iter()
+    .any(|needle| value.contains(needle))
 }
 
 impl SkV13DecisionActiveCostReport {
@@ -8855,6 +9441,242 @@ mod tests {
         bytes as f64 * 8_000.0 / mbps
     }
 
+    fn skv16_css_typed_report() -> SkV16CssTypedReport {
+        SkV16CssTypedReport {
+            schema_version: SKV16_CSS_TYPED_SCHEMA.into(),
+            wave_id: "SK-V16-W0".into(),
+            run_id: "sk-v16-w0:css-typed-open".into(),
+            host_triple: "aarch64-apple-darwin;arch=aarch64;cpu=Apple M5 Max".into(),
+            feature_mask: "target_cpu=native".into(),
+            build_flags: "RUSTFLAGS=-C target-cpu=native".into(),
+            dirty_generated_state: "inherited_and_manifested".into(),
+            json_guard_state: "json_51_guarded".into(),
+            native_simd_status: "not_in_scope".into(),
+            css_admitted_row_count: 0,
+            css_open_row_count: 24,
+            rows: SKV13_CSS_FEATURES
+                .iter()
+                .map(|feature| SkV16CssTypedRow {
+                    row_id: skv16_expected_css_row_id(feature),
+                    css_feature_id: (*feature).into(),
+                    grammar_id: "css_l4".into(),
+                    workload: "direct_to_struct".into(),
+                    output_plane: "css_l4_typed_summary".into(),
+                    typed_api_status: "not_built:w5".into(),
+                    css_track1_typed_passes: 0,
+                    css_cssparser_typed_passes: 0,
+                    css_track1_typed_errors: 0,
+                    css_cssparser_typed_errors: 0,
+                    css_typed_summary_equal: false,
+                    css_provider_source: "not_built:w4".into(),
+                    provider_derivation_status: "not_built:w4".into(),
+                    typed_materialization_invariant: "not_built:w5".into(),
+                    comparator_source: "cssparser:not_built:w5".into(),
+                    comparator_plane: "css_l4_typed_summary".into(),
+                    comparator_strictness: "strict".into(),
+                    legacy_source_quarantine: "diagnostic_only".into(),
+                    admission_status: "OPEN".into(),
+                    same_wave_consumer_class: "gate_json_skv16_css_typed_open_contract".into(),
+                    track1_typed_mbps: None,
+                    cssparser_typed_mbps: None,
+                    threshold_mbps: None,
+                    admission_margin_mbps: None,
+                })
+                .collect(),
+        }
+    }
+
+    fn skv16_css_reject(mut mutate: impl FnMut(&mut SkV16CssTypedReport)) {
+        let mut report = skv16_css_typed_report();
+        mutate(&mut report);
+        assert!(report.validate_gate().is_err());
+    }
+
+    fn skv16_dirty_generated_report() -> SkV16DirtyGeneratedReport {
+        let generated_manifest = SKV16_DIRTY_GENERATED_PATHS
+            .iter()
+            .map(|path| SkV16DirtyGeneratedEntry {
+                path: (*path).into(),
+                git_status: "M".into(),
+                generated_header_present: true,
+                diff_numstat: "+7/-7".into(),
+                generated_kind: if path.contains("generated_real_typed") {
+                    "real_typed".into()
+                } else {
+                    "css_l4_runtime".into()
+                },
+                owner_path: if path.contains("generated_real_typed") {
+                    "skinny/xtask/src/main.rs::regen_real_typed/check_real_typed".into()
+                } else {
+                    "skinny/xtask/src/regen_css.rs".into()
+                },
+                generator_command: if path.contains("generated_real_typed") {
+                    "cargo xtask regen-real-typed".into()
+                } else {
+                    "cargo xtask regen-css".into()
+                },
+                check_command: if path.contains("generated_real_typed") {
+                    "cargo xtask check-real-typed".into()
+                } else {
+                    "cargo xtask check-css-l4-declaration-values".into()
+                },
+                check_status: "fail:expected_stale_generated".into(),
+                failure_kind: "generated_byte_mismatch".into(),
+                disposition_owner: "SK-V16-W1".into(),
+                disposition: "w1_pending".into(),
+                disposition_proof_command:
+                    "cargo xtask gate-json --check-results --skv16-dirty-generated-report".into(),
+                replacement_or_block_proof: "routed_to_w1".into(),
+            })
+            .collect();
+        let broad_commands = [
+            "cargo xtask check-real-typed",
+            "cargo xtask check-css-l4-at-rules-and-media",
+            "cargo xtask check-css-l4-declaration-values",
+            "cargo xtask check-css-l4-declaration-values-extended",
+            "cargo xtask check-css-l4-nested-layout",
+            "cargo xtask check-css-l4-stylesheet-selectors",
+            "cargo xtask check-css-l4-vendor-and-custom-atrules",
+            "cargo xtask check-css-l4-visual-functions",
+            "cargo test -p codegen css_l4_generated_runtimes_reproducible_from_request",
+        ]
+        .into_iter()
+        .map(|command| SkV16DirtyBroadCommand {
+            command: command.into(),
+            status: "fail:expected_stale_generated".into(),
+            expected_failure: true,
+            owner_path: "SK-V16-W1".into(),
+        })
+        .collect();
+        SkV16DirtyGeneratedReport {
+            schema_version: SKV16_DIRTY_GENERATED_SCHEMA.into(),
+            wave_id: "SK-V16-W0".into(),
+            run_id: "sk-v16-w0:dirty-generated-inherited".into(),
+            source_commit: "0b69bca31".into(),
+            dirty_generated_state: "inherited_and_manifested".into(),
+            git_status_short: SKV16_DIRTY_GENERATED_PATHS
+                .iter()
+                .map(|path| format!(" M {path}"))
+                .collect(),
+            generated_manifest,
+            excluded_dirty_state: vec![
+                SkV16ExcludedDirtyEntry {
+                    path: "docs/precepts".into(),
+                    git_status: "M".into(),
+                    disposition: "preserve_unmodified_unrelated".into(),
+                },
+                SkV16ExcludedDirtyEntry {
+                    path: "restart/skinny/tranches/sk-v13/research/w2/skv13-W2-css-l4-stylesheet-selectors.json".into(),
+                    git_status: "M".into(),
+                    disposition: "preserve_unmodified_unrelated".into(),
+                },
+            ],
+            broad_commands,
+            gate_consumer: "cargo xtask gate-json --check-results".into(),
+            behavior_drift_status: "no_w0_behavior_drift".into(),
+        }
+    }
+
+    fn skv16_dirty_reject(mut mutate: impl FnMut(&mut SkV16DirtyGeneratedReport)) {
+        let mut report = skv16_dirty_generated_report();
+        mutate(&mut report);
+        assert!(report.validate_gate().is_err());
+    }
+
+    fn skv16_pattern_h_report() -> SkV16PatternHRoundtripReport {
+        SkV16PatternHRoundtripReport {
+            schema_version: SKV16_PATTERN_H_SCHEMA.into(),
+            wave_id: "SK-V16-W0".into(),
+            run_id: "sk-v16-w0:pattern-h-roundtrip".into(),
+            census_command: SKV16_PATTERN_H_CENSUS_COMMAND.into(),
+            pattern_h_count: 67,
+            forbidden_maxdepth_command: SKV16_PATTERN_H_FORBIDDEN_MAXDEPTH_COMMAND.into(),
+            forbidden_maxdepth_count: 63,
+            depth3_required_paths: SKV16_PATTERN_H_DEPTH3_PATHS
+                .iter()
+                .map(|path| (*path).into())
+                .collect(),
+            line1_provenance_count: 67,
+            roundtrip_command: "cargo xtask check-runtime".into(),
+            roundtrip_status: "pass".into(),
+            generator_owner_status: "roundtrip_proven".into(),
+            header_only_proof: false,
+            generated_source_edits_in_w0: false,
+        }
+    }
+
+    fn skv16_pattern_reject(mut mutate: impl FnMut(&mut SkV16PatternHRoundtripReport)) {
+        let mut report = skv16_pattern_h_report();
+        mutate(&mut report);
+        assert!(report.validate_gate().is_err());
+    }
+
+    fn skv16_native_simd_report() -> SkV16NativeSimdReport {
+        SkV16NativeSimdReport {
+            schema_version: SKV16_NATIVE_SIMD_SCHEMA.into(),
+            wave_id: "SK-V16-W0".into(),
+            run_id: "sk-v16-w0:native-not-in-scope".into(),
+            native_simd_status: "not_in_scope".into(),
+            native_simd_scope_reason: "W0 is report/gate/no-behavior baseline only".into(),
+            host_arch: "aarch64".into(),
+            x86_touched: false,
+            avx_evidence_cited: false,
+            selected_primitive: None,
+            s_p1_hot_leaf_artifact: None,
+            s_p2_survivor_artifact: None,
+            scalar_reference_path: None,
+            scalar_reference_status: None,
+            checkasm_command: None,
+            checkasm_status: None,
+            same_wave_consumer_path: None,
+            same_wave_consumer_status: None,
+            cold_measurement_row_ids: None,
+            lock14_status: None,
+            lock16_status: None,
+            orphan_count_after: None,
+            admission_evidence: None,
+        }
+    }
+
+    fn skv16_native_scoped_report() -> SkV16NativeSimdReport {
+        SkV16NativeSimdReport {
+            schema_version: SKV16_NATIVE_SIMD_SCHEMA.into(),
+            wave_id: "SK-V16-W10".into(),
+            run_id: "sk-v16-w10:native-scoped".into(),
+            native_simd_status: "profile_first_scalar_ref_checkasm_same_wave".into(),
+            native_simd_scope_reason: "scoped native primitive proof".into(),
+            host_arch: "aarch64".into(),
+            x86_touched: false,
+            avx_evidence_cited: false,
+            selected_primitive: Some("bbnf_simd::find_ascii_set_member64".into()),
+            s_p1_hot_leaf_artifact: Some(
+                "restart/skinny/tranches/sk-v16/research/p1/hot-leaf.json".into(),
+            ),
+            s_p2_survivor_artifact: Some(
+                "restart/skinny/tranches/sk-v16/research/p2/survivor.json".into(),
+            ),
+            scalar_reference_path: Some("skinny/crates/bbnf-simd/src/scalar.rs".into()),
+            scalar_reference_status: Some("pass".into()),
+            checkasm_command: Some("BBNF_SIMD_STRICT=1 cargo xtask primitive-checkasm".into()),
+            checkasm_status: Some("pass".into()),
+            same_wave_consumer_path: Some("skinny/crates/bbnf-bench/src/nonjson_css_l4.rs".into()),
+            same_wave_consumer_status: Some("measured".into()),
+            cold_measurement_row_ids: Some(vec![
+                "css_l4/declaration_values/direct_to_struct/main".into()
+            ]),
+            lock14_status: Some("pass".into()),
+            lock16_status: Some("pass".into()),
+            orphan_count_after: Some(0),
+            admission_evidence: Some("aarch64 same-wave measurement".into()),
+        }
+    }
+
+    fn skv16_native_reject(mut mutate: impl FnMut(&mut SkV16NativeSimdReport)) {
+        let mut report = skv16_native_simd_report();
+        mutate(&mut report);
+        assert!(report.validate_gate().is_err());
+    }
+
     fn w0_evidence(row_id: &str) -> Vec<SkV8ComparatorEvidence> {
         let (corpus, workload) = parse_row_id(row_id).unwrap();
         let sonic_bench = match workload {
@@ -9489,6 +10311,272 @@ mod tests {
         let mut value = serde_json::to_value(skv13_css_comparator_report()).unwrap();
         value["rows"][0]["producer_only_field"] = serde_json::json!("not consumed");
         assert!(SkV13CssComparatorOracleReport::from_json_str(&value.to_string()).is_err());
+    }
+
+    #[test]
+    fn skv16_css_typed_report_accepts_open_non_admission_surface() {
+        assert!(skv16_css_typed_report().validate_gate().is_ok());
+    }
+
+    #[test]
+    fn skv16_css_typed_report_rejects_unknown_producer_fields() {
+        let mut value = serde_json::to_value(skv16_css_typed_report()).unwrap();
+        value["rows"][0]["producer_only_field"] = serde_json::json!("not consumed");
+        assert!(SkV16CssTypedReport::from_json_str(&value.to_string()).is_err());
+    }
+
+    #[test]
+    fn skv16_css_typed_report_rejects_missing_required_fields() {
+        let mut value = serde_json::to_value(skv16_css_typed_report()).unwrap();
+        value.as_object_mut().unwrap().remove("native_simd_status");
+        assert!(SkV16CssTypedReport::from_json_str(&value.to_string()).is_err());
+    }
+
+    #[test]
+    fn skv16_css_typed_report_rejects_non_24_or_duplicate_rows() {
+        skv16_css_reject(|report| {
+            report.rows.pop();
+            report.css_open_row_count = 23;
+        });
+        skv16_css_reject(|report| {
+            report.rows[1].css_feature_id = report.rows[0].css_feature_id.clone()
+        });
+    }
+
+    #[test]
+    fn skv16_css_typed_report_rejects_false_equality_or_bad_counts() {
+        skv16_css_reject(|report| report.rows[0].css_typed_summary_equal = true);
+        skv16_css_reject(|report| report.rows[0].css_track1_typed_passes = 1);
+        skv16_css_reject(|report| report.rows[0].css_cssparser_typed_errors = 1);
+    }
+
+    #[test]
+    fn skv16_css_typed_report_rejects_fact_stream_or_full_parse_plane() {
+        skv16_css_reject(|report| report.rows[0].output_plane = "fact_stream".into());
+        skv16_css_reject(|report| report.rows[0].output_plane = "full_parse_summary".into());
+    }
+
+    #[test]
+    fn skv16_css_typed_report_rejects_css_generated_rs_provider() {
+        skv16_css_reject(|report| report.rows[0].css_provider_source = "CSS_GENERATED_RS".into());
+        skv16_css_reject(|report| {
+            report.rows[0].css_provider_source =
+                "skinny/crates/runtime/src/grammars/css_l4_declaration_values/generated.rs".into()
+        });
+    }
+
+    #[test]
+    fn skv16_css_typed_report_rejects_fnv_or_checksum_only_equality() {
+        skv16_css_reject(|report| report.rows[0].legacy_source_quarantine = "input_fnv64".into());
+        skv16_css_reject(|report| report.rows[0].legacy_source_quarantine = "checksum_only".into());
+    }
+
+    #[test]
+    fn skv16_css_typed_report_rejects_lightningcss_or_w8r_broadcast_comparator() {
+        skv16_css_reject(|report| report.rows[0].comparator_source = "lightningcss".into());
+        skv16_css_reject(|report| {
+            report.rows[0].legacy_source_quarantine = "SK-V14-W8R-broadcast".into()
+        });
+    }
+
+    #[test]
+    fn skv16_css_typed_report_rejects_pre_w6_speed_fields() {
+        skv16_css_reject(|report| report.rows[0].track1_typed_mbps = Some(1.0));
+        skv16_css_reject(|report| report.rows[0].threshold_mbps = Some(2.0));
+    }
+
+    #[test]
+    fn skv16_dirty_generated_report_accepts_exact_manifest_with_routed_failures() {
+        assert!(skv16_dirty_generated_report().validate_gate().is_ok());
+    }
+
+    #[test]
+    fn skv16_dirty_generated_report_accepts_inherited_manifest_without_w0_behavior_drift() {
+        let report = skv16_dirty_generated_report();
+        assert_eq!(report.dirty_generated_state, "inherited_and_manifested");
+        assert_eq!(report.behavior_drift_status, "no_w0_behavior_drift");
+        assert!(report.validate_gate().is_ok());
+    }
+
+    #[test]
+    fn skv16_dirty_generated_report_rejects_missing_manifest_path() {
+        skv16_dirty_reject(|report| {
+            report.generated_manifest.retain(|entry| {
+                entry.path != "skinny/crates/bbnf-bench/src/generated_real_typed.rs"
+            })
+        });
+    }
+
+    #[test]
+    fn skv16_dirty_generated_report_rejects_unrelated_dirty_as_generated() {
+        skv16_dirty_reject(|report| {
+            report.generated_manifest[0].path = "docs/precepts".into();
+        });
+    }
+
+    #[test]
+    fn skv16_dirty_generated_report_rejects_unknown_producer_fields() {
+        let mut value = serde_json::to_value(skv16_dirty_generated_report()).unwrap();
+        value["producer_only_rejection_proof"] = serde_json::json!("self-attesting");
+        assert!(SkV16DirtyGeneratedReport::from_json_str(&value.to_string()).is_err());
+    }
+
+    #[test]
+    fn skv16_dirty_generated_report_rejects_dirty_unrouted_or_accepted_state() {
+        skv16_dirty_reject(|report| report.dirty_generated_state = "dirty_unrouted".into());
+        skv16_dirty_reject(|report| report.dirty_generated_state = "accepted".into());
+    }
+
+    #[test]
+    fn skv16_dirty_generated_report_rejects_missing_broad_command_or_owner() {
+        skv16_dirty_reject(|report| report.broad_commands.pop().map(drop).unwrap());
+        skv16_dirty_reject(|report| report.broad_commands[0].owner_path.clear());
+    }
+
+    #[test]
+    fn skv16_dirty_generated_report_rejects_self_attesting_proof_field() {
+        let mut value = serde_json::to_value(skv16_dirty_generated_report()).unwrap();
+        value["generated_manifest"][0]["producer_only_rejection_proof"] =
+            serde_json::json!("not consumed");
+        assert!(SkV16DirtyGeneratedReport::from_json_str(&value.to_string()).is_err());
+    }
+
+    #[test]
+    fn skv16_dirty_generated_report_rejects_unmanifested_runtime_codegen_diff() {
+        skv16_dirty_reject(|report| {
+            report.behavior_drift_status = "unmanifested_runtime_codegen_diff".into()
+        });
+    }
+
+    #[test]
+    fn skv16_pattern_h_roundtrip_report_accepts_exact_67_generator_roundtrip() {
+        assert!(skv16_pattern_h_report().validate_gate().is_ok());
+    }
+
+    #[test]
+    fn skv16_pattern_h_roundtrip_report_rejects_unknown_producer_fields() {
+        let mut value = serde_json::to_value(skv16_pattern_h_report()).unwrap();
+        value["producer_only_field"] = serde_json::json!("not consumed");
+        assert!(SkV16PatternHRoundtripReport::from_json_str(&value.to_string()).is_err());
+    }
+
+    #[test]
+    fn skv16_pattern_h_roundtrip_report_rejects_wrong_census_command() {
+        skv16_pattern_reject(|report| {
+            report.census_command = "find crates/core/src/runtime -type f".into()
+        });
+    }
+
+    #[test]
+    fn skv16_pattern_h_roundtrip_report_rejects_maxdepth_trap() {
+        skv16_pattern_reject(|report| {
+            report.census_command = SKV16_PATTERN_H_FORBIDDEN_MAXDEPTH_COMMAND.into()
+        });
+        skv16_pattern_reject(|report| report.forbidden_maxdepth_count = 67);
+    }
+
+    #[test]
+    fn skv16_pattern_h_roundtrip_report_rejects_missing_depth3_paths() {
+        skv16_pattern_reject(|report| report.depth3_required_paths.pop().map(drop).unwrap());
+    }
+
+    #[test]
+    fn skv16_pattern_h_roundtrip_report_rejects_header_only_without_roundtrip() {
+        skv16_pattern_reject(|report| report.header_only_proof = true);
+        skv16_pattern_reject(|report| report.generator_owner_status = "header_only".into());
+    }
+
+    #[test]
+    fn skv16_pattern_h_roundtrip_report_rejects_roundtrip_not_run_or_failed() {
+        skv16_pattern_reject(|report| {
+            report.roundtrip_status = "not_run_in_readonly_research".into()
+        });
+        skv16_pattern_reject(|report| report.roundtrip_status = "fail".into());
+    }
+
+    #[test]
+    fn skv16_pattern_h_roundtrip_report_rejects_generated_source_edits_in_w0() {
+        skv16_pattern_reject(|report| report.generated_source_edits_in_w0 = true);
+    }
+
+    #[test]
+    fn skv16_native_simd_report_accepts_w0_not_in_scope() {
+        assert!(skv16_native_simd_report().validate_gate().is_ok());
+    }
+
+    #[test]
+    fn skv16_w0_baseline_requires_native_simd_not_in_scope() {
+        skv16_native_reject(|report| {
+            report.native_simd_status = "profile_first_scalar_ref_checkasm_same_wave".into()
+        });
+    }
+
+    #[test]
+    fn skv16_native_simd_report_rejects_unknown_producer_fields() {
+        let mut value = serde_json::to_value(skv16_native_simd_report()).unwrap();
+        value["producer_only_field"] = serde_json::json!("not consumed");
+        assert!(SkV16NativeSimdReport::from_json_str(&value.to_string()).is_err());
+    }
+
+    #[test]
+    fn skv16_native_simd_report_rejects_x86_or_avx_evidence() {
+        skv16_native_reject(|report| report.x86_touched = true);
+        skv16_native_reject(|report| report.avx_evidence_cited = true);
+    }
+
+    #[test]
+    fn skv16_native_simd_report_rejects_wildcard_wave_id_or_wired_status() {
+        let mut report = skv16_native_scoped_report();
+        report.wave_id = "SK-V16-W10-or-scoped-wave".into();
+        assert!(report.validate_gate().is_err());
+        let mut report = skv16_native_scoped_report();
+        report.same_wave_consumer_status = Some("wired_and_measured".into());
+        assert!(report.validate_gate().is_err());
+    }
+
+    #[test]
+    fn skv16_native_simd_report_rejects_missing_scalar_reference() {
+        let mut report = skv16_native_scoped_report();
+        report.scalar_reference_path = None;
+        assert!(report.validate_gate().is_err());
+    }
+
+    #[test]
+    fn skv16_native_simd_report_rejects_missing_strict_checkasm() {
+        let mut report = skv16_native_scoped_report();
+        report.checkasm_status = None;
+        assert!(report.validate_gate().is_err());
+    }
+
+    #[test]
+    fn skv16_native_simd_report_rejects_missing_same_wave_consumer() {
+        let mut report = skv16_native_scoped_report();
+        report.same_wave_consumer_path = None;
+        assert!(report.validate_gate().is_err());
+    }
+
+    #[test]
+    fn skv16_native_simd_report_rejects_missing_cold_measurement() {
+        let mut report = skv16_native_scoped_report();
+        report.cold_measurement_row_ids = Some(Vec::new());
+        assert!(report.validate_gate().is_err());
+    }
+
+    #[test]
+    fn skv16_native_simd_report_rejects_orphan_kernel() {
+        let mut report = skv16_native_scoped_report();
+        report.orphan_count_after = Some(1);
+        assert!(report.validate_gate().is_err());
+    }
+
+    #[test]
+    fn skv16_native_simd_report_rejects_x86_admission_evidence_but_allows_rejection_policy_text() {
+        let mut report = skv16_native_simd_report();
+        report.native_simd_scope_reason = "W0 policy rejects x86 and AVX admission evidence".into();
+        assert!(report.validate_gate().is_ok());
+        let mut report = skv16_native_scoped_report();
+        report.admission_evidence = Some("x86_64 AVX side evidence".into());
+        assert!(report.validate_gate().is_err());
     }
 
     #[test]

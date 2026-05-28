@@ -1,0 +1,44 @@
+{
+  "schema_version": "sk-v16-dirty-generated-report-v1",
+  "wave_id": "SK-V16-W0",
+  "run_id": "sk-v16-w0:dirty-generated-inherited",
+  "source_commit": "0b69bca31",
+  "dirty_generated_state": "inherited_and_manifested",
+  "git_status_short": [
+    " M skinny/crates/bbnf-bench/src/generated_real_typed.rs",
+    " M skinny/crates/runtime/src/grammars/css_l4_at_rules_and_media/generated.rs",
+    " M skinny/crates/runtime/src/grammars/css_l4_declaration_values/generated.rs",
+    " M skinny/crates/runtime/src/grammars/css_l4_declaration_values_extended/generated.rs",
+    " M skinny/crates/runtime/src/grammars/css_l4_nested_layout/generated.rs",
+    " M skinny/crates/runtime/src/grammars/css_l4_stylesheet_selectors/generated.rs",
+    " M skinny/crates/runtime/src/grammars/css_l4_vendor_and_custom_atrules/generated.rs",
+    " M skinny/crates/runtime/src/grammars/css_l4_visual_functions/generated.rs"
+  ],
+  "generated_manifest": [
+    {"path":"skinny/crates/bbnf-bench/src/generated_real_typed.rs","git_status":"M","generated_header_present":true,"diff_numstat":"+929/-309","generated_kind":"real_typed","owner_path":"skinny/xtask/src/main.rs::regen_real_typed/check_real_typed","generator_command":"cargo xtask regen-real-typed","check_command":"cargo xtask check-real-typed","check_status":"fail:expected_stale_generated","failure_kind":"generated_byte_mismatch","disposition_owner":"SK-V16-W1","disposition":"w1_pending","disposition_proof_command":"cargo xtask gate-json --check-results --skv16-dirty-generated-report","replacement_or_block_proof":"routed_to_w1"},
+    {"path":"skinny/crates/runtime/src/grammars/css_l4_at_rules_and_media/generated.rs","git_status":"M","generated_header_present":true,"diff_numstat":"+7/-7","generated_kind":"css_l4_runtime","owner_path":"skinny/xtask/src/regen_css.rs","generator_command":"cargo xtask regen-css","check_command":"cargo xtask check-css-l4-at-rules-and-media","check_status":"fail:expected_stale_generated","failure_kind":"generated_byte_mismatch","disposition_owner":"SK-V16-W1","disposition":"w1_pending","disposition_proof_command":"cargo xtask gate-json --check-results --skv16-dirty-generated-report","replacement_or_block_proof":"routed_to_w1"},
+    {"path":"skinny/crates/runtime/src/grammars/css_l4_declaration_values/generated.rs","git_status":"M","generated_header_present":true,"diff_numstat":"+7/-7","generated_kind":"css_l4_runtime","owner_path":"skinny/xtask/src/regen_css.rs","generator_command":"cargo xtask regen-css","check_command":"cargo xtask check-css-l4-declaration-values","check_status":"fail:expected_stale_generated","failure_kind":"generated_byte_mismatch","disposition_owner":"SK-V16-W1","disposition":"w1_pending","disposition_proof_command":"cargo xtask gate-json --check-results --skv16-dirty-generated-report","replacement_or_block_proof":"routed_to_w1"},
+    {"path":"skinny/crates/runtime/src/grammars/css_l4_declaration_values_extended/generated.rs","git_status":"M","generated_header_present":true,"diff_numstat":"+7/-7","generated_kind":"css_l4_runtime","owner_path":"skinny/xtask/src/regen_css.rs","generator_command":"cargo xtask regen-css","check_command":"cargo xtask check-css-l4-declaration-values-extended","check_status":"fail:expected_stale_generated","failure_kind":"generated_byte_mismatch","disposition_owner":"SK-V16-W1","disposition":"w1_pending","disposition_proof_command":"cargo xtask gate-json --check-results --skv16-dirty-generated-report","replacement_or_block_proof":"routed_to_w1"},
+    {"path":"skinny/crates/runtime/src/grammars/css_l4_nested_layout/generated.rs","git_status":"M","generated_header_present":true,"diff_numstat":"+7/-7","generated_kind":"css_l4_runtime","owner_path":"skinny/xtask/src/regen_css.rs","generator_command":"cargo xtask regen-css","check_command":"cargo xtask check-css-l4-nested-layout","check_status":"fail:expected_stale_generated","failure_kind":"generated_byte_mismatch","disposition_owner":"SK-V16-W1","disposition":"w1_pending","disposition_proof_command":"cargo xtask gate-json --check-results --skv16-dirty-generated-report","replacement_or_block_proof":"routed_to_w1"},
+    {"path":"skinny/crates/runtime/src/grammars/css_l4_stylesheet_selectors/generated.rs","git_status":"M","generated_header_present":true,"diff_numstat":"+7/-7","generated_kind":"css_l4_runtime","owner_path":"skinny/xtask/src/regen_css.rs","generator_command":"cargo xtask regen-css","check_command":"cargo xtask check-css-l4-stylesheet-selectors","check_status":"fail:expected_stale_generated","failure_kind":"generated_byte_mismatch","disposition_owner":"SK-V16-W1","disposition":"w1_pending","disposition_proof_command":"cargo xtask gate-json --check-results --skv16-dirty-generated-report","replacement_or_block_proof":"routed_to_w1"},
+    {"path":"skinny/crates/runtime/src/grammars/css_l4_vendor_and_custom_atrules/generated.rs","git_status":"M","generated_header_present":true,"diff_numstat":"+7/-7","generated_kind":"css_l4_runtime","owner_path":"skinny/xtask/src/regen_css.rs","generator_command":"cargo xtask regen-css","check_command":"cargo xtask check-css-l4-vendor-and-custom-atrules","check_status":"fail:expected_stale_generated","failure_kind":"generated_byte_mismatch","disposition_owner":"SK-V16-W1","disposition":"w1_pending","disposition_proof_command":"cargo xtask gate-json --check-results --skv16-dirty-generated-report","replacement_or_block_proof":"routed_to_w1"},
+    {"path":"skinny/crates/runtime/src/grammars/css_l4_visual_functions/generated.rs","git_status":"M","generated_header_present":true,"diff_numstat":"+7/-7","generated_kind":"css_l4_runtime","owner_path":"skinny/xtask/src/regen_css.rs","generator_command":"cargo xtask regen-css","check_command":"cargo xtask check-css-l4-visual-functions","check_status":"fail:expected_stale_generated","failure_kind":"generated_byte_mismatch","disposition_owner":"SK-V16-W1","disposition":"w1_pending","disposition_proof_command":"cargo xtask gate-json --check-results --skv16-dirty-generated-report","replacement_or_block_proof":"routed_to_w1"}
+  ],
+  "excluded_dirty_state": [
+    {"path":"docs/precepts","git_status":"M","disposition":"preserve_unmodified_unrelated"},
+    {"path":"restart/skinny/tranches/sk-v13/research/w2/skv13-W2-css-l4-stylesheet-selectors.json","git_status":"M","disposition":"preserve_unmodified_unrelated"}
+  ],
+  "broad_commands": [
+    {"command":"cargo xtask check-real-typed","status":"fail:expected_stale_generated","expected_failure":true,"owner_path":"SK-V16-W1"},
+    {"command":"cargo xtask check-css-l4-at-rules-and-media","status":"fail:expected_stale_generated","expected_failure":true,"owner_path":"SK-V16-W1"},
+    {"command":"cargo xtask check-css-l4-declaration-values","status":"fail:expected_stale_generated","expected_failure":true,"owner_path":"SK-V16-W1"},
+    {"command":"cargo xtask check-css-l4-declaration-values-extended","status":"fail:expected_stale_generated","expected_failure":true,"owner_path":"SK-V16-W1"},
+    {"command":"cargo xtask check-css-l4-nested-layout","status":"fail:expected_stale_generated","expected_failure":true,"owner_path":"SK-V16-W1"},
+    {"command":"cargo xtask check-css-l4-stylesheet-selectors","status":"fail:expected_stale_generated","expected_failure":true,"owner_path":"SK-V16-W1"},
+    {"command":"cargo xtask check-css-l4-vendor-and-custom-atrules","status":"fail:expected_stale_generated","expected_failure":true,"owner_path":"SK-V16-W1"},
+    {"command":"cargo xtask check-css-l4-visual-functions","status":"fail:expected_stale_generated","expected_failure":true,"owner_path":"SK-V16-W1"},
+    {"command":"cargo test -p codegen css_l4_generated_runtimes_reproducible_from_request","status":"fail:expected_stale_generated","expected_failure":true,"owner_path":"SK-V16-W1"}
+  ],
+  "gate_consumer": "cargo xtask gate-json --check-results",
+  "behavior_drift_status": "no_w0_behavior_drift"
+}

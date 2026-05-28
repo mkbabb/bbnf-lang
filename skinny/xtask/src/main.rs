@@ -11,6 +11,10 @@ const USAGE: &str = "usage: cargo xtask <regen-json|check-json|regen-css|check-c
 const SKV15_W2_LOCK_GATES_ONLY_FLAG: &str = "--skv15-w2-lock-gates-only";
 const SKV15_BACKEND_LOWERERS_REPORT_FLAG: &str = "--skv15-backend-lowerers-report";
 const SKV15_FNV_QUARANTINE_REPORT_FLAG: &str = "--skv15-fnv-quarantine-report";
+const SKV16_CSS_TYPED_REPORT_FLAG: &str = "--skv16-css-typed-report";
+const SKV16_DIRTY_GENERATED_REPORT_FLAG: &str = "--skv16-dirty-generated-report";
+const SKV16_PATTERN_H_ROUNDTRIP_REPORT_FLAG: &str = "--skv16-pattern-h-roundtrip-report";
+const SKV16_NATIVE_SIMD_REPORT_FLAG: &str = "--skv16-native-simd-report";
 const PRIMITIVE_CHECKASM_TESTS: &[&str] = &[
     "checkasm_ascii_set_member_find_64",
     "checkasm_byte_class_from_eq_set_64",
@@ -408,7 +412,11 @@ fn validate_gate_json_passthrough(args: &[String]) -> Result<()> {
             | "--skv13-typed-product-report"
             | "--skv13-simd-asm-production-report"
             | SKV15_BACKEND_LOWERERS_REPORT_FLAG
-            | SKV15_FNV_QUARANTINE_REPORT_FLAG => {
+            | SKV15_FNV_QUARANTINE_REPORT_FLAG
+            | SKV16_CSS_TYPED_REPORT_FLAG
+            | SKV16_DIRTY_GENERATED_REPORT_FLAG
+            | SKV16_PATTERN_H_ROUNDTRIP_REPORT_FLAG
+            | SKV16_NATIVE_SIMD_REPORT_FLAG => {
                 if index + 1 >= args.len() {
                     bail!("{} expects one path argument", args[index]);
                 }
@@ -2532,6 +2540,72 @@ mod tests {
             "--check-results".into(),
         ])
         .unwrap();
+    }
+
+    #[test]
+    fn gate_json_passthrough_accepts_skv16_report_flags() {
+        validate_gate_json_passthrough(&[
+            SKV16_CSS_TYPED_REPORT_FLAG.into(),
+            "skv16-css.json".into(),
+            SKV16_DIRTY_GENERATED_REPORT_FLAG.into(),
+            "skv16-dirty.json".into(),
+            SKV16_PATTERN_H_ROUNDTRIP_REPORT_FLAG.into(),
+            "skv16-pattern.json".into(),
+            SKV16_NATIVE_SIMD_REPORT_FLAG.into(),
+            "skv16-native.json".into(),
+            "--check-results".into(),
+        ])
+        .unwrap();
+    }
+
+    #[test]
+    fn gate_json_passthrough_accepts_skv16_css_typed_report_flag() {
+        validate_gate_json_passthrough(&[
+            SKV16_CSS_TYPED_REPORT_FLAG.into(),
+            "skv16-css.json".into(),
+            "--check-results".into(),
+        ])
+        .unwrap();
+    }
+
+    #[test]
+    fn gate_json_passthrough_accepts_skv16_dirty_generated_report() {
+        validate_gate_json_passthrough(&[
+            SKV16_DIRTY_GENERATED_REPORT_FLAG.into(),
+            "skv16-dirty.json".into(),
+            "--check-results".into(),
+        ])
+        .unwrap();
+    }
+
+    #[test]
+    fn gate_json_passthrough_accepts_skv16_pattern_h_roundtrip_report_flag() {
+        validate_gate_json_passthrough(&[
+            SKV16_PATTERN_H_ROUNDTRIP_REPORT_FLAG.into(),
+            "skv16-pattern.json".into(),
+            "--check-results".into(),
+        ])
+        .unwrap();
+    }
+
+    #[test]
+    fn gate_json_passthrough_accepts_skv16_native_simd_report_flag() {
+        validate_gate_json_passthrough(&[
+            SKV16_NATIVE_SIMD_REPORT_FLAG.into(),
+            "skv16-native.json".into(),
+            "--check-results".into(),
+        ])
+        .unwrap();
+    }
+
+    #[test]
+    fn gate_json_passthrough_rejects_skv16_report_flag_missing_path() {
+        assert!(validate_gate_json_passthrough(&[SKV16_CSS_TYPED_REPORT_FLAG.into()]).is_err());
+    }
+
+    #[test]
+    fn gate_json_passthrough_rejects_unknown_skv16_report_flag() {
+        assert!(validate_gate_json_passthrough(&["--skv16-unknown-report".into()]).is_err());
     }
 
     #[test]

@@ -23,13 +23,34 @@ compare them without writing (`check-runtime`).
 - `xtask/src/main.rs`
 - `xtask/src/regen_simple_runtime.rs`
 - `xtask/src/regen_css.rs`
-- `crates/core/src/runtime/**`
+- `crates/core/src/runtime/{bbnf,bnf,css_l4,css_pretty,csv,ebnf,google_sheets,json,math}/**/*.rs`
 - `restart/skinny/tranches/sk-v15/research/w4/skv15-W4-challenge-v1.md`
+- `restart/skinny/tranches/sk-v15/research/w4/skv15-W4-challenge-v2.md`
 - `restart/skinny/tranches/sk-v15/research/w4/skv15-W4-redress.md`
 
 No skinny generated CSS files, benchmark ledgers, CSS typed provider, Decision
 Engine, BackendShape lowerers, root grammar-generated files, or prior tranche
 research JSON files are owned by W4.
+`crates/core/src/runtime/*.rs` root/shared files are excluded from the Pattern
+H 67-file owner set.
+
+## Cost / Cap Discipline
+
+SPEC W4 envelope: High risk, manual LOC `120-280`, generated status
+`Runtime generated checks`, docs LOC `80-180`, entry gate W2 and W3
+admitted/routed, and exit gate 67 root runtime files with true provenance plus
+non-writing regen/check proof.
+
+Estimated manual implementation: `160-260` LOC across the two emitters and
+root xtask CLI. Generated runtime output is outside manual LOC only if it is
+deterministically emitted by the root runtime generators and reproduced by
+`check-runtime`. Planned W4 docs: plan/challenge/redress within `80-180` LOC
+after research packet filing.
+
+Redress cap: `<=30 minutes`. At 0.9x cap, commit or checkpoint. At cap, halt
+with evidence. Intrinsic-block instead of widening if path-set equality,
+projection validation, or non-writing byte comparison cannot be implemented
+inside the W4 owner paths and cap.
 
 ## Implementation Shape
 
@@ -42,7 +63,9 @@ research JSON files are owned by W4.
 
    With no `--grammar`, it checks all nine root runtime projections:
    `css_l4`, `math`, `csv`, `bbnf`, `bnf`, `ebnf`, `css_pretty`,
-   `google_sheets`, and `json`.
+   `google_sheets`, and `json`. Unknown grammar names reject. The
+   `--grammar` form is diagnostic only; W4 close must use the no-argument
+   all-projection command.
 
 2. Split both root runtime emitters into shared render/write/check paths:
 
@@ -50,6 +73,8 @@ research JSON files are owned by W4.
    - `regen_simple_runtime::check(grammar)` renders then byte-compares.
    - `regen_css::run()` writes rendered files.
    - `regen_css::check()` renders then byte-compares.
+
+   The check path must not call `write_if_changed`.
 
 3. Attach line-1 provenance after `prettyplease` formatting so ordinary
    comments are not discarded by `syn` parsing:
@@ -63,12 +88,28 @@ research JSON files are owned by W4.
    `regen-ebnf`, `regen-css-pretty`, `regen-google-sheets`, and
    `regen-json`.
 
-4. Regenerate the root runtime projection outputs through the owning
+4. Make `check-runtime` fail closed in one non-writing command:
+
+   - render final formatted bytes plus line-1 header for every checked
+     projection;
+   - assert the expected generated path set exactly equals the actual Pattern
+     H path set for the full no-argument command;
+   - assert every actual Pattern H file line 1 has the header for its owning
+     directory, not just any allowed generated header;
+   - validate `xtask/runtime-projections/*.toml` against
+     `[workspace.metadata.bbnf].grammars` and fail on missing or extra root
+     runtime projections;
+   - validate each projection `output_dir` exactly matches
+     `crates/core/src/runtime/<module_name>`, except CSS L4 whose output is
+     exactly `crates/core/src/runtime/css_l4`;
+   - reject stale/unexpected files in the Pattern H include roots.
+
+5. Regenerate the root runtime projection outputs through the owning
    generator commands. This will replace the current dirty formatter-only
    baseline with generator-owned header-bearing bytes. The final proof is the
    non-writing `check-runtime` command, not the write command itself.
 
-5. Do not delete root runtime files in W4. Do not remove CSS `LegacyPath` or
+6. Do not delete root runtime files in W4. Do not remove CSS `LegacyPath` or
    `LegacySegment`; record them as blocked under
    `DEP-W4-W6-CSS-LEGACY-RUNTIME-SHIM` unless same-wave replacement proof
    unexpectedly lands inside the root projection generator.
@@ -84,6 +125,10 @@ Consumed rows:
   blocked for deletion until W5/W6 typed CSS proof or equivalent same-wave
   replacement proof.
 
+Allowed W4 legacy-shim hits are limited to the current CSS root runtime output
+and the CSS root runtime generator template. New `LegacyPath` or
+`LegacySegment` hits outside those routed surfaces reject redress.
+
 If any projection cannot be rendered and checked without writing, W4 records
 an intrinsic block for that projection and does not claim full Pattern H
 generated discipline.
@@ -92,14 +137,21 @@ generated discipline.
 
 - `cargo fmt --check --package xtask`
 - `RUSTFLAGS="-C target-cpu=native" cargo run --profile ax-iter -p xtask -- check-runtime`
+  checks all projections and performs path-set equality, per-directory header
+  validation, projection-set validation, output-dir validation, and byte
+  comparison without writing.
 - `find crates/core/src/runtime -mindepth 2 -type f -name '*.rs' | wc -l`
   returns `67`.
-- Line-1 provenance scan accepts all 67 files.
+- Line-1 provenance scan accepts all 67 files with exact directory-to-command
+  header mapping.
 - `rg -n "LegacyPath|LegacySegment" crates/core/src/runtime xtask/src/regen_css.rs xtask/src/regen_simple_runtime.rs`
-  is recorded as blocked for deletion, not treated as W4 close failure.
+  reports only the routed CSS runtime/generator hits and is recorded as
+  blocked for deletion, not treated as W4 close failure.
 - `grep -cE "^[0-9]+\\. \\*\\*" restart/locks/LOCKS.md` returns `16`.
 - BackendShape canon remains five variants.
 - `git diff --check`.
+- Pre/post `git status --short` snapshots show unowned dirty paths remain
+  unstaged. `git diff --cached --name-only` contains only W4 owner paths.
 
 ## Revert Protocol
 

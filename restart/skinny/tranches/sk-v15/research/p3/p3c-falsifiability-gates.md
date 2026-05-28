@@ -48,7 +48,25 @@ Maintain budgets used below:
 | `M1` behavior wave | W5, W6, or any wave that changes generated/runtime behavior | Every selected target row meets its same-run comparator threshold; every non-target JSON Track 1 and Track 2 cell stays >=98.0% of `SK-V15-open`; all 51 JSON rows remain `A / GO / strict / measured-row`; every existing or rebuilt CSS live row keeps its declared comparator-plane status. |
 | `M-css-prune` | W1 only | The 24 current CSS feature rows may lose live-admit status because they are the targeted false admits; JSON 51/51 must obey `M0`; no replacement 24-row admit is allowed unless each row has a distinct measurement. |
 
-### Section 1.1 - Canonical Telemetry Fields
+### Section 1.1 - Candidate Rebinding Table
+
+P3-A owns the candidate shortlist; P3-C owns the final gate formulas. W0
+creates `SK-V15-open`, then every candidate floor below is rebound before
+redress. Missing row movement rejects or demotes the candidate to
+scalar-only with REDRESS evidence.
+
+| candidate | row universe | final threshold formula | same-wave consumer | proof command shape | fail action |
+|---|---|---|---|---|---|
+| 1 byte-set run skipper | `apache_builds/parse_only` target; JSON guard rows named in P3-A | `max(P3-A floor, SK-V15-open target * 1.03)`; non-target JSON >=98% | Generated JSON whitespace / colon-comma sites plus CSS/Sheets/BBNF trivia or FIRST-set consumer | scalar loop proof, checkasm/table parity, generated consumer test, cold row measurement | Revert SIMD/generator route or REDRESS as unwired primitive. |
+| 2 byte-class/TBL4/movemask | At least two structural/direct target rows from P3-A; JSON guard rows | `max(P3-A floor, SK-V15-open target * 1.00)` for selected targets; non-target JSON >=98% | Generated direct `skip_value` / FIRST-set dispatch or non-JSON FIRST-set scanner | scalar alphabet reference, local-wrapper parity, generated consumer test, cold row measurement | Revert helper or scalar-delegate with REDRESS. |
+| 3 bounded literal span | `canada/real_typed_struct` or `unicode_basic/direct_to_struct`; string guard rows | `max(P3-A floor, SK-V15-open target * 1.00)`; non-target JSON >=98% | JSON string end sites plus CSS strings, Sheets quoted strings, or BBNF literal/regex span | scalar delimiter/escape/control oracle, literal checkasm, generated consumer test | Revert SIMD body or REDRESS tiny-string replay. |
+| 4 UTF-8 run validator | Unicode target rows from P3-A; JSON guard rows | `max(P3-A floor, SK-V15-open target * 1.00)`; non-target JSON >=98% | JSON string matcher or byte-backed non-JSON literal validation consumer | run-level scalar oracle, checkasm/parity over boundary/tail cases, cold row measurement | Revert hot routing or scalar-delegate. |
+| 5 escaped literal segments | Unicode escape target rows from P3-A; JSON guard rows | `max(P3-A floor, SK-V15-open target * 1.00)`; non-target JSON >=98% | Generated JSON escape/string consumer or CSS/Sheets/BBNF escape consumer | segment visitor oracle, escape parity, generated consumer test, cold row measurement | Revert or REDRESS materializer/decoded-string relapse. |
+| 6 direct cursor / FIRST-set templates | At least two direct cursor target rows from P3-A; JSON guard rows | `max(P3-A floor, SK-V15-open target * 1.00)`; non-target JSON >=98% | Generated direct `skip_value` / FIRST-set caller in same wave | corpus equality gate, optional byte-class checkasm, generated diff proof | Revert template extraction or REDRESS retained cursor relapse. |
+| 7 same-tape capacity/sparse flags | Materialization and parse/typed rows named in P3-A | Maintain listed floors and prove materialization ratio no worse than current diagnostic ratio unless explicitly improved | Existing tape, retained view, and generated accessors consuming opaque flags | offset/flag/value traversal parity, materialization ratio report, cold row measurement if behavior changes | Revert or REDRESS sidecar/second-tape route. |
+| 8 same-tape fact projection / mask-to-tape | JSON structural targets from P3-A or CSS typed rows after W5/W6 | JSON: `max(P3-A floor, SK-V15-open target * 1.00)`; CSS: fresh W6 same-run cssparser typed comparator only, never W8R tuple | Existing tape/direct sink/fact output, generated CSS typed value/document output, or generated JSON retained parser | offset/flag/view/fact equality, scalar-vs-SIMD mask parity, typed CSS equality if CSS | Revert, demote to diagnostic, or REDRESS retained sidecar/broadcast route. |
+
+### Section 1.2 - Canonical Telemetry Fields
 
 W0 creates the carrier and every later wave consumes these fields through
 `gate-json` or its SK-V15 successor:
@@ -68,7 +86,7 @@ W0 creates the carrier and every later wave consumes these fields through
 
 Producer-only telemetry rejects. Hidden one-to-N measurement stamps reject.
 
-### Section 1.2 - Lock 14 / Lock 16 Exclusion Report Schema
+### Section 1.3 - Lock 14 / Lock 16 Exclusion Report Schema
 
 Every gate that scans generic roots, generated outputs, SIMD/ASM
 primitives, or parity manifests emits and consumes this schema:
@@ -87,6 +105,23 @@ primitives, or parity manifests emits and consumes this schema:
 
 Silent allowlists, self-exempting grep/checkasm rules, and scan reports
 not consumed by the gate are REJECT.
+
+### Section 1.4 - Non-JSON Proof Receiver Matrix
+
+Generic edits need surface-specific receivers, not a generic "non-JSON"
+claim. A plan touching one of these surfaces must name the minimum receiver
+set, proof shape, and intrinsic-block handling before redress.
+
+| Generic surface | Minimum non-JSON receivers | Proof shape | Intrinsic-block handling |
+|---|---|---|---|
+| `grammar_provider.rs` | CSS L4 plus Sheets or BBNF-self | Provider-free metadata path emits or checks both receivers; Lock 14 scan has no grammar-family roster. | Block with scan output naming the missing receiver. |
+| `runtime_generator.rs` | CSS L4 plus one of Sheets, BBNF-self, CSV, or math | Non-writing regen/check or named generated diff for each receiver. | Block if output is committed-template replay or receiver lacks generator source. |
+| Backend lowerers | CSS L4 plus Sheets or BBNF-self | Fixture fails old scaffold and emits runtime-relevant diff or gate-consumed rejected alternative. | Block shape-specific lowerer; no all-five claim. |
+| `backend_egraph.rs` | CSS L4 plus one non-CSS receiver | E-graph rewrite changes selected shape or generated selection fixture. | Block decision-driven row movement. |
+| `decision_csp.rs` | CSS L4 plus one non-CSS receiver | Removing a required fact changes satisfiability or selection. | Block CSP close as tautological. |
+| CostFacts / `cost.rs` | CSS L4 plus Sheets or BBNF-self | Cost fact changes are visible in decision report without grammar-named facts. | Block if cost is advisory-only. |
+| `xtask` regen/check | CSS L4 plus at least one non-CSS generated receiver | Command proves no hidden generator/provider branch for both receivers. | Block with command output and owner path. |
+| gate/report code (`gate.rs`, `report.rs`) | JSON guard plus CSS L4 diagnostic/typed rows | Gate consumes emitted schema, rejects missing fields, and reports exclusions. | Block producer-only telemetry or self-exempting report. |
 
 ## Section 2 - W0..W11 Gates
 

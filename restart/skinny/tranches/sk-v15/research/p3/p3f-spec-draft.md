@@ -30,7 +30,8 @@ The generated SPEC contains:
 - Section 0 close condition, telemetry, row goalset, and comparator rules.
 - Section 1 non-negotiables.
 - Section 2 wave manifest with caps, risk/LOC columns, dependency table,
-  generality/Lock 14 table, and global gates.
+  named dependency rows, non-JSON receiver matrix, generality/Lock 14
+  table, cost overflow rule, and global gates.
 - Sections 3 through 14 for W0 through W11.
 - Section 15 pre-blocked routes.
 - Section 16 dispatch posture and G-Omega boundary.
@@ -40,6 +41,8 @@ The dispatch prompt contains:
 - Authority order.
 - Research, plan, and redress role separation.
 - Pre-dispatch verification and dispatch lock for W1-W11.
+- Dependency-row dispatch checks, exclusion-report schema, non-JSON receiver
+  matrix, and per-wave cost budget citation.
 - Challenge triggers for W2 through W10.
 - Per-wave dispatch envelopes W0 through W11.
 - Explicit same-wave consumers for W6 cssparser typed comparison, W7

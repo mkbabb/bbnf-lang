@@ -53,6 +53,53 @@ Before a wave dispatch:
 6. Verify the wave does not reopen an S-P2 REJECT or REDRESS pre-block
    under old framing.
 7. Verify Apple M5 Max / aarch64 is the only admission target.
+8. Verify the plan quotes the current wave's SPEC risk, manual source/test
+   LOC budget, generated-output status, docs/ledger LOC budget, phase caps,
+   and split/intrinsic-block trigger. Redress is rejected if the estimate is
+   absent or over budget.
+9. Because W0-W11 consumes the full 12-wave ceiling, over-budget plans cannot
+   spawn W12 and cannot use CHALLENGE time as implementation overflow. They
+   must record row-level intrinsic block, revert/REDRESS, or route a
+   wave-graph amendment through the gate before redress.
+10. Verify any generic or gate/report edit carries the applicable non-JSON
+    proof receiver matrix row and the Lock 14 / Lock 16 exclusion schema
+    fields from Sections 2.1 and 2.2 below.
+
+### Section 2.1 - Dependency Rows Required By Dispatch
+
+Plans that delete, retire, diagnostic-demote, or neutralize a live claim
+must cite one of these rows from `SPEC.md` before redress. The authoritative
+SPEC table columns are `row_id`, `retired_or_deleted_artifact`,
+`delete_or_retire_wave`, `rebuild_provider_wave`, `proof_command`,
+`provider_lands_no_later`, `conditional_status`, `consuming_exit_gates`, and
+`preblock_cluster`; compact plans are invalid unless they bind back to those
+fields:
+
+| row_id | consuming waves | dispatch requirement |
+|---|---|---|
+| `DEP-W1-CSS-BROADCAST` | W0, W1, W5, W6, W11 | CSS broadcast demotion must be diagnostic-only and gate-consumed. |
+| `DEP-W6-CSS-GENERATED-RS` | W1, W3, W5, W6, W11 | `CSS_GENERATED_RS` cannot retire before W6 typed proof. |
+| `DEP-W6-CSS-SUMMARY-FACT-STREAM` | W1, W5, W6, W11 | Summary/fact-stream/brace proof cannot remain live after W6. |
+| `DEP-W3-W6-CSS-PROVIDER-TEMPLATE` | W2, W3, W5, W6, W11 | Provider/template deletion waits for provider proof no later than deletion. |
+| `DEP-W4-PATTERN-H-PROVENANCE` | W4, W11 | Pattern H provenance requires real regen/check proof. |
+| `DEP-W4-W6-CSS-LEGACY-RUNTIME-SHIM` | W4, W5, W6, W11 | CSS legacy shim deletion requires root regen/check or typed provider proof. |
+| `DEP-W7-DECISION-SPINE` | W7, W8, W9, W11 | Decision scaffold retirement requires executable decision proof. |
+| `DEP-W8-LOWERERS-A` | W8, W11 | EagerTape/OffsetTape lowerer scaffolds require generated fixture proof. |
+| `DEP-W9-LOWERERS-B` | W9, W11 | EventTape/SinkOnly/CollapsedStage lowerers require all-five gate proof. |
+| `DEP-W10-FNV-QUARANTINE` | W10, W11 | FNV remains bench-only and production migration is blocked. |
+| `DEP-W11-CLOSE-NO-ORPHANS` | W11 | PASS-IMPL V2 must consume every dependency row disposition. |
+
+### Section 2.2 - Exclusion Schema And Non-JSON Receivers
+
+Lock 14 / Lock 16 reports must carry included roots, excluded roots, reason,
+owner, self-scan status, primitive status, gate consumer, affected rows, and
+disposition. A plan missing one of those columns does not dispatch.
+
+Generic edits must also cite the surface-specific receiver matrix from
+`SPEC.md`: `grammar_provider.rs`, `runtime_generator.rs`, lowerers,
+`backend_egraph.rs`, `decision_csp.rs`, CostFacts / `cost.rs`, `xtask`
+regen/check, and gate/report code. Each plan names the minimum non-JSON
+receivers, proof shape, and intrinsic-block handling.
 
 ## Section 3 - Challenge Triggers
 
@@ -91,6 +138,8 @@ wave.
 Redress closes only when no CSS live admit can be produced from the W8R
 24-row broadcast.
 
+Dependency rows consumed: `DEP-W1-CSS-BROADCAST`.
+
 ### W2 - Lock 14 / Lock 16 Gate Restoration
 
 Research scopes: omitted Lock 14 roots, gate exclusions, checkasm
@@ -100,6 +149,10 @@ Plan must name scan roots, exclusion report schema, fail-closed tests, and
 primitive status classification.
 
 Redress closes only when gates consume their own exclusion reports.
+
+Dispatch schema required: included roots, excluded roots, reason, owner,
+self-scan status, primitive status, gate consumer, affected rows, and
+disposition.
 
 ### W3 - Codegen Leak Abrogation
 
@@ -112,6 +165,11 @@ generator/check consumer.
 Redress closes only with leak grep, generated-output proof, and JSON guard
 rerun if JSON-adjacent generation changes.
 
+Dependency rows consumed: `DEP-W3-W6-CSS-PROVIDER-TEMPLATE`.
+CH5 forbidden terms consumed: parser-owned structural projection, retained
+cursor/list, aux density/projection table, parallel source pass, second tape,
+Track 1 == Track 2 sidecar, and grammar-family branches.
+
 ### W4 - Pattern H Generated Discipline
 
 Research scopes: 67 root runtime files, generator provenance, non-writing
@@ -121,6 +179,9 @@ Plan must distinguish true generated provenance from header-only edits.
 
 Redress closes only with the 67-file count, line-1 provenance scan, and
 regen/check proof or intrinsic-block route.
+
+Dependency rows consumed: `DEP-W4-PATTERN-H-PROVENANCE`,
+`DEP-W4-W6-CSS-LEGACY-RUNTIME-SHIM`.
 
 ### W5 - CSS Typed Value Provider
 
@@ -134,6 +195,10 @@ Redress closes only with typed CSS provider output, gate-consumed tests,
 JSON guard maintain if behavior changes, and no reuse of broadcast
 measurements as floors.
 
+Dependency rows consumed: `DEP-W6-CSS-GENERATED-RS`,
+`DEP-W6-CSS-SUMMARY-FACT-STREAM`, `DEP-W3-W6-CSS-PROVIDER-TEMPLATE`,
+`DEP-W4-W6-CSS-LEGACY-RUNTIME-SHIM`.
+
 ### W6 - CSS Same-Workload Retime And Old-Proof Retirement
 
 Research scopes: cssparser typed-value/document comparator path, CSS
@@ -146,6 +211,10 @@ Redress closes only with fresh typed CSS measurements against `cssparser`,
 same comparator workload, strict typed equality, no W8R floors, and JSON
 51/51 maintain if behavior changed.
 
+Dependency rows consumed: `DEP-W6-CSS-GENERATED-RS`,
+`DEP-W6-CSS-SUMMARY-FACT-STREAM`, `DEP-W3-W6-CSS-PROVIDER-TEMPLATE`,
+`DEP-W4-W6-CSS-LEGACY-RUNTIME-SHIM`.
+
 ### W7 - Decision Engine Spine
 
 Research scopes: e-graph, CSP, CostFacts, generated selection evidence.
@@ -155,6 +224,10 @@ the generated selection/report consumer.
 
 Redress closes only when generated behavior or plan selection can change
 and generic decision facts are grammar-neutral.
+
+Dependency rows consumed: `DEP-W7-DECISION-SPINE`.
+CH5 forbidden terms consumed: retained class/structural/cursor streams,
+new substrate API, new/sixth `BackendShape`, and advisory-only cost facts.
 
 Required consumers or proven successors:
 
@@ -172,6 +245,8 @@ gate-consumed rejected alternative.
 
 Redress closes only when fixtures fail against the old scaffold and
 EagerTape/OffsetTape no longer remain placeholder-only.
+
+Dependency rows consumed: `DEP-W8-LOWERERS-A`.
 
 Required consumers or proven successors:
 
@@ -191,6 +266,11 @@ alternate document projection.
 Redress closes only when tests fail against the old scaffold, remaining
 lowerers are real or gate-rejected, and the all-five gate covers exactly
 the canonical five BackendShape variants.
+
+Dependency rows consumed: `DEP-W9-LOWERERS-B`.
+CH5 forbidden terms consumed: sidecar event vector, retained parser stream,
+public substrate API, alternate document projection, and new/sixth
+`BackendShape`.
 
 Required consumers or proven successors:
 
@@ -214,6 +294,10 @@ correctness proof.
 Required consumers: strict-product gate over quarantine metadata,
 production `rg -n "fnv|FNV"` scan, and adversarial semantic fixtures.
 
+Dependency rows consumed: `DEP-W10-FNV-QUARANTINE`.
+CH5 forbidden terms consumed: production FNV arbiter and production hash
+correctness proof.
+
 ### W11 - Close Reconciliation
 
 Research scopes: RESULTS, REDRESS, rolling delta, HANDOFF, dependency
@@ -228,12 +312,23 @@ blocked by row-level proof. Any implementation fix, measurement rerun, or
 unresolved dependency row discovered during W11 aborts close and spawns
 the owning repair wave; it is not deferred to SK-V16.
 
+Dependency rows consumed: every `DEP-*` row, especially
+`DEP-W11-CLOSE-NO-ORPHANS`.
+
 ## Section 5 - Same-Wave Consumer Mandate
 
 Any primitive, kernel, new generated path, new parser helper, new
 telemetry field, or gate report must be consumed by the hot path or gate
 in the same wave. Source-present but unwired is REJECT unless the wave
 explicitly deletes, scalar-delegates, or records intrinsic block.
+
+The CH5 forbidden vocabulary is load-bearing in dispatch: parser-owned
+structural projection, retained cursor/list, aux density/projection table,
+sidecar event vector, parallel source pass, second tape, public `UnionTape`,
+retained class/structural/cursor stream, Track 1 == Track 2 sidecar, new
+substrate API, new/sixth `BackendShape`, alternate document projection,
+production FNV arbiter, and production hash correctness proof are rejected
+unless a future Alpha/G-Omega contract reopens them.
 
 The shared pre-block list every wave must carry is:
 

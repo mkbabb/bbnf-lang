@@ -144,6 +144,13 @@ and native-platform mismatch reject close.
    reference or oracle, parity/checkasm where relevant, and same-wave
    consumer.
 8. No documentation-only close.
+9. No hidden-coupling vocabulary may be narrowed in dispatch. Plans reject
+   parser-owned structural projection, retained cursor/list, aux
+   density/projection table, sidecar event vector, parallel source pass,
+   second tape, public `UnionTape`, retained class/structural/cursor stream,
+   Track 1 == Track 2 sidecar, new substrate API, new or sixth
+   `BackendShape`, alternate document projection, production FNV arbiter,
+   and production hash correctness proof.
 
 ## Section 2 - Wave Manifest, Caps, And Global Gates
 
@@ -155,8 +162,12 @@ Every wave follows `SKINNY-TRIUMVIRATE.md`: research, plan, redress.
 | Plan | <=15 minutes | One intervention, owner paths, gates, revert route. |
 | Redress | <=30 minutes | Implementation or ledger edit, measurements, REDRESS/revert/admit. |
 
-At 0.9x cap, commit or checkpoint; at cap, halt with evidence. If a wave
-cannot fit the cap, split before redress.
+At 0.9x cap, commit or checkpoint; at cap, halt with evidence. Because
+W0-W11 consumes the 12-wave ceiling, a wave that cannot fit its LOC budget,
+generated-output status, docs budget, or 30-minute redress cap cannot spawn
+W12 and cannot use CHALLENGE time as implementation overflow. It must record
+row-level intrinsic block, revert/REDRESS the oversized intervention, or
+route a wave-graph amendment through the gate before redress.
 
 | Wave | Receiver | Risk | Manual LOC | Generated | Docs LOC | Entry gate | Exit gate |
 |---|---|---|---:|---|---:|---|---|
@@ -173,19 +184,39 @@ cannot fit the cap, split before redress.
 | W10 | FNV quarantine | Medium | 80-220 | 100-240 bench fixtures/reports | 80-180 | W9 admitted/routed | FNV stays bench-only and production FNV scan/adversarial fixtures are consumed. |
 | W11 | Close and PASS-IMPL V2 handoff | Medium | 0-80 | None except evidence from prior waves | 120-420 | W1-W10 resolved | PASS-IMPL V2 accepts each axis or records row-level intrinsic-block proof at HEAD. |
 
-### Section 2.1 - Dependency Table
+### Section 2.1 - Dependency Row Table
 
-| Dependency | Provider wave | Consumer/delete wave | Gate |
+Every delete, retirement, diagnostic demotion, or neutralization must match
+one of these rows before redress. Missing rows reject the plan.
+
+| row_id | retired_or_deleted_artifact | delete_or_retire_wave | rebuild_provider_wave | proof_command | provider_lands_no_later | conditional_status | consuming_exit_gates | preblock_cluster |
+|---|---|---|---|---|---|---|---|---|
+| `DEP-W1-CSS-BROADCAST` | CSS 24-row live admission claim built from one W8R timing tuple | W1 | W0/W1 telemetry gate | Gate over `measurement_row_id`, `measurement_origin`, `broadcast_group_id`, `value_plane`, and CSS comparator fields plus duplicate signature scan. | `diagnostic-demotion-only` | `diagnostic-only` | W0, W1, W5, W6, W11 | REDRESS 215 |
+| `DEP-W6-CSS-GENERATED-RS` | `CSS_GENERATED_RS` string-literal parser evidence and byte-identical generated CSS bodies as live parser proof | W6 | W5 typed CSS Value provider | `rg -n "CSS_GENERATED_RS|hand_written:CSS_GENERATED_RS"` over live admission paths plus CSS typed tests. | `yes:same-wave` in W6 | `blocked` before W6 | W1, W3, W5, W6, W11 | REDRESS 183/184/209-213/215 |
+| `DEP-W6-CSS-SUMMARY-FACT-STREAM` | `CssFullParseSummary`, brace-counter summary, and fact-stream-only `parse()` as live CSS proof | W6 | W5 typed CSS Value provider | CSS semantic equality tests, same-workload `cssparser` run, and `rg -n "CssFullParseSummary|Result<String, CssFactError>|fact_stream|brace"` over CSS live proof paths. | `yes:same-wave` in W6 | `blocked` before W6 | W1, W5, W6, W11 | REDRESS 215 |
+| `DEP-W3-W6-CSS-PROVIDER-TEMPLATE` | CSS provider/template/static profile roster and runtime family fanout | W3 neutralization; W6 deletion | W3 generic contract; W5/W6 typed CSS provider/proof for deletion | Lock 14 scan over codegen roots, generated-output diff, JSON 51/51 rerun if JSON-adjacent, W6 CSS typed proof for deletion. | `yes:same-wave` for neutralization; `no:block` for deletion before W6 | `blocked` for deletion before W6 | W2, W3, W5, W6, W11 | REDRESS 184/209-213 |
+| `DEP-W4-PATTERN-H-PROVENANCE` | Pattern H root runtime files lacking true line-1 generated provenance | W4 provenance repair; destructive delete only with proof | W4 root runtime generator/check | `find crates/core/src/runtime -mindepth 2 -type f -name '*.rs' | wc -l`; line-1 provenance scan; non-writing regen check. | `yes:same-wave` for provenance proof; `no:block` for destructive delete without proof | `allowed` for truth repair, `blocked` for fake/header-only close | W4, W11 | REDRESS 183/213 |
+| `DEP-W4-W6-CSS-LEGACY-RUNTIME-SHIM` | CSS `LegacyPath`, `LegacySegment`, or equivalent root runtime shim | W4 only with replacement proof; otherwise W6 | W4 root runtime projection or W5/W6 typed CSS provider | `rg -n "LegacyPath|LegacySegment"` over root runtime plus root regen/check or typed CSS proof. | `yes:same-wave` or `no:block` | `blocked` without replacement proof | W4, W5, W6, W11 | REDRESS 183/213/215 |
+| `DEP-W7-DECISION-SPINE` | Decision Engine scaffold status fields, zero-rule e-graph, tautological CSP, and grammar-named facts as load-bearing proof | W7 | W7 e-graph/CSP provider | Decision tests, `egraph_rewrite_count >= 1`, CSP removal/alteration test, and `rg` scan for `json_*`/`css_*` generic facts. | `yes:same-wave` | `blocked` until executable diff/proof | W7, W8, W9, W11 | REDRESS 96-98 |
+| `DEP-W8-LOWERERS-A` | EagerTape/OffsetTape label-string or pass-through lowerer scaffolds | W8 | W8 lowerer implementation | Lowerer tests that fail old scaffold plus generated runtime diff fixtures. | `yes:same-wave` | `blocked` until generated runtime proof | W8, W11 | Lock 10/14 plus REDRESS 96-98 |
+| `DEP-W9-LOWERERS-B` | EventTape/SinkOnly/CollapsedStage label-string or pass-through lowerer scaffolds | W9 | W9 lowerer implementation | Lowerer tests that fail old scaffold, all-five BackendShape gate, EventTape anti-sidecar scan. | `yes:same-wave` | `blocked` until generated runtime proof | W9, W11 | Lock 10/14 plus REDRESS 96-98 |
+| `DEP-W10-FNV-QUARANTINE` | W11L/W11N/W11O FNV closed-enum or hash-sidecar correctness claim | W10 quarantine only | W10 adversarial semantic fixtures and bench-only metadata | `rg -n "fnv|FNV"` over production runtime/generic codegen roots plus adversarial typed-equality tests. | `yes:same-wave` for quarantine; production migration is `no:block` | `quarantine-only` | W10, W11 | FNV closed-enum production migration |
+| `DEP-W11-CLOSE-NO-ORPHANS` | Any dependency row without proof, REDRESS route, revert evidence, or intrinsic-block proof | W11 | W1-W10 row owners | PASS-IMPL V2 audit plus dependency-row checklist. | `yes:prior-wave` or `intrinsic-block` | `blocked` if orphan remains | W11 | All clusters |
+
+### Section 2.2 - Non-JSON Proof Receiver Matrix
+
+| Generic surface | Minimum non-JSON receivers | Proof shape | Intrinsic-block handling |
 |---|---|---|---|
-| CSS SOTA admission | W5 typed provider plus W6 fresh retime | W6 and later | No CSS SOTA admit before W6 same-workload retime. |
-| CSS provider/template deletion | W5 typed provider and W6 old-proof retirement | W6 or later | No delete before provider proof no later than delete wave. |
-| Pattern H generated claim | W4 root runtime regen/check | W4 and later | No generated claim before W4 proof. |
-| Decision-driven row movement | W7 Decision Engine spine | W8/W9 lowerers | No lowerer row movement before W7. |
-| All-five BackendShape claim | W8 partial lowerers plus W9 remaining lowerers | W9 | No all-five close before W9. |
-| FNV correctness/selection role | W10 quarantine | W10 and close | No production role; bench-only quarantine proof required. |
-| Close | W11 PASS-IMPL V2 | W11 | No close before PASS-IMPL V2 consumes packet. |
+| `grammar_provider.rs` | CSS L4 plus Sheets or BBNF-self | Provider-free metadata path emits or checks both receivers; Lock 14 scan has no grammar-family roster. | Block with scan output naming the missing receiver. |
+| `runtime_generator.rs` | CSS L4 plus Sheets, BBNF-self, CSV, or math | Non-writing regen/check or named generated diff for each receiver. | Block if output is committed-template replay or receiver lacks generator source. |
+| Backend lowerers | CSS L4 plus Sheets or BBNF-self | Fixture fails old scaffold and emits runtime-relevant diff or gate-consumed rejected alternative. | Block shape-specific lowerer; no all-five claim. |
+| `backend_egraph.rs` | CSS L4 plus one non-CSS receiver | E-graph rewrite changes selected shape or generated selection fixture. | Block decision-driven row movement. |
+| `decision_csp.rs` | CSS L4 plus one non-CSS receiver | Removing a required fact changes satisfiability or selection. | Block CSP close as tautological. |
+| CostFacts / `cost.rs` | CSS L4 plus Sheets or BBNF-self | Cost fact changes are visible in decision report without grammar-named facts. | Block if cost is advisory-only. |
+| `xtask` regen/check | CSS L4 plus at least one non-CSS generated receiver | Command proves no hidden generator/provider branch for both receivers. | Block with command output and owner path. |
+| gate/report code (`gate.rs`, `report.rs`) | JSON guard plus CSS L4 diagnostic/typed rows | Gate consumes emitted schema, rejects missing fields, and reports exclusions. | Block producer-only telemetry or self-exempting report. |
 
-### Section 2.2 - Generality / Lock 14 Gate
+### Section 2.3 - Generality / Lock 14 Gate
 
 Every wave plan that touches generic crates or generic generators must
 carry this table. A missing row rejects redress.
@@ -206,7 +237,11 @@ a sidecar vector, class column, sixth shape, public `UnionTape`, retained
 stream, public substrate API, or alternate document projection. Generated
 output requires line-1 provenance plus non-writing regen/check; header-only
 proof rejects. Lowerers cannot be label strings, `todo!`, or pass-through
-shells.
+shells. The CH5 forbidden vocabulary is load-bearing here: plans also reject
+parser-owned structural projection, retained cursor/list, aux density or
+projection table, sidecar event vector, parallel source pass, Track 1 ==
+Track 2 sidecar, new substrate API, new/sixth BackendShape, production FNV
+arbiter, and production hash correctness proof.
 
 ## Section 3 - W0 Baseline And Telemetry Lock
 
@@ -243,6 +278,7 @@ Exit gate:
 - `CSS_GENERATED_RS`, `CssFullParseSummary`, fact-stream-only `parse()`,
   and brace-counter output are diagnostic only.
 - JSON 51/51 guard stays within W0 budget.
+- Dependency rows consumed: `DEP-W1-CSS-BROADCAST`.
 
 ## Section 5 - W2 Lock 14 / Lock 16 Gate Restoration
 
@@ -277,6 +313,7 @@ Exit gate:
   JSON structural roles, or CSS profile names.
 - If JSON-adjacent generation changes, JSON 51/51 reruns in the same wave.
 - CSS provider/template deletion remains blocked until W6 proof.
+- Dependency rows consumed: `DEP-W3-W6-CSS-PROVIDER-TEMPLATE`.
 
 ## Section 7 - W4 Pattern H Generated Discipline
 
@@ -293,6 +330,8 @@ Exit gate:
   returns 67.
 - All 67 intended files carry true line-1 generated provenance.
 - Generator/check proof can reproduce them or emits an intrinsic block.
+- Dependency rows consumed: `DEP-W4-PATTERN-H-PROVENANCE`,
+  `DEP-W4-W6-CSS-LEGACY-RUNTIME-SHIM`.
 
 ## Section 8 - W5 CSS Typed Value Provider
 
@@ -310,6 +349,10 @@ Exit gate:
 - W8R tuple values are diagnostic negative fixtures only, never floors.
 - Generic provider edits prove CSS plus Sheets or BBNF-self stability when
   the generic path can affect multiple grammars.
+- Dependency rows consumed: `DEP-W6-CSS-GENERATED-RS`,
+  `DEP-W6-CSS-SUMMARY-FACT-STREAM`,
+  `DEP-W3-W6-CSS-PROVIDER-TEMPLATE`,
+  `DEP-W4-W6-CSS-LEGACY-RUNTIME-SHIM`.
 
 ## Section 9 - W6 CSS Same-Workload Retime And Old-Proof Retirement
 
@@ -327,6 +370,10 @@ Exit gate:
 - Optional per-feature rows have distinct measurements and no shared hidden
   signature.
 - JSON 51/51 maintains >=98% of W0 if behavior changes.
+- Dependency rows consumed: `DEP-W6-CSS-GENERATED-RS`,
+  `DEP-W6-CSS-SUMMARY-FACT-STREAM`,
+  `DEP-W3-W6-CSS-PROVIDER-TEMPLATE`,
+  `DEP-W4-W6-CSS-LEGACY-RUNTIME-SHIM`.
 
 ## Section 10 - W7 Decision Engine Spine
 
@@ -342,6 +389,7 @@ Exit gate:
 - `egraph_rewrite_count >= 1`.
 - Removing a required fact can change CSP satisfiability or selection.
 - No `json_*` or `css_*` facts drive generic selection.
+- Dependency rows consumed: `DEP-W7-DECISION-SPINE`.
 
 ## Section 11 - W8 BackendShape Harness Plus EagerTape/OffsetTape
 
@@ -359,6 +407,7 @@ Exit gate:
   `todo!`, or pass-through shells.
 - Generated fixture output is runtime-relevant or rejected by a consumed
   gate.
+- Dependency rows consumed: `DEP-W8-LOWERERS-A`.
 
 ## Section 12 - W9 EventTape/SinkOnly/CollapsedStage And All-Five Gate
 
@@ -376,6 +425,7 @@ Exit gate:
   SinkOnly, CollapsedStage}`.
 - EventTape is not a sidecar vector, sixth shape, retained stream, public
   substrate API, or alternate document projection.
+- Dependency rows consumed: `DEP-W9-LOWERERS-B`.
 
 ## Section 13 - W10 FNV Quarantine
 
@@ -392,6 +442,7 @@ Exit gate:
   proof.
 - Strict-product gate consumes quarantine metadata and negative fixtures.
 - Production FNV hits are absent or routed to REDRESS with a new contract.
+- Dependency rows consumed: `DEP-W10-FNV-QUARANTINE`.
 
 ## Section 14 - W11 Close Reconciliation
 
@@ -410,6 +461,8 @@ Exit gate:
   at HEAD.
 - SK-V16 routing is routed remainder after proof; it cannot substitute for
   an SK-V15 repair.
+- Dependency rows consumed: every `DEP-*` row, especially
+  `DEP-W11-CLOSE-NO-ORPHANS`.
 
 ## Section 15 - Pre-Blocked Routes
 
@@ -420,15 +473,15 @@ The shared pre-block list is:
 | Route family | Block |
 |---|---|
 | REDRESS 28+33, 60, 72, 83 | No tiny-string/StringBlock replay under a new name. |
-| REDRESS 50-55, 96-98 | No retained sidecar tables, cursor streams, class columns, public `UnionTape`, or second tape. |
-| REDRESS 60-72, 84 | No retained parse shortcuts or global direct/Track 2 cap changes. |
+| REDRESS 50-55, 96-98 | No parser-owned structural projection, retained cursor/list, aux density/projection table, retained sidecar tables, cursor streams, class columns, public `UnionTape`, second tape, parallel source pass, or Track 1 == Track 2 sidecar. |
+| REDRESS 60-72, 84 | No retained parse shortcuts, parser-owned structural streams, sidecar event vectors, alternate document projections, or global direct/Track 2 cap changes. |
 | REDRESS 80 | No numeric/digit route without fresh P1 BBNF-side hot leaf. |
 | REDRESS 82-84 | No one-quartet Unicode/object-pair production promotion. |
 | REDRESS 88, 89 | No PMULL or CSSC production hot-body promotion from checkasm/ISA alone. |
 | REDRESS 183/184/209-213 | No provider/runtime/template delete before replacement proof. |
 | REDRESS 215 | No CSS broadcast, brace-counter, or wrong-plane comparator admission. |
 | REDRESS 242-247 | No decoded-string, structural-stream, string64, or fixed-shape unicode retry under old framing. |
-| FNV closed enum | Bench-only quarantine; no production migration without a future contract. |
+| FNV closed enum | Bench-only quarantine; no production FNV arbiter, production hash correctness proof, or production migration without a future contract. |
 
 ## Section 16 - Dispatch Posture
 

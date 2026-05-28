@@ -25,6 +25,13 @@ The two V2 splits are load-bearing:
 - old W7 splits into W8 lowerer fixture/EagerTape/OffsetTape and W9
   EventTape/SinkOnly/CollapsedStage plus the all-five gate.
 
+Because W0..W11 consumes the full 12-wave ceiling, a plan estimate that
+exceeds the current wave's manual LOC budget, generated-output status,
+docs/ledger budget, or 30-minute redress cap cannot spawn W12 and cannot
+use CHALLENGE time as implementation overflow. It must record row-level
+intrinsic block, revert/REDRESS the oversized intervention, or route a
+wave-graph amendment through the gate before redress.
+
 Every implementation wave uses the SK-V15 Alpha caps:
 
 | Phase | Hard cap | Rule |

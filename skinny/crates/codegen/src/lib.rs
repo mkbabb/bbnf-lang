@@ -1237,6 +1237,93 @@ fn decision_spine_changes_generated_selection_fixture() {
 
 #[cfg(test)]
 #[test]
+fn backend_lowerer_fixture_rejects_label_string_scaffold() {
+    let rule = ir::BackendRule {
+        name: "sample".to_string(),
+        expr: ir::BackendExpr::Seq(vec![
+            ir::BackendExpr::ByteLiteral(vec![b'a']),
+            ir::BackendExpr::Return,
+        ]),
+    };
+
+    let eager = lower::eager_tape::lower_rule(&rule);
+    let offset = lower::offset_tape::lower_rule(&rule);
+
+    assert!(!eager.contains("-> eager_tape"));
+    assert!(!offset.contains("-> offset_tape"));
+    assert!(eager.contains("runtime_plan::EagerTapeRule"));
+    assert!(offset.contains("runtime_plan::OffsetTapeRule"));
+    assert!(eager.contains("eager_match_literal_hex(61)"));
+    assert!(offset.contains("offset_match_literal_hex(61)"));
+}
+
+#[cfg(test)]
+#[test]
+fn lower_eager_tape_emits_runtime_relevant_diff() {
+    let source = r#"
+root = "a" | "ab" ;
+"#;
+    let grammar = grammar::parse_grammar("root", source).unwrap();
+    let output = passes::compile(&grammar).unwrap();
+    let lowered = lower::lower_to_rust(
+        &output.backend_ir,
+        &lower::LowerCtx {
+            backend_shape: &output.layout_facts.backend_shape,
+            cost_facts: &output.layout_facts.cost_facts,
+            per_grammar_policy: &output.layout_facts.per_grammar_policy,
+            same_substrate_union: &output.layout_facts.same_substrate_union,
+            diagnostics: &output.diagnostics,
+        },
+    )
+    .unwrap();
+    let root = lowered
+        .rule_plans
+        .iter()
+        .find(|rule| rule.rule == "root")
+        .expect("root plan");
+
+    assert_eq!(root.shape, BackendShape::EagerTape);
+    assert!(root.body.contains("runtime_plan::EagerTapeRule"));
+    assert!(root.body.contains("alt_"));
+    assert!(root.body.contains("eager_match_literal_hex(61)"));
+    assert!(!root.body.contains("-> eager_tape"));
+}
+
+#[cfg(test)]
+#[test]
+fn lower_offset_tape_emits_runtime_relevant_diff() {
+    let source = r#"
+root = "a" "b" ;
+"#;
+    let grammar = grammar::parse_grammar("root", source).unwrap();
+    let output = passes::compile(&grammar).unwrap();
+    let lowered = lower::lower_to_rust(
+        &output.backend_ir,
+        &lower::LowerCtx {
+            backend_shape: &output.layout_facts.backend_shape,
+            cost_facts: &output.layout_facts.cost_facts,
+            per_grammar_policy: &output.layout_facts.per_grammar_policy,
+            same_substrate_union: &output.layout_facts.same_substrate_union,
+            diagnostics: &output.diagnostics,
+        },
+    )
+    .unwrap();
+    let root = lowered
+        .rule_plans
+        .iter()
+        .find(|rule| rule.rule == "root")
+        .expect("root plan");
+
+    assert_eq!(root.shape, BackendShape::OffsetTape);
+    assert!(root.body.contains("runtime_plan::OffsetTapeRule"));
+    assert!(root.body.contains("seq_begin"));
+    assert!(root.body.contains("offset_match_literal_hex(61)"));
+    assert!(root.body.contains("offset_match_literal_hex(62)"));
+    assert!(!root.body.contains("-> offset_tape"));
+}
+
+#[cfg(test)]
+#[test]
 fn w5a_runtime_contract_consumes_source_and_metadata() {
     tests::w5a_runtime_contract_consumes_source_and_metadata();
 }

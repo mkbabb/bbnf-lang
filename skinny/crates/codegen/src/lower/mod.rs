@@ -5,6 +5,7 @@ pub mod offset_tape;
 pub mod rust;
 pub mod schema_direct;
 pub mod sink_only;
+mod tape_plan;
 
 use ir::{BackendRule, BackendShape, CostFacts};
 

@@ -6352,3 +6352,29 @@ material differential.
   `tests::css_l4_generated_runtimes_reproducible_from_request` reports
   `DifferentFile("generated.rs")`. Those generated files are not part of W7's
   staged slice.
+
+## SK-V15 W8 EagerTape OffsetTape Lowerer Admit
+
+- Item 250 closes `G-SK-V15-W8-LOWERERS-A` as `ADMIT-W8`. W8 consumes
+  `DEP-W8-LOWERERS-A` for EagerTape and OffsetTape only; EventTape,
+  SinkOnly, CollapsedStage, and the all-five gate remain W9 scope.
+- The W8 implementation replaces the old `rule X -> eager_tape` and
+  `rule X -> offset_tape` format-string scaffolds with a shared
+  `BackendExpr` operation-plan renderer. The renderer emits runtime-relevant
+  operations for entry, sequence, alternation, repeats, optional branches,
+  literals, regex spans, calls, span marks, tape emits, direct builds, value
+  projection, and return.
+- The new lowerer output names `ParserState` and `TapeBuilder` and includes
+  shape-specific operations such as `eager_match_literal_hex`,
+  `offset_match_literal_hex`, `capture_span_value`, `record_span_offsets`, and
+  `ParserState::emit_plain_offset`. It is no longer a label string or
+  pass-through shell.
+- Required evidence passed:
+  `cargo test --manifest-path skinny/Cargo.toml -p codegen backend_lowerer_fixture_rejects_label_string_scaffold -- --exact`,
+  `cargo test --manifest-path skinny/Cargo.toml -p codegen lower_eager_tape_emits_runtime_relevant_diff -- --exact`, and
+  `cargo test --manifest-path skinny/Cargo.toml -p codegen lower_offset_tape_emits_runtime_relevant_diff -- --exact`.
+  The W7 guard `decision_spine_changes_generated_selection_fixture` also
+  passed.
+- Full codegen package testing remains blocked by the same pre-existing dirty
+  CSS generated runtime files recorded in W7. Those files are not part of the
+  W8 staged slice.

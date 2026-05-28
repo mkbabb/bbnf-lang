@@ -6378,3 +6378,37 @@ material differential.
 - Full codegen package testing remains blocked by the same pre-existing dirty
   CSS generated runtime files recorded in W7. Those files are not part of the
   W8 staged slice.
+
+## SK-V15 W9 Remaining Lowerer All-Five Gate Admit
+
+- Item 251 closes `G-SK-V15-W9-LOWERERS-B` as `ADMIT-W9`. W9 consumes
+  `DEP-W9-LOWERERS-B` for EventTape, SinkOnly, CollapsedStage, and the
+  all-five BackendShape report gate.
+- EventTape and CollapsedStage now use the shared `BackendExpr`
+  operation-plan renderer instead of `rule X -> event_tape` and
+  `rule X -> collapsed_stage` label strings. EventTape emits
+  `runtime_plan::EventTapeRule` over `ParserState+TapeBuilder+EventGrammar`;
+  CollapsedStage emits `runtime_plan::CollapsedStageRule` over
+  `ParserState+CollapsedStagePlan`.
+- SinkOnly keeps the real `SinkOnlyProgram` compiled-runtime path and now
+  marks the per-rule plan as `runtime_plan::SinkOnlyRule
+  generated_runtime=JsonSink+DirectBuild`.
+- `cargo xtask gate-json --check-results --skv15-backend-lowerers-report
+  restart/skinny/tranches/sk-v15/research/w9/skv15-W9-backend-lowerers-report.json`
+  consumes the exact five-shape canon and rejects missing or extra lowerers,
+  non-implemented statuses, missing command evidence, and EventTape anti-sidecar
+  fields that are not `absent`.
+- Required evidence passed:
+  `cargo test --manifest-path skinny/Cargo.toml -p codegen lower_event_tape_emits_runtime_relevant_diff -- --exact`,
+  `cargo test --manifest-path skinny/Cargo.toml -p codegen lower_sink_only_emits_runtime_relevant_diff -- --exact`,
+  `cargo test --manifest-path skinny/Cargo.toml -p codegen lower_collapsed_stage_emits_runtime_relevant_diff -- --exact`, and
+  the W9 `gate-json` report command above. The broadened
+  `backend_lowerer_fixture_rejects_label_string_scaffold` guard also passed.
+- Product-code scans over `skinny/crates/codegen/src/lower` and EventTape
+  anti-sidecar roots returned no scaffold, sidecar vector, retained parser
+  stream, public substrate API, public `UnionTape`, alternate document
+  projection, or sixth BackendShape hits. Test-only negative assertions remain
+  in `skinny/crates/codegen/src/lib.rs`.
+- Full codegen package testing remains blocked by the same pre-existing dirty
+  CSS generated runtime files recorded in W7 and W8. Those files are not part
+  of the W9 staged slice.

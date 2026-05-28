@@ -1248,13 +1248,24 @@ fn backend_lowerer_fixture_rejects_label_string_scaffold() {
 
     let eager = lower::eager_tape::lower_rule(&rule);
     let offset = lower::offset_tape::lower_rule(&rule);
+    let event = lower::event_tape::lower_rule(&rule);
+    let collapsed = lower::collapsed_stage::lower_rule(&rule);
+    let sink = lower::sink_only::lower_rule(&rule);
 
     assert!(!eager.contains("-> eager_tape"));
     assert!(!offset.contains("-> offset_tape"));
+    assert!(!event.contains("-> event_tape"));
+    assert!(!collapsed.contains("-> collapsed_stage"));
+    assert!(!sink.contains("-> sink_only"));
     assert!(eager.contains("runtime_plan::EagerTapeRule"));
     assert!(offset.contains("runtime_plan::OffsetTapeRule"));
+    assert!(event.contains("runtime_plan::EventTapeRule"));
+    assert!(collapsed.contains("runtime_plan::CollapsedStageRule"));
+    assert!(sink.contains("runtime_plan::SinkOnlyRule"));
     assert!(eager.contains("eager_match_literal_hex(61)"));
     assert!(offset.contains("offset_match_literal_hex(61)"));
+    assert!(event.contains("event_match_literal_hex(61)"));
+    assert!(collapsed.contains("collapsed_match_literal_hex(61)"));
 }
 
 #[cfg(test)]
@@ -1320,6 +1331,129 @@ root = "a" "b" ;
     assert!(root.body.contains("offset_match_literal_hex(61)"));
     assert!(root.body.contains("offset_match_literal_hex(62)"));
     assert!(!root.body.contains("-> offset_tape"));
+}
+
+#[cfg(test)]
+#[test]
+fn lower_event_tape_emits_runtime_relevant_diff() {
+    let rule = sample_lowerer_rule("event_root");
+    let body = lower::event_tape::lower_rule(&rule);
+
+    assert!(body.contains("runtime_plan::EventTapeRule"));
+    assert!(body.contains("generated_runtime=ParserState+TapeBuilder+EventGrammar"));
+    assert!(body.contains("event_match_literal_hex(61)"));
+    assert!(body.contains("event_classify_span_event(String"));
+    assert!(body.contains("event_append_event_record(StringValue)"));
+    assert!(body.contains("ParserState::emit_plain_offset"));
+    assert!(!body.contains("-> event_tape"));
+    for forbidden in [
+        "sidecar",
+        "EventVector",
+        "retained_parser_stream",
+        "public_substrate",
+        "alternate_document_projection",
+        "UnionTape",
+    ] {
+        assert!(
+            !body.contains(forbidden),
+            "forbidden EventTape marker {forbidden}"
+        );
+    }
+}
+
+#[cfg(test)]
+#[test]
+fn lower_sink_only_emits_runtime_relevant_diff() {
+    const JSON_GRAMMAR: &str = include_str!("../../../grammars/json.bbnf");
+
+    let grammar = grammar::parse_grammar("json", JSON_GRAMMAR).unwrap();
+    let output = passes::compile(&grammar).unwrap();
+    let lowered = lower::lower_to_rust(
+        &output.backend_ir,
+        &lower::LowerCtx {
+            backend_shape: &output.layout_facts.backend_shape,
+            cost_facts: &output.layout_facts.cost_facts,
+            per_grammar_policy: &output.layout_facts.per_grammar_policy,
+            same_substrate_union: &output.layout_facts.same_substrate_union,
+            diagnostics: &output.diagnostics,
+        },
+    )
+    .unwrap();
+    let sink_rule = lowered
+        .rule_plans
+        .iter()
+        .find(|rule| rule.shape == BackendShape::SinkOnly)
+        .expect("sink-only rule");
+
+    assert!(sink_rule.body.contains("runtime_plan::SinkOnlyRule"));
+    assert!(sink_rule
+        .body
+        .contains("generated_runtime=JsonSink+DirectBuild"));
+    assert!(!sink_rule.body.contains("-> sink_only"));
+
+    let program = lowered.sink_only_program.expect("sink-only program");
+    assert_eq!(program.policy_summary.backend_shape, BackendShape::SinkOnly);
+    assert!(program.has_rule("object") || program.has_rule("array"));
+    assert!(!program.direct_shapes.is_empty());
+    assert!(!program.literals.is_empty());
+
+    let emitted = emit_from_source("json", JSON_GRAMMAR).unwrap();
+    let generated = emitted.get("generated.rs").expect("generated.rs");
+    assert!(generated.contains("// sink-only lowered from BackendIr"));
+    assert!(generated.contains("pub fn parse_direct"));
+    assert!(generated.contains("JsonSink"));
+    assert!(!generated.contains("rule json -> sink_only"));
+    assert!(!generated.contains("todo!"));
+    assert!(!generated.contains("unimplemented!"));
+}
+
+#[cfg(test)]
+#[test]
+fn lower_collapsed_stage_emits_runtime_relevant_diff() {
+    let rule = sample_lowerer_rule("collapsed_root");
+    let body = lower::collapsed_stage::lower_rule(&rule);
+
+    assert!(body.contains("runtime_plan::CollapsedStageRule"));
+    assert!(body.contains("generated_runtime=ParserState+CollapsedStagePlan"));
+    assert!(body.contains("collapsed_match_literal_hex(61)"));
+    assert!(body.contains("collapsed_fuse_span_stage(String"));
+    assert!(body.contains("collapsed_commit_fused_stage(StringValue)"));
+    assert!(body.contains("ParserState::emit_plain_offset"));
+    assert!(!body.contains("-> collapsed_stage"));
+}
+
+#[cfg(test)]
+fn sample_lowerer_rule(name: &str) -> ir::BackendRule {
+    ir::BackendRule {
+        name: name.to_string(),
+        expr: ir::BackendExpr::Entry(Box::new(ir::BackendExpr::Seq(vec![
+            ir::BackendExpr::Alt {
+                mode: ir::AltMode::Dispatch,
+                branches: vec![
+                    ir::BackendExpr::ByteLiteral(vec![b'a']),
+                    ir::BackendExpr::ByteLiteral(vec![b'b']),
+                ],
+            },
+            ir::BackendExpr::RegexProgram {
+                pattern: "[a-z]+".to_string(),
+                span_kind: ir::SpanKind::String,
+            },
+            ir::BackendExpr::TapeEmit {
+                kind: ir::TapeKind::StringValue,
+            },
+            ir::BackendExpr::DirectBuild {
+                shape: "SampleValue".to_string(),
+                fields: vec![ir::DirectBuildField {
+                    name: "value".to_string(),
+                    source: ir::DirectBuildSource::Span {
+                        label: "value".to_string(),
+                    },
+                    target: None,
+                }],
+            },
+            ir::BackendExpr::Return,
+        ]))),
+    }
 }
 
 #[cfg(test)]

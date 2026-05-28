@@ -5,6 +5,8 @@ use std::fmt::Write;
 pub(super) enum TapeFlavor {
     Eager,
     Offset,
+    Event,
+    Collapsed,
 }
 
 impl TapeFlavor {
@@ -12,6 +14,16 @@ impl TapeFlavor {
         match self {
             Self::Eager => "EagerTapeRule",
             Self::Offset => "OffsetTapeRule",
+            Self::Event => "EventTapeRule",
+            Self::Collapsed => "CollapsedStageRule",
+        }
+    }
+
+    fn runtime_components(self) -> &'static str {
+        match self {
+            Self::Eager | Self::Offset => "ParserState+TapeBuilder",
+            Self::Event => "ParserState+TapeBuilder+EventGrammar",
+            Self::Collapsed => "ParserState+CollapsedStagePlan",
         }
     }
 
@@ -19,6 +31,8 @@ impl TapeFlavor {
         match self {
             Self::Eager => "eager",
             Self::Offset => "offset",
+            Self::Event => "event",
+            Self::Collapsed => "collapsed",
         }
     }
 
@@ -26,6 +40,8 @@ impl TapeFlavor {
         match self {
             Self::Eager => "capture_span_value",
             Self::Offset => "record_span_offsets",
+            Self::Event => "classify_span_event",
+            Self::Collapsed => "fuse_span_stage",
         }
     }
 
@@ -33,6 +49,8 @@ impl TapeFlavor {
         match self {
             Self::Eager => "write_tape_value",
             Self::Offset => "write_tape_offset",
+            Self::Event => "append_event_record",
+            Self::Collapsed => "commit_fused_stage",
         }
     }
 }
@@ -44,8 +62,9 @@ pub(super) fn render_rule(rule: &BackendRule, flavor: TapeFlavor) -> String {
     ops.push("finish_rule".to_string());
 
     let mut out = format!(
-        "runtime_plan::{} generated_runtime=ParserState+TapeBuilder rule={} ops={}\n",
+        "runtime_plan::{} generated_runtime={} rule={} ops={}\n",
         flavor.runtime_type(),
+        flavor.runtime_components(),
         rule.name,
         ops.len()
     );

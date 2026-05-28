@@ -13,5 +13,5 @@ impl ShapeLowering for Lowering {
 }
 
 pub fn lower_rule(rule: &BackendRule) -> String {
-    format!("rule {} -> collapsed_stage", rule.name)
+    super::tape_plan::render_rule(rule, super::tape_plan::TapeFlavor::Collapsed)
 }

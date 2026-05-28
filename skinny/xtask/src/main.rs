@@ -9,6 +9,7 @@ mod regen_css;
 
 const USAGE: &str = "usage: cargo xtask <regen-json|check-json|regen-css|check-css-l4-at-rules-and-media|check-css-l4-declaration-values|check-css-l4-declaration-values-extended|check-css-l4-nested-layout|check-css-l4-stylesheet-selectors|check-css-l4-vendor-and-custom-atrules|check-css-l4-visual-functions|regen-real-typed|check-real-typed|check-conformance|lint-loc|bench-json|gate-json|primitive-checkasm>";
 const SKV15_W2_LOCK_GATES_ONLY_FLAG: &str = "--skv15-w2-lock-gates-only";
+const SKV15_BACKEND_LOWERERS_REPORT_FLAG: &str = "--skv15-backend-lowerers-report";
 const PRIMITIVE_CHECKASM_TESTS: &[&str] = &[
     "checkasm_ascii_set_member_find_64",
     "checkasm_byte_class_from_eq_set_64",
@@ -315,6 +316,16 @@ fn gate_json(root: &Path, passthrough: Vec<String>) -> Result<()> {
         return gate_json_cost_facts(root, passthrough);
     }
     validate_gate_json_passthrough(&passthrough)?;
+    if let Some(report_path) =
+        extract_report_path(&passthrough, SKV15_BACKEND_LOWERERS_REPORT_FLAG)?
+    {
+        if !passthrough.iter().any(|arg| arg == "--check-results") {
+            bail!("{SKV15_BACKEND_LOWERERS_REPORT_FLAG} requires --check-results");
+        }
+        validate_w0_results_snapshot(root)?;
+        validate_skv15_backend_lowerers_report(root, &report_path)?;
+        return Ok(());
+    }
     let results_only_check = passthrough.len() == 1 && passthrough[0] == "--check-results";
     if passthrough.iter().any(|arg| arg == "--check-results") {
         validate_w0_results_snapshot(root)?;
@@ -385,7 +396,8 @@ fn validate_gate_json_passthrough(args: &[String]) -> Result<()> {
             | "--skv13-json-parse-only-report"
             | "--skv14-json-parse-only-report"
             | "--skv13-typed-product-report"
-            | "--skv13-simd-asm-production-report" => {
+            | "--skv13-simd-asm-production-report"
+            | SKV15_BACKEND_LOWERERS_REPORT_FLAG => {
                 if index + 1 >= args.len() {
                     bail!("{} expects one path argument", args[index]);
                 }
@@ -395,6 +407,174 @@ fn validate_gate_json_passthrough(args: &[String]) -> Result<()> {
         }
     }
     Ok(())
+}
+
+fn extract_report_path(args: &[String], flag: &str) -> Result<Option<PathBuf>> {
+    let mut found = None;
+    let mut index = 0;
+    while index < args.len() {
+        if args[index] == flag {
+            if found.is_some() {
+                bail!("{flag} may be supplied only once");
+            }
+            let path = args
+                .get(index + 1)
+                .ok_or_else(|| anyhow!("{flag} expects one path argument"))?;
+            found = Some(PathBuf::from(path));
+            index += 2;
+        } else {
+            index += 1;
+        }
+    }
+    Ok(found)
+}
+
+fn validate_skv15_backend_lowerers_report(root: &Path, report_path: &Path) -> Result<()> {
+    let path = resolve_report_path(root, report_path);
+    let text = std::fs::read_to_string(&path).with_context(|| {
+        format!(
+            "{SKV15_BACKEND_LOWERERS_REPORT_FLAG} requires {}",
+            path.display()
+        )
+    })?;
+    let value: serde_json::Value = serde_json::from_str(&text)
+        .with_context(|| format!("{} is not valid JSON", path.display()))?;
+    validate_skv15_backend_lowerers_report_value(&value).with_context(|| {
+        format!(
+            "{} failed SK-V15 W9 lowerer report validation",
+            path.display()
+        )
+    })
+}
+
+fn resolve_report_path(root: &Path, report_path: &Path) -> PathBuf {
+    if report_path.is_absolute() {
+        return report_path.to_path_buf();
+    }
+    let workspace_relative = root.join(report_path);
+    if workspace_relative.exists() {
+        return workspace_relative;
+    }
+    root.parent()
+        .map(|parent| parent.join(report_path))
+        .unwrap_or(workspace_relative)
+}
+
+fn validate_skv15_backend_lowerers_report_value(value: &serde_json::Value) -> Result<()> {
+    require_json_str(value, "schema_version", "sk-v15-backend-lowerers-report-v1")?;
+    require_json_str(value, "wave_id", "SK-V15-W9")?;
+    require_json_str(value, "dep_row", "DEP-W9-LOWERERS-B")?;
+    require_json_str(value, "disposition", "ADMIT-W9")?;
+    require_json_str(value, "no_extra_backend_shape_status", "pass")?;
+    require_json_u64(value, "shape_count", 5)?;
+
+    let expected = [
+        "EagerTape",
+        "OffsetTape",
+        "EventTape",
+        "SinkOnly",
+        "CollapsedStage",
+    ];
+    let canon = value
+        .get("shape_canon")
+        .and_then(serde_json::Value::as_array)
+        .ok_or_else(|| anyhow!("shape_canon must be an array"))?;
+    let actual = canon
+        .iter()
+        .map(|shape| {
+            shape
+                .as_str()
+                .ok_or_else(|| anyhow!("shape_canon entries must be strings"))
+        })
+        .collect::<Result<Vec<_>>>()?;
+    if actual != expected {
+        bail!("shape_canon {actual:?} != {expected:?}");
+    }
+
+    let lowerers = value
+        .get("lowerers")
+        .and_then(serde_json::Value::as_array)
+        .ok_or_else(|| anyhow!("lowerers must be an array"))?;
+    let mut seen = BTreeSet::new();
+    for entry in lowerers {
+        let shape = entry
+            .get("shape")
+            .and_then(serde_json::Value::as_str)
+            .ok_or_else(|| anyhow!("lowerer entry missing string shape"))?;
+        let status = entry
+            .get("status")
+            .and_then(serde_json::Value::as_str)
+            .ok_or_else(|| anyhow!("lowerer {shape} missing string status"))?;
+        if status != "implemented" {
+            bail!("lowerer {shape} status {status} != implemented");
+        }
+        let marker = entry
+            .get("runtime_marker")
+            .and_then(serde_json::Value::as_str)
+            .ok_or_else(|| anyhow!("lowerer {shape} missing runtime_marker"))?;
+        if !marker.starts_with("runtime_plan::") && shape != "SinkOnly" {
+            bail!("lowerer {shape} marker {marker} is not runtime_plan");
+        }
+        seen.insert(shape);
+    }
+    let expected_set = expected.into_iter().collect::<BTreeSet<_>>();
+    if seen != expected_set {
+        bail!("lowerers {seen:?} != {expected_set:?}");
+    }
+
+    let anti_sidecar = value
+        .get("event_tape_anti_sidecar")
+        .and_then(serde_json::Value::as_object)
+        .ok_or_else(|| anyhow!("event_tape_anti_sidecar must be an object"))?;
+    for key in [
+        "sidecar_event_vector",
+        "retained_parser_stream",
+        "public_substrate_api",
+        "alternate_document_projection",
+        "public_union_tape",
+        "sixth_backend_shape",
+    ] {
+        if anti_sidecar.get(key).and_then(serde_json::Value::as_str) != Some("absent") {
+            bail!("event_tape_anti_sidecar {key} must be absent");
+        }
+    }
+
+    let commands = value
+        .get("commands")
+        .and_then(serde_json::Value::as_array)
+        .ok_or_else(|| anyhow!("commands must be an array"))?;
+    for required in [
+        "lower_event_tape_emits_runtime_relevant_diff",
+        "lower_sink_only_emits_runtime_relevant_diff",
+        "lower_collapsed_stage_emits_runtime_relevant_diff",
+        SKV15_BACKEND_LOWERERS_REPORT_FLAG,
+    ] {
+        if !commands
+            .iter()
+            .filter_map(serde_json::Value::as_str)
+            .any(|command| command.contains(required))
+        {
+            bail!("commands missing `{required}`");
+        }
+    }
+
+    Ok(())
+}
+
+fn require_json_str(value: &serde_json::Value, key: &str, expected: &str) -> Result<()> {
+    match value.get(key).and_then(serde_json::Value::as_str) {
+        Some(actual) if actual == expected => Ok(()),
+        Some(actual) => bail!("{key} {actual} != {expected}"),
+        None => bail!("{key} missing or not a string"),
+    }
+}
+
+fn require_json_u64(value: &serde_json::Value, key: &str, expected: u64) -> Result<()> {
+    match value.get(key).and_then(serde_json::Value::as_u64) {
+        Some(actual) if actual == expected => Ok(()),
+        Some(actual) => bail!("{key} {actual} != {expected}"),
+        None => bail!("{key} missing or not an unsigned integer"),
+    }
 }
 
 fn apply_bench_output_env(command: &mut Command, root: &Path) {

@@ -1,0 +1,61 @@
+{
+  "schema_version": "sk-v15-backend-lowerers-report-v1",
+  "wave_id": "SK-V15-W9",
+  "dep_row": "DEP-W9-LOWERERS-B",
+  "shape_canon": [
+    "EagerTape",
+    "OffsetTape",
+    "EventTape",
+    "SinkOnly",
+    "CollapsedStage"
+  ],
+  "shape_count": 5,
+  "no_extra_backend_shape_status": "pass",
+  "lowerers": [
+    {
+      "shape": "EagerTape",
+      "status": "implemented",
+      "consumer": "codegen::lower::tape_plan::render_rule",
+      "runtime_marker": "runtime_plan::EagerTapeRule"
+    },
+    {
+      "shape": "OffsetTape",
+      "status": "implemented",
+      "consumer": "codegen::lower::tape_plan::render_rule",
+      "runtime_marker": "runtime_plan::OffsetTapeRule"
+    },
+    {
+      "shape": "EventTape",
+      "status": "implemented",
+      "consumer": "codegen::lower::tape_plan::render_rule",
+      "runtime_marker": "runtime_plan::EventTapeRule"
+    },
+    {
+      "shape": "SinkOnly",
+      "status": "implemented",
+      "consumer": "codegen::lower::sink_only::lower_program",
+      "runtime_marker": "runtime_plan::SinkOnlyRule"
+    },
+    {
+      "shape": "CollapsedStage",
+      "status": "implemented",
+      "consumer": "codegen::lower::tape_plan::render_rule",
+      "runtime_marker": "runtime_plan::CollapsedStageRule"
+    }
+  ],
+  "event_tape_anti_sidecar": {
+    "sidecar_event_vector": "absent",
+    "retained_parser_stream": "absent",
+    "public_substrate_api": "absent",
+    "alternate_document_projection": "absent",
+    "public_union_tape": "absent",
+    "sixth_backend_shape": "absent"
+  },
+  "commands": [
+    "cargo test --manifest-path skinny/Cargo.toml -p codegen lower_event_tape_emits_runtime_relevant_diff -- --exact",
+    "cargo test --manifest-path skinny/Cargo.toml -p codegen lower_sink_only_emits_runtime_relevant_diff -- --exact",
+    "cargo test --manifest-path skinny/Cargo.toml -p codegen lower_collapsed_stage_emits_runtime_relevant_diff -- --exact",
+    "cargo xtask gate-json --check-results --skv15-backend-lowerers-report restart/skinny/tranches/sk-v15/research/w9/skv15-W9-backend-lowerers-report.json"
+  ],
+  "disposition": "ADMIT-W9"
+}

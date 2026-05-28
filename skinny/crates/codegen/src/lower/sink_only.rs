@@ -111,7 +111,7 @@ pub fn lower_rule(rule: &BackendRule) -> String {
         .map(|shape| shape.shape.as_str())
         .unwrap_or("none");
     format!(
-        "rule {} -> sink_only(shape={shape}, spans={}, literals={}, dispatch_alts={})",
+        "runtime_plan::SinkOnlyRule generated_runtime=JsonSink+DirectBuild rule={} shape={shape} spans={} literals={} dispatch_alts={}",
         rule.name,
         facts.span_kinds.len(),
         facts.literals.len(),

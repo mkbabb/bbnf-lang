@@ -1,8 +1,8 @@
 ---
 agent: 1D
 pass: T-P1-excavation
-cycle: V2
-generated_at: 2026-05-28T04:19:00Z
+cycle: V3
+generated_at: 2026-05-28T06:10:00Z
 spec_surfaces_audited:
   - restart/prompts/totality/PASS-1-EXCAVATION.md
   - skinny/REDRESS.md
@@ -44,6 +44,9 @@ prior_cycle_dispositions_folded:
     - CH3-V1-005 added explicit REDRESS-183/184/209..213 wave-graph pre-block row
     - CH4-V1-002 added LOC/risk fields for divergence buckets
     - CH5-V1-04 and CH5-V1-05 added CSS sidecar and broadcast-admission handling
+    - CH2-V2-F05 added pass-layer recognizer/materialization leaks as grammar-neutral Lock 14 findings
+    - CH4-V2-F08 split broad implementation buckets into bounded receiver classes
+    - CH4-V2-F09 added primitive/kernel receiver proof table
   first_cycle_additions:
     - SKV15-J-JSON-51-GUARD
     - SKV15-J-PARSEONLY-MEMCHR
@@ -139,6 +142,7 @@ PRUNE-WAVE-A and REBUILD-WAVE-E before any CSS >SOTA claim returns.
 | G-7 | disproved | Retained structural indexes, streaming cursors, class columns, and second substrates remain blocked. | `restart/skinny/tranches/sk-v15/research/p2/p2a-sota-teardown.md:36-37`; `restart/skinny/tranches/sk-v15/research/p2/p2d-substrate-tape.md:50-58` |
 | G-8 | pending | SIMD/ASM candidates require scalar oracle, strict checkasm, same-wave consumer, and Lock 16 manifest. | `restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:22-32`; `restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:34-41` |
 | G-9 | pending | parse-that needs grammar-neutral Layer-1 vocabulary before S-P3 can shortlist parser primitives. | `restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md:10-25`; `restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md:223-237` |
+| G-10 | disproved | Pass-layer recognizer mining and materialization role mining are JSON-shaped generic pass logic, not JSON-only empirical lessons; Sheets and BBNF-self must be proof receivers before these claims generalize. | `restart/audit/totality/p1/1B-codegen-evidence.md` rows `P1-1B-D9` and `P1-1B-D10`; recognizer whitelist `skinny/crates/passes/src/lib.rs:332`-`359`; role mining `skinny/crates/passes/src/lib.rs:1354`-`1435` |
 
 ### CSS Audit-Demoted Findings
 
@@ -157,9 +161,9 @@ PRUNE-WAVE-A and REBUILD-WAVE-E before any CSS >SOTA claim returns.
 | divergence | count bucket | loc_delta_estimate | risk | evidence | V1 impact |
 |---|---:|---:|---|---|---|
 | Proved/currently implemented skinny lessons that V1 may cite with scope qualifiers: JSON 51-row guard, W11W parse_only, strict product rows, hot-leaf attribution discipline, same tape substrate, aarch64 admission pin, root candidate process discipline. | 7 implemented | 0-120 doc LOC | medium if overgeneralized | `skinny/RESULTS.md:139-149`; `skinny/REDRESS.md:6254-6284`; `restart/skinny/tranches/sk-v15/research/p1/p1e-hot-leaf-attribution.md:31-35`; `restart/skinny/tranches/sk-v15/research/p2/p2d-substrate-tape.md:12-15`; `restart/skinny/tranches/sk-v15/HANDOFF.md:16-18`; `restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:22-32` | Scope these as JSON-empirical or process/substrate, not proof of CSS/generalized codegen. |
-| Disproved/unimplemented claims: CSS broadcast, CSS generated string, CSS comparator/equality mismatch, CSS Value API absence, Lock 14/16 gate holes, Pattern H ownership gap, Decision Engine scaffold, codegen grammar-family leaks, retained sidecars, harness/hash primitive misuse. | 10 unimplemented | 1,500-8,000 implementation LOC plus gate work | high | `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:21-58`; `restart/skinny/tranches/sk-v15/audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md:16-24`; `restart/skinny/tranches/sk-v15/research/p2/p2d-substrate-tape.md:50-58`; `restart/skinny/tranches/sk-v15/research/p1/p1e-hot-leaf-attribution.md:31-35` | V1 must not describe SK-V15 as at generalisation inflection until these close. |
+| Disproved/unimplemented claims: CSS broadcast, CSS generated string, CSS comparator/equality mismatch, CSS Value API absence, Lock 14/16 gate holes, Pattern H ownership gap, Decision Engine scaffold, codegen grammar-family leaks, retained sidecars, harness/hash primitive misuse. | 10 unimplemented | CSS broadcast/value 300-900 LOC; Lock 14/16 gates 120-420 LOC; Pattern H generator/provenance gate 1,500-3,000 LOC plus per-runtime projection subwaves; Decision Engine 600-2,200 LOC; codegen leak axes 450-1,000 LOC | high | `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:21-58`; `restart/skinny/tranches/sk-v15/audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md:16-24`; `restart/skinny/tranches/sk-v15/research/p2/p2d-substrate-tape.md:50-58`; `restart/skinny/tranches/sk-v15/research/p1/p1e-hot-leaf-attribution.md:31-35` | V1 must not describe SK-V15 as at generalisation inflection until these close. |
 | Implementation/evidence exceeds old totality schema: CSS anti-broadcast telemetry fields, new CH3/CH5/CH7 addenda, and P1/P2 normalized evidence surfaces. | 3 impl_exceeds_spec | 200-600 doc/gate LOC | medium | `restart/skinny/tranches/sk-v15/SYNTHESIS.md:98-127`; `restart/skinny/tranches/sk-v15/research/alpha/alpha-A-results-extraction.md:48-62`; `restart/skinny/tranches/sk-v15/research/p1/p1e-hot-leaf-attribution.md:31-35` | V1 schema should absorb anti-broadcast fields, gate-exclusion reporting, and normalized hot-leaf evidence. |
-| Unknown/pending close surfaces: FNV quarantine, JSON c/B misses, CSS typed API/re-timing, Lock 14/16 gate restoration, Pattern H round-trip, Decision Engine emission diffs, grammar-neutral parse-that vocabulary, primitive same-wave consumers. | 8 unknown | 400-3,000 implementation LOC per receiver | high | `restart/skinny/tranches/sk-v15/SYNTHESIS.md:70-80`; `restart/skinny/tranches/sk-v15/research/p1/p1d-pmu-cycles.md:70-73`; `restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md:27-29`; `restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:24-32` | These are S-P3 / T-P3 routing inputs, not close evidence. |
+| Unknown/pending close surfaces: FNV quarantine, JSON c/B misses, CSS typed API/re-timing, Lock 14/16 gate restoration, Pattern H round-trip, Decision Engine emission diffs, grammar-neutral parse-that vocabulary, primitive same-wave consumers. | 8 unknown | FNV quarantine 80-220 LOC; JSON c/B research 0-180 LOC unless a parser primitive lands; CSS typed API/re-timing 300-900 LOC; Lock 14/16 gate restoration 120-420 LOC; Pattern H round-trip 1,500-3,000 LOC plus projection subwaves; Decision Engine emission diffs 600-2,200 LOC; parse-that vocabulary 250-700 LOC per accepted primitive; primitive same-wave consumers 80-350 LOC each | high | `restart/skinny/tranches/sk-v15/SYNTHESIS.md:70-80`; `restart/skinny/tranches/sk-v15/research/p1/p1d-pmu-cycles.md:70-73`; `restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md:27-29`; `restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:24-32` | These are S-P3 / T-P3 routing inputs, not close evidence. |
 
 ## V2 Hardening Fold
 
@@ -170,6 +174,16 @@ PRUNE-WAVE-A and REBUILD-WAVE-E before any CSS >SOTA claim returns.
 | CH4-V1-002 | Added LOC and risk fields to the divergence table. |
 | CH5-V1-05 | Broadcast CSS admits are treated as admission-plane dishonesty unless rows are explicitly aggregate or carry distinct `measurement_row_id` / `broadcast_group_id`. |
 | CH5-V1-04 | CSS source-sidecar comparator evidence is comparator-only and cannot be used as runtime substrate or CSS Value API proof. |
+
+## V3 Primitive / Kernel Receiver Table
+
+| primitive / kernel | owning wave | consumer path or row | proof command / evidence | disposition if no consumer exists |
+|---|---|---|---|---|
+| Lock 16 SIMD primitive manifest | REBUILD-WAVE-F or primitive-specific subwave | `skinny/crates/bbnf-simd/src/dispatch.rs`; `skinny/crates/bbnf-simd/tests/checkasm_parity.rs`; Lock 16 gate row | `BBNF_SIMD_STRICT=1` checkasm/parity transcript plus source-present primitive manifest | Mark source-present primitive as `deleted`, `scalar-delegate-non-ASM`, or `architecture-blocked-with-REDRESS`; no orphan kernel may close. |
+| Grammar-neutral byte-set/classifier primitive | S-P3 shortlist then owning implementation wave | parse-that Layer-1 rows from `restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md` and generated parser consumer | Scalar oracle, aarch64 path, strict parity, and one same-wave generated runtime consumer | Reject as research-only; do not admit as >SOTA or Lock 16 evidence. |
+| UTF-8 / string / literal span primitive | S-P3 shortlist then owning implementation wave | JSON string rows only as guard; non-JSON proof receiver required for generality | Scalar oracle + non-JSON fixture + generated consumer diff | Scope to JSON guard or delete from generalization claim. |
+| Same-tape fact projection | REBUILD-WAVE-E / substrate receiver | CSS typed value/document/view row and Lock 1 fact-stream schema row | Value equality against cssparser same-workload output; no string-only fact-stream admit | Keep CSS as audit-demoted and non-SOTA. |
+| FNV closed-enum comparator scaffold | REBUILD-WAVE-G | W11L/W11N/W11O bench-only rows | Gate proving FNV-keyed arbiters are absent from production runtime and adversarial strict-product fixtures fail closed | Quarantine as bench-only or delete; never use as production equality oracle. |
 
 ## Gaps / Missing Primitives
 

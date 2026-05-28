@@ -1,8 +1,8 @@
 ---
 agent: 1B
 pass: T-P1-excavation
-cycle: V2
-generated_at: 2026-05-28T04:18:00Z
+cycle: V3
+generated_at: 2026-05-28T06:10:00Z
 spec_surfaces_audited: [PASS-1-EXCAVATION.md, ORCHESTRATOR.md, ARCHITECTURE.md, MASTER-PLAN.md, LOCKS.md]
 files_audited_count: 23
 live_truth_method: "end-to-end PASS-1 prompt read; ORCHESTRATOR §3W/§3Z line read; nl -ba line reads of ARCHITECTURE/MASTER-PLAN/LOCKS; rg symbol scans; wc -l preflight; static line reads of skinny/crates/codegen/src/lower/*.rs, codegen/src/{lib.rs,grammar_profile.rs,grammar_provider.rs,runtime_generator.rs}, passes/src/*.rs, ir/src/*.rs; no cargo test"
@@ -12,6 +12,8 @@ prior_cycle_dispositions_folded:
   revised:
     - CH3-V1-007 and CH7-FOLD-003 added EventTape / typed-event cursor REDRESS fences
     - CH2-FOLD-004 routed pass-layer JSON-shape leaks P1-1B-D9/P1-1B-D10 into 1D
+    - CH1-V2-F04 removed stale V1 self-description
+    - CH2-V2-F05 confirmed P1-1B-D9/P1-1B-D10 must be grammar-neutral findings in 1D V3
   first_cycle_additions: [P1-1B-D1, P1-1B-D2, P1-1B-D3, P1-1B-D4, P1-1B-D5, P1-1B-D6, P1-1B-D7, P1-1B-D8, P1-1B-D9, P1-1B-D10, P1-1B-D11]
 divergence_count:
   spec_claims_implemented: 8
@@ -31,7 +33,7 @@ The material gaps are in concrete lowering and grammar neutrality. Four retained
 
 | Spec claim | Implementation evidence | Verdict | Note |
 |---|---|---|---|
-| T-P1 requires every 1B inventory to audit codegen, the five-shape canon, `derive_backend_shape`, cost model, and lowerer hierarchy; output schema requires divergences, gaps, open questions, and amendment candidates when surfaced (`restart/prompts/totality/PASS-1-EXCAVATION.md:45`-`47`, `restart/prompts/totality/PASS-1-EXCAVATION.md:72`-`103`). | This artifact line-cites `ARCHITECTURE.md`, `MASTER-PLAN.md`, `LOCKS.md`, and the live codegen/passes/ir implementation. | Implemented by this artifact. | Cycle is V1 per user dispatch, not prior V6 artifact state. |
+| T-P1 requires every 1B inventory to audit codegen, the five-shape canon, `derive_backend_shape`, cost model, and lowerer hierarchy; output schema requires divergences, gaps, open questions, and amendment candidates when surfaced (`restart/prompts/totality/PASS-1-EXCAVATION.md:45`-`47`, `restart/prompts/totality/PASS-1-EXCAVATION.md:72`-`103`). | This artifact line-cites `ARCHITECTURE.md`, `MASTER-PLAN.md`, `LOCKS.md`, and the live codegen/passes/ir implementation. | Implemented by this artifact. | Cycle is V3; V1 names are retained only inside finding IDs and prior PASS-IMPL evidence anchors. |
 | CHALLENGE requires claim citations and no grammar-name leaks; convergence is iterative V1..V5 (`restart/prompts/ORCHESTRATOR.md:74`-`88`, `restart/prompts/ORCHESTRATOR.md:104`-`126`). | Open questions below carry `verify_action`; grammar-name and shape leaks are catalogued. | Implemented by this artifact. | No CH files written in this scope. |
 | Backend IR is executable and the only lowerer input; Lock 5 rejects emitters walking Grammar IR (`restart/MASTER-PLAN.md:37`-`43`, `restart/locks/LOCKS.md:181`). | `emit_from_source` parses and compiles, then passes `BackendIr`, `backend_shape`, `cost_facts`, policy and union side tables into `emit_with_layout` (`skinny/crates/codegen/src/lib.rs:106`-`116`, `skinny/crates/codegen/src/lib.rs:155`-`180`). `lower_to_rust` accepts `&BackendIr` plus `LowerCtx` (`skinny/crates/codegen/src/lower/rust.rs:23`-`32`). | Implemented for the lowerer boundary. | The facade still parses grammar source before the lowerer boundary, which is consistent with the claim. |
 | V1 formal lowerer surface is `Backend` with `lower` and `emit_artefacts`; V1 ships `RustBackend: Backend`, V2 adds Wasm/TS (`restart/ARCHITECTURE.md:1485`-`1531`, `restart/locks/LOCKS.md:181`). | Live `codegen/src/lower/mod.rs` exposes `ShapeLowering::lower_rule` and `select_lowering`; no `trait Backend`, `RustBackend`, `WasmBackend`, or `TsBackend` symbols were found under scoped codegen/passes/ir search (`skinny/crates/codegen/src/lower/mod.rs:9`-`24`). | Unimplemented. | P1-1B-D1. |
@@ -67,6 +69,13 @@ The material gaps are in concrete lowering and grammar neutrality. Four retained
 | EventTape REDRESS fence | `EventTape` rows remain valid totality gaps, but any implementation route must be a generated same-substrate lowering. It must not reopen EventCursor sidecars, retained structural streams, retained class lanes, parser-owned cursor lists, or cross-call classifier state under Lock 1. |
 | Pass-layer JSON-shape leaks | P1-1B-D9 recognizer mining and P1-1B-D10 materialization role mining are grammar-neutral Lock 14 leaks caused by JSON-shaped pass logic, not JSON-only empirical lessons. 1D V2 must cite these rows directly. |
 | Shorthand citation repair | Lowerer sibling references remain readable in this file, but downstream CH1 citation checks should use the fully qualified paths already present in `P1-1B-D7`: `skinny/crates/codegen/src/lower/{eager_tape,offset_tape,event_tape,collapsed_stage}.rs:15`-`17`. |
+
+## V3 Hardening Fold
+
+| fold | disposition |
+|---|---|
+| CH1-V2-F04 | Stale cycle wording is replaced with V3 wording; finding identifiers keep their original V1 keys for traceability. |
+| CH2-V2-F05 | `P1-1B-D9` and `P1-1B-D10` remain mandatory 1D grammar-neutral Lock 14 findings, with Sheets/BBNF-self proof receivers rather than JSON-only routing. |
 
 ## Derive Backend Shape: Eight-Step Diagnostic Vocabulary
 

@@ -1,8 +1,8 @@
 ---
 agent: 1A
 pass: T-P1-excavation
-cycle: V2
-generated_at: 2026-05-28T04:18:00Z
+cycle: V3
+generated_at: 2026-05-28T06:10:00Z
 spec_surfaces_audited: [ARCHITECTURE.md, LOCKS.md, PASS-1-EXCAVATION.md, ORCHESTRATOR.md]
 files_audited_count: 59
 live_truth_method: "Read PASS-1-EXCAVATION end-to-end; read ORCHESTRATOR §3W/§3Z; line-audited ARCHITECTURE §1/§7.1/§9 and LOCKS Lock 1 with nl -ba; enumerated live scope with rg --files/find; line-audited selected symbols in skinny/crates/runtime/src/tape, skinny/crates/ir/src, and skinny/crates/runtime/src/grammars; no source build or tests because this is docs-only evidence."
@@ -14,10 +14,13 @@ prior_cycle_dispositions_folded:
     - CH3-V1-007 added EventTape / typed-event-cursor REDRESS fence
     - CH5-V1-02 added root OnceCell<StructuralIndex> coupling census
     - CH6-V1-1A-CLOSURE-WORDING downgraded substrate/scheduling/rollback closure wording
+    - CH1-V2-F02 reconciled 1A frontmatter counts to the V2 table
+    - CH1-V2-F04 removed stale V1 self-description from the dispatch context
+    - CH6-V2-F11 scoped 1A-SUB-001 to JSON/example implementation because CSS lacks the full retained roster
   first_cycle_additions: [1A-SUB-001, 1A-SUB-002, 1A-SUB-003, 1A-SUB-004, 1A-SUB-005, 1A-SUB-006, 1A-SUB-007, 1A-SUB-008, 1A-SUB-009, 1A-SUB-010, 1A-SUB-011, 1A-SUB-012, 1A-SUB-013, 1A-SUB-014, 1A-SUB-015, 1A-SUB-016, 1A-SUB-017, 1A-SUB-018, 1A-SUB-019, 1A-SUB-020, 1A-SUB-021, 1A-SUB-022]
 divergence_count:
   spec_claims_implemented: 6
-  spec_claims_unimplemented: 6
+  spec_claims_unimplemented: 7
   impl_exceeds_spec: 4
   unknown: 5
 locks_amendment_candidates: 0
@@ -49,7 +52,7 @@ are generated output planes, but their config labels `admitted_fact_output` as
 which conflicts with the spec's "not a 6th BackendShape" claim at
 `restart/ARCHITECTURE.md:1781`.
 
-Dispatch context: this V1 inventory treats SK-V15 as PRUNE-then-REBUILD after
+Dispatch context: this V3 inventory treats SK-V15 as PRUNE-then-REBUILD after
 PASS-IMPL V1. CSS fact-stream contrivances and Pattern H are catalogued here as
 implementation-level substrate evidence only; this agent makes no source edit,
 lock edit, or commit.
@@ -58,7 +61,7 @@ lock edit, or commit.
 
 | id | claim path:line | impl path:line | verdict | note |
 |---|---|---|---|---|
-| 1A-SUB-001 | `restart/ARCHITECTURE.md:79` says `runtime` owns tape, direct-to-struct support, generated grammar modules, visitors, and document views. | `skinny/crates/runtime/src/tape/mod.rs:1`; `skinny/crates/runtime/src/grammars/json/mod.rs:2`; `skinny/crates/runtime/src/grammars/json/mod.rs:12`; `skinny/crates/runtime/src/grammars/css_l4_declaration_values/mod.rs:2` | implemented | Skinny has a tape module and grammar modules. JSON exposes parser, sink, value, view, and visitor; CSS fact-stream modules expose config/generated/parser/sink rather than the full retained-view roster. |
+| 1A-SUB-001 | `restart/ARCHITECTURE.md:79` says `runtime` owns tape, direct-to-struct support, generated grammar modules, visitors, and document views. | `skinny/crates/runtime/src/tape/mod.rs:1`; `skinny/crates/runtime/src/grammars/json/mod.rs:2`; `skinny/crates/runtime/src/grammars/json/mod.rs:12`; `skinny/crates/runtime/src/grammars/css_l4_declaration_values/mod.rs:2` | partial / JSON-example implemented | Skinny has a tape module and grammar modules. JSON exposes parser, sink, value, view, and visitor; CSS fact-stream modules expose config/generated/parser/sink rather than the full retained-view/value/visitor roster, so this cannot be counted as broad runtime ownership closure. |
 | 1A-SUB-002 | `restart/locks/LOCKS.md:75` says retained typed values borrow into tape as `&'i Tape<'i>` plus cursor. | `skinny/crates/runtime/src/tape/mod.rs:175`; `skinny/crates/runtime/src/tape/mod.rs:191`; `skinny/crates/runtime/src/grammars/json/view.rs:68` | implemented | The live shape is `ValueRef<'doc, 'input, K, G>` over `&'doc Tape<'input>` and a `u32` cursor; JSON `DocumentView` returns a root `ValueRef`. |
 | 1A-SUB-003 | `restart/ARCHITECTURE.md:1772` and `restart/locks/LOCKS.md:75` claim tape plus direct-to-struct form one substrate family. | `skinny/crates/runtime/src/tape/mod.rs:94`; `skinny/crates/runtime/src/grammars/json/view.rs:17`; `skinny/crates/runtime/src/grammars/json/generated.rs:760`; `skinny/crates/runtime/src/grammars/json/config.rs:22` | partial / UNKNOWN routed | Retained JSON is tape-backed and JSON direct is explicitly `SinkOnly`, but the shared TapeEmit / DirectBuild event schedule is still UNKNOWN in 1A-SUB-019. Do not count this as full substrate-union closure until that schedule proof lands. |
 | 1A-SUB-004 | `restart/ARCHITECTURE.md:1788` names retained tape, direct sink, admitted fact-stream output, and transient scanner/capacity as output planes. | `skinny/crates/ir/src/cost.rs:55`; `skinny/crates/ir/src/cost.rs:118`; `skinny/crates/ir/src/cost.rs:139`; `skinny/crates/runtime/src/grammars/css_l4_declaration_values/generated.rs:5` | implemented | The IR cost facts encode `SubstrateTarget::{LocalTempOnly, ExistingTape, DirectSink, AdmittedFactOutput}` and provide `Lock1PolicyTriad::fact_stream`; CSS emits a fact stream. |
@@ -89,6 +92,14 @@ lock edit, or commit.
 | CH5-V1-02 | Added root structural-index sidecar census requirement: scan `OnceCell<StructuralIndex>`, `scan_structural`, `ensure_structural_index`, and `next_structural_at_or_after`; classify each hit by `substrate_target`, `retention_lifetime`, and `policy_owner` before T-P2 uses it. |
 | CH6-V1-1A-CLOSURE-WORDING | Downgraded substrate-family and checkpoint rows from implemented to partial / UNKNOWN routed where their own notes depend on unresolved shared scheduling or rollback evidence. |
 | CH3/CH7 EventTape fence | Added local REDRESS fences to typed-event cursor and EventTape rows so future work cannot be read as permission to revive EventCursor sidecars or retained structural streams. |
+
+## V3 Hardening Fold
+
+| fold | disposition |
+|---|---|
+| CH1-V2-F02 | Frontmatter now counts 6 implemented, 7 unimplemented, 4 implementation-exceeds, and 5 unknown rows. `1A-SUB-001` moved out of broad implemented closure, making the table mechanically match the count. |
+| CH1-V2-F04 | Dispatch context now describes this artifact as V3 and preserves V1 only as the origin of PASS-IMPL evidence. |
+| CH6-V2-F11 | Broad runtime ownership language is scoped to JSON/example implementation; CSS remains a fact-stream profile without typed value/view/visitor parity. |
 
 ## Divergences Catalogued
 

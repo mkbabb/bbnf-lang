@@ -53,7 +53,7 @@ CH4 cost, propagation, cap-fit, consumer/gate, and fail-action route.
 |---|---|---|
 | Carried from prior cycle | `ARCH-3A-V1-D01` through `ARCH-3A-V1-D12` remain the proposed architecture deltas. | V3 folds hardening repairs without adding live spec edits or new architecture delta IDs (`restart/audit/totality/p3/hardening/HARDENING-T-P3-V1-CONSOLIDATED.md:35`-`48`). |
 | Removed | None. | T-P3 is proposal-only and may not silently drop evidence (`restart/audit/totality/p3/T-P3-DISPATCH-CONTEXT.md:63`-`69`). |
-| Answered | V1 CH4/CH5/CH6 REVISE findings and `CH4-V2-001` affecting 3A are folded into D04, D07, D08, D10, Open Questions, and the CH4 coverage matrix. | Required V2/V3 fold rows name 3A for regex/runtime-DFA wording, Open Questions triads, and per-delta cap-fit/fail-action coverage (`restart/audit/totality/p3/hardening/HARDENING-T-P3-V1-CONSOLIDATED.md:41`-`48`; `restart/audit/totality/p3/hardening/V2/CH4.md:38`-`47`). |
+| Answered | V1 CH4/CH5/CH6 REVISE findings and `CH4-V2-001` affecting 3A are folded into D04, D07, D08, D10, Open Questions, and the CH4 coverage matrix. | Required V2/V3 fold rows name 3A for regex/runtime-DFA wording, Open Questions triads, and per-delta cap-fit/fail-action coverage (`restart/audit/totality/p3/hardening/HARDENING-T-P3-V1-CONSOLIDATED.md:41`-`48`; `restart/audit/totality/p3/hardening/V2/CH4.md:36`). |
 | Newly added | None. | V3 repairs the V2 proposal packet; it does not create a new live V1 spec surface or implementation route. |
 
 ## Proposed Delta Table

@@ -1,0 +1,49 @@
+# SK-V15 S-P2 V1 CH6 - Anti-Paper-Close
+
+Scope: committed S-P2 research artifacts `p2a` through `p2f` at `HEAD`.
+
+Governing standard: CH6 rejects self-reported "researched" or "designed" status unless comparator claims cite comparator source, ISA claims cite manual sections, and primitive claims include scalar-reference sketches in Section 2; future-wave detail is paper-close (`restart/prompts/skinny/PASS-2-RESEARCH.md:133`-`:138`). The universal CH6 lens also rejects "complete"/"wired"/"verified" claims without live evidence and forbids deferral to a future phase (`restart/prompts/ORCHESTRATOR.md:83`-`:88`). The cycle protocol requires folding dispositions before advancement (`restart/prompts/ORCHESTRATOR.md:112`-`:116`), and the closing posture repeats that no deferrals are allowed (`restart/prompts/ORCHESTRATOR.md:205`-`:211`).
+
+## Findings
+
+### ACCEPT - P2-A comparator teardown is evidence-backed, not paper-close
+
+P2-A grounds comparator claims in named comparator source lines before extracting candidate shapes: asmjson README/source/SAX/DOM lines are cited for AVX-512/SWAR classification, callbacks, string scanning, digit precheck, and tape writes (`restart/skinny/tranches/sk-v15/research/p2/p2a-sota-teardown.md:16`-`:20`); sonic-rs performance/source lines are cited for string bitmaps, whitespace skipping, arena sizing, escape masks, container skip, retained `nospace_bits`, and aarch64 NEON details (`restart/skinny/tranches/sk-v15/research/p2/p2a-sota-teardown.md:22`-`:28`); simdjson stage1/stage2 source lines are cited for structural indexing, string scanning, tape building, and On Demand stage1 allocation (`restart/skinny/tranches/sk-v15/research/p2/p2a-sota-teardown.md:30`-`:36`); yyjson README/source/header lines are cited for strictness, scalar skip/number/string paths, read-result storage, and max-memory formulas (`restart/skinny/tranches/sk-v15/research/p2/p2a-sota-teardown.md:38`-`:42`).
+
+The candidate table includes scalar-reference status for every primitive and blocks unsupported claims instead of closing them: `decode_escape_run` is explicitly "Missing" and blocked for product-plane use, `container_skip_local_count_64` is blocked if it becomes retained cursor/index state, and `tape_reserve_upper_bound` is limited to the existing tape/event storage (`restart/skinny/tranches/sk-v15/research/p2/p2a-sota-teardown.md:48`-`:54`). The risk section rejects permissive asmjson as a strict comparator anchor and treats it only as primitive-shape evidence (`restart/skinny/tranches/sk-v15/research/p2/p2a-sota-teardown.md:78`).
+
+### ACCEPT - P2-B admission process rejects orphan SIMD/ASM inventory
+
+P2-B defines a five-stage admission gate requiring a scalar oracle, target-feature dispatch, checkasm parity, same-wave consumer, and manifest/lock row (`restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:24`-`:32`). It makes strict checkasm commands necessary but insufficient and requires every source-present primitive to close as `wired`, `deleted`, `scalar-delegate-non-ASM`, or `architectural-block-with-REDRESS` (`restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:34`-`:41`).
+
+Primitive rows are concrete: accepted floor primitives cite scalar/checkasm/consumer status, while weak surfaces are demoted or blocked. Examples include `BYTE_CLASS_FROM_EQ_SET_64` with scalar, NEON, checkasm, and current consumer evidence (`restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:48`); `escape_mask_64` explicitly has no throughput consumer and cannot earn production credit alone (`restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:52`); `unescape_uxxxx_x4` still needs a dedicated production checkasm/caller and cannot replay the one-quartet route (`restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:54`); generated product builders and harness hashes are rejected as primitive candidates (`restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:58`).
+
+### ACCEPT - P2-C ISA inventory is manual-cited and does not treat instruction availability as admission
+
+P2-C inventories architecture candidates with scalar-reference status, checkasm expectation, same-wave consumer, P1 antecedent, and REDRESS-blocked routes in one table (`restart/skinny/tranches/sk-v15/research/p2/p2c-arch-esoterica.md:24`-`:35`). Manual citations cover CSSC/CTZ, PMULL/PMULL2, DotProd/UDOT, TBL/TBX, CMEQ, and shift families (`restart/skinny/tranches/sk-v15/research/p2/p2c-arch-esoterica.md:76`-`:82`).
+
+The file does not paper-close ISA candidates on availability. It says instruction presence is not admission and still requires scalar reference, checkasm parity, same-wave consumer, and same-row measurement gates (`restart/skinny/tranches/sk-v15/research/p2/p2c-arch-esoterica.md:55`). It rejects x86 as an admission route for this tranche (`restart/skinny/tranches/sk-v15/research/p2/p2c-arch-esoterica.md:59`) and blocks PMULL/CSSC routes through REDRESS rather than deferring proof (`restart/skinny/tranches/sk-v15/research/p2/p2c-arch-esoterica.md:70`-`:72`).
+
+### ACCEPT - P2-D same-substrate candidates do not hide future detail
+
+P2-D grounds the tape/substrate conclusion in Lock 1 and live tape code, then states S-P3 must not shortlist parallel retained structural indexes, cursor lists, class lanes, whitespace bitmaps, density tables, or second projections (`restart/skinny/tranches/sk-v15/research/p2/p2d-substrate-tape.md:12`). It also cites current scanner/generated-parser behavior to require any SIMD structural candidate to write the active tape or same-wave sink/fact consumer (`restart/skinny/tranches/sk-v15/research/p2/p2d-substrate-tape.md:26`).
+
+The candidate table supplies scalar/equality references and parity expectations for all tape candidates (`restart/skinny/tranches/sk-v15/research/p2/p2d-substrate-tape.md:36`-`:41`). The risk section turns common paper-close routes into explicit non-candidates: capacity ratios alone are not SOTA proof, checkasm bypass makes an orphan kernel, and retained structural vectors/cursors/class columns/decoded sidecars/public `UnionTape` are excluded (`restart/skinny/tranches/sk-v15/research/p2/p2d-substrate-tape.md:52`-`:58`).
+
+### ACCEPT - P2-E gap candidates include scalar sketches and same-wave consumer constraints
+
+P2-E states up front that S-P3 must drop any gap row that cannot name a same-wave consumer, scalar oracle, REDRESS pre-block, and strict checkasm/parity gate (`restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md:29`). Each candidate then includes a concrete scalar sketch/status and does not claim completion: `skip_byte_set_run` loops over a caller byte set (`restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md:41`); `classify_local_block_64` specifies live-byte mask construction and no retained state (`restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md:72`-`:80`); `bounded_plain_literal_span` specifies delimiter/escape/control/tail behavior (`restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md:107`-`:113`); `validate_utf8_run` extends a byte-walk status oracle and marks block checkasm insufficient (`restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md:138`-`:144`); `digit_run_span_accumulate` factors current digit-run routines and demands UDOT checkasm before use (`restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md:171`-`:177`); `escaped_literal_segments` cites semantic scalar references and says the current x4 smoke is insufficient before admission (`restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md:207`-`:213`).
+
+The only future-looking phrase is constrained, not closing: a stricter x8/x16 escape body is allowed only after checkasm (`restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md:209`). The file also rejects JSON-only wording and requires a non-JSON consumer, negative-control witness, or scoped claim (`restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md:225`-`:236`).
+
+### ACCEPT - P2-F verdicts are concrete and use the required disposition vocabulary
+
+P2-F is the disposition ledger. It assigns concrete `ACCEPT`, `REVISE`, or `REJECT` outcomes to candidate surfaces across P2-B through P2-E (`restart/skinny/tranches/sk-v15/research/p2/p2f-grammar-neutral.md:26`-`:57`). The accepted abstractions include explicit CSS/Sheets/BBNF-self witness boundaries and reject generic-crate grammar branching (`restart/skinny/tranches/sk-v15/research/p2/p2f-grammar-neutral.md:61`-`:68`). The revised set names the exact reframing needed for escape masks, unicode batch, wide-shift fold, direct cursor, tape/allocation pressure, and escaped segments (`restart/skinny/tranches/sk-v15/research/p2/p2f-grammar-neutral.md:70`-`:79`). The rejected set names PMULL hot body, CSSC bulk consumer, retained tiny/string routes, retained structural/cursor/class streams, and generated product/harness rows with concrete reasons (`restart/skinny/tranches/sk-v15/research/p2/p2f-grammar-neutral.md:81`-`:89`).
+
+CSS L4 is not used as paper proof: P2-F says it is audit-demoted/contrived and only a future repaired positive witness, while Sheets and BBNF-self can serve as generated-role/negative-control witnesses (`restart/skinny/tranches/sk-v15/research/p2/p2f-grammar-neutral.md:22`). The same caveat is repeated as a risk: stale CSS rows cannot prove any candidate (`restart/skinny/tranches/sk-v15/research/p2/p2f-grammar-neutral.md:116`).
+
+## Overall CH6 Verdict
+
+ACCEPT.
+
+No committed S-P2 candidate closes on self-report alone. Comparator and ISA claims are source/manual-cited, primitive claims include scalar-reference sketches or explicit missing/blocker status, future-looking language is framed as an admission precondition rather than a closure substitute, and P2-F supplies concrete ACCEPT / REVISE / REJECT dispositions instead of rhetorical verdicts.

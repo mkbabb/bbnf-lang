@@ -1393,6 +1393,14 @@ const SK_V14_W11A_OWNER_PATHS: &[&str] = &[
     "xtask/src/main.rs",
 ];
 
+const SK_V15_W10_OWNER_PATHS: &[&str] = &[
+    "crates/bbnf-bench/src/fnv_quarantine.rs",
+    "crates/bbnf-bench/src/lib.rs",
+    "xtask/src/main.rs",
+];
+
+const SK_V15_W11_OWNER_PATHS: &[&str] = &["crates/bbnf-bench/src/lock14_baseline.rs"];
+
 fn current_lock14_owner_paths() -> Vec<&'static str> {
     let mut paths = Vec::with_capacity(
         SK_V12_W1A_OWNER_PATHS.len()
@@ -1437,7 +1445,9 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
             + SK_V14_W8R_OWNER_PATHS.len()
             + SK_V14_W9_OWNER_PATHS.len()
             + SK_V14_W10_OWNER_PATHS.len()
-            + SK_V14_W11A_OWNER_PATHS.len(),
+            + SK_V14_W11A_OWNER_PATHS.len()
+            + SK_V15_W10_OWNER_PATHS.len()
+            + SK_V15_W11_OWNER_PATHS.len(),
     );
     paths.extend_from_slice(SK_V12_W1A_OWNER_PATHS);
     paths.extend_from_slice(SK_V12_W1B1_OWNER_PATHS);
@@ -1482,6 +1492,8 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
     paths.extend_from_slice(SK_V14_W9_OWNER_PATHS);
     paths.extend_from_slice(SK_V14_W10_OWNER_PATHS);
     paths.extend_from_slice(SK_V14_W11A_OWNER_PATHS);
+    paths.extend_from_slice(SK_V15_W10_OWNER_PATHS);
+    paths.extend_from_slice(SK_V15_W11_OWNER_PATHS);
     paths
 }
 
@@ -2091,6 +2103,22 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
             return Ok(());
         }
     }
+    if is_skv15_w10_fnv_quarantine_subject(subject) {
+        let allowed = changed_paths
+            .iter()
+            .all(|path| is_allowed_path(path, SK_V15_W10_OWNER_PATHS));
+        if allowed {
+            return Ok(());
+        }
+    }
+    if is_skv15_w11_close_subject(subject) {
+        let allowed = changed_paths
+            .iter()
+            .all(|path| is_allowed_path(path, SK_V15_W11_OWNER_PATHS));
+        if allowed {
+            return Ok(());
+        }
+    }
     Err(format!(
         "Lock 14 frozen diff failed for parent paths [{}]",
         changed_paths.join(", ")
@@ -2115,6 +2143,16 @@ fn is_w10_json_parse_only_subject(subject: &str) -> bool {
 fn is_w11a_json_direct_strict_subject(subject: &str) -> bool {
     let subject = subject.to_ascii_lowercase();
     subject.contains("sk-v14-wavew11a") || subject.contains("sk-v14-w11a")
+}
+
+fn is_skv15_w10_fnv_quarantine_subject(subject: &str) -> bool {
+    let subject = subject.to_ascii_lowercase();
+    subject.contains("sk-v15-wavew10") || subject.contains("sk-v15-w10")
+}
+
+fn is_skv15_w11_close_subject(subject: &str) -> bool {
+    let subject = subject.to_ascii_lowercase();
+    subject.contains("sk-v15-wavew11") || subject.contains("sk-v15-w11")
 }
 
 fn is_w5b_frontend_subject(subject: &str) -> bool {
@@ -4603,6 +4641,46 @@ mod tests {
         assert!(validate_authorized_parent_diff(
             &outside,
             "feat(sk-v14-w11a-direct-strict): admit strict-product direct rows"
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn admits_skv15_w10_parent_diff_under_w10_scope() {
+        let changed = SK_V15_W10_OWNER_PATHS
+            .iter()
+            .map(|path| (*path).to_string())
+            .collect::<Vec<_>>();
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "feat(sk-v15-waveW10): quarantine FNV strict-product evidence"
+        )
+        .is_ok());
+        let mut outside = changed;
+        outside.push("crates/codegen/src/runtime_generator.rs".into());
+        assert!(validate_authorized_parent_diff(
+            &outside,
+            "feat(sk-v15-waveW10): quarantine FNV strict-product evidence"
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn admits_skv15_w11_parent_diff_under_w11_scope() {
+        let changed = SK_V15_W11_OWNER_PATHS
+            .iter()
+            .map(|path| (*path).to_string())
+            .collect::<Vec<_>>();
+        assert!(validate_authorized_parent_diff(
+            &changed,
+            "test(sk-v15-waveW11): restore Lock14 W10 gate accounting"
+        )
+        .is_ok());
+        let mut outside = changed;
+        outside.push("xtask/src/main.rs".into());
+        assert!(validate_authorized_parent_diff(
+            &outside,
+            "test(sk-v15-waveW11): restore Lock14 W10 gate accounting"
         )
         .is_err());
     }

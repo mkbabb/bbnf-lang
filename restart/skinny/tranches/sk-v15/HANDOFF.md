@@ -1,26 +1,29 @@
 # Handoff SK-V15
 
-Date: 2026-05-27.
+Date: 2026-05-28.
 HEAD at bracket: `cbafeb566`.
+Close evidence HEAD before W11 packet: `8bada626a`.
 
 ## Current State
 
-SK-V14 closed full-admit in the row ledger at `8e7378025`, then PASS-IMPL
-V1 landed at `cbafeb566` and reclassified the implementation truth:
-JSON is honest; CSS L4 is contrived; generic infrastructure is mixed;
-Pattern H is not collapsed; Decision Engine is scaffold.
+SK-V15 W0-W11 has executed and W11 closes the implementation tranche as
+`ADMIT-W11` with routed blocks. JSON remains 51 / 51 strict measured rows.
+CSS L4 has no SK-V15 admission: W1 demoted the 24 W8R broadcast rows to
+diagnostic evidence, W6 retired the old live proof classes, and W11 re-ran
+typed same-workload retime with `admitted_rows=0`. Lock 14 / Lock 16 gates,
+Pattern H line-1 provenance, Decision Engine activation, all five BackendShape
+lowerers, and FNV bench quarantine have executable close evidence.
 
-SK-V15 is therefore open as a PRUNE-then-REBUILD tranche. S-P0 and S-P1
-have closed. S-P2 locked at `HARDENING-S-P2-V3-CONSOLIDATED.md` with
-two consecutive clean CH1-CH7 cycles (V2 and V3, both 7/7 ACCEPT). S-P3
-locked at `HARDENING-S-P3-V4-CONSOLIDATED.md` with two consecutive clean
-CH1-CH7 cycles (V3 and V4, both 7/7 ACCEPT). The locked skinny output is
-the W0-W11 implementation contract in `SPEC.md` and `DISPATCH-PROMPT.md`.
-Totality T-P1 V1 is in hardening and has already surfaced REVISE folds
-for stale 1F auxiliary files, CH3 wave-graph precedent, and gate-exclusion
-carriers. G-Omega remains the only mandatory user gate under the active
-user pin. Admission evidence is native Apple M5 Max / aarch64 only; x86
-and AVX-512 rows are diagnostic signals, not SK-V15 anchors.
+PASS-IMPL V2 records `ACCEPT-SK-V15-CLOSE-WITH-ROUTED-BLOCKS` at
+`restart/audit/skinny-impl-overfit/V2/CONSOLIDATED-AUDIT.md`. SK-V15 is not
+the CSS inflection point and not a grammar-driven generalisation close. SK-V16
+must begin from routed remainder: grammar-derived CSS L4 provider, typed CSS
+same-workload equality, Pattern H collapse beyond provenance, retirement of
+dirty generated CSS state, and continued FNV production-migration block.
+
+G-Omega remains the only mandatory user gate under the active user pin.
+Admission evidence is native Apple M5 Max / aarch64 only; x86 and AVX-512 rows
+are diagnostic signals, not SK-V15 anchors.
 
 ## Authority
 
@@ -58,12 +61,14 @@ under the user's latest extended loop request.
 
 ## Next Move
 
-1. Finish T-P1 V1 hardening, fold its REVISEs into T-P1 V2, and iterate
-   T-P1 to §3Z convergence before T-P2.
-2. Dispatch and converge T-P2, then T-P3, against the S-P3 V4 locked
-   W0-W11 implementation contract.
-3. Run Pass Omega V5 for any spec amendments and stop at G-Omega.
-4. After G-Omega authorization, execute the SK-V15 waves in the
-   PRUNE-then-REBUILD order, except that any deletion or retirement wave
-   is blocked, coupled, or reordered until its rebuild provider is proven
-   by the NEW-CH3-V5-01 dependency table.
+1. Re-enter Pass Alpha for SK-V16 using the W11 close packet, PASS-IMPL V2,
+   and `skv15-W11-close-dependency-checklist.json` as bracket inputs.
+2. Do not pre-author SK-V16 content beyond routed remainder. Pass Alpha must
+   derive the SK-V16 goalset from SK-V15 close evidence.
+3. Carry forward the binding implementation truth: CSS remains open,
+   historical CSS PASS-ADMIT text is historical only, broad generated checks
+   cannot close until pre-existing dirty generated CSS state is retired, and
+   FNV production migration remains blocked.
+4. Continue the SK loop through SK-V16 and SK-V17 under the active user pin,
+   stopping only at G-Omega, unrepaired invariant violation, or completed
+   SK-V17 close.

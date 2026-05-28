@@ -6442,3 +6442,24 @@ material differential.
   `cargo test --manifest-path skinny/Cargo.toml -p bbnf-bench fnv_quarantine::tests::fnv_quarantine_report_accepts_bench_only_metadata -- --exact`,
   the W10 `gate-json` report command above, and
   `rg -n "fnv|FNV" crates/core/src/runtime crates/core/src/backend crates/core/src/generate skinny/crates/runtime/src skinny/crates/codegen/src`.
+
+## SK-V15 W11 Close Reconciliation Admit
+
+- Item 253 closes `G-SK-V15-W11-CLOSE-NO-ORPHANS` as `ADMIT-W11`. W11 consumes
+  `DEP-W11-CLOSE-NO-ORPHANS` and records every SK-V15 dependency row as
+  admitted, routed with REDRESS, or intrinsically blocked by row-level proof.
+- PASS-IMPL V2 verdict is `ACCEPT-SK-V15-CLOSE-WITH-ROUTED-BLOCKS`, recorded in
+  `restart/audit/skinny-impl-overfit/V2/CONSOLIDATED-AUDIT.md`.
+- CSS L4 is not admitted. The W11 typed same-workload retime re-proves
+  `admitted_rows=0`, Track 1 `2/4` parses, cssparser `4/4`, unequal typed
+  summaries, Track 1 `3.426 Mbps`, cssparser `1995.168 Mbps`, and margin
+  `-1992.742 Mbps`.
+- Required W11 evidence passed: `cargo xtask check-json`,
+  `cargo xtask gate-json --check-results`, W7 decision tests, W8/W9 lowerer
+  tests, W9 all-five report gate, W10 FNV quarantine tests and report gate,
+  the W6 typed CSS retime, lock count `16`, Pattern H count `67`, and the
+  line-1 Pattern H provenance scan.
+- Broad full-codegen and real-typed generated checks remain routed because of
+  pre-existing dirty generated files outside W11 ownership. SK-V16 receives
+  those as routed remainder after proof, not as substitute evidence for SK-V15
+  close.

@@ -2,10 +2,10 @@
 
 Date: 2026-05-27.
 
-Status: Pass Alpha V1 contract draft for SK-V15. SK-V14 closed full-admit
-in the row ledger, but PASS-IMPL V1 rejects the CSS leg as a generalisation
-claim. SK-V15 is a PRUNE-then-REBUILD tranche. It does not author
-`SPEC.md`; skinny S-P3 derives the exact wave plan from this goalset.
+Status: SK-V15 W11 close packet landed. SK-V14 closed full-admit in the row
+ledger, but PASS-IMPL V1 rejected the CSS leg as a generalisation claim.
+SK-V15 executed as a PRUNE-then-REBUILD tranche and closes as
+`ADMIT-W11` with routed blocks, not as the CSS inflection point.
 
 ## Authority
 
@@ -135,3 +135,27 @@ SK-V15 surfaces new contrivances, PASS-IMPL V2 routes them as SK-V16
 prune inputs. Under the latest user extension, SK-V17 remains in the loop
 until CSS, Pattern H, Lock 14 / Lock 16, and Decision Engine all satisfy
 the no-contrivance bar.
+
+## Section 4 - W11 Close Packet
+
+W11 consumed `DEP-W11-CLOSE-NO-ORPHANS` through
+`restart/skinny/tranches/sk-v15/research/w11/skv15-W11-close-dependency-checklist.json`.
+PASS-IMPL V2 returns `ACCEPT-SK-V15-CLOSE-WITH-ROUTED-BLOCKS`, recorded at
+`restart/audit/skinny-impl-overfit/V2/CONSOLIDATED-AUDIT.md`.
+
+SK-V15 close facts:
+
+- JSON remains 51 / 51 strict measured rows.
+- CSS L4 admitted rows remain `0`; W11 retime re-proved Track 1 `2/4`,
+  cssparser `4/4`, unequal typed summaries, and `admitted_rows=0`.
+- Lock count remains `16`.
+- Pattern H runtime census remains `67` and line-1 provenance scan returns no
+  bad rows.
+- BackendShape canon remains exactly five shapes.
+- W7 Decision Engine, W8/W9 lowerers, and W10 FNV quarantine have executable
+  close evidence.
+
+SK-V16 begins from routed remainder because PASS-IMPL V2 did not accept every
+axis as perfected. Grammar-derived CSS, typed CSS equality, full Pattern H
+collapse, dirty generated CSS retirement, and FNV production-migration block
+remain first-class SK-V16 inputs.

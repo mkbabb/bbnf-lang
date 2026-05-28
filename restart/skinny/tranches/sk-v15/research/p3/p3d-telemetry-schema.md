@@ -1,6 +1,6 @@
 # SK-V15 P3-D: Telemetry Schema Binding
 
-Pass: S-P3 Synthesis-Plan. Cycle: V1.
+Pass: S-P3 Synthesis-Plan. Cycle: V2.
 Date: 2026-05-28.
 Scope: Bind the `skinny/RESULTS.md` telemetry schema for SK-V15, carrying the SK-V8 schema-v3 surface and adding SK-V15 anti-broadcast and gate-exclusion fields.
 Output: this file.
@@ -21,6 +21,11 @@ The current carrier is the SK-V14 W0 telemetry manifest. `xtask` parses 32 manif
 SK-V15 therefore extends the carrier with ten required fields:
 
 `measurement_row_id`, `measurement_origin`, `value_plane`, `css_comparator_workload`, `generator_source`, `lock14_scan_scope`, `lock16_status`, `checkasm_or_parity_status`, `gate_exclusion_report`, and `broadcast_group_id`.
+
+The W0..W11 topology consumes those fields in four load-bearing places:
+W0 creates the carrier/schema, W1 collapses or demotes the CSS broadcast
+admission, W5 provides typed CSS value/document output, and W6 performs
+the fresh same-workload retiming that can set a CSS typed-admission floor.
 
 ## Section 2 - Deliverable
 
@@ -72,6 +77,8 @@ The existing CSS W8R residue is the negative fixture: 24 CSS rows currently carr
 - retime each feature independently on typed CSS value/CSSOM output, with distinct `measurement_row_id`, distinct `measurement_origin`, compatible `css_comparator_workload`, and no shared hidden signature.
 
 It is illegal to keep 24 `A / GO` CSS feature rows by assigning 24 fresh row ids to one timing tuple.
+P3-A and P3-C must not cite these numbers as floors; W6 derives any CSS
+typed-admission floor from fresh same-workload typed measurements.
 
 ## Section 3 - Falsifiability Binding
 

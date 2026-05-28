@@ -2,11 +2,12 @@
 
 Date: 2026-05-28.
 
-Status: S-P3 V1 planning packet. This file is not an implementation
-dispatch. It folds Pass Alpha's SK-V15 goalset, PASS-IMPL V1, S-P2
-V3 locked survivor boundaries, and S-P3 P3-A through P3-F into a
-conditional W0-W9 wave plan. The shape mirrors the SK-V8/SK-V14 SPEC
-contract while preserving the SK-V15 prune-before-rebuild direction.
+Status: S-P3 V2 planning packet. This file is not an implementation
+dispatch. It folds Pass Alpha's SK-V15 goalset, PASS-IMPL V1, S-P2 V3
+locked survivor boundaries, and S-P3 P3-A through P3-F into a conditional
+W0-W11 wave plan. The shape preserves SK-V15 prune-before-rebuild
+direction and the V2 hardening split of CSS provider/retime and
+Decision/lowerer work.
 
 Authority:
 
@@ -32,8 +33,14 @@ Dispatch lock:
   auto-passes under the active user pin.
 - W0 is the first legal implementation wave after S-P3 convergence and
   required gate authorization.
-- W1-W9 are conditionally gated by this packet; each wave still requires
+- W1-W11 are conditionally gated by this packet; each wave still requires
   a research, plan, and redress triumvirate.
+- W1 dispatches after W0. W2 dispatches after W1 demotes or blocks CSS
+  admission. W3 dispatches after W2. W4 dispatches after W2 plus W3.
+  W5 dispatches after W1-W4. W6 dispatches after W5 typed CSS provider.
+  W7 dispatches after W6. W8 dispatches after W7. W9 dispatches after W8.
+  W10 dispatches after W9. W11 dispatches after W1-W10 are admitted,
+  reverted, redressed, or intrinsically blocked with proof.
 
 ## Section 0 - Close Condition And Goalset
 
@@ -42,15 +49,15 @@ Dispatch lock:
 SK-V15 closes only when all of these are true:
 
 1. W0 creates a checked `SK-V15-open` baseline and telemetry lock.
-2. All 51 JSON rows remain admitted, strict, same-plane, and measured
-   on native Apple M5 Max / aarch64.
+2. All 51 JSON rows remain admitted, strict, same-plane, and measured on
+   native Apple M5 Max / aarch64.
 3. No CSS 24-row broadcast admit remains. CSS rows are either one
    diagnostic aggregate or independently measured typed-output rows.
 4. `CSS_GENERATED_RS`, `CssFullParseSummary`, fact-stream-only CSS
    `parse()`, and brace-counter admission are retired from live CSS
    admission.
-5. CSS exposes typed value, document, view, and visitor surfaces
-   comparable in capability to JSON's Value API.
+5. CSS exposes typed value, document, view, and visitor surfaces comparable
+   in capability to JSON's Value API.
 6. CSS retiming uses a same-workload comparator. `cssparser` is the
    near-term comparator; `lightningcss` counts only after Track 1 emits
    comparable CSSOM/value output.
@@ -59,22 +66,22 @@ SK-V15 closes only when all of these are true:
 8. Generic codegen has no JSON/CSS runtime mode split, per-grammar regen
    enum/match fanout, hardcoded CSS profile table, or generic-pass JSON
    byte recognizer.
-9. Pattern H remains exactly 67 root runtime files and every file has
-   true generator provenance at line 1, backed by a regeneration/check
-   proof rather than header-only edits.
+9. Pattern H remains exactly 67 root runtime files and every file has true
+   generator provenance at line 1, backed by regeneration/check proof.
 10. Decision Engine has at least one asserted e-graph rewrite, a
-    non-tautological CSP, grammar-neutral facts, and all five
-    BackendShape lowerers emit real implementation paths.
+    non-tautological CSP, grammar-neutral facts, and all five BackendShape
+    lowerers emit real implementation paths.
 11. W11L/W11N/W11O FNV closed-enum products remain bench-only and the
     strict-product comparator catches closed-enum sidecar coupling.
-12. Every close row cites HEAD command output, generated artifacts or
-    diffs where relevant, strict parity/checkasm where relevant, and
-    cold per-parse measurement evidence.
+12. Every close row cites HEAD command output, generated artifacts or diffs
+    where relevant, strict parity/checkasm where relevant, and cold
+    per-parse measurement evidence.
 13. PASS-IMPL V2 accepts every axis or supplies row-level intrinsic-block
     proof.
 
 No implementation-limited miss closes SK-V15. A miss becomes REDRESS,
-revert, demotion, or intrinsic block with proof.
+revert, demotion, or intrinsic block with proof. SK-V16 routing is routed
+remainder after proof, not SK-V15 close evidence.
 
 ### Section 0.2 - Comparator Classes
 
@@ -82,19 +89,18 @@ revert, demotion, or intrinsic block with proof.
 |---|---|---|
 | Same-run strict anchor | JSON strict same-plane comparators; CSS typed output vs `cssparser` typed value/document comparator | Admission only when output plane, corpus, equality semantics, strictness, and host match. |
 | Same-run flaw probe | lossy/permissive JSON comparators; CSS parser sidecars on a different output plane | Planning only. |
-| Diagnostic planning signal | stale sidecars, `lightningcss` before comparable CSSOM output, x86/AVX-512 diagnostics | Planning only. |
+| Diagnostic planning signal | stale sidecars, W8R CSS tuple, `lightningcss` before comparable CSSOM output, x86/AVX-512 diagnostics | Planning only. |
 
 ### Section 0.3 - Outcome Posture
 
 JSON rows may remain admitted only as strict same-plane measured rows.
-CSS rows that still carry W8R broadcast evidence are diagnostic or
-NO-GO, not admits. Ledger demotion is not a throughput regression; it is
-truth repair.
+CSS rows that still carry W8R broadcast evidence are diagnostic or NO-GO,
+not admits. Ledger demotion is truth repair, not throughput regression.
 
 ### Section 0.4 - Required Telemetry
 
-SK-V15 preserves the visible schema-v3 `skinny/RESULTS.md` surface and
-the SK-V8 telemetry carrier. It additionally requires these gate-consumed
+SK-V15 preserves the visible schema-v3 `skinny/RESULTS.md` surface and the
+SK-V8 telemetry carrier. It additionally requires these gate-consumed
 fields:
 
 ```text
@@ -110,10 +116,10 @@ gate_exclusion_report
 broadcast_group_id
 ```
 
-Every emitted field must be parsed by `gate-json` or its SK-V15
-successor. Missing fields, producer-only telemetry, hidden one-to-N CSS
-measurement stamps, self-exempting gate exclusions, source-present
-unwired primitives, and native-platform mismatch reject close.
+Every emitted field must be parsed by `gate-json` or its SK-V15 successor.
+Missing fields, producer-only telemetry, hidden one-to-N CSS measurement
+stamps, self-exempting gate exclusions, source-present unwired primitives,
+and native-platform mismatch reject close.
 
 ### Section 0.5 - Opening Row Goalset
 
@@ -152,31 +158,65 @@ Every wave follows `SKINNY-TRIUMVIRATE.md`: research, plan, redress.
 At 0.9x cap, commit or checkpoint; at cap, halt with evidence. If a wave
 cannot fit the cap, split before redress.
 
-| Wave | Receiver | Entry gate | Owner path family | Exit gate |
-|---|---|---|---|---|
-| W0 | Baseline and telemetry lock | S-P3 convergence and G-Omega authorization | `skinny/RESULTS.md`, `skinny/REDRESS.md`, `restart/skinny/ROLLING-SOTA-DELTA.md`, gate/report/telemetry surfaces | SK-V15 telemetry is present and gate-consumed; CSS broadcast is visible as diagnostic; no provider deletion. |
-| W1 | PRUNE-A CSS admission honesty | W0 admitted | CSS bench/report/gate surfaces and rolling delta | 24 CSS broadcast admits demoted or replaced by independently measured typed rows; JSON 51/51 unchanged. |
-| W2 | PRUNE-B Lock 14 / Lock 16 gate restoration | W0 and W1 admitted or W1 blocks CSS as non-admission | Lock 14/16 gates, checkasm reports, scan roots | Gates scan/report leak roots and exclusions; self-exemptions fail closed. |
-| W3 | PRUNE-C codegen leak abrogation | W2 admitted | codegen, grammar provider/profile, runtime generator, passes, xtask | No generic JSON/CSS runtime mode split, static CSS roster, per-grammar workaround, or JSON-shaped generic pass leak. |
-| W4 | PRUNE-D Pattern H generated discipline | W2 and W3 admitted/routed | root `crates/core/src/runtime/**`, skinny runtime projections, xtask regen | 67 Pattern H files have true generated provenance and non-writing regen/check proof; no destructive delete without proof. |
-| W5 | REBUILD-E CSS typed Value API | W1-W4 admitted/routed with no open delete dependency | CSS grammar/codegen/runtime/bench/gate surfaces | Typed CSS value/document/view/visitor output exists; same-workload comparator retiming; old summary/fact-stream proof retired only with same-wave provider proof. |
-| W6 | REBUILD-F.1 Decision Engine spine | W5 admitted or intrinsically routed | `backend_egraph.rs`, `decision_csp.rs`, passes, IR, tests | e-graph rewrite count >=1; CSP is non-tautological; grammar-neutral facts can change selection. |
-| W7 | REBUILD-F.2 BackendShape lowerers | W6 admitted | `skinny/crates/codegen/src/lower/*.rs`, generated fixtures | All five lowerers emit real output or gate-consumed rejected alternatives; no label strings. |
-| W8 | REBUILD-G FNV quarantine | W7 admitted/routed | bench/xtask FNV helpers, strict-product gates, adversarial fixtures | FNV is bench-only and cannot arbitrate runtime correctness or selection; adversarial semantic fixtures pass. |
-| W9 | Close reconciliation and PASS-IMPL V2 handoff | W1-W8 admitted/rejected/routed | RESULTS, REDRESS, rolling delta, HANDOFF, PASS-IMPL V2 packet | Close artifacts agree; no dependency-table orphan remains; PASS-IMPL V2 executes. |
+| Wave | Receiver | Risk | Manual LOC | Generated | Docs LOC | Entry gate | Exit gate |
+|---|---|---|---:|---|---:|---|---|
+| W0 | Baseline and telemetry lock | Medium | 60-160 | None | 80-180 | S-P3 and G-Omega closed | Gate consumes SK-V15 telemetry; CSS broadcast is diagnostic; no provider deletion. |
+| W1 | CSS admission honesty | Medium | 80-200 | None | 80-180 | W0 admitted | 24 CSS broadcast admits are demoted or collapsed; no W8R live admit. |
+| W2 | Lock 14 / Lock 16 gate restoration | High | 120-280 | Reports/fixtures only | 80-180 | W1 admitted or CSS blocked | Gates report roots/exclusions and source-present primitive status; self-exemptions fail. |
+| W3 | Codegen leak abrogation | High | 150-320 | Regen/check evidence | 80-180 | W2 admitted | One coherent generic leak family is removed with same-wave generator consumer. |
+| W4 | Pattern H generated discipline | High | 120-280 | Runtime generated checks | 80-180 | W2 and W3 admitted/routed | 67 root runtime files have true provenance and non-writing regen/check proof. |
+| W5 | CSS typed Value provider | High | 180-360 | 220-440 allowed from named provider | 80-180 | W1-W4 admitted/routed | Typed CSS value/document/view/visitor provider exists; old proof remains diagnostic. |
+| W6 | CSS same-workload retime and old-proof retirement | High | 160-340 | Reports/results | 100-220 | W5 admitted | Fresh typed cssparser comparison sets any CSS floor; old CSS proof paths retire. |
+| W7 | Decision Engine spine | High | 140-300 | Selection fixtures | 80-180 | W6 admitted/routed | E-graph rewrite and non-tautological CSP are gate-consumed. |
+| W8 | BackendShape harness plus EagerTape/OffsetTape | High | 140-300 | 180-360 fixtures | 80-180 | W7 admitted | Harness rejects label scaffold; EagerTape/OffsetTape emit runtime-relevant output. |
+| W9 | EventTape/SinkOnly/CollapsedStage plus all-five gate | High | 160-340 | 220-420 fixtures | 100-220 | W8 admitted | Remaining lowerers are real and all-five gate proves exactly five BackendShape variants. |
+| W10 | FNV quarantine | Medium | 80-220 | 100-240 bench fixtures/reports | 80-180 | W9 admitted/routed | FNV stays bench-only and production FNV scan/adversarial fixtures are consumed. |
+| W11 | Close and PASS-IMPL V2 handoff | Medium | 0-80 | None except evidence from prior waves | 120-420 | W1-W10 resolved | PASS-IMPL V2 accepts each axis or records row-level intrinsic-block proof at HEAD. |
+
+### Section 2.1 - Dependency Table
+
+| Dependency | Provider wave | Consumer/delete wave | Gate |
+|---|---|---|---|
+| CSS SOTA admission | W5 typed provider plus W6 fresh retime | W6 and later | No CSS SOTA admit before W6 same-workload retime. |
+| CSS provider/template deletion | W5 typed provider and W6 old-proof retirement | W6 or later | No delete before provider proof no later than delete wave. |
+| Pattern H generated claim | W4 root runtime regen/check | W4 and later | No generated claim before W4 proof. |
+| Decision-driven row movement | W7 Decision Engine spine | W8/W9 lowerers | No lowerer row movement before W7. |
+| All-five BackendShape claim | W8 partial lowerers plus W9 remaining lowerers | W9 | No all-five close before W9. |
+| FNV correctness/selection role | W10 quarantine | W10 and close | No production role; bench-only quarantine proof required. |
+| Close | W11 PASS-IMPL V2 | W11 | No close before PASS-IMPL V2 consumes packet. |
+
+### Section 2.2 - Generality / Lock 14 Gate
+
+Every wave plan that touches generic crates or generic generators must
+carry this table. A missing row rejects redress.
+
+| Required column | Meaning |
+|---|---|
+| Generic owner path | Exact generic crate, pass, generator, lowerer, or SIMD/parser-helper file touched. |
+| Forbidden token scan | `Json`, `CssL4`, Sheets/corpus names, JSON structural roles, CSS profile names, `json_`, `css_`, `RuntimeProvider`, and aliases. |
+| Non-JSON receiver | CSS L4 plus Sheets or BBNF-self when generic behavior can affect multiple grammars; otherwise intrinsic block with proof. |
+| Proof command | Regen/check/test command that exercises the changed generic path for the receiver. |
+| Generated-output expectation | Byte-identical no-diff, named generated diff, or gate-consumed rejected alternative. |
+| Fail action | Revert, REDRESS, scalar-delegate, delete, or intrinsic block. |
+
+Gate exclusions must list included roots, excluded roots, reason, owner,
+self-scan status, primitive status, gate consumer, affected rows, and
+disposition. EventTape is only one BackendShape lowerer; it cannot become
+a sidecar vector, class column, sixth shape, public `UnionTape`, retained
+stream, public substrate API, or alternate document projection. Generated
+output requires line-1 provenance plus non-writing regen/check; header-only
+proof rejects. Lowerers cannot be label strings, `todo!`, or pass-through
+shells.
 
 ## Section 3 - W0 Baseline And Telemetry Lock
 
 Tasks:
 
 - Capture `SK-V15-open` for the 51 JSON rows.
-- Preserve current CSS rows as diagnostic broadcast evidence unless W1
-  has already demoted them.
+- Preserve current CSS rows as diagnostic broadcast evidence unless W1 has
+  already demoted them.
 - Add or validate SK-V15 telemetry fields.
 - Prove gate consumption of every emitted field.
-
-Entry gate: S-P3 convergence, authorized wave dispatch, clean ownership
-of gate/report/telemetry files.
 
 Exit gate:
 
@@ -186,10 +226,7 @@ Exit gate:
 - `gate-json` rejects missing SK-V15 fields and hidden broadcast.
 - Host telemetry is Apple M5 Max / aarch64.
 
-Revert protocol: revert W0 telemetry/report/gate/RESULTS edits, preserve
-failing output, and add REDRESS naming the missing field or drift.
-
-## Section 4 - W1 PRUNE-A CSS Admission Honesty
+## Section 4 - W1 CSS Admission Honesty
 
 Tasks:
 
@@ -197,10 +234,8 @@ Tasks:
   diagnostic aggregate.
 - Reject any live CSS admit that shares one measurement tuple across
   multiple feature rows.
-- Keep live CSS providers until W5 unless typed replacement proof lands
-  in the same wave.
-
-Entry gate: W0 admitted.
+- Keep live CSS providers until W5 unless typed replacement proof lands in
+  the same wave.
 
 Exit gate:
 
@@ -209,10 +244,7 @@ Exit gate:
   and brace-counter output are diagnostic only.
 - JSON 51/51 guard stays within W0 budget.
 
-Revert protocol: revert CSS report/gate/RESULTS edits, record REDRESS
-with offending row ids and duplicate measurement identity.
-
-## Section 5 - W2 PRUNE-B Lock 14 / Lock 16 Gate Restoration
+## Section 5 - W2 Lock 14 / Lock 16 Gate Restoration
 
 Tasks:
 
@@ -222,9 +254,6 @@ Tasks:
 - Classify source-present SIMD/ASM primitives as wired, scalar-delegated,
   deleted, blocked, or strict-checkasm admitted.
 
-Entry gate: W0 admitted and W1 has removed CSS admission pressure or
-explicitly blocked CSS as non-admission.
-
 Exit gate:
 
 - Lock 14 reports scan roots and every exclusion.
@@ -232,32 +261,24 @@ Exit gate:
   relevant.
 - Self-exempting scans reject.
 
-Revert protocol: revert gate/report edits, save failing gate output, add
-REDRESS naming the omitted root or self-exemption.
-
-## Section 6 - W3 PRUNE-C Codegen Leak Abrogation
+## Section 6 - W3 Codegen Leak Abrogation
 
 Tasks:
 
 - Remove grammar-family runtime modes and hardcoded CSS profile rosters
   from generic codegen.
-- Remove JSON/CSS recognizers from generic passes or route them to
-  generated grammar metadata.
+- Remove JSON/CSS recognizers from generic passes or route them to generated
+  grammar metadata.
 - Exercise changed generator paths with a same-wave regen/check command.
-
-Entry gate: W2 admitted.
 
 Exit gate:
 
 - Generic crates do not branch on `Json`, `CssL4`, Sheets, corpus names,
   JSON structural roles, or CSS profile names.
 - If JSON-adjacent generation changes, JSON 51/51 reruns in the same wave.
-- CSS provider/template deletion remains blocked until W5 proof.
+- CSS provider/template deletion remains blocked until W6 proof.
 
-Revert protocol: revert codegen/generator/gate edits together and record
-the leak token and generated-output diff in REDRESS.
-
-## Section 7 - W4 PRUNE-D Pattern H Discipline
+## Section 7 - W4 Pattern H Generated Discipline
 
 Tasks:
 
@@ -266,8 +287,6 @@ Tasks:
   runtime deletion.
 - Reject header-only generated status.
 
-Entry gate: W2 admitted and W3 admitted/routed.
-
 Exit gate:
 
 - `find crates/core/src/runtime -mindepth 2 -type f -name '*.rs' | wc -l`
@@ -275,36 +294,41 @@ Exit gate:
 - All 67 intended files carry true line-1 generated provenance.
 - Generator/check proof can reproduce them or emits an intrinsic block.
 
-Revert protocol: revert provenance/generator/report edits, save 67-file
-inventory, add REDRESS for unreproducible files.
-
-## Section 8 - W5 REBUILD-E CSS Typed Value API
+## Section 8 - W5 CSS Typed Value Provider
 
 Tasks:
 
 - Build typed CSS value, document, view, and visitor output.
-- Retire string/fact/summary/brace-counter CSS admission proof only after
-  typed provider proof lands.
-- Retest against same-workload `cssparser` comparator and maintain JSON
-  guard rows.
-
-Entry gate: W1 and W2 admitted; W3/W4 admitted or routed if their owner
-paths affect the CSS provider.
+- Keep old CSS proof diagnostic until W6 same-workload retime closes.
+- Prove typed provider output through tests/gates.
 
 Exit gate:
 
 - CSS Track 1 emits typed value/document facts, not a fact stream or
   four-counter summary.
-- CSS comparator workload matches the output plane.
+- CSS provider surfaces are comparable to JSON Value API capability.
+- W8R tuple values are diagnostic negative fixtures only, never floors.
+- Generic provider edits prove CSS plus Sheets or BBNF-self stability when
+  the generic path can affect multiple grammars.
+
+## Section 9 - W6 CSS Same-Workload Retime And Old-Proof Retirement
+
+Tasks:
+
+- Run fresh same-run `cssparser` typed-value/document comparator evidence.
+- Set any CSS typed-admission floor from the fresh W6 typed run only.
+- Retire `CSS_GENERATED_RS`, `CssFullParseSummary`, fact-stream-only
+  `parse()`, and brace-counter proof from live admission.
+
+Exit gate:
+
 - Track 1 CSS typed row meets or beats same-run cssparser on the same
-  workload; optional per-feature rows have distinct measurements.
+  workload.
+- Optional per-feature rows have distinct measurements and no shared hidden
+  signature.
 - JSON 51/51 maintains >=98% of W0 if behavior changes.
 
-Revert protocol: revert CSS runtime/codegen/bench/gate/RESULTS edits and
-any provider retirement as one slice; add REDRESS for missed CSS row or
-JSON guard failure.
-
-## Section 9 - W6 REBUILD-F.1 Decision Engine Spine
+## Section 10 - W7 Decision Engine Spine
 
 Tasks:
 
@@ -313,39 +337,47 @@ Tasks:
 - Remove grammar-named facts from generic decision records.
 - Prove decision output can change generated behavior or selection.
 
-Entry gate: W5 admitted or intrinsically routed.
-
 Exit gate:
 
 - `egraph_rewrite_count >= 1`.
 - Removing a required fact can change CSP satisfiability or selection.
 - No `json_*` or `css_*` facts drive generic selection.
 
-Revert protocol: revert Decision Engine edits and generated diffs; add
-REDRESS naming tautological facts or non-driving rewrites.
-
-## Section 10 - W7 REBUILD-F.2 BackendShape Lowerers
+## Section 11 - W8 BackendShape Harness Plus EagerTape/OffsetTape
 
 Tasks:
 
-- Implement real lowerer paths for EagerTape, OffsetTape, EventTape,
-  SinkOnly, and CollapsedStage or gate-consumed rejection alternatives.
-- Add tests that would fail against label-string scaffolds.
-- Keep row movement claims tied to generated runtime evidence.
-
-Entry gate: W6 admitted.
+- Add lowerer fixtures that fail against label-string scaffolds.
+- Implement real output paths for EagerTape and OffsetTape, or
+  gate-consumed rejected alternatives.
+- Exercise generic lowerer paths with CSS L4 plus Sheets or BBNF-self when
+  the generic path changes.
 
 Exit gate:
 
-- No lowerer is a placeholder, label string, `todo!`, or pass-through shell.
-- Each lowerer has a runtime-relevant generated diff or explicit rejected
-  alternative.
-- Any behavior diff obeys JSON maintain and strict equality gates.
+- EagerTape and OffsetTape lowerers are not placeholders, label strings,
+  `todo!`, or pass-through shells.
+- Generated fixture output is runtime-relevant or rejected by a consumed
+  gate.
 
-Revert protocol: revert lowerer/generated-output edits, save failing
-lowerer report, and add REDRESS.
+## Section 12 - W9 EventTape/SinkOnly/CollapsedStage And All-Five Gate
 
-## Section 11 - W8 REBUILD-G FNV Quarantine
+Tasks:
+
+- Implement real output paths for EventTape, SinkOnly, and CollapsedStage,
+  or gate-consumed rejected alternatives.
+- Add the all-five BackendShape gate.
+- Enforce EventTape anti-sidecar discipline.
+
+Exit gate:
+
+- EventTape/SinkOnly/CollapsedStage lowerers are not placeholders.
+- The all-five gate sees exactly `{EagerTape, OffsetTape, EventTape,
+  SinkOnly, CollapsedStage}`.
+- EventTape is not a sidecar vector, sixth shape, retained stream, public
+  substrate API, or alternate document projection.
+
+## Section 13 - W10 FNV Quarantine
 
 Tasks:
 
@@ -354,8 +386,6 @@ Tasks:
   typed semantic equality.
 - Scan production roots for FNV use.
 
-Entry gate: W7 admitted or routed with independence proof.
-
 Exit gate:
 
 - FNV cannot act as runtime selector, production arbiter, or correctness
@@ -363,31 +393,29 @@ Exit gate:
 - Strict-product gate consumes quarantine metadata and negative fixtures.
 - Production FNV hits are absent or routed to REDRESS with a new contract.
 
-Revert protocol: revert FNV quarantine/gate/report edits, save failing
-strict-product differential output, add REDRESS.
-
-## Section 12 - W9 Close Reconciliation
+## Section 14 - W11 Close Reconciliation
 
 Tasks:
 
 - Reconcile RESULTS, REDRESS, rolling delta, and HANDOFF.
 - Run PASS-IMPL V2.
-- Prepare SK-V16 Pass Alpha input.
-
-Entry gate: W1-W8 admitted, reverted, redressed, or intrinsically
-blocked with proof.
+- Prepare SK-V16 Pass Alpha input only after SK-V15 proof exists.
 
 Exit gate:
 
 - No dependency-table row lacks proof or intrinsic-block evidence.
-- Close evidence is command output, generated diffs, strict manifests,
-  and cold measurements, not docs-only claims.
-- PASS-IMPL V2 accepts every axis or routes SK-V16 prune inputs.
+- Close evidence is command output, generated diffs, strict manifests, and
+  cold measurements, not docs-only claims.
+- PASS-IMPL V2 accepts every axis or records row-level intrinsic-block proof
+  at HEAD.
+- SK-V16 routing is routed remainder after proof; it cannot substitute for
+  an SK-V15 repair.
 
-Revert protocol: revert close-packet edits, preserve PASS-IMPL V2
-failure output, and add REDRESS.
+## Section 15 - Pre-Blocked Routes
 
-## Section 13 - Pre-Blocked Routes
+The shared pre-block list is:
+
+`28+33, 50-55, 60-72, 80, 82-84, 88, 89, 96-98, 183/184/209-213, 215, 242-247, and FNV closed-enum production migration`
 
 | Route family | Block |
 |---|---|
@@ -397,12 +425,12 @@ failure output, and add REDRESS.
 | REDRESS 80 | No numeric/digit route without fresh P1 BBNF-side hot leaf. |
 | REDRESS 82-84 | No one-quartet Unicode/object-pair production promotion. |
 | REDRESS 88, 89 | No PMULL or CSSC production hot-body promotion from checkasm/ISA alone. |
-| REDRESS 183, 184, 209-213 | No provider/runtime/template delete before replacement proof. |
+| REDRESS 183/184/209-213 | No provider/runtime/template delete before replacement proof. |
 | REDRESS 215 | No CSS broadcast, brace-counter, or wrong-plane comparator admission. |
 | REDRESS 242-247 | No decoded-string, structural-stream, string64, or fixed-shape unicode retry under old framing. |
 | FNV closed enum | Bench-only quarantine; no production migration without a future contract. |
 
-## Section 14 - Dispatch Posture
+## Section 16 - Dispatch Posture
 
 S-P3 produces this contract; it does not execute it. On S-P3 convergence,
 the orchestrator updates `HANDOFF.md` to `ready-for-wave-W0`, runs any
@@ -410,5 +438,5 @@ required Pass Omega/G-Omega step for spec amendments, and then dispatches
 W0 through the SKINNY triumvirate.
 
 Only G-Omega is a mandatory user gate under the active pin. Every other
-gate auto-passes unless an intrinsic invariant violation cannot be
-repaired inside the pass discipline.
+gate auto-passes unless an intrinsic invariant violation cannot be repaired
+inside the pass discipline.

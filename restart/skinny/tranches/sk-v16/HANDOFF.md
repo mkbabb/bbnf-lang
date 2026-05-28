@@ -46,10 +46,19 @@ and cannot be folded into CH6 or deferred to S-P0.
 
 1. S-P0 overfit audit is converged at `dafe288dd`; S-P1 profile is converged
    after V1/V2 CH1-CH7 hardening with two clean ACCEPT cycles.
-2. Dispatch S-P2 research. S-P2 must consume the S-P1 hot-leaf floor and the
-   S-P0 prune list; behavior/admission waves remain blocked until S-P3 authors
-   legal prune-first waves and executable consumers.
-3. Run totality passes and Pass Omega only where the loop requires them or a
+2. S-P2 research is converged after V1/V2 CH1-CH7 hardening. Candidate pool is
+   locked for S-P3 consumption at
+   `restart/skinny/tranches/sk-v16/research/p2/hardening/HARDENING-S-P2-V2-CONSOLIDATED.md`.
+   S-P3 must select and sequence only from the surviving grammar-neutral or
+   quarantined candidate classes: byte-set/class-table scans, local
+   string-special masks, escape/hex/digit atoms under strict scalar/checkasm
+   gates, sealed-tape scalar view operations, and materialization ratio
+   reporting. PMULL/CSSC production promotion, x86 scope, sidecars, FNV/checksum
+   proof, CSS legacy fact streams, old Unicode/string64/tiny/numeric shortcuts,
+   and dirty generated state remain blocked.
+3. Dispatch S-P3 synthesis-plan. Behavior/admission waves remain blocked until
+   S-P3 authors legal prune-first waves and executable consumers.
+4. Run totality passes and Pass Omega only where the loop requires them or a
    spec-class amendment surfaces. Stop only at G-Omega.
-4. Execute the SK-V16 wave program after S-P3/Pass Omega gating, preserving the
+5. Execute the SK-V16 wave program after S-P3/Pass Omega gating, preserving the
    no-contrivance, no-x86, profile-first aarch64 SIMD discipline.

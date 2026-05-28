@@ -1,7 +1,7 @@
 ---
 agent: 1E
 pass: T-P1-excavation
-cycle: V3
+cycle: V4
 generated_at: 2026-05-28T06:10:00Z
 spec_surfaces_audited:
   - restart/prompts/totality/PASS-1-EXCAVATION.md
@@ -44,6 +44,7 @@ prior_cycle_dispositions_folded:
     - CH4-V2-F07 re-keyed cost carriers so divergence and LAC rows budget their own ids
     - CH4-V2-F09 added LAC wave/cost/hard-cap alignment for every amendment candidate
     - CH6-V2-F10 downgraded Lock 1 closure wording to partial JSON-tape-only
+    - CH6-V3-F06 downgraded Lock 5 closure wording to partial Rust-only IR boundary evidence
   first_cycle_additions:
     - L01-factstream-schema-without-sixth-backendshape
     - L08-broadcast-admission-detector
@@ -90,7 +91,7 @@ amend locks.
 | L02 Layout lowering canonical name | drifted | Lock requires `passes::layout`, `Layout`, and `LayoutSink` at `restart/locks/LOCKS.md:160`; the v+1 note admits only `LayoutFacts.backend_shape` is live at `restart/locks/LOCKS.md:162`-`166`; current source has `LayoutFacts` and `backend_shape` at `skinny/crates/passes/src/lib.rs:91`-`96`. | Side-table is live; public canonical names are not. |
 | L03 Cursor-parse + byte-skip empty path | silent-must-add | Lock requires empty-path elision via `__EAGER_EMPTY_PATH` at `restart/locks/LOCKS.md:170-176`; live grep found no `__EAGER_EMPTY_PATH` marker. | Need a golden/codegen proof or the claim is unverifiable. |
 | L04 Per-domain orthogonal optimization | drifted | Lock rejects solver fusion at `restart/locks/LOCKS.md:179`; Lock 6 strengthens dependency separation at `restart/locks/LOCKS.md:183`; live root `crates/egraph/Cargo.toml:11` depends directly on `csp-solver`; skinny decision CSP has grammar-named fields at `skinny/crates/passes/src/decision_csp.rs:162-166`. | Algorithmic fusion is not seen, but the dependency-graph / bridge claim is false in root and scaffolded in skinny. |
-| L05 IR + per-backend lower | honoured | Lock states the IR contract at `restart/locks/LOCKS.md:181`; `BackendIr` is live at `skinny/crates/ir/src/lib.rs:330-337`; codegen lowers from IR/layout via `skinny/crates/codegen/src/lib.rs:155-180`. | Rust-only V1 boundary is present. Load-bearing shape coverage is assessed under L10. |
+| L05 IR + per-backend lower | partial / Rust-only IR boundary present | Lock states the IR contract at `restart/locks/LOCKS.md:181`; `BackendIr` is live at `skinny/crates/ir/src/lib.rs:330-337`; codegen lowers from IR/layout via `skinny/crates/codegen/src/lib.rs:155-180`; sibling 1B evidence finds no formal `Backend` / `RustBackend` / `WasmBackend` / `TsBackend` symbols and records four of five retained-shape lowerers as marker strings (`restart/audit/totality/p1/1B-codegen-evidence.md:39`, `restart/audit/totality/p1/1B-codegen-evidence.md:49`, `restart/audit/totality/p1/1B-codegen-evidence.md:57-63`). | Rust-only IR boundary is present. The formal backend trait and concrete per-shape lowerer depth remain open under L10, `P1-1B-D1`, and `P1-1B-D7`. |
 | L06 xtask committed generated source | drifted | Lock requires committed source artifacts at `restart/locks/LOCKS.md:183-196`; root xtask still carries grammar-specific regen commands at `xtask/src/main.rs:64-108`; `RuntimeStyle` has four styles at `xtask/src/regen_simple_runtime.rs:32-38`; Pattern H core files have 0 generated headers. | Committed source exists, but round-trip/generic generation discipline is not proven. |
 | L07 `crates/path/` consolidated path crate | drifted | Lock requires `crates/path/` and `crates/path-core/` at `restart/locks/LOCKS.md:200`; live `find` shows only `crates/bbnf-path` and `crates/bbnf-path-ts`; `crates/core/src/path/` is still nonempty. | The lock names a destination topology the root workspace has not reached. |
 | L08 SOTA gates | over-stated | Lock sets SOTA gate discipline at `restart/locks/LOCKS.md:202-258`; current `skinny/RESULTS.md:139-149` says JSON and CSS rows admitted; PASS-IMPL says all 24 CSS admits are one broadcast measurement and CSS workload is mismatched at `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:19-34`. | JSON rows are credible; CSS 24-row close is over-stated and requires broadcast/workload amendments. |
@@ -189,6 +190,7 @@ amend locks.
 | CH4-V2-F07 | Divergence cost rows now key to the divergence IDs and budget the same divergence each row names. |
 | CH4-V2-F09 | Every LAC candidate has a wave hint, risk, LOC estimate, and hard cap in the LAC carrier. |
 | CH6-V2-F10 | Lock 1 wording is downgraded from broad `honoured` to `partial / JSON-tape-only`; CSS fact-stream/schema remains unresolved. |
+| CH6-V3-F06 | Lock 5 wording is downgraded from broad `honoured` to `partial / Rust-only IR boundary present`; formal backend trait and retained-shape lowerer depth remain open. |
 
 ## V2 Lock 14 / 16 Gate-Exclusion Carrier
 

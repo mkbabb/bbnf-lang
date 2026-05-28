@@ -1,7 +1,7 @@
 ---
 agent: 1D
 pass: T-P1-excavation
-cycle: V3
+cycle: V4
 generated_at: 2026-05-28T06:10:00Z
 spec_surfaces_audited:
   - restart/prompts/totality/PASS-1-EXCAVATION.md
@@ -47,6 +47,8 @@ prior_cycle_dispositions_folded:
     - CH2-V2-F05 added pass-layer recognizer/materialization leaks as grammar-neutral Lock 14 findings
     - CH4-V2-F08 split broad implementation buckets into bounded receiver classes
     - CH4-V2-F09 added primitive/kernel receiver proof table
+    - CH4-V3-F02 split remaining class-level cost carriers into bounded receiver rows
+    - CH4-V3-F03 enumerated primitive/kernel receivers by named source row
   first_cycle_additions:
     - SKV15-J-JSON-51-GUARD
     - SKV15-J-PARSEONLY-MEMCHR
@@ -161,9 +163,25 @@ PRUNE-WAVE-A and REBUILD-WAVE-E before any CSS >SOTA claim returns.
 | divergence | count bucket | loc_delta_estimate | risk | evidence | V1 impact |
 |---|---:|---:|---|---|---|
 | Proved/currently implemented skinny lessons that V1 may cite with scope qualifiers: JSON 51-row guard, W11W parse_only, strict product rows, hot-leaf attribution discipline, same tape substrate, aarch64 admission pin, root candidate process discipline. | 7 implemented | 0-120 doc LOC | medium if overgeneralized | `skinny/RESULTS.md:139-149`; `skinny/REDRESS.md:6254-6284`; `restart/skinny/tranches/sk-v15/research/p1/p1e-hot-leaf-attribution.md:31-35`; `restart/skinny/tranches/sk-v15/research/p2/p2d-substrate-tape.md:12-15`; `restart/skinny/tranches/sk-v15/HANDOFF.md:16-18`; `restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:22-32` | Scope these as JSON-empirical or process/substrate, not proof of CSS/generalized codegen. |
-| Disproved/unimplemented claims: CSS broadcast, CSS generated string, CSS comparator/equality mismatch, CSS Value API absence, Lock 14/16 gate holes, Pattern H ownership gap, Decision Engine scaffold, codegen grammar-family leaks, retained sidecars, harness/hash primitive misuse. | 10 unimplemented | CSS broadcast/value 300-900 LOC; Lock 14/16 gates 120-420 LOC; Pattern H generator/provenance gate 1,500-3,000 LOC plus per-runtime projection subwaves; Decision Engine 600-2,200 LOC; codegen leak axes 450-1,000 LOC | high | `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:21-58`; `restart/skinny/tranches/sk-v15/audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md:16-24`; `restart/skinny/tranches/sk-v15/research/p2/p2d-substrate-tape.md:50-58`; `restart/skinny/tranches/sk-v15/research/p1/p1e-hot-leaf-attribution.md:31-35` | V1 must not describe SK-V15 as at generalisation inflection until these close. |
+| Disproved/unimplemented claims: CSS broadcast, CSS generated string, CSS comparator/equality mismatch, CSS Value API absence, Lock 14/16 gate holes, Pattern H ownership gap, Decision Engine scaffold, codegen grammar-family leaks, retained sidecars, harness/hash primitive misuse. | 10 unimplemented | See V4 receiver carrier `RC-01` through `RC-11` below. | high | `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:21-58`; `restart/skinny/tranches/sk-v15/audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md:16-24`; `restart/skinny/tranches/sk-v15/research/p2/p2d-substrate-tape.md:50-58`; `restart/skinny/tranches/sk-v15/research/p1/p1e-hot-leaf-attribution.md:31-35` | V1 must not describe SK-V15 as at generalisation inflection until the receiver rows below close or record intrinsic blocks. |
 | Implementation/evidence exceeds old totality schema: CSS anti-broadcast telemetry fields, new CH3/CH5/CH7 addenda, and P1/P2 normalized evidence surfaces. | 3 impl_exceeds_spec | 200-600 doc/gate LOC | medium | `restart/skinny/tranches/sk-v15/SYNTHESIS.md:98-127`; `restart/skinny/tranches/sk-v15/research/alpha/alpha-A-results-extraction.md:48-62`; `restart/skinny/tranches/sk-v15/research/p1/p1e-hot-leaf-attribution.md:31-35` | V1 schema should absorb anti-broadcast fields, gate-exclusion reporting, and normalized hot-leaf evidence. |
-| Unknown/pending close surfaces: FNV quarantine, JSON c/B misses, CSS typed API/re-timing, Lock 14/16 gate restoration, Pattern H round-trip, Decision Engine emission diffs, grammar-neutral parse-that vocabulary, primitive same-wave consumers. | 8 unknown | FNV quarantine 80-220 LOC; JSON c/B research 0-180 LOC unless a parser primitive lands; CSS typed API/re-timing 300-900 LOC; Lock 14/16 gate restoration 120-420 LOC; Pattern H round-trip 1,500-3,000 LOC plus projection subwaves; Decision Engine emission diffs 600-2,200 LOC; parse-that vocabulary 250-700 LOC per accepted primitive; primitive same-wave consumers 80-350 LOC each | high | `restart/skinny/tranches/sk-v15/SYNTHESIS.md:70-80`; `restart/skinny/tranches/sk-v15/research/p1/p1d-pmu-cycles.md:70-73`; `restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md:27-29`; `restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:24-32` | These are S-P3 / T-P3 routing inputs, not close evidence. |
+| Unknown/pending close surfaces: FNV quarantine, JSON c/B misses, CSS typed API/re-timing, Lock 14/16 gate restoration, Pattern H round-trip, Decision Engine emission diffs, grammar-neutral parse-that vocabulary, primitive same-wave consumers. | 8 unknown | See V4 receiver carrier `RC-01` through `RC-11` and the V4 primitive/kernel receiver table below. | high | `restart/skinny/tranches/sk-v15/SYNTHESIS.md:70-80`; `restart/skinny/tranches/sk-v15/research/p1/p1d-pmu-cycles.md:70-73`; `restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md:27-29`; `restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:24-32` | These are S-P3 / T-P3 routing inputs until a named receiver row carries executable proof or intrinsic-block evidence. |
+
+## V4 Receiver Cost Carrier
+
+| receiver | owner path / row | LOC range | risk | wave | hard cap | consumer / proof | route or revert disposition |
+|---|---|---:|---|---|---:|---|---|
+| RC-01 CSS broadcast telemetry | `C-1`, `CH5-V1-05`, `DEP-W1-CSS-BROADCAST` | 80-200 | high | W1 | 250 | Gate over `measurement_row_id`, `measurement_origin`, `broadcast_group_id`, `value_plane`, and duplicate timing signatures. | Collapse to one diagnostic aggregate or demote rows; no W8R live admit. |
+| RC-02 CSS typed Value provider | `C-5`, REBUILD-WAVE-E | 300-900 | high | W5 | 1200 | Typed CSS value/document/view/visitor output plus generated consumer tests. | Block CSS SOTA; old proof stays diagnostic. |
+| RC-03 CSS same-workload retime | `C-3`, `C-6`, W6 CSS retime | 160-340 | high | W6 | 500 | Fresh same-run cssparser typed comparator, distinct measurement ids, and retired old proof scans. | Keep CSS audit-demoted if typed retime is absent or mismatched. |
+| RC-04 Lock 14 / Lock 16 gate restoration | `SKV15-G-LOCK14-LOCK16-GATE-HOLES` | 120-420 | high | W2 | 420 | Gate prints included roots, exclusions, primitive source status, and strict checkasm/parity evidence. | Reject self-exempting gates; route source-present unwired primitives to manifest disposition. |
+| RC-05 Pattern H generated ownership | `SKV15-G-PATTERN-H-OWNERSHIP-GAP`; `1C-V1-D6` | 1,500-3,000 generator/provenance gate; 700-1,200 for any named runtime projection; 600-1,200 close transcript | high | W4 | 3,600 | Line-1 provenance, non-writing regen/check, `find ... | wc -l` remains 67, and explicit per-runtime owner rows when projection changes. | Header-only close rejects; destructive delete requires same-wave replacement proof. |
+| RC-06 Decision Engine emission | `SKV15-G-DECISION-ENGINE-SCAFFOLD` | 600-2,200 | high | W7-W9 | 2,200 | E-graph rewrite count, non-tautological CSP, no grammar-named facts, and generated runtime-relevant diffs. | Block shape-selection claims; no all-five lowerer close before W9 proof. |
+| RC-07 Codegen grammar-family leaks | `P1-1B-D8` / `P1-1B-D9` / `P1-1B-D10` | 450-1,000 | high | W3 | 1,200 | CSS plus Sheets or BBNF-self generated metadata proof; no new generic source branch for a receiver. | Revert or REDRESS any profile/template branch that lacks non-JSON proof. |
+| RC-08 FNV quarantine | `J-4`, W10 FNV guard | 80-220 | medium | W10 | 320 | Production `rg -n "fnv|FNV|input_fnv64|stream_fnv64"` scan plus adversarial strict-product fixtures. | Bench-only quarantine or delete; no production equality arbiter. |
+| RC-09 JSON c/B research | `J-5`, P1 PMU misses | 0-180 docs/research unless a primitive row owns code | medium | S-P1/S-P3 input | 180 | P1 rerun or existing PMU transcript tied to a named primitive row. | No implementation admit from c/B debt alone. |
+| RC-10 Parse-that vocabulary | P2-E gap rows | 250-700 docs/generator work across named vocabulary rows | medium-high | S-P3 shortlist then owning wave | 700 | Scalar oracle, non-JSON witness or scoped claim, REDRESS pre-block check, generated consumer. | Research-only unless a row below names executable consumer proof. |
+| RC-11 Primitive same-wave consumers | V4 primitive/kernel receiver table | 80-350 for a named consumer row | high | Owning wave from table | 350 | Scalar reference, aarch64 implementation or scalar-delegate decision, strict parity, and row maintain gate. | `wired`, `deleted`, `scalar-delegate-non-ASM`, `architecture-blocked-with-REDRESS`, or `research-only/rejected`. |
 
 ## V2 Hardening Fold
 
@@ -175,15 +193,28 @@ PRUNE-WAVE-A and REBUILD-WAVE-E before any CSS >SOTA claim returns.
 | CH5-V1-05 | Broadcast CSS admits are treated as admission-plane dishonesty unless rows are explicitly aggregate or carry distinct `measurement_row_id` / `broadcast_group_id`. |
 | CH5-V1-04 | CSS source-sidecar comparator evidence is comparator-only and cannot be used as runtime substrate or CSS Value API proof. |
 
-## V3 Primitive / Kernel Receiver Table
+## V4 Primitive / Kernel Receiver Table
 
-| primitive / kernel | owning wave | consumer path or row | proof command / evidence | disposition if no consumer exists |
-|---|---|---|---|---|
-| Lock 16 SIMD primitive manifest | REBUILD-WAVE-F or primitive-specific subwave | `skinny/crates/bbnf-simd/src/dispatch.rs`; `skinny/crates/bbnf-simd/tests/checkasm_parity.rs`; Lock 16 gate row | `BBNF_SIMD_STRICT=1` checkasm/parity transcript plus source-present primitive manifest | Mark source-present primitive as `deleted`, `scalar-delegate-non-ASM`, or `architecture-blocked-with-REDRESS`; no orphan kernel may close. |
-| Grammar-neutral byte-set/classifier primitive | S-P3 shortlist then owning implementation wave | parse-that Layer-1 rows from `restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md` and generated parser consumer | Scalar oracle, aarch64 path, strict parity, and one same-wave generated runtime consumer | Reject as research-only; do not admit as >SOTA or Lock 16 evidence. |
-| UTF-8 / string / literal span primitive | S-P3 shortlist then owning implementation wave | JSON string rows only as guard; non-JSON proof receiver required for generality | Scalar oracle + non-JSON fixture + generated consumer diff | Scope to JSON guard or delete from generalization claim. |
-| Same-tape fact projection | REBUILD-WAVE-E / substrate receiver | CSS typed value/document/view row and Lock 1 fact-stream schema row | Value equality against cssparser same-workload output; no string-only fact-stream admit | Keep CSS as audit-demoted and non-SOTA. |
-| FNV closed-enum comparator scaffold | REBUILD-WAVE-G | W11L/W11N/W11O bench-only rows | Gate proving FNV-keyed arbiters are absent from production runtime and adversarial strict-product fixtures fail closed | Quarantine as bench-only or delete; never use as production equality oracle. |
+| primitive / kernel | source row | owning wave | consumer / proof | LOC / risk / hard cap | absent-consumer disposition |
+|---|---|---|---|---|---|
+| `BYTE_CLASS_FROM_TABLE_64` | P2-B candidate inventory | S-P3 shortlist then W7/W8 if selected | Scalar byte-class oracle, aarch64 TBL/TBX or scalar-delegate path, generated parser consumer, strict parity. | 80-180 / medium-high / 250 | research-only unless consumer row names grammar-neutral byte-class use. |
+| `BYTE_CLASS_FROM_EQ_SET_64` | P2-B candidate inventory | S-P3 shortlist then W7/W8 if selected | Scalar equality-set oracle, NEON compare/table path or scalar-delegate, generated consumer, row maintain gate. | 80-180 / medium-high / 250 | scalar-delegate-non-ASM or research-only. |
+| `BITMAP_PREFIX_XOR_64` | P2-B / P2-C REDRESS 88 | blocked unless fresh P1 names consumer | Scalar quote-mask oracle and strict parity; PMULL hot-body cannot be default without fresh row proof. | 80-220 / high / 300 | architecture-blocked-with-REDRESS or scalar-delegate. |
+| `BITMAP_NEXT_SET_BIT` / `BULK_EMIT_POSITIONS_64` | P2-B / P2-C REDRESS 89 | blocked unless fresh P1 names consumer | Scalar next-bit/bulk-emission oracle; CSSC CTZ availability alone is not proof. | 80-220 / high / 300 | architecture-blocked-with-REDRESS or scalar-delegate. |
+| `EOB_PAD_CLAMP` | P2-B support inventory | no SK-V15 admit wave | Existing support only; no parser primitive close row. | 0-80 / low / 120 | support inventory; not an implementation candidate. |
+| `escape_mask_64` | P2-B / P2-F revised row | owning wave only with string consumer | Scalar escape mask oracle, generated string consumer, no cross-call carry. | 120-260 / high / 350 | research-only or scoped JSON guard. |
+| UTF-8 validation run | P2-B / P2-E `validate_utf8_run` | owning wave only with non-JSON witness | Scalar UTF-8 oracle, non-JSON fixture or scoped JSON claim, generated consumer diff. | 120-300 / high / 350 | research-only if no consumer. |
+| Unicode escape SIMD | P2-B string/unicode row | owning wave only with generated string consumer | Scalar unicode escape oracle, aarch64 implementation or scalar-delegate, strict product guard. | 160-350 / high / 350 | scoped JSON guard or research-only. |
+| Long-string scanner | P2-B / P2-E `escaped_literal_segments` | owning wave only with string hot-leaf proof | Scalar segment oracle, no retained sidecar, same-wave parser consumer. | 120-320 / medium-high / 350 | research-only without hot-leaf proof. |
+| Direct cursor / whitespace scanner | P2-B direct cursor row | owning wave only if substrate schedule is named | `DirectBuild` / `TapeEmit` schedule proof, no parser-owned cursor list. | 120-260 / medium-high / 350 | reject as retained cursor replay if no schedule proof. |
+| Tape/allocation pressure helper | P2-B allocation/tape row | W5/W7/W8 only with emitted consumer | Tape capacity oracle, generated consumer, no retained capacity sidecar. | 80-240 / medium / 300 | scalar/runtime-local helper only. |
+| Product-builder / harness hash rows | P2-B rejected rows; FNV W10 | W10 for quarantine only | Production scan plus adversarial strict-product fixtures. | 80-220 / medium / 320 | delete or bench-only quarantine; never production equality proof. |
+| `skip_byte_set_run` | P2-E parse-that gap | S-P3 shortlist then owning wave | Scalar oracle, non-JSON receiver, generated consumer, row maintain gate. | 120-260 / medium-high / 350 | research-only if not selected. |
+| `classify_local_block_64` | P2-E parse-that gap | S-P3 shortlist then owning wave | Scalar classifier oracle, local mask lifetime, generated consumer. | 120-280 / medium-high / 350 | research-only if no consumer. |
+| `bounded_plain_literal_span` | P2-E parse-that gap | S-P3 shortlist then owning wave | Scalar literal-span oracle, bounded output, no retained sidecar. | 120-260 / medium / 350 | research-only if no consumer. |
+| `validate_utf8_run` | P2-E parse-that gap | S-P3 shortlist then owning wave | Same proof as UTF-8 validation run, with grammar-source facts for valid spans. | 120-300 / high / 350 | research-only if no consumer. |
+| `digit_run_span_accumulate` | P2-E parse-that gap | blocked unless fresh P1 names number hot leaf | Scalar digit accumulator oracle plus non-JSON or scoped proof. | 120-260 / medium / 350 | research-only; stale numeric/digit route remains blocked. |
+| `escaped_literal_segments` | P2-E parse-that gap | S-P3 shortlist then owning wave | Scalar escaped-segment oracle, string consumer, no sidecar identity. | 120-320 / high / 350 | research-only if no consumer. |
 
 ## Gaps / Missing Primitives
 

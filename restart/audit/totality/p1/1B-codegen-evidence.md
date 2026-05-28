@@ -1,7 +1,7 @@
 ---
 agent: 1B
 pass: T-P1-excavation
-cycle: V3
+cycle: V4
 generated_at: 2026-05-28T06:10:00Z
 spec_surfaces_audited: [PASS-1-EXCAVATION.md, ORCHESTRATOR.md, ARCHITECTURE.md, MASTER-PLAN.md, LOCKS.md]
 files_audited_count: 23
@@ -14,6 +14,7 @@ prior_cycle_dispositions_folded:
     - CH2-FOLD-004 routed pass-layer JSON-shape leaks P1-1B-D9/P1-1B-D10 into 1D
     - CH1-V2-F04 removed stale V1 self-description
     - CH2-V2-F05 confirmed P1-1B-D9/P1-1B-D10 must be grammar-neutral findings in 1D V3
+    - CH1-V3-001 expanded brace lowerer citations into explicit repo-root paths
   first_cycle_additions: [P1-1B-D1, P1-1B-D2, P1-1B-D3, P1-1B-D4, P1-1B-D5, P1-1B-D6, P1-1B-D7, P1-1B-D8, P1-1B-D9, P1-1B-D10, P1-1B-D11]
 divergence_count:
   spec_claims_implemented: 8
@@ -68,14 +69,15 @@ The material gaps are in concrete lowering and grammar neutrality. Four retained
 |---|---|
 | EventTape REDRESS fence | `EventTape` rows remain valid totality gaps, but any implementation route must be a generated same-substrate lowering. It must not reopen EventCursor sidecars, retained structural streams, retained class lanes, parser-owned cursor lists, or cross-call classifier state under Lock 1. |
 | Pass-layer JSON-shape leaks | P1-1B-D9 recognizer mining and P1-1B-D10 materialization role mining are grammar-neutral Lock 14 leaks caused by JSON-shaped pass logic, not JSON-only empirical lessons. 1D V2 must cite these rows directly. |
-| Shorthand citation repair | Lowerer sibling references remain readable in this file, but downstream CH1 citation checks should use the fully qualified paths already present in `P1-1B-D7`: `skinny/crates/codegen/src/lower/{eager_tape,offset_tape,event_tape,collapsed_stage}.rs:15`-`17`. |
+| Shorthand citation repair | Lowerer sibling references remain readable in prose, but downstream CH1 citation checks use explicit repo-root paths: `skinny/crates/codegen/src/lower/eager_tape.rs:15`-`17`, `skinny/crates/codegen/src/lower/offset_tape.rs:15`-`17`, `skinny/crates/codegen/src/lower/event_tape.rs:15`-`17`, and `skinny/crates/codegen/src/lower/collapsed_stage.rs:15`-`17`. |
 
 ## V3 Hardening Fold
 
 | fold | disposition |
 |---|---|
-| CH1-V2-F04 | Stale cycle wording is replaced with V3 wording; finding identifiers keep their original V1 keys for traceability. |
+| CH1-V2-F04 | Stale V1 cycle wording is removed; finding identifiers keep their original V1 keys for traceability. |
 | CH2-V2-F05 | `P1-1B-D9` and `P1-1B-D10` remain mandatory 1D grammar-neutral Lock 14 findings, with Sheets/BBNF-self proof receivers rather than JSON-only routing. |
+| CH1-V3-001 | Brace lowerer citations are expanded to four explicit repo-root paths so no citation requires shell brace expansion to verify. |
 
 ## Derive Backend Shape: Eight-Step Diagnostic Vocabulary
 
@@ -111,7 +113,7 @@ The material gaps are in concrete lowering and grammar neutrality. Four retained
 | Gap | Evidence | Impact |
 |---|---|---|
 | Formal backend trait boundary missing. | `Backend` spec at `restart/ARCHITECTURE.md:1494`-`1513`; live `ShapeLowering` at `skinny/crates/codegen/src/lower/mod.rs:13`-`15`. | V2 Wasm/TS addition would not plug into the promised trait without reshaping. |
-| Concrete retained-shape lowerers missing. | Marker lowerers at `skinny/crates/codegen/src/lower/{eager_tape,offset_tape,event_tape,collapsed_stage}.rs:15`-`17`. | Retained shape claims rely on templates/runtime generator, not per-shape lower output. |
+| Concrete retained-shape lowerers missing. | Marker lowerers at `skinny/crates/codegen/src/lower/eager_tape.rs:15`-`17`, `skinny/crates/codegen/src/lower/offset_tape.rs:15`-`17`, `skinny/crates/codegen/src/lower/event_tape.rs:15`-`17`, and `skinny/crates/codegen/src/lower/collapsed_stage.rs:15`-`17`. | Retained shape claims rely on templates/runtime generator, not per-shape lower output. |
 | CollapsedStage concrete ASM path missing. | Spec triple at `restart/ARCHITECTURE.md:1186`; live marker at `skinny/crates/codegen/src/lower/collapsed_stage.rs:15`-`17`. | Lock 16 cannot admit CollapsedStage without same-wave consumer/parity evidence. |
 | Grammar-neutral runtime generator missing. | Static profile roster `skinny/crates/codegen/src/grammar_profile.rs:89`-`99`; JSON/CSS renderer branches `skinny/crates/codegen/src/runtime_generator.rs:32`-`153`. | Adding a new generated runtime still requires codegen source edits. |
 | Grammar-neutral recognizer and materialization facts missing. | Recognizer whitelist `skinny/crates/passes/src/lib.rs:332`-`359`; role mining `skinny/crates/passes/src/lib.rs:1354`-`1435`. | Sheets/BBNF-self future grammar rows cannot close through current pass layer. |

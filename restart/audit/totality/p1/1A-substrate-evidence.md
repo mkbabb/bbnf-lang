@@ -1,7 +1,7 @@
 ---
 agent: 1A
 pass: T-P1-excavation
-cycle: V3
+cycle: V4
 generated_at: 2026-05-28T06:10:00Z
 spec_surfaces_audited: [ARCHITECTURE.md, LOCKS.md, PASS-1-EXCAVATION.md, ORCHESTRATOR.md]
 files_audited_count: 59
@@ -17,6 +17,7 @@ prior_cycle_dispositions_folded:
     - CH1-V2-F02 reconciled 1A frontmatter counts to the V2 table
     - CH1-V2-F04 removed stale V1 self-description from the dispatch context
     - CH6-V2-F11 scoped 1A-SUB-001 to JSON/example implementation because CSS lacks the full retained roster
+    - T-P1-V4 no-op carry-forward; V3 CH1/CH6 accepted 1A counts and closure wording
   first_cycle_additions: [1A-SUB-001, 1A-SUB-002, 1A-SUB-003, 1A-SUB-004, 1A-SUB-005, 1A-SUB-006, 1A-SUB-007, 1A-SUB-008, 1A-SUB-009, 1A-SUB-010, 1A-SUB-011, 1A-SUB-012, 1A-SUB-013, 1A-SUB-014, 1A-SUB-015, 1A-SUB-016, 1A-SUB-017, 1A-SUB-018, 1A-SUB-019, 1A-SUB-020, 1A-SUB-021, 1A-SUB-022]
 divergence_count:
   spec_claims_implemented: 6
@@ -98,8 +99,14 @@ lock edit, or commit.
 | fold | disposition |
 |---|---|
 | CH1-V2-F02 | Frontmatter now counts 6 implemented, 7 unimplemented, 4 implementation-exceeds, and 5 unknown rows. `1A-SUB-001` moved out of broad implemented closure, making the table mechanically match the count. |
-| CH1-V2-F04 | Dispatch context now describes this artifact as V3 and preserves V1 only as the origin of PASS-IMPL evidence. |
+| CH1-V2-F04 | The earlier V3 fold removed stale V1 wording and preserved V1 only as the origin of PASS-IMPL evidence. |
 | CH6-V2-F11 | Broad runtime ownership language is scoped to JSON/example implementation; CSS remains a fact-stream profile without typed value/view/visitor parity. |
+
+## V4 Hardening Fold
+
+| fold | disposition |
+|---|---|
+| T-P1-V4-1A | No 1A edits were required by V3 hardening. The V3 count reconciliation, `1A-SUB-001` scope downgrade, EventTape sidecar fence, and UNKNOWN verify-action rows are carried forward unchanged for V4 challenge. |
 
 ## Divergences Catalogued
 

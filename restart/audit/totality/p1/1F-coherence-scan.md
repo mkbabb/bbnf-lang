@@ -1,7 +1,7 @@
 ---
 agent: 1F
 pass: T-P1-excavation
-cycle: V3
+cycle: V4
 generated_at: 2026-05-28T06:10:00Z
 spec_surfaces_audited:
   - restart/ARCHITECTURE.md
@@ -37,6 +37,7 @@ prior_cycle_dispositions_folded:
     - CH1-V2-F01 expanded root-shorthand citations to repo-root path:line form
     - CH1-V2-F03 reconciled frontmatter counts to the V2 table classifications
     - CH2-V2-F06 added compact Lock 14 owner/receiver leak map
+    - CH5-V3-F04 added current-source FNV production-coupling census and hash-sidecar grep guard
   first_cycle_additions:
     - COH-001-SKV15-authority-drift
     - COH-002-CSS-broadcast-admission-drift
@@ -53,17 +54,18 @@ prior_cycle_dispositions_folded:
     - COH-013-1F-auxiliary-supersession
     - COH-014-root-OnceCell-StructuralIndex-coupling
     - COH-015-current-CSS-source-sidecar-coupling
+    - COH-016-current-CSS-FNV-runtime-hash-coupling
 divergence_count:
   spec_claims_implemented: 3
   spec_claims_unimplemented: 11
   impl_exceeds_spec: 0
-  unknown: 1
+  unknown: 2
 locks_amendment_candidates: 0
 ---
 
 ## Executive Summary
 
-SK-V15 starts from a split truth: JSON is a validated guard baseline, while CSS L4 is audit-demoted and Pattern H, Lock 14/16 gates, codegen neutrality, and the Decision Engine remain prune/rebuild obligations. The current top-level V1 surfaces still mostly narrate SK-V14 W5B-FRONTENDR and the SK-V14 audit-corrected baseline (`restart/HANDOFF.md:5`, `restart/HANDOFF.md:70`, `restart/skinny/INDEX.md:5`), while SK-V15 now declares a PRUNE-then-REBUILD tranche (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:5`, `restart/skinny/tranches/sk-v15/HANDOFF.md:8`). The most material drift is not a new architecture disagreement; it is stale authority routing and evidence-gate incompleteness. Live scans confirm the known risks: 24 CSS admits are one broadcast measurement; `CSS_GENERATED_RS` is a relocated hand-curated parser body; Lock 14/16 gates omit or self-exempt known leak roots; Pattern H remains 67 root runtime files with 0 generated headers; the Decision Engine has zero e-graph rewrites, non-driving CSP, and four stub lowerers. Past-corpora findings that SK-V15 must not re-derive are already named in Alpha-C, especially REDRESS-183/184/209..213 and the seven pre-blocked route patterns.
+SK-V15 starts from a split truth: JSON is a validated guard baseline, while CSS L4 is audit-demoted and Pattern H, Lock 14/16 gates, codegen neutrality, and the Decision Engine remain prune/rebuild obligations. The current top-level V1 surfaces still mostly narrate SK-V14 W5B-FRONTENDR and the SK-V14 audit-corrected baseline (`restart/HANDOFF.md:5`, `restart/HANDOFF.md:70`, `restart/skinny/INDEX.md:5`), while SK-V15 now declares a PRUNE-then-REBUILD tranche (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:5`, `restart/skinny/tranches/sk-v15/HANDOFF.md:8`). The most material drift is not a new architecture disagreement; it is stale authority routing and evidence-gate incompleteness. Live scans confirm the known risks: 24 CSS admits are one broadcast measurement; `CSS_GENERATED_RS` is a relocated hand-curated parser body; generated CSS runtimes currently emit FNV input hashes that need telemetry-only or quarantine proof; Lock 14/16 gates omit or self-exempt known leak roots; Pattern H remains 67 root runtime files with 0 generated headers; the Decision Engine has zero e-graph rewrites, non-driving CSP, and four stub lowerers. Past-corpora findings that SK-V15 must not re-derive are already named in Alpha-C, especially REDRESS-183/184/209..213 and the seven pre-blocked route patterns.
 
 ## Spec-Claim ↔ Implementation Table
 
@@ -84,6 +86,7 @@ SK-V15 starts from a split truth: JSON is a validated guard baseline, while CSS 
 | COH-013 | The pass root contains historical 1F auxiliary files. | `1F-anti-pattern.md` and `1F-past-corpora.md` are explicitly superseded in V2 and are no longer authoritative live SK-V15 inventories; this file is the authoritative 1F live coherence packet. | implemented fold | implemented | Historical ledgers may be cited as history only, not as current live scans. |
 | COH-014 | Lock 1 must classify root generated structural-index sidecars, not only skinny runtime scanner planes. | Root emitter can create `OnceCell<StructuralIndex>` fields (`crates/core/src/backend/rust/emitter/shapes/dispatcher/support.rs:43`-`49`, `crates/core/src/backend/rust/emitter/shapes/dispatcher/support.rs:445`-`456`), initialized via `scan_structural` (`crates/core/src/backend/rust/emitter/shapes/dispatcher/support.rs:472`-`484`); generated JSON and Google Sheets carry/consume the sidecar (`crates/core/src/grammar/generated/json.rs:695`-`703`, `crates/core/src/grammar/generated/google_sheets.rs:3542`-`3605`). | hidden coupling | unimplemented | Classify as local generated scratch or reject as retained sidecar before substrate-union closure. |
 | COH-015 | CSS source-sidecar comparator evidence must be current-cycle fenced. | `lightningcss_facts` calls `fixture_sidecar_facts(input)` (`skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:636`-`648`); source-sidecar writer literals appear at `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:1080`-`1085`, `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:1200`-`1206`, `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:1351`-`1357`, `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:1508`-`1514`, `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:1658`-`1664`, `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:1812`-`1818`, and `skinny/crates/bbnf-bench/src/nonjson_css_l4.rs:1961`-`1967`. | comparator-sidecar coupling | unimplemented | Comparator-only evidence; never runtime substrate or CSS Value API proof. |
+| COH-016 | Generated CSS runtime FNV input hashes must be fenced as hash-sidecar / telemetry coupling before any CSS close claim. | Each generated CSS runtime emits `source\tinput_fnv64` at `generated.rs:25` and `generated.rs:71` and defines `fn fnv64` at `generated.rs:619`, e.g. `skinny/crates/runtime/src/grammars/css_l4_declaration_values/generated.rs:25`, `:71`, and `:619`; all seven profiles share the same line positions. The generator template emits the same surfaces at `skinny/crates/codegen/src/runtime_generator.rs:737`, `:783`, and `:1331`. | hash-sidecar coupling | unknown | Treat as telemetry-only output-plane metadata unless W10 proves otherwise. It is not CSS Value API proof, retained document identity, same-substrate evidence, or a production equality arbiter. |
 
 ## V2 1F Authority Statement
 
@@ -122,7 +125,7 @@ For SK-V15 T-P1 V2, `1F-coherence-scan.md` is the only live 1F inventory. The tw
 | Anti-pattern | Live evidence | Verdict | verify_action |
 |---|---|---|---|
 | God modules | Live `wc -l` over skinny Rust files reports `bbnf-bench/src/report.rs=10564`, `bbnf-bench/src/bin/gate.rs=5949`, `bbnf-bench/src/generated_real_typed.rs=4941`, `bbnf-bench/src/lock14_baseline.rs=4796`, `bbnf-bench/src/nonjson_css_l4.rs=3644`; Lock 13 permits bench/report/gate over 500 LOC only under explicit gate-surface budget (`restart/locks/LOCKS.md:340`-`344`). | open; bench may be exempt, production-like reports need budget transcript | Emit a Lock 13 transcript naming each >500 LOC file and its exemption or split receiver. |
-| Parallel substrates / sidecars | Lock 1/ARCH treat mask streams as transient producers, not retained sidecars (`restart/ARCHITECTURE.md:1088`); Track 2 uses runtime tape helpers through `skinny/crates/runtime/src/grammars/json/parser.rs:5` and direct bench tape construction at `skinny/crates/bbnf-bench/src/track2/json.rs:5-7`, `skinny/crates/bbnf-bench/src/track2/json.rs:26-34`, and `skinny/crates/bbnf-bench/src/track2/json.rs:45`; CSS facts are comparator/fact-stream outputs. | no new retained substrate proven in this pass; CSS fact-stream still needs fence | Re-run `rg -n 'EventCursor|generated_eventcursor|structural_offsets|TapeAssembler' skinny/crates crates/core/src` before any close claim. |
+| Parallel substrates / sidecars | Lock 1/ARCH treat mask streams as transient producers, not retained sidecars (`restart/ARCHITECTURE.md:1088`); Track 2 uses runtime tape helpers through `skinny/crates/runtime/src/grammars/json/parser.rs:5` and direct bench tape construction at `skinny/crates/bbnf-bench/src/track2/json.rs:5-7`, `skinny/crates/bbnf-bench/src/track2/json.rs:26-34`, and `skinny/crates/bbnf-bench/src/track2/json.rs:45`; CSS facts are comparator/fact-stream outputs; generated CSS runtimes also emit FNV input hashes as telemetry. | no new retained substrate proven in this pass; CSS fact-stream and hash telemetry still need fences | Re-run `rg -n 'EventCursor|generated_eventcursor|structural_offsets|TapeAssembler|fixture_sidecar_facts|same-plane-source-sidecar|input_fnv64|stream_fnv64|fn fnv64|fnv64\\(' skinny/crates crates/core/src` before any close claim. |
 | Grammar-name leaks | Runtime root exports JSON and seven CSS modules by name (`skinny/crates/runtime/src/lib.rs:3`-`25`); codegen profiles hardcode eight profiles (`skinny/crates/codegen/src/grammar_profile.rs:89`-`99`); A3 sees CSS/JSON decision facts (`skinny/crates/passes/src/decision_csp.rs:162`-`166`). | live Lock 14 violation | PRUNE-WAVE-B expands scan; PRUNE-WAVE-C removes codegen/runtime family branches. |
 | Self-exempting gates | Legacy gate paths return `Ok(())` without explicit JSON/results check (`skinny/crates/bbnf-bench/src/bin/gate.rs:63`-`75`, `skinny/crates/bbnf-bench/src/bin/gate.rs:91`-`92`); `xtask gate_json` only validates results when `--check-results` is present (`skinny/xtask/src/main.rs:285`-`292`). | live close risk | Gate close must reject missing `--check-results` or emit a non-close diagnostic; no silent pass. |
 
@@ -136,6 +139,7 @@ For SK-V15 T-P1 V2, `1F-coherence-scan.md` is the only live 1F inventory. The tw
 | Pass materialization mining | JSON literal/role mining in generic pass logic | pass-layer grammar-shaped materialization leak | 1B / 1D | REBUILD-WAVE-F | Non-JSON role facts derive from generated metadata rather than hard-coded `{}`, `[]`, `:`, `true`, `false`, `null`. |
 | Pattern H root runtime | 67 hand-written root runtime files with zero generated headers | root Pattern H provenance failure | 1C / 1E / 1F | PRUNE-WAVE-D | Delete/regenerate or check transcript proves generated ownership; reheader-only closure is rejected. |
 | CSS `CSS_GENERATED_RS` | Embedded hand-curated parser body copied under generated headers | generated-output contrivance | 1D / 1E / 1F | PRUNE-WAVE-A and REBUILD-WAVE-E | CSS output derives from grammar source and typed value API; no string-literal parser relocation. |
+| CSS generated FNV hashes | `input_fnv64` output and `fnv64` helper in generated CSS runtimes and generator template | hash-sidecar / telemetry coupling | 1D / 1F | W10 FNV quarantine | Gate proves FNV hashes are telemetry-only and never a CSS Value API proof, retained identity, same-substrate proof, or production equality arbiter. |
 | Lock 14 gate exclusions | Excluded leak-bearing files in `lock14_baseline.rs` | self-exempting gate | 1E / 1F | PRUNE-WAVE-B | Gate output reports included roots and exclusions, and scans exclusion entries for grammar names. |
 
 ## Past-Corpora Do-Not-Redrive Ledger
@@ -158,6 +162,7 @@ For SK-V15 T-P1 V2, `1F-coherence-scan.md` is the only live 1F inventory. The tw
 | No typed CSS value/document/view API. | SK-V15 close requires CSS Value API (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:41`); A4 finds CSS output is summary/fact-stream text (`restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A4-generator-roundtrip.md:24`-`25`). | REBUILD-WAVE-E |
 | No generated root runtime provenance for Pattern H. | A4/A6 report 67 root runtime files and 0 generated headers (`restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A4-generator-roundtrip.md:17`-`18`; `restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A6-pattern-recurrence.md:35`). | PRUNE-WAVE-D |
 | No load-bearing e-graph/CSP/lowerer decision loop. | A5 verdict table rows CRITICAL/HIGH (`restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A5-decision-engine-fold.md:10`-`16`). | REBUILD-WAVE-F |
+| No production FNV/hash-sidecar quarantine proof for generated CSS runtimes. | CSS generated runtimes emit `input_fnv64` and define `fnv64` (`skinny/crates/runtime/src/grammars/css_l4_declaration_values/generated.rs:25`, `:71`, `:619`); template sites are `skinny/crates/codegen/src/runtime_generator.rs:737`, `:783`, and `:1331`. | W10 FNV quarantine |
 
 ## Open Questions
 
@@ -165,7 +170,7 @@ For SK-V15 T-P1 V2, `1F-coherence-scan.md` is the only live 1F inventory. The tw
 |---|---|---|
 | U-COH-001 | Which top-level surface becomes the canonical SK-V15 entry: `restart/HANDOFF.md`, `restart/skinny/INDEX.md`, or SK-V15 tranche handoff only? | T-P3/Omega fold should add one SK-V15 authority row to HANDOFF and INDEX, then cite SK-V15 SYNTHESIS/HANDOFF as current tranche authority. |
 | U-COH-002 | Should Lock 14/16 text itself gain explicit "report all exclusions" language, or is SK-V15 telemetry sufficient? | 1E/T-P3 should compare `restart/locks/LOCKS.md:377`-`390` and `restart/locks/LOCKS.md:480`-`506` against `restart/skinny/tranches/sk-v15/SYNTHESIS.md:109`-`127`, then decide whether to amend LOCKS or only gate schema. |
-| U-COH-003 | Are all claimed sidecar absences still true in the current dirty tree? | Capture exact `rg -n 'EventCursor|generated_eventcursor|structural_offsets|TapeAssembler|fixture_sidecar_facts|same-plane-source-sidecar' skinny/crates crates/core/src` output before any CH5 or substrate-close claim. |
+| U-COH-003 | Are all claimed sidecar absences still true in the current dirty tree? | Capture exact `rg -n 'EventCursor|generated_eventcursor|structural_offsets|TapeAssembler|fixture_sidecar_facts|same-plane-source-sidecar|input_fnv64|stream_fnv64|fn fnv64|fnv64\\(' skinny/crates crates/core/src` output before any CH5 or substrate-close claim. |
 | U-COH-004 | Does the G-Alpha auto-pass user pin need a durable V1 governance note? | Reconcile Alpha-F gate conflict (`restart/skinny/tranches/sk-v15/research/alpha/alpha-F-contract-draft.md:71`-`80`) with SK-V15 HANDOFF (`restart/skinny/tranches/sk-v15/HANDOFF.md:46`-`50`) in the next Omega/governance fold. |
 
 ## V3 Hardening Fold
@@ -173,5 +178,7 @@ For SK-V15 T-P1 V2, `1F-coherence-scan.md` is the only live 1F inventory. The tw
 | fold | disposition |
 |---|---|
 | CH1-V2-F01 | Shorthand citations are expanded to repo-root path:line form for A2/A4/A6, root sidecar, CSS source-sidecar, route pre-block, gate, and unknown rows. |
-| CH1-V2-F03 | Frontmatter now matches table classifications: 3 implemented rows (`COH-010`, `COH-011`, `COH-013`), 11 unimplemented rows (`COH-001` through `COH-009`, `COH-014`, `COH-015`), and 1 unknown (`COH-012`). |
+| CH1-V2-F03 | Frontmatter originally matched V3 table classifications: 3 implemented rows (`COH-010`, `COH-011`, `COH-013`), 11 unimplemented rows (`COH-001` through `COH-009`, `COH-014`, `COH-015`), and 1 unknown (`COH-012`). V4 adds `COH-016` as a second unknown hash-sidecar row. |
 | CH2-V2-F06 | Added compact Lock 14 owner/receiver map binding each leak to the inventory owner, downstream wave receiver, and proof expected. |
+| CH5-V3-F04 | Added COH-016 current-source FNV runtime-hash coupling row and W10 quarantine receiver. |
+| CH5-V3-F05 | Extended sidecar/substrate close grep guard to include `input_fnv64`, `stream_fnv64`, `fn fnv64`, and `fnv64(`. |

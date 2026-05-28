@@ -1,7 +1,7 @@
 ---
 agent: 1C
 pass: T-P1-excavation
-cycle: V3
+cycle: V4
 generated_at: 2026-05-28T06:10:00Z
 spec_surfaces_audited: [ARCHITECTURE.md, LOCKS.md, PASS-1-EXCAVATION.md, ORCHESTRATOR.md]
 files_audited_count: 66
@@ -62,7 +62,7 @@ dirs (`restart/ARCHITECTURE.md:1800`-`1824`, `restart/locks/LOCKS.md:402`-`420`)
 | `OffsetTape` consumption should produce a retained tape/document identity (`restart/ARCHITECTURE.md:1788`, `restart/ARCHITECTURE.md:1902`-`1906`). | JSON parser state owns a `TapeBuilder` (`skinny/crates/runtime/src/grammars/json/parser.rs:7`-`12`), finishes to `JsonRoot::from_tape` (`skinny/crates/runtime/src/grammars/json/parser.rs:27`-`30`), and generated parse code emits offsets through `emit_plain_offset` calls (`skinny/crates/runtime/src/grammars/json/generated.rs:203`-`208`, `skinny/crates/runtime/src/grammars/json/generated.rs:260`-`304`). JSON view stores a `Tape`, exposes `offset_stream`, and implements `DocumentView` (`skinny/crates/runtime/src/grammars/json/view.rs:12`-`35`, `skinny/crates/runtime/src/grammars/json/view.rs:42`-`49`, `skinny/crates/runtime/src/grammars/json/view.rs:63`-`82`). | Implemented for JSON | The emitted runtime uses offset tape mechanics, though the generated file does not label the path `OffsetTape`. |
 | `SinkOnly` outputs retain no queryable document identity after parse (`restart/ARCHITECTURE.md:1789`, `restart/ARCHITECTURE.md:1905`-`1906`). | JSON config labels direct backend shape `SinkOnly` with `direct_sink` (`skinny/crates/runtime/src/grammars/json/config.rs:22`-`26`); generated direct parser asserts `SinkOnly`, takes `&mut S: JsonSink`, and writes directly to callbacks (`skinny/crates/runtime/src/grammars/json/generated.rs:746`-`764`, `skinny/crates/runtime/src/grammars/json/generated.rs:782`-`819`); the sink API is grammar-owned and hand-written (`skinny/crates/runtime/src/grammars/json/sink.rs:1`-`16`). | Implemented for JSON | Semantics match `SinkOnly`, but the sink surface is not generated. |
 | `EventTape` has a runtime consumer for compact event cells (`restart/ARCHITECTURE.md:1788`, `restart/ARCHITECTURE.md:1918`-`1927`). | `EventGrammar` exists as a trait (`skinny/crates/runtime/src/tape/event_grammar.rs:4`-`14`), and JSON/Sheets witnesses compile behind proof/test modules (`skinny/crates/runtime/src/lib.rs:27`-`33`), but no generated runtime parser consumes an `EventTape`. | Unimplemented | Event tape is proof/scaffold state at runtime, not emitted consumption code. REDRESS fence: future EventTape work must be a generated same-substrate consumer and must not revive retained EventCursor / structural-stream sidecars. |
-| CSS L4 fact streams are admitted fact output, not a retained substrate or sixth shape (`restart/ARCHITECTURE.md:1789`-`1791`). | CSS config writes `W7_POLICY_BACKEND_SHAPE = "admitted_fact_output"` plus `retention_lifetime = "output_row"` and `policy_owner = "generated_grammar"` (`skinny/crates/runtime/src/grammars/css_l4_declaration_values/config.rs:2`-`9`); generated code emits a row/policy/source fact stream (`skinny/crates/runtime/src/grammars/css_l4_declaration_values/generated.rs:5`-`47`). | Implemented | The CSS L4 files are generated runtime files, but not `SinkOnly`/`OffsetTape`/`EventTape` consumers. |
+| CSS L4 fact streams are admitted fact output, not a retained substrate or sixth shape (`restart/ARCHITECTURE.md:1789`-`1791`). | CSS config writes `W7_POLICY_BACKEND_SHAPE = "admitted_fact_output"` plus `retention_lifetime = "output_row"` and `policy_owner = "generated_grammar"` (`skinny/crates/runtime/src/grammars/css_l4_declaration_values/config.rs:2`-`9`); generated code emits a row/policy/source fact stream (`skinny/crates/runtime/src/grammars/css_l4_declaration_values/generated.rs:5`-`47`). | Partial / admitted output plane present; metadata/schema unresolved | The CSS L4 files are generated runtime files and no sixth `BackendShape` enum variant exists, but `W7_POLICY_BACKEND_SHAPE` carries an admitted-output-plane label that remains unresolved until a schema consumer proves it is non-shape telemetry. |
 | Lock 14 Pattern H must be counted as 67 and must include google_sheets depth-3 files (`restart/locks/LOCKS.md:402`-`410`). | Main workspace live audit: `find crates/core/src/runtime -mindepth 2 -type f -name '*.rs' | wc -l` returned 67; `rg` found zero generated headers under `crates/core/src/runtime`. Architecture already records 67 hand-written files and 0 generated markers (`restart/ARCHITECTURE.md:1809`-`1824`). | Unimplemented in main workspace | Pattern H is still the category-scale Lock 14 failure, even though skinny generated runtime files now exist. |
 
 # Per-Grammar Runtime Module Census
@@ -75,12 +75,12 @@ and first-line header inspection. Total skinny grammar files: 48. Generated:
 |---|---:|---:|---|---|---|
 | `json` | 11 | 8 | `config, event_grammar_witness, generated, host, mod, parser, scan, sink, value, view, visitor` | Retained offset tape + `SinkOnly` direct + proof witness | Generated header at `skinny/crates/runtime/src/grammars/json/generated.rs:1`; parser owns `TapeBuilder` at `skinny/crates/runtime/src/grammars/json/parser.rs:5`-`12`; direct sink hand-owned at `skinny/crates/runtime/src/grammars/json/sink.rs:1`-`4`. |
 | `css_l4_declaration_values` | 5 | 5 | `config, generated, mod, parser, sink` | `admitted_fact_output` | Header and policy at `skinny/crates/runtime/src/grammars/css_l4_declaration_values/config.rs:1`-`9`; parser calls `emit_fact_stream` at `skinny/crates/runtime/src/grammars/css_l4_declaration_values/parser.rs:5`-`7`. |
-| `css_l4_declaration_values_extended` | 5 | 5 | `config, generated, mod, parser, sink` | `admitted_fact_output` | Header and policy at `css_l4_declaration_values_extended/config.rs:1`-`9`. |
-| `css_l4_stylesheet_selectors` | 5 | 5 | `config, generated, mod, parser, sink` | `admitted_fact_output` | Header and policy at `css_l4_stylesheet_selectors/config.rs:1`-`9`. |
-| `css_l4_visual_functions` | 5 | 5 | `config, generated, mod, parser, sink` | `admitted_fact_output` | Header and policy at `css_l4_visual_functions/config.rs:1`-`9`. |
-| `css_l4_at_rules_and_media` | 5 | 5 | `config, generated, mod, parser, sink` | `admitted_fact_output` | Header and policy at `css_l4_at_rules_and_media/config.rs:1`-`9`. |
-| `css_l4_vendor_and_custom_atrules` | 5 | 5 | `config, generated, mod, parser, sink` | `admitted_fact_output` | Header and policy at `css_l4_vendor_and_custom_atrules/config.rs:1`-`9`. |
-| `css_l4_nested_layout` | 5 | 5 | `config, generated, mod, parser, sink` | `admitted_fact_output` | Header and policy at `css_l4_nested_layout/config.rs:1`-`9`. |
+| `css_l4_declaration_values_extended` | 5 | 5 | `config, generated, mod, parser, sink` | `admitted_fact_output` | Header and policy at `skinny/crates/runtime/src/grammars/css_l4_declaration_values_extended/config.rs:1`-`9`. |
+| `css_l4_stylesheet_selectors` | 5 | 5 | `config, generated, mod, parser, sink` | `admitted_fact_output` | Header and policy at `skinny/crates/runtime/src/grammars/css_l4_stylesheet_selectors/config.rs:1`-`9`. |
+| `css_l4_visual_functions` | 5 | 5 | `config, generated, mod, parser, sink` | `admitted_fact_output` | Header and policy at `skinny/crates/runtime/src/grammars/css_l4_visual_functions/config.rs:1`-`9`. |
+| `css_l4_at_rules_and_media` | 5 | 5 | `config, generated, mod, parser, sink` | `admitted_fact_output` | Header and policy at `skinny/crates/runtime/src/grammars/css_l4_at_rules_and_media/config.rs:1`-`9`. |
+| `css_l4_vendor_and_custom_atrules` | 5 | 5 | `config, generated, mod, parser, sink` | `admitted_fact_output` | Header and policy at `skinny/crates/runtime/src/grammars/css_l4_vendor_and_custom_atrules/config.rs:1`-`9`. |
+| `css_l4_nested_layout` | 5 | 5 | `config, generated, mod, parser, sink` | `admitted_fact_output` | Header and policy at `skinny/crates/runtime/src/grammars/css_l4_nested_layout/config.rs:1`-`9`. |
 | `sheets_witness` | 2 | 0 | `mod, event_grammar_witness` | Event grammar proof witness only | Runtime root gates it under `cfg(any(test, feature = "proof"))` (`skinny/crates/runtime/src/lib.rs:31`-`33`). |
 
 # Hand-Written vs Generated Audit For Lock 14
@@ -109,7 +109,7 @@ and first-line header inspection. Total skinny grammar files: 48. Generated:
 | `SinkOnly` | JSON generated `parse_direct` asserts `W7_DIRECT_BACKEND_SHAPE == "SinkOnly"` and writes into `JsonSink` callbacks (`skinny/crates/runtime/src/grammars/json/config.rs:22`-`26`; `skinny/crates/runtime/src/grammars/json/generated.rs:746`-`764`; `skinny/crates/runtime/src/grammars/json/sink.rs:4`-`16`). | Implemented for JSON | The sink API is hand-owned JSON code, not generated. |
 | `EventTape` | No emitted consumer. Only `EventGrammar` trait + JSON/Sheets proof witnesses exist (`skinny/crates/runtime/src/tape/event_grammar.rs:4`-`14`; `skinny/crates/runtime/src/lib.rs:27`-`33`). | Unimplemented | `passes` can select `EventTape` (`skinny/crates/passes/src/lib.rs:556`-`559`), but runtime emission does not consume it. |
 | `CollapsedStage` | No emitted runtime consumer found in `skinny/crates/runtime/src/grammars`. | Unimplemented | `passes` has candidate/prune state (`skinny/crates/passes/src/lib.rs:549`-`553`), but no runtime module consumes it. |
-| CSS L4 fact output | Seven generated CSS L4 runtimes emit tabular fact streams with `admitted_fact_output` policy (`skinny/crates/runtime/src/grammars/css_l4_declaration_values/generated.rs:5`-`47`). | Implemented as admitted output plane | This is explicitly not a sixth `BackendShape` per architecture (`restart/ARCHITECTURE.md:1780`-`1790`). |
+| CSS L4 fact output | Seven generated CSS L4 runtimes emit tabular fact streams with `admitted_fact_output` policy (`skinny/crates/runtime/src/grammars/css_l4_declaration_values/generated.rs:5`-`47`). | Partial output plane | This is explicitly not a sixth `BackendShape` per architecture (`restart/ARCHITECTURE.md:1780`-`1790`), but the `W7_POLICY_BACKEND_SHAPE` key/schema remains unresolved and cannot close as CSS Value API proof. |
 
 # Divergences Catalogued
 
@@ -127,7 +127,9 @@ and first-line header inspection. Total skinny grammar files: 48. Generated:
 | fold | disposition |
 |---|---|
 | CH1-V2-F01 | Runtime evidence rows now expand shorthand ranges to repo-root `path:line` form so downstream agents can verify citations without carrying previous-cell context. |
-| CH4-V2-F08 | Pattern H cost is no longer a single unbounded bucket; it is split into generator/provenance gate, per-runtime projection subwaves, and close transcript receivers. |
+| CH4-V2-F08 | Pattern H cost is no longer a single open-ended bucket; it is split into generator/provenance gate, named runtime projection subwaves, and close transcript receivers. |
+| CH1-V3-001 | Remaining CSS runtime census citations are expanded to full repo-root paths under `skinny/crates/runtime/src/grammars/<profile>/config.rs:1-9`. |
+| CH6-V3-F07 | CSS fact-stream status is downgraded from broad implemented closure to partial admitted-output-plane evidence; the policy-key/schema issue remains open. |
 
 # Gaps / Missing Primitives
 

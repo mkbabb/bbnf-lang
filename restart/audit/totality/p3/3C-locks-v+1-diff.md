@@ -1,28 +1,31 @@
 ---
 agent: 3C
 pass: T-P3-synthesis
-cycle: V1
-generated_at: 2026-05-28T07:23:44Z
+cycle: V2
+generated_at: 2026-05-28T07:50:49Z
 t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F]
 t_p2_dossiers_consumed: [2A, 2B, 2C, 2D, 2E, 2F]
 v1_surface_targeted: LOCKS.md
 proposed_deltas_count: 1
 delta_summary:
-  carried_from_prior_cycle: []
+  carried_from_prior_cycle: [SK-V15-T-P3-3C-V1-diff]
   removed: []
   answered: [all-live-1E-and-2X-LACs]
   newly_added: [SK-V15-T-P3-v+1-crystallisation-addendum]
 prior_cycle_dispositions_folded:
   accepted: [T-P1-V5-clean-final-G1-auto-pinned, T-P2-V3-normal-3Z-lock]
   rejected: []
-  revised: []
+  revised:
+    - "CH1-V1-001: proposed hunk context now anchors on the v+1 governance boundary instead of repeating an inherited out-of-range 2F citation."
+    - "CH5-V1-01: Lock 16 owner wording now names canonical parse-that-regex and treats skinny/crates/bbnf-regex as legacy path-only."
+    - "CH5-V1-02: runtime regex/DFA now requires prior G-Omega Lock 1 amendment; manifest and consumer proof are necessary but not sufficient."
 ---
 
 # 3C LOCKS v+1 Proposed Diff
 
 ## Executive Summary
 
-This is a proposed-only line-level diff for `restart/locks/LOCKS.md`. It adds one SK-V15 T-P3 crystallisation addendum immediately before the existing `## v+1 Governance Boundary`. The hunk preserves the 16 numbered locks, preserves the five `BackendShape` variants, and adds no new directive, BIR variant, substrate, public substrate API, retained sidecar, lock, lock retirement, or sixth shape. Candidate coverage and per-row dispositions are in `3C-locks-crystallisation.md`.
+This is a proposed-only line-level diff for `restart/locks/LOCKS.md`. It adds one SK-V15 T-P3 crystallisation addendum immediately before the existing `## v+1 Governance Boundary`. The V2 hunk anchors on the boundary heading and does not restate inherited stale citation context above it. The hunk preserves the 16 numbered locks, preserves the five `BackendShape` variants, and adds no new directive, BIR variant, substrate, public substrate API, retained sidecar, lock, lock retirement, or sixth shape. Candidate coverage, per-row dispositions, and per-clause costs are in `3C-locks-crystallisation.md`.
 
 ## Proposed Unified Diff
 
@@ -30,16 +33,12 @@ This is a proposed-only line-level diff for `restart/locks/LOCKS.md`. It adds on
 diff --git a/restart/locks/LOCKS.md b/restart/locks/LOCKS.md
 --- a/restart/locks/LOCKS.md
 +++ b/restart/locks/LOCKS.md
-@@ -578,6 +578,36 @@
-     `restart/audit/totality/p2/2F-parse-that-gaps.md:518`,
-     `restart/audit/totality/p2/2F-parse-that-gaps.md:23` (v6_fold F-CH3-2F-08).
-
-+
+@@ -581,3 +581,32 @@
 +## SK-V15 T-P3 v+1 Crystallisation Addendum
 +
 +This addendum is the SK-V15 T-P3 3C candidate fold. It preserves the 16 numbered locks and the exact five BackendShape variants `{EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage}`; it adds no directive, BIR variant, substrate, public substrate API, retained sidecar, lock, lock retirement, or sixth shape. T-P1 is a clean-final/G1-auto-pinned input, not a normal two-clean-cycle lock; T-P2 is the normal Section 3Z locked research input. Evidence: `restart/audit/totality/p1/hardening/HARDENING-T-P1-V5-CONSOLIDATED.md:21`-`28`, `restart/audit/totality/p2/hardening/HARDENING-T-P2-V3-CONSOLIDATED.md:15`-`19`, `restart/audit/totality/p3/T-P3-DISPATCH-CONTEXT.md:70`-`74`.
 +
-+- Lock 1 substrate/fact-stream/sidecar clause: `FactStream` remains an output-plane/admitted-product category only, not a sixth BackendShape and not a retained internal sidecar. CSS fact streams require typed schema/provenance and gate-consumed telemetry; string-only fact streams, retained cursor/list/class-column/sidecar, parser-owned structural streams, public `UnionTape`, second tape, runtime regex/DFA substrate, or cross-call classifier state remain rejected unless a later G-Omega explicitly amends Lock 1. Evidence: `restart/audit/totality/p1/1E-locks-evidence.md:130`, `restart/audit/totality/p2/2A-sota-landscape.md:110`, `restart/audit/totality/p2/2C-grammar-neutrality.md:145`, `restart/audit/totality/p2/2F-parse-that-gaps.md:120`.
++- Lock 1 substrate/fact-stream/sidecar clause: `FactStream` remains an output-plane/admitted-product category only, not a sixth BackendShape and not a retained internal sidecar. CSS fact streams require typed schema/provenance and gate-consumed telemetry; string-only fact streams, retained cursor/list/class-column/sidecar, parser-owned structural streams, public `UnionTape`, second tape, runtime regex/DFA substrate, or cross-call classifier state remain rejected unless a later G-Omega explicitly amends Lock 1. Runtime regex/DFA manifest plus consumer proof is necessary but never sufficient before that amendment. Evidence: `restart/audit/totality/p1/1E-locks-evidence.md:130`, `restart/audit/totality/p2/2A-sota-landscape.md:110`, `restart/audit/totality/p2/2C-grammar-neutrality.md:145`, `restart/audit/totality/p2/2F-parse-that-gaps.md:120`.
 +
 +- Lock 2 live-state clause: `LayoutFacts.backend_shape` is current implementation evidence, but it does not close Lock 2 while the public `passes::layout`, `Layout`, and `LayoutSink` obligations remain absent. A future closure must either land those names or have Pass Omega narrow the lock text. Evidence: `restart/audit/totality/p1/1E-locks-evidence.md:131`, `restart/audit/totality/p1/1E-locks-evidence.md:91`.
 +
@@ -61,7 +60,7 @@ diff --git a/restart/locks/LOCKS.md b/restart/locks/LOCKS.md
 +
 +- Lock 15 profile-scope clause: skinny release-profile compliance is scoped skinny evidence only. Root release profile, generated runtimes, throughput-sensitive consumers, and `target-cpu=native` host-bound rows require separate proof before Lock 15 closure. Evidence: `restart/audit/totality/p1/1E-locks-evidence.md:142`, `restart/audit/totality/p1/1E-locks-evidence.md:104`.
 +
-+- Lock 16 primitive-manifest clause: every primitive or parse-that-family route records owner (`bbnf-regex`, `bbnf-simd`, generated provider, or `parse-that-regex`), scalar oracle, strict parity/checkasm command, Apple M5 Max/aarch64 hardware gate or explicit fallback, same-wave consumer, row movement target, lock16 status, fallback state, LOC/risk/wave owner/hard-cap fit, rollback/abrogate rule, and final disposition. `scalar-delegated` is an admissible fallback only when no SIMD row movement is claimed; source inventory and `bbnf.asm` macro names are not admission. Non-strict parity is exploratory. PMU counters support close only with row-local command/input/equality/timing and no broadcast group. SVE/SVE2 primitives must not be filed as NEON/AdvSIMD; future `svmatch_u8` requires an SVE2 host and scalable-vector dispatch. PMULL/CSSC, CollapsedStage, DotProd/I8MM, ternary bitwise, runtime regex/DFA, and CSS semantic reuse require the same manifest and consumer proof before admission. Evidence: `restart/audit/totality/p1/1E-locks-evidence.md:143`, `restart/audit/totality/p2/2A-sota-landscape.md:111`, `restart/audit/totality/p2/2B-primitive-vocabulary.md:201`-`204`, `restart/audit/totality/p2/2E-host-arch-esoterica.md:139`-`141`, `restart/audit/totality/p2/2F-parse-that-gaps.md:119`-`122`.
++- Lock 16 primitive-manifest clause: every primitive or parse-that-family route records owner (`parse-that-regex`, `bbnf-simd`, or generated provider), scalar oracle, strict parity/checkasm command, Apple M5 Max/aarch64 hardware gate or explicit fallback, same-wave consumer, row movement target, lock16 status, fallback state, LOC/risk/wave owner/hard-cap fit, rollback/abrogate rule, and final disposition. Legacy `skinny/crates/bbnf-regex` is a temporary path awaiting Lock 11 rename cleanup, not an admissible future owner or peer owner. `scalar-delegated` is an admissible fallback only when no SIMD row movement is claimed; source inventory and `bbnf.asm` macro names are not admission. Non-strict parity is exploratory. PMU counters support close only with row-local command/input/equality/timing and no broadcast group. SVE/SVE2 primitives must not be filed as NEON/AdvSIMD; future `svmatch_u8` requires an SVE2 host and scalable-vector dispatch. PMULL/CSSC, CollapsedStage, DotProd/I8MM, ternary bitwise, and CSS semantic reuse require the same manifest and consumer proof before admission. Runtime regex/DFA manifest and consumer proof are necessary but never sufficient; any runtime regex/DFA substrate requires prior G-Omega amendment to Lock 1 before Lock 16 admission can proceed. Evidence: `restart/audit/totality/p1/1E-locks-evidence.md:143`, `restart/audit/totality/p2/2A-sota-landscape.md:111`, `restart/audit/totality/p2/2B-primitive-vocabulary.md:201`-`204`, `restart/audit/totality/p2/2E-host-arch-esoterica.md:139`-`141`, `restart/audit/totality/p2/2F-parse-that-gaps.md:119`-`122`.
 +
 +
  ## v+1 Governance Boundary

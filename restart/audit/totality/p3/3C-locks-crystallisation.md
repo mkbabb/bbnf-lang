@@ -1,21 +1,26 @@
 ---
 agent: 3C
 pass: T-P3-synthesis
-cycle: V1
-generated_at: 2026-05-28T07:23:44Z
+cycle: V2
+generated_at: 2026-05-28T07:50:49Z
 t_p1_inventories_consumed: [1A, 1B, 1C, 1D, 1E, 1F]
 t_p2_dossiers_consumed: [2A, 2B, 2C, 2D, 2E, 2F]
 v1_surface_targeted: LOCKS.md
 proposed_deltas_count: 12
 delta_summary:
-  carried_from_prior_cycle: []
+  carried_from_prior_cycle: [SK-V15-T-P3-3C-V1-addendum]
   removed: []
   answered: [LAC-1E-V1-01, LAC-1E-V1-02, LAC-1E-V1-03, LAC-1E-V1-04, LAC-1E-V1-05, LAC-1E-V1-06, LAC-1E-V1-07, LAC-1E-V1-08, LAC-1E-V1-09, LAC-1E-V1-10, LAC-1E-V1-11, LAC-1E-V1-12, LAC-1E-V1-13, LAC-1E-V1-14, LAC-1E-V2-15, T2A-V1-LAC-01, T2A-V1-LAC-02, T2A-V1-LAC-03, T2A-V1-LAC-04, T2A-V1-LAC-05, LAC-2B-V2-01, LAC-2B-V2-02, LAC-2B-V2-03, LAC-2B-V2-04, LAC-2C-SK15-01, LAC-2C-SK15-02, LAC-2C-SK15-03, LAC-2C-SK15-04, LAC-2C-SK15-05, LAC-2C-SK15-06, LAC-2D-01, LAC-2D-02, LAC-2D-03, LAC-2D-04, LAC-2D-05, LOCK16-A64-HOST-GATE, LOCK16-PMU-ROW-LOCAL, LOCK16-SVE2-SEPARATION, LAC-2F-V1-01, LAC-2F-V1-02, LAC-2F-V1-03, LAC-2F-V1-04]
   newly_added: [D-L01-substrate-factstream-sidecar, D-L02-layout-live-state, D-L03-empty-path-proof, D-L04-solver-bridge, D-L06-regeneration-delete-provider, D-L08-row-plane-broadcast, D-L09-borrow-surface, D-L10-decision-five-shape, D-L11-L12-topology-archive, D-L14-generated-provider-generalisation, D-L15-profile-scope, D-L16-primitive-manifest]
 prior_cycle_dispositions_folded:
   accepted: [T-P1-V5-clean-final-G1-auto-pinned, T-P2-V3-normal-3Z-lock]
   rejected: []
-  revised: []
+  revised:
+    - "CH1-V1-001: proposed LOCKS hunk context regenerated without the inherited out-of-range 2F line citation."
+    - "CH4-COST-03: every D-L* clause now carries doc LOC, risk, affected waves, consumer/gate, and propagation count."
+    - "CH5-V1-01: regex ownership now uses canonical parse-that-regex wording; legacy bbnf-regex is path-only and non-admissible as a future owner."
+    - "CH5-V1-02: runtime regex/DFA manifest and consumer proof are necessary but never sufficient without prior G-Omega Lock 1 amendment."
+    - "CH6-V1-01: Open Questions now route receiver, blocker, and gate."
 ---
 
 # 3C LOCKS Crystallisation
@@ -24,11 +29,11 @@ prior_cycle_dispositions_folded:
 
 This packet disposes every live 1E and 2A-2F `LOCKS-AMENDMENTS-CANDIDATE`: 42 rows total, with 23 `ACCEPT`, 19 `MODIFY`, 0 `REJECT`, and 0 `DEFER`. The proposed `LOCKS.md` delta is an addendum, not an edit to the live governance file. It preserves the 16 numbered locks, preserves the five `BackendShape` variants, and creates no new directive, BIR variant, substrate, public substrate API, retained sidecar, or sixth shape. T-P1 is carried honestly as clean-final / G1-auto-pinned rather than a normal two-clean-cycle lock (`restart/audit/totality/p1/hardening/HARDENING-T-P1-V5-CONSOLIDATED.md:21`-`28`). T-P2 is carried as a normal Section 3Z lock (`restart/audit/totality/p2/hardening/HARDENING-T-P2-V3-CONSOLIDATED.md:15`-`19`). The line-level proposed diff is emitted separately in `3C-locks-v+1-diff.md`.
 
-## V1 Delta Summary
+## V2 Delta Summary
 
 | class | count | notes |
 |---|---:|---|
-| carried | 0 | No prior 3C cycle exists. |
+| carried | 1 | V1 proposed addendum carried forward with CH1/CH4/CH5/CH6 repairs folded. |
 | removed | 0 | No live LAC is silently dropped. |
 | answered | 42 | Every 1E and 2A-2F LAC receives a disposition below. |
 | newly added | 12 | The 42 LACs are folded into 12 lock-addendum clauses. |
@@ -37,7 +42,7 @@ This packet disposes every live 1E and 2A-2F `LOCKS-AMENDMENTS-CANDIDATE`: 42 ro
 
 | proposed delta | source finding ids | affected LOCKS section | rationale |
 |---|---|---|---|
-| D-L01-substrate-factstream-sidecar | LAC-1E-V1-01, T2A-V1-LAC-04, LAC-2C-SK15-02, LAC-2F-V1-02 | Lock 1 | Fact streams are output products, not `BackendShape` variants or sidecars; retained cursor/list/class-column/sidecar and runtime-regex substrate routes stay blocked (`restart/audit/totality/p1/1E-locks-evidence.md:130`, `restart/audit/totality/p2/2A-sota-landscape.md:110`, `restart/audit/totality/p2/2F-parse-that-gaps.md:120`). |
+| D-L01-substrate-factstream-sidecar | LAC-1E-V1-01, T2A-V1-LAC-04, LAC-2C-SK15-02, LAC-2F-V1-02 | Lock 1 | Fact streams are output products, not `BackendShape` variants or sidecars; retained cursor/list/class-column/sidecar and runtime-regex substrate routes stay blocked. Runtime regex/DFA manifest plus consumer proof is necessary but never sufficient without prior G-Omega amendment to Lock 1 (`restart/audit/totality/p1/1E-locks-evidence.md:130`, `restart/audit/totality/p2/2A-sota-landscape.md:110`, `restart/audit/totality/p2/2F-parse-that-gaps.md:120`). |
 | D-L02-layout-live-state | LAC-1E-V1-02 | Lock 2 | `LayoutFacts.backend_shape` is live, but Lock 2 closure cannot cite absent `Layout` / `LayoutSink` names (`restart/audit/totality/p1/1E-locks-evidence.md:131`). |
 | D-L03-empty-path-proof | LAC-1E-V1-03 | Lock 3 | Empty-path cursor elision requires generated-code proof, not a missing-symbol claim (`restart/audit/totality/p1/1E-locks-evidence.md:132`). |
 | D-L04-solver-bridge | LAC-1E-V1-04 | Lock 4 / Lock 6 | The egraph/CSP dependency state must be split or accepted explicitly; it cannot be closure evidence by silence (`restart/audit/totality/p1/1E-locks-evidence.md:133`). |
@@ -48,7 +53,26 @@ This packet disposes every live 1E and 2A-2F `LOCKS-AMENDMENTS-CANDIDATE`: 42 ro
 | D-L11-L12-topology-archive | LAC-1E-V1-06 | Lock 7 / Lock 11 / Lock 12 | Root topology and archive closure must be split from skinny claims and proven by workspace/archive evidence (`restart/audit/totality/p1/1E-locks-evidence.md:135`). |
 | D-L14-generated-provider-generalisation | LAC-1E-V1-11, LAC-1E-V1-12, LAC-2C-SK15-01, LAC-2C-SK15-05, LAC-2C-SK15-06, LAC-2F-V1-03 | Lock 14 / Lock 16 | Generic code consumes generated manifests/facts only; scans report included/excluded roots; future grammar onboarding is grammar-source/metadata only; CSS semantics cannot be JSON string/number APIs (`restart/audit/totality/p2/2C-grammar-neutrality.md:144`, `restart/audit/totality/p2/2C-grammar-neutrality.md:148`-`149`, `restart/audit/totality/p2/2F-parse-that-gaps.md:121`). |
 | D-L15-profile-scope | LAC-1E-V1-13 | Lock 15 | Skinny release-profile compliance is not root workspace compliance, and `target-cpu=native` rows remain host-bound (`restart/audit/totality/p1/1E-locks-evidence.md:142`). |
-| D-L16-primitive-manifest | LAC-1E-V1-14, T2A-V1-LAC-05, LAC-2B-V2-01, LAC-2B-V2-02, LAC-2B-V2-03, LAC-2B-V2-04, LOCK16-A64-HOST-GATE, LOCK16-PMU-ROW-LOCAL, LOCK16-SVE2-SEPARATION, LAC-2F-V1-01 | Lock 16 | Primitive admission requires owner, scalar oracle, strict parity/checkasm, aarch64 hardware gate, same-wave consumer, row movement, status, fallback state, emitted-asm proof when relevant, PMU row-locality, and SVE2/NEON separation (`restart/audit/totality/p2/2B-primitive-vocabulary.md:201`-`204`, `restart/audit/totality/p2/2E-host-arch-esoterica.md:139`-`141`, `restart/audit/totality/p2/2F-parse-that-gaps.md:119`). |
+| D-L16-primitive-manifest | LAC-1E-V1-14, T2A-V1-LAC-05, LAC-2B-V2-01, LAC-2B-V2-02, LAC-2B-V2-03, LAC-2B-V2-04, LOCK16-A64-HOST-GATE, LOCK16-PMU-ROW-LOCAL, LOCK16-SVE2-SEPARATION, LAC-2F-V1-01 | Lock 16 | Primitive admission requires owner, scalar oracle, strict parity/checkasm, aarch64 hardware gate, same-wave consumer, row movement, status, fallback state, emitted-asm proof when relevant, PMU row-locality, and SVE2/NEON separation. Canonical regex ownership is `parse-that-regex`; legacy `skinny/crates/bbnf-regex` is a non-admissible path alias until Lock 11 rename cleanup, not a peer owner. Runtime regex/DFA manifest and consumer proof are necessary but never sufficient without prior G-Omega amendment to Lock 1 (`restart/audit/totality/p2/2B-primitive-vocabulary.md:201`-`204`, `restart/audit/totality/p2/2E-host-arch-esoterica.md:139`-`141`, `restart/audit/totality/p2/2F-parse-that-gaps.md:119`). |
+
+## Per-Clause Cost Matrix
+
+This matrix costs the proposed `LOCKS.md` addendum text and its governance propagation only. It authorizes no implementation work, and any wave that cannot consume a clause inside its cap must record intrinsic-block, REDRESS, or G-Omega wave-graph amendment rather than hiding overflow.
+
+| proposed delta | doc LOC | risk | affected waves | consumer/gate | propagation count |
+|---|---:|---|---|---|---:|
+| D-L01-substrate-factstream-sidecar | 4-6 | high | W0/W1/W5/W7/W11 | Lock 1 substrate manifest plus runtime-regex G-Omega gate | 5 |
+| D-L02-layout-live-state | 2-3 | medium | W7/W8/W9/W11 | Lock 2 closure review over `Layout` / `LayoutSink` evidence | 3 |
+| D-L03-empty-path-proof | 2-3 | medium | W3/W11 | Generated-code empty-path unit/golden gate | 3 |
+| D-L04-solver-bridge | 2-4 | medium | W7/W11 | egraph/CSP dependency split-or-exception gate | 3 |
+| D-L06-regeneration-delete-provider | 4-6 | high | W3/W4/W5/W6/W11 | generator provenance, non-writing regen/check, provider-before-delete gates | 5 |
+| D-L08-row-plane-broadcast | 5-8 | high | W0/W1/W5/W6/W11 | telemetry duplicate-signature, CSS typed provider, and same-workload retime gates | 6 |
+| D-L09-borrow-surface | 2-3 | medium | W8/W11 | generated API tests for `parse_in` / `parse_owned` lifetime discipline | 3 |
+| D-L10-decision-five-shape | 5-8 | high | W7/W8/W9/W11 | Decision Engine, lowerer output, and exact all-five `BackendShape` gates | 5 |
+| D-L11-L12-topology-archive | 3-5 | medium | Pass Omega CRUD/W11 | root topology, legacy-name routing, and archive-inventory gate | 4 |
+| D-L14-generated-provider-generalisation | 5-8 | high | W2/W3/W5/W6/W7/W11 | Lock 14 scan, generated provider manifest, CSS typed semantic gate | 6 |
+| D-L15-profile-scope | 2-3 | medium | W0/W11 | root profile and host-bound row admission gate | 3 |
+| D-L16-primitive-manifest | 6-10 | high | W2/W5/W7/W8/W9/W11 | Lock 16 manifest, strict parity/checkasm, aarch64, same-wave consumer gate | 6 |
 
 ## Disposition Matrix
 
@@ -92,8 +116,8 @@ This packet disposes every live 1E and 2A-2F `LOCKS-AMENDMENTS-CANDIDATE`: 42 ro
 | LOCK16-A64-HOST-GATE | 2E | L16 | ACCEPT | D-L16 | `restart/audit/totality/p2/2E-host-arch-esoterica.md:139`; host close route at `restart/audit/totality/p2/2E-host-arch-esoterica.md:25`-`32` | Add aarch64 primitive status and emitted-asm proof requirement. |
 | LOCK16-PMU-ROW-LOCAL | 2E | L16/L08 | ACCEPT | D-L16, D-L08 | `restart/audit/totality/p2/2E-host-arch-esoterica.md:140`; PMU row at `restart/audit/totality/p2/2E-host-arch-esoterica.md:80` | PMU only supports row-local equality/timing, never broadcast laundering. |
 | LOCK16-SVE2-SEPARATION | 2E | L16 | ACCEPT | D-L16 | `restart/audit/totality/p2/2E-host-arch-esoterica.md:141`; SVE2 refutation at `restart/audit/totality/p2/2E-host-arch-esoterica.md:82` | Separate SVE/SVE2 from NEON/AdvSIMD. |
-| LAC-2F-V1-01 | 2F | L16 | ACCEPT | D-L16 | `restart/audit/totality/p2/2F-parse-that-gaps.md:119`; crate ownership floor at `restart/audit/totality/p2/2F-parse-that-gaps.md:27`-`40` | Add parse-that-family owner taxonomy. |
-| LAC-2F-V1-02 | 2F | L16/L01 | ACCEPT | D-L01, D-L16 | `restart/audit/totality/p2/2F-parse-that-gaps.md:120`; runtime import refutation at `restart/audit/totality/p2/2F-parse-that-gaps.md:98`-`100` | Runtime regex/DFA engines remain blocked absent named generated consumer plus CH3/CH5 review. |
+| LAC-2F-V1-01 | 2F | L16 | ACCEPT | D-L16 | `restart/audit/totality/p2/2F-parse-that-gaps.md:119`; crate ownership floor at `restart/audit/totality/p2/2F-parse-that-gaps.md:27`-`40` | Add parse-that-family owner taxonomy using canonical `parse-that-regex`; legacy `skinny/crates/bbnf-regex` remains path-only and is not a future owner. |
+| LAC-2F-V1-02 | 2F | L16/L01 | ACCEPT | D-L01, D-L16 | `restart/audit/totality/p2/2F-parse-that-gaps.md:120`; runtime import refutation at `restart/audit/totality/p2/2F-parse-that-gaps.md:98`-`100` | Runtime regex/DFA engines remain blocked unless G-Omega first amends Lock 1; manifest, consumer proof, and CH3/CH5 review are necessary but not sufficient. |
 | LAC-2F-V1-03 | 2F | L14/L16 | ACCEPT | D-L14, D-L16 | `restart/audit/totality/p2/2F-parse-that-gaps.md:121`; CSS semantic refutation at `restart/audit/totality/p2/2F-parse-that-gaps.md:101`-`102` | Byte kernels may be reused; JSON semantic APIs cannot be the CSS parser. |
 | LAC-2F-V1-04 | 2F | L08/L16 | ACCEPT | D-L08, D-L16 | `restart/audit/totality/p2/2F-parse-that-gaps.md:122`; broadcast block at `restart/audit/totality/p2/2F-parse-that-gaps.md:103` | Primitive row movement is blocked while broadcast telemetry is unresolved. |
 
@@ -101,14 +125,14 @@ This packet disposes every live 1E and 2A-2F `LOCKS-AMENDMENTS-CANDIDATE`: 42 ro
 
 Positive: the diff turns scattered candidate wording into one lock addendum and keeps the invariant boundaries visible. It also resolves duplicate CSS broadcast, primitive-manifest, and five-shape clauses without adding a sixth shape.
 
-Cost: this is a documentation-only proposal. Pass Omega CRUD must decide whether to keep the addendum as one section or distribute each clause into the affected lock body. No implementation is authorized.
+Cost: this is a documentation-only proposal with per-clause propagation costs stated above. Pass Omega CRUD must decide whether to keep the addendum as one section or distribute each clause into the affected lock body. No implementation is authorized, and no clause may be used to launder wave overflow into challenge time.
 
 Propagation: this touches `LOCKS.md` only. 3A/3B/3E/3F should cross-reference the same 12 delta ids where their surfaces mention architecture, waves, grammar generalisation, or handoff.
 
 ## Open Questions
 
-| lens | question | re-entry trigger |
-|---|---|---|
-| CH1 | Should Pass Omega distribute the addendum under each lock instead of adding one SK-V15 addendum section? | Pass Omega CRUD style decision; no candidate is deferred. |
-| CH4 | Are the 12 clauses too dense for downstream wave owners? | If CH4 asks for split ownership, split by affected lock while preserving the candidate matrix. |
-| CH6 | Can any candidate be treated as already satisfied by current LOCKS text? | Only after Pass Omega verifies the current text has resolving evidence and no stale/nonexistent citation. |
+| lens | question | receiver | blocker | gate |
+|---|---|---|---|---|
+| CH1 | Should Pass Omega distribute the addendum under each lock instead of adding one SK-V15 addendum section? | Pass Omega CRUD owner for `restart/locks/LOCKS.md` | Governance-style placement only; no LAC is deferred by this decision. | CH1 path-resolution plus clean `git apply --check` of `3C-locks-v+1-diff.md`. |
+| CH4 | Are the 12 clauses too dense for downstream wave owners? | Pass Omega CRUD owner plus 3A/3B/3E/3F propagation owners | Downstream owner split may be needed if one addendum section hides wave/gate responsibility. | CH4 per-clause cost matrix and same-wave consumer/gate review. |
+| CH6 | Can any candidate be treated as already satisfied by current `LOCKS.md` text? | Pass Omega CH1/CH6 reviewers | Current text must already contain resolving evidence with valid path:line citations and no paper close. | CH1 citation-resolution matrix and CH6 anti-paper-close review. |

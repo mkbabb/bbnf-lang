@@ -138,4 +138,14 @@ pub trait StructBuilder {
     #[inline]
     #[allow(unused_variables)]
     fn record_compound_bounds_end(&mut self, offset: u32) {}
+
+    /// Bind the full input slice so builders that materialise byte-range
+    /// spans from `record_compound_bounds_*` offsets can resolve them to
+    /// `&str` during the parse (CSS L4's selector-prelude span). The
+    /// input outlives the parse, so the offset readers are sound.
+    /// Default no-op: JSON / Sheets builders carry every span as a leaf
+    /// push and ignore byte bounds.
+    #[inline]
+    #[allow(unused_variables)]
+    fn bind_input(&mut self, input: &[u8]) {}
 }

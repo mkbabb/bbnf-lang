@@ -420,33 +420,57 @@ pub(super) fn emit_parse_wrap_struct_direct(
     }
 }
 
-/// Emit the StructDirect Alt-dispatch body. Partitions branches into
-/// byte-dispatch (Refs with bounded first-byte set ≤ 16) and
-/// linear-try fallback; opens a Wrap frame on the builder, runs the
-/// dispatch, stamps the chosen branch index, then closes the frame.
-fn emit_alt_struct_dispatch(
-    branches: &[bbnf_ir::AltBranch],
-    grammar_suffix: &str,
-    ir: &GrammarIR,
-    rule: &IrRule,
-    strategy: &EmitStrategy,
-) -> TokenStream {
-    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
-    let layout_literal = quote_layout_literal(rule, ir);
-    let builder_ty_e = builder_ty_elided(strategy);
+/// Assembled dispatch arms for a Wrap-Alt body: the first-byte
+/// `match` arms (fast path) and the ordered linear-try fallback.
+struct DispatchPartition {
+    byte_arms: Vec<TokenStream>,
+    linear_arms: Vec<TokenStream>,
+}
 
+/// Partition Alt branches into a first-byte `match` prefilter and an
+/// ordered linear-try fallback **while preserving PEG branch
+/// precedence**.
+///
+/// The byte-dispatch `match first { … } _ => {}` always runs *before*
+/// the linear fallback. That reordering is only sound when every
+/// branch hoisted into the byte prefilter precedes every linear branch
+/// in Alt order. The canonical hazard is CSS L4's
+/// `atRule = mediaRule | keyframesRule | genericAtRule`: `mediaRule`
+/// (literal `"@media"`) and `keyframesRule` (regex
+/// `/@(-[a-z]+-)?keyframes/`) expose no bounded first-byte set and fall
+/// to linear, whereas `genericAtRule`'s leading `/@…/` yields the
+/// bounded set `{@}`. Hoisting the *later* `genericAtRule` into the
+/// `@` byte-arm makes it fire before the earlier `mediaRule`/
+/// `keyframesRule`, so every `@media`/`@keyframes` rule is misparsed as
+/// a generic at-rule.
+///
+/// The precedence-safe rule: walk branches in Alt order and lock the
+/// dispatch into linear mode as soon as a branch cannot be
+/// byte-dispatched (empty first-byte set). Once locked, every
+/// subsequent branch stays linear — a byte-dispatched branch can never
+/// jump ahead of an earlier linear branch. Branches sharing a first
+/// byte append to the same byte-arm in Alt order, so intra-arm
+/// precedence is preserved by construction.
+fn partition_branches<'b>(
+    branches: &'b [bbnf_ir::AltBranch],
+    _grammar_suffix: &str,
+    _ir: &GrammarIR,
+    mut lower: impl FnMut(&'b bbnf_ir::AltBranch, u32) -> Option<(TokenStream, Vec<u8>)>,
+) -> DispatchPartition {
     let mut per_byte: std::collections::BTreeMap<u8, Vec<TokenStream>> = Default::default();
     let mut linear_arms: Vec<TokenStream> = Vec::new();
+    let mut dispatch_locked = false;
 
     for (ord, branch) in branches.iter().enumerate() {
-        let Some((call, first_bytes)) =
-            emit_wrap_branch_call_struct_direct(branch, grammar_suffix, ir)
-        else {
+        let Some((attempt_body, first_bytes)) = lower(branch, ord as u32) else {
             continue;
         };
-        let branch_idx = ord as u32;
-        let attempt_body = emit_struct_branch_attempt(&call, branch_idx);
-        if first_bytes.is_empty() {
+        // A branch with no bounded first-byte set must run in Alt
+        // order; route it linear and lock all following branches to
+        // linear so none can be hoisted ahead of it by the byte
+        // prefilter.
+        if dispatch_locked || first_bytes.is_empty() {
+            dispatch_locked = true;
             linear_arms.push(attempt_body);
         } else {
             for b in first_bytes {
@@ -466,6 +490,35 @@ fn emit_alt_struct_dispatch(
             }
         })
         .collect();
+
+    DispatchPartition {
+        byte_arms,
+        linear_arms,
+    }
+}
+
+/// Emit the StructDirect Alt-dispatch body. Partitions branches into
+/// byte-dispatch (Refs with bounded first-byte set ≤ 16) and
+/// linear-try fallback; opens a Wrap frame on the builder, runs the
+/// dispatch, stamps the chosen branch index, then closes the frame.
+fn emit_alt_struct_dispatch(
+    branches: &[bbnf_ir::AltBranch],
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+    rule: &IrRule,
+    strategy: &EmitStrategy,
+) -> TokenStream {
+    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
+    let layout_literal = quote_layout_literal(rule, ir);
+    let builder_ty_e = builder_ty_elided(strategy);
+
+    let DispatchPartition {
+        byte_arms,
+        linear_arms,
+    } = partition_branches(branches, grammar_suffix, ir, |branch, ord| {
+        emit_wrap_branch_call_struct_direct(branch, grammar_suffix, ir)
+            .map(|(call, first_bytes)| (emit_struct_branch_attempt(&call, ord), first_bytes))
+    });
 
     quote! {
         // AZ-I.W2.RD — open the Wrap compound. The layout literal is
@@ -544,36 +597,13 @@ fn emit_alt_struct_dispatch_transparent(
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
     let _ = strategy;
 
-    let mut per_byte: std::collections::BTreeMap<u8, Vec<TokenStream>> = Default::default();
-    let mut linear_arms: Vec<TokenStream> = Vec::new();
-
-    for branch in branches.iter() {
-        let Some((call, first_bytes)) =
-            emit_wrap_branch_call_struct_direct(branch, grammar_suffix, ir)
-        else {
-            continue;
-        };
-        let attempt_body = emit_struct_branch_attempt_transparent(&call);
-        if first_bytes.is_empty() {
-            linear_arms.push(attempt_body);
-        } else {
-            for b in first_bytes {
-                per_byte.entry(b).or_default().push(attempt_body.clone());
-            }
-        }
-    }
-
-    let byte_arms: Vec<TokenStream> = per_byte
-        .into_iter()
-        .map(|(byte, bodies)| {
-            let byte_lit = byte;
-            quote! {
-                #byte_lit => {
-                    #(#bodies)*
-                }
-            }
-        })
-        .collect();
+    let DispatchPartition {
+        byte_arms,
+        linear_arms,
+    } = partition_branches(branches, grammar_suffix, ir, |branch, _ord| {
+        emit_wrap_branch_call_struct_direct(branch, grammar_suffix, ir)
+            .map(|(call, first_bytes)| (emit_struct_branch_attempt_transparent(&call), first_bytes))
+    });
 
     quote! {
         // AZ-II.cutover.H Phase 1 — transparent-rule passthrough.

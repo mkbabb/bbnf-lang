@@ -402,6 +402,11 @@ fn emit_parse_body_struct_direct(
         // recovers the rooted document.
         let mut state = #support_mod_ident::ScanState::new();
         let mut builder = #builder_ty::new();
+        // Bind the input slice so builders that materialise byte-range
+        // spans (e.g. CSS L4's selector-prelude / rule spans recorded
+        // via `record_compound_bounds_*`) can resolve them during the
+        // parse. Default no-op for builders that ignore byte bounds.
+        crate::runtime::builder::StructBuilder::bind_input(&mut builder, __input_bytes);
         // AZ-IV.W3.6 — eager parses construct an always-ParseFully
         // cursor against a 'static empty path. The cursor's state is
         // unused by the emit body (the cursor consult returns

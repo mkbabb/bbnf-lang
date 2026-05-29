@@ -5,27 +5,29 @@ use crate::runtime::bbnf::document::BbnfDocument;
 use crate::runtime::bbnf::value::BbnfValue;
 use crate::runtime::builder::StructBuilder;
 use crate::runtime::handle::CompoundHandle;
-#[derive(Debug, Clone)]
-struct OpenFrame<'p> {
+#[derive(Debug, Clone, Copy)]
+struct OpenFrame {
     kind: BbnfCompoundKind,
     branch_tag: Option<u32>,
     start_offset: Option<u32>,
     end_offset: Option<u32>,
-    children: Vec<BbnfValue<'p>>,
+    children_base: usize,
 }
 #[derive(Debug)]
 pub struct BbnfStructBuilder<'p> {
     arena: BbnfArena<'p>,
-    stack: Vec<OpenFrame<'p>>,
+    stack: Vec<OpenFrame>,
+    pending_children: Vec<BbnfValue<'p>>,
     root: Option<BbnfValue<'p>>,
     next_handle: u64,
 }
 #[derive(Debug, Clone)]
 pub struct BbnfStructCheckpoint<'p> {
     compounds: usize,
-    stack: Vec<OpenFrame<'p>>,
+    stack: Vec<OpenFrame>,
     root: Option<BbnfValue<'p>>,
     next_handle: u64,
+    pending_children_len: usize,
 }
 impl<'p> Default for BbnfStructBuilder<'p> {
     fn default() -> Self {
@@ -38,6 +40,7 @@ impl<'p> BbnfStructBuilder<'p> {
         Self {
             arena: BbnfArena::new(),
             stack: Vec::with_capacity(16),
+            pending_children: Vec::with_capacity(32),
             root: None,
             next_handle: 0,
         }
@@ -47,6 +50,7 @@ impl<'p> BbnfStructBuilder<'p> {
         Self {
             arena: BbnfArena::with_capacity(compounds),
             stack: Vec::with_capacity(16),
+            pending_children: Vec::with_capacity(32),
             root: None,
             next_handle: 0,
         }
@@ -65,9 +69,10 @@ impl<'p> BbnfStructBuilder<'p> {
     }
     #[inline]
     fn deposit(&mut self, value: BbnfValue<'p>) {
-        match self.stack.last_mut() {
-            None => self.root = Some(value),
-            Some(frame) => frame.children.push(value),
+        if self.stack.is_empty() {
+            self.root = Some(value);
+        } else {
+            self.pending_children.push(value);
         }
     }
 }
@@ -80,6 +85,7 @@ impl<'p> StructBuilder for BbnfStructBuilder<'p> {
             stack: self.stack.clone(),
             root: self.root,
             next_handle: self.next_handle,
+            pending_children_len: self.pending_children.len(),
         }
     }
     #[inline]
@@ -88,6 +94,7 @@ impl<'p> StructBuilder for BbnfStructBuilder<'p> {
         self.stack = checkpoint.stack;
         self.root = checkpoint.root;
         self.next_handle = checkpoint.next_handle;
+        self.pending_children.truncate(checkpoint.pending_children_len);
     }
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
         self.stack
@@ -96,7 +103,7 @@ impl<'p> StructBuilder for BbnfStructBuilder<'p> {
                 branch_tag: None,
                 start_offset: None,
                 end_offset: None,
-                children: Vec::new(),
+                children_base: self.pending_children.len(),
             });
         self.next_handle = self.next_handle.wrapping_add(1);
         CompoundHandle::new(self.next_handle, 0)
@@ -106,6 +113,9 @@ impl<'p> StructBuilder for BbnfStructBuilder<'p> {
             .stack
             .pop()
             .expect("BbnfStructBuilder::end_compound on empty stack");
+        let children: Vec<BbnfValue<'p>> = self
+            .pending_children
+            .split_off(frame.children_base);
         let bounds = match (frame.start_offset, frame.end_offset) {
             (Some(start), Some(end)) => Some((start, end)),
             _ => None,
@@ -116,7 +126,7 @@ impl<'p> StructBuilder for BbnfStructBuilder<'p> {
                 kind: frame.kind,
                 branch_tag: frame.branch_tag,
                 bounds,
-                children: frame.children,
+                children,
             });
         self.deposit(BbnfValue::Compound(id));
     }

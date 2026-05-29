@@ -5,26 +5,28 @@ use crate::runtime::handle::CompoundHandle;
 use crate::runtime::google_sheets::arena::{SheetsArena, SheetsCompoundKind};
 use crate::runtime::google_sheets::document::SheetsDocument;
 use crate::runtime::google_sheets::value::SheetsValue;
-#[derive(Debug, Clone)]
-struct Frame<'p> {
+#[derive(Debug, Clone, Copy)]
+struct Frame {
     kind: SheetsCompoundKind,
-    children: Vec<SheetsValue<'p>>,
+    children_base: usize,
     #[allow(dead_code)]
     handle_token: u64,
 }
 #[derive(Debug)]
 pub struct SheetsStructBuilder<'p> {
     arena: SheetsArena<'p>,
-    stack: Vec<Frame<'p>>,
+    stack: Vec<Frame>,
+    pending_children: Vec<SheetsValue<'p>>,
     root: Option<SheetsValue<'p>>,
     next_handle: u64,
 }
 #[derive(Debug, Clone)]
 pub struct SheetsStructCheckpoint<'p> {
     compounds: usize,
-    stack: Vec<Frame<'p>>,
+    stack: Vec<Frame>,
     root: Option<SheetsValue<'p>>,
     next_handle: u64,
+    pending_children_len: usize,
 }
 impl<'p> Default for SheetsStructBuilder<'p> {
     fn default() -> Self {
@@ -37,6 +39,7 @@ impl<'p> SheetsStructBuilder<'p> {
         Self {
             arena: SheetsArena::new(),
             stack: Vec::with_capacity(8),
+            pending_children: Vec::with_capacity(32),
             root: None,
             next_handle: 0,
         }
@@ -46,6 +49,7 @@ impl<'p> SheetsStructBuilder<'p> {
         Self {
             arena: SheetsArena::with_capacity(compounds),
             stack: Vec::with_capacity(8),
+            pending_children: Vec::with_capacity(32),
             root: None,
             next_handle: 0,
         }
@@ -64,9 +68,10 @@ impl<'p> SheetsStructBuilder<'p> {
     }
     #[inline]
     fn deposit(&mut self, value: SheetsValue<'p>) {
-        match self.stack.last_mut() {
-            None => self.root = Some(value),
-            Some(frame) => frame.children.push(value),
+        if self.stack.is_empty() {
+            self.root = Some(value);
+        } else {
+            self.pending_children.push(value);
         }
     }
 }
@@ -79,6 +84,7 @@ impl<'p> StructBuilder for SheetsStructBuilder<'p> {
             stack: self.stack.clone(),
             root: self.root,
             next_handle: self.next_handle,
+            pending_children_len: self.pending_children.len(),
         }
     }
     #[inline]
@@ -87,6 +93,7 @@ impl<'p> StructBuilder for SheetsStructBuilder<'p> {
         self.stack = checkpoint.stack;
         self.root = checkpoint.root;
         self.next_handle = checkpoint.next_handle;
+        self.pending_children.truncate(checkpoint.pending_children_len);
     }
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
         let kind = SheetsCompoundKind::from_layout(layout);
@@ -95,7 +102,7 @@ impl<'p> StructBuilder for SheetsStructBuilder<'p> {
         self.stack
             .push(Frame {
                 kind,
-                children: Vec::new(),
+                children_base: self.pending_children.len(),
                 handle_token,
             });
         CompoundHandle::new(handle_token, 0)
@@ -105,10 +112,13 @@ impl<'p> StructBuilder for SheetsStructBuilder<'p> {
             .stack
             .pop()
             .expect("SheetsStructBuilder::end_compound on empty stack");
-        let value = if frame.kind.is_transparent_wrap() && frame.children.len() == 1 {
-            frame.children[0]
+        let children: Vec<SheetsValue<'p>> = self
+            .pending_children
+            .split_off(frame.children_base);
+        let value = if frame.kind.is_transparent_wrap() && children.len() == 1 {
+            children[0]
         } else {
-            let id = self.arena.push_compound(frame.kind, frame.children);
+            let id = self.arena.push_compound(frame.kind, children);
             SheetsValue::Compound(id)
         };
         self.deposit(value);

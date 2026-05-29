@@ -90,11 +90,19 @@ struct Frame<'p, V: SimpleValue<'p>> {
     /// Alt sub-variant index, when the rule is Alt-typed; `None`
     /// otherwise. Recorded via [`StructBuilder::push_branch_tag`].
     branch_tag: Option<u32>,
-    /// Child values, in source order.
-    children: Vec<V>,
-    /// Anchors the `'p` lifetime through the `SimpleValue<'p>` bound
-    /// when `V` itself does not name `'p` in a field. Zero-sized.
-    _phantom: PhantomData<&'p ()>,
+    /// Cursor into the builder's append-only `pending_children` scratch.
+    /// Interior leaf / compound pushes append to the scratch top;
+    /// `end_compound` drains `[children_base..]` as this frame's child
+    /// slice. Hoisting the growing child `Vec` out of the frame keeps the
+    /// frame `Clone` cheap (scalar + cursor), so the checkpoint
+    /// `stack.clone()` is O(depth) rather than an O(document) deep clone —
+    /// the prior O(N^2) speculation cost.
+    children_base: usize,
+    /// Anchors both `'p` and `V` through the `SimpleValue<'p>` bound now
+    /// that the child values live in the builder's `pending_children`
+    /// scratch rather than in this frame. Zero-sized; carrying `V` keeps
+    /// the type parameter constrained at the construction site.
+    _phantom: PhantomData<(&'p (), V)>,
 }
 
 /// Generic struct-builder for the simple-cohort grammars.
@@ -115,6 +123,13 @@ pub struct SimpleStructBuilder<'p, V: SimpleValue<'p>, C: SimpleCompound<'p, V>>
     pub arena: CompoundSlabArena<C>,
     /// In-flight open compound stack.
     stack: Vec<Frame<'p, V>>,
+    /// Append-only scratch stack of child values. Each open frame holds a
+    /// `children_base` cursor into this; interior deposits append to the
+    /// top; `end_compound` drains the `[base..]` suffix. Being
+    /// append-only, it is rolled back by a count-marker truncate — the
+    /// precise inverse of the speculative appends, so below-marker frames'
+    /// children are restored exactly without a per-frame deep clone.
+    pending_children: Vec<V>,
     /// The root value, set when the outermost emission reaches an
     /// empty stack.
     pub root: Option<V>,
@@ -122,13 +137,16 @@ pub struct SimpleStructBuilder<'p, V: SimpleValue<'p>, C: SimpleCompound<'p, V>>
     next_handle: u64,
 }
 
-/// Rollback snapshot for [`SimpleStructBuilder`].
+/// Rollback snapshot for [`SimpleStructBuilder`]. Pure `Copy` / length
+/// markers: the `stack` clone is O(depth) of scalar+cursor frames, and
+/// `pending_children_len` is the truncate target for the scratch stack.
 #[derive(Debug, Clone)]
 pub struct SimpleCheckpoint<'p, V: SimpleValue<'p>> {
     compounds: usize,
     stack: Vec<Frame<'p, V>>,
     root: Option<V>,
     next_handle: u64,
+    pending_children_len: usize,
 }
 
 impl<'p, V: SimpleValue<'p>, C: SimpleCompound<'p, V>> Default for SimpleStructBuilder<'p, V, C> {
@@ -144,6 +162,7 @@ impl<'p, V: SimpleValue<'p>, C: SimpleCompound<'p, V>> SimpleStructBuilder<'p, V
         Self {
             arena: CompoundSlabArena::new(),
             stack: Vec::with_capacity(16),
+            pending_children: Vec::with_capacity(32),
             root: None,
             next_handle: 0,
         }
@@ -155,18 +174,20 @@ impl<'p, V: SimpleValue<'p>, C: SimpleCompound<'p, V>> SimpleStructBuilder<'p, V
         Self {
             arena: CompoundSlabArena::with_capacity(compounds),
             stack: Vec::with_capacity(16),
+            pending_children: Vec::with_capacity(32),
             root: None,
             next_handle: 0,
         }
     }
 
-    /// Land a finalised value on the topmost open frame, or store it as
-    /// the root if the stack is empty.
+    /// Land a finalised value on the topmost open frame's scratch suffix,
+    /// or store it as the root if the stack is empty.
     #[inline]
     fn deposit(&mut self, value: V) {
-        match self.stack.last_mut() {
-            None => self.root = Some(value),
-            Some(frame) => frame.children.push(value),
+        if self.stack.is_empty() {
+            self.root = Some(value);
+        } else {
+            self.pending_children.push(value);
         }
     }
 
@@ -196,9 +217,13 @@ impl<'p, V: SimpleValue<'p>, C: SimpleCompound<'p, V>> StructBuilder
     fn checkpoint(&self) -> Self::Checkpoint {
         SimpleCheckpoint {
             compounds: self.arena.compound_count(),
+            // O(depth) memcpy of scalar+cursor frames; the growing child
+            // containers live in the `pending_children` scratch (truncated
+            // by the length marker on rollback).
             stack: self.stack.clone(),
             root: self.root,
             next_handle: self.next_handle,
+            pending_children_len: self.pending_children.len(),
         }
     }
 
@@ -208,13 +233,15 @@ impl<'p, V: SimpleValue<'p>, C: SimpleCompound<'p, V>> StructBuilder
         self.stack = checkpoint.stack;
         self.root = checkpoint.root;
         self.next_handle = checkpoint.next_handle;
+        // Inverse of every speculative child append since the checkpoint.
+        self.pending_children.truncate(checkpoint.pending_children_len);
     }
 
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
         self.stack.push(Frame {
             layout: layout.clone(),
             branch_tag: None,
-            children: Vec::new(),
+            children_base: self.pending_children.len(),
             _phantom: PhantomData,
         });
         self.next_handle = self.next_handle.wrapping_add(1);
@@ -226,7 +253,8 @@ impl<'p, V: SimpleValue<'p>, C: SimpleCompound<'p, V>> StructBuilder
             .stack
             .pop()
             .expect("SimpleStructBuilder::end_compound on empty stack");
-        let entry = C::new_entry(&frame.layout, frame.branch_tag, frame.children);
+        let children: Vec<V> = self.pending_children.split_off(frame.children_base);
+        let entry = C::new_entry(&frame.layout, frame.branch_tag, children);
         let id_plus_one = self.arena.push_compound(entry);
         self.deposit(V::from_compound_index(id_plus_one));
     }

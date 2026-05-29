@@ -12,27 +12,23 @@ use crate::runtime::css_l4::value::{
     StyleSheet,
 };
 use crate::runtime::handle::CompoundHandle;
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 enum OpenFrame<'p> {
-    StyleSheet { rules: Vec<CssRule<'p>> },
-    StyleRule {
-        selectors: Vec<Selector<'p>>,
-        declarations: Vec<Declaration<'p>>,
-        span: &'p str,
-    },
-    MediaRule { query: &'p str, rules: Vec<CssRule<'p>> },
-    KeyframesRule { name: &'p str, blocks: Vec<KeyframeBlock<'p>> },
-    KeyframeBlock { selector: &'p str, declarations: Vec<Declaration<'p>> },
+    StyleSheet { rules_base: usize },
+    StyleRule { selectors_base: usize, decls_base: usize, span: &'p str },
+    MediaRule { query: &'p str, rules_base: usize },
+    KeyframesRule { name: &'p str, blocks_base: usize },
+    KeyframeBlock { selector: &'p str, decls_base: usize },
     GenericAtRule { name: &'p str, prelude: &'p str, body: &'p str },
-    Declaration {
-        property: Option<&'p str>,
-        values: Vec<CssTypedValue<'p>>,
-        important: bool,
-    },
-    SelectorList { selectors: Vec<Selector<'p>>, span: &'p str },
+    Declaration { property: Option<&'p str>, values_base: usize, important: bool },
+    SelectorList { selectors_base: usize, span: &'p str },
     Wrap { value: Option<CssTypedValue<'p>> },
     Numeric { kind: NumericKind, magnitude: Option<f64>, unit: Option<u8> },
-    ColorFunction { kind_tag: Option<u8>, space_tag: Option<u8>, components: Vec<f64> },
+    ColorFunction {
+        kind_tag: Option<u8>,
+        space_tag: Option<u8>,
+        components_base: usize,
+    },
     ColorMix {
         mix_space: Option<u8>,
         hue_method: Option<u8>,
@@ -41,7 +37,7 @@ enum OpenFrame<'p> {
         right: Option<&'p CssColor<'p>>,
         right_pct: Option<f64>,
     },
-    Function { kind: FunctionKind, name: &'p str, args: Vec<CssTypedValue<'p>> },
+    Function { kind: FunctionKind, name: &'p str, args_base: usize },
     HexColor { hex_span: Option<&'p str> },
     DirPseudo { kind_tag: Option<u8> },
 }
@@ -75,6 +71,12 @@ pub struct CssStructBuilder<'p> {
     pending_value: Option<CssTypedValue<'p>>,
     input: &'p [u8],
     span_starts: Vec<u32>,
+    pending_rules: Vec<CssRule<'p>>,
+    pending_decls: Vec<Declaration<'p>>,
+    pending_selectors: Vec<Selector<'p>>,
+    pending_values: Vec<CssTypedValue<'p>>,
+    pending_blocks: Vec<KeyframeBlock<'p>>,
+    pending_components: Vec<f64>,
 }
 #[derive(Debug, Clone)]
 pub struct CssStructCheckpoint<'p> {
@@ -88,7 +90,13 @@ pub struct CssStructCheckpoint<'p> {
     root: Option<StyleSheet>,
     next_handle: u64,
     pending_value: Option<CssTypedValue<'p>>,
-    span_starts: Vec<u32>,
+    span_starts_len: usize,
+    pending_rules_len: usize,
+    pending_decls_len: usize,
+    pending_selectors_len: usize,
+    pending_values_len: usize,
+    pending_blocks_len: usize,
+    pending_components_len: usize,
 }
 impl<'p> Default for CssStructBuilder<'p> {
     fn default() -> Self {
@@ -105,6 +113,12 @@ impl<'p> CssStructBuilder<'p> {
             pending_value: None,
             input: &[],
             span_starts: Vec::with_capacity(16),
+            pending_rules: Vec::with_capacity(64),
+            pending_decls: Vec::with_capacity(64),
+            pending_selectors: Vec::with_capacity(32),
+            pending_values: Vec::with_capacity(32),
+            pending_blocks: Vec::with_capacity(16),
+            pending_components: Vec::with_capacity(8),
         }
     }
     pub fn with_capacity(
@@ -122,6 +136,12 @@ impl<'p> CssStructBuilder<'p> {
             pending_value: None,
             input: &[],
             span_starts: Vec::with_capacity(16),
+            pending_rules: Vec::with_capacity(64),
+            pending_decls: Vec::with_capacity(64),
+            pending_selectors: Vec::with_capacity(32),
+            pending_values: Vec::with_capacity(32),
+            pending_blocks: Vec::with_capacity(16),
+            pending_components: Vec::with_capacity(8),
         }
     }
     pub fn finalise(mut self, input: &'p str) -> CssDocument<'p> {
@@ -138,46 +158,42 @@ impl<'p> CssStructBuilder<'p> {
         CssDocument::new(self.arena, root, input)
     }
     fn deposit_value(&mut self, value: CssTypedValue<'p>) {
+        if matches!(
+            self.stack.last(), Some(OpenFrame::Declaration { .. } | OpenFrame::Function {
+            .. })
+        ) {
+            self.pending_values.push(value);
+            return;
+        }
         match self.stack.last_mut() {
-            None => self.pending_value = Some(value),
-            Some(OpenFrame::Declaration { values, .. }) => values.push(value),
             Some(OpenFrame::Wrap { value: slot }) => *slot = Some(value),
-            Some(OpenFrame::Function { args, .. }) => args.push(value),
             _ => self.pending_value = Some(value),
         }
     }
     fn deposit_declaration(&mut self, decl: Declaration<'p>) {
-        if let Some(frame) = self
+        if self
             .stack
-            .iter_mut()
+            .iter()
             .rev()
-            .find(|f| {
+            .any(|f| {
                 matches!(
                     f, OpenFrame::StyleRule { .. } | OpenFrame::KeyframeBlock { .. }
                 )
             })
         {
-            match frame {
-                OpenFrame::StyleRule { declarations, .. } => declarations.push(decl),
-                OpenFrame::KeyframeBlock { declarations, .. } => declarations.push(decl),
-                _ => {}
-            }
+            self.pending_decls.push(decl);
         }
     }
     fn deposit_rule(&mut self, rule: CssRule<'p>) {
-        if let Some(frame) = self
+        if self
             .stack
-            .iter_mut()
+            .iter()
             .rev()
-            .find(|f| {
+            .any(|f| {
                 matches!(f, OpenFrame::StyleSheet { .. } | OpenFrame::MediaRule { .. })
             })
         {
-            match frame {
-                OpenFrame::StyleSheet { rules } => rules.push(rule),
-                OpenFrame::MediaRule { rules, .. } => rules.push(rule),
-                _ => {}
-            }
+            self.pending_rules.push(rule);
         }
     }
 }
@@ -195,7 +211,13 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
             root: self.root,
             next_handle: self.next_handle,
             pending_value: self.pending_value,
-            span_starts: self.span_starts.clone(),
+            span_starts_len: self.span_starts.len(),
+            pending_rules_len: self.pending_rules.len(),
+            pending_decls_len: self.pending_decls.len(),
+            pending_selectors_len: self.pending_selectors.len(),
+            pending_values_len: self.pending_values.len(),
+            pending_blocks_len: self.pending_blocks.len(),
+            pending_components_len: self.pending_components.len(),
         }
     }
     fn rollback(&mut self, checkpoint: Self::Checkpoint) {
@@ -212,7 +234,13 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
         self.root = checkpoint.root;
         self.next_handle = checkpoint.next_handle;
         self.pending_value = checkpoint.pending_value;
-        self.span_starts = checkpoint.span_starts;
+        self.span_starts.truncate(checkpoint.span_starts_len);
+        self.pending_rules.truncate(checkpoint.pending_rules_len);
+        self.pending_decls.truncate(checkpoint.pending_decls_len);
+        self.pending_selectors.truncate(checkpoint.pending_selectors_len);
+        self.pending_values.truncate(checkpoint.pending_values_len);
+        self.pending_blocks.truncate(checkpoint.pending_blocks_len);
+        self.pending_components.truncate(checkpoint.pending_components_len);
     }
     fn bind_input(&mut self, input: &[u8]) {
         self.input = unsafe { core::mem::transmute::<&[u8], &'p [u8]>(input) };
@@ -261,7 +289,7 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                 OpenFrame::Function {
                     kind: FunctionKind::Url,
                     name: "",
-                    args: Vec::new(),
+                    args_base: self.pending_values.len(),
                 }
             }
             57 => {
@@ -308,21 +336,21 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                 OpenFrame::Function {
                     kind: FunctionKind::Generic,
                     name: "",
-                    args: Vec::new(),
+                    args_base: self.pending_values.len(),
                 }
             }
             82 => {
                 OpenFrame::Function {
                     kind: FunctionKind::Var,
                     name: "",
-                    args: Vec::new(),
+                    args_base: self.pending_values.len(),
                 }
             }
             83 => {
                 OpenFrame::Function {
                     kind: FunctionKind::Env,
                     name: "",
-                    args: Vec::new(),
+                    args_base: self.pending_values.len(),
                 }
             }
             84 => {
@@ -336,47 +364,47 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                 OpenFrame::ColorFunction {
                     kind_tag: None,
                     space_tag: None,
-                    components: Vec::new(),
+                    components_base: self.pending_components.len(),
                 }
             }
             105 => {
                 OpenFrame::Function {
                     kind: FunctionKind::Calc,
                     name: "",
-                    args: Vec::new(),
+                    args_base: self.pending_values.len(),
                 }
             }
             106 => {
                 OpenFrame::Function {
                     kind: FunctionKind::Min,
                     name: "",
-                    args: Vec::new(),
+                    args_base: self.pending_values.len(),
                 }
             }
             107 => {
                 OpenFrame::Function {
                     kind: FunctionKind::Max,
                     name: "",
-                    args: Vec::new(),
+                    args_base: self.pending_values.len(),
                 }
             }
             108 => {
                 OpenFrame::Function {
                     kind: FunctionKind::Clamp,
                     name: "",
-                    args: Vec::new(),
+                    args_base: self.pending_values.len(),
                 }
             }
             139 => {
                 OpenFrame::KeyframeBlock {
                     selector: "",
-                    declarations: Vec::new(),
+                    decls_base: self.pending_decls.len(),
                 }
             }
             140 => {
                 OpenFrame::KeyframesRule {
                     name: "",
-                    blocks: Vec::new(),
+                    blocks_base: self.pending_blocks.len(),
                 }
             }
             142 => {
@@ -388,20 +416,20 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
             }
             144 => {
                 OpenFrame::StyleRule {
-                    selectors: Vec::new(),
-                    declarations: Vec::new(),
+                    selectors_base: self.pending_selectors.len(),
+                    decls_base: self.pending_decls.len(),
                     span: "",
                 }
             }
             145 => {
                 OpenFrame::MediaRule {
                     query: "",
-                    rules: Vec::new(),
+                    rules_base: self.pending_rules.len(),
                 }
             }
             149 => {
                 OpenFrame::StyleSheet {
-                    rules: Vec::new(),
+                    rules_base: self.pending_rules.len(),
                 }
             }
             143 => OpenFrame::Wrap { value: None },
@@ -410,13 +438,13 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
             | 136 | 137 => {
                 OpenFrame::Declaration {
                     property: None,
-                    values: Vec::new(),
+                    values_base: self.pending_values.len(),
                     important: false,
                 }
             }
             96 => {
                 OpenFrame::SelectorList {
-                    selectors: Vec::new(),
+                    selectors_base: self.pending_selectors.len(),
                     span: "",
                 }
             }
@@ -435,14 +463,21 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
             .pop()
             .expect("CssStructBuilder::end_compound on empty stack");
         match frame {
-            OpenFrame::StyleSheet { rules } => {
+            OpenFrame::StyleSheet { rules_base } => {
+                let rules: Vec<CssRule<'p>> = self.pending_rules.split_off(rules_base);
                 let id = self.arena.push_rules(rules);
                 let sheet = StyleSheet { rules: id };
                 if self.stack.is_empty() {
                     self.root = Some(sheet);
                 }
             }
-            OpenFrame::StyleRule { selectors, declarations, span } => {
+            OpenFrame::StyleRule { selectors_base, decls_base, span } => {
+                let declarations: Vec<Declaration<'p>> = self
+                    .pending_decls
+                    .split_off(decls_base);
+                let selectors: Vec<Selector<'p>> = self
+                    .pending_selectors
+                    .split_off(selectors_base);
                 let sel_id = self.arena.push_selectors(selectors);
                 let decl_id = self.arena.push_decls(declarations);
                 self.deposit_rule(
@@ -453,27 +488,31 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                     }),
                 );
             }
-            OpenFrame::MediaRule { query, rules } => {
+            OpenFrame::MediaRule { query, rules_base } => {
+                let rules: Vec<CssRule<'p>> = self.pending_rules.split_off(rules_base);
                 let id = self.arena.push_rules(rules);
                 self.deposit_rule(CssRule::Media(MediaRule { query, rules: id }));
             }
-            OpenFrame::KeyframesRule { name, blocks } => {
+            OpenFrame::KeyframesRule { name, blocks_base } => {
+                let blocks: Vec<KeyframeBlock<'p>> = self
+                    .pending_blocks
+                    .split_off(blocks_base);
                 let id = self.arena.push_keyframes(blocks);
                 self.deposit_rule(
                     CssRule::Keyframes(KeyframesRule { name, blocks: id }),
                 );
             }
-            OpenFrame::KeyframeBlock { selector, declarations } => {
+            OpenFrame::KeyframeBlock { selector, decls_base } => {
+                let declarations: Vec<Declaration<'p>> = self
+                    .pending_decls
+                    .split_off(decls_base);
                 let id = self.arena.push_decls(declarations);
                 let block = KeyframeBlock {
                     selector,
                     declarations: id,
                 };
-                if let Some(OpenFrame::KeyframesRule { blocks, .. }) = self
-                    .stack
-                    .last_mut()
-                {
-                    blocks.push(block);
+                if matches!(self.stack.last(), Some(OpenFrame::KeyframesRule { .. })) {
+                    self.pending_blocks.push(block);
                 }
             }
             OpenFrame::GenericAtRule { name, prelude, body } => {
@@ -485,7 +524,10 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                     }),
                 );
             }
-            OpenFrame::Declaration { property, values, important } => {
+            OpenFrame::Declaration { property, values_base, important } => {
+                let values: Vec<CssTypedValue<'p>> = self
+                    .pending_values
+                    .split_off(values_base);
                 let property = property.unwrap_or("");
                 let value = match values.len() {
                     0 => CssTypedValue::Span(""),
@@ -498,14 +540,19 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                     important,
                 });
             }
-            OpenFrame::SelectorList { selectors, span } => {
+            OpenFrame::SelectorList { selectors_base, span } => {
+                let selectors: Vec<Selector<'p>> = self
+                    .pending_selectors
+                    .split_off(selectors_base);
                 let unit = if span.is_empty() {
                     selectors.into_iter().next().unwrap_or(Selector::Universal)
                 } else {
                     Selector::Span(span)
                 };
-                match self.stack.last_mut() {
-                    Some(OpenFrame::StyleRule { selectors: dst, .. }) => dst.push(unit),
+                match self.stack.last() {
+                    Some(OpenFrame::StyleRule { .. }) => {
+                        self.pending_selectors.push(unit)
+                    }
                     Some(OpenFrame::KeyframeBlock { .. }) => {}
                     Some(OpenFrame::SelectorList { .. }) => {}
                     _ => {}
@@ -561,7 +608,10 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                 };
                 self.deposit_value(CssTypedValue::Dimension(dim));
             }
-            OpenFrame::ColorFunction { kind_tag, space_tag, components } => {
+            OpenFrame::ColorFunction { kind_tag, space_tag, components_base } => {
+                let components: Vec<f64> = self
+                    .pending_components
+                    .split_off(components_base);
                 let c1 = components.first().copied().unwrap_or(0.0);
                 let c2 = components.get(1).copied().unwrap_or(0.0);
                 let c3 = components.get(2).copied().unwrap_or(0.0);
@@ -623,7 +673,10 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                     ),
                 );
             }
-            OpenFrame::Function { kind, name, args } => {
+            OpenFrame::Function { kind, name, args_base } => {
+                let args: Vec<CssTypedValue<'p>> = self
+                    .pending_values
+                    .split_off(args_base);
                 let id = self.arena.push_values(args);
                 let func = match kind {
                     FunctionKind::Calc => CssFunction::Calc { args: id },
@@ -658,16 +711,11 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                     Some(0) => ":dir(ltr)",
                     _ => ":dir()",
                 };
-                if let Some(OpenFrame::SelectorList { selectors, .. }) = self
-                    .stack
-                    .last_mut()
-                {
-                    selectors.push(Selector::PseudoClass(text));
-                } else if let Some(OpenFrame::StyleRule { selectors, .. }) = self
-                    .stack
-                    .last_mut()
-                {
-                    selectors.push(Selector::PseudoClass(text));
+                if matches!(
+                    self.stack.last(), Some(OpenFrame::SelectorList { .. } |
+                    OpenFrame::StyleRule { .. })
+                ) {
+                    self.pending_selectors.push(Selector::PseudoClass(text));
                 } else {
                     self.deposit_value(CssTypedValue::Span(text));
                 }
@@ -684,9 +732,12 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
         }
     }
     fn push_leaf_with_f64(&mut self, value: f64) {
+        if matches!(self.stack.last(), Some(OpenFrame::ColorFunction { .. })) {
+            self.pending_components.push(value);
+            return;
+        }
         match self.stack.last_mut() {
             Some(OpenFrame::Numeric { magnitude, .. }) => *magnitude = Some(value),
-            Some(OpenFrame::ColorFunction { components, .. }) => components.push(value),
             Some(OpenFrame::ColorMix { left_pct, right_pct, left, right, .. }) => {
                 if left.is_some() && left_pct.is_none() {
                     *left_pct = Some(value);
@@ -710,6 +761,10 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
     fn push_leaf_with_bool(&mut self, _value: bool) {}
     fn push_leaf_with_str(&mut self, value: &str) {
         let lifetime_extended: &'p str = unsafe { core::mem::transmute(value) };
+        if matches!(self.stack.last(), Some(OpenFrame::SelectorList { .. })) {
+            self.pending_selectors.push(Selector::Span(lifetime_extended));
+            return;
+        }
         match self.stack.last_mut() {
             Some(OpenFrame::Declaration { property, .. }) if property.is_none() => {
                 *property = Some(lifetime_extended);
@@ -728,9 +783,6 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
             }
             Some(OpenFrame::GenericAtRule { name, .. }) if name.is_empty() => {
                 *name = lifetime_extended;
-            }
-            Some(OpenFrame::SelectorList { selectors, .. }) => {
-                selectors.push(Selector::Span(lifetime_extended));
             }
             Some(OpenFrame::HexColor { hex_span }) if hex_span.is_none() => {
                 *hex_span = Some(lifetime_extended);

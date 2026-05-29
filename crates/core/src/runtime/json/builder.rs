@@ -5,10 +5,10 @@ use crate::runtime::handle::CompoundHandle;
 use crate::runtime::json::arena::JsonArena;
 use crate::runtime::json::document::JsonDocument;
 use crate::runtime::json::value::{JsonNumber, JsonPair, JsonValue};
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 enum OpenFrame<'p> {
-    Array { items: Vec<JsonValue<'p>> },
-    Object { pairs: Vec<JsonPair<'p>>, pending_key: Option<&'p str> },
+    Array { items_base: usize },
+    Object { pairs_base: usize, pending_key: Option<&'p str> },
     Pair { key: Option<&'p str>, value: Option<JsonValue<'p>> },
     Wrap { value: Option<JsonValue<'p>> },
 }
@@ -18,6 +18,8 @@ pub struct JsonStructBuilder<'p> {
     stack: Vec<OpenFrame<'p>>,
     root: Option<JsonValue<'p>>,
     next_handle: u64,
+    pending_items: Vec<JsonValue<'p>>,
+    pending_pairs: Vec<JsonPair<'p>>,
 }
 #[derive(Debug, Clone)]
 pub struct JsonStructCheckpoint<'p> {
@@ -26,6 +28,8 @@ pub struct JsonStructCheckpoint<'p> {
     stack: Vec<OpenFrame<'p>>,
     root: Option<JsonValue<'p>>,
     next_handle: u64,
+    pending_items_len: usize,
+    pending_pairs_len: usize,
 }
 impl<'p> Default for JsonStructBuilder<'p> {
     fn default() -> Self {
@@ -40,6 +44,8 @@ impl<'p> JsonStructBuilder<'p> {
             stack: Vec::with_capacity(8),
             root: None,
             next_handle: 0,
+            pending_items: Vec::with_capacity(32),
+            pending_pairs: Vec::with_capacity(32),
         }
     }
     #[inline]
@@ -49,6 +55,8 @@ impl<'p> JsonStructBuilder<'p> {
             stack: Vec::with_capacity(8),
             root: None,
             next_handle: 0,
+            pending_items: Vec::with_capacity(32),
+            pending_pairs: Vec::with_capacity(32),
         }
     }
     #[inline]
@@ -65,23 +73,27 @@ impl<'p> JsonStructBuilder<'p> {
     }
     #[inline]
     fn deposit(&mut self, value: JsonValue<'p>) {
-        match self.stack.last_mut() {
-            None => self.root = Some(value),
-            Some(OpenFrame::Array { items }) => items.push(value),
-            Some(OpenFrame::Object { pairs, pending_key }) => {
-                if pending_key.is_none() {
-                    if let JsonValue::String(s) = value {
-                        *pending_key = Some(s);
-                        return;
-                    }
-                }
-                debug_assert!(
-                    pending_key.is_some(), "Object value pushed without pending key"
-                );
-                if let Some(key) = pending_key.take() {
-                    pairs.push(JsonPair { key, value });
+        if matches!(self.stack.last(), Some(OpenFrame::Array { .. })) {
+            self.pending_items.push(value);
+            return;
+        }
+        if let Some(OpenFrame::Object { pending_key, .. }) = self.stack.last_mut() {
+            if pending_key.is_none() {
+                if let JsonValue::String(s) = value {
+                    *pending_key = Some(s);
+                    return;
                 }
             }
+            debug_assert!(
+                pending_key.is_some(), "Object value pushed without pending key"
+            );
+            if let Some(key) = pending_key.take() {
+                self.pending_pairs.push(JsonPair { key, value });
+            }
+            return;
+        }
+        match self.stack.last_mut() {
+            None => self.root = Some(value),
             Some(OpenFrame::Pair { key, value: slot }) => {
                 if key.is_none() {
                     if let JsonValue::String(s) = value {
@@ -98,6 +110,7 @@ impl<'p> JsonStructBuilder<'p> {
             Some(OpenFrame::Wrap { value: slot }) => {
                 *slot = Some(value);
             }
+            Some(OpenFrame::Array { .. }) | Some(OpenFrame::Object { .. }) => {}
         }
     }
 }
@@ -111,6 +124,8 @@ impl<'p> StructBuilder for JsonStructBuilder<'p> {
             stack: self.stack.clone(),
             root: self.root,
             next_handle: self.next_handle,
+            pending_items_len: self.pending_items.len(),
+            pending_pairs_len: self.pending_pairs.len(),
         }
     }
     #[inline]
@@ -119,6 +134,8 @@ impl<'p> StructBuilder for JsonStructBuilder<'p> {
         self.stack = checkpoint.stack;
         self.root = checkpoint.root;
         self.next_handle = checkpoint.next_handle;
+        self.pending_items.truncate(checkpoint.pending_items_len);
+        self.pending_pairs.truncate(checkpoint.pending_pairs_len);
     }
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
         let frame = match (layout.kind, layout.rule_id) {
@@ -126,14 +143,14 @@ impl<'p> StructBuilder for JsonStructBuilder<'p> {
             | (LayoutKind::TaggedEnum, 5)
             | (LayoutKind::UntaggedEnum, 5) => {
                 OpenFrame::Array {
-                    items: Vec::new(),
+                    items_base: self.pending_items.len(),
                 }
             }
             (LayoutKind::Struct, 4)
             | (LayoutKind::TaggedEnum, 4)
             | (LayoutKind::UntaggedEnum, 4) => {
                 OpenFrame::Object {
-                    pairs: Vec::new(),
+                    pairs_base: self.pending_pairs.len(),
                     pending_key: None,
                 }
             }
@@ -155,22 +172,24 @@ impl<'p> StructBuilder for JsonStructBuilder<'p> {
             .pop()
             .expect("JsonStructBuilder::end_compound on empty stack");
         let value = match frame {
-            OpenFrame::Array { items } => {
+            OpenFrame::Array { items_base } => {
+                let items: Vec<JsonValue<'p>> = self.pending_items.split_off(items_base);
                 let id = self.arena.push_array(items);
                 JsonValue::Array(id)
             }
-            OpenFrame::Object { pairs, pending_key } => {
+            OpenFrame::Object { pairs_base, pending_key } => {
                 debug_assert!(
                     pending_key.is_none(), "Object closed with dangling pending_key"
                 );
+                let pairs: Vec<JsonPair<'p>> = self.pending_pairs.split_off(pairs_base);
                 let id = self.arena.push_object(pairs);
                 JsonValue::Object(id)
             }
             OpenFrame::Pair { key, value } => {
                 let key = key.expect("Pair closed without key");
                 let value = value.expect("Pair closed without value");
-                if let Some(OpenFrame::Object { pairs, .. }) = self.stack.last_mut() {
-                    pairs.push(JsonPair { key, value });
+                if matches!(self.stack.last(), Some(OpenFrame::Object { .. })) {
+                    self.pending_pairs.push(JsonPair { key, value });
                     return;
                 }
                 debug_assert!(false, "Pair closed outside Object context");

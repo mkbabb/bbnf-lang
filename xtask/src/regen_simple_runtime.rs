@@ -605,10 +605,17 @@ use __MODULE__::arena::{__P__Arena, __P__CompoundKind};
 use __MODULE__::document::__P__Document;
 use __MODULE__::value::__P__Value;
 
-#[derive(Debug, Clone)]
-struct Frame<'p> {
+// O(1) checkpoint design: the growing per-frame `children` Vec is hoisted
+// into the builder-owned append-only `pending_children` scratch; each
+// frame holds a `children_base` cursor. The `Frame` is now `Copy`
+// (`CompoundKind` + cursor + token), so the checkpoint `stack.clone()` is
+// an O(depth) memcpy rather than the prior O(document) deep clone of the
+// growing root-compound child Vec at every speculative checkpoint. Scratch
+// rollback is a count-marker truncate — the precise inverse of append.
+#[derive(Debug, Clone, Copy)]
+struct Frame {
     kind: __P__CompoundKind,
-    children: Vec<__P__Value<'p>>,
+    children_base: usize,
     #[allow(dead_code)]
     handle_token: u64,
 }
@@ -616,7 +623,8 @@ struct Frame<'p> {
 #[derive(Debug)]
 pub struct __P__StructBuilder<'p> {
     arena: __P__Arena<'p>,
-    stack: Vec<Frame<'p>>,
+    stack: Vec<Frame>,
+    pending_children: Vec<__P__Value<'p>>,
     root: Option<__P__Value<'p>>,
     next_handle: u64,
 }
@@ -624,9 +632,10 @@ pub struct __P__StructBuilder<'p> {
 #[derive(Debug, Clone)]
 pub struct __P__StructCheckpoint<'p> {
     compounds: usize,
-    stack: Vec<Frame<'p>>,
+    stack: Vec<Frame>,
     root: Option<__P__Value<'p>>,
     next_handle: u64,
+    pending_children_len: usize,
 }
 
 impl<'p> Default for __P__StructBuilder<'p> {
@@ -641,6 +650,7 @@ impl<'p> __P__StructBuilder<'p> {
         Self {
             arena: __P__Arena::new(),
             stack: Vec::with_capacity(8),
+            pending_children: Vec::with_capacity(32),
             root: None,
             next_handle: 0,
         }
@@ -651,6 +661,7 @@ impl<'p> __P__StructBuilder<'p> {
         Self {
             arena: __P__Arena::with_capacity(compounds),
             stack: Vec::with_capacity(8),
+            pending_children: Vec::with_capacity(32),
             root: None,
             next_handle: 0,
         }
@@ -671,9 +682,10 @@ impl<'p> __P__StructBuilder<'p> {
 
     #[inline]
     fn deposit(&mut self, value: __P__Value<'p>) {
-        match self.stack.last_mut() {
-            None => self.root = Some(value),
-            Some(frame) => frame.children.push(value),
+        if self.stack.is_empty() {
+            self.root = Some(value);
+        } else {
+            self.pending_children.push(value);
         }
     }
 }
@@ -685,9 +697,12 @@ impl<'p> StructBuilder for __P__StructBuilder<'p> {
     fn checkpoint(&self) -> Self::Checkpoint {
         __P__StructCheckpoint {
             compounds: self.arena.compound_count(),
+            // O(depth) memcpy of `Copy` frames; growing children live in
+            // the `pending_children` scratch (length-marked below).
             stack: self.stack.clone(),
             root: self.root,
             next_handle: self.next_handle,
+            pending_children_len: self.pending_children.len(),
         }
     }
 
@@ -697,6 +712,7 @@ impl<'p> StructBuilder for __P__StructBuilder<'p> {
         self.stack = checkpoint.stack;
         self.root = checkpoint.root;
         self.next_handle = checkpoint.next_handle;
+        self.pending_children.truncate(checkpoint.pending_children_len);
     }
 
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
@@ -705,7 +721,7 @@ impl<'p> StructBuilder for __P__StructBuilder<'p> {
         let handle_token = self.next_handle;
         self.stack.push(Frame {
             kind,
-            children: Vec::new(),
+            children_base: self.pending_children.len(),
             handle_token,
         });
         CompoundHandle::new(handle_token, 0)
@@ -716,10 +732,11 @@ impl<'p> StructBuilder for __P__StructBuilder<'p> {
             .stack
             .pop()
             .expect("__P__StructBuilder::end_compound on empty stack");
-        let value = if frame.kind.is_transparent_wrap() && frame.children.len() == 1 {
-            frame.children[0]
+        let children: Vec<__P__Value<'p>> = self.pending_children.split_off(frame.children_base);
+        let value = if frame.kind.is_transparent_wrap() && children.len() == 1 {
+            children[0]
         } else {
-            let id = self.arena.push_compound(frame.kind, frame.children);
+            let id = self.arena.push_compound(frame.kind, children);
             __P__Value::Compound(id)
         };
         self.deposit(value);
@@ -1758,11 +1775,23 @@ use __MODULE__::arena::__P__Arena;
 use __MODULE__::document::__P__Document;
 use __MODULE__::value::{{__P__Number, __P__Pair, __P__Value}};
 
-#[derive(Debug, Clone)]
+// O(1) checkpoint design: the growing per-frame item/pair containers are
+// hoisted out of `OpenFrame` into builder-owned append-only scratch
+// stacks (`pending_items` / `pending_pairs`). Each container-owning frame
+// holds only a `*_base: usize` cursor; interior deposits append to the
+// scratch top; `end_compound` drains `[base..]` as one contiguous list.
+// Frames carry only `Copy` scalars + cursor indices, so `stack.clone()`
+// at checkpoint is an O(depth) memcpy — the prior O(N^2) cause (deep
+// clone of the growing root array/object Vec at every checkpoint) is
+// eliminated. The `pending_key` scalar stays inline; the cheap
+// `stack.clone()` restores below-marker frames' `pending_key` on
+// rollback, so the speculative-key corruption case is sound. Scratch
+// rollback is a count-marker truncate (the precise inverse of append).
+#[derive(Debug, Clone, Copy)]
 enum OpenFrame<'p> {{
-    Array {{ items: Vec<__P__Value<'p>> }},
+    Array {{ items_base: usize }},
     Object {{
-        pairs: Vec<__P__Pair<'p>>,
+        pairs_base: usize,
         pending_key: Option<&'p str>,
     }},
     Pair {{
@@ -1778,6 +1807,8 @@ pub struct __P__StructBuilder<'p> {{
     stack: Vec<OpenFrame<'p>>,
     root: Option<__P__Value<'p>>,
     next_handle: u64,
+    pending_items: Vec<__P__Value<'p>>,
+    pending_pairs: Vec<__P__Pair<'p>>,
 }}
 
 #[derive(Debug, Clone)]
@@ -1787,6 +1818,8 @@ pub struct __P__StructCheckpoint<'p> {{
     stack: Vec<OpenFrame<'p>>,
     root: Option<__P__Value<'p>>,
     next_handle: u64,
+    pending_items_len: usize,
+    pending_pairs_len: usize,
 }}
 
 impl<'p> Default for __P__StructBuilder<'p> {{
@@ -1803,6 +1836,8 @@ impl<'p> __P__StructBuilder<'p> {{
             stack: Vec::with_capacity(8),
             root: None,
             next_handle: 0,
+            pending_items: Vec::with_capacity(32),
+            pending_pairs: Vec::with_capacity(32),
         }}
     }}
 
@@ -1813,6 +1848,8 @@ impl<'p> __P__StructBuilder<'p> {{
             stack: Vec::with_capacity(8),
             root: None,
             next_handle: 0,
+            pending_items: Vec::with_capacity(32),
+            pending_pairs: Vec::with_capacity(32),
         }}
     }}
 
@@ -1832,24 +1869,32 @@ impl<'p> __P__StructBuilder<'p> {{
 
     #[inline]
     fn deposit(&mut self, value: __P__Value<'p>) {{
-        match self.stack.last_mut() {{
-            None => self.root = Some(value),
-            Some(OpenFrame::Array {{ items }}) => items.push(value),
-            Some(OpenFrame::Object {{ pairs, pending_key }}) => {{
-                if pending_key.is_none() {{
-                    if let __P__Value::String(s) = value {{
-                        *pending_key = Some(s);
-                        return;
-                    }}
-                }}
-                debug_assert!(
-                    pending_key.is_some(),
-                    "Object value pushed without pending key"
-                );
-                if let Some(key) = pending_key.take() {{
-                    pairs.push(__P__Pair {{ key, value }});
+        // Array items and object pairs accumulate on the builder's
+        // append-only scratch stacks; the immutable frame-kind probe
+        // releases the `self.stack` borrow before each scratch push so the
+        // two `&mut self` paths never overlap.
+        if matches!(self.stack.last(), Some(OpenFrame::Array {{ .. }})) {{
+            self.pending_items.push(value);
+            return;
+        }}
+        if let Some(OpenFrame::Object {{ pending_key, .. }}) = self.stack.last_mut() {{
+            if pending_key.is_none() {{
+                if let __P__Value::String(s) = value {{
+                    *pending_key = Some(s);
+                    return;
                 }}
             }}
+            debug_assert!(
+                pending_key.is_some(),
+                "Object value pushed without pending key"
+            );
+            if let Some(key) = pending_key.take() {{
+                self.pending_pairs.push(__P__Pair {{ key, value }});
+            }}
+            return;
+        }}
+        match self.stack.last_mut() {{
+            None => self.root = Some(value),
             Some(OpenFrame::Pair {{ key, value: slot }}) => {{
                 if key.is_none() {{
                     if let __P__Value::String(s) = value {{
@@ -1864,6 +1909,8 @@ impl<'p> __P__StructBuilder<'p> {{
             Some(OpenFrame::Wrap {{ value: slot }}) => {{
                 *slot = Some(value);
             }}
+            // `Array` / `Object` are routed to the scratch stacks above.
+            Some(OpenFrame::Array {{ .. }}) | Some(OpenFrame::Object {{ .. }}) => {{}}
         }}
     }}
 }}
@@ -1876,9 +1923,13 @@ impl<'p> StructBuilder for __P__StructBuilder<'p> {{
         __P__StructCheckpoint {{
             arrays: self.arena.array_count(),
             objects: self.arena.object_count(),
+            // O(depth) memcpy of `Copy` frames; the growing item/pair
+            // containers live in the scratch stacks (length-marked below).
             stack: self.stack.clone(),
             root: self.root,
             next_handle: self.next_handle,
+            pending_items_len: self.pending_items.len(),
+            pending_pairs_len: self.pending_pairs.len(),
         }}
     }}
 
@@ -1888,17 +1939,23 @@ impl<'p> StructBuilder for __P__StructBuilder<'p> {{
         self.stack = checkpoint.stack;
         self.root = checkpoint.root;
         self.next_handle = checkpoint.next_handle;
+        // Truncate the append-only scratch stacks to their checkpoint
+        // length — the precise inverse of every speculative append.
+        self.pending_items.truncate(checkpoint.pending_items_len);
+        self.pending_pairs.truncate(checkpoint.pending_pairs_len);
     }}
 
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {{
         let frame = match (layout.kind, layout.rule_id) {{
             (LayoutKind::Struct, {array_rule})
             | (LayoutKind::TaggedEnum, {array_rule})
-            | (LayoutKind::UntaggedEnum, {array_rule}) => OpenFrame::Array {{ items: Vec::new() }},
+            | (LayoutKind::UntaggedEnum, {array_rule}) => OpenFrame::Array {{
+                items_base: self.pending_items.len(),
+            }},
             (LayoutKind::Struct, {object_rule})
             | (LayoutKind::TaggedEnum, {object_rule})
             | (LayoutKind::UntaggedEnum, {object_rule}) => OpenFrame::Object {{
-                pairs: Vec::new(),
+                pairs_base: self.pending_pairs.len(),
                 pending_key: None,
             }},
             (LayoutKind::Struct, {pair_rule}) => OpenFrame::Pair {{
@@ -1918,23 +1975,27 @@ impl<'p> StructBuilder for __P__StructBuilder<'p> {{
             .pop()
             .expect("__P__StructBuilder::end_compound on empty stack");
         let value = match frame {{
-            OpenFrame::Array {{ items }} => {{
+            OpenFrame::Array {{ items_base }} => {{
+                let items: Vec<__P__Value<'p>> = self.pending_items.split_off(items_base);
                 let id = self.arena.push_array(items);
                 __P__Value::Array(id)
             }}
-            OpenFrame::Object {{ pairs, pending_key }} => {{
+            OpenFrame::Object {{ pairs_base, pending_key }} => {{
                 debug_assert!(
                     pending_key.is_none(),
                     "Object closed with dangling pending_key"
                 );
+                let pairs: Vec<__P__Pair<'p>> = self.pending_pairs.split_off(pairs_base);
                 let id = self.arena.push_object(pairs);
                 __P__Value::Object(id)
             }}
             OpenFrame::Pair {{ key, value }} => {{
                 let key = key.expect("Pair closed without key");
                 let value = value.expect("Pair closed without value");
-                if let Some(OpenFrame::Object {{ pairs, .. }}) = self.stack.last_mut() {{
-                    pairs.push(__P__Pair {{ key, value }});
+                // The enclosing `Object` owns the `pending_pairs` scratch
+                // top; deposit there directly.
+                if matches!(self.stack.last(), Some(OpenFrame::Object {{ .. }})) {{
+                    self.pending_pairs.push(__P__Pair {{ key, value }});
                     return;
                 }}
                 debug_assert!(false, "Pair closed outside Object context");
@@ -2607,19 +2668,27 @@ use __MODULE__::value::__P__Value;
 use crate::runtime::builder::StructBuilder;
 use crate::runtime::handle::CompoundHandle;
 
-#[derive(Debug, Clone)]
-struct OpenFrame<'p> {
+// O(1) checkpoint design: the growing per-frame `children` Vec is hoisted
+// into the builder-owned append-only `pending_children` scratch; each
+// frame holds a `children_base` cursor. The `OpenFrame` is now `Copy`
+// (kind + tag + offset scalars + cursor), so the checkpoint `stack.clone()`
+// is an O(depth) memcpy rather than an O(document) deep clone of the
+// growing root-compound child Vec at every speculative checkpoint. Scratch
+// rollback is a count-marker truncate — the precise inverse of append.
+#[derive(Debug, Clone, Copy)]
+struct OpenFrame {
     kind: __P__CompoundKind,
     branch_tag: Option<u32>,
     start_offset: Option<u32>,
     end_offset: Option<u32>,
-    children: Vec<__P__Value<'p>>,
+    children_base: usize,
 }
 
 #[derive(Debug)]
 pub struct __P__StructBuilder<'p> {
     arena: __P__Arena<'p>,
-    stack: Vec<OpenFrame<'p>>,
+    stack: Vec<OpenFrame>,
+    pending_children: Vec<__P__Value<'p>>,
     root: Option<__P__Value<'p>>,
     next_handle: u64,
 }
@@ -2627,9 +2696,10 @@ pub struct __P__StructBuilder<'p> {
 #[derive(Debug, Clone)]
 pub struct __P__StructCheckpoint<'p> {
     compounds: usize,
-    stack: Vec<OpenFrame<'p>>,
+    stack: Vec<OpenFrame>,
     root: Option<__P__Value<'p>>,
     next_handle: u64,
+    pending_children_len: usize,
 }
 
 impl<'p> Default for __P__StructBuilder<'p> {
@@ -2644,6 +2714,7 @@ impl<'p> __P__StructBuilder<'p> {
         Self {
             arena: __P__Arena::new(),
             stack: Vec::with_capacity(16),
+            pending_children: Vec::with_capacity(32),
             root: None,
             next_handle: 0,
         }
@@ -2654,6 +2725,7 @@ impl<'p> __P__StructBuilder<'p> {
         Self {
             arena: __P__Arena::with_capacity(compounds),
             stack: Vec::with_capacity(16),
+            pending_children: Vec::with_capacity(32),
             root: None,
             next_handle: 0,
         }
@@ -2675,9 +2747,10 @@ impl<'p> __P__StructBuilder<'p> {
 
     #[inline]
     fn deposit(&mut self, value: __P__Value<'p>) {
-        match self.stack.last_mut() {
-            None => self.root = Some(value),
-            Some(frame) => frame.children.push(value),
+        if self.stack.is_empty() {
+            self.root = Some(value);
+        } else {
+            self.pending_children.push(value);
         }
     }
 }
@@ -2689,9 +2762,12 @@ impl<'p> StructBuilder for __P__StructBuilder<'p> {
     fn checkpoint(&self) -> Self::Checkpoint {
         __P__StructCheckpoint {
             compounds: self.arena.compound_count(),
+            // O(depth) memcpy of `Copy` frames; growing children live in
+            // the `pending_children` scratch (length-marked below).
             stack: self.stack.clone(),
             root: self.root,
             next_handle: self.next_handle,
+            pending_children_len: self.pending_children.len(),
         }
     }
 
@@ -2701,6 +2777,7 @@ impl<'p> StructBuilder for __P__StructBuilder<'p> {
         self.stack = checkpoint.stack;
         self.root = checkpoint.root;
         self.next_handle = checkpoint.next_handle;
+        self.pending_children.truncate(checkpoint.pending_children_len);
     }
 
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
@@ -2709,7 +2786,7 @@ impl<'p> StructBuilder for __P__StructBuilder<'p> {
             branch_tag: None,
             start_offset: None,
             end_offset: None,
-            children: Vec::new(),
+            children_base: self.pending_children.len(),
         });
         self.next_handle = self.next_handle.wrapping_add(1);
         CompoundHandle::new(self.next_handle, 0)
@@ -2720,6 +2797,7 @@ impl<'p> StructBuilder for __P__StructBuilder<'p> {
             .stack
             .pop()
             .expect("__P__StructBuilder::end_compound on empty stack");
+        let children: Vec<__P__Value<'p>> = self.pending_children.split_off(frame.children_base);
         let bounds = match (frame.start_offset, frame.end_offset) {
             (Some(start), Some(end)) => Some((start, end)),
             _ => None,
@@ -2728,7 +2806,7 @@ impl<'p> StructBuilder for __P__StructBuilder<'p> {
             kind: frame.kind,
             branch_tag: frame.branch_tag,
             bounds,
-            children: frame.children,
+            children,
         });
         self.deposit(__P__Value::Compound(id));
     }

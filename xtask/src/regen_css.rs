@@ -676,18 +676,25 @@ fn emit_builder(_projection: &RuntimeProjection, routes: &ResolvedBuilderRoutes)
     let mut arms = BTreeMap::<u32, String>::new();
     for (id, frame) in &routes.aggregate {
         let source = match frame.as_str() {
-            "StyleSheet" => "OpenFrame::StyleSheet { rules: Vec::new() }".to_string(),
+            "StyleSheet" => {
+                "OpenFrame::StyleSheet { rules_base: self.pending_rules.len() }".to_string()
+            }
             "HexColor" => "OpenFrame::HexColor { hex_span: None }".to_string(),
             "StyleRule" => {
-                "OpenFrame::StyleRule { selectors: Vec::new(), declarations: Vec::new(), span: \"\" }"
+                "OpenFrame::StyleRule { selectors_base: self.pending_selectors.len(), decls_base: self.pending_decls.len(), span: \"\" }"
                     .to_string()
             }
-            "MediaRule" => "OpenFrame::MediaRule { query: \"\", rules: Vec::new() }".to_string(),
+            "MediaRule" => {
+                "OpenFrame::MediaRule { query: \"\", rules_base: self.pending_rules.len() }"
+                    .to_string()
+            }
             "KeyframesRule" => {
-                "OpenFrame::KeyframesRule { name: \"\", blocks: Vec::new() }".to_string()
+                "OpenFrame::KeyframesRule { name: \"\", blocks_base: self.pending_blocks.len() }"
+                    .to_string()
             }
             "KeyframeBlock" => {
-                "OpenFrame::KeyframeBlock { selector: \"\", declarations: Vec::new() }".to_string()
+                "OpenFrame::KeyframeBlock { selector: \"\", decls_base: self.pending_decls.len() }"
+                    .to_string()
             }
             "GenericAtRule" => {
                 "OpenFrame::GenericAtRule { name: \"\", prelude: \"\", body: \"\" }".to_string()
@@ -709,14 +716,14 @@ fn emit_builder(_projection: &RuntimeProjection, routes: &ResolvedBuilderRoutes)
         arms.insert(
             *id,
             format!(
-                "OpenFrame::Function {{ kind: FunctionKind::{kind}, name: \"\", args: Vec::new() }}"
+                "OpenFrame::Function {{ kind: FunctionKind::{kind}, name: \"\", args_base: self.pending_values.len() }}"
             ),
         );
     }
     for (id, frame) in &routes.colors {
         let source = match frame.as_str() {
             "ColorFunction" => {
-                "OpenFrame::ColorFunction { kind_tag: None, space_tag: None, components: Vec::new() }"
+                "OpenFrame::ColorFunction { kind_tag: None, space_tag: None, components_base: self.pending_components.len() }"
                     .to_string()
             }
             other => bail!("unknown color frame `{other}`"),
@@ -736,13 +743,13 @@ fn emit_builder(_projection: &RuntimeProjection, routes: &ResolvedBuilderRoutes)
     }
     if !routes.declarations.is_empty() {
         route_arms.push_str(&format!(
-            "{} => OpenFrame::Declaration {{ property: None, values: Vec::new(), important: false }},\n",
+            "{} => OpenFrame::Declaration {{ property: None, values_base: self.pending_values.len(), important: false }},\n",
             match_pattern(&routes.declarations)
         ));
     }
     if !routes.selectors.is_empty() {
         route_arms.push_str(&format!(
-            "{} => OpenFrame::SelectorList {{ selectors: Vec::new(), span: \"\" }},\n",
+            "{} => OpenFrame::SelectorList {{ selectors_base: self.pending_selectors.len(), span: \"\" }},\n",
             match_pattern(&routes.selectors)
         ));
     }
@@ -763,19 +770,39 @@ use crate::runtime::css_l4::value::{{
 }};
 use crate::runtime::handle::CompoundHandle;
 
-#[derive(Debug, Clone)]
+// O(1) checkpoint design: every growing per-frame container is hoisted
+// out of the `OpenFrame` into a builder-owned append-only scratch stack
+// (`pending_rules` / `pending_decls` / `pending_selectors` /
+// `pending_values` / `pending_blocks` / `pending_components`). Each
+// container-owning frame holds only a `*_base: usize` cursor into the
+// matching scratch; interior pushes append to the scratch top, and
+// `end_compound` drains the `[base..]` suffix as one contiguous list.
+// Because frames now carry only `Copy` scalars + cursor indices, the
+// `OpenFrame` is `Copy`, so `stack.clone()` at checkpoint time is an
+// O(stack-depth) memcpy of small frames rather than an O(document) deep
+// clone of the growing `StyleSheet.rules` Vec — the prior O(N^2) cause.
+// Scratch rollback is the count-marker truncate the arena slabs already
+// use, so the speculative below-marker deposits (rules/decls/values
+// pushed by a committed inline-Repeat iteration or recursive Ref inside a
+// structural Alt branch that later fails) are undone exactly: the scratch
+// is append-only, the checkpoint records its length, and rollback
+// truncates it. Frames below the checkpoint marker keep their `*_base`
+// cursor (restored by the cheap `stack.clone()`), so their drain range is
+// unchanged. Truncate is the precise inverse of append; soundness is
+// parametric in the deposit alphabet.
+#[derive(Debug, Clone, Copy)]
 enum OpenFrame<'p> {{
-    StyleSheet {{ rules: Vec<CssRule<'p>> }},
-    StyleRule {{ selectors: Vec<Selector<'p>>, declarations: Vec<Declaration<'p>>, span: &'p str }},
-    MediaRule {{ query: &'p str, rules: Vec<CssRule<'p>> }},
-    KeyframesRule {{ name: &'p str, blocks: Vec<KeyframeBlock<'p>> }},
-    KeyframeBlock {{ selector: &'p str, declarations: Vec<Declaration<'p>> }},
+    StyleSheet {{ rules_base: usize }},
+    StyleRule {{ selectors_base: usize, decls_base: usize, span: &'p str }},
+    MediaRule {{ query: &'p str, rules_base: usize }},
+    KeyframesRule {{ name: &'p str, blocks_base: usize }},
+    KeyframeBlock {{ selector: &'p str, decls_base: usize }},
     GenericAtRule {{ name: &'p str, prelude: &'p str, body: &'p str }},
-    Declaration {{ property: Option<&'p str>, values: Vec<CssTypedValue<'p>>, important: bool }},
-    SelectorList {{ selectors: Vec<Selector<'p>>, span: &'p str }},
+    Declaration {{ property: Option<&'p str>, values_base: usize, important: bool }},
+    SelectorList {{ selectors_base: usize, span: &'p str }},
     Wrap {{ value: Option<CssTypedValue<'p>> }},
     Numeric {{ kind: NumericKind, magnitude: Option<f64>, unit: Option<u8> }},
-    ColorFunction {{ kind_tag: Option<u8>, space_tag: Option<u8>, components: Vec<f64> }},
+    ColorFunction {{ kind_tag: Option<u8>, space_tag: Option<u8>, components_base: usize }},
     ColorMix {{
         mix_space: Option<u8>,
         hue_method: Option<u8>,
@@ -784,7 +811,7 @@ enum OpenFrame<'p> {{
         right: Option<&'p CssColor<'p>>,
         right_pct: Option<f64>,
     }},
-    Function {{ kind: FunctionKind, name: &'p str, args: Vec<CssTypedValue<'p>> }},
+    Function {{ kind: FunctionKind, name: &'p str, args_base: usize }},
     HexColor {{ hex_span: Option<&'p str> }},
     DirPseudo {{ kind_tag: Option<u8> }},
 }}
@@ -825,8 +852,28 @@ pub struct CssStructBuilder<'p> {{
     // stack; pushed at `record_compound_bounds_start`, consumed at
     // `record_compound_bounds_end`.
     span_starts: Vec<u32>,
+    // Append-only scratch stacks for the per-frame growing containers.
+    // Each container-owning `OpenFrame` records a `*_base` cursor into
+    // the matching scratch at `begin_compound`; interior deposits append
+    // to the scratch top; `end_compound` drains `[base..]` into the arena
+    // as one contiguous list. Being append-only, each scratch is
+    // rolled back by a count-marker truncate (see `checkpoint` /
+    // `rollback`), so speculative below-marker deposits are undone
+    // exactly without a per-frame deep clone.
+    pending_rules: Vec<CssRule<'p>>,
+    pending_decls: Vec<Declaration<'p>>,
+    pending_selectors: Vec<Selector<'p>>,
+    pending_values: Vec<CssTypedValue<'p>>,
+    pending_blocks: Vec<KeyframeBlock<'p>>,
+    pending_components: Vec<f64>,
 }}
 
+// O(1) checkpoint: pure `Copy`/length markers. `stack` is cloned, but the
+// frames are now `Copy` scalars + cursor indices (the growing containers
+// live in the builder's append-only scratch stacks), so the clone is an
+// O(stack-depth) memcpy rather than the prior O(document) deep clone of
+// `StyleSheet.rules`. Every other field is a `usize` length marker or a
+// `Copy` snapshot; rollback truncates the scratch stacks to these markers.
 #[derive(Debug, Clone)]
 pub struct CssStructCheckpoint<'p> {{
     rules: usize,
@@ -839,7 +886,13 @@ pub struct CssStructCheckpoint<'p> {{
     root: Option<StyleSheet>,
     next_handle: u64,
     pending_value: Option<CssTypedValue<'p>>,
-    span_starts: Vec<u32>,
+    span_starts_len: usize,
+    pending_rules_len: usize,
+    pending_decls_len: usize,
+    pending_selectors_len: usize,
+    pending_values_len: usize,
+    pending_blocks_len: usize,
+    pending_components_len: usize,
 }}
 
 impl<'p> Default for CssStructBuilder<'p> {{
@@ -858,6 +911,12 @@ impl<'p> CssStructBuilder<'p> {{
             pending_value: None,
             input: &[],
             span_starts: Vec::with_capacity(16),
+            pending_rules: Vec::with_capacity(64),
+            pending_decls: Vec::with_capacity(64),
+            pending_selectors: Vec::with_capacity(32),
+            pending_values: Vec::with_capacity(32),
+            pending_blocks: Vec::with_capacity(16),
+            pending_components: Vec::with_capacity(8),
         }}
     }}
 
@@ -876,6 +935,12 @@ impl<'p> CssStructBuilder<'p> {{
             pending_value: None,
             input: &[],
             span_starts: Vec::with_capacity(16),
+            pending_rules: Vec::with_capacity(64),
+            pending_decls: Vec::with_capacity(64),
+            pending_selectors: Vec::with_capacity(32),
+            pending_values: Vec::with_capacity(32),
+            pending_blocks: Vec::with_capacity(16),
+            pending_components: Vec::with_capacity(8),
         }}
     }}
 
@@ -892,36 +957,44 @@ impl<'p> CssStructBuilder<'p> {{
     }}
 
     fn deposit_value(&mut self, value: CssTypedValue<'p>) {{
+        // Values land on the nearest value-collecting frame's scratch
+        // suffix. `Declaration` / `Function` both accumulate into the
+        // shared `pending_values` stack (each holds its own `*_base`
+        // cursor; LIFO drain keeps the ranges disjoint). `Wrap` stores
+        // the value inline in the frame scalar; the root deposits to
+        // `pending_value`. The frame-kind probe runs before the scratch
+        // push so the `self.stack` borrow does not overlap it.
+        if matches!(
+            self.stack.last(),
+            Some(OpenFrame::Declaration {{ .. }} | OpenFrame::Function {{ .. }})
+        ) {{
+            self.pending_values.push(value);
+            return;
+        }}
         match self.stack.last_mut() {{
-            None => self.pending_value = Some(value),
-            Some(OpenFrame::Declaration {{ values, .. }}) => values.push(value),
             Some(OpenFrame::Wrap {{ value: slot }}) => *slot = Some(value),
-            Some(OpenFrame::Function {{ args, .. }}) => args.push(value),
             _ => self.pending_value = Some(value),
         }}
     }}
 
     fn deposit_declaration(&mut self, decl: Declaration<'p>) {{
-        if let Some(frame) = self.stack.iter_mut().rev().find(|f| {{
+        // The nearest open `StyleRule` / `KeyframeBlock` owns the topmost
+        // `pending_decls` suffix, so appending to the scratch top routes
+        // the declaration to it (its `decls_base` cursor is unchanged).
+        if self.stack.iter().rev().any(|f| {{
             matches!(f, OpenFrame::StyleRule {{ .. }} | OpenFrame::KeyframeBlock {{ .. }})
         }}) {{
-            match frame {{
-                OpenFrame::StyleRule {{ declarations, .. }} => declarations.push(decl),
-                OpenFrame::KeyframeBlock {{ declarations, .. }} => declarations.push(decl),
-                _ => {{}}
-            }}
+            self.pending_decls.push(decl);
         }}
     }}
 
     fn deposit_rule(&mut self, rule: CssRule<'p>) {{
-        if let Some(frame) = self.stack.iter_mut().rev().find(|f| {{
+        // The nearest open `StyleSheet` / `MediaRule` owns the topmost
+        // `pending_rules` suffix.
+        if self.stack.iter().rev().any(|f| {{
             matches!(f, OpenFrame::StyleSheet {{ .. }} | OpenFrame::MediaRule {{ .. }})
         }}) {{
-            match frame {{
-                OpenFrame::StyleSheet {{ rules }} => rules.push(rule),
-                OpenFrame::MediaRule {{ rules, .. }} => rules.push(rule),
-                _ => {{}}
-            }}
+            self.pending_rules.push(rule);
         }}
     }}
 }}
@@ -937,11 +1010,21 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
             values: self.arena.value_slab_count(),
             keyframes: self.arena.keyframe_slab_count(),
             colors: self.arena.color_count(),
+            // O(stack-depth) memcpy of `Copy` frames (growing containers
+            // hoisted to the scratch stacks below). This restores the
+            // exact below-marker frame scalars + `*_base` cursors on
+            // rollback.
             stack: self.stack.clone(),
             root: self.root,
             next_handle: self.next_handle,
             pending_value: self.pending_value,
-            span_starts: self.span_starts.clone(),
+            span_starts_len: self.span_starts.len(),
+            pending_rules_len: self.pending_rules.len(),
+            pending_decls_len: self.pending_decls.len(),
+            pending_selectors_len: self.pending_selectors.len(),
+            pending_values_len: self.pending_values.len(),
+            pending_blocks_len: self.pending_blocks.len(),
+            pending_components_len: self.pending_components.len(),
         }}
     }}
 
@@ -958,7 +1041,19 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
         self.root = checkpoint.root;
         self.next_handle = checkpoint.next_handle;
         self.pending_value = checkpoint.pending_value;
-        self.span_starts = checkpoint.span_starts;
+        // Truncate every append-only scratch stack to its checkpoint
+        // length. This is the precise inverse of the speculative appends
+        // (rules / decls / selectors / values / blocks / components and
+        // the span-start cursor); below-marker frames keep their `*_base`
+        // cursors via the restored `stack`, so their drain ranges are
+        // unchanged.
+        self.span_starts.truncate(checkpoint.span_starts_len);
+        self.pending_rules.truncate(checkpoint.pending_rules_len);
+        self.pending_decls.truncate(checkpoint.pending_decls_len);
+        self.pending_selectors.truncate(checkpoint.pending_selectors_len);
+        self.pending_values.truncate(checkpoint.pending_values_len);
+        self.pending_blocks.truncate(checkpoint.pending_blocks_len);
+        self.pending_components.truncate(checkpoint.pending_components_len);
     }}
 
     fn bind_input(&mut self, input: &[u8]) {{
@@ -1018,14 +1113,17 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
     fn end_compound(&mut self, _handle: CompoundHandle) {{
         let frame = self.stack.pop().expect("CssStructBuilder::end_compound on empty stack");
         match frame {{
-            OpenFrame::StyleSheet {{ rules }} => {{
+            OpenFrame::StyleSheet {{ rules_base }} => {{
+                let rules: Vec<CssRule<'p>> = self.pending_rules.split_off(rules_base);
                 let id = self.arena.push_rules(rules);
                 let sheet = StyleSheet {{ rules: id }};
                 if self.stack.is_empty() {{
                     self.root = Some(sheet);
                 }}
             }}
-            OpenFrame::StyleRule {{ selectors, declarations, span }} => {{
+            OpenFrame::StyleRule {{ selectors_base, decls_base, span }} => {{
+                let declarations: Vec<Declaration<'p>> = self.pending_decls.split_off(decls_base);
+                let selectors: Vec<Selector<'p>> = self.pending_selectors.split_off(selectors_base);
                 let sel_id = self.arena.push_selectors(selectors);
                 let decl_id = self.arena.push_decls(declarations);
                 self.deposit_rule(CssRule::Style(StyleRule {{
@@ -1034,25 +1132,32 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
                     span,
                 }}));
             }}
-            OpenFrame::MediaRule {{ query, rules }} => {{
+            OpenFrame::MediaRule {{ query, rules_base }} => {{
+                let rules: Vec<CssRule<'p>> = self.pending_rules.split_off(rules_base);
                 let id = self.arena.push_rules(rules);
                 self.deposit_rule(CssRule::Media(MediaRule {{ query, rules: id }}));
             }}
-            OpenFrame::KeyframesRule {{ name, blocks }} => {{
+            OpenFrame::KeyframesRule {{ name, blocks_base }} => {{
+                let blocks: Vec<KeyframeBlock<'p>> = self.pending_blocks.split_off(blocks_base);
                 let id = self.arena.push_keyframes(blocks);
                 self.deposit_rule(CssRule::Keyframes(KeyframesRule {{ name, blocks: id }}));
             }}
-            OpenFrame::KeyframeBlock {{ selector, declarations }} => {{
+            OpenFrame::KeyframeBlock {{ selector, decls_base }} => {{
+                let declarations: Vec<Declaration<'p>> = self.pending_decls.split_off(decls_base);
                 let id = self.arena.push_decls(declarations);
                 let block = KeyframeBlock {{ selector, declarations: id }};
-                if let Some(OpenFrame::KeyframesRule {{ blocks, .. }}) = self.stack.last_mut() {{
-                    blocks.push(block);
+                // Land on the nearest open `KeyframesRule`'s `pending_blocks`
+                // suffix (it owns the top region; LIFO drain keeps it
+                // disjoint). Guarded to match the prior parent-context check.
+                if matches!(self.stack.last(), Some(OpenFrame::KeyframesRule {{ .. }})) {{
+                    self.pending_blocks.push(block);
                 }}
             }}
             OpenFrame::GenericAtRule {{ name, prelude, body }} => {{
                 self.deposit_rule(CssRule::GenericAt(GenericAtRule {{ name, prelude, body }}));
             }}
-            OpenFrame::Declaration {{ property, values, important }} => {{
+            OpenFrame::Declaration {{ property, values_base, important }} => {{
+                let values: Vec<CssTypedValue<'p>> = self.pending_values.split_off(values_base);
                 let property = property.unwrap_or("");
                 let value = match values.len() {{
                     0 => CssTypedValue::Span(""),
@@ -1061,7 +1166,7 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
                 }};
                 self.deposit_declaration(Declaration {{ property, value, important }});
             }}
-            OpenFrame::SelectorList {{ selectors, span }} => {{
+            OpenFrame::SelectorList {{ selectors_base, span }} => {{
                 // A `selectorList` is the qualified rule's full prelude.
                 // cssparser raises exactly one selector event per
                 // qualified rule, so the typed summary deposits exactly
@@ -1071,13 +1176,17 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
                 // enclosing prelude, not separate selector events, so
                 // they fold into the parent prelude without adding to
                 // the per-rule count.
+                let selectors: Vec<Selector<'p>> = self.pending_selectors.split_off(selectors_base);
                 let unit = if span.is_empty() {{
                     selectors.into_iter().next().unwrap_or(Selector::Universal)
                 }} else {{
                     Selector::Span(span)
                 }};
-                match self.stack.last_mut() {{
-                    Some(OpenFrame::StyleRule {{ selectors: dst, .. }}) => dst.push(unit),
+                // After draining this prelude's own region, the
+                // `pending_selectors` top is the parent `StyleRule`'s
+                // region; deposit the single per-prelude unit there.
+                match self.stack.last() {{
+                    Some(OpenFrame::StyleRule {{ .. }}) => self.pending_selectors.push(unit),
                     Some(OpenFrame::KeyframeBlock {{ .. }}) => {{}}
                     Some(OpenFrame::SelectorList {{ .. }}) => {{}}
                     _ => {{}}
@@ -1117,7 +1226,8 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
                 }};
                 self.deposit_value(CssTypedValue::Dimension(dim));
             }}
-            OpenFrame::ColorFunction {{ kind_tag, space_tag, components }} => {{
+            OpenFrame::ColorFunction {{ kind_tag, space_tag, components_base }} => {{
+                let components: Vec<f64> = self.pending_components.split_off(components_base);
                 let c1 = components.first().copied().unwrap_or(0.0);
                 let c2 = components.get(1).copied().unwrap_or(0.0);
                 let c3 = components.get(2).copied().unwrap_or(0.0);
@@ -1166,7 +1276,8 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
                     right_pct,
                 }})));
             }}
-            OpenFrame::Function {{ kind, name, args }} => {{
+            OpenFrame::Function {{ kind, name, args_base }} => {{
+                let args: Vec<CssTypedValue<'p>> = self.pending_values.split_off(args_base);
                 let id = self.arena.push_values(args);
                 let func = match kind {{
                     FunctionKind::Calc => CssFunction::Calc {{ args: id }},
@@ -1186,10 +1297,15 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
                     Some(0) => ":dir(ltr)",
                     _ => ":dir()",
                 }};
-                if let Some(OpenFrame::SelectorList {{ selectors, .. }}) = self.stack.last_mut() {{
-                    selectors.push(Selector::PseudoClass(text));
-                }} else if let Some(OpenFrame::StyleRule {{ selectors, .. }}) = self.stack.last_mut() {{
-                    selectors.push(Selector::PseudoClass(text));
+                // `:dir(...)` lands as one pseudo-class selector on the
+                // nearest open `SelectorList` / `StyleRule` (both collect
+                // into the `pending_selectors` scratch top); otherwise it
+                // degrades to a span value.
+                if matches!(
+                    self.stack.last(),
+                    Some(OpenFrame::SelectorList {{ .. }} | OpenFrame::StyleRule {{ .. }})
+                ) {{
+                    self.pending_selectors.push(Selector::PseudoClass(text));
                 }} else {{
                     self.deposit_value(CssTypedValue::Span(text));
                 }}
@@ -1207,9 +1323,15 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
     }}
 
     fn push_leaf_with_f64(&mut self, value: f64) {{
+        // `ColorFunction` collects components into the `pending_components`
+        // scratch; the borrow of `self.stack` is released before the
+        // scratch push so the two `&mut self` paths do not overlap.
+        if matches!(self.stack.last(), Some(OpenFrame::ColorFunction {{ .. }})) {{
+            self.pending_components.push(value);
+            return;
+        }}
         match self.stack.last_mut() {{
             Some(OpenFrame::Numeric {{ magnitude, .. }}) => *magnitude = Some(value),
-            Some(OpenFrame::ColorFunction {{ components, .. }}) => components.push(value),
             Some(OpenFrame::ColorMix {{ left_pct, right_pct, left, right, .. }}) => {{
                 if left.is_some() && left_pct.is_none() {{
                     *left_pct = Some(value);
@@ -1237,6 +1359,13 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
 
     fn push_leaf_with_str(&mut self, value: &str) {{
         let lifetime_extended: &'p str = unsafe {{ core::mem::transmute(value) }};
+        // A bare selector token lands on the `SelectorList`'s
+        // `pending_selectors` scratch top; the immutable frame-kind probe
+        // releases the `self.stack` borrow before the scratch push.
+        if matches!(self.stack.last(), Some(OpenFrame::SelectorList {{ .. }})) {{
+            self.pending_selectors.push(Selector::Span(lifetime_extended));
+            return;
+        }}
         match self.stack.last_mut() {{
             Some(OpenFrame::Declaration {{ property, .. }}) if property.is_none() => {{
                 *property = Some(lifetime_extended);
@@ -1260,9 +1389,6 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
             // counting them as generic at-rules).
             Some(OpenFrame::GenericAtRule {{ name, .. }}) if name.is_empty() => {{
                 *name = lifetime_extended;
-            }}
-            Some(OpenFrame::SelectorList {{ selectors, .. }}) => {{
-                selectors.push(Selector::Span(lifetime_extended));
             }}
             Some(OpenFrame::HexColor {{ hex_span }}) if hex_span.is_none() => {{
                 *hex_span = Some(lifetime_extended);

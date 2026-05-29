@@ -12691,7 +12691,7 @@ mod __cssl4parser_emit_impl {
     static __DTA_REGEX_1231: &str = "\\s*\\+\\s*";
     static __DTA_REGEX_1232: &str = "\\s*~\\s*";
     static __DTA_REGEX_1233: &str = "\\s+";
-    static __DTA_REGEX_1264: &str = "\\d+%";
+    static __DTA_REGEX_1264: &str = "\\d+(\\.\\d+)?%";
     static __DTA_REGEX_1274: &str = "[^()\"']+";
     static __DTA_REGEX_1280: &str = "[^)\"'\\s]+";
     static __DTA_REGEX_1305: &str = "--[\\w-]+";
@@ -14512,6 +14512,24 @@ mod __cssl4parser_emit_impl {
                                 37 => __dfa_state = 1,
                                 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
                                     __dfa_state = 2;
+                                }
+                                46 => __dfa_state = 4,
+                                _ => break,
+                            }
+                        }
+                        3 => {
+                            match b {
+                                37 => __dfa_state = 1,
+                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
+                                    __dfa_state = 3;
+                                }
+                                _ => break,
+                            }
+                        }
+                        4 => {
+                            match b {
+                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
+                                    __dfa_state = 3;
                                 }
                                 _ => break,
                             }
@@ -38780,7 +38798,7 @@ mod __cssl4parser_emit_impl {
                 }
                 {
                     if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
-                        "\\d+%",
+                        "\\d+(\\.\\d+)?%",
                         input,
                         *p,
                     ) {
@@ -86409,6 +86427,25 @@ mod __cssl4parser_emit_impl {
                                         {
                                             if ::parse_that::scan_digits_mut(state).is_none() {
                                                 return None;
+                                            }
+                                        }
+                                        {
+                                            let __save = state.offset;
+                                            let __ok = (|| -> Option<()> {
+                                                if state.src_bytes.get(state.offset).copied() != Some(b'.')
+                                                {
+                                                    return None;
+                                                }
+                                                state.offset += 1;
+                                                {
+                                                    if ::parse_that::scan_digits_mut(state).is_none() {
+                                                        return None;
+                                                    }
+                                                }
+                                                Some(())
+                                            })();
+                                            if __ok.is_none() {
+                                                state.offset = __save;
                                             }
                                         }
                                         if state.src_bytes.get(state.offset).copied() != Some(b'%')

@@ -24,7 +24,7 @@ mediaRule     = "@media" ?w , mediaQueryList ?w , ruleBlock ;
 // u8 discriminant for keyframe selector forms: percentage=0, from=1, to=2.
 // (Numeric percent stops use tag 0; the numeric literal carries the
 // percentage value when AU.2.5 aggregate codegen composes it.)
-keyframeStop  = /\d+%/ -> 0u8 | "from" -> 1u8 | "to" -> 2u8 ;
+keyframeStop  = /\d+(\.\d+)?%/ -> 0u8 | "from" -> 1u8 | "to" -> 2u8 ;
 keyframeSel   = keyframeStop , (/\s*,\s*/ >> keyframeStop) * ;
 keyframeBlock = (keyframeSel ?w , "{" >> ((declaration ?w) *) ?w << "}") ?w ;
 keyframesRule = /@(-[a-z]+-)?keyframes/ ?w , ident ?w , "{" >> (keyframeBlock *) ?w << "}" ;

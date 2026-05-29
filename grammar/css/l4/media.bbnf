@@ -33,5 +33,9 @@ mediaCondition = mediaNot | mediaAnd | mediaOr | mediaInParens ;
 
 // --- Full media query ---
 // "print", "screen and (min-width: 768px)", "not print", "(prefers-color-scheme: dark)"
-mediaQuery     = mediaQualifier ? , mediaType ? , ("and" ?w >> mediaInParens) * ;
+// A bare-parenthesised query -- "@media (min-width:768px)" -- has no qualifier or
+// type, so the condition itself is the head; the all-optional typed-query prefix
+// otherwise matches empty and leaves the leading "(" unconsumed.
+mediaTypedQuery = mediaQualifier ? , mediaType ? , ("and" ?w >> mediaInParens) * ;
+mediaQuery     = mediaCondition | mediaTypedQuery ;
 mediaQueryList = mediaQuery , ("," ?w >> mediaQuery) * ;

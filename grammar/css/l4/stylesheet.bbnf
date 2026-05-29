@@ -27,11 +27,11 @@ mediaRule     = "@media" ?w , mediaQueryList ?w , ruleBlock ;
 keyframeStop  = /\d+%/ -> 0u8 | "from" -> 1u8 | "to" -> 2u8 ;
 keyframeSel   = keyframeStop , (/\s*,\s*/ >> keyframeStop) * ;
 keyframeBlock = (keyframeSel ?w , "{" >> ((declaration ?w) *) ?w << "}") ?w ;
-keyframesRule = "@keyframes" ?w , ident ?w , "{" >> (keyframeBlock *) ?w << "}" ;
+keyframesRule = /@(-[a-z]+-)?keyframes/ ?w , ident ?w , "{" >> (keyframeBlock *) ?w << "}" ;
 
 // Generic @-rule fallback
 atRuleBody    = ruleBlock | ";" ;
-genericAtRule = /@[a-zA-Z][\w-]*/ , /[^;{}]*/ , atRuleBody ;
+genericAtRule = /@-?[a-zA-Z][\w-]*/ , /[^;{}]*/ , atRuleBody ;
 
 // u8 discriminant for at-rule kind — matches lightningcss AtRule ordering:
 // @media=0, @keyframes=1, generic (catch-all)=255.

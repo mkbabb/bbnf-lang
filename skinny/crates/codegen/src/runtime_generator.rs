@@ -660,6 +660,33 @@ const CSS_SINK_RS: &str = r#"
     impl std::error::Error for CssFactError {}
 "#;
 
+// NON-LIVE LEGACY PROOF — RETIRED, DO NOT REVIVE.
+//
+// `CSS_GENERATED_RS` is the hand-written const-string brace-counter CSS
+// "provider" (`emit_fact_stream` / `emit_full_parse` / `CssFullParser` /
+// `CssFullParseSummary`). It is NOT grammar-derived: its parse logic is
+// authored directly in this string literal, not lowered from
+// `grammar/css/l4/*.bbnf` through the codegen path.
+//
+// The LIVE, grammar-derived CSS L4 provider is the root pipeline:
+//   grammar/css/l4/*.bbnf
+//     -> `cargo xtask regen --grammar css_l4`
+//        -> crates/core/src/grammar/generated/css_l4.rs (AUTO-GENERATED header)
+//           + css_l4.registry.json
+//     -> `cargo xtask regen-css`
+//        -> crates/core/src/runtime/css_l4/{value,arena,builder,document,view}.rs
+//   entry: `bbnf::grammar::generated::css_l4::CssL4Parser::parse`
+//          -> `bbnf::runtime::css_l4::visit_document` (full typed CSSOM).
+//
+// This literal is kept ONLY as a disclosed, audit-falsified artifact:
+//   - skinny/xtask/src/skv15_w0.rs requires the falsified CSS row to
+//     DISCLOSE `CSS_GENERATED_RS` as its (non-live) generator source;
+//   - skinny/crates/bbnf-bench/src/report.rs marks it AUDIT-FALSIFIED_OPEN
+//     (REDRESS-215: fact_stream is not full parse);
+//   - crates/core/tests/css_l4_w6_typed_retime.rs HARD-REJECTS any
+//     live-admission report citing `CSS_GENERATED_RS`/`CssFullParseSummary`/
+//     `fact_stream`/`parse_full`.
+// It contributes ZERO to any admitted CSS equality/speed proof.
 const CSS_GENERATED_RS: &str = r#"
     use super::config;
     use super::sink::CssFactError;

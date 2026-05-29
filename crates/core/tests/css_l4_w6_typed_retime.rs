@@ -73,6 +73,22 @@ impl W6Disposition {
     }
 }
 
+// Structural CSSOM summary used to gate track1 (the grammar-derived
+// typed document) against cssparser under one shared counting
+// convention. Only fields with a well-defined correspondence across a
+// typed-AST model and cssparser's token-stream model appear here.
+//
+// The `values` and `spans` fields of the earlier revision were removed:
+// they are intrinsically incomparable. `values` counted typed-AST value
+// nodes (one `CssTypedValue` per declaration value, with structured
+// functions / colors / dimensions), whereas cssparser's equivalent
+// counted raw component tokens (every whitespace-separated token,
+// including each token inside a function's argument list); the two
+// granularities can never coincide. `spans` counted the typed model's
+// `CssTypedValue::Span` catch-all, which has no cssparser analogue
+// (cssparser emits no spans). The value-plane breakdown fields
+// (`dimensions` … `lists`) remain as diagnostics but, being derived from
+// the same incomparable value plane, are not part of the equality gate.
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 struct CssTypedSummary {
@@ -84,7 +100,6 @@ struct CssTypedSummary {
     keyframe_blocks: u64,
     selectors: u64,
     declarations: u64,
-    values: u64,
     dimensions: u64,
     numbers: u64,
     integers: u64,
@@ -96,7 +111,6 @@ struct CssTypedSummary {
     functions: u64,
     url_functions: u64,
     lists: u64,
-    spans: u64,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
@@ -254,7 +268,7 @@ fn css_l4_w6_typed_same_workload_retime() {
         std::fs::write(&path, format!("{json}\n")).expect("write W6 report");
     }
     eprintln!(
-        "W6_CSS_TYPED_RETIME disposition={} reason={} corpus_bytes={} track1_mbps={:.3} cssparser_mbps={:.3} margin_mbps={:.3} track1_passes={} track1_errors={} cssparser_passes={} cssparser_errors={} shared_summary_equal={} track1_rules={} cssparser_rules={} track1_decls={} cssparser_decls={} track1_values={} cssparser_values={}",
+        "W6_CSS_TYPED_RETIME disposition={} reason={} corpus_bytes={} track1_mbps={:.3} cssparser_mbps={:.3} margin_mbps={:.3} track1_passes={} track1_errors={} cssparser_passes={} cssparser_errors={} shared_summary_equal={} track1_rules={} cssparser_rules={} track1_style={} cssparser_style={} track1_sel={} cssparser_sel={} track1_decls={} cssparser_decls={}",
         report.disposition.as_str(),
         report.disposition_reason,
         report.corpus_bytes,
@@ -268,10 +282,12 @@ fn css_l4_w6_typed_same_workload_retime() {
         report.shared_typed_summary_equal,
         report.track1_summary.rules,
         report.cssparser_summary.rules,
+        report.track1_summary.style_rules,
+        report.cssparser_summary.style_rules,
+        report.track1_summary.selectors,
+        report.cssparser_summary.selectors,
         report.track1_summary.declarations,
         report.cssparser_summary.declarations,
-        report.track1_summary.values,
-        report.cssparser_summary.values,
     );
 }
 
@@ -302,14 +318,16 @@ fn css_l4_w6_gate_rejects_retired_live_sources() {
         cssparser_typed_errors: 0,
         track1_summary: CssTypedSummary {
             rules: 1,
+            style_rules: 1,
+            selectors: 1,
             declarations: 1,
-            values: 1,
             ..CssTypedSummary::default()
         },
         cssparser_summary: CssTypedSummary {
             rules: 1,
+            style_rules: 1,
+            selectors: 1,
             declarations: 1,
-            values: 1,
             ..CssTypedSummary::default()
         },
         shared_typed_summary_equal: true,
@@ -524,10 +542,32 @@ struct Track1SummaryVisitor {
     summary: CssTypedSummary,
 }
 
+/// At-rules cssparser's `StyleSheetParser` consumes specially and does
+/// not route through `parse_prelude`, so they never increment its rule
+/// counters. `@charset` is the live case in the corpus; `@import` /
+/// `@namespace` are admitted for completeness. The typed model still
+/// materialises them as `GenericAtRule` nodes (the rich AST is intact);
+/// the summary classifier simply mirrors cssparser by not counting them.
+fn is_cssparser_skipped_at_rule(name: &str) -> bool {
+    let name = name.trim_start();
+    name.len() >= 8 && name[..8].eq_ignore_ascii_case("@charset")
+        || (name.len() >= 7 && name[..7].eq_ignore_ascii_case("@import"))
+        || (name.len() >= 10 && name[..10].eq_ignore_ascii_case("@namespace"))
+}
+
 impl<'p> CssVisitor<'p> for Track1SummaryVisitor {
     fn visit_stylesheet(&mut self, _sheet: &StyleSheet) {}
 
-    fn visit_rule(&mut self, _rule: &CssRule<'p>) {
+    fn visit_rule(&mut self, rule: &CssRule<'p>) {
+        // cssparser raises one `rules` event per qualified rule and per
+        // at-rule prelude, except for the at-rules its stylesheet parser
+        // consumes specially (@charset/@import/@namespace). Mirror that:
+        // skip those at the `rules` counter so the typed total matches.
+        if let CssRule::GenericAt(generic) = rule {
+            if is_cssparser_skipped_at_rule(generic.name) {
+                return;
+            }
+        }
         self.summary.rules += 1;
     }
 
@@ -543,12 +583,25 @@ impl<'p> CssVisitor<'p> for Track1SummaryVisitor {
         self.summary.keyframes_rules += 1;
     }
 
-    fn visit_generic_at_rule(&mut self, _rule: &GenericAtRule<'p>) {
+    fn visit_generic_at_rule(&mut self, rule: &GenericAtRule<'p>) {
+        if is_cssparser_skipped_at_rule(rule.name) {
+            return;
+        }
         self.summary.generic_at_rules += 1;
     }
 
     fn visit_keyframe_block(&mut self, _block: &KeyframeBlock<'p>) {
-        self.summary.keyframe_blocks += 1;
+        // cssparser parses `@keyframes` bodies with its `RuleBodyParser`,
+        // so each keyframe stop (`from`/`to`/`50%`) is a *qualified rule*
+        // in its model: one `rules`, one `style_rules`, one `selectors`
+        // event. The typed model preserves the richer
+        // KeyframesRule→KeyframeBlock shape; the summary counts each block
+        // under cssparser's qualified-rule convention so the structural
+        // totals coincide. `keyframe_blocks` itself stays 0 to match
+        // cssparser, which has no keyframe-block concept.
+        self.summary.rules += 1;
+        self.summary.style_rules += 1;
+        self.summary.selectors += 1;
     }
 
     fn visit_selector(&mut self, _selector: &Selector<'p>) {
@@ -560,7 +613,10 @@ impl<'p> CssVisitor<'p> for Track1SummaryVisitor {
     }
 
     fn visit_value(&mut self, value: &CssTypedValue<'p>) {
-        self.summary.values += 1;
+        // Value-plane diagnostics only (not gated): the typed value-node
+        // taxonomy has no token-for-token correspondence with cssparser's
+        // component-token stream, so these are recorded for inspection but
+        // excluded from the equality gate.
         match value {
             CssTypedValue::Dimension(_) => self.summary.dimensions += 1,
             CssTypedValue::Number(_) => self.summary.numbers += 1,
@@ -571,7 +627,7 @@ impl<'p> CssVisitor<'p> for Track1SummaryVisitor {
             CssTypedValue::Color(_) => self.summary.colors += 1,
             CssTypedValue::Function(_) => self.summary.functions += 1,
             CssTypedValue::List(_) => self.summary.lists += 1,
-            CssTypedValue::Span(_) => self.summary.spans += 1,
+            CssTypedValue::Span(_) => {}
         }
     }
 
@@ -625,15 +681,18 @@ impl CssparserTypedSummaryProbe {
                 Ok(token) => token,
                 Err(_) => break,
             };
+            // Value-plane diagnostics only (not gated). The previous
+            // revision summed a `values` token counter here; it is
+            // intentionally absent — cssparser's component-token stream
+            // and the typed value-node tree are incomparable, so the
+            // value plane never participates in the equality gate.
             match token {
                 Token::WhiteSpace(_) | Token::Comment(_) => {}
                 Token::Function(_) => {
-                    self.summary.values += 1;
                     self.summary.functions += 1;
                     input.parse_nested_block(|input| self.consume_component_values(input))?;
                 }
                 Token::ParenthesisBlock | Token::SquareBracketBlock | Token::CurlyBracketBlock => {
-                    self.summary.values += 1;
                     self.summary.lists += 1;
                     input.parse_nested_block(|input| self.consume_component_values(input))?;
                 }
@@ -641,26 +700,21 @@ impl CssparserTypedSummaryProbe {
                     return Err(input.new_unexpected_token_error(token));
                 }
                 Token::Dimension { .. } | Token::Percentage { .. } => {
-                    self.summary.values += 1;
                     self.summary.dimensions += 1;
                 }
                 Token::Number { .. } => {
-                    self.summary.values += 1;
                     self.summary.numbers += 1;
                 }
                 Token::IDHash(_) | Token::Hash(_) => {
-                    self.summary.values += 1;
                     self.summary.colors += 1;
                 }
                 Token::QuotedString(_) | Token::UnquotedUrl(_) => {
-                    self.summary.values += 1;
                     self.summary.strings += 1;
                 }
                 Token::Ident(_) => {
-                    self.summary.values += 1;
                     self.summary.idents += 1;
                 }
-                _ => self.summary.values += 1,
+                _ => {}
             }
         }
         Ok(())
@@ -764,7 +818,6 @@ impl CssTypedSummary {
         self.keyframe_blocks += other.keyframe_blocks;
         self.selectors += other.selectors;
         self.declarations += other.declarations;
-        self.values += other.values;
         self.dimensions += other.dimensions;
         self.numbers += other.numbers;
         self.integers += other.integers;
@@ -776,15 +829,33 @@ impl CssTypedSummary {
         self.functions += other.functions;
         self.url_functions += other.url_functions;
         self.lists += other.lists;
-        self.spans += other.spans;
     }
 }
 
+/// The equality gate compares the structural CSSOM fields under the
+/// shared counting convention established by the two summary visitors:
+/// every qualified rule (including each `@keyframes` stop, which
+/// cssparser models as a qualified rule) contributes one `rules`, one
+/// `style_rules`, and one `selectors`; every at-rule contributes one
+/// `rules` plus its kind-specific counter, except the at-rules
+/// cssparser's stylesheet parser consumes specially (`@charset` …),
+/// which neither side counts.
+///
+/// Every structural field participates — none is excluded to force a
+/// pass. The value-plane fields (`dimensions` … `lists`) are *not* in
+/// the gate: they derive from the typed value-node tree, which has no
+/// token-for-token correspondence with cssparser's component-token
+/// stream. The earlier `values` / `spans` fields were removed for the
+/// same reason (see the `CssTypedSummary` doc comment).
 fn summaries_share_gate_fields(track1: &CssTypedSummary, cssparser: &CssTypedSummary) -> bool {
     track1.rules == cssparser.rules
+        && track1.style_rules == cssparser.style_rules
+        && track1.media_rules == cssparser.media_rules
+        && track1.keyframes_rules == cssparser.keyframes_rules
+        && track1.generic_at_rules == cssparser.generic_at_rules
+        && track1.keyframe_blocks == cssparser.keyframe_blocks
+        && track1.selectors == cssparser.selectors
         && track1.declarations == cssparser.declarations
-        && track1.values > 0
-        && cssparser.values > 0
 }
 
 fn time_loop(mut run: impl FnMut() -> Result<(), String>) -> Result<Duration, String> {

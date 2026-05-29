@@ -121,9 +121,14 @@ fn css_color_space_round_trips() {
 #[test]
 fn struct_builder_assembles_simple_stylesheet() {
     let mut builder = CssStructBuilder::<'static>::new();
-    let sheet_layout = layout_for(148, "ruleList", LayoutKind::Struct);
-    let style_layout = layout_for(143, "qualifiedRule", LayoutKind::Struct);
-    let decl_layout = layout_for(138, "declaration", LayoutKind::Struct);
+    let sheet_layout = layout_for(149, "ruleList", LayoutKind::Struct);
+    let style_layout = layout_for(144, "qualifiedRule", LayoutKind::Struct);
+    // `declaration` (the Alt dispatch wrapper) no longer opens a
+    // Declaration frame; the concrete declaration frame is opened by the
+    // matched leaf rule (here `genericDecl`). Routing the wrapper *and*
+    // the leaf both to a Declaration frame double-counted every
+    // declaration, so only the leaf rule opens one.
+    let decl_layout = layout_for(64, "genericDecl", LayoutKind::Struct);
 
     let sheet_handle = builder.begin_compound(&sheet_layout);
     let style_handle = builder.begin_compound(&style_layout);
@@ -151,9 +156,9 @@ fn struct_builder_assembles_simple_stylesheet() {
 #[test]
 fn struct_builder_checkpoint_discards_nested_rule_attempt() {
     let mut builder = CssStructBuilder::<'static>::new();
-    let sheet_layout = layout_for(148, "ruleList", LayoutKind::Struct);
-    let style_layout = layout_for(143, "qualifiedRule", LayoutKind::Struct);
-    let decl_layout = layout_for(138, "declaration", LayoutKind::Struct);
+    let sheet_layout = layout_for(149, "ruleList", LayoutKind::Struct);
+    let style_layout = layout_for(144, "qualifiedRule", LayoutKind::Struct);
+    let decl_layout = layout_for(64, "genericDecl", LayoutKind::Struct);
 
     let sheet = builder.begin_compound(&sheet_layout);
     let checkpoint = builder.checkpoint();
@@ -174,7 +179,7 @@ fn struct_builder_checkpoint_discards_nested_rule_attempt() {
 #[test]
 fn struct_builder_assembles_typed_dimension() {
     let mut builder = CssStructBuilder::<'static>::new();
-    let length_layout = layout_for(79, "length", LayoutKind::Struct);
+    let length_layout = layout_for(84, "length", LayoutKind::Struct);
 
     let h = builder.begin_compound(&length_layout);
     builder.push_leaf_with_f64(100.0);
@@ -192,7 +197,7 @@ fn struct_builder_assembles_typed_dimension() {
 #[test]
 fn struct_builder_threads_color_function() {
     let mut builder = CssStructBuilder::<'static>::new();
-    let layout = layout_for(86, "colorFn", LayoutKind::Struct);
+    let layout = layout_for(87, "colorFn", LayoutKind::Struct);
 
     let h = builder.begin_compound(&layout);
     // Rgb discriminant is 0 per `color.bbnf::colorType`.
@@ -237,9 +242,9 @@ fn document_get_path_query_resolves_string() {
     // Build a stylesheet with one declaration `color: red` and verify
     // the CssPathQuery walker descends through Index(0).Index(0).
     let mut builder = CssStructBuilder::<'static>::new();
-    let sheet = layout_for(148, "ruleList", LayoutKind::Struct);
-    let style = layout_for(143, "qualifiedRule", LayoutKind::Struct);
-    let decl = layout_for(138, "declaration", LayoutKind::Struct);
+    let sheet = layout_for(149, "ruleList", LayoutKind::Struct);
+    let style = layout_for(144, "qualifiedRule", LayoutKind::Struct);
+    let decl = layout_for(64, "genericDecl", LayoutKind::Struct);
 
     let h_sheet = builder.begin_compound(&sheet);
     let h_style = builder.begin_compound(&style);

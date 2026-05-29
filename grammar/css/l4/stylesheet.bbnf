@@ -26,8 +26,8 @@ mediaRule     = "@media" ?w , mediaQueryList ?w , ruleBlock ;
 // percentage value when AU.2.5 aggregate codegen composes it.)
 keyframeStop  = /\d+(\.\d+)?%/ -> 0u8 | "from" -> 1u8 | "to" -> 2u8 ;
 keyframeSel   = keyframeStop , (/\s*,\s*/ >> keyframeStop) * ;
-keyframeBlock = (keyframeSel ?w , "{" >> ((declaration ?w) *) ?w << "}") ?w ;
-keyframesRule = /@(-[a-z]+-)?keyframes/ ?w , ident ?w , "{" >> (keyframeBlock *) ?w << "}" ;
+keyframeBlock = keyframeSel ?w , "{" >> ((declaration ?w) *) ?w << "}" ;
+keyframesRule = /@(-[a-z]+-)?keyframes/ ?w , ident ?w , "{" >> ((keyframeBlock ?w) *) ?w << "}" ;
 
 // Generic @-rule fallback
 atRuleBody    = ruleBlock | ";" ;

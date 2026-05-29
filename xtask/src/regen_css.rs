@@ -686,6 +686,9 @@ fn emit_builder(_projection: &RuntimeProjection, routes: &ResolvedBuilderRoutes)
             "KeyframesRule" => {
                 "OpenFrame::KeyframesRule { name: \"\", blocks: Vec::new() }".to_string()
             }
+            "KeyframeBlock" => {
+                "OpenFrame::KeyframeBlock { selector: \"\", declarations: Vec::new() }".to_string()
+            }
             "GenericAtRule" => {
                 "OpenFrame::GenericAtRule { name: \"\", prelude: \"\", body: \"\" }".to_string()
             }
@@ -739,7 +742,7 @@ fn emit_builder(_projection: &RuntimeProjection, routes: &ResolvedBuilderRoutes)
     }
     if !routes.selectors.is_empty() {
         route_arms.push_str(&format!(
-            "{} => OpenFrame::SelectorList {{ selectors: Vec::new() }},\n",
+            "{} => OpenFrame::SelectorList {{ selectors: Vec::new(), span: \"\" }},\n",
             match_pattern(&routes.selectors)
         ));
     }
@@ -769,7 +772,7 @@ enum OpenFrame<'p> {{
     KeyframeBlock {{ selector: &'p str, declarations: Vec<Declaration<'p>> }},
     GenericAtRule {{ name: &'p str, prelude: &'p str, body: &'p str }},
     Declaration {{ property: Option<&'p str>, values: Vec<CssTypedValue<'p>>, important: bool }},
-    SelectorList {{ selectors: Vec<Selector<'p>> }},
+    SelectorList {{ selectors: Vec<Selector<'p>>, span: &'p str }},
     Wrap {{ value: Option<CssTypedValue<'p>> }},
     Numeric {{ kind: NumericKind, magnitude: Option<f64>, unit: Option<u8> }},
     ColorFunction {{ kind_tag: Option<u8>, space_tag: Option<u8>, components: Vec<f64> }},
@@ -816,6 +819,12 @@ pub struct CssStructBuilder<'p> {{
     root: Option<StyleSheet>,
     next_handle: u64,
     pending_value: Option<CssTypedValue<'p>>,
+    input: &'p [u8],
+    // Byte-range start of the topmost compound for which a span is
+    // being captured (selector preludes). Parallel to the open-frame
+    // stack; pushed at `record_compound_bounds_start`, consumed at
+    // `record_compound_bounds_end`.
+    span_starts: Vec<u32>,
 }}
 
 #[derive(Debug, Clone)]
@@ -830,6 +839,7 @@ pub struct CssStructCheckpoint<'p> {{
     root: Option<StyleSheet>,
     next_handle: u64,
     pending_value: Option<CssTypedValue<'p>>,
+    span_starts: Vec<u32>,
 }}
 
 impl<'p> Default for CssStructBuilder<'p> {{
@@ -846,6 +856,8 @@ impl<'p> CssStructBuilder<'p> {{
             root: None,
             next_handle: 0,
             pending_value: None,
+            input: &[],
+            span_starts: Vec::with_capacity(16),
         }}
     }}
 
@@ -862,6 +874,8 @@ impl<'p> CssStructBuilder<'p> {{
             root: None,
             next_handle: 0,
             pending_value: None,
+            input: &[],
+            span_starts: Vec::with_capacity(16),
         }}
     }}
 
@@ -927,6 +941,7 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
             root: self.root,
             next_handle: self.next_handle,
             pending_value: self.pending_value,
+            span_starts: self.span_starts.clone(),
         }}
     }}
 
@@ -943,6 +958,48 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
         self.root = checkpoint.root;
         self.next_handle = checkpoint.next_handle;
         self.pending_value = checkpoint.pending_value;
+        self.span_starts = checkpoint.span_starts;
+    }}
+
+    fn bind_input(&mut self, input: &[u8]) {{
+        // The input outlives the parse; extend to the builder lifetime.
+        // Same lifetime-extension pattern as `push_leaf_with_str`.
+        self.input = unsafe {{ core::mem::transmute::<&[u8], &'p [u8]>(input) }};
+    }}
+
+    fn record_compound_bounds_start(&mut self, offset: u32) {{
+        self.span_starts.push(offset);
+    }}
+
+    fn record_compound_bounds_end(&mut self, offset: u32) {{
+        let Some(start) = self.span_starts.pop() else {{ return }};
+        // Only the selector-prelude frame captures its byte extent; the
+        // span is the qualified rule's full selector text (one unit per
+        // rule, mirroring cssparser's single per-prelude selector event).
+        let s = start as usize;
+        let e = offset as usize;
+        let captured: Option<&'p str> = if s <= e && e <= self.input.len() {{
+            core::str::from_utf8(&self.input[s..e]).ok()
+        }} else {{
+            None
+        }};
+        match (captured, self.stack.last_mut()) {{
+            (Some(text), Some(OpenFrame::SelectorList {{ span, .. }})) => {{
+                if span.is_empty() {{
+                    *span = text;
+                }}
+            }}
+            // Capture the generic at-rule's full source span as its
+            // `name` so the typed summary can recognise the at-rules
+            // cssparser's `StyleSheetParser` consumes specially and does
+            // not surface as generic at-rules (`@charset` foremost).
+            (Some(text), Some(OpenFrame::GenericAtRule {{ name, .. }})) => {{
+                if name.is_empty() || *name == ";" {{
+                    *name = text;
+                }}
+            }}
+            _ => {{}}
+        }}
     }}
 
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {{
@@ -1004,11 +1061,28 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
                 }};
                 self.deposit_declaration(Declaration {{ property, value, important }});
             }}
-            OpenFrame::SelectorList {{ selectors }} => match self.stack.last_mut() {{
-                Some(OpenFrame::StyleRule {{ selectors: dst, .. }}) => dst.extend(selectors),
-                Some(OpenFrame::SelectorList {{ selectors: dst }}) => dst.extend(selectors),
-                _ => {{}}
-            }},
+            OpenFrame::SelectorList {{ selectors, span }} => {{
+                // A `selectorList` is the qualified rule's full prelude.
+                // cssparser raises exactly one selector event per
+                // qualified rule, so the typed summary deposits exactly
+                // one `Selector` per top-level prelude carrying the
+                // prelude's source span. Nested `selectorList`s (inside
+                // `:is()` / `:not()` / `:where()`) are part of the
+                // enclosing prelude, not separate selector events, so
+                // they fold into the parent prelude without adding to
+                // the per-rule count.
+                let unit = if span.is_empty() {{
+                    selectors.into_iter().next().unwrap_or(Selector::Universal)
+                }} else {{
+                    Selector::Span(span)
+                }};
+                match self.stack.last_mut() {{
+                    Some(OpenFrame::StyleRule {{ selectors: dst, .. }}) => dst.push(unit),
+                    Some(OpenFrame::KeyframeBlock {{ .. }}) => {{}}
+                    Some(OpenFrame::SelectorList {{ .. }}) => {{}}
+                    _ => {{}}
+                }}
+            }}
             OpenFrame::Wrap {{ value }} => {{
                 if let Some(value) = value {{
                     self.deposit_value(value);
@@ -1112,7 +1186,7 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
                     Some(0) => ":dir(ltr)",
                     _ => ":dir()",
                 }};
-                if let Some(OpenFrame::SelectorList {{ selectors }}) = self.stack.last_mut() {{
+                if let Some(OpenFrame::SelectorList {{ selectors, .. }}) = self.stack.last_mut() {{
                     selectors.push(Selector::PseudoClass(text));
                 }} else if let Some(OpenFrame::StyleRule {{ selectors, .. }}) = self.stack.last_mut() {{
                     selectors.push(Selector::PseudoClass(text));
@@ -1179,7 +1253,15 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
             Some(OpenFrame::MediaRule {{ query, .. }}) if query.is_empty() => {{
                 *query = lifetime_extended;
             }}
-            Some(OpenFrame::SelectorList {{ selectors }}) => {{
+            // Generic at-rule name (`@charset`, `@font-face`, `@supports`,
+            // …). The leading regex leaf carries the `@name`; capture it so
+            // the typed summary can classify the at-rule the way cssparser
+            // does (it skips `@charset`/`@import`/`@namespace` rather than
+            // counting them as generic at-rules).
+            Some(OpenFrame::GenericAtRule {{ name, .. }}) if name.is_empty() => {{
+                *name = lifetime_extended;
+            }}
+            Some(OpenFrame::SelectorList {{ selectors, .. }}) => {{
                 selectors.push(Selector::Span(lifetime_extended));
             }}
             Some(OpenFrame::HexColor {{ hex_span }}) if hex_span.is_none() => {{

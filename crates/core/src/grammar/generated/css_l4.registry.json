@@ -2598,7 +2598,7 @@
       },
       "62": {
         "rule_id": 62,
-        "rule_name": "customPropertyDecl",
+        "rule_name": "mediaFeature",
         "kind": "Struct",
         "rule_type": "Span",
         "fields": [
@@ -2630,20 +2630,11 @@
             }
           },
           {
-            "name": "importantSuffix",
+            "name": "field_3",
             "type_desc": "Span",
             "source": {
               "SeqPosition": {
                 "position": 3
-              }
-            }
-          },
-          {
-            "name": "field_4",
-            "type_desc": "Span",
-            "source": {
-              "SeqPosition": {
-                "position": 4
               }
             }
           }
@@ -2651,7 +2642,7 @@
       },
       "63": {
         "rule_id": 63,
-        "rule_name": "genericDecl",
+        "rule_name": "customPropertyDecl",
         "kind": "Struct",
         "rule_type": "Span",
         "fields": [
@@ -2704,6 +2695,59 @@
       },
       "64": {
         "rule_id": 64,
+        "rule_name": "genericDecl",
+        "kind": "Struct",
+        "rule_type": "Span",
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          },
+          {
+            "name": "field_2",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 2
+              }
+            }
+          },
+          {
+            "name": "importantSuffix",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 3
+              }
+            }
+          },
+          {
+            "name": "field_4",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 4
+              }
+            }
+          }
+        ]
+      },
+      "65": {
+        "rule_id": 65,
         "rule_name": "nsPrefix",
         "kind": "Struct",
         "rule_type": "Span",
@@ -2728,8 +2772,8 @@
           }
         ]
       },
-      "65": {
-        "rule_id": 65,
+      "66": {
+        "rule_id": 66,
         "rule_name": "classSelector",
         "kind": "Struct",
         "rule_type": "Span",
@@ -2754,8 +2798,8 @@
           }
         ]
       },
-      "66": {
-        "rule_id": 66,
+      "67": {
+        "rule_id": 67,
         "rule_name": "partPseudo",
         "kind": "Struct",
         "rule_type": {
@@ -2799,8 +2843,8 @@
           }
         ]
       },
-      "67": {
-        "rule_id": 67,
+      "68": {
+        "rule_id": 68,
         "rule_name": "highlightPseudo",
         "kind": "Struct",
         "rule_type": "Span",
@@ -2825,8 +2869,8 @@
           }
         ]
       },
-      "68": {
-        "rule_id": 68,
+      "69": {
+        "rule_id": 69,
         "rule_name": "simplePseudoElement",
         "kind": "Struct",
         "rule_type": "Span",
@@ -2851,8 +2895,8 @@
           }
         ]
       },
-      "69": {
-        "rule_id": 69,
+      "70": {
+        "rule_id": 70,
         "rule_name": "langPseudo",
         "kind": "Struct",
         "rule_type": {
@@ -2896,8 +2940,8 @@
           }
         ]
       },
-      "70": {
-        "rule_id": 70,
+      "71": {
+        "rule_id": 71,
         "rule_name": "simplePseudoClass",
         "kind": "Struct",
         "rule_type": "Span",
@@ -2922,8 +2966,8 @@
           }
         ]
       },
-      "71": {
-        "rule_id": 71,
+      "72": {
+        "rule_id": 72,
         "rule_name": "dirPseudo",
         "kind": "Struct",
         "rule_type": "Span",
@@ -2948,8 +2992,8 @@
           }
         ]
       },
-      "72": {
-        "rule_id": 72,
+      "73": {
+        "rule_id": 73,
         "rule_name": "keyframeSel",
         "kind": "Struct",
         "rule_type": {
@@ -2983,8 +3027,8 @@
           }
         ]
       },
-      "73": {
-        "rule_id": 73,
+      "74": {
+        "rule_id": 74,
         "rule_name": "genericFunction",
         "kind": "Struct",
         "rule_type": {
@@ -3033,241 +3077,8 @@
           }
         ]
       },
-      "74": {
-        "rule_id": 74,
-        "rule_name": "mediaFeature",
-        "kind": "Struct",
-        "rule_type": "Span",
-        "fields": [
-          {
-            "name": "field_0",
-            "type_desc": "Span",
-            "source": {
-              "SeqPosition": {
-                "position": 0
-              }
-            }
-          },
-          {
-            "name": "field_1",
-            "type_desc": "Span",
-            "source": {
-              "SeqPosition": {
-                "position": 1
-              }
-            }
-          },
-          {
-            "name": "field_2",
-            "type_desc": "Span",
-            "source": {
-              "SeqPosition": {
-                "position": 2
-              }
-            }
-          },
-          {
-            "name": "field_3",
-            "type_desc": "Span",
-            "source": {
-              "SeqPosition": {
-                "position": 3
-              }
-            }
-          }
-        ]
-      },
       "75": {
         "rule_id": 75,
-        "rule_name": "wqName",
-        "kind": "Struct",
-        "rule_type": "Span",
-        "fields": [
-          {
-            "name": "field_0",
-            "type_desc": "Span",
-            "source": {
-              "SeqPosition": {
-                "position": 0
-              }
-            }
-          },
-          {
-            "name": "selectorIdent",
-            "type_desc": "Span",
-            "source": {
-              "SeqPosition": {
-                "position": 1
-              }
-            }
-          }
-        ]
-      },
-      "76": {
-        "rule_id": 76,
-        "rule_name": "attrSelector",
-        "kind": "Struct",
-        "rule_type": "Span",
-        "fields": [
-          {
-            "name": "field_0",
-            "type_desc": "Span",
-            "source": {
-              "SeqPosition": {
-                "position": 0
-              }
-            }
-          },
-          {
-            "name": "field_1",
-            "type_desc": "Span",
-            "source": {
-              "SeqPosition": {
-                "position": 1
-              }
-            }
-          },
-          {
-            "name": "field_2",
-            "type_desc": "Span",
-            "source": {
-              "SeqPosition": {
-                "position": 2
-              }
-            }
-          },
-          {
-            "name": "field_3",
-            "type_desc": "Span",
-            "source": {
-              "SeqPosition": {
-                "position": 3
-              }
-            }
-          }
-        ]
-      },
-      "77": {
-        "rule_id": 77,
-        "rule_name": "varFunction",
-        "kind": "Struct",
-        "rule_type": {
-          "Tuple": [
-            "Span",
-            {
-              "Option": "BoxedEnum"
-            }
-          ]
-        },
-        "fields": [
-          {
-            "name": "field_0",
-            "type_desc": "Span",
-            "source": {
-              "SeqPosition": {
-                "position": 0
-              }
-            }
-          },
-          {
-            "name": "field_1",
-            "type_desc": "Span",
-            "source": {
-              "SeqPosition": {
-                "position": 1
-              }
-            }
-          },
-          {
-            "name": "field_2",
-            "type_desc": {
-              "Option": "BoxedEnum"
-            },
-            "source": {
-              "SeqPosition": {
-                "position": 2
-              }
-            }
-          }
-        ]
-      },
-      "78": {
-        "rule_id": 78,
-        "rule_name": "envFunction",
-        "kind": "Struct",
-        "rule_type": {
-          "Tuple": [
-            "Span",
-            {
-              "Option": "BoxedEnum"
-            }
-          ]
-        },
-        "fields": [
-          {
-            "name": "field_0",
-            "type_desc": "Span",
-            "source": {
-              "SeqPosition": {
-                "position": 0
-              }
-            }
-          },
-          {
-            "name": "field_1",
-            "type_desc": "Span",
-            "source": {
-              "SeqPosition": {
-                "position": 1
-              }
-            }
-          },
-          {
-            "name": "field_2",
-            "type_desc": {
-              "Option": "BoxedEnum"
-            },
-            "source": {
-              "SeqPosition": {
-                "position": 2
-              }
-            }
-          }
-        ]
-      },
-      "79": {
-        "rule_id": 79,
-        "rule_name": "length",
-        "kind": "Struct",
-        "rule_type": {
-          "Tuple": [
-            "F64",
-            "Span"
-          ]
-        },
-        "fields": [
-          {
-            "name": "number",
-            "type_desc": "F64",
-            "source": {
-              "SeqPosition": {
-                "position": 0
-              }
-            }
-          },
-          {
-            "name": "field_1",
-            "type_desc": "Span",
-            "source": {
-              "SeqPosition": {
-                "position": 1
-              }
-            }
-          }
-        ]
-      },
-      "80": {
-        "rule_id": 80,
         "rule_name": "mediaNot",
         "kind": "Struct",
         "rule_type": {
@@ -3297,8 +3108,8 @@
           }
         ]
       },
-      "81": {
-        "rule_id": 81,
+      "76": {
+        "rule_id": 76,
         "rule_name": "mediaAnd",
         "kind": "Struct",
         "rule_type": {
@@ -3332,8 +3143,8 @@
           }
         ]
       },
-      "82": {
-        "rule_id": 82,
+      "77": {
+        "rule_id": 77,
         "rule_name": "mediaOr",
         "kind": "Struct",
         "rule_type": {
@@ -3367,8 +3178,8 @@
           }
         ]
       },
-      "83": {
-        "rule_id": 83,
+      "78": {
+        "rule_id": 78,
         "rule_name": "mediaCondition",
         "kind": "UntaggedEnum",
         "rule_type": "BoxedEnum",
@@ -3411,8 +3222,8 @@
           }
         ]
       },
-      "84": {
-        "rule_id": 84,
+      "79": {
+        "rule_id": 79,
         "rule_name": "mediaInParens",
         "kind": "TaggedEnum",
         "rule_type": {
@@ -3423,7 +3234,7 @@
         },
         "fields": [
           {
-            "name": "1989",
+            "name": "1990",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -3442,8 +3253,241 @@
           }
         ]
       },
+      "80": {
+        "rule_id": 80,
+        "rule_name": "wqName",
+        "kind": "Struct",
+        "rule_type": "Span",
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "selectorIdent",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          }
+        ]
+      },
+      "81": {
+        "rule_id": 81,
+        "rule_name": "attrSelector",
+        "kind": "Struct",
+        "rule_type": "Span",
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          },
+          {
+            "name": "field_2",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 2
+              }
+            }
+          },
+          {
+            "name": "field_3",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 3
+              }
+            }
+          }
+        ]
+      },
+      "82": {
+        "rule_id": 82,
+        "rule_name": "varFunction",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "Span",
+            {
+              "Option": "BoxedEnum"
+            }
+          ]
+        },
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          },
+          {
+            "name": "field_2",
+            "type_desc": {
+              "Option": "BoxedEnum"
+            },
+            "source": {
+              "SeqPosition": {
+                "position": 2
+              }
+            }
+          }
+        ]
+      },
+      "83": {
+        "rule_id": 83,
+        "rule_name": "envFunction",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "Span",
+            {
+              "Option": "BoxedEnum"
+            }
+          ]
+        },
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          },
+          {
+            "name": "field_2",
+            "type_desc": {
+              "Option": "BoxedEnum"
+            },
+            "source": {
+              "SeqPosition": {
+                "position": 2
+              }
+            }
+          }
+        ]
+      },
+      "84": {
+        "rule_id": 84,
+        "rule_name": "length",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "F64",
+            "Span"
+          ]
+        },
+        "fields": [
+          {
+            "name": "number",
+            "type_desc": "F64",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          }
+        ]
+      },
       "85": {
         "rule_id": 85,
+        "rule_name": "mediaTypedQuery",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "Span",
+            {
+              "Vec": "Enum"
+            }
+          ]
+        },
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          },
+          {
+            "name": "field_2",
+            "type_desc": {
+              "Vec": "Enum"
+            },
+            "source": {
+              "SeqPosition": {
+                "position": 2
+              }
+            }
+          }
+        ]
+      },
+      "86": {
+        "rule_id": 86,
         "rule_name": "typeSelector",
         "kind": "UntaggedEnum",
         "rule_type": "Span",
@@ -3468,12 +3512,12 @@
           }
         ]
       },
-      "86": {
-        "rule_id": 86,
+      "87": {
+        "rule_id": 87,
         "rule_name": "colorFn",
         "kind": "Struct",
         "rule_type": {
-          "Named": 600
+          "Named": 602
         },
         "fields": [
           {
@@ -3534,8 +3578,8 @@
           }
         ]
       },
-      "87": {
-        "rule_id": 87,
+      "88": {
+        "rule_id": 88,
         "rule_name": "valueUnit",
         "kind": "TaggedEnum",
         "rule_type": {
@@ -3609,55 +3653,11 @@
             }
           },
           {
-            "name": "1990",
+            "name": "1991",
             "type_desc": "F64",
             "source": {
               "BranchTag": {
                 "branch_index": 7
-              }
-            }
-          }
-        ]
-      },
-      "88": {
-        "rule_id": 88,
-        "rule_name": "mediaTypedQuery",
-        "kind": "Struct",
-        "rule_type": {
-          "Tuple": [
-            "Span",
-            {
-              "Vec": "Enum"
-            }
-          ]
-        },
-        "fields": [
-          {
-            "name": "field_0",
-            "type_desc": "Span",
-            "source": {
-              "SeqPosition": {
-                "position": 0
-              }
-            }
-          },
-          {
-            "name": "field_1",
-            "type_desc": "Span",
-            "source": {
-              "SeqPosition": {
-                "position": 1
-              }
-            }
-          },
-          {
-            "name": "field_2",
-            "type_desc": {
-              "Vec": "Enum"
-            },
-            "source": {
-              "SeqPosition": {
-                "position": 2
               }
             }
           }
@@ -4218,6 +4218,41 @@
       },
       "103": {
         "rule_id": 103,
+        "rule_name": "mediaQueryList",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "BoxedEnum",
+            {
+              "Vec": "Enum"
+            }
+          ]
+        },
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": {
+              "Vec": "Enum"
+            },
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          }
+        ]
+      },
+      "104": {
+        "rule_id": 104,
         "rule_name": "mathExpr",
         "kind": "Struct",
         "rule_type": {
@@ -4251,8 +4286,8 @@
           }
         ]
       },
-      "104": {
-        "rule_id": 104,
+      "105": {
+        "rule_id": 105,
         "rule_name": "calcFunction",
         "kind": "Struct",
         "rule_type": {
@@ -4282,54 +4317,9 @@
           }
         ]
       },
-      "105": {
-        "rule_id": 105,
-        "rule_name": "minFunction",
-        "kind": "Struct",
-        "rule_type": {
-          "Tuple": [
-            "Span",
-            {
-              "Tuple": [
-                "BoxedEnum",
-                {
-                  "Vec": "Enum"
-                }
-              ]
-            }
-          ]
-        },
-        "fields": [
-          {
-            "name": "field_0",
-            "type_desc": "Span",
-            "source": {
-              "SeqPosition": {
-                "position": 0
-              }
-            }
-          },
-          {
-            "name": "field_1",
-            "type_desc": {
-              "Tuple": [
-                "BoxedEnum",
-                {
-                  "Vec": "Enum"
-                }
-              ]
-            },
-            "source": {
-              "SeqPosition": {
-                "position": 1
-              }
-            }
-          }
-        ]
-      },
       "106": {
         "rule_id": 106,
-        "rule_name": "maxFunction",
+        "rule_name": "minFunction",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -4374,6 +4364,51 @@
       },
       "107": {
         "rule_id": 107,
+        "rule_name": "maxFunction",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "Span",
+            {
+              "Tuple": [
+                "BoxedEnum",
+                {
+                  "Vec": "Enum"
+                }
+              ]
+            }
+          ]
+        },
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": {
+              "Tuple": [
+                "BoxedEnum",
+                {
+                  "Vec": "Enum"
+                }
+              ]
+            },
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          }
+        ]
+      },
+      "108": {
+        "rule_id": 108,
         "rule_name": "clampFunction",
         "kind": "Struct",
         "rule_type": {
@@ -4423,8 +4458,8 @@
           }
         ]
       },
-      "108": {
-        "rule_id": 108,
+      "109": {
+        "rule_id": 109,
         "rule_name": "mathProduct",
         "kind": "Struct",
         "rule_type": {
@@ -4458,8 +4493,8 @@
           }
         ]
       },
-      "109": {
-        "rule_id": 109,
+      "110": {
+        "rule_id": 110,
         "rule_name": "mathValue",
         "kind": "TaggedEnum",
         "rule_type": {
@@ -4515,7 +4550,7 @@
             }
           },
           {
-            "name": "1992",
+            "name": "1993",
             "type_desc": "F64",
             "source": {
               "BranchTag": {
@@ -4552,41 +4587,6 @@
           }
         ]
       },
-      "110": {
-        "rule_id": 110,
-        "rule_name": "mediaQueryList",
-        "kind": "Struct",
-        "rule_type": {
-          "Tuple": [
-            "BoxedEnum",
-            {
-              "Vec": "Enum"
-            }
-          ]
-        },
-        "fields": [
-          {
-            "name": "field_0",
-            "type_desc": "BoxedEnum",
-            "source": {
-              "SeqPosition": {
-                "position": 0
-              }
-            }
-          },
-          {
-            "name": "field_1",
-            "type_desc": {
-              "Vec": "Enum"
-            },
-            "source": {
-              "SeqPosition": {
-                "position": 1
-              }
-            }
-          }
-        ]
-      },
       "111": {
         "rule_id": 111,
         "rule_name": "value",
@@ -4618,7 +4618,7 @@
             }
           },
           {
-            "name": "1993",
+            "name": "1994",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -4654,7 +4654,7 @@
             }
           },
           {
-            "name": "1994",
+            "name": "1995",
             "type_desc": "F64",
             "source": {
               "BranchTag": {
@@ -4663,7 +4663,7 @@
             }
           },
           {
-            "name": "1993",
+            "name": "1994",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -4672,7 +4672,7 @@
             }
           },
           {
-            "name": "1993",
+            "name": "1994",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -4681,7 +4681,7 @@
             }
           },
           {
-            "name": "1993",
+            "name": "1994",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -4690,7 +4690,7 @@
             }
           },
           {
-            "name": "1993",
+            "name": "1994",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -4699,7 +4699,7 @@
             }
           },
           {
-            "name": "1993",
+            "name": "1994",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -4708,7 +4708,7 @@
             }
           },
           {
-            "name": "1993",
+            "name": "1994",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -4726,7 +4726,7 @@
             }
           },
           {
-            "name": "1993",
+            "name": "1994",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -6386,7 +6386,7 @@
         },
         "fields": [
           {
-            "name": "2009",
+            "name": "2010",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -6629,7 +6629,7 @@
             }
           },
           {
-            "name": "2009",
+            "name": "2010",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -6641,20 +6641,48 @@
       },
       "139": {
         "rule_id": 139,
+        "rule_name": "keyframeBlock",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "BoxedEnum",
+            {
+              "Vec": "Enum"
+            }
+          ]
+        },
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": {
+              "Vec": "Enum"
+            },
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          }
+        ]
+      },
+      "140": {
+        "rule_id": 140,
         "rule_name": "keyframesRule",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
             "Span",
             {
-              "Vec": {
-                "Tuple": [
-                  "BoxedEnum",
-                  {
-                    "Vec": "Enum"
-                  }
-                ]
-              }
+              "Vec": "Enum"
             }
           ]
         },
@@ -6680,14 +6708,7 @@
           {
             "name": "field_2",
             "type_desc": {
-              "Vec": {
-                "Tuple": [
-                  "BoxedEnum",
-                  {
-                    "Vec": "Enum"
-                  }
-                ]
-              }
+              "Vec": "Enum"
             },
             "source": {
               "SeqPosition": {
@@ -6697,8 +6718,8 @@
           }
         ]
       },
-      "140": {
-        "rule_id": 140,
+      "141": {
+        "rule_id": 141,
         "rule_name": "atRuleBody",
         "kind": "TaggedEnum",
         "rule_type": {
@@ -6709,7 +6730,7 @@
         },
         "fields": [
           {
-            "name": "2010",
+            "name": "2011",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -6728,8 +6749,8 @@
           }
         ]
       },
-      "141": {
-        "rule_id": 141,
+      "142": {
+        "rule_id": 142,
         "rule_name": "genericAtRule",
         "kind": "Struct",
         "rule_type": {
@@ -6768,8 +6789,8 @@
           }
         ]
       },
-      "142": {
-        "rule_id": 142,
+      "143": {
+        "rule_id": 143,
         "rule_name": "ruleBlock",
         "kind": "Struct",
         "rule_type": "BoxedEnum",
@@ -6779,14 +6800,14 @@
             "type_desc": "BoxedEnum",
             "source": {
               "RuleReference": {
-                "target_rule": 147
+                "target_rule": 148
               }
             }
           }
         ]
       },
-      "143": {
-        "rule_id": 143,
+      "144": {
+        "rule_id": 144,
         "rule_name": "qualifiedRule",
         "kind": "Struct",
         "rule_type": {
@@ -6816,8 +6837,8 @@
           }
         ]
       },
-      "144": {
-        "rule_id": 144,
+      "145": {
+        "rule_id": 145,
         "rule_name": "mediaRule",
         "kind": "Struct",
         "rule_type": {
@@ -6857,8 +6878,8 @@
           }
         ]
       },
-      "145": {
-        "rule_id": 145,
+      "146": {
+        "rule_id": 146,
         "rule_name": "atRule",
         "kind": "UntaggedEnum",
         "rule_type": "BoxedEnum",
@@ -6892,8 +6913,8 @@
           }
         ]
       },
-      "146": {
-        "rule_id": 146,
+      "147": {
+        "rule_id": 147,
         "rule_name": "ruleItem",
         "kind": "UntaggedEnum",
         "rule_type": "BoxedEnum",
@@ -6918,24 +6939,9 @@
           }
         ]
       },
-      "147": {
-        "rule_id": 147,
-        "rule_name": "blockContent",
-        "kind": "Struct",
-        "rule_type": {
-          "Vec": "Enum"
-        },
-        "fields": [
-          {
-            "name": "element",
-            "type_desc": "BoxedEnum",
-            "source": "RepeatElement"
-          }
-        ]
-      },
       "148": {
         "rule_id": 148,
-        "rule_name": "ruleList",
+        "rule_name": "blockContent",
         "kind": "Struct",
         "rule_type": {
           "Vec": "Enum"
@@ -6950,6 +6956,21 @@
       },
       "149": {
         "rule_id": 149,
+        "rule_name": "ruleList",
+        "kind": "Struct",
+        "rule_type": {
+          "Vec": "Enum"
+        },
+        "fields": [
+          {
+            "name": "element",
+            "type_desc": "BoxedEnum",
+            "source": "RepeatElement"
+          }
+        ]
+      },
+      "150": {
+        "rule_id": 150,
         "rule_name": "stylesheet",
         "kind": "Struct",
         "rule_type": "BoxedEnum",
@@ -6959,14 +6980,14 @@
             "type_desc": "BoxedEnum",
             "source": {
               "RuleReference": {
-                "target_rule": 148
+                "target_rule": 149
               }
             }
           }
         ]
       },
-      "150": {
-        "rule_id": 150,
+      "151": {
+        "rule_id": 151,
         "rule_name": "__pattern_90b9f441ae92fa6c",
         "kind": "TaggedEnum",
         "rule_type": {
@@ -6986,7 +7007,7 @@
             }
           },
           {
-            "name": "2011",
+            "name": "2012",
             "type_desc": "F64",
             "source": {
               "BranchTag": {
@@ -6996,9 +7017,9 @@
           }
         ]
       },
-      "151": {
-        "rule_id": 151,
-        "rule_name": "__calcFunction_cont_151",
+      "152": {
+        "rule_id": 152,
+        "rule_name": "__calcFunction_cont_152",
         "kind": "Struct",
         "rule_type": "BoxedEnum",
         "fields": [
@@ -7007,42 +7028,7 @@
             "type_desc": "BoxedEnum",
             "source": {
               "RuleReference": {
-                "target_rule": 103
-              }
-            }
-          }
-        ]
-      },
-      "152": {
-        "rule_id": 152,
-        "rule_name": "__minFunction_cont_152",
-        "kind": "Struct",
-        "rule_type": {
-          "Tuple": [
-            "BoxedEnum",
-            {
-              "Vec": "Enum"
-            }
-          ]
-        },
-        "fields": [
-          {
-            "name": "mathExpr",
-            "type_desc": "BoxedEnum",
-            "source": {
-              "SeqPosition": {
-                "position": 0
-              }
-            }
-          },
-          {
-            "name": "field_1",
-            "type_desc": {
-              "Vec": "Enum"
-            },
-            "source": {
-              "SeqPosition": {
-                "position": 1
+                "target_rule": 104
               }
             }
           }
@@ -7050,7 +7036,7 @@
       },
       "153": {
         "rule_id": 153,
-        "rule_name": "__maxFunction_cont_153",
+        "rule_name": "__minFunction_cont_153",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -7085,7 +7071,42 @@
       },
       "154": {
         "rule_id": 154,
-        "rule_name": "__clampFunction_cont_154",
+        "rule_name": "__maxFunction_cont_154",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "BoxedEnum",
+            {
+              "Vec": "Enum"
+            }
+          ]
+        },
+        "fields": [
+          {
+            "name": "mathExpr",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": {
+              "Vec": "Enum"
+            },
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          }
+        ]
+      },
+      "155": {
+        "rule_id": 155,
+        "rule_name": "__clampFunction_cont_155",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -7124,44 +7145,9 @@
           }
         ]
       },
-      "155": {
-        "rule_id": 155,
-        "rule_name": "__varFunction_cont_155",
-        "kind": "Struct",
-        "rule_type": {
-          "Tuple": [
-            "Span",
-            {
-              "Option": "BoxedEnum"
-            }
-          ]
-        },
-        "fields": [
-          {
-            "name": "field_0",
-            "type_desc": "Span",
-            "source": {
-              "SeqPosition": {
-                "position": 0
-              }
-            }
-          },
-          {
-            "name": "field_1",
-            "type_desc": {
-              "Option": "BoxedEnum"
-            },
-            "source": {
-              "SeqPosition": {
-                "position": 1
-              }
-            }
-          }
-        ]
-      },
       "156": {
         "rule_id": 156,
-        "rule_name": "__envFunction_cont_156",
+        "rule_name": "__varFunction_cont_156",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -7196,7 +7182,7 @@
       },
       "157": {
         "rule_id": 157,
-        "rule_name": "__varFunction_cont_157",
+        "rule_name": "__envFunction_cont_157",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -7231,7 +7217,42 @@
       },
       "158": {
         "rule_id": 158,
-        "rule_name": "__calcFunction_cont_158",
+        "rule_name": "__varFunction_cont_158",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "Span",
+            {
+              "Option": "BoxedEnum"
+            }
+          ]
+        },
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": {
+              "Option": "BoxedEnum"
+            },
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          }
+        ]
+      },
+      "159": {
+        "rule_id": 159,
+        "rule_name": "__calcFunction_cont_159",
         "kind": "Struct",
         "rule_type": "BoxedEnum",
         "fields": [
@@ -7240,15 +7261,15 @@
             "type_desc": "BoxedEnum",
             "source": {
               "RuleReference": {
-                "target_rule": 103
+                "target_rule": 104
               }
             }
           }
         ]
       },
-      "159": {
-        "rule_id": 159,
-        "rule_name": "__urlFunction_cont_159",
+      "160": {
+        "rule_id": 160,
+        "rule_name": "__urlFunction_cont_160",
         "kind": "UntaggedEnum",
         "rule_type": "Span",
         "fields": [
@@ -7272,9 +7293,9 @@
           }
         ]
       },
-      "160": {
-        "rule_id": 160,
-        "rule_name": "__genericFunction_cont_160",
+      "161": {
+        "rule_id": 161,
+        "rule_name": "__genericFunction_cont_161",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -7313,63 +7334,9 @@
           }
         ]
       },
-      "161": {
-        "rule_id": 161,
-        "rule_name": "__colorDecl_cont_161",
-        "kind": "Struct",
-        "rule_type": {
-          "Tuple": [
-            "Span",
-            {
-              "Vec": "Enum"
-            },
-            "Span"
-          ]
-        },
-        "fields": [
-          {
-            "name": "field_0",
-            "type_desc": "Span",
-            "source": {
-              "SeqPosition": {
-                "position": 0
-              }
-            }
-          },
-          {
-            "name": "field_1",
-            "type_desc": {
-              "Vec": "Enum"
-            },
-            "source": {
-              "SeqPosition": {
-                "position": 1
-              }
-            }
-          },
-          {
-            "name": "importantSuffix",
-            "type_desc": "Span",
-            "source": {
-              "SeqPosition": {
-                "position": 2
-              }
-            }
-          },
-          {
-            "name": "field_3",
-            "type_desc": "Span",
-            "source": {
-              "SeqPosition": {
-                "position": 3
-              }
-            }
-          }
-        ]
-      },
       "162": {
         "rule_id": 162,
-        "rule_name": "__sizeDecl_cont_162",
+        "rule_name": "__colorDecl_cont_162",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -7423,7 +7390,7 @@
       },
       "163": {
         "rule_id": 163,
-        "rule_name": "__spacingDecl_cont_163",
+        "rule_name": "__sizeDecl_cont_163",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -7477,7 +7444,7 @@
       },
       "164": {
         "rule_id": 164,
-        "rule_name": "__fontDecl_cont_164",
+        "rule_name": "__spacingDecl_cont_164",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -7531,7 +7498,7 @@
       },
       "165": {
         "rule_id": 165,
-        "rule_name": "__bgDecl_cont_165",
+        "rule_name": "__fontDecl_cont_165",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -7585,7 +7552,7 @@
       },
       "166": {
         "rule_id": 166,
-        "rule_name": "__transformDecl_cont_166",
+        "rule_name": "__bgDecl_cont_166",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -7639,7 +7606,7 @@
       },
       "167": {
         "rule_id": 167,
-        "rule_name": "__transitionDecl_cont_167",
+        "rule_name": "__transformDecl_cont_167",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -7693,7 +7660,7 @@
       },
       "168": {
         "rule_id": 168,
-        "rule_name": "__listTableDecl_cont_168",
+        "rule_name": "__transitionDecl_cont_168",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -7747,7 +7714,7 @@
       },
       "169": {
         "rule_id": 169,
-        "rule_name": "__displayDecl_cont_169",
+        "rule_name": "__listTableDecl_cont_169",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -7801,7 +7768,7 @@
       },
       "170": {
         "rule_id": 170,
-        "rule_name": "__positionDecl_cont_170",
+        "rule_name": "__displayDecl_cont_170",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -7855,7 +7822,7 @@
       },
       "171": {
         "rule_id": 171,
-        "rule_name": "__overflowDecl_cont_171",
+        "rule_name": "__positionDecl_cont_171",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -7909,7 +7876,7 @@
       },
       "172": {
         "rule_id": 172,
-        "rule_name": "__visibilityDecl_cont_172",
+        "rule_name": "__overflowDecl_cont_172",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -7963,7 +7930,7 @@
       },
       "173": {
         "rule_id": 173,
-        "rule_name": "__flexDirDecl_cont_173",
+        "rule_name": "__visibilityDecl_cont_173",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -8017,7 +7984,7 @@
       },
       "174": {
         "rule_id": 174,
-        "rule_name": "__flexWrapDecl_cont_174",
+        "rule_name": "__flexDirDecl_cont_174",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -8071,7 +8038,7 @@
       },
       "175": {
         "rule_id": 175,
-        "rule_name": "__alignDecl_cont_175",
+        "rule_name": "__flexWrapDecl_cont_175",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -8125,7 +8092,7 @@
       },
       "176": {
         "rule_id": 176,
-        "rule_name": "__flexNumDecl_cont_176",
+        "rule_name": "__alignDecl_cont_176",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -8179,7 +8146,7 @@
       },
       "177": {
         "rule_id": 177,
-        "rule_name": "__fontSizeDecl_cont_177",
+        "rule_name": "__flexNumDecl_cont_177",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -8233,7 +8200,7 @@
       },
       "178": {
         "rule_id": 178,
-        "rule_name": "__fontWeightDecl_cont_178",
+        "rule_name": "__fontSizeDecl_cont_178",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -8287,7 +8254,7 @@
       },
       "179": {
         "rule_id": 179,
-        "rule_name": "__lineHeightDecl_cont_179",
+        "rule_name": "__fontWeightDecl_cont_179",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -8341,7 +8308,7 @@
       },
       "180": {
         "rule_id": 180,
-        "rule_name": "__borderWidthDecl_cont_180",
+        "rule_name": "__lineHeightDecl_cont_180",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -8395,7 +8362,7 @@
       },
       "181": {
         "rule_id": 181,
-        "rule_name": "__borderStyleDecl_cont_181",
+        "rule_name": "__borderWidthDecl_cont_181",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -8449,7 +8416,7 @@
       },
       "182": {
         "rule_id": 182,
-        "rule_name": "__borderRadiusDecl_cont_182",
+        "rule_name": "__borderStyleDecl_cont_182",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -8503,7 +8470,7 @@
       },
       "183": {
         "rule_id": 183,
-        "rule_name": "__opacityDecl_cont_183",
+        "rule_name": "__borderRadiusDecl_cont_183",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -8557,7 +8524,7 @@
       },
       "184": {
         "rule_id": 184,
-        "rule_name": "__textAlignDecl_cont_184",
+        "rule_name": "__opacityDecl_cont_184",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -8611,7 +8578,7 @@
       },
       "185": {
         "rule_id": 185,
-        "rule_name": "__boxSizingDecl_cont_185",
+        "rule_name": "__textAlignDecl_cont_185",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -8665,7 +8632,61 @@
       },
       "186": {
         "rule_id": 186,
-        "rule_name": "__cursorDecl_cont_186",
+        "rule_name": "__boxSizingDecl_cont_186",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "Span",
+            {
+              "Vec": "Enum"
+            },
+            "Span"
+          ]
+        },
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": {
+              "Vec": "Enum"
+            },
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          },
+          {
+            "name": "importantSuffix",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 2
+              }
+            }
+          },
+          {
+            "name": "field_3",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 3
+              }
+            }
+          }
+        ]
+      },
+      "187": {
+        "rule_id": 187,
+        "rule_name": "__cursorDecl_cont_187",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [

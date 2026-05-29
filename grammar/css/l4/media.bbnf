@@ -16,7 +16,12 @@ mediaType = "all" -> 0u8 | "print" -> 1u8
 mediaQualifier = "not" -> 0u8 | "only" -> 1u8 ;
 
 // --- Media feature: (name: value) or (name) ---
-mediaFeatureName = ident ;
+// Vendor-prefixed feature names (`-ms-high-contrast`, `-webkit-…`) lead
+// with a hyphen, which the bare `ident` token rejects; admit an
+// optional vendor prefix so comma-separated queries that mix typed
+// prefixes with `(-ms-…)` features still parse as a media rule rather
+// than falling through to the generic at-rule.
+mediaFeatureName = /-?-?[a-zA-Z_\x80-\xff][\w\x80-\xff-]*/ ;
 mediaFeatureValue = /[^)]+/ ;
 mediaFeature = "(" ?w , mediaFeatureName ?w , (":" ?w , mediaFeatureValue ?w) ? , ")" ;
 

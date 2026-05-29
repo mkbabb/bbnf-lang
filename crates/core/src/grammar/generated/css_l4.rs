@@ -928,7 +928,7 @@ mod __cssl4parser_emit_impl {
     /// Mined literal-led Alt branches, sorted lexicographically.
     /// Binary search dispatches in O(log N) compares; LLVM lowers
     /// the fixed-size table to a balanced compare tree.
-    static __PHF_CssL4Parser_109_KW: [&[u8]; 7usize] = [
+    static __PHF_CssL4Parser_110_KW: [&[u8]; 7usize] = [
         b"(",
         b"calc",
         b"clamp",
@@ -940,7 +940,7 @@ mod __cssl4parser_emit_impl {
     /// Per-entry branch discriminant — parallel to [`#kw_ident`].
     /// Entry `i`'s keyword bytes at `#kw_ident[i]` route to the
     /// branch with discriminant `#idx_ident[i]`.
-    static __PHF_CssL4Parser_109_IDX: [u8; 7usize] = [6, 0, 3, 8, 2, 1, 7];
+    static __PHF_CssL4Parser_110_IDX: [u8; 7usize] = [6, 0, 3, 8, 2, 1, 7];
     /// AW-III.W6.2 — dispatch the mined keyword table for rule
     /// `#rule_id`.
     ///
@@ -950,10 +950,10 @@ mod __cssl4parser_emit_impl {
     /// scan to a single binary search.
     #[allow(dead_code)]
     #[inline]
-    fn __phf_CssL4Parser_dispatch_109(bytes: &[u8]) -> ::core::option::Option<u8> {
-        match __PHF_CssL4Parser_109_KW.binary_search(&bytes) {
+    fn __phf_CssL4Parser_dispatch_110(bytes: &[u8]) -> ::core::option::Option<u8> {
+        match __PHF_CssL4Parser_110_KW.binary_search(&bytes) {
             ::core::result::Result::Ok(idx) => {
-                ::core::option::Option::Some(__PHF_CssL4Parser_109_IDX[idx])
+                ::core::option::Option::Some(__PHF_CssL4Parser_110_IDX[idx])
             }
             ::core::result::Result::Err(_) => ::core::option::Option::None,
         }
@@ -1211,8 +1211,8 @@ mod __cssl4parser_emit_impl {
             pub field_index: u32,
             pub decision: Decision,
         }
-        pub const PATH_PLAN_LEN: usize = 1049;
-        pub static PATH_PLAN: &[PathPlanEntry; 1049] = &[
+        pub const PATH_PLAN_LEN: usize = 1054;
+        pub static PATH_PLAN: &[PathPlanEntry; 1054] = &[
             PathPlanEntry {
                 rule_id: 0,
                 segment_kind: SegmentKind::Wildcard,
@@ -1929,18 +1929,6 @@ mod __cssl4parser_emit_impl {
             },
             PathPlanEntry {
                 rule_id: 62,
-                segment_kind: SegmentKind::Field,
-                field_index: 4,
-                decision: Decision::ParseUntil(4),
-            },
-            PathPlanEntry {
-                rule_id: 62,
-                segment_kind: SegmentKind::Index,
-                field_index: 4,
-                decision: Decision::ParseUntil(4),
-            },
-            PathPlanEntry {
-                rule_id: 62,
                 segment_kind: SegmentKind::Wildcard,
                 field_index: 4294967295,
                 decision: Decision::ParseFully,
@@ -2037,6 +2025,42 @@ mod __cssl4parser_emit_impl {
             },
             PathPlanEntry {
                 rule_id: 64,
+                segment_kind: SegmentKind::Field,
+                field_index: 2,
+                decision: Decision::ParseUntil(2),
+            },
+            PathPlanEntry {
+                rule_id: 64,
+                segment_kind: SegmentKind::Index,
+                field_index: 2,
+                decision: Decision::ParseUntil(2),
+            },
+            PathPlanEntry {
+                rule_id: 64,
+                segment_kind: SegmentKind::Field,
+                field_index: 3,
+                decision: Decision::ParseUntil(3),
+            },
+            PathPlanEntry {
+                rule_id: 64,
+                segment_kind: SegmentKind::Index,
+                field_index: 3,
+                decision: Decision::ParseUntil(3),
+            },
+            PathPlanEntry {
+                rule_id: 64,
+                segment_kind: SegmentKind::Field,
+                field_index: 4,
+                decision: Decision::ParseUntil(4),
+            },
+            PathPlanEntry {
+                rule_id: 64,
+                segment_kind: SegmentKind::Index,
+                field_index: 4,
+                decision: Decision::ParseUntil(4),
+            },
+            PathPlanEntry {
+                rule_id: 64,
                 segment_kind: SegmentKind::Wildcard,
                 field_index: 4294967295,
                 decision: Decision::ParseFully,
@@ -2307,30 +2331,6 @@ mod __cssl4parser_emit_impl {
             },
             PathPlanEntry {
                 rule_id: 73,
-                segment_kind: SegmentKind::Field,
-                field_index: 2,
-                decision: Decision::ParseUntil(2),
-            },
-            PathPlanEntry {
-                rule_id: 73,
-                segment_kind: SegmentKind::Index,
-                field_index: 2,
-                decision: Decision::ParseUntil(2),
-            },
-            PathPlanEntry {
-                rule_id: 73,
-                segment_kind: SegmentKind::Field,
-                field_index: 3,
-                decision: Decision::ParseUntil(3),
-            },
-            PathPlanEntry {
-                rule_id: 73,
-                segment_kind: SegmentKind::Index,
-                field_index: 3,
-                decision: Decision::ParseUntil(3),
-            },
-            PathPlanEntry {
-                rule_id: 73,
                 segment_kind: SegmentKind::Wildcard,
                 field_index: 4294967295,
                 decision: Decision::ParseFully,
@@ -2445,30 +2445,6 @@ mod __cssl4parser_emit_impl {
             },
             PathPlanEntry {
                 rule_id: 76,
-                segment_kind: SegmentKind::Field,
-                field_index: 2,
-                decision: Decision::ParseUntil(2),
-            },
-            PathPlanEntry {
-                rule_id: 76,
-                segment_kind: SegmentKind::Index,
-                field_index: 2,
-                decision: Decision::ParseUntil(2),
-            },
-            PathPlanEntry {
-                rule_id: 76,
-                segment_kind: SegmentKind::Field,
-                field_index: 3,
-                decision: Decision::ParseUntil(3),
-            },
-            PathPlanEntry {
-                rule_id: 76,
-                segment_kind: SegmentKind::Index,
-                field_index: 3,
-                decision: Decision::ParseUntil(3),
-            },
-            PathPlanEntry {
-                rule_id: 76,
                 segment_kind: SegmentKind::Wildcard,
                 field_index: 4294967295,
                 decision: Decision::ParseFully,
@@ -2499,57 +2475,9 @@ mod __cssl4parser_emit_impl {
             },
             PathPlanEntry {
                 rule_id: 77,
-                segment_kind: SegmentKind::Field,
-                field_index: 2,
-                decision: Decision::ParseUntil(2),
-            },
-            PathPlanEntry {
-                rule_id: 77,
-                segment_kind: SegmentKind::Index,
-                field_index: 2,
-                decision: Decision::ParseUntil(2),
-            },
-            PathPlanEntry {
-                rule_id: 77,
                 segment_kind: SegmentKind::Wildcard,
                 field_index: 4294967295,
                 decision: Decision::ParseFully,
-            },
-            PathPlanEntry {
-                rule_id: 78,
-                segment_kind: SegmentKind::Field,
-                field_index: 0,
-                decision: Decision::ParseUntil(0),
-            },
-            PathPlanEntry {
-                rule_id: 78,
-                segment_kind: SegmentKind::Index,
-                field_index: 0,
-                decision: Decision::ParseUntil(0),
-            },
-            PathPlanEntry {
-                rule_id: 78,
-                segment_kind: SegmentKind::Field,
-                field_index: 1,
-                decision: Decision::ParseUntil(1),
-            },
-            PathPlanEntry {
-                rule_id: 78,
-                segment_kind: SegmentKind::Index,
-                field_index: 1,
-                decision: Decision::ParseUntil(1),
-            },
-            PathPlanEntry {
-                rule_id: 78,
-                segment_kind: SegmentKind::Field,
-                field_index: 2,
-                decision: Decision::ParseUntil(2),
-            },
-            PathPlanEntry {
-                rule_id: 78,
-                segment_kind: SegmentKind::Index,
-                field_index: 2,
-                decision: Decision::ParseUntil(2),
             },
             PathPlanEntry {
                 rule_id: 78,
@@ -2559,25 +2487,13 @@ mod __cssl4parser_emit_impl {
             },
             PathPlanEntry {
                 rule_id: 79,
-                segment_kind: SegmentKind::Field,
+                segment_kind: SegmentKind::VariantName,
                 field_index: 0,
                 decision: Decision::ParseUntil(0),
             },
             PathPlanEntry {
                 rule_id: 79,
-                segment_kind: SegmentKind::Index,
-                field_index: 0,
-                decision: Decision::ParseUntil(0),
-            },
-            PathPlanEntry {
-                rule_id: 79,
-                segment_kind: SegmentKind::Field,
-                field_index: 1,
-                decision: Decision::ParseUntil(1),
-            },
-            PathPlanEntry {
-                rule_id: 79,
-                segment_kind: SegmentKind::Index,
+                segment_kind: SegmentKind::VariantName,
                 field_index: 1,
                 decision: Decision::ParseUntil(1),
             },
@@ -2640,6 +2556,30 @@ mod __cssl4parser_emit_impl {
                 segment_kind: SegmentKind::Index,
                 field_index: 1,
                 decision: Decision::ParseUntil(1),
+            },
+            PathPlanEntry {
+                rule_id: 81,
+                segment_kind: SegmentKind::Field,
+                field_index: 2,
+                decision: Decision::ParseUntil(2),
+            },
+            PathPlanEntry {
+                rule_id: 81,
+                segment_kind: SegmentKind::Index,
+                field_index: 2,
+                decision: Decision::ParseUntil(2),
+            },
+            PathPlanEntry {
+                rule_id: 81,
+                segment_kind: SegmentKind::Field,
+                field_index: 3,
+                decision: Decision::ParseUntil(3),
+            },
+            PathPlanEntry {
+                rule_id: 81,
+                segment_kind: SegmentKind::Index,
+                field_index: 3,
+                decision: Decision::ParseUntil(3),
             },
             PathPlanEntry {
                 rule_id: 81,
@@ -2670,6 +2610,18 @@ mod __cssl4parser_emit_impl {
                 segment_kind: SegmentKind::Index,
                 field_index: 1,
                 decision: Decision::ParseUntil(1),
+            },
+            PathPlanEntry {
+                rule_id: 82,
+                segment_kind: SegmentKind::Field,
+                field_index: 2,
+                decision: Decision::ParseUntil(2),
+            },
+            PathPlanEntry {
+                rule_id: 82,
+                segment_kind: SegmentKind::Index,
+                field_index: 2,
+                decision: Decision::ParseUntil(2),
             },
             PathPlanEntry {
                 rule_id: 82,
@@ -2679,19 +2631,67 @@ mod __cssl4parser_emit_impl {
             },
             PathPlanEntry {
                 rule_id: 83,
+                segment_kind: SegmentKind::Field,
+                field_index: 0,
+                decision: Decision::ParseUntil(0),
+            },
+            PathPlanEntry {
+                rule_id: 83,
+                segment_kind: SegmentKind::Index,
+                field_index: 0,
+                decision: Decision::ParseUntil(0),
+            },
+            PathPlanEntry {
+                rule_id: 83,
+                segment_kind: SegmentKind::Field,
+                field_index: 1,
+                decision: Decision::ParseUntil(1),
+            },
+            PathPlanEntry {
+                rule_id: 83,
+                segment_kind: SegmentKind::Index,
+                field_index: 1,
+                decision: Decision::ParseUntil(1),
+            },
+            PathPlanEntry {
+                rule_id: 83,
+                segment_kind: SegmentKind::Field,
+                field_index: 2,
+                decision: Decision::ParseUntil(2),
+            },
+            PathPlanEntry {
+                rule_id: 83,
+                segment_kind: SegmentKind::Index,
+                field_index: 2,
+                decision: Decision::ParseUntil(2),
+            },
+            PathPlanEntry {
+                rule_id: 83,
                 segment_kind: SegmentKind::Wildcard,
                 field_index: 4294967295,
                 decision: Decision::ParseFully,
             },
             PathPlanEntry {
                 rule_id: 84,
-                segment_kind: SegmentKind::VariantName,
+                segment_kind: SegmentKind::Field,
                 field_index: 0,
                 decision: Decision::ParseUntil(0),
             },
             PathPlanEntry {
                 rule_id: 84,
-                segment_kind: SegmentKind::VariantName,
+                segment_kind: SegmentKind::Index,
+                field_index: 0,
+                decision: Decision::ParseUntil(0),
+            },
+            PathPlanEntry {
+                rule_id: 84,
+                segment_kind: SegmentKind::Field,
+                field_index: 1,
+                decision: Decision::ParseUntil(1),
+            },
+            PathPlanEntry {
+                rule_id: 84,
+                segment_kind: SegmentKind::Index,
                 field_index: 1,
                 decision: Decision::ParseUntil(1),
             },
@@ -2703,81 +2703,45 @@ mod __cssl4parser_emit_impl {
             },
             PathPlanEntry {
                 rule_id: 85,
+                segment_kind: SegmentKind::Field,
+                field_index: 0,
+                decision: Decision::ParseUntil(0),
+            },
+            PathPlanEntry {
+                rule_id: 85,
+                segment_kind: SegmentKind::Index,
+                field_index: 0,
+                decision: Decision::ParseUntil(0),
+            },
+            PathPlanEntry {
+                rule_id: 85,
+                segment_kind: SegmentKind::Field,
+                field_index: 1,
+                decision: Decision::ParseUntil(1),
+            },
+            PathPlanEntry {
+                rule_id: 85,
+                segment_kind: SegmentKind::Index,
+                field_index: 1,
+                decision: Decision::ParseUntil(1),
+            },
+            PathPlanEntry {
+                rule_id: 85,
+                segment_kind: SegmentKind::Field,
+                field_index: 2,
+                decision: Decision::ParseUntil(2),
+            },
+            PathPlanEntry {
+                rule_id: 85,
+                segment_kind: SegmentKind::Index,
+                field_index: 2,
+                decision: Decision::ParseUntil(2),
+            },
+            PathPlanEntry {
+                rule_id: 85,
                 segment_kind: SegmentKind::Wildcard,
                 field_index: 4294967295,
                 decision: Decision::ParseFully,
-            },
-            PathPlanEntry {
-                rule_id: 86,
-                segment_kind: SegmentKind::Field,
-                field_index: 0,
-                decision: Decision::ParseUntil(0),
-            },
-            PathPlanEntry {
-                rule_id: 86,
-                segment_kind: SegmentKind::Index,
-                field_index: 0,
-                decision: Decision::ParseUntil(0),
-            },
-            PathPlanEntry {
-                rule_id: 86,
-                segment_kind: SegmentKind::Field,
-                field_index: 1,
-                decision: Decision::ParseUntil(1),
-            },
-            PathPlanEntry {
-                rule_id: 86,
-                segment_kind: SegmentKind::Index,
-                field_index: 1,
-                decision: Decision::ParseUntil(1),
-            },
-            PathPlanEntry {
-                rule_id: 86,
-                segment_kind: SegmentKind::Field,
-                field_index: 2,
-                decision: Decision::ParseUntil(2),
-            },
-            PathPlanEntry {
-                rule_id: 86,
-                segment_kind: SegmentKind::Index,
-                field_index: 2,
-                decision: Decision::ParseUntil(2),
-            },
-            PathPlanEntry {
-                rule_id: 86,
-                segment_kind: SegmentKind::Field,
-                field_index: 3,
-                decision: Decision::ParseUntil(3),
-            },
-            PathPlanEntry {
-                rule_id: 86,
-                segment_kind: SegmentKind::Index,
-                field_index: 3,
-                decision: Decision::ParseUntil(3),
-            },
-            PathPlanEntry {
-                rule_id: 86,
-                segment_kind: SegmentKind::Field,
-                field_index: 4,
-                decision: Decision::ParseUntil(4),
-            },
-            PathPlanEntry {
-                rule_id: 86,
-                segment_kind: SegmentKind::Index,
-                field_index: 4,
-                decision: Decision::ParseUntil(4),
-            },
-            PathPlanEntry {
-                rule_id: 86,
-                segment_kind: SegmentKind::Field,
-                field_index: 5,
-                decision: Decision::ParseUntil(5),
-            },
-            PathPlanEntry {
-                rule_id: 86,
-                segment_kind: SegmentKind::Index,
-                field_index: 5,
-                decision: Decision::ParseUntil(5),
             },
             PathPlanEntry {
                 rule_id: 86,
@@ -2787,93 +2751,129 @@ mod __cssl4parser_emit_impl {
             },
             PathPlanEntry {
                 rule_id: 87,
-                segment_kind: SegmentKind::VariantName,
+                segment_kind: SegmentKind::Field,
                 field_index: 0,
                 decision: Decision::ParseUntil(0),
             },
             PathPlanEntry {
                 rule_id: 87,
-                segment_kind: SegmentKind::VariantName,
+                segment_kind: SegmentKind::Index,
+                field_index: 0,
+                decision: Decision::ParseUntil(0),
+            },
+            PathPlanEntry {
+                rule_id: 87,
+                segment_kind: SegmentKind::Field,
                 field_index: 1,
                 decision: Decision::ParseUntil(1),
             },
             PathPlanEntry {
                 rule_id: 87,
-                segment_kind: SegmentKind::VariantName,
+                segment_kind: SegmentKind::Index,
+                field_index: 1,
+                decision: Decision::ParseUntil(1),
+            },
+            PathPlanEntry {
+                rule_id: 87,
+                segment_kind: SegmentKind::Field,
                 field_index: 2,
                 decision: Decision::ParseUntil(2),
             },
             PathPlanEntry {
                 rule_id: 87,
-                segment_kind: SegmentKind::VariantName,
+                segment_kind: SegmentKind::Index,
+                field_index: 2,
+                decision: Decision::ParseUntil(2),
+            },
+            PathPlanEntry {
+                rule_id: 87,
+                segment_kind: SegmentKind::Field,
                 field_index: 3,
                 decision: Decision::ParseUntil(3),
             },
             PathPlanEntry {
                 rule_id: 87,
-                segment_kind: SegmentKind::VariantName,
+                segment_kind: SegmentKind::Index,
+                field_index: 3,
+                decision: Decision::ParseUntil(3),
+            },
+            PathPlanEntry {
+                rule_id: 87,
+                segment_kind: SegmentKind::Field,
                 field_index: 4,
                 decision: Decision::ParseUntil(4),
             },
             PathPlanEntry {
                 rule_id: 87,
-                segment_kind: SegmentKind::VariantName,
+                segment_kind: SegmentKind::Index,
+                field_index: 4,
+                decision: Decision::ParseUntil(4),
+            },
+            PathPlanEntry {
+                rule_id: 87,
+                segment_kind: SegmentKind::Field,
                 field_index: 5,
                 decision: Decision::ParseUntil(5),
             },
             PathPlanEntry {
                 rule_id: 87,
+                segment_kind: SegmentKind::Index,
+                field_index: 5,
+                decision: Decision::ParseUntil(5),
+            },
+            PathPlanEntry {
+                rule_id: 87,
+                segment_kind: SegmentKind::Wildcard,
+                field_index: 4294967295,
+                decision: Decision::ParseFully,
+            },
+            PathPlanEntry {
+                rule_id: 88,
+                segment_kind: SegmentKind::VariantName,
+                field_index: 0,
+                decision: Decision::ParseUntil(0),
+            },
+            PathPlanEntry {
+                rule_id: 88,
+                segment_kind: SegmentKind::VariantName,
+                field_index: 1,
+                decision: Decision::ParseUntil(1),
+            },
+            PathPlanEntry {
+                rule_id: 88,
+                segment_kind: SegmentKind::VariantName,
+                field_index: 2,
+                decision: Decision::ParseUntil(2),
+            },
+            PathPlanEntry {
+                rule_id: 88,
+                segment_kind: SegmentKind::VariantName,
+                field_index: 3,
+                decision: Decision::ParseUntil(3),
+            },
+            PathPlanEntry {
+                rule_id: 88,
+                segment_kind: SegmentKind::VariantName,
+                field_index: 4,
+                decision: Decision::ParseUntil(4),
+            },
+            PathPlanEntry {
+                rule_id: 88,
+                segment_kind: SegmentKind::VariantName,
+                field_index: 5,
+                decision: Decision::ParseUntil(5),
+            },
+            PathPlanEntry {
+                rule_id: 88,
                 segment_kind: SegmentKind::VariantName,
                 field_index: 6,
                 decision: Decision::ParseUntil(6),
             },
             PathPlanEntry {
-                rule_id: 87,
+                rule_id: 88,
                 segment_kind: SegmentKind::VariantName,
                 field_index: 7,
                 decision: Decision::ParseUntil(7),
-            },
-            PathPlanEntry {
-                rule_id: 87,
-                segment_kind: SegmentKind::Wildcard,
-                field_index: 4294967295,
-                decision: Decision::ParseFully,
-            },
-            PathPlanEntry {
-                rule_id: 88,
-                segment_kind: SegmentKind::Field,
-                field_index: 0,
-                decision: Decision::ParseUntil(0),
-            },
-            PathPlanEntry {
-                rule_id: 88,
-                segment_kind: SegmentKind::Index,
-                field_index: 0,
-                decision: Decision::ParseUntil(0),
-            },
-            PathPlanEntry {
-                rule_id: 88,
-                segment_kind: SegmentKind::Field,
-                field_index: 1,
-                decision: Decision::ParseUntil(1),
-            },
-            PathPlanEntry {
-                rule_id: 88,
-                segment_kind: SegmentKind::Index,
-                field_index: 1,
-                decision: Decision::ParseUntil(1),
-            },
-            PathPlanEntry {
-                rule_id: 88,
-                segment_kind: SegmentKind::Field,
-                field_index: 2,
-                decision: Decision::ParseUntil(2),
-            },
-            PathPlanEntry {
-                rule_id: 88,
-                segment_kind: SegmentKind::Index,
-                field_index: 2,
-                decision: Decision::ParseUntil(2),
             },
             PathPlanEntry {
                 rule_id: 88,
@@ -3477,30 +3477,6 @@ mod __cssl4parser_emit_impl {
             },
             PathPlanEntry {
                 rule_id: 107,
-                segment_kind: SegmentKind::Field,
-                field_index: 2,
-                decision: Decision::ParseUntil(2),
-            },
-            PathPlanEntry {
-                rule_id: 107,
-                segment_kind: SegmentKind::Index,
-                field_index: 2,
-                decision: Decision::ParseUntil(2),
-            },
-            PathPlanEntry {
-                rule_id: 107,
-                segment_kind: SegmentKind::Field,
-                field_index: 3,
-                decision: Decision::ParseUntil(3),
-            },
-            PathPlanEntry {
-                rule_id: 107,
-                segment_kind: SegmentKind::Index,
-                field_index: 3,
-                decision: Decision::ParseUntil(3),
-            },
-            PathPlanEntry {
-                rule_id: 107,
                 segment_kind: SegmentKind::Wildcard,
                 field_index: 4294967295,
                 decision: Decision::ParseFully,
@@ -3531,93 +3507,117 @@ mod __cssl4parser_emit_impl {
             },
             PathPlanEntry {
                 rule_id: 108,
+                segment_kind: SegmentKind::Field,
+                field_index: 2,
+                decision: Decision::ParseUntil(2),
+            },
+            PathPlanEntry {
+                rule_id: 108,
+                segment_kind: SegmentKind::Index,
+                field_index: 2,
+                decision: Decision::ParseUntil(2),
+            },
+            PathPlanEntry {
+                rule_id: 108,
+                segment_kind: SegmentKind::Field,
+                field_index: 3,
+                decision: Decision::ParseUntil(3),
+            },
+            PathPlanEntry {
+                rule_id: 108,
+                segment_kind: SegmentKind::Index,
+                field_index: 3,
+                decision: Decision::ParseUntil(3),
+            },
+            PathPlanEntry {
+                rule_id: 108,
                 segment_kind: SegmentKind::Wildcard,
                 field_index: 4294967295,
                 decision: Decision::ParseFully,
             },
             PathPlanEntry {
                 rule_id: 109,
-                segment_kind: SegmentKind::VariantName,
+                segment_kind: SegmentKind::Field,
                 field_index: 0,
                 decision: Decision::ParseUntil(0),
             },
             PathPlanEntry {
                 rule_id: 109,
-                segment_kind: SegmentKind::VariantName,
+                segment_kind: SegmentKind::Index,
+                field_index: 0,
+                decision: Decision::ParseUntil(0),
+            },
+            PathPlanEntry {
+                rule_id: 109,
+                segment_kind: SegmentKind::Field,
                 field_index: 1,
                 decision: Decision::ParseUntil(1),
             },
             PathPlanEntry {
                 rule_id: 109,
+                segment_kind: SegmentKind::Index,
+                field_index: 1,
+                decision: Decision::ParseUntil(1),
+            },
+            PathPlanEntry {
+                rule_id: 109,
+                segment_kind: SegmentKind::Wildcard,
+                field_index: 4294967295,
+                decision: Decision::ParseFully,
+            },
+            PathPlanEntry {
+                rule_id: 110,
+                segment_kind: SegmentKind::VariantName,
+                field_index: 0,
+                decision: Decision::ParseUntil(0),
+            },
+            PathPlanEntry {
+                rule_id: 110,
+                segment_kind: SegmentKind::VariantName,
+                field_index: 1,
+                decision: Decision::ParseUntil(1),
+            },
+            PathPlanEntry {
+                rule_id: 110,
                 segment_kind: SegmentKind::VariantName,
                 field_index: 2,
                 decision: Decision::ParseUntil(2),
             },
             PathPlanEntry {
-                rule_id: 109,
+                rule_id: 110,
                 segment_kind: SegmentKind::VariantName,
                 field_index: 3,
                 decision: Decision::ParseUntil(3),
             },
             PathPlanEntry {
-                rule_id: 109,
+                rule_id: 110,
                 segment_kind: SegmentKind::VariantName,
                 field_index: 4,
                 decision: Decision::ParseUntil(4),
             },
             PathPlanEntry {
-                rule_id: 109,
+                rule_id: 110,
                 segment_kind: SegmentKind::VariantName,
                 field_index: 5,
                 decision: Decision::ParseUntil(5),
             },
             PathPlanEntry {
-                rule_id: 109,
+                rule_id: 110,
                 segment_kind: SegmentKind::VariantName,
                 field_index: 6,
                 decision: Decision::ParseUntil(6),
             },
             PathPlanEntry {
-                rule_id: 109,
+                rule_id: 110,
                 segment_kind: SegmentKind::VariantName,
                 field_index: 7,
                 decision: Decision::ParseUntil(7),
             },
             PathPlanEntry {
-                rule_id: 109,
+                rule_id: 110,
                 segment_kind: SegmentKind::VariantName,
                 field_index: 8,
                 decision: Decision::ParseUntil(8),
-            },
-            PathPlanEntry {
-                rule_id: 109,
-                segment_kind: SegmentKind::Wildcard,
-                field_index: 4294967295,
-                decision: Decision::ParseFully,
-            },
-            PathPlanEntry {
-                rule_id: 110,
-                segment_kind: SegmentKind::Field,
-                field_index: 0,
-                decision: Decision::ParseUntil(0),
-            },
-            PathPlanEntry {
-                rule_id: 110,
-                segment_kind: SegmentKind::Index,
-                field_index: 0,
-                decision: Decision::ParseUntil(0),
-            },
-            PathPlanEntry {
-                rule_id: 110,
-                segment_kind: SegmentKind::Field,
-                field_index: 1,
-                decision: Decision::ParseUntil(1),
-            },
-            PathPlanEntry {
-                rule_id: 110,
-                segment_kind: SegmentKind::Index,
-                field_index: 1,
-                decision: Decision::ParseUntil(1),
             },
             PathPlanEntry {
                 rule_id: 110,
@@ -5637,33 +5637,45 @@ mod __cssl4parser_emit_impl {
             },
             PathPlanEntry {
                 rule_id: 139,
-                segment_kind: SegmentKind::Field,
-                field_index: 2,
-                decision: Decision::ParseUntil(2),
-            },
-            PathPlanEntry {
-                rule_id: 139,
-                segment_kind: SegmentKind::Index,
-                field_index: 2,
-                decision: Decision::ParseUntil(2),
-            },
-            PathPlanEntry {
-                rule_id: 139,
                 segment_kind: SegmentKind::Wildcard,
                 field_index: 4294967295,
                 decision: Decision::ParseFully,
             },
             PathPlanEntry {
                 rule_id: 140,
-                segment_kind: SegmentKind::VariantName,
+                segment_kind: SegmentKind::Field,
                 field_index: 0,
                 decision: Decision::ParseUntil(0),
             },
             PathPlanEntry {
                 rule_id: 140,
-                segment_kind: SegmentKind::VariantName,
+                segment_kind: SegmentKind::Index,
+                field_index: 0,
+                decision: Decision::ParseUntil(0),
+            },
+            PathPlanEntry {
+                rule_id: 140,
+                segment_kind: SegmentKind::Field,
                 field_index: 1,
                 decision: Decision::ParseUntil(1),
+            },
+            PathPlanEntry {
+                rule_id: 140,
+                segment_kind: SegmentKind::Index,
+                field_index: 1,
+                decision: Decision::ParseUntil(1),
+            },
+            PathPlanEntry {
+                rule_id: 140,
+                segment_kind: SegmentKind::Field,
+                field_index: 2,
+                decision: Decision::ParseUntil(2),
+            },
+            PathPlanEntry {
+                rule_id: 140,
+                segment_kind: SegmentKind::Index,
+                field_index: 2,
+                decision: Decision::ParseUntil(2),
             },
             PathPlanEntry {
                 rule_id: 140,
@@ -5673,39 +5685,15 @@ mod __cssl4parser_emit_impl {
             },
             PathPlanEntry {
                 rule_id: 141,
-                segment_kind: SegmentKind::Field,
+                segment_kind: SegmentKind::VariantName,
                 field_index: 0,
                 decision: Decision::ParseUntil(0),
             },
             PathPlanEntry {
                 rule_id: 141,
-                segment_kind: SegmentKind::Index,
-                field_index: 0,
-                decision: Decision::ParseUntil(0),
-            },
-            PathPlanEntry {
-                rule_id: 141,
-                segment_kind: SegmentKind::Field,
+                segment_kind: SegmentKind::VariantName,
                 field_index: 1,
                 decision: Decision::ParseUntil(1),
-            },
-            PathPlanEntry {
-                rule_id: 141,
-                segment_kind: SegmentKind::Index,
-                field_index: 1,
-                decision: Decision::ParseUntil(1),
-            },
-            PathPlanEntry {
-                rule_id: 141,
-                segment_kind: SegmentKind::Field,
-                field_index: 2,
-                decision: Decision::ParseUntil(2),
-            },
-            PathPlanEntry {
-                rule_id: 141,
-                segment_kind: SegmentKind::Index,
-                field_index: 2,
-                decision: Decision::ParseUntil(2),
             },
             PathPlanEntry {
                 rule_id: 141,
@@ -5715,36 +5703,48 @@ mod __cssl4parser_emit_impl {
             },
             PathPlanEntry {
                 rule_id: 142,
+                segment_kind: SegmentKind::Field,
+                field_index: 0,
+                decision: Decision::ParseUntil(0),
+            },
+            PathPlanEntry {
+                rule_id: 142,
+                segment_kind: SegmentKind::Index,
+                field_index: 0,
+                decision: Decision::ParseUntil(0),
+            },
+            PathPlanEntry {
+                rule_id: 142,
+                segment_kind: SegmentKind::Field,
+                field_index: 1,
+                decision: Decision::ParseUntil(1),
+            },
+            PathPlanEntry {
+                rule_id: 142,
+                segment_kind: SegmentKind::Index,
+                field_index: 1,
+                decision: Decision::ParseUntil(1),
+            },
+            PathPlanEntry {
+                rule_id: 142,
+                segment_kind: SegmentKind::Field,
+                field_index: 2,
+                decision: Decision::ParseUntil(2),
+            },
+            PathPlanEntry {
+                rule_id: 142,
+                segment_kind: SegmentKind::Index,
+                field_index: 2,
+                decision: Decision::ParseUntil(2),
+            },
+            PathPlanEntry {
+                rule_id: 142,
                 segment_kind: SegmentKind::Wildcard,
                 field_index: 4294967295,
                 decision: Decision::ParseFully,
             },
             PathPlanEntry {
                 rule_id: 143,
-                segment_kind: SegmentKind::Field,
-                field_index: 0,
-                decision: Decision::ParseUntil(0),
-            },
-            PathPlanEntry {
-                rule_id: 143,
-                segment_kind: SegmentKind::Index,
-                field_index: 0,
-                decision: Decision::ParseUntil(0),
-            },
-            PathPlanEntry {
-                rule_id: 143,
-                segment_kind: SegmentKind::Field,
-                field_index: 1,
-                decision: Decision::ParseUntil(1),
-            },
-            PathPlanEntry {
-                rule_id: 143,
-                segment_kind: SegmentKind::Index,
-                field_index: 1,
-                decision: Decision::ParseUntil(1),
-            },
-            PathPlanEntry {
-                rule_id: 143,
                 segment_kind: SegmentKind::Wildcard,
                 field_index: 4294967295,
                 decision: Decision::ParseFully,
@@ -5772,18 +5772,6 @@ mod __cssl4parser_emit_impl {
                 segment_kind: SegmentKind::Index,
                 field_index: 1,
                 decision: Decision::ParseUntil(1),
-            },
-            PathPlanEntry {
-                rule_id: 144,
-                segment_kind: SegmentKind::Field,
-                field_index: 2,
-                decision: Decision::ParseUntil(2),
-            },
-            PathPlanEntry {
-                rule_id: 144,
-                segment_kind: SegmentKind::Index,
-                field_index: 2,
-                decision: Decision::ParseUntil(2),
             },
             PathPlanEntry {
                 rule_id: 144,
@@ -5793,18 +5781,48 @@ mod __cssl4parser_emit_impl {
             },
             PathPlanEntry {
                 rule_id: 145,
+                segment_kind: SegmentKind::Field,
+                field_index: 0,
+                decision: Decision::ParseUntil(0),
+            },
+            PathPlanEntry {
+                rule_id: 145,
+                segment_kind: SegmentKind::Index,
+                field_index: 0,
+                decision: Decision::ParseUntil(0),
+            },
+            PathPlanEntry {
+                rule_id: 145,
+                segment_kind: SegmentKind::Field,
+                field_index: 1,
+                decision: Decision::ParseUntil(1),
+            },
+            PathPlanEntry {
+                rule_id: 145,
+                segment_kind: SegmentKind::Index,
+                field_index: 1,
+                decision: Decision::ParseUntil(1),
+            },
+            PathPlanEntry {
+                rule_id: 145,
+                segment_kind: SegmentKind::Field,
+                field_index: 2,
+                decision: Decision::ParseUntil(2),
+            },
+            PathPlanEntry {
+                rule_id: 145,
+                segment_kind: SegmentKind::Index,
+                field_index: 2,
+                decision: Decision::ParseUntil(2),
+            },
+            PathPlanEntry {
+                rule_id: 145,
                 segment_kind: SegmentKind::Wildcard,
                 field_index: 4294967295,
                 decision: Decision::ParseFully,
             },
             PathPlanEntry {
                 rule_id: 146,
-                segment_kind: SegmentKind::Wildcard,
-                field_index: 4294967295,
-                decision: Decision::ParseFully,
-            },
-            PathPlanEntry {
-                rule_id: 147,
                 segment_kind: SegmentKind::Wildcard,
                 field_index: 4294967295,
                 decision: Decision::ParseFully,
@@ -5834,16 +5852,10 @@ mod __cssl4parser_emit_impl {
                 decision: Decision::ParseFully,
             },
             PathPlanEntry {
-                rule_id: 150,
-                segment_kind: SegmentKind::VariantName,
-                field_index: 0,
-                decision: Decision::ParseUntil(0),
-            },
-            PathPlanEntry {
-                rule_id: 150,
-                segment_kind: SegmentKind::VariantName,
-                field_index: 1,
-                decision: Decision::ParseUntil(1),
+                rule_id: 149,
+                segment_kind: SegmentKind::Wildcard,
+                field_index: 4294967295,
+                decision: Decision::ParseFully,
             },
             PathPlanEntry {
                 rule_id: 150,
@@ -5853,33 +5865,21 @@ mod __cssl4parser_emit_impl {
             },
             PathPlanEntry {
                 rule_id: 151,
+                segment_kind: SegmentKind::VariantName,
+                field_index: 0,
+                decision: Decision::ParseUntil(0),
+            },
+            PathPlanEntry {
+                rule_id: 151,
+                segment_kind: SegmentKind::VariantName,
+                field_index: 1,
+                decision: Decision::ParseUntil(1),
+            },
+            PathPlanEntry {
+                rule_id: 151,
                 segment_kind: SegmentKind::Wildcard,
                 field_index: 4294967295,
                 decision: Decision::ParseFully,
-            },
-            PathPlanEntry {
-                rule_id: 152,
-                segment_kind: SegmentKind::Field,
-                field_index: 0,
-                decision: Decision::ParseUntil(0),
-            },
-            PathPlanEntry {
-                rule_id: 152,
-                segment_kind: SegmentKind::Index,
-                field_index: 0,
-                decision: Decision::ParseUntil(0),
-            },
-            PathPlanEntry {
-                rule_id: 152,
-                segment_kind: SegmentKind::Field,
-                field_index: 1,
-                decision: Decision::ParseUntil(1),
-            },
-            PathPlanEntry {
-                rule_id: 152,
-                segment_kind: SegmentKind::Index,
-                field_index: 1,
-                decision: Decision::ParseUntil(1),
             },
             PathPlanEntry {
                 rule_id: 152,
@@ -5943,45 +5943,45 @@ mod __cssl4parser_emit_impl {
             },
             PathPlanEntry {
                 rule_id: 154,
+                segment_kind: SegmentKind::Wildcard,
+                field_index: 4294967295,
+                decision: Decision::ParseFully,
+            },
+            PathPlanEntry {
+                rule_id: 155,
+                segment_kind: SegmentKind::Field,
+                field_index: 0,
+                decision: Decision::ParseUntil(0),
+            },
+            PathPlanEntry {
+                rule_id: 155,
+                segment_kind: SegmentKind::Index,
+                field_index: 0,
+                decision: Decision::ParseUntil(0),
+            },
+            PathPlanEntry {
+                rule_id: 155,
+                segment_kind: SegmentKind::Field,
+                field_index: 1,
+                decision: Decision::ParseUntil(1),
+            },
+            PathPlanEntry {
+                rule_id: 155,
+                segment_kind: SegmentKind::Index,
+                field_index: 1,
+                decision: Decision::ParseUntil(1),
+            },
+            PathPlanEntry {
+                rule_id: 155,
                 segment_kind: SegmentKind::Field,
                 field_index: 2,
                 decision: Decision::ParseUntil(2),
             },
             PathPlanEntry {
-                rule_id: 154,
+                rule_id: 155,
                 segment_kind: SegmentKind::Index,
                 field_index: 2,
                 decision: Decision::ParseUntil(2),
-            },
-            PathPlanEntry {
-                rule_id: 154,
-                segment_kind: SegmentKind::Wildcard,
-                field_index: 4294967295,
-                decision: Decision::ParseFully,
-            },
-            PathPlanEntry {
-                rule_id: 155,
-                segment_kind: SegmentKind::Field,
-                field_index: 0,
-                decision: Decision::ParseUntil(0),
-            },
-            PathPlanEntry {
-                rule_id: 155,
-                segment_kind: SegmentKind::Index,
-                field_index: 0,
-                decision: Decision::ParseUntil(0),
-            },
-            PathPlanEntry {
-                rule_id: 155,
-                segment_kind: SegmentKind::Field,
-                field_index: 1,
-                decision: Decision::ParseUntil(1),
-            },
-            PathPlanEntry {
-                rule_id: 155,
-                segment_kind: SegmentKind::Index,
-                field_index: 1,
-                decision: Decision::ParseUntil(1),
             },
             PathPlanEntry {
                 rule_id: 155,
@@ -6051,6 +6051,30 @@ mod __cssl4parser_emit_impl {
             },
             PathPlanEntry {
                 rule_id: 158,
+                segment_kind: SegmentKind::Field,
+                field_index: 0,
+                decision: Decision::ParseUntil(0),
+            },
+            PathPlanEntry {
+                rule_id: 158,
+                segment_kind: SegmentKind::Index,
+                field_index: 0,
+                decision: Decision::ParseUntil(0),
+            },
+            PathPlanEntry {
+                rule_id: 158,
+                segment_kind: SegmentKind::Field,
+                field_index: 1,
+                decision: Decision::ParseUntil(1),
+            },
+            PathPlanEntry {
+                rule_id: 158,
+                segment_kind: SegmentKind::Index,
+                field_index: 1,
+                decision: Decision::ParseUntil(1),
+            },
+            PathPlanEntry {
+                rule_id: 158,
                 segment_kind: SegmentKind::Wildcard,
                 field_index: 4294967295,
                 decision: Decision::ParseFully,
@@ -6063,42 +6087,6 @@ mod __cssl4parser_emit_impl {
             },
             PathPlanEntry {
                 rule_id: 160,
-                segment_kind: SegmentKind::Field,
-                field_index: 0,
-                decision: Decision::ParseUntil(0),
-            },
-            PathPlanEntry {
-                rule_id: 160,
-                segment_kind: SegmentKind::Index,
-                field_index: 0,
-                decision: Decision::ParseUntil(0),
-            },
-            PathPlanEntry {
-                rule_id: 160,
-                segment_kind: SegmentKind::Field,
-                field_index: 1,
-                decision: Decision::ParseUntil(1),
-            },
-            PathPlanEntry {
-                rule_id: 160,
-                segment_kind: SegmentKind::Index,
-                field_index: 1,
-                decision: Decision::ParseUntil(1),
-            },
-            PathPlanEntry {
-                rule_id: 160,
-                segment_kind: SegmentKind::Field,
-                field_index: 2,
-                decision: Decision::ParseUntil(2),
-            },
-            PathPlanEntry {
-                rule_id: 160,
-                segment_kind: SegmentKind::Index,
-                field_index: 2,
-                decision: Decision::ParseUntil(2),
-            },
-            PathPlanEntry {
-                rule_id: 160,
                 segment_kind: SegmentKind::Wildcard,
                 field_index: 4294967295,
                 decision: Decision::ParseFully,
@@ -6138,18 +6126,6 @@ mod __cssl4parser_emit_impl {
                 segment_kind: SegmentKind::Index,
                 field_index: 2,
                 decision: Decision::ParseUntil(2),
-            },
-            PathPlanEntry {
-                rule_id: 161,
-                segment_kind: SegmentKind::Field,
-                field_index: 3,
-                decision: Decision::ParseUntil(3),
-            },
-            PathPlanEntry {
-                rule_id: 161,
-                segment_kind: SegmentKind::Index,
-                field_index: 3,
-                decision: Decision::ParseUntil(3),
             },
             PathPlanEntry {
                 rule_id: 161,
@@ -7503,6 +7479,60 @@ mod __cssl4parser_emit_impl {
             },
             PathPlanEntry {
                 rule_id: 186,
+                segment_kind: SegmentKind::Wildcard,
+                field_index: 4294967295,
+                decision: Decision::ParseFully,
+            },
+            PathPlanEntry {
+                rule_id: 187,
+                segment_kind: SegmentKind::Field,
+                field_index: 0,
+                decision: Decision::ParseUntil(0),
+            },
+            PathPlanEntry {
+                rule_id: 187,
+                segment_kind: SegmentKind::Index,
+                field_index: 0,
+                decision: Decision::ParseUntil(0),
+            },
+            PathPlanEntry {
+                rule_id: 187,
+                segment_kind: SegmentKind::Field,
+                field_index: 1,
+                decision: Decision::ParseUntil(1),
+            },
+            PathPlanEntry {
+                rule_id: 187,
+                segment_kind: SegmentKind::Index,
+                field_index: 1,
+                decision: Decision::ParseUntil(1),
+            },
+            PathPlanEntry {
+                rule_id: 187,
+                segment_kind: SegmentKind::Field,
+                field_index: 2,
+                decision: Decision::ParseUntil(2),
+            },
+            PathPlanEntry {
+                rule_id: 187,
+                segment_kind: SegmentKind::Index,
+                field_index: 2,
+                decision: Decision::ParseUntil(2),
+            },
+            PathPlanEntry {
+                rule_id: 187,
+                segment_kind: SegmentKind::Field,
+                field_index: 3,
+                decision: Decision::ParseUntil(3),
+            },
+            PathPlanEntry {
+                rule_id: 187,
+                segment_kind: SegmentKind::Index,
+                field_index: 3,
+                decision: Decision::ParseUntil(3),
+            },
+            PathPlanEntry {
+                rule_id: 187,
                 segment_kind: SegmentKind::Wildcard,
                 field_index: 4294967295,
                 decision: Decision::ParseFully,
@@ -9096,6 +9126,31 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 62u32,
+                rule_name: ::std::string::String::from("mediaFeature"),
+                kind: ::bbnf_ir::registry::LayoutKind::Struct,
+                rule_type: ::bbnf_ir::TypeDesc::Span,
+                fields: ::std::vec![
+                    ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("field_0"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 0u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("field_1"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 1u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("field_2"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 2u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("field_3"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 3u32, }, }
+                ],
+            });
+        __registry
+            .insert(::bbnf_ir::registry::StructLayout {
+                rule_id: 63u32,
                 rule_name: ::std::string::String::from("customPropertyDecl"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -9124,7 +9179,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 63u32,
+                rule_id: 64u32,
                 rule_name: ::std::string::String::from("genericDecl"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -9153,7 +9208,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 64u32,
+                rule_id: 65u32,
                 rule_name: ::std::string::String::from("nsPrefix"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -9170,7 +9225,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 65u32,
+                rule_id: 66u32,
                 rule_name: ::std::string::String::from("classSelector"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -9187,7 +9242,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 66u32,
+                rule_id: 67u32,
                 rule_name: ::std::string::String::from("partPseudo"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
@@ -9212,7 +9267,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 67u32,
+                rule_id: 68u32,
                 rule_name: ::std::string::String::from("highlightPseudo"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -9229,7 +9284,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 68u32,
+                rule_id: 69u32,
                 rule_name: ::std::string::String::from("simplePseudoElement"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -9246,7 +9301,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 69u32,
+                rule_id: 70u32,
                 rule_name: ::std::string::String::from("langPseudo"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
@@ -9271,7 +9326,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 70u32,
+                rule_id: 71u32,
                 rule_name: ::std::string::String::from("simplePseudoClass"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -9288,7 +9343,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 71u32,
+                rule_id: 72u32,
                 rule_name: ::std::string::String::from("dirPseudo"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -9305,7 +9360,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 72u32,
+                rule_id: 73u32,
                 rule_name: ::std::string::String::from("keyframeSel"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
@@ -9328,7 +9383,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 73u32,
+                rule_id: 74u32,
                 rule_name: ::std::string::String::from("genericFunction"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
@@ -9358,32 +9413,122 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 74u32,
-                rule_name: ::std::string::String::from("mediaFeature"),
+                rule_id: 75u32,
+                rule_name: ::std::string::String::from("mediaNot"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
-                rule_type: ::bbnf_ir::TypeDesc::Span,
+                rule_type: ::bbnf_ir::TypeDesc::Tuple(
+                    ::std::vec![
+                        ::bbnf_ir::TypeDesc::Span, ::bbnf_ir::TypeDesc::BoxedEnum
+                    ],
+                ),
                 fields: ::std::vec![
                     ::bbnf_ir::registry::StructField { name :
                     ::std::string::String::from("field_0"), type_desc :
                     ::bbnf_ir::TypeDesc::Span, source :
                     ::bbnf_ir::registry::FieldSource::SeqPosition { position : 0u32, },
                     }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("field_1"), type_desc :
-                    ::bbnf_ir::TypeDesc::Span, source :
-                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 1u32, },
-                    }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("field_2"), type_desc :
-                    ::bbnf_ir::TypeDesc::Span, source :
-                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 2u32, },
-                    }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("field_3"), type_desc :
-                    ::bbnf_ir::TypeDesc::Span, source :
-                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 3u32, }, }
+                    ::std::string::String::from("mediaInParens"), type_desc :
+                    ::bbnf_ir::TypeDesc::BoxedEnum, source :
+                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 1u32, }, }
                 ],
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 75u32,
+                rule_id: 76u32,
+                rule_name: ::std::string::String::from("mediaAnd"),
+                kind: ::bbnf_ir::registry::LayoutKind::Struct,
+                rule_type: ::bbnf_ir::TypeDesc::Tuple(
+                    ::std::vec![
+                        ::bbnf_ir::TypeDesc::BoxedEnum,
+                        ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum))
+                    ],
+                ),
+                fields: ::std::vec![
+                    ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("mediaInParens"), type_desc :
+                    ::bbnf_ir::TypeDesc::BoxedEnum, source :
+                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 0u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("field_1"), type_desc :
+                    ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum)),
+                    source : ::bbnf_ir::registry::FieldSource::SeqPosition { position :
+                    1u32, }, }
+                ],
+            });
+        __registry
+            .insert(::bbnf_ir::registry::StructLayout {
+                rule_id: 77u32,
+                rule_name: ::std::string::String::from("mediaOr"),
+                kind: ::bbnf_ir::registry::LayoutKind::Struct,
+                rule_type: ::bbnf_ir::TypeDesc::Tuple(
+                    ::std::vec![
+                        ::bbnf_ir::TypeDesc::BoxedEnum,
+                        ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum))
+                    ],
+                ),
+                fields: ::std::vec![
+                    ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("mediaInParens"), type_desc :
+                    ::bbnf_ir::TypeDesc::BoxedEnum, source :
+                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 0u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("field_1"), type_desc :
+                    ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum)),
+                    source : ::bbnf_ir::registry::FieldSource::SeqPosition { position :
+                    1u32, }, }
+                ],
+            });
+        __registry
+            .insert(::bbnf_ir::registry::StructLayout {
+                rule_id: 78u32,
+                rule_name: ::std::string::String::from("mediaCondition"),
+                kind: ::bbnf_ir::registry::LayoutKind::UntaggedEnum,
+                rule_type: ::bbnf_ir::TypeDesc::BoxedEnum,
+                fields: ::std::vec![
+                    ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_0"), type_desc :
+                    ::bbnf_ir::TypeDesc::BoxedEnum, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 0u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_1"), type_desc :
+                    ::bbnf_ir::TypeDesc::BoxedEnum, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 1u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_2"), type_desc :
+                    ::bbnf_ir::TypeDesc::BoxedEnum, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 2u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_3"), type_desc :
+                    ::bbnf_ir::TypeDesc::BoxedEnum, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 3u32, },
+                    }
+                ],
+            });
+        __registry
+            .insert(::bbnf_ir::registry::StructLayout {
+                rule_id: 79u32,
+                rule_name: ::std::string::String::from("mediaInParens"),
+                kind: ::bbnf_ir::registry::LayoutKind::TaggedEnum,
+                rule_type: ::bbnf_ir::TypeDesc::HeterogeneousAltJoin(
+                    ::std::vec![
+                        ::bbnf_ir::TypeDesc::Span, ::bbnf_ir::TypeDesc::BoxedEnum
+                    ],
+                ),
+                fields: ::std::vec![
+                    ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("1990"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 0u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("branch_1"), type_desc :
+                    ::bbnf_ir::TypeDesc::BoxedEnum, source :
+                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 1u32, },
+                    }
+                ],
+            });
+        __registry
+            .insert(::bbnf_ir::registry::StructLayout {
+                rule_id: 80u32,
                 rule_name: ::std::string::String::from("wqName"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -9400,7 +9545,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 76u32,
+                rule_id: 81u32,
                 rule_name: ::std::string::String::from("attrSelector"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -9425,7 +9570,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 77u32,
+                rule_id: 82u32,
                 rule_name: ::std::string::String::from("varFunction"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
@@ -9452,7 +9597,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 78u32,
+                rule_id: 83u32,
                 rule_name: ::std::string::String::from("envFunction"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
@@ -9479,7 +9624,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 79u32,
+                rule_id: 84u32,
                 rule_name: ::std::string::String::from("length"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
@@ -9498,12 +9643,13 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 80u32,
-                rule_name: ::std::string::String::from("mediaNot"),
+                rule_id: 85u32,
+                rule_name: ::std::string::String::from("mediaTypedQuery"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
-                        ::bbnf_ir::TypeDesc::Span, ::bbnf_ir::TypeDesc::BoxedEnum
+                        ::bbnf_ir::TypeDesc::Span,
+                        ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum))
                     ],
                 ),
                 fields: ::std::vec![
@@ -9512,108 +9658,19 @@ mod __cssl4parser_emit_impl {
                     ::bbnf_ir::TypeDesc::Span, source :
                     ::bbnf_ir::registry::FieldSource::SeqPosition { position : 0u32, },
                     }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("mediaInParens"), type_desc :
-                    ::bbnf_ir::TypeDesc::BoxedEnum, source :
-                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 1u32, }, }
-                ],
-            });
-        __registry
-            .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 81u32,
-                rule_name: ::std::string::String::from("mediaAnd"),
-                kind: ::bbnf_ir::registry::LayoutKind::Struct,
-                rule_type: ::bbnf_ir::TypeDesc::Tuple(
-                    ::std::vec![
-                        ::bbnf_ir::TypeDesc::BoxedEnum,
-                        ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum))
-                    ],
-                ),
-                fields: ::std::vec![
-                    ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("mediaInParens"), type_desc :
-                    ::bbnf_ir::TypeDesc::BoxedEnum, source :
-                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 0u32, },
-                    }, ::bbnf_ir::registry::StructField { name :
                     ::std::string::String::from("field_1"), type_desc :
-                    ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum)),
-                    source : ::bbnf_ir::registry::FieldSource::SeqPosition { position :
-                    1u32, }, }
-                ],
-            });
-        __registry
-            .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 82u32,
-                rule_name: ::std::string::String::from("mediaOr"),
-                kind: ::bbnf_ir::registry::LayoutKind::Struct,
-                rule_type: ::bbnf_ir::TypeDesc::Tuple(
-                    ::std::vec![
-                        ::bbnf_ir::TypeDesc::BoxedEnum,
-                        ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum))
-                    ],
-                ),
-                fields: ::std::vec![
-                    ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("mediaInParens"), type_desc :
-                    ::bbnf_ir::TypeDesc::BoxedEnum, source :
-                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 0u32, },
-                    }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("field_1"), type_desc :
-                    ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum)),
-                    source : ::bbnf_ir::registry::FieldSource::SeqPosition { position :
-                    1u32, }, }
-                ],
-            });
-        __registry
-            .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 83u32,
-                rule_name: ::std::string::String::from("mediaCondition"),
-                kind: ::bbnf_ir::registry::LayoutKind::UntaggedEnum,
-                rule_type: ::bbnf_ir::TypeDesc::BoxedEnum,
-                fields: ::std::vec![
-                    ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("branch_0"), type_desc :
-                    ::bbnf_ir::TypeDesc::BoxedEnum, source :
-                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 0u32, },
-                    }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("branch_1"), type_desc :
-                    ::bbnf_ir::TypeDesc::BoxedEnum, source :
-                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 1u32, },
-                    }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("branch_2"), type_desc :
-                    ::bbnf_ir::TypeDesc::BoxedEnum, source :
-                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 2u32, },
-                    }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("branch_3"), type_desc :
-                    ::bbnf_ir::TypeDesc::BoxedEnum, source :
-                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 3u32, },
-                    }
-                ],
-            });
-        __registry
-            .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 84u32,
-                rule_name: ::std::string::String::from("mediaInParens"),
-                kind: ::bbnf_ir::registry::LayoutKind::TaggedEnum,
-                rule_type: ::bbnf_ir::TypeDesc::HeterogeneousAltJoin(
-                    ::std::vec![
-                        ::bbnf_ir::TypeDesc::Span, ::bbnf_ir::TypeDesc::BoxedEnum
-                    ],
-                ),
-                fields: ::std::vec![
-                    ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("1989"), type_desc :
                     ::bbnf_ir::TypeDesc::Span, source :
-                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 0u32, },
+                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 1u32, },
                     }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("branch_1"), type_desc :
-                    ::bbnf_ir::TypeDesc::BoxedEnum, source :
-                    ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 1u32, },
-                    }
+                    ::std::string::String::from("field_2"), type_desc :
+                    ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum)),
+                    source : ::bbnf_ir::registry::FieldSource::SeqPosition { position :
+                    2u32, }, }
                 ],
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 85u32,
+                rule_id: 86u32,
                 rule_name: ::std::string::String::from("typeSelector"),
                 kind: ::bbnf_ir::registry::LayoutKind::UntaggedEnum,
                 rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -9631,10 +9688,10 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 86u32,
+                rule_id: 87u32,
                 rule_name: ::std::string::String::from("colorFn"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
-                rule_type: ::bbnf_ir::TypeDesc::Named(600u32),
+                rule_type: ::bbnf_ir::TypeDesc::Named(602u32),
                 fields: ::std::vec![
                     ::bbnf_ir::registry::StructField { name :
                     ::std::string::String::from("field_0"), type_desc :
@@ -9665,7 +9722,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 87u32,
+                rule_id: 88u32,
                 rule_name: ::std::string::String::from("valueUnit"),
                 kind: ::bbnf_ir::registry::LayoutKind::TaggedEnum,
                 rule_type: ::bbnf_ir::TypeDesc::HeterogeneousAltJoin(
@@ -9701,37 +9758,10 @@ mod __cssl4parser_emit_impl {
                     ::bbnf_ir::TypeDesc::BoxedEnum, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 6u32, },
                     }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("1990"), type_desc :
+                    ::std::string::String::from("1991"), type_desc :
                     ::bbnf_ir::TypeDesc::F64, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 7u32, },
                     }
-                ],
-            });
-        __registry
-            .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 88u32,
-                rule_name: ::std::string::String::from("mediaTypedQuery"),
-                kind: ::bbnf_ir::registry::LayoutKind::Struct,
-                rule_type: ::bbnf_ir::TypeDesc::Tuple(
-                    ::std::vec![
-                        ::bbnf_ir::TypeDesc::Span,
-                        ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum))
-                    ],
-                ),
-                fields: ::std::vec![
-                    ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("field_0"), type_desc :
-                    ::bbnf_ir::TypeDesc::Span, source :
-                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 0u32, },
-                    }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("field_1"), type_desc :
-                    ::bbnf_ir::TypeDesc::Span, source :
-                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 1u32, },
-                    }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("field_2"), type_desc :
-                    ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum)),
-                    source : ::bbnf_ir::registry::FieldSource::SeqPosition { position :
-                    2u32, }, }
                 ],
             });
         __registry
@@ -10082,6 +10112,29 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 103u32,
+                rule_name: ::std::string::String::from("mediaQueryList"),
+                kind: ::bbnf_ir::registry::LayoutKind::Struct,
+                rule_type: ::bbnf_ir::TypeDesc::Tuple(
+                    ::std::vec![
+                        ::bbnf_ir::TypeDesc::BoxedEnum,
+                        ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum))
+                    ],
+                ),
+                fields: ::std::vec![
+                    ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("field_0"), type_desc :
+                    ::bbnf_ir::TypeDesc::BoxedEnum, source :
+                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 0u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("field_1"), type_desc :
+                    ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum)),
+                    source : ::bbnf_ir::registry::FieldSource::SeqPosition { position :
+                    1u32, }, }
+                ],
+            });
+        __registry
+            .insert(::bbnf_ir::registry::StructLayout {
+                rule_id: 104u32,
                 rule_name: ::std::string::String::from("mathExpr"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
@@ -10104,7 +10157,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 104u32,
+                rule_id: 105u32,
                 rule_name: ::std::string::String::from("calcFunction"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
@@ -10125,7 +10178,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 105u32,
+                rule_id: 106u32,
                 rule_name: ::std::string::String::from("minFunction"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
@@ -10150,7 +10203,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 106u32,
+                rule_id: 107u32,
                 rule_name: ::std::string::String::from("maxFunction"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
@@ -10175,7 +10228,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 107u32,
+                rule_id: 108u32,
                 rule_name: ::std::string::String::from("clampFunction"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
@@ -10205,7 +10258,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 108u32,
+                rule_id: 109u32,
                 rule_name: ::std::string::String::from("mathProduct"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
@@ -10228,7 +10281,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 109u32,
+                rule_id: 110u32,
                 rule_name: ::std::string::String::from("mathValue"),
                 kind: ::bbnf_ir::registry::LayoutKind::TaggedEnum,
                 rule_type: ::bbnf_ir::TypeDesc::HeterogeneousAltJoin(
@@ -10256,7 +10309,7 @@ mod __cssl4parser_emit_impl {
                     ::bbnf_ir::TypeDesc::BoxedEnum, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 4u32, },
                     }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("1992"), type_desc :
+                    ::std::string::String::from("1993"), type_desc :
                     ::bbnf_ir::TypeDesc::F64, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 5u32, },
                     }, ::bbnf_ir::registry::StructField { name :
@@ -10272,29 +10325,6 @@ mod __cssl4parser_emit_impl {
                     ::bbnf_ir::TypeDesc::BoxedEnum, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 8u32, },
                     }
-                ],
-            });
-        __registry
-            .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 110u32,
-                rule_name: ::std::string::String::from("mediaQueryList"),
-                kind: ::bbnf_ir::registry::LayoutKind::Struct,
-                rule_type: ::bbnf_ir::TypeDesc::Tuple(
-                    ::std::vec![
-                        ::bbnf_ir::TypeDesc::BoxedEnum,
-                        ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum))
-                    ],
-                ),
-                fields: ::std::vec![
-                    ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("field_0"), type_desc :
-                    ::bbnf_ir::TypeDesc::BoxedEnum, source :
-                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 0u32, },
-                    }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("field_1"), type_desc :
-                    ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum)),
-                    source : ::bbnf_ir::registry::FieldSource::SeqPosition { position :
-                    1u32, }, }
                 ],
             });
         __registry
@@ -10318,7 +10348,7 @@ mod __cssl4parser_emit_impl {
                     ::bbnf_ir::TypeDesc::BoxedEnum, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 1u32, },
                     }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("1993"), type_desc :
+                    ::std::string::String::from("1994"), type_desc :
                     ::bbnf_ir::TypeDesc::Span, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 2u32, },
                     }, ::bbnf_ir::registry::StructField { name :
@@ -10334,31 +10364,31 @@ mod __cssl4parser_emit_impl {
                     ::bbnf_ir::TypeDesc::BoxedEnum, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 5u32, },
                     }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("1994"), type_desc :
+                    ::std::string::String::from("1995"), type_desc :
                     ::bbnf_ir::TypeDesc::F64, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 6u32, },
                     }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("1993"), type_desc :
+                    ::std::string::String::from("1994"), type_desc :
                     ::bbnf_ir::TypeDesc::Span, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 7u32, },
                     }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("1993"), type_desc :
+                    ::std::string::String::from("1994"), type_desc :
                     ::bbnf_ir::TypeDesc::Span, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 8u32, },
                     }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("1993"), type_desc :
+                    ::std::string::String::from("1994"), type_desc :
                     ::bbnf_ir::TypeDesc::Span, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 9u32, },
                     }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("1993"), type_desc :
+                    ::std::string::String::from("1994"), type_desc :
                     ::bbnf_ir::TypeDesc::Span, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 10u32,
                     }, }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("1993"), type_desc :
+                    ::std::string::String::from("1994"), type_desc :
                     ::bbnf_ir::TypeDesc::Span, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 11u32,
                     }, }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("1993"), type_desc :
+                    ::std::string::String::from("1994"), type_desc :
                     ::bbnf_ir::TypeDesc::Span, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 12u32,
                     }, }, ::bbnf_ir::registry::StructField { name :
@@ -10366,7 +10396,7 @@ mod __cssl4parser_emit_impl {
                     ::bbnf_ir::TypeDesc::BoxedEnum, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 13u32,
                     }, }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("1993"), type_desc :
+                    ::std::string::String::from("1994"), type_desc :
                     ::bbnf_ir::TypeDesc::Span, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 14u32,
                     }, }
@@ -11294,7 +11324,7 @@ mod __cssl4parser_emit_impl {
                 ),
                 fields: ::std::vec![
                     ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("2009"), type_desc :
+                    ::std::string::String::from("2010"), type_desc :
                     ::bbnf_ir::TypeDesc::Span, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 0u32, },
                     }, ::bbnf_ir::registry::StructField { name :
@@ -11402,7 +11432,7 @@ mod __cssl4parser_emit_impl {
                     ::bbnf_ir::TypeDesc::BoxedEnum, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 26u32,
                     }, }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("2009"), type_desc :
+                    ::std::string::String::from("2010"), type_desc :
                     ::bbnf_ir::TypeDesc::Span, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 27u32,
                     }, }
@@ -11411,13 +11441,35 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 139u32,
+                rule_name: ::std::string::String::from("keyframeBlock"),
+                kind: ::bbnf_ir::registry::LayoutKind::Struct,
+                rule_type: ::bbnf_ir::TypeDesc::Tuple(
+                    ::std::vec![
+                        ::bbnf_ir::TypeDesc::BoxedEnum,
+                        ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum))
+                    ],
+                ),
+                fields: ::std::vec![
+                    ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("field_0"), type_desc :
+                    ::bbnf_ir::TypeDesc::BoxedEnum, source :
+                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 0u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("field_1"), type_desc :
+                    ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum)),
+                    source : ::bbnf_ir::registry::FieldSource::SeqPosition { position :
+                    1u32, }, }
+                ],
+            });
+        __registry
+            .insert(::bbnf_ir::registry::StructLayout {
+                rule_id: 140u32,
                 rule_name: ::std::string::String::from("keyframesRule"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
                         ::bbnf_ir::TypeDesc::Span,
-                        ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Tuple(::std::vec![::bbnf_ir::TypeDesc::BoxedEnum,
-                        ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum))])))
+                        ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum))
                     ],
                 ),
                 fields: ::std::vec![
@@ -11431,15 +11483,14 @@ mod __cssl4parser_emit_impl {
                     ::bbnf_ir::registry::FieldSource::SeqPosition { position : 1u32, },
                     }, ::bbnf_ir::registry::StructField { name :
                     ::std::string::String::from("field_2"), type_desc :
-                    ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Tuple(::std::vec![::bbnf_ir::TypeDesc::BoxedEnum,
-                    ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum))]))),
+                    ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum)),
                     source : ::bbnf_ir::registry::FieldSource::SeqPosition { position :
                     2u32, }, }
                 ],
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 140u32,
+                rule_id: 141u32,
                 rule_name: ::std::string::String::from("atRuleBody"),
                 kind: ::bbnf_ir::registry::LayoutKind::TaggedEnum,
                 rule_type: ::bbnf_ir::TypeDesc::HeterogeneousAltJoin(
@@ -11449,7 +11500,7 @@ mod __cssl4parser_emit_impl {
                 ),
                 fields: ::std::vec![
                     ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("2010"), type_desc :
+                    ::std::string::String::from("2011"), type_desc :
                     ::bbnf_ir::TypeDesc::Span, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 0u32, },
                     }, ::bbnf_ir::registry::StructField { name :
@@ -11461,7 +11512,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 141u32,
+                rule_id: 142u32,
                 rule_name: ::std::string::String::from("genericAtRule"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
@@ -11486,7 +11537,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 142u32,
+                rule_id: 143u32,
                 rule_name: ::std::string::String::from("ruleBlock"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::BoxedEnum,
@@ -11495,12 +11546,12 @@ mod __cssl4parser_emit_impl {
                     ::std::string::String::from("blockContent"), type_desc :
                     ::bbnf_ir::TypeDesc::BoxedEnum, source :
                     ::bbnf_ir::registry::FieldSource::RuleReference { target_rule :
-                    147u32, }, }
+                    148u32, }, }
                 ],
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 143u32,
+                rule_id: 144u32,
                 rule_name: ::std::string::String::from("qualifiedRule"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
@@ -11521,7 +11572,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 144u32,
+                rule_id: 145u32,
                 rule_name: ::std::string::String::from("mediaRule"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
@@ -11547,7 +11598,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 145u32,
+                rule_id: 146u32,
                 rule_name: ::std::string::String::from("atRule"),
                 kind: ::bbnf_ir::registry::LayoutKind::UntaggedEnum,
                 rule_type: ::bbnf_ir::TypeDesc::BoxedEnum,
@@ -11569,7 +11620,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 146u32,
+                rule_id: 147u32,
                 rule_name: ::std::string::String::from("ruleItem"),
                 kind: ::bbnf_ir::registry::LayoutKind::UntaggedEnum,
                 rule_type: ::bbnf_ir::TypeDesc::BoxedEnum,
@@ -11587,7 +11638,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 147u32,
+                rule_id: 148u32,
                 rule_name: ::std::string::String::from("blockContent"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Vec(
@@ -11602,7 +11653,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 148u32,
+                rule_id: 149u32,
                 rule_name: ::std::string::String::from("ruleList"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Vec(
@@ -11617,7 +11668,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 149u32,
+                rule_id: 150u32,
                 rule_name: ::std::string::String::from("stylesheet"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::BoxedEnum,
@@ -11626,12 +11677,12 @@ mod __cssl4parser_emit_impl {
                     ::std::string::String::from("ruleList"), type_desc :
                     ::bbnf_ir::TypeDesc::BoxedEnum, source :
                     ::bbnf_ir::registry::FieldSource::RuleReference { target_rule :
-                    148u32, }, }
+                    149u32, }, }
                 ],
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 150u32,
+                rule_id: 151u32,
                 rule_name: ::std::string::String::from("__pattern_90b9f441ae92fa6c"),
                 kind: ::bbnf_ir::registry::LayoutKind::TaggedEnum,
                 rule_type: ::bbnf_ir::TypeDesc::HeterogeneousAltJoin(
@@ -11643,7 +11694,7 @@ mod __cssl4parser_emit_impl {
                     ::bbnf_ir::TypeDesc::BoxedEnum, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 0u32, },
                     }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("2011"), type_desc :
+                    ::std::string::String::from("2012"), type_desc :
                     ::bbnf_ir::TypeDesc::F64, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 1u32, },
                     }
@@ -11651,8 +11702,8 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 151u32,
-                rule_name: ::std::string::String::from("__calcFunction_cont_151"),
+                rule_id: 152u32,
+                rule_name: ::std::string::String::from("__calcFunction_cont_152"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::BoxedEnum,
                 fields: ::std::vec![
@@ -11660,36 +11711,13 @@ mod __cssl4parser_emit_impl {
                     ::std::string::String::from("mathExpr"), type_desc :
                     ::bbnf_ir::TypeDesc::BoxedEnum, source :
                     ::bbnf_ir::registry::FieldSource::RuleReference { target_rule :
-                    103u32, }, }
-                ],
-            });
-        __registry
-            .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 152u32,
-                rule_name: ::std::string::String::from("__minFunction_cont_152"),
-                kind: ::bbnf_ir::registry::LayoutKind::Struct,
-                rule_type: ::bbnf_ir::TypeDesc::Tuple(
-                    ::std::vec![
-                        ::bbnf_ir::TypeDesc::BoxedEnum,
-                        ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum))
-                    ],
-                ),
-                fields: ::std::vec![
-                    ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("mathExpr"), type_desc :
-                    ::bbnf_ir::TypeDesc::BoxedEnum, source :
-                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 0u32, },
-                    }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("field_1"), type_desc :
-                    ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum)),
-                    source : ::bbnf_ir::registry::FieldSource::SeqPosition { position :
-                    1u32, }, }
+                    104u32, }, }
                 ],
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 153u32,
-                rule_name: ::std::string::String::from("__maxFunction_cont_153"),
+                rule_name: ::std::string::String::from("__minFunction_cont_153"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
@@ -11712,7 +11740,30 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 154u32,
-                rule_name: ::std::string::String::from("__clampFunction_cont_154"),
+                rule_name: ::std::string::String::from("__maxFunction_cont_154"),
+                kind: ::bbnf_ir::registry::LayoutKind::Struct,
+                rule_type: ::bbnf_ir::TypeDesc::Tuple(
+                    ::std::vec![
+                        ::bbnf_ir::TypeDesc::BoxedEnum,
+                        ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum))
+                    ],
+                ),
+                fields: ::std::vec![
+                    ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("mathExpr"), type_desc :
+                    ::bbnf_ir::TypeDesc::BoxedEnum, source :
+                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 0u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("field_1"), type_desc :
+                    ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum)),
+                    source : ::bbnf_ir::registry::FieldSource::SeqPosition { position :
+                    1u32, }, }
+                ],
+            });
+        __registry
+            .insert(::bbnf_ir::registry::StructLayout {
+                rule_id: 155u32,
+                rule_name: ::std::string::String::from("__clampFunction_cont_155"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
@@ -11737,31 +11788,8 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 155u32,
-                rule_name: ::std::string::String::from("__varFunction_cont_155"),
-                kind: ::bbnf_ir::registry::LayoutKind::Struct,
-                rule_type: ::bbnf_ir::TypeDesc::Tuple(
-                    ::std::vec![
-                        ::bbnf_ir::TypeDesc::Span,
-                        ::bbnf_ir::TypeDesc::Option(::std::boxed::Box::new(::bbnf_ir::TypeDesc::BoxedEnum))
-                    ],
-                ),
-                fields: ::std::vec![
-                    ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("field_0"), type_desc :
-                    ::bbnf_ir::TypeDesc::Span, source :
-                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 0u32, },
-                    }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("field_1"), type_desc :
-                    ::bbnf_ir::TypeDesc::Option(::std::boxed::Box::new(::bbnf_ir::TypeDesc::BoxedEnum)),
-                    source : ::bbnf_ir::registry::FieldSource::SeqPosition { position :
-                    1u32, }, }
-                ],
-            });
-        __registry
-            .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 156u32,
-                rule_name: ::std::string::String::from("__envFunction_cont_156"),
+                rule_name: ::std::string::String::from("__varFunction_cont_156"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
@@ -11784,7 +11812,7 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 157u32,
-                rule_name: ::std::string::String::from("__varFunction_cont_157"),
+                rule_name: ::std::string::String::from("__envFunction_cont_157"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
@@ -11807,7 +11835,30 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 158u32,
-                rule_name: ::std::string::String::from("__calcFunction_cont_158"),
+                rule_name: ::std::string::String::from("__varFunction_cont_158"),
+                kind: ::bbnf_ir::registry::LayoutKind::Struct,
+                rule_type: ::bbnf_ir::TypeDesc::Tuple(
+                    ::std::vec![
+                        ::bbnf_ir::TypeDesc::Span,
+                        ::bbnf_ir::TypeDesc::Option(::std::boxed::Box::new(::bbnf_ir::TypeDesc::BoxedEnum))
+                    ],
+                ),
+                fields: ::std::vec![
+                    ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("field_0"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 0u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("field_1"), type_desc :
+                    ::bbnf_ir::TypeDesc::Option(::std::boxed::Box::new(::bbnf_ir::TypeDesc::BoxedEnum)),
+                    source : ::bbnf_ir::registry::FieldSource::SeqPosition { position :
+                    1u32, }, }
+                ],
+            });
+        __registry
+            .insert(::bbnf_ir::registry::StructLayout {
+                rule_id: 159u32,
+                rule_name: ::std::string::String::from("__calcFunction_cont_159"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::BoxedEnum,
                 fields: ::std::vec![
@@ -11815,13 +11866,13 @@ mod __cssl4parser_emit_impl {
                     ::std::string::String::from("mathExpr"), type_desc :
                     ::bbnf_ir::TypeDesc::BoxedEnum, source :
                     ::bbnf_ir::registry::FieldSource::RuleReference { target_rule :
-                    103u32, }, }
+                    104u32, }, }
                 ],
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 159u32,
-                rule_name: ::std::string::String::from("__urlFunction_cont_159"),
+                rule_id: 160u32,
+                rule_name: ::std::string::String::from("__urlFunction_cont_160"),
                 kind: ::bbnf_ir::registry::LayoutKind::UntaggedEnum,
                 rule_type: ::bbnf_ir::TypeDesc::Span,
                 fields: ::std::vec![
@@ -11838,8 +11889,8 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 160u32,
-                rule_name: ::std::string::String::from("__genericFunction_cont_160"),
+                rule_id: 161u32,
+                rule_name: ::std::string::String::from("__genericFunction_cont_161"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
@@ -11864,39 +11915,8 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 161u32,
-                rule_name: ::std::string::String::from("__colorDecl_cont_161"),
-                kind: ::bbnf_ir::registry::LayoutKind::Struct,
-                rule_type: ::bbnf_ir::TypeDesc::Tuple(
-                    ::std::vec![
-                        ::bbnf_ir::TypeDesc::Span,
-                        ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum)),
-                        ::bbnf_ir::TypeDesc::Span
-                    ],
-                ),
-                fields: ::std::vec![
-                    ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("field_0"), type_desc :
-                    ::bbnf_ir::TypeDesc::Span, source :
-                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 0u32, },
-                    }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("field_1"), type_desc :
-                    ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum)),
-                    source : ::bbnf_ir::registry::FieldSource::SeqPosition { position :
-                    1u32, }, }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("importantSuffix"), type_desc :
-                    ::bbnf_ir::TypeDesc::Span, source :
-                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 2u32, },
-                    }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("field_3"), type_desc :
-                    ::bbnf_ir::TypeDesc::Span, source :
-                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 3u32, }, }
-                ],
-            });
-        __registry
-            .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 162u32,
-                rule_name: ::std::string::String::from("__sizeDecl_cont_162"),
+                rule_name: ::std::string::String::from("__colorDecl_cont_162"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
@@ -11927,7 +11947,7 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 163u32,
-                rule_name: ::std::string::String::from("__spacingDecl_cont_163"),
+                rule_name: ::std::string::String::from("__sizeDecl_cont_163"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
@@ -11958,7 +11978,7 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 164u32,
-                rule_name: ::std::string::String::from("__fontDecl_cont_164"),
+                rule_name: ::std::string::String::from("__spacingDecl_cont_164"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
@@ -11989,7 +12009,7 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 165u32,
-                rule_name: ::std::string::String::from("__bgDecl_cont_165"),
+                rule_name: ::std::string::String::from("__fontDecl_cont_165"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
@@ -12020,7 +12040,7 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 166u32,
-                rule_name: ::std::string::String::from("__transformDecl_cont_166"),
+                rule_name: ::std::string::String::from("__bgDecl_cont_166"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
@@ -12051,7 +12071,7 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 167u32,
-                rule_name: ::std::string::String::from("__transitionDecl_cont_167"),
+                rule_name: ::std::string::String::from("__transformDecl_cont_167"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
@@ -12082,7 +12102,7 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 168u32,
-                rule_name: ::std::string::String::from("__listTableDecl_cont_168"),
+                rule_name: ::std::string::String::from("__transitionDecl_cont_168"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
@@ -12113,7 +12133,7 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 169u32,
-                rule_name: ::std::string::String::from("__displayDecl_cont_169"),
+                rule_name: ::std::string::String::from("__listTableDecl_cont_169"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
@@ -12144,7 +12164,7 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 170u32,
-                rule_name: ::std::string::String::from("__positionDecl_cont_170"),
+                rule_name: ::std::string::String::from("__displayDecl_cont_170"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
@@ -12175,7 +12195,7 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 171u32,
-                rule_name: ::std::string::String::from("__overflowDecl_cont_171"),
+                rule_name: ::std::string::String::from("__positionDecl_cont_171"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
@@ -12206,7 +12226,7 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 172u32,
-                rule_name: ::std::string::String::from("__visibilityDecl_cont_172"),
+                rule_name: ::std::string::String::from("__overflowDecl_cont_172"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
@@ -12237,7 +12257,7 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 173u32,
-                rule_name: ::std::string::String::from("__flexDirDecl_cont_173"),
+                rule_name: ::std::string::String::from("__visibilityDecl_cont_173"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
@@ -12268,7 +12288,7 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 174u32,
-                rule_name: ::std::string::String::from("__flexWrapDecl_cont_174"),
+                rule_name: ::std::string::String::from("__flexDirDecl_cont_174"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
@@ -12299,7 +12319,7 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 175u32,
-                rule_name: ::std::string::String::from("__alignDecl_cont_175"),
+                rule_name: ::std::string::String::from("__flexWrapDecl_cont_175"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
@@ -12330,7 +12350,7 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 176u32,
-                rule_name: ::std::string::String::from("__flexNumDecl_cont_176"),
+                rule_name: ::std::string::String::from("__alignDecl_cont_176"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
@@ -12361,7 +12381,7 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 177u32,
-                rule_name: ::std::string::String::from("__fontSizeDecl_cont_177"),
+                rule_name: ::std::string::String::from("__flexNumDecl_cont_177"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
@@ -12392,7 +12412,7 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 178u32,
-                rule_name: ::std::string::String::from("__fontWeightDecl_cont_178"),
+                rule_name: ::std::string::String::from("__fontSizeDecl_cont_178"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
@@ -12423,7 +12443,7 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 179u32,
-                rule_name: ::std::string::String::from("__lineHeightDecl_cont_179"),
+                rule_name: ::std::string::String::from("__fontWeightDecl_cont_179"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
@@ -12454,7 +12474,7 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 180u32,
-                rule_name: ::std::string::String::from("__borderWidthDecl_cont_180"),
+                rule_name: ::std::string::String::from("__lineHeightDecl_cont_180"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
@@ -12485,7 +12505,7 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 181u32,
-                rule_name: ::std::string::String::from("__borderStyleDecl_cont_181"),
+                rule_name: ::std::string::String::from("__borderWidthDecl_cont_181"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
@@ -12516,7 +12536,7 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 182u32,
-                rule_name: ::std::string::String::from("__borderRadiusDecl_cont_182"),
+                rule_name: ::std::string::String::from("__borderStyleDecl_cont_182"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
@@ -12547,7 +12567,7 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 183u32,
-                rule_name: ::std::string::String::from("__opacityDecl_cont_183"),
+                rule_name: ::std::string::String::from("__borderRadiusDecl_cont_183"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
@@ -12578,7 +12598,7 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 184u32,
-                rule_name: ::std::string::String::from("__textAlignDecl_cont_184"),
+                rule_name: ::std::string::String::from("__opacityDecl_cont_184"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
@@ -12609,7 +12629,7 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 185u32,
-                rule_name: ::std::string::String::from("__boxSizingDecl_cont_185"),
+                rule_name: ::std::string::String::from("__textAlignDecl_cont_185"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
@@ -12640,7 +12660,38 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 186u32,
-                rule_name: ::std::string::String::from("__cursorDecl_cont_186"),
+                rule_name: ::std::string::String::from("__boxSizingDecl_cont_186"),
+                kind: ::bbnf_ir::registry::LayoutKind::Struct,
+                rule_type: ::bbnf_ir::TypeDesc::Tuple(
+                    ::std::vec![
+                        ::bbnf_ir::TypeDesc::Span,
+                        ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum)),
+                        ::bbnf_ir::TypeDesc::Span
+                    ],
+                ),
+                fields: ::std::vec![
+                    ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("field_0"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 0u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("field_1"), type_desc :
+                    ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum)),
+                    source : ::bbnf_ir::registry::FieldSource::SeqPosition { position :
+                    1u32, }, }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("importantSuffix"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 2u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("field_3"), type_desc :
+                    ::bbnf_ir::TypeDesc::Span, source :
+                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 3u32, }, }
+                ],
+            });
+        __registry
+            .insert(::bbnf_ir::registry::StructLayout {
+                rule_id: 187u32,
+                rule_name: ::std::string::String::from("__cursorDecl_cont_187"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
@@ -12694,18 +12745,19 @@ mod __cssl4parser_emit_impl {
     static __DTA_REGEX_1264: &str = "\\d+(\\.\\d+)?%";
     static __DTA_REGEX_1274: &str = "[^()\"']+";
     static __DTA_REGEX_1280: &str = "[^)\"'\\s]+";
-    static __DTA_REGEX_1305: &str = "--[\\w-]+";
-    static __DTA_REGEX_1310: &str = "(?:[^;!}\\/]|\\/\\*[^*]*(?:\\*+[^\\/][^*]*)*\\*+\\/|\\/[^*])*";
-    static __DTA_REGEX_1315: &str = "--[\\w-]+|-?[a-zA-Z_][\\w-]*";
-    static __DTA_REGEX_1320: &str = "[^;!}]*";
-    static __DTA_REGEX_1381: &str = "\\s*,\\s*";
-    static __DTA_REGEX_1386: &str = "[a-zA-Z][\\w-]*";
-    static __DTA_REGEX_1403: &str = "[^)]+";
-    static __DTA_REGEX_1444: &str = "[iIsS]";
-    static __DTA_REGEX_1463: &str = "[a-zA-Z_][\\w-]*";
-    static __DTA_REGEX_2293: &str = "@(-[a-z]+-)?keyframes";
-    static __DTA_REGEX_2333: &str = "@-?[a-zA-Z][\\w-]*";
-    static __DTA_REGEX_2334: &str = "[^;{}]*";
+    static __DTA_REGEX_1309: &str = "-?-?[a-zA-Z_\\x80-\\xff][\\w\\x80-\\xff-]*";
+    static __DTA_REGEX_1317: &str = "[^)]+";
+    static __DTA_REGEX_1325: &str = "--[\\w-]+";
+    static __DTA_REGEX_1330: &str = "(?:[^;!}\\/]|\\/\\*[^*]*(?:\\*+[^\\/][^*]*)*\\*+\\/|\\/[^*])*";
+    static __DTA_REGEX_1335: &str = "--[\\w-]+|-?[a-zA-Z_][\\w-]*";
+    static __DTA_REGEX_1340: &str = "[^;!}]*";
+    static __DTA_REGEX_1401: &str = "\\s*,\\s*";
+    static __DTA_REGEX_1406: &str = "[a-zA-Z][\\w-]*";
+    static __DTA_REGEX_1481: &str = "[iIsS]";
+    static __DTA_REGEX_1500: &str = "[a-zA-Z_][\\w-]*";
+    static __DTA_REGEX_2310: &str = "@(-[a-z]+-)?keyframes";
+    static __DTA_REGEX_2334: &str = "@-?[a-zA-Z][\\w-]*";
+    static __DTA_REGEX_2335: &str = "[^;{}]*";
     /// AY.W4.3 — hoisted DFA byte-class equivalence table.
     /// Consumed by `emit_dfa_body_table_driven` emitted in
     /// the same translation unit; AY-II.W0'.c retired the
@@ -12713,7 +12765,7 @@ mod __cssl4parser_emit_impl {
     /// tables with their consumer 1:1 at
     /// `emit_regex_scan_adapter`'s `state_count >=
     /// DFA_HOIST_MIN_STATES` branch.
-    pub(crate) const __DFA_CLASSES_CssL4Parser_19: [u8; 256] = [
+    pub(crate) const __DFA_CLASSES_CssL4Parser_21: [u8; 256] = [
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -12729,14 +12781,14 @@ mod __cssl4parser_emit_impl {
     /// (state * num_classes + class -> target_state |
     /// 0xFF=DEAD). Consumed via the same hoist-branch pairing
     /// as the byte-class table above.
-    pub(crate) const __DFA_TRANS_CssL4Parser_19: [u8; 44] = [
+    pub(crate) const __DFA_TRANS_CssL4Parser_21: [u8; 44] = [
         0, 255, 0, 1, 0, 0, 3, 0, 2, 3, 6, 7, 3, 3, 8, 3, 0, 0, 2, 4, 2, 2, 9, 5, 2, 3,
         9, 4, 2, 2, 10, 2, 3, 3, 10, 0, 2, 3, 9, 5, 3, 3, 10, 2,
     ];
     /// AY.W4.3 — hoisted DFA accept-state bitset. Consumed
     /// via the same hoist-branch pairing as the byte-class
     /// table above.
-    pub(crate) const __DFA_ACCEPT_CssL4Parser_19: [u64; 1] = [629];
+    pub(crate) const __DFA_ACCEPT_CssL4Parser_21: [u64; 1] = [629];
     /// AY.W4.3 — hoisted DFA byte-class equivalence table.
     /// Consumed by `emit_dfa_body_table_driven` emitted in
     /// the same translation unit; AY-II.W0'.c retired the
@@ -12744,7 +12796,7 @@ mod __cssl4parser_emit_impl {
     /// tables with their consumer 1:1 at
     /// `emit_regex_scan_adapter`'s `state_count >=
     /// DFA_HOIST_MIN_STATES` branch.
-    pub(crate) const __DFA_CLASSES_CssL4Parser_27: [u8; 256] = [
+    pub(crate) const __DFA_CLASSES_CssL4Parser_28: [u8; 256] = [
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -12760,7 +12812,7 @@ mod __cssl4parser_emit_impl {
     /// (state * num_classes + class -> target_state |
     /// 0xFF=DEAD). Consumed via the same hoist-branch pairing
     /// as the byte-class table above.
-    pub(crate) const __DFA_TRANS_CssL4Parser_27: [u8; 168] = [
+    pub(crate) const __DFA_TRANS_CssL4Parser_28: [u8; 168] = [
         255, 255, 2, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
         255, 255, 255, 255, 255, 255, 255, 255, 255, 3, 255, 255, 255, 255, 255, 5, 255,
         255, 255, 255, 255, 255, 255, 4, 4, 4, 4, 4, 4, 4, 4, 4, 255, 9, 255, 4, 4, 4, 4,
@@ -12775,7 +12827,7 @@ mod __cssl4parser_emit_impl {
     /// AY.W4.3 — hoisted DFA accept-state bitset. Consumed
     /// via the same hoist-branch pairing as the byte-class
     /// table above.
-    pub(crate) const __DFA_ACCEPT_CssL4Parser_27: [u64; 1] = [2];
+    pub(crate) const __DFA_ACCEPT_CssL4Parser_28: [u64; 1] = [2];
     /// AY.W4.3 — per-pattern (LAST-byte-set lo, hi) packed
     /// `CharSet128` tuples. `(0, 0)` means narrowing is
     /// disabled for that pattern (suffix not deterministic).
@@ -12785,7 +12837,7 @@ mod __cssl4parser_emit_impl {
     /// contain any byte in the LAST set, the regex cannot
     /// complete a match — skip the DFA walk entirely.
     #[allow(dead_code)]
-    pub(crate) const __REGEX_LAST_BYTE_SET_CssL4Parser: [(u64, u64); 30] = [
+    pub(crate) const __REGEX_LAST_BYTE_SET_CssL4Parser: [(u64, u64); 31] = [
         (0, 0),
         (0, 0),
         (0, 0),
@@ -12802,6 +12854,7 @@ mod __cssl4parser_emit_impl {
         (0, 0),
         (0, 0),
         (137438953472, 0),
+        (0, 0),
         (0, 0),
         (0, 0),
         (0, 0),
@@ -14769,8 +14822,8 @@ mod __cssl4parser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_1305.as_ptr())
-            || pattern == __DTA_REGEX_1305
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_1309.as_ptr())
+            || pattern == __DTA_REGEX_1309
         {
             if input.len() >= 64 * 1024 {
                 let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssL4Parser[18];
@@ -14808,6 +14861,263 @@ mod __cssl4parser_emit_impl {
                     match __dfa_state {
                         0 => {
                             match b {
+                                65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76
+                                | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88
+                                | 89 | 90 | 95 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104
+                                | 105 | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114
+                                | 115 | 116 | 117 | 118 | 119 | 120 | 121 | 122 | 128 | 129
+                                | 130 | 131 | 132 | 133 | 134 | 135 | 136 | 137 | 138 | 139
+                                | 140 | 141 | 142 | 143 | 144 | 145 | 146 | 147 | 148 | 149
+                                | 150 | 151 | 152 | 153 | 154 | 155 | 156 | 157 | 158 | 159
+                                | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169
+                                | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179
+                                | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189
+                                | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198 | 199
+                                | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 209
+                                | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218 | 219
+                                | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228 | 229
+                                | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238 | 239
+                                | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248 | 249
+                                | 250 | 251 | 252 | 253 | 254 | 255 => __dfa_state = 1,
+                                45 => __dfa_state = 3,
+                                _ => break,
+                            }
+                        }
+                        1 => {
+                            match b {
+                                45 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 65
+                                | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77
+                                | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89
+                                | 90 | 95 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105
+                                | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115
+                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 | 128 | 129 | 130
+                                | 131 | 132 | 133 | 134 | 135 | 136 | 137 | 138 | 139 | 140
+                                | 141 | 142 | 143 | 144 | 145 | 146 | 147 | 148 | 149 | 150
+                                | 151 | 152 | 153 | 154 | 155 | 156 | 157 | 158 | 159 | 160
+                                | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170
+                                | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180
+                                | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190
+                                | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198 | 199 | 200
+                                | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 209 | 210
+                                | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218 | 219 | 220
+                                | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228 | 229 | 230
+                                | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238 | 239 | 240
+                                | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248 | 249 | 250
+                                | 251 | 252 | 253 | 254 | 255 => __dfa_state = 1,
+                                _ => break,
+                            }
+                        }
+                        2 => {
+                            match b {
+                                65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76
+                                | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88
+                                | 89 | 90 | 95 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104
+                                | 105 | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114
+                                | 115 | 116 | 117 | 118 | 119 | 120 | 121 | 122 | 128 | 129
+                                | 130 | 131 | 132 | 133 | 134 | 135 | 136 | 137 | 138 | 139
+                                | 140 | 141 | 142 | 143 | 144 | 145 | 146 | 147 | 148 | 149
+                                | 150 | 151 | 152 | 153 | 154 | 155 | 156 | 157 | 158 | 159
+                                | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169
+                                | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179
+                                | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189
+                                | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198 | 199
+                                | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 209
+                                | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218 | 219
+                                | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228 | 229
+                                | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238 | 239
+                                | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248 | 249
+                                | 250 | 251 | 252 | 253 | 254 | 255 => __dfa_state = 1,
+                                _ => break,
+                            }
+                        }
+                        3 => {
+                            match b {
+                                65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76
+                                | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88
+                                | 89 | 90 | 95 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104
+                                | 105 | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114
+                                | 115 | 116 | 117 | 118 | 119 | 120 | 121 | 122 | 128 | 129
+                                | 130 | 131 | 132 | 133 | 134 | 135 | 136 | 137 | 138 | 139
+                                | 140 | 141 | 142 | 143 | 144 | 145 | 146 | 147 | 148 | 149
+                                | 150 | 151 | 152 | 153 | 154 | 155 | 156 | 157 | 158 | 159
+                                | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169
+                                | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179
+                                | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189
+                                | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198 | 199
+                                | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 209
+                                | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218 | 219
+                                | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228 | 229
+                                | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238 | 239
+                                | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248 | 249
+                                | 250 | 251 | 252 | 253 | 254 | 255 => __dfa_state = 1,
+                                45 => __dfa_state = 2,
+                                _ => break,
+                            }
+                        }
+                        _ => unsafe { ::core::hint::unreachable_unchecked() }
+                    }
+                    __dfa_p += 1;
+                    match __dfa_state {
+                        1 => {
+                            __dfa_last_match = ::core::option::Option::Some(
+                                __dfa_p as u32,
+                            );
+                        }
+                        _ => {}
+                    }
+                }
+                break '__dfa __dfa_last_match.map(|end| end - pos as u32);
+            };
+        }
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_1317.as_ptr())
+            || pattern == __DTA_REGEX_1317
+        {
+            if input.len() >= 64 * 1024 {
+                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssL4Parser[19];
+                if (__lb_lo | __lb_hi) != 0 {
+                    let __scan_end = (pos + 256).min(input.len());
+                    let __slice = &input[pos..__scan_end];
+                    let mut __found = false;
+                    for &__b in __slice {
+                        let __test = if __b < 64 {
+                            (__lb_lo >> __b) & 1
+                        } else if __b < 128 {
+                            (__lb_hi >> (__b - 64)) & 1
+                        } else {
+                            0
+                        };
+                        if __test != 0 {
+                            __found = true;
+                            break;
+                        }
+                    }
+                    if !__found && __scan_end == input.len() {
+                        return ::core::option::Option::None;
+                    }
+                }
+            }
+            return '__dfa: {
+                let mut __dfa_state: u32 = 0;
+                let mut __dfa_p: usize = pos;
+                let mut __dfa_last_match: ::core::option::Option<u32> = ::core::option::Option::None;
+                loop {
+                    let b = match input.get(__dfa_p) {
+                        ::core::option::Option::Some(&b) => b,
+                        ::core::option::Option::None => break,
+                    };
+                    match __dfa_state {
+                        0 => {
+                            match b {
+                                0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13
+                                | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25
+                                | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37
+                                | 38 | 39 | 40 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50
+                                | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62
+                                | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74
+                                | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86
+                                | 87 | 88 | 89 | 90 | 91 | 92 | 93 | 94 | 95 | 96 | 97 | 98
+                                | 99 | 100 | 101 | 102 | 103 | 104 | 105 | 106 | 107 | 108
+                                | 109 | 110 | 111 | 112 | 113 | 114 | 115 | 116 | 117 | 118
+                                | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 126 | 127 | 128
+                                | 129 | 130 | 131 | 132 | 133 | 134 | 135 | 136 | 137 | 138
+                                | 139 | 140 | 141 | 142 | 143 | 144 | 145 | 146 | 147 | 148
+                                | 149 | 150 | 151 | 152 | 153 | 154 | 155 | 156 | 157 | 158
+                                | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168
+                                | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178
+                                | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188
+                                | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198
+                                | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208
+                                | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218
+                                | 219 | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228
+                                | 229 | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238
+                                | 239 | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248
+                                | 249 | 250 | 251 | 252 | 253 | 254 | 255 => __dfa_state = 1,
+                                _ => break,
+                            }
+                        }
+                        1 => {
+                            match b {
+                                0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13
+                                | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25
+                                | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37
+                                | 38 | 39 | 40 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50
+                                | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62
+                                | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74
+                                | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86
+                                | 87 | 88 | 89 | 90 | 91 | 92 | 93 | 94 | 95 | 96 | 97 | 98
+                                | 99 | 100 | 101 | 102 | 103 | 104 | 105 | 106 | 107 | 108
+                                | 109 | 110 | 111 | 112 | 113 | 114 | 115 | 116 | 117 | 118
+                                | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 126 | 127 | 128
+                                | 129 | 130 | 131 | 132 | 133 | 134 | 135 | 136 | 137 | 138
+                                | 139 | 140 | 141 | 142 | 143 | 144 | 145 | 146 | 147 | 148
+                                | 149 | 150 | 151 | 152 | 153 | 154 | 155 | 156 | 157 | 158
+                                | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168
+                                | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178
+                                | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188
+                                | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198
+                                | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208
+                                | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218
+                                | 219 | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228
+                                | 229 | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238
+                                | 239 | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248
+                                | 249 | 250 | 251 | 252 | 253 | 254 | 255 => __dfa_state = 1,
+                                _ => break,
+                            }
+                        }
+                        _ => unsafe { ::core::hint::unreachable_unchecked() }
+                    }
+                    __dfa_p += 1;
+                    match __dfa_state {
+                        1 => {
+                            __dfa_last_match = ::core::option::Option::Some(
+                                __dfa_p as u32,
+                            );
+                        }
+                        _ => {}
+                    }
+                }
+                break '__dfa __dfa_last_match.map(|end| end - pos as u32);
+            };
+        }
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_1325.as_ptr())
+            || pattern == __DTA_REGEX_1325
+        {
+            if input.len() >= 64 * 1024 {
+                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssL4Parser[20];
+                if (__lb_lo | __lb_hi) != 0 {
+                    let __scan_end = (pos + 256).min(input.len());
+                    let __slice = &input[pos..__scan_end];
+                    let mut __found = false;
+                    for &__b in __slice {
+                        let __test = if __b < 64 {
+                            (__lb_lo >> __b) & 1
+                        } else if __b < 128 {
+                            (__lb_hi >> (__b - 64)) & 1
+                        } else {
+                            0
+                        };
+                        if __test != 0 {
+                            __found = true;
+                            break;
+                        }
+                    }
+                    if !__found && __scan_end == input.len() {
+                        return ::core::option::Option::None;
+                    }
+                }
+            }
+            return '__dfa: {
+                let mut __dfa_state: u32 = 0;
+                let mut __dfa_p: usize = pos;
+                let mut __dfa_last_match: ::core::option::Option<u32> = ::core::option::Option::None;
+                loop {
+                    let b = match input.get(__dfa_p) {
+                        ::core::option::Option::Some(&b) => b,
+                        ::core::option::Option::None => break,
+                    };
+                    match __dfa_state {
+                        0 => {
+                            match b {
                                 45 => __dfa_state = 3,
                                 _ => break,
                             }
@@ -14855,11 +15165,11 @@ mod __cssl4parser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_1310.as_ptr())
-            || pattern == __DTA_REGEX_1310
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_1330.as_ptr())
+            || pattern == __DTA_REGEX_1330
         {
             if input.len() >= 64 * 1024 {
-                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssL4Parser[19];
+                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssL4Parser[21];
                 if (__lb_lo | __lb_hi) != 0 {
                     let __scan_end = (pos + 256).min(input.len());
                     let __slice = &input[pos..__scan_end];
@@ -14892,10 +15202,10 @@ mod __cssl4parser_emit_impl {
                 while __dfa_p < __end {
                     let __b = unsafe { *input.get_unchecked(__dfa_p) };
                     let __c = unsafe {
-                        *__DFA_CLASSES_CssL4Parser_19.get_unchecked(__b as usize)
+                        *__DFA_CLASSES_CssL4Parser_21.get_unchecked(__b as usize)
                     };
                     let __next = unsafe {
-                        *__DFA_TRANS_CssL4Parser_19
+                        *__DFA_TRANS_CssL4Parser_21
                             .get_unchecked(__dfa_state as usize * 4 + __c as usize)
                     };
                     if __next == 0xFF {
@@ -14903,7 +15213,7 @@ mod __cssl4parser_emit_impl {
                     }
                     __dfa_state = __next;
                     __dfa_p += 1;
-                    if (__DFA_ACCEPT_CssL4Parser_19[__dfa_state as usize / 64]
+                    if (__DFA_ACCEPT_CssL4Parser_21[__dfa_state as usize / 64]
                         >> (__dfa_state as usize % 64)) & 1 != 0
                     {
                         __dfa_last_match = ::core::option::Option::Some(__dfa_p as u32);
@@ -14912,11 +15222,11 @@ mod __cssl4parser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_1315.as_ptr())
-            || pattern == __DTA_REGEX_1315
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_1335.as_ptr())
+            || pattern == __DTA_REGEX_1335
         {
             if input.len() >= 64 * 1024 {
-                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssL4Parser[20];
+                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssL4Parser[22];
                 if (__lb_lo | __lb_hi) != 0 {
                     let __scan_end = (pos + 256).min(input.len());
                     let __slice = &input[pos..__scan_end];
@@ -15012,11 +15322,11 @@ mod __cssl4parser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_1320.as_ptr())
-            || pattern == __DTA_REGEX_1320
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_1340.as_ptr())
+            || pattern == __DTA_REGEX_1340
         {
             if input.len() >= 64 * 1024 {
-                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssL4Parser[21];
+                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssL4Parser[23];
                 if (__lb_lo | __lb_hi) != 0 {
                     let __scan_end = (pos + 256).min(input.len());
                     let __slice = &input[pos..__scan_end];
@@ -15095,11 +15405,11 @@ mod __cssl4parser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_1381.as_ptr())
-            || pattern == __DTA_REGEX_1381
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_1401.as_ptr())
+            || pattern == __DTA_REGEX_1401
         {
             if input.len() >= 64 * 1024 {
-                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssL4Parser[22];
+                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssL4Parser[24];
                 if (__lb_lo | __lb_hi) != 0 {
                     let __scan_end = (pos + 256).min(input.len());
                     let __slice = &input[pos..__scan_end];
@@ -15160,11 +15470,11 @@ mod __cssl4parser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_1386.as_ptr())
-            || pattern == __DTA_REGEX_1386
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_1406.as_ptr())
+            || pattern == __DTA_REGEX_1406
         {
             if input.len() >= 64 * 1024 {
-                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssL4Parser[23];
+                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssL4Parser[25];
                 if (__lb_lo | __lb_hi) != 0 {
                     let __scan_end = (pos + 256).min(input.len());
                     let __slice = &input[pos..__scan_end];
@@ -15233,121 +15543,11 @@ mod __cssl4parser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_1403.as_ptr())
-            || pattern == __DTA_REGEX_1403
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_1481.as_ptr())
+            || pattern == __DTA_REGEX_1481
         {
             if input.len() >= 64 * 1024 {
-                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssL4Parser[24];
-                if (__lb_lo | __lb_hi) != 0 {
-                    let __scan_end = (pos + 256).min(input.len());
-                    let __slice = &input[pos..__scan_end];
-                    let mut __found = false;
-                    for &__b in __slice {
-                        let __test = if __b < 64 {
-                            (__lb_lo >> __b) & 1
-                        } else if __b < 128 {
-                            (__lb_hi >> (__b - 64)) & 1
-                        } else {
-                            0
-                        };
-                        if __test != 0 {
-                            __found = true;
-                            break;
-                        }
-                    }
-                    if !__found && __scan_end == input.len() {
-                        return ::core::option::Option::None;
-                    }
-                }
-            }
-            return '__dfa: {
-                let mut __dfa_state: u32 = 0;
-                let mut __dfa_p: usize = pos;
-                let mut __dfa_last_match: ::core::option::Option<u32> = ::core::option::Option::None;
-                loop {
-                    let b = match input.get(__dfa_p) {
-                        ::core::option::Option::Some(&b) => b,
-                        ::core::option::Option::None => break,
-                    };
-                    match __dfa_state {
-                        0 => {
-                            match b {
-                                0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13
-                                | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25
-                                | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37
-                                | 38 | 39 | 40 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50
-                                | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62
-                                | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74
-                                | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86
-                                | 87 | 88 | 89 | 90 | 91 | 92 | 93 | 94 | 95 | 96 | 97 | 98
-                                | 99 | 100 | 101 | 102 | 103 | 104 | 105 | 106 | 107 | 108
-                                | 109 | 110 | 111 | 112 | 113 | 114 | 115 | 116 | 117 | 118
-                                | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 126 | 127 | 128
-                                | 129 | 130 | 131 | 132 | 133 | 134 | 135 | 136 | 137 | 138
-                                | 139 | 140 | 141 | 142 | 143 | 144 | 145 | 146 | 147 | 148
-                                | 149 | 150 | 151 | 152 | 153 | 154 | 155 | 156 | 157 | 158
-                                | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168
-                                | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178
-                                | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188
-                                | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198
-                                | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208
-                                | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218
-                                | 219 | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228
-                                | 229 | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238
-                                | 239 | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248
-                                | 249 | 250 | 251 | 252 | 253 | 254 | 255 => __dfa_state = 1,
-                                _ => break,
-                            }
-                        }
-                        1 => {
-                            match b {
-                                0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13
-                                | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25
-                                | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37
-                                | 38 | 39 | 40 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50
-                                | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62
-                                | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74
-                                | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86
-                                | 87 | 88 | 89 | 90 | 91 | 92 | 93 | 94 | 95 | 96 | 97 | 98
-                                | 99 | 100 | 101 | 102 | 103 | 104 | 105 | 106 | 107 | 108
-                                | 109 | 110 | 111 | 112 | 113 | 114 | 115 | 116 | 117 | 118
-                                | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 126 | 127 | 128
-                                | 129 | 130 | 131 | 132 | 133 | 134 | 135 | 136 | 137 | 138
-                                | 139 | 140 | 141 | 142 | 143 | 144 | 145 | 146 | 147 | 148
-                                | 149 | 150 | 151 | 152 | 153 | 154 | 155 | 156 | 157 | 158
-                                | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168
-                                | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178
-                                | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188
-                                | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198
-                                | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208
-                                | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218
-                                | 219 | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228
-                                | 229 | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238
-                                | 239 | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248
-                                | 249 | 250 | 251 | 252 | 253 | 254 | 255 => __dfa_state = 1,
-                                _ => break,
-                            }
-                        }
-                        _ => unsafe { ::core::hint::unreachable_unchecked() }
-                    }
-                    __dfa_p += 1;
-                    match __dfa_state {
-                        1 => {
-                            __dfa_last_match = ::core::option::Option::Some(
-                                __dfa_p as u32,
-                            );
-                        }
-                        _ => {}
-                    }
-                }
-                break '__dfa __dfa_last_match.map(|end| end - pos as u32);
-            };
-        }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_1444.as_ptr())
-            || pattern == __DTA_REGEX_1444
-        {
-            if input.len() >= 64 * 1024 {
-                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssL4Parser[25];
+                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssL4Parser[26];
                 if (__lb_lo | __lb_hi) != 0 {
                     let __scan_end = (pos + 256).min(input.len());
                     let __slice = &input[pos..__scan_end];
@@ -15406,11 +15606,11 @@ mod __cssl4parser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_1463.as_ptr())
-            || pattern == __DTA_REGEX_1463
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_1500.as_ptr())
+            || pattern == __DTA_REGEX_1500
         {
             if input.len() >= 64 * 1024 {
-                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssL4Parser[26];
+                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssL4Parser[27];
                 if (__lb_lo | __lb_hi) != 0 {
                     let __scan_end = (pos + 256).min(input.len());
                     let __slice = &input[pos..__scan_end];
@@ -15481,11 +15681,11 @@ mod __cssl4parser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_2293.as_ptr())
-            || pattern == __DTA_REGEX_2293
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_2310.as_ptr())
+            || pattern == __DTA_REGEX_2310
         {
             if input.len() >= 64 * 1024 {
-                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssL4Parser[27];
+                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssL4Parser[28];
                 if (__lb_lo | __lb_hi) != 0 {
                     let __scan_end = (pos + 256).min(input.len());
                     let __slice = &input[pos..__scan_end];
@@ -15516,10 +15716,10 @@ mod __cssl4parser_emit_impl {
                 while __dfa_p < __end {
                     let __b = unsafe { *input.get_unchecked(__dfa_p) };
                     let __c = unsafe {
-                        *__DFA_CLASSES_CssL4Parser_27.get_unchecked(__b as usize)
+                        *__DFA_CLASSES_CssL4Parser_28.get_unchecked(__b as usize)
                     };
                     let __next = unsafe {
-                        *__DFA_TRANS_CssL4Parser_27
+                        *__DFA_TRANS_CssL4Parser_28
                             .get_unchecked(__dfa_state as usize * 12 + __c as usize)
                     };
                     if __next == 0xFF {
@@ -15527,7 +15727,7 @@ mod __cssl4parser_emit_impl {
                     }
                     __dfa_state = __next;
                     __dfa_p += 1;
-                    if (__DFA_ACCEPT_CssL4Parser_27[__dfa_state as usize / 64]
+                    if (__DFA_ACCEPT_CssL4Parser_28[__dfa_state as usize / 64]
                         >> (__dfa_state as usize % 64)) & 1 != 0
                     {
                         __dfa_last_match = ::core::option::Option::Some(__dfa_p as u32);
@@ -15536,11 +15736,11 @@ mod __cssl4parser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_2333.as_ptr())
-            || pattern == __DTA_REGEX_2333
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_2334.as_ptr())
+            || pattern == __DTA_REGEX_2334
         {
             if input.len() >= 64 * 1024 {
-                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssL4Parser[28];
+                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssL4Parser[29];
                 if (__lb_lo | __lb_hi) != 0 {
                     let __scan_end = (pos + 256).min(input.len());
                     let __slice = &input[pos..__scan_end];
@@ -15626,11 +15826,11 @@ mod __cssl4parser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_2334.as_ptr())
-            || pattern == __DTA_REGEX_2334
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_2335.as_ptr())
+            || pattern == __DTA_REGEX_2335
         {
             if input.len() >= 64 * 1024 {
-                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssL4Parser[29];
+                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssL4Parser[30];
                 if (__lb_lo | __lb_hi) != 0 {
                     let __scan_end = (pos + 256).min(input.len());
                     let __slice = &input[pos..__scan_end];
@@ -40250,7 +40450,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_customPropertyDecl<'p, __P>(
+    pub fn parse_flat_CssL4Parser_mediaFeature<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -40264,9 +40464,232 @@ mod __cssl4parser_emit_impl {
         use crate::path::cursor::Decision as __Decision;
         let __decision: __Decision = cursor.decide(62u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
+        let __span_lo: usize = *p;
+        let __compound_start: u32 = *p as u32;
+        let __mediaFeature_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 62u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("mediaFeature"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __mediaFeature_handle = <crate::runtime::css_l4::CssStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__mediaFeature_layout,
+        );
+        <crate::runtime::css_l4::CssStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
+        );
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            {
+                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [40u8] {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                        offset: at as u32,
+                    });
+                }
+                *p = end;
+                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+            }
+            {
+                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                {
+                    let __scan_start = *p;
+                    let Some(match_len) = __regex_scan_CssL4Parser(
+                        "-?-?[a-zA-Z_\\x80-\\xff][\\w\\x80-\\xff-]*",
+                        input,
+                        *p,
+                    ) else {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                            offset: __scan_start as u32,
+                        });
+                    };
+                    *p += match_len as usize;
+                }
+                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+            }
+            {
+                {
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 1u32 {
+                            break;
+                        }
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
+                        }
+                        let __iter_builder_checkpoint = builder.checkpoint();
+                        let __iter_result: ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > = (|| {
+                            let _ = __shape_support_CssL4Parser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [58u8] {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                    offset: at as u32,
+                                });
+                            }
+                            *p = end;
+                            let _ = __shape_support_CssL4Parser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            let _ = __shape_support_CssL4Parser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            {
+                                let __scan_start = *p;
+                                let Some(match_len) = __regex_scan_CssL4Parser(
+                                    "[^)]+",
+                                    input,
+                                    *p,
+                                ) else {
+                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                        offset: __scan_start as u32,
+                                    });
+                                };
+                                *p += match_len as usize;
+                            }
+                            let _ = __shape_support_CssL4Parser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            Ok(())
+                        })();
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
+                                    break;
+                                }
+                                builder.commit(__iter_builder_checkpoint);
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
+                                break;
+                            }
+                        }
+                    }
+                    if __iter_count < 0u32 {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                            offset: *p as u32,
+                        });
+                    }
+                }
+            }
+            {
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [41u8] {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                        offset: at as u32,
+                    });
+                }
+                *p = end;
+            }
+            ::core::result::Result::Ok(())
+        })();
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                let __span_hi: usize = *p;
+                let __span_slice: &str = ::core::str::from_utf8(
+                        &input[__span_lo..__span_hi],
+                    )
+                    .unwrap_or("");
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::push_leaf_with_str(
+                    builder,
+                    __span_slice,
+                );
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __mediaFeature_handle,
+                );
+                ::core::result::Result::Ok(())
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
+    }
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
+    ///
+    /// Compound emission lands as typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
+    ///
+    /// Returns unit for StructDirect composition
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_CssL4Parser_customPropertyDecl<'p, __P>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_CssL4Parser::ScanState,
+        builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
+    {
+        use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(63u32 as u32);
+        let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __customPropertyDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 62u32 as ::bbnf_ir::RuleId,
+            rule_id: 63u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("customPropertyDecl"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -40455,11 +40878,11 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(63u32 as u32);
+        let __decision: __Decision = cursor.decide(64u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __genericDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 63u32 as ::bbnf_ir::RuleId,
+            rule_id: 64u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("genericDecl"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -40653,11 +41076,11 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(64u32 as u32);
+        let __decision: __Decision = cursor.decide(65u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __nsPrefix_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 64u32 as ::bbnf_ir::RuleId,
+            rule_id: 65u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("nsPrefix"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -40831,11 +41254,11 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(65u32 as u32);
+        let __decision: __Decision = cursor.decide(66u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __classSelector_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 65u32 as ::bbnf_ir::RuleId,
+            rule_id: 66u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("classSelector"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -40923,7 +41346,7 @@ mod __cssl4parser_emit_impl {
     {
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 66u32 as ::bbnf_ir::RuleId,
+            rule_id: 67u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("partPseudo"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -41037,7 +41460,7 @@ mod __cssl4parser_emit_impl {
     {
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 67u32 as ::bbnf_ir::RuleId,
+            rule_id: 68u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("highlightPseudo"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -41147,11 +41570,11 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(68u32 as u32);
+        let __decision: __Decision = cursor.decide(69u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __simplePseudoElement_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 68u32 as ::bbnf_ir::RuleId,
+            rule_id: 69u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("simplePseudoElement"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -41239,7 +41662,7 @@ mod __cssl4parser_emit_impl {
     {
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 69u32 as ::bbnf_ir::RuleId,
+            rule_id: 70u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("langPseudo"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -41371,11 +41794,11 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(70u32 as u32);
+        let __decision: __Decision = cursor.decide(71u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __simplePseudoClass_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 70u32 as ::bbnf_ir::RuleId,
+            rule_id: 71u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("simplePseudoClass"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -41463,7 +41886,7 @@ mod __cssl4parser_emit_impl {
     {
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 71u32 as ::bbnf_ir::RuleId,
+            rule_id: 72u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("dirPseudo"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -41577,11 +42000,11 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(72u32 as u32);
+        let __decision: __Decision = cursor.decide(73u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __keyframeSel_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 72u32 as ::bbnf_ir::RuleId,
+            rule_id: 73u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("keyframeSel"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -41727,7 +42150,7 @@ mod __cssl4parser_emit_impl {
     {
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 73u32 as ::bbnf_ir::RuleId,
+            rule_id: 74u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("genericFunction"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -41818,7 +42241,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_mediaFeature<'p, __P>(
+    pub fn parse_flat_CssL4Parser_mediaNot<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -41830,22 +42253,19 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(74u32 as u32);
+        let __decision: __Decision = cursor.decide(75u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __mediaFeature_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 74u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("mediaFeature"),
+        let __mediaNot_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 75u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("mediaNot"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let __mediaFeature_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let __mediaNot_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(
-            builder,
-            &__mediaFeature_layout,
-        );
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &__mediaNot_layout);
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::record_compound_bounds_start(
@@ -41856,8 +42276,8 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [40u8] {
+                let end = at + 3usize;
+                if input.len() < end || input[at..end] != [110u8, 111u8, 116u8] {
                     return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                         offset: at as u32,
                     });
@@ -41866,18 +42286,137 @@ mod __cssl4parser_emit_impl {
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             }
             {
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_hregex_CssL4Parser_ident(input, p, state, builder, cursor)
+                    let __first = __shape_support_CssL4Parser::skip_space(
+                            input,
+                            p,
+                            state,
+                        )
+                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                            offset: *p as u32,
+                        })?;
+                    parse_keyword_CssL4Parser_mediaInParens(
+                        input,
+                        p,
+                        __first,
+                        state,
+                        builder,
+                        cursor,
+                    )
                 })?;
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+            }
+            ::core::result::Result::Ok(())
+        })();
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __mediaNot_handle,
+                );
+                ::core::result::Result::Ok(())
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
+    }
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
+    ///
+    /// Compound emission lands as typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
+    ///
+    /// Returns unit for StructDirect composition
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_CssL4Parser_mediaAnd<'p, __P>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_CssL4Parser::ScanState,
+        builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
+    {
+        use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(76u32 as u32);
+        let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
+        let __mediaAnd_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 76u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("mediaAnd"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __mediaAnd_handle = <crate::runtime::css_l4::CssStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &__mediaAnd_layout);
+        <crate::runtime::css_l4::CssStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
+        );
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            {
+                let _ = ({
+                    let __first = __shape_support_CssL4Parser::skip_space(
+                            input,
+                            p,
+                            state,
+                        )
+                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                            offset: *p as u32,
+                        })?;
+                    parse_keyword_CssL4Parser_mediaInParens(
+                        input,
+                        p,
+                        __first,
+                        state,
+                        builder,
+                        cursor,
+                    )
+                })?;
             }
             {
                 {
                     let mut __iter_count: u32 = 0;
                     loop {
-                        if __iter_count >= 1u32 {
+                        if __iter_count >= 4294967295u32 {
                             break;
                         }
                         let __iter_save_p = *p;
@@ -41895,8 +42434,10 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let at = *p;
-                            let end = at + 1usize;
-                            if input.len() < end || input[at..end] != [58u8] {
+                            let end = at + 3usize;
+                            if input.len() < end
+                                || input[at..end] != [97u8, 110u8, 100u8]
+                            {
                                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: at as u32,
                                 });
@@ -41907,29 +42448,24 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                             );
-                            let _ = __shape_support_CssL4Parser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
-                            {
-                                let __scan_start = *p;
-                                let Some(match_len) = __regex_scan_CssL4Parser(
-                                    "[^)]+",
+                            let _ = ({
+                                let __first = __shape_support_CssL4Parser::skip_space(
+                                        input,
+                                        p,
+                                        state,
+                                    )
+                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                        offset: *p as u32,
+                                    })?;
+                                parse_keyword_CssL4Parser_mediaInParens(
                                     input,
-                                    *p,
-                                ) else {
-                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                        offset: __scan_start as u32,
-                                    });
-                                };
-                                *p += match_len as usize;
-                            }
-                            let _ = __shape_support_CssL4Parser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
+                                    p,
+                                    __first,
+                                    state,
+                                    builder,
+                                    cursor,
+                                )
+                            })?;
                             Ok(())
                         })();
                         match __iter_result {
@@ -41948,22 +42484,12 @@ mod __cssl4parser_emit_impl {
                             }
                         }
                     }
-                    if __iter_count < 0u32 {
+                    if __iter_count < 1u32 {
                         return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: *p as u32,
                         });
                     }
                 }
-            }
-            {
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [41u8] {
-                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                        offset: at as u32,
-                    });
-                }
-                *p = end;
             }
             ::core::result::Result::Ok(())
         })();
@@ -41979,13 +42505,726 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    __mediaFeature_handle,
+                    __mediaAnd_handle,
                 );
                 ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
                 ::core::result::Result::Err(__err)
+            }
+        }
+    }
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
+    ///
+    /// Compound emission lands as typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
+    ///
+    /// Returns unit for StructDirect composition
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_CssL4Parser_mediaOr<'p, __P>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_CssL4Parser::ScanState,
+        builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
+    {
+        use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(77u32 as u32);
+        let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
+        let __mediaOr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 77u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("mediaOr"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __mediaOr_handle = <crate::runtime::css_l4::CssStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &__mediaOr_layout);
+        <crate::runtime::css_l4::CssStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
+        );
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            {
+                let _ = ({
+                    let __first = __shape_support_CssL4Parser::skip_space(
+                            input,
+                            p,
+                            state,
+                        )
+                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                            offset: *p as u32,
+                        })?;
+                    parse_keyword_CssL4Parser_mediaInParens(
+                        input,
+                        p,
+                        __first,
+                        state,
+                        builder,
+                        cursor,
+                    )
+                })?;
+            }
+            {
+                {
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 4294967295u32 {
+                            break;
+                        }
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
+                        }
+                        let __iter_builder_checkpoint = builder.checkpoint();
+                        let __iter_result: ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > = (|| {
+                            let _ = __shape_support_CssL4Parser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            let at = *p;
+                            let end = at + 2usize;
+                            if input.len() < end || input[at..end] != [111u8, 114u8] {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                    offset: at as u32,
+                                });
+                            }
+                            *p = end;
+                            let _ = __shape_support_CssL4Parser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            let _ = ({
+                                let __first = __shape_support_CssL4Parser::skip_space(
+                                        input,
+                                        p,
+                                        state,
+                                    )
+                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                        offset: *p as u32,
+                                    })?;
+                                parse_keyword_CssL4Parser_mediaInParens(
+                                    input,
+                                    p,
+                                    __first,
+                                    state,
+                                    builder,
+                                    cursor,
+                                )
+                            })?;
+                            Ok(())
+                        })();
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
+                                    break;
+                                }
+                                builder.commit(__iter_builder_checkpoint);
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
+                                break;
+                            }
+                        }
+                    }
+                    if __iter_count < 1u32 {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                            offset: *p as u32,
+                        });
+                    }
+                }
+            }
+            ::core::result::Result::Ok(())
+        })();
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __mediaOr_handle,
+                );
+                ::core::result::Result::Ok(())
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
+    }
+    /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
+    ///
+    /// Opens a Wrap frame on the builder, dispatches to the matched
+    /// branch's shape fn (which carries its own
+    /// begin_compound/end_compound for compound branches and the
+    /// matching push_leaf_with_* for scalar branches), stamps the
+    /// chosen branch index via push_branch_tag, then closes the
+    /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
+    /// forward-the-single-child semantics.
+    ///
+    /// Returns unit for StructDirect composition
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AZ-IV.W3.6 — Cursor-threaded. The Alt-dispatch branch
+    /// selector consults `cursor.decide(rule_id)` so a
+    /// `Decision::ParseUntil(idx)` returned by the path plan
+    /// means the targeted variant index is preserved by the
+    /// linear-try fallback (the byte-dispatch arms are still
+    /// the prefilter; the cursor's decision is forwarded into
+    /// the inner Refs as the descent proceeds).
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_wrap_CssL4Parser_mediaCondition<'p, __P>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_CssL4Parser::ScanState,
+        builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
+    {
+        use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let _ = cursor.decide(78u32 as u32);
+        let first = __shape_support_CssL4Parser::skip_space(input, p, state)
+            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                offset: *p as u32,
+            })?;
+        'try_branches: loop {
+            match first {
+                40u8 => {
+                    {
+                        let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
+                        match parse_flat_CssL4Parser_mediaNot(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        ) {
+                            ::core::result::Result::Ok(_) => {
+                                builder.commit(attempt_builder);
+                                break 'try_branches;
+                            }
+                            ::core::result::Result::Err(_) => {
+                                *p = attempt_p;
+                                builder.rollback(attempt_builder);
+                            }
+                        }
+                    }
+                    {
+                        let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
+                        match parse_flat_CssL4Parser_mediaAnd(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        ) {
+                            ::core::result::Result::Ok(_) => {
+                                builder.commit(attempt_builder);
+                                break 'try_branches;
+                            }
+                            ::core::result::Result::Err(_) => {
+                                *p = attempt_p;
+                                builder.rollback(attempt_builder);
+                            }
+                        }
+                    }
+                    {
+                        let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
+                        match parse_flat_CssL4Parser_mediaOr(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        ) {
+                            ::core::result::Result::Ok(_) => {
+                                builder.commit(attempt_builder);
+                                break 'try_branches;
+                            }
+                            ::core::result::Result::Err(_) => {
+                                *p = attempt_p;
+                                builder.rollback(attempt_builder);
+                            }
+                        }
+                    }
+                    {
+                        let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
+                        match parse_keyword_CssL4Parser_mediaInParens(
+                            input,
+                            p,
+                            first,
+                            state,
+                            builder,
+                            cursor,
+                        ) {
+                            ::core::result::Result::Ok(_) => {
+                                builder.commit(attempt_builder);
+                                break 'try_branches;
+                            }
+                            ::core::result::Result::Err(_) => {
+                                *p = attempt_p;
+                                builder.rollback(attempt_builder);
+                            }
+                        }
+                    }
+                }
+                41u8 => {
+                    {
+                        let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
+                        match parse_flat_CssL4Parser_mediaNot(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        ) {
+                            ::core::result::Result::Ok(_) => {
+                                builder.commit(attempt_builder);
+                                break 'try_branches;
+                            }
+                            ::core::result::Result::Err(_) => {
+                                *p = attempt_p;
+                                builder.rollback(attempt_builder);
+                            }
+                        }
+                    }
+                    {
+                        let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
+                        match parse_flat_CssL4Parser_mediaAnd(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        ) {
+                            ::core::result::Result::Ok(_) => {
+                                builder.commit(attempt_builder);
+                                break 'try_branches;
+                            }
+                            ::core::result::Result::Err(_) => {
+                                *p = attempt_p;
+                                builder.rollback(attempt_builder);
+                            }
+                        }
+                    }
+                    {
+                        let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
+                        match parse_flat_CssL4Parser_mediaOr(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        ) {
+                            ::core::result::Result::Ok(_) => {
+                                builder.commit(attempt_builder);
+                                break 'try_branches;
+                            }
+                            ::core::result::Result::Err(_) => {
+                                *p = attempt_p;
+                                builder.rollback(attempt_builder);
+                            }
+                        }
+                    }
+                    {
+                        let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
+                        match parse_keyword_CssL4Parser_mediaInParens(
+                            input,
+                            p,
+                            first,
+                            state,
+                            builder,
+                            cursor,
+                        ) {
+                            ::core::result::Result::Ok(_) => {
+                                builder.commit(attempt_builder);
+                                break 'try_branches;
+                            }
+                            ::core::result::Result::Err(_) => {
+                                *p = attempt_p;
+                                builder.rollback(attempt_builder);
+                            }
+                        }
+                    }
+                }
+                45u8 => {
+                    {
+                        let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
+                        match parse_flat_CssL4Parser_mediaNot(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        ) {
+                            ::core::result::Result::Ok(_) => {
+                                builder.commit(attempt_builder);
+                                break 'try_branches;
+                            }
+                            ::core::result::Result::Err(_) => {
+                                *p = attempt_p;
+                                builder.rollback(attempt_builder);
+                            }
+                        }
+                    }
+                    {
+                        let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
+                        match parse_flat_CssL4Parser_mediaAnd(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        ) {
+                            ::core::result::Result::Ok(_) => {
+                                builder.commit(attempt_builder);
+                                break 'try_branches;
+                            }
+                            ::core::result::Result::Err(_) => {
+                                *p = attempt_p;
+                                builder.rollback(attempt_builder);
+                            }
+                        }
+                    }
+                    {
+                        let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
+                        match parse_flat_CssL4Parser_mediaOr(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        ) {
+                            ::core::result::Result::Ok(_) => {
+                                builder.commit(attempt_builder);
+                                break 'try_branches;
+                            }
+                            ::core::result::Result::Err(_) => {
+                                *p = attempt_p;
+                                builder.rollback(attempt_builder);
+                            }
+                        }
+                    }
+                    {
+                        let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
+                        match parse_keyword_CssL4Parser_mediaInParens(
+                            input,
+                            p,
+                            first,
+                            state,
+                            builder,
+                            cursor,
+                        ) {
+                            ::core::result::Result::Ok(_) => {
+                                builder.commit(attempt_builder);
+                                break 'try_branches;
+                            }
+                            ::core::result::Result::Err(_) => {
+                                *p = attempt_p;
+                                builder.rollback(attempt_builder);
+                            }
+                        }
+                    }
+                }
+                58u8 => {
+                    {
+                        let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
+                        match parse_flat_CssL4Parser_mediaNot(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        ) {
+                            ::core::result::Result::Ok(_) => {
+                                builder.commit(attempt_builder);
+                                break 'try_branches;
+                            }
+                            ::core::result::Result::Err(_) => {
+                                *p = attempt_p;
+                                builder.rollback(attempt_builder);
+                            }
+                        }
+                    }
+                    {
+                        let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
+                        match parse_flat_CssL4Parser_mediaAnd(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        ) {
+                            ::core::result::Result::Ok(_) => {
+                                builder.commit(attempt_builder);
+                                break 'try_branches;
+                            }
+                            ::core::result::Result::Err(_) => {
+                                *p = attempt_p;
+                                builder.rollback(attempt_builder);
+                            }
+                        }
+                    }
+                    {
+                        let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
+                        match parse_flat_CssL4Parser_mediaOr(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        ) {
+                            ::core::result::Result::Ok(_) => {
+                                builder.commit(attempt_builder);
+                                break 'try_branches;
+                            }
+                            ::core::result::Result::Err(_) => {
+                                *p = attempt_p;
+                                builder.rollback(attempt_builder);
+                            }
+                        }
+                    }
+                    {
+                        let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
+                        match parse_keyword_CssL4Parser_mediaInParens(
+                            input,
+                            p,
+                            first,
+                            state,
+                            builder,
+                            cursor,
+                        ) {
+                            ::core::result::Result::Ok(_) => {
+                                builder.commit(attempt_builder);
+                                break 'try_branches;
+                            }
+                            ::core::result::Result::Err(_) => {
+                                *p = attempt_p;
+                                builder.rollback(attempt_builder);
+                            }
+                        }
+                    }
+                }
+                110u8 => {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match parse_flat_CssL4Parser_mediaNot(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                _ => {}
+            }
+            return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                offset: *p as u32,
+            });
+        }
+        ::core::result::Result::Ok(())
+    }
+    /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
+    /// (Alt of literal-led, Ref-led, or Seq-led branches).
+    ///
+    /// Literal branches push leaves through
+    /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
+    /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
+    /// untyped). Ref branches delegate to the target shape
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
+    #[inline(always)]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_keyword_CssL4Parser_mediaInParens<'p, __P>(
+        input: &'p [u8],
+        p: &mut usize,
+        first_byte: u8,
+        state: &mut __shape_support_CssL4Parser::ScanState,
+        builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
+    {
+        use crate::runtime::builder::StructBuilder as _;
+        let _ = state;
+        let _ = cursor;
+        match first_byte {
+            40u8 => {
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [40u8] {
+                    let __ref_save_p = *p;
+                    let __ref_builder_checkpoint = builder.checkpoint();
+                    match ({
+                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                        parse_flat_CssL4Parser_mediaFeature(
+                            input,
+                            p,
+                            state,
+                            builder,
+                            cursor,
+                        )
+                    }) {
+                        ::core::result::Result::Ok(__off) => {
+                            builder.commit(__ref_builder_checkpoint);
+                            return ::core::result::Result::Ok(__off);
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = __ref_save_p;
+                            builder.rollback(__ref_builder_checkpoint);
+                        }
+                    }
+                }
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [40u8] {
+                    let __seq_span_lo = *p;
+                    let __seq_builder_checkpoint = builder.checkpoint();
+                    let __seq_result: ::core::result::Result<
+                        (),
+                        crate::runtime::DtaError,
+                    > = (|| {
+                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [40u8] {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                    offset: at as u32,
+                                });
+                            }
+                            *p = end;
+                        }
+                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                        let _ = ({
+                            let _ = __shape_support_CssL4Parser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            parse_wrap_CssL4Parser_mediaCondition(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            )
+                        })?;
+                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [41u8] {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                    offset: at as u32,
+                                });
+                            }
+                            *p = end;
+                        }
+                        ::core::result::Result::Ok(())
+                    })();
+                    match __seq_result {
+                        ::core::result::Result::Ok(()) => {
+                            let __seq_span_hi = *p;
+                            builder.rollback(__seq_builder_checkpoint);
+                            let __seq_text = unsafe {
+                                ::core::str::from_utf8_unchecked(
+                                    &input[__seq_span_lo..__seq_span_hi],
+                                )
+                            };
+                            builder.push_leaf_with_str(__seq_text);
+                            return ::core::result::Result::Ok(());
+                        }
+                        ::core::result::Result::Err(__err) => {
+                            *p = __seq_span_lo;
+                            builder.rollback(__seq_builder_checkpoint);
+                            return ::core::result::Result::Err(__err);
+                        }
+                    }
+                }
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                    offset: *p as u32,
+                });
+            }
+            _ => {
+                ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                    offset: *p as u32,
+                })
             }
         }
     }
@@ -42032,11 +43271,11 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(75u32 as u32);
+        let __decision: __Decision = cursor.decide(80u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __wqName_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 75u32 as ::bbnf_ir::RuleId,
+            rule_id: 80u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("wqName"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -42186,11 +43425,11 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(76u32 as u32);
+        let __decision: __Decision = cursor.decide(81u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __attrSelector_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 76u32 as ::bbnf_ir::RuleId,
+            rule_id: 81u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("attrSelector"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -42665,7 +43904,7 @@ mod __cssl4parser_emit_impl {
     {
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 77u32 as ::bbnf_ir::RuleId,
+            rule_id: 82u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("varFunction"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -42774,7 +44013,7 @@ mod __cssl4parser_emit_impl {
     {
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 78u32 as ::bbnf_ir::RuleId,
+            rule_id: 83u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("envFunction"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -42903,11 +44142,11 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(79u32 as u32);
+        let __decision: __Decision = cursor.decide(84u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __length_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 79u32 as ::bbnf_ir::RuleId,
+            rule_id: 84u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("length"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -43070,7 +44309,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_mediaNot<'p, __P>(
+    pub fn parse_flat_CssL4Parser_mediaTypedQuery<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -43082,19 +44321,22 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(80u32 as u32);
+        let __decision: __Decision = cursor.decide(85u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __mediaNot_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 80u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("mediaNot"),
+        let __mediaTypedQuery_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 85u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("mediaTypedQuery"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let __mediaNot_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let __mediaTypedQuery_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__mediaNot_layout);
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__mediaTypedQuery_layout,
+        );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::record_compound_bounds_start(
@@ -43103,143 +44345,122 @@ mod __cssl4parser_emit_impl {
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                let at = *p;
-                let end = at + 3usize;
-                if input.len() < end || input[at..end] != [110u8, 111u8, 116u8] {
-                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                        offset: at as u32,
-                    });
+                {
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 1u32 {
+                            break;
+                        }
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
+                        }
+                        let __iter_builder_checkpoint = builder.checkpoint();
+                        let __iter_result: ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > = (|| {
+                            let _ = ({
+                                let __first = __shape_support_CssL4Parser::skip_space(
+                                        input,
+                                        p,
+                                        state,
+                                    )
+                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                        offset: *p as u32,
+                                    })?;
+                                parse_keyword_CssL4Parser_mediaQualifier(
+                                    input,
+                                    p,
+                                    __first,
+                                    state,
+                                    builder,
+                                    cursor,
+                                )
+                            })?;
+                            Ok(())
+                        })();
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
+                                    break;
+                                }
+                                builder.commit(__iter_builder_checkpoint);
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
+                                break;
+                            }
+                        }
+                    }
+                    if __iter_count < 0u32 {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                            offset: *p as u32,
+                        });
+                    }
                 }
-                *p = end;
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             }
             {
-                let _ = ({
-                    let __first = __shape_support_CssL4Parser::skip_space(
-                            input,
-                            p,
-                            state,
-                        )
-                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                {
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 1u32 {
+                            break;
+                        }
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
+                        }
+                        let __iter_builder_checkpoint = builder.checkpoint();
+                        let __iter_result: ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > = (|| {
+                            let _ = ({
+                                let __first = __shape_support_CssL4Parser::skip_space(
+                                        input,
+                                        p,
+                                        state,
+                                    )
+                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                        offset: *p as u32,
+                                    })?;
+                                parse_keyword_CssL4Parser_mediaType(
+                                    input,
+                                    p,
+                                    __first,
+                                    state,
+                                    builder,
+                                    cursor,
+                                )
+                            })?;
+                            Ok(())
+                        })();
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
+                                    break;
+                                }
+                                builder.commit(__iter_builder_checkpoint);
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
+                                break;
+                            }
+                        }
+                    }
+                    if __iter_count < 0u32 {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: *p as u32,
-                        })?;
-                    parse_keyword_CssL4Parser_mediaInParens(
-                        input,
-                        p,
-                        __first,
-                        state,
-                        builder,
-                        cursor,
-                    )
-                })?;
-            }
-            ::core::result::Result::Ok(())
-        })();
-        match __body_result {
-            ::core::result::Result::Ok(()) => {
-                <crate::runtime::css_l4::CssStructBuilder<
-                    '_,
-                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
-                    builder,
-                    *p as u32,
-                );
-                <crate::runtime::css_l4::CssStructBuilder<
-                    '_,
-                > as crate::runtime::StructBuilder>::end_compound(
-                    builder,
-                    __mediaNot_handle,
-                );
-                ::core::result::Result::Ok(())
-            }
-            ::core::result::Result::Err(__err) => {
-                builder.rollback(__flat_checkpoint);
-                ::core::result::Result::Err(__err)
-            }
-        }
-    }
-    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
-    /// **struct-direct body**. Targets the grammar's concrete
-    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
-    /// resolver's `SubstrateBinding`).
-    ///
-    /// Compound emission lands as typed
-    /// `begin_compound` / `end_compound` calls against the in-flight
-    /// frame stack. Per-position pushes (string keys, recursive
-    /// value calls, byte literals) land directly on the topmost
-    /// open frame.
-    ///
-    /// Returns unit for StructDirect composition
-    /// with sibling shape fns under struct-direct mode; the
-    /// offset is unused by struct-direct callers.
-    ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
-    /// cross-shape recursive edge (Flat → Wrap → Flat through
-    /// the grammar's `__value` discriminant). LLVM's inliner
-    /// collapses plain `#[inline]` candidates only when
-    /// profitable and bails cleanly on detected recursion.
-    ///
-    /// AZ-III.W2.4.r — content-only bodies (no Ref /
-    /// TokenDispatch in the IR) capture `*p` before and after
-    /// the per-position emission and push one synthetic Span
-    /// leaf carrying the consumed source slice; this restores
-    /// the contract `bootstrap_parser` met for `regex` /
-    /// `literal` / `comment` / `big_comment` / `import_path`
-    /// (all flat-shape rules whose grammar projection is
-    /// `-> Span` or whose host walker reads via `byte_span()`).
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_mediaAnd<'p, __P>(
-        input: &'p [u8],
-        p: &mut usize,
-        state: &mut __shape_support_CssL4Parser::ScanState,
-        builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError>
-    where
-        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
-    {
-        use crate::runtime::builder::StructBuilder as _;
-        use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(81u32 as u32);
-        let __flat_checkpoint = builder.checkpoint();
-        let __compound_start: u32 = *p as u32;
-        let __mediaAnd_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 81u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("mediaAnd"),
-            kind: ::bbnf_ir::registry::LayoutKind::Struct,
-            rule_type: ::bbnf_ir::TypeDesc::Span,
-            fields: ::std::vec::Vec::new(),
-        };
-        let __mediaAnd_handle = <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__mediaAnd_layout);
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
-            builder,
-            __compound_start,
-        );
-        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
-            {
-                let _ = ({
-                    let __first = __shape_support_CssL4Parser::skip_space(
-                            input,
-                            p,
-                            state,
-                        )
-                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_keyword_CssL4Parser_mediaInParens(
-                        input,
-                        p,
-                        __first,
-                        state,
-                        builder,
-                        cursor,
-                    )
-                })?;
+                        });
+                    }
+                }
             }
             {
                 {
@@ -43313,7 +44534,7 @@ mod __cssl4parser_emit_impl {
                             }
                         }
                     }
-                    if __iter_count < 1u32 {
+                    if __iter_count < 0u32 {
                         return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: *p as u32,
                         });
@@ -43334,437 +44555,13 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    __mediaAnd_handle,
+                    __mediaTypedQuery_handle,
                 );
                 ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
                 ::core::result::Result::Err(__err)
-            }
-        }
-    }
-    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
-    /// **struct-direct body**. Targets the grammar's concrete
-    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
-    /// resolver's `SubstrateBinding`).
-    ///
-    /// Compound emission lands as typed
-    /// `begin_compound` / `end_compound` calls against the in-flight
-    /// frame stack. Per-position pushes (string keys, recursive
-    /// value calls, byte literals) land directly on the topmost
-    /// open frame.
-    ///
-    /// Returns unit for StructDirect composition
-    /// with sibling shape fns under struct-direct mode; the
-    /// offset is unused by struct-direct callers.
-    ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
-    /// cross-shape recursive edge (Flat → Wrap → Flat through
-    /// the grammar's `__value` discriminant). LLVM's inliner
-    /// collapses plain `#[inline]` candidates only when
-    /// profitable and bails cleanly on detected recursion.
-    ///
-    /// AZ-III.W2.4.r — content-only bodies (no Ref /
-    /// TokenDispatch in the IR) capture `*p` before and after
-    /// the per-position emission and push one synthetic Span
-    /// leaf carrying the consumed source slice; this restores
-    /// the contract `bootstrap_parser` met for `regex` /
-    /// `literal` / `comment` / `big_comment` / `import_path`
-    /// (all flat-shape rules whose grammar projection is
-    /// `-> Span` or whose host walker reads via `byte_span()`).
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_mediaOr<'p, __P>(
-        input: &'p [u8],
-        p: &mut usize,
-        state: &mut __shape_support_CssL4Parser::ScanState,
-        builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError>
-    where
-        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
-    {
-        use crate::runtime::builder::StructBuilder as _;
-        use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(82u32 as u32);
-        let __flat_checkpoint = builder.checkpoint();
-        let __compound_start: u32 = *p as u32;
-        let __mediaOr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 82u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("mediaOr"),
-            kind: ::bbnf_ir::registry::LayoutKind::Struct,
-            rule_type: ::bbnf_ir::TypeDesc::Span,
-            fields: ::std::vec::Vec::new(),
-        };
-        let __mediaOr_handle = <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__mediaOr_layout);
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
-            builder,
-            __compound_start,
-        );
-        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
-            {
-                let _ = ({
-                    let __first = __shape_support_CssL4Parser::skip_space(
-                            input,
-                            p,
-                            state,
-                        )
-                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_keyword_CssL4Parser_mediaInParens(
-                        input,
-                        p,
-                        __first,
-                        state,
-                        builder,
-                        cursor,
-                    )
-                })?;
-            }
-            {
-                {
-                    let mut __iter_count: u32 = 0;
-                    loop {
-                        if __iter_count >= 4294967295u32 {
-                            break;
-                        }
-                        let __iter_save_p = *p;
-                        if input.get(*p).is_none() {
-                            break;
-                        }
-                        let __iter_builder_checkpoint = builder.checkpoint();
-                        let __iter_result: ::core::result::Result<
-                            (),
-                            crate::runtime::DtaError,
-                        > = (|| {
-                            let _ = __shape_support_CssL4Parser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
-                            let at = *p;
-                            let end = at + 2usize;
-                            if input.len() < end || input[at..end] != [111u8, 114u8] {
-                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                    offset: at as u32,
-                                });
-                            }
-                            *p = end;
-                            let _ = __shape_support_CssL4Parser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
-                            let _ = ({
-                                let __first = __shape_support_CssL4Parser::skip_space(
-                                        input,
-                                        p,
-                                        state,
-                                    )
-                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                        offset: *p as u32,
-                                    })?;
-                                parse_keyword_CssL4Parser_mediaInParens(
-                                    input,
-                                    p,
-                                    __first,
-                                    state,
-                                    builder,
-                                    cursor,
-                                )
-                            })?;
-                            Ok(())
-                        })();
-                        match __iter_result {
-                            Ok(()) => {
-                                if *p == __iter_save_p {
-                                    builder.rollback(__iter_builder_checkpoint);
-                                    break;
-                                }
-                                builder.commit(__iter_builder_checkpoint);
-                                __iter_count += 1;
-                            }
-                            Err(_) => {
-                                *p = __iter_save_p;
-                                builder.rollback(__iter_builder_checkpoint);
-                                break;
-                            }
-                        }
-                    }
-                    if __iter_count < 1u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
-                    }
-                }
-            }
-            ::core::result::Result::Ok(())
-        })();
-        match __body_result {
-            ::core::result::Result::Ok(()) => {
-                <crate::runtime::css_l4::CssStructBuilder<
-                    '_,
-                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
-                    builder,
-                    *p as u32,
-                );
-                <crate::runtime::css_l4::CssStructBuilder<
-                    '_,
-                > as crate::runtime::StructBuilder>::end_compound(
-                    builder,
-                    __mediaOr_handle,
-                );
-                ::core::result::Result::Ok(())
-            }
-            ::core::result::Result::Err(__err) => {
-                builder.rollback(__flat_checkpoint);
-                ::core::result::Result::Err(__err)
-            }
-        }
-    }
-    /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
-    ///
-    /// Opens a Wrap frame on the builder, dispatches to the matched
-    /// branch's shape fn (which carries its own
-    /// begin_compound/end_compound for compound branches and the
-    /// matching push_leaf_with_* for scalar branches), stamps the
-    /// chosen branch index via push_branch_tag, then closes the
-    /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
-    /// forward-the-single-child semantics.
-    ///
-    /// Returns unit for StructDirect composition
-    /// with sibling shape fns under struct-direct mode; the
-    /// offset is unused by struct-direct callers.
-    ///
-    /// AZ-IV.W3.6 — Cursor-threaded. The Alt-dispatch branch
-    /// selector consults `cursor.decide(rule_id)` so a
-    /// `Decision::ParseUntil(idx)` returned by the path plan
-    /// means the targeted variant index is preserved by the
-    /// linear-try fallback (the byte-dispatch arms are still
-    /// the prefilter; the cursor's decision is forwarded into
-    /// the inner Refs as the descent proceeds).
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_wrap_CssL4Parser_mediaCondition<'p, __P>(
-        input: &'p [u8],
-        p: &mut usize,
-        state: &mut __shape_support_CssL4Parser::ScanState,
-        builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError>
-    where
-        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
-    {
-        use crate::runtime::builder::StructBuilder as _;
-        use crate::path::cursor::Decision as __Decision;
-        let _ = cursor.decide(83u32 as u32);
-        let first = __shape_support_CssL4Parser::skip_space(input, p, state)
-            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                offset: *p as u32,
-            })?;
-        'try_branches: loop {
-            match first {
-                _ => {}
-            }
-            {
-                let attempt_p = *p;
-                let attempt_builder = builder.checkpoint();
-                match parse_flat_CssL4Parser_mediaNot(input, p, state, builder, cursor) {
-                    ::core::result::Result::Ok(_) => {
-                        builder.commit(attempt_builder);
-                        break 'try_branches;
-                    }
-                    ::core::result::Result::Err(_) => {
-                        *p = attempt_p;
-                        builder.rollback(attempt_builder);
-                    }
-                }
-            }
-            {
-                let attempt_p = *p;
-                let attempt_builder = builder.checkpoint();
-                match parse_flat_CssL4Parser_mediaAnd(input, p, state, builder, cursor) {
-                    ::core::result::Result::Ok(_) => {
-                        builder.commit(attempt_builder);
-                        break 'try_branches;
-                    }
-                    ::core::result::Result::Err(_) => {
-                        *p = attempt_p;
-                        builder.rollback(attempt_builder);
-                    }
-                }
-            }
-            {
-                let attempt_p = *p;
-                let attempt_builder = builder.checkpoint();
-                match parse_flat_CssL4Parser_mediaOr(input, p, state, builder, cursor) {
-                    ::core::result::Result::Ok(_) => {
-                        builder.commit(attempt_builder);
-                        break 'try_branches;
-                    }
-                    ::core::result::Result::Err(_) => {
-                        *p = attempt_p;
-                        builder.rollback(attempt_builder);
-                    }
-                }
-            }
-            {
-                let attempt_p = *p;
-                let attempt_builder = builder.checkpoint();
-                match parse_keyword_CssL4Parser_mediaInParens(
-                    input,
-                    p,
-                    first,
-                    state,
-                    builder,
-                    cursor,
-                ) {
-                    ::core::result::Result::Ok(_) => {
-                        builder.commit(attempt_builder);
-                        break 'try_branches;
-                    }
-                    ::core::result::Result::Err(_) => {
-                        *p = attempt_p;
-                        builder.rollback(attempt_builder);
-                    }
-                }
-            }
-            return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                offset: *p as u32,
-            });
-        }
-        ::core::result::Result::Ok(())
-    }
-    /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
-    /// (Alt of literal-led, Ref-led, or Seq-led branches).
-    ///
-    /// Literal branches push leaves through
-    /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
-    /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
-    /// untyped). Ref branches delegate to the target shape
-    /// fn so the target writes directly into the same
-    /// builder. Returns unit for StructDirect composition.
-    #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_keyword_CssL4Parser_mediaInParens<'p, __P>(
-        input: &'p [u8],
-        p: &mut usize,
-        first_byte: u8,
-        state: &mut __shape_support_CssL4Parser::ScanState,
-        builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError>
-    where
-        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
-    {
-        use crate::runtime::builder::StructBuilder as _;
-        let _ = state;
-        let _ = cursor;
-        match first_byte {
-            40u8 => {
-                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [40u8] {
-                    let __ref_save_p = *p;
-                    let __ref_builder_checkpoint = builder.checkpoint();
-                    match ({
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_flat_CssL4Parser_mediaFeature(
-                            input,
-                            p,
-                            state,
-                            builder,
-                            cursor,
-                        )
-                    }) {
-                        ::core::result::Result::Ok(__off) => {
-                            builder.commit(__ref_builder_checkpoint);
-                            return ::core::result::Result::Ok(__off);
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = __ref_save_p;
-                            builder.rollback(__ref_builder_checkpoint);
-                        }
-                    }
-                }
-                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [40u8] {
-                    let __seq_span_lo = *p;
-                    let __seq_builder_checkpoint = builder.checkpoint();
-                    let __seq_result: ::core::result::Result<
-                        (),
-                        crate::runtime::DtaError,
-                    > = (|| {
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() < end || input[at..end] != [40u8] {
-                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                    offset: at as u32,
-                                });
-                            }
-                            *p = end;
-                        }
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        let _ = ({
-                            let _ = __shape_support_CssL4Parser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
-                            parse_wrap_CssL4Parser_mediaCondition(
-                                input,
-                                p,
-                                state,
-                                builder,
-                                cursor,
-                            )
-                        })?;
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() < end || input[at..end] != [41u8] {
-                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                    offset: at as u32,
-                                });
-                            }
-                            *p = end;
-                        }
-                        ::core::result::Result::Ok(())
-                    })();
-                    match __seq_result {
-                        ::core::result::Result::Ok(()) => {
-                            let __seq_span_hi = *p;
-                            builder.rollback(__seq_builder_checkpoint);
-                            let __seq_text = unsafe {
-                                ::core::str::from_utf8_unchecked(
-                                    &input[__seq_span_lo..__seq_span_hi],
-                                )
-                            };
-                            builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(());
-                        }
-                        ::core::result::Result::Err(__err) => {
-                            *p = __seq_span_lo;
-                            builder.rollback(__seq_builder_checkpoint);
-                            return ::core::result::Result::Err(__err);
-                        }
-                    }
-                }
-                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                    offset: *p as u32,
-                });
-            }
-            _ => {
-                ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                    offset: *p as u32,
-                })
             }
         }
     }
@@ -43798,7 +44595,7 @@ mod __cssl4parser_emit_impl {
                 offset: *p as u32,
             })?;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 85u32 as ::bbnf_ir::RuleId,
+            rule_id: 86u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("typeSelector"),
             kind: ::bbnf_ir::registry::LayoutKind::TaggedEnum,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -43949,7 +44746,7 @@ mod __cssl4parser_emit_impl {
     {
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 86u32 as ::bbnf_ir::RuleId,
+            rule_id: 87u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("colorFn"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -44114,10 +44911,10 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let _ = cursor.decide(87u32 as u32);
+        let _ = cursor.decide(88u32 as u32);
         let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 87u32 as ::bbnf_ir::RuleId,
+            rule_id: 88u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("valueUnit"),
             kind: ::bbnf_ir::registry::LayoutKind::TaggedEnum,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -46366,293 +47163,6 @@ mod __cssl4parser_emit_impl {
             }
         }
     }
-    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
-    /// **struct-direct body**. Targets the grammar's concrete
-    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
-    /// resolver's `SubstrateBinding`).
-    ///
-    /// Compound emission lands as typed
-    /// `begin_compound` / `end_compound` calls against the in-flight
-    /// frame stack. Per-position pushes (string keys, recursive
-    /// value calls, byte literals) land directly on the topmost
-    /// open frame.
-    ///
-    /// Returns unit for StructDirect composition
-    /// with sibling shape fns under struct-direct mode; the
-    /// offset is unused by struct-direct callers.
-    ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
-    /// cross-shape recursive edge (Flat → Wrap → Flat through
-    /// the grammar's `__value` discriminant). LLVM's inliner
-    /// collapses plain `#[inline]` candidates only when
-    /// profitable and bails cleanly on detected recursion.
-    ///
-    /// AZ-III.W2.4.r — content-only bodies (no Ref /
-    /// TokenDispatch in the IR) capture `*p` before and after
-    /// the per-position emission and push one synthetic Span
-    /// leaf carrying the consumed source slice; this restores
-    /// the contract `bootstrap_parser` met for `regex` /
-    /// `literal` / `comment` / `big_comment` / `import_path`
-    /// (all flat-shape rules whose grammar projection is
-    /// `-> Span` or whose host walker reads via `byte_span()`).
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_mediaTypedQuery<'p, __P>(
-        input: &'p [u8],
-        p: &mut usize,
-        state: &mut __shape_support_CssL4Parser::ScanState,
-        builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError>
-    where
-        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
-    {
-        use crate::runtime::builder::StructBuilder as _;
-        use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(88u32 as u32);
-        let __flat_checkpoint = builder.checkpoint();
-        let __compound_start: u32 = *p as u32;
-        let __mediaTypedQuery_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 88u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("mediaTypedQuery"),
-            kind: ::bbnf_ir::registry::LayoutKind::Struct,
-            rule_type: ::bbnf_ir::TypeDesc::Span,
-            fields: ::std::vec::Vec::new(),
-        };
-        let __mediaTypedQuery_handle = <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::begin_compound(
-            builder,
-            &__mediaTypedQuery_layout,
-        );
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
-            builder,
-            __compound_start,
-        );
-        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
-            {
-                {
-                    let mut __iter_count: u32 = 0;
-                    loop {
-                        if __iter_count >= 1u32 {
-                            break;
-                        }
-                        let __iter_save_p = *p;
-                        if input.get(*p).is_none() {
-                            break;
-                        }
-                        let __iter_builder_checkpoint = builder.checkpoint();
-                        let __iter_result: ::core::result::Result<
-                            (),
-                            crate::runtime::DtaError,
-                        > = (|| {
-                            let _ = ({
-                                let __first = __shape_support_CssL4Parser::skip_space(
-                                        input,
-                                        p,
-                                        state,
-                                    )
-                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                        offset: *p as u32,
-                                    })?;
-                                parse_keyword_CssL4Parser_mediaQualifier(
-                                    input,
-                                    p,
-                                    __first,
-                                    state,
-                                    builder,
-                                    cursor,
-                                )
-                            })?;
-                            Ok(())
-                        })();
-                        match __iter_result {
-                            Ok(()) => {
-                                if *p == __iter_save_p {
-                                    builder.rollback(__iter_builder_checkpoint);
-                                    break;
-                                }
-                                builder.commit(__iter_builder_checkpoint);
-                                __iter_count += 1;
-                            }
-                            Err(_) => {
-                                *p = __iter_save_p;
-                                builder.rollback(__iter_builder_checkpoint);
-                                break;
-                            }
-                        }
-                    }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
-                    }
-                }
-            }
-            {
-                {
-                    let mut __iter_count: u32 = 0;
-                    loop {
-                        if __iter_count >= 1u32 {
-                            break;
-                        }
-                        let __iter_save_p = *p;
-                        if input.get(*p).is_none() {
-                            break;
-                        }
-                        let __iter_builder_checkpoint = builder.checkpoint();
-                        let __iter_result: ::core::result::Result<
-                            (),
-                            crate::runtime::DtaError,
-                        > = (|| {
-                            let _ = ({
-                                let __first = __shape_support_CssL4Parser::skip_space(
-                                        input,
-                                        p,
-                                        state,
-                                    )
-                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                        offset: *p as u32,
-                                    })?;
-                                parse_keyword_CssL4Parser_mediaType(
-                                    input,
-                                    p,
-                                    __first,
-                                    state,
-                                    builder,
-                                    cursor,
-                                )
-                            })?;
-                            Ok(())
-                        })();
-                        match __iter_result {
-                            Ok(()) => {
-                                if *p == __iter_save_p {
-                                    builder.rollback(__iter_builder_checkpoint);
-                                    break;
-                                }
-                                builder.commit(__iter_builder_checkpoint);
-                                __iter_count += 1;
-                            }
-                            Err(_) => {
-                                *p = __iter_save_p;
-                                builder.rollback(__iter_builder_checkpoint);
-                                break;
-                            }
-                        }
-                    }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
-                    }
-                }
-            }
-            {
-                {
-                    let mut __iter_count: u32 = 0;
-                    loop {
-                        if __iter_count >= 4294967295u32 {
-                            break;
-                        }
-                        let __iter_save_p = *p;
-                        if input.get(*p).is_none() {
-                            break;
-                        }
-                        let __iter_builder_checkpoint = builder.checkpoint();
-                        let __iter_result: ::core::result::Result<
-                            (),
-                            crate::runtime::DtaError,
-                        > = (|| {
-                            let _ = __shape_support_CssL4Parser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
-                            let at = *p;
-                            let end = at + 3usize;
-                            if input.len() < end
-                                || input[at..end] != [97u8, 110u8, 100u8]
-                            {
-                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                    offset: at as u32,
-                                });
-                            }
-                            *p = end;
-                            let _ = __shape_support_CssL4Parser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
-                            let _ = ({
-                                let __first = __shape_support_CssL4Parser::skip_space(
-                                        input,
-                                        p,
-                                        state,
-                                    )
-                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                        offset: *p as u32,
-                                    })?;
-                                parse_keyword_CssL4Parser_mediaInParens(
-                                    input,
-                                    p,
-                                    __first,
-                                    state,
-                                    builder,
-                                    cursor,
-                                )
-                            })?;
-                            Ok(())
-                        })();
-                        match __iter_result {
-                            Ok(()) => {
-                                if *p == __iter_save_p {
-                                    builder.rollback(__iter_builder_checkpoint);
-                                    break;
-                                }
-                                builder.commit(__iter_builder_checkpoint);
-                                __iter_count += 1;
-                            }
-                            Err(_) => {
-                                *p = __iter_save_p;
-                                builder.rollback(__iter_builder_checkpoint);
-                                break;
-                            }
-                        }
-                    }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
-                    }
-                }
-            }
-            ::core::result::Result::Ok(())
-        })();
-        match __body_result {
-            ::core::result::Result::Ok(()) => {
-                <crate::runtime::css_l4::CssStructBuilder<
-                    '_,
-                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
-                    builder,
-                    *p as u32,
-                );
-                <crate::runtime::css_l4::CssStructBuilder<
-                    '_,
-                > as crate::runtime::StructBuilder>::end_compound(
-                    builder,
-                    __mediaTypedQuery_handle,
-                );
-                ::core::result::Result::Ok(())
-            }
-            ::core::result::Result::Err(__err) => {
-                builder.rollback(__flat_checkpoint);
-                ::core::result::Result::Err(__err)
-            }
-        }
-    }
     /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
     /// **struct-direct body**.
     ///
@@ -48587,6 +49097,303 @@ mod __cssl4parser_emit_impl {
         }
         ::core::result::Result::Ok(())
     }
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
+    ///
+    /// Compound emission lands as typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
+    ///
+    /// Returns unit for StructDirect composition
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_CssL4Parser_mediaQueryList<'p, __P>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_CssL4Parser::ScanState,
+        builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
+    {
+        use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(103u32 as u32);
+        let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
+        let __mediaQueryList_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 103u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("mediaQueryList"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __mediaQueryList_handle = <crate::runtime::css_l4::CssStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__mediaQueryList_layout,
+        );
+        <crate::runtime::css_l4::CssStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
+        );
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            {
+                'try_branches: loop {
+                    {
+                        let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
+                        let __alt_result: ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > = (|| {
+                            let _ = ({
+                                let _ = __shape_support_CssL4Parser::skip_space(
+                                    input,
+                                    p,
+                                    state,
+                                );
+                                parse_wrap_CssL4Parser_mediaCondition(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                    cursor,
+                                )
+                            })?;
+                            Ok(())
+                        })();
+                        match __alt_result {
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
+                            Err(_) => {
+                                *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
+                            }
+                        }
+                    }
+                    {
+                        let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
+                        let __alt_result: ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > = (|| {
+                            let _ = ({
+                                let _ = __shape_support_CssL4Parser::skip_space(
+                                    input,
+                                    p,
+                                    state,
+                                );
+                                parse_flat_CssL4Parser_mediaTypedQuery(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                    cursor,
+                                )
+                            })?;
+                            Ok(())
+                        })();
+                        match __alt_result {
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
+                            Err(_) => {
+                                *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
+                            }
+                        }
+                    }
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                        offset: *p as u32,
+                    });
+                }
+            }
+            {
+                {
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 4294967295u32 {
+                            break;
+                        }
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
+                        }
+                        let __iter_builder_checkpoint = builder.checkpoint();
+                        let __iter_result: ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > = (|| {
+                            let _ = __shape_support_CssL4Parser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [44u8] {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                    offset: at as u32,
+                                });
+                            }
+                            *p = end;
+                            let _ = __shape_support_CssL4Parser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            'try_branches: loop {
+                                {
+                                    let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
+                                    let __alt_result: ::core::result::Result<
+                                        (),
+                                        crate::runtime::DtaError,
+                                    > = (|| {
+                                        let _ = ({
+                                            let _ = __shape_support_CssL4Parser::skip_space(
+                                                input,
+                                                p,
+                                                state,
+                                            );
+                                            parse_wrap_CssL4Parser_mediaCondition(
+                                                input,
+                                                p,
+                                                state,
+                                                builder,
+                                                cursor,
+                                            )
+                                        })?;
+                                        Ok(())
+                                    })();
+                                    match __alt_result {
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
+                                        Err(_) => {
+                                            *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
+                                        }
+                                    }
+                                }
+                                {
+                                    let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
+                                    let __alt_result: ::core::result::Result<
+                                        (),
+                                        crate::runtime::DtaError,
+                                    > = (|| {
+                                        let _ = ({
+                                            let _ = __shape_support_CssL4Parser::skip_space(
+                                                input,
+                                                p,
+                                                state,
+                                            );
+                                            parse_flat_CssL4Parser_mediaTypedQuery(
+                                                input,
+                                                p,
+                                                state,
+                                                builder,
+                                                cursor,
+                                            )
+                                        })?;
+                                        Ok(())
+                                    })();
+                                    match __alt_result {
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
+                                        Err(_) => {
+                                            *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
+                                        }
+                                    }
+                                }
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                    offset: *p as u32,
+                                });
+                            }
+                            Ok(())
+                        })();
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
+                                    break;
+                                }
+                                builder.commit(__iter_builder_checkpoint);
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
+                                break;
+                            }
+                        }
+                    }
+                    if __iter_count < 0u32 {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                            offset: *p as u32,
+                        });
+                    }
+                }
+            }
+            ::core::result::Result::Ok(())
+        })();
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __mediaQueryList_handle,
+                );
+                ::core::result::Result::Ok(())
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
+    }
     /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
     /// function, **struct-direct body**. Targets the grammar's
     /// concrete `StructBuilder`.
@@ -48628,7 +49435,7 @@ mod __cssl4parser_emit_impl {
         let _ = cursor;
         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
         let __mathExpr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 103u32 as ::bbnf_ir::RuleId,
+            rule_id: 104u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("mathExpr"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -48736,7 +49543,7 @@ mod __cssl4parser_emit_impl {
     {
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 104u32 as ::bbnf_ir::RuleId,
+            rule_id: 105u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("calcFunction"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -48820,7 +49627,7 @@ mod __cssl4parser_emit_impl {
     {
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 105u32 as ::bbnf_ir::RuleId,
+            rule_id: 106u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("minFunction"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -48932,7 +49739,7 @@ mod __cssl4parser_emit_impl {
     {
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 106u32 as ::bbnf_ir::RuleId,
+            rule_id: 107u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("maxFunction"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -49044,7 +49851,7 @@ mod __cssl4parser_emit_impl {
     {
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 107u32 as ::bbnf_ir::RuleId,
+            rule_id: 108u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("clampFunction"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -49170,7 +49977,7 @@ mod __cssl4parser_emit_impl {
         let _ = cursor;
         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
         let __mathProduct_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 108u32 as ::bbnf_ir::RuleId,
+            rule_id: 109u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("mathProduct"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -49294,7 +50101,7 @@ mod __cssl4parser_emit_impl {
                 offset: *p as u32,
             })?;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 109u32 as ::bbnf_ir::RuleId,
+            rule_id: 110u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("mathValue"),
             kind: ::bbnf_ir::registry::LayoutKind::TaggedEnum,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -49564,303 +50371,6 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__dispatch_checkpoint);
-                ::core::result::Result::Err(__err)
-            }
-        }
-    }
-    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
-    /// **struct-direct body**. Targets the grammar's concrete
-    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
-    /// resolver's `SubstrateBinding`).
-    ///
-    /// Compound emission lands as typed
-    /// `begin_compound` / `end_compound` calls against the in-flight
-    /// frame stack. Per-position pushes (string keys, recursive
-    /// value calls, byte literals) land directly on the topmost
-    /// open frame.
-    ///
-    /// Returns unit for StructDirect composition
-    /// with sibling shape fns under struct-direct mode; the
-    /// offset is unused by struct-direct callers.
-    ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
-    /// cross-shape recursive edge (Flat → Wrap → Flat through
-    /// the grammar's `__value` discriminant). LLVM's inliner
-    /// collapses plain `#[inline]` candidates only when
-    /// profitable and bails cleanly on detected recursion.
-    ///
-    /// AZ-III.W2.4.r — content-only bodies (no Ref /
-    /// TokenDispatch in the IR) capture `*p` before and after
-    /// the per-position emission and push one synthetic Span
-    /// leaf carrying the consumed source slice; this restores
-    /// the contract `bootstrap_parser` met for `regex` /
-    /// `literal` / `comment` / `big_comment` / `import_path`
-    /// (all flat-shape rules whose grammar projection is
-    /// `-> Span` or whose host walker reads via `byte_span()`).
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_mediaQueryList<'p, __P>(
-        input: &'p [u8],
-        p: &mut usize,
-        state: &mut __shape_support_CssL4Parser::ScanState,
-        builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError>
-    where
-        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
-    {
-        use crate::runtime::builder::StructBuilder as _;
-        use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(110u32 as u32);
-        let __flat_checkpoint = builder.checkpoint();
-        let __compound_start: u32 = *p as u32;
-        let __mediaQueryList_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 110u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("mediaQueryList"),
-            kind: ::bbnf_ir::registry::LayoutKind::Struct,
-            rule_type: ::bbnf_ir::TypeDesc::Span,
-            fields: ::std::vec::Vec::new(),
-        };
-        let __mediaQueryList_handle = <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::begin_compound(
-            builder,
-            &__mediaQueryList_layout,
-        );
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
-            builder,
-            __compound_start,
-        );
-        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
-            {
-                'try_branches: loop {
-                    {
-                        let __alt_save_p = *p;
-                        let __alt_builder_checkpoint = builder.checkpoint();
-                        let __alt_result: ::core::result::Result<
-                            (),
-                            crate::runtime::DtaError,
-                        > = (|| {
-                            let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
-                                parse_wrap_CssL4Parser_mediaCondition(
-                                    input,
-                                    p,
-                                    state,
-                                    builder,
-                                    cursor,
-                                )
-                            })?;
-                            Ok(())
-                        })();
-                        match __alt_result {
-                            Ok(()) => {
-                                builder.commit(__alt_builder_checkpoint);
-                                break 'try_branches;
-                            }
-                            Err(_) => {
-                                *p = __alt_save_p;
-                                builder.rollback(__alt_builder_checkpoint);
-                            }
-                        }
-                    }
-                    {
-                        let __alt_save_p = *p;
-                        let __alt_builder_checkpoint = builder.checkpoint();
-                        let __alt_result: ::core::result::Result<
-                            (),
-                            crate::runtime::DtaError,
-                        > = (|| {
-                            let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
-                                parse_flat_CssL4Parser_mediaTypedQuery(
-                                    input,
-                                    p,
-                                    state,
-                                    builder,
-                                    cursor,
-                                )
-                            })?;
-                            Ok(())
-                        })();
-                        match __alt_result {
-                            Ok(()) => {
-                                builder.commit(__alt_builder_checkpoint);
-                                break 'try_branches;
-                            }
-                            Err(_) => {
-                                *p = __alt_save_p;
-                                builder.rollback(__alt_builder_checkpoint);
-                            }
-                        }
-                    }
-                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                        offset: *p as u32,
-                    });
-                }
-            }
-            {
-                {
-                    let mut __iter_count: u32 = 0;
-                    loop {
-                        if __iter_count >= 4294967295u32 {
-                            break;
-                        }
-                        let __iter_save_p = *p;
-                        if input.get(*p).is_none() {
-                            break;
-                        }
-                        let __iter_builder_checkpoint = builder.checkpoint();
-                        let __iter_result: ::core::result::Result<
-                            (),
-                            crate::runtime::DtaError,
-                        > = (|| {
-                            let _ = __shape_support_CssL4Parser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() < end || input[at..end] != [44u8] {
-                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                    offset: at as u32,
-                                });
-                            }
-                            *p = end;
-                            let _ = __shape_support_CssL4Parser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
-                            'try_branches: loop {
-                                {
-                                    let __alt_save_p = *p;
-                                    let __alt_builder_checkpoint = builder.checkpoint();
-                                    let __alt_result: ::core::result::Result<
-                                        (),
-                                        crate::runtime::DtaError,
-                                    > = (|| {
-                                        let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
-                                            parse_wrap_CssL4Parser_mediaCondition(
-                                                input,
-                                                p,
-                                                state,
-                                                builder,
-                                                cursor,
-                                            )
-                                        })?;
-                                        Ok(())
-                                    })();
-                                    match __alt_result {
-                                        Ok(()) => {
-                                            builder.commit(__alt_builder_checkpoint);
-                                            break 'try_branches;
-                                        }
-                                        Err(_) => {
-                                            *p = __alt_save_p;
-                                            builder.rollback(__alt_builder_checkpoint);
-                                        }
-                                    }
-                                }
-                                {
-                                    let __alt_save_p = *p;
-                                    let __alt_builder_checkpoint = builder.checkpoint();
-                                    let __alt_result: ::core::result::Result<
-                                        (),
-                                        crate::runtime::DtaError,
-                                    > = (|| {
-                                        let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
-                                            parse_flat_CssL4Parser_mediaTypedQuery(
-                                                input,
-                                                p,
-                                                state,
-                                                builder,
-                                                cursor,
-                                            )
-                                        })?;
-                                        Ok(())
-                                    })();
-                                    match __alt_result {
-                                        Ok(()) => {
-                                            builder.commit(__alt_builder_checkpoint);
-                                            break 'try_branches;
-                                        }
-                                        Err(_) => {
-                                            *p = __alt_save_p;
-                                            builder.rollback(__alt_builder_checkpoint);
-                                        }
-                                    }
-                                }
-                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                    offset: *p as u32,
-                                });
-                            }
-                            Ok(())
-                        })();
-                        match __iter_result {
-                            Ok(()) => {
-                                if *p == __iter_save_p {
-                                    builder.rollback(__iter_builder_checkpoint);
-                                    break;
-                                }
-                                builder.commit(__iter_builder_checkpoint);
-                                __iter_count += 1;
-                            }
-                            Err(_) => {
-                                *p = __iter_save_p;
-                                builder.rollback(__iter_builder_checkpoint);
-                                break;
-                            }
-                        }
-                    }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
-                    }
-                }
-            }
-            ::core::result::Result::Ok(())
-        })();
-        match __body_result {
-            ::core::result::Result::Ok(()) => {
-                <crate::runtime::css_l4::CssStructBuilder<
-                    '_,
-                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
-                    builder,
-                    *p as u32,
-                );
-                <crate::runtime::css_l4::CssStructBuilder<
-                    '_,
-                > as crate::runtime::StructBuilder>::end_compound(
-                    builder,
-                    __mediaQueryList_handle,
-                );
-                ::core::result::Result::Ok(())
-            }
-            ::core::result::Result::Err(__err) => {
-                builder.rollback(__flat_checkpoint);
                 ::core::result::Result::Err(__err)
             }
         }
@@ -60734,7 +61244,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_keyframesRule<'p, __P>(
+    pub fn parse_flat_CssL4Parser_keyframeBlock<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -60749,8 +61259,193 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(139u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __keyframesRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        let __keyframeBlock_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 139u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("keyframeBlock"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __keyframeBlock_handle = <crate::runtime::css_l4::CssStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__keyframeBlock_layout,
+        );
+        <crate::runtime::css_l4::CssStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
+        );
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            {
+                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                let _ = ({
+                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                    parse_flat_CssL4Parser_keyframeSel(input, p, state, builder, cursor)
+                })?;
+                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+            }
+            {
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [123u8] {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                        offset: at as u32,
+                    });
+                }
+                *p = end;
+            }
+            {
+                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                {
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 4294967295u32 {
+                            break;
+                        }
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
+                        }
+                        let __iter_builder_checkpoint = builder.checkpoint();
+                        let __iter_result: ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > = (|| {
+                            let _ = __shape_support_CssL4Parser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            let _ = ({
+                                let _ = __shape_support_CssL4Parser::skip_space(
+                                    input,
+                                    p,
+                                    state,
+                                );
+                                parse_wrap_CssL4Parser_declaration(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                    cursor,
+                                )
+                            })?;
+                            let _ = __shape_support_CssL4Parser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            Ok(())
+                        })();
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
+                                    break;
+                                }
+                                builder.commit(__iter_builder_checkpoint);
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
+                                break;
+                            }
+                        }
+                    }
+                    if __iter_count < 0u32 {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                            offset: *p as u32,
+                        });
+                    }
+                }
+                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+            }
+            {
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [125u8] {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                        offset: at as u32,
+                    });
+                }
+                *p = end;
+            }
+            ::core::result::Result::Ok(())
+        })();
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __keyframeBlock_handle,
+                );
+                ::core::result::Result::Ok(())
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
+    }
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
+    ///
+    /// Compound emission lands as typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
+    ///
+    /// Returns unit for StructDirect composition
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_CssL4Parser_keyframesRule<'p, __P>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_CssL4Parser::ScanState,
+        builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
+    {
+        use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(140u32 as u32);
+        let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
+        let __keyframesRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 140u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("keyframesRule"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -60826,18 +61521,13 @@ mod __cssl4parser_emit_impl {
                                 p,
                                 state,
                             );
-                            let _ = __shape_support_CssL4Parser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
                             let _ = ({
                                 let _ = __shape_support_CssL4Parser::skip_space(
                                     input,
                                     p,
                                     state,
                                 );
-                                parse_flat_CssL4Parser_keyframeSel(
+                                parse_flat_CssL4Parser_keyframeBlock(
                                     input,
                                     p,
                                     state,
@@ -60845,100 +61535,6 @@ mod __cssl4parser_emit_impl {
                                     cursor,
                                 )
                             })?;
-                            let _ = __shape_support_CssL4Parser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() < end || input[at..end] != [123u8] {
-                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                    offset: at as u32,
-                                });
-                            }
-                            *p = end;
-                            let _ = __shape_support_CssL4Parser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
-                            {
-                                let mut __iter_count: u32 = 0;
-                                loop {
-                                    if __iter_count >= 4294967295u32 {
-                                        break;
-                                    }
-                                    let __iter_save_p = *p;
-                                    if input.get(*p).is_none() {
-                                        break;
-                                    }
-                                    let __iter_builder_checkpoint = builder.checkpoint();
-                                    let __iter_result: ::core::result::Result<
-                                        (),
-                                        crate::runtime::DtaError,
-                                    > = (|| {
-                                        let _ = __shape_support_CssL4Parser::skip_space(
-                                            input,
-                                            p,
-                                            state,
-                                        );
-                                        let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
-                                            parse_wrap_CssL4Parser_declaration(
-                                                input,
-                                                p,
-                                                state,
-                                                builder,
-                                                cursor,
-                                            )
-                                        })?;
-                                        let _ = __shape_support_CssL4Parser::skip_space(
-                                            input,
-                                            p,
-                                            state,
-                                        );
-                                        Ok(())
-                                    })();
-                                    match __iter_result {
-                                        Ok(()) => {
-                                            if *p == __iter_save_p {
-                                                builder.rollback(__iter_builder_checkpoint);
-                                                break;
-                                            }
-                                            builder.commit(__iter_builder_checkpoint);
-                                            __iter_count += 1;
-                                        }
-                                        Err(_) => {
-                                            *p = __iter_save_p;
-                                            builder.rollback(__iter_builder_checkpoint);
-                                            break;
-                                        }
-                                    }
-                                }
-                                if __iter_count < 0u32 {
-                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                        offset: *p as u32,
-                                    });
-                                }
-                            }
-                            let _ = __shape_support_CssL4Parser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() < end || input[at..end] != [125u8] {
-                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                    offset: at as u32,
-                                });
-                            }
-                            *p = end;
                             let _ = __shape_support_CssL4Parser::skip_space(
                                 input,
                                 p,
@@ -61123,11 +61719,11 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(141u32 as u32);
+        let __decision: __Decision = cursor.decide(142u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __genericAtRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 141u32 as ::bbnf_ir::RuleId,
+            rule_id: 142u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("genericAtRule"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -61260,11 +61856,11 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(142u32 as u32);
+        let __decision: __Decision = cursor.decide(143u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __ruleBlock_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 142u32 as ::bbnf_ir::RuleId,
+            rule_id: 143u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("ruleBlock"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -61378,11 +61974,11 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(143u32 as u32);
+        let __decision: __Decision = cursor.decide(144u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __qualifiedRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 143u32 as ::bbnf_ir::RuleId,
+            rule_id: 144u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("qualifiedRule"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -61484,11 +62080,11 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(144u32 as u32);
+        let __decision: __Decision = cursor.decide(145u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __mediaRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 144u32 as ::bbnf_ir::RuleId,
+            rule_id: 145u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("mediaRule"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -61600,17 +62196,237 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let _ = cursor.decide(145u32 as u32);
+        let _ = cursor.decide(146u32 as u32);
         let first = __shape_support_CssL4Parser::skip_space(input, p, state)
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
         'try_branches: loop {
             match first {
+                40u8 => {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match parse_flat_CssL4Parser_mediaRule(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                41u8 => {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match parse_flat_CssL4Parser_mediaRule(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                44u8 => {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match parse_flat_CssL4Parser_mediaRule(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                45u8 => {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match parse_flat_CssL4Parser_mediaRule(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                58u8 => {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match parse_flat_CssL4Parser_mediaRule(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
                 64u8 => {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
-                    match parse_flat_CssL4Parser_genericAtRule(
+                    match parse_flat_CssL4Parser_mediaRule(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                97u8 => {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match parse_flat_CssL4Parser_mediaRule(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                110u8 => {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match parse_flat_CssL4Parser_mediaRule(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                111u8 => {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match parse_flat_CssL4Parser_mediaRule(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                112u8 => {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match parse_flat_CssL4Parser_mediaRule(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                115u8 => {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match parse_flat_CssL4Parser_mediaRule(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                123u8 => {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match parse_flat_CssL4Parser_mediaRule(
                         input,
                         p,
                         state,
@@ -61632,7 +62448,7 @@ mod __cssl4parser_emit_impl {
             {
                 let attempt_p = *p;
                 let attempt_builder = builder.checkpoint();
-                match parse_flat_CssL4Parser_mediaRule(
+                match parse_flat_CssL4Parser_keyframesRule(
                     input,
                     p,
                     state,
@@ -61652,7 +62468,7 @@ mod __cssl4parser_emit_impl {
             {
                 let attempt_p = *p;
                 let attempt_builder = builder.checkpoint();
-                match parse_flat_CssL4Parser_keyframesRule(
+                match parse_flat_CssL4Parser_genericAtRule(
                     input,
                     p,
                     state,
@@ -61710,7 +62526,7 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let _ = cursor.decide(146u32 as u32);
+        let _ = cursor.decide(147u32 as u32);
         let first = __shape_support_CssL4Parser::skip_space(input, p, state)
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -61802,11 +62618,11 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(147u32 as u32);
+        let __decision: __Decision = cursor.decide(148u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __blockContent_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 147u32 as ::bbnf_ir::RuleId,
+            rule_id: 148u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("blockContent"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -62016,11 +62832,11 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(148u32 as u32);
+        let __decision: __Decision = cursor.decide(149u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
         let __ruleList_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 148u32 as ::bbnf_ir::RuleId,
+            rule_id: 149u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("ruleList"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -62183,10 +62999,10 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let _ = cursor.decide(150u32 as u32);
+        let _ = cursor.decide(151u32 as u32);
         let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 150u32 as ::bbnf_ir::RuleId,
+            rule_id: 151u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__pattern_90b9f441ae92fa6c"),
             kind: ::bbnf_ir::registry::LayoutKind::TaggedEnum,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -62828,123 +63644,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___calcFunction_cont_151<'p, __P>(
-        input: &'p [u8],
-        p: &mut usize,
-        state: &mut __shape_support_CssL4Parser::ScanState,
-        builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError>
-    where
-        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
-    {
-        use crate::runtime::builder::StructBuilder as _;
-        use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(151u32 as u32);
-        let __flat_checkpoint = builder.checkpoint();
-        let __compound_start: u32 = *p as u32;
-        let ____calcFunction_cont_151_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 151u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__calcFunction_cont_151"),
-            kind: ::bbnf_ir::registry::LayoutKind::Struct,
-            rule_type: ::bbnf_ir::TypeDesc::Span,
-            fields: ::std::vec::Vec::new(),
-        };
-        let ____calcFunction_cont_151_handle = <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::begin_compound(
-            builder,
-            &____calcFunction_cont_151_layout,
-        );
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
-            builder,
-            __compound_start,
-        );
-        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
-            {
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [40u8] {
-                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                        offset: at as u32,
-                    });
-                }
-                *p = end;
-            }
-            {
-                let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_pratt_CssL4Parser_mathExpr(input, p, state, builder, cursor)
-                })?;
-            }
-            {
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [41u8] {
-                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                        offset: at as u32,
-                    });
-                }
-                *p = end;
-            }
-            ::core::result::Result::Ok(())
-        })();
-        match __body_result {
-            ::core::result::Result::Ok(()) => {
-                <crate::runtime::css_l4::CssStructBuilder<
-                    '_,
-                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
-                    builder,
-                    *p as u32,
-                );
-                <crate::runtime::css_l4::CssStructBuilder<
-                    '_,
-                > as crate::runtime::StructBuilder>::end_compound(
-                    builder,
-                    ____calcFunction_cont_151_handle,
-                );
-                ::core::result::Result::Ok(())
-            }
-            ::core::result::Result::Err(__err) => {
-                builder.rollback(__flat_checkpoint);
-                ::core::result::Result::Err(__err)
-            }
-        }
-    }
-    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
-    /// **struct-direct body**. Targets the grammar's concrete
-    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
-    /// resolver's `SubstrateBinding`).
-    ///
-    /// Compound emission lands as typed
-    /// `begin_compound` / `end_compound` calls against the in-flight
-    /// frame stack. Per-position pushes (string keys, recursive
-    /// value calls, byte literals) land directly on the topmost
-    /// open frame.
-    ///
-    /// Returns unit for StructDirect composition
-    /// with sibling shape fns under struct-direct mode; the
-    /// offset is unused by struct-direct callers.
-    ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
-    /// cross-shape recursive edge (Flat → Wrap → Flat through
-    /// the grammar's `__value` discriminant). LLVM's inliner
-    /// collapses plain `#[inline]` candidates only when
-    /// profitable and bails cleanly on detected recursion.
-    ///
-    /// AZ-III.W2.4.r — content-only bodies (no Ref /
-    /// TokenDispatch in the IR) capture `*p` before and after
-    /// the per-position emission and push one synthetic Span
-    /// leaf carrying the consumed source slice; this restores
-    /// the contract `bootstrap_parser` met for `regex` /
-    /// `literal` / `comment` / `big_comment` / `import_path`
-    /// (all flat-shape rules whose grammar projection is
-    /// `-> Span` or whose host walker reads via `byte_span()`).
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___minFunction_cont_152<'p, __P>(
+    pub fn parse_flat_CssL4Parser___calcFunction_cont_152<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -62959,18 +63659,18 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(152u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____minFunction_cont_152_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        let ____calcFunction_cont_152_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 152u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__minFunction_cont_152"),
+            rule_name: ::std::string::String::from("__calcFunction_cont_152"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let ____minFunction_cont_152_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let ____calcFunction_cont_152_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____minFunction_cont_152_layout,
+            &____calcFunction_cont_152_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -62996,69 +63696,6 @@ mod __cssl4parser_emit_impl {
                 })?;
             }
             {
-                {
-                    let mut __iter_count: u32 = 0;
-                    loop {
-                        if __iter_count >= 4294967295u32 {
-                            break;
-                        }
-                        let __iter_save_p = *p;
-                        if input.get(*p).is_none() {
-                            break;
-                        }
-                        let __iter_builder_checkpoint = builder.checkpoint();
-                        let __iter_result: ::core::result::Result<
-                            (),
-                            crate::runtime::DtaError,
-                        > = (|| {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() < end || input[at..end] != [44u8] {
-                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                    offset: at as u32,
-                                });
-                            }
-                            *p = end;
-                            let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
-                                parse_pratt_CssL4Parser_mathExpr(
-                                    input,
-                                    p,
-                                    state,
-                                    builder,
-                                    cursor,
-                                )
-                            })?;
-                            Ok(())
-                        })();
-                        match __iter_result {
-                            Ok(()) => {
-                                if *p == __iter_save_p {
-                                    builder.rollback(__iter_builder_checkpoint);
-                                    break;
-                                }
-                                builder.commit(__iter_builder_checkpoint);
-                                __iter_count += 1;
-                            }
-                            Err(_) => {
-                                *p = __iter_save_p;
-                                builder.rollback(__iter_builder_checkpoint);
-                                break;
-                            }
-                        }
-                    }
-                    if __iter_count < 1u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
-                    }
-                }
-            }
-            {
                 let at = *p;
                 let end = at + 1usize;
                 if input.len() < end || input[at..end] != [41u8] {
@@ -63082,7 +63719,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    ____minFunction_cont_152_handle,
+                    ____calcFunction_cont_152_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -63123,7 +63760,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___maxFunction_cont_153<'p, __P>(
+    pub fn parse_flat_CssL4Parser___minFunction_cont_153<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -63138,18 +63775,18 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(153u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____maxFunction_cont_153_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        let ____minFunction_cont_153_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 153u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__maxFunction_cont_153"),
+            rule_name: ::std::string::String::from("__minFunction_cont_153"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let ____maxFunction_cont_153_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let ____minFunction_cont_153_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____maxFunction_cont_153_layout,
+            &____minFunction_cont_153_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -63261,7 +63898,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    ____maxFunction_cont_153_handle,
+                    ____minFunction_cont_153_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -63302,7 +63939,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___clampFunction_cont_154<'p, __P>(
+    pub fn parse_flat_CssL4Parser___maxFunction_cont_154<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -63317,18 +63954,197 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(154u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____clampFunction_cont_154_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        let ____maxFunction_cont_154_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 154u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__clampFunction_cont_154"),
+            rule_name: ::std::string::String::from("__maxFunction_cont_154"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let ____clampFunction_cont_154_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let ____maxFunction_cont_154_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____clampFunction_cont_154_layout,
+            &____maxFunction_cont_154_layout,
+        );
+        <crate::runtime::css_l4::CssStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
+        );
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            {
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [40u8] {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                        offset: at as u32,
+                    });
+                }
+                *p = end;
+            }
+            {
+                let _ = ({
+                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                    parse_pratt_CssL4Parser_mathExpr(input, p, state, builder, cursor)
+                })?;
+            }
+            {
+                {
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 4294967295u32 {
+                            break;
+                        }
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
+                        }
+                        let __iter_builder_checkpoint = builder.checkpoint();
+                        let __iter_result: ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > = (|| {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [44u8] {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                    offset: at as u32,
+                                });
+                            }
+                            *p = end;
+                            let _ = ({
+                                let _ = __shape_support_CssL4Parser::skip_space(
+                                    input,
+                                    p,
+                                    state,
+                                );
+                                parse_pratt_CssL4Parser_mathExpr(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                    cursor,
+                                )
+                            })?;
+                            Ok(())
+                        })();
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
+                                    break;
+                                }
+                                builder.commit(__iter_builder_checkpoint);
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
+                                break;
+                            }
+                        }
+                    }
+                    if __iter_count < 1u32 {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                            offset: *p as u32,
+                        });
+                    }
+                }
+            }
+            {
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [41u8] {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                        offset: at as u32,
+                    });
+                }
+                *p = end;
+            }
+            ::core::result::Result::Ok(())
+        })();
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____maxFunction_cont_154_handle,
+                );
+                ::core::result::Result::Ok(())
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
+    }
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
+    ///
+    /// Compound emission lands as typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
+    ///
+    /// Returns unit for StructDirect composition
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_CssL4Parser___clampFunction_cont_155<'p, __P>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_CssL4Parser::ScanState,
+        builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
+    {
+        use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(155u32 as u32);
+        let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
+        let ____clampFunction_cont_155_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 155u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("__clampFunction_cont_155"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let ____clampFunction_cont_155_handle = <crate::runtime::css_l4::CssStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &____clampFunction_cont_155_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -63409,7 +64225,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    ____clampFunction_cont_154_handle,
+                    ____clampFunction_cont_155_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -63450,7 +64266,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___varFunction_cont_155<'p, __P>(
+    pub fn parse_flat_CssL4Parser___varFunction_cont_156<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -63462,21 +64278,21 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(155u32 as u32);
+        let __decision: __Decision = cursor.decide(156u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____varFunction_cont_155_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 155u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__varFunction_cont_155"),
+        let ____varFunction_cont_156_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 156u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("__varFunction_cont_156"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let ____varFunction_cont_155_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let ____varFunction_cont_156_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____varFunction_cont_155_layout,
+            &____varFunction_cont_156_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -63597,7 +64413,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    ____varFunction_cont_155_handle,
+                    ____varFunction_cont_156_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -63638,7 +64454,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___envFunction_cont_156<'p, __P>(
+    pub fn parse_flat_CssL4Parser___envFunction_cont_157<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -63650,21 +64466,21 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(156u32 as u32);
+        let __decision: __Decision = cursor.decide(157u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____envFunction_cont_156_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 156u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__envFunction_cont_156"),
+        let ____envFunction_cont_157_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 157u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("__envFunction_cont_157"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let ____envFunction_cont_156_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let ____envFunction_cont_157_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____envFunction_cont_156_layout,
+            &____envFunction_cont_157_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -63785,7 +64601,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    ____envFunction_cont_156_handle,
+                    ____envFunction_cont_157_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -63826,7 +64642,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___varFunction_cont_157<'p, __P>(
+    pub fn parse_flat_CssL4Parser___varFunction_cont_158<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -63838,21 +64654,21 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(157u32 as u32);
+        let __decision: __Decision = cursor.decide(158u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____varFunction_cont_157_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 157u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__varFunction_cont_157"),
+        let ____varFunction_cont_158_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 158u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("__varFunction_cont_158"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let ____varFunction_cont_157_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let ____varFunction_cont_158_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____varFunction_cont_157_layout,
+            &____varFunction_cont_158_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -63973,7 +64789,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    ____varFunction_cont_157_handle,
+                    ____varFunction_cont_158_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -64014,7 +64830,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___calcFunction_cont_158<'p, __P>(
+    pub fn parse_flat_CssL4Parser___calcFunction_cont_159<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -64026,21 +64842,21 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(158u32 as u32);
+        let __decision: __Decision = cursor.decide(159u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____calcFunction_cont_158_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 158u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__calcFunction_cont_158"),
+        let ____calcFunction_cont_159_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 159u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("__calcFunction_cont_159"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let ____calcFunction_cont_158_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let ____calcFunction_cont_159_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____calcFunction_cont_158_layout,
+            &____calcFunction_cont_159_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -64089,7 +64905,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    ____calcFunction_cont_158_handle,
+                    ____calcFunction_cont_159_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -64130,7 +64946,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___urlFunction_cont_159<'p, __P>(
+    pub fn parse_flat_CssL4Parser___urlFunction_cont_160<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -64142,21 +64958,21 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(159u32 as u32);
+        let __decision: __Decision = cursor.decide(160u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____urlFunction_cont_159_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 159u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__urlFunction_cont_159"),
+        let ____urlFunction_cont_160_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 160u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("__urlFunction_cont_160"),
             kind: ::bbnf_ir::registry::LayoutKind::UntaggedEnum,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let ____urlFunction_cont_159_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let ____urlFunction_cont_160_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____urlFunction_cont_159_layout,
+            &____urlFunction_cont_160_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -64285,7 +65101,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    ____urlFunction_cont_159_handle,
+                    ____urlFunction_cont_160_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -64326,7 +65142,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___genericFunction_cont_160<'p, __P>(
+    pub fn parse_flat_CssL4Parser___genericFunction_cont_161<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -64338,21 +65154,21 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(160u32 as u32);
+        let __decision: __Decision = cursor.decide(161u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____genericFunction_cont_160_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 160u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__genericFunction_cont_160"),
+        let ____genericFunction_cont_161_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 161u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("__genericFunction_cont_161"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let ____genericFunction_cont_160_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let ____genericFunction_cont_161_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____genericFunction_cont_160_layout,
+            &____genericFunction_cont_161_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -64401,7 +65217,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    ____genericFunction_cont_160_handle,
+                    ____genericFunction_cont_161_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -64442,235 +65258,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___colorDecl_cont_161<'p, __P>(
-        input: &'p [u8],
-        p: &mut usize,
-        state: &mut __shape_support_CssL4Parser::ScanState,
-        builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError>
-    where
-        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
-    {
-        use crate::runtime::builder::StructBuilder as _;
-        use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(161u32 as u32);
-        let __flat_checkpoint = builder.checkpoint();
-        let __compound_start: u32 = *p as u32;
-        let ____colorDecl_cont_161_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 161u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__colorDecl_cont_161"),
-            kind: ::bbnf_ir::registry::LayoutKind::Struct,
-            rule_type: ::bbnf_ir::TypeDesc::Span,
-            fields: ::std::vec::Vec::new(),
-        };
-        let ____colorDecl_cont_161_handle = <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::begin_compound(
-            builder,
-            &____colorDecl_cont_161_layout,
-        );
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
-            builder,
-            __compound_start,
-        );
-        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
-            {
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [58u8] {
-                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                        offset: at as u32,
-                    });
-                }
-                *p = end;
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-            }
-            {
-                {
-                    let mut __iter_count: u32 = 0;
-                    loop {
-                        if __iter_count >= 4294967295u32 {
-                            break;
-                        }
-                        let __iter_save_p = *p;
-                        if input.get(*p).is_none() {
-                            break;
-                        }
-                        let __iter_builder_checkpoint = builder.checkpoint();
-                        let __iter_result: ::core::result::Result<
-                            (),
-                            crate::runtime::DtaError,
-                        > = (|| {
-                            let _ = __shape_support_CssL4Parser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
-                            let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
-                                parse_altdispatch_CssL4Parser_value(
-                                    input,
-                                    p,
-                                    state,
-                                    builder,
-                                    cursor,
-                                )
-                            })?;
-                            let _ = __shape_support_CssL4Parser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
-                            Ok(())
-                        })();
-                        match __iter_result {
-                            Ok(()) => {
-                                if *p == __iter_save_p {
-                                    builder.rollback(__iter_builder_checkpoint);
-                                    break;
-                                }
-                                builder.commit(__iter_builder_checkpoint);
-                                __iter_count += 1;
-                            }
-                            Err(_) => {
-                                *p = __iter_save_p;
-                                builder.rollback(__iter_builder_checkpoint);
-                                break;
-                            }
-                        }
-                    }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
-                    }
-                }
-            }
-            {
-                let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(
-                        input,
-                        p,
-                        state,
-                        builder,
-                        cursor,
-                    )
-                })?;
-            }
-            {
-                {
-                    let mut __iter_count: u32 = 0;
-                    loop {
-                        if __iter_count >= 1u32 {
-                            break;
-                        }
-                        let __iter_save_p = *p;
-                        if input.get(*p).is_none() {
-                            break;
-                        }
-                        let __iter_builder_checkpoint = builder.checkpoint();
-                        let __iter_result: ::core::result::Result<
-                            (),
-                            crate::runtime::DtaError,
-                        > = (|| {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() < end || input[at..end] != [59u8] {
-                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                    offset: at as u32,
-                                });
-                            }
-                            *p = end;
-                            Ok(())
-                        })();
-                        match __iter_result {
-                            Ok(()) => {
-                                if *p == __iter_save_p {
-                                    builder.rollback(__iter_builder_checkpoint);
-                                    break;
-                                }
-                                builder.commit(__iter_builder_checkpoint);
-                                __iter_count += 1;
-                            }
-                            Err(_) => {
-                                *p = __iter_save_p;
-                                builder.rollback(__iter_builder_checkpoint);
-                                break;
-                            }
-                        }
-                    }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
-                    }
-                }
-            }
-            ::core::result::Result::Ok(())
-        })();
-        match __body_result {
-            ::core::result::Result::Ok(()) => {
-                <crate::runtime::css_l4::CssStructBuilder<
-                    '_,
-                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
-                    builder,
-                    *p as u32,
-                );
-                <crate::runtime::css_l4::CssStructBuilder<
-                    '_,
-                > as crate::runtime::StructBuilder>::end_compound(
-                    builder,
-                    ____colorDecl_cont_161_handle,
-                );
-                ::core::result::Result::Ok(())
-            }
-            ::core::result::Result::Err(__err) => {
-                builder.rollback(__flat_checkpoint);
-                ::core::result::Result::Err(__err)
-            }
-        }
-    }
-    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
-    /// **struct-direct body**. Targets the grammar's concrete
-    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
-    /// resolver's `SubstrateBinding`).
-    ///
-    /// Compound emission lands as typed
-    /// `begin_compound` / `end_compound` calls against the in-flight
-    /// frame stack. Per-position pushes (string keys, recursive
-    /// value calls, byte literals) land directly on the topmost
-    /// open frame.
-    ///
-    /// Returns unit for StructDirect composition
-    /// with sibling shape fns under struct-direct mode; the
-    /// offset is unused by struct-direct callers.
-    ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
-    /// cross-shape recursive edge (Flat → Wrap → Flat through
-    /// the grammar's `__value` discriminant). LLVM's inliner
-    /// collapses plain `#[inline]` candidates only when
-    /// profitable and bails cleanly on detected recursion.
-    ///
-    /// AZ-III.W2.4.r — content-only bodies (no Ref /
-    /// TokenDispatch in the IR) capture `*p` before and after
-    /// the per-position emission and push one synthetic Span
-    /// leaf carrying the consumed source slice; this restores
-    /// the contract `bootstrap_parser` met for `regex` /
-    /// `literal` / `comment` / `big_comment` / `import_path`
-    /// (all flat-shape rules whose grammar projection is
-    /// `-> Span` or whose host walker reads via `byte_span()`).
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___sizeDecl_cont_162<'p, __P>(
+    pub fn parse_flat_CssL4Parser___colorDecl_cont_162<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -64685,18 +65273,18 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(162u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____sizeDecl_cont_162_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        let ____colorDecl_cont_162_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 162u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__sizeDecl_cont_162"),
+            rule_name: ::std::string::String::from("__colorDecl_cont_162"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let ____sizeDecl_cont_162_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let ____colorDecl_cont_162_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____sizeDecl_cont_162_layout,
+            &____colorDecl_cont_162_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -64857,7 +65445,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    ____sizeDecl_cont_162_handle,
+                    ____colorDecl_cont_162_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -64898,7 +65486,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___spacingDecl_cont_163<'p, __P>(
+    pub fn parse_flat_CssL4Parser___sizeDecl_cont_163<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -64913,18 +65501,18 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(163u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____spacingDecl_cont_163_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        let ____sizeDecl_cont_163_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 163u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__spacingDecl_cont_163"),
+            rule_name: ::std::string::String::from("__sizeDecl_cont_163"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let ____spacingDecl_cont_163_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let ____sizeDecl_cont_163_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____spacingDecl_cont_163_layout,
+            &____sizeDecl_cont_163_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -65085,7 +65673,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    ____spacingDecl_cont_163_handle,
+                    ____sizeDecl_cont_163_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -65126,7 +65714,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___fontDecl_cont_164<'p, __P>(
+    pub fn parse_flat_CssL4Parser___spacingDecl_cont_164<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -65141,18 +65729,246 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(164u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____fontDecl_cont_164_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        let ____spacingDecl_cont_164_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 164u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__fontDecl_cont_164"),
+            rule_name: ::std::string::String::from("__spacingDecl_cont_164"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let ____fontDecl_cont_164_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let ____spacingDecl_cont_164_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____fontDecl_cont_164_layout,
+            &____spacingDecl_cont_164_layout,
+        );
+        <crate::runtime::css_l4::CssStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
+        );
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            {
+                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [58u8] {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                        offset: at as u32,
+                    });
+                }
+                *p = end;
+                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+            }
+            {
+                {
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 4294967295u32 {
+                            break;
+                        }
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
+                        }
+                        let __iter_builder_checkpoint = builder.checkpoint();
+                        let __iter_result: ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > = (|| {
+                            let _ = __shape_support_CssL4Parser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            let _ = ({
+                                let _ = __shape_support_CssL4Parser::skip_space(
+                                    input,
+                                    p,
+                                    state,
+                                );
+                                parse_altdispatch_CssL4Parser_value(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                    cursor,
+                                )
+                            })?;
+                            let _ = __shape_support_CssL4Parser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            Ok(())
+                        })();
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
+                                    break;
+                                }
+                                builder.commit(__iter_builder_checkpoint);
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
+                                break;
+                            }
+                        }
+                    }
+                    if __iter_count < 0u32 {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                            offset: *p as u32,
+                        });
+                    }
+                }
+            }
+            {
+                let _ = ({
+                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
+                })?;
+            }
+            {
+                {
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 1u32 {
+                            break;
+                        }
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
+                        }
+                        let __iter_builder_checkpoint = builder.checkpoint();
+                        let __iter_result: ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > = (|| {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [59u8] {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                    offset: at as u32,
+                                });
+                            }
+                            *p = end;
+                            Ok(())
+                        })();
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
+                                    break;
+                                }
+                                builder.commit(__iter_builder_checkpoint);
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
+                                break;
+                            }
+                        }
+                    }
+                    if __iter_count < 0u32 {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                            offset: *p as u32,
+                        });
+                    }
+                }
+            }
+            ::core::result::Result::Ok(())
+        })();
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____spacingDecl_cont_164_handle,
+                );
+                ::core::result::Result::Ok(())
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
+    }
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
+    ///
+    /// Compound emission lands as typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
+    ///
+    /// Returns unit for StructDirect composition
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_CssL4Parser___fontDecl_cont_165<'p, __P>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_CssL4Parser::ScanState,
+        builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
+    {
+        use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(165u32 as u32);
+        let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
+        let ____fontDecl_cont_165_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 165u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("__fontDecl_cont_165"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let ____fontDecl_cont_165_handle = <crate::runtime::css_l4::CssStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &____fontDecl_cont_165_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -65376,7 +66192,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    ____fontDecl_cont_164_handle,
+                    ____fontDecl_cont_165_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -65417,235 +66233,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___bgDecl_cont_165<'p, __P>(
-        input: &'p [u8],
-        p: &mut usize,
-        state: &mut __shape_support_CssL4Parser::ScanState,
-        builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError>
-    where
-        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
-    {
-        use crate::runtime::builder::StructBuilder as _;
-        use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(165u32 as u32);
-        let __flat_checkpoint = builder.checkpoint();
-        let __compound_start: u32 = *p as u32;
-        let ____bgDecl_cont_165_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 165u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__bgDecl_cont_165"),
-            kind: ::bbnf_ir::registry::LayoutKind::Struct,
-            rule_type: ::bbnf_ir::TypeDesc::Span,
-            fields: ::std::vec::Vec::new(),
-        };
-        let ____bgDecl_cont_165_handle = <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::begin_compound(
-            builder,
-            &____bgDecl_cont_165_layout,
-        );
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
-            builder,
-            __compound_start,
-        );
-        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
-            {
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [58u8] {
-                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                        offset: at as u32,
-                    });
-                }
-                *p = end;
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-            }
-            {
-                {
-                    let mut __iter_count: u32 = 0;
-                    loop {
-                        if __iter_count >= 4294967295u32 {
-                            break;
-                        }
-                        let __iter_save_p = *p;
-                        if input.get(*p).is_none() {
-                            break;
-                        }
-                        let __iter_builder_checkpoint = builder.checkpoint();
-                        let __iter_result: ::core::result::Result<
-                            (),
-                            crate::runtime::DtaError,
-                        > = (|| {
-                            let _ = __shape_support_CssL4Parser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
-                            let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
-                                parse_altdispatch_CssL4Parser_value(
-                                    input,
-                                    p,
-                                    state,
-                                    builder,
-                                    cursor,
-                                )
-                            })?;
-                            let _ = __shape_support_CssL4Parser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
-                            Ok(())
-                        })();
-                        match __iter_result {
-                            Ok(()) => {
-                                if *p == __iter_save_p {
-                                    builder.rollback(__iter_builder_checkpoint);
-                                    break;
-                                }
-                                builder.commit(__iter_builder_checkpoint);
-                                __iter_count += 1;
-                            }
-                            Err(_) => {
-                                *p = __iter_save_p;
-                                builder.rollback(__iter_builder_checkpoint);
-                                break;
-                            }
-                        }
-                    }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
-                    }
-                }
-            }
-            {
-                let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(
-                        input,
-                        p,
-                        state,
-                        builder,
-                        cursor,
-                    )
-                })?;
-            }
-            {
-                {
-                    let mut __iter_count: u32 = 0;
-                    loop {
-                        if __iter_count >= 1u32 {
-                            break;
-                        }
-                        let __iter_save_p = *p;
-                        if input.get(*p).is_none() {
-                            break;
-                        }
-                        let __iter_builder_checkpoint = builder.checkpoint();
-                        let __iter_result: ::core::result::Result<
-                            (),
-                            crate::runtime::DtaError,
-                        > = (|| {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() < end || input[at..end] != [59u8] {
-                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                    offset: at as u32,
-                                });
-                            }
-                            *p = end;
-                            Ok(())
-                        })();
-                        match __iter_result {
-                            Ok(()) => {
-                                if *p == __iter_save_p {
-                                    builder.rollback(__iter_builder_checkpoint);
-                                    break;
-                                }
-                                builder.commit(__iter_builder_checkpoint);
-                                __iter_count += 1;
-                            }
-                            Err(_) => {
-                                *p = __iter_save_p;
-                                builder.rollback(__iter_builder_checkpoint);
-                                break;
-                            }
-                        }
-                    }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
-                    }
-                }
-            }
-            ::core::result::Result::Ok(())
-        })();
-        match __body_result {
-            ::core::result::Result::Ok(()) => {
-                <crate::runtime::css_l4::CssStructBuilder<
-                    '_,
-                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
-                    builder,
-                    *p as u32,
-                );
-                <crate::runtime::css_l4::CssStructBuilder<
-                    '_,
-                > as crate::runtime::StructBuilder>::end_compound(
-                    builder,
-                    ____bgDecl_cont_165_handle,
-                );
-                ::core::result::Result::Ok(())
-            }
-            ::core::result::Result::Err(__err) => {
-                builder.rollback(__flat_checkpoint);
-                ::core::result::Result::Err(__err)
-            }
-        }
-    }
-    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
-    /// **struct-direct body**. Targets the grammar's concrete
-    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
-    /// resolver's `SubstrateBinding`).
-    ///
-    /// Compound emission lands as typed
-    /// `begin_compound` / `end_compound` calls against the in-flight
-    /// frame stack. Per-position pushes (string keys, recursive
-    /// value calls, byte literals) land directly on the topmost
-    /// open frame.
-    ///
-    /// Returns unit for StructDirect composition
-    /// with sibling shape fns under struct-direct mode; the
-    /// offset is unused by struct-direct callers.
-    ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
-    /// cross-shape recursive edge (Flat → Wrap → Flat through
-    /// the grammar's `__value` discriminant). LLVM's inliner
-    /// collapses plain `#[inline]` candidates only when
-    /// profitable and bails cleanly on detected recursion.
-    ///
-    /// AZ-III.W2.4.r — content-only bodies (no Ref /
-    /// TokenDispatch in the IR) capture `*p` before and after
-    /// the per-position emission and push one synthetic Span
-    /// leaf carrying the consumed source slice; this restores
-    /// the contract `bootstrap_parser` met for `regex` /
-    /// `literal` / `comment` / `big_comment` / `import_path`
-    /// (all flat-shape rules whose grammar projection is
-    /// `-> Span` or whose host walker reads via `byte_span()`).
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___transformDecl_cont_166<'p, __P>(
+    pub fn parse_flat_CssL4Parser___bgDecl_cont_166<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -65660,18 +66248,18 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(166u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____transformDecl_cont_166_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        let ____bgDecl_cont_166_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 166u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__transformDecl_cont_166"),
+            rule_name: ::std::string::String::from("__bgDecl_cont_166"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let ____transformDecl_cont_166_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let ____bgDecl_cont_166_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____transformDecl_cont_166_layout,
+            &____bgDecl_cont_166_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -65832,7 +66420,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    ____transformDecl_cont_166_handle,
+                    ____bgDecl_cont_166_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -65873,7 +66461,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___transitionDecl_cont_167<'p, __P>(
+    pub fn parse_flat_CssL4Parser___transformDecl_cont_167<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -65888,18 +66476,18 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(167u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____transitionDecl_cont_167_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        let ____transformDecl_cont_167_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 167u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__transitionDecl_cont_167"),
+            rule_name: ::std::string::String::from("__transformDecl_cont_167"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let ____transitionDecl_cont_167_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let ____transformDecl_cont_167_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____transitionDecl_cont_167_layout,
+            &____transformDecl_cont_167_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -66060,7 +66648,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    ____transitionDecl_cont_167_handle,
+                    ____transformDecl_cont_167_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -66101,7 +66689,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___listTableDecl_cont_168<'p, __P>(
+    pub fn parse_flat_CssL4Parser___transitionDecl_cont_168<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -66116,18 +66704,18 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(168u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____listTableDecl_cont_168_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        let ____transitionDecl_cont_168_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 168u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__listTableDecl_cont_168"),
+            rule_name: ::std::string::String::from("__transitionDecl_cont_168"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let ____listTableDecl_cont_168_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let ____transitionDecl_cont_168_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____listTableDecl_cont_168_layout,
+            &____transitionDecl_cont_168_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -66288,7 +66876,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    ____listTableDecl_cont_168_handle,
+                    ____transitionDecl_cont_168_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -66329,7 +66917,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___displayDecl_cont_169<'p, __P>(
+    pub fn parse_flat_CssL4Parser___listTableDecl_cont_169<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -66344,18 +66932,246 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(169u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____displayDecl_cont_169_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        let ____listTableDecl_cont_169_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 169u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__displayDecl_cont_169"),
+            rule_name: ::std::string::String::from("__listTableDecl_cont_169"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let ____displayDecl_cont_169_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let ____listTableDecl_cont_169_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____displayDecl_cont_169_layout,
+            &____listTableDecl_cont_169_layout,
+        );
+        <crate::runtime::css_l4::CssStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
+        );
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            {
+                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [58u8] {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                        offset: at as u32,
+                    });
+                }
+                *p = end;
+                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+            }
+            {
+                {
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 4294967295u32 {
+                            break;
+                        }
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
+                        }
+                        let __iter_builder_checkpoint = builder.checkpoint();
+                        let __iter_result: ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > = (|| {
+                            let _ = __shape_support_CssL4Parser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            let _ = ({
+                                let _ = __shape_support_CssL4Parser::skip_space(
+                                    input,
+                                    p,
+                                    state,
+                                );
+                                parse_altdispatch_CssL4Parser_value(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                    cursor,
+                                )
+                            })?;
+                            let _ = __shape_support_CssL4Parser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            Ok(())
+                        })();
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
+                                    break;
+                                }
+                                builder.commit(__iter_builder_checkpoint);
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
+                                break;
+                            }
+                        }
+                    }
+                    if __iter_count < 0u32 {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                            offset: *p as u32,
+                        });
+                    }
+                }
+            }
+            {
+                let _ = ({
+                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
+                })?;
+            }
+            {
+                {
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 1u32 {
+                            break;
+                        }
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
+                        }
+                        let __iter_builder_checkpoint = builder.checkpoint();
+                        let __iter_result: ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > = (|| {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [59u8] {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                    offset: at as u32,
+                                });
+                            }
+                            *p = end;
+                            Ok(())
+                        })();
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
+                                    break;
+                                }
+                                builder.commit(__iter_builder_checkpoint);
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
+                                break;
+                            }
+                        }
+                    }
+                    if __iter_count < 0u32 {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                            offset: *p as u32,
+                        });
+                    }
+                }
+            }
+            ::core::result::Result::Ok(())
+        })();
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____listTableDecl_cont_169_handle,
+                );
+                ::core::result::Result::Ok(())
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
+    }
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
+    ///
+    /// Compound emission lands as typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
+    ///
+    /// Returns unit for StructDirect composition
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_CssL4Parser___displayDecl_cont_170<'p, __P>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_CssL4Parser::ScanState,
+        builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
+    {
+        use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(170u32 as u32);
+        let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
+        let ____displayDecl_cont_170_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 170u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("__displayDecl_cont_170"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let ____displayDecl_cont_170_handle = <crate::runtime::css_l4::CssStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &____displayDecl_cont_170_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -66579,7 +67395,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    ____displayDecl_cont_169_handle,
+                    ____displayDecl_cont_170_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -66620,7 +67436,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___positionDecl_cont_170<'p, __P>(
+    pub fn parse_flat_CssL4Parser___positionDecl_cont_171<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -66632,21 +67448,21 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(170u32 as u32);
+        let __decision: __Decision = cursor.decide(171u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____positionDecl_cont_170_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 170u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__positionDecl_cont_170"),
+        let ____positionDecl_cont_171_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 171u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("__positionDecl_cont_171"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let ____positionDecl_cont_170_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let ____positionDecl_cont_171_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____positionDecl_cont_170_layout,
+            &____positionDecl_cont_171_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -66870,7 +67686,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    ____positionDecl_cont_170_handle,
+                    ____positionDecl_cont_171_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -66911,7 +67727,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___overflowDecl_cont_171<'p, __P>(
+    pub fn parse_flat_CssL4Parser___overflowDecl_cont_172<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -66923,21 +67739,21 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(171u32 as u32);
+        let __decision: __Decision = cursor.decide(172u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____overflowDecl_cont_171_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 171u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__overflowDecl_cont_171"),
+        let ____overflowDecl_cont_172_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 172u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("__overflowDecl_cont_172"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let ____overflowDecl_cont_171_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let ____overflowDecl_cont_172_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____overflowDecl_cont_171_layout,
+            &____overflowDecl_cont_172_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -67161,7 +67977,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    ____overflowDecl_cont_171_handle,
+                    ____overflowDecl_cont_172_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -67202,7 +68018,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___visibilityDecl_cont_172<'p, __P>(
+    pub fn parse_flat_CssL4Parser___visibilityDecl_cont_173<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -67214,21 +68030,21 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(172u32 as u32);
+        let __decision: __Decision = cursor.decide(173u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____visibilityDecl_cont_172_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 172u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__visibilityDecl_cont_172"),
+        let ____visibilityDecl_cont_173_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 173u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("__visibilityDecl_cont_173"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let ____visibilityDecl_cont_172_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let ____visibilityDecl_cont_173_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____visibilityDecl_cont_172_layout,
+            &____visibilityDecl_cont_173_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -67452,7 +68268,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    ____visibilityDecl_cont_172_handle,
+                    ____visibilityDecl_cont_173_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -67493,7 +68309,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___flexDirDecl_cont_173<'p, __P>(
+    pub fn parse_flat_CssL4Parser___flexDirDecl_cont_174<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -67505,21 +68321,21 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(173u32 as u32);
+        let __decision: __Decision = cursor.decide(174u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____flexDirDecl_cont_173_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 173u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__flexDirDecl_cont_173"),
+        let ____flexDirDecl_cont_174_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 174u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("__flexDirDecl_cont_174"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let ____flexDirDecl_cont_173_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let ____flexDirDecl_cont_174_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____flexDirDecl_cont_173_layout,
+            &____flexDirDecl_cont_174_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -67743,7 +68559,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    ____flexDirDecl_cont_173_handle,
+                    ____flexDirDecl_cont_174_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -67784,7 +68600,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___flexWrapDecl_cont_174<'p, __P>(
+    pub fn parse_flat_CssL4Parser___flexWrapDecl_cont_175<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -67796,21 +68612,21 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(174u32 as u32);
+        let __decision: __Decision = cursor.decide(175u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____flexWrapDecl_cont_174_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 174u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__flexWrapDecl_cont_174"),
+        let ____flexWrapDecl_cont_175_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 175u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("__flexWrapDecl_cont_175"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let ____flexWrapDecl_cont_174_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let ____flexWrapDecl_cont_175_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____flexWrapDecl_cont_174_layout,
+            &____flexWrapDecl_cont_175_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -68034,7 +68850,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    ____flexWrapDecl_cont_174_handle,
+                    ____flexWrapDecl_cont_175_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -68075,7 +68891,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___alignDecl_cont_175<'p, __P>(
+    pub fn parse_flat_CssL4Parser___alignDecl_cont_176<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -68087,21 +68903,21 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(175u32 as u32);
+        let __decision: __Decision = cursor.decide(176u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____alignDecl_cont_175_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 175u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__alignDecl_cont_175"),
+        let ____alignDecl_cont_176_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 176u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("__alignDecl_cont_176"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let ____alignDecl_cont_175_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let ____alignDecl_cont_176_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____alignDecl_cont_175_layout,
+            &____alignDecl_cont_176_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -68325,7 +69141,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    ____alignDecl_cont_175_handle,
+                    ____alignDecl_cont_176_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -68366,235 +69182,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___flexNumDecl_cont_176<'p, __P>(
-        input: &'p [u8],
-        p: &mut usize,
-        state: &mut __shape_support_CssL4Parser::ScanState,
-        builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError>
-    where
-        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
-    {
-        use crate::runtime::builder::StructBuilder as _;
-        use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(176u32 as u32);
-        let __flat_checkpoint = builder.checkpoint();
-        let __compound_start: u32 = *p as u32;
-        let ____flexNumDecl_cont_176_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 176u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__flexNumDecl_cont_176"),
-            kind: ::bbnf_ir::registry::LayoutKind::Struct,
-            rule_type: ::bbnf_ir::TypeDesc::Span,
-            fields: ::std::vec::Vec::new(),
-        };
-        let ____flexNumDecl_cont_176_handle = <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::begin_compound(
-            builder,
-            &____flexNumDecl_cont_176_layout,
-        );
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
-            builder,
-            __compound_start,
-        );
-        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
-            {
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [58u8] {
-                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                        offset: at as u32,
-                    });
-                }
-                *p = end;
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-            }
-            {
-                {
-                    let mut __iter_count: u32 = 0;
-                    loop {
-                        if __iter_count >= 4294967295u32 {
-                            break;
-                        }
-                        let __iter_save_p = *p;
-                        if input.get(*p).is_none() {
-                            break;
-                        }
-                        let __iter_builder_checkpoint = builder.checkpoint();
-                        let __iter_result: ::core::result::Result<
-                            (),
-                            crate::runtime::DtaError,
-                        > = (|| {
-                            let _ = __shape_support_CssL4Parser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
-                            let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
-                                parse_altdispatch_CssL4Parser_value(
-                                    input,
-                                    p,
-                                    state,
-                                    builder,
-                                    cursor,
-                                )
-                            })?;
-                            let _ = __shape_support_CssL4Parser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
-                            Ok(())
-                        })();
-                        match __iter_result {
-                            Ok(()) => {
-                                if *p == __iter_save_p {
-                                    builder.rollback(__iter_builder_checkpoint);
-                                    break;
-                                }
-                                builder.commit(__iter_builder_checkpoint);
-                                __iter_count += 1;
-                            }
-                            Err(_) => {
-                                *p = __iter_save_p;
-                                builder.rollback(__iter_builder_checkpoint);
-                                break;
-                            }
-                        }
-                    }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
-                    }
-                }
-            }
-            {
-                let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(
-                        input,
-                        p,
-                        state,
-                        builder,
-                        cursor,
-                    )
-                })?;
-            }
-            {
-                {
-                    let mut __iter_count: u32 = 0;
-                    loop {
-                        if __iter_count >= 1u32 {
-                            break;
-                        }
-                        let __iter_save_p = *p;
-                        if input.get(*p).is_none() {
-                            break;
-                        }
-                        let __iter_builder_checkpoint = builder.checkpoint();
-                        let __iter_result: ::core::result::Result<
-                            (),
-                            crate::runtime::DtaError,
-                        > = (|| {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() < end || input[at..end] != [59u8] {
-                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                    offset: at as u32,
-                                });
-                            }
-                            *p = end;
-                            Ok(())
-                        })();
-                        match __iter_result {
-                            Ok(()) => {
-                                if *p == __iter_save_p {
-                                    builder.rollback(__iter_builder_checkpoint);
-                                    break;
-                                }
-                                builder.commit(__iter_builder_checkpoint);
-                                __iter_count += 1;
-                            }
-                            Err(_) => {
-                                *p = __iter_save_p;
-                                builder.rollback(__iter_builder_checkpoint);
-                                break;
-                            }
-                        }
-                    }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
-                    }
-                }
-            }
-            ::core::result::Result::Ok(())
-        })();
-        match __body_result {
-            ::core::result::Result::Ok(()) => {
-                <crate::runtime::css_l4::CssStructBuilder<
-                    '_,
-                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
-                    builder,
-                    *p as u32,
-                );
-                <crate::runtime::css_l4::CssStructBuilder<
-                    '_,
-                > as crate::runtime::StructBuilder>::end_compound(
-                    builder,
-                    ____flexNumDecl_cont_176_handle,
-                );
-                ::core::result::Result::Ok(())
-            }
-            ::core::result::Result::Err(__err) => {
-                builder.rollback(__flat_checkpoint);
-                ::core::result::Result::Err(__err)
-            }
-        }
-    }
-    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
-    /// **struct-direct body**. Targets the grammar's concrete
-    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
-    /// resolver's `SubstrateBinding`).
-    ///
-    /// Compound emission lands as typed
-    /// `begin_compound` / `end_compound` calls against the in-flight
-    /// frame stack. Per-position pushes (string keys, recursive
-    /// value calls, byte literals) land directly on the topmost
-    /// open frame.
-    ///
-    /// Returns unit for StructDirect composition
-    /// with sibling shape fns under struct-direct mode; the
-    /// offset is unused by struct-direct callers.
-    ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
-    /// cross-shape recursive edge (Flat → Wrap → Flat through
-    /// the grammar's `__value` discriminant). LLVM's inliner
-    /// collapses plain `#[inline]` candidates only when
-    /// profitable and bails cleanly on detected recursion.
-    ///
-    /// AZ-III.W2.4.r — content-only bodies (no Ref /
-    /// TokenDispatch in the IR) capture `*p` before and after
-    /// the per-position emission and push one synthetic Span
-    /// leaf carrying the consumed source slice; this restores
-    /// the contract `bootstrap_parser` met for `regex` /
-    /// `literal` / `comment` / `big_comment` / `import_path`
-    /// (all flat-shape rules whose grammar projection is
-    /// `-> Span` or whose host walker reads via `byte_span()`).
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___fontSizeDecl_cont_177<'p, __P>(
+    pub fn parse_flat_CssL4Parser___flexNumDecl_cont_177<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -68609,18 +69197,18 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(177u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____fontSizeDecl_cont_177_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        let ____flexNumDecl_cont_177_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 177u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__fontSizeDecl_cont_177"),
+            rule_name: ::std::string::String::from("__flexNumDecl_cont_177"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let ____fontSizeDecl_cont_177_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let ____flexNumDecl_cont_177_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____fontSizeDecl_cont_177_layout,
+            &____flexNumDecl_cont_177_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -68781,7 +69369,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    ____fontSizeDecl_cont_177_handle,
+                    ____flexNumDecl_cont_177_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -68822,7 +69410,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___fontWeightDecl_cont_178<'p, __P>(
+    pub fn parse_flat_CssL4Parser___fontSizeDecl_cont_178<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -68837,18 +69425,246 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(178u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____fontWeightDecl_cont_178_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        let ____fontSizeDecl_cont_178_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 178u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__fontWeightDecl_cont_178"),
+            rule_name: ::std::string::String::from("__fontSizeDecl_cont_178"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let ____fontWeightDecl_cont_178_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let ____fontSizeDecl_cont_178_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____fontWeightDecl_cont_178_layout,
+            &____fontSizeDecl_cont_178_layout,
+        );
+        <crate::runtime::css_l4::CssStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
+        );
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            {
+                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [58u8] {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                        offset: at as u32,
+                    });
+                }
+                *p = end;
+                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+            }
+            {
+                {
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 4294967295u32 {
+                            break;
+                        }
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
+                        }
+                        let __iter_builder_checkpoint = builder.checkpoint();
+                        let __iter_result: ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > = (|| {
+                            let _ = __shape_support_CssL4Parser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            let _ = ({
+                                let _ = __shape_support_CssL4Parser::skip_space(
+                                    input,
+                                    p,
+                                    state,
+                                );
+                                parse_altdispatch_CssL4Parser_value(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                    cursor,
+                                )
+                            })?;
+                            let _ = __shape_support_CssL4Parser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            Ok(())
+                        })();
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
+                                    break;
+                                }
+                                builder.commit(__iter_builder_checkpoint);
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
+                                break;
+                            }
+                        }
+                    }
+                    if __iter_count < 0u32 {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                            offset: *p as u32,
+                        });
+                    }
+                }
+            }
+            {
+                let _ = ({
+                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
+                })?;
+            }
+            {
+                {
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 1u32 {
+                            break;
+                        }
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
+                        }
+                        let __iter_builder_checkpoint = builder.checkpoint();
+                        let __iter_result: ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > = (|| {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [59u8] {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                    offset: at as u32,
+                                });
+                            }
+                            *p = end;
+                            Ok(())
+                        })();
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
+                                    break;
+                                }
+                                builder.commit(__iter_builder_checkpoint);
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
+                                break;
+                            }
+                        }
+                    }
+                    if __iter_count < 0u32 {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                            offset: *p as u32,
+                        });
+                    }
+                }
+            }
+            ::core::result::Result::Ok(())
+        })();
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____fontSizeDecl_cont_178_handle,
+                );
+                ::core::result::Result::Ok(())
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
+    }
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
+    ///
+    /// Compound emission lands as typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
+    ///
+    /// Returns unit for StructDirect composition
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_CssL4Parser___fontWeightDecl_cont_179<'p, __P>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_CssL4Parser::ScanState,
+        builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
+    {
+        use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(179u32 as u32);
+        let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
+        let ____fontWeightDecl_cont_179_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 179u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("__fontWeightDecl_cont_179"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let ____fontWeightDecl_cont_179_handle = <crate::runtime::css_l4::CssStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &____fontWeightDecl_cont_179_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -69072,7 +69888,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    ____fontWeightDecl_cont_178_handle,
+                    ____fontWeightDecl_cont_179_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -69113,7 +69929,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___lineHeightDecl_cont_179<'p, __P>(
+    pub fn parse_flat_CssL4Parser___lineHeightDecl_cont_180<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -69125,21 +69941,21 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(179u32 as u32);
+        let __decision: __Decision = cursor.decide(180u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____lineHeightDecl_cont_179_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 179u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__lineHeightDecl_cont_179"),
+        let ____lineHeightDecl_cont_180_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 180u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("__lineHeightDecl_cont_180"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let ____lineHeightDecl_cont_179_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let ____lineHeightDecl_cont_180_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____lineHeightDecl_cont_179_layout,
+            &____lineHeightDecl_cont_180_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -69300,7 +70116,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    ____lineHeightDecl_cont_179_handle,
+                    ____lineHeightDecl_cont_180_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -69341,7 +70157,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___borderWidthDecl_cont_180<'p, __P>(
+    pub fn parse_flat_CssL4Parser___borderWidthDecl_cont_181<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -69353,21 +70169,21 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(180u32 as u32);
+        let __decision: __Decision = cursor.decide(181u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____borderWidthDecl_cont_180_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 180u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__borderWidthDecl_cont_180"),
+        let ____borderWidthDecl_cont_181_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 181u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("__borderWidthDecl_cont_181"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let ____borderWidthDecl_cont_180_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let ____borderWidthDecl_cont_181_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____borderWidthDecl_cont_180_layout,
+            &____borderWidthDecl_cont_181_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -69591,7 +70407,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    ____borderWidthDecl_cont_180_handle,
+                    ____borderWidthDecl_cont_181_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -69632,7 +70448,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___borderStyleDecl_cont_181<'p, __P>(
+    pub fn parse_flat_CssL4Parser___borderStyleDecl_cont_182<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -69644,21 +70460,21 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(181u32 as u32);
+        let __decision: __Decision = cursor.decide(182u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____borderStyleDecl_cont_181_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 181u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__borderStyleDecl_cont_181"),
+        let ____borderStyleDecl_cont_182_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 182u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("__borderStyleDecl_cont_182"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let ____borderStyleDecl_cont_181_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let ____borderStyleDecl_cont_182_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____borderStyleDecl_cont_181_layout,
+            &____borderStyleDecl_cont_182_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -69882,7 +70698,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    ____borderStyleDecl_cont_181_handle,
+                    ____borderStyleDecl_cont_182_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -69923,235 +70739,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___borderRadiusDecl_cont_182<'p, __P>(
-        input: &'p [u8],
-        p: &mut usize,
-        state: &mut __shape_support_CssL4Parser::ScanState,
-        builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError>
-    where
-        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
-    {
-        use crate::runtime::builder::StructBuilder as _;
-        use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(182u32 as u32);
-        let __flat_checkpoint = builder.checkpoint();
-        let __compound_start: u32 = *p as u32;
-        let ____borderRadiusDecl_cont_182_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 182u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__borderRadiusDecl_cont_182"),
-            kind: ::bbnf_ir::registry::LayoutKind::Struct,
-            rule_type: ::bbnf_ir::TypeDesc::Span,
-            fields: ::std::vec::Vec::new(),
-        };
-        let ____borderRadiusDecl_cont_182_handle = <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::begin_compound(
-            builder,
-            &____borderRadiusDecl_cont_182_layout,
-        );
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
-            builder,
-            __compound_start,
-        );
-        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
-            {
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [58u8] {
-                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                        offset: at as u32,
-                    });
-                }
-                *p = end;
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-            }
-            {
-                {
-                    let mut __iter_count: u32 = 0;
-                    loop {
-                        if __iter_count >= 4294967295u32 {
-                            break;
-                        }
-                        let __iter_save_p = *p;
-                        if input.get(*p).is_none() {
-                            break;
-                        }
-                        let __iter_builder_checkpoint = builder.checkpoint();
-                        let __iter_result: ::core::result::Result<
-                            (),
-                            crate::runtime::DtaError,
-                        > = (|| {
-                            let _ = __shape_support_CssL4Parser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
-                            let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
-                                parse_altdispatch_CssL4Parser_value(
-                                    input,
-                                    p,
-                                    state,
-                                    builder,
-                                    cursor,
-                                )
-                            })?;
-                            let _ = __shape_support_CssL4Parser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
-                            Ok(())
-                        })();
-                        match __iter_result {
-                            Ok(()) => {
-                                if *p == __iter_save_p {
-                                    builder.rollback(__iter_builder_checkpoint);
-                                    break;
-                                }
-                                builder.commit(__iter_builder_checkpoint);
-                                __iter_count += 1;
-                            }
-                            Err(_) => {
-                                *p = __iter_save_p;
-                                builder.rollback(__iter_builder_checkpoint);
-                                break;
-                            }
-                        }
-                    }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
-                    }
-                }
-            }
-            {
-                let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_importantSuffix(
-                        input,
-                        p,
-                        state,
-                        builder,
-                        cursor,
-                    )
-                })?;
-            }
-            {
-                {
-                    let mut __iter_count: u32 = 0;
-                    loop {
-                        if __iter_count >= 1u32 {
-                            break;
-                        }
-                        let __iter_save_p = *p;
-                        if input.get(*p).is_none() {
-                            break;
-                        }
-                        let __iter_builder_checkpoint = builder.checkpoint();
-                        let __iter_result: ::core::result::Result<
-                            (),
-                            crate::runtime::DtaError,
-                        > = (|| {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() < end || input[at..end] != [59u8] {
-                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                    offset: at as u32,
-                                });
-                            }
-                            *p = end;
-                            Ok(())
-                        })();
-                        match __iter_result {
-                            Ok(()) => {
-                                if *p == __iter_save_p {
-                                    builder.rollback(__iter_builder_checkpoint);
-                                    break;
-                                }
-                                builder.commit(__iter_builder_checkpoint);
-                                __iter_count += 1;
-                            }
-                            Err(_) => {
-                                *p = __iter_save_p;
-                                builder.rollback(__iter_builder_checkpoint);
-                                break;
-                            }
-                        }
-                    }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
-                    }
-                }
-            }
-            ::core::result::Result::Ok(())
-        })();
-        match __body_result {
-            ::core::result::Result::Ok(()) => {
-                <crate::runtime::css_l4::CssStructBuilder<
-                    '_,
-                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
-                    builder,
-                    *p as u32,
-                );
-                <crate::runtime::css_l4::CssStructBuilder<
-                    '_,
-                > as crate::runtime::StructBuilder>::end_compound(
-                    builder,
-                    ____borderRadiusDecl_cont_182_handle,
-                );
-                ::core::result::Result::Ok(())
-            }
-            ::core::result::Result::Err(__err) => {
-                builder.rollback(__flat_checkpoint);
-                ::core::result::Result::Err(__err)
-            }
-        }
-    }
-    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
-    /// **struct-direct body**. Targets the grammar's concrete
-    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
-    /// resolver's `SubstrateBinding`).
-    ///
-    /// Compound emission lands as typed
-    /// `begin_compound` / `end_compound` calls against the in-flight
-    /// frame stack. Per-position pushes (string keys, recursive
-    /// value calls, byte literals) land directly on the topmost
-    /// open frame.
-    ///
-    /// Returns unit for StructDirect composition
-    /// with sibling shape fns under struct-direct mode; the
-    /// offset is unused by struct-direct callers.
-    ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
-    /// cross-shape recursive edge (Flat → Wrap → Flat through
-    /// the grammar's `__value` discriminant). LLVM's inliner
-    /// collapses plain `#[inline]` candidates only when
-    /// profitable and bails cleanly on detected recursion.
-    ///
-    /// AZ-III.W2.4.r — content-only bodies (no Ref /
-    /// TokenDispatch in the IR) capture `*p` before and after
-    /// the per-position emission and push one synthetic Span
-    /// leaf carrying the consumed source slice; this restores
-    /// the contract `bootstrap_parser` met for `regex` /
-    /// `literal` / `comment` / `big_comment` / `import_path`
-    /// (all flat-shape rules whose grammar projection is
-    /// `-> Span` or whose host walker reads via `byte_span()`).
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___opacityDecl_cont_183<'p, __P>(
+    pub fn parse_flat_CssL4Parser___borderRadiusDecl_cont_183<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -70166,18 +70754,18 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(183u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____opacityDecl_cont_183_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        let ____borderRadiusDecl_cont_183_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 183u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__opacityDecl_cont_183"),
+            rule_name: ::std::string::String::from("__borderRadiusDecl_cont_183"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let ____opacityDecl_cont_183_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let ____borderRadiusDecl_cont_183_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____opacityDecl_cont_183_layout,
+            &____borderRadiusDecl_cont_183_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -70338,7 +70926,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    ____opacityDecl_cont_183_handle,
+                    ____borderRadiusDecl_cont_183_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -70379,7 +70967,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___textAlignDecl_cont_184<'p, __P>(
+    pub fn parse_flat_CssL4Parser___opacityDecl_cont_184<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -70394,18 +70982,246 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(184u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____textAlignDecl_cont_184_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        let ____opacityDecl_cont_184_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 184u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__textAlignDecl_cont_184"),
+            rule_name: ::std::string::String::from("__opacityDecl_cont_184"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let ____textAlignDecl_cont_184_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let ____opacityDecl_cont_184_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____textAlignDecl_cont_184_layout,
+            &____opacityDecl_cont_184_layout,
+        );
+        <crate::runtime::css_l4::CssStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
+        );
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            {
+                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [58u8] {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                        offset: at as u32,
+                    });
+                }
+                *p = end;
+                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+            }
+            {
+                {
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 4294967295u32 {
+                            break;
+                        }
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
+                        }
+                        let __iter_builder_checkpoint = builder.checkpoint();
+                        let __iter_result: ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > = (|| {
+                            let _ = __shape_support_CssL4Parser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            let _ = ({
+                                let _ = __shape_support_CssL4Parser::skip_space(
+                                    input,
+                                    p,
+                                    state,
+                                );
+                                parse_altdispatch_CssL4Parser_value(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                    cursor,
+                                )
+                            })?;
+                            let _ = __shape_support_CssL4Parser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            Ok(())
+                        })();
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
+                                    break;
+                                }
+                                builder.commit(__iter_builder_checkpoint);
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
+                                break;
+                            }
+                        }
+                    }
+                    if __iter_count < 0u32 {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                            offset: *p as u32,
+                        });
+                    }
+                }
+            }
+            {
+                let _ = ({
+                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                    parse_flat_CssL4Parser_importantSuffix(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
+                })?;
+            }
+            {
+                {
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 1u32 {
+                            break;
+                        }
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
+                        }
+                        let __iter_builder_checkpoint = builder.checkpoint();
+                        let __iter_result: ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > = (|| {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [59u8] {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                    offset: at as u32,
+                                });
+                            }
+                            *p = end;
+                            Ok(())
+                        })();
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
+                                    break;
+                                }
+                                builder.commit(__iter_builder_checkpoint);
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
+                                break;
+                            }
+                        }
+                    }
+                    if __iter_count < 0u32 {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                            offset: *p as u32,
+                        });
+                    }
+                }
+            }
+            ::core::result::Result::Ok(())
+        })();
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____opacityDecl_cont_184_handle,
+                );
+                ::core::result::Result::Ok(())
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
+    }
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
+    ///
+    /// Compound emission lands as typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
+    ///
+    /// Returns unit for StructDirect composition
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_CssL4Parser___textAlignDecl_cont_185<'p, __P>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_CssL4Parser::ScanState,
+        builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
+    {
+        use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(185u32 as u32);
+        let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
+        let ____textAlignDecl_cont_185_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 185u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("__textAlignDecl_cont_185"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let ____textAlignDecl_cont_185_handle = <crate::runtime::css_l4::CssStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &____textAlignDecl_cont_185_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -70629,7 +71445,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    ____textAlignDecl_cont_184_handle,
+                    ____textAlignDecl_cont_185_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -70670,7 +71486,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___boxSizingDecl_cont_185<'p, __P>(
+    pub fn parse_flat_CssL4Parser___boxSizingDecl_cont_186<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -70682,21 +71498,21 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(185u32 as u32);
+        let __decision: __Decision = cursor.decide(186u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____boxSizingDecl_cont_185_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 185u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__boxSizingDecl_cont_185"),
+        let ____boxSizingDecl_cont_186_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 186u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("__boxSizingDecl_cont_186"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let ____boxSizingDecl_cont_185_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let ____boxSizingDecl_cont_186_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____boxSizingDecl_cont_185_layout,
+            &____boxSizingDecl_cont_186_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -70920,7 +71736,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    ____boxSizingDecl_cont_185_handle,
+                    ____boxSizingDecl_cont_186_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -70961,7 +71777,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser___cursorDecl_cont_186<'p, __P>(
+    pub fn parse_flat_CssL4Parser___cursorDecl_cont_187<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -70973,21 +71789,21 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
-        let __decision: __Decision = cursor.decide(186u32 as u32);
+        let __decision: __Decision = cursor.decide(187u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____cursorDecl_cont_186_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 186u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("__cursorDecl_cont_186"),
+        let ____cursorDecl_cont_187_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 187u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("__cursorDecl_cont_187"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let ____cursorDecl_cont_186_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let ____cursorDecl_cont_187_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____cursorDecl_cont_186_layout,
+            &____cursorDecl_cont_187_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -71211,7 +72027,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    ____cursorDecl_cont_186_handle,
+                    ____cursorDecl_cont_187_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -71264,7 +72080,7 @@ mod __cssl4parser_emit_impl {
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-        let _ = cursor.decide(149u32);
+        let _ = cursor.decide(150u32);
         parse_scalar_CssL4Parser_stylesheet(input, p, state, builder, cursor)
     }
     impl CssL4Parser {
@@ -88174,6 +88990,216 @@ mod __cssl4parser_emit_impl {
                 Some(__builder.finish())
             })
         }
+        fn __mediaFeature_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    {
+                        let __ows183 = state.offset;
+                        let _ = ::parse_that::scan_ws_block_comments(state);
+                        let __ows184 = state.offset;
+                        {
+                            if state.src_bytes.get(state.offset).copied() != Some(b'(') {
+                                return false;
+                            }
+                            state.offset += 1;
+                            __builder.char(b'(');
+                        };
+                        __builder.text_inline_ws(&state.src[__ows183..__ows184]);
+                        let __ows185 = state.offset;
+                        let _ = ::parse_that::scan_ws_block_comments(state);
+                        __builder.text_inline_ws(&state.src[__ows185..state.offset]);
+                    };
+                    {
+                        let __ows186 = state.offset;
+                        let _ = ::parse_that::scan_ws_block_comments(state);
+                        let __ows187 = state.offset;
+                        {
+                            let __start = state.offset;
+                            if {
+                                let __start = state.offset;
+                                let __result: Option<()> = (|| {
+                                    {
+                                        let __save = state.offset;
+                                        let __ok = (|| -> Option<()> {
+                                            if state.src_bytes.get(state.offset).copied() != Some(b'-')
+                                            {
+                                                return None;
+                                            }
+                                            state.offset += 1;
+                                            Some(())
+                                        })();
+                                        if __ok.is_none() {
+                                            state.offset = __save;
+                                        }
+                                    }
+                                    {
+                                        let __save = state.offset;
+                                        let __ok = (|| -> Option<()> {
+                                            if state.src_bytes.get(state.offset).copied() != Some(b'-')
+                                            {
+                                                return None;
+                                            }
+                                            state.offset += 1;
+                                            Some(())
+                                        })();
+                                        if __ok.is_none() {
+                                            state.offset = __save;
+                                        }
+                                    }
+                                    {
+                                        let __b = *state.src_bytes.get(state.offset)?;
+                                        if !(((__b >= b'A' && __b <= b'Z') || __b == b'_'
+                                            || (__b >= b'a' && __b <= b'z')
+                                            || (__b >= b'\x80' && __b <= b'\xFF')))
+                                        {
+                                            return None;
+                                        }
+                                        state.offset += 1;
+                                    }
+                                    {
+                                        let __end = state.src_bytes.len();
+                                        let mut __pos = state.offset;
+                                        while __pos < __end {
+                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                            if (__b == b'-' || (__b >= b'0' && __b <= b'9')
+                                                || (__b >= b'A' && __b <= b'Z') || __b == b'_'
+                                                || (__b >= b'a' && __b <= b'z')
+                                                || (__b >= b'\x80' && __b <= b'\xFF'))
+                                            {
+                                                __pos += 1;
+                                            } else {
+                                                break;
+                                            }
+                                        }
+                                        state.offset = __pos;
+                                    }
+                                    Some(())
+                                })();
+                                if __result.is_some() && state.offset > __start {
+                                    Some(
+                                        ::parse_that::Span::new(__start, state.offset, state.src),
+                                    )
+                                } else {
+                                    state.offset = __start;
+                                    None
+                                }
+                            }
+                                .is_none()
+                            {
+                                return false;
+                            }
+                            let __matched = &state.src[__start..state.offset];
+                            if !__matched.is_empty() {
+                                __builder.text(__matched);
+                            }
+                        };
+                        __builder.text_inline_ws(&state.src[__ows186..__ows187]);
+                        let __ows188 = state.offset;
+                        let _ = ::parse_that::scan_ws_block_comments(state);
+                        __builder.text_inline_ws(&state.src[__ows188..state.offset]);
+                    };
+                    {
+                        let _ = {
+                            let __pretty_cp195 = state.offset;
+                            let __pretty_bcp196 = __builder.checkpoint();
+                            let __ok = (|| -> bool {
+                                {
+                                    {
+                                        let __ows189 = state.offset;
+                                        let _ = ::parse_that::scan_ws_block_comments(state);
+                                        let __ows190 = state.offset;
+                                        {
+                                            if state.src_bytes.get(state.offset).copied() != Some(b':')
+                                            {
+                                                return false;
+                                            }
+                                            state.offset += 1;
+                                            __builder.char(b':');
+                                        };
+                                        __builder.text_inline_ws(&state.src[__ows189..__ows190]);
+                                        let __ows191 = state.offset;
+                                        let _ = ::parse_that::scan_ws_block_comments(state);
+                                        __builder
+                                            .text_inline_ws(&state.src[__ows191..state.offset]);
+                                    };
+                                    {
+                                        let __ows192 = state.offset;
+                                        let _ = ::parse_that::scan_ws_block_comments(state);
+                                        let __ows193 = state.offset;
+                                        {
+                                            let __start = state.offset;
+                                            if {
+                                                let __start = state.offset;
+                                                loop {
+                                                    ::parse_that::scan_ws_block_comments(state);
+                                                    if state.offset >= state.src_bytes.len() {
+                                                        break;
+                                                    }
+                                                    let __b = state.src_bytes[state.offset];
+                                                    if __b == b')' {
+                                                        break;
+                                                    }
+                                                    state.offset += 1;
+                                                }
+                                                if state.offset > __start {
+                                                    Some(
+                                                        ::parse_that::Span::new(__start, state.offset, state.src),
+                                                    )
+                                                } else {
+                                                    None
+                                                }
+                                            }
+                                                .is_none()
+                                            {
+                                                return false;
+                                            }
+                                            let __matched = &state.src[__start..state.offset];
+                                            if !__matched.is_empty() {
+                                                __builder.text(__matched);
+                                            }
+                                        };
+                                        __builder.text_inline_ws(&state.src[__ows192..__ows193]);
+                                        let __ows194 = state.offset;
+                                        let _ = ::parse_that::scan_ws_block_comments(state);
+                                        __builder
+                                            .text_inline_ws(&state.src[__ows194..state.offset]);
+                                    };
+                                };
+                                true
+                            })();
+                            if !__ok {
+                                state.offset = __pretty_cp195;
+                                __builder.restore(__pretty_bcp196);
+                            }
+                            __ok
+                        };
+                        true
+                    };
+                    {
+                        if state.src_bytes.get(state.offset).copied() != Some(b')') {
+                            return false;
+                        }
+                        state.offset += 1;
+                        __builder.char(b')');
+                    };
+                };
+                true
+            }
+        }
+        pub fn mediaFeature_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__mediaFeature_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
         fn __customPropertyDecl_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -88219,9 +89245,9 @@ mod __cssl4parser_emit_impl {
                         }
                     };
                     {
-                        let __ows183 = state.offset;
+                        let __ows197 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows184 = state.offset;
+                        let __ows198 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -88229,10 +89255,10 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows183..__ows184]);
-                        let __ows185 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows197..__ows198]);
+                        let __ows199 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows185..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows199..state.offset]);
                     };
                     {
                         let __start = state.offset;
@@ -88442,8 +89468,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp186 = state.offset;
-                            let __pretty_bcp187 = __builder.checkpoint();
+                            let __pretty_cp200 = state.offset;
+                            let __pretty_bcp201 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -88456,8 +89482,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp186;
-                                __builder.restore(__pretty_bcp187);
+                                state.offset = __pretty_cp200;
+                                __builder.restore(__pretty_bcp201);
                             }
                             __ok
                         };
@@ -88488,117 +89514,21 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     if !{
-                        let __pretty_cp195 = state.offset;
-                        let __pretty_bcp196 = __builder.checkpoint();
+                        let __pretty_cp209 = state.offset;
+                        let __pretty_bcp210 = __builder.checkpoint();
                         let __ok = (|| -> bool {
                             {
-                                let __ows193 = state.offset;
+                                let __ows207 = state.offset;
                                 let _ = ::parse_that::scan_ws_block_comments(state);
                                 __builder
-                                    .text_inline_ws(&state.src[__ows193..state.offset]);
+                                    .text_inline_ws(&state.src[__ows207..state.offset]);
                                 {
                                     {
                                         let __start = state.offset;
-                                        if {
-                                            let __start = state.offset;
-                                            let __result: Option<()> = (|| {
-                                                {
-                                                    let __save_alt = state.offset;
-                                                    let __alt_ok = (|| -> Option<()> {
-                                                        if state.src_bytes.get(state.offset).copied() != Some(b'-')
-                                                        {
-                                                            return None;
-                                                        }
-                                                        state.offset += 1;
-                                                        if state.src_bytes.get(state.offset).copied() != Some(b'-')
-                                                        {
-                                                            return None;
-                                                        }
-                                                        state.offset += 1;
-                                                        {
-                                                            let __loop_start = state.offset;
-                                                            let __end = state.src_bytes.len();
-                                                            let mut __pos = state.offset;
-                                                            while __pos < __end {
-                                                                let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                                                if (__b == b'-' || (__b >= b'0' && __b <= b'9')
-                                                                    || (__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                                                    || (__b >= b'a' && __b <= b'z'))
-                                                                {
-                                                                    __pos += 1;
-                                                                } else {
-                                                                    break;
-                                                                }
-                                                            }
-                                                            if __pos < __loop_start + 1 as usize {
-                                                                return None;
-                                                            }
-                                                            state.offset = __pos;
-                                                        }
-                                                        Some(())
-                                                    })();
-                                                    let __alt_ok = if __alt_ok.is_none() {
-                                                        state.offset = __save_alt;
-                                                        (|| -> Option<()> {
-                                                            {
-                                                                let __save = state.offset;
-                                                                let __ok = (|| -> Option<()> {
-                                                                    if state.src_bytes.get(state.offset).copied() != Some(b'-')
-                                                                    {
-                                                                        return None;
-                                                                    }
-                                                                    state.offset += 1;
-                                                                    Some(())
-                                                                })();
-                                                                if __ok.is_none() {
-                                                                    state.offset = __save;
-                                                                }
-                                                            }
-                                                            {
-                                                                let __b = *state.src_bytes.get(state.offset)?;
-                                                                if !(((__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                                                    || (__b >= b'a' && __b <= b'z')))
-                                                                {
-                                                                    return None;
-                                                                }
-                                                                state.offset += 1;
-                                                            }
-                                                            {
-                                                                let __end = state.src_bytes.len();
-                                                                let mut __pos = state.offset;
-                                                                while __pos < __end {
-                                                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                                                    if (__b == b'-' || (__b >= b'0' && __b <= b'9')
-                                                                        || (__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                                                        || (__b >= b'a' && __b <= b'z'))
-                                                                    {
-                                                                        __pos += 1;
-                                                                    } else {
-                                                                        break;
-                                                                    }
-                                                                }
-                                                                state.offset = __pos;
-                                                            }
-                                                            Some(())
-                                                        })()
-                                                    } else {
-                                                        __alt_ok
-                                                    };
-                                                    if __alt_ok.is_none() {
-                                                        return None;
-                                                    }
-                                                }
-                                                Some(())
-                                            })();
-                                            if __result.is_some() && state.offset > __start {
-                                                Some(
-                                                    ::parse_that::Span::new(__start, state.offset, state.src),
-                                                )
-                                            } else {
-                                                state.offset = __start;
-                                                None
-                                            }
-                                        }
+                                        if ::parse_that::scan_ident(
+                                                state,
+                                                &::parse_that::CSS_IDENT_CONFIG,
+                                            )
                                             .is_none()
                                         {
                                             return false;
@@ -88609,9 +89539,9 @@ mod __cssl4parser_emit_impl {
                                         }
                                     };
                                     {
-                                        let __ows188 = state.offset;
+                                        let __ows202 = state.offset;
                                         let _ = ::parse_that::scan_ws_block_comments(state);
-                                        let __ows189 = state.offset;
+                                        let __ows203 = state.offset;
                                         {
                                             if state.src_bytes.get(state.offset).copied() != Some(b':')
                                             {
@@ -88620,11 +89550,11 @@ mod __cssl4parser_emit_impl {
                                             state.offset += 1;
                                             __builder.char(b':');
                                         };
-                                        __builder.text_inline_ws(&state.src[__ows188..__ows189]);
-                                        let __ows190 = state.offset;
+                                        __builder.text_inline_ws(&state.src[__ows202..__ows203]);
+                                        let __ows204 = state.offset;
                                         let _ = ::parse_that::scan_ws_block_comments(state);
                                         __builder
-                                            .text_inline_ws(&state.src[__ows190..state.offset]);
+                                            .text_inline_ws(&state.src[__ows204..state.offset]);
                                     };
                                     {
                                         let __start = state.offset;
@@ -88659,8 +89589,8 @@ mod __cssl4parser_emit_impl {
                                     }
                                     {
                                         let _ = {
-                                            let __pretty_cp191 = state.offset;
-                                            let __pretty_bcp192 = __builder.checkpoint();
+                                            let __pretty_cp205 = state.offset;
+                                            let __pretty_bcp206 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
                                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -88673,24 +89603,24 @@ mod __cssl4parser_emit_impl {
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp191;
-                                                __builder.restore(__pretty_bcp192);
+                                                state.offset = __pretty_cp205;
+                                                __builder.restore(__pretty_bcp206);
                                             }
                                             __ok
                                         };
                                         true
                                     };
                                 };
-                                let __ows194 = state.offset;
+                                let __ows208 = state.offset;
                                 let _ = ::parse_that::scan_ws_block_comments(state);
                                 __builder
-                                    .text_inline_ws(&state.src[__ows194..state.offset]);
+                                    .text_inline_ws(&state.src[__ows208..state.offset]);
                             };
                             true
                         })();
                         if !__ok {
-                            state.offset = __pretty_cp195;
-                            __builder.restore(__pretty_bcp196);
+                            state.offset = __pretty_cp209;
+                            __builder.restore(__pretty_bcp210);
                         }
                         __ok
                     } {
@@ -89232,12 +90162,12 @@ mod __cssl4parser_emit_impl {
                                     }
                                 };
                                 {
-                                    let mut __rep_count199 = 0usize;
-                                    while __rep_count199 < 4294967295 {
-                                        let __rep_cp200 = state.offset;
+                                    let mut __rep_count213 = 0usize;
+                                    while __rep_count213 < 4294967295 {
+                                        let __rep_cp214 = state.offset;
                                         if !{
-                                            let __pretty_cp197 = state.offset;
-                                            let __pretty_bcp198 = __builder.checkpoint();
+                                            let __pretty_cp211 = state.offset;
+                                            let __pretty_bcp212 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
                                                     {
@@ -89387,18 +90317,18 @@ mod __cssl4parser_emit_impl {
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp197;
-                                                __builder.restore(__pretty_bcp198);
+                                                state.offset = __pretty_cp211;
+                                                __builder.restore(__pretty_bcp212);
                                             }
                                             __ok
                                         } {
-                                            state.offset = __rep_cp200;
+                                            state.offset = __rep_cp214;
                                             break;
                                         }
-                                        if state.offset == __rep_cp200 {
+                                        if state.offset == __rep_cp214 {
                                             break;
                                         }
-                                        __rep_count199 += 1;
+                                        __rep_count213 += 1;
                                     }
                                 };
                             };
@@ -89952,12 +90882,12 @@ mod __cssl4parser_emit_impl {
                                     }
                                 };
                                 {
-                                    let mut __rep_count203 = 0usize;
-                                    while __rep_count203 < 4294967295 {
-                                        let __rep_cp204 = state.offset;
+                                    let mut __rep_count217 = 0usize;
+                                    while __rep_count217 < 4294967295 {
+                                        let __rep_cp218 = state.offset;
                                         if !{
-                                            let __pretty_cp201 = state.offset;
-                                            let __pretty_bcp202 = __builder.checkpoint();
+                                            let __pretty_cp215 = state.offset;
+                                            let __pretty_bcp216 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
                                                     {
@@ -90107,18 +91037,18 @@ mod __cssl4parser_emit_impl {
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp201;
-                                                __builder.restore(__pretty_bcp202);
+                                                state.offset = __pretty_cp215;
+                                                __builder.restore(__pretty_bcp216);
                                             }
                                             __ok
                                         } {
-                                            state.offset = __rep_cp204;
+                                            state.offset = __rep_cp218;
                                             break;
                                         }
-                                        if state.offset == __rep_cp204 {
+                                        if state.offset == __rep_cp218 {
                                             break;
                                         }
-                                        __rep_count203 += 1;
+                                        __rep_count217 += 1;
                                     }
                                 };
                             };
@@ -90375,12 +91305,12 @@ mod __cssl4parser_emit_impl {
                         return false;
                     }
                     {
-                        let mut __rep_count207 = 0usize;
-                        while __rep_count207 < 4294967295 {
-                            let __rep_cp208 = state.offset;
+                        let mut __rep_count221 = 0usize;
+                        while __rep_count221 < 4294967295 {
+                            let __rep_cp222 = state.offset;
                             if !{
-                                let __pretty_cp205 = state.offset;
-                                let __pretty_bcp206 = __builder.checkpoint();
+                                let __pretty_cp219 = state.offset;
+                                let __pretty_bcp220 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         {
@@ -90426,18 +91356,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp205;
-                                    __builder.restore(__pretty_bcp206);
+                                    state.offset = __pretty_cp219;
+                                    __builder.restore(__pretty_bcp220);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp208;
+                                state.offset = __rep_cp222;
                                 break;
                             }
-                            if state.offset == __rep_cp208 {
+                            if state.offset == __rep_cp222 {
                                 break;
                             }
-                            __rep_count207 += 1;
+                            __rep_count221 += 1;
                         }
                     };
                 };
@@ -90541,183 +91471,406 @@ mod __cssl4parser_emit_impl {
                 Some(__builder.finish())
             })
         }
-        fn __mediaFeature_prettify<'a>(
+        fn __mediaNot_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
             {
                 {
                     {
-                        let __ows209 = state.offset;
+                        let __ows223 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows210 = state.offset;
+                        let __ows224 = state.offset;
                         {
-                            if state.src_bytes.get(state.offset).copied() != Some(b'(') {
+                            let __s = "not";
+                            let __bytes = __s.as_bytes();
+                            let __slc = match state.src_bytes.get(state.offset..) {
+                                Some(s) if s.len() >= 3usize => s,
+                                _ => return false,
+                            };
+                            if &__slc[..3usize] != __bytes {
                                 return false;
                             }
-                            state.offset += 1;
-                            __builder.char(b'(');
+                            __builder
+                                .text(&state.src[state.offset..state.offset + 3usize]);
+                            state.offset += 3usize;
                         };
-                        __builder.text_inline_ws(&state.src[__ows209..__ows210]);
-                        let __ows211 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows223..__ows224]);
+                        let __ows225 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows211..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows225..state.offset]);
                     };
+                    if !Self::__mediaInParens_prettify(state, __builder) {
+                        return false;
+                    }
+                };
+                true
+            }
+        }
+        pub fn mediaNot_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__mediaNot_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __mediaAnd_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    if !Self::__mediaInParens_prettify(state, __builder) {
+                        return false;
+                    }
                     {
-                        let __ows212 = state.offset;
-                        let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows213 = state.offset;
-                        {
-                            let __start = state.offset;
-                            if {
-                                let __start = state.offset;
-                                let __result: Option<()> = (|| {
+                        let __rep_start233 = state.offset;
+                        let __rep_bcp234 = __builder.checkpoint();
+                        let mut __rep_count231 = 0usize;
+                        while __rep_count231 < 4294967295 {
+                            let __rep_cp232 = state.offset;
+                            if !{
+                                let __pretty_cp229 = state.offset;
+                                let __pretty_bcp230 = __builder.checkpoint();
+                                let __ok = (|| -> bool {
                                     {
-                                        let __b = *state.src_bytes.get(state.offset)?;
-                                        if !(((__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                            || (__b >= b'a' && __b <= b'z')
-                                            || (__b >= b'\x80' && __b <= b'\xFF')))
                                         {
-                                            return None;
-                                        }
-                                        state.offset += 1;
-                                    }
-                                    {
-                                        let __end = state.src_bytes.len();
-                                        let mut __pos = state.offset;
-                                        while __pos < __end {
-                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                            if (__b == b'-' || (__b >= b'0' && __b <= b'9')
-                                                || (__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                                || (__b >= b'a' && __b <= b'z')
-                                                || (__b >= b'\x80' && __b <= b'\xFF'))
+                                            let __ows226 = state.offset;
+                                            let _ = ::parse_that::scan_ws_block_comments(state);
+                                            let __ows227 = state.offset;
                                             {
-                                                __pos += 1;
-                                            } else {
-                                                break;
-                                            }
+                                                let __s = "and";
+                                                let __bytes = __s.as_bytes();
+                                                let __slc = match state.src_bytes.get(state.offset..) {
+                                                    Some(s) if s.len() >= 3usize => s,
+                                                    _ => return false,
+                                                };
+                                                if &__slc[..3usize] != __bytes {
+                                                    return false;
+                                                }
+                                                __builder
+                                                    .text(&state.src[state.offset..state.offset + 3usize]);
+                                                state.offset += 3usize;
+                                            };
+                                            __builder.text_inline_ws(&state.src[__ows226..__ows227]);
+                                            let __ows228 = state.offset;
+                                            let _ = ::parse_that::scan_ws_block_comments(state);
+                                            __builder
+                                                .text_inline_ws(&state.src[__ows228..state.offset]);
+                                        };
+                                        if !Self::__mediaInParens_prettify(state, __builder) {
+                                            return false;
                                         }
-                                        state.offset = __pos;
-                                    }
-                                    Some(())
+                                    };
+                                    true
                                 })();
-                                if __result.is_some() && state.offset > __start {
-                                    Some(
-                                        ::parse_that::Span::new(__start, state.offset, state.src),
-                                    )
-                                } else {
-                                    state.offset = __start;
-                                    None
+                                if !__ok {
+                                    state.offset = __pretty_cp229;
+                                    __builder.restore(__pretty_bcp230);
                                 }
+                                __ok
+                            } {
+                                state.offset = __rep_cp232;
+                                break;
                             }
-                                .is_none()
-                            {
-                                return false;
+                            if state.offset == __rep_cp232 {
+                                break;
                             }
-                            let __matched = &state.src[__start..state.offset];
-                            if !__matched.is_empty() {
-                                __builder.text(__matched);
-                            }
-                        };
-                        __builder.text_inline_ws(&state.src[__ows212..__ows213]);
-                        let __ows214 = state.offset;
-                        let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows214..state.offset]);
-                    };
-                    {
-                        let _ = {
-                            let __pretty_cp221 = state.offset;
-                            let __pretty_bcp222 = __builder.checkpoint();
-                            let __ok = (|| -> bool {
-                                {
-                                    {
-                                        let __ows215 = state.offset;
-                                        let _ = ::parse_that::scan_ws_block_comments(state);
-                                        let __ows216 = state.offset;
-                                        {
-                                            if state.src_bytes.get(state.offset).copied() != Some(b':')
-                                            {
-                                                return false;
-                                            }
-                                            state.offset += 1;
-                                            __builder.char(b':');
-                                        };
-                                        __builder.text_inline_ws(&state.src[__ows215..__ows216]);
-                                        let __ows217 = state.offset;
-                                        let _ = ::parse_that::scan_ws_block_comments(state);
-                                        __builder
-                                            .text_inline_ws(&state.src[__ows217..state.offset]);
-                                    };
-                                    {
-                                        let __ows218 = state.offset;
-                                        let _ = ::parse_that::scan_ws_block_comments(state);
-                                        let __ows219 = state.offset;
-                                        {
-                                            let __start = state.offset;
-                                            if {
-                                                let __start = state.offset;
-                                                loop {
-                                                    ::parse_that::scan_ws_block_comments(state);
-                                                    if state.offset >= state.src_bytes.len() {
-                                                        break;
-                                                    }
-                                                    let __b = state.src_bytes[state.offset];
-                                                    if __b == b')' {
-                                                        break;
-                                                    }
-                                                    state.offset += 1;
-                                                }
-                                                if state.offset > __start {
-                                                    Some(
-                                                        ::parse_that::Span::new(__start, state.offset, state.src),
-                                                    )
-                                                } else {
-                                                    None
-                                                }
-                                            }
-                                                .is_none()
-                                            {
-                                                return false;
-                                            }
-                                            let __matched = &state.src[__start..state.offset];
-                                            if !__matched.is_empty() {
-                                                __builder.text(__matched);
-                                            }
-                                        };
-                                        __builder.text_inline_ws(&state.src[__ows218..__ows219]);
-                                        let __ows220 = state.offset;
-                                        let _ = ::parse_that::scan_ws_block_comments(state);
-                                        __builder
-                                            .text_inline_ws(&state.src[__ows220..state.offset]);
-                                    };
-                                };
-                                true
-                            })();
-                            if !__ok {
-                                state.offset = __pretty_cp221;
-                                __builder.restore(__pretty_bcp222);
-                            }
-                            __ok
-                        };
-                        true
-                    };
-                    {
-                        if state.src_bytes.get(state.offset).copied() != Some(b')') {
+                            __rep_count231 += 1;
+                        }
+                        if __rep_count231 < 1 {
+                            state.offset = __rep_start233;
+                            __builder.restore(__rep_bcp234);
                             return false;
                         }
-                        state.offset += 1;
-                        __builder.char(b')');
                     };
                 };
                 true
             }
         }
-        pub fn mediaFeature_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn mediaAnd_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::__mediaFeature_prettify(state, &mut __builder) {
+                if !Self::__mediaAnd_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __mediaOr_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    if !Self::__mediaInParens_prettify(state, __builder) {
+                        return false;
+                    }
+                    {
+                        let __rep_start242 = state.offset;
+                        let __rep_bcp243 = __builder.checkpoint();
+                        let mut __rep_count240 = 0usize;
+                        while __rep_count240 < 4294967295 {
+                            let __rep_cp241 = state.offset;
+                            if !{
+                                let __pretty_cp238 = state.offset;
+                                let __pretty_bcp239 = __builder.checkpoint();
+                                let __ok = (|| -> bool {
+                                    {
+                                        {
+                                            let __ows235 = state.offset;
+                                            let _ = ::parse_that::scan_ws_block_comments(state);
+                                            let __ows236 = state.offset;
+                                            {
+                                                let __s = "or";
+                                                let __bytes = __s.as_bytes();
+                                                let __slc = match state.src_bytes.get(state.offset..) {
+                                                    Some(s) if s.len() >= 2usize => s,
+                                                    _ => return false,
+                                                };
+                                                if &__slc[..2usize] != __bytes {
+                                                    return false;
+                                                }
+                                                __builder
+                                                    .text(&state.src[state.offset..state.offset + 2usize]);
+                                                state.offset += 2usize;
+                                            };
+                                            __builder.text_inline_ws(&state.src[__ows235..__ows236]);
+                                            let __ows237 = state.offset;
+                                            let _ = ::parse_that::scan_ws_block_comments(state);
+                                            __builder
+                                                .text_inline_ws(&state.src[__ows237..state.offset]);
+                                        };
+                                        if !Self::__mediaInParens_prettify(state, __builder) {
+                                            return false;
+                                        }
+                                    };
+                                    true
+                                })();
+                                if !__ok {
+                                    state.offset = __pretty_cp238;
+                                    __builder.restore(__pretty_bcp239);
+                                }
+                                __ok
+                            } {
+                                state.offset = __rep_cp241;
+                                break;
+                            }
+                            if state.offset == __rep_cp241 {
+                                break;
+                            }
+                            __rep_count240 += 1;
+                        }
+                        if __rep_count240 < 1 {
+                            state.offset = __rep_start242;
+                            __builder.restore(__rep_bcp243);
+                            return false;
+                        }
+                    };
+                };
+                true
+            }
+        }
+        pub fn mediaOr_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__mediaOr_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __mediaCondition_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    if !{
+                        let __pretty_cp250 = state.offset;
+                        let __pretty_bcp251 = __builder.checkpoint();
+                        let __ok = (|| -> bool {
+                            if !Self::__mediaNot_prettify(state, __builder) {
+                                return false;
+                            }
+                            true
+                        })();
+                        if !__ok {
+                            state.offset = __pretty_cp250;
+                            __builder.restore(__pretty_bcp251);
+                        }
+                        __ok
+                    } {
+                        {
+                            if !{
+                                let __pretty_cp248 = state.offset;
+                                let __pretty_bcp249 = __builder.checkpoint();
+                                let __ok = (|| -> bool {
+                                    if !Self::__mediaAnd_prettify(state, __builder) {
+                                        return false;
+                                    }
+                                    true
+                                })();
+                                if !__ok {
+                                    state.offset = __pretty_cp248;
+                                    __builder.restore(__pretty_bcp249);
+                                }
+                                __ok
+                            } {
+                                {
+                                    if !{
+                                        let __pretty_cp246 = state.offset;
+                                        let __pretty_bcp247 = __builder.checkpoint();
+                                        let __ok = (|| -> bool {
+                                            if !Self::__mediaOr_prettify(state, __builder) {
+                                                return false;
+                                            }
+                                            true
+                                        })();
+                                        if !__ok {
+                                            state.offset = __pretty_cp246;
+                                            __builder.restore(__pretty_bcp247);
+                                        }
+                                        __ok
+                                    } {
+                                        {
+                                            if !{
+                                                let __pretty_cp244 = state.offset;
+                                                let __pretty_bcp245 = __builder.checkpoint();
+                                                let __ok = (|| -> bool {
+                                                    if !Self::__mediaInParens_prettify(state, __builder) {
+                                                        return false;
+                                                    }
+                                                    true
+                                                })();
+                                                if !__ok {
+                                                    state.offset = __pretty_cp244;
+                                                    __builder.restore(__pretty_bcp245);
+                                                }
+                                                __ok
+                                            } {
+                                                return false;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                };
+                true
+            }
+        }
+        pub fn mediaCondition_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__mediaCondition_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __mediaInParens_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    if !{
+                        let __pretty_cp259 = state.offset;
+                        let __pretty_bcp260 = __builder.checkpoint();
+                        let __ok = (|| -> bool {
+                            if !Self::__mediaFeature_prettify(state, __builder) {
+                                return false;
+                            }
+                            true
+                        })();
+                        if !__ok {
+                            state.offset = __pretty_cp259;
+                            __builder.restore(__pretty_bcp260);
+                        }
+                        __ok
+                    } {
+                        {
+                            {
+                                {
+                                    let __ows252 = state.offset;
+                                    let _ = ::parse_that::scan_ws_block_comments(state);
+                                    let __ows253 = state.offset;
+                                    {
+                                        if state.src_bytes.get(state.offset).copied() != Some(b'(')
+                                        {
+                                            return false;
+                                        }
+                                        state.offset += 1;
+                                        __builder.char(b'(');
+                                    };
+                                    __builder.text_inline_ws(&state.src[__ows252..__ows253]);
+                                    let __ows254 = state.offset;
+                                    let _ = ::parse_that::scan_ws_block_comments(state);
+                                    __builder
+                                        .text_inline_ws(&state.src[__ows254..state.offset]);
+                                };
+                                {
+                                    if !{
+                                        let __pretty_cp257 = state.offset;
+                                        let __pretty_bcp258 = __builder.checkpoint();
+                                        let __ok = (|| -> bool {
+                                            {
+                                                let __ows255 = state.offset;
+                                                let _ = ::parse_that::scan_ws_block_comments(state);
+                                                __builder
+                                                    .text_inline_ws(&state.src[__ows255..state.offset]);
+                                                if !Self::__mediaCondition_prettify(state, __builder) {
+                                                    return false;
+                                                }
+                                                let __ows256 = state.offset;
+                                                let _ = ::parse_that::scan_ws_block_comments(state);
+                                                __builder
+                                                    .text_inline_ws(&state.src[__ows256..state.offset]);
+                                            };
+                                            true
+                                        })();
+                                        if !__ok {
+                                            state.offset = __pretty_cp257;
+                                            __builder.restore(__pretty_bcp258);
+                                        }
+                                        __ok
+                                    } {
+                                        return false;
+                                    }
+                                };
+                            };
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b')')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b')');
+                            };
+                        };
+                    }
+                };
+                true
+            }
+        }
+        pub fn mediaInParens_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__mediaInParens_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
@@ -90731,8 +91884,8 @@ mod __cssl4parser_emit_impl {
                 {
                     {
                         let _ = {
-                            let __pretty_cp223 = state.offset;
-                            let __pretty_bcp224 = __builder.checkpoint();
+                            let __pretty_cp261 = state.offset;
+                            let __pretty_bcp262 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 if !Self::__nsPrefix_prettify(state, __builder) {
                                     return false;
@@ -90740,8 +91893,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp223;
-                                __builder.restore(__pretty_bcp224);
+                                state.offset = __pretty_cp261;
+                                __builder.restore(__pretty_bcp262);
                             }
                             __ok
                         };
@@ -90904,9 +92057,9 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     {
-                        let __ows225 = state.offset;
+                        let __ows263 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows226 = state.offset;
+                        let __ows264 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b'[') {
                                 return false;
@@ -90914,25 +92067,25 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b'[');
                         };
-                        __builder.text_inline_ws(&state.src[__ows225..__ows226]);
-                        let __ows227 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows263..__ows264]);
+                        let __ows265 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows227..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows265..state.offset]);
                     };
                     {
                         if !{
-                            let __pretty_cp237 = state.offset;
-                            let __pretty_bcp238 = __builder.checkpoint();
+                            let __pretty_cp275 = state.offset;
+                            let __pretty_bcp276 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
-                                    let __ows235 = state.offset;
+                                    let __ows273 = state.offset;
                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                     __builder
-                                        .text_inline_ws(&state.src[__ows235..state.offset]);
+                                        .text_inline_ws(&state.src[__ows273..state.offset]);
                                     {
                                         if !{
-                                            let __pretty_cp233 = state.offset;
-                                            let __pretty_bcp234 = __builder.checkpoint();
+                                            let __pretty_cp271 = state.offset;
+                                            let __pretty_bcp272 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
                                                     {
@@ -91217,14 +92370,14 @@ mod __cssl4parser_emit_impl {
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp233;
-                                                __builder.restore(__pretty_bcp234);
+                                                state.offset = __pretty_cp271;
+                                                __builder.restore(__pretty_bcp272);
                                             }
                                             __ok
                                         } {
                                             {
                                                 if !{
-                                                    let __pretty_cp232 = state.offset;
+                                                    let __pretty_cp270 = state.offset;
                                                     let __ok = (|| -> bool {
                                                         {
                                                             let __start = state.offset;
@@ -91364,14 +92517,14 @@ mod __cssl4parser_emit_impl {
                                                         true
                                                     })();
                                                     if !__ok {
-                                                        state.offset = __pretty_cp232;
+                                                        state.offset = __pretty_cp270;
                                                     }
                                                     __ok
                                                 } {
                                                     {
                                                         if !{
-                                                            let __pretty_cp230 = state.offset;
-                                                            let __pretty_bcp231 = __builder.checkpoint();
+                                                            let __pretty_cp268 = state.offset;
+                                                            let __pretty_bcp269 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 {
                                                                     {
@@ -91527,15 +92680,15 @@ mod __cssl4parser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp230;
-                                                                __builder.restore(__pretty_bcp231);
+                                                                state.offset = __pretty_cp268;
+                                                                __builder.restore(__pretty_bcp269);
                                                             }
                                                             __ok
                                                         } {
                                                             {
                                                                 if !{
-                                                                    let __pretty_cp228 = state.offset;
-                                                                    let __pretty_bcp229 = __builder.checkpoint();
+                                                                    let __pretty_cp266 = state.offset;
+                                                                    let __pretty_bcp267 = __builder.checkpoint();
                                                                     let __ok = (|| -> bool {
                                                                         {
                                                                             {
@@ -91685,8 +92838,8 @@ mod __cssl4parser_emit_impl {
                                                                         true
                                                                     })();
                                                                     if !__ok {
-                                                                        state.offset = __pretty_cp228;
-                                                                        __builder.restore(__pretty_bcp229);
+                                                                        state.offset = __pretty_cp266;
+                                                                        __builder.restore(__pretty_bcp267);
                                                                     }
                                                                     __ok
                                                                 } {
@@ -91699,16 +92852,16 @@ mod __cssl4parser_emit_impl {
                                             }
                                         }
                                     };
-                                    let __ows236 = state.offset;
+                                    let __ows274 = state.offset;
                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                     __builder
-                                        .text_inline_ws(&state.src[__ows236..state.offset]);
+                                        .text_inline_ws(&state.src[__ows274..state.offset]);
                                 };
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp237;
-                                __builder.restore(__pretty_bcp238);
+                                state.offset = __pretty_cp275;
+                                __builder.restore(__pretty_bcp276);
                             }
                             __ok
                         } {
@@ -91717,33 +92870,33 @@ mod __cssl4parser_emit_impl {
                     };
                     {
                         let _ = {
-                            let __pretty_cp249 = state.offset;
-                            let __pretty_bcp250 = __builder.checkpoint();
+                            let __pretty_cp287 = state.offset;
+                            let __pretty_bcp288 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     {
                                         if !{
-                                            let __pretty_cp241 = state.offset;
-                                            let __pretty_bcp242 = __builder.checkpoint();
+                                            let __pretty_cp279 = state.offset;
+                                            let __pretty_bcp280 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows239 = state.offset;
+                                                    let __ows277 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows239..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows277..state.offset]);
                                                     if !Self::__attrMatcher_prettify(state, __builder) {
                                                         return false;
                                                     }
-                                                    let __ows240 = state.offset;
+                                                    let __ows278 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows240..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows278..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp241;
-                                                __builder.restore(__pretty_bcp242);
+                                                state.offset = __pretty_cp279;
+                                                __builder.restore(__pretty_bcp280);
                                             }
                                             __ok
                                         } {
@@ -91752,14 +92905,14 @@ mod __cssl4parser_emit_impl {
                                     };
                                     {
                                         if !{
-                                            let __pretty_cp245 = state.offset;
-                                            let __pretty_bcp246 = __builder.checkpoint();
+                                            let __pretty_cp283 = state.offset;
+                                            let __pretty_bcp284 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows243 = state.offset;
+                                                    let __ows281 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows243..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows281..state.offset]);
                                                     {
                                                         let __byte = match state.src_bytes.get(state.offset) {
                                                             Some(&b) => b,
@@ -92094,16 +93247,16 @@ mod __cssl4parser_emit_impl {
                                                             }
                                                         }
                                                     };
-                                                    let __ows244 = state.offset;
+                                                    let __ows282 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows244..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows282..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp245;
-                                                __builder.restore(__pretty_bcp246);
+                                                state.offset = __pretty_cp283;
+                                                __builder.restore(__pretty_bcp284);
                                             }
                                             __ok
                                         } {
@@ -92112,8 +93265,8 @@ mod __cssl4parser_emit_impl {
                                     };
                                     {
                                         let _ = {
-                                            let __pretty_cp247 = state.offset;
-                                            let __pretty_bcp248 = __builder.checkpoint();
+                                            let __pretty_cp285 = state.offset;
+                                            let __pretty_bcp286 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
                                                     let __start = state.offset;
@@ -92145,8 +93298,8 @@ mod __cssl4parser_emit_impl {
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp247;
-                                                __builder.restore(__pretty_bcp248);
+                                                state.offset = __pretty_cp285;
+                                                __builder.restore(__pretty_bcp286);
                                             }
                                             __ok
                                         };
@@ -92156,8 +93309,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp249;
-                                __builder.restore(__pretty_bcp250);
+                                state.offset = __pretty_cp287;
+                                __builder.restore(__pretty_bcp288);
                             }
                             __ok
                         };
@@ -92254,8 +93407,8 @@ mod __cssl4parser_emit_impl {
                     {
                         {
                             let _ = {
-                                let __pretty_cp251 = state.offset;
-                                let __pretty_bcp252 = __builder.checkpoint();
+                                let __pretty_cp289 = state.offset;
+                                let __pretty_bcp290 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         {
@@ -92273,8 +93426,8 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp251;
-                                    __builder.restore(__pretty_bcp252);
+                                    state.offset = __pretty_cp289;
+                                    __builder.restore(__pretty_bcp290);
                                 }
                                 __ok
                             };
@@ -92384,8 +93537,8 @@ mod __cssl4parser_emit_impl {
                     {
                         {
                             let _ = {
-                                let __pretty_cp253 = state.offset;
-                                let __pretty_bcp254 = __builder.checkpoint();
+                                let __pretty_cp291 = state.offset;
+                                let __pretty_bcp292 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         {
@@ -92403,8 +93556,8 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp253;
-                                    __builder.restore(__pretty_bcp254);
+                                    state.offset = __pretty_cp291;
+                                    __builder.restore(__pretty_bcp292);
                                 }
                                 __ok
                             };
@@ -92581,8 +93734,8 @@ mod __cssl4parser_emit_impl {
                     };
                     {
                         if !{
-                            let __pretty_cp255 = state.offset;
-                            let __pretty_bcp256 = __builder.checkpoint();
+                            let __pretty_cp293 = state.offset;
+                            let __pretty_bcp294 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 if !Self::__absoluteLengthUnit_prettify(state, __builder) {
                                     return false;
@@ -92590,8 +93743,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp255;
-                                __builder.restore(__pretty_bcp256);
+                                state.offset = __pretty_cp293;
+                                __builder.restore(__pretty_bcp294);
                             }
                             __ok
                         } {
@@ -92615,77 +93768,61 @@ mod __cssl4parser_emit_impl {
                 Some(__builder.finish())
             })
         }
-        fn __mediaNot_prettify<'a>(
+        fn __mediaTypedQuery_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
             {
                 {
                     {
-                        let __ows257 = state.offset;
-                        let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows258 = state.offset;
-                        {
-                            let __s = "not";
-                            let __bytes = __s.as_bytes();
-                            let __slc = match state.src_bytes.get(state.offset..) {
-                                Some(s) if s.len() >= 3usize => s,
-                                _ => return false,
-                            };
-                            if &__slc[..3usize] != __bytes {
-                                return false;
+                        let _ = {
+                            let __pretty_cp295 = state.offset;
+                            let __pretty_bcp296 = __builder.checkpoint();
+                            let __ok = (|| -> bool {
+                                if !Self::__mediaQualifier_prettify(state, __builder) {
+                                    return false;
+                                }
+                                true
+                            })();
+                            if !__ok {
+                                state.offset = __pretty_cp295;
+                                __builder.restore(__pretty_bcp296);
                             }
-                            __builder
-                                .text(&state.src[state.offset..state.offset + 3usize]);
-                            state.offset += 3usize;
+                            __ok
                         };
-                        __builder.text_inline_ws(&state.src[__ows257..__ows258]);
-                        let __ows259 = state.offset;
-                        let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows259..state.offset]);
+                        true
                     };
-                    if !Self::__mediaInParens_prettify(state, __builder) {
-                        return false;
-                    }
-                };
-                true
-            }
-        }
-        pub fn mediaNot_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__mediaNot_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __mediaAnd_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            {
-                {
-                    if !Self::__mediaInParens_prettify(state, __builder) {
-                        return false;
-                    }
                     {
-                        let __rep_start267 = state.offset;
-                        let __rep_bcp268 = __builder.checkpoint();
-                        let mut __rep_count265 = 0usize;
-                        while __rep_count265 < 4294967295 {
-                            let __rep_cp266 = state.offset;
+                        let _ = {
+                            let __pretty_cp297 = state.offset;
+                            let __pretty_bcp298 = __builder.checkpoint();
+                            let __ok = (|| -> bool {
+                                if !Self::__mediaType_prettify(state, __builder) {
+                                    return false;
+                                }
+                                true
+                            })();
+                            if !__ok {
+                                state.offset = __pretty_cp297;
+                                __builder.restore(__pretty_bcp298);
+                            }
+                            __ok
+                        };
+                        true
+                    };
+                    {
+                        let mut __rep_count304 = 0usize;
+                        while __rep_count304 < 4294967295 {
+                            let __rep_cp305 = state.offset;
                             if !{
-                                let __pretty_cp263 = state.offset;
-                                let __pretty_bcp264 = __builder.checkpoint();
+                                let __pretty_cp302 = state.offset;
+                                let __pretty_bcp303 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         {
-                                            let __ows260 = state.offset;
+                                            let __ows299 = state.offset;
                                             let _ = ::parse_that::scan_ws_block_comments(state);
-                                            let __ows261 = state.offset;
+                                            let __ows300 = state.offset;
                                             {
                                                 let __s = "and";
                                                 let __bytes = __s.as_bytes();
@@ -92700,11 +93837,11 @@ mod __cssl4parser_emit_impl {
                                                     .text(&state.src[state.offset..state.offset + 3usize]);
                                                 state.offset += 3usize;
                                             };
-                                            __builder.text_inline_ws(&state.src[__ows260..__ows261]);
-                                            let __ows262 = state.offset;
+                                            __builder.text_inline_ws(&state.src[__ows299..__ows300]);
+                                            let __ows301 = state.offset;
                                             let _ = ::parse_that::scan_ws_block_comments(state);
                                             __builder
-                                                .text_inline_ws(&state.src[__ows262..state.offset]);
+                                                .text_inline_ws(&state.src[__ows301..state.offset]);
                                         };
                                         if !Self::__mediaInParens_prettify(state, __builder) {
                                             return false;
@@ -92713,308 +93850,30 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp263;
-                                    __builder.restore(__pretty_bcp264);
+                                    state.offset = __pretty_cp302;
+                                    __builder.restore(__pretty_bcp303);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp266;
+                                state.offset = __rep_cp305;
                                 break;
                             }
-                            if state.offset == __rep_cp266 {
+                            if state.offset == __rep_cp305 {
                                 break;
                             }
-                            __rep_count265 += 1;
-                        }
-                        if __rep_count265 < 1 {
-                            state.offset = __rep_start267;
-                            __builder.restore(__rep_bcp268);
-                            return false;
+                            __rep_count304 += 1;
                         }
                     };
                 };
                 true
             }
         }
-        pub fn mediaAnd_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn mediaTypedQuery_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::__mediaAnd_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __mediaOr_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            {
-                {
-                    if !Self::__mediaInParens_prettify(state, __builder) {
-                        return false;
-                    }
-                    {
-                        let __rep_start276 = state.offset;
-                        let __rep_bcp277 = __builder.checkpoint();
-                        let mut __rep_count274 = 0usize;
-                        while __rep_count274 < 4294967295 {
-                            let __rep_cp275 = state.offset;
-                            if !{
-                                let __pretty_cp272 = state.offset;
-                                let __pretty_bcp273 = __builder.checkpoint();
-                                let __ok = (|| -> bool {
-                                    {
-                                        {
-                                            let __ows269 = state.offset;
-                                            let _ = ::parse_that::scan_ws_block_comments(state);
-                                            let __ows270 = state.offset;
-                                            {
-                                                let __s = "or";
-                                                let __bytes = __s.as_bytes();
-                                                let __slc = match state.src_bytes.get(state.offset..) {
-                                                    Some(s) if s.len() >= 2usize => s,
-                                                    _ => return false,
-                                                };
-                                                if &__slc[..2usize] != __bytes {
-                                                    return false;
-                                                }
-                                                __builder
-                                                    .text(&state.src[state.offset..state.offset + 2usize]);
-                                                state.offset += 2usize;
-                                            };
-                                            __builder.text_inline_ws(&state.src[__ows269..__ows270]);
-                                            let __ows271 = state.offset;
-                                            let _ = ::parse_that::scan_ws_block_comments(state);
-                                            __builder
-                                                .text_inline_ws(&state.src[__ows271..state.offset]);
-                                        };
-                                        if !Self::__mediaInParens_prettify(state, __builder) {
-                                            return false;
-                                        }
-                                    };
-                                    true
-                                })();
-                                if !__ok {
-                                    state.offset = __pretty_cp272;
-                                    __builder.restore(__pretty_bcp273);
-                                }
-                                __ok
-                            } {
-                                state.offset = __rep_cp275;
-                                break;
-                            }
-                            if state.offset == __rep_cp275 {
-                                break;
-                            }
-                            __rep_count274 += 1;
-                        }
-                        if __rep_count274 < 1 {
-                            state.offset = __rep_start276;
-                            __builder.restore(__rep_bcp277);
-                            return false;
-                        }
-                    };
-                };
-                true
-            }
-        }
-        pub fn mediaOr_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__mediaOr_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __mediaCondition_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            {
-                {
-                    if !{
-                        let __pretty_cp284 = state.offset;
-                        let __pretty_bcp285 = __builder.checkpoint();
-                        let __ok = (|| -> bool {
-                            if !Self::__mediaNot_prettify(state, __builder) {
-                                return false;
-                            }
-                            true
-                        })();
-                        if !__ok {
-                            state.offset = __pretty_cp284;
-                            __builder.restore(__pretty_bcp285);
-                        }
-                        __ok
-                    } {
-                        {
-                            if !{
-                                let __pretty_cp282 = state.offset;
-                                let __pretty_bcp283 = __builder.checkpoint();
-                                let __ok = (|| -> bool {
-                                    if !Self::__mediaAnd_prettify(state, __builder) {
-                                        return false;
-                                    }
-                                    true
-                                })();
-                                if !__ok {
-                                    state.offset = __pretty_cp282;
-                                    __builder.restore(__pretty_bcp283);
-                                }
-                                __ok
-                            } {
-                                {
-                                    if !{
-                                        let __pretty_cp280 = state.offset;
-                                        let __pretty_bcp281 = __builder.checkpoint();
-                                        let __ok = (|| -> bool {
-                                            if !Self::__mediaOr_prettify(state, __builder) {
-                                                return false;
-                                            }
-                                            true
-                                        })();
-                                        if !__ok {
-                                            state.offset = __pretty_cp280;
-                                            __builder.restore(__pretty_bcp281);
-                                        }
-                                        __ok
-                                    } {
-                                        {
-                                            if !{
-                                                let __pretty_cp278 = state.offset;
-                                                let __pretty_bcp279 = __builder.checkpoint();
-                                                let __ok = (|| -> bool {
-                                                    if !Self::__mediaInParens_prettify(state, __builder) {
-                                                        return false;
-                                                    }
-                                                    true
-                                                })();
-                                                if !__ok {
-                                                    state.offset = __pretty_cp278;
-                                                    __builder.restore(__pretty_bcp279);
-                                                }
-                                                __ok
-                                            } {
-                                                return false;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                };
-                true
-            }
-        }
-        pub fn mediaCondition_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__mediaCondition_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __mediaInParens_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            {
-                {
-                    if !{
-                        let __pretty_cp293 = state.offset;
-                        let __pretty_bcp294 = __builder.checkpoint();
-                        let __ok = (|| -> bool {
-                            if !Self::__mediaFeature_prettify(state, __builder) {
-                                return false;
-                            }
-                            true
-                        })();
-                        if !__ok {
-                            state.offset = __pretty_cp293;
-                            __builder.restore(__pretty_bcp294);
-                        }
-                        __ok
-                    } {
-                        {
-                            {
-                                {
-                                    let __ows286 = state.offset;
-                                    let _ = ::parse_that::scan_ws_block_comments(state);
-                                    let __ows287 = state.offset;
-                                    {
-                                        if state.src_bytes.get(state.offset).copied() != Some(b'(')
-                                        {
-                                            return false;
-                                        }
-                                        state.offset += 1;
-                                        __builder.char(b'(');
-                                    };
-                                    __builder.text_inline_ws(&state.src[__ows286..__ows287]);
-                                    let __ows288 = state.offset;
-                                    let _ = ::parse_that::scan_ws_block_comments(state);
-                                    __builder
-                                        .text_inline_ws(&state.src[__ows288..state.offset]);
-                                };
-                                {
-                                    if !{
-                                        let __pretty_cp291 = state.offset;
-                                        let __pretty_bcp292 = __builder.checkpoint();
-                                        let __ok = (|| -> bool {
-                                            {
-                                                let __ows289 = state.offset;
-                                                let _ = ::parse_that::scan_ws_block_comments(state);
-                                                __builder
-                                                    .text_inline_ws(&state.src[__ows289..state.offset]);
-                                                if !Self::__mediaCondition_prettify(state, __builder) {
-                                                    return false;
-                                                }
-                                                let __ows290 = state.offset;
-                                                let _ = ::parse_that::scan_ws_block_comments(state);
-                                                __builder
-                                                    .text_inline_ws(&state.src[__ows290..state.offset]);
-                                            };
-                                            true
-                                        })();
-                                        if !__ok {
-                                            state.offset = __pretty_cp291;
-                                            __builder.restore(__pretty_bcp292);
-                                        }
-                                        __ok
-                                    } {
-                                        return false;
-                                    }
-                                };
-                            };
-                            {
-                                if state.src_bytes.get(state.offset).copied() != Some(b')')
-                                {
-                                    return false;
-                                }
-                                state.offset += 1;
-                                __builder.char(b')');
-                            };
-                        };
-                    }
-                };
-                true
-            }
-        }
-        pub fn mediaInParens_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__mediaInParens_prettify(state, &mut __builder) {
+                if !Self::__mediaTypedQuery_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
@@ -93027,8 +93886,8 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     if !{
-                        let __pretty_cp297 = state.offset;
-                        let __pretty_bcp298 = __builder.checkpoint();
+                        let __pretty_cp308 = state.offset;
+                        let __pretty_bcp309 = __builder.checkpoint();
                         let __ok = (|| -> bool {
                             if !Self::__wqName_prettify(state, __builder) {
                                 return false;
@@ -93036,16 +93895,16 @@ mod __cssl4parser_emit_impl {
                             true
                         })();
                         if !__ok {
-                            state.offset = __pretty_cp297;
-                            __builder.restore(__pretty_bcp298);
+                            state.offset = __pretty_cp308;
+                            __builder.restore(__pretty_bcp309);
                         }
                         __ok
                     } {
                         {
                             {
                                 let _ = {
-                                    let __pretty_cp295 = state.offset;
-                                    let __pretty_bcp296 = __builder.checkpoint();
+                                    let __pretty_cp306 = state.offset;
+                                    let __pretty_bcp307 = __builder.checkpoint();
                                     let __ok = (|| -> bool {
                                         if !Self::__nsPrefix_prettify(state, __builder) {
                                             return false;
@@ -93053,8 +93912,8 @@ mod __cssl4parser_emit_impl {
                                         true
                                     })();
                                     if !__ok {
-                                        state.offset = __pretty_cp295;
-                                        __builder.restore(__pretty_bcp296);
+                                        state.offset = __pretty_cp306;
+                                        __builder.restore(__pretty_bcp307);
                                     }
                                     __ok
                                 };
@@ -93128,8 +93987,8 @@ mod __cssl4parser_emit_impl {
                     {
                         {
                             let _ = {
-                                let __pretty_cp299 = state.offset;
-                                let __pretty_bcp300 = __builder.checkpoint();
+                                let __pretty_cp310 = state.offset;
+                                let __pretty_bcp311 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         {
@@ -93150,8 +94009,8 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp299;
-                                    __builder.restore(__pretty_bcp300);
+                                    state.offset = __pretty_cp310;
+                                    __builder.restore(__pretty_bcp311);
                                 }
                                 __ok
                             };
@@ -93187,8 +94046,8 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     if !{
-                        let __pretty_cp314 = state.offset;
-                        let __pretty_bcp315 = __builder.checkpoint();
+                        let __pretty_cp325 = state.offset;
+                        let __pretty_bcp326 = __builder.checkpoint();
                         let __ok = (|| -> bool {
                             if !Self::__length_prettify(state, __builder) {
                                 return false;
@@ -93196,15 +94055,15 @@ mod __cssl4parser_emit_impl {
                             true
                         })();
                         if !__ok {
-                            state.offset = __pretty_cp314;
-                            __builder.restore(__pretty_bcp315);
+                            state.offset = __pretty_cp325;
+                            __builder.restore(__pretty_bcp326);
                         }
                         __ok
                     } {
                         {
                             if !{
-                                let __pretty_cp312 = state.offset;
-                                let __pretty_bcp313 = __builder.checkpoint();
+                                let __pretty_cp323 = state.offset;
+                                let __pretty_bcp324 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     if !Self::__angle_prettify(state, __builder) {
                                         return false;
@@ -93212,15 +94071,15 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp312;
-                                    __builder.restore(__pretty_bcp313);
+                                    state.offset = __pretty_cp323;
+                                    __builder.restore(__pretty_bcp324);
                                 }
                                 __ok
                             } {
                                 {
                                     if !{
-                                        let __pretty_cp310 = state.offset;
-                                        let __pretty_bcp311 = __builder.checkpoint();
+                                        let __pretty_cp321 = state.offset;
+                                        let __pretty_bcp322 = __builder.checkpoint();
                                         let __ok = (|| -> bool {
                                             if !Self::__time_prettify(state, __builder) {
                                                 return false;
@@ -93228,15 +94087,15 @@ mod __cssl4parser_emit_impl {
                                             true
                                         })();
                                         if !__ok {
-                                            state.offset = __pretty_cp310;
-                                            __builder.restore(__pretty_bcp311);
+                                            state.offset = __pretty_cp321;
+                                            __builder.restore(__pretty_bcp322);
                                         }
                                         __ok
                                     } {
                                         {
                                             if !{
-                                                let __pretty_cp308 = state.offset;
-                                                let __pretty_bcp309 = __builder.checkpoint();
+                                                let __pretty_cp319 = state.offset;
+                                                let __pretty_bcp320 = __builder.checkpoint();
                                                 let __ok = (|| -> bool {
                                                     if !Self::__frequency_prettify(state, __builder) {
                                                         return false;
@@ -93244,15 +94103,15 @@ mod __cssl4parser_emit_impl {
                                                     true
                                                 })();
                                                 if !__ok {
-                                                    state.offset = __pretty_cp308;
-                                                    __builder.restore(__pretty_bcp309);
+                                                    state.offset = __pretty_cp319;
+                                                    __builder.restore(__pretty_bcp320);
                                                 }
                                                 __ok
                                             } {
                                                 {
                                                     if !{
-                                                        let __pretty_cp306 = state.offset;
-                                                        let __pretty_bcp307 = __builder.checkpoint();
+                                                        let __pretty_cp317 = state.offset;
+                                                        let __pretty_bcp318 = __builder.checkpoint();
                                                         let __ok = (|| -> bool {
                                                             if !Self::__resolution_prettify(state, __builder) {
                                                                 return false;
@@ -93260,15 +94119,15 @@ mod __cssl4parser_emit_impl {
                                                             true
                                                         })();
                                                         if !__ok {
-                                                            state.offset = __pretty_cp306;
-                                                            __builder.restore(__pretty_bcp307);
+                                                            state.offset = __pretty_cp317;
+                                                            __builder.restore(__pretty_bcp318);
                                                         }
                                                         __ok
                                                     } {
                                                         {
                                                             if !{
-                                                                let __pretty_cp304 = state.offset;
-                                                                let __pretty_bcp305 = __builder.checkpoint();
+                                                                let __pretty_cp315 = state.offset;
+                                                                let __pretty_bcp316 = __builder.checkpoint();
                                                                 let __ok = (|| -> bool {
                                                                     if !Self::__flex_prettify(state, __builder) {
                                                                         return false;
@@ -93276,15 +94135,15 @@ mod __cssl4parser_emit_impl {
                                                                     true
                                                                 })();
                                                                 if !__ok {
-                                                                    state.offset = __pretty_cp304;
-                                                                    __builder.restore(__pretty_bcp305);
+                                                                    state.offset = __pretty_cp315;
+                                                                    __builder.restore(__pretty_bcp316);
                                                                 }
                                                                 __ok
                                                             } {
                                                                 {
                                                                     if !{
-                                                                        let __pretty_cp302 = state.offset;
-                                                                        let __pretty_bcp303 = __builder.checkpoint();
+                                                                        let __pretty_cp313 = state.offset;
+                                                                        let __pretty_bcp314 = __builder.checkpoint();
                                                                         let __ok = (|| -> bool {
                                                                             if !Self::__percentage_prettify(state, __builder) {
                                                                                 return false;
@@ -93292,14 +94151,14 @@ mod __cssl4parser_emit_impl {
                                                                             true
                                                                         })();
                                                                         if !__ok {
-                                                                            state.offset = __pretty_cp302;
-                                                                            __builder.restore(__pretty_bcp303);
+                                                                            state.offset = __pretty_cp313;
+                                                                            __builder.restore(__pretty_bcp314);
                                                                         }
                                                                         __ok
                                                                     } {
                                                                         {
                                                                             if !{
-                                                                                let __pretty_cp301 = state.offset;
+                                                                                let __pretty_cp312 = state.offset;
                                                                                 let __ok = (|| -> bool {
                                                                                     {
                                                                                         let __start = state.offset;
@@ -93444,7 +94303,7 @@ mod __cssl4parser_emit_impl {
                                                                                     true
                                                                                 })();
                                                                                 if !__ok {
-                                                                                    state.offset = __pretty_cp301;
+                                                                                    state.offset = __pretty_cp312;
                                                                                 }
                                                                                 __ok
                                                                             } {
@@ -93474,117 +94333,6 @@ mod __cssl4parser_emit_impl {
                     state.src.len().saturating_mul(2),
                 );
                 if !Self::__valueUnit_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __mediaTypedQuery_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            {
-                {
-                    {
-                        let _ = {
-                            let __pretty_cp316 = state.offset;
-                            let __pretty_bcp317 = __builder.checkpoint();
-                            let __ok = (|| -> bool {
-                                if !Self::__mediaQualifier_prettify(state, __builder) {
-                                    return false;
-                                }
-                                true
-                            })();
-                            if !__ok {
-                                state.offset = __pretty_cp316;
-                                __builder.restore(__pretty_bcp317);
-                            }
-                            __ok
-                        };
-                        true
-                    };
-                    {
-                        let _ = {
-                            let __pretty_cp318 = state.offset;
-                            let __pretty_bcp319 = __builder.checkpoint();
-                            let __ok = (|| -> bool {
-                                if !Self::__mediaType_prettify(state, __builder) {
-                                    return false;
-                                }
-                                true
-                            })();
-                            if !__ok {
-                                state.offset = __pretty_cp318;
-                                __builder.restore(__pretty_bcp319);
-                            }
-                            __ok
-                        };
-                        true
-                    };
-                    {
-                        let mut __rep_count325 = 0usize;
-                        while __rep_count325 < 4294967295 {
-                            let __rep_cp326 = state.offset;
-                            if !{
-                                let __pretty_cp323 = state.offset;
-                                let __pretty_bcp324 = __builder.checkpoint();
-                                let __ok = (|| -> bool {
-                                    {
-                                        {
-                                            let __ows320 = state.offset;
-                                            let _ = ::parse_that::scan_ws_block_comments(state);
-                                            let __ows321 = state.offset;
-                                            {
-                                                let __s = "and";
-                                                let __bytes = __s.as_bytes();
-                                                let __slc = match state.src_bytes.get(state.offset..) {
-                                                    Some(s) if s.len() >= 3usize => s,
-                                                    _ => return false,
-                                                };
-                                                if &__slc[..3usize] != __bytes {
-                                                    return false;
-                                                }
-                                                __builder
-                                                    .text(&state.src[state.offset..state.offset + 3usize]);
-                                                state.offset += 3usize;
-                                            };
-                                            __builder.text_inline_ws(&state.src[__ows320..__ows321]);
-                                            let __ows322 = state.offset;
-                                            let _ = ::parse_that::scan_ws_block_comments(state);
-                                            __builder
-                                                .text_inline_ws(&state.src[__ows322..state.offset]);
-                                        };
-                                        if !Self::__mediaInParens_prettify(state, __builder) {
-                                            return false;
-                                        }
-                                    };
-                                    true
-                                })();
-                                if !__ok {
-                                    state.offset = __pretty_cp323;
-                                    __builder.restore(__pretty_bcp324);
-                                }
-                                __ok
-                            } {
-                                state.offset = __rep_cp326;
-                                break;
-                            }
-                            if state.offset == __rep_cp326 {
-                                break;
-                            }
-                            __rep_count325 += 1;
-                        }
-                    };
-                };
-                true
-            }
-        }
-        pub fn mediaTypedQuery_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__mediaTypedQuery_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
@@ -94757,6 +95505,114 @@ mod __cssl4parser_emit_impl {
                 Some(__builder.finish())
             })
         }
+        fn __mediaQueryList_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    {
+                        if !{
+                            let __pretty_cp384 = state.offset;
+                            let __pretty_bcp385 = __builder.checkpoint();
+                            let __ok = (|| -> bool {
+                                if !Self::__mediaCondition_prettify(state, __builder) {
+                                    return false;
+                                }
+                                true
+                            })();
+                            if !__ok {
+                                state.offset = __pretty_cp384;
+                                __builder.restore(__pretty_bcp385);
+                            }
+                            __ok
+                        } {
+                            if !Self::__mediaTypedQuery_prettify(state, __builder) {
+                                return false;
+                            }
+                        }
+                    };
+                    {
+                        let mut __rep_count393 = 0usize;
+                        while __rep_count393 < 4294967295 {
+                            let __rep_cp394 = state.offset;
+                            if !{
+                                let __pretty_cp391 = state.offset;
+                                let __pretty_bcp392 = __builder.checkpoint();
+                                let __ok = (|| -> bool {
+                                    {
+                                        {
+                                            let __ows386 = state.offset;
+                                            let _ = ::parse_that::scan_ws_block_comments(state);
+                                            let __ows387 = state.offset;
+                                            {
+                                                if state.src_bytes.get(state.offset).copied() != Some(b',')
+                                                {
+                                                    return false;
+                                                }
+                                                state.offset += 1;
+                                                __builder.char(b',');
+                                            };
+                                            __builder.text_inline_ws(&state.src[__ows386..__ows387]);
+                                            let __ows388 = state.offset;
+                                            let _ = ::parse_that::scan_ws_block_comments(state);
+                                            __builder
+                                                .text_inline_ws(&state.src[__ows388..state.offset]);
+                                        };
+                                        {
+                                            if !{
+                                                let __pretty_cp389 = state.offset;
+                                                let __pretty_bcp390 = __builder.checkpoint();
+                                                let __ok = (|| -> bool {
+                                                    if !Self::__mediaCondition_prettify(state, __builder) {
+                                                        return false;
+                                                    }
+                                                    true
+                                                })();
+                                                if !__ok {
+                                                    state.offset = __pretty_cp389;
+                                                    __builder.restore(__pretty_bcp390);
+                                                }
+                                                __ok
+                                            } {
+                                                if !Self::__mediaTypedQuery_prettify(state, __builder) {
+                                                    return false;
+                                                }
+                                            }
+                                        };
+                                    };
+                                    true
+                                })();
+                                if !__ok {
+                                    state.offset = __pretty_cp391;
+                                    __builder.restore(__pretty_bcp392);
+                                }
+                                __ok
+                            } {
+                                state.offset = __rep_cp394;
+                                break;
+                            }
+                            if state.offset == __rep_cp394 {
+                                break;
+                            }
+                            __rep_count393 += 1;
+                        }
+                    };
+                };
+                true
+            }
+        }
+        pub fn mediaQueryList_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__mediaQueryList_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
         fn __mathExpr_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -94767,12 +95623,12 @@ mod __cssl4parser_emit_impl {
                         return false;
                     }
                     {
-                        let mut __rep_count386 = 0usize;
-                        while __rep_count386 < 4294967295 {
-                            let __rep_cp387 = state.offset;
+                        let mut __rep_count397 = 0usize;
+                        while __rep_count397 < 4294967295 {
+                            let __rep_cp398 = state.offset;
                             if !{
-                                let __pretty_cp384 = state.offset;
-                                let __pretty_bcp385 = __builder.checkpoint();
+                                let __pretty_cp395 = state.offset;
+                                let __pretty_bcp396 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !Self::__mathSumOp_prettify(state, __builder) {
@@ -94785,18 +95641,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp384;
-                                    __builder.restore(__pretty_bcp385);
+                                    state.offset = __pretty_cp395;
+                                    __builder.restore(__pretty_bcp396);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp387;
+                                state.offset = __rep_cp398;
                                 break;
                             }
-                            if state.offset == __rep_cp387 {
+                            if state.offset == __rep_cp398 {
                                 break;
                             }
-                            __rep_count386 += 1;
+                            __rep_count397 += 1;
                         }
                     };
                 };
@@ -94904,14 +95760,14 @@ mod __cssl4parser_emit_impl {
                                     return false;
                                 }
                                 {
-                                    let __rep_start392 = state.offset;
-                                    let __rep_bcp393 = __builder.checkpoint();
-                                    let mut __rep_count390 = 0usize;
-                                    while __rep_count390 < 4294967295 {
-                                        let __rep_cp391 = state.offset;
+                                    let __rep_start403 = state.offset;
+                                    let __rep_bcp404 = __builder.checkpoint();
+                                    let mut __rep_count401 = 0usize;
+                                    while __rep_count401 < 4294967295 {
+                                        let __rep_cp402 = state.offset;
                                         if !{
-                                            let __pretty_cp388 = state.offset;
-                                            let __pretty_bcp389 = __builder.checkpoint();
+                                            let __pretty_cp399 = state.offset;
+                                            let __pretty_bcp400 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
                                                     {
@@ -94929,22 +95785,22 @@ mod __cssl4parser_emit_impl {
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp388;
-                                                __builder.restore(__pretty_bcp389);
+                                                state.offset = __pretty_cp399;
+                                                __builder.restore(__pretty_bcp400);
                                             }
                                             __ok
                                         } {
-                                            state.offset = __rep_cp391;
+                                            state.offset = __rep_cp402;
                                             break;
                                         }
-                                        if state.offset == __rep_cp391 {
+                                        if state.offset == __rep_cp402 {
                                             break;
                                         }
-                                        __rep_count390 += 1;
+                                        __rep_count401 += 1;
                                     }
-                                    if __rep_count390 < 1 {
-                                        state.offset = __rep_start392;
-                                        __builder.restore(__rep_bcp393);
+                                    if __rep_count401 < 1 {
+                                        state.offset = __rep_start403;
+                                        __builder.restore(__rep_bcp404);
                                         return false;
                                     }
                                 };
@@ -95007,14 +95863,14 @@ mod __cssl4parser_emit_impl {
                                     return false;
                                 }
                                 {
-                                    let __rep_start398 = state.offset;
-                                    let __rep_bcp399 = __builder.checkpoint();
-                                    let mut __rep_count396 = 0usize;
-                                    while __rep_count396 < 4294967295 {
-                                        let __rep_cp397 = state.offset;
+                                    let __rep_start409 = state.offset;
+                                    let __rep_bcp410 = __builder.checkpoint();
+                                    let mut __rep_count407 = 0usize;
+                                    while __rep_count407 < 4294967295 {
+                                        let __rep_cp408 = state.offset;
                                         if !{
-                                            let __pretty_cp394 = state.offset;
-                                            let __pretty_bcp395 = __builder.checkpoint();
+                                            let __pretty_cp405 = state.offset;
+                                            let __pretty_bcp406 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
                                                     {
@@ -95032,22 +95888,22 @@ mod __cssl4parser_emit_impl {
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp394;
-                                                __builder.restore(__pretty_bcp395);
+                                                state.offset = __pretty_cp405;
+                                                __builder.restore(__pretty_bcp406);
                                             }
                                             __ok
                                         } {
-                                            state.offset = __rep_cp397;
+                                            state.offset = __rep_cp408;
                                             break;
                                         }
-                                        if state.offset == __rep_cp397 {
+                                        if state.offset == __rep_cp408 {
                                             break;
                                         }
-                                        __rep_count396 += 1;
+                                        __rep_count407 += 1;
                                     }
-                                    if __rep_count396 < 1 {
-                                        state.offset = __rep_start398;
-                                        __builder.restore(__rep_bcp399);
+                                    if __rep_count407 < 1 {
+                                        state.offset = __rep_start409;
+                                        __builder.restore(__rep_bcp410);
                                         return false;
                                     }
                                 };
@@ -95166,12 +96022,12 @@ mod __cssl4parser_emit_impl {
                         return false;
                     }
                     {
-                        let mut __rep_count402 = 0usize;
-                        while __rep_count402 < 4294967295 {
-                            let __rep_cp403 = state.offset;
+                        let mut __rep_count413 = 0usize;
+                        while __rep_count413 < 4294967295 {
+                            let __rep_cp414 = state.offset;
                             if !{
-                                let __pretty_cp400 = state.offset;
-                                let __pretty_bcp401 = __builder.checkpoint();
+                                let __pretty_cp411 = state.offset;
+                                let __pretty_bcp412 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !Self::__mathProductOp_prettify(state, __builder) {
@@ -95184,18 +96040,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp400;
-                                    __builder.restore(__pretty_bcp401);
+                                    state.offset = __pretty_cp411;
+                                    __builder.restore(__pretty_bcp412);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp403;
+                                state.offset = __rep_cp414;
                                 break;
                             }
-                            if state.offset == __rep_cp403 {
+                            if state.offset == __rep_cp414 {
                                 break;
                             }
-                            __rep_count402 += 1;
+                            __rep_count413 += 1;
                         }
                     };
                 };
@@ -95220,8 +96076,8 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     if !{
-                        let __pretty_cp419 = state.offset;
-                        let __pretty_bcp420 = __builder.checkpoint();
+                        let __pretty_cp430 = state.offset;
+                        let __pretty_bcp431 = __builder.checkpoint();
                         let __ok = (|| -> bool {
                             if !Self::__calcFunction_prettify(state, __builder) {
                                 return false;
@@ -95229,15 +96085,15 @@ mod __cssl4parser_emit_impl {
                             true
                         })();
                         if !__ok {
-                            state.offset = __pretty_cp419;
-                            __builder.restore(__pretty_bcp420);
+                            state.offset = __pretty_cp430;
+                            __builder.restore(__pretty_bcp431);
                         }
                         __ok
                     } {
                         {
                             if !{
-                                let __pretty_cp417 = state.offset;
-                                let __pretty_bcp418 = __builder.checkpoint();
+                                let __pretty_cp428 = state.offset;
+                                let __pretty_bcp429 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     if !Self::__minFunction_prettify(state, __builder) {
                                         return false;
@@ -95245,15 +96101,15 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp417;
-                                    __builder.restore(__pretty_bcp418);
+                                    state.offset = __pretty_cp428;
+                                    __builder.restore(__pretty_bcp429);
                                 }
                                 __ok
                             } {
                                 {
                                     if !{
-                                        let __pretty_cp415 = state.offset;
-                                        let __pretty_bcp416 = __builder.checkpoint();
+                                        let __pretty_cp426 = state.offset;
+                                        let __pretty_bcp427 = __builder.checkpoint();
                                         let __ok = (|| -> bool {
                                             if !Self::__maxFunction_prettify(state, __builder) {
                                                 return false;
@@ -95261,15 +96117,15 @@ mod __cssl4parser_emit_impl {
                                             true
                                         })();
                                         if !__ok {
-                                            state.offset = __pretty_cp415;
-                                            __builder.restore(__pretty_bcp416);
+                                            state.offset = __pretty_cp426;
+                                            __builder.restore(__pretty_bcp427);
                                         }
                                         __ok
                                     } {
                                         {
                                             if !{
-                                                let __pretty_cp413 = state.offset;
-                                                let __pretty_bcp414 = __builder.checkpoint();
+                                                let __pretty_cp424 = state.offset;
+                                                let __pretty_bcp425 = __builder.checkpoint();
                                                 let __ok = (|| -> bool {
                                                     if !Self::__clampFunction_prettify(state, __builder) {
                                                         return false;
@@ -95277,15 +96133,15 @@ mod __cssl4parser_emit_impl {
                                                     true
                                                 })();
                                                 if !__ok {
-                                                    state.offset = __pretty_cp413;
-                                                    __builder.restore(__pretty_bcp414);
+                                                    state.offset = __pretty_cp424;
+                                                    __builder.restore(__pretty_bcp425);
                                                 }
                                                 __ok
                                             } {
                                                 {
                                                     if !{
-                                                        let __pretty_cp411 = state.offset;
-                                                        let __pretty_bcp412 = __builder.checkpoint();
+                                                        let __pretty_cp422 = state.offset;
+                                                        let __pretty_bcp423 = __builder.checkpoint();
                                                         let __ok = (|| -> bool {
                                                             if !Self::__valueUnit_prettify(state, __builder) {
                                                                 return false;
@@ -95293,14 +96149,14 @@ mod __cssl4parser_emit_impl {
                                                             true
                                                         })();
                                                         if !__ok {
-                                                            state.offset = __pretty_cp411;
-                                                            __builder.restore(__pretty_bcp412);
+                                                            state.offset = __pretty_cp422;
+                                                            __builder.restore(__pretty_bcp423);
                                                         }
                                                         __ok
                                                     } {
                                                         {
                                                             if !{
-                                                                let __pretty_cp410 = state.offset;
+                                                                let __pretty_cp421 = state.offset;
                                                                 let __ok = (|| -> bool {
                                                                     {
                                                                         let __start = state.offset;
@@ -95445,14 +96301,14 @@ mod __cssl4parser_emit_impl {
                                                                     true
                                                                 })();
                                                                 if !__ok {
-                                                                    state.offset = __pretty_cp410;
+                                                                    state.offset = __pretty_cp421;
                                                                 }
                                                                 __ok
                                                             } {
                                                                 {
                                                                     if !{
-                                                                        let __pretty_cp408 = state.offset;
-                                                                        let __pretty_bcp409 = __builder.checkpoint();
+                                                                        let __pretty_cp419 = state.offset;
+                                                                        let __pretty_bcp420 = __builder.checkpoint();
                                                                         let __ok = (|| -> bool {
                                                                             {
                                                                                 {
@@ -95480,15 +96336,15 @@ mod __cssl4parser_emit_impl {
                                                                             true
                                                                         })();
                                                                         if !__ok {
-                                                                            state.offset = __pretty_cp408;
-                                                                            __builder.restore(__pretty_bcp409);
+                                                                            state.offset = __pretty_cp419;
+                                                                            __builder.restore(__pretty_bcp420);
                                                                         }
                                                                         __ok
                                                                     } {
                                                                         {
                                                                             if !{
-                                                                                let __pretty_cp406 = state.offset;
-                                                                                let __pretty_bcp407 = __builder.checkpoint();
+                                                                                let __pretty_cp417 = state.offset;
+                                                                                let __pretty_bcp418 = __builder.checkpoint();
                                                                                 let __ok = (|| -> bool {
                                                                                     if !Self::__varFunction_prettify(state, __builder) {
                                                                                         return false;
@@ -95496,15 +96352,15 @@ mod __cssl4parser_emit_impl {
                                                                                     true
                                                                                 })();
                                                                                 if !__ok {
-                                                                                    state.offset = __pretty_cp406;
-                                                                                    __builder.restore(__pretty_bcp407);
+                                                                                    state.offset = __pretty_cp417;
+                                                                                    __builder.restore(__pretty_bcp418);
                                                                                 }
                                                                                 __ok
                                                                             } {
                                                                                 {
                                                                                     if !{
-                                                                                        let __pretty_cp404 = state.offset;
-                                                                                        let __pretty_bcp405 = __builder.checkpoint();
+                                                                                        let __pretty_cp415 = state.offset;
+                                                                                        let __pretty_bcp416 = __builder.checkpoint();
                                                                                         let __ok = (|| -> bool {
                                                                                             if !Self::__envFunction_prettify(state, __builder) {
                                                                                                 return false;
@@ -95512,8 +96368,8 @@ mod __cssl4parser_emit_impl {
                                                                                             true
                                                                                         })();
                                                                                         if !__ok {
-                                                                                            state.offset = __pretty_cp404;
-                                                                                            __builder.restore(__pretty_bcp405);
+                                                                                            state.offset = __pretty_cp415;
+                                                                                            __builder.restore(__pretty_bcp416);
                                                                                         }
                                                                                         __ok
                                                                                     } {
@@ -95545,114 +96401,6 @@ mod __cssl4parser_emit_impl {
                     state.src.len().saturating_mul(2),
                 );
                 if !Self::__mathValue_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __mediaQueryList_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            {
-                {
-                    {
-                        if !{
-                            let __pretty_cp421 = state.offset;
-                            let __pretty_bcp422 = __builder.checkpoint();
-                            let __ok = (|| -> bool {
-                                if !Self::__mediaCondition_prettify(state, __builder) {
-                                    return false;
-                                }
-                                true
-                            })();
-                            if !__ok {
-                                state.offset = __pretty_cp421;
-                                __builder.restore(__pretty_bcp422);
-                            }
-                            __ok
-                        } {
-                            if !Self::__mediaTypedQuery_prettify(state, __builder) {
-                                return false;
-                            }
-                        }
-                    };
-                    {
-                        let mut __rep_count430 = 0usize;
-                        while __rep_count430 < 4294967295 {
-                            let __rep_cp431 = state.offset;
-                            if !{
-                                let __pretty_cp428 = state.offset;
-                                let __pretty_bcp429 = __builder.checkpoint();
-                                let __ok = (|| -> bool {
-                                    {
-                                        {
-                                            let __ows423 = state.offset;
-                                            let _ = ::parse_that::scan_ws_block_comments(state);
-                                            let __ows424 = state.offset;
-                                            {
-                                                if state.src_bytes.get(state.offset).copied() != Some(b',')
-                                                {
-                                                    return false;
-                                                }
-                                                state.offset += 1;
-                                                __builder.char(b',');
-                                            };
-                                            __builder.text_inline_ws(&state.src[__ows423..__ows424]);
-                                            let __ows425 = state.offset;
-                                            let _ = ::parse_that::scan_ws_block_comments(state);
-                                            __builder
-                                                .text_inline_ws(&state.src[__ows425..state.offset]);
-                                        };
-                                        {
-                                            if !{
-                                                let __pretty_cp426 = state.offset;
-                                                let __pretty_bcp427 = __builder.checkpoint();
-                                                let __ok = (|| -> bool {
-                                                    if !Self::__mediaCondition_prettify(state, __builder) {
-                                                        return false;
-                                                    }
-                                                    true
-                                                })();
-                                                if !__ok {
-                                                    state.offset = __pretty_cp426;
-                                                    __builder.restore(__pretty_bcp427);
-                                                }
-                                                __ok
-                                            } {
-                                                if !Self::__mediaTypedQuery_prettify(state, __builder) {
-                                                    return false;
-                                                }
-                                            }
-                                        };
-                                    };
-                                    true
-                                })();
-                                if !__ok {
-                                    state.offset = __pretty_cp428;
-                                    __builder.restore(__pretty_bcp429);
-                                }
-                                __ok
-                            } {
-                                state.offset = __rep_cp431;
-                                break;
-                            }
-                            if state.offset == __rep_cp431 {
-                                break;
-                            }
-                            __rep_count430 += 1;
-                        }
-                    };
-                };
-                true
-            }
-        }
-        pub fn mediaQueryList_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__mediaQueryList_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
@@ -101590,6 +102338,155 @@ mod __cssl4parser_emit_impl {
                 Some(__builder.finish())
             })
         }
+        fn __keyframeBlock_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    {
+                        if !{
+                            let __pretty_cp885 = state.offset;
+                            let __pretty_bcp886 = __builder.checkpoint();
+                            let __ok = (|| -> bool {
+                                {
+                                    let __ows883 = state.offset;
+                                    let _ = ::parse_that::scan_ws_block_comments(state);
+                                    __builder
+                                        .text_inline_ws(&state.src[__ows883..state.offset]);
+                                    if !Self::__keyframeSel_prettify(state, __builder) {
+                                        return false;
+                                    }
+                                    let __ows884 = state.offset;
+                                    let _ = ::parse_that::scan_ws_block_comments(state);
+                                    __builder
+                                        .text_inline_ws(&state.src[__ows884..state.offset]);
+                                };
+                                true
+                            })();
+                            if !__ok {
+                                state.offset = __pretty_cp885;
+                                __builder.restore(__pretty_bcp886);
+                            }
+                            __ok
+                        } {
+                            return false;
+                        }
+                    };
+                    {
+                        {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'{')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'{');
+                            };
+                            {
+                                if !{
+                                    let __pretty_cp897 = state.offset;
+                                    let __pretty_bcp898 = __builder.checkpoint();
+                                    let __ok = (|| -> bool {
+                                        {
+                                            let __ows895 = state.offset;
+                                            let _ = ::parse_that::scan_ws_block_comments(state);
+                                            __builder
+                                                .text_inline_ws(&state.src[__ows895..state.offset]);
+                                            {
+                                                let mut __rep_count893 = 0usize;
+                                                while __rep_count893 < 4294967295 {
+                                                    let __rep_cp894 = state.offset;
+                                                    if !{
+                                                        let __pretty_cp891 = state.offset;
+                                                        let __pretty_bcp892 = __builder.checkpoint();
+                                                        let __ok = (|| -> bool {
+                                                            {
+                                                                if !{
+                                                                    let __pretty_cp889 = state.offset;
+                                                                    let __pretty_bcp890 = __builder.checkpoint();
+                                                                    let __ok = (|| -> bool {
+                                                                        {
+                                                                            let __ows887 = state.offset;
+                                                                            let _ = ::parse_that::scan_ws_block_comments(state);
+                                                                            __builder
+                                                                                .text_inline_ws(&state.src[__ows887..state.offset]);
+                                                                            if !Self::__declaration_prettify(state, __builder) {
+                                                                                return false;
+                                                                            }
+                                                                            let __ows888 = state.offset;
+                                                                            let _ = ::parse_that::scan_ws_block_comments(state);
+                                                                            __builder
+                                                                                .text_inline_ws(&state.src[__ows888..state.offset]);
+                                                                        };
+                                                                        true
+                                                                    })();
+                                                                    if !__ok {
+                                                                        state.offset = __pretty_cp889;
+                                                                        __builder.restore(__pretty_bcp890);
+                                                                    }
+                                                                    __ok
+                                                                } {
+                                                                    return false;
+                                                                }
+                                                            };
+                                                            true
+                                                        })();
+                                                        if !__ok {
+                                                            state.offset = __pretty_cp891;
+                                                            __builder.restore(__pretty_bcp892);
+                                                        }
+                                                        __ok
+                                                    } {
+                                                        state.offset = __rep_cp894;
+                                                        break;
+                                                    }
+                                                    if state.offset == __rep_cp894 {
+                                                        break;
+                                                    }
+                                                    __rep_count893 += 1;
+                                                }
+                                            };
+                                            let __ows896 = state.offset;
+                                            let _ = ::parse_that::scan_ws_block_comments(state);
+                                            __builder
+                                                .text_inline_ws(&state.src[__ows896..state.offset]);
+                                        };
+                                        true
+                                    })();
+                                    if !__ok {
+                                        state.offset = __pretty_cp897;
+                                        __builder.restore(__pretty_bcp898);
+                                    }
+                                    __ok
+                                } {
+                                    return false;
+                                }
+                            };
+                        };
+                        {
+                            if state.src_bytes.get(state.offset).copied() != Some(b'}') {
+                                return false;
+                            }
+                            state.offset += 1;
+                            __builder.char(b'}');
+                        };
+                    };
+                };
+                true
+            }
+        }
+        pub fn keyframeBlock_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__keyframeBlock_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
         fn __keyframesRule_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -101600,9 +102497,9 @@ mod __cssl4parser_emit_impl {
                 {
                     {
                         {
-                            let __ows883 = state.offset;
+                            let __ows899 = state.offset;
                             let _ = ::parse_that::scan_ws_block_comments(state);
-                            let __ows884 = state.offset;
+                            let __ows900 = state.offset;
                             {
                                 let __start = state.offset;
                                 if {
@@ -101714,15 +102611,15 @@ mod __cssl4parser_emit_impl {
                                     __builder.text(__matched);
                                 }
                             };
-                            __builder.text_inline_ws(&state.src[__ows883..__ows884]);
-                            let __ows885 = state.offset;
+                            __builder.text_inline_ws(&state.src[__ows899..__ows900]);
+                            let __ows901 = state.offset;
                             let _ = ::parse_that::scan_ws_block_comments(state);
-                            __builder.text_inline_ws(&state.src[__ows885..state.offset]);
+                            __builder.text_inline_ws(&state.src[__ows901..state.offset]);
                         };
                         {
-                            let __ows886 = state.offset;
+                            let __ows902 = state.offset;
                             let _ = ::parse_that::scan_ws_block_comments(state);
-                            let __ows887 = state.offset;
+                            let __ows903 = state.offset;
                             {
                                 let __start = state.offset;
                                 if {
@@ -101775,10 +102672,10 @@ mod __cssl4parser_emit_impl {
                                     __builder.text(__matched);
                                 }
                             };
-                            __builder.text_inline_ws(&state.src[__ows886..__ows887]);
-                            let __ows888 = state.offset;
+                            __builder.text_inline_ws(&state.src[__ows902..__ows903]);
+                            let __ows904 = state.offset;
                             let _ = ::parse_that::scan_ws_block_comments(state);
-                            __builder.text_inline_ws(&state.src[__ows888..state.offset]);
+                            __builder.text_inline_ws(&state.src[__ows904..state.offset]);
                         };
                         {
                             {
@@ -101818,137 +102715,9 @@ mod __cssl4parser_emit_impl {
                                                                                 let _ = ::parse_that::scan_ws_block_comments(state);
                                                                                 __builder
                                                                                     .text_inline_ws(&state.src[__ows905..state.offset]);
-                                                                                {
-                                                                                    {
-                                                                                        if !{
-                                                                                            let __pretty_cp891 = state.offset;
-                                                                                            let __pretty_bcp892 = __builder.checkpoint();
-                                                                                            let __ok = (|| -> bool {
-                                                                                                {
-                                                                                                    let __ows889 = state.offset;
-                                                                                                    let _ = ::parse_that::scan_ws_block_comments(state);
-                                                                                                    __builder
-                                                                                                        .text_inline_ws(&state.src[__ows889..state.offset]);
-                                                                                                    if !Self::__keyframeSel_prettify(state, __builder) {
-                                                                                                        return false;
-                                                                                                    }
-                                                                                                    let __ows890 = state.offset;
-                                                                                                    let _ = ::parse_that::scan_ws_block_comments(state);
-                                                                                                    __builder
-                                                                                                        .text_inline_ws(&state.src[__ows890..state.offset]);
-                                                                                                };
-                                                                                                true
-                                                                                            })();
-                                                                                            if !__ok {
-                                                                                                state.offset = __pretty_cp891;
-                                                                                                __builder.restore(__pretty_bcp892);
-                                                                                            }
-                                                                                            __ok
-                                                                                        } {
-                                                                                            return false;
-                                                                                        }
-                                                                                    };
-                                                                                    {
-                                                                                        {
-                                                                                            {
-                                                                                                if state.src_bytes.get(state.offset).copied() != Some(b'{')
-                                                                                                {
-                                                                                                    return false;
-                                                                                                }
-                                                                                                state.offset += 1;
-                                                                                                __builder.char(b'{');
-                                                                                            };
-                                                                                            {
-                                                                                                if !{
-                                                                                                    let __pretty_cp903 = state.offset;
-                                                                                                    let __pretty_bcp904 = __builder.checkpoint();
-                                                                                                    let __ok = (|| -> bool {
-                                                                                                        {
-                                                                                                            let __ows901 = state.offset;
-                                                                                                            let _ = ::parse_that::scan_ws_block_comments(state);
-                                                                                                            __builder
-                                                                                                                .text_inline_ws(&state.src[__ows901..state.offset]);
-                                                                                                            {
-                                                                                                                let mut __rep_count899 = 0usize;
-                                                                                                                while __rep_count899 < 4294967295 {
-                                                                                                                    let __rep_cp900 = state.offset;
-                                                                                                                    if !{
-                                                                                                                        let __pretty_cp897 = state.offset;
-                                                                                                                        let __pretty_bcp898 = __builder.checkpoint();
-                                                                                                                        let __ok = (|| -> bool {
-                                                                                                                            {
-                                                                                                                                if !{
-                                                                                                                                    let __pretty_cp895 = state.offset;
-                                                                                                                                    let __pretty_bcp896 = __builder.checkpoint();
-                                                                                                                                    let __ok = (|| -> bool {
-                                                                                                                                        {
-                                                                                                                                            let __ows893 = state.offset;
-                                                                                                                                            let _ = ::parse_that::scan_ws_block_comments(state);
-                                                                                                                                            __builder
-                                                                                                                                                .text_inline_ws(&state.src[__ows893..state.offset]);
-                                                                                                                                            if !Self::__declaration_prettify(state, __builder) {
-                                                                                                                                                return false;
-                                                                                                                                            }
-                                                                                                                                            let __ows894 = state.offset;
-                                                                                                                                            let _ = ::parse_that::scan_ws_block_comments(state);
-                                                                                                                                            __builder
-                                                                                                                                                .text_inline_ws(&state.src[__ows894..state.offset]);
-                                                                                                                                        };
-                                                                                                                                        true
-                                                                                                                                    })();
-                                                                                                                                    if !__ok {
-                                                                                                                                        state.offset = __pretty_cp895;
-                                                                                                                                        __builder.restore(__pretty_bcp896);
-                                                                                                                                    }
-                                                                                                                                    __ok
-                                                                                                                                } {
-                                                                                                                                    return false;
-                                                                                                                                }
-                                                                                                                            };
-                                                                                                                            true
-                                                                                                                        })();
-                                                                                                                        if !__ok {
-                                                                                                                            state.offset = __pretty_cp897;
-                                                                                                                            __builder.restore(__pretty_bcp898);
-                                                                                                                        }
-                                                                                                                        __ok
-                                                                                                                    } {
-                                                                                                                        state.offset = __rep_cp900;
-                                                                                                                        break;
-                                                                                                                    }
-                                                                                                                    if state.offset == __rep_cp900 {
-                                                                                                                        break;
-                                                                                                                    }
-                                                                                                                    __rep_count899 += 1;
-                                                                                                                }
-                                                                                                            };
-                                                                                                            let __ows902 = state.offset;
-                                                                                                            let _ = ::parse_that::scan_ws_block_comments(state);
-                                                                                                            __builder
-                                                                                                                .text_inline_ws(&state.src[__ows902..state.offset]);
-                                                                                                        };
-                                                                                                        true
-                                                                                                    })();
-                                                                                                    if !__ok {
-                                                                                                        state.offset = __pretty_cp903;
-                                                                                                        __builder.restore(__pretty_bcp904);
-                                                                                                    }
-                                                                                                    __ok
-                                                                                                } {
-                                                                                                    return false;
-                                                                                                }
-                                                                                            };
-                                                                                        };
-                                                                                        {
-                                                                                            if state.src_bytes.get(state.offset).copied() != Some(b'}')
-                                                                                            {
-                                                                                                return false;
-                                                                                            }
-                                                                                            state.offset += 1;
-                                                                                            __builder.char(b'}');
-                                                                                        };
-                                                                                    };
-                                                                                };
+                                                                                if !Self::__keyframeBlock_prettify(state, __builder) {
+                                                                                    return false;
+                                                                                }
                                                                                 let __ows906 = state.offset;
                                                                                 let _ = ::parse_that::scan_ws_block_comments(state);
                                                                                 __builder
@@ -102972,7 +103741,7 @@ mod __cssl4parser_emit_impl {
                 Some(__builder.finish())
             })
         }
-        fn ____calcFunction_cont_151_prettify<'a>(
+        fn ____calcFunction_cont_152_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -103001,7 +103770,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __calcFunction_cont_151_prettify<'a>() -> Parser<
+        pub fn __calcFunction_cont_152_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -103009,13 +103778,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____calcFunction_cont_151_prettify(state, &mut __builder) {
+                if !Self::____calcFunction_cont_152_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____minFunction_cont_152_prettify<'a>(
+        fn ____minFunction_cont_153_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -103091,7 +103860,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __minFunction_cont_152_prettify<'a>() -> Parser<
+        pub fn __minFunction_cont_153_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -103099,13 +103868,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____minFunction_cont_152_prettify(state, &mut __builder) {
+                if !Self::____minFunction_cont_153_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____maxFunction_cont_153_prettify<'a>(
+        fn ____maxFunction_cont_154_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -103181,7 +103950,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __maxFunction_cont_153_prettify<'a>() -> Parser<
+        pub fn __maxFunction_cont_154_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -103189,13 +103958,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____maxFunction_cont_153_prettify(state, &mut __builder) {
+                if !Self::____maxFunction_cont_154_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____clampFunction_cont_154_prettify<'a>(
+        fn ____clampFunction_cont_155_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -103251,7 +104020,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __clampFunction_cont_154_prettify<'a>() -> Parser<
+        pub fn __clampFunction_cont_155_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -103259,13 +104028,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____clampFunction_cont_154_prettify(state, &mut __builder) {
+                if !Self::____clampFunction_cont_155_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____varFunction_cont_155_prettify<'a>(
+        fn ____varFunction_cont_156_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -103359,7 +104128,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __varFunction_cont_155_prettify<'a>() -> Parser<
+        pub fn __varFunction_cont_156_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -103367,13 +104136,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____varFunction_cont_155_prettify(state, &mut __builder) {
+                if !Self::____varFunction_cont_156_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____envFunction_cont_156_prettify<'a>(
+        fn ____envFunction_cont_157_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -103479,7 +104248,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __envFunction_cont_156_prettify<'a>() -> Parser<
+        pub fn __envFunction_cont_157_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -103487,13 +104256,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____envFunction_cont_156_prettify(state, &mut __builder) {
+                if !Self::____envFunction_cont_157_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____varFunction_cont_157_prettify<'a>(
+        fn ____varFunction_cont_158_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -103587,7 +104356,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __varFunction_cont_157_prettify<'a>() -> Parser<
+        pub fn __varFunction_cont_158_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -103595,13 +104364,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____varFunction_cont_157_prettify(state, &mut __builder) {
+                if !Self::____varFunction_cont_158_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____calcFunction_cont_158_prettify<'a>(
+        fn ____calcFunction_cont_159_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -103630,7 +104399,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __calcFunction_cont_158_prettify<'a>() -> Parser<
+        pub fn __calcFunction_cont_159_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -103638,13 +104407,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____calcFunction_cont_158_prettify(state, &mut __builder) {
+                if !Self::____calcFunction_cont_159_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____urlFunction_cont_159_prettify<'a>(
+        fn ____urlFunction_cont_160_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -103914,7 +104683,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __urlFunction_cont_159_prettify<'a>() -> Parser<
+        pub fn __urlFunction_cont_160_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -103922,13 +104691,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____urlFunction_cont_159_prettify(state, &mut __builder) {
+                if !Self::____urlFunction_cont_160_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____genericFunction_cont_160_prettify<'a>(
+        fn ____genericFunction_cont_161_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -103955,7 +104724,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __genericFunction_cont_160_prettify<'a>() -> Parser<
+        pub fn __genericFunction_cont_161_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -103963,13 +104732,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____genericFunction_cont_160_prettify(state, &mut __builder) {
+                if !Self::____genericFunction_cont_161_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____colorDecl_cont_161_prettify<'a>(
+        fn ____colorDecl_cont_162_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -104075,7 +104844,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __colorDecl_cont_161_prettify<'a>() -> Parser<
+        pub fn __colorDecl_cont_162_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -104083,13 +104852,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____colorDecl_cont_161_prettify(state, &mut __builder) {
+                if !Self::____colorDecl_cont_162_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____sizeDecl_cont_162_prettify<'a>(
+        fn ____sizeDecl_cont_163_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -104195,7 +104964,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __sizeDecl_cont_162_prettify<'a>() -> Parser<
+        pub fn __sizeDecl_cont_163_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -104203,13 +104972,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____sizeDecl_cont_162_prettify(state, &mut __builder) {
+                if !Self::____sizeDecl_cont_163_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____spacingDecl_cont_163_prettify<'a>(
+        fn ____spacingDecl_cont_164_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -104315,7 +105084,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __spacingDecl_cont_163_prettify<'a>() -> Parser<
+        pub fn __spacingDecl_cont_164_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -104323,13 +105092,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____spacingDecl_cont_163_prettify(state, &mut __builder) {
+                if !Self::____spacingDecl_cont_164_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____fontDecl_cont_164_prettify<'a>(
+        fn ____fontDecl_cont_165_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -104453,7 +105222,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __fontDecl_cont_164_prettify<'a>() -> Parser<
+        pub fn __fontDecl_cont_165_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -104461,13 +105230,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____fontDecl_cont_164_prettify(state, &mut __builder) {
+                if !Self::____fontDecl_cont_165_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____bgDecl_cont_165_prettify<'a>(
+        fn ____bgDecl_cont_166_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -104573,18 +105342,18 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __bgDecl_cont_165_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn __bgDecl_cont_166_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____bgDecl_cont_165_prettify(state, &mut __builder) {
+                if !Self::____bgDecl_cont_166_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____transformDecl_cont_166_prettify<'a>(
+        fn ____transformDecl_cont_167_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -104690,7 +105459,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __transformDecl_cont_166_prettify<'a>() -> Parser<
+        pub fn __transformDecl_cont_167_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -104698,13 +105467,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____transformDecl_cont_166_prettify(state, &mut __builder) {
+                if !Self::____transformDecl_cont_167_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____transitionDecl_cont_167_prettify<'a>(
+        fn ____transitionDecl_cont_168_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -104810,7 +105579,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __transitionDecl_cont_167_prettify<'a>() -> Parser<
+        pub fn __transitionDecl_cont_168_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -104818,13 +105587,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____transitionDecl_cont_167_prettify(state, &mut __builder) {
+                if !Self::____transitionDecl_cont_168_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____listTableDecl_cont_168_prettify<'a>(
+        fn ____listTableDecl_cont_169_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -104930,7 +105699,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __listTableDecl_cont_168_prettify<'a>() -> Parser<
+        pub fn __listTableDecl_cont_169_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -104938,13 +105707,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____listTableDecl_cont_168_prettify(state, &mut __builder) {
+                if !Self::____listTableDecl_cont_169_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____displayDecl_cont_169_prettify<'a>(
+        fn ____displayDecl_cont_170_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -105068,7 +105837,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __displayDecl_cont_169_prettify<'a>() -> Parser<
+        pub fn __displayDecl_cont_170_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -105076,13 +105845,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____displayDecl_cont_169_prettify(state, &mut __builder) {
+                if !Self::____displayDecl_cont_170_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____positionDecl_cont_170_prettify<'a>(
+        fn ____positionDecl_cont_171_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -105206,7 +105975,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __positionDecl_cont_170_prettify<'a>() -> Parser<
+        pub fn __positionDecl_cont_171_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -105214,13 +105983,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____positionDecl_cont_170_prettify(state, &mut __builder) {
+                if !Self::____positionDecl_cont_171_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____overflowDecl_cont_171_prettify<'a>(
+        fn ____overflowDecl_cont_172_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -105344,7 +106113,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __overflowDecl_cont_171_prettify<'a>() -> Parser<
+        pub fn __overflowDecl_cont_172_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -105352,13 +106121,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____overflowDecl_cont_171_prettify(state, &mut __builder) {
+                if !Self::____overflowDecl_cont_172_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____visibilityDecl_cont_172_prettify<'a>(
+        fn ____visibilityDecl_cont_173_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -105482,7 +106251,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __visibilityDecl_cont_172_prettify<'a>() -> Parser<
+        pub fn __visibilityDecl_cont_173_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -105490,13 +106259,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____visibilityDecl_cont_172_prettify(state, &mut __builder) {
+                if !Self::____visibilityDecl_cont_173_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____flexDirDecl_cont_173_prettify<'a>(
+        fn ____flexDirDecl_cont_174_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -105620,7 +106389,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __flexDirDecl_cont_173_prettify<'a>() -> Parser<
+        pub fn __flexDirDecl_cont_174_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -105628,13 +106397,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____flexDirDecl_cont_173_prettify(state, &mut __builder) {
+                if !Self::____flexDirDecl_cont_174_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____flexWrapDecl_cont_174_prettify<'a>(
+        fn ____flexWrapDecl_cont_175_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -105758,7 +106527,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __flexWrapDecl_cont_174_prettify<'a>() -> Parser<
+        pub fn __flexWrapDecl_cont_175_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -105766,13 +106535,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____flexWrapDecl_cont_174_prettify(state, &mut __builder) {
+                if !Self::____flexWrapDecl_cont_175_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____alignDecl_cont_175_prettify<'a>(
+        fn ____alignDecl_cont_176_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -105896,7 +106665,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __alignDecl_cont_175_prettify<'a>() -> Parser<
+        pub fn __alignDecl_cont_176_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -105904,13 +106673,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____alignDecl_cont_175_prettify(state, &mut __builder) {
+                if !Self::____alignDecl_cont_176_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____flexNumDecl_cont_176_prettify<'a>(
+        fn ____flexNumDecl_cont_177_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -106016,7 +106785,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __flexNumDecl_cont_176_prettify<'a>() -> Parser<
+        pub fn __flexNumDecl_cont_177_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -106024,13 +106793,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____flexNumDecl_cont_176_prettify(state, &mut __builder) {
+                if !Self::____flexNumDecl_cont_177_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____fontSizeDecl_cont_177_prettify<'a>(
+        fn ____fontSizeDecl_cont_178_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -106136,7 +106905,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __fontSizeDecl_cont_177_prettify<'a>() -> Parser<
+        pub fn __fontSizeDecl_cont_178_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -106144,13 +106913,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____fontSizeDecl_cont_177_prettify(state, &mut __builder) {
+                if !Self::____fontSizeDecl_cont_178_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____fontWeightDecl_cont_178_prettify<'a>(
+        fn ____fontWeightDecl_cont_179_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -106274,7 +107043,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __fontWeightDecl_cont_178_prettify<'a>() -> Parser<
+        pub fn __fontWeightDecl_cont_179_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -106282,13 +107051,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____fontWeightDecl_cont_178_prettify(state, &mut __builder) {
+                if !Self::____fontWeightDecl_cont_179_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____lineHeightDecl_cont_179_prettify<'a>(
+        fn ____lineHeightDecl_cont_180_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -106394,7 +107163,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __lineHeightDecl_cont_179_prettify<'a>() -> Parser<
+        pub fn __lineHeightDecl_cont_180_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -106402,13 +107171,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____lineHeightDecl_cont_179_prettify(state, &mut __builder) {
+                if !Self::____lineHeightDecl_cont_180_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____borderWidthDecl_cont_180_prettify<'a>(
+        fn ____borderWidthDecl_cont_181_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -106532,7 +107301,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __borderWidthDecl_cont_180_prettify<'a>() -> Parser<
+        pub fn __borderWidthDecl_cont_181_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -106540,13 +107309,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____borderWidthDecl_cont_180_prettify(state, &mut __builder) {
+                if !Self::____borderWidthDecl_cont_181_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____borderStyleDecl_cont_181_prettify<'a>(
+        fn ____borderStyleDecl_cont_182_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -106670,7 +107439,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __borderStyleDecl_cont_181_prettify<'a>() -> Parser<
+        pub fn __borderStyleDecl_cont_182_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -106678,13 +107447,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____borderStyleDecl_cont_181_prettify(state, &mut __builder) {
+                if !Self::____borderStyleDecl_cont_182_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____borderRadiusDecl_cont_182_prettify<'a>(
+        fn ____borderRadiusDecl_cont_183_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -106790,7 +107559,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __borderRadiusDecl_cont_182_prettify<'a>() -> Parser<
+        pub fn __borderRadiusDecl_cont_183_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -106798,13 +107567,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____borderRadiusDecl_cont_182_prettify(state, &mut __builder) {
+                if !Self::____borderRadiusDecl_cont_183_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____opacityDecl_cont_183_prettify<'a>(
+        fn ____opacityDecl_cont_184_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -106910,7 +107679,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __opacityDecl_cont_183_prettify<'a>() -> Parser<
+        pub fn __opacityDecl_cont_184_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -106918,13 +107687,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____opacityDecl_cont_183_prettify(state, &mut __builder) {
+                if !Self::____opacityDecl_cont_184_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____textAlignDecl_cont_184_prettify<'a>(
+        fn ____textAlignDecl_cont_185_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -107048,7 +107817,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __textAlignDecl_cont_184_prettify<'a>() -> Parser<
+        pub fn __textAlignDecl_cont_185_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -107056,13 +107825,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____textAlignDecl_cont_184_prettify(state, &mut __builder) {
+                if !Self::____textAlignDecl_cont_185_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____boxSizingDecl_cont_185_prettify<'a>(
+        fn ____boxSizingDecl_cont_186_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -107186,7 +107955,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __boxSizingDecl_cont_185_prettify<'a>() -> Parser<
+        pub fn __boxSizingDecl_cont_186_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -107194,13 +107963,13 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____boxSizingDecl_cont_185_prettify(state, &mut __builder) {
+                if !Self::____boxSizingDecl_cont_186_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
             })
         }
-        fn ____cursorDecl_cont_186_prettify<'a>(
+        fn ____cursorDecl_cont_187_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -107324,7 +108093,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __cursorDecl_cont_186_prettify<'a>() -> Parser<
+        pub fn __cursorDecl_cont_187_prettify<'a>() -> Parser<
             'a,
             Vec<::pprint::FmtOp<'a>>,
         > {
@@ -107332,7 +108101,7 @@ mod __cssl4parser_emit_impl {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::____cursorDecl_cont_186_prettify(state, &mut __builder) {
+                if !Self::____cursorDecl_cont_187_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
@@ -107349,6 +108118,10 @@ mod __cssl4parser_emit_impl {
             let __input_bytes = input.as_bytes();
             let mut state = __shape_support_CssL4Parser::ScanState::new();
             let mut builder = crate::runtime::css_l4::CssStructBuilder::new();
+            crate::runtime::builder::StructBuilder::bind_input(
+                &mut builder,
+                __input_bytes,
+            );
             static __EAGER_EMPTY_PATH: ::std::sync::LazyLock<
                 crate::path::ir::TypedPath<crate::path::markers::Json, &'static str>,
             > = ::std::sync::LazyLock::new(|| {

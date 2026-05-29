@@ -29,7 +29,7 @@ enum OpenFrame<'p> {
         values: Vec<CssTypedValue<'p>>,
         important: bool,
     },
-    SelectorList { selectors: Vec<Selector<'p>> },
+    SelectorList { selectors: Vec<Selector<'p>>, span: &'p str },
     Wrap { value: Option<CssTypedValue<'p>> },
     Numeric { kind: NumericKind, magnitude: Option<f64>, unit: Option<u8> },
     ColorFunction { kind_tag: Option<u8>, space_tag: Option<u8>, components: Vec<f64> },
@@ -73,6 +73,8 @@ pub struct CssStructBuilder<'p> {
     root: Option<StyleSheet>,
     next_handle: u64,
     pending_value: Option<CssTypedValue<'p>>,
+    input: &'p [u8],
+    span_starts: Vec<u32>,
 }
 #[derive(Debug, Clone)]
 pub struct CssStructCheckpoint<'p> {
@@ -86,6 +88,7 @@ pub struct CssStructCheckpoint<'p> {
     root: Option<StyleSheet>,
     next_handle: u64,
     pending_value: Option<CssTypedValue<'p>>,
+    span_starts: Vec<u32>,
 }
 impl<'p> Default for CssStructBuilder<'p> {
     fn default() -> Self {
@@ -100,6 +103,8 @@ impl<'p> CssStructBuilder<'p> {
             root: None,
             next_handle: 0,
             pending_value: None,
+            input: &[],
+            span_starts: Vec::with_capacity(16),
         }
     }
     pub fn with_capacity(
@@ -115,6 +120,8 @@ impl<'p> CssStructBuilder<'p> {
             root: None,
             next_handle: 0,
             pending_value: None,
+            input: &[],
+            span_starts: Vec::with_capacity(16),
         }
     }
     pub fn finalise(mut self, input: &'p str) -> CssDocument<'p> {
@@ -188,6 +195,7 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
             root: self.root,
             next_handle: self.next_handle,
             pending_value: self.pending_value,
+            span_starts: self.span_starts.clone(),
         }
     }
     fn rollback(&mut self, checkpoint: Self::Checkpoint) {
@@ -204,6 +212,36 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
         self.root = checkpoint.root;
         self.next_handle = checkpoint.next_handle;
         self.pending_value = checkpoint.pending_value;
+        self.span_starts = checkpoint.span_starts;
+    }
+    fn bind_input(&mut self, input: &[u8]) {
+        self.input = unsafe { core::mem::transmute::<&[u8], &'p [u8]>(input) };
+    }
+    fn record_compound_bounds_start(&mut self, offset: u32) {
+        self.span_starts.push(offset);
+    }
+    fn record_compound_bounds_end(&mut self, offset: u32) {
+        let Some(start) = self.span_starts.pop() else { return };
+        let s = start as usize;
+        let e = offset as usize;
+        let captured: Option<&'p str> = if s <= e && e <= self.input.len() {
+            core::str::from_utf8(&self.input[s..e]).ok()
+        } else {
+            None
+        };
+        match (captured, self.stack.last_mut()) {
+            (Some(text), Some(OpenFrame::SelectorList { span, .. })) => {
+                if span.is_empty() {
+                    *span = text;
+                }
+            }
+            (Some(text), Some(OpenFrame::GenericAtRule { name, .. })) => {
+                if name.is_empty() || *name == ";" {
+                    *name = text;
+                }
+            }
+            _ => {}
+        }
     }
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
         let frame = match layout.rule_id {
@@ -261,68 +299,68 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                     unit: None,
                 }
             }
-            71 => {
+            72 => {
                 OpenFrame::DirPseudo {
                     kind_tag: None,
                 }
             }
-            73 => {
+            74 => {
                 OpenFrame::Function {
                     kind: FunctionKind::Generic,
                     name: "",
                     args: Vec::new(),
                 }
             }
-            77 => {
+            82 => {
                 OpenFrame::Function {
                     kind: FunctionKind::Var,
                     name: "",
                     args: Vec::new(),
                 }
             }
-            78 => {
+            83 => {
                 OpenFrame::Function {
                     kind: FunctionKind::Env,
                     name: "",
                     args: Vec::new(),
                 }
             }
-            79 => {
+            84 => {
                 OpenFrame::Numeric {
                     kind: NumericKind::Length,
                     magnitude: None,
                     unit: None,
                 }
             }
-            86 => {
+            87 => {
                 OpenFrame::ColorFunction {
                     kind_tag: None,
                     space_tag: None,
                     components: Vec::new(),
                 }
             }
-            104 => {
+            105 => {
                 OpenFrame::Function {
                     kind: FunctionKind::Calc,
                     name: "",
                     args: Vec::new(),
                 }
             }
-            105 => {
+            106 => {
                 OpenFrame::Function {
                     kind: FunctionKind::Min,
                     name: "",
                     args: Vec::new(),
                 }
             }
-            106 => {
+            107 => {
                 OpenFrame::Function {
                     kind: FunctionKind::Max,
                     name: "",
                     args: Vec::new(),
                 }
             }
-            107 => {
+            108 => {
                 OpenFrame::Function {
                     kind: FunctionKind::Clamp,
                     name: "",
@@ -330,49 +368,56 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                 }
             }
             139 => {
+                OpenFrame::KeyframeBlock {
+                    selector: "",
+                    declarations: Vec::new(),
+                }
+            }
+            140 => {
                 OpenFrame::KeyframesRule {
                     name: "",
                     blocks: Vec::new(),
                 }
             }
-            141 => {
+            142 => {
                 OpenFrame::GenericAtRule {
                     name: "",
                     prelude: "",
                     body: "",
                 }
             }
-            143 => {
+            144 => {
                 OpenFrame::StyleRule {
                     selectors: Vec::new(),
                     declarations: Vec::new(),
                     span: "",
                 }
             }
-            144 => {
+            145 => {
                 OpenFrame::MediaRule {
                     query: "",
                     rules: Vec::new(),
                 }
             }
-            148 => {
+            149 => {
                 OpenFrame::StyleSheet {
                     rules: Vec::new(),
                 }
             }
-            142 => OpenFrame::Wrap { value: None },
-            62 | 63 | 112 | 113 | 114 | 115 | 116 | 117 | 118 | 119 | 120 | 121 | 122
+            143 => OpenFrame::Wrap { value: None },
+            63 | 64 | 112 | 113 | 114 | 115 | 116 | 117 | 118 | 119 | 120 | 121 | 122
             | 123 | 124 | 125 | 126 | 127 | 128 | 129 | 130 | 131 | 132 | 133 | 134 | 135
-            | 136 | 137 | 138 => {
+            | 136 | 137 => {
                 OpenFrame::Declaration {
                     property: None,
                     values: Vec::new(),
                     important: false,
                 }
             }
-            96 | 99 | 101 => {
+            96 => {
                 OpenFrame::SelectorList {
                     selectors: Vec::new(),
+                    span: "",
                 }
             }
             _ => {
@@ -453,14 +498,16 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                     important,
                 });
             }
-            OpenFrame::SelectorList { selectors } => {
+            OpenFrame::SelectorList { selectors, span } => {
+                let unit = if span.is_empty() {
+                    selectors.into_iter().next().unwrap_or(Selector::Universal)
+                } else {
+                    Selector::Span(span)
+                };
                 match self.stack.last_mut() {
-                    Some(OpenFrame::StyleRule { selectors: dst, .. }) => {
-                        dst.extend(selectors)
-                    }
-                    Some(OpenFrame::SelectorList { selectors: dst }) => {
-                        dst.extend(selectors)
-                    }
+                    Some(OpenFrame::StyleRule { selectors: dst, .. }) => dst.push(unit),
+                    Some(OpenFrame::KeyframeBlock { .. }) => {}
+                    Some(OpenFrame::SelectorList { .. }) => {}
                     _ => {}
                 }
             }
@@ -611,7 +658,7 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                     Some(0) => ":dir(ltr)",
                     _ => ":dir()",
                 };
-                if let Some(OpenFrame::SelectorList { selectors }) = self
+                if let Some(OpenFrame::SelectorList { selectors, .. }) = self
                     .stack
                     .last_mut()
                 {
@@ -679,7 +726,10 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
             Some(OpenFrame::MediaRule { query, .. }) if query.is_empty() => {
                 *query = lifetime_extended;
             }
-            Some(OpenFrame::SelectorList { selectors }) => {
+            Some(OpenFrame::GenericAtRule { name, .. }) if name.is_empty() => {
+                *name = lifetime_extended;
+            }
+            Some(OpenFrame::SelectorList { selectors, .. }) => {
                 selectors.push(Selector::Span(lifetime_extended));
             }
             Some(OpenFrame::HexColor { hex_span }) if hex_span.is_none() => {

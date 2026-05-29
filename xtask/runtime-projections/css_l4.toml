@@ -493,9 +493,8 @@ declaration_rules = [
   "textAlignDecl",
   "boxSizingDecl",
   "cursorDecl",
-  "declaration",
 ]
-selector_rules = ["selectorList", "complexSelector", "compoundSelector"]
+selector_rules = ["selectorList"]
 wrap_rules = ["ruleBlock"]
 
 [[builder.aggregate_routes]]
@@ -517,6 +516,10 @@ frame = "MediaRule"
 [[builder.aggregate_routes]]
 rule = "keyframesRule"
 frame = "KeyframesRule"
+
+[[builder.aggregate_routes]]
+rule = "keyframeBlock"
+frame = "KeyframeBlock"
 
 [[builder.aggregate_routes]]
 rule = "genericAtRule"

@@ -3423,7 +3423,7 @@
         },
         "fields": [
           {
-            "name": "1988",
+            "name": "1989",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -3609,7 +3609,7 @@
             }
           },
           {
-            "name": "1989",
+            "name": "1990",
             "type_desc": "F64",
             "source": {
               "BranchTag": {
@@ -3621,7 +3621,7 @@
       },
       "88": {
         "rule_id": 88,
-        "rule_name": "mediaQuery",
+        "rule_name": "mediaTypedQuery",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -4218,41 +4218,6 @@
       },
       "103": {
         "rule_id": 103,
-        "rule_name": "mediaQueryList",
-        "kind": "Struct",
-        "rule_type": {
-          "Tuple": [
-            "BoxedEnum",
-            {
-              "Vec": "Enum"
-            }
-          ]
-        },
-        "fields": [
-          {
-            "name": "mediaQuery",
-            "type_desc": "BoxedEnum",
-            "source": {
-              "SeqPosition": {
-                "position": 0
-              }
-            }
-          },
-          {
-            "name": "field_1",
-            "type_desc": {
-              "Vec": "Enum"
-            },
-            "source": {
-              "SeqPosition": {
-                "position": 1
-              }
-            }
-          }
-        ]
-      },
-      "104": {
-        "rule_id": 104,
         "rule_name": "mathExpr",
         "kind": "Struct",
         "rule_type": {
@@ -4286,8 +4251,8 @@
           }
         ]
       },
-      "105": {
-        "rule_id": 105,
+      "104": {
+        "rule_id": 104,
         "rule_name": "calcFunction",
         "kind": "Struct",
         "rule_type": {
@@ -4317,9 +4282,54 @@
           }
         ]
       },
+      "105": {
+        "rule_id": 105,
+        "rule_name": "minFunction",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "Span",
+            {
+              "Tuple": [
+                "BoxedEnum",
+                {
+                  "Vec": "Enum"
+                }
+              ]
+            }
+          ]
+        },
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": {
+              "Tuple": [
+                "BoxedEnum",
+                {
+                  "Vec": "Enum"
+                }
+              ]
+            },
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          }
+        ]
+      },
       "106": {
         "rule_id": 106,
-        "rule_name": "minFunction",
+        "rule_name": "maxFunction",
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
@@ -4364,51 +4374,6 @@
       },
       "107": {
         "rule_id": 107,
-        "rule_name": "maxFunction",
-        "kind": "Struct",
-        "rule_type": {
-          "Tuple": [
-            "Span",
-            {
-              "Tuple": [
-                "BoxedEnum",
-                {
-                  "Vec": "Enum"
-                }
-              ]
-            }
-          ]
-        },
-        "fields": [
-          {
-            "name": "field_0",
-            "type_desc": "Span",
-            "source": {
-              "SeqPosition": {
-                "position": 0
-              }
-            }
-          },
-          {
-            "name": "field_1",
-            "type_desc": {
-              "Tuple": [
-                "BoxedEnum",
-                {
-                  "Vec": "Enum"
-                }
-              ]
-            },
-            "source": {
-              "SeqPosition": {
-                "position": 1
-              }
-            }
-          }
-        ]
-      },
-      "108": {
-        "rule_id": 108,
         "rule_name": "clampFunction",
         "kind": "Struct",
         "rule_type": {
@@ -4458,8 +4423,8 @@
           }
         ]
       },
-      "109": {
-        "rule_id": 109,
+      "108": {
+        "rule_id": 108,
         "rule_name": "mathProduct",
         "kind": "Struct",
         "rule_type": {
@@ -4493,8 +4458,8 @@
           }
         ]
       },
-      "110": {
-        "rule_id": 110,
+      "109": {
+        "rule_id": 109,
         "rule_name": "mathValue",
         "kind": "TaggedEnum",
         "rule_type": {
@@ -4550,7 +4515,7 @@
             }
           },
           {
-            "name": "1991",
+            "name": "1992",
             "type_desc": "F64",
             "source": {
               "BranchTag": {
@@ -4587,6 +4552,41 @@
           }
         ]
       },
+      "110": {
+        "rule_id": 110,
+        "rule_name": "mediaQueryList",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "BoxedEnum",
+            {
+              "Vec": "Enum"
+            }
+          ]
+        },
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": {
+              "Vec": "Enum"
+            },
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          }
+        ]
+      },
       "111": {
         "rule_id": 111,
         "rule_name": "value",
@@ -4618,7 +4618,7 @@
             }
           },
           {
-            "name": "1992",
+            "name": "1993",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -4654,7 +4654,7 @@
             }
           },
           {
-            "name": "1993",
+            "name": "1994",
             "type_desc": "F64",
             "source": {
               "BranchTag": {
@@ -4663,7 +4663,7 @@
             }
           },
           {
-            "name": "1992",
+            "name": "1993",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -4672,7 +4672,7 @@
             }
           },
           {
-            "name": "1992",
+            "name": "1993",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -4681,7 +4681,7 @@
             }
           },
           {
-            "name": "1992",
+            "name": "1993",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -4690,7 +4690,7 @@
             }
           },
           {
-            "name": "1992",
+            "name": "1993",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -4699,7 +4699,7 @@
             }
           },
           {
-            "name": "1992",
+            "name": "1993",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -4708,7 +4708,7 @@
             }
           },
           {
-            "name": "1992",
+            "name": "1993",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -4726,7 +4726,7 @@
             }
           },
           {
-            "name": "1992",
+            "name": "1993",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -6386,7 +6386,7 @@
         },
         "fields": [
           {
-            "name": "2008",
+            "name": "2009",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -6629,7 +6629,7 @@
             }
           },
           {
-            "name": "2008",
+            "name": "2009",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -6709,7 +6709,7 @@
         },
         "fields": [
           {
-            "name": "2009",
+            "name": "2010",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -6986,7 +6986,7 @@
             }
           },
           {
-            "name": "2010",
+            "name": "2011",
             "type_desc": "F64",
             "source": {
               "BranchTag": {
@@ -7007,7 +7007,7 @@
             "type_desc": "BoxedEnum",
             "source": {
               "RuleReference": {
-                "target_rule": 104
+                "target_rule": 103
               }
             }
           }
@@ -7240,7 +7240,7 @@
             "type_desc": "BoxedEnum",
             "source": {
               "RuleReference": {
-                "target_rule": 104
+                "target_rule": 103
               }
             }
           }

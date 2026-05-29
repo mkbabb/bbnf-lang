@@ -301,28 +301,28 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                     components: Vec::new(),
                 }
             }
-            105 => {
+            104 => {
                 OpenFrame::Function {
                     kind: FunctionKind::Calc,
                     name: "",
                     args: Vec::new(),
                 }
             }
-            106 => {
+            105 => {
                 OpenFrame::Function {
                     kind: FunctionKind::Min,
                     name: "",
                     args: Vec::new(),
                 }
             }
-            107 => {
+            106 => {
                 OpenFrame::Function {
                     kind: FunctionKind::Max,
                     name: "",
                     args: Vec::new(),
                 }
             }
-            108 => {
+            107 => {
                 OpenFrame::Function {
                     kind: FunctionKind::Clamp,
                     name: "",

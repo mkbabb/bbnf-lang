@@ -928,7 +928,7 @@ mod __cssl4parser_emit_impl {
     /// Mined literal-led Alt branches, sorted lexicographically.
     /// Binary search dispatches in O(log N) compares; LLVM lowers
     /// the fixed-size table to a balanced compare tree.
-    static __PHF_CssL4Parser_110_KW: [&[u8]; 7usize] = [
+    static __PHF_CssL4Parser_109_KW: [&[u8]; 7usize] = [
         b"(",
         b"calc",
         b"clamp",
@@ -940,7 +940,7 @@ mod __cssl4parser_emit_impl {
     /// Per-entry branch discriminant — parallel to [`#kw_ident`].
     /// Entry `i`'s keyword bytes at `#kw_ident[i]` route to the
     /// branch with discriminant `#idx_ident[i]`.
-    static __PHF_CssL4Parser_110_IDX: [u8; 7usize] = [6, 0, 3, 8, 2, 1, 7];
+    static __PHF_CssL4Parser_109_IDX: [u8; 7usize] = [6, 0, 3, 8, 2, 1, 7];
     /// AW-III.W6.2 — dispatch the mined keyword table for rule
     /// `#rule_id`.
     ///
@@ -950,10 +950,10 @@ mod __cssl4parser_emit_impl {
     /// scan to a single binary search.
     #[allow(dead_code)]
     #[inline]
-    fn __phf_CssL4Parser_dispatch_110(bytes: &[u8]) -> ::core::option::Option<u8> {
-        match __PHF_CssL4Parser_110_KW.binary_search(&bytes) {
+    fn __phf_CssL4Parser_dispatch_109(bytes: &[u8]) -> ::core::option::Option<u8> {
+        match __PHF_CssL4Parser_109_KW.binary_search(&bytes) {
             ::core::result::Result::Ok(idx) => {
-                ::core::option::Option::Some(__PHF_CssL4Parser_110_IDX[idx])
+                ::core::option::Option::Some(__PHF_CssL4Parser_109_IDX[idx])
             }
             ::core::result::Result::Err(_) => ::core::option::Option::None,
         }
@@ -1133,43 +1133,6 @@ mod __cssl4parser_emit_impl {
             op_discriminant: 1u8,
         },
     ];
-    /// AX.W0a.2.l — per-rule dense Pratt precedence LUT.
-    ///
-    /// One byte per dispatch byte for this Pratt rule's
-    /// operator alphabet. Consulted inline by the rule's
-    /// emitted `parse_pratt_*` body. See `bbnf::backend::
-    /// rust::emitter::precedence` for the bit layout.
-    pub const PRECEDENCE_LUT_mediaQueryList: [u8; 256] = [
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 1u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-    ];
-    /// AX.W0a.2.l — per-rule sparse Pratt metadata slice.
-    ///
-    /// One entry per mined operator for this rule.
-    /// Consulted by the rule's emitted `parse_pratt_*`
-    /// body when the LUT byte's bit-7 two-byte flag is
-    /// set, to resolve the second byte + discriminant.
-    pub const PRECEDENCE_ENTRIES_mediaQueryList: &[PrattEntry] = &[
-        PrattEntry {
-            byte: 44u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 0u8,
-        },
-    ];
     /// AW-III.W6.5 — aggregate dense Pratt precedence LUT.
     ///
     /// Union of every Pratt rule's packed LUT (last-write-wins
@@ -1179,7 +1142,7 @@ mod __cssl4parser_emit_impl {
     pub const PRECEDENCE_LUT: [u8; 256] = [
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 1u8, 2u8, 1u8, 2u8, 0u8, 1u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 1u8, 2u8, 0u8, 2u8, 0u8, 1u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
@@ -1218,16 +1181,11 @@ mod __cssl4parser_emit_impl {
             second_byte: ::core::option::Option::None,
             op_discriminant: 1u8,
         },
-        PrattEntry {
-            byte: 44u8,
-            second_byte: ::core::option::Option::None,
-            op_discriminant: 0u8,
-        },
     ];
     /// AW-III.W6.5 — total mined operator count for this
     /// grammar. Non-zero iff the lift admitted ≥ 1 chain OR the
     /// shape classifier admitted ≥ 1 single-rung Pratt rule.
-    pub const PRECEDENCE_OPERATOR_COUNT: usize = 5usize;
+    pub const PRECEDENCE_OPERATOR_COUNT: usize = 4usize;
     /// AZ-IV.W3.3 — codegen-emitted lazy-parse path plan.
     ///
     /// The static `PATH_PLAN` carries one row per `(rule, segment
@@ -3519,6 +3477,30 @@ mod __cssl4parser_emit_impl {
             },
             PathPlanEntry {
                 rule_id: 107,
+                segment_kind: SegmentKind::Field,
+                field_index: 2,
+                decision: Decision::ParseUntil(2),
+            },
+            PathPlanEntry {
+                rule_id: 107,
+                segment_kind: SegmentKind::Index,
+                field_index: 2,
+                decision: Decision::ParseUntil(2),
+            },
+            PathPlanEntry {
+                rule_id: 107,
+                segment_kind: SegmentKind::Field,
+                field_index: 3,
+                decision: Decision::ParseUntil(3),
+            },
+            PathPlanEntry {
+                rule_id: 107,
+                segment_kind: SegmentKind::Index,
+                field_index: 3,
+                decision: Decision::ParseUntil(3),
+            },
+            PathPlanEntry {
+                rule_id: 107,
                 segment_kind: SegmentKind::Wildcard,
                 field_index: 4294967295,
                 decision: Decision::ParseFully,
@@ -3549,117 +3531,93 @@ mod __cssl4parser_emit_impl {
             },
             PathPlanEntry {
                 rule_id: 108,
-                segment_kind: SegmentKind::Field,
-                field_index: 2,
-                decision: Decision::ParseUntil(2),
-            },
-            PathPlanEntry {
-                rule_id: 108,
-                segment_kind: SegmentKind::Index,
-                field_index: 2,
-                decision: Decision::ParseUntil(2),
-            },
-            PathPlanEntry {
-                rule_id: 108,
-                segment_kind: SegmentKind::Field,
-                field_index: 3,
-                decision: Decision::ParseUntil(3),
-            },
-            PathPlanEntry {
-                rule_id: 108,
-                segment_kind: SegmentKind::Index,
-                field_index: 3,
-                decision: Decision::ParseUntil(3),
-            },
-            PathPlanEntry {
-                rule_id: 108,
                 segment_kind: SegmentKind::Wildcard,
                 field_index: 4294967295,
                 decision: Decision::ParseFully,
             },
             PathPlanEntry {
                 rule_id: 109,
-                segment_kind: SegmentKind::Field,
-                field_index: 0,
-                decision: Decision::ParseUntil(0),
-            },
-            PathPlanEntry {
-                rule_id: 109,
-                segment_kind: SegmentKind::Index,
-                field_index: 0,
-                decision: Decision::ParseUntil(0),
-            },
-            PathPlanEntry {
-                rule_id: 109,
-                segment_kind: SegmentKind::Field,
-                field_index: 1,
-                decision: Decision::ParseUntil(1),
-            },
-            PathPlanEntry {
-                rule_id: 109,
-                segment_kind: SegmentKind::Index,
-                field_index: 1,
-                decision: Decision::ParseUntil(1),
-            },
-            PathPlanEntry {
-                rule_id: 109,
-                segment_kind: SegmentKind::Wildcard,
-                field_index: 4294967295,
-                decision: Decision::ParseFully,
-            },
-            PathPlanEntry {
-                rule_id: 110,
                 segment_kind: SegmentKind::VariantName,
                 field_index: 0,
                 decision: Decision::ParseUntil(0),
             },
             PathPlanEntry {
-                rule_id: 110,
+                rule_id: 109,
                 segment_kind: SegmentKind::VariantName,
                 field_index: 1,
                 decision: Decision::ParseUntil(1),
             },
             PathPlanEntry {
-                rule_id: 110,
+                rule_id: 109,
                 segment_kind: SegmentKind::VariantName,
                 field_index: 2,
                 decision: Decision::ParseUntil(2),
             },
             PathPlanEntry {
-                rule_id: 110,
+                rule_id: 109,
                 segment_kind: SegmentKind::VariantName,
                 field_index: 3,
                 decision: Decision::ParseUntil(3),
             },
             PathPlanEntry {
-                rule_id: 110,
+                rule_id: 109,
                 segment_kind: SegmentKind::VariantName,
                 field_index: 4,
                 decision: Decision::ParseUntil(4),
             },
             PathPlanEntry {
-                rule_id: 110,
+                rule_id: 109,
                 segment_kind: SegmentKind::VariantName,
                 field_index: 5,
                 decision: Decision::ParseUntil(5),
             },
             PathPlanEntry {
-                rule_id: 110,
+                rule_id: 109,
                 segment_kind: SegmentKind::VariantName,
                 field_index: 6,
                 decision: Decision::ParseUntil(6),
             },
             PathPlanEntry {
-                rule_id: 110,
+                rule_id: 109,
                 segment_kind: SegmentKind::VariantName,
                 field_index: 7,
                 decision: Decision::ParseUntil(7),
             },
             PathPlanEntry {
-                rule_id: 110,
+                rule_id: 109,
                 segment_kind: SegmentKind::VariantName,
                 field_index: 8,
                 decision: Decision::ParseUntil(8),
+            },
+            PathPlanEntry {
+                rule_id: 109,
+                segment_kind: SegmentKind::Wildcard,
+                field_index: 4294967295,
+                decision: Decision::ParseFully,
+            },
+            PathPlanEntry {
+                rule_id: 110,
+                segment_kind: SegmentKind::Field,
+                field_index: 0,
+                decision: Decision::ParseUntil(0),
+            },
+            PathPlanEntry {
+                rule_id: 110,
+                segment_kind: SegmentKind::Index,
+                field_index: 0,
+                decision: Decision::ParseUntil(0),
+            },
+            PathPlanEntry {
+                rule_id: 110,
+                segment_kind: SegmentKind::Field,
+                field_index: 1,
+                decision: Decision::ParseUntil(1),
+            },
+            PathPlanEntry {
+                rule_id: 110,
+                segment_kind: SegmentKind::Index,
+                field_index: 1,
+                decision: Decision::ParseUntil(1),
             },
             PathPlanEntry {
                 rule_id: 110,
@@ -9643,7 +9601,7 @@ mod __cssl4parser_emit_impl {
                 ),
                 fields: ::std::vec![
                     ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("1988"), type_desc :
+                    ::std::string::String::from("1989"), type_desc :
                     ::bbnf_ir::TypeDesc::Span, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 0u32, },
                     }, ::bbnf_ir::registry::StructField { name :
@@ -9743,7 +9701,7 @@ mod __cssl4parser_emit_impl {
                     ::bbnf_ir::TypeDesc::BoxedEnum, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 6u32, },
                     }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("1989"), type_desc :
+                    ::std::string::String::from("1990"), type_desc :
                     ::bbnf_ir::TypeDesc::F64, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 7u32, },
                     }
@@ -9752,7 +9710,7 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 88u32,
-                rule_name: ::std::string::String::from("mediaQuery"),
+                rule_name: ::std::string::String::from("mediaTypedQuery"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
@@ -10124,29 +10082,6 @@ mod __cssl4parser_emit_impl {
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
                 rule_id: 103u32,
-                rule_name: ::std::string::String::from("mediaQueryList"),
-                kind: ::bbnf_ir::registry::LayoutKind::Struct,
-                rule_type: ::bbnf_ir::TypeDesc::Tuple(
-                    ::std::vec![
-                        ::bbnf_ir::TypeDesc::BoxedEnum,
-                        ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum))
-                    ],
-                ),
-                fields: ::std::vec![
-                    ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("mediaQuery"), type_desc :
-                    ::bbnf_ir::TypeDesc::BoxedEnum, source :
-                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 0u32, },
-                    }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("field_1"), type_desc :
-                    ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum)),
-                    source : ::bbnf_ir::registry::FieldSource::SeqPosition { position :
-                    1u32, }, }
-                ],
-            });
-        __registry
-            .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 104u32,
                 rule_name: ::std::string::String::from("mathExpr"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
@@ -10169,7 +10104,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 105u32,
+                rule_id: 104u32,
                 rule_name: ::std::string::String::from("calcFunction"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
@@ -10190,7 +10125,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 106u32,
+                rule_id: 105u32,
                 rule_name: ::std::string::String::from("minFunction"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
@@ -10215,7 +10150,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 107u32,
+                rule_id: 106u32,
                 rule_name: ::std::string::String::from("maxFunction"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
@@ -10240,7 +10175,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 108u32,
+                rule_id: 107u32,
                 rule_name: ::std::string::String::from("clampFunction"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
@@ -10270,7 +10205,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 109u32,
+                rule_id: 108u32,
                 rule_name: ::std::string::String::from("mathProduct"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
@@ -10293,7 +10228,7 @@ mod __cssl4parser_emit_impl {
             });
         __registry
             .insert(::bbnf_ir::registry::StructLayout {
-                rule_id: 110u32,
+                rule_id: 109u32,
                 rule_name: ::std::string::String::from("mathValue"),
                 kind: ::bbnf_ir::registry::LayoutKind::TaggedEnum,
                 rule_type: ::bbnf_ir::TypeDesc::HeterogeneousAltJoin(
@@ -10321,7 +10256,7 @@ mod __cssl4parser_emit_impl {
                     ::bbnf_ir::TypeDesc::BoxedEnum, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 4u32, },
                     }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("1991"), type_desc :
+                    ::std::string::String::from("1992"), type_desc :
                     ::bbnf_ir::TypeDesc::F64, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 5u32, },
                     }, ::bbnf_ir::registry::StructField { name :
@@ -10337,6 +10272,29 @@ mod __cssl4parser_emit_impl {
                     ::bbnf_ir::TypeDesc::BoxedEnum, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 8u32, },
                     }
+                ],
+            });
+        __registry
+            .insert(::bbnf_ir::registry::StructLayout {
+                rule_id: 110u32,
+                rule_name: ::std::string::String::from("mediaQueryList"),
+                kind: ::bbnf_ir::registry::LayoutKind::Struct,
+                rule_type: ::bbnf_ir::TypeDesc::Tuple(
+                    ::std::vec![
+                        ::bbnf_ir::TypeDesc::BoxedEnum,
+                        ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum))
+                    ],
+                ),
+                fields: ::std::vec![
+                    ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("field_0"), type_desc :
+                    ::bbnf_ir::TypeDesc::BoxedEnum, source :
+                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 0u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("field_1"), type_desc :
+                    ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum)),
+                    source : ::bbnf_ir::registry::FieldSource::SeqPosition { position :
+                    1u32, }, }
                 ],
             });
         __registry
@@ -10360,7 +10318,7 @@ mod __cssl4parser_emit_impl {
                     ::bbnf_ir::TypeDesc::BoxedEnum, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 1u32, },
                     }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("1992"), type_desc :
+                    ::std::string::String::from("1993"), type_desc :
                     ::bbnf_ir::TypeDesc::Span, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 2u32, },
                     }, ::bbnf_ir::registry::StructField { name :
@@ -10376,31 +10334,31 @@ mod __cssl4parser_emit_impl {
                     ::bbnf_ir::TypeDesc::BoxedEnum, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 5u32, },
                     }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("1993"), type_desc :
+                    ::std::string::String::from("1994"), type_desc :
                     ::bbnf_ir::TypeDesc::F64, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 6u32, },
                     }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("1992"), type_desc :
+                    ::std::string::String::from("1993"), type_desc :
                     ::bbnf_ir::TypeDesc::Span, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 7u32, },
                     }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("1992"), type_desc :
+                    ::std::string::String::from("1993"), type_desc :
                     ::bbnf_ir::TypeDesc::Span, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 8u32, },
                     }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("1992"), type_desc :
+                    ::std::string::String::from("1993"), type_desc :
                     ::bbnf_ir::TypeDesc::Span, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 9u32, },
                     }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("1992"), type_desc :
+                    ::std::string::String::from("1993"), type_desc :
                     ::bbnf_ir::TypeDesc::Span, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 10u32,
                     }, }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("1992"), type_desc :
+                    ::std::string::String::from("1993"), type_desc :
                     ::bbnf_ir::TypeDesc::Span, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 11u32,
                     }, }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("1992"), type_desc :
+                    ::std::string::String::from("1993"), type_desc :
                     ::bbnf_ir::TypeDesc::Span, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 12u32,
                     }, }, ::bbnf_ir::registry::StructField { name :
@@ -10408,7 +10366,7 @@ mod __cssl4parser_emit_impl {
                     ::bbnf_ir::TypeDesc::BoxedEnum, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 13u32,
                     }, }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("1992"), type_desc :
+                    ::std::string::String::from("1993"), type_desc :
                     ::bbnf_ir::TypeDesc::Span, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 14u32,
                     }, }
@@ -11336,7 +11294,7 @@ mod __cssl4parser_emit_impl {
                 ),
                 fields: ::std::vec![
                     ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("2008"), type_desc :
+                    ::std::string::String::from("2009"), type_desc :
                     ::bbnf_ir::TypeDesc::Span, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 0u32, },
                     }, ::bbnf_ir::registry::StructField { name :
@@ -11444,7 +11402,7 @@ mod __cssl4parser_emit_impl {
                     ::bbnf_ir::TypeDesc::BoxedEnum, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 26u32,
                     }, }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("2008"), type_desc :
+                    ::std::string::String::from("2009"), type_desc :
                     ::bbnf_ir::TypeDesc::Span, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 27u32,
                     }, }
@@ -11491,7 +11449,7 @@ mod __cssl4parser_emit_impl {
                 ),
                 fields: ::std::vec![
                     ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("2009"), type_desc :
+                    ::std::string::String::from("2010"), type_desc :
                     ::bbnf_ir::TypeDesc::Span, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 0u32, },
                     }, ::bbnf_ir::registry::StructField { name :
@@ -11685,7 +11643,7 @@ mod __cssl4parser_emit_impl {
                     ::bbnf_ir::TypeDesc::BoxedEnum, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 0u32, },
                     }, ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("2010"), type_desc :
+                    ::std::string::String::from("2011"), type_desc :
                     ::bbnf_ir::TypeDesc::F64, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 1u32, },
                     }
@@ -11702,7 +11660,7 @@ mod __cssl4parser_emit_impl {
                     ::std::string::String::from("mathExpr"), type_desc :
                     ::bbnf_ir::TypeDesc::BoxedEnum, source :
                     ::bbnf_ir::registry::FieldSource::RuleReference { target_rule :
-                    104u32, }, }
+                    103u32, }, }
                 ],
             });
         __registry
@@ -11857,7 +11815,7 @@ mod __cssl4parser_emit_impl {
                     ::std::string::String::from("mathExpr"), type_desc :
                     ::bbnf_ir::TypeDesc::BoxedEnum, source :
                     ::bbnf_ir::registry::FieldSource::RuleReference { target_rule :
-                    104u32, }, }
+                    103u32, }, }
                 ],
             });
         __registry
@@ -12745,8 +12703,9 @@ mod __cssl4parser_emit_impl {
     static __DTA_REGEX_1403: &str = "[^)]+";
     static __DTA_REGEX_1444: &str = "[iIsS]";
     static __DTA_REGEX_1463: &str = "[a-zA-Z_][\\w-]*";
-    static __DTA_REGEX_2329: &str = "@[a-zA-Z][\\w-]*";
-    static __DTA_REGEX_2330: &str = "[^;{}]*";
+    static __DTA_REGEX_2293: &str = "@(-[a-z]+-)?keyframes";
+    static __DTA_REGEX_2333: &str = "@-?[a-zA-Z][\\w-]*";
+    static __DTA_REGEX_2334: &str = "[^;{}]*";
     /// AY.W4.3 — hoisted DFA byte-class equivalence table.
     /// Consumed by `emit_dfa_body_table_driven` emitted in
     /// the same translation unit; AY-II.W0'.c retired the
@@ -12778,6 +12737,45 @@ mod __cssl4parser_emit_impl {
     /// via the same hoist-branch pairing as the byte-class
     /// table above.
     pub(crate) const __DFA_ACCEPT_CssL4Parser_19: [u64; 1] = [629];
+    /// AY.W4.3 — hoisted DFA byte-class equivalence table.
+    /// Consumed by `emit_dfa_body_table_driven` emitted in
+    /// the same translation unit; AY-II.W0'.c retired the
+    /// `#[allow(dead_code)]` marker — the emission pairs the
+    /// tables with their consumer 1:1 at
+    /// `emit_regex_scan_adapter`'s `state_count >=
+    /// DFA_HOIST_MIN_STATES` branch.
+    pub(crate) const __DFA_CLASSES_CssL4Parser_27: [u8; 256] = [
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 4, 4, 4, 5, 6, 4, 4, 4, 4, 7,
+        4, 8, 4, 4, 4, 4, 9, 10, 4, 4, 4, 4, 4, 11, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    ];
+    /// AY.W4.3 — hoisted DFA flat transition table
+    /// (state * num_classes + class -> target_state |
+    /// 0xFF=DEAD). Consumed via the same hoist-branch pairing
+    /// as the byte-class table above.
+    pub(crate) const __DFA_TRANS_CssL4Parser_27: [u8; 168] = [
+        255, 255, 2, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 3, 255, 255, 255, 255, 255, 5, 255,
+        255, 255, 255, 255, 255, 255, 4, 4, 4, 4, 4, 4, 4, 4, 4, 255, 9, 255, 4, 4, 4, 4,
+        4, 4, 4, 4, 4, 255, 255, 255, 255, 255, 7, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 10, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 8, 255, 255, 255, 255, 255, 255, 11, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 5, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 13, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 6, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 1,
+        255, 255, 255, 255, 255, 255, 12, 255, 255, 255, 255, 255, 255,
+    ];
+    /// AY.W4.3 — hoisted DFA accept-state bitset. Consumed
+    /// via the same hoist-branch pairing as the byte-class
+    /// table above.
+    pub(crate) const __DFA_ACCEPT_CssL4Parser_27: [u64; 1] = [2];
     /// AY.W4.3 — per-pattern (LAST-byte-set lo, hi) packed
     /// `CharSet128` tuples. `(0, 0)` means narrowing is
     /// disabled for that pattern (suffix not deterministic).
@@ -12787,7 +12785,7 @@ mod __cssl4parser_emit_impl {
     /// contain any byte in the LAST set, the regex cannot
     /// complete a match — skip the DFA walk entirely.
     #[allow(dead_code)]
-    pub(crate) const __REGEX_LAST_BYTE_SET_CssL4Parser: [(u64, u64); 29] = [
+    pub(crate) const __REGEX_LAST_BYTE_SET_CssL4Parser: [(u64, u64); 30] = [
         (0, 0),
         (0, 0),
         (0, 0),
@@ -12815,6 +12813,7 @@ mod __cssl4parser_emit_impl {
         (0, 0),
         (0, 0),
         (0, 0),
+        (0, 2251799813685248),
         (0, 0),
         (0, 0),
     ];
@@ -15464,11 +15463,66 @@ mod __cssl4parser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_2329.as_ptr())
-            || pattern == __DTA_REGEX_2329
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_2293.as_ptr())
+            || pattern == __DTA_REGEX_2293
         {
             if input.len() >= 64 * 1024 {
                 let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssL4Parser[27];
+                if (__lb_lo | __lb_hi) != 0 {
+                    let __scan_end = (pos + 256).min(input.len());
+                    let __slice = &input[pos..__scan_end];
+                    let mut __found = false;
+                    for &__b in __slice {
+                        let __test = if __b < 64 {
+                            (__lb_lo >> __b) & 1
+                        } else if __b < 128 {
+                            (__lb_hi >> (__b - 64)) & 1
+                        } else {
+                            0
+                        };
+                        if __test != 0 {
+                            __found = true;
+                            break;
+                        }
+                    }
+                    if !__found && __scan_end == input.len() {
+                        return ::core::option::Option::None;
+                    }
+                }
+            }
+            return '__dfa: {
+                let mut __dfa_state: u8 = 0;
+                let mut __dfa_p: usize = pos;
+                let mut __dfa_last_match: ::core::option::Option<u32> = ::core::option::Option::None;
+                let __end = input.len();
+                while __dfa_p < __end {
+                    let __b = unsafe { *input.get_unchecked(__dfa_p) };
+                    let __c = unsafe {
+                        *__DFA_CLASSES_CssL4Parser_27.get_unchecked(__b as usize)
+                    };
+                    let __next = unsafe {
+                        *__DFA_TRANS_CssL4Parser_27
+                            .get_unchecked(__dfa_state as usize * 12 + __c as usize)
+                    };
+                    if __next == 0xFF {
+                        break;
+                    }
+                    __dfa_state = __next;
+                    __dfa_p += 1;
+                    if (__DFA_ACCEPT_CssL4Parser_27[__dfa_state as usize / 64]
+                        >> (__dfa_state as usize % 64)) & 1 != 0
+                    {
+                        __dfa_last_match = ::core::option::Option::Some(__dfa_p as u32);
+                    }
+                }
+                break '__dfa __dfa_last_match.map(|end| end - pos as u32);
+            };
+        }
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_2333.as_ptr())
+            || pattern == __DTA_REGEX_2333
+        {
+            if input.len() >= 64 * 1024 {
+                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssL4Parser[28];
                 if (__lb_lo | __lb_hi) != 0 {
                     let __scan_end = (pos + 256).min(input.len());
                     let __slice = &input[pos..__scan_end];
@@ -15525,6 +15579,17 @@ mod __cssl4parser_emit_impl {
                                 | 89 | 90 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105
                                 | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115
                                 | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 1,
+                                45 => __dfa_state = 3,
+                                _ => break,
+                            }
+                        }
+                        3 => {
+                            match b {
+                                65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76
+                                | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88
+                                | 89 | 90 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105
+                                | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115
+                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 1,
                                 _ => break,
                             }
                         }
@@ -15543,11 +15608,11 @@ mod __cssl4parser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_2330.as_ptr())
-            || pattern == __DTA_REGEX_2330
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_2334.as_ptr())
+            || pattern == __DTA_REGEX_2334
         {
             if input.len() >= 64 * 1024 {
-                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssL4Parser[28];
+                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssL4Parser[29];
                 if (__lb_lo | __lb_hi) != 0 {
                     let __scan_end = (pos + 256).min(input.len());
                     let __slice = &input[pos..__scan_end];
@@ -46314,7 +46379,7 @@ mod __cssl4parser_emit_impl {
     /// `-> Span` or whose host walker reads via `byte_span()`).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssL4Parser_mediaQuery<'p, __P>(
+    pub fn parse_flat_CssL4Parser_mediaTypedQuery<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
@@ -46329,18 +46394,18 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(88u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __mediaQuery_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        let __mediaTypedQuery_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 88u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("mediaQuery"),
+            rule_name: ::std::string::String::from("mediaTypedQuery"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let __mediaQuery_handle = <crate::runtime::css_l4::CssStructBuilder<
+        let __mediaTypedQuery_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__mediaQuery_layout,
+            &__mediaTypedQuery_layout,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -46560,7 +46625,7 @@ mod __cssl4parser_emit_impl {
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(
                     builder,
-                    __mediaQuery_handle,
+                    __mediaTypedQuery_handle,
                 );
                 ::core::result::Result::Ok(())
             }
@@ -48532,138 +48597,6 @@ mod __cssl4parser_emit_impl {
         unused_mut,
         unused_assignments
     )]
-    pub fn parse_pratt_CssL4Parser_mediaQueryList<'p, __P>(
-        input: &'p [u8],
-        p: &mut usize,
-        state: &mut __shape_support_CssL4Parser::ScanState,
-        builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
-    ) -> ::core::result::Result<(), crate::runtime::DtaError>
-    where
-        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
-    {
-        let _ = cursor;
-        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-        let __mediaQueryList_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 103u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("mediaQueryList"),
-            kind: ::bbnf_ir::registry::LayoutKind::Struct,
-            rule_type: ::bbnf_ir::TypeDesc::Span,
-            fields: ::std::vec::Vec::new(),
-        };
-        let __mediaQueryList_handle = <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::begin_compound(
-            builder,
-            &__mediaQueryList_layout,
-        );
-        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
-            let _ = ({
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                parse_flat_CssL4Parser_mediaQuery(input, p, state, builder, cursor)
-            })?;
-            loop {
-                let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
-                let mut lut_byte: u8 = PRECEDENCE_LUT_mediaQueryList[op_byte as usize];
-                if lut_byte == 0 {
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    op_byte = input.get(*p).copied().unwrap_or(0);
-                    lut_byte = PRECEDENCE_LUT_mediaQueryList[op_byte as usize];
-                }
-                if lut_byte == 0 {
-                    break;
-                }
-                let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
-                let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
-                let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
-                    let mut found_disc: u8 = 0u8;
-                    let mut matched: bool = false;
-                    for e in PRECEDENCE_ENTRIES_mediaQueryList.iter() {
-                        if e.byte == op_byte && e.second_byte.is_none() {
-                            found_disc = e.op_discriminant;
-                            matched = true;
-                            break;
-                        }
-                    }
-                    (1u32, found_disc, matched)
-                } else {
-                    let mut found_disc: u8 = 0u8;
-                    let mut matched_two_byte: bool = false;
-                    let mut matched_single: bool = false;
-                    for e in PRECEDENCE_ENTRIES_mediaQueryList.iter() {
-                        if e.byte == op_byte && e.second_byte == second_byte {
-                            found_disc = e.op_discriminant;
-                            matched_two_byte = e.second_byte.is_some();
-                            break;
-                        }
-                    }
-                    if !matched_two_byte {
-                        for e in PRECEDENCE_ENTRIES_mediaQueryList.iter() {
-                            if e.byte == op_byte && e.second_byte.is_none() {
-                                found_disc = e.op_discriminant;
-                                matched_single = true;
-                                break;
-                            }
-                        }
-                    }
-                    let width = if matched_two_byte { 2u32 } else { 1u32 };
-                    (width, found_disc, matched_two_byte || matched_single)
-                };
-                if !op_matched {
-                    break;
-                }
-                <crate::runtime::css_l4::CssStructBuilder<
-                    '_,
-                > as crate::runtime::StructBuilder>::push_branch_tag(
-                    builder,
-                    op_discriminant as u32,
-                );
-                *p = (*p).saturating_add(op_width as usize);
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_mediaQuery(input, p, state, builder, cursor)
-                })?;
-            }
-            ::core::result::Result::Ok(())
-        })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __mediaQueryList_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(())
-    }
-    /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
-    /// function, **struct-direct body**. Targets the grammar's
-    /// concrete `StructBuilder`.
-    ///
-    /// Opens a compound for the rule (e.g. `add_expr` →
-    /// `SheetsCompoundKind::AddExpr`), dispatches operands +
-    /// stamps operator branch tags inline, closes the compound.
-    /// Children land in the order
-    /// `[lhs_subtree, op_tag, rhs_subtree, op_tag, …]` — the
-    /// rule's structural alphabet is preserved verbatim;
-    /// associativity-honouring binary-tree reduction is a
-    /// consumer-side projection (the generated module exposes
-    /// `PRECEDENCE_LUT_<rule>` + `PRECEDENCE_ENTRIES_<rule>` for
-    /// that purpose).
-    ///
-    /// Returns unit for StructDirect composition
-    /// with sibling shape fns under struct-direct mode.
-    ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
-    /// cross-shape recursive edge through the value dispatcher.
-    #[inline]
-    #[allow(
-        non_snake_case,
-        clippy::too_many_arguments,
-        unused_variables,
-        unused_mut,
-        unused_assignments
-    )]
     pub fn parse_pratt_CssL4Parser_mathExpr<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
@@ -48677,7 +48610,7 @@ mod __cssl4parser_emit_impl {
         let _ = cursor;
         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
         let __mathExpr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 104u32 as ::bbnf_ir::RuleId,
+            rule_id: 103u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("mathExpr"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -48785,7 +48718,7 @@ mod __cssl4parser_emit_impl {
     {
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 105u32 as ::bbnf_ir::RuleId,
+            rule_id: 104u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("calcFunction"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -48869,7 +48802,7 @@ mod __cssl4parser_emit_impl {
     {
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 106u32 as ::bbnf_ir::RuleId,
+            rule_id: 105u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("minFunction"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -48981,7 +48914,7 @@ mod __cssl4parser_emit_impl {
     {
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 107u32 as ::bbnf_ir::RuleId,
+            rule_id: 106u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("maxFunction"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -49093,7 +49026,7 @@ mod __cssl4parser_emit_impl {
     {
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 108u32 as ::bbnf_ir::RuleId,
+            rule_id: 107u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("clampFunction"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -49219,7 +49152,7 @@ mod __cssl4parser_emit_impl {
         let _ = cursor;
         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
         let __mathProduct_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 109u32 as ::bbnf_ir::RuleId,
+            rule_id: 108u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("mathProduct"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -49343,7 +49276,7 @@ mod __cssl4parser_emit_impl {
                 offset: *p as u32,
             })?;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 110u32 as ::bbnf_ir::RuleId,
+            rule_id: 109u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("mathValue"),
             kind: ::bbnf_ir::registry::LayoutKind::TaggedEnum,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -49613,6 +49546,303 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__dispatch_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
+    }
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
+    ///
+    /// Compound emission lands as typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
+    ///
+    /// Returns unit for StructDirect composition
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
+    ///
+    /// AZ-III.W2.4.r — content-only bodies (no Ref /
+    /// TokenDispatch in the IR) capture `*p` before and after
+    /// the per-position emission and push one synthetic Span
+    /// leaf carrying the consumed source slice; this restores
+    /// the contract `bootstrap_parser` met for `regex` /
+    /// `literal` / `comment` / `big_comment` / `import_path`
+    /// (all flat-shape rules whose grammar projection is
+    /// `-> Span` or whose host walker reads via `byte_span()`).
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_CssL4Parser_mediaQueryList<'p, __P>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_CssL4Parser::ScanState,
+        builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
+        cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
+    ) -> ::core::result::Result<(), crate::runtime::DtaError>
+    where
+        __P: for<'__c> crate::path::schema::PathSchema<'__c>,
+    {
+        use crate::runtime::builder::StructBuilder as _;
+        use crate::path::cursor::Decision as __Decision;
+        let __decision: __Decision = cursor.decide(110u32 as u32);
+        let __flat_checkpoint = builder.checkpoint();
+        let __compound_start: u32 = *p as u32;
+        let __mediaQueryList_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 110u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("mediaQueryList"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __mediaQueryList_handle = <crate::runtime::css_l4::CssStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__mediaQueryList_layout,
+        );
+        <crate::runtime::css_l4::CssStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
+        );
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            {
+                'try_branches: loop {
+                    {
+                        let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
+                        let __alt_result: ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > = (|| {
+                            let _ = ({
+                                let _ = __shape_support_CssL4Parser::skip_space(
+                                    input,
+                                    p,
+                                    state,
+                                );
+                                parse_wrap_CssL4Parser_mediaCondition(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                    cursor,
+                                )
+                            })?;
+                            Ok(())
+                        })();
+                        match __alt_result {
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
+                            Err(_) => {
+                                *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
+                            }
+                        }
+                    }
+                    {
+                        let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
+                        let __alt_result: ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > = (|| {
+                            let _ = ({
+                                let _ = __shape_support_CssL4Parser::skip_space(
+                                    input,
+                                    p,
+                                    state,
+                                );
+                                parse_flat_CssL4Parser_mediaTypedQuery(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                    cursor,
+                                )
+                            })?;
+                            Ok(())
+                        })();
+                        match __alt_result {
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
+                            Err(_) => {
+                                *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
+                            }
+                        }
+                    }
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                        offset: *p as u32,
+                    });
+                }
+            }
+            {
+                {
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 4294967295u32 {
+                            break;
+                        }
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
+                        }
+                        let __iter_builder_checkpoint = builder.checkpoint();
+                        let __iter_result: ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > = (|| {
+                            let _ = __shape_support_CssL4Parser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [44u8] {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                    offset: at as u32,
+                                });
+                            }
+                            *p = end;
+                            let _ = __shape_support_CssL4Parser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            'try_branches: loop {
+                                {
+                                    let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
+                                    let __alt_result: ::core::result::Result<
+                                        (),
+                                        crate::runtime::DtaError,
+                                    > = (|| {
+                                        let _ = ({
+                                            let _ = __shape_support_CssL4Parser::skip_space(
+                                                input,
+                                                p,
+                                                state,
+                                            );
+                                            parse_wrap_CssL4Parser_mediaCondition(
+                                                input,
+                                                p,
+                                                state,
+                                                builder,
+                                                cursor,
+                                            )
+                                        })?;
+                                        Ok(())
+                                    })();
+                                    match __alt_result {
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
+                                        Err(_) => {
+                                            *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
+                                        }
+                                    }
+                                }
+                                {
+                                    let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
+                                    let __alt_result: ::core::result::Result<
+                                        (),
+                                        crate::runtime::DtaError,
+                                    > = (|| {
+                                        let _ = ({
+                                            let _ = __shape_support_CssL4Parser::skip_space(
+                                                input,
+                                                p,
+                                                state,
+                                            );
+                                            parse_flat_CssL4Parser_mediaTypedQuery(
+                                                input,
+                                                p,
+                                                state,
+                                                builder,
+                                                cursor,
+                                            )
+                                        })?;
+                                        Ok(())
+                                    })();
+                                    match __alt_result {
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
+                                        Err(_) => {
+                                            *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
+                                        }
+                                    }
+                                }
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                    offset: *p as u32,
+                                });
+                            }
+                            Ok(())
+                        })();
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
+                                    break;
+                                }
+                                builder.commit(__iter_builder_checkpoint);
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
+                                break;
+                            }
+                        }
+                    }
+                    if __iter_count < 0u32 {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                            offset: *p as u32,
+                        });
+                    }
+                }
+            }
+            ::core::result::Result::Ok(())
+        })();
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+                    builder,
+                    *p as u32,
+                );
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __mediaQueryList_handle,
+                );
+                ::core::result::Result::Ok(())
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
                 ::core::result::Result::Err(__err)
             }
         }
@@ -60523,20 +60753,19 @@ mod __cssl4parser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                let at = *p;
-                let end = at + 10usize;
-                if input.len() < end
-                    || input[at..end]
-                        != [
-                            64u8, 107u8, 101u8, 121u8, 102u8, 114u8, 97u8, 109u8, 101u8,
-                            115u8,
-                        ]
                 {
-                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                        offset: at as u32,
-                    });
+                    let __scan_start = *p;
+                    let Some(match_len) = __regex_scan_CssL4Parser(
+                        "@(-[a-z]+-)?keyframes",
+                        input,
+                        *p,
+                    ) else {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                            offset: __scan_start as u32,
+                        });
+                    };
+                    *p += match_len as usize;
                 }
-                *p = end;
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             }
             {
@@ -60903,7 +61132,7 @@ mod __cssl4parser_emit_impl {
                 {
                     let __scan_start = *p;
                     let Some(match_len) = __regex_scan_CssL4Parser(
-                        "@[a-zA-Z][\\w-]*",
+                        "@-?[a-zA-Z][\\w-]*",
                         input,
                         *p,
                     ) else {
@@ -61278,7 +61507,7 @@ mod __cssl4parser_emit_impl {
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 let _ = ({
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_pratt_CssL4Parser_mediaQueryList(
+                    parse_flat_CssL4Parser_mediaQueryList(
                         input,
                         p,
                         state,
@@ -61360,172 +61589,10 @@ mod __cssl4parser_emit_impl {
             })?;
         'try_branches: loop {
             match first {
-                44u8 => {
-                    let attempt_p = *p;
-                    let attempt_builder = builder.checkpoint();
-                    match parse_flat_CssL4Parser_mediaRule(
-                        input,
-                        p,
-                        state,
-                        builder,
-                        cursor,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            builder.commit(attempt_builder);
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                            builder.rollback(attempt_builder);
-                        }
-                    }
-                }
                 64u8 => {
-                    {
-                        let attempt_p = *p;
-                        let attempt_builder = builder.checkpoint();
-                        match parse_flat_CssL4Parser_mediaRule(
-                            input,
-                            p,
-                            state,
-                            builder,
-                            cursor,
-                        ) {
-                            ::core::result::Result::Ok(_) => {
-                                builder.commit(attempt_builder);
-                                break 'try_branches;
-                            }
-                            ::core::result::Result::Err(_) => {
-                                *p = attempt_p;
-                                builder.rollback(attempt_builder);
-                            }
-                        }
-                    }
-                    {
-                        let attempt_p = *p;
-                        let attempt_builder = builder.checkpoint();
-                        match parse_flat_CssL4Parser_genericAtRule(
-                            input,
-                            p,
-                            state,
-                            builder,
-                            cursor,
-                        ) {
-                            ::core::result::Result::Ok(_) => {
-                                builder.commit(attempt_builder);
-                                break 'try_branches;
-                            }
-                            ::core::result::Result::Err(_) => {
-                                *p = attempt_p;
-                                builder.rollback(attempt_builder);
-                            }
-                        }
-                    }
-                }
-                97u8 => {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
-                    match parse_flat_CssL4Parser_mediaRule(
-                        input,
-                        p,
-                        state,
-                        builder,
-                        cursor,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            builder.commit(attempt_builder);
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                            builder.rollback(attempt_builder);
-                        }
-                    }
-                }
-                110u8 => {
-                    let attempt_p = *p;
-                    let attempt_builder = builder.checkpoint();
-                    match parse_flat_CssL4Parser_mediaRule(
-                        input,
-                        p,
-                        state,
-                        builder,
-                        cursor,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            builder.commit(attempt_builder);
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                            builder.rollback(attempt_builder);
-                        }
-                    }
-                }
-                111u8 => {
-                    let attempt_p = *p;
-                    let attempt_builder = builder.checkpoint();
-                    match parse_flat_CssL4Parser_mediaRule(
-                        input,
-                        p,
-                        state,
-                        builder,
-                        cursor,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            builder.commit(attempt_builder);
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                            builder.rollback(attempt_builder);
-                        }
-                    }
-                }
-                112u8 => {
-                    let attempt_p = *p;
-                    let attempt_builder = builder.checkpoint();
-                    match parse_flat_CssL4Parser_mediaRule(
-                        input,
-                        p,
-                        state,
-                        builder,
-                        cursor,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            builder.commit(attempt_builder);
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                            builder.rollback(attempt_builder);
-                        }
-                    }
-                }
-                115u8 => {
-                    let attempt_p = *p;
-                    let attempt_builder = builder.checkpoint();
-                    match parse_flat_CssL4Parser_mediaRule(
-                        input,
-                        p,
-                        state,
-                        builder,
-                        cursor,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            builder.commit(attempt_builder);
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                            builder.rollback(attempt_builder);
-                        }
-                    }
-                }
-                123u8 => {
-                    let attempt_p = *p;
-                    let attempt_builder = builder.checkpoint();
-                    match parse_flat_CssL4Parser_mediaRule(
+                    match parse_flat_CssL4Parser_genericAtRule(
                         input,
                         p,
                         state,
@@ -61543,6 +61610,26 @@ mod __cssl4parser_emit_impl {
                     }
                 }
                 _ => {}
+            }
+            {
+                let attempt_p = *p;
+                let attempt_builder = builder.checkpoint();
+                match parse_flat_CssL4Parser_mediaRule(
+                    input,
+                    p,
+                    state,
+                    builder,
+                    cursor,
+                ) {
+                    ::core::result::Result::Ok(_) => {
+                        builder.commit(attempt_builder);
+                        break 'try_branches;
+                    }
+                    ::core::result::Result::Err(_) => {
+                        *p = attempt_p;
+                        builder.rollback(attempt_builder);
+                    }
+                }
             }
             {
                 let attempt_p = *p;
@@ -93355,7 +93442,7 @@ mod __cssl4parser_emit_impl {
                 Some(__builder.finish())
             })
         }
-        fn __mediaQuery_prettify<'a>(
+        fn __mediaTypedQuery_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -93455,12 +93542,12 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn mediaQuery_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn mediaTypedQuery_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::__mediaQuery_prettify(state, &mut __builder) {
+                if !Self::__mediaTypedQuery_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
@@ -94633,78 +94720,6 @@ mod __cssl4parser_emit_impl {
                 Some(__builder.finish())
             })
         }
-        fn __mediaQueryList_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            {
-                {
-                    if !Self::__mediaQuery_prettify(state, __builder) {
-                        return false;
-                    }
-                    {
-                        let mut __rep_count389 = 0usize;
-                        while __rep_count389 < 4294967295 {
-                            let __rep_cp390 = state.offset;
-                            if !{
-                                let __pretty_cp387 = state.offset;
-                                let __pretty_bcp388 = __builder.checkpoint();
-                                let __ok = (|| -> bool {
-                                    {
-                                        {
-                                            let __ows384 = state.offset;
-                                            let _ = ::parse_that::scan_ws_block_comments(state);
-                                            let __ows385 = state.offset;
-                                            {
-                                                if state.src_bytes.get(state.offset).copied() != Some(b',')
-                                                {
-                                                    return false;
-                                                }
-                                                state.offset += 1;
-                                                __builder.char(b',');
-                                            };
-                                            __builder.text_inline_ws(&state.src[__ows384..__ows385]);
-                                            let __ows386 = state.offset;
-                                            let _ = ::parse_that::scan_ws_block_comments(state);
-                                            __builder
-                                                .text_inline_ws(&state.src[__ows386..state.offset]);
-                                        };
-                                        if !Self::__mediaQuery_prettify(state, __builder) {
-                                            return false;
-                                        }
-                                    };
-                                    true
-                                })();
-                                if !__ok {
-                                    state.offset = __pretty_cp387;
-                                    __builder.restore(__pretty_bcp388);
-                                }
-                                __ok
-                            } {
-                                state.offset = __rep_cp390;
-                                break;
-                            }
-                            if state.offset == __rep_cp390 {
-                                break;
-                            }
-                            __rep_count389 += 1;
-                        }
-                    };
-                };
-                true
-            }
-        }
-        pub fn mediaQueryList_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__mediaQueryList_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
         fn __mathExpr_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -94715,12 +94730,12 @@ mod __cssl4parser_emit_impl {
                         return false;
                     }
                     {
-                        let mut __rep_count393 = 0usize;
-                        while __rep_count393 < 4294967295 {
-                            let __rep_cp394 = state.offset;
+                        let mut __rep_count386 = 0usize;
+                        while __rep_count386 < 4294967295 {
+                            let __rep_cp387 = state.offset;
                             if !{
-                                let __pretty_cp391 = state.offset;
-                                let __pretty_bcp392 = __builder.checkpoint();
+                                let __pretty_cp384 = state.offset;
+                                let __pretty_bcp385 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !Self::__mathSumOp_prettify(state, __builder) {
@@ -94733,18 +94748,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp391;
-                                    __builder.restore(__pretty_bcp392);
+                                    state.offset = __pretty_cp384;
+                                    __builder.restore(__pretty_bcp385);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp394;
+                                state.offset = __rep_cp387;
                                 break;
                             }
-                            if state.offset == __rep_cp394 {
+                            if state.offset == __rep_cp387 {
                                 break;
                             }
-                            __rep_count393 += 1;
+                            __rep_count386 += 1;
                         }
                     };
                 };
@@ -94852,14 +94867,14 @@ mod __cssl4parser_emit_impl {
                                     return false;
                                 }
                                 {
-                                    let __rep_start399 = state.offset;
-                                    let __rep_bcp400 = __builder.checkpoint();
-                                    let mut __rep_count397 = 0usize;
-                                    while __rep_count397 < 4294967295 {
-                                        let __rep_cp398 = state.offset;
+                                    let __rep_start392 = state.offset;
+                                    let __rep_bcp393 = __builder.checkpoint();
+                                    let mut __rep_count390 = 0usize;
+                                    while __rep_count390 < 4294967295 {
+                                        let __rep_cp391 = state.offset;
                                         if !{
-                                            let __pretty_cp395 = state.offset;
-                                            let __pretty_bcp396 = __builder.checkpoint();
+                                            let __pretty_cp388 = state.offset;
+                                            let __pretty_bcp389 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
                                                     {
@@ -94877,22 +94892,22 @@ mod __cssl4parser_emit_impl {
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp395;
-                                                __builder.restore(__pretty_bcp396);
+                                                state.offset = __pretty_cp388;
+                                                __builder.restore(__pretty_bcp389);
                                             }
                                             __ok
                                         } {
-                                            state.offset = __rep_cp398;
+                                            state.offset = __rep_cp391;
                                             break;
                                         }
-                                        if state.offset == __rep_cp398 {
+                                        if state.offset == __rep_cp391 {
                                             break;
                                         }
-                                        __rep_count397 += 1;
+                                        __rep_count390 += 1;
                                     }
-                                    if __rep_count397 < 1 {
-                                        state.offset = __rep_start399;
-                                        __builder.restore(__rep_bcp400);
+                                    if __rep_count390 < 1 {
+                                        state.offset = __rep_start392;
+                                        __builder.restore(__rep_bcp393);
                                         return false;
                                     }
                                 };
@@ -94955,14 +94970,14 @@ mod __cssl4parser_emit_impl {
                                     return false;
                                 }
                                 {
-                                    let __rep_start405 = state.offset;
-                                    let __rep_bcp406 = __builder.checkpoint();
-                                    let mut __rep_count403 = 0usize;
-                                    while __rep_count403 < 4294967295 {
-                                        let __rep_cp404 = state.offset;
+                                    let __rep_start398 = state.offset;
+                                    let __rep_bcp399 = __builder.checkpoint();
+                                    let mut __rep_count396 = 0usize;
+                                    while __rep_count396 < 4294967295 {
+                                        let __rep_cp397 = state.offset;
                                         if !{
-                                            let __pretty_cp401 = state.offset;
-                                            let __pretty_bcp402 = __builder.checkpoint();
+                                            let __pretty_cp394 = state.offset;
+                                            let __pretty_bcp395 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
                                                     {
@@ -94980,22 +94995,22 @@ mod __cssl4parser_emit_impl {
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp401;
-                                                __builder.restore(__pretty_bcp402);
+                                                state.offset = __pretty_cp394;
+                                                __builder.restore(__pretty_bcp395);
                                             }
                                             __ok
                                         } {
-                                            state.offset = __rep_cp404;
+                                            state.offset = __rep_cp397;
                                             break;
                                         }
-                                        if state.offset == __rep_cp404 {
+                                        if state.offset == __rep_cp397 {
                                             break;
                                         }
-                                        __rep_count403 += 1;
+                                        __rep_count396 += 1;
                                     }
-                                    if __rep_count403 < 1 {
-                                        state.offset = __rep_start405;
-                                        __builder.restore(__rep_bcp406);
+                                    if __rep_count396 < 1 {
+                                        state.offset = __rep_start398;
+                                        __builder.restore(__rep_bcp399);
                                         return false;
                                     }
                                 };
@@ -95114,12 +95129,12 @@ mod __cssl4parser_emit_impl {
                         return false;
                     }
                     {
-                        let mut __rep_count409 = 0usize;
-                        while __rep_count409 < 4294967295 {
-                            let __rep_cp410 = state.offset;
+                        let mut __rep_count402 = 0usize;
+                        while __rep_count402 < 4294967295 {
+                            let __rep_cp403 = state.offset;
                             if !{
-                                let __pretty_cp407 = state.offset;
-                                let __pretty_bcp408 = __builder.checkpoint();
+                                let __pretty_cp400 = state.offset;
+                                let __pretty_bcp401 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !Self::__mathProductOp_prettify(state, __builder) {
@@ -95132,18 +95147,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp407;
-                                    __builder.restore(__pretty_bcp408);
+                                    state.offset = __pretty_cp400;
+                                    __builder.restore(__pretty_bcp401);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp410;
+                                state.offset = __rep_cp403;
                                 break;
                             }
-                            if state.offset == __rep_cp410 {
+                            if state.offset == __rep_cp403 {
                                 break;
                             }
-                            __rep_count409 += 1;
+                            __rep_count402 += 1;
                         }
                     };
                 };
@@ -95168,8 +95183,8 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     if !{
-                        let __pretty_cp426 = state.offset;
-                        let __pretty_bcp427 = __builder.checkpoint();
+                        let __pretty_cp419 = state.offset;
+                        let __pretty_bcp420 = __builder.checkpoint();
                         let __ok = (|| -> bool {
                             if !Self::__calcFunction_prettify(state, __builder) {
                                 return false;
@@ -95177,15 +95192,15 @@ mod __cssl4parser_emit_impl {
                             true
                         })();
                         if !__ok {
-                            state.offset = __pretty_cp426;
-                            __builder.restore(__pretty_bcp427);
+                            state.offset = __pretty_cp419;
+                            __builder.restore(__pretty_bcp420);
                         }
                         __ok
                     } {
                         {
                             if !{
-                                let __pretty_cp424 = state.offset;
-                                let __pretty_bcp425 = __builder.checkpoint();
+                                let __pretty_cp417 = state.offset;
+                                let __pretty_bcp418 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     if !Self::__minFunction_prettify(state, __builder) {
                                         return false;
@@ -95193,15 +95208,15 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp424;
-                                    __builder.restore(__pretty_bcp425);
+                                    state.offset = __pretty_cp417;
+                                    __builder.restore(__pretty_bcp418);
                                 }
                                 __ok
                             } {
                                 {
                                     if !{
-                                        let __pretty_cp422 = state.offset;
-                                        let __pretty_bcp423 = __builder.checkpoint();
+                                        let __pretty_cp415 = state.offset;
+                                        let __pretty_bcp416 = __builder.checkpoint();
                                         let __ok = (|| -> bool {
                                             if !Self::__maxFunction_prettify(state, __builder) {
                                                 return false;
@@ -95209,15 +95224,15 @@ mod __cssl4parser_emit_impl {
                                             true
                                         })();
                                         if !__ok {
-                                            state.offset = __pretty_cp422;
-                                            __builder.restore(__pretty_bcp423);
+                                            state.offset = __pretty_cp415;
+                                            __builder.restore(__pretty_bcp416);
                                         }
                                         __ok
                                     } {
                                         {
                                             if !{
-                                                let __pretty_cp420 = state.offset;
-                                                let __pretty_bcp421 = __builder.checkpoint();
+                                                let __pretty_cp413 = state.offset;
+                                                let __pretty_bcp414 = __builder.checkpoint();
                                                 let __ok = (|| -> bool {
                                                     if !Self::__clampFunction_prettify(state, __builder) {
                                                         return false;
@@ -95225,15 +95240,15 @@ mod __cssl4parser_emit_impl {
                                                     true
                                                 })();
                                                 if !__ok {
-                                                    state.offset = __pretty_cp420;
-                                                    __builder.restore(__pretty_bcp421);
+                                                    state.offset = __pretty_cp413;
+                                                    __builder.restore(__pretty_bcp414);
                                                 }
                                                 __ok
                                             } {
                                                 {
                                                     if !{
-                                                        let __pretty_cp418 = state.offset;
-                                                        let __pretty_bcp419 = __builder.checkpoint();
+                                                        let __pretty_cp411 = state.offset;
+                                                        let __pretty_bcp412 = __builder.checkpoint();
                                                         let __ok = (|| -> bool {
                                                             if !Self::__valueUnit_prettify(state, __builder) {
                                                                 return false;
@@ -95241,14 +95256,14 @@ mod __cssl4parser_emit_impl {
                                                             true
                                                         })();
                                                         if !__ok {
-                                                            state.offset = __pretty_cp418;
-                                                            __builder.restore(__pretty_bcp419);
+                                                            state.offset = __pretty_cp411;
+                                                            __builder.restore(__pretty_bcp412);
                                                         }
                                                         __ok
                                                     } {
                                                         {
                                                             if !{
-                                                                let __pretty_cp417 = state.offset;
+                                                                let __pretty_cp410 = state.offset;
                                                                 let __ok = (|| -> bool {
                                                                     {
                                                                         let __start = state.offset;
@@ -95393,14 +95408,14 @@ mod __cssl4parser_emit_impl {
                                                                     true
                                                                 })();
                                                                 if !__ok {
-                                                                    state.offset = __pretty_cp417;
+                                                                    state.offset = __pretty_cp410;
                                                                 }
                                                                 __ok
                                                             } {
                                                                 {
                                                                     if !{
-                                                                        let __pretty_cp415 = state.offset;
-                                                                        let __pretty_bcp416 = __builder.checkpoint();
+                                                                        let __pretty_cp408 = state.offset;
+                                                                        let __pretty_bcp409 = __builder.checkpoint();
                                                                         let __ok = (|| -> bool {
                                                                             {
                                                                                 {
@@ -95428,15 +95443,15 @@ mod __cssl4parser_emit_impl {
                                                                             true
                                                                         })();
                                                                         if !__ok {
-                                                                            state.offset = __pretty_cp415;
-                                                                            __builder.restore(__pretty_bcp416);
+                                                                            state.offset = __pretty_cp408;
+                                                                            __builder.restore(__pretty_bcp409);
                                                                         }
                                                                         __ok
                                                                     } {
                                                                         {
                                                                             if !{
-                                                                                let __pretty_cp413 = state.offset;
-                                                                                let __pretty_bcp414 = __builder.checkpoint();
+                                                                                let __pretty_cp406 = state.offset;
+                                                                                let __pretty_bcp407 = __builder.checkpoint();
                                                                                 let __ok = (|| -> bool {
                                                                                     if !Self::__varFunction_prettify(state, __builder) {
                                                                                         return false;
@@ -95444,15 +95459,15 @@ mod __cssl4parser_emit_impl {
                                                                                     true
                                                                                 })();
                                                                                 if !__ok {
-                                                                                    state.offset = __pretty_cp413;
-                                                                                    __builder.restore(__pretty_bcp414);
+                                                                                    state.offset = __pretty_cp406;
+                                                                                    __builder.restore(__pretty_bcp407);
                                                                                 }
                                                                                 __ok
                                                                             } {
                                                                                 {
                                                                                     if !{
-                                                                                        let __pretty_cp411 = state.offset;
-                                                                                        let __pretty_bcp412 = __builder.checkpoint();
+                                                                                        let __pretty_cp404 = state.offset;
+                                                                                        let __pretty_bcp405 = __builder.checkpoint();
                                                                                         let __ok = (|| -> bool {
                                                                                             if !Self::__envFunction_prettify(state, __builder) {
                                                                                                 return false;
@@ -95460,8 +95475,8 @@ mod __cssl4parser_emit_impl {
                                                                                             true
                                                                                         })();
                                                                                         if !__ok {
-                                                                                            state.offset = __pretty_cp411;
-                                                                                            __builder.restore(__pretty_bcp412);
+                                                                                            state.offset = __pretty_cp404;
+                                                                                            __builder.restore(__pretty_bcp405);
                                                                                         }
                                                                                         __ok
                                                                                     } {
@@ -95498,6 +95513,114 @@ mod __cssl4parser_emit_impl {
                 Some(__builder.finish())
             })
         }
+        fn __mediaQueryList_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    {
+                        if !{
+                            let __pretty_cp421 = state.offset;
+                            let __pretty_bcp422 = __builder.checkpoint();
+                            let __ok = (|| -> bool {
+                                if !Self::__mediaCondition_prettify(state, __builder) {
+                                    return false;
+                                }
+                                true
+                            })();
+                            if !__ok {
+                                state.offset = __pretty_cp421;
+                                __builder.restore(__pretty_bcp422);
+                            }
+                            __ok
+                        } {
+                            if !Self::__mediaTypedQuery_prettify(state, __builder) {
+                                return false;
+                            }
+                        }
+                    };
+                    {
+                        let mut __rep_count430 = 0usize;
+                        while __rep_count430 < 4294967295 {
+                            let __rep_cp431 = state.offset;
+                            if !{
+                                let __pretty_cp428 = state.offset;
+                                let __pretty_bcp429 = __builder.checkpoint();
+                                let __ok = (|| -> bool {
+                                    {
+                                        {
+                                            let __ows423 = state.offset;
+                                            let _ = ::parse_that::scan_ws_block_comments(state);
+                                            let __ows424 = state.offset;
+                                            {
+                                                if state.src_bytes.get(state.offset).copied() != Some(b',')
+                                                {
+                                                    return false;
+                                                }
+                                                state.offset += 1;
+                                                __builder.char(b',');
+                                            };
+                                            __builder.text_inline_ws(&state.src[__ows423..__ows424]);
+                                            let __ows425 = state.offset;
+                                            let _ = ::parse_that::scan_ws_block_comments(state);
+                                            __builder
+                                                .text_inline_ws(&state.src[__ows425..state.offset]);
+                                        };
+                                        {
+                                            if !{
+                                                let __pretty_cp426 = state.offset;
+                                                let __pretty_bcp427 = __builder.checkpoint();
+                                                let __ok = (|| -> bool {
+                                                    if !Self::__mediaCondition_prettify(state, __builder) {
+                                                        return false;
+                                                    }
+                                                    true
+                                                })();
+                                                if !__ok {
+                                                    state.offset = __pretty_cp426;
+                                                    __builder.restore(__pretty_bcp427);
+                                                }
+                                                __ok
+                                            } {
+                                                if !Self::__mediaTypedQuery_prettify(state, __builder) {
+                                                    return false;
+                                                }
+                                            }
+                                        };
+                                    };
+                                    true
+                                })();
+                                if !__ok {
+                                    state.offset = __pretty_cp428;
+                                    __builder.restore(__pretty_bcp429);
+                                }
+                                __ok
+                            } {
+                                state.offset = __rep_cp431;
+                                break;
+                            }
+                            if state.offset == __rep_cp431 {
+                                break;
+                            }
+                            __rep_count430 += 1;
+                        }
+                    };
+                };
+                true
+            }
+        }
+        pub fn mediaQueryList_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__mediaQueryList_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
         fn __value_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -95505,8 +95628,8 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     if !{
-                        let __pretty_cp450 = state.offset;
-                        let __pretty_bcp451 = __builder.checkpoint();
+                        let __pretty_cp454 = state.offset;
+                        let __pretty_bcp455 = __builder.checkpoint();
                         let __ok = (|| -> bool {
                             if !Self::__varFunction_prettify(state, __builder) {
                                 return false;
@@ -95514,15 +95637,15 @@ mod __cssl4parser_emit_impl {
                             true
                         })();
                         if !__ok {
-                            state.offset = __pretty_cp450;
-                            __builder.restore(__pretty_bcp451);
+                            state.offset = __pretty_cp454;
+                            __builder.restore(__pretty_bcp455);
                         }
                         __ok
                     } {
                         {
                             if !{
-                                let __pretty_cp448 = state.offset;
-                                let __pretty_bcp449 = __builder.checkpoint();
+                                let __pretty_cp452 = state.offset;
+                                let __pretty_bcp453 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     if !Self::__calcFunction_prettify(state, __builder) {
                                         return false;
@@ -95530,15 +95653,15 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp448;
-                                    __builder.restore(__pretty_bcp449);
+                                    state.offset = __pretty_cp452;
+                                    __builder.restore(__pretty_bcp453);
                                 }
                                 __ok
                             } {
                                 {
                                     if !{
-                                        let __pretty_cp446 = state.offset;
-                                        let __pretty_bcp447 = __builder.checkpoint();
+                                        let __pretty_cp450 = state.offset;
+                                        let __pretty_bcp451 = __builder.checkpoint();
                                         let __ok = (|| -> bool {
                                             if !Self::__urlFunction_prettify(state, __builder) {
                                                 return false;
@@ -95546,15 +95669,15 @@ mod __cssl4parser_emit_impl {
                                             true
                                         })();
                                         if !__ok {
-                                            state.offset = __pretty_cp446;
-                                            __builder.restore(__pretty_bcp447);
+                                            state.offset = __pretty_cp450;
+                                            __builder.restore(__pretty_bcp451);
                                         }
                                         __ok
                                     } {
                                         {
                                             if !{
-                                                let __pretty_cp444 = state.offset;
-                                                let __pretty_bcp445 = __builder.checkpoint();
+                                                let __pretty_cp448 = state.offset;
+                                                let __pretty_bcp449 = __builder.checkpoint();
                                                 let __ok = (|| -> bool {
                                                     if !Self::__colorFn_prettify(state, __builder) {
                                                         return false;
@@ -95562,15 +95685,15 @@ mod __cssl4parser_emit_impl {
                                                     true
                                                 })();
                                                 if !__ok {
-                                                    state.offset = __pretty_cp444;
-                                                    __builder.restore(__pretty_bcp445);
+                                                    state.offset = __pretty_cp448;
+                                                    __builder.restore(__pretty_bcp449);
                                                 }
                                                 __ok
                                             } {
                                                 {
                                                     if !{
-                                                        let __pretty_cp442 = state.offset;
-                                                        let __pretty_bcp443 = __builder.checkpoint();
+                                                        let __pretty_cp446 = state.offset;
+                                                        let __pretty_bcp447 = __builder.checkpoint();
                                                         let __ok = (|| -> bool {
                                                             if !Self::__genericFunction_prettify(state, __builder) {
                                                                 return false;
@@ -95578,15 +95701,15 @@ mod __cssl4parser_emit_impl {
                                                             true
                                                         })();
                                                         if !__ok {
-                                                            state.offset = __pretty_cp442;
-                                                            __builder.restore(__pretty_bcp443);
+                                                            state.offset = __pretty_cp446;
+                                                            __builder.restore(__pretty_bcp447);
                                                         }
                                                         __ok
                                                     } {
                                                         {
                                                             if !{
-                                                                let __pretty_cp440 = state.offset;
-                                                                let __pretty_bcp441 = __builder.checkpoint();
+                                                                let __pretty_cp444 = state.offset;
+                                                                let __pretty_bcp445 = __builder.checkpoint();
                                                                 let __ok = (|| -> bool {
                                                                     if !Self::__valueUnit_prettify(state, __builder) {
                                                                         return false;
@@ -95594,14 +95717,14 @@ mod __cssl4parser_emit_impl {
                                                                     true
                                                                 })();
                                                                 if !__ok {
-                                                                    state.offset = __pretty_cp440;
-                                                                    __builder.restore(__pretty_bcp441);
+                                                                    state.offset = __pretty_cp444;
+                                                                    __builder.restore(__pretty_bcp445);
                                                                 }
                                                                 __ok
                                                             } {
                                                                 {
                                                                     if !{
-                                                                        let __pretty_cp439 = state.offset;
+                                                                        let __pretty_cp443 = state.offset;
                                                                         let __ok = (|| -> bool {
                                                                             {
                                                                                 let __start = state.offset;
@@ -95746,14 +95869,14 @@ mod __cssl4parser_emit_impl {
                                                                             true
                                                                         })();
                                                                         if !__ok {
-                                                                            state.offset = __pretty_cp439;
+                                                                            state.offset = __pretty_cp443;
                                                                         }
                                                                         __ok
                                                                     } {
                                                                         {
                                                                             if !{
-                                                                                let __pretty_cp437 = state.offset;
-                                                                                let __pretty_bcp438 = __builder.checkpoint();
+                                                                                let __pretty_cp441 = state.offset;
+                                                                                let __pretty_bcp442 = __builder.checkpoint();
                                                                                 let __ok = (|| -> bool {
                                                                                     if !Self::__namedColor_prettify(state, __builder) {
                                                                                         return false;
@@ -95761,15 +95884,15 @@ mod __cssl4parser_emit_impl {
                                                                                     true
                                                                                 })();
                                                                                 if !__ok {
-                                                                                    state.offset = __pretty_cp437;
-                                                                                    __builder.restore(__pretty_bcp438);
+                                                                                    state.offset = __pretty_cp441;
+                                                                                    __builder.restore(__pretty_bcp442);
                                                                                 }
                                                                                 __ok
                                                                             } {
                                                                                 {
                                                                                     if !{
-                                                                                        let __pretty_cp435 = state.offset;
-                                                                                        let __pretty_bcp436 = __builder.checkpoint();
+                                                                                        let __pretty_cp439 = state.offset;
+                                                                                        let __pretty_bcp440 = __builder.checkpoint();
                                                                                         let __ok = (|| -> bool {
                                                                                             if !Self::__globalKeyword_prettify(state, __builder) {
                                                                                                 return false;
@@ -95777,14 +95900,14 @@ mod __cssl4parser_emit_impl {
                                                                                             true
                                                                                         })();
                                                                                         if !__ok {
-                                                                                            state.offset = __pretty_cp435;
-                                                                                            __builder.restore(__pretty_bcp436);
+                                                                                            state.offset = __pretty_cp439;
+                                                                                            __builder.restore(__pretty_bcp440);
                                                                                         }
                                                                                         __ok
                                                                                     } {
                                                                                         {
                                                                                             if !{
-                                                                                                let __pretty_cp434 = state.offset;
+                                                                                                let __pretty_cp438 = state.offset;
                                                                                                 let __ok = (|| -> bool {
                                                                                                     {
                                                                                                         let __start = state.offset;
@@ -95842,13 +95965,13 @@ mod __cssl4parser_emit_impl {
                                                                                                     true
                                                                                                 })();
                                                                                                 if !__ok {
-                                                                                                    state.offset = __pretty_cp434;
+                                                                                                    state.offset = __pretty_cp438;
                                                                                                 }
                                                                                                 __ok
                                                                                             } {
                                                                                                 {
                                                                                                     if !{
-                                                                                                        let __pretty_cp433 = state.offset;
+                                                                                                        let __pretty_cp437 = state.offset;
                                                                                                         let __ok = (|| -> bool {
                                                                                                             {
                                                                                                                 let __start = state.offset;
@@ -95905,13 +96028,13 @@ mod __cssl4parser_emit_impl {
                                                                                                             true
                                                                                                         })();
                                                                                                         if !__ok {
-                                                                                                            state.offset = __pretty_cp433;
+                                                                                                            state.offset = __pretty_cp437;
                                                                                                         }
                                                                                                         __ok
                                                                                                     } {
                                                                                                         {
                                                                                                             if !{
-                                                                                                                let __pretty_cp432 = state.offset;
+                                                                                                                let __pretty_cp436 = state.offset;
                                                                                                                 let __ok = (|| -> bool {
                                                                                                                     {
                                                                                                                         if state.src_bytes.get(state.offset).copied() != Some(b',')
@@ -95924,13 +96047,13 @@ mod __cssl4parser_emit_impl {
                                                                                                                     true
                                                                                                                 })();
                                                                                                                 if !__ok {
-                                                                                                                    state.offset = __pretty_cp432;
+                                                                                                                    state.offset = __pretty_cp436;
                                                                                                                 }
                                                                                                                 __ok
                                                                                                             } {
                                                                                                                 {
                                                                                                                     if !{
-                                                                                                                        let __pretty_cp431 = state.offset;
+                                                                                                                        let __pretty_cp435 = state.offset;
                                                                                                                         let __ok = (|| -> bool {
                                                                                                                             {
                                                                                                                                 if state.src_bytes.get(state.offset).copied() != Some(b'/')
@@ -95943,14 +96066,14 @@ mod __cssl4parser_emit_impl {
                                                                                                                             true
                                                                                                                         })();
                                                                                                                         if !__ok {
-                                                                                                                            state.offset = __pretty_cp431;
+                                                                                                                            state.offset = __pretty_cp435;
                                                                                                                         }
                                                                                                                         __ok
                                                                                                                     } {
                                                                                                                         {
                                                                                                                             if !{
-                                                                                                                                let __pretty_cp429 = state.offset;
-                                                                                                                                let __pretty_bcp430 = __builder.checkpoint();
+                                                                                                                                let __pretty_cp433 = state.offset;
+                                                                                                                                let __pretty_bcp434 = __builder.checkpoint();
                                                                                                                                 let __ok = (|| -> bool {
                                                                                                                                     {
                                                                                                                                         {
@@ -96008,14 +96131,14 @@ mod __cssl4parser_emit_impl {
                                                                                                                                     true
                                                                                                                                 })();
                                                                                                                                 if !__ok {
-                                                                                                                                    state.offset = __pretty_cp429;
-                                                                                                                                    __builder.restore(__pretty_bcp430);
+                                                                                                                                    state.offset = __pretty_cp433;
+                                                                                                                                    __builder.restore(__pretty_bcp434);
                                                                                                                                 }
                                                                                                                                 __ok
                                                                                                                             } {
                                                                                                                                 {
                                                                                                                                     if !{
-                                                                                                                                        let __pretty_cp428 = state.offset;
+                                                                                                                                        let __pretty_cp432 = state.offset;
                                                                                                                                         let __ok = (|| -> bool {
                                                                                                                                             {
                                                                                                                                                 let __start = state.offset;
@@ -96198,7 +96321,7 @@ mod __cssl4parser_emit_impl {
                                                                                                                                             true
                                                                                                                                         })();
                                                                                                                                         if !__ok {
-                                                                                                                                            state.offset = __pretty_cp428;
+                                                                                                                                            state.offset = __pretty_cp432;
                                                                                                                                         }
                                                                                                                                         __ok
                                                                                                                                     } {
@@ -96257,9 +96380,9 @@ mod __cssl4parser_emit_impl {
                         return false;
                     }
                     {
-                        let __ows452 = state.offset;
+                        let __ows456 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows453 = state.offset;
+                        let __ows457 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -96267,42 +96390,42 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows452..__ows453]);
-                        let __ows454 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows456..__ows457]);
+                        let __ows458 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows454..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows458..state.offset]);
                     };
                     {
-                        let mut __rep_count461 = 0usize;
-                        while __rep_count461 < 4294967295 {
-                            let __rep_cp462 = state.offset;
+                        let mut __rep_count465 = 0usize;
+                        while __rep_count465 < 4294967295 {
+                            let __rep_cp466 = state.offset;
                             if !{
-                                let __pretty_cp459 = state.offset;
-                                let __pretty_bcp460 = __builder.checkpoint();
+                                let __pretty_cp463 = state.offset;
+                                let __pretty_bcp464 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp457 = state.offset;
-                                            let __pretty_bcp458 = __builder.checkpoint();
+                                            let __pretty_cp461 = state.offset;
+                                            let __pretty_bcp462 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows455 = state.offset;
+                                                    let __ows459 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows455..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows459..state.offset]);
                                                     if !Self::__value_prettify(state, __builder) {
                                                         return false;
                                                     }
-                                                    let __ows456 = state.offset;
+                                                    let __ows460 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows456..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows460..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp457;
-                                                __builder.restore(__pretty_bcp458);
+                                                state.offset = __pretty_cp461;
+                                                __builder.restore(__pretty_bcp462);
                                             }
                                             __ok
                                         } {
@@ -96312,18 +96435,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp459;
-                                    __builder.restore(__pretty_bcp460);
+                                    state.offset = __pretty_cp463;
+                                    __builder.restore(__pretty_bcp464);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp462;
+                                state.offset = __rep_cp466;
                                 break;
                             }
-                            if state.offset == __rep_cp462 {
+                            if state.offset == __rep_cp466 {
                                 break;
                             }
-                            __rep_count461 += 1;
+                            __rep_count465 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -96331,8 +96454,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp463 = state.offset;
-                            let __pretty_bcp464 = __builder.checkpoint();
+                            let __pretty_cp467 = state.offset;
+                            let __pretty_bcp468 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -96345,8 +96468,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp463;
-                                __builder.restore(__pretty_bcp464);
+                                state.offset = __pretty_cp467;
+                                __builder.restore(__pretty_bcp468);
                             }
                             __ok
                         };
@@ -96377,9 +96500,9 @@ mod __cssl4parser_emit_impl {
                         return false;
                     }
                     {
-                        let __ows465 = state.offset;
+                        let __ows469 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows466 = state.offset;
+                        let __ows470 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -96387,42 +96510,42 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows465..__ows466]);
-                        let __ows467 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows469..__ows470]);
+                        let __ows471 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows467..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows471..state.offset]);
                     };
                     {
-                        let mut __rep_count474 = 0usize;
-                        while __rep_count474 < 4294967295 {
-                            let __rep_cp475 = state.offset;
+                        let mut __rep_count478 = 0usize;
+                        while __rep_count478 < 4294967295 {
+                            let __rep_cp479 = state.offset;
                             if !{
-                                let __pretty_cp472 = state.offset;
-                                let __pretty_bcp473 = __builder.checkpoint();
+                                let __pretty_cp476 = state.offset;
+                                let __pretty_bcp477 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp470 = state.offset;
-                                            let __pretty_bcp471 = __builder.checkpoint();
+                                            let __pretty_cp474 = state.offset;
+                                            let __pretty_bcp475 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows468 = state.offset;
+                                                    let __ows472 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows468..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows472..state.offset]);
                                                     if !Self::__value_prettify(state, __builder) {
                                                         return false;
                                                     }
-                                                    let __ows469 = state.offset;
+                                                    let __ows473 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows469..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows473..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp470;
-                                                __builder.restore(__pretty_bcp471);
+                                                state.offset = __pretty_cp474;
+                                                __builder.restore(__pretty_bcp475);
                                             }
                                             __ok
                                         } {
@@ -96432,18 +96555,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp472;
-                                    __builder.restore(__pretty_bcp473);
+                                    state.offset = __pretty_cp476;
+                                    __builder.restore(__pretty_bcp477);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp475;
+                                state.offset = __rep_cp479;
                                 break;
                             }
-                            if state.offset == __rep_cp475 {
+                            if state.offset == __rep_cp479 {
                                 break;
                             }
-                            __rep_count474 += 1;
+                            __rep_count478 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -96451,8 +96574,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp476 = state.offset;
-                            let __pretty_bcp477 = __builder.checkpoint();
+                            let __pretty_cp480 = state.offset;
+                            let __pretty_bcp481 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -96465,8 +96588,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp476;
-                                __builder.restore(__pretty_bcp477);
+                                state.offset = __pretty_cp480;
+                                __builder.restore(__pretty_bcp481);
                             }
                             __ok
                         };
@@ -96497,9 +96620,9 @@ mod __cssl4parser_emit_impl {
                         return false;
                     }
                     {
-                        let __ows478 = state.offset;
+                        let __ows482 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows479 = state.offset;
+                        let __ows483 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -96507,42 +96630,42 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows478..__ows479]);
-                        let __ows480 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows482..__ows483]);
+                        let __ows484 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows480..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows484..state.offset]);
                     };
                     {
-                        let mut __rep_count487 = 0usize;
-                        while __rep_count487 < 4294967295 {
-                            let __rep_cp488 = state.offset;
+                        let mut __rep_count491 = 0usize;
+                        while __rep_count491 < 4294967295 {
+                            let __rep_cp492 = state.offset;
                             if !{
-                                let __pretty_cp485 = state.offset;
-                                let __pretty_bcp486 = __builder.checkpoint();
+                                let __pretty_cp489 = state.offset;
+                                let __pretty_bcp490 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp483 = state.offset;
-                                            let __pretty_bcp484 = __builder.checkpoint();
+                                            let __pretty_cp487 = state.offset;
+                                            let __pretty_bcp488 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows481 = state.offset;
+                                                    let __ows485 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows481..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows485..state.offset]);
                                                     if !Self::__value_prettify(state, __builder) {
                                                         return false;
                                                     }
-                                                    let __ows482 = state.offset;
+                                                    let __ows486 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows482..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows486..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp483;
-                                                __builder.restore(__pretty_bcp484);
+                                                state.offset = __pretty_cp487;
+                                                __builder.restore(__pretty_bcp488);
                                             }
                                             __ok
                                         } {
@@ -96552,18 +96675,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp485;
-                                    __builder.restore(__pretty_bcp486);
+                                    state.offset = __pretty_cp489;
+                                    __builder.restore(__pretty_bcp490);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp488;
+                                state.offset = __rep_cp492;
                                 break;
                             }
-                            if state.offset == __rep_cp488 {
+                            if state.offset == __rep_cp492 {
                                 break;
                             }
-                            __rep_count487 += 1;
+                            __rep_count491 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -96571,8 +96694,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp489 = state.offset;
-                            let __pretty_bcp490 = __builder.checkpoint();
+                            let __pretty_cp493 = state.offset;
+                            let __pretty_bcp494 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -96585,8 +96708,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp489;
-                                __builder.restore(__pretty_bcp490);
+                                state.offset = __pretty_cp493;
+                                __builder.restore(__pretty_bcp494);
                             }
                             __ok
                         };
@@ -96617,9 +96740,9 @@ mod __cssl4parser_emit_impl {
                         return false;
                     }
                     {
-                        let __ows491 = state.offset;
+                        let __ows495 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows492 = state.offset;
+                        let __ows496 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -96627,33 +96750,33 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows491..__ows492]);
-                        let __ows493 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows495..__ows496]);
+                        let __ows497 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows493..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows497..state.offset]);
                     };
                     {
-                        let mut __rep_count502 = 0usize;
-                        while __rep_count502 < 4294967295 {
-                            let __rep_cp503 = state.offset;
+                        let mut __rep_count506 = 0usize;
+                        while __rep_count506 < 4294967295 {
+                            let __rep_cp507 = state.offset;
                             if !{
-                                let __pretty_cp500 = state.offset;
-                                let __pretty_bcp501 = __builder.checkpoint();
+                                let __pretty_cp504 = state.offset;
+                                let __pretty_bcp505 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp498 = state.offset;
-                                            let __pretty_bcp499 = __builder.checkpoint();
+                                            let __pretty_cp502 = state.offset;
+                                            let __pretty_bcp503 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows496 = state.offset;
+                                                    let __ows500 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows496..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows500..state.offset]);
                                                     {
                                                         if !{
-                                                            let __pretty_cp494 = state.offset;
-                                                            let __pretty_bcp495 = __builder.checkpoint();
+                                                            let __pretty_cp498 = state.offset;
+                                                            let __pretty_bcp499 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 if !Self::__fontWeightKeyword_prettify(state, __builder) {
                                                                     return false;
@@ -96661,8 +96784,8 @@ mod __cssl4parser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp494;
-                                                                __builder.restore(__pretty_bcp495);
+                                                                state.offset = __pretty_cp498;
+                                                                __builder.restore(__pretty_bcp499);
                                                             }
                                                             __ok
                                                         } {
@@ -96671,16 +96794,16 @@ mod __cssl4parser_emit_impl {
                                                             }
                                                         }
                                                     };
-                                                    let __ows497 = state.offset;
+                                                    let __ows501 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows497..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows501..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp498;
-                                                __builder.restore(__pretty_bcp499);
+                                                state.offset = __pretty_cp502;
+                                                __builder.restore(__pretty_bcp503);
                                             }
                                             __ok
                                         } {
@@ -96690,18 +96813,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp500;
-                                    __builder.restore(__pretty_bcp501);
+                                    state.offset = __pretty_cp504;
+                                    __builder.restore(__pretty_bcp505);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp503;
+                                state.offset = __rep_cp507;
                                 break;
                             }
-                            if state.offset == __rep_cp503 {
+                            if state.offset == __rep_cp507 {
                                 break;
                             }
-                            __rep_count502 += 1;
+                            __rep_count506 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -96709,8 +96832,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp504 = state.offset;
-                            let __pretty_bcp505 = __builder.checkpoint();
+                            let __pretty_cp508 = state.offset;
+                            let __pretty_bcp509 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -96723,8 +96846,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp504;
-                                __builder.restore(__pretty_bcp505);
+                                state.offset = __pretty_cp508;
+                                __builder.restore(__pretty_bcp509);
                             }
                             __ok
                         };
@@ -96755,9 +96878,9 @@ mod __cssl4parser_emit_impl {
                         return false;
                     }
                     {
-                        let __ows506 = state.offset;
+                        let __ows510 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows507 = state.offset;
+                        let __ows511 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -96765,42 +96888,42 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows506..__ows507]);
-                        let __ows508 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows510..__ows511]);
+                        let __ows512 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows508..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows512..state.offset]);
                     };
                     {
-                        let mut __rep_count515 = 0usize;
-                        while __rep_count515 < 4294967295 {
-                            let __rep_cp516 = state.offset;
+                        let mut __rep_count519 = 0usize;
+                        while __rep_count519 < 4294967295 {
+                            let __rep_cp520 = state.offset;
                             if !{
-                                let __pretty_cp513 = state.offset;
-                                let __pretty_bcp514 = __builder.checkpoint();
+                                let __pretty_cp517 = state.offset;
+                                let __pretty_bcp518 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp511 = state.offset;
-                                            let __pretty_bcp512 = __builder.checkpoint();
+                                            let __pretty_cp515 = state.offset;
+                                            let __pretty_bcp516 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows509 = state.offset;
+                                                    let __ows513 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows509..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows513..state.offset]);
                                                     if !Self::__value_prettify(state, __builder) {
                                                         return false;
                                                     }
-                                                    let __ows510 = state.offset;
+                                                    let __ows514 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows510..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows514..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp511;
-                                                __builder.restore(__pretty_bcp512);
+                                                state.offset = __pretty_cp515;
+                                                __builder.restore(__pretty_bcp516);
                                             }
                                             __ok
                                         } {
@@ -96810,18 +96933,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp513;
-                                    __builder.restore(__pretty_bcp514);
+                                    state.offset = __pretty_cp517;
+                                    __builder.restore(__pretty_bcp518);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp516;
+                                state.offset = __rep_cp520;
                                 break;
                             }
-                            if state.offset == __rep_cp516 {
+                            if state.offset == __rep_cp520 {
                                 break;
                             }
-                            __rep_count515 += 1;
+                            __rep_count519 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -96829,8 +96952,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp517 = state.offset;
-                            let __pretty_bcp518 = __builder.checkpoint();
+                            let __pretty_cp521 = state.offset;
+                            let __pretty_bcp522 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -96843,8 +96966,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp517;
-                                __builder.restore(__pretty_bcp518);
+                                state.offset = __pretty_cp521;
+                                __builder.restore(__pretty_bcp522);
                             }
                             __ok
                         };
@@ -96875,9 +96998,9 @@ mod __cssl4parser_emit_impl {
                         return false;
                     }
                     {
-                        let __ows519 = state.offset;
+                        let __ows523 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows520 = state.offset;
+                        let __ows524 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -96885,42 +97008,42 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows519..__ows520]);
-                        let __ows521 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows523..__ows524]);
+                        let __ows525 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows521..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows525..state.offset]);
                     };
                     {
-                        let mut __rep_count528 = 0usize;
-                        while __rep_count528 < 4294967295 {
-                            let __rep_cp529 = state.offset;
+                        let mut __rep_count532 = 0usize;
+                        while __rep_count532 < 4294967295 {
+                            let __rep_cp533 = state.offset;
                             if !{
-                                let __pretty_cp526 = state.offset;
-                                let __pretty_bcp527 = __builder.checkpoint();
+                                let __pretty_cp530 = state.offset;
+                                let __pretty_bcp531 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp524 = state.offset;
-                                            let __pretty_bcp525 = __builder.checkpoint();
+                                            let __pretty_cp528 = state.offset;
+                                            let __pretty_bcp529 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows522 = state.offset;
+                                                    let __ows526 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows522..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows526..state.offset]);
                                                     if !Self::__value_prettify(state, __builder) {
                                                         return false;
                                                     }
-                                                    let __ows523 = state.offset;
+                                                    let __ows527 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows523..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows527..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp524;
-                                                __builder.restore(__pretty_bcp525);
+                                                state.offset = __pretty_cp528;
+                                                __builder.restore(__pretty_bcp529);
                                             }
                                             __ok
                                         } {
@@ -96930,18 +97053,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp526;
-                                    __builder.restore(__pretty_bcp527);
+                                    state.offset = __pretty_cp530;
+                                    __builder.restore(__pretty_bcp531);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp529;
+                                state.offset = __rep_cp533;
                                 break;
                             }
-                            if state.offset == __rep_cp529 {
+                            if state.offset == __rep_cp533 {
                                 break;
                             }
-                            __rep_count528 += 1;
+                            __rep_count532 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -96949,8 +97072,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp530 = state.offset;
-                            let __pretty_bcp531 = __builder.checkpoint();
+                            let __pretty_cp534 = state.offset;
+                            let __pretty_bcp535 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -96963,8 +97086,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp530;
-                                __builder.restore(__pretty_bcp531);
+                                state.offset = __pretty_cp534;
+                                __builder.restore(__pretty_bcp535);
                             }
                             __ok
                         };
@@ -96995,9 +97118,9 @@ mod __cssl4parser_emit_impl {
                         return false;
                     }
                     {
-                        let __ows532 = state.offset;
+                        let __ows536 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows533 = state.offset;
+                        let __ows537 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -97005,42 +97128,42 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows532..__ows533]);
-                        let __ows534 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows536..__ows537]);
+                        let __ows538 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows534..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows538..state.offset]);
                     };
                     {
-                        let mut __rep_count541 = 0usize;
-                        while __rep_count541 < 4294967295 {
-                            let __rep_cp542 = state.offset;
+                        let mut __rep_count545 = 0usize;
+                        while __rep_count545 < 4294967295 {
+                            let __rep_cp546 = state.offset;
                             if !{
-                                let __pretty_cp539 = state.offset;
-                                let __pretty_bcp540 = __builder.checkpoint();
+                                let __pretty_cp543 = state.offset;
+                                let __pretty_bcp544 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp537 = state.offset;
-                                            let __pretty_bcp538 = __builder.checkpoint();
+                                            let __pretty_cp541 = state.offset;
+                                            let __pretty_bcp542 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows535 = state.offset;
+                                                    let __ows539 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows535..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows539..state.offset]);
                                                     if !Self::__value_prettify(state, __builder) {
                                                         return false;
                                                     }
-                                                    let __ows536 = state.offset;
+                                                    let __ows540 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows536..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows540..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp537;
-                                                __builder.restore(__pretty_bcp538);
+                                                state.offset = __pretty_cp541;
+                                                __builder.restore(__pretty_bcp542);
                                             }
                                             __ok
                                         } {
@@ -97050,18 +97173,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp539;
-                                    __builder.restore(__pretty_bcp540);
+                                    state.offset = __pretty_cp543;
+                                    __builder.restore(__pretty_bcp544);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp542;
+                                state.offset = __rep_cp546;
                                 break;
                             }
-                            if state.offset == __rep_cp542 {
+                            if state.offset == __rep_cp546 {
                                 break;
                             }
-                            __rep_count541 += 1;
+                            __rep_count545 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -97069,8 +97192,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp543 = state.offset;
-                            let __pretty_bcp544 = __builder.checkpoint();
+                            let __pretty_cp547 = state.offset;
+                            let __pretty_bcp548 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -97083,8 +97206,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp543;
-                                __builder.restore(__pretty_bcp544);
+                                state.offset = __pretty_cp547;
+                                __builder.restore(__pretty_bcp548);
                             }
                             __ok
                         };
@@ -97115,9 +97238,9 @@ mod __cssl4parser_emit_impl {
                         return false;
                     }
                     {
-                        let __ows545 = state.offset;
+                        let __ows549 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows546 = state.offset;
+                        let __ows550 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -97125,42 +97248,42 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows545..__ows546]);
-                        let __ows547 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows549..__ows550]);
+                        let __ows551 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows547..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows551..state.offset]);
                     };
                     {
-                        let mut __rep_count554 = 0usize;
-                        while __rep_count554 < 4294967295 {
-                            let __rep_cp555 = state.offset;
+                        let mut __rep_count558 = 0usize;
+                        while __rep_count558 < 4294967295 {
+                            let __rep_cp559 = state.offset;
                             if !{
-                                let __pretty_cp552 = state.offset;
-                                let __pretty_bcp553 = __builder.checkpoint();
+                                let __pretty_cp556 = state.offset;
+                                let __pretty_bcp557 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp550 = state.offset;
-                                            let __pretty_bcp551 = __builder.checkpoint();
+                                            let __pretty_cp554 = state.offset;
+                                            let __pretty_bcp555 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows548 = state.offset;
+                                                    let __ows552 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows548..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows552..state.offset]);
                                                     if !Self::__value_prettify(state, __builder) {
                                                         return false;
                                                     }
-                                                    let __ows549 = state.offset;
+                                                    let __ows553 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows549..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows553..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp550;
-                                                __builder.restore(__pretty_bcp551);
+                                                state.offset = __pretty_cp554;
+                                                __builder.restore(__pretty_bcp555);
                                             }
                                             __ok
                                         } {
@@ -97170,18 +97293,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp552;
-                                    __builder.restore(__pretty_bcp553);
+                                    state.offset = __pretty_cp556;
+                                    __builder.restore(__pretty_bcp557);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp555;
+                                state.offset = __rep_cp559;
                                 break;
                             }
-                            if state.offset == __rep_cp555 {
+                            if state.offset == __rep_cp559 {
                                 break;
                             }
-                            __rep_count554 += 1;
+                            __rep_count558 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -97189,8 +97312,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp556 = state.offset;
-                            let __pretty_bcp557 = __builder.checkpoint();
+                            let __pretty_cp560 = state.offset;
+                            let __pretty_bcp561 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -97203,8 +97326,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp556;
-                                __builder.restore(__pretty_bcp557);
+                                state.offset = __pretty_cp560;
+                                __builder.restore(__pretty_bcp561);
                             }
                             __ok
                         };
@@ -97245,9 +97368,9 @@ mod __cssl4parser_emit_impl {
                         state.offset += 7usize;
                     };
                     {
-                        let __ows558 = state.offset;
+                        let __ows562 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows559 = state.offset;
+                        let __ows563 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -97255,33 +97378,33 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows558..__ows559]);
-                        let __ows560 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows562..__ows563]);
+                        let __ows564 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows560..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows564..state.offset]);
                     };
                     {
-                        let mut __rep_count569 = 0usize;
-                        while __rep_count569 < 4294967295 {
-                            let __rep_cp570 = state.offset;
+                        let mut __rep_count573 = 0usize;
+                        while __rep_count573 < 4294967295 {
+                            let __rep_cp574 = state.offset;
                             if !{
-                                let __pretty_cp567 = state.offset;
-                                let __pretty_bcp568 = __builder.checkpoint();
+                                let __pretty_cp571 = state.offset;
+                                let __pretty_bcp572 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp565 = state.offset;
-                                            let __pretty_bcp566 = __builder.checkpoint();
+                                            let __pretty_cp569 = state.offset;
+                                            let __pretty_bcp570 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows563 = state.offset;
+                                                    let __ows567 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows563..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows567..state.offset]);
                                                     {
                                                         if !{
-                                                            let __pretty_cp561 = state.offset;
-                                                            let __pretty_bcp562 = __builder.checkpoint();
+                                                            let __pretty_cp565 = state.offset;
+                                                            let __pretty_bcp566 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 if !Self::__displayKeyword_prettify(state, __builder) {
                                                                     return false;
@@ -97289,8 +97412,8 @@ mod __cssl4parser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp561;
-                                                                __builder.restore(__pretty_bcp562);
+                                                                state.offset = __pretty_cp565;
+                                                                __builder.restore(__pretty_bcp566);
                                                             }
                                                             __ok
                                                         } {
@@ -97299,16 +97422,16 @@ mod __cssl4parser_emit_impl {
                                                             }
                                                         }
                                                     };
-                                                    let __ows564 = state.offset;
+                                                    let __ows568 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows564..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows568..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp565;
-                                                __builder.restore(__pretty_bcp566);
+                                                state.offset = __pretty_cp569;
+                                                __builder.restore(__pretty_bcp570);
                                             }
                                             __ok
                                         } {
@@ -97318,18 +97441,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp567;
-                                    __builder.restore(__pretty_bcp568);
+                                    state.offset = __pretty_cp571;
+                                    __builder.restore(__pretty_bcp572);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp570;
+                                state.offset = __rep_cp574;
                                 break;
                             }
-                            if state.offset == __rep_cp570 {
+                            if state.offset == __rep_cp574 {
                                 break;
                             }
-                            __rep_count569 += 1;
+                            __rep_count573 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -97337,8 +97460,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp571 = state.offset;
-                            let __pretty_bcp572 = __builder.checkpoint();
+                            let __pretty_cp575 = state.offset;
+                            let __pretty_bcp576 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -97351,8 +97474,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp571;
-                                __builder.restore(__pretty_bcp572);
+                                state.offset = __pretty_cp575;
+                                __builder.restore(__pretty_bcp576);
                             }
                             __ok
                         };
@@ -97393,9 +97516,9 @@ mod __cssl4parser_emit_impl {
                         state.offset += 8usize;
                     };
                     {
-                        let __ows573 = state.offset;
+                        let __ows577 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows574 = state.offset;
+                        let __ows578 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -97403,33 +97526,33 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows573..__ows574]);
-                        let __ows575 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows577..__ows578]);
+                        let __ows579 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows575..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows579..state.offset]);
                     };
                     {
-                        let mut __rep_count584 = 0usize;
-                        while __rep_count584 < 4294967295 {
-                            let __rep_cp585 = state.offset;
+                        let mut __rep_count588 = 0usize;
+                        while __rep_count588 < 4294967295 {
+                            let __rep_cp589 = state.offset;
                             if !{
-                                let __pretty_cp582 = state.offset;
-                                let __pretty_bcp583 = __builder.checkpoint();
+                                let __pretty_cp586 = state.offset;
+                                let __pretty_bcp587 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp580 = state.offset;
-                                            let __pretty_bcp581 = __builder.checkpoint();
+                                            let __pretty_cp584 = state.offset;
+                                            let __pretty_bcp585 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows578 = state.offset;
+                                                    let __ows582 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows578..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows582..state.offset]);
                                                     {
                                                         if !{
-                                                            let __pretty_cp576 = state.offset;
-                                                            let __pretty_bcp577 = __builder.checkpoint();
+                                                            let __pretty_cp580 = state.offset;
+                                                            let __pretty_bcp581 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 if !Self::__positionKeyword_prettify(state, __builder) {
                                                                     return false;
@@ -97437,8 +97560,8 @@ mod __cssl4parser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp576;
-                                                                __builder.restore(__pretty_bcp577);
+                                                                state.offset = __pretty_cp580;
+                                                                __builder.restore(__pretty_bcp581);
                                                             }
                                                             __ok
                                                         } {
@@ -97447,16 +97570,16 @@ mod __cssl4parser_emit_impl {
                                                             }
                                                         }
                                                     };
-                                                    let __ows579 = state.offset;
+                                                    let __ows583 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows579..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows583..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp580;
-                                                __builder.restore(__pretty_bcp581);
+                                                state.offset = __pretty_cp584;
+                                                __builder.restore(__pretty_bcp585);
                                             }
                                             __ok
                                         } {
@@ -97466,18 +97589,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp582;
-                                    __builder.restore(__pretty_bcp583);
+                                    state.offset = __pretty_cp586;
+                                    __builder.restore(__pretty_bcp587);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp585;
+                                state.offset = __rep_cp589;
                                 break;
                             }
-                            if state.offset == __rep_cp585 {
+                            if state.offset == __rep_cp589 {
                                 break;
                             }
-                            __rep_count584 += 1;
+                            __rep_count588 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -97485,8 +97608,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp586 = state.offset;
-                            let __pretty_bcp587 = __builder.checkpoint();
+                            let __pretty_cp590 = state.offset;
+                            let __pretty_bcp591 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -97499,8 +97622,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp586;
-                                __builder.restore(__pretty_bcp587);
+                                state.offset = __pretty_cp590;
+                                __builder.restore(__pretty_bcp591);
                             }
                             __ok
                         };
@@ -97659,9 +97782,9 @@ mod __cssl4parser_emit_impl {
                         };
                     };
                     {
-                        let __ows588 = state.offset;
+                        let __ows592 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows589 = state.offset;
+                        let __ows593 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -97669,33 +97792,33 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows588..__ows589]);
-                        let __ows590 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows592..__ows593]);
+                        let __ows594 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows590..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows594..state.offset]);
                     };
                     {
-                        let mut __rep_count599 = 0usize;
-                        while __rep_count599 < 4294967295 {
-                            let __rep_cp600 = state.offset;
+                        let mut __rep_count603 = 0usize;
+                        while __rep_count603 < 4294967295 {
+                            let __rep_cp604 = state.offset;
                             if !{
-                                let __pretty_cp597 = state.offset;
-                                let __pretty_bcp598 = __builder.checkpoint();
+                                let __pretty_cp601 = state.offset;
+                                let __pretty_bcp602 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp595 = state.offset;
-                                            let __pretty_bcp596 = __builder.checkpoint();
+                                            let __pretty_cp599 = state.offset;
+                                            let __pretty_bcp600 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows593 = state.offset;
+                                                    let __ows597 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows593..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows597..state.offset]);
                                                     {
                                                         if !{
-                                                            let __pretty_cp591 = state.offset;
-                                                            let __pretty_bcp592 = __builder.checkpoint();
+                                                            let __pretty_cp595 = state.offset;
+                                                            let __pretty_bcp596 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 if !Self::__overflowKeyword_prettify(state, __builder) {
                                                                     return false;
@@ -97703,8 +97826,8 @@ mod __cssl4parser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp591;
-                                                                __builder.restore(__pretty_bcp592);
+                                                                state.offset = __pretty_cp595;
+                                                                __builder.restore(__pretty_bcp596);
                                                             }
                                                             __ok
                                                         } {
@@ -97713,16 +97836,16 @@ mod __cssl4parser_emit_impl {
                                                             }
                                                         }
                                                     };
-                                                    let __ows594 = state.offset;
+                                                    let __ows598 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows594..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows598..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp595;
-                                                __builder.restore(__pretty_bcp596);
+                                                state.offset = __pretty_cp599;
+                                                __builder.restore(__pretty_bcp600);
                                             }
                                             __ok
                                         } {
@@ -97732,18 +97855,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp597;
-                                    __builder.restore(__pretty_bcp598);
+                                    state.offset = __pretty_cp601;
+                                    __builder.restore(__pretty_bcp602);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp600;
+                                state.offset = __rep_cp604;
                                 break;
                             }
-                            if state.offset == __rep_cp600 {
+                            if state.offset == __rep_cp604 {
                                 break;
                             }
-                            __rep_count599 += 1;
+                            __rep_count603 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -97751,8 +97874,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp601 = state.offset;
-                            let __pretty_bcp602 = __builder.checkpoint();
+                            let __pretty_cp605 = state.offset;
+                            let __pretty_bcp606 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -97765,8 +97888,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp601;
-                                __builder.restore(__pretty_bcp602);
+                                state.offset = __pretty_cp605;
+                                __builder.restore(__pretty_bcp606);
                             }
                             __ok
                         };
@@ -97807,9 +97930,9 @@ mod __cssl4parser_emit_impl {
                         state.offset += 10usize;
                     };
                     {
-                        let __ows603 = state.offset;
+                        let __ows607 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows604 = state.offset;
+                        let __ows608 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -97817,33 +97940,33 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows603..__ows604]);
-                        let __ows605 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows607..__ows608]);
+                        let __ows609 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows605..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows609..state.offset]);
                     };
                     {
-                        let mut __rep_count614 = 0usize;
-                        while __rep_count614 < 4294967295 {
-                            let __rep_cp615 = state.offset;
+                        let mut __rep_count618 = 0usize;
+                        while __rep_count618 < 4294967295 {
+                            let __rep_cp619 = state.offset;
                             if !{
-                                let __pretty_cp612 = state.offset;
-                                let __pretty_bcp613 = __builder.checkpoint();
+                                let __pretty_cp616 = state.offset;
+                                let __pretty_bcp617 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp610 = state.offset;
-                                            let __pretty_bcp611 = __builder.checkpoint();
+                                            let __pretty_cp614 = state.offset;
+                                            let __pretty_bcp615 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows608 = state.offset;
+                                                    let __ows612 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows608..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows612..state.offset]);
                                                     {
                                                         if !{
-                                                            let __pretty_cp606 = state.offset;
-                                                            let __pretty_bcp607 = __builder.checkpoint();
+                                                            let __pretty_cp610 = state.offset;
+                                                            let __pretty_bcp611 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 if !Self::__visibilityKeyword_prettify(state, __builder) {
                                                                     return false;
@@ -97851,8 +97974,8 @@ mod __cssl4parser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp606;
-                                                                __builder.restore(__pretty_bcp607);
+                                                                state.offset = __pretty_cp610;
+                                                                __builder.restore(__pretty_bcp611);
                                                             }
                                                             __ok
                                                         } {
@@ -97861,16 +97984,16 @@ mod __cssl4parser_emit_impl {
                                                             }
                                                         }
                                                     };
-                                                    let __ows609 = state.offset;
+                                                    let __ows613 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows609..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows613..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp610;
-                                                __builder.restore(__pretty_bcp611);
+                                                state.offset = __pretty_cp614;
+                                                __builder.restore(__pretty_bcp615);
                                             }
                                             __ok
                                         } {
@@ -97880,18 +98003,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp612;
-                                    __builder.restore(__pretty_bcp613);
+                                    state.offset = __pretty_cp616;
+                                    __builder.restore(__pretty_bcp617);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp615;
+                                state.offset = __rep_cp619;
                                 break;
                             }
-                            if state.offset == __rep_cp615 {
+                            if state.offset == __rep_cp619 {
                                 break;
                             }
-                            __rep_count614 += 1;
+                            __rep_count618 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -97899,8 +98022,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp616 = state.offset;
-                            let __pretty_bcp617 = __builder.checkpoint();
+                            let __pretty_cp620 = state.offset;
+                            let __pretty_bcp621 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -97913,8 +98036,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp616;
-                                __builder.restore(__pretty_bcp617);
+                                state.offset = __pretty_cp620;
+                                __builder.restore(__pretty_bcp621);
                             }
                             __ok
                         };
@@ -97955,9 +98078,9 @@ mod __cssl4parser_emit_impl {
                         state.offset += 14usize;
                     };
                     {
-                        let __ows618 = state.offset;
+                        let __ows622 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows619 = state.offset;
+                        let __ows623 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -97965,33 +98088,33 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows618..__ows619]);
-                        let __ows620 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows622..__ows623]);
+                        let __ows624 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows620..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows624..state.offset]);
                     };
                     {
-                        let mut __rep_count629 = 0usize;
-                        while __rep_count629 < 4294967295 {
-                            let __rep_cp630 = state.offset;
+                        let mut __rep_count633 = 0usize;
+                        while __rep_count633 < 4294967295 {
+                            let __rep_cp634 = state.offset;
                             if !{
-                                let __pretty_cp627 = state.offset;
-                                let __pretty_bcp628 = __builder.checkpoint();
+                                let __pretty_cp631 = state.offset;
+                                let __pretty_bcp632 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp625 = state.offset;
-                                            let __pretty_bcp626 = __builder.checkpoint();
+                                            let __pretty_cp629 = state.offset;
+                                            let __pretty_bcp630 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows623 = state.offset;
+                                                    let __ows627 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows623..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows627..state.offset]);
                                                     {
                                                         if !{
-                                                            let __pretty_cp621 = state.offset;
-                                                            let __pretty_bcp622 = __builder.checkpoint();
+                                                            let __pretty_cp625 = state.offset;
+                                                            let __pretty_bcp626 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 if !Self::__flexDirKeyword_prettify(state, __builder) {
                                                                     return false;
@@ -97999,8 +98122,8 @@ mod __cssl4parser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp621;
-                                                                __builder.restore(__pretty_bcp622);
+                                                                state.offset = __pretty_cp625;
+                                                                __builder.restore(__pretty_bcp626);
                                                             }
                                                             __ok
                                                         } {
@@ -98009,16 +98132,16 @@ mod __cssl4parser_emit_impl {
                                                             }
                                                         }
                                                     };
-                                                    let __ows624 = state.offset;
+                                                    let __ows628 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows624..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows628..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp625;
-                                                __builder.restore(__pretty_bcp626);
+                                                state.offset = __pretty_cp629;
+                                                __builder.restore(__pretty_bcp630);
                                             }
                                             __ok
                                         } {
@@ -98028,18 +98151,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp627;
-                                    __builder.restore(__pretty_bcp628);
+                                    state.offset = __pretty_cp631;
+                                    __builder.restore(__pretty_bcp632);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp630;
+                                state.offset = __rep_cp634;
                                 break;
                             }
-                            if state.offset == __rep_cp630 {
+                            if state.offset == __rep_cp634 {
                                 break;
                             }
-                            __rep_count629 += 1;
+                            __rep_count633 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -98047,8 +98170,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp631 = state.offset;
-                            let __pretty_bcp632 = __builder.checkpoint();
+                            let __pretty_cp635 = state.offset;
+                            let __pretty_bcp636 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -98061,8 +98184,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp631;
-                                __builder.restore(__pretty_bcp632);
+                                state.offset = __pretty_cp635;
+                                __builder.restore(__pretty_bcp636);
                             }
                             __ok
                         };
@@ -98103,9 +98226,9 @@ mod __cssl4parser_emit_impl {
                         state.offset += 9usize;
                     };
                     {
-                        let __ows633 = state.offset;
+                        let __ows637 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows634 = state.offset;
+                        let __ows638 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -98113,33 +98236,33 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows633..__ows634]);
-                        let __ows635 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows637..__ows638]);
+                        let __ows639 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows635..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows639..state.offset]);
                     };
                     {
-                        let mut __rep_count644 = 0usize;
-                        while __rep_count644 < 4294967295 {
-                            let __rep_cp645 = state.offset;
+                        let mut __rep_count648 = 0usize;
+                        while __rep_count648 < 4294967295 {
+                            let __rep_cp649 = state.offset;
                             if !{
-                                let __pretty_cp642 = state.offset;
-                                let __pretty_bcp643 = __builder.checkpoint();
+                                let __pretty_cp646 = state.offset;
+                                let __pretty_bcp647 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp640 = state.offset;
-                                            let __pretty_bcp641 = __builder.checkpoint();
+                                            let __pretty_cp644 = state.offset;
+                                            let __pretty_bcp645 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows638 = state.offset;
+                                                    let __ows642 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows638..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows642..state.offset]);
                                                     {
                                                         if !{
-                                                            let __pretty_cp636 = state.offset;
-                                                            let __pretty_bcp637 = __builder.checkpoint();
+                                                            let __pretty_cp640 = state.offset;
+                                                            let __pretty_bcp641 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 if !Self::__flexWrapKeyword_prettify(state, __builder) {
                                                                     return false;
@@ -98147,8 +98270,8 @@ mod __cssl4parser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp636;
-                                                                __builder.restore(__pretty_bcp637);
+                                                                state.offset = __pretty_cp640;
+                                                                __builder.restore(__pretty_bcp641);
                                                             }
                                                             __ok
                                                         } {
@@ -98157,16 +98280,16 @@ mod __cssl4parser_emit_impl {
                                                             }
                                                         }
                                                     };
-                                                    let __ows639 = state.offset;
+                                                    let __ows643 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows639..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows643..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp640;
-                                                __builder.restore(__pretty_bcp641);
+                                                state.offset = __pretty_cp644;
+                                                __builder.restore(__pretty_bcp645);
                                             }
                                             __ok
                                         } {
@@ -98176,18 +98299,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp642;
-                                    __builder.restore(__pretty_bcp643);
+                                    state.offset = __pretty_cp646;
+                                    __builder.restore(__pretty_bcp647);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp645;
+                                state.offset = __rep_cp649;
                                 break;
                             }
-                            if state.offset == __rep_cp645 {
+                            if state.offset == __rep_cp649 {
                                 break;
                             }
-                            __rep_count644 += 1;
+                            __rep_count648 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -98195,8 +98318,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp646 = state.offset;
-                            let __pretty_bcp647 = __builder.checkpoint();
+                            let __pretty_cp650 = state.offset;
+                            let __pretty_bcp651 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -98209,8 +98332,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp646;
-                                __builder.restore(__pretty_bcp647);
+                                state.offset = __pretty_cp650;
+                                __builder.restore(__pretty_bcp651);
                             }
                             __ok
                         };
@@ -98239,7 +98362,7 @@ mod __cssl4parser_emit_impl {
                 {
                     {
                         if !{
-                            let __pretty_cp652 = state.offset;
+                            let __pretty_cp656 = state.offset;
                             let __ok = (|| -> bool {
                                 {
                                     let __s = "justify-content";
@@ -98258,14 +98381,14 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp652;
+                                state.offset = __pretty_cp656;
                             }
                             __ok
                         } {
                             {
                                 if !{
-                                    let __pretty_cp650 = state.offset;
-                                    let __pretty_bcp651 = __builder.checkpoint();
+                                    let __pretty_cp654 = state.offset;
+                                    let __pretty_bcp655 = __builder.checkpoint();
                                     let __ok = (|| -> bool {
                                         {
                                             {
@@ -98393,15 +98516,15 @@ mod __cssl4parser_emit_impl {
                                         true
                                     })();
                                     if !__ok {
-                                        state.offset = __pretty_cp650;
-                                        __builder.restore(__pretty_bcp651);
+                                        state.offset = __pretty_cp654;
+                                        __builder.restore(__pretty_bcp655);
                                     }
                                     __ok
                                 } {
                                     {
                                         if !{
-                                            let __pretty_cp648 = state.offset;
-                                            let __pretty_bcp649 = __builder.checkpoint();
+                                            let __pretty_cp652 = state.offset;
+                                            let __pretty_bcp653 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
                                                     {
@@ -98525,8 +98648,8 @@ mod __cssl4parser_emit_impl {
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp648;
-                                                __builder.restore(__pretty_bcp649);
+                                                state.offset = __pretty_cp652;
+                                                __builder.restore(__pretty_bcp653);
                                             }
                                             __ok
                                         } {
@@ -98538,9 +98661,9 @@ mod __cssl4parser_emit_impl {
                         }
                     };
                     {
-                        let __ows653 = state.offset;
+                        let __ows657 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows654 = state.offset;
+                        let __ows658 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -98548,33 +98671,33 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows653..__ows654]);
-                        let __ows655 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows657..__ows658]);
+                        let __ows659 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows655..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows659..state.offset]);
                     };
                     {
-                        let mut __rep_count664 = 0usize;
-                        while __rep_count664 < 4294967295 {
-                            let __rep_cp665 = state.offset;
+                        let mut __rep_count668 = 0usize;
+                        while __rep_count668 < 4294967295 {
+                            let __rep_cp669 = state.offset;
                             if !{
-                                let __pretty_cp662 = state.offset;
-                                let __pretty_bcp663 = __builder.checkpoint();
+                                let __pretty_cp666 = state.offset;
+                                let __pretty_bcp667 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp660 = state.offset;
-                                            let __pretty_bcp661 = __builder.checkpoint();
+                                            let __pretty_cp664 = state.offset;
+                                            let __pretty_bcp665 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows658 = state.offset;
+                                                    let __ows662 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows658..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows662..state.offset]);
                                                     {
                                                         if !{
-                                                            let __pretty_cp656 = state.offset;
-                                                            let __pretty_bcp657 = __builder.checkpoint();
+                                                            let __pretty_cp660 = state.offset;
+                                                            let __pretty_bcp661 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 if !Self::__alignKeyword_prettify(state, __builder) {
                                                                     return false;
@@ -98582,8 +98705,8 @@ mod __cssl4parser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp656;
-                                                                __builder.restore(__pretty_bcp657);
+                                                                state.offset = __pretty_cp660;
+                                                                __builder.restore(__pretty_bcp661);
                                                             }
                                                             __ok
                                                         } {
@@ -98592,16 +98715,16 @@ mod __cssl4parser_emit_impl {
                                                             }
                                                         }
                                                     };
-                                                    let __ows659 = state.offset;
+                                                    let __ows663 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows659..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows663..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp660;
-                                                __builder.restore(__pretty_bcp661);
+                                                state.offset = __pretty_cp664;
+                                                __builder.restore(__pretty_bcp665);
                                             }
                                             __ok
                                         } {
@@ -98611,18 +98734,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp662;
-                                    __builder.restore(__pretty_bcp663);
+                                    state.offset = __pretty_cp666;
+                                    __builder.restore(__pretty_bcp667);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp665;
+                                state.offset = __rep_cp669;
                                 break;
                             }
-                            if state.offset == __rep_cp665 {
+                            if state.offset == __rep_cp669 {
                                 break;
                             }
-                            __rep_count664 += 1;
+                            __rep_count668 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -98630,8 +98753,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp666 = state.offset;
-                            let __pretty_bcp667 = __builder.checkpoint();
+                            let __pretty_cp670 = state.offset;
+                            let __pretty_bcp671 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -98644,8 +98767,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp666;
-                                __builder.restore(__pretty_bcp667);
+                                state.offset = __pretty_cp670;
+                                __builder.restore(__pretty_bcp671);
                             }
                             __ok
                         };
@@ -98811,9 +98934,9 @@ mod __cssl4parser_emit_impl {
                         }
                     };
                     {
-                        let __ows668 = state.offset;
+                        let __ows672 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows669 = state.offset;
+                        let __ows673 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -98821,42 +98944,42 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows668..__ows669]);
-                        let __ows670 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows672..__ows673]);
+                        let __ows674 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows670..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows674..state.offset]);
                     };
                     {
-                        let mut __rep_count677 = 0usize;
-                        while __rep_count677 < 4294967295 {
-                            let __rep_cp678 = state.offset;
+                        let mut __rep_count681 = 0usize;
+                        while __rep_count681 < 4294967295 {
+                            let __rep_cp682 = state.offset;
                             if !{
-                                let __pretty_cp675 = state.offset;
-                                let __pretty_bcp676 = __builder.checkpoint();
+                                let __pretty_cp679 = state.offset;
+                                let __pretty_bcp680 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp673 = state.offset;
-                                            let __pretty_bcp674 = __builder.checkpoint();
+                                            let __pretty_cp677 = state.offset;
+                                            let __pretty_bcp678 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows671 = state.offset;
+                                                    let __ows675 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows671..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows675..state.offset]);
                                                     if !Self::__value_prettify(state, __builder) {
                                                         return false;
                                                     }
-                                                    let __ows672 = state.offset;
+                                                    let __ows676 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows672..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows676..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp673;
-                                                __builder.restore(__pretty_bcp674);
+                                                state.offset = __pretty_cp677;
+                                                __builder.restore(__pretty_bcp678);
                                             }
                                             __ok
                                         } {
@@ -98866,18 +98989,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp675;
-                                    __builder.restore(__pretty_bcp676);
+                                    state.offset = __pretty_cp679;
+                                    __builder.restore(__pretty_bcp680);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp678;
+                                state.offset = __rep_cp682;
                                 break;
                             }
-                            if state.offset == __rep_cp678 {
+                            if state.offset == __rep_cp682 {
                                 break;
                             }
-                            __rep_count677 += 1;
+                            __rep_count681 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -98885,8 +99008,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp679 = state.offset;
-                            let __pretty_bcp680 = __builder.checkpoint();
+                            let __pretty_cp683 = state.offset;
+                            let __pretty_bcp684 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -98899,8 +99022,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp679;
-                                __builder.restore(__pretty_bcp680);
+                                state.offset = __pretty_cp683;
+                                __builder.restore(__pretty_bcp684);
                             }
                             __ok
                         };
@@ -98941,9 +99064,9 @@ mod __cssl4parser_emit_impl {
                         state.offset += 9usize;
                     };
                     {
-                        let __ows681 = state.offset;
+                        let __ows685 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows682 = state.offset;
+                        let __ows686 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -98951,42 +99074,42 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows681..__ows682]);
-                        let __ows683 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows685..__ows686]);
+                        let __ows687 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows683..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows687..state.offset]);
                     };
                     {
-                        let mut __rep_count690 = 0usize;
-                        while __rep_count690 < 4294967295 {
-                            let __rep_cp691 = state.offset;
+                        let mut __rep_count694 = 0usize;
+                        while __rep_count694 < 4294967295 {
+                            let __rep_cp695 = state.offset;
                             if !{
-                                let __pretty_cp688 = state.offset;
-                                let __pretty_bcp689 = __builder.checkpoint();
+                                let __pretty_cp692 = state.offset;
+                                let __pretty_bcp693 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp686 = state.offset;
-                                            let __pretty_bcp687 = __builder.checkpoint();
+                                            let __pretty_cp690 = state.offset;
+                                            let __pretty_bcp691 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows684 = state.offset;
+                                                    let __ows688 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows684..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows688..state.offset]);
                                                     if !Self::__value_prettify(state, __builder) {
                                                         return false;
                                                     }
-                                                    let __ows685 = state.offset;
+                                                    let __ows689 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows685..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows689..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp686;
-                                                __builder.restore(__pretty_bcp687);
+                                                state.offset = __pretty_cp690;
+                                                __builder.restore(__pretty_bcp691);
                                             }
                                             __ok
                                         } {
@@ -98996,18 +99119,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp688;
-                                    __builder.restore(__pretty_bcp689);
+                                    state.offset = __pretty_cp692;
+                                    __builder.restore(__pretty_bcp693);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp691;
+                                state.offset = __rep_cp695;
                                 break;
                             }
-                            if state.offset == __rep_cp691 {
+                            if state.offset == __rep_cp695 {
                                 break;
                             }
-                            __rep_count690 += 1;
+                            __rep_count694 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -99015,8 +99138,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp692 = state.offset;
-                            let __pretty_bcp693 = __builder.checkpoint();
+                            let __pretty_cp696 = state.offset;
+                            let __pretty_bcp697 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -99029,8 +99152,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp692;
-                                __builder.restore(__pretty_bcp693);
+                                state.offset = __pretty_cp696;
+                                __builder.restore(__pretty_bcp697);
                             }
                             __ok
                         };
@@ -99071,9 +99194,9 @@ mod __cssl4parser_emit_impl {
                         state.offset += 11usize;
                     };
                     {
-                        let __ows694 = state.offset;
+                        let __ows698 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows695 = state.offset;
+                        let __ows699 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -99081,33 +99204,33 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows694..__ows695]);
-                        let __ows696 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows698..__ows699]);
+                        let __ows700 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows696..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows700..state.offset]);
                     };
                     {
-                        let mut __rep_count705 = 0usize;
-                        while __rep_count705 < 4294967295 {
-                            let __rep_cp706 = state.offset;
+                        let mut __rep_count709 = 0usize;
+                        while __rep_count709 < 4294967295 {
+                            let __rep_cp710 = state.offset;
                             if !{
-                                let __pretty_cp703 = state.offset;
-                                let __pretty_bcp704 = __builder.checkpoint();
+                                let __pretty_cp707 = state.offset;
+                                let __pretty_bcp708 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp701 = state.offset;
-                                            let __pretty_bcp702 = __builder.checkpoint();
+                                            let __pretty_cp705 = state.offset;
+                                            let __pretty_bcp706 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows699 = state.offset;
+                                                    let __ows703 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows699..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows703..state.offset]);
                                                     {
                                                         if !{
-                                                            let __pretty_cp697 = state.offset;
-                                                            let __pretty_bcp698 = __builder.checkpoint();
+                                                            let __pretty_cp701 = state.offset;
+                                                            let __pretty_bcp702 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 if !Self::__fontWeightKeyword_prettify(state, __builder) {
                                                                     return false;
@@ -99115,8 +99238,8 @@ mod __cssl4parser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp697;
-                                                                __builder.restore(__pretty_bcp698);
+                                                                state.offset = __pretty_cp701;
+                                                                __builder.restore(__pretty_bcp702);
                                                             }
                                                             __ok
                                                         } {
@@ -99125,16 +99248,16 @@ mod __cssl4parser_emit_impl {
                                                             }
                                                         }
                                                     };
-                                                    let __ows700 = state.offset;
+                                                    let __ows704 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows700..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows704..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp701;
-                                                __builder.restore(__pretty_bcp702);
+                                                state.offset = __pretty_cp705;
+                                                __builder.restore(__pretty_bcp706);
                                             }
                                             __ok
                                         } {
@@ -99144,18 +99267,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp703;
-                                    __builder.restore(__pretty_bcp704);
+                                    state.offset = __pretty_cp707;
+                                    __builder.restore(__pretty_bcp708);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp706;
+                                state.offset = __rep_cp710;
                                 break;
                             }
-                            if state.offset == __rep_cp706 {
+                            if state.offset == __rep_cp710 {
                                 break;
                             }
-                            __rep_count705 += 1;
+                            __rep_count709 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -99163,8 +99286,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp707 = state.offset;
-                            let __pretty_bcp708 = __builder.checkpoint();
+                            let __pretty_cp711 = state.offset;
+                            let __pretty_bcp712 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -99177,8 +99300,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp707;
-                                __builder.restore(__pretty_bcp708);
+                                state.offset = __pretty_cp711;
+                                __builder.restore(__pretty_bcp712);
                             }
                             __ok
                         };
@@ -99219,9 +99342,9 @@ mod __cssl4parser_emit_impl {
                         state.offset += 11usize;
                     };
                     {
-                        let __ows709 = state.offset;
+                        let __ows713 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows710 = state.offset;
+                        let __ows714 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -99229,42 +99352,42 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows709..__ows710]);
-                        let __ows711 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows713..__ows714]);
+                        let __ows715 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows711..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows715..state.offset]);
                     };
                     {
-                        let mut __rep_count718 = 0usize;
-                        while __rep_count718 < 4294967295 {
-                            let __rep_cp719 = state.offset;
+                        let mut __rep_count722 = 0usize;
+                        while __rep_count722 < 4294967295 {
+                            let __rep_cp723 = state.offset;
                             if !{
-                                let __pretty_cp716 = state.offset;
-                                let __pretty_bcp717 = __builder.checkpoint();
+                                let __pretty_cp720 = state.offset;
+                                let __pretty_bcp721 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp714 = state.offset;
-                                            let __pretty_bcp715 = __builder.checkpoint();
+                                            let __pretty_cp718 = state.offset;
+                                            let __pretty_bcp719 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows712 = state.offset;
+                                                    let __ows716 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows712..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows716..state.offset]);
                                                     if !Self::__value_prettify(state, __builder) {
                                                         return false;
                                                     }
-                                                    let __ows713 = state.offset;
+                                                    let __ows717 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows713..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows717..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp714;
-                                                __builder.restore(__pretty_bcp715);
+                                                state.offset = __pretty_cp718;
+                                                __builder.restore(__pretty_bcp719);
                                             }
                                             __ok
                                         } {
@@ -99274,18 +99397,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp716;
-                                    __builder.restore(__pretty_bcp717);
+                                    state.offset = __pretty_cp720;
+                                    __builder.restore(__pretty_bcp721);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp719;
+                                state.offset = __rep_cp723;
                                 break;
                             }
-                            if state.offset == __rep_cp719 {
+                            if state.offset == __rep_cp723 {
                                 break;
                             }
-                            __rep_count718 += 1;
+                            __rep_count722 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -99293,8 +99416,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp720 = state.offset;
-                            let __pretty_bcp721 = __builder.checkpoint();
+                            let __pretty_cp724 = state.offset;
+                            let __pretty_bcp725 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -99307,8 +99430,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp720;
-                                __builder.restore(__pretty_bcp721);
+                                state.offset = __pretty_cp724;
+                                __builder.restore(__pretty_bcp725);
                             }
                             __ok
                         };
@@ -99496,9 +99619,9 @@ mod __cssl4parser_emit_impl {
                         };
                     };
                     {
-                        let __ows722 = state.offset;
+                        let __ows726 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows723 = state.offset;
+                        let __ows727 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -99506,33 +99629,33 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows722..__ows723]);
-                        let __ows724 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows726..__ows727]);
+                        let __ows728 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows724..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows728..state.offset]);
                     };
                     {
-                        let mut __rep_count733 = 0usize;
-                        while __rep_count733 < 4294967295 {
-                            let __rep_cp734 = state.offset;
+                        let mut __rep_count737 = 0usize;
+                        while __rep_count737 < 4294967295 {
+                            let __rep_cp738 = state.offset;
                             if !{
-                                let __pretty_cp731 = state.offset;
-                                let __pretty_bcp732 = __builder.checkpoint();
+                                let __pretty_cp735 = state.offset;
+                                let __pretty_bcp736 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp729 = state.offset;
-                                            let __pretty_bcp730 = __builder.checkpoint();
+                                            let __pretty_cp733 = state.offset;
+                                            let __pretty_bcp734 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows727 = state.offset;
+                                                    let __ows731 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows727..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows731..state.offset]);
                                                     {
                                                         if !{
-                                                            let __pretty_cp725 = state.offset;
-                                                            let __pretty_bcp726 = __builder.checkpoint();
+                                                            let __pretty_cp729 = state.offset;
+                                                            let __pretty_bcp730 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 if !Self::__borderWidthKeyword_prettify(state, __builder) {
                                                                     return false;
@@ -99540,8 +99663,8 @@ mod __cssl4parser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp725;
-                                                                __builder.restore(__pretty_bcp726);
+                                                                state.offset = __pretty_cp729;
+                                                                __builder.restore(__pretty_bcp730);
                                                             }
                                                             __ok
                                                         } {
@@ -99550,16 +99673,16 @@ mod __cssl4parser_emit_impl {
                                                             }
                                                         }
                                                     };
-                                                    let __ows728 = state.offset;
+                                                    let __ows732 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows728..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows732..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp729;
-                                                __builder.restore(__pretty_bcp730);
+                                                state.offset = __pretty_cp733;
+                                                __builder.restore(__pretty_bcp734);
                                             }
                                             __ok
                                         } {
@@ -99569,18 +99692,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp731;
-                                    __builder.restore(__pretty_bcp732);
+                                    state.offset = __pretty_cp735;
+                                    __builder.restore(__pretty_bcp736);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp734;
+                                state.offset = __rep_cp738;
                                 break;
                             }
-                            if state.offset == __rep_cp734 {
+                            if state.offset == __rep_cp738 {
                                 break;
                             }
-                            __rep_count733 += 1;
+                            __rep_count737 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -99588,8 +99711,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp735 = state.offset;
-                            let __pretty_bcp736 = __builder.checkpoint();
+                            let __pretty_cp739 = state.offset;
+                            let __pretty_bcp740 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -99602,8 +99725,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp735;
-                                __builder.restore(__pretty_bcp736);
+                                state.offset = __pretty_cp739;
+                                __builder.restore(__pretty_bcp740);
                             }
                             __ok
                         };
@@ -99791,9 +99914,9 @@ mod __cssl4parser_emit_impl {
                         };
                     };
                     {
-                        let __ows737 = state.offset;
+                        let __ows741 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows738 = state.offset;
+                        let __ows742 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -99801,33 +99924,33 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows737..__ows738]);
-                        let __ows739 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows741..__ows742]);
+                        let __ows743 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows739..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows743..state.offset]);
                     };
                     {
-                        let mut __rep_count748 = 0usize;
-                        while __rep_count748 < 4294967295 {
-                            let __rep_cp749 = state.offset;
+                        let mut __rep_count752 = 0usize;
+                        while __rep_count752 < 4294967295 {
+                            let __rep_cp753 = state.offset;
                             if !{
-                                let __pretty_cp746 = state.offset;
-                                let __pretty_bcp747 = __builder.checkpoint();
+                                let __pretty_cp750 = state.offset;
+                                let __pretty_bcp751 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp744 = state.offset;
-                                            let __pretty_bcp745 = __builder.checkpoint();
+                                            let __pretty_cp748 = state.offset;
+                                            let __pretty_bcp749 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows742 = state.offset;
+                                                    let __ows746 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows742..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows746..state.offset]);
                                                     {
                                                         if !{
-                                                            let __pretty_cp740 = state.offset;
-                                                            let __pretty_bcp741 = __builder.checkpoint();
+                                                            let __pretty_cp744 = state.offset;
+                                                            let __pretty_bcp745 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 if !Self::__borderStyleKeyword_prettify(state, __builder) {
                                                                     return false;
@@ -99835,8 +99958,8 @@ mod __cssl4parser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp740;
-                                                                __builder.restore(__pretty_bcp741);
+                                                                state.offset = __pretty_cp744;
+                                                                __builder.restore(__pretty_bcp745);
                                                             }
                                                             __ok
                                                         } {
@@ -99845,16 +99968,16 @@ mod __cssl4parser_emit_impl {
                                                             }
                                                         }
                                                     };
-                                                    let __ows743 = state.offset;
+                                                    let __ows747 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows743..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows747..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp744;
-                                                __builder.restore(__pretty_bcp745);
+                                                state.offset = __pretty_cp748;
+                                                __builder.restore(__pretty_bcp749);
                                             }
                                             __ok
                                         } {
@@ -99864,18 +99987,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp746;
-                                    __builder.restore(__pretty_bcp747);
+                                    state.offset = __pretty_cp750;
+                                    __builder.restore(__pretty_bcp751);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp749;
+                                state.offset = __rep_cp753;
                                 break;
                             }
-                            if state.offset == __rep_cp749 {
+                            if state.offset == __rep_cp753 {
                                 break;
                             }
-                            __rep_count748 += 1;
+                            __rep_count752 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -99883,8 +100006,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp750 = state.offset;
-                            let __pretty_bcp751 = __builder.checkpoint();
+                            let __pretty_cp754 = state.offset;
+                            let __pretty_bcp755 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -99897,8 +100020,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp750;
-                                __builder.restore(__pretty_bcp751);
+                                state.offset = __pretty_cp754;
+                                __builder.restore(__pretty_bcp755);
                             }
                             __ok
                         };
@@ -100222,9 +100345,9 @@ mod __cssl4parser_emit_impl {
                         };
                     };
                     {
-                        let __ows752 = state.offset;
+                        let __ows756 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows753 = state.offset;
+                        let __ows757 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -100232,42 +100355,42 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows752..__ows753]);
-                        let __ows754 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows756..__ows757]);
+                        let __ows758 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows754..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows758..state.offset]);
                     };
                     {
-                        let mut __rep_count761 = 0usize;
-                        while __rep_count761 < 4294967295 {
-                            let __rep_cp762 = state.offset;
+                        let mut __rep_count765 = 0usize;
+                        while __rep_count765 < 4294967295 {
+                            let __rep_cp766 = state.offset;
                             if !{
-                                let __pretty_cp759 = state.offset;
-                                let __pretty_bcp760 = __builder.checkpoint();
+                                let __pretty_cp763 = state.offset;
+                                let __pretty_bcp764 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp757 = state.offset;
-                                            let __pretty_bcp758 = __builder.checkpoint();
+                                            let __pretty_cp761 = state.offset;
+                                            let __pretty_bcp762 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows755 = state.offset;
+                                                    let __ows759 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows755..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows759..state.offset]);
                                                     if !Self::__value_prettify(state, __builder) {
                                                         return false;
                                                     }
-                                                    let __ows756 = state.offset;
+                                                    let __ows760 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows756..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows760..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp757;
-                                                __builder.restore(__pretty_bcp758);
+                                                state.offset = __pretty_cp761;
+                                                __builder.restore(__pretty_bcp762);
                                             }
                                             __ok
                                         } {
@@ -100277,18 +100400,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp759;
-                                    __builder.restore(__pretty_bcp760);
+                                    state.offset = __pretty_cp763;
+                                    __builder.restore(__pretty_bcp764);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp762;
+                                state.offset = __rep_cp766;
                                 break;
                             }
-                            if state.offset == __rep_cp762 {
+                            if state.offset == __rep_cp766 {
                                 break;
                             }
-                            __rep_count761 += 1;
+                            __rep_count765 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -100296,8 +100419,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp763 = state.offset;
-                            let __pretty_bcp764 = __builder.checkpoint();
+                            let __pretty_cp767 = state.offset;
+                            let __pretty_bcp768 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -100310,8 +100433,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp763;
-                                __builder.restore(__pretty_bcp764);
+                                state.offset = __pretty_cp767;
+                                __builder.restore(__pretty_bcp768);
                             }
                             __ok
                         };
@@ -100352,9 +100475,9 @@ mod __cssl4parser_emit_impl {
                         state.offset += 7usize;
                     };
                     {
-                        let __ows765 = state.offset;
+                        let __ows769 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows766 = state.offset;
+                        let __ows770 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -100362,42 +100485,42 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows765..__ows766]);
-                        let __ows767 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows769..__ows770]);
+                        let __ows771 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows767..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows771..state.offset]);
                     };
                     {
-                        let mut __rep_count774 = 0usize;
-                        while __rep_count774 < 4294967295 {
-                            let __rep_cp775 = state.offset;
+                        let mut __rep_count778 = 0usize;
+                        while __rep_count778 < 4294967295 {
+                            let __rep_cp779 = state.offset;
                             if !{
-                                let __pretty_cp772 = state.offset;
-                                let __pretty_bcp773 = __builder.checkpoint();
+                                let __pretty_cp776 = state.offset;
+                                let __pretty_bcp777 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp770 = state.offset;
-                                            let __pretty_bcp771 = __builder.checkpoint();
+                                            let __pretty_cp774 = state.offset;
+                                            let __pretty_bcp775 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows768 = state.offset;
+                                                    let __ows772 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows768..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows772..state.offset]);
                                                     if !Self::__value_prettify(state, __builder) {
                                                         return false;
                                                     }
-                                                    let __ows769 = state.offset;
+                                                    let __ows773 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows769..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows773..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp770;
-                                                __builder.restore(__pretty_bcp771);
+                                                state.offset = __pretty_cp774;
+                                                __builder.restore(__pretty_bcp775);
                                             }
                                             __ok
                                         } {
@@ -100407,18 +100530,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp772;
-                                    __builder.restore(__pretty_bcp773);
+                                    state.offset = __pretty_cp776;
+                                    __builder.restore(__pretty_bcp777);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp775;
+                                state.offset = __rep_cp779;
                                 break;
                             }
-                            if state.offset == __rep_cp775 {
+                            if state.offset == __rep_cp779 {
                                 break;
                             }
-                            __rep_count774 += 1;
+                            __rep_count778 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -100426,8 +100549,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp776 = state.offset;
-                            let __pretty_bcp777 = __builder.checkpoint();
+                            let __pretty_cp780 = state.offset;
+                            let __pretty_bcp781 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -100440,8 +100563,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp776;
-                                __builder.restore(__pretty_bcp777);
+                                state.offset = __pretty_cp780;
+                                __builder.restore(__pretty_bcp781);
                             }
                             __ok
                         };
@@ -100482,9 +100605,9 @@ mod __cssl4parser_emit_impl {
                         state.offset += 10usize;
                     };
                     {
-                        let __ows778 = state.offset;
+                        let __ows782 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows779 = state.offset;
+                        let __ows783 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -100492,33 +100615,33 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows778..__ows779]);
-                        let __ows780 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows782..__ows783]);
+                        let __ows784 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows780..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows784..state.offset]);
                     };
                     {
-                        let mut __rep_count789 = 0usize;
-                        while __rep_count789 < 4294967295 {
-                            let __rep_cp790 = state.offset;
+                        let mut __rep_count793 = 0usize;
+                        while __rep_count793 < 4294967295 {
+                            let __rep_cp794 = state.offset;
                             if !{
-                                let __pretty_cp787 = state.offset;
-                                let __pretty_bcp788 = __builder.checkpoint();
+                                let __pretty_cp791 = state.offset;
+                                let __pretty_bcp792 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp785 = state.offset;
-                                            let __pretty_bcp786 = __builder.checkpoint();
+                                            let __pretty_cp789 = state.offset;
+                                            let __pretty_bcp790 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows783 = state.offset;
+                                                    let __ows787 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows783..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows787..state.offset]);
                                                     {
                                                         if !{
-                                                            let __pretty_cp781 = state.offset;
-                                                            let __pretty_bcp782 = __builder.checkpoint();
+                                                            let __pretty_cp785 = state.offset;
+                                                            let __pretty_bcp786 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 if !Self::__textAlignKeyword_prettify(state, __builder) {
                                                                     return false;
@@ -100526,8 +100649,8 @@ mod __cssl4parser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp781;
-                                                                __builder.restore(__pretty_bcp782);
+                                                                state.offset = __pretty_cp785;
+                                                                __builder.restore(__pretty_bcp786);
                                                             }
                                                             __ok
                                                         } {
@@ -100536,16 +100659,16 @@ mod __cssl4parser_emit_impl {
                                                             }
                                                         }
                                                     };
-                                                    let __ows784 = state.offset;
+                                                    let __ows788 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows784..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows788..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp785;
-                                                __builder.restore(__pretty_bcp786);
+                                                state.offset = __pretty_cp789;
+                                                __builder.restore(__pretty_bcp790);
                                             }
                                             __ok
                                         } {
@@ -100555,18 +100678,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp787;
-                                    __builder.restore(__pretty_bcp788);
+                                    state.offset = __pretty_cp791;
+                                    __builder.restore(__pretty_bcp792);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp790;
+                                state.offset = __rep_cp794;
                                 break;
                             }
-                            if state.offset == __rep_cp790 {
+                            if state.offset == __rep_cp794 {
                                 break;
                             }
-                            __rep_count789 += 1;
+                            __rep_count793 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -100574,8 +100697,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp791 = state.offset;
-                            let __pretty_bcp792 = __builder.checkpoint();
+                            let __pretty_cp795 = state.offset;
+                            let __pretty_bcp796 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -100588,8 +100711,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp791;
-                                __builder.restore(__pretty_bcp792);
+                                state.offset = __pretty_cp795;
+                                __builder.restore(__pretty_bcp796);
                             }
                             __ok
                         };
@@ -100630,9 +100753,9 @@ mod __cssl4parser_emit_impl {
                         state.offset += 10usize;
                     };
                     {
-                        let __ows793 = state.offset;
+                        let __ows797 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows794 = state.offset;
+                        let __ows798 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -100640,33 +100763,33 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows793..__ows794]);
-                        let __ows795 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows797..__ows798]);
+                        let __ows799 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows795..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows799..state.offset]);
                     };
                     {
-                        let mut __rep_count804 = 0usize;
-                        while __rep_count804 < 4294967295 {
-                            let __rep_cp805 = state.offset;
+                        let mut __rep_count808 = 0usize;
+                        while __rep_count808 < 4294967295 {
+                            let __rep_cp809 = state.offset;
                             if !{
-                                let __pretty_cp802 = state.offset;
-                                let __pretty_bcp803 = __builder.checkpoint();
+                                let __pretty_cp806 = state.offset;
+                                let __pretty_bcp807 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp800 = state.offset;
-                                            let __pretty_bcp801 = __builder.checkpoint();
+                                            let __pretty_cp804 = state.offset;
+                                            let __pretty_bcp805 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows798 = state.offset;
+                                                    let __ows802 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows798..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows802..state.offset]);
                                                     {
                                                         if !{
-                                                            let __pretty_cp796 = state.offset;
-                                                            let __pretty_bcp797 = __builder.checkpoint();
+                                                            let __pretty_cp800 = state.offset;
+                                                            let __pretty_bcp801 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 if !Self::__boxSizingKeyword_prettify(state, __builder) {
                                                                     return false;
@@ -100674,8 +100797,8 @@ mod __cssl4parser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp796;
-                                                                __builder.restore(__pretty_bcp797);
+                                                                state.offset = __pretty_cp800;
+                                                                __builder.restore(__pretty_bcp801);
                                                             }
                                                             __ok
                                                         } {
@@ -100684,16 +100807,16 @@ mod __cssl4parser_emit_impl {
                                                             }
                                                         }
                                                     };
-                                                    let __ows799 = state.offset;
+                                                    let __ows803 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows799..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows803..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp800;
-                                                __builder.restore(__pretty_bcp801);
+                                                state.offset = __pretty_cp804;
+                                                __builder.restore(__pretty_bcp805);
                                             }
                                             __ok
                                         } {
@@ -100703,18 +100826,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp802;
-                                    __builder.restore(__pretty_bcp803);
+                                    state.offset = __pretty_cp806;
+                                    __builder.restore(__pretty_bcp807);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp805;
+                                state.offset = __rep_cp809;
                                 break;
                             }
-                            if state.offset == __rep_cp805 {
+                            if state.offset == __rep_cp809 {
                                 break;
                             }
-                            __rep_count804 += 1;
+                            __rep_count808 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -100722,8 +100845,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp806 = state.offset;
-                            let __pretty_bcp807 = __builder.checkpoint();
+                            let __pretty_cp810 = state.offset;
+                            let __pretty_bcp811 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -100736,8 +100859,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp806;
-                                __builder.restore(__pretty_bcp807);
+                                state.offset = __pretty_cp810;
+                                __builder.restore(__pretty_bcp811);
                             }
                             __ok
                         };
@@ -100778,9 +100901,9 @@ mod __cssl4parser_emit_impl {
                         state.offset += 6usize;
                     };
                     {
-                        let __ows808 = state.offset;
+                        let __ows812 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows809 = state.offset;
+                        let __ows813 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -100788,33 +100911,33 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows808..__ows809]);
-                        let __ows810 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows812..__ows813]);
+                        let __ows814 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows810..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows814..state.offset]);
                     };
                     {
-                        let mut __rep_count819 = 0usize;
-                        while __rep_count819 < 4294967295 {
-                            let __rep_cp820 = state.offset;
+                        let mut __rep_count823 = 0usize;
+                        while __rep_count823 < 4294967295 {
+                            let __rep_cp824 = state.offset;
                             if !{
-                                let __pretty_cp817 = state.offset;
-                                let __pretty_bcp818 = __builder.checkpoint();
+                                let __pretty_cp821 = state.offset;
+                                let __pretty_bcp822 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp815 = state.offset;
-                                            let __pretty_bcp816 = __builder.checkpoint();
+                                            let __pretty_cp819 = state.offset;
+                                            let __pretty_bcp820 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows813 = state.offset;
+                                                    let __ows817 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows813..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows817..state.offset]);
                                                     {
                                                         if !{
-                                                            let __pretty_cp811 = state.offset;
-                                                            let __pretty_bcp812 = __builder.checkpoint();
+                                                            let __pretty_cp815 = state.offset;
+                                                            let __pretty_bcp816 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 if !Self::__cursorKeyword_prettify(state, __builder) {
                                                                     return false;
@@ -100822,8 +100945,8 @@ mod __cssl4parser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp811;
-                                                                __builder.restore(__pretty_bcp812);
+                                                                state.offset = __pretty_cp815;
+                                                                __builder.restore(__pretty_bcp816);
                                                             }
                                                             __ok
                                                         } {
@@ -100832,16 +100955,16 @@ mod __cssl4parser_emit_impl {
                                                             }
                                                         }
                                                     };
-                                                    let __ows814 = state.offset;
+                                                    let __ows818 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows814..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows818..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp815;
-                                                __builder.restore(__pretty_bcp816);
+                                                state.offset = __pretty_cp819;
+                                                __builder.restore(__pretty_bcp820);
                                             }
                                             __ok
                                         } {
@@ -100851,18 +100974,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp817;
-                                    __builder.restore(__pretty_bcp818);
+                                    state.offset = __pretty_cp821;
+                                    __builder.restore(__pretty_bcp822);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp820;
+                                state.offset = __rep_cp824;
                                 break;
                             }
-                            if state.offset == __rep_cp820 {
+                            if state.offset == __rep_cp824 {
                                 break;
                             }
-                            __rep_count819 += 1;
+                            __rep_count823 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -100870,8 +100993,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp821 = state.offset;
-                            let __pretty_bcp822 = __builder.checkpoint();
+                            let __pretty_cp825 = state.offset;
+                            let __pretty_bcp826 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -100884,8 +101007,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp821;
-                                __builder.restore(__pretty_bcp822);
+                                state.offset = __pretty_cp825;
+                                __builder.restore(__pretty_bcp826);
                             }
                             __ok
                         };
@@ -100913,8 +101036,8 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     if !{
-                        let __pretty_cp877 = state.offset;
-                        let __pretty_bcp878 = __builder.checkpoint();
+                        let __pretty_cp881 = state.offset;
+                        let __pretty_bcp882 = __builder.checkpoint();
                         let __ok = (|| -> bool {
                             if !Self::__customPropertyDecl_prettify(state, __builder) {
                                 return false;
@@ -100922,15 +101045,15 @@ mod __cssl4parser_emit_impl {
                             true
                         })();
                         if !__ok {
-                            state.offset = __pretty_cp877;
-                            __builder.restore(__pretty_bcp878);
+                            state.offset = __pretty_cp881;
+                            __builder.restore(__pretty_bcp882);
                         }
                         __ok
                     } {
                         {
                             if !{
-                                let __pretty_cp875 = state.offset;
-                                let __pretty_bcp876 = __builder.checkpoint();
+                                let __pretty_cp879 = state.offset;
+                                let __pretty_bcp880 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     if !Self::__colorDecl_prettify(state, __builder) {
                                         return false;
@@ -100938,15 +101061,15 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp875;
-                                    __builder.restore(__pretty_bcp876);
+                                    state.offset = __pretty_cp879;
+                                    __builder.restore(__pretty_bcp880);
                                 }
                                 __ok
                             } {
                                 {
                                     if !{
-                                        let __pretty_cp873 = state.offset;
-                                        let __pretty_bcp874 = __builder.checkpoint();
+                                        let __pretty_cp877 = state.offset;
+                                        let __pretty_bcp878 = __builder.checkpoint();
                                         let __ok = (|| -> bool {
                                             if !Self::__sizeDecl_prettify(state, __builder) {
                                                 return false;
@@ -100954,15 +101077,15 @@ mod __cssl4parser_emit_impl {
                                             true
                                         })();
                                         if !__ok {
-                                            state.offset = __pretty_cp873;
-                                            __builder.restore(__pretty_bcp874);
+                                            state.offset = __pretty_cp877;
+                                            __builder.restore(__pretty_bcp878);
                                         }
                                         __ok
                                     } {
                                         {
                                             if !{
-                                                let __pretty_cp871 = state.offset;
-                                                let __pretty_bcp872 = __builder.checkpoint();
+                                                let __pretty_cp875 = state.offset;
+                                                let __pretty_bcp876 = __builder.checkpoint();
                                                 let __ok = (|| -> bool {
                                                     if !Self::__spacingDecl_prettify(state, __builder) {
                                                         return false;
@@ -100970,15 +101093,15 @@ mod __cssl4parser_emit_impl {
                                                     true
                                                 })();
                                                 if !__ok {
-                                                    state.offset = __pretty_cp871;
-                                                    __builder.restore(__pretty_bcp872);
+                                                    state.offset = __pretty_cp875;
+                                                    __builder.restore(__pretty_bcp876);
                                                 }
                                                 __ok
                                             } {
                                                 {
                                                     if !{
-                                                        let __pretty_cp869 = state.offset;
-                                                        let __pretty_bcp870 = __builder.checkpoint();
+                                                        let __pretty_cp873 = state.offset;
+                                                        let __pretty_bcp874 = __builder.checkpoint();
                                                         let __ok = (|| -> bool {
                                                             if !Self::__fontDecl_prettify(state, __builder) {
                                                                 return false;
@@ -100986,15 +101109,15 @@ mod __cssl4parser_emit_impl {
                                                             true
                                                         })();
                                                         if !__ok {
-                                                            state.offset = __pretty_cp869;
-                                                            __builder.restore(__pretty_bcp870);
+                                                            state.offset = __pretty_cp873;
+                                                            __builder.restore(__pretty_bcp874);
                                                         }
                                                         __ok
                                                     } {
                                                         {
                                                             if !{
-                                                                let __pretty_cp867 = state.offset;
-                                                                let __pretty_bcp868 = __builder.checkpoint();
+                                                                let __pretty_cp871 = state.offset;
+                                                                let __pretty_bcp872 = __builder.checkpoint();
                                                                 let __ok = (|| -> bool {
                                                                     if !Self::__bgDecl_prettify(state, __builder) {
                                                                         return false;
@@ -101002,15 +101125,15 @@ mod __cssl4parser_emit_impl {
                                                                     true
                                                                 })();
                                                                 if !__ok {
-                                                                    state.offset = __pretty_cp867;
-                                                                    __builder.restore(__pretty_bcp868);
+                                                                    state.offset = __pretty_cp871;
+                                                                    __builder.restore(__pretty_bcp872);
                                                                 }
                                                                 __ok
                                                             } {
                                                                 {
                                                                     if !{
-                                                                        let __pretty_cp865 = state.offset;
-                                                                        let __pretty_bcp866 = __builder.checkpoint();
+                                                                        let __pretty_cp869 = state.offset;
+                                                                        let __pretty_bcp870 = __builder.checkpoint();
                                                                         let __ok = (|| -> bool {
                                                                             if !Self::__transformDecl_prettify(state, __builder) {
                                                                                 return false;
@@ -101018,15 +101141,15 @@ mod __cssl4parser_emit_impl {
                                                                             true
                                                                         })();
                                                                         if !__ok {
-                                                                            state.offset = __pretty_cp865;
-                                                                            __builder.restore(__pretty_bcp866);
+                                                                            state.offset = __pretty_cp869;
+                                                                            __builder.restore(__pretty_bcp870);
                                                                         }
                                                                         __ok
                                                                     } {
                                                                         {
                                                                             if !{
-                                                                                let __pretty_cp863 = state.offset;
-                                                                                let __pretty_bcp864 = __builder.checkpoint();
+                                                                                let __pretty_cp867 = state.offset;
+                                                                                let __pretty_bcp868 = __builder.checkpoint();
                                                                                 let __ok = (|| -> bool {
                                                                                     if !Self::__transitionDecl_prettify(state, __builder) {
                                                                                         return false;
@@ -101034,15 +101157,15 @@ mod __cssl4parser_emit_impl {
                                                                                     true
                                                                                 })();
                                                                                 if !__ok {
-                                                                                    state.offset = __pretty_cp863;
-                                                                                    __builder.restore(__pretty_bcp864);
+                                                                                    state.offset = __pretty_cp867;
+                                                                                    __builder.restore(__pretty_bcp868);
                                                                                 }
                                                                                 __ok
                                                                             } {
                                                                                 {
                                                                                     if !{
-                                                                                        let __pretty_cp861 = state.offset;
-                                                                                        let __pretty_bcp862 = __builder.checkpoint();
+                                                                                        let __pretty_cp865 = state.offset;
+                                                                                        let __pretty_bcp866 = __builder.checkpoint();
                                                                                         let __ok = (|| -> bool {
                                                                                             if !Self::__listTableDecl_prettify(state, __builder) {
                                                                                                 return false;
@@ -101050,15 +101173,15 @@ mod __cssl4parser_emit_impl {
                                                                                             true
                                                                                         })();
                                                                                         if !__ok {
-                                                                                            state.offset = __pretty_cp861;
-                                                                                            __builder.restore(__pretty_bcp862);
+                                                                                            state.offset = __pretty_cp865;
+                                                                                            __builder.restore(__pretty_bcp866);
                                                                                         }
                                                                                         __ok
                                                                                     } {
                                                                                         {
                                                                                             if !{
-                                                                                                let __pretty_cp859 = state.offset;
-                                                                                                let __pretty_bcp860 = __builder.checkpoint();
+                                                                                                let __pretty_cp863 = state.offset;
+                                                                                                let __pretty_bcp864 = __builder.checkpoint();
                                                                                                 let __ok = (|| -> bool {
                                                                                                     if !Self::__displayDecl_prettify(state, __builder) {
                                                                                                         return false;
@@ -101066,15 +101189,15 @@ mod __cssl4parser_emit_impl {
                                                                                                     true
                                                                                                 })();
                                                                                                 if !__ok {
-                                                                                                    state.offset = __pretty_cp859;
-                                                                                                    __builder.restore(__pretty_bcp860);
+                                                                                                    state.offset = __pretty_cp863;
+                                                                                                    __builder.restore(__pretty_bcp864);
                                                                                                 }
                                                                                                 __ok
                                                                                             } {
                                                                                                 {
                                                                                                     if !{
-                                                                                                        let __pretty_cp857 = state.offset;
-                                                                                                        let __pretty_bcp858 = __builder.checkpoint();
+                                                                                                        let __pretty_cp861 = state.offset;
+                                                                                                        let __pretty_bcp862 = __builder.checkpoint();
                                                                                                         let __ok = (|| -> bool {
                                                                                                             if !Self::__positionDecl_prettify(state, __builder) {
                                                                                                                 return false;
@@ -101082,15 +101205,15 @@ mod __cssl4parser_emit_impl {
                                                                                                             true
                                                                                                         })();
                                                                                                         if !__ok {
-                                                                                                            state.offset = __pretty_cp857;
-                                                                                                            __builder.restore(__pretty_bcp858);
+                                                                                                            state.offset = __pretty_cp861;
+                                                                                                            __builder.restore(__pretty_bcp862);
                                                                                                         }
                                                                                                         __ok
                                                                                                     } {
                                                                                                         {
                                                                                                             if !{
-                                                                                                                let __pretty_cp855 = state.offset;
-                                                                                                                let __pretty_bcp856 = __builder.checkpoint();
+                                                                                                                let __pretty_cp859 = state.offset;
+                                                                                                                let __pretty_bcp860 = __builder.checkpoint();
                                                                                                                 let __ok = (|| -> bool {
                                                                                                                     if !Self::__overflowDecl_prettify(state, __builder) {
                                                                                                                         return false;
@@ -101098,15 +101221,15 @@ mod __cssl4parser_emit_impl {
                                                                                                                     true
                                                                                                                 })();
                                                                                                                 if !__ok {
-                                                                                                                    state.offset = __pretty_cp855;
-                                                                                                                    __builder.restore(__pretty_bcp856);
+                                                                                                                    state.offset = __pretty_cp859;
+                                                                                                                    __builder.restore(__pretty_bcp860);
                                                                                                                 }
                                                                                                                 __ok
                                                                                                             } {
                                                                                                                 {
                                                                                                                     if !{
-                                                                                                                        let __pretty_cp853 = state.offset;
-                                                                                                                        let __pretty_bcp854 = __builder.checkpoint();
+                                                                                                                        let __pretty_cp857 = state.offset;
+                                                                                                                        let __pretty_bcp858 = __builder.checkpoint();
                                                                                                                         let __ok = (|| -> bool {
                                                                                                                             if !Self::__visibilityDecl_prettify(state, __builder) {
                                                                                                                                 return false;
@@ -101114,15 +101237,15 @@ mod __cssl4parser_emit_impl {
                                                                                                                             true
                                                                                                                         })();
                                                                                                                         if !__ok {
-                                                                                                                            state.offset = __pretty_cp853;
-                                                                                                                            __builder.restore(__pretty_bcp854);
+                                                                                                                            state.offset = __pretty_cp857;
+                                                                                                                            __builder.restore(__pretty_bcp858);
                                                                                                                         }
                                                                                                                         __ok
                                                                                                                     } {
                                                                                                                         {
                                                                                                                             if !{
-                                                                                                                                let __pretty_cp851 = state.offset;
-                                                                                                                                let __pretty_bcp852 = __builder.checkpoint();
+                                                                                                                                let __pretty_cp855 = state.offset;
+                                                                                                                                let __pretty_bcp856 = __builder.checkpoint();
                                                                                                                                 let __ok = (|| -> bool {
                                                                                                                                     if !Self::__flexDirDecl_prettify(state, __builder) {
                                                                                                                                         return false;
@@ -101130,15 +101253,15 @@ mod __cssl4parser_emit_impl {
                                                                                                                                     true
                                                                                                                                 })();
                                                                                                                                 if !__ok {
-                                                                                                                                    state.offset = __pretty_cp851;
-                                                                                                                                    __builder.restore(__pretty_bcp852);
+                                                                                                                                    state.offset = __pretty_cp855;
+                                                                                                                                    __builder.restore(__pretty_bcp856);
                                                                                                                                 }
                                                                                                                                 __ok
                                                                                                                             } {
                                                                                                                                 {
                                                                                                                                     if !{
-                                                                                                                                        let __pretty_cp849 = state.offset;
-                                                                                                                                        let __pretty_bcp850 = __builder.checkpoint();
+                                                                                                                                        let __pretty_cp853 = state.offset;
+                                                                                                                                        let __pretty_bcp854 = __builder.checkpoint();
                                                                                                                                         let __ok = (|| -> bool {
                                                                                                                                             if !Self::__flexWrapDecl_prettify(state, __builder) {
                                                                                                                                                 return false;
@@ -101146,15 +101269,15 @@ mod __cssl4parser_emit_impl {
                                                                                                                                             true
                                                                                                                                         })();
                                                                                                                                         if !__ok {
-                                                                                                                                            state.offset = __pretty_cp849;
-                                                                                                                                            __builder.restore(__pretty_bcp850);
+                                                                                                                                            state.offset = __pretty_cp853;
+                                                                                                                                            __builder.restore(__pretty_bcp854);
                                                                                                                                         }
                                                                                                                                         __ok
                                                                                                                                     } {
                                                                                                                                         {
                                                                                                                                             if !{
-                                                                                                                                                let __pretty_cp847 = state.offset;
-                                                                                                                                                let __pretty_bcp848 = __builder.checkpoint();
+                                                                                                                                                let __pretty_cp851 = state.offset;
+                                                                                                                                                let __pretty_bcp852 = __builder.checkpoint();
                                                                                                                                                 let __ok = (|| -> bool {
                                                                                                                                                     if !Self::__alignDecl_prettify(state, __builder) {
                                                                                                                                                         return false;
@@ -101162,15 +101285,15 @@ mod __cssl4parser_emit_impl {
                                                                                                                                                     true
                                                                                                                                                 })();
                                                                                                                                                 if !__ok {
-                                                                                                                                                    state.offset = __pretty_cp847;
-                                                                                                                                                    __builder.restore(__pretty_bcp848);
+                                                                                                                                                    state.offset = __pretty_cp851;
+                                                                                                                                                    __builder.restore(__pretty_bcp852);
                                                                                                                                                 }
                                                                                                                                                 __ok
                                                                                                                                             } {
                                                                                                                                                 {
                                                                                                                                                     if !{
-                                                                                                                                                        let __pretty_cp845 = state.offset;
-                                                                                                                                                        let __pretty_bcp846 = __builder.checkpoint();
+                                                                                                                                                        let __pretty_cp849 = state.offset;
+                                                                                                                                                        let __pretty_bcp850 = __builder.checkpoint();
                                                                                                                                                         let __ok = (|| -> bool {
                                                                                                                                                             if !Self::__flexNumDecl_prettify(state, __builder) {
                                                                                                                                                                 return false;
@@ -101178,15 +101301,15 @@ mod __cssl4parser_emit_impl {
                                                                                                                                                             true
                                                                                                                                                         })();
                                                                                                                                                         if !__ok {
-                                                                                                                                                            state.offset = __pretty_cp845;
-                                                                                                                                                            __builder.restore(__pretty_bcp846);
+                                                                                                                                                            state.offset = __pretty_cp849;
+                                                                                                                                                            __builder.restore(__pretty_bcp850);
                                                                                                                                                         }
                                                                                                                                                         __ok
                                                                                                                                                     } {
                                                                                                                                                         {
                                                                                                                                                             if !{
-                                                                                                                                                                let __pretty_cp843 = state.offset;
-                                                                                                                                                                let __pretty_bcp844 = __builder.checkpoint();
+                                                                                                                                                                let __pretty_cp847 = state.offset;
+                                                                                                                                                                let __pretty_bcp848 = __builder.checkpoint();
                                                                                                                                                                 let __ok = (|| -> bool {
                                                                                                                                                                     if !Self::__fontSizeDecl_prettify(state, __builder) {
                                                                                                                                                                         return false;
@@ -101194,15 +101317,15 @@ mod __cssl4parser_emit_impl {
                                                                                                                                                                     true
                                                                                                                                                                 })();
                                                                                                                                                                 if !__ok {
-                                                                                                                                                                    state.offset = __pretty_cp843;
-                                                                                                                                                                    __builder.restore(__pretty_bcp844);
+                                                                                                                                                                    state.offset = __pretty_cp847;
+                                                                                                                                                                    __builder.restore(__pretty_bcp848);
                                                                                                                                                                 }
                                                                                                                                                                 __ok
                                                                                                                                                             } {
                                                                                                                                                                 {
                                                                                                                                                                     if !{
-                                                                                                                                                                        let __pretty_cp841 = state.offset;
-                                                                                                                                                                        let __pretty_bcp842 = __builder.checkpoint();
+                                                                                                                                                                        let __pretty_cp845 = state.offset;
+                                                                                                                                                                        let __pretty_bcp846 = __builder.checkpoint();
                                                                                                                                                                         let __ok = (|| -> bool {
                                                                                                                                                                             if !Self::__fontWeightDecl_prettify(state, __builder) {
                                                                                                                                                                                 return false;
@@ -101210,15 +101333,15 @@ mod __cssl4parser_emit_impl {
                                                                                                                                                                             true
                                                                                                                                                                         })();
                                                                                                                                                                         if !__ok {
-                                                                                                                                                                            state.offset = __pretty_cp841;
-                                                                                                                                                                            __builder.restore(__pretty_bcp842);
+                                                                                                                                                                            state.offset = __pretty_cp845;
+                                                                                                                                                                            __builder.restore(__pretty_bcp846);
                                                                                                                                                                         }
                                                                                                                                                                         __ok
                                                                                                                                                                     } {
                                                                                                                                                                         {
                                                                                                                                                                             if !{
-                                                                                                                                                                                let __pretty_cp839 = state.offset;
-                                                                                                                                                                                let __pretty_bcp840 = __builder.checkpoint();
+                                                                                                                                                                                let __pretty_cp843 = state.offset;
+                                                                                                                                                                                let __pretty_bcp844 = __builder.checkpoint();
                                                                                                                                                                                 let __ok = (|| -> bool {
                                                                                                                                                                                     if !Self::__lineHeightDecl_prettify(state, __builder) {
                                                                                                                                                                                         return false;
@@ -101226,15 +101349,15 @@ mod __cssl4parser_emit_impl {
                                                                                                                                                                                     true
                                                                                                                                                                                 })();
                                                                                                                                                                                 if !__ok {
-                                                                                                                                                                                    state.offset = __pretty_cp839;
-                                                                                                                                                                                    __builder.restore(__pretty_bcp840);
+                                                                                                                                                                                    state.offset = __pretty_cp843;
+                                                                                                                                                                                    __builder.restore(__pretty_bcp844);
                                                                                                                                                                                 }
                                                                                                                                                                                 __ok
                                                                                                                                                                             } {
                                                                                                                                                                                 {
                                                                                                                                                                                     if !{
-                                                                                                                                                                                        let __pretty_cp837 = state.offset;
-                                                                                                                                                                                        let __pretty_bcp838 = __builder.checkpoint();
+                                                                                                                                                                                        let __pretty_cp841 = state.offset;
+                                                                                                                                                                                        let __pretty_bcp842 = __builder.checkpoint();
                                                                                                                                                                                         let __ok = (|| -> bool {
                                                                                                                                                                                             if !Self::__borderWidthDecl_prettify(state, __builder) {
                                                                                                                                                                                                 return false;
@@ -101242,15 +101365,15 @@ mod __cssl4parser_emit_impl {
                                                                                                                                                                                             true
                                                                                                                                                                                         })();
                                                                                                                                                                                         if !__ok {
-                                                                                                                                                                                            state.offset = __pretty_cp837;
-                                                                                                                                                                                            __builder.restore(__pretty_bcp838);
+                                                                                                                                                                                            state.offset = __pretty_cp841;
+                                                                                                                                                                                            __builder.restore(__pretty_bcp842);
                                                                                                                                                                                         }
                                                                                                                                                                                         __ok
                                                                                                                                                                                     } {
                                                                                                                                                                                         {
                                                                                                                                                                                             if !{
-                                                                                                                                                                                                let __pretty_cp835 = state.offset;
-                                                                                                                                                                                                let __pretty_bcp836 = __builder.checkpoint();
+                                                                                                                                                                                                let __pretty_cp839 = state.offset;
+                                                                                                                                                                                                let __pretty_bcp840 = __builder.checkpoint();
                                                                                                                                                                                                 let __ok = (|| -> bool {
                                                                                                                                                                                                     if !Self::__borderStyleDecl_prettify(state, __builder) {
                                                                                                                                                                                                         return false;
@@ -101258,15 +101381,15 @@ mod __cssl4parser_emit_impl {
                                                                                                                                                                                                     true
                                                                                                                                                                                                 })();
                                                                                                                                                                                                 if !__ok {
-                                                                                                                                                                                                    state.offset = __pretty_cp835;
-                                                                                                                                                                                                    __builder.restore(__pretty_bcp836);
+                                                                                                                                                                                                    state.offset = __pretty_cp839;
+                                                                                                                                                                                                    __builder.restore(__pretty_bcp840);
                                                                                                                                                                                                 }
                                                                                                                                                                                                 __ok
                                                                                                                                                                                             } {
                                                                                                                                                                                                 {
                                                                                                                                                                                                     if !{
-                                                                                                                                                                                                        let __pretty_cp833 = state.offset;
-                                                                                                                                                                                                        let __pretty_bcp834 = __builder.checkpoint();
+                                                                                                                                                                                                        let __pretty_cp837 = state.offset;
+                                                                                                                                                                                                        let __pretty_bcp838 = __builder.checkpoint();
                                                                                                                                                                                                         let __ok = (|| -> bool {
                                                                                                                                                                                                             if !Self::__borderRadiusDecl_prettify(state, __builder) {
                                                                                                                                                                                                                 return false;
@@ -101274,15 +101397,15 @@ mod __cssl4parser_emit_impl {
                                                                                                                                                                                                             true
                                                                                                                                                                                                         })();
                                                                                                                                                                                                         if !__ok {
-                                                                                                                                                                                                            state.offset = __pretty_cp833;
-                                                                                                                                                                                                            __builder.restore(__pretty_bcp834);
+                                                                                                                                                                                                            state.offset = __pretty_cp837;
+                                                                                                                                                                                                            __builder.restore(__pretty_bcp838);
                                                                                                                                                                                                         }
                                                                                                                                                                                                         __ok
                                                                                                                                                                                                     } {
                                                                                                                                                                                                         {
                                                                                                                                                                                                             if !{
-                                                                                                                                                                                                                let __pretty_cp831 = state.offset;
-                                                                                                                                                                                                                let __pretty_bcp832 = __builder.checkpoint();
+                                                                                                                                                                                                                let __pretty_cp835 = state.offset;
+                                                                                                                                                                                                                let __pretty_bcp836 = __builder.checkpoint();
                                                                                                                                                                                                                 let __ok = (|| -> bool {
                                                                                                                                                                                                                     if !Self::__opacityDecl_prettify(state, __builder) {
                                                                                                                                                                                                                         return false;
@@ -101290,15 +101413,15 @@ mod __cssl4parser_emit_impl {
                                                                                                                                                                                                                     true
                                                                                                                                                                                                                 })();
                                                                                                                                                                                                                 if !__ok {
-                                                                                                                                                                                                                    state.offset = __pretty_cp831;
-                                                                                                                                                                                                                    __builder.restore(__pretty_bcp832);
+                                                                                                                                                                                                                    state.offset = __pretty_cp835;
+                                                                                                                                                                                                                    __builder.restore(__pretty_bcp836);
                                                                                                                                                                                                                 }
                                                                                                                                                                                                                 __ok
                                                                                                                                                                                                             } {
                                                                                                                                                                                                                 {
                                                                                                                                                                                                                     if !{
-                                                                                                                                                                                                                        let __pretty_cp829 = state.offset;
-                                                                                                                                                                                                                        let __pretty_bcp830 = __builder.checkpoint();
+                                                                                                                                                                                                                        let __pretty_cp833 = state.offset;
+                                                                                                                                                                                                                        let __pretty_bcp834 = __builder.checkpoint();
                                                                                                                                                                                                                         let __ok = (|| -> bool {
                                                                                                                                                                                                                             if !Self::__textAlignDecl_prettify(state, __builder) {
                                                                                                                                                                                                                                 return false;
@@ -101306,15 +101429,15 @@ mod __cssl4parser_emit_impl {
                                                                                                                                                                                                                             true
                                                                                                                                                                                                                         })();
                                                                                                                                                                                                                         if !__ok {
-                                                                                                                                                                                                                            state.offset = __pretty_cp829;
-                                                                                                                                                                                                                            __builder.restore(__pretty_bcp830);
+                                                                                                                                                                                                                            state.offset = __pretty_cp833;
+                                                                                                                                                                                                                            __builder.restore(__pretty_bcp834);
                                                                                                                                                                                                                         }
                                                                                                                                                                                                                         __ok
                                                                                                                                                                                                                     } {
                                                                                                                                                                                                                         {
                                                                                                                                                                                                                             if !{
-                                                                                                                                                                                                                                let __pretty_cp827 = state.offset;
-                                                                                                                                                                                                                                let __pretty_bcp828 = __builder.checkpoint();
+                                                                                                                                                                                                                                let __pretty_cp831 = state.offset;
+                                                                                                                                                                                                                                let __pretty_bcp832 = __builder.checkpoint();
                                                                                                                                                                                                                                 let __ok = (|| -> bool {
                                                                                                                                                                                                                                     if !Self::__boxSizingDecl_prettify(state, __builder) {
                                                                                                                                                                                                                                         return false;
@@ -101322,15 +101445,15 @@ mod __cssl4parser_emit_impl {
                                                                                                                                                                                                                                     true
                                                                                                                                                                                                                                 })();
                                                                                                                                                                                                                                 if !__ok {
-                                                                                                                                                                                                                                    state.offset = __pretty_cp827;
-                                                                                                                                                                                                                                    __builder.restore(__pretty_bcp828);
+                                                                                                                                                                                                                                    state.offset = __pretty_cp831;
+                                                                                                                                                                                                                                    __builder.restore(__pretty_bcp832);
                                                                                                                                                                                                                                 }
                                                                                                                                                                                                                                 __ok
                                                                                                                                                                                                                             } {
                                                                                                                                                                                                                                 {
                                                                                                                                                                                                                                     if !{
-                                                                                                                                                                                                                                        let __pretty_cp825 = state.offset;
-                                                                                                                                                                                                                                        let __pretty_bcp826 = __builder.checkpoint();
+                                                                                                                                                                                                                                        let __pretty_cp829 = state.offset;
+                                                                                                                                                                                                                                        let __pretty_bcp830 = __builder.checkpoint();
                                                                                                                                                                                                                                         let __ok = (|| -> bool {
                                                                                                                                                                                                                                             if !Self::__cursorDecl_prettify(state, __builder) {
                                                                                                                                                                                                                                                 return false;
@@ -101338,15 +101461,15 @@ mod __cssl4parser_emit_impl {
                                                                                                                                                                                                                                             true
                                                                                                                                                                                                                                         })();
                                                                                                                                                                                                                                         if !__ok {
-                                                                                                                                                                                                                                            state.offset = __pretty_cp825;
-                                                                                                                                                                                                                                            __builder.restore(__pretty_bcp826);
+                                                                                                                                                                                                                                            state.offset = __pretty_cp829;
+                                                                                                                                                                                                                                            __builder.restore(__pretty_bcp830);
                                                                                                                                                                                                                                         }
                                                                                                                                                                                                                                         __ok
                                                                                                                                                                                                                                     } {
                                                                                                                                                                                                                                         {
                                                                                                                                                                                                                                             if !{
-                                                                                                                                                                                                                                                let __pretty_cp823 = state.offset;
-                                                                                                                                                                                                                                                let __pretty_bcp824 = __builder.checkpoint();
+                                                                                                                                                                                                                                                let __pretty_cp827 = state.offset;
+                                                                                                                                                                                                                                                let __pretty_bcp828 = __builder.checkpoint();
                                                                                                                                                                                                                                                 let __ok = (|| -> bool {
                                                                                                                                                                                                                                                     if !Self::__genericDecl_prettify(state, __builder) {
                                                                                                                                                                                                                                                         return false;
@@ -101354,8 +101477,8 @@ mod __cssl4parser_emit_impl {
                                                                                                                                                                                                                                                     true
                                                                                                                                                                                                                                                 })();
                                                                                                                                                                                                                                                 if !__ok {
-                                                                                                                                                                                                                                                    state.offset = __pretty_cp823;
-                                                                                                                                                                                                                                                    __builder.restore(__pretty_bcp824);
+                                                                                                                                                                                                                                                    state.offset = __pretty_cp827;
+                                                                                                                                                                                                                                                    __builder.restore(__pretty_bcp828);
                                                                                                                                                                                                                                                 }
                                                                                                                                                                                                                                                 __ok
                                                                                                                                                                                                                                             } {
@@ -101440,32 +101563,129 @@ mod __cssl4parser_emit_impl {
                 {
                     {
                         {
-                            let __ows879 = state.offset;
+                            let __ows883 = state.offset;
                             let _ = ::parse_that::scan_ws_block_comments(state);
-                            let __ows880 = state.offset;
+                            let __ows884 = state.offset;
                             {
-                                let __s = "@keyframes";
-                                let __bytes = __s.as_bytes();
-                                let __slc = match state.src_bytes.get(state.offset..) {
-                                    Some(s) if s.len() >= 10usize => s,
-                                    _ => return false,
-                                };
-                                if &__slc[..10usize] != __bytes {
+                                let __start = state.offset;
+                                if {
+                                    let __start = state.offset;
+                                    let __result: Option<()> = (|| {
+                                        if state.src_bytes.get(state.offset).copied() != Some(b'@')
+                                        {
+                                            return None;
+                                        }
+                                        state.offset += 1;
+                                        {
+                                            let __save = state.offset;
+                                            let __ok = (|| -> Option<()> {
+                                                if state.src_bytes.get(state.offset).copied() != Some(b'-')
+                                                {
+                                                    return None;
+                                                }
+                                                state.offset += 1;
+                                                {
+                                                    let __loop_start = state.offset;
+                                                    let __end = state.src_bytes.len();
+                                                    let mut __pos = state.offset;
+                                                    while __pos < __end {
+                                                        let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                        if (__b >= b'a' && __b <= b'z') {
+                                                            __pos += 1;
+                                                        } else {
+                                                            break;
+                                                        }
+                                                    }
+                                                    if __pos < __loop_start + 1 as usize {
+                                                        return None;
+                                                    }
+                                                    state.offset = __pos;
+                                                }
+                                                if state.src_bytes.get(state.offset).copied() != Some(b'-')
+                                                {
+                                                    return None;
+                                                }
+                                                state.offset += 1;
+                                                Some(())
+                                            })();
+                                            if __ok.is_none() {
+                                                state.offset = __save;
+                                            }
+                                        }
+                                        if state.src_bytes.get(state.offset).copied() != Some(b'k')
+                                        {
+                                            return None;
+                                        }
+                                        state.offset += 1;
+                                        if state.src_bytes.get(state.offset).copied() != Some(b'e')
+                                        {
+                                            return None;
+                                        }
+                                        state.offset += 1;
+                                        if state.src_bytes.get(state.offset).copied() != Some(b'y')
+                                        {
+                                            return None;
+                                        }
+                                        state.offset += 1;
+                                        if state.src_bytes.get(state.offset).copied() != Some(b'f')
+                                        {
+                                            return None;
+                                        }
+                                        state.offset += 1;
+                                        if state.src_bytes.get(state.offset).copied() != Some(b'r')
+                                        {
+                                            return None;
+                                        }
+                                        state.offset += 1;
+                                        if state.src_bytes.get(state.offset).copied() != Some(b'a')
+                                        {
+                                            return None;
+                                        }
+                                        state.offset += 1;
+                                        if state.src_bytes.get(state.offset).copied() != Some(b'm')
+                                        {
+                                            return None;
+                                        }
+                                        state.offset += 1;
+                                        if state.src_bytes.get(state.offset).copied() != Some(b'e')
+                                        {
+                                            return None;
+                                        }
+                                        state.offset += 1;
+                                        if state.src_bytes.get(state.offset).copied() != Some(b's')
+                                        {
+                                            return None;
+                                        }
+                                        state.offset += 1;
+                                        Some(())
+                                    })();
+                                    if __result.is_some() && state.offset > __start {
+                                        Some(
+                                            ::parse_that::Span::new(__start, state.offset, state.src),
+                                        )
+                                    } else {
+                                        state.offset = __start;
+                                        None
+                                    }
+                                }
+                                    .is_none()
+                                {
                                     return false;
                                 }
-                                __builder
-                                    .text(&state.src[state.offset..state.offset + 10usize]);
-                                state.offset += 10usize;
+                                let __matched = &state.src[__start..state.offset];
+                                if !__matched.is_empty() {
+                                    __builder.text(__matched);
+                                }
                             };
-                            __builder.text_inline_ws(&state.src[__ows879..__ows880]);
-                            let __ows881 = state.offset;
+                            __builder.text_inline_ws(&state.src[__ows883..__ows884]);
+                            let __ows885 = state.offset;
                             let _ = ::parse_that::scan_ws_block_comments(state);
-                            __builder.text_inline_ws(&state.src[__ows881..state.offset]);
+                            __builder.text_inline_ws(&state.src[__ows885..state.offset]);
                         };
                         {
-                            let __ows882 = state.offset;
+                            let __ows886 = state.offset;
                             let _ = ::parse_that::scan_ws_block_comments(state);
-                            let __ows883 = state.offset;
+                            let __ows887 = state.offset;
                             {
                                 let __start = state.offset;
                                 if {
@@ -101518,10 +101738,10 @@ mod __cssl4parser_emit_impl {
                                     __builder.text(__matched);
                                 }
                             };
-                            __builder.text_inline_ws(&state.src[__ows882..__ows883]);
-                            let __ows884 = state.offset;
+                            __builder.text_inline_ws(&state.src[__ows886..__ows887]);
+                            let __ows888 = state.offset;
                             let _ = ::parse_that::scan_ws_block_comments(state);
-                            __builder.text_inline_ws(&state.src[__ows884..state.offset]);
+                            __builder.text_inline_ws(&state.src[__ows888..state.offset]);
                         };
                         {
                             {
@@ -101535,56 +101755,56 @@ mod __cssl4parser_emit_impl {
                                 };
                                 {
                                     if !{
-                                        let __pretty_cp911 = state.offset;
-                                        let __pretty_bcp912 = __builder.checkpoint();
+                                        let __pretty_cp915 = state.offset;
+                                        let __pretty_bcp916 = __builder.checkpoint();
                                         let __ok = (|| -> bool {
                                             {
-                                                let __ows909 = state.offset;
+                                                let __ows913 = state.offset;
                                                 let _ = ::parse_that::scan_ws_block_comments(state);
                                                 __builder
-                                                    .text_inline_ws(&state.src[__ows909..state.offset]);
+                                                    .text_inline_ws(&state.src[__ows913..state.offset]);
                                                 {
-                                                    let mut __rep_count907 = 0usize;
-                                                    while __rep_count907 < 4294967295 {
-                                                        let __rep_cp908 = state.offset;
+                                                    let mut __rep_count911 = 0usize;
+                                                    while __rep_count911 < 4294967295 {
+                                                        let __rep_cp912 = state.offset;
                                                         if !{
-                                                            let __pretty_cp905 = state.offset;
-                                                            let __pretty_bcp906 = __builder.checkpoint();
+                                                            let __pretty_cp909 = state.offset;
+                                                            let __pretty_bcp910 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 {
                                                                     if !{
-                                                                        let __pretty_cp903 = state.offset;
-                                                                        let __pretty_bcp904 = __builder.checkpoint();
+                                                                        let __pretty_cp907 = state.offset;
+                                                                        let __pretty_bcp908 = __builder.checkpoint();
                                                                         let __ok = (|| -> bool {
                                                                             {
-                                                                                let __ows901 = state.offset;
+                                                                                let __ows905 = state.offset;
                                                                                 let _ = ::parse_that::scan_ws_block_comments(state);
                                                                                 __builder
-                                                                                    .text_inline_ws(&state.src[__ows901..state.offset]);
+                                                                                    .text_inline_ws(&state.src[__ows905..state.offset]);
                                                                                 {
                                                                                     {
                                                                                         if !{
-                                                                                            let __pretty_cp887 = state.offset;
-                                                                                            let __pretty_bcp888 = __builder.checkpoint();
+                                                                                            let __pretty_cp891 = state.offset;
+                                                                                            let __pretty_bcp892 = __builder.checkpoint();
                                                                                             let __ok = (|| -> bool {
                                                                                                 {
-                                                                                                    let __ows885 = state.offset;
+                                                                                                    let __ows889 = state.offset;
                                                                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                                                                     __builder
-                                                                                                        .text_inline_ws(&state.src[__ows885..state.offset]);
+                                                                                                        .text_inline_ws(&state.src[__ows889..state.offset]);
                                                                                                     if !Self::__keyframeSel_prettify(state, __builder) {
                                                                                                         return false;
                                                                                                     }
-                                                                                                    let __ows886 = state.offset;
+                                                                                                    let __ows890 = state.offset;
                                                                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                                                                     __builder
-                                                                                                        .text_inline_ws(&state.src[__ows886..state.offset]);
+                                                                                                        .text_inline_ws(&state.src[__ows890..state.offset]);
                                                                                                 };
                                                                                                 true
                                                                                             })();
                                                                                             if !__ok {
-                                                                                                state.offset = __pretty_cp887;
-                                                                                                __builder.restore(__pretty_bcp888);
+                                                                                                state.offset = __pretty_cp891;
+                                                                                                __builder.restore(__pretty_bcp892);
                                                                                             }
                                                                                             __ok
                                                                                         } {
@@ -101603,45 +101823,45 @@ mod __cssl4parser_emit_impl {
                                                                                             };
                                                                                             {
                                                                                                 if !{
-                                                                                                    let __pretty_cp899 = state.offset;
-                                                                                                    let __pretty_bcp900 = __builder.checkpoint();
+                                                                                                    let __pretty_cp903 = state.offset;
+                                                                                                    let __pretty_bcp904 = __builder.checkpoint();
                                                                                                     let __ok = (|| -> bool {
                                                                                                         {
-                                                                                                            let __ows897 = state.offset;
+                                                                                                            let __ows901 = state.offset;
                                                                                                             let _ = ::parse_that::scan_ws_block_comments(state);
                                                                                                             __builder
-                                                                                                                .text_inline_ws(&state.src[__ows897..state.offset]);
+                                                                                                                .text_inline_ws(&state.src[__ows901..state.offset]);
                                                                                                             {
-                                                                                                                let mut __rep_count895 = 0usize;
-                                                                                                                while __rep_count895 < 4294967295 {
-                                                                                                                    let __rep_cp896 = state.offset;
+                                                                                                                let mut __rep_count899 = 0usize;
+                                                                                                                while __rep_count899 < 4294967295 {
+                                                                                                                    let __rep_cp900 = state.offset;
                                                                                                                     if !{
-                                                                                                                        let __pretty_cp893 = state.offset;
-                                                                                                                        let __pretty_bcp894 = __builder.checkpoint();
+                                                                                                                        let __pretty_cp897 = state.offset;
+                                                                                                                        let __pretty_bcp898 = __builder.checkpoint();
                                                                                                                         let __ok = (|| -> bool {
                                                                                                                             {
                                                                                                                                 if !{
-                                                                                                                                    let __pretty_cp891 = state.offset;
-                                                                                                                                    let __pretty_bcp892 = __builder.checkpoint();
+                                                                                                                                    let __pretty_cp895 = state.offset;
+                                                                                                                                    let __pretty_bcp896 = __builder.checkpoint();
                                                                                                                                     let __ok = (|| -> bool {
                                                                                                                                         {
-                                                                                                                                            let __ows889 = state.offset;
+                                                                                                                                            let __ows893 = state.offset;
                                                                                                                                             let _ = ::parse_that::scan_ws_block_comments(state);
                                                                                                                                             __builder
-                                                                                                                                                .text_inline_ws(&state.src[__ows889..state.offset]);
+                                                                                                                                                .text_inline_ws(&state.src[__ows893..state.offset]);
                                                                                                                                             if !Self::__declaration_prettify(state, __builder) {
                                                                                                                                                 return false;
                                                                                                                                             }
-                                                                                                                                            let __ows890 = state.offset;
+                                                                                                                                            let __ows894 = state.offset;
                                                                                                                                             let _ = ::parse_that::scan_ws_block_comments(state);
                                                                                                                                             __builder
-                                                                                                                                                .text_inline_ws(&state.src[__ows890..state.offset]);
+                                                                                                                                                .text_inline_ws(&state.src[__ows894..state.offset]);
                                                                                                                                         };
                                                                                                                                         true
                                                                                                                                     })();
                                                                                                                                     if !__ok {
-                                                                                                                                        state.offset = __pretty_cp891;
-                                                                                                                                        __builder.restore(__pretty_bcp892);
+                                                                                                                                        state.offset = __pretty_cp895;
+                                                                                                                                        __builder.restore(__pretty_bcp896);
                                                                                                                                     }
                                                                                                                                     __ok
                                                                                                                                 } {
@@ -101651,30 +101871,30 @@ mod __cssl4parser_emit_impl {
                                                                                                                             true
                                                                                                                         })();
                                                                                                                         if !__ok {
-                                                                                                                            state.offset = __pretty_cp893;
-                                                                                                                            __builder.restore(__pretty_bcp894);
+                                                                                                                            state.offset = __pretty_cp897;
+                                                                                                                            __builder.restore(__pretty_bcp898);
                                                                                                                         }
                                                                                                                         __ok
                                                                                                                     } {
-                                                                                                                        state.offset = __rep_cp896;
+                                                                                                                        state.offset = __rep_cp900;
                                                                                                                         break;
                                                                                                                     }
-                                                                                                                    if state.offset == __rep_cp896 {
+                                                                                                                    if state.offset == __rep_cp900 {
                                                                                                                         break;
                                                                                                                     }
-                                                                                                                    __rep_count895 += 1;
+                                                                                                                    __rep_count899 += 1;
                                                                                                                 }
                                                                                                             };
-                                                                                                            let __ows898 = state.offset;
+                                                                                                            let __ows902 = state.offset;
                                                                                                             let _ = ::parse_that::scan_ws_block_comments(state);
                                                                                                             __builder
-                                                                                                                .text_inline_ws(&state.src[__ows898..state.offset]);
+                                                                                                                .text_inline_ws(&state.src[__ows902..state.offset]);
                                                                                                         };
                                                                                                         true
                                                                                                     })();
                                                                                                     if !__ok {
-                                                                                                        state.offset = __pretty_cp899;
-                                                                                                        __builder.restore(__pretty_bcp900);
+                                                                                                        state.offset = __pretty_cp903;
+                                                                                                        __builder.restore(__pretty_bcp904);
                                                                                                     }
                                                                                                     __ok
                                                                                                 } {
@@ -101692,16 +101912,16 @@ mod __cssl4parser_emit_impl {
                                                                                         };
                                                                                     };
                                                                                 };
-                                                                                let __ows902 = state.offset;
+                                                                                let __ows906 = state.offset;
                                                                                 let _ = ::parse_that::scan_ws_block_comments(state);
                                                                                 __builder
-                                                                                    .text_inline_ws(&state.src[__ows902..state.offset]);
+                                                                                    .text_inline_ws(&state.src[__ows906..state.offset]);
                                                                             };
                                                                             true
                                                                         })();
                                                                         if !__ok {
-                                                                            state.offset = __pretty_cp903;
-                                                                            __builder.restore(__pretty_bcp904);
+                                                                            state.offset = __pretty_cp907;
+                                                                            __builder.restore(__pretty_bcp908);
                                                                         }
                                                                         __ok
                                                                     } {
@@ -101711,30 +101931,30 @@ mod __cssl4parser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp905;
-                                                                __builder.restore(__pretty_bcp906);
+                                                                state.offset = __pretty_cp909;
+                                                                __builder.restore(__pretty_bcp910);
                                                             }
                                                             __ok
                                                         } {
-                                                            state.offset = __rep_cp908;
+                                                            state.offset = __rep_cp912;
                                                             break;
                                                         }
-                                                        if state.offset == __rep_cp908 {
+                                                        if state.offset == __rep_cp912 {
                                                             break;
                                                         }
-                                                        __rep_count907 += 1;
+                                                        __rep_count911 += 1;
                                                     }
                                                 };
-                                                let __ows910 = state.offset;
+                                                let __ows914 = state.offset;
                                                 let _ = ::parse_that::scan_ws_block_comments(state);
                                                 __builder
-                                                    .text_inline_ws(&state.src[__ows910..state.offset]);
+                                                    .text_inline_ws(&state.src[__ows914..state.offset]);
                                             };
                                             true
                                         })();
                                         if !__ok {
-                                            state.offset = __pretty_cp911;
-                                            __builder.restore(__pretty_bcp912);
+                                            state.offset = __pretty_cp915;
+                                            __builder.restore(__pretty_bcp916);
                                         }
                                         __ok
                                     } {
@@ -101833,6 +102053,20 @@ mod __cssl4parser_emit_impl {
                                         return None;
                                     }
                                     state.offset += 1;
+                                    {
+                                        let __save = state.offset;
+                                        let __ok = (|| -> Option<()> {
+                                            if state.src_bytes.get(state.offset).copied() != Some(b'-')
+                                            {
+                                                return None;
+                                            }
+                                            state.offset += 1;
+                                            Some(())
+                                        })();
+                                        if __ok.is_none() {
+                                            state.offset = __save;
+                                        }
+                                    }
                                     {
                                         let __b = *state.src_bytes.get(state.offset)?;
                                         if !(__b.is_ascii_alphabetic()) {
@@ -101941,27 +102175,27 @@ mod __cssl4parser_emit_impl {
                         };
                         {
                             if !{
-                                let __pretty_cp915 = state.offset;
-                                let __pretty_bcp916 = __builder.checkpoint();
+                                let __pretty_cp919 = state.offset;
+                                let __pretty_bcp920 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
-                                        let __ows913 = state.offset;
+                                        let __ows917 = state.offset;
                                         let _ = ::parse_that::scan_ws_block_comments(state);
                                         __builder
-                                            .text_inline_ws(&state.src[__ows913..state.offset]);
+                                            .text_inline_ws(&state.src[__ows917..state.offset]);
                                         if !Self::__blockContent_prettify(state, __builder) {
                                             return false;
                                         }
-                                        let __ows914 = state.offset;
+                                        let __ows918 = state.offset;
                                         let _ = ::parse_that::scan_ws_block_comments(state);
                                         __builder
-                                            .text_inline_ws(&state.src[__ows914..state.offset]);
+                                            .text_inline_ws(&state.src[__ows918..state.offset]);
                                     };
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp915;
-                                    __builder.restore(__pretty_bcp916);
+                                    state.offset = __pretty_cp919;
+                                    __builder.restore(__pretty_bcp920);
                                 }
                                 __ok
                             } {
@@ -102001,35 +102235,6 @@ mod __cssl4parser_emit_impl {
                     {
                         {
                             if !{
-                                let __pretty_cp919 = state.offset;
-                                let __pretty_bcp920 = __builder.checkpoint();
-                                let __ok = (|| -> bool {
-                                    {
-                                        let __ows917 = state.offset;
-                                        let _ = ::parse_that::scan_ws_block_comments(state);
-                                        __builder
-                                            .text_inline_ws(&state.src[__ows917..state.offset]);
-                                        if !Self::__selectorList_prettify(state, __builder) {
-                                            return false;
-                                        }
-                                        let __ows918 = state.offset;
-                                        let _ = ::parse_that::scan_ws_block_comments(state);
-                                        __builder
-                                            .text_inline_ws(&state.src[__ows918..state.offset]);
-                                    };
-                                    true
-                                })();
-                                if !__ok {
-                                    state.offset = __pretty_cp919;
-                                    __builder.restore(__pretty_bcp920);
-                                }
-                                __ok
-                            } {
-                                return false;
-                            }
-                        };
-                        {
-                            if !{
                                 let __pretty_cp923 = state.offset;
                                 let __pretty_bcp924 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
@@ -102038,7 +102243,7 @@ mod __cssl4parser_emit_impl {
                                         let _ = ::parse_that::scan_ws_block_comments(state);
                                         __builder
                                             .text_inline_ws(&state.src[__ows921..state.offset]);
-                                        if !Self::__ruleBlock_prettify(state, __builder) {
+                                        if !Self::__selectorList_prettify(state, __builder) {
                                             return false;
                                         }
                                         let __ows922 = state.offset;
@@ -102051,6 +102256,35 @@ mod __cssl4parser_emit_impl {
                                 if !__ok {
                                     state.offset = __pretty_cp923;
                                     __builder.restore(__pretty_bcp924);
+                                }
+                                __ok
+                            } {
+                                return false;
+                            }
+                        };
+                        {
+                            if !{
+                                let __pretty_cp927 = state.offset;
+                                let __pretty_bcp928 = __builder.checkpoint();
+                                let __ok = (|| -> bool {
+                                    {
+                                        let __ows925 = state.offset;
+                                        let _ = ::parse_that::scan_ws_block_comments(state);
+                                        __builder
+                                            .text_inline_ws(&state.src[__ows925..state.offset]);
+                                        if !Self::__ruleBlock_prettify(state, __builder) {
+                                            return false;
+                                        }
+                                        let __ows926 = state.offset;
+                                        let _ = ::parse_that::scan_ws_block_comments(state);
+                                        __builder
+                                            .text_inline_ws(&state.src[__ows926..state.offset]);
+                                    };
+                                    true
+                                })();
+                                if !__ok {
+                                    state.offset = __pretty_cp927;
+                                    __builder.restore(__pretty_bcp928);
                                 }
                                 __ok
                             } {
@@ -102085,9 +102319,9 @@ mod __cssl4parser_emit_impl {
                 {
                     {
                         {
-                            let __ows925 = state.offset;
+                            let __ows929 = state.offset;
                             let _ = ::parse_that::scan_ws_block_comments(state);
-                            let __ows926 = state.offset;
+                            let __ows930 = state.offset;
                             {
                                 let __s = "@media";
                                 let __bytes = __s.as_bytes();
@@ -102102,34 +102336,34 @@ mod __cssl4parser_emit_impl {
                                     .text(&state.src[state.offset..state.offset + 6usize]);
                                 state.offset += 6usize;
                             };
-                            __builder.text_inline_ws(&state.src[__ows925..__ows926]);
-                            let __ows927 = state.offset;
+                            __builder.text_inline_ws(&state.src[__ows929..__ows930]);
+                            let __ows931 = state.offset;
                             let _ = ::parse_that::scan_ws_block_comments(state);
-                            __builder.text_inline_ws(&state.src[__ows927..state.offset]);
+                            __builder.text_inline_ws(&state.src[__ows931..state.offset]);
                         };
                         {
                             if !{
-                                let __pretty_cp930 = state.offset;
-                                let __pretty_bcp931 = __builder.checkpoint();
+                                let __pretty_cp934 = state.offset;
+                                let __pretty_bcp935 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
-                                        let __ows928 = state.offset;
+                                        let __ows932 = state.offset;
                                         let _ = ::parse_that::scan_ws_block_comments(state);
                                         __builder
-                                            .text_inline_ws(&state.src[__ows928..state.offset]);
+                                            .text_inline_ws(&state.src[__ows932..state.offset]);
                                         if !Self::__mediaQueryList_prettify(state, __builder) {
                                             return false;
                                         }
-                                        let __ows929 = state.offset;
+                                        let __ows933 = state.offset;
                                         let _ = ::parse_that::scan_ws_block_comments(state);
                                         __builder
-                                            .text_inline_ws(&state.src[__ows929..state.offset]);
+                                            .text_inline_ws(&state.src[__ows933..state.offset]);
                                     };
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp930;
-                                    __builder.restore(__pretty_bcp931);
+                                    state.offset = __pretty_cp934;
+                                    __builder.restore(__pretty_bcp935);
                                 }
                                 __ok
                             } {
@@ -102167,8 +102401,8 @@ mod __cssl4parser_emit_impl {
                 {
                     {
                         if !{
-                            let __pretty_cp936 = state.offset;
-                            let __pretty_bcp937 = __builder.checkpoint();
+                            let __pretty_cp940 = state.offset;
+                            let __pretty_bcp941 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 if !Self::__mediaRule_prettify(state, __builder) {
                                     return false;
@@ -102176,15 +102410,15 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp936;
-                                __builder.restore(__pretty_bcp937);
+                                state.offset = __pretty_cp940;
+                                __builder.restore(__pretty_bcp941);
                             }
                             __ok
                         } {
                             {
                                 if !{
-                                    let __pretty_cp934 = state.offset;
-                                    let __pretty_bcp935 = __builder.checkpoint();
+                                    let __pretty_cp938 = state.offset;
+                                    let __pretty_bcp939 = __builder.checkpoint();
                                     let __ok = (|| -> bool {
                                         if !Self::__keyframesRule_prettify(state, __builder) {
                                             return false;
@@ -102192,15 +102426,15 @@ mod __cssl4parser_emit_impl {
                                         true
                                     })();
                                     if !__ok {
-                                        state.offset = __pretty_cp934;
-                                        __builder.restore(__pretty_bcp935);
+                                        state.offset = __pretty_cp938;
+                                        __builder.restore(__pretty_bcp939);
                                     }
                                     __ok
                                 } {
                                     {
                                         if !{
-                                            let __pretty_cp932 = state.offset;
-                                            let __pretty_bcp933 = __builder.checkpoint();
+                                            let __pretty_cp936 = state.offset;
+                                            let __pretty_bcp937 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 if !Self::__genericAtRule_prettify(state, __builder) {
                                                     return false;
@@ -102208,8 +102442,8 @@ mod __cssl4parser_emit_impl {
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp932;
-                                                __builder.restore(__pretty_bcp933);
+                                                state.offset = __pretty_cp936;
+                                                __builder.restore(__pretty_bcp937);
                                             }
                                             __ok
                                         } {
@@ -102244,8 +102478,8 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     if !{
-                        let __pretty_cp938 = state.offset;
-                        let __pretty_bcp939 = __builder.checkpoint();
+                        let __pretty_cp942 = state.offset;
+                        let __pretty_bcp943 = __builder.checkpoint();
                         let __ok = (|| -> bool {
                             if !Self::__qualifiedRule_prettify(state, __builder) {
                                 return false;
@@ -102253,8 +102487,8 @@ mod __cssl4parser_emit_impl {
                             true
                         })();
                         if !__ok {
-                            state.offset = __pretty_cp938;
-                            __builder.restore(__pretty_bcp939);
+                            state.offset = __pretty_cp942;
+                            __builder.restore(__pretty_bcp943);
                         }
                         __ok
                     } {
@@ -102286,34 +102520,34 @@ mod __cssl4parser_emit_impl {
             let __pretty_ok = {
                 {
                     {
-                        let mut __rep_count947 = 0usize;
-                        while __rep_count947 < 4294967295 {
-                            let __rep_cp948 = state.offset;
-                            let __iter_cp = if __rep_count947 > 0 {
+                        let mut __rep_count951 = 0usize;
+                        while __rep_count951 < 4294967295 {
+                            let __rep_cp952 = state.offset;
+                            let __iter_cp = if __rep_count951 > 0 {
                                 Some(__builder.checkpoint())
                             } else {
                                 None
                             };
-                            if __rep_count947 > 0 {
+                            if __rep_count951 > 0 {
                                 __builder.hardline();
                             }
                             if !{
-                                let __pretty_cp946 = state.offset;
+                                let __pretty_cp950 = state.offset;
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp944 = state.offset;
-                                            let __pretty_bcp945 = __builder.checkpoint();
+                                            let __pretty_cp948 = state.offset;
+                                            let __pretty_bcp949 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows942 = state.offset;
+                                                    let __ows946 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows942..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows946..state.offset]);
                                                     {
                                                         if !{
-                                                            let __pretty_cp940 = state.offset;
-                                                            let __pretty_bcp941 = __builder.checkpoint();
+                                                            let __pretty_cp944 = state.offset;
+                                                            let __pretty_bcp945 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 if !Self::__declaration_prettify(state, __builder) {
                                                                     return false;
@@ -102321,8 +102555,8 @@ mod __cssl4parser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp940;
-                                                                __builder.restore(__pretty_bcp941);
+                                                                state.offset = __pretty_cp944;
+                                                                __builder.restore(__pretty_bcp945);
                                                             }
                                                             __ok
                                                         } {
@@ -102331,16 +102565,16 @@ mod __cssl4parser_emit_impl {
                                                             }
                                                         }
                                                     };
-                                                    let __ows943 = state.offset;
+                                                    let __ows947 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows943..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows947..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp944;
-                                                __builder.restore(__pretty_bcp945);
+                                                state.offset = __pretty_cp948;
+                                                __builder.restore(__pretty_bcp949);
                                             }
                                             __ok
                                         } {
@@ -102350,23 +102584,23 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp946;
+                                    state.offset = __pretty_cp950;
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp948;
+                                state.offset = __rep_cp952;
                                 if let Some(__bcp) = __iter_cp {
                                     __builder.restore(__bcp);
                                 }
                                 break;
                             }
-                            if state.offset == __rep_cp948 {
+                            if state.offset == __rep_cp952 {
                                 if let Some(__bcp) = __iter_cp {
                                     __builder.restore(__bcp);
                                 }
                                 break;
                             }
-                            __rep_count947 += 1;
+                            __rep_count951 += 1;
                         }
                     };
                     true
@@ -102393,44 +102627,44 @@ mod __cssl4parser_emit_impl {
         ) -> bool {
             {
                 {
-                    let mut __rep_count954 = 0usize;
-                    while __rep_count954 < 4294967295 {
-                        let __rep_cp955 = state.offset;
-                        let __iter_cp = if __rep_count954 > 0 {
+                    let mut __rep_count958 = 0usize;
+                    while __rep_count958 < 4294967295 {
+                        let __rep_cp959 = state.offset;
+                        let __iter_cp = if __rep_count958 > 0 {
                             Some(__builder.checkpoint())
                         } else {
                             None
                         };
-                        if __rep_count954 > 0 {
+                        if __rep_count958 > 0 {
                             __builder.hardline();
                             __builder.hardline();
                         }
                         if !{
-                            let __pretty_cp953 = state.offset;
+                            let __pretty_cp957 = state.offset;
                             let __ok = (|| -> bool {
                                 {
                                     if !{
-                                        let __pretty_cp951 = state.offset;
-                                        let __pretty_bcp952 = __builder.checkpoint();
+                                        let __pretty_cp955 = state.offset;
+                                        let __pretty_bcp956 = __builder.checkpoint();
                                         let __ok = (|| -> bool {
                                             {
-                                                let __ows949 = state.offset;
+                                                let __ows953 = state.offset;
                                                 let _ = ::parse_that::scan_ws_block_comments(state);
                                                 __builder
-                                                    .text_inline_ws(&state.src[__ows949..state.offset]);
+                                                    .text_inline_ws(&state.src[__ows953..state.offset]);
                                                 if !Self::__ruleItem_prettify(state, __builder) {
                                                     return false;
                                                 }
-                                                let __ows950 = state.offset;
+                                                let __ows954 = state.offset;
                                                 let _ = ::parse_that::scan_ws_block_comments(state);
                                                 __builder
-                                                    .text_inline_ws(&state.src[__ows950..state.offset]);
+                                                    .text_inline_ws(&state.src[__ows954..state.offset]);
                                             };
                                             true
                                         })();
                                         if !__ok {
-                                            state.offset = __pretty_cp951;
-                                            __builder.restore(__pretty_bcp952);
+                                            state.offset = __pretty_cp955;
+                                            __builder.restore(__pretty_bcp956);
                                         }
                                         __ok
                                     } {
@@ -102440,23 +102674,23 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp953;
+                                state.offset = __pretty_cp957;
                             }
                             __ok
                         } {
-                            state.offset = __rep_cp955;
+                            state.offset = __rep_cp959;
                             if let Some(__bcp) = __iter_cp {
                                 __builder.restore(__bcp);
                             }
                             break;
                         }
-                        if state.offset == __rep_cp955 {
+                        if state.offset == __rep_cp959 {
                             if let Some(__bcp) = __iter_cp {
                                 __builder.restore(__bcp);
                             }
                             break;
                         }
-                        __rep_count954 += 1;
+                        __rep_count958 += 1;
                     }
                 };
                 true
@@ -102480,27 +102714,27 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     if !{
-                        let __pretty_cp958 = state.offset;
-                        let __pretty_bcp959 = __builder.checkpoint();
+                        let __pretty_cp962 = state.offset;
+                        let __pretty_bcp963 = __builder.checkpoint();
                         let __ok = (|| -> bool {
                             {
-                                let __ows956 = state.offset;
+                                let __ows960 = state.offset;
                                 let _ = ::parse_that::scan_ws_block_comments(state);
                                 __builder
-                                    .text_inline_ws(&state.src[__ows956..state.offset]);
+                                    .text_inline_ws(&state.src[__ows960..state.offset]);
                                 if !Self::__ruleList_prettify(state, __builder) {
                                     return false;
                                 }
-                                let __ows957 = state.offset;
+                                let __ows961 = state.offset;
                                 let _ = ::parse_that::scan_ws_block_comments(state);
                                 __builder
-                                    .text_inline_ws(&state.src[__ows957..state.offset]);
+                                    .text_inline_ws(&state.src[__ows961..state.offset]);
                             };
                             true
                         })();
                         if !__ok {
-                            state.offset = __pretty_cp958;
-                            __builder.restore(__pretty_bcp959);
+                            state.offset = __pretty_cp962;
+                            __builder.restore(__pretty_bcp963);
                         }
                         __ok
                     } {
@@ -102528,8 +102762,8 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     if !{
-                        let __pretty_cp960 = state.offset;
-                        let __pretty_bcp961 = __builder.checkpoint();
+                        let __pretty_cp964 = state.offset;
+                        let __pretty_bcp965 = __builder.checkpoint();
                         let __ok = (|| -> bool {
                             if !Self::__percentage_prettify(state, __builder) {
                                 return false;
@@ -102537,8 +102771,8 @@ mod __cssl4parser_emit_impl {
                             true
                         })();
                         if !__ok {
-                            state.offset = __pretty_cp960;
-                            __builder.restore(__pretty_bcp961);
+                            state.offset = __pretty_cp964;
+                            __builder.restore(__pretty_bcp965);
                         }
                         __ok
                     } {
@@ -102763,14 +102997,14 @@ mod __cssl4parser_emit_impl {
                                 return false;
                             }
                             {
-                                let __rep_start966 = state.offset;
-                                let __rep_bcp967 = __builder.checkpoint();
-                                let mut __rep_count964 = 0usize;
-                                while __rep_count964 < 4294967295 {
-                                    let __rep_cp965 = state.offset;
+                                let __rep_start970 = state.offset;
+                                let __rep_bcp971 = __builder.checkpoint();
+                                let mut __rep_count968 = 0usize;
+                                while __rep_count968 < 4294967295 {
+                                    let __rep_cp969 = state.offset;
                                     if !{
-                                        let __pretty_cp962 = state.offset;
-                                        let __pretty_bcp963 = __builder.checkpoint();
+                                        let __pretty_cp966 = state.offset;
+                                        let __pretty_bcp967 = __builder.checkpoint();
                                         let __ok = (|| -> bool {
                                             {
                                                 {
@@ -102788,22 +103022,22 @@ mod __cssl4parser_emit_impl {
                                             true
                                         })();
                                         if !__ok {
-                                            state.offset = __pretty_cp962;
-                                            __builder.restore(__pretty_bcp963);
+                                            state.offset = __pretty_cp966;
+                                            __builder.restore(__pretty_bcp967);
                                         }
                                         __ok
                                     } {
-                                        state.offset = __rep_cp965;
+                                        state.offset = __rep_cp969;
                                         break;
                                     }
-                                    if state.offset == __rep_cp965 {
+                                    if state.offset == __rep_cp969 {
                                         break;
                                     }
-                                    __rep_count964 += 1;
+                                    __rep_count968 += 1;
                                 }
-                                if __rep_count964 < 1 {
-                                    state.offset = __rep_start966;
-                                    __builder.restore(__rep_bcp967);
+                                if __rep_count968 < 1 {
+                                    state.offset = __rep_start970;
+                                    __builder.restore(__rep_bcp971);
                                     return false;
                                 }
                             };
@@ -102853,14 +103087,14 @@ mod __cssl4parser_emit_impl {
                                 return false;
                             }
                             {
-                                let __rep_start972 = state.offset;
-                                let __rep_bcp973 = __builder.checkpoint();
-                                let mut __rep_count970 = 0usize;
-                                while __rep_count970 < 4294967295 {
-                                    let __rep_cp971 = state.offset;
+                                let __rep_start976 = state.offset;
+                                let __rep_bcp977 = __builder.checkpoint();
+                                let mut __rep_count974 = 0usize;
+                                while __rep_count974 < 4294967295 {
+                                    let __rep_cp975 = state.offset;
                                     if !{
-                                        let __pretty_cp968 = state.offset;
-                                        let __pretty_bcp969 = __builder.checkpoint();
+                                        let __pretty_cp972 = state.offset;
+                                        let __pretty_bcp973 = __builder.checkpoint();
                                         let __ok = (|| -> bool {
                                             {
                                                 {
@@ -102878,22 +103112,22 @@ mod __cssl4parser_emit_impl {
                                             true
                                         })();
                                         if !__ok {
-                                            state.offset = __pretty_cp968;
-                                            __builder.restore(__pretty_bcp969);
+                                            state.offset = __pretty_cp972;
+                                            __builder.restore(__pretty_bcp973);
                                         }
                                         __ok
                                     } {
-                                        state.offset = __rep_cp971;
+                                        state.offset = __rep_cp975;
                                         break;
                                     }
-                                    if state.offset == __rep_cp971 {
+                                    if state.offset == __rep_cp975 {
                                         break;
                                     }
-                                    __rep_count970 += 1;
+                                    __rep_count974 += 1;
                                 }
-                                if __rep_count970 < 1 {
-                                    state.offset = __rep_start972;
-                                    __builder.restore(__rep_bcp973);
+                                if __rep_count974 < 1 {
+                                    state.offset = __rep_start976;
+                                    __builder.restore(__rep_bcp977);
                                     return false;
                                 }
                             };
@@ -103050,8 +103284,8 @@ mod __cssl4parser_emit_impl {
                     {
                         {
                             let _ = {
-                                let __pretty_cp974 = state.offset;
-                                let __pretty_bcp975 = __builder.checkpoint();
+                                let __pretty_cp978 = state.offset;
+                                let __pretty_bcp979 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         {
@@ -103069,8 +103303,8 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp974;
-                                    __builder.restore(__pretty_bcp975);
+                                    state.offset = __pretty_cp978;
+                                    __builder.restore(__pretty_bcp979);
                                 }
                                 __ok
                             };
@@ -103170,8 +103404,8 @@ mod __cssl4parser_emit_impl {
                     {
                         {
                             let _ = {
-                                let __pretty_cp976 = state.offset;
-                                let __pretty_bcp977 = __builder.checkpoint();
+                                let __pretty_cp980 = state.offset;
+                                let __pretty_bcp981 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         {
@@ -103189,8 +103423,8 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp976;
-                                    __builder.restore(__pretty_bcp977);
+                                    state.offset = __pretty_cp980;
+                                    __builder.restore(__pretty_bcp981);
                                 }
                                 __ok
                             };
@@ -103278,8 +103512,8 @@ mod __cssl4parser_emit_impl {
                     {
                         {
                             let _ = {
-                                let __pretty_cp978 = state.offset;
-                                let __pretty_bcp979 = __builder.checkpoint();
+                                let __pretty_cp982 = state.offset;
+                                let __pretty_bcp983 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         {
@@ -103297,8 +103531,8 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp978;
-                                    __builder.restore(__pretty_bcp979);
+                                    state.offset = __pretty_cp982;
+                                    __builder.restore(__pretty_bcp983);
                                 }
                                 __ok
                             };
@@ -103705,9 +103939,9 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     {
-                        let __ows980 = state.offset;
+                        let __ows984 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows981 = state.offset;
+                        let __ows985 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -103715,42 +103949,42 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows980..__ows981]);
-                        let __ows982 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows984..__ows985]);
+                        let __ows986 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows982..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows986..state.offset]);
                     };
                     {
-                        let mut __rep_count989 = 0usize;
-                        while __rep_count989 < 4294967295 {
-                            let __rep_cp990 = state.offset;
+                        let mut __rep_count993 = 0usize;
+                        while __rep_count993 < 4294967295 {
+                            let __rep_cp994 = state.offset;
                             if !{
-                                let __pretty_cp987 = state.offset;
-                                let __pretty_bcp988 = __builder.checkpoint();
+                                let __pretty_cp991 = state.offset;
+                                let __pretty_bcp992 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp985 = state.offset;
-                                            let __pretty_bcp986 = __builder.checkpoint();
+                                            let __pretty_cp989 = state.offset;
+                                            let __pretty_bcp990 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows983 = state.offset;
+                                                    let __ows987 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows983..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows987..state.offset]);
                                                     if !Self::__value_prettify(state, __builder) {
                                                         return false;
                                                     }
-                                                    let __ows984 = state.offset;
+                                                    let __ows988 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows984..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows988..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp985;
-                                                __builder.restore(__pretty_bcp986);
+                                                state.offset = __pretty_cp989;
+                                                __builder.restore(__pretty_bcp990);
                                             }
                                             __ok
                                         } {
@@ -103760,18 +103994,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp987;
-                                    __builder.restore(__pretty_bcp988);
+                                    state.offset = __pretty_cp991;
+                                    __builder.restore(__pretty_bcp992);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp990;
+                                state.offset = __rep_cp994;
                                 break;
                             }
-                            if state.offset == __rep_cp990 {
+                            if state.offset == __rep_cp994 {
                                 break;
                             }
-                            __rep_count989 += 1;
+                            __rep_count993 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -103779,8 +104013,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp991 = state.offset;
-                            let __pretty_bcp992 = __builder.checkpoint();
+                            let __pretty_cp995 = state.offset;
+                            let __pretty_bcp996 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -103793,8 +104027,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp991;
-                                __builder.restore(__pretty_bcp992);
+                                state.offset = __pretty_cp995;
+                                __builder.restore(__pretty_bcp996);
                             }
                             __ok
                         };
@@ -103825,9 +104059,9 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     {
-                        let __ows993 = state.offset;
+                        let __ows997 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows994 = state.offset;
+                        let __ows998 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -103835,42 +104069,42 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows993..__ows994]);
-                        let __ows995 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows997..__ows998]);
+                        let __ows999 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows995..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows999..state.offset]);
                     };
                     {
-                        let mut __rep_count1002 = 0usize;
-                        while __rep_count1002 < 4294967295 {
-                            let __rep_cp1003 = state.offset;
+                        let mut __rep_count1006 = 0usize;
+                        while __rep_count1006 < 4294967295 {
+                            let __rep_cp1007 = state.offset;
                             if !{
-                                let __pretty_cp1000 = state.offset;
-                                let __pretty_bcp1001 = __builder.checkpoint();
+                                let __pretty_cp1004 = state.offset;
+                                let __pretty_bcp1005 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp998 = state.offset;
-                                            let __pretty_bcp999 = __builder.checkpoint();
+                                            let __pretty_cp1002 = state.offset;
+                                            let __pretty_bcp1003 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows996 = state.offset;
+                                                    let __ows1000 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows996..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1000..state.offset]);
                                                     if !Self::__value_prettify(state, __builder) {
                                                         return false;
                                                     }
-                                                    let __ows997 = state.offset;
+                                                    let __ows1001 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows997..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1001..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp998;
-                                                __builder.restore(__pretty_bcp999);
+                                                state.offset = __pretty_cp1002;
+                                                __builder.restore(__pretty_bcp1003);
                                             }
                                             __ok
                                         } {
@@ -103880,18 +104114,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp1000;
-                                    __builder.restore(__pretty_bcp1001);
+                                    state.offset = __pretty_cp1004;
+                                    __builder.restore(__pretty_bcp1005);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp1003;
+                                state.offset = __rep_cp1007;
                                 break;
                             }
-                            if state.offset == __rep_cp1003 {
+                            if state.offset == __rep_cp1007 {
                                 break;
                             }
-                            __rep_count1002 += 1;
+                            __rep_count1006 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -103899,8 +104133,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp1004 = state.offset;
-                            let __pretty_bcp1005 = __builder.checkpoint();
+                            let __pretty_cp1008 = state.offset;
+                            let __pretty_bcp1009 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -103913,8 +104147,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp1004;
-                                __builder.restore(__pretty_bcp1005);
+                                state.offset = __pretty_cp1008;
+                                __builder.restore(__pretty_bcp1009);
                             }
                             __ok
                         };
@@ -103945,9 +104179,9 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     {
-                        let __ows1006 = state.offset;
+                        let __ows1010 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows1007 = state.offset;
+                        let __ows1011 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -103955,42 +104189,42 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows1006..__ows1007]);
-                        let __ows1008 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows1010..__ows1011]);
+                        let __ows1012 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows1008..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows1012..state.offset]);
                     };
                     {
-                        let mut __rep_count1015 = 0usize;
-                        while __rep_count1015 < 4294967295 {
-                            let __rep_cp1016 = state.offset;
+                        let mut __rep_count1019 = 0usize;
+                        while __rep_count1019 < 4294967295 {
+                            let __rep_cp1020 = state.offset;
                             if !{
-                                let __pretty_cp1013 = state.offset;
-                                let __pretty_bcp1014 = __builder.checkpoint();
+                                let __pretty_cp1017 = state.offset;
+                                let __pretty_bcp1018 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp1011 = state.offset;
-                                            let __pretty_bcp1012 = __builder.checkpoint();
+                                            let __pretty_cp1015 = state.offset;
+                                            let __pretty_bcp1016 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows1009 = state.offset;
+                                                    let __ows1013 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1009..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1013..state.offset]);
                                                     if !Self::__value_prettify(state, __builder) {
                                                         return false;
                                                     }
-                                                    let __ows1010 = state.offset;
+                                                    let __ows1014 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1010..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1014..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp1011;
-                                                __builder.restore(__pretty_bcp1012);
+                                                state.offset = __pretty_cp1015;
+                                                __builder.restore(__pretty_bcp1016);
                                             }
                                             __ok
                                         } {
@@ -104000,18 +104234,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp1013;
-                                    __builder.restore(__pretty_bcp1014);
+                                    state.offset = __pretty_cp1017;
+                                    __builder.restore(__pretty_bcp1018);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp1016;
+                                state.offset = __rep_cp1020;
                                 break;
                             }
-                            if state.offset == __rep_cp1016 {
+                            if state.offset == __rep_cp1020 {
                                 break;
                             }
-                            __rep_count1015 += 1;
+                            __rep_count1019 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -104019,8 +104253,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp1017 = state.offset;
-                            let __pretty_bcp1018 = __builder.checkpoint();
+                            let __pretty_cp1021 = state.offset;
+                            let __pretty_bcp1022 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -104033,8 +104267,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp1017;
-                                __builder.restore(__pretty_bcp1018);
+                                state.offset = __pretty_cp1021;
+                                __builder.restore(__pretty_bcp1022);
                             }
                             __ok
                         };
@@ -104065,9 +104299,9 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     {
-                        let __ows1019 = state.offset;
+                        let __ows1023 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows1020 = state.offset;
+                        let __ows1024 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -104075,33 +104309,33 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows1019..__ows1020]);
-                        let __ows1021 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows1023..__ows1024]);
+                        let __ows1025 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows1021..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows1025..state.offset]);
                     };
                     {
-                        let mut __rep_count1030 = 0usize;
-                        while __rep_count1030 < 4294967295 {
-                            let __rep_cp1031 = state.offset;
+                        let mut __rep_count1034 = 0usize;
+                        while __rep_count1034 < 4294967295 {
+                            let __rep_cp1035 = state.offset;
                             if !{
-                                let __pretty_cp1028 = state.offset;
-                                let __pretty_bcp1029 = __builder.checkpoint();
+                                let __pretty_cp1032 = state.offset;
+                                let __pretty_bcp1033 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp1026 = state.offset;
-                                            let __pretty_bcp1027 = __builder.checkpoint();
+                                            let __pretty_cp1030 = state.offset;
+                                            let __pretty_bcp1031 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows1024 = state.offset;
+                                                    let __ows1028 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1024..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1028..state.offset]);
                                                     {
                                                         if !{
-                                                            let __pretty_cp1022 = state.offset;
-                                                            let __pretty_bcp1023 = __builder.checkpoint();
+                                                            let __pretty_cp1026 = state.offset;
+                                                            let __pretty_bcp1027 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 if !Self::__fontWeightKeyword_prettify(state, __builder) {
                                                                     return false;
@@ -104109,8 +104343,8 @@ mod __cssl4parser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp1022;
-                                                                __builder.restore(__pretty_bcp1023);
+                                                                state.offset = __pretty_cp1026;
+                                                                __builder.restore(__pretty_bcp1027);
                                                             }
                                                             __ok
                                                         } {
@@ -104119,16 +104353,16 @@ mod __cssl4parser_emit_impl {
                                                             }
                                                         }
                                                     };
-                                                    let __ows1025 = state.offset;
+                                                    let __ows1029 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1025..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1029..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp1026;
-                                                __builder.restore(__pretty_bcp1027);
+                                                state.offset = __pretty_cp1030;
+                                                __builder.restore(__pretty_bcp1031);
                                             }
                                             __ok
                                         } {
@@ -104138,18 +104372,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp1028;
-                                    __builder.restore(__pretty_bcp1029);
+                                    state.offset = __pretty_cp1032;
+                                    __builder.restore(__pretty_bcp1033);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp1031;
+                                state.offset = __rep_cp1035;
                                 break;
                             }
-                            if state.offset == __rep_cp1031 {
+                            if state.offset == __rep_cp1035 {
                                 break;
                             }
-                            __rep_count1030 += 1;
+                            __rep_count1034 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -104157,8 +104391,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp1032 = state.offset;
-                            let __pretty_bcp1033 = __builder.checkpoint();
+                            let __pretty_cp1036 = state.offset;
+                            let __pretty_bcp1037 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -104171,8 +104405,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp1032;
-                                __builder.restore(__pretty_bcp1033);
+                                state.offset = __pretty_cp1036;
+                                __builder.restore(__pretty_bcp1037);
                             }
                             __ok
                         };
@@ -104203,9 +104437,9 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     {
-                        let __ows1034 = state.offset;
+                        let __ows1038 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows1035 = state.offset;
+                        let __ows1039 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -104213,42 +104447,42 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows1034..__ows1035]);
-                        let __ows1036 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows1038..__ows1039]);
+                        let __ows1040 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows1036..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows1040..state.offset]);
                     };
                     {
-                        let mut __rep_count1043 = 0usize;
-                        while __rep_count1043 < 4294967295 {
-                            let __rep_cp1044 = state.offset;
+                        let mut __rep_count1047 = 0usize;
+                        while __rep_count1047 < 4294967295 {
+                            let __rep_cp1048 = state.offset;
                             if !{
-                                let __pretty_cp1041 = state.offset;
-                                let __pretty_bcp1042 = __builder.checkpoint();
+                                let __pretty_cp1045 = state.offset;
+                                let __pretty_bcp1046 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp1039 = state.offset;
-                                            let __pretty_bcp1040 = __builder.checkpoint();
+                                            let __pretty_cp1043 = state.offset;
+                                            let __pretty_bcp1044 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows1037 = state.offset;
+                                                    let __ows1041 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1037..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1041..state.offset]);
                                                     if !Self::__value_prettify(state, __builder) {
                                                         return false;
                                                     }
-                                                    let __ows1038 = state.offset;
+                                                    let __ows1042 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1038..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1042..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp1039;
-                                                __builder.restore(__pretty_bcp1040);
+                                                state.offset = __pretty_cp1043;
+                                                __builder.restore(__pretty_bcp1044);
                                             }
                                             __ok
                                         } {
@@ -104258,18 +104492,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp1041;
-                                    __builder.restore(__pretty_bcp1042);
+                                    state.offset = __pretty_cp1045;
+                                    __builder.restore(__pretty_bcp1046);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp1044;
+                                state.offset = __rep_cp1048;
                                 break;
                             }
-                            if state.offset == __rep_cp1044 {
+                            if state.offset == __rep_cp1048 {
                                 break;
                             }
-                            __rep_count1043 += 1;
+                            __rep_count1047 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -104277,8 +104511,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp1045 = state.offset;
-                            let __pretty_bcp1046 = __builder.checkpoint();
+                            let __pretty_cp1049 = state.offset;
+                            let __pretty_bcp1050 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -104291,8 +104525,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp1045;
-                                __builder.restore(__pretty_bcp1046);
+                                state.offset = __pretty_cp1049;
+                                __builder.restore(__pretty_bcp1050);
                             }
                             __ok
                         };
@@ -104320,9 +104554,9 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     {
-                        let __ows1047 = state.offset;
+                        let __ows1051 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows1048 = state.offset;
+                        let __ows1052 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -104330,42 +104564,42 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows1047..__ows1048]);
-                        let __ows1049 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows1051..__ows1052]);
+                        let __ows1053 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows1049..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows1053..state.offset]);
                     };
                     {
-                        let mut __rep_count1056 = 0usize;
-                        while __rep_count1056 < 4294967295 {
-                            let __rep_cp1057 = state.offset;
+                        let mut __rep_count1060 = 0usize;
+                        while __rep_count1060 < 4294967295 {
+                            let __rep_cp1061 = state.offset;
                             if !{
-                                let __pretty_cp1054 = state.offset;
-                                let __pretty_bcp1055 = __builder.checkpoint();
+                                let __pretty_cp1058 = state.offset;
+                                let __pretty_bcp1059 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp1052 = state.offset;
-                                            let __pretty_bcp1053 = __builder.checkpoint();
+                                            let __pretty_cp1056 = state.offset;
+                                            let __pretty_bcp1057 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows1050 = state.offset;
+                                                    let __ows1054 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1050..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1054..state.offset]);
                                                     if !Self::__value_prettify(state, __builder) {
                                                         return false;
                                                     }
-                                                    let __ows1051 = state.offset;
+                                                    let __ows1055 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1051..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1055..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp1052;
-                                                __builder.restore(__pretty_bcp1053);
+                                                state.offset = __pretty_cp1056;
+                                                __builder.restore(__pretty_bcp1057);
                                             }
                                             __ok
                                         } {
@@ -104375,18 +104609,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp1054;
-                                    __builder.restore(__pretty_bcp1055);
+                                    state.offset = __pretty_cp1058;
+                                    __builder.restore(__pretty_bcp1059);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp1057;
+                                state.offset = __rep_cp1061;
                                 break;
                             }
-                            if state.offset == __rep_cp1057 {
+                            if state.offset == __rep_cp1061 {
                                 break;
                             }
-                            __rep_count1056 += 1;
+                            __rep_count1060 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -104394,8 +104628,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp1058 = state.offset;
-                            let __pretty_bcp1059 = __builder.checkpoint();
+                            let __pretty_cp1062 = state.offset;
+                            let __pretty_bcp1063 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -104408,8 +104642,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp1058;
-                                __builder.restore(__pretty_bcp1059);
+                                state.offset = __pretty_cp1062;
+                                __builder.restore(__pretty_bcp1063);
                             }
                             __ok
                         };
@@ -104440,9 +104674,9 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     {
-                        let __ows1060 = state.offset;
+                        let __ows1064 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows1061 = state.offset;
+                        let __ows1065 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -104450,42 +104684,42 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows1060..__ows1061]);
-                        let __ows1062 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows1064..__ows1065]);
+                        let __ows1066 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows1062..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows1066..state.offset]);
                     };
                     {
-                        let mut __rep_count1069 = 0usize;
-                        while __rep_count1069 < 4294967295 {
-                            let __rep_cp1070 = state.offset;
+                        let mut __rep_count1073 = 0usize;
+                        while __rep_count1073 < 4294967295 {
+                            let __rep_cp1074 = state.offset;
                             if !{
-                                let __pretty_cp1067 = state.offset;
-                                let __pretty_bcp1068 = __builder.checkpoint();
+                                let __pretty_cp1071 = state.offset;
+                                let __pretty_bcp1072 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp1065 = state.offset;
-                                            let __pretty_bcp1066 = __builder.checkpoint();
+                                            let __pretty_cp1069 = state.offset;
+                                            let __pretty_bcp1070 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows1063 = state.offset;
+                                                    let __ows1067 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1063..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1067..state.offset]);
                                                     if !Self::__value_prettify(state, __builder) {
                                                         return false;
                                                     }
-                                                    let __ows1064 = state.offset;
+                                                    let __ows1068 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1064..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1068..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp1065;
-                                                __builder.restore(__pretty_bcp1066);
+                                                state.offset = __pretty_cp1069;
+                                                __builder.restore(__pretty_bcp1070);
                                             }
                                             __ok
                                         } {
@@ -104495,18 +104729,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp1067;
-                                    __builder.restore(__pretty_bcp1068);
+                                    state.offset = __pretty_cp1071;
+                                    __builder.restore(__pretty_bcp1072);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp1070;
+                                state.offset = __rep_cp1074;
                                 break;
                             }
-                            if state.offset == __rep_cp1070 {
+                            if state.offset == __rep_cp1074 {
                                 break;
                             }
-                            __rep_count1069 += 1;
+                            __rep_count1073 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -104514,8 +104748,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp1071 = state.offset;
-                            let __pretty_bcp1072 = __builder.checkpoint();
+                            let __pretty_cp1075 = state.offset;
+                            let __pretty_bcp1076 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -104528,8 +104762,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp1071;
-                                __builder.restore(__pretty_bcp1072);
+                                state.offset = __pretty_cp1075;
+                                __builder.restore(__pretty_bcp1076);
                             }
                             __ok
                         };
@@ -104560,9 +104794,9 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     {
-                        let __ows1073 = state.offset;
+                        let __ows1077 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows1074 = state.offset;
+                        let __ows1078 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -104570,42 +104804,42 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows1073..__ows1074]);
-                        let __ows1075 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows1077..__ows1078]);
+                        let __ows1079 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows1075..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows1079..state.offset]);
                     };
                     {
-                        let mut __rep_count1082 = 0usize;
-                        while __rep_count1082 < 4294967295 {
-                            let __rep_cp1083 = state.offset;
+                        let mut __rep_count1086 = 0usize;
+                        while __rep_count1086 < 4294967295 {
+                            let __rep_cp1087 = state.offset;
                             if !{
-                                let __pretty_cp1080 = state.offset;
-                                let __pretty_bcp1081 = __builder.checkpoint();
+                                let __pretty_cp1084 = state.offset;
+                                let __pretty_bcp1085 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp1078 = state.offset;
-                                            let __pretty_bcp1079 = __builder.checkpoint();
+                                            let __pretty_cp1082 = state.offset;
+                                            let __pretty_bcp1083 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows1076 = state.offset;
+                                                    let __ows1080 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1076..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1080..state.offset]);
                                                     if !Self::__value_prettify(state, __builder) {
                                                         return false;
                                                     }
-                                                    let __ows1077 = state.offset;
+                                                    let __ows1081 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1077..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1081..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp1078;
-                                                __builder.restore(__pretty_bcp1079);
+                                                state.offset = __pretty_cp1082;
+                                                __builder.restore(__pretty_bcp1083);
                                             }
                                             __ok
                                         } {
@@ -104615,18 +104849,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp1080;
-                                    __builder.restore(__pretty_bcp1081);
+                                    state.offset = __pretty_cp1084;
+                                    __builder.restore(__pretty_bcp1085);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp1083;
+                                state.offset = __rep_cp1087;
                                 break;
                             }
-                            if state.offset == __rep_cp1083 {
+                            if state.offset == __rep_cp1087 {
                                 break;
                             }
-                            __rep_count1082 += 1;
+                            __rep_count1086 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -104634,8 +104868,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp1084 = state.offset;
-                            let __pretty_bcp1085 = __builder.checkpoint();
+                            let __pretty_cp1088 = state.offset;
+                            let __pretty_bcp1089 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -104648,8 +104882,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp1084;
-                                __builder.restore(__pretty_bcp1085);
+                                state.offset = __pretty_cp1088;
+                                __builder.restore(__pretty_bcp1089);
                             }
                             __ok
                         };
@@ -104680,9 +104914,9 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     {
-                        let __ows1086 = state.offset;
+                        let __ows1090 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows1087 = state.offset;
+                        let __ows1091 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -104690,33 +104924,33 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows1086..__ows1087]);
-                        let __ows1088 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows1090..__ows1091]);
+                        let __ows1092 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows1088..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows1092..state.offset]);
                     };
                     {
-                        let mut __rep_count1097 = 0usize;
-                        while __rep_count1097 < 4294967295 {
-                            let __rep_cp1098 = state.offset;
+                        let mut __rep_count1101 = 0usize;
+                        while __rep_count1101 < 4294967295 {
+                            let __rep_cp1102 = state.offset;
                             if !{
-                                let __pretty_cp1095 = state.offset;
-                                let __pretty_bcp1096 = __builder.checkpoint();
+                                let __pretty_cp1099 = state.offset;
+                                let __pretty_bcp1100 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp1093 = state.offset;
-                                            let __pretty_bcp1094 = __builder.checkpoint();
+                                            let __pretty_cp1097 = state.offset;
+                                            let __pretty_bcp1098 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows1091 = state.offset;
+                                                    let __ows1095 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1091..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1095..state.offset]);
                                                     {
                                                         if !{
-                                                            let __pretty_cp1089 = state.offset;
-                                                            let __pretty_bcp1090 = __builder.checkpoint();
+                                                            let __pretty_cp1093 = state.offset;
+                                                            let __pretty_bcp1094 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 if !Self::__displayKeyword_prettify(state, __builder) {
                                                                     return false;
@@ -104724,8 +104958,8 @@ mod __cssl4parser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp1089;
-                                                                __builder.restore(__pretty_bcp1090);
+                                                                state.offset = __pretty_cp1093;
+                                                                __builder.restore(__pretty_bcp1094);
                                                             }
                                                             __ok
                                                         } {
@@ -104734,16 +104968,16 @@ mod __cssl4parser_emit_impl {
                                                             }
                                                         }
                                                     };
-                                                    let __ows1092 = state.offset;
+                                                    let __ows1096 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1092..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1096..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp1093;
-                                                __builder.restore(__pretty_bcp1094);
+                                                state.offset = __pretty_cp1097;
+                                                __builder.restore(__pretty_bcp1098);
                                             }
                                             __ok
                                         } {
@@ -104753,18 +104987,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp1095;
-                                    __builder.restore(__pretty_bcp1096);
+                                    state.offset = __pretty_cp1099;
+                                    __builder.restore(__pretty_bcp1100);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp1098;
+                                state.offset = __rep_cp1102;
                                 break;
                             }
-                            if state.offset == __rep_cp1098 {
+                            if state.offset == __rep_cp1102 {
                                 break;
                             }
-                            __rep_count1097 += 1;
+                            __rep_count1101 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -104772,8 +105006,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp1099 = state.offset;
-                            let __pretty_bcp1100 = __builder.checkpoint();
+                            let __pretty_cp1103 = state.offset;
+                            let __pretty_bcp1104 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -104786,8 +105020,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp1099;
-                                __builder.restore(__pretty_bcp1100);
+                                state.offset = __pretty_cp1103;
+                                __builder.restore(__pretty_bcp1104);
                             }
                             __ok
                         };
@@ -104818,9 +105052,9 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     {
-                        let __ows1101 = state.offset;
+                        let __ows1105 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows1102 = state.offset;
+                        let __ows1106 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -104828,33 +105062,33 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows1101..__ows1102]);
-                        let __ows1103 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows1105..__ows1106]);
+                        let __ows1107 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows1103..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows1107..state.offset]);
                     };
                     {
-                        let mut __rep_count1112 = 0usize;
-                        while __rep_count1112 < 4294967295 {
-                            let __rep_cp1113 = state.offset;
+                        let mut __rep_count1116 = 0usize;
+                        while __rep_count1116 < 4294967295 {
+                            let __rep_cp1117 = state.offset;
                             if !{
-                                let __pretty_cp1110 = state.offset;
-                                let __pretty_bcp1111 = __builder.checkpoint();
+                                let __pretty_cp1114 = state.offset;
+                                let __pretty_bcp1115 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp1108 = state.offset;
-                                            let __pretty_bcp1109 = __builder.checkpoint();
+                                            let __pretty_cp1112 = state.offset;
+                                            let __pretty_bcp1113 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows1106 = state.offset;
+                                                    let __ows1110 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1106..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1110..state.offset]);
                                                     {
                                                         if !{
-                                                            let __pretty_cp1104 = state.offset;
-                                                            let __pretty_bcp1105 = __builder.checkpoint();
+                                                            let __pretty_cp1108 = state.offset;
+                                                            let __pretty_bcp1109 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 if !Self::__positionKeyword_prettify(state, __builder) {
                                                                     return false;
@@ -104862,8 +105096,8 @@ mod __cssl4parser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp1104;
-                                                                __builder.restore(__pretty_bcp1105);
+                                                                state.offset = __pretty_cp1108;
+                                                                __builder.restore(__pretty_bcp1109);
                                                             }
                                                             __ok
                                                         } {
@@ -104872,16 +105106,16 @@ mod __cssl4parser_emit_impl {
                                                             }
                                                         }
                                                     };
-                                                    let __ows1107 = state.offset;
+                                                    let __ows1111 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1107..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1111..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp1108;
-                                                __builder.restore(__pretty_bcp1109);
+                                                state.offset = __pretty_cp1112;
+                                                __builder.restore(__pretty_bcp1113);
                                             }
                                             __ok
                                         } {
@@ -104891,18 +105125,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp1110;
-                                    __builder.restore(__pretty_bcp1111);
+                                    state.offset = __pretty_cp1114;
+                                    __builder.restore(__pretty_bcp1115);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp1113;
+                                state.offset = __rep_cp1117;
                                 break;
                             }
-                            if state.offset == __rep_cp1113 {
+                            if state.offset == __rep_cp1117 {
                                 break;
                             }
-                            __rep_count1112 += 1;
+                            __rep_count1116 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -104910,8 +105144,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp1114 = state.offset;
-                            let __pretty_bcp1115 = __builder.checkpoint();
+                            let __pretty_cp1118 = state.offset;
+                            let __pretty_bcp1119 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -104924,8 +105158,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp1114;
-                                __builder.restore(__pretty_bcp1115);
+                                state.offset = __pretty_cp1118;
+                                __builder.restore(__pretty_bcp1119);
                             }
                             __ok
                         };
@@ -104956,9 +105190,9 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     {
-                        let __ows1116 = state.offset;
+                        let __ows1120 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows1117 = state.offset;
+                        let __ows1121 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -104966,33 +105200,33 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows1116..__ows1117]);
-                        let __ows1118 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows1120..__ows1121]);
+                        let __ows1122 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows1118..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows1122..state.offset]);
                     };
                     {
-                        let mut __rep_count1127 = 0usize;
-                        while __rep_count1127 < 4294967295 {
-                            let __rep_cp1128 = state.offset;
+                        let mut __rep_count1131 = 0usize;
+                        while __rep_count1131 < 4294967295 {
+                            let __rep_cp1132 = state.offset;
                             if !{
-                                let __pretty_cp1125 = state.offset;
-                                let __pretty_bcp1126 = __builder.checkpoint();
+                                let __pretty_cp1129 = state.offset;
+                                let __pretty_bcp1130 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp1123 = state.offset;
-                                            let __pretty_bcp1124 = __builder.checkpoint();
+                                            let __pretty_cp1127 = state.offset;
+                                            let __pretty_bcp1128 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows1121 = state.offset;
+                                                    let __ows1125 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1121..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1125..state.offset]);
                                                     {
                                                         if !{
-                                                            let __pretty_cp1119 = state.offset;
-                                                            let __pretty_bcp1120 = __builder.checkpoint();
+                                                            let __pretty_cp1123 = state.offset;
+                                                            let __pretty_bcp1124 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 if !Self::__overflowKeyword_prettify(state, __builder) {
                                                                     return false;
@@ -105000,8 +105234,8 @@ mod __cssl4parser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp1119;
-                                                                __builder.restore(__pretty_bcp1120);
+                                                                state.offset = __pretty_cp1123;
+                                                                __builder.restore(__pretty_bcp1124);
                                                             }
                                                             __ok
                                                         } {
@@ -105010,16 +105244,16 @@ mod __cssl4parser_emit_impl {
                                                             }
                                                         }
                                                     };
-                                                    let __ows1122 = state.offset;
+                                                    let __ows1126 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1122..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1126..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp1123;
-                                                __builder.restore(__pretty_bcp1124);
+                                                state.offset = __pretty_cp1127;
+                                                __builder.restore(__pretty_bcp1128);
                                             }
                                             __ok
                                         } {
@@ -105029,18 +105263,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp1125;
-                                    __builder.restore(__pretty_bcp1126);
+                                    state.offset = __pretty_cp1129;
+                                    __builder.restore(__pretty_bcp1130);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp1128;
+                                state.offset = __rep_cp1132;
                                 break;
                             }
-                            if state.offset == __rep_cp1128 {
+                            if state.offset == __rep_cp1132 {
                                 break;
                             }
-                            __rep_count1127 += 1;
+                            __rep_count1131 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -105048,8 +105282,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp1129 = state.offset;
-                            let __pretty_bcp1130 = __builder.checkpoint();
+                            let __pretty_cp1133 = state.offset;
+                            let __pretty_bcp1134 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -105062,8 +105296,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp1129;
-                                __builder.restore(__pretty_bcp1130);
+                                state.offset = __pretty_cp1133;
+                                __builder.restore(__pretty_bcp1134);
                             }
                             __ok
                         };
@@ -105094,9 +105328,9 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     {
-                        let __ows1131 = state.offset;
+                        let __ows1135 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows1132 = state.offset;
+                        let __ows1136 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -105104,33 +105338,33 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows1131..__ows1132]);
-                        let __ows1133 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows1135..__ows1136]);
+                        let __ows1137 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows1133..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows1137..state.offset]);
                     };
                     {
-                        let mut __rep_count1142 = 0usize;
-                        while __rep_count1142 < 4294967295 {
-                            let __rep_cp1143 = state.offset;
+                        let mut __rep_count1146 = 0usize;
+                        while __rep_count1146 < 4294967295 {
+                            let __rep_cp1147 = state.offset;
                             if !{
-                                let __pretty_cp1140 = state.offset;
-                                let __pretty_bcp1141 = __builder.checkpoint();
+                                let __pretty_cp1144 = state.offset;
+                                let __pretty_bcp1145 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp1138 = state.offset;
-                                            let __pretty_bcp1139 = __builder.checkpoint();
+                                            let __pretty_cp1142 = state.offset;
+                                            let __pretty_bcp1143 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows1136 = state.offset;
+                                                    let __ows1140 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1136..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1140..state.offset]);
                                                     {
                                                         if !{
-                                                            let __pretty_cp1134 = state.offset;
-                                                            let __pretty_bcp1135 = __builder.checkpoint();
+                                                            let __pretty_cp1138 = state.offset;
+                                                            let __pretty_bcp1139 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 if !Self::__visibilityKeyword_prettify(state, __builder) {
                                                                     return false;
@@ -105138,8 +105372,8 @@ mod __cssl4parser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp1134;
-                                                                __builder.restore(__pretty_bcp1135);
+                                                                state.offset = __pretty_cp1138;
+                                                                __builder.restore(__pretty_bcp1139);
                                                             }
                                                             __ok
                                                         } {
@@ -105148,16 +105382,16 @@ mod __cssl4parser_emit_impl {
                                                             }
                                                         }
                                                     };
-                                                    let __ows1137 = state.offset;
+                                                    let __ows1141 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1137..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1141..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp1138;
-                                                __builder.restore(__pretty_bcp1139);
+                                                state.offset = __pretty_cp1142;
+                                                __builder.restore(__pretty_bcp1143);
                                             }
                                             __ok
                                         } {
@@ -105167,18 +105401,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp1140;
-                                    __builder.restore(__pretty_bcp1141);
+                                    state.offset = __pretty_cp1144;
+                                    __builder.restore(__pretty_bcp1145);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp1143;
+                                state.offset = __rep_cp1147;
                                 break;
                             }
-                            if state.offset == __rep_cp1143 {
+                            if state.offset == __rep_cp1147 {
                                 break;
                             }
-                            __rep_count1142 += 1;
+                            __rep_count1146 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -105186,8 +105420,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp1144 = state.offset;
-                            let __pretty_bcp1145 = __builder.checkpoint();
+                            let __pretty_cp1148 = state.offset;
+                            let __pretty_bcp1149 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -105200,8 +105434,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp1144;
-                                __builder.restore(__pretty_bcp1145);
+                                state.offset = __pretty_cp1148;
+                                __builder.restore(__pretty_bcp1149);
                             }
                             __ok
                         };
@@ -105232,9 +105466,9 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     {
-                        let __ows1146 = state.offset;
+                        let __ows1150 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows1147 = state.offset;
+                        let __ows1151 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -105242,33 +105476,33 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows1146..__ows1147]);
-                        let __ows1148 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows1150..__ows1151]);
+                        let __ows1152 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows1148..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows1152..state.offset]);
                     };
                     {
-                        let mut __rep_count1157 = 0usize;
-                        while __rep_count1157 < 4294967295 {
-                            let __rep_cp1158 = state.offset;
+                        let mut __rep_count1161 = 0usize;
+                        while __rep_count1161 < 4294967295 {
+                            let __rep_cp1162 = state.offset;
                             if !{
-                                let __pretty_cp1155 = state.offset;
-                                let __pretty_bcp1156 = __builder.checkpoint();
+                                let __pretty_cp1159 = state.offset;
+                                let __pretty_bcp1160 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp1153 = state.offset;
-                                            let __pretty_bcp1154 = __builder.checkpoint();
+                                            let __pretty_cp1157 = state.offset;
+                                            let __pretty_bcp1158 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows1151 = state.offset;
+                                                    let __ows1155 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1151..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1155..state.offset]);
                                                     {
                                                         if !{
-                                                            let __pretty_cp1149 = state.offset;
-                                                            let __pretty_bcp1150 = __builder.checkpoint();
+                                                            let __pretty_cp1153 = state.offset;
+                                                            let __pretty_bcp1154 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 if !Self::__flexDirKeyword_prettify(state, __builder) {
                                                                     return false;
@@ -105276,8 +105510,8 @@ mod __cssl4parser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp1149;
-                                                                __builder.restore(__pretty_bcp1150);
+                                                                state.offset = __pretty_cp1153;
+                                                                __builder.restore(__pretty_bcp1154);
                                                             }
                                                             __ok
                                                         } {
@@ -105286,16 +105520,16 @@ mod __cssl4parser_emit_impl {
                                                             }
                                                         }
                                                     };
-                                                    let __ows1152 = state.offset;
+                                                    let __ows1156 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1152..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1156..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp1153;
-                                                __builder.restore(__pretty_bcp1154);
+                                                state.offset = __pretty_cp1157;
+                                                __builder.restore(__pretty_bcp1158);
                                             }
                                             __ok
                                         } {
@@ -105305,18 +105539,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp1155;
-                                    __builder.restore(__pretty_bcp1156);
+                                    state.offset = __pretty_cp1159;
+                                    __builder.restore(__pretty_bcp1160);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp1158;
+                                state.offset = __rep_cp1162;
                                 break;
                             }
-                            if state.offset == __rep_cp1158 {
+                            if state.offset == __rep_cp1162 {
                                 break;
                             }
-                            __rep_count1157 += 1;
+                            __rep_count1161 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -105324,8 +105558,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp1159 = state.offset;
-                            let __pretty_bcp1160 = __builder.checkpoint();
+                            let __pretty_cp1163 = state.offset;
+                            let __pretty_bcp1164 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -105338,8 +105572,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp1159;
-                                __builder.restore(__pretty_bcp1160);
+                                state.offset = __pretty_cp1163;
+                                __builder.restore(__pretty_bcp1164);
                             }
                             __ok
                         };
@@ -105370,9 +105604,9 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     {
-                        let __ows1161 = state.offset;
+                        let __ows1165 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows1162 = state.offset;
+                        let __ows1166 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -105380,33 +105614,33 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows1161..__ows1162]);
-                        let __ows1163 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows1165..__ows1166]);
+                        let __ows1167 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows1163..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows1167..state.offset]);
                     };
                     {
-                        let mut __rep_count1172 = 0usize;
-                        while __rep_count1172 < 4294967295 {
-                            let __rep_cp1173 = state.offset;
+                        let mut __rep_count1176 = 0usize;
+                        while __rep_count1176 < 4294967295 {
+                            let __rep_cp1177 = state.offset;
                             if !{
-                                let __pretty_cp1170 = state.offset;
-                                let __pretty_bcp1171 = __builder.checkpoint();
+                                let __pretty_cp1174 = state.offset;
+                                let __pretty_bcp1175 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp1168 = state.offset;
-                                            let __pretty_bcp1169 = __builder.checkpoint();
+                                            let __pretty_cp1172 = state.offset;
+                                            let __pretty_bcp1173 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows1166 = state.offset;
+                                                    let __ows1170 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1166..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1170..state.offset]);
                                                     {
                                                         if !{
-                                                            let __pretty_cp1164 = state.offset;
-                                                            let __pretty_bcp1165 = __builder.checkpoint();
+                                                            let __pretty_cp1168 = state.offset;
+                                                            let __pretty_bcp1169 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 if !Self::__flexWrapKeyword_prettify(state, __builder) {
                                                                     return false;
@@ -105414,8 +105648,8 @@ mod __cssl4parser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp1164;
-                                                                __builder.restore(__pretty_bcp1165);
+                                                                state.offset = __pretty_cp1168;
+                                                                __builder.restore(__pretty_bcp1169);
                                                             }
                                                             __ok
                                                         } {
@@ -105424,16 +105658,16 @@ mod __cssl4parser_emit_impl {
                                                             }
                                                         }
                                                     };
-                                                    let __ows1167 = state.offset;
+                                                    let __ows1171 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1167..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1171..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp1168;
-                                                __builder.restore(__pretty_bcp1169);
+                                                state.offset = __pretty_cp1172;
+                                                __builder.restore(__pretty_bcp1173);
                                             }
                                             __ok
                                         } {
@@ -105443,18 +105677,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp1170;
-                                    __builder.restore(__pretty_bcp1171);
+                                    state.offset = __pretty_cp1174;
+                                    __builder.restore(__pretty_bcp1175);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp1173;
+                                state.offset = __rep_cp1177;
                                 break;
                             }
-                            if state.offset == __rep_cp1173 {
+                            if state.offset == __rep_cp1177 {
                                 break;
                             }
-                            __rep_count1172 += 1;
+                            __rep_count1176 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -105462,8 +105696,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp1174 = state.offset;
-                            let __pretty_bcp1175 = __builder.checkpoint();
+                            let __pretty_cp1178 = state.offset;
+                            let __pretty_bcp1179 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -105476,8 +105710,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp1174;
-                                __builder.restore(__pretty_bcp1175);
+                                state.offset = __pretty_cp1178;
+                                __builder.restore(__pretty_bcp1179);
                             }
                             __ok
                         };
@@ -105508,9 +105742,9 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     {
-                        let __ows1176 = state.offset;
+                        let __ows1180 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows1177 = state.offset;
+                        let __ows1181 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -105518,33 +105752,33 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows1176..__ows1177]);
-                        let __ows1178 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows1180..__ows1181]);
+                        let __ows1182 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows1178..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows1182..state.offset]);
                     };
                     {
-                        let mut __rep_count1187 = 0usize;
-                        while __rep_count1187 < 4294967295 {
-                            let __rep_cp1188 = state.offset;
+                        let mut __rep_count1191 = 0usize;
+                        while __rep_count1191 < 4294967295 {
+                            let __rep_cp1192 = state.offset;
                             if !{
-                                let __pretty_cp1185 = state.offset;
-                                let __pretty_bcp1186 = __builder.checkpoint();
+                                let __pretty_cp1189 = state.offset;
+                                let __pretty_bcp1190 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp1183 = state.offset;
-                                            let __pretty_bcp1184 = __builder.checkpoint();
+                                            let __pretty_cp1187 = state.offset;
+                                            let __pretty_bcp1188 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows1181 = state.offset;
+                                                    let __ows1185 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1181..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1185..state.offset]);
                                                     {
                                                         if !{
-                                                            let __pretty_cp1179 = state.offset;
-                                                            let __pretty_bcp1180 = __builder.checkpoint();
+                                                            let __pretty_cp1183 = state.offset;
+                                                            let __pretty_bcp1184 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 if !Self::__alignKeyword_prettify(state, __builder) {
                                                                     return false;
@@ -105552,8 +105786,8 @@ mod __cssl4parser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp1179;
-                                                                __builder.restore(__pretty_bcp1180);
+                                                                state.offset = __pretty_cp1183;
+                                                                __builder.restore(__pretty_bcp1184);
                                                             }
                                                             __ok
                                                         } {
@@ -105562,16 +105796,16 @@ mod __cssl4parser_emit_impl {
                                                             }
                                                         }
                                                     };
-                                                    let __ows1182 = state.offset;
+                                                    let __ows1186 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1182..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1186..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp1183;
-                                                __builder.restore(__pretty_bcp1184);
+                                                state.offset = __pretty_cp1187;
+                                                __builder.restore(__pretty_bcp1188);
                                             }
                                             __ok
                                         } {
@@ -105581,18 +105815,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp1185;
-                                    __builder.restore(__pretty_bcp1186);
+                                    state.offset = __pretty_cp1189;
+                                    __builder.restore(__pretty_bcp1190);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp1188;
+                                state.offset = __rep_cp1192;
                                 break;
                             }
-                            if state.offset == __rep_cp1188 {
+                            if state.offset == __rep_cp1192 {
                                 break;
                             }
-                            __rep_count1187 += 1;
+                            __rep_count1191 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -105600,8 +105834,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp1189 = state.offset;
-                            let __pretty_bcp1190 = __builder.checkpoint();
+                            let __pretty_cp1193 = state.offset;
+                            let __pretty_bcp1194 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -105614,8 +105848,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp1189;
-                                __builder.restore(__pretty_bcp1190);
+                                state.offset = __pretty_cp1193;
+                                __builder.restore(__pretty_bcp1194);
                             }
                             __ok
                         };
@@ -105646,9 +105880,9 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     {
-                        let __ows1191 = state.offset;
+                        let __ows1195 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows1192 = state.offset;
+                        let __ows1196 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -105656,42 +105890,42 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows1191..__ows1192]);
-                        let __ows1193 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows1195..__ows1196]);
+                        let __ows1197 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows1193..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows1197..state.offset]);
                     };
                     {
-                        let mut __rep_count1200 = 0usize;
-                        while __rep_count1200 < 4294967295 {
-                            let __rep_cp1201 = state.offset;
+                        let mut __rep_count1204 = 0usize;
+                        while __rep_count1204 < 4294967295 {
+                            let __rep_cp1205 = state.offset;
                             if !{
-                                let __pretty_cp1198 = state.offset;
-                                let __pretty_bcp1199 = __builder.checkpoint();
+                                let __pretty_cp1202 = state.offset;
+                                let __pretty_bcp1203 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp1196 = state.offset;
-                                            let __pretty_bcp1197 = __builder.checkpoint();
+                                            let __pretty_cp1200 = state.offset;
+                                            let __pretty_bcp1201 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows1194 = state.offset;
+                                                    let __ows1198 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1194..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1198..state.offset]);
                                                     if !Self::__value_prettify(state, __builder) {
                                                         return false;
                                                     }
-                                                    let __ows1195 = state.offset;
+                                                    let __ows1199 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1195..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1199..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp1196;
-                                                __builder.restore(__pretty_bcp1197);
+                                                state.offset = __pretty_cp1200;
+                                                __builder.restore(__pretty_bcp1201);
                                             }
                                             __ok
                                         } {
@@ -105701,18 +105935,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp1198;
-                                    __builder.restore(__pretty_bcp1199);
+                                    state.offset = __pretty_cp1202;
+                                    __builder.restore(__pretty_bcp1203);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp1201;
+                                state.offset = __rep_cp1205;
                                 break;
                             }
-                            if state.offset == __rep_cp1201 {
+                            if state.offset == __rep_cp1205 {
                                 break;
                             }
-                            __rep_count1200 += 1;
+                            __rep_count1204 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -105720,8 +105954,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp1202 = state.offset;
-                            let __pretty_bcp1203 = __builder.checkpoint();
+                            let __pretty_cp1206 = state.offset;
+                            let __pretty_bcp1207 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -105734,8 +105968,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp1202;
-                                __builder.restore(__pretty_bcp1203);
+                                state.offset = __pretty_cp1206;
+                                __builder.restore(__pretty_bcp1207);
                             }
                             __ok
                         };
@@ -105766,9 +106000,9 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     {
-                        let __ows1204 = state.offset;
+                        let __ows1208 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows1205 = state.offset;
+                        let __ows1209 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -105776,42 +106010,42 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows1204..__ows1205]);
-                        let __ows1206 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows1208..__ows1209]);
+                        let __ows1210 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows1206..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows1210..state.offset]);
                     };
                     {
-                        let mut __rep_count1213 = 0usize;
-                        while __rep_count1213 < 4294967295 {
-                            let __rep_cp1214 = state.offset;
+                        let mut __rep_count1217 = 0usize;
+                        while __rep_count1217 < 4294967295 {
+                            let __rep_cp1218 = state.offset;
                             if !{
-                                let __pretty_cp1211 = state.offset;
-                                let __pretty_bcp1212 = __builder.checkpoint();
+                                let __pretty_cp1215 = state.offset;
+                                let __pretty_bcp1216 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp1209 = state.offset;
-                                            let __pretty_bcp1210 = __builder.checkpoint();
+                                            let __pretty_cp1213 = state.offset;
+                                            let __pretty_bcp1214 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows1207 = state.offset;
+                                                    let __ows1211 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1207..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1211..state.offset]);
                                                     if !Self::__value_prettify(state, __builder) {
                                                         return false;
                                                     }
-                                                    let __ows1208 = state.offset;
+                                                    let __ows1212 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1208..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1212..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp1209;
-                                                __builder.restore(__pretty_bcp1210);
+                                                state.offset = __pretty_cp1213;
+                                                __builder.restore(__pretty_bcp1214);
                                             }
                                             __ok
                                         } {
@@ -105821,18 +106055,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp1211;
-                                    __builder.restore(__pretty_bcp1212);
+                                    state.offset = __pretty_cp1215;
+                                    __builder.restore(__pretty_bcp1216);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp1214;
+                                state.offset = __rep_cp1218;
                                 break;
                             }
-                            if state.offset == __rep_cp1214 {
+                            if state.offset == __rep_cp1218 {
                                 break;
                             }
-                            __rep_count1213 += 1;
+                            __rep_count1217 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -105840,8 +106074,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp1215 = state.offset;
-                            let __pretty_bcp1216 = __builder.checkpoint();
+                            let __pretty_cp1219 = state.offset;
+                            let __pretty_bcp1220 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -105854,8 +106088,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp1215;
-                                __builder.restore(__pretty_bcp1216);
+                                state.offset = __pretty_cp1219;
+                                __builder.restore(__pretty_bcp1220);
                             }
                             __ok
                         };
@@ -105886,9 +106120,9 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     {
-                        let __ows1217 = state.offset;
+                        let __ows1221 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows1218 = state.offset;
+                        let __ows1222 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -105896,33 +106130,33 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows1217..__ows1218]);
-                        let __ows1219 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows1221..__ows1222]);
+                        let __ows1223 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows1219..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows1223..state.offset]);
                     };
                     {
-                        let mut __rep_count1228 = 0usize;
-                        while __rep_count1228 < 4294967295 {
-                            let __rep_cp1229 = state.offset;
+                        let mut __rep_count1232 = 0usize;
+                        while __rep_count1232 < 4294967295 {
+                            let __rep_cp1233 = state.offset;
                             if !{
-                                let __pretty_cp1226 = state.offset;
-                                let __pretty_bcp1227 = __builder.checkpoint();
+                                let __pretty_cp1230 = state.offset;
+                                let __pretty_bcp1231 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp1224 = state.offset;
-                                            let __pretty_bcp1225 = __builder.checkpoint();
+                                            let __pretty_cp1228 = state.offset;
+                                            let __pretty_bcp1229 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows1222 = state.offset;
+                                                    let __ows1226 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1222..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1226..state.offset]);
                                                     {
                                                         if !{
-                                                            let __pretty_cp1220 = state.offset;
-                                                            let __pretty_bcp1221 = __builder.checkpoint();
+                                                            let __pretty_cp1224 = state.offset;
+                                                            let __pretty_bcp1225 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 if !Self::__fontWeightKeyword_prettify(state, __builder) {
                                                                     return false;
@@ -105930,8 +106164,8 @@ mod __cssl4parser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp1220;
-                                                                __builder.restore(__pretty_bcp1221);
+                                                                state.offset = __pretty_cp1224;
+                                                                __builder.restore(__pretty_bcp1225);
                                                             }
                                                             __ok
                                                         } {
@@ -105940,16 +106174,16 @@ mod __cssl4parser_emit_impl {
                                                             }
                                                         }
                                                     };
-                                                    let __ows1223 = state.offset;
+                                                    let __ows1227 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1223..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1227..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp1224;
-                                                __builder.restore(__pretty_bcp1225);
+                                                state.offset = __pretty_cp1228;
+                                                __builder.restore(__pretty_bcp1229);
                                             }
                                             __ok
                                         } {
@@ -105959,18 +106193,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp1226;
-                                    __builder.restore(__pretty_bcp1227);
+                                    state.offset = __pretty_cp1230;
+                                    __builder.restore(__pretty_bcp1231);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp1229;
+                                state.offset = __rep_cp1233;
                                 break;
                             }
-                            if state.offset == __rep_cp1229 {
+                            if state.offset == __rep_cp1233 {
                                 break;
                             }
-                            __rep_count1228 += 1;
+                            __rep_count1232 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -105978,8 +106212,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp1230 = state.offset;
-                            let __pretty_bcp1231 = __builder.checkpoint();
+                            let __pretty_cp1234 = state.offset;
+                            let __pretty_bcp1235 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -105992,8 +106226,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp1230;
-                                __builder.restore(__pretty_bcp1231);
+                                state.offset = __pretty_cp1234;
+                                __builder.restore(__pretty_bcp1235);
                             }
                             __ok
                         };
@@ -106024,9 +106258,9 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     {
-                        let __ows1232 = state.offset;
+                        let __ows1236 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows1233 = state.offset;
+                        let __ows1237 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -106034,42 +106268,42 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows1232..__ows1233]);
-                        let __ows1234 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows1236..__ows1237]);
+                        let __ows1238 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows1234..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows1238..state.offset]);
                     };
                     {
-                        let mut __rep_count1241 = 0usize;
-                        while __rep_count1241 < 4294967295 {
-                            let __rep_cp1242 = state.offset;
+                        let mut __rep_count1245 = 0usize;
+                        while __rep_count1245 < 4294967295 {
+                            let __rep_cp1246 = state.offset;
                             if !{
-                                let __pretty_cp1239 = state.offset;
-                                let __pretty_bcp1240 = __builder.checkpoint();
+                                let __pretty_cp1243 = state.offset;
+                                let __pretty_bcp1244 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp1237 = state.offset;
-                                            let __pretty_bcp1238 = __builder.checkpoint();
+                                            let __pretty_cp1241 = state.offset;
+                                            let __pretty_bcp1242 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows1235 = state.offset;
+                                                    let __ows1239 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1235..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1239..state.offset]);
                                                     if !Self::__value_prettify(state, __builder) {
                                                         return false;
                                                     }
-                                                    let __ows1236 = state.offset;
+                                                    let __ows1240 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1236..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1240..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp1237;
-                                                __builder.restore(__pretty_bcp1238);
+                                                state.offset = __pretty_cp1241;
+                                                __builder.restore(__pretty_bcp1242);
                                             }
                                             __ok
                                         } {
@@ -106079,18 +106313,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp1239;
-                                    __builder.restore(__pretty_bcp1240);
+                                    state.offset = __pretty_cp1243;
+                                    __builder.restore(__pretty_bcp1244);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp1242;
+                                state.offset = __rep_cp1246;
                                 break;
                             }
-                            if state.offset == __rep_cp1242 {
+                            if state.offset == __rep_cp1246 {
                                 break;
                             }
-                            __rep_count1241 += 1;
+                            __rep_count1245 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -106098,8 +106332,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp1243 = state.offset;
-                            let __pretty_bcp1244 = __builder.checkpoint();
+                            let __pretty_cp1247 = state.offset;
+                            let __pretty_bcp1248 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -106112,8 +106346,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp1243;
-                                __builder.restore(__pretty_bcp1244);
+                                state.offset = __pretty_cp1247;
+                                __builder.restore(__pretty_bcp1248);
                             }
                             __ok
                         };
@@ -106144,9 +106378,9 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     {
-                        let __ows1245 = state.offset;
+                        let __ows1249 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows1246 = state.offset;
+                        let __ows1250 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -106154,33 +106388,33 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows1245..__ows1246]);
-                        let __ows1247 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows1249..__ows1250]);
+                        let __ows1251 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows1247..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows1251..state.offset]);
                     };
                     {
-                        let mut __rep_count1256 = 0usize;
-                        while __rep_count1256 < 4294967295 {
-                            let __rep_cp1257 = state.offset;
+                        let mut __rep_count1260 = 0usize;
+                        while __rep_count1260 < 4294967295 {
+                            let __rep_cp1261 = state.offset;
                             if !{
-                                let __pretty_cp1254 = state.offset;
-                                let __pretty_bcp1255 = __builder.checkpoint();
+                                let __pretty_cp1258 = state.offset;
+                                let __pretty_bcp1259 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp1252 = state.offset;
-                                            let __pretty_bcp1253 = __builder.checkpoint();
+                                            let __pretty_cp1256 = state.offset;
+                                            let __pretty_bcp1257 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows1250 = state.offset;
+                                                    let __ows1254 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1250..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1254..state.offset]);
                                                     {
                                                         if !{
-                                                            let __pretty_cp1248 = state.offset;
-                                                            let __pretty_bcp1249 = __builder.checkpoint();
+                                                            let __pretty_cp1252 = state.offset;
+                                                            let __pretty_bcp1253 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 if !Self::__borderWidthKeyword_prettify(state, __builder) {
                                                                     return false;
@@ -106188,8 +106422,8 @@ mod __cssl4parser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp1248;
-                                                                __builder.restore(__pretty_bcp1249);
+                                                                state.offset = __pretty_cp1252;
+                                                                __builder.restore(__pretty_bcp1253);
                                                             }
                                                             __ok
                                                         } {
@@ -106198,16 +106432,16 @@ mod __cssl4parser_emit_impl {
                                                             }
                                                         }
                                                     };
-                                                    let __ows1251 = state.offset;
+                                                    let __ows1255 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1251..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1255..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp1252;
-                                                __builder.restore(__pretty_bcp1253);
+                                                state.offset = __pretty_cp1256;
+                                                __builder.restore(__pretty_bcp1257);
                                             }
                                             __ok
                                         } {
@@ -106217,18 +106451,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp1254;
-                                    __builder.restore(__pretty_bcp1255);
+                                    state.offset = __pretty_cp1258;
+                                    __builder.restore(__pretty_bcp1259);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp1257;
+                                state.offset = __rep_cp1261;
                                 break;
                             }
-                            if state.offset == __rep_cp1257 {
+                            if state.offset == __rep_cp1261 {
                                 break;
                             }
-                            __rep_count1256 += 1;
+                            __rep_count1260 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -106236,8 +106470,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp1258 = state.offset;
-                            let __pretty_bcp1259 = __builder.checkpoint();
+                            let __pretty_cp1262 = state.offset;
+                            let __pretty_bcp1263 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -106250,8 +106484,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp1258;
-                                __builder.restore(__pretty_bcp1259);
+                                state.offset = __pretty_cp1262;
+                                __builder.restore(__pretty_bcp1263);
                             }
                             __ok
                         };
@@ -106282,9 +106516,9 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     {
-                        let __ows1260 = state.offset;
+                        let __ows1264 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows1261 = state.offset;
+                        let __ows1265 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -106292,33 +106526,33 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows1260..__ows1261]);
-                        let __ows1262 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows1264..__ows1265]);
+                        let __ows1266 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows1262..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows1266..state.offset]);
                     };
                     {
-                        let mut __rep_count1271 = 0usize;
-                        while __rep_count1271 < 4294967295 {
-                            let __rep_cp1272 = state.offset;
+                        let mut __rep_count1275 = 0usize;
+                        while __rep_count1275 < 4294967295 {
+                            let __rep_cp1276 = state.offset;
                             if !{
-                                let __pretty_cp1269 = state.offset;
-                                let __pretty_bcp1270 = __builder.checkpoint();
+                                let __pretty_cp1273 = state.offset;
+                                let __pretty_bcp1274 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp1267 = state.offset;
-                                            let __pretty_bcp1268 = __builder.checkpoint();
+                                            let __pretty_cp1271 = state.offset;
+                                            let __pretty_bcp1272 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows1265 = state.offset;
+                                                    let __ows1269 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1265..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1269..state.offset]);
                                                     {
                                                         if !{
-                                                            let __pretty_cp1263 = state.offset;
-                                                            let __pretty_bcp1264 = __builder.checkpoint();
+                                                            let __pretty_cp1267 = state.offset;
+                                                            let __pretty_bcp1268 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 if !Self::__borderStyleKeyword_prettify(state, __builder) {
                                                                     return false;
@@ -106326,8 +106560,8 @@ mod __cssl4parser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp1263;
-                                                                __builder.restore(__pretty_bcp1264);
+                                                                state.offset = __pretty_cp1267;
+                                                                __builder.restore(__pretty_bcp1268);
                                                             }
                                                             __ok
                                                         } {
@@ -106336,16 +106570,16 @@ mod __cssl4parser_emit_impl {
                                                             }
                                                         }
                                                     };
-                                                    let __ows1266 = state.offset;
+                                                    let __ows1270 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1266..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1270..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp1267;
-                                                __builder.restore(__pretty_bcp1268);
+                                                state.offset = __pretty_cp1271;
+                                                __builder.restore(__pretty_bcp1272);
                                             }
                                             __ok
                                         } {
@@ -106355,18 +106589,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp1269;
-                                    __builder.restore(__pretty_bcp1270);
+                                    state.offset = __pretty_cp1273;
+                                    __builder.restore(__pretty_bcp1274);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp1272;
+                                state.offset = __rep_cp1276;
                                 break;
                             }
-                            if state.offset == __rep_cp1272 {
+                            if state.offset == __rep_cp1276 {
                                 break;
                             }
-                            __rep_count1271 += 1;
+                            __rep_count1275 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -106374,8 +106608,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp1273 = state.offset;
-                            let __pretty_bcp1274 = __builder.checkpoint();
+                            let __pretty_cp1277 = state.offset;
+                            let __pretty_bcp1278 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -106388,8 +106622,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp1273;
-                                __builder.restore(__pretty_bcp1274);
+                                state.offset = __pretty_cp1277;
+                                __builder.restore(__pretty_bcp1278);
                             }
                             __ok
                         };
@@ -106420,9 +106654,9 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     {
-                        let __ows1275 = state.offset;
+                        let __ows1279 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows1276 = state.offset;
+                        let __ows1280 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -106430,42 +106664,42 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows1275..__ows1276]);
-                        let __ows1277 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows1279..__ows1280]);
+                        let __ows1281 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows1277..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows1281..state.offset]);
                     };
                     {
-                        let mut __rep_count1284 = 0usize;
-                        while __rep_count1284 < 4294967295 {
-                            let __rep_cp1285 = state.offset;
+                        let mut __rep_count1288 = 0usize;
+                        while __rep_count1288 < 4294967295 {
+                            let __rep_cp1289 = state.offset;
                             if !{
-                                let __pretty_cp1282 = state.offset;
-                                let __pretty_bcp1283 = __builder.checkpoint();
+                                let __pretty_cp1286 = state.offset;
+                                let __pretty_bcp1287 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp1280 = state.offset;
-                                            let __pretty_bcp1281 = __builder.checkpoint();
+                                            let __pretty_cp1284 = state.offset;
+                                            let __pretty_bcp1285 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows1278 = state.offset;
+                                                    let __ows1282 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1278..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1282..state.offset]);
                                                     if !Self::__value_prettify(state, __builder) {
                                                         return false;
                                                     }
-                                                    let __ows1279 = state.offset;
+                                                    let __ows1283 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1279..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1283..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp1280;
-                                                __builder.restore(__pretty_bcp1281);
+                                                state.offset = __pretty_cp1284;
+                                                __builder.restore(__pretty_bcp1285);
                                             }
                                             __ok
                                         } {
@@ -106475,18 +106709,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp1282;
-                                    __builder.restore(__pretty_bcp1283);
+                                    state.offset = __pretty_cp1286;
+                                    __builder.restore(__pretty_bcp1287);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp1285;
+                                state.offset = __rep_cp1289;
                                 break;
                             }
-                            if state.offset == __rep_cp1285 {
+                            if state.offset == __rep_cp1289 {
                                 break;
                             }
-                            __rep_count1284 += 1;
+                            __rep_count1288 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -106494,8 +106728,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp1286 = state.offset;
-                            let __pretty_bcp1287 = __builder.checkpoint();
+                            let __pretty_cp1290 = state.offset;
+                            let __pretty_bcp1291 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -106508,8 +106742,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp1286;
-                                __builder.restore(__pretty_bcp1287);
+                                state.offset = __pretty_cp1290;
+                                __builder.restore(__pretty_bcp1291);
                             }
                             __ok
                         };
@@ -106540,9 +106774,9 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     {
-                        let __ows1288 = state.offset;
+                        let __ows1292 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows1289 = state.offset;
+                        let __ows1293 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -106550,42 +106784,42 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows1288..__ows1289]);
-                        let __ows1290 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows1292..__ows1293]);
+                        let __ows1294 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows1290..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows1294..state.offset]);
                     };
                     {
-                        let mut __rep_count1297 = 0usize;
-                        while __rep_count1297 < 4294967295 {
-                            let __rep_cp1298 = state.offset;
+                        let mut __rep_count1301 = 0usize;
+                        while __rep_count1301 < 4294967295 {
+                            let __rep_cp1302 = state.offset;
                             if !{
-                                let __pretty_cp1295 = state.offset;
-                                let __pretty_bcp1296 = __builder.checkpoint();
+                                let __pretty_cp1299 = state.offset;
+                                let __pretty_bcp1300 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp1293 = state.offset;
-                                            let __pretty_bcp1294 = __builder.checkpoint();
+                                            let __pretty_cp1297 = state.offset;
+                                            let __pretty_bcp1298 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows1291 = state.offset;
+                                                    let __ows1295 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1291..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1295..state.offset]);
                                                     if !Self::__value_prettify(state, __builder) {
                                                         return false;
                                                     }
-                                                    let __ows1292 = state.offset;
+                                                    let __ows1296 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1292..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1296..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp1293;
-                                                __builder.restore(__pretty_bcp1294);
+                                                state.offset = __pretty_cp1297;
+                                                __builder.restore(__pretty_bcp1298);
                                             }
                                             __ok
                                         } {
@@ -106595,18 +106829,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp1295;
-                                    __builder.restore(__pretty_bcp1296);
+                                    state.offset = __pretty_cp1299;
+                                    __builder.restore(__pretty_bcp1300);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp1298;
+                                state.offset = __rep_cp1302;
                                 break;
                             }
-                            if state.offset == __rep_cp1298 {
+                            if state.offset == __rep_cp1302 {
                                 break;
                             }
-                            __rep_count1297 += 1;
+                            __rep_count1301 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -106614,8 +106848,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp1299 = state.offset;
-                            let __pretty_bcp1300 = __builder.checkpoint();
+                            let __pretty_cp1303 = state.offset;
+                            let __pretty_bcp1304 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -106628,8 +106862,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp1299;
-                                __builder.restore(__pretty_bcp1300);
+                                state.offset = __pretty_cp1303;
+                                __builder.restore(__pretty_bcp1304);
                             }
                             __ok
                         };
@@ -106660,9 +106894,9 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     {
-                        let __ows1301 = state.offset;
+                        let __ows1305 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows1302 = state.offset;
+                        let __ows1306 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -106670,33 +106904,33 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows1301..__ows1302]);
-                        let __ows1303 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows1305..__ows1306]);
+                        let __ows1307 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows1303..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows1307..state.offset]);
                     };
                     {
-                        let mut __rep_count1312 = 0usize;
-                        while __rep_count1312 < 4294967295 {
-                            let __rep_cp1313 = state.offset;
+                        let mut __rep_count1316 = 0usize;
+                        while __rep_count1316 < 4294967295 {
+                            let __rep_cp1317 = state.offset;
                             if !{
-                                let __pretty_cp1310 = state.offset;
-                                let __pretty_bcp1311 = __builder.checkpoint();
+                                let __pretty_cp1314 = state.offset;
+                                let __pretty_bcp1315 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp1308 = state.offset;
-                                            let __pretty_bcp1309 = __builder.checkpoint();
+                                            let __pretty_cp1312 = state.offset;
+                                            let __pretty_bcp1313 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows1306 = state.offset;
+                                                    let __ows1310 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1306..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1310..state.offset]);
                                                     {
                                                         if !{
-                                                            let __pretty_cp1304 = state.offset;
-                                                            let __pretty_bcp1305 = __builder.checkpoint();
+                                                            let __pretty_cp1308 = state.offset;
+                                                            let __pretty_bcp1309 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 if !Self::__textAlignKeyword_prettify(state, __builder) {
                                                                     return false;
@@ -106704,8 +106938,8 @@ mod __cssl4parser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp1304;
-                                                                __builder.restore(__pretty_bcp1305);
+                                                                state.offset = __pretty_cp1308;
+                                                                __builder.restore(__pretty_bcp1309);
                                                             }
                                                             __ok
                                                         } {
@@ -106714,16 +106948,16 @@ mod __cssl4parser_emit_impl {
                                                             }
                                                         }
                                                     };
-                                                    let __ows1307 = state.offset;
+                                                    let __ows1311 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1307..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1311..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp1308;
-                                                __builder.restore(__pretty_bcp1309);
+                                                state.offset = __pretty_cp1312;
+                                                __builder.restore(__pretty_bcp1313);
                                             }
                                             __ok
                                         } {
@@ -106733,18 +106967,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp1310;
-                                    __builder.restore(__pretty_bcp1311);
+                                    state.offset = __pretty_cp1314;
+                                    __builder.restore(__pretty_bcp1315);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp1313;
+                                state.offset = __rep_cp1317;
                                 break;
                             }
-                            if state.offset == __rep_cp1313 {
+                            if state.offset == __rep_cp1317 {
                                 break;
                             }
-                            __rep_count1312 += 1;
+                            __rep_count1316 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -106752,8 +106986,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp1314 = state.offset;
-                            let __pretty_bcp1315 = __builder.checkpoint();
+                            let __pretty_cp1318 = state.offset;
+                            let __pretty_bcp1319 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -106766,8 +107000,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp1314;
-                                __builder.restore(__pretty_bcp1315);
+                                state.offset = __pretty_cp1318;
+                                __builder.restore(__pretty_bcp1319);
                             }
                             __ok
                         };
@@ -106798,9 +107032,9 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     {
-                        let __ows1316 = state.offset;
+                        let __ows1320 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows1317 = state.offset;
+                        let __ows1321 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -106808,33 +107042,33 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows1316..__ows1317]);
-                        let __ows1318 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows1320..__ows1321]);
+                        let __ows1322 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows1318..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows1322..state.offset]);
                     };
                     {
-                        let mut __rep_count1327 = 0usize;
-                        while __rep_count1327 < 4294967295 {
-                            let __rep_cp1328 = state.offset;
+                        let mut __rep_count1331 = 0usize;
+                        while __rep_count1331 < 4294967295 {
+                            let __rep_cp1332 = state.offset;
                             if !{
-                                let __pretty_cp1325 = state.offset;
-                                let __pretty_bcp1326 = __builder.checkpoint();
+                                let __pretty_cp1329 = state.offset;
+                                let __pretty_bcp1330 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp1323 = state.offset;
-                                            let __pretty_bcp1324 = __builder.checkpoint();
+                                            let __pretty_cp1327 = state.offset;
+                                            let __pretty_bcp1328 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows1321 = state.offset;
+                                                    let __ows1325 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1321..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1325..state.offset]);
                                                     {
                                                         if !{
-                                                            let __pretty_cp1319 = state.offset;
-                                                            let __pretty_bcp1320 = __builder.checkpoint();
+                                                            let __pretty_cp1323 = state.offset;
+                                                            let __pretty_bcp1324 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 if !Self::__boxSizingKeyword_prettify(state, __builder) {
                                                                     return false;
@@ -106842,8 +107076,8 @@ mod __cssl4parser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp1319;
-                                                                __builder.restore(__pretty_bcp1320);
+                                                                state.offset = __pretty_cp1323;
+                                                                __builder.restore(__pretty_bcp1324);
                                                             }
                                                             __ok
                                                         } {
@@ -106852,16 +107086,16 @@ mod __cssl4parser_emit_impl {
                                                             }
                                                         }
                                                     };
-                                                    let __ows1322 = state.offset;
+                                                    let __ows1326 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1322..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1326..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp1323;
-                                                __builder.restore(__pretty_bcp1324);
+                                                state.offset = __pretty_cp1327;
+                                                __builder.restore(__pretty_bcp1328);
                                             }
                                             __ok
                                         } {
@@ -106871,18 +107105,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp1325;
-                                    __builder.restore(__pretty_bcp1326);
+                                    state.offset = __pretty_cp1329;
+                                    __builder.restore(__pretty_bcp1330);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp1328;
+                                state.offset = __rep_cp1332;
                                 break;
                             }
-                            if state.offset == __rep_cp1328 {
+                            if state.offset == __rep_cp1332 {
                                 break;
                             }
-                            __rep_count1327 += 1;
+                            __rep_count1331 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -106890,8 +107124,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp1329 = state.offset;
-                            let __pretty_bcp1330 = __builder.checkpoint();
+                            let __pretty_cp1333 = state.offset;
+                            let __pretty_bcp1334 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -106904,8 +107138,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp1329;
-                                __builder.restore(__pretty_bcp1330);
+                                state.offset = __pretty_cp1333;
+                                __builder.restore(__pretty_bcp1334);
                             }
                             __ok
                         };
@@ -106936,9 +107170,9 @@ mod __cssl4parser_emit_impl {
             {
                 {
                     {
-                        let __ows1331 = state.offset;
+                        let __ows1335 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        let __ows1332 = state.offset;
+                        let __ows1336 = state.offset;
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
                                 return false;
@@ -106946,33 +107180,33 @@ mod __cssl4parser_emit_impl {
                             state.offset += 1;
                             __builder.char(b':');
                         };
-                        __builder.text_inline_ws(&state.src[__ows1331..__ows1332]);
-                        let __ows1333 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows1335..__ows1336]);
+                        let __ows1337 = state.offset;
                         let _ = ::parse_that::scan_ws_block_comments(state);
-                        __builder.text_inline_ws(&state.src[__ows1333..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows1337..state.offset]);
                     };
                     {
-                        let mut __rep_count1342 = 0usize;
-                        while __rep_count1342 < 4294967295 {
-                            let __rep_cp1343 = state.offset;
+                        let mut __rep_count1346 = 0usize;
+                        while __rep_count1346 < 4294967295 {
+                            let __rep_cp1347 = state.offset;
                             if !{
-                                let __pretty_cp1340 = state.offset;
-                                let __pretty_bcp1341 = __builder.checkpoint();
+                                let __pretty_cp1344 = state.offset;
+                                let __pretty_bcp1345 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if !{
-                                            let __pretty_cp1338 = state.offset;
-                                            let __pretty_bcp1339 = __builder.checkpoint();
+                                            let __pretty_cp1342 = state.offset;
+                                            let __pretty_bcp1343 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows1336 = state.offset;
+                                                    let __ows1340 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1336..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1340..state.offset]);
                                                     {
                                                         if !{
-                                                            let __pretty_cp1334 = state.offset;
-                                                            let __pretty_bcp1335 = __builder.checkpoint();
+                                                            let __pretty_cp1338 = state.offset;
+                                                            let __pretty_bcp1339 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 if !Self::__cursorKeyword_prettify(state, __builder) {
                                                                     return false;
@@ -106980,8 +107214,8 @@ mod __cssl4parser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp1334;
-                                                                __builder.restore(__pretty_bcp1335);
+                                                                state.offset = __pretty_cp1338;
+                                                                __builder.restore(__pretty_bcp1339);
                                                             }
                                                             __ok
                                                         } {
@@ -106990,16 +107224,16 @@ mod __cssl4parser_emit_impl {
                                                             }
                                                         }
                                                     };
-                                                    let __ows1337 = state.offset;
+                                                    let __ows1341 = state.offset;
                                                     let _ = ::parse_that::scan_ws_block_comments(state);
                                                     __builder
-                                                        .text_inline_ws(&state.src[__ows1337..state.offset]);
+                                                        .text_inline_ws(&state.src[__ows1341..state.offset]);
                                                 };
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp1338;
-                                                __builder.restore(__pretty_bcp1339);
+                                                state.offset = __pretty_cp1342;
+                                                __builder.restore(__pretty_bcp1343);
                                             }
                                             __ok
                                         } {
@@ -107009,18 +107243,18 @@ mod __cssl4parser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp1340;
-                                    __builder.restore(__pretty_bcp1341);
+                                    state.offset = __pretty_cp1344;
+                                    __builder.restore(__pretty_bcp1345);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp1343;
+                                state.offset = __rep_cp1347;
                                 break;
                             }
-                            if state.offset == __rep_cp1343 {
+                            if state.offset == __rep_cp1347 {
                                 break;
                             }
-                            __rep_count1342 += 1;
+                            __rep_count1346 += 1;
                         }
                     };
                     if !Self::__importantSuffix_prettify(state, __builder) {
@@ -107028,8 +107262,8 @@ mod __cssl4parser_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp1344 = state.offset;
-                            let __pretty_bcp1345 = __builder.checkpoint();
+                            let __pretty_cp1348 = state.offset;
+                            let __pretty_bcp1349 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -107042,8 +107276,8 @@ mod __cssl4parser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp1344;
-                                __builder.restore(__pretty_bcp1345);
+                                state.offset = __pretty_cp1348;
+                                __builder.restore(__pretty_bcp1349);
                             }
                             __ok
                         };

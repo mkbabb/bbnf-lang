@@ -2417,18 +2417,20 @@ mod __cssprettyparser_emit_impl {
         let __flat_checkpoint = builder.checkpoint();
         let __span_lo: usize = *p;
         let __compound_start: u32 = *p as u32;
-        let __important_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __IMPORTANT_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 0u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("important"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __important_handle = <crate::runtime::css_pretty::CssPrettyStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__important_layout,
+            &*__IMPORTANT_LAYOUT,
         );
         <crate::runtime::css_pretty::CssPrettyStructBuilder<
             '_,
@@ -2557,18 +2559,20 @@ mod __cssprettyparser_emit_impl {
         let __flat_checkpoint = builder.checkpoint();
         let __span_lo: usize = *p;
         let __compound_start: u32 = *p as u32;
-        let __importRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __IMPORTRULE_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 1u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("importRule"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __importRule_handle = <crate::runtime::css_pretty::CssPrettyStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__importRule_layout,
+            &*__IMPORTRULE_LAYOUT,
         );
         <crate::runtime::css_pretty::CssPrettyStructBuilder<
             '_,
@@ -2770,18 +2774,20 @@ mod __cssprettyparser_emit_impl {
         let __decision: __Decision = cursor.decide(2u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __declaration_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __DECLARATION_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 2u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("declaration"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __declaration_handle = <crate::runtime::css_pretty::CssPrettyStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__declaration_layout,
+            &*__DECLARATION_LAYOUT,
         );
         <crate::runtime::css_pretty::CssPrettyStructBuilder<
             '_,
@@ -3161,18 +3167,20 @@ mod __cssprettyparser_emit_impl {
         let __decision: __Decision = cursor.decide(3u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __genericAtRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __GENERICATRULE_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 3u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("genericAtRule"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __genericAtRule_handle = <crate::runtime::css_pretty::CssPrettyStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__genericAtRule_layout,
+            &*__GENERICATRULE_LAYOUT,
         );
         <crate::runtime::css_pretty::CssPrettyStructBuilder<
             '_,
@@ -3301,18 +3309,20 @@ mod __cssprettyparser_emit_impl {
         let __decision: __Decision = cursor.decide(4u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __qualifiedRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __QUALIFIEDRULE_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 4u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("qualifiedRule"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __qualifiedRule_handle = <crate::runtime::css_pretty::CssPrettyStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__qualifiedRule_layout,
+            &*__QUALIFIEDRULE_LAYOUT,
         );
         <crate::runtime::css_pretty::CssPrettyStructBuilder<
             '_,
@@ -3433,18 +3443,20 @@ mod __cssprettyparser_emit_impl {
         let __decision: __Decision = cursor.decide(5u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __mediaRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __MEDIARULE_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 5u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("mediaRule"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __mediaRule_handle = <crate::runtime::css_pretty::CssPrettyStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__mediaRule_layout,
+            &*__MEDIARULE_LAYOUT,
         );
         <crate::runtime::css_pretty::CssPrettyStructBuilder<
             '_,
@@ -3562,18 +3574,20 @@ mod __cssprettyparser_emit_impl {
         let __decision: __Decision = cursor.decide(6u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __supportsRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __SUPPORTSRULE_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 6u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("supportsRule"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __supportsRule_handle = <crate::runtime::css_pretty::CssPrettyStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__supportsRule_layout,
+            &*__SUPPORTSRULE_LAYOUT,
         );
         <crate::runtime::css_pretty::CssPrettyStructBuilder<
             '_,
@@ -3692,18 +3706,20 @@ mod __cssprettyparser_emit_impl {
         let __decision: __Decision = cursor.decide(7u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __fontFaceRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __FONTFACERULE_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 7u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("fontFaceRule"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __fontFaceRule_handle = <crate::runtime::css_pretty::CssPrettyStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__fontFaceRule_layout,
+            &*__FONTFACERULE_LAYOUT,
         );
         <crate::runtime::css_pretty::CssPrettyStructBuilder<
             '_,
@@ -3905,18 +3921,20 @@ mod __cssprettyparser_emit_impl {
         let __decision: __Decision = cursor.decide(9u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __ruleBlock_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __RULEBLOCK_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 9u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("ruleBlock"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __ruleBlock_handle = <crate::runtime::css_pretty::CssPrettyStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__ruleBlock_layout,
+            &*__RULEBLOCK_LAYOUT,
         );
         <crate::runtime::css_pretty::CssPrettyStructBuilder<
             '_,
@@ -4057,18 +4075,20 @@ mod __cssprettyparser_emit_impl {
         let __decision: __Decision = cursor.decide(10u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __blockContent_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __BLOCKCONTENT_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 10u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("blockContent"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __blockContent_handle = <crate::runtime::css_pretty::CssPrettyStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__blockContent_layout,
+            &*__BLOCKCONTENT_LAYOUT,
         );
         <crate::runtime::css_pretty::CssPrettyStructBuilder<
             '_,
@@ -4511,16 +4531,21 @@ mod __cssprettyparser_emit_impl {
         let __decision: __Decision = cursor.decide(13u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __ruleList_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __RULELIST_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 13u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("ruleList"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __ruleList_handle = <crate::runtime::css_pretty::CssPrettyStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__ruleList_layout);
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &*__RULELIST_LAYOUT,
+        );
         <crate::runtime::css_pretty::CssPrettyStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::record_compound_bounds_start(
@@ -4661,18 +4686,20 @@ mod __cssprettyparser_emit_impl {
         let __decision: __Decision = cursor.decide(14u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __stylesheet_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __STYLESHEET_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 14u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("stylesheet"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __stylesheet_handle = <crate::runtime::css_pretty::CssPrettyStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__stylesheet_layout,
+            &*__STYLESHEET_LAYOUT,
         );
         <crate::runtime::css_pretty::CssPrettyStructBuilder<
             '_,

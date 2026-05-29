@@ -381,6 +381,31 @@ fn run_typed_retime() -> Result<CssL4W6RetimeReport, String> {
         }
         Ok(())
     })?;
+    // W6 fair cold comparator — lightningcss full L2 semantic parse over
+    // the identical corpus and identical cold convention (warmup_iters=0,
+    // sample_count=1). cssparser remains the SPEC admission gate (it is
+    // the same-token-stream same-workload comparator); lightningcss is the
+    // upper-bound SOTA reference (a hand-tuned full-document parser built
+    // on cssparser). It does not gate admission — it bounds the honest
+    // ceiling the typed Track 1 parse is measured against.
+    let lightningcss_elapsed = time_loop(|| {
+        for _ in 0..W6_SAMPLE_COUNT {
+            for source in &sources {
+                match lightningcss_full_parse(source) {
+                    Ok(rules) => black_box(rules),
+                    Err(error) => black_box(error.len() as u64),
+                };
+            }
+        }
+        Ok(())
+    })?;
+    let lightningcss_full_parse_mbps = throughput_mbps(profiled_bytes, lightningcss_elapsed);
+    eprintln!(
+        "W6_CSS_LIGHTNINGCSS_FULL_PARSE corpus_bytes={} lightningcss_full_parse_mbps={:.3} track1_vs_lightningcss_ratio={:.6}",
+        corpus_bytes,
+        lightningcss_full_parse_mbps,
+        throughput_mbps(profiled_bytes, track1_elapsed) / lightningcss_full_parse_mbps,
+    );
     let track1_typed_mbps = throughput_mbps(profiled_bytes, track1_elapsed);
     let cssparser_typed_mbps = throughput_mbps(profiled_bytes, cssparser_elapsed);
     let sota_threshold_mbps = cssparser_typed_mbps + W6_SOTA_EPSILON_MBPS;
@@ -642,6 +667,18 @@ impl<'p> CssVisitor<'p> for Track1SummaryVisitor {
             self.summary.url_functions += 1;
         }
     }
+}
+
+/// W6 fair cold comparator — lightningcss full L2 semantic parse. Parses
+/// the source into the full lightningcss `StyleSheet` (rules + selectors +
+/// declarations + typed values), the heaviest fair full-parse workload,
+/// returning the top-level rule count so the optimiser cannot elide the
+/// parse. Mirrors `crates/core/benches/css/competitors.rs:156`.
+fn lightningcss_full_parse(source: &str) -> Result<u64, String> {
+    use lightningcss::stylesheet::{ParserOptions, StyleSheet};
+    let sheet = StyleSheet::parse(source, ParserOptions::default())
+        .map_err(|error| format!("lightningcss full parse error: {error:?}"))?;
+    Ok(sheet.rules.0.len() as u64)
 }
 
 fn cssparser_summary(source: &str) -> Result<CssTypedSummary, String> {

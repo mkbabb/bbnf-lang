@@ -24807,16 +24807,17 @@ mod __cssl4parser_emit_impl {
         let __flat_checkpoint = builder.checkpoint();
         let __span_lo: usize = *p;
         let __compound_start: u32 = *p as u32;
-        let __hex_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __HEX_LAYOUT: ::std::sync::LazyLock<::bbnf_ir::registry::StructLayout> = ::std::sync::LazyLock::new(||
+        ::bbnf_ir::registry::StructLayout {
             rule_id: 3u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("hex"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __hex_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__hex_layout);
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &*__HEX_LAYOUT);
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::record_compound_bounds_start(
@@ -27372,18 +27373,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(11u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __containerLengthUnit_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __CONTAINERLENGTHUNIT_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 11u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("containerLengthUnit"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __containerLengthUnit_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__containerLengthUnit_layout,
+            &*__CONTAINERLENGTHUNIT_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -31579,18 +31582,20 @@ mod __cssl4parser_emit_impl {
         let __flat_checkpoint = builder.checkpoint();
         let __span_lo: usize = *p;
         let __compound_start: u32 = *p as u32;
-        let __importantSuffix_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __IMPORTANTSUFFIX_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 34u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("importantSuffix"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __importantSuffix_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__importantSuffix_layout,
+            &*__IMPORTANTSUFFIX_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -34663,16 +34668,18 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(41u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __bgProps_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __BGPROPS_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 41u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("bgProps"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __bgProps_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__bgProps_layout);
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &*__BGPROPS_LAYOUT);
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::record_compound_bounds_start(
@@ -38584,18 +38591,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(50u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __nthFunctionName_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __NTHFUNCTIONNAME_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 50u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("nthFunctionName"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __nthFunctionName_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__nthFunctionName_layout,
+            &*__NTHFUNCTIONNAME_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -39074,18 +39083,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(53u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __percentage_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __PERCENTAGE_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 53u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("percentage"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __percentage_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__percentage_layout,
+            &*__PERCENTAGE_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -39197,16 +39208,21 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(54u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __funcBody_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __FUNCBODY_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 54u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("funcBody"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __funcBody_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__funcBody_layout);
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &*__FUNCBODY_LAYOUT,
+        );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::record_compound_bounds_start(
@@ -39859,16 +39875,18 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(57u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __angle_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __ANGLE_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 57u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("angle"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __angle_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__angle_layout);
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &*__ANGLE_LAYOUT);
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::record_compound_bounds_start(
@@ -39979,16 +39997,17 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(58u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __time_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __TIME_LAYOUT: ::std::sync::LazyLock<::bbnf_ir::registry::StructLayout> = ::std::sync::LazyLock::new(||
+        ::bbnf_ir::registry::StructLayout {
             rule_id: 58u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("time"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __time_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__time_layout);
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &*__TIME_LAYOUT);
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::record_compound_bounds_start(
@@ -40099,18 +40118,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(59u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __frequency_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __FREQUENCY_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 59u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("frequency"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __frequency_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__frequency_layout,
+            &*__FREQUENCY_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -40222,18 +40243,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(60u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __resolution_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __RESOLUTION_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 60u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("resolution"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __resolution_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__resolution_layout,
+            &*__RESOLUTION_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -40345,16 +40368,17 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(61u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __flex_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __FLEX_LAYOUT: ::std::sync::LazyLock<::bbnf_ir::registry::StructLayout> = ::std::sync::LazyLock::new(||
+        ::bbnf_ir::registry::StructLayout {
             rule_id: 61u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("flex"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __flex_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__flex_layout);
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &*__FLEX_LAYOUT);
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::record_compound_bounds_start(
@@ -40466,18 +40490,20 @@ mod __cssl4parser_emit_impl {
         let __flat_checkpoint = builder.checkpoint();
         let __span_lo: usize = *p;
         let __compound_start: u32 = *p as u32;
-        let __mediaFeature_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __MEDIAFEATURE_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 62u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("mediaFeature"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __mediaFeature_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__mediaFeature_layout,
+            &*__MEDIAFEATURE_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -40688,18 +40714,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(63u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __customPropertyDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __CUSTOMPROPERTYDECL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 63u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("customPropertyDecl"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __customPropertyDecl_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__customPropertyDecl_layout,
+            &*__CUSTOMPROPERTYDECL_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -40881,18 +40909,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(64u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __genericDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __GENERICDECL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 64u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("genericDecl"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __genericDecl_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__genericDecl_layout,
+            &*__GENERICDECL_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -41079,16 +41109,21 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(65u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __nsPrefix_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __NSPREFIX_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 65u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("nsPrefix"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __nsPrefix_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__nsPrefix_layout);
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &*__NSPREFIX_LAYOUT,
+        );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::record_compound_bounds_start(
@@ -41257,18 +41292,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(66u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __classSelector_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __CLASSSELECTOR_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 66u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("classSelector"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __classSelector_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__classSelector_layout,
+            &*__CLASSSELECTOR_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -41573,18 +41610,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(69u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __simplePseudoElement_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __SIMPLEPSEUDOELEMENT_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 69u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("simplePseudoElement"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __simplePseudoElement_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__simplePseudoElement_layout,
+            &*__SIMPLEPSEUDOELEMENT_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -41797,18 +41836,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(71u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __simplePseudoClass_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __SIMPLEPSEUDOCLASS_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 71u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("simplePseudoClass"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __simplePseudoClass_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__simplePseudoClass_layout,
+            &*__SIMPLEPSEUDOCLASS_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -42003,18 +42044,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(73u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __keyframeSel_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __KEYFRAMESEL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 73u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("keyframeSel"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __keyframeSel_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__keyframeSel_layout,
+            &*__KEYFRAMESEL_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -42256,16 +42299,21 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(75u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __mediaNot_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __MEDIANOT_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 75u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("mediaNot"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __mediaNot_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__mediaNot_layout);
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &*__MEDIANOT_LAYOUT,
+        );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::record_compound_bounds_start(
@@ -42375,16 +42423,21 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(76u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __mediaAnd_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __MEDIAAND_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 76u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("mediaAnd"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __mediaAnd_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__mediaAnd_layout);
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &*__MEDIAAND_LAYOUT,
+        );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::record_compound_bounds_start(
@@ -42561,16 +42614,18 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(77u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __mediaOr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __MEDIAOR_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 77u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("mediaOr"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __mediaOr_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__mediaOr_layout);
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &*__MEDIAOR_LAYOUT);
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::record_compound_bounds_start(
@@ -43274,16 +43329,18 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(80u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __wqName_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __WQNAME_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 80u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("wqName"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __wqName_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__wqName_layout);
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &*__WQNAME_LAYOUT);
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::record_compound_bounds_start(
@@ -43428,18 +43485,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(81u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __attrSelector_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __ATTRSELECTOR_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 81u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("attrSelector"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __attrSelector_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__attrSelector_layout,
+            &*__ATTRSELECTOR_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -44145,16 +44204,18 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(84u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __length_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __LENGTH_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 84u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("length"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __length_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__length_layout);
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &*__LENGTH_LAYOUT);
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::record_compound_bounds_start(
@@ -44324,18 +44385,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(85u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __mediaTypedQuery_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __MEDIATYPEDQUERY_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 85u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("mediaTypedQuery"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __mediaTypedQuery_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__mediaTypedQuery_layout,
+            &*__MEDIATYPEDQUERY_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -47553,18 +47616,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(93u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __nthPseudo_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __NTHPSEUDO_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 93u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("nthPseudo"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __nthPseudo_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__nthPseudo_layout,
+            &*__NTHPSEUDO_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -47760,18 +47825,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(94u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __relativeSelector_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __RELATIVESELECTOR_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 94u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("relativeSelector"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __relativeSelector_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__relativeSelector_layout,
+            &*__RELATIVESELECTOR_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -47912,18 +47979,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(95u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __relativeSelectorList_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __RELATIVESELECTORLIST_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 95u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("relativeSelectorList"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __relativeSelectorList_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__relativeSelectorList_layout,
+            &*__RELATIVESELECTORLIST_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -48082,18 +48151,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(96u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __selectorList_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __SELECTORLIST_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 96u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("selectorList"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __selectorList_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__selectorList_layout,
+            &*__SELECTORLIST_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -48486,18 +48557,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(99u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __complexSelector_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __COMPLEXSELECTOR_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 99u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("complexSelector"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __complexSelector_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__complexSelector_layout,
+            &*__COMPLEXSELECTOR_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -49143,18 +49216,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(103u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __mediaQueryList_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __MEDIAQUERYLIST_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 103u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("mediaQueryList"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __mediaQueryList_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__mediaQueryList_layout,
+            &*__MEDIAQUERYLIST_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -50812,18 +50887,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(112u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __colorDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __COLORDECL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 112u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("colorDecl"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __colorDecl_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__colorDecl_layout,
+            &*__COLORDECL_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -51060,16 +51137,21 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(113u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __sizeDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __SIZEDECL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 113u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("sizeDecl"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __sizeDecl_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__sizeDecl_layout);
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &*__SIZEDECL_LAYOUT,
+        );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::record_compound_bounds_start(
@@ -51305,18 +51387,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(114u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __spacingDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __SPACINGDECL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 114u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("spacingDecl"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __spacingDecl_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__spacingDecl_layout,
+            &*__SPACINGDECL_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -51553,16 +51637,21 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(115u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __fontDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __FONTDECL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 115u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("fontDecl"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __fontDecl_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__fontDecl_layout);
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &*__FONTDECL_LAYOUT,
+        );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::record_compound_bounds_start(
@@ -51861,16 +51950,18 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(116u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __bgDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __BGDECL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 116u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("bgDecl"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __bgDecl_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__bgDecl_layout);
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &*__BGDECL_LAYOUT);
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::record_compound_bounds_start(
@@ -52092,18 +52183,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(117u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __transformDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __TRANSFORMDECL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 117u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("transformDecl"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __transformDecl_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__transformDecl_layout,
+            &*__TRANSFORMDECL_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -52340,18 +52433,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(118u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __transitionDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __TRANSITIONDECL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 118u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("transitionDecl"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __transitionDecl_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__transitionDecl_layout,
+            &*__TRANSITIONDECL_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -52588,18 +52683,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(119u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __listTableDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __LISTTABLEDECL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 119u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("listTableDecl"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __listTableDecl_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__listTableDecl_layout,
+            &*__LISTTABLEDECL_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -52836,18 +52933,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(120u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __displayDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __DISPLAYDECL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 120u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("displayDecl"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __displayDecl_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__displayDecl_layout,
+            &*__DISPLAYDECL_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -53139,18 +53238,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(121u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __positionDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __POSITIONDECL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 121u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("positionDecl"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __positionDecl_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__positionDecl_layout,
+            &*__POSITIONDECL_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -53443,18 +53544,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(122u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __overflowDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __OVERFLOWDECL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 122u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("overflowDecl"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __overflowDecl_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__overflowDecl_layout,
+            &*__OVERFLOWDECL_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -53952,18 +54055,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(123u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __visibilityDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __VISIBILITYDECL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 123u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("visibilityDecl"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __visibilityDecl_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__visibilityDecl_layout,
+            &*__VISIBILITYDECL_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -54259,18 +54364,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(124u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __flexDirDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __FLEXDIRDECL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 124u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("flexDirDecl"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __flexDirDecl_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__flexDirDecl_layout,
+            &*__FLEXDIRDECL_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -54566,18 +54673,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(125u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __flexWrapDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __FLEXWRAPDECL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 125u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("flexWrapDecl"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __flexWrapDecl_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__flexWrapDecl_layout,
+            &*__FLEXWRAPDECL_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -54870,18 +54979,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(126u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __alignDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __ALIGNDECL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 126u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("alignDecl"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __alignDecl_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__alignDecl_layout,
+            &*__ALIGNDECL_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -55587,18 +55698,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(127u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __flexNumDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __FLEXNUMDECL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 127u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("flexNumDecl"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __flexNumDecl_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__flexNumDecl_layout,
+            &*__FLEXNUMDECL_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -56057,18 +56170,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(128u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __fontSizeDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __FONTSIZEDECL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 128u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("fontSizeDecl"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __fontSizeDecl_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__fontSizeDecl_layout,
+            &*__FONTSIZEDECL_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -56298,18 +56413,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(129u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __fontWeightDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __FONTWEIGHTDECL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 129u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("fontWeightDecl"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __fontWeightDecl_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__fontWeightDecl_layout,
+            &*__FONTWEIGHTDECL_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -56605,18 +56722,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(130u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __lineHeightDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __LINEHEIGHTDECL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 130u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("lineHeightDecl"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __lineHeightDecl_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__lineHeightDecl_layout,
+            &*__LINEHEIGHTDECL_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -56849,18 +56968,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(131u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __borderWidthDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __BORDERWIDTHDECL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 131u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("borderWidthDecl"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __borderWidthDecl_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__borderWidthDecl_layout,
+            &*__BORDERWIDTHDECL_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -57442,18 +57563,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(132u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __borderStyleDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __BORDERSTYLEDECL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 132u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("borderStyleDecl"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __borderStyleDecl_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__borderStyleDecl_layout,
+            &*__BORDERSTYLEDECL_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -58035,18 +58158,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(133u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __borderRadiusDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __BORDERRADIUSDECL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 133u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("borderRadiusDecl"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __borderRadiusDecl_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__borderRadiusDecl_layout,
+            &*__BORDERRADIUSDECL_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -58705,18 +58830,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(134u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __opacityDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __OPACITYDECL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 134u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("opacityDecl"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __opacityDecl_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__opacityDecl_layout,
+            &*__OPACITYDECL_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -58945,18 +59072,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(135u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __textAlignDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __TEXTALIGNDECL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 135u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("textAlignDecl"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __textAlignDecl_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__textAlignDecl_layout,
+            &*__TEXTALIGNDECL_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -59252,18 +59381,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(136u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __boxSizingDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __BOXSIZINGDECL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 136u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("boxSizingDecl"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __boxSizingDecl_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__boxSizingDecl_layout,
+            &*__BOXSIZINGDECL_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -59559,18 +59690,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(137u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __cursorDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __CURSORDECL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 137u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("cursorDecl"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __cursorDecl_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__cursorDecl_layout,
+            &*__CURSORDECL_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -61259,18 +61392,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(139u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __keyframeBlock_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __KEYFRAMEBLOCK_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 139u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("keyframeBlock"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __keyframeBlock_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__keyframeBlock_layout,
+            &*__KEYFRAMEBLOCK_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -61444,18 +61579,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(140u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __keyframesRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __KEYFRAMESRULE_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 140u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("keyframesRule"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __keyframesRule_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__keyframesRule_layout,
+            &*__KEYFRAMESRULE_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -61722,18 +61859,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(142u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __genericAtRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __GENERICATRULE_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 142u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("genericAtRule"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __genericAtRule_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__genericAtRule_layout,
+            &*__GENERICATRULE_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -61859,18 +61998,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(143u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __ruleBlock_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __RULEBLOCK_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 143u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("ruleBlock"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __ruleBlock_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__ruleBlock_layout,
+            &*__RULEBLOCK_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -61977,18 +62118,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(144u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __qualifiedRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __QUALIFIEDRULE_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 144u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("qualifiedRule"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __qualifiedRule_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__qualifiedRule_layout,
+            &*__QUALIFIEDRULE_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -62083,18 +62226,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(145u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __mediaRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __MEDIARULE_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 145u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("mediaRule"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __mediaRule_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__mediaRule_layout,
+            &*__MEDIARULE_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -62621,18 +62766,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(148u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __blockContent_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __BLOCKCONTENT_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 148u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("blockContent"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __blockContent_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__blockContent_layout,
+            &*__BLOCKCONTENT_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -62835,16 +62982,21 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(149u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __ruleList_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __RULELIST_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 149u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("ruleList"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __ruleList_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__ruleList_layout);
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &*__RULELIST_LAYOUT,
+        );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::record_compound_bounds_start(
@@ -63659,18 +63811,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(152u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____calcFunction_cont_152_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____CALCFUNCTION_CONT_152_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 152u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__calcFunction_cont_152"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____calcFunction_cont_152_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____calcFunction_cont_152_layout,
+            &*____CALCFUNCTION_CONT_152_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -63775,18 +63929,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(153u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____minFunction_cont_153_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____MINFUNCTION_CONT_153_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 153u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__minFunction_cont_153"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____minFunction_cont_153_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____minFunction_cont_153_layout,
+            &*____MINFUNCTION_CONT_153_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -63954,18 +64110,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(154u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____maxFunction_cont_154_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____MAXFUNCTION_CONT_154_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 154u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__maxFunction_cont_154"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____maxFunction_cont_154_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____maxFunction_cont_154_layout,
+            &*____MAXFUNCTION_CONT_154_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -64133,18 +64291,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(155u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____clampFunction_cont_155_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____CLAMPFUNCTION_CONT_155_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 155u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__clampFunction_cont_155"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____clampFunction_cont_155_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____clampFunction_cont_155_layout,
+            &*____CLAMPFUNCTION_CONT_155_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -64281,18 +64441,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(156u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____varFunction_cont_156_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____VARFUNCTION_CONT_156_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 156u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__varFunction_cont_156"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____varFunction_cont_156_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____varFunction_cont_156_layout,
+            &*____VARFUNCTION_CONT_156_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -64469,18 +64631,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(157u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____envFunction_cont_157_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____ENVFUNCTION_CONT_157_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 157u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__envFunction_cont_157"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____envFunction_cont_157_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____envFunction_cont_157_layout,
+            &*____ENVFUNCTION_CONT_157_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -64657,18 +64821,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(158u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____varFunction_cont_158_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____VARFUNCTION_CONT_158_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 158u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__varFunction_cont_158"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____varFunction_cont_158_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____varFunction_cont_158_layout,
+            &*____VARFUNCTION_CONT_158_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -64845,18 +65011,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(159u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____calcFunction_cont_159_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____CALCFUNCTION_CONT_159_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 159u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__calcFunction_cont_159"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____calcFunction_cont_159_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____calcFunction_cont_159_layout,
+            &*____CALCFUNCTION_CONT_159_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -64961,18 +65129,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(160u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____urlFunction_cont_160_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____URLFUNCTION_CONT_160_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 160u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__urlFunction_cont_160"),
             kind: ::bbnf_ir::registry::LayoutKind::UntaggedEnum,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____urlFunction_cont_160_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____urlFunction_cont_160_layout,
+            &*____URLFUNCTION_CONT_160_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -65157,18 +65327,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(161u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____genericFunction_cont_161_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____GENERICFUNCTION_CONT_161_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 161u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__genericFunction_cont_161"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____genericFunction_cont_161_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____genericFunction_cont_161_layout,
+            &*____GENERICFUNCTION_CONT_161_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -65273,18 +65445,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(162u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____colorDecl_cont_162_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____COLORDECL_CONT_162_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 162u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__colorDecl_cont_162"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____colorDecl_cont_162_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____colorDecl_cont_162_layout,
+            &*____COLORDECL_CONT_162_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -65501,18 +65675,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(163u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____sizeDecl_cont_163_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____SIZEDECL_CONT_163_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 163u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__sizeDecl_cont_163"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____sizeDecl_cont_163_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____sizeDecl_cont_163_layout,
+            &*____SIZEDECL_CONT_163_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -65729,18 +65905,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(164u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____spacingDecl_cont_164_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____SPACINGDECL_CONT_164_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 164u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__spacingDecl_cont_164"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____spacingDecl_cont_164_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____spacingDecl_cont_164_layout,
+            &*____SPACINGDECL_CONT_164_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -65957,18 +66135,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(165u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____fontDecl_cont_165_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____FONTDECL_CONT_165_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 165u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__fontDecl_cont_165"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____fontDecl_cont_165_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____fontDecl_cont_165_layout,
+            &*____FONTDECL_CONT_165_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -66248,18 +66428,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(166u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____bgDecl_cont_166_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____BGDECL_CONT_166_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 166u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__bgDecl_cont_166"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____bgDecl_cont_166_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____bgDecl_cont_166_layout,
+            &*____BGDECL_CONT_166_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -66476,18 +66658,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(167u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____transformDecl_cont_167_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____TRANSFORMDECL_CONT_167_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 167u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__transformDecl_cont_167"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____transformDecl_cont_167_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____transformDecl_cont_167_layout,
+            &*____TRANSFORMDECL_CONT_167_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -66704,18 +66888,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(168u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____transitionDecl_cont_168_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____TRANSITIONDECL_CONT_168_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 168u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__transitionDecl_cont_168"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____transitionDecl_cont_168_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____transitionDecl_cont_168_layout,
+            &*____TRANSITIONDECL_CONT_168_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -66932,18 +67118,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(169u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____listTableDecl_cont_169_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____LISTTABLEDECL_CONT_169_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 169u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__listTableDecl_cont_169"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____listTableDecl_cont_169_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____listTableDecl_cont_169_layout,
+            &*____LISTTABLEDECL_CONT_169_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -67160,18 +67348,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(170u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____displayDecl_cont_170_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____DISPLAYDECL_CONT_170_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 170u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__displayDecl_cont_170"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____displayDecl_cont_170_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____displayDecl_cont_170_layout,
+            &*____DISPLAYDECL_CONT_170_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -67451,18 +67641,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(171u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____positionDecl_cont_171_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____POSITIONDECL_CONT_171_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 171u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__positionDecl_cont_171"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____positionDecl_cont_171_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____positionDecl_cont_171_layout,
+            &*____POSITIONDECL_CONT_171_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -67742,18 +67934,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(172u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____overflowDecl_cont_172_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____OVERFLOWDECL_CONT_172_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 172u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__overflowDecl_cont_172"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____overflowDecl_cont_172_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____overflowDecl_cont_172_layout,
+            &*____OVERFLOWDECL_CONT_172_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -68033,18 +68227,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(173u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____visibilityDecl_cont_173_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____VISIBILITYDECL_CONT_173_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 173u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__visibilityDecl_cont_173"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____visibilityDecl_cont_173_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____visibilityDecl_cont_173_layout,
+            &*____VISIBILITYDECL_CONT_173_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -68324,18 +68520,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(174u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____flexDirDecl_cont_174_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____FLEXDIRDECL_CONT_174_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 174u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__flexDirDecl_cont_174"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____flexDirDecl_cont_174_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____flexDirDecl_cont_174_layout,
+            &*____FLEXDIRDECL_CONT_174_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -68615,18 +68813,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(175u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____flexWrapDecl_cont_175_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____FLEXWRAPDECL_CONT_175_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 175u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__flexWrapDecl_cont_175"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____flexWrapDecl_cont_175_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____flexWrapDecl_cont_175_layout,
+            &*____FLEXWRAPDECL_CONT_175_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -68906,18 +69106,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(176u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____alignDecl_cont_176_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____ALIGNDECL_CONT_176_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 176u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__alignDecl_cont_176"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____alignDecl_cont_176_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____alignDecl_cont_176_layout,
+            &*____ALIGNDECL_CONT_176_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -69197,18 +69399,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(177u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____flexNumDecl_cont_177_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____FLEXNUMDECL_CONT_177_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 177u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__flexNumDecl_cont_177"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____flexNumDecl_cont_177_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____flexNumDecl_cont_177_layout,
+            &*____FLEXNUMDECL_CONT_177_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -69425,18 +69629,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(178u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____fontSizeDecl_cont_178_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____FONTSIZEDECL_CONT_178_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 178u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__fontSizeDecl_cont_178"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____fontSizeDecl_cont_178_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____fontSizeDecl_cont_178_layout,
+            &*____FONTSIZEDECL_CONT_178_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -69653,18 +69859,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(179u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____fontWeightDecl_cont_179_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____FONTWEIGHTDECL_CONT_179_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 179u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__fontWeightDecl_cont_179"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____fontWeightDecl_cont_179_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____fontWeightDecl_cont_179_layout,
+            &*____FONTWEIGHTDECL_CONT_179_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -69944,18 +70152,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(180u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____lineHeightDecl_cont_180_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____LINEHEIGHTDECL_CONT_180_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 180u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__lineHeightDecl_cont_180"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____lineHeightDecl_cont_180_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____lineHeightDecl_cont_180_layout,
+            &*____LINEHEIGHTDECL_CONT_180_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -70172,18 +70382,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(181u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____borderWidthDecl_cont_181_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____BORDERWIDTHDECL_CONT_181_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 181u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__borderWidthDecl_cont_181"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____borderWidthDecl_cont_181_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____borderWidthDecl_cont_181_layout,
+            &*____BORDERWIDTHDECL_CONT_181_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -70463,18 +70675,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(182u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____borderStyleDecl_cont_182_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____BORDERSTYLEDECL_CONT_182_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 182u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__borderStyleDecl_cont_182"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____borderStyleDecl_cont_182_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____borderStyleDecl_cont_182_layout,
+            &*____BORDERSTYLEDECL_CONT_182_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -70754,18 +70968,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(183u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____borderRadiusDecl_cont_183_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____BORDERRADIUSDECL_CONT_183_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 183u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__borderRadiusDecl_cont_183"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____borderRadiusDecl_cont_183_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____borderRadiusDecl_cont_183_layout,
+            &*____BORDERRADIUSDECL_CONT_183_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -70982,18 +71198,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(184u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____opacityDecl_cont_184_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____OPACITYDECL_CONT_184_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 184u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__opacityDecl_cont_184"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____opacityDecl_cont_184_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____opacityDecl_cont_184_layout,
+            &*____OPACITYDECL_CONT_184_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -71210,18 +71428,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(185u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____textAlignDecl_cont_185_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____TEXTALIGNDECL_CONT_185_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 185u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__textAlignDecl_cont_185"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____textAlignDecl_cont_185_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____textAlignDecl_cont_185_layout,
+            &*____TEXTALIGNDECL_CONT_185_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -71501,18 +71721,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(186u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____boxSizingDecl_cont_186_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____BOXSIZINGDECL_CONT_186_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 186u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__boxSizingDecl_cont_186"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____boxSizingDecl_cont_186_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____boxSizingDecl_cont_186_layout,
+            &*____BOXSIZINGDECL_CONT_186_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,
@@ -71792,18 +72014,20 @@ mod __cssl4parser_emit_impl {
         let __decision: __Decision = cursor.decide(187u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let ____cursorDecl_cont_187_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static ____CURSORDECL_CONT_187_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 187u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__cursorDecl_cont_187"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let ____cursorDecl_cont_187_handle = <crate::runtime::css_l4::CssStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &____cursorDecl_cont_187_layout,
+            &*____CURSORDECL_CONT_187_LAYOUT,
         );
         <crate::runtime::css_l4::CssStructBuilder<
             '_,

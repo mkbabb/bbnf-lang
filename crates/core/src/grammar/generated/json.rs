@@ -1768,16 +1768,17 @@ mod __jsonparser_emit_impl {
         let __decision: __Decision = cursor.decide(6u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __pair_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __PAIR_LAYOUT: ::std::sync::LazyLock<::bbnf_ir::registry::StructLayout> = ::std::sync::LazyLock::new(||
+        ::bbnf_ir::registry::StructLayout {
             rule_id: 6u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("pair"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __pair_handle = <crate::runtime::json::JsonStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__pair_layout);
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &*__PAIR_LAYOUT);
         <crate::runtime::json::JsonStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::record_compound_bounds_start(

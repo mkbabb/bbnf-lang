@@ -3063,18 +3063,20 @@ mod __ebnfparser_emit_impl {
         let __decision: __Decision = cursor.decide(3u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __identifier_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __IDENTIFIER_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 3u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("identifier"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __identifier_handle = <crate::runtime::ebnf::EbnfStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__identifier_layout,
+            &*__IDENTIFIER_LAYOUT,
         );
         <crate::runtime::ebnf::EbnfStructBuilder<
             '_,
@@ -3833,18 +3835,20 @@ mod __ebnfparser_emit_impl {
         let __decision: __Decision = cursor.decide(6u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __concatenation_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __CONCATENATION_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 6u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("concatenation"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __concatenation_handle = <crate::runtime::ebnf::EbnfStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__concatenation_layout,
+            &*__CONCATENATION_LAYOUT,
         );
         <crate::runtime::ebnf::EbnfStructBuilder<
             '_,
@@ -4051,18 +4055,20 @@ mod __ebnfparser_emit_impl {
         let __decision: __Decision = cursor.decide(7u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __alternation_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __ALTERNATION_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 7u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("alternation"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __alternation_handle = <crate::runtime::ebnf::EbnfStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__alternation_layout,
+            &*__ALTERNATION_LAYOUT,
         );
         <crate::runtime::ebnf::EbnfStructBuilder<
             '_,
@@ -4602,16 +4608,18 @@ mod __ebnfparser_emit_impl {
         let __decision: __Decision = cursor.decide(10u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __factor_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __FACTOR_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 10u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("factor"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __factor_handle = <crate::runtime::ebnf::EbnfStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__factor_layout);
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &*__FACTOR_LAYOUT);
         <crate::runtime::ebnf::EbnfStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::record_compound_bounds_start(
@@ -4910,16 +4918,17 @@ mod __ebnfparser_emit_impl {
         let __decision: __Decision = cursor.decide(11u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __rule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __RULE_LAYOUT: ::std::sync::LazyLock<::bbnf_ir::registry::StructLayout> = ::std::sync::LazyLock::new(||
+        ::bbnf_ir::registry::StructLayout {
             rule_id: 11u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("rule"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __rule_handle = <crate::runtime::ebnf::EbnfStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__rule_layout);
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &*__RULE_LAYOUT);
         <crate::runtime::ebnf::EbnfStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::record_compound_bounds_start(

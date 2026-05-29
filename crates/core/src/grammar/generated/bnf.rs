@@ -1308,16 +1308,21 @@ mod __bnfparser_emit_impl {
         let __flat_checkpoint = builder.checkpoint();
         let __span_lo: usize = *p;
         let __compound_start: u32 = *p as u32;
-        let __terminal_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __TERMINAL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 0u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("terminal"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __terminal_handle = <crate::runtime::bnf::BnfStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__terminal_layout);
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &*__TERMINAL_LAYOUT,
+        );
         <crate::runtime::bnf::BnfStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::record_compound_bounds_start(
@@ -1442,18 +1447,20 @@ mod __bnfparser_emit_impl {
         let __flat_checkpoint = builder.checkpoint();
         let __span_lo: usize = *p;
         let __compound_start: u32 = *p as u32;
-        let __nonterminal_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __NONTERMINAL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 1u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("nonterminal"),
             kind: ::bbnf_ir::registry::LayoutKind::NewtypeWrapper,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __nonterminal_handle = <crate::runtime::bnf::BnfStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__nonterminal_layout,
+            &*__NONTERMINAL_LAYOUT,
         );
         <crate::runtime::bnf::BnfStructBuilder<
             '_,
@@ -1578,18 +1585,20 @@ mod __bnfparser_emit_impl {
         let __decision: __Decision = cursor.decide(2u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __alternation_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __ALTERNATION_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 2u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("alternation"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __alternation_handle = <crate::runtime::bnf::BnfStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__alternation_layout,
+            &*__ALTERNATION_LAYOUT,
         );
         <crate::runtime::bnf::BnfStructBuilder<
             '_,
@@ -1995,16 +2004,17 @@ mod __bnfparser_emit_impl {
         let __decision: __Decision = cursor.decide(3u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __rule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __RULE_LAYOUT: ::std::sync::LazyLock<::bbnf_ir::registry::StructLayout> = ::std::sync::LazyLock::new(||
+        ::bbnf_ir::registry::StructLayout {
             rule_id: 3u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("rule"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __rule_handle = <crate::runtime::bnf::BnfStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__rule_layout);
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &*__RULE_LAYOUT);
         <crate::runtime::bnf::BnfStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::record_compound_bounds_start(

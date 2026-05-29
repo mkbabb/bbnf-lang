@@ -1065,16 +1065,18 @@ mod __csvparser_emit_impl {
         let __flat_checkpoint = builder.checkpoint();
         let __span_lo: usize = *p;
         let __compound_start: u32 = *p as u32;
-        let __escaped_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __ESCAPED_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 1u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("escaped"),
             kind: ::bbnf_ir::registry::LayoutKind::NewtypeWrapper,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __escaped_handle = <crate::runtime::csv::CsvStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__escaped_layout);
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &*__ESCAPED_LAYOUT);
         <crate::runtime::csv::CsvStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::record_compound_bounds_start(
@@ -1195,16 +1197,18 @@ mod __csvparser_emit_impl {
         let __decision: __Decision = cursor.decide(2u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __record_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __RECORD_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 2u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("record"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __record_handle = <crate::runtime::csv::CsvStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__record_layout);
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &*__RECORD_LAYOUT);
         <crate::runtime::csv::CsvStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::record_compound_bounds_start(
@@ -1469,16 +1473,17 @@ mod __csvparser_emit_impl {
         let __decision: __Decision = cursor.decide(3u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __csv_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __CSV_LAYOUT: ::std::sync::LazyLock<::bbnf_ir::registry::StructLayout> = ::std::sync::LazyLock::new(||
+        ::bbnf_ir::registry::StructLayout {
             rule_id: 3u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("csv"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __csv_handle = <crate::runtime::csv::CsvStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__csv_layout);
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &*__CSV_LAYOUT);
         <crate::runtime::csv::CsvStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::record_compound_bounds_start(

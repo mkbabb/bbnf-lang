@@ -276,8 +276,21 @@ pub(super) fn emit_parse_flat_struct_direct(
     };
 
     let layout_literal = quote_layout_literal(rule, ir);
-    let layout_var = format_ident!("__{}_layout", rule_name);
     let handle_var = format_ident!("__{}_handle", rule_name);
+
+    // W6 CSS SOTA — the `StructLayout` a concrete `StructBuilder` reads
+    // at `begin_compound` is rule-invariant (constant `rule_id` / kind /
+    // name / span type / empty fields). The pre-W6 emission rebuilt it on
+    // every parse attempt: a `String::from(rule_name)` + `Vec::new()` heap
+    // pair per speculative entry. On the CSS L4 typed parse the `angle`
+    // (and sibling dimension) rules are tried as Alt alternatives for
+    // every numeric token, so that per-attempt allocation dominated the
+    // profile (samply: `parse_flat_*_angle` self-time >70%). Hoist the
+    // layout into a function-local `LazyLock` so the heap pair is built
+    // exactly once per rule and `begin_compound` borrows the shared
+    // `&'static StructLayout`. The value is byte-identical, so every
+    // grammar's builder routing (JSON/Sheets/CSS) is unchanged.
+    let layout_static = format_ident!("__{}_LAYOUT", rule_name.to_uppercase());
 
     // AZ-I.W2-act.B3 — substrate-binding splice: convert the
     // strategy's `builder_path` into a TokenStream so the function
@@ -403,10 +416,13 @@ pub(super) fn emit_parse_flat_struct_direct(
             let __flat_checkpoint = builder.checkpoint();
             #span_capture_pre
             let __compound_start: u32 = *p as u32;
-            let #layout_var: ::bbnf_ir::registry::StructLayout = #layout_literal;
+            // W6 CSS SOTA — rule-invariant layout, built once.
+            static #layout_static: ::std::sync::LazyLock<
+                ::bbnf_ir::registry::StructLayout,
+            > = ::std::sync::LazyLock::new(|| #layout_literal);
             let #handle_var = <
                 #builder_ty_elided as crate::runtime::StructBuilder
-            >::begin_compound(builder, &#layout_var);
+            >::begin_compound(builder, &*#layout_static);
             <
                 #builder_ty_elided as crate::runtime::StructBuilder
             >::record_compound_bounds_start(builder, __compound_start);

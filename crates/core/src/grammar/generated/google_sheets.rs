@@ -4422,18 +4422,20 @@ mod __googlesheetsparser_emit_impl {
         let __decision: __Decision = cursor.decide(3u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __error_literal_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __ERROR_LITERAL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 3u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("error_literal"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __error_literal_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__error_literal_layout,
+            &*__ERROR_LITERAL_LAYOUT,
         );
         <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
@@ -5326,16 +5328,17 @@ mod __googlesheetsparser_emit_impl {
         let __decision: __Decision = cursor.decide(11u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __cell_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __CELL_LAYOUT: ::std::sync::LazyLock<::bbnf_ir::registry::StructLayout> = ::std::sync::LazyLock::new(||
+        ::bbnf_ir::registry::StructLayout {
             rule_id: 11u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("cell"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __cell_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__cell_layout);
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &*__CELL_LAYOUT);
         <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::record_compound_bounds_start(
@@ -5484,18 +5487,20 @@ mod __googlesheetsparser_emit_impl {
         let __decision: __Decision = cursor.decide(12u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __func_open_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __FUNC_OPEN_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 12u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("func_open"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __func_open_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__func_open_layout,
+            &*__FUNC_OPEN_LAYOUT,
         );
         <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
@@ -5600,18 +5605,20 @@ mod __googlesheetsparser_emit_impl {
         let __decision: __Decision = cursor.decide(13u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __range_ref_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __RANGE_REF_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 13u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("range_ref"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __range_ref_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__range_ref_layout,
+            &*__RANGE_REF_LAYOUT,
         );
         <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
@@ -6441,18 +6448,20 @@ mod __googlesheetsparser_emit_impl {
         let __decision: __Decision = cursor.decide(17u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __unary_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __UNARY_EXPR_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 17u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("unary_expr"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __unary_expr_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__unary_expr_layout,
+            &*__UNARY_EXPR_LAYOUT,
         );
         <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
@@ -6606,18 +6615,20 @@ mod __googlesheetsparser_emit_impl {
         let __decision: __Decision = cursor.decide(18u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __paren_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __PAREN_EXPR_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 18u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("paren_expr"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __paren_expr_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__paren_expr_layout,
+            &*__PAREN_EXPR_LAYOUT,
         );
         <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
@@ -6734,16 +6745,17 @@ mod __googlesheetsparser_emit_impl {
         let __decision: __Decision = cursor.decide(19u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __arg_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __ARG_LAYOUT: ::std::sync::LazyLock<::bbnf_ir::registry::StructLayout> = ::std::sync::LazyLock::new(||
+        ::bbnf_ir::registry::StructLayout {
             rule_id: 19u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("arg"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __arg_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__arg_layout);
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &*__ARG_LAYOUT);
         <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::record_compound_bounds_start(
@@ -6873,18 +6885,20 @@ mod __googlesheetsparser_emit_impl {
         let __decision: __Decision = cursor.decide(20u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __func_args_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __FUNC_ARGS_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 20u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("func_args"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __func_args_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__func_args_layout,
+            &*__FUNC_ARGS_LAYOUT,
         );
         <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
@@ -7075,18 +7089,20 @@ mod __googlesheetsparser_emit_impl {
         let __decision: __Decision = cursor.decide(21u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __let_binding_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __LET_BINDING_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 21u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("let_binding"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __let_binding_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__let_binding_layout,
+            &*__LET_BINDING_LAYOUT,
         );
         <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
@@ -7209,18 +7225,20 @@ mod __googlesheetsparser_emit_impl {
         let __decision: __Decision = cursor.decide(22u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __lambda_params_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __LAMBDA_PARAMS_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 22u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("lambda_params"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __lambda_params_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__lambda_params_layout,
+            &*__LAMBDA_PARAMS_LAYOUT,
         );
         <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
@@ -7709,18 +7727,20 @@ mod __googlesheetsparser_emit_impl {
         let __decision: __Decision = cursor.decide(25u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __array_literal_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __ARRAY_LITERAL_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 25u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("array_literal"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __array_literal_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__array_literal_layout,
+            &*__ARRAY_LITERAL_LAYOUT,
         );
         <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
@@ -8472,16 +8492,21 @@ mod __googlesheetsparser_emit_impl {
         let __decision: __Decision = cursor.decide(32u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __let_args_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __LET_ARGS_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 32u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("let_args"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __let_args_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__let_args_layout);
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &*__LET_ARGS_LAYOUT,
+        );
         <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::record_compound_bounds_start(
@@ -9039,18 +9064,20 @@ mod __googlesheetsparser_emit_impl {
         let __decision: __Decision = cursor.decide(35u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __postfix_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __POSTFIX_EXPR_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 35u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("postfix_expr"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __postfix_expr_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
-            &__postfix_expr_layout,
+            &*__POSTFIX_EXPR_LAYOUT,
         );
         <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
@@ -9194,16 +9221,18 @@ mod __googlesheetsparser_emit_impl {
         let __decision: __Decision = cursor.decide(36u32 as u32);
         let __flat_checkpoint = builder.checkpoint();
         let __compound_start: u32 = *p as u32;
-        let __formula_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+        static __FORMULA_LAYOUT: ::std::sync::LazyLock<
+            ::bbnf_ir::registry::StructLayout,
+        > = ::std::sync::LazyLock::new(|| ::bbnf_ir::registry::StructLayout {
             rule_id: 36u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("formula"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
-        };
+        });
         let __formula_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__formula_layout);
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &*__FORMULA_LAYOUT);
         <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::record_compound_bounds_start(

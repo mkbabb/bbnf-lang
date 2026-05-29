@@ -20,6 +20,7 @@ pub mod handle;
 pub mod json;
 pub mod math;
 pub mod path;
+pub mod tape;
 pub mod view;
 
 pub use bbnf::{

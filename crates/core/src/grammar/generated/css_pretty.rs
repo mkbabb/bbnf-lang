@@ -4417,32 +4417,32 @@ mod __cssprettyparser_emit_impl {
             })?;
         'try_branches: loop {
             match first {
-                64u8 => {
-                    let attempt_p = *p;
-                    let attempt_builder = builder.checkpoint();
-                    match parse_wrap_CssPrettyParser_atRule(
-                        input,
-                        p,
-                        state,
-                        builder,
-                        cursor,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            builder.commit(attempt_builder);
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                            builder.rollback(attempt_builder);
-                        }
-                    }
-                }
                 _ => {}
             }
             {
                 let attempt_p = *p;
                 let attempt_builder = builder.checkpoint();
                 match parse_flat_CssPrettyParser_qualifiedRule(
+                    input,
+                    p,
+                    state,
+                    builder,
+                    cursor,
+                ) {
+                    ::core::result::Result::Ok(_) => {
+                        builder.commit(attempt_builder);
+                        break 'try_branches;
+                    }
+                    ::core::result::Result::Err(_) => {
+                        *p = attempt_p;
+                        builder.rollback(attempt_builder);
+                    }
+                }
+            }
+            {
+                let attempt_p = *p;
+                let attempt_builder = builder.checkpoint();
+                match parse_wrap_CssPrettyParser_atRule(
                     input,
                     p,
                     state,
@@ -8961,6 +8961,10 @@ mod __cssprettyparser_emit_impl {
             let __input_bytes = input.as_bytes();
             let mut state = __shape_support_CssPrettyParser::ScanState::new();
             let mut builder = crate::runtime::css_pretty::CssPrettyStructBuilder::new();
+            crate::runtime::builder::StructBuilder::bind_input(
+                &mut builder,
+                __input_bytes,
+            );
             static __EAGER_EMPTY_PATH: ::std::sync::LazyLock<
                 crate::path::ir::TypedPath<crate::path::markers::Json, &'static str>,
             > = ::std::sync::LazyLock::new(|| {

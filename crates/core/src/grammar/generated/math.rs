@@ -811,6 +811,10 @@ mod __mathparser_emit_impl {
             let __input_bytes = input.as_bytes();
             let mut state = __shape_support_MathParser::ScanState::new();
             let mut builder = crate::runtime::math::MathStructBuilder::new();
+            crate::runtime::builder::StructBuilder::bind_input(
+                &mut builder,
+                __input_bytes,
+            );
             static __EAGER_EMPTY_PATH: ::std::sync::LazyLock<
                 crate::path::ir::TypedPath<crate::path::markers::Json, &'static str>,
             > = ::std::sync::LazyLock::new(|| {

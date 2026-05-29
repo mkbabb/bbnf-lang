@@ -8721,306 +8721,6 @@ mod __googlesheetsparser_emit_impl {
             })?;
         'try_branches: loop {
             match first {
-                34u8 => {
-                    let attempt_p = *p;
-                    let attempt_builder = builder.checkpoint();
-                    match parse_string_GoogleSheetsParser_string(
-                        input,
-                        p,
-                        state,
-                        builder,
-                        cursor,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            builder.commit(attempt_builder);
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                            builder.rollback(attempt_builder);
-                        }
-                    }
-                }
-                35u8 => {
-                    let attempt_p = *p;
-                    let attempt_builder = builder.checkpoint();
-                    match parse_flat_GoogleSheetsParser_error_literal(
-                        input,
-                        p,
-                        state,
-                        builder,
-                        cursor,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            builder.commit(attempt_builder);
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                            builder.rollback(attempt_builder);
-                        }
-                    }
-                }
-                40u8 => {
-                    let attempt_p = *p;
-                    let attempt_builder = builder.checkpoint();
-                    match parse_flat_GoogleSheetsParser_paren_expr(
-                        input,
-                        p,
-                        state,
-                        builder,
-                        cursor,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            builder.commit(attempt_builder);
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                            builder.rollback(attempt_builder);
-                        }
-                    }
-                }
-                46u8 => {
-                    let attempt_p = *p;
-                    let attempt_builder = builder.checkpoint();
-                    match parse_hregex_GoogleSheetsParser_number(
-                        input,
-                        p,
-                        state,
-                        builder,
-                        cursor,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            builder.commit(attempt_builder);
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                            builder.rollback(attempt_builder);
-                        }
-                    }
-                }
-                48u8 => {
-                    let attempt_p = *p;
-                    let attempt_builder = builder.checkpoint();
-                    match parse_hregex_GoogleSheetsParser_number(
-                        input,
-                        p,
-                        state,
-                        builder,
-                        cursor,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            builder.commit(attempt_builder);
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                            builder.rollback(attempt_builder);
-                        }
-                    }
-                }
-                49u8 => {
-                    let attempt_p = *p;
-                    let attempt_builder = builder.checkpoint();
-                    match parse_hregex_GoogleSheetsParser_number(
-                        input,
-                        p,
-                        state,
-                        builder,
-                        cursor,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            builder.commit(attempt_builder);
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                            builder.rollback(attempt_builder);
-                        }
-                    }
-                }
-                50u8 => {
-                    let attempt_p = *p;
-                    let attempt_builder = builder.checkpoint();
-                    match parse_hregex_GoogleSheetsParser_number(
-                        input,
-                        p,
-                        state,
-                        builder,
-                        cursor,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            builder.commit(attempt_builder);
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                            builder.rollback(attempt_builder);
-                        }
-                    }
-                }
-                51u8 => {
-                    let attempt_p = *p;
-                    let attempt_builder = builder.checkpoint();
-                    match parse_hregex_GoogleSheetsParser_number(
-                        input,
-                        p,
-                        state,
-                        builder,
-                        cursor,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            builder.commit(attempt_builder);
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                            builder.rollback(attempt_builder);
-                        }
-                    }
-                }
-                52u8 => {
-                    let attempt_p = *p;
-                    let attempt_builder = builder.checkpoint();
-                    match parse_hregex_GoogleSheetsParser_number(
-                        input,
-                        p,
-                        state,
-                        builder,
-                        cursor,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            builder.commit(attempt_builder);
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                            builder.rollback(attempt_builder);
-                        }
-                    }
-                }
-                53u8 => {
-                    let attempt_p = *p;
-                    let attempt_builder = builder.checkpoint();
-                    match parse_hregex_GoogleSheetsParser_number(
-                        input,
-                        p,
-                        state,
-                        builder,
-                        cursor,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            builder.commit(attempt_builder);
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                            builder.rollback(attempt_builder);
-                        }
-                    }
-                }
-                54u8 => {
-                    let attempt_p = *p;
-                    let attempt_builder = builder.checkpoint();
-                    match parse_hregex_GoogleSheetsParser_number(
-                        input,
-                        p,
-                        state,
-                        builder,
-                        cursor,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            builder.commit(attempt_builder);
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                            builder.rollback(attempt_builder);
-                        }
-                    }
-                }
-                55u8 => {
-                    let attempt_p = *p;
-                    let attempt_builder = builder.checkpoint();
-                    match parse_hregex_GoogleSheetsParser_number(
-                        input,
-                        p,
-                        state,
-                        builder,
-                        cursor,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            builder.commit(attempt_builder);
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                            builder.rollback(attempt_builder);
-                        }
-                    }
-                }
-                56u8 => {
-                    let attempt_p = *p;
-                    let attempt_builder = builder.checkpoint();
-                    match parse_hregex_GoogleSheetsParser_number(
-                        input,
-                        p,
-                        state,
-                        builder,
-                        cursor,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            builder.commit(attempt_builder);
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                            builder.rollback(attempt_builder);
-                        }
-                    }
-                }
-                57u8 => {
-                    let attempt_p = *p;
-                    let attempt_builder = builder.checkpoint();
-                    match parse_hregex_GoogleSheetsParser_number(
-                        input,
-                        p,
-                        state,
-                        builder,
-                        cursor,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            builder.commit(attempt_builder);
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                            builder.rollback(attempt_builder);
-                        }
-                    }
-                }
-                70u8 => {
-                    let attempt_p = *p;
-                    let attempt_builder = builder.checkpoint();
-                    match parse_wrap_GoogleSheetsParser_boolean(
-                        input,
-                        p,
-                        state,
-                        builder,
-                        cursor,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            builder.commit(attempt_builder);
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                            builder.rollback(attempt_builder);
-                        }
-                    }
-                }
                 76u8 => {
                     {
                         let attempt_p = *p;
@@ -9060,46 +8760,6 @@ mod __googlesheetsparser_emit_impl {
                                 *p = attempt_p;
                                 builder.rollback(attempt_builder);
                             }
-                        }
-                    }
-                }
-                84u8 => {
-                    let attempt_p = *p;
-                    let attempt_builder = builder.checkpoint();
-                    match parse_wrap_GoogleSheetsParser_boolean(
-                        input,
-                        p,
-                        state,
-                        builder,
-                        cursor,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            builder.commit(attempt_builder);
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                            builder.rollback(attempt_builder);
-                        }
-                    }
-                }
-                102u8 => {
-                    let attempt_p = *p;
-                    let attempt_builder = builder.checkpoint();
-                    match parse_wrap_GoogleSheetsParser_boolean(
-                        input,
-                        p,
-                        state,
-                        builder,
-                        cursor,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            builder.commit(attempt_builder);
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                            builder.rollback(attempt_builder);
                         }
                     }
                 }
@@ -9145,52 +8805,52 @@ mod __googlesheetsparser_emit_impl {
                         }
                     }
                 }
-                116u8 => {
-                    let attempt_p = *p;
-                    let attempt_builder = builder.checkpoint();
-                    match parse_wrap_GoogleSheetsParser_boolean(
-                        input,
-                        p,
-                        state,
-                        builder,
-                        cursor,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            builder.commit(attempt_builder);
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                            builder.rollback(attempt_builder);
-                        }
-                    }
-                }
-                123u8 => {
-                    let attempt_p = *p;
-                    let attempt_builder = builder.checkpoint();
-                    match parse_flat_GoogleSheetsParser_array_literal(
-                        input,
-                        p,
-                        state,
-                        builder,
-                        cursor,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            builder.commit(attempt_builder);
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                            builder.rollback(attempt_builder);
-                        }
-                    }
-                }
                 _ => {}
             }
             {
                 let attempt_p = *p;
                 let attempt_builder = builder.checkpoint();
                 match parse_arglist_GoogleSheetsParser_func_call(
+                    input,
+                    p,
+                    state,
+                    builder,
+                    cursor,
+                ) {
+                    ::core::result::Result::Ok(_) => {
+                        builder.commit(attempt_builder);
+                        break 'try_branches;
+                    }
+                    ::core::result::Result::Err(_) => {
+                        *p = attempt_p;
+                        builder.rollback(attempt_builder);
+                    }
+                }
+            }
+            {
+                let attempt_p = *p;
+                let attempt_builder = builder.checkpoint();
+                match parse_hregex_GoogleSheetsParser_number(
+                    input,
+                    p,
+                    state,
+                    builder,
+                    cursor,
+                ) {
+                    ::core::result::Result::Ok(_) => {
+                        builder.commit(attempt_builder);
+                        break 'try_branches;
+                    }
+                    ::core::result::Result::Err(_) => {
+                        *p = attempt_p;
+                        builder.rollback(attempt_builder);
+                    }
+                }
+            }
+            {
+                let attempt_p = *p;
+                let attempt_builder = builder.checkpoint();
+                match parse_wrap_GoogleSheetsParser_boolean(
                     input,
                     p,
                     state,
@@ -9231,6 +8891,86 @@ mod __googlesheetsparser_emit_impl {
                 let attempt_p = *p;
                 let attempt_builder = builder.checkpoint();
                 match parse_hregex_GoogleSheetsParser_identifier(
+                    input,
+                    p,
+                    state,
+                    builder,
+                    cursor,
+                ) {
+                    ::core::result::Result::Ok(_) => {
+                        builder.commit(attempt_builder);
+                        break 'try_branches;
+                    }
+                    ::core::result::Result::Err(_) => {
+                        *p = attempt_p;
+                        builder.rollback(attempt_builder);
+                    }
+                }
+            }
+            {
+                let attempt_p = *p;
+                let attempt_builder = builder.checkpoint();
+                match parse_string_GoogleSheetsParser_string(
+                    input,
+                    p,
+                    state,
+                    builder,
+                    cursor,
+                ) {
+                    ::core::result::Result::Ok(_) => {
+                        builder.commit(attempt_builder);
+                        break 'try_branches;
+                    }
+                    ::core::result::Result::Err(_) => {
+                        *p = attempt_p;
+                        builder.rollback(attempt_builder);
+                    }
+                }
+            }
+            {
+                let attempt_p = *p;
+                let attempt_builder = builder.checkpoint();
+                match parse_flat_GoogleSheetsParser_error_literal(
+                    input,
+                    p,
+                    state,
+                    builder,
+                    cursor,
+                ) {
+                    ::core::result::Result::Ok(_) => {
+                        builder.commit(attempt_builder);
+                        break 'try_branches;
+                    }
+                    ::core::result::Result::Err(_) => {
+                        *p = attempt_p;
+                        builder.rollback(attempt_builder);
+                    }
+                }
+            }
+            {
+                let attempt_p = *p;
+                let attempt_builder = builder.checkpoint();
+                match parse_flat_GoogleSheetsParser_array_literal(
+                    input,
+                    p,
+                    state,
+                    builder,
+                    cursor,
+                ) {
+                    ::core::result::Result::Ok(_) => {
+                        builder.commit(attempt_builder);
+                        break 'try_branches;
+                    }
+                    ::core::result::Result::Err(_) => {
+                        *p = attempt_p;
+                        builder.rollback(attempt_builder);
+                    }
+                }
+            }
+            {
+                let attempt_p = *p;
+                let attempt_builder = builder.checkpoint();
+                match parse_flat_GoogleSheetsParser_paren_expr(
                     input,
                     p,
                     state,
@@ -14028,6 +13768,10 @@ mod __googlesheetsparser_emit_impl {
             let __input_bytes = input.as_bytes();
             let mut state = __shape_support_GoogleSheetsParser::ScanState::new();
             let mut builder = crate::runtime::google_sheets::SheetsStructBuilder::new();
+            crate::runtime::builder::StructBuilder::bind_input(
+                &mut builder,
+                __input_bytes,
+            );
             static __EAGER_EMPTY_PATH: ::std::sync::LazyLock<
                 crate::path::ir::TypedPath<crate::path::markers::Json, &'static str>,
             > = ::std::sync::LazyLock::new(|| {

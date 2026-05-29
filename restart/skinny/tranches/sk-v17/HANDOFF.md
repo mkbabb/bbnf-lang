@@ -186,6 +186,17 @@ admission, cross-call classifier-state retention.
 
 ## Next Move
 
+**next-move = ready-for-T-P1 (totality fold) then W0 dispatch.** (S-P3 CONVERGED
+2026-05-29: CHALLENGE V2 95.8% → V3 97.9%, zero REJECT, zero orphan disposition-flipping
+REVISE, V≤5, waves 6≤12; per `HARDENING-S-P3-V3-CONSOLIDATED.md`.) The SK-V17 SPEC is the
+contract: W0 (baseline + telemetry lock + lightningcss CSSOM re-baseline) is dispatchable
+now; W1–W5 conditionally gated; W4/L9 doubly-conditional on the post-W1 re-profile. One
+non-gating residual carried to the W0 first-touch: the R1 three-line P3-A/P3-C SPEC-line
+citation re-key (`:447`→`:475`; `:616,637`→`:670-672,695`; `:388,391`→`:390,396,446-448`).
+
+The narrative below is the Pass-Alpha-time plan that produced this SPEC; it is superseded
+by the converged SPEC + the next-move line above.
+
 1. Run the CHALLENGE pass (CH1-CH6 canon + CH7 pass-added overfit-prune extension)
    over alphaA-F; fold dispositions into Pass Alpha V{N+1} if any REVISE/REJECT.
    Converge per ORCHESTRATOR §3Z (≥95% ACCEPT x2 consecutive, zero orphan REVISE,

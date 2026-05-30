@@ -97,3 +97,26 @@ source_commit: bae430dcf
 - `T1_sota` is the pinned admission threshold: `sonic-rs strict + 1 Mbps` for JSON rows. CSS table values remain retained W8R diagnostic full-parse evidence only; SK-V15 W6 supersedes live CSS admission with a typed same-workload rejection (`Track1=4.317 Mbps`, `cssparser=2051.911 Mbps`, margin `-2048.594 Mbps`, Track1 `2/4` corpus passes), so CSS stays `OPEN` until a fresh typed row beats `cssparser` with typed-summary equality.
 - `tranche_admitted` records current strict admission status only; positive diagnostic parse margins remain `OPEN` until a same-wave implementation lands the required equality and gate provenance.
 - Missing real typed rows are explicit `MISSING` rows so the 51-row JSON universe cannot silently shrink.
+
+## SK-V17 close note (2026-05-30, HEAD `6bb4b2a6c`)
+
+SK-V17 supersedes the CSS L4 plane above. The CSS rows in this table are the
+pre-SK-V17 `css_l4_full_parse` diagnostic (cssparser flaw-probe, `T1_current=2319.04`
+/ `T1_sota=930.28`, one tuple broadcast across 24 conceptual rows) and remain `OPEN`
+under the current schema. SK-V17 re-bases the CSS >SOTA claim on the FAIR
+full-CSSOM-materializing comparator (lightningcss), per-corpus, at the rich typed
+plane with EXACT 9-field cssparser equality — NOT the cssparser flaw-probe. The
+canonical SK-V17 close medians (N=200 cold, rich-typed Track-1 vs lightningcss
+full-CSSOM, re-baselined same-run; `restart/skinny/tranches/sk-v17/research/w5/skv17-W5-close-ledger.md` §3):
+
+| corpus | class | rich-typed Mbps | lightningcss Mbps | rich/lcss |
+|---|---|---:|---:|---:|
+| bootstrap | regular | 2473.1 | 1119.1 | **2.210×** |
+| animate | regular | 2937.9 | 1247.7 | **2.355×** |
+| tailwindcss | utility | 2773.4 | 828.5 | **3.348×** |
+| material-components-web | irregular | 2618.5 | 1312.0 | **1.996×** |
+
+Both regular corpora cross decisively; max ratio 3.348×. The 24-row CSS broadcast
+above is NOT re-stamped (pre-blocked route); a schema migration to per-corpus
+lightningcss rows is an SK-V18 RESULTS-plane fold. The JSON 51-row universe (this
+table) is unchanged and ADMITTED throughout SK-V17.

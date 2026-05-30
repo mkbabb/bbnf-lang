@@ -245,3 +245,36 @@ by the converged SPEC + the next-move line above.
 
 Revert protocol, hard caps, and per-wave triumvirate discipline are sanctioned-deferred
 to S-P3 (PASS-ALPHA §4.4 authority), not paper-closed here.
+
+## Close status (W5, 2026-05-30, HEAD `6bb4b2a6c`)
+
+**SK-V17 is CLOSED** — R10 met. The five waves executed:
+
+- **W0** — baseline/telemetry; lightningcss@W0 >SOTA bar LOCKED per corpus.
+- **W1** — fact-stream String PRUNED; CSS Track-1 routed into the existing skinny
+  offset tape; `W5C_REQUEST_FACT_PROFILES` retired; EXACT 4-field equality.
+- **W2** — rich lazy 9-field typed CSSOM projection (`BackendRule`-walking, zero
+  payload writes); EXACT 9-field cssparser equality.
+- **W3** — shared grammar-neutral aarch64 NEON eq-set classifier + 2 net-new mask
+  primitives (checkasm PASS, same-wave consumed); >SOTA MET.
+- **W4** — commit-by-construction Alt-mode (CONDITIONAL): **NOT-MET, L9 not-needed**.
+  The post-W1 re-profile (samply, bootstrap + material) measures 0% speculative
+  checkpoint/rollback self-time; W1's PRUNE already rebuilt the recognizer as a
+  commit-as-you-scan delimiter parser. The sound subset is empty. Honest
+  conditional-not-met close per `SPEC.md:679-680`.
+- **W5** — close: `regen --check` 9/9 exit 0; Lock-14 grammar-neutrality CLEAN;
+  RESULTS reconciled; invariants held; R10 CLOSED.
+
+**Final >SOTA (N=200 cold median, rich-typed vs lightningcss full-CSSOM):** bootstrap
+2.210× · animate 2.355× (both regular corpora cross) · tailwind 3.348× · material
+1.996×. EXACT 9-field cssparser equality; JSON 51/51 held; preserve-rich-ast intact.
+
+Residuals routed to SK-V18 (close ledger §5): the literal single-emitter
+codegen-unification (REDRESS-W2-1), the crates/core totality-tree adoption, the
+Sheets/BBNF-self projection generality. The ~7 pre-existing bbnf-bench audit-overlay
+census failures are verified pre-existing and carried forward (they do not block the
+close).
+
+Close ledgers: `research/w5/skv17-W5-close-ledger.md` (verdict + RESULTS
+reconciliation + residual ledger), `research/w4/skv17-W4-conditional-ledger.md`
+(W4 re-profile note). On close, Pass Alpha dispatches the SK-V17→SK-V18 synthesis.

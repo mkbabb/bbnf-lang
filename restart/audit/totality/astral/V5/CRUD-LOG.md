@@ -161,6 +161,56 @@ re-stating the canon.
 - **`git diff --check`** clean; **`git diff --stat`** = `restart/ARCHITECTURE.md | 120 ++ | 1 file changed, 120 insertions(+)`.
 - **Clean-regen discipline / dirty-file preservation**: only `restart/ARCHITECTURE.md` + this astral log staged; pre-existing dirty SK-V12/13 research JSON, skinny `css_l4_*` generated.rs, `docs/precepts` untouched.
 
+## CRUD-2 MASTER-PLAN Leg
+
+Pass: Pass Omega. Cycle: V5 (SK-V17 T-P3 tape-fold). Gate: G-Omega CLOSED.
+Status: CRUD-2 MASTER-PLAN complete.
+
+This leg applies the 9 3B deltas (`restart/audit/totality/sk-v17/p3/3b-master-plan-reconciliation.md`:
+`MP-3B-SKV17-D01..D09`) + the SK-V18 adoption-wave receiver block (W0-W6) to
+`restart/MASTER-PLAN.md`, cross-referencing the post-CRUD-3 SK-V17 T-P3
+Crystallisation Addendum at `restart/locks/LOCKS.md:610`-`622` (applied
+`7157be073`) and the CRUD-1 ARCHITECTURE §7.3/§7.4/§9.1/§9.2 fold directives
+(applied `bdfe71123`). Each SK-V18 receiver row carries its F-candidate, the LAC
+it crystallises, LOC/risk, the same-wave consumer (no orphan pre-gate), the
+5-shape-canon coherence note, and the cap-fit/fail route. The §13 SIMD allowlist
+gains one arm64 NEON `select_classifier(alphabet)` manifest ROW (D05).
+
+### Receiver Log
+
+| CRUD | Receiver | Operation | Files | Status | Commit | Notes |
+|---|---|---|---|---|---|---|
+| CRUD-2 | MASTER-PLAN | Update (apply 3B deltas + SK-V18 receiver block) | `restart/MASTER-PLAN.md` | complete | `91789be07` | 9 deltas D01..D09; new §13.6 SK-V18 adoption waves MP.SK18.W0..W6; +110/-7; 16-lock PRESERVED; 5-shape canon verbatim, NO 6th; tape = substrate-manifest category |
+
+### Per-delta placement
+
+| delta | source 3B | MASTER surface | placement |
+|---|---|---|---|
+| `MP-3B-SKV17-D01` SK-V15→SK-V17→SK-V18 downstream authority | 3b:162 | §13 preamble + §25 Implementation Order | monotonic skinny→totality note; SK-V18 downstream of SK-V15 |
+| `MP-3B-SKV17-D02` SK-V18 fold receiver block | 3b:163 | new §13.6 (after §13.5 SK-V15) | MP.SK18.W0..W6 with F-candidate/LAC/LOC/risk/consumer columns |
+| `MP-3B-SKV17-D03` tape-as-substrate-category, NOT 6th shape | 3b:164 | §13 Lock-10 inheritance row, §13.6 global gates, §13.2 MP.NW6 | 5-shape canon verbatim; LAC-1E-14 precedent inherited by the tape |
+| `MP-3B-SKV17-D04` B/F/G gates fed by fold | 3b:165 | §5 Tranche Set, §5.3 YAML B row | proven `Tape`/`ValueRef`/visitor implementation; no parallel substrate |
+| `MP-3B-SKV17-D05` shared NEON classifier Lock-16 manifest row | 3b:166 | §13.1 arm64 NEON allowlist | `select_classifier`/`scan_structural` ROW; scalar-ref+checkasm+tape consumer; aarch64-only |
+| `MP-3B-SKV17-D06` StructRegistry compile-time fence | 3b:167 | §13.6 MP.SK18.W4, §23 Risk, §24 Carry | layout resolved once at codegen; per-leaf lookup REJECT; `arena.rs:47` severed |
+| `MP-3B-SKV17-D07` `derive_backend_shape` selector wiring | 3b:168 | §13 H.W4, §13.5 MP.SK15.W9, §13.6 MP.SK18.W5 | WIRES decision engine; side-table field; no new shape; CH4-V3-01 cost-row absorbed |
+| `MP-3B-SKV17-D08` F3/F7 one-encoding + pre-gate | 3b:169 | §13 H.W1, §13.6 MP.SK18.W0/W2, §24 Carry | exactly-one SoA encoding across 8 carriers; dual AoS/SoA re-opens REDRESS-53 |
+| `MP-3B-SKV17-D09` Lock-2 `StructLayout` reconcile | 3b:170 | §13.6 MP.SK18.W6, §21 Lock Ownership | two priced paths (960-rename vs side-table); generator-side; Pass-Omega/3C call |
+
+### CRUD-2 MASTER-PLAN Verification (post-apply)
+
+- **16-lock count PRESERVED**: `grep -cE "^[0-9]+\. \*\*" restart/locks/LOCKS.md` = 16 (MASTER edit touches no lock).
+- **5-shape BackendShape canon verbatim, NO 6th**: `grep -cF "{EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage}" restart/MASTER-PLAN.md` = 3; `grep -nE "EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage,[A-Za-z]" restart/MASTER-PLAN.md` empty (no six-variant tuple).
+- **Tape = substrate-manifest CATEGORY**: §13 Lock-10 row + §13.6 global gates + §13.2 MP.NW6 record `substrate_target = existing_tape` per LAC-1E-14, NOT a 6th `BackendShape`.
+- **aarch64-only**: the new §13.1 NEON manifest row marks `arm64-only; x86/SVE remain diagnostic`; the §13.6 global gates bar x86/AVX-512/SVE close routes.
+- **preserve-rich-ast**: §13.6 global gates + §5 D04 note — lazy `ValueRef<G>` view reconstructs typed CSSOM, never flattens.
+- **No re-opened REDRESS**: §13.6 global gates fence AZ-IV eager (fold-DELETION target), per-leaf `StructRegistry` (W4 REJECT), fact-stream-String, x86 close route, D6 second substrate.
+- **All 9 deltas cited**: D01..D09 each carry a `MP-3B-SKV17-D0x` attribution at their placement site.
+- **CH4-V3-01 absorbed**: MP.SK18.W5 row + §23 Risk row carry the scaffold→body cost-cell band (~4×270=800-1100 LOC) as one explicit cost-row distinct from the 600-1400 wiring envelope.
+- **CH6-V3-7 absorbed**: the 3C anti-silent-satisfy clause rides the LOCKS Lock-10 inline Lock-1 manifest cross-reference (applied `7157be073`); the 3E defer-word re-order is a grammar-generalisation-surface (CRUD-5) concern, not MASTER.
+- **`git diff --check`** clean; **`git diff --stat`** = `restart/MASTER-PLAN.md | 117 + | 1 file changed, 110 insertions(+), 7 deletions(-)`.
+- **Clean-regen discipline / dirty-file preservation**: only `restart/MASTER-PLAN.md` staged and committed (`91789be07`); pre-existing dirty SK-V12/13 research JSON, skinny `css_l4_*` generated.rs, `docs/precepts`, and concurrent-leg surfaces untouched. No source / generated runtime / gate / `RESULTS.md` / `REDRESS.md` / live skinny SPEC edits.
+- **Astral note**: `restart/audit/totality/astral/V5/ΩD-master-plan-reconciliation-skv17.md`.
+
 ## CRUD-5 SKINNY CORPUS Leg
 
 Pass: Pass Omega. Cycle: V5 (SK-V17 T-P3 tape-fold). Gate: G-Omega CLOSED.

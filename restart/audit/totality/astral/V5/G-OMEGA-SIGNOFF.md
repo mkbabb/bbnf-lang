@@ -97,6 +97,7 @@ the CRUD application phase per
 |---|---|---|---|
 | CRUD-3 LOCKS | `restart/locks/LOCKS.md` | `7157be073` | SK-V17 T-P3 Crystallisation Addendum applied; 5 clauses on Locks 1/2/10/14/16; 15 insertions, 0 deletions; 16-lock count PRESERVED; 5-shape canon verbatim with NO 6th; tape recorded as substrate-manifest category |
 | CRUD-1 ARCHITECTURE | `restart/ARCHITECTURE.md` | THIS COMMIT | 8 3A deltas D01..D08 applied (§7.3 fold directive, §9.1 tape invariant, §9.2 value-plane, §7.4 Lock-2 reconcile); +120 lines, 0 deletions; 5-shape canon verbatim with NO 6th; CH4-V3-01 cost-cell band + CH6-V3-7 anti-silent-satisfy absorbed; 16-lock cross-refs resolve |
+| CRUD-2 MASTER-PLAN | `restart/MASTER-PLAN.md` | `91789be07` | 9 3B deltas D01..D09 applied + new §13.6 SK-V18 adoption waves MP.SK18.W0..W6; +110/-7; 16-lock PRESERVED; 5-shape canon verbatim with NO 6th; tape = substrate-manifest category; §13.1 NEON `select_classifier` manifest row; CH4-V3-01 cost-row at MP.SK18.W5/§23, CH6-V3-7 carried via LOCKS Lock-10 cross-ref |
 
 ## Gate Result
 

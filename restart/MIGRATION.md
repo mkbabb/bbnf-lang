@@ -27,12 +27,69 @@ This synthesis inventory counted 834 current Rust files with `find crates -name
 '*.rs' -type f`, so tranche gates must use the live count, not only the prior
 corpus.
 
-## 0.1 Current SK-V15 V9 Migration Receiver
+## 0.0 Current SK-V17 Tape-Fold Migration Receiver
 
-Pass Omega V9 G-Omega is authorized and V9 CRUD is being applied. This
-receiver is the current implementation migration authority before the
-historical Pass Omega V2..V8 receivers below. The active implementation route
-is SK-V15 W0-W11 through `restart/skinny/tranches/sk-v15/SPEC.md` and
+Pass Omega V5 SK-V17 tape-fold G-Omega CLOSED 2026-05-30 by explicit user
+authorization. This is the current implementation migration authority; the
+SK-V15 V9 receiver (§0.1) and the historical Pass Omega V2..V8 receivers below
+are HISTORICAL SK-V15 lineage, not current dispatch authority. SK-V16 closed at
+`1c5bd7a25` (shared flat-tape SUBSTRATE landed, UNWIRED for CSS). SK-V17 (the
+SKINNY tape-fold **contract** for CSS-on-tape / lazy-`ValueRef` / shared-NEON;
+**JSON >SOTA-proven** at `skinny/RESULTS.md`, **CSS >SOTA the SK-V18 proof
+obligation, bar NOT yet met** per `restart/skinny/tranches/sk-v17/HANDOFF.md:44-45`
+and `restart/skinny/tranches/sk-v17/SPEC.md:207`) S-P3 CONVERGED. The CRUD-3
+LOCKS leg landed the SK-V17 T-P3 Crystallisation Addendum on Locks 1/2/10/14/16
+at `7157be073` (`restart/locks/LOCKS.md:610`-`618`; 16-lock count preserved,
+five-shape canon verbatim, tape recorded as substrate-manifest CATEGORY per the
+LAC-1E-14 FactStream precedent — NOT a 6th `BackendShape`).
+
+SK-V17 skinny waves W0-W5 are dispatchable under the SKINNY triumvirate; SK-V18
+is the totality implementation tranche that adopts the SKINNY-proven
+unified-tape / lazy-view / shared-NEON model into `crates/core/`. The five
+LOCKED fold designs (T-P2 LAC-2F-FOLD-01..05,
+`restart/audit/totality/sk-v17/p2/hardening/HARDENING-T-P2-SKV17-V3-CONSOLIDATED.md:77`-`221`)
+are the receiver set. Source `^0.0 SK-V18 Tape-Fold Migration Receiver` is the
+3F17-MH-01/02 delta (`restart/audit/totality/sk-v17/p3/3f-migration-handoff.md:67`-`68`,
+`:84`-`102`).
+
+This is a document-authority migration leg. It does not authorize source,
+generated output, gate implementation, `skinny/RESULTS.md`, `skinny/REDRESS.md`,
+or SK-V17 SPEC/DISPATCH edits. Those remain blocked until the owning SK-V17
+wave dispatches through the skinny triumvirate, and no SK-V18 implementation
+wave dispatches until G-Omega has authorized the required V1 patches (this leg).
+
+| Receiver (LAC) | Migration rule (crates/core) | Blocker | Gate |
+|---|---|---|---|
+| LAC-2F-FOLD-01/02 tape-as-unified-substrate | Retire eager `OpenFrame` builders (`json/builder.rs`, `css_l4/builder.rs:16`); converge AoS `TapeRec` (`tape/record.rs:103`) onto the proven SoA `Tape` as the SINGLE surviving encoding; all-8 `OnceCell<StructuralIndex>` declare `substrate_target` before wiring. | a committed AoS/SoA dual end-state; a sidecar index. | §19.4 substrate gate + Lock 1 (`restart/locks/LOCKS.md:75`). |
+| LAC-2F-FOLD-03 lazy `ValueRef<G>` value-API | One `BackendRule`/`FieldSource`-walking projection generator emits `document/value/view/visitor` over the EXISTING `Tape`/`ValueRef`; `@generated`-allowed; resolved once at codegen. JSON+CSS exercised; Sheets/BBNF-self by-construction (SK-V18). | per-grammar eager value enums kept as the live plane; a per-leaf registry walk. | §19.5 generated-equality + Lock 14. |
+| LAC-2F-FOLD-03 shared NEON classifier | Register `select_classifier(alphabet)` as a Lock-16 primitive-manifest ROW (alphabet-as-data); `substrate_target=existing_tape`, transient-single-call; scalar-ref + checkasm parity; aarch64-only NEON. | x86/AVX-512/SVE close path; a cross-call classifier-state carry. | Lock 16 manifest + §9.3 simd-scan scope reconcile. |
+| LAC-2F-FOLD-02 BackendShape disposition | The tape is the substrate the 5 shapes project from — a substrate-manifest CATEGORY at the Lock-1 manifest, NOT a 6th `BackendShape` variant; the 5-shape canon `{EagerTape,OffsetTape,EventTape,SinkOnly,CollapsedStage}` holds verbatim. | a silent 6th shape; an aarch64 CollapsedStage admission without G-Omega. | Lock 1 manifest + Lock 10 5-shape domain (`restart/locks/LOCKS.md:107`-`109`). |
+| LAC-2F-FOLD-04 StructRegistry/FieldSource fence | ANY per-leaf runtime `StructRegistry::layout(rule)` / `compound_kind_for_layout` indirection in the tape/projection hot path is REJECT (re-opens the measured 28-65× / 983× / 10583× regression); the FieldSource walk is compile-time-resolved-once. Live coupling at `bbnf/arena.rs:47` is severed by eager-builder retirement. | a per-leaf registry lookup re-entering the hot path. | §19.4 substrate gate + AZ-IV pre-block (SPEC `:791-794`). |
+| LAC-2F-FOLD-05 (Lock-2 sub-surface) StructLayout→Layout | The Lock-2-retired `StructLayout` (960 live sites in `crates/`) renames to `Layout` GENERATOR-SIDE, regenerating all 8 parsers + ~16 tests; regen-gated, NEVER hand-patched. Price the rename as the 960-site generator surface, not 40-120 LOC. | a hand-patch outside the generator (clean-regen violation). | §19.5 generated-equality + Lock 2 (`restart/locks/LOCKS.md:160`). |
+
+Migration fences (binding on every SK-V18 row; source 3F17-MH-03/05/06):
+- EXACTLY ONE tape encoding survives post-fold; the AoS/SoA dual is admissible
+  ONLY as a transient fold-state, never a Lock-1 closure. `grep` proves AoS
+  `TapeRec` retired OR SoA `Tape` retired, never both live (§19.4 + Lock 1,
+  `restart/locks/LOCKS.md:75`).
+- No second substrate: the projection generator emits over the EXISTING
+  `Tape`/`ValueRef`; an introduced `StructLayout`/`TapeStructBuilder`/`TapeCursor`
+  ALONGSIDE the proven `Tape`/`ValueRef` is a Lock-1 type-ambivalence REJECT. The
+  shared NEON classifier carries `substrate_target = existing_tape` /
+  `retention_lifetime = transient-single-call`; no sidecar mask producer, no
+  parallel source pass, no sixth BackendShape.
+- No per-leaf `StructRegistry` indirection in the tape/projection hot path
+  (AZ-IV pre-block, SPEC `:791-794`); the FieldSource walk is compile-time
+  projection-emission resolved ONCE at codegen.
+- aarch64 NEON + optional dotprod/i8mm only; no x86/AVX-512/SVE close path.
+- No fact-stream String as a live CSS admission plane (diagnostic-only).
+
+## 0.1 Historical SK-V15 V9 Migration Receiver (not current authority)
+
+Pass Omega V9 G-Omega was authorized and V9 CRUD applied for the SK-V15
+PRUNE-then-REBUILD lineage. This receiver is HISTORICAL after the current
+SK-V17 tape-fold receiver (§0.0) above. The historical implementation route
+was SK-V15 W0-W11 through `restart/skinny/tranches/sk-v15/SPEC.md` and
 `restart/skinny/tranches/sk-v15/DISPATCH-PROMPT.md`.
 
 V9 CRUD is a document-authority migration. It does not authorize source,
@@ -916,6 +973,22 @@ Runtime rows prove one `(TapeId, node id, payload class)` identity, direct
 scalar caches over declared payload slots, validation/source ownership metadata,
 and verifier-before-tape behavior for any SIMD prefilter path.
 
+SK-V18 single-encoding closure gate (3F17-MH-03,
+`restart/audit/totality/sk-v17/p3/3f-migration-handoff.md:69`): after the SK-V18
+fold EXACTLY ONE tape encoding survives in `crates/core` — `grep` proves the AoS
+`TapeRec` retired OR the SoA `Tape` retired, never both live; the dual AoS/SoA
+state is admissible ONLY as a transient fold-state, never a Lock-1 closure (Lock
+1, `restart/locks/LOCKS.md:75`). The `rg "OpenFrame|Vec<OpenFrame>|ParseStream"`
+check additionally asserts `JsonStructBuilder`/`CssStructBuilder` eager
+`OpenFrame` retirement; the eager-builder retirement severs the live per-leaf
+`StructRegistry`/`FieldSource` coupling at `bbnf/arena.rs:47` (3F17-MH-05), so
+no per-leaf `StructRegistry::layout(rule)` / `compound_kind_for_layout`
+indirection re-enters the hot path (re-opens the measured 28-65× / 983× /
+10583× regression; AZ-IV pre-block, SPEC `:791-794`). The projection generator
+emits over the EXISTING `Tape`/`ValueRef`; an introduced
+`StructLayout`/`TapeStructBuilder`/`TapeCursor` alongside the proven substrate
+is a Lock-1 type-ambivalence REJECT (3F17-MH-06).
+
 ### 19.5 Generated Equality
 
 ```sh
@@ -965,6 +1038,15 @@ exported ABI defer post-V1 alongside the V2 `TsBackend: Backend` and
 `WasmBackend: Backend` impls per `restart/ARCHITECTURE.md` §7.5; both route
 to V2 amendment and no longer occupy V1 carry rows. The single carry-truth
 principle holds: one ledger, two sources, one set of receivers.
+
+SK-V18 `StructLayout`→`Layout` rename row (3F17-MH-04,
+`restart/audit/totality/sk-v17/p3/3f-migration-handoff.md:70`): the Lock-2-retired
+`StructLayout` term is live at 960 sites in `crates/`. The rename is
+GENERATOR-SIDE (regenerating all 8 parsers + ~16 tests), regen-gated, NOT a
+hand-patch. Price it as the 960-site generator surface, not 40-120 LOC.
+Receiver: SK-V18 codegen-rename wave (3B). Blocker: any hand-patch of
+`StructLayout` outside the generator (clean-regen violation). Gate: §19.5
+generated-equality (`git diff --exit-code`) + Lock 2 (`restart/locks/LOCKS.md:160`).
 
 ## 21. Migration Close
 

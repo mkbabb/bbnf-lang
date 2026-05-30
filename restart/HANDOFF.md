@@ -1,68 +1,71 @@
 # Handoff — bbnf-lang Greenfield Restart
 
-## Current Totality Override - 2026-05-28
+## Current Totality Override - 2026-05-30
 
-Status: **G-Omega V9 is authorized and V9 CRUD is being applied. Current
-implementation authority is SK-V15 W0-W11.** The locked SK-V15
-PRUNE-then-REBUILD contract is `restart/skinny/tranches/sk-v15/SPEC.md`
-plus `restart/skinny/tranches/sk-v15/DISPATCH-PROMPT.md`. SK-V14 W5B /
-Pass Omega V8 remains historical/pre-block evidence only.
+Status: **Pass Omega V5 SK-V17 tape-fold G-Omega is CLOSED (2026-05-30) and
+the CRUD wave is applied.** SK-V16 closed at `1c5bd7a25` (shared flat-tape
+SUBSTRATE landed, UNWIRED for CSS). SK-V17 (the SKINNY tape-fold **contract**
+for CSS-on-tape / lazy-`ValueRef` / shared-NEON) S-P3 CONVERGED. T-P1 CONVERGED
+(`91b6893b0`), T-P2 CONVERGED V3 (five LOCKED LAC-2F-FOLD-01..05), T-P3 §3Z
+CONVERGED (`139ab1e4a`). The LOCKS CRUD-3 leg landed the SK-V17 T-P3
+Crystallisation Addendum on Locks 1/2/10/14/16 at `7157be073`
+(`restart/locks/LOCKS.md:610`-`618`; 16-lock count preserved, five-shape canon
+verbatim, tape as substrate-manifest CATEGORY — NOT a 6th `BackendShape`, per
+the LAC-1E-14 FactStream precedent).
 
-Next implementation dispatch after authorized CRUD is **SK-V15 W0 Baseline
-and telemetry lock** through
-`restart/skinny/tranches/sk-v15/DISPATCH-PROMPT.md`. Continue W1 through
-W11 in strict `SPEC.md` order. Do not run routine Alpha/Omega churn before
-W0; another Alpha/Omega loop is justified only by a concrete unrepaired
-invariant or REDRESS route requiring a V1 surface, LOCKS, or wave-graph
-amendment.
+SK-V17 skinny waves W0-W5 are dispatchable under the SKINNY triumvirate. The
+next IMPLEMENTATION tranche is **SK-V18**: it adopts the SKINNY-proven
+unified-tape / lazy-`ValueRef` / shared-NEON model into the totality
+`crates/core/` tree, per the five LOCKED fold designs. No SK-V18 wave dispatches
+until the required V1 patches are authorized at this G-Omega. Current SK-V17
+skinny wave authority routes through
+`restart/skinny/tranches/sk-v17/DISPATCH-PROMPT.md`; cite no missing companion
+prompt as current authority.
+
+The migration receiver for the tape-fold is `restart/MIGRATION.md` §0.0; the
+historical SK-V15 V9 receiver and the SK-V6 body below stay provenance-only.
 
 Sources of authority for this cycle:
 
-- Pass Omega V9 G-Omega packet:
-  `restart/audit/totality/astral/V9/G-OMEGA-PACKET.md`.
-- Pass Omega V9 coherence and migration handoff:
-  `restart/audit/totality/astral/V9/ΩA-coherence-audit.md` and
-  `restart/audit/totality/astral/V9/ΩF-migration-handoff.md`.
-- Pass Omega V9 master-plan operation list:
-  `restart/audit/totality/astral/V9/master-plan-diff.md`.
-- SK-V15 locked skinny surfaces:
-  `restart/skinny/tranches/sk-v15/SPEC.md`,
-  `restart/skinny/tranches/sk-v15/DISPATCH-PROMPT.md`, and
-  `restart/skinny/tranches/sk-v15/HANDOFF.md`.
-- T-P1 current authority:
-  `restart/audit/totality/p1/hardening/HARDENING-T-P1-V5-CONSOLIDATED.md`
-  (clean-final / G1-auto-pinned, not normal two-clean-cycle 3Z).
-- T-P2 current authority:
-  `restart/audit/totality/p2/hardening/HARDENING-T-P2-V3-CONSOLIDATED.md`
-  (normal 3Z LOCK / G2-auto-passed).
-- T-P3 current authority:
-  `restart/audit/totality/p3/hardening/HARDENING-T-P3-V5-CONSOLIDATED.md`
-  (final convergence / G3 auto-passed).
-- PASS-IMPL V1 blocker map:
-  `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md`.
-- Historical Pass Omega V2..V8 correction packets remain provenance only;
-  they no longer define current dispatch.
+- SK-V17 T-P3 synthesis set (the G-Omega gate object):
+  `restart/audit/totality/sk-v17/p3/{3a-architecture-synthesis,3b-master-plan-reconciliation,3c-locks-crystallisation,3d-skinny-fold,3e-grammar-generalisation,3f-migration-handoff}.md`
+  and `restart/audit/totality/sk-v17/p3/3c-locks-v+1-diff.md`
+  (`git apply --check` EXIT 0 at `2a76916ac`).
+- SK-V17 T-P1/T-P2 LOCKED inputs:
+  `restart/audit/totality/sk-v17/p1/` (CONVERGED `91b6893b0`) and
+  `restart/audit/totality/sk-v17/p2/hardening/HARDENING-T-P2-SKV17-V3-CONSOLIDATED.md`
+  (CONVERGED V3, five LOCKED LACs).
+- SK-V17 T-P3 CHALLENGE verdict:
+  `restart/audit/totality/sk-v17/p3/hardening/HARDENING-T-P3-SKV17-V3-CONSOLIDATED.md`.
+- SK-V17 locked skinny surfaces:
+  `restart/skinny/tranches/sk-v17/SPEC.md`,
+  `restart/skinny/tranches/sk-v17/DISPATCH-PROMPT.md`, and
+  `restart/skinny/tranches/sk-v17/HANDOFF.md`.
+- Pass Omega V5 SK-V17 CRUD logs:
+  `restart/audit/totality/astral/V5/{CRUD-LOG,G-OMEGA-SIGNOFF}.md`.
+- `skinny/RESULTS.md` (JSON model >SOTA-proven) and `skinny/REDRESS.md`.
+- Historical Pass Omega V2..V9 packets and the SK-V15 lineage remain provenance
+  only; they no longer define current dispatch.
 
 Read in order for current work:
 
 1. `restart/prompts/ORCHESTRATOR.md`.
 2. `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`.
 3. `restart/prompts/pass-contracts/PASS-OMEGA.md`.
-4. `restart/audit/totality/astral/V9/G-OMEGA-PACKET.md`.
-5. `restart/audit/totality/astral/V9/ΩA-coherence-audit.md`.
-6. `restart/audit/totality/astral/V9/ΩF-migration-handoff.md`.
-7. `restart/audit/totality/astral/V9/master-plan-diff.md`.
-8. `restart/audit/totality/p1/hardening/HARDENING-T-P1-V5-CONSOLIDATED.md`.
-9. `restart/audit/totality/p2/hardening/HARDENING-T-P2-V3-CONSOLIDATED.md`.
-10. `restart/audit/totality/p3/hardening/HARDENING-T-P3-V5-CONSOLIDATED.md`.
-11. `restart/skinny/tranches/sk-v15/SPEC.md`.
-12. `restart/skinny/tranches/sk-v15/DISPATCH-PROMPT.md`.
-13. `restart/skinny/tranches/sk-v15/HANDOFF.md`.
-14. `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md`.
-15. `restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`,
+4. `restart/audit/totality/sk-v17/p3/3a-architecture-synthesis.md` through
+   `restart/audit/totality/sk-v17/p3/3f-migration-handoff.md`.
+5. `restart/audit/totality/sk-v17/p3/3c-locks-v+1-diff.md`.
+6. `restart/audit/totality/sk-v17/p2/hardening/HARDENING-T-P2-SKV17-V3-CONSOLIDATED.md`.
+7. `restart/audit/totality/sk-v17/p3/hardening/HARDENING-T-P3-SKV17-V3-CONSOLIDATED.md`.
+8. `restart/skinny/tranches/sk-v17/SPEC.md`.
+9. `restart/skinny/tranches/sk-v17/DISPATCH-PROMPT.md`.
+10. `restart/skinny/tranches/sk-v17/HANDOFF.md`.
+11. `restart/audit/totality/astral/V5/CRUD-LOG.md` and
+    `restart/audit/totality/astral/V5/G-OMEGA-SIGNOFF.md`.
+12. `restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`,
     `restart/locks/LOCKS.md`, `restart/MIGRATION.md`, and this file
     (current V1 surfaces).
-16. `skinny/RESULTS.md` and `skinny/REDRESS.md`.
+13. `skinny/RESULTS.md` and `skinny/REDRESS.md`.
 
 Grammar onboarding remains three declarative surfaces only: grammar
 source `.bbnf`, workspace metadata, and an optional per-grammar
@@ -76,46 +79,66 @@ Pattern H count = 67 hand-written runtime files under
 google_sheets, json, math}/`; `find crates/core/src/runtime -mindepth 2
 -type f -name '*.rs' | wc -l` → 67).
 
-Dispatch rule: SK-V15 source/generated/gate/RESULTS/REDRESS edits remain
-blocked until V9 CRUD completes and SK-V15 W0 dispatches through the skinny
-wave-triumvirate. Every SK-V15 wave runs research -> plan -> redress under
+Dispatch rule: SK-V17 source/generated/gate/RESULTS/REDRESS edits remain
+blocked until the owning SK-V17 wave dispatches through the skinny
+wave-triumvirate; SK-V18 `crates/core` fold edits remain blocked until SK-V18
+W0 dispatches post-G-Omega. Every wave runs research -> plan -> redress under
 `restart/prompts/pass-contracts/SKINNY-TRIUMVIRATE.md`; delete, retirement,
-diagnostic demotion, or neutralization work must cite the matching SK-V15
-dependency row before redress.
+diagnostic demotion, or neutralization work must cite the matching dependency
+row before redress.
 
-## Pass Omega V9 SK-V15 dispatch directive
+## Pass Omega V5 SK-V17 tape-fold dispatch directive
 
-Per `restart/audit/totality/astral/V9/G-OMEGA-PACKET.md`, the sequence after
-G-Omega V9 authorization is:
+The post-G-Omega sequence (source 3F17-MH-08,
+`restart/audit/totality/sk-v17/p3/3f-migration-handoff.md:74`,`:163`-`206`):
 
-(a) apply authorized V9 CRUD only on the approved restart surfaces;
+(a) apply the authorized V1 patches (this CRUD wave) only on the named restart
+    surfaces;
 (b) keep source, generated output, gates, `skinny/RESULTS.md`,
-    `skinny/REDRESS.md`, and SK-V15 SPEC/DISPATCH read-only during CRUD;
-(c) stop routine Omega/Alpha churn for this SK-V15 implementation authority;
-(d) dispatch SK-V15 W0 through
-    `restart/skinny/tranches/sk-v15/DISPATCH-PROMPT.md`;
-(e) continue W1 -> W2 -> W3 -> W4 -> W5 -> W6 -> W7 -> W8 -> W9 -> W10
-    -> W11 in strict `SPEC.md` order;
-(f) do not close SK-V15 with doc-only proof, implementation-limited misses,
-    stale CSS broadcast evidence, Pattern H deletion without provenance proof,
-    scaffold Decision/lowerer claims, production FNV, or planned SK-V16
-    handoff.
+    `skinny/REDRESS.md`, and SK-V17 SPEC/DISPATCH read-only during CRUD;
+(c) dispatch the SK-V17 skinny waves W0-W5 through
+    `restart/skinny/tranches/sk-v17/DISPATCH-PROMPT.md` under the SKINNY
+    triumvirate;
+(d) after Pass Omega CRUD current-state truth is complete and G-Omega has
+    authorized the HANDOFF/MIGRATION/LOCKS patches, dispatch **SK-V18 W0** (the
+    `crates/core` tape-fold) through the SKINNY triumvirate;
+(e) SK-V18 waves then adopt the five LOCKED fold designs in the dependency order
+    set by the MASTER-PLAN reconciliation (3B), preserving the LAC receiver rows
+    and the migration fences;
+(f) do not close SK-V18 with a dual tape encoding, a 6th `BackendShape`, a
+    per-leaf `StructRegistry` walk, an x86/AVX/SVE close path, a second
+    substrate, a fact-stream live-admission plane, or doc-only proof; SK-V18
+    cannot close while any LAC row lacks proof, REDRESS route, revert evidence,
+    or intrinsic-block proof.
 
 The current dispatch checklist:
 
 | gate | measurable condition | source |
 |---|---|---|
-| G-Omega V9 | Authorized; V9 CRUD is being applied before SK-V15 W0. | `restart/audit/totality/astral/V9/G-OMEGA-PACKET.md` |
-| T-P1 | CLEAN-FINAL / G1-AUTO-PINNED; not rewritten as normal two-clean-cycle 3Z. | `restart/audit/totality/p1/hardening/HARDENING-T-P1-V5-CONSOLIDATED.md` |
-| T-P2 | Normal 3Z LOCK / G2-AUTO-PASSED from V2 and V3 clean cycles. | `restart/audit/totality/p2/hardening/HARDENING-T-P2-V3-CONSOLIDATED.md` |
-| T-P3 | Final V5 convergence; G3 auto-passes. | `restart/audit/totality/p3/hardening/HARDENING-T-P3-V5-CONSOLIDATED.md` |
-| SK-V15 W0 dispatch | V9 CRUD complete; dispatch W0 through SK-V15 `DISPATCH-PROMPT.md`. | `restart/skinny/tranches/sk-v15/DISPATCH-PROMPT.md` |
-| SK-V15 close | W11 plus PASS-IMPL V2 accepts every axis or records row-level intrinsic-block proof at HEAD. | `restart/skinny/tranches/sk-v15/SPEC.md §14` |
+| G-Omega V5 SK-V17 | CLOSED 2026-05-30; tape-fold CRUD applied to V1 surfaces. | `restart/audit/totality/astral/V5/G-OMEGA-SIGNOFF.md` |
+| T-P1 | CONVERGED `91b6893b0`; tape-fold divergence inventory. | `restart/audit/totality/sk-v17/p1/` |
+| T-P2 | CONVERGED V3 (V2 98.6% + V3 100.0% ACCEPT); five LOCKED LAC-2F-FOLD-01..05. | `restart/audit/totality/sk-v17/p2/hardening/HARDENING-T-P2-SKV17-V3-CONSOLIDATED.md` |
+| T-P3 | §3Z CONVERGED `139ab1e4a`; LOCKS addendum applied `7157be073`. | `restart/audit/totality/sk-v17/p3/3c-locks-crystallisation.md` |
+| SK-V17 W0-W5 dispatch | Dispatchable under the SKINNY triumvirate via SK-V17 `DISPATCH-PROMPT.md`. | `restart/skinny/tranches/sk-v17/DISPATCH-PROMPT.md` |
+| SK-V18 W0 dispatch | After CRUD complete + G-Omega; `crates/core` tape-fold via SKINNY triumvirate. | `restart/MIGRATION.md` §0.0 |
+| SK-V18 close | Every LAC row admits with proof or records intrinsic-block proof; no dual encoding, no 6th shape, no per-leaf registry walk. | `restart/MIGRATION.md` §0.0 fences |
+
+CRUD cap handling: before G-Omega, CRUD-4 either completes current-state
+HANDOFF/MIGRATION cleanup or records a blocked/extension decision naming the
+exact remainder, receiver, blocker, and gate; any remainder touching current
+dispatch truth blocks SK-V18 W0 until resolved. No silent deferral.
 
 Gate posture: G-Omega is the only mandatory user gate under the active pin.
 G1, G2, G3, G-Alpha, challenge confirmation gates, and wave-internal gates
 auto-pass unless an unrepaired invariant violation or REDRESS route requires
 G-Omega.
+
+> CSS >SOTA = SK-V18 obligation, NOT met: SK-V17 proved the JSON model >SOTA
+> (`skinny/RESULTS.md`) and converged the CSS-on-tape CONTRACT; ALL per-corpus
+> lightningcss endpoints are UNMEASURED-PENDING (`restart/skinny/tranches/sk-v17/SPEC.md:207`)
+> and the CSS >SOTA bar is explicitly NOT met
+> (`restart/skinny/tranches/sk-v17/HANDOFF.md:44-45`). SK-V18 W0 carries the
+> CSS >SOTA bar as a PROOF OBLIGATION, not an achieved win.
 
 ## Historical Pass Omega V1.1 close (not current authority)
 

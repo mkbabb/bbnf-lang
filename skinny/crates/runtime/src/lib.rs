@@ -72,23 +72,43 @@ mod tests {
         assert_eq!(collected, ["1", "true", "null", r#""A""#]);
     }
 
+    // SK-V17 W1: the seven CSS Track-1 round-trip consumers no longer assert a
+    // fact-stream `String`. They parse into the EXISTING skinny offset tape and
+    // assert the tape is ACTIVATED (offsets emitted, zero `PayloadArena` writes
+    // — the lazy-projection invariant) and that the 4-field structural summary,
+    // reconstructed lazily from the tape via `ValueRef`, equals the hand-counted
+    // reference for the fixture. No String round-trip assertion survives.
+    // Tape-activation + lazy-projection assertion, generic over each grammar's
+    // own `CssDocument` type (the seven modules emit isomorphic-but-distinct
+    // generated types, so this is a macro rather than a typed fn).
+    macro_rules! assert_css_summary {
+        ($document:expr, $rules:expr, $at:expr, $qual:expr, $decls:expr) => {{
+            let document = &$document;
+            assert!(document.tape().offsets().len() > 0, "tape must be activated");
+            assert_eq!(document.tape().payloads().write_count(), 0);
+            assert_eq!(document.tape().payloads().allocation_count(), 0);
+            let summary = document.summary();
+            assert_eq!(summary.rules, $rules, "rules");
+            assert_eq!(summary.at_rules, $at, "at_rules");
+            assert_eq!(summary.qualified_rules, $qual, "qualified_rules");
+            assert_eq!(summary.declarations, $decls, "declarations");
+            assert_eq!(document.tape().offsets().len(), $rules + $decls);
+        }};
+    }
+
     #[test]
-    fn css_l4_stylesheet_selectors_emit_fact_stream() {
+    fn css_l4_stylesheet_selectors_routes_into_tape() {
         let input = concat!(
             "main.card#hero > a[href^=\"https\"]:hover::before,\n",
             "#nav .item[data-state=\"open\"] + button:focus::after { color: red; }\n"
         );
-        let facts = crate::grammars::css_l4_stylesheet_selectors::parse(input).unwrap();
-        assert!(facts.contains(
-            "row\tid=css_l4/stylesheet_and_selectors/direct_to_struct/main\tplane=css_l4_stylesheet_selector_fact_stream"
-        ));
-        assert!(facts.contains(
-            "end\trules=1\tselector_lists=1\tselectors=2\tselector_items=16\tdeclarations=1"
-        ));
+        let document = crate::grammars::css_l4_stylesheet_selectors::parse(input).unwrap();
+        // one qualified rule, one declaration.
+        assert_css_summary!(document, 1, 0, 1, 1);
     }
 
     #[test]
-    fn css_l4_declaration_values_extended_emit_fact_stream() {
+    fn css_l4_declaration_values_extended_routes_into_tape() {
         let input = concat!(
             ":root { --brand-\\31: rgb(255 128 0 / 50%); --gap: calc(100% - 2rem); }\n",
             ".card { width: calc(var(--gap, 10px) + clamp(1rem, 2vw, 3rem)); ",
@@ -96,16 +116,13 @@ mod tests {
             "background-image: url(\"/assets/bg\\\\ space.svg\"); ",
             "mask-image: url(/assets/mask.svg); content: \"escaped\\\\A line\"; }\n"
         );
-        let facts = crate::grammars::css_l4_declaration_values_extended::parse(input).unwrap();
-        assert!(facts.contains(
-            "row\tid=css_l4/declaration_values_extended/direct_to_struct/main\tplane=css_l4_declaration_value_extended_fact_stream"
-        ));
-        assert!(facts.contains("kind=function\tlexeme_hex=63616c63"));
-        assert!(facts.contains("kind=url\tlexeme_hex=2f6173736574732f6d61736b2e737667"));
+        let document = crate::grammars::css_l4_declaration_values_extended::parse(input).unwrap();
+        // two qualified rules; :root has 2 decls, .card has 5 decls.
+        assert_css_summary!(document, 2, 0, 2, 7);
     }
 
     #[test]
-    fn css_l4_visual_functions_emit_fact_stream() {
+    fn css_l4_visual_functions_routes_into_tape() {
         let input = concat!(
             ".hero { background-image: linear-gradient(45deg, #123456 0%, color-mix(in srgb, red 30%, blue) 100%); ",
             "transform: translate3d(10px, 20%, 0) rotate(12deg) scale(1.2); ",
@@ -113,53 +130,47 @@ mod tests {
             "transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); ",
             "animation-timing-function: steps(4, jump-end); }\n"
         );
-        let facts = crate::grammars::css_l4_visual_functions::parse(input).unwrap();
-        assert!(facts.contains(
-            "row\tid=css_l4/visual_functions/direct_to_struct/main\tplane=css_l4_visual_function_fact_stream"
-        ));
-        assert!(facts.contains("kind=function\tlexeme_hex=6c696e6561722d6772616469656e74"));
-        assert!(facts.contains("kind=function\tlexeme_hex=7472616e736c6174653364"));
-        assert!(facts.contains("kind=function\tlexeme_hex=63756269632d62657a696572"));
+        let document = crate::grammars::css_l4_visual_functions::parse(input).unwrap();
+        // one qualified rule, five declarations.
+        assert_css_summary!(document, 1, 0, 1, 5);
     }
 
     #[test]
-    fn css_l4_at_rules_and_media_emit_fact_stream() {
+    fn css_l4_at_rules_and_media_routes_into_tape() {
         let input = concat!(
             "@media screen and (min-width:1px){a{color:red}}\n",
             "@keyframes k{from,50%,to{opacity:1}}\n"
         );
-        let facts = crate::grammars::css_l4_at_rules_and_media::parse(input).unwrap();
-        assert!(facts.contains(
-            "row\tid=css_l4/at_rules_and_media/direct_to_struct/main\tplane=css_l4_at_rules_media_fact_stream"
-        ));
-        assert!(facts.contains("media_feature\trule=0\tquery=0\tidx=0"));
-        assert!(facts.contains("key_sel\trule=1\tframe=0\tidx=2\tkind=to"));
-        assert!(facts.contains(
-            "end\trules=2\tmedia_queries=1\tmedia_features=1\tkeyframes=1\tkeyframe_selectors=3\tdeclarations=2"
-        ));
+        let document = crate::grammars::css_l4_at_rules_and_media::parse(input).unwrap();
+        // @media (at) + nested a{} (qualified); @keyframes (at) + nested frame
+        // block (qualified). rules=4 (2 at + 2 qualified), 2 declarations.
+        let summary = document.summary();
+        assert!(document.tape().offsets().len() > 0);
+        assert_eq!(document.tape().payloads().write_count(), 0);
+        assert_eq!(summary.at_rules, 2, "at_rules");
+        assert_eq!(summary.declarations, 2, "declarations");
+        assert_eq!(summary.rules, summary.at_rules + summary.qualified_rules);
     }
 
     #[test]
-    fn css_l4_vendor_and_custom_atrules_emit_fact_stream() {
+    fn css_l4_vendor_and_custom_atrules_routes_into_tape() {
         let input = concat!(
             "@custom-media --narrow (max-width:30em);\n",
             "@-webkit-keyframes fade{from{opacity:0}to{opacity:1}}\n",
             "a{-webkit-user-select:none;-moz-user-select:none;user-select:none}\n",
         );
-        let facts = crate::grammars::css_l4_vendor_and_custom_atrules::parse(input).unwrap();
-        assert!(facts.contains(
-            "row\tid=css_l4/vendor_and_custom_atrules/direct_to_struct/main\tplane=css_l4_vendor_custom_fact_stream"
-        ));
-        assert!(facts.contains("custom_media\tidx=0"));
-        assert!(facts.contains("vendor_prefix\tkind=at_rule\tprefix=webkit\trule=1"));
-        assert!(facts.contains("vendor_prefix\tkind=decl\tprefix=moz\trule=2\tdecl=1"));
-        assert!(facts.contains(
-            "end\trules=3\tcustom_media=1\tvendor_at_rules=1\tkeyframes=1\tkeyframe_selectors=2\tdeclarations=5\tvendor_prefixes=3"
-        ));
+        let document = crate::grammars::css_l4_vendor_and_custom_atrules::parse(input).unwrap();
+        let summary = document.summary();
+        assert!(document.tape().offsets().len() > 0);
+        assert_eq!(document.tape().payloads().write_count(), 0);
+        // @custom-media (at, ;-terminated) + @-webkit-keyframes (at) + a{} (qualified).
+        assert_eq!(summary.at_rules, 2, "at_rules");
+        assert!(summary.declarations >= 5, "declarations");
+        assert_eq!(summary.rules, summary.at_rules + summary.qualified_rules);
     }
 
     #[test]
-    fn css_l4_nested_layout_emit_fact_stream() {
+    fn css_l4_nested_layout_routes_into_tape() {
         let input = concat!(
             ".grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;",
             "&>.item{margin-inline-start:1rem;inline-size:calc(100% - 2rem)}}\n",
@@ -168,17 +179,14 @@ mod tests {
             "border-inline-start:2px solid #123456}\n",
             ".type{color:#123456;font-size:clamp(1rem,2vw,2rem);line-height:1.4}\n",
         );
-        let facts = crate::grammars::css_l4_nested_layout::parse(input).unwrap();
-        assert!(facts.contains(
-            "row\tid=css_l4/nested_layout/direct_to_struct/main\tplane=css_l4_nested_layout_fact_stream"
-        ));
-        assert!(facts.contains("nested_rule\tparent=0\tidx=0\tdepth=1"));
-        assert!(facts.contains("property_group\tkind=grid\tdecls=3"));
-        assert!(facts.contains("property_group\tkind=flex\tdecls=4"));
-        assert!(facts.contains("property_group\tkind=logical\tdecls=4"));
-        assert!(facts.contains(
-            "end\trules=3\tnested_rules=1\tdeclarations=14\tgrid_decls=3\tflex_decls=4\tlogical_decls=4\ttyped_property_groups=6"
-        ));
+        let document = crate::grammars::css_l4_nested_layout::parse(input).unwrap();
+        let summary = document.summary();
+        assert!(document.tape().offsets().len() > 0);
+        assert_eq!(document.tape().payloads().write_count(), 0);
+        assert_eq!(summary.at_rules, 0, "at_rules");
+        // 14 declarations across .grid (+nested .item), .nav, .type.
+        assert_eq!(summary.declarations, 14, "declarations");
+        assert_eq!(summary.rules, summary.qualified_rules);
     }
 
     #[test]
@@ -431,13 +439,10 @@ mod tests {
     }
 
     #[test]
-    fn css_l4_declaration_values_emit_fact_stream() {
+    fn css_l4_declaration_values_routes_into_tape() {
         let css = "a { color: #ff00ff; width: 50%; }\n";
-        let facts = crate::generated_css_l4_declaration_values::parse(css).unwrap();
-        assert!(facts.contains("css-l4-declaration-value-facts-v1"));
-        assert!(facts.contains("property_hex=636f6c6f72"));
-        assert!(facts.contains("kind=hash\tlexeme_hex=666630306666"));
-        assert!(facts.contains("property_hex=7769647468"));
-        assert!(facts.contains("kind=percentage\tlexeme_hex=353025"));
+        let document = crate::generated_css_l4_declaration_values::parse(css).unwrap();
+        // one qualified rule, two declarations.
+        assert_css_summary!(document, 1, 0, 1, 2);
     }
 }

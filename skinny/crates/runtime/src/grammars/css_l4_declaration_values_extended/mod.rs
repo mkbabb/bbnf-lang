@@ -4,5 +4,6 @@ pub mod generated;
 pub mod parser;
 pub mod sink;
 
-pub use parser::{parse, parse_bytes};
+pub use generated::{CssDocument, CssNode, CssNodeKind, CssSummary};
+pub use parser::{parse, parse_bytes, summary, summary_bytes};
 pub use sink::CssFactError;

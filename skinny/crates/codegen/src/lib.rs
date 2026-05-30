@@ -295,12 +295,44 @@ mod tests {
         }
     }
 
+    // SK-V17 W1 — the hand-curated `W5C_REQUEST_FACT_PROFILES` label catalogue
+    // (the Lock-14-phrase-#1 construct) is RETIRED. Routing for the seven CSS
+    // companions is now the bare profile-id list (`CSS_PROFILE_IDS`, the datum
+    // derived from the grammar/`BackendRule` shape — one entry per generated
+    // companion), and the request-facts identity labels are derived
+    // STRUCTURALLY from that id, not read from a per-rule literal table.
+    const CSS_PROFILE_IDS: &[&str] = &[
+        "css_l4_declaration_values",
+        "css_l4_declaration_values_extended",
+        "css_l4_stylesheet_selectors",
+        "css_l4_visual_functions",
+        "css_l4_at_rules_and_media",
+        "css_l4_vendor_and_custom_atrules",
+        "css_l4_nested_layout",
+    ];
+
     fn request_facts_labels(profile_id: &str) -> RuntimeOutputLabels {
-        W5C_REQUEST_FACT_PROFILES
-            .iter()
-            .find(|profile| profile.profile_id == profile_id)
-            .map(|profile| profile.labels)
-            .unwrap_or_else(|| panic!("missing request-facts profile {profile_id}"))
+        assert!(
+            CSS_PROFILE_IDS.contains(&profile_id),
+            "unknown css request-facts profile {profile_id}"
+        );
+        // ROW_ID is the only label `config.rs` still consumes (the fact-stream
+        // schema/output-plane labels retired with the emitter). It is derived
+        // from the profile id by stripping the `css_l4_` prefix; the one spelling
+        // exception (`stylesheet_selectors` -> `stylesheet_and_selectors`) names
+        // the grammar companion exactly, matching `xtask/src/regen_css.rs`.
+        let slug = match profile_id {
+            "css_l4_stylesheet_selectors" => "stylesheet_and_selectors",
+            other => other.strip_prefix("css_l4_").unwrap_or(other),
+        };
+        // Leak is test-only.
+        let row_id: &'static str =
+            Box::leak(format!("css_l4/{slug}/direct_to_struct/main").into_boxed_str());
+        RuntimeOutputLabels {
+            fact_schema: "",
+            row_id,
+            output_plane: "",
+        }
     }
 
     fn w5a_css_request(source: &str) -> RuntimeGenerationRequest {
@@ -326,71 +358,6 @@ mod tests {
             profile_contract: request_facts_contract("css_l4_declaration_values"),
         }
     }
-
-    #[derive(Clone, Copy)]
-    struct RequestFactsProfile {
-        profile_id: &'static str,
-        labels: RuntimeOutputLabels,
-    }
-
-    const W5C_REQUEST_FACT_PROFILES: &[RequestFactsProfile] = &[
-        RequestFactsProfile {
-            profile_id: "css_l4_declaration_values",
-            labels: RuntimeOutputLabels {
-                fact_schema: "css-l4-declaration-value-facts-v1",
-                row_id: "css_l4/declaration_values/direct_to_struct/main",
-                output_plane: "css_l4_declaration_value_fact_stream",
-            },
-        },
-        RequestFactsProfile {
-            profile_id: "css_l4_declaration_values_extended",
-            labels: RuntimeOutputLabels {
-                fact_schema: "css-l4-declaration-value-extended-facts-v1",
-                row_id: "css_l4/declaration_values_extended/direct_to_struct/main",
-                output_plane: "css_l4_declaration_value_extended_fact_stream",
-            },
-        },
-        RequestFactsProfile {
-            profile_id: "css_l4_stylesheet_selectors",
-            labels: RuntimeOutputLabels {
-                fact_schema: "css-l4-stylesheet-selector-facts-v1",
-                row_id: "css_l4/stylesheet_and_selectors/direct_to_struct/main",
-                output_plane: "css_l4_stylesheet_selector_fact_stream",
-            },
-        },
-        RequestFactsProfile {
-            profile_id: "css_l4_visual_functions",
-            labels: RuntimeOutputLabels {
-                fact_schema: "css-l4-visual-function-facts-v1",
-                row_id: "css_l4/visual_functions/direct_to_struct/main",
-                output_plane: "css_l4_visual_function_fact_stream",
-            },
-        },
-        RequestFactsProfile {
-            profile_id: "css_l4_at_rules_and_media",
-            labels: RuntimeOutputLabels {
-                fact_schema: "css-l4-at-rules-media-facts-v1",
-                row_id: "css_l4/at_rules_and_media/direct_to_struct/main",
-                output_plane: "css_l4_at_rules_media_fact_stream",
-            },
-        },
-        RequestFactsProfile {
-            profile_id: "css_l4_vendor_and_custom_atrules",
-            labels: RuntimeOutputLabels {
-                fact_schema: "css-l4-vendor-custom-facts-v1",
-                row_id: "css_l4/vendor_and_custom_atrules/direct_to_struct/main",
-                output_plane: "css_l4_vendor_custom_fact_stream",
-            },
-        },
-        RequestFactsProfile {
-            profile_id: "css_l4_nested_layout",
-            labels: RuntimeOutputLabels {
-                fact_schema: "css-l4-nested-layout-facts-v1",
-                row_id: "css_l4/nested_layout/direct_to_struct/main",
-                output_plane: "css_l4_nested_layout_fact_stream",
-            },
-        },
-    ];
 
     const W5C_CSS_SOURCE: &str = r#"
 @import "tokens.bbnf" ;
@@ -564,8 +531,7 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
 
     #[test]
     fn css_l4_frontend_profiles_are_request_generated() {
-        for profile in W5C_REQUEST_FACT_PROFILES {
-            let profile_id = profile.profile_id;
+        for &profile_id in CSS_PROFILE_IDS {
             let emitted = emit_runtime_from_request(w5c_css_request(profile_id, W5C_CSS_SOURCE))
                 .expect("request generated css runtime");
             let names = emitted.files().map(|(name, _)| name).collect::<Vec<_>>();
@@ -575,16 +541,20 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
                 .get("config.rs")
                 .unwrap()
                 .contains("FRONTEND_SOURCE_HASH"));
-            assert!(emitted
-                .get("generated.rs")
-                .unwrap()
-                .contains("emit_fact_stream"));
+            // SK-V17 W1: the generated provider now routes into the EXISTING
+            // skinny tape — assert the tape append op, not the retired
+            // fact-stream String emitter.
+            let generated = emitted.get("generated.rs").unwrap();
+            assert!(generated.contains("parse_into_tape"));
+            assert!(generated.contains("TapeBuilder"));
+            assert!(generated.contains("push_plain_offset") || generated.contains("push_offset"));
+            assert!(!generated.contains("emit_fact_stream"));
             assert!(emitted.get("parser.rs").unwrap().contains("parse_bytes"));
         }
     }
 
     #[test]
-    fn json_and_css_runtime_outputs_consume_w7_policy() {
+    fn json_consumes_w7_policy_and_css_routes_into_tape() {
         let json = emit_from_source("json", JSON_GRAMMAR).unwrap();
         let json_config = json.get("config.rs").unwrap();
         let json_generated = json.get("generated.rs").unwrap();
@@ -594,22 +564,23 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
         assert!(json_generated.contains("config::w7_direct_policy_triad"));
         assert!(json_generated.contains("parse_w11_1_number_array_direct"));
 
+        // SK-V17 W1: the CSS provider routes into the EXISTING skinny tape; the
+        // fact-stream W7 policy plane is retired with `emit_fact_stream`.
         let css = emit_runtime_from_request(w5c_css_request(
             "css_l4_declaration_values_extended",
             W5C_CSS_SOURCE,
         ))
         .unwrap();
-        let css_config = css.get("config.rs").unwrap();
         let css_generated = css.get("generated.rs").unwrap();
 
-        assert!(css_config.contains("W7_SUBSTRATE_TARGET: &str = \"admitted_fact_output\""));
-        assert!(css_generated.contains("config::W7_SAME_SUBSTRATE_UNION"));
+        assert!(css_generated.contains("crate::tape::{OffsetFlags, Tape, TapeBuilder, ValueRef}"));
+        assert!(css_generated.contains("parse_into_tape"));
+        assert!(!css_generated.contains("emit_fact_stream"));
     }
 
     #[test]
     fn css_l4_generated_runtimes_reproducible_from_request() {
-        for profile in W5C_REQUEST_FACT_PROFILES {
-            let profile_id = profile.profile_id;
+        for &profile_id in CSS_PROFILE_IDS {
             let emitted = emit_runtime_from_request(w5c_full_css_request(profile_id))
                 .expect("request generated css runtime");
             let runtime_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -995,10 +966,12 @@ root = @{ "url" , "(" >> ident ?w , "," ?w , ident << ")" } ;
 tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
 "#;
         let emitted = emit_runtime_from_request(w5a_css_request(source)).unwrap();
+        // SK-V17 W1: tape-routed provider — assert the tape append, not the
+        // retired fact-stream String emitter.
         assert!(emitted
             .get("generated.rs")
             .unwrap()
-            .contains("emit_fact_stream"));
+            .contains("parse_into_tape"));
 
         let mut missing_metadata = w5a_css_request(source);
         missing_metadata.workspace_metadata.generated_root.clear();
@@ -1029,10 +1002,11 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
             .get("generated.rs")
             .unwrap()
             .contains(GENERATED_HEADER));
+        // SK-V17 W1: tape-routed provider.
         assert!(emitted
             .get("generated.rs")
             .unwrap()
-            .contains("emit_fact_stream"));
+            .contains("parse_into_tape"));
     }
 
     pub(super) fn w5b_frontend_request_rejects_missing_closure_materiality() {

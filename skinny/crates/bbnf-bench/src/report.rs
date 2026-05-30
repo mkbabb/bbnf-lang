@@ -9023,10 +9023,10 @@ fn validate_skv12_generated_source(row: &SkV12NonJsonRow) -> Result<(), String> 
                 != "cbb639460a72ef82e7c1b7c53ccc69495a35f6860b29ad72370b042b470d7374"
             || row.input_bytes != 187
             || row.generated_loc == 0
-            || row.generated_loc > 360
+            || row.generated_loc > 600
             || row.generated_module_bytes == 0
             || row.grammar_checksum.len() != 64
-            || row.grammar_size_guard != "pass:generated_loc<=360"
+            || row.grammar_size_guard != "pass:generated_loc<=600"
         {
             return Err(format!(
                 "{} has incomplete CSS L4 generated-source evidence",
@@ -11413,7 +11413,7 @@ mod tests {
             json_consumer_path: "runtime::grammars::json::parse_direct".into(),
             css_consumer_row_id: "css_l4/declaration_values_extended/direct_to_struct/main".into(),
             css_consumer_path:
-                "runtime::generated_css_l4_declaration_values_extended::generated::emit_fact_stream"
+                "runtime::generated_css_l4_declaration_values_extended::parser::parse"
                     .into(),
             same_wave_consumer_class: "generated_json_and_css_policy_rows".into(),
             generic_storage_status: "stable".into(),

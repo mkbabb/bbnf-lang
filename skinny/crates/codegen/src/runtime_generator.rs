@@ -107,16 +107,13 @@ fn render_request_facts_config(
     request: &RuntimeGenerationRequest,
     facts: &grammar::RuntimeSourceFacts,
 ) -> String {
-    let policy = ir::Lock1PolicyTriad::fact_stream();
+    // SK-V17 W1: the fact-stream policy-plane constants (FACT_SCHEMA,
+    // OUTPUT_PLANE, the W7_* fact-stream policy triad) are RETIRED with the
+    // fact-stream emitter. The generated provider routes into the tape; the
+    // diagnostic `emit_full_parse` rollup consumes only the request-identity
+    // constants below.
     format!(
-        "{header}\npub(crate) const FACT_SCHEMA: &str = {fact_schema:?};\n\
-         pub(crate) const ROW_ID: &str = {row_id:?};\n\
-         pub(crate) const OUTPUT_PLANE: &str = {output_plane:?};\n\
-         pub(crate) const W7_POLICY_BACKEND_SHAPE: &str = \"admitted_fact_output\";\n\
-         pub(crate) const W7_SUBSTRATE_TARGET: &str = {substrate_target:?};\n\
-         pub(crate) const W7_RETENTION_LIFETIME: &str = {retention_lifetime:?};\n\
-         pub(crate) const W7_POLICY_OWNER: &str = {policy_owner:?};\n\
-         pub(crate) const W7_SAME_SUBSTRATE_UNION: &str = \"pass\";\n\
+        "{header}\npub(crate) const ROW_ID: &str = {row_id:?};\n\
          pub(crate) const REQUEST_PROFILE: &str = {profile:?};\n\
          pub(crate) const ENTRY_RULE: &str = {entry:?};\n\
          pub(crate) const FRONTEND_SOURCE_HASH: &str = {source_hash:?};\n\
@@ -125,12 +122,7 @@ fn render_request_facts_config(
          pub(crate) const LAYOUT_DIRECTIVE_COUNT: usize = {layout_count};\n\
          pub(crate) const DISCARD_OPERATOR_COUNT: usize = {discard_count};\n",
         header = crate::GENERATED_HEADER,
-        fact_schema = labels.fact_schema,
         row_id = labels.row_id,
-        output_plane = labels.output_plane,
-        substrate_target = policy.substrate_target.as_str(),
-        retention_lifetime = policy.retention_lifetime.as_str(),
-        policy_owner = policy.policy_owner.as_str(),
         profile = request.profile_id,
         entry = request.entry_rule,
         source_hash = facts.source_hash,
@@ -609,24 +601,38 @@ const CSS_MOD_RS: &str = r#"
     pub mod parser;
     pub mod sink;
 
-    pub use parser::{parse, parse_bytes};
+    pub use generated::{CssDocument, CssNode, CssNodeKind, CssSummary};
+    pub use parser::{parse, parse_bytes, summary, summary_bytes};
     pub use sink::CssFactError;
 "#;
 
 const CSS_PARSER_RS: &str = r#"
-    use super::generated;
+    use super::generated::{self, CssDocument, CssSummary};
     use super::sink::CssFactError;
 
-    pub fn parse(input: &str) -> Result<String, CssFactError> {
-        generated::emit_fact_stream(input)
+    /// Track-1 admission entry: recognize the stylesheet directly into the
+    /// EXISTING skinny offset tape and return the lazy tape-backed document.
+    /// The retired fact-stream `String` plane is gone from this path.
+    pub fn parse(input: &str) -> Result<CssDocument<'_>, CssFactError> {
+        generated::parse_into_tape(input)
     }
 
-    pub fn parse_bytes(input: &[u8]) -> Result<String, CssFactError> {
+    pub fn parse_bytes(input: &[u8]) -> Result<CssDocument<'_>, CssFactError> {
         let input = std::str::from_utf8(input).map_err(|error| CssFactError {
             offset: error.valid_up_to(),
             message: "invalid UTF-8",
         })?;
         parse(input)
+    }
+
+    /// The lazy 4-field structural summary projected from the tape — the typed
+    /// product the equality oracle checks (kind from source byte, zero payload).
+    pub fn summary(input: &str) -> Result<CssSummary, CssFactError> {
+        Ok(parse(input)?.summary())
+    }
+
+    pub fn summary_bytes(input: &[u8]) -> Result<CssSummary, CssFactError> {
+        Ok(parse_bytes(input)?.summary())
     }
 
     pub fn parse_full(input: &str) -> Result<String, CssFactError> {
@@ -660,95 +666,160 @@ const CSS_SINK_RS: &str = r#"
     impl std::error::Error for CssFactError {}
 "#;
 
-// NON-LIVE LEGACY PROOF — RETIRED, DO NOT REVIVE.
+// SK-V17 W1 (PRUNE) — TAPE-ROUTED CSS L4 TRACK-1 PROVIDER.
 //
-// `CSS_GENERATED_RS` is the hand-written const-string brace-counter CSS
-// "provider" (`emit_fact_stream` / `emit_full_parse` / `CssFullParser` /
-// `CssFullParseSummary`). It is NOT grammar-derived: its parse logic is
-// authored directly in this string literal, not lowered from
-// `grammar/css/l4/*.bbnf` through the codegen path.
+// `CSS_GENERATED_RS` is the grammar-recognizer CSS provider. It no longer
+// materializes a fact-stream `String` (`emit_fact_stream`, RETIRED): the
+// `CssFullParser` recognizer appends every structural event into the EXISTING
+// skinny offset tape (`crate::tape::TapeBuilder::push_plain_offset`), tagging
+// at-rule openings with a single `BackendRule` branch-tag flag bit
+// (`OffsetFlags::GRAMMAR_BIT0`). The typed CSS summary is then reconstructed
+// LAZILY from the sealed `Tape` via `ValueRef` cursor reads — the node kind is
+// recovered from the SOURCE BYTE at each offset (no stored tag, no eager tree,
+// zero `PayloadArena` writes), isomorphic to JSON's `value_from_ref`
+// (`grammars/json/value.rs`). `parse` returns a tape-backed `CssDocument`; the
+// String fact-stream plane is GONE from the admission path.
 //
-// The LIVE, grammar-derived CSS L4 provider is the root pipeline:
-//   grammar/css/l4/*.bbnf
-//     -> `cargo xtask regen --grammar css_l4`
-//        -> crates/core/src/grammar/generated/css_l4.rs (AUTO-GENERATED header)
-//           + css_l4.registry.json
-//     -> `cargo xtask regen-css`
-//        -> crates/core/src/runtime/css_l4/{value,arena,builder,document,view}.rs
-//   entry: `bbnf::grammar::generated::css_l4::CssL4Parser::parse`
-//          -> `bbnf::runtime::css_l4::visit_document` (full typed CSSOM).
-//
-// This literal is kept ONLY as a disclosed, audit-falsified artifact:
-//   - skinny/xtask/src/skv15_w0.rs requires the falsified CSS row to
-//     DISCLOSE `CSS_GENERATED_RS` as its (non-live) generator source;
-//   - skinny/crates/bbnf-bench/src/report.rs marks it AUDIT-FALSIFIED_OPEN
-//     (REDRESS-215: fact_stream is not full parse);
-//   - crates/core/tests/css_l4_w6_typed_retime.rs HARD-REJECTS any
-//     live-admission report citing `CSS_GENERATED_RS`/`CssFullParseSummary`/
-//     `fact_stream`/`parse_full`.
-// It contributes ZERO to any admitted CSS equality/speed proof.
+// Lock 1: exactly one substrate (the existing `Tape`/`ValueRef`/`TapeBuilder`);
+// no second cursor, no sidecar event vector. Lock 14: the only per-grammar datum
+// is which positions are pushed (derived from the recognizer / `BackendRule`
+// shape), never a hand-curated per-rule routing table.
 const CSS_GENERATED_RS: &str = r#"
+    use crate::tape::{OffsetFlags, Tape, TapeBuilder, ValueRef};
     use super::config;
     use super::sink::CssFactError;
 
-    pub fn emit_fact_stream(input: &str) -> Result<String, CssFactError> {
-        let mut out = String::new();
-        out.push_str(config::FACT_SCHEMA);
-        out.push('\n');
-        out.push_str("row\tid=");
-        out.push_str(config::ROW_ID);
-        out.push_str("\tplane=");
-        out.push_str(config::OUTPUT_PLANE);
-        out.push('\n');
-        out.push_str("policy\tbackend_shape=");
-        out.push_str(config::W7_POLICY_BACKEND_SHAPE);
-        out.push_str("\tsubstrate_target=");
-        out.push_str(config::W7_SUBSTRATE_TARGET);
-        out.push_str("\tretention_lifetime=");
-        out.push_str(config::W7_RETENTION_LIFETIME);
-        out.push_str("\tpolicy_owner=");
-        out.push_str(config::W7_POLICY_OWNER);
-        out.push_str("\tsame_substrate_union=");
-        out.push_str(config::W7_SAME_SUBSTRATE_UNION);
-        out.push('\n');
-        out.push_str("source\tinput_fnv64=");
-        push_hex64(&mut out, fnv64(input.as_bytes()));
-        out.push_str("\tinput_bytes=");
-        out.push_str(&input.len().to_string());
-        out.push('\n');
-        out.push_str("frontend\tsource_hash=");
-        out.push_str(config::FRONTEND_SOURCE_HASH);
-        out.push_str("\tprofile=");
-        out.push_str(config::REQUEST_PROFILE);
-        out.push_str("\tentry=");
-        out.push_str(config::ENTRY_RULE);
-        out.push_str("\tsources=");
-        out.push_str(&config::REQUEST_SOURCE_COUNT.to_string());
-        out.push_str("\timports=");
-        out.push_str(&config::IMPORT_COUNT.to_string());
-        out.push_str("\tlayout=");
-        out.push_str(&config::LAYOUT_DIRECTIVE_COUNT.to_string());
-        out.push_str("\tdiscard=");
-        out.push_str(&config::DISCARD_OPERATOR_COUNT.to_string());
-        out.push('\n');
-        emit_declarations(input, &mut out);
-        emit_profile_witnesses(&mut out);
-        Ok(out)
+    /// Structural-role flag: set on a rule cursor whose opener is an at-rule
+    /// (`@media`, `@keyframes`, ...). A clear flag marks a qualified rule. This
+    /// is a `BackendRule` branch-tag projection (at-rule branch vs qualified
+    /// branch), stored in the EXISTING sparse `flag_cursors`/`flag_values` pair
+    /// — paid only where non-zero — not a widened per-position record.
+    const AT_RULE_FLAG: u8 = OffsetFlags::GRAMMAR_BIT0;
+
+    /// The structural kind a tape cursor projects to, recovered lazily from the
+    /// source byte at the cursor's offset plus the sparse at-rule flag. There is
+    /// no stored tag: this is the CSS analogue of `JsonNodeKind::at_cursor`.
+    #[derive(Copy, Clone, Eq, PartialEq, Debug)]
+    pub enum CssNodeKind {
+        QualifiedRule,
+        AtRule,
+        Declaration,
+    }
+
+    impl CssNodeKind {
+        #[inline]
+        pub fn at_cursor(tape: &Tape<'_>, cursor: u32) -> Self {
+            let offset = tape
+                .offset_at(cursor)
+                .expect("CSS cursor must point into the sealed offset tape");
+            match tape.source()[offset] {
+                b':' => CssNodeKind::Declaration,
+                _ if tape
+                    .flags_at(cursor)
+                    .is_some_and(|flags| flags.contains(AT_RULE_FLAG)) =>
+                {
+                    CssNodeKind::AtRule
+                }
+                _ => CssNodeKind::QualifiedRule,
+            }
+        }
+    }
+
+    /// A lazy view over one structural CSS node on the tape. 8 bytes of cursor;
+    /// the kind is decoded on demand, never stored.
+    #[derive(Copy, Clone)]
+    pub struct CssNode<'doc, 'input> {
+        node: ValueRef<'doc, 'input>,
+    }
+
+    impl<'doc, 'input> CssNode<'doc, 'input> {
+        #[inline]
+        pub fn kind(&self) -> CssNodeKind {
+            CssNodeKind::at_cursor(self.node.tape(), self.node.cursor())
+        }
+
+        #[inline]
+        pub fn offset(&self) -> usize {
+            self.node.offset()
+        }
+    }
+
+    /// The sealed tape-backed CSS document: the retained product of a Track-1
+    /// parse. Holds exactly the existing `Tape` — no second substrate.
+    pub struct CssDocument<'input> {
+        tape: Tape<'input>,
+    }
+
+    impl<'input> CssDocument<'input> {
+        #[inline]
+        pub fn tape(&self) -> &Tape<'input> {
+            &self.tape
+        }
+
+        /// Iterate the structural nodes as lazy `ValueRef` views.
+        pub fn nodes(&self) -> impl Iterator<Item = CssNode<'_, 'input>> + '_ {
+            (0..self.tape.offsets().len() as u32).map(move |cursor| CssNode {
+                node: ValueRef::new(&self.tape, cursor),
+            })
+        }
+
+        /// Reconstruct the 4-field structural summary LAZILY from the tape —
+        /// every count re-derived from `(source byte, at-rule flag)` via
+        /// `ValueRef` reads, materializing nothing. This is the same summary the
+        /// recognizer counts inline; equality is by construction.
+        pub fn summary(&self) -> CssSummary {
+            let mut summary = CssSummary::default();
+            for node in self.nodes() {
+                match node.kind() {
+                    CssNodeKind::AtRule => {
+                        summary.rules += 1;
+                        summary.at_rules += 1;
+                    }
+                    CssNodeKind::QualifiedRule => {
+                        summary.rules += 1;
+                        summary.qualified_rules += 1;
+                    }
+                    CssNodeKind::Declaration => summary.declarations += 1,
+                }
+            }
+            summary
+        }
+    }
+
+    #[derive(Default, Copy, Clone, Eq, PartialEq, Debug)]
+    pub struct CssSummary {
+        pub rules: usize,
+        pub at_rules: usize,
+        pub qualified_rules: usize,
+        pub declarations: usize,
+    }
+
+    /// Track-1 entry: recognize the stylesheet and emit every structural event
+    /// into the existing offset tape, returning the lazy tape-backed document.
+    pub fn parse_into_tape(input: &str) -> Result<CssDocument<'_>, CssFactError> {
+        let bytes = input.as_bytes();
+        let mut builder = TapeBuilder::new(bytes, structural_reserve(bytes.len()));
+        CssFullParser::new(input, &mut builder).parse_stylesheet()?;
+        Ok(CssDocument {
+            tape: builder.finish(),
+        })
+    }
+
+    /// Conservative byte-proportional structural capacity bound (L7, scalar
+    /// reserve until the W3 NEON scan count lands). Never a per-corpus literal.
+    #[inline]
+    fn structural_reserve(byte_len: usize) -> usize {
+        (byte_len / 8).max(16)
     }
 
     const FULL_PARSE_SCHEMA: &str = "css-l4-full-parse-v1";
     const FULL_PARSE_OUTPUT_PLANE: &str = "css_l4_full_parse";
 
-    #[derive(Default)]
-    struct CssFullParseSummary {
-        rules: usize,
-        at_rules: usize,
-        qualified_rules: usize,
-        declarations: usize,
-    }
-
     pub fn emit_full_parse(input: &str) -> Result<String, CssFactError> {
-        let summary = CssFullParser::new(input).parse_stylesheet()?;
+        // Diagnostic-only roll-up: derive the summary LAZILY from the same tape
+        // the admission path builds, proving tape-vs-recognizer equality by
+        // construction (the tape is the single source of the counts).
+        let summary = parse_into_tape(input)?.summary();
         let mut out = String::new();
         out.push_str(FULL_PARSE_SCHEMA);
         out.push('\n');
@@ -789,29 +860,49 @@ const CSS_GENERATED_RS: &str = r#"
         Ok(out)
     }
 
-    struct CssFullParser<'i> {
+    struct CssFullParser<'i, 'b, 'input> {
         bytes: &'i [u8],
         pos: usize,
-        summary: CssFullParseSummary,
+        tape: &'b mut TapeBuilder<'input>,
     }
 
-    impl<'i> CssFullParser<'i> {
-        fn new(input: &'i str) -> Self {
+    impl<'i, 'b, 'input> CssFullParser<'i, 'b, 'input> {
+        fn new(input: &'i str, tape: &'b mut TapeBuilder<'input>) -> Self {
             Self {
                 bytes: input.as_bytes(),
                 pos: 0,
-                summary: CssFullParseSummary::default(),
+                tape,
             }
         }
 
-        fn parse_stylesheet(mut self) -> Result<CssFullParseSummary, CssFactError> {
+        /// Append a rule opening at `offset` into the existing offset tape; the
+        /// at-rule branch sets the sparse `GRAMMAR_BIT0` flag, the qualified
+        /// branch leaves it clear (a `BackendRule` branch-tag projection).
+        #[inline]
+        fn push_rule(&mut self, offset: usize, at_rule: bool) {
+            let flags = if at_rule {
+                OffsetFlags::NONE.with(AT_RULE_FLAG)
+            } else {
+                OffsetFlags::NONE
+            };
+            self.tape.push_offset(offset, flags);
+        }
+
+        /// Append a declaration at its `:` offset; the source byte (`:`) is the
+        /// lazy kind tag — no flag, no payload.
+        #[inline]
+        fn push_declaration(&mut self, colon: usize) {
+            self.tape.push_plain_offset(colon);
+        }
+
+        fn parse_stylesheet(mut self) -> Result<(), CssFactError> {
             loop {
                 self.skip_ws_comments()?;
                 if self.skip_top_level_legacy_marker() {
                     continue;
                 }
                 if self.pos >= self.bytes.len() {
-                    return Ok(self.summary);
+                    return Ok(());
                 }
                 if self.bytes[self.pos] == b'@' {
                     self.parse_at_rule()?;
@@ -839,15 +930,13 @@ const CSS_GENERATED_RS: &str = r#"
 
             match self.find_component_delim(self.pos, b";{}")? {
                 Some((b';', end)) => {
+                    self.push_rule(end, true);
                     self.pos = end + 1;
-                    self.summary.rules += 1;
-                    self.summary.at_rules += 1;
                     Ok(())
                 }
                 Some((b'{', end)) => {
+                    self.push_rule(end, true);
                     self.pos = end + 1;
-                    self.summary.rules += 1;
-                    self.summary.at_rules += 1;
                     self.parse_block()
                 }
                 Some((b'}', end)) => Err(css_full_error(end, "unexpected closing delimiter")),
@@ -860,9 +949,8 @@ const CSS_GENERATED_RS: &str = r#"
             let start = self.pos;
             match self.find_component_delim(self.pos, b"{};")? {
                 Some((b'{', end)) if has_non_ws(self.bytes, start, end) => {
+                    self.push_rule(end, false);
                     self.pos = end + 1;
-                    self.summary.rules += 1;
-                    self.summary.qualified_rules += 1;
                     self.parse_block()
                 }
                 Some((b';', end)) if !has_non_ws(self.bytes, start, end) => {
@@ -899,9 +987,8 @@ const CSS_GENERATED_RS: &str = r#"
             let start = self.pos;
             match self.find_component_delim(self.pos, b"{};")? {
                 Some((b'{', end)) if has_non_ws(self.bytes, start, end) => {
+                    self.push_rule(end, false);
                     self.pos = end + 1;
-                    self.summary.rules += 1;
-                    self.summary.qualified_rules += 1;
                     self.parse_block()
                 }
                 Some((b';', end)) => {
@@ -935,13 +1022,13 @@ const CSS_GENERATED_RS: &str = r#"
             self.pos = colon + 1;
             match self.find_component_delim(self.pos, b";}")? {
                 Some((b';', end)) => {
+                    self.push_declaration(colon);
                     self.pos = end + 1;
-                    self.summary.declarations += 1;
                     Ok(())
                 }
                 Some((b'}', end)) => {
+                    self.push_declaration(colon);
                     self.pos = end;
-                    self.summary.declarations += 1;
                     Ok(())
                 }
                 Some((_, end)) => Err(css_full_error(end, "expected declaration terminator")),
@@ -1099,212 +1186,6 @@ const CSS_GENERATED_RS: &str = r#"
         CssFactError { offset, message }
     }
 
-    fn emit_declarations(input: &str, out: &mut String) {
-        let bytes = input.as_bytes();
-        let mut pos = 0usize;
-        let mut decl = 0u32;
-        while pos < bytes.len() {
-            if bytes[pos] == b':' {
-                let prop_start = property_start(bytes, pos);
-                let prop_end = trim_end(bytes, prop_start, pos);
-                let value_start = trim_start(bytes, pos + 1, bytes.len());
-                let value_end = declaration_end(bytes, value_start);
-                if prop_start < prop_end && value_start <= value_end {
-                    out.push_str("decl\tidx=");
-                    out.push_str(&decl.to_string());
-                    out.push_str("\tdepth=1\tproperty_hex=");
-                    push_ascii_lower_hex(out, &input[prop_start..prop_end]);
-                    out.push_str("\timportant=0\tvalue_start=");
-                    out.push_str(&value_start.to_string());
-                    out.push_str("\tvalue_end=");
-                    out.push_str(&value_end.to_string());
-                    out.push('\n');
-                    emit_tokens(input, value_start, value_end, decl, out);
-                    decl += 1;
-                }
-                pos = value_end.saturating_add(1);
-            } else {
-                pos += 1;
-            }
-        }
-        out.push_str("end\tdecls=");
-        out.push_str(&decl.to_string());
-        out.push('\n');
-    }
-
-    fn property_start(bytes: &[u8], mut pos: usize) -> usize {
-        while pos > 0 && bytes[pos - 1].is_ascii_whitespace() {
-            pos -= 1;
-        }
-        while pos > 0 {
-            let byte = bytes[pos - 1];
-            if byte == b'{' || byte == b';' || byte == b'}' {
-                break;
-            }
-            pos -= 1;
-        }
-        trim_start(bytes, pos, bytes.len())
-    }
-
-    fn declaration_end(bytes: &[u8], mut pos: usize) -> usize {
-        let mut depth = 0u32;
-        while pos < bytes.len() {
-            match bytes[pos] {
-                b'(' | b'[' => depth += 1,
-                b')' | b']' => depth = depth.saturating_sub(1),
-                b';' | b'}' if depth == 0 => break,
-                _ => {}
-            }
-            pos += 1;
-        }
-        trim_end(bytes, 0, pos)
-    }
-
-    fn emit_tokens(input: &str, mut pos: usize, end: usize, decl: u32, out: &mut String) {
-        let bytes = input.as_bytes();
-        let mut idx = 0u32;
-        while pos < end {
-            pos = trim_start(bytes, pos, end);
-            if pos >= end {
-                break;
-            }
-            let start = pos;
-            let b = bytes[pos];
-            let (kind, lexeme_start, lexeme_end, next) = if b == b'#' {
-                pos += 1;
-                let mark = pos;
-                while pos < end && is_ident_byte(bytes[pos]) {
-                    pos += 1;
-                }
-                ("hash", mark, pos, pos)
-            } else if starts_number(bytes, pos, end) {
-                pos = consume_number(bytes, pos, end);
-                if pos < end && bytes[pos] == b'%' {
-                    pos += 1;
-                    ("percentage", start, pos, pos)
-                } else if pos < end && is_ident_start(bytes[pos]) {
-                    while pos < end && is_ident_byte(bytes[pos]) {
-                        pos += 1;
-                    }
-                    ("dimension", start, pos, pos)
-                } else {
-                    ("number", start, pos, pos)
-                }
-            } else if is_ident_start(b) {
-                pos += 1;
-                while pos < end && is_ident_byte(bytes[pos]) {
-                    pos += 1;
-                }
-                let ident_end = pos;
-                if pos < end && bytes[pos] == b'(' {
-                    pos += 1;
-                    if input[start..ident_end].eq_ignore_ascii_case("url") {
-                        let inner_start = trim_start(bytes, pos, end);
-                        while pos < end && bytes[pos] != b')' {
-                            pos += 1;
-                        }
-                        let inner_end = trim_url(bytes, inner_start, pos);
-                        ("url", inner_start, inner_end, pos.saturating_add(1))
-                    } else {
-                        ("function", start, ident_end, pos)
-                    }
-                } else {
-                    ("ident", start, pos, pos)
-                }
-            } else {
-                pos += 1;
-                ("delim", start, pos, pos)
-            };
-            out.push_str("tok\tdecl=");
-            out.push_str(&decl.to_string());
-            out.push_str("\tidx=");
-            out.push_str(&idx.to_string());
-            out.push_str("\tkind=");
-            out.push_str(kind);
-            out.push_str("\tlexeme_hex=");
-            if matches!(kind, "ident" | "function" | "hash" | "dimension") {
-                push_ascii_lower_hex(out, &input[lexeme_start..lexeme_end]);
-            } else {
-                push_hex(out, &bytes[lexeme_start..lexeme_end]);
-            }
-            out.push_str("\tflags=none\n");
-            idx += 1;
-            pos = next;
-        }
-    }
-
-    fn emit_profile_witnesses(out: &mut String) {
-        match config::OUTPUT_PLANE {
-            "css_l4_stylesheet_selector_fact_stream" => {
-                out.push_str("end\trules=1\tselector_lists=1\tselectors=2\tselector_items=16\tdeclarations=1\n");
-            }
-            "css_l4_at_rules_media_fact_stream" => {
-                out.push_str("media_feature\trule=0\tquery=0\tidx=0\n");
-                out.push_str("key_sel\trule=1\tframe=0\tidx=2\tkind=to\n");
-                out.push_str("end\trules=2\tmedia_queries=1\tmedia_features=1\tkeyframes=1\tkeyframe_selectors=3\tdeclarations=2\n");
-            }
-            "css_l4_vendor_custom_fact_stream" => {
-                out.push_str("custom_media\tidx=0\n");
-                out.push_str("vendor_prefix\tkind=at_rule\tprefix=webkit\trule=1\n");
-                out.push_str("vendor_prefix\tkind=decl\tprefix=moz\trule=2\tdecl=1\n");
-                out.push_str("end\trules=3\tcustom_media=1\tvendor_at_rules=1\tkeyframes=1\tkeyframe_selectors=2\tdeclarations=5\tvendor_prefixes=3\n");
-            }
-            "css_l4_nested_layout_fact_stream" => {
-                out.push_str("nested_rule\tparent=0\tidx=0\tdepth=1\n");
-                out.push_str("property_group\tkind=grid\tdecls=3\n");
-                out.push_str("property_group\tkind=flex\tdecls=4\n");
-                out.push_str("property_group\tkind=logical\tdecls=4\n");
-                out.push_str("end\trules=3\tnested_rules=1\tdeclarations=14\tgrid_decls=3\tflex_decls=4\tlogical_decls=4\ttyped_property_groups=6\n");
-            }
-            _ => {}
-        }
-    }
-
-    fn trim_start(bytes: &[u8], mut start: usize, end: usize) -> usize {
-        while start < end && bytes[start].is_ascii_whitespace() {
-            start += 1;
-        }
-        start
-    }
-
-    fn trim_end(bytes: &[u8], start: usize, mut end: usize) -> usize {
-        while end > start && bytes[end - 1].is_ascii_whitespace() {
-            end -= 1;
-        }
-        end
-    }
-
-    fn trim_url(bytes: &[u8], start: usize, end: usize) -> usize {
-        let start = trim_start(bytes, start, end);
-        let mut end = trim_end(bytes, start, end);
-        if end > start + 1 && matches!(bytes[start], b'"' | b'\'') && bytes[end - 1] == bytes[start] {
-            end -= 1;
-        }
-        end
-    }
-
-    fn starts_number(bytes: &[u8], pos: usize, end: usize) -> bool {
-        pos < end && (bytes[pos].is_ascii_digit() || matches!(bytes[pos], b'+' | b'-' | b'.'))
-    }
-
-    fn consume_number(bytes: &[u8], mut pos: usize, end: usize) -> usize {
-        if pos < end && matches!(bytes[pos], b'+' | b'-') {
-            pos += 1;
-        }
-        while pos < end && (bytes[pos].is_ascii_digit() || bytes[pos] == b'.') {
-            pos += 1;
-        }
-        pos
-    }
-
-    fn is_ident_start(byte: u8) -> bool {
-        byte.is_ascii_alphabetic() || byte == b'_' || byte == b'-'
-    }
-
-    fn is_ident_byte(byte: u8) -> bool {
-        is_ident_start(byte) || byte.is_ascii_digit()
-    }
-
     fn fnv64(bytes: &[u8]) -> u64 {
         let mut hash = 0xcbf29ce484222325u64;
         for byte in bytes {
@@ -1314,23 +1195,7 @@ const CSS_GENERATED_RS: &str = r#"
         hash
     }
 
-    fn push_ascii_lower_hex(out: &mut String, text: &str) {
-        let mut buf = Vec::with_capacity(text.len());
-        for byte in text.bytes() {
-            buf.push(byte.to_ascii_lowercase());
-        }
-        push_hex(out, &buf);
-    }
-
     fn push_hex64(out: &mut String, value: u64) {
         out.push_str(&format!("{value:016x}"));
-    }
-
-    fn push_hex(out: &mut String, bytes: &[u8]) {
-        const HEX: &[u8; 16] = b"0123456789abcdef";
-        for byte in bytes {
-            out.push(HEX[(byte >> 4) as usize] as char);
-            out.push(HEX[(byte & 0x0f) as usize] as char);
-        }
     }
 "#;

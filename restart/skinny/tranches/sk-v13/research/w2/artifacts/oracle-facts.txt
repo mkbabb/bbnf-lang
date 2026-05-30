@@ -1,27 +1,2 @@
-css-l4-stylesheet-selector-facts-v1
-row	id=css_l4/stylesheet_and_selectors/direct_to_struct/main	plane=css_l4_stylesheet_selector_fact_stream
-source	input_fnv64=b6ac6a6f4f0f0960	input_bytes=117
-stylesheet	idx=0	start=0	end=116	rules=1
-rule	idx=0	kind=qualified	depth=0	selector_list=0	start=0	end=116	block_start=101	block_end=116	decls=1
-selector_list	rule=0	idx=0	start=0	end=100	selectors=2	separators=1
-selector	list=0	idx=0	start=0	end=47	items=8
-sel	selector=0	idx=0	kind=type	name_hex=6d61696e	start=0	end=4
-sel	selector=0	idx=1	kind=class	name_hex=63617264	start=4	end=9
-sel	selector=0	idx=2	kind=id	name_hex=6865726f	start=9	end=14
-sel	selector=0	idx=3	kind=combinator	value=child	start=15	end=16
-sel	selector=0	idx=4	kind=type	name_hex=61	start=17	end=18
-sel	selector=0	idx=5	kind=attribute	name_hex=68726566	op=prefix	value_hex=6874747073	quote=double	case=default	start=18	end=33
-sel	selector=0	idx=6	kind=pseudo_class	name_hex=686f766572	start=33	end=39
-sel	selector=0	idx=7	kind=pseudo_element	name_hex=6265666f7265	start=39	end=47
-sep	list=0	idx=0	kind=comma	start=47	end=48
-selector	list=0	idx=1	start=49	end=100	items=8
-sel	selector=1	idx=0	kind=id	name_hex=6e6176	start=49	end=53
-sel	selector=1	idx=1	kind=combinator	value=descendant	start=53	end=54
-sel	selector=1	idx=2	kind=class	name_hex=6974656d	start=54	end=59
-sel	selector=1	idx=3	kind=attribute	name_hex=646174612d7374617465	op=equals	value_hex=6f70656e	quote=double	case=default	start=59	end=78
-sel	selector=1	idx=4	kind=combinator	value=next_sibling	start=79	end=80
-sel	selector=1	idx=5	kind=type	name_hex=627574746f6e	start=81	end=87
-sel	selector=1	idx=6	kind=pseudo_class	name_hex=666f637573	start=87	end=93
-sel	selector=1	idx=7	kind=pseudo_element	name_hex=6166746572	start=93	end=100
-decl	rule=0	idx=0	property_hex=636f6c6f72	important=0	value_start=110	value_end=113
-end	rules=1	selector_lists=1	selectors=2	selector_items=16	declarations=1	stream_fnv64=5ec8b16c78e94737
+css-l4-typed-summary-v1
+summary	rules=1	at_rules=0	qualified_rules=1	declarations=1

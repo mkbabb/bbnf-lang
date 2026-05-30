@@ -445,4 +445,48 @@ mod tests {
         // one qualified rule, two declarations.
         assert_css_summary!(document, 1, 0, 1, 2);
     }
+
+    #[test]
+    fn css_l4_rich_projection_is_lazy_and_typed() {
+        use crate::generated_css_l4_declaration_values as css;
+        use css::CssTypedValue;
+
+        // Two qualified rules (3 + 2 selectors) and a typed value mix:
+        // dimension (10px), color (#abc), number (0.5), function (rgb(...)),
+        // keyword (red), dimension (2rem).
+        let input = concat!(
+            "a, b.c, #d { margin: 10px; color: #abc; opacity: 0.5; }\n",
+            ".x, .y { background: rgb(1 2 3); border: red; gap: 2rem; }\n"
+        );
+        let document = css::parse(input).unwrap();
+        // The rich projection materializes NOTHING: zero payload writes/allocs.
+        assert_eq!(document.tape().payloads().write_count(), 0, "lazy: no payload writes");
+        assert_eq!(document.tape().payloads().allocation_count(), 0, "lazy: no payload allocs");
+
+        let rich = document.rich_summary();
+        // 4-field structural plane stays consistent with the lazy 4-field summary.
+        let base = document.summary();
+        assert_eq!(rich.rules, base.rules);
+        assert_eq!(rich.at_rules, base.at_rules);
+        assert_eq!(rich.qualified_rules, base.qualified_rules);
+        assert_eq!(rich.declarations, base.declarations);
+        // Rich value plane.
+        assert_eq!(rich.rules, 2, "rules");
+        assert_eq!(rich.qualified_rules, 2, "qualified_rules");
+        assert_eq!(rich.declarations, 6, "declarations");
+        assert_eq!(rich.selectors, 5, "selectors (3 + 2)");
+        assert_eq!(rich.dimensions, 2, "dimensions (10px, 2rem)");
+        assert_eq!(rich.numbers, 1, "numbers (0.5)");
+        assert_eq!(rich.colors, 1, "colors (#abc)");
+        assert_eq!(rich.functions, 1, "functions (rgb(...))");
+
+        // The typed value-node decode is recovered from the source byte at the
+        // value head — no stored tag.
+        assert_eq!(CssTypedValue::classify(b"10px"), CssTypedValue::Dimension);
+        assert_eq!(CssTypedValue::classify(b"#abc"), CssTypedValue::Color);
+        assert_eq!(CssTypedValue::classify(b"0.5"), CssTypedValue::Number);
+        assert_eq!(CssTypedValue::classify(b"rgb(1 2 3)"), CssTypedValue::Function);
+        assert_eq!(CssTypedValue::classify(b"red"), CssTypedValue::Keyword);
+        assert_eq!(CssTypedValue::classify(b"50%"), CssTypedValue::Dimension);
+    }
 }

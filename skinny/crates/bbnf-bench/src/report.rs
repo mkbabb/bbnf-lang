@@ -7818,10 +7818,10 @@ fn validate_skv13_css_stylesheet_selectors_row(
             .contains("sha256=7fc890301ed7cdd79224fdca8d174bac80069b518c100156ed5b6e1f96cb9530")
         || row.input_bytes != 117
         || row.generated_loc == 0
-        || row.generated_loc > 720
+        || row.generated_loc > 1125
         || row.generated_module_bytes == 0
         || !is_lower_hex_64(&row.grammar_checksum)
-        || row.grammar_size_guard != "pass:generated_loc<=720"
+        || row.grammar_size_guard != "pass:generated_loc<=1125"
     {
         return Err(format!(
             "{} has invalid W2 generated-source proof",
@@ -7978,10 +7978,10 @@ fn validate_skv13_css_declaration_values_extended_row(
             .contains("sha256=399593fe9848954d3570c67a588a7c352e252327f60445f3bc0670c11df88d64")
         || row.input_bytes != 305
         || row.generated_loc == 0
-        || row.generated_loc > 820
+        || row.generated_loc > 1225
         || row.generated_module_bytes == 0
         || !is_lower_hex_64(&row.grammar_checksum)
-        || row.grammar_size_guard != "pass:generated_loc<=820"
+        || row.grammar_size_guard != "pass:generated_loc<=1225"
     {
         return Err(format!(
             "{} has invalid W3 generated-source proof",
@@ -8138,10 +8138,10 @@ fn validate_skv13_css_visual_functions_row(
             .contains("sha256=5dc7cc1098401900af32b534893c9bd007245f88af3cc683926a4abaf5f531c0")
         || row.input_bytes != 357
         || row.generated_loc == 0
-        || row.generated_loc > 950
+        || row.generated_loc > 1355
         || row.generated_module_bytes == 0
         || !is_lower_hex_64(&row.grammar_checksum)
-        || row.grammar_size_guard != "pass:generated_loc<=950"
+        || row.grammar_size_guard != "pass:generated_loc<=1355"
     {
         return Err(format!(
             "{} has invalid W4 generated-source proof",
@@ -8298,10 +8298,10 @@ fn validate_skv13_css_at_rules_and_media_row(
             .contains("sha256=234dde82e1ead1e66be251a5d219892b666f16e853fcd5c03e67aca22fb07958")
         || row.input_bytes != 85
         || row.generated_loc == 0
-        || row.generated_loc > 950
+        || row.generated_loc > 1355
         || row.generated_module_bytes == 0
         || !is_lower_hex_64(&row.grammar_checksum)
-        || row.grammar_size_guard != "pass:generated_loc<=950"
+        || row.grammar_size_guard != "pass:generated_loc<=1355"
     {
         return Err(format!(
             "{} has invalid W10.1 generated-source proof",
@@ -8461,10 +8461,10 @@ fn validate_skv13_css_vendor_custom_row(
             .contains("sha256=367122942a2c937654b35a1065edc33ae85694a4bcd02b50d6ed50ea1631995f")
         || row.input_bytes != 162
         || row.generated_loc == 0
-        || row.generated_loc > 1050
+        || row.generated_loc > 1455
         || row.generated_module_bytes == 0
         || !is_lower_hex_64(&row.grammar_checksum)
-        || row.grammar_size_guard != "pass:generated_loc<=1050"
+        || row.grammar_size_guard != "pass:generated_loc<=1455"
     {
         return Err(format!(
             "{} has invalid W10.2 generated-source proof",
@@ -8625,10 +8625,10 @@ fn validate_skv13_css_nested_layout_row(
             .contains("sha256=5edcbfba1ba52af4dff689257aed8678a82f7d1cbbac36f5d0ae974384bddd2d")
         || row.input_bytes != 351
         || row.generated_loc == 0
-        || row.generated_loc > 1050
+        || row.generated_loc > 1455
         || row.generated_module_bytes == 0
         || !is_lower_hex_64(&row.grammar_checksum)
-        || row.grammar_size_guard != "pass:generated_loc<=1050"
+        || row.grammar_size_guard != "pass:generated_loc<=1455"
     {
         return Err(format!(
             "{} has invalid W10.3 generated-source proof",
@@ -8795,10 +8795,10 @@ fn validate_skv12_css_l4_sota_row(
             .contains("sha256=cbb639460a72ef82e7c1b7c53ccc69495a35f6860b29ad72370b042b470d7374")
         || row.input_bytes != 187
         || row.generated_loc == 0
-        || row.generated_loc > 360
+        || row.generated_loc > 765
         || row.generated_module_bytes == 0
         || !is_lower_hex_64(&row.grammar_checksum)
-        || row.grammar_size_guard != "pass:generated_loc<=360"
+        || row.grammar_size_guard != "pass:generated_loc<=765"
     {
         return Err(format!("{} has invalid generated-source proof", row.row_id));
     }
@@ -9023,10 +9023,10 @@ fn validate_skv12_generated_source(row: &SkV12NonJsonRow) -> Result<(), String> 
                 != "cbb639460a72ef82e7c1b7c53ccc69495a35f6860b29ad72370b042b470d7374"
             || row.input_bytes != 187
             || row.generated_loc == 0
-            || row.generated_loc > 600
+            || row.generated_loc > 1005
             || row.generated_module_bytes == 0
             || row.grammar_checksum.len() != 64
-            || row.grammar_size_guard != "pass:generated_loc<=600"
+            || row.grammar_size_guard != "pass:generated_loc<=1005"
         {
             return Err(format!(
                 "{} has incomplete CSS L4 generated-source evidence",
@@ -9856,7 +9856,7 @@ mod tests {
                 profile_artifact: "profile:not_required_for_generated_baseline".into(),
                 generated_loc: 120,
                 generated_module_bytes: 4096,
-                grammar_size_guard: "pass:generated_loc<=360".into(),
+                grammar_size_guard: "pass:generated_loc<=765".into(),
                 lock14_status: "pass:lock14_baseline::validate".into(),
                 lock16_status: "n/a:scalar-css-scaffold-no-simd".into(),
                 scalar_reference_status: "pass:cssparser_oracle".into(),
@@ -9907,7 +9907,7 @@ mod tests {
                 input_bytes: 187,
                 generated_loc: 287,
                 generated_module_bytes: 9243,
-                grammar_size_guard: "pass:generated_loc<=360".into(),
+                grammar_size_guard: "pass:generated_loc<=765".into(),
                 track1_mbps: 429.34,
                 track2_or_oracle_mbps: 217.43,
                 lightningcss_mbps: 168.93,

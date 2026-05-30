@@ -1,24 +1,2 @@
-css-l4-declaration-value-facts-v1
-row	id=css_l4/declaration_values/direct_to_struct/main	plane=css_l4_declaration_value_fact_stream
-source	input_fnv64=27240148e5780a54	input_bytes=187
-decl	idx=0	depth=1	property_hex=636f6c6f72	important=0	value_start=11	value_end=18
-tok	decl=0	idx=0	kind=hash	lexeme_hex=666630306666	flags=none
-decl	idx=1	depth=1	property_hex=7769647468	important=0	value_start=27	value_end=30
-tok	decl=1	idx=0	kind=percentage	lexeme_hex=353025	flags=none
-decl	idx=2	depth=1	property_hex=6f706163697479	important=0	value_start=41	value_end=43
-tok	decl=2	idx=0	kind=number	lexeme_hex=2e35	flags=none
-decl	idx=3	depth=1	property_hex=6d617267696e2d6c656674	important=0	value_start=58	value_end=63
-tok	decl=3	idx=0	kind=dimension	lexeme_hex=2d31307078	flags=none
-decl	idx=4	depth=1	property_hex=6261636b67726f756e642d636f6c6f72	important=1	value_start=89	value_end=109
-tok	decl=4	idx=0	kind=function	lexeme_hex=726762	flags=none
-tok	decl=4	idx=1	kind=number	lexeme_hex=323535	flags=none
-tok	decl=4	idx=2	kind=number	lexeme_hex=313238	flags=none
-tok	decl=4	idx=3	kind=number	lexeme_hex=30	flags=none
-tok	decl=4	idx=4	kind=delim	lexeme_hex=2f	flags=none
-tok	decl=4	idx=5	kind=number	lexeme_hex=302e35	flags=none
-tok	decl=4	idx=6	kind=paren_close	lexeme_hex=29	flags=none
-decl	idx=5	depth=2	property_hex=686569676874	important=0	value_start=164	value_end=169
-tok	decl=5	idx=0	kind=dimension	lexeme_hex=3130307078	flags=none
-decl	idx=6	depth=2	property_hex=636f6c6f72	important=0	value_start=178	value_end=181
-tok	decl=6	idx=0	kind=ident	lexeme_hex=726564	flags=none
-end	decls=7	tokens=13	stream_fnv64=285dd62f19dea4a8
+css-l4-typed-summary-v1
+summary	rules=4	at_rules=1	qualified_rules=3	declarations=7

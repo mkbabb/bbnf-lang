@@ -601,13 +601,16 @@ const CSS_MOD_RS: &str = r#"
     pub mod parser;
     pub mod sink;
 
-    pub use generated::{CssDocument, CssNode, CssNodeKind, CssSummary};
-    pub use parser::{parse, parse_bytes, summary, summary_bytes};
+    pub use generated::{
+        CssDeclaration, CssDocument, CssNode, CssNodeKind, CssRichSummary, CssRule, CssSummary,
+        CssTypedNode, CssTypedValue,
+    };
+    pub use parser::{parse, parse_bytes, rich_summary, rich_summary_bytes, summary, summary_bytes};
     pub use sink::CssFactError;
 "#;
 
 const CSS_PARSER_RS: &str = r#"
-    use super::generated::{self, CssDocument, CssSummary};
+    use super::generated::{self, CssDocument, CssRichSummary, CssSummary};
     use super::sink::CssFactError;
 
     /// Track-1 admission entry: recognize the stylesheet directly into the
@@ -633,6 +636,17 @@ const CSS_PARSER_RS: &str = r#"
 
     pub fn summary_bytes(input: &[u8]) -> Result<CssSummary, CssFactError> {
         Ok(parse_bytes(input)?.summary())
+    }
+
+    /// The RICH typed-CSSOM summary projected lazily from the tape — the fair
+    /// full-materialization product compared against lightningcss (selectors +
+    /// typed value-node counts atop the 4 structural fields).
+    pub fn rich_summary(input: &str) -> Result<CssRichSummary, CssFactError> {
+        Ok(parse(input)?.rich_summary())
+    }
+
+    pub fn rich_summary_bytes(input: &[u8]) -> Result<CssRichSummary, CssFactError> {
+        Ok(parse_bytes(input)?.rich_summary())
     }
 
     pub fn parse_full(input: &str) -> Result<String, CssFactError> {
@@ -742,6 +756,201 @@ const CSS_GENERATED_RS: &str = r#"
         pub fn offset(&self) -> usize {
             self.node.offset()
         }
+
+        /// The left boundary of this node's prelude/property: the byte after the
+        /// nearest structural delimiter (`{`, `}`, `;`) at or before `end`,
+        /// floored by the previous tape node's offset. The previous offset bounds
+        /// the backward scan to this node's own component (read from the EXISTING
+        /// `offsets` vector); the delimiter scan resolves the exact left edge,
+        /// lazily, with no retained span.
+        #[inline]
+        fn left_boundary(&self, end: usize) -> usize {
+            let cursor = self.node.cursor();
+            let floor = if cursor == 0 {
+                0
+            } else {
+                self.node
+                    .tape()
+                    .offset_at(cursor - 1)
+                    .map_or(0, |offset| offset + 1)
+            };
+            let source = self.node.tape().source();
+            let mut pos = end.min(source.len());
+            while pos > floor {
+                match source[pos - 1] {
+                    b'{' | b'}' | b';' => break,
+                    _ => pos -= 1,
+                }
+            }
+            pos
+        }
+
+        /// The rich typed view of this node: the `BackendRule` branch tag (kind)
+        /// dispatches to the typed projection — at-rule / qualified-rule (carrying
+        /// its lazy selector prelude) or declaration (carrying its lazy property +
+        /// typed value). This is the CSS analogue of JSON's `value_from_ref`: the
+        /// branch is recovered from `(source byte, at-rule flag)` and the typed
+        /// payload is a lazy `ValueRef` span, materializing nothing.
+        #[inline]
+        pub fn value(&self) -> CssTypedNode<'doc, 'input> {
+            match self.kind() {
+                CssNodeKind::AtRule => CssTypedNode::Rule(CssRule {
+                    node: *self,
+                    at_rule: true,
+                }),
+                CssNodeKind::QualifiedRule => CssTypedNode::Rule(CssRule {
+                    node: *self,
+                    at_rule: false,
+                }),
+                CssNodeKind::Declaration => {
+                    CssTypedNode::Declaration(CssDeclaration { node: *self })
+                }
+            }
+        }
+    }
+
+    /// The lazily-projected rich CSS node: one `BackendRule` branch per variant,
+    /// each a thin `ValueRef`-cursor view (8 bytes of cursor; no eager subtree).
+    #[derive(Copy, Clone)]
+    pub enum CssTypedNode<'doc, 'input> {
+        Rule(CssRule<'doc, 'input>),
+        Declaration(CssDeclaration<'doc, 'input>),
+    }
+
+    /// A lazy view over one CSS rule (at-rule or qualified). The selector prelude
+    /// is the source slice `(prev_node_end .. brace_offset)`, recovered on demand
+    /// from the neighbouring tape offsets — never stored.
+    #[derive(Copy, Clone)]
+    pub struct CssRule<'doc, 'input> {
+        node: CssNode<'doc, 'input>,
+        at_rule: bool,
+    }
+
+    impl<'doc, 'input> CssRule<'doc, 'input> {
+        #[inline]
+        pub fn is_at_rule(&self) -> bool {
+            self.at_rule
+        }
+
+        /// The prelude span: for a qualified rule this is the selector list, for
+        /// an at-rule it is the `@name <prelude>`. Lazily recovered from the tape.
+        #[inline]
+        pub fn prelude(&self) -> &'input [u8] {
+            let source = self.node.node.tape().source();
+            let end = self.node.offset();
+            let start = self.node.left_boundary(end);
+            trim_ascii(&source[start..end])
+        }
+
+        /// The selector-list entries of a qualified rule, split on top-level
+        /// commas (the cssparser selector-count definition). At-rules yield zero
+        /// selectors. Lazy: iterates the prelude bytes, allocating nothing.
+        #[inline]
+        pub fn selector_count(&self) -> usize {
+            if self.at_rule {
+                return 0;
+            }
+            let prelude = self.prelude();
+            if prelude.is_empty() {
+                return 0;
+            }
+            1 + count_top_level_commas(prelude)
+        }
+    }
+
+    /// A lazy view over one CSS declaration. The property is the slice
+    /// `(prev_node_end .. colon)`, the value is `(colon+1 .. terminator)`; both are
+    /// recovered on demand from the recorded colon offset, materializing nothing.
+    #[derive(Copy, Clone)]
+    pub struct CssDeclaration<'doc, 'input> {
+        node: CssNode<'doc, 'input>,
+    }
+
+    impl<'doc, 'input> CssDeclaration<'doc, 'input> {
+        /// The declaration colon offset (the recorded tape position).
+        #[inline]
+        fn colon(&self) -> usize {
+            self.node.offset()
+        }
+
+        /// The property name span `(prev_node_end .. colon)`, lazily recovered.
+        #[inline]
+        pub fn property(&self) -> &'input [u8] {
+            let source = self.node.node.tape().source();
+            let colon = self.colon();
+            let start = self.node.left_boundary(colon);
+            trim_ascii(&source[start..colon])
+        }
+
+        /// The value span `(colon+1 .. terminator)`, recovered by a lazy forward
+        /// scan over balanced components from the colon — the same balanced scan
+        /// the recognizer used, never a retained span.
+        #[inline]
+        pub fn value_span(&self) -> &'input [u8] {
+            let source = self.node.node.tape().source();
+            let colon = self.colon();
+            let start = (colon + 1).min(source.len());
+            let end = scan_value_end(source, start);
+            trim_ascii(&source[start..end])
+        }
+
+        /// The typed value-node kind of the declaration's leading significant
+        /// token, decoded from the source byte at the value head (no stored tag —
+        /// the CSS analogue of `JsonNodeKind::at_cursor`).
+        #[inline]
+        pub fn typed_value(&self) -> CssTypedValue {
+            CssTypedValue::classify(self.value_span())
+        }
+    }
+
+    /// The typed value-node model the tape supports: the leading-token category of
+    /// a declaration value, recovered lazily from the source bytes. Each variant is
+    /// a `BackendRule` value-branch tag projection, decoded from the value head.
+    #[derive(Copy, Clone, Eq, PartialEq, Debug)]
+    pub enum CssTypedValue {
+        /// `<number><unit>` or `<number>%` (e.g. `10px`, `50%`, `1.2rem`).
+        Dimension,
+        /// A bare numeric value (e.g. `0`, `1.5`, `.5`).
+        Number,
+        /// A `#rrggbb` / `#rgb` hash colour.
+        Color,
+        /// A `name(...)` functional value (e.g. `rgb(...)`, `calc(...)`).
+        Function,
+        /// A keyword / identifier-led value (e.g. `red`, `none`, `var`).
+        Keyword,
+        /// A quoted string, url, or otherwise non-categorised value head.
+        Other,
+    }
+
+    impl CssTypedValue {
+        /// Classify a value span by its leading significant byte and shape — the
+        /// lazy typed-value decode (no stored tag, no payload).
+        #[inline]
+        pub fn classify(value: &[u8]) -> CssTypedValue {
+            let value = trim_ascii(value);
+            let Some(&head) = value.first() else {
+                return CssTypedValue::Other;
+            };
+            match head {
+                b'#' => CssTypedValue::Color,
+                b'"' | b'\'' => CssTypedValue::Other,
+                b'+' | b'-' | b'.' | b'0'..=b'9' => {
+                    if number_has_unit(value) {
+                        CssTypedValue::Dimension
+                    } else {
+                        CssTypedValue::Number
+                    }
+                }
+                b'a'..=b'z' | b'A'..=b'Z' | b'_' | 0x80..=0xff | b'\\' => {
+                    if leading_ident_is_function(value) {
+                        CssTypedValue::Function
+                    } else {
+                        CssTypedValue::Keyword
+                    }
+                }
+                _ => CssTypedValue::Other,
+            }
+        }
     }
 
     /// The sealed tape-backed CSS document: the retained product of a Track-1
@@ -784,6 +993,42 @@ const CSS_GENERATED_RS: &str = r#"
             }
             summary
         }
+
+        /// Reconstruct the RICH typed CSSOM summary LAZILY from the tape — the
+        /// fair full-materialization comparison vs lightningcss. Beyond the 4-field
+        /// structural counts it materializes, per node, the rich typed values by
+        /// `ValueRef` view: selector-list entries per qualified rule, and the typed
+        /// value-node category of every declaration value head
+        /// (dimension/number/color/function/keyword). Every field is re-derived
+        /// from `(source, offset)` via lazy spans, writing nothing to the payload
+        /// arena (preserve-rich-ast: rich, lazy, not eager, not flattened).
+        pub fn rich_summary(&self) -> CssRichSummary {
+            let mut summary = CssRichSummary::default();
+            for node in self.nodes() {
+                match node.value() {
+                    CssTypedNode::Rule(rule) if rule.is_at_rule() => {
+                        summary.rules += 1;
+                        summary.at_rules += 1;
+                    }
+                    CssTypedNode::Rule(rule) => {
+                        summary.rules += 1;
+                        summary.qualified_rules += 1;
+                        summary.selectors += rule.selector_count();
+                    }
+                    CssTypedNode::Declaration(decl) => {
+                        summary.declarations += 1;
+                        match decl.typed_value() {
+                            CssTypedValue::Dimension => summary.dimensions += 1,
+                            CssTypedValue::Number => summary.numbers += 1,
+                            CssTypedValue::Color => summary.colors += 1,
+                            CssTypedValue::Function => summary.functions += 1,
+                            CssTypedValue::Keyword | CssTypedValue::Other => {}
+                        }
+                    }
+                }
+            }
+            summary
+        }
     }
 
     #[derive(Default, Copy, Clone, Eq, PartialEq, Debug)]
@@ -792,6 +1037,23 @@ const CSS_GENERATED_RS: &str = r#"
         pub at_rules: usize,
         pub qualified_rules: usize,
         pub declarations: usize,
+    }
+
+    /// The rich typed-CSSOM summary: the 4 structural fields plus the lazily
+    /// materialized rich value plane (selectors + typed value-node counts). This
+    /// is the population-parity surface the W2 equality oracle checks against the
+    /// independent cssparser reference.
+    #[derive(Default, Copy, Clone, Eq, PartialEq, Debug)]
+    pub struct CssRichSummary {
+        pub rules: usize,
+        pub at_rules: usize,
+        pub qualified_rules: usize,
+        pub declarations: usize,
+        pub selectors: usize,
+        pub dimensions: usize,
+        pub numbers: usize,
+        pub colors: usize,
+        pub functions: usize,
     }
 
     /// Track-1 entry: recognize the stylesheet and emit every structural event
@@ -1056,6 +1318,37 @@ const CSS_GENERATED_RS: &str = r#"
             } else if self.starts_with_at(self.pos, b"-->") {
                 self.pos += 3;
                 true
+            } else if self.skip_charset_directive() {
+                true
+            } else {
+                false
+            }
+        }
+
+        /// `@charset "..."` is a tokenizer directive, not a counted at-rule (the
+        /// CSS spec consumes it pre-tokenization; cssparser/lightningcss surface
+        /// no rule for it). At the top level it is skipped here so the structural
+        /// counts match the reference CSSOM — a top-level directive skip, the same
+        /// class as the CDO/CDC markers above, not a per-rule routing table.
+        #[inline]
+        fn skip_charset_directive(&mut self) -> bool {
+            if !self.starts_with_at(self.pos, b"@charset") {
+                return false;
+            }
+            let after = self.pos + b"@charset".len();
+            // Only a genuine `@charset` directive (terminated by `;`), never an
+            // identifier whose prefix is `charset` (e.g. `@charset-like`).
+            match self.bytes.get(after) {
+                Some(byte) if byte.is_ascii_whitespace() => {}
+                _ => return false,
+            }
+            let mut pos = after;
+            while pos < self.bytes.len() && self.bytes[pos] != b';' && self.bytes[pos] != b'{' {
+                pos += 1;
+            }
+            if pos < self.bytes.len() && self.bytes[pos] == b';' {
+                self.pos = pos + 1;
+                true
             } else {
                 false
             }
@@ -1180,6 +1473,132 @@ const CSS_GENERATED_RS: &str = r#"
 
     fn is_name_byte(byte: u8) -> bool {
         byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'\\') || byte >= 0x80
+    }
+
+    /// Trim leading/trailing ASCII whitespace from a span — the lazy span readers
+    /// normalise prelude/property/value boundaries without allocating.
+    #[inline]
+    fn trim_ascii(mut bytes: &[u8]) -> &[u8] {
+        while let [first, rest @ ..] = bytes {
+            if first.is_ascii_whitespace() {
+                bytes = rest;
+            } else {
+                break;
+            }
+        }
+        while let [rest @ .., last] = bytes {
+            if last.is_ascii_whitespace() {
+                bytes = rest;
+            } else {
+                break;
+            }
+        }
+        bytes
+    }
+
+    /// Count top-level commas in a selector prelude (commas not nested inside
+    /// `()`/`[]`/`{}` or strings) — the selector-list separator count.
+    #[inline]
+    fn count_top_level_commas(bytes: &[u8]) -> usize {
+        let mut depth: i32 = 0;
+        let mut commas = 0usize;
+        let mut pos = 0usize;
+        while pos < bytes.len() {
+            match bytes[pos] {
+                b'(' | b'[' | b'{' => depth += 1,
+                b')' | b']' | b'}' => depth = depth.saturating_sub(1),
+                b'"' | b'\'' => {
+                    pos = skip_string(bytes, pos);
+                    continue;
+                }
+                b',' if depth == 0 => commas += 1,
+                _ => {}
+            }
+            pos += 1;
+        }
+        commas
+    }
+
+    /// Forward-scan from a declaration value head to its terminator (`;` or `}` at
+    /// top level), honouring balanced `()`/`[]`/`{}` and strings — recovers the
+    /// value span lazily from the recorded colon offset.
+    #[inline]
+    fn scan_value_end(bytes: &[u8], start: usize) -> usize {
+        let mut depth: i32 = 0;
+        let mut pos = start;
+        while pos < bytes.len() {
+            match bytes[pos] {
+                b'(' | b'[' | b'{' => depth += 1,
+                b')' | b']' => depth = depth.saturating_sub(1),
+                b'}' if depth == 0 => return pos,
+                b'}' => depth -= 1,
+                b';' if depth == 0 => return pos,
+                b'"' | b'\'' => {
+                    pos = skip_string(bytes, pos);
+                    continue;
+                }
+                _ => {}
+            }
+            pos += 1;
+        }
+        bytes.len()
+    }
+
+    /// Skip a CSS string literal beginning at `pos` (`pos` points at the quote),
+    /// returning the index just past the closing quote.
+    #[inline]
+    fn skip_string(bytes: &[u8], pos: usize) -> usize {
+        let quote = bytes[pos];
+        let mut cursor = pos + 1;
+        while cursor < bytes.len() {
+            match bytes[cursor] {
+                b'\\' => cursor += 2,
+                byte if byte == quote => return cursor + 1,
+                _ => cursor += 1,
+            }
+        }
+        bytes.len()
+    }
+
+    /// Whether a numeric value head carries a unit or `%` suffix (a dimension) as
+    /// opposed to a bare number.
+    #[inline]
+    fn number_has_unit(value: &[u8]) -> bool {
+        let mut pos = 0usize;
+        if matches!(value.first(), Some(b'+' | b'-')) {
+            pos += 1;
+        }
+        while pos < value.len() && matches!(value[pos], b'0'..=b'9' | b'.') {
+            pos += 1;
+        }
+        if pos < value.len() && matches!(value[pos], b'e' | b'E') {
+            let mut exp = pos + 1;
+            if exp < value.len() && matches!(value[exp], b'+' | b'-') {
+                exp += 1;
+            }
+            if exp < value.len() && value[exp].is_ascii_digit() {
+                pos = exp;
+                while pos < value.len() && value[pos].is_ascii_digit() {
+                    pos += 1;
+                }
+            }
+        }
+        matches!(value.get(pos), Some(b'%') | Some(b'a'..=b'z') | Some(b'A'..=b'Z'))
+    }
+
+    /// Whether an identifier-led value head opens a function call (`name(`),
+    /// scanning the leading ident run for an immediate `(`.
+    #[inline]
+    fn leading_ident_is_function(value: &[u8]) -> bool {
+        let mut pos = 0usize;
+        while pos < value.len() {
+            match value[pos] {
+                b'a'..=b'z' | b'A'..=b'Z' | b'0'..=b'9' | b'-' | b'_' | 0x80..=0xff => pos += 1,
+                b'\\' => pos += 2,
+                _ => break,
+            }
+        }
+        matches!(value.get(pos), Some(b'('))
     }
 
     fn css_full_error(offset: usize, message: &'static str) -> CssFactError {

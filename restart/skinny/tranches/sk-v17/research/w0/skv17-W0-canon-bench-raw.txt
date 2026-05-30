@@ -1,0 +1,16 @@
+ROW corpus=bootstrap workload=track1_full_parse bytes=232803 n=200 median_mbps=2175.411 min_mbps=1772.753 max_mbps=2519.486 stddev_mbps=199.804
+ROW corpus=bootstrap workload=track1_fact_stream bytes=232803 n=200 median_mbps=843.728 min_mbps=801.862 max_mbps=887.661 stddev_mbps=15.722
+ROW corpus=bootstrap workload=lightningcss bytes=232803 n=200 median_mbps=1112.393 min_mbps=910.405 max_mbps=1140.027 stddev_mbps=25.190
+ROW corpus=bootstrap workload=cssparser bytes=232803 n=200 median_mbps=2901.632 min_mbps=2576.858 max_mbps=2920.877 stddev_mbps=38.780
+ROW corpus=tailwindcss workload=track1_full_parse bytes=179631 n=200 median_mbps=2826.862 min_mbps=2225.966 max_mbps=2882.987 stddev_mbps=181.194
+ROW corpus=tailwindcss workload=track1_fact_stream bytes=179631 n=200 median_mbps=554.479 min_mbps=526.777 max_mbps=584.275 stddev_mbps=11.245
+ROW corpus=tailwindcss workload=lightningcss bytes=179631 n=200 median_mbps=841.332 min_mbps=753.532 max_mbps=865.778 stddev_mbps=13.885
+ROW corpus=tailwindcss workload=cssparser bytes=179631 n=200 median_mbps=1740.865 min_mbps=1588.337 max_mbps=1781.188 stddev_mbps=24.975
+ROW corpus=material-components-web workload=track1_full_parse bytes=495454 n=200 median_mbps=2669.153 min_mbps=2097.761 max_mbps=2873.324 stddev_mbps=146.725
+ROW corpus=material-components-web workload=track1_fact_stream bytes=495454 n=200 median_mbps=868.365 min_mbps=812.893 max_mbps=912.403 stddev_mbps=26.202
+ROW corpus=material-components-web workload=lightningcss bytes=495454 n=200 median_mbps=1292.260 min_mbps=1117.776 max_mbps=1314.910 stddev_mbps=25.538
+ROW corpus=material-components-web workload=cssparser bytes=495454 n=200 median_mbps=3278.438 min_mbps=2790.799 max_mbps=3318.121 stddev_mbps=51.918
+ROW corpus=animate workload=track1_full_parse bytes=71750 n=200 median_mbps=2430.273 min_mbps=2062.893 max_mbps=2582.677 stddev_mbps=134.616
+ROW corpus=animate workload=track1_fact_stream bytes=71750 n=200 median_mbps=731.735 min_mbps=644.130 max_mbps=754.519 stddev_mbps=27.904
+ROW corpus=animate workload=lightningcss bytes=71750 n=200 median_mbps=1218.685 min_mbps=1124.663 max_mbps=1234.077 stddev_mbps=16.814
+ROW corpus=animate workload=cssparser bytes=71750 n=200 median_mbps=2633.529 min_mbps=2432.636 max_mbps=2650.768 stddev_mbps=25.338

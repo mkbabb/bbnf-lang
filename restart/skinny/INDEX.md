@@ -35,6 +35,25 @@ plus same-workload `cssparser` comparison. `lightningcss` remains diagnostic
 until Track 1 emits comparable CSSOM/value output. SK-V16 routing is remainder
 only; it cannot substitute for SK-V15 close evidence.
 
+**Pass Omega V5 / SK-V17 fold state (2026-05-30).** The SK-V17 T-P3 tape-fold
+converged and is CRUD-applied to the V1 surfaces. The one load-bearing skinny
+WIN — the flat lazy-offset SoA `Tape<'input>` + lazy `ValueRef<G>` projection
+(JSON 51/51 strict A/GO Track 1 > sonic same-plane) — becomes the
+V1-authoritative single post-fold substrate the five `BackendShape` shapes
+project from; the durable skinny REJECTIONS (AZ-IV eager value tree 118×,
+StructRegistry/Arena/Builder per-leaf indirection, CSS fact-stream String as
+admission plane, x86/AVX/SVE) become locks-strengthening fences. The fold
+direction is MONOTONIC and governance-bound: SK-V18 adopts the PROVEN skinny
+`Tape`/`ValueRef` INTO crates/core; it NEVER relocates crates/core
+`TapeStructBuilder`/`StructLayout`/`TapeCursor` into skinny, and the totality
+spec never dictates back to a live skinny iteration. The CSS `>SOTA` bar is
+UNMEASURED-PENDING — an SK-V18 proof obligation, not an SK-V17 result.
+Sheets/BBNF-self projection generality is by-construction-not-by-exercise
+(SK-V18). The full tape-fold posture is bound by the LOCKS SK-V17 T-P3
+Crystallisation Addendum (Locks 1/2/10/14/16; 16-lock count preserved; five-shape
+canon verbatim; tape = substrate-manifest category). Source:
+`restart/audit/totality/sk-v17/p3/3d-skinny-fold.md` deltas `3D-SK17-D07`/`D08`.
+
 The full V1 spec lives at `restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`, `restart/MIGRATION.md`, plus the PASS surfaces. This skinny spec carves out a minimum-viable subset of that V1 contract.
 
 ## Four quadrants

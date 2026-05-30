@@ -22,6 +22,24 @@ diagnostic after W1 and cannot remain live admission after W6. Typed CSS
 Value/document/view/visitor output belongs to W5; fresh same-workload typed
 `cssparser` retime belongs to W6.
 
+**Pass Omega V5 / SK-V17 hardening receiver (fold-scope honesty firewall).** A
+hardening run that touches the SK-V17 tape-fold reads every Sheets/BBNF-self
+claim AND every CSS-`>SOTA` claim as predicted / SK-V18-pending, not proven: the
+tape/`ValueRef<G>`/NEON fold is proven by-exercise on JSON only (51/51 strict
+A/GO Track 1 > sonic same-plane) and first-moved on CSS (its `>SOTA` bar
+UNMEASURED-PENDING), and is by-construction-not-by-exercise on Sheets/BBNF-self.
+The two non-blocking REVISE residuals ride forward: CH4-V3-01 (the D07
+scaffold→body cost-cell band) routes to the MASTER-PLAN cost table, and
+CH6-V3-7 (the 3E `EBNF/BNF/CSV/math` defer-word re-order + 3C anti-silent-satisfy
+clause) is absorbed by the qualified receiver/blocker/gate defer triple and the
+Lock-10 mandatory inline Lock-1 manifest cross-reference. Refuse any fold claim
+that reads CSS `>SOTA` as MET, that asserts fleet-wide grammar-neutrality without
+a non-JSON-non-CSS value-plane witness, that ships a dual AoS/SoA substrate as a
+Lock-1 closure, or that admits a 6th `BackendShape`. Source:
+`restart/audit/totality/sk-v17/p3/3d-skinny-fold.md` SCOPE-HONESTY BANNER;
+`restart/audit/totality/sk-v17/p3/3e-grammar-generalisation.md` deltas
+`3E17-D05`/`D07`.
+
 W2-W10 are mandatory seven-lens CHALLENGE candidates unless the plan proves
 the redress is ledger-only and non-behavioral. The lenses are CH1 correctness,
 CH2 generality, CH3 regression, CH4 cost, CH5 hidden coupling,

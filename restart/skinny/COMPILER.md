@@ -67,6 +67,56 @@ provenance and regen/check coverage. Historical helpers such as
 `shapes_for_json`, `nominate_json`, and static CSS provider/profile rosters are
 deletion or quarantine targets, not naming patterns for new compiler code.
 
+**Pass Omega V5 / SK-V17 compiler receiver (shared NEON classifier + single
+generator).** The SK-V17 T-P3 tape-fold folds two compiler-side WINs into the
+V1 spec: the shared alphabet-parametrised NEON classifier, and the single
+`BackendRule`-walking projection generator. Both fold monotonically
+skinny→totality; neither adds syntax, a directive, a BIR variant, or a generic
+crate grammar branch. Source: `restart/audit/totality/sk-v17/p3/3d-skinny-fold.md`
+deltas `3D-SK17-D02`/`D03`/`D07`;
+`restart/audit/totality/sk-v17/p3/3e-grammar-generalisation.md` deltas
+`3E17-D04`/`D06`/`D07`/`D08`.
+
+1. **Shared `select_classifier(alphabet:&[u8;64])` is alphabet-as-data
+   (`3D-SK17-D03` / `3E17-D04`).** The structural-scan leaf takes the alphabet as
+   its ONLY grammar datum; the JSON-first NEON narrative folds to alphabet-as-data,
+   wired across 8 of 9 generated grammars (math has no `structural_index`). The
+   eq-set fan `byte_class_from_eq_set_64` registers as a Lock-16 primitive-manifest
+   ROW (scalar reference + checkasm under `BBNF_SIMD_STRICT=1`); `byte_class_from_table_64`
+   and `bitmap_prefix_xor_64` are honestly-declared scalar-delegate passthroughs.
+   aarch64-only; x86/AVX-512/SVE permanently pre-blocked as close paths. CSS L4 is
+   the named non-JSON same-wave consumer binding the REAL NEON body via the `;{`
+   slot-59 eq-set-fan route (`3E17-D06`), not the scalar-delegate table entry.
+2. **ONE `BackendRule`-walking projection generator (`3D-SK17-D02`).** A single
+   grammar-agnostic generator emits document/value/view/visitor by retargeting the
+   existing `@generated` per-grammar value path to lazy `ValueRef<G>`; the grammar
+   enters as a TYPE parameter, never a generator `match grammar` arm. The value-axis
+   firewall (onboarding predicate P6): the one generator re-emits JSON byte-equal
+   AND CSS lazy from one walk; a generator with a CSS-specific value branch FAILS
+   Lock 14.
+3. **By-construction-not-by-exercise scoping (`3D-SK17-D07` / `3E17-D07`).** The
+   tape/`ValueRef<G>`/classifier generality is breadth-of-CONFIG, value-plane-
+   exercised JSON+CSS ONLY. Sheets/BBNF-self projection is by-construction under
+   SK-V18 (`sheets_witness` is a 24-LOC `EventGrammar` stub with no `BackendRule`),
+   may not be claimed fleet-wide, and routes its concrete onboarding story through
+   the Lock-14 future-grammar onboarding test. The `EBNF/BNF/CSV/math` matrix cell
+   is DEFERRED with a full receiver/blocker/gate triple (receiver = SK-V18
+   onboarding wave; blocker = no `structural_index`/scan witness for math; gate =
+   Lock-14 future-grammar onboarding test), never an unqualified defer (`3E17-D08`,
+   CH6-V3-7 absorption).
+4. **Leak-census decrease is OWNED, never an unowned "HEAD → 0" (`3E17-D08`).**
+   The 7 `crates/ir/src/registry/strategy.rs` grammar-name string-ident sites are
+   the catalogued ARCH-3A-D09 leak surface (doc-comment + string-ident registry,
+   NOT a runtime `match grammar {}` arm). Their monotonic decrease is OWNED by the
+   SK-V18 `ValueRef<G>` projection generator wave (whose codegen subsumes the
+   BackendShape strategy registry keys); fail-closed, they are an admitted
+   catalogued non-zero Lock-14 baseline with a named re-entry trigger.
+
+The compiler receiver preserves the exact 5-shape `BackendShape` canon at Lock
+10 (`{EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage}`) verbatim; the
+tape folds in as the substrate-manifest CATEGORY the five shapes project from
+(per the LAC-1E-14 FactStream precedent), NOT a sixth `BackendShape`.
+
 ---
 
 ## 1. `json.bbnf` Source Sketch

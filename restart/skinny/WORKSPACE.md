@@ -59,6 +59,24 @@ This document records ownership and budget receivers only; it does not
 authorize telemetry implementation, source edits, gates, `RESULTS.md`, or
 `REDRESS.md` mutations.
 
+**Pass Omega V5 / SK-V17 workspace receiver (fold state).** The SK-V17 T-P3
+tape-fold records the monotonic governance boundary and the leak-census owner.
+The fold direction is invariant: SK-V18 adopts the PROVEN skinny `Tape`/
+`ValueRef` into crates/core; it NEVER relocates the crates/core
+`TapeStructBuilder`/`StructLayout`/`TapeCursor` names into skinny (those are
+SK-V17 §9 FORBIDDEN-IN-SKINNY vocabulary), and the totality spec never dictates
+back to a live skinny iteration. The future-grammar onboarding leak census stays
+grammar-neutral: the 7 `crates/ir/src/registry/strategy.rs` grammar-name
+string-ident sites are a catalogued leak surface (doc-comment + string-ident
+registry, NOT a runtime `match grammar {}` arm) whose monotonic decrease is OWNED
+by the SK-V18 `ValueRef<G>` projection generator wave — never an unowned
+"HEAD → 0"; fail-closed, an admitted catalogued non-zero Lock-14 baseline with a
+named re-entry trigger. `bbnf-simd` stays grammar-neutral and Lock-16-governed;
+the shared NEON classifier's only grammar datum is the `alphabet:&[u8;64]`;
+aarch64-only, no x86/AVX/SVE close path. Source:
+`restart/audit/totality/sk-v17/p3/3d-skinny-fold.md` delta `3D-SK17-D08`;
+`restart/audit/totality/sk-v17/p3/3e-grammar-generalisation.md` delta `3E17-D08`.
+
 Not in this file: substrate internals (`SUBSTRATE.md`), compiler pipeline internals (`COMPILER.md`), bench thresholds and reproducibility schema (`BENCH.md`).
 
 ### 0.1 Post-Iteration State (SK-V2)

@@ -161,9 +161,43 @@ re-stating the canon.
 - **`git diff --check`** clean; **`git diff --stat`** = `restart/ARCHITECTURE.md | 120 ++ | 1 file changed, 120 insertions(+)`.
 - **Clean-regen discipline / dirty-file preservation**: only `restart/ARCHITECTURE.md` + this astral log staged; pre-existing dirty SK-V12/13 research JSON, skinny `css_l4_*` generated.rs, `docs/precepts` untouched.
 
+## CRUD-5 SKINNY CORPUS Leg
+
+Pass: Pass Omega. Cycle: V5 (SK-V17 T-P3 tape-fold). Gate: G-Omega CLOSED.
+Status: CRUD-5 SKINNY CORPUS complete.
+
+This leg applies the 3D skinny-fold (8 deltas `3D-SK17-D01..D08`) + 3E
+grammar-generalisation (9 deltas `3E17-D01..D09`) deltas
+(`restart/audit/totality/sk-v17/p3/{3d-skinny-fold,3e-grammar-generalisation}.md`)
+to the six skinny corpus surfaces, cross-referencing the post-CRUD-3 SK-V17 T-P3
+Crystallisation Addendum (applied `7157be073`). Per the CRUD-5 brief mapping:
+SUBSTRATE ← tape-as-unified-substrate + `ValueRef<G>` (3D-D01/D02, 3E-D01/D02/D09);
+COMPILER ← shared NEON classifier + single generator (3D-D02/D03/D07,
+3E-D04/D06/D07/D08); BENCH ← canonical N≥50 harness + lightningcss fair bar
+(3D CSS `>SOTA` non-fit, 3E P5a/P5b); INDEX/WORKSPACE ← SK-V17 fold state
+(3D-D07/D08, 3E-D08); HARDENING ← fold-scope honesty firewall (3D BANNER,
+3E-D05/D07).
+
+| CRUD | Receiver | Operation | Files | Status | Commit | Notes |
+|---|---|---|---|---|---|---|
+| CRUD-5 | SKINNY CORPUS | Update (apply 3D/3E receivers) | `restart/skinny/{INDEX,SUBSTRATE,COMPILER,BENCH,HARDENING,WORKSPACE}.md` | complete | this commit | 6 SK-V17 receiver blocks; +175 lines; invariants preserved; dirty files untouched |
+
+### CRUD-5 Verification (post-apply)
+
+- **16-lock count PRESERVED**: `grep -cE "^[0-9]+\. \*\*" restart/locks/LOCKS.md` = 16 (LOCKS untouched this leg).
+- **5-shape canon verbatim, NO 6th**: `grep -nE "EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage,[A-Za-z]" restart/skinny/*.md` empty; canon cited verbatim in INDEX + COMPILER receivers.
+- **Tape = substrate-manifest CATEGORY (LAC-1E-14)**: COMPILER.md receiver records the tape as the CATEGORY the five shapes project from, NOT a 6th `BackendShape`.
+- **aarch64-only**: COMPILER.md + WORKSPACE.md receivers bar x86/AVX-512/SVE close paths.
+- **preserve-rich-ast**: SUBSTRATE.md receiver clause 2 — lazy `ValueRef<G>` view IS the rich-AST plane, never a flattening.
+- **No re-opened REDRESS**: AZ-IV eager tree = fold-DELETION target; per-leaf `StructRegistry::layout` = REJECT; fact-stream-String CSS admission retired diagnostic-only.
+- **Per-surface deltas**: INDEX +19, SUBSTRATE +42, COMPILER +50, BENCH +28, HARDENING +18, WORKSPACE +18 = +175.
+- **Residuals**: CH4-V3-01 recorded in BENCH receiver clause 3 (MASTER-PLAN cost-row); CH6-V3-7 absorbed by COMPILER receiver clause 3 defer triple + the Lock-10 inline Lock-1 manifest cross-reference.
+- **Dirty-file preservation**: only the six skinny surfaces + this astral log staged; SK-V12/13 research JSON, skinny `css_l4_*` generated.rs, `docs/precepts` untouched. No source / generated runtime / gate / `RESULTS.md` / `REDRESS.md` / live skinny SPEC edits.
+- **Astral note**: `restart/audit/totality/astral/V5/ΩE-skinny-corpus-skv17.md`.
+
 ## Next Dispatch
 
 The remaining Pass Omega V5 SK-V17 CRUD legs (CRUD-2 MASTER-PLAN, CRUD-4
-HANDOFF/MIGRATION, CRUD-5 SKINNY CORPUS, CRUD-6 AUDIT) apply the corresponding
-3b/3d/3e/3f deltas to the named V1 surfaces. This leg discharges CRUD-1
-ARCHITECTURE; CRUD-3 LOCKS is discharged above.
+HANDOFF/MIGRATION, CRUD-6 AUDIT) apply the corresponding 3b/3f deltas (plus the
+CH4-V3-01 cost-row at MASTER-PLAN) to the named V1 surfaces. This leg discharges
+CRUD-5 SKINNY CORPUS; CRUD-1 ARCHITECTURE and CRUD-3 LOCKS are discharged above.

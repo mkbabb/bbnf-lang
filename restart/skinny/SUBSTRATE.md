@@ -60,6 +60,48 @@ is SK-V15 W0-W11, not SK-V14 W5B/W5C/W5D.
    EventTape, SinkOnly, CollapsedStage}`. A sixth shape, retained EventTape
    sidecar, or production FNV route remains blocked.
 
+**Pass Omega V5 / SK-V17 substrate receiver (tape-as-unified-substrate +
+`ValueRef<G>`).** The SK-V17 T-P3 tape-fold makes the SoA `Tape<'input>` the
+V1-authoritative single post-fold substrate, and the lazy grammar-parametric
+`ValueRef<G>` the one materialization plane. These are the proven-and-benched
+skinny WINs (JSON 51/51 strict A/GO Track 1 > sonic same-plane,
+`skinny/RESULTS.md`); they fold monotonically skinny→totality. No substrate
+amendment is created here — the receiver records the fold posture and binds the
+LOCKS SK-V17 T-P3 Crystallisation Addendum (`restart/locks/LOCKS.md` Lock 1
+tape-substrate-union clause + Lock 14 ValueRef/classifier-generalisation clause).
+Source: `restart/audit/totality/sk-v17/p3/3d-skinny-fold.md` deltas
+`3D-SK17-D01`/`D02`; `restart/audit/totality/sk-v17/p3/3e-grammar-generalisation.md`
+deltas `3E17-D01`/`D02`/`D09`.
+
+1. **SoA `Tape<'input>` is the single post-fold substrate (`3D-SK17-D01`).** The
+   SoA encoding (`offsets:Vec<u32>` + sparse `flag_cursors`/`flag_values` +
+   `PayloadArena`) is the V1-authoritative substrate the five `BackendShape`
+   shapes project from. The AoS `TapeRec` (16-byte/align-4) converges ONTO it
+   under SK-V18; a dual AoS/SoA end-state is a transient fold-state only, NEVER a
+   permissible Lock-1 closure (exactly one encoding survives). The substrate
+   stays grammar-column-free (`3E17-D02`): flags are sparse position-keyed
+   side-vectors, never a per-grammar dense class column (the barred AV.04 shape).
+2. **Lazy `ValueRef<'doc,'input,K,G:EventGrammar>` is the one materialization
+   plane (`3D-SK17-D02` / `3E17-D01`).** The grammar enters as a TYPE parameter
+   monomorphised at codegen, with ZERO runtime `match grammar {…}` arm. One
+   `BackendRule`-walking generator emits document/value/view/visitor; the
+   existing `@generated` per-grammar value path is RETARGETED to emit lazy
+   `ValueRef<G>`. preserve-rich-ast holds: the lazy view IS the rich-AST
+   materialization plane, never a typed-AST flattening.
+3. **The `FieldSource` projection walk is compile-time emission (`3E17-D09`).**
+   The `FieldSource{TypedLeaf,BranchTag,SeqPosition,RepeatElement,RuleReference}`
+   walk that produces the `ValueRef<G>` projection is grammar-neutral ONLY as
+   compile-time projection-emission resolved once at codegen. Any per-leaf
+   runtime `StructRegistry::layout` walk in the projection hot path re-opens the
+   measured 28-65×/983×/10583× regression AND re-introduces grammar-shaped runtime
+   dispatch; `begin_compound` reads `layout.rule_id & 0x1F` only (grep-zero
+   `StructRegistry`). REJECT.
+4. **The eager value tree is the fold-DELETION target, never carried forward.**
+   The AZ-IV eager value tree REFUTED 118× — the crates/core `CssTypedValue` enum
+   + six `pending_*` Vecs (the eager `OpenFrame` builder) — is replaced by the
+   lazy projection, retired no-delete-before-same-wave-replacement (the tape
+   consumer proven first). Materialization stays lazy-by-default.
+
 Source authority (verbatim citations, not paraphrase):
 
 - `restart/ARCHITECTURE.md` §9 (lines 1373-1426) — tape and direct-to-struct union; tape invariants; per-grammar runtime template path.

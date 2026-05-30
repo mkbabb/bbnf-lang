@@ -54,6 +54,34 @@ attribution, PMU/samply signals, and primitive/checkasm state are workload
 extensions consumed by the owning SK-V15 wave gate. No `RESULTS.md` or
 gate-code mutation is authorized by this document alone.
 
+**Pass Omega V5 / SK-V17 bench receiver (canonical N≥50 harness + lightningcss
+fair bar).** The SK-V17 T-P3 tape-fold records the bench posture for the tape /
+`ValueRef<G>` / classifier engine. The canonical harness is the
+cold-per-parse N≥50 median (no warm/cached rows; warm benches are disingenuous);
+JSON rides the tape >SOTA at 51/51 strict A/GO Track 1 > sonic same-plane
+(`skinny/RESULTS.md`) — the standing >SOTA proof and the regression tripwire.
+Source: `restart/audit/totality/sk-v17/p3/3d-skinny-fold.md` (CSS `>SOTA`
+non-fit row + SCOPE-HONESTY BANNER);
+`restart/audit/totality/sk-v17/p3/3e-grammar-generalisation.md` (P5a/P5b split).
+
+1. **CSS `>SOTA` is UNMEASURED-PENDING — an SK-V18 proof obligation, NOT met.**
+   No SK-V17 bench row asserts CSS `>SOTA` proven. The fold absorbs the
+   CONVERGED CONTRACT (lazy `ValueRef<G>` + retired fact-stream-String CSS
+   admission) whose CSS `>SOTA` bar SK-V18 must measure-prove against
+   `lightningcss` on the same workload. A bench row reading CSS `>SOTA` as MET is
+   a scope-honesty failure; `lightningcss` is the fair-comparison CSS bar but
+   stays diagnostic until Track 1 emits comparable typed CSSOM/value output.
+2. **CSS classifier-scan (P5a) is wired/measured; CSS tape-consumer (P5b) is the
+   SK-V18 fold-target.** The classifier-scan measurement (the `;{` slot-59
+   eq-set-fan route satisfying Lock 16's ≥1-non-JSON-consumer) does NOT imply the
+   full tape-consumer chain (classifier → tape → `ValueRef<G>` projection) is
+   measured. Conflating P5a with P5b is a CH2 over-claim; the two axes report
+   separately.
+3. **The cost-row residual rides forward (CH4-V3-01).** The D07 scaffold→body
+   cost-cell band (~4×270 = 800–1100 LOC) is a MASTER-PLAN cost-table concern,
+   added as one cost-row at the SK-V18 wave allocation, not a BENCH threshold
+   amendment here.
+
 The full V1 spec lives at `restart/ARCHITECTURE.md` and `restart/MASTER-PLAN.md`.
 SOTA anchors live at `restart/corpora/SOTA.md` and Lock 8 v+1
 (`restart/locks/LOCKS.md:202`; v+1 row-plane + LAC-1E-16 audit-overlay at

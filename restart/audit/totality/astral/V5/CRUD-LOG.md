@@ -63,3 +63,63 @@ source-consuming generator-capability gate:
 
 W5B remains blocked until W5A closes. W6 remains blocked until W5B closes.
 W8/W9/W10 remain globally blocked until PRUNE-1..PRUNE-5 close.
+
+---
+
+# Pass Omega V5 — SK-V17 Tape-Fold CRUD Leg (CRUD-3 LOCKS)
+
+Pass: Pass Omega.
+Cycle: V5 (SK-V17 T-P3 tape-fold CRUD application).
+Gate: G-Omega CLOSED by user this turn.
+Master HEAD at apply: `2a76916ac`.
+Status: CRUD-3 LOCKS complete.
+
+This section is a DISTINCT Pass Omega V5 leg from the SK-V14 W5R cycle logged
+above. The SK-V14 W5R cycle recorded CRUD-3 LOCKS as a zero-delta no-op
+(`locks-diff.md` empty). The SK-V17 tape-fold leg applies a real LOCKS v+1
+addendum (the `## SK-V17 T-P3 Crystallisation Addendum`) crystallising the five
+LOCKED T-P2 fold designs (`LAC-2F-FOLD-01..05`) into five addendum clauses on
+Locks 1, 2, 10, 14, and 16. The substantive Omega synthesis + CHALLENGE were
+discharged by the SK-V17 T-P3 convergence (§3Z, commit chain to `2a76916ac`);
+this leg is the post-G-Omega CRUD application.
+
+## Gate Record
+
+G-Omega CLOSED by explicit user authorization this turn for the SK-V17
+tape-fold CRUD application phase, per
+`restart/prompts/pass-contracts/PASS-OMEGA.md` §4 (CRUD-1..6) + §6.
+
+## Source
+
+LOCKED proposed deltas, T-P3 §3Z:
+`restart/audit/totality/sk-v17/p3/3c-locks-v+1-diff.md` (the G-Omega gate
+object; `git apply --check` EXIT 0 at `2a76916ac`), plus the 3a/3b/3c/3d/3e/3f
+synthesis set and `HARDENING-T-P3-SKV17-V3-CONSOLIDATED.md`.
+
+## Receiver Log
+
+| CRUD | Receiver | Operation | Files | Status | Commit | Notes |
+|---|---|---|---|---|---|---|
+| CRUD-3 | LOCKS | Update (apply v+1 addendum) | `restart/locks/LOCKS.md` | complete | `7157be073` | SK-V17 T-P3 Crystallisation Addendum: 5 clauses (Locks 1/2/10/14/16); 15 insertions, 0 deletions; 16-lock count PRESERVED |
+
+## CRUD-3 LOCKS Verification (post-apply)
+
+- **16-lock count PRESERVED**: `grep -cE "^[0-9]+\. \*\*" restart/locks/LOCKS.md` = 16. The addendum amends Locks 1/2/10/14/16; it adds no new numbered lock, retires none, renumbers none.
+- **5-shape BackendShape canon verbatim, NO 6th**: `{EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage}` restated in the addendum heading and the Lock 10 clause; `grep -cF` on the full tuple = 6 (5 prior + 1 addendum). No six-variant tuple exists (`grep -nE "EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage,[A-Za-z]"` empty).
+- **Tape = substrate-manifest CATEGORY**: the Lock 10 tape-category clause records the tape as the SUBSTRATE the five `BackendShape` shapes project from (`substrate_target = existing_tape`), per the LAC-1E-14 FactStream precedent — NOT a 6th `BackendShape` variant.
+- **No new directive / BIR variant / substrate / public substrate API / retained sidecar**: NEON classifier is `retention_lifetime = transient-single-call`; `OnceCell<StructuralIndex>` carriers resolve to `existing_tape` or `local_temp_only`.
+- **Distribution invariant intact**: the Lock 10 clause carries the inline cross-reference to the Lock 1 substrate manifest, preventing the silent-6th-shape reading on forward distribution.
+- **Governance boundary in force**: the addendum sits above the `## v+1 Governance Boundary` (still present, single occurrence).
+- **Clean-regen discipline / dirty-file preservation**: only `restart/locks/LOCKS.md` was staged and committed; pre-existing dirty SK-V12/13 research JSON, skinny `css_l4_*` generated.rs, `docs/precepts`, and other untracked/modified files were not touched.
+
+## Residual Absorption (2 non-blocking REVISE)
+
+- **CH4-V3-01** (D07 scaffold->body cost-cell band): a cost-row residual for the D07 scaffold-to-body cost-cell band. It is a MASTER-PLAN/cost-table surface concern, not a LOCKS surface; it does not alter the LOCKS addendum and rides forward to the cost-table CRUD leg.
+- **CH6-V3-7** (3E defer-word re-order + 3C anti-silent-satisfy clause): the 3C anti-silent-satisfy clause is absorbed by the gate object's Invariant Check distribution-invariant fence (the Lock 10 clause's mandatory inline Lock-1 manifest cross-reference), which the applied addendum carries verbatim. The 3E defer-word re-order is a grammar-generalisation-surface concern, not LOCKS.
+
+## Next Dispatch
+
+The remaining Pass Omega V5 SK-V17 CRUD legs (CRUD-1 ARCHITECTURE, CRUD-2
+MASTER-PLAN, CRUD-4 HANDOFF/MIGRATION, CRUD-5 SKINNY CORPUS, CRUD-6 AUDIT) apply
+the corresponding 3a/3b/3d/3e/3f deltas to the named V1 surfaces. This leg
+discharges CRUD-3 LOCKS only.

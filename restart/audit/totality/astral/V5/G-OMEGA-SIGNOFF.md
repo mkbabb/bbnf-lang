@@ -63,3 +63,44 @@ locally and the next sequenced step is SK-V14 W5A under the source-consuming
 generator-capability gate. W5B remains blocked until W5A closes; W6 remains
 blocked until W5B closes; W8/W9/W10 remain blocked until PRUNE-1..PRUNE-5
 close.
+
+---
+
+# G-Omega Sign-Off — Pass Omega V5 SK-V17 Tape-Fold CRUD Leg
+
+Gate: G-Omega.
+Cycle: Pass Omega V5 (SK-V17 T-P3 tape-fold CRUD application).
+Status: CLOSED by user authorization this turn.
+Master HEAD at apply: `2a76916ac`.
+
+## User Authorization
+
+G-Omega CLOSED by the user this turn for the SK-V17 tape-fold CRUD application
+phase. The substantive Omega synthesis + CHALLENGE were discharged by the
+SK-V17 T-P3 convergence (§3Z, commit chain to `2a76916ac`); the user authorized
+the CRUD application phase per
+`restart/prompts/pass-contracts/PASS-OMEGA.md` §4 (CRUD-1..6) + §6.
+
+## Converged Inputs
+
+- G-Omega gate object (LOCKED T-P3 §3Z proposed deltas):
+  `restart/audit/totality/sk-v17/p3/3c-locks-v+1-diff.md` —
+  `git apply --check` EXIT 0 at `2a76916ac`.
+- T-P3 synthesis set:
+  `restart/audit/totality/sk-v17/p3/{3a-architecture-synthesis,3b-master-plan-reconciliation,3c-locks-crystallisation,3d-skinny-fold,3e-grammar-generalisation,3f-migration-handoff}.md`.
+- CHALLENGE consolidated verdict:
+  `restart/audit/totality/sk-v17/p3/hardening/HARDENING-T-P3-SKV17-V3-CONSOLIDATED.md`.
+
+## CRUD-3 LOCKS Result
+
+| CRUD | Surface | Commit | Result |
+|---|---|---|---|
+| CRUD-3 LOCKS | `restart/locks/LOCKS.md` | `7157be073` | SK-V17 T-P3 Crystallisation Addendum applied; 5 clauses on Locks 1/2/10/14/16; 15 insertions, 0 deletions; 16-lock count PRESERVED; 5-shape canon verbatim with NO 6th; tape recorded as substrate-manifest category |
+
+## Gate Result
+
+G-Omega CLOSED for the SK-V17 tape-fold CRUD-3 LOCKS leg. The LOCKS v+1
+addendum is in force under the `## v+1 Governance Boundary`. The 16-lock count,
+the five `BackendShape` variants, and the tape-as-substrate-category placement
+(not a 6th shape) are preserved. The remaining V5 SK-V17 CRUD legs (CRUD-1/2/4/
+5/6) apply the corresponding 3a/3b/3d/3e/3f deltas to the named V1 surfaces.

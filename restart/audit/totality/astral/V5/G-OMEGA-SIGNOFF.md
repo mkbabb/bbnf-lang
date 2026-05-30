@@ -91,16 +91,19 @@ the CRUD application phase per
 - CHALLENGE consolidated verdict:
   `restart/audit/totality/sk-v17/p3/hardening/HARDENING-T-P3-SKV17-V3-CONSOLIDATED.md`.
 
-## CRUD-3 LOCKS Result
+## CRUD Result (SK-V17 tape-fold legs)
 
 | CRUD | Surface | Commit | Result |
 |---|---|---|---|
 | CRUD-3 LOCKS | `restart/locks/LOCKS.md` | `7157be073` | SK-V17 T-P3 Crystallisation Addendum applied; 5 clauses on Locks 1/2/10/14/16; 15 insertions, 0 deletions; 16-lock count PRESERVED; 5-shape canon verbatim with NO 6th; tape recorded as substrate-manifest category |
+| CRUD-1 ARCHITECTURE | `restart/ARCHITECTURE.md` | THIS COMMIT | 8 3A deltas D01..D08 applied (§7.3 fold directive, §9.1 tape invariant, §9.2 value-plane, §7.4 Lock-2 reconcile); +120 lines, 0 deletions; 5-shape canon verbatim with NO 6th; CH4-V3-01 cost-cell band + CH6-V3-7 anti-silent-satisfy absorbed; 16-lock cross-refs resolve |
 
 ## Gate Result
 
-G-Omega CLOSED for the SK-V17 tape-fold CRUD-3 LOCKS leg. The LOCKS v+1
-addendum is in force under the `## v+1 Governance Boundary`. The 16-lock count,
-the five `BackendShape` variants, and the tape-as-substrate-category placement
-(not a 6th shape) are preserved. The remaining V5 SK-V17 CRUD legs (CRUD-1/2/4/
-5/6) apply the corresponding 3a/3b/3d/3e/3f deltas to the named V1 surfaces.
+G-Omega CLOSED for the SK-V17 tape-fold CRUD-3 LOCKS + CRUD-1 ARCHITECTURE legs.
+The LOCKS v+1 addendum is in force under the `## v+1 Governance Boundary`, and
+ARCHITECTURE §7.3/§7.4/§9.1/§9.2 carry the matching SK-V18 fold directives. The
+16-lock count, the five `BackendShape` variants, and the
+tape-as-substrate-category placement (not a 6th shape) are preserved. The
+remaining V5 SK-V17 CRUD legs (CRUD-2/4/5/6) apply the corresponding 3b/3d/3e/3f
+deltas to the named V1 surfaces.

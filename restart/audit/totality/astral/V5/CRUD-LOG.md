@@ -117,9 +117,53 @@ synthesis set and `HARDENING-T-P3-SKV17-V3-CONSOLIDATED.md`.
 - **CH4-V3-01** (D07 scaffold->body cost-cell band): a cost-row residual for the D07 scaffold-to-body cost-cell band. It is a MASTER-PLAN/cost-table surface concern, not a LOCKS surface; it does not alter the LOCKS addendum and rides forward to the cost-table CRUD leg.
 - **CH6-V3-7** (3E defer-word re-order + 3C anti-silent-satisfy clause): the 3C anti-silent-satisfy clause is absorbed by the gate object's Invariant Check distribution-invariant fence (the Lock 10 clause's mandatory inline Lock-1 manifest cross-reference), which the applied addendum carries verbatim. The 3E defer-word re-order is a grammar-generalisation-surface concern, not LOCKS.
 
+## CRUD-1 ARCHITECTURE Leg
+
+Pass: Pass Omega. Cycle: V5 (SK-V17 T-P3 tape-fold). Gate: G-Omega CLOSED.
+Status: CRUD-1 ARCHITECTURE complete.
+
+This leg applies the 8 3A deltas (`restart/audit/totality/sk-v17/p3/3a-architecture-synthesis.md`:
+ARCH-3A-S17-D01..D08) to `restart/ARCHITECTURE.md`, cross-referencing the
+post-CRUD-3 SK-V17 T-P3 Crystallisation Addendum at `restart/locks/LOCKS.md:610`-`622`
+(applied `7157be073`; recorded `c3d6e6fd9`). The fold posture is conservative
+against the V1 surface: ARCH §7.3 already frames the five `BackendShape` shapes
+as tape projections, so the edits write the SK-V18 *fold directive* (retirement
+step, value-plane, manifest row, fence, selector wiring, pre-gates) rather than
+re-stating the canon.
+
+### Receiver Log
+
+| CRUD | Receiver | Operation | Files | Status | Commit | Notes |
+|---|---|---|---|---|---|---|
+| CRUD-1 | ARCHITECTURE | Update (apply 3A deltas) | `restart/ARCHITECTURE.md` | complete | this commit | 8 deltas D01..D08; +120 lines, 0 deletions; 5-shape canon verbatim, NO 6th; 16-lock cross-refs resolve |
+
+### Per-delta placement
+
+| delta | source 3A | ARCH surface | placement |
+|---|---|---|---|
+| `ARCH-3A-S17-D01` tape-as-unified-substrate | 3a:82 | §7.3 fold directive + §9.1 tape invariant | retire eager `OpenFrame` builders, converge AoS `TapeRec`→SoA `Tape<'input>`, single encoding |
+| `ARCH-3A-S17-D02` lazy `ValueRef<G>` value-plane | 3a:83 | §9.2 (after Substrate-Union Disposition) | one `@generated` accessor generator; preserve-rich-ast; JSON+CSS scope-honest |
+| `ARCH-3A-S17-D03` shared NEON classifier manifest | 3a:84 | §7.3 fold directive bullet | Lock-16 primitive-manifest row; eq-set fan is the one NEON body; aarch64-only |
+| `ARCH-3A-S17-D04` BackendShape-category disposition | 3a:85 | §7.3 fold directive bullet | tape = substrate-manifest CATEGORY (LAC-1E-14), NOT a 6th shape |
+| `ARCH-3A-S17-D05` StructRegistry/FieldSource fence | 3a:86 | §7.3 fold directive bullet | no per-leaf registry walk; `arena.rs:47` sole coupling severed by D01 |
+| `ARCH-3A-S17-D06` Lock-2 `StructLayout` reconcile | 3a:87 | §7.4 reconcile note | two disjoint priced paths; neither closure chosen in spec |
+| `ARCH-3A-S17-D07` BackendShape selector wiring (CH4-V3-01 cost-cell band) | 3a:88 | §7.3 fold directive bullet | WIRES decision engine; cost-cell band 60-200 + 600-1400 LOC |
+| `ARCH-3A-S17-D08` three-ORQ disposition | 3a:89 | §7.3 fold directive bullet | U1/U2/U3 named SK-V18 pre-gates with receiver+blocker+gate |
+
+### CRUD-1 ARCHITECTURE Verification (post-apply)
+
+- **16-lock count PRESERVED**: `grep -cE "^[0-9]+\. \*\*" restart/locks/LOCKS.md` = 16 (ARCH edit touches no lock).
+- **5-shape BackendShape canon verbatim, NO 6th**: `grep -cF "EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage" restart/ARCHITECTURE.md` = 2 (D04 bullet + Lock-10 domain restatement); `grep -nE "EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage,[A-Za-z]"` empty (no six-variant tuple); the `BackendShape` enum body is unchanged.
+- **Tape = substrate-manifest CATEGORY**: D04 bullet records `substrate_target = existing_tape` per the LAC-1E-14 FactStream precedent, NOT a 6th `BackendShape` variant.
+- **All 8 deltas cited**: combined header line carries D01/D03/D04/D05/D07/D08; D02 at §9.2, D06 at §7.4, D08 bullet at the directive tail; each cites its source 3A row and the matching LOCKS addendum clause.
+- **CH4-V3-01 absorbed**: the D07 bullet carries the scaffold→body cost-cell band (60-200 selector + 600-1400 joint wiring envelope), the residual non-blocking REVISE.
+- **CH6-V3-7 absorbed**: the §7.3 directive carries the anti-silent-satisfy fence (the 6th-shape G-Omega gate + the LAC-1E-14 categorical refusal restated inline), and D08 re-orders the defer-words into named pre-gates (receiver + blocker + gate) rather than open-ended deferrals.
+- **`git diff --check`** clean; **`git diff --stat`** = `restart/ARCHITECTURE.md | 120 ++ | 1 file changed, 120 insertions(+)`.
+- **Clean-regen discipline / dirty-file preservation**: only `restart/ARCHITECTURE.md` + this astral log staged; pre-existing dirty SK-V12/13 research JSON, skinny `css_l4_*` generated.rs, `docs/precepts` untouched.
+
 ## Next Dispatch
 
-The remaining Pass Omega V5 SK-V17 CRUD legs (CRUD-1 ARCHITECTURE, CRUD-2
-MASTER-PLAN, CRUD-4 HANDOFF/MIGRATION, CRUD-5 SKINNY CORPUS, CRUD-6 AUDIT) apply
-the corresponding 3a/3b/3d/3e/3f deltas to the named V1 surfaces. This leg
-discharges CRUD-3 LOCKS only.
+The remaining Pass Omega V5 SK-V17 CRUD legs (CRUD-2 MASTER-PLAN, CRUD-4
+HANDOFF/MIGRATION, CRUD-5 SKINNY CORPUS, CRUD-6 AUDIT) apply the corresponding
+3b/3d/3e/3f deltas to the named V1 surfaces. This leg discharges CRUD-1
+ARCHITECTURE; CRUD-3 LOCKS is discharged above.

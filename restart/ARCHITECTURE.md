@@ -1205,6 +1205,91 @@ checkasm + same-wave consumer + corpus parity) or retire via Lock 10 amendment.
 | `SinkOnly` | direct typed-field sink, no retained document | SK-V12 CSS L4 declaration-values, audit-demoted by PASS-IMPL V1 | any | scalar reference equivalence | `cargo test -p skinny-codegen sink_only` | CSS fact-stream row is diagnostic until SK-V15 W5/W6 | `skinny/crates/codegen/src/lower/sink_only.rs:112-140` exists, but CSS fact-stream-only proof does not close SK-V15 | **OPEN / AUDIT-DEMOTED**: substantive path exists, but CSS/SinkOnly admission cannot close until typed CSS Value output, same-workload retime, and W8/W9 lowerer gates produce executable evidence |
 | `CollapsedStage` | x86 AVX-512 collapsed-stage FSM | asmjson AVX-512 (Lemire 2023 ICPP), Sneller branchless-AVX-512 (T2A-REF-002) | **`target.arch == x86` + `target.avx512bw` + `Entry(_)`** (LAC-2D-06; aarch64 mechanically refused) | scalar reference required pre-admit | absent in skinny | absent in skinny | absent in skinny | **NOT-ADMITTED**: x86-only; aarch64 candidate is UNKNOWN-2D-05 (requires 2E source-backed aarch64 strategy before any aarch64 admission); marker-string lowerer at `skinny/crates/codegen/src/lower/collapsed_stage.rs:15-17` per P1-1B-D6 |
 
+**SK-V17 T-P3 tape-fold directive (ARCH-3A-S17-D01/D03/D04/D05/D07/D08;
+crystallised at `restart/locks/LOCKS.md:610`-`622` SK-V17 T-P3 Crystallisation
+Addendum, applied `7157be073`; G-Omega CLOSED).** The five-shape canon above is
+the architectural target; the SK-V18 implementation folds the SKINNY-proven
+unified-tape / lazy-`ValueRef<G>` / aarch64-NEON engine into this spec
+monotonically (skinny→core, never the reverse). This directive records the fold
+steps; it adds no directive, BIR variant, substrate, public substrate API,
+retained sidecar, lock, or sixth shape.
+
+- **Tape-as-unified-substrate (D01; Lock 1 tape-substrate-union clause).** The
+  substrate-manifest prose at `:1088` already states the five shapes ARE the
+  tape's projections; the fold writes the *retirement* step. SK-V18 retires the
+  live eager `OpenFrame` builders (`crates/core/src/runtime/css_l4/builder.rs:16`
+  817 LOC, `crates/core/src/runtime/json/builder.rs:9` 231 LOC; eager-retirement
+  blast radius 40 files via `grep -rl 'JsonStructBuilder\|CssStructBuilder'
+  crates/`) and converges the AoS `TapeRec`
+  (`crates/core/src/runtime/tape/record.rs:103`) onto the PROVEN-AND-BENCHED SoA
+  `Tape<'input>` (`skinny/crates/runtime/src/tape/mod.rs:94`) as the SINGLE
+  post-fold encoding. Exactly ONE encoding survives (Lock 1, `:75`); a dual
+  AoS/SoA end-state is admissible ONLY as a transient fold-state, REJECT as a
+  closure. The all-8 `OnceCell<StructuralIndex>` `substrate_target` declaration
+  (json/ebnf/bnf/csv/css_l4/css_pretty/google_sheets/bbnf) is the pre-gate.
+  Eliminates the `Vec<OpenFrame>::clone` 86.07% samply parallel-substrate
+  pathology Lock 1 forbids.
+- **Tape = substrate-manifest CATEGORY, not a 6th shape (D04; Lock 10
+  tape-category clause).** The tape is the SUBSTRATE the five `BackendShape`
+  shapes project from (`substrate_target = existing_tape`), recorded at the Lock
+  1 substrate manifest per the LAC-1E-14 FactStream precedent
+  (`restart/locks/LOCKS.md:100`-`116`) — NOT a 6th `BackendShape` variant. The
+  five-shape Lock-10 domain `{EagerTape, OffsetTape, EventTape, SinkOnly,
+  CollapsedStage}` holds verbatim; a 6th variant remains G-Omega gated. The
+  verdict stands on TWO independent grounds: the categorical precedent, and the
+  `admits_collapsed_stage` x86-binding (`:1151`, `:1206`) that mechanically
+  refuses on the aarch64 M5 Max target, leaving no mechanism for a 6th aarch64
+  shape.
+- **StructRegistry/FieldSource fence (D05; Lock 1 clause regression firewall).**
+  The `FieldSource` projection walk inside the live `StructRegistry`
+  (`crates/ir/src/registry/struct.rs:84`,`:313`) is compile-time emission
+  resolved ONCE at codegen; ANY per-leaf runtime `StructRegistry::layout(rule)`
+  indirection in the tape/projection hot path re-opens the measured
+  28-65×/983×/10583× regression and is REJECT. `begin_compound` reads
+  `layout.rule_id & 0x1F` only (`crates/core/src/runtime/tape/mod.rs:185`-`186`,
+  grep-zero `StructRegistry`); the SOLE live-runtime `StructRegistry`-method
+  coupling is `crates/core/src/runtime/bbnf/arena.rs:47`
+  (`StructRegistry::compound_kind_for_layout`, unique caller of the
+  `struct.rs:388` defn), reached only via the eager bbnf builder
+  `crates/core/src/runtime/bbnf/builder.rs:102`; D01's eager-OpenFrame retirement
+  severs it precisely there. The css_l4 + json builders carry ZERO
+  `StructRegistry` coupling; the other 6 grammars resolve compound kind from a
+  local `match layout.rule_id` (`crates/core/src/runtime/bnf/kind.rs:20`). Keeps
+  the AZ-IV-IV StructRegistry indirection pre-blocked.
+- **NEON classifier primitive-manifest row (D03; Lock 16 NEON-classifier
+  clause).** The shared alphabet-parametrised `select_classifier(alphabet)` /
+  `scan_structural(input, &StructuralAlphabet)` classifier registers as a Lock-16
+  `PrimitiveFacts` manifest ROW (abstract primitive = alphabet-parametrised byte
+  classification; scalar oracle `scalar/byte_class_from_eq_set_64.rs`; checkasm
+  parity under `BBNF_SIMD_STRICT=1`; `substrate_target = existing_tape`;
+  `retention_lifetime = transient-single-call`; same-wave consumer = the tape).
+  The eq-set fan is the ONE proven NEON Layer-1 body (87 LOC, 8 distinct NEON
+  intrinsics); `byte_class_from_table_64` and `bitmap_prefix_xor_64` are
+  honestly-declared `scalar-delegate-non-ASM` passthroughs, not SIMD row-movers.
+  The JSON-first classifier narrative folds to the alphabet-as-data form; the
+  `crates/simd-scan` scope-reconcile is aarch64-primary, no x86 close path, no
+  SVE.
+- **BackendShape selector wiring (D07; cost-cell band, CH4-V3-01).** The
+  `BackendShape` enum + `derive_backend_shape` selector (skinny-only today;
+  grep-zero in `crates/`) WIRES into core atop the `EmitStrategy::StructDirect`
+  lineage, consuming the already-present `crates/egraph` + `crates/csp-solver`
+  decision engine — the fold WIRES, does not build. `backend_shape` is a
+  `LayoutFacts` side-table field, not a surface annotation; no grammar author
+  annotates the shape. Cost-cell band: 60-200 LOC selector wiring atop a
+  600-1400 LOC joint decision-engine wiring envelope; the envelope is bounded by
+  the WIRE posture and is intrinsic-blocked (not overflow-waved) if the 4 skinny
+  lowerers (17-LOC scaffolds) require real per-shape lowering bodies rather than
+  wiring the existing engine.
+- **Three-ORQ SK-V18 pre-gates (D08).** The three T-P2 ORQs are named SK-V18
+  pre-gates, not open-ended deferrals: U1 (SoA `Tape` is the declared
+  convergence-target encoding; adopt-vs-parity is the SK-V18 substrate-union gate
+  call, 2F recommends the proven-and-benched SoA form); U2 (each of the 8
+  `OnceCell<StructuralIndex>` carriers classified `existing_tape` vs
+  `local_temp_only` BEFORE wiring, else REDRESS-53 re-entry); U3 (aarch64
+  CollapsedStage = UNKNOWN-2D-05, no admission without a 2E source-backed
+  strategy; no x86 close path, no D6 second substrate). Each names a concrete
+  receiver + blocker + receiving gate.
+
 **Grammar-Generality BackendShape Matrix (3E-D01 / 3E-D02; 2C V4 §Executive
 Summary 15 CSS L4 sub-grammars; LAC-2C-04 resolver-generated shape facts;
 3E-D07 CSS L4 + Sheets/BBNF-self negative-control mandate).** The
@@ -1284,6 +1369,20 @@ admission; until then aarch64 admission is mechanically refused at the
 The bifurcation is load-bearing for LLVM compatibility. Recursive-descent Rust compiles to an implicit automaton through LLVM's optimiser — the call-stack-as-parse-state lowering fuses with force-inlined hot leaves under Lock 15's `lto = "fat"` + `codegen-units = 1` + ~20 KiB hot-function ceiling, and yyjson's reference C body demonstrates the same shape stays in i-cache. Codegen-emitted *explicit* Rust automatons do not survive this lowering: LLVM cannot fold an indirect-dispatch state walk back into PC-as-state form, and the overhead asmjson eliminates via `jmp [r10 + state*8]` reappears as branch-misprediction taxa in any LLVM-emitted equivalent. The lone exception — `CollapsedStage` — therefore consumes hand-written NASM where direct control over generated-code addresses is available (asmjson's PC-as-state pattern; Lock 16's `FSM_DISPATCH_THREADED` primitive in `skinny/crates/bbnf-simd/ext/x86/bbnf.asm`). All four other shapes stay in LLVM's territory and consume Layer-1 primitives from the same `ext/x86/bbnf.asm` vocabulary only at scan-shaped inner loops where the primitive's grammar-neutral signature (`BYTE_CLASS_FROM_TABLE_64`, `BYTE_CLASS_FROM_EQ_SET_64`, `BITMAP_PREFIX_XOR_64`, `BITMAP_NEXT_SET_BIT`, `BULK_EMIT_COMPRESSED`, `EOB_PAD_CLAMP`, `FRAME_PUSH_BOUNDED`, `FRAME_POP_BOUNDED`) admits a direct FFI binding. The Rust per-shape lowerer surface exists as a skinny prototype at `skinny/crates/codegen/src/lower/rust.rs`, not as SK-V15 closure: PASS-IMPL V1 found four label-string lowerer scaffolds and a `SinkOnly` path whose CSS proof is diagnostic until typed CSS output and same-workload retiming land. The two-layer reusable vocabulary — Layer 0 vendored from dav1d at `skinny/crates/bbnf-simd/ext/x86/x86inc.asm` (1,978 LOC, BSD-2), Layer 1 grammar-neutral macros at `skinny/crates/bbnf-simd/ext/x86/bbnf.asm` — is the dav1d / asmjson factoring elaborated at `restart/skinny/tranches/shared/SOTA-BEAT-DESIGN.md` §5.2; Lock 1 governs the substrate union that admits all five shapes, Lock 14 governs the zero-grammar-overfitting discipline that keeps `bbnf.asm` grammar-neutral, Lock 15 governs the i-cache residency budget that bounds the recursive-descent shapes, and Lock 16 governs the admissibility allowlist that bounds the primitive vocabulary. The same-wave-consumer rule at `docs/precepts/instructions/LESSONS-LEARNED.md:17-26` constrains admission: a `CollapsedStage` lowering target lands only when a per-grammar kernel author is in flight (no substrate-without-consumer); a primitive lands in `bbnf.asm` only when at least one shape consumes it through codegen at the same wave.
 
 ### 7.4 SK-V5 Through SK-V15 Implementation Status
+
+**Lock-2 `StructLayout` reconcile note (ARCH-3A-S17-D06; Lock 2
+StructLayout-reconcile clause, `restart/locks/LOCKS.md:616`; G-Omega CLOSED).**
+`StructLayout` is Lock-2-RETIRED (canonical name `Layout`/`LayoutFacts`) yet LIVE
+at 960 sites in `crates/` (`grep StructLayout crates/` = 960), while
+`LayoutFacts`/`backend_shape` are skinny/prior-totality-only (`grep
+'backend_shape\|LayoutFacts' crates/` = 0). The reconcile is priced by TWO
+disjoint paths, neither chosen here: (a) full rename `StructLayout`→`Layout`
+across the 960 generator-side sites, regenerating 8 parsers + ~16 tests; (b)
+re-scope toward a `LayoutFacts.backend_shape` side-table, sized as the 0→N
+introduce-site delta — so path-(b)'s `crates/core` realisation is NON-ZERO, a
+re-scope not a closure. The v+1 note bars Lock-2 closure by `LayoutFacts` alone
+while public `Layout`/`LayoutSink` remain absent. Route selection is an SK-V18
+wave decision the clause governs, not a spec edit.
 
 **Generic-Crate Grammar-Name Leak Surface (ARCH-3A-D09; P1-1B-D7 revised +
 P1-1B-D8 + P1-1B-D10 + P1-1B-D13; 1B Generic-Crate Census; 1C Lock 14 Leak
@@ -1859,6 +1958,7 @@ Tape invariants:
 | Tokens borrow source slices where possible, and payload policy declares when normalized strings or parsed scalars live in the payload arena. | Slice-borrow API tests plus materialisation-cost artefact. |
 | Direct views can point into tape. | `DocumentView` tests. |
 | Every public node has one `(TapeId, node id, payload class)` identity. | Runtime identity smoke for document root, `ValueRef`, path/select, visitor, and debug trace. |
+| SK-V18 converges to ONE tape encoding: the PROVEN-AND-BENCHED SoA `Tape<'input>` (`skinny/crates/runtime/src/tape/mod.rs:94`), not the AoS `TapeRec`. A dual AoS/SoA end-state is a transient fold-state only. (ARCH-3A-S17-D01; Lock 1 tape-substrate-union clause, `restart/locks/LOCKS.md:614`.) | Lock 1 exactly-one-encoding gate; SK-V18 substrate-union gate (adopt-vs-parity). |
 
 ### 9.2 Direct-To-Struct Union
 
@@ -1886,6 +1986,26 @@ dispositions:
   event cursor at HEAD. Pass Omega Ω-A selects ratify-two-cursor OR
   mandate-unification before any §9.2 prose merge that asserts cursor-shape
   unification.
+
+**Lazy `ValueRef<G>` value-plane (ARCH-3A-S17-D02; Lock 14
+ValueRef/classifier-generalisation clause, `restart/locks/LOCKS.md:620`; G-Omega
+CLOSED).** The one grammar-parametric `ValueRef<'doc,'input,K,G:EventGrammar>`
+projection (`skinny/crates/runtime/src/tape/mod.rs:175`) is the unified
+materialization plane: SK-V18 re-emits all 8 per-grammar value surfaces from a
+single grammar-agnostic `@generated` accessor generator that resolves
+`StructLayout`/`FieldSource` ONCE at codegen, replacing the per-grammar EAGER
+value enums (`crates/core/src/runtime/css_l4/value.rs:414`). The `G:EventGrammar`
+type parameter is the generality vehicle; `@generated` per-grammar emission keeps
+it grammar-neutral by construction (hand-authoring a per-grammar runtime file in
+a generic crate would be the Lock 14 VIOLATION). preserve-rich-ast holds: the
+lazy view is the materialization plane, never a flattening of the typed AST. The
+value-fold is SCOPE-HONEST — exercised JSON+CSS ONLY; Sheets/BBNF-self are
+by-construction under SK-V18 (the `sheets_witness` 24-LOC stub cannot serve as
+exercise), NOT claimed fleet-wide. The shared classifier's grammar-generality is
+config-breadth (alphabet-as-data across 8 of 9 generated grammars), a SEPARATE
+axis from the value-fold. Pre-gate: the JSON `value_from_ref` byte-equal re-emit
+proof — a CSS-only generator that never re-emits JSON FAILS the single-plane
+claim and is REDRESS.
 
 Direct builders do not bypass the substrate event stream. Retained direct
 views are projections over sealed tape; `SinkOnly` direct outputs are

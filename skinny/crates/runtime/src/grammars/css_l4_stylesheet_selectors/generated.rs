@@ -798,25 +798,16 @@ fn trim_ascii(mut bytes: &[u8]) -> &[u8] {
 
 /// Count top-level commas in a selector prelude (commas not nested inside
 /// `()`/`[]`/`{}` or strings) — the selector-list separator count.
+///
+/// L6 NEON consumer: `bbnf_simd`'s `bracket_depth_mask_64` produces the
+/// bracket-interior mask 64 bytes at a time; a top-level comma is one whose
+/// bit is OUTSIDE that mask. The shared bridge threads the i32 depth carry
+/// and falls back to a scalar byte-walk for any block containing a quote
+/// (string interiors are not bracket-tracked). Result is bit-identical to
+/// the scalar reference below; the rich 9-field equality oracle re-proves it.
 #[inline]
 fn count_top_level_commas(bytes: &[u8]) -> usize {
-    let mut depth: i32 = 0;
-    let mut commas = 0usize;
-    let mut pos = 0usize;
-    while pos < bytes.len() {
-        match bytes[pos] {
-            b'(' | b'[' | b'{' => depth += 1,
-            b')' | b']' | b'}' => depth = depth.saturating_sub(1),
-            b'"' | b'\'' => {
-                pos = skip_string(bytes, pos);
-                continue;
-            }
-            b',' if depth == 0 => commas += 1,
-            _ => {}
-        }
-        pos += 1;
-    }
-    commas
+    crate::runtime_simd::count_top_level_commas(bytes)
 }
 
 /// Forward-scan from a declaration value head to its terminator (`;` or `}` at

@@ -249,6 +249,7 @@ pub fn compact_mask(base: usize, mask: u64, positions: &mut Vec<u32>) {
 // ============================================================================
 
 pub mod prim {
+    pub use crate::scalar::comment_body_mask_64::CommentCarry;
     pub use crate::scalar::eob_pad_clamp::EobBlock;
 
     #[inline]
@@ -289,5 +290,48 @@ pub mod prim {
         return crate::aarch64::byte_class_from_eq_set_64::byte_class_from_eq_set_64_neon(src, set);
         #[allow(unreachable_code)]
         crate::scalar::byte_class_from_eq_set_64::byte_class_from_eq_set_64_scalar(src, set)
+    }
+
+    /// Comment-interior mask over a 64-byte block. Bit `i` is set iff `src[i]`
+    /// is interior to an `open`…`close` block comment (CSS `/*`…`*/`). Carries
+    /// the inter-block `CommentCarry` (transient, init `default()` per parse).
+    /// NEON on aarch64, scalar elsewhere; checkasm-parity gated.
+    #[inline]
+    pub fn comment_body_mask_64(
+        src: &[u8; 64],
+        open: [u8; 2],
+        close: [u8; 2],
+        carry: CommentCarry,
+    ) -> (u64, CommentCarry) {
+        #[cfg(target_arch = "aarch64")]
+        return crate::aarch64::comment_body_mask_64::comment_body_mask_64_neon(
+            src, open, close, carry,
+        );
+        #[allow(unreachable_code)]
+        crate::scalar::comment_body_mask_64::comment_body_mask_64_scalar(src, open, close, carry)
+    }
+
+    /// Bracket-depth-interior mask over a 64-byte block. Bit `i` is set iff
+    /// `src[i]` is at nesting depth ≥ 1 under the `opens`/`closes` bracket sets
+    /// (CSS `([{` / `)]}`). Threads the i32 `depth` carry within one parse
+    /// (transient, init 0). The body is the scalar running balance (REDRESS-89:
+    /// NOT CTZ); NEON only vectorizes the open/close classification.
+    #[inline]
+    pub fn bracket_depth_mask_64(
+        src: &[u8; 64],
+        opens: &[u8; 4],
+        open_len: usize,
+        closes: &[u8; 4],
+        close_len: usize,
+        depth: i32,
+    ) -> (u64, i32) {
+        #[cfg(target_arch = "aarch64")]
+        return crate::aarch64::bracket_depth_mask_64::bracket_depth_mask_64_neon(
+            src, opens, open_len, closes, close_len, depth,
+        );
+        #[allow(unreachable_code)]
+        crate::scalar::bracket_depth_mask_64::bracket_depth_mask_64_scalar(
+            src, opens, open_len, closes, close_len, depth,
+        )
     }
 }

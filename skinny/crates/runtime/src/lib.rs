@@ -1,5 +1,10 @@
 pub mod tape;
 
+/// Grammar-neutral bridge to the shared `bbnf-simd` structural primitives (the
+/// CSS structural scan's NEON inner-skip + comment/bracket mask consumers;
+/// alphabet/byte-set as caller data, Lock 14).
+pub mod runtime_simd;
+
 #[path = "grammars/json/mod.rs"]
 pub mod generated_json;
 
@@ -488,5 +493,152 @@ mod tests {
         assert_eq!(CssTypedValue::classify(b"rgb(1 2 3)"), CssTypedValue::Function);
         assert_eq!(CssTypedValue::classify(b"red"), CssTypedValue::Keyword);
         assert_eq!(CssTypedValue::classify(b"50%"), CssTypedValue::Dimension);
+    }
+
+    // ---- W3 NEON runtime-consumer parity guards ----------------------------
+    //
+    // The NEON inner-skip (`find_css_significant`), the L5 comment-close
+    // consumer (`find_comment_close`), and the L6 top-level-comma consumer
+    // (`count_top_level_commas`) accelerate the CSS scan; these guards pin them
+    // to their scalar references so an acceleration regression is caught here,
+    // independent of the corpus-scale equality oracle.
+
+    fn significant_ref(bytes: &[u8], from: usize, delims: &[u8], fixed: &[u8; 9]) -> usize {
+        let mut pos = from;
+        while pos < bytes.len() {
+            let byte = bytes[pos];
+            if delims.contains(&byte) || fixed.contains(&byte) {
+                return pos;
+            }
+            pos += 1;
+        }
+        pos
+    }
+
+    fn comment_close_ref(bytes: &[u8], start: usize) -> Option<usize> {
+        let mut pos = start + 2;
+        while pos + 1 < bytes.len() {
+            if bytes[pos] == b'*' && bytes[pos + 1] == b'/' {
+                return Some(pos + 2);
+            }
+            pos += 1;
+        }
+        None
+    }
+
+    fn count_top_level_commas_ref(bytes: &[u8]) -> usize {
+        let mut depth: i32 = 0;
+        let mut commas = 0usize;
+        let mut pos = 0usize;
+        while pos < bytes.len() {
+            match bytes[pos] {
+                b'(' | b'[' | b'{' => depth += 1,
+                b')' | b']' | b'}' => depth = depth.saturating_sub(1),
+                b'"' | b'\'' => {
+                    let quote = bytes[pos];
+                    let mut c = pos + 1;
+                    while c < bytes.len() {
+                        match bytes[c] {
+                            b'\\' => c += 2,
+                            x if x == quote => {
+                                c += 1;
+                                break;
+                            }
+                            _ => c += 1,
+                        }
+                    }
+                    pos = c;
+                    continue;
+                }
+                b',' if depth == 0 => commas += 1,
+                _ => {}
+            }
+            pos += 1;
+        }
+        commas
+    }
+
+    #[test]
+    fn neon_significant_skip_matches_scalar() {
+        const FIXED: &[u8; 9] = b"'\"/()[]{}";
+        let corpora: [&[u8]; 5] = [
+            b".a{color:red;background:url(x)}/* c */\n@media(x){.b,.c{d:e}}",
+            b"a b c d e f g h i j k l m n o p q r s t u v w x y z 0 1 2 3 4 5 6 7 8 9",
+            br#"x:"quoted; with delims {}" ; y : 'single (paren)' }"#,
+            b"",
+            b"012345678901234567890123456789012345678901234567890123456789012345;{}()",
+        ];
+        for input in corpora {
+            for &delims in &[&b";{}"[..], &b"{};"[..], &b":{};"[..], &b";}"[..]] {
+                for from in 0..=input.len() {
+                    let got = crate::runtime_simd::find_css_significant(input, from, delims, FIXED);
+                    let want = significant_ref(input, from, delims, FIXED);
+                    assert_eq!(
+                        got, want,
+                        "significant skip diverged: from={from} delims={delims:?} input={input:?}"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn neon_comment_close_matches_scalar() {
+        let cases: [&[u8]; 7] = [
+            b"/* short */rest",
+            b"/**/x",
+            b"/* unterminated",
+            b"/* exactly-64-bytes-of-comment-body-aaaaaaaaaaaaaaaaaaaaaaaaaa */z",
+            b"/* a */ /* b */",
+            b"/* contains ; { } : delimiters that must NOT leak */ .x{}",
+            b"/*aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa*/tail",
+        ];
+        for input in cases {
+            assert_eq!(
+                crate::runtime_simd::find_comment_close(input, 0),
+                comment_close_ref(input, 0),
+                "comment-close diverged: input={input:?}"
+            );
+        }
+        for pad in 55..70 {
+            let mut input = b"/*".to_vec();
+            input.resize(pad, b'a');
+            input.extend_from_slice(b"*/tail");
+            assert_eq!(
+                crate::runtime_simd::find_comment_close(&input, 0),
+                comment_close_ref(&input, 0),
+                "boundary comment-close diverged: pad={pad}"
+            );
+        }
+    }
+
+    #[test]
+    fn neon_top_level_commas_matches_scalar() {
+        let cases: [&[u8]; 8] = [
+            b".a, .b, .c",
+            b"a:not(.x, .y), b[attr=\"v,w\"], c",
+            b"",
+            b".single",
+            b"li:nth-child(2n+1), .grid > [data-col], main .a, .b, .c, .d, .e, .f, .g, .h, .i",
+            b"x:matches(:is(a, b), :where(c, d)), y",
+            br#".a[title="comma, inside"] , .b"#,
+            b".aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa, .b, .c",
+        ];
+        for input in cases {
+            assert_eq!(
+                crate::runtime_simd::count_top_level_commas(input),
+                count_top_level_commas_ref(input),
+                "top-level comma count diverged: input={input:?}"
+            );
+        }
+        for pad in 58..70 {
+            let mut input = vec![b'x'; pad];
+            input.extend_from_slice(b"(a, b), c, d");
+            assert_eq!(
+                crate::runtime_simd::count_top_level_commas(&input),
+                count_top_level_commas_ref(&input),
+                "boundary comma count diverged: pad={pad}"
+            );
+        }
     }
 }

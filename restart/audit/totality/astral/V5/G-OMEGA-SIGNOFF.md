@@ -108,3 +108,80 @@ ARCHITECTURE §7.3/§7.4/§9.1/§9.2 carry the matching SK-V18 fold directives. 
 tape-as-substrate-category placement (not a 6th shape) are preserved. The
 remaining V5 SK-V17 CRUD legs (CRUD-2/4/5/6) apply the corresponding 3b/3d/3e/3f
 deltas to the named V1 surfaces.
+
+---
+
+# G-Omega Sign-Off — Pass Omega V5 SK-V17 Tape-Fold (CRUD-6 Consolidation / FULL CLOSE)
+
+Gate: G-Omega.
+Cycle: Pass Omega V5 (SK-V17 T-P3 tape-fold CRUD application).
+Status: **CLOSED 2026-05-30** — all six CRUD legs complete.
+
+## Gate Record
+
+G-Omega CLOSED by the user this turn for the SK-V17 tape-fold CRUD application
+phase, per `restart/prompts/pass-contracts/PASS-OMEGA.md` §4 (CRUD-1..6) + §6.
+The substantive Omega synthesis + CHALLENGE were discharged by the SK-V17 T-P3
+convergence (§3Z, `139ab1e4a`); this sign-off records the post-G-Omega CRUD
+application across the full receiver set.
+
+## SK-V17 Cohort LOCK Convergence
+
+The SK-V17 cohort = Alpha V4 + S-P1 V4 + S-P2 V3 + S-P3 V3 + T-P1 conv + T-P2 V3
++ T-P3 V3 §3Z-LOCKED.
+
+| Cohort | Status | Evidence |
+|---|---|---|
+| Alpha | V4 LOCKED | `restart/audit/totality/sk-v17/p1/` |
+| S-P1 | V4 LOCKED | SK-V17 skinny synthesis set |
+| S-P2 | V3 LOCKED | SK-V17 skinny synthesis set |
+| S-P3 | V3 CONVERGED | CSS-on-tape / lazy-`ValueRef` / shared-NEON |
+| T-P1 | CONVERGED `91b6893b0` | `restart/audit/totality/sk-v17/p1/` |
+| T-P2 | V3 LOCKED (V2 98.6% + V3 100.0% ACCEPT; five LOCKED LAC-2F-FOLD-01..05) | `restart/audit/totality/sk-v17/p2/hardening/HARDENING-T-P2-SKV17-V3-CONSOLIDATED.md` |
+| T-P3 | §3Z CONVERGED `139ab1e4a` | `restart/audit/totality/sk-v17/p3/3c-locks-crystallisation.md` |
+
+## The 5 LOCKS Clauses Applied (CRUD-3, `7157be073`)
+
+The SK-V17 T-P3 Crystallisation Addendum applies five clauses on Locks 1/2/10/14/16
+(`restart/locks/LOCKS.md:610`-`622`), crystallising the five LOCKED T-P2 fold
+designs `LAC-2F-FOLD-01..05`. 15 insertions, 0 deletions; 16-lock count
+PRESERVED; five `BackendShape` variants verbatim with NO 6th; tape recorded as a
+substrate-manifest category per the LAC-1E-14 FactStream precedent.
+
+## CRUD Sequence (this Pass Omega V5 SK-V17 tape-fold cycle)
+
+| CRUD | Surface | Commit | Lines delta |
+|---|---|---|---|
+| CRUD-3 LOCKS | `restart/locks/LOCKS.md` | `7157be073` (rec. `c3d6e6fd9`) | +15 |
+| CRUD-1 ARCHITECTURE | `restart/ARCHITECTURE.md` | `bdfe71123` | +120 |
+| CRUD-2 MASTER-PLAN | `restart/MASTER-PLAN.md` | `91789be07` (rec. `b57354a9e`) | +110/-7 |
+| CRUD-4 HANDOFF + MIGRATION | `restart/{HANDOFF,MIGRATION}.md` | `c5a4f7644` | +298/-82 |
+| CRUD-5 SKINNY CORPUS | `restart/skinny/{INDEX,SUBSTRATE,COMPILER,BENCH,HARDENING,WORKSPACE}.md` | `f7f94163f` | +175 |
+| CRUD-6 AUDIT + CLEANUP | `restart/audit/totality/astral/V5/{CRUD-LOG,G-OMEGA-SIGNOFF}.md` | THIS COMMIT | +consolidation |
+
+## Final Verification Table
+
+| Invariant | Result |
+|---|---|
+| 16-lock count (`grep -cE "^[0-9]+\. \*\*" restart/locks/LOCKS.md`) | **16** — PRESERVED |
+| 5-shape `BackendShape` canon `{EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage}`, NO 6th | verbatim across LOCKS/ARCH/MASTER-PLAN/skinny; no six-variant tuple anywhere |
+| tape = substrate-manifest CATEGORY (LAC-1E-14) | `substrate_target = existing_tape`; NOT a 6th shape; a 6th shape remains G-Omega gated + SK-V17 §9-barred |
+| aarch64-only (no x86/AVX/SVE close path) | all x86 refs are comparator / architecture-pressure / diagnostic; NEON manifest rows `arm64-only` |
+| preserve-rich-ast | lazy `ValueRef<G>` view IS the rich-AST plane; never a flattening |
+| no re-opened REDRESS | AZ-IV eager REFUTED/fold-DELETION; per-leaf `StructRegistry` REJECT fence; fact-stream diagnostic-only |
+| cross-references resolve | CRUD-1..5 cite CRUD-3 addendum (`7157be073`); CRUD-2/4/5 cite CRUD-1 ARCH (`bdfe71123`); all live |
+| 2 non-blocking REVISE (CH4-V3-01, CH6-V3-7) | both DISCHARGED at their proper surfaces |
+
+## Gate Result
+
+**G-Omega CLOSED 2026-05-30** for the full Pass Omega V5 SK-V17 tape-fold CRUD
+sequence. All six CRUD legs complete (CRUD-1 ARCHITECTURE, CRUD-2 MASTER-PLAN,
+CRUD-3 LOCKS, CRUD-4 HANDOFF/MIGRATION, CRUD-5 SKINNY CORPUS, CRUD-6
+AUDIT/CLEANUP). The 16-lock count, the five `BackendShape` variants, the
+tape-as-substrate-category placement, aarch64-only posture, preserve-rich-ast,
+and the closed-REDRESS fences are all preserved. Legacy nuke = empty (SK-V14
+astral V2-V4 stay).
+
+Next sequenced step: SK-V17 skinny waves W0-W5 under the SKINNY triumvirate,
+then SK-V18 W0 (the `crates/core` tape-fold adoption, MP.SK18.W0..W6)
+post-G-Omega.

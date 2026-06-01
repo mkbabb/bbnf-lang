@@ -1,0 +1,408 @@
+Analysis of sampling css_track1_profile (pid 71915) every 1 millisecond
+Process:         css_track1_profile [71915]
+Path:            /Users/USER/*/css_track1_profile
+Load Address:    0x104438000
+Identifier:      css_track1_profile
+Version:         0
+Code Type:       ARM64
+Platform:        macOS
+Parent Process:  zsh [70329]
+Target Type:     live task
+
+Date/Time:       2026-05-31 21:56:59.425 -0400
+Launch Time:     2026-05-31 21:56:58.340 -0400
+OS Version:      macOS 26.4.1 (25E253)
+Report Version:  7
+Analysis Tool:   /usr/bin/sample
+
+Physical footprint:         3888K
+Physical footprint (peak):  3904K
+Idle exit:                  untracked
+----
+
+Call graph:
+    6160 Thread_13241843   DispatchQueue_1: com.apple.main-thread  (serial)
+      6160 start  (in dyld) + 6992  [0x18f8b3da4]
+        6160 main  (in css_track1_profile) + 860  [0x10443bc08]
+          6160 _RINvNtNtCsicsVAbuKrnN_3std3sys9backtrace28___rust_begin_short_backtraceFEuuECs5BJdgycOxAm_18css_track1_profile  (in css_track1_profile) + 12  [0x1044389a4]  backtrace.rs:166
+            2097 _RNvCs5BJdgycOxAm_18css_track1_profile4main  (in css_track1_profile) + 1860  [0x1044390f0]  css_track1_profile.rs:31
+            + 1001 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 336  [0x1044418c4]  generated.rs:543
+            + ! 429 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 156,364,...  [0x1044414dc,0x1044415ac,...]  generated.rs:667
+            + ! 223 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 424  [0x1044415e8]  generated.rs:670
+            + ! : 107 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 112,164,...  [0x104442014,0x104442048,...]  generated.rs:700
+            + ! : 40 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 380  [0x104442120]  generated.rs:703
+            + ! : | 26 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 112,544,...  [0x104442014,0x1044421c4,...]  generated.rs:700
+            + ! : | 9 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 92  [0x104442000]  generated.rs:696
+            + ! : | 3 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 572  [0x1044421e0]  generated.rs:709
+            + ! : | 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 44  [0x104441fd0]  generated.rs:0
+            + ! : | 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 380  [0x104442120]  generated.rs:703
+            + ! : |   1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 92  [0x104442000]  generated.rs:696
+            + ! : 34 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 92  [0x104442000]  generated.rs:696
+            + ! : 24 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 572  [0x1044421e0]  generated.rs:709
+            + ! : 7 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 216,236,...  [0x10444207c,0x104442090,...]  generated.rs:701
+            + ! : 3 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 668  [0x104442240]  generated.rs:698
+            + ! : 3 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 636,656  [0x104442220,0x104442234]  generated.rs:713
+            + ! : 2 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 44  [0x104441fd0]  generated.rs:0
+            + ! : 2 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 24  [0x104441fbc]  generated.rs:693
+            + ! : 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 380  [0x104442120]  generated.rs:703
+            + ! 203 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 128,108,...  [0x1044414c0,0x1044414ac,...]  generated.rs:664
+            + ! 58 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 84  [0x104441494]  generated.rs:663
+            + ! 45 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 620  [0x1044416ac]  generated.rs:676
+            + ! 31 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 688  [0x1044416f0]  generated.rs:665
+            + ! 5 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 656,648  [0x104442234,0x10444222c]  generated.rs:713
+            + ! 2 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 24  [0x104441458]  generated.rs:657
+            + ! 2 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 272  [0x104441550]  generated.rs:668
+            + ! 2 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 752  [0x104441730]  generated.rs:680
+            + ! 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 424  [0x1044415e8]  generated.rs:670
+            + 313 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 880  [0x104441ae4]  generated.rs:543
+            + ! 296 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser17parse_declaration  (in css_track1_profile) + 188  [0x104441e00]  generated.rs:585
+            + ! : 111 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 424  [0x1044415e8]  generated.rs:670
+            + ! : | 58 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 164,544,...  [0x104442048,0x1044421c4,...]  generated.rs:700
+            + ! : | 17 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 380  [0x104442120]  generated.rs:703
+            + ! : | + 10 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 544,164,...  [0x1044421c4,0x104442048,...]  generated.rs:700
+            + ! : | + 3 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 92  [0x104442000]  generated.rs:696
+            + ! : | + 3 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 572  [0x1044421e0]  generated.rs:709
+            + ! : | + 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 636  [0x104442220]  generated.rs:713
+            + ! : | 13 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 92  [0x104442000]  generated.rs:696
+            + ! : | 9 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 572  [0x1044421e0]  generated.rs:709
+            + ! : | 4 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 524,204,...  [0x1044421b0,0x104442070,...]  generated.rs:701
+            + ! : | 3 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 668  [0x104442240]  generated.rs:698
+            + ! : | 3 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 636  [0x104442220]  generated.rs:713
+            + ! : | 2 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 0,24  [0x104441fa4,0x104441fbc]  generated.rs:693
+            + ! : | 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 408  [0x10444213c]  generated.rs:702
+            + ! : | 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 364  [0x104442110]  generated.rs:703
+            + ! : 90 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 148,156,...  [0x1044414d4,0x1044414dc,...]  generated.rs:667
+            + ! : 31 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 96,108  [0x1044414a0,0x1044414ac]  generated.rs:664
+            + ! : 20 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 688  [0x1044416f0]  generated.rs:665
+            + ! : 13 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 36,20,...  [0x104441464,0x104441454,...]  generated.rs:657
+            + ! : 12 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 620  [0x1044416ac]  generated.rs:676
+            + ! : 11 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 84  [0x104441494]  generated.rs:663
+            + ! : 5 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 752  [0x104441730]  generated.rs:680
+            + ! : 3 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 656  [0x104442234]  generated.rs:713
+            + ! 7 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser17parse_declaration  (in css_track1_profile) + 40,68,...  [0x104441d6c,0x104441d88,...]  generated.rs:581
+            + ! 5 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser17parse_declaration  (in css_track1_profile) + 268,196  [0x104441e50,0x104441e08]  generated.rs:585
+            + ! 2 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser17parse_declaration  (in css_track1_profile) + 388  [0x104441ec8]  generated.rs:587
+            + ! 2 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 764,772  [0x10444173c,0x104441744]  generated.rs:680
+            + ! 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser17parse_declaration  (in css_track1_profile) + 376  [0x104441ebc]  generated.rs:0
+            + 301 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 744  [0x104441a5c]  generated.rs:543
+            + ! 113 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 156,208,...  [0x1044414dc,0x104441510,...]  generated.rs:667
+            + ! 111 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 108,96,...  [0x1044414ac,0x1044414a0,...]  generated.rs:664
+            + ! 28 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 620  [0x1044416ac]  generated.rs:676
+            + ! 26 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 84  [0x104441494]  generated.rs:663
+            + ! 14 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 688  [0x1044416f0]  generated.rs:665
+            + ! 7 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 36,20,...  [0x104441464,0x104441454,...]  generated.rs:657
+            + ! 2 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 752  [0x104441730]  generated.rs:680
+            + 224 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 940  [0x104441b20]  generated.rs:543
+            + ! 204 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser17parse_declaration  (in css_track1_profile) + 188  [0x104441e00]  generated.rs:585
+            + ! : 90 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 424  [0x1044415e8]  generated.rs:670
+            + ! : | 47 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 112,164,...  [0x104442014,0x104442048,...]  generated.rs:700
+            + ! : | 21 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 380  [0x104442120]  generated.rs:703
+            + ! : | + 14 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 112,544,...  [0x104442014,0x1044421c4,...]  generated.rs:700
+            + ! : | + 5 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 92  [0x104442000]  generated.rs:696
+            + ! : | + 2 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 572  [0x1044421e0]  generated.rs:709
+            + ! : | 8 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 572  [0x1044421e0]  generated.rs:709
+            + ! : | 6 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 92  [0x104442000]  generated.rs:696
+            + ! : | 4 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 636,648,...  [0x104442220,0x10444222c,...]  generated.rs:713
+            + ! : | 3 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 228,236,...  [0x104442088,0x104442090,...]  generated.rs:701
+            + ! : | 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 24  [0x104441fbc]  generated.rs:693
+            + ! : 56 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 156,148,...  [0x1044414dc,0x1044414d4,...]  generated.rs:667
+            + ! : 27 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 108,96  [0x1044414ac,0x1044414a0]  generated.rs:664
+            + ! : 12 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 620  [0x1044416ac]  generated.rs:676
+            + ! : 8 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 36,8  [0x104441464,0x104441448]  generated.rs:657
+            + ! : 8 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 84  [0x104441494]  generated.rs:663
+            + ! : 2 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 688  [0x1044416f0]  generated.rs:665
+            + ! : 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 656  [0x104442234]  generated.rs:713
+            + ! 7 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser17parse_declaration  (in css_track1_profile) + 20,68  [0x104441d58,0x104441d88]  generated.rs:581
+            + ! 6 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser17parse_declaration  (in css_track1_profile) + 196,268,...  [0x104441e08,0x104441e50,...]  generated.rs:585
+            + ! 4 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser17parse_declaration  (in css_track1_profile) + 304  [0x104441e74]  generated.rs:592
+            + ! 3 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 764,772  [0x10444173c,0x104441744]  generated.rs:680
+            + 137 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 568  [0x1044419ac]  generated.rs:543
+            + ! 63 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 156,364,...  [0x1044414dc,0x1044415ac,...]  generated.rs:667
+            + ! 43 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 108,128,...  [0x1044414ac,0x1044414c0,...]  generated.rs:664
+            + ! 20 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 84  [0x104441494]  generated.rs:663
+            + ! 6 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 688  [0x1044416f0]  generated.rs:665
+            + ! 3 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 620  [0x1044416ac]  generated.rs:676
+            + ! 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 36  [0x104441464]  generated.rs:657
+            + ! 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 752  [0x104441730]  generated.rs:680
+            + 29 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 964,484,...  [0x104441b38,0x104441958,...]  generated.rs:543
+            + 27 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 108,144,...  [0x1044417e0,0x104441804,...]  generated.rs:530
+            + 23 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 772,764,...  [0x104441744,0x10444173c,...]  generated.rs:680
+            + 19 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 88,16,...  [0x1044417cc,0x104441784,...]  generated.rs:528
+            + 9 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 296,292,...  [0x10444189c,0x104441898,...]  generated.rs:534
+            + 7 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 272  [0x104441884]  generated.rs:531
+            + 7 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser17parse_declaration  (in css_track1_profile) + 440,448  [0x104441efc,0x104441f04]  generated.rs:599
+            1770 _RNvCs5BJdgycOxAm_18css_track1_profile4main  (in css_track1_profile) + 2464,2476,...  [0x10443934c,0x104439358,...]  css_track1_profile.rs:31
+            1612 _RNvCs5BJdgycOxAm_18css_track1_profile4main  (in css_track1_profile) + 1536  [0x104438fac]  css_track1_profile.rs:31
+            + 1190 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 1248  [0x104441c54]  generated.rs:543
+            + ! 554 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 336  [0x1044418c4]  generated.rs:543
+            + ! : 232 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 156,364,...  [0x1044414dc,0x1044415ac,...]  generated.rs:667
+            + ! : 141 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 108,116,...  [0x1044414ac,0x1044414b4,...]  generated.rs:664
+            + ! : 81 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 424  [0x1044415e8]  generated.rs:670
+            + ! : | 39 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 112,164,...  [0x104442014,0x104442048,...]  generated.rs:700
+            + ! : | 19 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 380  [0x104442120]  generated.rs:703
+            + ! : | + 16 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 544,164,...  [0x1044421c4,0x104442048,...]  generated.rs:700
+            + ! : | + 2 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 572  [0x1044421e0]  generated.rs:709
+            + ! : | + 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 92  [0x104442000]  generated.rs:696
+            + ! : | 12 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 92  [0x104442000]  generated.rs:696
+            + ! : | 9 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 572  [0x1044421e0]  generated.rs:709
+            + ! : | 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 44  [0x104441fd0]  generated.rs:0
+            + ! : | 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 24  [0x104441fbc]  generated.rs:693
+            + ! : 40 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 84  [0x104441494]  generated.rs:663
+            + ! : 36 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 620  [0x1044416ac]  generated.rs:676
+            + ! : 14 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 688  [0x1044416f0]  generated.rs:665
+            + ! : 6 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 24,0,...  [0x104441458,0x104441440,...]  generated.rs:657
+            + ! : 3 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 656  [0x104442234]  generated.rs:713
+            + ! : 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 752  [0x104441730]  generated.rs:680
+            + ! 159 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 940  [0x104441b20]  generated.rs:543
+            + ! : 149 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser17parse_declaration  (in css_track1_profile) + 188  [0x104441e00]  generated.rs:585
+            + ! : | 66 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 148,156,...  [0x1044414d4,0x1044414dc,...]  generated.rs:667
+            + ! : | 26 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 108,96  [0x1044414ac,0x1044414a0]  generated.rs:664
+            + ! : | 18 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 424  [0x1044415e8]  generated.rs:670
+            + ! : | + 8 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 380  [0x104442120]  generated.rs:703
+            + ! : | + ! 5 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 164,552  [0x104442048,0x1044421cc]  generated.rs:700
+            + ! : | + ! 2 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 92  [0x104442000]  generated.rs:696
+            + ! : | + ! 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 572  [0x1044421e0]  generated.rs:709
+            + ! : | + 7 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 164,320,...  [0x104442048,0x1044420e4,...]  generated.rs:700
+            + ! : | + 2 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 92  [0x104442000]  generated.rs:696
+            + ! : | + 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 44  [0x104441fd0]  generated.rs:0
+            + ! : | 15 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 84  [0x104441494]  generated.rs:663
+            + ! : | 12 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 620  [0x1044416ac]  generated.rs:676
+            + ! : | 6 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 20,36  [0x104441454,0x104441464]  generated.rs:657
+            + ! : | 4 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 688  [0x1044416f0]  generated.rs:665
+            + ! : | 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 424  [0x1044415e8]  generated.rs:670
+            + ! : | 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 752  [0x104441730]  generated.rs:680
+            + ! : 6 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser17parse_declaration  (in css_track1_profile) + 68,20,...  [0x104441d88,0x104441d58,...]  generated.rs:581
+            + ! : 2 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser17parse_declaration  (in css_track1_profile) + 196  [0x104441e08]  generated.rs:585
+            + ! : 2 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 772  [0x104441744]  generated.rs:680
+            + ! 156 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 568  [0x1044419ac]  generated.rs:543
+            + ! : 62 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 156,600,...  [0x1044414dc,0x104441698,...]  generated.rs:667
+            + ! : 61 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 96,108,...  [0x1044414a0,0x1044414ac,...]  generated.rs:664
+            + ! : 17 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 84  [0x104441494]  generated.rs:663
+            + ! : 9 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 620  [0x1044416ac]  generated.rs:676
+            + ! : 5 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 688  [0x1044416f0]  generated.rs:665
+            + ! : 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 36  [0x104441464]  generated.rs:657
+            + ! : 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 40  [0x104441468]  generated.rs:662
+            + ! 131 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 880  [0x104441ae4]  generated.rs:543
+            + ! : 121 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser17parse_declaration  (in css_track1_profile) + 188  [0x104441e00]  generated.rs:585
+            + ! : | 46 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 424  [0x1044415e8]  generated.rs:670
+            + ! : | + 30 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 112,128,...  [0x104442014,0x104442024,...]  generated.rs:700
+            + ! : | + 9 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 380  [0x104442120]  generated.rs:703
+            + ! : | + ! 3 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 164,172  [0x104442048,0x104442050]  generated.rs:700
+            + ! : | + ! 3 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 572  [0x1044421e0]  generated.rs:709
+            + ! : | + ! 2 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 92  [0x104442000]  generated.rs:696
+            + ! : | + ! 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 44  [0x104441fd0]  generated.rs:0
+            + ! : | + 3 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 92  [0x104442000]  generated.rs:696
+            + ! : | + 2 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 572  [0x1044421e0]  generated.rs:709
+            + ! : | + 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 44  [0x104441fd0]  generated.rs:0
+            + ! : | + 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 668  [0x104442240]  generated.rs:698
+            + ! : | 45 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 592,156,...  [0x104441690,0x1044414dc,...]  generated.rs:667
+            + ! : | 7 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 84  [0x104441494]  generated.rs:663
+            + ! : | 6 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 620  [0x1044416ac]  generated.rs:676
+            + ! : | 5 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 96,108,...  [0x1044414a0,0x1044414ac,...]  generated.rs:664
+            + ! : | 4 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 688  [0x1044416f0]  generated.rs:665
+            + ! : | 3 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 648,656  [0x10444222c,0x104442234]  generated.rs:713
+            + ! : | 3 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 36  [0x104441464]  generated.rs:657
+            + ! : | 2 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 424  [0x1044415e8]  generated.rs:670
+            + ! : 4 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser17parse_declaration  (in css_track1_profile) + 196,268  [0x104441e08,0x104441e50]  generated.rs:585
+            + ! : 3 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser17parse_declaration  (in css_track1_profile) + 40,68  [0x104441d6c,0x104441d88]  generated.rs:581
+            + ! : 2 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser17parse_declaration  (in css_track1_profile) + 388  [0x104441ec8]  generated.rs:587
+            + ! : 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 772  [0x104441744]  generated.rs:680
+            + ! 115 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 744  [0x104441a5c]  generated.rs:543
+            + ! : 45 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 128,96,...  [0x1044414c0,0x1044414a0,...]  generated.rs:664
+            + ! : 42 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 592,156,...  [0x104441690,0x1044414dc,...]  generated.rs:667
+            + ! : 12 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 84  [0x104441494]  generated.rs:663
+            + ! : 10 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 620  [0x1044416ac]  generated.rs:676
+            + ! : 3 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 32,36  [0x104441460,0x104441464]  generated.rs:657
+            + ! : 3 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 688  [0x1044416f0]  generated.rs:665
+            + ! 21 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 964,484,...  [0x104441b38,0x104441958,...]  generated.rs:543
+            + ! 17 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 144,100,...  [0x104441804,0x1044417d8,...]  generated.rs:530
+            + ! 11 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 772,764  [0x104441744,0x10444173c]  generated.rs:680
+            + ! 8 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 88,84  [0x1044417cc,0x1044417c8]  generated.rs:528
+            + ! 8 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 296,292,...  [0x10444189c,0x104441898,...]  generated.rs:534
+            + ! 6 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 272  [0x104441884]  generated.rs:531
+            + ! 4 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser17parse_declaration  (in css_track1_profile) + 440  [0x104441efc]  generated.rs:599
+            + 326 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 336  [0x1044418c4]  generated.rs:543
+            + ! 168 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 156,148,...  [0x1044414dc,0x1044414d4,...]  generated.rs:667
+            + ! 101 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 96,128,...  [0x1044414a0,0x1044414c0,...]  generated.rs:664
+            + ! 23 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 84  [0x104441494]  generated.rs:663
+            + ! 19 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 620  [0x1044416ac]  generated.rs:676
+            + ! 10 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 688  [0x1044416f0]  generated.rs:665
+            + ! 2 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 24,36  [0x104441458,0x104441464]  generated.rs:657
+            + ! 2 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 424  [0x1044415e8]  generated.rs:670
+            + ! : 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 92  [0x104442000]  generated.rs:696
+            + ! : 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 572  [0x1044421e0]  generated.rs:709
+            + ! 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 752  [0x104441730]  generated.rs:680
+            + 29 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser13parse_at_rule  (in css_track1_profile) + 260  [0x104441114]  generated.rs:493
+            + ! 13 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 156,164,...  [0x1044414dc,0x1044414e4,...]  generated.rs:667
+            + ! 9 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 424  [0x1044415e8]  generated.rs:670
+            + ! : 5 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 544,112,...  [0x1044421c4,0x104442014,...]  generated.rs:700
+            + ! : 4 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 92  [0x104442000]  generated.rs:696
+            + ! 4 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 108,96,...  [0x1044414ac,0x1044414a0,...]  generated.rs:664
+            + ! 2 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 84  [0x104441494]  generated.rs:663
+            + ! 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 688  [0x1044416f0]  generated.rs:665
+            + 17 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 444  [0x104441930]  generated.rs:539
+            + ! 7 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 1248  [0x104441c54]  generated.rs:543
+            + ! : 6 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 336  [0x1044418c4]  generated.rs:543
+            + ! : | 4 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 128,108,...  [0x1044414c0,0x1044414ac,...]  generated.rs:664
+            + ! : | 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 156  [0x1044414dc]  generated.rs:667
+            + ! : | 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 424  [0x1044415e8]  generated.rs:670
+            + ! : |   1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 112  [0x104442014]  generated.rs:700
+            + ! : 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 568  [0x1044419ac]  generated.rs:543
+            + ! :   1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 36  [0x104441464]  generated.rs:657
+            + ! 6 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 336  [0x1044418c4]  generated.rs:543
+            + ! : 5 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 600,148,...  [0x104441698,0x1044414d4,...]  generated.rs:667
+            + ! : 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 96  [0x1044414a0]  generated.rs:664
+            + ! 2 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser13parse_at_rule  (in css_track1_profile) + 260  [0x104441114]  generated.rs:493
+            + ! : 2 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 424  [0x1044415e8]  generated.rs:670
+            + ! :   1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 572  [0x1044421e0]  generated.rs:709
+            + ! :   1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 636  [0x104442220]  generated.rs:713
+            + ! 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 144  [0x104441804]  generated.rs:530
+            + ! 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser13parse_at_rule  (in css_track1_profile) + 832  [0x104441350]  generated.rs:500
+            + !   1 _RNvMs3_NtCskh7iNGrcMfw_5alloc7raw_vecINtB5_6RawVecmE8grow_oneCs5PDFVN8LxIb_9bbnf_simd  (in css_track1_profile) + 52  [0x10447ecc4]  mod.rs:188
+            + !     1 _RNvMs4_NtCskh7iNGrcMfw_5alloc7raw_vecNtB5_11RawVecInner11finish_growCs5PDFVN8LxIb_9bbnf_simd  (in css_track1_profile) + 72  [0x10447ed38]  mod.rs:556
+            + !       1 _mi_theap_realloc_zero  (in css_track1_profile) + 336  [0x10446b4dc]  alloc.c:400
+            + !         1 _platform_memmove  (in libsystem_platform.dylib) + 180  [0x18fc79474]
+            + 10 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 964,520,...  [0x104441b38,0x10444197c,...]  generated.rs:543
+            + 8 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 108,144,...  [0x1044417e0,0x104441804,...]  generated.rs:530
+            + 5 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 304,284,...  [0x1044418a4,0x104441890,...]  generated.rs:534
+            + 5 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser13parse_at_rule  (in css_track1_profile) + 80,120,...  [0x104441060,0x104441088,...]  generated.rs:482
+            + 4 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 88,24  [0x1044417cc,0x10444178c]  generated.rs:528
+            + 4 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 764,768,...  [0x10444173c,0x104441740,...]  generated.rs:680
+            + 3 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser13parse_at_rule  (in css_track1_profile) + 108  [0x10444107c]  generated.rs:483
+            + 3 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser13parse_at_rule  (in css_track1_profile) + 760,740  [0x104441308,0x1044412f4]  generated.rs:500
+            + 2 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 1332  [0x104441ca8]  generated.rs:546
+            + 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 312  [0x1044418ac]  generated.rs:0
+            + 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 272  [0x104441884]  generated.rs:531
+            + 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 1360  [0x104441cc4]  generated.rs:535
+            + 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser13parse_at_rule  (in css_track1_profile) + 0  [0x104441010]  generated.rs:479
+            + 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser13parse_at_rule  (in css_track1_profile) + 348  [0x10444116c]  generated.rs:493
+            + 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser13parse_at_rule  (in css_track1_profile) + 832  [0x104441350]  generated.rs:500
+            +   1 _RNvMs3_NtCskh7iNGrcMfw_5alloc7raw_vecINtB5_6RawVecmE8grow_oneCs5PDFVN8LxIb_9bbnf_simd  (in css_track1_profile) + 52  [0x10447ecc4]  mod.rs:188
+            +     1 _RNvMs4_NtCskh7iNGrcMfw_5alloc7raw_vecNtB5_11RawVecInner11finish_growCs5PDFVN8LxIb_9bbnf_simd  (in css_track1_profile) + 72  [0x10447ed38]  mod.rs:556
+            +       1 _mi_theap_realloc_zero  (in css_track1_profile) + 480  [0x10446b56c]  alloc.c:387
+            +         1 _mi_malloc_generic  (in css_track1_profile) + 540  [0x104477278]  page.c:1036
+            667 _RNvCs5BJdgycOxAm_18css_track1_profile4main  (in css_track1_profile) + 1568  [0x104438fcc]  css_track1_profile.rs:31
+            + 348 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 156,208,...  [0x1044414dc,0x104441510,...]  generated.rs:667
+            + 164 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 108,116,...  [0x1044414ac,0x1044414b4,...]  generated.rs:664
+            + 54 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 84  [0x104441494]  generated.rs:663
+            + 40 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 620  [0x1044416ac]  generated.rs:676
+            + 29 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 424  [0x1044415e8]  generated.rs:670
+            + ! 16 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 112,164,...  [0x104442014,0x104442048,...]  generated.rs:700
+            + ! 6 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 572  [0x1044421e0]  generated.rs:709
+            + ! 3 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 92  [0x104442000]  generated.rs:696
+            + ! 2 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 152  [0x10444203c]  generated.rs:704
+            + ! : 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 668  [0x104442240]  generated.rs:698
+            + ! : 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 552  [0x1044421cc]  generated.rs:700
+            + ! 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 44  [0x104441fd0]  generated.rs:0
+            + ! 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 668  [0x104442240]  generated.rs:698
+            + 21 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 688  [0x1044416f0]  generated.rs:665
+            + 10 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 196  [0x104441504]  generated.rs:671
+            + ! 7 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 104,320,...  [0x10444200c,0x1044420e4,...]  generated.rs:700
+            + ! 2 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 572  [0x1044421e0]  generated.rs:709
+            + ! 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 92  [0x104442000]  generated.rs:696
+            + 1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 648  [0x10444222c]  generated.rs:713
+            4 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 764,772  [0x10444173c,0x104441744]  generated.rs:680
+            3 _RNvCs5BJdgycOxAm_18css_track1_profile4main  (in css_track1_profile) + 988  [0x104438d88]  css_track1_profile.rs:31
+            + 2 mi_malloc_aligned  (in css_track1_profile) + 120  [0x10446b64c]  alloc-aligned.c:274
+            + 1 mi_theap_malloc_zero_aligned_at_overalloc  (in css_track1_profile) + 216  [0x10447acec]  alloc-aligned.c:0
+            2 _RNvCs5BJdgycOxAm_18css_track1_profile4main  (in css_track1_profile) + 7116  [0x10443a578]  css_track1_profile.rs:31
+            + 2 _RINvNvMs2_NtCskh7iNGrcMfw_5alloc7raw_vecINtB8_11RawVecInnerpE7reserve21do_reserve_and_handleNtNtBa_5alloc6GlobalECsgumKUXW3nJ5_7runtime  (in css_track1_profile) + 88  [0x10447f264]  mod.rs:668
+            +   2 _RNvMs4_NtCskh7iNGrcMfw_5alloc7raw_vecNtB5_11RawVecInner11finish_growCsgumKUXW3nJ5_7runtime  (in css_track1_profile) + 88  [0x10447f2f0]  mod.rs:556
+            +     1 _mi_theap_realloc_zero  (in css_track1_profile) + 480  [0x10446b56c]  alloc.c:387
+            +     ! 1 _mi_malloc_generic  (in css_track1_profile) + 160  [0x1044770fc]  page.c:1009
+            +     1 _mi_theap_realloc_zero  (in css_track1_profile) + 336  [0x10446b4dc]  alloc.c:400
+            +       1 _platform_memmove  (in libsystem_platform.dylib) + 204  [0x18fc7948c]
+            1 _RNvCs5BJdgycOxAm_18css_track1_profile4main  (in css_track1_profile) + 2808  [0x1044394a4]  css_track1_profile.rs:31
+            + 1 _RNvNtCsiMP5swsg2Zt_4core3fmt5write  (in css_track1_profile) + 324  [0x10443cc74]  mod.rs:1735
+            +   1 _RNvXsC_NtNtCsiMP5swsg2Zt_4core3fmt3numyNtB7_8LowerHex3fmt  (in css_track1_profile) + 104  [0x10443fe24]  num.rs:49
+            +     1 _RNvMsa_NtCsiMP5swsg2Zt_4core3fmtNtB5_9Formatter12pad_integral  (in css_track1_profile) + 140  [0x10443d964]  mod.rs:1858
+            +       1 _RNvNvMsa_NtCsiMP5swsg2Zt_4core3fmtNtB7_9Formatter12pad_integral12write_prefix  (in css_track1_profile) + 8  [0x10443db7c]  mod.rs:1847
+            1 _RNvCs5BJdgycOxAm_18css_track1_profile4main  (in css_track1_profile) + 3256  [0x104439664]  css_track1_profile.rs:31
+            + 1 _platform_memmove  (in libsystem_platform.dylib) + 428  [0x18fc7956c]
+            1 _RNvCs5BJdgycOxAm_18css_track1_profile4main  (in css_track1_profile) + 6132  [0x10443a1a0]  css_track1_profile.rs:31
+            + 1 _RINvNvMs2_NtCskh7iNGrcMfw_5alloc7raw_vecINtB8_11RawVecInnerpE7reserve21do_reserve_and_handleNtNtBa_5alloc6GlobalECsgumKUXW3nJ5_7runtime  (in css_track1_profile) + 88  [0x10447f264]  mod.rs:668
+            +   1 _RNvMs4_NtCskh7iNGrcMfw_5alloc7raw_vecNtB5_11RawVecInner11finish_growCsgumKUXW3nJ5_7runtime  (in css_track1_profile) + 88  [0x10447f2f0]  mod.rs:556
+            +     1 _mi_theap_realloc_zero  (in css_track1_profile) + 344  [0x10446b4e4]  alloc.c:401
+            +       1 mi_free  (in css_track1_profile) + 0  [0x10446b2d4]  free.c:208
+            1 _RNvCs5BJdgycOxAm_18css_track1_profile4main  (in css_track1_profile) + 6168  [0x10443a1c4]  css_track1_profile.rs:31
+            + 1 _RINvNvMs2_NtCskh7iNGrcMfw_5alloc7raw_vecINtB8_11RawVecInnerpE7reserve21do_reserve_and_handleNtNtBa_5alloc6GlobalECsgumKUXW3nJ5_7runtime  (in css_track1_profile) + 88  [0x10447f264]  mod.rs:668
+            +   1 _RNvMs4_NtCskh7iNGrcMfw_5alloc7raw_vecNtB5_11RawVecInner11finish_growCsgumKUXW3nJ5_7runtime  (in css_track1_profile) + 88  [0x10447f2f0]  mod.rs:556
+            +     1 _mi_theap_realloc_zero  (in css_track1_profile) + 336  [0x10446b4dc]  alloc.c:400
+            +       1 _platform_memmove  (in libsystem_platform.dylib) + 24  [0x18fc793d8]
+            1 _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 1332  [0x104441ca8]  generated.rs:546
+
+Total number in stack (recursive counted multiple, when >=5):
+        17       _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 0  [0x104441fa4]  generated.rs:696
+        17       _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 0  [0x104441fa4]  generated.rs:700
+        15       _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 0  [0x104441fa4]  generated.rs:709
+        15       _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 0  [0x104441440]  generated.rs:664
+        15       _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 0  [0x104441440]  generated.rs:667
+        15       _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 0  [0x104441440]  generated.rs:680
+        13       _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 0  [0x104441440]  generated.rs:663
+        13       _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 0  [0x104441440]  generated.rs:665
+        12       _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 0  [0x104441440]  generated.rs:657
+        12       _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 0  [0x104441440]  generated.rs:676
+        11       _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 0  [0x104441fa4]  generated.rs:713
+        11       _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile) + 424  [0x1044415e8]  generated.rs:670
+        7       _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 0  [0x104441fa4]  generated.rs:0
+        7       _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 380  [0x104442120]  generated.rs:703
+        5       _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile) + 336  [0x1044418c4]  generated.rs:543
+        5       _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile) + 0  [0x104441fa4]  generated.rs:698
+
+Sort by top of stack, same collapsed (when >= 5):
+        _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser20find_component_delim  (in css_track1_profile)        3483
+        _RNvCs5BJdgycOxAm_18css_track1_profile4main  (in css_track1_profile)        1770
+        _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser19consume_balanced_at  (in css_track1_profile)        638
+        _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser11parse_block  (in css_track1_profile)        185
+        _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser17parse_declaration  (in css_track1_profile)        60
+        _RNvMs4_NtNtCsgumKUXW3nJ5_7runtime35generated_css_l4_declaration_values9generatedNtB5_13CssFullParser13parse_at_rule  (in css_track1_profile)        13
+
+Binary Images:
+       0x104438000 -        0x104490e4f +css_track1_profile (0) <66D5171F-C26A-3297-9BC0-840CD278881D> /Users/*/css_track1_profile
+       0x18f80c000 -        0x18f85eb4b  libobjc.A.dylib (951.7) <2E858E25-1FF6-3DA6-84F6-911630620512> /usr/lib/libobjc.A.dylib
+       0x18f85f000 -        0x18f893b34  libdyld.dylib (1376.6) <2C3C5F75-3686-39A1-9202-BD4D2133379D> /usr/lib/system/libdyld.dylib
+       0x18f894000 -        0x18f939ec7  dyld (1.0.0 - 1376.6) <9F682DCF-340C-3BFA-BCDD-DD702F30313E> /usr/lib/dyld
+       0x18f93a000 -        0x18f93d228  libsystem_blocks.dylib (96) <2EA73169-CF76-3DD1-9869-F23C8B338022> /usr/lib/system/libsystem_blocks.dylib
+       0x18f93e000 -        0x18f99251f  libxpc.dylib (3102.100.102) <618039C8-9965-3782-A7D2-90FD4C3DD66F> /usr/lib/system/libxpc.dylib
+       0x18f993000 -        0x18f9b39bf  libsystem_trace.dylib (1861.100.19) <08629650-54FC-3AA6-910E-EACA563804D0> /usr/lib/system/libsystem_trace.dylib
+       0x18f9b4000 -        0x18fa61daf  libcorecrypto.dylib (1922.101.2) <D1EC203E-9B2E-391B-8DE3-7C58F0589437> /usr/lib/system/libcorecrypto.dylib
+       0x18fa62000 -        0x18fab21d7  libsystem_malloc.dylib (812.100.31) <2AD21BE3-FFDB-31D5-A3D7-2F7F672D6E92> /usr/lib/system/libsystem_malloc.dylib
+       0x18fab3000 -        0x18fafa23f  libdispatch.dylib (1542.100.32) <E17AA23F-DB2A-3302-B14C-F6B08C540FCF> /usr/lib/system/libdispatch.dylib
+       0x18fafb000 -        0x18fafdffb  libsystem_featureflags.dylib (103) <0DE01F76-4B36-35A2-98F9-43DD147EDD95> /usr/lib/system/libsystem_featureflags.dylib
+       0x18fafe000 -        0x18fb7eef7  libsystem_c.dylib (1752.100.10) <66EBD321-6899-3863-BA24-5CFC3076A0CB> /usr/lib/system/libsystem_c.dylib
+       0x18fb7f000 -        0x18fc0fae7  libc++.1.dylib (2100.43) <1E9541EC-C564-38CB-BED6-46F708E8D863> /usr/lib/libc++.1.dylib
+       0x18fc10000 -        0x18fc2a75f  libc++abi.dylib (2100.43) <E8D325ED-3B97-325E-B494-B1B0FF93D133> /usr/lib/libc++abi.dylib
+       0x18fc2b000 -        0x18fc6828f  libsystem_kernel.dylib (12377.101.15) <51565B39-F595-3E96-A217-FEF29815057A> /usr/lib/system/libsystem_kernel.dylib
+       0x18fc69000 -        0x18fc75b3b  libsystem_pthread.dylib (539.100.4) <E7A73008-0C09-31E3-9DD9-0C61652F0E85> /usr/lib/system/libsystem_pthread.dylib
+       0x18fc76000 -        0x18fc7e8f3  libsystem_platform.dylib (375.100.10) <D93EC420-F465-3A3A-916D-A04AF9B023EB> /usr/lib/system/libsystem_platform.dylib
+       0x18fc7f000 -        0x18fcae6eb  libsystem_info.dylib (600) <201FD67C-3DF6-3788-B132-A69CAA2AA3D7> /usr/lib/system/libsystem_info.dylib
+       0x193c44000 -        0x193c4de5f  libsystem_darwin.dylib (1752.100.10) <D5BA0CAB-F283-3620-AAA9-1EEB718E1BA8> /usr/lib/system/libsystem_darwin.dylib
+       0x1940af000 -        0x1940c0f5b  libsystem_notify.dylib (348.100.7) <9F46F30B-B7C0-3DD7-AC38-57B78C7971FF> /usr/lib/system/libsystem_notify.dylib
+       0x196379000 -        0x196393f5b  libsystem_networkextension.dylib (2226.101.1) <85169C7B-48DD-3542-AD38-F1B88EA2A95A> /usr/lib/system/libsystem_networkextension.dylib
+       0x196416000 -        0x19642dfdf  libsystem_asl.dylib (406) <6427D987-7938-3278-8C14-10FB9C06BBD5> /usr/lib/system/libsystem_asl.dylib
+       0x197fd1000 -        0x197fd9387  libsystem_symptoms.dylib (2169.100.30) <28B6E34E-9C7D-3437-A3F1-A3C979DE579A> /usr/lib/system/libsystem_symptoms.dylib
+       0x19c26c000 -        0x19c2a425f  libsystem_containermanager.dylib (725.100.37) <14750F95-BB3A-3654-8610-A05A454643A8> /usr/lib/system/libsystem_containermanager.dylib
+       0x19d67c000 -        0x19d6805d7  libsystem_configuration.dylib (1405.100.8) <634F597D-F8BD-3C00-B967-86047FC15D14> /usr/lib/system/libsystem_configuration.dylib
+       0x19d681000 -        0x19d6878cf  libsystem_sandbox.dylib (2680.100.174) <AF76231D-EADC-3399-9414-6AD90FB4EA89> /usr/lib/system/libsystem_sandbox.dylib
+       0x19ecc7000 -        0x19ecca1fb  libquarantine.dylib (196.100.8) <268FEB6E-A237-3050-BFFF-AE3A66B7EAD4> /usr/lib/system/libquarantine.dylib
+       0x19f466000 -        0x19f46cd03  libsystem_coreservices.dylib (191.4.5) <7129349D-04F9-3C3C-BF37-3082C1468654> /usr/lib/system/libsystem_coreservices.dylib
+       0x19f9eb000 -        0x19fa28a77  libsystem_m.dylib (3312.100.1) <83B173CD-7F32-3901-8E67-C0B2676BE015> /usr/lib/system/libsystem_m.dylib
+       0x19fa29000 -        0x19fa29c9b  libcharset.1.dylib (115.100.1) <994633BA-AA7A-31BF-94C5-E31A08CA6243> /usr/lib/libcharset.1.dylib
+       0x19fa2a000 -        0x19fa2d527  libmacho.dylib (1376.6) <9729ECEA-0A08-32E3-8BDB-B42FC15FF258> /usr/lib/system/libmacho.dylib
+       0x19fa47000 -        0x19fa543a7  libcommonCrypto.dylib (600035) <710EC5FA-F77C-3646-A9E3-C037C42E1539> /usr/lib/system/libcommonCrypto.dylib
+       0x19fa55000 -        0x19fa5eca3  libunwind.dylib (2100.2) <FB0518B9-DF0F-3A03-A74B-AF1B21C26F8B> /usr/lib/system/libunwind.dylib
+       0x19fa67000 -        0x19fa717ff  libcopyfile.dylib (240) <0B7FF027-5579-3CBF-A12B-68A4FD36641C> /usr/lib/system/libcopyfile.dylib
+       0x19fa72000 -        0x19fa75987  libcompiler_rt.dylib (103.3) <65E29E6E-7042-3F73-A1D2-F2C4EBCD7524> /usr/lib/system/libcompiler_rt.dylib
+       0x19fa76000 -        0x19fa7a78b  libsystem_collections.dylib (1752.100.10) <B81193DE-3BEC-3340-86D0-DB7F3683D135> /usr/lib/system/libsystem_collections.dylib
+       0x19fa7b000 -        0x19fa7e4cf  libsystem_secinit.dylib (168.100.7) <A6B77B36-195D-33F8-8058-FE0B5BFA9D37> /usr/lib/system/libsystem_secinit.dylib
+       0x19fa7f000 -        0x19fa81bf7  libremovefile.dylib (85.100.6) <BD89B1A3-0D06-3881-B5E1-EFC6CFBDFCC1> /usr/lib/system/libremovefile.dylib
+       0x19fa82000 -        0x19fa82f27  libkeymgr.dylib (31) <DE8F8219-0072-35C2-8932-C065491ED15D> /usr/lib/system/libkeymgr.dylib
+       0x19fa83000 -        0x19fa8be3f  libsystem_dnssd.dylib (2881.100.56.0.1) <DEC8BDD2-366C-3BF9-A123-35744DB06354> /usr/lib/system/libsystem_dnssd.dylib
+       0x19fa8c000 -        0x19fa9109b  libcache.dylib (95) <4D6833A3-C910-3A76-AA8A-303F698B36BF> /usr/lib/system/libcache.dylib
+       0x19fa92000 -        0x19fa93ce3  libSystem.B.dylib (1356) <E05F5341-06B7-365E-8014-E9CD64C352FE> /usr/lib/libSystem.B.dylib
+       0x19facc000 -        0x19fad31cb  libiconv.2.dylib (115.100.1) <E384E5FE-DFF5-36ED-88C8-0EEF2FBF89CE> /usr/lib/libiconv.2.dylib
+       0x292375000 -        0x29237c349  libRosetta.dylib (367.5) <2FC1EF06-04C4-35FC-8DC3-BEA1E9FBD63F> /usr/lib/libRosetta.dylib
+       0x294052000 -        0x294055a4b  libsystem_darwindirectory.dylib (122) <CCAA2170-32DD-34BD-A927-32DF30893969> /usr/lib/system/libsystem_darwindirectory.dylib
+       0x294056000 -        0x29405f5a7  libsystem_eligibility.dylib (319.101.1) <2D19994A-87BB-34B8-A343-CB8DD47FF110> /usr/lib/system/libsystem_eligibility.dylib
+       0x294060000 -        0x2940678db  libsystem_sanitizers.dylib (26) <FCB93D2F-4437-3089-A43F-A19BC23DD65B> /usr/lib/system/libsystem_sanitizers.dylib
+       0x294068000 -        0x294068bb7  libsystem_trial.dylib (474.2.18) <5BB81430-4E33-3160-94D2-1FFB2B614DB2> /usr/lib/system/libsystem_trial.dylib

@@ -1,0 +1,395 @@
+Analysis of sampling profile_direct (pid 72210) every 1 millisecond
+Process:         profile_direct [72210]
+Path:            /Users/USER/*/profile_direct
+Load Address:    0x102ac0000
+Identifier:      profile_direct
+Version:         0
+Code Type:       ARM64
+Platform:        macOS
+Parent Process:  zsh [70329]
+Target Type:     live task
+
+Date/Time:       2026-05-31 21:57:08.782 -0400
+Launch Time:     2026-05-31 21:57:07.720 -0400
+OS Version:      macOS 26.4.1 (25E253)
+Report Version:  7
+Analysis Tool:   /usr/bin/sample
+
+Physical footprint:         1968K
+Physical footprint (peak):  1968K
+Idle exit:                  untracked
+----
+
+Call graph:
+    6191 Thread_13242533   DispatchQueue_1: com.apple.main-thread  (serial)
+      6191 start  (in dyld) + 6992  [0x18f8b3da4]
+        6191 main  (in profile_direct) + 860  [0x102ad5f30]
+          6191 _RINvNtNtCsicsVAbuKrnN_3std3sys9backtrace28___rust_begin_short_backtraceFEuuECs2D7e4PfsAAs_14profile_direct  (in profile_direct) + 12  [0x102ac0d54]  backtrace.rs:166
+            6190 _RNvCs2D7e4PfsAAs_14profile_direct4main  (in profile_direct) + 6404  [0x102acc988]  profile_direct.rs:107
+            + 6190 _RNvCs2D7e4PfsAAs_14profile_direct8run_once  (in profile_direct) + 3360  [0x102acdfbc]  profile_direct.rs:156
+            +   6187 _RNvNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct13track1_digest  (in profile_direct) + 7080  [0x102ae1894]  direct_struct.rs:423
+            +   ! 6175 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 6924  [0x102ae65b8]  generated.rs:834
+            +   ! : 5596 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated29parse_array_element_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1r_  (in profile_direct) + 4824  [0x102aeb388]  generated.rs:873
+            +   ! : | 3272 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 4824  [0x102ae5d84]  generated.rs:833
+            +   ! : | + 934 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 1660,1640,...  [0x102ae5128,0x102ae5114,...]  generated.rs:833
+            +   ! : | + 771 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 4824  [0x102ae5d84]  generated.rs:833
+            +   ! : | + ! 217 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 760,780,...  [0x102ae4da4,0x102ae4db8,...]  generated.rs:836
+            +   ! : | + ! 116 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 4824  [0x102ae5d84]  generated.rs:833
+            +   ! : | + ! : 46 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 6924  [0x102ae65b8]  generated.rs:834
+            +   ! : | + ! : | 32 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated29parse_array_element_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1r_  (in profile_direct) + 4824  [0x102aeb388]  generated.rs:873
+            +   ! : | + ! : | + 18 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 780,16660,...  [0x102ae4db8,0x102ae8bc0,...]  generated.rs:836
+            +   ! : | + ! : | + 10 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 8552,6868,...  [0x102ae6c14,0x102ae6580,...]  generated.rs:834
+            +   ! : | + ! : | + 2 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 15092,19272  [0x102ae85a0,0x102ae95f4]  mod.rs:0
+            +   ! : | + ! : | + 1 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 20  [0x102ae4ac0]  generated.rs:823
+            +   ! : | + ! : | + 1 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 6384  [0x102ae639c]  generated.rs:837
+            +   ! : | + ! : | 9 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated29parse_array_element_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1r_  (in profile_direct) + 536,620,...  [0x102aea2c8,0x102aea31c,...]  generated.rs:873
+            +   ! : | + ! : | 4 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 18304,18288  [0x102ae922c,0x102ae921c]  generated.rs:859
+            +   ! : | + ! : | 1 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated29parse_array_element_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1r_  (in profile_direct) + 32  [0x102aea0d0]  generated.rs:869
+            +   ! : | + ! : 31 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 4824  [0x102ae5d84]  generated.rs:833
+            +   ! : | + ! : | 22 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 6924  [0x102ae65b8]  generated.rs:834
+            +   ! : | + ! : | + 17 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated29parse_array_element_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1r_  (in profile_direct) + 4824  [0x102aeb388]  generated.rs:873
+            +   ! : | + ! : | + ! 9 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 16660,760,...  [0x102ae8bc0,0x102ae4da4,...]  generated.rs:836
+            +   ! : | + ! : | + ! 5 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 6860,7760,...  [0x102ae6578,0x102ae68fc,...]  generated.rs:834
+            +   ! : | + ! : | + ! 1 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 48  [0x102ae4adc]  generated.rs:829
+            +   ! : | + ! : | + ! 1 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 10884  [0x102ae7530]  generated.rs:834
+            +   ! : | + ! : | + ! : 1 _RNvNtCsk4yOFcUt2Lu_16parse_that_regex6number15materialize_u64  (in profile_direct) + 16  [0x102ae9e2c]  mod.rs:251
+            +   ! : | + ! : | + ! 1 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 6264  [0x102ae6324]  generated.rs:837
+            +   ! : | + ! : | + 5 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated29parse_array_element_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1r_  (in profile_direct) + 1652,1660,...  [0x102aea724,0x102aea72c,...]  generated.rs:873
+            +   ! : | + ! : | 6 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 224,284,...  [0x102ae4b8c,0x102ae4bc8,...]  generated.rs:834
+            +   ! : | + ! : | 1 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 15320  [0x102ae8684]  generated.rs:0
+            +   ! : | + ! : | 1 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 20  [0x102ae4ac0]  generated.rs:823
+            +   ! : | + ! : | 1 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 140  [0x102ae4b38]  generated.rs:832
+            +   ! : | + ! : 23 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 564,636,...  [0x102ae4ce0,0x102ae4d28,...]  generated.rs:833
+            +   ! : | + ! : 6 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 13188,316,...  [0x102ae7e30,0x102ae4be8,...]  generated.rs:834
+            +   ! : | + ! : 4 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 15292,15348,...  [0x102ae8668,0x102ae86a0,...]  generated.rs:0
+            +   ! : | + ! : 3 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 140,148,...  [0x102ae4b38,0x102ae4b40,...]  generated.rs:832
+            +   ! : | + ! : 2 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 18304  [0x102ae922c]  generated.rs:859
+            +   ! : | + ! : 1 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 48  [0x102ae4adc]  generated.rs:829
+            +   ! : | + ! 90 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 6264,6272,...  [0x102ae6324,0x102ae632c,...]  generated.rs:837
+            +   ! : | + ! 82 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 6924  [0x102ae65b8]  generated.rs:834
+            +   ! : | + ! : 58 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated29parse_array_element_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1r_  (in profile_direct) + 4824  [0x102aeb388]  generated.rs:873
+            +   ! : | + ! : | 19 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 4824  [0x102ae5d84]  generated.rs:833
+            +   ! : | + ! : | + 11 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 4976,588,...  [0x102ae5e1c,0x102ae4cf8,...]  generated.rs:833
+            +   ! : | + ! : | + 7 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 4824  [0x102ae5d84]  generated.rs:833
+            +   ! : | + ! : | + ! 4 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 5624,5736,...  [0x102ae60a4,0x102ae6114,...]  generated.rs:841
+            +   ! : | + ! : | + ! 2 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 148  [0x102ae4b40]  generated.rs:832
+            +   ! : | + ! : | + ! 1 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 6224  [0x102ae62fc]  generated.rs:837
+            +   ! : | + ! : | + 1 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 18288  [0x102ae921c]  generated.rs:859
+            +   ! : | + ! : | 18 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 16728,16708,...  [0x102ae8c04,0x102ae8bf0,...]  generated.rs:836
+            +   ! : | + ! : | 12 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 336,7652,...  [0x102ae4bfc,0x102ae6890,...]  generated.rs:834
+            +   ! : | + ! : | 4 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 6264,6196,...  [0x102ae6324,0x102ae62e0,...]  generated.rs:837
+            +   ! : | + ! : | 2 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 1652,4620  [0x102ae5120,0x102ae5cb8]  generated.rs:833
+            +   ! : | + ! : | 1 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 10884  [0x102ae7530]  generated.rs:834
+            +   ! : | + ! : | + 1 _RNvNtCsk4yOFcUt2Lu_16parse_that_regex6number15materialize_u64  (in profile_direct) + 8  [0x102ae9e24]  mod.rs:248
+            +   ! : | + ! : | 1 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 15932  [0x102ae88e8]  generated.rs:841
+            +   ! : | + ! : | + 1 _RNvNtCsk4yOFcUt2Lu_16parse_that_regex6number15materialize_u64  (in profile_direct) + 104  [0x102ae9e84]  mod.rs:258
+            +   ! : | + ! : | 1 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 19272  [0x102ae95f4]  mod.rs:0
+            +   ! : | + ! : 23 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated29parse_array_element_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1r_  (in profile_direct) + 1640,1660,...  [0x102aea718,0x102aea72c,...]  generated.rs:873
+            +   ! : | + ! : 1 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 18304  [0x102ae922c]  generated.rs:859
+            +   ! : | + ! 63 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 18680  [0x102ae93a4]  generated.rs:837
+            +   ! : | + ! : 24 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 708,668,...  [0x102cf9ed8,0x102cf9eb0,...]  lib.rs:880
+            +   ! : | + ! : 16 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 424  [0x102cf9dbc]  lib.rs:876
+            +   ! : | + ! : | 8 _xzm_xzone_malloc_tiny  (in libsystem_malloc.dylib) + 284,172,...  [0x18fa91ff0,0x18fa91f80,...]
+            +   ! : | + ! : | 4 <deduplicated_symbol>  (in libsystem_malloc.dylib) + 100,112,...  [0x18fa8c138,0x18fa8c144,...]
+            +   ! : | + ! : | 2 _malloc_zone_malloc  (in libsystem_malloc.dylib) + 12,44  [0x18fa9c044,0x18fa9c064]
+            +   ! : | + ! : | 2 _xzm_xzone_malloc  (in libsystem_malloc.dylib) + 8,12  [0x18fa8c8c8,0x18fa8c8cc]
+            +   ! : | + ! : 10 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 216,156,...  [0x102cf9cec,0x102cf9cb0,...]  lib.rs:868
+            +   ! : | + ! : 4 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 624  [0x102cf9e84]  lib.rs:0
+            +   ! : | + ! : 2 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 876  [0x102cf9f80]  lib.rs:888
+            +   ! : | + ! : | 1 DYLD-STUB$$memcpy  (in profile_direct) + 4  [0x102d377c4]
+            +   ! : | + ! : | 1 _platform_memmove  (in libsystem_platform.dylib) + 176  [0x18fc79470]
+            +   ! : | + ! : 2 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 880  [0x102cf9f84]  lib.rs:888
+            +   ! : | + ! : 1 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 24  [0x102cf9c2c]  lib.rs:867
+            +   ! : | + ! : 1 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 640  [0x102cf9e94]  lib.rs:879
+            +   ! : | + ! : 1 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 780  [0x102cf9f20]  lib.rs:882
+            +   ! : | + ! : 1 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 884  [0x102cf9f88]  lib.rs:890
+            +   ! : | + ! : 1 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 4768  [0x102cfaeb4]  lib.rs:956
+            +   ! : | + ! :   1 _platform_memmove  (in libsystem_platform.dylib) + 208  [0x18fc79490]
+            +   ! : | + ! 45 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 1660,4944,...  [0x102ae5128,0x102ae5dfc,...]  generated.rs:833
+            +   ! : | + ! 35 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 19824  [0x102ae981c]  generated.rs:837
+            +   ! : | + ! : 21 _xzm_free  (in libsystem_malloc.dylib) + 1048  [0x18fa8d484]
+            +   ! : | + ! : | 20 mach_absolute_time  (in libsystem_kernel.dylib) + 108,112,...  [0x18fc2c10c,0x18fc2c110,...]
+            +   ! : | + ! : | 1 DYLD-STUB$$mach_absolute_time  (in libsystem_malloc.dylib) + 12  [0x18faa4b18]
+            +   ! : | + ! : 5 _xzm_free  (in libsystem_malloc.dylib) + 580,716,...  [0x18fa8d2b0,0x18fa8d338,...]
+            +   ! : | + ! : 4 _free  (in libsystem_malloc.dylib) + 12,36,...  [0x18fa9cc58,0x18fa9cc70,...]
+            +   ! : | + ! : 3 _xzm_free  (in libsystem_malloc.dylib) + 352  [0x18fa8d1cc]
+            +   ! : | + ! : | 2 DYLD-STUB$$_platform_bzero  (in libsystem_malloc.dylib) + 12  [0x18faa47f8]
+            +   ! : | + ! : | 1 _platform_memset  (in libsystem_platform.dylib) + 140  [0x18fc7917c]
+            +   ! : | + ! : 1 DYLD-STUB$$free  (in profile_direct) + 4  [0x102d37770]
+            +   ! : | + ! : 1 xzm_malloc_zone_try_free_default  (in libsystem_malloc.dylib) + 0  [0x18fa98108]
+            +   ! : | + ! 33 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 15724,1128,...  [0x102ae8818,0x102ae4f14,...]  generated.rs:841
+            +   ! : | + ! 20 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 20,16,...  [0x102ae4ac0,0x102ae4abc,...]  generated.rs:823
+            +   ! : | + ! 15 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 140,148,...  [0x102ae4b38,0x102ae4b40,...]  generated.rs:832
+            +   ! : | + ! 10 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 280,5412,...  [0x102ae4bc4,0x102ae5fd0,...]  generated.rs:834
+            +   ! : | + ! 9 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 48,32  [0x102ae4adc,0x102ae4acc]  generated.rs:829
+            +   ! : | + ! 7 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 20012,15308,...  [0x102ae98d8,0x102ae8678,...]  generated.rs:0
+            +   ! : | + ! 6 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 15932  [0x102ae88e8]  generated.rs:841
+            +   ! : | + ! : 4 _RNvNtCsk4yOFcUt2Lu_16parse_that_regex6number15materialize_u64  (in profile_direct) + 68,80  [0x102ae9e60,0x102ae9e6c]  mod.rs:254
+            +   ! : | + ! : 1 _RNvNtCsk4yOFcUt2Lu_16parse_that_regex6number15materialize_u64  (in profile_direct) + 8  [0x102ae9e24]  mod.rs:248
+            +   ! : | + ! : 1 _RNvNtCsk4yOFcUt2Lu_16parse_that_regex6number15materialize_u64  (in profile_direct) + 16  [0x102ae9e2c]  mod.rs:251
+            +   ! : | + ! 6 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 14124,14144,...  [0x102ae81d8,0x102ae81ec,...]  generated.rs:849
+            +   ! : | + ! 5 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 18296,18304,...  [0x102ae9224,0x102ae922c,...]  generated.rs:859
+            +   ! : | + ! 4 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 14300,14236  [0x102ae8288,0x102ae8248]  generated.rs:844
+            +   ! : | + ! 4 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 19272  [0x102ae95f4]  mod.rs:0
+            +   ! : | + ! 2 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 936  [0x102ae4e54]  generated.rs:848
+            +   ! : | + ! 1 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 996  [0x102ae4e90]  generated.rs:843
+            +   ! : | + ! 1 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 5544  [0x102ae6054]  lib.rs:0
+            +   ! : | + 479 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 760,748,...  [0x102ae4da4,0x102ae4d98,...]  generated.rs:836
+            +   ! : | + 316 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 6924  [0x102ae65b8]  generated.rs:834
+            +   ! : | + ! 162 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated29parse_array_element_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1r_  (in profile_direct) + 4824  [0x102aeb388]  generated.rs:873
+            +   ! : | + ! : 52 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 772,748,...  [0x102ae4db0,0x102ae4d98,...]  generated.rs:836
+            +   ! : | + ! : 42 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 8420,13244,...  [0x102ae6b90,0x102ae7e68,...]  generated.rs:834
+            +   ! : | + ! : 19 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 4824  [0x102ae5d84]  generated.rs:833
+            +   ! : | + ! : | 9 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 4824  [0x102ae5d84]  generated.rs:833
+            +   ! : | + ! : | + 6 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 15684,15724,...  [0x102ae87f0,0x102ae8818,...]  generated.rs:841
+            +   ! : | + ! : | + 2 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 15932  [0x102ae88e8]  generated.rs:841
+            +   ! : | + ! : | + ! 1 _RNvNtCsk4yOFcUt2Lu_16parse_that_regex6number15materialize_u64  (in profile_direct) + 16  [0x102ae9e2c]  mod.rs:251
+            +   ! : | + ! : | + ! 1 _RNvNtCsk4yOFcUt2Lu_16parse_that_regex6number15materialize_u64  (in profile_direct) + 80  [0x102ae9e6c]  mod.rs:254
+            +   ! : | + ! : | + 1 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 6224  [0x102ae62fc]  generated.rs:837
+            +   ! : | + ! : | 9 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 1748,4436,...  [0x102ae5180,0x102ae5c00,...]  generated.rs:833
+            +   ! : | + ! : | 1 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 19992  [0x102ae98c4]  generated.rs:0
+            +   ! : | + ! : 15 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 6224,6272,...  [0x102ae62fc,0x102ae632c,...]  generated.rs:837
+            +   ! : | + ! : 7 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 880,15348,...  [0x102ae4e1c,0x102ae86a0,...]  generated.rs:0
+            +   ! : | + ! : 6 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 1640,1636,...  [0x102ae5114,0x102ae5110,...]  generated.rs:833
+            +   ! : | + ! : 6 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 1128,15412,...  [0x102ae4f14,0x102ae86e0,...]  generated.rs:841
+            +   ! : | + ! : 3 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 20  [0x102ae4ac0]  generated.rs:823
+            +   ! : | + ! : 3 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 140,156  [0x102ae4b38,0x102ae4b48]  generated.rs:832
+            +   ! : | + ! : 3 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 10884  [0x102ae7530]  generated.rs:834
+            +   ! : | + ! : | 2 _RNvNtCsk4yOFcUt2Lu_16parse_that_regex6number15materialize_u64  (in profile_direct) + 68  [0x102ae9e60]  mod.rs:254
+            +   ! : | + ! : | 1 _RNvNtCsk4yOFcUt2Lu_16parse_that_regex6number15materialize_u64  (in profile_direct) + 104  [0x102ae9e84]  mod.rs:258
+            +   ! : | + ! : 2 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 15932  [0x102ae88e8]  generated.rs:841
+            +   ! : | + ! : | 1 _RNvNtCsk4yOFcUt2Lu_16parse_that_regex6number15materialize_u64  (in profile_direct) + 8  [0x102ae9e24]  mod.rs:248
+            +   ! : | + ! : | 1 _RNvNtCsk4yOFcUt2Lu_16parse_that_regex6number15materialize_u64  (in profile_direct) + 104  [0x102ae9e84]  mod.rs:258
+            +   ! : | + ! : 2 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 18284  [0x102ae9218]  generated.rs:859
+            +   ! : | + ! : 1 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 32  [0x102ae4acc]  generated.rs:829
+            +   ! : | + ! : 1 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 19272  [0x102ae95f4]  mod.rs:0
+            +   ! : | + ! 143 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated29parse_array_element_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1r_  (in profile_direct) + 1632,1652,...  [0x102aea710,0x102aea724,...]  generated.rs:873
+            +   ! : | + ! 10 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 18304,18292,...  [0x102ae922c,0x102ae9220,...]  generated.rs:859
+            +   ! : | + ! 1 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated29parse_array_element_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1r_  (in profile_direct) + 15384  [0x102aedcc8]  generated.rs:0
+            +   ! : | + 192 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 6264,6272,...  [0x102ae6324,0x102ae632c,...]  generated.rs:837
+            +   ! : | + 141 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 18680  [0x102ae93a4]  generated.rs:837
+            +   ! : | + ! 43 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 668,708,...  [0x102cf9eb0,0x102cf9ed8,...]  lib.rs:880
+            +   ! : | + ! 24 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 876  [0x102cf9f80]  lib.rs:888
+            +   ! : | + ! : 22 _platform_memmove  (in libsystem_platform.dylib) + 460,428,...  [0x18fc7958c,0x18fc7956c,...]
+            +   ! : | + ! : 2 DYLD-STUB$$memcpy  (in profile_direct) + 0,4  [0x102d377c0,0x102d377c4]
+            +   ! : | + ! 20 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 156,252,...  [0x102cf9cb0,0x102cf9d10,...]  lib.rs:868
+            +   ! : | + ! 20 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 424  [0x102cf9dbc]  lib.rs:876
+            +   ! : | + ! : 11 _xzm_xzone_malloc_tiny  (in libsystem_malloc.dylib) + 88,764,...  [0x18fa91f2c,0x18fa921d0,...]
+            +   ! : | + ! : 4 _malloc_zone_malloc  (in libsystem_malloc.dylib) + 44,56,...  [0x18fa9c064,0x18fa9c070,...]
+            +   ! : | + ! : 3 <deduplicated_symbol>  (in libsystem_malloc.dylib) + 8,100,...  [0x18fa8c0dc,0x18fa8c138,...]
+            +   ! : | + ! : 1 _xzm_xzone_malloc  (in libsystem_malloc.dylib) + 0  [0x18fa8c8c0]
+            +   ! : | + ! : 1 xzm_malloc_zone_malloc_type_malloc  (in libsystem_malloc.dylib) + 0  [0x18fa9811c]
+            +   ! : | + ! 9 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 4768  [0x102cfaeb4]  lib.rs:956
+            +   ! : | + ! : 8 _platform_memmove  (in libsystem_platform.dylib) + 428,436,...  [0x18fc7956c,0x18fc79574,...]
+            +   ! : | + ! : 1 DYLD-STUB$$memcpy  (in profile_direct) + 4  [0x102d377c4]
+            +   ! : | + ! 6 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 624,404,...  [0x102cf9e84,0x102cf9da8,...]  lib.rs:0
+            +   ! : | + ! 5 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 832,828,...  [0x102cf9f54,0x102cf9f50,...]  lib.rs:888
+            +   ! : | + ! 3 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 780  [0x102cf9f20]  lib.rs:882
+            +   ! : | + ! 3 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 4716,4768  [0x102cfae80,0x102cfaeb4]  lib.rs:956
+            +   ! : | + ! 2 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 640  [0x102cf9e94]  lib.rs:879
+            +   ! : | + ! 2 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 1508,1608  [0x102cfa1f8,0x102cfa25c]  lib.rs:891
+            +   ! : | + ! 2 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 1680  [0x102cfa2a4]  lib.rs:893
+            +   ! : | + ! 1 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 820  [0x102cf9f48]  lib.rs:887
+            +   ! : | + ! 1 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 4792  [0x102cfaecc]  lib.rs:958
+            +   ! : | + 118 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 5752,15608,...  [0x102ae6124,0x102ae87a4,...]  generated.rs:841
+            +   ! : | + 69 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 18304,18284,...  [0x102ae922c,0x102ae9218,...]  generated.rs:859
+            +   ! : | + 60 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 19824  [0x102ae981c]  generated.rs:837
+            +   ! : | + ! 39 _xzm_free  (in libsystem_malloc.dylib) + 1048  [0x18fa8d484]
+            +   ! : | + ! : 38 mach_absolute_time  (in libsystem_kernel.dylib) + 108,112,...  [0x18fc2c10c,0x18fc2c110,...]
+            +   ! : | + ! : 1 DYLD-STUB$$mach_absolute_time  (in libsystem_malloc.dylib) + 12  [0x18faa4b18]
+            +   ! : | + ! 15 _xzm_free  (in libsystem_malloc.dylib) + 256,720,...  [0x18fa8d16c,0x18fa8d33c,...]
+            +   ! : | + ! 3 _free  (in libsystem_malloc.dylib) + 36,44,...  [0x18fa9cc70,0x18fa9cc78,...]
+            +   ! : | + ! 2 _xzm_free  (in libsystem_malloc.dylib) + 352  [0x18fa8d1cc]
+            +   ! : | + ! : 1 __bzero  (in libsystem_platform.dylib) + 24  [0x18fc790a8]
+            +   ! : | + ! : 1 _platform_memset  (in libsystem_platform.dylib) + 160  [0x18fc79190]
+            +   ! : | + ! 1 DYLD-STUB$$free  (in profile_direct) + 4  [0x102d37770]
+            +   ! : | + 33 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 140,60,...  [0x102ae4b38,0x102ae4ae8,...]  generated.rs:832
+            +   ! : | + 27 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 20,16  [0x102ae4ac0,0x102ae4abc]  generated.rs:823
+            +   ! : | + 25 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 20040,15352,...  [0x102ae98f4,0x102ae86a4,...]  generated.rs:0
+            +   ! : | + 25 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 316,280,...  [0x102ae4be8,0x102ae4bc4,...]  generated.rs:834
+            +   ! : | + 14 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 48,32,...  [0x102ae4adc,0x102ae4acc,...]  generated.rs:829
+            +   ! : | + 14 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 15932  [0x102ae88e8]  generated.rs:841
+            +   ! : | + ! 5 _RNvNtCsk4yOFcUt2Lu_16parse_that_regex6number15materialize_u64  (in profile_direct) + 8  [0x102ae9e24]  mod.rs:248
+            +   ! : | + ! 5 _RNvNtCsk4yOFcUt2Lu_16parse_that_regex6number15materialize_u64  (in profile_direct) + 80,68  [0x102ae9e6c,0x102ae9e60]  mod.rs:254
+            +   ! : | + ! 2 _RNvNtCsk4yOFcUt2Lu_16parse_that_regex6number15materialize_u64  (in profile_direct) + 16  [0x102ae9e2c]  mod.rs:251
+            +   ! : | + ! 1 _RNvNtCsk4yOFcUt2Lu_16parse_that_regex6number15materialize_u64  (in profile_direct) + 0  [0x102ae9e1c]  mod.rs:247
+            +   ! : | + ! 1 _RNvNtCsk4yOFcUt2Lu_16parse_that_regex6number15materialize_u64  (in profile_direct) + 104  [0x102ae9e84]  mod.rs:258
+            +   ! : | + 13 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 19272  [0x102ae95f4]  mod.rs:0
+            +   ! : | + 11 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 920,936  [0x102ae4e44,0x102ae4e54]  generated.rs:848
+            +   ! : | + 8 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 14124,14144,...  [0x102ae81d8,0x102ae81ec,...]  generated.rs:849
+            +   ! : | + 5 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 14256,14300,...  [0x102ae825c,0x102ae8288,...]  generated.rs:844
+            +   ! : | + 4 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 15060  [0x102ae8580]  generated.rs:833
+            +   ! : | + ! 4 _RNvMs3_NtCskh7iNGrcMfw_5alloc7raw_vecINtB5_6RawVecNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct11DigestFrameE8grow_oneBQ_  (in profile_direct) + 60  [0x102d2e050]  mod.rs:188
+            +   ! : | + !   4 _RNvMs4_NtCskh7iNGrcMfw_5alloc7raw_vecNtB5_11RawVecInner11finish_growCs3VHJR6Sw3F_10bbnf_bench  (in profile_direct) + 228  [0x102d2dddc]  mod.rs:556
+            +   ! : | + !     3 _realloc  (in libsystem_malloc.dylib) + 452  [0x18fa9ce90]
+            +   ! : | + !     : 3 _malloc_zone_realloc  (in libsystem_malloc.dylib) + 148  [0x18fa9c674]
+            +   ! : | + !     :   1 xzm_realloc  (in libsystem_malloc.dylib) + 780  [0x18fa8ce00]
+            +   ! : | + !     :   | 1 _xzm_xzone_malloc_freelist_outlined  (in libsystem_malloc.dylib) + 324  [0x18fa9377c]
+            +   ! : | + !     :   |   1 _xzm_xzone_find_and_malloc_from_freelist_chunk  (in libsystem_malloc.dylib) + 584  [0x18fa9415c]
+            +   ! : | + !     :   |     1 _xzm_chunk_list_pop  (in libsystem_malloc.dylib) + 44  [0x18fa948ac]
+            +   ! : | + !     :   1 xzm_realloc  (in libsystem_malloc.dylib) + 876  [0x18fa8ce60]
+            +   ! : | + !     :   | 1 _xzm_free  (in libsystem_malloc.dylib) + 1048  [0x18fa8d484]
+            +   ! : | + !     :   |   1 mach_absolute_time  (in libsystem_kernel.dylib) + 108  [0x18fc2c10c]
+            +   ! : | + !     :   1 xzm_realloc  (in libsystem_malloc.dylib) + 212  [0x18fa8cbc8]
+            +   ! : | + !     1 _realloc  (in libsystem_malloc.dylib) + 252  [0x18fa9cdc8]
+            +   ! : | + !       1 xzm_malloc_zone_size  (in libsystem_malloc.dylib) + 724  [0x18fa97778]
+            +   ! : | + 4 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 14356,14376,...  [0x102ae82c0,0x102ae82d4,...]  generated.rs:854
+            +   ! : | + 3 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 84  [0x102ae4b00]  generated.rs:853
+            +   ! : | + 2 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 5544  [0x102ae6054]  lib.rs:0
+            +   ! : | + 2 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 4816  [0x102cfaee4]  lib.rs:959
+            +   ! : | + 1 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated29parse_array_element_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1r_  (in profile_direct) + 18352  [0x102aee860]  generated.rs:899
+            +   ! : | + 1 _xzm_free  (in libsystem_malloc.dylib) + 1552  [0x18fa8d67c]
+            +   ! : | 1661 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 1640,1652,...  [0x102ae5114,0x102ae5120,...]  generated.rs:833
+            +   ! : | 209 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 748,16660,...  [0x102ae4d98,0x102ae8bc0,...]  generated.rs:836
+            +   ! : | 138 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 18680  [0x102ae93a4]  generated.rs:837
+            +   ! : | + 37 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 668,708,...  [0x102cf9eb0,0x102cf9ed8,...]  lib.rs:880
+            +   ! : | + 32 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 876  [0x102cf9f80]  lib.rs:888
+            +   ! : | + ! 31 _platform_memmove  (in libsystem_platform.dylib) + 460,452,...  [0x18fc7958c,0x18fc79584,...]
+            +   ! : | + ! 1 DYLD-STUB$$memcpy  (in profile_direct) + 4  [0x102d377c4]
+            +   ! : | + 22 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 424  [0x102cf9dbc]  lib.rs:876
+            +   ! : | + ! 15 _xzm_xzone_malloc_tiny  (in libsystem_malloc.dylib) + 256,420,...  [0x18fa91fd4,0x18fa92078,...]
+            +   ! : | + ! 3 _xzm_xzone_malloc  (in libsystem_malloc.dylib) + 8,336  [0x18fa8c8c8,0x18fa8ca10]
+            +   ! : | + ! 2 <deduplicated_symbol>  (in libsystem_malloc.dylib) + 100,208  [0x18fa8c138,0x18fa8c1a4]
+            +   ! : | + ! 2 _malloc_zone_malloc  (in libsystem_malloc.dylib) + 80,120  [0x18fa9c088,0x18fa9c0b0]
+            +   ! : | + 11 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 156,108,...  [0x102cf9cb0,0x102cf9c80,...]  lib.rs:868
+            +   ! : | + 9 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 624,404,...  [0x102cf9e84,0x102cf9da8,...]  lib.rs:0
+            +   ! : | + 7 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 4768  [0x102cfaeb4]  lib.rs:956
+            +   ! : | + ! 7 _platform_memmove  (in libsystem_platform.dylib) + 460,452,...  [0x18fc7958c,0x18fc79584,...]
+            +   ! : | + 6 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 896,1500,...  [0x102cf9f94,0x102cfa1f0,...]  lib.rs:891
+            +   ! : | + 4 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 844,880  [0x102cf9f60,0x102cf9f84]  lib.rs:888
+            +   ! : | + 2 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 24,28  [0x102cf9c2c,0x102cf9c30]  lib.rs:867
+            +   ! : | + 2 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 640  [0x102cf9e94]  lib.rs:879
+            +   ! : | + 2 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 780  [0x102cf9f20]  lib.rs:882
+            +   ! : | + 2 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 788  [0x102cf9f28]  lib.rs:885
+            +   ! : | + 2 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 4716,4736  [0x102cfae80,0x102cfae94]  lib.rs:956
+            +   ! : | 96 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 18304,18288,...  [0x102ae922c,0x102ae921c,...]  generated.rs:859
+            +   ! : | 70 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 6264,19608,...  [0x102ae6324,0x102ae9744,...]  generated.rs:837
+            +   ! : | 61 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 19824  [0x102ae981c]  generated.rs:837
+            +   ! : | + 37 _xzm_free  (in libsystem_malloc.dylib) + 1048  [0x18fa8d484]
+            +   ! : | + ! 37 mach_absolute_time  (in libsystem_kernel.dylib) + 108,16,...  [0x18fc2c10c,0x18fc2c0b0,...]
+            +   ! : | + 17 _xzm_free  (in libsystem_malloc.dylib) + 692,320,...  [0x18fa8d320,0x18fa8d1ac,...]
+            +   ! : | + 3 _free  (in libsystem_malloc.dylib) + 0,36  [0x18fa9cc4c,0x18fa9cc70]
+            +   ! : | + 3 _xzm_free  (in libsystem_malloc.dylib) + 352  [0x18fa8d1cc]
+            +   ! : | + ! 2 _platform_memset  (in libsystem_platform.dylib) + 140  [0x18fc7917c]
+            +   ! : | + ! 1 __bzero  (in libsystem_platform.dylib) + 0  [0x18fc79090]
+            +   ! : | + 1 DYLD-STUB$$free  (in profile_direct) + 4  [0x102d37770]
+            +   ! : | 27 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 15668,15576,...  [0x102ae87e0,0x102ae8784,...]  generated.rs:841
+            +   ! : | 11 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 20,16  [0x102ae4ac0,0x102ae4abc]  generated.rs:823
+            +   ! : | 10 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 15356,20012,...  [0x102ae86a8,0x102ae98d8,...]  generated.rs:0
+            +   ! : | 9 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 140,52,...  [0x102ae4b38,0x102ae4ae0,...]  generated.rs:832
+            +   ! : | 9 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 19272  [0x102ae95f4]  mod.rs:0
+            +   ! : | 6 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 48,32,...  [0x102ae4adc,0x102ae4acc,...]  generated.rs:829
+            +   ! : | 4 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 84,96  [0x102ae4b00,0x102ae4b0c]  generated.rs:853
+            +   ! : | 3 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 15932  [0x102ae88e8]  generated.rs:841
+            +   ! : | + 1 _RNvNtCsk4yOFcUt2Lu_16parse_that_regex6number15materialize_u64  (in profile_direct) + 8  [0x102ae9e24]  mod.rs:248
+            +   ! : | + 1 _RNvNtCsk4yOFcUt2Lu_16parse_that_regex6number15materialize_u64  (in profile_direct) + 80  [0x102ae9e6c]  mod.rs:254
+            +   ! : | + 1 _RNvNtCsk4yOFcUt2Lu_16parse_that_regex6number15materialize_u64  (in profile_direct) + 104  [0x102ae9e84]  mod.rs:258
+            +   ! : | 2 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 920,936  [0x102ae4e44,0x102ae4e54]  generated.rs:848
+            +   ! : | 2 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 14124,14180  [0x102ae81d8,0x102ae8210]  generated.rs:849
+            +   ! : | 2 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 14356  [0x102ae82c0]  generated.rs:854
+            +   ! : | 2 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 5544  [0x102ae6054]  lib.rs:0
+            +   ! : | 2 _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct) + 4808,4816  [0x102cfaedc,0x102cfaee4]  lib.rs:959
+            +   ! : 536 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated29parse_array_element_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1r_  (in profile_direct) + 1640,1652,...  [0x102aea718,0x102aea724,...]  generated.rs:873
+            +   ! : 40 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 18304,18300,...  [0x102ae922c,0x102ae9228,...]  generated.rs:859
+            +   ! : 2 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated29parse_array_element_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1r_  (in profile_direct) + 20044  [0x102aeeefc]  generated.rs:0
+            +   ! : 1 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated29parse_array_element_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1r_  (in profile_direct) + 48  [0x102aea0e0]  generated.rs:869
+            +   ! 6 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 6508,13164,...  [0x102ae6418,0x102ae7e18,...]  generated.rs:834
+            +   ! 4 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 2464,4436,...  [0x102ae544c,0x102ae5c00,...]  generated.rs:833
+            +   ! 1 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 19980  [0x102ae98b8]  generated.rs:0
+            +   ! 1 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 4824  [0x102ae5d84]  generated.rs:833
+            +   !   1 _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 16276  [0x102ae8a40]  generated.rs:841
+            +   !     1 _RNvNtCsk4yOFcUt2Lu_16parse_that_regex6number15materialize_f64  (in profile_direct) + 632  [0x102ae9d78]  mod.rs:264
+            +   2 _RNvNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct13track1_digest  (in profile_direct) + 2568,4388  [0x102ae06f4,0x102ae0e10]  direct_struct.rs:423
+            +   1 _RNvNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct13track1_digest  (in profile_direct) + 1468  [0x102ae02a8]  direct_struct.rs:0
+            +     1 _xzm_free  (in libsystem_malloc.dylib) + 1048  [0x18fa8d484]
+            +       1 mach_absolute_time  (in libsystem_kernel.dylib) + 108  [0x18fc2c10c]
+            1 _RNvCs2D7e4PfsAAs_14profile_direct4main  (in profile_direct) + 6404  [0x102acc988]  profile_direct.rs:107
+
+Total number in stack (recursive counted multiple, when >=5):
+        10       _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 0  [0x102ae4aac]  generated.rs:859
+        9       _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 0  [0x102ae4aac]  generated.rs:833
+        9       _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 0  [0x102ae4aac]  generated.rs:834
+        9       _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 0  [0x102ae4aac]  generated.rs:837
+        9       _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 4824  [0x102ae5d84]  generated.rs:833
+        8       _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 0  [0x102ae4aac]  generated.rs:0
+        7       _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 0  [0x102ae4aac]  generated.rs:832
+        7       _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 0  [0x102ae4aac]  generated.rs:836
+        6       _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 0  [0x102ae4aac]  generated.rs:823
+        6       _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 0  [0x102ae4aac]  generated.rs:829
+        6       _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 0  [0x102ae4aac]  generated.rs:841
+        6       _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 0  [0x102ae4aac]  mod.rs:0
+        6       _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 15932  [0x102ae88e8]  generated.rs:841
+        6       _platform_memmove  (in libsystem_platform.dylib) + 0  [0x18fc793c0]
+        5       _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct) + 6924  [0x102ae65b8]  generated.rs:834
+        5       _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated29parse_array_element_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1r_  (in profile_direct) + 0  [0x102aea0b0]  generated.rs:873
+        5       _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated29parse_array_element_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1r_  (in profile_direct) + 4824  [0x102aeb388]  generated.rs:873
+        5       _RNvNtCsk4yOFcUt2Lu_16parse_that_regex6number15materialize_u64  (in profile_direct) + 0  [0x102ae9e1c]  mod.rs:248
+        5       _RNvNtCsk4yOFcUt2Lu_16parse_that_regex6number15materialize_u64  (in profile_direct) + 0  [0x102ae9e1c]  mod.rs:254
+        5       _RNvNtCsk4yOFcUt2Lu_16parse_that_regex6number15materialize_u64  (in profile_direct) + 0  [0x102ae9e1c]  mod.rs:258
+        5       _xzm_free  (in libsystem_malloc.dylib) + 1048  [0x18fa8d484]
+        5       mach_absolute_time  (in libsystem_kernel.dylib) + 0  [0x18fc2c0a0]
+
+Sort by top of stack, same collapsed (when >= 5):
+        _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated28parse_object_value_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1q_  (in profile_direct)        4924
+        _RINvNtNtCsgumKUXW3nJ5_7runtime14generated_json9generated29parse_array_element_at_directNtNtCs3VHJR6Sw3F_10bbnf_bench13direct_struct14JsonDigestSinkEB1r_  (in profile_direct)        722
+        _RNvCsk4yOFcUt2Lu_16parse_that_regex15unescape_string  (in profile_direct)        213
+        mach_absolute_time  (in libsystem_kernel.dylib)        97
+        _platform_memmove  (in libsystem_platform.dylib)        70
+        _xzm_free  (in libsystem_malloc.dylib)        38
+        _xzm_xzone_malloc_tiny  (in libsystem_malloc.dylib)        34
+        _RNvNtCsk4yOFcUt2Lu_16parse_that_regex6number15materialize_u64  (in profile_direct)        33
+        _free  (in libsystem_malloc.dylib)        10
+        <deduplicated_symbol>  (in libsystem_malloc.dylib)        9
+        _malloc_zone_malloc  (in libsystem_malloc.dylib)        8
+        _xzm_xzone_malloc  (in libsystem_malloc.dylib)        6
+        DYLD-STUB$$memcpy  (in profile_direct)        5
+
+Binary Images:
+       0x102ac0000 -        0x102d50077 +profile_direct (0) <84BB859D-F079-3492-8D74-3B24C19877A7> /Users/*/profile_direct
+       0x18f80c000 -        0x18f85eb4b  libobjc.A.dylib (951.7) <2E858E25-1FF6-3DA6-84F6-911630620512> /usr/lib/libobjc.A.dylib
+       0x18f85f000 -        0x18f893b34  libdyld.dylib (1376.6) <2C3C5F75-3686-39A1-9202-BD4D2133379D> /usr/lib/system/libdyld.dylib
+       0x18f894000 -        0x18f939ec7  dyld (1.0.0 - 1376.6) <9F682DCF-340C-3BFA-BCDD-DD702F30313E> /usr/lib/dyld
+       0x18f93a000 -        0x18f93d228  libsystem_blocks.dylib (96) <2EA73169-CF76-3DD1-9869-F23C8B338022> /usr/lib/system/libsystem_blocks.dylib
+       0x18f93e000 -        0x18f99251f  libxpc.dylib (3102.100.102) <618039C8-9965-3782-A7D2-90FD4C3DD66F> /usr/lib/system/libxpc.dylib
+       0x18f993000 -        0x18f9b39bf  libsystem_trace.dylib (1861.100.19) <08629650-54FC-3AA6-910E-EACA563804D0> /usr/lib/system/libsystem_trace.dylib
+       0x18f9b4000 -        0x18fa61daf  libcorecrypto.dylib (1922.101.2) <D1EC203E-9B2E-391B-8DE3-7C58F0589437> /usr/lib/system/libcorecrypto.dylib
+       0x18fa62000 -        0x18fab21d7  libsystem_malloc.dylib (812.100.31) <2AD21BE3-FFDB-31D5-A3D7-2F7F672D6E92> /usr/lib/system/libsystem_malloc.dylib
+       0x18fab3000 -        0x18fafa23f  libdispatch.dylib (1542.100.32) <E17AA23F-DB2A-3302-B14C-F6B08C540FCF> /usr/lib/system/libdispatch.dylib
+       0x18fafb000 -        0x18fafdffb  libsystem_featureflags.dylib (103) <0DE01F76-4B36-35A2-98F9-43DD147EDD95> /usr/lib/system/libsystem_featureflags.dylib
+       0x18fafe000 -        0x18fb7eef7  libsystem_c.dylib (1752.100.10) <66EBD321-6899-3863-BA24-5CFC3076A0CB> /usr/lib/system/libsystem_c.dylib
+       0x18fb7f000 -        0x18fc0fae7  libc++.1.dylib (2100.43) <1E9541EC-C564-38CB-BED6-46F708E8D863> /usr/lib/libc++.1.dylib
+       0x18fc10000 -        0x18fc2a75f  libc++abi.dylib (2100.43) <E8D325ED-3B97-325E-B494-B1B0FF93D133> /usr/lib/libc++abi.dylib
+       0x18fc2b000 -        0x18fc6828f  libsystem_kernel.dylib (12377.101.15) <51565B39-F595-3E96-A217-FEF29815057A> /usr/lib/system/libsystem_kernel.dylib
+       0x18fc69000 -        0x18fc75b3b  libsystem_pthread.dylib (539.100.4) <E7A73008-0C09-31E3-9DD9-0C61652F0E85> /usr/lib/system/libsystem_pthread.dylib
+       0x18fc76000 -        0x18fc7e8f3  libsystem_platform.dylib (375.100.10) <D93EC420-F465-3A3A-916D-A04AF9B023EB> /usr/lib/system/libsystem_platform.dylib
+       0x18fc7f000 -        0x18fcae6eb  libsystem_info.dylib (600) <201FD67C-3DF6-3788-B132-A69CAA2AA3D7> /usr/lib/system/libsystem_info.dylib
+       0x193c44000 -        0x193c4de5f  libsystem_darwin.dylib (1752.100.10) <D5BA0CAB-F283-3620-AAA9-1EEB718E1BA8> /usr/lib/system/libsystem_darwin.dylib
+       0x1940af000 -        0x1940c0f5b  libsystem_notify.dylib (348.100.7) <9F46F30B-B7C0-3DD7-AC38-57B78C7971FF> /usr/lib/system/libsystem_notify.dylib
+       0x196379000 -        0x196393f5b  libsystem_networkextension.dylib (2226.101.1) <85169C7B-48DD-3542-AD38-F1B88EA2A95A> /usr/lib/system/libsystem_networkextension.dylib
+       0x196416000 -        0x19642dfdf  libsystem_asl.dylib (406) <6427D987-7938-3278-8C14-10FB9C06BBD5> /usr/lib/system/libsystem_asl.dylib
+       0x197fd1000 -        0x197fd9387  libsystem_symptoms.dylib (2169.100.30) <28B6E34E-9C7D-3437-A3F1-A3C979DE579A> /usr/lib/system/libsystem_symptoms.dylib
+       0x19c26c000 -        0x19c2a425f  libsystem_containermanager.dylib (725.100.37) <14750F95-BB3A-3654-8610-A05A454643A8> /usr/lib/system/libsystem_containermanager.dylib
+       0x19d67c000 -        0x19d6805d7  libsystem_configuration.dylib (1405.100.8) <634F597D-F8BD-3C00-B967-86047FC15D14> /usr/lib/system/libsystem_configuration.dylib
+       0x19d681000 -        0x19d6878cf  libsystem_sandbox.dylib (2680.100.174) <AF76231D-EADC-3399-9414-6AD90FB4EA89> /usr/lib/system/libsystem_sandbox.dylib
+       0x19ecc7000 -        0x19ecca1fb  libquarantine.dylib (196.100.8) <268FEB6E-A237-3050-BFFF-AE3A66B7EAD4> /usr/lib/system/libquarantine.dylib
+       0x19f466000 -        0x19f46cd03  libsystem_coreservices.dylib (191.4.5) <7129349D-04F9-3C3C-BF37-3082C1468654> /usr/lib/system/libsystem_coreservices.dylib
+       0x19f9eb000 -        0x19fa28a77  libsystem_m.dylib (3312.100.1) <83B173CD-7F32-3901-8E67-C0B2676BE015> /usr/lib/system/libsystem_m.dylib
+       0x19fa29000 -        0x19fa29c9b  libcharset.1.dylib (115.100.1) <994633BA-AA7A-31BF-94C5-E31A08CA6243> /usr/lib/libcharset.1.dylib
+       0x19fa2a000 -        0x19fa2d527  libmacho.dylib (1376.6) <9729ECEA-0A08-32E3-8BDB-B42FC15FF258> /usr/lib/system/libmacho.dylib
+       0x19fa47000 -        0x19fa543a7  libcommonCrypto.dylib (600035) <710EC5FA-F77C-3646-A9E3-C037C42E1539> /usr/lib/system/libcommonCrypto.dylib
+       0x19fa55000 -        0x19fa5eca3  libunwind.dylib (2100.2) <FB0518B9-DF0F-3A03-A74B-AF1B21C26F8B> /usr/lib/system/libunwind.dylib
+       0x19fa67000 -        0x19fa717ff  libcopyfile.dylib (240) <0B7FF027-5579-3CBF-A12B-68A4FD36641C> /usr/lib/system/libcopyfile.dylib
+       0x19fa72000 -        0x19fa75987  libcompiler_rt.dylib (103.3) <65E29E6E-7042-3F73-A1D2-F2C4EBCD7524> /usr/lib/system/libcompiler_rt.dylib
+       0x19fa76000 -        0x19fa7a78b  libsystem_collections.dylib (1752.100.10) <B81193DE-3BEC-3340-86D0-DB7F3683D135> /usr/lib/system/libsystem_collections.dylib
+       0x19fa7b000 -        0x19fa7e4cf  libsystem_secinit.dylib (168.100.7) <A6B77B36-195D-33F8-8058-FE0B5BFA9D37> /usr/lib/system/libsystem_secinit.dylib
+       0x19fa7f000 -        0x19fa81bf7  libremovefile.dylib (85.100.6) <BD89B1A3-0D06-3881-B5E1-EFC6CFBDFCC1> /usr/lib/system/libremovefile.dylib
+       0x19fa82000 -        0x19fa82f27  libkeymgr.dylib (31) <DE8F8219-0072-35C2-8932-C065491ED15D> /usr/lib/system/libkeymgr.dylib
+       0x19fa83000 -        0x19fa8be3f  libsystem_dnssd.dylib (2881.100.56.0.1) <DEC8BDD2-366C-3BF9-A123-35744DB06354> /usr/lib/system/libsystem_dnssd.dylib
+       0x19fa8c000 -        0x19fa9109b  libcache.dylib (95) <4D6833A3-C910-3A76-AA8A-303F698B36BF> /usr/lib/system/libcache.dylib
+       0x19fa92000 -        0x19fa93ce3  libSystem.B.dylib (1356) <E05F5341-06B7-365E-8014-E9CD64C352FE> /usr/lib/libSystem.B.dylib
+       0x19facc000 -        0x19fad31cb  libiconv.2.dylib (115.100.1) <E384E5FE-DFF5-36ED-88C8-0EEF2FBF89CE> /usr/lib/libiconv.2.dylib
+       0x292375000 -        0x29237c349  libRosetta.dylib (367.5) <2FC1EF06-04C4-35FC-8DC3-BEA1E9FBD63F> /usr/lib/libRosetta.dylib
+       0x294052000 -        0x294055a4b  libsystem_darwindirectory.dylib (122) <CCAA2170-32DD-34BD-A927-32DF30893969> /usr/lib/system/libsystem_darwindirectory.dylib
+       0x294056000 -        0x29405f5a7  libsystem_eligibility.dylib (319.101.1) <2D19994A-87BB-34B8-A343-CB8DD47FF110> /usr/lib/system/libsystem_eligibility.dylib
+       0x294060000 -        0x2940678db  libsystem_sanitizers.dylib (26) <FCB93D2F-4437-3089-A43F-A19BC23DD65B> /usr/lib/system/libsystem_sanitizers.dylib
+       0x294068000 -        0x294068bb7  libsystem_trial.dylib (474.2.18) <5BB81430-4E33-3160-94D2-1FFB2B614DB2> /usr/lib/system/libsystem_trial.dylib

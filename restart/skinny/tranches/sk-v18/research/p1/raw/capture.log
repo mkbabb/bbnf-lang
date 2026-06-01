@@ -1,0 +1,37 @@
+=== SK-V18 S-P1 capture v2 @ 0fbee121f ===
+host_loadavg:  4.35 6.03 5.70
+### BUILD (single cargo, all bins) ###
+help: Check that the patched package version and available features are compatible
+      with the dependency requirements. If the patch has a different version from
+      what is locked in the Cargo.lock file, run `cargo update` to use the new
+      version. This may also occur with an optional dependency that is not enabled.
+   Compiling bbnf-bench v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/skinny/crates/bbnf-bench)
+    Finished `release` profile [optimized + debuginfo] target(s) in 51.96s
+BUILD_RESULT=
+-rwxr-xr-x  1 mkbabb  staff  2954576 May 31 21:56 target/release/css_canon_bench
+### CSS CANON N=200 COLD ###
+ROW corpus=bootstrap workload=track1_full_parse bytes=232803 n=200 median_mbps=940.282 min_mbps=570.836 max_mbps=1086.463 stddev_mbps=62.322
+ROW corpus=bootstrap workload=track1_rich bytes=232803 n=200 median_mbps=880.961 min_mbps=786.386 max_mbps=888.791 stddev_mbps=12.543
+ROW corpus=bootstrap workload=lightningcss bytes=232803 n=200 median_mbps=402.246 min_mbps=349.620 max_mbps=427.011 stddev_mbps=17.343
+ROW corpus=bootstrap workload=cssparser bytes=232803 n=200 median_mbps=1123.098 min_mbps=987.172 max_mbps=1137.966 stddev_mbps=30.911
+ROW corpus=tailwindcss workload=track1_full_parse bytes=179631 n=200 median_mbps=1013.597 min_mbps=311.254 max_mbps=1085.042 stddev_mbps=159.820
+ROW corpus=tailwindcss workload=track1_rich bytes=179631 n=200 median_mbps=1010.050 min_mbps=418.010 max_mbps=1173.181 stddev_mbps=119.305
+ROW corpus=tailwindcss workload=lightningcss bytes=179631 n=200 median_mbps=299.264 min_mbps=76.806 max_mbps=358.997 stddev_mbps=42.980
+ROW corpus=tailwindcss workload=cssparser bytes=179631 n=200 median_mbps=542.602 min_mbps=252.464 max_mbps=550.093 stddev_mbps=27.407
+ROW corpus=material-components-web workload=track1_full_parse bytes=495454 n=200 median_mbps=900.446 min_mbps=776.054 max_mbps=921.543 stddev_mbps=26.491
+ROW corpus=material-components-web workload=track1_rich bytes=495454 n=200 median_mbps=788.282 min_mbps=702.481 max_mbps=971.627 stddev_mbps=84.044
+ROW corpus=material-components-web workload=lightningcss bytes=495454 n=200 median_mbps=475.464 min_mbps=282.745 max_mbps=500.161 stddev_mbps=42.512
+ROW corpus=material-components-web workload=cssparser bytes=495454 n=200 median_mbps=1266.775 min_mbps=1021.280 max_mbps=1283.248 stddev_mbps=74.674
+ROW corpus=animate workload=track1_full_parse bytes=71750 n=200 median_mbps=956.866 min_mbps=805.660 max_mbps=994.658 stddev_mbps=27.695
+ROW corpus=animate workload=track1_rich bytes=71750 n=200 median_mbps=1009.342 min_mbps=637.749 max_mbps=1048.482 stddev_mbps=47.914
+ROW corpus=animate workload=lightningcss bytes=71750 n=200 median_mbps=480.368 min_mbps=368.283 max_mbps=491.158 stddev_mbps=31.855
+ROW corpus=animate workload=cssparser bytes=71750 n=200 median_mbps=1011.863 min_mbps=739.969 max_mbps=1029.674 stddev_mbps=74.500
+### CSS HOT-LEAF (sample css_track1_profile, rich path) ###
+Sampling completed, processing symbols...
+Sample analysis of process 71915 written to file ../restart/skinny/tranches/sk-v18/research/p1/raw/css_sample.txt
+CSS_SAMPLE_LINES=     408
+### JSON HOT-LEAF (sample profile_direct) ###
+Sampling completed, processing symbols...
+Sample analysis of process 72210 written to file ../restart/skinny/tranches/sk-v18/research/p1/raw/json_sample.txt
+JSON_SAMPLE_LINES=     395
+### DONE ###

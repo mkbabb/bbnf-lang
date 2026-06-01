@@ -1,0 +1,14 @@
+# SK-V18 S-P2 CHALLENGE — final readiness confirm (cycle V4)
+
+Adversarial sweep of `restart/skinny/tranches/sk-v18/research/p2/SYNTHESIS-RESEARCH.md` against the 8 readiness criteria. Verdict: one line each.
+
+1. ACCEPT — §1 names all six recommendeds (R-A=A delete `RuntimeEmitterKind`/dispatch on `BackendShape`; R-B=B⊃A balanced-scan named primitive; R-C=C1 `SinkOnlyExpr` AST-walk; R-D=A thin `Cursor` trait + DELETE phantom `<G>`; R-E=R-E-2 precedence-tower core; R-F=A inner-skip vectorize), each with a grounded justification citing disk `path:line` and the S-P1 hot-leaf percentages.
+2. ACCEPT — §2's lattice is internally consistent and matches §3's diagram on every gate (G3←G1∧G2, G6←P1∧P3∧G3, G4←G3, PROVE←G3∧G4 transit G1∧P3); the only blemish is §2.5 calling G4 a "transitive" PROVE-predecessor when G4 is a direct conjunct, a wording slip that does not alter the G3→G4→PROVE order binding in §3.
+3. ACCEPT — §3 gives every wave (P1-P5, G1-G6, PROVE, H1) a falsifiable exit-gate: concrete grep-count/md5-distinct/bool-telemetry falsifiers, including the re-inject-and-revert coverage proofs for P3/P4 and the four-conjunct `emit_shape_source == lowered_program` G3 exit closing the relocated-seam hole.
+4. ACCEPT — both §6 findings (CSS balanced scan PRIMARY, JSON leaf kernels SECONDARY) inherit the normative four-part gate (lines 256-265): (a) grammar-invoked-by-name + (b) varies-under-mutation + (c) `verbatim_blob_present==false` + (d) profile-proven-narrow-leaf; inline "(a)-(c)" is a deliberate, self-defined shorthand for the coupling triad (line 263 splits (a)-(c)=coupling, (d)=size-bound), not a missing gate — both findings are genuinely gated, not paper-closed.
+5. ACCEPT — Sheets PROVE is a genuine negative control: the 7-level precedence tower (`sheets_grammar_shape == pratt-operator`) is established as the SOLE Sheets-distinctive construct JSON+CSS structurally lack, with the `Nu8`-tagged-alt family explicitly demoted from the litmus (CSS 295× vs Sheets 21×, so it is a shared construct the generator must already handle), and only the grammar's own TODO-deferred aggregates deferred.
+6. ACCEPT — §5 names seven residual risks (relocated seam, alphabet-derivation gap, hot-leaf byte-equivalence, thin-trait critique, non-existent un-forked G3, parity-under-retarget, load-depressed Mbps) each with an explicit mitigation or binding gate S-P3 can plan around.
+7. ACCEPT — line 323 reads "Next move: ready-for-S-P3."
+8. ACCEPT — no surviving numeric/citation contradiction: field-ordinal systems (`RuntimeProfileContract` #3/#4 vs `RuntimeTarget` #11/#12) are kept consistent across all three mentions with the R16 conflation warning intact; 94.1%/91.5%/79.5%/295×/21× and `generator_grammar_count == 3` are used uniformly; the "(a)-(c)"/"(a)-(b)-(c)-(d)" labeling is a consistent two-tier scheme, not a contradiction.
+
+TALLY accept=8 revise=0 reject=0

@@ -1,158 +1,105 @@
-# T-P1 V4 CH2 Generality
+# T-P1 CH2 GENERALITY — SK-V18 Totality Excavation (cycle V4)
 
-Verdict: ACCEPT.
+Verdict: REVISE (3 of 7 findings REVISE; 4 ACCEPT; 0 REJECT).
 
-Score: 5 / 5 CH2 checks pass. The SK-V15 V4 packet keeps Lock 14
-generality explicit across the six live inventories. The V3 CH2 accepted
-surface is preserved: `P1-1B-D9` / `P1-1B-D10` remain grammar-neutral Lock 14
-failures with non-JSON proof receivers, and the V4 receiver cost carrier plus
-primitive/kernel receiver table do not demote those rows, or the primitive
-rows, into JSON-only lessons.
+Lens: CH2 GENERALITY. Lock 14 must hold across the six live SK-V18 (V5-self-labelled)
+inventories — no divergence catalogued JSON/CSS-only when it is a grammar-neutral
+substrate fact; 1C's runtime census flags every grammar-named module in a generic
+crate; 1D separates JSON/CSS-empirical from grammar-neutral; no grammar-name leak
+passes uncited (`restart/prompts/totality/PASS-1-EXCAVATION.md:110-114`,`:210`).
 
-V4 is still only the first possible clean T-P1 cycle: the V4 dispatch context
-states V3 returned 3 / 7 ACCEPT and V4 cannot lock T-P1 alone
-(`restart/audit/totality/p1/hardening/V4/CHALLENGE-CONTEXT.md:24-26`).
+The prior `V4/CH2.md` on disk was the SK-V15 campaign's verdict; per the SK-V18
+cycle protocol it is superseded in place. The current inventories carry frontmatter
+`cycle: V5-SKV18-totality`; this CH2 reviews them as the live V4 challenge pass and
+spot-verified the most load-bearing cited path:line rows against live code.
 
-## Evidence
+## What holds (live-verified)
 
-Authority read:
+The grammar-neutral / JSON-empirical separation is genuinely strong and survives
+close reading against the tree:
 
-```sh
-nl -ba restart/prompts/totality/PASS-1-EXCAVATION.md | sed -n '104,132p'
-nl -ba restart/prompts/ORCHESTRATOR.md | sed -n '74,126p'
-nl -ba restart/audit/totality/p1/hardening/V4/CHALLENGE-CONTEXT.md | sed -n '1,90p'
-nl -ba restart/audit/totality/p1/hardening/HARDENING-T-P1-V3-CONSOLIDATED.md | sed -n '1,68p'
-nl -ba restart/audit/totality/p1/hardening/V3/CH2.md | sed -n '1,68p'
-```
+- **1D's two-table split is exemplary.** "JSON / CSS-Empirical Findings" (J-1..C-4,
+  `1D:181-191`) are held distinct from "Grammar-Neutral Findings" (G-1..G-13,
+  `1D:193-209`). G-10 (`1D:206`) is the single most CH2-load-bearing row and it is
+  correct: it re-scopes the 94.1%/79.5% figures as CSS-EMPIRICAL (per CH2-V3-009)
+  and keeps ONLY the G6=WIRE decision-RULE as grammar-neutral. I verified the
+  falsifier live: `rg find_component_delim skinny/crates/runtime/src | grep -v css`
+  is EMPTY (the leaf has zero non-CSS caller; all 7 hits are `css_l4_*/generated.rs`).
+- **1F is the only inventory citing the totality-tree leak, and it is exact.**
+  `crates/ir/src/registry/strategy.rs` carries NINE grammar-named `idents` rows
+  (`:137` Json, `:143` GoogleSheets, `:149` CssL4, `:155` Bbnf, `:161` Csv, `:167`
+  Math, `:173` Bnf, `:179` Ebnf, `:185` CssPretty) — confirmed verbatim. The
+  COH18-005/012 precision claim "the strict 4-name regex catches only 4 of 9 idents
+  rows; the other 5 escape" is live-accurate: the narrow regex matches exactly
+  `:137,:143,:149,:155` among idents rows; Csv/Math/Bnf/Ebnf/CssPretty escape. Total
+  `crates/ir/src/` narrow-regex sites = 11 (9 strategy.rs + 1 grammar_facts.rs + 1
+  scalar.rs). The consumer anchor `for_grammar_with_manifest(grammar_ident, registry,
+  PRODUCTION_MANIFEST_TABLE)` is real at `strategy.rs:216`.
+- **The analysis-crate completeness add (COH18-012, per CH2-V3-010) is real.**
+  `crates/analysis/src/state/ast_utils/mod.rs:4` (`BbnfBootstrapNodeView`) and `:11`
+  (`BbnfBootstrapRuleKind`) are `//!` doc-comments, exactly as classed. The 5
+  escaping names do not leak beyond `ir/strategy.rs` into other generic crates.
+- **The neutral discriminator is genuinely grammar-neutral.** `select_lowering`
+  (`skinny/crates/codegen/src/lower/mod.rs:18-26`) matches on `BackendShape` with
+  ZERO grammar names; the `RuntimeEmitterKind{CompiledLowering,RequestFacts}` fork
+  (`grammar_provider.rs:40-42`) is the leak and is catalogued AS the leak, not
+  laundered. The phantom `<G>` (`tape/mod.rs:175,179`, `_grammar: PhantomData<fn() ->
+  G>`) is flagged decorative across 1A/1C/1D/1F.
+- **Pattern-H census numbers reconcile exactly.** Live `find crates/core/src/runtime
+  -mindepth 2 -type f -name '*.rs'` = 71; per-grammar (excl. `tape/`) = 67;
+  `@generated` markers = 67. The inventories correctly distinguish 71-with-substrate
+  (1F COH18-007) from 67 per-grammar Pattern-H (1C C1, 1D U-1) and trace the +4 to
+  the generic `tape/` dir. The 6867-LOC carry figure (1C D6, 1D U-1) is exact.
 
-Inventory and source checks run:
+No instance was found of a grammar-neutral substrate fact mis-catalogued as
+JSON/CSS-only. The two `JSON-only`/`CSS-only` tokens that appear (`1D:206` G-10,
+`1F:81` COH18-011) are both CORRECT usage — G-10 scoping a CSS measurement away from
+a neutral rule, COH18-011 quoting the spec's own REDRESS-prohibition language.
 
-```sh
-nl -ba restart/audit/totality/p1/1A-substrate-evidence.md
-nl -ba restart/audit/totality/p1/1B-codegen-evidence.md
-nl -ba restart/audit/totality/p1/1C-runtime-evidence.md
-nl -ba restart/audit/totality/p1/1D-skinny-lessons.md
-nl -ba restart/audit/totality/p1/1E-locks-evidence.md
-nl -ba restart/audit/totality/p1/1F-coherence-scan.md
-rg -n "JSON-only|json-only|JSON-empirical|grammar-neutral|P1-1B-D9|P1-1B-D10|non-JSON|Sheets|BBNF-self|primitive same-wave|V4 Primitive|Primitive same-wave|Parse-that vocabulary|source-present primitive|grammar-neutral byte-class" restart/audit/totality/p1/1A-substrate-evidence.md restart/audit/totality/p1/1B-codegen-evidence.md restart/audit/totality/p1/1C-runtime-evidence.md restart/audit/totality/p1/1D-skinny-lessons.md restart/audit/totality/p1/1E-locks-evidence.md restart/audit/totality/p1/1F-coherence-scan.md
-nl -ba restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md | sed -n '20,62p;60,90p'
-nl -ba restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md | sed -n '10,65p;220,240p'
-```
+## Where it fails (the REVISE band)
 
-Material evidence:
+The defect is concentrated and structural, not scattered: the totality-tree
+grammar-name leak that falsifies Lock 14's OWN verification command lives only in
+1F, and the two CH2-charged status inventories (1E for lock-status, 1C for the
+runtime grammar-named-module census) omit it.
 
-- CH2's required standard is Lock 14 generality: no JSON-only cataloguing of
-  grammar-neutral facts, 1C must flag grammar-name leaks, 1D must separate
-  JSON-empirical from grammar-neutral findings, and no grammar-name leak may
-  pass uncited (`restart/prompts/totality/PASS-1-EXCAVATION.md:110-114`).
-  The universal CH2 lens also requires grammar-neutral interventions that work
-  for CSS L4 / Sheets / BBNF-self, not only JSON
-  (`restart/prompts/ORCHESTRATOR.md:81-85`).
-- The V4 dispatch focus is exact: verify receiver tables remain
-  grammar-neutral and do not demote `P1-1B-D9` / `P1-1B-D10` or primitive rows
-  into JSON-only lessons
-  (`restart/audit/totality/p1/hardening/V4/CHALLENGE-CONTEXT.md:53-59`).
-  The same context supersedes stale prior SK-V14 V4 CH files in place
-  (`restart/audit/totality/p1/hardening/V4/CHALLENGE-CONTEXT.md:3-7`) and
-  declares `1F-anti-pattern.md` and `1F-past-corpora.md` historical only
-  (`restart/audit/totality/p1/hardening/V4/CHALLENGE-CONTEXT.md:19-22`).
-- V3 already accepted CH2 on this axis:
-  `HARDENING-T-P1-V3-CONSOLIDATED.md:26` says `P1-1B-D9` / `P1-1B-D10` are
-  grammar-neutral Lock 14 failures with non-JSON proof receivers, and
-  `HARDENING-T-P1-V3-CONSOLIDATED.md:49-50` says that state plus the Lock 14
-  owner/receiver map must be preserved. V3 CH2's own required fold was
-  "None" except preserving the `G-10` row and owner/receiver map
-  (`restart/audit/totality/p1/hardening/V3/CH2.md:64-68`).
-- `1B-codegen-evidence.md` still names the live leaks as generic pass/codegen
-  failures: D9 recognizer mining is JSON-punctuation-coded and D10
-  materialization role mining is JSON-role-coded
-  (`restart/audit/totality/p1/1B-codegen-evidence.md:52-53`). The V2/V3 fold
-  rows explicitly preserve them as grammar-neutral Lock 14 findings with
-  Sheets/BBNF-self proof receivers, not JSON-only routing
-  (`restart/audit/totality/p1/1B-codegen-evidence.md:71`,
-  `restart/audit/totality/p1/1B-codegen-evidence.md:79`). Their divergence rows
-  require Sheets/BBNF-self/CSS or non-JSON generated metadata proof
-  (`restart/audit/totality/p1/1B-codegen-evidence.md:107-108`).
-- `1C-runtime-evidence.md` satisfies the 1C CH2 obligation by flagging generic
-  runtime/codegen grammar-name leaks rather than laundering them as generated
-  allowance: runtime root generic modules are unimplemented against Lock 14
-  (`restart/audit/totality/p1/1C-runtime-evidence.md:61`), the generated vs
-  hand-owned audit marks runtime root and Pattern H as Lock 14 failures
-  (`restart/audit/totality/p1/1C-runtime-evidence.md:90-94`), and the
-  divergence table carries the root/profile/CSS-row leaks as open rows
-  (`restart/audit/totality/p1/1C-runtime-evidence.md:118-123`).
-- `1D-skinny-lessons.md` keeps JSON-empirical, grammar-neutral, and
-  CSS-audit-demoted lessons in separate sections. JSON rows are scoped as
-  JSON-empirical at `1D:101-106`; grammar-neutral rows start at `1D:134`, and
-  rows `G-3` through `G-10` include Lock 14/16, Pattern H, Decision Engine,
-  codegen neutrality, retained sidecars, primitive gates, parse-that gaps, and
-  D9/D10 as grammar-neutral findings (`restart/audit/totality/p1/1D-skinny-lessons.md:134-147`).
-  The CSS demotion is separate at `1D:149-159`.
-- `1D` preserves the D9/D10 fold verbatim: `G-10` says pass-layer recognizer
-  mining and materialization role mining are JSON-shaped generic pass logic,
-  not JSON-only empirical lessons, with Sheets and BBNF-self as proof receivers
-  (`restart/audit/totality/p1/1D-skinny-lessons.md:147`), and the V2 fold row
-  repeats the same classification (`restart/audit/totality/p1/1D-skinny-lessons.md:190`).
-- The V4 receiver cost carrier remains grammar-neutral where CH2 needs it.
-  `RC-07` routes `P1-1B-D8` / `P1-1B-D9` / `P1-1B-D10` to CSS plus
-  Sheets-or-BBNF-self generated metadata proof and rejects any branch that lacks
-  non-JSON proof (`restart/audit/totality/p1/1D-skinny-lessons.md:180`).
-  `RC-10` requires scalar oracle, non-JSON witness or scoped claim, REDRESS
-  pre-block check, and generated consumer for parse-that vocabulary
-  (`restart/audit/totality/p1/1D-skinny-lessons.md:183`). `RC-11` routes
-  primitive same-wave consumers to scalar reference, aarch64/scalar-delegate
-  disposition, strict parity, and row-maintain gates with explicit final states
-  (`restart/audit/totality/p1/1D-skinny-lessons.md:184`).
-- The V4 primitive/kernel receiver table enumerates the concrete primitives
-  requested by V3 rather than collapsing them into JSON-only classes
-  (`restart/audit/totality/p1/1D-skinny-lessons.md:196-217`). It uses
-  grammar-neutral or non-JSON proof where required: byte-class rows require a
-  grammar-neutral byte-class use or generated consumer (`1D:200-201`), UTF-8
-  requires a non-JSON witness or scoped JSON claim (`1D:206`), parse-that rows
-  require non-JSON receiver/generated consumer/grammar-source facts where
-  relevant (`1D:212-217`), and product-builder/hash rows are quarantined as
-  delete or bench-only, never production equality proof (`1D:211`).
-- The cited P2 source rows support that interpretation. P2-B states that the
-  primitive admission process is grammar-neutral, but individual primitive
-  claims are not grammar-neutral until policy source and consumer prove it
-  (`restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:60-65`).
-  P2-E says parse-that candidate APIs may expose no JSON/CSS/Sheets/BBNF names
-  in generic APIs, lists non-JSON witness requirements for each candidate, and
-  explicitly rejects JSON-only wording
-  (`restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md:223-236`).
-- `1F-coherence-scan.md` carries the owner/receiver map required by V3. It maps
-  runtime root, codegen profile roster, pass recognizer mining, pass
-  materialization mining, Pattern H, CSS `CSS_GENERATED_RS`, CSS FNV hashes, and
-  Lock 14 gate exclusions to owners, receivers, and proof expectations
-  (`restart/audit/totality/p1/1F-coherence-scan.md:132-143`). D9/D10 specifically
-  route through Sheets/BBNF-self/CSS recognizer facts and non-JSON role facts
-  (`restart/audit/totality/p1/1F-coherence-scan.md:138-139`).
-- `1E-locks-evidence.md` preserves the broader gate discipline: Lock 14 is
-  drifted because scan exclusions hide leak-bearing files
-  (`restart/audit/totality/p1/1E-locks-evidence.md:103`), and the Lock 14/16
-  gate carrier requires included-root/exclusion reporting plus primitive
-  source-status classification
-  (`restart/audit/totality/p1/1E-locks-evidence.md:197-200`).
+I ran the EXACT Lock 14 verification command from `restart/locks/LOCKS.md:349`
+(`rg -n 'JsonParser|CssL4Parser|BbnfBootstrap|GoogleSheetsParser'
+crates/{ir,parse,codegen,runtime,...,analysis,lsp}/src/`). LOCKS:349 asserts it
+"returns ZERO". Live result: **13 sites** (11 `crates/ir/src/` + 2
+`crates/analysis/src/`). The lock's own gate is RED.
 
-The live `rg` scan found no current inventory line that demotes D9/D10 into a
-JSON-only lesson. The "JSON-only" tokens that do appear are negative or scoped
-evidence: `1D:147` and `1D:190` reject JSON-only treatment for D9/D10, while
-`1D:114` describes the current Lock 14 scan token universe as too JSON-only and
-therefore a grammar-neutral gate failure.
+`crates/core/src/css_types.rs` is live (66 LOC, `:1` "Host shims for the CSS L4
+grammar's `-> parse_hex_color(...)` map") — the file LOCKS:349 names VERBATIM as "the
+failure mode this lock prevents from recurring." Cited only by 1F (COH18-006).
 
 ## Findings
 
 | id | disposition | finding | evidence |
 |---|---|---|---|
-| CH2-V4-001 | ACCEPT | The V4 packet preserves the V3 CH2 accepted surface. `P1-1B-D9` / `P1-1B-D10` remain grammar-neutral Lock 14 failures with non-JSON proof receivers, not JSON-only empirical lessons. | `restart/audit/totality/p1/1B-codegen-evidence.md:71`, `restart/audit/totality/p1/1B-codegen-evidence.md:79`, `restart/audit/totality/p1/1B-codegen-evidence.md:107-108`, `restart/audit/totality/p1/1D-skinny-lessons.md:147`, `restart/audit/totality/p1/1D-skinny-lessons.md:190`. |
-| CH2-V4-002 | ACCEPT | The V4 receiver cost carrier remains grammar-neutral. D9/D10 route through CSS plus Sheets-or-BBNF-self generated metadata, and parse-that/primitive receivers require non-JSON witnesses, scoped claims, generated consumers, or explicit rejection states. | `restart/audit/totality/p1/1D-skinny-lessons.md:170-184`. |
-| CH2-V4-003 | ACCEPT | The primitive/kernel receiver table enumerates named primitives and does not turn them into JSON-only lessons. Rows with possible JSON first consumers are explicitly scoped and do not claim fleet-wide closure; P2-B/P2-E require non-JSON witnesses or scoped language before generalization. | `restart/audit/totality/p1/1D-skinny-lessons.md:196-217`; `restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:60-65`; `restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md:223-236`. |
-| CH2-V4-004 | ACCEPT | 1D preserves the required separation among JSON-empirical guard facts, CSS audit-demoted facts, and grammar-neutral lessons. The primitive and Lock 14 rows sit in the grammar-neutral / unknown receiver path, not in the JSON guard section. | JSON rows at `restart/audit/totality/p1/1D-skinny-lessons.md:101-106`; grammar-neutral rows at `restart/audit/totality/p1/1D-skinny-lessons.md:134-147`; CSS audit-demoted rows at `restart/audit/totality/p1/1D-skinny-lessons.md:149-159`; unknown receiver rows at `restart/audit/totality/p1/1D-skinny-lessons.md:168`, `restart/audit/totality/p1/1D-skinny-lessons.md:225-229`. |
-| CH2-V4-005 | ACCEPT | No grammar-name leak passes uncited. 1C flags runtime root/profile leaks and Pattern H; 1F maps leak owners/receivers; 1E requires gate exclusion reporting and primitive source-status classification. | `restart/audit/totality/p1/1C-runtime-evidence.md:61`, `restart/audit/totality/p1/1C-runtime-evidence.md:90-94`, `restart/audit/totality/p1/1C-runtime-evidence.md:118-123`; `restart/audit/totality/p1/1F-coherence-scan.md:132-143`; `restart/audit/totality/p1/1E-locks-evidence.md:103`, `restart/audit/totality/p1/1E-locks-evidence.md:197-200`. |
+| CH2-V4-001 | ACCEPT | 1D's JSON/CSS-empirical vs grammar-neutral split is exemplary; G-10 re-scopes the 94.1%/79.5% as CSS-empirical and keeps only the G6=WIRE rule neutral. `grep -v css` falsifier verified empty live. | `1D:181-191`, `1D:193-209`, `1D:206`; live `rg find_component_delim skinny/crates/runtime/src \| grep -v css` = empty |
+| CH2-V4-002 | ACCEPT | 1F's totality `strategy.rs` 9-grammar idents-table leak and the "4 caught / 5 escape" narrow-regex precision are live-exact; consumer anchor `:216` real; 11-site `crates/ir/src/` total confirmed. | `crates/ir/src/registry/strategy.rs:137,143,149,155,161,167,173,179,185,216`; `1F:75`,`1F:99` |
+| CH2-V4-003 | ACCEPT | The grammar-neutral discriminator holds: `select_lowering` is Lock-14-clean (zero grammar names, matches on `BackendShape`); the `RuntimeEmitterKind` fork and phantom `<G>` are catalogued AS leaks, not laundered. | `skinny/crates/codegen/src/lower/mod.rs:18-26`; `grammar_provider.rs:40-42`; `tape/mod.rs:175,179`; `1B:51,59`; `1C:34,37` |
+| CH2-V4-004 | ACCEPT | Pattern-H census (71 total / 67 per-grammar / 67 `@generated` / 6867 LOC) reconciles exactly across 1C/1D/1F; the +4 traced to generic `tape/`. No neutral-vs-grammar miscount. | live `find`/`rg`/`wc`; `1C` C1/C2/D6, `1D` U-1, `1F` COH18-007 |
+| CH2-V4-005 | REVISE | **1E L14 omits the totality-tree leak that falsifies Lock 14's own gate.** The authoritative lock-status row catalogues L14 `drifted (HIGH)` but cites ONLY skinny-tree leaks (`grammar_provider.rs`, `runtime_generator.rs`, `tape/mod.rs`, `lock14_baseline.rs`, `json/generated.rs`). It never cites `crates/ir/src/registry/strategy.rs:137-185` nor `crates/core/src/css_types.rs:1`, and never states that the LOCKS:349 verification command itself returns 13 (not 0). CORRECTION: add to `1E-locks-evidence.md` L14 row (and a new D-1E-V5 divergence row) the totality idents-table leak `crates/ir/src/registry/strategy.rs:137-185` and the lock-NAMED `crates/core/src/css_types.rs:1`, and record the live LOCKS:349 gate result = 13 sites (not ZERO) as the falsifier. | `1E:94`, `1E:105-113` (no `strategy.rs`/`css_types`/`crates/ir` cite — confirmed via `rg`); live LOCKS:349 command = 13 sites |
+| CH2-V4-006 | REVISE | **1C's runtime grammar-named-module census omits `css_types.rs`.** CH2 charges 1C to flag every grammar-named module in a generic crate; `crates/core/src/css_types.rs` is a CSS-L4-named host-shim module IN the generic `core` crate, in 1C's audited tree (`crates/core/src/...`), and LOCKS:349 names it verbatim. 1C cites the Pattern-H runtime leaks (C2/C3 `__shape_support_CssL4Parser` etc.) but not `css_types.rs`. CORRECTION: add a `1C-runtime-evidence.md` divergence/table row citing `crates/core/src/css_types.rs:1` as a grammar-named module in the generic core crate (Lock 14 (c) does NOT apply — it is not a `crates/<grammar>/` declaration crate). | `1C` C1-C12 + D1-D8 (no `css_types` cite — confirmed via `rg`); `crates/core/src/css_types.rs:1`; `LOCKS.md:349` names it |
+| CH2-V4-007 | REVISE | **1F COH18-012's "gate DOES catch it" framing softens the live RED gate.** COH18-012 reclassifies OFF impl-exceeds-spec with "the §9 gate `:2215` and `LOCKS.md:349` BOTH scan `crates/{ir,...}/src/` and DO catch `strategy.rs` (11 sites)." The sharper CH2 fact is that LOCKS:349 asserts its command "returns ZERO" and the live command returns 13 (11 ir + 2 analysis) — the lock's own verification gate is FALSIFIED, not merely "catching" a leak benignly. CORRECTION: in `1F-coherence-scan.md` COH18-012 (and the COH18-005 note), state that the LOCKS:349 verification command returns 13 sites live versus the asserted ZERO, so Lock 14's own gate is RED — distinct from "the wide command catches it." | `1F:82` (COH18-012 "DO catch it"); live LOCKS:349 = 13 (11 `crates/ir/src/` + 2 `crates/analysis/src/`) |
 
-## Required Fold
+## Required Fold (V5)
 
-None. CH2 is ACCEPT for SK-V15 T-P1 V4. Preserve `1D` rows `G-10`, `RC-07`,
-`RC-10`, `RC-11`, the V4 primitive/kernel receiver table, and the `1F` Lock 14
-owner/receiver map in V5; do not weaken the non-JSON proof receiver language
-or broaden scoped JSON guard language into fleet-wide generality.
+1. **1E** — fold CH2-V4-005: add `crates/ir/src/registry/strategy.rs:137-185` (9-grammar
+   idents table) and `crates/core/src/css_types.rs:1` to the L14 drift evidence and a
+   new `D-1E-V5-10` row; record the live LOCKS:349 verification result = 13 sites (not
+   ZERO) as the lock-self-falsifier. The skinny-tree leaks already cited remain.
+2. **1C** — fold CH2-V4-006: add a runtime-census row for `crates/core/src/css_types.rs:1`
+   as a CSS-named module in the generic core crate (Lock 14 (c) inapplicable).
+3. **1F** — fold CH2-V4-007: re-word COH18-012 to state the LOCKS:349 command returns 13
+   live (asserted ZERO) — the gate is RED, not benignly "catching."
+
+Preserve verbatim in V5: `1D` G-10 CSS-empirical re-scoping and the J/G two-table
+split; `1F` COH18-005/012 "4 caught / 5 escape" precision and the analysis
+doc-comment completeness add; the Pattern-H 71-vs-67 trace. Do NOT broaden any
+CSS-empirical scoped row (G-10, J-3) into fleet-neutral generality, and do not demote
+the grammar-neutral G-rows into JSON/CSS-only lessons.
+
+TALLY accept=4 revise=3 reject=0

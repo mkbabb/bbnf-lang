@@ -16,10 +16,23 @@ after the V2 fold:
 - `1E-locks-evidence.md`
 - `1F-coherence-scan.md`
 
-The two 1F auxiliaries remain historical and superseded:
+The two 1F auxiliaries are CURRENT-PASS V5-SKV18-totality rewrites and ARE live
+T-P1 authority (corrected per CH5-V3-008 REJECT — the prior "historical and
+superseded / not live authority" framing is FALSE on disk: `1F-anti-pattern.md:4`
+carries `cycle: V5-SKV18-totality`, and it is the SOLE carrier of the OnceCell
+Lock-1 classification cross-referenced by the live `1E-locks-evidence.md:158` and
+of the FNV hash-sidecar fence):
 
-- `1F-anti-pattern.md`
-- `1F-past-corpora.md`
+- `1F-anti-pattern.md` — LIVE: carries the OnceCell-lifetime Lock-1 classification
+  (`:43`) and the FNV hash-sidecar production fence (`:41`).
+- `1F-past-corpora.md` — LIVE: carries the cross-tranche empirical-floor lessons.
+
+NOTE (CH5-V3-006): the two heaviest hidden-coupling fences — the totality
+`OnceCell<StructuralIndex>` lifetime classification and the FNV/source-sidecar
+fence — live in `1F-anti-pattern.md:43`/`:41`, NOT in `1F-coherence-scan.md`
+(which holds the scanner asymmetry COH18-015 and relocated-seam COH18-005). Route
+those two fences to their actual carrier `1F-anti-pattern.md`; do not route a fence
+to a file that lacks it.
 
 ## §0 - Authority
 

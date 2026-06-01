@@ -1,135 +1,175 @@
 ---
-agent: 1B
-pass: T-P1-excavation
-cycle: V4
-generated_at: 2026-05-28T06:10:00Z
-spec_surfaces_audited: [PASS-1-EXCAVATION.md, ORCHESTRATOR.md, ARCHITECTURE.md, MASTER-PLAN.md, LOCKS.md]
-files_audited_count: 23
-live_truth_method: "end-to-end PASS-1 prompt read; ORCHESTRATOR §3W/§3Z line read; nl -ba line reads of ARCHITECTURE/MASTER-PLAN/LOCKS; rg symbol scans; wc -l preflight; static line reads of skinny/crates/codegen/src/lower/*.rs, codegen/src/{lib.rs,grammar_profile.rs,grammar_provider.rs,runtime_generator.rs}, passes/src/*.rs, ir/src/*.rs; no cargo test"
-prior_cycle_dispositions_folded:
-  accepted: []
-  rejected: []
-  revised:
-    - CH3-V1-007 and CH7-FOLD-003 added EventTape / typed-event cursor REDRESS fences
-    - CH2-FOLD-004 routed pass-layer JSON-shape leaks P1-1B-D9/P1-1B-D10 into 1D
-    - CH1-V2-F04 removed stale V1 self-description
-    - CH2-V2-F05 confirmed P1-1B-D9/P1-1B-D10 must be grammar-neutral findings in 1D V3
-    - CH1-V3-001 expanded brace lowerer citations into explicit repo-root paths
-  first_cycle_additions: [P1-1B-D1, P1-1B-D2, P1-1B-D3, P1-1B-D4, P1-1B-D5, P1-1B-D6, P1-1B-D7, P1-1B-D8, P1-1B-D9, P1-1B-D10, P1-1B-D11]
+agent: T-P1-1B-codegen-evidence
+pass: T-P1
+cycle: V5-SKV18-totality
+cycle_self_label: SK-V18-TOTALITY-EXCAVATION
+generated_at: 2026-06-01T00:00:00Z
+spec_surfaces_audited:
+  - restart/ARCHITECTURE.md §7.2-§7.4 (BackendShape canon, derive_backend_shape, impl status)
+  - restart/ARCHITECTURE.md §10 + §10.1 (codegen + lowerers + rewrite-budget)
+  - restart/locks/LOCKS.md Lock 5, Lock 10, Lock 14 (+ SK-V15/SK-V17 addenda)
+  - restart/skinny/tranches/sk-v18/SPEC.md §6 (G3 un-fork emitter)
+  - restart/skinny/tranches/sk-v18/research/p2/SYNTHESIS-RESEARCH.md + rA-emitter-unify.md
+  - restart/skinny/tranches/sk-v18/audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md
+files_audited_count: 16
 divergence_count:
-  spec_claims_implemented: 8
-  spec_claims_unimplemented: 6
+  implemented: 6
+  unimplemented: 7
   impl_exceeds_spec: 2
-  unknown: 2
-locks_amendment_candidates: 3
+  unknown: 3
+  enumeration_note: "Per-row bucket map across the Spec-Claim table (16 verdict rows), the Divergences section (D1-D6), and Open Questions (U1-U3) per CH1-V4-F8, matching the 1A enumeration model. implemented(6) = the 6 clean IMPLEMENTED table rows: 5-shape canon, derive_backend_shape, cost pipeline, select_lowering, LoweredRust fail-closed, SinkOnly lowers. (The 7th nominally-IMPLEMENTED row 'Generated source committed' folds into D1's verbatim-courier divergence — its CSS arm is the `CSS_GENERATED_RS:701` const, so it is NOT counted clean-implemented.) unimplemented(7) = the 4 marker-string lowerer rows (EagerTape, OffsetTape, EventTape, CollapsedStage = D2) + the 3 DIVERGE rows (SinkOnly fixed-literal body = D3, Lock-5 RuntimeEmitterKind fork = D1, backend_shape config-carried strategy = D5). impl_exceeds_spec(2) = 'five lowerers as scaffolds' (matches the §7.4 scaffold concession) + '§10.1 rewrite-budget one REWRITE_SET wired' (D6). unknown(3) = U1 (cost model ever selects non-SinkOnly), U2 (decision_csp non-tautological), U3 (marker-string rule_plans feed any committed generated.rs). D4 (stale spec line-references) is a spec-defect documentation reconcile counted within the unimplemented/diverge surface, not a separate bucket. Sum = 6+7+2+3 = 18."
+locks_amendment_candidates: 0
 ---
+
+# 1B — Codegen-Layer Evidence (SK-V18 T-P1 Totality Excavation)
 
 ## Executive Summary
 
-The codegen layer implements the named five-shape `BackendShape` canon and carries per-rule shape/cost side tables from `passes::compile` into `codegen::lower::rust::lower_to_rust`. The live selector is no longer a pure P1-P8 cascade: it builds five candidates per rule, selects through `backend_egraph::select`, finalizes through `decision_csp::finalize_rule`, and records active cost plus CSP facts. That broadly matches the current ARCH §7.3 pipeline, while the diagnostic eight-step vocabulary remains only partly represented in live branches.
-
-The material gaps are in concrete lowering and grammar neutrality. Four retained/ASM shapes (`EagerTape`, `OffsetTape`, `EventTape`, `CollapsedStage`) still lower to marker strings. `SinkOnly` is the only non-stub shape lowerer and produces a `SinkOnlyProgram`, but runtime emission still routes through JSON-specific templates/renderers and CSS-specific fact-stream branches. The old per-provider module split has been reduced to one `grammar_provider.rs`, but `grammar_profile.rs` still hardcodes eight profiles and `runtime_generator.rs` hardcodes JSON/CSS render paths. The formal `Backend` / `RustBackend` trait required by ARCH §7.6 and Lock 5 is absent.
+The 5-shape `BackendShape` canon `{EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage}`
+is WHOLE as a discriminator: the enum (`ir/src/lib.rs:340-346`), the `derive_backend_shape`
+selector (`passes/src/lib.rs:392`), and the per-shape `select_lowering` dispatch
+(`codegen/src/lower/mod.rs:18-26`) all enumerate exactly five shapes, matching Lock 10 and
+ARCHITECTURE.md §7.3. The cost-model pipeline (egraph candidate gen → CSP feasibility →
+extraction) is substantive, not tautological on its face. BUT the lowerer BODIES are the
+divergence: four of five shapes (Eager/Offset/Event/Collapsed) emit MARKER-STRING plans via one
+shared `tape_plan::render_rule` (`lower/tape_plan.rs:58`), not real Rust recursive-descent bodies
+— exactly the "label-string lowerer scaffolds" §7.4 concedes. Only `SinkOnly` has a real
+AST-walk (`lower/sink_only.rs:122 lower_program`), and even its rendered JSON body is
+FIXED-LITERAL (`json_sink_direct.rs` render fns take `&mut String`, push hardcoded `{[",-tfn`
+dispatch). The largest spec-vs-impl divergence: `RuntimeEmitterKind{CompiledLowering,RequestFacts}`
+(`grammar_provider.rs:40-42`) is a JSON-vs-CSS GRAMMAR-FAMILY fork that ARCHITECTURE.md never
+mentions (grep == 0) — Lock 5 forbids per-grammar emit forks, yet it is LIVE. SK-V18 G3/R-A
+target its DELETE in favor of `BackendShape` dispatch; the spec already canonicalizes that axis,
+so the fork is a pure impl-side divergence the totality spec absorbs by deletion.
 
 ## Spec-Claim ↔ Implementation Table
 
-| Spec claim | Implementation evidence | Verdict | Note |
+| Spec claim (path:line) | Impl (path:line) | Verdict | Note |
 |---|---|---|---|
-| T-P1 requires every 1B inventory to audit codegen, the five-shape canon, `derive_backend_shape`, cost model, and lowerer hierarchy; output schema requires divergences, gaps, open questions, and amendment candidates when surfaced (`restart/prompts/totality/PASS-1-EXCAVATION.md:45`-`47`, `restart/prompts/totality/PASS-1-EXCAVATION.md:72`-`103`). | This artifact line-cites `ARCHITECTURE.md`, `MASTER-PLAN.md`, `LOCKS.md`, and the live codegen/passes/ir implementation. | Implemented by this artifact. | Cycle is V4; V1 names are retained only inside finding IDs and prior PASS-IMPL evidence anchors. |
-| CHALLENGE requires claim citations and no grammar-name leaks; convergence is iterative V1..V5 (`restart/prompts/ORCHESTRATOR.md:74`-`88`, `restart/prompts/ORCHESTRATOR.md:104`-`126`). | Open questions below carry `verify_action`; grammar-name and shape leaks are catalogued. | Implemented by this artifact. | No CH files written in this scope. |
-| Backend IR is executable and the only lowerer input; Lock 5 rejects emitters walking Grammar IR (`restart/MASTER-PLAN.md:37`-`43`, `restart/locks/LOCKS.md:181`). | `emit_from_source` parses and compiles, then passes `BackendIr`, `backend_shape`, `cost_facts`, policy and union side tables into `emit_with_layout` (`skinny/crates/codegen/src/lib.rs:106`-`116`, `skinny/crates/codegen/src/lib.rs:155`-`180`). `lower_to_rust` accepts `&BackendIr` plus `LowerCtx` (`skinny/crates/codegen/src/lower/rust.rs:23`-`32`). | Implemented for the lowerer boundary. | The facade still parses grammar source before the lowerer boundary, which is consistent with the claim. |
-| V1 formal lowerer surface is `Backend` with `lower` and `emit_artefacts`; V1 ships `RustBackend: Backend`, V2 adds Wasm/TS (`restart/ARCHITECTURE.md:1485`-`1531`, `restart/locks/LOCKS.md:181`). | Live `codegen/src/lower/mod.rs` exposes `ShapeLowering::lower_rule` and `select_lowering`; no `trait Backend`, `RustBackend`, `WasmBackend`, or `TsBackend` symbols were found under scoped codegen/passes/ir search (`skinny/crates/codegen/src/lower/mod.rs:9`-`24`). | Unimplemented. | P1-1B-D1. |
-| Five `BackendShape` variants are the complete canon: `EagerTape`, `OffsetTape`, `EventTape`, `SinkOnly`, `CollapsedStage`; FactStream is not a sixth backend shape (`restart/ARCHITECTURE.md:1088`-`1116`, `restart/locks/LOCKS.md:100`-`109`). | `ir::BackendShape` has exactly those five variants (`skinny/crates/ir/src/lib.rs:339`-`346`), and `all_backend_shapes()` returns exactly those five (`skinny/crates/ir/src/cost.rs:333`-`340`). | Implemented. | No sixth variant in live IR. |
-| `LayoutFacts.backend_shape` and `CostFacts` are public side tables consumed by Backend IR/codegen (`restart/ARCHITECTURE.md:1075`-`1082`). | `passes::LayoutFacts` includes `backend_shape`, `cost_facts`, `per_grammar_policy`, and `same_substrate_union` maps (`skinny/crates/passes/src/lib.rs:90`-`99`). `compile` fills them from `derive_backend_shape_with_diagnostics` (`skinny/crates/passes/src/lib.rs:48`-`57`). `LowerCtx` consumes them (`skinny/crates/codegen/src/lower/rust.rs:23`-`30`). | Implemented. | Side-table handoff is real. |
-| `CostFacts` must store objective vectors, Pareto/frontier membership, scalarization, selected/rejected/dominated alternatives, extraction method, plus active cost and CSP fields (`restart/ARCHITECTURE.md:1081`). Lock 10 says thin `CostFacts`/P1-P8 are only diagnostics until active evidence exists (`restart/locks/LOCKS.md:271`-`278`). | Live `CostFacts` has chosen/rationale/rejected/priority plus `active_cost`, `decision_csp`, `per_grammar_policy`, and `same_substrate_union` (`skinny/crates/ir/src/cost.rs:4`-`21`). `ActiveCostFacts` and `DecisionCspFacts` carry many active fields (`skinny/crates/ir/src/cost.rs:172`-`247`), but there are no named objective vector, Pareto/frontier, scalarization profile, dominated alternatives list, or extraction-method fields. | Partially implemented; impl also exceeds older thin-cost state. | P1-1B-D2. |
-| `derive_backend_shape` pipeline is candidate generation → bounded e-graph saturation → CSP feasibility → active cost extraction → diagnostic emission; historical P1-P8 survives only as diagnostic ordering (`restart/ARCHITECTURE.md:1118`-`1164`, `restart/ARCHITECTURE.md:1165`-`1176`). | Live `derive_backend_shape_with_diagnostics` iterates rules and calls `choose_backend_shape` (`skinny/crates/passes/src/lib.rs:401`-`465`). `choose_backend_shape` builds candidates, calls `backend_egraph::select`, then `decision_csp::finalize_rule` (`skinny/crates/passes/src/lib.rs:473`-`500`). `PriorityStep::ALL` is eight slots (`skinny/crates/ir/src/cost.rs:262`-`285`). | Partially implemented. | P1-1B-D3: active pipeline exists; P5/P6 are declared but not emitted by the candidate generator. |
-| EagerTape diagnostic steps cover recovery, host decode, layout, and first-set overlap (`restart/ARCHITECTURE.md:1166`-`1169`). | `requires_eager_tape` checks recovery annotation, parse-time host decode, layout policy, and dispatch overlap (`skinny/crates/passes/src/lib.rs:756`-`761`), with helpers at `skinny/crates/passes/src/lib.rs:763`-`838`. | Implemented, skinny subset. | The implementation is annotation/string based, not a full typed directive model. |
-| SinkOnly is selected only when the API does not require post-parse path/value traversal (`restart/ARCHITECTURE.md:1104`-`1107`, `restart/ARCHITECTURE.md:1170`). | `admits_sink_only` checks `DirectBuild` plus `target.direct_only_output || target.direct_build_consumer` (`skinny/crates/passes/src/lib.rs:921`-`924`). Host target sets `direct_build_consumer: true` and `retained_api_consumer: true` (`skinny/crates/passes/src/lib.rs:371`-`379`). | Underimplemented. | P1-1B-D4: selected by direct consumer presence, not by absence of retained traversal. |
-| CollapsedStage requires target features plus a hub with at least four byte-disjoint arms; Lock 16 hardens x86 + AVX512 + concrete emitted transient strategy (`restart/ARCHITECTURE.md:1171`, `restart/locks/LOCKS.md:515`-`538`). | Live predicate is only `target.avx512bw && matches!(rule_ir.expr, BackendExpr::Entry(_))` (`skinny/crates/passes/src/lib.rs:926`-`928`). `TargetFeatures` has no explicit `arch` field (`skinny/crates/passes/src/lib.rs:362`-`369`). | Underimplemented. | P1-1B-D5. |
-| EventTape selected when payload/recovery/layout side facts must be retained per cursor (`restart/ARCHITECTURE.md:1101`-`1103`, `restart/ARCHITECTURE.md:1172`). | `prefers_event_tape` checks only `alt_branch_count >= 8` (`skinny/crates/passes/src/lib.rs:930`-`932`). | Underimplemented. | P1-1B-D6. |
-| OffsetTape is the default retained offset tape (`restart/ARCHITECTURE.md:1097`-`1100`, `restart/ARCHITECTURE.md:1173`). | Candidate generator emits `BackendShape::OffsetTape` when a backend rule exists and eager is not forced (`skinny/crates/passes/src/lib.rs:526`-`568`). | Implemented. | Active cost may still pick another ranked candidate. |
-| Per-shape lowerers emit concrete Rust/ASM artefact triples (`restart/ARCHITECTURE.md:1178`-`1187`). Admission ledger says only SinkOnly is admitted and the other four are non-admitted/stub (`restart/ARCHITECTURE.md:1188`-`1202`). | Dispatch exists for all five shapes (`skinny/crates/codegen/src/lower/mod.rs:17`-`24`). Eager, Offset, Event, and Collapsed lowerers return marker strings only (`skinny/crates/codegen/src/lower/eager_tape.rs:15`-`17`, `skinny/crates/codegen/src/lower/offset_tape.rs:15`-`17`, `skinny/crates/codegen/src/lower/event_tape.rs:15`-`17`, `skinny/crates/codegen/src/lower/collapsed_stage.rs:15`-`17`). `SinkOnly` lowers `BackendExpr` into `SinkOnlyProgram` (`skinny/crates/codegen/src/lower/sink_only.rs:122`-`168`, `skinny/crates/codegen/src/lower/sink_only.rs:170`-`227`). | Mostly unimplemented; one shape implemented. | P1-1B-D7. |
-| Lowerer hierarchy: Rust primary, SIMD co-impl, VM replay-only, WASM/TS deferred (`restart/ARCHITECTURE.md:1960`-`1975`). | Codegen has Rust + five shape modules (`skinny/crates/codegen/src/lower/mod.rs:1`-`7`); no Wasm/TS lowerer symbols found in scoped search; no VM crate was line-audited in scoped files. | Partial; VM unknown. | UNKNOWN-1. |
-| Runtime generation should be grammar-neutral; generic crates may not hand-code provider enums, JSON/CSS renderer branches, punctuation alphabets, role mining, or sink names (`restart/locks/LOCKS.md:368`-`375`; Lock 14 zero-overfit rule at `restart/locks/LOCKS.md:349`). | `grammar_profile.rs` hardcodes an eight-profile roster (`skinny/crates/codegen/src/grammar_profile.rs:89`-`99`) and seven CSS profile IDs (`skinny/crates/codegen/src/grammar_profile.rs:117`-`199`). `runtime_generator.rs` hardcodes JSON templates/renderers (`skinny/crates/codegen/src/runtime_generator.rs:32`-`79`, `skinny/crates/codegen/src/runtime_generator.rs:194`-`228`) and CSS profile config branches (`skinny/crates/codegen/src/runtime_generator.rs:81`-`153`). | Diverged. | P1-1B-D8. The old many-provider module leak is reduced: only `grammar_provider.rs` exists under `*_provider.rs`. |
-| Lock 10 requires Pratt/SIMD/materialization auto-detection without `@pratt`/`@simd`; grammar facts must be generated, not JSON-shaped (`restart/locks/LOCKS.md:269`-`286`). | Recognizer mining matches only single-byte JSON punctuation `{ } [ ] , : "` or quoted-string regex (`skinny/crates/passes/src/lib.rs:332`-`359`). Materialization role mining still recognizes JSON literals/roles (`true`, `false`, `null`, `{}`, `[]`, `:`) (`skinny/crates/passes/src/lib.rs:1354`-`1435`). | Diverged. | P1-1B-D9 and P1-1B-D10. |
-| Diagnostics catalogue includes `BBNF-BACKEND-SHAPE-INCONSISTENT` and `BBNF-COLLAPSEDSTAGE-NOT-VIABLE` (`restart/ARCHITECTURE.md:1471`-`1472`). | Live diagnostics also include `BBNF-DOMINATED-ALTERNATIVE` and `BBNF-COSTFACTS-MISSING-EVIDENCE` (`skinny/crates/passes/src/diagnostics.rs:48`-`64`), emitted from shape derivation (`skinny/crates/passes/src/lib.rs:440`-`451`). | Implemented plus impl exceeds spec. | P1-1B-D11. |
-
-## Five-Shape Inventory
-
-| Shape | Spec derivation / output | Live selector evidence | Live lowerer evidence | Verdict |
-|---|---|---|---|---|
-| `EagerTape` | Recovery/host-decode/layout/first-set-overlap select eager (`restart/ARCHITECTURE.md:1091`-`1096`, `restart/ARCHITECTURE.md:1166`-`1169`); emits eager recursive descent (`restart/ARCHITECTURE.md:1182`). | `requires_eager_tape` covers those four triggers (`skinny/crates/passes/src/lib.rs:756`-`761`). Candidate generator also uses `P8EagerFallback` when backend rule is missing (`skinny/crates/passes/src/lib.rs:531`-`539`). | Marker only: `format!("rule {} -> eager_tape", rule.name)` (`skinny/crates/codegen/src/lower/eager_tape.rs:15`-`17`). | Selector partial; lowerer stub/absent concrete impl. |
-| `OffsetTape` | Default retained offset tape (`restart/ARCHITECTURE.md:1097`-`1100`, `restart/ARCHITECTURE.md:1173`); emits event-cursor over offsets (`restart/ARCHITECTURE.md:1183`). | Candidate generator emits `OffsetTape` as non-eager fallback (`skinny/crates/passes/src/lib.rs:526`-`568`). | Marker only (`skinny/crates/codegen/src/lower/offset_tape.rs:15`-`17`). | Selector implemented; lowerer stub/absent concrete impl. |
-| `EventTape` | Payload/recovery/layout side facts retained per cursor (`restart/ARCHITECTURE.md:1101`-`1103`, `restart/ARCHITECTURE.md:1172`); emits compact event cells (`restart/ARCHITECTURE.md:1184`). | `prefers_event_tape` is alt-count only (`skinny/crates/passes/src/lib.rs:930`-`932`). | Marker only (`skinny/crates/codegen/src/lower/event_tape.rs:15`-`17`). | Selector underimplemented; lowerer stub/absent concrete impl. |
-| `SinkOnly` | Direct typed-field writes with no retained queryable document (`restart/ARCHITECTURE.md:1104`-`1108`, `restart/ARCHITECTURE.md:1185`). | `admits_sink_only` checks `DirectBuild` plus direct/direct-build consumer flags (`skinny/crates/passes/src/lib.rs:921`-`924`). | `lower_program` emits `SinkOnlyProgram` and captures direct shapes/spans/literals/policy summary (`skinny/crates/codegen/src/lower/sink_only.rs:19`-`28`, `skinny/crates/codegen/src/lower/sink_only.rs:122`-`168`, `skinny/crates/codegen/src/lower/sink_only.rs:170`-`227`). | Only concrete shape lowerer; runtime renderer remains JSON/CSS-specific. |
-| `CollapsedStage` | AVX-512/x86, byte-disjoint hub, concrete transient ASM strategy (`restart/ARCHITECTURE.md:1109`-`1114`, `restart/ARCHITECTURE.md:1171`, `restart/locks/LOCKS.md:515`-`538`). | Predicate checks only AVX512BW and `Entry(_)` (`skinny/crates/passes/src/lib.rs:926`-`928`); `decision_csp` currently rejects collapsed-stage candidates in the SIMD constraint (`skinny/crates/passes/src/decision_csp.rs:78`-`80`). | Marker only (`skinny/crates/codegen/src/lower/collapsed_stage.rs:15`-`17`). | Selector underimplemented/non-admitting; lowerer stub/absent concrete impl. |
-
-## V2 Hardening Fold
-
-| fold | disposition |
-|---|---|
-| EventTape REDRESS fence | `EventTape` rows remain valid totality gaps, but any implementation route must be a generated same-substrate lowering. It must not reopen EventCursor sidecars, retained structural streams, retained class lanes, parser-owned cursor lists, or cross-call classifier state under Lock 1. |
-| Pass-layer JSON-shape leaks | P1-1B-D9 recognizer mining and P1-1B-D10 materialization role mining are grammar-neutral Lock 14 leaks caused by JSON-shaped pass logic, not JSON-only empirical lessons. 1D V2 must cite these rows directly. |
-| Shorthand citation repair | Lowerer sibling references remain readable in prose, but downstream CH1 citation checks use explicit repo-root paths: `skinny/crates/codegen/src/lower/eager_tape.rs:15`-`17`, `skinny/crates/codegen/src/lower/offset_tape.rs:15`-`17`, `skinny/crates/codegen/src/lower/event_tape.rs:15`-`17`, and `skinny/crates/codegen/src/lower/collapsed_stage.rs:15`-`17`. |
-
-## V3 Hardening Fold
-
-| fold | disposition |
-|---|---|
-| CH1-V2-F04 | Stale V1 cycle wording is removed; finding identifiers keep their original V1 keys for traceability. |
-| CH2-V2-F05 | `P1-1B-D9` and `P1-1B-D10` remain mandatory 1D grammar-neutral Lock 14 findings, with Sheets/BBNF-self proof receivers rather than JSON-only routing. |
-| CH1-V3-001 | Brace lowerer citations are expanded to four explicit repo-root paths so no citation requires shell brace expansion to verify. |
-
-## Derive Backend Shape: Eight-Step Diagnostic Vocabulary
-
-| Step | Spec claim | Live evidence | Verdict |
-|---|---|---|---|
-| 1. Recovery ⇒ `EagerTape` | `restart/ARCHITECTURE.md:1166` | `has_recovery_annotation` scans annotations for `recover` (`skinny/crates/passes/src/lib.rs:763`-`782`). | Implemented, string-based. |
-| 2. Host decoded-at-parse ⇒ `EagerTape` | `restart/ARCHITECTURE.md:1167` | `has_parse_time_host_decode` scans annotation name/value strings (`skinny/crates/passes/src/lib.rs:785`-`803`). | Implemented, string-based. |
-| 3. Layout directive ⇒ `EagerTape` | `restart/ARCHITECTURE.md:1168` | `has_layout_policy` only checks nonempty `layout.layout_policies` (`skinny/crates/passes/src/lib.rs:805`-`807`). | Partially implemented. |
-| 4. First-set overlap ⇒ `EagerTape` | `restart/ARCHITECTURE.md:1169` | `has_dispatch_overlap` / `branches_overlap` compute first-byte overlap (`skinny/crates/passes/src/lib.rs:809`-`838`). | Implemented for byte FIRST sets. |
-| 5. Direct-only output/no post-parse traversal ⇒ `SinkOnly` | `restart/ARCHITECTURE.md:1170` | `admits_sink_only` does not reject retained traversal when `direct_build_consumer` is true (`skinny/crates/passes/src/lib.rs:921`-`924`, host flags at `skinny/crates/passes/src/lib.rs:371`-`379`). | Diverged. |
-| 6. Target + ≥4 byte-disjoint hub ⇒ `CollapsedStage` | `restart/ARCHITECTURE.md:1171` | `admits_collapsed_stage` lacks hub/byte-disjoint and explicit arch predicate (`skinny/crates/passes/src/lib.rs:926`-`928`). | Diverged. |
-| 7. Payload/recovery/layout side facts ⇒ `EventTape` | `restart/ARCHITECTURE.md:1172` | `prefers_event_tape` is only `alt_branch_count >= 8` (`skinny/crates/passes/src/lib.rs:930`-`932`). | Diverged. |
-| 8. Default ⇒ `OffsetTape` | `restart/ARCHITECTURE.md:1173` | Offset candidate appears when backend rule exists and eager is not forced (`skinny/crates/passes/src/lib.rs:526`-`568`); `P8EagerFallback` is used for missing backend rules (`skinny/crates/passes/src/lib.rs:531`-`539`). | Partially implemented; missing-backend fallback differs. |
+| 5-shape canon `{Eager,Offset,Event,SinkOnly,Collapsed}` (ARCH:1091-1115; LOCKS:107-108) | `ir/src/lib.rs:340-346` enum | IMPLEMENTED | Exactly five variants; matches Lock 10 search domain verbatim |
+| `derive_backend_shape(grammar_ir, rule_id) -> BackendShape` at `passes::recognizers` (ARCH:1135) | `passes/src/lib.rs:329 mod recognizers` + `:392 fn derive_backend_shape` | IMPLEMENTED | Location matches; ARCH:1409 cites IR enum at `lib.rs:401-408` but enum is at `:340-346` (stale line ref) |
+| Cost pipeline: egraph candidate-gen → CSP feasibility → cost extraction (ARCH:1118-1163) | `passes/src/backend_egraph.rs:36 select` (real EGraph add/union/extract) + `decision_csp.rs:16 finalize_rule` | IMPLEMENTED | Substantive surface: EGraph, CSP SAT/budget; tautology open (U2) |
+| `select_lowering` dispatch on `cost.chosen: BackendShape` (ARCH:1414 cites `lower/mod.rs:17-24`) | `codegen/src/lower/mod.rs:18-26` | IMPLEMENTED | 5-arm `match cost.chosen`; zero grammar names — Lock-14-clean discriminator |
+| `LoweredRust` fail-closed against cost/CSP/policy/union facts (ARCH §7.3 cost-derivation) | `lower/rust.rs:32-92 lower_to_rust` + `:112 validate_policy_facts` | IMPLEMENTED | W7 fail-closed: shape↔cost agreement, active-cost, CSP sat, per-grammar policy, substrate union all gated |
+| `SinkOnly` lowers BackendIr→`SinkOnlyProgram` with field/source roster (ARCH:1447-1448) | `lower/sink_only.rs:122 lower_program` (real AST `SinkOnlyExpr` walk) | IMPLEMENTED | Substantive AST + DirectBuild roster + `policy_summary.backend_shape` |
+| `EagerTape` lowering = rust_recursive_descent_body, eager source[pos] reads (ARCH:1182) | `lower/eager_tape.rs:16 → tape_plan::render_rule(Eager)` | UNIMPLEMENTED | Emits MARKER STRING `runtime_plan::EagerTapeRule … ops=N`, NOT Rust; ARCH:1202 self-concedes NOT-ADMITTED marker-string lowerer |
+| `OffsetTape` lowering = EventCursor over retained offsets (ARCH:1183) | `lower/offset_tape.rs:16 → tape_plan::render_rule(Offset)` | UNIMPLEMENTED | Marker string; ARCH:1203 NOT-ADMITTED. REDRESS fence: the admissible EventCursor lowering consumes the SINGLE substrate's event stream IN-LOOP; a *retained parser-local* EventCursor (SK-V5 items 51/53, REJECT — item 51 at `skinny/REDRESS.md:742-768`, item 53 at `:784-813`; `:769-783` is item 52, a non-rejected profiling reassay carved out per CH3-V3-005, matching the EventTape sibling at `:55`) is pre-blocked. Cross-cite the 1A fence `1A-substrate-evidence.md:75` (1A-SUB-012). |
+| `EventTape` lowering = EventCursor over compact event cells (ARCH:1184) | `lower/event_tape.rs:16 → tape_plan::render_rule(Event)` | UNIMPLEMENTED | Marker string; ARCH:1204 NOT-ADMITTED. REDRESS fence: same as OffsetTape — the EventTape lowering consumes the single substrate's event stream in-loop; the SK-V5-rejected *retained parser-local* EventCursor (items 51/53, `skinny/REDRESS.md:742-813`, REJECT — item 51 at `:742-768`, item 53 at `:784-813`; span widened to cover BOTH per CH3-V2-004, matching the OffsetTape sibling) must NOT be revived. Cross-cite `1A-substrate-evidence.md:75` (1A-SUB-012). |
+| `CollapsedStage` = rust_caller_shim + hand NASM kernel x86-only (ARCH:1186,1206) | `lower/collapsed_stage.rs:16 → tape_plan::render_rule(Collapsed)` | UNIMPLEMENTED | Marker string; ARCH:1206 NOT-ADMITTED, x86-only, aarch64 mechanically refused (UNKNOWN-2D-05) |
+| `SinkOnly` rendered body = direct typed-field writes DERIVED from grammar (ARCH:1185; G1 target) | `json_sink_direct.rs:124,251,326,497` render fns take `&mut String` only | DIVERGE | FIXED-LITERAL: hardcoded `{[",-tfn` dispatch (`:138-163`) NOT derived from `value=object\|array\|…`; rA §0 R2/G1 finding |
+| Lock 5: no source-emit-per-backend, no emitter walking grammar by family (LOCKS:181; ARCH:2095) | `grammar_provider.rs:40-42 RuntimeEmitterKind{CompiledLowering,RequestFacts}` + `runtime_generator.rs:16-25` match fork | DIVERGE | GRAMMAR-FAMILY fork (JSON→emit_from_source / CSS→emit_request_facts); undocumented in ARCH (grep==0); SK-V18 G3 DELETE target |
+| Five lowerers as 17-LOC scaffolds need real per-shape bodies (ARCH:1281; SK-V18 D07:1280-1282) | `lower/{eager,offset,event}_tape.rs` + `lower/collapsed_stage.rs` each 17-18 LOC | IMPL_EXCEEDS_SPEC | Spec NAMES them as scaffolds — impl matches the scaffold concession exactly, not the §7.3 prose target. (Brace-shorthand `collapsed}_tape.rs` corrected per CH1-V2-F2 — the fourth file is `lower/collapsed_stage.rs`, NOT `collapsed_tape.rs` which does not exist; `lower/mod.rs:1` declares `pub mod collapsed_stage;`.) |
+| Generated source committed, xtask not proc-macro (Lock 6; ARCH:2110) | `runtime_generator.rs` const couriers + xtask regen path | IMPLEMENTED | Committed-source model holds; but CSS is verbatim `CSS_GENERATED_RS:701` const (addendum-1 verbatim-blob) |
+| §10.1 rewrite-budget = 3 pools (legality/normalization/cost-driven) (ARCH:2127-2131) | `skinny/crates/passes/src/backend_egraph.rs:9` one `REWRITE_SET = sk-v15-w7-direct-sink-normalization-v1` (root-relative path per CH1-V3-F9, matching the correctly-pathed `:49`) | IMPL_EXCEEDS_SPEC | One named rewrite set wired; spec's 3-pool budget separation not realized as 3 distinct pools |
+| `backend_shape` is side-table, no config-carried strategy (Lock 10:269; LOCKS side-table) | `grammar_provider.rs:32-37` carries `emitter: RuntimeEmitterKind` field | DIVERGE | `emitter` is config-carried per-profile strategy, not a cost-model output (rA §0 relocated-seam already present) |
 
 ## Divergences Catalogued
 
-| ID | Divergence | Evidence | loc_budget | risk | verify_action |
-|---|---|---|---:|---|---|
-| P1-1B-D1 | Formal `Backend` / `RustBackend` trait absent; live API is `ShapeLowering` + facade functions. | Spec `restart/ARCHITECTURE.md:1485`-`1531`; live `skinny/crates/codegen/src/lower/mod.rs:13`-`24`; scoped `rg` found no `trait Backend` / `RustBackend`. | 120-240 | medium | Add or intentionally retire `Backend` trait with import-deny tests proving lowerers consume `BackendIr` only. |
-| P1-1B-D2 | `CostFacts` still lacks spec-named objective/frontier/scalarization/extraction fields, despite active cost and CSP fields. | Spec `restart/ARCHITECTURE.md:1081`; live `skinny/crates/ir/src/cost.rs:4`-`21`, `skinny/crates/ir/src/cost.rs:172`-`247`. | 160-320 | medium | Snapshot serialized `CostFacts` and assert either spec-named fields exist or ARCH/LOCKS name the live substituted fields. |
-| P1-1B-D3 | P1-P8 vocabulary exists but candidate generator emits P1/P2/P3/P4/P7/P8 only; P5/P6 are declared but not live candidate classes. | Spec `restart/ARCHITECTURE.md:1165`-`1176`; `PriorityStep::ALL` at `skinny/crates/ir/src/cost.rs:262`-`285`; generator specs at `skinny/crates/passes/src/lib.rs:529`-`568`. | 80-180 | medium | Fixture each priority step and assert selected/rejected evidence; decide whether P5/P6 are retired diagnostics. |
-| P1-1B-D4 | `SinkOnly` admissibility does not enforce "no post-parse traversal"; retained API consumer defaults true. | Spec `restart/ARCHITECTURE.md:1170`; live flags `skinny/crates/passes/src/lib.rs:362`-`379`; predicate `skinny/crates/passes/src/lib.rs:921`-`924`. | 120-260 | high | Negative fixture with retained path/value consumer plus `DirectBuild` must not select/admit `SinkOnly`. |
-| P1-1B-D5 | `CollapsedStage` predicate lacks explicit `target.arch == x86` and ≥4 byte-disjoint hub checks. | Spec `restart/ARCHITECTURE.md:1171`; Lock `restart/locks/LOCKS.md:520`-`538`; live `skinny/crates/passes/src/lib.rs:926`-`928`. | 180-360 | high | Cross-target fixture with inherited `avx512bw` and non-hub `Entry` must fail closed with `BBNF-COLLAPSEDSTAGE-NOT-VIABLE`. |
-| P1-1B-D6 | `EventTape` selection uses alt density instead of retained payload/recovery/layout side facts. | Spec `restart/ARCHITECTURE.md:1172`; live `skinny/crates/passes/src/lib.rs:930`-`932`. | 120-260 | medium | Fixture side-fact retention without 8 alt branches must select or rank `EventTape`; 8-arm no-side-fact rule must not be admitted solely on density. |
-| P1-1B-D7 | Four of five shape lowerers are marker strings, not concrete source/ASM artefact emitters. | Spec `restart/ARCHITECTURE.md:1178`-`1187`; live stubs `skinny/crates/codegen/src/lower/eager_tape.rs:15`-`17`, `skinny/crates/codegen/src/lower/offset_tape.rs:15`-`17`, `skinny/crates/codegen/src/lower/event_tape.rs:15`-`17`, `skinny/crates/codegen/src/lower/collapsed_stage.rs:15`-`17`. | 800-1600 | high | Golden generated-source tests for Eager/Offset/Event and checkasm/parity harness for CollapsedStage. |
-| P1-1B-D8 | Runtime generation remains grammar-name/profile hardcoded even after provider-module collapse. | Lock `restart/locks/LOCKS.md:368`-`375`; live roster `skinny/crates/codegen/src/grammar_profile.rs:89`-`99`; JSON/CSS render branches `skinny/crates/codegen/src/runtime_generator.rs:32`-`153`. | 450-1000 | high | Add non-JSON/non-CSS grammar by grammar source + metadata only; no new codegen `.rs` branch or profile constant. |
-| P1-1B-D9 | Recognizer mining is JSON-punctuation-coded. | Lock `restart/locks/LOCKS.md:269`-`286`; live whitelist `skinny/crates/passes/src/lib.rs:332`-`359`. | 250-500 | medium-high | Sheets/BBNF-self/CSS fixture must derive recognizer alphabet from generated facts with no pass-crate edit. |
-| P1-1B-D10 | Materialization role mining is JSON-role-coded. | Lock `restart/locks/LOCKS.md:368`-`375`; live role mining `skinny/crates/passes/src/lib.rs:1354`-`1435`. | 250-500 | medium-high | Non-JSON role facts fixture must derive from generated metadata rather than `{}`, `[]`, `:`, `true`, `false`, `null`. |
-| P1-1B-D11 | Live diagnostic vocabulary exceeds ARCH §7.5 with `BBNF-DOMINATED-ALTERNATIVE` and `BBNF-COSTFACTS-MISSING-EVIDENCE`. | Spec names two backend-shape diagnostics at `restart/ARCHITECTURE.md:1471`-`1472`; live names four at `skinny/crates/passes/src/diagnostics.rs:48`-`64`. | 30-80 doc/test | low | 1E/3C decide whether to register these diagnostics in ARCH or mark skinny-only. |
+**D1 (HIGH, loc_delta ≈ −910 courier + fork-arm delete) — `RuntimeEmitterKind` grammar-family fork is undocumented + Lock-5-divergent.**
+`grammar_provider.rs:40-42` defines `pub enum RuntimeEmitterKind { CompiledLowering, RequestFacts }`,
+carried as `RuntimeProfileContract.emitter` (`:33`), dispatched at `runtime_generator.rs:16-25`
+(`match request.profile_contract.emitter`) and again at `grammar_provider.rs:110` (CSS-exempts the
+`first_unsupported()` fail-closed check). JSON routes `CompiledLowering → emit_from_source`; CSS
+routes `RequestFacts → emit_request_facts` (verbatim `CSS_GENERATED_RS` const). ARCHITECTURE.md
+mentions `RuntimeEmitterKind` ZERO times — it is an undocumented impl-only fork. Lock 5
+(LOCKS:181; ARCH:2095) forbids "a trait-based emitter walking grammar directly" / source-emit-
+per-backend duplication; this two-arm fork is the spec-vs-impl divergence the SK-V18 totality
+spec must absorb. SK-V18 G3/R-A (SPEC:1070-1188; rA-emitter-unify.md §3) recommends DELETE +
+dispatch on the lowered `BackendShape` — and the spec ALREADY canonicalizes that axis via
+`select_lowering` (`lower/mod.rs:18`). So the fix is a PATH change, not a new spec primitive.
+ANSWER to the SK-V18 lens: the spec already canonicalizes `BackendShape` dispatch; the
+`RuntimeEmitterKind` fork is a pure impl-side divergence, NOT a missing spec primitive.
+
+**D2 (HIGH, loc_delta sourced two ways — if the fold WIRES the existing engine (the intended posture) the un-fork band is `≤450 hand source/test/gate LOC` per SPEC G3 `restart/skinny/tranches/sk-v18/SPEC.md:440`; if the 4 skinny lowerers (17-LOC scaffolds) instead require REAL per-shape lowering bodies it is the intrinsic-blocked `600-1400 LOC joint decision-engine wiring envelope` per `restart/ARCHITECTURE.md:1280-1282`. The prior uncited `+400..+1200 … SK-V18 SPEC §6 budget` figure traced to NO source — grep of that SPEC for `+400..+1200`/`four real`/`per-shape bod` = 0; CH4-V2-008 corrected.) — Four of five lowerers are marker-string scaffolds, not Rust bodies.**
+`lower/{eager,offset,event}_tape.rs` + `lower/collapsed_stage.rs` (the fourth file is `collapsed_stage.rs`, NOT `collapsed_tape.rs`; CH1-V2-F2/CH4-V2-008) each delegate to one shared
+`tape_plan::render_rule(rule, flavor)` (`lower/tape_plan.rs:58`). The output is a structured
+MARKER STRING — `runtime_plan::EagerTapeRule generated_runtime=ParserState+TapeBuilder rule=X
+ops=N` with per-op lines like `eager_match_literal_hex(...) -> ParserState::match_literal`
+(`tape_plan.rs:110-158`). No `source[pos]` read, no EventCursor, no Rust emitted. ARCH:1202-1206
+self-concedes all four NOT-ADMITTED marker-string lowerers; ARCH:1281 names them "17-LOC
+scaffolds." The §7.3 per-shape lowering-output table (ARCH:1180-1186) is the unrealized spec
+target. The 5-shape CANON is whole in `lower/mod.rs`; the 5-shape BODIES are not.
+
+**D3 (HIGH, loc_delta net ≈0..+150 — replace ~4 fixed-literal `render_*(&mut String)` push sites with a `SinkOnlyExpr` walk; SK-V18 G1) — `SinkOnly` rendered JSON body is fixed-literal, not grammar-derived.**
+`json_sink_direct.rs:4 render(program: &SinkOnlyProgram)` validates the program but then calls
+`render_value_dispatch(&mut out)`, `render_container_rules(&mut out)`, `render_string_rule`,
+`render_utility_rules` — all taking ONLY `&mut String` (`:124,251,326,497`). The hardcoded
+dispatch bytes `{[",-tfn` (`:138-163`) are NOT derived from the `SinkOnlyExpr` structural IR
+(`sink_only.rs:69-96`) nor from `value = object|array|string|number|bool|null`. Only
+`render_header` (`:68`) and `render_number_emitter` (`:457`) read program data. So the ONE
+substantive lowerer still couriers fixed literals — the addendum-1 verbatim-blob class, just
+fragmented across push_str sites (SYNTHESIS-AUDIT-OVERFIT R2/G1). SK-V18 G1 fixes this BEFORE G3.
+
+**D4 (MEDIUM, loc_delta ≈0 — doc/spec line-reference reconcile, no source LOC) — Stale spec line-references for the five-shape enum + passes path.**
+ARCH:1409 cites `skinny/crates/ir/src/lib.rs:401-408` as the enum owner; the enum is actually at
+`ir/src/lib.rs:340-346`. ARCH:1410-1414 cites `passes/src/lib.rs:28-60/:387-438/:446-506`; live
+`derive_backend_shape` is at `passes/src/lib.rs:392` and the choose path at `:473`. ARCH:1135
+cites `passes::recognizers::derive_backend_shape` — `mod recognizers` is INLINE in `lib.rs:329`,
+not a separate file. Non-semantic drift but path:line citations must reconcile in the totality fold.
+
+**D5 (MEDIUM, loc_delta +1 — the SK-V18 R16 `+1-line PartialEq` derive at `skinny/xtask/src/regen.rs:5`, plus the PLANNED `runtime_target_rows_collapsed` co-gate, defined in SK-V18 SPEC at `restart/skinny/tranches/sk-v18/SPEC.md:247` — `rg runtime_target_rows_collapsed skinny/crates skinny/xtask` returns NO live definition; it is a spec-planned structural gate, not a current code symbol) — `RuntimeProfileContract.emitter` is config-carried strategy (relocated-seam present).**
+The 7 CSS `RuntimeTarget` rows are byte-identical except decorative columns
+(`profile`/`output_dir`/`output_labels`); the `emitter` field is a per-profile strategy, not a
+cost-model output. rA §0 names this the "relocated-seam already in the metadata" — even after a
+naive un-fork, a strategy moved into the neutral row is the textbook seam. `RuntimeTarget` today
+derives only `Clone, Copy, Debug` (no `PartialEq`) at `skinny/xtask/src/regen.rs:5`
+(over `pub(crate) struct RuntimeTarget` at `:6`), so the row-collapse co-gate is not yet
+enforceable (SK-V18 R16 recipe pins the `+1-line PartialEq` derive at
+`skinny/xtask/src/regen.rs:5`). The `runtime_target_rows_collapsed` co-gate named here is the
+PLANNED SK-V18 gate at `restart/skinny/tranches/sk-v18/SPEC.md:247` (MUST be true at G3/P3, full-row
+PartialEq over BOTH nested structs); it has NO live definition in `skinny/crates`/`skinny/xtask`
+yet, so the name is a spec-planned symbol, not a current-code citation (CH1-V3-F12).
+
+**D6 (LOW, loc_delta +60..+200 — split the single `REWRITE_SET` into three named legality/normalization/cost-driven pools) — §10.1 three-pool rewrite-budget not realized as three pools.**
+ARCH:2127-2131 specifies `legality-rewrites` / `normalization-rewrites` / `cost-driven-rewrites`
+as three budget pools with distinct legality-vs-cost discipline. `skinny/crates/passes/src/backend_egraph.rs:9` wires ONE
+named `REWRITE_SET = sk-v15-w7-direct-sink-normalization-v1` (root-relative per CH1-V3-F9). The per-category pool separation is
+spec-only; impl has a single normalization rewrite set inside `select`.
 
 ## Gaps / Missing Primitives
 
-| Gap | Evidence | Impact |
-|---|---|---|
-| Formal backend trait boundary missing. | `Backend` spec at `restart/ARCHITECTURE.md:1494`-`1513`; live `ShapeLowering` at `skinny/crates/codegen/src/lower/mod.rs:13`-`15`. | V2 Wasm/TS addition would not plug into the promised trait without reshaping. |
-| Concrete retained-shape lowerers missing. | Marker lowerers at `skinny/crates/codegen/src/lower/eager_tape.rs:15`-`17`, `skinny/crates/codegen/src/lower/offset_tape.rs:15`-`17`, `skinny/crates/codegen/src/lower/event_tape.rs:15`-`17`, and `skinny/crates/codegen/src/lower/collapsed_stage.rs:15`-`17`. | Retained shape claims rely on templates/runtime generator, not per-shape lower output. |
-| CollapsedStage concrete ASM path missing. | Spec triple at `restart/ARCHITECTURE.md:1186`; live marker at `skinny/crates/codegen/src/lower/collapsed_stage.rs:15`-`17`. | Lock 16 cannot admit CollapsedStage without same-wave consumer/parity evidence. |
-| Grammar-neutral runtime generator missing. | Static profile roster `skinny/crates/codegen/src/grammar_profile.rs:89`-`99`; JSON/CSS renderer branches `skinny/crates/codegen/src/runtime_generator.rs:32`-`153`. | Adding a new generated runtime still requires codegen source edits. |
-| Grammar-neutral recognizer and materialization facts missing. | Recognizer whitelist `skinny/crates/passes/src/lib.rs:332`-`359`; role mining `skinny/crates/passes/src/lib.rs:1354`-`1435`. | Sheets/BBNF-self future grammar rows cannot close through current pass layer. |
-| Regex/HIR facts do not feed shape selection. | Lock requires regex/HIR facts (`restart/locks/LOCKS.md:307`-`316`); live recognizer uses `analyze(pattern).hir.kind == RegexKind::QuotedString` only (`skinny/crates/passes/src/lib.rs:342`-`346`). | Scanner/backend decisions remain under-evidenced for non-JSON regex roles. |
+- **G-GAP-1: real per-shape lowering bodies (4 shapes).** `EagerTape`/`OffsetTape`/`EventTape`/
+  `CollapsedStage` have NO Rust-emitting lowerer; `tape_plan.rs` is a single marker-string
+  renderer. The §7.3 artefact-triple table (ARCH:1180-1186) has no realized counterpart. SK-V18
+  D07 prices this as intrinsic-blocked if the 17-LOC scaffolds need real bodies (vs wiring).
+- **G-GAP-2: grammar-derived `SinkOnly` projection.** `json_sink_direct.rs` must walk
+  `SinkOnlyExpr` (Seq/Alt/RepeatLoop/DirectBuild/RegexProgram/CallRule/TapeEmit/ValueProject) to
+  derive dispatch from grammar, not push fixed literals. SK-V18 G1.
+- **G-GAP-3: unified grammar-agnostic emitter.** No single `render(program)` serving JSON+CSS;
+  the two arms emit DIFFERENT rosters (`COMPILED_RUNTIME_FILES` 8 files vs
+  `REQUEST_FACTS_RUNTIME_FILES` 5 files) hard-validated per arm (rA §0). SK-V18 G3.
+- **G-GAP-4: CSS reaches `lower_to_rust`.** CSS never lowers — `emit_request_facts` couriers the
+  `CSS_GENERATED_RS:701` const; the `.bbnf` is parsed only for request-identity facts
+  (`grammar_provider.rs:108`), never to shape the body. SK-V18 G2 (G3's hard predecessor).
+- **G-GAP-5: aarch64 `CollapsedStage` strategy.** Spec mechanically refuses CollapsedStage on
+  aarch64 (ARCH:1206; `admits_collapsed_stage` x86-bound); the M5 Max target has NO collapsed-
+  stage path — UNKNOWN-2D-05, requires a 2E source-backed strategy before any admission.
 
-## Open Questions
+## Open Questions (UNKNOWN → verify_action)
 
-| UNKNOWN | Why unknown | verify_action |
-|---|---|---|
-| UNKNOWN-1: VM replay status relative to ARCH §10. | Scope requested codegen/passes/ir paths; no VM crate/files were line-audited. | `rg -n "vm|replay_all_backend_ir_variants|BackendIr" skinny/crates -g '*.rs'` and line-read any VM crate. |
-| UNKNOWN-2: Current test status after W7 fail-closed gates. | Static audit only; no cargo tests were run. | From `skinny/`, run `cargo test -p passes -p codegen` or the repo's current test profile and capture failing rows. |
+- **U1: Does the cost model EVER select a non-`SinkOnly` shape for the live JSON/CSS grammars?**
+  If JSON lowers to `SinkOnly` and CSS never lowers at all, the 4 marker-string lowerers are
+  never exercised on a real grammar — making the "5-shape whole" claim true for the discriminator
+  but vacuous for the bodies. VERIFY: instrument `derive_backend_shape` over `json.bbnf` +
+  `stylesheet.bbnf` and record the chosen-shape histogram (do NOT run cargo here — T-P3 dispatch).
+- **U2: Is `decision_csp::finalize_rule` non-tautological (does fact removal flip SAT/selection)?**
+  Lock 10 v+1 (LOCKS:599) requires "a non-tautological CSP whose fact removal or alteration
+  changes SAT/UNSAT or selection." `skinny/crates/passes/src/decision_csp.rs:151 selected_rule_count = u32::from(csp_status
+  == "sat")` and `:265 assert_eq csp_status == "sat"` (root-relative per CH1-V3-F9) suggest a near-always-sat path. VERIFY at
+  T-P3: mutate one grammar fact and confirm SAT/selection delta.
+- **U3: Does `LoweredRust.rule_plans` (marker strings) feed ANY committed `generated.rs`, or is it
+  a dead diagnostic surface?** `lower_to_rust` returns marker-string `RuleLoweringPlan.body`, but
+  `emit_from_request` (JSON arm) routes through `emit_from_source`→`SinkOnlyProgram`→
+  `json_sink_direct`, bypassing the tape-plan markers. VERIFY: trace whether any
+  `runtime_generator` path consumes `rule_plans` into shipped output, or whether it is
+  test/diagnostic-only (which would make D2 a fully-dead-code divergence).
 
-## Amendment Candidates Surfaced To 1E Only
+## (1E only) Amendment-Candidate Count: 0
 
-| Candidate | Target | Supporting evidence | Disposition boundary |
-|---|---|---|---|
-| Register or retire the live extra diagnostics `BBNF-DOMINATED-ALTERNATIVE` and `BBNF-COSTFACTS-MISSING-EVIDENCE`. | ARCH §7.5 / Lock 10 diagnostic vocabulary. | Live diagnostics at `skinny/crates/passes/src/diagnostics.rs:48`-`64`; emission at `skinny/crates/passes/src/lib.rs:440`-`451`; ARCH only names backend-shape inconsistent and collapsed-stage viability at `restart/ARCHITECTURE.md:1471`-`1472`. | Candidate only; 1E/3C decides. |
-| Update stale ARCH leak census text that still refers to a removed runtime-provider enum at `restart/ARCHITECTURE.md:1283`-`1293`; live leak is an eight-profile static roster plus renderer branches, not an enum. | ARCH §7.4 / Lock 14 evidence wording. | Spec census `restart/ARCHITECTURE.md:1283`-`1293`; live roster `skinny/crates/codegen/src/grammar_profile.rs:89`-`99`; `find skinny/crates/codegen/src -maxdepth 1 -name '*_provider.rs'` returns only `grammar_provider.rs`. | Candidate only; 1E/3C decides. |
-| Clarify Lock 10's "8-priority decision tree" wording against current ARCH pipeline wording: P1-P8 is diagnostic-only, while egraph+CSP+active cost owns selection. | Lock 10 / ARCH §7.3. | Lock text still says `ARCHITECTURE.md §7.3's 8-priority decision tree` (`restart/locks/LOCKS.md:269`); ARCH says pipeline, not fixed cascade (`restart/ARCHITECTURE.md:1118`-`1128`, `restart/ARCHITECTURE.md:1165`-`1176`); live code uses egraph+CSP (`skinny/crates/passes/src/lib.rs:497`-`500`). | Candidate only; 1E/3C decides. |
+T-P1 1B holds no LOCKS-amendment authority and surfaces ZERO 1E amendment candidates. All
+divergences resolve WITHIN the existing 16 locks + the standing SK-V15/SK-V17 addenda: the
+5-shape canon, the FactStream-not-6th-shape clause, and the tape-category clause already govern
+every codegen-layer finding. The `RuntimeEmitterKind` fork (D1) is a Lock-5 / Lock-14 VIOLATION
+to be pruned by SK-V18 G3, not a lock to amend. The aarch64 `CollapsedStage` gap (G-GAP-5) is the
+named UNKNOWN-2D-05, already lock-governed (G-Omega-gated, no 6th shape). Disposition is T-P3;
+ratification is Pass Omega.

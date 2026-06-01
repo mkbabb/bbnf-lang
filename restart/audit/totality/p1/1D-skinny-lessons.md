@@ -1,243 +1,256 @@
 ---
 agent: 1D
 pass: T-P1-excavation
-cycle: V4
-generated_at: 2026-05-28T06:10:00Z
+cycle: V5-SKV18-totality
+cycle_self_label: SK-V18-totality
+generated_at: 2026-06-01T00:00:00Z
+scope: 1D — skinny-track lessons digest (SK-V1..SK-V18); SK-V18 GENERALIZATION lens
 spec_surfaces_audited:
-  - restart/prompts/totality/PASS-1-EXCAVATION.md
+  - restart/ARCHITECTURE.md
+  - restart/MASTER-PLAN.md
+  - restart/locks/LOCKS.md
+  - restart/skinny/tranches/sk-v18/SPEC.md
+  - restart/skinny/tranches/sk-v18/research/p2/SYNTHESIS-RESEARCH.md
+  - restart/skinny/tranches/sk-v18/audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md
   - skinny/REDRESS.md
   - skinny/RESULTS.md
-  - restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md
-  - restart/skinny/tranches/sk-v15/HANDOFF.md
-  - restart/skinny/tranches/sk-v15/SYNTHESIS.md
-  - restart/skinny/tranches/sk-v15/research/alpha/alpha-A-results-extraction.md
-  - restart/skinny/tranches/sk-v15/research/alpha/alpha-B-competitor-deltas.md
-  - restart/skinny/tranches/sk-v15/research/alpha/alpha-C-redress-digest.md
-  - restart/skinny/tranches/sk-v15/research/alpha/alpha-D-validated-invalidated.md
-  - restart/skinny/tranches/sk-v15/research/alpha/alpha-E-candidate-shortlist.md
-  - restart/skinny/tranches/sk-v15/research/alpha/alpha-F-contract-draft.md
-  - restart/skinny/tranches/sk-v15/audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md
-  - restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A1-measurement-integrity.md
-  - restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A2-admit-mechanism-integrity.md
-  - restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A3-lock14-lock16-generic-scan.md
-  - restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A4-generator-roundtrip.md
-  - restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A5-decision-engine-fold.md
-  - restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A6-pattern-recurrence.md
-  - restart/skinny/tranches/sk-v15/research/p1/p1a-samply-mode-1.md
-  - restart/skinny/tranches/sk-v15/research/p1/p1b-samply-mode-2.md
-  - restart/skinny/tranches/sk-v15/research/p1/p1c-samply-mode-3.md
-  - restart/skinny/tranches/sk-v15/research/p1/p1d-pmu-cycles.md
-  - restart/skinny/tranches/sk-v15/research/p1/p1e-hot-leaf-attribution.md
-  - restart/skinny/tranches/sk-v15/research/p1/p1f-results-delta.md
-  - restart/skinny/tranches/sk-v15/research/p2/p2a-sota-teardown.md
-  - restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md
-  - restart/skinny/tranches/sk-v15/research/p2/p2c-arch-esoterica.md
-  - restart/skinny/tranches/sk-v15/research/p2/p2d-substrate-tape.md
-  - restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md
-files_audited_count: 30
-live_truth_method: "nl -ba on PASS-1-EXCAVATION, REDRESS, RESULTS, PASS-IMPL V1 consolidated audit, SK-V15 handoff/synthesis/alpha/S-P0/S-P1/S-P2 docs; rg for SK-V15/P0/P1/P2 discovery and REDRESS anchors; git status --short preflight to avoid unrelated dirty work"
-prior_cycle_dispositions_folded:
-  accepted: []
-  rejected: []
-  revised:
-    - CH2-FOLD-004 added pass-layer JSON-shape leak citations P1-1B-D9/P1-1B-D10
-    - CH3-V1-005 added explicit REDRESS-183/184/209..213 wave-graph pre-block row
-    - CH4-V1-002 added LOC/risk fields for divergence buckets
-    - CH5-V1-04 and CH5-V1-05 added CSS sidecar and broadcast-admission handling
-    - CH2-V2-F05 added pass-layer recognizer/materialization leaks as grammar-neutral Lock 14 findings
-    - CH4-V2-F08 split broad implementation buckets into bounded receiver classes
-    - CH4-V2-F09 added primitive/kernel receiver proof table
-    - CH4-V3-F02 split remaining class-level cost carriers into bounded receiver rows
-    - CH4-V3-F03 enumerated primitive/kernel receivers by named source row
-  first_cycle_additions:
-    - SKV15-J-JSON-51-GUARD
-    - SKV15-J-PARSEONLY-MEMCHR
-    - SKV15-J-DIRECT-TYPED-STRICT-PRODUCTS
-    - SKV15-J-FNV-BENCH-QUARANTINE
-    - SKV15-J-PMU-CB-MISSES
-    - SKV15-C-CSS-BROADCAST-DEMOTION
-    - SKV15-C-CSS-GENERATED-RS-DEMOTION
-    - SKV15-C-CSS-VALUE-API-GAP
-    - SKV15-G-LOCK14-LOCK16-GATE-HOLES
-    - SKV15-G-PATTERN-H-OWNERSHIP-GAP
-    - SKV15-G-DECISION-ENGINE-SCAFFOLD
-    - SKV15-G-SAME-TAPE-SUBSTRATE
-    - SKV15-G-AARCH64-ONLY-ADMISSION
-    - SKV15-G-PRIMITIVE-CANDIDATE-GATES
+files_audited_count: 18
+live_truth_method: "wc -l preflight on REDRESS/RESULTS/ARCHITECTURE/MASTER-PLAN/LOCKS/SPEC; rg + sed on each cited path:line in skinny/crates/ and crates/core/; md5 on 7 css_l4 generated.rs to re-prove replica identity; find -type f for x86 + Pattern-H census; grep for RuntimeEmitterKind/CSS_GENERATED_RS/parse_w11_1_number/phantom-<G>/find_component_delim live witnesses at HEAD"
 divergence_count:
-  spec_claims_implemented: 7
+  spec_claims_implemented: 1
   spec_claims_unimplemented: 10
   impl_exceeds_spec: 3
-  unknown: 8
+  unknown: 5
 locks_amendment_candidates: 0
 ---
 
 ## Executive Summary
 
-SK-V15 does not reopen the old row ledger as a clean generalisation proof. It
-starts from a split truth: JSON is a validated 51/51 guard baseline, while CSS
-L4 is audit-demoted and must be pruned/rebuilt before the V1 spec can cite it
-as a second worked grammar. The SK-V15 handoff states the current
-classification directly: JSON honest, CSS contrived, generic infrastructure
-mixed, Pattern H not collapsed, and Decision Engine scaffold-only
-(`restart/skinny/tranches/sk-v15/HANDOFF.md:8-18`). The close condition
-requires JSON guard preservation, CSS anti-broadcast repair, CSS typed Value
-API, Lock 14/16 gate restoration, codegen neutrality, Pattern H generated
-ownership, Decision Engine activation, FNV quarantine, and executable close
-evidence (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:34-50`).
-
-For totality V1, the durable lessons separate into three buckets. JSON-empirical
-lessons prove strict same-plane measurement and product equality can work, with
-bench-only FNV and fresh PMU c/B misses pending. Grammar-neutral lessons prove
-the single tape/substrate direction and native aarch64 admission discipline, but
-disprove current Lock 14/16, Pattern H, codegen-neutrality, and Decision Engine
-claims. CSS lessons are not admits: they are audit-demoted facts that must drive
-PRUNE-WAVE-A and REBUILD-WAVE-E before any CSS >SOTA claim returns.
+SK-V18 is the INFLECTION cycle. The durable skinny lesson the V1 totality spec
+must absorb is the inversion of SK-V13: the >SOTA is now MEASUREMENT-VALID for the
+JSON half (JSON 51/51 strict cold beats sonic-rs — `RESULTS.md:5-25` bench-row-backed);
+the CSS half (CSS canonical cold beats lightningcss 1.9–3.3×) is newly measurement-valid
+(NOT fake) but DIRECTIONAL, NOT yet re-locked (loadavg 4.35; H1 `css_canon_bench`
+re-lock gate per U-4 — split per CH6-V3-F1 so the headline does not carry the
+un-caveated closure word its own body retired). The implementation that produced it
+is hand-written, FORKED, and
+REPLICATED under a "grammar-driven" banner — the generator does not exist
+(`SYNTHESIS-AUDIT-OVERFIT.md:36-39,141`). The empirical floor proved across
+SK-V1..V14 (single tape/`ValueRef` substrate, aarch64-only admission,
+scalar→checkasm→same-wave-consumer SIMD discipline, FNV-as-non-equality-arbiter
+(the production `emit_full_parse input_fnv64` is live telemetry, NOT bench-only — see G-5
+split per CH5-V3-005), no retained sidecar) HOLDS and is grammar-neutral. What is DISPROVED is the
+emission story: 7 css_l4 `generated.rs` are byte-identical (md5 `b654562c…`,
+re-verified live), `RuntimeEmitterKind` forks on grammar family, JSON renders 7×
+`push_str` fixed literals, the phantom `<G>` is test-only, x86 lingers crate-wide,
+and the Lock-14 gate is green-by-exclusion. The SK-V18 finding the totality spec
+must reflect: a naive grammar-walk regresses to lightningcss's architecture
+(94.1% `find_component_delim` scan), so >SOTA survives ONLY via named,
+`.bbnf`-invoked, grammar-derived, (a)-(d)-gated primitives — never a paper-close.
 
 ## Spec-Claim ↔ Implementation Table
 
-| totality V1 claim that must reflect skinny evidence | skinny evidence | verdict | note |
+The "spec claim" column is the SK-V18 GENERALIZATION goalset (the V1 greater-spec
+surface the totality cycle absorbs): `restart/skinny/tranches/sk-v18/SPEC.md`
+§0.1 close conditions 1–12 + the binding architecture surfaces (`ARCHITECTURE.md`
+5-shape `BackendShape`, `MASTER-PLAN.md` one-generator goal). Verdicts:
+implemented / unimplemented / impl_exceeds_spec / unknown.
+
+| spec claim (path:line) | impl evidence (path:line) | verdict | note |
 |---|---|---|---|
-| JSON can remain the guard proof-of-concept for strict same-plane measurement. | `skinny/RESULTS.md` records JSON parse_only 17/17, direct_to_struct 17/17, and real_typed_struct 17/17 admitted, plus CSS 24/24 separately (`skinny/RESULTS.md:139-141`). SK-V15 Alpha explicitly marks the three JSON families as validated guard baseline (`restart/skinny/tranches/sk-v15/research/alpha/alpha-A-results-extraction.md:14-19`). | proved / JSON-empirical | V1 should cite JSON as a guard baseline, not as proof that CSS or arbitrary grammars are clean. |
-| JSON parse_only can beat the strict parser comparator with a distinct parse_only contract. | W11W admits the final six parse_only rows with `memchr2` trusted-string split (`skinny/REDRESS.md:6254-6265`), correctness gates (`skinny/REDRESS.md:6266-6271`), positive cold margins for all six residual rows (`skinny/REDRESS.md:6272-6280`), and 17/17 parse_only close (`skinny/REDRESS.md:6281-6284`). | proved / JSON-empirical | This is JSON parse_only evidence only; S-P1 later keeps it as guard evidence and does not mutate RESULTS (`restart/skinny/tranches/sk-v15/research/p1/p1f-results-delta.md:19-27`). |
-| JSON direct and typed rows can be strict product rows rather than digest-plane rows. | RESULTS notes direct rows are strict product rows, typed rows are strict typed product rows, and CSS rows are a separate full-parse plane (`skinny/RESULTS.md:147-149`). W11A closes strict-product direct rows (`skinny/REDRESS.md:5853-5871`), and W11U admits `unicode_escapes` direct/typed through raw JSON string lexeme products (`skinny/REDRESS.md:6213-6220`; `skinny/RESULTS.md:45-46`). | proved / JSON-empirical | Keep strict product terminology precise; do not collapse it back to digest-plane proof. |
-| JSON guard evidence is clean enough to preserve, but W11L/W11N/W11O FNV closed-enum products need quarantine. | PASS-IMPL V1 flags W11L/W11N/W11O FNV closed-enum strict-product weakness as bench-only (`restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:60-65`). SK-V15 requires FNV products to stay bench-only and comparator hardening to catch closed-enum sidecar coupling (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:48`; `restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A2-admit-mechanism-integrity.md:47`). | pending / JSON-empirical | V1 must prevent this technique from becoming a production equality arbiter. |
-| Fresh P1 evidence does not reverse JSON admits, but exposes c/B debt for S-P2. | P1-D reports parse_only Track 1 beats best strict comparator on 17/17 rows, while direct_strict misses `mesh` and `unicode_escapes`, and real_typed misses `unicode_escapes` (`restart/skinny/tranches/sk-v15/research/p1/p1d-pmu-cycles.md:70-73`). P1-B states those misses are measurement-only S-P2 inputs, not admission reversals (`restart/skinny/tranches/sk-v15/research/p1/p1b-samply-mode-2.md:37-40`). | pending / JSON-empirical | V1 should distinguish admission ledger state from current research debt. |
-| Harness/checksum/profile hot leaves are not parser primitives. | P1-E makes the normalized attribution ledger binding and blocks generated wrappers, schema-specific products, comparators, checksums, and sidecar drift unless mapped to grammar-neutral boundaries (`restart/skinny/tranches/sk-v15/research/p1/p1e-hot-leaf-attribution.md:31-35`). P1-C warns structural-scan profiles often show hash/checksum work and must not be mistaken for parser wins (`restart/skinny/tranches/sk-v15/research/p1/p1c-samply-mode-3.md:37-45`). | proved / JSON-empirical | V1 research gates should require hot-leaf classification before candidate selection. |
-| CSS L4 24/24 rows are not admitted V1 evidence. | PASS-IMPL V1 headline says all 24 CSS rows are one measurement broadcast 24 times (`restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:21-27`). SK-V15 starting state brackets CSS as audit-demoted/reopened despite the SK-V14 ledger (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:57-68`). P1-F says CSS rows still appear in RESULTS but remain PRUNE-WAVE-A input (`restart/skinny/tranches/sk-v15/research/p1/p1f-results-delta.md:24-31`). | disproved / CSS audit-demoted | V1 must not cite CSS L4 rows as 24 independent admits. |
-| CSS L4 live generated code is not grammar-derived. | PASS-IMPL V1 identifies the generator as a 646-line hand-written `CSS_GENERATED_RS` string literal copied into the seven CSS modules (`restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:31-33`). S-P0 A4 confirms `emit_frontend_facts` writes `normalize(CSS_GENERATED_RS)` and all seven generated files are byte-identical (`restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A4-generator-roundtrip.md:24`). | disproved / CSS audit-demoted | V1 must require grammar-derived emission before CSS returns as proof. |
-| CSS admission comparator/equality plane is not same-workload typed output. | PASS-IMPL V1 says `CssFullParseSummary` is four counters and lightningcss builds a full CSSOM; cssparser beats Track 1 in the same measurement (`restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:29`). A2 adds that CSS equality is marker/status checking, not equivalent value equality (`restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A2-admit-mechanism-integrity.md:45-46`). | disproved / CSS audit-demoted | V1 must bind CSS to cssparser near-term and lightningcss only after CSSOM/value parity. |
-| CSS Value API is absent. | PASS-IMPL V1 says JSON has `JsonValue` + view/visitor, but CSS parse returns `Result<String, CssFactError>` fact-stream output (`restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:56-58`). SK-V15 close requires typed CSS value/document/view/visitor surfaces (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:40-42`). | spec_claims_unimplemented / CSS audit-demoted | This is REBUILD-WAVE-E, not a documentation clarification. |
-| The retained tape/structural projection direction is the correct substrate boundary. | REDRESS records direct view as a typed projection over sealed tape offsets, not a parallel struct tree (`skinny/REDRESS.md:126-132`). P2-D confirms live `Tape` owns source, offsets, sparse flags, payload arena and id, while `ValueRef` is `&Tape + cursor` (`restart/skinny/tranches/sk-v15/research/p2/p2d-substrate-tape.md:12-15`). | proved / grammar-neutral | V1 should preserve "structural projection is the tape" while rejecting retained sidecars. |
-| Retained structural sidecars, streaming cursors, and union-substrate imports remain blocked. | P2-A says simdjson/sonic retained structural indexes and parser-owned cursors cannot be imported; REDRESS 51/53/97/98 already rejected cursor/sidecar routes (`restart/skinny/tranches/sk-v15/research/p2/p2a-sota-teardown.md:36-37`). P2-D repeats that retained class columns, streaming cursors, and class-lane-only union substrate were retired or blocked (`restart/skinny/tranches/sk-v15/research/p2/p2d-substrate-tape.md:31-32`). | disproved / grammar-neutral | Candidate primitives must consume local masks into the existing tape/event loop. |
-| Native Apple M5 Max/aarch64 is the admission platform for this tranche. | Handoff says x86 and AVX-512 rows are diagnostic signals, not SK-V15 anchors (`restart/skinny/tranches/sk-v15/HANDOFF.md:16-18`). P2-C repeats x86 cannot rescue or anchor any candidate (`restart/skinny/tranches/sk-v15/research/p2/p2c-arch-esoterica.md:14`, `restart/skinny/tranches/sk-v15/research/p2/p2c-arch-esoterica.md:59`). | proved / grammar-neutral | V1 should not let x86-only comparator pressure close SK-V15 claims. |
-| Lock 14 / Lock 16 gates are currently insufficient. | PASS-IMPL V1 says Lock 14 scan roots exclude `runtime_generator.rs`, `grammar_provider.rs`, `json_sink_direct.rs`, `json_typed_direct.rs`, and `json_templates/` (`restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:45-47`). A3 adds the scan token universe is JSON-only and Lock 16 report coverage is incomplete (`restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A3-lock14-lock16-generic-scan.md:26-31`). | disproved / grammar-neutral | PRUNE-WAVE-B is required before generic cleanliness is credible. |
-| Pattern H is not collapsed. | PASS-IMPL V1 reports 67 runtime files, 0/67 generated headers, four runtime styles, and CSS L4 `OpenFrame` as a canonical violation (`restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:37-43`). A4/A6 reconfirm 67 files and zero line-1 generated provenance (`restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A4-generator-roundtrip.md:17-18`; `restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A6-pattern-recurrence.md:23-28`). | disproved / grammar-neutral | PRUNE-WAVE-D must prove generator ownership, not header-only paper close. |
-| Decision Engine is scaffold, not load-bearing. | PASS-IMPL V1 says e-graph has zero rewrite rules, CSP is tautological, and four lowerers are 17-LOC stubs (`restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:49-55`). A5 confirms emitted runtime code ignores rule plans, e-graph has zero rewrites, CSP preserves selected index, grammar-named facts remain, and four lowerers are label-string stubs (`restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A5-decision-engine-fold.md:10-17`). | disproved / grammar-neutral | REBUILD-WAVE-F must produce runtime-relevant generated diffs. |
-| Candidate primitives are research gaps, not admits. | P2-A lists candidate primitives such as byte-class masks, byte-set skip, string events, escape decode, number spans, local container skip, and tape reserve, each requiring scalar reference and Lock 1/14 discipline (`restart/skinny/tranches/sk-v15/research/p2/p2a-sota-teardown.md:44-55`). P2-B defines the five-stage SIMD/ASM admission process: scalar oracle, target path, checkasm parity, same-wave consumer, and manifest/locks (`restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:22-32`). | pending / grammar-neutral | V1 should encode scalar/checkasm/same-wave consumer as mandatory, not optional quality bars. |
-| parse-that Layer-1 vocabulary is incomplete. | P2-E says `parse-that-regex` exposes JSON-shaped string/number helpers but lacks grammar-neutral byte-set skip, local structural dispatch, bounded literal spans, UTF-8 run validation, digit-run accumulation, and escaped segment streaming (`restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md:10-25`). | pending / grammar-neutral | This is a research input for S-P3; no implementation claim yet. |
+| ONE generator emits JSON+CSS+Sheets from `.bbnf`, 3 NON-IDENTICAL grammar-DERIVED parsers (`SPEC.md:63-69`) | `skinny/crates/codegen/src/runtime_generator.rs:16` forks `match request.profile_contract.emitter`; CSS arm is `normalize(CSS_GENERATED_RS)` const at `skinny/crates/codegen/src/runtime_generator.rs:91,701`; JSON arm is `json_sink_direct.rs` 7× `push_str` (root-relative paths per CH1-V4-F10) | unimplemented | the generator DOES NOT EXIST; both paths are grammar-specialized couriers (`SYNTHESIS-AUDIT-OVERFIT.md:141`, A4). This is the SK-V18 inflection: round-trip passes over hand-written content. |
+| One un-forked emitter, dispatched on LOWERED `BackendShape`, not grammar tag (`SPEC.md:71-78`) | `skinny/crates/codegen/src/grammar_provider.rs:33` `pub emitter: RuntimeEmitterKind` (root-relative per CH1-V4-F10); `:40` `enum RuntimeEmitterKind{CompiledLowering,RequestFacts}`; `:110` gates on `!= RuntimeEmitterKind::RequestFacts` | unimplemented | R3, addendum-3 (single-emitter-path). The fork is a live grammar-family discriminator; G3 deletes it. |
+| 7 byte-identical css_l4 replicas collapse to ONE; R16 row-collapse (`SPEC.md:80-85`) | 7× `css_l4_*/generated.rs` all md5 `b654562ccff46ed62dd48e9ace325830` (re-verified live); `find_component_delim` at offset 657 in every replica | unimplemented | R4, addendum-2. md5 identity re-proven this pass across all 7 modules; the per-`RuntimeTarget` row-collapse (`skinny/xtask/src/regen.rs:5` derives `Clone,Copy,Debug` only, over `pub(crate) struct RuntimeTarget` at `:6`) is the R16 +1-line `PartialEq` target, not yet landed. |
+| Grammar-NEUTRAL 5-shape `BackendShape{EagerTape,OffsetTape,EventTape,SinkOnly,CollapsedStage}` over `select_lowering` (`ARCHITECTURE.md` §7.3; `SPEC.md:74-76`) | `lower/mod.rs:18` `fn select_lowering(cost:&CostFacts)->&'static dyn ShapeLowering`; `:20-24` match arms over exactly the 5 shapes | impl_exceeds_spec | the 5-shape canon is real, grammar-neutral, and Lock-14-clean; SK-V15 W8/W9 admitted all five lowerers as operation-plan renderers (`REDRESS.md:6356-6414`). This is the seam G3 dispatches on — present at greater fidelity than the spec asserts. |
+| Shared value-API trait, JSON+CSS+Sheets instantiate ONE `Cursor`/`DocumentView` seam (`SPEC.md:87-97`) | `tape/mod.rs:227` `pub trait DocumentView<'a>` exists (latent); JSON `ValueRef<K>` real; CSS returns `Result<String,CssFactError>` fact-stream, no value API | unimplemented | R6 LCD-flatten hazard; the CSS value API is absent (carried from SK-V15 REBUILD-WAVE-E). G4 must extend the seam WITHOUT flattening JSON rich nav. |
+| Phantom `<G>` resolved by DELETE (`SPEC.md:99-102`) | `tape/mod.rs:175` `ValueRef<'doc,'input,K=AnyKind,G:EventGrammar=AnyGrammar>`; `:179` `_grammar:PhantomData<fn()->G>`; `:197` `_grammar:PhantomData` | unimplemented | R5, addendum-4. The `<G>` axis is test-only (`_proof_compiles` census excl. `_tests.rs` is EMPTY per `SYNTHESIS-RESEARCH.md:26-30`); G4 DELETEs it, preserving REAL `K=Kind` axis. |
+| >SOTA preserved HONESTLY — JSON beats sonic-rs strict, CSS beats lightningcss (`SPEC.md:104-128`) | JSON: `RESULTS.md:5-25` cold Track 1 > sonic-rs strict per row (twitter 8349>4913, citm 9079>8335, canada 16709>12970), per-iter equality PASS — bench-row-backed. CSS: SK-V18 headline canonical cold 1.9–3.3× is a synthesis-doc ASSERTION (`SYNTHESIS-AUDIT-OVERFIT.md:36-37`), NOT a bench-row table | impl_exceeds_spec (JSON) / directional, not re-locked (CSS) | SPLIT per CH6-F2. JSON: 51/51 strict-vs-sonic cold admitted, same-plane, per-iter equality — legitimately exceeds spec. CSS: >SOTA is MEASUREMENT-VALID (NOT fake like SK-V13) but the 1.9–3.3× ratios (bootstrap 2.190, tailwind 3.375, material 1.658, animate 2.101, `SPEC.md:113-118`) ran under loadavg 4.35 and are DIRECTIONAL, NOT re-locked; the H1 `css_canon_bench` re-lock gate (U-4 `1D:199-203,228-232`) is the falsifier. The CSS half rides hand-written content; preservation through the generator is the open burden. Do NOT carry the un-caveated "MEASUREMENT-VALID" closure word on the CSS half. |
+| x86 gone, aarch64-only (`SPEC.md:130-133`) | `skinny/crates/bbnf-simd/src/x86_64/` (24 files incl. `byte_class_from_eq_set_64.{rs,asm}`) + `ext/x86/` vendored ASM live at HEAD | unimplemented | R8, A6. Both surfaces present; P1 deletes crate-wide (≈−4500 LOC). aarch64-only admission discipline is PROVED policy (SK-V15 G-2) but the x86 tree is not yet excised. |
+| Lock-14 gate MEANINGFUL, no green-by-exclusion (`SPEC.md:135-141`) | `skinny/crates/bbnf-bench/src/lock14_baseline.rs:2409` `GENERIC_SCAN_ROOTS`; `:2442` `SKV15_W2_EXTRA_COVERAGE_ROOTS` holds `runtime_generator.rs`,`grammar_provider.rs`,`json_sink_direct.rs`,`json_typed_direct.rs`,`json_templates`; `:2463` `diagnostic-x86` exclusion live | unimplemented | R9, A3. The gate reads CLEAN only because the leak surfaces sit in the WEAK extra-coverage roots, not strict `GENERIC_SCAN_ROOTS`; P4 promotes them BEFORE G2/G3. (Bare `lock14_baseline.rs` prefixed to `skinny/crates/bbnf-bench/src/` per CH1-V2-F4 — the file is NOT under `codegen/`.) |
+| Sheets proves generalization REAL — pratt precedence tower via generator ONLY (`SPEC.md:143-152`) | `crates/gorgeous/grammar/google-sheets/google-sheets.bbnf:36-51` 7-level left-assoc tower (comparison→concat→add→mul→exp→unary→postfix); `:67` cyclic `paren_expr="(",expression,")"` (the canonical root copy `grammar/google-sheets/google-sheets.bbnf` carries the SAME tower at `:103-121` and paren_expr at `:137`); `sheets_witness/event_grammar_witness.rs` exists as DEFINITION only | unimplemented | R-E PROVE make-or-break. The precedence tower is the SOLE Sheets-distinctive construct JSON+CSS structurally lack; it stresses G3 generality. Witness is consumed only by `_tests.rs` `_proof_compiles` (defined, never animated). |
+| NEON reaches hot path AT ADMISSION (`SPEC.md:154-165`) | `find_component_delim` SCALAR in every css_l4 `generated.rs:657`; `byte_class_from_eq_set_64`/`find_ascii_set_member64` kernel EXISTS in `bbnf-simd/src/{aarch64,scalar,x86_64}`; `find_css_significant` lives in `runtime/src/runtime_simd.rs`+`lib.rs` (caller-side), dead at admission | unimplemented | R7, addendum-6. The 94.1% CSS hot leaf is scalar; the eq-set kernel is checkasm-gated but not retargeted onto the recursive shell. G6 wires it; G5 retires zero-sampled `json/scan.rs`. |
+| Generated-state cleanliness — no metalang leak, regen --check exit 0 (`SPEC.md:167-169`) | `skinny/crates/runtime/src/grammars/json/generated.rs:801,841,881` (root-relative per CH1-V4-F10) call `parse_w11_1_number_direct/_object_direct/_array_direct` (7 occurrences) | unimplemented | R15, A1/regen. Bench-wave-id `w11_1` leaked into shipped runtime symbol names; P5 renames `parse_w11_1_number_*`→`parse_number_*` at source. |
+| Tape ∪ direct-to-struct UNION substrate; `ValueRef` is a cursor into the tape (Lock 1; `MASTER-PLAN` substrate goal) | `tape/mod.rs:175` `ValueRef` is `&Tape + cursor`; SK-V15 P2-D confirmed single `Tape` owns source/offsets/sparse-flags/payload-arena; REDRESS records direct view as typed projection over sealed offsets (`REDRESS.md:126-132`) | impl_exceeds_spec | the substrate is the genuine CLEAN foundation S-P0 KEEPs (`SYNTHESIS-AUDIT-OVERFIT.md:109`). Lock 1 holds; no second substrate, no retained sidecar. |
+| Decision Engine load-bearing (e-graph cost / CSP / 5 lowerers drive selection) (`MASTER-PLAN` Lock 10/Lock 5) | SK-V15 W7 admitted decision spine (`REDRESS.md:6326-6354`); W8/W9 admitted all-five lowerers as operation-plan renderers (`REDRESS.md:6356-6414`) | implemented | the SK-V15 cycle moved this from scaffold (prior-cycle G-5 disproved) to load-bearing; the e-graph records `egraph_rewrite_count`, CSP capacity is falsifiable. Carried forward as PROVED. |
+
+## Divergences Catalogued
+
+Severity inherits `SYNTHESIS-AUDIT-OVERFIT.md §2` (HIGH = falsifies a campaign
+claim; MEDIUM = honesty/discipline residual). Every row re-verified LIVE this
+pass at the cited path:line.
+
+- **D-1 (HIGH, unimplemented) — the generator does not exist (A4).** Spec claims
+  ONE grammar-driven generator (`SPEC.md:63`); disk shows two forked couriers
+  (`skinny/crates/codegen/src/runtime_generator.rs:16,91,701`; `json_sink_direct.rs` 7× push_str; root-relative per CH1-V4-F10). The
+  round-trip (`delete + regen ⇒ byte-equivalent`) passes BUT over hand-written
+  content — the SK-V18 headline divergence. Disposition: G1+G2+G3.
+- **D-2 (HIGH, unimplemented) — 7 byte-identical css_l4 replicas.** All 7
+  `css_l4_*/generated.rs` share md5 `b654562c…` (re-verified). The "9-grammar
+  census" the prior totality cycle cited counts 7 css_l4 + json + sheets_witness
+  in the skinny runtime tree; the totality `crates/core/` tree mirrors this with
+  one css_l4 dir but per-grammar hand-written runtime modules (7–10 files each).
+  P3 collapses to ONE CSS config. loc_delta ≈ −5460 (G-13 P3, `1D` G-13 below;
+  source `SYNTHESIS-AUDIT-OVERFIT.md:153`).
+- **D-3 (HIGH, unimplemented) — RuntimeEmitterKind grammar-family fork** at
+  `skinny/crates/codegen/src/grammar_provider.rs:33,40,110` (root-relative per CH1-V4-F10). The discriminator IS the relocated-seam risk:
+  un-forking the visible enum while leaving a per-grammar branch in a neutral
+  data table is caught ONLY by the structural `runtime_target_rows_collapsed`
+  co-gate (R16), never by arm-grep (`SYNTHESIS-RESEARCH.md:272-279`).
+- **D-4 (HIGH, unimplemented) — x86 two surfaces live** in `bbnf-simd/src/x86_64/`
+  + `ext/x86/`. Wrong-arch under an aarch64-only admission platform (G-2 PROVED).
+  P1 deletes ≈−4500 LOC (loc_delta = G-13 P1, `SYNTHESIS-AUDIT-OVERFIT.md:153`;
+  disk: 28 files / 4401 LOC).
+- **D-5 (HIGH, unimplemented) — phantom `<G>` test-only** at `tape/mod.rs:175,179,197`.
+  Decorative generic; instantiate-or-DELETE (DELETE default, preserve `K` axis).
+- **D-6 (HIGH, unimplemented) — CSS NEON dead at admission.** `find_component_delim`
+  is scalar in all 7 replicas (`:657`); the eq-set kernel exists checkasm-gated but
+  is not retargeted onto the recursive shell. The 94.1% G6=WIRE profile finding.
+- **D-7 (MEDIUM, unimplemented) — Lock-14 green-by-exclusion** (`skinny/crates/bbnf-bench/src/lock14_baseline.rs:2442`
+  `SKV15_W2_EXTRA_COVERAGE_ROOTS` + `:2463` `diagnostic-x86`; bare path prefixed
+  per CH1-V2-F4 — home is `bbnf-bench`, not `codegen`). The gate is not
+  meaningful until P4 promotes the leak surfaces into strict scan roots.
+- **D-8 (MEDIUM, unimplemented) — metalang leak** `parse_w11_1_number` ×7 in
+  `skinny/crates/runtime/src/grammars/json/generated.rs:801,841,881` (root-relative per CH1-V4-F10). Bench-wave-id contaminates shipped symbols. P5.
+  loc_delta ≈0 — rename-only (G-13 P5, `SYNTHESIS-AUDIT-OVERFIT.md:153`).
+- **D-9 (impl_exceeds_spec) — JSON 51/51 strict cold > sonic-rs**, same-plane,
+  per-iter equality (`RESULTS.md:5-25`). The guard baseline EXCEEDS a "documentation
+  clarification" — it is the load-bearing proof the substrate + projection CAN beat
+  SOTA honestly; the burden is preserving it THROUGH the generator (G1 91.5% leaf).
+- **D-10 (impl_exceeds_spec — at admitted scope; selection DEPTH pending) — the
+  5-shape `BackendShape` + decision spine are load-bearing**, not scaffold. SK-V15
+  W7/W8/W9 converted the prior-cycle scaffold finding into operation-plan renderers
+  (`REDRESS.md:6326-6414`). This is the seam G3 dispatches on — the architecture the
+  spec claims already exists. CAVEAT (CH3-V1-004 reconcile with 1E-L10): the
+  decision-engine SELECTION DEPTH under the Sheets R-E precedence tower is the open
+  L10 stressor (`1E-locks-evidence.md:90` — the L10 row; re-anchored from `:89` (the L09 row) per CH1-V4-F9), un-tested until G3 exists.
+- **D-11 (impl_exceeds_spec) — the unified Tape/ValueRef/PayloadArena substrate is
+  CLEAN** (`SYNTHESIS-AUDIT-OVERFIT.md:109`). Lock 1 holds at greater fidelity than
+  the spec asserts; it is the genuine foundation S-P0 explicitly KEEPs.
+
+## Gaps / Missing Primitives
+
+- **The grammar-derived CSS balanced scan (PRIMARY §6 finding).** The 94.1% hot
+  leaf (`find_component_delim`+`consume_balanced_at`) has a delimiter alphabet
+  (`{}:;`) and structural-byte dispatch (`' " / ( [ {`) EMERGENT from rule shapes,
+  modeled by NO `SinkOnlyExpr` node (`SYNTHESIS-RESEARCH.md:222-237`). Missing:
+  the `css_balanced_component_scan` named primitive — grammar-INVOKED, taking
+  grammar-DERIVED byte-set args, (a)-(d)-gated, doubling as the G6 NEON call site.
+  NEUTRALITY obligation: a non-CSS invoker (JSON `{}/[]` or Sheets `paren_expr`)
+  must exercise the SAME shell, else demote to `css_`-scoped name.
+- **JSON string/number leaf scanners (SECONDARY §6 finding).** The 91.5% leaf's
+  micro-opts (`b'-'|b'0'..=b'9'` fast-path, `match_tiny_plain_string_direct`) must
+  survive the AST-walk byte-exact as named primitives invoked by `.bbnf` `string`/
+  `number` rules, each with the (b) byte-set-mutation falsifier (`SYNTHESIS-RESEARCH.md:238-248`).
+- **The CSS Value API** is absent (carried from SK-V15 REBUILD-WAVE-E): CSS returns
+  `Result<String,CssFactError>`, JSON has `JsonValue`+visitor. G4 must build a lazy
+  `CssNode` over the existing tape WITHOUT a second substrate or eager tree.
+- **The Sheets precedence-tower lowering** is unrealized — the 7-level right-iterated
+  EBNF (`A=B(op B)*`) lowering to `Seq`+`RepeatLoop`+`Alt{Dispatch}`+`CallRule` needs
+  NO new IR primitive but stresses G3's generality; if G3 cannot render recursive
+  `CallRule`/`RepeatLoop` chains from grammar structure, the tower breaks first.
+- **The R16 row-collapse mechanism** — `RuntimeTarget` derives only `Clone,Copy,Debug`
+  (`skinny/xtask/src/regen.rs:5`, over `pub(crate) struct RuntimeTarget` at `:6`); the
+  +1-line `PartialEq` full-row derive that recurses into both
+  `frontend_requirements` (#11) and `output_labels` (#12) is not yet present.
+
+## Rejected-Route Pre-Block (REDRESS items the SK-V18 G6/G2/G4 moves abut)
+
+The three highest-regression SK-V18 moves each ADJOIN a route already REJECTED in
+`skinny/REDRESS.md`; this pre-block enumerates the specific items by id+line and
+states the FALSIFYING distinction (admissible = retarget/decorate the existing
+in-loop single-substrate leaf; rejected = add a second scanner / structural-stream
+driver / bespoke per-grammar mask / parser-local cursor). Routing this list at
+path:line keeps a downstream wave from re-implementing a measured-and-reverted
+shape (CH3-V1-002).
+
+| REDRESS item | line | rejected shape | SK-V18 wave it bounds | admissible vs rejected distinction |
+|---|---|---|---|---|
+| Item 246 — W11T parse-only structural stream | `skinny/REDRESS.md:6184-6219` (REJECT) | a structural-stream parse_only DRIVER (second substrate over a retained structural stream) | G4 lazy `Cursor`/`CssNode` | ADMISSIBLE: G4's `Cursor` is a VIEW over the EXISTING `Tape`/`ValueRef`/`PayloadArena` (`SPEC.md:87-97`). REJECTED: a structural-stream driver = a second substrate. |
+| Item 247 — W11V parse-only string64 mask | `skinny/REDRESS.md:6230-6260` (REJECT) | a bespoke per-grammar 64-byte string-special mask | G2 `css_balanced_component_scan` | ADMISSIBLE: G2 is a SHARED grammar-neutral primitive over a grammar-DERIVED byte set. REJECTED: a bespoke per-grammar 64-byte mask re-emitted per grammar. |
+| Item 51 — SK-V5 event-cursor (`JsonEventCursor`) | `skinny/REDRESS.md:742-768` (REJECT) | a parser-local transient event-cursor wrapper in the retained parser | G6 NEON retarget (EventCursor-adjacent) | ADMISSIBLE: the EventTape lowering consumes the single substrate's event stream IN-LOOP. REJECTED: a retained/parser-local second cursor (cf. 1A-SUB-012, 1B EventCursor rows). (Span narrowed `742-783`→`742-768` per CH3-V2-005 — item 51 prose ends at `:767`; `:768` is the blank separator before item 52 (`:769`), so the block span `742-768` includes that separator (off-by-one corrected per CH3-V3-004); `:769-783` is item 52 "SK-V5 baseline reassay", a profiling re-measurement, NOT a rejected route. Reconciles with `1B:55` CH3-V2-004: 1B widened the 51∪53 PAIR span to cover both rejects; this row narrows the item-51 SUB-span to exclude item 52 — both land 51=`742-768`, 53=`784-813` (CH3-V3-006).) |
+| Item 53 — SK-V5 structural-mask parser-local cursor (`JsonStructuralCursor`) | `skinny/REDRESS.md:784-813` (REJECT) | a second retained-parser cursor over a per-64-byte emit mask | G6 NEON retarget onto the scalar shell | ADMISSIBLE: G6 RETARGETS NEON onto the EXISTING in-loop `find_component_delim` shell as a shared primitive the generated scan CALLS (`SPEC.md:154-165`). REJECTED: a parser-local second scanner over a retained mask. |
+
+Note: the SK-V18 SPEC itself does NOT cite these items (`rg 'W11T|W11V|structural.stream|event.cursor' SPEC.md` = 0), so this pre-block discharges the burden the dispatch chain otherwise leaves unmet. COMPLETENESS CAVEAT (per CH3-V4-006): coverage is scoped to the committed ledger (which ends at SK-V15 W11, `skinny/REDRESS.md:6446`); SK-V16/V17 rejected routes are NOT yet captured in `skinny/REDRESS.md` (both tranches exist on disk — `restart/skinny/tranches/sk-v16/{HANDOFF,SPEC,SYNTHESIS}.md`, `…/sk-v17/…`) — see U-5. The pre-block is complete for the captured ledger, NOT for the full skinny history; any SK-V16/V17 rejected route is structurally invisible to this four-item table.
 
 ## Proved / Disproved / Pending Digest
 
-### JSON-Empirical Findings
+Separated per Lock 14: JSON/CSS-empirical (grammar-specific) vs grammar-NEUTRAL
+(generalizes across the 9 totality grammars). The SK-V18 lens column flags the
+inflection finding each row feeds.
+
+### JSON / CSS-Empirical Findings
 
 | id | status | lesson V1 must reflect | citations |
 |---|---|---|---|
-| J-1 | proved | JSON has a validated 51-row guard baseline across parse_only, direct_to_struct, and real_typed_struct. | `skinny/RESULTS.md:139-141`; `restart/skinny/tranches/sk-v15/research/alpha/alpha-D-validated-invalidated.md:8-21` |
-| J-2 | proved | W11W parse_only memchr trusted-string split is the accepted JSON parse_only close route. | `skinny/REDRESS.md:6254-6284`; `restart/skinny/tranches/sk-v15/research/alpha/alpha-C-redress-digest.md:8-16` |
-| J-3 | proved | Direct and typed JSON admits are strict product/typed product rows, not digest-plane rows. | `skinny/RESULTS.md:147-149`; `skinny/RESULTS.md:101-102` |
-| J-4 | pending | W11L/W11N/W11O closed-enum/FNV products are bench-only and require quarantine/comparator hardening. | `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:60-65`; `restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A2-admit-mechanism-integrity.md:47` |
-| J-5 | pending | Current P1 PMU exposes direct/typed c/B misses on `mesh` and `unicode_escapes`; S-P1 does not reverse admits. | `restart/skinny/tranches/sk-v15/research/p1/p1d-pmu-cycles.md:70-73`; `restart/skinny/tranches/sk-v15/research/p1/p1b-samply-mode-2.md:37-40` |
-| J-6 | disproved as candidate source | Harness hashes, checksums, generated wrappers, and sidecar symbolization drift are not parser primitive evidence. | `restart/skinny/tranches/sk-v15/research/p1/p1e-hot-leaf-attribution.md:31-35`; `restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:57-58` |
-| J-7 | disproved as reopen route | Rejected JSON W10/W11 parse_only/product routes remain pre-blocked without fresh material differential. | `restart/skinny/tranches/sk-v15/research/alpha/alpha-C-redress-digest.md:35-38`; `restart/skinny/tranches/sk-v15/research/p2/p2c-arch-esoterica.md:61-72` |
+| J-1 | PROVED | JSON has a validated 51-row guard baseline (parse_only/direct/typed) beating sonic-rs strict cold, same-plane, per-iter equality. | `RESULTS.md:5-25`; `SYNTHESIS-AUDIT-OVERFIT.md:113,139` |
+| J-2 | PROVED | W11W parse_only memchr trusted-string split + W11A direct strict-product are the accepted JSON close routes. | `REDRESS.md:6262-6294`; `REDRESS.md:5861-5881` |
+| J-3 | DIRECTIONAL / not-re-locked (newly measurement-valid, NOT yet bench-re-locked) | CSS canonical cold N≥200 real-corpus beats lightningcss 1.9–3.3× — NOT a fake admit (unlike SK-V13); the residual is hand-written content, not a fabricated number. INLINE CAVEAT (CH6-F3, per U-4 `1D:199-203`): the S-P1 absolute ratios (bootstrap 2.190, tailwind 3.375, material 1.658, animate 2.101, `SPEC.md:113-118`) ran under loadavg 4.35 and are DIRECTIONAL, NOT re-locked. The `SYNTHESIS-AUDIT-OVERFIT.md:36` cite is the synthesis doc ASSERTING the ratio, not a bench-row table (contrast J-1's `RESULTS.md:5-25` measured rows); a quiet re-capture on `css_canon_bench` is the H1 re-lock gate. Grade CSS >SOTA `directional`, not `PROVED`, until that row is cited. | `SYNTHESIS-AUDIT-OVERFIT.md:36-37,138`; directional caveat `SPEC.md:113-118`; re-lock gate U-4 `1D:199-203` |
+| C-1 | DISPROVED | CSS live `generated.rs` is NOT grammar-derived — `CSS_GENERATED_RS` const courier copied into 7 byte-identical replicas (md5 `b654562c…`). | `skinny/crates/codegen/src/runtime_generator.rs:701,91` (root-relative per CH1-V4-F10); 7× live md5; `SYNTHESIS-AUDIT-OVERFIT.md:50,88` |
+| C-2 | DISPROVED | The CSS Value API is absent; CSS returns `Result<String,CssFactError>` fact-stream, not a typed value/document/visitor surface. | `tape/mod.rs:227` (latent DocumentView only); `SYNTHESIS-AUDIT-OVERFIT.md:90` (R6) |
+| C-3 | PENDING | CSS >SOTA must survive re-emission via the generator without regressing the 94.1% scan to a tree-walk (lightningcss's own architecture). | `SYNTHESIS-RESEARCH.md:222-237`; `SPEC.md:104-128` |
+| C-4 | PENDING | The metalang `parse_w11_1_number` leak must be purged at source so shipped JSON runtime carries no bench-wave id. | `skinny/crates/runtime/src/grammars/json/generated.rs:801,841,881` (root-relative per CH1-V4-F10); `SYNTHESIS-AUDIT-OVERFIT.md:99` (R15) |
 
 ### Grammar-Neutral Findings
 
 | id | status | lesson V1 must reflect | citations |
 |---|---|---|---|
-| G-1 | proved | Structural projection and tape are one substrate; `ValueRef` is a cursor into the tape. | `skinny/REDRESS.md:126-132`; `restart/skinny/tranches/sk-v15/research/p2/p2d-substrate-tape.md:12-15` |
-| G-2 | proved | Native Apple M5 Max/aarch64 anchors this tranche; x86/AVX-512 is diagnostic only. | `restart/skinny/tranches/sk-v15/HANDOFF.md:16-18`; `restart/skinny/tranches/sk-v15/research/p2/p2c-arch-esoterica.md:14-15` |
-| G-3 | disproved | Current Lock 14/16 gate coverage is not clean; scan roots and report/checkasm coverage hide known gaps. | `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:45-47`; `restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A3-lock14-lock16-generic-scan.md:26-31` |
-| G-4 | disproved | Pattern H is not collapsed: 67 files remain and 0/67 root runtime files carry line-1 generated provenance. | `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:37-43`; `restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A6-pattern-recurrence.md:23-35` |
-| G-5 | disproved | Decision Engine is not load-bearing; e-graph/CSP/lowerers are scaffolded or non-driving. | `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:49-55`; `restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A5-decision-engine-fold.md:10-17` |
-| G-6 | disproved | Codegen neutrality is not achieved; grammar-family modes, static CSS rosters, JSON templates, and grammar/backend bindings remain. | `restart/skinny/tranches/sk-v15/audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md:68-74`; `restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A6-pattern-recurrence.md:37-39` |
-| G-7 | disproved | Retained structural indexes, streaming cursors, class columns, and second substrates remain blocked. | `restart/skinny/tranches/sk-v15/research/p2/p2a-sota-teardown.md:36-37`; `restart/skinny/tranches/sk-v15/research/p2/p2d-substrate-tape.md:50-58` |
-| G-8 | pending | SIMD/ASM candidates require scalar oracle, strict checkasm, same-wave consumer, and Lock 16 manifest. | `restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:22-32`; `restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:34-41` |
-| G-9 | pending | parse-that needs grammar-neutral Layer-1 vocabulary before S-P3 can shortlist parser primitives. | `restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md:10-25`; `restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md:223-237` |
-| G-10 | disproved | Pass-layer recognizer mining and materialization role mining are JSON-shaped generic pass logic, not JSON-only empirical lessons; Sheets and BBNF-self must be proof receivers before these claims generalize. | `restart/audit/totality/p1/1B-codegen-evidence.md` rows `P1-1B-D9` and `P1-1B-D10`; recognizer whitelist `skinny/crates/passes/src/lib.rs:332`-`359`; role mining `skinny/crates/passes/src/lib.rs:1354`-`1435` |
+| G-1 | PROVED | Structural projection and tape are ONE substrate; `ValueRef` is a cursor into the tape (Lock 1 holds, CLEAN). | `tape/mod.rs:175`; `REDRESS.md:126-132`; `SYNTHESIS-AUDIT-OVERFIT.md:109` |
+| G-2 | PROVED | aarch64 / Apple M5 Max is the SOLE admission platform; x86/AVX-512 is diagnostic only — the prune target. | `SYNTHESIS-RESEARCH.md:9`; `SPEC.md:130-133`; x86 surfaces live in `bbnf-simd` |
+| G-3 | PROVED (at admitted scope; selection DEPTH pending) | The 5-shape `BackendShape` + decision spine are LOAD-BEARING (SK-V15 W7/W8/W9 admitted operation-plan renderers + e-graph rewrite count + falsifiable CSP). RECONCILE with 1E-L10 (CH3-V1-004): the W7/W8/W9 lowerers are admitted-as-operation-plan-renderers at the admitted scope, BUT the decision-engine SELECTION DEPTH under the Sheets R-E precedence tower remains the open L10 stressor (`1E-locks-evidence.md:90` — the L10 row; re-anchored from `:89` (L09) per CH1-V4-F9; `SYNTHESIS-RESEARCH.md:249-255`) — not "fully proved load-bearing" without that caveat. | `lower/mod.rs:18-24`; `REDRESS.md:6326-6414`; depth caveat `1E-locks-evidence.md:90` |
+| G-4 | PROVED | SIMD/ASM admission discipline = scalar oracle → strict checkasm → same-wave consumer (no orphan kernel); the eq-set kernel is already checkasm-gated. | `SYNTHESIS-RESEARCH.md:43`; `SYNTHESIS-AUDIT-OVERFIT.md:70,113` |
+| G-5 | PROVED (split per CH5-V3-005) | FNV / closed-enum products are NEVER a runtime equality arbiter (SK-V15 W10 quarantine). TWO surfaces: (a) the BENCH-side FNV quarantine (`fnv_quarantine.rs`) is clean/KEEP — genuinely bench-only; (b) the PRODUCTION `emit_full_parse` `input_fnv64`/`fnv64` is LIVE telemetry-output on the Track-1 recognition path (`skinny/crates/runtime/src/grammars/css_l4_declaration_values/generated.rs:393,:394,:899`; template `runtime_generator.rs:1093,:1599`), CALLED by the production parser (`parser.rs:42 generated::emit_full_parse`) and the MEASURED Track-1 plane (`skinny/crates/bbnf-bench/src/bin/css_cold_harness.rs:131 fn track1_full`; bench dispatch `:306`/`:345`) — it is non-equality / non-substrate / non-document-identity telemetry, NOT "bench-quarantined". (Harness cite repaired per CH3-V4-007 / CH6-V4-005: added the dropped `/bin/` segment; `fn track1_full` is at `:131` — `:130` is the `// ---- track1_full` comment.) | `REDRESS.md:6416-6444`; `SYNTHESIS-AUDIT-OVERFIT.md:113`; production path:line above |
+| G-6 | DISPROVED | The single grammar-agnostic emitter does NOT exist — `RuntimeEmitterKind` forks on grammar family; the generator is two couriers + 7 replicas. | `skinny/crates/codegen/src/grammar_provider.rs:40,110`; `skinny/crates/codegen/src/runtime_generator.rs:16` (root-relative per CH1-V4-F10); `SYNTHESIS-AUDIT-OVERFIT.md:141` |
+| G-7 | DISPROVED | The Lock-14 gate is green-by-EXCLUSION — leak surfaces sit in weak extra-coverage roots + `diagnostic-x86` exclusion. | `skinny/crates/bbnf-bench/src/lock14_baseline.rs:2442,2463` (bare path prefixed per CH1-V2-F4); `SYNTHESIS-AUDIT-OVERFIT.md:93,140` |
+| G-8 | DISPROVED | The phantom `<G:EventGrammar>` axis is decorative — zero non-test production consumers; witnesses defined, never animated. | `tape/mod.rs:175,179`; `SYNTHESIS-RESEARCH.md:26-30` |
+| G-9 | PROVED (inflection; CSS ratio DIRECTIONAL not re-locked) | We are AT the inflection point: >SOTA is real, the impl is hand-written/forked/replicated; a naive grammar-walk regresses to lightningcss — >SOTA survives ONLY via (a)-(d)-gated named primitives, never a paper-close. INLINE CAVEAT (CH6-F3): the JSON half is bench-row-backed (`RESULTS.md:5-25`); the CSS 1.9–3.3× half is DIRECTIONAL (loadavg 4.35, NOT re-locked, U-4 `1D:199-203`) — the inflection thesis stands, but the CSS ratio is not a re-locked bench row. | `SYNTHESIS-AUDIT-OVERFIT.md:23,36-39`; `SYNTHESIS-RESEARCH.md:215-266`; CSS directional caveat U-4 `1D:199-203` |
+| G-10 | PROVED (profile) | The G6=WIRE decision RULE is the grammar-NEUTRAL lesson: a hot leaf with a measured profile share above the WIRE threshold warrants NEON retarget over honest-retire. The supporting 94.1%/79.5% figures are CSS-EMPIRICAL, not fleet-neutral (re-scoped per CH2-V3-009): `find_component_delim` is the 94.1% CSS hot leaf / 79.5% of the CSS path, and the leaf has ZERO non-CSS caller on disk (`rg find_component_delim skinny/crates/runtime/src \| grep -v css` = empty). Keep the decision-rule as the neutral lesson; the ratio is a CSS profile measurement. | `SYNTHESIS-RESEARCH.md:43,222`; `SPEC.md:154-165`; CSS-only leaf census (`grep -v css` = empty) |
+| G-11 | PENDING | The §6 named-primitive escape is the single largest paper-close surface — admissible ONLY under (a) grammar-INVOKED-by-name ∧ (b) output VARIES under invoking-rule mutation ∧ (c) `verbatim_blob_present==false` ∧ (d) PROFILE-PROVEN-NARROW-LEAF. | `SYNTHESIS-RESEARCH.md:257-266`; `SYNTHESIS-AUDIT-OVERFIT.md:103,247-251` |
+| G-12 | PENDING | The relocated-seam risk: un-forking the visible enum while leaving a per-grammar branch in a neutral data table is caught ONLY by the structural row-collapse co-gate (R16 `PartialEq` full-row), never by arm-grep. | `SYNTHESIS-RESEARCH.md:272-279`; `SYNTHESIS-AUDIT-OVERFIT.md:59-63,100` |
+| G-13 | PROVED (prune) | The prune list deletes net ≈−10800 LOC: P1 x86 (−4500), P2 warm bench (−700), P3 7 css_l4 replicas (−5460), P4 gate-fix, P5 metalang. PRUNE-before-GENERALIZE is the standing order. | `SYNTHESIS-AUDIT-OVERFIT.md:153-179`; `SPEC.md:551-770` |
 
-### CSS Audit-Demoted Findings
+## Open Questions (UNKNOWN → verify_action)
 
-| id | status | lesson V1 must reflect | citations |
-|---|---|---|---|
-| C-1 | disproved | CSS L4 24-row admit is one broadcast aggregate, not 24 independent feature measurements. | `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:21-27`; `restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A1-measurement-integrity.md:11-13` |
-| C-2 | disproved | CSS runtime generation is relocated hand-written `CSS_GENERATED_RS`, not grammar-derived parser emission. | `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:31-33`; `restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A4-generator-roundtrip.md:24-26` |
-| C-3 | disproved | CSS comparison is workload-mismatched: Track 1 summary/fact stream is not lightningcss CSSOM, and cssparser is faster in the same row. | `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:29`; `restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A2-admit-mechanism-integrity.md:45` |
-| C-4 | disproved | CSS equality oracle is marker/status checking, not equivalent CSS value equality. | `restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A2-admit-mechanism-integrity.md:46`; `restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A2-admit-mechanism-integrity.md:74-78` |
-| C-5 | spec_claims_unimplemented | CSS typed value/document/view/visitor API is missing and blocks CSS >SOTA admission. | `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:56-58`; `restart/skinny/tranches/sk-v15/SYNTHESIS.md:40-42` |
-| C-6 | pending | CSS parser retirement is coupled to typed CSS rebuild proof; deletion/retirement cannot outrun provider proof. | `restart/skinny/tranches/sk-v15/SYNTHESIS.md:91-96`; `restart/skinny/tranches/sk-v15/research/alpha/alpha-F-contract-draft.md:64-69` |
-| C-7 | pre-blocked | REDRESS-183, REDRESS-184, REDRESS-209, REDRESS-210, REDRESS-211, REDRESS-212, and REDRESS-213 are the SK-V14 wave-graph-cycle precedent: a delete or retirement wave cannot close unless the rebuild provider for that artefact has already landed or lands in the same wave. | `skinny/REDRESS.md:5090-5118`; `skinny/REDRESS.md:5171-5293`; `restart/skinny/tranches/sk-v15/SYNTHESIS.md:102-106`; `restart/skinny/tranches/sk-v15/research/alpha/alpha-F-contract-draft.md:64-69` |
+- **U-1 — totality `crates/core/` Pattern-H carry.** The skinny runtime tree has 40
+  hand-written per-grammar files (7 css_l4 + json + sheets_witness); the totality tree
+  `crates/core/src/runtime/{json,css_l4,google_sheets,bbnf,csv,ebnf,bnf,math,css_pretty}`
+  carries 7–10 hand-written `.rs` per grammar (≈70 files; the hand-written Pattern-H
+  carry surface is **67 files / 6867 LOC** — `find crates/core/src/runtime -mindepth 2
+  -name '*.rs' -not -path '*tape*'`). The 169956-LOC figure is the GENERATED
+  `crates/core/src/grammar/generated/*.rs` recognizer plane (a DIFFERENT tree, ~25× the
+  hand-written carry — `wc -l grammar/generated/*.rs = 169956`), detached here from the
+  runtime-file clause per CH4-V2-010; the 9×-scale carry-cost is the ≈6867-LOC hand-written
+  surface, not the generated plane. Whether SK-V19's totality fold inherits the SAME forked-emitter problem at
+  9× scale is UNKNOWN. **verify_action:** at SK-V19 entry, census `crates/core/src/runtime`
+  for line-1 `@generated` provenance + md5-distinctness across the 9 grammars, mirroring
+  the skinny P3 falsifier.
+- **U-2 — Sheets precedence-tower emits via the generator ONLY.** The grammar
+  (`crates/gorgeous/grammar/google-sheets/google-sheets.bbnf:36-67`; canonical root
+  copy `grammar/google-sheets/google-sheets.bbnf:103-137`) is structurally distinct
+  (7-level tower + cyclic `paren_expr`); whether G3 can render recursive
+  `CallRule`/`RepeatLoop` chains from
+  grammar structure is the PROVE make-or-break and is UNKNOWN until G3 exists.
+  **verify_action:** at PROVE, assert Sheets `generated.rs` md5-distinct from JSON∧CSS +
+  `sheets_grammar_shape==pratt-operator` + no `const.*_RS.*r#` blob.
+- **U-3 — the named-primitive neutrality proof.** Whether `css_balanced_component_scan`'s
+  recognizer SHELL gets a genuine non-CSS invoker (JSON `{}/[]` or Sheets `paren_expr`) in
+  THIS campaign, or is honestly demoted to `css_`-scoped, is UNKNOWN.
+  **verify_action:** at G2, grep the `.bbnf`-invocation census for a non-CSS caller of the
+  shell; absent one, require the `css_` rename.
+- **U-4 — load-depressed absolute Mbps re-lock.** The S-P1 CSS absolute ratios (bootstrap
+  2.190, tailwind 3.375, material 1.658, animate 2.101) ran under loadavg 4.35 and are
+  DIRECTIONAL, NOT re-locked (`SPEC.md:113-118`). Whether a quiet re-capture preserves the
+  crossing is UNKNOWN. **verify_action:** at H1, re-measure on the P2-survivor `css_canon_bench`
+  in a quiet plane; require ≥1 regular corpus (animate OR bootstrap) crossing >1.0× same-run.
+- **U-5 — REDRESS.md ledger coverage of SK-V16/V17.** The committed ledger ends at SK-V15 W11
+  (`REDRESS.md:6446-6465`); SK-V16/V17 redress is not in this file (their lessons reach this
+  digest only via the SK-V18 synthesis docs). Whether SK-V16/V17 carry an uncaptured
+  empirical reversal is UNKNOWN. **verify_action:** locate the SK-V16/V17 tranche REDRESS/HANDOFF
+  and reconcile against the SK-V18 S-P0 residual census before Pass Omega ratification.
 
-## Divergences Catalogued
+## LOCKS-Amendment Candidates
 
-| divergence | count bucket | loc_delta_estimate | risk | evidence | V1 impact |
-|---|---:|---:|---|---|---|
-| Proved/currently implemented skinny lessons that V1 may cite with scope qualifiers: JSON 51-row guard, W11W parse_only, strict product rows, hot-leaf attribution discipline, same tape substrate, aarch64 admission pin, root candidate process discipline. | 7 implemented | 0-120 doc LOC | medium if overgeneralized | `skinny/RESULTS.md:139-149`; `skinny/REDRESS.md:6254-6284`; `restart/skinny/tranches/sk-v15/research/p1/p1e-hot-leaf-attribution.md:31-35`; `restart/skinny/tranches/sk-v15/research/p2/p2d-substrate-tape.md:12-15`; `restart/skinny/tranches/sk-v15/HANDOFF.md:16-18`; `restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:22-32` | Scope these as JSON-empirical or process/substrate, not proof of CSS/generalized codegen. |
-| Disproved/unimplemented claims: CSS broadcast, CSS generated string, CSS comparator/equality mismatch, CSS Value API absence, Lock 14/16 gate holes, Pattern H ownership gap, Decision Engine scaffold, codegen grammar-family leaks, retained sidecars, harness/hash primitive misuse. | 10 unimplemented | See V4 receiver carrier `RC-01` through `RC-11` below. | high | `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:21-58`; `restart/skinny/tranches/sk-v15/audit-overfit/SYNTHESIS-AUDIT-OVERFIT.md:16-24`; `restart/skinny/tranches/sk-v15/research/p2/p2d-substrate-tape.md:50-58`; `restart/skinny/tranches/sk-v15/research/p1/p1e-hot-leaf-attribution.md:31-35` | V1 must not describe SK-V15 as at generalisation inflection until the receiver rows below close or record intrinsic blocks. |
-| Implementation/evidence exceeds old totality schema: CSS anti-broadcast telemetry fields, new CH3/CH5/CH7 addenda, and P1/P2 normalized evidence surfaces. | 3 impl_exceeds_spec | 200-600 doc/gate LOC | medium | `restart/skinny/tranches/sk-v15/SYNTHESIS.md:98-127`; `restart/skinny/tranches/sk-v15/research/alpha/alpha-A-results-extraction.md:48-62`; `restart/skinny/tranches/sk-v15/research/p1/p1e-hot-leaf-attribution.md:31-35` | V1 schema should absorb anti-broadcast fields, gate-exclusion reporting, and normalized hot-leaf evidence. |
-| Unknown/pending close surfaces: FNV quarantine, JSON c/B misses, CSS typed API/re-timing, Lock 14/16 gate restoration, Pattern H round-trip, Decision Engine emission diffs, grammar-neutral parse-that vocabulary, primitive same-wave consumers. | 8 unknown | See V4 receiver carrier `RC-01` through `RC-11` and the V4 primitive/kernel receiver table below. | high | `restart/skinny/tranches/sk-v15/SYNTHESIS.md:70-80`; `restart/skinny/tranches/sk-v15/research/p1/p1d-pmu-cycles.md:70-73`; `restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md:27-29`; `restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:24-32` | These are S-P3 / T-P3 routing inputs until a named receiver row carries executable proof or intrinsic-block evidence. |
-
-## V4 Receiver Cost Carrier
-
-| receiver | owner path / row | LOC range | risk | wave | hard cap | consumer / proof | route or revert disposition |
-|---|---|---:|---|---|---:|---|---|
-| RC-01 CSS broadcast telemetry | `C-1`, `CH5-V1-05`, `DEP-W1-CSS-BROADCAST` | 80-200 | high | W1 | 250 | Gate over `measurement_row_id`, `measurement_origin`, `broadcast_group_id`, `value_plane`, and duplicate timing signatures. | Collapse to one diagnostic aggregate or demote rows; no W8R live admit. |
-| RC-02 CSS typed Value provider | `C-5`, REBUILD-WAVE-E | 300-900 | high | W5 | 1200 | Typed CSS value/document/view/visitor output plus generated consumer tests. | Block CSS SOTA; old proof stays diagnostic. |
-| RC-03 CSS same-workload retime | `C-3`, `C-6`, W6 CSS retime | 160-340 | high | W6 | 500 | Fresh same-run cssparser typed comparator, distinct measurement ids, and retired old proof scans. | Keep CSS audit-demoted if typed retime is absent or mismatched. |
-| RC-04 Lock 14 / Lock 16 gate restoration | `SKV15-G-LOCK14-LOCK16-GATE-HOLES` | 120-420 | high | W2 | 420 | Gate prints included roots, exclusions, primitive source status, and strict checkasm/parity evidence. | Reject self-exempting gates; route source-present unwired primitives to manifest disposition. |
-| RC-05 Pattern H generated ownership | `SKV15-G-PATTERN-H-OWNERSHIP-GAP`; `1C-V1-D6` | 1,500-3,000 generator/provenance gate; 700-1,200 for any named runtime projection; 600-1,200 close transcript | high | W4 | 3,600 | Line-1 provenance, non-writing regen/check, `find ... | wc -l` remains 67, and explicit per-runtime owner rows when projection changes. | Header-only close rejects; destructive delete requires same-wave replacement proof. |
-| RC-06 Decision Engine emission | `SKV15-G-DECISION-ENGINE-SCAFFOLD` | 600-2,200 | high | W7-W9 | 2,200 | E-graph rewrite count, non-tautological CSP, no grammar-named facts, and generated runtime-relevant diffs. | Block shape-selection claims; no all-five lowerer close before W9 proof. |
-| RC-07 Codegen grammar-family leaks | `P1-1B-D8` / `P1-1B-D9` / `P1-1B-D10` | 450-1,000 | high | W3 | 1,200 | CSS plus Sheets or BBNF-self generated metadata proof; no new generic source branch for a receiver. | Revert or REDRESS any profile/template branch that lacks non-JSON proof. |
-| RC-08 FNV quarantine | `J-4`, W10 FNV guard | 80-220 | medium | W10 | 320 | Production `rg -n "fnv|FNV|input_fnv64|stream_fnv64"` scan plus adversarial strict-product fixtures. | Bench-only quarantine or delete; no production equality arbiter. |
-| RC-09 JSON c/B research | `J-5`, P1 PMU misses | 0-180 docs/research unless a primitive row owns code | medium | S-P1/S-P3 input | 180 | P1 rerun or existing PMU transcript tied to a named primitive row. | No implementation admit from c/B debt alone. |
-| RC-10 Parse-that vocabulary | P2-E gap rows | 250-700 docs/generator work across named vocabulary rows | medium-high | S-P3 shortlist then owning wave | 700 | Scalar oracle, non-JSON witness or scoped claim, REDRESS pre-block check, generated consumer. | Research-only unless a row below names executable consumer proof. |
-| RC-11 Primitive same-wave consumers | V4 primitive/kernel receiver table | 80-350 for a named consumer row | high | Owning wave from table | 350 | Scalar reference, aarch64 implementation or scalar-delegate decision, strict parity, and row maintain gate. | `wired`, `deleted`, `scalar-delegate-non-ASM`, `architecture-blocked-with-REDRESS`, or `research-only/rejected`. |
-
-## V2 Hardening Fold
-
-| fold | disposition |
-|---|---|
-| CH2-FOLD-004 | 1B pass-layer leaks `P1-1B-D9` and `P1-1B-D10` are now carried as grammar-neutral Lock 14 failures: recognizer mining and materialization role mining are JSON-shaped generic pass logic, not JSON-only empirical lessons. |
-| CH3-V1-005 | Added `C-7` wave-graph-cycle pre-block naming REDRESS-183/184/209..213 and binding `NEW-CH3-V5-01` dependency-table logic. |
-| CH4-V1-002 | Added LOC and risk fields to the divergence table. |
-| CH5-V1-05 | Broadcast CSS admits are treated as admission-plane dishonesty unless rows are explicitly aggregate or carry distinct `measurement_row_id` / `broadcast_group_id`. |
-| CH5-V1-04 | CSS source-sidecar comparator evidence is comparator-only and cannot be used as runtime substrate or CSS Value API proof. |
-
-## V4 Primitive / Kernel Receiver Table
-
-| primitive / kernel | source row | owning wave | consumer / proof | LOC / risk / hard cap | absent-consumer disposition |
-|---|---|---|---|---|---|
-| `BYTE_CLASS_FROM_TABLE_64` | P2-B candidate inventory | S-P3 shortlist then W7/W8 if selected | Scalar byte-class oracle, aarch64 TBL/TBX or scalar-delegate path, generated parser consumer, strict parity. | 80-180 / medium-high / 250 | research-only unless consumer row names grammar-neutral byte-class use. |
-| `BYTE_CLASS_FROM_EQ_SET_64` | P2-B candidate inventory | S-P3 shortlist then W7/W8 if selected | Scalar equality-set oracle, NEON compare/table path or scalar-delegate, generated consumer, row maintain gate. | 80-180 / medium-high / 250 | scalar-delegate-non-ASM or research-only. |
-| `BITMAP_PREFIX_XOR_64` | P2-B / P2-C REDRESS 88 | blocked unless fresh P1 names consumer | Scalar quote-mask oracle and strict parity; PMULL hot-body cannot be default without fresh row proof. | 80-220 / high / 300 | architecture-blocked-with-REDRESS or scalar-delegate. |
-| `BITMAP_NEXT_SET_BIT` / `BULK_EMIT_POSITIONS_64` | P2-B / P2-C REDRESS 89 | blocked unless fresh P1 names consumer | Scalar next-bit/bulk-emission oracle; CSSC CTZ availability alone is not proof. | 80-220 / high / 300 | architecture-blocked-with-REDRESS or scalar-delegate. |
-| `EOB_PAD_CLAMP` | P2-B support inventory | no SK-V15 admit wave | Existing support only; no parser primitive close row. | 0-80 / low / 120 | support inventory; not an implementation candidate. |
-| `escape_mask_64` | P2-B / P2-F revised row | owning wave only with string consumer | Scalar escape mask oracle, generated string consumer, no cross-call carry. | 120-260 / high / 350 | research-only or scoped JSON guard. |
-| UTF-8 validation run | P2-B / P2-E `validate_utf8_run` | owning wave only with non-JSON witness | Scalar UTF-8 oracle, non-JSON fixture or scoped JSON claim, generated consumer diff. | 120-300 / high / 350 | research-only if no consumer. |
-| Unicode escape SIMD | P2-B string/unicode row | owning wave only with generated string consumer | Scalar unicode escape oracle, aarch64 implementation or scalar-delegate, strict product guard. | 160-350 / high / 350 | scoped JSON guard or research-only. |
-| Long-string scanner | P2-B / P2-E `escaped_literal_segments` | owning wave only with string hot-leaf proof | Scalar segment oracle, no retained sidecar, same-wave parser consumer. | 120-320 / medium-high / 350 | research-only without hot-leaf proof. |
-| Direct cursor / whitespace scanner | P2-B direct cursor row | owning wave only if substrate schedule is named | `DirectBuild` / `TapeEmit` schedule proof, no parser-owned cursor list. | 120-260 / medium-high / 350 | reject as retained cursor replay if no schedule proof. |
-| Tape/allocation pressure helper | P2-B allocation/tape row | W5/W7/W8 only with emitted consumer | Tape capacity oracle, generated consumer, no retained capacity sidecar. | 80-240 / medium / 300 | scalar/runtime-local helper only. |
-| Product-builder / harness hash rows | P2-B rejected rows; FNV W10 | W10 for quarantine only | Production scan plus adversarial strict-product fixtures. | 80-220 / medium / 320 | delete or bench-only quarantine; never production equality proof. |
-| `skip_byte_set_run` | P2-E parse-that gap | S-P3 shortlist then owning wave | Scalar oracle, non-JSON receiver, generated consumer, row maintain gate. | 120-260 / medium-high / 350 | research-only if not selected. |
-| `classify_local_block_64` | P2-E parse-that gap | S-P3 shortlist then owning wave | Scalar classifier oracle, local mask lifetime, generated consumer. | 120-280 / medium-high / 350 | research-only if no consumer. |
-| `bounded_plain_literal_span` | P2-E parse-that gap | S-P3 shortlist then owning wave | Scalar literal-span oracle, bounded output, no retained sidecar. | 120-260 / medium / 350 | research-only if no consumer. |
-| `validate_utf8_run` | P2-E parse-that gap | S-P3 shortlist then owning wave | Same proof as UTF-8 validation run, with grammar-source facts for valid spans. | 120-300 / high / 350 | research-only if no consumer. |
-| `digit_run_span_accumulate` | P2-E parse-that gap | blocked unless fresh P1 names number hot leaf | Scalar digit accumulator oracle plus non-JSON or scoped proof. | 120-260 / medium / 350 | research-only; stale numeric/digit route remains blocked. |
-| `escaped_literal_segments` | P2-E parse-that gap | S-P3 shortlist then owning wave | Scalar escaped-segment oracle, string consumer, no sidecar identity. | 120-320 / high / 350 | research-only if no consumer. |
-
-## Gaps / Missing Primitives
-
-| gap | status | evidence | verify_action |
-|---|---|---|---|
-| CSS typed value/document/view/visitor surface. | UNKNOWN / required | CSS Value API is a close gate (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:40-42`), and A4 shows current CSS parse/full-parse outputs are strings/counters (`restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A4-generator-roundtrip.md:25`). | Build REBUILD-WAVE-E; verify a CSS row reports typed value/CSSOM-equivalent output and value equality against cssparser before any CSS SOTA admit. |
-| Anti-broadcast RESULTS/gate telemetry. | UNKNOWN / required | SK-V15 adds `measurement_row_id`, `measurement_origin`, `value_plane`, comparator workload, generator source, scan scope, exclusion report, and `broadcast_group_id` (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:119-127`; `restart/skinny/tranches/sk-v15/research/alpha/alpha-A-results-extraction.md:48-62`). | Gate must reject one-to-N measurement stamps unless explicitly aggregate; verify CSS 24 rows collapse or carry 24 distinct measurement ids. |
-| Lock 14 / Lock 16 full-surface gate restoration. | UNKNOWN / required | A3 says generic scan roots omit leak-bearing codegen roots and Lock 16 lacks manifest/strict command enforcement (`restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A3-lock14-lock16-generic-scan.md:26-31`). | PRUNE-WAVE-B should scan all generic roots, print exclusions as findings, require strict checkasm text, and produce a source-present primitive manifest. |
-| Pattern H generated ownership and round-trip proof. | UNKNOWN / required | Root runtime count remains 67 with zero generated headers and no non-writing root runtime round-trip gate (`restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A4-generator-roundtrip.md:17-18`; `restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A4-generator-roundtrip.md:47`). | PRUNE-WAVE-D must preserve count 67, add line-1 provenance, and provide delete+regen or check proof from one grammar-neutral generator. |
-| Decision Engine runtime-relevant emission. | UNKNOWN / required | A5 requires rewrite count >=1, CSP that can alter/reject selection, no grammar-named facts, and five real lowerers (`restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A5-decision-engine-fold.md:44-50`). | REBUILD-WAVE-F must produce a generated runtime diff when selected BackendShape changes; verify `rg` finds no JSON/CSS decision facts. |
-| Grammar-neutral parse-that Layer-1 vocabulary. | UNKNOWN / research input | P2-E identifies missing `skip_byte_set_run`, `classify_local_block_64`, `bounded_plain_literal_span`, `validate_utf8_run`, `digit_run_span_accumulate`, and `escaped_literal_segments` (`restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md:27-55`, `restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md:57-221`). | S-P3 should only shortlist rows with scalar oracle, non-JSON witness or scoped claim, REDRESS pre-block review, and same-wave consumer. |
-| SIMD/ASM primitive manifest and same-wave consumer. | UNKNOWN / required for SIMD admits | P2-B defines scalar oracle, target path, checkasm, same-wave consumer, and manifest gates (`restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:22-32`). | For each source-present primitive, close as `wired`, `deleted`, `scalar-delegate-non-ASM`, or `architectural-block-with-REDRESS`; no orphan kernel may close. |
-| FNV closed-enum production guard. | UNKNOWN / required | SK-V15 close requires W11L/W11N/W11O FNV products to remain bench-only and comparator hardening to catch sidecar coupling (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:48`; `restart/skinny/tranches/sk-v15/research/alpha/alpha-E-candidate-shortlist.md:20`). | REBUILD-WAVE-G should assert no FNV-keyed arbiter in production runtime and add adversarial strict-product fixtures. |
-
-## Open Questions
-
-| question | status | verify_action |
-|---|---|---|
-| Does totality V1 already distinguish JSON-empirical proof from grammar-neutral proof? | UNKNOWN | Check `restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`, and `restart/locks/LOCKS.md` for language equivalent to T-P1 CH2's required separation (`restart/prompts/totality/PASS-1-EXCAVATION.md:110-114`) and SK-V15's JSON-guard/CSS-demoted split (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:55-68`). |
-| Does totality V1 mark CSS L4 as audit-demoted rather than admitted? | UNKNOWN | Verify no V1 surface cites `skinny/RESULTS.md:112-135` CSS rows as independent admits without the PASS-IMPL demotion evidence (`restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:21-31`). |
-| Does V1 require anti-broadcast telemetry in RESULTS/gate schema? | UNKNOWN | Verify schema includes `measurement_row_id`, `measurement_origin`, `value_plane`, `gate_exclusion_report`, and `broadcast_group_id` or equivalent fields (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:119-127`). |
-| Does V1 require CSS typed Value API before CSS SOTA claims? | UNKNOWN | Confirm V1 blocks `CssFullParseSummary`/fact-stream output as admission evidence until typed CSS value/document/view output exists (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:40-42`; `restart/audit/skinny-impl-overfit/V1/CONSOLIDATED-AUDIT.md:56-58`). |
-| Does V1 encode Lock 14 / Lock 16 gates that scan exclusions as findings? | UNKNOWN | Compare lock wording and gate specs against SK-V15 `NEW-CH7-V5-03` and PRUNE-WAVE-B (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:107-110`; `restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A3-lock14-lock16-generic-scan.md:100-110`). |
-| Does V1 forbid retained structural sidecars while permitting same-call masks consumed into the tape/event loop? | UNKNOWN | Verify Lock 1/V1 substrate text matches P2-D's allowed candidates and explicit non-candidate class (`restart/skinny/tranches/sk-v15/research/p2/p2d-substrate-tape.md:34-42`; `restart/skinny/tranches/sk-v15/research/p2/p2d-substrate-tape.md:50-58`). |
-| Does V1 require scalar oracle + strict checkasm + same-wave consumer for SIMD/ASM admits? | UNKNOWN | Verify Lock 16 or totality research gates encode the five-stage P2-B process (`restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:22-41`). |
-| Does V1 route Decision Engine as scaffold until runtime diffs prove shape selection drives emission? | UNKNOWN | Verify totality codegen claims do not credit zero-rewrite egraph/CSP/lowerer stubs as load-bearing; require A5 acceptance tests (`restart/skinny/tranches/sk-v15/audit-overfit/sk-v15-audit-overfit-A5-decision-engine-fold.md:44-52`). |
+NONE (0). 1D surfaces zero LOCKS-amendment candidate this pass. Every SK-V18 divergence
+is dispositioned by an existing SK-V18 wave (P1–P5 / G1–G6 / PROVE / H1) under the
+already-ratified 16 locks; the §6 named-primitive escape and the R16 row-collapse recipe
+are gate-mechanism precision pins (T-P3 disposition), not lock amendments. The 1E agent
+holds amendment-candidate authority; 1D defers.

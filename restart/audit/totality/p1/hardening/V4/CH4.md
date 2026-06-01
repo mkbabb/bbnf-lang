@@ -1,100 +1,93 @@
-# SK-V15 T-P1 V4 CH4 Cost Hardening
+# SK-V18 T-P1 V4 CH4 Cost Hardening
 
-Verdict: ACCEPT
+Verdict: REVISE
 
-Scope: CH4 cost/risk/wave/hard-cap review over the SK-V15 T-P1 V4 packet,
-with the V4 dispatch focus on the 1D receiver cost carrier and
-primitive/kernel receiver table. This replaces stale prior-cycle content in
-place. No inventories, spec surfaces, source files, staging, or commits were
-changed by this lens.
+Scope: CH4 COST lens (cycle V4) over the live SK-V18 T-P1 inventories
+(`1A`/`1B`/`1C`/`1D`/`1E`/`1F-coherence` + `1F-anti-pattern`/`1F-past-corpora`).
+This file replaces stale prior-campaign (SK-V15) CH4 content in place per the §3Z
+cycle protocol. No source files, inventories, staging, or commits were changed by
+this lens.
 
-## Evidence
+## Lens
 
-Authority checked:
+Per the workflow CH4 overlay (`skv18-t-p1-workflow.mjs:53`) +
+`restart/prompts/totality/PASS-1-EXCAVATION.md:121-123`: every divergence carries
+a realistic LOC-delta + risk class; 1E (and 1A) amendment candidates carry a
+wave-alignment hint + path:line; a candidate without supporting evidence is
+REVISE. The most load-bearing cited path:line cost rows are re-grounded on disk.
 
-- `restart/prompts/totality/PASS-1-EXCAVATION.md:121-123` requires every
-  divergence to carry realistic LOC/risk and every 1E amendment candidate to
-  carry wave-alignment evidence.
-- `restart/prompts/ORCHESTRATOR.md:81-88` defines CH4 COST as LOC budget,
-  risk class, wave alignment, hard cap, and same-wave consumer per
-  kernel/primitive.
-- `restart/prompts/ORCHESTRATOR.md:110-120` requires CHALLENGE results to fold
-  before the next cycle and uses two consecutive >=95% cycles for convergence.
-- `restart/audit/totality/p1/hardening/V4/CHALLENGE-CONTEXT.md:42-50` assigns
-  `T-P1-V4-F02` and `T-P1-V4-F03` to `1D-skinny-lessons.md`.
-- `restart/audit/totality/p1/hardening/V4/CHALLENGE-CONTEXT.md:62-64` narrows
-  this lens to whether the receiver cost carrier and primitive/kernel receiver
-  table remove the V3 class-level cost gaps, with no unbounded, paper-only, or
-  non-enumerated primitive route surviving.
-- `restart/audit/totality/p1/hardening/HARDENING-T-P1-V3-CONSOLIDATED.md:28`
-  records the V3 CH4 REVISE fold target;
-  `restart/audit/totality/p1/hardening/HARDENING-T-P1-V3-CONSOLIDATED.md:38-39`
-  define the required V4 receiver carrier and primitive/kernel enumeration.
-- `restart/audit/totality/p1/hardening/V3/CH4.md:50-51` names the two V3 CH4
-  blockers, and `restart/audit/totality/p1/hardening/V3/CH4.md:58-65` states
-  the required fold.
+## Prior-Cycle Fold Discharge (V3 REVISEs verified closed this pass)
 
-Live packet evidence:
+V3 CH4 returned 4 REVISE (CH4-V3-006/007/008/010). All four are DISCHARGED live:
 
-- `restart/audit/totality/p1/1D-skinny-lessons.md:48-51` records the V4 fold
-  of CH4-V2 and CH4-V3 cost/primitive requirements.
-- `restart/audit/totality/p1/1D-skinny-lessons.md:166` routes the old
-  unimplemented class bucket to the V4 receiver carrier, and
-  `restart/audit/totality/p1/1D-skinny-lessons.md:168` routes unknown primitive
-  surfaces to the receiver carrier plus primitive/kernel table.
-- `restart/audit/totality/p1/1D-skinny-lessons.md:170-184` contains
-  `RC-01` through `RC-11`, each with owner path/row, LOC range, risk, wave,
-  hard cap, consumer/proof, and route/revert disposition.
-- `restart/audit/totality/p1/1D-skinny-lessons.md:196-217` enumerates the
-  primitive/kernel rows required by the V3 fold.
-- `restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:24-32`
-  defines scalar oracle, SIMD/ASM path, checkasm, same-wave consumer, and
-  manifest/locks as mandatory admission stages;
-  `restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:41` states
-  every source-present primitive must close as `wired`, `deleted`,
-  `scalar-delegate-non-ASM`, or architecture-blocked with REDRESS, and orphan
-  intrinsic/ASM files do not close Lock 16.
-- `restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:47-58`
-  lists the P2-B source primitive/process rows that V4 must route.
-- `restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md:31-55`,
-  `restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md:57-75`,
-  `restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md:90-123`,
-  `restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md:154-217`,
-  and `restart/skinny/tranches/sk-v15/research/p2/p2e-parse-that-gaps.md:223-236`
-  list the P2-E parse-that vocabulary gaps and grammar-neutrality constraints.
-- `restart/audit/totality/p1/1E-locks-evidence.md:195-200` independently
-  requires Lock 16 gate output to classify each source-present primitive as
-  wired, deleted, scalar-delegate non-ASM, or architecture-blocked with REDRESS.
-- `restart/audit/totality/p1/1F-coherence-scan.md:128` extends the sidecar
-  close grep guard to include FNV/hash surfaces, and
-  `restart/audit/totality/p1/1F-coherence-scan.md:142` routes CSS generated FNV
-  hashes to W10 quarantine rather than substrate/equality proof.
+| V3 REVISE | target | discharge evidence |
+|---|---|---|
+| CH4-V3-006 | D-1E-V5-04 dangling `1A 1A-DIV` x86 cross-ref | `1E-locks-evidence.md:108` now reads "dangling `1A 1A-DIV reuse` cross-ref struck per CH4-V3-006: `1A-substrate-evidence.md` has ZERO x86 content"; the live sources are `1F-anti` R8 (canonical −4500) + the in-cell disk figure (28/4401). The phrase survives only as a documented STRIKE record, not a live citation. |
+| CH4-V3-007 | 1A amendment candidate unpriced | `1A-substrate-evidence.md:180` `1A-LOCK1-AMEND-001` now carries `loc_delta ≈ −1..+5 LOC` + wave hint `SK-V19 LOCKS reconcile / Pass Omega` + a cross-link to the 1E sibling so both amendment surfaces share one priced disposition (CH4-V3-007 explicitly cited). |
+| CH4-V3-008 | 1C D8 Sheets cost mis-keyed to G3 `≤450` | `1C-runtime-evidence.md:66` re-keyed to `SPEC.md:443` PROVE = `≈ +200 Sheets adoption`; live-verified `SPEC.md:443` carries `≈ +200 Sheets adoption (≈+30 grammar-root + xtask; the rest generated...)` verbatim. G3 `≤450` is the separate `:440` un-fork band. |
+| CH4-V3-010 | 1C D6 unpriced de-dup envelope | `1C-runtime-evidence.md:60` now carries `≈ −4000..−5000` for the 9×→1× shared-module fold of the 6867-LOC Pattern-H surface, with the SK-V19 receiver and the P3-as-analogy disclaimer preserved (CH4-V3-010 cited). Band is conservative-realistic: 6867·8/9 ≈ 6104 if all 67 files were pure duplicates; −4000..−5000 sits honestly below that ceiling. |
 
-Material grep check:
+## Spot-Verification (load-bearing cost rows re-grounded LIVE this pass)
 
-- A targeted scan over the six live inventories found no residual old V3
-  unbounded phrases `10,000+`, `1,500-8,000`, `per accepted primitive`, or
-  `primitive same-wave consumers 80-350 LOC each`.
-- The remaining `source-present primitive` language is gate/manifest language,
-  not an admit route: `restart/audit/totality/p1/1D-skinny-lessons.md:177`,
-  `restart/audit/totality/p1/1D-skinny-lessons.md:225`,
-  `restart/audit/totality/p1/1D-skinny-lessons.md:229`;
-  `restart/audit/totality/p1/1E-locks-evidence.md:200`;
-  `restart/audit/totality/p1/1F-coherence-scan.md:77`.
+| cost claim | inventory rows | live verification | result |
+|---|---|---|---|
+| `CSS_GENERATED_RS` const = 911 LOC (701-1611) | 1C D1, 1E D-1E-V5-01, 1F COH18-003 | `rg -n 'const CSS_GENERATED_RS'` → `:701` | CONFIRMED |
+| x86 = 28 files / 4401 LOC / ≈ −4500 prune | 1D D-4, 1E D-1E-V5-04, 1F COH18-009, 1F-anti R8 | `find …/x86_64 …/ext/x86 -type f \| wc -l = 28`; `cat \| wc -l = 4401` | CONFIRMED |
+| builder.rs = 817 LOC (>500 cap) | 1E D-1E-V5-13 | `wc -l crates/core/src/runtime/css_l4/builder.rs = 817` | CONFIRMED ("CH4 EXACT") |
+| Pattern H = 71 total / 67 per-grammar | 1E D-1E-V5-06, 1F COH18-007 | `find … = 71`; `-not -path '*tape*' = 67` | CONFIRMED |
+| 1C D6 surface = 6867 LOC across 67 files | 1C D6, 1D U-1 | `find … -not -path '*tape*' \| cat \| wc -l = 6867` | CONFIRMED |
+| SPEC G3 un-fork band = `≤450` (`:440`) | 1B D2 | `sed -n '440p' SPEC.md` = G3 "≤450 hand source/test/gate LOC" | CONFIRMED |
+| SPEC PROVE Sheets = `≈ +200` (`:443`) | 1C D8 | `sed -n '443p' SPEC.md` = PROVE "≈ +200 Sheets adoption" | CONFIRMED (re-key correct) |
+| `StructLayout` 960× rename surface | 1E D-1E-V5-12 | crate-wide `rg -c StructLayout` sum = 960 | CONFIRMED (EXACT) |
+| `strategy.rs` 9 grammar-named idents | 1F COH18-005/012, 1F-anti | idents rows at `:137,:143,:149,:155,:161,:167,:173,:179,:185` (9) | CONFIRMED |
+| `css_types.rs` = 66 LOC | 1F COH18-006 | `wc -l = 66` | CONFIRMED |
+| prune ladder P1−4500 / P2−700 / P3−5460 / net−10800 | 1D G-13, 1F-anti Net-LOC table | `SYNTHESIS-AUDIT-OVERFIT.md:153,162,169` carry the figures verbatim | CONFIRMED |
+
+The cost spine of this packet is, on its load-bearing rows, materially accurate.
+Twelve independent cost facts re-grounded clean, the four V3 REVISEs all
+discharged, and the prune ladder traces verbatim to source. The fabrication
+suspicion is falsified on every spot-checked row (CH4-V4-009).
 
 ## Findings
 
-| id | disposition | finding | evidence |
-|---|---|---|---|
-| CH4-V4-001 | ACCEPT | The V4 receiver cost carrier discharges the V3 class-level 1D cost bucket. | V3 required splitting the class rows into keyed receiver rows with owner, LOC, risk, wave, hard cap, same-wave proof, and route/revert disposition (`restart/audit/totality/p1/hardening/HARDENING-T-P1-V3-CONSOLIDATED.md:38`; `restart/audit/totality/p1/hardening/V3/CH4.md:50`, `restart/audit/totality/p1/hardening/V3/CH4.md:58-62`). V4 routes the former aggregate rows to `RC-01` through `RC-11` at `restart/audit/totality/p1/1D-skinny-lessons.md:166`, `restart/audit/totality/p1/1D-skinny-lessons.md:168`, and defines those receivers at `restart/audit/totality/p1/1D-skinny-lessons.md:170-184`. The required buckets are present: CSS broadcast/value/re-time (`RC-01`..`RC-03`), Lock 14/16 gates (`RC-04`), Pattern H (`RC-05`), Decision Engine (`RC-06`), codegen leaks (`RC-07`), FNV quarantine (`RC-08`), JSON c/B research (`RC-09`), parse-that vocabulary (`RC-10`), and primitive same-wave consumers (`RC-11`). |
-| CH4-V4-002 | ACCEPT | No receiver row is unbounded or paper-only. | Each receiver row at `restart/audit/totality/p1/1D-skinny-lessons.md:174-184` has a bounded LOC range and hard cap plus proof/disposition text. The largest Pattern H row is no longer open-ended: `RC-05` sets generator/provenance, named projection, and close-transcript ranges plus a 3,600 LOC cap and requires explicit per-runtime owner rows when projection changes (`restart/audit/totality/p1/1D-skinny-lessons.md:178`). FNV is bounded and quarantined by production scan plus adversarial fixtures (`restart/audit/totality/p1/1D-skinny-lessons.md:181`), not accepted as an equality arbiter. JSON c/B remains docs/research unless a primitive row owns code (`restart/audit/totality/p1/1D-skinny-lessons.md:182`). |
-| CH4-V4-003 | ACCEPT | The primitive/kernel receiver table enumerates every V3-required named route. | V3 required source-present primitive/kernel rows instead of class rows (`restart/audit/totality/p1/hardening/HARDENING-T-P1-V3-CONSOLIDATED.md:39`; `restart/audit/totality/p1/hardening/V3/CH4.md:51`, `restart/audit/totality/p1/hardening/V3/CH4.md:63-65`). V4 lists `BYTE_CLASS_FROM_TABLE_64`, `BYTE_CLASS_FROM_EQ_SET_64`, `BITMAP_PREFIX_XOR_64`, `BITMAP_NEXT_SET_BIT` / `BULK_EMIT_POSITIONS_64`, `EOB_PAD_CLAMP`, `escape_mask_64`, UTF-8 validation, Unicode escape SIMD, long-string scanner, direct cursor/whitespace, tape/allocation pressure, product-builder/hash rows, and the six parse-that gaps `skip_byte_set_run`, `classify_local_block_64`, `bounded_plain_literal_span`, `validate_utf8_run`, `digit_run_span_accumulate`, and `escaped_literal_segments` at `restart/audit/totality/p1/1D-skinny-lessons.md:200-217`. |
-| CH4-V4-004 | ACCEPT | Primitive rows carry the CH4 fields and block non-enumerated admit routes. | The primitive table header requires source row, owning wave, consumer/proof, LOC/risk/hard cap, and absent-consumer disposition (`restart/audit/totality/p1/1D-skinny-lessons.md:198`). Rows `restart/audit/totality/p1/1D-skinny-lessons.md:200-217` populate those fields. The table does not admit by declaration: PMULL/CSSC rows are architecture-blocked or scalar-delegate unless fresh consumer proof lands (`restart/audit/totality/p1/1D-skinny-lessons.md:202-203`); `EOB_PAD_CLAMP` is support inventory only (`restart/audit/totality/p1/1D-skinny-lessons.md:204`); `escape_mask_64`, UTF-8, Unicode escape, long-string, and parse-that rows remain research-only without consumer proof (`restart/audit/totality/p1/1D-skinny-lessons.md:205-208`, `restart/audit/totality/p1/1D-skinny-lessons.md:212-217`); product-builder/hash rows are delete or bench-only quarantine and never production equality proof (`restart/audit/totality/p1/1D-skinny-lessons.md:211`). |
-| CH4-V4-005 | ACCEPT | The packet keeps primitive work as required/UNKNOWN until proof exists, which is the correct CH4 cost posture rather than paper-close. | 1D states candidate primitives are research gaps, not admits (`restart/audit/totality/p1/1D-skinny-lessons.md:117`), and records G-8/G-9 as pending with scalar oracle, strict checkasm, same-wave consumer, and grammar-neutral vocabulary requirements (`restart/audit/totality/p1/1D-skinny-lessons.md:145-146`). The Gaps table preserves Lock 14/16 restoration, parse-that vocabulary, and SIMD/ASM manifest as UNKNOWN/required inputs (`restart/audit/totality/p1/1D-skinny-lessons.md:225`, `restart/audit/totality/p1/1D-skinny-lessons.md:228-229`). P2-B says checkasm commands are necessary but not sufficient and source-present primitives must receive an explicit final disposition (`restart/skinny/tranches/sk-v15/research/p2/p2b-dav1d-process.md:41`). 1E's Lock 16 gate carrier repeats the same disposition requirement (`restart/audit/totality/p1/1E-locks-evidence.md:195-200`). |
-| CH4-V4-006 | ACCEPT | FNV/hash and sidecar-adjacent primitive risks are cost-bounded and fenced, not laundered into a primitive close. | 1D's FNV receiver is `RC-08`, bounded at 80-220 LOC / 320 cap, with production scan plus adversarial fixtures and bench-only quarantine/delete disposition (`restart/audit/totality/p1/1D-skinny-lessons.md:181`). Product-builder/hash rows in the primitive table route to W10 quarantine and explicitly forbid production equality proof (`restart/audit/totality/p1/1D-skinny-lessons.md:211`). 1F identifies generated CSS runtime FNV hashes as hash-sidecar/telemetry coupling and says they are not CSS Value API proof, retained identity, same-substrate evidence, or a production equality arbiter (`restart/audit/totality/p1/1F-coherence-scan.md:89`, `restart/audit/totality/p1/1F-coherence-scan.md:142`, `restart/audit/totality/p1/1F-coherence-scan.md:165`). |
+| id | disposition | finding | evidence | required correction |
+|---|---|---|---|---|
+| CH4-V4-001 | ACCEPT | All four V3 CH4 REVISEs are discharged in place: D-1E-V5-04 cross-ref struck, the 1A amendment priced, 1C D8 re-keyed to PROVE, 1C D6 bounded. The packet converged exactly where V3 directed. | Discharge table above; each fold carries its CH4-V3-NNN citation in the inventory text. | None. |
+| CH4-V4-002 | ACCEPT | The 1E divergence carrier (`D-1E-V5-01..13`) is cost-complete: every row carries a loc_delta cell + a lock-pressure risk class, and every reused estimate names its cross-inventory sibling explicitly (the `:100-101` "REFERENCE the cross-inventory sibling … no new measurement" disclaimer is honest cost hygiene). | `1E-locks-evidence.md:103-117`; e.g. D-1E-V5-02 `≈ −fork-arms (1B D1)` ties to `1B-codegen-evidence.md:67` `≈ −910 courier + fork-arm delete`; D-1E-V5-05 `gate-only (no body LOC)` is the correct cost class for a scan-root config change; D-1E-V5-08 `≈0 rename-only`. | None. |
+| CH4-V4-003 | ACCEPT | All seven 1E LAC candidates carry a wave-alignment hint AND a supporting path:line evidence cell. | `1E-locks-evidence.md:146-152` — wave hints `G2∧G1`, `G3∧P3`, `G2∧G6`, `P1`, `G1∧G2`, `P4 (MUST land before G2/G3)`, `totality-core census / SK-V19 adoption`; each evidence cell cites a concrete SPEC/research path:line. | None. |
+| CH4-V4-004 | ACCEPT | 1B prices the G3 un-fork honestly with a dual-posture band keyed to the WIRE-vs-real-bodies fork; the prior uncited `+400..+1200` figure is removed (CH4-V2-008 discharged). | `1B-codegen-evidence.md:82` D2 cites `≤450` (`SPEC.md:440`, WIRE) OR `600-1400 LOC` (`ARCHITECTURE.md:1280-1282`, intrinsic-blocked); both live-verified; the deleted `+400..+1200` greps to 0 in SPEC. | None. |
+| CH4-V4-005 | ACCEPT | The 1A divergence table is cost-complete: all 8 `1A-DIV-001..008` rows carry a `loc_delta_estimate` + a `risk` column with realistic bands (BIR 20-vs-13 = 600-1,200 high; third-cursor = 400-900 medium/high; CSS config row = 20-80 low/medium). | `1A-substrate-evidence.md:102-111`; `1A-DIV-006` third-cursor 400-900 LOC re-grounds against the three live cursor carriers (retained/runtime-direct/codegen). | None. |
+| CH4-V4-006 | ACCEPT | 1D G-13 prune ladder + U-1 carry-cost are fully source-cited, not recalled: P1−4500/P2−700/P3−5460/net−10800 trace to `SYNTHESIS-AUDIT-OVERFIT.md:153-169` verbatim, and U-1 keeps 169956 (generated plane) detached from the 6867-LOC hand-written carry (CH4-V2-010 held). | `1D-skinny-lessons.md:209` (G-13) + `:213-225` (U-1); source figures re-grounded this pass; live `find … = 6867 LOC` matches the carry figure exactly. | None. |
+| CH4-V4-007 | REVISE | `COH18-015` (the simd-scan scanner-asymmetry divergence) carries a risk class (`medium-high`) and a wave hint (`SK-V19 scanner-unification decision`) but NO LOC-delta number — the only divergence-table row in the packet whose cost cell omits a band. It is a late-cycle addition NOT in `first_cycle_additions` (COH18-001..010), so it never reached the V2/V3 CH4 cost fold and escaped pricing. The underlying surface is bounded and pricable: `crates/simd-scan/src/{index.rs (103), lib.rs (114)}` = 217 LOC plus the 8/9 generated-grammar `OnceCell<StructuralIndex>` emission sites. | `1F-coherence-scan.md:100` — COH18-015 LOC/risk cell = "renamed/parallel-scanner check; SK-V19 scanner-unification decision; medium-high" (no number); live `wc -l crates/simd-scan/src/index.rs lib.rs = 217`; consumers `crates/core/src/grammar/generated/json.rs:701,:719,:732` + emitter `support.rs:67`. | Add a realistic LOC-delta band to COH18-015's cost cell (the SK-V19 scanner-unify is a ≈217-LOC probe-API reconcile + the 8/9 generated-grammar emission-site re-route; a decision/reconcile band keyed to that surface, e.g. ≈ +20..+217 unify-or-rename), matching the band discipline the other 14 COH18 divergence rows already carry. |
+| CH4-V4-008 | REVISE | The simd-scan / `OnceCell` probe-API surface is catalogued in THREE places that all route to the SAME SK-V19 scanner-unification disposition, yet NONE carries a shared priced LOC-delta: `1F-coherence` COH18-015 (no band), the `1F-anti` OnceCell row (priced only as a "reconcile burden", no number), and the `1E` line-158 carry (a classification carry, no loc_delta). The lens requires a divergence-bearing cross-document surface to share one priced disposition (the discipline CH4-V3-007 enforced for the 1A↔1E amendment siblings). | `1F-coherence-scan.md:100` (COH18-015, no LOC); `1F-anti-pattern.md:43` ("the SK-V19-adoption Lock-1 reconcile burden" — no number); `1E-locks-evidence.md:158` ("SK-V19-adoption Lock-1 classification carry … must be classified at SK-V19 adoption" — no loc_delta). | Cross-link the three rows to ONE priced SK-V19 scanner-unification disposition (the 217-LOC probe-API surface), as the 1A↔1E amendment siblings were cross-linked per CH4-V3-007. A named surface routed across three inventories with zero shared priced delta is a class-level envelope, not a bounded receiver. |
+| CH4-V4-009 | REVISE | `D-1E-V5-11` (`css_balanced_component_scan` neutrality obligation) prices its build cost as `new-primitive (G2 build; lock-clause +text)` — it names the owning wave (G2) but does NOT carry G2's `≤450` band inline, unlike its sibling D-1E-V5-09 which carries an explicit `+20..+80`. SPEC G2 (`:439`) is the named owner with a `≤450` band; the row leaves the build delta unpriced where the band is available. | `1E-locks-evidence.md:115` D-1E-V5-11 cost cell = "new-primitive (G2 build; lock-clause +text)"; live `SPEC.md:439` G2 = "≤450 hand source/test/gate LOC; new `lower/css_scan.rs` + `css_scan_direct.rs` + primitive shell + arg-derivation". Contrast D-1E-V5-09 `:113` which carries `+20..+80`. | Import the G2 `≤450` band into D-1E-V5-11's cost cell (e.g. "new-primitive ≤450 LOC / G2 build, `SPEC.md:439`; lock-clause +text"), so the row carries a realistic LOC-delta number, not only a wave pointer. |
+| CH4-V4-010 | REJECT | The latent CH4 suspicion that any cited LOC is recalled/fabricated as a number is FALSIFIED for every load-bearing figure spot-verified this pass. A blanket "fabricated-LOC" REVISE would be uncited. | The verbatim disk match on x86 28/4401, builder 817, CSS courier 911-span, Pattern-H 71/67, D6 surface 6867, StructLayout 960, strategy idents ×9, css_types 66, SPEC G3 `:440` `≤450`, SPEC PROVE `:443` `≈ +200`, and the prune ladder verbatim at `SYNTHESIS-AUDIT-OVERFIT.md:153-169`. | None — the falsifying evidence is the verbatim disk match on every spot-checked row. |
 
-## Required Fold
+## Tally Rationale
 
-None. The V4 receiver carrier and primitive/kernel receiver table remove the V3
-CH4 class-level cost gaps. No unbounded, paper-only, or non-enumerated
-primitive route survives in the live V4 packet.
+Ten cost-lens findings: 6 ACCEPT, 3 REVISE, 1 REJECT (30% REVISE — at the
+close-reading floor). The ACCEPTs are not paper-close: the four V3 REVISEs are
+each verified discharged in place, and twelve independent cost facts plus the
+full prune ladder are re-grounded against disk verbatim. The single REJECT
+records that the fabrication suspicion is falsified on every spot-verified row.
+
+The three REVISEs are bounded cost-carrier defects, not structural failures:
+
+1. **CH4-V4-007** — COH18-015, a late-cycle divergence, is the lone
+   divergence-table row whose cost cell omits a LOC band; it escaped the V2/V3
+   CH4 folds because it post-dates them. The surface (217-LOC probe API) is
+   pricable.
+2. **CH4-V4-008** — the same simd-scan/`OnceCell` surface is routed across
+   three inventories (COH18-015, 1F-anti, 1E:158) with zero shared priced
+   disposition — a class-level envelope where CH4-V3-007 already established that
+   a cross-inventory divergence surface must share ONE priced disposition.
+3. **CH4-V4-009** — D-1E-V5-11 names its owning wave (G2) but omits G2's
+   available `≤450` band inline, where its sibling D-1E-V5-09 carries `+20..+80`.
+
+None of the three reopens a numeric figure proven correct; all three are
+pricing-completeness defects the v+1 fold can discharge with edits under a few
+LOC of inventory text each. CH4 cannot move all-ACCEPT until the simd-scan
+scanner-unification surface carries a realistic LOC-delta with one shared priced
+disposition, and D-1E-V5-11 imports its G2 band.
+
+TALLY accept=6 revise=3 reject=1

@@ -16,25 +16,32 @@ alone (`restart/README.md:3`). Legacy plans remain inheritance, not governing
 truth; the inheritance index says BA/BB/BC/BD are to be mined and cited, not
 resumed as-is (`restart/inheritance/INDEX.md:1-5`).
 
-**SK-V15 current authority (2026-05-28, G-Omega V9 CRUD-1).** The active
-implementation authority is SK-V15 W0-W11: T-P1 V5 is clean-final /
-G1-auto-pinned and is not normal two-clean-cycle §3Z; T-P2 V3 is the normal
-§3Z lock; T-P3 V5 is the final-convergence lock; and SK-V15 S-P3 V4 locks
-`restart/skinny/tranches/sk-v15/SPEC.md` plus `DISPATCH-PROMPT.md` as the
-implementation contract. SK-V14 W5B / Pass Omega V8, T-P3 V4, and earlier
-cohort-lock prose are historical/pre-block evidence only. PASS-IMPL V1 blocks
-current closure on CSS L4 broadcast/wrong-plane/string-literal proof, missing
-CSS Value API, Pattern H 67-file generated provenance, Lock 14/16 gate holes,
-Decision Engine scaffold status, lowerer stubs, and FNV bench-only quarantine.
-Any new directive, BIR variant, substrate, public substrate API, retained
-sidecar, or `BackendShape` expansion remains G-Omega-gated; the 16 locks and
-5-shape canon `{EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage}`
-remain preserved. Admission evidence for SK-V15 is Apple M5 Max / aarch64
-only; x86 and AVX/AVX-512 evidence is diagnostic unless a future authorized
-gate says otherwise. Settled architecture remains unchanged: no new
-directives, no new BIR variants, no parallel substrate. Same-plane SOTA rows
-are required; grammar-specific performance behavior flows through generated
-data and side tables, not generic crate branches.
+**SK-V18 current authority (Pass Omega V10, generalization cycle).** The active
+implementation authority is the SK-V18 GENERALIZATION cycle on the SKINNY tree:
+un-fork JSON+CSS into ONE `.bbnf`-driven generator emitting JSON+CSS+Sheets
+(ultimately the 9 totality grammars), >SOTA preserved, aarch64-ONLY, across the
+certified 12-wave manifest (`W-PRUNE / P1-P5 / G1-G6 / PROVE / H1`,
+`restart/skinny/tranches/sk-v18/SPEC.md:431`-`447`), net ≈ −10800 campaign
+(per-wave SPEC sum ≈ −10685). SK-V18 is verifiable by grepping `skinny/crates/`;
+the `crates/core/` totality fold (the model the older surfaces mislabelled
+"SK-V18") is now SK-V19. T-P1/T-P2 are near-converged NON-normal-§3Z and T-P3 is
+in-cycle hardening; SK-V18 S-P0..S-P3 lock `restart/skinny/tranches/sk-v18/SPEC.md`
+as the implementation contract. Earlier SK-V14/SK-V15/SK-V17 cohort-lock prose is
+historical/pre-block evidence only. The standing closure obligations are the
+§6 named-primitive (a)-(d) gate, the verbatim-blob-courier prohibition
+(`CSS_GENERATED_RS`; the CSS generator does not yet exist), the un-forked emitter
+(`RuntimeEmitterKind` DELETED, dispatch on lowered `BackendShape`), the phantom
+`<G>` axis delete, the totality 9-ident / `css_types.rs` leak (teed to SK-V19),
+and the FNV bench-only quarantine. Any new directive, BIR variant, substrate,
+public substrate API, retained sidecar, or `BackendShape` expansion remains
+G-Omega-gated; the 16 locks and 5-shape canon
+`{EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage}` remain preserved.
+Admission evidence for SK-V18 is Apple M5 Max / aarch64 only; the whole x86
+surface is a PRUNE/DELETE target and x86/AVX-512 evidence is diagnostic, closing
+no aarch64 row. Settled architecture remains unchanged: no new directives, no new
+BIR variants, no parallel substrate. Same-plane SOTA rows are required;
+grammar-specific performance behavior flows through generated data and side
+tables, not generic crate branches.
 
 | Topic | Settled architecture | Superseded material | Resolution |
 |---|---|---|---|
@@ -1148,8 +1155,10 @@ rule_id) -> BackendShape`:
    e-graph cap, cycle detection, or generated-LOC overrun.
 3. **CSP feasibility filter.** `decision_csp::finalize_rule` filters
    infeasible plans against active grammar facts and target-feature gates
-   (LAC-2D-06 binds `admits_collapsed_stage` to `target.arch == x86` +
-   `target.avx512bw` + `Entry(_)`); CSP timeout ≤1 s/grammar aborts the
+   (the historical LAC-2D-06 binding of `admits_collapsed_stage` to
+   `target.arch == x86` + `target.avx512bw` + `Entry(_)` is a DIAGNOSTIC
+   record only — the certified plane is aarch64-ONLY, so this x86 co-require
+   admits no live row); CSP timeout ≤1 s/grammar aborts the
    wave per the V3 numeric abrogate-gate (`restart/locks/LOCKS.md:225-233`).
 4. **Cost extraction with active CostFacts.** `cost-model::frontier`
    extracts the selected alternative against an active objective vector
@@ -1168,7 +1177,7 @@ Diagnostic step vocabulary (historical P1-P8 cascade, now diagnostic-only):
 3. Rule body contains `LayoutDirective` ⇒ `EagerTape`
 4. Rule's `Alt` first-set has overlap ⇒ `EagerTape` (lowers `Alt` as `Speculative`, not `Dispatch`)
 5. Public output mode is direct-only and no post-parse path/value traversal is required ⇒ `SinkOnly`
-6. Target features admit AND rule is a hub with ≥ 4 byte-disjoint arms ⇒ `CollapsedStage` (LAC-2D-06: `target.arch == x86` MUST co-require)
+6. Target features admit AND rule is a hub with ≥ 4 byte-disjoint arms ⇒ `CollapsedStage` (the historical LAC-2D-06 `target.arch == x86` co-require is DIAGNOSTIC-ONLY against the aarch64-only plane; the SHAPE SLOT is retained, the x86 admission text closes no row)
 7. Payload/recovery/layout side facts must be retained per cursor ⇒ `EventTape`
 8. Default ⇒ `OffsetTape`
 
@@ -1183,7 +1192,7 @@ Per-shape lowering output. Each `BackendShape` value resolves to a concrete arte
 | `OffsetTape` | (rust_recursive_descent_body — `EventCursor` over retained structural offsets, `Alt { Dispatch }` against `event.byte()`; optional primitive FFI shim calls) |
 | `EventTape` | (rust_recursive_descent_body — `EventCursor` over compact event cells carrying payload/recovery/layout side facts; optional primitive FFI shim calls) |
 | `SinkOnly` | (rust_recursive_descent_body — direct typed-field writes during parse, no retained queryable document, no post-parse generic view walk; optional primitive FFI shim calls) |
-| `CollapsedStage` | (rust_caller_shim — `parse_value` entry point that prepares the input buffer per the Lock 16 `EOB_PAD_CLAMP` discipline and invokes the kernel; asm_kernel_file — per-grammar hand-authored file at `skinny/crates/bbnf-simd/src/x86_64/{grammar}_collapsed.asm`; data_section — codegen-emitted `.data` section co-located in the same file, carrying the 256-byte classifier LUT, the state-transition LUT, and the accept/reject decision table) |
+| `CollapsedStage` | (rust_caller_shim — `parse_value` entry point that prepares the input buffer per the Lock 16 `EOB_PAD_CLAMP` discipline and invokes the kernel; the historical `skinny/crates/bbnf-simd/src/x86_64/{grammar}_collapsed.asm` data-section artefact is DIAGNOSTIC/HISTORICAL only — the whole x86 surface is a DELETE target and the certified plane is aarch64-ONLY, so this NASM path closes no live row; the SHAPE SLOT is retained, any aarch64-gated body is diagnostic-only until a 2E source-backed aarch64 strategy lands) |
 
 **Live BackendShape Admission Ledger (ARCH-3A-D05; P1-1B-D6; 2D admission
 ledger at `restart/audit/totality/p2/2D-cost-model.md:164-179`; 2B
@@ -1202,8 +1211,8 @@ checkasm + same-wave consumer + corpus parity) or retire via Lock 10 amendment.
 | `EagerTape` | recursive-descent eager dispatch | — (Rust LLVM contract) | any | scalar reference equivalence | n/a (no Layer-1 primitive in skinny path) | n/a | absent in skinny | **NOT-ADMITTED**: marker-string lowerer (`skinny/crates/codegen/src/lower/rust.rs`); resolves into per-rule lower per LAC-2D-04 or retires under Lock 10 amendment |
 | `OffsetTape` | event-cursor over retained offsets | — (sonic-rs lazy-value lineage) | any | scalar reference equivalence | n/a | n/a | absent in skinny | **NOT-ADMITTED**: same disposition class as EagerTape |
 | `EventTape` | event-cursor over event cells with payload/recovery facts | — | any | scalar reference equivalence | n/a | n/a | absent in skinny | **NOT-ADMITTED**: same disposition |
-| `SinkOnly` | direct typed-field sink, no retained document | SK-V12 CSS L4 declaration-values, audit-demoted by PASS-IMPL V1 | any | scalar reference equivalence | `cargo test -p skinny-codegen sink_only` | CSS fact-stream row is diagnostic until SK-V15 W5/W6 | `skinny/crates/codegen/src/lower/sink_only.rs:112-140` exists, but CSS fact-stream-only proof does not close SK-V15 | **OPEN / AUDIT-DEMOTED**: substantive path exists, but CSS/SinkOnly admission cannot close until typed CSS Value output, same-workload retime, and W8/W9 lowerer gates produce executable evidence |
-| `CollapsedStage` | x86 AVX-512 collapsed-stage FSM | asmjson AVX-512 (Lemire 2023 ICPP), Sneller branchless-AVX-512 (T2A-REF-002) | **`target.arch == x86` + `target.avx512bw` + `Entry(_)`** (LAC-2D-06; aarch64 mechanically refused) | scalar reference required pre-admit | absent in skinny | absent in skinny | absent in skinny | **NOT-ADMITTED**: x86-only; aarch64 candidate is UNKNOWN-2D-05 (requires 2E source-backed aarch64 strategy before any aarch64 admission); marker-string lowerer at `skinny/crates/codegen/src/lower/collapsed_stage.rs:15-17` per P1-1B-D6 |
+| `SinkOnly` | direct typed-field sink, no retained document | CSS is skinny-PROVEN >SOTA (beats lightningcss 1.66–3.38×); the residual is the verbatim-blob courier, not parity | any | scalar reference equivalence | `cargo test -p skinny-codegen sink_only` | round-trip byte-equivalence against the deletable oracle (NOT a ±5% line-count delta) is the binding proof of a real projection | the live CSS `generated.rs` is a verbatim `&str` const courier (`CSS_GENERATED_RS`, emitted byte-for-byte); the CSS generator DOES NOT EXIST — a `@generated` file that is a verbatim `&str` literal is hand-written, not derived | **OPEN / COURIER-PROHIBITED**: REJECT the verbatim-blob courier as "grammar-driven" (a Lock-6-v+1 violation); the courier is deleted at G2 AFTER the same-wave CSS provider proves byte-equivalence — no deletion before the provider. SinkOnly's JSON body is still fixed-literal (`json_sink_direct.rs` 7× `push_str`); G1 fixes it before G3 |
+| `CollapsedStage` | aarch64-gated collapsed-stage FSM (SHAPE SLOT retained, body diagnostic-only) | asmjson AVX-512 (Lemire 2023 ICPP), Sneller branchless-AVX-512 (T2A-REF-002) — DIAGNOSTIC architecture pressure, closing no aarch64 row | the historical `target.arch == x86` + `target.avx512bw` + `Entry(_)` co-require (LAC-2D-06) is DIAGNOSTIC-ONLY against the aarch64-only plane; the whole x86 surface is a DELETE target | scalar reference required pre-admit | absent in skinny | absent in skinny | absent in skinny | **NOT-ADMITTED**: x86 path is DIAGNOSTIC/DELETE-target only; aarch64 candidate is UNKNOWN-2D-05 (requires 2E source-backed aarch64 strategy before any aarch64 admission); marker-string lowerer at `skinny/crates/codegen/src/lower/collapsed_stage.rs:15-17` per P1-1B-D6 |
 
 **SK-V17 T-P3 tape-fold directive (ARCH-3A-S17-D01/D03/D04/D05/D07/D08;
 crystallised at `restart/locks/LOCKS.md:610`-`622` SK-V17 T-P3 Crystallisation
@@ -1280,6 +1289,25 @@ retained sidecar, lock, or sixth shape.
   the WIRE posture and is intrinsic-blocked (not overflow-waved) if the 4 skinny
   lowerers (17-LOC scaffolds) require real per-shape lowering bodies rather than
   wiring the existing engine.
+- **Un-fork: ONE `render(program)` on lowered `BackendShape` (D03/D04).** The
+  single `render(program)` emitter dispatches on the cost-model-DERIVED
+  `BackendShape` (`cost.chosen`); the `RuntimeEmitterKind{CompiledLowering, RequestFacts}`
+  grammar-family fork (`skinny/crates/codegen/src/runtime_generator.rs`) is an
+  undocumented Lock-5 divergence to be DELETED, not a spec primitive — the spec
+  already canonicalizes `BackendShape` dispatch via `select_lowering`
+  (`lower/mod.rs:18`), so this is a PATH change, not a new primitive
+  (`generator_grammar_branch_count == generator_grammar_type_count == 0`). The
+  relocated-seam FIREWALL: the un-forked `render(program)` reads its output-shape
+  ONLY from `program.policy_summary.backend_shape` — `emit_shape_source == lowered_program`
+  — NEVER from any `RuntimeTarget`/`RuntimeProfileContract`/`profile`/`emitter`/`output_labels`
+  field. md5-distinctness is NECESSARY-NOT-SUFFICIENT; the PLANNED R16
+  `runtime_target_rows_collapsed` full-row `PartialEq` co-gate is MANDATORY (the
+  arm-census grep cannot see a per-grammar branch relocated into a neutral data
+  table). SCOPE: the SK-V18 G2 SKINNY firewall scans the SKINNY CSS surface ONLY
+  (`skinny/crates/runtime/src/grammars/css_l4_*` + `runtime_simd.rs`); the
+  totality `crates/core/src/runtime/css_l4/` surface is the SK-V19-adoption seam,
+  NOT a skinny-cycle scan target — a skinny-cycle firewall must not silently
+  target the totality tree.
 - **Three-ORQ SK-V18 pre-gates (D08).** The three T-P2 ORQs are named SK-V18
   pre-gates, not open-ended deferrals: U1 (SoA `Tape` is the declared
   convergence-target encoding; adopt-vs-parity is the SK-V18 substrate-union gate
@@ -1368,7 +1396,7 @@ admission; until then aarch64 admission is mechanically refused at the
 
 The bifurcation is load-bearing for LLVM compatibility. Recursive-descent Rust compiles to an implicit automaton through LLVM's optimiser — the call-stack-as-parse-state lowering fuses with force-inlined hot leaves under Lock 15's `lto = "fat"` + `codegen-units = 1` + ~20 KiB hot-function ceiling, and yyjson's reference C body demonstrates the same shape stays in i-cache. Codegen-emitted *explicit* Rust automatons do not survive this lowering: LLVM cannot fold an indirect-dispatch state walk back into PC-as-state form, and the overhead asmjson eliminates via `jmp [r10 + state*8]` reappears as branch-misprediction taxa in any LLVM-emitted equivalent. The lone exception — `CollapsedStage` — therefore consumes hand-written NASM where direct control over generated-code addresses is available (asmjson's PC-as-state pattern; Lock 16's `FSM_DISPATCH_THREADED` primitive in `skinny/crates/bbnf-simd/ext/x86/bbnf.asm`). All four other shapes stay in LLVM's territory and consume Layer-1 primitives from the same `ext/x86/bbnf.asm` vocabulary only at scan-shaped inner loops where the primitive's grammar-neutral signature (`BYTE_CLASS_FROM_TABLE_64`, `BYTE_CLASS_FROM_EQ_SET_64`, `BITMAP_PREFIX_XOR_64`, `BITMAP_NEXT_SET_BIT`, `BULK_EMIT_COMPRESSED`, `EOB_PAD_CLAMP`, `FRAME_PUSH_BOUNDED`, `FRAME_POP_BOUNDED`) admits a direct FFI binding. The Rust per-shape lowerer surface exists as a skinny prototype at `skinny/crates/codegen/src/lower/rust.rs`, not as SK-V15 closure: PASS-IMPL V1 found four label-string lowerer scaffolds and a `SinkOnly` path whose CSS proof is diagnostic until typed CSS output and same-workload retiming land. The two-layer reusable vocabulary — Layer 0 vendored from dav1d at `skinny/crates/bbnf-simd/ext/x86/x86inc.asm` (1,978 LOC, BSD-2), Layer 1 grammar-neutral macros at `skinny/crates/bbnf-simd/ext/x86/bbnf.asm` — is the dav1d / asmjson factoring elaborated at `restart/skinny/tranches/shared/SOTA-BEAT-DESIGN.md` §5.2; Lock 1 governs the substrate union that admits all five shapes, Lock 14 governs the zero-grammar-overfitting discipline that keeps `bbnf.asm` grammar-neutral, Lock 15 governs the i-cache residency budget that bounds the recursive-descent shapes, and Lock 16 governs the admissibility allowlist that bounds the primitive vocabulary. The same-wave-consumer rule at `docs/precepts/instructions/LESSONS-LEARNED.md:17-26` constrains admission: a `CollapsedStage` lowering target lands only when a per-grammar kernel author is in flight (no substrate-without-consumer); a primitive lands in `bbnf.asm` only when at least one shape consumes it through codegen at the same wave.
 
-### 7.4 SK-V5 Through SK-V15 Implementation Status
+### 7.4 SK-V5 Through SK-V18 Implementation Status
 
 **Lock-2 `StructLayout` reconcile note (ARCH-3A-S17-D06; Lock 2
 StructLayout-reconcile clause, `restart/locks/LOCKS.md:616`; G-Omega CLOSED).**
@@ -1396,6 +1424,16 @@ leak classes at HEAD:
 | (a) `RuntimeProvider` enum + roster | `skinny/crates/codegen/src/grammar_profile.rs:17-26` + `runtime_profiles()` at `:100-110` + 7 CSS L4 match arms | 8 variants + 8 roster entries + 7 arms | 3E-D09 Lock 14 v+1 generated-provider manifest replaces enum; future grammar onboarding adds workspace-metadata block only |
 | (b) per-grammar provider modules | 8 modules under `skinny/crates/codegen/` (one per grammar) | 8 modules | Lock 14 PRUNE wave; manifest-emitted output target |
 | (c) Pattern H runtime grammar-named symbols | `crates/core/src/runtime/{json,bbnf,css_l4,google_sheets}/{parse_with,mod,document,builder,serialize}.rs` + `google_sheets/document/{mod,canonical}.rs` (live `find -mindepth 2`: **67 hand-written files across 9 grammar dirs**; 0/9 carry `@generated`) | 30 parser-name leak sites across 15 files (live re-run 2026-05-23) | 3E-D11 Lock 14 v+1 verification publishes baseline + monotonic-decrease rule (HEAD 30 → 0) |
+
+Pattern-H census ownership split (3A-D11 / CH4-V1). The 67→0 (c) and 30→0
+parser-name baselines split across two cycles: **D11a** is the SK-V18 skinny P4
+green-by-exclusion gate (≈ +15 LOC) — it lands INLINE in the skinny tree before
+G2/G3, promoting leak roots into strict `GENERIC_SCAN_ROOTS` and extending
+`FORBIDDEN_GENERIC_TOKENS ⊇ {GENERATED_RS, CSS_GENERATED_RS, EventGrammar, *EventGrammar}`.
+**D11b** is the SK-V19 totality 9-ident R16 structural full-row-collapse over
+`crates/ir/src/registry/strategy.rs:137`-`185` plus the widened leak regex
+(≈ +217 LOC) — it TEES to SK-V19 and is charged there, NOT laundered into D11a's
++15. The CRUD must NOT bolt the 9-name regex widen as an SK-V18 patch.
 | (d) runtime-root reexport census | `crates/core/src/runtime/mod.rs:25-71` (133 raw `pub use` minus 6 in-window grammar-neutral) | **127 grammar-named reexports across 47 lines** | 3E-D11 Lock 14 v+1 verification publishes baseline 127 → 0 with monotonic-decrease per wave |
 | (e) pass-layer JSON-byte / literal recognizer leaks | `skinny/crates/passes/src/lib.rs:331` (1B-D8 byte whitelist `{ } [ ] , : "`) + `:1300-1391` (1B-D10 role mining) + `:1059/1079/1102` (LAC-2C-02 `label: "object"/"array"/"pair"`) | byte + role + label leaks distinct from codegen-layer | 3E-D10 Lock 14 v+1 census MUST cover BOTH recognizer plane AND role plane PLUS LAC-2C-02 label sites; non-JSON grammar fixture must derive from generated metadata without pass-crate edits |
 
@@ -1988,14 +2026,19 @@ dispositions:
   unification.
 
 **Lazy `ValueRef<G>` value-plane (ARCH-3A-S17-D02; Lock 14
-ValueRef/classifier-generalisation clause, `restart/locks/LOCKS.md:620`; G-Omega
-CLOSED).** The one grammar-parametric `ValueRef<'doc,'input,K,G:EventGrammar>`
+ValueRef/classifier-generalisation clause, `restart/locks/LOCKS.md:620`; the prior
+"G-Omega CLOSED" annotation RE-OPENS as an in-flight SK-V18 obligation — the
+`<G>` axis delete is a NEW SK-V18 commitment, not a closed disposition).** The
+one grammar-parametric `ValueRef<'doc,'input,K,G:EventGrammar>`
 projection (`skinny/crates/runtime/src/tape/mod.rs:175`) is the unified
 materialization plane: SK-V18 re-emits all 8 per-grammar value surfaces from a
 single grammar-agnostic `@generated` accessor generator that resolves
 `StructLayout`/`FieldSource` ONCE at codegen, replacing the per-grammar EAGER
 value enums (`crates/core/src/runtime/css_l4/value.rs:414`). The `G:EventGrammar`
-type parameter is the generality vehicle; `@generated` per-grammar emission keeps
+type parameter is DELETED at SK-V18 (no non-test production animator exists); the
+generality claim re-anchors onto the shared value-API `Cursor` micro-trait (≥2
+non-collapsible impls) and the config-breadth classifier (`alphabet: &'static [u8; 64]`,
+alphabet-as-data, 8-of-9 re-census owed at G4/G5). `@generated` per-grammar emission keeps
 it grammar-neutral by construction (hand-authoring a per-grammar runtime file in
 a generic crate would be the Lock 14 VIOLATION). preserve-rich-ast holds: the
 lazy view is the materialization plane, never a flattening of the typed AST. The
@@ -2143,6 +2186,14 @@ spine) admit larger budgets without bloating the default. Threshold
 violations emit `BBNF-PRATT-NOT-APPLIED` and `BBNF-SIMD-NOT-SELECTED`
 where applicable; the diagnostic identifies which budget pool exhausted
 and which `CostFacts` row the rewrite stalled on.
+
+The emitter is un-forked: ONE `render(program)` reads its output-shape from the
+cost-model-DERIVED `program.policy_summary.backend_shape` and dispatches via
+`select_lowering` (`lower/mod.rs:18`). The `RuntimeEmitterKind{CompiledLowering, RequestFacts}`
+grammar-family fork is DELETED post-G3 — a PATH change, not a new primitive — so
+emission is selected by the lowered `BackendShape`, never by a source-family tag
+(`emit_shape_source == lowered_program`, companion to the §7.3 relocated-seam
+firewall and its PLANNED `runtime_target_rows_collapsed` `PartialEq` co-gate).
 
 ## 11. Performance Targets
 
@@ -2400,6 +2451,13 @@ extension or a `cargo xtask lint` step.
 | `naming-canon` | `pointer!` macro mentions in greenfield text or new code (the macro is `path!`); `bbnf-path` / `bbnf-path-ts` crate-name references (the canonical names are `path` and `path-ts`); `bbnf-regex` references (the canonical name is `parse-that-regex`). | `cargo xtask lint --naming-canon`. | `BBNF-NAMING-DRIFT`. |
 | `regex-engine-canon` | `regex-automata` import in any V1 active reference (the regex engine is `parse-that-regex`); the corpus removes the regex-automata oracle role per V1-FOLD-CANDIDATES Tier 3 #23. | `cargo xtask lint --regex-engine-canon` plus `Cargo.toml` deny-import gate. | `BBNF-REGEX-ENGINE-DRIFT`. |
 | `per-grammar-fence-canon` | Lock 14 violations: grammar names in generic-crate source, grammar-named modules outside `runtime/src/grammars/<g>/`, per-grammar match arms in `bbnf-ir`/`passes`/`codegen`/`runtime`/`host`/`path`/`path-core`/`egraph`/`csp-solver`/`parse-that`/`parse-that-regex`/`bbnf-simd`/`analysis`/`lsp`. | `cargo xtask lint-grammar-generalization` (existing) plus `cargo xtask lint --fence-canon`. | `BBNF-GRAMMAR-NAME-IN-GENERIC-CRATE`. |
+
+The `BBNF-GRAMMAR-NAME-IN-GENERIC-CRATE` fence lint splits its repair across two
+cycles (3A-D11 / CH4-V1): the SK-V18 P4 green-by-exclusion fix (≈ +15, the strict
+`GENERIC_SCAN_ROOTS` + `FORBIDDEN_GENERIC_TOKENS ⊇ {GENERATED_RS, CSS_GENERATED_RS, EventGrammar, *EventGrammar}`
+extension) is SK-V18-owned and lands before G2/G3; the 9-ident roster-wide
+structural row-collapse over `crates/ir/src/registry/strategy.rs` (≈ +217) is
+SK-V19-owned and is NOT bolted on as an SK-V18 9-name regex widen.
 
 The lint manifest is part of the architectural contract; lints retire
 only by explicit amendment. Adding a lint requires extending this table

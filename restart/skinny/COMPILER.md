@@ -38,44 +38,42 @@ C6 extends this cleanup to `parse-that-regex`: JSON-named string, number,
 whitespace, and Unicode helper APIs must become grammar-neutral primitive facts
 or generated compatibility wrappers, not generic crate surface.
 
-**Pass Omega V9 / SK-V15 compiler receiver (2026-05-28).** SK-V14
-W5B/W5C/W5D is historical REDRESS evidence, not current dispatch. The active
-compiler obligations are SK-V15 W3, W5, W7, W8, and W9. W3 removes one coherent
-generic codegen leak family with same-wave generator/check consumer and
-non-JSON receiver proof. W5 builds typed CSS Value/document/view/visitor output
-before old CSS parser proof retires. W7 makes the Decision Engine executable:
-at least one asserted e-graph rewrite, non-tautological CSP, grammar-neutral
-facts, and generated selection impact. W8 implements or gate-rejects
-`EagerTape`/`OffsetTape` lowerers; W9 implements or gate-rejects
-`EventTape`/`SinkOnly`/`CollapsedStage` and proves the all-five BackendShape
-gate.
+**Pass Omega V10 / SK-V18 compiler receiver (2026-06-01).** The compiler
+obligations are the certified SK-V18 generator waves. G1: retire the JSON 7x
+`push_str` fixed-literal; emit `json/generated.rs` from `json.bbnf` with the §6
+(a)-(d)-gated `string`/`number` leaf primitives. G2: lower CSS via the
+`css_balanced_component_scan` named primitive (the 94.1% hot leaf, FORCED-CSS-
+scoped per s6/C4) + fact-keyed projection; DELETE `CSS_GENERATED_RS`. G3: un-fork
+the emitter — DELETE `RuntimeEmitterKind{CompiledLowering,RequestFacts}`;
+`render(program)` reads its output-shape ONLY from
+`program.policy_summary.backend_shape` (the grammar-NEUTRAL 5-shape
+`BackendShape`), never a `RuntimeTarget` field (`emitter_fork_present == false`;
+`generator_grammar_branch_count == 0`). PROVE: Sheets emits through the SAME
+un-forked generator (`google-sheets.bbnf`, pratt-operator shape) — the negative
+control proving the generalization is real. `generator_grammar_count == 3` (json
++ css + sheets, NOT json + 7-css + sheets).
 
-The compiler receiver preserves the exact 5-shape `BackendShape` canon at Lock
-10 (`{EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage}`). FactStream
-is a substrate-manifest category, not a sixth `BackendShape`, and EventTape is
-not a retained sidecar stream. CSS fact streams may be diagnostic evidence or
-historical substrate-manifest classification, but fact-stream-only CSS
-`parse()`, `CssFullParseSummary`, `CSS_GENERATED_RS`, and brace-counter proof
-are not live CSS admission after SK-V15 W6.
+The compiler receiver preserves the exact 5-shape `BackendShape` canon at Lock 10
+({EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage}). `CSS_GENERATED_RS`,
+`CssFullParseSummary`, the fact-stream `String`, and brace-counter proof are
+RETIRED in W-PRUNE/G2 (`verbatim_blob_present == false` campaign-wide); CSS live
+admission is the `track1_rich` typed CSSOM projection. Generated status requires
+grammar-DERIVED generation proven by the `.bbnf`-mutation falsifier
+(emitted-output VARIES under invoking-rule mutation) + the byte-equiv diff
+control — not a header-only change or a relabeled blob. Historical helpers
+(`shapes_for_json`, `nominate_json`, static CSS provider/profile rosters) are
+deletion targets, not naming patterns.
 
-Generated status now requires grammar-derived generation, line-1 provenance,
-and a non-writing regen/check route. Header-only changes, byte-identical replay
-of a hand-written string literal, static CSS profile rosters, JSON/CSS runtime
-mode splits, and grammar-family branches in generic code fail SK-V15. Pattern H
-remains a 67 root-runtime-file repair surface until W4 proves true generated
-provenance and regen/check coverage. Historical helpers such as
-`shapes_for_json`, `nominate_json`, and static CSS provider/profile rosters are
-deletion or quarantine targets, not naming patterns for new compiler code.
-
-**Pass Omega V5 / SK-V17 compiler receiver (shared NEON classifier + single
-generator).** The SK-V17 T-P3 tape-fold folds two compiler-side WINs into the
-V1 spec: the shared alphabet-parametrised NEON classifier, and the single
-`BackendRule`-walking projection generator. Both fold monotonically
-skinny→totality; neither adds syntax, a directive, a BIR variant, or a generic
-crate grammar branch. Source: `restart/audit/totality/sk-v17/p3/3d-skinny-fold.md`
-deltas `3D-SK17-D02`/`D03`/`D07`;
-`restart/audit/totality/sk-v17/p3/3e-grammar-generalisation.md` deltas
-`3E17-D04`/`D06`/`D07`/`D08`.
+**Pass Omega V10 / SK-V18 compiler receiver (shared NEON classifier + single
+generator, CERTIFIED).** The SK-V17 fold PREDICTIONS are SK-V18-certified. The
+shared `select_classifier(alphabet:&[u8;64])` NEON path takes the alphabet as its
+ONLY grammar datum and is WIRED (not scalar-delegate) at G5/G6 with
+`acceleration_at_admission == admission` (G6=WIRE: G6 proves the wire, H1
+produces the corpus-in-timer speedup). The ONE `BackendRule`-walking projection
+generator emits document/value/view/visitor for JSON byte-equal AND CSS + Sheets
+lazy from one walk; the grammar enters as a TYPE parameter, never a generator
+`match grammar` arm. A generator with a CSS-specific value branch FAILS the
+onboarding predicate. aarch64-only; x86 DELETED.
 
 1. **Shared `select_classifier(alphabet:&[u8;64])` is alphabet-as-data
    (`3D-SK17-D03` / `3E17-D04`).** The structural-scan leaf takes the alphabet as

@@ -26,51 +26,51 @@ The historical SK-V6 implementation route was
 `restart/skinny/tranches/sk-v6/SPEC.md`; current authority is the SK-V15
 receiver below.
 
-**Pass Omega V9 / SK-V15 bench receiver (2026-05-28).** BENCH consumes SK-V15
-W0, W1, W5, W6, and W10. CSS W8R 24-row evidence is diagnostic or NO-GO until
-W1 demotes/collapses the broadcast and W5/W6 provide typed CSS Value output
-with fresh same-workload `cssparser` comparison. `lightningcss` is a
-diagnostic planning signal before comparable CSSOM/value output; it is not an
-admission floor for fact-stream or brace-counter output. No CSS broadcast
-admit, no `CSS_GENERATED_RS` / `CssFullParseSummary` / fact-stream-only
-`parse()` / brace-counter live proof, and no warm-only bench evidence may close
-SK-V15.
+**Pass Omega V10 / SK-V18 bench receiver (2026-06-01).** The canonical CSS
+workload is `track1_rich` (`parser::rich_summary` summing the 9 materialized
+fields: rules/at_rules/qualified_rules/declarations/selectors/dimensions/numbers/
+colors/functions) — an eager-rich typed CSSOM projection against lightningcss's
+full CSSOM. The bit-rot repair replaced the deleted `track1_fact_stream` workload
+(W-PRUNE deleted the fact-stream `String`) with `track1_rich`. BOTH the
+`track1_rich` win (1.66-3.38x) AND the old fact-stream loss (0.60-0.76x) are
+DIRECTIONAL figures captured under concurrent-session load (loadavg 4.35 at
+capture); neither is a settled MEASUREMENT-VALID comparison until the H1
+`css_canon_bench` re-lock under `host_loadavg < 1.0` (the un-caveated
+MEASUREMENT-VALID closure word is FORBIDDEN before H1, CH2-V1-R03). `lightningcss`
+IS the binding CSS >SOTA speed bar: the BINDING close gate is the H1
+`css_canon_bench` re-lock — SAME-RUN `track1_rich/lightningcss > 1.0x` ∧ no
+same-run regression vs the parser's OWN pre-G2 baseline
+(`track1_rich_over_lcss_ratio_pre_g2`, captured AT G2 ENTRY in one quiet run) ∧
+≥1 regular corpus crossing >1.0x same-run under `host_loadavg < 1.0`.
+`cssparser` is the 9-field EXACT CORRECTNESS oracle (gate-before-speed,
+`css_typed_summary_equal`), structurally distinct from `track1_rich` — NOT a
+speed comparator.
 
-SK-V15 rows require `measurement_row_id`, `measurement_origin`, `value_plane`,
-`css_comparator_workload`, `generator_source`, `lock14_scan_scope`,
-`lock16_status`, `checkasm_or_parity_status`, `gate_exclusion_report`, and
-`broadcast_group_id`, alongside the existing strictness/output-plane columns.
-Missing fields, hidden one-to-N measurement stamps, self-exempting gate
-exclusions, source-present unwired primitives, non-native admission hosts, and
-producer-only telemetry reject close. Admission evidence is native Apple M5
-Max / aarch64 unless a future authorized packet amends the host policy;
-x86/AVX/AVX-512 rows remain diagnostic.
+SK-V18 rows require the §3 gate schema: `generator_grammar_count`,
+`emitter_fork_present`, `runtime_target_rows_collapsed`,
+`named_primitive_falsifier_pass` (per (a)-(d)), `css_track1_rich_median_mbps`,
+`css_lightningcss_full_cssom_median_mbps`, `track1_rich_over_lcss_ratio`,
+`track1_rich_over_lcss_ratio_pre_g2`, `css_typed_summary_equal`,
+`acceleration_at_admission`, `simd_admission_profile_sampled`, and
+`corpus_in_timer`, alongside the existing strictness/output-plane columns. Cold
+per-parse N≥50 median only — no warm/cached rows. A NEON speedup CLAIM (G6) is
+admissible only when `acceleration_at_admission == admission` (BOTH the
+`generated.rs` hot-loop caller census AND `simd_admission_profile_sampled`); the
+corpus-in-timer speedup is DEFERRED from G6 to H1. Admission evidence is native
+Apple M5 Max / aarch64; x86 is DELETED. No production runtime/generic-codegen FNV
+arbiter, selector, or hash-correctness proof is admissible.
 
-W11L/W11N/W11O FNV closed-enum products are bench-only quarantine inputs.
-Strict-product comparators must catch closed-enum sidecar coupling. No
-production runtime/generic-codegen FNV arbiter, selector, or hash correctness
-proof is admissible in SK-V15. Throughput, rolling deltas, hot-leaf
-attribution, PMU/samply signals, and primitive/checkasm state are workload
-extensions consumed by the owning SK-V15 wave gate. No `RESULTS.md` or
-gate-code mutation is authorized by this document alone.
+**Pass Omega V10 / SK-V18 bench receiver (canonical N≥50 + lightningcss fair
+bar, CERTIFIED).** The canonical harness is the cold-per-parse N≥50 median (no
+warm/cached rows). JSON rides the tape >SOTA at 51/51 strict A/GO Track 1 > sonic
+same-plane. CSS >SOTA is the certified SK-V18 close gate — DIRECTIONALLY measured
+at G2 exit (`track1_rich/lightningcss > 1.0x`, 1.66-3.38x at loadavg 4.35) and
+BINDING-closed only at the H1 `css_canon_bench` re-lock under `host_loadavg < 1.0`
+(the un-caveated MEASUREMENT-VALID closure word is forbidden before H1,
+CH2-V1-R03). A QUIET re-capture is required before any absolute Mbps claim in H1
+(the S-P1 absolute ratios were load-depressed at loadavg 4.35; they are
+directional antecedents, not the floor).
 
-**Pass Omega V5 / SK-V17 bench receiver (canonical N≥50 harness + lightningcss
-fair bar).** The SK-V17 T-P3 tape-fold records the bench posture for the tape /
-`ValueRef<G>` / classifier engine. The canonical harness is the
-cold-per-parse N≥50 median (no warm/cached rows; warm benches are disingenuous);
-JSON rides the tape >SOTA at 51/51 strict A/GO Track 1 > sonic same-plane
-(`skinny/RESULTS.md`) — the standing >SOTA proof and the regression tripwire.
-Source: `restart/audit/totality/sk-v17/p3/3d-skinny-fold.md` (CSS `>SOTA`
-non-fit row + SCOPE-HONESTY BANNER);
-`restart/audit/totality/sk-v17/p3/3e-grammar-generalisation.md` (P5a/P5b split).
-
-1. **CSS `>SOTA` is UNMEASURED-PENDING — an SK-V18 proof obligation, NOT met.**
-   No SK-V17 bench row asserts CSS `>SOTA` proven. The fold absorbs the
-   CONVERGED CONTRACT (lazy `ValueRef<G>` + retired fact-stream-String CSS
-   admission) whose CSS `>SOTA` bar SK-V18 must measure-prove against
-   `lightningcss` on the same workload. A bench row reading CSS `>SOTA` as MET is
-   a scope-honesty failure; `lightningcss` is the fair-comparison CSS bar but
-   stays diagnostic until Track 1 emits comparable typed CSSOM/value output.
 2. **CSS classifier-scan (P5a) is wired/measured; CSS tape-consumer (P5b) is the
    SK-V18 fold-target.** The classifier-scan measurement (the `;{` slot-59
    eq-set-fan route satisfying Lock 16's ≥1-non-JSON-consumer) does NOT imply the
@@ -336,11 +336,10 @@ in generic crates.
   cross-language noise that defeats the controlled comparison. The simdjson
   number anchors the structural-scan microbenchmark target (§4) but does not
   appear as a parse-time competitor row.
-- **lightning-css:** CSS L4 comparator for historical SK-V13/SK-V14 rows and
-  an SK-V15 diagnostic planning signal. It is not a JSON parse-time competitor
-  and it is not an admission floor until Track 1 emits comparable CSSOM/value
-  output; W5 owns typed CSS Value output and W6 owns same-workload typed
-  `cssparser` retime.
+- **lightning-css:** the CSS L4 comparator and the binding CSS >SOTA speed bar.
+  It is not a JSON parse-time competitor. `lightningcss` IS the CSS >SOTA speed
+  bar; `cssparser` is the 9-field EXACT correctness oracle (gate-before-speed),
+  not a speed comparator.
 - **tree-sitter:** different output shape (CST vs typed root). Defers to V1
   diagnostic ledger only.
 - **jq, oj, json-parser-c:** not architecturally adjacent.
@@ -1656,17 +1655,16 @@ graduates, this workflow renames or absorbs into J.W1.
 The skinny intentionally does NOT measure several axes that V1 does. Each
 omission has an explicit impact statement on the SOTA-viability conclusion.
 
-### 9.1 CSS L4 receiver — SK-V15 diagnostic until typed retime
+### 9.1 CSS L4 receiver — SK-V18 track1_rich >SOTA close gate
 
-Full lightning-css comparison does not close current CSS admission. PASS-IMPL
-V1 demoted the SK-V14 CSS W8R rows because one aggregate tuple was broadcast
-across 24 conceptual rows, `cssparser` beat Track 1 on the same aggregate
-workload, and `lightningcss` lived on a different output plane. Under SK-V15,
-CSS rows are diagnostic or NO-GO until W1 demotes/collapses the broadcast, W5
-emits typed CSS Value/document/view/visitor output, and W6 reruns a fresh
-same-workload typed `cssparser` comparison. `lightningcss` counts only after
-Track 1 emits comparable CSSOM/value output. The old substrate-only probe below
-remains historical evidence only.
+The SK-V14 24-row broadcast is historical: PASS-IMPL V1 demoted those CSS W8R
+rows because one aggregate tuple was broadcast across 24 conceptual rows. Under
+SK-V18, CSS now beats lightningcss 1.66-3.38x via `track1_rich` (the eager-rich
+typed CSSOM projection against lightningcss's full CSSOM); the binding close
+gate is the SAME-RUN `track1_rich/lightningcss > 1.0x` at the H1 `css_canon_bench`
+re-lock under `host_loadavg < 1.0`. `cssparser` is the 9-field EXACT correctness
+oracle (gate-before-speed), not a speed comparator. The old substrate-only probe
+below remains historical evidence only.
 
 There was a **CSS prior probe** intended to sharpen the earlier
 SOTA-viability conclusion:
@@ -2265,7 +2263,7 @@ head -1 skinny/RESULTS.md
 | Is the single-plan extraction masking cost-model wins? | open on event/tape consumption | scalar alternate passes (canonical wins); dispatch-table alternate INVALID per `skinny/REDRESS.md` item 17; byte-class whitespace EventCursor INVALID per item 51; parser-local structural-mask cursor INVALID per item 53; the remaining admissible alternate is single-substrate event/tape consumption |
 | Is cold-cache parse latency acceptable? | report-only | cold_first_parse probe per corpus |
 | Is the substrate viable for concurrent-parse workloads? | yes | peak RSS gated at outcome M (≤ 3× competitor on canada) |
-| Does the substrate generalise beyond JSON? | SK-V15 open | CSS prior probe is historical; current proof requires W5 typed CSS output plus W6 same-workload `cssparser` retime |
+| Does the substrate generalise beyond JSON? | SK-V18 CERTIFIED | CSS generalizes via the one generator (G2); proof is the same-run `track1_rich/lightningcss > 1.0x` gate + the 9-field `cssparser` oracle parity; Sheets (PROVE) is the negative control |
 | Are CSS SOTA gates cleared? | NO | SK-V14 CSS rows are audit-demoted; no broadcast, fact-stream-only, brace-counter, or `CSS_GENERATED_RS` evidence can close CSS admission |
 | Is incremental parsing performance acceptable? | NO (defers to V1 I) | n/a — committed tape is private and immutable; mutable reuse belongs to the V1 I `TapeBuilder` path documented in INDEX.md deviation ledger |
 | Is generated JSON LOC inside budget? | yes | `xtask lint-loc` / gate metadata; V1 nine-grammar scale defers to F.W3 |

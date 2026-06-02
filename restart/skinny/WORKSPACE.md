@@ -26,56 +26,51 @@ schema v3 comparator-plane rows before any SOTA decision. Remaining Lock 14
 cleanup includes splitting the `bbnf-simd` JSON god-module residue and
 removing JSON-name logic from generic pass/codegen crates.
 
-**Pass Omega V9 / SK-V15 workspace receiver (2026-05-28).** SK-V15 is no
-longer conditional on SK-V14 R10. The active workspace receiver is the locked
-SK-V15 W0-W11 contract: W0 telemetry baseline; W1 CSS admission honesty and
-24-row broadcast demotion/collapse; W2 Lock 14 / Lock 16 gate restoration; W3
-codegen leak abrogation; W4 Pattern H generated discipline for the 67 root
-runtime files; W5 CSS typed Value provider; W6 CSS same-workload typed
-`cssparser` retime and old-proof retirement; W7 Decision Engine spine; W8/W9
-BackendShape lowerers for exactly `EagerTape`, `OffsetTape`, `EventTape`,
-`SinkOnly`, and `CollapsedStage`; W10 FNV quarantine; and W11 close /
-PASS-IMPL V2 handoff. The SK-V14 W5B/W5C/W5D graph remains historical
-REDRESS evidence only and no longer dispatches workspace work.
+**Pass Omega V10 / SK-V18 workspace receiver (2026-06-01).** The active
+workspace receiver is the certified SK-V18 W-PRUNE→G1..G6→PROVE→H1 contract.
+W-PRUNE (P1-P5): x86 (`src/x86_64/` + `ext/x86/` + the nasm `build.rs`) DELETED;
+the const courier `CSS_GENERATED_RS` and the JSON 7x `push_str` fixed-literal
+RETIRED; the 7 byte-identical `css_l4_*/generated.rs` replicas collapsed to ONE
+CSS config; the 7 xtask `RuntimeTarget` rows collapsed via the R16
+`PartialEq` full-row derive. G1: JSON un-courier + the §6 (a)-(d)-gated
+string/number leaf primitives. G2: CSS lowering via the
+`css_balanced_component_scan` named primitive. G3: un-fork the emitter (DELETE
+`RuntimeEmitterKind`, dispatch on `BackendShape`). G4: the shared value-API
+trait. G5/G6: neutral NEON scan retarget (G6=WIRE). PROVE: Sheets via the SAME
+un-forked generator. H1: honest >SOTA re-capture. Net LOC ≈ −10800. The SK-V14
+W5B/W5C/W5D and SK-V15 W0-W11 graphs are historical only.
 
-`bbnf-bench` / gate/report code must consume SK-V15 fields:
-`measurement_row_id`, `measurement_origin`, `value_plane`,
-`css_comparator_workload`, `generator_source`, `lock14_scan_scope`,
-`lock16_status`, `checkasm_or_parity_status`, `gate_exclusion_report`, and
-`broadcast_group_id`. Producer-only telemetry, hidden one-to-N measurement
-stamps, self-exempting gate exclusions, source-present unwired primitives, and
+`bbnf-bench` / gate/report code consumes the SK-V18 §3 gate schema:
+`generator_grammar_count`, `emitter_fork_present`,
+`runtime_target_rows_collapsed`, `named_primitive_falsifier_pass` (per (a)-(d)),
+`track1_rich_over_lcss_ratio`, `track1_rich_over_lcss_ratio_pre_g2`,
+`css_typed_summary_equal` (the 9-field cssparser oracle),
+`acceleration_at_admission`, `simd_admission_profile_sampled`, and
+`corpus_in_timer`. Producer-only telemetry, source-present unwired primitives,
+self-exempting Lock 14 exclusions, hidden one-to-N measurement stamps, and
 warm-only bench evidence reject close.
 
-`bbnf-simd` remains grammar-neutral and Lock-16-governed: each primitive must
-have a scalar oracle/reference, strict parity/checkasm where relevant,
-same-wave consumer, and native Apple M5 Max / aarch64 admission evidence.
-x86/AVX/AVX-512 rows are diagnostic only unless a future authorized host policy
-amends the admission surface. Pattern H remains a 67-file repair surface until
-W4 proves line-1 generated provenance plus non-writing regen/check evidence.
-CSS fact streams, `CSS_GENERATED_RS`, `CssFullParseSummary`, and brace-counter
-proof are diagnostic after W1 and cannot remain live admission after W6.
+`bbnf-simd` remains grammar-neutral and Lock-16-governed: each primitive carries
+a scalar oracle/reference, strict parity/checkasm where relevant, a same-wave
+generated consumer, and native Apple M5 Max / aarch64 admission evidence. x86 is
+DELETED, not "diagnostic." A SIMD acceleration claim is admissible only when
+`acceleration_at_admission == admission` (BOTH the `generated.rs` caller census
+AND `simd_admission_profile_sampled`). The campaign is net-DELETING (≈ −10800
+LOC); the budget posture is contraction, not growth.
 
 This document records ownership and budget receivers only; it does not
 authorize telemetry implementation, source edits, gates, `RESULTS.md`, or
 `REDRESS.md` mutations.
 
-**Pass Omega V5 / SK-V17 workspace receiver (fold state).** The SK-V17 T-P3
-tape-fold records the monotonic governance boundary and the leak-census owner.
-The fold direction is invariant: SK-V18 adopts the PROVEN skinny `Tape`/
-`ValueRef` into crates/core; it NEVER relocates the crates/core
-`TapeStructBuilder`/`StructLayout`/`TapeCursor` names into skinny (those are
-SK-V17 §9 FORBIDDEN-IN-SKINNY vocabulary), and the totality spec never dictates
-back to a live skinny iteration. The future-grammar onboarding leak census stays
-grammar-neutral: the 7 `crates/ir/src/registry/strategy.rs` grammar-name
-string-ident sites are a catalogued leak surface (doc-comment + string-ident
-registry, NOT a runtime `match grammar {}` arm) whose monotonic decrease is OWNED
-by the SK-V18 `ValueRef<G>` projection generator wave — never an unowned
-"HEAD → 0"; fail-closed, an admitted catalogued non-zero Lock-14 baseline with a
-named re-entry trigger. `bbnf-simd` stays grammar-neutral and Lock-16-governed;
-the shared NEON classifier's only grammar datum is the `alphabet:&[u8;64]`;
-aarch64-only, no x86/AVX/SVE close path. Source:
-`restart/audit/totality/sk-v17/p3/3d-skinny-fold.md` delta `3D-SK17-D08`;
-`restart/audit/totality/sk-v17/p3/3e-grammar-generalisation.md` delta `3E17-D08`.
+**Pass Omega V10 / SK-V18 workspace receiver (fold-adoption state).** SK-V18 IS
+the certified adopter of the SK-V17 tape-fold: the PROVEN skinny `Tape`/
+`ValueRef<G>` is adopted into crates/core (the SK-V19 target); the one generator
+now projects `ValueRef<G>` for JSON + CSS + Sheets. The fold direction stays
+invariant — skinny→totality, never back. The `crates/ir/src/registry/strategy.rs`
+grammar-name string-ident leak surface stays a catalogued Lock-14 baseline whose
+monotonic decrease is owned by the SK-V18 `ValueRef<G>` projection generator
+wave (G1/G2/G4). `bbnf-simd` stays grammar-neutral, aarch64-only; the shared NEON
+classifier's only grammar datum is `alphabet:&[u8;64]`.
 
 Not in this file: substrate internals (`SUBSTRATE.md`), compiler pipeline internals (`COMPILER.md`), bench thresholds and reproducibility schema (`BENCH.md`).
 

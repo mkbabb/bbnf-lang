@@ -274,7 +274,7 @@ implementation path.
 | Tranche | YAML state | Gate that closes the handoff |
 |---|---|---|
 | A | `grammars/yaml.bbnf` plus one `[workspace.metadata.bbnf.grammars.yaml]` block enters the workspace. | Metadata validator accepts the two surfaces and rejects Rust registry, path registry, host shim, fixture-only admission, and declaration-crate onboarding. |
-| B | Tape/direct substrate can host a generated yaml root once F emits it. | Tape identity and direct-root tests stay grammar-neutral; no `OpenFrame` or runtime `ParseStream` concept enters the yaml route. Per MP-3B-SKV17-D04, the substrate yaml rides is the SK-V18 fold-proven SoA `Tape` (§13.6); the eager `OpenFrame` is the fold-DELETION target, not a yaml-route sibling. |
+| B | Tape/direct substrate can host a generated yaml root once F emits it. | Tape identity and direct-root tests stay grammar-neutral; no `OpenFrame` or runtime `ParseStream` concept enters the yaml route. Per MP-3B-SKV17-D04, the substrate yaml rides is the SK-V19 fold (§13.6); the eager `OpenFrame` is the fold-DELETION target, not a yaml-route sibling. |
 | C | Grammar IR and side tables represent yaml rules, layout, recognizer facts, and recovery facts without grammar-name dispatch. | `cargo xtask bbnf bir yaml --check` emits a stable yaml BIR snapshot from grammar + metadata only. |
 | D | The BBNF extension parser proves yaml uses only settled syntax: lookbehind, generics, block-bodied `@host fn`, chains, `@error(recover = ...)`, and `@layout`. | Negative fixtures reject rewrite syntax, grammar Unicode algebra, bodyless host forms, and standalone recovery directives. |
 | E | Backend IR lowers yaml through the same BIR alphabet as seed grammars. | Import-deny and BIR-snapshot gates pass with yaml included in the smoke cohort. |
@@ -543,6 +543,14 @@ to its regenerated form from grammar source + workspace metadata; hand-patches
 return REVISE per `[clean-regen-discipline]`. R4 family covers
 JSON / CSS / Sheets / BBNF / EBNF / BNF / CSV / Math.
 
+Per MP-3B-SKV18-D09, the §5 F gate / F.W5 "Nine seed grammars build through new
+template" IS the un-fork statement T-P1 COH18-004 shows UNREALISED in BOTH impl
+trees (skinny: 2 forked arms + courier + 7 replicas; totality: 9 generated files
+fed by a grammar-named lookup table). SK-V18 proves the un-fork on 3 grammars
+(skinny); SK-V19 scales it to 9 (totality). The F.W5 close gate is FED by
+SK-V18's un-forked generator and adopted at SK-V19 scale — it is NOT satisfied
+at HEAD.
+
 ## 12. Tranche G - Path, Value, Visitor
 
 Goal: deliver user-facing value navigation and mutation on top of tape/direct
@@ -581,10 +589,11 @@ The SK-V5 implementation packet at `restart/skinny/tranches/sk-v5/SPEC.md` decla
 
 Goal: activate performance recognizers + typed-event codegen template + per-target SIMD/ASM primitive layer (`bbnf-simd`) on the Rust line; close the expanded skinny SOTA-BEAT gate against sonic-rs, simd-json, yyjson, simdjson C++, and asmjson reference planes. The primary close is **arm64 Apple Silicon**. x86_64 AVX-512 closes as a secondary hardware gate with strict/permissive comparator rows separated.
 
-Per MP-3B-SKV17-D01, the SK-V17/SK-V18 tape-fold sits DOWNSTREAM of §13.5
+Per MP-3B-SKV18-D01, the SK-V17/SK-V19 tape-fold sits DOWNSTREAM of §13.5
 SK-V15: SK-V15 closes the CSS-honesty PRUNE-then-REBUILD repair first; SK-V17
 then EMPIRICALLY PROVES the unified-tape / lazy-`ValueRef<G>` / NEON classifier
 model in skinny (`restart/skinny/tranches/sk-v17/SPEC.md:264`-`269`); SK-V18
+(§13.7) GENERALIZES it into ONE `.bbnf`-driven generator; SK-V19
 (§13.6 below) adopts the proven `Tape`/`ValueRef`/`select_classifier` into
 crates/core. The direction is monotonic skinny→totality: the skinny-proven
 engine becomes V1-authoritative; MASTER never dictates back to a live skinny
@@ -639,11 +648,11 @@ benchmark-private sink.
 | Wave | Scope | Consumer gate |
 |---|---|---|
 | H.W0 (preflight + Plan D capacity + escape_mask_64 fix) | Lock 15 enforcement (`[profile.release] lto=fat codegen-units=1 panic="abort" debug=true`); Plan D `Vec::with_capacity(256)` + geometric grow adopted as production default per Wave 2 Agent 6 evidence (deletes sampled and sparse-flag capacity helpers); `escape_mask_64` NEON correctness bug fix per Wave 2 Agent 5 evidence (xorshift adversarial repro `0xCAFEF00DBAADF00D`); `bbnf-simd` crate scaffold (per-target submodule layout per `SOTA-BEAT-DESIGN.md` §3.1); CPUID dispatch at parser construction. | `BBNF_SIMD_STRICT=1 cargo test -p bbnf-simd --release --test checkasm_parity` zero divergences; Plan D matches the cross-corpus throughput table at SK-V3 packet §4 (+4.8% random, +10.2% github_events, 23–64% capacity reclamation); release-build invocation confirms `-C lto=fat` + `codegen-units=1`. |
-| H.W1 (typed event cursor over tape projection — load-bearing) | **LANDED for Rust-state substrate in SK-V5 Wave 1 (`603308b3`) and still open for throughput recovery.** Cost model in `passes::recognizers` derives `LayoutFacts.backend_shape[rule_id]` from existing Grammar IR facts; `BackendShape`, `LayoutFacts.backend_shape`, `derive_backend_shape`, and `codegen/src/lower/` exist. Parse-time retained projection aux side tables (REDRESS 50), byte-class whitespace cursor (51), and parser-local structural-mask cursor (53) are rejected. H.W1 must make structural projection the single parse substrate; no new BIR variant and no new BBNF directive. Per MP-3B-SKV17-D08, the SK-V18 fold supplies its proven substrate here: MP.SK18.W0 (`OnceCell<StructuralIndex>` substrate_target classification, §13.6) GATES MP.SK18.W2 (AoS `TapeRec` → SoA `Tape` exactly-one-encoding closure), enforcing "the structural projection IS the tape" across all 8 carriers; a dual AoS/SoA end-state or a retained index parallel to a wired tape re-opens REDRESS-53 / the second-substrate block. SoA is the proven convergence anchor. | SK-V6 Wave 1 re-profiles the generated Track 1 baseline before selecting any new H.W1 intervention. A later implementation wave must either reduce named retained parse G rows or record falsified candidates in REDRESS. |
+| H.W1 (typed event cursor over tape projection — load-bearing) | **LANDED for Rust-state substrate in SK-V5 Wave 1 (`603308b3`) and still open for throughput recovery.** Cost model in `passes::recognizers` derives `LayoutFacts.backend_shape[rule_id]` from existing Grammar IR facts; `BackendShape`, `LayoutFacts.backend_shape`, `derive_backend_shape`, and `codegen/src/lower/` exist. Parse-time retained projection aux side tables (REDRESS 50), byte-class whitespace cursor (51), and parser-local structural-mask cursor (53) are rejected. H.W1 must make structural projection the single parse substrate; no new BIR variant and no new BBNF directive. Per MP-3B-SKV17-D08, the SK-V19 fold supplies its proven substrate here: MP.SK19.W0 (`OnceCell<StructuralIndex>` substrate_target classification, §13.6) GATES MP.SK19.W2 (AoS `TapeRec` → SoA `Tape` exactly-one-encoding closure), enforcing "the structural projection IS the tape" across all 8 carriers; a dual AoS/SoA end-state or a retained index parallel to a wired tape re-opens REDRESS-53 / the second-substrate block. SoA is the proven convergence anchor. | SK-V6 Wave 1 re-profiles the generated Track 1 baseline before selecting any new H.W1 intervention. A later implementation wave must either reduce named retained parse G rows or record falsified candidates in REDRESS. |
 | H.W2 (bbnf-simd kernel contract — host-aarch64 first; pathology-class fix kernels) | **PARTIALLY LANDED.** AArch64 classifier work, `bulk_emit_positions_64`, `BYTE_CLASS_FROM_*`, bitmap helpers, and `EOB_PAD_CLAMP` have scalar references, checkasm parity, and hot consumers where admitted. Class A `match_tiny_plain_string` wiring remains invalidated. The older claim that the NEON UTF-8 codepoint pipeline is the corrected parse-G fix is superseded by SK-V6: REDRESS 50-55 show the Wave 3 family did not close the current generated-baseline rows. | Canada structural scan is green in the full matrix at 69075 Mbps. New H.W2 primitives require SK-V6 Wave 1 attribution, same-wave consumer, and same-row Mbps lift; otherwise they are rejected. |
 | H.W2.5 (primitive vocabulary authoring + checkasm gate — `ext/x86/bbnf.asm`) | Author grammar-neutral primitive macros that compose the shared SIMD/ASM vocabulary at `skinny/crates/bbnf-simd/ext/x86/bbnf.asm`. Admission is consumed-only: `BYTE_CLASS_FROM_TABLE_64`, `BYTE_CLASS_FROM_EQ_SET_64`, `BITMAP_PREFIX_XOR_64`, `BITMAP_NEXT_SET_BIT`, `EOB_PAD_CLAMP`, the AArch64 structural+terminator classifier, and `BULK_EMIT_POSITIONS_64` have scalar references, checkasm parity, and same-wave hot consumers. `BULK_EMIT_COMPRESSED`, `FSM_DISPATCH_THREADED`, `FRAME_PUSH_BOUNDED`, and `FRAME_POP_BOUNDED` remain contract-level until structural-tape compressed sink, bracket-stack, or per-grammar CollapsedStage consumers land in the same change. Layer 0 vendored macros stay read-only in `ext/x86/x86inc.asm` (dav1d, BSD-2). Admission to either consumer path is gated through the FFmpeg-discipline harness at `BBNF_SIMD_STRICT=1 cargo test -p bbnf-simd --release --test checkasm_parity`. | All admitted primitives pass `primitive-checkasm` with zero divergence on the active host; no primitive lands without a wave-bound consumer. The prior "all nine bodies" reading is superseded by the no-orphan rule. |
 | H.W3 (parse-that primitive closure — string, Unicode, number) | **NUMBER LANDED; UTF-8 FUSION REFUTED AS CLOSE.** Eisel-Lemire and integer materialization are vendored and consumed; `numbers` direct closes. The SK-V5 Wave 3 string/UTF-8 family is not canonical as a close route after REDRESS 50-55. `parse-that/string` / `unicode` remain the ownership boundary for exact string and Unicode semantics, but no new kernel lands without fresh attribution and same-row lift. | `numbers` passes. `unicode_*`, `distinct_values`, `y_string_unicode`, and other string-bound direct/retained rows remain SK-V6 Wave 1 profile targets before implementation. |
-| H.W4 (workload gates + direct-to-struct `SinkOnly` closure + 5-shape backend_shape per-rule selection) | **PARTIALLY LANDED.** The generated `SinkOnly` path is correctness-green, lowerer-authored from BIR, preserves raw string spans to `JsonSink::*_source`, and keeps retained view-walk digest as parity oracle. Direct receiver/source-shape redress lifts four stressor rows (`citm_catalog`, `apache_builds`, `github_events`, `instruments`) but overall gate remains `N-direct / NoGo`. Generic decoded visitor, sink-local exact-stats helper, quote-source streaming hasher, source-hook folding, parser-owned decoded scratch, byte-output unescape, semantic string facts, and the first hand-authored JSON typed sink are rejected as closes. REDRESS 72 admits a generated-retained-only cap-16 probe and rejects global/direct/Track 2 widening, so H.W4 must carry per-shape cost facts instead of a single string threshold. | SK-V6 Wave 3 splits the plane: `semantic_full_digest_stressor` remains visible as a guard, while `real_typed_struct` becomes the representative DirectBuild closure row only after the host/API output schema is lowered into generated field facts rather than supplied by a benchmark-private hand sink. Per MP-3B-SKV17-D07, the SK-V18 fold's MP.SK18.W5 (§13.6) WIRES the skinny `derive_backend_shape` 5-shape selector into core atop the existing decision engine (`crates/egraph` + `crates/csp-solver`), preserving the all-five gate; `backend_shape` stays a side-table field, no new shape, no surface annotation. |
+| H.W4 (workload gates + direct-to-struct `SinkOnly` closure + 5-shape backend_shape per-rule selection) | **PARTIALLY LANDED.** The generated `SinkOnly` path is correctness-green, lowerer-authored from BIR, preserves raw string spans to `JsonSink::*_source`, and keeps retained view-walk digest as parity oracle. Direct receiver/source-shape redress lifts four stressor rows (`citm_catalog`, `apache_builds`, `github_events`, `instruments`) but overall gate remains `N-direct / NoGo`. Generic decoded visitor, sink-local exact-stats helper, quote-source streaming hasher, source-hook folding, parser-owned decoded scratch, byte-output unescape, semantic string facts, and the first hand-authored JSON typed sink are rejected as closes. REDRESS 72 admits a generated-retained-only cap-16 probe and rejects global/direct/Track 2 widening, so H.W4 must carry per-shape cost facts instead of a single string threshold. | SK-V6 Wave 3 splits the plane: `semantic_full_digest_stressor` remains visible as a guard, while `real_typed_struct` becomes the representative DirectBuild closure row only after the host/API output schema is lowered into generated field facts rather than supplied by a benchmark-private hand sink. Per MP-3B-SKV17-D07, the SK-V19 fold's MP.SK19.W5 (§13.6) WIRES the skinny `derive_backend_shape` 5-shape selector into core atop the existing decision engine (`crates/egraph` + `crates/csp-solver`), preserving the all-five gate; `backend_shape` stays a side-table field, no new shape, no surface annotation. |
 | H.W4.LOCK14 (Lock 14 remediation — generic-crate audit closure; SK-V5 Wave 4) | **PARTIALLY LANDED.** `simd-scan`, `generated_eventcursor.rs`, and the `eventcursor` feature/cfg path are purged. The `bbnf-simd/src/lib.rs` god-module split and remaining JSON classifier parameterization are still pending. | SK-V6 Wave 5 performs the durability split only after parse-G and direct N-direct are reduced; it is not a SOTA-beat prerequisite. |
 | H.W5 (x86_64 AVX-512 primitive path — strict additions consumed by retained and direct shapes) | **LANDED FOR CONSUMED ARM64/GENERIC SET; X86 SUCCESSOR OPTIONAL.** Consumed primitive admission is green for the active host set. No-orphan macro bodies stay blocked until same-wave consumers exist. `CollapsedStage` remains a separate per-grammar `.asm` authoring wave. | `primitive-checkasm` must pass for admitted primitives; x86 `CollapsedStage` requires Zen 4 silicon, NASM author, strict comparator plane, and per-grammar consumer. |
 | H.W6 | **SK-V13 full-SOTA receiver map.** G1 full CSS L4 parity, G2 decision-engine fold, G3 union variant or architectural block, G4 zero aarch64 production orphans, G5 all 51 JSON rows above strict sonic-rs or architecturally blocked, G6 Totality V1.1/G-Omega before W0, and G7 no-demotion. | `restart/skinny/tranches/sk-v13/SYNTHESIS.md` G1-G7 governs S-P3 and J.W1; every miss needs row admission, measured rejection, or architectural-block proof. |
@@ -959,7 +968,7 @@ Global SK-V15 gates:
 | MP.SK15.W6 CSS same-workload retime and old-proof retirement | active pending | W5 admitted | Fresh typed `cssparser` comparison sets any CSS floor; old CSS proof paths retire. | H.W6, J.W1, BENCH. |
 | MP.SK15.W7 Decision Engine spine | active pending | W6 admitted/routed | E-graph rewrite and non-tautological CSP are gate-consumed. | C.W4/C.W5, H.W4/H.W7, MP.NW8. |
 | MP.SK15.W8 BackendShape harness plus EagerTape/OffsetTape | active pending | W7 admitted | Harness rejects label scaffolds; EagerTape/OffsetTape emit runtime-relevant output. | E/F/H lowerer boundary. |
-| MP.SK15.W9 EventTape/SinkOnly/CollapsedStage plus all-five gate | active pending | W8 admitted | Remaining lowerers are real and all-five gate proves exactly five BackendShape variants. | H.W4/H.W7 and BackendShape canon. Per MP-3B-SKV17-D07, the SK-V18 MP.SK18.W5 `derive_backend_shape` selector wiring (§13.6) consumes this W8/W9 all-five gate as its lowerer consumer. |
+| MP.SK15.W9 EventTape/SinkOnly/CollapsedStage plus all-five gate | active pending | W8 admitted | Remaining lowerers are real and all-five gate proves exactly five BackendShape variants. | H.W4/H.W7 and BackendShape canon. Per MP-3B-SKV17-D07, the SK-V19 MP.SK19.W5 `derive_backend_shape` selector wiring (§13.6) consumes this W8/W9 all-five gate as its lowerer consumer. |
 | MP.SK15.W10 FNV quarantine | active pending | W9 admitted/routed | FNV stays bench-only; production FNV scan and adversarial fixtures are consumed. | J.W1/J.W5 and bench-only guard. |
 | MP.SK15.W11 Close and PASS-IMPL V2 handoff | active pending | W1-W10 resolved | PASS-IMPL V2 accepts each axis or records row-level intrinsic-block proof at HEAD. | J.W5 and Master Close. |
 
@@ -971,25 +980,36 @@ Dependency rows are inherited from SK-V15 SPEC §2.1: `DEP-W1-CSS-BROADCAST`,
 `DEP-W11-CLOSE-NO-ORPHANS`. Missing dependency proof blocks the consuming
 exit gate; it does not route to SK-V16 as close evidence.
 
-### §13.6 SK-V18 Tape-Fold Adoption Receiver Block (downstream of SK-V15; active after SK-V17 skinny W0-W5 + G-Omega)
+Per MP-3B-SKV18-D10, the SK-V15 CSS verdict is UPGRADED: T-P1 COH18-013 raises
+the "CSS contrived" verdict to "CSS >SOTA is directionally-valid pending the H1
+`css_canon_bench` re-lock; the overfit is IMPLEMENTATION (forks/replicas), not
+measurement". SK-V18 retires the FORKS, not the measurement. Carry the
+directional caveat (loadavg 4.35 at capture, H1 quiet re-lock pending) until the
+bench row is re-locked — do NOT carry the un-caveated "MEASUREMENT-VALID"
+closure word the row's own fail-action forbids (CH2-V1-R03).
 
-Per MP-3B-SKV17-D01/D02, this block sits downstream of §13.5 SK-V15. SK-V15
-closes the CSS-honesty PRUNE-then-REBUILD repair first; SK-V17 then EMPIRICALLY
-PROVES the unified-tape / lazy-`ValueRef<G>` / NEON classifier model in skinny
-(`restart/skinny/tranches/sk-v17/SPEC.md:264`-`269`); SK-V18 is the totality
-fold that ADOPTS the proven `Tape`/`ValueRef`/`select_classifier` into
+### §13.6 SK-V19 Totality-Fold Adoption Receiver Block (downstream of SK-V18 generalization; active after SK-V18 W-PRUNE→G1..G6→PROVE→H1 close + G-Omega)
+
+Per MP-3B-SKV18-D01/D02, this block sits downstream of §13.7 SK-V18. SK-V15
+closed the CSS-honesty PRUNE-then-REBUILD repair (`66232b7c3`); SK-V17 then
+EMPIRICALLY PROVED the unified-tape / lazy-`ValueRef<G>` / NEON classifier
+model in skinny (`restart/skinny/tranches/sk-v17/SPEC.md:264`-`269`; W0-W5
+closed `f6a38445b`); SK-V18 (§13.7) GENERALIZES it into ONE `.bbnf`-driven
+generator on the skinny tree; SK-V19 is the totality fold that ADOPTS the
+un-forked, tape-proven `Tape`/`ValueRef`/`select_classifier` into
 crates/core and retires the eager-`OpenFrame` / AoS-`TapeRec` / per-leaf
 `StructRegistry` fold-targets. The monotonic direction is skinny→totality: the
 skinny-proven engine becomes V1-authoritative; this MASTER block never dictates
 back to a live skinny iteration (`restart/skinny/tranches/sk-v17/SPEC.md:110`-`114`).
 This section imports the five LOCKED T-P2 fold designs (LAC-2F-FOLD-01..05,
 realised as candidates F1-F9, `restart/audit/totality/sk-v17/p2/2f-fold-gaps.md:115`-`503`)
-as a pending receiver map. It does not dispatch implementation by itself. SK-V18
-W0 dispatches only AFTER SK-V17 skinny W0-W5 close proves the model and Pass
-Omega / G-Omega authorise. There is no implicit 6th wave, no W7, and no
+as a pending receiver map. It does not dispatch implementation by itself. SK-V19
+W0 dispatches only AFTER SK-V18 W-PRUNE→G1..G6→PROVE→H1 close proves the
+un-forked generator on 3 grammars (skinny) and Pass Omega / G-Omega authorise.
+There is no implicit 6th wave, no W7, and no
 challenge-time implementation overflow.
 
-Global SK-V18 gates:
+Global SK-V19 gates:
 
 - The tape is a Lock-1 substrate-manifest CATEGORY (the SUBSTRATE the five
   `BackendShape` shapes project from), per the LAC-1E-14 FactStream precedent —
@@ -998,8 +1018,8 @@ Global SK-V18 gates:
   (MP-3B-SKV17-D03). A 6th variant remains G-Omega gated.
 - Every fold design is grammar-neutral (Lock 14): tape members are
   grammar-blind; `select_classifier(alphabet)` is config-breadth, not grammar-id
-  dispatch. JSON+CSS exercise only; Sheets/BBNF-self generality stays SK-V18
-  by-construction proof, not an SK-V17 claim
+  dispatch. JSON+CSS exercise only; SK-V19 adopts the SK-V18-proven 3-grammar
+  un-fork to the 9-grammar fleet, not an SK-V17 claim
   (`restart/audit/totality/sk-v17/p1/1d-skinny-lessons.md:96`).
 - The fold REINFORCES — never re-opens — the REDRESS-strengthened pre-blocks:
   AZ-IV eager value tree, StructRegistry/Arena/Builder per-leaf indirection, CSS
@@ -1010,34 +1030,116 @@ Global SK-V18 gates:
 - preserve-rich-ast: the lazy `ValueRef<G>` view reconstructs typed CSSOM and
   never flattens (`restart/skinny/tranches/sk-v17/SPEC.md:252`).
 
-| SK-V18 receiver | F-candidate / LAC | manual LOC / generated / risk | MASTER alignment | same-wave consumer / gate | cap-fit and fail route |
+| SK-V19 receiver | F-candidate / LAC | manual LOC / generated / risk | MASTER alignment | same-wave consumer / gate | cap-fit and fail route |
 |---|---|---:|---|---|---|
-| MP.SK18.W0 `OnceCell` substrate_target classification (pre-gate) | F7 / LAC-2F-FOLD-01 | 0 behaviour LOC; classification report; HIGH (REDRESS-53 re-entry) | H.W1 single-substrate; B substrate | Co-waved W1 tape-wiring IS the consumer; classification GATES the wiring. All 8 carriers (json/ebnf/bnf/csv/css_l4/css_pretty/google_sheets/bbnf), not a 4-grammar sample. | Classification only; a mis-declared `existing_tape` re-opens REDRESS-53 → REDRESS/intrinsic block, no implicit overflow. |
-| MP.SK18.W1 Eager-`OpenFrame` retire → flat-tape commit-by-construction | F1 / LAC-2F-FOLD-01 | 300-700 generator-side + per-grammar regen ×8; blast radius = 40 files via `grep -rl 'JsonStructBuilder\|CssStructBuilder' crates/` (=40 at master HEAD `2a76916ac`; the 300-700 LOC band is the fold-edit envelope, not the touched-file count); HIGH | B "Tape/direct works"; B forbids parallel substrate (§7, `restart/MASTER-PLAN.md:192`) | The flat-tape commit (`push_plain_offset`) is the same-wave consumer of the retired builders; revert slice `grep -rln JsonStructBuilder\|CssStructBuilder`. | Eager-deletion + tape-wiring; delete-before-tape-wired is reverted (no orphan deletion). Severs the F6 `arena.rs:47` coupling. |
-| MP.SK18.W2 AoS `TapeRec` → SoA `Tape` exactly-one-encoding closure | F3 / LAC-2F-FOLD-01 | 200-600; MEDIUM | B substrate; Lock 1 one-encoding | The W1 commit-by-construction path consumes the converged SoA encoding; AoS→SoA is the transient fold-state. | Encoding convergence; a dual AoS/SoA END-state is a Lock-1 violation → REDRESS. SoA is the proven anchor. |
-| MP.SK18.W3 Lazy `ValueRef<G>` projection generator | F2 / LAC-2F-FOLD-03 (value-plane home) | 300-700 generator-LOC + per-grammar regen value/view/document ×8; HIGH | F runtime template (§11, `restart/MASTER-PLAN.md:196`); §13.5 MP.SK15.W5 CSS provider | JSON `value_from_ref` byte-equal re-emission is the W3 gate consumer; a CSS-only generator that never re-emits JSON FAILS CH2. | ONE grammar-agnostic accessor generator (Lock 14); JSON+CSS-exercised only — Sheets/BBNF-self by-construction. preserve-rich-ast. |
-| MP.SK18.W4 StructRegistry/FieldSource compile-time projection fence | F6 / LAC-2F-FOLD-04 | 0 LOC (fence); HIGH (regression class) | Lock 1; AZ-IV pre-block | The W3 generator IS the consumer — it resolves the layout ONCE at codegen, never per-leaf. | A fence on W3 emission; ANY per-leaf runtime `StructRegistry::layout(rule)` re-opens 28-65×/983×/10583× → REJECT. |
-| MP.SK18.W5 Shared NEON classifier Lock-16 manifest row + BackendShape selector wiring | F5 + F8 / LAC-2F-FOLD-03 (NEON) + LAC-2F-FOLD-02 | F5 0-LOC narrative + manifest row, 100-400 scope reconcile; F8 60-200 selector + scaffold→body cost-cell band ~4×270=800-1100 LOC + 600-1400 joint decision-engine wiring; MEDIUM | H.W2/H.W2.5 Lock 16; H.W4 5-shape selection; §13.5 W8/W9 lowerer gate | F5 same-wave consumer = the tape; F8 consumer = the 5 real lowerers (the §13.5 W8/W9 all-five gate). | Manifest row + selector wiring atop existing `crates/egraph`+`crates/csp-solver`; 5-shape canon PRESERVED — F4 disposes the tape as substrate-manifest category, not a 6th shape. The scaffold→body cost-cell band carries one cost-row in §23/cost evidence. |
-| MP.SK18.W6 Lock-2 `StructLayout` canonical-name reconcile | F9 / LAC-2F-FOLD-05 | path-(a) 960-site rename (regen 8 parsers + ~16 tests) MEDIUM; path-(b) text-only re-scope LOW + core materialisation UNKNOWN→bounded | Lock 2 name-retirement | The regen of all 8 parsers is the same-wave consumer of the rename; path-(b) side-table is sized as the 0→N introduce-site delta (`grep StructLayout crates/`=960 vs `grep backend_shape\|LayoutFacts crates/`=0). | A Lock-2 sub-surface reconcile, generator-side; the path-(a)-vs-(b) choice is a Pass-Omega/3C call. Not one of the five core fold designs. |
+| MP.SK19.W0 `OnceCell` substrate_target classification (pre-gate) | F7 / LAC-2F-FOLD-01 | 0 behaviour LOC; classification report; HIGH (REDRESS-53 re-entry) | H.W1 single-substrate; B substrate | Co-waved W1 tape-wiring IS the consumer; classification GATES the wiring. All 8 carriers (json/ebnf/bnf/csv/css_l4/css_pretty/google_sheets/bbnf), not a 4-grammar sample. | Classification only; a mis-declared `existing_tape` re-opens REDRESS-53 → REDRESS/intrinsic block, no implicit overflow. |
+| MP.SK19.W1 Eager-`OpenFrame` retire → flat-tape commit-by-construction | F1 / LAC-2F-FOLD-01 | 300-700 generator-side + per-grammar regen ×8; blast radius = 40 files via `grep -rl 'JsonStructBuilder\|CssStructBuilder' crates/` (=40 at master HEAD `2a76916ac`; the 300-700 LOC band is the fold-edit envelope, not the touched-file count); HIGH | B "Tape/direct works"; B forbids parallel substrate (§7, `restart/MASTER-PLAN.md:192`) | The flat-tape commit (`push_plain_offset`) is the same-wave consumer of the retired builders; revert slice `grep -rln JsonStructBuilder\|CssStructBuilder`. | Eager-deletion + tape-wiring; delete-before-tape-wired is reverted (no orphan deletion). Severs the F6 `arena.rs:47` coupling. |
+| MP.SK19.W2 AoS `TapeRec` → SoA `Tape` exactly-one-encoding closure | F3 / LAC-2F-FOLD-01 | 200-600; MEDIUM | B substrate; Lock 1 one-encoding | The W1 commit-by-construction path consumes the converged SoA encoding; AoS→SoA is the transient fold-state. | Encoding convergence; a dual AoS/SoA END-state is a Lock-1 violation → REDRESS. SoA is the proven anchor. |
+| MP.SK19.W3 Lazy `ValueRef<G>` projection generator | F2 / LAC-2F-FOLD-03 (value-plane home) | 300-700 generator-LOC + per-grammar regen value/view/document ×8; HIGH | F runtime template (§11, `restart/MASTER-PLAN.md:196`); §13.5 MP.SK15.W5 CSS provider | JSON `value_from_ref` byte-equal re-emission is the W3 gate consumer; a CSS-only generator that never re-emits JSON FAILS CH2. | ONE grammar-agnostic accessor generator (Lock 14); JSON+CSS-exercised only — Sheets/BBNF-self by-construction. preserve-rich-ast. |
+| MP.SK19.W4 StructRegistry/FieldSource compile-time projection fence | F6 / LAC-2F-FOLD-04 | 0 LOC (fence); HIGH (regression class) | Lock 1; AZ-IV pre-block | The W3 generator IS the consumer — it resolves the layout ONCE at codegen, never per-leaf. | A fence on W3 emission; ANY per-leaf runtime `StructRegistry::layout(rule)` re-opens 28-65×/983×/10583× → REJECT. |
+| MP.SK19.W5 Shared NEON classifier Lock-16 manifest row + BackendShape selector wiring | F5 + F8 / LAC-2F-FOLD-03 (NEON) + LAC-2F-FOLD-02 | F5 0-LOC narrative + manifest row, 100-400 scope reconcile; F8 60-200 selector + scaffold→body cost-cell band ~4×270=800-1100 LOC + 600-1400 joint decision-engine wiring; MEDIUM | H.W2/H.W2.5 Lock 16; H.W4 5-shape selection; §13.5 W8/W9 lowerer gate | F5 same-wave consumer = the tape; F8 consumer = the 5 real lowerers (the §13.5 W8/W9 all-five gate). | Manifest row + selector wiring atop existing `crates/egraph`+`crates/csp-solver`; 5-shape canon PRESERVED — F4 disposes the tape as substrate-manifest category, not a 6th shape. The scaffold→body cost-cell band carries one cost-row in §23/cost evidence. |
+| MP.SK19.W6 Lock-2 `StructLayout` canonical-name reconcile | F9 / LAC-2F-FOLD-05 | path-(a) 960-site rename (regen 8 parsers + ~16 tests) MEDIUM; path-(b) text-only re-scope LOW + core materialisation UNKNOWN→bounded | Lock 2 name-retirement | The regen of all 8 parsers is the same-wave consumer of the rename; path-(b) side-table is sized as the 0→N introduce-site delta (`grep StructLayout crates/`=960 vs `grep backend_shape\|LayoutFacts crates/`=0). | A Lock-2 sub-surface reconcile, generator-side; the path-(a)-vs-(b) choice is a Pass-Omega/3C call. Not one of the five core fold designs. |
 
 The F4 BackendShape-canon disposition (LAC-2F-FOLD-02) is a CANON/PRECEDENT
 delta, not an implementation wave — it carries 0 LOC and is realised as the
 cross-reference that the tape is a substrate-manifest category (folded into
-MP.SK18.W5's manifest row plus the §13 H.W4 / §13.1 / §13.2 canon notes per
+MP.SK19.W5's manifest row plus the §13 H.W4 / §13.1 / §13.2 canon notes per
 MP-3B-SKV17-D03). It is a coherence assertion across §13 H.W4, §13.5, and §13.1;
 it touches no new wave LOC.
 
-Per MP-3B-SKV17-D08, MP.SK18.W0 (classification) and MP.SK18.W2 (exactly-one-
+Per MP-3B-SKV17-D08, MP.SK19.W0 (classification) and MP.SK19.W2 (exactly-one-
 encoding closure) are Lock-1 one-substrate obligations across all 8 carriers: a
 dual AoS/SoA end-state or a retained index parallel to a wired tape re-opens
 REDRESS-53 / the second-substrate block; SoA is the proven convergence anchor.
-Per MP-3B-SKV17-D06, MP.SK18.W4 is a MASTER substrate-manifest fence obligation
-(see §23 Risk Register and §24 Carry Ledger). Per MP-3B-SKV17-D07, MP.SK18.W5
+Per MP-3B-SKV17-D06, MP.SK19.W4 is a MASTER substrate-manifest fence obligation
+(see §23 Risk Register and §24 Carry Ledger). Per MP-3B-SKV17-D07, MP.SK19.W5
 WIRES — does not build — the existing decision-engine crates (`crates/egraph`
 1885 LOC + `crates/csp-solver` 5882 LOC); the skinny lowerer scaffolds it
 consumes are `backend_egraph` 311 LOC + `decision_csp` 273 LOC; the 600-1400 LOC
 envelope sizes the WIRING and the scaffold→body cost-cell band sizes the body
 fill, not the engine, and the §13.5 W8/W9 all-five gate is the consumer.
+
+### §13.7 SK-V18 GENERALIZATION Receiver Block (the 12-wave skinny un-fork; active after §13.5 SK-V15 + SK-V17 close + Pass Omega/G-Omega)
+
+Per MP-3B-SKV18-D01/D03, the CERTIFIED SK-V18 is the GENERALIZATION cycle on the
+SKINNY tree: two forked parsers (JSON + CSS) collapse into ONE grammar-driven
+generator emitting JSON + CSS + Sheets from `.bbnf`, preserving >SOTA (CSS beats
+lightningcss 1.66-3.38×; JSON beats sonic-rs strict), aarch64-only,
+≈ −10800 campaign LOC (per-wave SPEC sum ≈−10685; `sk-v18/SPEC.md:571`). Every surface
+citation is the benched skinny tree (`skinny/crates/`), NOT
+`crates/core/` (the TOTALITY tree is the SK-V19 adoption target). The certified
+plan is `restart/skinny/tranches/sk-v18/SPEC.md` (`:19`-`:21`,`:58`-`:61`).
+
+Global SK-V18 gates (every wave carries the §2.1 generality + Lock-14 gate):
+- ONE generator emits JSON + CSS (+ Sheets at PROVE). The
+  `generator_grammar_count == 3` (json + css + sheets, NOT json + 7-css + sheets
+  — the P3 collapse) is a PROVE-EXIT gate, NOT a per-wave global: through
+  G1-G6 the count is 2 (json + css); Sheets enters the generator only at the
+  PROVE wave and only on a non-`N` verdict (`sk-v18/SPEC.md:254`: "MUST be 3 at
+  PROVE (json+css+sheets); 7-css inflation = the P3 overfit, REJECT"), mirroring
+  the PROVE-row falsifier below. This is the `scoped non-JSON witness` (3-grammar)
+  un-fork per the live MP.NW6 (`restart/MASTER-PLAN.md:662`)
+  single-negative-control standard (CSS + one Sheets control); the F.W5
+  nine-grammar close is FED by this generator and adopted at SK-V19 scale — §13.7
+  does NOT satisfy F.W5, and fleet-wide / grammar-neutral wording requires SK-V19
+  OR both Sheets AND BBNF-self in one wave.
+- One un-forked emitter dispatched on the LOWERED program, NOT a grammar tag:
+  `emitter_fork_present == false`; `generator_grammar_branch_count == 0`;
+  `generator_grammar_type_count == 0`; `emit_shape_source == lowered_program`.
+  `render(program)` reads output-shape ONLY from
+  `program.policy_summary.backend_shape` (the 5-shape canon, UNCHANGED — no 6th).
+- The relocated seam closes STRUCTURALLY: the R16 `RuntimeTarget: PartialEq`
+  full-row derive recurses into BOTH nested structs (`frontend_requirements`
+  #11 ∧ `output_labels` #12); `runtime_target_rows_collapsed == true`.
+- aarch64-only: the eq-set fan is the one real NEON Layer-1 body; x86/SVE remain
+  diagnostic. preserve-rich-ast: JSON's rich tree preserved by CONCRETE
+  FALSIFIER, not by construction.
+- The §6 named-primitive (a)-(d) escape is the ONLY admission for a
+  grammar-derived primitive (T-P2 literature-validated).
+
+| SK-V18 receiver | T-P1/T-P2 source | manual LOC / risk | MASTER alignment | same-wave consumer / gate | exit-gate falsifier (turns RED) |
+|---|---|---:|---|---|---|
+| MP.SK18.P1 DELETE the x86 surface crate-wide | T-P1 D-4 (`1D:99-102`); COH18-009; addendum A6 | 0 add / ≈−4500 del / med | H.W5 x86 successor; aarch64-only | The 11 `checkasm_parity.rs` x86_64 call sites DECOUPLE in the SAME commit (re-grep before merge as counts may drift); 12 aarch64 parity harnesses retained | `find …/x86_64 …/ext/x86 -type f == 0` (today 28); `cargo build`/`cargo test --no-run` clean (`x86_tree_deleted==true`) |
+| MP.SK18.P2 DELETE warm micro-fixture CSS bench | T-P2 addendum 5; `sk-v18/SPEC.md:608-633` | ≈−700 / low | H.W6/BENCH timed-plane | The retained `css_canon_bench` cold harness consumes the extracted 9-field oracle | `grep -c 'measure_mbps\|lightningcss_facts' bbnf-bench/src/nonjson_css_l4.rs == 0` (today 48; the certified SPEC `:627` exit-gate falsifier + owner-path `:614` bind the P2 gate to `bbnf-bench/src/nonjson_css_l4.rs` ALONE — the `src/`-qualified path disambiguates from the 7-hit `bbnf-bench/benches/nonjson_css_l4.rs`, and the 16 crate-wide hits in `bin/gate.rs` are NOT a P2 gate target, no SPEC/1D/3B wave owns their retirement; SPEC `:633` is the R14/H1 INDEPENDENT disclosure note, it binds NOTHING about the gate); `corpus_in_timer==true` |
+| MP.SK18.P3 collapse 6 of 7 byte-identical css_l4 replicas + RuntimeTarget row-collapse | T-P1 D-2 (`1D:87-93`); COH18-005 analog; addendum 2/R16 | ≈−5500 / high (relocated seam) | A.W2 nine-grammar census; G3 row-collapse co-gate | The G3 un-fork consumes the `RuntimeTarget: PartialEq` full-row derive (both nested structs) | `md5 …/{json,css_l4}/generated.rs` no identical pair; `runtime_target_rows_collapsed==true` |
+| MP.SK18.P4 fix Lock-14 green-by-exclusion gate (BEFORE G2/G3) | T-P1 D-7 (`1D:108-111`); COH18-012; addendum A3 | ≈+15 / high | H.W4.LOCK14; §13.5 W2 gate restoration; MP.NW6 | The G1/G2/G3 emitter waves are neutrality-scanned AS authored (P4 is their entry-gate) | re-inject `SHEETS_GENERATED_RS`→RED; `FORBIDDEN ⊇ {GENERATED_RS,CSS_GENERATED_RS,EventGrammar,*EventGrammar}`; `lock14_gate_scans_codegen==true` |
+| MP.SK18.P5 purge metalang bench-wave-id leak | T-P1 D-8 (`1D:112-114`); addendum A1/regen | ≈0 (rename-only) / low | clean-regen discipline | The 1:1 regen of `json/generated.rs` consumes the template-source `json_sink_direct.rs` rename; the `lib.rs:565` test-assert updates SAME pass | `grep -c parse_w11_1_number json/generated.rs == 0` (today 7; the certified SPEC `:755`/`:570` binds the P5 gate to `json/generated.rs` ALONE — the unscoped crate-wide count is 15: + 7 template-source `json_sink_direct.rs` + 1 `lib.rs:565` test-assert, both driven to 0 by the same rename+regen but NOT the SPEC gate target); `regen --check` exit 0 |
+| MP.SK18.G1 JSON projection — `SinkOnlyExpr` AST-walk emitter | T-P2 R-C C1; T-P1 D-9; `sk-v18/SPEC.md:438` | ≤450 hand / high | H.W4 SinkOnly; JSON 51-row guard | The byte-equiv diff vs `json_templates/` oracle BEFORE oracle deletion (COH18-011) | `.bbnf`-mutation falsifier; `g1_hot_leaf_preserved==true`; `json_strict_rows_admitted==51` |
+| MP.SK18.G2 CSS lowering — `css_balanced_component_scan` + fact-keyed projection | T-P2 R-B; T-P1 D-6; §6 (a)-(d) gate; `sk-v18/SPEC.md:439` | ≤450 hand / high | H.W6 CSS >SOTA; §13.5 W5 CSS typed provider | The arg-mutation falsifier + the 9-field cssparser oracle (gate BEFORE speed); `CSS_GENERATED_RS` DELETED | `css_typed_summary_equal==true` before speed; `track1_rich/lcss > 1.0×` same-run ∧ no pre-G2 regression |
+| MP.SK18.G3 un-fork the emitter — DELETE `RuntimeEmitterKind`, dispatch on `BackendShape` | T-P1 D-3/COH18-003/COH18-008; T-P2 R-A; `sk-v18/SPEC.md:440` | ≤450 hand / high (relocated-seam) | F.W5 un-fork; H.W4 5-shape; MP.NW6 Lock 14 | Generated output byte-equivalent to G1/G2-closed files (PATH change, not OUTPUT) | 5-conjunct exit: `emitter_fork_present==false`; `generator_grammar_branch_count==0`; `generator_grammar_type_count==0`; `emit_shape_source==lowered_program`; `runtime_target_rows_collapsed==true` |
+| MP.SK18.G4 shared value-API trait + phantom resolution — `Cursor` micro-trait, DELETE `<G>` | T-P1 D-5/COH18-008; T-P2 R-D; `sk-v18/SPEC.md:441` | ≤450 hand / med-high | B substrate; G path/value/visitor; §13.5 W5 CSS provider | JSON `value.rs` navigation byte-equal diff vs pre-G4 (preserve-rich-ast, not "by construction") | `phantom_generic_resolved==deleted`; `json_rich_navigation_preserved==true`; `shared_trait_non_collapsible==true` |
+| MP.SK18.G5/G6 neutral scan retarget — NEON onto the CSS scan shell + neutralize json/scan.rs | T-P1 D-6; T-P2 R-F; `sk-v18/SPEC.md:442` | ≤450 hand / med-high | H.W2/H.W2.5 Lock 16; H.W5 NEON | The (P3-collapsed singular) generated scan CALLS the shared `runtime_simd` primitive (no orphan kernel) | `acceleration_at_admission==admission`: generated.rs caller census non-empty ∧ `simd_admission_profile_sampled==true` |
+| MP.SK18.PROVE Sheets via the un-forked generator ONLY — precedence-tower core | T-P1 1D U-2; T-P2 R-E-2 / 2C SHEETS-PRECEDENCE-TOWER; `sk-v18/SPEC.md:443` | ≈+200 / med-high (make-or-break) | G future-grammar gate; the negative control | The Sheets value type instantiates the G4 trait; Sheets `generated.rs` md5-distinct from JSON∧CSS | `sheets_grammar_shape==pratt-operator`; `generator_grammar_count==3`; no `const.*_RS.*r#` Sheets blob; BINDING FALLBACK `N` if shim-needed |
+| MP.SK18.H1 CSS framing honesty + corpus-in-timer + regen --check clean | T-P1 1D U-4 (load-depressed re-lock); R14/R-A0-1; `sk-v18/SPEC.md:444` | 0 source / low | H.W6 honesty; J.W1 close | The H1 quiet re-capture + PASS-IMPL close audit consume the deferred G6 figure | `materialization_framing==lazy-rich-vs-eager-cssom`; `host_loadavg<1.0`; ≥1 regular corpus crossing >1.0× same-run |
+
+Binding lattice (`sk-v18/SPEC.md:535-547`): P-cluster (P5 before G1; P4 live
+before G2/G3; P3 dual-gates G2 + binds G3) → G1 → G2 (G1∧P3) → G3 (G1∧G2∧P4∧P3)
+→ {G4 (G1∧G2∧G3); G5/G6 (P1∧P3∧G3, PARALLEL to G4)} → PROVE (G3∧G4, PARALLEL to
+G5/G6) → H1 (G5/G6∧PROVE). Wave count = 12, at the skinny ceiling (no W12).
+The P-cluster (P1-P5) is the ONLY dispatch-now-eligible cluster on S-P3 close;
+every GENERALIZE/PROVE/HONESTY wave is blocked until its predecessor closes its
+exit gate AND its entry-gate predicate holds GREEN AND the orchestrator/user
+dispatches the wave triumvirate.
+
+Per MP-3B-SKV18-D04, the P-cluster build-soundness coupling is recorded: P1's
+`checkasm_parity.rs` x86 decouple is SAME-commit across all 11 x86_64 call sites
+(a deletion list narrower than
+the verify grep ships a RED-by-construction gate); P4 is the ENTRY-GATE of
+G2/G3, a hard ordering, not a preference. Per MP-3B-SKV18-D05, each G-wave is
+≤450 hand LOC under the §6 (a)-(d) named-primitive gate; the
+`css_balanced_component_scan` is FORCED-demoted (CSS-scoped) per the s6/C4
+neutrality finding; the un-forked emitter reads `BackendShape`, not a grammar
+tag. Per MP-3B-SKV18-D06, a Sheets emission needing a shim is the negative-
+control fail `N` (generalization NOT real), surfaced honestly, never paper-
+closed; H1 discloses `materialization_framing == lazy-rich-vs-eager-cssom`.
+
+Per the CH3-V1-R2 retime (3B/3D-D08/3F-MH-003): G2/G4/G6 entry is BLOCKED until
+the SK-V16/V17 REDRESS reconcile (the four-item pre-block is complete only for
+the SK-V15-W11 ledger; 1D U-5) is on the committed ledger as a
+Pass-Omega-V10 / pre-W-PRUNE blocker — these waves abut REDRESS items
+51/53/246/247 (1D:168-171; the 3F CH3 row 3F-migration-handoff.md:274;
+item 246 = the W11T parse-only structural-STREAM driver reject that bounds G4)
+and run DURING SK-V18.
 
 ## 14. Tranche I - Recovery, Incremental, LSP
 
@@ -1258,7 +1360,7 @@ Budget enforcement rows:
 | Lock | Owner tranche | Close proof |
 |---|---|---|
 | 1 Tape/direct substrate | B/F/H | Runtime identity tests, payload projection tests, no OpenFrame clone stack. |
-| 2 Layout lowering term | D/F | Layout facts lower through BIR. Per MP-3B-SKV17-D09, the SK-V18 MP.SK18.W6 (§13.6) reconciles the `StructLayout` canonical-name retirement as a Lock-2 sub-surface: path-(a) is a 960-site rename (regen 8 parsers + ~16 tests); path-(b) is a text-only re-scope plus a side-table sized as the 0→N introduce-delta (`grep StructLayout crates/`=960 vs `grep backend_shape\|LayoutFacts crates/`=0). Generator-side, regen-gated; the path choice is a Pass-Omega/3C call. Lock 2 closure is not claimed by `LayoutFacts` alone. |
+| 2 Layout lowering term | D/F | Layout facts lower through BIR. Per MP-3B-SKV17-D09, the SK-V19 MP.SK19.W6 (§13.6) reconciles the `StructLayout` canonical-name retirement as a Lock-2 sub-surface: path-(a) is a 960-site rename (regen 8 parsers + ~16 tests); path-(b) is a text-only re-scope plus a side-table sized as the 0→N introduce-delta (`grep StructLayout crates/`=960 vs `grep backend_shape\|LayoutFacts crates/`=0). Generator-side, regen-gated; the path choice is a Pass-Omega/3C call. Lock 2 closure is not claimed by `LayoutFacts` alone. |
 | 3 Cursor-parse/byte-skip | B/H | Empty-path elision and scanner tests. |
 | 4 CSP/egraph bridge | C | Bridge tests, no fused hypergraph, representative-stability test, rewrite-budget test, bridge-justification round-trip. |
 | 5 Backend IR lowerers | E/F/H | Codegen BIR-only tests. |
@@ -1330,8 +1432,8 @@ artefacts that should contain it returns CH7 REJECT and triggers revise.
 | LSP incremental parser diverges from batch parser. | I CLI/LSP diagnostic parity tests. |
 | SOTA gates are measured on unclear hardware. | H/J benchmark metadata records CPU, OS, build flags, input hashes. |
 | Legacy archive becomes active code again. | A/J workspace membership checks. |
-| Per-leaf `StructRegistry::layout(rule)` indirection re-enters the hot path (28-65×/983×/10583× regression class). | Per MP-3B-SKV17-D06, the SK-V18 MP.SK18.W4 fence (§13.6): the W3 `ValueRef<G>` generator resolves the layout ONCE at codegen, never per-leaf; the live coupling at `crates/core/src/runtime/bbnf/arena.rs:47` is severed by F1 in the same wave; ANY per-leaf runtime lookup is REJECT/REDRESS. |
-| Scaffold-to-body cost-cell band on the decision-engine wiring (MP.SK18.W5, ~4×270=800-1100 LOC) understates cost. | Per residual CH4-V3-01, MP.SK18.W5 carries one explicit cost-row for the scaffold→body fill (`backend_egraph` 311 + `decision_csp` 273 skinny scaffolds → core body) distinct from the 600-1400 LOC wiring envelope; cost evidence (§24) records selected/rejected/dominated provenance for it. |
+| Per-leaf `StructRegistry::layout(rule)` indirection re-enters the hot path (28-65×/983×/10583× regression class). | Per MP-3B-SKV17-D06, the SK-V19 MP.SK19.W4 fence (§13.6): the W3 `ValueRef<G>` generator resolves the layout ONCE at codegen, never per-leaf; the live coupling at `crates/core/src/runtime/bbnf/arena.rs:47` is severed by F1 in the same wave; ANY per-leaf runtime lookup is REJECT/REDRESS. |
+| Scaffold-to-body cost-cell band on the decision-engine wiring (MP.SK19.W5, ~4×270=800-1100 LOC) understates cost. | Per residual CH4-V3-01, MP.SK19.W5 carries one explicit cost-row for the scaffold→body fill (`backend_egraph` 311 + `decision_csp` 273 skinny scaffolds → core body) distinct from the 600-1400 LOC wiring envelope; cost evidence (§24) records selected/rejected/dominated provenance for it. |
 
 ## 24. Carry And Friction Ledger
 
@@ -1343,7 +1445,10 @@ rather than duplicating receivers.
 | Item | Receiver | Blocker | Gate | Source |
 |---|---|---|---|---|
 | Omega V1.1 MASTER reconciliation | CRUD-2 / G-Omega | §H scoped landings, refuted routes, and SK-V13 full-SOTA receivers are not visible in current MASTER. | Apply the Ω-D accepted diff only after Pass Omega convergence and G-Omega; preserve landed-scoped/partial/refuted/pending labels. | omega |
-| SK-V18 tape-fold adoption (MP.SK18.W0..W6) | §13.6 / SK-V17 skinny W0-W5 close + G-Omega | The fold's proven `Tape`/`ValueRef`/`select_classifier` is not yet adopted into crates/core; eager-`OpenFrame`, AoS-`TapeRec`, per-leaf-`StructRegistry`, and CSS fact-stream-String fold-targets persist. | Per MP-3B-SKV17-D06/D08: MP.SK18.W4 fences per-leaf `StructRegistry::layout(rule)` (W3 generator resolves layout once at codegen; `arena.rs:47` coupling severed by F1); MP.SK18.W0 gates MP.SK18.W2 to exactly-one SoA encoding across all 8 carriers; a dual AoS/SoA end-state re-opens REDRESS-53. Dispatched only after SK-V17 skinny W0-W5 close proves the model and G-Omega authorises; no engineered-defer-without-receiver. | omega + skinny |
+| SK-V18 generalization (MP.SK18.P1..H1; the 12-wave skinny un-fork) | §13.7 / §13.5 SK-V15 + SK-V17 close + Pass Omega/G-Omega | The two forked parsers (JSON+CSS) + 7 css_l4 replicas + the CSS const courier + the `RuntimeEmitterKind` fork + the phantom `<G>` axis persist; ONE `.bbnf`-driven generator not yet realised. | Per MP-3B-SKV18-D03/D04/D05/D06: each §13.7 wave carries a same-wave consumer + RED exit-gate falsifier; W-PRUNE is dispatch-eligible on S-P3 close, every GENERALIZE/PROVE/HONESTY wave predecessor-gated; a Sheets `N` (shim-needed) is the honest negative-control fail, never paper-closed; ≈ −10800 campaign LOC (per-wave SPEC sum ≈−10685; a REDUCTION). | omega + skinny |
+| SK-V19 totality-fold adoption (MP.SK19.W0..W6, re-keyed §13.6 F1-F9) | §13.6 / SK-V18 H1 close + G-Omega | The SK-V18-proven un-forked generator is not yet adopted into the 9-grammar crates/core fleet; eager-`OpenFrame` / AoS-`TapeRec` / per-leaf-`StructRegistry` fold-targets persist in totality. | Per-grammar regen ×8/×9; SoA exactly-one-encoding closure (Lock 1); dispatched only after SK-V18 H1 close proves the 3-grammar un-fork (skinny); no engineered-defer-without-receiver. | omega + skinny |
+| SK-V19 totality-tree leaks (the 3 carried at HEAD, routed forward) | §13.6 SK-V19 sub-section / SK-V19 waves | (a) the 9-ident `ir/registry/strategy.rs` grammar-named table (Lock 14 self-gate RED at 13 sites); (b) `crates/core/src/css_types.rs` (named in the Lock 14 `:349` "The current overfitting mess —" enumeration, 66 LOC, in generic core); (c) the `simd-scan` vs skinny `bbnf-simd` probe-API asymmetry — all verified at HEAD but SK-V19-closeable, NOT SK-V18. | (a) R16 `PartialEq` row-collapse over ALL 9 idents + widen leak regex to 9 names (≈+217); (b) relocate to `crates/css/` declaration crate (admissible per Lock 14(c)) OR delete; (c) decide UNIFY vs renamed-parallel-scanner + 8/9 OnceCell re-route. DEFER — do NOT bolt a 9-name regex widen into an SK-V18 gate. | omega + skinny |
+| SK-V19 BBNF-self 4th-grammar litmus + 9-grammar fleet onboarding | §13.6 SK-V19 sub-section / §5 A.W2 nine-grammar census | SK-V18 witnesses 3 grammars (JSON+CSS+Sheets); SK-V19 scales the onboarding test to 9 + arbitrary user grammars. BBNF-self exercises recursive grammar-source ownership with no `Bbnf` branch in generic crates. | regen/`--check` diff + generic-code no-change gate; source/metadata-only addition; fail if any generic owner path changes except generated manifests. SK-V19 entry census: `crates/core/src/runtime` line-1 `@generated` provenance + md5-distinctness across the 9 (mirrors the skinny P3 falsifier). | omega + skinny |
 | Rolling SOTA delta | H/J/BENCH/HANDOFF | Close can paper over row demotion or one-row CSS admission. | `restart/skinny/ROLLING-SOTA-DELTA.md` or equivalent BENCH-owned table carries every JSON row/plane and CSS feature; regressions fail G7 unless architectural-block/user re-pin is recorded. | omega + skinny |
 | G-Omega before SK-V13 W0 | HANDOFF / S-P3 | Implementation waves can start before Totality V1.1 ratifies skinny lessons. | HANDOFF and S-P3 SPEC refuse Wave 0, source edit waves, and RESULTS/REDRESS-writing waves until G-Omega closes. | omega + skinny |
 | Declaration-crate escape valve | A/D | Review form missing reason, scope, owner, or deletion path. | Metadata validator rejects `allow_declaration_crate = true` without the eight-field review form (template at `restart/ARCHITECTURE.md` §5.6 lines 738-770 — landed Phase 7.1). A.W4 consumes the template; D consumers reference it when the rare escape valve fires. | synthesis + migration |
@@ -1412,14 +1517,22 @@ The implementation order is:
 13. Build J only when parity, SOTA, docs, and publication checks have real
     artifacts to verify.
 
-Per MP-3B-SKV17-D01, the SK-V17/SK-V18 tape-fold is sequenced DOWNSTREAM of
-SK-V15: SK-V15 W0-W11 close the CSS-honesty repair first; SK-V17 skinny W0-W5
-then PROVE the unified-tape / lazy-`ValueRef<G>` / NEON classifier model; only
-after that proof and Pass Omega / G-Omega authorisation does SK-V18 W0 (§13.6
-MP.SK18.W0) dispatch to ADOPT the proven substrate into crates/core. The
-direction is monotonic skinny→totality; MASTER never dictates back to a live
-skinny iteration. No SK-V18 fold wave is engineered-deferred without its named
-SK-V17-close + G-Omega receiver.
+Per MP-3B-SKV18-D08, the generalization→totality sequence is: SK-V15 W0-W11
+CLOSED the CSS-honesty PRUNE-then-REBUILD repair (`66232b7c3`); SK-V16 W0-W6
+landed the CSS >SOTA rearchitecture + shared flat-tape substrate (`1c5bd7a25`);
+SK-V17 skinny W0-W5 CLOSED, PROVING the unified-tape / lazy-`ValueRef<G>` / NEON
+classifier model (`f6a38445b`); SK-V18 (§13.7) is the skinny GENERALIZATION
+cycle — ONE `.bbnf`-driven generator emitting JSON+CSS+Sheets, un-forking the
+two parsers on 3 grammars, aarch64-only, ≈ −10800 campaign LOC (per-wave SPEC sum
+≈−10685; the W-PRUNE cluster is
+dispatch-eligible on S-P3 close; every GENERALIZE/PROVE/HONESTY wave is
+predecessor-gated); only after SK-V18 H1 close and Pass Omega / G-Omega
+authorisation does SK-V19 W0 (§13.6 MP.SK19.W0) dispatch to ADOPT the un-forked,
+tape-proven generator into the 9-grammar crates/core fleet + onboard BBNF-self.
+The direction is monotonic skinny→totality; MASTER never dictates back to a live
+skinny iteration. No SK-V18 wave is engineered-deferred without its named close +
+G-Omega receiver; no SK-V19 fold wave dispatches without its SK-V18-H1-close
+predecessor.
 
 No implementation tranche starts by editing PASS outputs, prompt contracts,
 locks, corpora, inheritance docs, `skinny/RESULTS.md`, or `skinny/REDRESS.md`.

@@ -4,53 +4,49 @@ You are the hardening agent for the **skinny implementation spec**. The skinny e
 
 This prompt is parameterised by target. It composes with the existing greenfield-restart hardening apparatus rather than duplicating it.
 
-**Pass Omega V9 / SK-V15 receiver (2026-05-28).** A hardening run now reads
-the locked SK-V15 `SPEC.md`, `DISPATCH-PROMPT.md`, `SYNTHESIS.md`, and
-`HANDOFF.md`; PASS-IMPL V1 consolidated audit; T-P1 V5, T-P2 V3, and T-P3 V5
-consolidated packets; and G-Omega V9 authorization before it treats any skinny
-surface as current. SK-V14 W5B-FRONTENDR and older Pass Omega V2..V8 receivers
-remain historical evidence only.
+**Pass Omega V10 / SK-V18 hardening receiver (2026-06-01).** A hardening run
+reads the certified SK-V18 `SPEC.md`, `SYNTHESIS.md`, `HANDOFF.md`; the S-P1
+`SYNTHESIS-PROFILE.md`; the S-P2 `SYNTHESIS-RESEARCH.md` (R-A..R-F + the §6
+(a)-(d) gate); the S-P0 `SYNTHESIS-AUDIT-OVERFIT.md` (PRUNE-list, CH7); and the
+converged T-P1/T-P2/T-P3 consolidated packets before treating any skinny surface
+as current. SK-V14 W5B-FRONTENDR and SK-V15 W0-W11 remain historical evidence
+only.
 
-Refuse implementation before G-Omega V9. Refuse SK-V15 close from
-documentation-only evidence, warm benches, x86/AVX/AVX-512 anchors, W8R CSS
-metric floors, hidden broadcast measurements, self-exempting Lock 14/16
-exclusions, header-only Pattern H provenance, source-present unwired
-primitives, Decision Engine advisory-only facts, label-string BackendShape
-lowerers, and production FNV arbiter/hash-correctness routes. CSS fact streams,
-`CSS_GENERATED_RS`, `CssFullParseSummary`, and brace-counter proof are
-diagnostic after W1 and cannot remain live admission after W6. Typed CSS
-Value/document/view/visitor output belongs to W5; fresh same-workload typed
-`cssparser` retime belongs to W6.
+Refuse implementation before G-Omega. Refuse SK-V18 close from:
+documentation-only evidence; warm benches; x86/AVX-512/SVE anchors (x86 is
+DELETED, a PRUNE target); a surviving verbatim const courier (`CSS_GENERATED_RS`)
+or a fixed-literal `render()` (`verbatim_blob_present` must be false); a named
+primitive with `named_primitive_falsifier_pass != true` on ANY of (a)-(d); a
+primitive whose LOC exceeds its profiled hot-leaf extent (the (d) god-kernel
+reject); an emitter still forked on a grammar tag (`emitter_fork_present` must be
+false, dispatched on `BackendShape`); a SIMD acceleration claim whose
+`acceleration_at_admission == dead`; and any CSS ratio NOT measured
+`track1_rich/lightningcss` same-run in one quiet plane. `cssparser` is the
+9-field EXACT correctness oracle (gate-before-speed), NOT a speed comparator.
 
-**Pass Omega V5 / SK-V17 hardening receiver (fold-scope honesty firewall).** A
-hardening run that touches the SK-V17 tape-fold reads every Sheets/BBNF-self
-claim AND every CSS-`>SOTA` claim as predicted / SK-V18-pending, not proven: the
-tape/`ValueRef<G>`/NEON fold is proven by-exercise on JSON only (51/51 strict
-A/GO Track 1 > sonic same-plane) and first-moved on CSS (its `>SOTA` bar
-UNMEASURED-PENDING), and is by-construction-not-by-exercise on Sheets/BBNF-self.
-The two non-blocking REVISE residuals ride forward: CH4-V3-01 (the D07
-scaffold→body cost-cell band) routes to the MASTER-PLAN cost table, and
-CH6-V3-7 (the 3E `EBNF/BNF/CSV/math` defer-word re-order + 3C anti-silent-satisfy
-clause) is absorbed by the qualified receiver/blocker/gate defer triple and the
-Lock-10 mandatory inline Lock-1 manifest cross-reference. Refuse any fold claim
-that reads CSS `>SOTA` as MET, that asserts fleet-wide grammar-neutrality without
-a non-JSON-non-CSS value-plane witness, that ships a dual AoS/SoA substrate as a
-Lock-1 closure, or that admits a 6th `BackendShape`. Source:
-`restart/audit/totality/sk-v17/p3/3d-skinny-fold.md` SCOPE-HONESTY BANNER;
-`restart/audit/totality/sk-v17/p3/3e-grammar-generalisation.md` deltas
-`3E17-D05`/`D07`.
+**Pass Omega V10 / SK-V18 hardening receiver (fold-scope honesty firewall).** The
+SK-V17 firewall's CSS-`>SOTA`-UNMEASURED-PENDING posture is DISCHARGED: SK-V18
+measure-proves CSS >SOTA via the certified `track1_rich/lightningcss > 1.0x`
+same-run gate (beaten 1.66-3.38x). The honesty firewall now reads every Sheets
+claim as the PROVE-wave negative control (proven-by-exercise once
+`google-sheets.bbnf` emits a non-hollow pratt-operator `generated.rs`,
+md5-DISTINCT from JSON/CSS), and every NEON acceleration claim as admissible only
+under `acceleration_at_admission == admission`. Refuse any claim that ships a
+dual AoS/SoA substrate as a Lock-1 closure, that admits a 6th `BackendShape`,
+that reads `cssparser` as a speed comparator, or that asserts the generalization
+without the Sheets negative control.
 
-W2-W10 are mandatory seven-lens CHALLENGE candidates unless the plan proves
-the redress is ledger-only and non-behavioral. The lenses are CH1 correctness,
-CH2 generality, CH3 regression, CH4 cost, CH5 hidden coupling,
-CH6 anti-paper-close, and CH7 overfit-prune/gate-exclusion. CH3 now includes
-wave-graph cycle detection for delete-before-rebuild paths. CH5 includes
-broadcast-admission detection: N admitted rows require N distinct measurement
-rows, not one row broadcast across conceptual features. CH7 includes gate
-exclusion detection: every Lock 14 / Lock 16 gate must report included roots,
-excluded roots, reasons, self-scan status, primitive status, gate consumer,
-affected rows, and disposition. This prompt still defines the lenses; it does
-not authorize source, gate, `RESULTS.md`, or `REDRESS.md` edits by itself.
+W-PRUNE and G1..G6/PROVE/H1 are mandatory seven-lens CHALLENGE candidates unless
+the plan proves the redress is ledger-only and non-behavioral. The lenses are CH1
+correctness, CH2 generality, CH3 regression (incl. delete-before-rebuild cycle
+detection), CH4 cost, CH5 hidden coupling (incl. closed-enum sidecar and
+one-to-N broadcast detection), CH6 anti-paper-close, and CH7
+overfit-prune/gate-exclusion — CH7 now subsumes the per-primitive (a)-(d)
+named-primitive falsifier (grammar-INVOKED-by-name;
+emitted-output-VARIES-under-invoking-rule-mutation; `verbatim_blob_present ==
+false`; PROFILE-PROVEN-NARROW-LEAF, primitive LOC ≤ profiled hot-leaf extent).
+This prompt still defines the lenses; it does not authorize source, gate,
+`RESULTS.md`, or `REDRESS.md` edits by itself.
 
 ## §1 — Purpose: why skinny hardening differs from V1 hardening
 

@@ -2,57 +2,47 @@
 
 The skinny exists to validate the V1 architectural premise — specifically the SOTA-viability claim — before tranches A-J commit. **One grammar (JSON) end-to-end through 10 partial crates plus `xtask`, dual-track measured against sonic-rs / simd-json. Buildable in 2-4 weeks; ~32,000 handwritten LOC + ≤4,000 generated LOC.**
 
-**Pass Omega V9 / SK-V15 authority update (2026-05-28).** SK-V14 remains
-historical row-ledger evidence, but it no longer dispatches live skinny work.
-PASS-IMPL V1 reclassified the CSS L4 leg as contrived and reopened CSS,
-Pattern H, Lock 14/16, Decision Engine, lowerers, and FNV as SK-V15
-overfit-prune work. The active skinny implementation contract is
-`restart/skinny/tranches/sk-v15/SPEC.md` plus
-`restart/skinny/tranches/sk-v15/DISPATCH-PROMPT.md`, W0-W11. W0 Baseline and
-Telemetry Lock is the first legal implementation wave after G-Omega V9
-authorization.
+**Pass Omega V10 / SK-V18 generalization authority (2026-06-01).** SK-V15's
+PRUNE-then-REBUILD W0-W11 narrative is historical. SK-V18 — the GENERALIZATION
+cycle, the inflection backtrack — is the active certified contract: the two
+hand-written/forked parsers (JSON + CSS) collapse into ONE grammar-driven
+generator emitting JSON + CSS + Sheets from `.bbnf` (`generator_grammar_count
+== 3`), preserving >SOTA honestly (CSS beats lightningcss 1.66-3.38x via
+`track1_rich`; JSON beats sonic-rs strict), x86 DELETED (aarch64-only), net LOC
+≈ −10800. The active implementation contract is
+`restart/skinny/tranches/sk-v18/SPEC.md` — the certified
+W-PRUNE→G1..G6→PROVE→H1 12-wave manifest. W-PRUNE (P1-P5) is the only
+dispatch-now-eligible cluster after G-Omega; every G1..G6/PROVE/H1 wave is
+gated on its predecessor's exit gate AND its entry-gate predicate AND an
+explicit wave-triumvirate dispatch.
 
-Historical SK-V5/SK-V6/SK-V13/SK-V14 cohorts remain evidence for rejected
-routes, primitive admission discipline, strict same-plane comparator language,
-and the closed JSON guard rows. They are not the active dispatch anchor. The
-current close posture is the SK-V15 PRUNE-then-REBUILD sequence: W0 baseline
-telemetry; W1 CSS admission honesty and 24-row broadcast demotion/collapse; W2
-Lock 14 / Lock 16 gate restoration with consumed exclusion reports; W3 one
-coherent generic codegen leak abrogation; W4 Pattern H line-1 generated
-provenance and non-writing regen/check proof for the 67 root runtime files; W5
-typed CSS Value/document/view/visitor provider; W6 same-workload typed CSS
-`cssparser` retime plus retirement of `CSS_GENERATED_RS`,
-`CssFullParseSummary`, fact-stream-only CSS `parse()`, and brace-counter proof
-from live admission; W7 executable Decision Engine spine; W8/W9 real or
-gate-rejected lowerers for the exact five `BackendShape` variants; W10
-bench-only FNV quarantine and production-root scan; W11 PASS-IMPL V2 close
-with no orphan dependency rows. No W12 escape hatch is available.
+Historical SK-V5/SK-V6/SK-V13/SK-V14/SK-V15 cohorts remain evidence for
+rejected routes, primitive-admission discipline, and strict same-plane
+comparator language; they are not the active dispatch anchor. SK-V16/SK-V17 are
+the immediate antecedents — the SK-V17 tape-fold predictions (the ONE
+BackendRule-walking projection generator, the shared NEON classifier) are now
+SK-V18-CERTIFIED.
 
 JSON parse_only / direct_to_struct / real_typed_struct remain 51/51 strict
-same-plane guard rows. CSS L4's 24 SK-V14 rows are audit-demoted until W1
-demotes or collapses the broadcast evidence and W5/W6 provide typed CSS output
-plus same-workload `cssparser` comparison. `lightningcss` remains diagnostic
-until Track 1 emits comparable CSSOM/value output. SK-V16 routing is remainder
-only; it cannot substitute for SK-V15 close evidence.
+same-plane guard rows (maintained at G1). CSS is no longer demoted: the
+certified close gate is the SAME-RUN `track1_rich/lightningcss > 1.0x` ∧ no
+same-run regression vs the parser's OWN pre-G2 baseline
+(`track1_rich_over_lcss_ratio_pre_g2`, captured at G2 entry). `cssparser` is
+the 9-field EXACT CORRECTNESS oracle (gate-before-speed), structurally distinct
+from `track1_rich` — NOT a speed comparator; `lightningcss` IS the CSS >SOTA
+speed bar. The 16-lock count and 5-shape `BackendShape` canon are preserved by
+addition (no sixth shape, no renumber, no production FNV route, no new public
+syntax).
 
-**Pass Omega V5 / SK-V17 fold state (2026-05-30).** The SK-V17 T-P3 tape-fold
-converged and is CRUD-applied to the V1 surfaces. The one load-bearing skinny
-WIN — the flat lazy-offset SoA `Tape<'input>` + lazy `ValueRef<G>` projection
-(JSON 51/51 strict A/GO Track 1 > sonic same-plane) — becomes the
-V1-authoritative single post-fold substrate the five `BackendShape` shapes
-project from; the durable skinny REJECTIONS (AZ-IV eager value tree 118×,
-StructRegistry/Arena/Builder per-leaf indirection, CSS fact-stream String as
-admission plane, x86/AVX/SVE) become locks-strengthening fences. The fold
-direction is MONOTONIC and governance-bound: SK-V18 adopts the PROVEN skinny
-`Tape`/`ValueRef` INTO crates/core; it NEVER relocates crates/core
-`TapeStructBuilder`/`StructLayout`/`TapeCursor` into skinny, and the totality
-spec never dictates back to a live skinny iteration. The CSS `>SOTA` bar is
-UNMEASURED-PENDING — an SK-V18 proof obligation, not an SK-V17 result.
-Sheets/BBNF-self projection generality is by-construction-not-by-exercise
-(SK-V18). The full tape-fold posture is bound by the LOCKS SK-V17 T-P3
-Crystallisation Addendum (Locks 1/2/10/14/16; 16-lock count preserved; five-shape
-canon verbatim; tape = substrate-manifest category). Source:
-`restart/audit/totality/sk-v17/p3/3d-skinny-fold.md` deltas `3D-SK17-D07`/`D08`.
+**Pass Omega V10 / SK-V18 fold-adoption state (2026-06-01).** The SK-V17 T-P3
+tape-fold is CERTIFIED-ADOPTED by SK-V18: the flat lazy-offset SoA
+`Tape<'input>` + lazy `ValueRef<G>` projection is the single post-fold
+substrate the 5 `BackendShape` shapes project from, and the ONE
+BackendRule-walking projection generator now emits JSON byte-equal AND CSS +
+Sheets lazy from one walk. The durable skinny REJECTIONS (AZ-IV eager value
+tree 118x, per-leaf indirection, CSS fact-stream String as admission plane,
+x86/AVX/SVE) are locks-strengthening fences — x86 is now DELETED, not merely
+fenced.
 
 The full V1 spec lives at `restart/ARCHITECTURE.md`, `restart/MASTER-PLAN.md`, `restart/MIGRATION.md`, plus the PASS surfaces. This skinny spec carves out a minimum-viable subset of that V1 contract.
 

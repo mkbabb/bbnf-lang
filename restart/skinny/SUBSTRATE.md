@@ -30,48 +30,42 @@ supplies one instance; CSS, Sheets, and BBNF-self supply others. SIMD/ASM
 primitives are admitted only through Lock 16 scalar-oracle plus checkasm gates
 and a same-wave runtime or generated consumer.
 
-**Pass Omega V9 / SK-V15 substrate receiver (2026-05-28).** No substrate
-amendment follows from SK-V15 totality closure. Lock 1 substrate union, no
+**Pass Omega V10 / SK-V18 substrate receiver (2026-06-01).** No substrate
+amendment follows from SK-V18 totality closure. Lock 1 substrate union, no
 parallel substrate, no cross-call retained classifier state, and the exact
-five-shape `BackendShape` canon remain binding. The active implementation route
-is SK-V15 W0-W11, not SK-V14 W5B/W5C/W5D.
+5-shape `BackendShape` canon {EagerTape, OffsetTape, EventTape, SinkOnly,
+CollapsedStage} remain binding (the 16-lock count is preserved by addition). The
+active implementation route is SK-V18 W-PRUNE→G1..G6→PROVE→H1, not SK-V15 W0-W11.
 
-1. **Lock 1 substrate-union boundary remains elevated.** Quote-mask,
-   escape-mask, structural-mask, class-stream, prev-state byte, prefix-XOR
-   carry word, or any prefix carry of any kind may be transient producers, but
-   cross-call retained classifier state remains inadmissible. Transient masks
-   and local classifiers may write existing tape/sink/fact output; they do not
-   create a retained sidecar, second tape, public `UnionTape`, alternate
+1. **Lock 1 substrate-union boundary remains elevated.** Quote/escape/structural
+   masks, class-stream, prev-state byte, and prefix-XOR carry may be transient
+   producers; cross-call retained classifier state remains inadmissible. They do
+   not create a retained sidecar, second tape, public `UnionTape`, alternate
    document projection, or public substrate API.
-2. **FactStream remains substrate-manifest classification only.** FactStream is
-   not a sixth `BackendShape`, and EventTape is not a retained sidecar stream.
-   Fact-stream-only CSS output is diagnostic after W1 and must retire from live
-   admission by W6 typed CSS proof. `CSS_GENERATED_RS`,
-   `CssFullParseSummary`, and brace-counter proof cannot close CSS admission.
-3. **SK-V15 W2 restores Lock 14 / Lock 16 gate coverage and exclusion
-   reporting.** Every gate must print included roots, excluded roots, reasons,
-   self-scan status, primitive status, gate consumer, affected rows, and
-   disposition. Every SIMD/ASM primitive must be wired, deleted,
-   scalar-delegated, or architecturally blocked with scalar oracle/reference,
-   strict parity/checkasm where relevant, same-wave consumer, and native Apple
-   M5 Max / aarch64 admission evidence. x86/AVX/AVX-512 rows are diagnostic.
-4. **SK-V15 W8/W9 prove lowerers for the existing five shapes only.** The
-   search domain at Lock 10 holds verbatim: `{EagerTape, OffsetTape,
-   EventTape, SinkOnly, CollapsedStage}`. A sixth shape, retained EventTape
-   sidecar, or production FNV route remains blocked.
+2. **The fact-stream `String` is DELETED (W-PRUNE).** FactStream is not a sixth
+   `BackendShape`; EventTape is not a retained sidecar stream. `CSS_GENERATED_RS`,
+   `CssFullParseSummary`, and brace-counter proof are RETIRED; CSS live admission
+   is the `track1_rich` typed CSSOM projection over the tape.
+3. **SK-V18 G2 lowers CSS via the `css_balanced_component_scan` named primitive;
+   G3 un-forks the emitter on the `BackendShape` discriminator; G5/G6 wire the
+   NEON classifier** (`acceleration_at_admission == admission`; the only grammar
+   datum is `alphabet:&[u8;64]`). Every SIMD primitive carries a scalar
+   oracle/reference, strict parity/checkasm where relevant, a same-wave generated
+   consumer, and native Apple M5 Max / aarch64 admission evidence. x86 is DELETED.
+4. **The 5-shape search domain at Lock 10 holds verbatim.** A sixth shape,
+   retained EventTape sidecar, public `UnionTape`, or production FNV route remains
+   blocked.
 
-**Pass Omega V5 / SK-V17 substrate receiver (tape-as-unified-substrate +
-`ValueRef<G>`).** The SK-V17 T-P3 tape-fold makes the SoA `Tape<'input>` the
-V1-authoritative single post-fold substrate, and the lazy grammar-parametric
-`ValueRef<G>` the one materialization plane. These are the proven-and-benched
-skinny WINs (JSON 51/51 strict A/GO Track 1 > sonic same-plane,
-`skinny/RESULTS.md`); they fold monotonically skinny→totality. No substrate
-amendment is created here — the receiver records the fold posture and binds the
-LOCKS SK-V17 T-P3 Crystallisation Addendum (`restart/locks/LOCKS.md` Lock 1
-tape-substrate-union clause + Lock 14 ValueRef/classifier-generalisation clause).
-Source: `restart/audit/totality/sk-v17/p3/3d-skinny-fold.md` deltas
-`3D-SK17-D01`/`D02`; `restart/audit/totality/sk-v17/p3/3e-grammar-generalisation.md`
-deltas `3E17-D01`/`D02`/`D09`.
+**Pass Omega V10 / SK-V18 substrate receiver (tape-as-unified-substrate +
+ValueRef<G>, CERTIFIED).** The SoA `Tape<'input>` is the single post-fold
+substrate; lazy `ValueRef<G>` is the one materialization plane, now
+SK-V18-CERTIFIED to project JSON byte-equal AND CSS + Sheets lazy from ONE
+`BackendRule`-walk. These are the proven-and-benched skinny WINs (JSON 51/51
+strict A/GO Track 1 > sonic same-plane; CSS track1_rich > lightningcss
+1.66-3.38x). No substrate amendment is created here. The receiver binds the LOCKS
+SK-V17 T-P3 Crystallisation Addendum (Lock 1 tape-substrate-union clause + Lock 14
+ValueRef/classifier-generalisation clause), preserved by addition in the 3C
+locks-v+1 diff.
 
 1. **SoA `Tape<'input>` is the single post-fold substrate (`3D-SK17-D01`).** The
    SoA encoding (`offsets:Vec<u32>` + sparse `flag_cursors`/`flag_values` +

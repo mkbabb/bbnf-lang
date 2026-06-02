@@ -27,12 +27,84 @@ This synthesis inventory counted 834 current Rust files with `find crates -name
 '*.rs' -type f`, so tranche gates must use the live count, not only the prior
 corpus.
 
-## 0.0 Current SK-V17 Tape-Fold Migration Receiver
+## 0.0 Current SK-V18 Pass Omega V10 Generalization Migration Receiver
+
+Status: applied at Pass Omega V10 G-Omega (mandatory user gate); **G-Omega V10
+CLOSED 2026-06-01**. This is the current implementation migration authority; the
+SK-V17 tape-fold receiver (§0.1) and all historical Pass Omega V2..V8 receivers
+below are HISTORICAL lineage, NOT current dispatch authority.
+
+SK-V18 is the GENERALIZATION cycle on the SKINNY tree (`skinny/crates/`): un-fork
+the two hand-written/forked parsers (JSON + CSS) into ONE grammar-driven
+generator emitting JSON + CSS + Sheets from `.bbnf`, aarch64-only, preserving
+>SOTA honestly (CSS beats lightningcss 1.66–3.38×; JSON beats sonic-rs strict),
+≈ −10800 campaign LOC (per-wave SPEC sum ≈ −10685; `sk-v18/SPEC.md:571`).
+The totality `crates/core/` adoption is **SK-V19**, NOT SK-V18
+(`restart/skinny/tranches/sk-v18/SPEC.md:19-21`,`:58-61`).
+
+Governance (per the 3F-MH-004 record): totality T-P1 SK-V18 near-converged
+NON-normal-§3Z (NOT a normal two-clean §3Z lock); T-P2 SK-V18 near-converged
+NON-normal-§3Z (converged=false, consec=0); T-P3 SK-V18 CONVERGED into the
+3A..3F synthesis + the 3C-locks-v+1-diff (21 candidates: 9 ACCEPT, 11 MODIFY,
+0 REJECT, 1 DEFER; git apply --check exit 0 against live LOCKS.md). Do NOT cite
+the SK-V15 `HARDENING-T-P3-V5-CONSOLIDATED.md` for the SK-V18 state. Order:
+PRUNE-before-GENERALIZE-before-PROVE.
+
+The 12-wave migration receiver (the REDUCTION ledger; ≈ −10800 campaign LOC,
+per-wave SPEC sum ≈ −10685, `restart/skinny/tranches/sk-v18/SPEC.md:429-449`,
+`:571`):
+
+| Receiver wave | Migration consequence | Net LOC | Exit gate |
+|---|---|---|---|
+| P1 x86 DELETE | x86 crate-wide gone: `bbnf-simd/src/x86_64/` (24 src/x86_64 + 4 ext/x86 = 28 files, the verify grep's full reach) + `bbnf-simd/build.rs` nasm driver + `nasm-rs` build-dep + `lib.rs` dispatch arms + the 11 `checkasm_parity.rs` x86_64 call sites DECOUPLED in the SAME commit (re-grep before merge as counts may drift). aarch64 is the SOLE admission platform. | ≈ −4500 | `find …/x86_64 …/ext/x86 -type f == 0`; crate-wide aarch64-neutral grep; `cargo build`/`cargo test --no-run` clean; `x86_tree_deleted == true` |
+| P2 warm CSS bench DELETE | warm micro-fixture machinery + SHA256 scaffold gone; 9-field cold oracle retained. | ≈ −700 | `grep -c 'measure_mbps\|lightningcss_facts' bbnf-bench/src/nonjson_css_l4.rs == 0` (today 48; the certified SPEC `:627` exit-gate falsifier + owner-path `:614` bind the P2 gate to `bbnf-bench/src/nonjson_css_l4.rs` ALONE — the `src/`-qualified path disambiguates from the 7-hit `bbnf-bench/benches/nonjson_css_l4.rs`, and the 16 crate-wide hits in `bin/gate.rs` are NOT a P2 gate target, no SPEC/1D/3B wave owns their retirement; SPEC `:633` is the R14/H1 INDEPENDENT disclosure note, it binds NOTHING about the gate); css_canon_bench green |
+| P3 replica COLLAPSE | 7 byte-identical `css_l4_*/generated.rs` (md5 `b654562c`) → ONE config; 7 `RuntimeTarget` rows → ONE via `PartialEq` full-row over BOTH nested structs (`frontend_requirements` #11 ∧ `output_labels` #12). | ≈ −5500 (`SPEC.md:435`: 6×910 = −5460 replica bodies + ~−40 collapsed rows + 1 `PartialEq`; 6 of 7 deleted) | `md5 …/{json,css_l4}/generated.rs` no-identical-pair ∧ `runtime_target_rows_collapsed == true` (matches master-plan-diff `:171` + handoff-delta `:125` + `SPEC.md:435`; the md5-distinctness half is NECESSARY-not-sufficient, the structural row-collapse co-gate completes it). NOTE: `generator_grammar_count == 3` is a **PROVE-EXIT** gate (`SPEC.md:254`: "MUST be 3 at PROVE (json+css+sheets); 7-css inflation = the P3 overfit, REJECT"), NOT a P3 close-gate — at a PRUNE wave the count is at most 2, and forcing it to 3 at P3 IS the inflation SPEC `:254` rejects. |
+| P4 Lock-14 gate FIX | `runtime_generator.rs` into strict `GENERIC_SCAN_ROOTS`; the `diagnostic-x86` exclusion dropped; FORBIDDEN ⊇ {`GENERATED_RS`,`CSS_GENERATED_RS`,`EventGrammar`,`*EventGrammar`}. **MUST LAND BEFORE G2/G3.** | ≈ +15 | re-inject a forbidden token → RED/revert; `lock14_gate_scans_codegen == true` |
+| P5 metalang PURGE | `parse_w11_1_number` ×7 → `parse_number_*` at template source `json_sink_direct.rs`; the `lib.rs:565` test-assert updates SAME pass (rename-only; 1:1 regen). | ≈ 0 | `grep -c parse_w11_1_number json/generated.rs == 0` (today 7; the certified SPEC `:755`/`:570` binds the P5 gate to `json/generated.rs` ALONE — the unscoped crate-wide count is 15: + 7 template-source `json_sink_direct.rs` + 1 `lib.rs:565` test-assert, both driven to 0 by the same rename+regen but NOT the SPEC gate target — matching master-plan-diff `:173`, handoff-delta `:181`, ΩF `:230`); `regen --check` clean |
+| G1 JSON projection | `json_sink_direct` / `json_templates/` retired; `SinkOnlyExpr` AST-walk emitter; byte-equivalent vs the oracle BEFORE oracle delete. | ≈ 0 generated | JSON byte-equivalence; `verbatim_blob_present == false` (JSON) |
+| G2 CSS lowering | `CSS_GENERATED_RS` (`runtime_generator.rs:701`) DELETED; `css_balanced_component_scan` primitive + fact-keyed projection. | ≈ −910 net | `CSS_GENERATED_RS` deleted; `verbatim_blob_present == false`; `emit_shape_source == lowered_program` |
+| G3 un-fork emitter | `RuntimeEmitterKind` DELETED; dispatch on `BackendShape`, not grammar tag. | ≤450 hand | `emit_shape_source == lowered_program`; byte-equivalent output |
+| G4 value-API + phantom | `Cursor` micro-trait (`tape/cursor.rs`) over the EXISTING tape; `<G>` DELETED, K-axis preserved; JSON rich-nav byte-equal. | ≤450 hand | `phantom_generic_resolved == deleted`; shared trait ≥2 impls |
+| G5/G6 NEON retarget | NEON onto the CSS scan shell; `json/scan.rs` neutralized; checkasm-gated scalar twin. | ≤450 hand | named SIMD call-site; checkasm parity green |
+| PROVE Sheets | Sheets via the un-forked generator ONLY; precedence-tower core. | ≈ +200 | `sheets_grammar_shape == pratt-operator`; md5-distinct from JSON ∧ CSS |
+| H1 honesty close | CSS framing honesty + corpus-in-timer + `regen --check` clean; CSS ratio re-locked. | ≈ 0 | `css_canon_bench` re-locked (≥1 regular corpus crossing >1.0× same-run); `regen --check` clean |
+
+Current SK-V18 wave authority routes through
+`restart/skinny/tranches/sk-v18/SPEC.md` (the 12-wave manifest). W-PRUNE (P1-P5)
+is the ONLY dispatch-eligible cluster on close (`sk-v18/SPEC.md:46-49`).
+
+### §0.0 Migration Decisions (the five rename/abrogate/refactor surfaces)
+
+| Decision | Kind | Receiver | Net LOC | Grounding |
+|---|---|---|---|---|
+| x86 surface (crate-wide, NOT just `src/x86_64/`) | DELETE | P1 | ≈ −4500 | `sk-v18/SPEC.md:130-134`,`:435`,`:573-600`; 1F `COH18-009`. Deletion list REACH-MATCHED to the verify grep (24 src/x86_64 + 4 ext/x86 = 28 files); 11 `checkasm_parity.rs` x86_64 call sites DECOUPLE in the SAME commit or the build breaks (re-grep before merge as counts may drift). aarch64 is the SOLE admission platform; x86/AVX/AVX-512 are diagnostic-only (2A REFUTATION: x86/AVX-512 closing an M5 Max row is REFUTED). |
+| `CSS_GENERATED_RS` const courier (`runtime_generator.rs:701`) + JSON `_RS` fixed-literals (`json_sink_direct.rs`) + `json_templates/` | RETIRE | G2 (CSS) / G1 (JSON) | ≈ −910 CSS + JSON | `sk-v18/SPEC.md:61-69`. The hand-written content becomes byte-for-byte parity ORACLES, deleted POST-equivalence, NOT the product. `verbatim_blob_present == false` campaign-wide; `emit_shape_source == lowered_program` (NOT `runtime_target`) — the relocated-seam falsifier. 2C REFUTATION: `find_css_significant` wire-as-is is REFUTED. |
+| 7 byte-identical `css_l4_*/generated.rs` (md5 `b654562c`) + 7 `RuntimeTarget` rows | COLLAPSE | P3 | ≈ −5500 (`SPEC.md:435`: 6×910 = −5460 replica bodies + ~−40 rows + 1 `PartialEq`) | `sk-v18/SPEC.md:80-85`,`:435`,`:635-663`. `xtask/regen.rs` derives `PartialEq` for the R16 full-row collapse over BOTH nested structs. P3 exit gate: `md5 …/{json,css_l4}/generated.rs` no-identical-pair ∧ `runtime_target_rows_collapsed == true` (siblings master-plan-diff `:171` + handoff-delta `:125`). NOTE: `generator_grammar_count == 3` binds the **PROVE-EXIT** wave, NOT P3 (`SPEC.md:254`: "MUST be 3 at PROVE; 7-css inflation = the P3 overfit, REJECT") — it is NOT a P3 close-gate. 2C REFUTATION: md5-distinctness ALONE does NOT prove the un-fork; the structural row-collapse co-gate is required. The totality-tree analog (`ir/registry/strategy.rs` 9-grammar table, COH18-005) the SK-V19 fold inherits. |
+| phantom `<G: EventGrammar>` axis (`tape/mod.rs:175`,`:179`,`:197`) | DELETE | G4 | — (decoration removal) | `sk-v18/SPEC.md:99-102`; 1A `1A-SUB-023` (census EMPTY of non-test instantiation); 1F `COH18-008`. The REAL `K=Kind` axis (`JsonNodeKind`/`RootKind`/`ObjectKind`) is PRESERVED untouched. `phantom_generic_resolved == deleted`. **Companion Lock-14 reconcile** (1A-LOCK1-AMEND-001): strike "The `G:EventGrammar` type parameter is the generality vehicle" (`restart/locks/LOCKS.md:620`) and re-anchor the generality claim on (a) the shared `Cursor` micro-trait (G4b, ≥2 non-collapsible impls) + (b) the config-breadth classifier — a 1-line LOCKS reconcile is **Pass Omega CRUD-3 / SK-V19**, NOT an Ω-F edit. No lock-count change; no shape/directive/substrate change. |
+| totality `crates/core/src/css_types.rs` (66 LOC) | RELOCATE-or-DELETE | **SK-V19** (NOT SK-V18) | 66 LOC | `restart/locks/LOCKS.md:349` (Lock 14) names it under the heading "Full grammar generalisation; zero overfitting", in the enumeration the line VERBATIM labels "The current overfitting mess — … `shape_dict_bbnf.rs`; `crates/core/src/css_types.rs`; per-grammar runtime/<g>/ hand-written modules"; 1F `COH18-006`/`U-COH18-002`. Lock 14 (c) admits ONLY a separate `crates/<grammar>/` declaration crate; admissible ONLY if relocated to a `crates/css/` declaration crate, else DELETE. The SK-V18 benched tree is skinny; this is a totality-tree carrier — an EXPLICIT SK-V19 migration decision, not a silent drop. |
+
+### §0.0 Totality-Pass Provenance (governance honesty)
+
+The three SK-V18 totality passes carry distinct provenance, stated honestly so
+no V1 surface over-claims a normal two-clean §3Z lock:
+
+- **T-P1 SK-V18**: near-converged NON-normal-§3Z. NOT a normal two-clean §3Z
+  lock; do NOT cite the SK-V15 `HARDENING-T-P3-V5-CONSOLIDATED.md` (a 42-candidate
+  / 23-ACCEPT-19-MODIFY SK-V15 matrix) for the SK-V18 state.
+- **T-P2 SK-V18**: near-converged NON-normal-§3Z (converged=false, consec=0;
+  single-cell citation-precision qualifiers from V4, no surviving REJECT).
+- **T-P3 SK-V18**: CONVERGED into the 3A..3F synthesis + the 3C-locks-v+1-diff
+  (21 candidates: 9 ACCEPT, 11 MODIFY, 0 REJECT, 1 DEFER; git apply --check
+  exit 0 against live LOCKS.md). The 16-lock count + 5 `BackendShape` variants
+  are PRESERVED (amendment by addition; no renumber).
+
+## 0.1 Current-superseded SK-V17 Tape-Fold Migration Receiver (HISTORICAL after §0.0)
 
 Pass Omega V5 SK-V17 tape-fold G-Omega CLOSED 2026-05-30 by explicit user
-authorization. This is the current implementation migration authority; the
-SK-V15 V9 receiver (§0.1) and the historical Pass Omega V2..V8 receivers below
-are HISTORICAL SK-V15 lineage, not current dispatch authority. SK-V16 closed at
+authorization. This receiver is HISTORICAL after the current SK-V18 Pass Omega
+V10 receiver (§0.0) above; the SK-V15 V9 receiver (§0.2) and the historical
+Pass Omega V2..V8 receivers below are deeper HISTORICAL SK-V15 lineage, not
+current dispatch authority. SK-V16 closed at
 `1c5bd7a25` (shared flat-tape SUBSTRATE landed, UNWIRED for CSS). SK-V17 (the
 SKINNY tape-fold **contract** for CSS-on-tape / lazy-`ValueRef` / shared-NEON;
 **JSON >SOTA-proven** at `skinny/RESULTS.md`, **CSS >SOTA the SK-V18 proof
@@ -84,11 +156,12 @@ Migration fences (binding on every SK-V18 row; source 3F17-MH-03/05/06):
 - aarch64 NEON + optional dotprod/i8mm only; no x86/AVX-512/SVE close path.
 - No fact-stream String as a live CSS admission plane (diagnostic-only).
 
-## 0.1 Historical SK-V15 V9 Migration Receiver (not current authority)
+## 0.2 Historical SK-V15 V9 Migration Receiver (not current authority)
 
 Pass Omega V9 G-Omega was authorized and V9 CRUD applied for the SK-V15
-PRUNE-then-REBUILD lineage. This receiver is HISTORICAL after the current
-SK-V17 tape-fold receiver (§0.0) above. The historical implementation route
+PRUNE-then-REBUILD lineage. This receiver is HISTORICAL after the
+SK-V17 tape-fold receiver (§0.1) and the current SK-V18 Pass Omega V10 receiver
+(§0.0) above. The historical implementation route
 was SK-V15 W0-W11 through `restart/skinny/tranches/sk-v15/SPEC.md` and
 `restart/skinny/tranches/sk-v15/DISPATCH-PROMPT.md`.
 
@@ -118,7 +191,7 @@ admission, or lowerer close may proceed unless the SK-V15 dependency row proves
 the rebuild provider lands no later than the delete/retire wave, or the row is
 explicitly diagnostic-demotion-only.
 
-## 0.2 Historical Pass Omega V2 Migration Receiver
+## 0.3 Historical Pass Omega V2 Migration Receiver
 
 Pass Omega V2 updates the migration receiver per the T-P3 V4 LOCK
 packet (`restart/audit/totality/p3/hardening/HARDENING-T-P3-V4-CONSOLIDATED.md`).
@@ -142,7 +215,7 @@ binds those waves to SK-V14 PRUNE-3/4/5 receivers (W5/W6/W7).
 | LAC-2F-V5-02 substrate-union ELEVATION | Lock 1 v+1 substrate-union ELEVATION (`restart/locks/LOCKS.md:137-158`): no cross-call retained classifier state. Quote-mask, escape-mask, structural-mask, class-stream, prev-state byte, prefix-XOR carry word, or any prefix carry of any kind — none is admissible under Lock 1 substrate-union. Carry MUST stay within a single chunk-call boundary. REDRESS 96/97/98 generalises to ALL transient classifier-state primitives. The third value `retained-across-call-boundary` in `retention_lifetime` is the REJECT class under Lock 1 v+1. |
 | Proposal boundary | Pass Omega CRUD artefacts at `restart/audit/totality/astral/V2/` are application logs; they record CRUD operations under G-Omega authorization (closed 2026-05-24). They do not authorize source, generated, gate, `RESULTS.md`, or `REDRESS.md` edits without the owning wave-triumvirate dispatch. This receiver is historical after the current SK-V15 V9 receiver above. |
 
-## 0.3 Historical Pass Omega V3 W2R Migration Receiver
+## 0.4 Historical Pass Omega V3 W2R Migration Receiver
 
 Pass Omega V3 W2R consumes REDRESS-183 and the W2R corrective packet. It
 changes the SK-V14 wave graph only. It does not amend LOCKS, architecture,
@@ -156,7 +229,7 @@ already-landed W2 rejection record.
 | Core-runtime CSS L4 receiver | `crates/core/src/runtime/css_l4/` remains Pattern H runtime-root work. It moves to W6.0 after W5D-DELETE closes over W5C-GEN's provider-free generator body. W6.0 emits or collapses the CSS L4 root-runtime tree from grammar source + workspace metadata, then passes the destructive root-runtime round-trip for that tree. |
 | Dispatch block | Historical for W2R. W2 admitted at `45568e669` and W3 admitted at `b0a864f0b`; the current block is REDRESS-184 / W4R until Pass Omega V4 CRUD applies. W8/W9/W10 remain globally blocked until PRUNE-1..PRUNE-5 close. Stale notes saying W5/W6/W7/W9/W10 may proceed independently after W2 or W4 rejection are non-controlling; hard entry gates, REDRESS-183/184, and the PRUNE-before-new-admit chain control. |
 
-## 0.4 Historical Pass Omega V4 W4R Migration Receiver
+## 0.5 Historical Pass Omega V4 W4R Migration Receiver
 
 Pass Omega V4 W4R consumes REDRESS-184 and the W4R corrective packet. It
 changes the SK-V14 W4/W5 wave graph only. It does not amend LOCKS,
@@ -172,7 +245,7 @@ note.
 | Core-runtime CSS L4 receiver | Unchanged from V3 W2R except sequencing: `crates/core/src/runtime/css_l4/` remains W6.0 after W5D-DELETE closes over W5C-GEN's provider-free generator body. |
 | Dispatch block | Historical for W4R after W4 admission. W5A admitted at `286233fa2`; the V8 dispatch route was W5B.0 LOCK14-GATE after V8 CRUD; W5B.1..W5B.4 remained blocked until preceding W5B sub-waves admitted; W5C-GEN remained blocked until aggregate W5B-FRONTEND closed; W5D-DELETE remained blocked until W5C-GEN closed; W6 remained blocked until W5D-DELETE closed; W8/W9/W10 remained globally blocked until PRUNE-1..PRUNE-5 close. |
 
-## 0.5 Historical Pass Omega V5 W5R Migration Receiver
+## 0.6 Historical Pass Omega V5 W5R Migration Receiver
 
 Pass Omega V5 W5R consumes REDRESS-209 and the W5R corrective packet. It
 changes the SK-V14 W5 wave graph only. It does not amend LOCKS, architecture,
@@ -187,7 +260,7 @@ REDRESS-209 supersession note.
 | Core-runtime CSS L4 receiver | Historical after V6 W5BR. `crates/core/src/runtime/css_l4/` remains W6.0 after W5C-DELETE, not after the rejected V5 W5B deletion gate. |
 | Dispatch block | Historical after V7 W5B-GENR, superseded by V8 and then V9. W5A admitted at `286233fa2`; W5B.0 LOCK14-GATE was the V8 next dispatch before SK-V15 supersession; W5B.1..W5B.4 remained blocked until preceding W5B sub-waves admitted; W5C-GEN remained blocked until aggregate W5B-FRONTEND closed; W5D-DELETE remained blocked until W5C-GEN closed; W6 remained blocked until W5D-DELETE closed; W8/W9/W10 remained globally blocked until PRUNE-1..PRUNE-5 close. |
 
-## 0.6 Historical Pass Omega V6 W5BR Migration Receiver
+## 0.7 Historical Pass Omega V6 W5BR Migration Receiver
 
 Pass Omega V6 W5BR consumes REDRESS-210 and the W5BR corrective packet. It
 changes the SK-V14 W5B/W6 wave graph only. It does not amend LOCKS,
@@ -202,7 +275,7 @@ beyond the REDRESS-210 supersession note.
 | Core-runtime CSS L4 receiver | `crates/core/src/runtime/css_l4/` remains W6.0 after W5C-DELETE. W6.0 emits or collapses the CSS L4 root-runtime tree from grammar source + workspace metadata and passes the destructive root-runtime round-trip for that tree. |
 | Dispatch block | Historical after V7 W5B-GENR. V6 unblocked W5B-GEN, but V7 supersedes that route. W5B-FRONTEND now unblocks after V7 CRUD; W5C-GEN remains blocked until W5B-FRONTEND close; W5D-DELETE remains blocked until W5C-GEN close; W6 remains blocked until W5D-DELETE close; W7 remains blocked until W6 close; W8/W9/W10 remain globally blocked until PRUNE-1..PRUNE-5 close. |
 
-## 0.7 Historical Pass Omega V7 W5B-GENR Migration Receiver
+## 0.8 Historical Pass Omega V7 W5B-GENR Migration Receiver
 
 Pass Omega V7 W5B-GENR consumes REDRESS-211 and the W5B-GENR corrective packet.
 It changes the SK-V14 W5B/W5C/W5D/W6 wave graph only. It does not amend LOCKS,
@@ -217,7 +290,7 @@ architecture, source, generated output, gates, `RESULTS.md`, or `REDRESS.md`.
 | Core-runtime CSS L4 receiver | `crates/core/src/runtime/css_l4/` remains W6.0 after W5D-DELETE. W6.0 emits or collapses the CSS L4 root-runtime tree from grammar source + workspace metadata through W5B-FRONTEND IR and the W5C-GEN generator body, then passes the destructive root-runtime round-trip for that tree. |
 | Dispatch block | W5B-FRONTEND unblocks after V7 CRUD. W5C-GEN remains blocked until W5B-FRONTEND close; W5D-DELETE remains blocked until W5C-GEN close; W6 remains blocked until W5D-DELETE close; W7 remains blocked until W6 close; W8/W9/W10 remain globally blocked until PRUNE-1..PRUNE-5 close. |
 
-## 0.8 Historical Pass Omega V8 W5B-FRONTENDR Migration Receiver
+## 0.9 Historical Pass Omega V8 W5B-FRONTENDR Migration Receiver
 
 Pass Omega V8 W5B-FRONTENDR consumed REDRESS-212 and the W5B-FRONTENDR
 corrective packet. It changes the SK-V14 W5B/W5C/W5D/W6 wave graph only. It
@@ -905,6 +978,29 @@ dependency, not topic (`docs/precepts/instructions/LESSONS-LEARNED.md:1-34`).
 This sequence keeps the tranche set at stub level. Full per-wave drafting
 belongs to the next phase.
 
+### §17.SK-V18 Deletion/Retirement Order Gate
+
+Under SK-V18 the order is PRUNE-before-GENERALIZE-before-PROVE. No
+GENERALIZE/PROVE wave deletes a hand-written ORACLE (JSON `json_templates/`, the
+7 css_l4 replica bodies, the `CSS_GENERATED_RS` courier) before its
+grammar-DERIVED replacement lands BYTE-EQUIVALENT and the round-trip
+diff-control gate is GREEN (G1 JSON byte-equivalence vs oracle BEFORE oracle
+delete; G2 `CSS_GENERATED_RS`-deleted; P3 md5-distinct + `runtime_target_rows_collapsed`
+post-collapse witness). This prevents the delete-before-replacement failure
+pattern (the lightningcss tree-walk regression, 1D `C-3`) re-entering under the
+un-fork.
+
+Additionally: **G2/G4/G6 entry is BLOCKED** until the SK-V16/V17 REDRESS
+reconcile (the four-item pre-block, complete only for the SK-V15-W11 ledger;
+1D U-5) is on the committed ledger as a Pass-Omega-V10 / pre-W-PRUNE blocker —
+these waves abut REDRESS items 51/53/246/247 (1D:168-171; item 246 = the W11T
+parse-only structural-STREAM driver reject that bounds G4) and run DURING SK-V18,
+so the reconcile is NOT deferrable to SK-V19 entry. Absent that committed fence, an
+SK-V16/V17-rejected shape (second scanner / structural-stream driver /
+parser-local cursor) must not re-enter G2/G4/G6.
+
+(Cross-referenced from §19 Migration Gates as the SK-V18 deletion-order gate.)
+
 ## 18. Greenfield Mechanics Summary
 
 The synthesis prompt authorizes a greenfield restart with a commit-chain
@@ -1023,6 +1119,16 @@ cargo xtask migration-carry --check
 
 Expected result: migration does not drop receiver/blocker/gate rows for
 deferred work, and public diagnostics are shared by CLI and LSP.
+
+### 19.8 SK-V18 Deletion/Retirement Order Gate
+
+The SK-V18 PRUNE-before-GENERALIZE-before-PROVE deletion-order gate is defined at
+§17.SK-V18 above and applies as a migration gate: no GENERALIZE/PROVE wave deletes
+a hand-written ORACLE (JSON `json_templates/`, the 7 css_l4 replica bodies, the
+`CSS_GENERATED_RS` courier) before its grammar-DERIVED replacement lands
+BYTE-EQUIVALENT and the round-trip diff-control gate is GREEN; and G2/G4/G6 entry
+is BLOCKED until the SK-V16/V17 REDRESS reconcile (REDRESS items 51/53/246/247) is
+on the committed ledger as a Pass-Omega-V10 / pre-W-PRUNE blocker.
 
 ## 20. Unresolved Migration Punch List
 

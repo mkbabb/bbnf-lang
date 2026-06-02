@@ -579,7 +579,9 @@ mod tests {
             .unwrap();
         let css_generated = css.get("generated.rs").unwrap();
 
-        assert!(css_generated.contains("crate::tape::{OffsetFlags, Tape, TapeBuilder, ValueRef}"));
+        assert!(css_generated.contains(
+            "crate::tape::{Cursor, DocumentView, OffsetFlags, Tape, TapeBuilder, TapeId, ValueRef}"
+        ));
         assert!(css_generated.contains("parse_into_tape"));
         assert!(!css_generated.contains("emit_fact_stream"));
     }

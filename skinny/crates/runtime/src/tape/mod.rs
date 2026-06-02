@@ -1,14 +1,12 @@
 mod assembler;
-pub mod event_grammar;
-#[cfg(test)]
-mod event_grammar_tests;
+pub mod cursor;
 mod offsets;
 
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 pub use assembler::{CapacityPlan, TapeBuilder};
-pub use event_grammar::{AnyGrammar, EventGrammar};
+pub use cursor::Cursor;
 pub use offsets::OffsetTapeStats;
 
 static NEXT_TAPE_ID: AtomicU64 = AtomicU64::new(1);
@@ -172,34 +170,32 @@ impl<'input> Tape<'input> {
     }
 }
 
-pub struct ValueRef<'doc, 'input: 'doc, K = AnyKind, G: EventGrammar = AnyGrammar> {
+pub struct ValueRef<'doc, 'input: 'doc, K = AnyKind> {
     tape: &'doc Tape<'input>,
     cursor: u32,
     _kind: PhantomData<fn() -> K>,
-    _grammar: PhantomData<fn() -> G>,
     _input: PhantomData<&'input [u8]>,
 }
 
-impl<'doc, 'input: 'doc, K, G: EventGrammar> Copy for ValueRef<'doc, 'input, K, G> {}
+impl<'doc, 'input: 'doc, K> Copy for ValueRef<'doc, 'input, K> {}
 
-impl<'doc, 'input: 'doc, K, G: EventGrammar> Clone for ValueRef<'doc, 'input, K, G> {
+impl<'doc, 'input: 'doc, K> Clone for ValueRef<'doc, 'input, K> {
     fn clone(&self) -> Self {
         *self
     }
 }
 
-impl<'doc, 'input: 'doc, K, G: EventGrammar> ValueRef<'doc, 'input, K, G> {
+impl<'doc, 'input: 'doc, K> ValueRef<'doc, 'input, K> {
     pub fn new(tape: &'doc Tape<'input>, cursor: u32) -> Self {
         Self {
             tape,
             cursor,
             _kind: PhantomData,
-            _grammar: PhantomData,
             _input: PhantomData,
         }
     }
 
-    pub fn erase(self) -> ValueRef<'doc, 'input, AnyKind, G> {
+    pub fn erase(self) -> ValueRef<'doc, 'input, AnyKind> {
         ValueRef::new(self.tape, self.cursor)
     }
 

@@ -20,14 +20,6 @@ pub mod generated_json;
 #[path = "grammars/css_l4_declaration_values/mod.rs"]
 pub mod generated_css_l4_declaration_values;
 
-#[cfg(any(test, feature = "proof"))]
-#[path = "grammars/json/event_grammar_witness.rs"]
-pub mod json_event_grammar_witness;
-
-#[cfg(any(test, feature = "proof"))]
-#[path = "grammars/sheets_witness/mod.rs"]
-pub mod sheets_witness;
-
 pub mod grammars {
     pub use crate::generated_css_l4_declaration_values as css_l4_declaration_values;
     pub use crate::generated_json as json;

@@ -116,6 +116,34 @@ impl<'doc, 'input> CssNode<'doc, 'input> {
     }
 }
 
+/// The shared lazy-cursor seam over the single tape — the `(tape, cursor,
+/// offset, kind)` primitive `CssNode` is built on. The flat-sweep navigation
+/// (`nodes`/`value`/`rich_summary`/`selector_count`) lives ENTIRELY outside this
+/// trait and is untouched by it.
+impl<'doc, 'input> Cursor<'doc, 'input> for CssNode<'doc, 'input> {
+    type Kind = CssNodeKind;
+
+    #[inline]
+    fn tape(&self) -> &'doc Tape<'input> {
+        self.node.tape()
+    }
+
+    #[inline]
+    fn cursor(&self) -> u32 {
+        self.node.cursor()
+    }
+
+    #[inline]
+    fn offset(&self) -> usize {
+        self.node.offset()
+    }
+
+    #[inline]
+    fn kind(&self) -> CssNodeKind {
+        CssNodeKind::at_cursor(self.node.tape(), self.node.cursor())
+    }
+}
+
 "#,
     );
 }
@@ -356,6 +384,27 @@ impl<'input> CssDocument<'input> {
             }
         }
         summary
+    }
+}
+
+/// The document-level seam shared with every grammar's document handle: root
+/// cursor + tape-id + source bytes over the single tape. Carries NO navigation
+/// (the flat sweep stays on `CssDocument` inherently) — naturally flatten-free.
+impl<'input> DocumentView<'input> for CssDocument<'input> {
+    type Root = CssNode<'input, 'input>;
+
+    fn root_value(&'input self) -> Self::Root {
+        CssNode {
+            node: ValueRef::new(&self.tape, 0),
+        }
+    }
+
+    fn tape_id(&self) -> TapeId {
+        self.tape.id()
+    }
+
+    fn source(&'input self) -> &'input [u8] {
+        self.tape.source()
     }
 }
 

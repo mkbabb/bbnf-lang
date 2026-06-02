@@ -83,7 +83,7 @@ fn render_header(program: &CssScanProgram, out: &mut String) {
         program.at_rule_branches.join("|"),
     );
     out.push_str(
-        r#"use crate::tape::{OffsetFlags, Tape, TapeBuilder, ValueRef};
+        r#"use crate::tape::{Cursor, DocumentView, OffsetFlags, Tape, TapeBuilder, TapeId, ValueRef};
 use crate::runtime_scan::{css_balanced_component_scan, ScanError};
 use super::config;
 use super::sink::CssFactError;

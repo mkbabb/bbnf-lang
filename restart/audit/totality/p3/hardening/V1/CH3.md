@@ -1,46 +1,34 @@
-# CH3 REGRESSION - T-P3 V1
+# CH3 REGRESSION — SK-V18 T-P3 V1 (cycle V1)
 
-## Verdict
+## Lens
 
-ACCEPT.
+No delta re-opens a `skinny/REDRESS.md` route; 3B revives no refuted wave; 3D
+promotes no rejected route; 3C weakens no lock that REDRESS strengthened; no
+delta revives one of the 13 T-P2-refuted assertions. Spot-verify the most
+load-bearing deltas (cited finding-id resolves; cited LOCKS section exists; the
+v+1 diff applies).
 
-The V1 packet does not reopen a REDRESS route, does not revive stale SK-V13/SK-V14 receiver blocks as current dispatch, keeps delete-before-provider sequences blocked, and keeps SK-V15 implementation waves behind Pass Omega CRUD plus G-Omega. The packet is proposal-only; no live V1 spec surface is amended by this CH3 file.
+## Verdict Summary
+
+The SK-V18 generalization packet is, under the REGRESSION lens, overwhelmingly
+disciplined: every adjoining REDRESS-rejected route (items 51/53/246/247,
+96/97/98) is carried with its falsifying ADMISSIBLE-vs-REJECTED distinction, not
+revived; every one of the 13 T-P2-refuted assertions is carried as a fence/gate,
+not reopened; 3B's §13.6 re-key is a tranche relabel (SK-V18→SK-V19), not a wave
+revival; 3D's G6 is RETARGET-not-wire-as-is, REDRESS-fenced; 3C strengthens (does
+not weaken) the locks REDRESS strengthened. The cited finding-ids and LOCKS
+sections that I spot-checked resolve.
+
+But two regression-relevant defects are load-bearing and force REVISE, and the
+mandatory v+1-diff spot-check FAILS. The packet's "no REDRESS route reopened"
+guarantee has a SELF-DISCLOSED hole (U-5: the committed ledger ends at SK-V15 W11;
+SK-V16/V17 rejected routes are uncaptured) that the packet routes to a SK-V19
+ENTRY reconcile — i.e. AFTER the SK-V18 GENERALIZE waves (G2/G4/G6) that actually
+abut the fenced shapes have already run. And the `3C-locks-v+1-diff.md` hunk does
+not apply to the current `LOCKS.md`, which blocks the very LOCKS-strengthening
+clauses that fence these routes from landing.
 
 ## Evidence Commands And Outputs
-
-```sh
-git show --stat --oneline 0a0508acd -- restart/audit/totality/p3
-```
-
-```text
-0a0508acd docs(sk-v15-t-p3): add V1 synthesis packet
- .../audit/totality/p3/3A-architecture-synthesis.md |  92 ++++++++++++
- .../totality/p3/3B-master-plan-reconciliation.md   | 167 +++++++++++++++++++++
- .../audit/totality/p3/3C-locks-crystallisation.md  | 114 ++++++++++++++
- restart/audit/totality/p3/3C-locks-v+1-diff.md     |  76 ++++++++++
- restart/audit/totality/p3/3D-skinny-fold.md        |  93 ++++++++++++
- .../audit/totality/p3/3E-grammar-generalisation.md | 145 ++++++++++++++++++
- restart/audit/totality/p3/3F-migration-handoff.md  | 120 +++++++++++++++
- 7 files changed, 807 insertions(+)
-```
-
-```sh
-git diff --check 0a0508acd^ 0a0508acd -- restart/audit/totality/p3
-```
-
-```text
-<no output; exit 0>
-```
-
-```sh
-awk '/^```diff$/{in_diff=1; next} in_diff && /^```$/{exit} in_diff {print}' \
-  restart/audit/totality/p3/3C-locks-v+1-diff.md > /tmp/tp3-locks-v1.diff
-git apply --check /tmp/tp3-locks-v1.diff
-```
-
-```text
-<no output; exit 0>
-```
 
 ```sh
 grep -cE '^[0-9]+\. \*\*' restart/locks/LOCKS.md
@@ -49,71 +37,166 @@ find crates/core/src/runtime -mindepth 2 -type f -name '*.rs' | wc -l
 
 ```text
 16
-      67
+      71
 ```
 
+16 numbered locks intact (canon preserved). Runtime files = 71 (NOT the
+LOCKS-asserted 67); 3A-V4-SK18-D12 and 3C D-SKV18-L13-pattern-h-recensus both
+DISCLOSE the 71-vs-67 drift and attribute the +4 to `tape/{mod,cursor,arena,record}.rs`
+— honest, traced, not a silent regression. (This is the expected-67 invariant in
+the stale SK-V15 dispatch context; the packet itself reconciles it as a finding.)
+
 ```sh
-rg -n "(historical / superseded|not implementation dispatch|Only after|No SK-V15 implementation|Pass Omega/G-Omega -> SK-V15 W0)" \
-  restart/audit/totality/p3/3B-master-plan-reconciliation.md \
-  restart/audit/totality/p3/3F-migration-handoff.md
+awk '/^```diff$/{f=1;next} f&&/^```$/{exit} f{print}' \
+  restart/audit/totality/p3/3C-locks-v+1-diff.md > /tmp/tp3-locks-v18.diff
+git apply --check /tmp/tp3-locks-v18.diff ; echo "exit=$?"
 ```
 
 ```text
-restart/audit/totality/p3/3B-master-plan-reconciliation.md:102:| SK-V14 W0..W11 block | historical / superseded | MASTER carries SK-V14 W0..W11 as authoritative receiver block (`restart/MASTER-PLAN.md:751-827`), but SK-V15 S-P3 locked a new W0..W11 contract (`restart/skinny/tranches/sk-v15/research/p3/hardening/HARDENING-S-P3-V4-CONSOLIDATED.md:35-49`). | New SK-V15 W0..W11 receiver block. |
-restart/audit/totality/p3/3B-master-plan-reconciliation.md:103:| MP-NW-01..14 block | historical / superseded except refusal rows | MASTER's 14 NEW rows mirror older MP.NW/SK-V14 commitments (`restart/MASTER-PLAN.md:837-869`). SK-V15 now consumes the same failure classes through W0-W11 and explicit DEP rows (`restart/skinny/tranches/sk-v15/SPEC.md:187-205`). | Keep as history/pre-block; do not use as current dispatch manifest. |
-restart/audit/totality/p3/3B-master-plan-reconciliation.md:107:These are proposed MASTER receiver rows, not implementation dispatch. They are
-restart/audit/totality/p3/3F-migration-handoff.md:46:| 3F-MH-007 | Replace the current "Pass Omega V8 next-cycle dispatch directive" with a **Pass Omega V5/G-Omega -> SK-V15 W0** directive: T-P3 locks, G3 auto-passes under active pin, Pass Omega V5 runs, CRUD-4 updates HANDOFF/MIGRATION, G-Omega authorizes required V1 patches, then W0 dispatches through SKINNY triumvirate. Implementation waves remain blocked until CRUD closes and G-Omega authorizes required spec patches. | T-P3 3F row requires next directive after Pass Omega V5 and says implementation waves do not begin until Pass Omega CRUD closes and G-Omega authorizes patches (`restart/audit/totality/p3/T-P3-DISPATCH-CONTEXT.md:118`-`121`). Pass Omega CRUD-4 owns HANDOFF+MIGRATION (`restart/prompts/pass-contracts/PASS-OMEGA.md:57`-`74`) and G-Omega controls merge/next-cycle dispatch (`restart/prompts/pass-contracts/PASS-OMEGA.md:94`-`110`). | `restart/HANDOFF.md` next-cycle directive (`restart/HANDOFF.md:149`-`177`). | Receiver: Pass Omega V5 then SK-V15 W0. Blocker: no CRUD-4, no G-Omega, or unresolved invariant. Gate: G-Omega; then W0 entry gate in SK-V15 SPEC (`restart/skinny/tranches/sk-v15/SPEC.md:29`-`43`, `restart/skinny/tranches/sk-v15/SPEC.md:488`-`494`). | Gives the next worker a concrete, measurable dispatch path and prevents direct implementation dispatch from T-P3 prose. |
-restart/audit/totality/p3/3F-migration-handoff.md:84:No SK-V15 implementation wave dispatches until Pass Omega V5 CRUD-4 has updated
-restart/audit/totality/p3/3F-migration-handoff.md:110:5. Only after Pass Omega V5 CRUD-4 has closed and G-Omega has authorized the HANDOFF/MIGRATION patches may the orchestrator update HANDOFF to `ready-for-wave-W0` and dispatch SK-V15 W0 (`restart/skinny/tranches/sk-v15/SPEC.md:488`-`494`). W0..W11 then follow the dependency order in the dispatch lock (`restart/skinny/tranches/sk-v15/SPEC.md:29`-`43`) and the manifest (`restart/skinny/tranches/sk-v15/SPEC.md:172`-`185`).
+error: corrupt patch at line 38
+exit=128
 ```
 
+The extracted hunk body has 5 context lines + 28 additions = 33 lines, but the
+hunk header declares `@@ -622,6 +622,38 @@` (old=6, new=38). Both counts are
+wrong (old should be ≤6 with the body present, new should be 33). Re-deriving a
+correct header still fails: the live `LOCKS.md` has TWO blank lines between the
+SK-V17 Lock-16 clause (`:622`) and `## v+1 Governance Boundary` (`:625`), while
+the diff context carries only ONE. The diff DOES NOT APPLY. (Live anchor verified:
+`LOCKS.md:622` = the SK-V17 NEON-classifier clause; `:623`-`:624` blank; `:625` =
+`## v+1 Governance Boundary`.)
+
 ```sh
-rg -n "(DEP-W6-CSS-GENERATED-RS|DEP-W3-W6-CSS-PROVIDER-TEMPLATE|DEP-W4-PATTERN-H-PROVENANCE|DEP-W10-FNV-QUARANTINE|REDRESS 183/184/209-213|REDRESS 215|FNV closed enum)" \
-  restart/skinny/tranches/sk-v15/SPEC.md \
-  restart/audit/totality/p3/3F-migration-handoff.md
+sed -n '156,173p' restart/audit/totality/p1/1D-skinny-lessons.md   # Rejected-Route Pre-Block
+sed -n '6184,6186p;6230,6232p' skinny/REDRESS.md                   # items 246/247
+sed -n '2795,2800p;2928,2933p' skinny/REDRESS.md                   # items 96/97/98 region
 ```
 
 ```text
-restart/skinny/tranches/sk-v15/SPEC.md:195:| `DEP-W6-CSS-GENERATED-RS` | `CSS_GENERATED_RS` string-literal parser evidence and byte-identical generated CSS bodies as live parser proof | W6 | W5 typed CSS Value provider | `rg -n "CSS_GENERATED_RS|hand_written:CSS_GENERATED_RS"` over live admission paths plus CSS typed tests. | `yes:same-wave` in W6 | `blocked` before W6 | W1, W3, W5, W6, W11 | REDRESS 183/184/209-213/215 |
-restart/skinny/tranches/sk-v15/SPEC.md:197:| `DEP-W3-W6-CSS-PROVIDER-TEMPLATE` | CSS provider/template/static profile roster and runtime family fanout | W3 neutralization; W6 deletion | W3 generic contract; W5/W6 typed CSS provider/proof for deletion | Lock 14 scan over codegen roots, generated-output diff, JSON 51/51 rerun if JSON-adjacent, W6 CSS typed proof for deletion. | `yes:same-wave` for neutralization; `no:block` for deletion before W6 | `blocked` for deletion before W6 | W2, W3, W5, W6, W11 | REDRESS 184/209-213 |
-restart/skinny/tranches/sk-v15/SPEC.md:198:| `DEP-W4-PATTERN-H-PROVENANCE` | Pattern H root runtime files lacking true line-1 generated provenance | W4 provenance repair; destructive delete only with proof | W4 root runtime generator/check | `find crates/core/src/runtime -mindepth 2 -type f -name '*.rs' | wc -l`; line-1 provenance scan; non-writing regen check. | `yes:same-wave` for provenance proof; `no:block` for destructive delete without proof | `allowed` for truth repair, `blocked` for fake/header-only close | W4, W11 | REDRESS 183/213 |
-restart/skinny/tranches/sk-v15/SPEC.md:203:| `DEP-W10-FNV-QUARANTINE` | W11L/W11N/W11O FNV closed-enum or hash-sidecar correctness claim | W10 quarantine only | W10 adversarial semantic fixtures and bench-only metadata | `rg -n "fnv|FNV"` over production runtime/generic codegen roots plus adversarial typed-equality tests. | `yes:same-wave` for quarantine; production migration is `no:block` | `quarantine-only` | W10, W11 | FNV closed-enum production migration |
-restart/skinny/tranches/sk-v15/SPEC.md:481:| REDRESS 183/184/209-213 | No provider/runtime/template delete before replacement proof. |
-restart/skinny/tranches/sk-v15/SPEC.md:482:| REDRESS 215 | No CSS broadcast, brace-counter, or wrong-plane comparator admission. |
-restart/skinny/tranches/sk-v15/SPEC.md:484:| FNV closed enum | Bench-only quarantine; no production FNV arbiter, production hash correctness proof, or production migration without a future contract. |
-restart/audit/totality/p3/3F-migration-handoff.md:42:| 3F-MH-003 | Add a MIGRATION gate clause: no delete, retirement, provider/template removal, old CSS proof retirement, or runtime-shim deletion may happen before its rebuild provider lands no later than the delete wave. | T-P1 `C-7` identifies REDRESS-183/184/209..213 as wave-graph-cycle precedent (`restart/audit/totality/p1/1D-skinny-lessons.md:158`-`159`). SK-V15 Synthesis requires delete/rebuild dependency columns (`restart/skinny/tranches/sk-v15/SYNTHESIS.md:102`-`106`). | `restart/MIGRATION.md` sections 17 and 19 gates (`restart/MIGRATION.md:794`-`814`, `restart/MIGRATION.md:833`-`917`). | Receiver: every migration deletion/retirement row. Blocker: absent provider proof or absent dependency row. Gate: SK-V15 dependency rows `DEP-W6-CSS-GENERATED-RS`, `DEP-W6-CSS-SUMMARY-FACT-STREAM`, `DEP-W3-W6-CSS-PROVIDER-TEMPLATE`, `DEP-W4-PATTERN-H-PROVENANCE`, and `DEP-W4-W6-CSS-LEGACY-RUNTIME-SHIM` (`restart/skinny/tranches/sk-v15/SPEC.md:195`-`199`). | Prevents the V3/V4/V5/V6/V7/V8 delete-before-provider failure pattern from re-entering under SK-V15. |
-restart/audit/totality/p3/3F-migration-handoff.md:72:| W10 FNV quarantine | FNV remains bench-only; no production arbiter. | production FNV correctness proof | DEP-W10-FNV-QUARANTINE |
+1D:166-171 Rejected-Route Pre-Block table resolves: item 246 = REDRESS:6184-6219
+(W11T parse-only structural stream, REJECT); item 247 = REDRESS:6230-6260 (W11V
+parse-only string64 mask, REJECT); item 51 = REDRESS:742-768 (JsonEventCursor,
+REJECT); item 53 = REDRESS:784-813 (JsonStructuralCursor, REJECT). REDRESS:2795+
+= "SK-V9 Wave 3 Union Event-Model Class-Column Redress" / item 96 (the
+scalar-cheaper-than-SIMD-cursor finding). All cited spans exist and say what the
+synthesis claims.
 ```
 
-## Findings
+```sh
+rg -n 'refuted' restart/audit/totality/p2/2C-grammar-neutrality.md | rg '132|134|136|307|308|309|310'
+```
 
-| id | regression surface | file:line evidence | result |
-|---|---|---|---|
-| CH3-R1 | REDRESS routes are not reopened. CSS broadcast, fact-stream/brace-counter CSS, FNV production migration, sidecar/structural stream families, and decoded-string/string64 retries remain pre-blocked. | `restart/skinny/tranches/sk-v15/SPEC.md:467`-`484`; `restart/audit/totality/p3/3D-skinny-fold.md:48`-`50`, `restart/audit/totality/p3/3D-skinny-fold.md:58`-`63`; `restart/audit/totality/p3/3A-architecture-synthesis.md:53`, `restart/audit/totality/p3/3A-architecture-synthesis.md:62`; `restart/audit/totality/p3/3B-master-plan-reconciliation.md:93`, `restart/audit/totality/p3/3B-master-plan-reconciliation.md:140`; `restart/audit/totality/p3/3F-migration-handoff.md:119`. | ACCEPT |
-| CH3-R2 | Stale SK-V13/SK-V14 receiver blocks are not revived as current dispatch. They are classified as historical/superseded/pre-block evidence, with SK-V15 W0-W11 as the new pending receiver map. | `restart/audit/totality/p3/3B-master-plan-reconciliation.md:23`-`36`, `restart/audit/totality/p3/3B-master-plan-reconciliation.md:102`-`107`, `restart/audit/totality/p3/3B-master-plan-reconciliation.md:134`, `restart/audit/totality/p3/3B-master-plan-reconciliation.md:141`; `restart/audit/totality/p3/3F-migration-handoff.md:40`, `restart/audit/totality/p3/3F-migration-handoff.md:44`-`46`, `restart/audit/totality/p3/3F-migration-handoff.md:118`. | ACCEPT |
-| CH3-R3 | Delete-before-provider sequences remain blocked. The proposed LOCKS addendum requires same-wave replacement provider before deletion/retirement, and MIGRATION gets an explicit no-delete/no-retire gate. | `restart/audit/totality/p3/3C-locks-crystallisation.md:44`, `restart/audit/totality/p3/3C-locks-v+1-diff.md:50`; `restart/audit/totality/p3/3F-migration-handoff.md:42`; `restart/audit/totality/p3/3D-skinny-fold.md:59`, `restart/audit/totality/p3/3D-skinny-fold.md:66`; `restart/skinny/tranches/sk-v15/SPEC.md:140`, `restart/skinny/tranches/sk-v15/SPEC.md:187`-`204`. | ACCEPT |
-| CH3-R4 | Dependency rows precede deletion/retirement. Every delete, retirement, diagnostic demotion, or neutralization must match a dependency row before redress, with missing rows rejecting the plan. | `restart/skinny/tranches/sk-v15/SPEC.md:187`-`204`; `restart/skinny/tranches/sk-v15/SPEC.md:272`-`281`, `restart/skinny/tranches/sk-v15/SPEC.md:315`-`316`, `restart/skinny/tranches/sk-v15/SPEC.md:352`-`376`, `restart/skinny/tranches/sk-v15/SPEC.md:455`-`465`; `restart/audit/totality/p3/3F-migration-handoff.md:41`-`42`, `restart/audit/totality/p3/3F-migration-handoff.md:66`-`73`. | ACCEPT |
-| CH3-R5 | 3B and 3F do not authorize implementation before Pass Omega/G-Omega. 3B marks new rows as proposed receiver rows, not implementation dispatch; 3F blocks W0 until CRUD-4 and G-Omega authorize V1 patches. | `restart/audit/totality/p3/3B-master-plan-reconciliation.md:35`-`36`, `restart/audit/totality/p3/3B-master-plan-reconciliation.md:62`, `restart/audit/totality/p3/3B-master-plan-reconciliation.md:107`, `restart/audit/totality/p3/3B-master-plan-reconciliation.md:131`, `restart/audit/totality/p3/3B-master-plan-reconciliation.md:141`; `restart/audit/totality/p3/3F-migration-handoff.md:25`, `restart/audit/totality/p3/3F-migration-handoff.md:46`, `restart/audit/totality/p3/3F-migration-handoff.md:57`-`60`, `restart/audit/totality/p3/3F-migration-handoff.md:84`-`85`, `restart/audit/totality/p3/3F-migration-handoff.md:106`-`110`. | ACCEPT |
-| CH3-R6 | V3/V4/V5/V6/V7/V8 wave-graph failures are not reintroduced. The old failure class was provider/runtime/template deletion or destructive regen before provider/runtime proof; V1 carries it as REDRESS history and binds it to SK-V15 dependency rows. | REDRESS precedents: `skinny/REDRESS.md:5092`-`5118`, `skinny/REDRESS.md:5173`-`5193`, `skinny/REDRESS.md:5197`-`5217`, `skinny/REDRESS.md:5221`-`5245`, `skinny/REDRESS.md:5249`-`5272`, `skinny/REDRESS.md:5276`-`5293`. V1 blockers: `restart/audit/totality/p3/3F-migration-handoff.md:42`; `restart/skinny/tranches/sk-v15/SPEC.md:195`-`199`, `restart/skinny/tranches/sk-v15/SPEC.md:481`; `restart/audit/totality/p3/3C-locks-v+1-diff.md:50`. | ACCEPT |
+```text
+2C:134 "CSS_GENERATED_RS is grammar-derived" → refuted (fenced by 3A-D05/3D-D03/3F-MH-010)
+2C:307 "neutral-name-on-one-grammar proves neutrality" → refuted (fenced by 3A-D10/3C-neutrality-proof/3E-D14)
+2C:308 "Nu8-tagged-alt is the Sheets litmus" → refuted (replaced by precedence tower, 3A-D13/3E-D15)
+2C:309/310 "9-ident table is neutral / 4-name regex sufficient" → refuted (fenced by 3A-D11/3C-L13/3F SK-V19)
+2C:312 "md5-distinctness proves the un-fork" → refuted (fenced by 3D-D12/3A-D04/3E-D17 structural co-gate)
+```
 
-## Repair Directives
+## Enumerated Dispositions Under The REGRESSION Lens
 
-None. No CH3 non-ACCEPT finding is present.
+| # | delta / disposition | lens conjunct | finding | result |
+|---|---|---|---|---|
+| 1 | `ARCH-3A-V4-SK18-D08` CollapsedStage diagnostic-only slot | abuts REDRESS 96/97/98 (streamed-cursor) | Carries the REDRESS 96/97/98 retired prior; promotion past `diagnostic-only` "must clear that retired prior" (3A:182; 3C-L10:71; cites `REDRESS.md:2795-2944` finding `:2928-2933`). Fences, does not revive. | ACCEPT |
+| 2 | `ARCH-3A-V4-SK18-D09` G6 retarget-not-author + single-movemask | abuts items 51/53/247 | RETARGETS the existing in-loop kernel (caller-data byte set, neutral inner); "REDRESS-fenced against item 51/53/247" (3A:183; 3C-L16-retarget:69). Falsifying distinction explicit. | ACCEPT |
+| 3 | `3D-D08-substrate-sidecar-lock` | items 51/53/246/247 four-item pre-block | "the NEON G6 retarget is RETARGET-onto-the-live-recursive-shell, never a wire-as-is dead-flat kernel or a parser-local second scanner"; cites 1D:166-171, the verified pre-block (3D:125). | ACCEPT |
+| 4 | `3D-D12-r16-relocated-seam-cogate` | 13-refuted "md5-distinctness proves un-fork" (2C:312) | Carries the refuted assertion as a 3-co-gate conjunction (md5 ∧ branch==0 ∧ type==0 ∧ rows_collapsed); does NOT credit md5 alone (3D:129). | ACCEPT |
+| 5 | `3D-D11-one-generator-inflection-thesis` | 13-refuted "tree-walk preserves the 94.1% scan" | Carries the refutation as the (a)-(d) named-primitive gate; "a tree-walk that inflates the flat scan into a combinator descent is REJECTED" (3D:128). | ACCEPT |
+| 6 | `3E-D14/D15/D17/D18` | refuted neutrality / Nu8-litmus / md5 / fleet-overclaim | All four carried as fences; 3E frontmatter `sk_v18_constraints_carried` lines 47-54 explicitly lists all 8 refutations incl. "bracket_depth_mask_64 replaces the scalar shell — REDRESS-96/97/98-fenced". | ACCEPT |
+| 7 | `3B` §13.6 re-key SK-V18→SK-V19 (MP-3B-SKV18-D02) | "3B revives no refuted wave" | Relabel of the tape-fold block to SK-V19 + new §13.7 receiver map; F1-F9 fold-design content unchanged; A-J stays pending. No refuted wave revived (3B:123-130). | ACCEPT |
+| 8 | `3F-MH-008..013` five migration deletes (x86/courier/replicas/phantom/css_types) | delete-before-provider; route revival | x86 = diagnostic-only plane delete (not a route); courier retires only with byte-equivalent oracle (3F-MH-010); replicas collapse with structural co-gate; phantom delete preserves K-axis; css_types DEFERRED to SK-V19 (not silently dropped). | ACCEPT |
+| 9 | `3F-MH-003` PRUNE-before-GENERALIZE delete-before-provider gate | dependency-precedes-deletion | "no GENERALIZE/PROVE wave deletes a hand-written ORACLE before its grammar-DERIVED replacement lands byte-equivalent" (3F:79). Sound. | ACCEPT |
+| 10 | `3C-locks-v+1-diff.md` hunk | "the v+1 diff applies" (mandatory spot-check) | **FAILS `git apply --check` (corrupt patch line 38).** Hunk header arithmetic wrong (old=6/new=38 vs body 5+28); and live `LOCKS.md:623-624` has two blank lines, diff context has one. The LOCKS-strengthening clauses that FENCE the REDRESS routes cannot land as written. | **REVISE** |
+| 11 | U-5 / four-item pre-block timing | "no delta re-opens a REDRESS route" | The pre-block (1D:166-171) self-discloses (CH3-V4-006 caveat) that it covers ONLY the committed ledger ending SK-V15 W11; SK-V16/V17 rejected routes are STRUCTURALLY INVISIBLE. 3B-CH3-Q (3B:252), 3D-CH3-Q (3D:163), 3F-CH3-Q (3F:258) all route this to **SK-V19 entry** — AFTER SK-V18 G2/G4/G6 run. A SK-V16/V17-rejected shape can re-enter a SK-V18 GENERALIZE wave with no committed fence. | **REVISE** |
+| 12 | `3C` LAC-2F-V3-03 DEFER (re-scope the "gap" frame) | silent-drop check | Folded as a one-line audit-scope note into D-SKV18-L16 with a named re-entry trigger; NOT silently dropped. Re-entry lands at SK-V19 — acceptable but, like #11, post-dates the SK-V18 waves it might bear on. | ACCEPT |
+| 13 | `3B` removed deltas D03-D08/D11 | silent-drop of a refuted-route fence? | Removed = SK-V15-routing deltas CONSUMED by landed §13.5/§13.6 (3B frontmatter:19). The refuted-route FENCES carry forward as MP-3B-V1-D02/D09/D10 standing gates; no fence silently dropped. | ACCEPT |
+| 14 | `3C` LAC-2D-V3-01 un-fork "ledger negative-witness" claim | route-novelty assertion | 3C asserts the un-fork is "SK-V18-NOVEL, not a REDRESS 96/97/98 revival" (3C:126). The un-fork (DELETE `RuntimeEmitterKind`, dispatch on `BackendShape`) is genuinely orthogonal to the streamed-cursor REDRESS class; claim holds. | ACCEPT |
+
+## REVISE Repair Directives
+
+**CH3-V1-R1 — `3C-locks-v+1-diff.md` does not apply (severity: HIGH).**
+Owner: 3C. Target: `restart/audit/totality/p3/3C-locks-v+1-diff.md:47` hunk
+header and the trailing-context block at `:76`-`:77`. Conflicting evidence:
+live `restart/locks/LOCKS.md:622`-`625` has TWO blank lines (`:623`,`:624`)
+before `## v+1 Governance Boundary`; the diff body emits 5 context + 28 added
+lines while the header declares `@@ -622,6 +622,38 @@`. Correction: (a) emit the
+missing second blank context line so the leading context matches `LOCKS.md:622`-
+`624`; (b) set the hunk header to the actual line accounting (old = context-line
+count, new = context + addition count) so `git apply --check` returns exit 0.
+This is a REGRESSION-lens blocker because the corrupt hunk prevents the
+verbatim-blob (D-SKV18-L06), CollapsedStage-slot (D-SKV18-L10), neutrality-proof
+(D-SKV18-L14-neutrality), and retarget-not-author (D-SKV18-L16) clauses — the
+clauses that FENCE the REDRESS 96/97/98 and item-51/53/247 routes — from being
+applied to `LOCKS.md` by Pass Omega CRUD. The `3C-locks-v+1-diff.md` Invariant
+Check (`:88`) asserts a clean `git apply --check`; that assertion is false at
+HEAD and must be made true.
+
+**CH3-V1-R2 — REDRESS coverage gap (U-5) is fenced only at SK-V19 entry, after
+the SK-V18 GENERALIZE waves it should gate (severity: MEDIUM).**
+Owner: 3D (primary; carries the four-item pre-block fold), with 3B/3F mirroring.
+Target: `3D-D08`/`3D` CH3 open question (`3D-skinny-fold.md:163`); `3B`
+CH3 open question (`3B-master-plan-reconciliation.md:252`); `3F` CH3 open
+question (`3F-migration-handoff.md:258`). Conflicting evidence: the
+Rejected-Route Pre-Block COMPLETENESS CAVEAT
+(`restart/audit/totality/p1/1D-skinny-lessons.md:171`, CH3-V4-006) states the
+four-item table "is complete for the captured ledger, NOT for the full skinny
+history; any SK-V16/V17 rejected route is structurally invisible," and U-5
+(`1D:244`-`248`) names the verify_action ("locate the SK-V16/V17 tranche
+REDRESS/HANDOFF and reconcile against the SK-V18 S-P0 residual census BEFORE Pass
+Omega ratification"). The packet routes the reconcile to SK-V19 entry, but the
+SK-V18 G2 (`css_balanced_component_scan`), G4 (`Cursor`/`<G>` delete), and G6
+(NEON retarget) waves — the exact moves that abut items 51/53/247 — run during
+SK-V18, before SK-V19. Correction: move the SK-V16/V17 REDRESS reconcile from a
+SK-V19-entry obligation to a **Pass-Omega-V6 / pre-W-PRUNE blocker** (per U-5's
+own "before Pass Omega ratification" verify_action), so the four-item pre-block
+is reconciled against the full skinny history BEFORE any SK-V18 GENERALIZE wave
+that abuts a fenced shape dispatches. At minimum, 3D-D08 and 3F-MH-003 must state
+that G2/G4/G6 entry is BLOCKED until the SK-V16/V17 pre-block reconcile is on the
+committed ledger.
+
+## What Holds (the ACCEPT spine)
+
+1. **No REDRESS route reopened (within the captured ledger).** Items
+   51/53/246/247 and 96/97/98 are each carried with a verified line-span and an
+   explicit ADMISSIBLE-vs-REJECTED distinction (1D:166-171; 3A-D08/D09;
+   3D-D08; 3E frontmatter:47-54; 3C-L10/L16; 3F-MH CH3-Q). The G4 `Cursor` is a
+   VIEW over the existing `Tape`/`ValueRef`/`PayloadArena` (admissible); the G6
+   move RETARGETS the existing in-loop shell (admissible); neither is a second
+   substrate, a structural-stream driver, a parser-local cursor, nor a bespoke
+   per-grammar mask (all rejected). The single COMPLETENESS gap is U-5, surfaced
+   honestly and addressed by CH3-V1-R2.
+
+2. **3B revives no refuted wave.** The §13.6 tape-fold receivers are re-keyed
+   SK-V18→SK-V19 with F1-F9 content preserved verbatim; the A-J tranche set stays
+   `pending`; the F.W5 un-fork claim is correctly marked UNREALISED-in-both-trees
+   (3B:97,107), not paper-closed.
+
+3. **3D promotes no rejected route.** The G6 decision is RETARGET-not-wire-as-is
+   (the refuted "wire `find_css_significant` as-is" is carried as REFUTED, 3D:125,
+   3E:48); the named-primitive (a)-(d) gate carries the refuted tree-walk as a
+   REJECT condition (3D:128, 3D-D11).
+
+4. **3C weakens no lock REDRESS strengthened.** Every SK-V18 clause is additive
+   or a sharpening (aarch64-PRIMARY→aarch64-ONLY; CollapsedStage admitted only as
+   an inert slot; verbatim-blob courier REJECTED). The CollapsedStage clause
+   explicitly carries the REDRESS 96/97/98 retired prior forward as a promotion
+   bar (3C-L10). 16 locks and 5 BackendShape variants intact.
+
+5. **No delta revives one of the 13 T-P2-refuted assertions.** All carried as
+   gates/fences (table above, conjunct 5/6).
 
 ## Residual Risk
 
-1. Pass Omega CRUD can still misapply the proposal text. CH3 acceptance depends on preserving the packet's explicit historical/current split and the Pass Omega/G-Omega implementation block when CRUD-4 edits live `MIGRATION.md` and `HANDOFF.md`.
-2. The old "Pass Omega V5" name collision is surfaced by 3F as a CH1/CH6 open question (`restart/audit/totality/p3/3F-migration-handoff.md:117`-`118`). It is not a CH3 blocker because the target packet explicitly labels current SK-V15 routing and keeps historical SK-V14 sections non-dispatch.
-3. W1 still must choose whether CSS broadcast evidence becomes one diagnostic aggregate or 24 explicit non-admit rows (`restart/audit/totality/p3/3B-master-plan-reconciliation.md:164`). Both permitted shapes preserve the CH3 invariant: no live CSS admit from W8R broadcast evidence.
+1. CH3-V1-R1 is also a CH1 correctness finding (the diff-applies invariant). If
+   CH1 repairs the hunk, this CH3 REVISE is discharged in the same fold; the two
+   must not double-count.
+2. CH3-V1-R2's reconcile may surface an SK-V16/V17 rejected route that a current
+   SK-V18 delta DOES abut — until the reconcile runs, that possibility cannot be
+   excluded, only bounded. The risk is that an SK-V16/V17-era streamed-cursor or
+   second-scanner reject is re-entered by G6 with no committed fence.
+3. The packet's CH3 open questions (3B:252, 3D:163, 3F:258) are each well-formed
+   (receiver/blocker/gate present); CH3-V1-R2 retimes their gate, it does not
+   reject them.
 
-## V3/V4/V5/V6/V7/V8 Wave-Graph Justification
-
-The V3/V4/V5/V6/V7/V8 failure class was not merely "old wave names"; it was the graph error of deleting or retiring provider/runtime/template surfaces before the replacement provider existed and was consumed. REDRESS records that W2/W4/W5/W5B/W5B-GEN/W5B-FRONTEND/W6.0 attempts failed or required reroute because generator/runtime/provider proof was absent or oversized (`skinny/REDRESS.md:5092`-`5118`, `skinny/REDRESS.md:5173`-`5293`).
-
-V1 avoids reintroducing that graph in three independent ways:
-
-1. 3B reclassifies SK-V14 W0-W11 and MP-NW-01..14 as historical or superseded, not current dispatch (`restart/audit/totality/p3/3B-master-plan-reconciliation.md:102`-`103`, `restart/audit/totality/p3/3B-master-plan-reconciliation.md:134`).
-2. 3C and 3F add explicit same-wave provider/dependency guards for deletion and retirement (`restart/audit/totality/p3/3C-locks-v+1-diff.md:50`; `restart/audit/totality/p3/3F-migration-handoff.md:42`).
-3. SK-V15 SPEC rows make the graph executable: CSS generated/parser proof cannot retire before W6 with W5 typed provider proof, provider/template deletion is blocked before W6 proof, Pattern H destructive delete is blocked without W4 proof, and FNV production migration is quarantine-only (`restart/skinny/tranches/sk-v15/SPEC.md:195`-`204`, `restart/skinny/tranches/sk-v15/SPEC.md:481`-`484`).
-
-Therefore the packet preserves the REDRESS lessons as lock-strengthening and dependency rows, rather than reopening them as implementation paths.
+TALLY accept=12 revise=2 reject=0

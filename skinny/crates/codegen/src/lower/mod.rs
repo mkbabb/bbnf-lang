@@ -1,4 +1,5 @@
 pub mod collapsed_stage;
+pub mod css_scan;
 pub mod eager_tape;
 pub mod event_tape;
 pub mod offset_tape;

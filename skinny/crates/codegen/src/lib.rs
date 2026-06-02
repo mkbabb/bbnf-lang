@@ -1,3 +1,4 @@
+pub mod css_scan_direct;
 pub mod direct_schema;
 mod grammar_profile;
 pub mod grammar_provider;
@@ -350,23 +351,6 @@ mod tests {
         }
     }
 
-    const W5C_CSS_SOURCE: &str = r#"
-@import "tokens.bbnf" ;
-@token ident ;
-@ws /\s*/ ;
-@pretty stylesheet block ;
-root = @{ "url" , "(" >> ident ?w , "," ?w , ident << ")" } ;
-tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
-"#;
-
-    fn w5c_css_request(profile_id: &str, source: &str) -> RuntimeGenerationRequest {
-        let mut request = w5a_css_request(source);
-        request.profile_id = profile_id.to_string();
-        request.output_dir = format!("crates/runtime/src/grammars/{profile_id}");
-        request.profile_contract = request_facts_contract(profile_id);
-        request
-    }
-
     fn w5c_full_css_request(profile_id: &str) -> RuntimeGenerationRequest {
         let sources = [
             (
@@ -523,7 +507,12 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
     #[test]
     fn css_l4_frontend_profiles_are_request_generated() {
         for &profile_id in CSS_PROFILE_IDS {
-            let emitted = emit_runtime_from_request(w5c_css_request(profile_id, W5C_CSS_SOURCE))
+            // SK-V18 G2: the CSS provider is now GENUINELY derived from the raw
+            // l4 grammar AST (`lower::css_scan`), so the request must carry the
+            // real structural rules (`ruleBlock`/`atRuleBody`/`cssString`/...),
+            // not the minimal `W5C_CSS_SOURCE` placeholder the retired courier
+            // ignored.
+            let emitted = emit_runtime_from_request(w5c_full_css_request(profile_id))
                 .expect("request generated css runtime");
             let names = emitted.files().map(|(name, _)| name).collect::<Vec<_>>();
 
@@ -557,11 +546,9 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
 
         // SK-V17 W1: the CSS provider routes into the EXISTING skinny tape; the
         // fact-stream W7 policy plane is retired with `emit_fact_stream`.
-        let css = emit_runtime_from_request(w5c_css_request(
-            "css_l4_declaration_values",
-            W5C_CSS_SOURCE,
-        ))
-        .unwrap();
+        // SK-V18 G2: the provider is derived from the real l4 grammar AST.
+        let css = emit_runtime_from_request(w5c_full_css_request("css_l4_declaration_values"))
+            .unwrap();
         let css_generated = css.get("generated.rs").unwrap();
 
         assert!(css_generated.contains("crate::tape::{OffsetFlags, Tape, TapeBuilder, ValueRef}"));
@@ -964,7 +951,12 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
 root = @{ "url" , "(" >> ident ?w , "," ?w , ident << ")" } ;
 tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
 "#;
-        let emitted = emit_runtime_from_request(w5a_css_request(source)).unwrap();
+        // SK-V18 G2: the CSS body is derived from the real l4 grammar AST; the
+        // success path uses the full multi-source request. The placeholder
+        // `source` is retained below for the metadata/closure-rejection probes
+        // (which fail at validation, before body derivation).
+        let emitted =
+            emit_runtime_from_request(w5c_full_css_request("css_l4_declaration_values")).unwrap();
         // SK-V17 W1: tape-routed provider — assert the tape append, not the
         // retired fact-stream String emitter.
         assert!(emitted
@@ -995,7 +987,11 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
 root = @{ "url" , "(" >> ident ?w , "," ?w , ident << ")" } ;
 tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
 "#;
-        let emitted = emit_runtime_from_request(w5a_css_request(source)).unwrap();
+        // SK-V18 G2: success path uses the full l4 grammar (the body is
+        // derived); `source` retained to exercise the frontend-closure path.
+        let _ = source;
+        let emitted =
+            emit_runtime_from_request(w5c_full_css_request("css_l4_declaration_values")).unwrap();
 
         assert!(emitted
             .get("generated.rs")
@@ -1078,13 +1074,20 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
     }
 
     pub(super) fn w5c_gen_css_runtime_output_depends_on_frontend_source_hash() {
+        // SK-V18 G2: the CSS body is derived from the real l4 grammar AST. A
+        // mutation of a NON-structural source (here a benign trailing comment
+        // on the entry source) changes the frontend source-hash — hence
+        // `config.rs` — while leaving the derived structural alphabet (and so
+        // `generated.rs`) byte-identical.
         let first =
-            emit_runtime_from_request(w5c_css_request("css_l4_declaration_values", W5C_CSS_SOURCE))
-                .unwrap();
-        let changed = format!("{W5C_CSS_SOURCE}\nextra = ident ;\n");
-        let second =
-            emit_runtime_from_request(w5c_css_request("css_l4_declaration_values", &changed))
-                .unwrap();
+            emit_runtime_from_request(w5c_full_css_request("css_l4_declaration_values")).unwrap();
+        let mut changed_request = w5c_full_css_request("css_l4_declaration_values");
+        for source in &mut changed_request.sources {
+            if source.rel_path.ends_with("stylesheet.bbnf") {
+                source.source.push_str("\n// G2 source-hash-dependence probe\n");
+            }
+        }
+        let second = emit_runtime_from_request(changed_request).unwrap();
 
         assert_ne!(first.get("config.rs"), second.get("config.rs"));
         assert!(first

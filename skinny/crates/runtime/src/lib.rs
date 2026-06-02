@@ -5,6 +5,11 @@ pub mod tape;
 /// alphabet/byte-set as caller data, Lock 14).
 pub mod runtime_simd;
 
+/// The `css_balanced_component_scan` named primitive (SK-V18 G2 §6): the
+/// grammar-parameterized balanced-delimiter scan ALGORITHM the CSS recognizer
+/// is built from. CSS-scoped SHELL (emits nothing), neutral inner kernel.
+pub mod runtime_scan;
+
 #[path = "grammars/json/mod.rs"]
 pub mod generated_json;
 

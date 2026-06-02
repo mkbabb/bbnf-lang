@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, watch, inject } from "vue";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Slider, Tooltip, TooltipTrigger, TooltipContent, Dialog, DialogContent, DialogTitle, DialogDescription, DialogTrigger } from "@mkbabb/glass-ui";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@mkbabb/glass-ui/select";
+import { Slider } from "@mkbabb/glass-ui/slider";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@mkbabb/glass-ui/tooltip";
+import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogTrigger } from "@mkbabb/glass-ui/dialog";
 import { Settings2 } from "lucide-vue-next";
 
 const props = defineProps<{

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, inject } from "vue";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Tooltip, TooltipTrigger, TooltipContent } from "@mkbabb/glass-ui";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@mkbabb/glass-ui/select";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@mkbabb/glass-ui/tooltip";
 import InlineRichText from "@/components/ui/InlineRichText.vue";
 import { exampleIcons, exampleToneClass, shimmerClass, tagToneStyle } from "@/lib/toneMaps";
 import type { Example } from "@/composables/useExamples";

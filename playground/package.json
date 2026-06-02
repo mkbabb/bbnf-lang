@@ -10,8 +10,8 @@
         "test:e2e:ui": "playwright test --ui"
     },
     "dependencies": {
-        "@mkbabb/glass-ui": "^2.0.0",
-        "@mkbabb/keyframes.js": "^2.1.1",
+        "@mkbabb/glass-ui": "^3.0.0",
+        "@mkbabb/keyframes.js": "^2.2.0",
         "@mkbabb/value.js": "^0.10.0",
         "@vueuse/core": "^14.0.0",
         "class-variance-authority": "^0.7.0",

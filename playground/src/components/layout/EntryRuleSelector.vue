@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, inject } from "vue";
-import { Select, SelectTrigger, SelectContent, SelectItem, Tooltip, TooltipTrigger, TooltipContent } from "@mkbabb/glass-ui";
+import { Select, SelectTrigger, SelectContent, SelectItem } from "@mkbabb/glass-ui/select";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@mkbabb/glass-ui/tooltip";
 import InlineRichText from "@/components/ui/InlineRichText.vue";
 import { GitBranch } from "lucide-vue-next";
 

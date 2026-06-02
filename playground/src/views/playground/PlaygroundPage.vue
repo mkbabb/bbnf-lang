@@ -2,7 +2,7 @@
 import { ref, computed, watch, onBeforeUnmount, type Ref } from "vue";
 import { useDebounceFn } from "@vueuse/core";
 import { toast } from "vue-sonner";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@mkbabb/glass-ui";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@mkbabb/glass-ui/tooltip";
 import { GripVertical } from "lucide-vue-next";
 import { useExamples } from "@/composables/useExamples";
 import { usePipeline, type PipelineError } from "@/composables/usePipeline";

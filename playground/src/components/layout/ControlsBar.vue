@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Tooltip, TooltipTrigger, TooltipContent } from "@mkbabb/glass-ui";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@mkbabb/glass-ui/tooltip";
 import { GlassDock } from "@mkbabb/glass-ui/dock";
 import ErrorDialog from "@/components/layout/ErrorDialog.vue";
 import ExampleSelector from "@/components/layout/ExampleSelector.vue";

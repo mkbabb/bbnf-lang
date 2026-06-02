@@ -16,9 +16,8 @@ use std::path::Path;
 use thiserror::Error;
 
 pub use grammar_provider::{
-    emit_runtime_from_request, RuntimeEmitterKind, RuntimeFrontendRequirements,
-    RuntimeGenerationRequest, RuntimeGrammarSource, RuntimeOutputLabels, RuntimeProfileContract,
-    RuntimeWorkspaceMetadata,
+    emit_runtime_from_request, RuntimeFrontendRequirements, RuntimeGenerationRequest,
+    RuntimeGrammarSource, RuntimeOutputLabels, RuntimeProfileContract, RuntimeWorkspaceMetadata,
 };
 
 #[derive(Debug, Error)]
@@ -35,13 +34,6 @@ pub enum CodegenError {
     UnexpectedFile(String),
     #[error("lowering failed: {0}")]
     Lowering(String),
-    #[error("{code}: {path}@{offset} source_hash={source_hash}")]
-    UnsupportedRuntimeConstruct {
-        code: &'static str,
-        path: String,
-        offset: usize,
-        source_hash: String,
-    },
     #[error(transparent)]
     Io(#[from] std::io::Error),
 }
@@ -152,14 +144,34 @@ pub fn emit_typed_from_source(
     )
 }
 
-fn emit_with_layout(
+/// Lower a lowerable grammar source to its [`lower::sink_only::SinkOnlyProgram`]
+/// — the `SinkOnly` lowered artifact the runtime un-fork renders. Same
+/// parse → compile → `lower_to_rust` pipeline `emit_from_source` rides; the
+/// artifact dispatch in `runtime_generator` consumes the produced program.
+pub(crate) fn lower_sink_only_from_source(
+    grammar_name: &str,
+    source: &str,
+) -> Result<lower::sink_only::SinkOnlyProgram, CodegenError> {
+    let grammar = grammar::parse_grammar(grammar_name, source)?;
+    let output = passes::compile(&grammar)?;
+    lower_sink_only_with_layout(
+        &output.backend_ir,
+        &output.layout_facts.backend_shape,
+        &output.layout_facts.cost_facts,
+        &output.layout_facts.per_grammar_policy,
+        &output.layout_facts.same_substrate_union,
+        &output.diagnostics,
+    )
+}
+
+fn lower_sink_only_with_layout(
     backend: &BackendIr,
     backend_shape: &std::collections::HashMap<RuleId, BackendShape>,
     cost_facts: &std::collections::HashMap<RuleId, CostFacts>,
     per_grammar_policy: &std::collections::HashMap<RuleId, PerGrammarPolicyFacts>,
     same_substrate_union: &std::collections::HashMap<RuleId, SameSubstrateUnionFacts>,
     diagnostics: &[passes::diagnostics::PassDiagnostic],
-) -> Result<EmittedSource, CodegenError> {
+) -> Result<lower::sink_only::SinkOnlyProgram, CodegenError> {
     let lowered = lower::lower_to_rust(
         backend,
         &lower::LowerCtx {
@@ -171,12 +183,30 @@ fn emit_with_layout(
         },
     )
     .map_err(CodegenError::Lowering)?;
-    let sink_only = lowered.sink_only_program.as_ref().ok_or_else(|| {
+    lowered.sink_only_program.ok_or_else(|| {
         CodegenError::Lowering(
             "BackendIr did not contain DirectBuild sink-only program".to_string(),
         )
-    })?;
-    runtime_generator::emit_compiled(&backend.grammar_name, sink_only)
+    })
+}
+
+fn emit_with_layout(
+    backend: &BackendIr,
+    backend_shape: &std::collections::HashMap<RuleId, BackendShape>,
+    cost_facts: &std::collections::HashMap<RuleId, CostFacts>,
+    per_grammar_policy: &std::collections::HashMap<RuleId, PerGrammarPolicyFacts>,
+    same_substrate_union: &std::collections::HashMap<RuleId, SameSubstrateUnionFacts>,
+    diagnostics: &[passes::diagnostics::PassDiagnostic],
+) -> Result<EmittedSource, CodegenError> {
+    let sink_only = lower_sink_only_with_layout(
+        backend,
+        backend_shape,
+        cost_facts,
+        per_grammar_policy,
+        same_substrate_union,
+        diagnostics,
+    )?;
+    runtime_generator::emit_sink_only(&backend.grammar_name, &sink_only)
 }
 
 fn emit_typed_with_layout(
@@ -280,7 +310,6 @@ mod tests {
 
     fn compiled_contract() -> RuntimeProfileContract {
         RuntimeProfileContract {
-            emitter: RuntimeEmitterKind::CompiledLowering,
             expected_files: grammar_profile::COMPILED_RUNTIME_FILES,
             frontend_requirements: RuntimeFrontendRequirements::none(),
             output_labels: None,
@@ -289,7 +318,6 @@ mod tests {
 
     fn request_facts_contract(profile_id: &str) -> RuntimeProfileContract {
         RuntimeProfileContract {
-            emitter: RuntimeEmitterKind::RequestFacts,
             expected_files: grammar_profile::REQUEST_FACTS_RUNTIME_FILES,
             frontend_requirements: RuntimeFrontendRequirements::full_request_facts(),
             output_labels: Some(request_facts_labels(profile_id)),

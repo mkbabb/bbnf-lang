@@ -1,4 +1,4 @@
-use crate::grammar_provider::{RuntimeEmitterKind, RuntimeGenerationRequest, RuntimeOutputLabels};
+use crate::grammar_provider::{RuntimeGenerationRequest, RuntimeOutputLabels};
 use crate::{css_scan_direct, grammar_profile, json_sink_direct, lower, CodegenError, EmittedSource};
 use std::collections::BTreeMap;
 use std::fmt::Write;
@@ -9,24 +9,82 @@ pub(crate) fn emit_profile_only(profile_id: &str) -> Result<EmittedSource, Codeg
     )))
 }
 
+/// The neutral lowered-artifact sum type — the ONE post-lowering shape the
+/// un-forked `render` dispatches on. The variant is the OUTPUT of the
+/// shape-derived lowering pipeline (`lower_for_runtime`), never a grammar tag
+/// nor a configured field: a grammar whose construct-kinds all lower
+/// (`first_unsupported().is_none()`) yields a `SinkOnly` program; a grammar
+/// carrying `@token`/`@pretty`/`->` (which `first_unsupported` rejects from
+/// `lower_to_rust`) yields the `Scan` IR derived from the raw grammar AST.
+pub(crate) enum LoweredArtifact {
+    /// A lowered sink-only program (carries `policy_summary.backend_shape`).
+    SinkOnly(lower::sink_only::SinkOnlyProgram),
+    /// A lowered CSS scan IR (balanced byte-skip; carries no `BackendShape`).
+    Scan(lower::css_scan::CssScanProgram),
+}
+
 pub(crate) fn emit_from_request(
     request: &RuntimeGenerationRequest,
     facts: &grammar::RuntimeSourceFacts,
 ) -> Result<EmittedSource, CodegenError> {
-    match request.profile_contract.emitter {
-        RuntimeEmitterKind::CompiledLowering => {
-            let Some(source) = request.sources.first() else {
-                return Err(CodegenError::Lowering(
-                    "compiled runtime request requires a source".to_string(),
-                ));
-            };
-            crate::emit_from_source(&request.grammar_name, &source.source)
-        }
-        RuntimeEmitterKind::RequestFacts => emit_request_facts(request, facts),
+    let artifact = lower_for_runtime(request, facts)?;
+    render(&artifact, request, facts)
+}
+
+/// The shape-derived artifact selection: run the lowering pipeline the
+/// grammar's own construct-kinds admit. `first_unsupported().is_none()` is the
+/// SAME construct-KIND predicate that already gated lowering — never a grammar
+/// NAME, never a config field. A lowerable grammar produces the
+/// `SinkOnlyProgram`; a non-lowerable one (CSS, with `@token`/`@pretty`/`->`)
+/// produces the raw-AST-derived `CssScanProgram`.
+fn lower_for_runtime(
+    request: &RuntimeGenerationRequest,
+    facts: &grammar::RuntimeSourceFacts,
+) -> Result<LoweredArtifact, CodegenError> {
+    if facts.first_unsupported().is_none() {
+        let Some(source) = request.sources.first() else {
+            return Err(CodegenError::Lowering(
+                "compiled runtime request requires a source".to_string(),
+            ));
+        };
+        let sink_only = crate::lower_sink_only_from_source(&request.grammar_name, &source.source)?;
+        Ok(LoweredArtifact::SinkOnly(sink_only))
+    } else {
+        // The raw-AST CSS harvest: the structural alphabet (per-call-site STOP
+        // byte-arrays + the fixed-9 SKIP set) is harvested from `stylesheet.
+        // bbnf`'s `ruleBlock`/declaration/selector literals; the scan ALGORITHM
+        // is the blob-free `css_balanced_component_scan` runtime primitive.
+        let scan_sources = request
+            .sources
+            .iter()
+            .map(|source| (source.rel_path.clone(), source.source.clone()))
+            .collect::<Vec<_>>();
+        let program = lower::css_scan::derive_program(
+            &request.grammar_name,
+            &request.entry_rule,
+            &scan_sources,
+        )?;
+        Ok(LoweredArtifact::Scan(program))
     }
 }
 
-pub(crate) fn emit_compiled(
+/// The ONE grammar-agnostic emit entry: it matches the lowered-artifact VARIANT
+/// (a computed lowering output) and reads its output-shape from the artifact
+/// (the `SinkOnly` arm from `policy_summary.backend_shape`; the `Scan` arm from
+/// the program's derived `alphabet`/`at_rule_branches`). It reads NO
+/// `target.*`/`contract.*` selection field — the firewall.
+fn render(
+    artifact: &LoweredArtifact,
+    request: &RuntimeGenerationRequest,
+    facts: &grammar::RuntimeSourceFacts,
+) -> Result<EmittedSource, CodegenError> {
+    match artifact {
+        LoweredArtifact::SinkOnly(program) => emit_sink_only(&request.grammar_name, program),
+        LoweredArtifact::Scan(program) => emit_scan(program, request, facts),
+    }
+}
+
+pub(crate) fn emit_sink_only(
     profile_id: &str,
     sink_only: &lower::sink_only::SinkOnlyProgram,
 ) -> Result<EmittedSource, CodegenError> {
@@ -71,7 +129,8 @@ pub(crate) fn emit_compiled(
     Ok(EmittedSource { files })
 }
 
-fn emit_request_facts(
+fn emit_scan(
+    program: &lower::css_scan::CssScanProgram,
     request: &RuntimeGenerationRequest,
     facts: &grammar::RuntimeSourceFacts,
 ) -> Result<EmittedSource, CodegenError> {
@@ -82,25 +141,12 @@ fn emit_request_facts(
         ))
     })?;
     // SK-V18 G2: the CSS provider body is DERIVED from the raw grammar AST
-    // (`lower::css_scan`) and emitted by `css_scan_direct::render` — the
-    // verbatim raw-string courier is gone. The structural alphabet (the
-    // per-call-site STOP byte-arrays + the fixed-9 SKIP set) is harvested from
-    // `stylesheet.bbnf`'s `ruleBlock`/declaration/selector literals; the scan
-    // ALGORITHM is the blob-free `css_balanced_component_scan` runtime primitive.
-    let scan_sources = request
-        .sources
-        .iter()
-        .map(|source| (source.rel_path.clone(), source.source.clone()))
-        .collect::<Vec<_>>();
-    let program = lower::css_scan::derive_program(
-        &request.grammar_name,
-        &request.entry_rule,
-        &scan_sources,
-    )?;
+    // (`lower::css_scan`, the `Scan` artifact) and emitted by
+    // `css_scan_direct::render` — the verbatim raw-string courier is gone.
     let mut generated = String::new();
     generated.push_str(crate::GENERATED_HEADER);
     generated.push('\n');
-    generated.push_str(&css_scan_direct::render(&program).map_err(CodegenError::Lowering)?);
+    generated.push_str(&css_scan_direct::render(program).map_err(CodegenError::Lowering)?);
 
     let files = BTreeMap::from([
         (
@@ -114,7 +160,7 @@ fn emit_request_facts(
     ]);
     grammar_profile::validate_generated_roster(
         &request.profile_id,
-        request.profile_contract.expected_files,
+        grammar_profile::REQUEST_FACTS_RUNTIME_FILES,
         files.keys().map(String::as_str),
     )
     .map_err(CodegenError::Lowering)?;

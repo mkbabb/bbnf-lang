@@ -12,7 +12,6 @@ pub(crate) struct RuntimeTarget {
     pub(crate) check_command: &'static str,
     pub(crate) source_inputs: &'static [&'static str],
     pub(crate) metadata_inputs: &'static [&'static str],
-    pub(crate) emitter: codegen::RuntimeEmitterKind,
     pub(crate) expected_files: &'static [&'static str],
     pub(crate) frontend_requirements: codegen::RuntimeFrontendRequirements,
     pub(crate) output_labels: Option<codegen::RuntimeOutputLabels>,
@@ -79,7 +78,6 @@ pub(crate) fn runtime_request(
         workspace_metadata: workspace_metadata(root, target.grammar_name)?,
         output_dir: target.output_dir.to_string(),
         profile_contract: codegen::RuntimeProfileContract {
-            emitter: target.emitter,
             expected_files: target.expected_files,
             frontend_requirements: target.frontend_requirements,
             output_labels: target.output_labels,

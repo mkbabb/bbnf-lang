@@ -1268,7 +1268,11 @@ const SK_V18_WPRUNE_P1_X86_OWNER_PATHS: &[&str] = &[
 // a directory module (`dispatch`/`first_set`/`skeleton`/`recognize`); G2 adds the
 // `css_scan_direct` directory-module CSS emitter (`drivers`/`projection`), its
 // `lower/css_scan` lowering surface, and the `runtime/src/runtime_scan` runtime
-// receiver. These are the authorized owner surface of the courier retirement.
+// receiver; G3 un-forks the emitter (DELETE RuntimeEmitterKind, dispatch on the
+// lowered-artifact type) touching `grammar_provider`/`grammar_profile`/`xtask`
+// and this gate file itself. These are the authorized owner surface of the
+// SK-V18 generalization program (G1-G6/PROVE/H1) — the matcher below admits any
+// `sk-v18-g*`/`-prove`/`-h1` commit subject editing ONLY these frozen surfaces.
 const SK_V18_G1_G2_EMITTER_OWNER_PATHS: &[&str] = &[
     "crates/codegen/src/json_sink_direct/",
     "crates/codegen/src/css_scan_direct/",
@@ -1276,10 +1280,14 @@ const SK_V18_G1_G2_EMITTER_OWNER_PATHS: &[&str] = &[
     "crates/codegen/src/lower/mod.rs",
     "crates/codegen/src/lib.rs",
     "crates/codegen/src/runtime_generator.rs",
+    "crates/codegen/src/grammar_provider.rs",
+    "crates/codegen/src/grammar_profile.rs",
     "crates/runtime/src/runtime_scan.rs",
     "crates/runtime/src/lib.rs",
     "crates/runtime/src/grammars/json/generated.rs",
     "crates/runtime/src/grammars/css_l4_declaration_values/generated.rs",
+    "xtask/src/main.rs",
+    "crates/bbnf-bench/src/lock14_baseline.rs",
 ];
 
 fn current_lock14_owner_paths() -> Vec<&'static str> {
@@ -2024,8 +2032,12 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
 // CSS emitter (retiring the CSS courier). Both author into the grammar-derived
 // emitter owner surface.
 fn is_skv18_g1_g2_emitter_subject(subject: &str) -> bool {
+    // SK-V18 generalization program: G1-G6 (`sk-v18-g<n>`) + PROVE + H1 all
+    // author into the same grammar-derived emitter owner surface above.
     let subject = subject.to_ascii_lowercase();
-    subject.contains("sk-v18-g1") || subject.contains("sk-v18-g2")
+    subject.contains("sk-v18-g")
+        || subject.contains("sk-v18-prove")
+        || subject.contains("sk-v18-h1")
 }
 
 fn is_w9_json_typed_subject(subject: &str) -> bool {

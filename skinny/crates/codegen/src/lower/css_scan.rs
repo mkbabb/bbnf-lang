@@ -2,7 +2,8 @@
 //!
 //! CSS cannot reach `lower::lower_to_rust`: `passes::compile`'s
 //! `first_unsupported` REJECTS CSS's `@token`/`@pretty`/`->`-projection
-//! constructs (the very reason CSS is on the `RequestFacts` path). So the CSS
+//! constructs (the very reason CSS lowers to the `Scan` artifact, not the
+//! `SinkOnly` one). So the CSS
 //! provider is DERIVED here, by walking the raw parsed grammar AST of
 //! `stylesheet.bbnf` (+ its l4 imports), NOT the `BackendIr`/`SinkOnlyProgram`.
 //!

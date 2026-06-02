@@ -181,7 +181,6 @@ const JSON_TARGET: regen::RuntimeTarget = regen::RuntimeTarget {
     check_command: "check-json",
     source_inputs: JSON_SOURCES,
     metadata_inputs: WORKSPACE_METADATA,
-    emitter: codegen::RuntimeEmitterKind::CompiledLowering,
     expected_files: COMPILED_RUNTIME_FILES,
     frontend_requirements: codegen::RuntimeFrontendRequirements::none(),
     output_labels: None,

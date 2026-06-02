@@ -11,7 +11,6 @@ pub(crate) const COMPILED_RUNTIME_FILES: &[&str] = &[
     "visitor.rs",
 ];
 
-#[cfg(test)]
 pub(crate) const REQUEST_FACTS_RUNTIME_FILES: &[&str] = &[
     "config.rs",
     "generated.rs",

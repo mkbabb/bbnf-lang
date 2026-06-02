@@ -1,0 +1,35 @@
+### W-PRUNE VERIFICATION @ beb7067e0 loadavg= 11.17 13.99 13.52 ###
+### STAGE 1: build xtask (codegen compiles after P1-P5?) ###
+warning: /Users/mkbabb/Programming/bbnf-lang/skinny/Cargo.toml: `panic` setting is ignored for `bench` profile
+warning: patch `bbnf v0.2.11 (/Users/mkbabb/Programming/bbnf-lang/crates/core)` was not used in the crate graph
+  |
+  = help: perhaps you meant one of the following:
+          	/Users/mkbabb/Programming/bbnf-lang/skinny/crates/bbnf
+warning: patch `bbnf-regex v0.1.0 (/Users/mkbabb/Programming/parse-that/rust/regex)` was not used in the crate graph
+  |
+  = help: perhaps you meant one of the following:
+          	/Users/mkbabb/Programming/bbnf-lang/skinny/crates/bbnf-regex
+warning: patch `bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-lang/crates/ir)` was not used in the crate graph
+warning: patch `bbnf-ser v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/crates/ser)` was not used in the crate graph
+warning: patch `egraph-derive v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/crates/egraph-derive)` was not used in the crate graph
+warning: patch `gorgeous v0.1.10 (/Users/mkbabb/Programming/bbnf-lang/crates/gorgeous)` was not used in the crate graph
+warning: patch `parse_that v0.4.0 (/Users/mkbabb/Programming/parse-that/rust/parse_that)` was not used in the crate graph
+warning: patch `pprint v0.3.6 (/Users/mkbabb/Programming/pprint/rust)` was not used in the crate graph
+warning: patch `pprint_derive v0.2.2 (/Users/mkbabb/Programming/pprint/rust/derive)` was not used in the crate graph
+help: Check that the patched package version and available features are compatible
+      with the dependency requirements. If the patch has a different version from
+      what is locked in the Cargo.lock file, run `cargo update` to use the new
+      version. This may also occur with an optional dependency that is not enabled.
+   Compiling codegen v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/skinny/crates/codegen)
+   Compiling xtask v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/skinny/xtask)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 57.53s
+XTASK_BUILD_EXIT=
+SKIP regen+build (xtask failed)
+### STAGE 6: falsifiers ###
+P1 x86 files: 0 (want 0)
+P2 warm hits: 0 (want 0)
+P5 metalang in generated: NA (want 0)
+P3 PartialEq on RuntimeTarget: 1 (want >=1)
+P3 css_l4 replica dirs: 1 (want 1)
+SKIP tests (workspace build failed)
+### DONE ###

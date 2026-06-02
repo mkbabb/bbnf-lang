@@ -4,12 +4,11 @@ use cssparser::{
     QualifiedRuleParser, RuleBodyItemParser, RuleBodyParser, StyleSheetParser, Token,
 };
 use lightningcss::stylesheet::{ParserOptions, StyleSheet};
-use runtime::{
-    generated_css_l4_at_rules_and_media, generated_css_l4_declaration_values,
-    generated_css_l4_declaration_values_extended, generated_css_l4_nested_layout,
-    generated_css_l4_stylesheet_selectors, generated_css_l4_vendor_and_custom_atrules,
-    generated_css_l4_visual_functions,
-};
+// P3 collapse (R-A0-2 / R16): the 7 byte-identical css_l4 replicas reduced to the
+// single canonical `generated_css_l4_declaration_values`. The W8 diagnostic still
+// exercises all 7 profile labels, each routed through the one surviving (and
+// formerly byte-identical) parser, so the diagnostic counts are unchanged.
+use runtime::generated_css_l4_declaration_values;
 use std::hint::black_box;
 use std::time::{Duration, Instant};
 
@@ -57,36 +56,13 @@ struct Track1Profile {
 const TRACK1_FULL_PARSE_OUTPUT_PLANE: &str = "css_l4_full_parse";
 const TRACK1_FULL_PARSE_SCHEMA: &str = "css-l4-full-parse-v1";
 
-const TRACK1_PROFILES: &[Track1Profile] = &[
-    Track1Profile {
-        row_id: "css_l4/declaration_values/direct_to_struct/main",
-        parse: parse_declaration_values,
-    },
-    Track1Profile {
-        row_id: "css_l4/declaration_values_extended/direct_to_struct/main",
-        parse: parse_declaration_values_extended,
-    },
-    Track1Profile {
-        row_id: "css_l4/stylesheet_and_selectors/direct_to_struct/main",
-        parse: parse_stylesheet_selectors,
-    },
-    Track1Profile {
-        row_id: "css_l4/visual_functions/direct_to_struct/main",
-        parse: parse_visual_functions,
-    },
-    Track1Profile {
-        row_id: "css_l4/at_rules_and_media/direct_to_struct/main",
-        parse: parse_at_rules_and_media,
-    },
-    Track1Profile {
-        row_id: "css_l4/vendor_and_custom_atrules/direct_to_struct/main",
-        parse: parse_vendor_and_custom_atrules,
-    },
-    Track1Profile {
-        row_id: "css_l4/nested_layout/direct_to_struct/main",
-        parse: parse_nested_layout,
-    },
-];
+// P3 collapse (R-A0-2 / R16): the 7 byte-identical css_l4 replicas reduced to the
+// ONE canonical config. The diagnostic exercises the single surviving profile; the
+// `row_id` matches the canonical parser's `parse_full` output marker.
+const TRACK1_PROFILES: &[Track1Profile] = &[Track1Profile {
+    row_id: "css_l4/declaration_values/direct_to_struct/main",
+    parse: parse_declaration_values,
+}];
 
 pub fn run_production_attempt() -> Result<CssL4W8AttemptReport, String> {
     let corpora =
@@ -395,37 +371,12 @@ impl<'i> RuleBodyItemParser<'i, (), String> for CssparserFullParseProbe {
     }
 }
 
+// P3 collapse: the single surviving canonical parser (the 7 replicas were
+// byte-identical). The former 6 per-companion parse fns are deleted with their
+// replica modules.
 fn parse_declaration_values(input: &str) -> Result<String, String> {
     generated_css_l4_declaration_values::parser::parse_full(input)
         .map_err(|error| error.to_string())
-}
-
-fn parse_declaration_values_extended(input: &str) -> Result<String, String> {
-    generated_css_l4_declaration_values_extended::parser::parse_full(input)
-        .map_err(|error| error.to_string())
-}
-
-fn parse_stylesheet_selectors(input: &str) -> Result<String, String> {
-    generated_css_l4_stylesheet_selectors::parser::parse_full(input)
-        .map_err(|error| error.to_string())
-}
-
-fn parse_visual_functions(input: &str) -> Result<String, String> {
-    generated_css_l4_visual_functions::parser::parse_full(input).map_err(|error| error.to_string())
-}
-
-fn parse_at_rules_and_media(input: &str) -> Result<String, String> {
-    generated_css_l4_at_rules_and_media::parser::parse_full(input)
-        .map_err(|error| error.to_string())
-}
-
-fn parse_vendor_and_custom_atrules(input: &str) -> Result<String, String> {
-    generated_css_l4_vendor_and_custom_atrules::parser::parse_full(input)
-        .map_err(|error| error.to_string())
-}
-
-fn parse_nested_layout(input: &str) -> Result<String, String> {
-    generated_css_l4_nested_layout::parser::parse_full(input).map_err(|error| error.to_string())
 }
 
 #[cfg(test)]

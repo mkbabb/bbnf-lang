@@ -562,7 +562,7 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
         assert!(json_config.contains("W7_DIRECT_BACKEND_SHAPE"));
         assert!(json_config.contains("W7_SUBSTRATE_TARGET: &str = \"direct_sink\""));
         assert!(json_generated.contains("config::w7_direct_policy_triad"));
-        assert!(json_generated.contains("parse_w11_1_number_array_direct"));
+        assert!(json_generated.contains("parse_number_array_direct"));
 
         // SK-V17 W1: the CSS provider routes into the EXISTING skinny tape; the
         // fact-stream W7 policy plane is retired with `emit_fact_stream`.

@@ -32,165 +32,38 @@ const REQUEST_FACTS_RUNTIME_FILES: &[&str] = &[
 const REQUEST_FACTS_REQUIREMENTS: codegen::RuntimeFrontendRequirements =
     codegen::RuntimeFrontendRequirements::full_request_facts();
 
-const TARGETS: &[RuntimeTarget] = &[
-    RuntimeTarget {
-        grammar_name: "css_l4",
-        profile: "css_l4_at_rules_and_media",
-        entry_rule: "stylesheet",
-        source_roots: CSS_L4_ROOTS,
-        output_dir: "crates/runtime/src/grammars/css_l4_at_rules_and_media",
-        check_command: "check-css-l4-at-rules-and-media",
-        source_inputs: CSS_L4_SOURCES,
-        metadata_inputs: WORKSPACE_METADATA,
-        emitter: codegen::RuntimeEmitterKind::RequestFacts,
-        expected_files: REQUEST_FACTS_RUNTIME_FILES,
-        frontend_requirements: REQUEST_FACTS_REQUIREMENTS,
-        output_labels: Some(codegen::RuntimeOutputLabels {
-            fact_schema: "css-l4-at-rules-media-facts-v1",
-            row_id: "css_l4/at_rules_and_media/direct_to_struct/main",
-            output_plane: "css_l4_at_rules_media_fact_stream",
-        }),
-    },
-    RuntimeTarget {
-        grammar_name: "css_l4",
-        profile: "css_l4_declaration_values",
-        entry_rule: "stylesheet",
-        source_roots: CSS_L4_ROOTS,
-        output_dir: "crates/runtime/src/grammars/css_l4_declaration_values",
-        check_command: "check-css-l4-declaration-values",
-        source_inputs: CSS_L4_SOURCES,
-        metadata_inputs: WORKSPACE_METADATA,
-        emitter: codegen::RuntimeEmitterKind::RequestFacts,
-        expected_files: REQUEST_FACTS_RUNTIME_FILES,
-        frontend_requirements: REQUEST_FACTS_REQUIREMENTS,
-        output_labels: Some(codegen::RuntimeOutputLabels {
-            fact_schema: "css-l4-declaration-value-facts-v1",
-            row_id: "css_l4/declaration_values/direct_to_struct/main",
-            output_plane: "css_l4_declaration_value_fact_stream",
-        }),
-    },
-    RuntimeTarget {
-        grammar_name: "css_l4",
-        profile: "css_l4_declaration_values_extended",
-        entry_rule: "stylesheet",
-        source_roots: CSS_L4_ROOTS,
-        output_dir: "crates/runtime/src/grammars/css_l4_declaration_values_extended",
-        check_command: "check-css-l4-declaration-values-extended",
-        source_inputs: CSS_L4_SOURCES,
-        metadata_inputs: WORKSPACE_METADATA,
-        emitter: codegen::RuntimeEmitterKind::RequestFacts,
-        expected_files: REQUEST_FACTS_RUNTIME_FILES,
-        frontend_requirements: REQUEST_FACTS_REQUIREMENTS,
-        output_labels: Some(codegen::RuntimeOutputLabels {
-            fact_schema: "css-l4-declaration-value-extended-facts-v1",
-            row_id: "css_l4/declaration_values_extended/direct_to_struct/main",
-            output_plane: "css_l4_declaration_value_extended_fact_stream",
-        }),
-    },
-    RuntimeTarget {
-        grammar_name: "css_l4",
-        profile: "css_l4_nested_layout",
-        entry_rule: "stylesheet",
-        source_roots: CSS_L4_ROOTS,
-        output_dir: "crates/runtime/src/grammars/css_l4_nested_layout",
-        check_command: "check-css-l4-nested-layout",
-        source_inputs: CSS_L4_SOURCES,
-        metadata_inputs: WORKSPACE_METADATA,
-        emitter: codegen::RuntimeEmitterKind::RequestFacts,
-        expected_files: REQUEST_FACTS_RUNTIME_FILES,
-        frontend_requirements: REQUEST_FACTS_REQUIREMENTS,
-        output_labels: Some(codegen::RuntimeOutputLabels {
-            fact_schema: "css-l4-nested-layout-facts-v1",
-            row_id: "css_l4/nested_layout/direct_to_struct/main",
-            output_plane: "css_l4_nested_layout_fact_stream",
-        }),
-    },
-    RuntimeTarget {
-        grammar_name: "css_l4",
-        profile: "css_l4_stylesheet_selectors",
-        entry_rule: "stylesheet",
-        source_roots: CSS_L4_ROOTS,
-        output_dir: "crates/runtime/src/grammars/css_l4_stylesheet_selectors",
-        check_command: "check-css-l4-stylesheet-selectors",
-        source_inputs: CSS_L4_SOURCES,
-        metadata_inputs: WORKSPACE_METADATA,
-        emitter: codegen::RuntimeEmitterKind::RequestFacts,
-        expected_files: REQUEST_FACTS_RUNTIME_FILES,
-        frontend_requirements: REQUEST_FACTS_REQUIREMENTS,
-        output_labels: Some(codegen::RuntimeOutputLabels {
-            fact_schema: "css-l4-stylesheet-selector-facts-v1",
-            row_id: "css_l4/stylesheet_and_selectors/direct_to_struct/main",
-            output_plane: "css_l4_stylesheet_selector_fact_stream",
-        }),
-    },
-    RuntimeTarget {
-        grammar_name: "css_l4",
-        profile: "css_l4_vendor_and_custom_atrules",
-        entry_rule: "stylesheet",
-        source_roots: CSS_L4_ROOTS,
-        output_dir: "crates/runtime/src/grammars/css_l4_vendor_and_custom_atrules",
-        check_command: "check-css-l4-vendor-and-custom-atrules",
-        source_inputs: CSS_L4_SOURCES,
-        metadata_inputs: WORKSPACE_METADATA,
-        emitter: codegen::RuntimeEmitterKind::RequestFacts,
-        expected_files: REQUEST_FACTS_RUNTIME_FILES,
-        frontend_requirements: REQUEST_FACTS_REQUIREMENTS,
-        output_labels: Some(codegen::RuntimeOutputLabels {
-            fact_schema: "css-l4-vendor-custom-facts-v1",
-            row_id: "css_l4/vendor_and_custom_atrules/direct_to_struct/main",
-            output_plane: "css_l4_vendor_custom_fact_stream",
-        }),
-    },
-    RuntimeTarget {
-        grammar_name: "css_l4",
-        profile: "css_l4_visual_functions",
-        entry_rule: "stylesheet",
-        source_roots: CSS_L4_ROOTS,
-        output_dir: "crates/runtime/src/grammars/css_l4_visual_functions",
-        check_command: "check-css-l4-visual-functions",
-        source_inputs: CSS_L4_SOURCES,
-        metadata_inputs: WORKSPACE_METADATA,
-        emitter: codegen::RuntimeEmitterKind::RequestFacts,
-        expected_files: REQUEST_FACTS_RUNTIME_FILES,
-        frontend_requirements: REQUEST_FACTS_REQUIREMENTS,
-        output_labels: Some(codegen::RuntimeOutputLabels {
-            fact_schema: "css-l4-visual-function-facts-v1",
-            row_id: "css_l4/visual_functions/direct_to_struct/main",
-            output_plane: "css_l4_visual_function_fact_stream",
-        }),
-    },
-];
+// P3 collapse (R-A0-2 / R16): the 7 byte-identical css_l4 replicas (all
+// `generated.rs` md5 `b654562c…`) were ONE grammar (`css_l4`) over ONE root
+// (`stylesheet.bbnf`) wearing 7 fabricated profile labels. They collapse to the
+// SINGLE canonical config — `css_l4_declaration_values`, the bench-consumed
+// `track1_rich` path (`css_canon_bench.rs`, `nonjson_css_l4.rs`). Minting fake
+// `.bbnf` roots to fake distinctness is the EXACT addendum-2 overfit; the disk
+// evidence is collapse-to-one.
+const TARGETS: &[RuntimeTarget] = &[RuntimeTarget {
+    grammar_name: "css_l4",
+    profile: "css_l4_declaration_values",
+    entry_rule: "stylesheet",
+    source_roots: CSS_L4_ROOTS,
+    output_dir: "crates/runtime/src/grammars/css_l4_declaration_values",
+    check_command: "check-css-l4-declaration-values",
+    source_inputs: CSS_L4_SOURCES,
+    metadata_inputs: WORKSPACE_METADATA,
+    emitter: codegen::RuntimeEmitterKind::RequestFacts,
+    expected_files: REQUEST_FACTS_RUNTIME_FILES,
+    frontend_requirements: REQUEST_FACTS_REQUIREMENTS,
+    output_labels: Some(codegen::RuntimeOutputLabels {
+        fact_schema: "css-l4-declaration-value-facts-v1",
+        row_id: "css_l4/declaration_values/direct_to_struct/main",
+        output_plane: "css_l4_declaration_value_fact_stream",
+    }),
+}];
 
 pub(crate) fn regen_css(root: &Path) -> Result<()> {
     regen::write_targets(root, TARGETS)
 }
 
-pub(crate) fn check_at_rules_and_media(root: &Path) -> Result<()> {
-    check(root, "check-css-l4-at-rules-and-media")
-}
-
 pub(crate) fn check_declaration_values(root: &Path) -> Result<()> {
     check(root, "check-css-l4-declaration-values")
-}
-
-pub(crate) fn check_declaration_values_extended(root: &Path) -> Result<()> {
-    check(root, "check-css-l4-declaration-values-extended")
-}
-
-pub(crate) fn check_nested_layout(root: &Path) -> Result<()> {
-    check(root, "check-css-l4-nested-layout")
-}
-
-pub(crate) fn check_stylesheet_selectors(root: &Path) -> Result<()> {
-    check(root, "check-css-l4-stylesheet-selectors")
-}
-
-pub(crate) fn check_vendor_and_custom_atrules(root: &Path) -> Result<()> {
-    check(root, "check-css-l4-vendor-and-custom-atrules")
-}
-
-pub(crate) fn check_visual_functions(root: &Path) -> Result<()> {
-    check(root, "check-css-l4-visual-functions")
 }
 
 fn check(root: &Path, command: &str) -> Result<()> {
@@ -207,22 +80,13 @@ fn check(root: &Path, command: &str) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::BTreeSet;
 
+    // P3 collapse: the 7 byte-identical css_l4 replicas reduced to ONE config.
     #[test]
-    fn css_l4_roster_has_seven_distinct_companions() {
-        let commands = TARGETS
-            .iter()
-            .map(|target| target.check_command)
-            .collect::<BTreeSet<_>>();
-        assert_eq!(commands.len(), 7);
-        assert!(commands.contains("check-css-l4-at-rules-and-media"));
-        assert!(commands.contains("check-css-l4-declaration-values"));
-        assert!(commands.contains("check-css-l4-declaration-values-extended"));
-        assert!(commands.contains("check-css-l4-nested-layout"));
-        assert!(commands.contains("check-css-l4-stylesheet-selectors"));
-        assert!(commands.contains("check-css-l4-vendor-and-custom-atrules"));
-        assert!(commands.contains("check-css-l4-visual-functions"));
+    fn css_l4_roster_is_one_collapsed_config() {
+        assert_eq!(TARGETS.len(), 1);
+        assert_eq!(TARGETS[0].grammar_name, "css_l4");
+        assert_eq!(TARGETS[0].check_command, "check-css-l4-declaration-values");
     }
 
     #[test]

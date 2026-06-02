@@ -1,0 +1,30 @@
+### W-PRUNE VERIFY v5 — full workspace test suite ###
+WORKSPACE_TEST_EXIT=101
+### per-test-binary results ###
+     Running unittests src/lib.rs (target/ax-iter/deps/bbnf-469831833b89099e)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running unittests src/lib.rs (target/ax-iter/deps/bbnf_bench-4ee8941e618eedff)
+test result: FAILED. 258 passed; 7 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.14s
+### any FAILED / panicked ###
+test lock14_baseline::tests::accepts_current_allowlist ... FAILED
+test report::tests::direct_contract_accepts_complete_n_direct_movement ... FAILED
+test report::tests::direct_contract_accepts_w11_3_mesh_track1_sota_reopen ... FAILED
+test report::tests::skv12_non_json_report_accepts_generated_baseline ... FAILED
+test report::tests::w0_report_accepts_exact_opening_baseline ... FAILED
+test report::tests::w6_typed_contract_accepts_complete_github_events_row ... FAILED
+test json_w9::tests::w9_surface_probe_classifies_direct_and_typed_rows ... FAILED
+thread 'lock14_baseline::tests::accepts_current_allowlist' (1281542) panicked at crates/bbnf-bench/src/lock14_baseline.rs:2860:25:
+thread 'report::tests::direct_contract_accepts_complete_n_direct_movement' (1281686) panicked at crates/bbnf-bench/src/report.rs:10966:9:
+assertion `left == right` failed
+thread 'report::tests::direct_contract_accepts_w11_3_mesh_track1_sota_reopen' (1281687) panicked at crates/bbnf-bench/src/report.rs:11055:9:
+assertion `left == right` failed
+thread 'report::tests::skv12_non_json_report_accepts_generated_baseline' (1281697) panicked at crates/bbnf-bench/src/report.rs:10218:9:
+thread 'report::tests::w0_report_accepts_exact_opening_baseline' (1281766) panicked at crates/bbnf-bench/src/report.rs:11105:9:
+assertion `left == right` failed
+thread 'report::tests::w6_typed_contract_accepts_complete_github_events_row' (1281774) panicked at crates/bbnf-bench/src/report.rs:11064:9:
+assertion `left == right` failed
+thread 'json_w9::tests::w9_surface_probe_classifies_direct_and_typed_rows' (1281541) panicked at crates/bbnf-bench/src/json_w9.rs:138:44:
+test result: FAILED. 258 passed; 7 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.14s
+### summary counts ###
+passed-suites: 1  failed-suites: 1
+### DONE ###

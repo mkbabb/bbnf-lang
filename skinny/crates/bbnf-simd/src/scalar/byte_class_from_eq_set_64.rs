@@ -6,13 +6,13 @@
 //!
 //! Citations:
 //!   * Lock 16 (SOTA-BEAT-DESIGN, dav1d primitive-lift row): the scalar
-//!     reference is the parity anchor for the checkasm admission gate; every
-//!     vector body (NEON, AVX-512 BW) must agree with this implementation
-//!     byte-for-byte on every (src, set) pair the harness sweeps.
-//!   * asmjson (Lemire et al.) `classify_chunk` inner loop: the AVX-512 BW
-//!     body fans `vpcmpeqb` against each broadcast member and `korq`-reduces
-//!     into a single 64-bit `k`-mask.  At 64-byte width this is the strict
-//!     additive lift over asmjson's 32-byte AVX2 path — no esoterica.
+//!     reference is the parity anchor for the checkasm admission gate; the
+//!     NEON body must agree with this implementation byte-for-byte on every
+//!     (src, set) pair the harness sweeps.
+//!   * asmjson (Lemire et al.) `classify_chunk` inner loop: the NEON body fans
+//!     a per-member compare against each broadcast member and reduces into a
+//!     single 64-bit mask.  At 64-byte width this is the strict additive lift
+//!     over asmjson's narrower-block path — no esoterica.
 //!
 //! Body status: this is the source-of-truth implementation.  The vector
 //! bodies are strictly correctness-equivalent fan-outs.

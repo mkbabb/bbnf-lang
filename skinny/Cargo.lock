@@ -110,9 +110,7 @@ name = "bbnf-simd"
 version = "0.1.0"
 dependencies = [
  "blake3",
- "cc",
  "libc",
- "nasm-rs",
  "test-fixtures",
 ]
 
@@ -840,15 +838,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.117",
-]
-
-[[package]]
-name = "nasm-rs"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "706bf8a5e8c8ddb99128c3291d31bd21f4bcde17f0f4c20ec678d85c74faa149"
-dependencies = [
- "log",
 ]
 
 [[package]]

@@ -5,18 +5,9 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 rust-version.workspace = true
-build = "build.rs"
 
 [dependencies]
 blake3.workspace = true
-
-[build-dependencies]
-# Per SK-V3 § 5 (Wave 1 Agent 2): when authored x86_64 .asm sources land,
-# build.rs assembles them via nasm-rs and archives via cc.  These dependencies
-# are no-ops on non-x86_64 hosts (build.rs returns early), so the cross-build
-# cost is exactly one cargo metadata fetch.
-cc = "1"
-nasm-rs = "0.3"
 
 [dev-dependencies]
 test-fixtures.workspace = true

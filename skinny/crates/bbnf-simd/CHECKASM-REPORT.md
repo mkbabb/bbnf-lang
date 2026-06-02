@@ -22,7 +22,6 @@ crates/bbnf-simd/
 │   │   ├── movemask.rs        # vshrn_n_u16<4> compressed movemask
 │   │   ├── quad_load.rs       # vld1q_u8_x4 quad-load wrapper
 │   │   └── string_block.rs    # quote/backslash/control trio
-│   └── x86_64/                # placeholder (AVX2 + AVX-512 VBMI2 forthcoming)
 └── tests/
     ├── aarch64_primitives.rs  # per-primitive smoke tests (pre-existing)
     ├── classifier_parity.rs   # one-byte input + escaped-string parity (pre-existing)
@@ -233,7 +232,7 @@ Layer-1 primitives with same-wave consumers:
 
 | Primitive | Consumer | Host implementation | Checkasm test |
 |---|---|---|---|
-| `BYTE_CLASS_FROM_TABLE_64` | generic `scan_dispatch` structural scanner | scalar executable spec on arm64; x86 table body remains gated on real x86 authoring | `checkasm_byte_class_from_table_64` |
+| `BYTE_CLASS_FROM_TABLE_64` | generic `scan_dispatch` structural scanner | scalar executable spec on arm64; NEON table body on aarch64 | `checkasm_byte_class_from_table_64` |
 | `BITMAP_PREFIX_XOR_64` | JSON string-region scan via `prefix_xor_64` | scalar bit-parallel carry on arm64 | `checkasm_bitmap_prefix_xor_64` |
 | `BITMAP_NEXT_SET_BIT` | `compact_mask` structural projection emit | scalar `ctz` / compiler-lowered next-bit on arm64 | `checkasm_bitmap_next_set_bit` |
 | `EOB_PAD_CLAMP` | JSON scan tail handling | scalar zero-pad block on arm64 | `checkasm_eob_pad_clamp` |

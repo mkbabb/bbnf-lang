@@ -8,26 +8,12 @@ pub mod runtime_simd;
 #[path = "grammars/json/mod.rs"]
 pub mod generated_json;
 
+// P3 collapse (R-A0-2 / R16): the 7 byte-identical css_l4 replicas collapsed to
+// the SINGLE canonical config `css_l4_declaration_values` (the bench-consumed
+// `track1_rich` path). The other 6 were fabricated profile labels over the same
+// `stylesheet.bbnf` root emitting identical `generated.rs`.
 #[path = "grammars/css_l4_declaration_values/mod.rs"]
 pub mod generated_css_l4_declaration_values;
-
-#[path = "grammars/css_l4_declaration_values_extended/mod.rs"]
-pub mod generated_css_l4_declaration_values_extended;
-
-#[path = "grammars/css_l4_stylesheet_selectors/mod.rs"]
-pub mod generated_css_l4_stylesheet_selectors;
-
-#[path = "grammars/css_l4_visual_functions/mod.rs"]
-pub mod generated_css_l4_visual_functions;
-
-#[path = "grammars/css_l4_at_rules_and_media/mod.rs"]
-pub mod generated_css_l4_at_rules_and_media;
-
-#[path = "grammars/css_l4_vendor_and_custom_atrules/mod.rs"]
-pub mod generated_css_l4_vendor_and_custom_atrules;
-
-#[path = "grammars/css_l4_nested_layout/mod.rs"]
-pub mod generated_css_l4_nested_layout;
 
 #[cfg(any(test, feature = "proof"))]
 #[path = "grammars/json/event_grammar_witness.rs"]
@@ -38,13 +24,7 @@ pub mod json_event_grammar_witness;
 pub mod sheets_witness;
 
 pub mod grammars {
-    pub use crate::generated_css_l4_at_rules_and_media as css_l4_at_rules_and_media;
     pub use crate::generated_css_l4_declaration_values as css_l4_declaration_values;
-    pub use crate::generated_css_l4_declaration_values_extended as css_l4_declaration_values_extended;
-    pub use crate::generated_css_l4_nested_layout as css_l4_nested_layout;
-    pub use crate::generated_css_l4_stylesheet_selectors as css_l4_stylesheet_selectors;
-    pub use crate::generated_css_l4_vendor_and_custom_atrules as css_l4_vendor_and_custom_atrules;
-    pub use crate::generated_css_l4_visual_functions as css_l4_visual_functions;
     pub use crate::generated_json as json;
 }
 
@@ -101,19 +81,24 @@ mod tests {
         }};
     }
 
+    // P3 collapse: the 6 former css_l4 replica modules were byte-identical to
+    // the surviving canonical `css_l4_declaration_values`. Their feature-coverage
+    // inputs (selectors / extended decls / visual fns / at-rules+media /
+    // vendor+custom at-rules / nested layout) are preserved by re-pointing each
+    // at the one canonical parser.
     #[test]
-    fn css_l4_stylesheet_selectors_routes_into_tape() {
+    fn css_l4_selectors_route_into_tape() {
         let input = concat!(
             "main.card#hero > a[href^=\"https\"]:hover::before,\n",
             "#nav .item[data-state=\"open\"] + button:focus::after { color: red; }\n"
         );
-        let document = crate::grammars::css_l4_stylesheet_selectors::parse(input).unwrap();
+        let document = crate::grammars::css_l4_declaration_values::parse(input).unwrap();
         // one qualified rule, one declaration.
         assert_css_summary!(document, 1, 0, 1, 1);
     }
 
     #[test]
-    fn css_l4_declaration_values_extended_routes_into_tape() {
+    fn css_l4_extended_decls_route_into_tape() {
         let input = concat!(
             ":root { --brand-\\31: rgb(255 128 0 / 50%); --gap: calc(100% - 2rem); }\n",
             ".card { width: calc(var(--gap, 10px) + clamp(1rem, 2vw, 3rem)); ",
@@ -121,13 +106,13 @@ mod tests {
             "background-image: url(\"/assets/bg\\\\ space.svg\"); ",
             "mask-image: url(/assets/mask.svg); content: \"escaped\\\\A line\"; }\n"
         );
-        let document = crate::grammars::css_l4_declaration_values_extended::parse(input).unwrap();
+        let document = crate::grammars::css_l4_declaration_values::parse(input).unwrap();
         // two qualified rules; :root has 2 decls, .card has 5 decls.
         assert_css_summary!(document, 2, 0, 2, 7);
     }
 
     #[test]
-    fn css_l4_visual_functions_routes_into_tape() {
+    fn css_l4_visual_functions_route_into_tape() {
         let input = concat!(
             ".hero { background-image: linear-gradient(45deg, #123456 0%, color-mix(in srgb, red 30%, blue) 100%); ",
             "transform: translate3d(10px, 20%, 0) rotate(12deg) scale(1.2); ",
@@ -135,18 +120,18 @@ mod tests {
             "transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); ",
             "animation-timing-function: steps(4, jump-end); }\n"
         );
-        let document = crate::grammars::css_l4_visual_functions::parse(input).unwrap();
+        let document = crate::grammars::css_l4_declaration_values::parse(input).unwrap();
         // one qualified rule, five declarations.
         assert_css_summary!(document, 1, 0, 1, 5);
     }
 
     #[test]
-    fn css_l4_at_rules_and_media_routes_into_tape() {
+    fn css_l4_at_rules_and_media_route_into_tape() {
         let input = concat!(
             "@media screen and (min-width:1px){a{color:red}}\n",
             "@keyframes k{from,50%,to{opacity:1}}\n"
         );
-        let document = crate::grammars::css_l4_at_rules_and_media::parse(input).unwrap();
+        let document = crate::grammars::css_l4_declaration_values::parse(input).unwrap();
         // @media (at) + nested a{} (qualified); @keyframes (at) + nested frame
         // block (qualified). rules=4 (2 at + 2 qualified), 2 declarations.
         let summary = document.summary();
@@ -158,13 +143,13 @@ mod tests {
     }
 
     #[test]
-    fn css_l4_vendor_and_custom_atrules_routes_into_tape() {
+    fn css_l4_vendor_and_custom_atrules_route_into_tape() {
         let input = concat!(
             "@custom-media --narrow (max-width:30em);\n",
             "@-webkit-keyframes fade{from{opacity:0}to{opacity:1}}\n",
             "a{-webkit-user-select:none;-moz-user-select:none;user-select:none}\n",
         );
-        let document = crate::grammars::css_l4_vendor_and_custom_atrules::parse(input).unwrap();
+        let document = crate::grammars::css_l4_declaration_values::parse(input).unwrap();
         let summary = document.summary();
         assert!(document.tape().offsets().len() > 0);
         assert_eq!(document.tape().payloads().write_count(), 0);
@@ -175,7 +160,7 @@ mod tests {
     }
 
     #[test]
-    fn css_l4_nested_layout_routes_into_tape() {
+    fn css_l4_nested_layout_route_into_tape() {
         let input = concat!(
             ".grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;",
             "&>.item{margin-inline-start:1rem;inline-size:calc(100% - 2rem)}}\n",
@@ -184,7 +169,7 @@ mod tests {
             "border-inline-start:2px solid #123456}\n",
             ".type{color:#123456;font-size:clamp(1rem,2vw,2rem);line-height:1.4}\n",
         );
-        let document = crate::grammars::css_l4_nested_layout::parse(input).unwrap();
+        let document = crate::grammars::css_l4_declaration_values::parse(input).unwrap();
         let summary = document.summary();
         assert!(document.tape().offsets().len() > 0);
         assert_eq!(document.tape().payloads().write_count(), 0);

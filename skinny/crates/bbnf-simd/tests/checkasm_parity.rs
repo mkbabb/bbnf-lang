@@ -450,58 +450,6 @@ fn sk_v3_scalar_anchors_compile() {
         sk_v3_primitives::unescape_uxxxx::join_surrogates(0xD83D, 0xDE00),
         0x1F600
     );
-
-    // x86_64 AVX-2 fallback scalar references (compile-checked on every host).
-    const STRUCTURAL_SET: &[u8] = b"{}[],:\"";
-    let block32: [u8; 32] = *b"{\"a\":1,\"b\":2,\"c\":3,\"d\":4,\"e\":555";
-    let avx2_mask =
-        bbnf_simd::x86_64::avx2::classify::classify_block_scalar(&block32, STRUCTURAL_SET);
-    // Block content: `{"a":1,"b":2,"c":3,"d":4,"e":555` — 1 brace + 10 quotes
-    // + 5 colons + 4 commas = 20 structural bytes.
-    assert_eq!(avx2_mask.count_ones(), 20);
-
-    let mut out = Vec::new();
-    bbnf_simd::x86_64::avx2::bmi2_emit::compact_mask_scalar(0, 0b1010_1010, &mut out);
-    assert_eq!(out, vec![1, 3, 5, 7]);
-
-    let xor = bbnf_simd::x86_64::avx2::prefix_xor::prefix_xor_scalar(0b0001_0010, false);
-    assert!(xor != 0);
-
-    // AVX-512 scalar references.
-    let block64: [u8; 64] = [
-        b'{', b'"', b'a', b'"', b':', b'1', b',', b'"', b'b', b'"', b':', b'2', b'}', 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    ];
-    let vbmi2_mask =
-        bbnf_simd::x86_64::avx512_vbmi2::classify::classify_block_scalar(&block64, STRUCTURAL_SET);
-    let gfni_mask = bbnf_simd::x86_64::avx512_gfni::classify_affine::classify_block_scalar(
-        &block64,
-        STRUCTURAL_SET,
-    );
-    assert_eq!(vbmi2_mask, gfni_mask);
-
-    let bitalg = bbnf_simd::x86_64::avx512_bitalg::multiclass::classify_full_scalar(
-        &block64,
-        STRUCTURAL_SET,
-        b'"',
-        b'\\',
-        0x20,
-    );
-    assert_eq!(bitalg.structural_mask, vbmi2_mask);
-
-    let fused = bbnf_simd::x86_64::avx512_vbmi2::mask_fuse::fuse_emit_scalar(0xFF, 0x0F, 0xF0);
-    assert_eq!(fused, 0xF0);
-
-    // Eisel-Lemire scalar mantissa multiply.
-    let prod = bbnf_simd::x86_64::avx_ifma::mantissa::mul52_low_scalar(0x1_0000_0000_0000, 10);
-    assert_eq!(prod, (0x1_0000_0000_0000u128 * 10 % (1u128 << 52)) as u64);
-
-    // VNNI digit-MAC scalar reference.
-    assert_eq!(
-        bbnf_simd::x86_64::avx512_vnni::digit_mac::parse_8_digits_scalar(b"12345678"),
-        Some(12_345_678)
-    );
 }
 
 #[test]
@@ -666,12 +614,6 @@ fn sk_v3_intrinsic_parity_aarch64() {
     {
         eprintln!("sk_v3_intrinsic_parity_aarch64: skipped on non-aarch64 host");
     }
-}
-
-#[test]
-#[ignore = "Wave 6: AVX-2 / AVX-512 intrinsic kernel bodies not yet landed"]
-fn sk_v3_intrinsic_parity_x86_64() {
-    panic!("kernel stubs are intentionally unimplemented; remove #[ignore] when Wave 6 lands");
 }
 
 #[test]

@@ -7,7 +7,7 @@ mod real_typed_schema;
 mod regen;
 mod regen_css;
 
-const USAGE: &str = "usage: cargo xtask <regen-json|check-json|regen-css|check-css-l4-at-rules-and-media|check-css-l4-declaration-values|check-css-l4-declaration-values-extended|check-css-l4-nested-layout|check-css-l4-stylesheet-selectors|check-css-l4-vendor-and-custom-atrules|check-css-l4-visual-functions|regen-real-typed|check-real-typed|check-conformance|lint-loc|bench-json|gate-json|primitive-checkasm>";
+const USAGE: &str = "usage: cargo xtask <regen-json|check-json|regen-css|check-css-l4-declaration-values|regen-real-typed|check-real-typed|check-conformance|lint-loc|bench-json|gate-json|primitive-checkasm>";
 const SKV15_W2_LOCK_GATES_ONLY_FLAG: &str = "--skv15-w2-lock-gates-only";
 const SKV15_BACKEND_LOWERERS_REPORT_FLAG: &str = "--skv15-backend-lowerers-report";
 const SKV15_FNV_QUARANTINE_REPORT_FLAG: &str = "--skv15-fnv-quarantine-report";
@@ -40,17 +40,7 @@ fn main() -> Result<()> {
         "regen-json" => regen_json(&root),
         "check-json" => check_json(&root),
         "regen-css" => regen_css::regen_css(&root),
-        "check-css-l4-at-rules-and-media" => regen_css::check_at_rules_and_media(&root),
         "check-css-l4-declaration-values" => regen_css::check_declaration_values(&root),
-        "check-css-l4-declaration-values-extended" => {
-            regen_css::check_declaration_values_extended(&root)
-        }
-        "check-css-l4-nested-layout" => regen_css::check_nested_layout(&root),
-        "check-css-l4-stylesheet-selectors" => regen_css::check_stylesheet_selectors(&root),
-        "check-css-l4-vendor-and-custom-atrules" => {
-            regen_css::check_vendor_and_custom_atrules(&root)
-        }
-        "check-css-l4-visual-functions" => regen_css::check_visual_functions(&root),
         "regen-real-typed" => regen_real_typed(&root),
         "check-real-typed" => check_real_typed(&root),
         "check-conformance" => check_conformance(&root),

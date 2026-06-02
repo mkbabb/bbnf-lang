@@ -2,7 +2,6 @@ pub mod aarch64;
 pub mod classifier;
 pub mod dispatch;
 pub mod scalar;
-pub mod x86_64;
 
 pub use classifier::{ClassifyResult, SimdClassifier};
 
@@ -244,8 +243,8 @@ pub fn compact_mask(base: usize, mask: u64, positions: &mut Vec<u32>) {
 
 // ============================================================================
 // BYTE_CLASS_FROM_EQ_SET_64 — first reference primitive
-// Contract documented in ext/x86/bbnf.asm; scalar reference is the executable
-// specification per the checkasm admission gate (Lock 16).
+// The scalar reference is the executable specification per the checkasm
+// admission gate (Lock 16); the NEON body is parity-checked against it.
 // ============================================================================
 
 pub mod prim {
@@ -282,10 +281,6 @@ pub mod prim {
     #[inline]
     pub fn byte_class_from_eq_set_64(src: &[u8; 64], set: &[u8]) -> u64 {
         debug_assert!(set.len() <= 8);
-        #[cfg(all(target_arch = "x86_64", target_feature = "avx512bw"))]
-        unsafe {
-            return crate::x86_64::byte_class_from_eq_set_64::byte_class_from_eq_set_64(src, set);
-        }
         #[cfg(target_arch = "aarch64")]
         return crate::aarch64::byte_class_from_eq_set_64::byte_class_from_eq_set_64_neon(src, set);
         #[allow(unreachable_code)]

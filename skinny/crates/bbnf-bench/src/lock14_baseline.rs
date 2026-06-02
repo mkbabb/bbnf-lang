@@ -216,126 +216,6 @@ pub const ALLOWLIST: &[AllowlistEntry] = &[
         "runtime_source",
     ),
     entry(
-        "crates/runtime/src/grammars/css_l4_declaration_values_extended/config.rs",
-        "generated_nonjson_output",
-        "read_only",
-        "generated",
-    ),
-    entry(
-        "crates/runtime/src/grammars/css_l4_declaration_values_extended/generated.rs",
-        "generated_nonjson_output",
-        "read_only",
-        "generated",
-    ),
-    entry(
-        "crates/runtime/src/grammars/css_l4_declaration_values_extended/mod.rs",
-        "generated_nonjson_output",
-        "read_only",
-        "generated",
-    ),
-    entry(
-        "crates/runtime/src/grammars/css_l4_declaration_values_extended/parser.rs",
-        "generated_nonjson_output",
-        "read_only",
-        "generated",
-    ),
-    entry(
-        "crates/runtime/src/grammars/css_l4_declaration_values_extended/sink.rs",
-        "per_grammar_runtime_source",
-        "read_only",
-        "runtime_source",
-    ),
-    entry(
-        "crates/runtime/src/grammars/css_l4_stylesheet_selectors/config.rs",
-        "generated_nonjson_output",
-        "read_only",
-        "generated",
-    ),
-    entry(
-        "crates/runtime/src/grammars/css_l4_stylesheet_selectors/generated.rs",
-        "generated_nonjson_output",
-        "read_only",
-        "generated",
-    ),
-    entry(
-        "crates/runtime/src/grammars/css_l4_stylesheet_selectors/mod.rs",
-        "generated_nonjson_output",
-        "read_only",
-        "generated",
-    ),
-    entry(
-        "crates/runtime/src/grammars/css_l4_stylesheet_selectors/parser.rs",
-        "generated_nonjson_output",
-        "read_only",
-        "generated",
-    ),
-    entry(
-        "crates/runtime/src/grammars/css_l4_stylesheet_selectors/sink.rs",
-        "per_grammar_runtime_source",
-        "read_only",
-        "runtime_source",
-    ),
-    entry(
-        "crates/runtime/src/grammars/css_l4_visual_functions/config.rs",
-        "generated_nonjson_output",
-        "read_only",
-        "generated",
-    ),
-    entry(
-        "crates/runtime/src/grammars/css_l4_visual_functions/generated.rs",
-        "generated_nonjson_output",
-        "read_only",
-        "generated",
-    ),
-    entry(
-        "crates/runtime/src/grammars/css_l4_visual_functions/mod.rs",
-        "generated_nonjson_output",
-        "read_only",
-        "generated",
-    ),
-    entry(
-        "crates/runtime/src/grammars/css_l4_visual_functions/parser.rs",
-        "generated_nonjson_output",
-        "read_only",
-        "generated",
-    ),
-    entry(
-        "crates/runtime/src/grammars/css_l4_visual_functions/sink.rs",
-        "per_grammar_runtime_source",
-        "read_only",
-        "runtime_source",
-    ),
-    entry(
-        "crates/runtime/src/grammars/css_l4_at_rules_and_media/config.rs",
-        "generated_nonjson_output",
-        "read_only",
-        "generated",
-    ),
-    entry(
-        "crates/runtime/src/grammars/css_l4_at_rules_and_media/generated.rs",
-        "generated_nonjson_output",
-        "read_only",
-        "generated",
-    ),
-    entry(
-        "crates/runtime/src/grammars/css_l4_at_rules_and_media/mod.rs",
-        "generated_nonjson_output",
-        "read_only",
-        "generated",
-    ),
-    entry(
-        "crates/runtime/src/grammars/css_l4_at_rules_and_media/parser.rs",
-        "generated_nonjson_output",
-        "read_only",
-        "generated",
-    ),
-    entry(
-        "crates/runtime/src/grammars/css_l4_at_rules_and_media/sink.rs",
-        "per_grammar_runtime_source",
-        "read_only",
-        "runtime_source",
-    ),
-    entry(
         "crates/bbnf-bench/src/generated_real_typed.rs",
         "generated_typed_output",
         "read_only",
@@ -530,41 +410,11 @@ const GENERATED_HEADER_TOKEN_BASELINE: &[&str] = &[
     "crates/codegen/src/json_templates/view.rs",
     "crates/codegen/src/json_typed_direct.rs",
     "crates/codegen/src/lib.rs",
-    "crates/runtime/src/grammars/css_l4_at_rules_and_media/config.rs",
-    "crates/runtime/src/grammars/css_l4_at_rules_and_media/generated.rs",
-    "crates/runtime/src/grammars/css_l4_at_rules_and_media/mod.rs",
-    "crates/runtime/src/grammars/css_l4_at_rules_and_media/parser.rs",
-    "crates/runtime/src/grammars/css_l4_at_rules_and_media/sink.rs",
     "crates/runtime/src/grammars/css_l4_declaration_values/config.rs",
     "crates/runtime/src/grammars/css_l4_declaration_values/generated.rs",
     "crates/runtime/src/grammars/css_l4_declaration_values/mod.rs",
     "crates/runtime/src/grammars/css_l4_declaration_values/parser.rs",
     "crates/runtime/src/grammars/css_l4_declaration_values/sink.rs",
-    "crates/runtime/src/grammars/css_l4_declaration_values_extended/config.rs",
-    "crates/runtime/src/grammars/css_l4_declaration_values_extended/generated.rs",
-    "crates/runtime/src/grammars/css_l4_declaration_values_extended/mod.rs",
-    "crates/runtime/src/grammars/css_l4_declaration_values_extended/parser.rs",
-    "crates/runtime/src/grammars/css_l4_declaration_values_extended/sink.rs",
-    "crates/runtime/src/grammars/css_l4_nested_layout/config.rs",
-    "crates/runtime/src/grammars/css_l4_nested_layout/generated.rs",
-    "crates/runtime/src/grammars/css_l4_nested_layout/mod.rs",
-    "crates/runtime/src/grammars/css_l4_nested_layout/parser.rs",
-    "crates/runtime/src/grammars/css_l4_nested_layout/sink.rs",
-    "crates/runtime/src/grammars/css_l4_stylesheet_selectors/config.rs",
-    "crates/runtime/src/grammars/css_l4_stylesheet_selectors/generated.rs",
-    "crates/runtime/src/grammars/css_l4_stylesheet_selectors/mod.rs",
-    "crates/runtime/src/grammars/css_l4_stylesheet_selectors/parser.rs",
-    "crates/runtime/src/grammars/css_l4_stylesheet_selectors/sink.rs",
-    "crates/runtime/src/grammars/css_l4_vendor_and_custom_atrules/config.rs",
-    "crates/runtime/src/grammars/css_l4_vendor_and_custom_atrules/generated.rs",
-    "crates/runtime/src/grammars/css_l4_vendor_and_custom_atrules/mod.rs",
-    "crates/runtime/src/grammars/css_l4_vendor_and_custom_atrules/parser.rs",
-    "crates/runtime/src/grammars/css_l4_vendor_and_custom_atrules/sink.rs",
-    "crates/runtime/src/grammars/css_l4_visual_functions/config.rs",
-    "crates/runtime/src/grammars/css_l4_visual_functions/generated.rs",
-    "crates/runtime/src/grammars/css_l4_visual_functions/mod.rs",
-    "crates/runtime/src/grammars/css_l4_visual_functions/parser.rs",
-    "crates/runtime/src/grammars/css_l4_visual_functions/sink.rs",
     "crates/runtime/src/grammars/json/config.rs",
     "crates/runtime/src/grammars/json/generated.rs",
     "crates/runtime/src/grammars/json/host.rs",
@@ -589,6 +439,7 @@ pub fn validate(root: &Path) -> Result<(), String> {
     validate_git_freeze(root)?;
     validate_backend_shape_surface(root)?;
     validate_generic_crate_neutrality(root)?;
+    validate_codegen_courier_neutrality(root)?;
     validate_skv15_w2_coverage(root)?;
     Ok(())
 }
@@ -1401,6 +1252,17 @@ const SK_V15_W10_OWNER_PATHS: &[&str] = &[
 
 const SK_V15_W11_OWNER_PATHS: &[&str] = &["crates/bbnf-bench/src/lock14_baseline.rs"];
 
+// SK-V18 W-PRUNE P1: x86 is DELETED crate-wide (aarch64-only). The x86 build
+// scaffold, the vendored x86 assembly, and the entire `x86_64/` SIMD tree are
+// removed; `scalar/byte_class_from_eq_set_64.rs` loses its x86 companion. These
+// frozen-root deletions are the authorized owner surface of the prune.
+const SK_V18_WPRUNE_P1_X86_OWNER_PATHS: &[&str] = &[
+    "crates/bbnf-simd/build.rs",
+    "crates/bbnf-simd/ext/x86/",
+    "crates/bbnf-simd/src/x86_64/",
+    "crates/bbnf-simd/src/scalar/byte_class_from_eq_set_64.rs",
+];
+
 fn current_lock14_owner_paths() -> Vec<&'static str> {
     let mut paths = Vec::with_capacity(
         SK_V12_W1A_OWNER_PATHS.len()
@@ -1447,7 +1309,8 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
             + SK_V14_W10_OWNER_PATHS.len()
             + SK_V14_W11A_OWNER_PATHS.len()
             + SK_V15_W10_OWNER_PATHS.len()
-            + SK_V15_W11_OWNER_PATHS.len(),
+            + SK_V15_W11_OWNER_PATHS.len()
+            + SK_V18_WPRUNE_P1_X86_OWNER_PATHS.len(),
     );
     paths.extend_from_slice(SK_V12_W1A_OWNER_PATHS);
     paths.extend_from_slice(SK_V12_W1B1_OWNER_PATHS);
@@ -1494,6 +1357,7 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
     paths.extend_from_slice(SK_V14_W11A_OWNER_PATHS);
     paths.extend_from_slice(SK_V15_W10_OWNER_PATHS);
     paths.extend_from_slice(SK_V15_W11_OWNER_PATHS);
+    paths.extend_from_slice(SK_V18_WPRUNE_P1_X86_OWNER_PATHS);
     paths
 }
 
@@ -2417,6 +2281,75 @@ const GENERIC_SCAN_ROOTS: &[&str] = &[
     "crates/ir/src",
 ];
 
+/// SK-V18 P4: the codegen leak surface — `runtime_generator.rs` + the JSON
+/// sink/typed/template surfaces + `grammar_provider.rs` — MOVED here out of the
+/// weak `SKV15_W2_EXTRA_COVERAGE_ROOTS` (which only checked file existence and
+/// never ran a neutrality scan). These surfaces are JSON-OWNED for the
+/// navigation tokens (`JsonSink`/`JsonValue`/...; the
+/// `json_owned_roots_may_contain_json_policy_tokens` invariant keeps those
+/// legitimate here), so they CANNOT be run through the full
+/// `FORBIDDEN_GENERIC_TOKENS` list. Instead they are strictly scanned for the
+/// grammar-body-courier + witness tokens (`COURIER_CONST_SUFFIX` +
+/// `EVENT_GRAMMAR_WITNESS_TOKEN`) by `validate_codegen_courier_neutrality`.
+/// This is the surface the un-forked
+/// emitter is authored INTO (G1/G2/G3); a re-injected `CSS_GENERATED_RS` /
+/// `SHEETS_GENERATED_RS` courier const or a grammar-named `*EventGrammar`
+/// witness literal turns the gate RED at its emit site.
+const CODEGEN_COURIER_SCAN_ROOTS: &[&str] = &[
+    "crates/codegen/src/runtime_generator.rs",
+    "crates/codegen/src/json_sink_direct.rs",
+    "crates/codegen/src/json_typed_direct.rs",
+    "crates/codegen/src/json_templates",
+    "crates/codegen/src/grammar_provider.rs",
+];
+
+/// SK-V18 P4: the grammar-body-courier and witness tokens the codegen leak
+/// surface is strictly scanned for. The §3.4 close-condition names the courier
+/// set `{GENERATED_RS, CSS_GENERATED_RS, EventGrammar, *EventGrammar}`; this is
+/// the dedicated subset the codegen courier scan consults (distinct from the
+/// full `FORBIDDEN_GENERIC_TOKENS`, which would false-RED on the JSON-owned
+/// navigation tokens these surfaces legitimately carry).
+///
+///   - `GENERATED_RS` (the §711 courier-SUFFIX form) is matched as a
+///     `const *_GENERATED_RS` grammar-body-courier DECLARATION. It catches a
+///     re-injected `const SHEETS_GENERATED_RS` while the two cohort-carried
+///     couriers present at P4 (`JSON_PARSE_ONLY_GENERATED_RS`, G1 retires;
+///     `CSS_GENERATED_RS`, G2 retires) sit in `COURIER_CONST_BASELINE`. The
+///     suffix scoping means the six surviving MOD/HOST/PARSER/SINK scaffold
+///     consts (`JSON_MOD_RS`/`JSON_HOST_RS`/`JSON_PARSE_ONLY_PARSER_RS`/
+///     `CSS_MOD_RS`/`CSS_PARSER_RS`/`CSS_SINK_RS`) do NOT false-RED — a bare
+///     `_RS`/`CSS_` would collide with them.
+///   - `CSS_GENERATED_RS` is the named close-condition #8 token; it is the
+///     `CSS`-courier member of the baselined `*_GENERATED_RS` set above.
+///   - `EventGrammar` (substring) is the alias-IMMUNE `*EventGrammar` glob: it
+///     catches a bare `EventGrammar` witness AND every `JsonEventGrammar` /
+///     `SheetsEventGrammar` alias under `contains`. ZERO occurrences exist in
+///     the courier surfaces today, so it is a HARD-ZERO forbidden token (no
+///     baseline). It is scoped to the courier surfaces ONLY — the generic
+///     `crates/codegen/src/lower` tree carries the pre-G4
+///     `"ParserState+TapeBuilder+EventGrammar"` lowering descriptor
+///     (`tape_plan.rs`), the EventTape axis G4 deletes, NOT a courier; a bare
+///     `EventGrammar` in `FORBIDDEN_GENERIC_TOKENS` would false-RED on it.
+const COURIER_CONST_SUFFIX: &str = "_GENERATED_RS";
+const EVENT_GRAMMAR_WITNESS_TOKEN: &str = "EventGrammar";
+
+/// The cohort-carried `*_GENERATED_RS` grammar-body-courier const declarations
+/// present at P4 — `(relative_path, const_ident)`. They are NOT gate-keyed
+/// (addendum 1: cohort-carried, not gate-keyed) but ARE the named baseline:
+/// G1 retires `JSON_PARSE_ONLY_GENERATED_RS`, G2 retires `CSS_GENERATED_RS`.
+/// Any `const *_GENERATED_RS` declaration in a courier root that is NOT in this
+/// baseline (e.g. a re-injected `SHEETS_GENERATED_RS`) turns the gate RED.
+const COURIER_CONST_BASELINE: &[(&str, &str)] = &[
+    (
+        "crates/codegen/src/runtime_generator.rs",
+        "JSON_PARSE_ONLY_GENERATED_RS",
+    ),
+    (
+        "crates/codegen/src/runtime_generator.rs",
+        "CSS_GENERATED_RS",
+    ),
+];
+
 const FORBIDDEN_GENERIC_TOKENS: &[(&str, &str)] = &[
     ("json_structural_alphabet_name", "STRUCTURAL_ALPHABET_JSON"),
     ("json_structural_alphabet_bytes", "b\"{}[],:\\\"\""),
@@ -2439,12 +2372,13 @@ const FORBIDDEN_GENERIC_TOKENS: &[(&str, &str)] = &[
 const SKV15_W2_FORBIDDEN_FINDING_TOKENS: &str = "Json,CssL4,Sheets,BBNF,json_,css_,RuntimeProvider,static_css_provider_status,json_sink_only_status,JSON-CSS";
 const SKV15_W2_REQUIRED_REPORT_COLUMNS: &str = "included_roots,excluded_roots,reason,owner,self_scan_status,primitive_status,gate_consumer,affected_rows,disposition,source_path,finding_kind,strict_command,scalar_reference,rollback_or_redress,dependency_row,non_json_receiver,proof_command,generated_output_expectation,json_guard_command,fail_action";
 
+// SK-V18 P4: the codegen leak surface (`runtime_generator.rs`,
+// `grammar_provider.rs`, `json_sink_direct.rs`, `json_typed_direct.rs`,
+// `json_templates`) is MOVED OUT of this weak existence-only set INTO the
+// strict `CODEGEN_COURIER_SCAN_ROOTS` (courier-token neutrality scan). What
+// remains here is the bench/xtask reporting surface, which carries no
+// grammar-body courier and is existence-tracked for coverage only.
 const SKV15_W2_EXTRA_COVERAGE_ROOTS: &[&str] = &[
-    "crates/codegen/src/runtime_generator.rs",
-    "crates/codegen/src/grammar_provider.rs",
-    "crates/codegen/src/json_sink_direct.rs",
-    "crates/codegen/src/json_typed_direct.rs",
-    "crates/codegen/src/json_templates",
     "crates/bbnf-bench/src/report.rs",
     "crates/bbnf-bench/src/bin/gate.rs",
     "crates/bbnf-bench/src/lock14_baseline.rs",
@@ -2452,6 +2386,9 @@ const SKV15_W2_EXTRA_COVERAGE_ROOTS: &[&str] = &[
     "xtask/src/skv15_w0.rs",
 ];
 
+// SK-V18 P4: the `("crates/bbnf-simd/src/x86_64", "diagnostic-x86")` exclusion
+// is DROPPED — x86 is DELETED crate-wide by P1 (aarch64-only). The remaining
+// rows are the aarch64 NEON primitive surfaces.
 const SKV15_W2_PRIMITIVE_CLASS_ROOTS: &[(&str, &str)] = &[
     ("crates/bbnf-simd/src/aarch64", "strict-checkasm-admitted"),
     ("crates/bbnf-simd/src/dispatch.rs", "wired"),
@@ -2460,7 +2397,6 @@ const SKV15_W2_PRIMITIVE_CLASS_ROOTS: &[(&str, &str)] = &[
         "crates/bbnf-simd/tests/checkasm_parity.rs",
         "strict-checkasm-admitted",
     ),
-    ("crates/bbnf-simd/src/x86_64", "diagnostic-x86"),
 ];
 
 fn validate_generic_crate_neutrality(root: &Path) -> Result<(), String> {
@@ -2474,6 +2410,68 @@ fn validate_generic_crate_neutrality(root: &Path) -> Result<(), String> {
         }
     }
     Ok(())
+}
+
+/// SK-V18 P4: strictly scan the codegen leak surface
+/// (`CODEGEN_COURIER_SCAN_ROOTS`) for the grammar-body-courier and
+/// witness tokens. This is the check that makes the Lock-14 gate MEANINGFUL
+/// rather than green-by-exclusion: the un-forked emitter is authored INTO these
+/// surfaces (G1/G2/G3), so a re-injected `SHEETS_GENERATED_RS` courier const or
+/// a grammar-named `*EventGrammar` witness literal turns the gate RED at its
+/// emit site. Production code only (`strip_test_code`); the navigation tokens
+/// (`JsonSink`/...) stay JSON-owned and are NOT checked here.
+fn validate_codegen_courier_neutrality(root: &Path) -> Result<(), String> {
+    for scan_root in CODEGEN_COURIER_SCAN_ROOTS {
+        for file in rust_files_under(&root.join(scan_root))? {
+            let source = std::fs::read_to_string(&file).map_err(|error| {
+                format!("failed to read codegen courier root {}: {error}", file.display())
+            })?;
+            let production = strip_test_code(&source);
+            let relative = relative_source_path(root, &file)?;
+            validate_codegen_courier_source(&relative, production)?;
+        }
+    }
+    Ok(())
+}
+
+/// Per-file courier neutrality: any `const *_GENERATED_RS` grammar-body-courier
+/// declaration not in `COURIER_CONST_BASELINE`, OR any `*EventGrammar` witness
+/// literal (hard-zero), turns the gate RED.
+fn validate_codegen_courier_source(relative: &str, source: &str) -> Result<(), String> {
+    for ident in courier_const_idents(source) {
+        let baselined = COURIER_CONST_BASELINE
+            .iter()
+            .any(|(path, baseline_ident)| *path == relative && *baseline_ident == ident);
+        if !baselined {
+            return Err(format!(
+                "Lock 14 codegen-courier scan found un-baselined grammar-body courier \
+                 `const {ident}` in {relative} (re-injected {COURIER_CONST_SUFFIX} courier)"
+            ));
+        }
+    }
+    if source.contains(EVENT_GRAMMAR_WITNESS_TOKEN) {
+        return Err(format!(
+            "Lock 14 codegen-courier scan found grammar-named witness token \
+             `{EVENT_GRAMMAR_WITNESS_TOKEN}` (*EventGrammar) in {relative}"
+        ));
+    }
+    Ok(())
+}
+
+/// Extract every `const NAME_GENERATED_RS` declaration identifier from a source
+/// body — the grammar-body-courier const declarations the courier suffix scopes.
+fn courier_const_idents(source: &str) -> Vec<&str> {
+    let mut idents = Vec::new();
+    for raw in source.split("const ").skip(1) {
+        let ident = match raw.split([':', ' ', '\n', '=']).next() {
+            Some(ident) => ident,
+            None => continue,
+        };
+        if ident.ends_with(COURIER_CONST_SUFFIX) {
+            idents.push(ident);
+        }
+    }
+    idents
 }
 
 fn validate_skv15_w2_coverage(root: &Path) -> Result<(), String> {
@@ -2508,6 +2506,7 @@ fn validate_skv15_w2_root_coverage(root: &Path) -> Result<(), String> {
     for required in GENERIC_SCAN_ROOTS
         .iter()
         .copied()
+        .chain(CODEGEN_COURIER_SCAN_ROOTS.iter().copied())
         .chain(SKV15_W2_EXTRA_COVERAGE_ROOTS.iter().copied())
     {
         if !root.join(required).exists() {
@@ -2539,17 +2538,10 @@ fn validate_skv15_w2_root_coverage(root: &Path) -> Result<(), String> {
 }
 
 fn skv15_w2_root_binding(path: &str) -> (&'static str, &'static str, &'static str) {
+    // SK-V18 P4: the `runtime_generator.rs` / `grammar_provider.rs` binding rows
+    // moved out with their surfaces — they are now strictly courier-scanned via
+    // `CODEGEN_COURIER_SCAN_ROOTS`, not existence-bound through this weak set.
     match path {
-        "crates/codegen/src/runtime_generator.rs" => (
-            "SK-V15-W3/W6",
-            "DEP-W3-W6-CSS-PROVIDER-TEMPLATE",
-            "CSS L4 plus Sheets/BBNF-self/CSV/math",
-        ),
-        "crates/codegen/src/grammar_provider.rs" => (
-            "SK-V15-W3",
-            "DEP-W3-W6-CSS-PROVIDER-TEMPLATE",
-            "CSS L4 plus Sheets or BBNF-self",
-        ),
         "crates/bbnf-bench/src/report.rs" | "crates/bbnf-bench/src/bin/gate.rs" => (
             "SK-V15-W2",
             "DEP-W1-CSS-BROADCAST",
@@ -2729,6 +2721,99 @@ mod tests {
     fn accepts_current_allowlist() {
         let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
         validate(&root).unwrap();
+    }
+
+    // SK-V18 P4: the codegen leak surface is now strictly courier-scanned. The
+    // cohort-carried `*_GENERATED_RS` couriers present at P4 stay GREEN; a
+    // re-injected `SHEETS_GENERATED_RS` courier const or any `*EventGrammar`
+    // witness literal turns the gate RED. These tests ARE the re-inject
+    // falsifier (no cargo/regen needed to prove coverage).
+
+    #[test]
+    fn codegen_courier_scan_covers_the_leak_surface() {
+        // lock14_gate_scans_codegen == true: every named leak surface is in the
+        // strict courier scan root set, and none routes through the weak set.
+        for surface in [
+            "crates/codegen/src/runtime_generator.rs",
+            "crates/codegen/src/json_sink_direct.rs",
+            "crates/codegen/src/json_typed_direct.rs",
+            "crates/codegen/src/json_templates",
+            "crates/codegen/src/grammar_provider.rs",
+        ] {
+            assert!(
+                CODEGEN_COURIER_SCAN_ROOTS.contains(&surface),
+                "{surface} is not courier-scanned"
+            );
+            assert!(
+                !SKV15_W2_EXTRA_COVERAGE_ROOTS.contains(&surface),
+                "{surface} still routes through the weak coverage set"
+            );
+        }
+    }
+
+    #[test]
+    fn codegen_courier_scan_admits_the_cohort_carried_couriers() {
+        // The two grammar-body couriers present at P4 are baselined GREEN
+        // (G1 retires the JSON courier, G2 the CSS courier).
+        let source =
+            "const JSON_PARSE_ONLY_GENERATED_RS: &str = r#\"...\"#;\nconst CSS_GENERATED_RS: &str = r#\"...\"#;\n";
+        validate_codegen_courier_source("crates/codegen/src/runtime_generator.rs", source)
+            .expect("cohort-carried couriers must stay GREEN");
+        // The surviving MOD/HOST/PARSER/SINK scaffold consts do NOT false-RED.
+        let scaffold = "const JSON_MOD_RS: &str = \"\";\nconst CSS_SINK_RS: &str = \"\";\n";
+        validate_codegen_courier_source("crates/codegen/src/runtime_generator.rs", scaffold)
+            .expect("MOD/HOST/PARSER/SINK scaffold consts must not false-RED");
+    }
+
+    #[test]
+    fn codegen_courier_scan_reds_on_reinjected_sheets_courier() {
+        // RE-INJECT FALSIFIER (the GENERATED_RS courier-suffix form): a fresh
+        // `const SHEETS_GENERATED_RS` in a courier root is un-baselined -> RED.
+        let reinjected = "const SHEETS_GENERATED_RS: &str = r#\"... sheets blob ...\"#;\n";
+        assert!(
+            validate_codegen_courier_source(
+                "crates/codegen/src/runtime_generator.rs",
+                reinjected,
+            )
+            .is_err(),
+            "re-injected SHEETS_GENERATED_RS courier must turn the gate RED"
+        );
+        // A bare `JsonSink` is NOT in the courier set and does NOT fire here
+        // (it stays JSON-owned per json_owned_roots_may_contain_json_policy_tokens).
+        validate_codegen_courier_source(
+            "crates/codegen/src/json_sink_direct.rs",
+            "pub use sink::JsonSink;\n",
+        )
+        .expect("bare JsonSink is JSON-owned, not a courier token");
+    }
+
+    #[test]
+    fn codegen_courier_scan_reds_on_event_grammar_witness() {
+        // RE-INJECT FALSIFIER (the *EventGrammar witness glob, alias-immune):
+        // any EventGrammar / JsonEventGrammar / SheetsEventGrammar literal -> RED.
+        for witness in [
+            "let g: EventGrammar = ...;",
+            "emit::<JsonEventGrammar>();",
+            "emit::<SheetsEventGrammar>();",
+        ] {
+            assert!(
+                validate_codegen_courier_source(
+                    "crates/codegen/src/runtime_generator.rs",
+                    witness,
+                )
+                .is_err(),
+                "witness `{witness}` must turn the gate RED"
+            );
+        }
+    }
+
+    #[test]
+    fn courier_const_idents_extracts_only_generated_rs_suffix() {
+        let source = "const A_GENERATED_RS: &str = \"\";\nconst B_MOD_RS: &str = \"\";\nconst C_GENERATED_RS: &str = \"\";\n";
+        assert_eq!(
+            courier_const_idents(source),
+            vec!["A_GENERATED_RS", "C_GENERATED_RS"]
+        );
     }
 
     #[test]

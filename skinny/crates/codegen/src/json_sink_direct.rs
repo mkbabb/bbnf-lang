@@ -144,7 +144,7 @@ fn parse_value_direct<'i, S: JsonSink>(
                 .map_err(|err| string_error(input, err))?;
             Ok(())
         }
-        b'-' | b'0'..=b'9' => parse_w11_1_number_direct(input, bytes, cursor, sink, byte),
+        b'-' | b'0'..=b'9' => parse_number_direct(input, bytes, cursor, sink, byte),
         b't' => {
             consume_literal_direct(input, bytes, cursor, config::TRUE_LITERAL)?;
             sink.bool(true);
@@ -184,7 +184,7 @@ fn parse_object_value_at_direct<'i, S: JsonSink>(
                 .map_err(|err| string_error(input, err))?;
             Ok(())
         }
-        b'-' | b'0'..=b'9' => parse_w11_1_number_object_direct(input, bytes, cursor, sink, byte),
+        b'-' | b'0'..=b'9' => parse_number_object_direct(input, bytes, cursor, sink, byte),
         b't' => {
             consume_literal_direct(input, bytes, cursor, config::TRUE_LITERAL)?;
             sink.object_bool(true);
@@ -224,7 +224,7 @@ fn parse_array_element_at_direct<'i, S: JsonSink>(
                 .map_err(|err| string_error(input, err))?;
             Ok(())
         }
-        b'-' | b'0'..=b'9' => parse_w11_1_number_array_direct(input, bytes, cursor, sink, byte),
+        b'-' | b'0'..=b'9' => parse_number_array_direct(input, bytes, cursor, sink, byte),
         b't' => {
             consume_literal_direct(input, bytes, cursor, config::TRUE_LITERAL)?;
             sink.array_bool(true);
@@ -304,7 +304,7 @@ fn parse_array_direct<'i, S: JsonSink>(
             return Err(direct_error(input, *cursor, ParseErrorKind::ExpectedValue));
         };
         if matches!(byte, b'-' | b'0'..=b'9') {
-            parse_w11_1_number_array_direct(input, bytes, cursor, sink, byte)?;
+            parse_number_array_direct(input, bytes, cursor, sink, byte)?;
         } else {
             parse_array_element_at_direct(input, bytes, cursor, sink)?;
         }
@@ -367,42 +367,6 @@ fn parse_string_direct<'i>(
 fn render_number_rules(out: &mut String) {
     out.push_str(
         r#"#[cfg_attr(feature = "parse-attribution", inline(never))]
-#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
-fn parse_w11_1_number_direct<'i, S: JsonSink>(
-    input: &'i str,
-    bytes: &'i [u8],
-    cursor: &mut usize,
-    sink: &mut S,
-    first: u8,
-) -> Result<(), ParseError<'i>> {
-    parse_number_direct(input, bytes, cursor, sink, first)
-}
-
-#[cfg_attr(feature = "parse-attribution", inline(never))]
-#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
-fn parse_w11_1_number_object_direct<'i, S: JsonSink>(
-    input: &'i str,
-    bytes: &'i [u8],
-    cursor: &mut usize,
-    sink: &mut S,
-    first: u8,
-) -> Result<(), ParseError<'i>> {
-    parse_number_object_direct(input, bytes, cursor, sink, first)
-}
-
-#[cfg_attr(feature = "parse-attribution", inline(never))]
-#[cfg_attr(not(feature = "parse-attribution"), inline(always))]
-fn parse_w11_1_number_array_direct<'i, S: JsonSink>(
-    input: &'i str,
-    bytes: &'i [u8],
-    cursor: &mut usize,
-    sink: &mut S,
-    first: u8,
-) -> Result<(), ParseError<'i>> {
-    parse_number_array_direct(input, bytes, cursor, sink, first)
-}
-
-#[cfg_attr(feature = "parse-attribution", inline(never))]
 #[cfg_attr(not(feature = "parse-attribution"), inline(always))]
 fn parse_number_direct<'i, S: JsonSink>(
     input: &'i str,

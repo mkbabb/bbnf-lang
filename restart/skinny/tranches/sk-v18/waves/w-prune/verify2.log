@@ -1,0 +1,39 @@
+### W-PRUNE VERIFY v2 (zsh-exit-fixed) @ beb7067e0 ###
+### regen-json (P5) ###
+REGEN_JSON_EXIT=0
+      what is locked in the Cargo.lock file, run `cargo update` to use the new
+      version. This may also occur with an optional dependency that is not enabled.
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 0.04s
+     Running `target/ax-iter/xtask regen-json`
+### regen-css (P3) ###
+REGEN_CSS_EXIT=0
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 0.03s
+     Running `target/ax-iter/xtask regen-css`
+inputs: css_l4_declaration_values 886e55b80e0dd269868019808c884ca7ad35c4760899ed550dd57883bd87a5d8
+regen: css_l4_declaration_values -> crates/runtime/src/grammars/css_l4_declaration_values (check-css-l4-declaration-values)
+### regen-real-typed ###
+REGEN_RT_EXIT=0
+      what is locked in the Cargo.lock file, run `cargo update` to use the new
+      version. This may also occur with an optional dependency that is not enabled.
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 0.03s
+     Running `target/ax-iter/xtask regen-real-typed`
+### build workspace ###
+WORKSPACE_BUILD_EXIT=101
+error[E0277]: `CssOracleError` doesn't implement `Debug`
+48 | impl std::error::Error for CssOracleError {}
+  --> /Users/mkbabb/.rustup/toolchains/nightly-2026-04-11-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/error.rs:59:18
+For more information about this error, try `rustc --explain E0277`.
+error: could not compile `bbnf-bench` (lib) due to 1 previous error
+### falsifiers (correct paths) ###
+P5 metalang in json/generated: 0
+FILE_NOT_FOUND
+json gen md5: c86ea4bea80fa2a3965a74b57322f20f
+css_l4 gen md5: b654562ccff46ed62dd48e9ace325830
+regen --check clean? 
+CHECK_JSON_EXIT=0
+      version. This may also occur with an optional dependency that is not enabled.
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 0.04s
+     Running `target/ax-iter/xtask check-json`
+### parity tests ###
+TESTS_EXIT=101
+### DONE ###

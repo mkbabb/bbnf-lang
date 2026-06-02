@@ -1,0 +1,10 @@
+### W-PRUNE VERIFY v4 (post scratch-bin cleanup) ###
+### build workspace ###
+WORKSPACE_BUILD_EXIT=0
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 0.09s
+### test --no-run (all bbnf-bench tests compile?) ###
+TEST_COMPILE_EXIT=0
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 1m 06s
+### parity tests (json + css + canonical) ###
+PARITY_EXIT=101
+### DONE ###

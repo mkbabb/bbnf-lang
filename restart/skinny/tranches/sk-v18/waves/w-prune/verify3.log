@@ -1,0 +1,17 @@
+### W-PRUNE VERIFY v3 (post CssOracleError fix) ###
+### build workspace ###
+WORKSPACE_BUILD_EXIT=101
+error[E0599]: no method named `len` found for struct `CssDocument<'input>` in the current scope
+error[E0599]: no method named `len` found for struct `CssDocument<'input>` in the current scope
+error: could not compile `bbnf-bench` (bin "css_cold_bench") due to 1 previous error
+error: could not compile `bbnf-bench` (bin "css_cold_harness") due to 1 previous error
+### check-css regen-clean gate ###
+CHECK_CSS_EXIT=0
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 0.06s
+     Running `target/ax-iter/xtask check-css-l4-declaration-values`
+inputs: css_l4_declaration_values 886e55b80e0dd269868019808c884ca7ad35c4760899ed550dd57883bd87a5d8
+### parity tests (json + css behavior) ###
+TESTS_EXIT=101
+### json canonical + css canonical parity (the >SOTA-bearing tests) ###
+CANON_TESTS_EXIT=101
+### DONE ###

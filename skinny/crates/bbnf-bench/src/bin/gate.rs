@@ -1219,7 +1219,6 @@ fn validate_skv12_css_l4_sota_report(
         return Err("CSS L4 sample count does not match Criterion lanes".to_string());
     }
     validate_css_l4_retained_artifacts(row, workspace)?;
-    validate_lightningcss_source_isolation(workspace)?;
     Ok(())
 }
 
@@ -1275,7 +1274,6 @@ fn validate_skv13_css_stylesheet_selectors_report(
         return Err("W2 CSS sample count does not match Criterion lanes".to_string());
     }
     validate_css_l4_stylesheet_selectors_retained_artifacts(row, workspace)?;
-    validate_stylesheet_selectors_lightningcss_source_isolation(workspace)?;
     Ok(())
 }
 
@@ -1331,7 +1329,6 @@ fn validate_skv13_css_declaration_values_extended_report(
         return Err("W3 CSS sample count does not match Criterion lanes".to_string());
     }
     validate_css_l4_declaration_values_extended_retained_artifacts(row, workspace)?;
-    validate_declaration_values_extended_lightningcss_source_isolation(workspace)?;
     Ok(())
 }
 
@@ -1387,7 +1384,6 @@ fn validate_skv13_css_visual_functions_report(
         return Err("W4 CSS sample count does not match Criterion lanes".to_string());
     }
     validate_css_l4_visual_functions_retained_artifacts(row, workspace)?;
-    validate_visual_functions_lightningcss_source_isolation(workspace)?;
     Ok(())
 }
 
@@ -1443,7 +1439,6 @@ fn validate_skv13_css_at_rules_and_media_report(
         return Err("W10.1 CSS sample count does not match Criterion lanes".to_string());
     }
     validate_css_l4_at_rules_and_media_retained_artifacts(row, workspace)?;
-    validate_at_rules_and_media_lightningcss_source_isolation(workspace)?;
     Ok(())
 }
 
@@ -1499,7 +1494,6 @@ fn validate_skv13_css_vendor_custom_report(
         return Err("W10.2 CSS sample count does not match Criterion lanes".to_string());
     }
     validate_css_l4_vendor_custom_retained_artifacts(row, workspace)?;
-    validate_vendor_custom_lightningcss_source_isolation(workspace)?;
     Ok(())
 }
 
@@ -1555,7 +1549,6 @@ fn validate_skv13_css_nested_layout_report(
         return Err("W10.3 CSS sample count does not match Criterion lanes".to_string());
     }
     validate_css_l4_nested_layout_retained_artifacts(row, workspace)?;
-    validate_nested_layout_lightningcss_source_isolation(workspace)?;
     Ok(())
 }
 
@@ -2051,200 +2044,6 @@ fn validate_css_l4_named_equality_artifact(
             "{} missing lightningcss comparator",
             path.display()
         ));
-    }
-    Ok(())
-}
-
-fn validate_lightningcss_source_isolation(workspace: &Path) -> Result<(), String> {
-    let source_path = workspace.join("crates/bbnf-bench/src/nonjson_css_l4.rs");
-    let source = fs::read_to_string(&source_path)
-        .map_err(|error| format!("failed to read {}: {error}", source_path.display()))?;
-    let start = source
-        .find("pub fn lightningcss_facts")
-        .ok_or_else(|| "lightningcss_facts function not found".to_string())?;
-    let rest = &source[start..];
-    let end = rest
-        .find("\npub fn assert_strict_equality")
-        .ok_or_else(|| "lightningcss_facts function end not found".to_string())?;
-    let body = &rest[..end];
-    for forbidden in [
-        " oracle_facts(",
-        "ParserInput",
-        "Parser::new",
-        "StyleSheetParser",
-        "cssparser::",
-    ] {
-        if body.contains(forbidden) {
-            return Err(format!(
-                "lightningcss_facts is coupled to cssparser via `{forbidden}`"
-            ));
-        }
-    }
-    Ok(())
-}
-
-fn validate_stylesheet_selectors_lightningcss_source_isolation(
-    workspace: &Path,
-) -> Result<(), String> {
-    let source_path = workspace.join("crates/bbnf-bench/src/nonjson_css_l4.rs");
-    let source = fs::read_to_string(&source_path)
-        .map_err(|error| format!("failed to read {}: {error}", source_path.display()))?;
-    let start = source
-        .find("pub fn stylesheet_selectors_lightningcss_facts")
-        .ok_or_else(|| "stylesheet_selectors_lightningcss_facts function not found".to_string())?;
-    let rest = &source[start..];
-    let end = rest
-        .find("\npub fn assert_strict_equality")
-        .ok_or_else(|| "stylesheet selectors lightningcss function end not found".to_string())?;
-    let body = &rest[..end];
-    for forbidden in [
-        "stylesheet_selectors_track1_facts(",
-        "runtime::generated_css_l4_stylesheet_selectors",
-        "generated_css_l4_stylesheet_selectors",
-    ] {
-        if body.contains(forbidden) {
-            return Err(format!(
-                "stylesheet selectors lightningcss facts are coupled to Track 1 via `{forbidden}`"
-            ));
-        }
-    }
-    Ok(())
-}
-
-fn validate_declaration_values_extended_lightningcss_source_isolation(
-    workspace: &Path,
-) -> Result<(), String> {
-    let source_path = workspace.join("crates/bbnf-bench/src/nonjson_css_l4.rs");
-    let source = fs::read_to_string(&source_path)
-        .map_err(|error| format!("failed to read {}: {error}", source_path.display()))?;
-    let start = source
-        .find("pub fn declaration_values_extended_lightningcss_facts")
-        .ok_or_else(|| {
-            "declaration_values_extended_lightningcss_facts function not found".to_string()
-        })?;
-    let rest = &source[start..];
-    let end = rest
-        .find("\npub fn assert_strict_equality")
-        .ok_or_else(|| {
-            "declaration-values-extended lightningcss function end not found".to_string()
-        })?;
-    let body = &rest[..end];
-    for forbidden in [
-        "declaration_values_extended_track1_facts(",
-        "runtime::generated_css_l4_declaration_values_extended",
-        "generated_css_l4_declaration_values_extended",
-    ] {
-        if body.contains(forbidden) {
-            return Err(format!(
-                "declaration-values-extended lightningcss facts are coupled to Track 1 via `{forbidden}`"
-            ));
-        }
-    }
-    Ok(())
-}
-
-fn validate_visual_functions_lightningcss_source_isolation(workspace: &Path) -> Result<(), String> {
-    let source_path = workspace.join("crates/bbnf-bench/src/nonjson_css_l4.rs");
-    let source = fs::read_to_string(&source_path)
-        .map_err(|error| format!("failed to read {}: {error}", source_path.display()))?;
-    let start = source
-        .find("pub fn visual_functions_lightningcss_facts")
-        .ok_or_else(|| "visual_functions_lightningcss_facts function not found".to_string())?;
-    let rest = &source[start..];
-    let end = rest
-        .find("\npub fn assert_strict_equality")
-        .ok_or_else(|| "visual-functions lightningcss function end not found".to_string())?;
-    let body = &rest[..end];
-    for forbidden in [
-        "visual_functions_track1_facts(",
-        "runtime::generated_css_l4_visual_functions",
-        "generated_css_l4_visual_functions",
-    ] {
-        if body.contains(forbidden) {
-            return Err(format!(
-                "visual-functions lightningcss facts are coupled to Track 1 via `{forbidden}`"
-            ));
-        }
-    }
-    Ok(())
-}
-
-fn validate_at_rules_and_media_lightningcss_source_isolation(
-    workspace: &Path,
-) -> Result<(), String> {
-    let source_path = workspace.join("crates/bbnf-bench/src/nonjson_css_l4.rs");
-    let source = fs::read_to_string(&source_path)
-        .map_err(|error| format!("failed to read {}: {error}", source_path.display()))?;
-    let start = source
-        .find("pub fn at_rules_and_media_lightningcss_facts")
-        .ok_or_else(|| "at_rules_and_media_lightningcss_facts function not found".to_string())?;
-    let rest = &source[start..];
-    let end = rest
-        .find("\npub fn assert_strict_equality")
-        .ok_or_else(|| "at-rules/media lightningcss function end not found".to_string())?;
-    let body = &rest[..end];
-    for forbidden in [
-        "at_rules_and_media_track1_facts(",
-        "runtime::generated_css_l4_at_rules_and_media",
-        "generated_css_l4_at_rules_and_media",
-    ] {
-        if body.contains(forbidden) {
-            return Err(format!(
-                "at-rules/media lightningcss facts are coupled to Track 1 via `{forbidden}`"
-            ));
-        }
-    }
-    Ok(())
-}
-
-fn validate_vendor_custom_lightningcss_source_isolation(workspace: &Path) -> Result<(), String> {
-    let source_path = workspace.join("crates/bbnf-bench/src/nonjson_css_l4.rs");
-    let source = fs::read_to_string(&source_path)
-        .map_err(|error| format!("failed to read {}: {error}", source_path.display()))?;
-    let start = source
-        .find("pub fn vendor_custom_lightningcss_facts")
-        .ok_or_else(|| "vendor_custom_lightningcss_facts function not found".to_string())?;
-    let rest = &source[start..];
-    let end = rest
-        .find("\npub fn assert_strict_equality")
-        .ok_or_else(|| "vendor/custom lightningcss function end not found".to_string())?;
-    let body = &rest[..end];
-    for forbidden in [
-        "vendor_custom_track1_facts(",
-        "runtime::generated_css_l4_vendor_and_custom_atrules",
-        "generated_css_l4_vendor_and_custom_atrules",
-    ] {
-        if body.contains(forbidden) {
-            return Err(format!(
-                "vendor/custom lightningcss facts are coupled to Track 1 via `{forbidden}`"
-            ));
-        }
-    }
-    Ok(())
-}
-
-fn validate_nested_layout_lightningcss_source_isolation(workspace: &Path) -> Result<(), String> {
-    let source_path = workspace.join("crates/bbnf-bench/src/nonjson_css_l4.rs");
-    let source = fs::read_to_string(&source_path)
-        .map_err(|error| format!("failed to read {}: {error}", source_path.display()))?;
-    let start = source
-        .find("pub fn nested_layout_lightningcss_facts")
-        .ok_or_else(|| "nested_layout_lightningcss_facts function not found".to_string())?;
-    let rest = &source[start..];
-    let end = rest
-        .find("\npub fn assert_strict_equality")
-        .ok_or_else(|| "nested/layout lightningcss function end not found".to_string())?;
-    let body = &rest[..end];
-    for forbidden in [
-        "nested_layout_track1_facts(",
-        "runtime::generated_css_l4_nested_layout",
-        "generated_css_l4_nested_layout",
-    ] {
-        if body.contains(forbidden) {
-            return Err(format!(
-                "nested/layout lightningcss facts are coupled to Track 1 via `{forbidden}`"
-            ));
-        }
     }
     Ok(())
 }

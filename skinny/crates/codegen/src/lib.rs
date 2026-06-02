@@ -301,15 +301,10 @@ mod tests {
     // derived from the grammar/`BackendRule` shape — one entry per generated
     // companion), and the request-facts identity labels are derived
     // STRUCTURALLY from that id, not read from a per-rule literal table.
-    const CSS_PROFILE_IDS: &[&str] = &[
-        "css_l4_declaration_values",
-        "css_l4_declaration_values_extended",
-        "css_l4_stylesheet_selectors",
-        "css_l4_visual_functions",
-        "css_l4_at_rules_and_media",
-        "css_l4_vendor_and_custom_atrules",
-        "css_l4_nested_layout",
-    ];
+    // SK-V18 P3: the 7 byte-identical css_l4 companions COLLAPSED to the ONE
+    // canonical `css_l4_declaration_values` (the `track1_rich` path) — aligned
+    // with the single `RuntimeTarget` row in `xtask/src/regen_css.rs`.
+    const CSS_PROFILE_IDS: &[&str] = &["css_l4_declaration_values"];
 
     fn request_facts_labels(profile_id: &str) -> RuntimeOutputLabels {
         assert!(
@@ -318,13 +313,9 @@ mod tests {
         );
         // ROW_ID is the only label `config.rs` still consumes (the fact-stream
         // schema/output-plane labels retired with the emitter). It is derived
-        // from the profile id by stripping the `css_l4_` prefix; the one spelling
-        // exception (`stylesheet_selectors` -> `stylesheet_and_selectors`) names
-        // the grammar companion exactly, matching `xtask/src/regen_css.rs`.
-        let slug = match profile_id {
-            "css_l4_stylesheet_selectors" => "stylesheet_and_selectors",
-            other => other.strip_prefix("css_l4_").unwrap_or(other),
-        };
+        // from the profile id by stripping the `css_l4_` prefix (the lone
+        // canonical companion `css_l4_declaration_values` post-P3-collapse).
+        let slug = profile_id.strip_prefix("css_l4_").unwrap_or(profile_id);
         // Leak is test-only.
         let row_id: &'static str =
             Box::leak(format!("css_l4/{slug}/direct_to_struct/main").into_boxed_str());
@@ -567,7 +558,7 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
         // SK-V17 W1: the CSS provider routes into the EXISTING skinny tape; the
         // fact-stream W7 policy plane is retired with `emit_fact_stream`.
         let css = emit_runtime_from_request(w5c_css_request(
-            "css_l4_declaration_values_extended",
+            "css_l4_declaration_values",
             W5C_CSS_SOURCE,
         ))
         .unwrap();
@@ -625,11 +616,14 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
         let emitted = emit_from_source("json", JSON_GRAMMAR).unwrap();
         let parser = emitted.get("parser.rs").unwrap();
         let generated = emitted.get("generated.rs").unwrap();
+        // The parse-only recognizer is derived as a recognize-only emit POLICY
+        // of the same SinkOnly walk (G1 amendment); it is a recursive-descent
+        // recognizer, not the retired iterative explicit-stack courier.
         let start = generated
-            .find("struct ParseOnlyState")
-            .expect("parse_only state emitted");
+            .find("pub fn parse_only")
+            .expect("parse_only entry emitted");
         let end = generated
-            .find("// sink-only lowered from BackendIr")
+            .find("pub fn parse_direct")
             .unwrap_or(generated.len());
         let parse_only_section = &generated[start..end];
 
@@ -640,11 +634,16 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
             .unwrap()
             .contains("parse_only, parse_only_bytes"));
         assert!(generated.contains("pub fn parse_only"));
-        assert!(parse_only_section.contains("fn parse_only_value_iterative"));
-        assert!(parse_only_section.contains("enum ParseOnlyFrame"));
-        assert!(parse_only_section.contains("fn parse_only_string"));
+        assert!(parse_only_section.contains("fn recognize_value"));
+        assert!(parse_only_section.contains("fn recognize_object"));
+        assert!(parse_only_section.contains("fn recognize_array"));
+        // The recognizer suppresses the sink: no JsonSink generic, no tape.
+        assert!(!parse_only_section.contains("sink: &mut S"));
         assert!(!parse_only_section.contains("TapeBuilder"));
         assert!(!parse_only_section.contains("emit_plain_offset"));
+        // The retired iterative courier blob must be gone campaign-wide.
+        assert!(!generated.contains("struct ParseOnlyState"));
+        assert!(!generated.contains("enum ParseOnlyFrame"));
         assert!(generated.contains(
             "#[cfg_attr(feature = \"parse-attribution\", inline(never))]\n\
              #[cfg_attr(not(feature = \"parse-attribution\"), inline(always))]\n\

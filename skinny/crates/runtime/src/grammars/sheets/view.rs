@@ -91,6 +91,30 @@ const KIND_TABLE: &[GoogleSheetsKind] = &[
     GoogleSheetsKind::Formula,
 ];
 
+/// The `(literal, tag)` table backing `as_tag`: each `-> Nu8` projection's
+/// matched byte-literal paired with its declared `u8` tag.
+const TAG_TABLE: &[(&str, u8)] = &[
+    ("#N/A", 0u8),
+    ("#VALUE!", 1u8),
+    ("#REF!", 2u8),
+    ("#DIV/0!", 3u8),
+    ("#NULL!", 4u8),
+    ("#NAME?", 5u8),
+    ("#NUM!", 6u8),
+    ("#ERROR!", 7u8),
+    ("#SPILL!", 8u8),
+    ("<>", 0u8),
+    ("<=", 1u8),
+    (">=", 2u8),
+    ("=", 3u8),
+    ("<", 4u8),
+    (">", 5u8),
+    ("+", 0u8),
+    ("-", 1u8),
+    ("*", 0u8),
+    ("/", 1u8),
+];
+
 impl GoogleSheetsKind {
     /// Decode the kind at a tape cursor from the sparse flag plane. A cursor with
     /// no flag (tag 0) — a bare structural offset — has no rule kind.
@@ -135,6 +159,47 @@ impl<'doc, 'input> GoogleSheetsNode<'doc, 'input> {
             .offset_at(self.cursor + 1)
             .unwrap_or(source.len());
         &source[start..end.min(source.len())]
+    }
+
+    /// The node's span parsed as `f64`, for nodes whose rule carries a
+    /// floating-point `->` projection. `None` for any other kind.
+    #[inline]
+    pub fn as_f64(&self) -> Option<f64> {
+        if !matches!(self.rule_kind(), Some(GoogleSheetsKind::Number)) {
+            return None;
+        }
+        std::str::from_utf8(self.span()).ok()?.trim().parse::<f64>().ok()
+    }
+
+    /// The node's span decoded as a `bool`, for nodes whose rule carries a
+    /// boolean-literal `->` projection. `None` for any other kind.
+    #[inline]
+    pub fn as_bool(&self) -> Option<bool> {
+        if !matches!(self.rule_kind(), Some(GoogleSheetsKind::Boolean)) {
+            return None;
+        }
+        let text = std::str::from_utf8(self.span()).ok()?.trim();
+        if text.eq_ignore_ascii_case("true") {
+            Some(true)
+        } else if text.eq_ignore_ascii_case("false") {
+            Some(false)
+        } else {
+            None
+        }
+    }
+
+    /// The node's `u8` tag, for nodes whose rule carries an `Nu8` `->`
+    /// projection — the tag of the branch matched by this node's span.
+    /// `None` for any other kind.
+    #[inline]
+    pub fn as_tag(&self) -> Option<u8> {
+        if !matches!(self.rule_kind(), Some(GoogleSheetsKind::ErrorLiteral) | Some(GoogleSheetsKind::CompareOp) | Some(GoogleSheetsKind::AddOp) | Some(GoogleSheetsKind::MulOp) | Some(GoogleSheetsKind::UnaryPrefix)) {
+            return None;
+        }
+        TAG_TABLE
+            .iter()
+            .find(|(literal, _)| self.span() == literal.as_bytes())
+            .map(|(_, tag)| *tag)
     }
 }
 

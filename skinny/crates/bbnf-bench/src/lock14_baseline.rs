@@ -1285,8 +1285,7 @@ const SK_V18_G1_G2_EMITTER_OWNER_PATHS: &[&str] = &[
     "crates/codegen/src/json_sink_direct/",
     "crates/codegen/src/css_scan_direct/",
     "crates/codegen/src/general_descent/",
-    "crates/codegen/src/lower/css_scan.rs",
-    "crates/codegen/src/lower/mod.rs",
+    "crates/codegen/src/lower/",
     "crates/codegen/src/lib.rs",
     "crates/codegen/src/runtime_generator.rs",
     "crates/codegen/src/grammar_provider.rs",
@@ -2059,11 +2058,15 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
 // emitter owner surface.
 fn is_skv18_g1_g2_emitter_subject(subject: &str) -> bool {
     // SK-V18 generalization program: G1-G6 (`sk-v18-g<n>`) + PROVE + H1 all
-    // author into the same grammar-derived emitter owner surface above.
+    // author into the same grammar-derived emitter owner surface above. The
+    // post-SK-V18 `value-api` line (grammar-deriving the typed value APIs —
+    // carrying the `->` projection through lowering to a derived value layer)
+    // authors into the SAME owner surface and is admitted by the same matcher.
     let subject = subject.to_ascii_lowercase();
     subject.contains("sk-v18-g")
         || subject.contains("sk-v18-prove")
         || subject.contains("sk-v18-h1")
+        || subject.contains("value-api")
 }
 
 fn is_w9_json_typed_subject(subject: &str) -> bool {

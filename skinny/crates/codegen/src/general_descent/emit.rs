@@ -373,10 +373,14 @@ fn emit_expr(
                 "{pad}match_leaf(bytes, cursor, tape, {first_lit}, {node_kind}u8, {nullable})?;"
             );
         }
+        SinkOnlyExpr::ValueProject { body, .. } => {
+            // The projection (target/ty) is consumed by the VIEW, not the
+            // recognizer — emit the body so the leaf is still matched + tape-marked.
+            emit_expr(program, body, out, level, node_kind)?;
+        }
         SinkOnlyExpr::SpanMark { .. }
         | SinkOnlyExpr::TapeEmit
         | SinkOnlyExpr::DirectBuild(_)
-        | SinkOnlyExpr::ValueProject
         | SinkOnlyExpr::Return => {
             // Tape bookkeeping / no-op for the recognizer. A DirectBuild records
             // a node boundary at the current cursor; the rest are pure markers.

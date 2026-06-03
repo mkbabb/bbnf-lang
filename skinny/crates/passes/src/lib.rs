@@ -969,7 +969,8 @@ pub mod recognizers {
             BackendExpr::DirectBuild { .. } => true,
             BackendExpr::Entry(inner)
             | BackendExpr::OptionalBranch(inner)
-            | BackendExpr::RepeatLoop { body: inner, .. } => contains_direct_build(inner),
+            | BackendExpr::RepeatLoop { body: inner, .. }
+            | BackendExpr::ValueProject { body: inner, .. } => contains_direct_build(inner),
             BackendExpr::Seq(children)
             | BackendExpr::Alt {
                 branches: children, ..
@@ -979,7 +980,6 @@ pub mod recognizers {
             | BackendExpr::CallRule { .. }
             | BackendExpr::SpanMark { .. }
             | BackendExpr::TapeEmit { .. }
-            | BackendExpr::ValueProject { .. }
             | BackendExpr::Return => false,
         }
     }
@@ -989,7 +989,8 @@ pub mod recognizers {
             BackendExpr::TapeEmit { kind } => *kind == needle,
             BackendExpr::Entry(inner)
             | BackendExpr::OptionalBranch(inner)
-            | BackendExpr::RepeatLoop { body: inner, .. } => contains_tape_kind(inner, needle),
+            | BackendExpr::RepeatLoop { body: inner, .. }
+            | BackendExpr::ValueProject { body: inner, .. } => contains_tape_kind(inner, needle),
             BackendExpr::Seq(children)
             | BackendExpr::Alt {
                 branches: children, ..
@@ -1001,7 +1002,6 @@ pub mod recognizers {
             | BackendExpr::CallRule { .. }
             | BackendExpr::SpanMark { .. }
             | BackendExpr::DirectBuild { .. }
-            | BackendExpr::ValueProject { .. }
             | BackendExpr::Return => false,
         }
     }
@@ -1011,7 +1011,8 @@ pub mod recognizers {
             BackendExpr::Alt { branches, .. } => branches.len(),
             BackendExpr::Entry(inner)
             | BackendExpr::OptionalBranch(inner)
-            | BackendExpr::RepeatLoop { body: inner, .. } => alt_branch_count(inner),
+            | BackendExpr::RepeatLoop { body: inner, .. }
+            | BackendExpr::ValueProject { body: inner, .. } => alt_branch_count(inner),
             BackendExpr::Seq(children) => children.iter().map(alt_branch_count).max().unwrap_or(0),
             BackendExpr::ByteLiteral(_)
             | BackendExpr::RegexProgram { .. }
@@ -1019,7 +1020,6 @@ pub mod recognizers {
             | BackendExpr::SpanMark { .. }
             | BackendExpr::TapeEmit { .. }
             | BackendExpr::DirectBuild { .. }
-            | BackendExpr::ValueProject { .. }
             | BackendExpr::Return => 0,
         }
     }
@@ -1346,7 +1346,11 @@ pub mod extract {
                 callee: name.clone(),
             },
             ExprKind::Annotation { .. } => BackendExpr::Seq(Vec::new()),
-            ExprKind::Project { body, .. } => lower_expr(grammar, *body),
+            ExprKind::Project { body, target, ty } => BackendExpr::ValueProject {
+                body: Box::new(lower_expr(grammar, *body)),
+                target: target.clone(),
+                ty: ty.clone(),
+            },
             ExprKind::Discard { left, right, .. } => {
                 // Phase 1: lower transparently — both operands are matched. The
                 // keep_left discard-semantic is metadata for a later phase.

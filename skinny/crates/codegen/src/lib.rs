@@ -1136,7 +1136,8 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
         match expr {
             BackendExpr::Entry(inner)
             | BackendExpr::OptionalBranch(inner)
-            | BackendExpr::RepeatLoop { body: inner, .. } => strip_direct_builds(inner),
+            | BackendExpr::RepeatLoop { body: inner, .. }
+            | BackendExpr::ValueProject { body: inner, .. } => strip_direct_builds(inner),
             BackendExpr::Seq(children)
             | BackendExpr::Alt {
                 branches: children, ..
@@ -1152,7 +1153,6 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
             | BackendExpr::SpanMark { .. }
             | BackendExpr::TapeEmit { .. }
             | BackendExpr::DirectBuild { .. }
-            | BackendExpr::ValueProject { .. }
             | BackendExpr::Return => {}
         }
     }

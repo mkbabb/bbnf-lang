@@ -149,8 +149,13 @@ fn render_expr(expr: &BackendExpr, flavor: TapeFlavor, ops: &mut Vec<String>) {
                 flavor.prefix()
             ));
         }
-        BackendExpr::ValueProject { projection } => {
-            ops.push(format!("{}_project_value({projection})", flavor.prefix()));
+        BackendExpr::ValueProject { body, target, ty } => {
+            let ty = ty.as_deref().unwrap_or("");
+            ops.push(format!(
+                "{}_project_value(target={target}, ty={ty})",
+                flavor.prefix()
+            ));
+            render_expr(body, flavor, ops);
         }
         BackendExpr::Return => {
             ops.push(format!("{}_return_success", flavor.prefix()));

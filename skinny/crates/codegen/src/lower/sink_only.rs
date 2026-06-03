@@ -91,7 +91,11 @@ pub enum SinkOnlyExpr {
     },
     TapeEmit,
     DirectBuild(DirectShape),
-    ValueProject,
+    ValueProject {
+        body: Box<SinkOnlyExpr>,
+        target: String,
+        ty: Option<String>,
+    },
     Return,
 }
 
@@ -221,7 +225,11 @@ fn lower_expr(expr: &BackendExpr, facts: &mut SinkOnlyFacts) -> SinkOnlyExpr {
                 fields: fields.clone(),
             })
         }
-        BackendExpr::ValueProject { .. } => SinkOnlyExpr::ValueProject,
+        BackendExpr::ValueProject { body, target, ty } => SinkOnlyExpr::ValueProject {
+            body: Box::new(lower_expr(body, facts)),
+            target: target.clone(),
+            ty: ty.clone(),
+        },
         BackendExpr::Return => SinkOnlyExpr::Return,
     }
 }
@@ -231,7 +239,8 @@ fn direct_shape(expr: &SinkOnlyExpr) -> Option<DirectShape> {
         SinkOnlyExpr::DirectBuild(shape) => Some(shape.clone()),
         SinkOnlyExpr::Entry(inner)
         | SinkOnlyExpr::OptionalBranch(inner)
-        | SinkOnlyExpr::RepeatLoop { body: inner, .. } => direct_shape(inner),
+        | SinkOnlyExpr::RepeatLoop { body: inner, .. }
+        | SinkOnlyExpr::ValueProject { body: inner, .. } => direct_shape(inner),
         SinkOnlyExpr::Seq(children) => children.iter().find_map(direct_shape),
         SinkOnlyExpr::Alt { branches, .. } => branches.iter().find_map(direct_shape),
         SinkOnlyExpr::ByteLiteral(_)
@@ -239,7 +248,6 @@ fn direct_shape(expr: &SinkOnlyExpr) -> Option<DirectShape> {
         | SinkOnlyExpr::CallRule { .. }
         | SinkOnlyExpr::SpanMark { .. }
         | SinkOnlyExpr::TapeEmit
-        | SinkOnlyExpr::ValueProject
         | SinkOnlyExpr::Return => None,
     }
 }

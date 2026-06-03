@@ -405,7 +405,9 @@ pub enum BackendExpr {
         fields: Vec<DirectBuildField>,
     },
     ValueProject {
-        projection: String,
+        body: Box<BackendExpr>,
+        target: String,
+        ty: Option<String>,
     },
     Return,
 }

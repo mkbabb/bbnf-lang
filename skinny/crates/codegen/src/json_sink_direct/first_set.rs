@@ -81,10 +81,10 @@ fn first_bytes_at(program: &SinkOnlyProgram, expr: &SinkOnlyExpr, depth: usize) 
             .find(|rule| &rule.name == callee)
             .map(|rule| first_bytes_at(program, &rule.expr, depth + 1))
             .unwrap_or_default(),
+        SinkOnlyExpr::ValueProject { body, .. } => first_bytes_at(program, body, depth + 1),
         SinkOnlyExpr::SpanMark { .. }
         | SinkOnlyExpr::TapeEmit
         | SinkOnlyExpr::DirectBuild(_)
-        | SinkOnlyExpr::ValueProject
         | SinkOnlyExpr::Return => FirstBytes {
             bytes: BTreeSet::new(),
             nullable: true,

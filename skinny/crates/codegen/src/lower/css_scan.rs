@@ -60,8 +60,9 @@ impl ScanAlphabet {
     /// The fixed-9 SKIP alphabet the `css_balanced_component_scan` primitive
     /// consumes: the quotes, the comment lead, then the open/close brackets in
     /// pair order. This MUST be exactly the 9-byte set the neutral
-    /// `find_css_significant` kernel rides (`b"'\"/()[]{}"`), but assembled
-    /// from the GRAMMAR-DERIVED members above — the membership is caller data.
+    /// `structural_classify_64` kernel partitions into kind buckets
+    /// (`b"'\"/()[]{}"`), but assembled from the GRAMMAR-DERIVED members above —
+    /// the membership is caller data.
     pub fn skip_alphabet(&self) -> [u8; 9] {
         let mut out = Vec::with_capacity(9);
         // quotes (cssString) then comment lead (@ws), then the bracket pairs

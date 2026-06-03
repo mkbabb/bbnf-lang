@@ -477,36 +477,16 @@ mod tests {
         assert_eq!(CssTypedValue::classify(b"50%"), CssTypedValue::Dimension);
     }
 
-    // ---- W3 NEON runtime-consumer parity guards ----------------------------
+    // ---- W3 NEON runtime-consumer parity guard -----------------------------
     //
-    // The NEON inner-skip (`find_css_significant`), the L5 comment-close
-    // consumer (`find_comment_close`), and the L6 top-level-comma consumer
-    // (`count_top_level_commas`) accelerate the CSS scan; these guards pin them
-    // to their scalar references so an acceleration regression is caught here,
-    // independent of the corpus-scale equality oracle.
-
-    fn significant_ref(bytes: &[u8], from: usize, delims: &[u8], fixed: &[u8; 9]) -> usize {
-        let mut pos = from;
-        while pos < bytes.len() {
-            let byte = bytes[pos];
-            if delims.contains(&byte) || fixed.contains(&byte) {
-                return pos;
-            }
-            pos += 1;
-        }
-        pos
-    }
-
-    fn comment_close_ref(bytes: &[u8], start: usize) -> Option<usize> {
-        let mut pos = start + 2;
-        while pos + 1 < bytes.len() {
-            if bytes[pos] == b'*' && bytes[pos + 1] == b'/' {
-                return Some(pos + 2);
-            }
-            pos += 1;
-        }
-        None
-    }
+    // The L6 top-level-comma consumer (`count_top_level_commas`) accelerates the
+    // CSS selector-list separator count via the bracket-depth-interior mask;
+    // this guard pins it to its scalar reference so an acceleration regression is
+    // caught here, independent of the corpus-scale equality oracle. (The former
+    // inner-skip / comment-close guards were retired with their kernels; the G6
+    // structural-classification kernel is anchored by the checkasm differential
+    // over the real corpora in `bbnf-simd/tests/checkasm_parity.rs` and the
+    // end-to-end scan differential in `runtime/tests/css_scan_differential.rs`.)
 
     fn count_top_level_commas_ref(bytes: &[u8]) -> usize {
         let mut depth: i32 = 0;
@@ -538,60 +518,6 @@ mod tests {
             pos += 1;
         }
         commas
-    }
-
-    #[test]
-    fn neon_significant_skip_matches_scalar() {
-        const FIXED: &[u8; 9] = b"'\"/()[]{}";
-        let corpora: [&[u8]; 5] = [
-            b".a{color:red;background:url(x)}/* c */\n@media(x){.b,.c{d:e}}",
-            b"a b c d e f g h i j k l m n o p q r s t u v w x y z 0 1 2 3 4 5 6 7 8 9",
-            br#"x:"quoted; with delims {}" ; y : 'single (paren)' }"#,
-            b"",
-            b"012345678901234567890123456789012345678901234567890123456789012345;{}()",
-        ];
-        for input in corpora {
-            for &delims in &[&b";{}"[..], &b"{};"[..], &b":{};"[..], &b";}"[..]] {
-                for from in 0..=input.len() {
-                    let got = crate::runtime_simd::find_css_significant(input, from, delims, FIXED);
-                    let want = significant_ref(input, from, delims, FIXED);
-                    assert_eq!(
-                        got, want,
-                        "significant skip diverged: from={from} delims={delims:?} input={input:?}"
-                    );
-                }
-            }
-        }
-    }
-
-    #[test]
-    fn neon_comment_close_matches_scalar() {
-        let cases: [&[u8]; 7] = [
-            b"/* short */rest",
-            b"/**/x",
-            b"/* unterminated",
-            b"/* exactly-64-bytes-of-comment-body-aaaaaaaaaaaaaaaaaaaaaaaaaa */z",
-            b"/* a */ /* b */",
-            b"/* contains ; { } : delimiters that must NOT leak */ .x{}",
-            b"/*aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa*/tail",
-        ];
-        for input in cases {
-            assert_eq!(
-                crate::runtime_simd::find_comment_close(input, 0),
-                comment_close_ref(input, 0),
-                "comment-close diverged: input={input:?}"
-            );
-        }
-        for pad in 55..70 {
-            let mut input = b"/*".to_vec();
-            input.resize(pad, b'a');
-            input.extend_from_slice(b"*/tail");
-            assert_eq!(
-                crate::runtime_simd::find_comment_close(&input, 0),
-                comment_close_ref(&input, 0),
-                "boundary comment-close diverged: pad={pad}"
-            );
-        }
     }
 
     #[test]

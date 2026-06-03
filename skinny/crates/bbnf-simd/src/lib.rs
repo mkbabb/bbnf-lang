@@ -250,6 +250,7 @@ pub fn compact_mask(base: usize, mask: u64, positions: &mut Vec<u32>) {
 pub mod prim {
     pub use crate::scalar::comment_body_mask_64::CommentCarry;
     pub use crate::scalar::eob_pad_clamp::EobBlock;
+    pub use crate::scalar::structural_classify_64::{KindPartition, StructuralClassify64};
 
     #[inline]
     pub fn byte_class_from_table_64(src: &[u8; 64], table: &[u8; 256]) -> u64 {
@@ -285,6 +286,26 @@ pub mod prim {
         return crate::aarch64::byte_class_from_eq_set_64::byte_class_from_eq_set_64_neon(src, set);
         #[allow(unreachable_code)]
         crate::scalar::byte_class_from_eq_set_64::byte_class_from_eq_set_64_scalar(src, set)
+    }
+
+    /// Structural-classification of a 64-byte block (simdjson stage-1, the G6
+    /// dispatch-targeting kernel). Returns a `StructuralClassify64`: a
+    /// `significant` bitmask + one bitmask per kind bucket of the caller's
+    /// `KindPartition`. Bit `i` ↔ `src[i]`. The shell CTZ-iterates `significant`
+    /// and reads each structural's KIND by bit-test — no re-load, no re-match.
+    ///
+    /// Grammar-NEUTRAL: the `KindPartition` is caller data. NEON `vceqq` fan on
+    /// aarch64, scalar reference elsewhere; checkasm-parity gated (the binding
+    /// dav1d correctness anchor).
+    #[inline]
+    pub fn structural_classify_64(
+        src: &[u8; 64],
+        partition: &KindPartition<'_>,
+    ) -> StructuralClassify64 {
+        #[cfg(target_arch = "aarch64")]
+        return crate::aarch64::structural_classify_64::structural_classify_64_neon(src, partition);
+        #[allow(unreachable_code)]
+        crate::scalar::structural_classify_64::structural_classify_64_scalar(src, partition)
     }
 
     /// Comment-interior mask over a 64-byte block. Bit `i` is set iff `src[i]`

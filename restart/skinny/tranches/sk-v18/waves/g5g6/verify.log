@@ -1,0 +1,26 @@
+### G6 VERIFY @ a9585cc65 ###
+### build runtime+bbnf-simd+bbnf-bench ###
+BUILD=0
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 3m 41s
+### checkasm differential (THE dav1d gate: NEON classify == scalar, real corpora) ###
+CHECKASM=0
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+test structural_classify_64_neon_matches_scalar_css_corpora ... ok
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 27.49s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.59s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+### regen-css (codegen css_scan change) + check ###
+REGEN_CSS=0
+CHECK_CSS=0
+### 9-field parity + JSON 51/51 ###
+RICH=0
+test nonjson_css_l4::tests::rich_cssom_matches_cssparser_on_fixture ... ok
+test nonjson_css_l4::tests::rich_cssom_matches_cssparser_on_real_corpora ... ok
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 263 filtered out; finished in 0.18s
+RUNTIME=0
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 22.71s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+### DONE ###

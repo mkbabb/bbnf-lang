@@ -39,32 +39,34 @@ pub(crate) fn emit_from_request(
 /// produces the raw-AST-derived `CssScanProgram`.
 fn lower_for_runtime(
     request: &RuntimeGenerationRequest,
-    facts: &grammar::RuntimeSourceFacts,
+    _facts: &grammar::RuntimeSourceFacts,
 ) -> Result<LoweredArtifact, CodegenError> {
-    if facts.first_unsupported().is_none() {
-        let Some(source) = request.sources.first() else {
-            return Err(CodegenError::Lowering(
-                "compiled runtime request requires a source".to_string(),
-            ));
-        };
-        let sink_only = crate::lower_sink_only_from_source(&request.grammar_name, &source.source)?;
-        Ok(LoweredArtifact::SinkOnly(sink_only))
-    } else {
-        // The raw-AST CSS harvest: the structural alphabet (per-call-site STOP
-        // byte-arrays + the fixed-9 SKIP set) is harvested from `stylesheet.
-        // bbnf`'s `ruleBlock`/declaration/selector literals; the scan ALGORITHM
-        // is the blob-free `css_balanced_component_scan` runtime primitive.
-        let scan_sources = request
-            .sources
-            .iter()
-            .map(|source| (source.rel_path.clone(), source.source.clone()))
-            .collect::<Vec<_>>();
-        let program = lower::css_scan::derive_program(
-            &request.grammar_name,
-            &request.entry_rule,
-            &scan_sources,
-        )?;
-        Ok(LoweredArtifact::Scan(program))
+    // The shape probe: a grammar derives to the `Scan` artifact IFF the raw-AST
+    // CSS harvest (`lower::css_scan::derive_program`) succeeds — that harvest
+    // requires the CSS structural alphabet (`ruleBlock`/`atRuleBody`/`cssString`
+    // /selector literals) and FAILS on any other grammar. So `Ok` ⇒ `Scan` (the
+    // CSS path, byte-identical); `Err` ⇒ the grammar lowers to a `SinkOnly`
+    // program. JSON and Sheets both fall to `SinkOnly` (JSON unchanged; Sheets
+    // the NEW route); CSS stays `Scan`. The selection is purely shape-derived —
+    // no grammar NAME, no config field.
+    let scan_sources = request
+        .sources
+        .iter()
+        .map(|source| (source.rel_path.clone(), source.source.clone()))
+        .collect::<Vec<_>>();
+    match lower::css_scan::derive_program(&request.grammar_name, &request.entry_rule, &scan_sources)
+    {
+        Ok(program) => Ok(LoweredArtifact::Scan(program)),
+        Err(_) => {
+            let Some(source) = request.sources.first() else {
+                return Err(CodegenError::Lowering(
+                    "compiled runtime request requires a source".to_string(),
+                ));
+            };
+            let sink_only =
+                crate::lower_sink_only_from_source(&request.grammar_name, &source.source)?;
+            Ok(LoweredArtifact::SinkOnly(sink_only))
+        }
     }
 }
 
@@ -88,6 +90,14 @@ pub(crate) fn emit_sink_only(
     profile_id: &str,
     sink_only: &lower::sink_only::SinkOnlyProgram,
 ) -> Result<EmittedSource, CodegenError> {
+    // Shape dispatch: a sink-only program carrying a `value` rule is the JSON
+    // family — `json_sink_direct` keys its recursive-descent dispatch off the
+    // `value`-Alt. A program WITHOUT a `value` rule (Google Sheets, the operator
+    // tower has no single `value` dispatch) routes to the GENERAL
+    // recursive-descent emitter. Shape-based, never a grammar name.
+    if !sink_only.has_rule("value") {
+        return emit_general_descent(profile_id, sink_only);
+    }
     let mut generated = include_str!("json_templates/generated.rs").to_string();
     generated.push('\n');
     generated.push_str(&json_sink_direct::render(sink_only).map_err(CodegenError::Lowering)?);
@@ -127,6 +137,75 @@ pub(crate) fn emit_sink_only(
     )
     .map_err(CodegenError::Lowering)?;
     Ok(EmittedSource { files })
+}
+
+/// Emit a sink-only program WITHOUT a `value` rule (Google Sheets) through the
+/// GENERAL recursive-descent emitter (`general_descent`). The 5-file roster
+/// (`config.rs`/`generated.rs`/`mod.rs`/`parser.rs`/`view.rs`) mirrors the
+/// request-facts roster but carries the lazy tape-backed projection in
+/// `view.rs`. Additive — the JSON path above is untouched.
+fn emit_general_descent(
+    profile_id: &str,
+    sink_only: &lower::sink_only::SinkOnlyProgram,
+) -> Result<EmittedSource, CodegenError> {
+    // The emitted view-type prefix is DERIVED from the grammar name (the
+    // `profile_id` IS the grammar name on this path) — `google_sheets` →
+    // `GoogleSheets`. The general emitter carries no hard-coded type token.
+    let prefix = crate::general_descent::grammar_pascal(profile_id);
+    let mut generated = String::new();
+    generated.push_str(crate::GENERATED_HEADER);
+    generated.push('\n');
+    generated.push_str(
+        &crate::general_descent::render(sink_only, profile_id).map_err(CodegenError::Lowering)?,
+    );
+
+    let files = BTreeMap::from([
+        (
+            "config.rs".to_string(),
+            render_general_descent_config(&sink_only.policy_summary, &sink_only.entry_rule),
+        ),
+        ("generated.rs".to_string(), generated),
+        (
+            "mod.rs".to_string(),
+            normalize(&general_descent_mod_rs(&prefix)),
+        ),
+        (
+            "parser.rs".to_string(),
+            normalize(&general_descent_parser_rs(&prefix)),
+        ),
+        (
+            "view.rs".to_string(),
+            crate::general_descent::render_view(sink_only, &prefix),
+        ),
+    ]);
+    grammar_profile::validate_generated_roster(
+        profile_id,
+        grammar_profile::GENERAL_DESCENT_RUNTIME_FILES,
+        files.keys().map(String::as_str),
+    )
+    .map_err(CodegenError::Lowering)?;
+    Ok(EmittedSource { files })
+}
+
+fn render_general_descent_config(
+    policy: &lower::sink_only::RuntimePolicySummary,
+    entry_rule: &str,
+) -> String {
+    let mut out = String::new();
+    out.push_str(crate::GENERATED_HEADER);
+    out.push('\n');
+    let _ = writeln!(out, "pub(crate) const ENTRY_RULE: &str = {entry_rule:?};");
+    let _ = writeln!(
+        out,
+        "pub(crate) const BACKEND_SHAPE: &str = {:?};",
+        format!("{:?}", policy.backend_shape)
+    );
+    let _ = writeln!(
+        out,
+        "pub(crate) const SUBSTRATE_TARGET: &str = {:?};",
+        policy.substrate_target.as_str()
+    );
+    out
 }
 
 fn emit_scan(
@@ -371,6 +450,57 @@ const CSS_PARSER_RS: &str = r#"
         parse_full(input)
     }
 "#;
+
+/// The general-descent `mod.rs` scaffolding, parameterized by the grammar-derived
+/// view-type `prefix` (`{prefix}Document`/`{prefix}Kind`/`{prefix}Node`). No
+/// hard-coded type token — the re-exports name the prefixed types.
+fn general_descent_mod_rs(prefix: &str) -> String {
+    format!(
+        r#"
+    pub(crate) mod config;
+    pub mod generated;
+    pub mod parser;
+    pub mod view;
+
+    pub use generated::ParseError;
+    pub use parser::{{parse, parse_bytes, recognize, recognize_bytes}};
+    pub use view::{{{prefix}Document, {prefix}Kind, {prefix}Node}};
+"#
+    )
+}
+
+/// The general-descent `parser.rs` scaffolding, parameterized by the
+/// grammar-derived `{prefix}Document` handle type.
+fn general_descent_parser_rs(prefix: &str) -> String {
+    format!(
+        r#"
+    use super::generated::{{self, ParseError}};
+    use super::view::{prefix}Document;
+
+    /// Recognize the formula directly into the existing offset tape and return
+    /// the lazy tape-backed document (the general recursive-descent analogue of
+    /// JSON's `parse` / CSS's `parse_into_tape`).
+    pub fn parse(input: &str) -> Result<{prefix}Document<'_>, ParseError<'_>> {{
+        generated::parse_into_tape(input)
+    }}
+
+    pub fn parse_bytes(input: &[u8]) -> Result<{prefix}Document<'_>, ParseError<'_>> {{
+        let input = std::str::from_utf8(input)
+            .map_err(|error| ParseError::new(error.valid_up_to(), "invalid UTF-8"))?;
+        parse(input)
+    }}
+
+    /// Recognize-only entry: parse the formula and discard the document.
+    pub fn recognize(input: &str) -> Result<(), ParseError<'_>> {{
+        parse(input).map(|_| ())
+    }}
+
+    pub fn recognize_bytes(input: &[u8]) -> Result<(), ParseError<'_>> {{
+        parse_bytes(input).map(|_| ())
+    }}
+"#
+    )
+}
 
 const CSS_SINK_RS: &str = r#"
     use std::fmt;

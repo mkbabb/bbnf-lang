@@ -20,9 +20,13 @@ pub mod generated_json;
 #[path = "grammars/css_l4_declaration_values/mod.rs"]
 pub mod generated_css_l4_declaration_values;
 
+#[path = "grammars/sheets/mod.rs"]
+pub mod generated_sheets;
+
 pub mod grammars {
     pub use crate::generated_css_l4_declaration_values as css_l4_declaration_values;
     pub use crate::generated_json as json;
+    pub use crate::generated_sheets as sheets;
 }
 
 #[cfg(test)]

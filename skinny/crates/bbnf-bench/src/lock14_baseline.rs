@@ -423,6 +423,14 @@ const GENERATED_HEADER_TOKEN_BASELINE: &[&str] = &[
     "crates/runtime/src/grammars/json/value.rs",
     "crates/runtime/src/grammars/json/view.rs",
     "crates/runtime/src/grammars/json/visitor.rs",
+    // SK-V18 PROVE: the general recursive-descent Sheets runtime — emitted by
+    // `general_descent`, byte-identical regen (`check-sheets`), carries the
+    // generated header like every other grammar's committed runtime output.
+    "crates/runtime/src/grammars/sheets/config.rs",
+    "crates/runtime/src/grammars/sheets/generated.rs",
+    "crates/runtime/src/grammars/sheets/mod.rs",
+    "crates/runtime/src/grammars/sheets/parser.rs",
+    "crates/runtime/src/grammars/sheets/view.rs",
 ];
 
 const GENERATED_HEADER_RECOGNIZED_EMISSION_ROSTER: &[&str] = &[
@@ -1276,6 +1284,7 @@ const SK_V18_WPRUNE_P1_X86_OWNER_PATHS: &[&str] = &[
 const SK_V18_G1_G2_EMITTER_OWNER_PATHS: &[&str] = &[
     "crates/codegen/src/json_sink_direct/",
     "crates/codegen/src/css_scan_direct/",
+    "crates/codegen/src/general_descent/",
     "crates/codegen/src/lower/css_scan.rs",
     "crates/codegen/src/lower/mod.rs",
     "crates/codegen/src/lib.rs",

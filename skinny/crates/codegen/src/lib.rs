@@ -1,5 +1,6 @@
 pub mod css_scan_direct;
 pub mod direct_schema;
+pub(crate) mod general_descent;
 mod grammar_profile;
 pub mod grammar_provider;
 mod json_sink_direct;

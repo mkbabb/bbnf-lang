@@ -39,6 +39,8 @@ fn main() -> Result<()> {
     match command.as_str() {
         "regen-json" => regen_json(&root),
         "check-json" => check_json(&root),
+        "regen-sheets" => regen_sheets(&root),
+        "check-sheets" => check_sheets(&root),
         "regen-css" => regen_css::regen_css(&root),
         "check-css-l4-declaration-values" => regen_css::check_declaration_values(&root),
         "regen-real-typed" => regen_real_typed(&root),
@@ -185,6 +187,42 @@ const JSON_TARGET: regen::RuntimeTarget = regen::RuntimeTarget {
     frontend_requirements: codegen::RuntimeFrontendRequirements::none(),
     output_labels: None,
 };
+
+const SHEETS_SOURCES: &[&str] = &["grammar/google-sheets/google-sheets.bbnf"];
+const SHEETS_ROOTS: &[&str] = &["grammar/google-sheets/google-sheets.bbnf"];
+const GENERAL_DESCENT_RUNTIME_FILES: &[&str] = &[
+    "config.rs",
+    "generated.rs",
+    "mod.rs",
+    "parser.rs",
+    "view.rs",
+];
+const SHEETS_TARGET: regen::RuntimeTarget = regen::RuntimeTarget {
+    grammar_name: "google_sheets",
+    profile: "google_sheets",
+    entry_rule: "formula",
+    source_roots: SHEETS_ROOTS,
+    output_dir: "crates/runtime/src/grammars/sheets",
+    check_command: "check-sheets",
+    source_inputs: SHEETS_SOURCES,
+    metadata_inputs: WORKSPACE_METADATA,
+    expected_files: GENERAL_DESCENT_RUNTIME_FILES,
+    frontend_requirements: codegen::RuntimeFrontendRequirements::none(),
+    output_labels: None,
+};
+
+fn regen_sheets(root: &Path) -> Result<()> {
+    let emitted = codegen::emit_runtime_from_request(regen::runtime_request(root, &SHEETS_TARGET)?)?;
+    emitted.write_to_dir(root.join("crates/runtime/src/grammars/sheets"))?;
+    Ok(())
+}
+
+fn check_sheets(root: &Path) -> Result<()> {
+    let emitted = codegen::emit_runtime_from_request(regen::runtime_request(root, &SHEETS_TARGET)?)?;
+    emitted
+        .check_dir(root.join("crates/runtime/src/grammars/sheets"))
+        .context("generated Sheets runtime is stale; run `cargo xtask regen-sheets`")
+}
 
 fn regen_json(root: &Path) -> Result<()> {
     let emitted = codegen::emit_runtime_from_request(regen::runtime_request(root, &JSON_TARGET)?)?;

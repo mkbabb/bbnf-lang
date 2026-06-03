@@ -1283,6 +1283,17 @@ const SK_V18_G1_G2_EMITTER_OWNER_PATHS: &[&str] = &[
     "crates/codegen/src/grammar_provider.rs",
     "crates/codegen/src/grammar_profile.rs",
     "crates/codegen/src/json_templates/",
+    // SK-V18 PROVE: the Sheets negative control extends the grammar FRONTEND
+    // (parse-and-record the `->`/`?w`/`,`/`<<` operators + `@pretty`/`@ws`
+    // directives so a precedence-tower grammar reaches the lowering) and adds a
+    // general recursive-descent emitter. These three generic-crate surfaces are
+    // the authorized PROVE frontend owner set; the changes are purely ADDITIVE
+    // (new `ExprKind::Project`/`Discard`, a relaxed nullable-repeat validator),
+    // so the JSON/CSS grammars — which use none of these constructs — stay
+    // byte-identical (the `check-json`/`check-css` regen gates enforce it).
+    "crates/grammar/src/",
+    "crates/ir/src/",
+    "crates/passes/src/",
     "crates/runtime/src/runtime_scan.rs",
     "crates/runtime/src/runtime_simd.rs",
     "crates/runtime/src/lib.rs",
@@ -1290,6 +1301,7 @@ const SK_V18_G1_G2_EMITTER_OWNER_PATHS: &[&str] = &[
     "crates/runtime/src/grammars/json/",
     "crates/runtime/src/grammars/css_l4_declaration_values/",
     "crates/runtime/src/grammars/sheets_witness/",
+    "crates/runtime/src/grammars/sheets/",
     "crates/bbnf-simd/src/",
     "xtask/src/main.rs",
     "crates/bbnf-bench/src/lock14_baseline.rs",

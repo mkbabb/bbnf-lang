@@ -15,8 +15,10 @@
 //!    tape offset; payload blob is empty.
 //!
 //! These are rule-level patterns: the miner walks each rule body (not
-//! per-node), checking the rule name and body structure. The templates
-//! feed into `GrammarProfile::shape_dict` for the emitter to lower.
+//! per-node), recognizing the shape purely STRUCTURALLY — by the body's
+//! structure and its defining concrete-syntax literals (the block-comment
+//! delimiters `/*`/`*/`, the map arrow `->`), never by the rule name. The
+//! templates feed into `GrammarProfile::shape_dict` for the emitter to lower.
 
 use std::hash::{Hash, Hasher};
 
@@ -73,31 +75,25 @@ pub enum BbnfShapeKind {
 pub fn mine_bbnf_shape_templates(ir: &GrammarIR) -> Vec<BbnfShapeTemplate> {
     let mut templates = Vec::new();
 
+    // Recognition is purely STRUCTURAL: a rule earns a template when its
+    // body matches the (tightened) shape — keyed on the defining
+    // concrete-syntax literals (block-comment delimiters / the map arrow),
+    // not on the rule name. The rule name is recorded as data only.
     for rule in &ir.rules {
-        let rule_name = ir.get_string(rule.name);
-
-        match rule_name {
-            "big_comment" => {
-                if is_big_comment_shape(&rule.body) {
-                    templates.push(BbnfShapeTemplate {
-                        rule_name: "big_comment".to_string(),
-                        kind: BbnfShapeKind::BigComment,
-                        shape_hash: compute_bbnf_shape_hash(BbnfShapeKind::BigComment),
-                        payload_bytes: 8, // u32 lo + u32 hi
-                    });
-                }
-            }
-            "mapped_factor" => {
-                if is_mapped_factor_empty_shape(&rule.body) {
-                    templates.push(BbnfShapeTemplate {
-                        rule_name: "mapped_factor".to_string(),
-                        kind: BbnfShapeKind::MappedFactorEmpty,
-                        shape_hash: compute_bbnf_shape_hash(BbnfShapeKind::MappedFactorEmpty),
-                        payload_bytes: 0, // empty payload
-                    });
-                }
-            }
-            _ => {}
+        if is_big_comment_shape(ir, &rule.body) {
+            templates.push(BbnfShapeTemplate {
+                rule_name: ir.get_string(rule.name).to_string(),
+                kind: BbnfShapeKind::BigComment,
+                shape_hash: compute_bbnf_shape_hash(BbnfShapeKind::BigComment),
+                payload_bytes: 8, // u32 lo + u32 hi
+            });
+        } else if is_mapped_factor_empty_shape(ir, &rule.body) {
+            templates.push(BbnfShapeTemplate {
+                rule_name: ir.get_string(rule.name).to_string(),
+                kind: BbnfShapeKind::MappedFactorEmpty,
+                shape_hash: compute_bbnf_shape_hash(BbnfShapeKind::MappedFactorEmpty),
+                payload_bytes: 0, // empty payload
+            });
         }
     }
 
@@ -111,21 +107,25 @@ pub fn mine_bbnf_shape_templates(ir: &GrammarIR) -> Vec<BbnfShapeTemplate> {
 /// ```
 ///
 /// In the IR this is a Seq of three literals-and-regex wrapped in a
-/// whitespace modifier, with a `-> Span` map. The structural shape
-/// is fixed: literal("/*"), regex(body), literal("*/").
-fn is_big_comment_shape(body: &IrNode) -> bool {
+/// whitespace modifier, with a `-> Span` map. The structural shape is
+/// fixed AND keyed on the defining concrete-syntax delimiters:
+/// literal("/*"), regex(body), literal("*/"). The `/*` and `*/` tokens
+/// are grammar-neutral block-comment syntax — not rule-name tokens — so
+/// matching on them keeps recognition structural while preventing any
+/// generic `Seq[literal, regex, literal]` from false-matching.
+fn is_big_comment_shape(ir: &GrammarIR, body: &IrNode) -> bool {
     // The body may be wrapped in Map (for `-> Span`) and/or
     // OptionalWhitespace (for `?w`). Peel all transparent layers.
     let inner = peel_transparent(body);
 
     match inner {
         IrNode::Seq(children) if children.len() == 3 => {
-            // Child 0: literal "/*"
+            // Child 0: literal "/*"  (the opening delimiter)
             // Child 1: regex (the body scanner)
-            // Child 2: literal "*/"
-            is_literal(children.first().unwrap())
+            // Child 2: literal "*/"  (the closing delimiter)
+            is_literal_value(ir, children.first().unwrap(), "/*")
                 && is_regex(children.get(1).unwrap())
-                && is_literal(children.get(2).unwrap())
+                && is_literal_value(ir, children.get(2).unwrap(), "*/")
         }
         _ => false,
     }
@@ -137,23 +137,44 @@ fn is_big_comment_shape(body: &IrNode) -> bool {
 /// mapped_factor = factor , ( "->" ?w , ( value_expr , type_annotation ? ) ) ? ;
 /// ```
 ///
-/// In the IR this is Seq([ Ref(factor), Repeat(inner, 0, 1) ]).
-/// The empty-branch template fires when the Repeat(0,1) body contains
-/// a leading literal "->".
-fn is_mapped_factor_empty_shape(body: &IrNode) -> bool {
+/// In the IR this is Seq([ Ref(factor), Repeat { inner, lo: 0, hi: 1 } ]).
+/// The empty-branch template fires when the Repeat(0,1) body LEADS with
+/// the map-arrow literal "->". The arrow is grammar-neutral map syntax —
+/// not a rule-name token — so keying on it keeps recognition structural
+/// while preventing a generic `Seq[Ref, Repeat(0,1)]` (any optional
+/// suffix) from false-matching.
+fn is_mapped_factor_empty_shape(ir: &GrammarIR, body: &IrNode) -> bool {
     let inner = peel_transparent(body);
     match inner {
         IrNode::Seq(children) if children.len() == 2 => {
             // Child 0: Ref to factor (possibly wrapped in OptionalWhitespace)
             let has_factor_ref = matches!(peel_transparent(&children[0]), IrNode::Ref(_));
-            // Child 1: Repeat(inner, 0, 1) — the optional `-> ...` branch
-            let has_optional_map = matches!(
-                peel_transparent(&children[1]),
-                IrNode::Repeat { lo: 0, hi: 1, .. }
-            );
+            // Child 1: Repeat { lo: 0, hi: 1, inner } — the optional `-> ...`
+            // branch, whose body must lead with the map-arrow literal.
+            let has_optional_map = match peel_transparent(&children[1]) {
+                IrNode::Repeat {
+                    inner,
+                    lo: 0,
+                    hi: 1,
+                } => repeat_body_leads_with_arrow(ir, inner),
+                _ => false,
+            };
             has_factor_ref && has_optional_map
         }
         _ => false,
+    }
+}
+
+/// True when the `Repeat(0,1)` body's first matched element is the
+/// map-arrow literal `->`. The body is either the arrow literal directly
+/// or a `Seq` whose first child is the arrow literal (after peeling
+/// transparent wrappers).
+fn repeat_body_leads_with_arrow(ir: &GrammarIR, body: &IrNode) -> bool {
+    match peel_transparent(body) {
+        IrNode::Seq(children) => children
+            .first()
+            .is_some_and(|first| is_literal_value(ir, first, "->")),
+        other => is_literal_value(ir, other, "->"),
     }
 }
 
@@ -168,8 +189,12 @@ fn peel_transparent(node: &IrNode) -> &IrNode {
     }
 }
 
-fn is_literal(node: &IrNode) -> bool {
-    matches!(peel_transparent(node), IrNode::Literal(_))
+/// True when `node` peels to a `Literal` whose interned string equals
+/// `expected`. This is the structural key that ties a shape to its
+/// defining concrete-syntax token (e.g. `/*`, `*/`, `->`) without
+/// referencing any grammar rule name.
+fn is_literal_value(ir: &GrammarIR, node: &IrNode, expected: &str) -> bool {
+    matches!(peel_transparent(node), IrNode::Literal(sid) if ir.get_string(*sid) == expected)
 }
 
 fn is_regex(node: &IrNode) -> bool {

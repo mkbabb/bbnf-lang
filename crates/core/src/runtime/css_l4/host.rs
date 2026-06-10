@@ -1,16 +1,13 @@
 //! Host shims for the CSS L4 grammar's `-> parse_hex_color(...)` map.
 //!
-//! The CSS L4 grammar references `crate::css_types::parse_hex_color`
-//! from its `hex` rule's map annotation (`grammar/css/l4/color.bbnf`).
-//! Pre-B2 the symbol resolved through each test crate's `mod common;
-//! pub use common::css_types;` indirection because the generated
-//! parser code lived inside the test crate (under `the proc-macro derive (retired B2)`
-//! expansion). Post-B2.W1 the generated source lives at
-//! `crates/core/src/grammar/generated/css_l4.rs`; `crate::css_types`
-//! now resolves to the bbnf library crate root, so the shim moves
-//! here next to the grammar that references it. Tests no longer
-//! shadow this module; they reach the host function via
-//! `bbnf::css_types::parse_hex_color` if needed.
+//! The CSS L4 grammar references this host function from its `hex`
+//! rule's map annotation (`grammar/css/l4/color.bbnf`). The shim lives
+//! here, next to the CSS L4 runtime that consumes it
+//! (`crate::runtime::css_l4::builder`), rather than in the generic
+//! crate root — the generic substrate carries zero grammar-specific
+//! code (Lock 14). The generated `builder.rs` references
+//! `crate::runtime::css_l4::host::parse_hex_color`; the emitter
+//! (`xtask/src/regen_css.rs`) splices that path.
 //!
 //! Single source of truth (per feedback_no_workarounds): one host
 //! shim, one resolution path, no test-side duplicate copies.

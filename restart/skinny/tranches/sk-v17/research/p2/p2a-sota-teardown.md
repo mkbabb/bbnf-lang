@@ -1,6 +1,6 @@
 # SK-V17 P2-A: SOTA Comparator Teardown
 
-Pass: S-P2 Research. Cycle: V2.
+Pass: S-P2 Research. Cycle: V3.
 Date: 2026-05-29.
 Scope: Architecture teardown of the SOTA parsers (asmjson / sonic-rs / simdjson / yyjson) on the JSON plane and the CSS comparators (lightningcss / cssparser) on the benched plane. For each: structural-classification strategy, number/string fast paths, tape/DOM/on-demand output plane, and the strict-vs-strict comparator discipline (§8.1). Name precisely what each does that bbnf does not — keyed to the S-P1 hot leaves. SELECTS nothing; grounds the candidate pool.
 Output: this file.

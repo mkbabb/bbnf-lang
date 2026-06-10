@@ -23,6 +23,13 @@ egraph-derive = { path = "../egraph-derive" }
 # and `crate::rewrites::RuleSet::{load_from_ron, save_to_ron}`.
 ron = "0.12"
 
+# SK-V19.W6a — `build.rs` reads `[workspace.metadata.bbnf-strategy]`
+# from the workspace Cargo.toml and emits `PRODUCTION_MANIFEST_TABLE`
+# into `$OUT_DIR`. The grammar-named rows are workspace metadata, not a
+# const in this generic crate (Lock 14).
+[build-dependencies]
+toml = "0.8"
+
 # Dev-only deps for the permanent substrate-audit test
 # (`crates/ir/tests/substrate_audit.rs`, AZ-IV.W5.4 / Hard Gate 13).
 # `cargo_metadata` resolves workspace member paths once and feeds the

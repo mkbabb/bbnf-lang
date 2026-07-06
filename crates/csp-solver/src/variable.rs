@@ -58,19 +58,40 @@ impl<D: Domain> Variable<D> {
         self.domain = domain;
     }
 
+    /// Drop the undo log without touching the working domain.
+    ///
+    /// Used by the restart driver to bake a post-propagation "baseline"
+    /// domain in place: the reductions already applied to `domain` are kept,
+    /// but their depth-tagged log entries are discarded so subsequent
+    /// `restore()` calls at any search depth cannot un-prune them. This is
+    /// the seam fix that stops a depth-0 backtrack from silently undoing
+    /// `solve_with_given`'s initial AC-3.
+    pub fn clear_log(&mut self) {
+        self.pruned.clear();
+    }
+
+    /// Reset the working domain to `domain` and clear the undo log.
+    ///
+    /// The restart driver calls this to return every variable to the shared
+    /// post-initial-propagation baseline before re-descending.
+    pub fn reset_to(&mut self, domain: D) {
+        self.domain = domain;
+        self.pruned.clear();
+    }
+
     /// Restrict domain to a single value, recording all other removals at `depth`.
     /// This is the fast path for backtracking assignment — avoids collecting
     /// domain values into a Vec just to prune them.
+    ///
+    /// Delegates the actual domain mutation to `Domain::restrict_to`, which
+    /// for `BitsetDomain` clears every bit but `val`'s in one bitwise AND
+    /// (O(1)) instead of this method's previous per-value iterate-and-remove
+    /// loop (O(domain size) bit ops, on top of the `Vec` collect it used to
+    /// allocate). This method's own job shrinks to what only it can do:
+    /// recording each removed value on the depth-keyed undo log.
     pub fn restrict_to(&mut self, val: &D::Value, depth: usize) {
-        // Snapshot current values, then prune non-matching.
-        // For BitsetDomain (u128), values() is just bit iteration — cheap.
-        // The undo log records each removal for restore(depth).
-        let vals: Vec<_> = self.domain.iter().collect();
-        for v in &vals {
-            if v != val {
-                self.domain.remove(v);
-                self.pruned.push((depth, v.clone()));
-            }
+        for v in self.domain.restrict_to(val) {
+            self.pruned.push((depth, v));
         }
     }
 }

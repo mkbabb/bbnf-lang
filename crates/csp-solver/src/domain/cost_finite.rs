@@ -135,7 +135,7 @@ impl Domain for CostFiniteDomain {
         self.inner.values()
     }
 
-    fn iter(&self) -> impl Iterator<Item = i32> {
+    fn iter(&self) -> impl Iterator<Item = i32> + use<> {
         self.inner.iter()
     }
 }

@@ -24,7 +24,7 @@ pub fn propagate_monotonic<D: Domain>(
     stats: &mut SolveStats,
 ) -> Result<(), Unsatisfiable>
 where
-    D::Value: PartialEq,
+    D::Value: PartialEq + 'static,
 {
     loop {
         let mut changed = false;
@@ -64,7 +64,7 @@ pub fn propagate_stratified<D: Domain>(
     stats: &mut SolveStats,
 ) -> Result<(), Unsatisfiable>
 where
-    D::Value: PartialEq,
+    D::Value: PartialEq + 'static,
 {
     let mut i = 0;
     while i < scc_order.len() {

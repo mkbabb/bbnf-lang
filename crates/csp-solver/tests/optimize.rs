@@ -1,80 +1,22 @@
 //! Tests for branch-and-bound optimization (CostDomain + SoftConstraint).
 
 use csp_solver::constraint::SoftLambdaConstraint;
+use csp_solver::domain::CostFiniteDomain;
 use csp_solver::domain::finite::FiniteDomain;
-use csp_solver::domain::traits::{CostDomain, Domain};
+use csp_solver::domain::traits::Domain;
 use csp_solver::ordering::Ordering;
 use csp_solver::{Csp, OptimizationMode, Pruning, SolveConfig};
 
 // ---------------------------------------------------------------------------
-// A domain with per-value costs: wraps (value, cost) pairs.
-// Uses a separate cost map so that costs survive remove/add cycles.
+// R10: this file used to hand-roll its own `CostFiniteDomain`, duplicating
+// the production `csp_solver::domain::CostFiniteDomain`. That duplicate was
+// excised; the tests now exercise the real type. Its constructor takes
+// parallel `values` / `costs` slices, so this shim keeps the per-test cost
+// tables readable as `(value, cost)` literals.
 // ---------------------------------------------------------------------------
-#[derive(Debug, Clone, PartialEq)]
-struct CostFiniteDomain {
-    /// Currently-active values.
-    active: Vec<i32>,
-    /// Immutable cost table: maps value -> cost.
-    costs: Vec<(i32, f64)>,
-}
-
-impl CostFiniteDomain {
-    fn new(entries: Vec<(i32, f64)>) -> Self {
-        let active = entries.iter().map(|(v, _)| *v).collect();
-        Self {
-            active,
-            costs: entries,
-        }
-    }
-
-    fn cost_of(&self, val: &i32) -> f64 {
-        self.costs
-            .iter()
-            .find(|(v, _)| v == val)
-            .map(|(_, c)| *c)
-            .unwrap_or(0.0)
-    }
-}
-
-impl Domain for CostFiniteDomain {
-    type Value = i32;
-
-    fn size(&self) -> usize {
-        self.active.len()
-    }
-
-    fn contains(&self, val: &i32) -> bool {
-        self.active.contains(val)
-    }
-
-    fn remove(&mut self, val: &i32) -> bool {
-        if let Some(pos) = self.active.iter().position(|v| v == val) {
-            self.active.swap_remove(pos);
-            true
-        } else {
-            false
-        }
-    }
-
-    fn add(&mut self, val: &i32) {
-        if !self.active.contains(val) {
-            self.active.push(*val);
-        }
-    }
-
-    fn values(&self) -> Vec<i32> {
-        self.active.clone()
-    }
-
-    fn iter(&self) -> impl Iterator<Item = i32> {
-        self.active.clone().into_iter()
-    }
-}
-
-impl CostDomain for CostFiniteDomain {
-    fn cost(&self, val: &i32) -> f64 {
-        self.cost_of(val)
-    }
+fn cost_domain(entries: Vec<(i32, f64)>) -> CostFiniteDomain {
+    let (values, costs): (Vec<i32>, Vec<f64>) = entries.into_iter().unzip();
+    CostFiniteDomain::new(values, costs)
 }
 
 // ---------------------------------------------------------------------------
@@ -85,7 +27,7 @@ impl CostDomain for CostFiniteDomain {
 #[test]
 fn test_single_var_minimize() {
     let mut csp = Csp::new();
-    let domain = CostFiniteDomain::new(vec![(1, 10.0), (2, 5.0), (3, 20.0)]);
+    let domain = cost_domain(vec![(1, 10.0), (2, 5.0), (3, 20.0)]);
     let _x = csp.add_variable(domain);
     csp.finalize();
 
@@ -107,7 +49,7 @@ fn test_single_var_minimize() {
 #[test]
 fn test_single_var_maximize() {
     let mut csp = Csp::new();
-    let domain = CostFiniteDomain::new(vec![(1, 10.0), (2, 5.0), (3, 20.0)]);
+    let domain = cost_domain(vec![(1, 10.0), (2, 5.0), (3, 20.0)]);
     let _x = csp.add_variable(domain);
     csp.finalize();
 
@@ -133,7 +75,7 @@ fn test_two_vars_not_equal_minimize() {
     // y: {A(cost=1), B(cost=5)}
     // x != y
     // Optimal: x=A(1), y=B(5) or x=B(5), y=A(1) -> total 6
-    let domain = CostFiniteDomain::new(vec![(0, 1.0), (1, 5.0)]);
+    let domain = cost_domain(vec![(0, 1.0), (1, 5.0)]);
     let x = csp.add_variable(domain.clone());
     let y = csp.add_variable(domain);
     csp.add_not_equal(x, y);
@@ -170,9 +112,9 @@ fn test_three_vars_minimize_with_constraints() {
     // (2,3,1): 1+2+7  = 10
     // (3,1,2): 5+3+4  = 12
     // (3,2,1): 5+8+7  = 20
-    let dx = CostFiniteDomain::new(vec![(1, 10.0), (2, 1.0), (3, 5.0)]);
-    let dy = CostFiniteDomain::new(vec![(1, 3.0), (2, 8.0), (3, 2.0)]);
-    let dz = CostFiniteDomain::new(vec![(1, 7.0), (2, 4.0), (3, 1.0)]);
+    let dx = cost_domain(vec![(1, 10.0), (2, 1.0), (3, 5.0)]);
+    let dy = cost_domain(vec![(1, 3.0), (2, 8.0), (3, 2.0)]);
+    let dz = cost_domain(vec![(1, 7.0), (2, 4.0), (3, 1.0)]);
 
     let x = csp.add_variable(dx);
     let y = csp.add_variable(dy);
@@ -199,9 +141,9 @@ fn test_three_vars_minimize_with_constraints() {
 #[test]
 fn test_three_vars_maximize() {
     let mut csp = Csp::new();
-    let dx = CostFiniteDomain::new(vec![(1, 10.0), (2, 1.0), (3, 5.0)]);
-    let dy = CostFiniteDomain::new(vec![(1, 3.0), (2, 8.0), (3, 2.0)]);
-    let dz = CostFiniteDomain::new(vec![(1, 7.0), (2, 4.0), (3, 1.0)]);
+    let dx = cost_domain(vec![(1, 10.0), (2, 1.0), (3, 5.0)]);
+    let dy = cost_domain(vec![(1, 3.0), (2, 8.0), (3, 2.0)]);
+    let dz = cost_domain(vec![(1, 7.0), (2, 4.0), (3, 1.0)]);
 
     let x = csp.add_variable(dx);
     let y = csp.add_variable(dy);
@@ -320,8 +262,8 @@ fn test_cost_domain_plus_soft_constraints() {
     let mut csp = Csp::new();
     // x in {0(cost=1), 1(cost=3)}
     // y in {0(cost=2), 1(cost=1)}
-    let dx = CostFiniteDomain::new(vec![(0, 1.0), (1, 3.0)]);
-    let dy = CostFiniteDomain::new(vec![(0, 2.0), (1, 1.0)]);
+    let dx = cost_domain(vec![(0, 1.0), (1, 3.0)]);
+    let dy = cost_domain(vec![(0, 2.0), (1, 1.0)]);
     let x = csp.add_variable(dx);
     let y = csp.add_variable(dy);
 
@@ -358,7 +300,7 @@ fn test_cost_domain_plus_soft_constraints() {
 #[test]
 fn test_feasibility_ignores_cost() {
     let mut csp = Csp::new();
-    let domain = CostFiniteDomain::new(vec![(1, 100.0), (2, 0.0)]);
+    let domain = cost_domain(vec![(1, 100.0), (2, 0.0)]);
     let _x = csp.add_variable(domain);
     csp.finalize();
 
@@ -383,10 +325,10 @@ fn test_branch_and_bound_pruning() {
     let mut csp = Csp::new();
     // 4 variables, each with 3 values.
     // Costs are arranged so that the minimum is obvious from the first variable.
-    let d0 = CostFiniteDomain::new(vec![(0, 0.0), (1, 100.0), (2, 200.0)]);
-    let d1 = CostFiniteDomain::new(vec![(0, 0.0), (1, 100.0), (2, 200.0)]);
-    let d2 = CostFiniteDomain::new(vec![(0, 0.0), (1, 100.0), (2, 200.0)]);
-    let d3 = CostFiniteDomain::new(vec![(0, 0.0), (1, 100.0), (2, 200.0)]);
+    let d0 = cost_domain(vec![(0, 0.0), (1, 100.0), (2, 200.0)]);
+    let d1 = cost_domain(vec![(0, 0.0), (1, 100.0), (2, 200.0)]);
+    let d2 = cost_domain(vec![(0, 0.0), (1, 100.0), (2, 200.0)]);
+    let d3 = cost_domain(vec![(0, 0.0), (1, 100.0), (2, 200.0)]);
 
     let _v0 = csp.add_variable(d0);
     let _v1 = csp.add_variable(d1);
@@ -412,7 +354,7 @@ fn test_branch_and_bound_pruning() {
 #[test]
 fn test_multiple_solutions_sorted() {
     let mut csp = Csp::new();
-    let domain = CostFiniteDomain::new(vec![(1, 10.0), (2, 5.0), (3, 1.0)]);
+    let domain = cost_domain(vec![(1, 10.0), (2, 5.0), (3, 1.0)]);
     let _x = csp.add_variable(domain);
     csp.finalize();
 
@@ -501,7 +443,7 @@ fn test_node_budget_aborts_long_search() {
     let mut csp = Csp::new();
     // 30 variables × 5 values — the search tree is 5^30 ≈ 9.3e20.
     // We set a 100-node budget so the abort fires within milliseconds.
-    let domain = CostFiniteDomain::new(vec![(1, 10.0), (2, 5.0), (3, 20.0), (4, 1.0), (5, 15.0)]);
+    let domain = cost_domain(vec![(1, 10.0), (2, 5.0), (3, 20.0), (4, 1.0), (5, 15.0)]);
     let vars: Vec<_> = (0..30).map(|_| csp.add_variable(domain.clone())).collect();
     // A soft constraint per pair to force the search to enumerate
     // (the branch-and-bound would otherwise pick the lowest-cost
@@ -549,7 +491,7 @@ fn test_node_budget_aborts_long_search() {
 #[test]
 fn test_node_budget_does_not_fire_for_small_search() {
     let mut csp = Csp::new();
-    let domain = CostFiniteDomain::new(vec![(1, 10.0), (2, 5.0), (3, 20.0)]);
+    let domain = cost_domain(vec![(1, 10.0), (2, 5.0), (3, 20.0)]);
     let _x = csp.add_variable(domain);
     csp.finalize();
 

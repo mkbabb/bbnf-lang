@@ -113,7 +113,6 @@ pub fn solve_futoshiki(puzzle: &FutoshikiPuzzle) -> Vec<Vec<u32>> {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: usize::MAX,
-        backjumping: false,
         ..Default::default()
     };
     csp.solve(&config)

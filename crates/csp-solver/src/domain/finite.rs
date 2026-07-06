@@ -49,7 +49,7 @@ impl<T: Clone + PartialEq + std::fmt::Debug> Domain for FiniteDomain<T> {
         self.values.clone()
     }
 
-    fn iter(&self) -> impl Iterator<Item = T> {
+    fn iter(&self) -> impl Iterator<Item = T> + use<T> {
         self.values.clone().into_iter()
     }
 }

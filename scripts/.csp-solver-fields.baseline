@@ -1,0 +1,14 @@
+SolveConfig:
+cancel
+max_solutions
+node_budget
+optimization_mode
+ordering
+pruning
+restarts
+SolveStats:
+backtracks
+budget_exceeded
+cancelled
+nodes_explored
+propagations

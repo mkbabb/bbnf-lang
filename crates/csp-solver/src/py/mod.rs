@@ -33,12 +33,16 @@ mod config;
 mod csp;
 mod enums;
 pub mod errors;
+mod futoshiki_api;
 mod sudoku_api;
 
 pub use config::{CancelToken, SolveConfig, SolveStats};
 pub use csp::Csp;
 pub use enums::{Ordering, PropagationStrategy, Pruning};
 pub use errors::{BudgetExceededError, CspTimeoutError, InvalidInputError, UnsatisfiableError};
+pub use futoshiki_api::{
+    FutoshikiBoard, FutoshikiCSP, create_futoshiki_csp, create_random_futoshiki, solve_futoshiki,
+};
 pub use sudoku_api::{
     SudokuCSP, SudokuDifficulty, create_random_board, create_sudoku_csp, solve_sudoku,
     solve_sudoku_board, template_count,
@@ -62,6 +66,12 @@ pub fn csp_solver(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(solve_sudoku_board, m)?)?;
     m.add_function(wrap_pyfunction!(create_random_board, m)?)?;
     m.add_function(wrap_pyfunction!(template_count, m)?)?;
+    // Futoshiki
+    m.add_class::<FutoshikiCSP>()?;
+    m.add_class::<FutoshikiBoard>()?;
+    m.add_function(wrap_pyfunction!(create_futoshiki_csp, m)?)?;
+    m.add_function(wrap_pyfunction!(solve_futoshiki, m)?)?;
+    m.add_function(wrap_pyfunction!(create_random_futoshiki, m)?)?;
     // Typed exceptions — `from csp_solver import UnsatisfiableError, ...`
     m.add(
         "UnsatisfiableError",

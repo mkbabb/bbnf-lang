@@ -84,10 +84,14 @@ pub struct SolveConfig {
 }
 
 impl Default for SolveConfig {
+    /// Ac3 + FailFirst (Pass-2 D6, ratified; ships in 0.2.0): the production
+    /// posture every measured surface converged on. Coordination-gated with
+    /// bbnf-lang's two live `finalize()+solve_optimized()` consumers via the
+    /// enforced-compile sync gate (`sync-csp-solver-vendor.sh --verify`).
     fn default() -> Self {
         Self {
-            pruning: Pruning::ForwardChecking,
-            ordering: Ordering::Chronological,
+            pruning: Pruning::Ac3,
+            ordering: Ordering::FailFirst,
             max_solutions: 1,
             restarts: false,
             optimization_mode: OptimizationMode::Feasibility,

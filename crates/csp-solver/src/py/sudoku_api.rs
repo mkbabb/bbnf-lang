@@ -279,10 +279,10 @@ pub fn create_random_board(
                 .map(|t| {
                     let mut flat = vec![0u32; total];
                     for (k, v) in t {
-                        if let Ok(pos) = k.parse::<usize>() {
-                            if pos < total {
-                                flat[pos] = *v as u32;
-                            }
+                        if let Ok(pos) = k.parse::<usize>()
+                            && pos < total
+                        {
+                            flat[pos] = *v as u32;
                         }
                     }
                     flat
@@ -328,9 +328,6 @@ pub fn create_random_board(
 /// parsing any template file.
 #[pyfunction]
 #[pyo3(signature = (N, difficulty=SudokuDifficulty::EASY))]
-pub fn template_count(
-    #[allow(non_snake_case)] N: u32,
-    difficulty: SudokuDifficulty,
-) -> usize {
+pub fn template_count(#[allow(non_snake_case)] N: u32, difficulty: SudokuDifficulty) -> usize {
     sudoku::embedded_template_count(N, difficulty.into())
 }

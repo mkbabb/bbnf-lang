@@ -6,11 +6,12 @@ Evidence base: pass-0 reports `research/01-32`, gap-fills `research/34-37`, adve
 by 30/31 (13/14 historical and 13/15 now-state claims CONFIRMED; two corrections consumed below).
 This draft amends the SK-V20 TW0-TW6 manifest wave by wave; where it supersedes, it says so and why.
 
-One accounting note carried openly: the pass-0 numbering reserves a slot for a standalone
-profiling-truth report (33); no such file exists on disk. The profiling truth of record is report 21
-(`21-restart-lacuna-profiling.md`), and its own disclosed limits (loadavg 8.97-10.66, JSON measured
-warm, no samply flame — 21:9-29) are inherited as limits here: every performance ranking in this
-draft is DIRECTIONAL until the TW0 quiet re-capture runs (32 Part IV, U1).
+Accounting note, updated at pass-1 close: report 33 (`33-cold-truth-profiling.md`) now EXISTS on
+disk — the recovered cold-per-parse JSON+CSS capture (json_canon_bench, N=200, loadavg 8.3-10.2).
+It joins report 21 as the profiling truth of record and supersedes 21's warm JSON numbers. Both
+captures ran above the charter's loadavg<2: every performance ranking in this draft remains
+DIRECTIONAL until the TW0 quiet re-capture runs (32 Part IV, U1). Where PROTO-P2's private harness
+(loadavg 16-17) and report 33 (loadavg 8-10) disagree, the quieter capture governs (CRIT-P2-v2).
 
 ---
 
@@ -20,8 +21,10 @@ A fully generalized parser generator that bests every SOTA parser for its target
 languages, by: (1) backend-agnostic core, zero grammar-specific code in generic crates; (2) a
 specializing emitter in the dav1d discipline — reference Rust, cost-model-selected grammar-agnostic
 aarch64 kernels, checkasm bound to liveness — with the honest asm bound now quantified: hand asm
-buys 0-5% over well-shaped intrinsics on Apple silicon except at register-pressure failures
-(25:263-271); (3) full type resolution — a genuine rank-1 HM core over the two open-ended surfaces,
+buys 0-5% over well-shaped intrinsics on Apple silicon generally, except at register-pressure
+failures AND at instruction-selection misses the intrinsic cannot survive — P5 measured one such
+exception on our own classify kernel (~10%, DIRECTIONAL, loadavg 17-21; static op-count 40 vs 32
+is the load-independent witness) (25:263-271; P5); (3) full type resolution — a genuine rank-1 HM core over the two open-ended surfaces,
 structural projection for the rest (28 §6); (4) a first-class Value API — lazy + eager over ONE
 tape, one grammar-derived path alphabet, every comparison asymmetry disclosed at the claim site.
 NO workarounds, NO stubs, NO legacy code; aarch64/Apple-M only; cold benchmarks only; ONE codegen
@@ -42,10 +45,14 @@ every emitted decision variant that fails to compile until each variant has an o
 
 **The cure, as standing law for SK-V21:**
 
-1. Every wave closes on a **consumer-invariant runtime gate in `crates/`** — never on a document,
-   never on a source grep. The gate template is Y.13's: exhaustive over the wave's emitted decision
-   surface (kernel selection, tape-layout shape, value-plane variant), plus runtime evidence of
-   activation (bench delta, `cargo expand` witness, or samply attribution — 07 §5.3).
+1. Every **substrate/kernel/value wave (TW1-TW4)** closes on a **consumer-invariant runtime gate in
+   `crates/`** — never on a document, never on a source grep. The gate template is Y.13's: exhaustive
+   over the wave's emitted decision surface (kernel selection, tape-layout shape, value-plane
+   variant), plus runtime evidence of activation — and, per P1's lesson, liveness alone is
+   INSUFFICIENT: the gate is liveness AND a measured ≥3% win (a scan proven live under `cargo expand`
+   still lost). Hygiene/stack/type waves (TW0, TW-S, TW5, TW6) close on their own named gate class
+   (build+bench parity, oracle green, falsifier-fires); structural LOCKS may be path greps — that is
+   a lock class, not a wave-close class, and the two are deliberately distinct (07 §5.3).
 2. **No substrate lands without its consumer in the same wave.** The four-hop pipeline — mined IR
    fact → pluggable cost model → emitter selects body shape → consumer reads the emitted const —
    closes all four hops in one wave or the wave does not open (07:189-192).
@@ -66,23 +73,39 @@ The pre-restart campaign's own artifacts settle the architecture question:
   The DTA/tape-automaton family is settled-negative: non-uniform state bodies (40-400 LOC) cannot
   compile into fast code (07 §4.1). The generalization mechanism is shape classification from IR
   (12-variant ShapeTag; 10/15 hand-tunings IR-derivable — 07 §5.2).
-- **The historical peak is AU**: twitter 1967 MB/s, 0.615 cyc/byte, 0.91× sonic — and its primitive
-  set is recorded: flat AoS `Vec<TapeRec>` (one 16-byte store per push), unified
-  `push_leaf_with(kind, PayloadData)`, `.map(|_| ())` elimination, per-grammar capacity fingerprint
-  (09 §C1, §D1). Every tranche after AU regressed from it. The JSON floor is AU-relative.
-- **The BEAT-sonic lever is proven and unfinished**: the emitted visitor lane already ran at
-  **0.99× sonic geomean** (beats on data/citm/data_xl) while the default `Parsed::to_value()` path
-  sat at 3.5-5.2× — the gap was never parse speed, it was the tape-then-walk reconstruction default
-  (09 §C2). **Fused parse+value single-pass emission becomes the default materialization lane**
-  (09 §D2); it was AY-II-I's thesis and was never executed. This is the highest-ROI unfinished
-  lever in the corpus and is prototype P2.
-- **The structural pre-scan is a costed per-grammar decision, never a universal pass.** Six
-  attempts at a universal stage-1 pre-pass, six losses (07 §5.4); eager whole-input scan regressed
-  −64% on twitter (09 §D7). But at HEAD the inverse waste stands: the NEON one-shot presize
-  (`OneShotSimd`) that would remove 7-8 realloc+memcpy growth events per twitter parse is dead
-  behind the `GrowOnly` default (21:110-135; 16 item 3). This is a two-way measured decision
-  (35 N8/N20) — prototype P1 — with the twice-fatal activation gate made an opening gate: one
-  production grammar must show the scan live under `cargo expand` before the wave counts it.
+- **The historical peak is AU**: twitter 1967 MB/s, 1.63 cyc/byte (09:144 table; report 09's prose
+  "0.615" is bytes/cycle mislabeled as its inverse — the arithmetic 3.2e9/1967e6 ≈ 1.63 settles it),
+  0.91× sonic — and its primitive set is recorded: flat AoS `Vec<TapeRec>` (one 16-byte store per
+  push), unified `push_leaf_with(kind, PayloadData)`, `.map(|_| ())` elimination, per-grammar
+  capacity fingerprint (09 §C1, §D1). Every tranche after AU regressed from it. AU was measured
+  under the warm harness regime, was never re-derived by the verifiers, and is contamination-
+  adjacent (30 claim 6) — it is a DIRECTIONAL aspiration, never a gate. **The single governing JSON
+  floor is the TW0 fresh cold baseline**; every no-regression clause in this spec binds to it and
+  to nothing else. An AU-relative cold capture (fused ns/B vs AU's recorded coordinates) is taken
+  at TW0 for the ledger, as context, not as a close condition.
+- **The BEAT-sonic lever is now cold-corroborated, per-corpus, with one honest loss.** The old warm
+  0.99×-geomean provenance is retired: P2 measured the actual fused single-pass cold, and report 33
+  independently measured the identical entry point (`direct_struct::track1_digest`) on the mandated
+  `json_canon_bench`. The doubly-sourced cold facts: fused single-pass beats the tape-then-walk
+  reconstruction default by ~3.2× (the reconstruction tax is real and cold-confirmed), and beats
+  sonic-rs cold on twitter and citm (~0.5-0.6× ratios). **canada LOSES to sonic cold** on the
+  quieter capture (33: 9936 vs 11794 Mbps, 1.19×) — the eager `materialize_f64` float tax, the
+  sharpest optimisation signal in the corpus, pending TW4's Eisel-Lemire/SWAR decode. P2's private
+  4/4-sweep claim is refuted on canada and is not carried. The lever is stated per-corpus, never as
+  a sweep or a geomean. **Fused parse+value single-pass emission becomes the default
+  materialization lane** (09 §D2) — de-risked for its core claim; the spec's actual default
+  construct (fold-over-lazy-cursor, §4) remains an OPEN TW3 sub-gate, unbenched.
+- **The structural pre-scan presize is resolved NEGATIVE: DELETE.** Six attempts at a universal
+  stage-1 pre-pass, six losses (07 §5.4); eager whole-input scan regressed −64% on twitter (09 §D7);
+  and P1 is the seventh and terminal loss: `OneShotSimd` — proven LIVE by three witnesses (runtime
+  backend, `cargo expand`, `nm`) — pays a full stage-1 pass plus a throwaway positions Vec purely to
+  size a tape, regressing 1.6-2.4× directional; `Sampled` presize ties `GrowOnly` within drift, so
+  removing the 7-8 realloc growth events buys nothing measurable. The decision is closed, not
+  carried to TW4: **delete `Sampled`/`Exact`/`OneShotSimd`, keep `GrowOnly` only** — the deletion
+  rides TW1's N24 reclaim sweep. The TW0 quiet re-capture (interleaved plans, stddev/CI reported)
+  certifies the magnitude and the Sampled-tie noise floor; it does not reopen the decision. A
+  CONSUMED stage1→stage2 index is a different design and was never refuted (P1's scope boundary);
+  it may only return via the §5 cost table with a measured win.
 - **Where the time actually goes** (21, directional): the live JSON parse is entirely scalar
   single-pass; number decode is hand-rolled, NOT serde_json (the 19-vs-21 conflict is adjudicated
   for 21 — 31 item 11; 34 headline). Number materialization + digest costs ~0.6 cyc/byte, +45%
@@ -92,11 +115,12 @@ The pre-restart campaign's own artifacts settle the architecture question:
   0.547 stage-1 — 22 §2); On-Demand's margin comes entirely from unread substructure and does not
   transfer to full materialization (22 §1) — bbnf's full-typed-AST mandate means the win lives in
   number decode and per-value store cost, not structural skipping.
-- **The benchmark truth-floor**: JSON has NO cold-per-parse harness at all — the committed 8349
-  Mbps figure vs the same binary's 25,448 warm shows a ~3× harness gap (21:50-77). `json_canon_bench`
-  (mirror of `css_canon_bench`, N≥50) is built before any JSON figure is re-quoted; the H1 quiet
-  re-capture (loadavg < 2) plus an interactive-samply flame is the prerequisite for *ranking* any
-  lever (32 U1). Per-corpus-shape reporting (numeric/string/nesting-dense) replaces aggregate
+- **The benchmark truth-floor**: the cold-per-parse JSON lacuna (the committed 8349 Mbps vs 25,448
+  warm ~3× harness gap — 21:50-77) is CLOSED in kind: `json_canon_bench` (mirror of
+  `css_canon_bench`, N=200, `proc_pid_rusage` PMU) exists and produced report 33. What remains for
+  TW0 is the quiet leg: loadavg < 2 re-capture plus an interactive-samply flame — the prerequisite
+  for *ranking* any lever (32 U1) — with P2's `assert_eq!` digest-parity gate folded into the
+  harness (33's XOR-under-black_box does not prove parity) and the canada sign adjudicated on it. Per-corpus-shape reporting (numeric/string/nesting-dense) replaces aggregate
   single numbers (23 §7). CSS holds under cold discipline even at load (~2.0-3.6× lightningcss
   full-CSSOM — 21:32-48) but the eager-depth asymmetry stands until TW3 closes it (§4).
 
@@ -108,12 +132,15 @@ commented out; `rust-toolchain.toml:6-8` vs `.cargo/config.toml:227-291`). The p
 stale. The abrogation:
 
 1. **Edition 2024 unification**: skinny `edition = "2021"` → `"2024"` (one workspace line +
-   3 `unsafe extern` wraps + `cargo fix --edition`; 166 files/~68.6K LOC; the `crates/` migration
-   is the in-repo precedent — 19 §a). MSRV 1.78 → 1.88 (simd-json 0.17/criterion floor).
+   FOUR `unsafe extern` wraps (P3's corrected count; sites enumerated in PROTO-P3:47-48) +
+   `cargo fix --edition`; 166 files/~68.6K LOC; the `crates/` migration is the in-repo precedent —
+   19 §a). MSRV 1.78 → 1.88 (simd-json 0.17/criterion floor). P3 proved this leg: skinny builds
+   clean on edition 2024 + pinned stable, mechanically trivial.
 2. **Pinned stable** (Path A, 19 §b): `channel = "1.96.1"` (then-current stable; 31 item 15).
    Retires the AttrId-ICE bisect treadmill; drop the cranelift component. Nightly returns only
    under a measured cold-build win. Prototype P3 executes and prices this before freeze.
-3. **Lock-15 release profile**: root `[profile.release]` lto thin→fat, add `panic = "abort"`
+3. **Lock-15 release profile** (OWNED by TW0, landed early so every later bench is honest; listed
+   here for stack coherence only): root `[profile.release]` lto thin→fat, add `panic = "abort"`
    (the thin config is documented as halving twitter throughput — 19 §d; 31 item 10); add
    `panic = "abort"` to bench; **add an Apple-M `target-cpu` to the bench profile** — currently set
    nowhere, "the largest untapped zero-risk throughput lever visible in the profile surface" (19 §d).
@@ -125,8 +152,22 @@ stale. The abrogation:
 5. `std::simd` is NOT adopted at any emitter layer; `core::arch` intrinsics remain the emission
    target (29:71-72).
 
-Close gate: whole repo (both workspaces) builds on the pinned stable; bench parity re-proven cold
-against the pre-migration baseline captured in TW0.
+**Scope decision (resolves P3's "MIXED" verdict):** the stable-build requirement covers **what
+survives the cutover** — the skinny workspace and every root crate the totality plan retains. The
+legacy root `crates/` tree's stable failure dies at one leaf: `parse_that` → `smallbox` with
+`features = ["nightly"]` (`../parse-that/rust/parse_that/Cargo.toml:97`, E0554 genuine). That leaf
+is retired-with-the-legacy-tree, not fixed: the cutover abrogates the pre-restart consumers of
+`parse_that`, so its nightly surface is moot, not a blocker. NO "de-nightly parse-that first"
+precondition is added — CRIT-P3 shows the coupling claim conflated two crates: §7.3 routes skinny
+onto the canonical **regex** engine (`../parse-that/rust/regex`), whose dependency set carries no
+smallbox and no `parse_that`; the regex unification does not re-import the nightly surface. One
+residual verification rides TW-S: a `cargo tree` transitive check that egraph/csp-solver pull no
+smallbox (P3 could not run cargo).
+
+Close gate: skinny + all surviving `crates/` members build on the pinned stable, edition 2024;
+bench parity re-proven cold against the TW0 baseline. TW-S is NOT yet priced — P3's bench leg was
+withheld (loadavg 15-18) and the §3.4 dependency modernization is unprototyped; the parity
+measurement is a TW-S close deliverable, not a discharged fact.
 
 ## §4 — The value plane and the one-tape substrate (TW1 + TW3, amended)
 
@@ -167,7 +208,11 @@ that leave the write path AoS.
 
 **TW3's headline close condition**: the fused parse+value lane (§2) becomes the DEFAULT
 materialization path fleet-wide; every `->` reaches the emitter (`typed_materialization_invariant`
-flips to built); JSON value_from_ref byte-equal; full-depth CSS oracle green.
+flips to built); JSON value_from_ref byte-equal; full-depth CSS oracle green. Two riders per
+CRIT-P2-v2: (a) the fold-over-lazy-cursor construct is benched against sonic-rs's dual-path
+direct-to-struct as an explicit OPEN sub-gate — the digest SINK P2 benched is not this construct;
+(b) TW3's per-corpus floor binds to the TW0 cold baseline (§2), and **TW3's canada leg depends on
+TW4's Eisel-Lemire decode** — the coupling is carried in §11, not hidden behind a parallel bar.
 
 ## §5 — The decision engine, right-sized (TW4, amended per 27)
 
@@ -179,10 +224,24 @@ rewrite rules registered zero fires behind the converging normalizer (09 §C7). 
 1. **The greedy tree-cost `Extractor` is the PERMANENT default engine**, not a placeholder
    (35 §1 C3). The one net-new artifact is the **measured `KernelCostTable`** —
    `(KernelId, Uarch) → cycles/64B`, populated by a checkasm/PMU harness, checked in as versioned
-   data, never estimated (27 §e.1). The single production `perf_cost: 0` site
-   (`skinny/crates/passes/src/lib.rs:590` — 16 item 2; NOT "~8 sites") is a one-line fix the table
-   feeds. `cfg!(target_arch)` and every hardcoded threshold (NIBBLE_LUT_MAX=8, WIDE_LUT_MAX=16,
-   alt_branch≥8, tiny_string_cap) demote to admissibility filters / table cells (27 §e.2).
+   data, never estimated (27 §e.1). P4 refuted the null (the thresholds do NOT already match
+   measurement: LUT wins from N≥3, crossover N*≈2, MultipassCmpEq never cost-optimal at N>16) —
+   but against a tests-only selector with proxy kernels. Binding corrections, per CRIT-P4: **the
+   table's consumer is the LIVE `crates/simd-scan` `KernelShape::select` ladder**
+   (`alphabet.rs:103,118-124`, byte-identical `1..=8 / 9..=16 / _`) and the live
+   `scan_nibble/scan_wide/scan_multi` kernels — never the tests-only `crates/ir`
+   `for_singleton_count` mirror, which is retired into the same source of truth. And because both
+   demonstrated flips exercise only hypothetical (single-delimiter CSV/TOML) or dead-branch (N>16)
+   decisions in today's fleet, **the table's flip-consumer is bound to TW6's third language** —
+   §11 orders TW4's table landing so its first outcome-changing flip is exercised by a fleet
+   grammar in the same campaign, or the table is the §1 pathology it exists to cure. The single
+   production `perf_cost: 0` site in the retained engine (`skinny/crates/passes/src/lib.rs:590` —
+   16 item 2; two further sites at `decision_csp.rs:242,254` are deleted WITH the CSP stage, per
+   §5.2) is a one-line fix the table feeds. `cfg!(target_arch)` and every hardcoded threshold
+   (NIBBLE_LUT_MAX=8, WIDE_LUT_MAX=16, alt_branch≥8, tiny_string_cap) demote to admissibility
+   filters / table cells (27 §e.2). P4's FLIP 3 is a real in-tree fix folded into TW0's honesty
+   sweep: two costs for one named movemask (`movemask.rs:4-5` `vshrn` vs the local `vaddv_u8` in
+   `byte_class_from_eq_set_64.rs:79-84`) — unify on the measured-cheaper spelling.
 2. **The tautological CSP second stage is retired, not ported** (decision_csp solves to recover its
    input — 31 item 5; no frontier design hands an extractor's answer to a downstream CSP — 27 §d).
    One engine over `(BackendShape × KernelStrategy)`; skinny's engine and core's `csp_strategy`
@@ -197,8 +256,19 @@ rewrite rules registered zero fires behind the converging normalizer (09 §C7). 
    kernel, iterating EVERY registered variant (the liveness property — 25 §4) so dead kernels
    (JSON `neon::scan` behind GrowOnly, `unescape_uxxxx`, the two dead `asm!` blocks, the lying
    `ScanBackend::Scalar` label) are wired-or-deleted, never carried. Intrinsics by default; hand asm
-   admitted per-kernel only with a cargo-asm/checkasm proof of a mis-schedule, missing intrinsic, or
-   spill failure — the honest bound is 0-5% (25 §3; prototype P5 prices it on OUR kernel).
+   admitted per-kernel only with a cargo-asm/checkasm proof of a mis-schedule, missing intrinsic,
+   spill failure, **or an instruction-selection miss no intrinsic spelling survives** (P5's actual
+   cause — LLVM De-Morgans the minimal ORR-tree into an 8-op-surplus form; the narrower gate would
+   reject the one measured exception). The bound: 0-5% generally, ~10% directional on the classify
+   kernel (P5). **Standing order, per CRIT-P5: the two cheaper doors are priced BEFORE any asm lane
+   is committed** — door (a) the intrinsic-expressible `vshrn` movemask algorithm (already in-file
+   at `json.rs:928`; likely beats all four variants, making the asm question moot — "algorithm vs
+   algorithm", 25:250-252) and door (b) an opaque-barrier/reassociation coercion keeping the
+   ORR-tree. Both are TW0-quiet-session bench items alongside the PMU re-capture that must confirm
+   >5% with the same op-count cause on the pinned toolchain; only if both doors fail does the
+   per-kernel asm gate open. checkasm is right-sized to the actual kernel census (~4-6 kernels, one
+   ISA): the per-kernel differential-parity + bench harness P5 built IS the liveness instrument;
+   no dav1d-scale machinery is imported beyond it.
 5. **Apple-NEON invariants live in the cost model as data** (25 §2): the `shrn`-4 movemask is
    4-bits-per-byte (nibble-domain arithmetic — the #1 porting trap); one SIMD↔GPR crossing per
    64-byte block (~12-cycle bubble each); classification LUTs ≤32 bytes (`vqtbl2q` at 2c/4-per-cyc,
@@ -206,8 +276,9 @@ rewrite rules registered zero fires behind the converging normalizer (09 §C7). 
    Host-tax discipline by construction: `MaybeUninit` scratch, panic-free hot paths, bounds-elision
    shapes (rav1d's largest real gains — 25 §1.3, §5).
 6. **The SOTA-gap kernels**: grammar-emittable Eisel-Lemire number decode (lexical-core is already
-   in the lockfile via simd-json — near-zero integration cost, 23 §3); NEON bulk unescape keyed on
-   HasEsc; tokenize-once CSS declaration bodies; the structural pre-scan decision per §2/P1.
+   in the lockfile via simd-json — near-zero integration cost, 23 §3; **this kernel is TW3's canada
+   dependency, §11**); NEON bulk unescape keyed on HasEsc; tokenize-once CSS declaration bodies.
+   The structural pre-scan presize is DELETED per §2/P1 — no TW4 decision remains.
 
 ## §6 — The type plane (TW5, per 28)
 
@@ -225,8 +296,26 @@ re-homed off the csp-solver crate onto a plain worklist (the "AC-3" naming is a 
 28 §a5); (6) a Salsa-style incremental shell, later. Algebraic subtyping (MLsub/Simple-sub) is
 explicitly rejected for the core; egglog is rejected as the type engine (e-class analyses propagate
 bottom-up; typing needs top-down contexts — 28 §3). Steps 1-3 are load-bearing honesty+capability;
-4-6 are frontier. Prototype P6 de-risks 1-3 over two grammars before the wave is scoped. The
-inference completes BEFORE emission so neither backend's type system does inference work — the
+4-6 are frontier and carry an explicit disposition: DEFERRED until a fleet grammar demands a
+generic rule or a row — never carried as silent committed scope. P6's actual de-risk accounting
+(CRIT-P6): **step 1 is de-risked over two grammars** (33/33 descriptors, zero Span defaults, three
+negative injections fire); step 2 is validated synthetically only (the corpus has no `@host fn` and
+lowering drops call args — the unifier's param edge is unreachable today); step 3 is absent from
+the corpus entirely. Three binding consequences:
+
+- **Step 0, scheduled**: the upstream lowering fix P6 exposed — width is destroyed before typing
+  (`value_expr/literals.rs:7,17`; `expression/wrap.rs:589-606`; dropped `FnCall` args), so synth
+  recovers `I64` where the grammar wrote `U8` for 22 of 33 descriptors. This lands FIRST in TW5;
+  without it the type plane types the wrong facts.
+- **The TW5 close gate asserts correct WIDTH, not merely zero `unwrap_or(Span)`** — P6 proved the
+  Span-free condition satisfiable while two-thirds of discriminant tags land at the wrong width;
+  the gate adds a per-descriptor width assertion against the grammar's written annotation.
+- **HostSigTable and its `@host` consumer land in the SAME wave** (§1's law applied to ourselves):
+  the `@host` declaration surface moves INTO TW5 alongside the table and unifier, with a falsifier
+  grammar exercising the signature-mismatch error; the land-or-delete decision on the wider
+  closure surface stays in TW6.
+
+The inference completes BEFORE emission so neither backend's type system does inference work — the
 chumsky/LALRPOP portability trap is structurally avoided and the backend-agnostic type manifest is
 the Rust/TS emission interface (28 §5).
 
@@ -249,6 +338,8 @@ the Rust/TS emission interface (28 §5).
    canonical parse-that engine (31 item 8). TW2 deletes the skinny crate and the ad-hoc FIRST
    scanner; ONE regex home — the canonical engine via the same path patch totality uses. The
    parse-that 1.0.0 cut is TypeScript-only; the Rust tree bbnf consumes is unaffected (35 N7).
+   The canonical regex crate's dependency set carries no smallbox and no `parse_that` — this
+   unification does NOT re-import the nightly surface P3 found in the `parse_that` parser (§3).
 
 ## §8 — Crate topology: decomposition-first (TW1 lead, per 20)
 
@@ -286,10 +377,28 @@ Lock-14 is green-by-exclusion (16 item 1) and the constraint's current status ha
 owner (32 Part I). Gate-widening (§8.3) makes the negative check honest; empirical certification
 makes the positive claim: **a third serious target language is required** to break the JSON/CSS
 duopoly (32 G4 — every SOTA researcher targeted only JSON/CSS; the "…" in the aim is unbacked).
-Prototype P7 pushes a TOML grammar end-to-end through the un-forked emitter and documents every
-grammar-specific break; TW6 lands it as a fleet member with an independent oracle (the `toml` crate
-field-for-field), alongside the N4 oracle completion (CSV vs the `csv` crate first; five grammars
-today have zero correctness oracle). The novelty seam this defends is confirmed still empty as of
+
+**The adjudicated generalization statement (CRIT-P7-adjudication, superseding both PROTO-P7 and
+CRIT-P7):** the generator at HEAD is MORE general than P7 claimed and less finished than either
+document located. P7's BREAK 1 is FALSE — `->` projections ARE carried and materialized for
+non-JSON grammars via `general_descent` (Sheets: 31 projections, `GoogleSheetsKind` emitted);
+dispatch is un-forked and structural (`SinkOnly`/`Scan` by shape-harvest; the `RuntimeEmitterKind`
+fork P7 tested is nonexistent at HEAD — P7 ran against a phantom base and is disqualified as
+measurement, retained as a break-census instrument). The TRUE walls are three SHARED
+generator defects in `general_descent`, not per-grammar gaps — which is the good news: **TW6's TOML
+is certifiable WITHOUT per-grammar emitter files.** The three fixes: (WALL A) whitespace policy
+derived from the grammar's `?w` declaration, replacing the hardcoded skip-whitespace between Seq
+elements (`emit.rs:126-135,272,303`) that makes newline-significant structure unrecognizable;
+(WALL B) a real runtime leaf regex matcher replacing the `match_leaf` delimiter-scan approximation
+(`emit.rs:157-228`, `regex_first.rs`) — RFC3339 datetimes, escaped/multiline strings, `[\s\S]*?`
+all break on the approximation; (WART C) delete the `has_rule("value")` name-gate
+(`runtime_generator.rs:98`) that misroutes any grammar owning a rule named `value` onto verbatim
+JSON templates — nominal residue, structurally forbidden. Lock-14 widens to a POSITIVE gate:
+**the emitted TOML parser round-trips against the `toml` crate**, not directory-path greps.
+
+TW6 lands TOML as a fleet member with that independent oracle (field-for-field), alongside the N4
+oracle completion (CSV vs the `csv` crate first; five grammars today have zero correctness
+oracle). The novelty seam this defends is confirmed still empty as of
 July 2026: no system holds even the (declarative grammar × emitted block-SIMD classification) pair;
 the Parabix lineage is alive but pointed at regex/GPU; XGrammar/llguidance are named and dispatched
 as Axis-G constrained generation, not parsing (26 §0, §6). The claim stays narrow: "first GENERATOR
@@ -313,70 +422,124 @@ independently re-derived and anchors no regression budget (32 U3).
 
 ## §11 — The amended wave manifest
 
-Order: **TW0 → TW-S → TW1 → TW2 → {TW3 ∥ TW4} → TW5 → TW6**, the D11 coupling carried: TW2 may
-land structure-un-forked with hot leaves behind static dispatch; TW4 replaces that dispatch with
-the measured table; the cutover-gate runs at TW2 close and again at TW4 close.
+Order: **TW0 → TW-S → TW1a → TW1b → TW1c → TW2 → TW4.1 → {TW3 ∥ TW4.2} → TW5 → TW6**, two
+couplings carried openly. The D11 coupling: TW2 may land structure-un-forked with hot leaves
+behind static dispatch; TW4 replaces that dispatch with the measured table; the cutover-gate runs
+at TW2 close and again at TW4 close. **The TW3↔TW4 number-decode coupling (CRIT-spec-architecture
+B2): TW3's canada close leg requires TW4's Eisel-Lemire decode kernel — so TW4 is split: TW4.1
+(Eisel-Lemire + the KernelCostTable substrate) lands BEFORE TW3 closes; TW4.2 (the remaining
+kernel plane + dispatch-table replacement) may run parallel to TW3.** The parallel bar binds only
+where no dependency crosses it.
 
-- **TW0 — Gates, hygiene, honesty, truth-floor.** First commit: the D-G reconcile (C6; tag skinny
-  `sk-v19-frozen`). The 24-crate supersession doc commit (§8.1). The five-lock falsifier audit +
-  meta-lock (§8.3). The Y.13 consumer-invariant gate template adopted as standing wave-close law
-  (§1). Lock-15 + target-cpu (§3.3, landed early so every later bench is honest). Lock-4 fix with
-  the csc411 re-vendor checkpoint (§7.2). W5d x86/wasm deletion. Inline-test relocation
-  (7+21 corrected). MASTER-PLAN §13.6 reconcile (16 item 9). Oracle hygiene (N5, W3C rekey).
-  **The truth-floor bench session**: `json_canon_bench` built; quiet (loadavg < 2) cold re-capture
-  of CSS + JSON both sides; interactive-samply flame captured; per-corpus-shape reporting; the
-  full-tree-touch plane added (N15). The parse-that NO-GO letter recorded (§7.1). Playground junk
-  ignored (16 tail). *Close gate:* locks/tests green; the quiet baseline ledgered — no later wave's
-  no-regression clause is meaningful without it (20 §4c).
-- **TW-S — Stack abrogation** (§3). *Close gate:* both workspaces build on pinned stable, edition
-  2024 everywhere; cold bench parity vs the TW0 baseline.
-- **TW1 — Topology split, then the one-tape AoS substrate** (§4, §8.2). Core decomposition as the
-  gated opener; then the AoS-hardened ONE tape + eager-builder retirement (~1,080 hits) in one
-  fenced parity-gated commit; StructLayout→Layout rename (960 hits) at the tail; N24 reclaim sweep.
-  *Close gate:* 9-grammar regen byte-clean; JSON+Sheets oracles field-for-field; Lock 1 green; no
-  cold regression vs the TW0 baseline; the split's crate boundaries enforced by the widened Lock-14.
+- **TW0 — Gates, hygiene, honesty, truth-floor.** **First commit — the D-G reconcile (C6),
+  defined so it is executable:** a doc-only commit that places the SK-V16/V17 REDRESS pre-block
+  reconcile onto the committed ledger. Concretely: REDRESS 51/53/246/247 are entries in the
+  SK-V16 pre-block route families (SK-V16 SYNTHESIS §0.4; SK-V19 SPEC D-G, CH3-V1-R2) — 51/53 from
+  the 50-55 retained-shortcut family (53 is the canonical instance: a structural index retained as
+  a parallel vector alongside the ONE tape; 51 its retained-parse-shortcut sibling) and 246/247
+  from the 242-247 fixed-shape/Unicode-retry family (one-quartet Unicode/object-pair promotion and
+  fixed-shape retry under old framing). The commit contains: (a) a DEFERRED-LEDGER entry naming
+  the four ids AND their carried family meanings, so no substrate wave can reopen them by renaming;
+  (b) the skinny freeze tag `sk-v19-frozen` — skinny becomes architecture-read-only, retained
+  solely as differential oracle + checkasm/microbench harness; (c) the supersession pointer to
+  this SPEC as the governing manifest. Zero behavior LOC; it unblocks every TW wave. Then: the
+  24-crate supersession doc commit (§8.1). The five-lock falsifier audit + meta-lock (§8.3). The
+  Y.13 consumer-invariant gate template adopted as standing wave-close law (§1). Lock-15 +
+  target-cpu (§3.3; TW0 is the SOLE owner — TW-S inherits, never re-lands). Lock-4 fix with the
+  csc411 re-vendor checkpoint (§7.2). W5d x86/wasm deletion. Inline-test relocation (7+21
+  corrected, including the four `#[cfg(test)]` perf_cost sites CRIT-spec-architecture R7 flags).
+  MASTER-PLAN §13.6 reconcile (16 item 9). Oracle hygiene (N5, W3C rekey). The P4 FLIP-3 movemask
+  unification (§5.1). **The truth-floor bench session**: `json_canon_bench` (exists per report 33)
+  gains the P2 digest-parity assert; quiet (loadavg < 2) cold re-capture of CSS + JSON both sides,
+  canada sign adjudicated; the P1 four-plan interleaved re-run with stddev/CI (magnitude
+  certification for the presize DELETE); the P5 PMU re-capture + doors (a)/(b) bench (§5.4);
+  interactive-samply flame; per-corpus-shape reporting; the full-tree-touch plane (N15). The
+  parse-that NO-GO letter recorded (§7.1). Playground junk ignored (16 tail). *Close gate:*
+  locks/tests green; the quiet baseline ledgered — no later wave's no-regression clause is
+  meaningful without it (20 §4c).
+- **TW-S — Stack abrogation** (§3). *Close gate:* skinny + surviving crates build on pinned
+  stable, edition 2024 everywhere (scope per §3); cold bench parity vs the TW0 baseline; the
+  smallbox transitive check clean.
+- **TW1a — The topology split** (§8.2). Core decomposition along the six named seams as its own
+  gated wave — nothing else rides it. *Close gate:* the split's crate boundaries enforced by the
+  widened Lock-14; 9-grammar regen byte-clean; build green both workspaces; zero behavior change
+  (differential oracle green).
+- **TW1b — The one-tape AoS substrate** (§4). The AoS-hardened ONE tape + the eager-builder
+  retirement (~1,080 hits) in one fenced parity-gated commit — the substrate and its consumer
+  together, per §1. *Close gate:* JSON+Sheets oracles field-for-field; Lock 1 green; no cold
+  regression vs the TW0 baseline.
+- **TW1c — Mechanical tail.** StructLayout→Layout rename (960 hits); the N24 reclaim sweep
+  (including the §2 presize deletion: `Sampled`/`Exact`/`OneShotSimd` and the dead
+  `attach_structural_index` no-op). *Close gate:* regen byte-clean; grep-zero on the retired
+  names; no cold regression.
 - **TW2 — The one generator.** As SK-V20 wrote it (BackendExpr → THE IR; real Emitter trait; xtask
   un-fork; couriers derived-or-owned; structural-predicate dispatch; grammar-derived alphabets),
   plus: ONE regex home (§7.3); the css_l4 108K-line regression trace attacking line count itself —
   the B2 lesson: relocation is not reduction (35 N6); `generated_loc_budget` enforced in
   `regen --check`; the idempotent-on-disk rule asserted (N25). *Close gate:* ONE emit path serves
   all 9 grammars; cutover-gate green for the slice; budgets met; widened Lock-14 green over codegen.
-- **TW3 — The value plane** (§4). Fused parse+value default lane; ValueRef/cursor fleet-wide;
-  eager-as-fold; one path alphabet; serde bridge; CSS depth closure with the derived-catalog +
-  Unparsed escape hatch; StructRegistry projection fence; projection-totality invariant
-  (`PROJECTION_DIRECT_TO_STRUCT.len() == materializers == consumers` — 09 §D4). *Close gate:* every
-  `->` reaches the emitter; the fused lane IS the default and meets the AU-relative floor cold;
-  full-depth CSS oracle green; direct-to-struct benched vs sonic-rs dual-path; asymmetries co-located.
-- **TW4 — The decision engine + kernel plane** (§5). KernelCostTable first; one engine; ablation
-  gate before any escalation; checkasm liveness over the whole dispatch table; pre-scan
-  two-way decision with the cargo-expand opening gate; Eisel-Lemire + unescape + CSS tokenize-once;
-  scanner unification (C4/C5: lo/hi nibble two-LUT, `vshrn` single-pack, Lock-16 co-gate).
-  *Close gate:* cutover-gate green (second leg); Lock-14 re-proven full-system; the compound >SOTA
-  sentence true unqualified on the gated planes — cold, quiet, live SIMD on the JSON path.
-- **TW5 — Type resolution** (§6). *Close gate:* 9 grammars type end-to-end with zero
-  `unwrap_or(Span)`; the host-signature gate fires on a falsifier; annotations check.
+- **TW4.1 — Eisel-Lemire + the cost-table substrate** (§5). The Eisel-Lemire/SWAR number-decode
+  kernel (TW3's canada dependency — lands FIRST); the `KernelCostTable` bound to the LIVE
+  `crates/simd-scan::KernelShape::select` ladder and kernels (§5.1); the tests-only `crates/ir`
+  selector retired into it. *Close gate:* canada eager cold beats sonic on `json_canon_bench`
+  (the float-tax signal closed); the table feeds the live selector with a `cargo expand` witness.
+- **TW3 — The value plane** (§4; opens after TW4.1). Fused parse+value default lane;
+  ValueRef/cursor fleet-wide; eager-as-fold; one path alphabet; serde bridge; CSS depth closure
+  with the derived-catalog + Unparsed escape hatch; StructRegistry projection fence;
+  projection-totality invariant (`PROJECTION_DIRECT_TO_STRUCT.len() == materializers == consumers`
+  — 09 §D4). *Close gate:* every `->` reaches the emitter; the fused lane IS the default with no
+  cold regression vs the TW0 baseline on any corpus, per-corpus reported (twitter/citm/canada
+  each named — no geomean); the fold-over-lazy-cursor benched vs sonic-rs dual-path
+  direct-to-struct (the §4 OPEN sub-gate discharged); full-depth CSS oracle green; the AU-relative
+  cold capture ledgered as context; asymmetries co-located.
+- **TW4.2 — The decision engine + kernel plane** (§5; parallel to TW3). One engine; ablation gate
+  before any escalation; per-kernel differential parity + bench (checkasm right-sized, §5.4) over
+  the whole dispatch table; NEON bulk unescape + CSS tokenize-once; scanner unification (C4/C5:
+  lo/hi nibble two-LUT, `vshrn` single-pack, Lock-16 co-gate); the asm door only per §5.4's
+  doors-first order. *Close gate:* cutover-gate green (second leg); Lock-14 re-proven full-system;
+  the compound >SOTA sentence true unqualified on the gated planes — cold, quiet, live SIMD on
+  the JSON path. The cost table's fleet-exercising flip is certified at TW6 when the third
+  language lands (§5.1's consumer binding).
+- **TW5 — Type resolution** (§6). Step 0 lowering fix first (width + FnCall args preserved);
+  then steps 1-3 with the `@host` declaration surface in-wave (§6). *Close gate:* 9 grammars type
+  end-to-end with zero `unwrap_or(Span)` AND correct width per the grammar's annotation (the P6
+  falsifier); the host-signature gate fires on a falsifier grammar; annotations check.
 - **TW6 — Language + fleet completeness + the third language.** MapExpr byte-fold primitives;
-  `type_annotation` extension; `@assoc`; land-or-delete the closure/@host surface; oracle
-  completion (N4/N13); **TOML landed as fleet member ten with an independent oracle** (§9).
-  *Close gate:* zero grammars without an oracle; zero live host hatches not expressible as grammar;
-  the generalization census names ten grammars, three of them serious targets.
+  `type_annotation` extension; `@assoc`; land-or-delete the remaining closure surface; oracle
+  completion (N4/N13); **TOML landed as fleet member ten via the three SHARED `general_descent`
+  fixes (§9: ?w-derived whitespace policy, real leaf regex matcher, name-gate deletion) — no
+  per-grammar emitter files**; the KernelCostTable's single-delimiter flip exercised live.
+  *Close gate:* the emitted TOML parser round-trips the `toml` crate field-for-field (the widened
+  positive Lock-14); zero grammars without an oracle; zero live host hatches not expressible as
+  grammar; the generalization census names ten grammars, three of them serious targets.
 
-## §12 — Prototype briefs (pass-2 instruments; worktree-isolated, never landed)
+## §12 — Prototype dispositions (pass-1 closed; instruments retained)
 
-Defined in the structured summary accompanying this draft: P1 NEON-presize-live (the N8/N20
-two-way decision), P2 fused-RD-default-lane (the 0.99× line), P3 edition-2024+stable build, P4
-measured-KernelCostTable-flips-a-decision, P5 hand-asm-vs-intrinsics on our kernel (the 0-5% bound
-priced), P6 HM-core spike (28's steps 1-3), P7 TOML end-to-end (the generalization certifier). Each
-carries one falsifiable question and success criteria sized to a 40-minute worktree agent. P1-P2
-share the `json_canon_bench` cold harness, built first in whichever runs first.
+All seven ran; their verdicts are folded above. P1 (presize): DELETE decided, §2 — instrument
+retired, magnitude certification rides TW0. P2 (fused lane): core thesis cold-corroborated, canada
+refuted, fold-over-cursor still open — §2/§4/TW3. P3 (stack): skinny-on-stable settled; scope
+decision taken in §3; bench leg deferred to TW-S close. P4 (cost table): null refuted; consumer
+re-bound to the live selector and TW6's third language — §5.1. P5 (asm): instrument sound;
+decision deferred behind the doors-first order — §5.4; the checkasm-shaped parity harness is a
+TW4 asset. P6 (HM spike): step 1 de-risked; step 0 lowering fix and the width gate scheduled —
+§6. P7 (TOML): disqualified as measurement (phantom fork), superseded by the adjudication — §9;
+the break census (walls A/B, wart C) is the TW6 work-list. The `json_canon_bench` harness and the
+P5 parity harness are the two instruments that graduate to `crates/`.
 
 ## §13 — Open questions carried to pass 2
 
-1. The asm-emission-path feasibility question (§0) — P5 informs; the spec answer lands in pass 2.
-2. Whether the fused lane's 0.99× survives cold-per-parse discipline (it was measured under the
-   old harness regime) — P2 answers.
-3. Whether the TW1 topology-split-first ordering survives contact with the substrate landing's
-   actual seams — the split may reveal that tape must move first; pass-2 critique adjudicates.
+1. The asm-emission-path question is NARROWED, not closed: doors (a)/(b) bench at TW0 quiet; only
+   a >5% confirmed delta with both doors failed opens the per-kernel asm gate (§5.4).
+2. The fused lane's cold survival is ANSWERED per-corpus (§2): wins twitter/citm, loses canada
+   pending TW4.1. What remains open is the fold-over-lazy-cursor construct vs sonic dual-path —
+   the TW3 sub-gate.
+3. Whether the TW1a split-first ordering survives contact with the substrate landing's actual
+   seams — the split may reveal that tape must move first; pass-2 critique adjudicates the
+   TW1a/TW1b boundary (the unbundling itself is settled).
 4. The severity-weight of CSS SIMD tokenization (24 §SIMD: a confirmed-by-absence open frontier
    with real comment/url() correctness risk) — deliberately NOT scheduled in TW4; it enters only
-   via a costed per-grammar decision after P1/P4 establish the measurement loop.
+   via a costed per-grammar decision once the TW0 measurement loop is live.
+5. NEW (P4): whether the live-selector cost-table rebind changes any current-fleet kernel choice
+   before TW6 — if not, the table lands with its TW6 consumer named in the same commit message.
+6. NEW (P3): the `cargo tree` smallbox transitive check over egraph/csp-solver (NO-cargo bound
+   pass 1; discharged at TW-S).

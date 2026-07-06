@@ -246,9 +246,10 @@ that leave the write path AoS.
   demanded (A1 D3: fold-over-cursor vs sonic dual-path direct-to-struct) and LOST on all three
   corpora — 2.32×/4.85×/2.27× slower than sonic (twitter/canada/citm), 3.87-4.23× slower than its
   own fused sink, 5.3-8.4× the AU 1.63 floor. The hedge this section carried ("a fold-over-cursor
-  could plausibly lose" — 23 §1, §8) resolved TRUE. The value plane is therefore two lanes over
-  the one tape-side substrate: **lazy = the cursor over the ONE tape; eager = the tapeless fused
-  single-pass sink** — the dual-path shape sonic-rs ships, MATCHED knowingly, not bested; the
+  could plausibly lose" — 23 §1, §8) resolved TRUE. The value plane is therefore two lanes, only
+  one of them tape-side: **lazy = the cursor over the ONE tape; eager = the DISTINCT tapeless
+  fused single-pass sink** (§0) — the dual-path shape sonic-rs ships, MATCHED knowingly, not
+  bested; the
   "stronger claim" is retracted and the elegance argument concedes to the measurement. One path
   alphabet is retained across both lanes (sonic-rs's `pointer!` proves
   one alphabet suffices — the four JSON-pointer-shaped implementations collapse); the serde
@@ -591,6 +592,11 @@ where no dependency crosses it.
   `crates/simd-scan::KernelShape::select` ladder and kernels (§5.1); the tests-only `crates/ir`
   selector retired into it. *Close gate:* canada eager cold beats sonic on `json_canon_bench`
   (the float-tax signal closed); the table feeds the live selector with a `cargo expand` witness.
+  Gate relaxation, carried openly (mirroring TW1b's NEW-R7 clause): the cost-table leg closes on
+  liveness alone — A2/P4-v2 measured NO current-fleet decision flip (§5.1: live crossover N\*=3,
+  flip band |S|≤2, JSON/CSS sit at N≥3), so the §1 ≥3%-win clause is unmeetable here by settled
+  fact and binds instead at TW6's CSV flip exercise (§5.1's consumer binding); the Eisel-Lemire
+  leg carries the full liveness-AND-win clause (canada-beats-sonic IS its measured win).
 - **TW3 — The value plane** (§4; opens after TW4.1). The fused single-pass SINK as the default
   eager lane; the lazy ValueRef/cursor over the ONE tape as its own lane (the dual-path shape,
   matched knowingly — §4); one path alphabet across both; serde bridge; CSS depth closure

@@ -155,3 +155,80 @@ spec-architecture correction.
 
 No new prototype or measurement is required for pass 3. A pass-3 freeze pass, not a discovery
 pass, is now the expected close.
+
+---
+
+## Pass 3 — 2026-07-05 (the freeze pass)
+
+Inputs: SPEC-DRAFT-P1.md (pass-2-amended; re-amended in place this pass), pass-3 re-scores
+CRIT-arch-v3 (94, wave-owned residuals: false — two blocking spec edits), CRIT-honesty-v3 (94,
+wave-owned residuals: true — zero blocking), freeze-audit (95, wave-owned residuals: true — zero
+blocking). Verification-only, per the pass-2 projection: no new prototype, no new measurement;
+every P-item score CARRIES from pass 2 (their residuals were re-certified wave-owned execution
+deliverables by the freeze audit, not open questions).
+
+### The two blocking issues, resolved in place this pass
+
+1. **NEW-R8 (primary, spec-edit): the TW4.1 cost-table gate contradiction.** §11's TW4.1 close
+   gate was liveness-only ("the table feeds the live selector with a `cargo expand` witness"),
+   but §1.1's standing law mandates liveness AND a measured ≥3% win — a clause unmeetable at
+   TW4.1 by settled fact, since A2/P4-v2 measured NO current-fleet decision flip (live crossover
+   N\*=3, flip band |S|≤2 = TW6's CSV; folded as fact at §5.1). §5.1 reconciled the intent (the
+   TW6 consumer binding) but no gate line carried it. RESOLVED: TW4.1 now carries the explicit
+   gate-relaxation sentence, mirroring the NEW-R7 clause TW1b already has — the cost-table leg
+   closes on liveness alone with the ≥3%-win clause binding at TW6's CSV flip exercise; the
+   Eisel-Lemire leg keeps the full liveness-AND-win clause (canada-beats-sonic IS its win).
+2. **NEW-R9 (cosmetic): the §4 lane-phrasing self-tension.** "Two lanes over the one tape-side
+   substrate" collided with "eager = the tapeless sink" in the same clause. RESOLVED: rephrased
+   to "two lanes, only one of them tape-side," matching the cleaner §0 charter phrasing (lazy
+   cursor over the ONE tape plus a DISTINCT tapeless fused single-pass sink) with a §0 pointer.
+
+### Item table
+
+| Item | Conv. | Moved by (this pass) | Blocks 100 |
+|---|---|---|---|
+| spec-architecture | 94 (was 82) | v3 re-score verified all pass-2 fold-ins (NEW-B1 + NEW-R1..R7, the §4/TW3 fused-sink rewrite) against their mandates; found exactly two blockers, both spec edits — NEW-R8 (TW4.1 gate contradiction) and NEW-R9 (§4 phrasing) — RESOLVED in place this pass | The two in-place amendments await the freeze-confirmation read — a micro-verification, not a critique round |
+| spec-honesty | 94 (was 86) | v3 re-score: Defects A/B/C reconciliations confirmed; the flagship asm sentence, the per-corpus canada disclosure, and the Sampled relabel all read true; zero blocking issues | Defect 3 stands by design (no ranking verified cold-quiet until TW0 runs) — wave-owned, TW0 |
+| freeze-audit (instrument) | 95 | Independent third read over the whole draft: zero blocking issues; certifies every remaining P-item residual as a wave-owned execution deliverable (TW0/TW-S/TW5/TW6), none an open design question | Not a weighted item — the freeze instrument of record |
+| P1 — NEON presize | 88 (carried) | No new evidence (verification pass); residual re-certified wave-owned | TW0 quiet-absolute leg |
+| P2 — fused default lane | 85 (carried) | Same | TW0 quiet re-capture of absolutes |
+| P3 — edition-2024 + stable | 82 (carried) | Same | TW-S cold parity; TW0 un-confounded channel ratio |
+| P4 — KernelCostTable | 82 (carried) | Same; the NEW-R8 fix carries its no-flip fact into the gate line | TW6 CSV flip exercise; TW0 quiet absolutes |
+| P5 — hand-asm door | 86 (carried) | Same | TW0 quiet PMU absolute re-capture |
+| P6 — HM-core spike | 78 (carried) | Same | TW5 step-0 re-land; TW5/TW6 consumer waves |
+| P7 — TOML generalization | 72 (carried) | Same | TW6 in-tree regen wiring (WsPolicy, interpreter swap, JSON fold) |
+
+### Overall convergence — weighted by plan-criticality (weights unchanged from pass 1)
+
+| Item | Weight | Score | Contribution |
+|---|---|---|---|
+| spec-architecture | 20 | 94 | 18.80 |
+| spec-honesty | 15 | 94 | 14.10 |
+| P2 fused lane | 15 | 85 | 12.75 |
+| P7 generalization | 12 | 72 | 8.64 |
+| P4 cost table | 10 | 82 | 8.20 |
+| P6 type plane | 10 | 78 | 7.80 |
+| P3 stack | 8 | 82 | 6.56 |
+| P1 presize | 5 | 88 | 4.40 |
+| P5 asm door | 5 | 86 | 4.30 |
+| **OVERALL (pass 3)** | **100** | | **85.55 → 86%** |
+
+The number is read honestly: 86 is NOT the freeze ceiling failing — the P-item scores (72-88) are
+frozen-at-pass-2 by discipline because their remaining blockers are MEASUREMENTS and BUILDS owned
+by named waves (TW0 quiet session, TW-S parity, TW5 step 0, TW6 wiring + CSV flip), which no
+amount of further spec-passing can retire. The plan-freeze question is carried entirely by the
+three verification instruments: 94/94/95, with the only two blocking findings resolved as
+one-file spec edits this pass. FREEZE WAS NOT CONFIRMED at the pass-3 re-score (NEW-R8 stood
+open at read time); it is expected to confirm on the amended draft.
+
+### What remains (focused next-pass list; in priority order)
+
+1. **Freeze confirmation** — verify the two pass-3 amendments against their mandates: the TW4.1
+   gate-relaxation sentence (NEW-R8; §11 TW4.1 close-gate block) and the §4 two-lanes phrasing
+   (NEW-R9; §4 value-plane paragraph). A read, not a critique round — the sole remaining
+   non-execution check.
+2. **On confirmation, the freeze executes**: SPEC.md written from the amended draft; the TW0
+   first commit (the D-G reconcile, §11) lands; the `sk-v19-frozen` tag placed; TW0 opens.
+3. **Everything else is wave-owned execution, none of it pass-shaped**: TW0 quiet (loadavg<2)
+   re-certification of the pass-2 directional absolutes incl. the channel ratio; TW-S cold
+   parity; TW5 step-0 re-land; TW6 regen wiring + the CSV flip exercise.

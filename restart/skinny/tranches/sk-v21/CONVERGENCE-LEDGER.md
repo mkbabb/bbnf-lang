@@ -85,3 +85,73 @@ critique round.
 Projected post-pass-2 position if items 1-5 land clean: the measurement blockers on P1/P2/P5
 retire, P7 gains real evidence, and the two spec items re-score against an amended draft —
 plausibly ~85%. A pass 3 is expected to be the freeze pass, not a discovery pass.
+
+---
+
+## Pass 2 — 2026-07-05
+
+Inputs: SPEC-DRAFT-P1.md (pass-1-amended; re-amended in place this pass), pass-2 prototypes
+PROTO-A1 (bench adjudication), PROTO-A2 (kernel PMU + P4-v2), PROTO-A3 (TW-S pricing), PROTO-B1
+(TOML-real), PROTO-B3 (width fix), the seam table research/38, re-critiques
+CRIT-spec-architecture-v2 (82), CRIT-spec-honesty-v2 (86), and CRIT-blocker-audit (80,
+pre-re-score basis). Environmental adjudication, binding on every row: NO pass-2 session met the
+loadavg<2 mandate (all ran 8-25); decisions are certified at the RATIO level (paired interleaving
++ CI, min-of-7 PMU, byte-equality parity, cross-harness reproduction of report 33); ABSOLUTES
+remain directional; the quiet re-certification is a TW0 EXECUTION gate, no longer a research
+question.
+
+### Item table
+
+| Item | Conv. | Moved by (this pass) | Blocks 100 |
+|---|---|---|---|
+| P1 — NEON presize | 88 (was 77) | A1 D1 interleaved-paired N=200 with 95% CI: canada +9.3% OVERTURNED to +1.25% TIE; twitter Sampled +3.45% real (CI excludes 0); OneShotSimd/Exact refuted overwhelmingly; json_canon_bench rebuilt with parity assert + validated against report 33 (1.5654 vs 1.559) | TW0 quiet-absolute leg only; the "Sampled buys nothing" spec wording corrected this pass (deleted for KISS, not null) |
+| P2 — fused default lane | 85 (was 70) | A1 D2 settles canada (fused/sonic 1.252x wall, 1.137x cyc — confirms 33, refutes P2 0.79x); A1 D3 benches the fold-over-cursor NEGATIVE (loses sonic 2.3-4.9x, own sink 3.9-4.2x); A1 D4 takes the AU-relative capture (parse_tape twitter 1.5654 BEATS 1.63); parity byte-exact all corpora | TW0 quiet re-capture of the absolutes; the negative D3 verdict migrated to spec-architecture as N1 (folded this pass) |
+| P3 — edition-2024 + stable | 82 (was 58) | A3: migration APPLIED (5 edits, verified in-worktree); divan port built+ran EXIT 0 both channels; smallbox `cargo tree` check DONE — count=0 through the canonical regex subtree, PROTO-P3's coupling recommendation FALSIFIED; dep modernization priced into TW-S.1-5; criterion deletion re-scoped (60+ ingestion refs → TW-S.2) | Nightly-vs-stable ratio LOAD-CONFOUNDED (nightly window loadavg 19-25) — clean channel ratio rides TW0; cold parity vs TW0 baseline remains the TW-S close deliverable |
+| P4 — KernelCostTable | 82 (was 64) | P4-v2 (A2 D2) re-ran against the LIVE kernels, parity byte-exact both runs: live crossover N*=3 (stable), mis-select band \|S\|≤2, NO current-fleet flip — the TW6/CSV consumer binding is now measured fact; FLIP-3 found inapplicable to the live path (already vaddv; spelling is a cost-model cell); raw logs on disk | Consumer-dead until TW6 by structure (JSON/CSS are N≥3) — the CSV flip exercise is the TW6 execution item; TW0 quiet absolutes |
+| P5 — hand-asm door | 86 (was 58) | A2 D1 priced both doors: door(a) vshrn intrinsic +34.6/36.5% over baseline, beats hand asm ~20-28%; door(b) +11.5/15.6%; binding resource established (8 SIMD→GPR crossings, ~2.6x the ALU lever); the asm lane is OBVIATED — P5's "exception the intrinsic cannot survive" refuted; §0/§5.4 reconciled this pass | TW0 quiet PMU absolute re-capture on the pinned toolchain (ratios settled); the per-kernel gate stays as law, unexercised |
+| P6 — HM-core spike | 78 (was 64) | PROTO-B3 BUILDS the width fix: 12-code-line helper in wrap.rs (+45/−15, one file), all 22 Nu8 tags land U8, checked=33/synth=0; root cause CORRECTED (view.rs:141 span destruction, not literals.rs); §6 step-0 re-written to the proven patch with corrected loci | @host union-find unifier still synthetic-only (no @host fn in corpus); Record/Sum absent; both deferred to TW5/TW6 with their consumers — execution items, not open questions |
+| P7 — TOML generalization | 72 (was 58) | PROTO-B1 at the real base efb6c875f (skew corrected): WALL A (one-bit ws-class) and WALL B (bounded regex interpreter) proven dissolvable by grammar-neutral primitives — 7/7 toml-crate round-trip, falsifier fires on cue, all 5 hard leaves match; WART C widened to a two-site JSON fold; §9 re-written with the submodule pin | The in-tree regen wiring (WsPolicy threading, interpreter swap, JSON fold) is specified-to-lines but NOT executed — the mechanical TW6 gate; heavier WART C scope carried |
+| spec-architecture | 82 (was 64) | All five pass-1 blockers verified CLOSED (v2); §13.3 seam self-defer DISCHARGED by research/38 (split-first survives; 81.6% of core is regen-owned; counts are regen artifacts); TW4.1/4.2 coupling proven correct by A1 D4; ONE new blocker (N1: §4 one-substrate default refuted) + six refinements (NEW-R1..R7) — ALL folded into the spec this pass | The pass-2 amendments (esp. the §4/TW3 fused-sink rewrite) are unverified by a critique round — the pass-3 re-score; TW0 breadth (~14 workstreams, R3) tolerated, unsequenced |
+| spec-honesty | 86 (was 84) | Both v1 must-fix defects verified discharged; pass-2 confirms the hard calls (canada loss double-sourced, smallbox decoupling proven, loadavg discipline honored); Defects A (asm flagship sentence) and B (default labelled unbenched while benched-negative) and C (Sampled) identified — ALL reconciled in the spec this pass | Defect 3 stands by design: no ranking is verified cold-quiet until TW0 runs — an execution gate; the reconciled flagship text awaits the pass-3 re-read |
+
+### Overall convergence — weighted by plan-criticality (weights unchanged from pass 1)
+
+| Item | Weight | Score | Contribution |
+|---|---|---|---|
+| spec-architecture | 20 | 82 | 16.40 |
+| spec-honesty | 15 | 86 | 12.90 |
+| P2 fused lane | 15 | 85 | 12.75 |
+| P7 generalization | 12 | 72 | 8.64 |
+| P4 cost table | 10 | 82 | 8.20 |
+| P6 type plane | 10 | 78 | 7.80 |
+| P3 stack | 8 | 82 | 6.56 |
+| P1 presize | 5 | 88 | 4.40 |
+| P5 asm door | 5 | 86 | 4.30 |
+| **OVERALL (pass 2)** | **100** | | **81.95 → 82%** |
+
+The bracket is honest: CRIT-blocker-audit's independent pre-re-score computation lands 80 (it
+scored spec-architecture 72/honesty 85 with work-item 5 in progress); the superseding v2 critique
+scores land 82. Pass 2 therefore closes at **80-82, ledgered 82** under the pass-1 discipline
+(final critique-round scores govern). The 3-point shortfall against the ~85 projection is
+traceable to two facts: the quiet (<2) session did NOT land — every measurement is
+ratio-authoritative, absolute-directional — and the largest pass-2 finding is a NEGATIVE one (N1:
+the §4 one-substrate default refuted), which discharged P2's blocker while opening a
+spec-architecture correction.
+
+### What blocks 100 (pass-3 list; in priority order)
+
+1. **The pass-3 verification re-score** — the only remaining non-execution blocker. This pass's
+   in-place amendments (the §4/TW3 fused-sink rewrite closing N1; the §0 asm reconciliation
+   closing Defect A; Defect B/C relabels; the §3/§5/§6/§9/§11/§13 fold-ins) are pass-3 critique
+   input, not yet re-scored — same discipline as pass 1. Verify each fold-in against its mandate
+   (CRIT-arch-v2 NEW-B1 + NEW-R1..R7; CRIT-honesty-v2 A/B/C; blocker-audit N1-N5).
+2. **The freeze decision**: if the re-score confirms the fold-ins, every remaining blocker is an
+   execution-tranche deliverable owned by a named wave — TW0 quiet re-certification (the sole
+   remaining MEASUREMENT of consequence), TW-S cold parity, TW5 step-0 re-land, TW6 regen wiring
+   + CSV flip. Freeze then proceeds: commit the D-G reconcile, tag, open TW0.
+3. **TW0 internal sequencing** (R3 residue, non-blocking): order the ~14 workstreams inside TW0's
+   letter (D-G → supersession docs → lock audit → Lock-15 → truth-floor quiet session) in the
+   execution plan, without re-lettering.
+
+No new prototype or measurement is required for pass 3. A pass-3 freeze pass, not a discovery
+pass, is now the expected close.

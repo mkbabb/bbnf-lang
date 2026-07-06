@@ -232,3 +232,97 @@ open at read time); it is expected to confirm on the amended draft.
 3. **Everything else is wave-owned execution, none of it pass-shaped**: TW0 quiet (loadavg<2)
    re-certification of the pass-2 directional absolutes incl. the channel ratio; TW-S cold
    parity; TW5 step-0 re-land; TW6 regen wiring + the CSV flip exercise.
+
+---
+
+## Pass 4 — 2026-07-05 (the confirmation pass; FINAL)
+
+Inputs: SPEC-DRAFT-P1.md (pass-3-amended: the NEW-R8 gate-relaxation sentence and the NEW-R9
+two-lanes rephrase, the only two changes since the v3 reads), the confirmation read
+CRIT-spec-architecture-v4, the carried CRIT-spec-honesty-v3 (94, zero blocking) and
+CRIT-freeze-audit (95, `residuals_wave_owned = true`). Confirmation-only, per the pass-3
+projection: no new prototype, no new measurement, no new amendment beyond the freeze-pass
+authoring outputs the audit itself named as what declaring convergence TRIGGERS.
+
+### The confirmation score
+
+**CRIT-spec-architecture-v4: 100/100.** Both pass-3 blockers verified folded exactly — NEW-R8
+(the TW4.1 cost-table gate now carries the explicit liveness-only relaxation mirroring TW1b's
+NEW-R7 clause, the ≥3%-win clause bound to TW6's CSV flip and that binding closed at all four
+sites: the TW4.1 gate, the TW6 gate, §5.1, §13; the Eisel-Lemire leg keeps its own measured-win
+gate so the wave is not dead substrate) and NEW-R9 (§4 "two lanes, only one of them tape-side"
+now matches the §0 charter wording; no affirmative one-substrate residue survives, retractions
+only). The sweep of both amended regions surfaced zero new contradiction; honesty-v3's two
+editorial hairlines lay outside the amended regions and are corrected in the promoted SPEC.md.
+
+### The freeze declaration
+
+**The criterion** (CRIT-freeze-audit:3-5, standing since pass 3): *the tranche plan may be
+declared converged ONLY IF every remaining blocker is a wave-owned execution item AND no open
+research or design question remains.* **Met**: arch-v4 100 (zero blockers), honesty-v3 94 (zero
+blocking), freeze-audit 95 (`residuals_wave_owned = true`); every residual is owned by a named
+wave — the TW0 quiet re-certification (W0.11), TW-S cold parity, TW5 step-0 re-land, TW6 regen
+wiring + the CSV flip — and the one ring-fenced frontier uncertainty (CSS SIMD tokenization
+severity) is a costed TW4 decision point with a defined mechanism, not a design unknown.
+**FREEZE CONFIRMED.** SPEC.md is promoted from the draft as the governing manifest (with §11.1
+TW0 internal sequencing, W0.0-W0.12, discharging the last pass-2 residual without re-lettering,
+and §14 THE FORWARD PROMPT); GESTALT-SYNTHESIS.md and the final DEFERRED-LEDGER.md capstones
+accompany it (commit `3538043c5`). SPEC-DRAFT-P1.md is superseded and retained as the
+convergence record.
+
+### Item table and the final percentage
+
+| Item | Weight | Score | Contribution |
+|---|---|---|---|
+| spec-architecture | 20 | 100 (was 94) | 20.00 |
+| spec-honesty | 15 | 94 (carried) | 14.10 |
+| P2 fused lane | 15 | 85 (carried) | 12.75 |
+| P7 generalization | 12 | 72 (carried) | 8.64 |
+| P4 cost table | 10 | 82 (carried) | 8.20 |
+| P6 type plane | 10 | 78 (carried) | 7.80 |
+| P3 stack | 8 | 82 (carried) | 6.56 |
+| P1 presize | 5 | 88 (carried) | 4.40 |
+| P5 asm door | 5 | 86 (carried) | 4.30 |
+| **OVERALL (pass 4, execution-inclusive index)** | **100** | | **86.75 → 87%** |
+
+Two numbers, both honest, deliberately distinct:
+
+- **The execution-inclusive index closes at 87** — the weighted continuation of the pass-1
+  discipline. The 13-point gap is composed ENTIRELY of P-item residuals frozen-at-pass-2 by
+  discipline: measurements and builds (the quiet session, TW-S parity, the step-0 re-land, the
+  TW6 wiring + flip) that are now SCHEDULED DELIVERABLES inside the frozen plan. No further
+  spec-pass can move this number; it is the loop's fixed point, and its remainder transfers to
+  the implementation campaign's ledgers.
+- **Plan convergence closes at 100** — the loop's terminating quantity per PASS-ALPHA.md:50-51
+  ("whereupon 100% convergence: stop, and develop out that exact tranche plan"), under the
+  freeze criterion the loop's own instruments defined and applied: 100 is
+  frozen-executable-tomorrow with zero surviving blockers and every residual wave-owned. The
+  plan-freeze question was carried by the three verification instruments (100/94/95); it is
+  answered. The loop STOPS here.
+
+### Closing statement — what the loop settled, passes 0-4
+
+Pass 0 (32 agents, research/01-32) established the substrate: the dig named the master
+pathology (substrate-without-consumer, fourteen instances) and its one executed cure (the Y.13
+consumer-invariant gate); the now-state audits found the dormant nightly surface, the two-crate
+regex collision, and the god-crate topology; the SOTA sweeps bounded the frontier (stage-2
+dominates on Apple silicon; no system holds the grammar×emitted-SIMD pair). Pass 1 (P1-P7 +
+critiques, 67%) authored the draft and took the first hard decisions: presize DELETE, the
+per-corpus fused-lane thesis, skinny-on-stable, the cost-table consumer re-bind, the TOML
+adjudication. Pass 2 (A1/A2/A3/B1/B3 + research/38, 82%) was the measurement pass and delivered
+every reversal the plan now stands on: the canada sign settled as an honest LOSS with the named
+fix, the one-substrate fold-over-cursor REFUTED and retracted, the hand-asm lane OBVIATED by
+its own priced doors, TW-S priced to five edits, the TOML walls dissolved by grammar-neutral
+primitives at 7/7, the width fix built. Pass 3 (86%) verified every fold-in and reduced the
+open surface to two spec edits, resolved in place. Pass 4 confirmed them at 100 and froze.
+
+What is settled, permanently and by evidence: fn-per-rule recursive descent over the ONE AoS
+tape (the SoA reversal honored); a dual-lane value plane — lazy cursor over the tape, DISTINCT
+tapeless fused sink as default — matched to sonic-rs knowingly after the stronger claim lost on
+the bench; intrinsics-first kernels with the asm door priced shut; the greedy extractor
+permanent over a measured KernelCostTable, the tautological CSP stage retired; stable 1.96.1 +
+edition 2024 everywhere; generalization certified by a third language through three SHARED
+generator fixes, never per-grammar emitters; and the whole campaign sequenced
+TW0 → TW-S → TW1a/b/c → TW2 → TW4.1 → {TW3 ∥ TW4.2} → TW5 → TW6 under the §1 standing law,
+opening with the D-G reconcile and the `sk-v19-frozen` tag. The convergence loop is closed;
+what follows is execution, governed by SPEC.md §14.

@@ -1,13 +1,17 @@
 # SK-V21 GESTALT-SYNTHESIS — the convergence-loop re-founding, closed
 
 Date: 2026-07-05. HEAD at close: `05302109d` (SK-V20 close; zero code commits since — the cutover
-commit 0 / D-G reconcile executes as TW0's first act, SPEC §11). Convergence trajectory: 67 → 82 →
-86 → freeze, with the three pass-3 verification instruments at 94/94/95 and the freeze audit's
-verdict READY-TO-FREEZE (CONVERGENCE-LEDGER.md:55,130,214; critiques/CRIT-freeze-audit.md:136-146).
-The governing plan is the amended SPEC (SPEC-DRAFT-P1.md at freeze), wave order
-**TW0 → TW-S → TW1a → TW1b → TW1c → TW2 → TW4.1 → {TW3 ∥ TW4.2} → TW5 → TW6** (§11). This document
-is the campaign's synthesis: what the dig proved, what the measurements corrected, what generalizes,
-what the stack becomes, how the evidence is graded, and what the loop itself was worth.
+commit 0 / D-G reconcile executes as TW0's first act, SPEC §11, §11.1 W0.0). Convergence
+trajectory: 67 → 82 → 86 → freeze CONFIRMED at pass 4 — the three pass-3 verification instruments
+at 94/94/95 with verdict READY-TO-FREEZE, then the confirmation verify at **100/100**: both
+pass-3 amendments folded exactly, zero new contradiction in the amended regions
+(CONVERGENCE-LEDGER.md:55,130,214; critiques/CRIT-freeze-audit.md:136-146;
+critiques/CRIT-spec-architecture-v4.md:10-15). The governing plan is the frozen **SPEC.md**
+(promoted from SPEC-DRAFT-P1.md, which it supersedes), wave order
+**TW0 → TW-S → TW1a → TW1b → TW1c → TW2 → TW4.1 → {TW3 ∥ TW4.2} → TW5 → TW6** (§11), TW0
+internally sequenced W0.0–W0.12 (§11.1). This document is the campaign's synthesis: what the dig
+proved, what the measurements corrected, what generalizes, what the stack becomes, how the
+evidence is graded, and what the loop itself was worth.
 
 ---
 
@@ -174,14 +178,15 @@ partially executed in-worktree at pass 2 (PROTO-A3):
 ## §5 — The environmental adjudication
 
 No pass-2 measurement session met the charter's loadavg<2 mandate (all ran 8-25). The adjudication,
-binding on every number in this campaign (SPEC preamble:16-27): decisions are certified at the
+binding on every number in this campaign (SPEC.md:19-32): decisions are certified at the
 **RATIO** level — paired per-sample interleaving with 95% CIs (A1 D1), same-binary min-of-7 PMU
 ratios (A2), same-window cross-harness reproduction (A1's 1.5654 vs report 33's 1.559), and full
 byte-equality parity including fingerprint on all three corpora — while every **ABSOLUTE** remains
 DIRECTIONAL. The quiet (loadavg<2) re-certification is a **TW0 execution gate**, a scheduled
 tranche deliverable, no longer an open research question; no pass-2 decision reopens at TW0 — the
-quiet session certifies magnitudes (SPEC §11 TW0). One ratio is explicitly not decision-grade: the
-A3 channel comparison (load-confounded); it too rides TW0. The truth-floor instrument itself was a
+quiet session certifies magnitudes (SPEC §11.1 W0.11). One ratio is explicitly not decision-grade:
+the A3 channel comparison (load-confounded); its clean capture also rides W0.11, which must run
+before TW-S retires the nightly pin. The truth-floor instrument itself was a
 campaign deliverable: `json_canon_bench` (mirror of `css_canon_bench`, N=200, PMU) closed the
 committed warm/cold ~3× conflation lacuna (research/21:50-77) and graduated at pass 2 with the
 digest-parity assert folded and passing — it and the P5 parity harness are the two instruments
@@ -211,21 +216,29 @@ each catch is a decision the frozen plan now carries in the corrected direction:
    the width-fix root cause corrected from the plausible file to the real one (view.rs:141 span
    destruction, PROTO-B3); the 0.615/1.63 arithmetic inversion; the dual-floor collapse.
 
-The scores tell the honest shape of it: **67 → 82 → 86 → freeze** — pass 1 amended editorially and
-refused to score its own amendments; pass 2 moved every P-item by measurement (its largest finding
-NEGATIVE); pass 3 was verification-only, froze the P-items at their measured scores, and put the
-plan-freeze question entirely on the three instruments (94/94/95, two blocking spec edits found and
-resolved in place). 86 is not a failed ceiling: the residual 14 points are measurements and builds
-owned by named waves — TW0 quiet re-certification, TW-S cold parity, TW5 step-0 re-land, TW6 regen
-wiring + CSV flip — which no further passing could retire (CONVERGENCE-LEDGER.md:216-222). The
-freeze criterion — every remaining blocker wave-owned, no open research or design question — is
-met, with the lone frontier uncertainty (CSS SIMD tokenization severity) consciously ring-fenced
-as a costed TW4 decision inside the measurement loop (CRIT-freeze-audit.md:114-124).
+The scores tell the honest shape of it: **67 → 82 → 86 → freeze confirmed** — pass 1 amended
+editorially and refused to score its own amendments; pass 2 moved every P-item by measurement (its
+largest finding NEGATIVE); pass 3 was verification-only, froze the P-items at their measured
+scores, and put the plan-freeze question entirely on the three instruments (94/94/95, two blocking
+spec edits found and resolved in place); pass 4 was the confirmation read — both amendments
+verified folded exactly against their mandates, zero new contradiction in the amended regions,
+100/100 (critiques/CRIT-spec-architecture-v4.md:10-15) — whereupon SPEC.md was written from the
+amended draft and the freeze executed. The frozen document also closes the freeze audit's one
+least-crisp residual in place: TW0's tail, spine-ordered but unsequenced at the audit, is now
+fully ordered as §11.1 W0.0–W0.12 with dependency edges and three hard orderings (W0.0 first;
+W0.11 after W0.4 + W0.6; W0.11 before TW-S retires the nightly pin — SPEC.md:648-675). 86 is not
+a failed ceiling: the residual 14 points are measurements and builds owned by named waves — TW0
+quiet re-certification, TW-S cold parity, TW5 step-0 re-land, TW6 regen wiring + CSV flip — which
+no further passing could retire (CONVERGENCE-LEDGER.md:216-222). The freeze criterion — every
+remaining blocker wave-owned, no open research or design question — is met, with the lone
+frontier uncertainty (CSS SIMD tokenization severity) consciously ring-fenced as a costed TW4
+decision inside the measurement loop (CRIT-freeze-audit.md:114-124).
 
 ## §7 — The frozen shape
 
 Ten waves, two couplings carried openly (SPEC §11): TW0 (gates, hygiene, the D-G reconcile as
-first commit, the quiet truth-floor session) → TW-S (stack abrogation, priced TW-S.1-5) → TW1a
+commit W0.0, the quiet truth-floor session as W0.11; internally sequenced at §11.1) → TW-S (stack
+abrogation, priced TW-S.1-5) → TW1a
 (topology split, relocation-only proof) → TW1b (the one AoS tape + eager-builder retirement, the
 substrate and its consumer together) → TW1c (mechanical tail + presize deletion) → TW2 (the one
 generator, one regex home, size budgets) → TW4.1 (Eisel-Lemire + the cost-table substrate, before

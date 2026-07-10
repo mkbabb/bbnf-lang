@@ -1,6 +1,5 @@
-//! Tests for branch-and-bound optimization (CostDomain + SoftConstraint).
+//! Tests for branch-and-bound optimization (CostDomain).
 
-use csp_solver::constraint::SoftLambdaConstraint;
 use csp_solver::domain::CostFiniteDomain;
 use csp_solver::domain::finite::FiniteDomain;
 use csp_solver::domain::traits::Domain;
@@ -167,135 +166,6 @@ fn test_three_vars_maximize() {
     assert_eq!(solutions[0], vec![3, 2, 1]);
 }
 
-/// Soft constraints: minimize soft penalty on a plain (non-CostDomain) domain.
-#[test]
-fn test_soft_constraints_only() {
-    let mut csp: Csp<FiniteDomain<i32>> = Csp::new();
-    let domain = FiniteDomain::new(vec![0, 1, 2]);
-    let x = csp.add_variable(domain.clone());
-    let y = csp.add_variable(domain);
-
-    // Hard constraint: x != y
-    csp.add_not_equal(x, y);
-
-    // Soft constraint: prefer x == 1 (penalty 100 if not)
-    csp.add_soft_constraint(SoftLambdaConstraint::new(
-        vec![x],
-        move |assignment| assignment[x as usize] == Some(1),
-        100.0,
-        "prefer_x_1",
-    ));
-
-    // Soft constraint: prefer y == 2 (penalty 50 if not)
-    csp.add_soft_constraint(SoftLambdaConstraint::new(
-        vec![y],
-        move |assignment| assignment[y as usize] == Some(2),
-        50.0,
-        "prefer_y_2",
-    ));
-
-    csp.finalize();
-
-    let config = SolveConfig {
-        pruning: Pruning::ForwardChecking,
-        ordering: Ordering::FailFirst,
-        max_solutions: 1,
-        optimization_mode: OptimizationMode::MinimizeCost,
-        ..Default::default()
-    };
-
-    // Use solve() (not solve_optimized) since FiniteDomain doesn't impl CostDomain.
-    let solutions = csp.solve(&config);
-    assert_eq!(solutions.len(), 1);
-    // Optimal: x=1, y=2 -> penalty 0 (both soft constraints satisfied, x != y holds).
-    assert_eq!(solutions[0], vec![1, 2]);
-}
-
-/// Soft constraints with unavoidable penalty.
-#[test]
-fn test_soft_constraints_unavoidable_penalty() {
-    let mut csp: Csp<FiniteDomain<i32>> = Csp::new();
-    let domain = FiniteDomain::new(vec![0, 1]);
-    let x = csp.add_variable(domain.clone());
-    let y = csp.add_variable(domain);
-
-    // Hard: x != y
-    csp.add_not_equal(x, y);
-
-    // Soft: prefer x == 0 (penalty 10)
-    csp.add_soft_constraint(SoftLambdaConstraint::new(
-        vec![x],
-        move |a| a[x as usize] == Some(0),
-        10.0,
-        "prefer_x_0",
-    ));
-
-    // Soft: prefer y == 0 (penalty 20)
-    // Can't have both x=0 and y=0, so one penalty is unavoidable.
-    csp.add_soft_constraint(SoftLambdaConstraint::new(
-        vec![y],
-        move |a| a[y as usize] == Some(0),
-        20.0,
-        "prefer_y_0",
-    ));
-
-    csp.finalize();
-
-    let config = SolveConfig {
-        pruning: Pruning::ForwardChecking,
-        ordering: Ordering::FailFirst,
-        max_solutions: 10,
-        optimization_mode: OptimizationMode::MinimizeCost,
-        ..Default::default()
-    };
-
-    let solutions = csp.solve(&config);
-    // Feasible: (0,1) penalty=20, (1,0) penalty=10
-    // Best: (1,0) with penalty=10
-    assert!(!solutions.is_empty());
-    assert_eq!(solutions[0], vec![1, 0]);
-}
-
-/// Combined: CostDomain + SoftConstraint.
-#[test]
-fn test_cost_domain_plus_soft_constraints() {
-    let mut csp = Csp::new();
-    // x in {0(cost=1), 1(cost=3)}
-    // y in {0(cost=2), 1(cost=1)}
-    let dx = cost_domain(vec![(0, 1.0), (1, 3.0)]);
-    let dy = cost_domain(vec![(0, 2.0), (1, 1.0)]);
-    let x = csp.add_variable(dx);
-    let y = csp.add_variable(dy);
-
-    // Hard: x != y
-    csp.add_not_equal(x, y);
-
-    // Soft: prefer x == 1 (penalty 10 if violated)
-    csp.add_soft_constraint(SoftLambdaConstraint::new(
-        vec![x],
-        move |a| a[x as usize] == Some(1),
-        10.0,
-        "prefer_x_1",
-    ));
-
-    csp.finalize();
-
-    let config = SolveConfig {
-        pruning: Pruning::ForwardChecking,
-        ordering: Ordering::FailFirst,
-        max_solutions: 10,
-        optimization_mode: OptimizationMode::MinimizeCost,
-        ..Default::default()
-    };
-
-    let solutions = csp.solve_optimized(&config);
-    // Feasible: (0,1) domain_cost=1+1=2, soft_penalty=10 (x!=1) -> total 12
-    //           (1,0) domain_cost=3+2=5, soft_penalty=0           -> total 5
-    // Best: (1,0)
-    assert!(!solutions.is_empty());
-    assert_eq!(solutions[0], vec![1, 0]);
-}
-
 /// Feasibility mode with CostDomain: costs should be ignored.
 #[test]
 fn test_feasibility_ignores_cost() {
@@ -445,20 +315,13 @@ fn test_node_budget_aborts_long_search() {
     // We set a 100-node budget so the abort fires within milliseconds.
     let domain = cost_domain(vec![(1, 10.0), (2, 5.0), (3, 20.0), (4, 1.0), (5, 15.0)]);
     let vars: Vec<_> = (0..30).map(|_| csp.add_variable(domain.clone())).collect();
-    // A soft constraint per pair to force the search to enumerate
-    // (the branch-and-bound would otherwise pick the lowest-cost
-    // value per variable independently).
-    for w in vars.windows(2) {
-        let (x, y) = (w[0], w[1]);
-        csp.add_soft_constraint(SoftLambdaConstraint::new(
-            vec![x, y],
-            move |a: &[Option<i32>]| match (&a[x as usize], &a[y as usize]) {
-                (Some(va), Some(vb)) => va != vb,
-                _ => true,
-            },
-            1.0,
-            "penalize_equal",
-        ));
+    // Make every pair mutually not-equal: 30 variables cannot be colored with
+    // only 5 values, so the problem is infeasible and branch-and-bound must
+    // grind through the tree rather than pick a per-variable optimum.
+    for i in 0..vars.len() {
+        for j in (i + 1)..vars.len() {
+            csp.add_not_equal(vars[i], vars[j]);
+        }
     }
     csp.finalize();
 

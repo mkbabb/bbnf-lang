@@ -3,12 +3,9 @@
 
 pub mod ac3;
 pub mod gac;
-pub mod heuristic;
 pub mod monotonic;
-pub mod nogoods;
 pub mod optimize;
 pub mod propagate;
-pub mod restart;
 pub mod search;
 
 use crate::constraint::VarId;

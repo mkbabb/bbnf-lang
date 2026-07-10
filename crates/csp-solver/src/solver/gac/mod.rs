@@ -98,6 +98,44 @@ struct GacScratch<V> {
     t_stack: Vec<u32>,
     t_call: Vec<(u32, u32)>,
     cache: HashMap<u32, Vec<Option<V>>>,
+    /// Generation-stamped reverse map for the integer fast path (Beat 1).
+    ///
+    /// When `D::Value` is a small non-negative integer, `val_index[k]` holds
+    /// the `all_vals` slot for value `k` **iff** `val_index_gen[k] == cur_gen`.
+    /// The stamp makes the per-call reset O(1) (bump `cur_gen`) so the buffer
+    /// never leaks a prior call's numbering across a value-universe shrink —
+    /// see [`INV-A`](self). Non-integer / out-of-range values fall back to the
+    /// generic `PartialEq` `position` scan, so no `Hash`/`Ord`/`ValueIndex`
+    /// bound is introduced.
+    val_index: Vec<u32>,
+    val_index_gen: Vec<u32>,
+    cur_gen: u32,
+}
+
+/// Upper bound on the integer key the value→index fast path will address.
+/// A value above this (or negative, or non-integer) uses the `position`-scan
+/// fallback, bounding `val_index`'s worst-case footprint. Live GAC value
+/// universes are tiny (`BitsetDomain` is 0..128; assignment columns 0..n_cols),
+/// so the cap is never approached in practice.
+const MAX_FAST_INDEX: usize = 1 << 20;
+
+/// If `v` is one of the supported integer types and lands in
+/// `0..=MAX_FAST_INDEX`, return it as a reverse-map key; otherwise `None`
+/// (caller falls back to the `PartialEq` scan). Uses the `Any` blanket impl
+/// available to every `'static` type, so it adds **no** trait bound to the
+/// generic value — `FiniteDomain<String>` still routes entirely through the
+/// scan and compiles unchanged.
+fn fast_index<V: 'static>(v: &V) -> Option<usize> {
+    let any = v as &dyn Any;
+    macro_rules! try_ints {
+        ($($t:ty),*) => {$(
+            if let Some(&x) = any.downcast_ref::<$t>() {
+                return usize::try_from(x).ok().filter(|&k| k <= MAX_FAST_INDEX);
+            }
+        )*};
+    }
+    try_ints!(u8, u16, u32, u64, usize, i8, i16, i32, i64, isize);
+    None
 }
 
 impl<V> Default for GacScratch<V> {
@@ -122,6 +160,9 @@ impl<V> Default for GacScratch<V> {
             t_stack: Vec::new(),
             t_call: Vec::new(),
             cache: HashMap::new(),
+            val_index: Vec::new(),
+            val_index_gen: Vec::new(),
+            cur_gen: 0,
         }
     }
 }
@@ -181,7 +222,19 @@ fn propagate_inner<D: Domain>(
     depth: usize,
     gac_id: Option<u32>,
     s: &mut GacScratch<D::Value>,
-) -> Revision {
+) -> Revision
+where
+    D::Value: 'static,
+{
+    // Advance the value→index fast-path generation (Beat 1). Every stamped
+    // entry from a prior call is now stale in O(1); on the rare u32 wrap we
+    // clear the stamps once and restart at 1 (0 means "never written").
+    s.cur_gen = s.cur_gen.wrapping_add(1);
+    if s.cur_gen == 0 {
+        s.val_index_gen.iter_mut().for_each(|g| *g = 0);
+        s.cur_gen = 1;
+    }
+
     // ----- Participant + assigned-value collection -----
     s.assigned_ns.clear();
     for &v in scope {
@@ -236,12 +289,34 @@ fn propagate_inner<D: Domain>(
             if s.assigned_ns.contains(&val) {
                 continue;
             }
-            let vi = match s.all_vals.iter().position(|x| *x == val) {
-                Some(k) => k as u32,
-                None => {
-                    s.all_vals.push(val);
-                    (s.all_vals.len() - 1) as u32
+            // Value→index resolution. Integer values in range take the O(1)
+            // generation-stamped reverse map; everything else falls back to
+            // the O(n_vals) `position` scan. Both dedup exactly (INV-B) and
+            // agree on the slot numbering, so the two paths are observably
+            // identical — the map is a pure accelerator over `all_vals`.
+            let vi = match fast_index(&val) {
+                Some(k) => {
+                    if k >= s.val_index.len() {
+                        s.val_index.resize(k + 1, 0);
+                        s.val_index_gen.resize(k + 1, 0);
+                    }
+                    if s.val_index_gen[k] == s.cur_gen {
+                        s.val_index[k]
+                    } else {
+                        let idx = s.all_vals.len() as u32;
+                        s.all_vals.push(val);
+                        s.val_index[k] = idx;
+                        s.val_index_gen[k] = s.cur_gen;
+                        idx
+                    }
                 }
+                None => match s.all_vals.iter().position(|x| *x == val) {
+                    Some(k) => k as u32,
+                    None => {
+                        s.all_vals.push(val);
+                        (s.all_vals.len() - 1) as u32
+                    }
+                },
             };
             s.adj[pu].push(vi);
         }
@@ -268,10 +343,20 @@ fn propagate_inner<D: Domain>(
             let Some(Some(cv)) = cvec.get(s.participants[pu]) else {
                 continue;
             };
-            let Some(vi) = s.all_vals.iter().position(|x| x == cv) else {
-                continue;
+            // Re-resolve the cached value against THIS call's `all_vals`
+            // (built just above, same generation), via the same fast path.
+            // A cached value not present in the current universe → skip, the
+            // warm start is a pure hint (INV-G).
+            let vi = match fast_index(cv) {
+                Some(k) if k < s.val_index.len() && s.val_index_gen[k] == s.cur_gen => {
+                    s.val_index[k]
+                }
+                Some(_) => continue,
+                None => match s.all_vals.iter().position(|x| x == cv) {
+                    Some(k) => k as u32,
+                    None => continue,
+                },
             };
-            let vi = vi as u32;
             if s.match_v[vi as usize] == NONE && s.adj[pu].contains(&vi) {
                 s.match_u[pu] = vi;
                 s.match_v[vi as usize] = pu as u32;

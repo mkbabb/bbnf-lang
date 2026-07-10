@@ -4,19 +4,28 @@
 //!
 //! Fluent API for the common pattern of "assign N source rows to M
 //! target columns with per-cell costs, role-based AllDifferent groups,
-//! and optional hard pin constraints." Internally constructs a
-//! [`Csp<CostFiniteDomain>`] with one variable per row, an
-//! [`AllDifferentExcept`] per row-group, and `-1` as the unmatched
-//! sentinel; the underlying branch-and-bound search is invoked through
-//! [`Csp::solve_optimized`] with [`OptimizationMode::MinimizeCost`] and
-//! [`Pruning::Ac3`].
+//! and optional hard pin constraints."
 //!
-//! `AssignmentBuilder` is intended for `n ≤ ~100` rows / cols. The
-//! branch-and-bound search degrades super-linearly past that point;
-//! larger problems should prefer a specialized Hungarian algorithm
-//! and feed the resulting permutation back into a Csp only if
-//! additional constraints (groups, pins) make the closed-form
-//! solution infeasible.
+//! # Two solve paths
+//!
+//! [`AssignmentBuilder::solve`] dispatches on the shape:
+//!
+//! * **Group-free / pin-free** instances are a pure linear assignment
+//!   problem, solved in closed form by Kuhn-Munkres (the `hungarian` crate)
+//!   in O(n³) — microseconds even at n=200. This path is always
+//!   proven-optimal and never budget-blows.
+//! * **Grouped or pinned** instances go through the general CSP: a
+//!   [`Csp<CostFiniteDomain>`] with one variable per row, an
+//!   [`AllDifferentExcept`] per row-group, and `-1` as the unmatched
+//!   sentinel, driven by branch-and-bound via [`Csp::solve_optimized`]
+//!   ([`OptimizationMode::MinimizeCost`] + [`Pruning::Ac3`]).
+//!
+//! The B&B path is only proven-optimal to roughly **n ≈ 15–18**; past that it
+//! exhausts its node budget and returns a *best-so-far* assignment with
+//! [`SolveStats::budget_exceeded`] set (n=20 budget-blows at ~1 M nodes). The
+//! closed-form dispatch exists precisely to keep the common group-free/pin-free
+//! shape off that cliff. [`AssignmentBuilder::solve_branch_and_bound`] forces
+//! the CSP path regardless of shape (benchmarking / the B&B node-count gate).
 //!
 //! # Example
 //!
@@ -306,8 +315,14 @@ impl AssignmentBuilder {
         self
     }
 
-    /// Validate the configuration, build the underlying CSP, and run
-    /// branch-and-bound to find the minimum-cost assignment.
+    /// Validate the configuration and solve for the minimum-cost assignment.
+    ///
+    /// A **group-free, pin-free** instance is dispatched to the closed-form
+    /// Kuhn-Munkres LAP solver (always optimal, microsecond-scale, never
+    /// budget-blows). Grouped or pinned instances fall through to the general
+    /// branch-and-bound CSP path. See the module docs for the n≈15–18 B&B
+    /// ceiling; use [`solve_branch_and_bound`](Self::solve_branch_and_bound) to
+    /// force the CSP path on any shape.
     pub fn solve(self) -> Result<AssignmentSolution, AssignmentError> {
         // 1. Dimensions + cost must be set.
         if self.n_rows == 0 || self.n_cols == 0 {
@@ -317,6 +332,114 @@ impl AssignmentBuilder {
             return Err(AssignmentError::CostNotSet);
         }
 
+        // Closed-form dispatch: a group-free, pin-free instance is a pure
+        // linear assignment problem — Kuhn-Munkres solves it optimally in
+        // O(n³), sidestepping the exponential B&B that only reaches optimality
+        // to n≈15–18 (n=20 budget-blows). Grouped/pinned instances carry
+        // constraints the LAP cannot express and stay on the CSP path.
+        if self.pins.is_empty() && self.row_groups.is_empty() && self.col_groups.is_empty() {
+            return Ok(self.solve_lap());
+        }
+
+        self.solve_csp()
+    }
+
+    /// Force the branch-and-bound CSP path regardless of shape, bypassing the
+    /// closed-form LAP dispatch in [`solve`](Self::solve).
+    ///
+    /// Exists for benchmarking the general solver and for the node-count
+    /// invariance gate — a group-free/pin-free instance solved here exercises
+    /// the exact same B&B trajectory it did before the LAP dispatch landed, so
+    /// its `nodes_explored` / `backtracks` counts are a stable regression
+    /// tripwire. Prefer [`solve`](Self::solve) in production.
+    pub fn solve_branch_and_bound(self) -> Result<AssignmentSolution, AssignmentError> {
+        if self.n_rows == 0 || self.n_cols == 0 {
+            return Err(AssignmentError::DimensionsNotSet);
+        }
+        if !self.cost_set {
+            return Err(AssignmentError::CostNotSet);
+        }
+        self.solve_csp()
+    }
+
+    /// Closed-form linear-assignment solve (Kuhn-Munkres via the `hungarian`
+    /// crate) for the group-free / pin-free case. Always optimal; the returned
+    /// [`SolveStats`] is the `Default` (no search ran, `budget_exceeded` is
+    /// `false`).
+    fn solve_lap(self) -> AssignmentSolution {
+        let n = self.n_rows;
+        let m = self.n_cols;
+
+        // Augmented integer cost matrix, `n` rows × `m + n` columns:
+        //   cols 0..m       real per-cell costs
+        //   cols m..m+n     one "unmatched" sentinel slot per row, every one
+        //                   priced at `unmatch_penalty`. With `n` such slots any
+        //                   subset of rows may go unmatched simultaneously and a
+        //                   perfect matching of all `n` rows always exists, so
+        //                   the LAP result maps cleanly back onto the CSP's
+        //                   "sentinel is shareable" semantics.
+        //
+        // Costs are quantized to i64 (the crate's integer API); the scale keeps
+        // six decimal digits, ample for any realistic cost function.
+        const SCALE: f64 = 1_000_000.0;
+        let width = m + n;
+        let pen = (self.unmatch_penalty * SCALE) as i64;
+        let mut matrix: Vec<i64> = Vec::with_capacity(n * width);
+        for i in 0..n {
+            let row_off = i * m;
+            for k in 0..m {
+                matrix.push((self.cost_matrix[row_off + k] * SCALE) as i64);
+            }
+            for _ in 0..n {
+                matrix.push(pen);
+            }
+        }
+
+        // Shift to non-negative. Adding a constant to every cell shifts the
+        // total by a fixed `n × c` (every row is matched exactly once in an
+        // `n × (m+n ≥ n)` assignment), so the argmin — the chosen columns — is
+        // unchanged, while the `hungarian` crate's negative-cost handling is
+        // sidestepped.
+        if let Some(&min) = matrix.iter().min()
+            && min < 0
+        {
+            for c in matrix.iter_mut() {
+                *c -= min;
+            }
+        }
+
+        let assignment = hungarian::minimize(&matrix, n, width);
+
+        // Project back: a real column (< m) is a match at its cost; a sentinel
+        // slot (≥ m) — or an unexpected `None` — is the shared unmatched token
+        // at the penalty. Cost is recomputed from the original f64 matrix so
+        // callers see exact inputs, not the quantized/shifted integers.
+        let mut assign: Vec<i32> = vec![SENTINEL; n];
+        let mut cost = 0.0;
+        for (i, slot) in assign.iter_mut().enumerate() {
+            match assignment.get(i).copied().flatten() {
+                Some(k) if k < m => {
+                    *slot = k as i32;
+                    cost += self.cost_matrix[i * m + k];
+                }
+                _ => {
+                    *slot = SENTINEL;
+                    cost += self.unmatch_penalty;
+                }
+            }
+        }
+
+        AssignmentSolution {
+            assign,
+            cost,
+            stats: SolveStats::default(),
+        }
+    }
+
+    /// The general branch-and-bound CSP path. Reached from
+    /// [`solve`](Self::solve) for grouped/pinned instances and unconditionally
+    /// from [`solve_branch_and_bound`](Self::solve_branch_and_bound).
+    fn solve_csp(self) -> Result<AssignmentSolution, AssignmentError> {
         // 2. Default groups to all-zero if the caller did not supply
         //    them; otherwise verify lengths match the declared
         //    dimensions.

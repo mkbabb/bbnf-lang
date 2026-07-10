@@ -62,12 +62,12 @@ impl Csp {
 
     /// Propagate constraints (auto-select strategy).
     ///
-    /// Releases the GIL for the duration of the native call (`py.allow_threads`)
-    /// so a Python-side `asyncio.wait_for` timeout / heartbeat thread keeps
-    /// making progress while this runs on a worker thread.
+    /// Detaches from the runtime (releases the GIL) for the duration of the
+    /// native call (`py.detach`) so a Python-side `asyncio.wait_for` timeout /
+    /// heartbeat thread keeps making progress while this runs on a worker thread.
     fn propagate(&mut self, py: Python<'_>) -> PyResult<bool> {
         let inner = &mut self.inner;
-        py.allow_threads(|| inner.propagate())
+        py.detach(|| inner.propagate())
             .map(|()| true)
             .map_err(|e| CspError::from(e).into())
     }
@@ -75,7 +75,7 @@ impl Csp {
     /// Propagate with an explicit strategy. See `propagate` re: GIL release.
     fn propagate_with(&mut self, py: Python<'_>, strategy: PropagationStrategy) -> PyResult<bool> {
         let inner = &mut self.inner;
-        py.allow_threads(|| inner.propagate_with(strategy.into()))
+        py.detach(|| inner.propagate_with(strategy.into()))
             .map(|()| true)
             .map_err(|e| CspError::from(e).into())
     }
@@ -84,7 +84,7 @@ impl Csp {
     fn solve(&mut self, py: Python<'_>, config: &SolveConfig) -> Vec<HashMap<u32, u32>> {
         let rust_config: RustSolveConfig = config.into();
         let inner = &mut self.inner;
-        py.allow_threads(|| inner.solve(&rust_config))
+        py.detach(|| inner.solve(&rust_config))
             .into_iter()
             .map(|sol| {
                 sol.into_iter()
@@ -105,7 +105,7 @@ impl Csp {
         let rust_config: RustSolveConfig = config.into();
         let given_vec: Vec<(VarId, u32)> = given.into_iter().collect();
         let inner = &mut self.inner;
-        py.allow_threads(|| inner.solve_with_given(&rust_config, &given_vec))
+        py.detach(|| inner.solve_with_given(&rust_config, &given_vec))
             .into_iter()
             .map(|sol| {
                 sol.into_iter()

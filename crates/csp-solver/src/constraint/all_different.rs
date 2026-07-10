@@ -52,29 +52,34 @@ impl AllDifferent {
         D::Value: PartialEq + 'static,
     {
         let mut changed = false;
-        let singletons: Vec<(VarId, D::Value)> = self
-            .scope
-            .iter()
-            .filter_map(|&v| {
-                vars[v as usize]
-                    .domain
-                    .singleton_value()
-                    .map(|val| (v, val))
-            })
-            .collect();
-
-        for (sv, sval) in &singletons {
-            for &other in &self.scope {
-                if other == *sv {
-                    continue;
-                }
-                if vars[other as usize].prune(sval, depth) {
-                    changed = true;
-                }
-                if vars[other as usize].domain.is_empty() {
-                    return Revision::Unsatisfiable;
+        // Snapshot-then-prune over a pooled thread-local buffer (Beat 2). The
+        // borrow is released before the GAC core call below — that path borrows
+        // its own thread-local scratch, and holding this one across it would
+        // risk a `RefCell` double-borrow. Semantics are byte-identical to the
+        // prior per-call `Vec`: collect every singleton first, then prune peers.
+        let unsat = super::scratch::with_singleton_buf::<D::Value, _>(|singletons| {
+            for &v in &self.scope {
+                if let Some(val) = vars[v as usize].domain.singleton_value() {
+                    singletons.push((v, val));
                 }
             }
+            for (sv, sval) in singletons.iter() {
+                for &other in &self.scope {
+                    if other == *sv {
+                        continue;
+                    }
+                    if vars[other as usize].prune(sval, depth) {
+                        changed = true;
+                    }
+                    if vars[other as usize].domain.is_empty() {
+                        return true;
+                    }
+                }
+            }
+            false
+        });
+        if unsat {
+            return Revision::Unsatisfiable;
         }
 
         // Dynamic gate: count live (non-singleton, non-empty) variables.

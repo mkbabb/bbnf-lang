@@ -9,9 +9,7 @@ pub mod solve;
 
 use crate::adjacency::Adjacency;
 use crate::config::{Csp, SolveStats};
-use crate::constraint::{
-    self, AllDifferent, Constraint, ConstraintEnum, NotEqual, SoftLambdaConstraint, VarId,
-};
+use crate::constraint::{self, AllDifferent, Constraint, ConstraintEnum, NotEqual, VarId};
 use crate::domain::Domain;
 use crate::variable::Variable;
 
@@ -50,11 +48,6 @@ impl<D: Domain> Csp<D> {
     /// Add a pre-typed constraint enum directly (avoids boxing for built-in types).
     pub fn add_constraint_enum(&mut self, c: ConstraintEnum<D>) {
         self.constraints.push(c);
-    }
-
-    /// Add a soft constraint (contributes penalty cost when violated, never prunes).
-    pub fn add_soft_constraint(&mut self, c: SoftLambdaConstraint<D>) {
-        self.constraints.push(ConstraintEnum::Soft(c));
     }
 
     /// Add a not-equal constraint (devirtualized fast path).

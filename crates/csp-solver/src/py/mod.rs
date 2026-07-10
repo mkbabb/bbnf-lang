@@ -1,6 +1,7 @@
-//! PyO3 bindings — general-purpose CSP solver + Sudoku convenience API.
+//! PyO3 bindings — general-purpose CSP solver + Sudoku/Futoshiki convenience API.
 //!
-//! Module name: `csp_solver` (drop-in replacement for the Python package).
+//! Module name: `csp_solver`. This is the only solver the FastAPI backend
+//! (`web/api`) imports; there is no Python-side solver behind it.
 //!
 //! ```python
 //! from csp_solver import Csp, Pruning, Ordering, PropagationStrategy, SolveConfig
@@ -8,7 +9,7 @@
 //! from csp_solver import SudokuDifficulty, create_sudoku_csp, solve_sudoku, create_random_board
 //! ```
 //!
-//! Build: `PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1 maturin develop --release --features py`
+//! Build: `maturin develop --release --features py`
 //!
 //! Split into submodules (each well under the 500-line budget) rather than
 //! one monolithic file:

@@ -1,4 +1,7 @@
 //! Board generation and difficulty measurement.
+//!
+//! Tests: `tests/sudoku_generate.rs` (template-bank + R13 debug-consistency
+//! contracts), `tests/sudoku.rs` (generation/solve/transform end-to-end).
 
 use include_dir::{Dir, include_dir};
 
@@ -308,61 +311,4 @@ fn generate_board_slow_with_rng(n: u32, difficulty: Difficulty, rng: &mut Simple
     }
 
     board
-}
-
-// ─── Whitebox tests ─────────────────────────────────────────────────────────
-//
-// The crate's tests-of-record are blackbox integration tests in `tests/`. These
-// inline `#[cfg(test)]` tests are the narrow exception the manifest sanctions
-// (mirroring `error.rs`): they exercise a *module-private* contract — the R13
-// difficulty-consistency assertion and its private `expected_backtrack_band`
-// table — which a blackbox test in `tests/` cannot see. Both cases use N=3 Easy
-// boards (fast to generate *and* measure: 0 backtracks), so neither pays the
-// multi-second `measure_difficulty` cost a genuinely-hard board would incur.
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    /// Happy path: a template that genuinely matches its claimed difficulty must
-    /// not trip the debug consistency assertion (it is silent when the contract
-    /// holds).
-    #[test]
-    fn generate_with_templates_matching_difficulty_does_not_panic() {
-        let easy = generate_board(3, Difficulty::Easy);
-        let board = generate_board_with_templates(3, Difficulty::Easy, &[easy]);
-        assert_eq!(board.len(), 81);
-    }
-
-    /// Mismatch: a trivially-easy board (0 backtracks) served under a `Hard`
-    /// claim (band `100..=MAX`) must fail the debug assertion loudly — the exact
-    /// "wrong directory" scenario R13 guards against. Uses an easy board so the
-    /// measurement is fast and the 0-backtracks result is stable.
-    #[test]
-    #[cfg_attr(
-        not(debug_assertions),
-        ignore = "R13 guard is a debug_assert; compiled out in release"
-    )]
-    #[should_panic(expected = "does not match its claimed difficulty")]
-    fn generate_with_templates_mismatched_difficulty_panics_in_debug() {
-        let easy = generate_board(3, Difficulty::Easy);
-        let _ = generate_board_with_templates(3, Difficulty::Hard, &[easy]);
-    }
-
-    /// The embed is populated for the sizes/difficulties the bank ships, and
-    /// degrades to an empty vec (not a panic) for absent ones — mirroring the
-    /// former `_load_templates` "return []" behavior, now at compile time.
-    #[test]
-    fn embedded_templates_present_and_absent() {
-        let hard = embedded_templates(3, Difficulty::Hard);
-        assert!(!hard.is_empty(), "N=3 hard bank should be embedded");
-        // The no-parse count agrees with the parsed length.
-        assert_eq!(embedded_template_count(3, Difficulty::Hard), hard.len());
-        // N=5 medium is deliberately not shipped (rejected at the API).
-        assert!(embedded_templates(5, Difficulty::Medium).is_empty());
-        assert_eq!(embedded_template_count(5, Difficulty::Medium), 0);
-        // Every embedded N=3 easy template parses to a full 81-cell board.
-        for board in embedded_templates(3, Difficulty::Easy) {
-            assert_eq!(board.len(), 81);
-        }
-    }
 }

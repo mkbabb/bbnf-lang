@@ -111,12 +111,9 @@ where
     /// Propagate from a freshly-assigned `var`. Returns `true` on domain
     /// wipe-out. All prunes are streamed onto `self.trail` for O(removed) undo.
     ///
-    /// The propagation primitives now return the blame signal (`Some(ci)` =
-    /// the constraint that emptied a domain — the CHS/dom-wdeg substrate). The
-    /// unified kernel does not yet consume the culprit (the restart/CHS driver
-    /// re-authoring from chs-restarts-nogoods is deferred — see the pass-3
-    /// composition report); it is collapsed to a wipe-out bool here via
-    /// `.is_some()`, keeping search behavior byte-identical.
+    /// The propagation primitives return a blame signal (`Some(ci)` = the
+    /// constraint that emptied a domain). The unified kernel does not consume
+    /// the culprit; it is collapsed to a wipe-out bool here via `.is_some()`.
     #[inline]
     fn propagate_from(
         &mut self,
@@ -363,7 +360,7 @@ impl<D: Domain> BranchBound<'_, D>
 where
     D::Value: PartialEq + 'static,
 {
-    /// Total cost of a complete assignment: domain costs + soft penalties.
+    /// Total cost of a complete assignment: the sum of domain costs.
     fn assignment_cost(&self, k: &Kernel<'_, D>, assignment: &[Option<D::Value>]) -> f64 {
         let mut cost = 0.0;
         for (i, val) in assignment.iter().enumerate() {
@@ -371,15 +368,11 @@ where
                 cost += self.eval.cost(&k.variables[i].domain, v);
             }
         }
-        for c in k.constraints {
-            cost += c.soft_penalty(assignment);
-        }
         cost
     }
 
     /// Optimistic bound on any completion (lower bound for minimize, upper for
-    /// maximize). Unassigned vars contribute their best-case domain cost;
-    /// fully-assigned soft-constraint scopes contribute their penalty.
+    /// maximize). Unassigned vars contribute their best-case domain cost.
     fn optimistic_bound(&self, k: &Kernel<'_, D>, assignment: &[Option<D::Value>]) -> f64 {
         let mut bound = 0.0;
         for (i, val) in assignment.iter().enumerate() {
@@ -387,12 +380,6 @@ where
                 Some(v) => bound += self.eval.cost(&k.variables[i].domain, v),
                 None if self.maximize => bound += self.eval.max_cost(&k.variables[i].domain),
                 None => bound += self.eval.min_cost(&k.variables[i].domain),
-            }
-        }
-        for c in k.constraints {
-            let scope = c.scope();
-            if scope.iter().all(|&v| assignment[v as usize].is_some()) {
-                bound += c.soft_penalty(assignment);
             }
         }
         bound

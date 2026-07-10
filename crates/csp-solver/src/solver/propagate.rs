@@ -1,10 +1,9 @@
 //! Forward checking and AC-FC hybrid propagation.
 //!
 //! On a domain wipe-out these return `Some(constraint_id)` naming the
-//! constraint that emptied a domain — the "blame" signal consumed by
-//! conflict-history weighting (CHS / dom-wdeg). `None` means propagation
-//! completed without a wipe-out. Every pruned neighbor is still recorded on
-//! `trail` for O(touched) undo (the kernel's touched-VarId trail).
+//! constraint that emptied a domain — a "blame" signal. `None` means
+//! propagation completed without a wipe-out. Every pruned neighbor is still
+//! recorded on `trail` for O(touched) undo (the kernel's touched-VarId trail).
 
 use crate::SolveStats;
 use crate::adjacency::Adjacency;

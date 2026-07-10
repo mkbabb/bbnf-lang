@@ -1,11 +1,15 @@
 //! A generalized CSP (Constraint Satisfaction Problem) solver.
 //!
-//! Isomorphic to the Python CSP solver. Supports:
+//! This is the sole solver in the workspace. Supports:
 //! - Backtracking search with configurable pruning and variable ordering
 //! - AC-3 (Maintaining Arc Consistency) propagation
-//! - Forward checking
-//! - AC-FC hybrid
+//! - Forward checking and the AC-FC hybrid
+//! - GAC all-different (Régin 1994), default-ON
 //! - Lattice domains for monotonic fixed-point propagation
+//!
+//! The optional PyO3 (`feature = "py"`) and wasm bindings expose this same
+//! core to Python and JavaScript — they wrap it, they do not mirror a
+//! separate implementation.
 //!
 //! The crate-root surface is assembled from three internal modules:
 //! [`config`] (solve vocabulary + the `Csp<D>` container), [`csp`] (the

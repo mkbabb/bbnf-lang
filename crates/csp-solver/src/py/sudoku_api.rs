@@ -1,4 +1,5 @@
-//! Sudoku convenience API (isomorphic to Python's `csp_solver.solver.sudoku`).
+//! Sudoku convenience API — `SudokuCSP`, `create_sudoku_csp`, `solve_sudoku`,
+//! `create_random_board`, exported on the `csp_solver` PyO3 module.
 
 use std::collections::HashMap;
 
@@ -11,7 +12,10 @@ use crate::ordering::Ordering as RustOrdering;
 use crate::sudoku::{self, Difficulty};
 use crate::{Pruning as RustPruning, SolveConfig as RustSolveConfig};
 
-#[pyclass]
+/// `from_py_object`: passed into `create_random_board`/`template_count` (and the
+/// `default=` of `get`) by value, so it opts into pyo3 0.29's `FromPyObject`
+/// derive.
+#[pyclass(from_py_object)]
 #[derive(Clone)]
 pub enum SudokuDifficulty {
     EASY,
@@ -47,7 +51,10 @@ impl From<SudokuDifficulty> for Difficulty {
     }
 }
 
-#[pyclass]
+/// `skip_from_py_object`: only ever borrowed (`&mut SudokuCSP`) or returned by
+/// value — never extracted from Python — so it declines pyo3 0.29's
+/// `FromPyObject` derive.
+#[pyclass(skip_from_py_object)]
 #[derive(Clone)]
 pub struct SudokuCSP {
     board: Vec<u32>,
@@ -153,7 +160,7 @@ pub fn solve_sudoku(
     // Releases the GIL for the entire construction + search: the FastAPI
     // event loop (and any heartbeat/health-check coroutine on it) keeps
     // running while this executes on its `asyncio.to_thread` worker.
-    let (solutions, stats) = py.allow_threads(|| {
+    let (solutions, stats) = py.detach(|| {
         let (mut rust_csp, given) = sudoku::create_sudoku_csp(board, n);
         let solutions = rust_csp.solve_with_given(&config, &given);
         (solutions, rust_csp.stats().clone())
@@ -182,7 +189,7 @@ pub fn solve_sudoku(
 
 /// Single-call sketch collapsing `create_sudoku_csp()` + `solve_sudoku()`
 /// into one PyO3 entry point, board-construction and search both inside one
-/// `py.allow_threads` block.
+/// `py.detach` block.
 ///
 /// The two-call shape (`create_sudoku_csp` then `solve_sudoku`) that
 /// `web/api/.../board.py` uses today costs two separate FFI boundary
@@ -226,7 +233,7 @@ pub fn solve_sudoku_board(
         ..Default::default()
     };
 
-    let (solutions, stats) = py.allow_threads(|| {
+    let (solutions, stats) = py.detach(|| {
         let (mut rust_csp, given) = sudoku::create_sudoku_csp(&board, n);
         let solutions = rust_csp.solve_with_given(&config, &given);
         (solutions, rust_csp.stats().clone())
@@ -267,7 +274,7 @@ pub fn create_random_board(
     // of which has no timeout wrapper at all on the Python side (see pass-1
     // fastapi-service F1a) and is the more direct DoS surface of the two
     // sudoku entry points.
-    let board = py.allow_threads(|| -> Result<Vec<u32>, CspError> {
+    let board = py.detach(|| -> Result<Vec<u32>, CspError> {
         if let Some(ref tmpls) = templates {
             // Explicit-template path (retained for callers that still marshal
             // their own templates, e.g. the wasm wire). The Python service no

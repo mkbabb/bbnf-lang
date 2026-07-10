@@ -20,6 +20,8 @@
 //! FastAPI JSON error envelope (`web/api/src/app/core/errors.py`, likewise
 //! not reconciled here) via the *Python* exception classes that `py/`
 //! raises. `code()` is the one string all downstream layers agree on.
+//!
+//! Tests: `tests/error.rs`.
 
 use std::fmt;
 
@@ -130,24 +132,5 @@ impl From<crate::AssignmentError> for CspError {
             crate::AssignmentError::Infeasible => CspError::Unsatisfiable,
             other => CspError::invalid_input(other.to_string()),
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn every_variant_has_a_stable_code() {
-        assert_eq!(CspError::Unsatisfiable.code(), "UNSATISFIABLE");
-        assert_eq!(CspError::BudgetExceeded.code(), "BUDGET_EXCEEDED");
-        assert_eq!(CspError::invalid_input("x").code(), "INVALID_INPUT");
-        assert_eq!(CspError::Timeout.code(), "TIMEOUT");
-    }
-
-    #[test]
-    fn unsatisfiable_marker_converts() {
-        let e: CspError = crate::Unsatisfiable.into();
-        assert_eq!(e, CspError::Unsatisfiable);
     }
 }

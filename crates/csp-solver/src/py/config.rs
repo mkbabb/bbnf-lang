@@ -15,10 +15,15 @@ use crate::{CancelToken as RustCancelToken, SolveConfig as RustSolveConfig};
 /// Construct one, pass it into `SolveConfig(cancel=token)`, keep the same
 /// `token` on the Python side, and call `token.cancel()` from *any* thread —
 /// including the asyncio event-loop thread — to stop a search that's
-/// currently running on a `Python::allow_threads`-released worker thread.
+/// currently running on a `Python::detach`-released worker thread.
 /// Checked at the same cadence as `node_budget` inside the search loop, so
 /// cancellation typically takes effect within a handful of search nodes.
-#[pyclass]
+///
+/// `from_py_object`: a `CancelToken` is passed *into* Python-facing APIs by value
+/// (the `cancel=` argument of `solve_sudoku`/`solve_futoshiki` and the settable
+/// `SolveConfig.cancel` field), so it opts into pyo3 0.29's now-explicit
+/// `FromPyObject` derive.
+#[pyclass(from_py_object)]
 #[derive(Clone, Default)]
 pub struct CancelToken {
     pub(super) inner: RustCancelToken,
@@ -51,27 +56,25 @@ impl CancelToken {
 
 /// The subset of the Rust-core [`RustSolveConfig`] surfaced to Python.
 ///
-/// **R15 — `optimization_mode` and `restarts` are deliberately kept off the py
-/// wire** (recorded alongside GF-7's restarts/CHS off-the-wire decision):
+/// **R15 — `optimization_mode` is deliberately kept off the py wire.**
+/// `optimization_mode` only changes behavior for **cost-aware** search
+/// (`solve_optimized()` on a `CostDomain`, or `solve()` over a domain carrying
+/// real domain-costs). The py [`Csp`] wraps `Csp<BitsetDomain>` and its builder
+/// surface adds only not-equal / all-different / equals / less-than /
+/// greater-than constraints — **no cost constraints**. Under that surface
+/// `MinimizeCost` / `MaximizeCost` run branch-and-bound with a `ZeroCost`
+/// evaluator (every solution costs 0), collapsing to `Feasibility` in result
+/// while doing strictly more work. Surfacing it would put an inert-or-pessimizing
+/// knob on the wire.
 ///
-/// - `restarts` is accepted-but-inert in the Rust core today (its Luby driver is
-///   not wired onto the unified kernel — see the core `SolveConfig` doc-comment),
-///   so exposing it would advertise a knob that does nothing.
-/// - `optimization_mode` only changes behavior for **cost-aware** search
-///   (`solve_optimized()` on a `CostDomain`, or `solve()` over a domain carrying
-///   real domain-costs / soft-constraint penalties). The py [`Csp`] wraps
-///   `Csp<BitsetDomain>` and its builder surface adds only
-///   not-equal / all-different / equals / less-than / greater-than constraints —
-///   **no cost or soft constraints**. Under that surface `MinimizeCost` /
-///   `MaximizeCost` run branch-and-bound with a `ZeroCost` evaluator (every
-///   solution costs 0), collapsing to `Feasibility` in result while doing
-///   strictly more work. Surfacing it would put an inert-or-pessimizing knob on
-///   the wire — the same reasoning that keeps `restarts` off it.
+/// It stays at its Rust-core default (`optimization_mode: Feasibility`) via the
+/// `..Default::default()` below. Revisit if/when the py wire ever exposes cost
+/// constraints.
 ///
-/// Both stay at their Rust-core defaults (`restarts: false`,
-/// `optimization_mode: Feasibility`) via the `..Default::default()` below.
-/// Revisit if/when the py wire ever exposes cost/soft constraints.
-#[pyclass]
+/// `skip_from_py_object`: only ever crosses the FFI boundary as `&SolveConfig`
+/// (the `From<&SolveConfig>` conversion), never extracted from Python by value,
+/// so it declines pyo3 0.29's `FromPyObject` derive.
+#[pyclass(skip_from_py_object)]
 #[derive(Clone)]
 pub struct SolveConfig {
     #[pyo3(get, set)]
@@ -124,7 +127,9 @@ impl From<&SolveConfig> for RustSolveConfig {
     }
 }
 
-#[pyclass]
+/// `skip_from_py_object`: purely a returned/getter type — never extracted from
+/// Python by value — so it declines pyo3 0.29's `FromPyObject` derive.
+#[pyclass(skip_from_py_object)]
 #[derive(Clone)]
 pub struct SolveStats {
     #[pyo3(get)]

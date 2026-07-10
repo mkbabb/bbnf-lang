@@ -54,13 +54,15 @@ pub enum OptimizationMode {
 pub struct SolveConfig {
     pub pruning: Pruning,
     pub ordering: Ordering,
+    /// Cap on solutions returned. `1` is a satisfiability probe.
+    ///
+    /// On a problem with more than one solution, *which* first solution comes
+    /// back under `Pruning::Ac3` is trajectory-dependent — different
+    /// pruning/ordering combinations may return different valid members of the
+    /// solution set. Each is a genuine member (see `kernel-soundness-closure.md`
+    /// §7.2), but callers must not depend on the specific choice. Only
+    /// enumerate-all (`usize::MAX`) has a defined, pruning-invariant set.
     pub max_solutions: usize,
-    /// Enable Luby restarts with phase saving and (if `Ordering::Chs`) dynamic
-    /// conflict-history weighting. Opt-in; production sudoku stays `Ac3 + Mrv`.
-    /// The restart *driver* is not yet wired onto the unified kernel (see the
-    /// pass-3 composition report — chs backtrack.rs re-authoring is deferred);
-    /// today this flag is accepted but inert.
-    pub restarts: bool,
     /// Optimization mode. Defaults to `Feasibility` (pure constraint satisfaction).
     pub optimization_mode: OptimizationMode,
     /// Maximum number of search nodes (backtrack / branch-and-bound
@@ -93,7 +95,6 @@ impl Default for SolveConfig {
             pruning: Pruning::Ac3,
             ordering: Ordering::FailFirst,
             max_solutions: 1,
-            restarts: false,
             optimization_mode: OptimizationMode::Feasibility,
             node_budget: Some(1_000_000),
             cancel: None,
@@ -131,7 +132,7 @@ pub struct Csp<D: Domain> {
     pub(crate) constraints: Vec<ConstraintEnum<D>>,
     pub(crate) adjacency: Option<Adjacency>,
     pub(crate) stats: SolveStats,
-    /// Per-constraint weights for the Mrv / Chs weighted-degree scan.
+    /// Per-constraint weights for the Mrv weighted-degree scan.
     pub(crate) constraint_weights: Vec<f64>,
     /// For each variable, the indices of constraints involving it.
     pub(crate) var_constraint_ids: Vec<Vec<usize>>,

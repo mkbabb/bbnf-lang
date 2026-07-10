@@ -32,7 +32,11 @@ use crate::{Pruning as RustPruning, SolveConfig as RustSolveConfig};
 /// [`FutoshikiPuzzle`] (adjacency + range checked at construction via
 /// [`FutoshikiPuzzle::from_parts`]) so [`solve_futoshiki`] can rebuild the
 /// Rust CSP inside its GIL-released block without re-validating.
-#[pyclass]
+///
+/// `skip_from_py_object`: only ever borrowed (`&mut FutoshikiCSP`) or returned —
+/// never extracted from Python by value — so it declines pyo3 0.29's
+/// `FromPyObject` derive.
+#[pyclass(skip_from_py_object)]
 #[derive(Clone)]
 pub struct FutoshikiCSP {
     puzzle: FutoshikiPuzzle,
@@ -138,7 +142,7 @@ pub fn solve_futoshiki(
     };
 
     let puzzle = csp.puzzle.clone();
-    let (solutions, stats) = py.allow_threads(|| {
+    let (solutions, stats) = py.detach(|| {
         let mut rust_csp = build_futoshiki_csp(&puzzle);
         // `solve_with_given` (feasibility-only) with an empty given, mirroring
         // the sudoku surface and the wasm wire — the fixed cells are baked as
@@ -171,7 +175,10 @@ pub fn solve_futoshiki(
 
 /// A generated Futoshiki board: dense `{position: value}` givens (`0` blanks
 /// dropped, matching the API `values` shape) plus its inequality furniture.
-#[pyclass]
+///
+/// `skip_from_py_object`: a returned-only type — never extracted from Python by
+/// value — so it declines pyo3 0.29's `FromPyObject` derive.
+#[pyclass(skip_from_py_object)]
 #[derive(Clone)]
 pub struct FutoshikiBoard {
     #[pyo3(get)]
@@ -206,7 +213,7 @@ pub fn create_random_futoshiki(
         .into());
     }
 
-    let (board, inequalities) = py.allow_threads(|| match seed {
+    let (board, inequalities) = py.detach(|| match seed {
         Some(s) => futoshiki::generate_futoshiki_seeded(board_size, s),
         None => futoshiki::generate_futoshiki(board_size),
     });

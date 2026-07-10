@@ -103,32 +103,36 @@ impl<V: Clone + PartialEq + std::fmt::Debug> AllDifferentExcept<V> {
             );
         }
 
-        // Small scope: singleton removal is fast and sufficient.
+        // Small scope: singleton removal is fast and sufficient. Snapshot into
+        // the pooled thread-local buffer (Beat 2), preserving the exact prior
+        // semantics — non-sentinel singletons only, collected before pruning.
         let mut changed = false;
-        let singletons: Vec<(VarId, D::Value)> = self
-            .scope
-            .iter()
-            .filter_map(|&v| {
-                vars[v as usize]
-                    .domain
-                    .singleton_value()
-                    .map(|val| (v, val))
-            })
-            .filter(|(_, val)| *val != self.sentinel)
-            .collect();
-
-        for (sv, sval) in &singletons {
-            for &other in &self.scope {
-                if other == *sv {
-                    continue;
-                }
-                if vars[other as usize].prune(sval, depth) {
-                    changed = true;
-                }
-                if vars[other as usize].domain.is_empty() {
-                    return Revision::Unsatisfiable;
+        let sentinel = &self.sentinel;
+        let unsat = super::scratch::with_singleton_buf::<D::Value, _>(|singletons| {
+            for &v in &self.scope {
+                if let Some(val) = vars[v as usize].domain.singleton_value()
+                    && val != *sentinel
+                {
+                    singletons.push((v, val));
                 }
             }
+            for (sv, sval) in singletons.iter() {
+                for &other in &self.scope {
+                    if other == *sv {
+                        continue;
+                    }
+                    if vars[other as usize].prune(sval, depth) {
+                        changed = true;
+                    }
+                    if vars[other as usize].domain.is_empty() {
+                        return true;
+                    }
+                }
+            }
+            false
+        });
+        if unsat {
+            return Revision::Unsatisfiable;
         }
 
         if changed {

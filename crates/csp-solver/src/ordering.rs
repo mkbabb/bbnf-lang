@@ -13,13 +13,8 @@ pub enum Ordering {
     FailFirst,
     /// Mrv: pick the variable minimizing `domain-size / Σ constraint-weights`.
     /// The weights are frozen at 1.0 (no dom/wdeg bumping is wired to the
-    /// kernel), so this is a static heuristic; `Chs` shares the same scan with
-    /// dynamically evolving weights.
+    /// kernel), so this is a static heuristic.
     Mrv,
-    /// CHS (Conflict-History Search): same `dom / Σ weights` scan as `Mrv`,
-    /// but the weights are updated dynamically by an exponential recency-weighted
-    /// average on each conflict (see [`crate::solver::heuristic`]).
-    Chs,
 }
 
 /// Select the next unassigned variable from the stack according to the ordering heuristic.
@@ -52,10 +47,8 @@ pub fn select_variable<D: Domain>(
             Some(best_idx)
         }
 
-        // CHS and Mrv share the `dom / Σ weights` branching rule; they
-        // differ only in *how* `constraint_weights` evolves (static 1.0 for
-        // Mrv, ERWA-updated for CHS — see `solver::heuristic`).
-        Ordering::Mrv | Ordering::Chs => {
+        // Mrv branches on `dom / Σ weights`; the weights are frozen at 1.0.
+        Ordering::Mrv => {
             let mut best_idx = 0;
             let mut best_score = f64::MAX;
             for (i, &var) in stack.iter().enumerate() {

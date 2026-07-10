@@ -5,7 +5,6 @@ node_budget
 optimization_mode
 ordering
 pruning
-restarts
 SolveStats:
 backtracks
 budget_exceeded

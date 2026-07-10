@@ -204,9 +204,9 @@ do_update() {
 
 # The PyO3 cfg branch is csc411-only and cannot live in bbnf's workspace graph:
 # bbnf-core's `jiter` already links pyo3 0.23 (`links = "python"`), csc411's crate
-# wants pyo3 0.24, and cargo forbids two `links="python"` packages in one graph.
+# wants pyo3 0.29, and cargo forbids two `links="python"` packages in one graph.
 # So compile that branch against the VENDORED src in a DETACHED single-crate
-# workspace (empty `[workspace]` table) at pyo3 0.24 — the faithful realization of
+# workspace (empty `[workspace]` table) at pyo3 0.29 — the faithful realization of
 # spike §8.1's "both cfg branches must build; the ThreadSafe fix is cfg-gated."
 verify_py_isolated() {
     local tmp; tmp="$(mktmp)"
@@ -218,7 +218,7 @@ name = "csp-solver"
 version = "0.1.0"
 edition = "2024"
 
-# Empty table → detaches this throwaway crate from bbnf's workspace so pyo3 0.24
+# Empty table → detaches this throwaway crate from bbnf's workspace so pyo3 0.29
 # never meets bbnf-core's jiter→pyo3 0.23 (links="python") conflict.
 [workspace]
 
@@ -228,13 +228,17 @@ py = ["dep:pyo3"]
 
 [dependencies]
 include_dir = "0.7.4"
-pyo3 = { version = "0.24", features = ["extension-module"], optional = true }
+# Promoted csc411-side from a dev-dependency to a real lib dependency at the
+# 0.3.0 substrate excision (Kuhn-Munkres LAP call now in builder/assignment.rs);
+# the isolated py crate compiles the same vendored src/, so it needs it too.
+hungarian = "1"
+pyo3 = { version = "0.29", features = ["extension-module"], optional = true }
 
 [lib]
 crate-type = ["lib"]
 EOF
-    # Forward-compat flag: pyo3 0.24's build script hard-rejects a Python newer
-    # than its max supported (3.13); the local interpreter may be 3.14+. This is
+    # Forward-compat flag: pyo3 0.29's build script hard-rejects a Python newer
+    # than its max supported; the local interpreter may be newer. This is
     # the exact env the spike used to compile the py branch (§6).
     ( cd "$tmp" && PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1 cargo check --features py )
 }

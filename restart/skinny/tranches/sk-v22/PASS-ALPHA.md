@@ -36,7 +36,15 @@ plan distills into the graduated tree's durable documentation.
    latex-paper, and keyframes. It is not bbnf's to fold in or retire; bbnf's seams to it are the
    canonical Rust regex engine (consumed), the NO-GO letter (dated), and the PT-E1 diagnostics
    design (mirrored when bbnf grows an error surface).
-4. **We must profile — under load, with accounting.** The loadavg<2 gate being environmentally
+4. **parse-that is IN scope for uplift — both TypeScript and Rust.** The "backbone untouched"
+   framing is corrected: backbone status raises the discipline bar (semver; value.js, latex-paper,
+   and keyframes must not break) but does not exempt parse-that from maturation. Rust: the tree is
+   frozen at 2026-05-02, carries the smallbox[nightly] stable-blocker, and skinny forked its
+   scanners — the uplift de-nightlies, modernizes deps, folds the fork home, and retires the WDM
+   tier per the NO-GO. TS: 1.0.0 shipped with PT-E1 (scoped diagnostics) and PT-E2 (inference
+   leak) open — the uplift executes them toward 1.1.0. A cross-repo uplift track with its own
+   gates joins the plan.
+5. **We must profile — under load, with accounting.** The loadavg<2 gate being environmentally
    unachievable does not excuse profiling: PMU cycles/byte with paired per-sample interleaving,
    per-block loadavg recording, multi-window repetition, and load-robust ratio certification are
    the method (validated at SK-V21 pass 2). A load-accounted profile of skinny at HEAD is this

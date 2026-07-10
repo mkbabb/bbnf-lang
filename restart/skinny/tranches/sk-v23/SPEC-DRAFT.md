@@ -1,8 +1,15 @@
 # SK-V23 SPEC-DRAFT — The Dual-Repo Tranche Codex
 
+> **SUPERSEDED 2026-07-10 — promoted to `SPEC.md` (FROZEN).** Retained as the draft record;
+> the frozen spec is the sole authority.
+
 **PASS-1 SYNTHESIS, 2026-07-09 — AMENDED 2026-07-10 (pass-1 agglomeration):** six prototype
 verdicts (PB-1–PB-6) + nine critiques folded in place; per-item movement and residuals in
-`CONVERGENCE-LEDGER.md`. Charter: `sk-v23/PASS-ALPHA.md` (three binding axes: full x86
+`CONVERGENCE-LEDGER.md`. **RE-AMENDED 2026-07-10 (pass-2, the closing agglomeration):**
+PROTO-PB-3b (sheets CARRY, executed byte-parity), research/09 (the 70-row DEFERRED-LEDGER
+re-home table), research/10 (the owner adjudication packet), and the two re-critiques
+(p2-architecture 94, p2-honesty-charter 97) folded in place; the pass-1 M1-M5 interlock
+moderates closed (closing ledger items 18-22). Charter: `sk-v23/PASS-ALPHA.md` (three binding axes: full x86
 abrogation both repos; deep modern SIMD within the ASM-hybrid union; greenfield-from-skinny,
 delineated honestly). Evidence base: sk-v23 research/01-08 (this pass), the FROZEN sk-v22 SPEC
 (graduation GW0-GW6 + PT-R/PT-T + archive sequence §2.1 + the §5 profiling standing law), the
@@ -92,7 +99,7 @@ commits as a durable doc in TB1.W4.
 |---|---|---|---|
 | Generator/emit spine | **GREENFIELD** (~2,000 new / −1,500 fork deleted) | `general_descent/` (1,206 LOC) as the structural sketch; PROTO-B1's wall dissolutions as proofs (WsPolicy, leaf-regex interpreter); the frozen `json_templates` parser as the byte-parity oracle (research/03:61-99) | TB3 |
 | Type plane | **GREENFIELD (net-new ~1,000 LOC)** — there is NO type system to carry; `RuntimeTypedProjection.type_text` is an opaque byte-slice (grammar_provider.rs:200-202); grep-zero inference machinery (research/03:181-209) | The `->` annotations in every corpus grammar; the sk-v21 §6 (research 28 §6) design order — HM core over the two open surfaces, structural projection for the rest; the frozen text-threaded projections as the never-lose-a-type oracle | TB4 |
-| Value plane / sink | **GREENFIELD (~1,400 new / −1,059 per-grammar retired)** | `json/sink.rs` (120) + `json/view.rs` (488) as the proven-cold prototypes; the legacy `bbnf-path` cursor alphabet (918 LOC) REBUILT natively, not ported (sk-v22/SPEC.md:82); PT-T4's `Diagnostic` shape for the error surface (research/03:114-143) | TB4 |
+| Value plane / sink | **GREENFIELD (~1,400 new / −780 per-grammar retired — JSON-only: `json/sink.rs` 120 + `json/view.rs` 488 + `json/value.rs` 172; `sheets/view.rs` (279) CARRIES per PB-3b executed byte-parity; the ~16-LOC css_l4 declaration-values sink retires per its own oracle, uncounted in the headline)** | `json/sink.rs` (120) + `json/view.rs` (488) as the proven-cold prototypes; the legacy `bbnf-path` cursor alphabet (918 LOC) REBUILT natively, not ported (sk-v22/SPEC.md:82); PT-T4's `Diagnostic` shape for the error surface (research/03:114-143) | TB4 |
 | SIMD dispatch + cost-table + SOTA layer | **GREENFIELD dispatch (~500 new); CARRY the ~1,600 LOC aarch64 primitive bodies** (they ARE the SK-V21 win); DELETE x86 wholesale | `bbnf-simd`'s 15-kernel body set + skinny `movemask.rs` (vshrn already in-tree); the dav1d discipline; research/02's landing table as the uplift manifest (research/03:144-179) | TB5 |
 | xtask/regen host | **GREENFIELD-REBUILD (~750 new / −2,500 fork deleted)** — B2's per-grammar fork, same sin as WART-C one layer up | `[workspace.metadata.bbnf.grammars]` + the existing conformance feature; clean-regen gates N1/N6/N25 (research/03:228-246) | TB3 |
 | Frontend (grammar+IR) | CARRY + FIX (god-file split, inline tests out) + the NEW `->` type-expression parse seam | — | TB4.W0 (seam), TB2 (hygiene) |
@@ -127,7 +134,13 @@ scope increase; the B3 width patch re-lands as a WAVE within it, not as the whol
   (`.github/workflows/ci.yml:12,:95`; `bench-iai.yml:25`) — the NEON kernels are never
   CI-exercised; skinny has NO CI at all. Flip to Apple-Silicon/arm runners + hard `uname -m`
   assertion; create the skinny workflow (research/01:81-97). The `release.yml` LSP x86-target
-  matrix is a FLAGGED POLICY CALL for the owner, not an automatic drop (research/01:88-95).
+  matrix is ADJUDICATED as packet Item 3 (`research/10-adjudication-packet.md:107-145`;
+  pass 2): the PROCEEDING position drops the three x86 (+ Windows-MSVC) LSP targets, retains
+  `aarch64-apple-darwin` + `aarch64-unknown-linux-gnu`, and attaches a NAMED-EXCEPTION clause —
+  reinstating x86 LSP targets requires an explicit owner grant recorded against the clause,
+  the one sanctioned x86 door, editor-distribution artifact only, never the
+  parser/kernel/emit plane. A veto retains the five-wide matrix as an owner-granted axis-1
+  exception with a scoped, reasoned allowlist entry for the release-workflow target strings.
   Owner: TB1.W3.
 - **parse-that: zero literal x86 intrinsics in the combinator SIMD plane except two arms; the
   real exposure is `portable_simd`.** The three `#![feature]` gates
@@ -164,7 +177,13 @@ scope increase; the B3 width patch re-lands as a WAVE within it, not as the whol
    mimalloc gate is non-SIMD). TB1.W3 OWNS the final rule: wasm32 tokens forbidden in
    SIMD/kernel/emit surfaces; platform/allocator gates enter the allowlist with a per-entry
    reason string; the gate must FIRE on a planted wasm32 SIMD arm AND stay green on the
-   mimalloc gate before reading done.**
+   mimalloc gate before reading done.** **VENDOR CLAUSE (pass 2, M4): C.2's walk INCLUDES the
+   vendored mirrors (`crates-infra/bbnf-regex`, the csp-solver vendor). Byte-identity and
+   abrogation never conflict because the pin is gated: a vendor pin advances ONLY to an
+   upstream commit that is x86-clean under the same token set, gate-verified at every sync
+   (TB2.W3 sync discipline; the TB3.W2 ↔ PT-R3 pairing); if upstream retains an x86 arm, the
+   pin holds at the last clean commit and the retention is ledgered, never silently synced
+   past the gate.**
 3. **C.3 Workspace lint floor.** `[workspace.lints.rust]` with `unexpected_cfgs` in deny mode +
    a check-cfg allowlist naming only sanctioned cfgs — catches feature-flag regrowth and typos
    C.2's token set misses (research/01:177-186).
@@ -178,7 +197,10 @@ scope increase; the B3 width patch re-lands as a WAVE within it, not as the whol
   sites). The gate must FIRE on a planted x86 intrinsic before reading green (the Lock-14
   planted-phantom discipline, sk-v22/SPEC.md:137-141).
 - **TB2.W2 empties the allowlist** — abrogates the residues; post-TB2 the allowlist holds only
-  the gate file's self-reference.
+  the gate file's self-reference. **STANDING META-INVARIANT (pass 2, M3): from TB2 close
+  onward, EVERY tranche close gate re-asserts `ALLOWLIST == {gate self-reference}`; any
+  re-growth demands a dated, per-entry reason string plus an owner note — the const cannot
+  silently re-grow, which is what "regrowth-proof" (axis 1) means for the gate itself.**
 - **TB3 delivers C.1** (the greenfield emitter never emits the token; regenerated stamps are
   aarch64-only).
 - **PT-R1.W2 is the parse-that mirror** (deny `portable_simd` + the x86 token set; planted
@@ -218,17 +240,26 @@ research/08 §E: (a) cutover/pure-move, (b) hygiene/stack, (c) substrate consume
   - **TB1.W2 — Removals + re-found root (GW0.c).** `git rm` `crates/` (the 502 x86 hits die),
     `restart/`, the archived trees; worktree purge; skinny `[workspace]` becomes root.
   - **TB1.W3 — The x86 anti-regrowth guard.** Layers C.2/C.3/C.4 per §2.3; transitional
-    allowlist dated; skinny CI created aarch64-only; `release.yml` policy call recorded for
-    owner adjudication.
+    allowlist dated; skinny CI created aarch64-only; `release.yml` adjudicated per packet
+    Item 3 (§2.1): aarch64-only + the named-exception clause, PROCEEDING absent owner veto.
   - **TB1.W4 — Durable docs + seam records + the oracle harness (GW0.e/f).** The six docs
     (ARCHITECTURE, PERFORMANCE-THESIS, NEGATIVE-RESULTS, BENCH-PROTOCOL, ORACLES,
     EVIDENCE-INDEX) + the §1 delineation table as the seventh; the four dated seam records; the
     GREENFIELD differential-oracle harness (~400 LOC, research/03:248-261) — every TB3/TB4/TB5
     greenfield gate consumes it, so it lands here, build-infra-first. **AMENDED (architecture
-    critique B2): W4 also owns the DEFERRED-LEDGER continuity audit — every ledger row (~40)
+    critique B2): W4 also owns the DEFERRED-LEDGER continuity audit — every ledger row
     re-homed to a named TB/PT owner or formally retired under the GW→TB re-lettering, no row
     orphaned; every §1 greenfield cleared against the REDRESS rejected-route registry
-    (DEFERRED-LEDGER §0) before its tranche opens.**
+    (DEFERRED-LEDGER §0) before its tranche opens.** **RE-AMENDED (pass 2): the audit
+    VERIFIES, never discovers — `research/09-ledger-rehome.md` is the pre-drafted NORMATIVE
+    table (70 rows walked, full TW→GW→TB/PT coordinate chains, no row orphaned outright; the
+    pass-1 "~40" figure corrects to 70 — the lower count was the active-residue subset). W4's
+    audit output MUST additionally: (i) fold the N5 dead/lying-oracle + W3C-rekey hygiene
+    sweep HERE — this wave is already the oracle-mechanism wave (research/09:146-151);
+    (ii) name the two standing deferrals verbatim, "authority unchanged, re-verified" — the
+    TS/WASM backends (Lock 5) and the TS path runtime (research/09:152-159); (iii) walk
+    CONTENT, not labels — the P7 phantom-fork row's literal TW6 label maps by content to
+    TB3.W1 (GW2a); a mechanical TW6→TB6 rename would misfile it (research/09:167-171).**
   - **TB1.W5 — Fuzzer + conformance infra (N5, fold-cheap).** The grammar-derived differential
     fuzzer skeleton on the regen host's conformance feature; fuzz-found divergences enter
     NEGATIVE-RESULTS (research/04:102-117).
@@ -348,14 +379,23 @@ research/08 §E: (a) cutover/pure-move, (b) hygiene/stack, (c) substrate consume
     (research/03:114-143). **AMENDED (PB-3 + its critique): the seam is ADOPTED as
     `NodeClass`/`Classify` — one plane-wide neutral enum, each grammar bridging via a
     two-method Classify (project, not flatten; PB-3: compiles over the carried AoS tape, all
-    four lanes, lazy-view byte-identical to `json/view.rs`, 602-LOC scratch proof). But the
-    sheets retirement is RE-SCOPED: the live sheets consumer navigates by a 39-kind
-    `rule_kind` flat-sweep (sheets_conformance.rs:90-91, view.rs:252) that `NodeClass` alone
-    cannot carry, and PB-3's flat scalar demo emitted no Enter/Leave structure. `sheets/view.rs`
-    leaves the unconditional −1,059 set; its retirement gates on a SHEETS differential oracle
-    proving structural events + kind pass-through reproduce the consumer's navigation
-    byte-identically over Classify — else sheets view CARRIES under a named row. JSON/CSS
-    retire per their own oracles.**
+    four lanes, lazy-view byte-identical to `json/view.rs`, 602-LOC scratch proof). And sheets
+    is DECIDED — CARRY, unconditional (RE-AMENDED pass 2, PROTO-PB-3b executed byte-parity,
+    13/13): the sheets tape records ZERO Enter/Leave events — 39 no-op `let _ = (Nu8, &mark)`
+    tags, one live `mark`, 12 `match_leaf` sites; only leaves seal a pair — so the structural
+    events the pass-1 gate named DO NOT EXIST (PROTO-PB-3b.md:24-49); pure two-method
+    `Classify` byte-DIVERGES from the live `rule_kind` navigation (`find(Identifier)`→offset 1
+    vs `find_by_class(Scalar(Raw))`→offset 0, `assert_ne!` proven — PROTO-PB-3b.md:81-97);
+    parity is recoverable ONLY by a `NativeTag` escape re-importing the 39-ordinal across the
+    seam — the flattening the "no enum crosses" invariant disavows, REJECTED, do not build
+    (PROTO-PB-3b.md:99-127,159-163). `sheets/view.rs` (279 LOC) CARRIES under a named row; the
+    SHEETS differential oracle is DELETED from this wave's close gate; the retirement
+    recomputes to −780, JSON-only. The delineation, stated honestly: the neutral surface
+    serves keyed/indexed value trees (JSON; CSS declaration values, data-tree-shaped);
+    flat-tape rich-`rule_kind` grammars (sheets) keep their native node sweep at full
+    fidelity — the `tape/cursor.rs:8-19` disclaimer vindicated, and the live
+    `sheets_conformance.rs` consumer stays green unchanged. JSON/CSS retire per their own
+    oracles.**
   - **TB4.W3 — The value-plane feature folds.** Q1 derive-macro direct-to-struct made
     grammar-agnostic (no facet runtime reflection); N4 the W3C/MDN-derived typed CSS catalog
     WITH the mandatory `var()`/Unparsed escape hatch — catalog breadth only, never
@@ -364,8 +404,10 @@ research/08 §E: (a) cutover/pure-move, (b) hygiene/stack, (c) substrate consume
 - **Close gate (class c).** Value plane: substrate runtime consumer-invariant — liveness AND
   measured win; fused-sink output byte-identical to the frozen `JsonSink` on the JSON corpus;
   lazy-view cursor-walk identical to `json/view.rs`; **the differential oracle is the code
-  being retired, FOR EVERY retired member — the retirement set spans JSON+sheets+css, so
-  parity proves per-member; JSON alone never covers it (PB-3 critique)**. Type plane: per-rule
+  being retired, FOR EVERY retired member — the retirement set is JSON (+ the css
+  declaration-values sink per its own oracle); sheets is OUT of the set (CARRY, PB-3b), so no
+  sheets oracle exists or is ever built; parity proves per-member (PB-3 critique, re-scoped
+  pass 2)**. Type plane: per-rule
   TypeDesc/registry equivalence on every corpus grammar (arrow-count the cheap first layer,
   the aggregate surfaces included); the frozen text-threaded projections remain a strict
   subset of what the plane derives — never a superset it loses (PB-4: strictly richer, zero
@@ -385,8 +427,12 @@ research/08 §E: (a) cutover/pure-move, (b) hygiene/stack, (c) substrate consume
   tokenize-once index — into the live kernel plane, greenfielding the dispatch and the
   dead/partial kernels.
 - **Entry deps.** TB3 (one-regex-home — `eisel_lemire`'s canonical home is the vendored engine
-  post-GW2b; the fix lands wherever the module lives). TB4 optional-parallel (the value plane
-  furnishes `materialize_f64`).
+  post-GW2b; the fix lands wherever the module lives). TB4 optional-parallel, with the SEAM
+  OWNER NAMED (pass 2, M1): `materialize_f64` is authored ONCE, by TB4.W2 (the value plane);
+  TB5.W0 consumes it, never authors it — restating SK-V21's decode-ordering law (the
+  TW4.1-before-TW3-closes rule that once cost a tranche split); TB5.W0's Eisel-Lemire wiring
+  lands before TB4.W2 closes, so the value plane's close gate exercises the final decode seam,
+  and the two greenfields never author the seam concurrently.
 - **Waves.**
   - **TB5.W0 — Eisel-Lemire (GW3).** The headline: canada eager cold BEATS sonic — the
     +1.48 cyc/B float tax localized to `materialize_f64` closed (04:149-159, 222-226).
@@ -396,7 +442,11 @@ research/08 §E: (a) cutover/pure-move, (b) hygiene/stack, (c) substrate consume
     struct (`dispatch.rs:51-85`) → a pluggable cost-table (pluggable-components precept); the
     ~15 carried kernel bodies wired-or-retired per wire-before-retire (the dead majority is the
     charter's "dead/partial kernels" verdict); the vqtbl ≤32-byte table bound encoded as a
-    cost-model guard, not a change (research/02:136-142, research/03:144-179).
+    cost-model guard, not a change (research/02:136-142, research/03:144-179). **AMENDED
+    (pass 2): the N20 revival door binds HERE — the twice-buried structural-bitmap pre-scan
+    may return ONLY through this cost table with a measured win; this is the general-purpose
+    door, distinct from TB5.W3's CSS-specific index, named so no future session re-discovers
+    the architecture a third time (research/09:160-165).**
   - **TB5.W2 — The SOTA NEON uplift.** In the dav1d discipline (intrinsics default, per-kernel
     asm gate, checkasm-liveness; vshrn obviates hand asm — do not re-attempt): the
     vshrn-nibble-domain movemask wherever the vaddv anti-pattern survives in the graduated
@@ -478,8 +528,14 @@ other row is review-at-leisure and gates nothing in parse-that's own T/U-adjacen
 law, PASS-ALPHA's axis-1/axis-2 "BOTH repos" reads, for parse-that, as DELIVERED-AS-PROPOSAL:
 the codex delivers the proposal artifacts (tranche specs, diffs, evidence coordinates) and
 claims those; the x86-abrogation and SIMD OUTCOMES in parse-that are CONTINGENT on adoption at
-parse-that's own cadence and are never reported as campaign deliveries. Owner ratification of
-this framing is a FREEZE PRECONDITION.
+parse-that's own cadence and are never reported as campaign deliveries. **RE-AMENDED
+(pass 2): the ratification is realized as Item 1 of the owner adjudication packet
+(`research/10-adjudication-packet.md`) — a veto-able PROCEEDING position: absent a veto the
+orchestrator proceeds on the contingent framing as written, and this default-proceed authority
+is itself the first thing a veto may withdraw. The one non-absorbable branch is disclosed, not
+papered: a full veto (insisting parse-that OUTCOMES be reported as DELIVERED) is irreconcilable
+with the non-clobber law, and the orchestrator halts for a charter re-issue rather than either
+clobber parse-that or misreport (research/10:59-66).**
 
 Two intra-repo chains: **PT-R1 → PT-R2 → PT-R3** (Rust) ∥ **PT-T4 → PT-T5** (TypeScript).
 PT baselines: parse-that's OWN divan scanner/regex benches, cold, load-accounted band — no bbnf
@@ -572,7 +628,10 @@ ratios.
 - **Charter.** The bidirectional fold-back, the resolution-graph relocation, the hazard
   closures, and the self-hosted regex.bbnf made a LIVE gate.
 - **Entry deps.** PT-R2 (the SOTA engine is the fold target) AND bbnf TB1.W1 (the
-  `crates-infra/egraph` re-home target must EXIST before the repoint).
+  `crates-infra/egraph` re-home target must EXIST before the repoint). **DECLARATION
+  CORRECTED (pass 2, M2): PT-R3.W0 is a DETACHED, time-clamped wave — its sole entry dep is
+  TB1.W1; it is exempt from the PT-R2 gate and must be actionable at TB1 opening (the dated
+  ask rides the letter then, per §5 edge 1). The PT-R2 entry dep binds W1-W3 only.**
 - **Waves.**
   - **PT-R3.W0 — The patch-table repoint (PT-R.5) — TIME-SENSITIVE.** The gitignored
     8-coordinate `.cargo/config.toml` patch web → `crates-infra/egraph[-derive]` paths; the
@@ -685,7 +744,11 @@ Cross-repo edges (the named laws):
    in the TB1.W2 opening commit. FALLBACK (bounded — no external SLA holds the critical path):
    if unconfirmed at TB1.W2 open, every removal proceeds EXCEPT `crates/egraph[-derive]`,
    retained under a dated NEIGHBOR-GRACE row — the campaign's only sanctioned duplicate —
-   deleted the instant confirmation lands.**
+   deleted the instant confirmation lands.** **RE-AMENDED (pass 2): the duplicate's sanction
+   is packaged as adjudication packet Item 2 (research/10:70-104) — a veto-able PROCEEDING
+   position, PROCEEDING absent a veto: one named, dated, bounded, self-deleting row. A veto
+   here evaporates the Item-1 fallback and collapses to block-or-brick (TB1.W2 blocks on the
+   external repoint, or parse-that's local build breaks); it is weighed as such.**
 2. **THE FOLD-BACK PAIRING.** `PT-R3.W1 (PT-R.4)` ↔ `TB3.W2 (GW2b)` — the two halves land
    against each other's parity suites; the vendor mirror byte-identical at the pinned upstream
    commit; {ws,quoted,number} family-scanner parity is the shared gate.
@@ -702,6 +765,12 @@ Cross-repo edges (the named laws):
 
 Independent of bbnf entirely: PT-R2 (self-gated), PT-T4, PT-T5; PT-R1 except as edge-5's
 precondition.
+
+**DECLARED SCHEDULE RISK (pass 2, M5).** TB4 and TB5 are the two heaviest tranches — two
+greenfields apiece plus the kernel/decision planes. Their `∥` is a permission, not a demand:
+if the 6-lane write ceiling binds, TB4 precedes TB5 serially (the M1 seam order is already
+compatible) rather than thinning either tranche's gates. The risk is named here so overload
+surfaces as a sequencing decision, never as gate erosion.
 
 **H1/baseline bindings, one line each:** bbnf — research/04 is the standing anchor for all six
 tranches; TB1 gates GW0.e on the H1 twitter reconciliation (2.10× vs 1.59×, +36% drift
@@ -773,6 +842,18 @@ regressions); PB-3 FEASIBLE for the JSON lanes (`NodeClass`/`Classify` adopted; 
 seam OPEN — pass-2 focus); PB-4 PASS arrow-scoped (falsifier broadened, §6 order restored,
 corpus migration sequenced at TB1.W1); PB-5 GO load-caveated; PB-6 GO adopted (cold close
 clause added). Verdicts folded into §§2-4 above; movement ledger in `CONVERGENCE-LEDGER.md`.
+
+**PASS-2 RESULTS (2026-07-10, the closing pass):** PROTO-PB-3b executed (scratch crate,
+471 LOC, 13/13 sheets-lane parity checks) — **SHEETS = CARRY, unconditional**: zero
+Enter/Leave events on the sheets tape, pure `Classify` byte-divergent from the `rule_kind`
+navigation, the `NativeTag` escape rejected as re-imported flattening; the −1,059 recomputes
+to −780 JSON-only (folded at §1 + TB4.W2 + the TB4 close gate). research/09 pre-enumerates
+the 70-row DEFERRED-LEDGER re-home with four flags — N5, the Lock-5 TS/WASM pair, the N20
+door, the P7 label caution (folded at TB1.W4 + TB5.W1). research/10 packages the three owner
+adjudications as veto-able PROCEEDING positions (folded at §2.1, §4.0, §5 edge 1). The two
+re-critiques (p2-architecture 94, p2-honesty-charter 97) return ZERO open design questions;
+their determinate folds — R1/R2/R3 (M1-M5) and the synthesis lag — are the amendments of this
+revision.
 
 All prototypes are worktree/scratch-isolated analysis instruments, never landed (precept 50).
 parse-that briefs run on scratch COPIES under the non-clobber law. Each fits one 40-min agent.
@@ -921,7 +1002,7 @@ Placed by the owner or a parse-that-side session; never written by a bbnf agent.
 11. `NodeClass`/`Classify` ADOPTED as the TB4.W2 value-plane seam; the sheets retirement
     RE-SCOPED out of the unconditional −1,059, gated on its own differential oracle (structural
     events + 39-kind pass-through); the TB4 close gate extends parity to every retired member
-    (PB-3 + its critique).
+    (PB-3 + its critique). *(Gate framing SUPERSEDED at item 18: PB-3b settles CARRY.)*
 12. TB4.W1 re-pinned to the sk-v21 §6 order (steps 1-3 land, 4-6 demand-gated — PB-4's
     inversion rejected); the falsifier broadened to per-rule TypeDesc/registry equivalence;
     the HM surfaces declared scaffold-dormant (Y.13 honesty); the orphaned `@host`/closure
@@ -939,3 +1020,34 @@ Placed by the owner or a parse-that-side session; never written by a bbnf agent.
     re-lettering; the REDRESS rejected-route registry cleared per greenfield (architecture B2).
 17. The CONTINGENT-DELIVERY clause added at §4.0 — OWNER-RATIFY, a named freeze precondition
     (charter critique).
+
+**Pass-2 amendments (2026-07-10, the closing agglomeration), from PB-3b + research/09 +
+research/10 + the two re-critiques:**
+
+18. **SHEETS = CARRY, unconditional** — PB-3b's executed byte-parity (zero Enter/Leave events
+    on the sheets tape; pure `Classify` byte-divergent from the `rule_kind` navigation;
+    `NativeTag` rejected as re-imported flattening). The sheets differential oracle DELETED
+    from the TB4.W2 close gate; the retirement headline recomputed −1,059 → **−780 JSON-only**
+    (the ~16-LOC css declaration-values sink retires per its own oracle, uncounted in the
+    headline — the two-way arithmetic reconcile pinned); item 11's gate framing superseded.
+    The neutral surface's honest span: keyed/indexed value trees only; flat-tape
+    rich-`rule_kind` grammars keep their native sweep.
+19. TB1.W4's continuity audit re-pointed at research/09's pre-drafted 70-row table (verify,
+    not discover; "~40" corrected to 70); the N5 oracle-hygiene sweep folded into TB1.W4; the
+    Lock-5 TS/WASM + TS-path standing deferrals named "authority unchanged, re-verified"; the
+    N20 revival door bound to TB5.W1's cost table (closing pass-1 L1 with it);
+    walk-content-not-labels (P7's literal TW6 label → TB3.W1 by content).
+20. The three owner adjudications folded as veto-able PROCEEDING positions per research/10:
+    Item 1 contingent-vs-delivered framing (PT-R.5 dated ask at TB1 opening + bounded
+    fallback; the full-veto hard-halt branch disclosed, never papered); Item 2 the
+    NEIGHBOR-GRACE duplicate sanction; Item 3 release.yml aarch64-only + the named-exception
+    clause. The default-proceed authority is stated as itself the first thing a veto may
+    withdraw (honesty re-critique governance note).
+21. The five pass-1 MODERATE interlock gaps closed: M1 `materialize_f64` seam owner (TB4.W2
+    authors, TB5.W0 consumes; decode-ordering law restated); M2 PT-R3.W0 declared
+    detached/time-clamped (the PT-R2 entry dep binds W1-W3 only); M3 the standing
+    allowlist meta-invariant at every close; M4 C.2 scans the vendored mirrors + the
+    clean-pin sync law; M5 the TB4/TB5 schedule risk declared.
+22. Re-critique scores recorded: p2-architecture 94, p2-honesty-charter 97 — both with ZERO
+    open design questions; every named determinate fold (R1/R2/R3 and the synthesis lag)
+    lands in THIS revision. Pass-2 movement ledger in `CONVERGENCE-LEDGER.md`.

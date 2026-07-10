@@ -1,4 +1,4 @@
-# SK-V23 CONVERGENCE-LEDGER — PASS 1 (agglomerated 2026-07-10)
+# SK-V23 CONVERGENCE-LEDGER — PASS 1 + PASS 2 (closing pass agglomerated 2026-07-10)
 
 Companion to `SPEC-DRAFT.md` (amended in place this pass). Inputs: six prototype verdicts
 (PB-1–PB-6), six prototype critiques, three codex critiques (architecture 80, honesty 87,
@@ -74,3 +74,73 @@ release.yml), and the unenumerated DEFERRED-LEDGER mapping.
 Verdict: **ready_to_freeze = FALSE.** Two residuals are not wave-owned execution (the sheets
 feasibility question; the owner-ratification set). Pass-2 is small and named; on its close
 this ledger expects ≥97 with every residual wave-owned.
+
+---
+
+# PASS 2 — THE CLOSING PASS (agglomerated 2026-07-10)
+
+Inputs: `prototypes/PROTO-PB-3b.md` (executed, 13/13 byte-parity), `research/09-ledger-rehome.md`
+(70 rows), `research/10-adjudication-packet.md` (three checkboxes), two re-critiques
+(`CRIT-p2-architecture.md` 94, `CRIT-p2-honesty-charter.md` 97 — both ZERO open design
+questions pre-fold). Every fold both re-critiques prescribed — R1 (sheets CARRY, −780,
+oracle deleted), R2 (the 70-row pre-map + four flags), R3 (M1-M5), the packet linkage, and
+the synthesis lag itself — landed in `SPEC-DRAFT.md` this revision (closing ledger items
+18-22).
+
+## §6 — Per-item movement, pass 2
+
+| Item | P1-post | Pass-2 evidence + fold | P2-post | Residual (all wave-owned or veto-able) |
+|---|---|---|---|---|
+| PB-1 accel/truffle | 95 | none new; plan complete | 96 | Gate-cost certification re-measure — PT-R2.W2 close |
+| PB-2 x86 purge | 96 | none new | 97 | C.1 greenfield re-proof — TB3.W1 close |
+| PB-3 value seam | 80 | **PB-3b: SHEETS = CARRY** by executed byte-parity (zero Enter/Leave; Classify byte-divergent, `assert_ne!`; NativeTag rejected); folded at §1/TB4.W2/close gate; −1,059→−780 JSON-only, css ~16 LOC per its own oracle, pinned | 98 | JSON(+css) retirement parity — TB4.W2 close |
+| PB-4 type plane | 90 | none new; falsifier already broadened | 91 | Aggregate-falsifier execution — TB4.W1 close |
+| PB-5 V8 shape | 96 | none new | 97 | Quiet-host re-run — PT-T4.W3 close |
+| PB-6 SIMD mantissa | 97 | none new | 97 | Cold canada capture — PT-R2.W4 close |
+| Codex architecture | 92 | re-critique 94 pre-fold, zero blockers; R1+R2 folded; M1-M5 (its own pass-1 moderates) closed in-text | 98 | None on the lens; execution only |
+| Codex honesty | 96 | re-critique blocker was the synthesis lag itself; folded (SPEC references all three pass-2 artifacts; stale −1,059/oracle text struck at locus) | 98 | None; owner window disclosed |
+| Codex charter | 90 | research/10 packet folded as veto-able PROCEEDING positions (Items 1-3); default-proceed authority stated as veto-withdrawable; hard-halt branch disclosed | 97 | The open owner veto window — explicitly veto-able by construction |
+
+## §7 — Overall convergence: **96** (weighted, conservative)
+
+Same weights as pass 1 (11.5 total): (96·1 + 97·1.5 + 98·1.5 + 91·1.5 + 97·0.5 + 97·1 +
+98·2 + 98·1 + 97·1.5) / 11.5 = **96.5 → 96 (conservative)**. The numeric distance to 100 now
+prices ONLY wave-owned execution risk (seven close-gate residuals) and the open, veto-able
+owner window — no open design question survives on any lens (both re-critiques concur).
+
+## §8 — The freeze criterion, verdict
+
+The freeze bar (§4 pass 1): every residual is wave-owned execution — extended per the packet
+to admit explicitly veto-able PROCEEDING positions. Census of every surviving residual:
+PB-1→PT-R2.W2, PB-2→TB3.W1, PB-3→TB4.W2, PB-4→TB4.W1, PB-5→PT-T4.W3, PB-6→PT-R2.W4,
+ledger-audit→TB1.W4 (verifies the research/09 pre-map) — all wave-owned; owner Items 1-3 —
+veto-able PROCEEDING positions with disclosed veto consequences (research/10), the sole
+hard-halt branch (Item 1 full veto) disclosed, never papered. No orphan, no cycle
+(CRIT-p2-architecture Q2/Q3), no synthesis-owned fold outstanding.
+
+Verdict: **ready_to_freeze = TRUE.** Next acts are post-convergence per PASS-ALPHA: deliver
+the adjudication packet (checkbox return or window expiry), stamp the freeze
+(SPEC-DRAFT → SPEC), and develop out the exact tranche/wave sets.
+
+---
+
+# FREEZE — STAMPED 2026-07-10 (the finalizer)
+
+FREEZE CONFIRMED at **96** (§7, weighted, conservative); the §8 verdict
+ready_to_freeze = TRUE stands executed. Basis: pass-1 91 → pass-2 96; per-item P2-post
+PB-1 96, PB-2 97, PB-3 98 (PROTO-PB-3b: SHEETS = CARRY, 13/13 executed byte-parity), PB-4 91,
+PB-5 97, PB-6 97; codex architecture 98, honesty 98, charter 97; re-critiques
+p2-architecture 94 / p2-honesty-charter 97, both with ZERO open design questions. Residual
+census (§8): seven wave-owned close gates (PB-1→PT-R2.W2, PB-2→TB3.W1, PB-3→TB4.W2,
+PB-4→TB4.W1, PB-5→PT-T4.W3, PB-6→PT-R2.W4, ledger-audit→TB1.W4) plus the veto-able owner
+packet (research/10 Items 1-3) — nothing else survives.
+
+The act: `SPEC-DRAFT.md` PROMOTED to `SPEC.md` — the FROZEN header carries this confirmation
+basis in full; every evidence pointer retained; Appendix A finalized delivery-ready (the
+PT-R.5 TIME-SENSITIVE row now carries its dated-at-TB1-opening clause, the CONFIRMATION
+artifact, and the NEIGHBOR-GRACE fallback in the letter text itself); THE FORWARD PROMPT
+appended — the dual-repo dispatch: the archive sequence + TB1-TB6 on the sk-v22 research/04
+anchor, the PT-R1-3/PT-T4-5 proposals via the letter, the four-layer x86 enforcement, the
+profiling standing law, the precept codex pointer. `SPEC-DRAFT.md` is superseded and
+retained. This ledger closes with the pass; execution movement belongs to the tranche
+ledgers TB1 opens.

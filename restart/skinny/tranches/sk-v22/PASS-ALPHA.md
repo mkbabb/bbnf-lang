@@ -44,6 +44,13 @@ plan distills into the graduated tree's durable documentation.
    tier per the NO-GO. TS: 1.0.0 shipped with PT-E1 (scoped diagnostics) and PT-E2 (inference
    leak) open — the uplift executes them toward 1.1.0. A cross-repo uplift track with its own
    gates joins the plan.
+   **Uplift means a FULL SOTA AUDIT, both Rust and TS** — in particular the regex systems and
+   the combinators: minimize allocations; exploit the compilers (Rust/LLVM: monomorphization,
+   inlining, branch shape, arena/enum dispatch over boxing; V8: hidden-class stability,
+   monomorphic call sites, inline caches, escape analysis) — alongside a full legacy/deprecated
+   audit of BOTH repos. NO quick solutions, NO workarounds: idiomatic, gestalt approaches;
+   architectural transpositions for elegance, simplicity, and performance are necessary and
+   desirable. NO legacy code.
 5. **We must profile — under load, with accounting.** The loadavg<2 gate being environmentally
    unachievable does not excuse profiling: PMU cycles/byte with paired per-sample interleaving,
    per-block loadavg recording, multi-window repetition, and load-robust ratio certification are

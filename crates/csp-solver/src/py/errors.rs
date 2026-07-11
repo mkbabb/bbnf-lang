@@ -12,7 +12,7 @@
 //! `PyRuntimeError`, distinguishable only by string-matching its message)
 //! with four `except`-able classes. The `From<CspError> for PyErr` impl
 //! below is the one place that maps variant → class, so every call site in
-//! `py/csp.rs` / `py/sudoku_api.rs` that returns `PyResult<T>` can just `?`
+//! `py/csp.rs` / `py/sudoku.rs` that returns `PyResult<T>` can just `?`
 //! a `Result<T, CspError>` instead of hand-rolling its own `map_err`.
 
 use pyo3::PyErr;

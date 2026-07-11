@@ -56,7 +56,7 @@ impl CancelToken {
 
 /// The subset of the Rust-core [`RustSolveConfig`] surfaced to Python.
 ///
-/// **R15 — `optimization_mode` is deliberately kept off the py wire.**
+/// **`optimization_mode` is deliberately kept off the py wire (settled).**
 /// `optimization_mode` only changes behavior for **cost-aware** search
 /// (`solve_optimized()` on a `CostDomain`, or `solve()` over a domain carrying
 /// real domain-costs). The py [`Csp`] wraps `Csp<BitsetDomain>` and its builder
@@ -68,8 +68,9 @@ impl CancelToken {
 /// knob on the wire.
 ///
 /// It stays at its Rust-core default (`optimization_mode: Feasibility`) via the
-/// `..Default::default()` below. Revisit if/when the py wire ever exposes cost
-/// constraints.
+/// `..Default::default()` below. This is a decided design choice, not a
+/// deferral: the knob returns to the wire only if the py surface ever grows
+/// cost constraints, at which point the rationale above no longer holds.
 ///
 /// `skip_from_py_object`: only ever crosses the FFI boundary as `&SolveConfig`
 /// (the `From<&SolveConfig>` conversion), never extracted from Python by value,

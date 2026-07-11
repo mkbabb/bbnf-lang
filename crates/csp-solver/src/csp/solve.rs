@@ -267,11 +267,6 @@ impl<D: Domain> Csp<D> {
     pub fn stats(&self) -> &SolveStats {
         &self.stats
     }
-
-    /// Get a reference to the adjacency graph (available after `finalize()`).
-    pub fn adjacency(&self) -> Option<&crate::adjacency::Adjacency> {
-        self.adjacency.as_ref()
-    }
 }
 
 impl<D: Domain> Default for Csp<D> {

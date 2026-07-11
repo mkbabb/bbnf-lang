@@ -14,12 +14,10 @@
 //! handling" the audit's fail-explicit precept bans (Pass-1 ledger R15, B0).
 //!
 //! `CspError` is the one family every layer should map 1:1 rather than
-//! reinvent: PyO3 via `create_exception!` (`py/errors.rs`), wasm via a typed
-//! `WasmCspError` that stamps a `.code` onto a genuine `Error` instance
-//! (`wasm/src/errors.rs`, not reconciled in this pass — see report), and the
-//! FastAPI JSON error envelope (`web/api/src/app/core/errors.py`, likewise
-//! not reconciled here) via the *Python* exception classes that `py/`
-//! raises. `code()` is the one string all downstream layers agree on.
+//! reinvent: PyO3 via `create_exception!` (`py/errors.rs`) and wasm via a
+//! typed `WasmCspError` that stamps a `.code` onto a genuine `Error` instance
+//! (`wasm/src/errors.rs`, not reconciled in this pass — see report). `code()`
+//! is the one string all downstream layers agree on.
 //!
 //! Tests: `tests/error.rs`.
 
@@ -59,10 +57,9 @@ pub enum CspError {
     /// Distinct from `BudgetExceeded` (a node-count budget, checked at the
     /// same cadence but triggered by *count* not *time*). Forward-declared
     /// for the wall-clock `time_budget` deferred item (synthesis-pass1 §3.1
-    /// N11) — the cooperative cancellation flag a caller's HTTP-layer
-    /// timeout should set, rather than the FastAPI `asyncio.wait_for`
-    /// theater that today cancels only the awaiting coroutine, never the
-    /// search (Pass-1 `fastapi-service` F3 / `pyo3-boundary`).
+    /// N11) — the cooperative cancellation flag a caller's own deadline
+    /// should set through the `CancelToken`, so the abort reaches the search
+    /// itself rather than only whatever coroutine or thread is awaiting it.
     Timeout,
 }
 
@@ -86,10 +83,9 @@ impl std::error::Error for CspError {}
 
 impl CspError {
     /// Stable machine-readable discriminant. This exact string is what
-    /// `py/errors.rs`'s exception class *names* are derived from, what a
-    /// wasm `CspJsError.code` would carry across that boundary, and what a
-    /// FastAPI JSON error envelope's `error.code` field would be — the
-    /// single vocabulary every layer of the taxonomy shares.
+    /// `py/errors.rs`'s exception class *names* are derived from and what a
+    /// wasm `CspJsError.code` carries across that boundary — the single
+    /// vocabulary every layer of the taxonomy shares.
     pub const fn code(&self) -> &'static str {
         match self {
             Self::Unsatisfiable => "UNSATISFIABLE",

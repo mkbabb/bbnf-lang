@@ -62,14 +62,18 @@ pub fn measure_difficulty(board: &[u32], n: u32) -> u32 {
 
 // ─── Embedded template access ───────────────────────────────────────────────
 
-/// Minimal, dependency-free parser for the fixed template schema
-/// `{"solution": {...}, "puzzle": {...}, "backtracks": N}`. Extracts the flat
-/// `puzzle` object (the given cells) as a dense `Vec<u32>`.
+/// Minimal, dependency-free parser for the sparse, puzzle-only template schema
+/// `{"puzzle":{"<pos>":<digit>,...}}`. Extracts the flat `puzzle` object (the
+/// given cells) as a dense `Vec<u32>`, zero-filling every cell the sparse map
+/// omits.
 ///
-/// Whitespace-tolerant, so it reads both the committed pretty-printed files
-/// (`"0": 1`) and the generator's compact output (`"0":1`). No `serde`
-/// dependency — the schema is a flat `{"<int>": <int>}` map with no nesting,
-/// arrays, string values, or escaping.
+/// Locates only the `puzzle` object, so it is unaffected by whatever else a
+/// template file might carry — it read the same field back when files also
+/// shipped the now-dropped `solution`/`backtracks` fields, and reads the leaner
+/// puzzle-only file identically. Whitespace-tolerant (`"0": 1` and `"0":1` both
+/// parse) and sparse-tolerant (omitted cells stay `0`). No `serde` dependency —
+/// the object is a flat `{"<int>":<int>}` map with no nesting, arrays, string
+/// values, or escaping.
 fn parse_puzzle_field(json: &str, total: usize) -> Vec<u32> {
     let key = json
         .find("\"puzzle\"")
@@ -103,7 +107,7 @@ fn parse_puzzle_field(json: &str, total: usize) -> Vec<u32> {
 
 /// Load the crate-owned templates for `(n, difficulty)` from the compile-time
 /// embed. Returns an empty vec when no bank is embedded for that size/difficulty
-/// (e.g. N=5 Medium/Hard, deliberately rejected at the API — see the N=5 policy).
+/// (e.g. N=5, deliberately rejected at the API — see the N=5 policy).
 pub fn embedded_templates(n: u32, difficulty: Difficulty) -> Vec<Vec<u32>> {
     let total = (n * n * n * n) as usize;
     let path = format!("{n}/{}", difficulty.dir_name());
@@ -122,11 +126,10 @@ pub fn embedded_templates(n: u32, difficulty: Difficulty) -> Vec<Vec<u32>> {
 /// Number of templates embedded for `(n, difficulty)`, counted from the
 /// directory listing without parsing any file.
 ///
-/// Zero means that size/difficulty is not shipped (e.g. N=5 Medium/Hard,
-/// rejected at the API per the locked N=5 policy). The PyO3 `template_count`
-/// wraps this so the Python service can reject such a request up front — with a
-/// `NOT_FOUND` — instead of falling through to unbounded hole-digging (the old
-/// N=5 DoS surface).
+/// Zero means that size/difficulty is not shipped (e.g. N=5, rejected per the
+/// locked N=5 policy): a size/difficulty with no embedded bank is refused up
+/// front rather than falling through to unbounded hole-digging (the old N=5
+/// DoS surface).
 pub fn embedded_template_count(n: u32, difficulty: Difficulty) -> usize {
     let path = format!("{n}/{}", difficulty.dir_name());
     SUDOKU_PUZZLES.get_dir(&path).map_or(0, |dir| {

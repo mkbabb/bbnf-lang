@@ -4,22 +4,6 @@
 //! ([`crate::solver::search::branch_and_bound`]); this module owns only the
 //! cost abstraction the optimizer plugs in — [`DomainCostEval`] and its two
 //! implementors ([`ZeroCost`], [`CostDomainEval`]).
-//!
-//! # Deferred extensions (Phase 2 design decisions)
-//!
-//! **`TieredCostEval` / lazy cost evaluation** — deferred because the
-//! [`crate::domain::CostDomain::min_cost`] incremental `Cell` cache covers the
-//! immediate bottleneck: the optimizer's optimistic bound was calling
-//! `min_cost()` O(domain) per node, and the cache amortizes that to O(1). A
-//! tiered evaluator (cheap proxy lower bound + expensive actual cost with
-//! memoization) only pays its API cost when a second consumer with a genuinely
-//! non-trivial cost function appears. [`DomainCostEval`] is the extension point
-//! — implement a new evaluator type, no solver-core changes needed.
-//!
-//! **`solve_with_warm_start`** — deferred because no consumer currently demands
-//! incremental re-solving (accepting a previous solution as the initial
-//! incumbent for tighter pruning from node zero). Land it when the first
-//! incremental consumer (e.g. a playground animation scrubber) appears.
 
 use crate::domain::Domain;
 

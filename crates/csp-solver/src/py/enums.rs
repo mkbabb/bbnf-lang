@@ -1,10 +1,9 @@
-//! PyO3-facing enums mirroring the Rust core's `Pruning` / `Ordering` /
-//! `PropagationStrategy`.
+//! PyO3-facing enums mirroring the Rust core's `Pruning` / `Ordering`.
 
 use pyo3::prelude::*;
 
+use crate::Pruning as RustPruning;
 use crate::ordering::Ordering as RustOrdering;
-use crate::{PropagationStrategy as RustPropagation, Pruning as RustPruning};
 
 // PyO3 exports these variant names verbatim to Python; they intentionally keep
 // the SCREAMING_CASE the Python API expects rather than Rust's CamelCase.
@@ -46,27 +45,6 @@ impl From<Ordering> for RustOrdering {
             Ordering::CHRONOLOGICAL => RustOrdering::Chronological,
             Ordering::FAIL_FIRST => RustOrdering::FailFirst,
             Ordering::MRV => RustOrdering::Mrv,
-        }
-    }
-}
-
-// PyO3 exports these variant names verbatim to Python; they intentionally keep
-// the SCREAMING_CASE the Python API expects rather than Rust's CamelCase.
-#[allow(non_camel_case_types)]
-#[pyclass(eq, eq_int, from_py_object)]
-#[derive(Clone, Copy, PartialEq)]
-pub enum PropagationStrategy {
-    AUTO = 0,
-    AC3 = 1,
-    SWEEP = 2,
-}
-
-impl From<PropagationStrategy> for RustPropagation {
-    fn from(s: PropagationStrategy) -> Self {
-        match s {
-            PropagationStrategy::AUTO => RustPropagation::Auto,
-            PropagationStrategy::AC3 => RustPropagation::Ac3,
-            PropagationStrategy::SWEEP => RustPropagation::Sweep,
         }
     }
 }

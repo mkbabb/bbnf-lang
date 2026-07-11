@@ -5,8 +5,6 @@ use std::collections::HashMap;
 use pyo3::prelude::*;
 
 use super::config::{SolveConfig, SolveStats};
-use super::enums::PropagationStrategy;
-use crate::constraint::VarId;
 use crate::domain::bitset::BitsetDomain;
 use crate::error::CspError;
 use crate::{Csp as RustCsp, SolveConfig as RustSolveConfig};
@@ -40,21 +38,6 @@ impl Csp {
         self.inner.add_all_different(vars);
     }
 
-    /// Fix a variable to a specific value.
-    fn add_equals(&mut self, var: u32, value: u32) {
-        self.inner.add_equals(var, value);
-    }
-
-    /// Constrain x < y.
-    fn add_less_than(&mut self, x: u32, y: u32) {
-        self.inner.add_less_than(x, y);
-    }
-
-    /// Constrain x > y.
-    fn add_greater_than(&mut self, x: u32, y: u32) {
-        self.inner.add_greater_than(x, y);
-    }
-
     /// Build the adjacency graph. Required before solve(), optional before propagate().
     fn finalize(&mut self) {
         self.inner.finalize();
@@ -72,40 +55,11 @@ impl Csp {
             .map_err(|e| CspError::from(e).into())
     }
 
-    /// Propagate with an explicit strategy. See `propagate` re: GIL release.
-    fn propagate_with(&mut self, py: Python<'_>, strategy: PropagationStrategy) -> PyResult<bool> {
-        let inner = &mut self.inner;
-        py.detach(|| inner.propagate_with(strategy.into()))
-            .map(|()| true)
-            .map_err(|e| CspError::from(e).into())
-    }
-
     /// Solve with the given configuration. See `propagate` re: GIL release.
     fn solve(&mut self, py: Python<'_>, config: &SolveConfig) -> Vec<HashMap<u32, u32>> {
         let rust_config: RustSolveConfig = config.into();
         let inner = &mut self.inner;
         py.detach(|| inner.solve(&rust_config))
-            .into_iter()
-            .map(|sol| {
-                sol.into_iter()
-                    .enumerate()
-                    .map(|(i, v)| (i as u32, v))
-                    .collect()
-            })
-            .collect()
-    }
-
-    /// Solve with pre-assigned values. See `propagate` re: GIL release.
-    fn solve_with_given(
-        &mut self,
-        py: Python<'_>,
-        config: &SolveConfig,
-        given: HashMap<u32, u32>,
-    ) -> Vec<HashMap<u32, u32>> {
-        let rust_config: RustSolveConfig = config.into();
-        let given_vec: Vec<(VarId, u32)> = given.into_iter().collect();
-        let inner = &mut self.inner;
-        py.detach(|| inner.solve_with_given(&rust_config, &given_vec))
             .into_iter()
             .map(|sol| {
                 sol.into_iter()

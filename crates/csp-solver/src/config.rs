@@ -7,11 +7,11 @@
 //!
 //! Tests: `tests/solver.rs` (config matrix across every pruning × ordering).
 
-use crate::solver::adjacency::Adjacency;
 use crate::cancel::CancelToken;
 use crate::constraint::ConstraintEnum;
 use crate::domain::Domain;
 use crate::ordering::Ordering;
+use crate::solver::adjacency::Adjacency;
 use crate::variable::Variable;
 
 /// Pruning strategy for backtracking search.

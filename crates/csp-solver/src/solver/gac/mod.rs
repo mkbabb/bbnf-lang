@@ -41,7 +41,7 @@ use crate::constraint::traits::{Revision, VarId};
 use crate::domain::Domain;
 use crate::variable::Variable;
 
-use matching::{NONE, hopcroft_karp, reset_adj, tarjan_scc};
+use matching::{NONE, hopcroft_karp, tarjan_scc};
 use scratch::{GacScratch, fast_index, resize_tarjan, with_scratch};
 
 /// Instrumentation: total entries into the unified GAC core (all variants).
@@ -113,10 +113,13 @@ where
     s.cur_gen = s.cur_gen.wrapping_add(1);
     if s.cur_gen == 0 {
         s.val_index_gen.iter_mut().for_each(|g| *g = 0);
+        s.assigned_mark.iter_mut().for_each(|g| *g = 0);
         s.cur_gen = 1;
     }
 
     // ----- Participant + assigned-value collection -----
+    // Each assigned non-sentinel singleton is also stamped into `assigned_mark`
+    // (ROW-7) so the adjacency loop's membership test is O(1) for integers.
     s.assigned_ns.clear();
     for &v in scope {
         let dom = &variables[v as usize].domain;
@@ -126,6 +129,12 @@ where
         if let Some(val) = dom.singleton_value()
             && sentinel != Some(&val)
         {
+            if let Some(k) = fast_index(&val) {
+                if k >= s.assigned_mark.len() {
+                    s.assigned_mark.resize(k + 1, 0);
+                }
+                s.assigned_mark[k] = s.cur_gen;
+            }
             s.assigned_ns.push(val);
         }
     }
@@ -159,15 +168,24 @@ where
     }
 
     // ----- Value universe + bipartite adjacency -----
+    // Built as a flat CSR: rows (participants) are appended in order, each
+    // sealed by `finish_row`, so no counting pass is needed.
     s.all_vals.clear();
-    reset_adj(&mut s.adj, n_vars);
+    s.adj.begin();
     for pu in 0..n_vars {
         let var_id = scope[s.participants[pu]] as usize;
         for val in variables[var_id].domain.iter() {
             if sentinel == Some(&val) {
                 continue;
             }
-            if s.assigned_ns.contains(&val) {
+            // Assigned-singleton membership: O(1) via the stamped `assigned_mark`
+            // for integers (ROW-7), the linear `contains` fallback otherwise.
+            let is_assigned = match fast_index(&val) {
+                Some(k) if k < s.assigned_mark.len() => s.assigned_mark[k] == s.cur_gen,
+                Some(_) => false,
+                None => s.assigned_ns.contains(&val),
+            };
+            if is_assigned {
                 continue;
             }
             // Value→index resolution. Integer values in range take the O(1)
@@ -199,8 +217,9 @@ where
                     }
                 },
             };
-            s.adj[pu].push(vi);
+            s.adj.push(vi);
         }
+        s.adj.finish_row();
     }
 
     // All non-sentinel values consumed by assigned singletons.
@@ -218,7 +237,8 @@ where
     s.dist.resize(n_vars, 0);
 
     if let Some(id) = gac_id
-        && let Some(cvec) = s.cache.get(&id)
+        && (id as usize) < CACHE_CAP
+        && let Some(Some(cvec)) = s.cache.get(id as usize)
     {
         for pu in 0..n_vars {
             let Some(Some(cv)) = cvec.get(s.participants[pu]) else {
@@ -238,7 +258,7 @@ where
                     None => continue,
                 },
             };
-            if s.match_v[vi as usize] == NONE && s.adj[pu].contains(&vi) {
+            if s.match_v[vi as usize] == NONE && s.adj.row(pu).contains(&vi) {
                 s.match_u[pu] = vi;
                 s.match_v[vi as usize] = pu as u32;
             }
@@ -262,12 +282,17 @@ where
         }
     }
 
-    // Persist the fresh matching for the next call's warm start.
-    if let Some(id) = gac_id {
-        if s.cache.len() > CACHE_CAP {
-            s.cache.clear();
+    // Persist the fresh matching for the next call's warm start. The Vec is
+    // indexed by the dense `gac_id`; ids past `CACHE_CAP` fall through uncached,
+    // so the buffer is bounded without a wholesale clear.
+    if let Some(id) = gac_id
+        && (id as usize) < CACHE_CAP
+    {
+        let idx = id as usize;
+        if idx >= s.cache.len() {
+            s.cache.resize_with(idx + 1, || None);
         }
-        let cvec = s.cache.entry(id).or_default();
+        let cvec = s.cache[idx].get_or_insert_with(Vec::new);
         cvec.clear();
         cvec.resize(scope.len(), None);
         for pu in 0..n_vars {
@@ -277,19 +302,30 @@ where
         }
     }
 
-    // ----- Residual graph -----
+    // ----- Residual graph (flat CSR) -----
+    // Variable rows `0..n_vars` are filled first, then value rows
+    // `n_vars..total_nodes`, so the CSR fills strictly in index order. A matched
+    // (var,val) edge orients val→var (an in-edge on the value); every other
+    // edge orients var→val. The matching is injective on the value side, so
+    // each value row holds at most the one variable it is matched to
+    // (`match_v[vi]`) — identical row contents to the vector-of-vectors build.
     let total_nodes = n_vars + n_vals;
-    reset_adj(&mut s.res_adj, total_nodes);
+    s.res_adj.begin();
     for u in 0..n_vars {
         let matched_vi = s.match_u[u];
-        for &vi in &s.adj[u] {
-            let val_node = (n_vars as u32) + vi;
-            if vi == matched_vi {
-                s.res_adj[val_node as usize].push(u as u32);
-            } else {
-                s.res_adj[u].push(val_node);
+        for &vi in s.adj.row(u) {
+            if vi != matched_vi {
+                s.res_adj.push((n_vars as u32) + vi);
             }
         }
+        s.res_adj.finish_row();
+    }
+    for vi in 0..n_vals {
+        let mu = s.match_v[vi];
+        if mu != NONE {
+            s.res_adj.push(mu);
+        }
+        s.res_adj.finish_row();
     }
 
     // ----- Reachability from free vertices -----
@@ -313,8 +349,9 @@ where
     while head < s.bfs.len() {
         let node = s.bfs[head] as usize;
         head += 1;
-        for i in 0..s.res_adj[node].len() {
-            let next = s.res_adj[node][i] as usize;
+        let row = s.res_adj.row(node);
+        for &next_node in row {
+            let next = next_node as usize;
             if !s.reachable[next] {
                 s.reachable[next] = true;
                 s.bfs.push(next as u32);
@@ -360,8 +397,7 @@ where
     for pu in 0..n_vars {
         let var_id = scope[s.participants[pu]] as usize;
         let matched_vi = s.match_u[pu];
-        for i in 0..s.adj[pu].len() {
-            let vi = s.adj[pu][i];
+        for &vi in s.adj.row(pu) {
             if vi == matched_vi {
                 continue;
             }

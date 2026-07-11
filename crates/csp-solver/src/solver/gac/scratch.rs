@@ -7,9 +7,8 @@
 
 use std::any::Any;
 use std::cell::RefCell;
-use std::collections::HashMap;
 
-use super::matching::NONE;
+use super::matching::{Csr, NONE};
 
 /// Per-thread, per-value-type reusable working set for the GAC core.
 ///
@@ -20,12 +19,12 @@ pub(super) struct GacScratch<V> {
     pub(super) has_sentinel: Vec<bool>,
     pub(super) assigned_ns: Vec<V>,
     pub(super) all_vals: Vec<V>,
-    pub(super) adj: Vec<Vec<u32>>,
+    pub(super) adj: Csr,
     pub(super) match_u: Vec<u32>,
     pub(super) match_v: Vec<u32>,
     pub(super) dist: Vec<u32>,
     pub(super) queue: Vec<u32>,
-    pub(super) res_adj: Vec<Vec<u32>>,
+    pub(super) res_adj: Csr,
     pub(super) reachable: Vec<bool>,
     pub(super) bfs: Vec<u32>,
     pub(super) t_index: Vec<u32>,
@@ -34,7 +33,14 @@ pub(super) struct GacScratch<V> {
     pub(super) t_scc: Vec<u32>,
     pub(super) t_stack: Vec<u32>,
     pub(super) t_call: Vec<(u32, u32)>,
-    pub(super) cache: HashMap<u32, Vec<Option<V>>>,
+    /// Per-constraint matching warm-start cache, indexed by the dense monotonic
+    /// `gac_id` (`next_gac_id`). `gac_id` lives in `0..N`, so a `Vec` slot is
+    /// strictly cheaper than a SipHash lookup on the hot path; ids at or past
+    /// `CACHE_CAP` fall through uncached, bounding the buffer without a
+    /// wholesale clear. `cache[id]` is `Some(matching)` once populated. The
+    /// warm start is a pure hint — every seeded edge is re-validated against
+    /// live domains — so which ids are cached never affects correctness.
+    pub(super) cache: Vec<Option<Vec<Option<V>>>>,
     /// Generation-stamped reverse map for the integer fast path (Beat 1).
     ///
     /// When `D::Value` is a small non-negative integer, `val_index[k]` holds
@@ -46,6 +52,13 @@ pub(super) struct GacScratch<V> {
     /// bound is introduced.
     pub(super) val_index: Vec<u32>,
     pub(super) val_index_gen: Vec<u32>,
+    /// Stamped-membership bitset for `assigned_ns`, mirroring `val_index`'s
+    /// generation discipline (ROW-7): `assigned_mark[k] == cur_gen` iff the
+    /// integer value `k` is an assigned non-sentinel singleton this call.
+    /// Turns the O(|assigned|) `assigned_ns.contains` scan on the
+    /// adjacency-build hot path into O(1); non-integer / out-of-range values
+    /// fall back to the linear `contains`, so no new trait bound appears.
+    pub(super) assigned_mark: Vec<u32>,
     pub(super) cur_gen: u32,
 }
 
@@ -82,12 +95,12 @@ impl<V> Default for GacScratch<V> {
             has_sentinel: Vec::new(),
             assigned_ns: Vec::new(),
             all_vals: Vec::new(),
-            adj: Vec::new(),
+            adj: Csr::default(),
             match_u: Vec::new(),
             match_v: Vec::new(),
             dist: Vec::new(),
             queue: Vec::new(),
-            res_adj: Vec::new(),
+            res_adj: Csr::default(),
             reachable: Vec::new(),
             bfs: Vec::new(),
             t_index: Vec::new(),
@@ -96,9 +109,10 @@ impl<V> Default for GacScratch<V> {
             t_scc: Vec::new(),
             t_stack: Vec::new(),
             t_call: Vec::new(),
-            cache: HashMap::new(),
+            cache: Vec::new(),
             val_index: Vec::new(),
             val_index_gen: Vec::new(),
+            assigned_mark: Vec::new(),
             cur_gen: 0,
         }
     }

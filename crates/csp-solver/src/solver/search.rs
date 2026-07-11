@@ -36,10 +36,10 @@
 //! change here is the one search skeleton; [`Feasibility`] and [`BranchBound`]
 //! are its co-designed leaves, not separable concerns. Waiver recorded, closed.
 
-use crate::solver::adjacency::Adjacency;
 use crate::constraint::{ConstraintEnum, VarId};
 use crate::domain::Domain;
 use crate::ordering::{self, Ordering};
+use crate::solver::adjacency::Adjacency;
 use crate::solver::optimize::DomainCostEval;
 use crate::solver::{Solution, Trail, ac3, propagate};
 use crate::variable::Variable;

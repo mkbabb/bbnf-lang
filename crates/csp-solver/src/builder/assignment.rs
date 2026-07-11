@@ -11,8 +11,9 @@
 //! [`AssignmentBuilder::solve`] dispatches on the shape:
 //!
 //! * **Group-free / pin-free** instances are a pure linear assignment
-//!   problem, solved in closed form by Kuhn-Munkres (the `hungarian` crate)
-//!   in O(n³) — microseconds even at n=200. This path is always
+//!   problem, solved in closed form by a hand-rolled Kuhn-Munkres
+//!   ([`kuhn_munkres`](super::kuhn_munkres)) in O(n³) — microseconds even at
+//!   n=200. This path is always
 //!   proven-optimal and never budget-blows.
 //! * **Grouped or pinned** instances go through the general CSP: a
 //!   [`Csp<CostFiniteDomain>`] with one variable per row, an
@@ -362,8 +363,9 @@ impl AssignmentBuilder {
         self.solve_csp()
     }
 
-    /// Closed-form linear-assignment solve (Kuhn-Munkres via the `hungarian`
-    /// crate) for the group-free / pin-free case. Always optimal; the returned
+    /// Closed-form linear-assignment solve (hand-rolled Kuhn-Munkres, see
+    /// [`super::kuhn_munkres`]) for the group-free / pin-free case. Always
+    /// optimal; the returned
     /// [`SolveStats`] is the `Default` (no search ran, `budget_exceeded` is
     /// `false`).
     fn solve_lap(self) -> AssignmentSolution {
@@ -398,8 +400,9 @@ impl AssignmentBuilder {
         // Shift to non-negative. Adding a constant to every cell shifts the
         // total by a fixed `n × c` (every row is matched exactly once in an
         // `n × (m+n ≥ n)` assignment), so the argmin — the chosen columns — is
-        // unchanged, while the `hungarian` crate's negative-cost handling is
-        // sidestepped.
+        // unchanged. The hand-rolled Kuhn-Munkres handles negative costs via its
+        // potentials, so this is a defensive normalization that also keeps the
+        // running potentials small.
         if let Some(&min) = matrix.iter().min()
             && min < 0
         {
@@ -408,7 +411,7 @@ impl AssignmentBuilder {
             }
         }
 
-        let assignment = hungarian::minimize(&matrix, n, width);
+        let assignment = super::kuhn_munkres::minimize(&matrix, n, width);
 
         // Project back: a real column (< m) is a match at its cost; a sentinel
         // slot (≥ m) — or an unexpected `None` — is the shared unmatched token

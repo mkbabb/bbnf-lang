@@ -2,7 +2,7 @@
 name = "csp-solver"
 version = "0.1.0"
 edition = "2024"
-description = "Generalized CSP/COP substrate; bench home of bbnf-lang. Source-of-truth tracked at csc411 commit 044f2526e7b1f3313c91d874a2737845c8000ea0 — `scripts/sync-csp-solver-vendor.sh --check` byte-diffs src/+data/ against that sibling rev and `--verify` proves the pinned code still builds every consumer. bbnf-lang's own build never enables `py`; the PyO3 surface lives in src/py/ (csc411 territory)."
+description = "Generalized CSP/COP substrate; bench home of bbnf-lang. Source-of-truth tracked at csc411 commit 02965a56cfe78f0c498f34095a9f88e1ff69974d — `scripts/sync-csp-solver-vendor.sh --check` byte-diffs src/+data/ against that sibling rev and `--verify` proves the pinned code still builds every consumer. bbnf-lang's own build never enables `py`; the PyO3 surface lives in src/py/ (csc411 territory)."
 
 [features]
 default = []
@@ -26,13 +26,11 @@ py = []
 # all — the macro reads the directory at build time, so `data/` is part of the
 # vendored surface and is byte-diffed by `--check`.
 include_dir = "0.7.4"
-# Kuhn-Munkres LAP. The closed-form optimal path `AssignmentBuilder` dispatches
-# to for group-free / pin-free instances (`src/builder/assignment.rs`) instead of
-# the exponential B&B. Integer-cost API, pure Rust, no C deps. Promoted csc411-side
-# from a dev-dependency to a real [dependencies] at the 0.3.0 substrate excision
-# (the LAP call is now in lib source); mirrored here by hand — the sync gate
-# diffs src/+data/, never Cargo.toml.
-hungarian = "1"
+# NOTE: the `hungarian = "1"` mirror (added at the tranche-2 sync when the LAP call
+# lived in lib source) was REMOVED at the csc411 T3-W5 re-vendor (b8af49d2): upstream
+# excised the `hungarian` crate for a hand-rolled `src/builder/kuhn_munkres.rs`, so
+# the dep is genuinely gone (only doc-comment mentions of the name remain). The sync
+# gate diffs src/+data/, never Cargo.toml, so this stale mirror is removed by hand.
 
 [lib]
 crate-type = ["lib"]

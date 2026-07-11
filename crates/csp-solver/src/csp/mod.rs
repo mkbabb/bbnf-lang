@@ -7,10 +7,10 @@
 
 pub mod solve;
 
-use crate::solver::adjacency::Adjacency;
 use crate::config::{Csp, SolveStats};
 use crate::constraint::{self, AllDifferent, Constraint, ConstraintEnum, NotEqual, VarId};
 use crate::domain::Domain;
+use crate::solver::adjacency::Adjacency;
 use crate::variable::Variable;
 
 impl<D: Domain> Csp<D> {

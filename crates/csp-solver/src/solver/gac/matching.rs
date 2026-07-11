@@ -6,14 +6,44 @@
 /// node index at the problem sizes GAC runs on.
 pub(super) const NONE: u32 = u32::MAX;
 
-/// Grow `adj` to at least `n` inner vectors and clear the first `n`, retaining
-/// their heap capacity so repeated calls avoid per-inner reallocation.
-pub(super) fn reset_adj(adj: &mut Vec<Vec<u32>>, n: usize) {
-    while adj.len() < n {
-        adj.push(Vec::new());
+/// Flat CSR adjacency: row `i`'s neighbors are `edges[offsets[i]..offsets[i+1]]`.
+///
+/// Replaces the vector-of-vectors `Vec<Vec<u32>>` — two pooled `Vec<u32>`
+/// allocations instead of N, contiguous edges for cache-friendly traversal.
+/// Rows are appended strictly in index order between [`Csr::begin`] and each
+/// [`Csr::finish_row`]; both the bipartite graph and the residual graph fill
+/// this way, so no counting-sort pass is needed.
+#[derive(Default)]
+pub(super) struct Csr {
+    offsets: Vec<u32>,
+    edges: Vec<u32>,
+}
+
+impl Csr {
+    /// Reset to a zero-row graph, retaining both buffers' heap capacity.
+    #[inline]
+    pub(super) fn begin(&mut self) {
+        self.offsets.clear();
+        self.edges.clear();
+        self.offsets.push(0);
     }
-    for a in adj.iter_mut().take(n) {
-        a.clear();
+
+    /// Append one neighbor to the row currently being built.
+    #[inline]
+    pub(super) fn push(&mut self, e: u32) {
+        self.edges.push(e);
+    }
+
+    /// Seal the row currently being built and open the next.
+    #[inline]
+    pub(super) fn finish_row(&mut self) {
+        self.offsets.push(self.edges.len() as u32);
+    }
+
+    /// Neighbors of row `i` (`i` must be a finished row).
+    #[inline]
+    pub(super) fn row(&self, i: usize) -> &[u32] {
+        &self.edges[self.offsets[i] as usize..self.offsets[i + 1] as usize]
     }
 }
 
@@ -23,7 +53,7 @@ pub(super) fn reset_adj(adj: &mut Vec<Vec<u32>>, n: usize) {
 pub(super) fn hopcroft_karp(
     n_u: usize,
     n_v: usize,
-    adj: &[Vec<u32>],
+    adj: &Csr,
     match_u: &mut [u32],
     match_v: &mut [u32],
     dist: &mut [u32],
@@ -47,7 +77,7 @@ pub(super) fn hopcroft_karp(
         while head < queue.len() {
             let u = queue[head] as usize;
             head += 1;
-            for &v in &adj[u] {
+            for &v in adj.row(u) {
                 let mu = match_v[v as usize];
                 if mu == NONE {
                     found = true;
@@ -73,13 +103,13 @@ pub(super) fn hopcroft_karp(
 /// DFS along the level graph to find an augmenting path from `u`.
 fn dfs_augment(
     u: usize,
-    adj: &[Vec<u32>],
+    adj: &Csr,
     match_u: &mut [u32],
     match_v: &mut [u32],
     dist: &mut [u32],
     inf: u32,
 ) -> bool {
-    for &v in &adj[u] {
+    for &v in adj.row(u) {
         let mu = match_v[v as usize];
         if mu == NONE
             || (dist[mu as usize] == dist[u] + 1
@@ -101,7 +131,7 @@ fn dfs_augment(
 #[allow(clippy::too_many_arguments)]
 pub(super) fn tarjan_scc(
     n_nodes: usize,
-    adj: &[Vec<u32>],
+    adj: &Csr,
     index: &mut [u32],
     lowlink: &mut [u32],
     on_stack: &mut [bool],
@@ -130,7 +160,7 @@ pub(super) fn tarjan_scc(
 
         while let Some(&mut (v, ref mut ni)) = call_stack.last_mut() {
             let v_usize = v as usize;
-            let neighbors = &adj[v_usize];
+            let neighbors = adj.row(v_usize);
 
             if (*ni as usize) < neighbors.len() {
                 let w = neighbors[*ni as usize];

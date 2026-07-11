@@ -6,10 +6,10 @@
 //! recorded on `trail` for O(touched) undo (the kernel's touched-VarId trail).
 
 use crate::SolveStats;
-use crate::solver::adjacency::Adjacency;
 use crate::constraint::{ConstraintEnum, VarId};
 use crate::domain::Domain;
 use crate::solver::Trail;
+use crate::solver::adjacency::Adjacency;
 use crate::variable::Variable;
 
 /// Outcome of a propagation step: `Some(ci)` on wipe-out (constraint `ci` is

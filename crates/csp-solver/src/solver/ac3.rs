@@ -2,11 +2,11 @@
 //!
 //! Uses a bitset worklist for lower overhead than VecDeque + `Vec<bool>`.
 
-use crate::solver::adjacency::Adjacency;
 use crate::bitscan::pop_lowest_bit;
 use crate::constraint::{ConstraintEnum, Revision, VarId};
 use crate::domain::Domain;
 use crate::solver::Trail;
+use crate::solver::adjacency::Adjacency;
 use crate::variable::Variable;
 use crate::{SolveStats, Unsatisfiable};
 

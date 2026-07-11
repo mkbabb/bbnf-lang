@@ -1,8 +1,8 @@
 //! Solver dispatch: AC-3 propagation, forward checking, and the unified
 //! monomorphized search kernel.
 
-pub(crate) mod adjacency;
 pub mod ac3;
+pub(crate) mod adjacency;
 pub mod gac;
 pub mod monotonic;
 pub mod optimize;

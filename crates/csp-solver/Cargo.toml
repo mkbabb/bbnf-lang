@@ -2,7 +2,7 @@
 name = "csp-solver"
 version = "0.1.0"
 edition = "2024"
-description = "Generalized CSP/COP substrate; bench home of bbnf-lang. Source-of-truth tracked at csc411 commit d78fef8ef8349d1c6b953b2523b18cc1106b9ee1 — `scripts/sync-csp-solver-vendor.sh --check` byte-diffs src/+data/ against that sibling rev and `--verify` proves the pinned code still builds every consumer. bbnf-lang's own build never enables `py`; the PyO3 surface lives in src/py/ (csc411 territory)."
+description = "Generalized CSP/COP substrate; bench home of bbnf-lang. Source-of-truth tracked at csc411 commit 044f2526e7b1f3313c91d874a2737845c8000ea0 — `scripts/sync-csp-solver-vendor.sh --check` byte-diffs src/+data/ against that sibling rev and `--verify` proves the pinned code still builds every consumer. bbnf-lang's own build never enables `py`; the PyO3 surface lives in src/py/ (csc411 territory)."
 
 [features]
 default = []

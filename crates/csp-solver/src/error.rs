@@ -60,6 +60,7 @@ pub enum CspError {
     /// N11) — the cooperative cancellation flag a caller's own deadline
     /// should set through the `CancelToken`, so the abort reaches the search
     /// itself rather than only whatever coroutine or thread is awaiting it.
+    // reserved: no constructor until cancel-driver
     Timeout,
 }
 

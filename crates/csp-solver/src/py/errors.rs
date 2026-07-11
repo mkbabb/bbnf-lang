@@ -39,6 +39,7 @@ create_exception!(
     PyException,
     "A caller-supplied argument was structurally invalid."
 );
+// reserved: no constructor until cancel-driver
 create_exception!(
     csp_solver,
     CspTimeoutError,

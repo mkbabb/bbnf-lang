@@ -7,7 +7,7 @@
 //!
 //! Tests: `tests/solver.rs` (config matrix across every pruning × ordering).
 
-use crate::adjacency::Adjacency;
+use crate::solver::adjacency::Adjacency;
 use crate::cancel::CancelToken;
 use crate::constraint::ConstraintEnum;
 use crate::domain::Domain;

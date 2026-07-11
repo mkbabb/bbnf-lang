@@ -18,7 +18,7 @@ use crate::{SolveStats, Unsatisfiable};
 ///
 /// Returns `Err(Unsatisfiable)` if a constraint reports unsatisfiable
 /// (shouldn't happen for well-formed lattice CSPs).
-pub fn propagate_monotonic<D: Domain>(
+pub(crate) fn propagate_monotonic<D: Domain>(
     variables: &mut [Variable<D>],
     constraints: &[ConstraintEnum<D>],
     stats: &mut SolveStats,

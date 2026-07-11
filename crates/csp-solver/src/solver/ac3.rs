@@ -1,8 +1,8 @@
 //! AC-3 worklist propagation using the adjacency graph.
 //!
-//! Uses a bitset worklist for lower overhead than VecDeque + Vec<bool>.
+//! Uses a bitset worklist for lower overhead than VecDeque + `Vec<bool>`.
 
-use crate::adjacency::Adjacency;
+use crate::solver::adjacency::Adjacency;
 use crate::bitscan::pop_lowest_bit;
 use crate::constraint::{ConstraintEnum, Revision, VarId};
 use crate::domain::Domain;
@@ -17,7 +17,7 @@ use crate::{SolveStats, Unsatisfiable};
 /// root calls) own one instance and every candidate-value attempt calls
 /// `clear()`/`fill_full()` (an O(words) sweep, no allocation) instead of
 /// constructing a fresh `Vec<u64>` per call (Pass-1 propagation audit, P2-2).
-pub struct BitsetWorklist {
+pub(crate) struct BitsetWorklist {
     words: Vec<u64>,
     /// Constraint count this worklist was sized for — needed by `fill_full`
     /// to mask off the unused high bits of the last word.
@@ -25,7 +25,7 @@ pub struct BitsetWorklist {
 }
 
 impl BitsetWorklist {
-    pub fn new(capacity: usize) -> Self {
+    pub(crate) fn new(capacity: usize) -> Self {
         Self {
             words: vec![0; capacity.div_ceil(64)],
             capacity,
@@ -73,7 +73,7 @@ impl BitsetWorklist {
 /// Returns `Err(Unsatisfiable)` if a domain wipe-out is detected. `worklist` is
 /// caller-owned reusable scratch (see `BitsetWorklist`) — reset here via
 /// `fill_full()` rather than freshly allocated.
-pub fn ac3_full<D: Domain>(
+pub(crate) fn ac3_full<D: Domain>(
     variables: &mut [Variable<D>],
     constraints: &[ConstraintEnum<D>],
     adjacency: &Adjacency,

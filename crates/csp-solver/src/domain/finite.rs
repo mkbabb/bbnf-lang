@@ -1,4 +1,4 @@
-//! FiniteDomain<T> — a generic finite domain backed by Vec<T>.
+//! `FiniteDomain<T>` — a generic finite domain backed by `Vec<T>`.
 
 use super::traits::Domain;
 

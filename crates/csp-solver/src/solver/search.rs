@@ -23,8 +23,20 @@
 //! Undo now runs off the shared [`Trail`] (touched-variable list) rather than an
 //! O(num_vars) per-node sweep, and read-only state (`weights`, `var_cids`,
 //! `adjacency`) is borrowed rather than deep-cloned per solve.
+//!
+//! # Waiver: this file stays whole (CLOSED)
+//!
+//! At 504 LOC the module sits four lines over the file budget, and the two
+//! policies are visually fenced — a `BranchBound`-out split looks free. It
+//! isn't. `BranchBound` impls [`SearchPolicy`] and calls [`search`], so
+//! extracting it to a sibling module forces `trait SearchPolicy`, `fn search`,
+//! and likely `Step` — all currently private kernel internals — to widen to
+//! `pub(super)`. That re-widens three internals to buy a cosmetic file cut: an
+//! encapsulation regression inside an encapsulation pass. The single reason to
+//! change here is the one search skeleton; [`Feasibility`] and [`BranchBound`]
+//! are its co-designed leaves, not separable concerns. Waiver recorded, closed.
 
-use crate::adjacency::Adjacency;
+use crate::solver::adjacency::Adjacency;
 use crate::constraint::{ConstraintEnum, VarId};
 use crate::domain::Domain;
 use crate::ordering::{self, Ordering};
@@ -38,7 +50,7 @@ use crate::{Pruning, SolveStats};
 /// depth-keyed undo can never target these permanent reductions — fixing the
 /// depth-0 seam where the first failed root candidate un-pruned the initial
 /// AC-3 via `restore(0)`.
-pub const PERMANENT_DEPTH: usize = 0;
+pub(crate) const PERMANENT_DEPTH: usize = 0;
 /// First depth used by search recursion frames.
 const SEARCH_ROOT_DEPTH: usize = 1;
 
@@ -48,16 +60,16 @@ const SEARCH_ROOT_DEPTH: usize = 1;
 /// copy of `constraint_weights` + `var_constraint_ids`. Those read-only vectors
 /// are now borrowed by the kernel, so they live nowhere in this struct.
 #[derive(Debug, Clone)]
-pub struct SearchParams {
-    pub pruning: Pruning,
-    pub ordering: Ordering,
-    pub max_solutions: usize,
+pub(crate) struct SearchParams {
+    pub(crate) pruning: Pruning,
+    pub(crate) ordering: Ordering,
+    pub(crate) max_solutions: usize,
     /// Node budget (search-frame count). `None` disables. See
     /// [`crate::SolveConfig::node_budget`].
-    pub node_budget: Option<u64>,
+    pub(crate) node_budget: Option<u64>,
     /// Cooperative cancellation handle, checked at the same cadence as
     /// `node_budget`. `None` disables. See [`crate::SolveConfig::cancel`].
-    pub cancel: Option<crate::CancelToken>,
+    pub(crate) cancel: Option<crate::CancelToken>,
 }
 
 /// Outcome of one recursion step. Feasibility and branch-and-bound only ever
@@ -286,7 +298,7 @@ where
 /// Run feasibility (satisfaction) search. `given` pre-seeds an assignment and
 /// filters the branch stack; `None` searches all variables from scratch.
 #[allow(clippy::too_many_arguments)]
-pub fn feasibility_search<D: Domain>(
+pub(crate) fn feasibility_search<D: Domain>(
     variables: &mut [Variable<D>],
     constraints: &[ConstraintEnum<D>],
     adjacency: &Adjacency,
@@ -441,7 +453,7 @@ where
 /// Run branch-and-bound optimization. Returns up to `max_solutions` solutions,
 /// sorted best-first per the optimization direction.
 #[allow(clippy::too_many_arguments)]
-pub fn branch_and_bound<D: Domain>(
+pub(crate) fn branch_and_bound<D: Domain>(
     variables: &mut [Variable<D>],
     constraints: &[ConstraintEnum<D>],
     adjacency: &Adjacency,

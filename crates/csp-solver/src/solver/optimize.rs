@@ -19,7 +19,7 @@ pub trait DomainCostEval<D: Domain> {
 }
 
 /// No-op evaluator: all costs are zero. Used when `D` doesn't implement `CostDomain`.
-pub struct ZeroCost;
+pub(crate) struct ZeroCost;
 
 impl<D: Domain> DomainCostEval<D> for ZeroCost {
     #[inline]
@@ -37,7 +37,7 @@ impl<D: Domain> DomainCostEval<D> for ZeroCost {
 }
 
 /// Evaluator that delegates to `CostDomain` methods.
-pub struct CostDomainEval;
+pub(crate) struct CostDomainEval;
 
 impl<D: crate::domain::CostDomain> DomainCostEval<D> for CostDomainEval {
     #[inline]

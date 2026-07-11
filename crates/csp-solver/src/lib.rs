@@ -15,7 +15,6 @@
 //! [`config`] (solve vocabulary + the `Csp<D>` container), [`csp`] (the
 //! builder methods), and [`csp::solve`] (propagation + search dispatch).
 
-pub mod adjacency;
 pub(crate) mod bitscan;
 pub mod builder;
 pub mod cancel;

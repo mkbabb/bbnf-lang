@@ -1,0 +1,309 @@
+diff --git a/crates/ir/Cargo.toml b/crates/ir/Cargo.toml
+index e0f11fcb8..e137f7e09 100644
+--- a/crates/ir/Cargo.toml
++++ b/crates/ir/Cargo.toml
+@@ -29,6 +29,11 @@ ron = "0.12"
+ # AST-walk; `syn` parses every production .rs file under the audited
+ # crates to enumerate `pub` substrates + count callers.
+ [dev-dependencies]
++# LOCK-1 pass-1 probe 1B: the `lattices/clash.rs` test names
++# `csp_solver::domain::LatticeDomain` to call `TypeDomain::join`
++# directly (a regular dep is not nameable from an integration-test
++# crate). Same version as the normal dependency above.
++csp-solver = "0.1"
+ cargo_metadata = "0.18"
+ syn = { version = "2", features = ["full", "extra-traits", "visit"] }
+ proc-macro2 = { version = "1", features = ["span-locations"] }
+diff --git a/crates/ir/tests/lattices/clash.rs b/crates/ir/tests/lattices/clash.rs
+new file mode 100644
+index 000000000..d433f9195
+--- /dev/null
++++ b/crates/ir/tests/lattices/clash.rs
+@@ -0,0 +1,275 @@
++//! LOCK-1 pass-1 probe 1B — CSP-equality soundness.
++//!
++//! QUESTION. Does `TypeDomain::join` (the shipping root-tree equality
++//! carrier at `crates/ir/src/passes/types/constraint/domain.rs:66-80`)
++//! swallow a genuine clash — accepting last-writer-wins re-assignment
++//! to a DIFFERENT ground leaf on disagreement — and does the LIVE
++//! `project_types` pass therefore silently pick one leaf on two
++//! incompatible `->` arrows, or does it raise a clash?
++//!
++//! Two orthogonal facts are established here, both RUNNING:
++//!
++//!   (A) `type_domain_join_is_silent_last_writer_wins` — a direct unit
++//!       probe of the *named* method. Grounds a domain to `Bool`, then
++//!       `join`s a `F64` ground into it. If `join` were a sound lattice
++//!       LUB / union-find carrier it would signal disagreement (return
++//!       a distinguishable clash, refuse the write, or lift to a join
++//!       sentinel). Instead it returns the ordinary `true` "changed"
++//!       signal — indistinguishable from monotone progress — and
++//!       silently overwrites `Bool` with `F64`. The clash is swallowed.
++//!
++//!   (B) `heterogeneous_arrows_into_one_var_via_live_pass` — the
++//!       pass-level realization the brief prescribes: ONE rule whose two
++//!       `->` projections ground to incompatible leaves (`Bool`, `F64`)
++//!       unifying into one Alt type var. Runs `project_types` and
++//!       inspects `ir.types` + `ir.type_obligations`. This measures what
++//!       the LIVE carrier actually does — which is NOT `TypeDomain::join`
++//!       at all (every constraint `revise` writes through `assign`, a
++//!       direct overwrite; the Alt convergence point routes through
++//!       `join_types`, which lifts distinct leaves into
++//!       `TypeDesc::HeterogeneousAltJoin` and surfaces a named
++//!       obligation).
++
++use std::collections::HashMap;
++
++use bbnf_ir::passes::types::constraint::TypeDomain;
++use bbnf_ir::passes::types::{TypeObligation, project_types};
++use bbnf_ir::{AltBranch, FnDescriptor, GrammarIR, IrNode, IrRule, RuleId, RuleMeta, TypeDesc};
++use csp_solver::domain::LatticeDomain;
++
++// ─── fixture helpers (self-contained; mirror lattices/types.rs) ────
++
++fn make_ir_with_fns(rules: Vec<IrRule>, fns: Vec<FnDescriptor>, strings: Vec<String>) -> GrammarIR {
++    GrammarIR {
++        entry: 0,
++        rules,
++        strings,
++        fns,
++        types: vec![],
++        follow_sets: HashMap::new(),
++        ws_pattern: None,
++        collapse_simple_spans: false,
++        debug_all: false,
++        debug_labels: Vec::new(),
++        type_map: None,
++        regex_info: std::collections::HashMap::new(),
++        node_facts: HashMap::new(),
++        recognizer_decisions: HashMap::new(),
++        delim_scan_configs: std::collections::HashMap::new(),
++        key_dispatch_configs: std::collections::HashMap::new(),
++        context_facts: std::collections::HashMap::new(),
++        has_family_recognizers: false,
++        regex_engine_decisions: std::collections::HashMap::new(),
++        dag: None,
++        cost_config: bbnf_ir::CostConfig::default(),
++        type_desc_interner: bbnf_ir::TypeDescInterner::new(),
++        materialization: std::collections::HashMap::new(),
++        string_index: std::collections::HashMap::new(),
++        payload_layouts: std::collections::HashMap::new(),
++        structural_alphabet: None,
++        push_fingerprint: None,
++        dedup_eligible_rules: Vec::new(),
++        shape_assignments:
++            bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
++        eclass_facts: std::collections::HashMap::new(),
++        keyword_branches: std::collections::HashMap::new(),
++        disjoint_first_tables: std::collections::HashMap::new(),
++        pattern_alphabets: std::collections::HashMap::new(),
++        ctns_lifts: std::collections::HashSet::new(),
++        struct_registry: bbnf_ir::StructRegistry::default(),
++        type_obligations: Vec::new(),
++        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
++        path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
++    }
++}
++
++fn rule(id: RuleId, body: IrNode) -> IrRule {
++    IrRule {
++        id,
++        name: id,
++        body,
++        meta: RuleMeta::default(),
++        source_span: None,
++    }
++}
++
++fn alt(nodes: Vec<IrNode>) -> IrNode {
++    IrNode::Alt(
++        nodes
++            .into_iter()
++            .map(|n| AltBranch {
++                node: n,
++                first_set: None,
++            })
++            .collect(),
++        None,
++    )
++}
++
++fn expr_fn(return_type: TypeDesc) -> FnDescriptor {
++    FnDescriptor::Expr {
++        expr: bbnf_ir::MapExpr::Input,
++        return_type: Some(return_type),
++    }
++}
++
++fn get_type(ir: &GrammarIR, id: RuleId) -> &TypeDesc {
++    ir.types
++        .iter()
++        .find(|(rid, _)| *rid == id)
++        .map(|(_, t)| t)
++        .unwrap()
++}
++
++// ─── (A) direct unit probe of the NAMED carrier `TypeDomain::join` ──
++
++/// The shipping `TypeDomain::join` is NOT a sound equality carrier: on
++/// disagreement between two distinct ground leaves it performs a
++/// non-monotone last-writer-wins overwrite and returns the ordinary
++/// `true` "changed" signal — the caller cannot distinguish a genuine
++/// clash from legitimate lattice progress. This is Wand's
++/// principal-type-losing shape, encoded in the domain's own LUB.
++#[test]
++fn type_domain_join_is_silent_last_writer_wins() {
++    let mut carrier = TypeDomain::ground(TypeDesc::Bool);
++    let incoming = TypeDomain::ground(TypeDesc::F64);
++
++    // A sound carrier would surface disagreement here. This one does not.
++    let signalled_change = carrier.join(&incoming);
++
++    // 1. The clash is reported as ordinary progress — indistinguishable
++    //    from a monotone refinement. No clash channel exists.
++    assert!(
++        signalled_change,
++        "join returned `false` (unchanged) — expected the last-writer-wins overwrite to report `true`",
++    );
++
++    // 2. The prior committed leaf `Bool` was silently discarded; the
++    //    carrier now holds `F64`. No union, no sentinel, no error.
++    assert_eq!(
++        carrier.solved,
++        Some(TypeDesc::F64),
++        "join must have overwritten Bool with F64 (last-writer-wins); \
++         a sound carrier would have kept Bool, raised, or lifted to a join sentinel",
++    );
++
++    // 3. Order-dependence: reversing the writes yields the OTHER leaf.
++    //    A commutative LUB / union-find carrier is order-independent;
++    //    this one is not — decisive proof it is not an equality carrier.
++    let mut reversed = TypeDomain::ground(TypeDesc::F64);
++    let _ = reversed.join(&TypeDomain::ground(TypeDesc::Bool));
++    assert_eq!(
++        reversed.solved,
++        Some(TypeDesc::Bool),
++        "reversed write order yields the other leaf — join is non-commutative last-writer-wins",
++    );
++    assert_ne!(
++        carrier.solved, reversed.solved,
++        "the two orderings disagree: the carrier's result depends on write order, \
++         not on the pair of types — it cannot be the spine's equality carrier as shipped",
++    );
++}
++
++// ─── (B) the LIVE pass: two `->` arrows unify into one Alt var ──────
++
++/// `clash = a | b ;` where `a -> Bool` and `b -> F64`. The two
++/// incompatible `->` leaves converge on the single Alt type variable of
++/// rule `clash`. Run the real `project_types` pass and observe what the
++/// LIVE equality carrier does with the disagreement.
++///
++/// This is the brief's prescribed method. It reveals that the shipping
++/// pass does NOT route through `TypeDomain::join` (which the unit probe
++/// above proved unsound): the Alt convergence point runs `join_types`,
++/// which lifts the distinct leaves into
++/// `TypeDesc::HeterogeneousAltJoin([Bool, F64])` and records a matching
++/// `TypeObligation` naming the rule. The clash is surfaced, not
++/// silently collapsed to one leaf.
++#[test]
++fn heterogeneous_arrows_into_one_var_via_live_pass() {
++    // rule 0 = Alt(Ref(1), Ref(2))          -> the single unifying var
++    // rule 1 = Map(Lit, f0)  f0 = -> Bool
++    // rule 2 = Map(Lit, f1)  f1 = -> F64
++    let mut ir = make_ir_with_fns(
++        vec![
++            rule(0, alt(vec![IrNode::Ref(1), IrNode::Ref(2)])),
++            rule(
++                1,
++                IrNode::Map {
++                    inner: Box::new(IrNode::Literal(3)),
++                    fn_id: 0,
++                },
++            ),
++            rule(
++                2,
++                IrNode::Map {
++                    inner: Box::new(IrNode::Literal(3)),
++                    fn_id: 1,
++                },
++            ),
++        ],
++        vec![expr_fn(TypeDesc::Bool), expr_fn(TypeDesc::F64)],
++        vec![
++            "clash".into(),
++            "a".into(),
++            "b".into(),
++            "lit".into(),
++        ],
++    );
++    bbnf_ir::dag::ensure_dag(&mut ir);
++    project_types(&mut ir);
++
++    let projected = get_type(&ir, 0).clone();
++
++    // FAIL condition (the brief's predicted outcome): a single silently
++    // chosen ground leaf with zero clash obligations.
++    let is_single_ground_leaf = matches!(
++        projected,
++        TypeDesc::Bool | TypeDesc::F64,
++    );
++    let clash_obligations: Vec<&TypeObligation> = ir
++        .type_obligations
++        .iter()
++        .filter(|ob| matches!(ob, TypeObligation::HeterogeneousAltJoin { rule: Some(0), .. }))
++        .collect();
++
++    // Print the decisive numbers for --nocapture inspection.
++    println!("[clash-probe] solved TypeDesc for rule 0 (`clash`): {projected:?}");
++    println!("[clash-probe] total type_obligations: {}", ir.type_obligations.len());
++    println!("[clash-probe] clash obligations naming rule 0: {}", clash_obligations.len());
++    println!("[clash-probe] is_single_silently_chosen_ground_leaf: {is_single_ground_leaf}");
++
++    // The live carrier must NOT silently pick one leaf.
++    assert!(
++        !is_single_ground_leaf,
++        "FAIL: live pass silently picked a single ground leaf {projected:?} — last-writer-wins",
++    );
++
++    // The live carrier surfaces the disagreement as a join sentinel...
++    match &projected {
++        TypeDesc::HeterogeneousAltJoin(branches) => {
++            assert_eq!(
++                branches,
++                &vec![TypeDesc::Bool, TypeDesc::F64],
++                "the join sentinel must carry both incompatible leaves in appearance order",
++            );
++        }
++        other => panic!(
++            "expected HeterogeneousAltJoin([Bool, F64]) join sentinel, got {other:?}",
++        ),
++    }
++
++    // ...and names the clash in the obligation stream.
++    assert_eq!(
++        clash_obligations.len(),
++        1,
++        "expected exactly one clash obligation naming rule 0; obligations = {:?}",
++        ir.type_obligations,
++    );
++    if let TypeObligation::HeterogeneousAltJoin { branches, .. } = clash_obligations[0] {
++        assert_eq!(
++            branches,
++            &vec![TypeDesc::Bool, TypeDesc::F64],
++            "obligation evidence must match the lifted join sentinel payload",
++        );
++    }
++}
+diff --git a/crates/ir/tests/lattices/main.rs b/crates/ir/tests/lattices/main.rs
+index 296492e3d..783ff560f 100644
+--- a/crates/ir/tests/lattices/main.rs
++++ b/crates/ir/tests/lattices/main.rs
+@@ -5,6 +5,7 @@
+ //! test semantics. Add new lattice-related tests as additional `mod ...;`
+ //! declarations here, with the actual test bodies under `tests/lattices/`.
+ 
++mod clash;
+ mod csp_authority;
+ mod csp_components;
+ mod csp_materialization;

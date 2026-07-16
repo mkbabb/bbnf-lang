@@ -1,321 +1,252 @@
-# LOCK-2 — THE GRAPH ENGINE — pass-1 CRIT-2 (adversarial, cross-lock weighted)
+# LOCK-2 — THE GRAPH ENGINE — pass-1 · CRIT-2 (Adversarial critic 2 of 2, CROSS-LOCK weight)
 
-*Critic 2 of 2. Charter: harden every family against the failure-mode checklist (vacuous
-convergence, spec-cites-itself, gates-that-cannot-fail, elegant-reduction trap, legacy aliases,
-masked fallbacks, unverified gestalt, consumer-less substrate) + constitution violations +
-prototype-evidence misuse; weight the CROSS-LOCK view. No CRIT-1 exists in this lock's pass-1 dir —
-this is the first adversarial audit. Read: PORTFOLIO, FAMILY-SPECS, PROTO-1/2 (+ patch/bench),
-research-{A,B,C,D,priorart}, and on-disk substrate + adjacent-lock FAMILY-SPECS (1,3,5,9).*
+*Charter: harden/challenge/refine every family against the failure-mode checklist — vacuous
+convergence, spec-cites-itself circularity, gates that cannot fail, the elegant-reduction trap,
+legacy aliases, masked fallbacks, unverified gestalt, consumer-less substrate — plus constitution
+violations and prototype-evidence misuse. Critic 2 weights the CROSS-LOCK view: where LOCK-2
+contradicts or double-homes work against the extant GN/PT codex and the other locks. Every
+divergence must be a NAMED supersession (Constitution ix).*
 
----
+**Disk re-anchored this pass (skinny HEAD `fe160a91a`, non-worktree), to avoid the wrong-tree trap
+the prior CRIT-2 fell into.** Verified verbatim: `skinny/crates/ir/src/` = **`cost.rs` + `lib.rs`
+only** — no egraph module, no `GrammarENode` (2B genuinely net-new in the subject tree);
+`ir/src/lib.rs:425-431` `SimdMode{Exact}` / `SimdSite{PreEntry}` **single-valued** (Island B / 2C
+sites absent from the IR); `find_component_delim` **gone from `codegen/`** — survives only in a
+bench bin + `runtime/src/runtime_scan.rs` (PROVE-12's cited codegen target is RETIRED);
+`has_rule("value")` name-gate **live** at `codegen/src/runtime_generator.rs:98`. The within-lock
+substrate census (§0, CRIT-1, research-A/B) is correct **for the skinny tree**, and I do not
+re-litigate it. My weight is the cross-lock seam, which neither the FAMILY-SPECS incompatibility map
+nor the LOCK-2 REGISTRY adjudicates: **the map is entirely intra-LOCK-2 (2A⊗2B, 2B⊗2C, 2A~2C), and
+the load-bearing forks are actually LOCK-2 ⊗ LOCK-3, LOCK-2 ⊗ LOCK-5, LOCK-2 ⊗ LOCK-9, and a
+lock-portfolio tree-of-record contradiction.**
 
-## 0. THE FINDING THAT RE-CUTS THE WHOLE LOCK — the synthesis (and both researchers) audited the WRONG dead substrate
-
-Every report in this lock — research-A, research-B, priorart, and the synthesis §0 — grounds the
-lock on one census claim: *"the sole `impl Language` today is `DecisionNode`; the grammar IR is not
-yet a Language; making it one is family 2B's work; `Ref`-as-leaf is the single most important
-structural decision in 2B; the inert decision substrate is `backend_egraph.rs`'s childless bag."*
-**This census is false on disk, and I verified it three ways this pass:**
-
-1. `crates/ir/src/egraph/node.rs:23-24` — `#[derive(..., Language)] pub enum GrammarENode`. The
-   grammar IR **already implements `Language`.** research-A's "sole `impl Language` is
-   `DecisionNode`" (research-A §0) and research-B's "the sole `impl Language` in the tree is
-   `DecisionNode` (`backend_egraph.rs:181`)" and "`ExprKind` cannot derive at all … 2B is precisely
-   the work of making that claim true" (research-B §2) are **all wrong**.
-2. `crates/ir/src/egraph/` is a full module tree: `build_egraph.rs`, `write_back.rs` (14.5 KB),
-   `interner.rs`, `cost.rs`, `rules/` (incl. `rules/regex.rs`), `analysis/`. `write_back.rs`'s own
-   header: *"After saturation, the e-graph contains every equivalent form of each rule's body. This
-   module walks each rule's root e-class via `Extractor` (cost-model-guided), rebuilds a concrete
-   `IrNode` tree … Rule boundaries are preserved: … emits `Ref(Y)` instead of inlining … essential
-   for preserving mutual recursion (JSON: value↔object↔array↔value). An additional per-walk
-   `visiting` set guards against non-rule-rooted cycles."* **This is, verbatim, research-B §1.1's
-   "load-bearing seam of family 2B" — `Ref`-as-leaf, per-rule root table, acyclic body extraction,
-   cycle guard — declared net-new, already built.**
-3. LOCK-2's OWN PROTO-1 imports `crates/ir/src/egraph/cost.rs:109-118` and builds
-   `EGraph<GrammarENode, NoAnalysis>` — the prototype used the very Language impl the synthesis says
-   does not exist. The lock's evidence contradicts the lock's census.
-
-**Two consequences, both decision-grade:**
-
-- **(A) The real Y.13 consumer-less substrate is uncatalogued.** `crates/ir/src/lib.rs:17` exposes
-  `pub mod egraph`, but a tree-wide grep finds **zero consumers outside the `ir` crate** — `passes/`
-  drives the hand-rolled `derive_recognizers`/`derive_backend_shape`, never `write_back`/
-  `build_egraph`. So a complete grammar e-graph (intern → saturate → extract → write-back, with
-  recursion and cycle handling) sits **fully built and never called on the production path.** THAT
-  is the constitution-viii / Y.13 dead substrate the lock exists to redeem — an order of magnitude
-  larger than the ~68 provenance fields §0 fingered. The synthesis's headline "inert decision
-  substrate" (the `backend_egraph.rs` childless bag) is a real but *secondary* symptom; the primary
-  dead substrate is an entire unused optimizer. No family names it. **This omission must be closed
-  before convergence talk: the lock's own diagnosis is incomplete.**
-
-- **(B) 2B is mis-scoped by a stale census; its convergence must drop, not because it is hard but
-  because the synthesis measured the wrong distance.** 2B is not "make the IR a Language" (done) or
-  "the `Ref`-as-leaf decision" (done) — it is "wire the extant unused grammar e-graph into the
-  pipeline in place of the hand-rolled passes, and prove adoption (i) stays in the ~230 µs budget
-  incl. teardown, (ii) is `regen∘regen` byte-identical through cost-guided extraction, (iii) changes
-  at least one output for the measurable better." All three are UNTESTED. The "80% substrate-built"
-  claim is right by accident; the residual is exactly the three hard questions, none prototyped.
-
-This finding is cross-lock (§5 below): the same unused `crates/ir/src/egraph/` tree is what LOCK-5
-5A/5B calls the grammar-side of its coproduct Language, and what LOCK-1 1D calls "the template."
-Three locks describe the same built-but-unused module; none states who owns turning it on.
+I concur with CRIT-1's within-lock reasoning and adopt its floor as my starting point; the
+cross-lock gaps below are **additional** open gaps, so my convergence numbers sit at or below CRIT-1's.
 
 ---
 
-## 1. THE TWO MASTER-GATE PROTOTYPES, RE-AUDITED — both PASS verdicts are softer than the binary label
+## THE GOVERNING CROSS-LOCK FINDING — LOCK-2 mislocates its own primary fork
 
-### PROTO-1 (Brief 1, §0 master gate) — the elegant-reduction trap, and a mis-distributed measurement
+The FAMILY-SPECS names its "primary architectural fork" as **2A ⊗ 2B** (§I of the incompatibility
+map): "the IR cannot simultaneously be a tree between islands and the e-graph container." That is a
+real tension, but it is the **wrong fork**, because *the middle IR is not LOCK-2's to shape*.
 
-**The gate asks (verbatim): does *any rewrite* create an e-class holding >1 candidate.** PROTO-1
-built the two-form e-class by **direct `union`, not by firing a rewrite** — its own candor: *"the
-construction is hand-authored, the extraction is production … a productionized
-`ManufactureDispatchAlt` rewrite … is the trivial next step."* This is the elegant-reduction trap:
-the load-bearing step — a *widening* rewrite that fires under the scheduler — is declared trivial
-and left unbuilt. It is not trivial, because the extant rewrite set is **all-narrowing**
-(`DeduplicateAltBranches`, `UnionMergeAlt`, `FuseAltRegexBranches`, `CommonSuffixFactor`,
-`SupersetAbsorbAlt`); a manufacturing rewrite that adds the dispatch twin must be shown **confluent
-with the narrowing set** (does `DeduplicateAltBranches` immediately collapse the twin back? does the
-extraction tie-break stay total?) and **terminating under `CspScheduler`**. PROTO-1 bypasses the
-rewrite set entirely, so the one thing R-1's null was actually about — that the *set* only narrows —
-is untouched. The gate proves the *payoff exists given a branch*; it does **not** prove *a rewrite
-manufactures the branch*. Weak PASS.
+- **LOCK-3's charter** (portfolio §LOCK-3): "the IR tower and its transpositions … lowering
+  contracts and invariants; residualization (PROVE-12) generalized; **the decision driver's seat**."
+- **LOCK-3's REGISTRY** (re-verified at `skinny@b3cb8c16b`): "The tower is **3B-shaped today** — one
+  rich `BackendIr`, `BackendShape` an attribute, fewest transpositions; LOCK-3 either **hardens
+  (3A/3B) or re-founds (3C/3D)**."
 
-**The cyc/B magnitude is measured on the wrong byte distribution.** Part B classifies *every corpus
-byte* (twitter: 514,197 NOMATCH of 631,514 — **81 % of measured bytes are not value-starts**), so
-the sequential classifier eats its full 7-compare fall-through on 4-of-5 bytes. At real value-start
-positions the mix is mostly `"`/digit (early in grammar order), where dispatch's one-load advantage
-over 2–3 early compares is *far* thinner. The report waves this off ("direction … not sensitive")
-with **no measurement at real positions.** The 2.28–3.34× is therefore a synthetic-stream artifact;
-the *direction* is plausible (enough for a directional §0 pass), but the **magnitude must not anchor
-any downstream cost claim** — yet the synthesis cites it as 2D's "real front to reason about" and
-"a scalar weight sign-flip flips the pick." Prototype-evidence misuse if 2D leans on the numbers.
-
-**The de-risking claim over-reaches.** PROTO-1 verdict: "anchored — 2A-Islands-A/C, 2B-extraction,
-2D-lattice simultaneously." The artifact is a **grammar `Alt` dispatch-table** decision — that is
-Island-B / backend-shape flavored, **not** Island A (regex-HIR canon) or Island C (projection
-canon), which are the two islands whose entire justification is "nodes with children → real
-extraction." Islands A and C received **zero evidence.** FAMILY-SPECS 2A open-question (1) — "does
-the fleet have a real regex leaf whose prefilter/DFA verdict changes under canon?" — is asked and
-left **unanswered by its own probe**, yet the verdict marks 2A-Islands-A/C "anchored." The claim and
-the artifact are mismatched.
-
-### PROTO-2 (Brief 2, budget) — a *conditional* proof over unmodeled sites with invented costs
-
-PROTO-2 is the stronger of the two: real fleet audit (CSS-L4 ≥10, BBNF ≥3 competing self-loop
-sites — refutes §0's "JSON's one whitespace loop" counterexample for the corpus), a genuinely
-net-new `bounded_sum` propagator (7 tests, 111 no-regression), forces `Exact` on 3 sites under a
-tight budget, byte-identical slack-budget parity. But its own asterisks gut the "teeth exist on the
-corpus" claim to a **conditional**:
-
-- **The sites are latent-in-source but UNMODELED by the IR.** `ir::SimdSite` has only `PreEntry`,
-  `ir::SimdMode` only `Exact`; `derive_recognizers` collapses every structural byte into ONE
-  `SimdScan{Exact,PreEntry}` per grammar. The ≥10 CSS sites the CSP ran over **do not exist in the
-  IR** — the per-loop `SelfLoop` recognizer-derivation is GN-2.W1, unbuilt. The CSP was built over
-  *grammar-source-audited* sites, not IR sites.
-- **The costs are invented.** Prefilter=40 LOC, Exact=8 LOC, and all per-site cyc/B are *synthetic
-  inputs, not measurements* (the report says so). Whether the budget **actually** binds depends
-  entirely on the *real* static-size costs — unknown until GN-2.W1 lowering exists and 2D fits them.
-  If real Prefilter lowering is ~12 LOC, the budget may never bind. So "budget binds on the corpus"
-  is proven only up to a fabricated cost vector. This is the family's actual teeth, and it is open.
-- **`regen∘regen` byte-identity — the constitution's hard gate — is NOT tested.** "full `cargo xtask
-  regen` is not exercised (no consumer reads the plan yet)." Determinism is shown at the CSP
-  decision layer only. And "no consumer reads the plan yet" is itself the Y.13 flag: **2C/Island B's
-  consumer does not exist** — it is GN-2.W1's unbuilt lowering. A plan nothing reads is dead
-  substrate; PROTO-2 built a plan with no reader.
-
-Net: PROTO-2 unblocks the **machinery** (propagator works, forces Exact, parity holds); it leaves
-open **binding-on-real-costs**, **IR site modeling (GN-2.W1)**, **the consumer**, and **end-to-end
-regen determinism**. The synthesis's post-PROTO verdict language ("2C's teeth exist on the corpus")
-is a category jump from what ran.
+2A ("the middle IR stays an ordinary annotated tree, e-graphs are local island tactics") and 2B
+("the middle IR *is* one e-graph container end-to-end; `derive_backend_shape` is deleted; extraction
+*is* the lowering") are **both** verdicts on what LOCK-3's tower IS. 2B is, precisely, a **fifth
+option imposed on LOCK-3's spine** that LOCK-3's own family set (3A hardens / 3B annotates / 3C
+grammar-homoiousia / 3D staged-residual) does not enumerate. The genuine primary fork of this lock
+is therefore **LOCK-2 ⊗ LOCK-3: does graph-optimization govern the middle IR's SHAPE (LOCK-2 owns
+the tower), or does it operate as a tactic WITHIN a tower LOCK-3 owns?** The FAMILY-SPECS resolves
+this silently in LOCK-2's favor by talking about "the middle IR" as if LOCK-2 defines it. That is an
+**undeclared supersession** of LOCK-3 (clause ix). Until GESTALT-B adjudicates the tower's owner,
+2A's "directed spine" and 2B's "IR-is-egraph" are both **speculative annexations of LOCK-3
+territory**, and the intra-lock 2A⊗2B fork is a sub-question of a boundary LOCK-2 has not earned the
+right to answer alone. This is the single most load-bearing cross-lock gap and it lowers every
+family that touches the middle IR.
 
 ---
 
-## 2. FAMILY 2A — EGRAPH-ISLANDS · convergence 58%
+## Cross-lock contradiction / double-home ledger (the critic-2 core)
 
-Strongest-aligned, and the directed-shell architecture is coherent. But three of its own open
-questions are open, its two child-bearing islands (A, C) have zero evidence, and it double-homes.
+| # | Seam | The contradiction / double-home | LOCK-2's handling |
+|---|---|---|---|
+| **XL-A** | **Tree-of-record** | **LOCK-1** REGISTRY: *"Root is the greenfield base; **skinny retires**"* (quoting `project_skv24_handoff.md`). **LOCK-3/5/7** REGISTRIES: **skinny is the live tree of record**; the legacy `crates/` tree is **archived by GN-0** (LOCK-7 XL-4). These are contradictory across the portfolio. | LOCK-2's whole pass-1 governing correction + its highest-value graft ("legacy `crates/ir/src/egraph/` → **port INTO skinny**", REGISTRY §3.3) + the PROVE-2B-PORT mover **assume skinny is the destination**. If LOCK-1's reading holds, the port direction **inverts** and the legacy egraph is the base, not an asset. **Unnamed by LOCK-2.** |
+| **XL-B** | **Middle-IR / decision-driver ownership** | LOCK-3 charter owns "the IR tower … the decision driver's seat." 2A/2B both re-shape it; 2B deletes `derive_backend_shape` and makes extraction the driver. | Framed as intra-lock 2A⊗2B; the LOCK-2/LOCK-3 boundary is **never adjudicated**. Governing finding above. |
+| **XL-C** | **PROVE-12 residualization** | Double/triple-homed: LOCK-2 (2B "residual ruleset" / 2A Island C), **LOCK-3 charter** ("residualization (PROVE-12) generalized"), **LOCK-3 3D STAGED-RESIDUAL**. And research-B's `ConstFoldDelimMask` rewrite anchors on `codegen/src/runtime_generator.rs::find_component_delim` — **RETIRED from skinny codegen on disk** (confirmed; LOCK-3 REGISTRY concurs: "retired from `codegen/src`"). | LOCK-2 cites PROVE-12 as its own rewrite target; **does not name LOCK-3 as co-owner**, and anchors on a dead codegen site. |
+| **XL-D** | **Scan-derivation substrate** | Triple-homed: LOCK-2 **Island B / 2C** (`SimdSite::SelfLoop`/`SimdMode::Prefilter` recognizer-derivation), **LOCK-9 9C SCANNER-AS-DFA** (BLOCKED — "quote/number/ws scanning become compiled DFA products; hand-written scanners cease to exist"), **LOCK-5 continuum** (owns grammar→DFA; SPEC-ONLY lock-wide per its P2). LOCK-9 9C is BLOCKED *precisely because* "the enabling substrate (grammar→DFA source-of-truth) is **owned by LOCK-5 and unbuilt**." | LOCK-2 treats the consumer as a single near-term dependency ("GN-2.W1 unbuilt"). It is actually **BLOCKED two locks deep** and its *provenance* (hand-written arm vs DFA-derived) is contested. Unnamed. |
+| **XL-E** | **Regex-canon exemplar** | LOCK-2's Island A + REGISTRY graft want to **port** legacy `egraph/rules/regex.rs` (434 LOC). LOCK-5 P1: skinny "needs no grammar-tier regex e-graph" is a live option — *"fold INTO it, **or to abrogate**."* LOCK-5 P2: the grammar-driven regex premise is **SPEC-ONLY lock-wide** (no artifact exercised it). | LOCK-2 marks Island A WITHHELD pending LOCK-5 cession (good) but **treats the exemplar as a port asset**, not as a possible LOCK-5 abrogation target. Half-named. |
+| **XL-F** | **Projection canon** | LOCK-2 Island C ("shared engine with LOCK-1") vs **LOCK-1 1D TYPES-AS-ECLASSES** + LOCK-1-owned `Project`@`passes/src/lib.rs:204`. LOCK-2 asserts "LOCK-1's 1D is BANKED-vacuous → no shared engine." But LOCK-1 REGISTRY: the **live 1B/1D substrate = "the shipped `crates/egraph`"** running on root. | LOCK-2's "1D vacuous, nothing to share" is a **wrong-tree assertion** (skinny has no egraph; LOCK-1's runs on root). Projection/type canon is **double-homed**, resolved only by an unverified tree-read. |
+| **XL-G** | **One solver home** | LOCK-2 2C ("csp-solver is the engine") + LOCK-1 1B ONE-CONSTRAINT-STORE ("every judgment is one constraint system; the csp-solver crate is the engine"). The portfolio GESTALT explicitly asks "one solver home?". | Constitution-aligned (general-infra edict), and `bounded_sum` is correctly homed in csp-solver (parsimony credit). But the **net-new `bounded_sum` extension is uncoordinated** with LOCK-1's constraint-store; neither lock's map names the shared home. Lesser, positive-adjacent. |
+
+---
+
+## Prototype-evidence misuse (cross-lock + method)
+
+- **Two protos for Brief 2 reach different verdicts; the honest one must govern.** `PROTO-2.md`
+  (worktree `…-28`) returns **PASS** ("2C's teeth exist on the corpus"). `PROTO-2-wf30.md`
+  (worktree `…-30`) returns the **CONDITIONAL** verdict — *"2C teeth LATENT (source-real,
+  IR-unmodeled, **un-budgeted**)"* — and its own reconciliation note explains why the PASS
+  overclaims: the ≥2 sites are audited in **grammar source**, not in the IR, which models exactly
+  one `PreEntry Exact` scan (I confirmed on disk). The REGISTRY correctly took the conditional
+  floor; the **PASS headline is prototype-evidence misuse** and must not anchor 2C.
+- **Consumer-less substrate reproduced BY the probe (clause viii / Y.13).** Both PROTO-2 variants
+  build `bounded_sum` + a scan-plan CSP whose plan **nothing reads** — the consumer
+  (SelfLoop-derivation) is unbuilt. Cross-lock sharpening (XL-D): it is not a near-term LOCK-2
+  deliverable but a substrate **LOCK-9 9C blocks on and LOCK-5 owns unbuilt**. The brief was meant
+  to *test for* the Y.13 pathology; the prototype *instantiates* it two locks deep.
+- **Synthetic cost anchoring a corpus claim (clause vii).** `Prefilter=40/Exact=8 LOC`,
+  `Exact=10/Prefilter=1` cyc/B are author-chosen; whether the budget "binds" is a pure function of
+  those constants. Real costs are 2D's territory (itself SPEC-ONLY, zero fits) — so the binding
+  demonstration is SPEC_ONLY resting on SPEC_ONLY.
+- **PROTO-1: PASS de-risks "2A/2B/2D simultaneously" is overclaimed.** I concur with CRIT-1 fully
+  (hand-`union` not a fired rewrite; W2 is the sign-flip of the calibrated `−2.0`, a gate that
+  cannot fail in the direction needed; Part B measures **every corpus byte** — twitter 81% NOMATCH —
+  a contrast the parser never runs). Cross-lock addition: PROTO-1's Part B cyc/B is a *real PMU
+  number on a synthetic workload*; using it to anchor "**2D-lattice anchored**" is a **directional
+  measurement dressed as a decision-grade perf claim** (clause vii). Its own Part B shows the table
+  dominates 2.27×–3.34× everywhere → the honest architecture is **canonicalization** (always
+  rewrite Alt→table), the FAIL-branch conclusion, not the extraction one.
+- **Baseline staleness (cross-lock method inconsistency).** Both protos ran at `d2b32f6e3` —
+  **~51 commits behind live** (LOCK-3 verified `git rev-list --count d2b32f6e3..b3cb8c16b = 51`);
+  skinny is now at `fe160a91a`, further still. **LOCK-3 and LOCK-7 re-ran their load-bearing greps
+  at live HEAD**; LOCK-2's REGISTRY does **not** re-anchor its cost-path cites (`cost_weights.rs`,
+  `backend_egraph.rs`, `decision_csp.rs`) against the moved tree. The §0 substrate claims I
+  spot-checked still hold at `fe160a91a`, but the un-re-anchored line cites are a method gap the
+  sibling locks did not tolerate.
+
+**Non-circularity (credit).** §0 rests on three *independent* legs — the in-tree R-1 54-config null,
+the external Cranelift aegraph (avg class 1.13, choice layer 2-of-4M), and the project's own
+all-narrowing legacy rule set. Not spec-cites-itself. This is the pass's genuine strength and I do
+not discount it. The `bounded_sum` propagator (7 tests, additive, correctly homed) and 2D's
+calibrate-time-closure determinism invariant are likewise sound and earn their credit.
+
+---
+
+## Family 2A — EGRAPH-ISLANDS — convergence **50%**
+
+Strongest-aligned; the LLVM directed-spine + local-island architecture is coherent, the legacy
+canonicalization exemplar proves the spine ships, and gate (i) genuinely can go RED (credit — not a
+gate-that-cannot-fail). But each of its three islands is cross-lock-contested, and the boundary with
+LOCK-3 (XL-B) is unadjudicated. CRIT-1's floor (55) does not price the cross-lock island gaps; I
+take **50**.
 
 **Enumerated open gaps:**
-1. **Island A is un-evidenced and double-homed with LOCK-5.** No prototype touched a regex leaf;
-   FAMILY-SPECS open-Q(1) is unanswered. Worse, "2A owns the rewrite set + cost model; LOCK-5 owns
-   the lawful HIR form" collides with LOCK-5 5A ("one `derive(Language)` on `ExprKind` gives one
-   saturation engine for regex + grammar canonicalization") and 5B (joint coproduct Language +
-   regex algebra rewrites). `crates/ir/src/egraph/rules/regex.rs` (434 LOC) — the regex rewrite set
-   over the grammar e-graph — **already exists** and is claimed by both LOCK-2-2A-IslandA and
-   LOCK-5-5A/5B. Who owns the regex-canon rewrite set is unadjudicated across the two locks.
-2. **Island C shares an engine with a BANKED LOCK-1 family, and contests `Project` ownership.**
-   Island C = "projection canonicalization (shared engine with LOCK-1)." LOCK-1's 1D
-   (types-as-eclasses) is **BANK — cost-extraction VACUOUS**, and LOCK-1 §5.1 insists **one store
-   owns the `Project` discard-site**. If LOCK-1 lands 1A (union-find, not an e-graph), there is *no
-   LOCK-1 e-graph to share*, and `Project` lives in a union-find store while Island C wants to
-   rewrite `map∘map⇄map` over the same nodes in an e-graph — a direct two-owner conflict on
-   `Project`. The "shared engine, distinct island (cost objective is the split)" boundary is a
-   **name-gate** unless LOCK-1's e-graph actually ships, which its own disposition says it will not.
-3. **GN-2.W1 supersession is undeclared (constitution ix).** Island B "subsumes and generalizes
-   GN-2.W1's hand-written detection arm," and PROTO-2 calls the unbuilt SelfLoop derivation "exactly
-   the GN-2.W1 consumer." Is Island B a **replacement** for GN-2.W1, a **wrapper** that lands after
-   it, or does it **wait on** it? The extant codex already homes the prefilter recognizer +
-   `find_member` lowering in GN-2.W1. Per clause ix every divergence is a *named* supersession;
-   "subsumes and generalizes" is not a disposition.
-4. **The manufacturing rewrite's confluence with the narrowing set is untested** (§1) — the actual
-   R-1-null-breaking artifact.
-5. **`regen∘regen` byte-identity untested end-to-end** for any island (PROTO-2 shows CSP-layer
-   determinism only).
-6. **Island count (3/2/1) unresolved** — open-Q(3), by design deferred, but a converged family must
-   answer it.
+1. **Middle-IR ownership vs LOCK-3 unadjudicated (XL-B).** 2A's "directed spine, IR is an annotated
+   tree between islands" is a verdict on LOCK-3's tower; the incompatibility map never names the
+   LOCK-2/LOCK-3 seam. Speculative annexation until GESTALT-B rules.
+2. **Island A doubly-blocked cross-lock (XL-E).** LOCK-5 owns the lawful HIR (unrendered) AND may
+   **abrogate** the shared `rules/regex.rs` exemplar 2A/2B want to port; LOCK-5 P2: grammar-driven
+   regex SPEC-ONLY lock-wide. Island A's only child-bearing extraction depends on a verdict + a
+   substrate that another lock has neither rendered nor decided to keep.
+3. **Island B sites absent from IR; deriving substrate cross-lock-BLOCKED (XL-D).** `SimdSite={PreEntry}`,
+   `SimdMode={Exact}` confirmed on disk at `fe160a91a`. The recognizer-derivation is not "GN-2.W1
+   unbuilt" (one dependency) but blocked through LOCK-9 9C (BLOCKED) and LOCK-5 (grammar→DFA
+   SPEC-ONLY). "Same-wave consumer that changes emitted code" is not present and not near-term.
+4. **Island C double-homed with LOCK-1, and probably not an island (XL-F).** `Project`@204 is LOCK-1's;
+   LOCK-2's "1D vacuous → no shared engine" is an unverified wrong-tree read (LOCK-1's egraph runs on
+   root). And PROTO-1's table-always-wins implies `map∘map`/dead-projection are always-apply
+   canonicalizations → by gate (i) they are plain rewrites, **not** islands.
+5. **Manufacturing rewrite still hand-`union`'d, un-fired, confluence-unproven** (PROTO-1 candor);
+   island count honest floor is plausibly **0 fully-instantiated islands** (A cross-lock, B
+   substrate-blocked, C canonicalization).
+6. **Deletion gate unexercised + adjacent name-gate unaddressed.** The 68-field provenance deletion
+   (gate v) is stated, not shown; and `has_rule("value")` — the **clause-vi-forbidden name-gate**
+   LOCK-3 flags — is **live at `runtime_generator.rs:98`**, the very codegen file 2A restructures,
+   yet LOCK-2 is silent on it.
 
-## FAMILY 2B — IR-IS-EGRAPH · convergence 42%
+## Family 2B — IR-IS-EGRAPH — convergence **32%**
 
-Re-scoped by §0: the structural work is **built and unused**, not net-new. VALUE-AT-RISK stands, but
-for a different reason than the synthesis gives.
+The `Ref`-as-leaf / per-rule-root-table insight is sound and legacy-realized (credit), but 2B's
+signature thesis collides head-on with LOCK-3 and rests on a LOCK-3-owned algebra LOCK-3 says is
+incomplete. CRIT-1's 38 is within-lock; the cross-lock primacy conflict and the NP-hard repair pull
+it to **32**.
 
 **Enumerated open gaps:**
-1. **Stale substrate premise (unverified gestalt).** "2B is the work of making the IR a Language"
-   and "`Ref`-as-leaf is the single most important structural decision in 2B" are already in
-   `crates/ir/src/egraph/{node.rs,write_back.rs}` (§0). 2B must be re-authored as "adopt the extant
-   unused grammar e-graph into the pipeline," not "build it."
-2. **The unused engine is itself the dead substrate (Y.13)** — uncatalogued (§0-A). 2B's real
-   deliverable is turning it on with a consumer, or deleting it; the family names neither.
-3. **Compile budget incl. teardown — untested.** research-B risk #5 (the `with_capacity` teardown
-   warning on ~300-node grammars) is real and unmeasured; no proto stood the full IR up as one
-   graph and timed build+saturate+extract+teardown against ~230 µs.
-4. **regen determinism through cost-guided extraction — untested.** The `FxHashMap best` + cost-tie
-   total-order obligation (research-B risk #4) is asserted, never demonstrated at grammar scale.
-5. **"Does extraction buy anything" — only weakly evidenced.** PROTO-1's hand-union (not a firing
-   rewrite) on a backend-dispatch `Alt`, with a mis-distributed cyc/B, is the sole datum; the
-   aegraph twin (1.13 avg class, 2-of-4M, ~0.1 %) predicts ~nothing. 2B's *distinctive* value beyond
-   the GVN/hash-consing 2A/2C also inherit is unshown.
-6. **Double-home with LOCK-5 5A on `ExprKind: Language`** — both claim the grammar-IR-as-Language
-   work (which is in fact done); the coproduct-vs-grammar-only shape is unadjudicated.
+1. **The real fork is LOCK-2 ⊗ LOCK-3, not 2A ⊗ 2B (XL-B, governing finding).** 2B deletes
+   `derive_backend_shape` and makes extraction the driver — seizing the seat LOCK-3's charter owns.
+   Mis-scoped as intra-lock; a GESTALT boundary call.
+2. **"Extraction emits BackendShape directly" depends on a starved, caller-sensitive LOCK-3 algebra.**
+   LOCK-3 REGISTRY: `DirectTypeKind` **Struct-only, sum node algebra un-emittable**. research-B risk
+   1 (caller-sensitive shape via `admits_sink_only`) is LOCK-3's domain; its only identity-preserving
+   repair is **NP-hard optimal context-sensitive extraction** (open-Q4) — a missing primitive of
+   *equal difficulty to the original problem* (the BLOCKED-candidate condition).
+3. **PROVE-12-as-rewrite anchored on a retired target + double-homed (XL-C).** `find_component_delim`
+   gone from skinny `codegen/` (disk-confirmed); PROVE-12 generalization is LOCK-3's charter item and
+   3D's family. LOCK-2 claims it without naming LOCK-3.
+4. **Distinctive extraction value triple-refuted inert (§0);** reduces to GVN/hash-consing that 2A
+   inherits from the shared engine. aegraph twin predicts residual ~0.1%.
+5. **Compile-budget incl. teardown / regen bit-identity / AC-confluence all untested;** and the
+   legacy exemplar it would port sits in the tree LOCK-5 may abrogate and LOCK-1 calls the retiring
+   base (XL-A) — the port's **direction is cross-lock-undecided**, so PROVE-2B-PORT cannot even name
+   its source of truth yet.
+6. **Substrate cites un-re-anchored** to `fe160a91a` (~51+ commits past the proto baseline), unlike
+   sibling locks.
 
-## FAMILY 2C — CSP-CENTRAL · convergence 50%
+## Family 2C — CSP-CENTRAL — convergence **30%** (as-primacy BANKED; propagator BANKED)
 
-PROTO-2 raised this from the synthesis's "BLOCKED-candidate" by building the propagator, but the
-*teeth* (budget binds on real costs, with a real consumer) remain open.
-
-**Enumerated open gaps:**
-1. **Budget-binds-on-REAL-costs unproven** — the binding was shown only under synthetic
-   Prefilter=40/Exact=8 (§1, PROTO-2). The one fact that justifies the whole family is untested
-   against real static-size costs.
-2. **The decision sites are unmodeled in the IR** (`SimdSite::SelfLoop`/`SimdMode::Prefilter`
-   absent) — the CSP ran over grammar-source sites, not IR sites; modeling them is GN-2.W1, unbuilt.
-3. **Consumer-less as it stands** — "no consumer reads the plan yet." 2C's consumer is GN-2.W1's
-   `lower_to_rust` reading the plan; until that lands, 2C is the exact Y.13 pathology the lock
-   condemns, one level up.
-4. **End-to-end `regen∘regen` determinism untested** (CSP-layer only).
-5. **Objective degenerate without 2D** — named self-dependency; without a fitted cost table the
-   objective is `static_size_cost`, "a CSP-shaped priority cascade with extra steps."
-6. **Monolithic-vs-bounded-post-solve scope unresolved** — the Unison ceiling (~946–1000 instr/fn;
-   CSS-L4 has 2875 DTA states) forbids the maximal "one global COP per grammar" reading; 2C is
-   lawful only as a bounded post-solve over a small coupled sub-CSP, which is **not** the family's
-   stated architecture. The spec concedes this in its verdict but keeps the maximal framing in §2.
-
-## FAMILY 2D — PROFILE-CLOSED-LOOP · convergence 33%
-
-**SPEC-ONLY.** No prototype ran (only Briefs 1 and 2 have PROTO files; PROVE-2D-A/B were never
-executed). Under clause vii, a family carrying perf claims with zero running artifact and zero
-measured numbers is exactly "status report / vague optimism." The loop is elegantly specified and
-every seam is located, but nothing was demonstrated.
+As-primacy is retired (both critics + Unison ceiling); the surviving form is Island B under another
+name. The `bounded_sum` propagator is a genuine banked asset. CRIT-1's 32 stands; the cross-lock
+depth of the missing consumer (XL-D) and the honest CONDITIONAL proto pull it to **30**.
 
 **Enumerated open gaps:**
-1. **Zero executed prototype** — PROVE-2D-A ("a fitted coefficient flips a decision AND wins
-   cold-paired") and PROVE-2D-B ("freshness goes RED on a mutated coefficient") are unrun. 2D is
-   SPEC-ONLY; per clause vii it cannot anchor any perf claim until one runs.
-2. **Attribution underdetermination unresolved** — whole-grammar cyc/B, ~15 equations, dozens of
-   features → β unidentifiable (research-D risk #2). The proposed A/B-differential primitive is
-   *proposed*, not built; without it the fit is ill-posed.
-3. **No knob shown to have a fitted-optimum ≠ current-value with a measured win** — the entire
-   "null-trap escape" (kernel crossover, `CSS_SHUFTI_MIN_SPAN`, GATE=16, capacity) is asserted from
-   demonstrated *spread elsewhere*, never demonstrated to *flip* here.
-4. **`from_env` masked-fallback not gated off the regen path** — "keep `from_env` (`BBNF_COST_*`)
-   for sweeps" alongside `from_fact_table` is two cost sources; if regen ever reads env when the
-   table is absent, `regen∘regen` breaks. The spec does not fence env out of the regen path.
-5. **The lattice plane stays BLOCKED** — 2D over the backend-shape lattice reproduces the R-1 null
-   (PROTO-1's weak, hand-unioned pass does not lift it, since no firing rewrite exists); 2D is
-   unblocked *in principle* only at thresholds, unmeasured.
+1. **As-primacy Unison-refuted** (CSS-L4 2875 DTA states ≫ ~946-1000 proven-optimal/function); the
+   monolithic global COP is off the cliff by construction. Surviving "bounded post-solve over a small
+   coupled sub-CSP" = 2A Island B — **not a distinct family**.
+2. **Teeth consumer-less (viii) + synthetic-cost (vii); the honest proto governs.** PROTO-2-wf30's
+   CONDITIONAL verdict (source-real, IR-latent, un-budgeted) is the truth; PROTO-2's PASS overclaims.
+   On disk: one `PreEntry Exact` scan per grammar, no `SelfLoop`/`Prefilter`.
+3. **The consumer is cross-lock BLOCKED two locks deep (XL-D)**, not "GN-2.W1 unbuilt." 2C's teeth
+   await a grammar→DFA scan-derivation LOCK-5 owns unbuilt and LOCK-9 9C is BLOCKED on.
+4. **Degenerate without 2D's fitted costs** (named dependency, itself SPEC-ONLY); the **P1–P8
+   PriorityStep retirement is an unproven masked-fallback** (no selection-equivalence check that the
+   constraint form subsumes rather than preserves the cascade).
+5. **One-solver-home coordination with LOCK-1 1B unnamed (XL-G).** `bounded_sum` extends the same
+   csp-solver LOCK-1's constraint store centralizes; a GESTALT unification point neither map names.
+
+## Family 2D — PROFILE-CLOSED-LOOP — convergence **33%**
+
+The loop discipline and the calibrate-time-closure determinism invariant are correct and
+non-negotiable (credit). But zero fit ran (clause vii), and — the cross-lock sharpening — its
+only applicable knobs live in LOCK-9 / GN scanner-kernel territory. REGISTRY's 33 stands.
+
+**Enumerated open gaps:**
+1. **Zero executed fit (clause vii, SPEC-ONLY).** Gate (1) — a fitted value flips a decision AND
+   beats the hardcoded lane cold-paired — has no evidence; PROTO-1's sign-flip is a manual weight
+   swap, not a fit.
+2. **Attribution underdetermination named, neither primitive built** (A/B-differential vs sub-parse
+   probes) — the elegant-reduction trap: the hard, unconverged core is punted to "the prototype must
+   choose."
+3. **The null-trap-escape knobs are cross-lock-owned.** `select_backend` / `build_lo6_table` kernel
+   crossover (`bbnf-simd/src/dispatch.rs`) is **LOCK-9 kernel territory**; `CSS_SHUFTI_MIN_SPAN` /
+   `GATE=16` are **GN-2 scanner knobs**. 2D's *entire* unblocked plane sits inside LOCK-9/GN land —
+   so "the coefficient plane under any LOCK-2 generator" is advertised over a surface LOCK-2 does not
+   own, and the shape-lattice plane (the one LOCK-2 owns) is BLOCKED by §0. Applicability is
+   **exactly where the LOCK-2 generators don't need it AND another lock owns the knob**.
+4. **Freshness-gate teeth (gate 4) unbuilt** — the anti-provenance-theater claim (`report.rs:1750`
+   RED-on-mutation, `check-calibration` fails) is itself, presently, provenance theater.
+5. **`from_env` dual cost-source not fenced off the regen path** — a masked fallback that breaks
+   `regen∘regen` if the committed table is absent.
 
 ---
 
-## 3. GATES-THAT-CANNOT-FAIL / VACUOUS-CONVERGENCE audit
+## Constitution & failure-mode audit (summary)
 
-- **The two master facts are labeled resolved by binary PASS, but both PASSes are conditional**
-  (§1). §0 says "de-risks or refutes simultaneously"; the prototypes de-risked the *payoff-given-a-
-  branch* (weakly) and the *machinery-given-synthetic-costs* (conditionally), not the two facts as
-  stated (a *rewrite* manufactures a branch; the budget binds on *real* costs). Treating them as
-  closed is premature-convergence.
-- **The born-RED gates are inherited from GN-2.W1** (≥8.0× skip, ≥0.95× dense). Good gates — but
-  they gate *GN-2.W1's* consumer, which is unbuilt; a gate on an unbuilt consumer cannot fail this
-  wave. LOCK-2 must either land the consumer in-wave or mark the gate as GN-owned, not LOCK-2-owned.
-- **No spec-cites-itself circularity detected** in the family logic — the reports cite external
-  twins (aegraph 1.13/2-of-4M, Unison 946-1000) and in-tree measurements (R-1 sweep). This is a
-  strength; the discipline is real.
+- **ix Extant-tranche consciousness — VIOLATED in multiple places.** GN-2.W1 supersession undeclared
+  (Island B: replacement / wrapper / waits-on?); LOCK-3's ownership of the tower + PROVE-12 not named
+  as co-home; the tree-of-record contradiction (XL-A) unnamed. Divergences must be **named
+  supersessions**, not silent annexations.
+- **viii Consumer-less substrate — TRIPPED by both PROTO-2 variants** (plan nothing reads), and the
+  consumer is blocked two locks deep (XL-D).
+- **vii Concrete-or-SPEC-ONLY — PROTO-2 synthetic-cost + PROTO-1 synthetic-workload cyc/B** are used
+  to anchor corpus/decision claims; both need the SPEC-ONLY label they currently lack.
+- **iv Refutation laws — honored in form** (ratios not absolutes, aarch64-only, no warm benches) but
+  PROTO-1 ran at loadavg ~10 on an unrepresentative every-byte workload — a representativeness defect
+  distinct from load noise.
+- **vi Parsimony / general-infra — CLEAN:** `bounded_sum` correctly homed in csp-solver.
+- **Gate-that-cannot-fail:** PROTO-1's W2 sign-flip. **Elegant-reduction trap:** the fired,
+  confluent `ManufactureDispatchAlt` rewrite (2A/2B) and 2D's attribution primitive — both the
+  unconverged hard part, declared "trivial/next-step."
 
-## 4. LEGACY-ALIAS / MASKED-FALLBACK audit
+## Lock-level disposition (critic-2 recommendation)
 
-- **2D `from_env` + `from_fact_table`** — dual cost source, fallback not fenced (2D-gap 4).
-- **The ~68 provenance fields** are correctly slated for deletion by 2A/2B — good, no legacy kept.
-  But the far larger dead code — `crates/ir/src/egraph/` unused — has no deletion-or-adoption
-  disposition (§0-A). Silence on built-but-unused code is the masked-fallback failure at module
-  scale: it will read as "we have an e-graph" while nothing calls it.
-
-## 5. CROSS-LOCK LEDGER (critic-2 weighting) — where LOCK-2 double-homes or contradicts
-
-1. **The grammar e-graph (`crates/ir/src/egraph/`) is TRIPLE-HOMED and no lock owns turning it on.**
-   LOCK-2-2B ("make the IR a Language" — already done), LOCK-5-5A/5B (grammar side of the coproduct
-   Language; `rules/regex.rs`), LOCK-1-1D ("the grammar tier is the template"). All three describe
-   the same built-but-unused tree; none states the owner of wiring it into `passes/`. **GESTALT-B
-   must assign single ownership** or it stays dead in all three.
-2. **`Project` / projection canonicalization double-home: LOCK-2-2A-Island-C ⊗ LOCK-1.** LOCK-1 §5.1
-   demands one store owns `Project`; its e-graph family (1D) is BANKED-vacuous, so the likely
-   LOCK-1 winner (1A) is union-find. Island C's "shared engine with LOCK-1" premise then has no
-   engine to share — Island C either becomes a solo LOCK-2 e-graph over `Project` (contradicting
-   LOCK-1's single-store rule) or does not exist. **Unadjudicated contradiction.**
-3. **Regex-canon rewrite set double-home: LOCK-2-2A-Island-A ⊗ LOCK-5-5A/5B.** `rules/regex.rs`
-   already exists; both locks claim the regex canonicalization rewrite set. LOCK-5 is the
-   constitutionally-designated owner of the lawful HIR form (clause ii); LOCK-2 claiming "the
-   rewrite set + cost model" needs LOCK-5's explicit cession, absent today.
-4. **Kernel-crossover cost knob TRIPLE-touched: 2D ⊗ LOCK-9 ⊗ LOCK-3-3D.** `select_backend`
-   (`bbnf-simd/dispatch.rs:89`, the N*≈3 crossover) — 2D fits it, LOCK-9 owns the kernels, LOCK-3-3D
-   owns the monomorph-vs-table staging ("LOCK-2 owns the *schedule*, 3D owns the *staging
-   semantics*"). LOCK-3 cleanly cedes the *choice* to LOCK-2 — the one well-drawn seam — but the
-   *fitting* of the crossover (2D) vs the *kernel* (LOCK-9) vs the *cost-model backend-
-   parameterization* (3D-Q3, "a single division is not backend-portable") is a three-way seam the
-   gestalt must sequence.
-5. **`CSS_SHUFTI_MIN_SPAN` / GATE=16 are extant-GN-codex knobs (GN-2.W1/W3).** 2D fitting them
-   supersedes hand-tuned literals — a named supersession is required per clause ix; the spec treats
-   them as free attachment points.
-6. **LOCK-9 → LOCK-2 handoff is CLEAN** (the one to keep): LOCK-9 line 176 explicitly selects its
-   four-tier lowering "by a plan predicate (the LOCK-2 scan-plan-selection e-graph island)." LOCK-9
-   defers scan-plan selection to LOCK-2 Island B. This is the model the other seams should follow —
-   but it also means LOCK-2 Island B is now on LOCK-9's critical path, raising the cost of Island B
-   collapsing to "GN-2.W1's hand arm."
-
-## 6. CONSTITUTION check
-
-- **viii / Y.13 (consumer-less substrate forbidden):** VIOLATED in the *diagnosis* — the largest
-  dead substrate (`crates/ir/src/egraph/`, zero consumers) is uncatalogued (§0-A); and PROTO-2 built
-  a plan with no reader (2C-gap 3). The lock condemns the pathology while sitting on its biggest
-  instance.
-- **vii (concrete artifacts or SPEC-ONLY):** 2D is SPEC-ONLY and must be labeled so; PROTO-1's cyc/B
-  magnitude must not anchor perf claims (§1).
-- **ix (extant-codex consciousness):** GN-2.W1 subsumption and the `SHUFTI_MIN_SPAN`/GATE=16 fits are
-  supersessions stated as "subsumes/attaches," not named supersessions (§2-gap 3, §5-5).
-- **iv (refutation laws), v (zero-cost types), regen-fixpoint:** no violation in principle; the
-  fixpoint gate is simply *untested end-to-end* everywhere (2A-5, 2B-4, 2C-4).
-
----
-
-## 7. VERDICT SUMMARY
-
-The lock's architecture is sound and its two prototypes are honest and well-built — but the pass
-converges on a **false substrate census** that mislocates the dead code (missing the entire unused
-grammar e-graph), reads two *conditional* prototype PASSes as *closed* master facts, and leaves four
-cross-lock double-homes (the grammar e-graph, `Project`, the regex-canon rule set, the kernel knob)
-unadjudicated. 2A is the defensible core once Islands A/C get evidence and the GN-2.W1 supersession
-is named; 2C's machinery is real but its teeth (real-cost binding + a live consumer) are open; 2B is
-mis-scoped and must be re-cut around the built-but-unused engine; 2D is SPEC-ONLY and cannot converge
-until one PROVE-2D artifact runs. **No family is at 100%; the lock returns as a converged CORE (2A
-directed-shell + 2C bounded_sum propagator, both anchored by running code) with the exact gaps
-enumerated above.** The single highest-value pass-2 directive: **catalogue and dispose of
-`crates/ir/src/egraph/` — adopt it (that IS 2B/2A's real deliverable) or delete it — before any
-further extraction/CSP design.**
+LOCK-2's honest converged core is **2A's directed canonicalization spine + the existing BackendShape
+driver**, anchored by the legacy exemplar — *but it is a core LOCK-2 cannot ratify alone*, because
+the middle IR it operates on is LOCK-3's (XL-B), the scan sites it optimizes are LOCK-9/LOCK-5's
+(XL-D/E), the projections it canonicalizes are LOCK-1's (XL-F), PROVE-12 is LOCK-3's (XL-C), and the
+tree it ports into is portfolio-contested (XL-A). Every one of LOCK-2's four families reaches across
+a lock boundary the incompatibility map does not draw. The lock should return as a **rigorously
+converged CORE with its cross-lock seams promoted to explicit GESTALT-B obligations**: (1) the
+LOCK-2/LOCK-3 middle-IR ownership fork; (2) the LOCK-2/LOCK-5/LOCK-9 scan-derivation home; (3) the
+LOCK-1/LOCK-2 projection + one-solver-home unification; (4) the portfolio tree-of-record
+contradiction, which gates the PROVE-2B-PORT mover's very direction. Extraction/CSP-extraction stays
+**SPEC-ONLY pending a fired, confluent, non-sign-flipped rewrite on a representative workload**;
+scan-plan CSP/budget stays **SPEC-ONLY pending an IR-modeled site + a live consumer no single lock
+currently owns**. No family may speak of convergence before those seams are named supersessions and
+one real fit / one fired rewrite runs.

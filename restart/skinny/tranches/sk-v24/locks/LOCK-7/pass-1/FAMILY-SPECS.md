@@ -1,261 +1,282 @@
 # LOCK-7 — THE GRAMMAR TOTALITY & BOOTSTRAP · FAMILY-SPECS (pass 1, synthesis)
 
-Synthesis of research-{A,B,C,D,priorart}, Fable-tier judgment. One cogent spec per family while
-routes remain incompatible, then the incompatibility map, then the two sharpest prototype briefs.
-Elegance earns nothing; a family stalled at a missing primitive equal in difficulty to the
-original problem is marked **BLOCKED-candidate**. All `path:line` claims re-verified on disk at
-HEAD (2026-07-16). Supersedes the 03:53 draft (which predates the current research set).
+Synthesis of research-{A,B,C,D,priorart} (refreshed 2026-07-16 09:3x), Fable-tier judgment, folding
+the pass-1 probe measurements (`PROTO-1*`, `PROTO-2*`) the earlier draft predated. One cogent spec
+per family while routes stay incompatible; then the incompatibility map; then the two sharpest
+prototype briefs. Elegance earns nothing — a family stalled at a missing primitive equal in
+difficulty to the original problem is **BLOCKED-candidate**. All `path:line` re-verified at HEAD.
 
 ---
 
-## 0 · SHARED SUBSTRATE REALITY (verified at HEAD — load-bearing corrections to the reports)
+## 0 · SHARED SUBSTRATE REALITY (verified at HEAD — corrections the reports over-credit)
 
-Confirmed by direct inspection, not quotation:
-
-- **skinny greenfield has NO generated bbnf parser.** No `skinny/crates/bootstrap`, no
-  `bbnf::grammar::generated`, no `BbnfBootstrap`. The `pub use … BbnfBootstrap` re-export and
-  `crates/core/src/grammar/generated/bbnf.rs` (21,557 LOC) that 7A/7B/7D cite live in the
-  **archived legacy root**, not the skinny tree GN-0 carries forward. **Consequence:** the
-  fixpoint gate and the differential oracle have **no stage-1 artifact to point at** — it must be
-  emitted fresh. The "diagnostic re-export already exists" premise is false for the tree being
-  built. (priorart §2.2 correct; 7A §1.2 / 7D §2.1 over-credit legacy.)
-- **The 21,557-LOC blow-up is a *legacy-generator* number.** The current skinny generator
-  (leaf-inlining IR optimizer via `passes::compile`) has never self-emitted bbnf; its budget is
-  **unmeasured**. The 21.5k is the anti-target/witness, not a prediction — the single most
-  decisive unmeasured quantity in the lock (Brief 1).
-- **`emit_from_source(name, source)` (codegen/src/lib.rs:101) parses with the HAND
-  `parse_grammar` then emits a RUNTIME TAPE parser** — not a `GrammarIr` producer. The
-  generator's own front-end IS `parse_grammar` (2142 LOC, skinny/crates/grammar/src/lib.rs:29).
-  The multi-file `@import` closure is `grammar_provider.rs`'s *import source-set*, **not** the
-  bbnf grammar-function `|params| rhs` closure — the latter's lowering is **unproven**.
-- **bbnf.bbnf projects its leaves `-> Span`** (`identifier`/`string`/`regex`/`comment`, lines
-  9–18); its structural rules carry no `->`. A parser emitted from it **recognizes bbnf and emits
-  a span-tape — it does not BUILD `GrammarIr`.** The construction semantics (arena interning,
-  `ExprId` edge-building, closure β-reduction, `@import` resolution) live in hand code,
-  unexpressed by the grammar.
-- **Corroborating witness on the parse-that side:** the committed self-hosted regex parser
-  `parse_that::regex::generated` internally *produces* a `RegexParserEnum` AST but its public
-  `parse_generated(pattern) -> bool` **discards it** — a self-host that recognizes, not builds.
-  Production regex remains the hand engine. And a **third, divergent** regex grammar sits at
-  `grammar/misc/regex.bbnf` (28 LOC, buggy escapes) vs canonical `parse-that/rust/bootstrap/
-  regex.bbnf` — a clause (ii) one-home breach.
+- **The 21,557-LOC self-hosting bbnf parser + its byte-fixpoint gate live in the ARCHIVED outer
+  tree** (`crates/core/src/grammar/generated/bbnf.rs`, `crates/bootstrap/src/lib.rs`,
+  `crates/core/tests/bbnf_bootstrap_reproducibility.rs` — `cargo xtask regen --grammar bbnf
+  --output` twice, assert byte-identical). This is the tree GN-0 archives. The GREENFIELD
+  (`skinny/`) inherits a **2142-LOC hand parser** (`skinny/crates/grammar/src/lib.rs:29
+  parse_grammar`); `skinny/xtask/src/main.rs:39-48` dispatches json/sheets/css/real-typed only —
+  **no `regen-bbnf`, no `regen-regex`, no fixpoint arm.** Reports 7A/7D that call this "~80% built"
+  are crediting the archived tree; clause (i) is UNMET in the tree that ships. LOCK-7 is
+  **rescue-and-port + a named build wall**, not greenfield invention.
+- **RECOGNIZE ≠ BUILD — the spine finding.** `bbnf.bbnf` projects its leaves `-> Span`
+  (`identifier`/`string`/`regex`/`comment`); its structural rules carry no `->`. A parser emitted
+  from it *recognizes* bbnf and emits a span-tape — it does **not build `GrammarIr`** (arena
+  interning, `ExprId` edges, closure β-reduction, `@import` resolution live in hand code,
+  unexpressed by the grammar). Corroborated on the mirror: `parse_that::regex::generated` internally
+  builds a `RegexParserEnum` but its public `parse_generated(pattern) -> bool` **discards it** — a
+  self-host that recognizes, not builds. Every family's central act needs the emitted parser to
+  *build* structure equivalent to `GrammarIr`, not merely accept the string.
+- **MEASURED (PROTO-1 self-emit probe, request-facts emitter over the bbnf triple):** self-emit
+  **succeeds**, **998 LOC** (0.466× the 2142 hand parser, **0.046×** the 21,557 legacy ghost),
+  **3× byte-identical** (the fixpoint determinism precondition HOLDS on this path). **The 21k
+  blow-up does NOT recur.** This retires the earlier draft's "budget is the make-or-break unknown."
+- **MEASURED (the build wall, byte-exact):** the *builder* path (compiled-lowering emitter) dies at
+  `BBNF-UNSUPPORTED-PROJECTION: grammar/bbnf/bbnf.bbnf@421` — the `-> Span` on
+  `identifier = /[_a-zA-Z][_a-zA-Z0-9-]*/ -> Span ;`. The skinny hand seed *also* rejects the same
+  construct (`BBNF-PARSE: unexpected token '-'` @421/@323 — `->` after a regex leaf). Determinism of
+  the failure is stable (3× identical). **So recognition + determinism are GREEN; the wall is
+  precisely leaf-projection lowering (`-> Span`, `-> i64`), and it fires at the first projected
+  leaf.** This is research-D's R1 ("cannot admit its own dialect, fires first") realized as a byte
+  offset, and research-B's "recognizing ≠ building" made concrete.
 - **`@host` parsed but unlowered:** `RuntimeConstructKind::HostCapture` →
-  `"BBNF-UNSUPPORTED-HOST-CAPTURE"` (grammar/src/lib.rs:222). The typed signature language
-  (`host_directive`, bbnf.bbnf:73; `type_name`, types.bbnf) exists; the dispatch does not.
-- **The string heuristic is real:** `has_parse_time_host_decode` sniffs
-  `name.contains("host") && (value.contains("decode")||"parse")` (passes/src/lib.rs:794–798).
-- **No self-host xtask targets:** main.rs dispatches json/sheets/css/real-typed only; `check_target`
-  is a **single-application staleness** check (committed ≡ emit(source)), NOT a fixpoint.
+  `"BBNF-UNSUPPORTED-HOST-CAPTURE"` (`skinny/crates/grammar/src/lib.rs:222`); the typed signature
+  language exists (`host_directive` bbnf.bbnf:73, `type_name` types.bbnf), the dispatch does not.
+  The string heuristic is real: `has_parse_time_host_decode` sniffs `name.contains("host") &&
+  (contains("decode")||"parse")` (`passes/src/lib.rs:794-798`).
+- **Clause (ii) one-home breach:** two divergent regex grammars — `grammar/misc/regex.bbnf` (27 LOC)
+  vs canonical `parse-that/rust/bootstrap/regex.bbnf` (72 LOC, full L4). Collapse is regex-bootstrap
+  work owed to LOCK-5.
 
-### The spine finding: RECOGNIZE ≠ BUILD
-
-All four families presume "self-hosted bbnf parser." The verified state is that bbnf.bbnf is a
-**recognizer grammar**, not a **builder grammar**. Every family's central act needs the emitted
-parser to *build* structure equivalent to `GrammarIr`, not merely accept the string:
-
-- 7A's fixpoint `P2 = generator(P1.parse(bbnf.bbnf))` requires P1 to feed the generator the same
-  `GrammarIr` parse_grammar does — impossible while P1 emits a span-tape; the gate degenerates to
-  the *staleness* check already present.
-- 7B's self-host must **build** the front-end (its own R3, "recognizing ≠ building").
-- 7D's NormalAst parity compares *trees*; the generated side yields spans/tape, not GrammarIr.
-- 7C is the **relief valve**: build semantics that cannot be `->`-expressed go behind typed host
-  fns. Whether bbnf's *construction* is `->`-expressible or host-fn-bound is the pivot the whole
-  lock turns on (Brief 2), and it is the genuine 7B↔7C incompatibility.
-
-Closing the gap is grammar-authoring work (upgrade `-> Span` leaves to builder projections) whose
-*hardness is the self-hosting itself* — so it is the work, not a BLOCKER — EXCEPT where a
-construction step is recursive-with-state (arena interning, `ExprId` graph edges), where it may be
-BLOCKED into 7C. **This is the one make-or-break gate all three vertical families share:** does
-`emit_from_source("bbnf", …)` produce a parser that reparses the corpus? Until GREEN, the bbnf leg
-of 7A/7B/7D is BLOCKED-candidate on the identical missing primitive — a general-descent emitter
-that lowers bbnf's own closure / `@import` / `@{}` / recursive-alternation surface.
+**The gate all three vertical families share:** does `emit_from_source("bbnf", …)` produce a parser
+that *reparses the corpus and builds GrammarIr*? Recognition is proven; determinism is proven; the
+open primitive is a general-descent emitter that lowers bbnf's own `-> Span`/`-> T` projection +
+`@{}` capture + closure + `@import` surface into **construction**, not just recognition. Until GREEN
+past byte 421, the bbnf leg of 7A/7B/7D is gated on this one missing primitive.
 
 ---
 
-## 1 · FAMILY 7A — STAGED-BOOTSTRAP · disposition: ADVANCE (fixpoint gated on the builder grammar)
+## 1 · FAMILY 7A — STAGED-BOOTSTRAP
 
-**Architecture.** GCC/META-II/rustc shape: minimal committed stage-0 `S0`; `P1 =
-generator(S0.parse(bbnf.bbnf))`; `P2 = generator(P1.parse(bbnf.bbnf))`; gate `bytes(P1) ≡ bytes(P2)`
-(regen∘regen = regen); promote `parse_grammar := P1`. Thesis: totality is earned by the *smallest
-provably-idempotent trust root*, not the widest self-host.
+**Center.** Totality is a *closure property* proven by self-application and enforced byte-for-byte
+over the *smallest provably-idempotent trust root* — not a percentage (7C), not a promotion oracle
+(7D). rustc stage1≡stage2 / META-II / GCC stage2≡stage3.
 
-**Mechanism / seams.** Extend `check_target` (regen.rs) from single-application staleness to a
-`bootstrap-fixpoint` arm (two applications); commit + assert the blake3 input digest
-(`validate_inputs`, printed-only today); add a `BBNF_TARGET` mirroring `JSON_TARGET` (main.rs:177)
-over the bbnf triple; regex resolves as a *dependent* target (regex-as-opaque-span at bootstrap
-breaks the nested cycle). Minimal S0 target ≤ ~600 LOC vs the 2142 hand parser — the auditability
-lever.
+**Architecture.** Committed **stage-0** `S0` (generated parser bytes); **seed** = `parse_grammar`
+stripped to *bbnf-core* (the sub-language `bbnf.bbnf` is written in: `= ; | , () [] {} * + ? ?w`,
+`/regex/`, `"literal"`, `@import` — quarantined, LOC-budget ratcheting DOWN); **stage-1** `P1 =
+gen(S0.parse(bbnf.bbnf))`; **stage-2** `P2 = gen(P1.parse(bbnf.bbnf))`; gate `blake3(P1) ≡
+blake3(P2) ≡ blake3(S0)`. Codegen emit backend NAMED A TRUSTED PRIMITIVE (7A does not
+grammar-specify it — that is 7B's Plane 4). Plus a bounded differential soundness guard (parse
+`grammar/**` with seed AND generated, assert `GrammarIr` equality) — a *bounded* 7D used only as the
+false-fixpoint guard.
 
-**Gates.** (a) fixpoint byte-identity across ≥2 self-applications; (b) 3×-run determinism
-(BTreeMap/sorted, reproducible-builds); (c) digest lock trips on stage-0-edit-without-regen; (d) a
-falsification harness planting a non-deterministic emission + a stale digest, proving the gate
-*can* fail; (e) S0 LOC ceiling.
+**Mechanism / seams.** Clone `JSON_TARGET` (main.rs:177) → `BBNF_TARGET`/`REGEX_TARGET`; extend
+`check_target` (regen.rs) from single-application staleness to a two-application `fixpoint` arm;
+promote `validate_inputs` blake3 from input-only to emitted-byte hashing; `lint_loc` (main.rs:259)
+→ `trusted-seed` budget. Regex resolves as a *dependent* target (regex-as-opaque-span at bootstrap
+breaks the nested cycle). Port the outer `bbnf_bootstrap_reproducibility.rs` gate into skinny.
 
-**Open questions.** (1) **The fixpoint as stated is not achievable at HEAD** — the emitted parser
-is a span-tape recognizer, so `generator(P1.parse(…))` cannot round-trip GrammarIr; the gate
-degenerates to the *staleness* check unless bbnf.bbnf becomes a *builder grammar* (Brief 2). What
-is the fixpoint *over* — generated `.rs` bytes (proves only determinism) or GrammarIr equivalence
-(needs the builder grammar)? (2) Can S0 reach ~600 LOC while still *building* GrammarIr, or does
-"build not recognize" inflate S0 back toward the hand parser (thesis-collapse)? **Not BLOCKED** —
-the fixpoint *mechanism* half-exists; its correctness meaning is empty until Brief 2 resolves.
+**Gates (born-RED).** (a) ≥2-self-application byte-identity; (b) 3×-run determinism
+(reproducible-builds); (c) digest-lock trips on stage-0-edit-without-regen; (d) a planted
+non-determinism + stale-digest falsification proving the gate *can* fail; (e) S0 LOC ceiling. Note
+(b) is **already MEASURED GREEN** on the request-facts path (3× byte-identical).
+
+**Open questions.** (1) The fixpoint as stated needs `gen(P1.parse(…))` to round-trip `GrammarIr` —
+impossible while P1 emits a span-tape; **what is the fixpoint OVER?** Generated `.rs` bytes (proves
+only determinism — already GREEN) or GrammarIr equivalence (needs the builder grammar past byte
+421, Proto-1)? (2) Can S0 stay minimal (~600 LOC) while *building* GrammarIr, or does "build not
+recognize" inflate S0 back toward the hand parser (thesis-collapse)? (3) Skinny 10.2k codegen
+determinism unaudited (HashMap iteration) beyond the request-facts happy path.
+
+**Status: VIABLE (rescue-and-port; determinism GREEN, build-fixpoint gated on Proto-1).** Not
+blocked — the primitive exists and runs in the outer tree; its *correctness meaning* in the
+greenfield is empty until the builder grammar clears byte 421.
 
 ---
 
-## 2 · FAMILY 7B — TOTAL-SELF-HOST · disposition: MIXED (A/D advance · B free · C BLOCKED-candidate)
+## 2 · FAMILY 7B — TOTAL-SELF-HOST
 
-**Architecture.** Drive clause (i) to its limit across four planes in dependency order, each with
-born-RED build-wall + generated-LOC gates: **A** bbnf grammar · **B** regex grammar · **C** IR
-grammar · **D** emitter templates-as-data. "Generator becomes mostly data."
+**Center.** Maximal coverage: four planes carried as bbnf data over one fixed meta-emitter; "the
+generator becomes mostly data." The maximal claim — it lives or dies on two budgets (build-time,
+debuggability) and one ratio (Plane 4).
 
-**Mechanism / seams.** Widen the existing xtask regen mouth (no new engine): `regen-bbnf` /
-`regen-regex`; the meta-circular closure feeds all repo `.bbnf` through the emitted parser and
-diffs GrammarIr; Plane D converts `runtime_generator.rs` const templates (`CSS_PARSER_RS` etc.,
-:339–:505) from programmatic glue to shape-selected template + hole-fill (MLIR/TableGen, already a
-gradient).
+**Architecture — four planes + a surviving hand floor.** **A** bbnf grammar (self-parse, retire the
+2142-LOC hand parser); **B** regex grammar (re-home off `bootstrap-regex.sh`'s `cargo expand`+Python
+hack); **C** IR grammar (`GrammarIr`/`ExprKind`/`BackendShape` as bbnf, transpositions as `->`
+maps); **D** emitter templates (the 10.2k stringly-typed codegen blobs → a template grammar keyed on
+IR *shape*, never grammar name). Floor = combinators, aarch64 SIMD, offset-tape runtime, the
+meta-emitter. Rides 7A (stage-0) and 7D (plane-by-plane promotion, no cutover).
+
+**Plane dispositions (measurement-updated).**
+- **A (bbnf):** ADVANCE. Self-emit budget MEASURED **998 LOC, 0.046× the legacy ghost, 3×
+  byte-identical** — the blow-up fear is retired. But this is the *recognizer*; parity to `GrammarIr`
+  is gated on the byte-421 build wall (Proto-1). Even a good budget yields only recognition until the
+  projection/construction surface lowers.
+- **B (regex):** FREE-ADVANCE — already bootstrapped parse-that-side (2293 LOC generated); work is
+  collapsing `grammar/misc/regex.bbnf` into the canonical source (clause ii) + a fixpoint-gated
+  skinny target. Its self-host also *discards* its AST (recognize-not-build) — the same upgrade.
+- **C (IR-as-grammar):** **BLOCKED-candidate.** `GrammarIr` carries interned arenas, `ExprId` graph
+  edges, Rust-typed payloads. 7B's own R2 concedes: if the IR needs host fns for its own recursion,
+  Plane C *is* 7C's lattice. The missing primitive — "an IR fully expressible as a CFG" — for a
+  graph-shaped interned IR is **equal in difficulty to the original self-hosting problem restated at
+  the IR level.** Gated behind LOCK-3C; carried as a named boundary, not attempted.
+- **D (emitter templates):** **BLOCKED-candidate on the maximal claim.** Rust emission carries
+  hygiene, lifetimes, type inference, borrow structure a template grammar cannot express; the
+  template risks degenerating into host-fn escapes that ARE the hand code relocated. MLIR ODS/BNFC
+  both bound totality exactly here. **Decided by Proto-2's data-vs-escape ratio: ≥50% data → Plane D
+  viable; <50% → the maximal claim is refuted and 7C is the honest form.** The request-facts emitter
+  (998-LOC deterministic) is the *gradient start*, not proof the maximal template survives.
 
 **Gates.** build-wall cold ceiling vs hand baseline; `lint-loc` per-grammar ceiling (anti-target:
-the 21,557-LOC ghost); meta-circular GrammarIr byte-parity on every input including bbnf.bbnf;
-Plane-D codegen-LOC-drop with generated output unchanged (`check-css` bit-for-bit).
+the 21,557 ghost); meta-circular GrammarIr byte-parity on every input including bbnf.bbnf; Plane-D
+codegen-LOC-drop with generated output bit-for-bit unchanged (`check-css`).
 
-**Plane dispositions.**
-- **A (bbnf):** ADVANCE-pending-measurement. Self-emit budget is unmeasured on the *skinny*
-  generator (§0). Brief 1 is make-or-break: emit succeeds ∧ LOC ≤ named multiple → live; blow-up
-  recurs → SPEC-ONLY. Even a good budget yields only a *recognizer* until Brief 2 resolves.
-- **B (regex):** FREE-ADVANCE — already bootstrapped parse-that-side; work is reconciling
-  `grammar/misc/regex.bbnf` into the canonical source (one home) + a fixpoint-gated skinny target.
-- **C (IR-as-grammar):** **BLOCKED-candidate.** `GrammarIr` carries interned arenas, `ExprId`
-  graph edges, Rust-typed payloads. 7B's own R2 concedes: if the IR needs host fns for its own
-  recursion, Plane C *is* 7C's lattice. The missing primitive — "an IR fully expressible as a CFG"
-  — is, for a graph-shaped interned IR, **equal in difficulty to the original self-hosting problem
-  restated at the IR level.** Gated behind LOCK-3C; carried as a named boundary, not attempted.
-- **D (templates):** ADVANCE (existing gradient); R5 (god-template) guarded by typed,
-  shape-addressed selection.
-
-**Open questions.** the budget number (Brief 1); whether Plane-A parity needs host fns for build
-semantics (Brief 2, shared with 7C); debuggability of a generated front-end (an un-steppable 21k
-parser is a named negative result if it recurs).
+**Status: MIXED.** Planes A/B VIABLE (A gated on Proto-1's build wall, B free). Planes C and D are
+**BLOCKED-candidate** — each rests on a primitive (CFG-expressible interned IR; template-grammar for
+borrow-checked Rust) plausibly as hard as the original problem. 7B's *distinctive maximal claim*
+therefore hangs on Proto-2; below the ratio it collapses into 7A (Planes A/B) + 7C (bounded floor).
 
 ---
 
-## 3 · FAMILY 7C — HOST-FUNCTION LATTICE · disposition: ADVANCE (lowest-risk in-tree win; the relief valve)
+## 3 · FAMILY 7C — HOST-FUNCTION LATTICE
 
-**Architecture.** Totality is a *measured percentage* bounded below by a **typed host-fn
-interface**. Three strata: GRAMMAR · PRIMITIVES/COMBINATORS (the exempt floor — pure decode:
-Eisel–Lemire, unescape, SIMD; a **closed, declared, checkasm-gated** `PrimitiveFloor`) · HOST
-FUNCTIONS (the only legal home for context-dependent / recursive-with-state semantics, behind
-`@host name : InType -> OutType` or `(InType, &mut CtxType) -> OutType`). The `HostContext` enum
-{Pure, ParseState, TreeFold, CompileIO} is the cost axis, read *structurally* not by substring.
+**Center.** Totality is a *measured percentage* bounded below by a **typed host-fn interface**, with
+a named floor per subsystem defended by CI and an escape hatch that cannot masquerade as a
+grammar-name gate. The relief valve for recognize-vs-build.
 
-**Mechanism / seams.** Extend `@host name` (bbnf.bbnf:73) to a full typed signature, types from
-`type_name` flowing into LOCK-1 inference as a typed leaf; **delete** the string heuristic
-(passes/src/lib.rs:794–798), replace with a registry `context_of(HostCall)` lookup; **lower
-`RuntimeConstructKind::HostCapture`** so `@{}` (`colorFunction`/`urlFunction`) stops emitting
-`BBNF-UNSUPPORTED`; a new `crates/ir/host/` directory-module holds `HostSig`/`HostRegistry`.
+**Architecture.** Three strata: GRAMMAR (`->`, `@{}`, class-run scans) · PRIMITIVES/COMBINATORS (the
+exempt floor: pure decode — Eisel-Lemire, unescape, SIMD — a closed, declared, checkasm-gated
+`PrimitiveFloor`) · HOST FUNCTIONS (the only legal home for context-dependent/recursive-with-state
+semantics, behind `@host name(InTypes) : OutType @purity`). Unify the *outer* `@host` declaration
+(today `HostFnDecl{name, return_type}`, a name→type map) with the already-typed *inner* lattice
+`FnDescriptor` (six variants: `EnumWrap`/`BoxWrap`/`NumberConvert`/`HexConvert`/`SpanCapture`/`Expr`)
+— `@{}` span-capture is the `pure : Span` corner. The `purity ∈ {pure, context, comptime}` axis is
+the cost discriminant, read *structurally* (a lookup) not by substring.
 
-**Gates.** (a) a PURE-DECODE `@host` type-checks and the zero-cost payload-no-write assertion
-holds (runtime/src/lib.rs:42–44); (b) `check-json` bit-for-bit after killing the heuristic (JSON
-floor = 0); (c) one real CONTEXT host fn (TOML `push_path`) round-trips against the `toml` crate;
-(d) a totality-floor gate (sibling of `check-name-gates`) fails on floor regression OR a
-grammar-name-specific host identifier; (e) purity *verified* by LOCK-1 (a `Pure` sig taking `&mut
-Ctx` is a type error).
+**Mechanism / seams.** Extend `@host` (bbnf.bbnf:73) to a full typed signature flowing into LOCK-1
+inference; **delete** the string heuristic (passes/src/lib.rs:794-798), replace with a registry
+`context_of(HostCall)` lookup driving the tape shape (`ir/src/cost.rs:255`
+`ShapeRationale::HostFnParseTime`); **lower `RuntimeConstructKind::HostCapture`** so `@{}`
+(`colorFunction`/`urlFunction`) stops emitting `BBNF-UNSUPPORTED`; `host_map`
+`HashMap<String,Option<String>>` → `HashMap<String,HostFnSig>` with backend-agnostic `TypeDesc`; a
+`crates/ir/host/` directory-module for `HostSig`/`HostRegistry`.
 
-**Why it advances.** It is the **relief valve** for recognize-vs-build: the exact
-GrammarIr-construction steps that resist `->` expression get a *typed, counted, floored* home
-instead of dissolving totality into opaque host blocks (the yacc/PEG.js anti-pattern). Genuinely
-orthogonal — it governs the horizontal leaf/context boundary, not the vertical bootstrap ladder,
-and its in-tree win (delete one heuristic, light one dormant directive) needs no self-emit and
-yields signal regardless of Brief 1.
+**Gates (born-RED).** (a) a PURE-DECODE `@host` type-checks and the zero-cost payload-no-write
+assertion holds; (b) `check-json` bit-for-bit after killing the heuristic (JSON floor = 0); (c) one
+real CONTEXT host fn (TOML `push_path`) round-trips against the `toml` crate; (d) a totality-floor
+gate (sibling of `check-name-gates`) fails on floor regression OR a grammar-name-specific host
+identifier (`parse_toml_datetime` = the master pathology); (e) purity *verified* by LOCK-1 (a `pure`
+sig taking `&mut Ctx` is a type error, not trusted). `xtask census-totality` is the measured
+deliverable (per-subsystem grammar-vs-host table + purity breakdown + committed floor).
 
-**Open questions / dependency.** Load-bearing on **LOCK-1** for purity verification (named
-dependency, not a block). The bbnf floor — how many CONTEXT host fns bbnf's own *construction*
-needs — is exactly Brief 2, and sets whether 7B Plane A reaches parity in pure grammar (floor = 0)
-or is 7C-bound (floor > 0). R8 (lying `Pure` sig) is discharged only if LOCK-1 checks it.
+**Why it advances.** The relief valve: the exact `-> Span`→GrammarIr *construction* steps that
+resist `->` expression get a typed, counted, floored home instead of dissolving totality into opaque
+host blocks (the yacc/PEG.js anti-pattern). Genuinely orthogonal — governs the horizontal
+leaf/context boundary, not the vertical bootstrap ladder; its in-tree win (delete one heuristic,
+light one dormant directive) needs no self-emit and yields signal regardless of Proto-1.
+
+**Status: VIABLE (lowest-risk in-tree win).** No missing primitive — all extends existing typed
+surface. Load-bearing on LOCK-1 for purity verification (named dependency, not a block). Its bbnf
+floor — how many CONTEXT host fns bbnf's own *construction* needs — is exactly Proto-2, and sets
+whether 7B Plane A reaches pure-grammar parity (floor = 0) or is 7C-bound (floor > 0).
 
 ---
 
-## 4 · FAMILY 7D — META-CIRCULAR-ORACLE · disposition: ADVANCE (the lawful entry ramp; cures Y.13)
+## 4 · FAMILY 7D — META-CIRCULAR ORACLE
 
-**Architecture.** Self-hosting as **verification first, production later**. Emitted bbnf/regex
-parsers run *beside* the hand parsers as differential **oracles**; promotion is subsystem-by-
-subsystem, gated on measured AST-parity (against a hand-audited golden anchor, not majority vote) +
-measured perf. The hand parser is the epistemic anchor until promotion, then the CI-only
-differential reference. Matches the field's strongest production precedent (CPython pegen ran
-old ∥ new for a full release cycle).
+**Center.** Self-hosting as *verification first, production later*: emitted bbnf/regex parsers run
+*beside* the hand parsers as differential **oracles**; promotion is subsystem-by-subsystem on
+measured AST-parity (against a hand-audited golden anchor, never majority vote) + measured perf.
+Cures the clause (viii)/Y.13 dormant-substrate violation the instant a parser is emitted (its
+consumer is the oracle). Matches the field's strongest precedent — CPython pegen ran old ∥ new for a
+full release cycle before promotion.
 
-**Mechanism / seams.** A `self_host/` submodule under the GN-5.W1 `bbnf-oracle` directory-module:
-`self_host/{bbnf,regex,normal_ast}.rs`; a `check-self-host` xtask arm reusing `write_targets`/
-`check_target`; golden fixtures `test-fixtures/corpus/{bbnf,regex}/golden/*.sexp`; a
+**Architecture / seams.** A `self_host/` submodule under the GN-5.W1 `bbnf-oracle` directory-module
+(`self_host/{bbnf,regex,normal_ast}.rs`); a `check-self-host` xtask arm reusing
+`write_targets`/`check_target`; golden fixtures `test-fixtures/corpus/{bbnf,regex}/golden/*.sexp`; a
 planted-mutation falsification (mirror `checkasm_parity`'s `INJECT_BUG` + strict/loose switch).
-Corpus = `grammar/**/*.bbnf` (zero fabrication) + regex literals harvested from every `.bbnf`.
+NormalAst = the least-normalizing S-expr preserving rule identity, precedence nesting, modifiers,
+`->` expressions, and **spans** (over-canonicalization is the named risk). Regex anchors additionally
+on `regex-syntax::Hir` (a third independent implementation). Corpus = `grammar/**/*.bbnf` (zero
+fabrication) + harvested `/…/` literals. Metric ladder L0(accept/reject)→L1(node histogram)→
+L2(NormalAst equality)→L3(byte-identical emitted parser)→L4(regen∘regen = 7A); promotion names the
+rung, never below L2.
 
-**Gates.** admitted% (parses at all) · parity% (byte-identical NormalAst) · cyc/B ratio; promotion
-= zero unadjudicated divergences sustained two regen cycles; the gate's artifact is the NormalAst
-diff, not a grep.
+**Gates.** admitted% · parity% · cyc/B ratio; promotion = zero unadjudicated divergences two regen
+cycles; the artifact is the NormalAst diff, not a grep.
 
-**Why it advances.** The **minimal lawful consumer** of the dormant `.bbnf` sources — cures the
-clause (viii)/Y.13 violation the instant a parser is emitted (its consumer is the oracle).
-Complementary to 7A: a fixpoint certifies *determinism*; the differential certifies *correctness*
-against an independent implementation (Thompson's circle).
+**Open questions (measurement-updated).** (1) **The NormalAst crux collides with recognize≠build:**
+the generated side yields a span-tape, so the differential compares at *recognition/span
+granularity* only (a weak oracle, missing wrong-precedence/wrong-construction) unless the
+builder-grammar exists — the same byte-421 upgrade (Proto-1). (2) R1 (dialect-rejection) is now
+EMPIRICALLY the first product: the generated grammar under-specifies at byte 421 (`-> Span`) — the
+augment-BBNF task list starts there. (3) R4: the perf gate is vacuous for cold compile-time bbnf
+parsing — the honest prize is **LOC deletion** (retire 2142 hand LOC), not speed; teeth exist only
+for runtime-hot regex leaves (PROVE-10 floor).
 
-**Open questions.** (1) **The NormalAst crux collides with recognize-vs-build:** the generated
-side yields a span-tape, not GrammarIr, so the differential compares only at *recognition/span
-granularity* (a weak oracle missing wrong-precedence/wrong-construction) unless the builder-grammar
-exists — the same upgrade 7A/7B need (Brief 2). (2) R4: the perf gate is vacuous for cold
-compile-time bbnf parsing — the honest prize is **LOC deletion**, not speed; teeth exist only for
-runtime-hot regex leaves (PROVE-10 floor). (3) R1 (dialect-rejection) is the expected first product
-— *which* constructs the generated grammar under-specifies is the augment-BBNF task list (folded
-into Brief 1).
+**Status: VIABLE (the lawful entry ramp).** No missing primitive; its first output is a falsifiable
+coverage number — already measured to fail at byte 421, which is the oracle working as designed.
 
 ---
 
-## 5 · INCOMPATIBILITY MAP (which families cannot coexist, and precisely why)
+## 5 · INCOMPATIBILITY MAP
 
-The prior-art thesis "they compose as a DAG 7A→7D→7C→7B" is **largely correct** — these are not
-four routes to pick one of. The genuine incompatibilities are *localized to two decision axes*.
+The prior-art "they compose as a DAG (7A→7D→7C→7B)" is largely right of the *mechanisms*. The
+genuine incompatibilities are of *centers* — localized to two decision axes a single lock cannot
+straddle.
 
-**INC-1 — Promotion trajectory: 7A (big-bang fixpoint) ⊥ 7D (incremental oracle).** Both govern the
-SAME seam (`parse_grammar := P1`) with DIFFERENT decision procedures. 7A flips the whole front-end
-the moment `bytes(P1) ≡ bytes(P2)` (a *determinism* proof; big-bang). 7D holds the hand parser as
-oracle and promotes construct-by-construct on *differential parity* (a *correctness* proof;
-incremental). They cannot BOTH be the promotion rule. **Resolution available:** the two *gates*
-compose (require fixpoint ∧ differential), but the *trajectory* must be chosen — evidence tilts to
-7D-trajectory (CPython oracle-first) with 7A's fixpoint as a determinism *precondition*, not the
-trigger.
+**INC-1 — Promotion trajectory + proof epistemics: 7A (big-bang fixpoint) ⊥ 7D (incremental
+oracle).** Same seam (`parse_grammar := P1`), different decision procedures and different proofs. 7A
+flips the whole front-end when `bytes(P1) ≡ bytes(P2)` — a *determinism* proof, big-bang; 7D holds
+the hand parser as oracle and promotes construct-by-construct on *differential parity* — a
+*correctness* proof, incremental. 7D's own §1 refutes 7A's center: "a parser that agrees with itself
+proves nothing — the fixpoint certifies the generator is deterministic, not that either parser is
+correct." They cannot both be the promotion rule and both be LOCK-7's headline. **Reconciliation:**
+the two *gates* compose (require fixpoint ∧ differential — 7A's §4 guard is a bounded 7D; 7D's L4
+rung is 7A), but the *trajectory/headline* must be chosen. Evidence tilts 7D-trajectory (CPython
+oracle-first) with 7A's fixpoint as a determinism *precondition* (already GREEN), not the trigger.
 
 **INC-2 — Totality reach at the build boundary: 7B (IR/build in grammar) ⊥ 7C (build behind typed
-host fns).** The sharpest genuine conflict. bbnf's GrammarIr *construction* (arena interning,
-`ExprId` edges, closure β-reduction) is either `->`-expressible (7B: floor = 0, pure grammar) or
-recursive-with-state and host-fn-bound (7C: floor > 0). Both cannot be true. This is
-recognize-vs-build made into a boundary dispute; **empirically decidable per construction step**
-(Brief 2). 7B Plane C is BLOCKED-candidate precisely because the IR is where this conflict is worst
-(graph-shaped interned IR ⇒ the "CFG-expressible IR" primitive is as hard as the original problem).
+host fns) — THE SHARPEST GENUINE CONFLICT, and it has NO measurement that dissolves it, only one
+that *locates the boundary*.** bbnf's `GrammarIr` *construction* (arena interning, `ExprId` edges,
+closure β-reduction) is either `->`-expressible (7B: floor = 0, pure grammar) or recursive-with-state
+and host-fn-bound (7C: floor > 0). Both cannot be true. This is recognize-vs-build made a boundary
+dispute — decidable *per construction step* (Proto-2). 7B Plane C is BLOCKED-candidate precisely
+because the interned graph-IR is where this conflict is worst. Whoever wins sets where clause (i)'s
+"save primitives" line falls at the IR level.
 
-**INC-3 — Hand-parser fate: 7B (retire on promotion) vs 7D (keep as permanent CI oracle).** *Not a
-hard incompatibility* — composable: retire from the *production* path (7B) while keeping it as the
-*CI-differential* reference (7D). A named supersession, not an exclusion.
+**INC-3 — The codegen backend's disposition: 7A (trusted primitive) ⊥ 7B Plane D (grammar data) —
+HARD, no measurement dissolves it.** 7A NAMES the 10.2k-LOC emit backend a trusted primitive drawn
+OUTSIDE grammar-specification (that boundary IS 7A's minimality thesis). 7B Plane D declares the same
+mass a template grammar (that inclusion IS 7B's maximality thesis). One artifact cannot be both the
+trusted floor and the top plane. Unlike INC-1 this is not "run both gates"; Proto-2's ratio only
+tells you *whether Plane D is even feasible* — the disposition (primitive vs plane) is an
+architectural fork the next pass must decide.
 
-**INC-4 — Trust-root minimization vs measured totality: 7A (smallest S0) vs 7B (most planes
-grammar-driven).** A *tension of objective*, not a contradiction: 7A minimizes hand code you must
-*trust*; 7B minimizes hand code that *exists*. They reconcile because 7A's minimal S0 is the
-*bootstrap seed* while 7B's totality is the *destination front-end* (P1) — different artifacts,
-explicit S0-vs-P1 split.
+**INC-4 — Hand-parser fate: 7B (retire on promotion) vs 7D (permanent CI oracle).** *Not hard* —
+composable: retire from the *production* path (7B) while keeping it as the *CI-differential*
+reference (7D). A named supersession, not an exclusion.
 
-**Cross-cutting bound (not a pair): budget × debuggability.** If Brief 1 shows the self-emit budget
-recurs the 21k blow-up, it simultaneously kills 7B Plane A (LOC gate) AND guts 7A/7D promotion (an
-un-steppable generated front-end is a debuggability negative result). One measurement bounds three
-families.
+**Cross-cutting bound (retired by measurement):** the earlier draft's "budget blow-up bounds three
+families" is DISCHARGED — self-emit measured 998 LOC / 0.046× the ghost / 3× identical. The residual
+cross-cutting risk is **debuggability** (an un-steppable generated front-end is a negative result for
+7A/7B/7D promotion) — folded into 7D's promotion gate, not a standalone blocker.
 
-**Net.** No family is wholly excluded by another. The lock resolves to **one composed route**
-(7A-determinism-floor ∧ 7D-oracle-trajectory ∧ 7C-typed-boundary → 7B-totality-per-plane) with two
-open adjudications — INC-1 (trajectory) and INC-2 (build boundary) — plus the budget bound. 7B
-Plane C stands alone as BLOCKED-candidate pending LOCK-3C.
+**Net.** No family is wholly excluded. The lock resolves to one composed route
+(7A-determinism-floor ∧ 7D-oracle-trajectory ∧ 7C-typed-boundary → 7B-totality-per-plane) with
+**three** open adjudications the next pass must settle: INC-1 (trajectory/headline — a framing
+choice), INC-2 (build boundary — located by Proto-2), INC-3 (codegen disposition — an architectural
+fork). 7B Planes C and D stand as BLOCKED-candidate pending LOCK-3C and Proto-2 respectively.
 
 ---
 
 ## 6 · TWO SHARPEST UNCERTAINTIES → PROTOTYPE BRIEFS
 
-Chosen to resolve the two adjudications that gate the whole composed route: the **budget/emit
-make-or-break** (bounds 7A+7B+7D jointly) and the **build-boundary census** (adjudicates INC-2, sets
-7C's bbnf floor, decides whether 7B Plane A can reach parity in pure grammar). Full briefs in the
-structured output — `bbnf-worktree` (self-emit budget + recognition) and `spec-probe` (construction
-census).
+Pivoted forward from the measured pass-1 results. The budget make-or-break is *resolved* (998 LOC,
+3× identical); the two live uncertainties that most advance the next pass are: **(1)** whether the
+byte-421 *build wall* clears with a bounded projection-lowering augment while preserving the
+fixpoint — the gate that decides 7A build-meaning, 7B Plane A parity, and 7D oracle strength jointly;
+and **(2)** the construction census / INC-2 adjudication that sets 7C's bbnf floor and decides
+whether 7B Plane A reaches pure-grammar parity. Full briefs in the structured return —
+`bbnf-worktree` (build-wall close + fixpoint) and `spec-probe` (construction census).

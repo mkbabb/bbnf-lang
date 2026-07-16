@@ -26,457 +26,479 @@ this pass, both real:
   `subst`/`obligations` populated by nothing.
 - **root `/Cargo.toml`** (the active `cargo xtask regen` tree) — carries the **live 1B/1D
   substrate**: the running lattice-CSP type inference (`crates/ir/src/passes/types/constraint/*`,
-  `TypeDomain: LatticeDomain`, `HeterogeneousAltJoin` live at
-  `crates/ir/src/types/type_desc.rs:63,199,209`, both backend consumers) and the shipped
-  `crates/egraph`. Confirmed live.
+  `TypeDomain: LatticeDomain`, `HeterogeneousAltJoin` live at `crates/ir/src/types/type_desc.rs:63`)
+  and the shipped `crates/egraph`. Confirmed live.
 
 **LINEAGE — RESOLVED, and it inverts the fork's cost accounting.** Project memory
-`project_skv24_handoff.md` governs and states verbatim: *"Skinny RETIRES. Supersedes
-skv22-graduation's tree-of-record premise … its code does not graduate wholesale — every carry
-re-earns its place."* So **root is the greenfield base; skinny retires.** This resolves CRIT-2's X1
-("authorities conflict; SK-V22 says skinny graduates") — CRIT-2 relied on the *superseded* memo.
-**But the resolution does not rescue 1A/1C — it inverts their cost against them:** their scaffold
-sits on the **retiring** tree, so "activate the dormant `TypeFacts`" becomes "port PROVE-08 + the
-scaffold into root and reconcile with / displace the running 1B CSP" — the full 1A⊥1B collision at
-displacement cost. 1B/1D substrate, by contrast, already runs on the surviving base.
+`project_skv24_handoff.md` governs: *"Skinny RETIRES … its code does not graduate wholesale —
+every carry re-earns its place."* **Root is the greenfield base; skinny retires.** This inverts
+1A/1C's cost: their scaffold sits on the **retiring** tree, so "activate the dormant `TypeFacts`"
+becomes "port PROVE-08 + the scaffold into root and reconcile with / displace the running 1B CSP" —
+the full 1A⊥1B collision at displacement cost. 1B/1D substrate already runs on the surviving base.
 
-### Anchors re-verified verbatim this pass (agglomerator re-ran every grep)
+### Anchors re-verified verbatim this pass (agglomerator re-ran every grep at HEAD)
 
 | Fact | Live truth | Bearing |
 |---|---|---|
-| `->` ty-drop (1A/1C target) | `skinny/…/passes/src/lib.rs:204` `Project { body, .. } => infer_expr(*body)?` — verbatim | 1A/1C mechanism site, on the **retiring** tree |
+| `->` ty-drop (1A/1C target) | `skinny/…/passes/src/lib.rs:204` `Project { body, .. } => infer_expr(*body)?` | 1A/1C mechanism site, on the **retiring** tree |
 | 1B running type system | `HeterogeneousAltJoin` live `type_desc.rs:63`; `TypeDomain: LatticeDomain`; both backends consume | 1B ships on the surviving base — not speculative substrate |
-| **`TypeDomain::join` is DEAD CODE** | `grep -rn '\.join(' crates/ir/src` → only `FactWidth::join` (facts.rs:223) + `str.join("\|")` (regex.rs:300). `TypeDomain::join` (domain.rs:66-80) has **ZERO call sites** in the type pass | **CORRECTS prior draft.** The "confirmed shipping defect" is unreachable dead code — NOT a live bug |
-| Live equality carrier | `assign` (`revise.rs:27-35`) `*slot = Some(ty)` no clash check — last-writer-wins under an **uncapped** monotonic loop (`monotonic.rs:29-44`) | latent hazard: two incompatible *grounds* would flip-flop forever — but **unreachable** under well-formed tree IR |
-| Live clash path is SOUND | the only reachable clash site (Alt join, `revise.rs:116` `join_types`) lifts distinct leaves to `HeterogeneousAltJoin` + a named obligation → raise-on-disagreement | 1B is **sound on every reachable surface** — the opposite of the prior "unsound as shipped" verdict |
-| **1D "zero new engine" FALSIFIED** | `egraph.rs:236-238` still `let changed = A::merge(…); if changed { analysis_pending.push(dst) }`; `rebuild_pass_count` **absent** | PROTO-2's `union()`-scheduling amendment (+30/−4) is **reverted, not in tree**; on the shipped engine injectivity never fires on a structural `Sum`/`Arrow`/`List` merge |
-| **X4 overload-absence** | `crates/ir/src/passes/types/` has **zero** `overload`/`escape`/`legality` code (grep empty) | the census measured an engine that **structurally cannot** exhibit the overload/decode residue the rich thesis rests on |
-| Both probes non-reproducible | `crates/core/tests/lock1_residue_census.rs` **absent**; `crates/egraph/tests/type_injectivity.rs` **absent** | PROTO-1 & PROTO-2 survive only as `.patch.diff`; a pass-2 reproducibility obligation |
+| **`TypeDomain::join` is DEAD CODE** | `grep '\.join(' crates/ir/src/passes/types/` → **zero call sites** (re-confirmed this pass); impl `domain.rs:66-80` only | the "confirmed shipping defect" is unreachable dead code — NOT a live bug |
+| **Dead `join` is non-commutative LWW** (run2) | `ground(Bool).join(ground(F64))` → `true`, leaves `Some(F64)`; reverse leaves `Some(Bool)` — last-writer-wins, not a lattice LUB | a real defect *in dead code*; strengthens "the case against 1B was mis-attributed" |
+| Live equality carrier | `assign` (`revise.rs:27`) `*slot = Some(ty)`, no clash check — LWW under an **uncapped** monotonic loop | latent hazard (two incompatible *grounds* flip-flop) — **unreachable** under well-formed tree IR |
+| **Live clash path is SOUND** (run2, 2nd fixture) | live pass: `ir.types[0] = HeterogeneousAltJoin([Bool, F64])` (NOT a single leaf); `type_obligations = 1`, clash obligation `HeterogeneousAltJoin{rule:Some(0)}` = 1; `is_single_silently_chosen_ground_leaf = false` | 1B is **sound on every reachable surface** — twice-measured now; the "unsound as shipped" verdict is **doubly dead** |
+| **List ≠ Row collapse is TOTAL** (probe2) | `array` and `object` share a **byte-identical** `struct_registry` `StructLayout` (kind=Struct, rule_type=Vec(Enum)) — collapse present in the sidecar **codegen actually consumes**, not just `ir.types` | the general pipeline **structurally cannot** name `List ≠ Row` |
+| **`LayoutKind` has no Row/Map** | `crates/ir/src/registry/struct.rs:58` → `{Struct, TaggedEnum, UntaggedEnum, NewtypeWrapper}` | a **LOCK-3 record-expressiveness** gap (GN-3 wall-b), engine-agnostic — no engine choice closes it; a `Row` variant does |
+| **`List ≠ Row` recovered by a masked fallback** | `skinny/crates/codegen/src/json_templates/value.rs` hand-matches raw `{ } [ ]`; dispatched by a hard-coded per-grammar table (`json→regen-json`); shipped `crates/core/src/runtime/json/value.rs` hand-encodes distinct `Array`/`Object` | a **clause-i / `no-workarounds` / `typed-materialization-invariant`** defect the RETIRE verdict quietly rests on |
+| **Collapse is SPECIFIC, not general** (probe2) | Sheets `comparison_expr = Tuple(mu, List(Tuple(Str, mu)))` — the running CSP **does** emit structural μ where the body is Seq/Tuple; the collapse is confined to **heterogeneous-Alt-of-compounds** (JSON `value`) | narrows 1D's structural advantage to a **single grammar shape**, not a general capability |
+| Running CSP is finite+terminating | probe2: JSON (8 rules, 2 knots), Sheets (37 rules, 20 mutual knots), CSS L4 (191 rules, 44 knots) — Finite=true, terminating=true, **zero stack overflows** | 1D's native-cyclicity "win" beats only the strawman; the incumbent already terminates |
+| **Real LOCK-1→LOCK-3 consumer** (CRIT-2 0b) | `crates/core/src/backend/driver/analysis.rs:16` `TypeAnalysis`, `::from_ir` (`:22`, ctor `:221`); a **second** `from_ir` at `rust/view/named_types.rs:100` | **no family names it**; specs cite the backend-leaf consumers and miss the driver seam; a **name collision** for 1D's proposed net-new `TypeAnalysis` |
+| **Root already federates TWO `Csp`s** (CRIT-2 0c) | type CSP `passes/types/` **and** LOCK-2 backend-shape CSP `passes/csp_strategy/{constraints,mod}.rs` — both over the vendored `csp-solver` | 1B's literal single-store = a **LOCK-1⊕LOCK-2 store merge**, a GESTALT-B call 1B cannot make alone |
+| **`union` amendment = 3-lock blast radius** (CRIT-2 0e) | `egraph.rs:236` `if changed { analysis_pending.push(dst) }`, no `rebuild_pass_count` — **reverted**; shared engine drives LOCK-2 `egraph/{node,build_egraph,rules}` **and** LOCK-5 `egraph/rules/regex.rs` (verified present) | 1D's hook fires on grammar + regex + type unions; "free for no-op analyses" un-measured on the two hottest consumers |
+| X4 overload-absence | `crates/ir/src/passes/types/` has **zero** `overload`/`escape`/`legality` code (grep empty) | the census measured an engine that **structurally cannot** exhibit the overload/decode residue the rich thesis rests on |
+| Probes non-reproducible from HEAD | `lock1_residue_census.rs`, `type_injectivity.rs`, `lock1_recursion_parity.rs`, `lattices/clash.rs` survive only as `.patch.diff`; the egraph amendment is reverted | a pass-2 reproducibility / land-or-retire obligation |
 
-**The material correction this pass.** The prior registry draft (and the FAMILY-SPECS it folded)
-branded `TypeDomain::join` (domain.rs:72-77, the `existing != ty => overwrite` arm) the **"confirmed
-shipping defect … Wand's principal-type-losing bug in production."** Both current critics (CRIT-1
-§0.2, CRIT-2 §0a) and the handed-in **PROTO-1B** refute this: the arm is **dead code**, and the live
-pass raises `HeterogeneousAltJoin([Bool, F64])` + a named obligation on two incompatible `->` arrows
-(measured — `cargo test -p bbnf-ir --test lattices clash`, 2 passed). The single most-cited concrete
-finding of pass-1 was a defect in unreachable code. This **removes the specs' main lever** for
-"seed 1A's union-find instead of the running CSP," and **reopens the carrier fork.**
+**The material corrections this pass (re-anchoring onto the newest evidence).**
 
-**Consequence.** The lock is an **engine-of-record fork on the surviving base (root)**, and it is
-*more open* than the prior draft claimed: adopt the *proven-elsewhere* union-find HM core (1A —
-now a **port + displace** into root) versus **harden the *already-running-here* lattice-CSP** (1B —
-already sound on the reachable surface; needs only additive `assign` hardening), with 1D a third
-engine that *modifies* the shared substrate and 1C a discipline that layers onto the winner. The
-honest adjudicator remains **residue richness** — and **that axis is NOT cleanly closed**: the one
-census (PROTO-1) measured document-shape residue thin (≤2%) but pre-tagged width/capacity/decode
-single-valued, substituted a post-hoc gate (X3), and ran on an instrument with **zero overload
-code** (X4). "Collapse to 1A" is **framed for document shapes, unearned for the numeric/overload
-axis.**
+1. **The stale ledger.** The prior registry draft (05:15) cited critic scores **68/65/55/52** (CRIT-1)
+   and **55/55/40/45** (CRIT-2) and folded on **PROTO-2-recursion-parity v1**. Both critics on disk
+   are newer — they explicitly consume the **09:39 re-runs** (`PROTO-1B-clash-run2`,
+   `PROTO-2-recursion-parity-probe2`) that postdate that fold — and land at **64/63/52/48** (CRIT-1)
+   and **56/54/40/44** (CRIT-2). This fold re-anchors on the on-disk critics and the two 09:39 probes.
+2. **The "shipping defect" is doubly dead.** run2 independently reproduces the deadness of
+   `TypeDomain::join` (0 call sites), adds a non-commutativity proof of that dead arm, and re-measures
+   the live clash path **sound** on a second fixture. The specs' main lever for "seed 1A's union-find
+   instead of the running CSP" is void — **the carrier fork is more open, not less.**
+3. **The recursion-axis RETIRE stands, but the structural-fidelity question re-opened.** probe2 shows
+   the `List ≠ Row` collapse is **total in the sidecar codegen consumes** (not just `ir.types`),
+   recovered by a **bespoke per-grammar template** — a masked fallback the RETIRE quietly leaned on.
+   But two facts **bound the 1D keep**: (a) the gap is **engine-agnostic** (a `LayoutKind::Row` fix any
+   engine populates — CRIT-2), and (b) the collapse is **specific to heterogeneous-Alt-of-compounds**
+   (Sheets already emits structural μ — probe2). 1D's disposition is **CONTESTED**, not clean RETIRE.
 
 ---
 
-## CURRENT DISPOSITIONS (as of pass-1, corrected fold)
+## CURRENT DISPOSITIONS (pass-1, re-anchored fold)
 
 | Family | Status | Convergence | One-line |
 |---|---|---|---|
-| **1A · UNIFICATION-FIRST** | **ADVANCED** (prior-art-endorsed trunk; unproven in tree) | **55%** | The endorsed HM(X) spine — but **zero direct prototype**, its carrier-displacement justification (CSP "unsound as shipped") **collapsed to dead code**, and the lineage resolution turns "activate scaffold" into "port + displace the running root CSP." |
-| **1B · ONE-CONSTRAINT-STORE** | **ADVANCED** (the running system-of-record; live path SOUND) | **55%** | The **only family that runs on the surviving base**, and PROTO-1B proves it **raises on every reachable clash** — its "unsound as shipped" indictment is refuted (dead code). Retirement-to-1A **lost its main prop**; may be the *cheaper* spine (harden, don't delete). Store-shape (R-B1) unbuilt; census (X3/X4) can't judge it. |
-| **1C · BIDIRECTIONAL-LOCAL** | **BANKED** (subsumed as the winner's diagnostics-and-locality discipline) | **40%** | Not a fourth engine — a discipline that layers onto the winner (naturally 1A). Its make-or-break head-to-head (R-C2) was **never run across two brief-cycles**; raison d'être **structurally unfalsifiable today** (zero `->` corpus). |
-| **1D · TYPES-AS-ECLASSES** | **BANKED** (recursion-keep RETIRED; narrow structural-μ hook survives, architecture-gated) | **45%** | Only ran-and-measured family. **PROTO-2-recursion-parity → RETIRE:** the running CSP is finite+terminating on every real recursive grammar; 1D's finer μ-sum is unused capacity. "Zero new engine" **falsified**; cost-extraction **idle** (overload = 0). The **one** surviving hook — 1D's structural μ-type (`List ≠ Row`) — turns on an **unadjudicated architecture call** (grammar-authoritative vs codegen-distributed) that a standing law bears on. |
+| **1A · UNIFICATION-FIRST** | **ADVANCED** (prior-art-endorsed trunk; unproven in tree) | **56%** | The endorsed HM(X) spine. But it **fuses** a well-evidenced *architecture* with an unproven *union-find carrier* whose justifying defect (CSP "unsound as shipped") is **doubly dead** (run2); **zero direct prototype**; it must feed a **LOCK-3 consumer (`TypeAnalysis::from_ir`) no spec names** and show a TS mirror. |
+| **1B · ONE-CONSTRAINT-STORE** | **ADVANCED** (running system-of-record; live path SOUND) — single-store thesis **BLOCKED-candidate** | **54%** | The **only family that runs on the surviving base**, twice-proven **sound on every reachable clash** (run2). Its "unsound" indictment is refuted; it may be the *cheaper* spine (harden, don't delete). But its **distinguishing** thesis (one heterogeneous store) is **BLOCKED**: literally it is a **LOCK-1⊕LOCK-2 store merge** (root already federates two `Csp`s). Census (X3/X4) cannot judge it. |
+| **1C · BIDIRECTIONAL-LOCAL** | **BANKED** (the winner's diagnostics-and-locality discipline) | **40%** | Not a fourth engine — a checking front + SCC seam + span field over the winning reconciler (reuses PROVE-08's `Unifier` → closest kin to 1A). Make-or-break head-to-head (R-C2) **structurally unrunnable** (zero `->` corpus, no typed grammars); span-add owed against **root**. A bet, not a finding. |
+| **1D · TYPES-AS-ECLASSES** | **BANKED** (recursion-keep + "zero new engine" + cost-extraction RETIRED; structural-μ hook survives, **CONTESTED**) | **44%** | Only ran-and-measured family. Recursion-keep **RETIRED** vs the finite+terminating incumbent; cost-extraction **IDLE** (overload = 0). The `List ≠ Row` gap it targets is **REAL** (masked fallback confirmed) but **engine-agnostic** (a `LayoutKind::Row` fix, not unique to 1D) and **specific** to one grammar shape; its true make-or-break — **deriving Row by *inference*** without a per-grammar hint — is **UNBUILT** and BLOCKED-candidate on structure. `union` amendment a **3-lock** blast radius; `TypeAnalysis` name-collision; no TS path. |
 
-**Floor rule applied.** Floors = **min across the two current (post-probe) critics**, taken
-**unadjusted**:
-`1A floor(68,55)=55 · 1B floor(65,55)=55 · 1C floor(55,40)=40 · 1D floor(52,45)=45`.
-The agglomerator re-verified every crux fact both critics rest on (dead-code `TypeDomain::join`, the
-live `assign` carrier, the `egraph.rs:236-238` guard + `rebuild_pass_count` absence, X4
-overload-absence, both probe absences, skinny `:204`, live `HeterogeneousAltJoin`) — **the critics
-did not err on any load-bearing fact.** The one correction (CRIT-2's X1 "authorities conflict" is
-stale — skv24-handoff supersedes SK-V22, skinny retires) **resolves lineage against 1A/1C**, so it
-moves **no floor upward.** Floors stand.
+**Floor rule applied.** Floors = **min across the two current post-probe critics** (on-disk
+CRIT-1 64/63/52/48, CRIT-2 56/54/40/44), taken **unadjusted**:
+`1A min(64,56)=56 · 1B min(63,54)=54 · 1C min(52,40)=40 · 1D min(48,44)=44`.
+The agglomerator **re-verified at HEAD every load-bearing fact both critics rest on** — dead-code
+`TypeDomain::join` (0 sites), the live `assign` carrier, `egraph.rs:236` guard present +
+`rebuild_pass_count` absent, `LayoutKind` has no Row (struct.rs:58), `TypeAnalysis::from_ir` live +
+a second `from_ir`, `csp_strategy/` second Csp, `egraph/rules/regex.rs` present, `json_templates`
+masked fallback, skinny `:204`. **The critics did not err on any load-bearing fact; no floor moves.**
+CRIT-2 is the binding floor on all four families.
 
-> **Correction to the prior draft's scores.** The earlier registry text (52/58/38/48) was folded
-> against the *pre-probe* critic drafts (cited as CRIT-1 70/68/55/60, CRIT-2 52/58/38/48) — which
-> repeated the dead-code mis-attribution and predate PROTO-1B (04:48) and PROTO-2-recursion-parity
-> (05:01). The current CRIT-1.md (68/65/55/52) and CRIT-2.md (55/55/40/45) *consume* both probes.
-> This fold re-anchors on them: **55 / 55 / 40 / 45.** The 1A↔1B tie is the honest read — the
-> carrier fork is genuinely open and neither carrier dominates on the corrected evidence.
+> **Movement vs the stale draft (52/58/38/48 → 55/55/40/45 → now 56/54/40/44).** The newest
+> critics nudge **1A up** (CRIT-2 55→56: architecture endorsed, carrier lever dead but not fatal),
+> **1B down** (CRIT-2 55→54: the single-store thesis is a *cross-lock* double-home, worse than the
+> intra-lock "1A in a coat" framing), and **1D down** (CRIT-2 45→44: probe2's masked fallback + the
+> engine-agnostic gap). The 1A/1B gap (56 vs 54) is **within noise — the carrier fork stays open.**
 
 ---
 
-## FAMILY 1A — UNIFICATION-FIRST · ADVANCED · 55%
+## FAMILY 1A — UNIFICATION-FIRST · ADVANCED · 56%
 
 **What is genuine (verified).** HM(X)/OutsideIn(X) stratification is the field's settled answer
 (prior-art §2A/§5): generate equality by unification, defer the theory residue to a bounded solver.
-The union-find leaf core is proven (PROVE-08); the dormant `TypeFacts { subst, obligations }`
-scaffold really exists in `skinny/crates/passes` and the `:204` discard is verbatim. On paper it is
-the endorsed trunk — and PROTO-2-recursion-parity now **indirectly evidences** its recursion story:
-the *running* pass already closes recursion **nominally** (`BoxedEnum`/`Enum` knot on sight) and
-terminates finitely on JSON, Sheets (mutual), and CSS L4 — i.e. a nominal fold, 1A's own mechanism,
-is empirically proven to work in tree.
+The union-find leaf core is proven (PROVE-08); the dormant `TypeFacts` scaffold really exists; the
+`:204` discard is verbatim. probe2 **indirectly evidences** its recursion story: the running pass
+already closes recursion **nominally** and terminates finitely on JSON, Sheets (mutual), CSS L4 —
+a nominal fold, 1A's own mechanism, is empirically proven to work in tree.
+
+**The conflation both critics isolate.** "1A ADVANCE (spine)" fuses (i) *1A-the-architecture* —
+union-find trunk + bounded residue + let-generalization — prior-art-endorsed and incumbent-backed;
+with (ii) *1A-the-union-find-carrier* — deletes the running root CSP, re-seeds equality from PROVE-08
+`hm.rs`. (i) is well-evidenced; (ii) is an in-scope migration whose justification is now doubly dead.
 
 **Open gaps.**
-- **G-1A-1 [lineage inverts the cost — scaffold is on the RETIRING tree].** With skinny retiring and
-  root the base, "activate the dormant scaffold" becomes "port PROVE-08 + `TypeFacts` into root and
-  reconcile with / displace the running 1B CSP" — the full 1A⊥1B HARD-INCOMPATIBLE collision at
-  displacement cost. 1A's apparent cheapness does not survive.
-- **G-1A-2 [the carrier-displacement argument LOST its lever this pass].** The prior draft justified
-  paying the displacement cost by "the running CSP is overwrite-unsound as shipped." That is **dead
-  code** (verified). With the live CSP path proven sound (PROTO-1B), the reason to prefer union-find
-  *as the carrier* over the running CSP shrinks to prior-art familiarity + "raises clashes
-  correctly" — which the running Alt-join *also* does. **The carrier fork is more open, not less.**
-- **G-1A-3 [no DIRECT 1A prototype — every gate asserted].** The nominal `unify(Rule i,Rule j)=i==j`
-  fold was never built as 1A code; its recursion story rides on the *incumbent's* proof
-  (PROTO-2-parity) and is *attacked* by the strawman PROTO-2. SPEC_ONLY on its own (Constitution vii).
-- **G-1A-4 [row discipline unpicked].** Leijen scoped-labels vs Gaster–Jones lacks — still
-  "Unresolved," principal-type-critical (Wand's trap), **unmeasurable** (zero `->` corpus).
+- **G-1A-1 [lineage inverts the cost — scaffold is on the RETIRING tree].** "Activate the scaffold"
+  becomes "port PROVE-08 + `TypeFacts` into root and reconcile with / displace the running 1B CSP" —
+  the full 1A⊥1B collision at displacement cost. Unmeasured.
+- **G-1A-2 [the carrier-displacement argument is DOUBLY dead].** The prior lever ("the running CSP is
+  overwrite-unsound as shipped") is dead code, now re-confirmed by run2 (deadness + non-commutativity
+  of the dead arm) and refuted by run2's second sound-live-path fixture. The residual case for
+  union-find-as-carrier is prior-art familiarity + "raises clashes" — which the running Alt-join
+  **also** does. **The carrier fork is unresolved and 1A's tilt is unearned.**
+- **G-1A-3 [no DIRECT 1A prototype — every gate (G1–G6) asserted].** The nominal-fold termination is
+  evidenced only **second-hand** via the incumbent (probe2), never via 1A-union-find code. SPEC_ONLY
+  on its own (Constitution vii).
+- **G-1A-4 [cross-lock — 1A does not name its LOCK-3 consumer].** It threads `->` into
+  `DirectTypeKind::Sum`/`DirectScalar` but never names `backend/driver/analysis.rs::TypeAnalysis::from_ir`
+  (the real sink) nor `backend/ts/projection.rs` (LOCK-6). A fused monotype must lower to **both**; the
+  emit half is asserted "genre-standard," never shown reaching the driver `TypeAnalysis` the incumbent
+  `TypeDesc` already feeds.
 - **G-1A-5 [numeric-width residue UNMEASURED, not resolved].** PROTO-1's `width` tag is Seq/tuple
-  *arity*; numeric width goes to `decode-class`, pre-tagged single-valued (X4). 1A §1.7's own central
-  sub-question (defaulting lattice vs CSP for widths) is open on the evidence, contra the synthesis's
-  implication that the census fixed it. (PROTO-2 test-(e) hints a monotone join suffices — but on a
-  *manufactured* residue, not 1A's, and not measured on a corpus.)
-- **G-1A-6 [generalization criterion + zero-runtime asserted, not exercised].** The value-restriction
-  criterion is unwritten (low-risk — rules are pure schema producers); no artifact drove
-  `git diff crates/runtime/` empty or the second type system deleted.
+  *arity*; numeric width routes to `decode-class`, pre-tagged single-valued (X4). "Defaulting dominates"
+  is plausible and prior-art-consonant, but **not established on the pass's own instrument**.
+- **G-1A-6 [row discipline unpicked + unmeasurable].** Leijen vs Gaster–Jones, principal-type-critical
+  (Wand's trap), **zero `->` corpus** to decide it. Sequences behind GN-3.W3.
+- **G-1A-7 [generalization criterion + zero-runtime asserted, not exercised].** Value-restriction unwritten
+  (low-risk — rules are pure schema producers); no artifact drove `git diff crates/runtime/` empty or the
+  second type system deleted.
 
 **Pass-2 directives.**
 1. **Build the 1A nominal-fold recursion prototype and race it against the running CSP** (not the
-   strawman) — make the recursion axis an actual head-to-head. PROTO-2-parity already shows the
-   incumbent terminates finitely; the open question is whether a *union-find* re-seed matches it at
-   equal or lower cost, or merely re-derives what already ships.
-2. **Cost the lineage port explicitly** (G-1A-1): what "port PROVE-08 into root + reconcile with /
-   displace the running 1B CSP" concretely costs, and measure `git diff crates/runtime/` + derive
-   wall-time for the union-find seed against the running-CSP seed head-to-head.
+   strawman). probe2 shows the incumbent terminates finitely; the open question is whether a union-find
+   re-seed matches it at equal-or-lower cost, or merely re-derives what already ships.
+2. **Cost the lineage port explicitly** (G-1A-1): measure `git diff crates/runtime/` + derive wall-time +
+   LOC-deleted for the union-find seed vs the running-CSP seed head-to-head, and **name the LOCK-3 sink**
+   (`TypeAnalysis::from_ir`) + the TS mirror the fused monotype must reach.
 3. **Build the numeric-width probe the census skipped** (X4) — a hand-authored `->` micro-fixture
-   genuinely under-determined between u8/u16/u32, measured for *defaulting* (ordered lattice) vs
-   *search*. This is the fork's true residue axis.
+   genuinely under-determined between u8/u16/u32, measured *defaulting* (ordered lattice) vs *search*.
 4. Pick and state the row discipline; write the generalization criterion.
 
-**Withheld from researchers:** do **not** re-derive HM(X) stratification (settled, endorsed); do
-**not** re-argue union-find dominates equality asymptotically (settled, prior-art §2B). Build the
-recursion race, the width probe, and the port cost — argue nothing more on paper.
+**Withheld from researchers:** do **not** re-derive HM(X) stratification (settled, endorsed); do **not**
+re-argue union-find dominates equality asymptotically (settled, prior-art §2B). Build the recursion race,
+the width probe, the port cost, and the named LOCK-3/TS lowering — argue nothing more on paper.
 
 ---
 
-## FAMILY 1B — ONE-CONSTRAINT-STORE · ADVANCED · 55%
+## FAMILY 1B — ONE-CONSTRAINT-STORE · ADVANCED · 54% · single-store thesis BLOCKED-candidate
 
-**What is genuine (verified at source).** 1B is the **only family that runs on the surviving base** —
-`TypeDomain: LatticeDomain`, per-former propagators, `ObligationSink`, `HeterogeneousAltJoin`, both
-backend consumers, end-to-end tests. And **PROTO-1B strengthened it in a way the specs never
-absorbed:** the live equality path is **sound on every reachable clash.** Measured — feeding two
-incompatible `->` arrows (`Bool` vs `F64`) yields `ir.types[0] = HeterogeneousAltJoin([Bool, F64])`
-(not a single leaf) + one named `HeterogeneousAltJoin { rule: Some(0) }` obligation. The
-"confirmed shipping defect" the prior draft leaned on is **dead code** (`TypeDomain::join`, 0 call
-sites); the family raises on disagreement where it matters.
+**What is genuine (verified at source).** 1B is the **only family that runs on the surviving base**,
+and run2 **strengthened it a second time**: the live equality path is **sound on every reachable
+clash** — two incompatible `->` arrows (`Bool` vs `F64`) yield `ir.types[0] = HeterogeneousAltJoin([Bool,
+F64])` + one named obligation (`is_single_silently_chosen_ground_leaf = false`). The "confirmed shipping
+defect" is dead code with 0 call sites, now with a non-commutativity proof that it is genuinely broken —
+*in code the pass never reaches.*
 
 **Open gaps.**
-- **G-1B-1 [the "unsound as shipped" indictment is REFUTED — but a latent hazard remains].** The
-  real carrier `assign` (revise.rs:27) is last-writer-wins under an **uncapped** loop — two
-  incompatible *grounds* on one var would flip-flop forever (worse than overwrite). It is
-  **unreachable** under well-formed tree IR (the generator never puts two grounds on one scalar var;
-  the only clash site, Alt join, raises). **Gap: add the additive hardening** — on
-  `Some(existing) != Some(ty)` record `TypeObligation::TypeClash` and refuse the overwrite (keep
-  `existing`, return `Unchanged`), matching the Alt-join discipline. Cheap, ships regardless of
-  carrier winner. Not confirmed backward-safe (G-1B-4).
-- **G-1B-2 [the "collapse to 1A" retirement is UNSOUND as argued — X3/X4].** (X3) Both PROTO-1
-  pre-registered gates FAIL on all four corpora (`eq+sum ≥95%` lands 82–89%; `structural-non-eq ≤2`
-  lands 18/1020/53/87); "THIN — decisive" is reached by **substituting a post-hoc third gate** chosen
-  because it yields THIN. (X4) The census measures 1B's *own* pass, which has **zero overload/legality
-  code** (grep-verified), so the rich-residue thesis is tested against an instrument that structurally
-  cannot exhibit it. **Retiring the running system-of-record on that census is unjustified.** Open.
-- **G-1B-3 [R-B1 store-shape UNBUILT].** Federation-`solve_with_given` vs single sum-domain — "needs
-  a prototype, not paper." No prototype ran; the decode-class-depends-on-sum-variant counterexample
-  was built neither way. The decision the family "cannot make on paper" is exactly as unmade.
-- **G-1B-4 [distinctness dilution — AND a possible inversion the prior draft missed].** The tree runs
-  the federated form (`Csp<TypeDomain>` + `Csp<CostFiniteDomain>` sequenced), which *is* HM(X) with
-  X = the solver — 1A's architecture wearing a CSP coat. **But post-refutation, the inversion CRIT-1
-  §3.4 raises is live:** the *cheapest sound spine* may be *the running CSP hardened* (both backend
-  consumers + sound live path + only additive hardening), **not** a union-find re-seed that *deletes*
-  running code (1A's G-1A-1 cost). Whether "one store" is a distinct thesis or 1A's residue-solver
-  rides on R-B4, which the unsound census failed to close.
-- **G-1B-5 [`assign` hardening not shown backward-safe].** Adding clash-raising changes live code
-  asserted by `types_heterogeneous_alt`; no probe confirmed the corpus still solves once overwrite is
-  refused.
+- **G-1B-1 [the "unsound as shipped" indictment is DOUBLY REFUTED — a latent hazard remains].** The
+  real carrier `assign` (revise.rs:27) is LWW under an **uncapped** loop — two incompatible *grounds*
+  would flip-flop forever — but **unreachable** for clashes (the only reachable clash site, Alt join,
+  raises). **Gap: land the additive hardening** — on `Some(existing) != Some(ty)` record
+  `TypeObligation::TypeClash` and refuse the overwrite. Cheap, ships regardless of carrier. **Not shown
+  backward-safe** (G-1B-5).
+- **G-1B-2 [cross-lock, the sharper wall — single-store = LOCK-1⊕LOCK-2 merge].** Root **already
+  federates** the type CSP (`passes/types/`) and the backend-shape CSP (`passes/csp_strategy/`) over the
+  same vendored solver. The literal single heterogeneous store must **merge LOCK-1's store with LOCK-2's**
+  — a GESTALT-B cross-lock consolidation 1B cannot make alone. This is **strictly worse** than the prior
+  "federation IS 1A in a coat" framing (which located the collapse inside LOCK-1). **The single-store
+  thesis is BLOCKED-candidate** — bigger than R-B1's per-revise tag dispatch.
+- **G-1B-3 [the "collapse to 1A" retirement is UNSOUND as argued — X3/X4].** Both PROTO-1 pre-registered
+  gates **FAIL** on all four corpora (eq+sum 82–89% < 95%; structural-non-eq 18/1020/53/87 ≫ 2); "THIN —
+  decisive" is reached by a **post-hoc third gate**. The census measures 1B's *own* pass, which has
+  **zero overload/legality code** (X4) and per probe2 **cannot even represent `List ≠ Row`** — an
+  instrument structurally blind to the rich residue it purports to refute, reading its own coarse output
+  (spec-cites-itself circularity).
+- **G-1B-4 [the carrier inversion is live — the pass's most important unadjudicated question].** With
+  §0's lever removed, **1B-as-running-CSP-hardened** is a live candidate for the carrier seat itself: it
+  keeps both backend consumers, has a sound live clash path, needs only additive hardening. The spec's
+  "federation IS 1A wearing a CSP coat" may have it backwards — the cheapest sound spine may be *the
+  running CSP hardened*, not a union-find re-seed that **deletes running code** (1A's G-1A-1 cost).
+- **G-1B-5 [`assign` hardening not shown backward-safe].** Refusing the overwrite touches code asserted
+  by `types_heterogeneous_alt`; no probe confirmed the corpus still solves once overwrite is refused.
+- **G-1B-6 [R-B1 store-shape UNBUILT].** The decode-class-depends-on-sum-variant counterexample the
+  research demanded be built both ways was built **neither** way. The family's sharpest design decision
+  is on paper.
 
 **Pass-2 directives.**
-1. **Land the additive `assign`/`join` raise-on-disagreement hardening** (record `TypeClash`, refuse
-   the overwrite) — converts the latent oscillation hazard into an explicit obligation. Confirm the
-   corpus still solves (`types_heterogeneous_alt` green). Ships regardless of the carrier winner.
-2. **Re-run the residue census on an instrument that MODELS overload/legality** (X4), honoring the
-   registered gate or formally re-cutting it **in advance** (X3). The census cannot refute the
-   rich-residue thesis about judgments its instrument does not implement.
-3. **Adjudicate the carrier inversion (G-1B-4):** measure "running-CSP hardened" vs "union-find
-   re-seed" head-to-head on derive wall-time + `git diff crates/runtime/` + LOC-deleted. The prior
-   tilt to union-find rested on a dead-code defect.
-4. **Build R-B1 both ways** on the decode-class-depends-on-sum-variant counterexample (G-1B-3).
+1. **Land the additive `assign`/`join` raise-on-disagreement hardening** (record `TypeClash`, refuse the
+   overwrite) — converts the latent oscillation hazard into an explicit obligation. **Confirm the corpus
+   still solves** (`types_heterogeneous_alt` green). Ships regardless of carrier winner.
+2. **Adjudicate the carrier inversion (G-1B-4):** measure "running-CSP hardened" vs "union-find re-seed"
+   head-to-head on derive wall-time + `git diff crates/runtime/` + LOC-deleted. The prior tilt to
+   union-find rested on a dead-code defect.
+3. **Re-run the residue census on an instrument that MODELS overload/legality AND can express `List ≠
+   Row`** (X4), honoring the registered gate or re-cutting it **in advance** (X3). The census cannot
+   refute a rich-residue thesis about judgments its instrument does not implement.
+4. **Build R-B1 both ways** on the decode-class-depends-on-sum-variant counterexample (G-1B-6); if the
+   single-store is pursued, **cost the LOCK-1⊕LOCK-2 store merge** (G-1B-2) as an explicit cross-lock
+   consolidation, or bank the literal thesis and keep the federation.
 
 **Withheld from researchers:** do **not** re-assert "1B collapses to 1A" on the current census (X3/X4
-unsound; bank-decision deferred to a faithful re-run); do **not** propose new csp-solver *engine*
-features (vendor sync gate) — stay consumer-side (`crates/ir/src/passes/`) adding *domains*, per the
-`ThreadSafe` precedent.
+unsound); do **not** propose new csp-solver *engine* features (vendor sync gate) — stay consumer-side
+(`crates/ir/src/passes/`) adding *domains*, per the `ThreadSafe` precedent.
 
 ---
 
 ## FAMILY 1C — BIDIRECTIONAL-LOCAL · BANKED · 40%
 
-**Why BANKED (redirect / crowding).** The incompatibility map is decisive: 1C is **not a fourth
-engine — it is a strict superset of 1A that degenerates to 1A's synthesis where there are no
-annotations** (R-C2, self-admitted), reuses PROVE-08's `Unifier` as its subsumption reconciler, and
-its natural form is one family: a union-find (or CSP) trunk with a bidirectional checking +
-diagnostics layer. Per the redirect rule the **standalone-fourth-engine formulation is BANKED**;
-bidirectional check/synthesize survives **subsumed as the winner's diagnostics-and-locality
-discipline** (the named graft below). It reactivates to ADVANCED only when R-C2 proves the layer
-earns a name.
-
-**What is genuine.** Bidirectional check/synthesize improves error locality (prior-art §2D);
-`classify_arrow` is a two-line bidirectional seed already in-tree; the `infer_expr` substrate it
-splits exists in `skinny/crates/passes`. As a discipline layered on the winning engine the idea is
-sound and the graft is clean.
+**Why BANKED (redirect / crowding).** 1C is **not a fourth engine — a strict superset of 1A that
+degenerates to 1A's synthesis where there are no annotations** (R-C2, self-admitted), reuses PROVE-08's
+`Unifier` as its subsumption reconciler → per the shared-mechanism rule, closest kin to 1A. Its natural
+form is one family: an equality trunk with a bidirectional checking + diagnostics layer. **The
+standalone-fourth-engine formulation is BANKED;** bidirectional check/synthesize survives **subsumed as
+the winner's diagnostics-and-locality discipline** (the named graft below). It reactivates to ADVANCED
+only when R-C2 proves the layer earns a name.
 
 **Open gaps.**
-- **G-1C-1 [the make-or-break head-to-head was NEVER run — across two brief-cycles].** R-C2: *does
-  `check_expr` localize `TypeError.span` at the `Project` span where unify-first reports at a
-  synthesized interior?* No PROTO exercised it (PROTO-1/1B/2/2-parity all test other axes). 1C's
-  distinct identity is **asserted, not measured** — the pass's most conspicuous omission, unchanged.
-- **G-1C-2 [structurally unfalsifiable today].** On generic `json.bbnf` (zero `->`) 1C ≡ 1A; the
-  typed grammars that would exercise it (twitter/citm/canada) **do not exist** — G2 cannot even run
-  until GN-3.W3 authors them. PROTO-1 shows heterogeneous residue ≤2% even on CSS L4, so the
-  addressable surface is small *and* empty. The disposition is a **bet**, not a finding.
-- **G-1C-3 [retired-lineage substrate + R-C5 span gap].** Every seam (`synth`/`check` split,
-  `RuleSig`, the `Project` mode-switch, the `PassDiagnostic` span-add) lives in **retiring** skinny;
-  on the root base the diagnostics type differs — even the substrate gap is mis-addressed. `PassDiagnostic`
-  is `RuleId`-only; a `span: Option<SourceSpan>` add is owed regardless of engine winner.
-- **G-1C-4 [R-C4 subtype-join / R-C3 sub-span — design-fixed, unbuilt].** MLsub subtype-join reserved
-  for numerics; `Project.ty` is one `String` with whole-expr span only — a sub-span the IR does not
-  carry is the quality ceiling on 1C's entire thesis.
+- **G-1C-1 [the make-or-break head-to-head (R-C2) is STRUCTURALLY UNRUNNABLE — never run across all
+  brief-cycles].** *Does `check_expr` localize `TypeError.span` at the `Project` span where unify-first
+  reports at a synthesized interior?* There is no input: **zero `->` corpus**, twitter/citm/canada typed
+  grammars absent. 1C's distinct identity is **unfalsifiable today**, not merely un-run. The disposition
+  is a bet.
+- **G-1C-2 [on zero-`->` grammars 1C ≡ its host engine].** PROTO-1's ≤2% hetero-residue even on CSS L4
+  bounds the addressable surface further; it is small *and* empty.
+- **G-1C-3 [cross-lock — substrate on the RETIRING tree; span-add owed against ROOT].** Every seam
+  (`synth`/`check` split, `RuleSig`, the `Project` mode-switch, the `PassDiagnostic` span-add) lives in
+  **skinny**; on root the diagnostics type differs. `PassDiagnostic` is `RuleId`-only; a
+  `span: Option<SourceSpan>` add is owed against the **root** base — additive, untouched, bank regardless.
+- **G-1C-4 [sub-span granularity ceiling — a LOCK-3 field].** `Project.ty` is one `String` carrying
+  whole-expr span; a wrong ascription cannot underline the `T`. The quality ceiling on 1C's entire thesis
+  is a sub-span the IR does not carry.
 
 **Pass-2 directives (under the banked banner; reactivate to ADVANCED only if R-C2 lands).**
-1. **Run the R-C2 diagnostic head-to-head** — the single experiment that decides whether 1C is a
-   named discipline or a footnote on 1A. Needs a typed `->` grammar authored first (blocks on
-   GN-3.W3 or a hand-authored micro-fixture).
-2. **Land the `PassDiagnostic.span` add** against the **root** base (not the retiring skinny type),
-   and specify the `Project` sub-span enrichment (R-C3) — additive, owed regardless of winner.
+1. **Run the R-C2 diagnostic head-to-head** — the single experiment that decides whether 1C is a named
+   discipline or a footnote on 1A. Needs a typed `->` grammar authored first (blocks on GN-3.W3 or a
+   hand-authored micro-fixture).
+2. **Land the `PassDiagnostic.span` add against the ROOT base** (not the retiring skinny type), and
+   specify the `Project` sub-span enrichment — additive, owed regardless of winner.
 
-**Withheld from researchers:** do **not** re-argue 1C as a distinct fourth engine (BANKED — a
-discipline on the winner); do **not** develop the width seam (R-C4) as a *separate* subsystem — it is
-the same width residue 1A/1B own; 1C only *consumes* the resolved width at the subsumption site.
+**Withheld from researchers:** do **not** re-argue 1C as a distinct fourth engine (BANKED); do **not**
+develop the width seam as a *separate* subsystem — it is the same width residue 1A/1B own; 1C only
+*consumes* the resolved width at the subsumption site.
 
 ---
 
-## FAMILY 1D — TYPES-AS-ECLASSES · BANKED · 45% · recursion-keep RETIRED
+## FAMILY 1D — TYPES-AS-ECLASSES · BANKED · 44% · recursion-keep RETIRED; structural-μ hook CONTESTED
 
-**Why BANKED, recursion-keep RETIRED (reconciling the two conflicting probes).** Two probes reached
-**opposite verdicts on the same retire-or-keep question**, and the pass must record both:
+**The disposition MOVED this pass — but not to a clean verdict.** Three probes now bear on 1D:
+PROTO-2 (strawman → keep), PROTO-2-recursion-parity **v1** (incumbent → retire), and
+PROTO-2-recursion-parity **probe2** (incumbent + sidecar → **CONTESTED**). The registry now folds
+probe2, which the prior draft never consumed.
 
-- **PROTO-2 (strawman)** raced 1D against 1A's *unbuilt* nominal fold → injectivity = unification
-  (a–d), width+injectivity fixpoint converges in 2 passes no oscillation (e), native cyclic
-  μ-extraction free via the visited set → **"1D does NOT retire."**
-- **PROTO-2-recursion-parity (incumbent)** raced 1D against the **running** root CSP → the running
-  pass is **finite + terminating** on JSON, Sheets (mutual), CSS L4 (191 rules, 44 recursion knots,
-  zero overflow); 1D's finer μ-sum (`Sum[6]`, `List(#0) ≠ Row(#0)`) vs the running `Sum[4]`
-  (`array == object == List(Enum)`) is **strictly more faithful but unused capacity** → **RETIRE.**
+- **Recursion-keep — RETIRED (reconfirmed).** probe2: the running CSP is **finite + terminating** on
+  JSON (8 rules, 2 knots), Sheets (37 rules, 20 mutual knots), CSS L4 (191 rules, 44 knots), zero
+  overflow. 1D's finer μ-sum beats only the **unbuilt** strawman; against the running system its native
+  cyclicity buys nothing on the divergence axis.
+- **Cost-extraction — IDLE (retired on the evidence, X4-caveated).** Overload/cost residue = 0
+  everywhere; the extractor has nothing to rank. (The thin-residue leg rests on the X3/X4-flawed census,
+  so this is *plausible, not airtight.*)
+- **"Zero new engine" — FALSIFIED + reverted at HEAD.** `egraph.rs:236` carries the old `if changed`
+  guard; `rebuild_pass_count` absent. The injectivity hook needs a **shared-engine** scheduling change —
+  a **3-lock** blast radius: it fires on LOCK-2 grammar-tier (`egraph/{node,build_egraph,rules}`) **and**
+  LOCK-5 regex-tier (`egraph/rules/regex.rs`, verified present) unions, not only type merges.
 
-**Adjudication:** the incumbent-parity verdict governs — the strawman its keep rested on is exactly
-what the parity probe falsifies. **1D's recursion "win" beats only an unbuilt opponent; against the
-running system it buys nothing on the divergence axis.** The recursion-keep is therefore **RETIRED**.
-Combined with the census's thin document-shape residue and the **verified-idle cost-extraction**
-(overload/cost residue = 0; pure HM has a unique principal type — nothing to extract), 1D's
-distinctive engine is idle where the mass is and empty where its raison d'être lives.
-
-> **RETIRED sub-verdicts (named negatives).**
-> - **"Zero new engine" — FALSIFIED, verified at HEAD.** PROTO-2's patch modifies the *shared* engine
->   `egraph.rs::union` (delete the `if changed` guard; push `analysis_pending` unconditionally; add
->   `rebuild_pass_count`; +30/−4). HEAD still carries the guard (`egraph.rs:236-238`) and lacks
->   `rebuild_pass_count` — **the amendment is reverted.** On the shipped engine injectivity **never
->   fires** on a structural `Sum`/`Arrow`/`List` merge. 1D is a ~22-LOC hook **+ a core-engine
->   scheduling change to the substrate LOCK-2/LOCK-5 consume** — not "a third Language only."
-> - **Cost-extraction — IDLE (retired on the evidence, X4-caveated).** Overload/cost residue = 0
->   everywhere; the extractor has nothing to rank. (The thin-residue leg is on the X3/X4-flawed
->   census, so this retirement is *plausible, not airtight* — a faithful overload-modeling census
->   could in principle revive it.)
-> - **Recursion-axis keep — RETIRED (PROTO-2-recursion-parity).** The running CSP terminates finitely
->   on every real recursive grammar; native cyclicity beats only the strawman.
-
-**The ONE surviving hook (architecture-gated — do NOT retire outright).** 1D is the *only* path that
-yields a self-contained **structural** recursive TypeDesc at the rule level (`List ≠ Row`, all arms,
-structural back-edges). The running solver deliberately emits a **nominal** skeleton and lets codegen
-(`crates/core/src/runtime/json/value.rs` + `JsonStructBuilder`) supply the 6-variant `JsonValue`
-downstream. **CRIT-2 G1D-4 is right that the RETIRE reasoning leans on that hand-code fallback** —
-and the standing law **`typed-materialization-invariant`** ("every `->` reaches the tape emitter;
-inference composes types, never loses them; parity = full typed-AST equivalence") **bears directly on
-it.** If the greenfield is **grammar-authoritative-typed** (project memory
-`grammar-authoritative-status`), a TypeDesc that collapses `array == object` is a **wall**, and 1D's
-structural μ-type is precisely what closes it. That architectural choice — **grammar-authoritative
-vs codegen-distributed-nominal** — is **unadjudicated**, and it is the *only* ground on which 1D
-revives. Hence BANKED (not RETIRED): the engine and cost-extraction are retired; the structural-μ hook
-survives **pending the architecture adjudication**, which is a GESTALT/cross-lock call, not a
-recursion race.
+**The ONE surviving hook is now DOUBLY challenged — the honest verdict is CONTESTED, not clean KEEP.**
+1D is the only path that would yield a self-contained **structural** recursive TypeDesc at the rule level
+(`List ≠ Row`, structural back-edges), and probe2 confirms the gap is **real and recovered by a masked
+fallback**: the `array ≡ object` collapse is **total in the `struct_registry` sidecar codegen consumes**,
+and `List ≠ Row` is restored only by a **bespoke per-grammar hand-written codegen template**
+(`json_templates/value.rs`) dispatched by a hard-coded table — a `no-workarounds` /
+`typed-materialization-invariant` / clause-i defect the RETIRE quietly leaned on. **But two facts bound
+the keep:**
+- **[CRIT-1] The make-or-break is Row *inference*, not extraction — and it is UNBUILT.** Every probe
+  proved 1D's *extraction* (handed a `Row` node → finite `Sum[6]` with `List ≠ Row`). **No probe shows
+  1D's type Language can *derive* that the `object` rule body (repeat-of-kv-pairs) is a `Row` rather than
+  a `List` WITHOUT the same semantic hint the bespoke template encodes by matching `{ }` vs `[ ]`.** That
+  classification **is** the workaround's content. If 1D needs a per-grammar hint, it *relocates* the
+  workaround into the type Language, it does not *close* it → **BLOCKED-candidate on the structural axis.**
+- **[CRIT-2] The gap is ENGINE-AGNOSTIC.** `List ≠ Row` is absent because `LayoutKind` has no Row variant
+  and `DirectTypeKind` has one `Struct` (a **LOCK-3** record-expressiveness gap, GN-3 wall-b). Adding
+  `LayoutKind::Row` / `DirectTypeKind::{Sum,Row}` lets **any** engine — including the running CSP —
+  populate it. "1D derives `List ≠ Row`" reduces to "1D **+ a widened `LayoutKind`** derives it," and the
+  actual missing primitive (the record can *hold* the distinction) is **not an e-graph capability**. **1D's
+  sole surviving advantage is thereby cosmetic** relative to "widen the record + let the running CSP fill it."
+- **[probe2] The gap is SPECIFIC, not general.** Sheets `comparison_expr = Tuple(mu, List(Tuple(Str, mu)))`
+  — the running CSP **already** emits structural μ where the body is Seq/Tuple. The collapse is confined to
+  **heterogeneous-Alt-of-compounds** (JSON `value`). 1D's structural win narrows to a single grammar shape.
 
 **Open gaps.**
-- **G-1D-1 [CROSS-LOCK blast radius — "free" asserted, never measured].** The amended `union()` sits
-  on LOCK-2's `GrammarENode` and LOCK-5's `RegexENode` hot saturation path; every union there would
-  unconditionally enqueue, re-canonicalize, and call `modify` (no-op for those analyses) — extra
-  churn per union across two locks. PROTO-2 verified correctness (37 pass) and **makes no perf
-  claim.** 1D's disposition **cannot be settled inside LOCK-1** — needs LOCK-2 sign-off + a saturation
-  measurement.
-- **G-1D-2 [AC-vs-injective coexistence UNBUILT — the elegant-reduction trap].** Positional
-  injectivity is **unsound for AC constructors** (`Sum`): two differently-ordered same-arity sums
-  falsely unify. The probe stayed sound by running the two mechanisms in **separate e-graphs**
-  (injectivity dormant on `Sum` in the cyclic test; AC-rewrites absent in the injectivity test). The
-  hard interaction — AC canonicalization *and* injectivity both live on `Sum` under saturation, gated
-  by the injective-vs-AC flag PROTO-2 calls "the one non-negotiable design obligation" — was tested
-  *around*, never *through*. Confluence asserted.
-- **G-1D-3 [the RETIRE itself is architecture-contingent, not clean].** The "unused capacity" verdict
-  presupposes the codegen-distributed-nominal architecture and quietly rejects the
-  grammar-authoritative one; neither PROTO-2 cleanly decides 1D until that call is made (the
-  structural-μ hook above).
-- **G-1D-4 [determinism gate + TS isomorphism unproven at scale].** Byte-identical extraction held
-  only on a 10-class toy sum; the GN-3.W3 gate (byte-identical `DirectSchemaSet` over real typed
-  grammars under FxHashMap iteration at 191-rule CSS) is unexercised. TS-backend consumption of
-  e-graph-derived types (Constitution iii) unspecified — 1B's verified consumers include
-  `backend/ts/projection.rs`.
+- **G-1D-1 [cross-lock — the `union` amendment is a 3-lock blast radius, un-measured on the hot paths].**
+  Reverted at HEAD; would fire on grammar-tier + regex-tier unions; "free for no-op analyses" is
+  un-measured on LOCK-2/LOCK-5 saturation. Cannot be settled inside LOCK-1.
+- **G-1D-2 [cross-lock — name-collision + no TS path].** Net-new `TypeAnalysis` collides with the live
+  LOCK-3 driver struct (`backend/driver/analysis.rs:16`, Constitution vi); e-graph-extracted types have
+  **no LOCK-6/TS mirror** (only `TypeDesc` feeds `backend/ts/projection.rs`, Constitution iii). 1D ranks
+  last on isomorphism.
+- **G-1D-3 [the Row-*inference* step is UNBUILT and of the same difficulty as the workaround].** The true
+  make-or-break (§ above) was never prototyped. Until it is, 1D's structural keep is BLOCKED-candidate.
+- **G-1D-4 [AC-vs-injective coexistence UNBUILT — the elegant-reduction trap].** Positional injectivity is
+  **unsound for AC constructors** (`Sum`). PROTO-2 stayed sound by running the two mechanisms in **separate
+  e-graphs**; the hard interaction (AC canonicalization + injectivity both live on `Sum` under saturation,
+  gated by a flag) is asserted-confluent, tested *around*, never *through*.
+- **G-1D-5 [the RETIRE/KEEP is architecture-contingent + cross-lock].** It turns on grammar-authoritative
+  (a coarse `TypeDesc` is a wall → 1D closes it) vs codegen-distributed (the template is the sanctioned
+  home → 1D is cosmetic) — a LOCK-7/GESTALT-B call. Both probe verdicts presuppose an unadjudicated
+  architecture. And the masked fallback (`json_templates`) is a **real clause-i defect** owned jointly
+  with LOCK-7, independent of 1D's fate.
+- **G-1D-6 [determinism at scale + off-tree proof].** PROTO-2's (a)–(e) rest on the **reverted** `union`
+  amendment (SPEC_ONLY masquerading as MEASURED, Constitution vii); byte-identity held only on a 10-class
+  toy; 191-rule CSS under `FxHashMap` iteration untested.
 
-**Pass-2 directives (under the banked banner; reactivate only if the structural-μ hook is *needed*).**
-1. **Adjudicate the architecture (the decisive experiment, not a recursion race):**
-   grammar-authoritative-typed vs codegen-distributed-nominal. This is a GESTALT/cross-lock call
-   bearing `typed-materialization-invariant`. If grammar-authoritative wins, 1D's structural μ-type is
-   the wall-closer and 1D reactivates on that narrow ground; if codegen-distributed wins, 1D is fully
-   RETIRED (the hand-code fallback is legitimate, not a masked one).
-2. **Route the `union()` amendment through LOCK-2 as a named cross-lock cost and MEASURE it** against
-   LOCK-2/LOCK-5 saturation (the "free for no-op analyses" claim) — a GESTALT-B/LOCK-2 adjudication.
-3. **Build the AC-sum + injectivity coexistence** with the constructor-injective flag **active on
-   `Sum` under saturation** (G-1D-2) — only if 1D reactivates.
+**Pass-2 directives (under the banked banner; reactivate only if the structural-μ hook is *needed AND*
+1D-specific).**
+1. **Build 1D's actual make-or-break: does a `TypeENode` Language DERIVE `Row` from the `object`
+   repeat-of-pairs body WITHOUT a per-grammar hint (G-1D-3)?** This, not extraction, decides whether 1D
+   *closes* the `json_templates` workaround or *relocates* it. If it needs the hint → BLOCKED-candidate.
+2. **[GESTALT-B/LOCK-3] Widen the record engine-agnostically** — add `LayoutKind::Row` /
+   `DirectTypeKind::{Sum,Row}` (GN-3 wall-b) and route the type plane through
+   `backend/driver/analysis.rs::TypeAnalysis::from_ir`. This closes `List ≠ Row` **without** an e-graph
+   and **dissolves 1D's sole surviving advantage into an IR-expressiveness fix.**
+3. **[LOCK-7/GESTALT-B] Adjudicate grammar-authoritative vs codegen-distributed** — the real 1D
+   keep/retire pivot, and the home of the clause-i masked-fallback defect (`json_templates/value.rs`).
+   Record it as a **named totality gap**, not "1D unused capacity."
+4. **[GESTALT-B/LOCK-2/LOCK-5] Route the `union` amendment through a three-lock saturation measurement**
+   (grammar + regex + type tiers) — never a free LOCK-1 hook; land or retire it in-tree. Build the AC-sum +
+   injectivity coexistence *through*, not around (G-1D-4) — only if 1D reactivates.
 
 **Withheld from researchers:** the **"zero new engine" claim is RETIRED** — do not re-pose it; do not
-carry the `union()` amendment as a free LOCK-1 hook (shared-engine change); do not model width as
-distinct `Int8`/`Int16` *constructors* (must be an analysis-lattice fact on one `Int` class, or
-injectivity has nothing to decompose); do **not** re-run the strawman recursion race (retired).
+carry the `union()` amendment as a free LOCK-1 hook; do not model width as distinct `Int8`/`Int16`
+*constructors* (must be an analysis-lattice fact on one `Int` class); do **not** re-run the strawman
+recursion race (retired).
 
 ---
 
 ## REDIRECT / CROWDING DECISIONS (this pass)
 
-The four families collapse to a **two-way equality-engine fork + one banked discipline + one banked
-engine** on the surviving base (root):
+The four families collapse to a **two-way carrier fork + one banked discipline + one banked engine** on
+the surviving base (root):
 
-1. **1C → BANKED into the winning trunk as a discipline.** Both critics + the incompatibility map
-   agree 1C "is not a fourth engine but a discipline that layers onto the winner (naturally 1A)."
-   Reactivation gate: R-C2 head-to-head.
-2. **1D → BANKED; recursion-keep + "zero new engine" + cost-extraction all RETIRED as named
-   negatives.** The 1B⊥1D soft-incompatibility resolves by **subordination under LOCK-2**, not
-   deletion. The one surviving hook (structural-μ) is architecture-gated (above).
-3. **The 1A/1B equality-engine fork stays OPEN — both ADVANCED, tied at 55% — because the
-   adjudicating measurement is unsound/unbuilt AND the prior tilt was on dead code.** The families
-   have **converged to ONE architecture** (HM(X): equality trunk + bounded residue) — but the
-   **redundancy is at the architecture level, not the build level.** The live difference is the
-   *carrier*: 1A re-seeds union-find (deleting the running CSP — G-1A-1 displacement cost) vs 1B
-   *hardens* the running CSP (additive, keeps both backend consumers). That is a **genuine
-   build-cost fork with different runtime-diff footprints**, not vacuous crowding — so **neither is
-   force-banked.** Banking 1B needs a *sound* census (present one X3/X4-flawed); banking 1A needs a
-   reason to discard the endorsed spine there is none for. The bank decision is **deferred to named
-   pass-2 experiments**: the hardened-vs-reseed carrier measurement (1B directive 3) + the
-   overload-modeling census (1B directive 2) + the 1A recursion race (1A directive 1) + the
-   numeric-width probe (1A directive 3).
+1. **The architecture converged — bank it as CONSENSUS, not as a family.** Both critics + the
+   incompatibility map agree 1A and 1B have collapsed onto **one architecture: HM(X) — an equality trunk
+   + a bounded residue solver + let-generalization.** Per the redirect rule this is the redundant
+   mechanism; it is **BANKED as the settled floor** (do not re-litigate it). **But the redundancy is
+   architecture-level, not build-level** — so *neither carrier is force-banked* (named reason below).
+2. **The carrier fork stays OPEN — 1A vs 1B, both ADVANCED (56 vs 54, within noise).** The live
+   difference is not the architecture but the *equality carrier*: 1A re-seeds union-find (**deleting** the
+   running CSP — G-1A-1 displacement cost) vs 1B **hardens** the running CSP (additive, keeps both backend
+   consumers). This is a **genuine build-cost fork with different `git diff crates/runtime/` footprints**,
+   and the prior tilt to 1A rested on a **doubly-dead defect** (run2). Banking 1B needs a *sound* census
+   (present one X3/X4-flawed); banking 1A needs a reason to discard the endorsed spine (there is none).
+   **Bank decision deferred to named pass-2 measurement:** the hardened-vs-reseed carrier race (1B dir 2)
+   + the overload-modeling census (1B dir 3) + the 1A recursion race (1A dir 1) + the numeric-width probe
+   (1A dir 3).
+3. **1C → BANKED as a discipline on the winning trunk.** Reactivation gate: R-C2 head-to-head (needs a
+   typed `->` grammar).
+4. **1D → BANKED; recursion-keep + "zero new engine" + cost-extraction RETIRED as named negatives.** The
+   structural-μ hook survives **CONTESTED**, doubly challenged (engine-agnostic + Row-inference unbuilt);
+   its disposition is a LOCK-7/GESTALT-B architecture call plus an unbuilt inference probe, not a LOCK-1
+   recursion race.
 
-**Underexplored formulations to OPEN (the crowding reveals two the charters under-cite):**
-- **The pluggable residue-solver X** (standing law `pluggable-components`). 1A/1B have collapsed onto
-  HM(X); the *real* open design point is **X**, the residue solver — which PROTO-1 says is an *ordered
-  defaulting lattice* (not a CSP, not an extractor), but on an X3/X4-flawed census. Open X as a
-  first-class pluggable seam (cost model / defaulting order / decode-class registry), so the carrier
-  fork and the residue fork are decided independently rather than bundled.
-- **The attribute-grammar cross-rule seam** (prior-art §2E, Silver/JastAdd). All three engines
-  re-derive the cross-rule seam independently (1A: SCC generalize-after-fixpoint; 1B: federation
-  sequencing via `solve_with_given`; 1C: SCC bounded fixpoint). The synthesized/reference/circular-
-  attribute discipline with a termination lattice is the deepest whole-system analogue and is
-  under-cited — open it as a pass-2 research thread (a *seam discipline*, not a fifth engine).
+**Underexplored formulations to OPEN (the crowding reveals three):**
+- **[NEW this pass] The engine-agnostic record-widening — `LayoutKind::Row` / `DirectTypeKind::{Sum,Row}`.**
+  probe2 + both critics converge on this: the `List ≠ Row` capability that 1D claims as its raison d'être
+  is a **LOCK-3 record-expressiveness gap any engine closes once the record is widened**, decoupling
+  *structural fidelity* from *engine choice*. Open it as a first-class pass-2 formulation — it may make the
+  entire engine axis (1A vs 1B vs 1D) orthogonal to the structural question that seemed to justify 1D.
+- **The pluggable residue-solver X** (`pluggable-components`). 1A/1B have collapsed onto HM(X); the real
+  open design point is **X** — which PROTO-1 says is an *ordered defaulting lattice* (not a CSP, not an
+  extractor), but on an X3/X4-flawed census. Open X as a first-class pluggable seam (cost model /
+  defaulting order / decode-class registry) so the carrier fork and the residue fork are decided
+  independently rather than bundled.
+- **The attribute-grammar cross-rule seam** (prior-art §2E, Silver/JastAdd). All three engines re-derive
+  the cross-rule seam independently (1A: SCC generalize-after-fixpoint; 1B: federation sequencing; 1C: SCC
+  bounded fixpoint). The synthesized/reference/circular-attribute discipline with a termination lattice is
+  the deepest whole-system analogue — open it as a pass-2 research thread (a *seam discipline*, not a fifth
+  engine).
 
 ## CROSS-POLLINATION (the one named, justified graft this pass)
 
 **1C's bidirectional check/synthesize ⟶ the winning trunk (1A or hardened-1B).** Both families are
-developed enough to name the graft: the trunk has the equality core (PROVE-08 `Unifier` for 1A, or
-the sound Alt-join for 1B) + the `classify_arrow` bidirectional seed; 1C has the mode-switch + SCC
-discipline mapped onto the *same* `infer_expr`. The graft: `infer_expr` becomes `synth_expr`,
+developed enough to name the graft: the trunk has the equality core (PROVE-08 `Unifier` for 1A, or the
+sound Alt-join for 1B) + the `classify_arrow` bidirectional seed already in-tree; 1C has the mode-switch +
+SCC discipline mapped onto the *same* `infer_expr`. The graft: `infer_expr` becomes `synth_expr`,
 `check_expr` overlays it, and **the trunk's equality reconciler is shared** (equality-unify for
-non-numeric leaves; MLsub subtype-join at the numeric seam, R-C4). This is the incompatibility map's
-"1C ∥ trunk compatible overlay." *Deferred graft (not this pass):* 1D's native-cyclic μ-extraction
-vs a nominal fold — cannot graft an unbuilt comparison, and the parity probe retired it; re-evaluate
-only if the architecture adjudication revives 1D's structural-μ hook.
+non-numeric leaves; MLsub subtype-join at the numeric seam). This is the incompatibility map's "1C ∥ trunk
+compatible overlay." *Deferred graft (not this pass):* 1D's native-cyclic μ-extraction vs a nominal fold —
+cannot graft an unbuilt comparison, and the parity probe retired it; re-evaluate only if the architecture
+adjudication revives 1D's structural-μ hook.
 
 ## CROSS-LOCK / GESTALT DIRECTIVES
 
 1. **X1 LINEAGE — RESOLVED at the SK-V24 level; it inverts the fork cost.** skinny **retires**
    (`skv24-handoff` supersedes SK-V22's graduation); **root is the greenfield base.** 1B/1D substrate
-   survives on the base ("already runs" is a real win); 1A/1C's skinny scaffold is on the retiring
-   tree → their mechanism becomes a **PROVE-08 port into root + reconciliation with / displacement of
-   the running 1B CSP.** GESTALT-B ratifies this base call and carries the port cost in 1A/1C
-   accounting. (This corrects CRIT-2 X1, which relied on the superseded SK-V22 — a named critic error,
-   but one that moves no floor upward since it inverts cost *against* 1A/1C.)
-2. **X2 — record the GN-3 §1.5 override as a NAMED SUPERSESSION (Constitution ix).** FAMILY-SPECS §0
-   finds prior-art C4 / GN-3 §1.5 ("no CSP or e-graph consumer exists") *factually void for root*
-   (both engines ship with live backend consumers — verified). But GN-3 §1.5 is a committed codex
-   adjudication; **amend it with a formal named supersession** rather than an inline "factually
-   false." Procedural, owed to GESTALT-B.
-3. **X5 — 1D↔LOCK-2 is DOUBLE-HOMED, not merely substrate-shared.** 1D *modifies* LOCK-2's engine
-   (the reverted `union()` amendment). Its disposition cannot be "banked under LOCK-2" quietly — the
-   engine change is a LOCK-2/GESTALT-B adjudication with a **required saturation perf measurement**
-   across the grammar + regex tiers.
-4. **Land or retire both probes in the tree.** PROTO-1 (`lock1_residue_census.rs`) and PROTO-2
-   (`type_injectivity.rs` + the `egraph` amendment) are **absent from HEAD** — pass-1 evidence lives
-   only in `.patch.diff`, non-reproducible. Land them (behind the base decision) or state them retired.
-   PROTO-1B (`lattices/clash.rs`) and PROTO-2-recursion-parity (`lock1_recursion_parity.rs`) likewise
-   survive as patches; land the additive `assign` hardening test regardless of carrier.
-5. **Zero-runtime-cost gate is asserted by every family, exercised by none** — a named gap for all
-   four in pass-2 (`git diff crates/runtime/` empty on every wave).
+   survives on the base; 1A/1C's skinny scaffold is on the retiring tree → their mechanism becomes a
+   **PROVE-08 port into root + reconciliation with / displacement of the running 1B CSP.** GESTALT-B
+   ratifies this base call and carries the port cost in 1A/1C accounting. (Corrects CRIT-2's earlier X1,
+   which relied on the superseded SK-V22 — a named critic error that moves no floor, since it inverts cost
+   *against* 1A/1C.)
+2. **X2 [NET-NEW consumer] — the real LOCK-1→LOCK-3 handoff is `TypeAnalysis::from_ir`, and NO family
+   names it.** The specs cite the backend-leaf consumers (`backend/rust/ir_types.rs`,
+   `backend/ts/projection.rs`) and miss the **driver-level** `crates/core/src/backend/driver/analysis.rs::
+   TypeAnalysis::from_ir` (+ a second `from_ir` at `rust/view/named_types.rs:100`) that owns the handoff.
+   Whichever record wins must lower through it. 1D's proposed net-new `TypeAnalysis` is a **name collision**
+   with this shipping struct (Constitution vi).
+3. **X3 [NET-NEW cross-lock] — 1B's single-store is a LOCK-1⊕LOCK-2 store merge.** Root already federates
+   the type CSP and the `csp_strategy` CSP; the literal thesis cannot be built inside LOCK-1. Either cost
+   the merge as an explicit GESTALT-B consolidation or bank the literal thesis and keep the federation.
+4. **X4 — the `List ≠ Row` gap is a LOCK-3 record-expressiveness fix, NOT an engine capability.** Add
+   `LayoutKind::Row` / `DirectTypeKind::{Sum,Row}` (GN-3 wall-b); this dissolves 1D's advantage and closes
+   a real clause-i masked fallback (`json_templates`). Owned by LOCK-3 + LOCK-7, engine-agnostic.
+5. **X5 — record the GN-3 §1.5 override as a NAMED SUPERSESSION (Constitution ix).** FAMILY-SPECS §0 voids
+   prior-art C4 / GN-3 §1.5 ("no CSP or e-graph consumer exists") inline as "factually superseded"; GN-3 is
+   committed codex — amend it with a formal named supersession + LOCK-7 sign-off, not an inline "factually
+   void."
+6. **X6 — 1D↔LOCK-2/LOCK-5 is DOUBLE-HOMED (a 3-lock blast radius).** The reverted `union()` amendment sits
+   on LOCK-2's `GrammarENode` **and** LOCK-5's `RegexENode` (`egraph/rules/regex.rs`) hot saturation path;
+   its disposition needs LOCK-2/LOCK-5 sign-off + a **required saturation perf measurement** across all
+   three tiers — never a free LOCK-1 hook.
+7. **X7 [LOCK-6] — the TS-consumption path constrains the record.** Only `TypeDesc` has a shipping TS
+   consumer (`backend/ts/projection.rs`); a fused monotype (1A) and `TypeENode` (1D) have **no demonstrated
+   TS mirror**. Show it before the record is chosen (Constitution iii).
+8. **X8 — land or retire the four probes in the tree.** PROTO-1 (`lock1_residue_census.rs`), PROTO-2
+   (`type_injectivity.rs` + the reverted egraph amendment), PROTO-1B (`lattices/clash.rs`),
+   PROTO-2-recursion-parity (`lock1_recursion_parity.rs`) survive only as `.patch.diff` — non-reproducible
+   from HEAD. Land them (behind the base decision) or state them retired; land the additive `assign`
+   hardening test regardless of carrier.
+9. **Zero-runtime-cost gate is asserted by every family, exercised by none** — a named gap for all four in
+   pass-2 (`git diff crates/runtime/` empty on every wave).
 
 ---
 
 ## PASS HISTORY
 
-### Pass 1 (folded by AGGLOMERATOR, Fable-tier) — CORRECTED FOLD
+### Pass 1 (folded by AGGLOMERATOR, Fable-tier) — RE-ANCHORED FOLD (consumes run2 + probe2 + on-disk critics)
 
-- **Inputs:** research-{A,B,C,D,priorart}; FAMILY-SPECS (04:41, stale — sealed before its two
-  decisive briefs ran); PROTO-1 (judgment-mix census, RAN_MEASURED — document-shape residue only);
-  PROTO-2 (1D injectivity vs strawman nominal fold, RAN_MEASURED on a reverted engine patch, "keep");
-  **PROTO-1B-clash** (RAN_MEASURED, 04:48 — CSP-equality soundness); **PROTO-2-recursion-parity**
-  (RAN_MEASURED, 05:01 — 1D vs the *running* CSP, "retire"); CRIT-1 (within-lock, post-probe,
-  68/65/55/52); CRIT-2 (cross-lock, post-probe, 55/55/40/45).
-- **Correction to the prior draft.** The earlier registry text mis-attributed the "confirmed shipping
-  defect" to `TypeDomain::join` (domain.rs:72-77) as **"CONFIRMED live"** and used **stale pre-probe
-  critic scores** (52/58/38/48). This fold **corrects both**: the agglomerator re-verified against the
-  live tree that `TypeDomain::join` has **zero call sites** (dead code); the live carrier is `assign`
-  (revise.rs:27, last-writer-wins but unreachable for clashes); and the reachable clash site (Alt
-  join) **raises `HeterogeneousAltJoin` + a named obligation** — the live 1B pass is **sound on every
-  reachable surface** (PROTO-1B, measured). The material consequence: the specs' main lever for "seed
-  1A's union-find instead of the running CSP" is void, and **the carrier fork reopens.**
-- **Agglomerator verification (live tree, this pass):** `TypeDomain::join` 0 call sites (dead);
-  `assign` last-writer-wins under uncapped `monotonic.rs` loop; `egraph.rs:236-238` `if changed` guard
-  **present** + `rebuild_pass_count` **absent** (1D amendment reverted → "zero new engine" falsified);
-  `crates/ir/src/passes/types/` has **zero** overload/legality code (X4); both PROTO-1/2 tests absent
-  from HEAD; skinny `:204` `->` discard verbatim; root `HeterogeneousAltJoin` live at
-  `type_desc.rs:63`; `skv24-handoff` memory confirms **skinny retires, root is base.** **The current
-  critics did not err on any load-bearing fact.** One named critic error: CRIT-2 X1's lineage
-  contradiction relied on the *superseded* SK-V22 (skv24-handoff resolves it) — but the resolution
-  inverts cost *against* 1A/1C, raising no floor.
-- **Floors taken unadjusted (min across current post-probe critics):** 1A 55% · 1B 55% · 1C 40% ·
-  1D 45%.
-- **Dispositions set:** 1A ADVANCED (endorsed trunk, unproven, port+displace) 55%; 1B ADVANCED
-  (running system-of-record, live path SOUND, retirement-to-1A prop refuted, possibly the cheaper
-  spine) 55%; 1C BANKED (discipline on the winner; standalone-engine banked) 40%; 1D BANKED
-  (recursion-keep + "zero new engine" + cost-extraction RETIRED as named negatives; structural-μ hook
-  survives architecture-gated) 45%.
-- **Redirects:** 4 families → a 2-way equality-engine fork (1A vs 1B, both ADVANCED, tied 55%,
-  bank-decision deferred to a sound census + a carrier measurement) + 1C banked-as-discipline + 1D
-  banked-as-LOCK-2-substrate with recursion-keep retired. Two underexplored formulations opened: the
-  **pluggable residue-solver X** (`pluggable-components`) and the **attribute-grammar cross-rule seam**
-  (prior-art §2E). Cross-pollination: 1C bidirectional overlay ⟶ the winning trunk (shared reconciler).
-  The two conflicting PROTO-2 verdicts reconciled: **RETIRE governs on the recursion axis** (strawman
-  falsified by incumbent parity), with a structural-μ keep-hook gated on the unadjudicated
-  grammar-authoritative-vs-codegen-distributed architecture call (`typed-materialization-invariant`).
-- **Lock-wide:** no family convergence-eligible (pass 1 of ≥3; first fresh post-probe audit only now).
-  The residue axis is measured for document shapes only (thin, but on an X3/X4-flawed census blind to
-  numeric/overload residue); the recursion axis retired 1D against the running incumbent; the lineage
-  inverts the 1A/1C cost. The synthesis verdict ("HM(X) trunk + bounded residue + 1C folded in") is
-  **prior-art-consonant and probably right — but the carrier seat (union-find reseed vs running-CSP
-  hardened) is genuinely open on the corrected evidence, and the 1D structural-μ question turns on an
-  architecture call this lock cannot make alone.**
+- **Inputs:** research-{A,B,C,D,priorart}; FAMILY-SPECS (04:41, stale — sealed before its decisive briefs
+  ran); PROTO-1 (judgment-mix census, RAN_MEASURED — document-shape residue only, X3/X4-flawed instrument);
+  PROTO-2 (1D injectivity vs strawman, RAN_MEASURED on a reverted engine patch, "keep"); **PROTO-1B-clash**
+  (04:48) **+ run2** (09:39, RAN_MEASURED — CSP-equality soundness, non-commutativity of dead `join`, live
+  path SOUND on a 2nd fixture); **PROTO-2-recursion-parity** (05:01) **+ probe2** (09:39, RAN_MEASURED —
+  total `array≡object` collapse in the `struct_registry` sidecar, `LayoutKind` has no Row, masked-fallback
+  `json_templates`, collapse SPECIFIC to hetero-Alt-of-compounds, incumbent finite+terminating on all
+  grammars); CRIT-1 (within-lock, post-run2/probe2, **64/63/52/48**); CRIT-2 (cross-lock, post-run2/probe2,
+  **56/54/40/44**).
+- **What this fold corrects vs the prior draft (05:15).** (a) The prior draft cited **stale** critic scores
+  (68/65/55/52, 55/55/40/45) and folded on **v1** parity; this fold re-anchors on the on-disk critics
+  (64/63/52/48, 56/54/40/44) and the **09:39 re-runs**. (b) run2 makes the "shipping defect" **doubly dead**
+  (deadness + non-commutativity proof + a 2nd sound-live-path fixture), so 1A's carrier-displacement lever
+  is void and the carrier fork is **more** open. (c) probe2 re-opens the structural-fidelity question the
+  clean RETIRE closed: the `List ≠ Row` collapse is **total in the sidecar codegen consumes** and recovered
+  by a **masked fallback** — but it is **engine-agnostic** (a `LayoutKind::Row` fix) and **specific** to one
+  grammar shape, and 1D's true make-or-break (Row *inference*) is **unbuilt** → 1D moves from clean RETIRE
+  to **CONTESTED**.
+- **Agglomerator verification (live tree, this pass):** re-ran every crux grep — `TypeDomain::join` 0 call
+  sites; `assign` LWW; `egraph.rs:236` `if changed` guard present + `rebuild_pass_count` absent (1D
+  amendment reverted); `LayoutKind` = {Struct, TaggedEnum, UntaggedEnum, NewtypeWrapper}, **no Row**
+  (struct.rs:58); `TypeAnalysis::from_ir` live (analysis.rs:16/22/221) + a 2nd `from_ir` (named_types.rs:100);
+  `csp_strategy/` second Csp present; `egraph/rules/regex.rs` present (3-lock); `json_templates/value.rs` +
+  shipped `runtime/json/value.rs` present (masked fallback); skinny `:204` `->` discard verbatim; root
+  `HeterogeneousAltJoin` live (type_desc.rs:63). **The critics did not err on any load-bearing fact.** One
+  named prior critic error (CRIT-2's stale-SK-V22 X1) is resolved by `skv24-handoff` and moves no floor.
+- **Floors taken unadjusted (min across current post-run2/probe2 critics):** 1A 56% · 1B 54% · 1C 40% ·
+  1D 44%. CRIT-2 binds on all four.
+- **Dispositions set:** 1A **ADVANCED** (endorsed HM(X) trunk; unproven in tree; carrier-displacement lever
+  doubly dead; unnamed LOCK-3 consumer) 56%; 1B **ADVANCED** (running system-of-record, live path SOUND,
+  possibly the cheaper spine — single-store thesis **BLOCKED-candidate**: a LOCK-1⊕LOCK-2 store merge) 54%;
+  1C **BANKED** (discipline on the winner; standalone-engine banked; R-C2 structurally unrunnable) 40%; 1D
+  **BANKED** (recursion-keep + "zero new engine" + cost-extraction RETIRED; structural-μ hook **CONTESTED** —
+  engine-agnostic + Row-inference unbuilt) 44%.
+- **Redirects:** the HM(X) *architecture* is BANKED as consensus (redundant mechanism, settled floor);
+  neither *carrier* force-banked (a genuine build-cost fork, prior tilt on dead code) — bank-decision
+  deferred to named pass-2 experiments. Three underexplored formulations opened: **the engine-agnostic
+  record-widening** (`LayoutKind::Row`, NEW — may make the whole engine axis orthogonal to the structural
+  question), the **pluggable residue-solver X**, the **attribute-grammar cross-rule seam**. Cross-pollination:
+  1C bidirectional overlay ⟶ the winning trunk (shared reconciler). 1D's three probe verdicts reconciled:
+  **recursion RETIRE governs**, structural-μ **CONTESTED** and gated on a LOCK-7 architecture call +
+  an unbuilt Row-*inference* probe.
+- **Lock-wide:** no family convergence-eligible (pass 1 of ≥3). The two sharpest unadjudicated questions,
+  both partly **cross-lock** and both mis-sized by the specs: (i) the **carrier seat** — harden the running
+  CSP (1B) or delete it for a union-find re-seed (1A)? — decided by a build-cost measurement, not the void
+  "unsound" defect; and (ii) whether 1D's type Language can **derive** `List ≠ Row` by inference (closing the
+  `json_templates` masked fallback) or merely **relocates** it — and whether a `LayoutKind::Row` widening
+  dissolves the question for every engine at once. The synthesis verdict ("HM(X) trunk + bounded defaulting
+  residue + 1C folded in") is **prior-art-consonant and probably right** — but it was earned by framing on a
+  zero-`->` corpus and a pipeline that cannot express `List ≠ Row`, and every family spec pretends the
+  type-of-record is LOCK-1's to choose alone when it is constrained from LOCK-3/LOCK-6/LOCK-7.
 
 <!-- Pass 2 appends below this line -->

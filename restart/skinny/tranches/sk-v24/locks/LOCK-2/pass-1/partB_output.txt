@@ -1,0 +1,60 @@
+############ PART B raw (independent reproduction run) ############
+=== TWITTER n=240 ===
+# corpus=skinny/test_data/twitter.json bytes=631515 samples/form=240 inner=4
+# structural parity mismatches = 0  (MUST be 0 before timing)
+# branch histogram [obj arr str num t f n NOMATCH] = [1264, 1057, 36906, 36332, 19736, 8419, 13603, 514198]
+
+# per-window median cyc/B (window size 80)
+# window   seq_trial   dispatch_table   ratio(seq/tab)
+  W1       4.0832      1.1809          3.458x
+  W2       4.0446      1.1772          3.436x
+  W3       3.9981      1.1871          3.368x
+
+── AGGREGATE (n=240 per form) ──
+seq_trial      mean=4.0594 cyc/B  median=4.0478  sd=0.1239
+dispatch_table mean=1.2046 cyc/B  median=1.1807  sd=0.0578
+ratio seq/tab (mean-based) = 3.3699x
+95% CI on ratio            = [3.3456x, 3.3941x]
+loadavg(1m) start=9.93 end=9.93
+
+── VERDICT (Part B) ── 95% CI excludes 1.00x same-direction: true  (ratio >1.0)
+
+=== CITM_CATALOG n=200 ===
+# corpus=skinny/test_data/citm_catalog.json bytes=1727204 samples/form=200 inner=4
+# structural parity mismatches = 0  (MUST be 0 before timing)
+# branch histogram [obj arr str num t f n NOMATCH] = [10937, 10451, 53210, 129934, 8141, 14, 4498, 1510019]
+
+# per-window median cyc/B (window size 66)
+# window   seq_trial   dispatch_table   ratio(seq/tab)
+  W1       3.5262      1.2105          2.913x
+  W2       3.5065      1.2114          2.895x
+  W3       3.4898      1.1929          2.925x
+
+── AGGREGATE (n=200 per form) ──
+seq_trial      mean=3.5318 cyc/B  median=3.5055  sd=0.1435
+dispatch_table mean=1.2289 cyc/B  median=1.2014  sd=0.0919
+ratio seq/tab (mean-based) = 2.8740x
+95% CI on ratio            = [2.8401x, 2.9079x]
+loadavg(1m) start=9.93 end=9.69
+
+── VERDICT (Part B) ── 95% CI excludes 1.00x same-direction: true  (ratio >1.0)
+
+=== CANADA n=200 ===
+# corpus=skinny/test_data/canada.json bytes=2251051 samples/form=200 inner=4
+# structural parity mismatches = 0  (MUST be 0 before timing)
+# branch histogram [obj arr str num t f n NOMATCH] = [4, 56045, 24, 1916598, 10, 1, 5, 278364]
+
+# per-window median cyc/B (window size 66)
+# window   seq_trial   dispatch_table   ratio(seq/tab)
+  W1       2.7497      1.2011          2.289x
+  W2       2.7693      1.2015          2.305x
+  W3       2.7695      1.1973          2.313x
+
+── AGGREGATE (n=200 per form) ──
+seq_trial      mean=2.7503 cyc/B  median=2.7667  sd=0.0506
+dispatch_table mean=1.2089 cyc/B  median=1.2004  sd=0.0298
+ratio seq/tab (mean-based) = 2.2750x
+95% CI on ratio            = [2.2653x, 2.2847x]
+loadavg(1m) start=9.69 end=9.69
+
+── VERDICT (Part B) ── 95% CI excludes 1.00x same-direction: true  (ratio >1.0)

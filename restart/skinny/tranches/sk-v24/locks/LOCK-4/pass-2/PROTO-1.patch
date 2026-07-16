@@ -1,0 +1,397 @@
+--- /dev/null	2026-07-16 09:52:12
++++ b/test/lock4-proto1-runtimes.ts	2026-07-16 09:50:45
+@@ -0,0 +1,239 @@
++// LOCK-4 / pass-2 / PROTO-1 — three TS runtimes of ONE projection-dense
++// value.js-shaped region: the rgb( n , n , n ) color triple (arity-7 all(),
++// PAST the arity-3 unrolled fuseAll arms → the general `.parser`-IC loop is the
++// honest baseline). All three expose the SAME shape: a raw ParserFunction
++// (state)->state, driven over a fresh ParserState. This isolates the terminal
++// execution face (no packrat / error-display wrapper pollutes any lane).
++//
++//   C  baseline   = today's all(...).map(project)   → fuseAll general arm,
++//                    `parsers[i].parser(state)` property-IC per element.
++//   B  emitted     = build-time-specialized closure via `new Function`; leaf
++//                    RAW functions bound as lexical consts f0..f6, called BY
++//                    LEXICAL NAME. Emitted source has ZERO `.parser(`.
++//   A  vm          = switch-loop decoder over a msgpack-serialized bytecode
++//                    program; regexes re-derived as sticky RegExp; runtime
++//                    `switch(op)` dispatch — the SpanParser-refutation shape.
++
++import { all, string, regex, Parser } from "../src/parse";
++import { ParserState } from "../src/parse/state.js";
++
++// ─────────────────────────────────────────────────────────────────────────────
++// The region: leaves for  rgb( <num> , <num> , <num> )
++// ─────────────────────────────────────────────────────────────────────────────
++const NUM = /[0-9]+(?:\.[0-9]+)?/;
++const COMMA = /\s*,\s*/;
++
++const lp = string("rgb(");
++const num = regex(NUM);
++const comma = regex(COMMA);
++const rp = string(")");
++
++// The 7-arm ordered sequence (the general fuseAll arm — arity > 3).
++const LEAVES: Parser<string>[] = [lp, num, comma, num, comma, num, rp];
++
++// Projection: the map callback (identical for all three lanes). Values array is
++// the drop-undefined result of the sequence; punctuation arms return strings, so
++// out = ["rgb(", r, ",", g, ",", b, ")"] → pick numeric channels.
++export function project(vals: unknown[]): { r: number; g: number; b: number } {
++    return { r: +(vals[1] as string), g: +(vals[3] as string), b: +(vals[5] as string) };
++}
++
++export type PFn = (s: ParserState<unknown>) => ParserState<unknown>;
++
++// ─────────────────────────────────────────────────────────────────────────────
++// C — baseline: the REAL parse-that path (fuseAll general arm + map wrapper).
++// ─────────────────────────────────────────────────────────────────────────────
++const baselineParser = all(lp, num, comma, num, comma, num, rp).map(project as any);
++export const C_fn: PFn = baselineParser.parser as unknown as PFn;
++
++// ─────────────────────────────────────────────────────────────────────────────
++// B — build-time-emitted specialized closure. We EMIT source text that unrolls
++// the 7 arms calling f0..f6 BY LEXICAL NAME (never `.parser`), threading the
++// exact drop-undefined + offset-restore semantics of fuseAll, then applies the
++// bound map fn. The emitted source string is exported for the `.parser(`-grep.
++// ─────────────────────────────────────────────────────────────────────────────
++function emitSpecialized(leaves: Parser<unknown>[]): { fn: PFn; src: string } {
++    const n = leaves.length;
++    const lines: string[] = [];
++    lines.push("return function fused(state){");
++    lines.push("  var savedOffset = state.offset;");
++    lines.push("  var w = 0;");
++    lines.push("  var out = new Array(" + n + ");");
++    for (let i = 0; i < n; i++) {
++        lines.push("  f" + i + "(state);");
++        lines.push("  if (state.isError) { state.offset = savedOffset; state.isError = true; return state; }");
++        lines.push("  if (state.value !== undefined) out[w++] = state.value;");
++    }
++    lines.push("  if (w !== " + n + ") out.length = w;");
++    lines.push("  return state.ok(mapfn(out));");
++    lines.push("}");
++    const src = lines.join("\n");
++
++    // Bind the RAW leaf functions as lexical consts f0..f6 + the map fn.
++    const argNames: string[] = [];
++    const argVals: unknown[] = [];
++    for (let i = 0; i < n; i++) {
++        argNames.push("f" + i);
++        argVals.push(leaves[i].parser); // captured ONCE at emit time — no per-call .parser load
++    }
++    argNames.push("mapfn");
++    argVals.push(project);
++
++    // eslint-disable-next-line @typescript-eslint/no-implied-eval
++    const factory = new Function(...argNames, src);
++    const fn = factory(...argVals) as PFn;
++    return { fn, src };
++}
++
++const emitted = emitSpecialized(LEAVES);
++export const B_fn: PFn = emitted.fn;
++export const B_emittedSrc: string = emitted.src;
++
++// ─────────────────────────────────────────────────────────────────────────────
++// A — switch-loop VM over a msgpack-serialized bbnf_ir-shaped bytecode program.
++// Op encoding (bbnf_ir leaf shape, to_vec_named-isomorphic): each op is a
++// 2-tuple [tag, payload]. tag 0 = STRING (payload = literal), tag 1 = REGEX
++// (payload = source). The program is a fixarray of these tuples. We serialize to
++// msgpack bytes, then DECODE at load: STRING payloads kept as literals, REGEX
++// payloads re-derived as sticky RegExp. VM runs a `for` + `switch(tag)`.
++// ─────────────────────────────────────────────────────────────────────────────
++const OP_STRING = 0;
++const OP_REGEX = 1;
++
++// --- minimal msgpack (subset: nil, fixint 0..127, fixstr, str8, fixarray) ----
++function mpEncode(value: unknown, out: number[]): void {
++    if (value === null || value === undefined) { out.push(0xc0); return; }
++    if (typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= 127) {
++        out.push(value); return;
++    }
++    if (typeof value === "string") {
++        const bytes = Array.from(new TextEncoder().encode(value));
++        if (bytes.length < 32) out.push(0xa0 | bytes.length);
++        else { out.push(0xd9); out.push(bytes.length & 0xff); }
++        for (const b of bytes) out.push(b);
++        return;
++    }
++    if (Array.isArray(value)) {
++        if (value.length < 16) out.push(0x90 | value.length);
++        else throw new Error("array too long for probe encoder");
++        for (const el of value) mpEncode(el, out);
++        return;
++    }
++    throw new Error("unsupported msgpack value in probe: " + String(value));
++}
++
++function mpDecode(buf: Uint8Array, posRef: { p: number }): unknown {
++    const b = buf[posRef.p++];
++    if (b === 0xc0) return null;
++    if (b < 0x80) return b;                                   // fixint
++    if (b >= 0xa0 && b <= 0xbf) {                             // fixstr
++        const len = b & 0x1f; return readStr(buf, posRef, len);
++    }
++    if (b === 0xd9) { const len = buf[posRef.p++]; return readStr(buf, posRef, len); }
++    if (b >= 0x90 && b <= 0x9f) {                             // fixarray
++        const len = b & 0x0f; const arr: unknown[] = [];
++        for (let i = 0; i < len; i++) arr.push(mpDecode(buf, posRef));
++        return arr;
++    }
++    throw new Error("probe msgpack: unhandled byte 0x" + b.toString(16));
++}
++function readStr(buf: Uint8Array, posRef: { p: number }, len: number): string {
++    const slice = buf.subarray(posRef.p, posRef.p + len); posRef.p += len;
++    return new TextDecoder().decode(slice);
++}
++
++// Build the bytecode program from the SAME region (Rust-serialized bbnf_ir shape).
++function buildProgramBytes(): Uint8Array {
++    const program: unknown[] = [
++        [OP_STRING, "rgb("],
++        [OP_REGEX, NUM.source],
++        [OP_REGEX, COMMA.source],
++        [OP_REGEX, NUM.source],
++        [OP_REGEX, COMMA.source],
++        [OP_REGEX, NUM.source],
++        [OP_STRING, ")"],
++    ];
++    const out: number[] = [];
++    mpEncode(program, out);
++    return Uint8Array.from(out);
++}
++
++interface DecodedOp {
++    tag: number;
++    lit: string;         // STRING literal
++    litLen: number;
++    re: RegExp | null;   // sticky RegExp for REGEX
++}
++
++function decodeProgram(bytes: Uint8Array): DecodedOp[] {
++    const posRef = { p: 0 };
++    const raw = mpDecode(bytes, posRef) as unknown[];
++    return raw.map((opAny) => {
++        const op = opAny as [number, string];
++        const tag = op[0];
++        if (tag === OP_STRING) {
++            return { tag, lit: op[1], litLen: op[1].length, re: null };
++        }
++        // REGEX — re-derive as sticky
++        return { tag, lit: "", litLen: 0, re: new RegExp(op[1], "y") };
++    });
++}
++
++const PROGRAM_BYTES: Uint8Array = buildProgramBytes();
++export const A_programByteLen = PROGRAM_BYTES.length;
++const PROGRAM: DecodedOp[] = decodeProgram(PROGRAM_BYTES);
++
++// The VM: `for` + `switch(tag)` runtime dispatch (the SpanParser-refutation shape).
++function makeVm(program: DecodedOp[], mapfn: (v: unknown[]) => unknown): PFn {
++    const n = program.length;
++    return function vm(state: ParserState<unknown>): ParserState<unknown> {
++        const savedOffset = state.offset;
++        let w = 0;
++        const out: unknown[] = new Array(n);
++        const src = state.src;
++        for (let i = 0; i < n; i++) {
++            const op = program[i];
++            switch (op.tag) {
++                case OP_STRING: {
++                    if (src.startsWith(op.lit, state.offset)) {
++                        state.offset += op.litLen;
++                        state.value = op.lit;
++                    } else {
++                        state.offset = savedOffset; state.isError = true; return state;
++                    }
++                    break;
++                }
++                case OP_REGEX: {
++                    const re = op.re!;
++                    re.lastIndex = state.offset;
++                    const m = re.exec(src);
++                    if (m !== null && m.index === state.offset) {
++                        state.offset += m[0].length;
++                        state.value = m[0];
++                    } else {
++                        state.offset = savedOffset; state.isError = true; return state;
++                    }
++                    break;
++                }
++                default:
++                    state.isError = true; return state;
++            }
++            if (state.value !== undefined) out[w++] = state.value;
++        }
++        if (w !== n) out.length = w;
++        return state.ok(mapfn(out));
++    };
++}
++
++export const A_fn: PFn = makeVm(PROGRAM, project);
++
++// ─────────────────────────────────────────────────────────────────────────────
++// Common driver + corpus.
++// ─────────────────────────────────────────────────────────────────────────────
++export function drive(fn: PFn, src: string): unknown {
++    const s = new ParserState(src);
++    fn(s);
++    return s.isError ? undefined : s.value;
++}
++
++export const CORPUS = "rgb(255, 128, 0)";
+--- /dev/null	2026-07-16 09:52:12
++++ b/test/lock4-proto1-verify.test.ts	2026-07-16 09:50:45
+@@ -0,0 +1,33 @@
++import { describe, it, expect } from "vitest";
++import {
++    A_fn, B_fn, C_fn, drive, CORPUS,
++    B_emittedSrc, A_programByteLen,
++} from "./lock4-proto1-runtimes.js";
++
++describe("LOCK-4 PROTO-1 equivalence + instrumentation", () => {
++    it("all three lanes produce identical output on the corpus", () => {
++        const c = drive(C_fn, CORPUS);
++        const b = drive(B_fn, CORPUS);
++        const a = drive(A_fn, CORPUS);
++        expect(c).toEqual({ r: 255, g: 128, b: 0 });
++        expect(b).toEqual(c);
++        expect(a).toEqual(c);
++    });
++
++    it("emitted B source contains ZERO `.parser(` indirection", () => {
++        const hits = (B_emittedSrc.match(/\.parser\(/g) || []).length;
++        // eslint-disable-next-line no-console
++        console.log("[INSTRUMENT] B `.parser(` count =", hits);
++        // eslint-disable-next-line no-console
++        console.log("[INSTRUMENT] A program byte length =", A_programByteLen);
++        // eslint-disable-next-line no-console
++        console.log("[INSTRUMENT] B emitted source:\n" + B_emittedSrc);
++        expect(hits).toBe(0);
++    });
++
++    it("lanes reject a malformed input identically", () => {
++        expect(drive(C_fn, "rgb(255,)")).toBeUndefined();
++        expect(drive(B_fn, "rgb(255,)")).toBeUndefined();
++        expect(drive(A_fn, "rgb(255,)")).toBeUndefined();
++    });
++});
+--- /dev/null	2026-07-16 09:52:12
++++ b/test/lock4-proto1-sampler.test.ts	2026-07-16 09:50:45
+@@ -0,0 +1,116 @@
++// LOCK-4 PROTO-1 — interleaved paired-cold sampler (the decisive instrument).
++//
++// vitest process (the `vitest bench` family harness). We do NOT use tinybench's
++// per-function isolation — the brief mandates SAMPLE-INTERLEAVED A,B,C measured
++// adjacent in time so the three lanes share thermal/GC/load conditions and the
++// RATIO is robust. Per sample: one K-iteration batch of each lane, timed with
++// performance.now(), order alternated per sample (ABC / CBA = "both orders").
++// N>=200 samples per window, TWO load windows. Report per-lane median + MAD.
++//
++// PASS  (B) median >= 1.05x baseline (C)  AND  (A) penalty vs (B) within +/-2%.
++// FAIL  (B) cannot beat baseline  OR  (A) ties (B) within noise.
++
++import { describe, it, expect } from "vitest";
++import os from "node:os";
++import { A_fn, B_fn, C_fn, drive, CORPUS, type PFn } from "./lock4-proto1-runtimes.js";
++
++const K = 3000;         // iterations per batch (batch ~ tens of µs, above timer noise)
++const N = 240;          // samples per window (>= 200)
++const WINDOWS = 2;      // two load windows
++const WARMUP = 60_000;  // force V8 tier-up before sampling
++
++function median(xs: number[]): number {
++    const s = [...xs].sort((a, b) => a - b);
++    const m = s.length >> 1;
++    return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
++}
++function mad(xs: number[], med: number): number {
++    const dev = xs.map((x) => Math.abs(x - med));
++    return median(dev);
++}
++function pct(xs: number[], p: number): number {
++    const s = [...xs].sort((a, b) => a - b);
++    return s[Math.min(s.length - 1, Math.floor((p / 100) * s.length))];
++}
++
++function batch(fn: PFn, k: number): number {
++    let sink = 0;
++    const t0 = performance.now();
++    for (let i = 0; i < k; i++) {
++        const v = drive(fn, CORPUS) as { r: number } | undefined;
++        if (v !== undefined) sink += v.r;
++    }
++    const t1 = performance.now();
++    if (sink === -1) throw new Error("unreachable"); // defeat DCE
++    return t1 - t0;
++}
++
++interface LaneStats { med: number; mad: number; p25: number; p75: number; }
++function stats(xs: number[]): LaneStats {
++    const med = median(xs);
++    return { med, mad: mad(xs, med), p25: pct(xs, 25), p75: pct(xs, 75) };
++}
++
++describe("LOCK-4 PROTO-1 interleaved paired-cold sampler", () => {
++    it("measures A/B/C and adjudicates PASS/FAIL", () => {
++        // Warmup — tier every lane to the optimizing compiler.
++        batch(A_fn, WARMUP); batch(B_fn, WARMUP); batch(C_fn, WARMUP);
++
++        const results: Array<{
++            window: number; load1: number;
++            A: LaneStats; B: LaneStats; C: LaneStats;
++            ratios: Record<string, number>;
++        }> = [];
++
++        for (let win = 0; win < WINDOWS; win++) {
++            const sA: number[] = [], sB: number[] = [], sC: number[] = [];
++            const load1Start = os.loadavg()[0];
++            for (let s = 0; s < N; s++) {
++                if ((s & 1) === 0) {
++                    // order ABC
++                    sA.push(batch(A_fn, K)); sB.push(batch(B_fn, K)); sC.push(batch(C_fn, K));
++                } else {
++                    // order CBA
++                    sC.push(batch(C_fn, K)); sB.push(batch(B_fn, K)); sA.push(batch(A_fn, K));
++                }
++            }
++            const A = stats(sA), B = stats(sB), C = stats(sC);
++            const ratios = {
++                "B_speedup_over_C": C.med / B.med,   // >1 => B faster than baseline
++                "A_vs_B": A.med / B.med,             // >1 => A slower than B (penalty)
++                "A_vs_C": A.med / C.med,
++                "C_vs_B": C.med / B.med,
++            };
++            results.push({ window: win, load1: load1Start, A, B, C, ratios });
++        }
++
++        // Pooled across windows (medians of per-window medians for stability).
++        const poolMed = (sel: (r: typeof results[number]) => number) =>
++            median(results.map(sel));
++        const B_med = poolMed((r) => r.B.med);
++        const C_med = poolMed((r) => r.C.med);
++        const A_med = poolMed((r) => r.A.med);
++        const B_speedup = C_med / B_med;
++        const A_penalty_vs_B = A_med / B_med;
++        const A_penalty_vs_C = A_med / C_med;
++
++        const out = {
++            config: { K, N, WINDOWS, WARMUP, corpus: CORPUS, node: process.version,
++                      cpus: os.cpus().length, cpu: os.cpus()[0]?.model },
++            loadavg_end: os.loadavg(),
++            windows: results,
++            pooled: {
++                A_med_ms: A_med, B_med_ms: B_med, C_med_ms: C_med,
++                B_speedup_over_C: B_speedup,
++                A_penalty_vs_B: A_penalty_vs_B,
++                A_penalty_vs_C: A_penalty_vs_C,
++            },
++        };
++        // eslint-disable-next-line no-console
++        console.log("[PROTO1-RESULT]" + JSON.stringify(out));
++
++        // The lanes stay correct throughout.
++        expect(drive(B_fn, CORPUS)).toEqual({ r: 255, g: 128, b: 0 });
++        expect(B_speedup).toBeGreaterThan(0);
++    }, 120_000);
++});

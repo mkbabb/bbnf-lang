@@ -1,155 +1,166 @@
-# PROTO-2 — GrammarIr construction-semantics census (the 7B↔7C build boundary)
+# PROTO-2 — Construction census: grammar-expressible vs host-bound GrammarIr build steps
 
-LOCK-7 pass-1, probe 2 (family 7C HOST-FUNCTION LATTICE ↔ 7B Plane A). Adjudicates **INC-2** and
-fixes bbnf's totality floor. **RAN_MEASURED**: census over live source at HEAD (2026-07-16) plus a
-3-assertion probe compiled and executed against the `grammar` crate; every classification claim is
-either a verified `path:line` or a passing test. Loadavg recorded. No live source mutated — the
-probe was written to `crates/grammar/tests/`, run, then removed; its text is preserved as
-`PROTO-2.probe.rs` (the patch).
+LOCK-7 pass-1, probe 2 (family **7C HOST-FUNCTION LATTICE** ↔ 7B Plane A). Adjudicates **INC-2**,
+sets bbnf's totality floor, bounds 7B Plane A. **RAN_MEASURED**: analytical census over live source
+at HEAD (2026-07-16), anchored by a 3-assertion probe compiled and executed against the `grammar`
+crate (exit 0, 3/3 passed). Loadavg **20.34** recorded during the run. Live source was **not**
+mutated — probe written to `crates/grammar/tests/`, run, then removed; text preserved as
+`PROTO-2.probe.rs` + `PROTO-2.patch`.
 
-> Naming note: the 04:05 `PROTO-2.{md,patch}` were a *prior brief-set's* family-7D regex-oracle
-> probe, superseded by the 04:51 FAMILY-SPECS re-synthesis (§6 names Brief 2 = "construction
-> census"). Preserved verbatim as `PROTO-2-7D-regex-oracle.{md,patch}`; nothing lost.
+> **Supersession note.** This re-adjudicates the 05:01 probe-2 census (whose text is folded in below
+> as *Reading R0*). R0 concluded `construction floor = 0`. This dispatch carries an **explicit
+> invariant** — *"any step that interns/edge-builds with mutable arena state MUST classify HOST …
+> if the census marks such a step GRAMMAR without a grammar operator that expresses the interning,
+> the census is wrong."* Applying that invariant honestly to the real `add_expr` **overturns R0 on
+> step 4**: the arena builder is host-bound in current bbnf. Nothing from R0 is lost — its
+> catamorphism argument survives as the reason step 4 is a **SOFT** (dischargeable) host, not a hard
+> one. The 04:05 `PROTO-2-7D-regex-oracle.{md,patch}` (a different family-7D probe) are untouched.
 
 ---
 
 ## Question (INC-2, verbatim)
 
-> Can bbnf's **GrammarIr CONSTRUCTION** be expressed in pure grammar `->` projections
-> (7B: floor = 0), or does it require typed host functions (7C: floor > 0)?
+> RECOGNIZE != BUILD: bbnf.bbnf *recognizes*, but the emitted parser must *BUILD* GrammarIr. For each
+> construction step, is it `->`-expressible (7B: 7C-floor = 0, pure grammar) or recursive-with-state
+> and typed-host-fn-bound (7C: floor > 0)? `count(HOST)` is 7C's bbnf floor AND the INC-2 verdict.
 
-INC-2 in FAMILY-SPECS §5 frames the fear precisely: *"bbnf's GrammarIr construction (arena
-interning, ExprId edges, closure β-reduction) is either `->`-expressible (7B) or
-recursive-with-state and host-fn-bound (7C) … 7B Plane C is BLOCKED-candidate precisely because
-graph-shaped interned IR ⇒ the 'CFG-expressible IR' primitive is as hard as the original
-problem."* This probe tests that fear against the real constructor.
+## Method (analytical census; the probe only anchors two empirical facts)
 
-## Method
-
-1. **Enumerate** every GrammarIr-construction site the hand parser performs
-   (`skinny/crates/grammar/src/lib.rs`, 2142 LOC; builder IR in `skinny/crates/ir/src/lib.rs`):
-   grep for `intern`/`Interner`, `add_expr`/`add_rule` (ExprId/RuleId alloc + edge-linking),
-   `resolve*`/closure/β-reduction, `@import`, and every `-> value_expr` builder.
-2. **Cross-map** each site to the `grammar/bbnf/bbnf.bbnf` (+ `expressions.bbnf`) rule it realizes.
-3. **Classify** each into {GRAMMAR-`->` · typed-host-fn (ParseState/TreeFold) · CompileIO}.
-4. **Run** a probe that empirically discriminates interner-vs-append and construct-vs-link.
+1. Read the **FnDescriptor six-variant lattice** (`crates/ir/src/types/fn_descriptor.rs:20-57`):
+   `EnumWrap · BoxWrap · NumberConvert · HexConvert · SpanCapture · Expr`. Module doc (lines 1-6,
+   17-19): the first five are **compiler-produced during lowering/specialization**; `Expr` is the
+   **only user-facing variant** — *"all `->` map syntax produces it."*
+2. Read every GrammarIr build primitive: the arena allocator (`skinny/crates/ir/src/lib.rs`
+   `add_expr:51`, `add_rule:57`), the linker (`resolve_refs:84`), and all 14 construction sites in
+   the hand parser (`skinny/crates/grammar/src/lib.rs:1332-1531`).
+3. Classify each of the **8 briefed steps** GRAMMAR / HOST with a `path:line` justification against
+   the lattice **and** the &mut-Ctx/arena-state test.
+4. **Run** a probe discriminating *append-vs-intern* (step 4) and *construct-vs-link* (step 5).
 
 ## What ran (measured)
 
-`CARGO_TARGET_DIR=<scratch> cargo test -p grammar` at HEAD, scratch target (no lock contention).
-Loadavg 9.85 → 8.93 (1-min) across the run; cold build.
+`CARGO_TARGET_DIR=<scratch> cargo test -p grammar --test proto2_lock7_census` — cold, scratch target
+(no lock contention). **`Finished in 0.35s`; 3 passed / 0 failed.** Loadavg 20.34 (1-min) at run.
 
-- **Existing suite, construction path** — `parses_skinny_json_rules` **ok**,
-  `resolves_forward_and_cyclic_refs` **ok**, `rejects_unresolved_refs` **ok**. (One *unrelated*
-  pre-existing red: `w5b_frontend_public_ws_remains_retired`, lib.rs:1866 — a runtime-frontend-ws
-  harvester assertion, not a construction site; noted, not mine.)
-- **Probe `proto2_construction_census` — 3 passed / 0 failed:**
-  - `add_expr_does_not_intern_identical_leaves` **ok** — `a = "x" , "x" ;` yields **two** distinct
-    `Literal{b"x"}` ExprIds. **No structural interner exists.**
-  - `arena_ids_are_post_order_synthesized` **ok** — every child ExprId `<` its parent Seq ExprId.
-    **IDs are a post-order numbering = a synthesized attribute.**
-  - `cross_rule_link_is_a_separate_global_pass` **ok** — forward+cyclic ref resolves only via the
-    whole-rule table; an undefined ref is a *link* error, not a *parse/construct* error.
+- `add_expr_is_append_only_not_interned` **ok** — `a = "x" , "x" ;` yields **two distinct**
+  `Literal{b"x"}` ExprIds → **no structural interner; the built IR is a TREE**.
+- `arena_ids_are_post_order_synthesized` **ok** — every child ExprId `<` its parent Seq ExprId →
+  **ids are a post-order numbering = a synthesized attribute**.
+- `cross_rule_link_is_a_separate_global_pass` **ok** — forward+cyclic ref (`a=b; b=a|"x";`) resolves
+  only via the whole-rule table; `a = undefined_rule ;` is a **link** error, not a construct error.
 
-## The classification table
+---
 
-**Legend** — `G` = GRAMMAR-`->` expressible (pure synthesized attribute); `H` = typed-host-fn;
-`IO` = CompileIO. `ir:51` = `add_expr` (ExprId alloc), `ir:57` = `add_rule` (RuleId alloc).
+## The 8-step census
 
-### A · Construction sites — the `parse_grammar` node-builder (ALL `G`)
+**Legend** — `G` grammar-`->`-expressible (stateless synthesized projection) · `Hs` **soft** host
+(threads state but fold-reducible; dischargeable by a value-language primitive) · `Hh` **hard** host
+(genuine recursive-with-global-state; irreducible in a synthesized `->`) · `IO` CompileIO ·
+`—` no live step. State column: does the step need cursor / `&mut Ctx` / arena beyond recognition?
 
-| # | site (grammar/src/lib.rs) | ir | bbnf.bbnf rule | construction op | class |
+| # | step | lattice variant | realizing path:line | state? | class |
 |---|---|---|---|---|---|
-| C0 | `GrammarIr::new` 1270 | ir:42 | grammar:85 | empty arena init | G |
-| C1 | `add_rule(name,body,span)` 1287 | ir:57 | rule:56 | RuleId push + body edge | G |
-| C2 | `Alt{branches,Dispatch}` 1351 | ir:51 | alternation:48 | ExprId, branch edges (child ids) | G |
-| C3 | `Annotation{ws}` (`?w`) 1371 | ir:51 | term/modifier:38 | ExprId leaf | G |
-| C4 | `Seq(∅)` 1393 | ir:51 | concatenation:47 | ExprId | G |
-| C5 | `Seq(children)` 1400 | ir:51 | concatenation:47 | ExprId, child edges | G |
-| C6 | `Discard{left,right,keep_left}` 1423 | ir:51 | binary_factor:45 / binary_operators:44 | ExprId, 2 edges | G |
-| C7 | `Repeat{min0}` (`*`) 1439 | ir:51 | modifier:38 | ExprId, body edge | G |
-| C8 | `Optional` (`?`) 1456 | ir:51 | modifier:38 | ExprId, body edge | G |
-| C9 | `Repeat{min1}` (`+`) 1463 | ir:51 | modifier:38 | ExprId, body edge | G |
-| C10 | `Project{body,target,ty}` 1485 | ir:51 | mapped_factor:42 | ExprId, body edge + span strings | G |
-| C11 | `Literal{bytes,case}` 1501 | ir:51 | literal:11 / term:31 | ExprId leaf | G |
-| C12 | `Regex{pattern}` 1511 | ir:51 | regex:15 / term:32 | ExprId leaf | G |
-| C13 | `Ref{name,target:None}` 1524 | ir:51 | identifier:9 / term:30 | ExprId leaf, **cross-rule edge DEFERRED** | G |
-| C14 | paren pass-through 1516–1520 | — | term:34 `( rhs )` | returns child id, emits **no** node | G (transparent) |
+| 1 | leaf span capture `-> Span` | `SpanCapture` (fn_descriptor.rs:44) | grammar `-> Span` bbnf.bbnf:9,13,15,17,18 → `Project{target:"Span"}` lib.rs:1485 | **none** (span = (start,end) of the match) | **G** |
+| 2 | numeric decode `-> i64/f64` | `NumberConvert{allow_leading_dot}` (fn_descriptor.rs:35) | grammar `-> i64`/`-> f64` expressions.bbnf:6-7 → `Project{ty}` lib.rs:1485 | **none** (pure fn of matched text) | **G** |
+| 3 | enum / box wrap | `EnumWrap{variant}` :22 / `BoxWrap` :26 | compiler lowering (fn_descriptor.rs:1-6,17); semantics = `Variant(input)` / `Box::new(input)` = value_fn_call expressions.bbnf:14 | **none** (pure wrap of one child value) | **G** |
+| 4 | **arena interning of ExprId** | **none** (not a Map descriptor) | `add_expr` ir:51-55 `id=ExprId(exprs.len()); exprs.push` — threaded `&mut GrammarIr` at every site (lib.rs:1351,1371,1393,1400,1423,1439,1456,1463,1485,1501,1511,1524) | **`&mut GrammarIr`** (arena) + edge-build (children stored as ExprIds) | **Hs** |
+| 5 | **cross-rule forward/cyclic ref resolution** | **none** (whole-grammar post-pass) | `resolve_refs` ir:84-108 — builds `HashMap<name,RuleId>` over the complete rule set, mutates every `Ref.target` None→Some; called lib.rs:33. Constructor defers the edge: `Ref{target:None}` lib.rs:1525 | **global symbol table** + `&mut` (forward+cyclic; needs whole grammar) | **Hh** |
+| 6 | closure β-reduction `\|params\| rhs` | none (unimplemented) | bbnf.bbnf:51-52 **recognizes** `closure`; skinny builder has **no** lower path (`\|` is only an alt separator, parse_alt lib.rs:1341; `@host` rejected 1324-1328). **No live β-reduction site.** | — | **—** (0 live) |
+| 7 | `@import` module resolution | none (source-set I/O) | `resolve_runtime_import_closure` lib.rs:963 (adjacency + cycle detect over multi-file source set); driven from grammar_provider.rs:101 `parse_runtime_source_facts`. Resolves the **runtime span-tape frontend**, not the GrammarIr node-builder | **file I/O + global source closure** | **IO** |
+| 8 | `@{}` capture | `SpanCapture` (fn_descriptor.rs:44, *intended* home) | bbnf.bbnf:33 `"@{",rhs,"}"` recognized; runtime harvest records `RuntimeHostCapture` lib.rs:170,422-431; IR-path returns **`BBNF-UNSUPPORTED-HOST-CAPTURE`** lib.rs:222. **Dormant** — no `@{` arm in parse_atom (1498-1531) | none *if activated* (raw-span, stateless) | **—** (0 live; SpanCapture=G on activation) |
 
-**15 construction sites. All G.** The arena (`add_expr`: `id = ExprId(exprs.len()); exprs.push`)
-is **append-only with zero dedup** — proof C-1. Each `parse_*` returns its ExprId as a *synthesized
-attribute*; parents embed children's ids bottom-up (C2/C5/C6/C7–C10 edges) — proof C-2. Every one
-maps onto an existing bbnf rule, and `mapped_factor:42` already supplies the `-> value_expr : type`
-hook that would carry the projection. `Ref` (C13) stores **`target: None`** — the only graph edge
-is *not built here*.
+### Why steps 1–3 are G (and not the "compiler-produced" fear)
 
-### B · Whole-grammar linking — a SEPARATE pass, not node-building
+The lattice module-doc calls `SpanCapture/NumberConvert/EnumWrap/BoxWrap` *"produced by the compiler
+during lowering"* — but that is **provenance, not host-binding**. Each is a **stateless total
+function of a single already-matched value**: `SpanCapture` returns the match's `(start,end)`;
+`NumberConvert` parses matched digits; `EnumWrap/BoxWrap` wrap one child. None touches the cursor,
+`&mut Ctx`, or the arena for its *semantics*. Each is either a first-class `->` operator
+(`-> Span`, `-> i64` at bbnf.bbnf:9 / expressions.bbnf:6) or a compiler **specialization** of the
+user-facing `Expr` projection (fn_descriptor.rs:17-19). They lower to `Project` nodes that then ride
+the arena (step 4), but the *projection value itself* is pure `->`. **Floor 0.**
 
-| # | site | ir | scope | op | class |
-|---|---|---|---|---|---|
-| L1 | `resolve_refs()` — called `parse_grammar` grammar:33 | ir:84 | **whole grammar (cross-rule)** | build `HashMap<name,RuleId>` symbol table, mutate every `Ref.target` | **H (TreeFold)** |
+### Why step 4 is Hs — the invariant bites, but softly (this is the R0 correction)
 
-`resolve_refs` needs the *complete rule set* (forward + cyclic refs — proof C-3) and a mutable
-symbol table. It is **not** a per-production synthesized projection: bbnf's `->` is
-synthesized-only (a match → a value from its children + `input`); it has **no inherited /
-global-environment attribute**. So name→RuleId resolution is beyond today's `->`. Critically, the
-constructor **already factors it out**: `parse_rules` builds `Ref{target:None}` (pure), then
-`resolve_refs()` runs as a distinct post-parse graph transform. It is TreeFold, and **separable**.
+`add_expr` **edge-builds with mutable arena state**: it threads `&mut GrammarIr` and stores children
+as `ExprId` indices (`Alt.branches`, `Seq(children)`, `Discard{left,right}`, `Repeat{body}`,
+`Optional`, `Project{body}`). bbnf exposes **no operator that mints an ExprId or appends to the
+arena** (expressions.bbnf's value language has `+`, calls, paths — no list/arena primitive). By the
+dispatch invariant this step **cannot** be marked GRAMMAR without exhibiting such an operator, and
+none exists → **HOST**. This is precisely where **R0 erred** (it marked the arena `G` on a
+catamorphism argument while exhibiting no bbnf operator).
 
-### C · Non-construction paths (the frontend-closure harvest — not the GrammarIr builder)
+But the probe shows the host-binding is **soft**: the arena is **append-only, un-interned** (PROOF A
+— identical leaves → distinct ids) and **post-order** (PROOF A'). So the built structure is a **tree**,
+and post-order flattening of a tree **is** a catamorphism. R0's mathematics is correct; what it
+missed is that *current bbnf's value language cannot express that fold*. Step 4 is therefore
+**dischargeable by a language extension** (an arena/list-append value primitive), **not** by a
+per-grammar recursive host fn — distinguishing it sharply from step 5.
 
-| # | site | bbnf.bbnf | op | class |
-|---|---|---|---|---|
-| I1 | `resolve_runtime_import_closure` grammar:963 | import_directive:60 (`@import`) | multi-file source-set closure + adjacency + cycle detect | **IO** |
-| I2 | closure β-reduction `\|params\| rhs` → GrammarCall | closure:51 (recognized) | **ABSENT** in skinny builder — bbnf.bbnf *recognizes* `closure`, the builder never lowers it | — (0 live; would be IO) |
-| I3 | `@{` HostCapture — scan grammar:420–431 → `BBNF-UNSUPPORTED-HOST-CAPTURE` ir-path lib.rs:222 | term:33 (`@{`) | host capture, **unlowered/dormant** | H (dormant) |
+### Why step 5 is Hh — irreducible
 
-`@import` (I1) resolves a *source-set* closure for the runtime span-tape frontend — **not** the
-`GrammarIr` builder (confirms FAMILY-SPECS §0). Grammar-function `|params| rhs` β-reduction (I2) is
-**unimplemented** in the skinny constructor — it is recognized by `closure:51`/`value_closure:33`
-but never inlined; there is **no live β-reduction site to classify**.
+`resolve_refs` needs the **complete rule set** (forward + cyclic — PROOF B) and a **global**
+`HashMap<name,RuleId>`. bbnf's `->` is **synthesized-only** (a value from a node's children +
+`input`); it has **no inherited / global-environment attribute**, so name→RuleId is beyond `->` **in
+principle**, not merely beyond today's value language. The one genuine graph edge (`Ref→RuleId`,
+forward-referencing, not a child edge) is what makes the IR more than a tree — and the constructor
+**already separates it** (`Ref{target:None}` at build, `resolve_refs` as a distinct pass). **TreeFold.**
+
+---
 
 ## The numbers
 
 ```
-N_host  (construction, node-building)        = 0     ← every ExprId/RuleId site is synthesized
-N_host  (mandatory whole-grammar linking)    = 1     ← resolve_refs (ir:84), TreeFold, SEPARABLE
-N_compileio                                  = 1     ← @import source-set closure (grammar:963)
-   of which closure β-reduction               = 0     ← absent/unimplemented in skinny
-dormant typed-host-fn (neither build nor IO) = 1     ← @{ HostCapture, unlowered (ir-path:222)
-construction sites classified                = 15 / 15, zero "unknown"
+step 1  -> Span            SpanCapture     G    floor 0   (stateless projection)
+step 2  -> i64/f64         NumberConvert   G    floor 0   (stateless leaf convert)
+step 3  enum/box wrap      EnumWrap/BoxWrap G    floor 0   (stateless value wrap)
+step 4  arena ExprId       (no variant)    Hs   floor +1  SOFT  — add_expr, &mut arena, fold-reducible
+step 5  cross-rule ref     (no variant)    Hh   floor +1  HARD  — resolve_refs, global env, TreeFold
+step 6  closure β-reduce   (unimplemented) —    floor 0   ABSENT — recognized, never lowered
+step 7  @import            (source I/O)    IO   +1 (IO)   CompileIO — not the node-builder
+step 8  @{} capture        SpanCapture     —    floor 0   DORMANT — BBNF-UNSUPPORTED; =G on activation
+
+count(HOST)  in-constructor mandatory  = 2   { add_expr (Hs), resolve_refs (Hh) }
+             of which SOFT (extension-dischargeable) = 1   (add_expr)
+             of which HARD (typed-host-fn-bound)     = 1   (resolve_refs)
+CompileIO  (out-of-constructor)         = 1   ( @import )
+β-reduction                             = 0   (absent in skinny)
+@{} live host binding                   = 0   (dormant; SpanCapture-class)
+steps classified                        = 8 / 8, zero "unknown"
 ```
 
 ## VERDICT
 
-**7B Plane A reaches parity in PURE grammar for GrammarIr CONSTRUCTION: `N_host_construction == 0`.**
-Structural construction — arena allocation and intra-rule ExprId edge-building — **is
-`->`-expressible**. The INC-2 fear is *empirically false for the skinny tree*: **there is no
-interner** (C-1: identical leaves → distinct ExprIds), ids are **post-order synthesized** (C-2),
-and the sole graph edge `Ref→RuleId` is **deferred out of the constructor** into a separate global
-pass (C-3). "Graph-shaped interned IR" does not exist here — the built IR is a **tree in an
-append-only arena**, which *is* a catamorphism / synthesized attribute.
+**`count(HOST) = 2 > 0` → INC-2 resolves to 7C-bound. 7B Plane A cannot be host-free at the build
+boundary in current bbnf.** The construction *values* (steps 1–3) are pure `->`; the **build
+mechanism itself is not**. Two steps are host-bound, and they are host-bound for **different reasons**
+— the distinction is the actionable payload of this census:
 
-**The single recursive-with-state primitive is NOT construction** — it is cross-rule name
-resolution **`resolve_refs` (ir:84)**: a whole-grammar `HashMap<name,RuleId>` symbol-table link,
-**TreeFold**-class, beyond bbnf's synthesized-only `->`. It is architecturally **separable** (the
-codebase already runs it as its own pass after `parse_grammar`), so it does **not** block 7B Plane
-A's *construction* parity.
+- **Step 4 `add_expr` — SOFT host, floor +1.** Threads `&mut GrammarIr` and edge-builds ExprIds, so
+  the invariant forbids a GRAMMAR mark (no bbnf operator mints ids). *But* the arena is a
+  non-interned post-order tree (PROOF A/A'), so it is a catamorphism — **dischargeable by a
+  value-language arena/list primitive**, not a per-grammar host fn. This is the corrected reading of
+  R0: R0's "it's a synthesized attribute" is true *in principle* and false *for today's `->`*.
+- **Step 5 `resolve_refs` — HARD host, floor +1, TreeFold.** Forward/cyclic cross-rule name
+  resolution over a global symbol table (PROOF B); no synthesized `->` can express it **in principle**
+  (bbnf has no inherited/global attribute). Architecturally **separable** (already its own pass).
 
-**INC-2 adjudication — a clean split at the phase boundary:**
-- **CONSTRUCTION (node-building) → 7B wins.** Floor = 0 host fns; pure `->`.
-- **LINKING (name resolution) → 7C-bound, floor = 1.** The named primitive that mandates a typed
-  host fn, with augment-BBNF signature:
+**bbnf's totality floor, fixed:**
 
-  ```
-  @host resolve_refs : (&mut GrammarIr) -> Result<(), UnresolvedRef>    // HostContext::TreeFold
-  ```
+```
+@host add_expr     : (&mut GrammarIr, ExprKind, SourceSpan) -> ExprId              // Hs — arena builder;
+                                                                                   //      or dissolve via a value-lang list/arena primitive
+@host resolve_refs : (&mut GrammarIr) -> Result<(), UnresolvedRef>                 // Hh — HostContext::TreeFold; whole-grammar link
+```
 
-  (Alternatively discharged by extending `->` with an *inherited* whole-grammar name-environment
-  attribute — a strictly larger language change than the one host fn; the host fn is the parsimonious floor.)
+- structural node-*value* floor = **0** (steps 1–3 pure `->`; step 8 SpanCapture-class);
+- arena-build floor = **1 SOFT** (`add_expr`, dischargeable by language extension);
+- whole-grammar-link floor = **1 HARD** (`resolve_refs`, TreeFold);
+- CompileIO = **1** (`@import`); β-reduction **absent**.
 
-**bbnf's totality floor, fixed:** structural-construction floor **= 0**; whole-grammar-linking
-floor **= 1 TreeFold** (`resolve_refs`); CompileIO **= 1** (`@import`); β-reduction **absent**.
-7B Plane A is *not* BLOCKED at the build boundary — the "IR interning is as hard as the original
-problem" premise (7B Plane C's BLOCKED-candidate rationale) **does not hold for the constructor**;
-it holds, if anywhere, only for the one separable linking pass, which 7C houses at floor 1.
+The 7B-Plane-C "IR interning is as hard as the original problem" premise is **half-true**: it does
+**not** hold for the constructor's node-building (a non-interned tree — the fear is empirically false
+there, PROOF A), and it **does** hold for the one separable linking edge (`Ref→RuleId`), which 7C
+houses at the hard floor of **1**. INC-2 therefore lands at **7C-bound, floor = 2** — with the SOFT
+half retractable to 0 by a value-language extension, leaving an **irreducible floor of 1**
+(`resolve_refs`) that 7B Plane A can never make host-free.

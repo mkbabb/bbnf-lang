@@ -1,0 +1,132 @@
+// Type annotations for value expressions and @host return types.
+// Includes primitive types and arbitrary identifiers (for IrNode, etc.).
+type_name = "u8" | "u16" | "u32" | "u64"
+          | "i32" | "i64"
+          | "f32" | "f64"
+          | "bool" | "usize"
+          | /[_a-zA-Z][_a-zA-Z0-9]*/ ;
+
+// Value expressions — the right side of -> in map syntax.
+
+
+// Atoms
+int_lit = /0[xX][0-9a-fA-F]+\w*|[0-9]+\w*/ -> i64 ;
+float_lit = /[0-9]*\.[0-9]+([eE][+-]?[0-9]+)?\w*/ -> f64 ;
+bool_lit = "true" | "false" ;
+string_lit = ( "\"" , /(\\.|[^"\\])*/ , "\"" ) -> Span ;
+
+value_ident = /[_a-zA-Z][_a-zA-Z0-9]*/ ;
+value_path = value_ident , ( "::" , value_ident ) * ;
+value_input = "input" , ( "." , value_ident ) * ;
+value_fn_call = value_path , "(" , ( value_expr , ( "," ?w , value_expr ) * ) ? , ")" ;
+
+value_atom = int_lit | float_lit | bool_lit | string_lit
+           | value_fn_call | value_input | value_path
+           | "(" , value_expr ?w , ")" ;
+
+// Operators (precedence climbing)
+mul_op = "*" | "/" | "%" ;
+add_op = "+" | "-" ;
+cmp_op = "==" | "!=" | "<=" | ">=" | "<" | ">" ;
+
+value_unary = ( "!" | "-" ) , value_atom | value_atom ;
+value_mul = value_unary , ( mul_op ?w , value_unary ) * ;
+value_add = value_mul , ( add_op ?w , value_mul ) * ;
+value_cmp = value_add , ( cmp_op ?w , value_add ) * ;
+value_and = value_cmp , ( "&&" ?w , value_cmp ) * ;
+value_or = value_and , ( "||" ?w , value_and ) * ;
+
+// Top level: closure or bare expression
+value_closure = "|" , value_ident , ( "," ?w , value_ident ) * , "|" , value_expr ;
+value_expr = value_closure | value_or ;
+
+// Type annotation
+type_annotation = ":" ?w , type_name ;
+
+// BBNF — Better Backus-Naur Form
+// Self-hosted grammar definition.
+
+
+// ─── Terminals ──────────────────────────────────────────────────────────────
+
+identifier = /[_a-zA-Z][_a-zA-Z0-9-]*/ -> Span ;
+
+literal = ( "\"" , /(\\.|[^"\\])*/  , "\""
+        | "'"  , /(\\.|[^'\\])*/  , "'"
+        | "`"  , /(\\.|[^`\\])*/  , "`" ) -> Span ;
+
+regex = ( "/" , /(\\.|[^\/])+/ , "/" ) -> Span ;
+
+big_comment = ( "/*" , /[^\*]*/ , "*/" ) ?w -> Span ;
+comment = ( "//" , /.*/ ) ?w -> Span ;
+
+// ─── Expressions ────────────────────────────────────────────────────────────
+
+lhs = identifier ;
+
+// Grammar function call args: each arg is a single binary_factor
+// (alternation of binary_factors, no comma-concatenation).
+// This avoids ambiguity between call arg commas and concatenation commas.
+call_arg = ( binary_factor ?w , "|" ? ) + ;
+
+term = "ε" | "epsilon"
+     | identifier , ( "(" , call_arg ?w , ( "," ?w , call_arg ?w ) * , ")" ) ?
+     | literal
+     | regex
+     | "@{" , rhs ?w , "}"
+     | "(" , rhs ?w , ")"
+     | "[" , rhs ?w , "]"
+     | "{" , rhs ?w , "}" ;
+
+modifier = "?w" | "?" | "*" | "+" ;
+factor = big_comment ? , term ?w , modifier ? , big_comment ? ;
+
+// Map syntax: factor -> value_expr : type
+mapped_factor = factor , ( "->" ?w , ( value_expr , type_annotation ? ) ) ? ;
+
+binary_operators = "<<" | ">>" | "-" ;
+binary_factor = mapped_factor , ( binary_operators ?w , mapped_factor ) * ;
+
+concatenation = ( binary_factor ?w , "," ? ) + ;
+alternation = ( concatenation ?w , "|" ? ) + ;
+
+// Closures at rule level: |params| rhs (grammar functions)
+closure = "|" , identifier , ( "," ?w , identifier ) * , "|" ?w , rhs ;
+rhs = closure | alternation ;
+
+// ─── Rules and Directives ───────────────────────────────────────────────────
+
+rule = lhs , "=" ?w , rhs ?w , ( ";" | "." ) ;
+
+import_path = "\"" , /(\\.|[^"\\])*/ , "\"" ;
+import_items = "{" ?w , ( identifier , ( "," ?w , identifier ) * ) ?w , "}" ;
+import_directive = "@import" ?w , (
+      import_items ?w , "from" ?w , import_path
+    | import_path
+) ?w , ( ";" | "." ) ? ;
+
+recover_directive = "@recover" ?w , identifier ?w , rhs ?w , ( ";" | "." ) ? ;
+
+pretty_hint = identifier , ( "(" , /[^)]*/ , ")" ) ? ;
+pretty_directive = "@pretty" ?w , ( "*" | identifier ) ?w , ( pretty_hint ?w ) + , ( ";" | "." ) ? ;
+
+ws_directive = "@ws" ?w , regex ?w , ( ";" | "." ) ? ;
+token_directive = "@token" ?w , identifier ?w , ( ";" | "." ) ? ;
+debug_directive = "@debug" ?w , ( "*" | identifier ) ?w , ( ";" | "." ) ? ;
+host_directive = "@host" ?w , identifier ?w , ( ":" ?w , type_name ?w ) ? , ( ";" | "." ) ? ;
+
+directive = import_directive
+          | recover_directive
+          | pretty_directive
+          | ws_directive
+          | token_directive
+          | debug_directive
+          | host_directive ;
+
+// Grammar: top-level items in any order.
+grammar_item = comment | big_comment | directive | rule ;
+grammar = ( grammar_item ?w ) * ;
+
+@pretty grammar block ;
+@pretty rule group ;
+@pretty alternation group ;

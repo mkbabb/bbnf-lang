@@ -1,276 +1,218 @@
-# LOCK-3 · Family 3B — SINGLE-IR-MULTIPASS (the LLVM shape)
+# LOCK-3 / Family 3B — SINGLE-IR-MULTIPASS (the LLVM shape)
 
-**Thesis.** One rich node arena, refined in place by annotating passes; `BackendShape`,
-tape/emit intent, recognizers, cost, and projected types are *attributes keyed by node id*,
-never a second tree. The generator's structural crossings collapse from three (source→AST→
-`GrammarIr`→`BackendIr`→Rust) to **two** — `source → arena` at parse, `arena → Rust` at emit —
-with every analysis and lowering decision living *between*, as side-tables, not as a rebuild.
-This is the fewest transpositions that suffice, and it is the only LOCK-3 family under which the
-three standing laws (no value-discard, no silent epsilon, preserve rich AST) hold *by
-construction* rather than by vigilance.
+The IR tower is one rich arena refined in place by annotating passes. Backend selection,
+tape kind, residual masks, and types are attribute columns on the ONE grammar arena — not a
+second IR. The frontend→backend transposition is deleted; the emitter reads
+`(GrammarIr, AttributeStore)` directly. Two transpositions survive (parse: source→arena;
+emit: arena+attrs→Rust), zero middle IR rebuilds.
 
----
+## 1. The finding that founds the family
 
-## 1. The tower at HEAD, and where it multiplies representations
+Skinny already has the substrate for single-IR and does not use it. `GrammarIr`
+(`ir/src/lib.rs:33-39`) is a **dense flat arena**: `exprs: Vec<Expr>` addressed by
+`ExprId(usize)` (`:19`), `rules: Vec<Rule>` by `RuleId(usize)` (`:16`), appended via
+`add_expr`/`add_rule` (`:51`,`:57`). This is the exact shape LLVM/MLIR/Cranelift use for the
+one-IR-many-passes model. The pass outputs are ALREADY side tables keyed by that arena:
+`LayoutFacts` (`passes/src/lib.rs:90-100`) holds `node_types: HashMap<ExprId,Type>`,
+`rule_types`, `backend_shape: HashMap<RuleId,BackendShape>`, `cost_facts`,
+`per_grammar_policy`, `same_substrate_union` — a proto-attribute-store, one map per pass
+output. `nullability` (`ir/src/lib.rs:320`) already returns a `Vec<bool>` column indexed by
+`ExprId.0`. The annotation architecture is 80% present.
 
-The generator today runs three distinct node universes with hard transpositions between them:
-
-- **AST → `GrammarIr`** (arena): `GrammarIr { rules: Vec<Rule>, exprs: Vec<Expr> }`,
-  `ir/src/lib.rs:33-39`; nodes addressed by `ExprId(usize)` (`:19`), 10-variant `ExprKind`
-  (`:233-271`). This is already a flat SoA arena — the right substrate. Crucially, analyses over
-  it *already use the attribute pattern*: `nullability(&GrammarIr) -> Vec<bool>` is a side-table
-  indexed by `ExprId` computed by a `Changed`-style fixpoint (`ir/src/lib.rs:320-349`). That
-  function is the existing proof-of-shape for the whole family.
-
-- **`GrammarIr` → `BackendIr`** (a *second* recursive tree): `BackendIr`/`BackendExpr`/
-  `BackendRule`, `ir/src/lib.rs:351-413`. This enum is `Box`-recursive (not arena-indexed), so it
-  **loses `ExprId` identity and the `SourceSpan`** carried on every `Expr` (`:227-231`). The
-  transposition is `Passes::lower_expr` (`passes/src/lib.rs:1318-1360`) — a full structural
-  rebuild — plus `materialize_rule` (`:1362-1389`), which *splices* new nodes (`SpanMark(Start) ·
-  body · SpanMark(End) · TapeEmit · DirectBuild · Return`) around each materializable body. The
-  `BackendIr` assembly site is `passes/src/lib.rs:1300-1316`.
-
-- **`BackendIr` → Rust**: `codegen::lower::lower_to_rust` consumes `backend_shape`, `cost_facts`,
-  `per_grammar_policy` (`codegen/src/lib.rs:176-184`), walking `BackendExpr`.
-
-Beside these sit the analysis products, *all already attribute-shaped but scattered*:
-`ShapeFacts` (`ir/src/lib.rs:537-587`), `Recognizer`s (`:415-422`, produced by
-`derive_recognizers`, `passes/src/lib.rs:338`), per-rule `CostFacts`/`ActiveCostFacts`
-(`ir/src/cost.rs:4-200`), the `MaterializationRoles`/`MaterializationPlan`
-(`passes/src/lib.rs:1391-1490`), the discarded projection `ty` (`ExprKind::Project.ty`, dropped
-at `infer_expr`, `passes/src/lib.rs:203`).
-
-**The observation that founds 3B:** `BackendExpr`'s *grammatical* half (`Seq`/`Alt`/`RepeatLoop`/
-`OptionalBranch`/`ByteLiteral`/`RegexProgram`/`CallRule`) is a near 1:1 re-encoding of `ExprKind`
-— a rename that discards `ExprId` and span. Its *backend* half (`SpanMark`/`TapeEmit`/
-`DirectBuild`/`ValueProject`/`Return`) is not new *structure* at all: it is *emit intent attached
-to specific grammar nodes*. `materialize_rule` proves this — every backend node it inserts is
-keyed to one `RuleId`'s descriptor. So `BackendIr` is an *attribute bundle wearing a tree's
-clothing*. 3B strips the clothing.
-
----
+The ONE thing that breaks single-IR is a redundant transposition: `lower_expr`
+(`passes/src/lib.rs:1318`) walks `GrammarIr` and **rebuilds it** as `BackendExpr`
+(`ir/src/lib.rs:376-413`) — a `Box`-recursive tree that (a) duplicates `ExprKind` variant
+for variant, (b) **discards `ExprId`** (so the ExprId-keyed side tables can no longer be
+joined against the tree the emitter walks), and (c) LOSES information: `Discard{keep_left}`
+is flattened to `Seq(vec![left,right])` with a comment admitting "the keep_left
+discard-semantic is metadata for a later phase" (`:1354-1358`) — a live no-value-discard
+violation baked into the transposition itself. `materialize_rule` (`:1362`) then SPLICES
+synthetic nodes (`SpanMark`/`TapeEmit`/`DirectBuild`/`Return`, `ir/src/lib.rs:396-412`) into
+that boxed tree. Family 3B's mechanism is: **delete `BackendExpr`/`BackendIr`; the emitter
+consumes the arena plus attribute columns.**
 
 ## 2. The mechanism made concrete
 
-### 2a. One arena, keyed identity preserved
+### 2a. The single spine
+`GrammarIr` is the IR at every level. No `BackendIr`. Passes never build a new tree; they
+write attribute columns keyed by `ExprId`/`RuleId`. The pipeline `compile`
+(`passes/src/lib.rs:32-68`) — today: infer → layout → materialization → shapes →
+recognizers → **`single_plan` (builds BackendIr)** → backend-shape → returns
+`PipelineOutput{ grammar, layout_facts, backend_ir, diagnostics }` — becomes: infer →
+… → backend-shape, returning `AnnotatedIr{ grammar, attrs }`. The `single_plan`/`lower_expr`
+step (the only `BackendIr` producer, `passes/src/lib.rs:1283,1318`) is excised.
 
-Keep exactly the arena that exists: `GrammarIr.exprs: Vec<Expr>`, `ExprId`, 10-variant
-`ExprKind`. Do **not** grow `ExprKind` with backend variants (that path is the god-enum
-counterexample — §6). `ExprKind` stays purely grammatical; `SourceSpan` (`ir/src/lib.rs:227`)
-therefore survives untouched all the way to emission, which is what makes grammar-sourced
-diagnostics free.
-
-### 2b. The attribute store (the "analysis manager")
-
-Replace `BackendIr` with a `Lowering` bundle of `ExprId`/`RuleId`-keyed side tables — the LLVM
-`AnalysisManager` / MLIR op-attribute model, but Rust-typed and dense:
+### 2b. The AttributeStore substrate (columnar, dense)
+The store is Struct-of-Arrays over the arena, not a bag of `HashMap`s:
 
 ```
-struct Lowering<'g> {
-    grammar:  &'g GrammarIr,
-    // dense IndexVec<ExprId, T> analyses (nullability is the template)
-    nullable:   Box<[bool]>,                    // = ir::nullability today
-    first_set:  IndexVec<ExprId, FirstSet>,
-    ty:         IndexVec<ExprId, InferredTy>,   // Project.ty threads HERE, never dropped
-    // sparse ExprId-keyed emit intent (replaces materialize_rule's spliced nodes)
-    emit:       SecondaryMap<ExprId, EmitAction>,   // Span(Start/End) | TapeEmit(kind) | Return
-    build:      SecondaryMap<RuleId, DirectBuild>,  // shape + Vec<DirectBuildField>
-    project:    SecondaryMap<ExprId, ProjectedLeaf>,
-    // whole-grammar / per-rule decisions
-    shape:      SecondaryMap<RuleId, BackendShape>, // BackendShape AS ATTRIBUTE
-    recognizer: SecondaryMap<RuleId, Recognizer>,
-    cost:       SecondaryMap<RuleId, CostFacts>,
+struct AttributeStore {
+    // per-ExprId columns (dense Vec indexed by ExprId.0; grows with the arena)
+    nullable:     Column<bool>,               // producer: ir::nullability (ir/src/lib.rs:320)
+    node_type:    Column<Type>,               // producer: layout::types::infer (passes:149)
+    recognizer:   Column<Recognizer>,         // producer: derive_recognizers (passes:338)
+    type_ref:     Column<DirectBuildTypeRef>, // producer: infer's Project arm (GN-3 W2)
+    residual:     Column<ResidualMask>,       // producer: emit-spine pass (PROVE-12 generalized)
+    // per-RuleId columns
+    backend_shape: Column<BackendShape>,      // producer: derive_backend_shape (passes:398)
+    cost_facts:    Column<CostFacts>,         // producer: derive_backend_shape (passes:398)
+    emit_plan:     Column<EmitPlan>,          // producer: materialization (replaces splice)
+    policy:        Column<PerGrammarPolicyFacts>,
 }
+type Column<T> = Vec<Option<T>>;  // ExprId/RuleId are dense arena indices → Vec, not HashMap
 ```
 
-Each field is written by exactly one annotating pass and read by named consumers (Y.13):
-`nullability` (`ir/src/lib.rs:320`) → `first_set` → `infer` (`passes/src/lib.rs`, the `Project`
-arm at `:203` now *writes* `project`/`ty` instead of discarding) → `derive_recognizers`
-(`:338`, writes `recognizer`) → `derive_backend_shape` (`:398`, writes `shape` — where the
-LOCK-2 e-graph/CSP decision lands, §4) → `derive_materialization_*` (`:1136-1490`, writes
-`emit`/`build`). No pass rebuilds the arena; each returns `&mut Lowering`.
+`Column<T> = Vec<Option<T>>` (or Cranelift's `SecondaryMap<K,T>` — grow-on-write,
+default-on-read) is chosen over `HashMap` for three reasons: dense keys make it O(1) index
+not hash; iteration is arena-ordered → **deterministic serialization** (the current
+`LayoutFacts` HashMaps have nondeterministic iteration, a regen-determinism hazard under
+§53); and it mirrors the entity-component pattern that is proven Rust prior art (§3).
 
-### 2c. Emission is one arena walk that consults attributes
+### 2c. BackendShape / emit-directives AS attributes (the charter's core clause)
+`BackendShape` (`ir/src/lib.rs:361`) stops being a tag on a whole `BackendIr` and IS a
+per-RuleId attribute column — already half-true (`backend_shape: HashMap<RuleId,_>`,
+`passes/src/lib.rs:96`); 3B formalizes it. The synthetic emit nodes `materialize_rule`
+splices become an **`EmitPlan` attribute** on the RuleId:
 
-The emitter walks `grammar.exprs` from the entry rule (recursing `ExprId`, not a `Box` tree). At
-each `ExprId` it emits the grammatical code for the `ExprKind` and *interleaves* the `emit`
-attribute where present — the exact `SpanMark…TapeEmit…Return` sequence `materialize_rule`
-splices today (`passes/src/lib.rs:1370-1388`) becomes "if `emit[id]` is `Some`, wrap here." The
-`build[rule]` attribute drives `DirectBuild`. `shape[rule]` selects the emit strategy per rule
-(the `lower/{offset_tape,sink_only,event_tape,collapsed_stage}.rs` split, R1 §2). This is a
-straight port of the existing `codegen/lower/*` walk from `BackendExpr` to `(&Expr, &Lowering)`.
+```
+struct EmitPlan { pre: Vec<EmitOp>, post: Vec<EmitOp> }  // SpanMark(Start).. / ..TapeEmit,DirectBuild,Return
+```
 
-**Net transposition count: two.** Everything else is in-place annotation.
+The emitter, walking RuleId `r`: run `emit_plan[r].pre`, walk `rule.body` over the arena,
+run `emit_plan[r].post`. No tree is rebuilt to hold these; they are annotations. This is
+literally "BackendShape as attributes; the fewest transpositions that suffice."
 
----
+### 2d. Emitter dispatch off the arena
+`codegen/src/lower/mod.rs:16-19` already dispatches lowering by `CostFacts` via a
+`ShapeLowering` trait (`select_lowering(cost)`) — backend-shape-as-attribute driving emit is
+already the pattern; it just currently walks `BackendExpr`. Rewire `lower_to_rust`
+(`lower/rust.rs`; `LowerCtx` already carries `backend_shape`/`cost_facts`/`per_grammar_policy`,
+R1 §2) and the `BackendExpr` consumers (`lower/sink_only.rs`, `lower/tape_plan.rs`,
+`lower/css_scan.rs`, `json_sink_direct/mod.rs`) to walk `grammar.expr(id).kind` reading
+columns. `Discard{keep_left}` is read directly at emit — the flattening loss (§1) simply
+vanishes: single-IR preserves it (no-value-discard satisfied by construction).
 
-## 3. Why 3B *is* the three standing laws
+### 2e. Structural rewrites without a new IR (RAUW column)
+Passes that genuinely restructure (left-factor an `Alt`, inline a `Ref`, dedup) do it the
+LLVM/e-graph way: append new `Expr`s to the arena and record forwarding in a
+`canonical: Column<ExprId>` union-find column, resolved on read (LLVM `replaceAllUsesWith`;
+egg e-class union). The arena is append-only already; this makes in-place rewrite lawful
+without mutating existing parents. Fixed-point passes use the LLVM `Changed`-flag convergence
+(memory: changed-flag-convergence) already visible in `nullability`'s `changed` loop
+(`ir/src/lib.rs:322-347`).
 
-- **No value-discard.** The canonical discard site is `ExprKind::Project { body, .. } =>
-  self.infer_expr(*body)` (`passes/src/lib.rs:203`), throwing away `target`/`ty`. Under 3B there
-  is no lossy rebuild to discard *into*: the `Project` arm's only job is to *write* `project[id]`
-  / `ty[id]`. A dropped value is a *missing attribute write*, caught deterministically by a
-  debug-assert over `SecondaryMap` coverage. The `typed-materialization-invariant` ("every `->`
-  reaches the tape emitter") becomes a coverage check on one table, not an audit of a rebuild.
+### 2f. Types are a column, not a third IR (folds GN-3, ties LOCK-1)
+GN-3 W2's move — thread `ExprKind::Project.ty` (`ir/src/lib.rs:261`) into
+`DirectBuild.type_ref` instead of discarding it at the `infer_expr` Project arm
+(`passes/src/lib.rs:203-204`) — IS a single-IR annotation write to the `type_ref` column.
+`DirectSchemaSet` (`codegen/src/direct_schema.rs`) becomes an **extraction view** projected
+from the `type_ref`/`emit_plan`/cardinality columns over the arena, not a separately-authored
+IR. 3B thus GENERALIZES GN-3's point-fix into the architectural law: every `->`, every pass
+output, is a column on the one arena; the hand schema (`xtask/src/real_typed_schema.rs`) and
+the `BackendExpr` re-projection are both instances of the same anti-pattern — a parallel
+structure kept in sync by hand. **Named re-cut (constitution ix):** GN-3 threads one attribute
+through a surviving `BackendExpr`; 3B holds that `BackendExpr`'s existence is the wall GN-3
+works around — a supersession candidate for GESTALT-B, not a contradiction of GN-3's waves
+(which land unchanged under 3B, W2 becoming trivially a column write).
 
-- **No silent epsilon.** The silent-epsilon hazard lives in lowering catch-alls — e.g.
-  `ExprKind::Annotation { .. } => BackendExpr::Seq(Vec::new())` (`passes/src/lib.rs:1348`), an
-  empty node synthesized in a rebuild. With no rebuild, there is no arm that can *fabricate* an
-  empty node; an annotation is a `Some(EmitAction)` or absent, and the emitter's match over
-  attribute+kind is exhaustive and fail-explicit.
+## 3. Prior art (with citations)
 
-- **Preserve rich AST.** `BackendExpr` *is* the flattening the law forbids: it drops `ExprId`,
-  `SourceSpan`, and re-Boxes. 3B never leaves the arena, so parity with the rich typed AST is not
-  "preserved through a translation" — there is no translation.
+- **LLVM** — one `Module`/`Function`/`Instruction` IR; passes are Analysis (results cached in
+  `AnalysisManager`, keyed by IR unit — the attribute-store analog) or Transform (mutate in
+  place); `llvm::Attribute` hangs off values/functions; `Value::replaceAllUsesWith` (RAUW) is
+  the in-place rewrite primitive; `verifyModule` enforces well-formedness. 3B's AttributeStore
+  = AnalysisManager made columnar because our keys are dense.
+- **MLIR** (Lattner et al., "MLIR: Scaling Compiler Infrastructure for Domain Specific
+  Computation", CGO 2021) — one `Operation` graph, **progressive lowering by rewriting ops +
+  attributes across dialects**, `Attribute`/`Type` as uniqued first-class side data, a per-op
+  verifier. "BackendShape as attributes; gradual lowering, one IR" is the MLIR thesis verbatim.
+  The dialect idea answers "don't pollute the frontend enum": keep `ExprKind` pure, carry
+  lowering directives (`EmitPlan`) as attributes, as MLIR keeps op structure and hangs lowering
+  intent on attributes.
+- **Cranelift `cranelift-entity`** — `EntityRef`, `PrimaryMap<K,V>` (the arena),
+  `SecondaryMap<K,V>` (dense grow-on-write attribute columns). This is the **directly
+  applicable Rust prior art** for `AttributeStore`: `ExprId`/`RuleId` are `EntityRef`s,
+  `GrammarIr.exprs` is a `PrimaryMap`, each column is a `SecondaryMap`. Recommend mirroring its
+  `SecondaryMap` default-on-read semantics.
+- **rustc MIR** — `rustc_mir_transform` applies a pass list to ONE `Body` in place (contrast
+  the HIR→THIR→MIR tower, which is family 3A's CONTRACT-TOWER); MIR passes annotate/mutate, not
+  rebuild. Confirms single-IR-multipass is the middle-end norm once the tower has bottomed out
+  into an optimizable form.
+- **GHC Core** — Core-to-Core passes iterate over one `CoreExpr` (the simplifier refines in
+  place); annotations ride on binders.
+- **egg / egglog** (Willsey et al., "egg: Fast and Extensible Equality Saturation", POPL 2021)
+  — one e-graph, rewrite in place, **e-class analysis data as attribute columns on e-classes**;
+  union = RAUW. Ties LOCK-2: 3B's `canonical` column IS an e-graph union restricted to a tree;
+  the AttributeStore is the substrate a LOCK-2 e-graph island would annotate.
 
----
+## 4. Integration seams (path:line)
 
-## 4. LOCK-2 interop: attributes are exactly where graph decisions land
+| Concern | Seam | Action |
+|---|---|---|
+| Arena substrate (keep) | `ir/src/lib.rs:33-39,16-19,51-57` | `GrammarIr` becomes the single IR; ExprId/RuleId are the EntityRefs |
+| Proto attribute store (consolidate+densify) | `passes/src/lib.rs:90-100` `LayoutFacts` | HashMaps → `AttributeStore` columnar `SecondaryMap` |
+| Redundant transposition (DELETE) | `passes/src/lib.rs:1283` `single_plan`, `:1318` `lower_expr`; `ir/src/lib.rs:376-413` `BackendExpr`; `:351-358` `BackendIr` | excise; emitter walks arena |
+| Splice→attribute | `passes/src/lib.rs:1362` `materialize_rule`; `ir/src/lib.rs:396-412` | synthetic nodes → `EmitPlan` column |
+| keep_left loss (fixed by construction) | `passes/src/lib.rs:1354-1358` | read `Discard.keep_left` at emit; no flatten |
+| BackendShape as attribute | `ir/src/lib.rs:361`; `passes/src/lib.rs:96,398` | formalize `backend_shape` HashMap as column |
+| Cost-driven emit dispatch (already the pattern) | `codegen/src/lower/mod.rs:16-19` `ShapeLowering`/`select_lowering` | keep; source from column not `BackendExpr` |
+| BackendIr consumers (rewire) | `codegen/src/lower/{rust,sink_only,tape_plan,css_scan}.rs`, `json_sink_direct/mod.rs` | consume `(GrammarIr,&AttributeStore)` |
+| type_ref column (GN-3 fold) | `passes/src/lib.rs:203-204`; `ir/src/lib.rs:261,485` | infer writes `type_ref` column instead of discarding |
+| Residual as attribute (PROVE-12 generalized) | `codegen/src/runtime_generator.rs` CSS template; `PROVE-12/patch.diff` | emit-spine pass writes `residual` mask column; emitter const-folds from it — pattern generalizes to every stop-set (PROVE-12 §7) |
+| Determinism/serde | `LayoutFacts` HashMaps | columnar Vec → arena-ordered, deterministic under §53 |
 
-3B does not own the e-graph/CSP engine (LOCK-2 does); it defines the *seam*. The engine already
-produces a decision written as an attribute: `backend_egraph::select(rule_id, candidates) ->
-ActiveSelection { shape, .. }` (`passes/src/backend_egraph.rs:36-149`) picks a `BackendShape` via
-`EGraph`/`Extractor` and returns it as a per-rule fact. Under 3B this is unchanged in spirit —
-`derive_backend_shape` writes `shape[rule_id]`. Two refinements the family enables:
+## 5. Named risks & counterexamples
 
-- **Rewrites that *do* mutate the arena** (regex-HIR canon, projection canon) run as passes that
-  read the arena, saturate a *scoped* e-graph island, and extract *back into the arena in place* —
-  the Cranelift aegraph model (a streaming append-and-union over an acyclic node table,
-  single-pass), not a persistent parallel graph. Grammar rule bodies form a DAG once recursion is
-  cut at `Ref` (`ExprKind::Ref.target`, `ir/src/lib.rs:253-256`), so the *acyclic* e-graph
-  precondition holds for intra-rule rewriting; inter-rule recursion is handled by keying rewrites
-  to `RuleId` boundaries — the same boundary `materialize_rule` already respects.
-- **Per-site cost** feeds the CSP as it does now (`DecisionCspFacts`, `ir/src/cost.rs:202-248`);
-  the CSP writes one attribute per rule. `ActiveCostFacts` (`cost.rs:173-200`) is the provenance
-  record for that write.
+1. **Column growth under rewrite.** Append-and-forward (§2e) grows the arena mid-pipeline;
+   every column must resize or default-on-read. Mitigation: `SecondaryMap` default semantics +
+   a verifier pass (`verifyModule` analog) asserting totality — after backend-selection, every
+   reachable RuleId has `backend_shape`; every `Project` ExprId has `type_ref`
+   (no-value-discard as a checkable invariant); every emit-requiring rule has an `EmitPlan`.
+   Consumer-less columns are forbidden (Y.13) → each column names a same-wave reader.
+2. **Does BackendExpr do hidden work?** Beyond copying it computes `backend_span_kind(pattern)`
+   (`passes/src/lib.rs:1343`) and flattens Discard. Counterexample audit: `span_kind` becomes a
+   node-column write; Discard flattening is a LOSS 3B removes. The proto (§6) MUST diff generated
+   output to prove the transposition was otherwise pure — if it wasn't, the residue names exactly
+   what an `EmitPlan`/column must carry.
+3. **Multi-backend leakage (Rust vs TS).** Columns like `DirectBuildTarget.rust_field`,
+   `representation: Borrowed/Owned` (`ir/src/lib.rs:485-527`) are Rust-specific. Risk: the
+   "backend-agnostic middle" (charter) leaks. Mitigation: LAYER the columns —
+   agnostic (`type_ref`, `cardinality`, `tape_kind`, `backend_shape`, `EmitPlan`) vs
+   backend-specific (naming, borrow policy); the TS backend reads agnostic columns + runs its own
+   naming/ownership pass (memory: backend-agnostic-types). Concrete realization of "backend-
+   agnostic middle over which Rust now, TS later"; ties LOCK-6.
+4. **"Renamed, not reduced" objection.** The emitter still lowers arena→Rust (a transposition).
+   Honest count: 3B yields TWO transpositions (source→arena, arena→Rust), ZERO middle rebuilds;
+   status quo is THREE (adds GrammarIr→BackendIr). The reduction is provable — a whole IR type +
+   `lower_expr` + `single_plan` + `materialize_rule` deleted.
+5. **HashMap→Vec determinism must actually be exercised.** If any column stays a HashMap the
+   regen-idempotency (§53, regen∘regen byte-identical) can silently depend on iteration order.
+   Gate: the columnar store's serde is arena-ordered by construction.
 
-The e-graph's own *analysis* discipline — data attached to each e-class, merged on union (egg's
-`Analysis` trait) — is the same pattern as 3B's attribute store one level down, the deepest
-argument that "annotate in place" is the SOTA idiom, not a shortcut.
+## 6. What a prototype must test to move this family
 
----
+**PROTO-3B-1 (decisive).** Delete `BackendExpr`/`BackendIr`/`lower_expr`/`single_plan`/
+`materialize_rule` for the JSON grammar only; introduce `AttributeStore` (columnar) +
+`EmitPlan`; rewire `lower_to_rust` and the JSON emitters to walk `(GrammarIr,&AttributeStore)`.
+Gates:
+- **Parity:** `cargo xtask regen-json` produces `generated.rs` **byte-identical** to HEAD
+  (proves the transposition was lossless — or the diff localizes exactly what hidden work
+  BackendExpr did, feeding risk 2).
+- **Parsimony:** net codegen LOC **negative** (BackendExpr enum + lower_expr + single_plan +
+  materialize_rule gone; the store is smaller than the tree it replaces). Report the delta.
+- **No-value-discard win:** exhibit a Discard grammar where HEAD's flattening loses `keep_left`
+  and 3B preserves it — a behavioral improvement, not just a refactor.
+- **Determinism:** regen∘regen byte-identical with the columnar store serialized.
+- **Y.13 totality:** the verifier pass asserts every reachable RuleId/Project-ExprId carries its
+  mandatory column; a deliberately-missing column fails the build (gate has teeth).
 
-## 5. Prior art (citations)
+**PROTO-3B-2 (multi-backend proof, ties LOCK-6).** Split columns agnostic/specific (risk 3);
+emit a TS skeleton for the SAME JSON arena reading ONLY agnostic columns + a TS naming pass.
+Gate: the TS skeleton's structure is derivable with zero reads of Rust-specific columns —
+proving the arena+attribute middle is genuinely backend-agnostic, the fewest-transpositions
+claim holding across two backends.
 
-- **LLVM new PassManager + AnalysisManager** — one `Module`/`Function`/`Instruction` IR mutated
-  in place; analyses (dominators, LoopInfo, AA) are *cached results keyed by IR unit* with explicit
-  invalidation, never a parallel IR. This is `Lowering`'s direct ancestor: side-table analyses over
-  one mutable IR. (llvm.org "Writing an LLVM Pass" / new PM docs.)
-- **MLIR — one IR, many dialects, attributes on operations, progressive lowering.** "Every
-  operation at every level is first-class IR… dialects can be mixed within a single module";
-  lowering is *pattern-rewrite of ops in place* (DialectConversion), and scheduling/semantic facts
-  ride as *attributes on ops*. This is the exact model for "BackendShape as attributes" and "fewest
-  transpositions": bbnf's grammar-level nodes and their lowered emit-intent coexist in one module,
-  attributes carrying the backend decision. (Lattner et al., MLIR, CGO 2021; https://mlir.llvm.org.)
-- **Cranelift aegraph** — an *acyclic* e-graph that is a "streaming journal of nodes": build a
-  node, add equivalents, union in place, refer forward by latest id; the node language is a *union
-  of CLIF and machine instructions* so lowering rules are rewrites within one IR. Grounds §4's
-  in-place, single-IR e-graph rewriting. (cfallin.org/blog/2026/04/09/aegraph;
-  bytecodealliance/rfcs cranelift-egraph.md; EGRAPHS 2023.)
-- **GHC Core** — a small typed IR with dozens of Core-to-Core passes, each transforming the same
-  representation in place; the canonical "one IR, many passes" success story at compiler scale.
-- **egg `Analysis`** — computed data attached per e-class and merged on `union`
-  (https://docs.rs/egg): the annotation-lattice idiom 3B mirrors.
-- **Counter-example, named honestly: rustc HIR → THIR → MIR.** rustc *does* use multiple IRs. But
-  each rustc IR serves a *distinct* client (name resolution/type-check vs pattern exhaustiveness vs
-  borrow-check/codegen) over a *whole language*. bbnf's surface is one small grammar algebra; the
-  `BackendExpr` split buys no new client — its grammatical half duplicates `ExprKind` and its
-  backend half is attributes. The multi-IR tower (family 3A) pays a round-trip/parity-oracle tax
-  justified when levels diverge semantically and unjustified here. 3B's claim: bbnf is on the
-  GHC-Core/Cranelift side of that line, not the rustc side.
-
----
-
-## 6. Named risks and counterexamples
-
-1. **The god-enum.** If backend node kinds are added to `ExprKind` (one enum for both levels),
-   every front-end pass must match backend variants — a kitchen-sink that violates the
-   no-god-modules edict. **Resolution:** attributes-not-nodes (§2a). `ExprKind` never grows;
-   `EmitAction`/`DirectBuild` live in `Lowering`, not the arena. The prototype must *prove the
-   emitter needs no backend node kind in `ExprKind`* to walk correctly.
-2. **The MLIR verifier gap.** MLIR/LLVM tolerate one mutable IR because a runtime *verifier*
-   re-checks invariants after every pass; Rust's exhaustive `match` is the compile-time analogue,
-   but attribute *coverage* (did every `Project` write `project[id]`?) is not enforced by the type
-   system. **Resolution:** a `Lowering::verify()` pass asserting per-table coverage against the set
-   of nodes that require it (every `ExprId` whose kind is `Project` has `project[id]`; every
-   materializable `RuleId` has `build` and matching `emit` marks) — fail-explicit, run as a
-   debug-assert at each pass boundary. This is the price of one IR and is a first-class deliverable,
-   not an afterthought.
-3. **Attribute-map dtype / dense-vs-sparse.** `nullable`/`first_set`/`ty` are total (dense
-   `IndexVec`); `emit`/`build`/`recognizer`/`shape` are sparse (`SecondaryMap`). Choosing wrong
-   wastes memory or forces `Option` noise. **Resolution:** dense for whole-arena analyses, sparse
-   for per-decision attributes — the split is mechanical from "is this defined at every node?".
-4. **Pass ordering / stale attributes.** In-place mutation risks a pass reading an attribute a
-   later rewrite invalidated (LLVM's invalidation problem). **Resolution:** the grammar pipeline is
-   a fixed DAG of passes with no fixpoint *across* passes (only within, à la `nullability`), so
-   ordering is static and declarable; an e-graph rewrite that mutates the arena invalidates
-   downstream analysis attributes, which the pipeline recomputes rather than patches (the
-   `Changed`-flag convergence law applies *within* a pass, not across the tower).
-5. **E-graph cyclicity.** Recursive grammars are cyclic; the aegraph model needs acyclicity.
-   **Resolution (§4):** cut at `RuleId` boundaries — intra-rule bodies are acyclic DAGs; recursion
-   is a `CallRule`/`Ref` edge the e-graph treats as an opaque leaf. The prototype must confirm a
-   left-recursive or mutually-recursive grammar (sheets, CSS) survives this cut.
-6. **Regression risk against a working tree.** `BackendIr` + `lower_expr` + `materialize_rule` are
-   live and passing on json/css/sheets. **Resolution:** the prototype is a *shadow* — build
-   `Lowering` alongside `BackendIr`, emit from both, diff byte-for-byte on all three live grammars
-   before deleting `BackendIr`. Byte-identity is the migration gate (mirrors GN-3's derived≡hand
-   discipline).
-
----
-
-## 7. Integration seams (where extant code serves)
-
-- **Delete:** `BackendIr`/`BackendExpr`/`BackendRule` (`ir/src/lib.rs:351-413`); `lower_expr`
-  (`passes/src/lib.rs:1318-1360`); `materialize_rule`'s node-splice (`:1362-1389`, becomes an
-  `emit`-attribute writer); the `BackendIr` assembly (`:1300-1316`).
-- **Keep as the template:** `nullability` (`ir/src/lib.rs:320-349`) — the exemplar dense attribute
-  pass; its `Changed`-fixpoint shape is copied for `first_set`.
-- **Rehome as attribute writers (minimal change):** `derive_recognizers` (`passes/src/lib.rs:338`)
-  → writes `recognizer[rule]`; `derive_backend_shape` (`:398`) → writes `shape[rule]` (the
-  `backend_egraph::select` call, `backend_egraph.rs:36`, is unchanged, only its sink is);
-  `derive_materialization_roles`/`_plan` (`:1391-1490`, `:1136-1391`) → write `emit`/`build`;
-  `infer`'s `Project` arm (`:203`) → writes `project`/`ty` (this is *also* the exact wire GN-3.W2
-  needs — 3B and the type plane converge here).
-- **Retarget the emitter:** `codegen::lower::lower_to_rust` and the `lower/{offset_tape,sink_only,
-  event_tape,collapsed_stage,css_scan}.rs` walkers (R1 §2) change input from `&BackendExpr` to
-  `(&Expr, &Lowering)` — same emit logic, different node source.
-- **Cost/provenance unchanged:** `CostFacts`/`ActiveCostFacts`/`DecisionCspFacts`
-  (`ir/src/cost.rs`) are already attribute records; they become `Lowering.cost` entries verbatim.
-- **PROVE-12 residualization is a corollary, not a special case.** The const-fold delimiter-mask
-  win (`prototypes/PROVE-12/patch.diff`, +18 LOC, cyc/B 0.81-0.98×) is emit-time specialization
-  from a *grammar-constant attribute* (the delimiter STOP-set). Under 3B that STOP-set is an
-  attribute (`emit`/recognizer alphabet) the emitter reads and bakes as a const generic — exactly
-  what PROVE-12 does by hand, generalized to "any grammar-derived stop-set" (its own §7
-  generalization note). No new mechanism; residualization is "the emitter reads an attribute and
-  emits a constant."
-
----
-
-## 8. What a prototype must test to move this family
-
-1. **Emitter needs no backend node in `ExprKind`.** Re-emit the live JSON grammar walking
-   `(&Expr, &Lowering)` where `emit`/`build`/`shape` reproduce `materialize_rule`'s spliced
-   sequence, and diff the generated `grammars/json/generated.rs` **byte-for-byte** against HEAD.
-   Success = byte-identical from attributes alone (proves §2a, refutes risk 1).
-2. **Coverage verifier catches a dropped `->`.** Wire `infer`'s `Project` arm to write `project`,
-   delete one write, and confirm `Lowering::verify()` fails explicitly (proves no-value-discard is
-   mechanically enforced, risk 2).
-3. **Span survives to emission.** Emit a deliberate error and confirm the `SourceSpan` on the
-   offending `ExprId` reaches the diagnostic — impossible under `BackendExpr` (which drops span),
-   trivial under 3B. Proves the rich-AST-preservation dividend.
-4. **Acyclic e-graph rewrite in place on a recursive grammar.** Run a single intra-rule
-   projection-canon rewrite over the sheets grammar (mutually recursive), extracting back into the
-   arena, and confirm `derive_backend_shape` reads correct post-rewrite attributes (proves risk 5
-   cut works, grounds §4).
-5. **Transposition count is two.** Instrument the pipeline; assert exactly two structural node
-   materializations occur (parse-build, emit-walk) and every intermediate pass is `&mut Lowering`
-   (the family's defining measurement).
-6. **Shadow-diff on all three live grammars** (json/css/sheets) before `BackendIr` deletion —
-   byte-identity as the migration gate (risk 6).
-
-The move-the-family artifact is test 1: a byte-identical JSON re-emit from the attribute store
-with `ExprKind` ungrown proves the entire thesis — that `BackendIr` was attributes wearing a
-tree's clothing, and one IR suffices.
-
-Sources: https://mlir.llvm.org · https://cfallin.org/blog/2026/04/09/aegraph/ ·
-https://github.com/bytecodealliance/rfcs/blob/main/accepted/cranelift-egraph.md · https://docs.rs/egg
+Move-the-family criterion: PROTO-3B-1 byte-identical + net-negative LOC + the keep_left win
+retires the `BackendExpr` transposition as pure debt; PROTO-3B-2 certifies the middle is
+backend-agnostic. Together they establish single-IR-multipass as the LOCK-3 spine with GN-3's
+type plane folded in as columns and PROVE-12's residual generalized as a `residual` column.

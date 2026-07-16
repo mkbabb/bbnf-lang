@@ -1,256 +1,195 @@
 # LOCK-2 · Family 2D — PROFILE-CLOSED-LOOP (research, pass 1)
 
-**Thesis.** The cost model is not authored — it is *measured*. Cost coefficients are fitted from
-cold paired canon-bench PMU captures, committed as a content-addressed fact table, and read
-(never re-measured) by the decision solver at regen. The loop — measure → fit → commit → solve →
-re-measure-to-validate — is the architecture; the solver's objective ceases to be a hand-tuned
-float vector and becomes a regression estimate the corpus itself produced. This family owns the
-*coefficient plane* under whatever candidate generator (2A islands, 2B saturation, 2C CSP) sits
-above it: it answers "where do the numbers in the cost lattice come from, and why are they
-trustworthy and deterministic." The differentiator no parser generator holds: its profiler and its
-cost model are one circuit — PEG/LR emit fixed automata (no profile), simdjson's thresholds are
-magic constants (hand-tuned, not fitted).
+Optimization as measured feedback: cost coefficients FITTED from canon-bench PMU captures,
+committed as deterministic fact tables, the solver RE-RUN at regen. The loop — capture →
+fit → commit → re-solve → regenerate → re-capture — is the architecture, not a bolt-on. This
+family owns the COEFFICIENT PLANE beneath whatever candidate generator (islands / saturation /
+CSP) sits above: it answers where the numbers in the cost lattice come from and why they are
+trustworthy AND deterministic. The differentiator no parser generator holds: profiler and cost
+model are one circuit — PEG/LR emit fixed automata (no profile), simdjson's thresholds are
+hand-tuned magic constants, not fitted.
 
----
+## 0. The thesis and the wall it must break
 
-## 1. The mechanism made concrete — the loop is BUILT but OPEN
+The graph engine today decides with a STATIC, self-declared-blocked cost model. Three
+artifacts prove the loop is stubbed and waiting:
 
-Every organ of the loop exists in-tree, wired to a **stub**. The family's whole content is closing
-the cut wires.
+1. `crates/egraph/src/cost_weights.rs:175` — `CALIBRATED_WEIGHTS` is a hardcoded const. Its
+   provenance docstring (`cost_weights.rs:134-167`) records that the AW-IV.W5.3 grid-sweep
+   over 54 configs × 4 grammars returned **NULL**: identical DTA state counts (JSON 51, BBNF
+   476, CSS L4 2875, Sheets 191) at every swept point. Artefact: `docs/benchmarks/
+   cost-weights-sweep.json` (fit methodology preserved: per-grammar Pareto over
+   (state_count, pipeline_ns), 3 repeats, median). Stated cause: the rewrite set
+   (`DeduplicateAltBranches, SupersetAbsorbAlt, UnionMergeAlt, FuseAltRegexBranches,
+   CommonSuffixFactor`) yields ≤1 canonical form per e-class — "the cost model has no choice
+   to exercise."
+2. `skinny/crates/passes/src/backend_egraph.rs:8` — `cost_formula_version = "sk-v13-w6-
+   integer-v1"`; `DecisionCost{freshness_rank, perf_cost:u32}` (`:240-242`) and
+   `DecisionCostModel::cost` (`:259-264`) score with a hardcoded INTEGER `perf_cost`, never a
+   measured cyc/B.
+3. `skinny/crates/passes/src/decision_csp.rs:183-186` — the loop's own provenance strings
+   NAME the gap: `static_profile_provider_status: "static-template-blocker"`,
+   `generated_runtime_diff_status: "absent"`, `row_move_toward_sota_status:
+   "measured_architectural_block"`. These are the stub this family activates.
 
-### 1.1 The dead perf dimension this family resurrects
+**The wall (the decisive counterexample, faced head-on).** A closed loop that fits
+coefficients into e-graph EXTRACTION is consumer-less substrate (Constitution viii / Y.13):
+AW-IV already measured extraction as degenerate — better numbers change no decision.
+Therefore 2D MUST close the loop NOT at `Extractor` (`crates/egraph/src/extract.rs`, greedy
+bottom-up, proven null) but at the decision points where genuine multi-candidate choice
+exists. Those points, all extant:
+   - the BackendShape priority ladder P1–P8 (`ir/src/cost.rs:264-286`), 5 shapes
+     (`all_backend_shapes`, `cost.rs:334`), selected in `passes::derive_backend_shape`
+     (R1 §8, `passes/src/lib.rs:398`) then re-ranked by `backend_egraph::select`
+     (`passes/src/backend_egraph.rs:36`) and `decision_csp::solve_rule`
+     (`decision_csp.rs:29`, a real `Csp<CostFiniteDomain>` with
+     ForwardChecking/FailFirst/MinimizeCost, `:85-98`);
+   - the SIMD mode Exact↔Prefilter and the N\*=3 kernel crossover (GN-2.W1/W4; `SimdMode`
+     `ir/src/lib.rs:425`; the shufti-on-measured-n guard, GN-4.md/PT-1.md);
+   - the CSS `CSS_SHUFTI_MIN_SPAN` short-span guard (GN-2.W3, a named cost-model value);
+   - the capacity policy `tiny_string_cap`/`container_initial_capacity`
+     (`ir/src/cost.rs:326-332`).
+These are real forks. Measured cyc/B can flip them; static integers cannot know which way.
 
-The decision substrate exists end to end but its perf dimension is **hardwired to zero**. Every
-backend-shape candidate is minted with `perf_cost: 0` (`passes/src/lib.rs:590`; also `:2023`,
-`:2035`, `:2062`, `decision_csp.rs:247`,`:259`). The only live cost dimensions are static-authored
-integers — `candidate_static_size_cost` (a fixed per-shape rank, `lib.rs:603-611`) and
-`candidate_capacity_cost` (a boolean, `lib.rs:599`). The e-graph extractor
-(`backend_egraph.rs:239-267`, `DecisionCost` lattice) orders candidates lexicographically by
-`(freshness, perf_cost, capacity, static_size, shape_rank, hash)` — so with `perf_cost ≡ 0` the
-*performance* term is inert and selection is decided entirely by the hand-authored `shape_rank`
-table (`lib.rs:566`,`:573`) and the 8-step `PriorityStep` cascade (`ir/src/cost.rs:264-286`). The
-decision CSP downstream (`decision_csp.rs:44-49`) then assigns cost `0.0` to the already-selected
-candidate and `1.0` to every other — a **rubber stamp**, not an optimizer. Its own provenance
-admits this: `static_profile_provider_status: "static-template-blocker"` (`decision_csp.rs:183`)
-and `row_move_toward_sota_status: "measured_architectural_block"` (`:186`). 2D is the removal of
-that block.
+## 1. The mechanism, made concrete
 
-### 1.2 The four-stage loop
+**A committed fact table + a gated fit harness + a table-reading provider + re-solve at
+regen.** Five organs:
 
-1. **MEASURE.** The canon benches capture per-process PMU cyc/B via
-   `proc_pid_rusage(RUSAGE_INFO_V5).ri_cycles` (`json_canon_bench.rs:59`,`:68-80`; mirrored in
-   `css_canon_bench.rs`), paired interleaving, N≥200, ins/B as the load-invariant check — exactly
-   the numbers, in exactly the discipline the constitution mandates (SPEC §0/§4). Today they emit
-   **whole-grammar-lane** rows (`json_canon_bench.rs:193`,`:212`) for lanes {tape, fused, sonic,
-   serde}. 2D adds a **decision-attributed** fact-emit mode (`--emit-facts`): per
-   (grammar, corpus, rule-or-scan-site, chosen knob) a cyc/B + ins/B sample, cold paired, ≥3
-   windows, per-block loadavg recorded.
-2. **FIT.** An offline `xtask calibrate` runs a *deterministic* regression (closed-form OLS/ridge,
-   fixed seed) from a structural feature vector `f(rule, shape)` — node count, alt-branch count,
-   tape-push count, simd-scan-site count: the very knobs `CostWeights` already names
-   (`cost_weights.rs:40-110`) — onto measured cyc/B, producing coefficient vector β. Fit target is
-   **relative ordering / paired ratios**, never absolute cyc/B (the law: ratios certified,
-   absolutes directional — fitting absolutes fits load noise).
-3. **COMMIT.** β is written to a committed, content-addressed table (`profile/coefficients.ron` or
-   a per-grammar sidecar under the `generated_root`), its hash stamped into `cost_formula_version`
-   (replacing the literal `FORMULA = "sk-v13-w6-integer-v1"`, `backend_egraph.rs:8` →
-   `ActiveCostFacts.cost_formula_version`, `cost.rs:174`). **Precedent for committed profile fact
-   tables already lives in-tree: `profile/yyjson/*.profile.json`.** The table carries its training
-   corpus id + a held-out residual so the fit is auditable, keyed by
-   `(host_triple, grammar, site_class, knob_id)`.
-4. **SOLVE (at regen, deterministic).** Regen reads *only* the committed table — never live PMU —
-   and evaluates `perf_cost = predict(f(rule,shape), β)` to populate the dead dimension at
-   `lib.rs:590`. The decision CSP becomes a genuine minimizer: `CostFiniteDomain::new(values,
-   costs)` (`decision_csp.rs:49`) already accepts a per-value cost vector — 2D feeds it
-   `predict(...)` instead of the `{0.0, 1.0}` stub.
+**(a) The capture.** `json_canon_bench` already emits the exact schema this loop ingests:
+`# schema: PMU corpus lane bytes iters cycles instructions cyc_per_byte cpi mbps`
+(`skinny/crates/bbnf-bench/src/bin/json_canon_bench.rs:193,211`; `css_canon_bench` the CSS
+twin; `ri_cycles` via `proc_pid_rusage(RUSAGE_INFO_V5)`, `:59,209`; paired-interleaved mode
+with 95% CI, `:224-259`). The §0 certified swath IS a fact table already: PROVE-12 CSS cyc/B
+per corpus×lane (bootstrap 0.848/0.812, tailwind 0.954/0.934, material 0.979/0.909, animate
+0.955/0.964; ins/B −3.7…−6.4% deterministic), PROVE-01 skip floor 0.115 cyc/B and ~1.03
+cyc/B membership ceiling, PROVE-03 twitter parse_tape 0.898×, PROVE-05 tailwind lcss 4.16×.
+Cold paired, multi-window, ratios certified — the profiling standing law (GN-2 §1.2 precepts
+43–49) IS the capture protocol.
 
-**The loop closes at calibrate-time, not regen-time — the load-bearing determinism invariant.**
-Regen is a pure function of `(grammar, committed-β)`, so `regen∘regen = regen` byte-identical (the
-fixpoint gate, precept 53) is preserved. All load noise, window variance, and host jitter live in
-`xtask calibrate`, off the regen path. A naive "re-measure at regen" makes regen load-dependent
-and shatters the fixpoint — the family's central discipline is that measurement and regen are
-*separated in time by the committed artifact*. This is precisely the PGO/AutoFDO/BOLT discipline:
-the profile is committed data, the build reads it and is reproducible.
+**(b) The fit.** A new `xtask fit-cost` (the resurrected/relocated `cost-grid-sweep`; the
+`.sh` is GONE — only `docs/benchmarks/cost-weights-sweep.json` survives, R1/grep confirm no
+live `scripts/` harness) reads the PMU stdout, regresses per-decision-site cyc/B (lead with
+ins/B, load-proof) onto the site's STATIC features (node count, alt arity, span length,
+member-set cardinality — never corpus identity, no name-gate) and emits fitted coefficients.
+The fit is ordinary least-squares over committed capture rows — no live bench in the regen
+path.
 
-### 1.3 Freshness becomes falsifiable, not a stamped string
+**(c) The committed table.** `skinny/crates/ir/cost-facts/<grammar>.toml` — a versioned,
+human-readable, content-addressed fact table: per-decision-site coefficient rows keyed by
+`(grammar, rule_id, decision_kind)`, each carrying fitted cyc/B + ins/B, capture provenance
+(window count, loadavg band, bench commit hash), and a `cost_formula_version` bump. This is
+"committed as fact tables (determinism preserved)" literally. It supersedes the hardcoded
+`CALIBRATED_WEIGHTS` const and the `"sk-v13-w6-integer-v1"` integer formula;
+`CostConfig` (`crates/egraph/src/cost_config.rs:56`) grows a `from_facts(path)` constructor
+beside its `from_env` (`:83`, the existing `BBNF_COST_*` tuning surface), reading the table
+into `weights` + per-site perf costs. The `@cost` grammar directive named "future tranche"
+in `cost_config.rs:29` reads the same struct — one slot.
 
-Today `selected_cost_freshness == "fresh"` iff `candidate.stale == false` (a static bool,
-`backend_egraph.rs:127-131`); `determinism_replay_status: "pass"`, `rewrite_order_variance_pct: 0`
-(`:139-141`) are hardcoded literals. Yet a real GATE already reads them:
-`bbnf-bench/src/report.rs:1742-1758` REJECTS a measurement row unless `cost_formula_version` is
-non-empty AND `selected_cost_freshness == "fresh"` AND `determinism_replay_status == "pass"`. The
-enforcement machinery is built; it presently checks a string equals a hardcoded string. A third
-verb, **`xtask check-calibration`**, recomputes `hash(coefficients.ron)`, asserts
-`cost_formula_version == hash(...)`, and asserts the last regen consumed the current table — so
-mutating any coefficient diverges the hash and drives the freshness gate RED. The stub fields
-become outputs of a re-run-and-diff, not literals.
+**(d) The re-solve.** At regen (`xtask regen-json|regen-css|…`, R1 §5) the decision driver
+re-runs `backend_egraph::select` + `decision_csp::solve_rule` with table-sourced perf costs
+replacing `candidate.perf_cost` (`backend_egraph.rs:21,170`). The DecisionCspFacts provenance
+flips from stub to fact: `static_profile_provider_status → "fitted-fact-table@<version>"`,
+`generated_runtime_diff_status → "present:<capture-ref>"`, `row_move_toward_sota_status →
+"<measured cyc/B delta>"` (`decision_csp.rs:183-186`). `selected_cost_freshness`
+(`backend_egraph.rs:127`) and `candidate_cost_stale_rate_bps` (`cost.rs:181`) become LIVE: a
+row older than its grammar's last bench is STALE, prompting re-fit — "solver re-runs at
+regen" with freshness teeth. `determinism_replay_status` + `selection_trace_hash`
+(`backend_egraph.rs:139,142`) verify the table→decision map replays byte-identically.
 
-### 1.4 Why fitting, not authoring — the null-calibration inheritance
+**(e) The re-capture gate.** After regen, `json_canon_bench`/`css_canon_bench` re-run in CI
+confirms the fitted decision did not regress (born-RED non-regression). A decision the table
+flipped must beat the decision it displaced on the same corpus, cold paired, or the fit is
+REVERTED and the row flagged. This is the loop closing on itself — GN-2.W6's adversarial
+re-measure discipline made standing infrastructure.
 
-The single hand-authored coefficient slot, `CALIBRATED_WEIGHTS` (`egraph/src/cost_weights.rs:175`),
-carries a documented **null calibration** (`:134-167`): a 54-config grid sweep
-(`scripts/cost-grid-sweep.sh`, `bootstrap/src/bin/cost_grid_sweep.rs`,
-`docs/benchmarks/cost-weights-sweep.json`) over {structural, alt_per_branch, dispatch_bonus,
-ref_cost} produced **identical** DTA state counts for every grammar (JSON 51, BBNF 476, CSS 2875,
-Sheets 191) — "the cost model has no choice to exercise" because the rewrite set collapses each
-e-class to one canonical form. The doc's own conclusion names this family's seam: "exactly one slot
-to update when a future calibration produces a non-trivial result" (`:169-174`). 2D is that
-calibration — from *measured cyc/B*, not DTA state count (a static proxy), fed into the *perf*
-dimension the grid sweep never touched.
+## 2. Substrate (extant vs net-new)
 
----
+EXTANT (consume, do not rebuild):
+- `ir::ActiveCostFacts`/`DecisionCspFacts` (`ir/src/cost.rs:173,203`) — the provenance spine,
+  already carrying `cost_formula_version`, `candidate_cost_stale_rate_bps`,
+  `selected_cost_freshness`, `determinism_replay_status`, `rewrite_order_variance_pct`,
+  `selection_trace_hash`, `static_profile_provider_status`, `generated_runtime_diff_status`,
+  `row_move_toward_sota_status`. These fields ARE the closed-loop schema; 2D fills them.
+- `egraph::CostConfig`/`CostWeights` (`cost_config.rs`, `cost_weights.rs`) + `from_env`
+  overrides — the tuning surface; extend with `from_facts`.
+- `backend_egraph::select` + `decision_csp::solve_rule` — the CSP over `CostFiniteDomain`
+  (`decision_csp.rs:48-98`) that already ranks candidates; swap its cost source only.
+- `json_canon_bench`/`css_canon_bench` PMU mode — the capture, schema-stable.
+- `docs/benchmarks/cost-weights-sweep.json` — the fit-harness precedent + input format.
 
-## 2. Where the loop attaches — the knobs that actually have a choice (the null-trap escape)
+NET-NEW (small, colocated, §1.5 parsimony): `xtask fit-cost` command (+ module under
+`xtask/src/`); `ir/cost-facts/*.toml` committed tables; `CostConfig::from_facts`; the
+provenance-string activation in `decision_csp.rs`/`backend_egraph.rs`; a CI re-capture gate
+bin. No new crate — the loop rides the existing cost/decision spine (Constitution vi).
 
-The grid-sweep NULL (§1.4) proves the backend-shape *lattice* is degenerate: `PriorityStep` +
-`shape_rank` force a single candidate per e-class, so fitting shape weights moves nothing. **The
-loop must attach to knobs with genuine measured spread — numeric thresholds and crossover points,
-precisely what a fitted coefficient is *for*:**
+## 3. Prior art (SOTA, cited)
 
-1. **The kernel-selection crossover.** `bbnf-simd/src/dispatch.rs:89` `select_backend` chooses
-   `NeonTbl4` vs `Scalar` on `lo6_table_admissible` (`:101`) — a pure *legality* predicate
-   (collision-free lo6 slots), NOT a cost decision. The "N\*=3 crossover" the empirical spine names
-   is **not wired**: below it, per-call `build_lo6_table` (`:24-30`) is unamortized and scalar
-   wins. A textbook fitted threshold: sweep span length on the canon bench, find the cyc/B
-   crossover, commit it, gate `select_backend` on it. A genuine multi-candidate decision the loop
-   moves.
-2. **The CSS short-span guard.** GN-2.W3's `CSS_SHUFTI_MIN_SPAN` (GN-2.md `:333`) — "a NAMED const
-   … exposed as a cost-model value, not a heuristic literal." Its purpose is *literally* "a
-   threshold tuned against a measured constraint" (erase animate's +13.4% regression while
-   retaining tailwind 4.16×). This is 2D's canonical instance; its born-RED gate (animate ≤1.0×
-   AND three-corpus wins retained, GN-2.md `:354-363`) is the loop's objective as a falsifiable
-   test.
-3. **The GATE=16 prefilter fast-path width** (SPEC §0 row 01; GN-2.W1 gate requires `≥0.95× dense`,
-   GN-2.md `:245`) — a fitted crossover between skip-benefit and dense-neutrality.
-4. **`CapacityPolicy`** (`cost.rs:326-332`): `tiny_string_cap`, `container_initial_capacity` —
-   numeric, workload-fitted.
+- **rustc `-Cprofile-use` / PGO** (LLVM `llvm-profdata` merge → `.profdata` at build).
+  Exactly this shape: an out-of-band profiling run produces a committed fact file steering
+  later codegen; profile is deterministic INPUT, not live measurement. Lesson 2D inherits:
+  version + staleness-check the file; builds without it fall to static heuristics (our
+  `from_env`/default path — graceful degradation).
+- **LLVM `BlockFrequencyInfo` + `MachineBlockPlacement`** — a fitted cost (PGO branch
+  weights) drives a discrete layout fork. Precedent that the measured coefficient must reach a
+  REAL discrete decision to matter; the AW-IV null is the counter-lesson (coefficient without
+  a fork = no effect).
+- **egg/egglog cost models + `LpExtractor`** (Willsey POPL'21; "Better Together" 2023).
+  Confirms greedy bottom-up extraction (`extract.rs`) is cost-INSENSITIVE when a class has one
+  canonical form — the field 2D must avoid. egglog scheduling/rulesets show where measured
+  cost CAN steer (rule firing order, saturation budget) — maps to our `CspScheduler`
+  iter/node caps (`csp_scheduler.rs:175-201`, `CostConfig` limits `:42-46`).
+- **MiniZinc/OR-Tools fitted objective** — `decision_csp`'s
+  `OptimizationMode::MinimizeCost` (`:89`) is the standard fitted-objective CSP; the fact
+  table is its coefficient vector.
+- **regex-automata prefilter cost heuristics** (BurntSushi) — the Teddy/memchr crossover is a
+  fitted membership-scan threshold; direct analogue to our N\*=3 kernel crossover
+  (GN-2.W4/SimdMode) as a profile-fitted decision.
+- **`fast_float`/Lemire** — canada float-conversion tax (+1.48 cyc/B, GN-2.W5) is a fact-table
+  row that could select deferred-vs-eager materialization by measured lane cost.
 
-The honest scope of a converged 2D: the loop is REAL and valuable at these
-**kernel/threshold/capacity knobs**, and DEGENERATE at the backend-shape lattice until the
-candidate generator (2A/2B/2C) grows real per-site alternatives. 2D commits to the former and
-names the latter as its exact prerequisite dependency.
+## 4. Named risks + counterexamples
 
----
+- **R1 (the wall, primary): the fitted coefficient changes NO decision.** If every real fork
+  is already forced by hard preconditions (`ShapeRationale`, `cost.rs:250`; the P1–P8 ladder
+  fires deterministically), measured cost is decorative and 2D is Y.13-dead like the
+  extraction sweep. Counterexample to survive: ≥1 grammar site where the static P-ladder picks
+  shape A but measured cyc/B favors B (candidate: OffsetTape vs SinkOnly on a thin projection —
+  PROVE-07's honestly-unmet twitter 2× bar, §0 row 07). If none exists across
+  json/css/csv/sheets/toml, the family RETIRES with a documented negative result and LOCK-2
+  converges on the candidate-generating families instead.
+- **R2: determinism leak.** If regen ever runs a bench, byte-identical regen (precept 53)
+  breaks under load noise. Structural mitigation: regen reads the committed table ONLY;
+  fitting is a separate gated command; `determinism_replay_status` + `selection_trace_hash`
+  verify replay.
+- **R3: overfit to a corpus.** A twitter-fitted coefficient mis-steers canada. Mitigation:
+  rows keyed per-(grammar, corpus-class); fit regresses on STRUCTURAL features, not corpus
+  identity (no name-gates); the re-capture gate (§1e) catches cross-corpus regression.
+- **R4: staleness churn.** Every kernel edit (GN-2 waves) invalidates rows → re-fit thrash.
+  Mitigation: `candidate_cost_stale_rate_bps` is WARN not hard-fail; stale rows fall to static
+  default (rustc-PGO-without-profile shape).
+- **R5: load-noise in the fit.** cyc/B carries loadavg noise (§0: absolutes directional).
+  Mitigation: fit the COEFFICIENT on ins/B (deterministic, load-proof, PROVE-12 §4), keep
+  cyc/B as the ratio-certified cross-check — the standing law's load-invariant column.
 
-## 3. The substrate (what already serves; consumer-in-wave)
+## 5. What a prototype MUST test to move this family (the falsifier)
 
-| Concern | Extant substrate (path:line) | 2D mutation |
-|---|---|---|
-| Cost provenance schema | `ir/src/cost.rs:172` `ActiveCostFacts` (`cost_formula_version`, `selected_cost_freshness`, `determinism_replay_status`, `selection_trace_hash`) | add `coefficient_table_hash`, `fit_residual_bps`, `training_corpus_id` (fields already serde) |
-| Measured-evidence model | `cost.rs:293` `RejectedAlternative.evidence: Vec<Measurement>`; `:305` `Measurement.cycles_per_byte_x1000`; `:318` `EvidenceSource::BenchProbe` | fill the empty vec (`:37 evidence: Vec::new()`) with PMU facts — the data model is ready, zero facts flow |
-| CSP provenance | `decision_csp.rs:183` `static_profile_provider_status`, `:186` `row_move_toward_sota_status` | flip `"static-template-blocker"` → `"fitted-coefficient-table-vN"` |
-| Perf dimension | `passes/src/lib.rs:590` `perf_cost: 0` | `perf_cost = predict(f(rule,shape), β)` |
-| Solver objective | `decision_csp.rs:44-49` `{0.0,1.0}` stub into `CostFiniteDomain` | real per-candidate `predict(...)` cost |
-| CSP cost eval seam | `csp-solver/src/solver/optimize.rs:12` `DomainCostEval::cost` | fitted β is the coefficient source its `cost()` reads |
-| Coefficient slot | `egraph/src/cost_weights.rs:175` `CALIBRATED_WEIGHTS`; `cost_config.rs:83` `from_env` | add `CostConfig::from_fact_table(path)`; keep `from_env` (`BBNF_COST_*`) for sweeps |
-| Profile-hint seam | `passes/src/lib.rs:1037` `PriorBenchProfile { hot_rule_names }`, consumed `:1052-1058` | widen to `CostProfile { coefficients, per_site_samples }` |
-| Freshness GATE | `bbnf-bench/src/report.rs:1742-1758` | give it teeth: `cost_formula_version = hash(table)` |
-| Measurement source | `bbnf-bench/src/bin/json_canon_bench.rs:59`,`:185`; `css_canon_bench.rs` | add `--emit-facts` decision-attributed writer |
-| Fit / commit / check host | `skinny/xtask/src/main.rs` dispatch; `cost_grid_sweep.rs` harness | new `calibrate` / `check-calibration` verbs; committed table dir; `profile/yyjson/*.profile.json` is the precedent home |
-| Residualization | `runtime_generator.rs` `CSS_GENERATED_RS` (`const fn delim_mask`, PROVE-12 §3) | a fitted coefficient const-folds into an emitted immediate exactly as the delimiter mask does |
+**PROVE-2D — "the fork exists and the profile flips it."** One prototype, born-RED, decisive:
+1. Enumerate every BackendShape/SIMD/capacity decision site across the 5 grammars; count how
+   many are precondition-FORCED vs genuinely cost-ranked (`ranked.len() > 1` in
+   `backend_egraph::select`, `:50-58`). If ZERO sites have ≥2 admissible candidates, the
+   family is dead on arrival — report the null (mirrors AW-IV.W5.3), retire.
+2. For ≥1 cost-ranked site, hand-author a `cost-facts.toml` with measured cyc/B (an actual
+   `json_canon_bench pmu` / `css_canon_bench` run, ≥3 windows) and show the driver selects a
+   DIFFERENT shape than `CALIBRATED_WEIGHTS`/integer `perf_cost` does.
+3. Regenerate; confirm the flipped decision (a) produces a byte-different generated parser,
+   (b) beats the static decision on that corpus cold-paired (the born-RED win), (c) leaves
+   `cargo xtask regen` byte-idempotent (table-read only, no bench in regen).
+4. Flip the three stub strings (`static_profile_provider_status`,
+   `generated_runtime_diff_status`, `row_move_toward_sota_status`) to fact-bearing values and
+   assert them in a `tests/` provenance oracle.
 
-**Consumer-in-wave (constitution viii / Y.13).** The committed coefficient table is forbidden as
-consumer-less substrate: it lands in the *same* wave as the `perf_cost` activation (`lib.rs:590`)
-and the CSP objective (`decision_csp.rs:49`) that reads it. A table shipping while `perf_cost`
-stays `0` is the dead-substrate pathology itself. The wire is four hops — bench fact stream → fit →
-committed β → CSP reads `predict(...)` — all closing in-wave, mirroring the GN-2.W1 discipline
-(GN-2.md `:40-46`).
-
----
-
-## 4. Prior art (with citations)
-
-- **AutoFDO** (Chen, Li, Hundt, *CGO 2016*). Sample-based FDO: hardware PMU samples (not
-  instrumentation) mapped to source; the compiler re-optimizes reading a committed profile. The
-  exact template — PMU → committed profile → deterministic re-compile — and its "samples not
-  instrumentation" stance matches our `proc_pid_rusage` cyc/B source.
-- **LLVM/GCC PGO** and **BOLT** (Panchenko et al., *CGO 2019*). `.profdata` is a committed fact
-  file; recompilation is a pure function of (source, profile). Our departure: we commit *fitted
-  coefficients*, not raw counts, so regen stays byte-deterministic and small.
-- **AutoTVM / Ansor** (Chen et al., *OSDI 2018*; Zheng et al., *OSDI 2020*) and **Halide
-  autoscheduler** (Adams et al., *SIGGRAPH 2019*) — the strongest analogue. A fitted cost model,
-  trained on MEASURED runtimes, drives a search over schedules; measurements accumulate in a
-  committed "tuning log" replayed deterministically. This *is* "measured feedback into a search's
-  cost model, profile committed as an artifact," scoped here to grammar-kernel selection.
-- **TASO** (Jia et al., *SOSP 2019*) — tensor-graph superoptimization extracts by *actual measured
-  runtime*, direct precedent that measured cost is a legitimate e-graph extraction objective — vs
-  **egg** (Willsey et al., *POPL 2021*) whose stock cost is *static* (`AstSize`/`AstDepth`); 2D is
-  the measured-cost extension the crate's `Extractor`/`CostModel` seam
-  (`backend_egraph.rs:83-88`,`:259-267`) already admits.
-- **Ithemal** (Mendis et al., *ICML 2019*), **uiCA / llvm-mca** — basic-block throughput
-  predictors: the `predict(features)` component. Our linear analog is deliberately simpler and
-  deterministic (closed-form β, no learned net), fitted to whole-parse cyc/B because macOS PMU is
-  process-granular (§5.2).
-- **regex-automata `rare.rs`** (BurntSushi) — the positive micro-precedent: prefilter rare-byte
-  selection reads a hardcoded byte-frequency rank table **fitted from a large corpus, committed as
-  source, deterministic**, driving a prefilter decision. This is 2D at micro-scale and proves the
-  pattern is SOTA-idiomatic for exactly this engine class — a small fitted table beating a live
-  heuristic. (The same engine's tier-choice heuristics elsewhere remain *hand-tuned* — the exact
-  seam LOCK-2's prefilter lowering, GN-2.W1, opens to fitting.)
-
----
-
-## 5. Named risks & counterexamples
-
-1. **The null-calibration trap (measured, in-tree — the central refutation risk).**
-   `cost_weights.rs:134-167` proves a fitted cost model moves **nothing** when the candidate set
-   has no distinct alternatives. 2D is inert over the backend-shape lattice. **Mitigation (§2):**
-   attach the loop to knobs with demonstrated spread — kernel crossover, `CSS_SHUFTI_MIN_SPAN`,
-   GATE=16, capacity — where a fitted value FLIPS a decision and MOVES a bench number. A 2D fitting
-   coefficients over the degenerate lattice reproduces the null and is refuted; over the threshold
-   knobs it has real work.
-2. **Attribution underdetermination.** The bench emits *whole-grammar* cyc/B
-   (`json_canon_bench.rs:193`), not per-rule; fitting per-decision β from whole-parse cyc/B over 5
-   grammars × ~3 corpora is underdetermined (dozens of features, ~15 equations) → β
-   unidentifiable. **Counterexample:** 40 JSON rules, 3 corpora cannot separate per-rule
-   coefficients. The prototype must choose (a) **A/B differential** per decision — compile both
-   legal knob values, diff whole-parse cyc/B cold-paired (clean, load-robust, O(candidate)
-   compiles), or (b) **shape-labeled sub-parse probes** (finer, more harness). (a) is the honest
-   primitive; the paired-interleave method is proven in-tree.
-3. **Determinism vs measurement (fixpoint gate).** If the solver reads live PMU at regen,
-   `regen∘regen ≠ regen`. Guard: fit is a *separate* offline verb; regen reads only committed β;
-   the table hash is the determinism anchor (`cost_formula_version`). Counterexample to refuse:
-   any design that re-measures inside `xtask regen`.
-4. **Corpus/host overfit.** β fitted on twitter/canada/citm + one M-series host may mis-rank for
-   TOML/CSV (no committed corpus yet — R1 §6), or fit animate at bootstrap's expense (GN-2.W3's
-   named risk, GN-2.md `:634`). Guard: `host_triple` keys the table (aarch64-only per x86
-   abrogation → single-host *simplifies*, no cross-ISA fit); the objective is a *multi-corpus
-   constraint* (retain all wins), not a single-corpus argmin; a cross-grammar held-out residual is
-   committed beside β and a flip must survive on a grammar outside the fit set.
-5. **Provenance theater.** Stamping `cost_formula_version = hash(table)` without
-   `check-calibration` actually re-running/diffing is the same lie the current `"pass"`/`0` stamps
-   are. Guard: freshness must go RED on a mutated coefficient (§6, PROVE-2D-B).
-6. **Refutation laws bind the measurement.** No warm benches (SPEC §0) — cold per-parse. Ratios
-   certified / absolutes directional (precepts 43-49) — fit target is relative ordering. macOS
-   `ri_cycles` is per-process — no per-BB counters (`xctrace_probe.rs` exists but is coarser); the
-   attribution ceiling is process-granular, which is *why* the A/B-differential primitive (risk 2a)
-   is the safe default.
-
----
-
-## 6. What a prototype must test (the family-mover)
-
-**PROVE-2D-A — does a measured coefficient table flip a decision, as a measured win?** Choose a
-knob with demonstrated spread (§2: the `select_backend` kernel crossover `dispatch.rs:89`, or
-`CSS_SHUFTI_MIN_SPAN`). A/B-measure the candidate values (compile each, cold-paired whole-parse
-cyc/B, ≥3 windows); fit β / the crossover; commit a one-row `coefficients.ron`; wire the decision
-driver (populate `perf_cost` at `lib.rs:590` / gate `select_backend`) to read it. **Gate:** the
-fitted value differs from the hardcoded/legality-only value AND the fitted-value lane beats the
-hardcoded-value lane cold-paired on a real grammar AND regen is byte-identical across the committed
-table on double-regen. **Failure semantics (honest):** if no knob's fitted optimum differs from its
-current value, 2D is a documented negative result — the null recurrence, now on kernels not the
-lattice — and the family's disposition becomes "coefficient plane, blocked on 2A/2B/2C candidate
-generation," a named dependency, not a silent pass.
-
-**PROVE-2D-B — determinism & falsifiable freshness.** Fit under quiet load and under loadavg 13-19
-(the PROVE-12 regime); committed β must be identical (fit on paired medians/ratios,
-load-invariant). Regen twice → byte-identical (fixpoint). Then set `cost_formula_version =
-hash(coefficients.ron)` and prove the `report.rs:1750` freshness gate is FALSIFIABLE — mutate one
-coefficient, freshness goes RED, `check-calibration` fails. This proves the loop is a real circuit,
-not stamped strings, and that its determinism is achieved by *separation* (measure off the regen
-path), not by careful timing.
-
-**The minimal move:** even one profile-fitted decision that (a) flips, (b) wins cold-paired, (c)
-leaves regen byte-identical, (d) drives freshness RED when perturbed — converts `perf_cost: 0` and
-`static-template-blocker` from an architectural admission into a measured, deterministic, auditable
-closed loop.
+PASS ⇒ 2D is a live, consumer-bearing loop with a measured win. FAIL at step 1 ⇒ the family
+is architecture-without-consumer and yields to sibling families. The prototype's single job is
+to answer the AW-IV null: **does a measured coefficient govern any real decision on any real
+grammar?** Everything else in this family is plumbing around that one falsifiable question.

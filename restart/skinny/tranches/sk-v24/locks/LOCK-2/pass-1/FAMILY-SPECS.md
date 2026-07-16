@@ -173,13 +173,27 @@ teardown? (2) Does regen stay bit-for-bit through cost-guided extraction? (3) **
 anything at all** — the aegraph external verdict (1.13 avg class, 2-of-4M, ~0.1% runtime) says the
 win is canonicalization, NOT extraction; if the §0 master gate does not flip, 2B's *distinctive*
 claim (the IR *becomes* the e-graph; extraction emits BackendShape) reduces to "GVN/hash-consing for
-free," which 2A/2C also inherit from the shared engine.
+free," which 2A/2C also inherit from the shared engine. (4) **`BackendShape` is caller-sensitive;
+greedy per-class extraction is not** (research-B risk 1, uncovered elsewhere in this pass).
+`admits_sink_only` (`passes/src/lib.rs:954`) keys shape legality on the *caller's target*: a sub-rule
+referenced by a `SinkOnly` caller and an `OffsetTape` caller cannot extract to one shape for both, so
+"extraction emits `BackendShape` directly" presumes a context-freedom the IR does not have. The
+repairs are all costly — context-split classes by caller (unbounded blowup), a post-extraction global
+shape solve (**concedes into 2C, dissolving 2B's identity**), or optimal context-sensitive DAG
+extraction (**NP-hard, inapproximable within any constant ratio** — prior-art [6][7]). Only rules
+with *no* caller-conflicting shape demand extract soundly; whether the fleet has any conflict is
+prototype-answerable (a caller-map audit over `admits_sink_only`/`requires_eager_tape`).
 
-**Verdict.** VALUE-AT-RISK, not strictly BLOCKED. The maximal reading is refuted by the IR shape;
-the aegraph reading is coherent and ~80% substrate-built, but its residual distinctive value is
-gated on §0 (prototype-answerable) and the aegraph twin predicts it is ~0.1%. If Brief 1 shows
-extraction inert, 2B collapses to canonicalization and its "IR-becomes-e-graph" thesis buys the
-compile-time cost of an oversized graph for the value 2A gets locally.
+**Verdict.** VALUE-AT-RISK trending BLOCKED-candidate. The maximal reading is refuted by the IR
+shape; the aegraph reading is coherent and ~80% substrate-built, but its residual distinctive value
+is gated on §0 (prototype-answerable) and the aegraph twin predicts it is ~0.1%. Additionally, its
+signature claim (extraction emits `BackendShape` directly) rests on context-free per-class shape,
+which open-question (4) refutes on the real IR; the only identity-preserving repair is a missing
+primitive of *equal difficulty* to the original problem (optimal context-sensitive extraction,
+NP-hard) — the BLOCKED-candidate condition. If Brief 1 shows extraction inert, 2B collapses to
+canonicalization and its "IR-becomes-e-graph" thesis buys the compile-time cost of an oversized graph
+for the value 2A gets locally; if a caller-conflict exists on the fleet, 2B's live content migrates
+to 2C (post-extraction shape solve) or 2A (bounded islands).
 
 ---
 

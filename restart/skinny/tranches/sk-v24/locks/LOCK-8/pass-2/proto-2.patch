@@ -1,0 +1,62 @@
+# LOCK-8 pass-2 PROTO-2 (probe t2, family 8C Brief 2) — patch
+# Adds the Rust half of the regex alternation-order behavioral differential.
+# Target (READ-ONLY original; lands only via BBNF-PT-G): rust/regex/tests/alternation_order_differential.rs
+# Drives Dfa::compile + find_at — the identical matcher parse_that/src/leaf.rs:74 runtime regex() leaf uses.
+# --- /dev/null
+# +++ b/rust/regex/tests/alternation_order_differential.rs
+
+@@ -0,0 +1,54 @@
++// LOCK-8 pass-2 probe t2 (family 8C, Brief 2): regex alternation-order behavioral differential.
++// Drives the SAME matcher the runtime `regex()` leaf drives: Dfa::compile + find_at (leftmost-LONGEST).
++// Emits one machine-parseable line per (pattern,input): `RUST <id> <matched_len|NONE>`.
++// The JS twin (sticky RegExp, leftmost-FIRST) is run separately; the two outputs are diffed.
++
++use bbnf_regex::Dfa;
++
++// (id, pattern, input). Mirrors js-differential.mjs exactly (same ids).
++const CASES: &[(&str, &str, &str)] = &[
++    // ── Synthetic engine-divergence probes (ordered alternation, shorter-first) ──
++    ("alt_a_ab__ab",        "a|ab",        "ab"),      // DFA longest=2, JS first=1  → DIVERGE
++    ("alt_ab_a__ab",        "ab|a",        "ab"),      // both 2 → agree
++    ("alt_a_ab__abc",       "a|ab",        "abc"),     // DFA 2, JS 1 → DIVERGE
++    ("alt_foo_foobar__fb",  "foo|foobar",  "foobar"),  // DFA 6, JS 3 → DIVERGE
++    ("alt_foobar_foo__fb",  "foobar|foo",  "foobar"),  // both 6 → agree
++    ("alt_cat_ca__cats",    "cat|ca",      "cats"),    // DFA 3, JS 3 (first alt longer) → agree
++    ("alt_ca_cat__cats",    "ca|cat",      "cats"),    // DFA 3, JS 2 → DIVERGE
++    // ── Lazy quantifier probes (DFA discards greedy/lazy priority) ──
++    ("lazy_digits__123",    "\\d+?",       "123"),     // DFA greedy=3, JS lazy=1 → DIVERGE
++    ("lazy_astar_b__axbxb", "a.*?b",       "axbxb"),   // DFA longest=5, JS lazy=3 → DIVERGE
++    // ── Real corpus regex leaves (expected to AGREE — no shorter-first alternation) ──
++    ("json_num__neg",       "-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?", "-12.5e3"),
++    ("json_num__zero",      "-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?", "0"),
++    ("json_num__int",       "-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?", "123"),
++    ("json_num__zeroish",   "-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?", "0123"), // 0 then stop
++    ("json_str__esc",       "\"(?:[^\"\\\\]|\\\\(?:[\"\\\\/bfnrt]|u[0-9a-fA-F]{4}))*\"", "\"a\\nb\""),
++    ("csv_notquote__ab",    "[^\"]+",      "ab,cd"),
++    ("csv_notcomma__ab",    "[^,]+",       "ab,cd"),
++    ("ws_star__spaces",     "\\s*",        "   x"),
++    ("ws_star__none",       "\\s*",        "x"),
++    ("hex4__cafe",          "[0-9a-fA-F]{4}", "cafe99"),
++];
++
++#[test]
++fn emit_rust_differential() {
++    let mut out = String::new();
++    for (id, pat, input) in CASES {
++        let res = match Dfa::compile(pat) {
++            Some(dfa) => match dfa.find_at(input.as_bytes(), 0) {
++                Some(end) => end.to_string(),
++                None => "NONE".to_string(),
++            },
++            None => "COMPILE_FAIL".to_string(),
++        };
++        out.push_str(&format!("RUST {} {}\n", id, res));
++    }
++    print!("{}", out);
++    // Also write to a file so capture is guaranteed regardless of test harness buffering.
++    std::fs::write(
++        concat!(env!("CARGO_MANIFEST_DIR"), "/../../rust-differential.out"),
++        &out,
++    )
++    .unwrap();
++}

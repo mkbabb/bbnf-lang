@@ -1,273 +1,224 @@
-# LOCK-7 · Family 7A — STAGED-BOOTSTRAP · research (pass 1)
+# LOCK-7 / Family 7A — STAGED-BOOTSTRAP (research, pass 1)
 
-The two-stage discipline: a committed, minimal, auditable stage-0; a generator that reads its
-own grammar to emit stage-1; a fixpoint gate that proves `regen∘regen = regen` byte-for-byte.
-The family's thesis is that grammar totality (constitution clause i) is earned not by making
-the most planes grammar-driven, nor by the widest oracle, but by the smallest, provably-idempotent
-trust root — the least hand-written code you must believe, gated by a mechanical fixpoint that a
-wrong stage-0 cannot silently satisfy.
+Charter: the classic two-stage bootstrap for grammar totality — committed stage-0 artifacts,
+a fixpoint gate (`regen∘regen = regen`, byte-identical), a **minimal** bootstrap surface, and
+**maximal** auditability. Constitution clause (i): everything is grammar-driven, here and
+there, save primitives and combinators — the regex grammar IS bootstrapped and bbnf-defined.
+This family's thesis: totality is not a percentage to chase (that is 7C's lattice) nor an
+oracle to promote (7D) — it is a **closure property, proven by self-application and enforced
+byte-for-byte in CI**, over a trusted seed small enough to read.
 
----
+## 1. The ground truth — what self-hosting already exists, and where it regressed
 
-## 1 · The mechanism, made concrete
+Self-hosting is **not greenfield**; it is built, then abandoned in the tree the greenfield
+inherits. Two facts must be held together:
 
-### 1.1 What "two-stage" means here
+**(a) The legacy `crates/core` tree self-hosts fully.** `grammar/bbnf/bbnf.bbnf` (89 LOC, with
+`@import` of `expressions.bbnf` + `types.bbnf`) is compiled by `cargo xtask regen` into
+`crates/core/src/grammar/generated/bbnf.rs` — **21,557 LOC / 1.09 MB of committed generated
+parser**. The whole grammar fleet is bootstrapped the same way: `bbnf.rs, bnf.rs, ebnf.rs,
+css_l4.rs (6.1 MB), css_pretty.rs, csv.rs, google_sheets.rs, json.rs, math.rs`, each with a
+`<name>.registry.json` companion. The self-host entry is a single function:
+`bbnf::grammar::generated::BbnfBootstrap::parse` (re-exported thinly by
+`crates/bootstrap/src/lib.rs`, one `pub use` line). bbnf parses its own grammar-of-grammars
+with a bbnf-generated parser **today** — the closure exists, it merely lives in the retired tree.
 
-A parser generator self-hosts when the grammar of its own input language is expressed in that
-language and fed through the generator to produce the front-end that reads it. bbnf's own
-syntax is already a self-describing grammar triple:
+**(b) The greenfield seed (`skinny/`) has REGRESSED to a hand parser.** The skinny `grammar`
+crate is `crates/grammar/src/lib.rs:29 pub fn parse_grammar(name, source) -> GrammarIr` —
+**2142 hand-written LOC** (R1 §1), no generated bbnf parser, and the xtask regen targets are
+`json / sheets / css / real-typed` ONLY (`xtask/src/main.rs:39-52`) — **there is no
+bbnf-parses-bbnf target and no regex-parses-regex target in skinny.** Because SPEC §1 retires
+skinny "as a tree" and the GN-series ports its organs forward, **the greenfield is born
+WITHOUT self-hosting unless 7A re-lands it.** Constitution clause (i) is therefore currently
+UNMET for the two grammars that matter most to it — bbnf and regex.
 
-- `grammar/bbnf/bbnf.bbnf` — rules, directives, terms, modifiers, the `->` map syntax, the
-  closure/grammar-function form (`closure = "|" , identifier , … , "|" ?w , rhs`), and
-  `@import`/`@pretty`/`@ws`/`@token`/`@debug`/`@host`/`@recover` directives.
-- `grammar/bbnf/expressions.bbnf` — the `value_expr` DSL that is the right side of `->`
-  (precedence-climbing atoms → mul → add → cmp → and → or, plus `value_closure`).
-- `grammar/bbnf/types.bbnf` — `type_name` (primitive widths + arbitrary idents).
+**(c) parse-that is the isomorphic mirror, and it too self-hosts.** `rust/bootstrap/regex.bbnf`
+(72 LOC, full L4 regex) → xtask regen → `parse_that::regex::generated` (`generated.rs`, **2293
+LOC committed**), surfaced by the thin `regex-bootstrap` crate (`pub use
+parse_that::regex::generated::{RegexParser, parse_generated}`). Its header records the exact
+shape 7A must preserve: the proc-macro path (`bbnf_derive::Parser` + `cargo expand` +
+`scripts/bootstrap-regex.sh` python post-processing) was **retired** (bbnf-lang commit
+`6142387f`); the generated parser is now committed source emitted by `cargo xtask regen`, and
+the bbnf-side mirror (`BbnfBootstrap`) is called out as the analogue. One `xtask fixpoint`
+gate can therefore cover BOTH repos' clause-(i) grammars — the bootstrap is physically
+isomorphic (LOCK-6's bbnf/parse-that face by construction).
 
-These three modules ARE the object language. Two-stage bootstrap makes the front-end that
-parses them a *product* of feeding them through the generator, not a hand-maintained artifact
-that merely happens to agree.
+## 2. The mechanism made concrete — the fixpoint the tree does not yet have
 
-### 1.2 The three parsers in play (the state of the art in-tree)
+What exists is a **staleness / idempotency gate**, not a fixpoint gate. Two mechanisms live in
+`skinny/xtask/src/regen.rs`:
 
-There are today two independent parsers of bbnf, plus a retired third:
+- `check_target` (`regen.rs:37`) → `EmittedSource::check_dir`: recompute `emit(source)` and
+  fail if it differs from the committed bytes. This is **one application** — it proves the
+  committed artifact is fresh w.r.t. the *current* generator. It does **not** run the
+  generated parser at all.
+- The legacy idempotent write-skip (`crates/bootstrap/src/lib.rs` header, "Post-B6.W0"):
+  `regen` skips the on-disk write when emitted bytes equal existing bytes, dropping cold-wall
+  regen ~88 s → ~0.5 s. This is a **build-cache** optimization on generator determinism, and
+  it is dangerous to 7A precisely because it can *mask* a fixpoint failure: it never forces the
+  grammar source to be re-parsed by the generated parser.
 
-1. **The hand-written production front-end.** `crates/grammar/src/lib.rs:29`
-   `pub fn parse_grammar(name, source) -> Result<GrammarIr, GrammarError>` — ~2142 hand LOC.
-   This is what `cargo xtask regen-*` actually calls to parse every `.bbnf` (via
-   `codegen::emit_from_source`, `codegen/src/lib.rs:101-102`). It is the *de facto* stage-0.
-2. **The generated bbnf parser.** `crates/bootstrap/src/lib.rs` is a one-line diagnostic
-   re-export `pub use ::bbnf::grammar::generated::BbnfBootstrap;` — a parser emitted from
-   bbnf.bbnf THROUGH the generator and committed. It exists but serves as a bench/oracle
-   surface, not the production front-end.
-3. **The retired proc-macro path.** `crates/derive` (`bbnf_derive`) was purged (commit
-   `6142387f`); it formerly expanded a `#[derive(Parser)]` marker by running the whole IR
-   pipeline at compile time. Its parse-that twin (`rust/bootstrap`, crate `regex-bootstrap`)
-   drove `RegexParser` from `regex.bbnf` via `cargo expand` + `scripts/bootstrap-regex.sh`
-   into `parse_that/src/regex/generated.rs`. Both derive hosts are gone; the generated
-   parsers now flow through `cargo xtask regen` and are committed source.
+Neither is `regen∘regen = regen` in the rustc sense. The staged bootstrap 7A must add:
 
-The strongest 7A reading: the generator ALREADY emits a bbnf-parses-bbnf artifact, but the
-bootstrap is *cosmetic* — the hand parser remains authoritative and never shrinks, and no
-fixpoint gate proves the generated parser is a true fixed point of the generator. 7A's work is
-to (a) make stage-0 minimal and auditable, (b) promote the generated parser to production, and
-(c) install the fixpoint gate that makes self-hosting mechanical rather than asserted.
+- **Stage 0** — the committed generated parser artifacts (`grammars/bbnf/*.rs`,
+  `grammars/regex/*.rs`), the auditable checkpoint.
+- **Seed (trusted base)** — the hand `parse_grammar` (2142 LOC) is the stage-(−1) compiler that
+  bootstraps stage 0 from source. It is the *only* unauditable-by-regen code and must be
+  minimized and quarantined (§4).
+- **Stage 1** — seed parses `bbnf.bbnf` → passes → codegen → emit parser **P1**.
+- **Stage 2** — **P1 (the generated parser) parses `bbnf.bbnf`** → passes → codegen → emit **P2**.
+- **The gate**: `blake3(P1) == blake3(P2) == blake3(stage-0 committed)`, byte-identical, in CI,
+  born-RED. Only stage 2 running the grammar source *through the generated parser* proves the
+  generated parser accepts the grammar that defines it — the self-application closure. This is
+  exactly rustc's stage1≡stage2 invariant and Hexa-lang's gen3≡gen4 native fixpoint.
 
-### 1.3 The staging tower (the concrete construction)
+**Concrete xtask surface** (mirrors the existing `RuntimeTarget` machinery verbatim):
 
-```
-stage-0  S0 = minimal committed bbnf parser (hand-written seed, enough to parse bbnf.bbnf)
-stage-1  P1 = generator(S0.parse(bbnf.bbnf))     — the emitted front-end
-stage-2  P2 = generator(P1.parse(bbnf.bbnf))     — re-emit through the emitted front-end
-FIXPOINT GATE:   bytes(P1) ≡ bytes(P2)           — regen∘regen = regen, byte-identical
-PROMOTION:       production front-end := P1  (S0 retired to the bootstrap-only path)
-```
+1. Add `RuntimeTarget { grammar_name:"bbnf", entry_rule:"grammar", source_inputs:
+   ["grammar/bbnf/bbnf.bbnf","grammar/bbnf/expressions.bbnf","grammar/bbnf/types.bbnf"],
+   output_dir:"crates/<runtime>/src/grammars/bbnf", ... }` and the twin `regex` target
+   (`grammar/misc/regex.bbnf`, entry `regex`) — structurally identical to `JSON_TARGET`
+   (`xtask/src/main.rs:177`) and `SHEETS_TARGET` (`:200`). Wire `regen-bbnf-self` /
+   `check-bbnf-self` / `regen-regex-self` / `check-regex-self` into the dispatch (`main.rs:39-52`).
+2. Add `xtask fixpoint`: run stage 1 via the seed; **rebind** the grammar-source front-end to
+   the freshly generated parser (a codegen entry that consumes a `dyn GrammarFrontend` rather
+   than calling `parse_grammar` directly — the one seam that must be introduced); run stage 2;
+   compare in memory (no write). The `validate_inputs` blake3 hasher already present
+   (`regen.rs:154-166`) is the substrate — extend it from *input* hashing to *emitted-byte*
+   hashing so stage1/stage2/stage0 digests are one comparison. `check_dir` already gives the
+   stage-0 half free.
+3. Budget the seed like code (`lint-loc`, `xtask/src/main.rs:259-311` is the template): a
+   `trusted-seed` LOC budget on `crates/grammar` that only ever ratchets DOWN — the Guix
+   reduced-binary-seed ethos made a number.
 
-This is the GCC `make bootstrap` shape: stage-0 seeds, stage-1 is compiled by stage-0, stage-2
-by stage-1, and stage-1 ≡ stage-2 bit-for-bit is the correctness proof. The difference from a
-compiler is that our "compilation" is grammar→Rust emission and the artifact compared is
-generated `.rs` source, so the comparison is textual/byte, cheaper and more auditable than
-object-file comparison.
+## 3. The substrate — what already carries the design
 
-### 1.4 The nested-grammar ordering (bbnf needs regex needs bbnf)
+- **Determinism substrate**: regen already sorts via `BTreeSet` (`regen.rs:89-101`
+  `validate_unique_targets`) and hashes inputs with blake3 — byte-identity is within reach, but
+  the whole `codegen` emit path (10201 LOC, R1 §2) must be audited for HashMap-iteration /
+  timestamp non-determinism (rustc's canonical fixpoint-breaker). The `.registry.json`
+  companions are already deterministic sidecars.
+- **The re-export seam is proven**: `crates/bootstrap/src/lib.rs` and `rust/bootstrap` show the
+  exact "generated parser lives in the runtime crate, thin crate re-exports the canonical type"
+  pattern for both repos. 7A does not invent a shape — it re-lands a retired one into the
+  greenfield and adds the missing gate.
+- **The check-dir gate is the enforcement rail**: `EmittedSource::check_dir` + the
+  `check-<grammar>` commands already fail CI on staleness; `check-fixpoint` slots beside them.
+- **Grammar totality is already broad**: `bbnf.bbnf` is expressed in bbnf (imports, `->`
+  projections, `@pretty` directives), `regex.bbnf` in bbnf, `ebnf.bbnf`/`bnf.bbnf` in bbnf —
+  the corpus for the differential soundness guard (§4) already exists in `grammar/`.
 
-bbnf.bbnf contains regex literals (`identifier = /[_a-zA-Z][_a-zA-Z0-9-]*/`), so parsing
-bbnf.bbnf requires a regex-literal sub-parser, and the regex language is itself bbnf-defined
-(`parse-that/rust/bootstrap/regex.bbnf` — full L4: classes, escapes, quantifiers, groups,
-the recursive alternation→concat→quantified→atom spine). The bootstrap is therefore a
-*mutual* two-grammar fixpoint with a forced order. The order that terminates: stage-0 treats a
-regex literal as an opaque `Span` (bbnf.bbnf line 15: `regex = ( "/" , /(\\.|[^\/])+/ , "/" )
--> Span`), so S0 needs only span-lexing, not a regex engine, to bootstrap bbnf. The regex
-grammar is then emitted as an ordinary grammar target once the bbnf front-end exists. This
-breaks the chicken-egg: regex is a *leaf span* at bootstrap time, promoted to a full parser
-afterward — a clean DAG, not a cycle.
+## 4. The trusted seed — minimality and auditability, made rigorous
 
-### 1.5 The fixpoint gate, mechanized
+"Minimal bootstrap surface, maximal auditability" is the family's discriminating clause, and it
+has a precise reading from the bootstrappable-builds literature (Guix Reduced Binary Seed; GNU
+Mes; Thompson's *Reflections on Trusting Trust*): the trusted computing base is exactly what
+cannot be re-derived by a byte-checkable regen. Here that base is `{ parse_grammar seed +
+codegen backend }`. 7A's honest floor:
 
-`crates/xtask/src/regen.rs:37` `check_target` today re-emits from source and calls
-`emitted.check_dir(output_dir)` — it asserts `committed ≡ emit(source)` (single application:
-staleness). This is the stage-0 *pin*, not the fixpoint. 7A extends it two ways:
+- **Bootstrap the front-end, not the whole generator.** The `codegen` emit backend (10201 LOC)
+  is a *primitive* under clause (i) ("save primitives and combinators") — 7A does NOT attempt
+  to grammar-specify it (that is 7B's ambition). 7A drives the seed→fixpoint to closure on the
+  **parser** and names the backend as trusted primitive. This is what keeps 7A *minimal*.
+- **Stage the language so the seed shrinks.** The seed need only parse the sub-language in which
+  `bbnf.bbnf` itself is written — core EBNF (`= ; | , () [] {} * + ? ?w` and `/regex/`,
+  `"literal"`, `@import`). It does **not** need `->` value-expressions, `@host`, `@pretty`,
+  closures, or `<<`/`>>`/`-` binary operators to *parse the grammar-of-grammars* (those are
+  needed to parse rich grammars, and the GENERATED parser supplies them). Define **bbnf-core**
+  = the seed's accepted language; the seed's LOC budget is measured against bbnf-core, and every
+  feature not in bbnf-core is proof the seed is smaller than the language. Target: the trusted
+  seed is a strict, readable subset — Mes's "≈5000 lines of simple C" is the spiritual bound.
+- **Soundness guard against false fixpoints** (the named counterexample below): a fixpoint on
+  `bbnf.bbnf` alone can pass while seed and generated parser accept *different languages*. 7A
+  therefore carries a bounded differential: parse the whole `grammar/` corpus
+  (`json/css_l4/ebnf/bnf/csv/google_sheets/regex`) with BOTH seed and generated parser and
+  assert equal `GrammarIr`. This is a *bounded* version of 7D's oracle — 7A needs it only as the
+  fixpoint's guard, not as a promotion mechanism.
 
-1. **Second application (the fixpoint).** A new `bootstrap-fixpoint` arm: emit P1 from
-   bbnf.bbnf through S0; parse bbnf.bbnf through P1; emit P2; assert `bytes(P1) ≡ bytes(P2)`.
-   One-step convergence is the gate; if it takes two steps, the generator is non-idempotent
-   and that is a named defect (§6, R2).
-2. **Input digest as a committed lock.** `regen.rs:153-167` `validate_inputs` already
-   blake3-hashes every source + metadata input (`hash_input`, incremental over `rel`+bytes)
-   and *prints* the digest (`regen.rs:165`). Today it is provenance theater — nothing asserts
-   it. 7A commits the digest beside the generated dir and asserts it in `check_target`, so a
-   stage-0 grammar edit without regen trips a digest mismatch (a cheap early gate) BEFORE the
-   full byte-diff, and the stage-0 trust root is a named, versioned quantity.
+## 5. Prior art (citations)
 
-The determinism substrate is partly in place: `regen.rs` uses `BTreeSet` for target validation
-(`:88-104`); the generator must emit under total orders (BTreeMap, sorted iteration) so
-`regen∘regen` is deterministic — the changed-flag-convergence and clean-regen laws bind here.
+- **rustc stage0/1/2**: stage0 precompiled → builds stage1 → stage1 builds stage2; **if stage1
+  and stage2 binaries are byte-identical the compiler is a fixpoint**. The exact gate 7A adopts.
+  (rustc-dev-guide, "What Bootstrapping Does".)
+- **Hexa-lang**: self-hosting native compiler advertising a **byte-identical gen3 ≡ gen4
+  fixpoint** with citation-enforced stages — a second independent instance of the double-regen
+  gate as the correctness proof.
+- **Guix Reduced Binary Seed / Full-Source Bootstrap / GNU Mes**: reducing the trusted binary
+  seed (250 MB → ~60 MiB → 25%) toward a fully source-auditable path; the discipline of
+  *minimizing the unauditable seed* is precisely 7A's §4. Rooted in **Ken Thompson, "Reflections
+  on Trusting Trust"** — the WHY of a small readable seed.
+- **T-diagram bootstrapping / metacircular front-ends**: the classical frame; 7A is the
+  front-end-only, byte-checked instance.
 
-### 1.6 Minimal stage-0 (the auditability lever)
+Sources: [rustc-dev-guide bootstrapping](https://rustc-dev-guide.rust-lang.org/building/bootstrapping/what-bootstrapping-does.html) ·
+[Hexa-lang](https://github.com/dancinlab/hexa-lang) ·
+[Guix Reduced Binary Seed](https://guix.gnu.org/manual/en/html_node/Reduced-Binary-Seed-Bootstrap.html) ·
+[Guix Full-Source Bootstrap](https://guix.gnu.org/en/blog/2023/the-full-source-bootstrap-building-from-source-all-the-way-down/) ·
+[GNU Mes / bootstrappable](https://www.gnu.org/software/mes/manual/html_node/Bootstrappable-Builds.html)
 
-The 2142-LOC hand parser is far larger than a bootstrap seed needs. bbnf.bbnf is a small
-grammar (≈35 rules across the triple). The 7A minimal seed S0 parses only the bbnf
-metalanguage — rules, terms, modifiers, `->`, closures, `@import` — enough to read the triple,
-with regex literals as opaque spans. Everything the full production parser does beyond that
-(rich diagnostics, recovery, the `value_expr` precedence tower's semantic checks) belongs to
-P1, the emitted parser, not S0. Target: S0 ≤ ~400–600 LOC (the "least code you must trust"),
-with the full front-end regenerated as P1. This is the family's distinguishing claim —
-minimal bootstrap surface, maximal auditability — and it is measurable (§7 P2).
+## 6. Named risks and counterexamples
 
----
+1. **Two-parser divergence — HAS HAPPENED.** The legacy tree already suffered two
+   `BbnfBootstrap` types (proc-macro-relocated vs raw-expansion) that DIVERGED and had to be
+   unified (`crates/bootstrap/src/lib.rs` header, "per W0-per-grammar-boundary §3.3"). Risk:
+   seed and generated parser accept different languages → fixpoint on `bbnf.bbnf` passes
+   vacuously. Mitigation = the §4 differential guard. This is the single most likely way 7A
+   ships a *green but wrong* gate.
+2. **Emit non-determinism → false RED.** HashMap iteration order, embedded paths/timestamps, or
+   float formatting in codegen break byte-identity and fail the fixpoint spuriously (rustc's
+   perennial reproducibility tax). Must audit the full `codegen` path; the existing BTreeSet
+   discipline is necessary but not sufficient.
+3. **Idempotent write-skip masks staleness.** The Post-B6.W0 mtime-preserving write-skip must be
+   *disabled* inside `xtask fixpoint` (compare in memory), or a real stage1≠stage2 drift hides
+   behind an unchanged file. Speed optimization and correctness gate must be separate code paths.
+4. **Seed creep.** Every new bbnf feature tempts growing the seed; that inflates the trusted
+   base and violates minimality. Counter: bbnf-core is FROZEN as the seed's language; new
+   features land only in the generated parser. If a feature is genuinely needed to *parse
+   bbnf.bbnf*, that is a deliberate, reviewed seed-budget increase — never incidental.
+5. **Double-regen build cost.** A fixpoint run is two full regens (bbnf 21.5k LOC, css_l4 6 MB);
+   at ~88 s cold-wall each, CI cost is real. Prototype must measure whether the double pass is
+   affordable or must be gated to a nightly / pre-merge lane while `check-<grammar>` staleness
+   runs per-commit.
+6. **Generator-is-not-bootstrapped is an honest boundary, not a hole.** 7A deliberately leaves
+   `codegen` as trusted primitive. A critic will call this "incomplete totality"; the answer is
+   that 7A's value proposition IS the minimal, auditable boundary — pushing the boundary into
+   the backend is 7B/7C's trade, measured against build-time and debuggability, not 7A's.
 
-## 2 · The substrate (what already exists to build on)
+## 7. What a prototype must test to move this family
 
-| Organ | Path | Role in 7A |
-|-------|------|-----------|
-| Hand front-end | `crates/grammar/src/lib.rs:29` `parse_grammar` | the *de facto* stage-0; shrink to minimal S0 + promote P1 |
-| Generated bbnf parser | `crates/bootstrap/src/lib.rs` (`BbnfBootstrap`) | today's stage-1 oracle; promotion target |
-| Generator entry | `codegen/src/lib.rs:101` `emit_from_source` | the emission the bootstrap drives |
-| Regen mechanics | `xtask/src/regen.rs:20` `write_targets`, `:37` `check_target` | staleness pin → extend to fixpoint + digest gate |
-| Input digest | `xtask/src/regen.rs:153-167` `validate_inputs`/`hash_input` (blake3) | printed-only → commit + assert (stage-0 lock) |
-| Dispatch | `xtask/src/main.rs:39-52` (`regen-json`/`check-json`/…) | add `regen-bbnf`/`check-bbnf`/`bootstrap-fixpoint` arms |
-| Target descriptor | `xtask/src/regen.rs:5-18` `RuntimeTarget` | a `BBNF_TARGET` const declaring the self-host target |
-| Workspace metadata | `skinny/Cargo.toml` `[workspace.metadata.bbnf]` (only `json` declared) | declare the bbnf-self + regex targets |
-| Regex bootstrap (twin) | `parse-that/rust/bootstrap` (`regex.bbnf`, `regex-bootstrap`), `parse_that::regex::generated` | the dependent regex target; retired proc-macro → xtask flow |
-| bbnf object language | `grammar/bbnf/{bbnf,expressions,types}.bbnf` | the three modules S0 must parse and the generator must self-emit |
+1. **Wire `bbnf-self` regen in skinny** (a `RuntimeTarget` clone) and confirm the emitted bbnf
+   parser (a) COMPILES and (b) parses `bbnf.bbnf` to the same `GrammarIr` the hand
+   `parse_grammar` produces. Proves the front-end is regenerable in the greenfield seed at all.
+2. **Implement `xtask fixpoint` and run it on the legacy `bbnf.rs`/`regex generated.rs`
+   artifacts**: is `regen∘regen` byte-identical TODAY, or does it drift? A measured yes de-risks
+   the whole family; a measured no localizes the non-determinism (risk 2) before GN.
+3. **Measure the trusted seed**: strip `parse_grammar` to bbnf-core; report the LOC of the
+   minimal seed that still parses `bbnf.bbnf` + `regex.bbnf`. This number is the family's headline.
+4. **Determinism audit**: two clean regens, `diff` the bytes across the whole `grammars/` output.
+   Any diff is a named non-determinism site with a fix.
+5. **Differential soundness**: parse the full `grammar/` corpus with seed vs generated parser,
+   assert `GrammarIr` equality — the guard against risk 1.
+6. **Cost**: wall-time of the double-regen fixpoint vs single staleness check; decide the CI lane.
 
-The regex bootstrap crate's own comment states the model verbatim: "Mirrors the bbnf-lang
-`crates/bootstrap` crate, whose lib.rs `pub use ::bbnf::grammar::generated::BbnfBootstrap` is
-the analogous diagnostic re-export of the workspace's xtask-emitted parser." The two repos
-already share the shape; 7A formalizes it into a gated tower on both sides.
+## 8. The integration seams (path:line)
 
----
+- `skinny/xtask/src/main.rs:39-52` — dispatch; add `regen/check-bbnf-self`, `regen/check-regex-self`, `fixpoint`.
+- `skinny/xtask/src/main.rs:177` `JSON_TARGET`, `:200` `SHEETS_TARGET` — the `RuntimeTarget` template to clone.
+- `skinny/xtask/src/regen.rs:20 write_targets`, `:37 check_target`, `:154 validate_inputs` (blake3) — extend to emitted-byte hashing; the fixpoint comparator.
+- `skinny/xtask/src/main.rs:259-311 lint_loc` — the template for the `trusted-seed` LOC budget.
+- `skinny/crates/grammar/src/lib.rs:29 parse_grammar` — the trusted seed to minimize to bbnf-core.
+- `skinny/crates/codegen/src/lib.rs:101 emit_from_source` + `runtime_generator.rs` — the front-end seam (`dyn GrammarFrontend`) and the determinism-audit surface.
+- `crates/bootstrap/src/lib.rs` + `crates/core/src/grammar/generated/bbnf.rs` (legacy, 21,557 LOC) — the proven self-host artifact + re-export shape to re-land.
+- parse-that `rust/bootstrap/regex.bbnf`, `parse_that::regex::generated` (2293 LOC), `regex-bootstrap` crate — the isomorphic regex bootstrap the same `fixpoint` gate covers.
 
-## 3 · Prior art (with citations)
+## 9. Family verdict
 
-- **GCC three-stage bootstrap** — `make bootstrap` builds stage1 with the host compiler,
-  stage2 with stage1, stage3 with stage2, then **compares stage2 and stage3 object files
-  bit-for-bit** (`compare` target). The canonical `regen∘regen = regen` fixpoint and the direct
-  archetype for 7A's gate; a mismatch means non-determinism or a miscompile. 7A's advantage: it
-  compares generated *source*, not objects, so the diff is human-auditable.
-- **rustc staged bootstrap** — stage0 (a downloaded beta), stage1 = stage0-built, stage2 =
-  stage1-built; `x.py build --stage 2`; `--enable-full-bootstrap` adds the stage2==stage3
-  identity check. Establishes committed/pinned stage-0 as normal auditable practice and the
-  reproducibility discipline (deterministic codegen) the fixpoint gate depends on.
-- **GHC** — stage0/1/2 with a `validate` triple-build; the compiler compiles itself; the
-  "stage restriction" discipline (what stage-N may use) parallels 7A's rule that S0 uses only
-  the metalanguage subset.
-- **ANTLR self-hosting** — ANTLR's own grammar is written in ANTLR (`ANTLRv4Parser.g4`,
-  `ANTLRv4Lexer.g4`); the tool parses its own input language and ships the *generated* parser,
-  not a hand one — the model for 7A's promotion step. Contrast: **tree-sitter** does NOT
-  self-host — its grammar DSL is `grammar.js` (JavaScript), parsed by a hand-written generator;
-  bbnf's self-describing `.bbnf` is the stronger position.
-- **Reflections on Trusting Trust** (Thompson, 1984) — the committed stage-0 is a trust root; a
-  self-perpetuating trojan in the seed survives all regeneration. **Diverse Double-Compiling**
-  (D. A. Wheeler, 2009) is the formal defense: build the self-hoster with a *second,
-  independent* implementation and compare outputs; agreement refutes a stage-0 trojan. 7A's
-  "maximal auditability" cashes out as (i) a minimal S0 a human can read, (ii) the parse-that
-  regex parser as an independent second emission path for a DDC-style cross-check.
-- **TeX/METAFONT trip/trap torture tests** (Knuth) and the **reproducible-builds** movement
-  (`SOURCE_DATE_EPOCH`, deterministic output) — generated artifacts must be bit-reproducible for
-  a byte-identical gate to be meaningful; directly constrains the generator's map-ordering and
-  address-stability.
-- **Regex determinization prior art** (`regex-automata`, RE2) is out of 7A's scope (LOCK-5); 7A
-  consumes the regex grammar only as a bootstrap *target*, not an engine.
-
----
-
-## 4 · Integration seams (path:line where extant code serves)
-
-- **Fixpoint gate**: `xtask/src/regen.rs:37` `check_target` (single-application byte compare via
-  `emitted.check_dir`) → add a second-application `bootstrap_fixpoint(root)` beside it, reusing
-  `runtime_request` (`:51`) and `emit_runtime_from_request`.
-- **Digest lock**: `xtask/src/regen.rs:155-165` `validate_inputs` — return + persist the blake3
-  digest instead of only printing; `check_target` asserts committed digest == recomputed.
-- **Self-host target**: a `BBNF_TARGET: regen::RuntimeTarget` const mirroring `JSON_TARGET`
-  (`xtask/src/main.rs:177`) / `SHEETS_TARGET` (`:200`), `source_inputs =
-  ["grammar/bbnf/bbnf.bbnf", "…/expressions.bbnf", "…/types.bbnf"]`, `output_dir` the
-  `BbnfBootstrap` home, `entry_rule = "grammar"`.
-- **Dispatch**: `xtask/src/main.rs:39-52` — `regen-bbnf` / `check-bbnf` / `bootstrap-fixpoint`
-  arms next to the existing `regen-json`/`check-json`.
-- **Generator drive**: `codegen/src/lib.rs:101` `emit_from_source(name, source)` is already the
-  correct entry (not the fail-closed `emit(backend)` at `:114`); the bootstrap calls it.
-- **Promotion**: `crates/grammar/src/lib.rs:29` `parse_grammar` is the production seam whose
-  body becomes the emitted parser once P1 passes the differential oracle (§7 P2/P4).
-- **Regex dependent target**: `parse-that/rust/bootstrap/regex.bbnf` +
-  `parse_that::regex::generated`; the `regex-bootstrap` crate's re-export is the parity/bench
-  surface; the fixpoint gate applies symmetrically there.
-- **Metadata**: `skinny/Cargo.toml` `[workspace.metadata.bbnf].grammars` (only `json`) — add the
-  bbnf-self entry so `root_grammar_path` (`regen.rs:139`) resolves it.
-
----
-
-## 5 · Falsification harness (the family's own gate can fail)
-
-Following the discipline of proving a gate can fail before trusting it to pass:
-`xtask/tests/bootstrap_fixpoint_falsification.rs` plants (i) a deliberately non-deterministic
-emission (unordered map in a throwaway generator source) and asserts `bootstrap-fixpoint`
-reports P1≠P2; (ii) a stage-0 edit without regen and asserts the digest lock trips; (iii)
-confirms the real tree passes clean. A fixpoint gate that cannot detect a non-fixed point is a
-defect.
-
----
-
-## 6 · Named risks and counterexamples
-
-- **R1 — Cosmetic self-hosting (the two-parser trap).** If the generated parser stays a
-  diagnostic re-export and `parse_grammar` remains authoritative forever, "self-hosting" is a
-  slogan. *Guard*: promotion is a gate, not a hope — P1 must pass a differential oracle over the
-  entire `grammar/` corpus (json/css-l4×16/sheets/misc×7/bbnf-triple) parsing byte-identical
-  `GrammarIr` to `parse_grammar`, then `parse_grammar`'s body is replaced by P1. If P1 cannot
-  reach parity, the exact divergent rule is a named BBNF-augmentation task (self-hosting uses
-  language features; augment, never shim).
-- **R2 — Non-idempotent emission (the fixpoint flaps).** If generator output depends on HashMap
-  iteration order, address-of, or timestamps, `bytes(P1) ≠ bytes(P2)` nondeterministically and
-  the gate is untrustworthy. *Guard*: audit every ordered structure in codegen for total order
-  (BTreeMap/sorted); reproducible-builds discipline. `BTreeSet` already appears in the regen
-  path — extend the invariant, gate it with a 3×-run identity check.
-- **R3 — Feature incompleteness (the generator can't self-emit).** bbnf.bbnf uses `@import`,
-  closures/grammar-functions (`call_arg`, the `closure` rule), `->` with the full `value_expr`
-  DSL, the `<<`/`>>`/`-` binary operators, and `?w`. If the generator cannot emit a parser that
-  BUILDS `GrammarIr` for these (recognizing ≠ building), the bbnf self-host is partial. *Guard*:
-  enumerate the feature set (§7 P4) and prove each survives emission; any gap is an augment-BBNF
-  task with a named floor, not a deferral.
-- **R4 — Trusting-trust in the seed.** A minimal S0 is auditable but still a trust root; a
-  compromised or subtly-wrong S0 propagates into every P1. *Guard*: the DDC cross-check — the
-  parse-that regex bootstrap is an independent second emission of the regex grammar; agreement
-  between the two paths (and a human-readable ≤600-LOC S0) bounds the trust.
-- **R5 — The nested regex ordering deadlocks.** If S0 tries to fully parse regex literals to
-  bootstrap bbnf, it needs the regex engine, which needs the bbnf front-end — a cycle. *Guard*:
-  S0 treats regex literals as opaque spans (bbnf.bbnf declares `regex … -> Span`); regex becomes
-  a dependent target, not a co-equal (§1.4). This must be *verified* — a prototype that emits S0
-  and confirms it never invokes regex-structural parsing.
-- **R6 — Stage-0 bloat defeats the family's thesis.** If the "minimal" seed drifts back toward
-  2142 LOC, 7A collapses into "keep the hand parser." *Guard*: a LOC budget on S0 (`xtask
-  lint-loc` already gates generated-LOC; add an S0-hand-LOC ceiling), born-RED until S0 ≤ target
-  with P1 at parity.
-
----
-
-## 7 · What a prototype must test to move this family
-
-- **P1 — The fixpoint gate converges in one step and is deterministic.** Implement
-  `bootstrap-fixpoint`: emit P1 from the bbnf triple through the current generator, re-parse and
-  emit P2, assert `bytes(P1) ≡ bytes(P2)`. Run the whole emission 3× and assert identical output.
-  *Moves the family* by proving/refuting `regen∘regen = regen` at HEAD — the gate is the spine;
-  if it does not converge, R2 is the blocking defect.
-- **P2 — Minimal stage-0 exists and P1 replaces it.** Extract the smallest S0 (target ≤600 LOC)
-  that parses the bbnf triple with regex-as-span, emit P1 from it, and run the differential
-  oracle: every `.bbnf` in `grammar/` parses to byte-identical `GrammarIr` under `parse_grammar`
-  vs P1. *Moves the family* by measuring the actual trust-root size and proving promotion is
-  sound — the auditability claim becomes a number.
-- **P3 — The digest lock and falsification.** Commit the blake3 input digest + the generated
-  digest; assert both in `check-bbnf`; plant a stage-0 edit-without-regen and a non-deterministic
-  emission and confirm the gates trip (§5). *Moves the family* by proving the stage-0 pin can
-  fail — a gate unable to fail is worthless.
-- **P4 — Feature-completeness census.** Enumerate the bbnf.bbnf construct set (@import,
-  closures/GrammarCall, `->`/`value_expr`, `<<`/`>>`/`-`, `?w`, `@host`) and, for each, confirm
-  the generated P1 BUILDS the correct `GrammarIr` node. *Moves the family* by converting
-  "self-hosting depth" from a vibe into a checklist with a named augment-BBNF task per gap (R3).
-- **P5 — DDC cross-check (auditability, stretch).** Emit the regex grammar through both the bbnf
-  front-end and the parse-that path; assert the two `parse_that::regex::generated`-shaped outputs
-  agree. *Moves the family* by giving "maximal auditability" a concrete trusting-trust defense.
-
-The convergence question for 7A is narrow and answerable: does the current generator emit a
-byte-identical fixed point of its own grammar (P1), and is the seed small enough (S0) that the
-self-hosting is auditable rather than cosmetic? P1 and P2 answer it; everything else hardens it.
+Self-hosting to a byte-identical fixpoint is **the correct, minimal reading of clause (i)** and
+it is ~80% built — but built in the tree being retired, and never gated for closure. 7A's
+deliverable is small and hard-edged: re-land the bbnf and regex bootstraps into the greenfield
+as committed stage-0 artifacts, add the double-regen fixpoint gate (stage1≡stage2≡stage0) with
+the differential soundness guard, minimize and budget the trusted seed to bbnf-core, and name
+the codegen backend as trusted primitive. It does not chase a totality percentage (7C) or a
+promotion oracle (7D); it makes totality a *proven closure over a readable seed*. The
+falsifiable prototype is `xtask fixpoint` returning byte-identical on `bbnf.rs` — run it and
+the family either converges or hands GN a named non-determinism list.

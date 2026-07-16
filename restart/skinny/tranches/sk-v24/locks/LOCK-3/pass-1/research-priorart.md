@@ -1,402 +1,210 @@
-# LOCK-3 — THE IR TRANSPOSITION SPINE · pass-1 PRIOR-ART RESEARCH
+# LOCK-3 — THE IR TRANSPOSITION SPINE — Prior-Art Research (pass 1)
 
-Charter (PORTFOLIO §LOCK-3): the IR tower and its transpositions — grammar AST → typed HIR →
-mid-IR → backend shapes → emission; lowering contracts and invariants; residualization
-(PROVE-12) generalized; the decision driver's seat; multi-backend (Rust now, TS later) over a
-backend-agnostic middle. Standing laws: no value-discard, no silent epsilon, preserve rich AST.
-Families: **3A CONTRACT-TOWER**, **3B SINGLE-IR-MULTIPASS**, **3C GRAMMAR-HOMOIOUSIA**,
-**3D STAGED-RESIDUAL**. No family allegiance held here — this sweeps the whole problem class.
+Researcher: PRIOR-ART, pass 1. No family allegiance; registry withheld by protocol.
+Problem class: the IR tower `grammar AST → typed HIR → mid-IR → BackendShape → emission`;
+lowering contracts/invariants; residualization (PROVE-12) generalized; the decision driver's
+seat; multi-backend (Rust now, TS later) over a backend-agnostic middle. Standing laws:
+no value-discard, no silent epsilon, preserve rich AST (constitution iv/v/vi; SPEC §0/§4).
 
-Method: web + codebase. Constitution binds every judgment (concrete artifacts or SPEC-ONLY;
-consumer-less substrate forbidden; type plane costs zero at runtime; colocation + parsimony;
-extant GN codex is the baseline, never silently contradicted).
+All `path:line` verified this pass. Web anchors cited inline; URLs in §7.
 
 ---
 
-## 0. WHAT EXISTS AT HEAD (the tower we already have — the baseline the gestalt re-cuts)
+## 0. What our own evidence base ALREADY decides (the binding floor)
 
-The skinny IR tower is **not hypothetical**; it is four concrete levels, verified by R1/R6 at
-`path:line`:
+These are not open questions — they are measured facts the tower design must obey.
 
-1. **`GrammarIr` (front IR)** — `skinny/crates/ir/src/lib.rs:33-271`. Arena of `Expr` (`ExprKind`:
-   Seq/Alt/Repeat/Optional/Literal/Regex/Ref/Annotation/**Project**/Discard) indexed by `ExprId`;
-   `nullability` is a Changed-flag fixpoint (`ir/src/lib.rs:320-349`) — already LLVM-shaped, not a
-   structural hash. `ExprKind::Project { body, target, ty: Option<String> }` (`:261-265`) is the
-   `->` carrier.
-2. **Typed pass layer** — `passes` infers a structural `Type` (Seq/Alt/List) but **discards
-   `Project.ty`** at `passes/src/lib.rs:203` (`infer_expr` returns `self.infer_expr(*body)`). This
-   is the load-bearing defect the whole type-plane story turns on (R6 §5a).
-3. **`BackendIr` (mid-IR)** — `ir/src/lib.rs:351-413`. `BackendExpr` (Entry/Seq/Alt/RepeatLoop/…/
-   `TapeEmit{kind}`/`DirectBuild{shape,fields}`/**`ValueProject{body,target,ty}`**/Return) +
-   `Recognizer::SimdScan{mode,alphabet,site}` (`:416-422`) + `ShapeFacts`. `BackendShape` is a
-   5-variant enum (`:361`: EagerTape/OffsetTape/EventTape/SinkOnly/CollapsedStage).
-4. **Backend shapes → emission** — `codegen` lowers `BackendIr` → Rust via `lower/` (per-shape
-   emitters) + `emit/` (json_sink_direct, css_scan_direct, general_descent) + `templates/`
-   (`runtime_generator.rs` raw-string spine). Entry `codegen/src/lib.rs:101,130`.
+- **The value-discard trap is REALIZED at HEAD, measured.** `ExprKind::Project { body, target,
+  ty: Option<String> }` (`ir/src/lib.rs:261-265`) carries `->` only as a bare string. Inference
+  DISCARDS it: `Infer::infer_expr` for `Project` returns the body's type, dropping the
+  projection (`passes/src/lib.rs:203`, cited R6 §5a). On general-descent `ty` folds to a
+  4-way `ProjectionKind {Float,Bool,Tag,Span}` (`general_descent/view.rs:20-46`); on the
+  offset-tape path `DirectBuildTarget.target` is `None` for every descriptor
+  (`passes/src/lib.rs:1149-1287`). The rich schema IR (`DirectBuildTarget{type_ref, presence,
+  cardinality, representation, decode}`, `ir/src/lib.rs:483-541`) EXISTS but is UNPOPULATED
+  from the grammar. **This is precisely the MLIR "lowered too early → information loss" failure
+  (§2) and the LLVM "brittle metadata" failure (§3), present in our own tree.** The
+  typed-materialization-invariant ("every `->` reaches the tape emitter") is currently broken;
+  the tower's first job is to close it. GN-3 confirms Wall 3 is half-fallen (`ExprKind::Project`
+  exists at HEAD — thread into infer + `DirectBuild.type_ref`).
+- **Zero-runtime-cost erasure is proven and must be preserved (constitution v).** SPEC §0 #08:
+  HM core (221 LOC) derives a validated `DirectSchemaSet` in ~230µs compile-time, ZERO runtime
+  cost (held under adversarial re-measure). Any staged/typed tower keeps stage-0 fully erased.
+- **PROVE-12 is a working instance of staged residualization, not a one-off.** SPEC §0 #12 /
+  PROVE-12 REPORT: `find_component_delim` const-generic over a `u128` delimiter mask;
+  membership residualizes to two immediate `and`s (disasm-verified `REPORT.md §3`); regen
+  bit-for-bit; +18 generated LOC; cyc/B 0.81-0.98×. The REPORT itself states the pattern
+  "generalizes to any grammar-derived delimiter/STOP-set scan" (§7). This is 3D's seed.
+- **The decision-driver seat already exists.** `ir/src/cost.rs`: `CostFacts` (:5),
+  `ActiveCostFacts` (egraph/CSP selection provenance, :173), `DecisionCspFacts` (:203),
+  `PriorityStep` 8-step (:264); `BackendShape` 5-variant (`ir/src/lib.rs:361`) selected by
+  `passes::derive_backend_shape` (`passes/src/lib.rs:398`). LOCK-3's "decision driver's seat"
+  is this seam, shared with LOCK-2.
+- **Generated-size budget is law** (memory: generated-size-budget) + **no silent epsilon**
+  (lowering catch-alls panic, never return Epsilon) + **fewest transpositions that suffice**
+  (constitution vi, extreme parsimony). These directly constrain tower depth (§1) and forbid
+  the nanopass "dozens of IRs" and MLIR "dialect proliferation" anti-patterns (§1, §2).
 
-**The rich schema IR already exists but is starved**: `DirectBuildTarget{ type_ref, presence,
-cardinality, representation, decode }` (`ir/src/lib.rs:483-535`) and `DirectSchemaSet`/
-`DirectTypeRef` (`codegen/src/direct_schema.rs:4-120`) are a real type lattice — but
-`DirectBuildField.target` is `None` on every offset-tape descriptor (R6 §5c) and the only
-schema *producer* is the 1014-LOC hand file `xtask/src/real_typed_schema.rs:7` (R6 §5d). The
-transposition tower is built; the **arrow-threading and the schema-derivation seams are the
-open holes** (R6 §8b names the exact two edits).
-
-**Verdict-relevant fact**: this is *3B-shaped today* — one rich `BackendIr` refined by passes,
-`BackendShape` as an attribute, the fewest transpositions that emit. LOCK-3's job is to decide
-whether that shape is kept and hardened (3A/3B) or re-founded (3C/3D), each with a *named
-supersession* of the GN codex, never a silent contradiction (Constitution ix).
-
----
-
-## 1. FAMILY 3A — CONTRACT-TOWER (small fixed tower, each lowering a total function w/ checkable contract)
-
-### Prior art — what won
-- **The Nanopass Framework** (Sarkar/Waddell/Dybvig 2004; Keep/Dybvig 2013, *A Nanopass Framework
-  for Commercial Compiler Development*, ICFP). The canonical win for this family: `define-language`
-  formally specifies each IR's grammar; `define-pass` is a total map from one language to the next;
-  the framework **auto-verifies output well-formedness against the target language** and fills
-  boilerplate. Chez Scheme ships ~50 nanopass IRs in production — the *commercial* qualifier in the
-  title is the proof it scales past pedagogy. This is CONTRACT-TOWER's existence proof.
-  <https://nanopass.org/> · <https://andykeep.com/pubs/dissertation.pdf>
-- **rustc's HIR→THIR→MIR** — three named IRs, each a checkable lowering, THIR the type-annotated
-  bridge, MIR the CFG for borrowck/opt. The industrial "small fixed tower" that is *not* nanopass-
-  many. <https://rustc-dev-guide.rust-lang.org/backend/codegen.html>
-
-### What lost / the trap
-- **Nanopass's cost is transposition tax**: many IRs means many near-identity pass arms and a
-  materialization per level. Keep's own thesis measures the boilerplate reduction but the
-  representation-copy cost is real; the framework mitigates by auto-generating catamorphism
-  boilerplate, *not* by eliminating the copy. For a **hot, cold-per-parse generator** (our §0 law:
-  warm benches are disinformation) a many-IR tower risks compile-time blowup and — if any level
-  leaks into runtime — the zero-cost invariant. The GN codex already chose "fewest transpositions"
-  (3B-lean); a 3A answer must justify each *new* level against `generated_size_budget`
-  (MEMORY: generated-size-budget) and the LOC ledgers (GN-3 is net +35 LOC total).
-- **Trap named by our own memory**: `no-silent-epsilon` — nanopass total-pass arms map cleanly to
-  our law that "lowering catch-alls panic on unknown rule_kinds, never silently return Epsilon".
-  A CONTRACT-TOWER here *is* that law made structural. GN-3's `DeriveError::Unify` (never a silent
-  fallback leaf, GN-3 §1.3 P56) is the same principle already in the codex.
-
-### Constraints our evidence imposes on 3A
-- Contracts must be **CI-enforced artifacts, not documents** (GN-1 §1.2 P19; GN-3 W1-W5 every gate
-  is a `cargo test`/regen byte-diff). The nanopass "output matches target language" check is
-  exactly the round-trip/parity oracle 3A demands — and we already have its instances: `regen ∘
-  regen = regen` byte-identity (P53, clean-regen-discipline), checkasm NEON==scalar parity, the
-  `CSS_CANON_PROFILE` XOR-fold parity checksum (PROVE-12 §5), and the derived≡hand schema
-  byte-diff (GN-3 W3). A 3A tower's per-level oracle is a *generalization of instruments that
-  already exist*, not net-new ceremony.
+Current tower at HEAD (R1 §2): `parse_grammar → GrammarIr` (AST) `→ passes::compile` (infer →
+shape → CSP → egraph) `→ BackendIr {recognizers, rules, shape_facts}` (`ir/src/lib.rs:352`)
+`→ lower::lower_to_rust → runtime_generator`. Two mid-shapes coexist: `BackendExpr`
+(`ir/src/lib.rs:376`) and the `DirectBuild*` schema. It is ALREADY a small tower — LOCK-3 is a
+consolidation/contract problem, not a green build.
 
 ---
 
-## 2. FAMILY 3B — SINGLE-IR-MULTIPASS (one rich IR refined in place; the LLVM shape)
+## 1. 3A CONTRACT-TOWER ancestor — the nanopass framework (Sarkar/Waddell/Dybvig 2004; Keep & Dybvig 2013)
 
-### Prior art — what won
-- **LLVM IR** — the reference single-IR-multipass: one SSA IR, passes annotate/transform in place,
-  target lowering at the end. Won the general-purpose-compiler world for two decades.
-- **Sea-of-nodes / GraalVM** — one graph IR refined by rewrites; the second-Futamura-projection JIT
-  (Truffle) rides it. Formal semantics exist (*A Formal Semantics of the GraalVM IR*,
-  arXiv:2107.01815) — evidence the single-graph-IR is analyzable, not just pragmatic.
+The micropass structure — "a collection of many small passes, each performing a single task" —
+is nanopass's thesis. **Wins that transfer to 3A:** each pass applies one transformation
+between adjacent IRs, keeping invariants LOCAL and the lowering sequence easy to reason about;
+per-pass testing/debugging. This is the intellectual parent of "each level a total function
+with a checkable contract."
 
-### What lost / the trap (this is the crux the field litigated and settled)
-- **MLIR is the field's verdict *against* monolithic single-IR** for multi-abstraction pipelines:
-  "High-level semantics (shapes, parallel loops, tensor semantics, sparsity, control-flow
-  abstractions) must be lowered into LLVM IR early, **losing information** useful for later
-  optimizations; representing high-level constructs forces many brittle intrinsics/metadata that
-  hamper composability." MLIR's progressive lowering with dialects + **attributes/interfaces on ops
-  to encode invariants** is the direct answer. <https://mlir.llvm.org/docs/Dialects/Vector/> ·
-  <https://www.lei.chat/posts/compilers-and-irs-llvm-ir-spirv-and-mlir/>
-- **The trap for LOCK-3**: 3B's "BackendShape as attributes" is *exactly the intrinsic/metadata
-  pattern MLIR indicts* if the single IR is asked to carry too many abstraction levels. Our own
-  evidence base already shows the symptom: `TapeEmit{kind}` is a **coarse 9-variant tag**
-  (`ir/src/lib.rs:452-463`) that *collapses* the rich `DirectBuildTarget` — R6 §5c: "the rich
-  per-field schema exists but on the offset-tape path the `target` field is `None` for every
-  descriptor." That is precisely "lowered too early, information lost." A 3B answer must prove the
-  single IR carries the `->` type through to emission **without** the coarse-tag collapse
-  (`typed-materialization-invariant` in MEMORY: "every `->` must reach the tape emitter; inference
-  composes types, never loses them").
+**The named trap (decisive for us):** naive micropass compilers "duplicate code for traversing
+and rewriting ASTs" and "obscure the meaningful transformation." Nanopass's whole value is
+*curing that trap* — `define-language` specifies each IR as a GRAMMAR, and the framework
+GENERATES the traversal/catamorphism + enforces grammar conformance between passes (Keep
+dissertation; nanopass.org; DeepWiki). **Consequence for LOCK-3: 3A and 3C are not rivals —
+3C (grammar-specified IR) is the mechanism that makes 3A affordable.** A hand-written 3-level
+contract tower re-pays the traversal-boilerplate tax nanopass explicitly eliminated. Also
+decisive: nanopass runs DOZENS of IRs; our "fewest transpositions that suffice" + generated-
+size budget forbid that. **The transferable core is the per-level grammar + generated traversal
++ conformance check, NOT the many-IRs count.**
 
-### Constraints our evidence imposes on 3B
-- The GN codex is *already committed to 3B-lean* ("the fewest transpositions that suffice", PORTFOLIO
-  3B; GN-1's tower is one `BackendIr`). So a 3B pass here is **hardening the extant shape**, and its
-  supersession budget is small — but it must *close the collapse*: thread `Project.ty` (`passes/src/
-  lib.rs:203`) into `DirectBuildTarget.type_ref` and retire the lossy 4-way `ProjectionKind` fold
-  (`general_descent/view.rs:20-46`), which is GN-3.W2 verbatim. **3B's win is measured by the
-  no-value-discard law** (MEMORY: `no-value-discard`, "codegen must never discard computed values
-  (.map(|_| ())); direct projection captures everything").
-- **Refutation guard**: the type plane is compile-time only (Constitution v; GN-3 §1.4). A 3B
-  "annotation pass" that leaks a runtime instruction is refuted by `git diff crates/runtime/`
-  (GN-3's every-wave invariant gate). Single-IR-multipass must annotate *the generator's* IR, never
-  emit a runtime type tag — the `stored discriminator` temptation (R6 §2, §8a) is a **GN-4 value-
-  fabric** question (a 1-byte kind column), explicitly *not* a type-plane one.
+## 2. The 3A-vs-3B tension IS the LLVM-vs-MLIR debate — progressive lowering vs single mid-IR
 
----
+MLIR's progressive-lowering argument (multiple dialects) names our exact failure: "high-level
+semantics must be lowered into LLVM IR early, losing information useful for optimization"; a
+single mid-IR forces high-level constructs into "many intrinsics, conventions, and metadata,
+which are brittle and hamper composability." **Our `Project.ty` discard (§0) and unpopulated
+`DirectBuildTarget` (§0) are this failure, measured.** The MLIR remedy — keep each abstraction
+at its own level, lower late — is the same principle as our standing law "preserve rich AST /
+no value-discard."
 
-## 3. FAMILY 3C — GRAMMAR-HOMOIOUSIA (the IR is itself bbnf-specified; transpositions are grammar-to-grammar)
+**But MLIR's own cost is dialect proliferation** — which extreme parsimony rejects. So the
+tower must be MLIR-in-principle (don't lower `->` intent early) yet LLVM-in-shape (few levels).
+This favors **3B SINGLE-IR-MULTIPASS refined by annotating passes with BackendShape-as-
+attributes** — provided the attributes are actually POPULATED (the HEAD bug is that they
+aren't). The synthesis question handed forward: can one rich IR carry projection intent as a
+live attribute to emission (3B) without the "brittle metadata" trap MLIR warns of? Nanopass's
+answer (§1): only if the attribute is part of a CHECKED grammar, not ad-hoc metadata.
 
-### Prior art — what won
-- **Nanopass `define-language`** *is* grammar-specified IR — each IR is a declared grammar, and this
-  is the winning half of nanopass (the auto-verification depends on it). This is the strongest
-  positive evidence for 3C: grammar-specified IR is *proven commercial technology* in Chez Scheme.
-  <https://nanopass.org/>
-- **Self-hosting / metacircular bootstrap** — McCarthy's Lisp-in-Lisp (1960), Hart-Levin self-
-  hosting compiler (1962) established "define the language formally, implement in a host, compile
-  itself." **Sysmel** (arXiv:2309.15416, *Design and Implementation of an Extensible System Meta-
-  Programming Language*) is a live 2023 datapoint: metacircular definition, bootstrapped through
-  **three full self-compilation cycles** — direct evidence a self-describing IR *converges* under a
-  fixpoint gate. This maps onto our LOCK-7 `regen∘regen=regen` byte-identity fixpoint (SPEC §2 GN-1).
+## 3. 3B / 3D killer anchor — Cranelift's acyclic e-graph (aegraph)
 
-### What lost / the trap
-- **Bootstrap staging cost & the chicken-egg**: a grammar-specified IR needs a stage-0 committed
-  artifact to parse the IR grammar that describes the IR. Our memory already codified the discipline
-  (`clean-regen-discipline`: generated files are always fresh regen output, never hand-patched;
-  LOCK-7 7A STAGED-BOOTSTRAP: committed stage-0, minimal bootstrap surface, maximal auditability).
-  The trap is **auditability collapse**: if transpositions become grammar-to-grammar maps that are
-  themselves generated, a bug is two meta-levels from the symptom. Sysmel's answer is the 3-cycle
-  fixpoint; ours must be the same byte-identity gate.
-- **Constitution i vs. parsimony**: "everything is grammar-driven … save primitives and combinators."
-  3C is the maximal reading. But `no-god-modules` + `extreme parsimony` (Constitution vi) and
-  `general-infra-crates` (MEMORY) constrain it: an IR-grammar plane is only lawful if it has a
-  **same-wave consumer** (Constitution viii, Y.13) — a grammar-specified IR with no generator eating
-  it is consumer-less substrate, *forbidden*. GN codex has **no GN-wave that consumes an IR grammar**
-  (GN-3 explicitly rules CSP/e-graph out of scope; there is no IR-homoiousia wave). So 3C is a
-  LOCK-7-adjacent design input **without a GN home today** — the same status GN-3 §1.5 gives full-
-  inference CSP/e-graph hybrids. A 3C answer must either *name the consuming wave it adds* or accept
-  SPEC-ONLY status.
+The single most load-bearing practical prior art, because it adjudicates "make the middle IR an
+e-graph" (LOCK-2 2B, LOCK-3 3D) against real compile-speed constraints:
 
-### Constraints our evidence imposes on 3C
-- **True isomorphism to the regex HIR** (Constitution ii; LOCK-5 decides the lawful form, every
-  other lock *consumes its verdict*). 3C for LOCK-3 cannot unilaterally define the IR grammar — it
-  must be a *functor-compatible* proposal that LOCK-5's ONE-HIR / LAWFUL-FUNCTOR verdict can consume.
-  Coupling risk named: LOCK-3's 3C and LOCK-5's 5A ("regex HIR is a sub-language of bbnf HIR — a
-  single type in a single home") are the same claim from two seats.
+- **Classic egg-style e-graph + separate extraction did NOT fit an in-place SSA IR.** Full
+  equality saturation's parent-pointer/canonicalization cost was "untenable" at JIT speed.
+- **Fusion won:** IR and e-graph are ONE structure. Pure (side-effect-free) nodes float
+  location-free in e-classes; side-effecting ops anchor a reduced "side-effect skeleton."
+  Unions happen ONLY at node-creation; rewrites apply EAGERLY during construction (cascades-
+  style), not in a separate saturate-then-extract phase.
+- **The rewrite engine is GENERATED, not egg:** rewrites are driven by ISLE-compiled Rust
+  "because... we need high control" and compile speed. ISLE extended with multi-extractors /
+  multi-constructors to iterate e-nodes in an e-class.
+- **Scoped elaboration** (dominator-tree traversal + scoped hashmap) subsumes GVN and does
+  scheduling in one pass — one structure solves phase-ordering.
+- **Rejected/failed, named:** per-block e-graphs (lose cross-block opt); PDG/VSDG predicate
+  embedding ("relooping and recovering a CFG... yields both bugs and slow compilation");
+  separate extraction phase; **optimization fuel is unsolved** ("a problem we will need to
+  solve," deferred). Result on SpiderMonkey.wasm: +1% compile time, −13% runtime.
 
----
+**Lessons for LOCK-3:** (a) if the mid-IR becomes an e-graph, use the ACYCLIC/eager-cascades
+form, not full saturation — our generated-size + compile-budget laws (§0) make Cranelift's
+verdict ours a fortiori; (b) the rewrite engine should be GENERATED from rules (ties 3C +
+codegen-is-the-generator), echoing ISLE-over-egg; (c) "one structure carrying scheduling +
+optimization + lowering" is the 3B "single rich IR, annotating passes" thesis, validated in
+production. RVSDG/VSDG (regionalized value-state dependence graph) is explicitly the road
+Cranelift REFUSED for the semantic-gap cost — a caution against any control-as-nested-
+expression reframing of our mid-IR. (See also "E-Graphs as a Persistent Compiler Abstraction,"
+arXiv 2602.16707, for the general in-place-e-graph position.)
 
-## 4. FAMILY 3D — STAGED-RESIDUAL (IR as explicitly two-stage; residualization = erasure of stage 0)
+## 4. 3C GRAMMAR-HOMOIOUSIA — ISLE term-rewriting + metacircular bootstrap
 
-### Prior art — what won (this is the deepest, most-cited vein for our exact problem class)
-- **Futamura projections** (1971): specialize an interpreter w.r.t. a program → a compiled program;
-  the residual is "leaner, faster, optimized for unknown inputs." **A parser generator emitting a
-  specialized parser from a grammar IS the first Futamura projection** — grammar = static input,
-  input-bytes = dynamic. PROVE-12's const-fold of the delimiter mask is a *hand-rolled instance*:
-  the grammar-constant delimiter set (static) is residualized to an immediate `and` mask, the
-  runtime `<[u8]>::contains` (dynamic dispatch over static data) erased. <https://en.wikipedia.org/
-  wiki/Partial_evaluation> · <https://arxiv.org/pdf/1611.09906>
-- **PyPy/RPython + GraalVM/Truffle** — production JITs built *on* the (first/second) Futamura
-  projection; the field's proof that staged specialization is not academic.
-  <https://dl.acm.org/doi/10.1145/3359061.3361077>
-- **Lightweight Modular Staging (LMS)** (Rompf/Odersky, CACM 2012) — "uses **only types** to
-  distinguish the two stages of execution … stage-1 executes partially to generate an optimized
-  intermediate program; stage-2 runs it." This is *precisely* PORTFOLIO 3D: "a two-stage program
-  (comptime/runtime split in the types); residualization is erasure of stage 0." LMS is the named
-  prior art for encoding the stage split **in the type system** rather than in syntax
-  (quasiquotation). <https://cacm.acm.org/research/lightweight-modular-staging/>
-- **Terra** (DeVito et al., PLDI 2013) — multi-stage; Lua metaprogram (stage 0) generates
-  low-level Terra (stage 1). The template-as-generator model our `runtime_generator.rs` raw-string
-  spine already is, but typed. <https://www.researchgate.net/publication/262238598>
+- **ISLE = "transpositions are grammar-to-grammar maps" in production.** Input IR is a tree of
+  terms; rules rewrite to another tree of terms; all rules compile to ONE single-pass decision
+  tree, sharing work, honoring per-rule priorities. Used for BOTH machine-independent opt
+  rewrites AND instruction lowering across **four ISAs (x86-64, aarch64, RISC-V, s390x)** —
+  ISLE already demonstrates ONE rewrite-rule DSL retargeting a backend-agnostic middle to many
+  targets. **Direct evidence for LOCK-3's multi-backend clause (Rust now, TS later) over one
+  middle.** Named practicality requirement: multi-extractors/multi-constructors + user-
+  configurable priorities.
+- **The bootstrap fixpoint oracle comes free with 3C.** Metacircular parser-generator practice
+  (van Rossum PEG meta-grammar; nanopass `define-language`; Chez self-host) gives the standard
+  correctness proof: regen∘regen byte-identical ("if compiled again the output is the same,
+  proving the generated meta-parser works"). Our `xtask check-*` stale gate + PROVE-12 "regen
+  bit-for-bit" already IS this. A grammar-specified IR grammar (3C) inherits nanopass's
+  generated-traversal win (§1) AND the bootstrap fixpoint oracle (aligns with LOCK-7 7A/7D).
 
-### What lost / the trap
-- **The BFA (binding-time analysis) precision cliff**: partial evaluation only wins where the
-  static/dynamic split is *precise*; imprecise BTA residualizes almost nothing or, worse, over-
-  specializes and **code-bloats** (monomorph explosion). PROVE-12 shows the *good* case (+18
-  generated LOC, one surviving monomorph symbol, the rest fully inlined) — but it warns: our
-  `generated-size-budget` law (MEMORY) exists *because* staged specialization's failure mode is
-  exactly O(N) generated-LOC blowup. A 3D answer must carry a per-site staging *decision* (which
-  LOCK-2's CSP/cost engine owns — PORTFOLIO 3D: "per-site staging solved by LOCK-2's engine"), not
-  a blanket "residualize everything."
-- **The self-deception trap our own §0 canonized**: PROVE-09 (portable_simd shim) — "the 1.34-1.57×
-  did not reproduce; **two-arm window asymmetry is the classic self-deception; paired interleaving
-  is mandatory even for obvious wins**." A staged-residual claim ("const-folding must be faster")
-  is refuted at the seam unless cold-paired-PMU measured (PROVE-12 did this correctly: baseline vs
-  modified binaries interleaved back-to-back, N=3×800, ins/B the load-proof floor). **STAGED-RESIDUAL
-  is the family most prone to unmeasured plausibility** — the constitution's clause vii (concrete
-  artifacts or SPEC-ONLY) bites hardest here.
+## 5. 3D STAGED-RESIDUAL — multi-stage programming / partial evaluation / Futamura
 
-### Constraints our evidence imposes on 3D
-- **PROVE-12 makes 3D partly born-verified**: residualization is *already proven* on the CSS
-  delimiter scan (GO, CONFIRMED; every corpus/lane ins/B −3.7…−6.4%, cyc/B 0.81-0.98×,
-  regen bit-for-bit). PROVE-12 §7 explicitly names the generalization: "the same `const fn mask`
-  + const-generic seam" applies "to any grammar-derived delimiter/STOP-set scan (JSON's structural
-  scan, general-descent)." So 3D's kernel is **not speculation — it is a landed pattern seeking
-  generalization**, which is the SPEC's whole thesis (most waves begin from working patches).
-- **The type-plane-as-stage-0 bridge**: GN-3's type plane is *definitionally* stage-0 — "emits no
-  runtime instruction; its runtime delta is identically zero by construction" (GN-3 §1.1, the
-  verified ZERO-RUNTIME-COST invariant). This is the cleanest existing instance of "erasure of
-  stage 0": the schema is computed at generation time and *fully erased* before runtime. A 3D
-  reading unifies GN-3 (type erasure) and PROVE-12 (constant erasure) under one staged-IR account —
-  PORTFOLIO 3D's "PROVE-12 becomes a corollary." **This is the strongest cross-family synthesis
-  available**: 3D subsumes the type plane and the residualizer as two erasures of the same stage.
+- **"Two-stage program with the split in the types" is LMS's `Rep[T]`, exactly.** Multi-stage
+  programming annotates which code runs at generation time vs runtime; LMS (Rompf, Scala)
+  realizes the first Futamura projection with `Rep[T]` binding-time types and reports >10× over
+  interpretive baselines. **PROVE-12 is a hand-rolled instance:** const-eval the mask at
+  generation time (stage 0) + monomorphize so each call site beta-reduces (stage-0 erasure).
+  3D generalizes it into a principled binding-time discipline in the type plane.
+- **Residualization = erasure of stage 0 = partial evaluation of the interpreter to the
+  program** (first Futamura projection). The mechanism 3D needs is classical **binding-time
+  analysis**: classify each IR site stage-0 (grammar-constant: delimiter sets, STOP-sets,
+  first-sets, dispatch keys) vs stage-1 (input-dependent). Our decision-driver seat (§0,
+  `cost.rs`) is where per-site staging would be solved by LOCK-2's engine (3D's own clause).
+- **Trap:** MSP's power is bounded by what binding-time analysis can prove static; over-eager
+  staging bloats generated code (collides with the generated-size budget). PROVE-12's +18 LOC
+  is the disciplined shape; the generalization must keep monomorphs "compiler-emitted, not
+  template-duplicated" (REPORT §6).
+
+## 6. 3A oracles — translation validation & the incompleteness trap
+
+Necula's translation validation (PLDI'00) is 3A's per-level contract mechanism: compare the IR
+before/after each pass and verify semantics preserved; retrofittable at "about the effort of
+one compiler pass"; if it succeeds the run is correct. **But the named trap is decisive:
+benchmark-driven differential validation is INCOMPLETE — "would not identify errors... not
+exercised by the benchmarks."** So 3A's CI round-trip/parity oracles MUST be backed by a
+conformance corpus, not just the canon benches. We already have the primitive: PROVE-12's
+`CSS_CANON_PROFILE` XOR-folds every parse into a checksum (byte-identical parity gate). The
+tower generalizes this to a per-level parity cksum + a conformance corpus (ties LOCK-6 6D
+oracle-isomorphism). The "no silent epsilon" law (lowering catch-alls panic) is the totality
+half of the same contract.
+
+### Cross-cutting traps (comparable systems, named)
+
+| System | Named trap | Bearing on LOCK-3 |
+|---|---|---|
+| Nanopass | traversal boilerplate; dozens-of-IRs | 3A needs 3C's generated traversal; parsimony caps depth |
+| MLIR | lower-too-early info loss; dialect proliferation | our `Project.ty` discard IS this; keep intent, few levels |
+| LLVM single mid-IR | brittle intrinsics/metadata for high-level constructs | our unpopulated `DirectBuildTarget`; attributes must be checked-grammar |
+| egg full saturation | parent-pointer cost untenable at compile speed; extraction phase | if mid-IR=e-graph, use acyclic/eager (Cranelift), generated rules |
+| VSDG/RVSDG/PDG | relooping semantic gap → "bugs and slow compilation" | do NOT reframe control as nested-expression mid-IR |
+| Translation validation | benchmark differential testing incomplete | 3A oracles need conformance corpus, not just benches |
+| MSP/LMS | over-staging bloats code | 3D bounded by binding-time analysis + size budget |
 
 ---
 
-## 5. CROSS-CUTTING CONSTRAINTS (bind every family — the evidence base's hard walls)
+## 7. Sources
 
-- **Multi-backend over a backend-agnostic middle** (LOCK-3 charter; LOCK-6 decides "reasonable").
-  Prior art: CrossTL's unified IR (arXiv:2508.21256 — language-specific frontends + dedicated
-  CodeGen backends over one CrossGL IR) and MLIR's dialect-conversion-to-target model. Our memory
-  binds the shape: `backend-agnostic-types` (grammar types are abstract `TypeDesc::Named`; each
-  backend resolves to native types), `no-ts-ir` (**no IR layer for TS; the AST IS the combinator** —
-  a hard constraint: the TS backend does *not* get its own mid-IR), `multi-backend` (shared decision
-  driver + Emitter trait for Rust/TS/WASM). PROVE-14 proved the **byte-exact offset-tape crossing**
-  to TS (CONFIRMED, 4.4× stop-early; full-walk 0.91× honestly unmet). So the backend-agnostic middle
-  is **the tape layout + the schema IR**, not a shared instruction IR — TS consumes the tape and the
-  `DirectSchemaSet`, it does not re-lower a mid-IR. Any LOCK-3 answer that gives TS its own IR tower
-  contradicts `no-ts-ir`.
-- **The decision driver's seat** — LOCK-3 charter names it; PORTFOLIO 3C/2C put the CSP there.
-  Constraint: `pluggable-components` (MEMORY — cost model, pattern registry, rewrite rules must be
-  pluggable, not hardcoded branches). `BackendShape` selection lives in `passes::derive_backend_shape`
-  (`passes/src/lib.rs:398`) fed by `CostFacts` (`ir/src/cost.rs`); the driver is *shared across
-  backends*, decided once in the middle. LOCK-3 owns *where the driver sits in the tower*; LOCK-2
-  owns *what engine it is*. Do not merge the seats.
-- **Standing laws restated (LOCK-3 charter names three)**: `no-value-discard`, `no-silent-epsilon`,
-  `preserve-rich-ast` (MEMORY: `preserve-rich-ast` — "never flatten typed grammar rules for speed;
-  rich AST parity with lightningcss is non-negotiable"). These three are *the CONTRACT-TOWER
-  invariants already in force*; any family's per-level contract must include them.
-- **Extant-tranche consciousness (Constitution ix)**: GN-1 (the tower's port + directory-module
-  recut — `ir/src/{cost,recognizer,shape}/`, `codegen/src/{lower,emit,templates,schema}/`), GN-3
-  (the type-plane, walls 1-3, the arrow-thread + sum node + hand-schema death) are the baseline.
-  LOCK-3 **re-cuts** them into a coherent spine; it must name every divergence as a supersession
-  (e.g. if 3A adds an IR level GN-3 did not have, that is a named super­session with a LOC-budget
-  justification, not a silent contradiction).
+Web:
+- Nanopass: https://nanopass.org/ ; Keep dissertation https://andykeep.com/pubs/dissertation.pdf ;
+  Sarkar/Waddell/Dybvig https://www.cs.tufts.edu/comp/150FP/archive/kent-dybvig/nanopass.pdf ;
+  https://deepwiki.com/nanopass/nanopass-framework-scheme
+- MLIR vs LLVM progressive lowering: https://www.lei.chat/posts/compilers-and-irs-llvm-ir-spirv-and-mlir/ ;
+  https://mlir.llvm.org/docs/TargetLLVMIR/
+- Cranelift aegraph RFC: https://github.com/bytecodealliance/rfcs/blob/main/accepted/cranelift-egraph.md ;
+  RVSDG anchor https://github.com/egraphs-good/egg/discussions/106 ;
+  E-graphs as persistent compiler abstraction https://arxiv.org/abs/2602.16707
+- ISLE: https://cfallin.org/blog/2023/01/20/cranelift-isle/ ;
+  language ref https://github.com/bytecodealliance/wasmtime/blob/main/cranelift/isle/docs/language-reference.md
+- MSP / Futamura / LMS: https://arxiv.org/pdf/1611.09906 (Futamura diagrammatic) ;
+  LMS via https://continuation.passing.style/static/papers/oopsla20.pdf
+- Translation validation: Necula PLDI'00 https://people.eecs.berkeley.edu/~necula/Papers/tv_pldi00.pdf ;
+  VOC https://www.jucs.org/jucs_9_3/voc_a_methodology_for/Zuck_L.pdf
+- Metacircular bootstrap: https://medium.com/@gvanrossum_83706/a-meta-grammar-for-peg-parsers-3d3d502ea332 ;
+  https://en.wikipedia.org/wiki/Self-hosting_(compilers)
 
----
-
-## 6. SYNTHESIS — the settled adjudications this pass hands forward
-
-1. **The tower is 3B today** (one rich `BackendIr`, `BackendShape` as attribute, fewest
-   transpositions). The GN codex is committed to 3B-lean. The *open holes* are the arrow-thread
-   (`passes/src/lib.rs:203`) and the schema-derivation producer (R6 §8b) — both are GN-3 waves.
-   **3B's burden is to close the coarse-tag collapse** (`TapeEmit{kind}` starving
-   `DirectBuildTarget`), measured by the typed-materialization-invariant + no-value-discard.
-2. **MLIR is the field's warning against 3B-maximal**: single IR carrying too many abstraction
-   levels loses information "lowered too early." Our own `TapeEmit` collapse is that symptom in
-   miniature. This is the strongest argument for a **3A discipline layered on the 3B substrate** —
-   keep one IR, but give each *pass* a nanopass-style checkable output contract (we already have the
-   oracle instruments: regen byte-identity, checkasm parity, XOR-fold checksum, derived≡hand diff).
-3. **3D is the most-evidenced synthesis vein**: it *subsumes* GN-3 (type erasure) and PROVE-12
-   (constant erasure) as two erasures of stage 0, with LMS/Futamura/Terra as named prior art and
-   **two landed born-verified instances already in hand**. PROVE-12 §7 hands 3D its generalization
-   target verbatim. But 3D's failure mode (BTA imprecision → monomorph bloat) is exactly why
-   `generated-size-budget` exists, and per-site staging is LOCK-2's engine, not LOCK-3's to hardcode.
-4. **3C (grammar-specified IR) has no GN consumer today** and is LOCK-5/LOCK-7-coupled (the IR
-   grammar must be functor-compatible with the regex HIR verdict LOCK-5 owns). It is a real design
-   input but, absent a same-wave consumer, is SPEC-ONLY / consumer-less-substrate-forbidden until a
-   consuming wave is named. Nanopass proves the *positive* (grammar-specified IR is commercial-grade);
-   Sysmel's 3-cycle fixpoint proves the bootstrap converges under our exact `regen∘regen=regen` gate.
-5. **Named traps carried forward**: (a) MLIR's "lower-too-early" information loss — already present
-   as the `TapeEmit` collapse; (b) LMS/PE binding-time imprecision → generated-LOC blowup, guarded
-   by the LOC budget; (c) PROVE-09's two-arm-window self-deception — every residualization claim is
-   cold-paired-PMU or it is refuted; (d) consumer-less substrate — any new IR level or IR grammar
-   needs a same-wave reader; (e) TS-gets-no-IR (`no-ts-ir`) — the backend-agnostic middle is the
-   tape + schema, not a shared instruction IR.
-
----
-
-## 7. ADDENDUM (pass-1 re-sweep — four load-bearing veins the field settled that sharpen each family)
-
-This addendum extends §§1-6 with prior art that materially changes the family verdicts; it does
-not revise the settled adjudications, it hardens them.
-
-### 7a. ISLE (Cranelift) — grammar-to-grammar lowering *compiled to efficient code* (the missing 3C datapoint)
-The existing 3C evidence (nanopass `define-language`, Sysmel bootstrap) proves grammar-specified IR
-is commercial-grade but leaves 3C's "transpositions are grammar-to-grammar maps" looking slow
-(nanopass's own efficiency criticism, §1A). **ISLE refutes that worry directly.** ISLE is a
-statically-typed **term-rewriting DSL**: `.isle` rule files map typed IR-term patterns → machine-inst
-terms; a meta-compiler compiles all rules into **single-pass generated Rust** merged into one shared
-decision tree with user-configurable priorities. Two properties decide it for LOCK-3: (i) the
-lowering rules are *data*, yet residualize to an efficient decision tree — grammar-to-grammar lowering
-need not be interpreted, which is exactly the PROVE-12/Futamura move applied to the *lowering rules
-themselves*; (ii) ISLE was "designed so the rules can both be compiled into an efficient backend AND
-be used in formal reasoning about the compiler" — the rewrite corpus IS the candidate set an e-graph/
-CSP engine (LOCK-2) extracts over. **Verdict impact:** 3C's "no efficient path" objection is void;
-its real cost is the rule-corpus verification burden (Cranelift needed the CLIR fuzzer precisely
-because miscompiles hide in the rules) — which is exactly the differential-oracle-vs-hand-path
-discipline our GN-3 byte-identity gate and LOCK-7 7D already mandate. 3C's blocker remains the
-*consumer* question (§3), not efficiency. <https://cfallin.org/blog/2023/01-20/cranelift-isle/>
-
-### 7b. RVSDG — the single-unified-*graph* IR (strengthens 3B beyond sea-of-nodes; ties LOCK-2)
-The existing 3B evidence (LLVM SSA, GraalVM sea-of-nodes) is sound but RVSDG (Reissmann/Själander,
-ACM TECS 2020) is the sharper datapoint: it models the **entire program in one IR** in demand-
-dependence form, with *regions* capturing hierarchy and *state edges* sequentializing side effects,
-and claims to "raise the abstraction level by enforcing invariants and relaxing input order,
-**eliminating many helper passes** of conventional CFG compilers." This is the maximal 3B/2B thesis
-(one rich graph, fewer transpositions) with a measured optimizing-compiler realization (jlm). **The
-tradeoff it names is the load-bearing warning for LOCK-3:** "construction and destruction methods are
-more sophisticated" — i.e. a single-graph IR concentrates its entire cost at the *ingest boundary*
-(grammar-AST → graph) and the *extraction boundary* (graph → BackendShape), not in the middle. For us
-that says: if 3B goes graph-shaped to share LOCK-2's e-graph substrate (2B IR-IS-EGRAPH), the risk is
-not the passes but the two boundaries — and RVSDG's construction/destruction difficulty is the
-concrete counterexample the design fleet must budget. It reinforces §5's "do not merge the seats":
-LOCK-3 owns the boundaries, LOCK-2 owns the in-graph rewriting. <https://arxiv.org/pdf/1912.05036>
-
-### 7c. Two-Level Type Theory — staging *in the types*, residualization as type-directed erasure (3D's rigor)
-The existing 3D account leans on LMS ("types distinguish the two stages") and Futamura. **2LTT
-(Kovács, "Staged Compilation with Two-Level Type Theory," 2022) is the rigorous backbone that makes
-PORTFOLIO 3D's phrasing — "comptime/runtime split *in the types*; residualization is erasure of stage
-0" — a theorem rather than an analogy.** In 2LTT the object/meta split is a *typed* distinction;
-stage-0 (meta) code provably erases, leaving a well-typed residual — meaning-preservation by
-construction. This is the exact formal shape of our verified ZERO-RUNTIME-COST type-plane invariant
-(GN-3 §1.1): the schema is a stage-0 artifact fully erased before runtime. **Verdict impact:** the
-§4/§6.3 synthesis — "3D subsumes GN-3 (type erasure) and PROVE-12 (constant erasure) as two erasures
-of one stage" — acquires a citable formal frame; the zero-cost law stops being an asserted invariant
-policed by `git diff crates/runtime/` and becomes a *typing discipline* whose gate is a corollary.
-The trap 2LTT does not remove is binding-time imprecision → monomorph bloat (§4), still LOCK-2's
-per-site decision. <https://arxiv.org/pdf/2209.09729>
-
-### 7d. Translation validation / verified validators — the rigorous form of 3A's per-level oracle
-§1A frames 3A's contract via nanopass output-well-formedness; the formal-methods field offers the
-stronger primitive. **Translation validation** (Necula, PLDI'00) certifies *each compiler run* by
-comparing IR before/after a pass and checking semantic preservation; a **verified validator**
-(CompCert) carries a proof that `validate=true ⇒ equivalence`, giving whole-compiler-verification-
-strength guarantees over an *unverified* compiler. **Verdict impact:** 3A's "total function with a
-checkable contract, CI-enforced" is realizable as a *validator per lowering* (GrammarIr→BackendIr,
-BackendIr→emitted-Rust), not a whole-generator proof — and we already run its cheap, decisive
-instances (byte-identical fixpoint regen, checkasm NEON≡scalar, CSS XOR-fold checksum, GN-3 derived≡
-hand diff). The named trap: **do not over-build the oracle** — full semantic/SMT validators are
-expensive and incomplete; for a *generator* the sufficient oracle is fixpoint regen + corpus
-differential, which are standing law already. This bounds 3A: the contract layer is instrument-
-generalization, never a verification-condition-generator subsystem (that would be consumer-less
-ceremony, Constitution viii). <https://people.eecs.berkeley.edu/~necula/Papers/tv_pldi00.pdf>
-
-### 7e. One trap-quote to carry verbatim (MLIR authors, sharpening §2/§6.2)
-The MLIR paper's own framing of the §2 information-loss trap, worth quoting in the gestalt:
-"**premature lowering is the root of all evil in compiler design** … attempts to raise semantics once
-lowered are fragile." mlirSynth (arXiv:2310.04196) resorts to *program synthesis* to raise IR — the
-field's proof that structure-discarding one-way lowering is near-irreversible. Our `Project.ty`
-discard (`passes/src/lib.rs:203`) + the 4-way `ProjectionKind` re-derivation fold is that exact
-anti-pattern in miniature; every family's answer must carry the projection type *forward*, never
-lower-then-raise. <https://arxiv.org/pdf/2002.11054> · <https://arxiv.org/pdf/2310.04196>
-
----
-
-## Citations
-
-**Internal (absolute paths).** IR tower: `/Users/mkbabb/Programming/bbnf-lang/skinny/crates/ir/src/lib.rs`
-(`ExprKind::Project` :261, `BackendExpr`/`ValueProject` :375-413, `Recognizer::SimdScan` :416,
-`TapeEmit`/`TapeKind` :452, `DirectBuildTarget` :483, `nullability` :320). Arrow-discard defect:
-`/Users/mkbabb/Programming/bbnf-lang/skinny/crates/passes/src/lib.rs:203`. Schema IR + hand producer:
-`/Users/mkbabb/Programming/bbnf-lang/skinny/crates/codegen/src/direct_schema.rs`,
-`/Users/mkbabb/Programming/bbnf-lang/skinny/crates/codegen/src/json_typed_direct.rs`,
-`/Users/mkbabb/Programming/bbnf-lang/skinny/xtask/src/real_typed_schema.rs:7`. Emit spine:
-`/Users/mkbabb/Programming/bbnf-lang/skinny/crates/codegen/src/lib.rs:101,130`,
-`.../codegen/src/runtime_generator.rs`. Evidence: SPEC §0 + §2 GN-3
-`/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v24/SPEC.md`; PORTFOLIO Constitution
-`.../sk-v24/locks/PORTFOLIO.md`; R1 `.../research/R1-skinny-cartography.md`; R6
-`.../research/R6-value-type-plane.md`; PROVE-12 REPORT `.../prototypes/PROVE-12/REPORT.md`; tranche
-codex `/Users/mkbabb/Programming/bbnf-lang/docs/tranches/sk-v24/{INDEX,GN-1,GN-3}.md`.
-
-**External (URLs).**
-- Nanopass Framework: <https://nanopass.org/> · Keep dissertation <https://andykeep.com/pubs/dissertation.pdf>
-- MLIR progressive lowering: <https://mlir.llvm.org/docs/Dialects/Vector/> · <https://www.lei.chat/posts/compilers-and-irs-llvm-ir-spirv-and-mlir/>
-- Partial evaluation / Futamura: <https://en.wikipedia.org/wiki/Partial_evaluation> · <https://arxiv.org/pdf/1611.09906> · 2nd-projection practical <https://dl.acm.org/doi/10.1145/3359061.3361077>
-- Lightweight Modular Staging (types-distinguish-stages): <https://cacm.acm.org/research/lightweight-modular-staging/>
-- Terra multi-stage: <https://www.researchgate.net/publication/262238598>
-- Sysmel metacircular 3-cycle bootstrap: <https://arxiv.org/pdf/2309.15416>
-- GraalVM IR formal semantics: <https://arxiv.org/pdf/2107.01815>
-- CrossTL unified-IR multi-backend: <https://arxiv.org/html/2508.21256>
-- rustc HIR/THIR/MIR tower: <https://rustc-dev-guide.rust-lang.org/backend/codegen.html>
-- ISLE (Cranelift) term-rewriting lowering DSL: <https://cfallin.org/blog/2023/01-20/cranelift-isle/> · lang ref <https://github.com/bytecodealliance/wasmtime/blob/main/cranelift/isle/docs/language-reference.md> · CLIR fuzzer <https://arxiv.org/pdf/2606.26977>
-- RVSDG unified-graph IR (Reissmann/Själander): <https://arxiv.org/pdf/1912.05036> · TECS full text <https://dl.acm.org/doi/fullHtml/10.1145/3391902> · jlm <https://github.com/phate/jlm>
-- Two-Level Type Theory / staged compilation (Kovács): <https://arxiv.org/pdf/2209.09729>
-- Translation validation (Necula PLDI'00): <https://people.eecs.berkeley.edu/~necula/Papers/tv_pldi00.pdf> · CompCert verified back-end <https://arxiv.org/pdf/0902.2137>
-- MLIR "premature lowering is the root of all evil" + mlirSynth raising: <https://arxiv.org/pdf/2002.11054> · <https://arxiv.org/pdf/2310.04196>
+Codebase (verified `path:line`, HEAD): `ir/src/lib.rs:261-265,352-541` (Project/BackendIr/
+BackendExpr/BackendShape/DirectBuild schema); `ir/src/cost.rs:5,173,203,264` (decision-driver
+seat); `passes/src/lib.rs:203,398,1149-1287,1403-1490` (infer-discard, shape derive, plan,
+roles); `codegen/src/lib.rs:101,130` + `lower/` (emit tower); PROVE-12 `REPORT.md §1-7`;
+seeds R1 §2/§8, R6 §5/§8; GN-3.md (three walls, Wall 3 half-fallen); SPEC §0 #08/#12 + §4 laws.

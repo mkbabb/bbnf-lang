@@ -1,0 +1,83 @@
+### parse-that scratch edits (owner -> scratch) — LOCK-9 9A probe
+
+#### rust/parse_that/src/parsers/scan/structural_bitmap.rs
+
+#### rust/parse_that/src/parsers/scan/ws_comment.rs
+
+#### rust/parse_that/Cargo.toml (PATCHED arm shown; CONTROL = default-features=false)
+--- /Users/mkbabb/Programming/parse-that/rust/parse_that/Cargo.toml	2026-04-27 16:38:17
++++ /private/tmp/claude-504/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/scratchpad/pt-scratch/rust/parse_that/Cargo.toml	2026-07-16 10:05:47
+@@ -88,6 +88,9 @@
+ 
+ [dependencies]
+ bbnf-regex = { version = "0.1", path = "../regex" }
++# LOCK-9 9A probe — de-faced kernel library. `defaced` (default) = cfg-direct
++# entries (patched arm); `default-features = false` = OnceLock facade (control).
++bbnf-simd = { version = "0.1.0", default-features = false }
+ pprint = "0.3"
+ colored = { version = "3", optional = true }
+ memchr = "2.5.0"
+
+#### rust/Cargo.toml
+--- /Users/mkbabb/Programming/parse-that/rust/Cargo.toml	2026-04-07 02:20:56
++++ /private/tmp/claude-504/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/scratchpad/pt-scratch/rust/Cargo.toml	2026-07-16 10:00:49
+@@ -3,12 +3,23 @@
+ resolver = "2"
+ 
+ 
++# LOCK-9 9A probe: fat LTO + single CGU on the release profile so the
++# --lib disassembly reflects the same cross-crate inlining regime as the bench.
++[profile.release]
++lto = "fat"
++codegen-units = 1
++opt-level = 3
++
+ [profile.release-lto]
+ inherits = "release"
+ lto = true
+ 
+ [profile.bench]
+ inherits = "release"
+-lto = "fat"
+-codegen-units = 1
++# LOCK-9 pass-2 PROTO-2 paired-divan override: thin LTO + 16 CGU for build
++# speed under a saturated host. Both the pristine and rebirth arms build
++# with the IDENTICAL profile, so the paired ratio (rebirth/baseline) is
++# invariant to this choice; only absolute wall-times differ from fat-LTO.
++lto = "thin"
++codegen-units = 16
+ opt-level = 3
+\ No newline at end of file
+
+#### rust/.cargo/config.toml
+--- /Users/mkbabb/Programming/parse-that/rust/.cargo/config.toml	2026-05-01 16:55:14
++++ /private/tmp/claude-504/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/scratchpad/pt-scratch/rust/.cargo/config.toml	2026-07-16 09:59:33
+@@ -3,16 +3,19 @@
+ [patch.crates-io]
+ parse_that = { path = "parse_that" }
+ bbnf-regex = { path = "regex" }
+-pprint = { path = "../../pprint/rust" }
+-pprint_derive = { path = "../../pprint/rust/derive" }
+-bbnf = { path = "../../bbnf-lang/crates/core" }
+-bbnf-ir = { path = "../../bbnf-lang/crates/ir" }
+-bbnf-ser = { path = "../../bbnf-lang/crates/ser" }
++pprint = { path = "/Users/mkbabb/Programming/pprint/rust" }
++pprint_derive = { path = "/Users/mkbabb/Programming/pprint/rust/derive" }
++bbnf = { path = "/Users/mkbabb/Programming/bbnf-lang/crates/core" }
++bbnf-ir = { path = "/Users/mkbabb/Programming/bbnf-lang/crates/ir" }
++bbnf-ser = { path = "/Users/mkbabb/Programming/bbnf-lang/crates/ser" }
+ # bbnf_derive retired in bbnf-lang B2 (commit `6142387f`); the
+-# `../../bbnf-lang/crates/derive` source no longer exists. Post-B2 the
++# `/Users/mkbabb/Programming/bbnf-lang/crates/derive` source no longer exists. Post-B2 the
+ # regex-bootstrap crate re-exports `parse_that::regex::generated`
+ # directly, so no patch line and no registry edge are needed.
+-csp-solver = { path = "../../csc411/CSC411_HW2_ProgrammingQuestion/csp-solver" }
++csp-solver = { path = "/Users/mkbabb/Programming/csc411/CSC411_HW2_ProgrammingQuestion/csp-solver" }
+ # Tranche H: HIR e-graph support for bbnf-regex.
+-egraph = { path = "../../bbnf-lang/crates/egraph" }
+-egraph-derive = { path = "../../bbnf-lang/crates/egraph-derive" }
++egraph = { path = "/Users/mkbabb/Programming/bbnf-lang/crates/egraph" }
++egraph-derive = { path = "/Users/mkbabb/Programming/bbnf-lang/crates/egraph-derive" }
++
++# LOCK-9 9A probe: de-faced bbnf-simd kernel library (scratch vendor).
++bbnf-simd = { path = "/private/tmp/claude-504/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/scratchpad/pt-scratch/vendor/bbnf-simd" }

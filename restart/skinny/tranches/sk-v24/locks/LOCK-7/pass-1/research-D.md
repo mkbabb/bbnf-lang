@@ -78,6 +78,13 @@ NormalAst blessed by human audit against the SPEC. Adjudication rule: every corp
 resolved against the golden set or, for json/css, against the external reference already trusted
 (`check_conformance`'s serde, the css corpora's cssparser 9-field parity cited at
 `css_scan_differential.rs`). No divergence is ever resolved by majority vote of two parsers.
+Critically, the **regex sub-language has its own external anchor**: `regex-syntax::Hir` (the
+`regex-automata` family's independent parser). This is a *third* implementation — neither bbnf's
+generated regex parser nor parse-that's hand parser — so a shared regex bug in both self-hosted
+sides is caught. Adopt `regex-automata`'s `regex-test` TOML corpus format (pattern → expected,
+run across every engine variant and cross-checked) verbatim for the regex golden set; it is the
+industrial precedent for a cross-implementation regex differential and supplies the anchor rows
+`bbnf.bbnf`'s own `/…/` leaves cannot self-certify.
 
 **2.5 The corpus is the grammar tree itself.** The natural, zero-fabrication bbnf differential
 corpus is `grammar/**/*.bbnf` — `bbnf.bbnf` (self-description), all 16 `css/l4/*.bbnf`,
@@ -125,7 +132,20 @@ strictly" mechanism 7D needs, verbatim.
   `xtask/src/main.rs:48`, driven by the same `regen.rs:19` `write_targets`/`check_target`
   mechanics. `check-self-host` runs the differential and fails on any unadjudicated divergence;
   its *artifact* is the NormalAst diff (precept 19: a hard gate needs a runtime artifact, not a
-  grep).
+  grep). **The seam is a two-const mirror, and neither exists today:** a grep of `xtask/src/
+  main.rs` for `BBNF_TARGET`/`REGEX_TARGET` is empty — `bbnf.bbnf`/`regex.bbnf` are NOT regen-
+  wired, unlike json/sheets. Add a `BBNF_TARGET`/`REGEX_TARGET` `regen::RuntimeTarget` const
+  (`regen.rs:5`) mirroring `JSON_TARGET` (`main.rs:177`) and `SHEETS_TARGET` (`main.rs:200`),
+  with `source_inputs = ["grammar/bbnf/{bbnf,expressions,types}.bbnf"]` resolved repo-root-
+  relative (`regen.rs:169`). Wiring these two targets is the family's *first mechanical move* —
+  it is also the falsification of R0/R1 (does the generator lower `bbnf.bbnf` at all).
+- **The metric ladder, named.** The four compare rungs above form an explicit ladder each
+  subsystem declares its floor on: **L0** accept/reject (the `check_conformance` invalid arm),
+  **L1** node-count histogram (the live `parity_oracle.rs` shape), **L2** NormalAst equality
+  modulo declared canon (§2.3, the strong rung), **L3** byte-identical *emitted parser* from
+  either upstream IR producer (`check_target`→`check_dir`), **L4** the meta-circular fixpoint
+  (`regen∘regen` + self-parse closure). Promotion (§2.6) names the rung; a subsystem cannot be
+  promoted below L2.
 - **The golden anchor fixtures** under `crates/test-fixtures/corpus/{bbnf,regex}/golden/`.
 - **The falsification proof.** A planted-divergence test (mirror `checkasm_parity`'s
   `INJECT_BUG`): mutate one NormalAst projection and assert `check-self-host` trips — the gate is
@@ -146,6 +166,12 @@ strictly" mechanism 7D needs, verbatim.
 - **dav1d / FFmpeg checkasm**: scalar-reference-vs-candidate bit-identical parity with injected-bug
   self-test — the in-tree template (`checkasm_parity.rs`) 7D lifts from kernels to parsers.
 - **tree-sitter `corpus/`**: parse→S-expr→golden-diff — the NormalAst comparison form.
+- **regex-automata `regex-test`** (`testdata/*.toml`): one pattern cross-checked across PikeVM,
+  bounded backtracker, dense/sparse DFA, lazy hybrid, and meta engines — a shipped, industrial
+  *cross-implementation regex differential*; the corpus format and `regex-syntax::Hir` are the
+  regex sub-language's external anchor (§2.4).
+- **MLIR round-trip** (`mlir-opt %s | mlir-opt | diff`) and **META II / OMeta** self-describing
+  metagrammars: the L3 "print∘parse = identity" rung and the "grammar that parses itself" lineage.
 - **GHC / CompCert golden-file validation**: golden-AST anchoring precedent (§2.4).
 - **Thompson, *Reflections on Trusting Trust* (1984)**: the reason self-parity alone is not
   verification — the motivation for the whole family.

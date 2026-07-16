@@ -1,262 +1,230 @@
-# LOCK-7 · Family 7C — THE HOST-FUNCTION LATTICE (pass 1, research)
+# LOCK-7 / family 7C — THE HOST-FUNCTION LATTICE (pass 1, research-C)
 
-Totality is not a boolean and not a slogan. It is a measured percentage of a grammar's
-behavioral surface that lives *inside* the grammar plane, bounded below by a **typed
-host-function interface** through which — and only through which — context-dependent and
-recursive-with-state semantics escape. This family draws the lawful boundary of the
-constitution's clause (i) ("everything is grammar-driven … save primitives and combinators")
-by making "save" a *typed, declared, counted* residue rather than an unmeasured escape hatch.
+Totality is not a slogan measured against 100% grammar coverage; it is a *bounded* quantity —
+the fraction of every subsystem's leaf and context semantics expressed by grammar (`->`
+projections, `@{}` captures, class-run scans) versus the fraction that legitimately lives
+behind a TYPED host-function interface. This family's thesis: draw that boundary with a
+declared, checkable host-fn signature lattice, measure the fraction behind it per subsystem,
+name a floor for each, and make the escape hatch impossible to abuse as a grammar-name gate in
+disguise. The regex-grammar bootstrap and self-hosting depth (the sibling families' centers)
+are consumed here as *consumers of the boundary* — the bbnf and regex grammars are themselves
+subsystems whose host-fn floor must be measured.
 
----
+## 1. The mechanism made concrete — what exists, and where the boundary lives today
 
-## 1. The substrate already exists — dormant, partial, and stringly-typed
+The host boundary already has three physical forms in the tree, unequal in maturity.
 
-The bbnf grammar is self-describing and already carries **two** host mechanisms, both defined
-in `grammar/bbnf/bbnf.bbnf`:
+**Declaration surface.** `@host name : ReturnType ;` is grammar-defined at
+`grammar/bbnf/bbnf.bbnf:73` (`host_directive = "@host" ?w , identifier ?w , ( ":" ?w ,
+type_name ?w ) ?`), with the return-type vocabulary in `grammar/bbnf/types.bbnf:3-7`
+(`type_name` = the numeric-width primitives plus an open `[_a-zA-Z][_a-zA-Z0-9]*` identifier for
+`IrNode`, `Span`, user structs). It parses through `decode_host` at
+`crates/core/src/grammar/host.rs:424` into `HostFnDecl { name, return_type: Option<Cow<str>> }`
+(`crates/core/src/types.rs:81`) and lands in `DirectiveMaps::host_map: HashMap<String,
+Option<String>>` (`crates/core/src/pipeline/directives.rs:34,52`) — a name→return-type map,
+**nothing more**. There is no parameter-type list, no arity, no purity/effect class, no
+staging annotation.
 
-- **Out-of-line typed declaration.** `bbnf.bbnf:73`
-  `host_directive = "@host" ?w , identifier ?w , ( ":" ?w , type_name ?w ) ? , ( ";" | "." ) ? ;`
-  — a named host fn with an *optional return type*. The type comes from `grammar/bbnf/types.bbnf`
-  (`type_name`), which admits the primitive widths (`u8..u64`, `i32/i64`, `f32/f64`, `bool`,
-  `usize`) **and an arbitrary identifier** (`/[_a-zA-Z][_a-zA-Z0-9]*/`) — i.e. a
-  backend-agnostic `Named` type the backend resolves later (the backend-agnostic-types law).
-  **Usage across every shipped grammar: zero.** The seam is designed and dormant.
-- **Inline host capture.** `bbnf.bbnf:33`, inside the `term` production: `"@{" , rhs ?w , "}"`.
-  This one *is* used: `grammar/css/l4/color.bbnf:220` `colorFunction = @{ (colorType) … }`
-  ("LargeAggregate routing") and `grammar/css/l4/values.bbnf:69`
-  `urlFunction = @{ "url" , "(" >> (string | /[^)"'\s]+/) << ")" }` ("preserves raw URL text
-  for source maps"). Yet in the skinny runtime it is **UNSUPPORTED**: the frontend classifies
-  it `RuntimeConstructKind::HostCapture` and maps it to the error code
-  `BBNF-UNSUPPORTED-HOST-CAPTURE` (`skinny/crates/grammar/src/lib.rs:222`, struct
-  `RuntimeHostCapture` at `:170`). So the CSS floor is presently *unmet by the compiler slice*.
+**Call surface.** Host functions are invoked only inside `->` value expressions as
+`MapExpr::FnCall { name: StringId, args: Vec<MapExpr> }` (`crates/ir/src/types/map_expr.rs:31`).
+The value grammar admits the call form at `grammar/bbnf/expressions.bbnf:14`
+(`value_fn_call = value_path , "(" , ( value_expr , … ) ? , ")"`). Return-type propagation from
+the declaration to the `-> T` map arrow is `extract_value_func_name`
+(`crates/core/src/lower/value_expr/unwrap.rs:199`): the recovered call name is looked up in the
+host-fn table; a miss is tolerated silently (non-host names just fail the table check).
 
-And the pathology the lattice abolishes is already in the tree, in the open:
-`skinny/crates/passes/src/lib.rs:794` `has_parse_time_host_decode` decides whether a leaf is a
-parse-time host decode by a **string heuristic** —
-`name.contains("host") && (value.contains("decode") || value.contains("parse"))`
-(`passes/src/lib.rs:798`), feeding `ShapeRationale::HostFnParseTime`
-(`passes/src/lib.rs:620`, cost lever `HostFnParseTime` at `ir/src/cost.rs:255`). A host boundary
-detected by substring sniffing is the untyped, name-gate-adjacent smell 7C exists to replace
-with a typed registry lookup. It is a one-file, shape-not-string cure (§5, prototype T2).
+**The already-typed inner lattice.** The load-bearing discovery: the compiler already carries a
+closed, typed classification of derived semantic actions — `FnDescriptor`
+(`crates/ir/src/types/fn_descriptor.rs`) with six variants: `EnumWrap{variant}`, `BoxWrap`,
+`NumberConvert{allow_leading_dot}`, `HexConvert{fn_path}`, `SpanCapture`, and the catch-all
+`Expr{expr: MapExpr, return_type: Option<TypeDesc>}` into which all `->` syntax lowers. This IS
+a lattice in the algebraic sense — each specialization (`NumberConvert`, `HexConvert`) is a join
+of `Expr` with a recognized inner regex class, refining an untyped user expression into a fused
+kernel. `@{expr}` span-capture (`grammar/bbnf/bbnf.bbnf:33`) lowers to `FnDescriptor::SpanCapture`
+— validate-then-discard-returning-Span, used by CSS `colorFunction`
+(`grammar/css/l4/color.bbnf:220`) and `urlFunction` (`grammar/css/l4/values.bbnf:69`). The family's
+work is to make the *outer* `@host` declaration as typed as the inner `FnDescriptor` lattice
+already is, and to unify them: `@host` becomes the user-facing constructor for the `Expr`-with-
+declared-signature node.
 
----
+**The cost boundary (where totality costs runtime).** A parse-time host decode forces the eager
+tape shape: `ShapeRationale::HostFnParseTime` (`crates/ir/src/cost.rs:255`) is chosen by
+`has_parse_time_host_decode` (`crates/passes/src/lib.rs:794`, consumed at `:620` and `:764`), a
+structural recursion over `ExprKind`. This is the crux the lattice must own: **a pure leaf-decode
+host fn should not tax the tape, but a context-carrying one legitimately does** — and today the
+distinction is a heuristic structural walk, not a declared purity class.
 
-## 2. The lattice — three strata, one typed seam between the top two
+**The skinny slice (the greenfield floor).** The skinny compiler is deliberately host-fn-*minimal*:
+`skinny/crates/runtime/src/grammars/json/host.rs` is empty ("JSON is host-fn-free in the skinny
+compiler slice"); the workspace metadata declares `host_registry = skinny-none`. Skinny does carry
+a leaner runtime `@{}` mechanism — `RuntimeHostCapture` (`skinny/crates/grammar/src/lib.rs:170`,
+scanned by `parse_runtime_host_capture:799`) — but tags it `BBNF-UNSUPPORTED-HOST-CAPTURE`
+(`:222`) and gates consumers behind a `host_capture: bool` requirement
+(`skinny/crates/codegen/src/grammar_provider.rs:45,267`, `frontend_missing("host capture")`). The
+greenfield inherits an almost-blank host plane — which is the opportunity: the lattice is
+*designed*, not retrofitted around a legacy surface.
 
-Totality is measured *only* against the boundary between strata 2 and 3. The strata:
+## 2. The substrate — the typed host-fn signature the lattice needs
 
-1. **GRAMMAR.** Rules, alternations, repetitions, `->` projections, the value-expression DSL
-   (`grammar/bbnf/expressions.bbnf`: precedence-climbing `value_or … value_atom`,
-   `value_fn_call`, `value_input`). The totality core; carries structure and pure leaf maps.
-2. **PRIMITIVES / COMBINATORS.** Pure, referentially-transparent kernels invoked from a
-   projection via `value_fn_call` — float decode (Eisel–Lemire, `parse-that-regex/src/number/
-   eisel_lemire/mod.rs:147`), string unescape (`parse-that-regex/src/lib.rs:867`), SIMD scan
-   (`bbnf-simd`). **This is the constitution's exempt floor.** JSON proves it: `host.rs` is
-   *empty* — "JSON is host-fn-free in the skinny compiler slice"
-   (`skinny/crates/runtime/src/grammars/json/host.rs:2`). JSON's number and string decodes are
-   **primitives, not host fns.** The lattice's first law: *pure decode is a primitive, never a
-   host fn.* This alone answers GN-5's TOML-datetime risk (§4, R1).
-3. **HOST FUNCTIONS.** The *only* legal home for context-dependent or recursive-with-state
-   semantics — behind a declared, typed signature. Two tiers, **declared not inferred**:
-   - **PURE-DECODE tier** — `@host name : Span -> T`, no parser state. (Should almost always be
-     demoted to stratum 2; the tier exists so a decode that is not yet a kernel has a lawful,
-     typed temporary home with a migration obligation.)
-   - **CONTEXT tier** — `@host name : (Span, &mut Ctx) -> T`, reads/mutates a *declared, typed*
-     parse-time context. The attribute-grammar framing is exact: the context is an **inherited
-     attribute** (table-path stack, indent stack, at-rule scope), the return an **synthesized
-     attribute**. This is the residue totality counts against.
+The concrete extension, minimal and grammar-first (self-hosting law: augment BBNF, never work
+around):
 
-The typed seam (stratum 2↔3) is one artifact: extend `@host name` to a full signature
-`@host name : InType -> OutType` (or `(InType, &mut CtxType) -> OutType`), where the types
-flow from `type_name` (already parsed) into LOCK-1's inference as a typed leaf whose result
-unifies into the projection algebra, and whose *tier* is read off the presence of a `&mut Ctx`
-parameter. The type plane is erased to zero runtime cost (constitution v) for the PURE-DECODE
-tier by construction; for the CONTEXT tier, the `Ctx` is a *parse-time-only* channel
-(indent/table-path stacks never outlive the parse), so the zero-cost invariant is re-verified,
-not assumed (§4, R5).
+**A full signature grammar.** Replace `@host name : ReturnType` with a declared signature:
 
-**The context class drives the cost model — structurally, not by substring.** The reason the
-`has_parse_time_host_decode` string-sniff exists at all is that a host boundary has a
-*materialization consequence*: a host fn that reads the cursor cannot be deferred; one over
-values can be const-folded. 7C makes that consequence a **declared enum on the signature**, and
-the cost model reads it:
-
-```rust
-// crates/ir/src/host/  (new directory-module; colocation edict, no god module)
-pub enum HostContext {            // the lattice's cost axis, low→high materialization
-    Pure,        // args are values only → foldable; admits SinkOnly / comptime const-fold
-    ParseState,  // reads cursor/offset      → parse-time; forces EagerTape
-    TreeFold,    // recurses over a subtree   → EventTape granularity
-    CompileIO,   // @import / scope resolution → comptime-ONLY, never on the runtime path
-}
-pub struct HostSig { pub params: Vec<TypeDesc>, pub ret: TypeDesc,
-                     pub context: HostContext, pub purity: Purity }
-pub struct HostRegistry { pub sigs: BTreeMap<HostFnId, HostSig>,
-                          pub primitive_floor: PrimitiveFloor }   // replaces the "skinny-none" String
+```
+host_directive = "@host" ?w , identifier ,
+                 ( "(" ?w , ( host_param , ( "," ?w , host_param )* ) ? , ")" ) ? ?w ,
+                 ( ":" ?w , type_name ?w ) ? ,
+                 ( "@" , purity_class ) ? , ( ";" | "." ) ? ;
+host_param     = type_name ;          // Span | ValueRef | u32 | f64 | Capture | …
+purity_class   = "pure" | "context" | "comptime" ;
 ```
 
-The cure at `passes/src/lib.rs:794` becomes a registry lookup that generalizes the single
-`HostFnParseTime` rationale to the full lattice:
+- **Param types** name what the host fn consumes: `Span` (raw leaf text), a typed `ValueRef`
+  cursor, a numeric width, or a `Capture` group. Arity + param types are checkable against every
+  `MapExpr::FnCall` site — today entirely unchecked.
+- **`return_type`** already exists (`HostFnDecl.return_type`); it threads to the `-> T` arrow via
+  `extract_value_func_name`.
+- **`purity_class`** is the totality-boundary discriminant, projecting directly onto the cost
+  model: `pure` (a leaf decode — hex→u32, base64, checksum; no parse state) must select a
+  *non-eager* shape; `context` (needs cursor/nesting depth — the tree-sitter-external-scanner
+  case) legitimately routes `ShapeRationale::HostFnParseTime`; `comptime` is a constant-foldable
+  decode (LOCK-3 staged residual — erased at stage 0). `has_parse_time_host_decode` becomes a
+  *lookup of the declared class*, not a structural guess.
 
-```rust
-fn host_shape_constraint(g, id, reg) -> Option<ShapeRationale> {
-    match reg.context_of(host_call(g, id)?) {         // structural: HostCall node, not a name
-        HostContext::ParseState => Some(ShapeRationale::HostFnParseTime),
-        HostContext::TreeFold   => Some(ShapeRationale::HostFnTreeFold),     // new variant
-        HostContext::CompileIO  => Some(ShapeRationale::HostFnComptimeOnly), // new variant
-        HostContext::Pure       => None, // no constraint — may SinkOnly / const-fold (PROVE-12 seam)
-    }
-}
-```
+**The signature store.** `DirectiveMaps::host_map` widens from `HashMap<String, Option<String>>`
+to `HashMap<String, HostFnSig>` where `HostFnSig { params: Vec<TypeDesc>, ret: Option<TypeDesc>,
+purity: PurityClass }`. `TypeDesc` is backend-agnostic (memory: backend-agnostic-types) so the
+Rust and TS backends each resolve it natively.
 
-`Pure` is what *lowers* cost: a pure host fn on a literal argument is a compile-time value, so
-the PROVE-12 residualization seam (const-fold to an immediate) generalizes to host calls — a win
-the substring sniff could never earn, since it forced eager on *every* `host…decode` name.
+**Unification with `FnDescriptor`.** A declared `@host` fn is `FnDescriptor::Expr` carrying its
+signature; the existing specializations (`HexConvert`, `NumberConvert`) become the *inferred*
+refinements of a `pure`-classed host call whose inner arg is a recognized regex class. One
+lattice: user-declared signatures at the top, compiler-inferred kernel specializations as joins
+below. The `SpanCapture`/`@{}` form is the `pure : Span` corner.
 
-**The primitive floor (stratum 2) is a closed, declared, gated list — not an open exemption.**
-`PrimitiveFloor` enumerates the constitution's exempt kernels: `bbnf-simd::prim::*`
-(`bbnf-simd/src/lib.rs:250-336`, each with a scalar reference + `primitive-checkasm` gate,
-`xtask/src/main.rs:52`), Eisel–Lemire (`parse-that-regex/src/number/eisel_lemire/mod.rs:147`),
-the tape writer/arena (`runtime/src/tape/mod.rs:92,:36`). Each floor member carries a
-`HostContext::Pure` signature and a parity oracle; *adding* a member is a named, gated act. This
-closes R7 (floor creep, §4): "primitive" cannot become an escape hatch because the floor is
-finite, declared, and checkasm-defended.
+**The totality census (the measured percentage — the charter's quantitative demand).** An xtask
+subcommand `census-totality` walks each grammar's IR and reports, per subsystem: leaf semantics
+expressed by grammar (`->` MapExpr with no `FnCall`, `@{}` SpanCapture, class-run/regex scans)
+versus behind a host `FnCall`, and classifies each host call by purity. Output is a table with a
+**named floor per subsystem** — the charter's deliverable. Current readings, from the tree:
+JSON = 100% grammar (host.rs empty); CSS carries two `@{}` span-captures (both `pure : Span`, not
+true host escapes); sheets/csv/toml floors to be measured. The floor is a committed invariant a CI
+gate defends (a regression below floor fails).
 
----
+## 3. Integration seams (path:line where extant code serves)
 
-## 3. Totality as a measured percentage with a named floor per subsystem
+- Declaration grammar: `grammar/bbnf/bbnf.bbnf:73` (`host_directive`), `grammar/bbnf/types.bbnf:3-7`
+  (`type_name` — the param/return vocabulary to widen).
+- Parse → typed decl: `crates/core/src/grammar/host.rs:424` (`decode_host`), sink at `:114`
+  (`push_host_fn`); `HostFnDecl` at `crates/core/src/types.rs:81`.
+- Signature store: `crates/core/src/pipeline/directives.rs:34,52` (`host_map` + `host_map_mut`).
+- Call node: `crates/ir/src/types/map_expr.rs:31` (`MapExpr::FnCall`).
+- The inner typed lattice to unify with: `crates/ir/src/types/fn_descriptor.rs` (six variants).
+- Return-type propagation: `crates/core/src/lower/value_expr/unwrap.rs:199`
+  (`extract_value_func_name`); atom lowering `crates/core/src/lower/value_expr/atom.rs:414`
+  (`lower_fn_call_atom`, `:426` `collect_fn_call_args`).
+- Cost/totality boundary: `crates/ir/src/cost.rs:255` (`ShapeRationale::HostFnParseTime`);
+  `crates/passes/src/lib.rs:794` (`has_parse_time_host_decode`, the structural heuristic to
+  replace with a purity lookup), consumed `:620,:764`.
+- Multi-backend resolution: Rust `host_registry` metadata at
+  `skinny/crates/codegen/src/grammar_provider.rs:27`; TS `declare function` stub emission at
+  `crates/core/src/backend/ts/emitter/grammar.rs:236` (`collect_host_fn_names`).
+- Skinny slice to grow: `skinny/crates/grammar/src/lib.rs:170` (`RuntimeHostCapture`),
+  `grammar_provider.rs:45,267` (`host_capture` requirement); empty
+  `skinny/crates/runtime/src/grammars/json/host.rs`.
+- Closures (the recursive-context sibling mechanism, adjacent but distinct):
+  `crates/core/src/pipeline/compile/closure_partition.rs` (first-class grammar functions expanded
+  inline; `partition_closures:21`, `collect_closure_param_names:116`) — grammar functions carry
+  their own param lattice and are the in-grammar answer to context the host boundary would
+  otherwise absorb.
+- Gate to extend: `docs/tranches/sk-v24/GN-5.md` W3 `check-name-gates` (the AST audit that the
+  host-fn declaration surface must also traverse; R2 §7 names this obligation explicitly).
 
-For each shipped grammar, a mechanical counter walks the `GrammarIr` and partitions leaves and
-alternation branches into {grammar, primitive, host}. **Totality% = (grammar + primitive
-behavioral surface) / total**, and equivalently a **host-residue floor** — the enumerated,
-justified set of CONTEXT host fns per subsystem. Measured against behavior (leaves × branches
-covered), *not* rule count, so a host fn that swallows a subtree counts its whole covered
-surface as non-total (defeats the gaming counterexample, §4 R3). The named floors, from the
-grammar sources:
+## 4. Prior art (with citations)
 
-| Subsystem | CONTEXT host floor | Evidence |
-|---|---|---|
-| **json** | **0** | `json/host.rs` empty; number/string are primitives |
-| **csv** | **0** | flat, line-oriented; WALL-A newline-significance is grammar-derived |
-| **toml** | **table-path nesting** (`[a.b.c]`, `[[array]]`) → `@host push_path : (Span, &mut TablePathStack) -> Unit` | GN-5.W2; nesting is genuinely context-dependent, datetime is *not* (primitive class-run scan) |
-| **css l4** | **`@{}` LargeAggregate/raw-span capture** (`colorFunction`, `urlFunction`); at-rule cascade scope candidate | `color.bbnf:220`, `values.bbnf:69`; blocked on productionizing HostCapture |
-| **sheets** | operator tower is grammar (39-branch); cross-cell reference resolution the only host candidate | R1 §9 sheets carve-out |
-| **bbnf (self-host)** | `@import` module resolution + closure β-reduction (compile-time) | `bbnf.bbnf:4-5,60`, closure at `:52` |
+- **ANTLR semantic predicates + actions** — inline host code embedded in productions to
+  disambiguate context-sensitive syntax; powerful but untyped and unbounded. The 7C lattice is the
+  disciplined typed analogue: `->` for pure leaves, a *declared-signature* `@host` for context —
+  the predicate's power without the unbounded inline-code coupling.
+  ([Comparison of Leading Language Parsers](https://www.researchgate.net/publication/376883410_Comparison_of_Leading_Language_Parsers_-_ANTLR_JavaCC_SableCC_Tree-sitter_Yacc_Bison))
+- **tree-sitter external scanners** — arbitrary C for non-regular tokens (indentation, heredocs,
+  raw strings). The unbounded, untyped escape hatch. 7C's contribution over it: a *typed
+  signature* + *purity class* + *measured floor* replaces "write whatever C you need" — the
+  boundary is declared and audited, not a blank function pointer.
+  ([External Scanners — Tree-sitter](https://tree-sitter.github.io/tree-sitter/creating-parsers/4-external-scanners.html))
+- **Menhir semantic actions** — typed OCaml expressions attached to productions; the type
+  discipline bbnf's `-> value_expr : type` already mirrors. Difference: Menhir actions are
+  arbitrary Turing-complete inline code; 7C bounds them behind a *named, signed* interface so the
+  grammar stays analyzable (constant-folding, type projection over `MapExpr`).
+  ([Menhir Reference Manual](https://gallium.inria.fr/~fpottier/menhir/manual.html),
+  [Parsing with OCamllex and Menhir](https://dev.realworldocaml.org/parsing-with-ocamllex-and-menhir.html))
+- **Marpa's staged evaluation** — events during recognition, actions during a separate evaluation
+  phase; the exact comptime/runtime split the `purity_class` `comptime` corner encodes (align with
+  LOCK-3 staged-residual: a `comptime` host fn is erased at stage 0).
+  ([Marpa FAQ](http://savage.net.au/Perl-modules/html/marpa.faq/faq.html))
+- **rustc/GHC effect & purity typing** — the precedent for classifying a function by what state it
+  touches; `purity_class` is the parser-generator instance (pure/context/comptime as a coarse
+  effect lattice driving the tape-shape decision).
 
-The floors are enforced by a **totality-floor gate** — a sibling of GN-5.W3's `check-name-gates`
-(`cargo xtask check-name-gates`, `docs/tranches/sk-v24/GN-5.md` W3) — that fails if a subsystem's
-host set exceeds its declared floor *or* if any host fn's name/body is grammar-name-specific
-(the overfitting cure, R1 below). This directly discharges GN-5's own open obligation: risk R2
-(§7) states "`check-name-gates` must be extended to audit host functions, or the datetime leaf
-stays grammar-expressed" — 7C makes that extension the lattice's enforcement organ.
+## 5. Named risks and counterexamples
 
----
+- **R1 — the typed host fn as a name-gate in disguise (GN-5 R2, binding).** `@host
+  parse_toml_datetime` hard-coding one grammar's leaf is the master pathology: it *passes* a
+  string-literal name-gate audit while being an overfit shim. Counter: `check-name-gates` must
+  traverse the `@host` *declaration surface* and flag any host-fn name/signature encoding a
+  grammar name; and the totality census must show a *high grammar floor* — a subsystem whose leaves
+  are mostly host-shimmed fails its floor. The self-hosting law bites here: TOML datetime must be
+  proven grammar-expressible (class-run scan, the WALL-B idiom) before a host shim is admitted.
+- **R2 — the escape hatch defeats the measurement.** If `@host` admits an untyped fn with no
+  signature, "percentage behind grammars" is meaningless (arbitrary code hides behind one name).
+  Counter: a host fn with no declared signature is a *hard error*, not a warning — no untyped
+  escape. The floor is only credible if every escape is signed.
+- **R3 — cross-backend non-portability.** A Rust host fn has no TS body; the TS backend emits only
+  `declare function` stubs (`backend/ts/emitter/grammar.rs:236`). A grammar leaning on host fns is
+  not isomorphic across backends (constitution iii). Counter: the signature is backend-agnostic
+  (`TypeDesc`), and a portability lint reports every host fn lacking a declared impl in a target
+  backend; `pure`/`comptime` classes are portable by construction (side-effect-free decode),
+  `context` classes are flagged as backend-specific.
+- **R4 — purity misdeclaration silently corrupts the tape shape.** Declaring a genuinely
+  context-dependent fn `pure` would select a non-eager shape that cannot supply the state the fn
+  needs. Counter: the lowering verifies a `pure`-declared fn's arg list references no parse-state
+  (`Input`/cursor) type; a `pure` fn taking a cursor param is a compile error. The declaration is
+  checked against the call, not trusted.
+- **R5 — the closure/host boundary blurs.** First-class grammar closures
+  (`closure_partition.rs`) and host fns both absorb context; overlap invites a god-mechanism.
+  Counter: the rule is sharp — closures are *in-grammar* (expanded inline, fully analyzable), host
+  fns are *out-of-grammar* (opaque, signed). Recursive/context semantics expressible as a closure
+  MUST be a closure; host is the last resort, and the census counts closures as *grammar* coverage,
+  not host coverage — so pushing context into closures *raises* the floor.
 
-## 4. Named risks and counterexamples
+## 6. Exactly what a prototype must test to move this family
 
-- **R1 — the host fn as name-gate in disguise (GN-5 §7 R2).** `@host toml_datetime` that
-  hard-codes TOML is overfitting wearing a signature. *Guard:* the totality-floor gate audits
-  host-fn identifiers and captured bodies for grammar-name literals (`toml`,`css`,…), the same
-  AST walk GN-5.W3 runs over codegen; a floor entry is legal only when justified by
-  context-dependence, and datetime — being pure — is forbidden from the host tier (it is a
-  primitive class-run scan).
-- **R2 — untyped drift.** `passes/src/lib.rs:798` proves detection degrades to
-  `name.contains("host")`. *Guard:* the typed registry is the single source of truth; the string
-  sniff is deleted, replaced by a tier lookup (prototype T2). If the registry is bypassed the
-  build fails closed (`grammar_provider.rs:267` already fails when host capture is required but
-  absent).
-- **R3 — totality gaming.** Push all structure into one giant host fn to *look* grammar-total.
-  *Guard:* measure behavioral surface (leaves × branches), not rules; a swallowing host fn
-  scores its whole subtree as non-total.
-- **R4 — the CSS floor is presently unmet.** `@{}` HostCapture is `BBNF-UNSUPPORTED`
-  (`grammar/src/lib.rs:222`) yet `colorFunction`/`urlFunction` depend on it. *Guard:* the
-  family's first production obligation is to lower `RuntimeConstructKind::HostCapture` in the
-  skinny runtime, else CSS totality is a paper number.
-- **R5 — the CONTEXT tier breaks the zero-cost type plane.** A `&mut Ctx` that leaks into the
-  emitted tape violates constitution v. *Guard:* CONTEXT is a *parse-time-only* typed channel
-  (stacks discarded at parse end); the zero-cost invariant (`runtime/src/lib.rs:42-44` payload
-  no-write assertion, JSON) is re-run per subsystem with a CONTEXT host fn present.
-- **R6 — isomorphism drift (LOCK-6).** A host fn body is Rust today, TS later. *Guard:* the
-  signature (types + tier) is backend-agnostic (`type_name` → `Named`); only the body is
-  per-backend, modeled on modular-FFI's "abstract the binding from its interpretation."
-- **R7 — primitive-floor creep.** If "primitive" is an open exemption, everything migrates to
-  stratum 2 and totality collapses to the floor. *Guard:* `PrimitiveFloor` is a **closed declared
-  list** with a per-member checkasm parity oracle; growth is visible and gated, not silent (§2).
-- **R8 — a lying `Pure` signature.** A host fn declared `Pure` that actually reads the cursor
-  mis-drives the cost model (SinkOnly where EagerTape was needed). *Guard:* purity is *verified,
-  not asserted* — LOCK-1's type plane checks that a `Pure` sig's params are value/`Span` types
-  only; a `Pure` fn taking `&mut Ctx`/cursor is a type error. 7C is load-bearing on LOCK-1 here.
+1. **Signature parse + arity check.** Extend `@host` to the full signature grammar; regenerate the
+   bbnf self-parser; prove a `@host decode(Span) : u32 @pure` declaration parses, threads into
+   `host_map` as a `HostFnSig`, and that a `MapExpr::FnCall` site with wrong arity/param type
+   throws a diagnostic naming the grammar span (today: unchecked). Success = an arity mismatch is a
+   compile error, not a silent miss.
+2. **The totality census with a named floor.** Implement `xtask census-totality` over the five
+   greenfield grammars (json/css/csv/toml/sheets); emit the per-subsystem grammar-vs-host table with
+   purity breakdown. Success = a committed floor per subsystem (JSON 100%, CSS's two `@{}` counted
+   as grammar, the rest measured) that a CI gate defends against regression.
+3. **Purity → tape-shape wiring.** Replace `has_parse_time_host_decode`'s structural heuristic with
+   a `purity_class` lookup; prove on a real grammar that a `pure` hex-decode host fn selects a
+   non-eager (offset/sink) shape while a `context` fn routes `HostFnParseTime` — measured cyc/B: the
+   `pure` path must NOT carry the eager-tape tax. Success = a purity reclassification measurably
+   changes the selected shape and the cost, cold-paired.
+4. **The name-gate falsification for host fns.** Plant `@host parse_csv_field` and
+   `@host toml_datetime` and assert the extended `check-name-gates` trips on grammar-name-encoding
+   host declarations; assert the clean five-grammar tree passes. Success = the gate distinguishes a
+   general host fn (`decode_hex`) from an overfit one (`parse_toml_datetime`) — the GN-5 R2
+   obligation discharged.
+5. **The TOML datetime falsification (the self-hosting proof).** Prove TOML's datetime leaf is
+   grammar-expressible (class-run scan) with NO host fn — the concrete demonstration that the floor
+   is achievable, not aspirational. Success = TOML round-trips against the `toml` crate with its
+   datetime leaf fully grammar-expressed, host_map empty for that subsystem.
 
----
-
-## 5. What a prototype must test to move this family (falsifiable, ordered)
-
-- **T1 — typed signature.** Extend `@host name` grammar to `@host name : InType -> OutType`
-  and `(InType, &mut CtxType) -> OutType`; wire the return `TypeDesc` into LOCK-1 inference as
-  a typed leaf. **Pass:** a PURE-DECODE `@host` type-checks and the zero-cost assertion
-  (`runtime/src/lib.rs:42-44`) still holds.
-- **T2 — kill the string heuristic.** Replace `has_parse_time_host_decode`
-  (`passes/src/lib.rs:794`) with a typed-tier registry lookup. **Pass:** `cargo xtask
-  check-json` bit-for-bit (JSON floor = 0, must be unaffected).
-- **T3 — one real CONTEXT host fn, end to end.** TOML `@host push_path : (Span, &mut
-  TablePathStack) -> Unit`; round-trips against the `toml` crate (GN-5.W2 oracle) **and** a
-  grammar-name-hardcoded variant is flagged by the floor gate.
-- **T4 — productionize `@{}`.** Lower `RuntimeConstructKind::HostCapture` in skinny; CSS
-  `colorFunction`/`urlFunction` stop emitting `BBNF-UNSUPPORTED`. **Pass:** CSS regen
-  bit-for-bit + measured CSS totality% delta.
-- **T5 — the totality counter + floor gate.** Mechanical per-grammar {grammar|primitive|host}
-  partition; publish totality% + named floor for all five grammars; a CI gate fails on floor
-  regression or grammar-name-specific host. **Pass:** the gate trips on a planted floor breach
-  (falsification-proven, GN-5.W3 discipline).
-- **T6 — bootstrap fixpoint.** The typed host-directive survives `regen∘regen` byte-identical
-  on `bbnf.bbnf` itself (the grammar that *defines* `host_directive` re-parses through its own
-  generated parser) — the LOCK-7 staging obligation, `skinny/crates/xtask/src/main.rs:39-52`
-  dispatch, `regen.rs:19` mechanics.
-
----
-
-## 6. Prior art (cited)
-
-- **tree-sitter external scanners** — hand-written C for tokens "that cannot be expressed as
-  regular languages" (indentation, heredocs, raw/template strings): the exact
-  context-dependent residue, but **untyped and no semantic predicates**. 7C's advance is the
-  *typed signature + measured floor*. (tree-sitter.github.io, "External Scanners".)
-- **ANTLR semantic predicates & actions** — embed host code to resolve ambiguity, at the cost
-  that "the whole grammar is not language-independent anymore" — the backend-agnostic violation
-  7C avoids by keeping types `Named` and only the body per-backend. (parser-comparison survey,
-  ResearchGate 376883410.)
-- **Menhir semantic actions** — OCaml fragments decorating productions; typed, but welded to
-  one host language. (Menhir Reference Manual, Inria/Gallium.)
-- **Attribute grammars** — synthesized (from children) vs inherited (from parent/siblings)
-  attributes: the formal model for the CONTEXT tier — the typed `&mut Ctx` **is** an inherited
-  attribute, the return a synthesized one. (Wikipedia, "Attribute grammar"; "Synthesis of
-  Semantic Actions in Attribute Grammars", arXiv 2208.06916.)
-- **Contextual MetaML / MetaOCaml typed staging** — brackets/escape, type-safe splices: the
-  model for a host fn as typed stage-0 code spliced into the stage-1 parser, tying to LOCK-3's
-  staged-residual and LOCK-7's bootstrap. (arXiv 2602.03033; 2601.15180.)
-- **Modular FFI (types-as-values)** — abstracting a binding's *definition* from its
-  *interpretation* (libffi vs codegen): the model for one backend-agnostic host signature with
-  Rust-now/TS-later bodies. (ScienceDirect S0167642317300709.)
-- **GHC FFI purity axis** — `foreign import ccall f :: T1 -> IO T2` vs a pure return, with
-  `unsafePerformIO` as the audited escape: the canonical *typed* host boundary with an explicit
-  IO/pure split. 7C's `HostContext`/`Purity` is exactly this axis; the erased-type-plane law
-  mirrors GHC's zero-cost erased types. (GHC User's Guide §8, FFI.)
-- **MLIR external funcs + op-interfaces** — `func.func` declarations and `CallOpInterface` are
-  declared typed contracts across dialects; `unrealized_conversion_cast` is the typed escape.
-  The dialect-lattice-with-typed-interfaces is the structural analog of the host lattice.
-- **Lean/Coq `opaque` / `axiom`** — a typed hole in an otherwise total system; the trusted
-  kernel is the closed primitive floor (stratum 2), with checkasm as the de-Bruijn-style proof
-  obligation. The floor is 7C's trusted computing base. (Lean 4 manual, "opaque".)
-
----
-
-## 7. The family's claim, sharply
-
-The generator does not become "mostly data" (that is a sibling family's wager); it becomes
-**grammar plus a typed, counted, floored escape hatch**. Self-hosting terminates because the
-un-grammar-expressible residue is finite, named, and typed — the primitives (stratum 2) are the
-constitution's exemption made concrete, the host fns (stratum 3) are the context-dependent
-remainder made *measurable*. The deliverable is not "100% self-hosted" but a **published
-totality percentage per subsystem with an enforced floor** — and the immediate, in-tree win is
-deleting one string heuristic (`passes:798`) and lighting up one dormant, already-designed,
-already-typed directive (`bbnf.bbnf:73`).
+The family moves when (2) and (3) land together: a *measured* totality percentage with a *named
+floor*, and a purity lattice that makes the totality boundary cost-honest rather than a structural
+guess. That pair is the charter's irreducible core — everything else (signature checking, the
+name-gate audit, backend portability) is the enforcement scaffolding around it.

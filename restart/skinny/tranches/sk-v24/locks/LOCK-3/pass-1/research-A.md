@@ -120,6 +120,22 @@ across the corpus; born-RED, fail-closed. This **unifies** oracles that today ar
 artifact the charter's "CI-enforced" clause demands, and the concrete-artifact discipline the
 constitution (clause vii) requires.
 
+**The load-bearing crux — L3 is already contracted-and-green; L1/L2 are contracted-and-violated.**
+The L3 emission contract EXISTS and PASSES in-tree today: `EmittedSource::check_dir`
+(`codegen/src/lib.rs:68`) + `xtask check-json/check-css/check-sheets` assert regen byte-identity,
+and `assert_direct_struct_parity` + the CSS `CSS_CANON_PROFILE` XOR-fold assert differential
+parity — a working level-contract in all but name. The L1 and L2 contracts, by contrast, are
+absent *and the laws they would enforce are silently violated at HEAD*: `Project.ty` is discarded
+at `passes/src/lib.rs:203-204` (the `no-value-discard`/`typed-materialization-invariant` breach,
+R6 §5a) and `DirectBuildField.target` is `None` for every offset-tape descriptor
+(`passes/src/lib.rs:1149-1287`, R6 §5c). 3A's mechanism is therefore precise and *proven-by-
+precedent*: **generalize the working L3 level-contract UP the tower to L1/L2, turning two silent,
+in-production law-violations into RED gates.** A law without an oracle is not a law — reviewer
+discipline already failed to catch these two; the tower makes each law a `verify()` a machine
+runs. This is the single sharpest argument for the family, and it distinguishes 3A from a
+merely-aspirational verifier tower: the pattern is not hypothetical, it is running at L3 and needs
+only lifting.
+
 ### 1.6 The multi-backend payoff (Rust now, TS later)
 
 The tower's cut point is `T3`: L2 (MIR + `LayoutFacts`) is **backend-agnostic** (the

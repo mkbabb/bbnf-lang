@@ -1,30 +1,4 @@
-   Compiling quote v1.0.45
-   Compiling camino v1.2.2
-   Compiling num-traits v0.2.19
-   Compiling once_cell v1.21.4
-   Compiling either v1.15.0
-   Compiling egraph v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-27/crates/egraph)
-   Compiling rayon v1.11.0
-   Compiling syn v2.0.117
-   Compiling serde_derive v1.0.228
-   Compiling egraph-derive v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-27/crates/egraph-derive)
-   Compiling pprint_derive v0.2.2 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/pprint/rust/derive)
-   Compiling thiserror-impl v1.0.69
-   Compiling rmp v0.8.15
-   Compiling pprint v0.3.6 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/pprint/rust)
-   Compiling thiserror v1.0.69
-   Compiling serde v1.0.228
-   Compiling bitflags v2.11.0
-   Compiling semver v1.0.27
-   Compiling bbnf-regex v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/parse-that/rust/regex)
-   Compiling ron v0.12.1
-   Compiling rmp-serde v1.3.1
-   Compiling cargo-platform v0.1.9
-   Compiling cargo_metadata v0.18.1
-   Compiling parse_that v0.4.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/parse-that/rust/parse_that)
-   Compiling bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-27/crates/ir)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 48.32s
-     Running `target/debug/examples/prove2_branch`
+======== PART A: extraction divergence (real GrammarCostModel/Extractor) ========
 e-class e7 holds 2 distinct Alt candidate forms (expect 2)
 
 W1 (dispatch_bonus=-2.0, favor table):
@@ -38,3 +12,5 @@ W2 (dispatch_bonus=+2.0, favor sequential):
 picks differ under W1 vs W2: true
 W1 chose table: true   W2 chose table: false
 PASS: two weight vectors extract DIFFERENT nodes from the same real Alt e-class.
+
+uname: Darwin 25.4.0 arm64

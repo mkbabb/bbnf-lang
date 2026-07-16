@@ -189,6 +189,41 @@ present; only the *dispatch* is missing.
 
 ---
 
+### 2.5 CORRECTION + AUGMENTATION (independent re-sweep — a working fixpoint gate EXISTS)
+
+§2.2 above concluded the bbnf self-host "does not exist in skinny." True for skinny — but the
+sweep stopped one tree too early. **The bbnf bootstrap EXISTS, RUNS, and is byte-fixpoint-gated
+in the OUTER `crates/` tree that GN-0 archives:**
+
+- `crates/bootstrap/src/lib.rs` re-exports `bbnf::grammar::generated::BbnfBootstrap`, emitted by
+  `cargo xtask regen` to `crates/core/src/grammar/generated/bbnf.rs` (lib.rs:6-11). The parse-that
+  header's claimed skinny mirror was mis-located — the real mirror is here, in `crates/`, not skinny.
+- **The ≥2-self-application byte-identical gate IS ALREADY IMPLEMENTED**:
+  `crates/core/tests/bbnf_bootstrap_reproducibility.rs` ("AZ-II.cutover.B — permanent CI gate")
+  runs `cargo xtask regen --grammar bbnf --output <dir>` **twice into fresh tempdirs and asserts
+  byte-identical output** — precisely 7A's `regen∘regen = regen`, and precisely the "GCC needs ≥2
+  self-applications" point of §1.1, already built. Its header names the exact non-idempotency
+  traps (hash-randomised iteration order, monotonic counters, cache pollution). So 7A is NOT
+  merely "half-built via xtask stale-fail" (§2.4) — a full fixpoint gate exists; it is *stranded
+  in the archived tree*.
+- **Bootstrap-engine lesson, sharpened**: the retired path was proc-macro derive → `cargo expand`
+  → shell post-process (`bootstrap-bbnf.sh` / `bootstrap-regex.sh`); B2 retired the proc-macro and
+  the **single `cargo xtask regen` host won** for BOTH bbnf and regex (crates/bootstrap/src/lib.rs:3-11;
+  parse-that/rust/bootstrap/src/lib.rs:10-13). B6.W0 added no-op-regen write-skip (cold-wall
+  88 s→0.5 s, mtime preserved) — a **build-time** property explicitly *not* a parse win
+  (lib.rs:20-27): any LOCK-7 perf claim conflating the two would trip the two-arm-asymmetry
+  refutation (SPEC §0 row 09).
+
+**The material adjudication this sharpens** (superseding §2.2's "reinvent" tilt toward
+"port under a named supersession"): the constitution-ix trap is **archival orphaning** — the
+working self-host (`crates/bootstrap` + `generated/bbnf.rs` + the reproducibility gate) lives in
+the tree GN-0 archives, while the greenfield inherits *hand-parser skinny*. Unless a named
+supersession CARRIES these three artifacts into the greenfield (and adds a `regen-bbnf` target to
+the greenfield xtask, which has none — grep-confirmed), self-hosting silently regresses from
+"gated and running" to "dormant sources + hand parser." This is the single highest-value
+LOCK-7 finding: the lock's job is largely **rescue-and-port, not invent** (constitution vii
+favours the running artifact). 7D remains the correctness half the byte-fixpoint cannot supply.
+
 ## 3. THE TRAPS, NAMED (from comparable systems)
 
 1. **Two-parser drift.** Hand and generated parsers silently diverge (CPython mitigated with a
@@ -262,7 +297,12 @@ Nez open grammar language — https://arxiv.org/pdf/1511.08307 ;
 tree-sitter grammar DSL + external scanner —
 https://tree-sitter.github.io/tree-sitter/creating-parsers/2-the-grammar-dsl.html .
 
-Codebase (`path:line`): live regex bootstrap `parse-that/rust/bootstrap/src/lib.rs:1-61`;
+Codebase (`path:line`, incl. §2.5 re-sweep): WORKING bbnf bootstrap + byte-fixpoint gate in the
+archived outer tree `crates/bootstrap/src/lib.rs:3-27`, `crates/core/tests/bbnf_bootstrap_reproducibility.rs`
+(AZ-II.cutover.B, `cargo xtask regen --grammar bbnf --output` ×2 byte-compare), generated home
+`crates/core/src/grammar/generated/bbnf.rs`; live regex bootstrap `parse-that/rust/bootstrap/src/lib.rs:1-61`;
+divergent second regex grammar `grammar/misc/regex.bbnf` (27 LOC, EBNF `{}`/`>>`/`-`) vs
+`parse-that/rust/bootstrap/regex.bbnf` (fuller L4) — one-regex-home law demands collapse;
 dormant bbnf self-host `grammar/bbnf/{bbnf.bbnf,expressions.bbnf,types.bbnf}`; hand front-end +
 unsupported host capture `skinny/crates/grammar/src/lib.rs:{29,170,222,251,421}`; xtask regen
 targets (no regen-bbnf) `skinny/xtask/src/main.rs:{40-48,224,237}`; regen/fixpoint mechanics +

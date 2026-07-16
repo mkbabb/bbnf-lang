@@ -1,14 +1,33 @@
-PROTO-2 run log (HEAD 2026-07-16, scratch CARGO_TARGET_DIR, cold)
-loadavg 1min: 9.85 (before) -> 8.93 (after)
+loadavg PRE: load: 20.34 19.82 15.71
+warning: /Users/mkbabb/Programming/bbnf-lang/skinny/Cargo.toml: `panic` setting is ignored for `bench` profile
+warning: patch `bbnf v0.2.11 (/Users/mkbabb/Programming/bbnf-lang/crates/core)` was not used in the crate graph
+  |
+  = help: perhaps you meant one of the following:
+          	/Users/mkbabb/Programming/bbnf-lang/skinny/crates/bbnf
+warning: patch `bbnf-regex v0.1.0 (/Users/mkbabb/Programming/parse-that/rust/regex)` was not used in the crate graph
+  |
+  = help: perhaps you meant one of the following:
+          	/Users/mkbabb/Programming/bbnf-lang/skinny/crates/bbnf-regex
+warning: patch `bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-lang/crates/ir)` was not used in the crate graph
+warning: patch `bbnf-ser v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/crates/ser)` was not used in the crate graph
+warning: patch `egraph-derive v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/crates/egraph-derive)` was not used in the crate graph
+warning: patch `gorgeous v0.1.10 (/Users/mkbabb/Programming/bbnf-lang/crates/gorgeous)` was not used in the crate graph
+warning: patch `parse_that v0.4.0 (/Users/mkbabb/Programming/parse-that/rust/parse_that)` was not used in the crate graph
+warning: patch `pprint v0.3.6 (/Users/mkbabb/Programming/pprint/rust)` was not used in the crate graph
+warning: patch `pprint_derive v0.2.2 (/Users/mkbabb/Programming/pprint/rust/derive)` was not used in the crate graph
+help: Check that the patched package version and available features are compatible
+      with the dependency requirements. If the patch has a different version from
+      what is locked in the Cargo.lock file, run `cargo update` to use the new
+      version. This may also occur with an optional dependency that is not enabled.
+   Compiling grammar v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/skinny/crates/grammar)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.35s
+     Running tests/proto2_lock7_census.rs (/private/tmp/claude-504/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/scratchpad/proto2-target/debug/deps/proto2_lock7_census-8efb8448c58c3237)
 
-cargo test -p grammar (construction path, existing suite):
-  parses_skinny_json_rules ... ok
-  resolves_forward_and_cyclic_refs ... ok
-  rejects_unresolved_refs ... ok
-  (unrelated pre-existing red: w5b_frontend_public_ws_remains_retired @ lib.rs:1866)
+running 3 tests
+test add_expr_is_append_only_not_interned ... ok
+test arena_ids_are_post_order_synthesized ... ok
+test cross_rule_link_is_a_separate_global_pass ... ok
 
-cargo test -p grammar --test proto2_construction_census:
-  add_expr_does_not_intern_identical_leaves ... ok
-  arena_ids_are_post_order_synthesized ... ok
-  cross_rule_link_is_a_separate_global_pass ... ok
-  test result: ok. 3 passed; 0 failed.
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+loadavg POST: load: 20.34 19.82 15.71

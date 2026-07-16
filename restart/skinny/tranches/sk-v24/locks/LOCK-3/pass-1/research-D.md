@@ -1,268 +1,300 @@
-# LOCK-3 · Family 3D — STAGED-RESIDUAL · pass-1 research
+# LOCK-3 pass-1 · family 3D — STAGED-RESIDUAL: the IR as a two-stage program
 
-**Thesis.** The generator is *already* a partial evaluator; skinny simply refuses to
-say so. Grammar → typed HIR → mid-IR → backend shape → emitted Rust is the **first
-Futamura projection** run by hand: the grammar is the object program, the
-recognizer-interpreter is the metaprogram, the generated `.rs` is the residual.
-Family 3D makes the two-stage structure *explicit in the types* — every IR value
-carries a binding time (Stage-0 = generation-time / static, Stage-1 = runtime /
-input-dependent) — and defines **residualization as erasure of Stage-0**. Under that
-discipline PROVE-12 (const-fold the CSS delimiter mask) stops being a clever manual
-patch and becomes the *forced output* of a binding-time analysis; the standing laws
-(no-value-discard, no-silent-epsilon, preserve-rich-AST) become type invariants the
-compiler mechanically enforces rather than conventions reviewers police; and the
-ambiguous per-site divisions (monomorphize-vs-thread, unroll-vs-loop, match-vs-table)
-become decision variables handed to LOCK-2's cost/CSP engine under the generated-size
-budget.
+**The thesis.** The IR tower is an explicitly *two-level* program. Every node carries a
+binding time — **stage 0** (comptime: known once the grammar is fixed) or **stage 1**
+(runtime: known only once input bytes arrive). Codegen is not "a lowering that happens to
+constant-fold in places"; it is a **specializer** (a partial evaluator) that runs every
+stage-0 subterm at generation time and emits only the stage-1 residual. Residualization —
+the thing PROVE-12 did by hand at five CSS delimiter sites — stops being a per-pattern
+trick and becomes the *definition of the emit spine*: emitting = erasing stage 0. Three
+strong corollaries fall out, and they are the reason this family is not decoration:
 
----
+1. **PROVE-12 is a corollary, not a feature.** `delim_mask(b";{}")` is a stage-0 fold; the
+   `find_component_delim::<{…}>` residual is its stage-1 remainder. The family makes that
+   one uniform pass rather than five hand-edits, and reaches the JSON structural scan and
+   the general-descent STOP-set with the same mechanism.
+2. **The zero-runtime-cost type-plane invariant (Constitution v; GN-3) *is* stage erasure.**
+   "The type plane costs zero at runtime" is exactly "the type plane is stage-0, and stage 0
+   is erased." `Project.ty`, `DirectSchemaSet`, `DirectBuildTarget` layout — all stage-0
+   metadata that drives residual shape and then vanishes. GN-3's per-wave `git diff
+   crates/runtime/ == empty` gate is the *stage-0-fully-erased* property stated operationally.
+   The family unifies GN-3's erasure and PROVE-12's residualization under one law.
+3. **The CSS-05 animate regression is a *mis-staging bug*, mechanically diagnosable.** GN-2.W3
+   exists because feature 05 builds its shufti LUT per-call — a stage-0 value (the delimiter
+   ∪ fixed set is grammar-fixed) computed at stage 1 (`find_css_significant`, per short span).
+   Binding-time analysis flags a stage-0 value on a stage-1 path as *mis-staged*; re-staging
+   it to a const table is the fix. The family turns GN-2.W3's hand-hoist into a consequence of
+   the stage assignment.
 
-## 1. The mechanism, made concrete
-
-### 1.1 The binding-time lattice and its law
-
-Introduce a two-point lattice `Stage = Static ⊑ Dynamic`. A value is **Static** when
-its value is fully determined by the grammar (known at `cargo xtask regen`), and
-**Dynamic** when it depends on the input bytes (known only at parse time). The single
-inference law (offline binding-time analysis, BTA): *an operation is Dynamic iff any
-operand is Dynamic; otherwise Static.* This is a monotone fixpoint, structurally
-identical to skinny's existing `nullability` at `skinny/crates/ir/src/lib.rs:320-349`
-— same LLVM-style `changed` convergence (memory: changed-flag-convergence), same
-`Vec<_>`-indexed-by-node SoA layout the tape already uses (R6 §1). The analysis is a
-new sibling `pub fn binding_time(grammar: &GrammarIr) -> Vec<Stage>` seeding the
-leaves:
-
-- **Static leaves**: `ExprKind::Literal.bytes`, `Regex.pattern`, `Project.ty`,
-  `Project.target`, `Repeat{min,max}`, `AltMode`, `SpanKind`, `CaseSensitivity`, the
-  capacity plan constant (`GrowOnly→256`, R6 §1), the structural alphabet
-  (`ir/src/lib.rs:435`), every delimiter/STOP set — *all grammar constants*.
-- **Dynamic leaves**: the byte at a cursor, a matched span's contents, a parsed
-  scalar (`materialize_f64`), the tape `offsets`/`flag_values`, the cursor position.
-- **Propagation**: `Seq`/`Alt`/`Repeat`/`Discard` are Dynamic (they branch on input);
-  a `Ref` inherits its callee's stage; a `Project` whose body is Dynamic but whose
-  `ty`/`target` is Static is the canonical *mixed* node — a Dynamic residual carrying
-  a lifted Static tag (this is exactly where the `->` discard bug lives, §3).
-
-### 1.2 The two-level IR
-
-`BackendExpr` (`skinny/crates/ir/src/lib.rs:376-413`) becomes a **two-level IR**: each
-node is tagged with its stage (cleanest: a parallel `Vec<Stage>` indexed by node id,
-SoA per the tape discipline — not a fat enum). Semantically the tower is unchanged
-(constitution ix: the GN codex — `EagerTape|OffsetTape|EventTape|SinkOnly|
-CollapsedStage` at `ir/src/lib.rs:361` — is re-cut, never contradicted); what changes
-is that the tower now has a *typed seam* between the two stages. Borrowing MetaML's
-notation, a Static subtree has type `T` and a Dynamic subtree has type `Code<T>` (a
-generation-time-only handle to emitted Rust). `Code<T>` is a **compile-time-only
-type**: it never exists in the residual (constitution v — the type plane costs zero at
-runtime; verified by the standing `payloads().len()==0` / zero-alloc invariant at
-`skinny/crates/runtime/src/lib.rs:42-44`).
-
-### 1.3 Residualization = the specializer
-
-The lowering `BackendIr → Rust` is re-expressed as a **specializer** that walks the
-staged IR once:
-
-- A **Static** node is *executed* at generation time; its result is a value (a mask, a
-  match table, a byte count, an erased Unit) — nothing is emitted for it directly.
-- A **Dynamic** node *emits residual Rust*.
-- A **Static value in a Dynamic context** is **lifted** (MetaML "cross-stage
-  persistence"): it becomes an immediate/const-generic in the residual. This lift IS
-  PROVE-12: `delim_mask(b";{}")` is the Static evaluation, `const DELIMS: u128` is the
-  lift, `(DELIMS >> byte) & 1` is the residual over the Dynamic `byte` (patch.diff at
-  `runtime_generator.rs` CSS template; disasm `mov x27,#0x2800…`, no slice loads, +18
-  LOC, byte-identical — SPEC §0 row 12 CONFIRMED). Under BTA this promotion is not
-  authored: `delimiters` is a Static operand threaded through a Dynamic loop, so the
-  specializer is *obligated* to lift it. PROVE-12 is a corollary.
-
-### 1.4 CollapsedStage reclaimed
-
-`BackendShape::CollapsedStage` (`ir/src/lib.rs:361`; admissibility at
-`passes/src/lib.rs:555-664`) is a dormant, consumer-less emit path flagged
-consumer-or-retire in the GN codex (Y.13 forbids consumer-less substrate). Family 3D
-gives it its *literal* meaning: the shape where Stage-0 **collapses** Stage-1 — a rule
-whose entire body residualizes to a straight-line, tape-free recognizer (maximal
-specialization; the lattice endpoint where no interpretive dispatch survives).
-CollapsedStage becomes the named home for a fully-residualized rule, retiring the
-dormant surface by giving it staged semantics rather than deleting it.
+The standing LOCK-3 laws — no-value-discard, no-silent-epsilon, preserve-rich-AST — recast as
+*type invariants* under this discipline: discarding `Project.ty` (`passes/src/lib.rs:203`) is a
+stage-0 value dropped before erasure could account for it; a silent epsilon is an unresolved
+binding time; the rich AST is the stage-0 evidence the residualizer consumes. They stop being
+conventions reviewers police and become properties the two-level IR mechanically enforces.
 
 ---
 
-## 2. Substrate & integration seams (path:line)
+## 1. The mechanism made concrete
 
-- **BTA fixpoint** — new `binding_time` beside `nullability`,
-  `skinny/crates/ir/src/lib.rs:320-349` (verbatim convergence shape).
-- **Stage carrier** — parallel `Vec<Stage>` over `BackendExpr` nodes,
-  `skinny/crates/ir/src/lib.rs:376-413`.
-- **The specializer** subsumes today's scattered lowering: `passes::lower_expr`
-  (`Project → ValueProject` at `skinny/crates/passes/src/lib.rs:1349-1353`) and the
-  emitter modules under `skinny/crates/codegen/src/lower/`. The ad-hoc const-folds
-  (PROVE-12's mask, the ws-blanket `SpanKind::Whitespace → Unit` at
-  `passes/src/lib.rs:225-231`, the capacity constant, the first-byte dispatch tables
-  at `json_sink_direct/dispatch.rs`) unify into *one* Static-evaluation pass.
-- **The extant baseline this supersedes (named, constitution ix).** The GN codex
-  already generalizes PROVE-12 into a *shared const-mask module*
-  `skinny/crates/codegen/src/residual/` (`delim_mask.rs` + `const_membership.rs`,
-  GN-5.W3), routing every stop-set (`matches!(_b, 44u8|34u8|…)` CSV textdata, JSON
-  structural scan, general-descent) through one `find_stop<const MASK:u128>` seam.
-  **Family 3D's supersession**: that seam is a *mechanism-level* hoist of one
-  transform; family 3D lifts it to a *principle-level* two-level IR where the const-
-  mask seam, the ws-erasure, and the dispatch-table fold are all instances of one
-  binding-time division — and where the division is *derived*, not hand-placed. The GN
-  residual module becomes the specializer's Static-membership emitter, one lift rule
-  among several, not the whole story.
-- **The cost/CSP seam (LOCK-2, §4)** — `CostFacts`/`ActiveCostFacts`/
-  `DecisionCspFacts`/`PriorityStep` at `skinny/crates/ir/src/cost.rs:5,173,203,264`;
-  the existing CSP-selected lowering precedent is `passes::derive_backend_shape`
-  (`skinny/crates/passes/src/lib.rs:398`) reading `BackendShapePlan.cost_facts`. The
-  staging division is a *new decision variable* in this same driver — no orthogonal
-  subsystem (memory: system-cohesion).
-- **The budget constraint** — `xtask lint-loc` (LOC-budget gate,
-  `skinny/xtask/src/main.rs:49`) is the hard constraint the specializer's CSP must
-  satisfy (memory: generated-size-budget).
-- **Determinism** — the specializer must regen bit-for-bit (memory:
-  clean-regen-discipline); ties in the CSP need a total order on candidate divisions.
+### 1.1 Binding-time analysis (BTA) — a Vec<Stage> fixpoint isomorphic to `nullability`
 
----
+The whole apparatus reduces to one monotone analysis over the existing `GrammarIr`. Define
 
-## 3. Why the staged types *are* the standing laws
+```
+enum Stage { Comptime, Runtime }          // the 2-level lattice; Comptime ⊑ Runtime
+```
 
-The LOCK-3 standing laws stop being convention and become mechanical:
+with the rule: **a node is Comptime iff all of its data-flow inputs are Comptime; any
+dependence on the input byte stream forces Runtime.** This is a least-fixpoint over the
+`exprs` vector, structurally *identical* to `nullability(&GrammarIr)` at
+`skinny/crates/ir/src/lib.rs:320-349` — same `loop { changed }` Changed-flag convergence
+(Memory: changed-flag-convergence), same per-`ExprKind` match, same `Vec<bool>`-shaped
+carrier. It lands as a sibling `pub fn binding_times(&GrammarIr) -> Vec<Stage>` in the same
+file, ~50 LOC, no new type layer. Seeds and forcers:
 
-- **no-value-discard.** `Infer::infer_expr` throws away `Project.ty` —
-  `skinny/crates/passes/src/lib.rs:203-204` returns `self.infer_expr(*body)?`,
-  silently dropping the Static projection tag (R6 §5a; the same drop makes every
-  `DirectBuildField.target` `None`, R6 §5c). In a two-level IR a Static value that is
-  neither consumed nor lifted is a **binding-time error** — the specializer cannot
-  erase a Static operand into nothing, it must fold it or lift it. The exact class of
-  bug the law names is caught by construction.
-- **no-silent-epsilon.** An unknown `rule_kind` at lowering is a *Static* computation
-  with no value; the specializer must `panic` at generation (memory:
-  no-silent-epsilon), never emit an epsilon residual — a Static failure is a
-  generation-time failure, categorically not a runtime Unit.
-- **preserve-rich-AST / diagnostics-first.** `SourceSpan` (`ir/src/lib.rs:21-25`) is
-  marked *Dynamic-adjacent*: it rides into the residual as a lifted constant so error
-  messages keep their grammar span even after Static folds erase surrounding
-  structure. Over-eager folding that drops a span is, again, a binding-time violation.
+- **Stage-0 seeds:** `ExprKind::Literal.bytes`, `ExprKind::Regex.pattern` (and its compiled
+  DFA — see §1.4), `ExprKind::Annotation` (capacity hints, `@cap`), `Project.target/.ty`
+  (`ir/src/lib.rs:185-193, 261-265`), `StructuralAlphabet.bytes` (`ir/src/lib.rs:434-437`),
+  the CSS STOP/delimiter sets derived in `codegen/src/lower/css_scan.rs`.
+- **Stage-1 forcers:** the cursor read (`source[offset]`), the byte at position, tape
+  offsets/spans, `Repeat` trip counts, anything reached through a `Ref` into the input-driven
+  driver. `Seq`/`Alt`/`Repeat`/`Discard` are Runtime as *control*, but their **operands'
+  binding times are what residualize** (an `Alt` whose branch-selecting key is stage-0
+  unrolls to straight-line dispatch; a `Repeat` whose bound is stage-0 unrolls).
 
----
+Soundness is the standard PE condition: the lattice is **conservative** — unknown ⇒ Runtime.
+A value that merely *looks* static but depends on input (e.g. a capacity keyed on document
+length) must never be assigned Comptime, or the specializer would bake an input-dependent
+constant. This is the one correctness obligation and it is monotone/decidable.
 
-## 4. The LOCK-2 seam — per-site staging as a solver problem
+### 1.2 The specializer = the emitter (the first Futamura projection, made explicit)
 
-BTA gives a *safe* division (everything reachable from a Dynamic operand is Dynamic),
-but not a *unique* one. Several sites are genuinely bistable, and the choice is a
-classic partial-evaluation *poly-variance / specialization-depth* decision with a
-runtime-cost vs code-size trade:
+bbnf's generator already *is* the compiler you get by specializing a generic parse-driver
+with respect to a grammar (Futamura's 1st projection). The family names that seam and asks the
+only question that matters per node: **is this subterm stage-0 (evaluate it now, splice the
+result) or stage-1 (emit residual code)?** The emit spine
+(`codegen/src/lib.rs:101` `emit_from_source` → `emit_with_layout` → `lower::lower_to_rust` →
+`runtime_generator::emit_sink_only`) consumes the BTA-annotated IR and, at each node:
 
-| Site | Static (residualize) | Dynamic (thread) | Trade |
-|---|---|---|---|
-| delimiter set (PROVE-12) | const-generic monomorph per site | one `&[u8]` fn | ins/B ↓ vs +N monomorphs |
-| bounded `Repeat{min,max}` | unroll to straight-line | runtime loop | branch elision vs LOC blowup |
-| first-byte dispatch (`json_sink_direct/dispatch.rs`) | `match` arms | lookup table | i-cache vs d-cache |
-| recursive `Ref` | inline (DANGER §5.1) | `CallRule` | *must stay Dynamic* |
+- **Comptime node** → run it at generation time; splice its value as a Rust `const`, a
+  `const fn` call, a `const`-generic parameter, or a compile-time LUT/table.
+- **Runtime node** → emit the residual straight-line Rust that consumes those constants.
 
-Each is a discrete variable; the constraint set is BTA legality (a Dynamic operand
-forbids a Static result) plus the `lint-loc` budget; the objective is the cost lattice
-fed by canon-bench PMU facts (`cost.rs`). This is exactly LOCK-2's engine: the e-graph
-*generates* candidate residualizations (equality-saturation over the staged IR —
-rewrites that move the Static/Dynamic frontier), CSP *extracts* the division
-minimizing cyc/B subject to LOC. "Per-site staging solved by LOCK-2's engine" is
-therefore concrete: the staging division is a first-class decision variable in the
-same `DecisionCspFacts` driver that already selects `BackendShape`, not a new
-subsystem.
+PROVE-12 is exactly this at one node class: the delimiter membership test. `delim_mask` is
+the Comptime evaluation (`patch.diff:75-88`), `find_component_delim::<{delim_mask(...)}>` is
+the Runtime residual with the constant threaded as a monomorphizing `const` generic
+(`patch.diff:45-60`). The family's claim: this is not special to CSS delimiters — it is the
+general shape of *every* residualization, and BTA tells the emitter which nodes get it.
 
----
+### 1.3 Residual forms (the stage-0 → Rust substrate)
 
-## 5. Named risks & counterexamples (what a prototype must kill)
+Rust supplies the entire residual substrate; no MetaML-style quote/splice surface syntax is
+introduced (staging stays *internal to the generator* — §5 risk). The Comptime→residual map:
 
-**5.1 Specialization non-termination / code explosion** — the canonical PE failure.
-Fully specializing a *recursive* rule (JSON `value → object → pair → value`) unrolls
-forever and blows `lint-loc`. Mitigation: BTA must keep rule-recursion **Dynamic**
-(generalized to a `CallRule`, never inlined); the CSP bounds unroll depth against the
-budget. *Counterexample to run*: nested-JSON (`data/json/citm`, `canada`) — confirm
-the specialized `value` rule stays a call and LOC stays in budget.
+| Stage-0 artifact | Residual form | Live proof-point |
+|---|---|---|
+| delimiter / STOP set | `const fn`-folded `u128` mask + `const`-generic monomorph | PROVE-12 (`patch.diff`) |
+| shufti/classify LUT | `const [uint8x16_t; N]` table, built once | GN-2.W3 hoist (`runtime_simd.rs` `find_css_significant`) |
+| small `Alt` with stage-0 keys | unrolled straight-line first-byte dispatch | `json_sink_direct/dispatch.rs` ("91.5% hot leaf") |
+| `Repeat` with stage-0 bound | unrolled body | — |
+| compiled regex DFA | `const` transition table / `dfa.find` | PROVE-10 (bbnf-regex) |
+| capacity plan | `const` sizing (where grammar-fixed) | `tape/assembler.rs:13-40`, `scan.rs:64` |
+| `Project.ty`, field layout, schema | drives struct/enum *shape*, then erased | GN-3 (`DirectBuildTarget`, `DirectSchemaSet`) |
 
-**5.2 Stage machinery leaking into the residual** — if `Code<T>` has any runtime
-footprint, constitution v is violated. *Oracle*: the standing `payloads().len()==0` /
-zero-alloc assert (`runtime/src/lib.rs:42-44`) plus byte-identical parity vs the
-hand-tuned emitter must both hold.
+### 1.4 Why not "just let LLVM const-fold it?" (the load-bearing distinction)
 
-**5.3 Backend-dependent division (LOCK-6 / constitution iii)** — the optimal division
-for Rust (lean on the monomorphizer: PROVE-12's `const DELIMS` yields 1 surviving
-symbol + 2 fully-inlined) is *wrong* for the TS backend (V8 has no monomorphization;
-Static values must be fully residualized at build time by the LOCK-4B/8 fuser — 5
-specialized functions, not 1 generic). The CSP cost model must therefore be
-**backend-parameterized**; a single division cannot be assumed isomorphic. *Named
-tension*, unresolved — the first cross-backend risk this family owns.
+The obvious objection is that rustc/LLVM already do constant propagation. PROVE-12 refutes it
+empirically and the refutation is the family's raison d'être: the delimiter set was threaded
+as a runtime `&[u8]` across a function boundary, and LLVM did **not** prove it constant — the
+`const` generic was required to *force* monomorphization; the `contains` loop with its length
+guards survived otherwise (REPORT §3 before/after disasm: 3 slice loads + 2 length guards
+gone). The grammar *knows* the binding-time separation; relying on LLVM to rediscover it
+across the interpreter/data boundary is "deferred to LLVM luck" (REPORT §2). **Staging is the
+discipline of making the separation the grammar already knows explicit, so the residual is
+straight-line before LLVM ever sees it.** Where LLVM *does* already nail it (JSON string/number
+already dispatch straight to hand kernels — R6 §3 confirms nothing to residualize), BTA finds
+nothing stage-0-mislaid and emits no change: those are *named negative results*, not defeats.
 
-**5.4 Binding-time improvement required** — naive BTA sometimes leaves too much
-Dynamic; exposing more Static structure needs an IR rewrite first ("The Trick": bound
-a Dynamic value to a Static enumeration). This is the LOCK-2 dependency: e-graph
-rewrites reshape the IR so BTA sees more Static. Risk = 3D's residualization quality is
-gated on LOCK-2 landing its rewrite library.
+### 1.5 Per-site staging as a LOCK-2 decision (the bounded-specialization knob)
 
-**5.5 Determinism under CSP ties** — non-deterministic tie-breaking breaks
-clean-regen. Requires a total order over candidate divisions (lexical over site id).
+Some nodes admit a genuine binding-time *choice* with a cost tradeoff, not a forced
+assignment: a small `Alt` may unroll to straight-line dispatch (faster, larger) or stay a
+runtime `match` (smaller); a LUT may be a `const` table (fast, +data) or an inline
+computation; a `Repeat` may unroll or loop; a stage-0 constant may be monomorphized-in or
+threaded. This is classic **polyvariant / bounded static variation** ("The Trick" in the PE
+literature) — and aggressive unrolling blows the generated-size budget (Memory:
+generated-size-budget). So the *aggressiveness of stage-0 specialization is exactly a CSP*:
+variables = per-site stage assignment where a choice exists; constraints = legality (never
+stage a Runtime-dependent value to Comptime) + the generated-LOC budget; objective = the cost
+lattice. That is precisely LOCK-2's engine (`ir/src/cost.rs` `CostFacts`/`DecisionCspFacts`/
+`PriorityStep`; `passes::derive_backend_shape` at `passes/src/lib.rs:398`). 3D hands LOCK-2 a
+well-typed decision — "specialize here or not" — rather than a hardcoded branch (Memory:
+pluggable-components). The forced assignments (the soundness-mandatory ones) never reach the
+solver; only the free choices do.
 
 ---
 
-## 6. Prior art (citations)
+## 2. The substrate
 
-- **Futamura, "Partial Computation of Programs" (1971)** — the three projections; the
-  first (specialize interpreter w.r.t. program → compiled target) is *precisely*
-  skinny's generator. This family names what the generator already is.
-- **Jones, Gomard & Sestoft, *Partial Evaluation and Automatic Program Generation*
-  (1993)** — the canonical text: offline BTA, the two-point binding-time lattice, the
-  Static/Dynamic congruence law, self-application, code-explosion control. §5.1's
-  termination discipline is from here.
-- **Nielson & Nielson, *Two-Level Functional Languages* (1992)** — the type-theoretic
-  substrate for "comptime/runtime split in the types": binding-time *types*, the
-  two-level λ-calculus. The literature for §1.2.
-- **Taha & Sheard, "MetaML / Multi-Stage Programming with Explicit Annotations"
-  (2000); MetaOCaml** — `Code<T>`, brackets/escape/run, cross-stage persistence (= the
-  Static-value lift, §1.3). The engineering vocabulary for the two-level IR.
-- **Rompf & Odersky, "Lightweight Modular Staging" (LMS, 2010); Delite** — the closest
-  production analogue: `Rep[T]` in the *type* distinguishes Dynamic from Static, and a
-  generative framework residualizes. Proof this is buildable in a typed host.
-- **Andersen, C-Mix (1994)** — offline PE for *C*, the systems-language precedent (we
-  emit systems Rust); binding-time-directed specialization of pointer code.
-- **Wegman & Zadeck, Sparse Conditional Constant Propagation (SCCP)** — the classical-
-  compiler twin of BTA: a Top/Const/Bottom lattice by sparse fixpoint. rustc's MIR
-  const-prop and LLVM's SCCP/known-bits are BTA-in-disguise; the specializer is SCCP
-  extended to *emit* rather than *rewrite*.
-- **Zig `comptime`; Terra (Lua-staged C)** — the pragmatic single-language incarnation.
-  Rust's `const fn` + const-generics + monomorphization is the same, weaker, offline
-  two-level language — the exact substrate PROVE-12 exploits.
-- **egg / egglog (Willsey et al., 2021)** — equality saturation + cost extraction for
-  the §4 per-site division. **Denali** (Joshi–Nelson–Randall) is the goal-directed-
-  superoptimizer precedent for e-graph-driven code selection.
-- **MLIR (Lattner et al., 2021)** — the progressive-lowering dialect tower and the
-  canonicalization/fold framework; the staged tower is MLIR-shaped (each stage a
-  dialect, residualization a legalization). PDL/transform-dialect = the pluggable
-  rewrite seam.
-- **regex-automata (in-tree consumer)** — the compiled DFA is a *static* residual of
-  the regex; the lazy DFA is *online* PE (residualize on demand) — both binding times
-  in one family, relevant to LOCK-5's automata-as-extraction.
-- **GHC Typed Template Haskell (`Code Q a`)** — a typed multi-stage system in a pure
-  host; the direct MetaML descendant, a reference for making `Code<T>` sound.
+Three concrete pieces, each with a same-wave consumer (Constitution viii, Y.13 — no
+consumer-less substrate):
+
+- **`Stage` + `binding_times()`** in `crates/ir/src/lib.rs` beside `nullability` (§1.1).
+  Consumer: the emit spine's residualizer.
+- **The residualizer pass** in `codegen/src/lower/` — a directory-module `lower/residual/`
+  (no god module; Memory: no-god-modules) that walks the BTA-annotated `BackendExpr`
+  (`ir/src/lib.rs:376-413`) and rewrites Comptime subterms to their spliced form. It *owns*
+  the `const fn` emission (generalizing `delim_mask`), the const-generic threading, and the
+  LUT-hoist. Consumer: `runtime_generator` / `json_sink_direct` templates it feeds.
+- **The stage-erasure oracle** — a test/gate that asserts no stage-0 value survives into the
+  runtime residual, strengthening the existing runtime assert `runtime/src/lib.rs:42-44`
+  (`payloads().len()==0`, zero writes/allocs after JSON parse) and GN-3's `git diff
+  crates/runtime/ == empty` into a *property of the emitter*, not a spot-check. Consumer: CI
+  + the GN-3 W5 challenge conjuncts.
+
+The substrate is deliberately *thin*: `Stage` is a two-element enum, `binding_times` is a
+50-LOC fixpoint, the residualizer generalizes an 18-LOC proven pattern. It is an **analysis +
+an emit discipline**, not a new type-system layer — this is the answer to the over-substrate
+risk (§5). The "types" are annotations the emitter reads; the specialization already happens
+in codegen today, ad hoc — the family makes it uniform and named.
 
 ---
 
-## 7. What the pass-1 prototype must demonstrate (moves the family)
+## 3. Integration seams (path:line)
 
-1. **Automate PROVE-12.** Feed the CSS `find_component_delim(pos, delimiters)` (5 call
-   sites, each `delimiters` a grammar constant) through `binding_time`; the specializer
-   must *derive* the const-mask residual (byte-identical to PROVE-12's hand patch —
-   parity is the acceptance oracle) with the same ins/B win (−4.8/−6.8%, SPEC §0 row
-   12) and no LOC regression beyond +18. Success = residualization *forced by BTA*, not
-   authored.
-2. **Type-catch the discard.** Add the `Stage` tag to `BackendExpr`; show the
-   `Project.ty` drop at `passes/src/lib.rs:203` becomes a binding-time error (a Static
-   value erased into nothing) — no-value-discard enforced by the type, not the
-   reviewer.
-3. **Bound the recursion.** On nested-JSON, confirm the specialized `value` rule stays
-   a `CallRule` (Dynamic) and LOC stays in `lint-loc` budget (§5.1 killed).
-4. **Prove the LOCK-2 seam is real.** Take one bistable site (dispatch `match` vs
-   lookup table, or bounded-`Repeat` unroll vs loop), formulate it as a `DecisionCsp`
-   variable with cost + LOC constraint, and show the engine picks the cheaper division
-   — demonstrating "per-site staging solved by LOCK-2's engine" is load-bearing, not
-   decorative.
+- **BTA fixpoint home:** `skinny/crates/ir/src/lib.rs:320-349` — `nullability`; the exact
+  structural template for `binding_times`. `ExprKind` at `:234-271`; `BackendExpr` at
+  `:376-413`.
+- **The archetypal residual (generalize this):** PROVE-12 `patch.diff` — `delim_mask` const
+  fn (`:75-88`) + `find_component_delim<const DELIMS: u128>` (`:45-60`); template home
+  `codegen/src/runtime_generator.rs` `CSS_GENERATED_RS`.
+- **Delimiter/alphabet stage-0 sources to residualize uniformly:** `StructuralAlphabet`
+  `ir/src/lib.rs:434-437`; CSS STOP-set `codegen/src/lower/css_scan.rs` (712 LOC); JSON
+  structural scanner (neutralized) `runtime/src/grammars/json/scan.rs:34-48`; general-descent
+  blanket `skip_ws` `codegen/src/general_descent/emit.rs:126-137`.
+- **Mis-staged LUT (the animate diagnosis):** `runtime/src/runtime_simd.rs`
+  `find_css_significant` builds `fixed ∪ delimiters → uint8x16_t` shufti tables per-call;
+  GN-2.W3 hoists it. BTA flags it: a grammar-fixed (stage-0) LUT computed on a stage-1 path.
+- **Type-plane erasure (the unification):** `Project.ty` discarded at `passes/src/lib.rs:203`
+  (GN-3 W2 threads it); `DirectBuildField.target` always `None` on the offset-tape path
+  (`passes/src/lib.rs:1149-1287`, R6 §5d); the honest type IR `DirectSchemaSet`/
+  `DirectBuildTarget` at `ir/src/lib.rs:465-535` and `codegen/src/direct_schema.rs`; the
+  zero-cost runtime assert `runtime/src/lib.rs:42-44`.
+- **Per-site staging → LOCK-2:** cost facts `ir/src/cost.rs` (`CostFacts` `:24`,
+  `DecisionCspFacts` `:203`, `PriorityStep` `:264`); shape/cost selection
+  `passes/src/lib.rs:398` `derive_backend_shape`; `BackendShape` `ir/src/lib.rs:361-367`.
+- **Regex DFA as stage-0 artifact:** `bbnf-regex` `analyze` (already consumed for nullability,
+  `ir/src/lib.rs:331`); PROVE-10 `dfa.find` — "compile the automaton at gen time, match at run
+  time" is the canonical staged product (ties LOCK-5).
+- **Capacity as a staging candidate:** `CapacityPlan`/`GrowOnly` const-256 `tape/assembler.rs:13-40`,
+  `scan.rs:64`.
+
+---
+
+## 4. Prior art (with citations)
+
+- **Futamura projections** (Y. Futamura, *Partial Evaluation of Computation Process*, 1971;
+  reprinted Higher-Order & Symbolic Comp. 1999). 1st projection: specialize an interpreter
+  w.r.t. a program ⇒ a target program. **bbnf codegen is the compiler produced by the 1st
+  projection over a generic parse-driver** — this family names that identity.
+- **Partial evaluation & binding-time analysis** — Jones, Gomard & Sestoft, *Partial
+  Evaluation and Automatic Program Generation* (Prentice Hall, 1993): the `mix` specializer,
+  offline BTA, "The Trick"/bounded static variation, polyvariant specialization, code-size
+  control. This is the direct theory of §1 and §1.5.
+- **Two-level languages** — Nielson & Nielson, *Two-Level Functional Languages* (CUP, 1992):
+  binding time as a *type-level* property (comptime vs runtime in the type), the exact
+  formulation the charter asks for ("the split in the types").
+- **Multi-stage programming** — Taha & Sheard, *MetaML and multi-stage programming with
+  explicit annotations* (TCS 2000); Kiselyov's BER MetaOCaml (brackets `.<>.`, escape `.~`,
+  `Runcode.run`). The reference semantics for staged code; the family adopts the *discipline*
+  but deliberately *not* the surface syntax (residuals are Rust const-generics/const-fn).
+- **Lightweight Modular Staging (LMS)** — Rompf & Odersky (GPCE 2010): `Rep[T]` marks stage-1;
+  everything else is staged away. The closest architectural analog — staging by *type-directed*
+  representation, no quasiquotes — mirrors "annotate, don't add syntax."
+- **Zig `comptime`** — the closest *production* analog: a parameter/value is comptime or
+  runtime, tracked in the type system, and the compiler partially evaluates. The bbnf target
+  in a systems idiom: `const`-generic residuals are Rust's `comptime`.
+- **Terra** — DeVito et al., *Terra: a multi-stage language for high-performance computing*
+  (PLDI 2013): a metalanguage staging a low-level target — the generator/runtime split bbnf
+  already has, made a language feature.
+- **Typed Template Haskell** (`Code Q a`) and **Racket phase separation** — staging via typed
+  quotes / hygienic phases; evidence that "the generator eats itself" (3C's homoiousia, LOCK-7
+  bootstrap) is a solved shape.
+- **Finally Tagless, Partially Evaluated** — Carette, Kiselyov & Shan (JFP 2009): staging
+  *without* a GADT IR via typeclass-polymorphic interpretation — an alternative to a two-level
+  ADT worth measuring against the annotation approach.
+- **Collapsing Towers of Interpreters** — Amin & Rompf (POPL 2018): multi-level staging
+  collapse; the theory behind aligning the generator's self-application with LOCK-7 bootstrap.
+- **regex-automata / RE2 / Thompson** — "compile the DFA once, match many": the DFA is a
+  textbook staged artifact (stage-0 build, stage-1 execute). Grounds §1.4's DFA row and the
+  LOCK-5 tie.
+- **Rust `const fn` / const generics / MIR const-eval** — the actual residual substrate
+  (what PROVE-12 rides); the family's residuals are all expressible here today, no nightly.
+
+---
+
+## 5. Named risks and counterexamples
+
+- **R-D1 — over-substrate (Y.13 / Constitution viii).** A full two-level *type system* would
+  be heavier than the win at HEAD (a handful of const-foldable sites: delimiters, alphabets,
+  one LUT). **Mitigation:** the family ships an *analysis* (`Stage` enum + 50-LOC fixpoint) +
+  an *emit discipline*, not a type layer; the specialization already exists ad hoc in codegen.
+  Named consumers: PROVE-12 delimiter sites, GN-2.W3 LUT, GN-3 type erasure, the JSON/general
+  STOP-sets, the capacity plan. If BTA cannot be shown to subsume ≥2 hand sites into one pass,
+  the family is refuted as premature abstraction — that is the prototype's job (§6.1).
+- **R-D2 — code-size explosion (generated-size budget).** Aggressive stage-0 unrolling
+  (per-context specialization, `Repeat` unroll) can blow the LOC budget. **Mitigation:** this
+  is *why* per-site staging is a LOCK-2 CSP with the budget as a hard constraint (§1.5) —
+  bounded specialization, never unbounded. Forced (sound) stagings don't hit the solver; only
+  free choices do. Counterexample to watch: a grammar with a large stage-0 `Alt` that unrolls
+  into a multi-KB dispatch — the budget constraint must prune it back to a runtime match.
+- **R-D3 — LLVM already does it (the skeptic's null hypothesis).** For some sites rustc
+  const-prop suffices and staging buys nothing. **Mitigation:** measure *per site*; PROVE-12
+  proves the cross-boundary slice case LLVM misses, but the family must publish the sites where
+  staging == LLVM as negative results, not hide them (Constitution vii). The win is only real
+  where the residual beats letting LLVM try.
+- **R-D4 — mis-staging is a *soundness* bug, not a perf miss.** If BTA wrongly marks an
+  input-dependent value Comptime, the specializer bakes a wrong constant into every parser.
+  **Mitigation:** conservative lattice (unknown ⇒ Runtime); a differential oracle (staged vs
+  unstaged emit must be byte-identical output — PROVE-12's parity checksum, REPORT §5) is the
+  standing gate. Counterexample: capacity keyed on document length must stay Runtime even
+  though it "looks" like a grammar constant.
+- **R-D5 — scope collision with GN-3 and GN-2.** The type-erasure framing overlaps GN-3
+  (which owns `Project.ty` threading) and the LUT-hoist overlaps GN-2.W3. **Mitigation:** 3D
+  is the *unifying account*, not a re-implementation — it re-cuts GN-2.W3 and GN-3's erasure
+  invariant as instances of one law (a named supersession per Constitution ix), and the
+  shared-file discipline (`passes/src/lib.rs`, serialized writes — GN-3 R3) is inherited.
+
+---
+
+## 6. What a prototype must test to move this family
+
+Each is falsifiable, artefact-backed, cold/paired per the profiling standing law.
+
+1. **BTA-uniform-residual (the generalization proof).** Implement `binding_times()` +
+   `lower/residual/` and drive the *same* const-fold/const-generic residualizer over ≥2 site
+   classes from one mechanism: (a) reproduce PROVE-12's CSS delimiter win byte-identically
+   (parity checksum unchanged; cyc/B 0.81-0.98× reproduced on `css_canon_bench`), and (b)
+   extend a *measurable* residual win to a **second** site — the JSON structural STOP-set or
+   the general-descent delimiter scan. **Gate:** ≥1 new site wins, all sites regen bit-identical
+   (`xtask regen-*` idempotent), generated-LOC within budget. **Refutes the family if:** the
+   second site shows staging == LLVM (nothing to residualize) *and* no other stage-0 site
+   exists — then 3D is a one-site hand-edit, not a plane.
+2. **Re-staging mechanically fixes animate.** Show BTA flags `find_css_significant`'s per-call
+   LUT as a stage-0 value on a stage-1 path, and that re-staging it to a `const` table (the
+   residualizer's LUT-hoist form) erases the +13.4% cyc/B / +29.9% ins animate regression —
+   i.e., GN-2.W3's hand-hoist *falls out of the stage assignment*. **Gate:** animate track1_rich
+   ≤1.0× with bootstrap/tailwind/material wins retained (tailwind lcss ratio ≥4.0×), ins Δ ≤+2%.
+3. **Zero-runtime-cost as an erasure *property*.** Prove via `cargo asm`/disasm that no
+   `Project.ty`/`DirectSchemaSet`/schema value survives into the runtime residual — a stage-0
+   erasure check strengthening `runtime/src/lib.rs:42` and GN-3's empty-`git diff` gate into a
+   property the emitter guarantees, not a spot-assert. **Gate:** the erasure oracle is
+   fail-closed and green; runtime binary byte-identical across a schema-shape change that alters
+   no runtime bytes.
+4. **Per-site staging is a real LOCK-2 decision.** Exhibit ≥1 site with a genuine binding-time
+   choice (small `Alt` unroll-to-dispatch vs runtime `match`, or const-LUT vs computed) where
+   the assignment is *selected by the cost model under the generated-size budget*, and show the
+   solver picks differently when the budget is tightened. **Gate:** the decision is a CSP
+   variable read from `DecisionCspFacts`, not a hardcoded branch; flipping the budget flips the
+   emitted form (proving the clause "per-site staging solved by LOCK-2's engine" is load-bearing,
+   not decorative).

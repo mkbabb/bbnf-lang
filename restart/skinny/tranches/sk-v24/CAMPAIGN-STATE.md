@@ -61,6 +61,8 @@ single-pass sink (fold-over-cursor refuted 2.3-4.9x).
 | 5-codex | wf_6ae8f4f7-16c | ~/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/workflows/scripts/sk-v24-codex-authorship-wf_6ae8f4f7-16c.js | DONE 28/29 (32 min, 3.25M tok; GN-6 author died post-write — file complete on disk; 31 defects → all CRITICAL/MAJOR fixed; minors harmonization agent running; codex commit pending its return) |
 | 6-locks-p1-bbnf | wf_63419230-36d | ~/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/workflows/scripts/sk-v24-locks-pass-wf_19b300e6-c0a.js (args: group bbnf, locks [1,2,3,7], pass 1) | RESUMED (locks 1/3/7 FOLDED — registries on disk; LOCK-2 synth died at retry cap after writing FAMILY-SPECS; resume replays 1/3/7 cached, re-runs 2) |
 
+| 6-locks-p2-pt | wf_a6d7a39f-623 | same script (args: group pt, locks [4,5,6,8,9], pass 2, baseCommit 7cdbff4ef) | RUNNING (script upgraded: PASS>1 directive-distiller stage — Fable distills researcher-safe questions from each registry honoring the WITHHELD lists; BASE-PIN clause on worktree protos) |
+
 PASS-2 BINDING DIRECTIVES (from pass-1 agglomerators, orchestrator-ratified):
 - BASE-PIN RULE: every bbnf-worktree prototype must FIRST verify/fast-forward its tree to
   the commit named in its brief (pass-1 protos ran d2b32f6e3, 51 commits stale — LOCK-3

@@ -156,7 +156,18 @@ NEGATIVE-RESULTS folding §0's refutations, BENCH-PROTOCOL = the standing law), 
 differentiator statement published, the all-prompts recap audit, quiet-host re-capture of
 the §0 table (carried residual — ratios stand, absolutes get a quiet stamp).
 
-## §2b THE TRANCHES — parse-that (PT-N series, REVIEW-NOT-EXECUTE, delivered by letter)
+## §2b THE TRANCHES — parse-that (PT series, FULL IMPLEMENTATION)
+
+**SUPERSESSION (owner order, 2026-07-16, post-freeze — binding):** the PT series is elevated
+from review-not-execute proposals to FULL IMPLEMENTATION tranches — "fully-upgrade parse-that
+(and the regex engine thereof)... a full implementation, not just a skinny pass." The
+implementation-depth tranche documents are docs/tranches/sk-v24/PT-{1,2,3}.md, which develop
+PT-N1-3 below into executable wave sets. Coordination survives as mechanics, not as a fence:
+each PT tranche opens with a W0 handshake (letter BBNF-PT-G + owner acknowledgment + rebase
+over any active WIP + consumer baselines); execution runs in the parse-that repo by the owner
+or a parse-that-side session after that handshake; bbnf-side agents still never write into
+~/Programming/parse-that, and the letter placement law is unchanged. The consumer suites
+(value.js, latex-paper, keyframes.js) remain the close gates.
 
 - **PT-N1 — the prefilter tier**: PROVE-10's 245-line additive patch (CONFIRMED 8.8-29.5×,
   compile-neutral, 44/44). Flagship. Generator inherits it by emitting dfa.find.

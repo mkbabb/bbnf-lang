@@ -58,7 +58,9 @@ single-pass sink (fold-over-cursor refuted 2.3-4.9x).
 | 2-proving | wf_386900ed-462 | ~/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/workflows/scripts/sk-v24-proving-fleet-wf_386900ed-462.js | DONE 14/14 (36 min, 2.84M tok); prover worktrees preserved at .claude/worktrees/wf_386900ed-462-N |
 | 3-verify | wf_a4c300b0-b54 | ~/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/workflows/scripts/sk-v24-verify-fleet-wf_a4c300b0-b54.js | DONE 12/12 (14 min, 1.06M tok) |
 
-| 5-codex | wf_6ae8f4f7-16c | ~/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/workflows/scripts/sk-v24-codex-authorship-wf_6ae8f4f7-16c.js | RUNNING (Author 10 → Audit 3 → Fix; 60/30/25-min caps) |
+| 5-codex | wf_6ae8f4f7-16c | ~/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/workflows/scripts/sk-v24-codex-authorship-wf_6ae8f4f7-16c.js | DONE 28/29 (32 min, 3.25M tok; GN-6 author died post-write — file complete on disk; 31 defects → all CRITICAL/MAJOR fixed; minors harmonization agent running; codex commit pending its return) |
+| 6-locks-p1-bbnf | wf_63419230-36d | ~/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/workflows/scripts/sk-v24-locks-pass-wf_19b300e6-c0a.js (args: group bbnf, locks [1,2,3,7], pass 1) | RUNNING |
+| 6-locks-p1-pt | wf_50d1252c-5ea | same script (args: group pt, locks [4,5,6], pass 1) | RUNNING |
 
 Heartbeat cron live: job 20e19341 (re-armed for stage 5), hourly at :23, session-scoped
 (fc81e24f retired at stage-4 close).
@@ -71,4 +73,9 @@ green — no spam. If this session is gone, a fresh session executing task #55 I
 
 ## Standing walls log (append incidents: what died, when, how resumed)
 
-- (none yet)
+- 2026-07-16 stage 5: GN-6 author hit StructuredOutput retry cap AFTER writing GN-6.md
+  (36KB, complete) — file verified on disk, no redispatch needed (the standing lesson held).
+- 2026-07-16 stage 6: wf_19b300e6-c0a died at launch — the Workflow args parameter reached
+  the script as a JSON STRING, not an object; pipeline(args.locks) threw. Cure: scripts
+  normalize with typeof args === 'string' ? JSON.parse(args) : args. Relaunched as
+  wf_63419230-36d (bbnf) + wf_50d1252c-5ea (pt). RULE for all future parameterized scripts.

@@ -72,7 +72,10 @@ single-pass sink (fold-over-cursor refuted 2.3-4.9x).
 | 6-locks-p3-pt (resume 2) | wf_acfc23d2-04b (task wtjdi7mfm) | same script, resumeFromRunId wf_acfc23d2-04b, args EXACTLY as ledgered | DONE-PARTIAL 18:11 ET (42/50): LOCKS 4/5/6 FOLDED (L4: 4A 68/4B 70, 4C BANKED 66, 4D BLOCKED — canada 1.56x is 4B's measured ceiling pending LOCK-9 9B; L5: 5D 55 direct-scan-default RATIFIED + 5C RUN-EARNED RETIRED (survivor ships as table), 5A 42 relabel-candidate, grammar-driven path ZERO artifacts after 3 passes = named floor for GESTALT-P; L6: 6B 70/6A 67/6D 66, 6C BANKED 68). LOCK-8/9 chains dropped at synth StructuredOutput cap AFTER writing FAMILY-SPECS (15:35/15:36) — no protos/crits/fold, registries still pass-2. |
 | 6-locks-p3-pt (resume 3, LOCK-8/9 close) | wf_acfc23d2-04b (task wz6s3127c) | same script, resumeFromRunId wf_acfc23d2-04b, args EXACTLY as ledgered | PAUSED-BY-OWNER 17:04 ET (was running clean; journal 106 results banked; LOCK-8/9 registries still pass-2 — back halves interrupted). SCHEMA-CAP TALLY: L2, L8, L9 synths each died ONCE at the SS cap (L4/5/6 passed the same schema — stochastic); if any synth caps out a SECOND time, relax SS proto_briefs minItems/maxItems to 1–3 once BOTH runs are idle. (Timestamp errata: resume-2 rows above that read 18:11/18:14 ET are actually ~16:34/16:40 ET.) |
 
-## THE PAUSE (owner order, 2026-07-16 17:04 ET) — resume hereupon
+## THE PAUSE (owner order, 2026-07-16 17:04 ET) — RESUMED BY OWNER same day ("Mark me"):
+cron re-armed as job b1933bf3; bbnf p2 resumed as task wwev9d1ov, pt p3 as task wkz55y1bp
+(same runIds, args exactly as ledgered). The procedure below remains the template for any
+future pause.
 
 Owner paused the campaign mid-stage-6. State at pause: 7 of 9 registries folded at their
 current pass (bbnf pass-2: LOCK-1/3/7 folded, LOCK-2 pending; pt pass-3: LOCK-4/5/6 folded,

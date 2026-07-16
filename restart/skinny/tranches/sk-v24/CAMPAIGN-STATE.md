@@ -61,9 +61,45 @@ single-pass sink (fold-over-cursor refuted 2.3-4.9x).
 | 5-codex | wf_6ae8f4f7-16c | ~/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/workflows/scripts/sk-v24-codex-authorship-wf_6ae8f4f7-16c.js | DONE 28/29 (32 min, 3.25M tok; GN-6 author died post-write — file complete on disk; 31 defects → all CRITICAL/MAJOR fixed; minors harmonization agent running; codex commit pending its return) |
 | 6-locks-p1-bbnf | wf_63419230-36d | ~/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/workflows/scripts/sk-v24-locks-pass-wf_19b300e6-c0a.js (args: group bbnf, locks [1,2,3,7], pass 1) | RUNNING |
 | 6-locks-p1-pt | wf_50d1252c-5ea | same script (args: group pt, locks [4,5,6], pass 1) | RUNNING |
+| 6-locks-p1-pt-ext | wf_0c50c1bb-81e | same script (args: group pt-ext, locks [8,9], pass 1) | RUNNING (locks 8/9 added per owner amendment: parse-that lock set + three-tier gestalt) |
 
-Heartbeat cron live: job 20e19341 (re-armed for stage 5), hourly at :23, session-scoped
-(fc81e24f retired at stage-4 close).
+AMENDMENT (owner, 2026-07-16): nine locks now — parse-that gets its own set of befitting
+size: LOCK-8 TS backbone plane, LOCK-9 scanner & kernel plane; sets = bbnf {1,2,3,7}, pt
+{4,5,8,9}, weave {6}. THE GESTALT is now three-tier, each itself a convergence loop:
+GESTALT-B (bbnf locks + GN codex) ∥ GESTALT-P (parse-that locks + PT codex + native series)
+→ GESTALT-Ω (both repos, all locks — the terminal artifact: the perfected dual-repo tranche
+set with DAG ordering). Pass-transition procedure applies to all three groups; from pass 2
+the groups are bbnf [1,2,3,7] and pt [4,5,6,8,9] (fold pt-ext into pt).
+
+Heartbeat cron live: job 2fd2e8d7 (upgraded: resurrect + pass-transition duty), hourly at
+:23, session-scoped, 7-day auto-expiry — re-arm as resurrection step one (prior jobs
+fc81e24f, 20e19341 retired). Current prompt text: reconcile ledger vs live tasks; resume dead
+runs via Workflow({scriptPath, resumeFromRunId, args-as-ledgered}) after TaskStop-ing
+zombies + walls-log entry; if both pass-K workflows DONE and pass-(K+1) unledgered, execute
+the stage-6 pass-transition procedure; never duplicate-launch; silent single-line green
+otherwise.
+
+## Stage-6 pass-transition procedure (durable — executable by a cold session or the heartbeat)
+
+When BOTH pass-K workflows (groups bbnf + pt) are DONE and no pass-(K+1) run is ledgered:
+1. Read every locks/LOCK-N/REGISTRY.md. The agglomerators' pass-(K+1) directives ARE the
+   between-pass synthesis (written by Fable-tier agents) — a mechanical relaunch is faithful.
+2. Launch pass K+1 with the SAME script
+   (~/.claude/.../workflows/scripts/sk-v24-locks-pass-wf_19b300e6-c0a.js), args
+   {"group":"bbnf","locks":[1,2,3,7],"pass":K+1} and {"group":"pt","locks":[4,5,6],"pass":K+1}.
+   Pass research-directives to researchers ONLY as refined questions (never registry content —
+   the withholding law); the orchestrator may edit the script to inject per-lock directives
+   via args {"directives":{...}} before relaunch.
+3. Ledger both runIds here FIRST (launch intent), then launch, then update.
+4. Convergence talk begins only at pass ≥3; then per-lock fresh non-author audits (agents who
+   authored nothing for that lock), then THE GESTALT (both repos) → the perfected tranche set
+   with DAG ordering at docs/tranches/sk-v24/ (v2, named supersessions of the v1 codex).
+5. A lock at two consecutive clean passes + zero gaps + audit survival = CONVERGED; drop it
+   from subsequent rounds and record the freeze in its REGISTRY.
+
+COLD-SESSION RESURRECTION (if this session died entirely): task #57 carries the live runIds
+in metadata; this file carries the stage plan; re-arm the heartbeat cron (prompt text below)
+as step one; then reconcile per the protocol at the top of this file.
 
 ## Heartbeat cron
 

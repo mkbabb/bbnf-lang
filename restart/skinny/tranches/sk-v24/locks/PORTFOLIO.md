@@ -1,11 +1,19 @@
-# SK-V24 STAGE 6 — THE LOCKS: round-zero portfolio (minted by Fable, 2026-07-16)
+# SK-V24 STAGE 6 — THE LOCKS: round-zero portfolio (minted by Fable, 2026-07-16; amended same day per owner order: parse-that lock set + the three-tier gestalt)
 
-Seven core locks, each resolved by the convergent multiagent design loop (≥3 passes, earned
-convergence, fresh non-author audit, two consecutive clean passes), then THE GESTALT: one
-agglomeration across both repos producing the perfected tranche set with proper DAG ordering —
-conscious of the extant tranches (docs/tranches/sk-v24/ GN-0..6 + PT-1..3, and parse-that's
-native series: VALUEJS-PT-*, KF-TO-PARSETHAT-*, its A/B/Q/S lineage). Families within a lock
-are genuinely orthogonal architectural centers; two routes sharing a mechanism share a family.
+Nine core locks, each resolved by the convergent multiagent design loop (≥3 passes, earned
+convergence, fresh non-author audit, two consecutive clean passes) — then THE GESTALT TIER
+(below): one gestalt per repo weaving its locks multidimensionally, then the OMEGA gestalt of
+both repos with all locks, producing the perfected dual-repo tranche set with proper DAG
+ordering — conscious of the extant tranches (docs/tranches/sk-v24/ GN-0..6 + PT-1..3, and
+parse-that's native series: VALUEJS-PT-*, KF-TO-PARSETHAT-*, its A/B/Q/S lineage). Families
+within a lock are genuinely orthogonal architectural centers; two routes sharing a mechanism
+share a family.
+
+**The lock sets.** bbnf-lang: LOCK-1 (solver spine), LOCK-2 (graph engine), LOCK-3 (IR
+transposition spine), LOCK-7 (grammar totality & bootstrap). parse-that (primacy — its own
+set, befitting size): LOCK-4 (combinator core), LOCK-5 (regex continuum), LOCK-8 (TS backbone
+plane), LOCK-9 (scanner & kernel plane). LOCK-6 (the isomorphism plane) is the weave lock,
+homed operationally with the parse-that group, consumed by both gestalts.
 
 ## THE CONSTITUTION (binding on every lock, every pass)
 
@@ -172,6 +180,69 @@ missing, never work around.
 - **7D META-CIRCULAR-ORACLE**: self-hosting as verification first — the bbnf-defined
   bbnf/regex grammars serve as differential ORACLES against the hand parsers; promotion to
   production parser is gated on measured parity + performance, subsystem by subsystem.
+
+## LOCK-8 — THE TS BACKBONE PLANE (parse-that/typescript)
+
+Task: the TypeScript backbone as a first-class design problem — V8 discipline (hidden
+classes, inline caches, allocation), the diagnostics plane (PT-E1 per-parse scoping),
+TYPE-LEVEL inference (PT-E2: ExtractValue totality, the Parser-any leaks — TS's own inference
+story, distinct from LOCK-1's Rust solver), packrat semantics, the API surface toward 1.1.0
+and beyond, and the consumer contract (value.js, latex-paper with its version skew,
+keyframes; semver; migration as artifact). Evidence seeds: R4, PROVE-11 REPORT+VERIFY,
+PT-3.md, the VALUEJS-PT-* letters in parse-that/docs.
+
+- **8A SHAPE-STABLE CORE**: the V8-first formulation — every state and combinator object
+  shape-stable and monomorphic by construction; an allocation-zero hot path; diagnostics and
+  packrat as shape-preserving optional planes; proven by IC-state probes and paired harnesses.
+- **8B TYPE-LEVEL TOTALITY**: the TS type system carries the grammar — full ExtractValue
+  inference, a typed combinator algebra with no Parser-any anywhere, diagnostics typed by
+  position; compile-time inference mirroring the zero-runtime-cost law.
+- **8C ISOMORPHIC MIRROR**: the TS plane as the lawful mirror of the Rust core (consumes
+  LOCK-6's verdict): shared graph/instruction shape (ties LOCK-4A/4C), generated skeletons,
+  differential oracles; hand-written TS minimized.
+- **8D CONSUMER-CONTRACT-FIRST**: designed backward from value.js, latex-paper, and
+  keyframes — their usage patterns define the API; perf gates ride THEIR suites; semver and
+  migration are first-class deliverables (the backbone formulation).
+
+## LOCK-9 — THE SCANNER & KERNEL PLANE (parse-that rust)
+
+Task: parse-that's own scan/kernel layer reborn — the eight portable_simd scanner files,
+quote_parity/number_simd/decode/structural_bitmap, honest after the PROVE-09 refutation (the
+shim law: stable NEON must be measured no-regression; vshrn narrow, never the double-addv
+movemask), the x86 purge, the kernel-sharing question with bbnf-simd, and parse-that's bench
+and oracle protocol (divan cold paired; PMU where the OS allows). Evidence seeds: R3,
+PROVE-09 REPORT+VERIFY (the refutation is law), PROVE-10, PT-2.md, skinny/crates/bbnf-simd.
+
+- **9A ONE-KERNEL-LIBRARY**: one shared aarch64 kernel home serving BOTH repos (bbnf-simd
+  extracted or vendored under a sync gate); parse-that scanners become thin consumers; the
+  isomorphism is physical.
+- **9B NATIVE-REBIRTH**: parse-that keeps its own kernels, rewritten in idiomatic stable
+  NEON, each with a scalar parity oracle and checkasm-liveness; no cross-repo coupling;
+  gate = measured no-regression per the PROVE-09 law.
+- **9C SCANNER-AS-DFA**: the scanner layer dissolves into the regex continuum (LOCK-5):
+  quote, number, and ws scanning become compiled DFA/prefilter products of the bootstrapped
+  grammar — hand-written scanners cease to exist.
+- **9D LAZY-SURFACE**: streaming-first — scanners as incremental lazy planes over input
+  windows; kernels selected by a cost model at combinator-compile time; streaming parse
+  support becomes the design center.
+
+## THE GESTALT TIER (three design iterations, each itself a convergence loop)
+
+Run only when the member locks have converged or been returned as rigorously converged cores
+with exact named gaps. Each gestalt is a design ITERATION — synthesis fleet over the member
+registries, probe/prototype where contradictions demand evidence, adversarial critique,
+agglomeration to earned 100% — weaving the locks multidimensionally: shared substrates
+unified (one solver home? one e-graph home? one kernel home?), contradictions adjudicated as
+named supersessions, double-homed work collapsed.
+
+- **GESTALT-B (bbnf)**: weaves LOCK-1/2/3/7 + LOCK-6's bbnf face + the GN codex → the
+  perfected bbnf tranche set.
+- **GESTALT-P (parse-that)**: weaves LOCK-4/5/8/9 + LOCK-6's parse-that face + the PT codex
+  + parse-that's native tranche series → the perfected parse-that tranche set (primacy: its
+  own set, not an appendage).
+- **GESTALT-Ω (omega)**: both repos, ALL locks and both gestalts → the perfected union — the
+  final dual-repo tranche set with proper DAG ordering, born-RED gates, π obligations, and a
+  disposition for every banked route. The omega output is the campaign's terminal artifact.
 
 ## Pass protocol bookkeeping
 

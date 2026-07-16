@@ -1,273 +1,307 @@
-# LOCK-4 — THE COMBINATOR CORE · pass-1 · CRIT-1 (Adversarial Critic 1 of 2 — within-lock view)
+# LOCK-4 — THE COMBINATOR CORE · pass-1 · CRIT-1 (Adversarial Critic 1 of 2 — WITHIN-LOCK view)
 
-*Weighting: internal soundness of each family spec + whether the two prototypes actually tested the
-sharpest uncertainty they are cited for. Every path:line anchor in the specs was spot-checked against
-the read-only `parse-that` tree and the `bbnf-lang` IR crate; the PROTO-1 scratch copy
-(`…/scratchpad/pt-scratch`) was opened and read. Verdict up front: the substrate claims are
-**accurate** (no fabrication), but the keystone prototype is **misattributed across three families**,
-and no family's make-or-break number for its own distinct mechanism was taken this pass.*
+*Weighting: internal soundness of each family spec, and whether the two prototypes actually exercised the
+sharpest uncertainty they are cited for. Every load-bearing path:line was spot-checked against the
+read-only `parse-that` tree; `PROTO-2-4B-FUSION.patch` was read in full and its faithfulness to the
+substrate verified (`parse.rs:41-53` blanket `impl ParserFn for F`; `parse.rs:61` `Parser =
+SmallBox<dyn ParserFn,S32>`; `lazy.rs:20-64` `UnsafeCell` + `Box<dyn LazyParserFn>` + cached `Parser`;
+the fused arm impls `ParserFn` on concrete `Seq2/Seq3/Alt2` structs — all confirmed).*
 
----
+**This CRIT-1 supersedes the earlier CRIT-1 (timestamp 04:09) verbatim.** That file critiqued a
+now-abandoned probe set (`PROTO-1.md` VALUE-PLANE-SURVIVAL hand-fused `json_graph.rs`). The CURRENT
+`FAMILY-SPECS.md` (04:34) re-synthesised the lock around two fresh briefs — **PROBE-1** (monadic-wall
+census) and **PROBE-2** (Rust runtime-substrate fork) — which then RAN as
+`PROTO-1-MONADIC-WALL-CENSUS.md` (04:41, GREEN) and `PROTO-2-4B-FUSION.md` (04:53, 4B CONFIRMED). The
+prior registry numbers (4A 50 / 4B 32 / 4C 35 / 4D 30) predate both and are stale. This critique reprices
+against the current evidence base.
 
-## 0. The two cross-family findings that reprice every family
-
-### F-CRUX-1 — PROTO-1 tested a HAND-FUSED SPECIAL CASE, not the general analyzable interpreter, and is over-leveraged across 4A/4C/4D.
-
-PROTO-1 is cited by FAMILY-SPECS §6 as *"Decides 4A/4C/4D single-tier viability at once."* It does not.
-I read the scratch `json_graph.rs`. What was actually built:
-
-- `JsonNode` is a **bespoke 5-variant enum** — `Map · Number · Array · Object · Dispatch` — **not** the
-  ~25-node `Node` union 4A §1.1 specifies (`Seq(Vec)/Alt(Vec)/Many/SepBy/Opt/Wrap/Skip/Next/Not/
-  Minus/LookAhead/Negate/Peek/NonTerminal/Boxed/…`).
-- The `Array`/`Object` arms are **hand-written straight-line loops** (`loop { items.push(self.call(*value,
-  state)?); trim; if comma.is_none() break }`), recursing by index over the **native call stack**. The
-  first-byte `Dispatch` table is **hand-built** in `json_graph()`, not synthesized by a FIRST-set pass.
-
-Consequences, family by family:
-
-- **For 4A:** the primary open measurement 4A itself names — *"does a widened `Map`-carrying node payload
-  push the `match` below the monomorphized closure chain?"* (4A open-Q (a); R2; §3.2) — is **untouched**,
-  because the structural spine here is *not* a general per-node `match` over a wide union; it is bespoke
-  fused arms. The proto satisfies the **letter** of P2 ("a graph producing `JsonValue` at ≥0.98×") while
-  evading its **spirit** (the general interpreter's dispatch cost). P2's own words — *"≥0.98× the closure
-  core head-to-head **on the SAME grammar**"* — are violated: the graph arm is hand-fused, the closure arm
-  is the fully-general `Parser<JsonValue>`. Unequal fusion levels, not the same grammar two ways.
-- **For 4C:** the proto is a **tree-walker** (native-stack recursion by index). 4C's entire mechanism is
-  the **opposite** — a flat bytecode program with an explicit choice-point/value stack and `PartialCommit`
-  back-edges, whose central risk (research-C §5.1) is *"a bytecode loop reintroduces one dispatch branch
-  per instruction + explicit-stack traffic the native stack did for free; honest prior 0.7–0.9×."* A
-  tree-walk arena's throughput says **nothing** about a choice-point-stack VM's throughput; they are
-  different overhead regimes. Citing PROTO-1 as evidence for 4C single-tier viability is **prototype-
-  evidence misuse** (constitution vii / SPEC-ONLY-style misanchoring, here a wrong-mechanism anchor).
-- **For 4D:** the proto builds a **parse-that-private** `JsonNode`, and never touches `bbnf_ir`,
-  `parse_with_ir`, or a single inherited optimizer pass. 4D's *decisive number* (research-D gate 2:
-  interpret-mode `parse_with_ir` vs the closure core) is therefore **unmeasured**. PROTO-1 shares **none**
-  of 4D's mechanism; it cannot reduce 4D's uncertainty at all.
-
-### F-CRUX-2 — the 6% "win" is a FUSION artifact, not an analyzability result, and the fair floor is a loss.
-
-PROTO-1's narrative ("Why the graph wins rather than merely ties") attributes the win to the graph
-retiring `lazy` (`UnsafeCell` + `Box<dyn LazyParserFn>`), `SmallBox` per combinator, and the
-`dispatch_byte_multi` `Vec` indirection. Every one of those is a cost of the **general, unfused** closure
-core — not of "keeping the representation analyzable." The graph arm won because it was **hand-
-specialized**; the closure arm was **general**. The tell is in the table: **canada** — coordinate-dense,
-runtime dominated by the byte-identical `scan_number_strict_f64` where fusion of the structural glue buys
-least — is the **only** corpus where the graph is *slower* (0.979–0.986×). Where structure matters (and
-hand-fusion pays), graph wins 6–9%; where it does not, graph loses. That is the exact signature of *the
-win is fusion, and analyzability is free-to-slightly-costly.* The honest verdict PROTO-1 supports is the
-**narrow** one — *the value-plane `Map` box confines to scalar leaves and does not blow up the spine*
-(and the objdump 45 `blr`-on-leaves does support that). The **broad** verdict it is used for — *"4A/4C/4D
-single-tier VIABLE, two-tier not forced"* — is not earned.
-
-### F-CRUX-3 — PROTO-1's pairing is not the interleaving the PROVE-09 law demands, at an effect size the law says to distrust.
-
-Divan runs each `#[divan::bench]` to completion in sequence: **all** samples of `_closure`, then **all**
-samples of `_graph` — adjacent, but not sample-level `A,B,A,B` interleaved (which research-B §8.6 and the
-TS PROVE-11 protocol require, and which the PROVE-09 refutation was *specifically* about). "Two windows,
-opposite temporal position" cancels *inter-window* drift but, with a **fixed intra-pair arm order** in both
-windows, does not cancel a systematic "second-arm-runs-warmer/cooler" bias — the precise window asymmetry
-that turned PROVE-09's 1.34–1.57× into parity-or-slower. The effect being claimed (~6%) is *smaller* than
-the shim's refuted magnitude. Consistent W1/W2 agreement is reassuring but does not rule this out, because
-both windows share the order. No `sample_count`/`sample_size` override is present in the bench; the "N≥200"
-of the briefs is not configured — divan defaults govern. **This does not overturn the narrow finding, but
-it forbids the 6% "graph is faster" headline from carrying any weight.**
-
-*(All three cruxes are within-lock: they concern whether the prototypes tested the sharpest uncertainty of
-the families they are cited for. They do not depend on any other lock.)*
+**Verdict up front.** The pass's decisive event is real and I credit it: **PROBE-2 ran the exact 4B
+inlining experiment the prior pass called "deferred", and it PASSED its own stated gate** — zero vtable
+`blr` on the fused hot chain, ≥1.10× cold-paired in all 12 cells, both load windows, both arm orders.
+That is a genuine, refutable, could-have-failed artifact (constitution vii satisfied). But the win it
+certifies is **narrower than "beyond-SOTA"**: the baseline is a *synthetic* `SmallBox` closure core, not
+the shipped tuned `json_parser()`; it is **Rust-only** (constitution iii is still 0% built for every
+family); the grammar is JSON (the smallest, least blowup-prone); and the fused form was reached by
+**hand-written structs**, not the public builder API — whose `seq!`/`alt!` macros do not even compile on
+the toolchain (E0282 / HRTB warts, conceded in the probe). The terminal runtime **still cannot be named
+inside LOCK-4**: Fork I (graph HOME) is untouched and the isomorphism half of Fork II is unmeasured.
 
 ---
 
-## 1. FAMILY 4A — CLOSURE-TO-GRAPH — **convergence 50%**
+## 0. Cross-family findings that reprice every family this pass
 
-**Sound and verified.** The substrate is real: `SpanKind` carries **29 variants** (spec said "~30") — every
-node 4A needs including the `TakeUntilAny1/2/3/Lut/SIMD` ladder, flat `Seq/OneOf(Vec)`, `SepByWs`, and the
-`Boxed(dyn ParserFn)` hatch — and it has live consumers (`parsers/json.rs`, `parsers/css/*`), so Y.13 is
-satisfied by construction. The passes-as-rewrites framing is coherent and has an in-tree precedent
-(`rust/regex/src/egraph/`). Disposition ADVANCE-candidate is defensible; 4A is the leader on cheapest-path-
-to-proof. But the keystone prototype it leans on does not prove what it is cited to prove.
+### F-1 — PROBE-2's "FORK II routes to 4B" is a TWO-arm measurement generalised to a THREE-way fork (prototype-evidence over-reach).
+
+FORK II is 4A (extracted closures) ⊗ 4B (monomorphized straight-line) ⊗ 4C (bytecode VM). PROBE-2 measured
+exactly one pair: `fused` (4B) vs a hand-reconstructed `SmallBox` **closure core**. It never built 4A's
+*extracted-fused-region* runtime, and it never built 4C's dispatch-loop VM. So "routes to 4B for Rust"
+(PROTO-2-4B-FUSION verdict line) is, against 4A and 4C, an **inference** — reasonable (4A keeps a box per
+fused region, 4C's honest prior is a loss), but not a measurement. The one datum that IS direct is
+4B-beats-closures; everything else in the routing claim is deduced. Pass-2 must state it as inference
+until a three-way bench exists.
+
+### F-2 — PROBE-2 does not just confirm 4B; it measures a NEW disadvantage for 4A's own runtime, unsurfaced by the synthesis.
+
+`FAMILY-SPECS §4A` fixes 4A's runtime as **"extraction to a fused closure tree (one closure per fused
+region … closures remain the execution substrate)."** PROBE-2 just measured that the closure-dispatch tax
+is **16–27%** on the JSON structural spine (zero-`blr` fused vs 60-`blr` closure). Therefore 4A's runtime
+substrate is now **measured-inferior to 4B on the very axis PROBE-2 tested**, unless 4A's fused regions
+are large enough to amortise the per-region box. FORK II is no longer symmetric: PROBE-2 puts a thumb on
+the scale *toward 4B and away from 4A-as-terminal-runtime*. The FAMILY-SPECS incompatibility map still
+treats 4A/4B/4C as three co-equal Fork-II positions; that is now false on the throughput axis for Rust.
+
+### F-3 — "Beyond-SOTA" is unestablished; the win is over a synthetic baseline, not the shipped parser.
+
+PROBE-2 is explicit and honest that it is **not** a comparison against `json_parser()` (which layers
+`dispatch_byte_multi` + SIMD string scanning). Both arms share identical leaf scanners as direct `bl`, so
+the measured 1.16–1.27× is *purely the box-dispatch tax on structural combinators*. That confirms the 4B
+**mechanism** (box dispatch is removable and costs ~20% of the structural traversal). It does **not**
+confirm the 4B **deliverable** (that 4B beats the tuned incumbent parse-that ships). "Those optimizations
+… would ride on top of 4B" is asserted, not measured — and `dispatch_byte_multi` removes exactly the
+kind of per-node dispatch 4B also removes, so an interaction that shrinks the marginal win is a live,
+untested possibility. The LOCK-4 charter is *beyond-SOTA*; PROBE-2 clears *beyond-the-naïve-boxed-core*.
+
+### F-4 — PROBE-1 greenlights the STRUCTURAL reification floor, not the VALUE-plane one — which is 4D's sharpest risk.
+
+PROBE-1's GREEN ("analyzable subset is effectively the WHOLE grammar") is a claim about
+**structure/FIRST/dispatch** analyzability: `chain`/`mapState` are the only structure-manufacturing
+opaque nodes, and they are 0.525% and hot-path-absent. That is exactly what 4A dispatch/packrat, 4B
+fusion, and 4C control-flow lowering need — good, real, credited. But `map`-over-an-opaque-closure is
+tallied bucket (b) "analyzable" **because its signature cannot return a `Parser`** — true for structure,
+**false for value-plane analyses** (discard/liveness/cost, and the tape-materialization bridge). 4D's
+staged-lane crux (does arbitrary `.map` output reconcile cheaply with bbnf's tape-first runtime?) is a
+value-plane question PROBE-1 does not touch. So PROBE-1 lifts the floor for 4A/4B/4C structurally and does
+**little for 4D's blocking risk**. The synthesis's uniform "green floor for all four" over-reads it.
+
+*(All four findings are within-lock: they concern whether the probes tested the sharpest uncertainty of
+the families they are cited for, independent of any other lock.)*
+
+---
+
+## 1. FAMILY 4A — CLOSURE-TO-GRAPH — **convergence 45%**
+
+**Sound substrate, but the current synthesis dropped 4A's one running artifact and no new probe touches
+its mechanism.** The substrate is real and consumed (`SpanKind`, live `parsers/json.rs` + `parsers/css/*`
+— Y.13 by construction) and the passes-as-rewrites framing is coherent with an in-tree precedent
+(`rust/regex/src/egraph/`). But the re-synthesis no longer leans on the old `json_graph.rs` tree-walk
+parity result, and **neither PROBE-1 nor PROBE-2 exercises a single 4A gate** (G-A1…G-A6). PROBE-1 lifts
+4A's *analyzability precondition*; PROBE-2 (F-2) lowers 4A's *runtime-substrate standing* vs 4B. Net: 4A
+is the best-substantiated family on substrate and the least-tested on its own novel claim.
 
 **Enumerated open gaps:**
-
-1. **[keystone, from F-CRUX-1] The general-interpreter value-plane number is untaken.** P2's real question —
-   does a *general* `match` over the wide union (widened by the `Map` payload) stay ≥0.98× the monomorphized
-   closure chain — was reduced to a hand-fused 5-arm arena. Rerun P2 with the **actual** `Node` union +
-   generic `Seq/Alt/Many/SepBy` dispatch arms, or state honestly that the value-plane result is limited to
-   hand-fused grammars.
-2. **P1 (fusion-as-a-separable-pass) was never built.** The proto hand-wrote the fused arena; it did not
-   extract `fuse(Graph)→Graph` and show byte-identical output to the hand-fused constructors + ≥0.98×.
-   The "cleverness becomes passes" thesis is still asserted, not demonstrated.
-3. **The one-path collapse is unbuilt and unproven.** `json.rs` (closure) still ships **alongside**
-   `json_graph.rs` in the scratch; the parity test *requires* both. §2.4.2's "parallel second codepath"
-   violation is therefore *still open* — the proto added an arm, it did not fold the closure `Parser` into
-   the graph. Whether the whole combinator library (not one grammar) collapses to a single tier is untested.
-4. **Recursion-seam guard (R3) untested.** The proto sidesteps `lazy()` entirely (index recursion `value:0`).
-   The proposed guard — keep `lazy()` as sugar auto-minting a `RuleId` via cache identity — is unbuilt, so
-   the "no API break for value.js/latex-paper inline recursion" claim is unverified.
-5. **P3 packrat-placement (SCC over `NonTerminal`) unbuilt.** No rule-map, no SCC analysis, no "placement ≥
-   armed-everywhere on recursive / strictly-faster on non-recursive" measurement.
-6. **P4 rust/ts isomorphism unbuilt, and prior signal is negative.** No `ParserNode` union or passes in TS.
-   R4's warning stands unaddressed: the dispatch-LUT lever already under-delivered (~+5% vs +10% claimed);
-   the Rust win is assumed to transfer, not shown.
-7. **Diagnostics-annotation pass unbuilt.** Labels-as-derived-graph-property is asserted; no pass exists.
+1. **[keystone] Fusion-as-a-separable-pass (G-A2) is unbuilt and unproven.** No `fuse(Graph)→Graph`
+   exists; the thesis that "hand `seq!`/`fuseAll` fusion becomes a derived total pass, byte-identical to
+   the hand form, for arbitrary arity" is SPEC-ONLY. This is 4A's *reason to exist* and it has zero
+   running evidence.
+2. **General-union value-plane dispatch cost (G-A1/open-Q) untaken.** Whether a `match` over the ~25-node
+   `Node` union — widened by the `Map` payload — stays competitive with monomorphized straight-line was
+   not measured this pass; PROBE-2 measured the *opposite* substrate (monomorphized, no union match).
+3. **[from F-2] 4A's extracted-closure runtime is now measured-inferior to 4B on Rust throughput.** The
+   "one box per fused region" runtime pays the exact 16–27% box tax PROBE-2 just certified, unless regions
+   are large. No measurement of how large 4A's fused regions get on real grammars, nor whether extraction
+   recovers 4B-level inlining. 4A must either concede the throughput axis to 4B or prove region-size
+   amortisation — untested either way.
+4. **Packrat-SCC placement (G-A5) + FIRST-set dispatch synthesis (G-A4) + diagnostics-annotation pass
+   unbuilt.** All three "derived, not hand-maintained" claims are asserted; no rule-map, no SCC, no
+   synthesised LUT, no labels pass.
+5. **One-path collapse unproven.** The claim that the whole combinator library folds to a single graph
+   tier (not a parallel second codepath alongside the closure `Parser`) is untested; parsimony (vi) is at
+   risk until a real fold, not an added arm, is shown.
+6. **Rust↔ts isomorphism (G-A6) 0% built.** No `Node` union or passes in TS; R4's live warning (a
+   `switch(node.tag)` interpreter may go megamorphic on V8; the dispatch-LUT lever under-delivered ~+5%
+   vs +10% claimed) is unaddressed. This is a LOCK-6 dependency 4A cannot resolve alone.
+7. **Recursion-seam guard unexercised.** The `lazy()`→`Ref(RuleId)` auto-mint-via-cache-identity is a
+   masked fallback until a consumer grammar with anonymous mutual recursion is run through it; `lazy.rs`
+   ships `UnsafeCell` + `Box<dyn LazyParserFn>` + cached `Parser` (verified) — the identity-recovery cost
+   is unpaid.
 
 ---
 
-## 2. FAMILY 4B — COMPTIME-FUSION — **convergence 32%**
+## 2. FAMILY 4B — COMPTIME-FUSION — **convergence 50%**
 
-**The honest state is: zero empirical evidence this pass, on the one axis that is its entire reason to
-exist.** The spec is candid — open-Q (a): *"the win is unproven and may be null"*; the §6 deferral removes
-4B's inlining-reality test from the pass-1 briefs outright. So the make-or-break (`cargo asm` shows the
-`blr` folded AND a paired, inlining-*attributable* win) was **not run**. Disposition ADVANCE-candidate/
-REWARD-AT-RISK is accurate as a *label*, but a family whose central lever is unmeasured and whose honest
-prior is NEUTRAL cannot sit above the low-30s at pass 1.
+**The pass's biggest single lift (from ~32% to 50%): its deciding throughput experiment RAN and passed
+its stated gate.** PROBE-2 is a genuine refutable artifact — zero `blr` on the fused chain (hard disasm
+gate), 1.16–1.27× cold-paired in all 12 cells, both windows, both arm orders, load-symmetric, equivalence
+gate green, recursion proven (one box on the closure arm, zero on the fused arm). On the axis 4B names as
+its reason to exist — the indirect-call/inlining barrier — 4B now has **positive Rust evidence**, not the
+NEUTRAL prior the prior pass recorded. That is the correct verdict for the mechanism. But 50%, not higher,
+because the win is scoped and the family's *other three axes are 0% built*.
 
 **Enumerated open gaps:**
-
-1. **The inlining win is unmeasured and PROTO-1 cuts against it.** F-CRUX-2 showed a *runtime* analyzable
-   graph already ties/beats the closure core. If closures are the thing 4B beats, and a graph that *keeps*
-   analyzability already matches them, 4B's headroom to win by *erasing* the runtime representation is
-   narrower than the spec implies. The spec does not surface this within-lock tension; pass 2 must.
-2. **`cargo asm`/`otool` mechanism proof not produced.** No demonstration that the `blr` vtable calls fold
-   to direct/inlined in a generic-struct build — the timing-independent proof the family rests on.
-3. **The predicted-branch trap (R1) unrebutted.** The SmallBox indirect call is a single fixed-target branch
-   the Apple-M BTB predicts perfectly on the steady loop; that inlining across it buys anything is exactly
-   the PROVE-09-shaped claim, and it is untested.
-4. **Weakest isomorphism of the four, and it is not flagged as a gap.** research-priorart §9 concedes 4B's
-   Rust and TS fusers are *different codegen over a shared plan*. Against constitution (iii) — "isomorphism
-   in layout **and in code**" — this is the softest position in the lock, yet FAMILY-SPECS lists no iso gap
-   for 4B. It must be enumerated.
-5. **TS build-time fuser unbuilt; PROVE-11 says the win is allocation-shaped (~+5% dispatch).** Generalizing
-   `fuseAll` past arity-3 to a vite/ts-transform plugin, isolating dispatch- from allocation-elimination,
-   and the bundle-size/`tsc`-clean/three-consumer-parity gates are all untouched.
-6. **Comptime/bundle blowup (R3) unmeasured.** The generated-size budget binds; FastParse is the cautionary
-   case; no compile-time or binary-size delta was taken.
-7. **"No runtime graph at all" is admitted false** (R4: TS static recognition is undecidable). Scoped to
-   fused sites, 4B-TS is *fuser + runtime-graph fallback* — which erodes its distinction from 4A to "only the
-   statically-fused sites." That narrowing is not carried into the disposition.
+1. **[from F-3] The win is over a synthetic `SmallBox` baseline, not the shipped `json_parser()`.**
+   "Beyond-SOTA" — the charter word — is unestablished. The production optimizations riding "on top" is
+   asserted; the `dispatch_byte_multi` interaction that could shrink the marginal win is untested.
+2. **Rust-only; isomorphism (constitution iii) 0% built — and 4B is the WEAKEST of the four on this
+   axis.** Rust monomorphized generics have **no TS analog**; the TS face is an *emitted-code* build-time
+   fuser (G-B3), unbuilt. "Isomorphism in layout AND in code" (iii, non-negotiable) is 4B's softest
+   position, and the family whose throughput case is strongest is the one whose iso case is weakest — an
+   awkward tension for the lock the synthesis does not resolve.
+3. **Ergonomic realizability unproven — the public API path does not compile on the toolchain.** The
+   probe concedes `seq!`/`alt!` hit E0282 / "FnOnce is not general enough" on nightly-2026-04-11; both
+   arms were **hand-written** (fused structs; the closure arm to the macros' expansion). So it is
+   unproven that `a.then(b).then(c)` monomorphizes to `Seq2<Seq2<A,B>,C>` *through the public API* rather
+   than requiring per-grammar hand-written structs. This is a real, current friction, not hypothetical.
+4. **Monomorphization / generated-size blowup untested at real grammar scale.** JSON is the smallest,
+   least-nested grammar. The blowup-prone consumers (CSS, value.js — hundreds of productions, deep
+   Seq∘Alt nesting) are unmeasured. The `generated-size-budget` memory binds a per-tranche line ceiling;
+   the fusion-policy question (fuse arity 2–4 + first-byte dispatch; table long fan-out) is open.
+5. **Generated-size budget is a gate that cannot fail (no threshold).** PROBE-2 "reports" 6.4/7.0 s
+   incremental compile and a binary-size figure but against **no budget** — "no size regression concern
+   at this grammar scale" is a judgment, not a pass/fail. A gate with no number cannot refute.
+6. **PROVE-11 caps the TS half at ~+5% dispatch.** The certified TS delta is allocation-shaped, not
+   dispatch-shaped; a 4B-TS fuser that isolates dispatch-elimination reproduces the small number.
+   "Beyond-SOTA for 4B-TS" is unsupported until the dispatch-vs-allocation isolation gate runs.
+7. **[latent] 4B-as-terminal vs 4B-as-build-time-backend-of-4A/4D unresolved.** In a Parsley-style
+   pipeline 4B is the *staging endpoint* of a reify→specialise flow, not a fourth co-equal terminal.
+   Whether 4B is elected as THE runtime or subsumed as the compile-mode of a graph family (Fork I) is
+   undecided and is a gestalt question.
 
 ---
 
-## 3. FAMILY 4C — VM-CORE — **convergence 35%**
+## 3. FAMILY 4C — VM-CORE — **convergence 28%**
 
-**Substrate real, headline claim untested, throughput unmeasured.** `SpanKind` is a genuine proto-VM one
-step short (tree-walk, native stack); `CompiledDfa(Arc<Dfa>)` proves half the leaf vocabulary is already a
-compiled machine. The disposition THROUGHPUT-OPEN is intellectually honest. But **not one line of a bytecode
-VM was written this pass**, and the family's *strongest and most distinctive* claim went untested.
+**No artifact touched its mechanism this pass, and PROBE-2 hardened the case against its throughput bid.**
+`SpanKind`/`CompiledDfa(Arc<Dfa>)` show half the leaf vocabulary is already a compiled machine — real. But
+not one line of a choice-point bytecode VM was written; PROBE-2 confirming 4B for Rust throughput means
+4C's own honest prior (a 0.7–0.9× loss, value-tier possibly 0.6×) is now *dominated on the axis it
+concedes*. 4C's remaining case is entirely on the non-throughput axes (iso-by-construction,
+TS-megamorphism-kill, one-register diagnostics, streaming) — and its cheapest, highest-signal,
+throughput-independent claim was skipped.
 
 **Enumerated open gaps:**
-
-1. **[from F-CRUX-1] PROTO-1 does not exercise 4C's mechanism.** A tree-walk arena is not a choice-point-
-   stack VM. 4C's own central risk (§5.1, prior 0.7–0.9×, recover via threaded code) is untouched. 4C
-   carries *no* throughput evidence; it must not inherit PROTO-1's.
-2. **The byte-identical-program oracle (gate 3) — the headline — is unbuilt.** "Isomorphism is a property of
-   the representation, strictly stronger than any LOCK-6 mirror-linter" is the family's differentiator, and
-   *nothing* serializes a program or decodes it in TS. This is the single cheapest, highest-signal thing 4C
-   could have proven this pass (it needs no throughput win), and it was skipped.
-3. **Span-tier-VM-vs-tree-walker paired bench (gate 1) unbuilt.** The falsifiable ≥0.98× / <0.9× gate that
-   would site the VM against the live `SpanParser` was not run.
-4. **Threaded-code recovery (gate 2) unbuilt.** The stated fallback for a naïve-loop loss is untested, so
-   "loss is recoverable" is an assumption.
-5. **Value-tier honesty (gate 5) unbuilt.** research-C §5.2's own warning — Span-tier 0.98× but value-tier
-   0.6× because every `Action` is an un-inlinable call — is exactly where 4C could collapse into 4B, and it
-   is unmeasured.
-6. **Packrat `MemoOpen/MemoCommit` + left-recursion seed-growing parity (gate 4) unbuilt.** research-C §5.4
-   flags LR parity as "the one genuinely subtle facility"; no oracle exists.
-7. **`proof:no-span-surface` non-reopening is asserted, not verified.** The argument "internal lowering
-   target ≠ public surface" is plausible but the TS gate was not exercised against a VM introduction.
+1. **The byte-identical-program iso oracle — 4C's differentiator — is unbuilt.** Nothing serializes a
+   program or decodes it in TS. This is the single cheapest thing 4C could have proven (needs no
+   throughput win), and it was not done. Its "strictly stronger than any LOCK-6 mirror-linter" claim is a
+   LOCK-6 verdict rendered inside LOCK-4 (spec-cites-itself / cross-lock over-reach) — and unexercised.
+2. **[cross-lock, verified] Bytecode-VM double-home.** `bbnf_ir` already ships a value-producing bytecode
+   VM (`crates/ir/src/vm/{bytecode.rs,compiler/,interpreter/}`). A parse-that-private LPeg ISA + two
+   interpreters is a *second* bytecode home — `no-orthogonal-codepaths` / `system-cohesion` forbid it. 4C
+   is only lawful if it *is* bbnf_ir's VM (which collapses it into 4D) or a private VM is justified
+   against LOCK-3's contract-tower. Unresolved.
+3. **Throughput is a loss-to-be-recovered with zero artifact.** The threaded-code recovery, the Span-tier
+   vs tree-walker paired bench, and the value-tier honesty check are all unrun. Do not import PROBE-2's
+   *closure-core* comparison, nor any tree-walk parity, as bytecode-VM evidence — different overhead
+   regime.
+4. **Value-tier collapse into 4B is an admitted, unowned escape.** If every `Action k` is an
+   un-inlinable indirect call, the value-tier resolves by *becoming 4B* (staging). A family whose value
+   plane converges by turning into another family has not converged as a terminal runtime.
+5. **Left-recursion seed-growth parity across rust/ts — the one genuinely subtle facility — untested.**
 
 ---
 
-## 4. FAMILY 4D — GRAMMAR-SUGAR — **convergence 30% (BLOCKED-candidate; the blocking analysis itself is high-confidence)**
+## 4. FAMILY 4D — GRAMMAR-SUGAR — **convergence 25% (BLOCKED; the block is high-confidence and unmoved)**
 
-**The BLOCKED disposition is correct and, unusually, well-converged — I verified its load-bearing facts.**
-`IrNode` carries **14 variants** matching the near-bijection table (`Literal/Regex/Epsilon/Seq/Alt/Repeat/
-Ref/Skip/Next/Minus/Negate/Map/OptionalWhitespace/TokenDispatch`); `FnDescriptor` has **`EnumWrap/BoxWrap/
-NumberConvert/HexConvert/SpanCapture/Expr{MapExpr}`** and **no opaque host-closure variant** — so 4D's
-central wall (must add `HostClosure`) is a **real, code-verified gap**, not a rhetorical one; `parse_with_ir`
-exists at `interpreter/mod.rs:373`. The Rust-side elegance ("re-homing, not rewrite") is genuine. The block
-is equally genuine: the constitutional rust/ts isomorphism (clause iii, non-negotiable) rests on a TS-
-execution primitive whose two horns are (i) a re-port of the grammar plane's execution engine — *a
-primitive of equal-or-greater difficulty than the original LOCK-4 problem* — and (ii) a WASM crossing
-PROVE-14 measured at **~0.91× on full-walk**, exactly the value-producing workload a combinator parser is.
-That is the constitution's "missing primitive equal in difficulty" trigger, correctly fired.
+**Rust-side near-bijection verified and elegant; the block equally verified and unmoved; PROBE-1 slightly
+de-risks the poison surface but PROBE-2 mildly weakens 4D's perf-differentiation story.** `IrNode` (14
+variants) matches the near-bijection table; `FnDescriptor` has `EnumWrap/BoxWrap/NumberConvert/HexConvert/
+SpanCapture/Expr{MapExpr}` and **no opaque host-closure variant** — so the central wall (must add
+`HostClosure`) is code-verified real; `parse_with_ir` exists at `interpreter/mod.rs:373`. On Rust alone,
+4D is the parsimony maximum — but elegance earns nothing on its own.
 
-**Enumerated open gaps (what would have to resolve to unblock, plus the intra-family unbuilt work):**
-
-1. **The TS-execution primitive is unresolved (the block).** Neither horn is retired: horn (ii)'s gate —
-   does the WASM-core crossing beat the PROVE-14 full-walk non-goal for a *value-producing* parse (not just
-   stop-early)? — is unmeasured; horn (i) is conceded equal-difficulty.
-2. **Cross-lock entanglement means 4D cannot converge inside LOCK-4.** It requires LOCK-5's ruling that
-   `bbnf_ir` is *genuinely* the shared substrate (else the "for free" optimizer/iso claim evaporates) and
-   LOCK-7's host-fn lattice for `HostClosure`. This is a hard dependency, not a soft one; 4D's ceiling this
-   pass is bounded by two other locks' verdicts.
-3. **4D's decisive number is unmeasured** (F-CRUX-1). No `parse_with_ir`-vs-closure paired bench; the
-   interpret-mode regression risk (research-D R1, the shim lesson) and the compile-mode win are both untested.
-4. **`FnDescriptor::HostClosure` + scoped-opacity guard unbuilt.** PROTO-2 argues the *current* sites don't
-   poison siblings, but the variant, the fn-table, and the applicative/selective/monadic tiering that keeps
-   `map`-on-result from defeating a branch's FIRST are all unbuilt.
-5. **State-effecting combinators (`peek/lookAhead/recover/mapState`) are outside the IR vocabulary.** The
-   "minimal lawful set of new variants vs `HostClosure`-with-state" is explicitly "must be measured, not
-   guessed" — and was not.
-
----
-
-## 5. PROTO-2 (CHAIN-MONADIC-CENSUS) — the substantive result holds; two soft edges
-
-The load-bearing result is **sound and I credit it**: every `chain`/`mapState`/`recover` site across the
-consumer suites fires *after a fixed-FIRST prefix parser* (the chain is on a **result**), so no site poisons
-an enclosing alternation's FIRST/dispatch — the poison-scope argument passes independent of the S/M tally.
-`mapState`=0, `recover`=0 call sites, and `map` is applicative-transparent by signature (verified: TS
-`map<T2>(f:(v:T)=>T2)`, Rust `fn map<O2>(self, f: fn(Output)->O2)` cannot return a `Parser`). Two edges to
-carry, neither fatal:
-
-1. **The gate's |M|≤3 pass depends on optimistic S-tagging of currently-monadic sites.** Sites 1–4 are
-   written as `chain` **today**; parse-that ships no `branch`/`select`. Tagging them **S** ("reformulable")
-   rather than **M** ("opaque as-is") is a claim about *potential*, not *current* analyzability — and it is
-   the difference between |M|=1 (pass) and |M|=5 (fail). The verdict should rest on the poison-scope
-   argument (which holds for all 5 regardless), not on the S/M arithmetic (which is soft). The elegant-
-   reduction risk: "reformulate the 4 S-sites as selective" reads as free but entails a **public-API
-   surface change** (add `branch`/`select`) *and* migrating external, read-only consumer repos — unowned work.
-2. **The census is a snapshot of today's grammars, not a property of the algebra.** "The analyzable subset
-   is effectively the WHOLE grammar … and any future parameterized-terminator rule" over-generalizes from 5
-   enumerated sites. Correct as measurement; the forward-looking clause is unearned.
+**Enumerated open gaps:**
+1. **The TS-execution primitive is unresolved (the block), and neither horn moved.** Horn (i) full port
+   of the grammar-plane engine to TS = a primitive of equal-or-greater difficulty than the original LOCK-4
+   problem; horn (ii) the WASM crossing, where PROVE-14 measured **~0.91× on full-walk value
+   materialization** — a LOSS on exactly the workload a value-producing combinator parser is (a measured
+   non-goal, not a bug). Neither was tested. The 4C-graft third horn (a small TS switch-loop decoder over
+   a serialized bbnf program) is unbuilt.
+2. **[F-4] PROBE-1 does NOT de-risk 4D's sharpest risk.** The value-model materialization tax (arbitrary
+   `.map` output ↔ tape-first codegen) is a value-plane question; PROBE-1 greenlit only structural
+   analyzability. 4D's blocking uncertainty is untouched by this pass's only census.
+3. **[from F-3, adverse] PROBE-2 mildly weakens 4D's differentiating perf claim.** 4D's staged-lane value
+   is "inherit bbnf's optimizer/prefilter for free." PROBE-2 just showed a **native monomorphization
+   (4B) buys 1.2× Rust with no bbnf IR at all** — so 4D's "for free" throughput advantage now competes
+   with a proven native route that needs none of bbnf's coupling. Fork-I evidence, gestalt-level, but it
+   cuts against 4D's headline.
+4. **Cannot converge inside LOCK-4.** Hard dependency on LOCK-5 (is `bbnf_ir` *genuinely* the shared
+   substrate? else "for free" evaporates) AND LOCK-7 (host-fn lattice for `HostClosure`, itself
+   unconverged). 4D's ceiling is bounded by two external verdicts.
+5. **`FnDescriptor::HostClosure` + state-effecting combinators (`peek/lookAhead/recover/mapState`)
+   outside the IR vocabulary; decisive `parse_with_ir`-vs-closure number unmeasured.** The minimal lawful
+   variant set "must be measured, not guessed" — it was not.
 
 ---
 
-## 6. Constitution sweep (within-lock)
+## 5. The two probes — hardened (within-lock)
 
-- **(i) Grammar totality** — respected; combinators are exempt; 4D's re-subordination risk is correctly
-  gated on "HIR *is* the shared substrate, not combinators grammar-generated." OK.
-- **(iii) Isomorphism** — the sharpest axis here. 4C claims the strongest form (byte-identical program) and
-  left it **untested** (§3 gap 2); 4D claims the strongest form (MessagePack data property) but **only Rust-
-  side**, TS blocked; 4A's is mirror-tree+linter, **TS unbuilt**; **4B's is the weakest (different codegen)
-  and is not enumerated as a gap** (§2 gap 4). No family has *demonstrated* iso this pass.
-- **(iv) Refutation laws** — PROTO-2 is correctly measurement-free. PROTO-1 respects cold/paired/mimalloc but
-  **not** the sample-level interleaving the PROVE-09 law motivates, at a distrust-band effect size
-  (F-CRUX-3). The specs correctly forbid stable-port/arena perf claims; no violation there.
-- **(v) Zero-runtime-cost types** — not materially exercised by LOCK-4 pass 1 (LOCK-1/8 territory); 4D's
-  `HostClosure` is a runtime slot, not a type-plane claim. N/A.
-- **(vi) Parsimony / one-path** — the incompatibility map correctly enforces a single terminal runtime. But
-  **PROTO-1 as-built violates one-path** (parallel `json_graph` + `json`), so the proto cannot be cited as
-  evidence of the single-tier collapse it is used to justify (F-CRUX-1, §1 gap 3).
-- **(vii) Concrete-or-SPEC-ONLY** — the substrate anchors are concrete and verified. The misuse is the
-  inverse of SPEC-ONLY-inflation: a **real** prototype cited for **three mechanisms it does not implement**
-  (tree-walk arena → 4C bytecode VM; private enum → 4D `bbnf_ir`; hand-fused → 4A general interpreter).
-- **(viii) Consumer-less substrate** — 4A/4C satisfied via `span_parser`'s live consumers; 4D via public-API
-  preservation; PROTO-1's `json_graph` is scratch-only (acceptable for a probe).
-- **(ix) Extant-tranche consciousness** — research-B §7 names the PT-2 W4 / PT-3 W4 supersessions explicitly.
-  OK.
+### PROBE-2 / PROTO-2-4B-FUSION — RAN, genuine, gate PASSED; four scope limits
+- **Credited.** Refutable (could have shown <1.10× or window/order asymmetry — the PROVE-09 failure
+   shape), and did not; the disasm gate is a hard, timing-independent proof (0 `blr` fused vs 60 closure).
+   The patch is faithful to the substrate (verified). The equivalence gate and recursion proof are real.
+- **Limit A (F-3):** baseline is a *synthetic* `SmallBox` core, not `json_parser()`; beyond-SOTA
+   unestablished.
+- **Limit B (F-1):** measured 4B-vs-closure only; "routes to 4B over 4A/4C" is inference, not a three-way
+   bench.
+- **Limit C:** Rust-only (iso 0% built); three corpora, not the six the gate names; median-only, no
+   dispersion/CI (the citm cells at 1.161–1.186× clear ≥1.10× by a thin ~5% margin under loadavg 8–17).
+- **Limit D (refutation-law edge):** the manual harness does a **3-rep, fused-only warmup** (`manual()`,
+   patch line 488–489) before the paired loop — asymmetric and mildly against the cold-only discipline,
+   though each timed rep is a genuinely cold full-document parse. Immaterial to the ≥1.10× verdict given
+   N=250 + median, but it should not be waved through as "purely cold."
+- **Requested correction:** re-label the verdict *"4B Rust throughput MECHANISM confirmed vs the boxed
+   closure core; beyond-SOTA (vs the tuned parser), the 4A/4C three-way, all-TS/iso, large-grammar
+   blowup, and the public-API realizability remain unmeasured."*
+
+### PROBE-1 / PROTO-1-MONADIC-WALL-CENSUS — RAN, honest, GREEN; robust where the prior census was soft
+- **Credited, and improved over the prior census.** The GREEN verdict **does not depend on the S/M
+   tally** — counting all 5 opaque sites, 5/952 = 0.525% ≤ 2%, and hot-path `chain`/`mapState` = 0. The
+   prior CRIT worry (the |M|≤3 pass rested on optimistic S-tagging) is largely dissolved: the threshold
+   holds even tagging every site opaque.
+- **Edge A (F-4):** greenlights the STRUCTURAL floor only; the value-plane floor (which 4D needs) is
+   untouched. "Analyzable subset is effectively the WHOLE grammar" over-reaches for value-liveness/cost.
+- **Edge B:** snapshot of today's grammars, not a property of the algebra (acknowledged). Surface is the
+   three consumer suites + parse-that json/csv/css — not parse-that's full test surface nor bbnf's
+   generated combinator usage. |M| is a lower bound over shipped consumers.
+- **Edge C:** the `S`-reformulability of the 4 value.js sites is *classified*, not *demonstrated* — none
+   was rewritten as `branch`/`select` and shown to preserve the parse; and such a rewrite is a public-API
+   change + read-only-consumer migration (unowned). Immaterial to GREEN (poison-scope holds regardless).
 
 ---
 
-## 7. Disposition for pass 2 (within-lock)
+## 6. Constitution & failure-mode ledger (within-lock)
 
-- The lock's real decision (single terminal runtime × ownership) **cannot be made on pass-1 evidence**: the
-  two numbers the incompatibility map says pass 2 needs (4A/4C general-interpreter value-plane, 4B inlining-
-  attributable win) were **both** untaken; PROTO-1 does not supply either.
-- **Cheapest high-signal pass-2 moves, in order:** (a) 4C's byte-identical-program oracle — no throughput
-  needed, proves/kills the headline; (b) re-run PROTO-1's value plane with the **general** `Node` union +
-  generic dispatch arms, sample-interleaved, so 4A's keystone is earned not assumed; (c) 4B's `cargo asm` +
-  paired generic-struct JSON, so its axis stops being a rumor.
-- **Do not** let the gestalt or a later pass inherit "4A/4C/4D single-tier VIABLE" as settled. What is
-  settled: *the value-plane `Map` indirection confines to scalar leaves* (narrow, real). What is open:
-  *whether the general analyzable interpreter — graph or VM — ties the closure core.*
+- **Vacuous convergence:** avoided — both probes are refutable gates that could have failed. But the
+   *lock-level* framing ("PROBE-1 + PROBE-2 clear the preconditions") is **elegant-reduction-adjacent**:
+   PROBE-2 resolved only the *throughput half of Fork II for Rust*; the terminal-runtime pick still reads
+   "and-then pick", and the hard part (Fork I graph HOME; the iso half of Fork II) is unconverged.
+- **Spec-cites-itself:** 4C's "byte-identical program strictly stronger than any LOCK-6 mirror-linter"
+   renders a LOCK-6 verdict inside LOCK-4 (§3.1). Milder than last pass on 4B (the "no runtime graph at
+   all" vs fallback tension is reduced but the TS opaque-site fallback is still unconceded).
+- **Gates that cannot fail:** 4B's generated-size/blowup gate has no quantified threshold (§2.5); PROBE-2
+   "reports" deltas against no budget.
+- **Prototype-evidence misuse:** PROBE-2's "routes to 4B" over-reaches a two-arm to a three-way fork
+   (F-1); "beyond-SOTA" is claimed of a synthetic-baseline win (F-3). The single sharpest correction for
+   pass-2.
+- **Masked fallbacks:** 4A's `lazy()`-recursion-seam guard unexercised (§1.7); 4B's public macro API does
+   not compile (E0282) and was side-stepped by hand-written structs (§2.3).
+- **Isomorphism (iii):** **0% built for every family** — the sharpest structural gap in the lock. 4B (the
+   Rust throughput winner) is weakest here; 4C claims the strongest form and left it unbuilt; 4A's is
+   mirror+linter (TS unbuilt); 4D's is blocked. No family has *demonstrated* iso this pass.
+- **Refutation laws (iv):** PROBE-1 correctly measurement-free; PROBE-2 cold-paired/two-window/both-order
+   (good) with the one warmup edge above (§5, Limit D). No stable-port / warm-throughput claim survives.
+- **Zero-runtime-cost types (v):** not engaged by LOCK-4 pass-1 (LOCK-1/8 territory). N/A.
+- **Consumer-less substrate (viii):** satisfied — probes are scratch/read-only; 4A/4C/4D preserve live
+   consumers. The inverse risk (4A/4C stand up substrates duplicating bbnf_ir's live `vm/`+`egraph/`) is
+   a Fork-I / gestalt matter, correctly flagged, not a within-lock resolution.
+
+---
+
+## 7. Disposition for pass-2 (within-lock)
+
+- **What is newly SETTLED (do not re-litigate):** on Rust, removing `SmallBox<dyn>` box dispatch from the
+   structural combinator traversal via monomorphized `Seq/Alt` structs buys **16–27%** over the boxed
+   closure core, with the vtable `blr` provably gone. The 4B *mechanism* is confirmed.
+- **What is NOT settled (do not inherit):** that 4B beats the *shipped tuned parser* (beyond-SOTA); that
+   Fork II "routes to 4B" over 4A/4C (only 4B-vs-closure was measured); anything TS / isomorphic; 4B's
+   behaviour at real-grammar scale; and the terminal-runtime pick (Fork I is untouched).
+- **Cheapest high-signal pass-2 moves, in order:** (a) the **three-way Rust bench** — 4B monomorphized vs
+   4A extracted-fused-region closures vs 4C bytecode VM, over the same JSON grammar, so Fork II is
+   *measured* not inferred (F-1/F-2); (b) run 4B against the **production `json_parser()`** (dispatch +
+   SIMD on both arms) to convert mechanism→deliverable (F-3); (c) produce **ONE TS number** — the
+   constitution-iii half is 0% built for all four; (d) build 4A's `fuse(Graph)→Graph` and run G-A2 — the
+   claim 4A rests on and has never exercised.
+- **Do not let the gestalt inherit "FORK II routes to 4B" as a three-way result** — it is a two-arm
+   measurement plus an inference. And do not freeze LOCK-4's terminal runtime ahead of LOCK-6 (iso) and
+   LOCK-5 (substrate); Fork I remains the deepest, wholly-untouched incompatibility.
+
+**Per-family convergence: 4A 45% · 4B 50% · 4C 28% · 4D 25% (BLOCKED, Rust-elegant, TS-blocked).**

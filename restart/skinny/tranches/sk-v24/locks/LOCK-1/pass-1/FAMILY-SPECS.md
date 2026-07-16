@@ -1,372 +1,330 @@
-# LOCK-1 — THE SOLVER SPINE · pass-1 · FAMILY SPECS (synthesis)
+# LOCK-1 — THE SOLVER SPINE · pass-1 · FAMILY-SPECS (synthesis, post-prototype)
 
 *Type inference & solving for the bbnf grammar plane: `->` projections, document shapes,
-sums/products, capacities, numeric widths, decode classes — inferred, solved, erased to
-zero runtime cost, with grammar-sourced diagnostics. GN-3's three walls are the floor.*
+sums/products, capacities, numeric widths, decode classes — inferred, solved, erased to zero
+runtime cost, with grammar-sourced diagnostics. GN-3's three walls are the floor.*
 
-One cogent spec per family while routes remain incompatible, then the incompatibility map.
-Elegance earns nothing on its own; a family stalled at a missing primitive equal in
-difficulty to the original problem is marked BLOCKED-candidate. Verified against source, not
-taken on the reports' word (§0).
+One cogent spec per family while the routes remain incompatible, then the incompatibility map.
+Elegance earns nothing on its own; a family stalled at a missing primitive equal in difficulty
+to the original problem is marked BLOCKED-candidate. Verified against source (§0) and against
+the two prototypes this pass ran — PROTO-1 (judgment-mix census) and PROTO-2 (1D injectivity) —
+so the dispositions are *measured*, not asserted (Constitution vii).
 
 ---
 
 ## 0. THE DECISIVE FACT THE CHARTERS SPLIT ON — verified, and it re-frames the whole lock
 
 The four charters silently reference **two different code lineages**, and the prior-art
-report's sharpest constraint (its C4: *"Current CSP consumer = LOCK-2, not LOCK-1 … families
-1B/1D inherit no type-plane consumer … forbidden consumer-less substrate"*) is **factually
-false for the tree the greenfield is being cut from.** Verified this pass:
+report's sharpest constraint (C4: *"families 1B/1D inherit no type-plane consumer … forbidden
+consumer-less substrate"*) is **factually superseded for the tree the greenfield is cut from.**
+Confirmed on disk this pass:
 
-- **`skinny/crates/` (retired lineage).** Carries 1A's dormant HM scaffold —
-  `passes::types::TypeFacts { subst: Substitution, obligations: Vec<TypeObligation{ span,
-  solver_stage } }` (`skinny/crates/passes/src/lib.rs:126-145`), **populated by nothing**; the
-  `->` discard is verbatim at `:204` (`ExprKind::Project { body, .. } => self.infer_expr(*body)?`).
-  This scaffold is *itself* consumer-less substrate today (a Y.13 violation), which 1A's
-  activation repairs. This is the lineage 1A and 1C target.
+- **`skinny/crates/` (older lineage).** Carries 1A's dormant HM scaffold —
+  `passes::types::TypeFacts { subst, obligations: Vec<TypeObligation{ span, solver_stage }> }`
+  (`skinny/crates/passes/src/lib.rs:126-145`), **populated by nothing**; the `->` discard is
+  verbatim at `:204`. This scaffold is *itself* consumer-less substrate today (a Y.13
+  violation) that 1A's activation repairs. 1A and 1C target this lineage.
 - **root `crates/` (live lineage).** Carries a **running CSP type inference** —
   `crates/ir/src/passes/types/constraint/{domain,alt,seq,operators,reference,grounds,revise}.rs`,
-  driven by `project_types()` → `csp.propagate()` (`crates/ir/src/passes/types/mod.rs:51,67`),
-  emitting `TypeDesc::HeterogeneousAltJoin` (`crates/ir/src/types/type_desc.rs:63,209`),
-  threaded through `GrammarIR::type_obligations` (`grammar.rs:428`) into **both backends**
-  (`core/src/backend/rust/{ir_types.rs:342, emitter/registry_emit.rs:198}`,
-  `core/src/backend/ts/{projection.rs:37, emitter/grammar.rs:30}`), asserted end-to-end
-  (`core/tests/{types_heterogeneous_alt,project_types_json,project_types_css_l4}.rs`,
-  `ir/tests/lattices/types.rs`). This is the lineage 1B targets — **it is not speculative
-  substrate; it is the type system of record that already ships.** The e-graph engine 1D wants
-  (`crates/egraph/` + `csp_scheduler.rs`) is equally live, with a working `Language` consumer
-  (`crates/ir/src/egraph/node.rs`).
+  driven by `project_types()` → `csp.propagate()` (`types/mod.rs:51`), emitting
+  `TypeDesc::HeterogeneousAltJoin` (`types/type_desc.rs:63,209`), threaded through
+  `GrammarIR::type_obligations` (`grammar.rs:428`) into **both backends**
+  (`core/backend/rust/ir_types.rs:346`, `core/backend/ts/projection.rs:40`), asserted
+  end-to-end (`ir/tests/lattices/types.rs:521`). **It is the type system of record that already
+  ships.** The e-graph engine 1D wants (`crates/egraph/` + `csp_scheduler.rs`) is equally live,
+  with a working `Language` consumer (`crates/ir/src/egraph/node.rs`) — but **no type Language
+  (`TypeENode`) exists yet**; 1D's third tier is genuinely net-new.
 
 **Consequence.** The lock is not "green HM core vs three exotic proposals." It is a genuine
-**engine-of-record fork**: a *proven-elsewhere* union-find HM core (1A/1C, PROVE-08 + skinny
-scaffold) versus an *already-running-here* lattice-CSP inference (1B) versus an
-*already-shipping-engine* e-graph (1D). C4's "consumer-less" veto **does not bind 1B or 1D**;
-the honest gate on all four is the prior-art report's *other* verdict (its §2G, §4.3, R-B4):
-**is the non-equality residue rich enough to justify any solver beyond an ordered defaulting
-lattice?** That single question — not a metatheory dispute — adjudicates the fork, and it is
-measurable now (Brief 1).
+**engine-of-record fork**: a *proven-elsewhere* union-find HM core (1A/1C) versus an
+*already-running-here* lattice-CSP inference (1B) versus an *already-shipping-engine* e-graph
+whose type tier is net-new (1D). C4's consumer veto **does not bind 1B or 1D**. The honest gate
+on all four became the prior-art report's *other* verdict (§2G/§4.3/R-B4): **is the
+non-equality residue rich enough to justify any solver beyond an ordered defaulting lattice?**
+That question was **measured this pass — PROTO-1 — and the answer is NO** (§0.1).
+
+**A second verified fact:** the in-tree `.bbnf` grammars (`json`, `css/pretty`, `google-sheets`,
+`bnf/ebnf/bbnf`) carry essentially **zero `->` projections**; the typed per-document grammars
+(twitter/citm/canada) GN-3.W3 names **do not yet exist**. Row-polymorphism (1A) and diagnostic
+locality (1C) therefore have **no corpus to be measured on** — both are currently unfalsifiable
+and sequence *behind* GN-3.W3 authoring typed grammars.
+
+### 0.1 The measured verdict — PROTO-1 (residue census over the live root pass)
+
+PROTO-1 instrumented the **live** `project_types` constraint generation over the four real
+corpora (JSON, CSS L4, Sheets, BBNF), tagging every propagator by judgment kind and reading the
+homogeneous/heterogeneous split from *ground truth* (`join_types` → `HeterogeneousAltJoin`):
+
+| grammar | eq+sum-shape | **genuine multi-valued residue** (hetero-alt) | overload/cost |
+|---|---:|---:|---:|
+| JSON | 82.0% | **2.0%** | 0 |
+| CSS L4 | 89.1% | **0.3%** | 0 |
+| Sheets | 89.2% | **0.0%** | 0 |
+| BBNF | 89.4% | **0.0%** | 0 |
+
+Genuine multi-valued residue is **≤2.0% in every grammar** (an order of magnitude under the 15%
+RICH bar); **overload/cost residue is exactly 0** everywhere. Wide alternations exist (CSS
+`declaration` fans to arity 28) but **collapse to a single homogeneous type — arity is not
+richness**. The width/capacity/decode buckets are all **deterministic monotone functions** (one
+fixed decode per site, one tuple arity, one bound), never a >1-candidate search. **Verdict:
+THIN.** The store never holds a variable needing search or cost to choose. **This retires the
+justification for both 1B's one-store and 1D's cost-extraction on the evidence** — not on
+metatheory, on measured constraint counts. Record **1A + an ordered defaulting lattice** as the
+surviving spine.
 
 ---
 
-## FAMILY 1A — UNIFICATION-FIRST (the HM core grows) · disposition: VIABLE
+## FAMILY 1A — UNIFICATION-FIRST (the HM core grows) · disposition: **ADVANCE (the spine)**
 
-### Architecture
-One Hindley–Milner inference over an open, structural type language, in the generator. Every
-`->` drives first-order unification; every rule is a let-generalized scheme; document shapes
-are **row-polymorphic records** (Leijen scoped labels — JSON permits duplicate keys, and
-skinny already carries `DuplicatePolicy::LastWins`). Unification is the decidable, principal,
-terminating **trunk**; the vendored `csp-solver` is a **bounded post-solve** for the genuine
-residue only (widths, decode-class/overload, capacity). This is HM(X)/OutsideIn(X) verbatim:
-generate equality constraints by unification, defer the theory constraints, solve them in a
-finite/lattice domain X. It is the exact shape the prior-art convergent verdict (§5) endorses.
+**Architecture.** One Hindley–Milner inference in the generator, HM(X)/OutsideIn(X) verbatim:
+first-order union-find unification is the decidable, principal, terminating **trunk**; the
+vendored `csp-solver` — or, per PROTO-1/§2G, an **ordered defaulting lattice** — is a bounded
+post-solve for the genuine residue only (widths, decode-class/overload, capacity). Document
+shapes are row-polymorphic records; rules are let-generalized schemes; recursion is
+iso-recursive **nominal folding** (`unify(Rule i, Rule j)` compares ids, never descends).
 
-### Mechanism
-Fuse skinny's two half-built type reps into one monotype in `passes`: grow
-`passes::types::Type` with `Prod(ρ)`/`Sum(ρ)` over a row `ρ = {l:τ… | r}`; port PROVE-08's
-proven union-find `unify`/`find`/`bind`/`resolve` (patch.diff:255-353) verbatim for the leaf
-half; add Robinson decompose arms for `List`/`Option`/`Prod`/`Sum`; `unify(Rule i, Rule j) =
-i==j` is the **iso-recursive nominal fold** — unification never descends through a rule
-boundary, so the mutually-recursive `value` types without an occurs-check divergence. Rows
-unify by label-splitting; the open tail `r` *is* `DirectTypeKind::Struct{unknown_fields:Skip}`
-promoted from policy-enum to type-theoretic object — **Wall 1 falls by openness, not by
-exhaustive per-document closure.** `Rule(id)` becomes a `let`-scheme: `generalize(infer(body))`
-+ `instantiate` at each `Ref`; SCCs seeded monomorphic, generalized after the fixpoint (the ML
-recipe). The `->` arm becomes the bidirectional driver (ascription checks, bare target
-synthesizes via `classify_arrow`), replacing the `:204` discard.
+**Mechanism.** Fused monotype `τ ::= Var|Leaf|List|Option|Prod(ρ)|Sum(ρ)|Rule(id)`, rows
+`ρ={l:τ…|r}`. `unify` grows the Robinson arms; the six-arm `value` sum unifies
+order-insensitively (GN-3 R5 free from row theory). Rule bodies `generalize(infer(body))`;
+`Ref` instantiates fresh; recursive SCCs seeded monomorphic, unified, then generalized.
+Widths/overloads become `TypeObligation`s solved *after* structural generalization (rustc-style
+late defaulting).
 
-### Substrate & seams (each with an in-wave consumer — Y.13)
-Activate `TypeFacts.subst`/`.obligations`; replace the pure fold `infer_expr`
-(`skinny/…/lib.rs:178-231`); new `types/{row,scheme,solve_annotations}.rs`; grow
-`schema/direct_schema.rs:52` with `DirectTypeKind::Sum` + a width field on `DirectScalar`; feed
-`json_typed_direct.rs`. Delete the parallel `codegen::type_plane::hm::Ty` duplicate — the
-union-find core moves into `passes`, `codegen` becomes a consumer (repairs the R6 §5 two-systems
-split). Width/overload/capacity route into `obligations` under `solver_stage ∈
-{"width-csp","overload-csp"}`, solved over `csp-solver`'s `BitsetLatticeDomain` +
-`CostFiniteDomain` — **or, per prior-art §2G/§4.3, an ordered defaulting lattice**, which the
-census (Brief 1) may show suffices without a CSP at all.
+**Integration seams (skinny lineage).** Activate `TypeFacts.subst/.obligations`
+(`skinny/…/lib.rs:126-145`); replace the fold (`:178-231`) and `->` discard (`:204`); nominal
+seed → scheme (`:172`,`:195-201`); grow `DirectTypeKind::Sum` + `DirectScalar` width
+(`schema/direct_schema.rs:52`); reuse PROVE-08 `hm.rs` union-find + `classify_arrow` verbatim.
 
-### Gates it carries
-(i) recursive `value` infers one 6-variant `Sum`, terminating, order-insensitive (rows are
-unordered — GN-3 R5 for free); (ii) open row absorbs extra JSON keys while closed fields check;
-(iii) let-gen: a shared `pair`/`entry` rule instantiated at two field types does **not** unify
-its payloads; (iv) width post-solve recovers PROVE-08's admitted `U8Tag→U32` loss to `u8`;
-(v) ascription clash raises a unify error carrying the arrow `SourceSpan`; (vi) `codegen`
-duplicate deleted, `git diff crates/runtime/` empty, derive wall-time within noise of GN-3's
-~230µs.
+**Gates.** (G1) recursive `value` terminates → one 6-variant sum, ~230 µs floor held. (G2) open
+row absorbs extra keys without a closed per-document grammar. (G3) generic `pair`/`entry` at two
+field types does not cross-unify. (G4) width post-solve recovers PROVE-08's `U8Tag→U32` loss →
+`u8`. (G5) `git diff crates/runtime/` empty; the second type system (`type_plane::hm` **or** the
+running root CSP) is deleted, not coexisted. (G6) ascription clash names the arrow span.
 
-### Exact open questions
-- **Row discipline: Leijen scoped-labels vs Gaster–Jones lacks-predicates.** The report splits
-  — raw JSON duplicates keys (Leijen) but a *derived struct schema* wants uniqueness
-  (Gaster–Jones). 1A must pick one and state it; "records, informally" re-derives Wand's
-  principal-type bug (prior-art §2C, trap 2). **Unresolved.**
-- **Is the width residue a CSP or a defaulting lattice?** Prior-art §2G calls width *defaulting,
-  not search*; over-modelling it as CSP is the named over-engineering trap. Depends on the
-  judgment-mix census (Brief 1). **Unresolved — but cheaply.**
-- **Generalization criterion (value restriction).** Rules are pure schema producers so the risk
-  is low, but the criterion must be explicit (prior-art trap 4). **Named, not yet stated.**
-
-### Why not BLOCKED
-No missing primitive: the union-find core is proven (PROVE-08 CONFIRMED_DELTA), the scaffold
-exists, every wall-cure is a known arm of Robinson + row theory. Its residue solver has a cheap
-fallback (defaulting). Solidly viable; it is the prior-art report's endorsed spine.
+**Exact open questions.** (O1) **Row discipline: Leijen (duplicate labels) vs Gaster–Jones
+(uniqueness).** research-A picks Leijen; priorart §2C argues a *derived struct* wants
+uniqueness. Wand's overwrite bug lurks either way (and — see §1B.O1 — *already ships* in the
+root join). Unresolved, principal-type-critical, but **currently unmeasurable** (no typed
+grammars). (O2) Is the width residue a lattice-CSP or **ordered defaulting**? PROTO-1 §2G:
+overload/cost residue is exactly 0 → **defaulting dominates; the CSP is over-engineering for
+widths.** (O3) **Lineage displacement:** 1A re-seeds an equality engine the greenfield may have
+already chosen (the running root CSP). 1A's win requires *deleting running root code* — an
+in-scope-migration question, the family's quietest liability.
 
 ---
 
-## FAMILY 1B — ONE-CONSTRAINT-STORE · disposition: VIABLE (with one confirmed defect)
+## FAMILY 1B — ONE-CONSTRAINT-STORE · disposition: **ADVANCE the federation as system-of-record; BANK the single-store thesis (BLOCKED-candidate)**
 
-### Architecture
-Every judgment — leaf equality, shape, sum membership, width, capacity, decode class, cost — is
-a constraint over inference variables in one engine under one propagation discipline.
-Unification is **not** a separate algorithm; it is equality propagation *as a lattice join*
-inside the `csp-solver` store, driven to a fixed point by `propagate_monotonic`. This is
-HM(X)=CLP(X): type inference is constraint solving over the parametric domain X, and X is the
-vendored solver. **The decisive differentiator from every sibling: 1B is not a proposal — it is
-the running type system of record in root `crates/`** (§0). Its work is to *name* that
-architecture, close its open judgment kinds, and refuse to resurrect a second (union-find) core.
+**Architecture.** Every judgment is a constraint over inference variables, one engine
+(`csp-solver`), one discipline (`propagate_monotonic`, the LLVM-style *Changed* sweep);
+unification = lattice join. HM(X)=CLP(X). **Uniquely, not a proposal — the running root tree**,
+to be named, completed, and *hardened*, not invented.
 
-### Mechanism (verified running)
-`TypeDomain { solved: Option<TypeDesc> }` implements `LatticeDomain`: `bottom()=None`,
-`join` assigns on `None→Some` (a bottom→ground unification step). One propagator family per
-grammar former (`alt`→sum/join, `seq`→product, `reference`→referent, `operators`→Vec/Option,
-`grounds`→leaf); `revise.rs` lifts heterogeneous alternations that cannot collapse to a
-homogeneous payload into `HeterogeneousAltJoin`, recorded as a **named obligation** carrying
-the branch types + grammar node id (the diagnostics-first channel, drained at convergence).
-AC-3 `propagate()` resolves it with no search/backtracking on the equality core (`mod.rs`
-docstring: *"no search/backtracking needed"*) — which is precisely how 1B **sidesteps the Swift
-exponential-blowup trap** (prior-art §2B): equality stays in monotone propagation, never in
-disjunction search. Widths/capacities are the net-new work: `CostFiniteDomain` variables in a
-coupled `Csp`, `solve_optimized` branch-and-bound — the same pattern `decision_csp.rs` already
-runs for backend shape.
+**Mechanism.** Generation walks the IR emitting one propagator per former into
+`Csp<TypeDomain>` (`TypeDomain=Option<TypeDesc>`, `join` grows ⊥→ground); under-determination
+drains as a named `TypeObligation` (`HeterogeneousAltJoin`). Remaining kinds are net-new domains
+in the same engine (width `CostFiniteDomain`+`solve_optimized`, decode-class finite domain).
 
-### Substrate & seams
-All live: `constraint/domain.rs` (the join cell), the per-former propagators, `obligation.rs`
-(`TypeObligation{UnresolvedCompoundRef, HeterogeneousAltJoin}` + `ObligationSink` — an
-`Rc<RefCell<…>>` the csp-solver was *deliberately reshaped upstream to admit*, the `ThreadSafe`
-vacuous marker at `csp-solver/…/traits.rs:19-50`), `type_desc.rs:209`, the two backend
-consumers. Net-new domains — width `CostFiniteDomain`, decode-class `FiniteDomain`, capacity
-cost var — all ride existing `LatticeDomain`/`Constraint`/`CostDomain` public traits: **stay on
-the consumer side; any engine change is a csc411 tranche, not a bbnf hand-patch** (the vendor
-sync gate is byte-diffed).
+**Integration seams (root lineage — already wired).** Grow `TypeDomain::join`
+(`constraint/domain.rs`); add propagators in `constraint/*.rs`; extend `obligation.rs`; land
+`TypeDesc::Sum` beside `HeterogeneousAltJoin`; keep the shipping backend consumers fed. Engine
+stays vendored — additions consumer-side; any engine change is a csc411 tranche.
 
-### Gates it carries
-(i) the six-arm alternation yields one canonical **order-insensitive** sum; (ii) two
-incompatible arrows on one rule yield a **clash obligation, not last-writer-wins**; (iii) the
-judgment-mix census shows the non-equality residue is non-trivial (else 1B collapses toward 1A
-and must say so — R-B4); (iv) the store-shape decision (federated vs single sum-domain) is made
-with a *measured* reason; (v) `git diff crates/runtime/` empty.
+**Gates.** (G1) six-arm alt → one order-insensitive canonical sum. (G2) **two incompatible
+arrows on one rule raise a clash obligation, not last-writer-wins — presently RED** (O1). (G3)
+width via `solve_optimized`, bounded. (G4) residue census RICH — **FALSIFIED by PROTO-1 (≤2%
+everywhere)**. (G5) runtime diff empty. (G6) obligations name spans.
 
-### Exact open questions
-- **R-B2 — CONFIRMED DEFECT (not a risk — a bug in live code).** `TypeDomain::join`
-  (`constraint/domain.rs:66-75`) has the arm `(Some(existing), Some(ty)) if existing != ty => {
-  self.solved = Some(ty.clone()); }` with the comment *"may refine types during convergence."*
-  This is **last-writer-wins on a genuine unification clash** — non-monotone (not a lattice
-  join), order-dependent, and a **silent overwrite where `no-silent-epsilon` demands a raised
-  obligation.** Two `->` arrows declaring incompatible leaves are silently reconciled instead of
-  reported. This must become a fail-explicit obligation; refinement reserved for bottom→ground
-  only. **The sharpest concrete finding of this pass.**
-- **R-B1 — the monomorphic-`Csp<D>` wall.** `Csp<D>` holds one domain; a literally-single
-  heterogeneous store needs either a sum `JudgmentValue` domain (a tag-branch per revise,
-  fighting the type system) or a **federation** (one typed `Csp` per lattice, sequenced by
-  `solve_with_given`). The tree runs the federation. "One store" then honestly means *one engine
-  + one obligation channel + one discipline*, not one variable arena. The decode-class-depends-
-  on-sum-variant counterexample forces the decision. **Unresolved — needs a prototype, not paper.**
-- **R-B4 — worth it over union-find for equality alone?** For pure equality, union-find is
-  asymptotically better than the worklist re-scan. 1B's win is *only* that widths, capacities,
-  classes, cost, FIRST/FOLLOW, and dispatch are already one substrate. If the census shows
-  equality dominates and residue is singletons, 1B collapses to 1A. **Measurable — Brief 1.**
+**Exact open questions.** (O1 — **the confirmed shipping defect**) `TypeDomain::join`
+(`constraint/domain.rs:72-77`) **allows re-assignment to a different type on disagreement**
+("the solver may refine") — **non-monotone last-writer-wins = Wand's principal-type-losing bug
+(priorart trap 2) in production**, silently swallowing a genuine clash (violating
+no-silent-epsilon). Must become raise-on-disagreement; refinement reserved for ⊥→ground only.
+**Un-run this pass — Brief 1 targets it.** (O2 — the R-B1 wall) `Csp<D>` is monomorphic; a
+literal single heterogeneous store needs a tag-dispatched `JudgmentValue` domain (a per-revise
+branch fighting Rust) or a **federation** (one `Csp` per lattice). The tree runs federation →
+"one store" reduces to "one engine + one obligation channel + one discipline," **the thesis
+defeated in its literal form, and the federation IS 1A's stratification wearing a CSP coat.**
+(O3) PROTO-1 shows the residue is THIN → 1B buys nothing a defaulting lattice does not; its win
+was only the shared substrate, now vacuous.
 
-### Why not BLOCKED
-No missing primitive — it runs. Its open questions are bounded engineering (a bug fix, a
-store-shape choice), not a problem equal in difficulty to inference itself. But its *distinctness*
-from 1A is contingent on R-B4: a thin residue retires 1B's thesis, not its code.
+**BLOCKED-candidate:** the literal single heterogeneous store admits no primitive short of
+per-revise tag dispatch (R-B1) — a wall of the same character as the problem. The federation
+survives but *is 1A*. Its equality is **unsound as shipped** (O1).
 
 ---
 
-## FAMILY 1C — BIDIRECTIONAL-LOCAL · disposition: VIABLE (distinctness falsifiable)
+## FAMILY 1C — BIDIRECTIONAL-LOCAL · disposition: **FOLD (diagnostics/locality layer over the winner)**
 
-### Architecture
-Two judgments per rule — SYNTHESIZE (`⇒`, read a type off structure) and CHECK (`⇐`, verify
-structure against a declared `-> T`). Pfenning recipe (Dunfield–Krishnaswami): intro forms
-check, elim forms synthesize, a single subsumption site is *the sole place a type error is
-raised*. The organizing thesis and the reason it is a distinct center: **the expected type is
-in hand at the failure site, so every diagnostic names the exact grammar span** — error
-locality is a structural property of the algorithm, not a message afterthought. Rule-local;
-"global" is bounded to the SCC condensation of the `Ref` graph.
+**Architecture.** Synthesize (⇒) / check (⇐) per the Pfenning recipe; one subsumption
+reconciler as the sole error site; "global" bounded to SCC condensations of the `Ref` graph
+solved by a `Changed`-flag fixpoint; widths hand off to a bounded lattice. Thesis: the expected
+type is known at the failure site → **every diagnostic names the exact grammar span.**
 
-### Mechanism
-Rename skinny's `infer_expr` to `synth_expr` (it is already the synthesis half in embryo); add a
-dual `check_expr(ExprId, &Expected) -> Result<(), TypeError>`; the two are mutually recursive.
-The `:204` `Project` arm becomes the **mode switch**: `ty:Some(A)` ⟹ `check(body, resolve(A))`,
-bare ⟹ `synth` via `classify_arrow`. The `Ref` arm consults a `RuleSig: HashMap<RuleId, Type>`
-populated in **reverse-topological SCC order**; an acyclic rule is purely local, a cyclic SCC
-(json's `value/object/array/pair`, 4 rules) is a **bounded local fixpoint** with a `Changed`
-flag — *this* is the precise reading of "global solving only at cross-rule seams." Structure is
-pinned by checking; numeric width/overload is a bounded lattice post-solve at the subsumption
-seam (subtype-join over `u8≤u16≤u32≤u64`, MLsub-style — **not** equality-unify, which would
-spuriously clash `-> 0u8` against `-> 70000`).
+**Mechanism.** Split `infer_expr` → `synth_expr` + `check_expr(ExprId,&Expected)`; `Project`
+becomes the mode switch; `Ref` consults `RuleSig` in SCC order; the reconciler reuses PROVE-08's
+`Unifier` for equality and a subtype-join at the numeric case.
 
-### Substrate & seams
-`synth`/`check` split on `Infer`; `RuleSig` + SCC pre-pass over the `Ref` graph;
-`TypeError{span, expected, got, rule}` + a new `PassDiagnosticCode::TypeMismatch`; the
-subsumption reconciler reuses PROVE-08's `Unifier` for equality and `classify_arrow` for
-bare-leaf synth; width post-solve over `BitsetLatticeDomain`. **Named substrate gap (R-C5):**
-`PassDiagnostic` (`skinny/…/diagnostics.rs`) is `RuleId`-only, *no span* — 1C must add
-`span: Option<SourceSpan>` and thread `Expr.span`/`Rule.span`. Consumers: the mode-switch arm,
-`derive_materialization_plan` filling `DirectBuildField.target`, the .bbnf-anchored error report
-(the family's headline artifact).
+**Integration seams (skinny lineage).** `infer_expr` split (`:178-215`); `Ref`→`RuleSig`
+(`:201`); `Project` mode switch (`:204`); SCC pre-pass (`:149`); **`PassDiagnostic` gains a
+`span` field** (`diagnostics.rs:3-8` is `RuleId`-only — a named substrate gap).
 
-### Gates it carries
-(i) the mode switch replaces the discard *via checking*, filling non-`None` targets for the four
-leaf rules; (ii) **the diagnostic head-to-head** — an erroneous `string -> decode_...(input) :
-Bool` reports `TypeError.span == Project.SourceSpan` under 1C while unify-first reports at a
-synthesized interior; (iii) the SCC census: json's 4-rule cycle solved by bounded fixpoint,
-leaf rules purely directional; (iv) width CSP terminates in one AC-3 pass; (v) sheets regen
-byte-identical after the `ProjectionKind` fold retires; `git diff crates/runtime/` empty.
+**Gates.** (G1) mode switch fills `DirectBuildField.target` non-`None`. (G2 — the justifying
+experiment) on an erroneous typed grammar, `check_expr`'s `TypeError.span` equals the `Project`
+span while unify-first reports at a synthesized interior. (G3) json's `value/object/array/pair`
+land in one SCC; SCC-local reconciliations are a handful. (G4) width lattice → `u32` in one AC-3
+pass. (G5) runtime diff empty; sheets regen byte-identical.
 
-### Exact open questions
-- **R-C2 — the bidirectional critique, self-admitted.** `grammars/json.bbnf` has **zero `->`**;
-  with nothing to check against, 1C *degenerates to pure synthesis = 1A*. Its distinct value
-  exists **only on typed grammars** (GN-3 W3's twitter/citm/canada `->` chains). The honest
-  claim — *on generic json, 1C ≡ 1A; on typed grammars, 1C localizes where 1A does not* — is
-  **falsifiable and unproven.** If unify-first reports the same span on the same erroneous
-  grammar, 1C carries no distinct value and folds into 1A. **This is the family's make-or-break
-  and it is measurable (Brief candidate).**
-- **R-C4 — subtyping-not-equality at the seam.** Getting the numeric case wrong collapses 1C into
-  spurious-clash (too strict) or lost-width (too loose). The join must be MLsub subtype-join,
-  equality-unify reserved for non-numeric leaves. **Design-fixed, not yet built.**
-- **R-C3 — span granularity.** `Project.ty` is one `String`; a wrong ascription should underline
-  the `T`, but `Project` carries only whole-expr span. Sub-span is the quality ceiling.
-  **Named gap.**
+**Exact open questions.** (O1 — the bidirectional critique) with **zero `->` in the real
+corpus**, 1C degenerates to pure synthesis = 1A; its value materializes only on typed grammars
+that **do not yet exist** → G2 **cannot run** until GN-3.W3 lands. (O2) Is 1C an engine family
+at all, or a discipline layer over 1A's union-find (which it reuses verbatim)? Per the
+Constitution's shared-mechanism rule, **1C = 1A + a checking front + an SCC seam + a span
+field**, orthogonal to the engine axis (§5). (O3) Sub-span granularity: `Project.ty` is one
+`String`; a `ty_span` sub-span is the quality ceiling.
 
-### Why not BLOCKED
-No missing primitive — it is 1A's Unifier plus a checking overlay plus an additive span field.
-The risk is not blockage but **redundancy**: 1C is a strict superset of 1A that must *earn* its
-separate identity on the diagnostic axis, or be absorbed as 1A's diagnostics layer.
+**Not blocked; not an engine family.** Fold as the diagnostics plane over whichever equality
+engine wins; bank the `PassDiagnostic.span` gap and the SCC seam regardless.
 
 ---
 
-## FAMILY 1D — TYPES-AS-ECLASSES · disposition: VIABLE-AT-RISK (idle-machinery caveat)
+## FAMILY 1D — TYPES-AS-ECLASSES · disposition: **BANK — narrow recursion-axis keep only; cost-extraction VACUOUS on the evidence**
 
-### Architecture
-The type lattice lives in an e-graph. Unification = congruence closure + injective
-decomposition; recursive sums are native cyclic class graphs (no occurs-check, no μ-binder);
-width is an analysis-lattice fact on one leaf class; a representative type is chosen by
-cost-model extraction. The claim: the **already-shipping** `crates/egraph` engine (union-find +
-hashcons + `rebuild` congruence + `Analysis` monotone lattice + `Extractor` + `csp_scheduler`)
-subsumes the bespoke HM core and reaches all three GN-3 walls with **zero new engine** — only a
-third `Language`. Type inference becomes the third instance of a proven saturated pattern
-(GrammarENode, RegexENode, TypeENode).
+**Architecture.** The type lattice lives in an e-graph; unification = congruence closure +
+constructor injectivity; recursive sums are native cyclic class graphs (no occurs-check, no
+μ-binder); widths are an analysis-lattice fact on one `Int` leaf class resolved by extraction.
+Claim: the engine is already paid for — types are the third `Language` instance.
 
-### Mechanism
-`TypeENode` derives `Language` (verified: the derive handles `Sum(Box<[Id]>)`, `Arrow([Id;2])`,
-`List(Id)`, `Row{fields,tail}`). `unify(a,b) = union(a,b); rebuild()` — `rebuild` gives the
-*forward* congruence direction free. The **one net-new primitive** is the backward direction:
-an **injectivity / decomposition propagator** (`Analysis::modify` hook, ~30 LOC) — when a class
-holds two same-constructor-same-arity nodes, union their positional children pairwise, to
-fixpoint via the existing `pending`/rebuild machinery. This is the classical CC⇒unification
-delta (Downey–Sethi–Tarjan, Nelson–Oppen). Sum canonicalization (`sum-flatten`/`sort`/`absorb`
-rewrites) makes order-insensitivity a *theorem of saturation*. Width is a `WidthBound{min,max}`
-join on the `Int` leaf's `Analysis` data (mirroring the extant `EClassFacts.width`); the
-extractor's cost function picks the minimal covering width — **the width post-solve is the
-extractor, not a separate CSP.** Provenance `ExprId` rides each leaf as `#[language(skip)]`
-metadata; a clash is two irreconcilable leaves in one class, reported via the explain-tree
-(Nieuwenhuis–Oliveras) as a span-path.
+**Mechanism & measured result (PROTO-2, RAN).** The one net-new primitive — a constructor
+injectivity propagator in `Analysis::modify` (~22 LOC) — **was built on the shipped engine and
+proven**: (a) `Sum([a,b])≡Sum([c,d]) ⟹ a≡c,b≡d` holds (genuine unification via the existing
+rebuild worklist); (b) cyclic `value` extracts to a **finite** 6-arm μ-representative with a
+back-edge; (c/d) extraction is order-independent and idempotent (byte-identical); (e) the
+combined injectivity+width fixpoint **converges in 2 passes (bound 10), no oscillation**. **1D
+does NOT hit its retirement condition on the recursion axis** — native cyclicity *beats* 1A's
+nominal fold (finite μ-extraction free via the visited set), it does not merely duplicate it.
 
-### Substrate & seams
-`crates/egraph` reused verbatim; the mirror of the live grammar tier `crates/ir/src/egraph/`
-(node/analysis/rules/cost/write_back). Home: e-node+rules+analysis beside the engine's other
-Languages (`crates/ir/src/egraph/`); the schema-lowering `derive.rs` in the codegen consumer.
-Repurposes the `:204` discard as a `union` (declared type checks synthesized body); subsumes the
-`Type` enum; lowers `TypeENode::Sum`→`DirectTypeKind::Sum`; replaces the hand schema. Rides
-`csp_scheduler` unchanged — **this is the LOCK-2 engine-share the charter names.**
+**But two measured costs bound the keep:** (i) PROTO-2 required a **core-engine amendment** to
+`crates/egraph/src/egraph.rs` `union` (schedule `modify` on every real merge, not only on
+lattice change) — a change to the shared/vendored engine, not a consumer-side addition. (ii)
+Positional injectivity is **unsound for associative-commutative constructors** (`Sum`): two
+differently-ordered same-arity sums in one class would falsely unify — a production 1D **must
+tag constructors injective-vs-AC and gate the hook**. And decisively: **PROTO-1 shows the
+cost-extraction that is 1D's raison d'être is idle** — overload/cost residue is exactly 0, so
+there is *nothing to extract over*. 1D's engine is idle on the equality that dominates
+(priorart §2F) and idle on the residue that is empty.
 
-### Gates it carries
-(i) **injectivity = unification**: `Sum([a,b])=Sum([c,d]) ⟹ a=c,b=d`, Arrow domains unify;
-(ii) recursive `value` extracts to one finite 6-variant Sum with a back-edge, order-invariant;
-(iii) width fact joins to `u32`, extraction picks minimal cover; (iv) **byte-identical derive
-across two runs** (deterministic `classes()` iteration + stable tie-break — real teeth: FxHashMap
-reorder → non-identical `DirectSchemaSet` → RED); (v) span-precise clash via explain-tree;
-(vi) `git diff crates/runtime/` empty; (vii) head-to-head reproduces PROVE-08's leaf census.
+**Integration seams.** `TypeENode`+`type_rules`+`TypeAnalysis` net-new beside the engine (the
+grammar tier `node.rs`/`build_egraph.rs`/`rules/`/`write_back.rs` is the template);
+`schema/type_plane/derive.rs` extractor → `DirectSchemaSet`. Reuses `unionfind.rs`,
+`egraph.rs`, `analysis.rs`, `csp_scheduler.rs`, `extract.rs`.
 
-### Exact open questions
-- **The idle-machinery caveat (prior-art §2F — the sharpest, and why "elegance earns nothing").**
-  Equality saturation's core value is *extraction-by-cost over many equal forms* — but **pure HM
-  has a unique principal type, so there is nothing to extract.** The e-graph's distinctive engine
-  is **idle on the equality core.** It only earns its keep where the type is genuinely
-  multi-valued (widths, overloads, decode class) — *the same residue as 1B*, where it competes
-  head-to-head with plain defaulting (prior-art §2G). If the census (Brief 1) shows a thin
-  residue, 1D's advantage **narrows to "free sum + recursion"** — which 1A's nominal fold reaches
-  more cheaply. This is not a missing primitive; it is an **unproven raison d'être.**
-- **R1 — the injectivity propagator's own fixpoint.** Omit it and `Sum=Sum` does not force
-  children equal (unsound extraction). Present, it may interact pathologically with the
-  width-lattice join and fail to converge deterministically (1D's own stated retirement
-  condition). **Unverified — the family's existence proof (Brief 2).**
-- **R3 — width as analysis-lattice, not constructor.** If `Int8`/`Int16` are distinct
-  *constructors*, injectivity has nothing to decompose and extraction tie-breaks
-  non-deterministically. Must be an analysis fact on one `Int` class. **Design-fixed, must hold.**
-- **R4 — determinism for byte-identical regen.** Extraction fixpoint + iteration order + equal-
-  cost tie-break must be total and stable. **A gate with teeth.**
+**Gates.** (G1–G5 of PROTO-2, all HELD) injectivity, finite recursive extraction,
+order-independence, idempotence, width+injectivity convergence. **The live make-or-break is now
+G6:** does native cyclicity ever change the *output schema* vs 1A's nominal fold on a real
+grammar — or is the advantage cosmetic given the thin residue? **Un-run — Brief 2 targets it.**
 
-### Why VIABLE-AT-RISK, not BLOCKED
-The one net-new primitive (injectivity, ~30 LOC, classical, riding the shipped fixpoint) is
-**not** equal in difficulty to the original problem — so 1D clears the BLOCKED bar. But it
-carries the lock's sharpest "elegance earns nothing" caveat: its distinctive engine is idle on
-the equality core and must demonstrate value on a residue that a defaulting lattice already
-serves. **Two convergent negative results retire it:** a thin residue (Brief 1) *and* a nominal
-fold that reaches the recursive sum as cheaply (Brief 2). If both land against 1D, it is a
-sound-but-superfluous engine for this plane.
+**Exact open questions.** (O1) Is the recursion-axis win worth an engine amendment +
+AC-tagging + a whole net-new Language, when cost-extraction is vacuous (PROTO-1)? (O2)
+constructor injective-vs-AC tagging is a non-negotiable design obligation carried from PROTO-2
+finding (4). (O3) determinism of extraction under real `FxHashMap` iteration at grammar scale
+(PROTO-2 proved it on a 10-class fixture; GN-3.W3 byte-identity has teeth at 191-rule CSS).
+
+**Not BLOCKED-candidate on the missing-primitive test** (injectivity is small, classical,
+proven). **BANK** behind Brief 2: highest net-new substrate, engine idle on the dominant
+judgment and empty on the residue, sole surviving advantage (native recursion) possibly
+cosmetic.
 
 ---
 
-## INCOMPATIBILITY MAP — which families cannot coexist, and precisely why
+## 5. THE INCOMPATIBILITY MAP
 
-The four families are distinguished by their **equality engine** and by *where the residue is
-solved*. They all write the **same downstream sink** — one `TypeDesc`/`DirectSchemaSet`, one
-`HeterogeneousAltJoin`/`Sum` node, the two backends. Because that sink admits exactly one type
-system of record, engines for it are mutually exclusive.
+The families are **not** four coequal rivals. One exclusive axis (the equality engine) carries
+three mutually-exclusive members; one cross-cutting discipline (1C) folds onto the winner.
 
-| Pair | Relation | Precise reason |
-|---|---|---|
-| **1A ⊥ 1B** | **HARD-INCOMPATIBLE** | Two different equality engines for one seam. 1A: near-linear union-find, equality as syntactic unification, CSP as a *bounded post-solve on the residue only*. 1B: equality *is* a lattice join inside the one CSP store, no separate union-find. They cannot both own `TypeFacts`/`project_types()`. Prior-art §2B/R-B4 sharpen it: for pure equality, union-find dominates the worklist re-scan asymptotically, so 1B is *only* justified by residue-richness — the exact axis Brief 1 measures. The choice is: adopt the running root CSP (1B) or replace it with a ported HM core (1A). |
-| **1A ⊥ 1D** | **HARD-INCOMPATIBLE** | Union-find HM vs congruence-closure e-graph — different engines for one seam, and 1D's recursion story (native cyclic classes, no occurs-check) directly contradicts 1A's (nominal `Rule(id)` fold guard). Both reach the recursive 6-arm sum; only one owns the inference. Brief 2 tests whether 1D's native cyclicity is a *real* advantage over 1A's fold or merely a costlier route to the same result. |
-| **1B ⊥ 1D** | **SOFT-INCOMPATIBLE (engine-exclusive, substrate-shared)** | As *type inference centers* they are exclusive: lattice-CSP vs e-graph, one `TypeDomain`/`TypeENode`. **But** they share the `csp-solver` substrate — 1D's saturation is *driven by* `csp_scheduler` (a `Csp<DirtyDomain>`). They cannot both be the type engine, yet the loser's substrate survives under LOCK-2. This is the *only* pair whose conflict is resolvable by subordination rather than deletion. |
-| **1C ∥ 1A** | **COMPATIBLE (overlay on trunk)** | 1C is a strict superset of 1A: it *reuses* PROVE-08's `Unifier` as its subsumption reconciler and degenerates to 1A's synthesis where there are no annotations (R-C2, self-admitted). Their natural form is **one family: a union-find trunk (1A) with a bidirectional checking + diagnostics layer (1C).** They do not compete; 1C is 1A's error-locality discipline. The open question is whether 1C's diagnostic gain is real enough to make it a *named layer* rather than a footnote. |
-| **1C ∥ 1B, 1C ∥ 1D** | **COMPATIBLE-IN-PRINCIPLE, UNNATURAL** | Bidirectionality (mode-directed check/synthesize) is orthogonal to the equality engine — checking mode could in principle drive a lattice-CSP or an e-graph. But 1C-as-specified targets union-find (reuses `Unifier`, threads `RuleSig` by SCC), so pairing it with 1B/1D would require re-expressing its reconciler over their engines. Not incompatible, but not free. |
+### 5.1 The exclusive axis — the equality engine (choose exactly one)
 
-**The load-bearing incompatibility is the 1A/1B/1D three-way engine fork** (all pairwise
-hard/soft-incompatible), with **1C not a fourth engine but a discipline that layers onto the
-winner** (naturally onto 1A). The lock does not resolve to "pick one of four"; it resolves to
-**"pick one equality engine (1A vs 1B vs 1D), then decide whether 1C's bidirectional layer earns
-naming on top of it."**
+| | 1A union-find | 1B CSP lattice | 1D e-graph |
+|---|---|---|---|
+| equality primitive | Robinson `unify` (near-linear) | `TypeDomain::join` (monotonic sweep, re-scans; **overwrite-unsound as shipped**) | `union`+`rebuild`+injectivity |
+| seed | PROVE-08 / skinny `TypeFacts` | **running** `types/constraint/` (has consumers) | grammar e-graph (template; type tier net-new + engine amendment) |
+| lineage | skinny | root | root |
 
-### The two axes that adjudicate the engine fork (both measurable now)
-1. **Residue richness** (retires 1B *and* 1D toward 1A if thin; vindicates them if rich).
-   Prior-art §2G/§4.3, R-B4. → **Brief 1.**
-2. **Recursion handling** (retires 1D toward 1A if the nominal fold reaches the recursive sum as
-   cheaply as native cyclicity; the make-or-break both 1A and 1D name first). → **Brief 2.**
-A thin residue **and** a sufficient nominal fold together collapse the fork to **1A + optional
-1C layer**, which is exactly the prior-art convergent verdict (§5). A rich residue keeps 1B
-live (its code already runs) and forces the store-shape decision (R-B1); it does *not* on its
-own vindicate 1D over 1B, because 1D must additionally beat defaulting *and* justify its idle
-extraction engine on the same residue 1B already serves.
+**Why they cannot coexist as "the spine":** each defines *equality* over a *different variable
+store* (union-find map vs `Csp` arena vs e-class union-find+hashcons), a different type of
+record (`TypeDesc` vs fused monotype vs `TypeENode`), and one owner of the `Project`
+discard-site. Running two equality engines is the "two type systems" failure both research-A R6
+and research-B indict; the greenfield ports **one** organ. **1A ⊥ 1B ⊥ 1D pairwise on the seat.**
+
+- **1A ⊥ 1B** — but they **collapse toward each other under contact**: R-B1 forces 1B to the
+  federated form, which *is* 1A's stratification (equality trunk + finite residue); PROTO-1's
+  THIN verdict removes 1B's only distinguishing claim; the live residual difference is merely
+  "union-find map vs `Csp<TypeDomain>` as the equality carrier," and O1 shows the CSP carrier is
+  currently unsound. Adjudicated by Brief 1.
+- **1A ⊥ 1D** — union-find vs congruence-closure. PROTO-2 shows 1D *beats* 1A on recursion
+  (free finite μ-extraction) but PROTO-1 shows 1D's cost-extraction is vacuous. The open seat
+  question reduces to: does 1D's recursion win change any real output schema (Brief 2)? One store
+  owns `Project`; not both.
+- **1B ⊥ 1D** — both root-lineage, both claimed the *same* residue as justification; PROTO-1
+  **empties that residue for both**. Neither is justified over 1A on the merits; they still
+  cannot co-own the `TypeDesc`→schema lowering.
+
+### 5.2 The cross-cutting discipline — 1C is not on the axis
+
+**1C is compatible with all three engines** — it is a checking front + SCC seam + span field
+over an equality reconciler it does not define (it reuses PROVE-08's `Unifier`, sharing 1A's
+mechanism). Per the Constitution's shared-mechanism rule it is closest kin to 1A. **1C ∦
+(1A|1B|1D): it folds onto whichever wins.** Its only incompatibility is degenerate: with no
+`->` in the real corpus, 1C ≡ its host engine until typed grammars exist.
+
+### 5.3 The shared residue — a convergence point PROTO-1 collapsed
+
+All four routed widths/overloads/decode-class/capacity to a bounded solver. PROTO-1 measured
+that residue THIN and its overload/cost fraction **exactly 0** → **an ordered default lattice
+dominates all four here** (priorart §2G). This is no longer an open fork; whoever wins the
+engine axis inherits an ordered-defaulting residue solver, not a CSP and not an extractor.
 
 ---
 
-## SYNTHESIS VERDICT (pass-1)
+## 6. BLOCKED-CANDIDATE REGISTER + SYNTHESIS FLOOR
 
-- **No family is BLOCKED-candidate.** None is stalled at a primitive equal in difficulty to
-  inference itself: 1A's core is proven, 1B runs, 1C is an additive overlay, 1D's one net-new
-  primitive (injectivity) is classical ~30 LOC on a shipped engine.
-- **1D carries the sharpest "elegance earns nothing" caveat** (VIABLE-AT-RISK): its distinctive
-  machinery is idle on the equality core and must prove value on a residue a defaulting lattice
-  already serves. Two convergent negatives retire it.
-- **1B carries the pass's one confirmed defect**: the non-monotone last-writer-wins clash arm at
-  `constraint/domain.rs:72`, a silent overwrite where `no-silent-epsilon` demands an obligation.
-- **1C's distinctness is falsifiable** and must be measured, not asserted (R-C2).
-- **The prior-art C4 veto ("1B/1D are consumer-less substrate") is void** for the root lineage —
-  both engines ship with live backend consumers. The honest adjudicator is residue richness, not
-  a metatheory prohibition.
-- **Pass-2 needs:** the judgment-mix census (Brief 1) to fix the residue axis, and the 1D
-  injectivity + cyclic-sum existence proof (Brief 2) to fix the recursion axis. Together they
-  determine whether the lock converges to **1A-trunk (+1C layer)** or keeps the **1B engine of
-  record** live — and whether **1D** survives as anything but LOCK-2 substrate.
+- **1A — none. ADVANCE (the spine).** Liability: lineage displacement (O3) + undecided row
+  discipline (O1), both currently unmeasurable (no typed grammars).
+- **1B — the literal single heterogeneous store is BLOCKED-candidate** (R-B1: no primitive short
+  of per-revise tag dispatch). The federation survives but *is 1A*; its equality is unsound as
+  shipped (O1). **ADVANCE federation as system-of-record; BANK the thesis BLOCKED-candidate.**
+- **1C — not blocked; not an engine family. FOLD** as a discipline layer; value unmeasurable
+  until typed grammars exist.
+- **1D — not BLOCKED-candidate** (injectivity proven, PROTO-2). **BANK — narrow recursion-axis
+  keep only:** cost-extraction is vacuous on the evidence (PROTO-1), engine idle on dominant
+  equality, sole advantage (native recursion) possibly cosmetic (Brief 2), and it costs an engine
+  amendment + AC-tagging + a net-new Language.
+
+**Synthesis floor for pass-2 (measured, not tasted).** The spine is **a union-find equality
+trunk (1A) + an ordered defaulting lattice for the thin residue (PROTO-1) + a bidirectional
+diagnostics layer (1C folded in)**, seeded by **one** equality carrier. The remaining live fork
+is which carrier: 1A's union-find (raises clashes correctly) vs the running root
+`Csp<TypeDomain>` (has consumers, but overwrite-unsound as shipped). Two un-run measurements
+decide it (§7). 1B's one-store and 1D's cost-extraction are **evidence-retired**; 1D keeps a
+watching brief on the recursion axis alone.
+
+---
+
+## 7. THE TWO SHARPEST UNCERTAINTIES → prototype briefs (both un-run this pass)
+
+PROTO-1 (census) and PROTO-2 (1D injectivity) are done; the next two adjudicate the *surviving*
+fork — which sound equality carrier seeds the 1A-shaped spine — against running code.
+
+**Brief 1 — CSP-equality soundness (bbnf-worktree).** Does the shipping `TypeDomain::join`
+(`constraint/domain.rs:72-77`) raise a clash on two incompatible `->` arrows, or silently
+last-writer-win (Wand's bug, in production)? This decides whether the running root CSP can be
+the spine's equality carrier *as-is*, or must be repaired to raise-on-disagreement (= union-find
+behavior, ceding distinctiveness to 1A). Confirmed-defect-targeting, immediately runnable.
+
+**Brief 2 — 1A-nominal-fold vs running-CSP recursion output parity (bbnf-worktree).** PROTO-2
+proved 1D's native cyclicity *beats* a nominal fold in the abstract, but the **running root CSP
+already derives recursive `value` without an e-graph** (JSON compiled in PROTO-1, `value` arity
+6). Does the running pass produce a correct, finite, terminating schema for the deepest real
+recursive grammars, byte-equal to 1D's e-graph extraction — establishing whether 1D's recursion
+advantage buys *anything the shipping system lacks*, or is cosmetic given the thin residue? This
+is the decisive retire-or-keep for 1D now that cost-extraction is off the table.

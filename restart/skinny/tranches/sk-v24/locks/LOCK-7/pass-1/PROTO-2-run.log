@@ -1,0 +1,14 @@
+PROTO-2 run log (HEAD 2026-07-16, scratch CARGO_TARGET_DIR, cold)
+loadavg 1min: 9.85 (before) -> 8.93 (after)
+
+cargo test -p grammar (construction path, existing suite):
+  parses_skinny_json_rules ... ok
+  resolves_forward_and_cyclic_refs ... ok
+  rejects_unresolved_refs ... ok
+  (unrelated pre-existing red: w5b_frontend_public_ws_remains_retired @ lib.rs:1866)
+
+cargo test -p grammar --test proto2_construction_census:
+  add_expr_does_not_intern_identical_leaves ... ok
+  arena_ids_are_post_order_synthesized ... ok
+  cross_rule_link_is_a_separate_global_pass ... ok
+  test result: ok. 3 passed; 0 failed.

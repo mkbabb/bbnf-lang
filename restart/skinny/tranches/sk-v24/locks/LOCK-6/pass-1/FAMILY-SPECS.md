@@ -1,365 +1,353 @@
 # LOCK-6 — THE ISOMORPHISM PLANE (rust/ts split): FAMILY SPECS (synthesis, pass 1)
 
-*Synthesis, Fable-tier, pass 1. One cogent spec per family while routes remain incompatible,
-then the incompatibility map. Grounded against the extant tree, not only the research prose:
-seams marked LIVE were verified present; seams marked PLANNED were verified absent (GN-4.W4
-substrate). Elegance earns nothing; a family stalled at a missing primitive equal in difficulty
-to the original problem is marked BLOCKED-candidate.*
+*Synthesis, Fable-tier, pass 1. One cogent spec per family while the routes remain
+incompatible, then the incompatibility map. Grounded against the extant tree, not only the
+research prose: seams marked LIVE were verified present this session; seams marked PLANNED were
+verified absent (GN-4.W4 substrate). Elegance earns nothing on its own — a family stalled at a
+missing primitive equal in difficulty to the original problem is marked BLOCKED-candidate.*
 
 ---
 
-## 0. The plane's coordinate system (what actually decides among the four)
+## 0. The plane's coordinate system (the measured facts every family must consume)
 
-The four families are not four styles of the same thing; they answer two orthogonal questions:
+LOCK-6 is not a blank design space. Six data points — five measured, one legal — pin the plane
+before any family speaks. They are the prior-art sweep §0, verified in-tree:
 
-- **Q1 — one implementation or two?** 6C says ONE (Rust→wasm); the TS "implementation" is
-  bindings + measured V8-native islands. 6A/6B/6D presuppose TWO artifacts that must be held
-  equivalent.
-- **Q2 — is the equivalence boundary CODE or DATA?** 6A pins CODE structure (a name map +
-  linter). 6B removes the CODE-drift class by GENERATING the shared surface. 6D pins only DATA
-  (a corpus + a language-neutral digest) and lets code float free.
+- **F1 — the wasm/JS boundary is the cost center, not the Rust core.** PROVE-14 measured the TS
+  tape *full-walk* at ~0.9–0.98× native `JSON.parse` (not the hoped 2×); the field agrees (a
+  Rust-WASM JSON parser measured 25% *slower* than TS because every string crossing re-encodes).
+  Any "wasm is the one impl" claim that routes per-value materialization across the boundary is
+  refuted before it is written.
+- **F2 — the win that crosses is stop-early, not compute.** PROVE-14 got 4.4× on stop-early
+  `get` because the tape skips `statuses[1..99]`. Cross the **layout** once (offset planes as
+  typed-array views), never per value.
+- **F3 — the tape is already an Arrow/Cap'n-Proto-class zero-copy layout.** Four SoA planes
+  (`offsets:u32, flag_cursors:u32, flag_values:u8, source`) decode byte-exactly node-for-node in
+  TS. Seam: `crates/core/src/runtime/tape/mod.rs` (four public accessors). This byte-identity is
+  a *requirement*, not a preference — it is what makes F2 zero-copy.
+- **F4 — the TS side runs V8 laws, not LLVM laws.** Hidden-class stability, arity-unrolled
+  monomorphizations, `Int8Array` dispatch tables exist because V8 rewards them and an
+  LLVM-idiomatic Rust mirror would omit them. Line-for-line *code-shape* mirroring is in tension
+  with V8 idiom; only *tree/name* mirroring is cheap.
+- **F5 — the type plane costs zero at runtime, both sides (Constitution v).** Any scheme adding a
+  runtime cast or marshalling shim to satisfy types is a defect.
+- **F6 (legal) — parse-that is READ-ONLY to bbnf; the letter is the only artifact across the
+  seam.** No single CI owns both trees; no bbnf agent runs parse-that's generator. Every
+  mechanism must survive a repo boundary that tooling cannot dissolve.
 
-6D is the **null hypothesis / floor**: behavioral parity is already installed as the plan-of-
-record close gate (`crates/core/tests/{json_canonical_parity,ts_node_execute}.rs` LIVE;
-GN-4.W5's four-lane `value_parity`). Every other family is "6D **plus** a structural
-enforcement mechanism." The lock's verdict is therefore: *does structural enforcement buy
-enough measured drift-avoidance to justify its tax, and on which surface* — the "reasonable
-point" the constitution demands be measured, not asserted.
-
-**Extant-state truth (verified, this repo):** the only LIVE cross-language mirror pair in
-bbnf-lang is `crates/bbnf-path` ↔ `crates/bbnf-path-ts` (Rust `{lib,registry,path_macro}.rs`,
-TS-facing `{schema,compile,fixture,template_tag}.rs` + `ts/{path,index}.ts`), guarded by
-`crates/bbnf-path-ts/tests/isomorphic_path_error.rs` (268 LOC, incl. the exhaustive
-`reason_variants_are_isomorphic` at `:227-268`). The tape substrate is LIVE at
-`crates/core/src/runtime/tape/`. The Rust emitter is LIVE at `crates/core/src/backend/emitter.rs`
-+ `crates/core/src/grammar/schema/emit/rust/`. `crates/bbnf-wasm` and `ts/tape` are **absent**
-(6C/6B-tape substrate is the GN-4.W4 plan). parse-that's dual Rust+TS core is a **separate repo**
-(only `docs/parse-that/*.md` present here) — the two-repo boundary is real, not rhetorical.
-
----
-
-## FAMILY 6A — MIRROR-TREE (hand-authored both sides + CI isomorphism linter)
-
-**Architecture.** Both trees stay hand-written and idiomatic; a checked-in machine-readable
-**name map** (`isomorphism.toml` or a `.bbnf` fragment per constitution i) is the single source
-of truth for what mirrors what; a CI **linter** proves the map holds against both *extracted*
-surfaces. Structure is pinned at ITEM granularity; file-tree partition is a soft warn (Rust
-`combinators/methods/` dir-module ≠ TS flat `parser.ts` monolith is lawful). This is Kotlin
-Multiplatform `expect`/`actual` reconstructed across two repos and two languages, with an
-external linter standing in for the single KMP compiler no toolchain provides here.
-
-**Mechanism (four tiers, a pair declares which bind it):**
-- **T1 name/tree correspondence** — the manifest enumerates `(rust_path, ts_path, {RustItem→tsItem})`;
-  the linter asserts every mapped item exists on both sides AND **no surface item lacks a manifest
-  entry** (totality; silent omission is RED). Promotes today's *prose* name map (the "mirror of
-  `bbnf::path::*`" doc comments in `bbnf-path-ts/src/schema.rs`) to a checked artifact and deletes
-  the prose.
-- **T2 surface correspondence** — public surfaces snapshotted and diffed *through the name map*:
-  Rust via `cargo-public-api` (rustdoc-JSON, committed `public-api.txt`), TS via API Extractor
-  `.api.md` or a `ts-morph` surface script. Reports field-rename-on-one-side, variant-present-one-
-  side, arity-drift.
-- **T3 behavioral correspondence** — one shared fixture set drives a Rust integration test and a
-  vitest test; generalizes the LIVE `isomorphic_path_error.rs` to a corpus feeding both.
-- **T0 byte tier (tape only)** — the offset-tape mirrors at the BYTE level (PROVE-14); wasm-exported
-  planes byte-identical to a Rust `tape_dump` fixture (born-RED, GN-4.W4 gate b). Stricter than any
-  name map; composes with T1–T3.
-
-**Integration seams.** LIVE seed: the bbnf-path pair + `isomorphic_path_error.rs:227-268`. Hard
-case: the parse-that combinator core (separate repo) — `combinators/methods/` (dir-module) ↔
-`parser.ts` (711-LOC monolith); the name map records `Parser::then ↔ Parser.then` at item
-granularity without forcing file-tree identity. Tape byte seam: `crates/core/src/runtime/tape/mod.rs`.
-
-**Gates it carries.** (i) Linter goes RED when one field/variant is renamed on one side only.
-(ii) Totality: every surface item has a manifest entry or RED. (iii) Idiom-seam allow-list —
-Rust-only `bump_slab`/`span_parser`/bespoke-DFA and TS-only `packrat`/native-`RegExp` are named
-exempt, NOT forced to grow twins (over-mirror-through-idiom-seam is refused). (iv) God-module
-invariant: the linter must encode the colocation edict, not freeze `utils.{rs,ts}` rot.
-(v) CI budget fits the proof-gate lane; nightly-rustdoc-JSON demand reported if the greenfield is
-stable-only.
-
-**Exact open questions.** (a) The **clean-map ratio** on the combinator core — fraction of items
-mapping 1:1 vs needing an idiom escape hatch; this IS 6A's "where reasonable ends" number and is
-unmeasured (parse-that is a separate repo). (b) T2's toolchain cost (nightly rustdoc-JSON) —
-blocker or fold-in? (c) Cross-repo CI ownership (bbnf-lang vs parse-that) — per-repo manifest
-fragments + a vendored conformance corpus.
-
-**Standing.** ADVANCE. Substrate LIVE (the one mirror pair + its exhaustive-parity test);
-prior art strong (Microsoft tsc-go's file-by-file port validated by a conformance suite, not by
-layout inspection — the winning play was mirror+oracle *together*). Not BLOCKED. The decisive
-caveat, proven LIVE in `isomorphic_path_error.rs:129-138`: the `$.statuses[0].nope` path yields
-`UnregisteredRule` offline but `UnknownField` via cdylib — identical shapes, divergent semantics.
-**T1/T2 pass green here; only T3 catches it, and only if the corpus contains that input.** 6A is
-necessary-not-sufficient without T3; T3 needs a coverage argument — which is exactly 6D's content.
+**The one live mirror pair (the seed for all four families).** `crates/bbnf-path` (Rust
+proc-macro) ↔ `crates/bbnf-path-ts` (cdylib + wasm-bindgen + `ts/path.ts`). The mirror contract
+is carried today as **prose** (`schema.rs:1-15`: "byte-identical under serde-wasm-bindgen",
+"field-for-field identical") — an unchecked, drift-prone name map. The differential oracle is
+LIVE at `crates/bbnf-path-ts/tests/isomorphic_path_error.rs` (268 LOC: five differential cases +
+`reason_variants_are_isomorphic:227-268`, an exhaustive 8-variant enum-parity test). Every family
+below is a different answer to "what replaces the prose."
 
 ---
 
-## FAMILY 6B — SPEC-GENERATED-SKELETON (one grammar-driven spec generates both skeletons)
+## 1. Family 6A — MIRROR-TREE (hand-authored both sides + a CI isomorphism linter)
 
-**Architecture.** A single machine-readable, grammar-derived spec generates BOTH the Rust and
-TS *skeletons* — the surfaces that must never diverge (type declarations, tape-plane layout, the
-node classifier as a DATA TABLE, oracle/conformance vectors) — while hand code fills idiomatic
-bodies (Rust NEON kernels; the TS monomorphic V8 walk). Where a surface is generated, drift is
-not detected but **unrepresentable**: a grammar edit regenerates both trees at once, and the
-regen fixpoint (LOCK-7 7A) is the proof. The generated/hand boundary is claimed to coincide with
-the structural/performance boundary, which coincides with the isomorphism/idiom boundary — that
-coincidence, quantified, is the family's measured answer to "where reasonable ends."
+**Thesis.** Both trees stay hand-written and idiomatic per language; a checked-in,
+machine-readable **name map** is the single source of truth for what mirrors what; a CI linter
+proves the map holds against both *extracted* surfaces. Kotlin Multiplatform `expect`/`actual`
+reconstructed across two repos and two languages, the linter standing in for the single KMP
+compiler no toolchain here provides.
 
-**Mechanism — the spec is the compiler's own middle, not a new IDL** (authoring an IDL would
-violate grammar totality i). Second consumer of the SAME IR + type-schema the LIVE Rust emitter
-already walks:
-- **Generated (drift-impossible):** (1) TS type declarations from the grammar-derived schema,
-  numeric widths resolved per-backend (`u64/i64 → bigint`, backend-agnostic-types law); (2) the
-  tape-decoder skeleton — SoA plane struct, the classify table as an `Int8Array(256)` literal
-  (NOT hand control flow), sparse-flag binary search, pointer navigation shape; (3) oracle/
-  conformance vectors emitted ONCE, read by both `crates/*/tests` and `ts/*/test`; (4) the wasm
-  boundary signature, derivable from the four-plane facts so FFI glue cannot drift.
-- **Hand-filled (idiomatic, per-language perf):** Rust NEON skip kernel; the TS monomorphic
-  `TapeDoc` class body (four ctor-only fields = one hidden class; the generator supplies the
-  classify *table* it reads, never the class *shape* it lives in).
+**Architecture — four tiers, each mirror pair declares which bind it.**
+- **T1 name/tree** — a manifest enumerates mirror pairs + an item-granularity map `(rust_path,
+  ts_path, {RustItem→tsItem})`; the linter asserts bidirectional totality (every mapped item
+  exists on both sides AND no surface item lacks an entry — a silent omission is RED).
+- **T2 surface** — each module's public surface extracted to a committed snapshot, diffed
+  *through* the name map (item set, field names, variant sets, arities). Rust:
+  `cargo-public-api`/`cargo-semver-checks` (rustdoc-JSON). TS: API Extractor `.api.md` or a
+  `ts-morph` script.
+- **T3 behavioral** — one shared fixture set drives both surfaces, compared field-for-field.
+  Already LIVE in prototype at `isomorphic_path_error.rs`.
+- **T0 byte** — the offset-tape mirrors at the byte level (stricter than any name map); the
+  born-RED GN-4.W4 gate (b), composes over T1–T3.
 
-**Integration seams.** Rust emitter to parallel: `crates/core/src/backend/emitter.rs` +
-`grammar/schema/emit/rust/` (LIVE). TS emitter = a sibling directory-module
-(`.../emit/ts_skeleton/`) producing a second file-map. Type spec: the grammar-derived schema
-(the HM/DirectSchema plane). Tape facts: `crates/core/src/runtime/tape/`. Landing: the GN-4.W4
-`ts/tape/{tape,load,pointer}.ts` file plan (PLANNED) — 6B recasts W4's "hand-port .mjs→.ts" as
-"generate layout/classify/oracle, hand-fill the walk." Regen host: `xtask`, under the same
-fixpoint gate as the Rust regen.
+**Mechanism / integration seams.** Promote `schema.rs`'s prose to a machine-checked manifest and
+**delete the prose duplicates**. Grammar-anchor the map (Constitution i): rule/variant names are
+already shared truth emitted by `crates/core/src/backend/emitter.rs`; the hand-authored manifest
+carries ONLY the idiom residue the grammar cannot name (`Parser::then ↔ Parser.then`). The linter
+lands in parse-that's existing proof-gate lane (`proof:*` node scripts, `manifest-gate.mjs`);
+rustc `tidy` is the cost model (structural lint in the normal gate lane).
 
-**Gates it carries.** (i) Two-consumer emit round-trips through the serde IR (genuinely the
-middle, not a fork). (ii) **Drift-impossibility (the family-decider):** add one JSON node kind /
-one flag bit → BOTH sides regenerate classify+type surfaces with ZERO hand edits; any surface
-needing a hand edit is named OUTSIDE the drift-impossible boundary — that boundary IS the
-measured result. (iii) V8 preservation: generated-table + hand-body reproduces PROVE-14 stop-early
-≥4× (not mere parity) — proving generation didn't perturb the hidden class. (iv) Width fidelity:
-a `u64` field resolves `bigint`, and the oracle catches a lossy `number`. (v) Cross-language
-fixpoint: regen∘regen byte-identical for BOTH output trees. (vi) Zero-runtime-cost: generate
-types + tables + fixtures, NEVER runtime dispatch (constitution v; no-ts-ir).
+**Gates it carries.** (a) linter goes RED when a single field/variant is renamed on one side
+only; (b) bidirectional-totality RED on any unmapped surface item; (c) item-map is HARD RED,
+file-tree correspondence is SOFT warn (the trees genuinely diverge: parse-that Rust
+`combinators/methods/` dir-module vs TS flat `parser.ts` 711 LOC); (d) exemption-ratio budget —
+the allow-list of one-sided idioms (Rust `span_parser`/bespoke-DFA, TS `packrat`/native
+`RegExp`) is a reviewed committed artifact and the linter warns when the exempt fraction grows.
 
-**Exact open questions (sharpest of any family).** (a) **Is the spec backend-NEUTRAL?** Verified
-absent: no `struct BackendIr` in-tree; per R1 the IR carries Rust type-name strings
-(`ty=Some("u64")`, `DirectBuild{shape:String}`). A truly neutral spec (abstract widths) is a
-*prerequisite* to correct TS generation — a subset of the isomorphism problem, not equal to it,
-so **not BLOCKED**, but convergence gates on this refactor. (b) **Is the generated fraction
-non-trivial?** If classify+walk stay hand (perf-sensitive), the most drift-prone surface (the
-classifier when a node kind appears) is hand on both sides and 6B degenerates into 6A with extra
-machinery — the R4 decisive boundary. The node-kind enum + classify TABLE MUST be in the
-generated fraction. (c) The quantitative "reasonable point": of PROVE-14's ~703-LOC TS decoder,
-generable ≈ 120–160 LOC (layout + classify/sparse-flag + oracle + type interfaces) vs hand ≈ 200
-LOC (byte-hash walk + descent).
+**Exact open questions.** (i) **The clean-map ratio on the combinator core** — fraction of items
+mapping 1:1 vs needing an idiom escape hatch, on parse-that Rust `parse.rs`/`leaf.rs`/
+`combinators/methods/` vs TS `parser.ts`/`leaf.ts`. UNMEASURED (separate repo, F6). This ratio IS
+the constitution's "where reasonable ends" number; a low ratio weakens the family. (ii)
+nightly-rustdoc-JSON toolchain demand vs a stable-only greenfield (HARD blocker if stable-only).
+(iii) cross-repo CI ownership (F6): per-repo manifest fragments + a vendored conformance corpus.
 
-**Standing.** ADVANCE, sharpest-uncertainty. Substrate PARTIALLY live (Rust emitter yes; neutral
-spec + TS emitter to build). Prior art proven for the DATA plane (serde-generate, FlatBuffers,
-tree-sitter node-types, Kaitai, ts-rs) and UNPROVEN for combinator logic — 6B's honest scope is
-"generate the mirror-able data/oracle surface, hand-fill idiomatic bodies," exactly matching the
-charter. Closest of the four to a structural stall (the backend-neutral-spec prerequisite) but
-below the BLOCKED bar.
+**Disposition: ADVANCED, but strictly dependent on 6D.** 6A's own risk 1 proves T1/T2 are
+*necessary-not-sufficient*: the LIVE `$.statuses[0].nope` asymmetry passes T1/T2 green
+(identical variant set, identical payload shape) while behavior diverges. 6A therefore *contains*
+6D's T3 as a mandatory tier — it is "6D plus a structural tax," never a standalone.
 
 ---
 
-## FAMILY 6C — WASM-CORE (the Rust core compiled to wasm is the one implementation)
+## 2. Family 6B — SPEC-GENERATED-SKELETON (one spec generates both skeletons)
 
-**Architecture.** Resolve the plane by COLLAPSE, not mirroring: one implementation (the Rust
-generator's emitted parsers + runtime + value-fabric accessors + scan kernels, retargeted to
-`wasm32-unknown-unknown` via wasm-bindgen); TS is its binding surface plus a thin idiom layer.
-"Isomorphism to a reasonable point" shrinks to ONE data-layout contract (the four SoA tape
-planes) verified by differential digest — **no module tree to lint, no skeleton to generate**.
-Drift is impossible over the collapsed surface because there is only one source of behavioral
-truth. TS-native code is admitted ONLY on measured islands where V8 defeats a wasm crossing; each
-island is a documented negative result carrying its number.
+**Thesis.** The isomorphism problem has a declarative half (drift-prone, low value-per-line, high
+correctness stakes: layout constants, tape byte-contract, type interfaces, oracle tables) and an
+imperative half (idiomatic, V8/LLVM-law-bound: the decode walk, the SIMD skip engine, the
+monomorphic hot loop). **Generate the declarative half from one spec; hand-write the imperative
+half; draw and measure the boundary.** Drift is not detected after the fact (6A) — it is made
+*impossible* for the generated surface, because both faces are outputs of one generator run.
 
-**Mechanism.** The crossing is the SoA tape byte-for-byte: wasm-bindgen hands JS
-`Uint32Array`/`Uint8Array` **views over wasm linear memory** for `offsets`/`flag_cursors`/
-`flag_values` + `source`; kind re-derived JS-side from `source[offsets[cursor]]`; no discriminator
-plane; the TS `TapeDoc` is a monomorphic hidden class navigating integer cursors, carrying **no
-parsing logic**. Two access modes: **cross-once-navigate-many** (the wasm-core win — stop-early
-`get`, materialize only visited leaves, byte-hash ASCII fast path with zero JS-string alloc) and
-**full materialization** (the V8-native island — route to a TS-native path or native `JSON.parse`,
-documented with its number). The generator itself stays host-side Rust and is NOT shipped to
-wasm — only its OUTPUT (emitted parsers) + runtime crosses; that bounds the artifact.
+**Architecture — three generated faces, one hand face.**
+- **Face I — layout contract (100% generated, 0 hand lines).** The node-kind alphabet is
+  derivable from the grammar's structural node kinds; `STRING_NEEDS_DECODE` is a grammar-derived
+  fact reachable from `crates/ir/src/passes/materialization.rs` (`MaterializationClass`, already a
+  CSP variable). One new `Emitter` method `emit_tape_layout(&LayoutSpec, ctx)`: Rust emits `const
+  K_OBJ_OPEN: u8 = 1;` into `runtime/tape/record.rs`; wasm emits plane-export names+strides; TS
+  emits the const block at the head of `tape.ts`. This face is where drift *actually lives* —
+  the AoS `record.rs` dialect and the SoA offset-tape are TWO hand-transcribed alphabets today.
+- **Face II — type interfaces (partly built).** `ParserState`/`Span`/`Value`-variant interfaces
+  already emitted for TS (`backend_ts.rs`, `bbnf-path-ts/src/schema.rs`). Addition: the
+  `TapeDoc` field decls as a **skeleton** (ctor-fixed order — the load-bearing V8 detail).
+- **Face III — oracle table (highest-leverage new face).** Generate the FNV digest comparator +
+  structural-count table into BOTH a Rust `value_parity.rs` fixture AND a TS
+  `tape-parity.test.ts`, so "same value, node-for-node" is true by construction of the
+  comparator; the four lane-entries become four distinct generated call sites — GN-4.W5's R5
+  "oracle stubs itself (`get==get`)" becomes *unwriteable*.
+- **The hand face (never generated).** The decode hot loop, idiomatic per language, riding the
+  generated skeleton: Rust NEON `skip_container`, TS `TapeDoc.walk` monomorphic cursor recursion.
 
-**The central crux — SIMD does not cross.** The §0 headline numbers are NEON (shufti/truffle,
-`vshrn` narrow, movemask, SWAR sink); `portable_simd` scalarizes on `wasm32`, and
-`core::arch::aarch64` NEON does not compile to wasm at all. So the wasm core has THREE kernel
-realities: native NEON, a scalar fallback, and — only if wasm keeps any SIMD — a hand-authored
-`core::arch::wasm32` v128 dialect (`i8x16_swizzle`/`i8x16_bitmask`). **6C's honest position: ship
-the scalar fallback first.** PROVE-14 measured stop-early 4.4× with a *scalar* JS walk — the win
-is "don't touch what you don't read," not SIMD throughput. The SIMD kernels are a native-only
-accelerant the wasm core legitimately FORGOES without losing its differentiating lane. A wasm32
-retarget of shufti is a named open measurement whose failure is a first-class negative result.
+**Mechanism / integration seams.** The spec is NOT a new artifact — it IS `GrammarIR` +
+`MaterializationClass`; `LayoutSpec` is a *derived view* computed once in the shared driver
+(`crates/core/src/backend/driver/mod.rs`), never serialized (honors "no-ts-ir" + parsimony). The
+existing multi-backend spine already proves the pattern: `Emitter` trait
+(`emitter.rs:31`, ~60 `emit_*`), three faces (`backend/{rust,wasm,ts}`), and a live isomorphism
+gate `backend_ts_typecheck.rs` (`tsc --noEmit --strict` over four grammars). `bbnf-path`/
+`bbnf-path-ts` is a literal 6B instance already shipping (both consume the same `bbnf-ir`
+`StructRegistry` + `bbnf-regex` lexer ⇒ isomorphic by construction). **6B's real work is
+completion: extend the Emitter to cover the three faces it does not yet generate.**
 
-**Integration seams.** ABI export boundary: the four public plane accessors on
-`crates/core/src/runtime/tape/mod.rs`. To BUILD (PLANNED, absent today): `crates/bbnf-wasm`
-cdylib (`parse(src)->TapeExport`), `ts/tape/{tape,load,pointer}.ts` idiom layer. Precedent +
-cost witness LIVE: `playground/src/wasm/bbnf_wasm_bg.wasm` (**3.63 MB** — a real instantiation
-surface), which GN-0 archives and GN-6 rebuilds "on the GN-4 seam." Protected out-of-scope
-surface: parse-that combinator backbone (separate repo, TS-native by decree; 6C draws its
-boundary AROUND parse-that, not through it).
+**Gates it carries.** (a) lockstep regen — one spec-line edit + `xtask regen` moves all three
+faces together while PROVE-14 byte-exact parity (6 counts + `codeUnits` + fp 986912547) holds; a
+hand-injected `tape.ts` drift fails a generated-const assertion; (b) `%HaveSameMap` V8 shape probe
+(`node --allow-natives-syntax`) proving the generated skeleton is single-hidden-class shape-stable
+(R1: a generated field-by-field init churns a hidden class and loses the 4.4× stop-early); (c)
+the born-RED cross-check (GN-4.W4 gate b) — generated wasm planes byte-identical to the
+`tape_dump` fixture, catching an AoS/SoA reconciliation that drifts.
 
-**Gates it carries.** (i) Live wasm export reproduces PROVE-14 byte-exact digest + stop-early
-4.4× **from the wasm boundary**, not from `.u32` files, with the plane-copy of R1 counted.
-(ii) Detached-buffer failure provoked and cured (copy-on-export vs owned-return ABI) — a
-CORRECTNESS gate: retained views detach on any later memory-grow and "parse" to wrong-but-
-plausible digests. (iii) Module-size + cold-instantiation budget → the document-size crossover
-below which `JSON.parse` wins (the honest lower bound); strip the generator from the wasm build.
-(iv) NO SIMD perf claim on the wasm path (§0/09 refutation law). (v) Every TS-native island
-carries a digit-for-digit differential test or is FORBIDDEN — the one lint 6C keeps in place of
-the deleted mirror linter.
+**Exact open questions.** (i) **The reasonable-point NUMBER** — generated-LOC vs hand-LOC per face
+across JSON + one more grammar (CSS-L4/Sheets); the plateau where generated coverage saturates IS
+the "reasonable point." The null hypothesis R3: if the declarative surface is only ~40 constants +
+two interfaces, a 6A linter is cheaper — 6B then honestly narrows to the oracle face alone. (ii)
+cross-repo regen (F6): a 6B pipeline cannot run parse-that's generator; the generated artifact
+ships *inside the letter*, regenerated parse-that-side — 6B relocates drift-prevention into the
+regen gate, it does not dissolve the boundary.
 
-**Exact open questions.** (a) Does the 4.4× survive the ACTUAL wasm→JS handoff (bbnf-wasm doesn't
-exist yet)? (b) The document-size crossover (R2). (c) Does `core::arch::wasm32` shufti pay on
-wasm — accelerant or negative result? (d) The per-grammar boundary (CSS has no native competitor
-→ its full-walk lane may WIN in wasm → no TS-native island; JSON is the *hardest* case, so
-JSON-parity is the conservative floor).
-
-**Standing.** ADVANCE but **SCOPE-BOUNDED**, not BLOCKED. 6C is INHERENTLY a *partial* collapse:
-by its own charter it excludes parse-that combinators and full-materialization, and forgoes SIMD.
-Its "one implementation" claim holds only for the generator's tape/value runtime; it cannot be
-the whole plane's answer. The full-crossing tax that bounds it is not a hope but a measured law
-(PROVE-14 full-walk ~0.91×, independently reproduced at ecosystem scale by oxc/swc resorting to
-`JSON.parse` over FFI). The missing primitive (wasm SIMD = NEON) is NOT equal to the original
-problem because 6C explicitly does not need it — hence not BLOCKED — but the SIMD gap caps its
-headline and the island-proliferation risk (R4) is the falsifiable boundary at which 6C fails and
-6A/6D become the better family.
+**Disposition: ADVANCED on the declarative/tape/oracle plane; REFUTED on the combinator type
+algebra.** Prior art is decisive and independent: `ts-rs`/`typeshare`/`specta` are documented to
+*flatten* conditional types — "generated types are simpler than hand-written equivalents." PT-E2's
+precise `infer V` inference (`all(a,b) → Parser<[A,B]>`, zero-cost) cannot be derive-macro'd. 6B's
+line is principled: generate the regular data planes; hand-write the V8/conditional-type idiom.
 
 ---
 
-## FAMILY 6D — ORACLE-ISOMORPHISM (behavioral parity only; layout free)
+## 3. Family 6C — WASM-CORE (the Rust core compiled to wasm is the one implementation)
 
-**Architecture.** The rust/ts split is held equivalent by a shared conformance corpus and
-differential tests ALONE — no mirrored trees, no generated skeleton, no single core. Layout is
-free per language (LLVM-shaped Rust, V8-shaped TS). The isomorphism boundary is DATA (corpus + a
-canonical language-neutral digest), never CODE. This is the **null hypothesis of the plane**: it
-wins by default and is defeated only if measured drift/maintenance cost exceeds a linter's (6A)
-or a generator's (6B).
+**Thesis.** One Rust implementation parses source to the tape inside wasm; TS is bindings + an
+idiom layer; TS-native code exists only where V8 measurably wins. The boundary is **data, not
+behavior — and the datum is the tape.** The four planes cross once, in bulk, as typed-array views;
+TS-native code walks them. This is the shape PROVE-14 already certified (row 14): stop-early get
+at 4.4× *because* the walk stays TS-native and the boundary is crossed once.
 
-**Mechanism (three coupled pieces + one offensive detector).**
-- **Canonical form** — a total, deterministic, language-neutral value digest. Three realized
-  forms ascending in generality: (a) canonical re-emission (LIVE:
-  `json_canonical_parity.rs:105`, normalized byte-equality vs `sonic_rs`); (b) the offset-tape
-  bytes (PROVE-14, node-for-node); (c) the recommended general form — a SAX-like typed EVENT
-  stream over the grammar-derived Value alphabet, folded by a fixed endianness-neutral rolling
-  hash (PROVE-14's `fp 986912547`). The hash folds the EVENT stream, never native memory, so Rust
-  `u32` planes and V8 typed arrays digest alike. The canonical serialization can itself be
-  grammar-defined (constitution i).
-- **Differential runner** — one thin conformance runner per language (protobuf-conformance shape):
-  read corpus input, parse via the idiomatic path, emit the digest; the harness diffs across the
-  impl set (Rust eager · Rust stop-early `get` · Rust `parse_into<T>` · TS `TapeDoc` · a
-  third-party reference so no impl is privileged). LIVE: `ts_node_execute.rs` already spawns real
-  `node`, walks a path, compares byte-for-byte across four lanes with a no-silent-skip gate
-  (`:249`).
-- **Shared corpus** — stored once, language-agnostic. Fold in the value/css/csv corpora; ADD a
-  JSONTestSuite-style accept/reject corpus partitioned **must-accept / must-reject / may-either**
-  so implementation-defined cases (deep nesting, dup keys, number precision) don't flap the
-  differential.
-- **Grammar-directed differential fuzzing (the teeth)** — sample the bbnf grammar (the source of
-  truth) to generate valid + near-miss inputs, feed both impls, diff digests; a mismatch is a bug
-  in exactly one side. Csmith-for-grammars — nearly free because the generator is the grammar in
-  hand. This converts the plane's one weakness (silent drift in un-exercised behavior) into an
-  offensive detector.
+**Architecture — the value-fabric split.**
 
-**Integration seams.** LIVE: `json_canonical_parity.rs:105`, its number-canon handling at `:74-77`,
-the shared normalizer `common/json_normalize.rs`, the real cross-language runner
-`ts_node_execute.rs` (`:249/:303/:329`), the sibling parity tests
-(`css_l4_canonical_parity`, `sheets_expr_parity`, `bbnf_self_parity`, `serialize_roundtrip`).
-PLANNED: GN-4.W5's four-way `value_parity` + `cross-lane.mjs`. 6D's contribution is
-**consolidation** — lift the scattered parity asserts into ONE corpus + ONE digest + ONE runner
-set, and add the accept/reject corpus + the fuzzer.
+| stage | home | why |
+|---|---|---|
+| parse source → tape (SIMD scan, structural classify) | **wasm-core** | batch, one crossing, no consumer awaits mid-parse |
+| tape planes → JS typed arrays | **the binding** | one `wasm-bindgen` export, zero-copy views |
+| classify / lazy `nextSibling` walk / stop-early get / string decode | **TS-native idiom** | V8 measurably wins (4.4×, boundary-free) |
 
-**Gates it carries.** (i) 100% digest agreement across all lanes on the full corpus (reproduces
-PROVE-14 parity as a *standing law*, not a one-shot). (ii) The behavioral spec DECLARES which
-behaviors are in-contract (values, accept/reject) vs out (message wording, span encoding) —
-under-specify → false confidence, over-specify → the maintenance cost that defeats 6D.
-(iii) Number canonicalization pinned per grammar (`f64` Display vs `Number.toString` on `.0`,
-`-0.0`, exponent, 17th digit). (iv) Digest folds an event stream, endianness-safe.
+"One implementation" is honest for the **parser + regex automata + solver** (batch, comptime,
+async-tolerant). It is *not* honest for the walk — the walk is TS-native by *measurement* (row
+14), not by concession.
 
-**Exact open questions (the verdict 6D owes the lock — both are MEASURED, not assertable).**
-(a) **Drift-escape rate:** inject N deliberate divergences (escape off-by-one, dropped token
-class, number-format delta, astral surrogate mishandle); measure the fraction caught by the
-static corpus vs the grammar fuzzer, and cycles-to-detection. If corpus+fuzz catches ≈100% within
-one cycle, drift cost → ~0 and 6D wins outright; any class that systematically escapes
-(diagnostics, astral strings) is exactly where 6A/6B earn their keep. (b) **Marginal maintenance
-cost per grammar:** add ONE new grammar (TOML), reach parity under corpus+digest only, record LOC
-+ effort — 6D wins iff this is strictly below the hypothetical 6A/6B cost.
+**Mechanism / integration seams.** The archetype is LIVE: `bbnf-path-ts` (cdylib + serde payload
++ the differential test that IS the drift gate). The shipped core is `wasm/` (`bbnf-wasm` v0.1.0,
+cdylib delivered to `playground/src/wasm/`). **Homing collision (a real 6C decision):** GN-4.W4
+specifies a *new* `crates/bbnf-wasm`, but a `bbnf-wasm` already exists at `wasm/` — two cdylibs
+mean two `.wasm` downloads + two instantiations. 6C's strongest form lands the tape export as a
+*module inside* the extant crate. Boundary discipline: cross at the plane; the walk is TS-native;
+strings return `offset+len` into the already-crossed `source` array, decoded TS-side.
 
-**Standing.** ADVANCE, and it is a **FLOOR under every other family** (behavioral parity is
-mandatory infra regardless of the winning route — already installed). Substrate the most-LIVE of
-the four. Prior art the settled SOTA (protobuf conformance, WPT, sqllogictest, JSONTestSuite,
-CommonMark, and a published cross-language JSON-parser differential-testing paper on our exact
-value plane). Not BLOCKED. Its one weakness (coverage gap) is precisely what its fuzzer must be
-MEASURED to close — that measurement is the null-hypothesis test.
+**Gates it carries.** (a) memory-growth view-invalidation — two increasing-size parses through one
+instance holding a live typed-array view must not corrupt the first (a `memory.grow()` detaches
+every outstanding view — a hazard NOT in GN-4.md's R4); copy-out per parse or re-fetch views; (b)
+per-node-boundary-tax refusal — no API crosses per tape node (29,573 crossings loses
+catastrophically — the full-walk lesson generalized); (c) cold-instantiate counted like cold parse
+(warm-bench-is-disinformation law), doubled by two cdylibs.
+
+**Exact open questions — the two forces that bound the plane.**
+- **R-A (the killer, decisive): does the NEON win cross to wasm?** The certified SIMD kernels are
+  aarch64 intrinsics; `portable_simd`→wasm32 does NOT inherit the win — wasm `simd128` is an
+  optional extension gated by `-C target-feature=+simd128` with no runtime detection, and CLMUL
+  (the prefix-XOR path) is absent. In-tree, `crates/simd-scan` already carries a **separate
+  hand-written `wasm.rs` SIMD128 twin** of `neon.rs`, with a documented CLMUL→shift-XOR fallback
+  divergence — i.e., the hot kernel is ALREADY a second implementation. Whether it keeps the
+  throughput is UNMEASURED (Brief 1).
+- **R-E (confining, hard): synchronous ESM consumers cannot await a module.** value.js/latex-paper/
+  keyframes call `all()`/`dispatch()` synchronously (value.js has 59 sync `all()` sites); a
+  wasm-core parse-that forces async `WebAssembly.instantiate`. This is not a tax — it is a
+  consumer-contract violation. It confines wasm-core to the **bbnf side** (generated parser + tape
+  + regex-automata + solver) and leaves parse-that's combinator backbone TS-native (PT-3).
+
+**Disposition: BLOCKED-candidate as an independent primary family; ADVANCED only as a component.**
+The maximal reading ("Rust wasm is THE impl") is refuted by F1 (full-walk ~0.9×) and the field
+benchmark. R-E confines it to the bbnf side — it cannot govern the parse-that combinator plane at
+all. Its *performance* premise is gated on R-A, and R-A's missing primitive — SIMD that keeps the
+aarch64 win in wasm — is genuinely hard: absent it, the hot kernel becomes a second
+implementation (as `simd-scan/wasm.rs` already is), re-instantiating on the hottest surface the
+dual-maintenance the family exists to abolish. **6C survives only as the zero-copy *crossing
+mechanism* for a 6B-generated, 6D-verified tape — not as the plane's primary answer.** If Brief 1
+shows the wasm kernel matches native NEON, this softens to ADVANCED-scoped (bbnf batch plane).
 
 ---
 
-## THE INCOMPATIBILITY MAP (which families cannot coexist, and precisely why)
+## 4. Family 6D — ORACLE-ISOMORPHISM (behavioral isomorphism only)
 
-The families are not a flat XOR. The plane partitions into surfaces; incompatibility is
-**per-surface**, and 6D is a floor beneath all.
+**Thesis.** The rust/ts split is held equivalent by a shared conformance corpus + differential
+tests ALONE — layout free per language. The isomorphism boundary is **data** (a corpus + a
+canonical language-neutral digest), never code. This is the plane's **null hypothesis**: it wins
+by default and is defeated only if measured drift/maintenance cost exceeds a 6A linter's or a 6B
+generator's.
 
-1. **6C ⊥ 6A and 6C ⊥ 6B — over the collapsed surface only.** 6C has ONE implementation
-   (Rust→wasm); there is no second hand-written (6A) or generated (6B) TS tree to hold isomorphic
-   over the tape/value-fabric runtime. "Collapse to one impl" and "keep two impls isomorphic" are
-   mutually exclusive on the same surface. BUT the conflict is *scoped*: 6C explicitly excludes
-   parse-that combinators (separate repo, TS-native by decree) and full-materialization
-   (TS-native island). Outside the generator's tape/value runtime the three do not contend. So:
-   **mutually exclusive per-surface, not globally** — 6C answers a *narrower* question than 6A/6B
-   and cannot be the whole-plane answer.
+**Architecture — four coupled pieces.**
+- **Canonical digest** — a SAX-like typed event stream over the grammar-derived Value alphabet
+  (`ObjectOpen · Key · String · Number · …`), folded by a fixed endianness-neutral rolling hash.
+  **The decisive design insight: encode numbers as the 8-byte big-endian IEEE-754 bit pattern,
+  not decimal text** — Rust `ryu` and V8 `Number.toString` produce the same value but different
+  text (`1e21` vs `1000...0`); bit-equality is language-agnostic and total, dissolving the entire
+  number-canonicalization hazard for the digest lane.
+- **Differential runner** — promote today's ad-hoc `spawn node` (`ts_node_execute.rs`, LIVE:
+  node-required no-silent-skip gate) into a protobuf-conformance wire protocol (`{corpus_id,
+  grammar, input} → {accept, digest, error_class?}`), so any impl (incl. a third-party reference
+  or the LOCK-7 meta-circular oracle) plugs in without host edits; two-tier CI (committed golden
+  digests fast lane, live spawn gated slow lane).
+- **Shared corpus** — the extant JSON/CSS/CSV fixtures + third-party references
+  (`sonic_rs_parity.rs`, `lightningcss_parity.rs`, LIVE) + a JSONTestSuite-style **three-way
+  partition** (must-accept / must-reject / may-either) so impl-defined inputs don't flap.
+- **Grammar-directed differential fuzzing (the teeth)** — the grammar IS the source of truth
+  (Constitution i); sample it for valid + near-miss invalid inputs, coverage-guided (Zest/RLCheck),
+  with delta-debugging shrink. Converts "wins unless we forget a test" into "wins because drift
+  cannot hide"; the measurable proxy is *grammar coverage × drift-escape rate*.
 
-2. **6A ⊥ 6B — on the same surface.** 6A: both trees hand-authored, drift DETECTED by a linter
-   (pay the linter tax, keep idiomatic freedom on that surface). 6B: the shared surface GENERATED
-   from one spec, drift UNREPRESENTABLE (pay the generator tax, forfeit idiomatic freedom on the
-   generated surface). A given surface item is either hand-written-and-linted OR generated — not
-   both. They **partition-complement** (generate what is generable, lint the residue), but as
-   competing CENTERS for the *same* surface they are exclusive. Crucially, the boundary between
-   them — 6B's "generated fraction" vs "hand fraction" — is *the same boundary* 6A calls its
-   "clean-map ratio," which is *the same boundary* 6C calls its "V8-native island cut." **All
-   three families are measuring the identical seam and naming it differently; the lock's job is to
-   locate that one seam with a number.**
+**Mechanism / integration seams.** No invention — *consolidation*. Lift the scattered parity
+asserts (`json_canonical_parity.rs`, `css_l4_canonical_parity.rs`, `sheets_expr_parity.rs`,
+`serialize_roundtrip.rs` — the metamorphic seed for reference-less grammars like sheets) into ONE
+corpus + ONE digest + ONE wire-protocol runner set. Feeds the GN-4.W5 four-way parity close gate
+(already plan-of-record).
 
-3. **6D-as-CENTER ⊥ {6A, 6B, 6C} — decided empirically, by ONE measured number.** 6D-as-FLOOR is
-   compatible with all (behavioral parity is installed infra). But 6D-as-CENTER (the null
-   hypothesis: layout FREE, NO structural enforcement) contradicts the core claim of 6A/6B/6C that
-   structural correspondence is worth enforcing. This incompatibility is **not a priori** — it is
-   adjudicated by the drift-escape rate under corpus+fuzz: if ~0, structural enforcement is cost
-   without a buyer (6D-center wins); if a class systematically escapes (the `$.statuses[0].nope`
-   asymmetry proven LIVE in `isomorphic_path_error.rs:129-138`; astral strings; diagnostics), that
-   class needs 6A/6B/6C and 6D-alone loses *there*. The `nope` counterexample is decisive: T1/T2
-   structural checks pass green while behavior differs — proving structure alone is
-   necessary-not-sufficient AND behavior alone (without a corpus covering that input) is blind. The
-   two families are **complementary on different failure modes**, not globally exchangeable.
+**Gates it carries.** (a) 100% digest agreement across Rust eager/stop-early/typed + TS `TapeDoc`
++ a third-party reference — PROVE-14 parity as a STANDING law; (b) the in/out-of-contract
+partition DECLARED as data: values + accept/reject = in-contract; message wording + span
+byte-encoding = out; **error class = a declared toggle** (the `nope` case); (c) three-way
+accept/reject partition so the gate is stable, not flaky.
 
-4. **Fixed constraints that bound every family (not inter-family, but they cap routes):**
-   - **Regex-engine non-isomorphism (LOCK-5):** Rust bespoke DFA vs TS native `RegExp`. No family
-     may mandate mirroring here — 6A allow-lists it, 6B does not generate a TS regex engine, 6C
-     may wasm-core the logic but LOCK-5 governs, 6D is behavioral-only and unaffected.
-   - **SIMD/NEON non-crossing (constitution iv, SPEC row 09):** NEON kernels do not cross; only
-     the tape crosses. Caps 6C's headline (wasm-scalar or a distinct wasm32 v128 dialect); a
-     refuted portable_simd→NEON shim proves no shared SIMD layer crosses at speed.
+**Exact open questions — two numbers decide the family, both measured.** (i) **drift-escape rate**
+— inject N deliberate divergences (off-by-one escape decode, dropped CSS token class, number-format
+delta, astral-string mishandle, the `nope` error-class flip); measure the fraction caught by
+static corpus vs coverage-guided fuzz, and cycles-to-detection. (ii) **marginal maintenance cost
+per grammar** — add TOML (none in-tree) and reach parity under 6D alone; 6D wins iff this cost is
+strictly below the hypothetical 6A/6B cost for the same grammar AND escaped-drift is bounded.
 
-**The convergent shape the incompatibility map implies (for later passes, not a verdict):** the
-real-world winners (tsc-go, FlatBuffers, oxc) are never a single family but a *layering* — 6D the
-mandatory behavioral floor; 6B generating the mirror-able data/oracle surface from the grammar;
-6A's linter enforcing hand-body correspondence up to the idiom seam; 6C confined to the
-crossing/playground lanes where its measured win (partial access, 4.4×) actually lives. Whether
-that layering collapses to one dominant center or stays a composite is the measured question the
-next passes owe — and it turns on exactly two numbers: **is 6B's generation drift-impossible for
-the enum/classify class, and does 6D's corpus+fuzz catch that same class cheaply if it is NOT
-generated.** Those two experiments are opposed on the identical drift class and together collapse
-the decision space.
+**Disposition: ADVANCED — the mandatory FLOOR, but not the whole answer.** 6D is compatible with
+every family and REQUIRED by each (6A's T3, 6B's parity oracle, 6C's drift gate). But **pure 6D
+(layout totally free) is BLOCKED-candidate as the whole answer for the tape plane**: "layout free"
+directly negates the byte-identical SoA layout the zero-copy stop-early win (F2/F3) requires. 6D
+wins as the *verification substrate*; it loses as the *whole answer* where the tape needs byte
+identity to be zero-copy. Its blind spot (silent drift in un-exercised behavior) is real and is
+exactly where a thin structural cap (6A/6B) earns its tax — but only on the classes the fuzzer
+provably cannot reach.
 
 ---
 
-## BLOCKED-candidate assessment (elegance earns nothing)
+## 5. The incompatibility map (which families cannot coexist, and precisely why)
 
-- **6A — not BLOCKED.** Substrate LIVE; owes the clean-map ratio (a measurement, not a missing
-  primitive).
-- **6B — not BLOCKED, closest to a structural stall.** Its prerequisite — a backend-NEUTRAL spec
-  (the IR today carries Rust type strings; no `struct BackendIr` verified in-tree) — is a *subset*
-  of the isomorphism problem, not equal to it. Convergence gates on that refactor + the
-  drift-impossibility experiment.
-- **6C — not BLOCKED, SCOPE-BOUNDED.** Inherently a *partial* collapse; the missing primitive
-  (wasm SIMD = NEON) is one it explicitly does not need. Cannot be the whole-plane answer.
-- **6D — not BLOCKED.** The floor; owes two measured numbers (drift-escape rate, marginal
-  maintenance cost). Its coverage-gap weakness is a measurement target, not a missing primitive.
+The families are **not** four mutually exclusive answers. They are one mandatory floor (6D) and
+three candidate structural caps (6A, 6B, 6C) that conflict **only on a shared surface**. Once
+surfaces are partitioned the conflicts dissolve into a stratification — and *drawing that
+partition is the constitution's "reasonable point," which is the next pass's central deliverable.*
 
-No family is a clean BLOCKED-candidate. The lock's remaining work is entirely *measurement*, which
-is the constitution's own demand (iii: measured, not asserted; vii: concrete artifacts).
+**Genuine pairwise incompatibilities (same surface):**
+
+1. **6A ⊥ 6B — exclusive per item.** Generate-vs-hand-write-and-lint cannot both govern the same
+   item. A 6B-generated pair has no independent hand-authored twin for 6A's name-map linter to
+   check — the linter would compare the generator's two outputs, a tautology (consumer-less
+   substrate, Y.13). Conversely, 6A's hand-authored idiom residue has no spec to generate from.
+   They coexist ONLY by partitioning the surface (declarative → 6B, idiom residue → 6A), and that
+   partition line IS the deliverable. On the **combinator type algebra** specifically, 6B is
+   independently REFUTED (§2), so that surface is 6A + 6D with no 6B option.
+
+2. **6C ⊥ 6A and 6C ⊥ 6B — on absorbed surfaces.** Where 6C absorbs a surface into the wasm core
+   (parser, regex automata, solver), there is NO second implementation: the TS side is a thin
+   binding, not a twin to mirror (6A) or a skeleton to generate to (6B). 6C thus *excludes* 6A/6B
+   inside the wasm boundary and *defers* to them outside it (the TS-native walk). 6C partitions
+   the plane at the wasm seam rather than competing across it.
+
+3. **6C ⊥ the parse-that consumer contract (family-vs-constraint, hard).** Synchronous ESM
+   `all()`/`dispatch()` cannot await `WebAssembly.instantiate` (R-E). Non-negotiable; confines 6C
+   to the bbnf side. This is why 6C can never be the *plane-wide* answer.
+
+4. **6D-pure ⊥ the tape plane (family-vs-measured-requirement).** "Layout free per language"
+   negates the byte-identical SoA layout that the zero-copy typed-array-view stop-early win (F2/F3)
+   requires. 6D-*as-whole-answer* conflicts with the tape's measured requirement; 6D-*as-floor*
+   does not. This is the precise sense in which the null hypothesis is defeated *for the tape* and
+   survives *as verification*.
+
+**Compatibilities (the stratification the incompatibilities resolve into):**
+
+| surface | primary mechanism | verification |
+|---|---|---|
+| tape layout (4 SoA planes) | **6B** generates the byte contract, **6C** crosses it zero-copy | 6D digest + T0 byte gate |
+| decoder skeleton / oracle tables | **6B** (grammar-defined) | 6D |
+| value-materialization / walk | **TS-native** (6C-tempered: "where V8 wins"); skeleton optionally 6B-generated | 6D |
+| combinator type algebra | **hand-written** (6B refuted); **6A** tree/name mirror | 6D behavioral |
+| module tree / names | **6A** tree+name mirror (NOT code-shape — F4) | 6D |
+| everything (behavior) | — | **6D** — the mandatory floor |
+
+The reading the evidence forces: **6D is installed everywhere as the floor; 6B governs the
+declarative/tape/oracle surface; 6A governs the module-tree/name/idiom-residue surface; 6C
+collapses from an independent family into the *crossing mechanism* for the 6B-generated tape,
+confined to the bbnf side.** The three "caps" are not rivals across the whole plane — they are
+rivals only where their surfaces overlap (6A⊥6B on any single declarative item), and the next
+pass's job is to fix that overlap by measuring the two reasonable-point numbers (6B §2 open-Q i,
+6A §1 open-Q i).
+
+**BLOCKED-candidate summary.** 6C-as-primary (BLOCKED-candidate: refuted maximal, confined by
+R-E, perf premise gated on the hard R-A primitive). 6D-as-whole-answer (BLOCKED-candidate: layout
+freedom negates the tape's byte requirement). 6A and 6B are ADVANCED, mutually exclusive per
+surface, and each strictly dependent on the 6D floor.
+
+---
+
+## 6. The two sharpest uncertainties for the next pass
+
+The next pass must resolve two hinge questions: **(Q1)** is 6C a real independent family, or does
+it collapse into a wasm-crossing of a generated/mirrored tape? **(Q2)** is a structural cap
+(6A/6B) ever sufficient alone, or is 6D a mandatory floor beneath every cap? The two briefs below
+are the cheapest, most decisive, in-tree resolutions.
+
+- **Brief 1 (bbnf-worktree) — the NEON-crossing decider (6C R-A).** Decides Q1: whether "one wasm
+  implementation" earns a performance claim on the hot kernel, or whether `simd-scan/wasm.rs` is
+  dead-weight second-implementation maintenance. Uniquely runnable because the wasm SIMD128 twin
+  already exists in-tree.
+- **Brief 2 (bbnf-worktree) — the structural-pin necessary-not-sufficient decider (6A T1/T2 vs 6D
+  T3).** Decides Q2: converts the LIVE `$.statuses[0].nope` assertion into a measured
+  green-structural / red-behavioral pair, proving (or refuting) that 6D is a mandatory floor and
+  that 6A/6B alone are insufficient. Cheapest, fully in-tree, single `cargo test`.
+
+(Full briefs returned in the structured output.)

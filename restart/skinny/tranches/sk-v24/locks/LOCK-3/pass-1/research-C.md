@@ -1,239 +1,289 @@
-# LOCK-3 · Family 3C — GRAMMAR-HOMOIOUSIA · pass-1 research
+# LOCK-3 · Family 3C — GRAMMAR-HOMOIOUSIA (pass 1)
 
-The IR is of *like substance* to the object grammars it lowers. Its node algebra is
-bbnf-specified in a meta-grammar; its transpositions are grammar-to-grammar maps; the same
-generator that emits JSON/CSS parsers emits the IR's own data types and pass scaffolding. The
-generator eats itself. This is the purest reading of constitution clause (i) — grammar totality
-applied not to a payload language but to the compiler's own middle.
+*The IR is itself grammar-specified: the IR node languages are bbnf grammars, the
+transpositions between them are grammar-to-grammar rewrite maps, and emission is
+grammar-derived unparse. The generator eats itself — bbnf-in-bbnf, IR-in-bbnf — with a
+committed stage-0 and a regen fixpoint, aligned with the LOCK-7 bootstrap. Homoiousia:
+the IR is *of like substance* with the grammars it processes; the compiler's own middle
+is not privileged hand-written Rust but another document the grammar plane derives.*
 
-The distinctive center (vs siblings): 3A/3B argue about the *number and contract* of IR
-levels; 3D argues about *staging*. 3C argues about the IR's **substance** — whether the node
-types and the pass boilerplate are hand-written Rust or grammar-derived artifacts. It is
-orthogonal to level-count: a homoiousious IR can be a 3-level tower or a single annotated graph.
-Its payoffs are bootstrap alignment (LOCK-7), rust/ts skeleton isomorphism by construction
-(LOCK-6 6B), and dogfooding the type plane (LOCK-1/GN-3) on the compiler itself.
+---
+
+## 0. The thesis, and what makes this family orthogonal
+
+Today the IR tower is a sequence of **hand-written Rust enum transformations**. The node
+languages are Rust enums: `ExprKind` (10 variants, `ir/src/lib.rs:233-271`), `BackendExpr`
+(`:376-413`), `Recognizer`/`SimdMode`/`TapeKind` (`:415-463`), the `DirectBuild*` schema
+lattice (`:465-535`). The transpositions are hand-written matches: `Infer::infer_expr`
+(`passes/src/lib.rs:203`), `lower_expr`'s `Project→ValueProject` arm
+(`passes/src/lib.rs:1349`), `materialize_rule`'s IR-node-from-IR-node splice
+(`passes/src/lib.rs:1357-1391`), and `lower::lower_to_rust` (`codegen/src/lower/mod.rs`).
+The final transposition — backend IR → Rust text — is **raw-string template splicing**:
+eight `include_str!("json_templates/*.rs")` files (`runtime_generator.rs:101-133`) and the
+`CSS_GENERATED_RS`/`CSS_MOD_RS`/`CSS_PARSER_RS`/`CSS_SINK_RS`/`JSON_*` raw strings
+(`runtime_generator.rs:339-505`). PROVE-12 residualization was applied as a **hand-edit of
+one raw-string template** (`runtime_generator.rs`, the `delim_mask` const fn + const-generic
+call sites — PROVE-12 REPORT §2).
+
+Family 3C's genuinely distinct architectural center: **make the IR levels and their
+transpositions grammar-specified data**, so the generator becomes mostly *derived*, not
+*written*. This is not the contract-tower question (how many levels, what invariants), nor
+the single-vs-multi-IR question, nor per-site staging as such — it is the *substance* of the
+IR: whether the middle is hand-Rust or bbnf-specified-and-generated. A homoiousious IR is
+orthogonal to level-count — it may be a 3-level tower or a single annotated graph. The two
+things already true in this tree make the family concrete rather than aspirational:
+
+1. **bbnf is already self-describing.** `grammar/bbnf/bbnf.bbnf` (89 LOC),
+   `expressions.bbnf` (37), `types.bbnf` (7) express the bbnf grammar *in bbnf*, with typed
+   projections (`identifier = /.../ -> Span`, `int_lit = /.../ -> i64`,
+   `float_lit = /.../ -> f64`), `@import { … } from "…"` module composition, and sum types by
+   alternation-of-refs (`directive = import_directive | recover_directive | … ;`). Siblings
+   `grammar/ebnf/ebnf.bbnf`, `grammar/bnf/bnf.bbnf`, `grammar/misc/{regex,g4,csv}.bbnf` prove
+   the meta-grammar pattern is load-bearing, not a toy. It is presently **unwired** — grammar
+   source is parsed by a 2142-LOC hand parser (`grammar/src/lib.rs`), and `bbnf.bbnf` is a
+   dormant self-host. The homoiousia bootstrap target already exists on disk.
+2. **The type plane already derives Rust types from bbnf `->` projections.** GN-3's
+   `type_plane::derive` → `DirectSchemaSet` → `json_typed_direct::render` (the working
+   1245-LOC direct-to-struct emitter, `json_typed_direct.rs:10`) turns a grammar's `->`
+   chains into Rust structs. **Turn that same engine on the compiler's own IR grammars and it
+   emits the IR enums.** The generator-that-eats-itself needs no new emitter — it needs the
+   IR expressed as grammar and fed to the emitter that already exists.
+
+The family's proposition, in one sentence: *`ir/src/lib.rs`, `passes::lower_expr`, and
+`runtime_generator`'s templates are the last three hand-written organs in a pipeline whose
+front (grammar→types) and whose analyses (HM, cost, recognizers) are already declarative or
+derivable; homoiousia closes the loop by specifying those three as grammars + rewrite rules +
+unparse, with a bootstrap fixpoint proving it.* Payoffs beyond parsimony: bootstrap alignment
+(LOCK-7), rust/ts skeleton isomorphism by construction (LOCK-6 6B — one spec, two skeletons),
+and dogfooding the type plane (LOCK-1/GN-3) on the compiler itself.
 
 ---
 
 ## 1. The mechanism, made concrete
 
-Three artifacts, each an extension of machinery that already exists at HEAD.
+Three substrates, each with an existing consumer (Y.13-honest by construction — every piece
+below is read by a mechanism already in the tree).
 
-### 1a. The IR meta-grammar (`grammar/ir/*.bbnf`) — net-new, but not novel in kind
+### 1.1 Substrate A — the IR metagrammars (the node languages as bbnf)
 
-bbnf is **already self-hosted**: `grammar/bbnf/bbnf.bbnf` (89 lines) describes bbnf's own
-concrete syntax with `-> Span` projections, `@import { … } from "…"` module composition, and
-sum-type declarations by alternation-of-refs — e.g. `directive = import_directive |
-recover_directive | pretty_directive | … ;` and `term = "ε" | identifier … | literal | regex |
-…`. Siblings `grammar/ebnf/ebnf.bbnf`, `grammar/bnf/bnf.bbnf`, `grammar/misc/regex.bbnf`,
-`grammar/misc/g4.bbnf` prove the meta-grammar pattern is load-bearing, not a toy. The
-constitution's clause (ii) already mandates the regex grammar be bbnf-defined; 3C is the same
-move for the IR.
+Author `crates/ir/grammars/{hir,mid,backend}.bbnf`. Each IR node kind is a bbnf rule; each
+Rust variant's payload type is a `->` projection. `ExprKind`'s ten arms become ten rules:
+`expr_kind = seq | alt | repeat | optional | literal | regex | ref | annotation | project |
+discard ;`, each alternative a `->` to a named constructor over typed/child-ref fields. The
+`ExprId(usize)` arena indices (`ir/src/lib.rs:18-19`) are the graph edges — a child-ref
+projection. `Project { body, target, ty }` is a three-field product; `Seq(Vec<ExprId>)` a
+constructor over a repeated child-ref. An **attribute vocabulary** carries what a bare grammar
+cannot: `@derive(Serialize,Deserialize)`, `@box body` (heap indirection, e.g.
+`Box<BackendExpr>` `:377`), `@newtype RuleId = usize` (`:16`), `@serde(skip_if_none) target`
+(`:469`).
 
-The IR meta-grammar is a bbnf file whose **type projections define the node algebra as sums of
-products**. The current hand-written `ir/src/lib.rs` `ExprKind` (10 variants,
-`ir/lib.rs:233-271`) and `BackendExpr` (13 variants, `ir/lib.rs:375-413`) are exactly algebraic
-data types — sums of records. A bbnf rule `expr_kind = seq | alt | repeat | optional | literal
-| regex | ref | annotation | project | discard ;` with each alternative carrying a `->`
-projection to a named constructor and typed fields *is* that ADT. `Seq(Vec<ExprId>)` is a rule
-projecting to a `Seq` constructor over a repeated child-ref; `Project { body, target, ty }` is a
-three-field product. The `ExprId(usize)` arena indices (`ir/lib.rs:18-19`) are the graph edges —
-a bbnf `Ref`-to-rule under the type plane.
+The consumer is **the type plane itself**: `type_plane::derive(hir.bbnf)` produces a
+`DirectSchemaSet` whose `DirectTypeKind::Struct`/`Sum` (GN-3.W1 adds `Sum`) map exactly onto
+`ExprKind`'s enum-of-structs shape, and `json_typed_direct::render` emits the Rust. The
+committed `ir/src/lib.rs` becomes `@generated`, its stage-0 form frozen; regen from
+`hir.bbnf` must reproduce it byte-identical. This is the *generator eating itself*: the
+schema-derivation path (GN-3) that produces user document structs from `twitter_search.bbnf`
+produces the compiler's `ExprKind` from `hir.bbnf` — one path, two consumers.
 
-Critically the substance is *not* concrete syntax to be parsed at runtime; it is a **schema
-declaration**. The IR grammar's only consumer is the generator, at generation time. This
-satisfies Y.13 (consumer-less substrate forbidden): the consumer is the codegen struct emitter,
-which regenerates `ir/lib.rs` from the meta-grammar.
+**Reuse, not new build:** `direct_schema.rs` (the schema IR), `json_typed_direct.rs` (the
+renderer), `lower/schema_direct.rs:11` (the bridge), and `type_plane/` (GN-3.W1-W3) are the
+entire machine. Homoiousia's Substrate A is a **new input** (`hir.bbnf`) and an **attribute
+extension** to `DirectSchemaSet`, not a new emitter.
 
-### 1b. Node-type emission — the direct-to-struct emitter, generalized
+### 1.2 Substrate B — the transpositions as grammar-to-grammar rewrite maps
 
-The generator already emits Rust data types from a schema. `codegen/src/json_typed_direct.rs`
-(1245 LOC, `render(program)` at `:10`) is a working direct-to-struct emitter; it consumes a
-`DirectSchemaSet` (`codegen/src/direct_schema.rs:4`) — a real type IR with `DirectTypeSchema`
-(`:52` `DirectTypeKind`), `DirectFieldSchema`, `DirectTypeRef`, presence/duplicate/capacity
-policy. Today the only schema producer is hand-written (`xtask/src/real_typed_schema.rs:7`,
-literal `CitmCatalog` rows) and `DirectTypeKind` has a single variant `Struct` — GN-3 W1 adds
-sum types.
+A bbnf-native rewrite-rule form. The LHS is a pattern over a source IR grammar's node rules;
+the RHS is a `value_expr` (the construction DSL bbnf *already has* — `expressions.bbnf`:
+`value_fn_call`, `value_path`, `value_input`) over the target IR grammar's node rules:
 
-3C's node-type emission = **point the direct-to-struct emitter at the IR meta-grammar's derived
-schema.** The seam R6 §8b already names for JSON — `passes::extract::derive_direct_schema(grammar,
-&plan) -> DirectSchemaSet`, threading `ExprKind::Project.ty` (`ir/lib.rs:263`) into
-`DirectBuildTarget.type_ref` instead of dropping it at `passes/src/lib.rs:203` — becomes the
-producer that turns `ir.bbnf` into the `DirectSchemaSet` that emits `ExprKind`/`BackendExpr`.
-`ir/src/lib.rs` gains the header `// @generated by skinny bbnf-codegen`. The generator eats
-itself: the enums it lowers are the enums it emits.
+```
+# passes/lower.rewrite  (interpreted at generation time; zero runtime cost)
+lower : Project{ body, target, ty }  ->  ValueProject{ body: lower(body), target, ty } ;
+lower : Discard{ left, right, keep } ->  discard_lower(lower(left), lower(right), keep) ;   # @host
+lower : Repeat{ body, min, max }     ->  RepeatLoop{ body: lower(body), min } ;
+# every unmatched node is the identity map — auto-derived (the Nanopass catamorphism)
+```
 
-Dependency (named): this requires `DirectTypeKind::Enum` (sum-of-variants) — **GN-3 W1 is a hard
-prerequisite** (`DirectTypeKind` at `direct_schema.rs:52` today Struct-only). 3C cannot emit
-`ExprKind` (a sum) until the schema IR represents sums. This is the LOCK-1 ⋈ LOCK-3 seam.
+The default per-node arm is the **identity map, auto-derived from the node grammar**, so a
+pass writes only the productions it changes — Chez's nanopass discipline. Structural rewrites
+are grammar; non-structural kernels are **typed `@host` functions** (the
+`hybrid-grammar-host` law): `discard_lower`, the HM `unify`, `derive_backend_shape`'s cost
+selection, `derive_recognizers`' first-set fixpoint. The rewrite file names the *schedule and
+the structure*; the host lattice supplies *analysis and semantics*. This is exactly
+LOCK-7-C's host-function-lattice, but scoped to the IR spine, with a measured floor: the
+family lives or dies on the **structural-fraction** — the proportion of each pass expressible
+as identity+rewrite vs escaped to host (§3, risk 1; §4, PROVE-HOMO-2 measures it).
 
-### 1c. Transpositions as grammar-to-grammar maps — the nanopass core
+The seed already exists: `materialize_rule` (`passes/src/lib.rs:1357-1391`) *already* builds
+IR nodes from IR nodes by splicing `SpanMark(Start) + body + SpanMark(End) + TapeEmit +
+DirectBuild + Return` — a hand-written rewrite. Homoiousia lifts that splice into a rewrite
+rule over `hir.bbnf`→`backend.bbnf`.
 
-`passes::lower_expr` (`passes/src/lib.rs`, `ExprKind → BackendExpr` catamorphism; the tail is at
-`:1340-1360`) is the transposition GrammarIr → BackendIr, hand-written as a per-constructor
-`match`: `Literal → ByteLiteral`, `Regex → RegexProgram{span_kind}`, `Ref → CallRule`, `Project
-→ ValueProject`, `Discard → Seq[left,right]`. This is a **grammar-to-grammar map** in the exact
-nanopass sense: source-language constructor → target-language constructor, with the recursive
-descent over the arena as derivable boilerplate.
+### 1.3 Substrate C — emission as grammar-derived unparse
 
-3C makes the transposition **declarative**: a pass is a set of rewrite clauses
-`source_ctor(fields…) => target_ctor(fields…)`, the catamorphism over `ExprId`/`BackendExpr`
-generated from the two IR meta-grammars, only the non-identity clauses hand-authored. The five
-`lower_expr` arms that are structurally trivial (`Seq→Seq`, `Alt→Alt`, `Optional→OptionalBranch`)
-are the derived identity fringe; the two that carry semantics (`Regex→RegexProgram` computing
-`span_kind`, `Project→ValueProject`) are the explicit clauses. Nanopass's contribution is
-precisely that the fringe is *free* and the passes shrink to their essential deltas.
+The raw-string templates (`runtime_generator.rs:101-133,339-505`) are the antithesis of
+grammar-to-grammar: the backend-IR→Rust map is opaque string splicing. Homoiousia replaces
+the *structural glue* with unparse: a Rust-surface grammar (or the existing `@pretty`
+machinery) run in reverse over the backend IR. The seed is `GrammarIr::pretty`
+(`ir/src/lib.rs:124-215`) — an *already-grammar-driven unparser* for bbnf — and the `@pretty`
+directives in `bbnf.bbnf` (`@pretty grammar block ;`) plus the `gorgeous`/`pprint` line
+(MEMORY: aesthetics-critical, doc-integration-style). BNFC's grammar→AST+pretty-printer is
+the model.
 
-The **heuristic role classifier** `derive_materialization_roles` (`passes/src/lib.rs:1403-1490`)
-— which invents the JSON `JsonValue` taxonomy by byte-literal pattern-matching (`b"{"`+`b"}"` →
-container, `≥4` value-refs → the `value` rule, `passes/src/lib.rs:1417-1465`; census in R6 §6) —
-is the anti-pattern 3C dissolves. Under a homoiousious IR the object grammar *declares* its
-shapes via `->` projections (GN-3 W2's `twitter_search.bbnf`); the transposition is a grammar
-map, not a name-gate. The central `sink_only.has_rule("value")` gate at
-`runtime_generator.rs:99` (R6's crux hardcode) has no place in a grammar-to-grammar pipeline.
+**The bounded claim (constitutional):** hand-written kernels stay hand-written — the JSON
+string/number/NEON scanners, the `parse_that_regex` leaves (constitution: "everything is
+grammar-driven … *save primitives and combinators*"; MEMORY: no-combinators-monolithic,
+one-codegen-path, preserve-rich-ast). Unparse emits **structural descent glue and kernel
+call-sites**, not kernels. The templates do not fully vanish; they collapse to a leaf
+vocabulary of `@host`-referenced kernels the unparser emits *calls* to. Naming this honestly
+is the difference between a real family and an over-claim (§3, risk 3).
+
+### 1.4 Residualization (PROVE-12) as a grammar-to-grammar corollary
+
+PROVE-12's win — const-fold the CSS delimiter membership to a `u128` immediate, monomorphize
+per call site, +18 generated LOC, 0.81-0.98× cyc/B, byte-identical output (REPORT §3-6) — is,
+in homoiousia terms, **one rewrite rule** over `backend.bbnf` with a stage-0 annotation:
+
+```
+residualize : find_delim{ set: @const s }  ->  find_delim_masked{ mask: delim_mask(s) } ;  # delim_mask is @host, comptime
+```
+
+The `@const`/stage marker rides the existing `ExprKind::Annotation { name, value }`
+(`ir/src/lib.rs:257-260`); the mask fold is a comptime `@host` fn; the emitted immediate is
+residual. PROVE-12 §7 explicitly promised this generalizes "to any grammar-derived
+delimiter/STOP-set scan (JSON's structural scan, general-descent)" but demonstrated it on CSS
+alone by hand-editing one template. Homoiousia *is* that generalization: **one rewrite rule,
+N grammars**, vs PROVE-12's one-template-per-grammar. This is the family's differentiator win
+and its cleanest falsifiable prototype (§4, PROVE-HOMO-3). It also names the LOCK-2 seam: the
+rewrite *schedule* (when residualization fires, at what depth) is where an e-graph/CSP driver
+would plug — but 3C's center is that residualization is a *rewrite over the IR grammar*, not a
+bespoke template patch; the scheduling engine is LOCK-2's to supply.
 
 ---
 
-## 2. The substrate — extant code that serves
+## 2. The substrate & integration seams (path:line)
 
-| Role | Site | Serves 3C as |
+| Homoiousia piece | Extant code it re-homes / re-uses | Seam |
 |---|---|---|
-| The ADT tower to be generated | `ir/src/lib.rs:233-271` (`ExprKind`), `:375-413` (`BackendExpr`), `:465-535` (`DirectBuild*` schema) | target of node-type emission; becomes `@generated` |
-| Self-host precedent | `grammar/bbnf/bbnf.bbnf` (sums via alt, `-> Span`, `@import`) | proves meta-grammar with type projections is real |
-| Type IR (schema) | `codegen/src/direct_schema.rs:4-120` (`DirectSchemaSet`/`DirectTypeKind`/`DirectTypeRef`) | the schema the IR meta-grammar lowers into |
-| Struct emitter | `codegen/src/json_typed_direct.rs:10` (`render`, 1245 LOC) | emits Rust enums/structs from schema |
-| Schema→program bridge | `codegen/src/lower/schema_direct.rs:11` (`lower_program`) | wires schema into emit |
-| Transposition (hand-written) | `passes/src/lib.rs` `lower_expr` (tail `:1340`) | the grammar-to-grammar map to be declarativized |
-| Shape-lowering dispatch | `codegen/src/lower/mod.rs` (`ShapeLowering` trait, `select_lowering`) | per-shape lowering already trait-abstracted — the pass-registry seam |
-| Projection carrier | `ir/lib.rs:261-265` (`Project{body,target,ty}`); infer-drop `passes/src/lib.rs:203`; lower `:1349` | the `->` type thread node-type emission needs |
-| Fold catamorphism precedent | `ir/lib.rs:320-349` (`nullability`, LLVM changed-flag fixpoint over `ExprKind`) | shows the derivable arena-walk shape |
-| Bootstrap engine | `xtask/src/regen.rs:19` (`write_targets`→`emit_runtime_from_request`), `check_target:36` | regen host; adds an `ir.bbnf` target + fixpoint gate |
+| IR node grammars (Substrate A) | `ExprKind` `ir/src/lib.rs:233-271`; `BackendExpr` `:376-413`; `Recognizer`/`SimdMode`/`TapeKind` `:415-463`; `DirectBuild*` `:465-535` | these enums become `@generated` from `hir/mid/backend.bbnf` |
+| IR-enum emitter (reuse) | `type_plane::derive`→`DirectSchemaSet` (GN-3); `direct_schema.rs`; `json_typed_direct.rs:10` (render); `lower/schema_direct.rs:11` | feed IR grammars to the *same* schema→struct engine that serves user shapes |
+| self-host bootstrap (LOCK-7 align) | `grammar/bbnf/{bbnf,expressions,types}.bbnf` (dormant); hand parser `grammar/src/lib.rs` (2142 LOC) | regen the parser/IR from `bbnf.bbnf`; committed stage-0 + fixpoint |
+| transposition rewrites (Substrate B) | `infer_expr` `passes/src/lib.rs:203`; `lower_expr` Project arm `:1349`; `materialize_rule` `:1357-1391`; `derive_materialization_plan` `:1136-1287`; `lower_to_rust` `codegen/src/lower/mod.rs` | lift each hand match into a `.rewrite` rule set over IR grammars + `@host` calls |
+| construction DSL (reuse) | `expressions.bbnf` (`value_expr`, `value_fn_call`, `value_path`, `value_input`) | the rewrite RHS *is* this existing value-expression grammar |
+| host-fn lattice (LOCK-7-C) | `@host` directive `bbnf.bbnf:host_directive`; `RuntimeFrontendRequirements` `grammar_provider.rs:38-81` | the escape hatch for non-structural passes (cost, HM, recognizers) |
+| emission-as-unparse (Substrate C) | `runtime_generator.rs:101-133,339-505` (raw templates); `GrammarIr::pretty` `ir/src/lib.rs:124-215`; `@pretty` `bbnf.bbnf` | structural glue unparle-emitted; kernels stay `@host` leaves |
+| residualization rewrite (§1.4) | PROVE-12 patch (`runtime_generator.rs` `delim_mask`); `ExprKind::Annotation` `ir/src/lib.rs:257-260`; `css_scan.rs` STOP-set (712 LOC) | `@const` stage marker + comptime `@host` fold, one rule, N grammars |
+| regen/bootstrap host (LOCK-7) | `xtask/src/regen.rs:19,36`; `codegen/src/lib.rs:101,130` (`emit_from_source`, `emit_typed_from_source`) | add IR-grammar regen targets; fixpoint gate `regen∘regen = regen` |
 
-The **`ShapeLowering` trait** (`lower/mod.rs`) is quietly the most important seam: lowering is
-*already* a pluggable dispatch over `BackendShape`, not a monolith. A pass registry (nanopass's
-pass pipeline) is the same shape generalized from 5 backend shapes to N transposition passes —
-no new architecture, an extension of the extant one (satisfies system-cohesion, no-orthogonal-
-subsystems).
-
----
-
-## 3. Prior art (citations)
-
-- **Nanopass framework** — Sarkar, Waddell, Dybvig, *A Nanopass Infrastructure for Compiler
-  Education* (ICFP 2004); Keep & Dybvig, *A Nanopass Framework for Commercial Compiler
-  Development* (ICFP 2013). THE canonical prior art: each IR is *defined by a language grammar*
-  (`define-language`), passes are grammar-to-grammar (`define-pass`) with auto-derived
-  catamorphism boilerplate; only non-identity clauses are written. Chez Scheme's production
-  compiler is built this way (~50 nanopasses). Direct blueprint for §1c. The measured lesson:
-  the boilerplate elimination is what makes many-small-passes tractable — the exact economy 3C
-  buys the skinny middle.
-- **MLIR** (Lattner et al., CGO 2021) + **ODS/TableGen** — dialect ops are *declaratively
-  specified* in TableGen (`.td`); C++ op classes are **generated**; `DialectConversion` +
-  rewrite patterns are dialect-to-dialect (grammar-to-grammar) maps. The "generator eats itself"
-  precedent at industrial scale. Difference: TableGen is a separate meta-language; 3C's meta-
-  language IS bbnf (tighter homoiousia).
-- **Spoofax / SDF3 + Stratego** (Visser et al.) — SDF3 defines syntax *and generates the
-  signature (ADT)*; Stratego is term-rewriting over grammar-defined trees. Grammar-to-grammar
-  transformation as a language. **Rascal** and **TXL** (Cordy) are the same family (source-to-
-  source, grammar-parameterized).
-- **Attribute grammars** — Knuth (1968); JastAdd reference-attribute grammars — the theoretical
-  root of "computation declared over grammar productions." Relevant if transpositions want
-  synthesized/inherited attributes rather than pure rewrites.
-- **Scrap Your Boilerplate** (Lämmel & Peyton Jones, TLDI 2003) / GHC `deriving Generic`,
-  `uniplate` — generic traversals over ADTs; the mechanism by which the catamorphism fringe is
-  *derived* rather than written. This is the Rust-side realization path (a `derive` or codegen'd
-  fold over the generated node enums).
-- **egg / egglog** (Willsey et al., POPL 2021) — rewrite rules over a term language; the LOCK-2
-  seam. If a transposition is expressed as e-graph rewrites over the IR term algebra, 3C and 2B
-  (IR-IS-EGRAPH) meet — the IR grammar defines the `Language`, rewrites are the passes.
-- **Truffle/Graal, RPython** — meta-circular "generator eats itself" at the extreme (the
-  interpreter specializes itself). Cautionary scale reference, not a template.
+Codex consciousness (constitution ix): family 3C **re-cuts** two GN-boundaries as named
+supersessions, never silent contradictions. (a) GN-1's `codegen/templates/{json,css,csv}/`
+raw-string home (GN-1.md §4.0) is superseded — homoiousia's Substrate C dissolves structural
+templates into a `backend.bbnf` unparse grammar; kernel leaves remain. (b) GN-3's
+`type_plane::derive` is generalized from *user-document* schema producer to *universal* schema
+producer (user shapes AND IR shapes) — GN-3.W3's derived≡hand gate becomes the template for
+the IR-enum bootstrap gate. Both re-cuts are subtractive (fewer hand-written organs), aligned
+with parsimony vi.
 
 ---
 
-## 4. Named risks and counterexamples
+## 3. Prior art (SOTA, with citations) — this is proven at production scale
 
-1. **The stratification / chicken-egg wall.** The generator that emits `ir/lib.rs` from
-   `ir.bbnf` is *written against `ir/lib.rs`*. Bootstrapping requires a committed stage-0 `ir.rs`
-   (LOCK-7 7A's committed artifacts), then a fixpoint gate `regen∘regen = regen` byte-identical.
-   If the meta-grammar changes the node algebra, stage-0 must be re-minted by hand once. This is
-   the classic self-host cost — real, bounded, and LOCK-7's problem to own. 3C must *consume*
-   7A's verdict, not re-solve it.
-2. **Type-plane dependency is a hard gate.** §1b cannot emit sum types until `DirectTypeKind`
-   grows an `Enum` variant (GN-3 W1). If LOCK-1 lands sums late, 3C is blocked. Counterexample to
-   naïve "just do it now": at HEAD `direct_schema.rs:52` is Struct-only — a prototype today can
-   only emit the *product* parts (`Rule`, `Expr`, `SourceSpan`, `DirectBuildTarget`), not the
-   sum `ExprKind`. Honest prototype scope must respect this.
-3. **Expressiveness ceiling of grammar-as-schema.** Not every IR node is a clean sum-of-products.
-   `cost::CostFacts`/`ActiveCostFacts` (`ir/cost.rs`) carry `HashMap`, provenance, egraph/CSP
-   selection state — analysis *results*, not syntax. These resist grammar specification and
-   should stay hand-written Rust (they are compiler internals, legitimately in the "primitives"
-   exception of clause (i)). 3C's scope is the **node algebra + transpositions**, NOT the cost/
-   analysis substrate. Over-reaching into cost facts would be god-modularizing the meta-grammar.
-4. **Transposition maps that aren't structural.** `derive_backend_shape` (`passes/src/lib.rs:398`)
-   is a *decision* (cost-model driven, LOCK-2's seat), not a structural rewrite. It cannot be a
-   pure grammar-to-grammar clause — it consults `CostFacts`. The clean line: **structural**
-   lowering (`lower_expr`) is a grammar map; **decisions** (shape selection, capacity) stay in
-   the CSP/cost driver. Blurring them reintroduces the orthogonal-codepath sin.
-5. **The [no-ts-ir] law.** Memory + constitution: TS has no runtime IR (AST *is* the combinator).
-   3C must not smuggle a runtime IR into TS. The resolution: the meta-grammar is a *compile-time
-   generator* input; it emits TS *type declarations / decoder skeletons* (LOCK-6 6B), never a TS
-   IR walked at parse time. The homoiousia is at the generator, one plane up from runtime. State
-   this explicitly or 3C collides with a standing law.
-6. **Generated-size budget.** Node-type emission of the full tower could balloon `ir/lib.rs`
-   (currently 1020 hand LOC). The generated-size-budget law (per-tranche line ceiling) applies.
-   Counterexample risk: a naïve emitter that expands every derive + every field accessor could
-   regress LOC vs the terse hand enums. The emitter must be as terse as the hand code, or the
-   budget gate (`xtask lint-loc`, `main.rs:49`) blocks the wave.
-
----
-
-## 5. What a prototype must test (to move this family)
-
-**PROVE-3C — the round-trip corollary.** One prototype, one falsifiable claim:
-
-> An `ir.bbnf` meta-grammar + the direct-to-struct emitter regenerates a *byte-identical*
-> subset of `ir/src/lib.rs`, and `lower_expr`'s identity fringe is derived (not written), at no
-> LOC regression.
-
-Concretely the prototype must:
-
-1. **Author `grammar/ir/grammar-ir.bbnf`** describing the product-only nodes reachable today:
-   `Rule`, `Expr`, `SourceSpan`, and the `DirectBuild*` records (`ir/lib.rs:465-535`, all
-   structs) — deliberately *excluding* the sum `ExprKind` until GN-3 W1, to isolate the
-   mechanism from the type-plane dependency (risk #2).
-2. **Add `derive_direct_schema`** (R6 §8b seam) producing a `DirectSchemaSet` from that grammar,
-   and run `json_typed_direct::render` to emit Rust. **Gate: emitted struct defs are byte-
-   identical (modulo ordering) to the hand-written ones**, proving the emitter is expressive
-   enough for IR substance. Diff against `ir/lib.rs:218-231, 465-490`.
-3. **Prototype one declarative transposition clause.** Express `lower_expr`'s `Literal →
-   ByteLiteral` + `Ref → CallRule` arms as data (a clause table) with a *generated* fold over the
-   remaining arms; show the hand-written `match` (`passes/src/lib.rs:1340`) reproduces
-   byte-identically from the derived catamorphism + 2 clauses. **Gate: parity on the JSON grammar
-   lowering** (BackendIr Display, `ir/lib.rs:589`) vs HEAD.
-4. **Measure the fixpoint + LOC.** Run the regen twice; assert `regen∘regen` byte-identical
-   (7A gate shape). Report generated-LOC delta on `ir/lib.rs` — must be ≤ 0 vs hand LOC, or name
-   the overage (risk #6).
-5. **Report the sum-type blocker precisely.** Quantify exactly which `ExprKind`/`BackendExpr`
-   variants are un-emittable until `DirectTypeKind::Enum` exists — this is the LOCK-1 hand-off
-   the gestalt needs (born-RED dependency on GN-3 W1).
-
-If (2) fails, the emitter isn't expressive enough for compiler-internal ADTs and 3C needs an
-emitter upgrade before the grammar move — a named negative result. If (3) fails, the nanopass
-economy doesn't survive the arena/`ExprId` representation (Rust indices vs Scheme's boxed terms)
-and the transposition-as-grammar-map claim is refuted for skinny's SoA IR. Both are the
-falsifiable pivots that move the family off SPEC-ONLY.
+- **Nanopass framework (Chez Scheme).** Sarkar, Waddell, Dybvig, *"A Nanopass Infrastructure
+  for Compiler Education"* (ICFP 2004); Keep & Dybvig, *"A Nanopass Framework for Commercial
+  Compiler Development"* (ICFP 2013). Each IR level is a `define-language` form — *a grammar*;
+  each pass is a `define-pass` that writes **only the changed productions**, the identity
+  catamorphism auto-derived. Chez's production compiler is built this way. **This is
+  homoiousia's flagship proof**: IR-as-grammar + transposition-as-declarative-map is a
+  *shipping commercial compiler architecture*, not a research toy. Substrate B is the
+  nanopass discipline in bbnf.
+- **MLIR — ODS + DRR + PDL.** Operation Definition Specification (TableGen `.td`) declares
+  ops/dialects *as data*; Declarative Rewrite Rules (`Pat<(SrcOp …),(ResOp …)>`) specify
+  lowerings; PDL makes rewrite patterns first-class IR. Lattner et al., *"MLIR: Scaling
+  Compiler Infrastructure for the Domain"* (CGO 2021). **The second flagship**: IR
+  grammar-specified + transpositions as declarative rewrite maps, at LLVM scale. Names the
+  build-time-tax risk (TableGen) homoiousia must measure (§3 risk 4).
+- **BNFC (BNF Converter).** Forsberg & Ranta. A labelled BNF grammar generates AST types +
+  parser + **pretty-printer/unparser** across backends. Direct model for Substrate C
+  (emission-as-unparse) and Substrate A (grammar→AST types).
+- **Stratego/XT + Spoofax + Rascal.** SDF (Syntax Definition Formalism) + Stratego strategic
+  term rewriting = the academic lineage of "the transposition is a rewrite map with a
+  schedule." Confirms the strategy/schedule separation (structure vs traversal control) that
+  bounds host-escape.
+- **egg / egglog.** Rewrite rules as data, equality saturation (Willsey et al., POPL 2021).
+  The *optimization* cousin of Substrate B; LOCK-2 owns the e-graph, so 3C uses **directed**
+  rewrite-as-lowering (nanopass/DRR), and cedes saturation-scheduling of residualization to
+  LOCK-2 (§1.4).
+- **Negative precedent (why this is non-trivial):** rustc (HIR/MIR hand-written Rust, query
+  system not grammar-specified), GHC Core (hand-written; only RULES pragma is declarative),
+  and `regex-syntax` HIR (hand-written) all chose hand-written IR. The reason is uniformly
+  **rewrite expressiveness** — the analyses (borrow-check, type inference, strictness) are not
+  structural rewrites. This is precisely why homoiousia's honest claim is *hybrid*
+  (grammar-structure + host-analysis), and why the structural-fraction measurement (§4) is the
+  family's make-or-break, not a formality.
 
 ---
 
-## 6. Verdict framing (for synthesis, not a pick)
+## 4. Named risks, counterexamples, and exactly what a prototype must test
 
-3C is **strongest as a bounded homoiousia**: the *node algebra* and the *structural
-transpositions* are grammar-derived; the *cost/analysis substrate* and *decisions* stay
-hand-written Rust primitives. It is not "the whole IR is a grammar" (that over-reaches into cost
-facts, risk #3/#4) — it is "the IR's syntax and its structural maps are of like substance to the
-grammars it serves, and the one generator emits them all." Its dependency chain is explicit:
-GN-3 W1 (sum types) → 3C node emission; LOCK-7 7A (stage-0 + fixpoint) → 3C bootstrap; LOCK-6 6B
-(spec-generated skeleton) → 3C's rust/ts node isomorphism for free. Its unique gift back to the
-portfolio: the type plane and the bootstrap gate each acquire their most demanding consumer —
-the compiler's own middle — which is the sternest possible test of both.
+**Risk 1 — the rewrite-expressiveness wall (the sharpest).** Not every transposition is a
+structural rewrite. `derive_recognizers` (`passes/src/lib.rs:338`) computes a
+`StructuralAlphabet` from a first-set fixpoint; `derive_backend_shape` (`:398`) is a
+cost-model search; HM `unify` is union-find. *Counterexample:* if a pass is 80% `@host`, the
+"grammar-specified" label is hollow — consumer-less-substrate-adjacent (Y.13). *Resolution:*
+the hybrid-grammar-host boundary; the family's honest claim is that *structure* is grammar and
+*analysis* is a typed host lattice. **The prototype must measure the split.**
+
+**Risk 2 — bootstrap byte-identity reachability.** The hand `ExprKind` carries
+`#[serde(default, skip_serializing_if="Option::is_none")]` on `DirectBuildField.target`
+(`ir/src/lib.rs:469`), `Box<BackendExpr>` indirections (`:377`), and newtype `RuleId(usize)`
+(`:16`). A bare grammar expresses none of these. *Counterexample:* derived enum ≠ hand enum on
+attributes → fixpoint fails. *Resolution:* an attribute vocabulary (`@derive`, `@box`,
+`@serde`, `@newtype`) in the metagrammar — the same information-moves-into-the-grammar cure as
+GN-3 Wall-1's capacity hints (GN-3.md R1). This is the reachability risk of like class and
+must be proven, not asserted.
+
+**Risk 3 — emission-as-unparse cannot fully retire templates.** `json_templates/parser.rs`
+interleaves structural descent with kernel calls. *Counterexample:* if unparse emits only
+glue, the raw strings survive wherever glue and kernel interleave → a *partial* win.
+*Resolution:* bound Substrate C to structural emission; kernels become `@host` leaves the
+unparser calls. Name the residual template surface explicitly (constitution vii).
+
+**Risk 4 — build-time tax + debuggability (parsimony vi).** A comptime rewrite interpreter is
+zero *runtime* cost (constitution v, satisfied) but may tax regen and obscure debugging (the
+MLIR-TableGen lesson). *Counterexample:* if grammar-specified regen is 3× slower or the
+generated Rust is unreadable, KISS/parsimony is violated. *Resolution:* measure regen wall
+time; require the generated Rust to be byte-identical to the hand form (so debuggability is
+unchanged — you read the same output).
+
+**Risk 5 — MEMORY invariants.** `preserve-rich-ast`, `typed-materialization-invariant`
+("every `->` reaches the tape emitter"), `no-ts-ir` ("AST IS the combinator"). Homoiousia must
+*strengthen* not flatten: the IR grammar's projections *are* the materialization contract,
+checkable by the regen fixpoint. No IR layer is *added*; the existing tower is *re-substanced*.
+
+### The prototypes that move the family (falsifiable, cheapest-first)
+
+- **PROVE-HOMO-1 — IR-enum-from-grammar bootstrap (decisive, cheap).** Author
+  `crates/ir/grammars/hir.bbnf` for `ExprKind`'s 10 variants + an attribute vocabulary. Run the
+  *existing* GN-3 `type_plane::derive` + `json_typed_direct::render` to emit a Rust enum. Gate:
+  emitted enum ≡ hand `ExprKind` (`ir/src/lib.rs:233-271`) byte-identical (modulo the attribute
+  vocabulary), and a real grammar (json.bbnf) parses identically through generated vs hand enum.
+  *Measures:* how much attribute machinery the metagrammar needs (risk 2). Mirrors GN-3.W3's
+  derived≡hand gate, reusing its engine — near-zero new code.
+- **PROVE-HOMO-2 — one transposition as a rewrite set (the make-or-break).** Express
+  `lower_expr`'s Project/Discard/Repeat/Seq/Alt arms (`passes/src/lib.rs`) as a `.rewrite` file
+  + `@host` calls; interpret at comptime; gate byte-identical `BackendIr` vs hand `lower_expr`
+  on json/css/sheets. *Measures:* the structural-fraction (risk 1) — the number that decides
+  whether the family is real. Target: ≥70% of arms are identity+structural-rewrite, the rest
+  named `@host`.
+- **PROVE-HOMO-3 — PROVE-12 as generalized residualization rewrite (the differentiator).**
+  Re-derive PROVE-12's const-fold as ONE rewrite rule over `backend.bbnf` (`@const` annotation
+  + `delim_mask` comptime `@host`), applied to BOTH the CSS delimiter scan AND a second
+  grammar's STOP-set (JSON structural scan or general-descent). Gate: reproduce PROVE-12's
+  byte-identical CSS `generated.rs` (+18 LOC, 0.81-0.98× cyc/B — REPORT §4-6) AND fire the *same
+  rule* on the second grammar. Proves the "one rewrite, N grammars" claim PROVE-12 §7 asserted
+  but never demonstrated — the family's concrete over-the-baseline win.
+
+**Convergence pivot for pass 2:** PROVE-HOMO-2's structural-fraction number. If ≥70%, the
+family is a nanopass-style hybrid worth carrying; if the analyses dominate and structure is a
+thin veneer, homoiousia collapses to "hand-written passes with a cosmetic grammar wrapper" and
+should bank in favor of a sibling. That measurement is the single fact pass 1 hands pass 2.

@@ -292,6 +292,83 @@ supersession* of the GN codex, never a silent contradiction (Constitution ix).
 
 ---
 
+## 7. ADDENDUM (pass-1 re-sweep — four load-bearing veins the field settled that sharpen each family)
+
+This addendum extends §§1-6 with prior art that materially changes the family verdicts; it does
+not revise the settled adjudications, it hardens them.
+
+### 7a. ISLE (Cranelift) — grammar-to-grammar lowering *compiled to efficient code* (the missing 3C datapoint)
+The existing 3C evidence (nanopass `define-language`, Sysmel bootstrap) proves grammar-specified IR
+is commercial-grade but leaves 3C's "transpositions are grammar-to-grammar maps" looking slow
+(nanopass's own efficiency criticism, §1A). **ISLE refutes that worry directly.** ISLE is a
+statically-typed **term-rewriting DSL**: `.isle` rule files map typed IR-term patterns → machine-inst
+terms; a meta-compiler compiles all rules into **single-pass generated Rust** merged into one shared
+decision tree with user-configurable priorities. Two properties decide it for LOCK-3: (i) the
+lowering rules are *data*, yet residualize to an efficient decision tree — grammar-to-grammar lowering
+need not be interpreted, which is exactly the PROVE-12/Futamura move applied to the *lowering rules
+themselves*; (ii) ISLE was "designed so the rules can both be compiled into an efficient backend AND
+be used in formal reasoning about the compiler" — the rewrite corpus IS the candidate set an e-graph/
+CSP engine (LOCK-2) extracts over. **Verdict impact:** 3C's "no efficient path" objection is void;
+its real cost is the rule-corpus verification burden (Cranelift needed the CLIR fuzzer precisely
+because miscompiles hide in the rules) — which is exactly the differential-oracle-vs-hand-path
+discipline our GN-3 byte-identity gate and LOCK-7 7D already mandate. 3C's blocker remains the
+*consumer* question (§3), not efficiency. <https://cfallin.org/blog/2023/01-20/cranelift-isle/>
+
+### 7b. RVSDG — the single-unified-*graph* IR (strengthens 3B beyond sea-of-nodes; ties LOCK-2)
+The existing 3B evidence (LLVM SSA, GraalVM sea-of-nodes) is sound but RVSDG (Reissmann/Själander,
+ACM TECS 2020) is the sharper datapoint: it models the **entire program in one IR** in demand-
+dependence form, with *regions* capturing hierarchy and *state edges* sequentializing side effects,
+and claims to "raise the abstraction level by enforcing invariants and relaxing input order,
+**eliminating many helper passes** of conventional CFG compilers." This is the maximal 3B/2B thesis
+(one rich graph, fewer transpositions) with a measured optimizing-compiler realization (jlm). **The
+tradeoff it names is the load-bearing warning for LOCK-3:** "construction and destruction methods are
+more sophisticated" — i.e. a single-graph IR concentrates its entire cost at the *ingest boundary*
+(grammar-AST → graph) and the *extraction boundary* (graph → BackendShape), not in the middle. For us
+that says: if 3B goes graph-shaped to share LOCK-2's e-graph substrate (2B IR-IS-EGRAPH), the risk is
+not the passes but the two boundaries — and RVSDG's construction/destruction difficulty is the
+concrete counterexample the design fleet must budget. It reinforces §5's "do not merge the seats":
+LOCK-3 owns the boundaries, LOCK-2 owns the in-graph rewriting. <https://arxiv.org/pdf/1912.05036>
+
+### 7c. Two-Level Type Theory — staging *in the types*, residualization as type-directed erasure (3D's rigor)
+The existing 3D account leans on LMS ("types distinguish the two stages") and Futamura. **2LTT
+(Kovács, "Staged Compilation with Two-Level Type Theory," 2022) is the rigorous backbone that makes
+PORTFOLIO 3D's phrasing — "comptime/runtime split *in the types*; residualization is erasure of stage
+0" — a theorem rather than an analogy.** In 2LTT the object/meta split is a *typed* distinction;
+stage-0 (meta) code provably erases, leaving a well-typed residual — meaning-preservation by
+construction. This is the exact formal shape of our verified ZERO-RUNTIME-COST type-plane invariant
+(GN-3 §1.1): the schema is a stage-0 artifact fully erased before runtime. **Verdict impact:** the
+§4/§6.3 synthesis — "3D subsumes GN-3 (type erasure) and PROVE-12 (constant erasure) as two erasures
+of one stage" — acquires a citable formal frame; the zero-cost law stops being an asserted invariant
+policed by `git diff crates/runtime/` and becomes a *typing discipline* whose gate is a corollary.
+The trap 2LTT does not remove is binding-time imprecision → monomorph bloat (§4), still LOCK-2's
+per-site decision. <https://arxiv.org/pdf/2209.09729>
+
+### 7d. Translation validation / verified validators — the rigorous form of 3A's per-level oracle
+§1A frames 3A's contract via nanopass output-well-formedness; the formal-methods field offers the
+stronger primitive. **Translation validation** (Necula, PLDI'00) certifies *each compiler run* by
+comparing IR before/after a pass and checking semantic preservation; a **verified validator**
+(CompCert) carries a proof that `validate=true ⇒ equivalence`, giving whole-compiler-verification-
+strength guarantees over an *unverified* compiler. **Verdict impact:** 3A's "total function with a
+checkable contract, CI-enforced" is realizable as a *validator per lowering* (GrammarIr→BackendIr,
+BackendIr→emitted-Rust), not a whole-generator proof — and we already run its cheap, decisive
+instances (byte-identical fixpoint regen, checkasm NEON≡scalar, CSS XOR-fold checksum, GN-3 derived≡
+hand diff). The named trap: **do not over-build the oracle** — full semantic/SMT validators are
+expensive and incomplete; for a *generator* the sufficient oracle is fixpoint regen + corpus
+differential, which are standing law already. This bounds 3A: the contract layer is instrument-
+generalization, never a verification-condition-generator subsystem (that would be consumer-less
+ceremony, Constitution viii). <https://people.eecs.berkeley.edu/~necula/Papers/tv_pldi00.pdf>
+
+### 7e. One trap-quote to carry verbatim (MLIR authors, sharpening §2/§6.2)
+The MLIR paper's own framing of the §2 information-loss trap, worth quoting in the gestalt:
+"**premature lowering is the root of all evil in compiler design** … attempts to raise semantics once
+lowered are fragile." mlirSynth (arXiv:2310.04196) resorts to *program synthesis* to raise IR — the
+field's proof that structure-discarding one-way lowering is near-irreversible. Our `Project.ty`
+discard (`passes/src/lib.rs:203`) + the 4-way `ProjectionKind` re-derivation fold is that exact
+anti-pattern in miniature; every family's answer must carry the projection type *forward*, never
+lower-then-raise. <https://arxiv.org/pdf/2002.11054> · <https://arxiv.org/pdf/2310.04196>
+
+---
+
 ## Citations
 
 **Internal (absolute paths).** IR tower: `/Users/mkbabb/Programming/bbnf-lang/skinny/crates/ir/src/lib.rs`
@@ -318,3 +395,8 @@ codex `/Users/mkbabb/Programming/bbnf-lang/docs/tranches/sk-v24/{INDEX,GN-1,GN-3
 - GraalVM IR formal semantics: <https://arxiv.org/pdf/2107.01815>
 - CrossTL unified-IR multi-backend: <https://arxiv.org/html/2508.21256>
 - rustc HIR/THIR/MIR tower: <https://rustc-dev-guide.rust-lang.org/backend/codegen.html>
+- ISLE (Cranelift) term-rewriting lowering DSL: <https://cfallin.org/blog/2023/01-20/cranelift-isle/> · lang ref <https://github.com/bytecodealliance/wasmtime/blob/main/cranelift/isle/docs/language-reference.md> · CLIR fuzzer <https://arxiv.org/pdf/2606.26977>
+- RVSDG unified-graph IR (Reissmann/Själander): <https://arxiv.org/pdf/1912.05036> · TECS full text <https://dl.acm.org/doi/fullHtml/10.1145/3391902> · jlm <https://github.com/phate/jlm>
+- Two-Level Type Theory / staged compilation (Kovács): <https://arxiv.org/pdf/2209.09729>
+- Translation validation (Necula PLDI'00): <https://people.eecs.berkeley.edu/~necula/Papers/tv_pldi00.pdf> · CompCert verified back-end <https://arxiv.org/pdf/0902.2137>
+- MLIR "premature lowering is the root of all evil" + mlirSynth raising: <https://arxiv.org/pdf/2002.11054> · <https://arxiv.org/pdf/2310.04196>

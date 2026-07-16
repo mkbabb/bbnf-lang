@@ -1,293 +1,246 @@
-# LOCK-2 pass-1 — Family 2B: IR-IS-EGRAPH
+# LOCK-2 · Family 2B — IR-IS-EGRAPH (pass 1, research B)
 
-The thesis: the middle IR is not a tree that an e-graph *island* occasionally consults —
-the middle IR **is** an e-graph, end to end. Every `BackendRule` body is interned as e-nodes
-into one shared `EGraph`; every compile pass is a rewrite group over that graph; a scheduled
-equality saturation reaches a fixed point (or an eager bound); and one cost-driven extraction
-emits both the concrete lowered form **and** its `BackendShape` per rule. Codegen consumes the
-extracted term. There is exactly one representation of the middle, one canonicalizer
-(congruence closure), and one decision surface (extraction).
+**Thesis.** The middle IR is not a tree that an e-graph occasionally consults at one decision
+point; the middle IR *is* an e-graph. `GrammarIr` interns once into a single `EGraph<IrNode,
+IrFacts>`; every compile pass (nullability, first-set, recognizer derivation, backend-shape
+selection, projection canonicalization, residualization) is a rewrite group or an `Analysis`
+lattice over that graph; congruence closure gives grammar-level GVN for free; a scheduled
+saturation reaches a fixed point; and a single cost-guided extraction emits the `BackendExpr`
+tree *and* its per-rule `BackendShape` directly to the lowerer. Passes stop being an ordered
+pipeline with a phase-ordering problem and become an unordered rewrite set closed under
+equality.
 
-## 1. The extant substrate, diagnosed honestly
+This is the maximal reading of the LOCK-2 charter. Its strongest form is *not* naive unbounded
+equality saturation — that is refuted below by the IR's own shape (variadic `Seq`/`Alt`,
+mutually-recursive rules, a non-local size budget). Its strongest form is the **aegraph
+discipline applied to the grammar plane**: one e-graph as the IR container, congruence closure
++ bounded confluent normal-forming rewrites applied largely on-insert, exploratory saturation
+reserved for the few passes that provably pay, and extraction-as-lowering with a cost model
+that is monotone by construction where greedy extraction is used and delegated to the CSP
+knapsack where it is not.
 
-The e-graph engine is real and general. `crates/egraph/` is a complete equality-saturation
-library: `EGraph<N, A>` with hash-cons + union-find + parent-edge rebuild
-(`egraph/src/egraph.rs:155` `add`, `:202` `union`, `:251` `rebuild`), a `Language` trait
-auto-derivable for any e-node enum (`egraph/src/language.rs:16`; derive at
-`egraph-derive/src/lib.rs` classifies `Id`/`Box<[Id]>`/`Vec<Id>`/`[Id;N]` fields to children,
-everything else to leaf metadata), a `Rewrite`/`RewriteFn` searcher-applier surface with an
-`should_apply` analysis guard (`egraph/src/rewrite.rs:34,58`), a `CostModel`+`Extractor` doing
-greedy bottom-up extraction over a `Lattice` cost (`egraph/src/extract.rs:85,121,134`), a
-`BackoffScheduler` and a **CSP-backed** `CspScheduler` that models the dirty frontier as an
-AC-3 lattice propagation (`egraph/src/csp_scheduler.rs:204` — `DirtyDomain` join, `ParentDirtyProp`
-constraint, one `csp.propagate()` per iteration harvesting the transitive-dirty closure).
+---
 
-But today the e-graph touches the pipeline at exactly **one degenerate island**, and the middle
-IR is a plain owned tree:
+## 1. The mechanism, made concrete
 
-- The middle IR is `BackendIr { recognizers, rules: Vec<BackendRule{ name, expr: BackendExpr }> }`
-  (`ir/src/lib.rs:352`), where `BackendExpr` (`ir/src/lib.rs:376`) is a recursive owned tree —
-  `Seq(Vec<BackendExpr>)`, `Alt{mode, branches}`, `RepeatLoop{body: Box<..>}`, `ByteLiteral`,
-  `RegexProgram{pattern, span_kind}`, `CallRule{callee}`, `SpanMark`, `TapeEmit`, `DirectBuild`,
-  `ValueProject`, `Return`. It is built by tree recursion in `lower_to_backend`
-  (`passes/src/lib.rs:1291` — `for rule in grammar.rules { lower_expr → materialize_rule → push }`),
-  never interned.
-- The **only** e-graph on the compile path is `passes/src/backend_egraph.rs:41` `select`: it
-  builds `EGraph<DecisionNode, NoAnalysis>` where `DecisionNode { …, children: [Id; 0] }`
-  (`backend_egraph.rs:159` — a **leaf-only** node, no structural children), unions all
-  backend-shape candidates into one class, runs one `NormalizeDirectSinkCost` rewrite, and
-  extracts the min-cost `BackendShape`. This is candidate-set selection, not IR rewriting; it
-  exercises congruence over nothing. It is a shrunk-to-nothing instance of the sibling 2A
-  "island" model, and the team kept the tree IR beside it. That is the state 2B supersedes.
+### 1.1 The node — an Id-child IR
 
-So: the engine exists and is battle-shaped for grammar work; the *IR* has simply never been put
-inside it. 2B's whole content is the transposition — and the honest reckoning with why it wasn't
-done already (§4).
-
-## 2. The mechanism made concrete
-
-### 2.1 The transposition: `BackendExpr` (tree) → `BackendNode` (e-node)
-
-Introduce `BackendNode`, the e-node isomorph of `BackendExpr`, deriving `Language`:
-recursive positions become `Id`, `Box<BackendExpr>` → `Id`, `Vec<BackendExpr>` → `Vec<Id>`,
-all scalar/byte/label metadata stays as leaf fields hashed into node identity.
+The current middle IR cannot be interned as-is. `ir/src/lib.rs:234` `ExprKind` names its children
+as `ExprId(pub usize)` (`ir/src/lib.rs:19`) — arena indices into `GrammarIr.exprs`, not e-graph
+`Id`s. `BackendExpr` (`ir/src/lib.rs:376`) names its children as `Box<BackendExpr>` /
+`Vec<BackendExpr>` — owned subtrees. The derive macro (`egraph-derive/src/lib.rs`) projects only
+literal `Id` / `Vec<Id>` / `Box<[Id]>` / `[Id;N]` fields into `children()`; per its own doc
+(`egraph-derive/src/lib.rs:7-9`) **`Box<Self>` and `Vec<Self>` are classified as leaves**, so
+`BackendExpr` derives an *empty* child slice today and `ExprKind` cannot derive at all. This is
+the load-bearing seam of family 2B: the e-graph node is a distinct **`IrNode`** whose recursive
+positions are `Id`:
 
 ```rust
-#[derive(Clone, Eq, PartialEq, Hash, egraph_derive::Language)]
-enum BackendNode {
-    Entry(Id), Seq(Vec<Id>),
+#[derive(Clone, PartialEq, Eq, Hash, egraph_derive::Language)]
+enum IrNode {
+    Seq(Vec<Id>),                         // variadic
     Alt { mode: AltMode, branches: Vec<Id> },
-    RepeatLoop { body: Id, min: u32 },
-    OptionalBranch(Id),
-    ByteLiteral(Vec<u8>),                       // leaf; congruence-merges equal literals
-    RegexProgram { pattern: String, span_kind: SpanKind },
-    CallRule { callee: RuleId },                // §4.1: an OPAQUE LEAF, not an Id edge
-    SpanMark { kind: SpanMarkKind, label: String },
-    TapeEmit { kind: TapeKind },
-    DirectBuild { shape: String, fields: Vec<DirectBuildField> },
-    ValueProject { body: Id, target: String, ty: Option<String> },
-    Return,
+    Repeat { body: Id, min: u32, max: Option<u32> },
+    Optional(Id),
+    Literal { bytes: Vec<u8>, case: CaseSensitivity },   // leaf (metadata)
+    Regex { pattern: String },                            // leaf
+    Ref { target: RuleId },                               // leaf — the recursion edge
+    Project { body: Id, target: Sym, ty: Option<Sym> },
+    Discard { children: [Id; 2], keep_left: bool },       // scattered Ids → [Id;N] per derive law
 }
 ```
 
-`BackendIr` becomes `{ graph: EGraph<BackendNode, EClassFacts>, roots: HashMap<RuleId, Id>,
-recognizers }`. The interning site is `passes/src/lib.rs:1291`: replace tree construction with
-`intern(&mut graph, expr)` per rule, recording each rule's root e-class in `roots`. Interning is
-mechanical — the same post-order walk `lower_expr` already does, `graph.add(node)` instead of
-`Box::new`. **Cross-rule GVN falls out for free**: identical whitespace-skip loops, identical
-`ByteLiteral(b"true")`, identical span kernels that appear in many rules hash-cons to one
-e-class. This is the aegraph result — GVN "for free" during translation into the e-graph
-([Fallin, aegraph](https://cfallin.org/blog/2026/04/09/aegraph/)).
+Two design consequences fall out immediately, both mandatory:
 
-### 2.2 The analysis lattice `EClassFacts`
+- **`Ref` is a leaf, not an `Id` child.** A grammar is a *call graph* of mutually-recursive
+  rules; `json.value → array → value` is a cycle. If `Ref` held an `Id` to the callee class, the
+  e-graph would be cyclic and greedy extraction (`egraph/src/extract.rs:134`) would fail to reach
+  recursive classes (`best_cost` returns `None`, `extract.rs:175`). Keeping `Ref{target:RuleId}`
+  a leaf makes each **rule body** an acyclic e-graph whose recursion is a symbolic edge resolved
+  by a separate per-rule root table (`RuleId → Id`). This is precisely the aegraph move —
+  eclasses reference only earlier eclasses within a body; the recursion lives outside the
+  congruence relation. It is the single most important structural decision in 2B.
+- **`Discard`'s two `ExprId`s** violate the derive's "no scattered `Id` fields" rule
+  (`egraph-derive/src/lib.rs:18-22`); they must be a `[Id;2]`. Trivial, but it is a real edit the
+  derive forces, and it is the kind of thing that makes "the AST *is* the e-node" false in the
+  small.
 
-The engine's `Analysis<N>` slot (`egraph/src/analysis.rs`, used through `should_apply` at
-`rewrite.rs:58`) carries the grammar facts rewrites need to fire safely: **nullable** and
-**first-set** per e-class (both already computed as tree analyses in `ir/src/lib.rs:326-338`
-`nullable` and the first-set derivation). As `A::make`/`A::merge`, they become the per-class
-lattice that (a) guards Alt-dispatch tightening (`should_apply` aborts a rewrite that would
-bloat an already-disjoint dispatch — the AA.5 rationale in `rewrite.rs:45-56`), and (b) feeds
-the recognizer-derivation rewrite (self-loop detection needs the body's character-class /
-complement cardinality). One analysis, computed by congruence, replacing the standalone tree
-passes.
+The reconciliation `ExprId (arena) ↔ Id (e-graph)` is a one-time interning walk: post-order over
+`GrammarIr.exprs`, `graph.add` each node, memo `ExprId → Id`. Because `add` hash-conses
+(`egraph/src/egraph.rs:155`), structurally-identical sub-grammars collapse to one class on the
+way in — GVN with zero extra code. The interning walk is the sole owner of the arena→graph map;
+after it, the arena is dead and the graph is the IR.
 
-### 2.3 Passes become rewrite groups
+### 1.2 Passes as rewrite groups + analyses
 
-Each existing pass is re-expressed as a `Rewrite<BackendNode, EClassFacts>` (non-destructive:
-`add` the equivalent form, `union` with the source — `rewrite.rs:70`), grouped and run under a
-schedule:
+The extant pipeline (`passes/src/lib.rs`) is a fixed sequence: `derive_recognizers`
+(`passes/src/lib.rs:338`) → `derive_backend_shape` (`passes/src/lib.rs:398`) → the degenerate
+selector e-graph (`passes/src/backend_egraph.rs`). 2B dissolves this into two populations over the
+one graph:
 
-- **Normalization group**: Seq-flatten (`Seq[.. Seq[a b] ..]` ≡ `Seq[.. a b ..]`), single-branch
-  `Alt` collapse, `Optional(x)` ≡ `Alt{Empty, x}`, dead-branch pruning. These are the classic
-  grammar canonicalizations; today they are scattered imperative tree edits.
-- **Residualization group** (PROVE-12 generalized): the CSS delimiter-mask const-fold that
-  PROVE-12 (`prototypes/PROVE-12/REPORT.md`, GO, CSS cyc/B 0.81-0.98×) hand-wrote into the
-  `CSS_GENERATED_RS` template becomes a *rewrite rule*: a `find_component_delim`-shaped self-loop
-  over a grammar-constant delimiter set rewrites to a `SpanMark`/scan node carrying the folded
-  `u128` mask. PROVE-12 §7 explicitly flags this generalizes "to any grammar-derived
-  delimiter/STOP-set scan … the same `const fn mask` + const-generic seam" — 2B is that
-  generalization, homed as one rewrite instead of per-template hand-edits.
-- **Recognizer-derivation group** (the GN-2.W1 seam): a Kleene/`RepeatLoop` over a character
-  class whose complement cardinality ∈ [1,16] rewrites to a `SimdScan{ mode: Prefilter,
-  site: SelfLoop{terminators} }` equivalent (`ir/src/lib.rs:425` `SimdMode`, `:430` `SimdSite` —
-  today `Exact`/`PreEntry` only). Extraction then picks scan-vs-scalar by cost. This folds
-  GN-2.W1's `derive_recognizers` detection (`passes/src/lib.rs:338`) into the same graph.
-- **Materialization/tape group**: the `materialize_rule` pass (`passes/src/lib.rs:~1294`) and
-  the tape-emit shaping become rewrites that add `TapeEmit`/`DirectBuild`/`ValueProject`
-  alternatives, so that eager-tape vs sink-only vs collapsed-stage are *co-present e-nodes in one
-  class* rather than a separately-computed `HashMap<RuleId, BackendShape>`.
+- **`Analysis<IrNode>` lattices** (`egraph/src/analysis.rs`) carry the *facts* that are pure
+  functions of a class: `nullable: bool` (join = OR, the fixed-point already hand-rolled at
+  `ir/src/lib.rs:320` becomes `merge`), `first_set: ByteSet` (join = union), and a per-class
+  `CostSummary`. Congruence maintenance runs these to fixed point for free — the hand-written
+  nullability worklist (`ir/src/lib.rs:322-348`) is deleted, replaced by `A::merge` returning
+  "changed" (`analysis.rs:35`), which is already the LLVM-`Changed` convergence pattern the memory
+  law mandates.
+- **`Rewrite<IrNode,IrFacts>` groups** (`egraph/src/rewrite.rs:34`) carry the *equalities*:
+  `Optional(x) ≡ Repeat{x,0,1}`; single-branch `Alt` ≡ its branch; `Seq([x])` ≡ `x`; adjacent
+  `Literal` fusion; the PROVE-12 residualization (`prototypes/PROVE-12/`) recast — the delimiter
+  set `contains` collapses to a const bitmask *as a rewrite* `MembershipScan(set) ≡
+  MaskScan(delim_mask(set))` guarded by `should_apply` (`rewrite.rs:58`), instead of a hand
+  mutation of the `CSS_GENERATED_RS` template. Recognizer derivation becomes a rewrite that adds a
+  `SimdScan` alternative into the class of a self-loop/`Regex` leaf, leaving the scalar form
+  present so extraction can choose per cost (this is exactly what `SimdMode`/`SimdSite` at
+  `ir/src/lib.rs:425-430` are for).
 
-### 2.4 Extraction emits BackendShape directly (the island's death)
+The scheduler is `CspScheduler` (`egraph/src/csp_scheduler.rs:175`): its dirty-frontier AC-3
+closure (`ParentDirtyProp`, `csp_scheduler.rs:120`) is already the incremental engine, and its
+`node_limit`/`iter_limit` (`csp_scheduler.rs:177`) are the growth guards that keep a variadic
+grammar from exploding. Saturation is *bounded and confluent by rule choice*, not open-ended.
 
-This is the load-bearing unification. Today `BackendShape` is chosen by a **separate** path:
-`derive_backend_shape` → `candidate` enumeration (`passes/src/lib.rs:504-580`) → the degenerate
-`backend_egraph::select` island → `HashMap<RuleId, BackendShape>` (`passes/src/lib.rs:96`), while
-the `BackendExpr` tree is built independently. In 2B they are the **same** extraction: the
-alternatives added by the materialization/tape group mean each rule root's e-class contains one
-e-node per admissible shape; the cost model ranks them; `Extractor::best_node(root)`
-(`extract.rs:183`) yields *the* shape, and `extract_tree(root)` (`extract.rs:190`) yields the
-concrete lowered term for codegen. The shape is an **attribute of the extracted form**, not a
-parallel map. `ActiveCostFacts.selected_shape` (`ir/src/cost.rs:184`) is populated from the
-extraction, and the entire `backend_egraph.rs` + the candidate machinery
-(`passes/src/lib.rs:486-609`) collapses into the one extraction pass.
+### 1.3 Extraction emits BackendShape directly
 
-### 2.5 The schedule
+Extraction (`egraph/src/extract.rs`) is the lowering. The cost model (`CostModel<IrNode>`,
+`extract.rs:85`) is fed by `ir/src/cost.rs` — `CostFacts` (`cost.rs:5`), the fitted
+`ActiveCostFacts` (`cost.rs:173`), `PriorityStep` (`cost.rs:264`) — and returns the cheapest
+`IrNode` per class. **`BackendShape` (`ir/src/lib.rs:361`) is chosen at the same extraction, per
+rule root**, because the shape is a function of the extracted body's cost summary (retention
+lifetime, `SubstrateTarget` at `cost.rs:57`, capacity). The greedy bottom-up extractor
+(`extract.rs:134`) is *sound only for monotone, local cost*; it suffices for the per-node kernel
+choice (scalar vs `SimdScan`, `MembershipScan` vs `MaskScan`) but **not** for the global
+generated-size budget (a knapsack: choosing `SinkOnly` here may bust the LOC budget there). That
+non-monotone slice is handed to the `csp-solver` knapsack, exactly the seam the existing
+`DecisionCspFacts` (`cost.rs:203`) and the vendored `csp-solver` were built for. The extracted
+`BackendExpr` tree is rebuilt from `extract_tree` (`extract.rs:190`) into the `Box`/`Vec` owned
+form the lowerer (`codegen::lower::rust::lower_to_rust`, cited as the same-wave consumer at
+`backend_egraph.rs:11`) already consumes.
 
-Saturation runs under `CspScheduler` (`csp_scheduler.rs:204`) — already the isomorphic
-CSP-as-scheduler the constitution's engine-sharing implies, reusing `csp-solver` for the
-dirty-closure. The measured alternative 2B must weigh (§3) is aegraph-style **eager, acyclic,
-single-pass** application (no fixpoint) — Cranelift's finding is that a levelized acyclic
-e-graph + eager cascade rules attains the optimization level in a few linear passes at 1-5%
-compile cost ([Fallin, aegraph](https://cfallin.org/blog/2026/04/09/aegraph/);
-[Bytecode Alliance RFC #27](https://github.com/bytecodealliance/rfcs/blob/main/accepted/cranelift-egraph.md)).
+---
 
-### 2.6 Codegen consumes the extracted term
+## 2. The substrate that exists, and what it lacks
 
-`codegen::lower::lower_to_rust` (invoked `codegen/src/lib.rs:176`, `LowerCtx` carries
-`backend_shape`/`cost_facts` per `lib.rs:177-184`) reads `extract_tree(root)` per rule instead
-of walking `BackendRule.expr`. This is the **same-wave consumer** that satisfies the Y.13
-consumer-less-substrate law (constitution viii): the e-graph is not substrate-in-waiting, it is
-read by the emitter in the same tranche it is built.
+| Piece | State | 2B need |
+|---|---|---|
+| `EGraph<N,A>` core (`egraph/src/egraph.rs`) | complete: hashcons, union, deferred rebuild | ✓ ready; `with_capacity` (`egraph.rs:78`) already sized for small grammars |
+| `Analysis` lattice (`egraph/src/analysis.rs`) | complete, `Changed`-returning `merge` | host nullable/first-set/cost as `IrFacts` |
+| `Rewrite`/`RewriteFn` (`egraph/src/rewrite.rs`) | complete, imperative search/apply | author the IR rewrite groups |
+| `CspScheduler` (`egraph/src/csp_scheduler.rs`) | complete dirty-frontier AC-3 | reuse verbatim as the saturation schedule |
+| `Extractor` (`egraph/src/extract.rs`) | greedy bottom-up, monotone only | **extend**: non-monotone/global extraction via `csp-solver`; cyclic guard |
+| `egraph-derive` (`egraph-derive/src/lib.rs`) | projects literal `Id` fields only | **extend** to project `Box<Self>`/`Vec<Self>` recursive positions to `Id`, or author `IrNode` by hand |
+| current consumer (`passes/src/backend_egraph.rs`) | **degenerate**: 5 childless `DecisionNode`s, one rewrite, `[Id;0]` | subsumed — this is a consumer-less substrate in gestation (Y.13 risk) that 2B redeems by making the IR the graph |
 
-## 3. Prior art (SOTA, cited)
+The honest reading of `backend_egraph.rs`: the e-graph today holds a flat set of pre-ranked
+`BackendShape` candidates with **zero children** (`backend_egraph.rs:158,176`) and applies a
+single cosmetic normalization rewrite (`NormalizeDirectSinkCost`, `backend_egraph.rs:193`). It
+uses none of the e-graph's actual power — no congruence, no sharing, no recursive structure. The
+`lib.rs` doc-claim that "both grammar IR nodes and regex HIR nodes implement `Language`"
+(`egraph/src/lib.rs:9-10`) is **aspirational, not realized** — the sole `impl Language` in the tree
+is `DecisionNode` (`backend_egraph.rs:181`). Family 2B is precisely the work of making that claim
+true: the grammar IR node *becomes* the `Language`.
 
-- **Cranelift ægraphs** — the decisive precedent and the honest template for 2B. Chris Fallin's
-  production mid-end **is** an e-graph end to end: separate machine-independent passes deleted,
-  GVN/LICM/rematerialization obtained "for free" during translation into the e-graph, better
-  code than the classical pipeline at ~1-5% compile cost. Crucially it solves 2B's two blockers:
-  **acyclicity** (a levelized "acyclic e-graph" so extraction terminates) and **eager rule
-  application** (no unbounded fixpoint), plus **scoped elaboration** to turn the graph back into
-  scheduled instructions. [blog](https://cfallin.org/blog/2026/04/09/aegraph/),
-  [EGRAPHS'23](https://pldi23.sigplan.org/details/egraphs-2023-papers/2/-graphs-Acyclic-E-graphs-for-Efficient-Optimization-in-a-Production-Compiler),
-  [RFC](https://github.com/bytecodealliance/rfcs/blob/main/accepted/cranelift-egraph.md).
-- **Equality saturation / PEG** (Tate, Stepp, Tatlock, Lerner, POPL'09 / LMCS'11) — the origin
-  of "the IR is an e-graph": Program Expression Graphs represent loops as expressions so the
-  *whole* program lives in one e-graph; optimize by saturate-then-extract. The direct ancestor of
-  2B's claim. [LMCS'11 PDF](https://www.cs.cornell.edu/~lerner/papers/lmcs11-eqsat.pdf).
-- **egg** (Willsey et al., POPL'21) — deferred rebuilding + e-class analyses; our `EGraph.rebuild`
-  (`egraph/src/egraph.rs:251`) and `Analysis` slot are the egg design. The `should_apply` guard
-  is egg's conditional-rewrite pattern.
-- **egglog** (Zhang et al., PLDI'23) — e-graphs unified with Datalog; the model for expressing
-  the rewrite *groups* declaratively and for stratified/scheduled saturation.
-- **Extraction is NP-hard in general**; ILP extraction (e.g. ROVER RTL datapath, up to 63% area)
-  only scales to small graphs — the named risk for any sharing-sensitive cost model
-  ([survey refs](https://www.cs.cornell.edu/courses/cs6120/2025sp/blog/superopt/)). 2B must keep
-  extraction greedy-monotone or delegate the sharing-sensitive decision to the bounded CSP.
-- **RVSDG / MLIR PDL** — regionalized dataflow IRs and pattern-rewrite infrastructure: precedent
-  that a production compiler middle can be a rewrite-driven graph with region boundaries (the
-  bbnf analog of per-rule regions, §4.1).
+---
 
-## 4. Named risks and counterexamples — the make-or-break
+## 3. Prior art (with the load-bearing citations)
 
-### 4.1 Recursion breaks greedy bottom-up extraction (THE blocker)
+- **Cranelift ægraphs** (Fallin, EGRAPHS 2023; cfallin.org/blog/2026/04/09/aegraph;
+  bytecodealliance/rfcs `cranelift-egraph.md`). The production proof that "the mid-end IR *is* an
+  e-graph" is viable *only* under discipline: acyclic (each eclass refers to earlier eclasses),
+  rules applied on-insert rather than to a fixed point, GVN/LICM/rematerialization folded into the
+  graph in a few linear passes. This is the template for 2B's strongest form and the direct source
+  of the `Ref`-as-leaf decision (§1.1). Its explicit non-goal — *no* full equality saturation,
+  *no* fixpoint loop — is the guardrail against the variadic/cyclic blowup below.
+- **egg** (Willsey et al, POPL 2021, `10.1145/3434304`). The deferred-rebuild + e-class-analysis
+  model the in-tree crate mirrors (`rebuild` at `egraph.rs:251`, `Analysis` at `analysis.rs`).
+  egg's own guidance: keep associative/commutative operators *out* of naive saturation; use
+  analyses to gate rewrites — both directly constrain 2B.
+- **egglog** (Zhang et al, PLDI 2023). Datalog ∪ equality-saturation: cooperating analyses,
+  lattice reasoning, and *extraction of optimized terms* as first-class. The model for treating
+  nullability/first-set (analyses) and normalization (rewrites) as one closed fixpoint rather than
+  ordered passes.
+- **MLIR `eqsat` dialect** (arXiv 2505.09363) and **DialEgg** (2025). Non-destructive rewriting as
+  an IR dialect and the phase-ordering cure — evidence that "the IR carries its own equalities" is
+  an active, validated direction, and a caution that MLIR pays for it in graph size.
+- **RVSDG / optir**. Regionalized value-state dependence graphs are the eqsat-friendly IR shape;
+  relevant because BBNF's grammar is a dataflow of rule outputs, not a CFG — the RVSDG region
+  boundary maps to the per-rule root of §1.1.
+- **Extraction-as-ILP**: Tensat (MLSys 2021), SPORES, Denali (Joshi et al). The canon that
+  *optimal* extraction under sharing/global cost is NP-hard and is solved by ILP/CSP — the
+  authority for handing the size-budget knapsack to `csp-solver` rather than the greedy extractor.
+- **Guided equality saturation** (Kœhler et al, POPL 2024). Sketch-guided saturation to tame
+  blowup — the fallback if any 2B rewrite group proves non-confluent.
 
-Grammar IR is cyclic: JSON `value → array → value`, `value → object → member → value`. If
-`CallRule` is an `Id` edge into the callee's root class, the e-graph has a cycle, and the extant
-extractor **deadlocks on it**: `Extractor::compute_best` (`extract.rs:143-149`) skips any node
-whose children are not all already resolved — a class reachable only through itself never
-resolves, so `best_node(value_root)` returns `None` and extraction fails. This is the exact
-counterexample that would sink a naive "one flat e-graph over all rules with CallRule-as-Id."
+---
 
-The aegraph answer, adopted: **CallRule is an opaque leaf** (a `RuleId` metadata field, not a
-child `Id`). The e-graph is then a forest of *acyclic per-rule-body regions*; cross-rule
-structural sharing is recovered by GVN on the extracted-form hash (identical rule bodies still
-merge), and the rule-call structure is a thin skeleton outside the graph — Cranelift's
-"hybridize the CFG with the e-graph for pure operators + scoped elaboration." The honest
-consequence: the maximalist slogan "one e-graph, no boundaries" is **false**; the lawful 2B is
-"one e-graph engine, one acyclic region per rule body, a rule-call skeleton." A prototype MUST
-decide whether the current greedy extractor tolerates the JSON recursion at all before any
-"end-to-end" language is committed (§5 P2). This is the single most important gate for the
-family, and where 2B either differentiates from or converges toward sibling 2A's explicit
-islands.
+## 4. Named risks and counterexamples
 
-### 4.2 Sharing-sensitive cost → NP-hard extraction
+1. **Variadic associative/commutative blowup.** `Seq(Vec<Id>)` and `Alt{branches:Vec<Id>}`
+   (`ir/src/lib.rs:235-239`) are the classic e-graph trap: naive re-association/commutation
+   rewrites over an N-ary sequence generate exponentially many equivalent groupings. *Mitigation
+   and law for 2B:* AC operators are **normal-formed one-directionally** (flatten nested `Seq`,
+   sort/dedup `Alt` dispatch branches by first-set) and never given exploratory
+   split/re-associate rewrites. Confluence of the normal-form set is a prototype obligation, not
+   an assumption.
+2. **Non-monotone global cost breaks greedy extraction.** The generated-size budget (GN-2/GN-5
+   LOC budget, memory `generated-size-budget`) and capacity plans are knapsack-global; the greedy
+   bottom-up extractor (`extract.rs:134`) is provably wrong for them. *Mitigation:* split the cost
+   into a monotone-local part (greedy) and a global part (`csp-solver`); this is the CSP-central
+   engine folded in, and it is where 2B and a CSP-central reading genuinely touch. A prototype must
+   exhibit one grammar where local-greedy busts the budget and the CSP pass recovers it.
+3. **Cyclic IR vs. finite extraction.** Recursive rules make the *rule call graph* cyclic; if
+   recursion were an `Id` edge, extraction could loop or return `None` (`extract.rs:175`). The
+   `Ref`-as-leaf + per-rule-root design (§1.1) is the fix, but it means the e-graph optimizes
+   *within* a rule body, not across the fixpoint of the whole grammar — a real expressiveness
+   ceiling that must be named, not hidden. Cross-rule inlining becomes an explicit, bounded rewrite
+   (`Ref` → body copy, gated by a size analysis), never implicit congruence.
+4. **Determinism / clean-regen.** The regen law demands byte-identical output across runs. The
+   extractor's `best` map is an `FxHashMap` (`extract.rs:118`) and iteration over it, or any tie in
+   cost, must resolve by a **total order** (class id, then a canonical node ordering) or regen
+   drifts. `HashMap` iteration is not an admissible tie-breaker. This is a hard prototype gate:
+   `regen ∘ regen = regen`, bit-for-bit, twice.
+5. **Compile-time teardown on tiny grammars.** The `with_capacity` note (`egraph.rs:78-88`) warns
+   that an oversized e-graph's *drop* can dominate the ~230µs compile profile of a ~300-node
+   grammar. Promoting the whole IR to an e-graph multiplies node count; the budget must be
+   measured, not assumed cheap. If the full-IR graph regresses compile time past budget, the
+   aegraph on-insert discipline (fewer live alternatives) is the retreat, not abandonment.
+6. **Consumer-in-wave (Y.13).** The extracted `BackendExpr`+`BackendShape` must reach
+   `lower_to_rust` in the *same* wave the graph is stood up, or 2B recreates exactly the
+   dead-substrate pathology the current `backend_egraph.rs` embodies. The consumer is named and
+   extant (`backend_egraph.rs:11`); wiring it is non-optional.
 
-The SPEC imposes a `generated_loc_budget` (GN-2 §5; sk-v22 law). A cost that rewards *shared*
-sub-parsers (one emitted function reused across rules) or bounds total generated size is
-**non-monotone** — optimal extraction becomes NP-hard (§3). The extant `Extractor` is greedy
-bottom-up and valid **only** for monotone cost (`extract.rs:9-11` says so). Disposition: keep the
-extraction cost monotone (per-node, child-summed, as `AstSize`/`DecisionCostModel` are), and push
-any global sharing/capacity/size decision to the **bounded CSP** post-solve
-(`passes/src/decision_csp.rs`, `DecisionCspFacts` at `ir/src/cost.rs:203`). This is precisely the
-sibling 2C boundary — 2B must name it as the seam it *delegates*, not one it dissolves, or it
-overclaims.
-
-### 4.3 Determinism / bit-for-bit regen
-
-The SPEC's hardest gate is `cargo xtask regen` byte-identical (constitution, GN-1 gate). Two
-hazards: saturation order and extraction tie-breaks. `compute_best` stores bests in an
-`FxHashMap` (`extract.rs:118,128`) and iterates classes in `Vec` order (deterministic) but ties
-resolve on first-seen — nondeterministic if rule application order varies. The extant island
-already defends this with a `candidate_hash`/`stable_hash` total order on `DecisionNode`
-(`backend_egraph.rs:170`, `selection_trace_hash`); 2B must give `BackendNode` extraction the same
-stable tie-break key. Prototype gate P4.
-
-### 4.4 Compile-time budget (the teardown tax)
-
-The type plane compiles in ~230µs (SPEC §0/08). `egraph/src/egraph.rs:67-88` documents that on a
-~300-node grammar an oversized hash-cons table's *teardown* can dominate the compile profile —
-and `csp_scheduler.rs:44-49` notes SipHasher scratch cost was already ~10% of `compile_bbnf`.
-Interning every rule body (vs the current thin tree) multiplies e-graph residency. Risk: 2B pays
-a compile-time regression for an optimization win that the tiny grammars (json/css/sheets) may
-not repay. Must be measured (§5 P5), with `with_capacity` sizing from grammar node count.
-
-### 4.5 Metadata-heavy leaves bloat interning
-
-`DirectBuild{shape, fields: Vec<DirectBuildField>}` and `RegexProgram{pattern}` carry large
-non-`Id` payloads hashed into node identity. They congruence-merge correctly but inflate memo
-keys; interning cost is real. Not fatal — they are leaves — but a named cost.
-
-### 4.6 Y.13 — the island precedent is a warning
-
-The team already built a narrow e-graph (`backend_egraph.rs`) and **kept the tree IR beside it**.
-2B must prove the full transposition earns its keep — i.e., that codegen reading `extract_tree`
-(§2.6) produces byte-identical output *and* that GVN/residualization-as-rewrite buy measurable
-generated-size or perf, or 2B is consumer-less substrate dressed as architecture.
+---
 
 ## 5. What a prototype must test to move this family
 
-- **P2 (decisive, do first): does extraction survive JSON recursion?** Intern `json.bbnf`'s
-  rules into one `EGraph<BackendNode>` with `CallRule` as (a) an `Id` edge, then (b) an opaque
-  leaf. Run `Extractor::new(...).best_node(roots[value])`. Prove (a) deadlocks/`None` and (b)
-  yields a valid term. Outcome dictates whether "IR-is-egraph" means one graph or acyclic regions
-  + skeleton — the family's actual shape.
-- **P1: measure GVN.** After interning json + css, report `total_nodes` vs sum of
-  `BackendExpr` tree nodes → the structural-sharing ratio. If dedup is negligible on real
-  grammars, the central 2B payoff (GVN "for free") is absent and the family weakens.
-- **P3: regen parity.** Encode PROVE-12 residualization + Seq-flatten + one recognizer-derivation
-  as rewrites; saturate under `CspScheduler`; extract; lower via `codegen::lower::lower_to_rust`
-  reading `extract_tree`; assert `generated.rs` is **byte-identical** to the current template
-  path (the SPEC hard gate). If it can't hit byte-parity, 2B cannot land.
-- **P4: determinism.** Saturate+extract twice; assert identical extracted forms and a stable
-  `selection_trace_hash`. Prove the tie-break is a total order, not `FxHashMap` order.
-- **P5: compile budget.** `compile_bbnf` self-time, e-graph path vs current tree path, on
-  json/css/sheets; must not regress the ~230µs envelope beyond a stated bound (aegraph's 1-5%
-  is the reference ceiling).
-- **P-sched: fixpoint vs eager.** Compare `CspScheduler` saturation against an aegraph-style
-  eager single-pass over the acyclic regions on identical rewrite sets — measure iterations,
-  compile time, and extracted-form quality; adopt the winner as 2B's schedule.
+1. **Interning + parity.** Derive/author `IrNode`, intern `json.bbnf` and
+   `css_l4_declaration_values` (R1 §5-6), run the normal-form rewrite set + nullability/first-set
+   analyses to fixed point, extract, and prove the extracted `BackendExpr`/`BackendShape` is
+   **equivalent to the hand pipeline's output** (`passes::derive_recognizers`/`derive_backend_shape`)
+   on json/css/sheets — and that `cargo xtask regen` is **bit-for-bit identical across two runs**
+   (determinism gate #4).
+2. **Blowup bound.** Measure e-node/e-class count and saturation iterations on the three live
+   grammars; confirm the variadic normal-form set is confluent and terminates under
+   `CspScheduler`'s `node_limit` (`csp_scheduler.rs:177`) with margin. Red line: any grammar whose
+   graph exceeds a stated node budget under the chosen rewrite set refutes the *full* reading and
+   forces the on-insert retreat.
+3. **Extraction crossover.** Construct one grammar where a per-node-greedy shape choice busts the
+   generated-size budget, show greedy extraction picks it, and show the `csp-solver` knapsack
+   extraction recovers the legal optimum — proving the monotone/global split (risk #2) is real and
+   necessary, not decorative.
+4. **Compile-time budget.** PMU/`ax-iter`-profile the full-IR-as-e-graph compile against the
+   current pipeline on the three grammars; the graph build + saturate + extract + **teardown** must
+   stay within the compile budget (risk #5). Report the teardown fraction explicitly.
+5. **Residualization-as-rewrite.** Reproduce PROVE-12's const-mask win (`prototypes/PROVE-12/`:
+   css cyc/B 0.81-0.98×, +18 gen LOC) with the delimiter collapse expressed as an `IrNode` rewrite
+   + extraction lowering rather than a template mutation, and show the emitted asm is the same
+   straight-line residual — the test that "passes are rewrite groups" reaches the actual codegen
+   win, not just the abstract graph.
 
-## 6. Integration seams (path:line)
-
-- `ir/src/lib.rs:376` `enum BackendExpr` → the source of `BackendNode: Language`
-  (`Box`→`Id`, `Vec`→`Vec<Id>`, metadata→leaf; derive at `egraph-derive/src/lib.rs`).
-- `ir/src/lib.rs:352` `struct BackendIr` → `{ graph, roots, recognizers }`.
-- `passes/src/lib.rs:1291` `lower_to_backend` → the interning site (replace tree build with
-  `graph.add`).
-- `passes/src/backend_egraph.rs` (whole) + `passes/src/lib.rs:398,486,504-609` (candidate
-  enumeration, `derive_backend_shape`, `select`) → **subsumed** by §2.4 extraction.
-- `egraph/src/extract.rs:134` `compute_best` → the cyclic-extraction blocker (§4.1); the tie-break
-  determinism site (§4.3).
-- `egraph/src/csp_scheduler.rs:204` → the saturation schedule (reused); the eager-aegraph
-  alternative measured against it.
-- `egraph/src/rewrite.rs:34,58` `Rewrite`/`should_apply` → where each pass-group rule lands, guarded
-  by `EClassFacts`.
-- `ir/src/lib.rs:326-338` (`nullable`, first-set) → the `Analysis<BackendNode>` lattice.
-- `ir/src/cost.rs:5,173,184` `CostFacts`/`ActiveCostFacts`/`selected_shape` → the extraction cost
-  model + provenance; `decision_csp.rs` / `cost.rs:203` `DecisionCspFacts` → the delegated
-  sharing/capacity CSP (§4.2).
-- `codegen/src/lib.rs:176-184` `lower_to_rust`/`LowerCtx` → the same-wave consumer reading
-  `extract_tree` (§2.6, Y.13).
-- `prototypes/PROVE-12/REPORT.md` §7 → residualization-as-rewrite, the generalization 2B homes.
-- GN-2.W1 (`docs/tranches/sk-v24/GN-2.md`, `passes/src/lib.rs:338`) → recognizer-derivation
-  rewrite group.
+**Verdict to carry forward.** Family 2B is coherent and its substrate is ~80% built, but its
+*honest* strongest form is the aegraph-disciplined "IR is one e-graph, recursion is a symbolic
+leaf, saturation is bounded/confluent, global cost is a CSP knapsack" — not textbook unbounded
+equality saturation, which the IR's variadic+cyclic shape refutes on contact. The two hard
+questions a prototype must answer before this family can be preferred: does the full-IR e-graph
+stay within the compile-time budget, and does regen stay bit-for-bit deterministic through
+cost-guided extraction.

@@ -1,209 +1,61 @@
-# PROTO-2 patch — the ONLY code added. No source file mutated.
-# Applies to a pt-scratch copy of parse-that (READ-ONLY origin) per R3 §8.
-# New file (in copy): rust/bootstrap/examples/oracle.rs
-# Build/run: cd rust; CARGO_TARGET_DIR=<copy>/target \
-#            cargo run --release --example oracle -p regex-bootstrap
-# ---------------------------------------------------------------
+# PROTO-2 patch — throwaway probe added to skinny/crates/grammar/tests/, run, then removed.
+# Preserved here as the code artifact. Apply verbatim to reproduce the RAN_MEASURED result:
+#   cd skinny && CARGO_TARGET_DIR=<scratch> cargo test -p grammar --test proto2_construction_census
+
 --- /dev/null
-+++ b/rust/bootstrap/examples/oracle.rs
-+//! LOCK-7 probe 2 (family 7D): the regex differential-oracle ledger row.
-+//!
-+//! Discriminates promotion-vs-oracle-only on the ONE edge with committed
-+//! producer code on both sides:
-+//!   * HAND  = parse_that::regex::parse_with        -> Result<Hir, ParseError>
-+//!   * GEN   = parse_that::regex::parse_generated_with -> Result<Hir, ParseError>
-+//!            (generated combinator parser from bootstrap/regex.bbnf + host::lower)
-+//! Both yield the *same* `Hir` type (derives PartialEq/Eq), so the equivalence
-+//! relation is pinned at structural Hir-equality — the strongest ≡ available
-+//! TODAY, no new functor required (host::lower already exists).
-+//!
-+//! Reports (1) parity ledger and (2) cold paired throughput at release -O3.
++++ b/skinny/crates/grammar/tests/proto2_construction_census.rs
++// PROTO-2 (LOCK-7 pass-1) probe: empirical proof that GrammarIr *construction* is a
++// pure synthesized-attribute tree fold — NO interner, NO build-time cross-rule edge.
++// Throwaway probe; deleted after the run.
++use grammar::parse_grammar;
++use ir::ExprKind;
 +
-+use std::hint::black_box;
-+use std::time::Instant;
++// PROOF 1 — add_expr is an APPEND-ONLY arena, NOT a structural interner.
++// Two byte-identical literals in the same grammar must occupy DISTINCT ExprIds.
++// An interner (structure->Id dedup) would collapse them to one; a synthesized-attribute
++// tree fold keeps them distinct. This is the discriminator INC-2 turns on.
++#[test]
++fn add_expr_does_not_intern_identical_leaves() {
++    let g = parse_grammar("t", "a = \"x\" , \"x\" ;").unwrap();
++    let lits: Vec<_> = g
++        .exprs
++        .iter()
++        .filter(|e| matches!(&e.kind, ExprKind::Literal { bytes, .. } if bytes == b"x"))
++        .map(|e| e.id)
++        .collect();
++    assert_eq!(lits.len(), 2, "two identical literals must NOT be interned");
++    assert_ne!(lits[0], lits[1], "distinct ExprIds => append-only arena, not a dedup interner");
++}
 +
-+use parse_that::regex::{self, ParseOptions};
-+
-+/// Superset corpus: every regex class across the BBNF grammars (52 patterns).
-+const PATTERNS: &[&str] = &[
-+    r#"-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?"#,
-+    r#""(?:[^"\\]|\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4}))*""#,
-+    r"[a-zA-Z_][\w-]*",
-+    r"-?[a-zA-Z_][\w-]*|--[\w-]+",
-+    r"[\-]?[a-zA-Z_][\w-]*|--[\w-]+",
-+    r"[-+]?(\d+(\.\d+)?|\.\d+)([eE][-+]?\d+)?",
-+    r"[-+]?\d+",
-+    r"(?s)(?:\s|/\*.*?\*/)*",
-+    r"[0-9a-fA-F]{3,8}",
-+    r"[0-9a-fA-F]+",
-+    r"[iIsS]",
-+    r"[^\]\\]",
-+    r"[^\\()\[\]{}|*+?.^$]",
-+    r#""(?:[^"\\]|\\[\s\S])*"|'(?:[^'\\]|\\[\s\S])*'"#,
-+    r"\d+",
-+    r"\s+",
-+    r"\w+",
-+    r"[a-z]+",
-+    r".",
-+    r"\\",
-+    r"(?:foo|bar|baz)+",
-+    r"(a|b)(c|d)",
-+    r"a*",
-+    r"a+?",
-+    r"a{3,5}",
-+    r"\n\r\t",
-+    r"\.",
-+    r"",
-+    r"(?:-?[a-zA-Z_]|\\[^\n])(?:[\w-]|\\[^\n])*",
-+    r"[-+]?\d*n",
-+    r"https?://[a-zA-Z0-9./-]+",
-+    r"(?:[a-z]+\.)+[a-z]+",
-+    r"#[0-9a-fA-F]{3,6}",
-+    r"\d+px",
-+    r"\d+%",
-+    r"\d+(?:px|em|rem|vh|vw)",
-+    r"\d{4}-\d{2}-\d{2}",
-+    r"\d{2}:\d{2}:\d{2}",
-+    r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}",
-+    r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
-+    r"0x[0-9a-fA-F]+",
-+    r"0b[01]+",
-+    r"0[0-7]+",
-+    r"\d+\.\d+",
-+    r"\d+(?:_\d+)*",
-+    r"[A-Za-z0-9+/]+",
-+    r"\$[a-zA-Z_][a-zA-Z0-9_]*",
-+    r"[a-zA-Z][a-zA-Z0-9]*",
-+    r"\w+(?:[-_]\w+)*",
-+    r"(?:foo|bar)*",
-+    r"(?:[a-z]{2,4})+",
-+];
-+
-+fn median(mut v: Vec<f64>) -> f64 {
-+    v.sort_by(|a, b| a.partial_cmp(b).unwrap());
-+    let n = v.len();
-+    if n == 0 {
-+        return f64::NAN;
-+    }
-+    if n % 2 == 1 {
-+        v[n / 2]
-+    } else {
-+        (v[n / 2 - 1] + v[n / 2]) / 2.0
++// PROOF 2 — ExprIds are assigned in strict post-order (child before parent):
++// a synthesized attribute. For `a = "x" , "y" ;` the two Literal leaves are added
++// before the enclosing Seq, so both leaf ids are < the Seq id.
++#[test]
++fn arena_ids_are_post_order_synthesized() {
++    let g = parse_grammar("t", "a = \"x\" , \"y\" ;").unwrap();
++    let seq = g
++        .exprs
++        .iter()
++        .find(|e| matches!(&e.kind, ExprKind::Seq(_)))
++        .expect("seq node");
++    let ExprKind::Seq(children) = &seq.kind else { unreachable!() };
++    for c in children {
++        assert!(c.0 < seq.id.0, "child ExprId {} must precede parent Seq ExprId {} (post-order)", c.0, seq.id.0);
 +    }
 +}
 +
-+fn main() {
-+    let opts = ParseOptions::default(); // unicode:true — identical on both sides
-+
-+    // ─── (1) PARITY LEDGER ────────────────────────────────────────────────
-+    let mut both_ok_eq = 0usize; // structural agreement (the strong ≡)
-+    let mut both_ok_neq = 0usize; // both accept, Hir DIVERGES
-+    let mut both_err = 0usize; // both reject (membership agreement)
-+    let mut disagree = 0usize; // one accepts, other rejects
-+    let mut divergences: Vec<String> = Vec::new();
-+
-+    for &p in PATTERNS {
-+        let hand = regex::parse_with(p, &opts);
-+        let gen_r = regex::parse_generated_with(p, &opts);
-+        match (&hand, &gen_r) {
-+            (Ok(h), Ok(g)) => {
-+                if h == g {
-+                    both_ok_eq += 1;
-+                } else {
-+                    both_ok_neq += 1;
-+                    divergences.push(format!(
-+                        "STRUCT-DIVERGE  {:?}\n    hand={:?}\n    gen_r ={:?}",
-+                        p, h, g
-+                    ));
-+                }
-+            }
-+            (Err(_), Err(_)) => both_err += 1,
-+            (Ok(_), Err(e)) => {
-+                disagree += 1;
-+                divergences.push(format!("HAND-OK/GEN-ERR {:?}  gen_err={}", p, e.message));
-+            }
-+            (Err(e), Ok(_)) => {
-+                disagree += 1;
-+                divergences.push(format!("HAND-ERR/GEN-OK {:?}  hand_err={}", p, e.message));
-+            }
-+        }
-+    }
-+
-+    let total = PATTERNS.len();
-+    let membership_agree = both_ok_eq + both_ok_neq + both_err; // accept/reject agree
-+    let structural_agree = both_ok_eq + both_err; // Hir-identical or both reject
-+
-+    println!("=== PARITY LEDGER (≡ pinned at Hir structural equality) ===");
-+    println!("corpus patterns          : {}", total);
-+    println!("both accept + Hir-equal  : {}", both_ok_eq);
-+    println!("both accept + Hir-DIVERGE : {}", both_ok_neq);
-+    println!("both reject              : {}", both_err);
-+    println!("membership disagree      : {}", disagree);
-+    println!(
-+        "membership parity        : {}/{} = {:.4}",
-+        membership_agree,
-+        total,
-+        membership_agree as f64 / total as f64
-+    );
-+    println!(
-+        "STRUCTURAL parity        : {}/{} = {:.4}",
-+        structural_agree,
-+        total,
-+        structural_agree as f64 / total as f64
-+    );
-+    if divergences.is_empty() {
-+        println!("divergence ledger        : (empty — full structural parity)");
-+    } else {
-+        println!("divergence ledger ({} rows):", divergences.len());
-+        for d in &divergences {
-+            println!("  - {}", d);
-+        }
-+    }
-+
-+    // ─── (2) COLD PAIRED PERF ─────────────────────────────────────────────
-+    // Fresh parse per call (no memoization anywhere in either path), so every
-+    // corpus pass is cold. Paired interleaved; median over reps; black_box to
-+    // defeat DCE. Ratio gen_r/hand is the promotion-ledger perf figure.
-+    const REPS: usize = 3000;
-+    let mut hand_us: Vec<f64> = Vec::with_capacity(REPS);
-+    let mut gen_us: Vec<f64> = Vec::with_capacity(REPS);
-+
-+    // Untimed prime pass (icache/branch-predictor warm — NOT result caching;
-+    // each parse still allocates fresh). Excluded from measurement.
-+    for _ in 0..50 {
-+        for &p in PATTERNS {
-+            black_box(regex::parse_with(black_box(p), &opts)).ok();
-+            black_box(regex::parse_generated_with(black_box(p), &opts)).ok();
-+        }
-+    }
-+
-+    for _ in 0..REPS {
-+        let t0 = Instant::now();
-+        for &p in PATTERNS {
-+            black_box(regex::parse_with(black_box(p), &opts)).ok();
-+        }
-+        hand_us.push(t0.elapsed().as_nanos() as f64 / 1000.0);
-+
-+        let t1 = Instant::now();
-+        for &p in PATTERNS {
-+            black_box(regex::parse_generated_with(black_box(p), &opts)).ok();
-+        }
-+        gen_us.push(t1.elapsed().as_nanos() as f64 / 1000.0);
-+    }
-+
-+    let hand_med = median(hand_us);
-+    let gen_med = median(gen_us);
-+    println!();
-+    println!("=== COLD PAIRED PERF (release -O3, {} reps, per corpus-pass) ===", REPS);
-+    println!("HAND  (bbnf_regex RD parser)   median: {:.3} us/pass", hand_med);
-+    println!("GEN   (generated + host::lower) median: {:.3} us/pass", gen_med);
-+    println!(
-+        "ratio gen_r/hand                 : {:.3}x  ({})",
-+        gen_med / hand_med,
-+        if gen_med <= hand_med {
-+            "GEN >= HAND — perf gate PASS (promotion eligible)"
-+        } else {
-+            "GEN slower — perf gate FAIL (ORACLE-ONLY lawful)"
-+        }
-+    );
++// PROOF 3 — construction leaves cross-rule Refs UNRESOLVED (target:None); the
++// name->RuleId link is a SEPARATE pass (resolve_refs). We can only observe the
++// post-resolve state through the public API, so we assert the two-phase contract
++// indirectly: a forward ref resolves (proving resolution is global, not local) and
++// an undefined ref is rejected by the linker, not the constructor.
++#[test]
++fn cross_rule_link_is_a_separate_global_pass() {
++    // forward + cyclic ref: only resolvable with the WHOLE rule table => not synthesized
++    let g = parse_grammar("t", "a = b ;\nb = a | \"x\" ;").unwrap();
++    let a = g.rule_by_name("a").unwrap();
++    let ExprKind::Ref { target, .. } = g.expr(a.body).kind else { panic!("expected ref") };
++    assert!(target.is_some(), "resolve_refs filled the cross-rule edge post-construction");
++    // undefined ref is a LINK error, not a parse/construct error
++    assert!(parse_grammar("t", "a = undefined_rule ;").is_err());
 +}

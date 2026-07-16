@@ -1,400 +1,411 @@
-# LOCK-2 — THE GRAPH ENGINE — pass-1 SYNTHESIS (FAMILY-SPECS)
+# LOCK-2 — THE GRAPH ENGINE — pass-1 FAMILY SPECS (synthesis)
 
-*Synthesis agent, pass 1. Four families distilled while routes remain incompatible; then the
-incompatibility map; then BLOCKED-candidate dispositions; then the two decisive uncertainties.*
+*e-graph + CSP optimization: HIR canon, IR rewriting, kernel/backend selection, capacity &
+schedule decisions, profile-fed cost, deterministic regen. Four families — 2A EGRAPH-ISLANDS ·
+2B IR-IS-EGRAPH · 2C CSP-CENTRAL · 2D PROFILE-CLOSED-LOOP — distilled while routes remain
+incompatible, then the incompatibility map. Synthesis over research-{A,B,C,D,priorart}, pass 1.*
 
-Task recap: where and how graph optimization governs the pipeline — HIR canon, IR rewriting,
-kernel/backend selection, capacity/schedule decisions; global vs local CSP; profile-fed cost;
-deterministic regen. Substrate: `crates/egraph/` (real egg-style engine, ~289 LOC core + derive +
-extractor + `CspScheduler`), `crates/csp-solver/` (real, general — `CostFiniteDomain`,
-`branch_and_bound`, `kuhn_munkres` LAP), `egraph/src/cost_weights.rs` `CALIBRATED_WEIGHTS`, and the
-decision seam (`passes/src/backend_egraph.rs`, `decision_csp.rs`, `ir/src/cost.rs`).
-
----
-
-## 0. THE CRUX THAT BINDS ALL FOUR FAMILIES (read first)
-
-Every family, and the prior-art sweep independently, converge on one measured in-tree finding that
-governs the whole lock:
-
-**The cost model is inert today because no e-class holds more than one semantically-distinct
-candidate.** A 54-configuration grid sweep over {structural, alt_per_branch, dispatch_bonus,
-ref_cost} produced DTA-state counts *identical to baseline for every grammar* (JSON 51, BBNF 476,
-CSS-L4 2875, Sheets 191 — zero variance across all 54; `cost_weights.rs:134-191`). The rewrite set
-(`DeduplicateAltBranches`, `SupersetAbsorbAlt`, `UnionMergeAlt`, `FuseAltRegexBranches`,
-`CommonSuffixFactor`) yields classes with "at most one semantically-distinct canonical form," so the
-extractor never chooses. This is corroborated by Cranelift's ægraph production verdict: average
-e-class size **1.13** after rewriting, the multi-option layer contributing **~0.1% execution
-improvement at ~0.005% compile cost** — "the ægraph itself may not (yet?) be pulling its weight";
-the *canonicalization* (GVN/CSE/DCE for free) does the heavy lifting, not extraction search.
-
-Two independent zero-facts make this concrete and non-negotiable:
-- `perf_cost: 0` is **hardcoded** at every candidate site (`passes/src/lib.rs:590`, and mirrored at
-  `:2023/:2035/:2062`, `decision_csp.rs:247/:259`). The cost lattice has no measured dimension at all.
-- The only e-graph on the compile path (`backend_egraph::select`) interns **childless** nodes
-  (`children:[Id;0]`), unions all candidates into one class, and extracts a `min_by_key` wearing an
-  e-graph costume; the "decision CSP" downstream is a one-variable solve with rigged `{0.0, 1.0}`
-  costs that structurally cannot change the answer (`decision_csp.rs:44-83`). Both are
-  **consumer-less substrate** in the constitution's sense (viii / Y.13) — the decision cannot go RED.
-
-**Consequence for every family:** a route that claims cost-model-governed selection is
-consumer-less substrate *until a rewrite manufactures a genuine e-class branch on the real fleet*.
-The single question that de-risks or collapses the entire lock is: **does any real decision exist to
-be made on this fleet?** It splits into two orthogonal decision surfaces — *local extraction
-diversity* (does a cost-weight flip pick a different form? — the e-graph question, 2A/2B) and
-*global coupling* (does the size budget ever bind sites together? — the CSP question, 2C). These are
-the two prototype briefs in §6.
+Constitution binds: consumer-less substrate forbidden (viii/Y.13); type plane costs zero at
+runtime (v); concrete artifacts or SPEC-ONLY (vii); refutation laws — no warm benches, ratios
+certified / absolutes directional (iv); deterministic regen (`regen∘regen = regen` byte-identical);
+extant GN/PT codex is the baseline (ix).
 
 ---
 
-## 1. FAMILY 2A — EGRAPH-ISLANDS
+## 0. The convergent finding that governs the whole lock — THE INERT DECISION SUBSTRATE
 
-**Architecture.** A directed pass pipeline (LLVM-shaped, `Changed`-flag convergence) punctuated by
-e-graph **islands** at a small named set of decision points. Each island is a *bounded*
-equality-saturation run whose extracted candidates feed a *local* CSP that selects one lowering
-under legality + the generated-size budget. Between islands the IR is an ordinary annotated tree —
-the e-graph is a local tactic at a chokepoint, never the connective tissue. This is deliberately the
-**DialEgg shape** (local egglog optimizer invoked at named points in an MLIR pass pipeline), not the
-whole-program e-graph.
+All five reports independently land on one fact, and it is the pass's most load-bearing result:
+**the extant e-graph/CSP substrate is ceremonial. It decides nothing a `min_by_key` would not, and
+its cost model has no branch to exercise.** Two independent measurements say so:
 
-**Mechanism — three islands, one fixed shell:**
-- **Island A · regex HIR canonicalization** (where eqsat genuinely earns it). Alternatives:
-  `a|b|c ⇄` character class; common-prefix factoring `abc|abd ⇄ ab(c|d)`; Kleene normal forms
-  `(a*)* ⇄ a*`, `a a* ⇄ a+`; epsilon absorption — precisely what `rust-lang/regex`
-  `Hir::alternation()` does *imperatively and lossily*; the e-graph keeps all forms until a
-  **downstream-automata cost** picks (`w_nfa·NFA-states + w_prefilter·(1−prefilterable) +
-  w_class·classes`, weights from `CALIBRATED_WEIGHTS` + PROVE-10 measurements). CSP is thin here
-  (extraction is a monotone-local min). LOCK-5 fixes the lawful HIR; 2A owns the rewrite set + cost.
-- **Island B · scan-plan selection** (where CSP, not extraction, is load-bearing). Per scan site:
-  `SimdMode × SimdSite × kernel × capacity`. e-graph enumerates lawful lowerings (`Repetition` over
-  a class with complement cardinality ∈[1,16] admits `Prefilter/SelfLoop` beside default `Exact`;
-  complement>16 or empty admits only `Exact`); the **CSP is the real solve** — legality
-  (`complement≤16`, `lo6_table_admissible`) *plus* the `generated_loc_budget` **knapsack across
-  sites**, objective a cost lattice fed by measured cyc/B. This is the `CostFiniteDomain` +
-  `MinimizeCost` path used *for real* (N>1 vars, non-rigged costs, a budget that can force `Exact`
-  on a legal-but-unaffordable site).
-- **Island C · projection canonicalization** (shares engine with LOCK-1, distinct island):
-  `map∘map ⇄ map`, identity/dead-projection elimination (guarded by an `Analysis` carrying the
-  projected type — respects no-value-discard), cost = tape-write / materialization-plan size.
-  Boundary vs LOCK-1's 1D: 2A's objective is *emitted-code cost*, 1D's is *type-lattice
-  representative*.
+- **In-tree (R-1, the null calibration).** A 54-config grid sweep over
+  {structural, alt_per_branch, dispatch_bonus, ref_cost} on the 4-grammar corpus produced a DTA
+  state count **identical to baseline for every grammar** (JSON 51, BBNF 476, CSS-L4 2875, Sheets
+  191 — zero variance across all 54). Root cause: the current rewrite set collapses each e-class to
+  **at most one semantically-distinct canonical form**, so extraction is inert
+  (`egraph/src/cost_weights.rs:134-191`).
+- **External twin (Cranelift ægraph, EGRAPHS 2023 / blog 2026-04-09).** After rewriting, **average
+  e-class size = 1.13 e-nodes**; the multi-representation layer was exercised **2 times across ~4M
+  value nodes**; the whole aegraph pipeline cost ~7-8% more compile time for ~2% runtime, and the
+  *canonicalization* (GVN/CSE/LICM "for free"), not extraction search, did the heavy lifting.
 
-**Shell:** fixed order `regex HIR canon → projection canon → scan-plan → lower`; extraction
-collapses each island before the next pass. No cross-island saturation, no persistent global
-e-graph. Insertion at the `passes::compile` spine `derive_*` seams.
+The current wiring embodies the pathology exactly: `passes::backend_egraph::select`
+(`passes/src/backend_egraph.rs:36-149`) interns each backend candidate as a **childless**
+`DecisionNode` and unions them into **one class** (a bag, not a congruence), then extracts the
+cheapest — a `min_by_key` in an e-graph costume. `passes::decision_csp::solve_rule`
+(`decision_csp.rs:29-189`) builds a **1-variable CSP with rigged 0/1 costs** and a constraint that
+**forces `value == selected_index`** — it re-selects its input. The perf dimension is
+**hardwired to zero** (`perf_cost: 0`, `passes/src/lib.rs:590`). ~68 provenance-string fields across
+`ActiveCostFacts`/`DecisionCspFacts` are "status report / vague optimism" rendered as code (clause
+vii). A consumer that cannot go RED is consumer-less substrate (clause viii / Y.13).
 
-**Integration seams:** `passes/src/lib.rs:39` (`derive_recognizers`), `:338` (Island B home), `:398`
-(`derive_backend_shape`), `:1149-1287` (Island C cost source); `ir/src/lib.rs:425/430/416`
-(`SimdMode`/`SimdSite`/`Recognizer::SimdScan` extension); `egraph/src/cost_weights.rs`,
-`cost_config.rs:56-70` (`BBNF_COST_*`, pluggable); `decision_csp.rs:3-5` (real CSP API, used N>1);
-consumer `codegen/src/lower/recognizer/mod.rs` (`find_member`).
+**Therefore the single fact that gates every family is:** *does any rewrite manufacture a genuine
+e-class alternative (>1 semantically-distinct candidate) on a real fleet grammar, such that the
+Extractor picks differently under two weight vectors AND the two picks produce a measured cyc/B
+delta?* Until that is shown, richer extraction (ILP, Pareto, treewidth, differentiable) solves a
+problem the fleet has not been shown to have, and the honest LOCK-2 collapses to
+**canonicalization + the existing BackendShape driver**, with the extraction/CSP machinery
+SPEC-ONLY. This is Brief 1. It de-risks or refutes 2A-Islands-A/C, 2B-extraction, and 2D-lattice
+simultaneously.
 
-**Gates it carries:** (i) an island is admitted **only** if its rewrites produce nodes with
-*children* (structural sharing → extraction non-trivial) OR its selection is genuinely
-*budget-constrained* (Island B knapsack → CSP non-trivial); a flat childless-union island must be
-written as a plain `min_by_key`, not dressed as saturation. (ii) born-RED prefilter gate ≥8× skip /
-≥0.95× dense on the wired scan site over ≥3 cold paired PMU windows. (iii) `regen∘regen`
-byte-identical (deterministic saturation order + total tie-break). (iv) compile-time delta ≤ noise
-on the ~230 µs budget (islands bounded: `egraph_node_limit` 100k, `egraph_iter_limit` 64, small by
-construction). (v) deletion of the ceremonial `ActiveCostFacts`/`DecisionCspFacts` string apparatus
-(grep-gate: zero readers survive).
-
-**Exact open questions:** (Q-2A-1) Does the five-grammar fleet contain a *real* regex leaf (CSS L4
-component-value) whose canon measurably changes its prefilter/DFA verdict? If none, Island A is a
-consumer-less rewrite set → deferred to LOCK-5 as a named negative result. (Q-2A-2) Does the
-`generated_loc_budget` ever bind ≥2 scan sites so Island B's CSP is more than a per-site argmin?
-(Q-2A-3) Is the downstream-automata cost *local* enough for the bottom-up extractor (Guided-EqSat
-monotonicity), or must non-local prefilter-tier count route to the CSP layer?
+**The second, orthogonal gate** is the CSP axis, which does *not* need e-class branching: *does a
+fleet grammar present a binding generated-size budget over ≥2 competing scan sites, such that a
+real N-variable CSP forces `Exact` on a legal-but-unaffordable site* — the one decision the rigged
+1-var CSP structurally cannot make? This is Brief 2. It settles 2C's teeth and 2A's Island B
+independently of extraction.
 
 ---
 
-## 2. FAMILY 2B — IR-IS-EGRAPH
+## Family 2A — EGRAPH-ISLANDS
 
-**Architecture.** The middle IR *is* an e-graph, not a tree an island occasionally consults. Every
-`BackendRule` body is interned as e-nodes into one shared `EGraph`; every pass is a rewrite group;
-scheduled saturation reaches a bounded fixed point; **one** cost-driven extraction emits both the
-concrete lowered term *and* its `BackendShape`. One representation of the middle, one canonicalizer
-(congruence closure), one decision surface (extraction). Codegen consumes `extract_tree(root)`.
+**Architecture.** An LLVM-shaped **directed pass pipeline** punctuated by e-graph **islands** at a
+small, named set of decision points. The middle IR stays an ordinary annotated tree between
+islands; the e-graph is a *local tactic at a chokepoint*, never the connective tissue. Each island
+is a bounded eqsat run whose extracted candidates feed a CSP that selects one lowering under
+legality + the generated-size budget; each island lands same-wave with a real consumer that changes
+emitted code, carrying a measured cost model. Precedent: DialEgg (CGO 2025) — egglog invoked at
+named points in an MLIR pass pipeline. Between islands: LLVM-style `Changed`-flag convergence.
 
-**Mechanism:** introduce `BackendNode` (the e-node isomorph of `BackendExpr`, deriving `Language`:
-`Box→Id`, `Vec→Vec<Id>`, metadata→leaf). `BackendIr` becomes `{graph, roots: HashMap<RuleId,Id>,
-recognizers}`. Interning at `passes/src/lib.rs:1291` is the mechanical post-order walk `lower_expr`
-already does, `graph.add(node)` instead of `Box::new`. **Cross-rule GVN falls out for free** —
-identical whitespace-skip loops / `ByteLiteral(b"true")` / span kernels hash-cons to one class
-(aegraph "GVN for free during translation into the e-graph"). Passes become `Rewrite`s guarded by an
-`EClassFacts` analysis lattice (nullable + first-set, today tree passes at `ir/src/lib.rs:326-338`):
-Normalization group (Seq-flatten, single-branch Alt collapse, `Optional(x)≡Alt{Empty,x}`, dead-branch
-prune); Residualization group (PROVE-12's CSS delimiter-mask const-fold generalized to *one rewrite*
-over any grammar-constant delimiter set); Recognizer-derivation group (GN-2.W1 self-loop→`SimdScan`
-folded into the graph); Materialization/tape group (eager-tape / sink-only / collapsed-stage become
-*co-present e-nodes in one class*). Extraction then emits the shape as an **attribute of the
-extracted form**, collapsing `backend_egraph.rs` + the candidate machinery
-(`passes/src/lib.rs:486-609`) into one pass.
+**Mechanism (three candidate islands, one directed shell).**
+- **Island A — regex HIR canonicalization** (egg's canonical use; the island with real
+  child-bearing extraction). Alternatives: `a|b|c ⇄ class`, prefix factoring `abc|abd ⇄ ab(c|d)`,
+  Kleene normal forms `(a*)* ⇄ a*`, `a a* ⇄ a+`. Cost = downstream automata/prefilter quality
+  (`w_nfa·NFA-states + w_prefilter·(1−prefilterable) + w_class·classes`), **local** for the
+  bottom-up extractor to be correct (Guided-EqSat monotone-local requirement). CSP thin (tie-break
+  only). Consumer: automata/prefilter derivation emitting `dfa.find`. **LOCK-5 owns the lawful HIR
+  form; 2A owns the rewrite set + cost model.**
+- **Island B — scan-plan selection** (where CSP, not extraction, is load-bearing). Variables per
+  scan site: `SimdMode∈{Exact,Prefilter}` × `SimdSite∈{PreEntry,SelfLoop{terminators}}` × kernel ×
+  capacity. e-graph enumerates the *lawful* lowerings of a self-loop over a class whose complement
+  cardinality ∈[1,16]; CSP legality (`complement≤16`, kernel admissibility) **plus the generated-LOC
+  budget as a global knapsack across sites** — the CSP can force `Exact` on a legal-but-unaffordable
+  site. Consumer: GN-2.W1's `codegen/src/lower/recognizer/mod.rs` `find_member`.
+- **Island C — projection canonicalization** (shared engine with LOCK-1, distinct island). Fuse
+  `map∘map ⇄ map`, eliminate identity/dead projections (guarded by no-value-discard via an
+  `Analysis` bearing the projected type). Cost = tape-write / materialization-plan size. Consumer:
+  the tape emitter (`json_typed_direct.rs`).
 
-**THE structural blocker (make-or-break):** grammar IR is **cyclic** (JSON `value→array→value`). If
-`CallRule` is an `Id` edge, the greedy bottom-up extractor **deadlocks** — `compute_best`
-(`extract.rs:143-149`) skips nodes whose children aren't resolved; a class reachable only through
-itself never resolves; `best_node(value_root)=None`. The aegraph answer, adopted: **`CallRule` is an
-opaque leaf** (a `RuleId` metadata field, not a child edge). The e-graph becomes a forest of
-*acyclic per-rule-body regions* + a thin rule-call skeleton outside the graph. **The maximalist
-slogan "one e-graph, no boundaries" is false;** the lawful 2B is "one e-graph *engine*, one acyclic
-region per rule body, a rule-call skeleton" — which is structurally 2A's islands at rule-body
-granularity.
+The shell runs a fixed order — regex-canon → projection-canon → scan-plan → lower — extraction
+collapsing each island before the next pass. No cross-island saturation, no persistent global
+e-graph.
 
-**Schedule:** the measured choice between `CspScheduler` fixpoint saturation and aegraph-style
-**eager, acyclic, single-pass** application (Cranelift attains the optimization level in a few
-linear passes at 1-5% compile cost; the prior-art sweep flags the `CspScheduler` rebuilds a fresh
-`Csp` every iteration — the *opposite* of aegraph's no-rebuild lesson, a scaling risk at CSS-L4).
+**Integration seams.** `passes/src/lib.rs:338` (`derive_recognizers`, Island B home / GN-2.W1
+detection arm), `:398` (`derive_backend_shape`), `:1149-1287` (`derive_materialization_plan`,
+Island C cost source); IR extension `ir/src/lib.rs:425/430` (`SimdMode`/`SimdSite`),
+`:416-422`/`:361` (`Recognizer::SimdScan`/`BackendShape`); cost surface
+`egraph/src/cost_weights.rs`, `cost_config.rs` (the `@cost` directive is the author entry); CSP API
+already imported at `decision_csp.rs:2-8`; Island A home = LOCK-5 territory.
 
-**Integration seams:** `ir/src/lib.rs:376` (`BackendExpr`→`BackendNode`), `:352`
-(`BackendIr`→graph), `passes/src/lib.rs:1291` (intern site), `backend_egraph.rs`+`:486-609`
-(subsumed), `extract.rs:134` (cyclic-extraction blocker + tie-break determinism), `csp_scheduler.rs:204`
-(schedule vs eager), `codegen/src/lib.rs:176-184` (same-wave consumer reading `extract_tree`).
+**Gates it carries.** (i) Every island's rewrites produce nodes *with children* OR its selection is
+genuinely *constrained* (Island B's budget) — else write it as a plain cost-ranked choice, do NOT
+island it. (ii) GN-2.W1 born-RED: ≥8.0× cyc/B on the wired skip site (95% CI excluding 8.0),
+≥0.95× dense on twitter, ≥3 cold paired PMU windows, ins/B load-invariant, structural parity
+asserted before timing. (iii) `regen∘regen = regen` byte-identical with a *total* tie-break.
+(iv) compile-time delta ≤ noise on the ~230µs budget. (v) Deletion of the ceremonial ~68-field
+provenance apparatus + relocation of inline `#[cfg(test)]` (no-inline-tests law).
 
-**Gates:** (i) extraction must survive JSON recursion (opaque-leaf `CallRule`); (ii) generated.rs
-**byte-identical** to the current template path (the SPEC hard gate); (iii) determinism — stable
-`selection_trace_hash` total order, not `FxHashMap` order; (iv) compile budget must not regress the
-~230 µs envelope beyond aegraph's 1-5% ceiling (interning every rule body multiplies e-graph
-residency; teardown tax at ~300 nodes already noted); (v) the sharing-sensitive / budget decision is
-**delegated** to the bounded CSP (its own §4.2 concession — 2B keeps extraction monotone-local, or
-extraction goes NP-hard).
+**Exact open questions.** (1) Does the 5-grammar fleet have a *real* regex leaf (CSS-L4 richest)
+whose prefilter/DFA verdict changes under canon? If none, Island A is a LOCK-5-owned negative
+result (share of the master gate, §0). (2) Does the fleet ever present ≥2 *competing* self-loop
+sites under a binding budget, or does it collapse to one (JSON's whitespace-skip is the sole
+self-loop, no contest)? (Brief 2.) (3) Are the islands three, two, or one — with the remainder
+written as plain cost-ranked selection?
 
-**Exact open questions:** (Q-2B-1) On real grammars, is the GVN dedup ratio (`total_nodes` vs summed
-tree nodes) material, or negligible (aegraph 1.13)? If negligible the central payoff is absent.
-(Q-2B-2) Does canon-as-rewrite + residualization-as-rewrite buy *measurable* generated-size/perf
-over the hand-written passes, or only architectural symmetry (aegraph 0.1%)? (Q-2B-3) Given the
-opaque-leaf reduction to per-rule regions, what — if anything — distinguishes lawful 2B from 2A's
-islands beyond internment granularity?
-
----
-
-## 3. FAMILY 2C — CSP-CENTRAL
-
-**Architecture.** The decision driver *is* a constraint-satisfaction/optimization problem, inverting
-HEAD (where the e-graph selects and the CSP rubber-stamps). One global `Csp<CostFiniteDomain>` over
-**all** sites; the per-rule choice is a variable; the size budget is a genuine coupling constraint;
-`OptimizationMode::MinimizeCost` branch-and-bound picks the globally cheapest budget-feasible
-assignment. The e-graph is **demoted to candidate generator** — it enumerates the per-site
-alternative set (`backend_candidates`, `passes/src/lib.rs:508`, already produces ≤5 `BackendCandidate`s
-per rule with cost fields); it does **not** select. This is Unison's thesis (combinatorial
-instruction-selection + register-allocation + scheduling as one constraint model) applied to
-parser-generator lowering.
-
-**Mechanism:**
-- **Variables/domains:** one CSP variable per lowering site (rule → shape; scan leaf → tier;
-  container → capacity; delim test → residualization depth). Domain = candidate index set;
-  `CostFiniteDomain` (`csp-solver/src/domain/cost_finite.rs`) with sorted `(value,cost)` table,
-  `-1` abstain sentinel, `Cell`-cached `min_cost()` lower bound B&B issues at every node.
-- **Constraints (the couplings greedy extraction cannot honor):** (1) **global generated-size
-  budget** `Σ static_size_cost(choice) ≤ B` (`generated_loc_budget`, `Cargo.toml:67`) — a
-  knapsack/bin-capacity resource constraint; **greedy per-rule extraction is provably budget-blind**
-  (detects overrun only via the post-hoc `lint_loc`, `xtask/src/main.rs:259`); only a global solver
-  trades costlier-here for much-cheaper-there. **This is why 2C is not decorative.** (2)
-  same-substrate-union all-equal channel (`SameSubstrateUnionFacts`). (3) no-double-emit mutual
-  exclusion (`find_member` XOR `dfa.find`, today prose-only, GN-2.W1⇄PT-1.W5). (4) legality unary
-  filters (hard-prune illegal indices).
-- **Objective:** `MinimizeCost` via `solve_optimized → branch_and_bound` (`solver/search.rs:456`),
-  per-candidate cost read from a **committed cost-fact table** keyed `(shape,tier,corpus)→cyc/B`
-  (SPEC §0 certified numbers), kept as frozen committed input so regen stays deterministic (the 2D
-  boundary — 2C reads the table, never re-measures).
-- **The decisive scaling fact + decomposition (the family's real engineering content):** general
-  grouped/coupled CSP B&B is proven-optimal only to **n≈15-18**, budget-blows at n≈20 (~1M nodes;
-  `builder/assignment.rs` doc). CSS L4 has 2875 states — a monolithic global CSP cannot go through
-  B&B. Architecture must **decompose**: independent sites → closed-form `kuhn_munkres` LAP / argmin;
-  B&B runs *only* over the small *coupled* sub-CSP (sites the budget or a union actually binds).
-
-**The one new primitive:** `constraint/mod.rs` has no bounded-sum/knapsack constraint. The budget
-`Σ ≤ B` *can* be expressed as a `LambdaConstraint` but it **prunes nothing** from a running partial
-sum, so B&B degenerates to weak forward-checking and hits the n≈18 cliff faster. 2C requires a
-**`SumLeq` propagator with bounds consistency** (prune index `v` from site `i` when
-`min_prefix + cost_i(v) + Σ_{j>i} min_cost_j > B`). Small, general, colocated (LOCK-1's
-one-constraint-store shares it; standard CP `cumulative`/`bin_packing`). This is the single piece of
-new substrate; everything else is rewiring.
-
-**Integration seams:** `passes/src/lib.rs:508` (enumerator stays; populate `perf_cost` from table),
-`:504-505` (replace per-rule `select`+`finalize_rule` with one global `finalize_all`), `decision_csp.rs`
-(1-var stamp → N-var global optimize), `xtask/src/main.rs:259`+`Cargo.toml:67` (budget becomes CSP
-input, `lint_loc` demoted to a post-solve assertion the solver guarantees), consumer
-`codegen/src/lower/recognizer/` (one lowering per site by construction).
-
-**Gates:** (i) **prove the budget binds** — exhibit one grammar where per-site argmin exceeds
-`generated_loc_budget`, and a concrete assignment (different sites, lower total objective,
-budget-feasible) the greedy lexicographic extractor cannot produce; without it 2C is a null result
-and must say so (vii). (ii) build `SumLeq` and show it keeps the coupled solve under `node_budget`
-(vs the `LambdaConstraint` encoding). (iii) CSP-selected set vs greedy set, cold paired PMU on
-canon benches, fed by real fact-table costs. (iv) `regen∘regen` byte-identical — proven-optimal
-regime or deterministic total-order tie-break; a `budget_exceeded` best-so-far solve is a build
-failure, not a silent best-effort. (v) decomposition scale — coupled sub-CSP stays ≤ B&B-optimal
-regime across all four canon grammars.
-
-**Exact open questions:** (Q-2C-1) Does *any* coupling actually bind on the real fleet, or does the
-per-site argmin already fit the budget (→ 2C degenerates to independent argmin, decorative — the
-exact fate of the `CALIBRATED_WEIGHTS` null sweep)? (Q-2C-2) After peeling independent sites to
-closed-form, is the coupled sub-CSP genuinely small on CSS L4, or does it stay large enough to need
-a Lagrangian/LP relaxation (a real scope escalation)? (Q-2C-3) Where do non-zero per-candidate costs
-come from before 2D exists — `static_size_cost` alone (a live dimension) or does 2C stall on the
-same `perf_cost:0` vapor as everyone else?
+**Verdict.** ADVANCED-candidate; **strongest-aligned with the evidence base**. Not BLOCKED: Island
+B stands on CSP+budget with a live consumer and needs no e-class branching; the design explicitly
+permits honest collapse (3→2→1). Islands A/C share the §0 master gate, prototype-answerable — not a
+missing primitive equal in difficulty to the original problem.
 
 ---
 
-## 4. FAMILY 2D — PROFILE-CLOSED-LOOP
+## Family 2B — IR-IS-EGRAPH
 
-**Architecture.** The cost model is not authored — it is *measured*. Coefficients fitted from cold
-paired canon-bench PMU captures, committed as a content-addressed fact table, read (never
+**Architecture.** The middle IR *is* an e-graph end to end. `GrammarIr` interns once into a single
+`EGraph<IrNode, IrFacts>`; every pass (nullability, first-set, recognizer derivation, backend-shape
+selection, projection canon, residualization) is a rewrite group or an `Analysis` lattice; congruence
+closure gives grammar-level GVN for free; a scheduled saturation reaches a fixed point; a single
+cost-guided extraction emits the `BackendExpr` tree *and* per-rule `BackendShape` directly to the
+lowerer. Passes stop being an ordered pipeline (phase-ordering dissolves) and become an unordered
+rewrite set closed under equality.
+
+**The honest strongest form is NOT unbounded saturation** — that is refuted on contact by the IR's
+own shape (variadic `Seq`/`Alt` → AC blowup; mutually-recursive rules → cyclic; non-local size
+budget). Its defensible form is the **Cranelift aegraph discipline**: acyclic (recursion is a
+symbolic leaf), rules applied largely on-insert, exploratory saturation only where it provably
+pays, global cost delegated to the CSP knapsack.
+
+**Mechanism.** A distinct `IrNode` whose recursive positions are `Id` (today `ExprKind` names
+children as arena `ExprId`, `ir/src/lib.rs:19/234`; `BackendExpr` uses owned `Box`/`Vec`,
+`:376` — neither interns; the derive classifies `Box<Self>`/`Vec<Self>` as *leaves*,
+`egraph-derive/src/lib.rs:7-9`). **`Ref{target:RuleId}` is a LEAF, not an `Id` child** — the single
+most important structural decision: it makes each rule *body* an acyclic e-graph, recursion resolved
+by a per-rule root table (`RuleId → Id`), so greedy extraction terminates (a cyclic `Id` edge would
+make `best_cost` return `None`, `extract.rs:175`). `Discard`'s two `ExprId`s become `[Id;2]` (derive
+forces it). Interning = one post-order walk; hash-consing (`egraph.rs:155`) collapses structurally
+identical sub-grammars → GVN with zero extra code. Analyses (`nullable` OR-join, `first_set`
+union-join, `CostSummary`) replace the hand-rolled nullability worklist (`ir/src/lib.rs:322-348`).
+Rewrites carry the equalities (`Optional(x)≡Repeat{x,0,1}`, single-branch `Alt`≡branch,
+`MembershipScan(set)≡MaskScan(delim_mask(set))` — PROVE-12 as a rewrite, not a template mutation).
+Scheduler = `CspScheduler` verbatim. Extraction = the lowering; monotone-local slice greedy,
+**non-monotone global size budget handed to `csp-solver` knapsack** (the seam 2B and 2C touch).
+
+**Integration seams.** `egraph-derive/src/lib.rs` (extend to project recursive positions, or author
+`IrNode` by hand); `egraph/src/analysis.rs` (host the fact lattices); `egraph/src/extract.rs`
+(non-monotone/global extraction + cyclic guard); `passes/src/backend_egraph.rs:11` (the extant
+named `lower_to_rust` consumer). The `lib.rs:9-10` doc-claim "grammar IR and regex HIR implement
+`Language`" is aspirational — the sole `impl Language` today is `DecisionNode`; 2B is the work of
+making it true.
+
+**Gates it carries.** (1) AC operators normal-formed **one-directionally** (flatten `Seq`, sort/dedup
+`Alt` by first-set), never given exploratory re-associate rewrites; confluence is a prototype
+obligation. (2) e-node/e-class count + saturation iterations bounded under `CspScheduler`'s
+`node_limit` with margin on all live grammars — any grammar exceeding the node budget refutes the
+full reading and forces the on-insert retreat. (3) `regen∘regen = regen` byte-identical: the
+extractor's `FxHashMap best` and any cost tie resolve by a *total* order (class id → canonical node
+order); `HashMap` iteration is not an admissible tie-break. (4) Full-IR-as-e-graph compile (build +
+saturate + extract + **teardown**) within the ~230µs budget — the `with_capacity` note warns
+teardown can dominate on a ~300-node grammar; report the teardown fraction. (5) Extraction crossover:
+exhibit one grammar where per-node greedy busts the size budget and the CSP knapsack recovers the
+legal optimum.
+
+**Exact open questions.** (1) Does the full-IR e-graph stay within the compile-time budget including
+teardown? (2) Does regen stay bit-for-bit through cost-guided extraction? (3) **Does extraction buy
+anything at all** — the aegraph external verdict (1.13 avg class, 2-of-4M, ~0.1% runtime) says the
+win is canonicalization, NOT extraction; if the §0 master gate does not flip, 2B's *distinctive*
+claim (the IR *becomes* the e-graph; extraction emits BackendShape) reduces to "GVN/hash-consing for
+free," which 2A/2C also inherit from the shared engine.
+
+**Verdict.** VALUE-AT-RISK, not strictly BLOCKED. The maximal reading is refuted by the IR shape;
+the aegraph reading is coherent and ~80% substrate-built, but its residual distinctive value is
+gated on §0 (prototype-answerable) and the aegraph twin predicts it is ~0.1%. If Brief 1 shows
+extraction inert, 2B collapses to canonicalization and its "IR-becomes-e-graph" thesis buys the
+compile-time cost of an oversized graph for the value 2A gets locally.
+
+---
+
+## Family 2C — CSP-CENTRAL
+
+**Architecture.** The decision driver **IS** a single constraint-optimization problem (COP) over the
+whole grammar, solved once at compile. Variables = per-site lowering choices; constraints = legality
++ the generated-size budget; objective = a cost lattice fed by PMU facts. **E-graphs are demoted
+from decider to candidate generator** — they populate variable domains and canonicalize/prune
+candidates; the `Extractor::best_node` leaves the decision path. Load-bearing claim: **only a global
+COP can treat the generated-size budget as a HARD constraint at decision time** — trading a
+size-cheap shape at rule A to afford a fast-but-fat kernel at rule B, which per-rule/greedy selection
+can only lint after the fact.
+
+**Mechanism.** One `Csp<CostFiniteDomain>` whose variable set is the union of every decision site
+across all rules. Variables: backend shape (5 `BackendShape`, one per rule), recognizer/kernel (one
+per scan site, `SimdMode×SimdSite`), capacity plan (`CapacityPolicy`, per container),
+residualization depth (PROVE-12 depth-0/1). Constraints: legality (`LambdaConstraint`; the P1-P8
+`PriorityStep` cascade RETIRED into legality/soft-preference constraints per its existing
+`evidence-only` disposition); cross-site coherence (`SameSubstrateUnionFacts` → `Implication` /
+`AllDifferentExcept`); **the generated-size budget** `Σ static_size_cost(chosen) ≤
+generated_loc_budget` (`skinny/Cargo.toml:67 = 4000`) — today a POST-HOC `xtask lint-loc`, 2C makes
+it a solve-time bounded-sum knapsack coupling every site, so the budget turns GREEN by construction.
+Objective: `OptimizationMode::MinimizeCost` via `solve_optimized` over `branch_and_bound` with
+forward-checking / fail-first / `node_budget`; per-value cost = `Measurement.cycles_per_byte_x1000`
+(`EvidenceSource::BenchProbe`), lexicographic tie preserved as scalarized objective.
+
+**Substrate.** The csp-solver is a full COP engine (AC-3 + forward-checking + fail-first +
+`node_budget` + restarts/cancel; `CostFiniteDomain` with cached `min_cost` B&B lower bound;
+`LambdaConstraint`/`AllDifferent(Except)`/`Implication`/`NotEqual`). **The one net-new primitive: a
+bounded/linear SUM (knapsack) propagator** with a lower-bound relaxation (Σ min-cost residuals) at
+`crates/csp-solver/src/constraint/bounded_sum.rs` — homed in csp-solver, not bbnf-lang
+(general-infra edict). Everything else is rewiring.
+
+**Gates it carries.** (1) A budget-binding grammar: exhibit a grammar where the budget binds and the
+global plan **strictly dominates** the greedy per-rule plan (legal + cheaper/feasible), AND a
+BYTE-IDENTICAL plan when the budget is slack (parity floor). (2) `regen∘regen = regen`: total-order
+tie-break on `candidate_hash`, integer-quantized costs, `restarts=false` (already pinned). (3) Solve
+cost: the global COP over CSS-L4 stays within `node_budget` and bounded `csp_solve_us` (reported).
+(4) Closed-loop seam: the objective consumes ≥1 PMU fact (stub table); flipping a cyc/B coefficient
+must CHANGE the plan.
+
+**Exact open questions.** (1) **Does the budget ever bind on the fleet?** If provably slack
+everywhere, the COP decomposes to independent per-site minima (parity with today minus the
+rubber-stamp) and 2C is refuted-for-corpus (Brief 2). (2) The Unison ceiling: CSS-L4 has 2875 DTA
+states — **above** Unison's proven-optimal ~946-1000 instr/function ceiling (seconds-minutes/function
+for 1.1-10% speedup) — so a monolithic global 2C is off the cliff by construction; it is lawful only
+as a **bounded post-solve over a small coupled sub-CSP** after independent sites are peeled to
+closed-form (coheres with LOCK-1's "bounded post-solve where unification is undecidable"). (3) The
+PMU cost table is 2D's territory; without it the objective degenerates to `static_size_cost` (a
+CSP-shaped priority cascade with extra steps) — a named dependency on 2D.
+
+**Verdict.** BLOCKED-candidate pending Brief 2. The family's entire teeth is the binding budget; the
+counterexample (JSON's one whitespace self-loop, no contest) makes the binding condition an *open
+empirical question*, and if it fails, 2C's distinctive value does not exist on the corpus — the
+missing primitive (a binding cross-site budget) may be absent from the fleet. Additionally dependent
+on 2D for a non-degenerate objective, and structurally constrained to a bounded post-solve (not the
+monolithic global driver its maximal reading proposes) by the Unison ceiling.
+
+---
+
+## Family 2D — PROFILE-CLOSED-LOOP
+
+**Architecture.** The cost model is **measured, not authored**. Coefficients fitted offline from cold
+paired canon-bench PMU captures, committed as a content-addressed fact table, and read (never
 re-measured) by the decision solver at regen. The loop — measure → fit → commit → solve →
-re-measure-to-validate — is the architecture; the objective ceases to be a hand-tuned float vector
-and becomes a regression estimate the corpus produced. **2D owns the *coefficient plane* under
-whatever candidate generator (2A/2B/2C) sits above it** — it does not itself generate candidates.
+re-measure-to-validate — is the architecture. 2D owns the **coefficient plane UNDER** whatever
+candidate generator (2A islands, 2B saturation, 2C CSP) sits above it; it answers "where do the
+numbers in the cost lattice come from, and why are they trustworthy and deterministic." Precedent:
+AutoFDO / PGO / BOLT (committed profile, reproducible build), AutoTVM/Ansor/Halide (fitted cost
+model over measured runtimes), regex-automata `rare.rs` (a small fitted byte-frequency table beating
+a live heuristic — 2D at micro-scale, SOTA-idiomatic for this engine class).
 
-**Mechanism — the four-stage loop:** (1) **MEASURE** — canon benches capture per-process cyc/B via
-`proc_pid_rusage(RUSAGE_INFO_V5).ri_cycles` (`json_canon_bench.rs:59`); add an `--emit-facts`
-decision-attributed sample stream (per grammar/corpus/site/shape, cold paired, ≥3 windows, loadavg
-recorded). (2) **FIT** — offline xtask `calibrate-cost` runs a deterministic closed-form OLS/ridge
-(fixed seed) from a structural feature vector `f(rule,shape)` (node count, alt-branch count,
-tape-push count, simd-scan-site count — the knobs `CostWeights` already names) onto measured cyc/B;
-fit target is **relative ordering / paired ratios**, never absolute cyc/B. (3) **COMMIT** — β written
-to `cost-coefficients.json`, hash stamped into `cost_formula_version` (`ir/src/cost.rs:174`; today
-literal `"sk-v13-w6-integer-v1"`), with training corpus + held-out residual for audit. (4) **SOLVE
-at regen** — regen reads *only* the committed table, evaluates `perf_cost = predict(f(rule,shape),β)`
-at `lib.rs:590`; the decision CSP's `CostFiniteDomain::new(values,costs)` gets `predict(...)` instead
-of the `{0.0,1.0}` stub. **The loop closes at calibrate-time, not regen-time** — the load-bearing
-determinism invariant: regen is a pure function of (grammar, committed-β), so `regen∘regen=regen` is
-preserved; any "re-measure at regen" shatters the gate.
+**Mechanism (the loop is BUILT but OPEN; every organ exists wired to a stub).**
+1. **MEASURE.** Canon benches already capture per-process PMU cyc/B via
+   `proc_pid_rusage(...).ri_cycles` (`json_canon_bench.rs:59`), paired, N≥200, ins/B load-invariant.
+   2D adds a `--emit-facts` decision-attributed writer: per (grammar, corpus, site, knob) a
+   cold-paired cyc/B + ins/B sample.
+2. **FIT.** Offline `xtask calibrate` runs a *deterministic* closed-form OLS/ridge (fixed seed) from
+   a structural feature vector onto measured cyc/B → coefficient vector β. Fit target = **relative
+   ordering / paired ratios**, never absolute cyc/B (fitting absolutes fits load noise).
+3. **COMMIT.** β → content-addressed table (`profile/coefficients.ron`; precedent
+   `profile/yyjson/*.profile.json`), hash stamped into `cost_formula_version`, keyed by
+   `(host_triple, grammar, site_class, knob_id)`, carrying training-corpus id + held-out residual.
+4. **SOLVE (at regen, deterministic).** Regen reads *only* the committed table — never live PMU —
+   and evaluates `perf_cost = predict(f, β)` to fill the dead dimension (`lib.rs:590`), feeding the
+   CSP's `CostFiniteDomain` real per-value costs instead of the `{0.0, 1.0}` stub.
 
-**Why fitting, not authoring:** the one hand-authored slot `CALIBRATED_WEIGHTS`
-(`cost_weights.rs:175`) carries a documented **null calibration** (54-config sweep → identical DTA
-counts). The doc itself says there is "exactly one slot to update when a future calibration produces
-a non-trivial result." 2D is that calibration — from *measured cyc/B*, not from DTA state count (a
-static proxy), fed into the *perf* dimension the grid sweep never touched.
+**The load-bearing determinism invariant:** the loop closes at *calibrate-time, not regen-time*.
+Regen is a pure function of `(grammar, committed-β)`, so `regen∘regen = regen` is preserved; all load
+noise lives in `xtask calibrate`, off the regen path. A "re-measure at regen" design shatters the
+fixpoint and is refused. This is precisely the PGO/AutoFDO/BOLT discipline.
 
-**Integration seams:** `ir/src/cost.rs:172/203` (add `coefficient_table_hash`, `fit_residual_bps`,
-`training_corpus_id`; flip `static_profile_provider_status:"static-template-blocker"` →
-`"fitted-coefficient-table-vN"`), `passes/src/lib.rs:590` (`perf_cost:0` → `predict(...)`),
-`decision_csp.rs:44-49` (`{0.0,1.0}` stub → real per-candidate cost), `cost_config.rs:83`
-(`BBNF_COST_*` env override retained for sweeps), `passes/src/lib.rs:1037`
-(`PriorBenchProfile`→`CostProfile{coefficients, per_site_samples}`), `json_canon_bench.rs`
-(`--emit-facts`), `xtask/src/main.rs` (new `calibrate-cost`). Precedent for committed profile fact
-tables in-tree: `profile/yyjson/*.profile.json`.
+**Where the loop attaches (the null-trap escape).** The grid-sweep null (§0) proves fitting
+*shape-lattice* weights moves nothing. 2D attaches to knobs with demonstrated measured spread:
+(1) the `select_backend` kernel crossover (`bbnf-simd/src/dispatch.rs:89` — the unwired "N*≈3"
+`build_lo6_table` amortization point); (2) `CSS_SHUFTI_MIN_SPAN` (GN-2.W3 — "a threshold tuned
+against a measured constraint," erase animate's +13.4% while retaining tailwind 4.16×); (3) the
+GATE=16 prefilter width; (4) `CapacityPolicy` thresholds.
 
-**Gates:** (i) **consumer-in-wave** — the committed table lands in the *same* wave as the `perf_cost`
-activation and the CSP objective that reads it; a table shipping while `perf_cost` stays 0 is exactly
-the dead-substrate pathology (viii/Y.13). (ii) ≥1 rule's selected shape *flips* vs the hand-`shape_rank`
-baseline **AND** the flip is a measured cold-paired win on a real grammar **AND** regen byte-identical
-on double regen. (iii) load-robustness — β identical under quiet load and loadavg 13-19 (fit on paired
-medians/ratios). (iv) cross-grammar held-out residual committed beside β; a flip must survive on a
-grammar outside the fit set. (v) refutation laws — cold per-parse only, ratios certified / absolutes
-directional, `ri_cycles` is process-granular (→ the A/B-differential primitive is the safe default).
+**Integration seams.** `ir/src/cost.rs:172` (`ActiveCostFacts` + new `coefficient_table_hash` /
+`fit_residual_bps` / `training_corpus_id`), `:293/305/318` (the empty `Measurement` evidence vec 2D
+fills), `passes/src/lib.rs:590` (`perf_cost`), `decision_csp.rs:44-49` (the `{0.0,1.0}` stub →
+`predict`), `csp-solver/src/solver/optimize.rs:12` (`DomainCostEval::cost` reads β),
+`egraph/src/cost_config.rs:83` (add `from_fact_table`, keep `from_env`),
+`bbnf-bench/src/report.rs:1742-1758` (the freshness GATE that already reads
+`cost_formula_version`/`selected_cost_freshness`/`determinism_replay_status` — give it teeth via
+`cost_formula_version = hash(table)`), `xtask` (`calibrate` / `check-calibration` verbs).
 
-**Exact open questions:** (Q-2D-1 — the family's central refutation) Does a measured table flip
-**any** decision, or is it a beautifully fitted table that flips zero decisions (null-calibration
-recurrence)? This has a **hard dependency on the candidate generator producing legally-distinct
-shapes per site** — 2D alone is the coefficient plane of an empty choice. (Q-2D-2) Attribution:
-whole-grammar cyc/B (`json_canon_bench.rs:193`) over ~5 grammars × ~3 corpora is an *underdetermined*
-regression for dozens of per-rule features → must the fit use **A/B differential** per decision
-(compile both legal shapes, diff whole-parse cyc/B cold-paired — clean, O(candidate) compiles) or
-finer shape-labeled sub-parse probes? (Q-2D-3) Is the process-granular attribution ceiling
-(no per-BB counters without Instruments) tight enough to fit meaningful per-site coefficients at all?
+**Gates it carries.** (1) A fitted value FLIPS a decision AND the fitted-value lane beats the
+hardcoded-value lane cold-paired on a real grammar. (2) β identical under quiet load and loadavg
+13-19 (fit on paired medians/ratios). (3) `regen∘regen` byte-identical across the committed table.
+(4) **Falsifiable freshness**: mutate one coefficient → the `report.rs:1750` gate goes RED,
+`check-calibration` fails (provenance-theater guard — the current `"pass"`/`0` stamps are the lie
+2D removes). (5) `host_triple`-keyed, aarch64-only (x86 abrogation simplifies — single-host fit);
+objective is a *multi-corpus constraint* (retain all wins), and a flip must survive on a held-out
+grammar outside the fit set.
 
----
+**Exact open questions.** (1) Attribution underdetermination — the bench emits *whole-grammar*
+cyc/B, not per-rule; fitting per-decision β from whole-parse cyc/B over ~15 equations with dozens
+of features is unidentifiable. The prototype must choose (a) **A/B differential** per decision
+(compile both legal knob values, diff whole-parse cyc/B cold-paired — the honest, load-robust,
+O(candidate)-compiles primitive) or (b) shape-labeled sub-parse probes (finer, more harness).
+(2) Does any knob's fitted optimum *differ* from its current value with a measured win?
 
-## 5. THE INCOMPATIBILITY MAP
-
-The four families are not four independent knobs; they are competing answers to **who holds the
-middle IR** and **who makes the decision**. Precise conflicts:
-
-**INCOMPAT-1 · 2A ⊥ 2B — on the IR representation.** 2A keeps the middle IR an *ordinary annotated
-tree* between three e-graph islands ("the e-graph is a local tactic at a chokepoint, never the
-connective tissue — that distinction is the whole boundary against 2B"). 2B makes the middle IR *an
-e-graph end to end* (every rule body interned). You cannot simultaneously have a tree-with-islands
-and an IR-that-is-an-egraph; the two mint incompatible `BackendIr` types. **Convergence caveat, not a
-dissolution:** once 2B accepts the mandatory opaque-leaf `CallRule` reduction, its e-graph is a
-forest of acyclic per-rule-body regions + a rule-call skeleton — structurally 2A's islands at
-*rule-body granularity*. The true axis of disagreement collapses to **internment granularity** (2A:
-3 named decision points; 2B: every rule body), **not** the engine. A pass-2 route may pick a point on
-this spectrum, but the two pure endpoints cannot coexist.
-
-**INCOMPAT-2 · 2B ⊥ 2C — on the primary decision surface.** 2B: extraction *emits* the decision
-(`BackendShape` falls out of `extract_tree`; the shape is an attribute of the extracted form). 2C:
-the *CSP* is the decision driver and the e-graph is demoted to a candidate generator that "does not
-select." These are opposed claims about who selects. Reconcilable **only** via 2B's own §4.2
-concession — delegate budget-/sharing-coupled decisions to the bounded CSP, keep monotone-local
-decisions in extraction — but then *neither is "the" driver*; it is a hybrid in which extraction owns
-local canonical choice and the CSP owns the coupled global choice. As pure routes (2B: "one decision
-surface, extraction"; 2C: "one decision surface, the global CSP") they are mutually exclusive.
-
-**INCOMPAT-3 · 2A ⊥ 2C — on CSP scope.** 2A's CSP is *local, per-island* (Island B: a budget
-knapsack over one scan site's alternatives; extraction decides at Islands A/C). 2C's CSP is *one
-global coupled solve* over all sites. Either selection is island-local (2A) or global-coupled (2C) —
-not both as the architecture. 2A itself frames its degenerate collapse as *converging toward 2C*
-("whether the islands are two — A eqsat + B/C CSP — or one — regex canon — with the rest honestly
-written as cost-ranked selection"). The families overlap in *mechanism* (both use egraph+CSP) but
-conflict on the *scope of coupling*: 2A denies that the budget couples enough sites to need a global
-solve; 2C asserts it does. **The measurement that adjudicates this is INCOMPAT-3's crux and is Brief 2
-in §6.**
-
-**INCOMPAT-4 · 2D is subordinate, not a peer — compatible with all, standalone-blocked.** 2D is the
-coefficient plane *under* any candidate generator; it composes with 2A, 2B, or 2C without
-representational conflict. It is therefore not incompatible with any family. But it is **inert without
-candidate diversity** (its own §4.1 null-calibration trap = the §0 crux = the prior-art R-1 finding):
-a fitted table that flips zero decisions. Its missing primitive — *a rewrite that manufactures a
-genuine e-class branch / a site with legally-distinct shapes* — **is the lock's original problem, not
-a smaller sub-problem.** 2D cannot stand as a route; it rides whichever of 2A/2B/2C first manufactures
-a real branch.
-
-**CONVERGENCE (not a conflict), worth naming for the gestalt.** All four share the `egraph` engine +
-`csp-solver` + `CostWeights` single-source cost surface. The **`SumLeq` bounds-consistent knapsack
-propagator** is required by *both* 2A (Island B budget) and 2C (global budget) — and by LOCK-1's
-one-constraint-store. It is the *single* new primitive the whole lock needs, and it is small and
-standard (CP `cumulative`/`bin_packing`). Building it once serves every budget-coupled route. This is
-where the families agree, and it should be built regardless of which route wins.
-
-**THE COLLAPSE SCENARIO (binds the whole map).** If the §0 crux resolves negative — no real e-class
-branch, no binding budget coupling, aegraph's 0.1% holds for this fleet — then LOCK-2 collapses to
-**canonicalization (2B's non-refuted core: GVN + normal-form rewrites, the heavy lifting) + the
-existing `BackendShape` driver**, and the extraction-search / global-CSP / profile-fit machinery of
-2A-Island-A / 2C / 2D retires to **SPEC-ONLY** as a named negative result. This is a decision-grade
-outcome, not a failure. The two briefs in §6 are precisely the measurements that decide between the
-collapse and the full route.
+**Verdict.** **BLOCKED-candidate at the backend-shape lattice** — the missing primitive is a
+branching rewrite (the §0 master gate, equal in difficulty to the original problem), so a 2D fitting
+the degenerate lattice reproduces the null and is refuted. **UNBLOCKED at the threshold/kernel/capacity
+plane**, where spread is demonstrated and a fitted value flips a real decision. 2D is a **dependent
+composable layer** under whichever of 2A/2B/2C wins — not architecturally exclusive with any — with
+the candidate-generator's real per-site alternatives as its exact prerequisite.
 
 ---
 
-## 6. BLOCKED-CANDIDATE DISPOSITIONS
+## The incompatibility map — which families cannot coexist, and precisely why
 
-Marking per the rule "a family stalled at a missing primitive equal in difficulty to the original
-problem is BLOCKED-candidate; elegance earns nothing on its own."
+The four families divide into a **primary architectural fork {2A, 2B}**, a **primacy conflict
+{2B, 2C}**, a **scope conflict {2A, 2C}**, and one **composable layer {2D}**.
 
-- **2A EGRAPH-ISLANDS — ADVANCE (conditional).** No primitive-block: Island B is a real solve whose
-  prerequisites are `SumLeq` (small, standard) + a measurement (does the budget bind ≥2 sites).
-  Island A's payoff is measurement-gated (Q-2A-1) and defers cleanly to LOCK-5 if the fleet has no
-  factorable regex leaf. Best-aligned with the evidence (directed pipeline, named same-wave consumer,
-  GN-2.W1 ready first island). **Conditional on Brief 1/Brief 2 showing a real decision exists.**
-- **2B IR-IS-EGRAPH — ADVANCE (maximalist form RETIRED).** The "one e-graph, no boundaries" slogan is
-  *refuted* (recursion + aegraph verdict): its lawful residue is acyclic per-rule regions + skeleton,
-  and its decision surface (extraction-emits-shape) is inert per §0 and must delegate the budget to
-  the CSP (its §4.2). Not primitive-blocked — the transposition is mechanical and the engine exists —
-  but its central *payoff* (GVN dedup, canon-as-rewrite beating hand-passes) is measurement-uncertain
-  (aegraph 1.13 / 0.1%). Advances **only as a canonicalization layer**; its extraction-as-decision
-  claim is subsumed by INCOMPAT-2's hybrid.
-- **2C CSP-CENTRAL — ADVANCE (conditional).** The one named missing primitive (`SumLeq`) is *smaller*
-  than the original problem — a standard bounds-consistent knapsack propagator, explicitly "the single
-  piece of new substrate; everything else is rewiring." Not blocked on primitive grounds. Gated
-  instead on the *null-result measurement* (Q-2C-1: does the budget bind?) and the *decomposition
-  scale* (Q-2C-2). Strongest prior art (Unison), bounded by the speed trap to a *post-solve over the
-  small coupled sub-CSP*, cohered with LOCK-1's CSP scoping.
-- **2D PROFILE-CLOSED-LOOP — BLOCKED-candidate.** Its central refutation risk (null-calibration) is a
-  **hard dependency on candidate diversity**, and that missing primitive — a rewrite/site that
-  manufactures a genuinely distinct legal alternative on the real fleet — **is the lock's original
-  problem** (the §0 crux, prior-art R-1's "the one prototype that settles pass-1"). 2D is the
-  coefficient plane of an empty choice until 2A/2B/2C supply the branch. Disposition: **BLOCKED on the
-  candidate-diversity primitive; not a standalone route; a rider that activates in the same wave the
-  first real branch lands.** (Its four-stage loop mechanism is sound and lawful — the block is on the
-  *prerequisite*, not the design.)
+### I. 2A ⊗ 2B — mutually exclusive middle-IR architecture (HARD)
+2A keeps an LLVM-shaped directed pass spine with the middle IR as an **annotated tree**, e-graphs
+inserted only as **local island tactics** at named chokepoints; the IR never *becomes* the e-graph
+and extraction never emits the backend shape directly. 2B makes the middle IR **one e-graph
+container end-to-end**; passes *are* rewrite groups over it and extraction *is* the lowering. The
+IR cannot simultaneously be "a tree between islands" and "the e-graph container." They share the
+`egraph` engine crate but are incompatible at the level of what the middle IR *is*. **This is the
+lock's primary fork.**
+
+### II. 2B ⊗ 2C — mutually exclusive on decision primacy (HARD)
+2B has **extraction emit `BackendShape` directly** (greedy bottom-up for the monotone-local slice,
+CSP knapsack only for the global size slice). 2C **removes the extractor from the decision path**
+(`best_node` folds into the CSP objective) and makes **one global COP the driver**, with e-graphs
+demoted to candidate generators. Both cannot be primary: either extraction decides and the CSP
+patches the global slice (2B), or the CSP decides and extraction only generates/prunes candidates
+(2C). They touch *precisely* at the knapsack — the seam where 2B hands its non-monotone global cost
+to the same `csp-solver` bounded-sum 2C makes central — which is why a hybrid is conceivable but
+their *primacy* is not co-instantiable.
+
+### III. 2A ~ 2C — partial conflict, reconcilable only at one chokepoint (SOFT)
+They **converge** at the scan-plan chokepoint: 2A's Island B *is* a CSP-over-budget, and 2C's
+"e-graphs as candidate generators feeding a CSP" is exactly 2A's island shape. They **diverge on
+scope**: 2A's CSP is **per-island / local and thin** (extraction still decides at the regex-canon
+and projection-canon islands), whereas 2C is **one global cross-site COP per grammar** with the
+budget as a hard whole-grammar knapsack and *no* extractor in any decision. A synthesis is possible
+— "2A's directed spine with Island B promoted to a global-budget COP" — but only by conceding 2C's
+whole-grammar scope OR 2A's per-island locality; they cannot both hold verbatim.
+
+### IV. 2D — composable with all three (NOT exclusive), with a prerequisite and a blocked plane
+2D is the **coefficient plane underneath** the candidate generator, orthogonal to the {2A,2B,2C}
+choice of *who decides*. It composes with any of them. It is **not incompatible** with any family.
+Its constraints are dependency, not exclusion: it is BLOCKED-candidate at the backend-shape lattice
+(the §0 null recurs) and only unblocked at threshold/kernel/capacity knobs, and it requires the
+chosen generator to have manufactured real per-site alternatives before it can move the shape
+decision.
+
+### The shared upstream gate (binds all four)
+Every family — 2A's Islands A/C, 2B's extraction, 2C's non-degenerate objective, 2D's lattice
+attachment — is gated on the **same §0 fact**: whether a rewrite manufactures a genuine e-class
+alternative on the real fleet. 2C and 2A's Island B additionally (and independently) hinge on the
+**budget-binding fact**. These two facts are the two orthogonal load-bearing uncertainties, resolved
+by Brief 1 (extraction axis) and Brief 2 (CSP axis). If Brief 1 fails, the lock collapses to
+canonicalization + the existing BackendShape driver (2A's degenerate-collapse form), and 2B/2D's
+lattice claims go SPEC-ONLY. If Brief 2 fails, 2C is refuted-for-corpus and 2A's Island B is
+GN-2.W1's hand-written detection arm. Both negative results are decision-grade.
 
 ---
 
-## 7. THE TWO DECISIVE UNCERTAINTIES (prototype briefs) — see StructuredOutput
+## Prototype briefs (the two sharpest uncertainties)
 
-Brief 1 tests the *local extraction-diversity* surface (the §0 crux; de-risks or collapses
-2A-Island-A / 2B / 2D). Brief 2 tests the *global coupling* surface (INCOMPAT-3; adjudicates 2C vs
-2A-local, and whether 2B must delegate). They are orthogonal — together they cover both decision
-surfaces the lock contains, and either negative is a decision-grade collapse result.
+### Brief 1 — `PROVE-2-BRANCH`: does a rewrite manufacture a real e-class alternative that moves a bench? (kind: bbnf-worktree)
+**Question.** On a real fleet grammar, does *any* rewrite create an e-class holding >1
+semantically-distinct candidate such that the `Extractor` picks **differently** under two weight
+vectors, AND the two picks produce a **measured cyc/B delta**? This is the §0 master gate; it
+de-risks 2A-Islands-A/C, 2B-extraction, and 2D-lattice at once, or refutes all three.
+**Method.** In a skinny worktree, author the canonical branching rewrite the tree already prices but
+does not exercise: **dispatch-table vs sequential-trial for a JSON/CSS `Alt`** (the two forms
+`egraph/src/cost_weights.rs` prices via `dispatch_branch` / `dispatch_table` / `alt_per_branch`).
+Add the rewrite so the `Alt` e-class holds *both* forms (do NOT collapse to one canonical form).
+Run `Extractor::best_node` under weight-vector W1 (favor table) and W2 (favor sequential); assert
+the extracted node differs. Lower each pick and cold-paired-bench (N≥200, ≥3 windows, ins/B
+load-invariant, structural parity asserted before timing).
+**Commands.** `cargo run -p bootstrap --bin cost_grid_sweep` (or equivalent regen) to extract under
+each weight vector; `cargo bench -p bbnf-bench --bench json_canon_bench` / `css_canon_bench`.
+**Pass/fail.** PASS = the two weight vectors extract *different* nodes on a real grammar AND the two
+lowerings differ by a cyc/B ratio whose 95% CI excludes 1.00× same-direction. FAIL = the e-class
+collapses to one canonical form (R-1 null recurs) OR picks identical OR the cyc/B CI includes 1.00×
+— LOCK-2 then collapses to canonicalization + the existing BackendShape driver, extraction/CSP
+machinery recorded SPEC-ONLY. Decision-grade either way.
+
+### Brief 2 — `PROVE-2-BUDGET`: does the generated-size budget ever bind over ≥2 competing scan sites? (kind: bbnf-worktree)
+**Question.** Does a fleet grammar present ≥2 *competing* self-loop scan sites under a binding
+`generated_loc_budget`, such that a real N-variable CSP forces `Exact` on a legal-but-unaffordable
+site — the decision the rigged 1-var CSP structurally cannot make? Settles 2C's teeth and 2A's
+Island B independently of extraction.
+**Method.** (Step 0, cheap falsifier first) audit the 5 fleet grammars for self-loop scan sites
+(`SimdSite::SelfLoop`, complement cardinality ∈[1,16]); if <2 competing legal sites exist anywhere,
+2C is refuted-for-corpus — record and stop. (Step 1) add the net-new **`bounded_sum` knapsack
+propagator** to `crates/csp-solver/src/constraint/bounded_sum.rs` (lower-bound = Σ min-cost
+residuals). (Step 2) build ONE global `Csp<CostFiniteDomain>` over a grammar with ≥2 legal sites
+(construct a real `.bbnf` if the fleet lacks one), each site's `{Exact, Prefilter}` a variable, with
+`Σ static_size_cost ≤ generated_loc_budget` as a live sum constraint; solve with
+`OptimizationMode::MinimizeCost` + forward-checking / fail-first.
+**Commands.** `cargo test -p csp-solver bounded_sum`; a small skinny bin building the global CSP over
+the target `.bbnf`, printing the plan under a tight vs slack budget; `cargo xtask regen` twice.
+**Pass/fail.** PASS = under a tight budget the CSP forces `Exact` on ≥1 legal site (budget is a HARD
+solve-time constraint) AND under a slack budget the plan is byte-identical to the per-rule pick
+(parity floor) AND `regen∘regen` is byte-identical. FAIL = the fleet audit finds <2 competing sites,
+or no budget value both binds and changes the plan — 2C refuted-for-corpus, 2A's Island B collapses
+to GN-2.W1's hand-written detection arm. Decision-grade either way.

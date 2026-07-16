@@ -68,12 +68,18 @@ Fallin (EGRAPHS 2023; blog 2026-04-09) rebuilt Cranelift's mid-end on an **acycl
 **deliberately rejects equality saturation**: eager rewriting at node construction + immutable union
 nodes + acyclicity (FLAX) → **no rebuild, no parent pointers, single pass**. Extraction is
 single-pass bottom-up DP that **ignores sharing to dodge NP-hardness**. The measured facts corroborate
-our R-1 exactly: **average e-class size after rewriting = 1.13 e-nodes**; the multi-option layer
-contributes **~0.1% execution improvement at ~0.005% compile cost** — *"the ægraph itself may not
-(yet?) be pulling its weight"*; the **sea-of-nodes canonicalization (GVN/LICM/CSE/DCE "for free")
-does the heavy lifting.** Full saturation "needs a meta/strategy driver with fuel to bound effort."
+our R-1 exactly (verified against the blog this pass): **average e-class size after rewriting = 1.13
+e-nodes**; the multi-option layer (union-nodes vs plain sea-of-nodes) contributes **~0.1% execution
+improvement at ~0.005% compile cost** — *"the ægraph itself … may not (yet?) be pulling its weight"*;
+starker still, **instruction rewrites that used the multi-representation layer occurred only 2 times
+across ~4 million value nodes** in the benchmark suite. The whole aegraph pipeline costs **~7–8% more
+compile time vs the classical pipeline for ~2% runtime speedup**, and the **sea-of-nodes
+canonicalization (GVN/LICM/CSE/DCE "for free") does the heavy lifting**, not extraction. Full
+saturation "needs a meta/strategy driver with fuel to bound effort."
 → **Trap for 2B (IR-IS-EGRAPH):** the win is canonicalization + hash-consing, NOT extraction search;
-budget a fuel/strategy layer or blowup kills the compile budget.
+budget a fuel/strategy layer or blowup kills the compile budget. The 2-of-4M-nodes fact is the
+external twin of our in-tree R-1 (54-config null sweep) — two independent measurements that the choice
+layer is empty until a rewrite manufactures a branch.
 [cfallin.org/blog aegraph](https://cfallin.org/blog/2026/04/09/aegraph/) ·
 [EGRAPHS 2023 slides](https://cfallin.org/pubs/egraphs2023_aegraphs_slides.pdf)
 
@@ -81,22 +87,30 @@ budget a fuel/strategy layer or blowup kills the compile budget.
 our `egraph.rs` mirrors; the **BackoffScheduler** (ban rules that explode match counts) is the baseline
 our `CspScheduler` must beat. [egg POPL21](https://arxiv.org/abs/2004.03082)
 
-**Extraction is NP-hard/NP-complete (DAG cost).** Confirmed everywhere. Prior art ladder: ILP (optimal,
-doesn't scale) → **treewidth-parameterized** (Goldstein et al., "E-graphs as Circuits", OOPSLA/2024 —
-optimal up to treewidth ~10, evaluated on the *Cranelift* suite) → **e-boost** (2025, 558× over ILP via
-warm-start exact + parallel heuristics) → **SmoothE** (ASPLOS 2025, differentiable/gradient extraction);
-**Extraction Gym** is the 2024 benchmark. Our `Extractor` is *greedy tree-cost* — below even DAG-greedy,
-matching Cranelift's pragmatic choice.
-[Fast&Optimal Extraction OOPSLA24](https://cse.hkust.edu.hk/~parreaux/publication/oopsla24a/) ·
+**Extraction is NP-hard (DAG cost with sharing).** Confirmed everywhere (verified this pass). Prior art
+ladder: ILP (optimal, doesn't scale) → **treewidth-parameterized** ("E-Graphs as Circuits, and Optimal
+Extraction via Treewidth", arXiv 2408.17042, 2024 — exploits that practical e-graphs have *low
+treewidth*, tractable when sparse) → **SmoothE** (ASPLOS 2025, differentiable extraction — discrete
+e-node selection relaxed to continuous probabilistic variables, GPU gradient descent) → **e-boost**
+(arXiv 2508.13020, 2025 — a *treewidth-parameterized* exact+heuristic extractor: **558× over ILP** and
+**+19% over SmoothE**); **Extraction Gym** is the community benchmark. Our `Extractor` is *greedy
+tree-cost* — below even DAG-greedy, matching Cranelift's pragmatic choice. **The whole ladder solves a
+problem our fleet has not yet been shown to have** (R-1 / aegraph 1.13): sophisticated extraction earns
+nothing until an e-class holds >1 candidate. Import it only *after* Brief-1 proves a branch exists.
+[E-Graphs as Circuits (treewidth)](https://arxiv.org/pdf/2408.17042) ·
 [e-boost](https://arxiv.org/abs/2508.13020) · [SmoothE](https://www.csl.cornell.edu/~yc2632/data/smoothe_asplos2025_final.pdf)
 
-**Constraint-based codegen (2C prior art).** Unison / "Modeling universal instruction selection"
-(Castañeda Lozano et al., CP 2015) unifies instruction selection + register allocation + scheduling as
-one constraint model — the strongest 2C precedent, but **notoriously slow** (seconds–minutes/function).
-Phase-ordering-as-constraints (Zucker, "Compiling with constraints"); MileStone (2026, multi-objective
-phase ordering over graph IR). → **Trap for 2C:** full constraint-model codegen can be orders too slow
-for a per-compile budget; LOCK-1 already scopes CSP to "bounded post-solve where unification is
-undecidable" — LOCK-2's CSP must inherit that bound.
+**Constraint-based codegen (2C prior art).** Unison (Castañeda Lozano et al.; "Combinatorial Register
+Allocation and Instruction Scheduling", TOPLAS 2019 / arXiv 1804.02452; "Modeling Universal Instruction
+Selection", CP 2015) unifies instruction selection + register allocation + scheduling as one CP model —
+the strongest 2C precedent. **Its measured scaling ceiling is the load-bearing trap:** optimal only up
+to **~946–1000 instructions per function** under a fixed time budget, at **seconds–minutes per function**,
+for a **1.1–10% mean speedup**. CSS L4 has **2875 DTA states** — *above* Unison's proven-optimal ceiling
+— so a monolithic global 2C is off the cliff by construction; 2C is lawful only as a **bounded post-solve
+over the small coupled sub-CSP** after independent sites are peeled to closed-form (the FAMILY-SPECS
+decomposition; coheres with LOCK-1's "bounded post-solve where unification is undecidable"). Also:
+phase-ordering-as-constraints (Zucker, "Compiling with constraints").
+[Combinatorial RA+IS TOPLAS19](https://arxiv.org/abs/1804.02452) ·
 [Universal instr-sel CP15](https://dl.acm.org/doi/10.5555/3102787.3102831)
 
 **Profile-guided cost (2D prior art).** HW-counted PGO (PMU sampling → frequency profiles) is standard;

@@ -1,184 +1,197 @@
 # LOCK-7 family 7D — META-CIRCULAR-ORACLE (research, pass 1)
 
-**The stance.** Self-hosting is verification first. The bbnf-defined bbnf grammar and the
-bbnf-defined regex grammar are compiled by the one generator into parsers that serve as
-**differential oracles** against the hand-written parsers, not as immediate replacements.
-Grammar totality (constitution i) is earned as a *measured property* — a promotion ledger,
-subsystem by subsystem, each edge gated on AST-parity plus cold-PMU performance under the
-standing profiling law. The hand parser stays the reference and the fallback until the
-generated one measurably wins on its own subsystem; totality is the union of promoted edges,
-reported as a percentage with a named floor, never asserted. This de-risks 7B's "generator
-becomes mostly data" ambition: the oracle delivers its full value — the grammar is a
-*checkable specification of the hand parser* — the instant it parses the corpus, long before
-(and independently of) any production cutover. A perpetually-verification-only edge is a
-lawful terminal state here, not a failure, provided it is named as such.
+Self-hosting recast as **verification first, production later**. The bbnf-defined bbnf grammar
+and the bbnf-defined regex grammar are compiled through the one generator into parsers that do
+not immediately replace anything — they run *beside* the incumbent hand parsers as differential
+**oracles**. Two independent implementations of the same language must agree, node-for-node,
+over a live corpus; disagreement is a bug in one of them, surfaced mechanically. Promotion of a
+generated parser to the production seat is gated, subsystem by subsystem, on **measured parity**
+(AST-equivalence over the corpus, adjudicated against a hand-audited golden anchor) plus
+**measured performance** (cyc/B non-regression, or the named perf floor where the parse is hot).
+The hand parser is never dead weight: until its subsystem is promoted it is the epistemic
+anchor; after promotion it survives as the CI-only differential reference. This is the family's
+distinctive center — it turns constitution clause (i) from a big-bang cutover into a measured
+trajectory, and it satisfies clause (viii) from day one, because the generated parser has a
+consumer (the oracle) the instant it is emitted.
 
-## 1 — The mechanism made concrete
+## 1. Why this family, not staged-bootstrap or total-self-host
 
-Three artifacts per self-hosting subsystem S (S ∈ {bbnf-grammar, regex, …}):
+A self-hosted parser that parses its own grammar and agrees with itself proves *nothing* — the
+trusting-trust circularity (Thompson 1984, *Reflections on Trusting Trust*). The fixpoint gate
+of the classic staged bootstrap (regen∘regen byte-identical) certifies that the *generator is
+deterministic*, not that either parser is *correct*. 7D breaks the circle by demanding agreement
+with a **second, independently authored implementation** — the 2142-LOC hand recursive-descent
+parser — and with **externally trusted references** (serde/lightningcss/cssparser already anchor
+the json/css corpora). Correctness is then a measured property of *disagreement rate against an
+independent oracle*, not an asserted property of self-application. This is exactly the epistemics
+of compiler differential testing (Csmith; Yang–Chen–Eide–Regehr, PLDI 2011) and of translation
+validation (Pnueli–Siegel–Singerman 1998; Necula, PLDI 2000): do not prove the translator once
+and trust it forever — *validate each run's output against an oracle, and promote only what
+survives*.
 
-1. **The generated parser** `Gen_S`, emitted from the `.bbnf` source through the *same*
-   `codegen::emit_from_source` path that emits json/css/sheets (no bespoke proc-macro — the
-   `bbnf_derive` crate was retired at bbnf-lang `6142387f`, generation now flows through
-   `cargo xtask regen`; parse-that `rust/bootstrap/src/lib.rs:11-22` records this contract).
+## 2. The mechanism made concrete
 
-2. **The differential oracle harness** `Oracle_S`: over a shared corpus C_S, run the hand
-   parser `Hand_S` and `Gen_S`, assert `⟦Hand_S(x)⟧ ≡ ⟦Gen_S(x)⟧` under a **declared
-   equivalence relation ≡** (§4 risk 1 makes this precise). Report `parity(S) = |{x∈C_S :
-   Hand≡Gen}| / |C_S|` plus a **divergence ledger** (every `x` where they disagree, with both
-   trees). C_S is closed under two generators: (a) the extant hand-authored corpus — every
-   `.bbnf` under `grammar/` for S=bbnf-grammar; the `PATTERNS` suite at
-   `parse-that/rust/bootstrap/benches/regex_parse.rs:12-60` for S=regex — and (b)
-   grammar-derived fuzzing (§3 prior art): sample strings from the grammar's own production
-   rules, feeding both parsers, driving parity toward saturation.
+**2.1 The two implementations per language.**
+- bbnf, incumbent (oracle-of-record initially): `skinny/crates/grammar/src/lib.rs:29`
+  `parse_grammar(name, source) -> Result<GrammarIr, GrammarError>` — hand recursive descent,
+  2142 LOC.
+- bbnf, challenger (generated): the self-hosted parser emitted from `grammar/bbnf/bbnf.bbnf`
+  (+ `grammar/bbnf/expressions.bbnf`, `grammar/bbnf/types.bbnf` via `@import`) through the one
+  emit spine `codegen/src/lib.rs:101` `emit_from_source`. The *type* to resurrect is
+  `BbnfBootstrap::parse` (legacy home `crates/bootstrap/src/lib.rs:28`,
+  `pub use ::bbnf::grammar::generated::BbnfBootstrap`; entry drivable per
+  `crates/bootstrap/src/bin/debug_parse.rs:22`).
+- regex, incumbent: parse-that's hand regex parser (`~/Programming/parse-that/rust/regex/src/hir`)
+  and its committed self-host `parse_that::regex::generated` re-exported by the `regex-bootstrap`
+  crate.
+- regex, challenger (generated): emitted from `grammar/misc/regex.bbnf` through the same spine.
 
-3. **The performance gate** `Perf_S`: cold per-parse PMU cyc/B, paired interleaving, N≥200,
-   multi-window, per SPEC §4 / §0 protocol — `Gen_S` vs `Hand_S`. The extant divan bench
-   (`regex_parse.rs`) is the *seed* harness and must be upgraded from divan wall-clock to the
-   PMU-paired protocol before it can gate.
+**2.2 The differential.** For each corpus document *d*: run both implementations, normalize each
+result to a shared **NormalAst** (§2.3), and assert equality. This is the `css_scan_differential`
+pattern (`skinny/crates/runtime/tests/css_scan_differential.rs`) lifted from *scan decisions* to
+*parse trees*: that harness already sweeps every start position over the real corpora and asserts
+a production kernel's `(byte, pos)`/`None`/error-offset sequence is bit-identical to a clean-room
+scalar reference. 7D is the same shape with the hand parser as the clean-room reference and the
+AST as the compared artifact. The external-reference variant already exists too:
+`xtask/src/main.rs:62` `check_conformance` runs `runtime::generated_json::parse_bytes` against
+`serde_json` over valid+invalid fixtures, canonicalizing floats to bits (`check_float_bits`) — the
+exact "canonicalize, then compare, valid-accept/invalid-reject" template, against an external
+oracle rather than the hand parser.
 
-**The promotion ledger** (the family's spine): a committed table, one row per subsystem,
-columns `{parity%, perf-ratio, equivalence-relation-id, decision∈{ORACLE-ONLY, PROMOTED}}`.
-An edge is born-RED at ORACLE-ONLY. It promotes to PROMOTED only when `parity(S)=1.0` on the
-frozen corpus **and** `Perf_S ≥ 1.0` within noise. On PROMOTION the hand parser is deleted (or
-demoted to a differential-test fixture) and `Gen_S` becomes the production path. On a
-perpetual perf loss the edge stays ORACLE-ONLY *by decision*, the divergence ledger stays
-empty (parity held), and the verification value is banked — this outcome is reported, not
-hidden.
+**2.3 The NormalAst (the crux).** The two implementations produce different in-memory types
+(hand → `GrammarIr`; generated → tape/typed nodes). Comparison needs a canonical normal form.
+Choose the **least-normalizing** form that both can project to: a structural S-expression that
+preserves rule identity, operator nesting/precedence, modifiers (`?w`/`?`/`*`/`+`), `->`
+projection expressions, and — critically — **source spans** (`start,end` byte offsets). Over-
+canonicalization is a named risk (§5): dropping spans would mask a wrong-span or wrong-precedence
+bug, precisely the class differential testing exists to catch. tree-sitter's `corpus/` tests
+(parse → S-expr → diff golden) are the precedent for the S-expr form; `check_float_bits` is the
+in-tree precedent for "canonicalize only where representation is incidental, compare exactly
+everywhere else." Normalizing *both* sides to `GrammarIr` is the alternative, but that couples the
+oracle to one side's type and is rejected — the S-expr is implementation-neutral.
 
-**The fixpoint corollary.** Once S=bbnf-grammar is PROMOTED, 7A's fixpoint gate
-(`regen∘regen = regen`, byte-identical) becomes a *special case* of this family: `Gen_bbnf`
-re-parses `bbnf.bbnf` to regenerate itself, and byte-identity is the reproducible-build
-witness (§3, Wheeler DDC). 7D subsumes 7A's gate rather than competing with it.
+**2.4 The golden anchor (breaks "differ, but who is right?").** A differential tells you the two
+disagree, not which is correct — and a generated parser that faithfully reproduces a *hand-parser
+bug* would pass a pure hand-vs-generated differential. Anchor truth with a small, hand-audited
+golden set: `crates/test-fixtures/corpus/bbnf/golden/*.sexp` (and `.../regex/golden/`), each a
+NormalAst blessed by human audit against the SPEC. Adjudication rule: every corpus divergence is
+resolved against the golden set or, for json/css, against the external reference already trusted
+(`check_conformance`'s serde, the css corpora's cssparser 9-field parity cited at
+`css_scan_differential.rs`). No divergence is ever resolved by majority vote of two parsers.
 
-## 2 — The substrate (what exists, path:line)
+**2.5 The corpus is the grammar tree itself.** The natural, zero-fabrication bbnf differential
+corpus is `grammar/**/*.bbnf` — `bbnf.bbnf` (self-description), all 16 `css/l4/*.bbnf`,
+`json/json.bbnf`, `google-sheets/google-sheets.bbnf`, `bnf/bnf.bbnf`, `ebnf/ebnf.bbnf`, and
+`misc/{csv,math,emoji,g4,regex,json-commented}.bbnf`. The regex differential corpus is *every
+regex literal extracted from every `.bbnf`* in that tree (mechanically harvestable — regex leaves
+are `/…/` spans), plus a crafted adversarial suite (backrefs, lookaround, nested classes per
+`grammar/misc/regex.bbnf`). Self-description is included but is not the *proof* — it is one row.
 
-**Regex — the furthest-advanced edge; the oracle is HALF-BUILT and committed.**
-- Generated parser: `parse-that/rust/parse_that/src/regex/generated.rs` (2293 LOC, committed,
-  `// AUTO-GENERATED from bootstrap/regex.bbnf`). Internally it *produces* an AST —
-  `Vec<RegexParserEnum<'a>>` (`:175`), per-rule fns `__quantifier`/`__alternation`/`__concat`/
-  `__regex` returning `Option<RegexParserEnum>` (`:215,390,434,2276`).
-- **The gap that defines the first prototype:** the public entry
-  `parse_generated(pattern:&str) -> bool` (`:2288`) is a **recognizer** — it *discards* the
-  produced AST and returns accept/reject. A recognizer is a strictly weaker oracle than a
-  producer (it cannot catch structural divergence, only membership divergence). The internal
-  producer already exists (`RegexParser::regex()`, consumed at `regex/mod.rs:40-41`); the
-  oracle must surface it.
-- Seed grammar: `parse-that/rust/bootstrap/regex.bbnf`; seed bench:
-  `parse-that/rust/bootstrap/benches/regex_parse.rs` (divan, hand-vs-generated, PATTERNS
-  corpus); tests `bootstrap/src/lib.rs:26-60` already assert `parse_generated` acceptance.
-- Hand regex parser: the parse-that `regex/` surface (`regex/mod.rs`); a *second* regex
-  grammar exists in bbnf-lang at `grammar/misc/regex.bbnf` (1006 B) — **the two diverge**
-  (§4 risk 3; one-regex-home law, SPEC §4; LOCK-5 owns the reconciliation, 7D consumes it).
+**2.6 The promotion gate (subsystem by subsystem).** Partition each language into promotable
+subsystems and gate each independently:
+- bbnf: (1) terminal/lexical layer (identifier, literal, regex, comment), (2) expression/factor
+  layer (term…alternation, modifiers, `->` mapped_factor), (3) directive layer (`@import`,
+  `@pretty`, `@ws`, `@host`, …), (4) whole-grammar assembly, (5) closures/grammar-functions.
+- regex: (a) char-class/range, (b) quantifier/group, (c) anchors/backrefs/lookaround, (d) flags.
 
-**bbnf-grammar — the source exists, the generated edge does NOT.**
-- Self-host grammar: `grammar/bbnf/bbnf.bbnf` (3448 B, real: directives `@import`/`@pretty`/
-  `@ws`/`@host`, closures `|params| rhs`, host blocks `@{…}`, `->`/`?w` throughout) with
-  `@import`ed `grammar/bbnf/expressions.bbnf` (value-expr sub-language) and
-  `grammar/bbnf/types.bbnf`.
-- Hand parser (the reference side of the oracle): `skinny/crates/grammar/src/lib.rs:29`
-  `parse_grammar(name, source) -> Result<GrammarIr, GrammarError>` — 2142 LOC; note it runs
-  `resolve_refs()` + `validate()` *after* the pure parse (`lib.rs:31-34`), which the grammar
-  cannot express (§4 risk 1).
-- **Missing:** no `regen-bbnf`/`check-bbnf`/`oracle-bbnf` in xtask. Dispatch is
-  `skinny/xtask/src/main.rs:39-52` (json/sheets/css/real-typed/conformance/checkasm only);
-  mechanics `xtask/src/regen.rs:19` `write_targets`, `:36` `check_target`;
-  `RuntimeTarget` shape at `main.rs:177-206`. A new target + a new `oracle-*` differential
-  command is the concrete xtask work.
-- The general-descent emitter that would lower bbnf.bbnf: `codegen/src/general_descent/`
-  (SK-V18 built it for `->`/`?w`/`,`/`<<`; project memory `skv18-prove-ir-gap`). It is the
-  base-case feasibility question (§4 risk 2).
+A subsystem is **promoted** — its generated parser becomes the production path for that construct,
+the hand branch retires to CI-differential — only when: **parity** = zero unadjudicated
+divergences over the whole corpus for that subsystem, sustained two consecutive regen cycles; and
+**perf** = generated cyc/B ≤ hand cyc/B (grammar-source parse is compile-time, so this is a
+non-regression floor, and the *win* is deleting hand LOC) — except the regex sub-language, whose
+leaves are hot at runtime, where the floor is PROVE-10's certified `Dfa::find` numbers (8.8–29.5×
+on prefilterable patterns, SPEC §0 row 10), not mere non-regression. This is dav1d/checkasm
+generalized from kernels to parsers: `skinny/crates/bbnf-simd/tests/checkasm_parity.rs` already
+runs scalar-reference vs NEON-candidate, `memcmp`s halves, sweeps misalignments, and has a
+deliberate-bug injection (`BBNF_SIMD_INJECT_BUG=1`) proving the gate *can* fail — the strict/loose
+promotion switch (`BBNF_SIMD_STRICT`) is the exact "record divergences until promoted, then assert
+strictly" mechanism 7D needs, verbatim.
 
-**Prior meta-circular precedent already lived here and was partly retired.** Both repos carry
-a `crates/bootstrap` mirror whose one line re-exports the xtask-emitted self-parser
-(`bootstrap/src/lib.rs:19-21` documents bbnf-lang's `pub use ::bbnf::grammar::generated::
-BbnfBootstrap`). `BbnfBootstrap` is *referenced by contract but absent from skinny* — the
-edge was designed, the proc-macro host retired, and the xtask regen edge never wired. 7D's
-first act is to complete that wiring as an *oracle*, not (yet) as production.
+## 3. The substrate (what gets built)
 
-## 3 — Prior art with citations
+- **Oracle home — extend, do not add a subsystem.** GN-5.W1 already *births* a `crates/bbnf-oracle`
+  directory-module of per-grammar submodules (GN-5.md §4). 7D adds a `self_host/` sibling submodule
+  there: `self_host/bbnf.rs` (generated-vs-`parse_grammar` differential over `grammar/**`),
+  `self_host/regex.rs` (generated-vs-parse-that differential over harvested literals),
+  `self_host/normal_ast.rs` (the NormalAst S-expr + both projections). System cohesion (memory:
+  `system-cohesion`); no orthogonal harness.
+- **The bootstrap re-export crate, resurrected as oracle citizen.** Mirror the extant pattern:
+  parse-that's `rust/bootstrap` (`regex-bootstrap`) is a thin re-export of
+  `parse_that::regex::generated`; bbnf's `crates/bootstrap` was the analogous
+  `pub use ::bbnf::grammar::generated::BbnfBootstrap`. Reinstate the bbnf side in the greenfield as
+  a thin re-export of the xtask-emitted self-host parser — its consumer is the oracle, not
+  production, until promotion.
+- **xtask command.** `check-self-host` (and `regen-self-host`) alongside `check-conformance` at
+  `xtask/src/main.rs:48`, driven by the same `regen.rs:19` `write_targets`/`check_target`
+  mechanics. `check-self-host` runs the differential and fails on any unadjudicated divergence;
+  its *artifact* is the NormalAst diff (precept 19: a hard gate needs a runtime artifact, not a
+  grep).
+- **The golden anchor fixtures** under `crates/test-fixtures/corpus/{bbnf,regex}/golden/`.
+- **The falsification proof.** A planted-divergence test (mirror `checkasm_parity`'s
+  `INJECT_BUG`): mutate one NormalAst projection and assert `check-self-host` trips — the gate is
+  proven able to fail before it is trusted to pass.
 
-- **Diverse Double-Compilation (D. A. Wheeler, PhD thesis 2009; ACSAC 2005, "Countering
-  Trusting Trust through Diverse Double-Compiling").** The canonical theory: compile a
-  self-hosting compiler with a *second, independent* implementation and check for identical
-  output. 7D is DDC specialized to parsers — `Hand_S` is the "second compiler," `Gen_S` the
-  self-hosted one, and byte/AST-identity is the trust witness. Directly grounds the fixpoint
-  corollary and answers "why trust the generated parser."
-- **rustc bootstrap fixed-point (stage0→stage1→stage2).** stage1 and stage2 must produce
-  *identical* artifacts — the reproducible fixpoint 7A gates on and 7D subsumes. rust-lang's
-  `ungrammar` (rust-analyzer's machine-readable Rust syntax) is precisely a "grammar as
-  checkable spec of the hand parser" — the same oracle stance, applied to Rust's own syntax.
-- **Differential/N-version parser testing.** McKeeman, "Differential Testing for Software"
-  (Digital Tech. Journal, 1998); CSmith (Yang, Chen, Eide, Regehr, PLDI 2011) — random
-  programs fed to N implementations, disagreement = bug. 7D's oracle harness is differential
-  testing with N=2 and a *grammar-derived* (not random-C) generator.
-- **Grammar-based test generation / fuzzing.** Zeller et al., *The Fuzzing Book* (grammar
-  fuzzing chapter); `grammarinator` (ANTLR); tree-sitter's grammar-driven corpus fuzzing.
-  These supply corpus generator (b): sampling productions from `bbnf.bbnf`/`regex.bbnf`
-  themselves to drive `parity → 1.0`. tree-sitter is the closest industrial analogue — a
-  grammar compiled to a parser, differentially tested against reference parsers per language.
-- **Metamorphic testing** (Chen et al.) — relations like "reformatting a `.bbnf` must not
-  change its AST" give oracle assertions where a golden AST is unavailable.
-- **Reflective towers / metacircularity** (Reynolds, "Definitional Interpreters," 1972;
-  Thompson, "Reflections on Trusting Trust," 1984) — the theoretical frame for why a
-  self-describing grammar is both the artifact and its own specification.
+## 4. Prior art (citations)
 
-## 4 — Named risks and counterexamples
+- **rustc bootstrap** (stage0→stage1→stage2, stage1==stage2 build-and-compare): the *fixpoint*
+  bootstrap = family 7A. 7D deliberately diverges — a fixpoint certifies determinism, not
+  correctness; 7D adds the independent-oracle differential rustc's bootstrap does not have.
+- **Csmith / differential compiler testing** (Yang, Chen, Eide, Regehr, PLDI 2011): disagreement
+  across independent implementations finds bugs; the known limitation (differ ≠ who's-right) is
+  answered here by the golden anchor + trusted external references (§2.4).
+- **Translation validation** (Pnueli–Siegel–Singerman 1998; Necula, "Translation Validation for
+  an Optimizing Compiler," PLDI 2000): validate each run's *output* rather than prove the
+  translator — the direct model for "promote on measured per-instance parity, subsystem by
+  subsystem."
+- **dav1d / FFmpeg checkasm**: scalar-reference-vs-candidate bit-identical parity with injected-bug
+  self-test — the in-tree template (`checkasm_parity.rs`) 7D lifts from kernels to parsers.
+- **tree-sitter `corpus/`**: parse→S-expr→golden-diff — the NormalAst comparison form.
+- **GHC / CompCert golden-file validation**: golden-AST anchoring precedent (§2.4).
+- **Thompson, *Reflections on Trusting Trust* (1984)**: the reason self-parity alone is not
+  verification — the motivation for the whole family.
 
-1. **Equivalence is not obvious (blocks the whole family if unspecified).** `Hand_bbnf` =
-   parse *then* `resolve_refs()`+`validate()` (`grammar/src/lib.rs:31-33`) — semantic passes
-   the grammar cannot emit. ≡ MUST be pinned at the **pre-semantic AST** (`Gen` produces the
-   raw tree; the harness runs the *shared* `resolve_refs`/`validate` on both, or on neither).
-   Counterexample if botched: `Gen` "diverges" only because it lacks ref-resolution — a false
-   negative that poisons parity%. The equivalence-relation-id column of the ledger exists to
-   make this auditable.
-2. **The base case may not lower.** `bbnf.bbnf` uses `@import` cross-file resolution, closures
-   `|p| rhs` (grammar functions), `@{ rhs }` host blocks, and 7 directive forms. SK-V18
-   extended the frontend only to `->`/`?w`/`,`/`<<`. If `codegen::emit_from_source` cannot
-   lower `bbnf.bbnf`, meta-circularity has no base case and S=bbnf-grammar cannot even reach
-   ORACLE-ONLY. This is the make-or-break test. Standing law (self-host uses language
-   features; augment BBNF, never work around) means the resolution is *frontend extension*,
-   not corpus-trimming.
-3. **Two regex grammars, one-regex-home law.** `parse-that/rust/bootstrap/regex.bbnf` (the
-   committed, generated one) vs bbnf-lang `grammar/misc/regex.bbnf` — they differ in surface
-   (e.g. lookbehind, `end = "/" >> flags`). 7D cannot pick the canonical home (LOCK-5's
-   verdict), but its oracle is undefined until one source is authoritative. Consume LOCK-5;
-   name the dependency.
-4. **Promotion may never fire (and that must be honest).** A generated recursive-descent
-   parser over a general IR can be persistently slower than a hand parser. `regex_parse.rs`
-   exists precisely to measure this and may report `Gen_regex/Hand_regex > 1.0` forever. 7D's
-   honest floor: ORACLE-ONLY is a *lawful terminal*, the verification value is real, and the
-   ledger says so — it does not pretend totality where perf refused it.
-5. **Recognizer ≠ producer.** Today `parse_generated -> bool` (`generated.rs:2288`). A bool
-   oracle catches only accept/reject divergence; a structural bug (wrong precedence,
-   mis-nested group) that still *accepts* is invisible. The oracle demands the AST-producing
-   surface (already present internally) — shipping the recognizer as "the oracle" is the
-   subtle self-deception to guard against.
+## 5. Named risks and counterexamples
 
-## 5 — What a prototype must test to move this family
+- **R1 — the self-hosted grammar cannot admit its own dialect (coverage gap, likely to fire
+  first).** The skinny IR parser has historically rejected dialect constructs the hand parser
+  accepts — `->` projections, `?w`, `,`/`;` terminators. `bbnf.bbnf` itself uses `@import`,
+  closures (`|params| rhs`), `?w`, `->` chains, `@host`/`@pretty` directives. *Counterexample to
+  expect:* the generated parser fails to parse `css/l4/*.bbnf` or `bbnf.bbnf` at all. This is not a
+  failure of the family — it is the oracle's *first product*: the differential names exactly which
+  construct the self-hosted grammar under-specifies, turning self-hosting into a coverage-driven
+  grammar-completion loop (memory: `no-workarounds-self-hosting` — augment `bbnf.bbnf`, never shim
+  the generated parser).
+- **R2 — over-canonicalized NormalAst masks real divergence.** If the S-expr drops spans or
+  reorders alternation arms, a wrong-span or wrong-precedence bug passes. *Guard:* NormalAst
+  carries spans and preserves arm order; the golden set includes a precedence-sensitive and a
+  span-sensitive document whose blessed form would break under any lossy normalization.
+- **R3 — differential resolves to the hand parser's bug.** If both are wrong the same way (e.g.
+  both mis-handle a `\` escape edge), the differential is silent. *Guard:* the golden anchor is
+  hand-audited against the SPEC independently of both parsers; json/css rows cross-check against
+  serde/cssparser (already trusted). Sheets has no external oracle — its golden set must be larger.
+- **R4 — promotion perf gate is vacuous for compile-time parsing.** Grammar-source parse is cold
+  and rare; a cyc/B non-regression floor is nearly free to pass, so "promotion earns performance"
+  is hollow *for bbnf*. *Answer:* the honest value for bbnf is **LOC deletion** (retire the 2142-LOC
+  hand parser), stated as such; the perf gate has teeth only for the **regex** sub-language, whose
+  leaves are runtime-hot — there the floor is PROVE-10's certified numbers, not non-regression.
+- **R5 — the oracle becomes shelfware if never promoted.** A perpetual CI-only differential that
+  never flips is dead substrate in spirit (Y.13 / clause viii). *Guard:* every subsystem carries a
+  named promotion deadline and a floor; a subsystem that cannot be promoted after two passes is a
+  named negative result (its blocking divergence documented), not an indefinite oracle.
 
-1. **Base-case feasibility (highest-value, make-or-break):** wire `regen-bbnf`+`check-bbnf`
-   into `xtask/src/main.rs`; attempt `codegen::emit_from_source("bbnf", read(bbnf.bbnf))`.
-   Binary outcome: does `bbnf.bbnf` (with its `@import`/closure/`@{}`/directive surface) lower
-   to a working `BbnfBootstrap` parser through the general-descent path, or does the frontend
-   reject it (and at which byte)? This decides whether S=bbnf-grammar reaches ORACLE-ONLY at
-   all, and scopes the exact frontend extension owed.
-2. **The differential oracle, defined:** implement `Oracle_bbnf` running `parse_grammar` and
-   `BbnfBootstrap` over every `.bbnf` in `grammar/`, with ≡ pinned per risk 1; emit
-   `parity%` + a divergence ledger. Deliverable = the first ledger row with a real number.
-3. **Regex: promote recognizer→producer oracle + PMU bench.** Surface the AST from
-   `RegexParser::regex()` (not `parse_generated`'s bool), assert `Hand ≡ Gen` structurally
-   over PATTERNS + grammar-fuzzed inputs; upgrade `regex_parse.rs` from divan to the SPEC-§4
-   PMU-paired protocol; report `parity(regex)` and `Perf_regex`. This is the one edge with
-   committed code on both sides — it yields the family's first *complete* ledger row fastest.
-4. **Corpus generator (b):** a grammar-driven sampler over `bbnf.bbnf`/`regex.bbnf`
-   productions feeding both parsers; measure how fast parity saturates and whether fuzzing
-   surfaces divergences the hand corpus misses (the real test of oracle strength).
+## 6. What a prototype must test to move this family
 
-## 6 — Consumer-in-wave (Y.13) compliance
+1. **Emit + coverage.** Regenerate the bbnf-in-bbnf parser from `grammar/bbnf/bbnf.bbnf` through
+   `emit_from_source`; does it parse `grammar/**/*.bbnf` at all? Report the exact dialect
+   constructs it rejects (R1). This single number — corpus documents admitted / total — is the
+   family's first falsifiable output.
+2. **Differential + NormalAst.** Build `normal_ast.rs`, run generated-vs-`parse_grammar` over the
+   admitted corpus, report the divergence count, each divergence adjudicated against the golden
+   anchor. Parity rate is the gate metric.
+3. **Perf.** cyc/B of generated vs hand on grammar-source parse (bbnf: expect non-regression, cite
+   LOC-deletion as the real prize); regex-leaf parse against PROVE-10's `Dfa::find` floor.
+4. **Falsification.** Plant a NormalAst mutation and confirm `check-self-host` trips (gate can
+   fail), then confirm it passes clean on HEAD.
 
-No consumer-less substrate: the oracle harness *is* consumed by CI (differential test gate),
-the promotion ledger is read by the regen gate, and each perf bench feeds the promotion
-decision in the same wave. The generated parsers are not dead substrate — where not yet
-PROMOTED they are live differential-test fixtures; where PROMOTED they are the production
-parse path. Every edge names its reader before it lands.
+The prototype's verdict is a table: *per subsystem — admitted %, parity %, cyc/B ratio,
+promote/hold/negative-result*. That table is the whole family, made concrete.

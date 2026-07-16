@@ -1,121 +1,155 @@
-# PROTO-2 — the regex differential-oracle ledger row (LOCK-7, family 7D)
+# PROTO-2 — GrammarIr construction-semantics census (the 7B↔7C build boundary)
 
-Probe 2 of LOCK-7 pass 1. Ran a real prototype against a pt-scratch copy of parse-that
-(READ-ONLY origin, files verified byte-identical to HEAD `ef10d5b`). No source mutated — one
-example added (`PROTO-2.patch`). Numbers are measured, cold, paired, load recorded.
+LOCK-7 pass-1, probe 2 (family 7C HOST-FUNCTION LATTICE ↔ 7B Plane A). Adjudicates **INC-2** and
+fixes bbnf's totality floor. **RAN_MEASURED**: census over live source at HEAD (2026-07-16) plus a
+3-assertion probe compiled and executed against the `grammar` crate; every classification claim is
+either a verified `path:line` or a passing test. Loadavg recorded. No live source mutated — the
+probe was written to `crates/grammar/tests/`, run, then removed; its text is preserved as
+`PROTO-2.probe.rs` (the patch).
+
+> Naming note: the 04:05 `PROTO-2.{md,patch}` were a *prior brief-set's* family-7D regex-oracle
+> probe, superseded by the 04:51 FAMILY-SPECS re-synthesis (§6 names Brief 2 = "construction
+> census"). Preserved verbatim as `PROTO-2-7D-regex-oracle.{md,patch}`; nothing lost.
 
 ---
 
-## Question
+## Question (INC-2, verbatim)
 
-FAMILY-SPECS §6 hinge 2 — the **promotion-vs-oracle-only** posture (INC-2: 7B
-*promote-to-production* vs 7D *oracle-first*), discriminable **today** on the one edge with
-committed producer code on both sides: the regex grammar. Precisely:
+> Can bbnf's **GrammarIr CONSTRUCTION** be expressed in pure grammar `->` projections
+> (7B: floor = 0), or does it require typed host functions (7C: floor > 0)?
 
-> Does the self-hosted generated regex parser (`bootstrap/regex.bbnf` → `RegexParserEnum` →
-> `host::lower` → `Hir`) reach **parity + perf** against the hand `bbnf_regex` RD parser — so
-> the 7B *promote* gate fires — or does it stay **ORACLE-ONLY** (7D's lawful terminal)?
-
-Secondary, from 7D's open questions: is a **producer-level** equivalence (not merely the bool
-recognizer FAMILY-SPECS §0 saw) even computable today, and how sensitive is parity to the choice
-of ≡ (7D-Q1)?
-
-## A correction to FAMILY-SPECS §0 (load-bearing)
-
-§0 fact 4 states the generated regex parser "produces a `RegexParserEnum` AST internally but the
-public `parse_generated -> bool` **discards it**", framing the edge as recognizer-only. That is
-true of `generated.rs::parse_generated` — but it **misses** `regex/mod.rs:34`, which already
-wraps the producer:
-
-```
-pub fn parse_generated(pattern) -> Result<Hir, ParseError>   // generated parser + host::lower
-```
-
-`host::lower` (`regex/host.rs`, 524 LOC, **byte-identical to HEAD**) folds `RegexParserEnum` into
-the **same `Hir`** the hand parser yields (`Hir` derives `PartialEq, Eq`). So the strongest ≡ —
-full **structural Hir equality** — is computable **now**, with no new functor. G-7D-2/G-7D-3's
-"recognizer→producer" gap is *already closed* on this edge; the recognizer-only framing was a §0
-miss. This is the finding that makes probe 2 runnable at all.
+INC-2 in FAMILY-SPECS §5 frames the fear precisely: *"bbnf's GrammarIr construction (arena
+interning, ExprId edges, closure β-reduction) is either `->`-expressible (7B) or
+recursive-with-state and host-fn-bound (7C) … 7B Plane C is BLOCKED-candidate precisely because
+graph-shaped interned IR ⇒ the 'CFG-expressible IR' primitive is as hard as the original
+problem."* This probe tests that fear against the real constructor.
 
 ## Method
 
-- **Copy, not mutate.** pt-scratch copy per R3 §8; `CARGO_TARGET_DIR` inside the copy; parse-that
-  origin untouched. Regex-path files (`generated.rs`, `regex/mod.rs`, `regex/host.rs`,
-  `bootstrap/{lib.rs,benches/regex_parse.rs}`) verified `diff`-identical to HEAD `ef10d5b`.
-- **One example, zero source edits** — `rust/bootstrap/examples/oracle.rs` (patch attached).
-- **≡ pinned at Hir structural equality**: `regex::parse_with` (HAND) vs
-  `regex::parse_generated_with` (GEN), both with a **shared** `ParseOptions::default()`
-  (`unicode:true`; identical on both sides — both public entry points default to it).
-- **Corpus**: the 51-pattern **union** of the two committed `regex_parse` bench corpora
-  (`bootstrap/benches` 29 + `regex/benches` 52, deduped) — every regex class across the BBNF
-  grammars (JSON, CSS idents/numbers, ws/comments, char-classes, quantifiers, groups, escapes,
-  URLs, dates, IPs, UUIDs, hex/oct/bin literals).
-- **Perf**: cold **paired, interleaved**, release `-O3`, **3000 reps**, per-corpus-pass median,
-  `black_box` against DCE, 50-iter icache prime (no result caching — every parse allocates a
-  fresh `Hir`, so every pass is cold). loadavg captured around each run.
+1. **Enumerate** every GrammarIr-construction site the hand parser performs
+   (`skinny/crates/grammar/src/lib.rs`, 2142 LOC; builder IR in `skinny/crates/ir/src/lib.rs`):
+   grep for `intern`/`Interner`, `add_expr`/`add_rule` (ExprId/RuleId alloc + edge-linking),
+   `resolve*`/closure/β-reduction, `@import`, and every `-> value_expr` builder.
+2. **Cross-map** each site to the `grammar/bbnf/bbnf.bbnf` (+ `expressions.bbnf`) rule it realizes.
+3. **Classify** each into {GRAMMAR-`->` · typed-host-fn (ParseState/TreeFold) · CompileIO}.
+4. **Run** a probe that empirically discriminates interner-vs-append and construct-vs-link.
 
-## What ran
+## What ran (measured)
 
-`cargo run --release --example oracle -p regex-bootstrap` inside pt-scratch. Deps came from
-prebuilt release rlibs (example link `0.35s`). Executed **3×** for stability. Toolchain
-`nightly-2026-04-11` (repo pin). Machine: 18 cores, 1-min loadavg 10.9–13.9 during runs
-(concurrent probes present — paired interleaving cancels shared contention in the ratio).
+`CARGO_TARGET_DIR=<scratch> cargo test -p grammar` at HEAD, scratch target (no lock contention).
+Loadavg 9.85 → 8.93 (1-min) across the run; cold build.
+
+- **Existing suite, construction path** — `parses_skinny_json_rules` **ok**,
+  `resolves_forward_and_cyclic_refs` **ok**, `rejects_unresolved_refs` **ok**. (One *unrelated*
+  pre-existing red: `w5b_frontend_public_ws_remains_retired`, lib.rs:1866 — a runtime-frontend-ws
+  harvester assertion, not a construction site; noted, not mine.)
+- **Probe `proto2_construction_census` — 3 passed / 0 failed:**
+  - `add_expr_does_not_intern_identical_leaves` **ok** — `a = "x" , "x" ;` yields **two** distinct
+    `Literal{b"x"}` ExprIds. **No structural interner exists.**
+  - `arena_ids_are_post_order_synthesized` **ok** — every child ExprId `<` its parent Seq ExprId.
+    **IDs are a post-order numbering = a synthesized attribute.**
+  - `cross_rule_link_is_a_separate_global_pass` **ok** — forward+cyclic ref resolves only via the
+    whole-rule table; an undefined ref is a *link* error, not a *parse/construct* error.
+
+## The classification table
+
+**Legend** — `G` = GRAMMAR-`->` expressible (pure synthesized attribute); `H` = typed-host-fn;
+`IO` = CompileIO. `ir:51` = `add_expr` (ExprId alloc), `ir:57` = `add_rule` (RuleId alloc).
+
+### A · Construction sites — the `parse_grammar` node-builder (ALL `G`)
+
+| # | site (grammar/src/lib.rs) | ir | bbnf.bbnf rule | construction op | class |
+|---|---|---|---|---|---|
+| C0 | `GrammarIr::new` 1270 | ir:42 | grammar:85 | empty arena init | G |
+| C1 | `add_rule(name,body,span)` 1287 | ir:57 | rule:56 | RuleId push + body edge | G |
+| C2 | `Alt{branches,Dispatch}` 1351 | ir:51 | alternation:48 | ExprId, branch edges (child ids) | G |
+| C3 | `Annotation{ws}` (`?w`) 1371 | ir:51 | term/modifier:38 | ExprId leaf | G |
+| C4 | `Seq(∅)` 1393 | ir:51 | concatenation:47 | ExprId | G |
+| C5 | `Seq(children)` 1400 | ir:51 | concatenation:47 | ExprId, child edges | G |
+| C6 | `Discard{left,right,keep_left}` 1423 | ir:51 | binary_factor:45 / binary_operators:44 | ExprId, 2 edges | G |
+| C7 | `Repeat{min0}` (`*`) 1439 | ir:51 | modifier:38 | ExprId, body edge | G |
+| C8 | `Optional` (`?`) 1456 | ir:51 | modifier:38 | ExprId, body edge | G |
+| C9 | `Repeat{min1}` (`+`) 1463 | ir:51 | modifier:38 | ExprId, body edge | G |
+| C10 | `Project{body,target,ty}` 1485 | ir:51 | mapped_factor:42 | ExprId, body edge + span strings | G |
+| C11 | `Literal{bytes,case}` 1501 | ir:51 | literal:11 / term:31 | ExprId leaf | G |
+| C12 | `Regex{pattern}` 1511 | ir:51 | regex:15 / term:32 | ExprId leaf | G |
+| C13 | `Ref{name,target:None}` 1524 | ir:51 | identifier:9 / term:30 | ExprId leaf, **cross-rule edge DEFERRED** | G |
+| C14 | paren pass-through 1516–1520 | — | term:34 `( rhs )` | returns child id, emits **no** node | G (transparent) |
+
+**15 construction sites. All G.** The arena (`add_expr`: `id = ExprId(exprs.len()); exprs.push`)
+is **append-only with zero dedup** — proof C-1. Each `parse_*` returns its ExprId as a *synthesized
+attribute*; parents embed children's ids bottom-up (C2/C5/C6/C7–C10 edges) — proof C-2. Every one
+maps onto an existing bbnf rule, and `mapped_factor:42` already supplies the `-> value_expr : type`
+hook that would carry the projection. `Ref` (C13) stores **`target: None`** — the only graph edge
+is *not built here*.
+
+### B · Whole-grammar linking — a SEPARATE pass, not node-building
+
+| # | site | ir | scope | op | class |
+|---|---|---|---|---|---|
+| L1 | `resolve_refs()` — called `parse_grammar` grammar:33 | ir:84 | **whole grammar (cross-rule)** | build `HashMap<name,RuleId>` symbol table, mutate every `Ref.target` | **H (TreeFold)** |
+
+`resolve_refs` needs the *complete rule set* (forward + cyclic refs — proof C-3) and a mutable
+symbol table. It is **not** a per-production synthesized projection: bbnf's `->` is
+synthesized-only (a match → a value from its children + `input`); it has **no inherited /
+global-environment attribute**. So name→RuleId resolution is beyond today's `->`. Critically, the
+constructor **already factors it out**: `parse_rules` builds `Ref{target:None}` (pure), then
+`resolve_refs()` runs as a distinct post-parse graph transform. It is TreeFold, and **separable**.
+
+### C · Non-construction paths (the frontend-closure harvest — not the GrammarIr builder)
+
+| # | site | bbnf.bbnf | op | class |
+|---|---|---|---|---|
+| I1 | `resolve_runtime_import_closure` grammar:963 | import_directive:60 (`@import`) | multi-file source-set closure + adjacency + cycle detect | **IO** |
+| I2 | closure β-reduction `\|params\| rhs` → GrammarCall | closure:51 (recognized) | **ABSENT** in skinny builder — bbnf.bbnf *recognizes* `closure`, the builder never lowers it | — (0 live; would be IO) |
+| I3 | `@{` HostCapture — scan grammar:420–431 → `BBNF-UNSUPPORTED-HOST-CAPTURE` ir-path lib.rs:222 | term:33 (`@{`) | host capture, **unlowered/dormant** | H (dormant) |
+
+`@import` (I1) resolves a *source-set* closure for the runtime span-tape frontend — **not** the
+`GrammarIr` builder (confirms FAMILY-SPECS §0). Grammar-function `|params| rhs` β-reduction (I2) is
+**unimplemented** in the skinny constructor — it is recognized by `closure:51`/`value_closure:33`
+but never inlined; there is **no live β-reduction site to classify**.
 
 ## The numbers
 
-**Parity ledger** (deterministic across all 3 runs; 51 patterns; ≡ = Hir structural equality):
+```
+N_host  (construction, node-building)        = 0     ← every ExprId/RuleId site is synthesized
+N_host  (mandatory whole-grammar linking)    = 1     ← resolve_refs (ir:84), TreeFold, SEPARABLE
+N_compileio                                  = 1     ← @import source-set closure (grammar:963)
+   of which closure β-reduction               = 0     ← absent/unimplemented in skinny
+dormant typed-host-fn (neither build nor IO) = 1     ← @{ HostCapture, unlowered (ir-path:222)
+construction sites classified                = 15 / 15, zero "unknown"
+```
 
-| metric | value |
-|---|---|
-| both accept + Hir-equal | 39 |
-| both accept + Hir-**diverge** | 3 |
-| both reject | 0 |
-| membership disagree (HAND-OK / GEN-ERR) | 9 |
-| **structural parity** | **39/51 = 0.7647** |
-| **membership parity** | **42/51 = 0.8235** |
+## VERDICT
 
-Divergence ledger — 12 rows, the oracle's checkable spec of what the generated grammar/host must
-fix before promotion is even discussable:
+**7B Plane A reaches parity in PURE grammar for GrammarIr CONSTRUCTION: `N_host_construction == 0`.**
+Structural construction — arena allocation and intra-rule ExprId edge-building — **is
+`->`-expressible**. The INC-2 fear is *empirically false for the skinny tree*: **there is no
+interner** (C-1: identical leaves → distinct ExprIds), ids are **post-order synthesized** (C-2),
+and the sole graph edge `Ref→RuleId` is **deferred out of the constructor** into a separate global
+pass (C-3). "Graph-shaped interned IR" does not exist here — the built IR is a **tree in an
+append-only arena**, which *is* a catamorphism / synthesized attribute.
 
-- **9× HAND-OK / GEN-ERR** `invalid repetition bound` — the generated→Hir path **rejects every
-  bounded quantifier** `{n}`, `{n,m}`, `{n,}` (a `host::lower` gap). Hit: `[0-9a-fA-F]{3,8}`,
-  `a{3,5}`, the JSON string's `u[0-9a-fA-F]{4}`, `#[0-9a-fA-F]{3,6}`, `\d{4}-\d{2}-\d{2}`,
-  `\d{2}:\d{2}:\d{2}`, IPv4 `\d{1,3}…`, the UUID pattern, `(?:[a-z]{2,4})+`.
-- **2× STRUCT-DIVERGE — genuine semantic bugs**:
-  - `.` → GEN lowers to a **literal dot** `Class([46])` instead of any-char-except-newline
-    `Class([^\n])`. The `.` metachar is mishandled.
-  - `(?s)(?:\s|/\*.*?\*/)*` → GEN treats the inline flag `(?s)` as a **literal group**
-    `Group([s])` (no dotall applied; the inner `.` stays literal). Inline-flag semantics absent.
-- **1× STRUCT-DIVERGE — cosmetic (≡-sensitivity)**: `""` → HAND `Empty`, GEN `Concat([])` —
-  semantically equal, structurally distinct. This is 7D-Q1 made concrete: a strict structural ≡
-  **over-counts**; ≡ must normalize `Empty ≡ Concat([])`. Under that normalization structural
-  parity is **40/51**; substantive divergences drop to **11** (9 reject + 2 wrong-Hir).
+**The single recursive-with-state primitive is NOT construction** — it is cross-rule name
+resolution **`resolve_refs` (ir:84)**: a whole-grammar `HashMap<name,RuleId>` symbol-table link,
+**TreeFold**-class, beyond bbnf's synthesized-only `->`. It is architecturally **separable** (the
+codebase already runs it as its own pass after `parse_grammar`), so it does **not** block 7B Plane
+A's *construction* parity.
 
-**Perf** — cold paired, per 51-pattern corpus-pass:
+**INC-2 adjudication — a clean split at the phase boundary:**
+- **CONSTRUCTION (node-building) → 7B wins.** Floor = 0 host fns; pure `->`.
+- **LINKING (name resolution) → 7C-bound, floor = 1.** The named primitive that mandates a typed
+  host fn, with augment-BBNF signature:
 
-| run | HAND µs/pass | GEN µs/pass | ratio GEN/HAND | loadavg(1m) |
-|---|---|---|---|---|
-| 1 | 17.105 | 30.917 | **1.808×** | 13.88 |
-| 2 | 14.792 | 26.250 | **1.775×** | 10.89 |
-| 3 | 14.583 | 25.875 | **1.774×** | 10.89 |
+  ```
+  @host resolve_refs : (&mut GrammarIr) -> Result<(), UnresolvedRef>    // HostContext::TreeFold
+  ```
 
-GEN is **1.77–1.81× slower** than the hand parser (ratio stable to ~2% across the load swing;
-paired interleaving makes the ratio robust to absolute-timing noise).
+  (Alternatively discharged by extending `->` with an *inherited* whole-grammar name-environment
+  attribute — a strictly larger language change than the one host fn; the host fn is the parsimonious floor.)
 
-## Verdict
-
-**VERDICT: RAN (measured). On the sole regex edge decidable today, the generated self-hosted
-parser meets NEITHER promotion gate — structural parity 0.76 (< 1.0) AND perf 1.77–1.81× slower
-(< 1.0). The 7B promote-to-production posture does NOT fire; ORACLE-ONLY (7D's lawful terminal)
-is the correct disposition for this edge now.** This is direct measured evidence resolving INC-2
-toward **7D** on the one edge where the contest is real. The oracle earned its keep the instant it
-ran: a 12-row checkable-spec ledger naming exactly what must be fixed — `host::lower` bounded-`{n,m}`
-lowering, the `.` metachar, and inline-flag `(?s)` — before promotion is discussable. Corollary
-for 7D-Q1: pin ≡ with `Empty`-normalization or the relation over-counts (the `""` row).
-
-**Scope / honesty caveats.** (1) release `-O3`, not the `bench` fat-LTO profile — immaterial to a
-*same-binary ratio* (both sides identical profile); fat-LTO would lift both absolutes, not the
-1.8× gap. (2) Machine under concurrent-probe load; paired interleaving mitigates, ratio stable.
-(3) Corpus is the committed 51; grammar-driven fuzzing (G-7D-4) would only *lower* parity by
-exercising more surface (bounded repetition alone is pervasive). None of these move the verdict:
-both gates fail by wide margins.
+**bbnf's totality floor, fixed:** structural-construction floor **= 0**; whole-grammar-linking
+floor **= 1 TreeFold** (`resolve_refs`); CompileIO **= 1** (`@import`); β-reduction **absent**.
+7B Plane A is *not* BLOCKED at the build boundary — the "IR interning is as hard as the original
+problem" premise (7B Plane C's BLOCKED-candidate rationale) **does not hold for the constructor**;
+it holds, if anywhere, only for the one separable linking pass, which 7C houses at floor 1.

@@ -1,0 +1,55 @@
+// PROTO-2 (LOCK-7 pass-1) probe: empirical proof that GrammarIr *construction* is a
+// pure synthesized-attribute tree fold — NO interner, NO build-time cross-rule edge.
+// Throwaway probe; deleted after the run.
+use grammar::parse_grammar;
+use ir::ExprKind;
+
+// PROOF 1 — add_expr is an APPEND-ONLY arena, NOT a structural interner.
+// Two byte-identical literals in the same grammar must occupy DISTINCT ExprIds.
+// An interner (structure->Id dedup) would collapse them to one; a synthesized-attribute
+// tree fold keeps them distinct. This is the discriminator INC-2 turns on.
+#[test]
+fn add_expr_does_not_intern_identical_leaves() {
+    let g = parse_grammar("t", "a = \"x\" , \"x\" ;").unwrap();
+    let lits: Vec<_> = g
+        .exprs
+        .iter()
+        .filter(|e| matches!(&e.kind, ExprKind::Literal { bytes, .. } if bytes == b"x"))
+        .map(|e| e.id)
+        .collect();
+    assert_eq!(lits.len(), 2, "two identical literals must NOT be interned");
+    assert_ne!(lits[0], lits[1], "distinct ExprIds => append-only arena, not a dedup interner");
+}
+
+// PROOF 2 — ExprIds are assigned in strict post-order (child before parent):
+// a synthesized attribute. For `a = "x" , "y" ;` the two Literal leaves are added
+// before the enclosing Seq, so both leaf ids are < the Seq id.
+#[test]
+fn arena_ids_are_post_order_synthesized() {
+    let g = parse_grammar("t", "a = \"x\" , \"y\" ;").unwrap();
+    let seq = g
+        .exprs
+        .iter()
+        .find(|e| matches!(&e.kind, ExprKind::Seq(_)))
+        .expect("seq node");
+    let ExprKind::Seq(children) = &seq.kind else { unreachable!() };
+    for c in children {
+        assert!(c.0 < seq.id.0, "child ExprId {} must precede parent Seq ExprId {} (post-order)", c.0, seq.id.0);
+    }
+}
+
+// PROOF 3 — construction leaves cross-rule Refs UNRESOLVED (target:None); the
+// name->RuleId link is a SEPARATE pass (resolve_refs). We can only observe the
+// post-resolve state through the public API, so we assert the two-phase contract
+// indirectly: a forward ref resolves (proving resolution is global, not local) and
+// an undefined ref is rejected by the linker, not the constructor.
+#[test]
+fn cross_rule_link_is_a_separate_global_pass() {
+    // forward + cyclic ref: only resolvable with the WHOLE rule table => not synthesized
+    let g = parse_grammar("t", "a = b ;\nb = a | \"x\" ;").unwrap();
+    let a = g.rule_by_name("a").unwrap();
+    let ExprKind::Ref { target, .. } = g.expr(a.body).kind else { panic!("expected ref") };
+    assert!(target.is_some(), "resolve_refs filled the cross-rule edge post-construction");
+    // undefined ref is a LINK error, not a parse/construct error
+    assert!(parse_grammar("t", "a = undefined_rule ;").is_err());
+}

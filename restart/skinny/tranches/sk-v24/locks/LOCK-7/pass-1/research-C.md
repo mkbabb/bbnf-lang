@@ -75,6 +75,53 @@ tier by construction; for the CONTEXT tier, the `Ctx` is a *parse-time-only* cha
 (indent/table-path stacks never outlive the parse), so the zero-cost invariant is re-verified,
 not assumed (§4, R5).
 
+**The context class drives the cost model — structurally, not by substring.** The reason the
+`has_parse_time_host_decode` string-sniff exists at all is that a host boundary has a
+*materialization consequence*: a host fn that reads the cursor cannot be deferred; one over
+values can be const-folded. 7C makes that consequence a **declared enum on the signature**, and
+the cost model reads it:
+
+```rust
+// crates/ir/src/host/  (new directory-module; colocation edict, no god module)
+pub enum HostContext {            // the lattice's cost axis, low→high materialization
+    Pure,        // args are values only → foldable; admits SinkOnly / comptime const-fold
+    ParseState,  // reads cursor/offset      → parse-time; forces EagerTape
+    TreeFold,    // recurses over a subtree   → EventTape granularity
+    CompileIO,   // @import / scope resolution → comptime-ONLY, never on the runtime path
+}
+pub struct HostSig { pub params: Vec<TypeDesc>, pub ret: TypeDesc,
+                     pub context: HostContext, pub purity: Purity }
+pub struct HostRegistry { pub sigs: BTreeMap<HostFnId, HostSig>,
+                          pub primitive_floor: PrimitiveFloor }   // replaces the "skinny-none" String
+```
+
+The cure at `passes/src/lib.rs:794` becomes a registry lookup that generalizes the single
+`HostFnParseTime` rationale to the full lattice:
+
+```rust
+fn host_shape_constraint(g, id, reg) -> Option<ShapeRationale> {
+    match reg.context_of(host_call(g, id)?) {         // structural: HostCall node, not a name
+        HostContext::ParseState => Some(ShapeRationale::HostFnParseTime),
+        HostContext::TreeFold   => Some(ShapeRationale::HostFnTreeFold),     // new variant
+        HostContext::CompileIO  => Some(ShapeRationale::HostFnComptimeOnly), // new variant
+        HostContext::Pure       => None, // no constraint — may SinkOnly / const-fold (PROVE-12 seam)
+    }
+}
+```
+
+`Pure` is what *lowers* cost: a pure host fn on a literal argument is a compile-time value, so
+the PROVE-12 residualization seam (const-fold to an immediate) generalizes to host calls — a win
+the substring sniff could never earn, since it forced eager on *every* `host…decode` name.
+
+**The primitive floor (stratum 2) is a closed, declared, gated list — not an open exemption.**
+`PrimitiveFloor` enumerates the constitution's exempt kernels: `bbnf-simd::prim::*`
+(`bbnf-simd/src/lib.rs:250-336`, each with a scalar reference + `primitive-checkasm` gate,
+`xtask/src/main.rs:52`), Eisel–Lemire (`parse-that-regex/src/number/eisel_lemire/mod.rs:147`),
+the tape writer/arena (`runtime/src/tape/mod.rs:92,:36`). Each floor member carries a
+`HostContext::Pure` signature and a parity oracle; *adding* a member is a named, gated act. This
+closes R7 (floor creep, §4): "primitive" cannot become an escape hatch because the floor is
+finite, declared, and checkasm-defended.
+
 ---
 
 ## 3. Totality as a measured percentage with a named floor per subsystem
@@ -132,6 +179,13 @@ stays grammar-expressed" — 7C makes that extension the lattice's enforcement o
 - **R6 — isomorphism drift (LOCK-6).** A host fn body is Rust today, TS later. *Guard:* the
   signature (types + tier) is backend-agnostic (`type_name` → `Named`); only the body is
   per-backend, modeled on modular-FFI's "abstract the binding from its interpretation."
+- **R7 — primitive-floor creep.** If "primitive" is an open exemption, everything migrates to
+  stratum 2 and totality collapses to the floor. *Guard:* `PrimitiveFloor` is a **closed declared
+  list** with a per-member checkasm parity oracle; growth is visible and gated, not silent (§2).
+- **R8 — a lying `Pure` signature.** A host fn declared `Pure` that actually reads the cursor
+  mis-drives the cost model (SinkOnly where EagerTape was needed). *Guard:* purity is *verified,
+  not asserted* — LOCK-1's type plane checks that a `Pure` sig's params are value/`Span` types
+  only; a `Pure` fn taking `&mut Ctx`/cursor is a type error. 7C is load-bearing on LOCK-1 here.
 
 ---
 
@@ -183,6 +237,16 @@ stays grammar-expressed" — 7C makes that extension the lattice's enforcement o
 - **Modular FFI (types-as-values)** — abstracting a binding's *definition* from its
   *interpretation* (libffi vs codegen): the model for one backend-agnostic host signature with
   Rust-now/TS-later bodies. (ScienceDirect S0167642317300709.)
+- **GHC FFI purity axis** — `foreign import ccall f :: T1 -> IO T2` vs a pure return, with
+  `unsafePerformIO` as the audited escape: the canonical *typed* host boundary with an explicit
+  IO/pure split. 7C's `HostContext`/`Purity` is exactly this axis; the erased-type-plane law
+  mirrors GHC's zero-cost erased types. (GHC User's Guide §8, FFI.)
+- **MLIR external funcs + op-interfaces** — `func.func` declarations and `CallOpInterface` are
+  declared typed contracts across dialects; `unrealized_conversion_cast` is the typed escape.
+  The dialect-lattice-with-typed-interfaces is the structural analog of the host lattice.
+- **Lean/Coq `opaque` / `axiom`** — a typed hole in an otherwise total system; the trusted
+  kernel is the closed primitive floor (stratum 2), with checkasm as the de-Bruijn-style proof
+  obligation. The floor is 7C's trusted computing base. (Lean 4 manual, "opaque".)
 
 ---
 

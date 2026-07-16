@@ -1,238 +1,177 @@
-# LOCK-2 · Family 2C — CSP-CENTRAL (pass 1, research-C)
+# LOCK-2 pass-1 research-C — family 2C: CSP-CENTRAL (the decision driver IS a CSP)
 
-**The thesis.** The decision driver IS a constraint-satisfaction/optimization problem. Variables
-are per-site lowering choices spanning the whole grammar (backend shape, prefilter/kernel tier,
-capacity plan, residualization depth). Constraints are legality couplings plus the
-generated-size budget. The objective is a cost lattice fed by PMU fact tables. The e-graph is
-demoted to a **candidate generator** — it enumerates the per-site alternative set; it does not
-select. Selection is the global solve.
+The decision driver is a single constraint-optimization problem over the whole grammar. Its
+variables are per-site lowering choices; its constraints are legality plus the generated-size
+budget; its objective is a cost lattice fed by PMU facts. E-graphs are demoted from decider to
+candidate generator — they populate the variables' domains and canonicalize candidates, and
+nothing more. This family's load-bearing claim: **only a global COP can treat the
+generated-size budget (`generated_loc_budget`) as a HARD constraint at decision time**;
+per-rule or greedy-extraction selection can only lint size after the fact and can never trade a
+size-cheap shape at rule A to afford a fast-but-fat kernel at rule B.
 
-This is a genuine architectural inversion of the code at HEAD, where the e-graph selects and the
-CSP rubber-stamps. 2C makes the CSP the actual optimizer and gives it the one thing greedy
-extraction structurally cannot honor: **a global resource budget that couples sites**.
+## 1. The defect this family cures (the current inversion)
 
----
+At HEAD the e-graph decides and the CSP rubber-stamps — exactly backwards from the family
+thesis. `passes::backend_egraph::select` (`skinny/crates/passes/src/backend_egraph.rs:36`)
+builds a one-e-class-per-candidate graph, runs one normalization rewrite
+(`NormalizeDirectSinkCost`, `:191`), and picks the winner by `Extractor::best_node`
+(`:84`) over a lexicographic `DecisionCost` tuple (`:239`: freshness→perf→capacity→size→rank→
+hash). Then `passes::decision_csp::finalize_rule` (`skinny/crates/passes/src/decision_csp.rs:16`)
+solves a **degenerate 1-variable, 5-constraint CSP whose only purpose is to confirm the pick
+the e-graph already made**: the cost vector is `0.0` for the pre-selected index and `1.0` for
+every other (`decision_csp.rs:44-47`), so `MinimizeCost` trivially reproduces the extractor's
+answer. The CSP is a fact-emitter (`DecisionCspFacts`, `ir/src/cost.rs:203`), scoped
+`"rule-local-backend-candidates"`, one variable, `csp_constraint_count: 5` hardcoded. It has no
+cross-rule variables, no budget coupling, no PMU-fed cost — it cannot express the one problem
+that would justify a CSP. Family 2C makes this CSP the driver and removes the extractor from the
+decision path (`backend_egraph.rs:84` `best_node` folds into the CSP's per-value cost).
 
-## 1. What exists at HEAD, and why it is the pathology this family cures
+## 2. The mechanism made concrete
 
-The skinny pipeline already contains both organs, wired in the wrong order:
+**One global COP per grammar, solved once at compile.** `passes::compile` builds a single
+`Csp<CostFiniteDomain>` whose variable set is the union of every decision site across all rules,
+not a fresh CSP per rule.
 
-- **Candidate generation + e-graph selection** —
-  `skinny/crates/passes/src/backend_egraph.rs`. `backend_candidates`
-  (`passes/src/lib.rs:508`) emits ≤5 `BackendCandidate`s per rule (one per `BackendShape`), each
-  carrying `perf_cost`, `capacity_cost`, `static_size_cost`, `shape_rank`, a `hard_pruned` flag.
-  `select` (`backend_egraph.rs:38`) builds a tiny `EGraph<DecisionNode>`, unions the candidates
-  into one class, runs one normalization rewrite (`NormalizeDirectSinkCost`), and extracts the
-  cheapest by a **lexicographic tuple** `DecisionCost { freshness, perf, capacity, size, rank,
-  hash }` (`backend_egraph.rs:298`). This IS the real selection today.
+**Variables (per decision site).** Each site is one `CostFiniteDomain`
+(`crates/csp-solver/src/domain/cost_finite.rs:91`) whose values are candidate indices and whose
+per-value `f64` cost is the site's cost-lattice reading:
+- *Backend shape*, one per rule: the 5 `BackendShape` values (`ir/src/lib.rs:361`,
+  `all_backend_shapes()` `ir/src/cost.rs:334`). Domain = the ranked (non-hard-pruned) candidates
+  `backend_egraph::select` currently produces.
+- *Recognizer / kernel*, one per scan site: `Recognizer::SimdScan { mode, site }`
+  (`ir/src/lib.rs:416`) — `SimdMode ∈ {Exact, Prefilter}` (`:425`), `SimdSite ∈ {PreEntry,
+  SelfLoop}` (`:430`, the GN-2.W1 extension). A self-loop with complement cardinality in `[1,16]`
+  admits a `Prefilter`/`find_member` candidate; the CSP chooses Exact vs Prefilter by cost.
+- *Capacity plan*, one per container: `CapacityPolicy { tiny_string_cap,
+  container_initial_capacity }` (`ir/src/cost.rs:327`) — the `capacity_cost` field
+  (`backend_egraph.rs:23`) becomes a per-value cost, not a post-hoc `≤ 1` predicate
+  (`decision_csp.rs:79`).
+- *Residualization depth*, one per delimiter/STOP-set scan: PROVE-12's const-generic
+  `delim_mask` fold is a depth-0/1 choice (interpretive `&[u8]` vs const-folded `u128` mask);
+  deeper residualization trades generated LOC for straight-line codegen — precisely a
+  size-vs-speed variable the budget constraint must arbitrate.
 
-- **The rubber-stamp CSP** — `skinny/crates/passes/src/decision_csp.rs`. Per rule it builds a
-  `Csp<CostFiniteDomain>` with **one variable, five `LambdaConstraint`s, one objective**
-  (`decision_csp.rs:49-83`). The cost vector is rigged: the already-selected index costs `0.0`,
-  every other candidate `1.0` (`decision_csp.rs:44-48`). The solve cannot change the answer — it
-  re-confirms the e-graph's pick and emits `DecisionCspFacts` (`ir/src/cost.rs:206`) with
-  `csp_variable_count: 1`, `csp_constraint_count: 5` hardcoded. This is a **consumer-less
-  substrate** in the sense the constitution forbids (viii / Y.13): a CSP whose decision nobody
-  actually consumes, a status-report organ (vii).
+**Constraints.**
+- *Legality* (`LambdaConstraint`, `crates/csp-solver/src/constraint/lambda.rs`, as already used
+  at `decision_csp.rs:204/221`): a shape's precondition (first-set overlap forces EagerTape; a
+  sink consumer forces SinkOnly; complement cardinality gates Prefilter). The P1–P8 priority
+  cascade (`PriorityStep`, `ir/src/cost.rs:264`) is RETIRED into these constraints — matching the
+  extant `priority_data_role: "evidence-only"` disposition (`decision_csp.rs:178`). Each Pn
+  becomes one legality or soft-preference constraint, not a hardcoded fallthrough.
+- *Cross-site coherence*: sibling rules sharing a substrate must agree
+  (`SameSubstrateUnionFacts`, `ir/src/cost.rs:160`) — an `Implication`
+  (`constraint/implication.rs`) or `AllDifferentExcept` (`constraint/all_different_except.rs`)
+  over the shape variables. This is a genuine cross-rule constraint the per-rule CSP cannot state.
+- **The generated-size budget — the one genuinely global constraint.** `Σ_site
+  static_size_cost(chosen) ≤ generated_loc_budget` (`skinny/Cargo.toml:67` = 4000). Today this is
+  a POST-HOC lint (`cargo xtask lint-loc`, `skinny/xtask/src/main.rs:49`); 2C makes it a
+  solve-time bounded-sum (knapsack) constraint coupling every site. This is the family's teeth:
+  the budget turns GREEN by construction, and the solver spends LOC where it buys the most cyc/B.
 
-Two facts make the pathology concrete and quotable:
-- `perf_cost: 0` is **hardcoded** at every candidate site (`passes/src/lib.rs:585`). The cost
-  lattice is presently **unfed by any measurement** — there is no PMU fact table. 2C's objective
-  clause is currently vapor.
-- The generated-size budget is a **post-hoc lint**, not a constraint: `lint_loc`
-  (`xtask/src/main.rs:259`) checks per-crate LOC and generated-JSON ≤ 4000
-  (`skinny/Cargo.toml:67` `generated_loc_budget = 4000`) *after* codegen, failing the build if
-  overrun. The solver never sees the budget. It cannot trade a cheaper-here lowering against it.
+**Objective.** `OptimizationMode::MinimizeCost` via `solve_optimized`
+(`crates/csp-solver/src/csp/solve.rs:282`) over the `branch_and_bound` kernel
+(`crates/csp-solver/src/solver/search.rs`), with `Pruning::ForwardChecking`/`Ordering::FailFirst`
+/`node_budget` (`decision_csp.rs:85-97`). The per-value cost is the cost lattice fed by PMU
+facts: `Measurement.cycles_per_byte_x1000` with `EvidenceSource::BenchProbe`
+(`ir/src/cost.rs:306/319`) — integer-quantized cyc/B, already the schema. Lexicographic
+tie-breaking (freshness→perf→size, today's `DecisionCost`) is preserved as a scalarized/ordered
+objective the B&B kernel already supports; `min_cost` (`cost_finite.rs:164`) is the B&B lower
+bound.
 
-**The cure (the family):** invert. Keep `backend_candidates` as the enumerator (it already
-produces the per-site alternative set with cost fields). Delete the lexicographic e-graph
-selection and the per-rule stamp. Replace both with **one global `Csp<CostFiniteDomain>` over all
-sites**, where the per-rule choice is a variable, the size budget is a genuine coupling
-constraint, and `OptimizationMode::MinimizeCost` branch-and-bound picks the globally cheapest
-budget-feasible assignment.
+**E-graphs demoted to candidate generators.** `backend_egraph::select` keeps its e-graph +
+`NormalizeDirectSinkCost` rewrite (`backend_egraph.rs:60-81`) but returns a candidate SET into the
+CSP variable's domain instead of an extracted winner; `Extractor::best_node`
+(`crates/egraph/src/extract.rs`) leaves the decision path. Candidate *canonicalization* (the
+direct-sink normalization) stays an e-graph job — the family boundary is crisp: e-graphs prove
+candidates equal and prune dominated ones; the CSP chooses across sites under the global budget.
 
----
+## 3. Substrate: what exists (reuse) vs. the one new piece
 
-## 2. The mechanism, made concrete
+Reuse — the csp-solver is a full COP engine, not a toy:
+- `Csp<CostFiniteDomain>`, `solve_optimized` (`csp/solve.rs:282`), `branch_and_bound`
+  (`solver/search.rs`), AC-3 + forward-checking + fail-first + `node_budget` + `restarts`/`cancel`
+  (`config.rs`; the csc411 W1 field changes are already absorbed at `decision_csp.rs:91-96`).
+- `CostFiniteDomain` (`domain/cost_finite.rs`): per-value `f64` cost, O(log n) `cost`, cached
+  `min_cost` lower bound for B&B — exactly the "cost lattice" substrate.
+- Constraint library: `LambdaConstraint`, `AllDifferent`, `AllDifferentExcept`, `Implication`,
+  `NotEqual` (`crates/csp-solver/src/constraint/`).
+- Fact plumbing already schema'd: `DecisionCspFacts` (`ir/cost.rs:203`), `Measurement`/
+  `EvidenceSource` (PMU cyc/B), `CapacityPolicy`, `SameSubstrateUnionFacts`.
 
-### 2.1 Variables and domains
-One CSP variable per lowering **site**. A site is a rule (backend-shape choice) and, at finer
-grain, a scan leaf (prefilter tier), a container (capacity plan), a delimiter test
-(residualization depth — PROVE-12). The variable's domain is the candidate index set; its cost
-vector is per-candidate cost. `csp-solver`'s `CostFiniteDomain`
-(`crates/csp-solver/src/domain/cost_finite.rs`) is purpose-built for exactly this: `i32` values
-(with `-1` as a natural "no-lowering/abstain" sentinel), a sorted `(value, cost)` table with
-O(log n) `cost()`, and a `Cell`-cached `min_cost()` lower bound the branch-and-bound issues at
-every node (`cost_finite.rs:150`). Enum lowering choices channel to `i32` indices.
+**The single new constraint type: a bounded/linear SUM (knapsack) propagator.** csp-solver has
+`all_different` but NO linear-sum constraint — home it at
+`crates/csp-solver/src/constraint/bounded_sum.rs` with a lower-bound relaxation (Σ min-cost
+residuals) so B&B prunes on the budget. This is the whole net-new substrate the family needs;
+everything else is rewiring. Placing it in csp-solver (not bbnf-lang) honors the
+`regex-generalized`/`general-infra-crates` edicts: a bounded-sum COP constraint is general.
 
-### 2.2 Constraints — the couplings greedy extraction cannot honor
-Three of these bind sites to each other; that binding is the whole justification for a solver
-over a per-site argmin.
+## 4. Prior art (with citations)
 
-1. **Global generated-size budget (the crown constraint).** `Σ_site static_size_cost(choice) ≤
-   B`, with `B` the `generated_loc_budget` (`Cargo.toml:67`). This is a knapsack/bin-capacity
-   resource constraint. Greedy per-rule extraction (`extract.rs` bottom-up, or the lexicographic
-   tuple) is **provably budget-blind** — it minimizes each site independently and can only detect
-   overrun after the fact (the current `lint_loc`). Only a global solver can pick a
-   *slightly-costlier-here* lowering to buy budget for a *much-cheaper-there* one. **This
-   constraint is the reason 2C is not decorative.**
-2. **Same-substrate-union** (`SameSubstrateUnionFacts`, `ir/src/cost.rs:189`): rules unified into
-   one substrate must share a `BackendShape` — an all-equal channel across their variables.
-3. **No-double-emit mutual exclusion** (the GN-2.W1 ⇄ PT-1.W5 interlock, `docs/tranches/sk-v24/
-   GN-2.md` §2.4): a self-loop scan site lowers to `PrefilterSet::find_member` (bbnf-simd)
-   **XOR** `dfa.find` (bbnf-regex), never both. This is a per-site mutual-exclusion constraint —
-   exactly a CSP channel, and today enforced only by prose.
-4. **Legality guards** already computed as candidate predicates in `decision_csp.rs:56-82`
-   (recognizer non-empty, substrate admissible, simd-eligibility, `capacity_cost ≤ 1`) become
-   unary domain filters (hard-prune the illegal indices before solve, per
-   `backend_egraph.rs:47` `hard_pruned`).
+- **PBQP (Partitioned Boolean Quadratic Problem)** is the exact archetype: "each node represents
+  options, exactly one must be chosen; edges are interdependencies; nodes carry cost VECTORS,
+  edges carry cost MATRICES." LLVM ships a PBQP register allocator (`RegAllocPBQP.cpp`) and PBQP
+  has been used for INSTRUCTION SELECTION on SSA graphs — the same "one lowering choice per site +
+  pairwise coherence" shape as 2C. Near-optimal in linear time on sparse graphs, **optimal on
+  trees** — decisive, because backend-selection sites are near-independent (the budget is the only
+  dense coupler), so the reduction stays cheap. Cites: beza1e1.tuxen.de/articles/pbqp.html;
+  llvm.org/doxygen/RegAllocPBQP_8cpp_source.html; "Optimal DNN Primitive Selection with PBQP"
+  (arXiv 1710.01079) — primitive/kernel selection by PBQP, directly analogous to per-site kernel
+  choice.
+- **ILP extraction for e-graphs** validates the demotion of `best_node` INTO the objective:
+  optimal DAG-size extraction (common-subterm-aware) is NP-hard; egg's LP extractor is optimal on
+  DAG size but exponential; recent exact/heuristic solvers (e-boost, arXiv 2508.13020; HKUST
+  OOPSLA24 sparse-e-graph extraction, treewidth ≤10 exact) mark the frontier. 2C's global CSP with
+  a shared-substrate cost IS a DAG-aware extraction expressed as a COP — so the NP-hardness caveat
+  transfers and is why `node_budget` (`decision_csp.rs:14` = 10_000) and PBQP-tree-reduction
+  matter. Cites: dl.acm.org/doi/10.1145/3434304 (egg); arXiv 2508.13020; cse.hkust OOPSLA24a.
+- **CP-SAT / νZ optimization**: MiniZinc/OR-tools CP-SAT and Z3's optimizing solver are the COP
+  engines whose bounded-sum + lexicographic-objective idiom 2C mirrors in-tree — standard CP, not
+  novel, which is the point: the mechanism is well-trodden.
 
-### 2.3 Objective — a cost lattice fed by PMU facts
-`OptimizationMode::MinimizeCost` (`csp-solver/src/config.rs:47`) via `solve_optimized`
-(`csp/solve.rs:282`) → `branch_and_bound` (`solver/search.rs:456`). The per-candidate cost is
-**not** the current `0`; it is read from a committed **cost fact table** keyed by
-`(BackendShape, kernel-tier, corpus-class)` → cyc/B, sourced from the §0 certified numbers
-(SPEC §0: e.g. prefilter skip-floor 0.115 cyc/B, membership scan ~1.03, CSS residualized
-0.81-0.98×). This is where 2C touches 2D but **keeps the facts as frozen committed input** so
-regen stays deterministic — the loop is a build-time table read, not a live re-measure.
-`CostWeights` (`crates/egraph/src/cost_weights.rs`) already carries the structural knobs
-(`static_size_cost` ↔ `structural`, `dispatch_bonus`, `tape_push`, `dispatch_branch/table`); 2C
-adds the measured cyc/B axis and feeds it into the domain cost vectors, not a scalar tuple.
+## 5. Named risks and counterexamples
 
-### 2.4 The solve shape and the decisive scaling fact
-The natural model is a **resource-constrained assignment problem**. Where the size budget is the
-only coupling and choices are otherwise independent, it is a linear assignment / min-cost
-selection — `csp-solver` already has the closed-form path: `AssignmentBuilder`
-(`builder/assignment.rs`) dispatches group-free/pin-free instances to a hand-rolled
-**Kuhn-Munkres** O(n³) LAP (`builder/kuhn_munkres.rs`), proven-optimal, microseconds at n=200.
-**But the general grouped/coupled CSP B&B is proven-optimal only to n≈15-18 and budget-blows at
-n≈20 (~1M nodes)** (`builder/assignment.rs` doc, verbatim). CSS L4 has 2875 DTA states
-(`cost_weights.rs` table); a naive global CSP over thousands of sites cannot go through B&B. The
-architecture must therefore **decompose**: independent sites solve by closed-form argmin/LAP; the
-solver runs only over the *coupled* sub-CSP (the sites the budget or a union actually binds),
-which is small. This decomposition is the family's real engineering content, not an afterthought.
+- **NP-hardness of the global knapsack.** A large grammar (css_l4, many rules) with a tight
+  budget is subset-sum-hard. Counterexample: 4000 sites + a binding budget → exponential B&B.
+  Mitigation: the decision graph is near-tree (PBQP-reducible — sites independent save the budget
+  and a few coherence edges); `node_budget` already caps and yields `budget-exceeded`
+  (`decision_csp.rs:103`); when the budget does NOT bind, the problem decomposes to independent
+  per-site minima (parity with today's per-rule pick, provable).
+- **Determinism / bit-for-bit regen (constitution ix, iv).** B&B over `f64` costs with
+  `restarts` can reorder equal-cost solutions → regen diff. Counterexample: two candidates with
+  identical PMU cost → nondeterministic winner. Mitigation: total-order tie-break on
+  `candidate_hash` (already in `DecisionCost`, `backend_egraph.rs:246`); costs are
+  integer-quantized (`cycles_per_byte_x1000`); `restarts→false` is already pinned
+  (`decision_csp.rs:95`). The prototype must PROVE regen idempotence, not assert it.
+- **Consumer-less substrate (constitution viii / Y.13).** A global plan nothing reads is dead.
+  Mitigation: the plan IS what `codegen::lower::rust::lower_to_rust` reads
+  (`same_wave_consumer_path`, `decision_csp.rs:171`); the budget constraint's consumer is
+  `lint-loc` going GREEN by construction. Same-wave consumer is mandatory in the first prototype.
+- **Missing PMU cost table.** The objective needs per-site cyc/B facts; §0 certifies per-CORPUS
+  numbers, not per-site cost coefficients — no committed fact table exists yet (that closed loop is
+  family 2D's territory). Without it the objective degenerates to `static_size_cost` (today's
+  integer proxy). Named gap: 2C must ship at least a stub cost table so the objective is genuinely
+  PMU-fed, or it is a CSP-shaped priority cascade with extra steps.
+- **Over-generalization vs. KISS (`kiss-perf-bias`).** If the budget never binds on any real
+  grammar, the global COP buys nothing over per-rule minima and is unjustified sprawl. The
+  prototype must EXHIBIT a grammar where the budget binds and the global plan beats the greedy
+  per-rule plan, or the family is refuted for the current corpus.
 
----
+## 6. What a prototype must test to move this family
 
-## 3. Prior art (with citations)
+1. **Add `bounded_sum` to csp-solver** and build ONE global `Csp<CostFiniteDomain>` over ≥2 real
+   grammars (json + css_l4) with `generated_loc_budget` as a live sum constraint. Show it selects
+   a DIFFERENT, legal, cheaper-or-budget-feasible plan than the current per-rule
+   `backend_egraph::select` when the budget binds, and a BYTE-IDENTICAL plan when it does not
+   (the parity floor). Falsifiable: exhibit the binding grammar or concede the budget is slack.
+2. **Determinism**: regen bit-for-bit across two runs of the global solver; equal-cost tie-break
+   stable; `restarts=false`. Gate = `cargo xtask check-json`/`check-css` idempotent.
+3. **Solve cost**: the global COP over the css_l4 rule set stays within `node_budget` and
+   `csp_solve_us` bounded (today <1ms/rule; the global solve must stay ~O(rules)·ms, reported).
+4. **Closed-loop seam (to family 2D)**: the objective consumes at least one PMU fact (stub cost
+   table); flipping a cyc/B coefficient must CHANGE the selected plan — proving the objective is
+   measurement-fed, not a relabeled static heuristic.
 
-- **Unison** (Lozano, Carlsson, Blindell, Schulte, *"Combinatorial Register Allocation and
-  Instruction Scheduling"*, ACM TOPLAS 2019; unison-code.github.io). The flagship: a **constraint
-  model** (Gecode/MiniZinc + a portfolio incl. CP-SAT) doing integrated instruction selection,
-  register allocation, and scheduling as ONE combinatorial optimization, beating LLVM/GCC on code
-  size and often speed. Direct precedent for "the backend decision IS a CSP over per-site choices
-  with a global objective." 2C is Unison's thesis applied to parser-generator lowering.
-- **LLVM PBQP register allocation** (Scholz & Eckstein, "Register allocation for irregular
-  architectures," 2002; Hames & Scholz PBQP solver in LLVM). Per-node choice + **pairwise cost
-  coupling** minimized as Partitioned Boolean Quadratic Programming — the exact "per-site
-  candidate cost + coupling constraint + cost objective" structure. The size-budget generalizes
-  PBQP's pairwise couplings to an n-ary resource constraint.
-- **Optimal e-graph extraction as ILP/CP.** The egg/egglog community's settled result: greedy
-  bottom-up extraction (`egraph/src/extract.rs`, the "Egg greedy" this repo ships) is **suboptimal
-  under sharing and resource constraints**; optimal extraction is an ILP/MaxSAT over the e-graph
-  (Coward, Constantinides, Drane, "Automating Constraint-Aware Datapath Optimization," and the
-  "Extraction Gym" / `egraph-serialize` ILP extractors, 2023). This is the canonical justification
-  for 2C's split: **e-graph generates candidates, CSP/ILP extracts optimally**. Cite as the reason
-  the e-graph stays but stops selecting.
-- **OR-Tools CP-SAT / MiniZinc global constraints.** The generated-size budget is a `cumulative` /
-  `bin_packing` global constraint; the lexicographic priority table (`PriorityStep::ALL`,
-  `ir/src/cost.rs:299`) is a lex-objective. These are stock in CP; `csp-solver` lacks them today
-  (§4).
-- **rustc / MIR:** greedy, no global cost solver — the contrast case. Instruction selection in
-  LLVM SelectionDAG is greedy DAG covering with local costs; the negative baseline 2C beats.
-
----
-
-## 4. Substrate: what is ready, and the one real gap
-
-**Ready in `csp-solver`:** `CostFiniteDomain` (per-value cost, cached lower bound), `Csp<D>`,
-`solve_optimized` → `branch_and_bound` (`search.rs:456`), `OptimizationMode::MinimizeCost`,
-`SolveConfig { pruning: ForwardChecking|Ac3, ordering: FailFirst, node_budget, max_solutions }`
-(`config.rs:54`), `LambdaConstraint`/`AllDifferentExcept`/`ImplicationConstraint`/`NotEqual`
-(`constraint/mod.rs:12-17`), GAC + bipartite `matching.rs`, closed-form LAP
-(`kuhn_munkres.rs`). `DecisionCspFacts` already reserves the fields
-(`csp_variable_count`, `csp_constraint_count`, `csp_objective_count`) for the real N.
-
-**The gap (named substrate need):** there is **no bounded-sum / knapsack / cardinality
-constraint** in `constraint/mod.rs` — only the all-different family, implication, not_equal,
-lambda. The global size-budget `Σ static_size_cost ≤ B` can be *expressed* by a
-`LambdaConstraint` but it will **not propagate a bound**: lambda only checks a full/partial
-assignment for legality, it prunes no domain from a running partial sum, so B&B degenerates to
-weak forward-checking and hits the n≈18 cliff faster. 2C requires a new **`SumLeq` propagator
-with bounds consistency** (prune index `v` from site `i` when `min_prefix + cost_i(v) +
-Σ_{j>i} min_cost_j > B`). This is a small, general, colocated addition to the csp-solver
-constraint module (LOCK-1's one-constraint-store shares it). It is the single piece of new
-substrate this family must build; everything else is rewiring.
-
-**Cost-fact table:** new. The committed `(shape,tier,corpus)→cyc/B` table, sourced from SPEC §0,
-lives beside `CostWeights` (`egraph/src/cost_weights.rs` already models "CALIBRATED_WEIGHTS from
-a grid sweep" — the same committed-fact pattern) and feeds the domain cost vectors.
-
----
-
-## 5. Integration seams (path:line)
-
-- **Enumerator stays:** `passes/src/lib.rs:508` `backend_candidates` — keep; it is the candidate
-  generator 2C's charter names. Populate its `perf_cost` (today `0`, `:585`) from the cost table.
-- **Selection inverts:** `passes/src/lib.rs:504-505` — replace the per-rule
-  `backend_egraph::select` + `decision_csp::finalize_rule` pair with a single **global**
-  `finalize_all(grammar, all_rules_candidates)` that builds one CSP over every rule's candidate
-  set. `backend_egraph::select`'s lexicographic extraction (`backend_egraph.rs:73-88`) is deleted;
-  the e-graph's role narrows to candidate enumeration (or is removed here — `backend_candidates`
-  already enumerates without it).
-- **CSP driver rewritten:** `decision_csp.rs` whole — from 1-var stamp to N-var global optimize;
-  `csp_variable_count`/`_constraint_count` (`ir/src/cost.rs:212-213`) become real.
-- **Budget seam:** `xtask/src/main.rs:259` `lint_loc` + `Cargo.toml:67` `generated_loc_budget`
-  become CSP **inputs** (a `SumLeq` bound), with `lint_loc` demoted to a post-solve assertion
-  that must now always pass (the solver guarantees it) — a determinism cross-check.
-- **No-double-emit:** the mutual-exclusion constraint lands in the same solve, feeding
-  `codegen/src/lower/recognizer/` dispatch (GN-2.W1 file plan, `GN-2.md` §4) — one lowering per
-  site by construction, retiring the prose interlock.
-- **Residualization depth:** PROVE-12's `find_component_delim<DELIMS>` const-generic
-  (`prototypes/PROVE-12/REPORT.md`) is a per-site depth choice — a natural CSP variable once the
-  cost table prices "residualize vs runtime slice" (measured 0.81-0.98× cyc/B there).
-
----
-
-## 6. Named risks and counterexamples
-
-1. **The null-result risk (decisive).** If no coupling constraint actually binds — if the
-   per-site argmin already fits the budget and no union forces a shared substrate — the global CSP
-   degenerates to independent argmin and **2C is decorative**, the exact fate of the
-   `CALIBRATED_WEIGHTS` grid sweep (`cost_weights.rs`: 54 configs, *identical* DTA state counts
-   for JSON/BBNF/CSS/Sheets — "the cost model has no choice to exercise"). 2C earns its keep ONLY
-   where the budget binds. The prototype's first duty is to exhibit one grammar where it does.
-2. **The B&B cliff (n≈15-18).** A monolithic global CSP over thousands of CSS sites budget-blows
-   (`assignment.rs` doc). Mitigation is mandatory decomposition: closed-form LAP/argmin for
-   independent sites, B&B only over the small coupled sub-CSP. If the coupled set is itself large,
-   2C needs a linear-relaxation / Lagrangian bound, not raw B&B — a real scope risk.
-3. **Determinism vs best-so-far.** `branch_and_bound` under `budget_exceeded` returns
-   *best-so-far*, which is search-order dependent (`assignment.rs` doc; `SolveStats.budget_exceeded`).
-   Non-determinism breaks regen bit-for-bit (a hard law, GN-1 gate). 2C must stay in the
-   proven-optimal regime or impose a total-order deterministic tie-break; a budget-exceeded solve
-   is a build failure, not a silent best-effort.
-4. **Cost-fact staleness.** The committed cyc/B table is frozen; if a kernel changes without a
-   re-capture the objective misranks. Guard: the table is provenance-stamped (like §0) and a stale
-   entry is a gate, mirroring `candidate_cost_stale_rate_bps` (`ir/src/cost.rs:180`).
-
----
-
-## 7. What a prototype must test to move this family
-
-1. **Prove the budget binds.** Construct or find one grammar (CSS L4 is the richest surface,
-   2875 states) where the unconstrained per-site argmin **exceeds** `generated_loc_budget`, so the
-   CSP is forced to pick a cheaper-size / costlier-cyc lowering somewhere. Show a **concrete
-   assignment the greedy lexicographic extractor cannot produce** — different sites, lower total
-   objective, budget-feasible. Without this, the family is a null result and must say so (vii).
-2. **Build and measure the `SumLeq` propagator.** Implement bounds-consistent `Σ ≤ B` in
-   `csp-solver/constraint/`, and show it keeps the coupled solve under `node_budget` on the target
-   grammar (i.e., it prunes enough to dodge the n≈18 cliff). Compare against the `LambdaConstraint`
-   encoding to quantify the propagation win.
-3. **Measure the selected set on a canon bench.** The CSP-selected lowering set vs the
-   e-graph-greedy set, cold paired PMU (SPEC §0 / GN-2 profiling law), on `css_canon_bench` /
-   `json_canon_bench`. The objective must be fed by real fact-table costs and the win (or its
-   absence) reported as a number, not asserted.
-4. **Prove regen determinism.** `regen ∘ regen` byte-identical with the CSP driver installed —
-   proven-optimal solve or deterministic tie-break; a budget-exceeded run fails the gate.
-5. **Decomposition scale test.** Show the coupled sub-CSP stays small (≤ the B&B-optimal regime)
-   after independent sites are peeled to closed-form, across all four canon grammars.
+Family verdict-shape: 2C stands iff prototype (1) exhibits a budget-binding grammar where the
+global plan strictly dominates the greedy per-rule plan under legality + regen determinism; it is
+refuted-for-corpus iff the budget is provably slack everywhere, in which case the per-rule minimum
+(today's path minus the rubber-stamp) is the honest KISS answer.

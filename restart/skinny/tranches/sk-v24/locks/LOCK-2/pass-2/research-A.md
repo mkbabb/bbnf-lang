@@ -1,318 +1,305 @@
-# LOCK-2 · PASS-2 · FAMILY 2A — EGRAPH-ISLANDS
+# LOCK-2 · Family 2A — EGRAPH-ISLANDS (pass-2 research-A)
 
-*A directed pass pipeline with e-graph islands at named decision points; every island holds a
-same-wave consumer and a cost model; CSP selects over extracted candidates. This report makes
-the mechanism concrete against the living substrate, names its one governing pathology, and
-states the single prototype that moves the family.*
-
----
-
-## 0. The mechanism, made concrete — the island already exists (and is degenerate)
-
-Family 2A's archetype is not hypothetical. One e-graph island is already wired at the
-backend-shape decision point and is the reference for every other:
-
-`skinny/crates/passes/src/backend_egraph.rs::select` builds `EGraph::<DecisionNode,
-NoAnalysis>::with_capacity(ranked.len())` (`:60`) from the ranked `BackendCandidate` set,
-**unions every candidate into one e-class** (`:65-69`), runs the scheduler over one rewrite rule
-(`:73-81`), and extracts the winner via `Extractor::new(&graph, &DecisionCostModel)` +
-`best_node(root)` (`:84-87`). It emits full provenance (`ActiveCostFacts`, `:115-146`) naming its
-generated-selection path (`derive_backend_shape_with_diagnostics`) and its **same-wave consumer**
-(`codegen::lower::rust::lower_to_rust`, `:11`). The candidate ranking that feeds it is produced by
-`passes/src/lib.rs::derive_backend_shape_with_diagnostics` (`:407`); the per-rule driver is
-`select(rule.id, candidates)` at `lib.rs:504`. The five `BackendShape` values it ranges over —
-`EagerTape|OffsetTape|EventTape|SinkOnly|CollapsedStage` — live at `ir/src/lib.rs:361`.
-
-So the substrate exists, has a consumer, has a cost model, and is per-rule (rule-local islands).
-This is exactly 2A's shape. The problem 2A must solve is **not** "build islands"; it is that the
-one built island **has no choice to exercise**.
-
-### The governing pathology: saturated multiplicity ≈ 1 (answers Q1)
-
-The single most important fact for this family is a measured null result. `crates/egraph/src/
-cost_weights.rs:134-167` records a 54-configuration grid sweep over {structural, alt_per_branch,
-dispatch_bonus, ref_cost} across the four-grammar corpus. The DTA state count was **identical to
-baseline in every configuration**: JSON 51 {51}, BBNF 476 {476}, CSS L4 2875 {2875}, Sheets 191
-{191}. The stated cause (`cost_weights.rs:154-161`): the current rewrite set
-(`DeduplicateAltBranches`, `SupersetAbsorbAlt`, `UnionMergeAlt`, `FuseAltRegexBranches`,
-`CommonSuffixFactor` — **all narrowing**) "produces e-classes with at most one
-semantically-distinct canonical form for these grammars, so the cost model has no choice to
-exercise."
-
-Consequence for 2A, stated plainly: **with multiplicity ≈ 1, extraction-as-decision is
-vacuous** — it degenerates to plain cost-ranked canonicalization (pick the single survivor). The
-saturation loop and the cost model are load-bearing only where saturation manufactures ≥2
-survivors of genuinely distinct *emission shape*. Today the only fork is the child-bearing `Alt`
-(branch factoring), and even there the narrowing rules collapse to a canonical form; the childless
-leaf kinds (`Regex(StringId)`, terminals) never fork. **A grammar-tier e-graph island earns its
-keep only when it hosts a widening rewrite that manufactures a real alternative** (§1). Absent
-that, the honest design is a cost-ranked canonicalizer, not extraction-as-decision — and the cost
-weights are inert (Q8 corollary).
+*A directed pass pipeline with e-graph islands at named decision points; every island a
+same-wave consumer and a cost model; CSP selects over extracted candidates. Developed to its
+strongest measured form on the living substrate.*
 
 ---
 
-## 1. Widening rewrites — the only thing that makes an island non-trivial (answers Q2)
+## 0. The thesis, corrected by evidence
 
-The whole family turns on one question: what rule *manufactures* an alternative so extraction has
-a decision to make? There is exactly one widening/normalizing rule shipping today, and it is
-instructive. `backend_egraph.rs:191` `NormalizeDirectSinkCost` searches for a `SinkOnly` /
-`DirectBuildNoConsumer` candidate with nonzero `static_size_cost`/`shape_rank`, **manufactures** a
-sibling `#direct-sink-normalized` node with those fields zeroed (`:216-221`), and unions it into
-the class (`:234-235`). It widens the class (adds a cheaper alternative) rather than narrowing.
+The family's premise is plural islands: `regex HIR canon`, `scan-plan selection`, `projection
+canon`, each a small e-graph with its own cost model and its own consumer. The substrate already
+runs ONE island end-to-end — the per-rule backend-shape selection at
+`skinny/crates/passes/src/backend_egraph.rs` — and the general-purpose e-graph it sits on
+(`crates/egraph/`) is domain-agnostic and mature (intern → saturate → extract, `Language`,
+`Analysis`, `CostModel`, `BackoffScheduler`, `CspScheduler`). So the family is not a green-field
+invention; it is a **generalization of one working island into a small fleet of them, under a
+parsimony law that forbids the consumer-less ones.**
 
-Its three obligations, met concretely — the template for every 2A widening rule:
-
-- **(a) Confluence with the narrowing set.** It is *idempotent by guard*: the search skips any
-  class already containing a `#direct-sink-normalized` node (`:203-206`). A widening rule that is
-  idempotent and monotone-lowering commutes with the narrowing rules because it only ever *adds*
-  a node the narrowing rules are then free to absorb — the union lattice is join-semilattice
-  confluent regardless of application order (egg's foundational result: the e-graph is the
-  confluent normal form of the rewrite *relation*, not of a term rewriting system).
-- **(b) Termination.** Guaranteed structurally here (the guard forbids a second application) and,
-  in general, by the scheduler: `BackoffScheduler` (scheduler.rs) plus the hard `node_limit`
-  (`csp_scheduler.rs:178-180`; `growth_limit_hit`, `:279-282`) and `iter_limit`. A widening rule
-  with no shrink measure is admissible only under these caps — the standard egg discipline, already
-  in-tree.
-- **(c) Semantics preservation.** Trivial here (both nodes select the same `BackendShape`,
-  differing only in cost annotation). For a widening rule that changes *shape* (GN-2.W1's
-  SelfLoop→Prefilter manufacture), preservation is by construction of the rewrite: both members
-  recognize the same language; the e-graph asserts their equivalence; extraction picks the cheaper
-  emission.
-
-**Precedent for widening + narrowing coexisting in shipping engines.** egg and egglog routinely
-mix expansive rules (`x ⇒ x*1`, `a ⇒ a+0`, distributivity `a*(b+c) ⇒ a*b+a*c`) with contractive
-ones (constant folding, `x*1 ⇒ x`) in one saturating set; termination is *not* proved from the
-rules but delegated to node/iteration caps + BackoffScheduler ban-lists — precisely the in-tree
-mechanism. Cranelift's ISLE/aegraph does the same: expansive algebraic rewrites bounded by a fuel
-budget. The refutation-abiding position for 2A: **widening rules are admissible, but only under
-the existing node/iter caps, and each must ship idempotent-or-measure-decreasing** as
-`NormalizeDirectSinkCost` demonstrates.
-
-**The XL-F supersession, characterized with evidence.** The GN-2.W1 scan-lowering predicate (an
-`ExprKind::Repetition`/Kleene over a char-class/negated-set whose complement cardinality ∈ [1,16]
-⇒ a `SelfLoop`/`Prefilter` recognizer) is a widening manufacture at the recognizer tier. Its
-relation to the extant `derive_recognizers` is **WRAPS, not replaces**: GN-2.md §GN-2.W1
-(`passes/src/lib.rs:338` plan, lines 203-208) specifies "add a *second* detection arm … **Keep
-the existing `Exact`/`PreEntry` arm untouched**." It adds a competing candidate alongside the
-existing one — the first structural place multiplicity ≥ 2 becomes real in the fleet. It
-*waits-on* the IR extension (`SimdSite::SelfLoop{terminators}`, `ir/src/lib.rs:430`), which LOCK-3
-owns building; LOCK-2 owns selecting over it.
+The single hardest fact this research surfaced governs everything below:
+`crates/egraph/src/cost_weights.rs:134-167` records a **measured null calibration**. A 54-config
+grid sweep across `{structural, alt_per_branch, dispatch_bonus, ref_cost}` on the four-grammar
+corpus (JSON 51 states, BBNF 476, CSS L4 2875, Sheets 191) produced **identical DTA state counts
+in every cell** — because "the current e-graph rewrite set (`DeduplicateAltBranches`,
+`SupersetAbsorbAlt`, `UnionMergeAlt`, `FuseAltRegexBranches`, `CommonSuffixFactor`) produces
+e-classes with at most one semantically-distinct canonical form for these grammars, so the cost
+model has no choice to exercise." **Saturated multiplicity ≈ 1 across the fleet, at the grammar
+tier, measured.** This is the answer to directive Q1 and the axis on which 2A must be honestly
+built: islands earn their e-graph only where a *child-bearing* rewrite manufactures ≥2 survivors;
+elsewhere the island is a cost-ranked canonicalizer (deterministic argmin) and the e-graph is
+SPEC-ONLY until such a rewrite is proven.
 
 ---
 
-## 2. Determinism and the port budget (answers Q3)
+## 1. The mechanism made concrete
 
-**Extraction is already deterministic without a total order in the cost — but fragilely so, and a
-total-order tie-break exists.** `extract.rs::compute_best` (`:134-171`) iterates
-`egraph.classes()` — `self.classes.iter().filter(|c| !c.nodes.is_empty())` (`egraph.rs:138`), a
-`Vec` in insertion order, **not** a HashMap. Within a class, `class.iter()` walks the class's node
-`Vec` (dedup'd by linear scan in `rebuild`, `egraph.rs:280-288` — deterministic). The `best` map
-is `FxHashMap<Id,(Cost,N)>` used **only as a keyed lookup** (`:152`, `:177`); its iteration order
-is never consulted for a decision. Improvement is gated `cost < *existing` (`:156`), so ties keep
-the first node in `Vec` order. Therefore extraction determinism rests on `Vec` ordering —
-**HashMap iteration is inadmissible and is in fact absent from the decision path.**
+### 1.1 Two island kinds, not one
 
-The admissible **total-order tie-break** is already built at the reference island: `DecisionCost`
-(`backend_egraph.rs:239-247`) is a `PartialOrd/Ord` tuple `(freshness_rank, perf_cost,
-capacity_cost, static_size_cost, shape_rank, candidate_hash)` whose final field
-`candidate_hash = stable_hash(&candidate.id)` is FNV-1a over the candidate id
-(`backend_egraph.rs:304-311`) — content-derived, HashMap-free, byte-stable across runs and hosts.
-This makes the argmin **total** (no two candidates tie), so extraction is order-independent even
-if `Vec` order changed. `selection_trace` sorts its rows (`:274-291`) before hashing to
-`selection_trace_hash`, giving a replay-stable audit key. This tuple is the pattern every 2A cost
-model must adopt: **a lexicographic cost whose last component is a content hash**, never a
-`HashMap`-iteration-order-dependent value. The provenance already asserts
-`determinism_replay_status: "pass"` and `rewrite_order_variance_pct: 0` (`:139-141`).
+The extant island (`backend_egraph::select`) reveals the taxonomy the family must own:
 
-**Port budget: build+saturate+extract+teardown.** The ~230 µs order is a **compile-time** budget
-(SPEC §0 row 08: the type plane "derives validated DirectSchemaSet in ~230µs compile-time, ZERO
-runtime cost"), amortized over every parse — the island runs at regen/codegen, never per-parse.
-The dominant cost at this grammar scale is **teardown**, and the substrate already addresses it:
-`EGraph::with_capacity` (`egraph.rs:78-88`) exists precisely because "on a ~300-node grammar [the
-default power-of-two table] can leave a 1024-bucket table whose teardown dominates the compile
-profile." The reference island calls `with_capacity(ranked.len())` (`:60`). `regen∘regen`
-byte-identity is preserved because (i) extraction is deterministic (above), (ii) the emitted trace
-hash is stable, and (iii) generated files are fresh-regen output with an idempotent-on-disk proof
-(PROVE-12 §6-7; GN-2 precept 53). Teardown is a compile-latency line item, not a per-parse runtime
-cost.
+- **Flat selection islands** (backend-shape today; scan-plan/kernel-tier tomorrow). Candidates
+  are **childless** e-nodes (`DecisionNode { children: [Id; 0] }`, `backend_egraph.rs:158`), all
+  unioned into ONE root class (`backend_egraph.rs:62-71`). "Extraction" is a deterministic argmin
+  over the class on a scalar-ish lattice (`DecisionCost`, a 6-field lexicographic tuple,
+  `backend_egraph.rs:239-247`). Multiplicity = number of non-hard-pruned candidates, which the
+  priority cascade routinely collapses to 1 (`backend_candidates` sets `hard_pruned: !ranked`,
+  `passes/src/lib.rs:588`; exactly one `PriorityStep` fires per rule, `lib.rs:535-575`). **On a
+  flat island the e-graph is machinery without a decision** — an argmin with a total-order
+  tie-break is the whole mechanism.
+- **Structural canon islands** (regex HIR canon; projection/`->` canon). Nodes are
+  **child-bearing** (`Concat`/`Alt`/`Star` in regex HIR; `Seq`/`Map`/`Project` in projections).
+  Here congruence closure does real sharing, saturation explores genuinely distinct rewrites, and
+  extraction faces a real choice AT child-bearing nodes (branch factoring vs. dispatch-eligible
+  form). This is the only place the e-graph's core value — representing many equivalent forms
+  compactly and deferring the cost decision — is actually exercised.
 
----
+The strongest form of 2A is therefore **heterogeneous islands under one substrate**: keep the
+`crates/egraph` engine as the shared home, but instantiate an e-graph *only* at structural islands
+with a demonstrated child-bearing rewrite; instantiate flat islands as a `CostModel`-ranked
+canonicalizer that shares the same `CostWeights`/`Lattice` vocabulary but skips saturation.
 
-## 3. Context-sensitive extraction — resolved by rule-local islands (answers Q4)
+### 1.2 The extraction total order (determinism, Q3)
 
-The audit target is `admits_sink_only` at `passes/src/lib.rs:954`; the caller-context guard is
-`lib.rs:661`: `(Some(rule_ir), BackendShape::SinkOnly) if !admits_sink_only(rule_ir, target)` —
-fail-closed, rejecting a `SinkOnly` shape for a rule whose caller context cannot serve it (a
-sub-rule reached under an offset-tape caller cannot take the sink-only shape a sink-only caller
-would give it). This is exactly the conflict the question names: one sub-rule, two caller
-contexts, one per-class shape cannot serve both.
+Extraction is already deterministic and regen-safe, and the substrate proves it — this is a
+correction to the directive's worry that "HashMap iteration is inadmissible":
 
-**But the island decomposition already dissolves it.** The reference island is **rule-local** —
-`select(rule.id, candidates)` (`lib.rs:504`), one island per `RuleId`, keyed provenance
-(`selected_rule_id`, `backend_egraph.rs:132`). Because the decision is taken per rule *in its
-caller context* rather than once per shared e-class, **context IS the rule** and no single
-per-class shape is asked to serve two contexts. The `admits_sink_only` guard (`:661`) is the
-legality filter that prunes the context-illegal candidate *before* it enters the island's
-candidate set (`derive_candidates`, `lib.rs:514`). Therefore: **context-free per-class extraction
-holds, because the tower does not share one e-class across contexts** — it re-runs a small
-rule-local island per context and prunes illegals up front. This is the identity-preserving
-repair, O(rules × candidates), already paid. The alternative — one whole-grammar e-graph with
-context-tagged e-classes (family 2B territory) — would reintroduce the conflict and demand
-per-context extraction passes; 2A's rule-local islands avoid it by construction. The measured
-*absence* of a cross-context per-class conflict in the fleet is what makes the rule-local
-decomposition sound rather than lossy.
+- The e-graph stores classes as a **`Vec<EClass>`** (`crates/egraph/src/egraph.rs:29`), iterated
+  in insertion order by `classes()` (`:138`); `memo: FxHashMap` (`:32`) is a hash-cons lookup
+  never iterated for output; `pending: Vec<Id>` (`:34`) is LIFO-popped in `rebuild` (`:251-253`).
+  Iteration order is insertion order — deterministic.
+- `Extractor::compute_best` (`extract.rs:134-171`) improves on strict `<`, so a tie never
+  displaces the incumbent; the incumbent is whichever node the deterministic class walk saw first.
+- `DecisionCost` closes the residual tie with a `candidate_hash` tail (FNV-1a of the candidate id,
+  `backend_egraph.rs:246`, `:304-311`) so the lexicographic order `(freshness, perf, capacity,
+  static_size, shape_rank, candidate_hash)` is a **total order** — the mechanism the directive
+  asks for. **Residual risk:** the tail is a 64-bit hash, not the id itself; two distinct ids that
+  collide would reintroduce iteration-order dependence. The parsimonious fix is to tie-break on the
+  full id string (already unique by construction, `lib.rs:581-584`), making the order
+  collision-free by definition. That is a one-line hardening a prototype must lock in.
 
----
+### 1.3 The CSP is a witness today; PBQP is the mechanism when sites couple (Q6, Q7)
 
-## 4. IR-modeled competing sites and the cost that binds them (answers Q5, Q8)
+`decision_csp::solve_rule` (`skinny/crates/passes/src/decision_csp.rs:29-189`) is **not a
+selector** — it pins `selected_index` to the e-graph's already-extracted choice
+(`add_selected_constraint`, `:199-212`, forces `value == selected_index`) and then "solves" a
+1-variable / 5-constraint CSP whose constraints are legality predicates (recognizer, substrate,
+simd, capacity, `:52-81`). It re-derives the e-graph's pick and records legality facts. The facts
+it emits are candid about this: `static_profile_provider_status: "static-template-blocker"`,
+`direct_sink_only_status: "sink-only-static-blocker"`, `row_move_toward_sota_status:
+"measured_architectural_block"` (`decision_csp.rs:183-186`). **The CSP has no decision to make
+because the sites are independent and multiplicity is 1.**
 
-**Are there ≥2 scan/self-loop sites modeled IN the IR with real binding costs?** Today: no — the
-IR models exactly one recognizer mode. `SimdMode` (`ir/src/lib.rs:425`) = `{Exact}`; `SimdSite`
-(`:430`) = `{PreEntry}`. The `BackendCandidate` carries `perf_cost/capacity_cost/
-static_size_cost/shape_rank` (`backend_egraph.rs:22-25`) but these are **ordinal ranks, not
-measured cyc/B** — they cannot flip a decision because they were never fit to a measurement, and
-multiplicity ≈ 1 leaves nothing to flip (§0).
+The mechanism that gives the CSP a real job is **inter-site coupling**, and the right solver for
+its graph class is **PBQP**, not the generic forward-checking B&B the substrate currently spreads
+(`SolveConfig { pruning: ForwardChecking, ordering: FailFirst }`, `decision_csp.rs:85-97`). The
+family's target graph — "independent sites + budget coupling + few coherence edges" — is precisely
+the Partitioned Boolean Quadratic Problem shape: each site is a node with a discrete domain (its
+admissible shapes/kernels), a per-choice cost **vector**, and a per-edge cost **matrix** for the
+few coherence pairs (two adjacent scan sites sharing a prefilter table; a sub-rule whose shape must
+agree across two callers). On a near-tree graph PBQP's R0/R1/R2 reductions solve in O(n) and are
+**provably optimal when no RN heuristic node arises** (a tree never needs RN). This is the
+distinguishing claim: an e-graph cost is per-node-plus-children and **cannot express a pairwise
+cost between two siblings' choices**; PBQP can. The honest position: keep argmin (= e-graph
+extraction) at a single independent site; introduce PBQP only when ≥2 sites with a real coherence
+edge are modeled in the IR (see Q5 below — they are not yet).
 
-**The IR extension that models the competing site is GN-2.W1's:** `SimdMode → {Exact, Prefilter}`
-and `SimdSite → {PreEntry, SelfLoop{terminators: StructuralAlphabet}}` (`ir/src/lib.rs:425/430`,
-GN-2.md §GN-2.W1). This is the first place the fleet will present two scan candidates per site —
-`Exact` (scalar membership, ~1.03 cyc/B) vs `Prefilter` (`find_member`, floor 0.115 cyc/B; SPEC §0
-row 01). **LOCK-3 owns building the node** (the IR tower's shape, XL-B); **LOCK-2 owns selecting
-over it** at the named decision point (the existing `backend_egraph` island, extended to range
-over the SelfLoop candidate). This is the concrete `SelfLoop`/`Prefilter` model the question asks
-for, and its costs become *binding* precisely when fed the GN-2-measured cyc/B rather than ordinal
-ranks.
+The budget knapsack (Q7) is one such coupling: `sum_sites static_size_cost ≤ generated_loc_budget`
+folded as a global `bounded_sum` constraint. It is **not** selection-equivalent to the per-rule
+priority cascade — the cascade is a local P1..P8 decision (`PriorityStep`, `ir/src/cost.rs:263-286`)
+that cannot see a global budget, so a binding budget can flip a locally-preferred shape. The one
+solver home that coordinates this is the **`csp-solver` crate** (vendored `crates/csp-solver/`,
+consumed by LOCK-1 for types and LOCK-2 for shapes); its constraint store is the single
+coordination point, and PBQP would be added as a solver mode there (`SolveConfig`), not a new
+subsystem.
 
-**Profile-fed cost (Q8), evidence-grounded.** The CALIBRATED_WEIGHTS null (§0) is the direct
-answer to "can a fitted coefficient flip a real per-site decision": **not while multiplicity ≈
-1** — there is no alternative to re-rank. A fit bites only after a *widening* rule (§1) plants a
-genuine second survivor at a real site (the SelfLoop/Prefilter pair, or the N*=3 kernel-crossover
-the empirical spine names, R1 §8). Attribution when whole-grammar cyc/B underdetermines per-feature
-coefficients: **A/B-differential**, and the substrate is built for it — GN-2's paired per-wave
-benches vary exactly one feature per measurement (W1 prefilter, W2 string kernel, W4 classify), so
-each coefficient is fit from a lane that moves only that feature. Env-source fencing from regen:
-cost facts are **committed const tables**, not env reads — `CALIBRATED_WEIGHTS` is "exactly one
-slot to update when a future calibration produces a non-trivial result" (`cost_weights.rs:169-174`
-consumer contract); every consumer constructs weights via `CostWeights::default()` aliasing that
-const. A profile fit supersedes the hand-set defaults at `cost_weights.rs:112-131` — nothing else —
-and the freshness gate is `selected_cost_freshness` (`backend_egraph.rs:127-131`), which goes RED
-on a stale (mutated) coefficient.
+### 1.4 Widening rewrites (Q2)
 
----
+The substrate already ships a **widening (manufacturing) rewrite** — `NormalizeDirectSinkCost`
+(`backend_egraph.rs:191-237`) invents a new node `"{id}#direct-sink-normalized"` with lowered
+`static_size_cost`/`shape_rank` and unions it in. Its coexistence with an all-narrowing set is
+sound by three mechanisms, each demonstrated:
 
-## 5. Solver shape and the budget knapsack — 2A's boundary (answers Q6, Q7)
-
-2A's constitutional stance is **e-graphs GENERATE candidates, CSP SELECTS**. The living code
-reveals the current arrangement is **double-homed**, and this is the family's cleanup: the
-`backend_egraph` island *already extracts a winner* (`:84-87`), then `decision_csp.rs::solve_rule`
-(`:29`) **re-solves the same decision** as a `Csp<CostFiniteDomain>` — 1 variable, 5 constraints
-(`decision_csp.rs:142-143`), `MinimizeCost` — that by construction reproduces the extraction's
-pick (costs are 0 for the selected index, 1 otherwise, `:44-47`). Two solvers, one decision,
-multiplicity 1: the CSP is a tautology cross-check, not a solver.
-
-**On the graph class (near-tree: independent per-rule sites + budget coupling + few coherence
-edges), the right structure is PBQP** (Scholz & Eckstein 2002, RegAllocPBQP) — per-node discrete
-choice with pairwise cost matrices — *when* the coupling edges are real. But the honest reading of
-the substrate is: **today there are no coupling edges** (each rule's island is independent, the
-per-rule CSP has one variable), so PBQP, generic B&B, and e-graph extraction all collapse to the
-same trivial argmin, and the measured `csp_solve_us` (`decision_csp.rs:101`) is noise. The 2A
-recommendation, evidence-first: **collapse the redundant per-rule CSP into the extraction argmin**
-(one home — the island) and reintroduce a solver *only* when a genuine cross-site constraint makes
-the problem >1 variable. That constraint is the budget knapsack.
-
-**The budget knapsack as a constraint (Q7).** The `generated_loc_budget` (GN-2 §5; precept 53:
-"W2 ≤ +40 generated LOC … overflow blocks the wave") is the one real cross-site coupling — a
-`bounded_sum` over per-site emission sizes. Folded as a constraint, it couples the otherwise
-independent per-rule islands: choosing `Prefilter` at site A (bigger emission) may force `Exact` at
-site B to stay under budget. This is where PBQP/CSP earns its place — and it is the *only* place,
-on this fleet, that a solver over the islands is non-vacuous. **Selection-equivalence with the
-priority cascade** it replaces (`ir/src/cost.rs:264` `PriorityStep`, the 8-step `ALL` at `:276`):
-the cascade is a lexicographic priority; a `MinimizeCost` CSP reproduces it iff the cost vector
-encodes the priority order as its lexicographic key — which `DecisionCost` already does (§2, the
-tuple ordering). So the knapsack folds in *without* breaking cascade equivalence, provided the
-budget term is added as the *lowest*-priority (last) lexicographic component so it tie-breaks only
-among equal-priority candidates. **One solver home:** the `csp-solver` crate (`crates/csp-solver/`),
-whose constraint store LOCK-1 governs and LOCK-2 consumes — the same store already used both at the
-grammar tier (`csp_domains.rs`, per `csp_scheduler.rs:22`) and *inside* the e-graph scheduler
-itself (`CspScheduler`, `csp_scheduler.rs` — the saturation scheduler **is** a CSP propagation over
-`DirtyDomain`, AC-3 transitive dirty closure through parent edges, `:141-169`). This isomorphism
-(one constraint store, three consumers: grammar-tier domains, egraph scheduler, decision select) is
-the coordination point GESTALT-B must unify.
+- **Confluence is not required.** Equality saturation keeps every form; the join lattice makes the
+  order of rule application irrelevant to the saturated set. This is the phase-ordering solution
+  of Tate–Stepp–Tatlock–Lerner, *Equality Saturation* (POPL 2009), realized here.
+- **Termination** is by a **fire-once guard** (`search` skips classes already carrying a
+  `#direct-sink-normalized` node, `backend_egraph.rs:203-206`) plus the scheduler's hard
+  `egraph_iter_limit: 64` / `egraph_node_limit: 100_000` (`crates/egraph/src/cost_config.rs:66-67`).
+  This is exactly egg's discipline for identity-introducing rules (guarded/conditional rewrites,
+  Willsey et al., *egg: Fast and Extensible Equality Saturation*, POPL 2021).
+- **Semantics preservation is the live risk.** `NormalizeDirectSinkCost` is a *cost* rewrite, not
+  a behavioral equality — it asserts two candidates decide the same shape at different recorded
+  cost. That is sound only if the normalization is a true no-op on the emitted parser. A
+  prototype must assert byte-identical emission across the pre/post-normalization candidate, or the
+  rewrite is unsound. Precedent for widening+narrowing coexisting in shipping engines: egg's own
+  rule sets pair strength-reduction (`(* x 2) → (<< x 1)`) with identity introduction
+  (`x → (* x 1)`, guarded); Cranelift's ISLE/aegraph pairs simplification with legalization
+  (widening to a target-legal form). The lesson for 2A: every widening rule carries a soundness
+  oracle, and the extraction cost must make the widened form *lose* unless it genuinely helps, so
+  the class never grows unboundedly with dead alternatives.
 
 ---
 
-## 6. Prior art (citations)
+## 2. The substrate (path:line)
 
-- **egg** (Willsey et al., POPL 2021, *"egg: Fast and Extensible Equality Saturation"*) — the
-  greedy bottom-up extractor `extract.rs` implements (it cites egg by name, `:8-11`); the
-  rebuild/hashcons/union-find core (`egraph.rs`); BackoffScheduler ban-lists for termination under
-  widening. The multiplicity-1 finding is the negative image of egg's premise: egg pays off when
-  the rewrite set is *expansive*.
-- **egglog** (Zhang et al., PLDI 2023) — datalog+egraph; bears on whether the narrowing-only rule
-  set should gain expansive rules to make extraction non-trivial (§0/§1).
-- **Scholz & Eckstein, PBQP** (2002, *"Register allocation for irregular architectures"*) and
-  LLVM's `RegAllocPBQP` — the per-node-choice + pairwise-cost model for budget-coupled site
-  selection (§5); the correct target *only once the knapsack edge exists*.
-- **Cranelift aegraph / ISLE** (Fallin, 2023) — acyclic-egraph one-pass extraction under a fuel
-  budget: precedent for widening rules bounded by caps rather than a termination proof (§1), and
-  for extraction-at-emit without a separate select pass.
-- **Eisel–Lemire / fast_float** (Lemire 2021; Nigel Tao) — the profile-fed cost lane's measured
-  feature (GN-2.W5), the A/B-differential fit target (§4).
-- **simdjson two-stage classify** — the LUT-upgrade path the classify kernel documents
-  (`aarch64/structural_classify_64.rs:1-31`, R1 §3), a future genuine-choice site.
-
----
-
-## 7. Named risks and counterexamples
-
-- **The island is a solution in search of a decision.** Risk: 2A ships e-graph islands whose
-  multiplicity stays 1 (CALIBRATED_WEIGHTS null, §0), so the saturation/extraction machinery is
-  pure overhead over a trivial argmin. Refuting counterexample: if *no* fleet grammar yields a
-  qualifying SelfLoop (complement ∉ [1,16]) — GN-2.md §7 W1 risk names exactly this ("if NO grammar
-  in the fleet has a qualifying self-loop, W1's consumer is a purpose-authored minimal skip
-  grammar"). Mitigation: 2A islands are admissible **only** where a widening rule demonstrably
-  manufactures ≥2 emission-distinct survivors; elsewhere the design down-declares to cost-ranked
-  canonicalization (no extractor, no cost model). Consumer-less substrate is forbidden (Y.13) — an
-  island whose choice is always singleton is a consumer-less e-graph.
-- **Double-home mistaken for defense-in-depth.** Risk: keeping both the extraction pick and the
-  per-rule CSP (§5) as a "cross-check" when they are the same argmin — two subsystems, one decision,
-  violating system-cohesion. Counterexample: `decision_csp.rs:44-47` sets cost 0/1 to *force*
-  agreement with the extractor, so the CSP can never disagree — it is not a check.
-- **Widening breaks regen determinism.** Risk: a widening rule whose application order affects the
-  saturated set, making `regen∘regen` non-identical. Mitigation: idempotent-guarded rules (§1) +
-  total-order cost (§2); the reference rule (`:203-206`) shows the pattern.
-- **Budget knapsack breaks cascade equivalence.** Risk: folding `bounded_sum` as a high-priority
-  constraint reorders decisions the priority cascade fixed. Mitigation (§5): the budget term must
-  be the *last* lexicographic component, tie-breaking only among equal-priority candidates.
+- **The engine** — `crates/egraph/`: `egraph.rs` (297, `EGraph<N,A>`, `add`/`union`/`rebuild`,
+  Vec-backed classes), `extract.rs` (215, greedy bottom-up `Extractor`, `Lattice`, `CostModel`,
+  `AstSize`, `Scalar<T>`), `rewrite.rs` (`Rewrite`/`RewriteFn`, `run_on_dirty`), `scheduler.rs`
+  (`BackoffScheduler`, `RunReport`), `csp_scheduler.rs` (368, `CspScheduler` — AC-3 dirty-closure
+  saturation over `ParentDirtyProp`, csp-solver-backed), `cost_weights.rs` (191, shared
+  `CostWeights` + the null-calibration record), `cost_config.rs`, `analysis.rs`, `unionfind.rs`.
+  `egraph-derive/` (343) auto-derives `Language` from an enum (recursive fields → `Id`).
+- **The one live island** — `skinny/crates/passes/src/backend_egraph.rs` (312): `select` builds
+  the flat e-graph, saturates with `BackoffScheduler` + `NormalizeDirectSinkCost`, extracts the
+  argmin, stamps `ActiveCostFacts`.
+- **The witness CSP** — `skinny/crates/passes/src/decision_csp.rs` (279): `finalize_rule` →
+  `solve_rule`, pinned single-variable `Csp<CostFiniteDomain>`, emits `DecisionCspFacts`.
+- **The decision driver** — `skinny/crates/passes/src/lib.rs`: `compile` (`:33-` pipeline:
+  `derive_recognizers` `:39` → `derive_backend_shape_with_diagnostics` `:48`),
+  `choose_backend_shape` (`:479-506`), `backend_candidates` (`:508-590`, the priority cascade),
+  `PRIORITY_TABLE` (`:473`).
+- **The fact schema** (the cost/decision provenance seam) — `skinny/crates/ir/src/cost.rs`:
+  `CostFacts` (`:4`), `ActiveCostFacts` (`:172`, e-graph provenance:
+  `egraph_node/eclass/iteration/rewrite_count`, `determinism_replay_status`,
+  `selection_trace_hash`), `DecisionCspFacts` (`:202`, the ~45-field CSP record),
+  `PriorityStep` P1..P8 (`:263-286`), `all_backend_shapes()` (`:334`).
+- **The IR nodes selected over** — `skinny/crates/ir/src/lib.rs`: `BackendShape` (`:361`, 5
+  variants), `enum Recognizer::SimdScan { mode, alphabet, site }` (`:416`), `SimdMode` (`:425`,
+  only `Exact`), `SimdSite` (`:430`, only `PreEntry`), `StructuralAlphabet` (`:435`).
+- **The residualization consumer (island #3 target, projection canon)** — PROVE-12's
+  `find_component_delim` const-generic mask fold lives in
+  `codegen/src/runtime_generator.rs::CSS_GENERATED_RS`; the pattern ("`const fn mask` +
+  const-generic seam") generalizes "to any grammar-derived delimiter/STOP-set scan" — the exact
+  hook where a projection-canon island's extracted form lowers to a residualized emit.
+- **The legacy structural islands** (archived at GN-0, but the *design* of record) — the outer
+  `crates/ir/src/egraph/` + `crates/ir/src/rewrites/` carry the child-bearing grammar rewrites
+  (`DeduplicateAltBranches`, `SupersetAbsorbAlt`, `UnionMergeAlt`, `FuseAltRegexBranches`,
+  `CommonSuffixFactor`) and the `GrammarCostModel`/`RegexExtractionCost` that embed `CostWeights`.
+  These are the substrate for a *structural* island; per XL-A the port is organ-level into GN-1.
 
 ---
 
-## 8. What a prototype must test to move this family
+## 3. Integration seams (where islands attach)
 
-**One prototype, minimal, decisive** — it converts the degenerate island into a genuine-choice
-island and measures every 2A claim at once:
+1. **Scan-plan island** attaches at `passes::derive_recognizers` (`lib.rs:338`) →
+   `ir::Recognizer` (`ir/lib.rs:416`). Today it is multiplicity-1 (only `SimdMode::Exact` /
+   `SimdSite::PreEntry`). It becomes a real island the moment GN-2.W1 lands
+   `SimdSite::SelfLoop { terminators }` + `SimdMode::Prefilter` (SPEC §2 GN-2.W1): then a rule can
+   present PreEntry-whitespace-skip **and** SelfLoop-inert-run-skip as competing scan plans, each
+   with a static-size cost and a cyc/B cost. The cost model is the same `CostWeights` vocabulary;
+   the consumer is `codegen/src/lower/recognizer/` (GN-2.W1's new dispatch, PT-1.W5 co-lands the
+   `dfa.find` branch — the recognizer dispatch emits exactly one lowering per site).
+2. **Backend-shape island** already attached (`choose_backend_shape` → `backend_egraph::select` →
+   consumer `codegen::lower::rust::lower_to_rust`, named at `backend_egraph.rs:11`). The 2A work
+   here is *demotion*: recognize it is flat/argmin and either (a) prove a child-bearing rewrite
+   that makes it a real e-graph, or (b) collapse it to a canonicalizer sharing the `Lattice`,
+   deleting the saturation call as consumer-less machinery (Y.13).
+3. **Projection/`->` canon island** attaches at the type-plane projection lowering (GN-3's
+   `ExprKind::Project` thread into `infer` + `DirectBuild.type_ref`; SPEC §GN-3 W3); its extracted
+   canonical form lowers through the PROVE-12 residualization seam. This is the island most likely
+   to have genuine multiplicity (Seq/Map re-association, dispatch-eligible vs. sequential forms) —
+   the one where extraction-as-decision earns over plain canonicalization.
+4. **Regex HIR canon island** is engine-tier (XL-C): it lives in parse-that/bbnf-regex, consumes
+   the same `crates/egraph` via `RegexExtractionCost`, and is LOCK-5's to own the lawful HIR form;
+   2A consumes its verdict and treats it as a fourth island on the shared substrate, not a thing
+   2A redraws.
 
-1. Extend `derive_recognizers` (`passes/src/lib.rs:338`) with the GN-2.W1 SelfLoop arm so a real
-   grammar scan site (JSON whitespace-skip: complement = 6 structurals + quote ≤ 16) yields **two
-   competing candidates** — `Exact` and `Prefilter` — entering the `backend_egraph` island's
-   candidate set as ≥2 emission-distinct survivors (multiplicity 2, the first in the fleet).
-2. Feed them **measured cyc/B** (Prefilter 0.115 floor vs Exact ~1.03; SPEC §0 row 01) as the
-   `perf_cost`, replacing ordinal ranks — so the cost is *binding*.
-3. Verify, against the four falsifiable questions the family rests on:
-   - **(Q1/Q8)** extraction picks the measured-cheaper candidate; and a perturbed coefficient (a
-     profile fit that raises Prefilter's fixed cost above the crossover) **flips** the pick — the
-     first demonstration that a fitted coefficient flips a real per-site decision.
-   - **(Q3)** `regen∘regen` is byte-identical and `selection_trace_hash` is stable across two runs
-     and a reordered candidate `Vec` (proving the `candidate_hash` tie-break, not `Vec` order,
-     carries determinism).
-   - **(Q3, teardown)** build+saturate+extract+teardown for the extended island stays within the
-     ~230 µs compile-order budget at JSON-grammar scale (`with_capacity` honored).
-   - **(Q5/Q7)** add a second SelfLoop site and a `generated_loc_budget` `bounded_sum` constraint;
-     confirm the coupling makes the per-site choices *interdependent* (choosing Prefilter at both
-     exceeds budget, forcing one back to Exact) — the first non-vacuous solver instance, and the
-     test that separates PBQP/CSP from trivial argmin by solve-cost.
+---
 
-Pass ⇒ 2A has one real island with a widening rule, a binding cost, deterministic extraction, and
-a budget-coupled solver instance — the family's strongest concrete form. Fail (no coefficient flip,
-or budget coupling never binds) ⇒ 2A down-declares to cost-ranked canonicalization and the e-graph
-machinery is retired from the grammar tier as consumer-less substrate.
+## 4. Prior art (citations)
+
+- **egg** — Willsey, Nandi, Wang, Flatt, Tatlock, Panchekha, *egg: Fast and Extensible Equality
+  Saturation*, POPL 2021. The `Extractor` here is egg's greedy bottom-up; the guarded widening
+  rule is egg's conditional-rewrite discipline; e-class analyses map to `crates/egraph::Analysis`.
+- **Equality Saturation** — Tate, Stepp, Tatlock, Lerner, POPL 2009. The order-independence that
+  lets a widening rule coexist with narrowing ones without confluence.
+- **egglog** — Zhang, Wang, Willsey et al., PLDI 2023 (Datalog ∪ e-graphs, semi-naïve evaluation).
+  The reference for scheduling islands as rule groups and for the dirty-frontier saturation the
+  `CspScheduler` implements by hand.
+- **Denali** — Joshi, Nelson, Randall, *Denali: A Goal-directed Superoptimizer*, PLDI 2002. The
+  ancestor of "e-graph generates candidates, a constraint solver extracts the optimum" — exactly
+  2A's e-graph→CSP pipeline. The historical proof that the split is a known-good architecture.
+- **Extraction is NP-hard** with sharing-aware cost — see the *extraction-gym* corpus and treewidth
+  / ILP extractors (Goharshady et al.; Cai et al., *SmoothE*, ASPLOS 2025). Justifies the
+  substrate's choice of greedy bottom-up for **monotone/additive** costs (optimal there) and warns
+  that any non-monotone cost at a structural island needs ILP/treewidth, not greedy.
+- **PBQP** — Scholz & Eckstein, *Register Allocation for Irregular Architectures by Coalescing*
+  (2002); Eckstein/Hames PBQP instruction selection; Buchwald & Zwinkau, *Instruction Selection by
+  Graph Transformation*. The per-node-choice + pairwise-cost-matrix solver that fits "independent
+  sites + few coherence edges"; near-linear + optimal on tree/near-tree via R0/R1/R2 reductions.
+- **Cranelift aegraph / ISLE** — Fallin, *ægraphs* (acyclic e-graphs for a compiler backend). The
+  precedent that a shipping compiler runs e-graph rewrites at a *bounded* budget on the hot path —
+  the empirical answer to Q3's "does the organ hold the per-parse budget."
+- **LLVM SelectionDAG/GlobalISel** — the maximal-munch/greedy baseline against which global
+  selection (PBQP, e-graph) must justify its solve cost.
+
+---
+
+## 5. Named risks & counterexamples
+
+- **Consumer-less island (Y.13 violation).** The gravest risk: shipping an e-graph at a flat
+  island where multiplicity is provably 1. The null-calibration record (`cost_weights.rs:134-167`)
+  is the standing counterexample — the machinery ran, changed nothing, on four grammars. Mitigation:
+  the family's law is "e-graph only where a child-bearing rewrite yields ≥2 measured survivors";
+  otherwise the island is a canonicalizer and the saturation call is deleted, not dormant.
+- **Fragmented cost vocabularies.** The legacy structural islands use f64 `CostWeights`
+  (`CALIBRATED_WEIGHTS`); skinny's live island uses an integer `DecisionCost`; the grep shows
+  **skinny does not consume `CALIBRATED_WEIGHTS` at all**. Two cost languages is drift the
+  constitution forbids (`cost_weights.rs:9-11` names splitting them "forbidden"). Mitigation: one
+  `Lattice`/`CostWeights` vocabulary across all islands, integer or f64 chosen once.
+- **The CSP that decides nothing.** `decision_csp` pinned to the e-graph's pick is substrate
+  without a decision — its own facts admit "measured_architectural_block". Mitigation: the CSP
+  layer materializes only when ≥2 sites couple (PBQP), else it is deleted from the per-rule path.
+- **Widening unsoundness.** `NormalizeDirectSinkCost` is a cost rewrite masquerading as an
+  equality; if the two candidates are not behaviorally identical, extraction can pick a wrong
+  shape. Mitigation: byte-identical-emission oracle across every widened candidate.
+- **Hash-collision non-determinism (Q3).** The `candidate_hash` tie-break tail is 64-bit; a
+  collision reintroduces class-iteration dependence and can break `regen∘regen`. Mitigation:
+  tie-break on the unique id string.
+- **Context-sensitive extraction (Q4).** Backend shape is chosen **per rule_id**, context-free
+  (`choose_backend_shape` takes one `rule`, `lib.rs:479`). A sub-rule inlined under a `SinkOnly`
+  caller and an `OffsetTape` caller cannot be served by one per-class shape. The fleet does not
+  model this today — `admits_sink_only` exists (`lib.rs:524`) but no per-context conflict is built;
+  the conflict would demand either context-indexed extraction (an ILP/PBQP formulation, expensive)
+  or a duplicate-and-specialize repair (identity-preserving but LOC-growing). Audit result: **no
+  binding conflict is presently modeled**, so context-free per-class extraction is sound *for now*;
+  the risk is latent and must be re-audited when inlining decisions (LOCK-3) land.
+- **Structural islands may still be multiplicity-1.** The sweep null result is not proof the
+  *structural* islands are barren — it is proof the *current rewrite set* is confluent-to-one on
+  these four grammars. A prototype must show a rewrite (e.g. prefix-factoring that competes with
+  dispatch-table emission) that yields a real ≥2 survivor set, or the structural island too is a
+  canonicalizer.
+
+---
+
+## 6. What a prototype must test to move this family
+
+1. **Multiplicity census (Q1).** On the four-grammar fleet at HEAD, instrument the saturated
+   e-class size at each candidate island (grammar-tier structural + backend-shape + the new
+   scan-plan once SelfLoop lands). Report average/max class size and the fraction of extractions
+   that face ≥2 survivors, split by node kind (child-bearing vs childless). Success = at least one
+   island demonstrates ≥2 survivors at a child-bearing node; failure = the whole fleet is
+   multiplicity-1 and 2A reduces to a canonicalizer-fleet (a legitimate, documented outcome).
+2. **Child-bearing rewrite that earns extraction.** Author one rewrite (prefix-factor vs.
+   dispatch-eligible form, or Seq re-association at a projection) that provably produces two
+   distinct extractable forms whose cost ranking flips under a plausible weight change. This is the
+   existence proof the null-calibration says is missing.
+3. **Budget/PBQP separation (Q6, Q7).** Construct a two-site grammar with a real coherence edge
+   (shared prefilter table) and a binding `generated_loc_budget`, and solve it three ways:
+   e-graph-extraction-per-site (cannot see the edge), generic B&B (`decision_csp`'s current mode),
+   and PBQP. Measure solve-µs and optimality gap. Success = PBQP matches B&B's optimum at O(n) cost
+   on the near-tree, and both differ from per-site argmin (proving the coupling is real).
+4. **Per-parse budget + teardown (Q3).** Time build+saturate+extract+**teardown** for a structural
+   organ on the largest fleet grammar (CSS L4, 2875 states) and confirm it holds the ~230µs
+   compile-order budget; confirm `regen∘regen` byte-identity with the id-string tie-break; confirm
+   the `Vec`-classes + LIFO-pending path admits no HashMap-iteration dependence.
+5. **Profile-fed flip (Q8).** Replace one hand-assigned `perf_cost` integer with a coefficient
+   fitted from measured cyc/B (A/B-differential to attribute a per-feature coefficient the
+   whole-grammar cyc/B underdetermines), committed as a fact table read at regen (env-fenced), and
+   show it flips a real per-site decision and wins cold-paired at real value-start positions. This
+   is the only test that turns the `static-profile-provider` blocker green.
+
+**Concrete-artifact status:** items 1, 4 are measurable on the substrate at HEAD (the island and
+engine exist). Items 2, 3, 5 are SPEC-ONLY until authored — they are the family's load-bearing
+prototypes, and each is falsifiable.

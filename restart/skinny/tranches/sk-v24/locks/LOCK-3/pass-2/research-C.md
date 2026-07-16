@@ -1,257 +1,293 @@
-# LOCK-3 · Family 3C — GRAMMAR-HOMOIOUSIA (the IR is itself a grammar)
+# LOCK-3 · Pass-2 · Family 3C — GRAMMAR-HOMOIOUSIA (the IR expressed as a grammar)
 
-Live substrate re-pinned to `skinny@c43126422` (the sole living implementation; the
-R6 value-plane cartography was cut at `7f3be27c2` and its line numbers are re-verified
-below against `c43126422`). Every `path:line` was opened on that tree unless marked as
-the main `bbnf-lang` tree (`crates/core/**`, a non-live design ancestor).
+Re-pinned to the live implementation tree `skinny@061c79fa7` (`git -C skinny
+rev-parse HEAD`; the R6 cartography was captured at `7f3be27c2`, R1 recon likewise
+— every seam below re-verified against `061c79fa7`). All paths under
+`/Users/mkbabb/Programming/bbnf-lang/skinny/` unless prefixed.
 
-The formulation: express each IR level as a bbnf grammar, make the transpositions
-grammar-to-grammar maps, and turn the generator on itself (bootstrap alignment with
-LOCK-7). The steering question is narrow and answered head-on: **what named downstream
-wave consumes an IR-expressed-as-grammar, and does that consumer exist on or near
-live?** The honest answer is that no self-standing consumer exists on live; the
-formulation reduces to two separable claims of very different strength, and the strong
-one is a single threaded-`ty` consumption that stands independent of homoiousia.
+The thesis of this family: the IR tower's node algebra is itself a bbnf grammar;
+transpositions are grammar-to-grammar maps; the generator eats its own type
+declarations (bootstrap alignment with LOCK-7). This report develops that to its
+strongest *honest* form, names its one live-adjacent consumer, carries its enabling
+gate as a born-RED dependency edge, and states the three prototypes that move it.
 
 ---
 
-## 1. The two claims inside "IR-as-grammar", separated
+## 0. What is actually on live — the two-tier node algebra
 
-Homoiousia bundles two claims that the substrate treats completely differently:
+The IR is two hand-written sum types, both in one file:
 
-- **C1 — the IR *data model* is grammar-specified.** The enum/struct shells of the IR
-  tower (`ExprKind`, `BackendExpr`, the `DirectBuild*` schema) are emitted from a bbnf
-  grammar describing them, rather than hand-written. This is a *schema-generation*
-  claim, and it has real prior art (tree-sitter node-types, MLIR ODS, attribute
-  grammars).
-- **C2 — the IR *transpositions* are grammar-to-grammar maps.** The lowering
-  `GrammarIr → BackendIr` (and downward to emission) is itself a grammar/rewrite
-  artifact, not a hand fold. This is a *term-transduction* claim, and it has **no
-  substrate on live** (§4, R1).
+- **Frontend `ExprKind`** — `crates/ir/src/lib.rs:234-271`, **10 arms**: `Seq`,
+  `Alt{branches,mode}`, `Repeat{body,min,max}`, `Optional`, `Literal{bytes,case}`,
+  `Regex{pattern:String}`, `Ref{name,target}`, `Annotation{name,value}`,
+  `Project{body,target,ty:Option<String>}`, `Discard{left,right,keep_left}`.
+- **Backend `BackendExpr`** — `crates/ir/src/lib.rs:376-413`, **13 arms**: `Entry`,
+  `Seq`, `Alt`, `RepeatLoop`, `OptionalBranch`, `ByteLiteral`, `RegexProgram{pattern,
+  span_kind}`, `CallRule`, `SpanMark{kind,label}`, `TapeEmit{kind:TapeKind}`,
+  `DirectBuild{shape,fields}`, `ValueProject{body,target,ty}`, `Return`.
 
-The charter phrase "transpositions are grammar-to-grammar maps" is C2; the phrase "the
-generator eats itself" is C1 executed under LOCK-7's bootstrap. C1 is buildable and
-gated; C2 is either vacuous or a re-import of LOCK-2's rewrite engine (an
-orthogonal-subsystem breach). Keeping them fused is the family's chief self-deception
-risk, so they are costed apart.
+Both are ~38 lines of hand-authored Rust `enum`. Together with `TapeKind` (9 arms,
+`:453-463`) and `BackendShape` (5 arms, `:361-367`) they are the whole spine
+vocabulary. `Regex{pattern:String}` (`:250`) is already an **opaque string leaf** —
+this is why XL-C's ratification (grammar tier keeps `Regex(StringId)` opaque)
+dissolves the ONE-HIR precondition: an `ir.bbnf` grammar treats a regex arm as a
+terminal carrying a string, never as a sub-grammar to unify. The regex sublanguage
+is *not* a dependency of this family.
 
----
-
-## 2. The live IR tower is genuinely a sum algebra (why the sum-node gate is load-bearing)
-
-The transposition spine is three sum types plus one product schema:
-
-- `ExprKind` — a **10-arm sum**: `Seq | Alt | Repeat | Optional | Literal | Regex |
-  Ref | Annotation | Project | Discard` (`crates/ir/src/lib.rs:234-271`). Already
-  `#[derive(Serialize, Deserialize)]` (`:233`) — the front IR is round-trippable data
-  today.
-- `BackendExpr` — a **13-arm sum**: `Entry | Seq | Alt | RepeatLoop | OptionalBranch |
-  ByteLiteral | RegexProgram | CallRule | SpanMark | TapeEmit | DirectBuild |
-  ValueProject | Return` (`crates/ir/src/lib.rs:376-413`).
-- `TapeKind` — a 9-arm sum (`:453-463`); `BackendShape` a 5-arm sum (`:361-367`).
-- `DirectTypeKind` — the typed-schema type constructor — has **exactly one variant,
-  `Struct`** (`crates/codegen/src/direct_schema.rs:52-58`). `DirectTypeRef` around it
-  carries products and collections (`Type | Scalar | Vec | MapString | MapEntriesVec |
-  StringEnum | Option`, `:93-120`) but **no recursive sum**.
-
-To express `ExprKind` (a 10-way alternation) *as a grammar* and round-trip it through
-the typed schema, the schema must represent a recursive sum with typed payloads. A bbnf
-`Alt` (`value = object | array | …`, `grammars/json.bbnf:11`) IS a sum; but the emitter
-can only lower it to a Rust `enum` with typed arms if `DirectTypeKind` gains a `Sum`
-variant. It does not have one. **The product-only, sum-excluding subset the directive
-forbids treating as the formulation is exactly the subset a grammar with no `Alt`
-rules describes — and that subset cannot express `ExprKind` or `BackendExpr` at all,
-since both are irreducibly sums.** There is a second, shallower enum surface —
-`ShapeFacts::add_enum` → `Shape::Enum { variants: Vec<String> }`
-(`crates/ir/src/lib.rs:560-579`), fed by the hardcoded 6-arm `JsonValue` list
-(`crates/passes/src/lib.rs:285-291`) — but its variants are bare name strings with no
-recursive payload schema; it is the lazy-view taxonomy, not a typed sum, and using it
-to claim "enums already render" is precisely the sum-excluding trap.
-
-**Gate, as a born-RED dependency edge:** `DirectTypeKind::Sum` @
-`direct_schema.rs:52-58`, **owner = GN-3.W1** ("The Sum Node", `GN-3.md` wave manifest,
-+420 LOC, born-RED). Homoiousia's first executable step (grammar-derive the IR's own
-type) is BLOCKED behind that edge and does not stand alone.
+The transposition `ExprKind → BackendExpr` is `lower_expr` (`passes/src/lib.rs`,
+the arm-by-arm map ending `Project → BackendExpr::ValueProject` at `:1349-1353`),
+followed by `materialize_rule` (`:1362-1391`) which splices the emit-order tail
+`SpanMark(Start) · body · SpanMark(End) · TapeEmit{kind} · DirectBuild{shape,fields}
+· Return`. This splice is the sharpest fact of the family and is treated in §4/R-2.
 
 ---
 
-## 3. The consumer question — the crux, answered without evasion
+## 1. The gate is exactly one schema construct: sum
 
-Constitution clause viii (Y.13): consumer-less substrate is forbidden, in designs as in
-code. A grammar that describes `ExprKind` produces a *type module*; that module needs a
-same-wave reader.
+The direct-to-struct schema IR `DirectTypeKind` (`crates/codegen/src/direct_schema.rs:
+52-58`) has **one variant, `Struct`**. `validate()` (`:162`) and `validate_type_ref`
+(`:293`) know only structs; the renderer `json_typed_direct::render`
+(`crates/codegen/src/json_typed_direct.rs:10`, 1245 LOC) emits only Rust structs.
 
-**On live there is none.** `skinny` ships exactly one grammar — `grammars/json.bbnf`
-(18 lines, structural, zero `->`) — and no `ir.bbnf`, no meta-grammar, no self-hosted
-IR. The generator consumes grammars-of-documents, never a grammar-of-itself. So a
-grammar-expressed IR has zero consumer on or near live.
+An `ExprKind` node is a **sum**: `expr = seq | alt | repeat | optional | literal |
+regex | ref | annotation | project | discard`. Its `->` projections declare *ten
+variant constructors*. The Struct-only schema cannot represent it. Therefore the
+homoiousia formulation is **entirely gated on `DirectTypeKind::Sum`** — and the
+directive's warning ("do not treat the product-only, sum-excluding subset as
+standing for the formulation") is correct: a grammar that only emits records is not
+an IR grammar. The IR *is* a sum of node kinds; without the sum node there is no
+family.
 
-**The only named downstream consumer is LOCK-7 · 7B (TOTAL-SELF-HOST)**, whose charter
-literally enumerates "bbnf grammar, regex grammar, **IR grammar**, emitter templates —
-all grammar-specified; the generator becomes mostly data" (`PORTFOLIO.md`, LOCK-7 7B).
-3C's C1 output *is* the substrate 7B consumes; 7B's bootstrap engine (`xtask`/regen) is
-its reader. Therefore the disposition the directive asks for — "the consumer named, or
-each gate carried as a born-RED dependency edge with its owner" — is:
+That gate is not this family's to invent. It is authored, on the plan of record,
+by **GN-3.W1 "The Sum Node"** (`docs/tranches/sk-v24/GN-3.md §4/W1`): add
+`DirectTypeKind::Sum{variants,unknown}`, grow HM `unify` over sums, add
+`render_sum_arm` beside `render_field_arm` (`json_typed_direct.rs:435`) emitting a
+Rust `enum` with one arm per variant. GN-3.W1's *own* consumer is the runtime
+`JsonValue` enum (byte-dispatched by `at_cursor`, `grammars/json/value.rs:28-47`).
+This family reuses only the **declaration face** of that node — the `enum … {…}`
+render — and discards the runtime byte-dispatch half (see §3, the no-ts-ir seam).
 
-| edge (born-RED) | seam | owner |
+---
+
+## 2. The mechanism, made concrete
+
+**Substrate — `ir.bbnf` (net-new grammar source, ~40 lines).** Each IR node kind is
+a rule; each alternative carries a `->` projection naming its Rust variant; struct
+payloads are rule references. Sketch (faithful to the live arms):
+
+```
+expr_kind = seq -> Seq | alt -> Alt | repeat -> Repeat
+          | optional -> Optional | literal -> Literal | regex -> Regex
+          | ref -> Ref | annotation -> Annotation
+          | project -> Project | discard -> Discard ;
+seq       = "Seq" -> Vec<ExprId> ;
+literal   = bytes:Vec<u8> , case:CaseSensitivity -> Literal ;
+regex     = pattern:String -> Regex ;     # opaque leaf — XL-C
+...
+@pretty expr_kind block ;                  # the declaration-emit directive
+```
+
+**Transposition as a grammar-to-grammar map.** `lower_expr`'s pure arms
+(`Seq→Seq`, `Alt→Alt`, `Optional→OptionalBranch`, `Literal→ByteLiteral`,
+`Regex→RegexProgram`, `Ref→CallRule`, `Project→ValueProject`) are a fixed
+variant-to-variant rewrite table — a second grammar `lower.bbnf` whose `->` targets
+are `BackendExpr` variants. Seven of the ten arms are *pure* (no external data). The
+remaining transposition — `materialize_rule`'s emit-order tail — is fact-dependent
+(R-2).
+
+**The generator eats its own declarations.** Feed `ir.bbnf` through the existing
+typed entry `emit_typed_from_source` (`crates/codegen/src/lib.rs:130`) — which
+already calls `lower::schema_direct::lower_program` + `json_typed_direct::render`
+(`lib.rs:238-243`). Once `DirectTypeKind::Sum` exists, the emitter materialises
+`ir.bbnf` to the Rust `enum ExprKind {…}` and `enum BackendExpr {…}`. The generated
+enums are diffed against the hand-written `ir/src/lib.rs:234-271`/`:376-413`; on
+byte-identity the hand enums are *promoted from* the grammar. Codegen then contains,
+as data, the definition of the IR it consumes — the homoiousia ("same substance":
+the generator's input language and its own IR are one grammar family).
+
+**How this CONSUMES the threaded `:204` node-type (the shared edge).** The
+`ir.bbnf` `->` projections *are* node-types. When GN-3.W2 stops discarding
+`Project.ty` at `passes/src/lib.rs:204` and threads it into `DirectBuild.target`
+(`:1149-1287`, today always `None` — R6 §5d), the IR grammar's `alt -> Alt` arrow
+resolves — through that exact thread — into a `DirectSumVariant{ rust_variant:"Alt",
+payload }` row. This family therefore **reads one resolved node-type off the thread**
+rather than re-deriving it: the arrow target `Alt` becomes the emitted variant name
+via the same infer→`type_ref` wire, never via a second classifier. Contrast the live
+`derive_materialization_roles` (`passes/src/lib.rs:1403-1490`) which *re-derives*
+JSON's taxonomy from byte-literal heuristics — the homoiousia path deletes that
+re-derivation in favor of the declared arrow.
+
+---
+
+## 3. The named downstream consumer (the Y.13 answer)
+
+Consumer-less substrate is forbidden. Two consumers, one enabling and one terminal:
+
+**(A) Enabling gate, born-RED, owner GN-3.** `DirectTypeKind::Sum` +
+`render_sum_arm` is the schema construct this family stands on. It is *already
+owned and scheduled* by GN-3.W1 (LOC +420, born-RED, `GN-3.md` wave manifest §3).
+Edge: `3C.grammar-as-IR —needs→ DirectTypeKind::Sum @ direct_schema.rs:52 (GN-3.W1)`.
+This family adds **zero** new substrate to obtain the sum node; it consumes GN-3's.
+That is the parsimony case (R-1): standalone, generating a 38-line enum from a
+generator is net-negative LOC; riding GN-3.W1's already-paid sum node it is nearly
+free.
+
+**(B) Terminal consumer, LOCK-7 (GESTALT-B homed).** The actual reader of an
+IR-expressed-as-grammar is the **bootstrap / meta-circular oracle** — LOCK-7's 7B
+("IR grammar … the generator becomes mostly data") and 7D ("self-hosting as
+verification first — grammar-defined grammars serve as differential ORACLES against
+the hand parsers; promotion gated on measured parity"). The consumer contract:
+`ir.bbnf` emits the `ExprKind`/`BackendExpr` declarations; a differential oracle
+diffs generated-vs-hand; the hand enum is retained until byte-identity + the
+regen∘regen=regen fixpoint (7A) hold, then promoted. This is on-live-adjacent
+because the three preconditions already exist:
+
+- **Self-host precedent lives.** `grammar/bnf/bnf.bbnf` is BNF-in-BBNF with working
+  `@pretty grammar block ; @pretty rule group ;` emit directives — a grammar that
+  *describes a grammar language* and drives structured emission. `grammar/misc/
+  g4.bbnf`, `grammar/misc/regex.bbnf` are further self-descriptions. The apex gap is
+  precisely a `bbnf.bbnf`/`ir.bbnf`; nothing structural forbids it.
+- **The emitter exists and works.** `json_typed_direct::render` is a live 1245-LOC
+  direct-to-struct emitter (PROVE-07 anchor). Its only missing arm is sum, which is
+  GN-3.W1.
+- **The diff targets exist.** The hand `ExprKind`/`BackendExpr` enums are the exact
+  oracle baseline (`ir/src/lib.rs:234-271`,`:376-413`).
+
+**Boundary honored (no-ts-ir / XL-D).** The IR-grammar face emits **type
+declarations, never a runtime IR value**. GN-3.W1's Sum node has two faces — a
+compile-time `enum` declaration and a runtime first-byte dispatcher (`at_cursor`).
+An `ExprKind` is a compile-time data structure, never parsed from input bytes, so
+this family consumes **only the declaration face** and drops the dispatcher. That is
+exactly XL-D: "the fast meta-grammar face is the build-time emitter." LOCK-3 keeps
+the driver-seat question (WHERE the fact contract sits at L1→L2) distinct from
+LOCK-2's engine choice; this family touches neither engine nor runtime.
+
+---
+
+## 4. Integration seams (path:line, live)
+
+| Seam | Site | Role in 3C |
 |---|---|---|
-| `DirectTypeKind::Sum` (render Alt→typed enum) | `direct_schema.rs:52` | **GN-3.W1** |
-| `ir.bbnf` consumed by regen; fixpoint holds | `xtask` regen lane; no live `ir.bbnf` | **LOCK-7 · 7B** |
-| the emit fold reads the grammar-derived IR module | `runtime_generator.rs:84` | **LOCK-7 · 7B / GESTALT-B** |
-
-C1 is thus a **substrate whose sole consumer is an unlanded LOCK-7 wave** — admissible
-only as a born-RED edge under GESTALT-B, never as a self-standing 3C deliverable. This
-is the family's defining structural fact, and stating it plainly is the family at its
-strongest: homoiousia is a bootstrap-tier claim, not an IR-tier one.
-
----
-
-## 4. What C2 (grammar-to-grammar transposition) actually requires — the sharpest counterexample
-
-The live transposition `GrammarIr → BackendIr` is `lower_expr` — a hand-written tree
-fold (`crates/passes/src/lib.rs:1329-1359`; the `Project → ValueProject` arm at
-`:1349-1353` carries `ty` verbatim). The emit-order framing `SpanMark(Start) · body ·
-SpanMark(End) · TapeEmit · DirectBuild · Return` is `materialize_rule`
-(`:1362-1389`), also a hand fold keyed by a `MaterializationPlan`.
-
-bbnf grammars map **bytes → tape** (recognizers over input). They do **not** express
-**tree → tree** transductions. `lower_expr` and `materialize_rule` consume an
-already-parsed `GrammarIr` and emit `BackendExpr`; there is no byte stream to recognize,
-so there is no bbnf grammar that *is* this map. Realizing "grammar-to-grammar maps"
-therefore demands a term-rewriting / attribute-evaluation facility bbnf lacks —
-i.e. an e-graph rewrite system (LOCK-2's `egraph`/`egraph-derive` in-tree) or a
-DRR/PDL-style pattern DSL. Importing one into 3C is either (a) an orthogonal-subsystem
-violation (`no-orthogonal-codepaths`, `system-cohesion`) or (b) a collapse of 3C into
-LOCK-2. **C2 has no honest home inside 3C's charter as written.** The strongest form of
-the family concedes C2 and keeps only C1 (data model) + the threaded-`ty` consumption
-(§5).
+| Frontend node algebra | `ir/src/lib.rs:234-271` | the sum this family expresses as `ir.bbnf` + the oracle diff target |
+| Backend node algebra | `ir/src/lib.rs:376-413` | second sum; `lower.bbnf` map's `->` targets |
+| Opaque regex leaf | `ir/src/lib.rs:250` | XL-C: string terminal, no ONE-HIR dependency |
+| The transposition map | `passes/src/lib.rs:1349-1353` | pure variant→variant rewrite (7 arms) |
+| Emit-order splice | `passes/src/lib.rs:1362-1391` | fact-dependent tail (R-2) |
+| Role re-derivation (to delete) | `passes/src/lib.rs:1403-1490` | replaced by declared `->` |
+| `->` thread-in point | `passes/src/lib.rs:204` (+plan `:1149-1287`) | the shared node-type this family consumes |
+| Schema sum gate (born-RED) | `direct_schema.rs:52-58` | GN-3.W1 provides `DirectTypeKind::Sum` |
+| Declaration emitter | `json_typed_direct.rs:10` (+`render_sum_arm`@`:435`) | materialises `ir.bbnf` → `enum` |
+| Typed entry | `codegen/src/lib.rs:130` (`emit_typed_from_source`) | the generation driver already wired |
+| Self-host precedent | `grammar/bnf/bnf.bbnf`, `@pretty` | proves grammar-describes-grammar + emit |
+| Name-gate to retire | `runtime_generator.rs:98` (`has_rule("value")`) | homoiousia removes the JSON-name special case |
 
 ---
 
-## 5. The `->` type value at the infer edge — the one consumption that stands on live
+## 5. Prior art (citations)
 
-The shared directive: `crates/passes/src/lib.rs:204` drops `ty` via `..`
-(`ExprKind::Project { body, .. } => self.infer_expr(*body)?`); the projected type never
-reaches inference. In the homoiousia reading, `Project.ty`
-(`crates/ir/src/lib.rs:261-265`, `ty: Option<String>`) is a **named reference into the
-IR grammar's own type namespace** — a `-> Type` where `Type` is a grammar rule name.
-
-**How this formulation CONSUMES one threaded node-type rather than re-deriving it:**
-today the taxonomy is *re-invented structurally* by `derive_materialization_roles`
-(`crates/passes/src/lib.rs:1403-1491`) — a byte-literal role classifier that sniffs
-`b"{"`/`b"}"`→container (`:1437-1438`), `b"["`/`b"]"`→sequence (`:1445-1446`),
-`b"true"`+`b"false"`→bool (`:1419-1422`), `b"null"`→null (`:1430`), the `>=4`
-value-ref heuristic → the `value` rule (`:1454-1465`) — plus the hardcoded 6-variant
-`JsonValue` fallback in `shapes::derive_shape_facts` (`:270-294`) and the
-`has_rule("value")` name-gate (`crates/codegen/src/runtime_generator.rs:98`). Homoiousia
-**consumes the threaded `ty`**: resolve `Project.ty` as a `DirectBuildTypeRef::Named {
-type_id }` and write it onto `DirectBuildField.target`
-(`crates/ir/src/lib.rs:466-490`; the field is `Option<DirectBuildTarget>` and is
-**always `None`** on the offset-tape path — the plan at `:1136-1287` never fills it).
-Once the grammar's own `->`-named sum *is* the taxonomy, the byte-literal classifier,
-the shape fallback, and the name-gate are **dead code, retired not relocated** — that
-is the concrete "one threaded node-type consumed, not re-derived" evidence, and it does
-not depend on any of homoiousia's harder claims.
-
-**Cross-tree caveat (must be stated).** The directive names the downstream consumer as
-`TypeAnalysis::from_ir` at `backend/driver/analysis.rs`. That symbol lives only in the
-**non-live main tree** (`crates/core/src/backend/driver/analysis.rs:22`, signature
-`from_ir(ir: &GrammarIR)` — it takes a *reference-resolved grammar*, not a typed IR with
-`node_types`, so it cannot receive a threaded projection type as-is). On the **live
-skinny tree** the consuming edge is `passes::extract::derive_materialization_plan`
-(`:1136-1287`) → `shapes::derive_shape_facts` (`:259`) → the codegen emit
-(`runtime_generator.rs:84`). Any thread must target the live edge; `from_ir` is a stale
-pointer for this lock.
+- **MLIR ODS / TableGen** — operations are declared as TableGen records; the C++ op
+  classes are *generated* from the declaration (`mlir-tblgen`). This is the industrial
+  proof of "the IR node algebra is data; the generator emits the node classes," i.e.
+  the generator eating its own definitions. The strongest scale anchor. (MLIR
+  Operation Definition Specification; Lattner et al., "MLIR: A Compiler Infrastructure
+  for the End of Moore's Law," 2021.) MLIR **PDL** (Pattern Descriptor Language) is
+  the declarative rewrite face — the analogue of "transpositions are grammar-to-grammar
+  maps."
+- **Nanopass framework** (Sarkar, Waddell, Dybvig, "A Nanopass Infrastructure for
+  Compiler Education," ICFP 2004; Keep & Dybvig 2013) — languages are *defined as
+  data* (`define-language`); passes are language-to-language maps with catamorphism
+  boilerplate auto-generated. This is the direct prior art for the transposition
+  claim: a pass is a partial rewrite over a declared node algebra, the framework fills
+  the identity arms. The honest model for `lower_expr` under homoiousia.
+- **tree-sitter `node-types.json`** — the typed AST *schema* is emitted from the
+  grammar; a grammar-expressed language yields a typed node vocabulary as data. The
+  closest analogue to "an IR expressed as a grammar produces the typed node schema."
+- **egg/egglog `define_language!`** and this repo's own `crates/egraph` derive-language
+  (`crates/egraph/tests/derive_language.rs`) — enum ⇄ language; the project already
+  derives a `Language` impl from an existing enum. Prior art *inside the tree* that the
+  enum↔grammar correspondence is mechanizable.
+- **Metacircular evaluator** (SICP ch. 4; Reynolds, "Definitional Interpreters," 1972)
+  — the homoiconic root: the evaluated language and the evaluator's data are one.
+- **GHC `deriving` / Template Haskell**, **`syn`+`quote` derive macros** — enum shape
+  synthesized from declaration; the mechanical basis of the declaration emitter.
 
 ---
 
-## 6. Prior art (citations)
+## 6. Named risks & counterexamples
 
-- **tree-sitter** — a grammar generates both a parser and a typed CST schema
-  (`node-types.json`) consumed by language bindings. This is C1 realized at scale:
-  the *type surface* is grammar-derived; the transformation engine is separate,
-  hand-written C. Confirms "schema yes, transduction no."
-- **MLIR ODS (Operation Definition Specification, TableGen)** — dialect ops and types
-  declaratively specified, generated to C++. But rewrite patterns (DRR/PDL) are backed
-  by a C++ pattern engine, not the ODS grammar. The industrial precedent that the DATA
-  MODEL is spec-generated while TRANSDUCTION is a distinct engine — exactly §4's split.
-- **Attribute grammars (Knuth 1968, "Semantics of context-free languages")** — the `->`
-  projection *is* a synthesized attribute; a grammar-specified IR is an attribute
-  grammar whose synthesized attributes are the IR nodes. Silver/Copper (U. Minnesota)
-  generate compilers from AG specs — the true theoretical home of C1, and evidence that
-  even there the attribute *equations* are a separate evaluation layer (echoing C2's
-  gap).
-- **GHC "Trees That Grow" (Najd & Peyton Jones, 2017)** — one AST, phase-indexed
-  extension fields: one-IR-many-phases without grammar generation. Relevant to
-  LOCK-3 3B, and a caution that phase richness resists a single generated shell.
-- **egg / egglog** — rewrite rules as data over an e-graph: the transduction-as-data
-  facility bbnf lacks (§4). Its existence is precisely why C2 belongs to LOCK-2, not 3C.
-- **Bootstrapping precedent (rustc, GHC self-host)** — the fixpoint `regen∘regen = regen`
-  byte-identical is LOCK-7 · 7A's gate; "the generator eats itself" is this bootstrap,
-  and its consumer is the bootstrap engine, confirming §3.
-- **PROVE-12 (in-tree, worktree base `d2b32f6e3`)** — the residualization model
-  homoiousia must obey: a grammar constant const-evaluated at generation into a
-  const-generic mask, zero runtime instruction, byte-identical parity, +18 generated
-  LOC. Any grammar-expressed IR must be an equally build-time artifact.
+- **R-2 (the sharpest — the transposition is NOT pure grammar-to-grammar).**
+  `materialize_rule` (`passes/src/lib.rs:1362-1391`) splices `SpanMark/TapeEmit/
+  DirectBuild/Return` from `MaterializationPlan.descriptors` — `label`, `shape`,
+  `fields:Vec<DirectBuildField>`, `kind:TapeKind` — none of which live in the source
+  grammar; they are *derived* by role classification (`derive_materialization_roles`,
+  `:1403`; `derive_materialization_plan`, `:1136-1287`). So `ExprKind→BackendExpr` is
+  **grammar + facts → grammar**, an *attributed* map, not a pure rewrite. The honest
+  claim is therefore weaker than the family's slogan: the node **algebra** is
+  grammar-derivable, but the transposition carries synthesized attributes. Two exits,
+  both real: (a) fold the facts *into* the grammar as `->` chains (this is exactly
+  GN-3.W3 "The Authored Shape" — typed grammars carry roles/labels/cardinality as
+  declared arrows, so the plan is derived not heuristic), making the map pure again;
+  or (b) model it as an attribute grammar (inherited/synthesized attributes), which is
+  Nanopass's actual shape. Either way the family must NOT claim a bare rewrite. A
+  prototype must *measure* the pure-arm fraction (§7 PROVE-B).
 
----
+- **R-1 (consumer thinness / parsimony inversion).** Standalone, replacing a 76-line
+  hand enum (`ExprKind`+`BackendExpr`) with `ir.bbnf` (~40 lines) *plus* the emitter
+  machinery is net-negative unless the sum node is a sunk cost. Disposition: the family
+  is only economical **riding GN-3.W1's already-scheduled sum node** and LOCK-7's
+  already-scheduled bootstrap oracle. Absent both owners, Y.13 is not satisfied and the
+  family should be BANKED, not landed. Counterexample to over-eagerness: skinny's IR is
+  ~23 arms total — MLIR-scale (thousands of ops) is what makes ODS pay; at 23 arms the
+  win is *bootstrap coherence and name-gate deletion*, not LOC.
 
-## 7. Named risks / counterexamples
+- **R-3 (bootstrap staging skew).** If codegen is generated from `ir.bbnf` and
+  `ir.bbnf` is parsed by codegen, a change to `ir.bbnf`'s node set requires the OLD
+  generator to emit the NEW enum. Standard bootstrap hazard; handled only by a
+  committed stage-0 + the regen∘regen=regen byte-identity fixpoint (LOCK-7 7A). This is
+  a real recurring cost, not a one-time bring-up.
 
-1. **C2 has no substrate (sharpest).** bbnf maps bytes→tape; `lower_expr`
-   (`passes:1329`) and `materialize_rule` (`:1362`) are tree→tree folds with no grammar
-   form. "Grammar-to-grammar maps" is vacuous unless a rewrite engine is imported —
-   which is either orthogonal-subsystem breach or a merge into LOCK-2.
-2. **The analyses aren't grammar-expressible.** `nullability` (`ir:320-349`),
-   `first_bytes`, `cost.rs`, and `derive_materialization_roles` are hand folds. LOCK-7
-   7B's "generator becomes mostly data" is bounded to *type shells*; the fold logic
-   stays hand-code, so the self-hosting percentage claim must be measured, not asserted.
-3. **The sum-node gate.** `ExprKind` is a 10-arm sum but `DirectTypeKind` is Struct-only
-   (`direct_schema:52`). Homoiousia cannot express its own IR until GN-3.W1 lands `Sum`;
-   the product-only subset excludes every `Alt` rule = excludes `ExprKind` itself.
-4. **Consumer-less on live.** Only `json.bbnf` exists; no `ir.bbnf`. Constitution viii
-   forbids the substrate absent a consumer; its sole consumer is unlanded LOCK-7 7B —
-   a born-RED edge, never a self-standing 3C product.
-5. **no-ts-ir / zero-runtime (XL-D, Constitution v).** The grammar-expressed IR must
-   stay a build-time emitter input. If it becomes a runtime IR-walker it breaks the
-   zero-runtime-cost invariant; PROVE-12 is the compliance model (const-eval at
-   generation, `git diff` over `crates/runtime/` empty).
-6. **Fixpoint fragility.** `regen∘regen = regen` byte-identical (LOCK-7 7A) is
-   unreachable if the hand `ir/src/lib.rs` carries derives, doc-comments, and impl
-   blocks a grammar cannot emit — the same "information must move into the grammar"
-   burden GN-3.W3 hit with capacity hints (`GN-3.md` R1). Byte-identity of a
-   grammar-generated `ir/src/lib.rs` is the sharpest engineering gate and likely forces
-   per-derive/per-impl annotations that bloat the IR grammar.
+- **R-4 (declaration face vs runtime-dispatch face conflation).** GN-3.W1's sum node
+  is designed for a *runtime* byte-dispatched `JsonValue`. Naively consuming it would
+  drag a first-byte `match` into the IR enum, which is nonsense (IR values are never
+  parsed from bytes). The family must consume only `render_sum_arm`'s type-declaration
+  output and assert the dispatcher half is absent — this is the no-ts-ir seam and must
+  be a gate, not an assumption.
+
+- **R-5 (sum canonicalization / order).** `ir.bbnf`'s alternative order must map to the
+  hand enum's variant order for byte-identity, or the oracle diff fails on ordering
+  alone. GN-3.W1 already specifies order-insensitive set-equal unification with
+  canonical ordering in `sum.rs` (GN-3 R5); this family inherits that requirement and
+  must additionally pin *declaration order* = source order for the diff to be strict.
 
 ---
 
-## 8. Exactly what a prototype must test to move 3C
+## 7. What a prototype must test to move this family
 
-- **P1 — Sum render.** Author `ir.bbnf` expressing `ExprKind` as a 10-arm `Alt` with one
-  product rule (`Project = body target ty -> Project`). Run the codegen enum renderer on
-  it. RED until `DirectTypeKind::Sum` (`direct_schema:52`) can lower an `Alt` to a
-  typed-payload Rust `enum`. Evidence: the emitted enum shell byte-matches the hand
-  `ExprKind` (`ir:234-271`) modulo derives/impls — measure the exact residual delta.
-- **P2 — Fixpoint gap quantified.** Regen `ir/src/lib.rs` from `ir.bbnf`; diff vs
-  committed. Report the byte-identity gap as a line/character budget (derives,
-  doc-comments, `impl` blocks) — this *is* the LOCK-7 7A cost, made concrete.
-- **P3 — Consumer edge, executed or carried.** Either land a LOCK-7 7B micro-wave that
-  reads the emitted IR module in-build, or commit the born-RED edge table of §3 with its
-  owners. No P3 pass = homoiousia stays a bootstrap-tier design input, not a 3C product.
-- **P4 — the `ty` thread (the win that stands alone).** Fill `DirectBuildField.target`
-  (`ir:470`, today `None`) from `Project.ty` (`ir:264`) as `DirectBuildTypeRef::Named`;
-  retire `derive_materialization_roles` (`passes:1403`), `shape_for` fallbacks
-  (`passes:270-294`), and the `has_rule("value")` name-gate
-  (`runtime_generator.rs:98`); prove `json` regen byte-identical (the heuristic taxonomy
-  == the grammar's `->` declaration). This is the RED→GREEN transition on `passes:204`
-  and the one consumption independent of C1/C2.
-- **P5 — zero-runtime gate.** `git diff --name-only <base>..HEAD | grep crates/runtime/`
-  must be empty on every step (PROVE-12 / GN-3 invariant); the IR-as-grammar is a
-  schema producer, never a runtime.
+- **PROVE-A — the declaration face round-trips.** Author `ir.bbnf` for the 10
+  `ExprKind` arms; run through `emit_typed_from_source` (`codegen/src/lib.rs:130`) with
+  a Sum-capable `DirectTypeKind` (borrow GN-3.W1's `render_sum_arm`); assert the
+  emitted `enum ExprKind {…}` is variant-set-equal and (post-`rustfmt`) byte-identical
+  to `ir/src/lib.rs:234-271`, and parses under `syn::parse_file`. Gate: the generated
+  enum *is* the hand enum. This proves the homoiousia declaration face and directly
+  exercises GN-3.W1's node — the tightest possible consumer for the sum gate.
 
-**Disposition.** 3C's strong core is C1 (grammar-specified IR *data model*) carried as a
-born-RED edge into LOCK-7 · 7B, gated on `DirectTypeKind::Sum` @ GN-3.W1, plus the
-self-standing P4 `ty`-thread that retires the byte-literal role classifier. C2
-(grammar-to-grammar transposition) is refuted on live for want of a tree-transduction
-substrate and is ceded to LOCK-2. The family is honest only when C1 and C2 are costed
-apart and the consumer is named as LOCK-7, not asserted as present.
+- **PROVE-B — quantify the pure-arm fraction (settles R-2).** Express `lower_expr` as a
+  declarative `lower.bbnf` rewrite table and count: of the 10 `ExprKind` arms, how many
+  map to `BackendExpr` with *no* consultation of `MaterializationPlan`? (Expected: 7
+  pure — Seq/Alt/Optional/Literal/Regex/Ref/Project; 3 fact-dependent via
+  `materialize_rule`.) Report the fraction and whether GN-3.W3's authored-shape arrows
+  eliminate the fact dependency. This is the honest measurement that decides whether the
+  family's slogan ("grammar-to-grammar maps") holds or must degrade to "attributed
+  map."
+
+- **PROVE-C — the fixpoint (settles R-3).** regen `ir.bbnf`→`ExprKind`, rebuild codegen
+  against the generated enum, regen again; assert byte-identical (regen∘regen=regen).
+  Proves the generator can eat itself without staging skew — the LOCK-7 7A gate this
+  family inherits.
+
+**Disposition of the family in one line:** the IR's node *algebra* is grammar-derivable
+and its declaration face round-trips through the existing typed emitter; the family adds
+no substrate of its own, standing entirely on two born-RED edges — `DirectTypeKind::Sum`
+(GN-3.W1) and the bootstrap oracle (LOCK-7 7B/7D) — and its slogan must be tempered from
+"pure grammar-to-grammar maps" to "declared node algebra + attributed transposition"
+until PROVE-B shows GN-3.W3's arrows close the fact gap.

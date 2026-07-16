@@ -1,293 +1,237 @@
-# LOCK-3 · Family 3D — STAGED-RESIDUAL · pass-2 research
+# LOCK-3 · Family 3D — THE STAGED-RESIDUAL FORMULATION (pass-2)
 
-Re-pin: the sole living tree is `skinny@c43126422` (HEAD at authorship;
-`git rev-parse HEAD`). The directive's `b3cb8c16b` is not this HEAD and is
-not present as a tag here — treat it as a stale pointer; every measurement
-below is anchored to `c43126422` or to the PROVE-12 worktree base `d2b32f6e3`
-where explicitly named. R6's `7f3be27c2` numbers are re-verified live below.
-All hosts aarch64 (NEON + scalar oracle; no x86). Line numbers are `c43126422`.
-
-The formulation: **the IR is an explicitly two-stage program — a binding-time
-plane over the existing nodes. Stage-0 facts are const at generation time and
-must vanish from the emitted recognizer (residualized); stage-1 is the per-byte
-runtime.** PROVE-12 is the corollary: it residualized one stage-0 fact (the
-delimiter set) and the stage-0 witness disappeared from the disassembly. This
-family generalizes that from one hand-found site to a *binding-time analysis*
-attached to live IR, with the type sub-plane as a second, symmetric stage-0
-residual. It does NOT author a new substrate — the substrate already exists on
-live (§1) and is currently mis-gated and under-consumed (§2, §5).
+Base pin: `skinny@061c79fa7581ec42f0d39f778c1f19dc7e65ed26` (live HEAD; the sole
+measurement substrate). The legacy `bbnf-lang` `crates/core` tree is a **port-target
+reference only**, never a measurement surface — this distinction is load-bearing below
+(§3, R-C). All `path:line` verified at this HEAD unless prefixed `crates/core/`.
 
 ---
 
-## 1. The substrate already ships — three live stage-0 facilities
+## 1. The thesis, made concrete
 
-The two-stage program is not a greenfield invention; skinny already carries
-three of its organs, un-unified:
+The IR carries a **binding-time (BT) fact per node**: every `BackendExpr`/`ExprId` is
+either *stage-0* (its value is fixed by the grammar, known at generation) or *stage-1*
+(its value depends on runtime input). Residualization is nothing but **erasing every
+stage-0 node into a generator-time constant and emitting only the stage-1 residual**.
+This is offline partial evaluation over the grammar IR: the two-level λ-calculus of
+Nielson & Nielson applied to `GrammarIr`, with the generator as the `mix` specializer.
 
-**(a) `BackendShape::CollapsedStage` — the two-stage *shape*.**
-`crates/ir/src/cost.rs:131-136` gives it a policy triad distinct from every
-other shape: `SubstrateTarget::LocalTempOnly` + `RetentionLifetime::LocalLoop`
-(`cost.rs:58-86`) — i.e. "nothing survives the loop; stage-0 is collapsed into
-a local temporary." It is a first-class candidate in the decision CSP
-(`passes/src/decision_csp.rs:68-78`, `lib.rs:554-560`, priority
-`P3CollapsedStage`), it has an emission target
-(`runtime_plan::CollapsedStageRule` / `CollapsedStagePlan`, asserted in
-`codegen/src/lib.rs:1270,1423-1424`), and a diagnostic when its wrapper is
-absent (`passes/src/diagnostics.rs:13,50,59`). **This is the stage-plane's home
-on live.** The staged-residual formulation's job is to make its admission
-grammar-derived and its collapse the general residualization engine.
+Two disciplines already ship on live as *un-labeled corollaries of this idea* — the
+family's job is to make the label explicit and prove it accounts for both:
 
-**(b) `ScanAlphabet` / `derive_alphabet` — the grammar-derived stage-0
-alphabet.** `codegen/src/lower/css_scan.rs:38-102,487-565`. Every field
-(`block_open`, `terminator`, `colon`, `balanced_pairs`, `quotes`,
-`comment_lead`) is *harvested from the CSS L4 rule literals/regexes* at
-generation time (`css_scan.rs:134` calls it from `derive_program`), never a
-fixed literal. The per-call-site STOP vectors (`at_rule_stop`,
-`qualified_stop`, `declaration_stop`, `colon_before_stop`, `css_scan.rs:82-101`)
-and the fixed-9 SKIP array (`skip_alphabet`, `:66-80`) are *rendered from it*
-into `generated.rs` by `css_scan_direct` (`mod.rs:112`, `projection.rs:446`).
-Per the directive: **declare this as the dependency; do not re-author it.** It
-is precisely a stage-0 residual island — a const `&[u8]` feeding a SIMD scan
-(`css_scan_direct`) — and it is what PROVE-12 const-folded.
+- **The alphabet/STOP-set island (the declared dependency, not re-authored).**
+  `ScanAlphabet::derive_alphabet` (`crates/codegen/src/lower/css_scan.rs:487-570`)
+  harvests the CSS structural bytes from *grammar rule terminals*
+  (`ruleBlock`→`{}`, `atRuleBody`→`;`, declaration→`:`, `cssString`→quotes) at
+  generation time and renders them as `const AT_RULE_STOP: &[u8]` … `COLON_BEFORE_STOP`
+  (`crates/codegen/src/css_scan_direct/mod.rs:112-149`, dispatched by
+  `css_scan_direct/drivers.rs:51-262`). JSON's analogue is `STRUCTURAL_ALPHABET`
+  (`crates/runtime/src/grammars/json/scan.rs:19`, a `const StructuralAlphabet`). These
+  consts **are** the stage-0 residual of a scan whose loop is the stage-1 program. The
+  island is not synthetic: it is exposed on the live emit path.
+- **PROVE-12 (residualization) is a strict corollary.** PROVE-12 const-folded the CSS
+  delimiter-membership test into a `const`-generic `u128` bitmask
+  (`find_component_delim::<{ delim_mask(b";{}") }>`), collapsing three runtime slice
+  loads + two length guards into two immediate `and` masks — measured −3.7…−6.4% ins/B,
+  0.81-0.98× cyc/B, byte-identical parity, +18 generated LOC. In BT terms: the
+  delimiter set was a *stage-0 node still being interpreted at stage-1*; residualization
+  moved it to where the BT fact already said it belonged. The framing predicts PROVE-12;
+  it does not merely accommodate it.
 
-**(c) PROVE-12 — the residualization *transform*, CONFIRMED.** Base
-`d2b32f6e3`. It took one stage-0 fact (the delimiter STOP set, a
-`ScanAlphabet`-derived constant threaded as a runtime `&[u8]`) and made it a
-`const DELIMS: u128` bitmask (`patch.diff` — `delim_mask` const fn +
-`find_component_delim::<{...}>`). The stage-0 witness — the slice loads
-`ldrb [x22,#N]` and the length guards `cmp x21,#2/#3` — **disappeared** from the
-emitted symbol (REPORT §3, VERIFY §4: mask-as-immediate, no slice loads). Every
-CSS corpus/lane won: ins/B −4.8…−6.8% deterministic, cyc/B 0.80–0.91×,
-byte-identical parity (XOR checksum MATCH), regen bit-for-bit, +18 generated LOC
-(SPEC §0 row 12, CONFIRMED). **Residualization = erasure of a stage-0 node is
-thereby a proven, measured operation on live emit — the family's central claim
-already has one executed instance.**
+The mechanism is therefore: **(a)** a `binding_times` analysis over the real
+`BackendIr`; **(b)** a residualizer that specializes each stage-0 frontier node via the
+host's own staging primitives — Rust `const fn` + const-generics (exactly PROVE-12's
+seam) and monomorphization-as-specialization (the first Futamura projection in
+miniature); **(c)** a BT fact on the type sub-plane whose stage-0 erasure *is* the
+zero-runtime-cost type-plane invariant (Constitution v).
 
 ---
 
-## 2. Q: can a "stage" fact attach to live IR nodes such that that residual
-## island is provably a stage-0 node the live emit path exposes?
+## 2. The substrate
 
-Yes, and the attach point is concrete. Define a `BindingTime ∈ {Stage0, Stage1}`
-*fact* computed over the lowered `BackendExpr` tree (not a new IR — an
-annotation, per 3B's shape, so 3D is 3B's type-directed refinement, not a rival
-tower). The rule is standard two-level λ (Nielson & Nielson; Jones/Gomard/Sestoft
-*Partial Evaluation*): a node is Stage0 iff all its inputs are grammar-constant.
+### 2a. The stage fact — an attribute, not a new sum arm
+Attach BT as a companion map over stable node ids, in the annotating-pass shape (do
+**not** grow the `BackendExpr` sum, per §14/parsimony and no-value-discard). Home it on
+`ShapeFacts` (`crates/ir/src/lib.rs:357`) or as a sibling of the recognizer/shape facts,
+keyed the same way `admits_collapsed_stage` already keys per-rule decisions:
 
-Concretely on live: a node is Stage0 exactly when it is derived from
-`ScanAlphabet` (grammar literals) or from a `ByteLiteral`
-(`passes/src/lib.rs:1340`) or a `Regex` whose `SpanKind` is fixed — everything
-`derive_alphabet` (`css_scan.rs:487`) reads. Stage1 is the input-dependent
-per-byte scan loop. The binding-time run on the **real CSS IR** is: walk the
-`CssScanProgram` (`css_scan.rs:104-117`), mark every `ScanAlphabet`-sourced STOP
-vector as Stage0 (it is a pure function of grammar literals — the
-`at_rule_stop`/`declaration_stop` bodies at `:82-101` read only `self.<field>`),
-mark the `find_component_delim` scan body as Stage1. **PROVE-12 already
-witnesses this partition**: it residualized exactly the Stage0 STOP-set nodes
-and left the Stage1 loop. So `binding_times(CssScanProgram)` is not synthetic —
-it *reconstructs the partition PROVE-12 hand-found*, and its correctness oracle
-is: "the Stage0 set = the set of nodes whose residualization leaves parity
-byte-identical." That oracle is runnable today via the PROVE-12 checksum
-(REPORT §5).
+```
+enum BindingTime { Static, Dynamic }          // two-level; Nielson & Nielson
+struct StageFacts { node_bt: Vec<(NodeId, BindingTime)> }
+```
 
-For JSON the honest answer (R6 §5, verified live: `grammars/json.bbnf` has zero
-`->`, `passes/src/lib.rs:204` discards `Project.ty`): the JSON hot path
-(string/number kernels, `generated.rs`) has no interpretive stage-0 island left
-to residualize — R6 confirms "JSON's hot rules already dispatch straight to
-hand-written kernels — nothing to residualize there." So the JSON stage-0
-residual is NOT in the scan loop; it is in the **type/shape plane** (§3), which
-is where 3D's second, non-overlapping win lives.
+Producer: a new `binding_times(&BackendIr) -> StageFacts` pass sited beside
+`derive_backend_shape` (`crates/passes/src/lib.rs:398`) and `admits_collapsed_stage`
+(`:959`). Rule of the analysis (offline BTA, Jones/Gomard/Sestoft): `ByteLiteral`,
+`RegexProgram` pattern text, `SpanMark` labels, `TapeEmit.kind`, `DirectBuild.shape`,
+and every alphabet/terminal that `derive_alphabet` reads are **Static**; the per-byte
+loop over `source[..]` and any input-classified branch are **Dynamic**. A node is Static
+iff all its inputs are Static (monotone lub — the standard BTA fixpoint, LLVM-SCCP-shaped).
 
-**Counterexample that bounds the claim:** `admits_collapsed_stage`
-(`passes/src/lib.rs:959-961`) currently reads
-`target.avx512bw && matches!(rule_ir.expr, BackendExpr::Entry(_))`. On the
-aarch64-only host `avx512bw` is permanently false (SPEC §0 refutation: x86
-dead), so **`CollapsedStage` is never admitted on live** — it is a dead shape,
-and `lib.rs:495` fires `CollapsedStageNotViable` whenever the author declares it.
-The staged-residual formulation's *first obligation* is to re-home this
-admission predicate off the dead x86 feature onto a grammar-derived binding-time
-fact ("this Entry rule has a stage-0 residual island of size ≥ k"). This is a
-named RED gate the family must carry and is the sharpest evidence the current
-stage-plane is consumer-less at runtime (Constitution viii, Y.13).
+### 2b. Relation to `CollapsedStage` — the live "stage" shape is DORMANT (a real gap)
+`BackendShape::CollapsedStage` (`crates/ir/src/lib.rs:366`) is the closest extant
+"stage" surface: a whole-rule decision (`P3CollapsedStage`,
+`crates/ir/src/cost.rs:267,279`; rationale `CollapsedStageAdmissible`, `cost.rs:258`;
+cost `LocalTempOnly`/`LocalLoop`, `cost.rs:131-135`), lowered by a 17-LOC emitter
+(`crates/codegen/src/lower/collapsed_stage.rs`) through `tape_plan.rs:9-53`
+(`fuse_span_stage`/`commit_fused_stage`). **But its admissibility predicate is
+`target.avx512bw && matches!(rule_ir.expr, BackendExpr::Entry(_))`
+(`crates/passes/src/lib.rs:959-961`)** — gated on an x86 feature that is abrogated
+(refutation-law: x86 dead). On aarch64 live it **never fires**. So the extant "stage"
+concept is (i) *coarse* (whole-rule, not per-node) and (ii) *inert*. The family's
+substrate **generalizes CollapsedStage from a dead whole-rule shape into a live per-node
+BT fact**, and either revives the shape under a real aarch64 admissibility predicate or
+retires it in favor of the node-level residualizer — a named supersession, not silent
+contradiction (Constitution ix).
 
----
-
-## 3. Q: can "type-plane erasure = stage-0 erasure on the type sub-plane" be
-## shown by threading the :204 `ty` as a stage-0 residual to a Rust *type*?
-
-This is the family's distinctive thesis and it is *the same mechanism* as
-PROVE-12 applied to the type sub-plane. The type plane costs zero at runtime
-(Constitution v) — which is exactly the statement "the type plane is entirely
-Stage0." So threading `Project.ty` from infer to a Rust type IS a stage-0
-residualization: the `->` annotation is a grammar constant (Stage0), and its
-correct residual is not a runtime tag but a *Rust type parameter / struct field
-type* emitted at generation time, leaving zero runtime witness — symmetric to
-PROVE-12 leaving zero delimiter-slice witness.
-
-The end-to-end thread (shared question + 3D's consumption contract):
-
-- **Edge:** `crates/passes/src/lib.rs:204` — `ExprKind::Project { body, .. }`
-  returns `self.infer_expr(*body)?`, dropping `ty` via `..`. (`:203`
-  `Annotation → Unit` is legitimate untyped — not a target.)
-- **Carrier already exists downstream:** lowering keeps `ty` verbatim —
-  `lib.rs:1349-1353` `ExprKind::Project → BackendExpr::ValueProject { body,
-  target, ty }`. So `ty` is NOT lost at lower; it is lost at *infer* (the type
-  fact never becomes a resolved type) and then *folded* at emit
-  (general-descent `classify_projection` collapses it to a 4-arm
-  `ProjectionKind{Float,Bool,Tag,Span}`, R6 §5b).
-- **3D's consumption contract (how it CONSUMES one threaded node-type, not
-  re-derives):** thread the `:204` `ty` into `node_types` (`infer_expr` writes it
-  at `lib.rs:212`) as a *resolved stage-0 type*, then have the schema-derivation
-  consumer read `node_types[project_expr]` rather than re-classifying the target
-  string. The honest live type-IR that receives it is `DirectSchemaSet` /
-  `DirectFieldSchema.type_ref` (`codegen/src/direct_schema.rs:4-120`) — a
-  full-fidelity struct/Vec/Option/Scalar lattice with a working direct-to-struct
-  renderer (`json_typed_direct::render`, `json_typed_direct.rs:10`, 1245 LOC).
-  Today its only input is **hand-authored**
-  (`xtask/src/real_typed_schema.rs:7`). The consumption is: a
-  `derive_direct_schema` pass sets `DirectBuildField.target.type_ref` from the
-  threaded node-type (currently always `None` on the offset path — R6 §5c,
-  `passes/src/lib.rs:1149-1287`), and `emit_typed_from_source`
-  (`codegen/src/lib.rs:130`) emits the Rust struct field type. The `ty` never
-  appears at runtime → stage-0 erasure to a Rust type, byte-for-byte the same
-  emitted parser plus a typed façade.
-
-**The named downstream consumer** the directive asks for is therefore
-`emit_typed_from_source`'s schema input (`direct_schema.rs` → `json_typed_direct`)
-— it exists, it works, and it is *starved of exactly the fact `:204` drops*.
-(The directive's `TypeAnalysis::from_ir` in `backend/driver/analysis.rs` does
-NOT exist on live — `grep` finds no `TypeAnalysis`/`from_ir`/`analysis.rs` in
-`crates/`; that is a greenfield/designed name. The live consumer that stands in
-its place is the `DirectSchemaSet` seam, the same architectural role. This must
-be flagged as a named divergence: the shared directive points at a not-yet-live
-consumer; 3D binds instead to the live typed emitter.)
+### 2c. The type sub-plane as a BT sub-lattice
+The `->` projection type is a Static value: `ExprKind::Project { body, target, ty }`
+(`crates/ir/src/lib.rs:261-265`), where `ty: Option<String>` is a generation-time
+token. "Type-plane erasure = stage-0 erasure on the type sub-plane" is literal: thread
+`ty` as a Static residual whose emission is a **Rust type** (a `DirectTypeRef`), which by
+construction costs zero at stage-1. This is Nielson's two-level *type* discipline and
+LMS's `Rep[T]` marker (Rompf & Odersky): the binding time lives *in the type*.
 
 ---
 
-## 4. Q: if both land — what NEW-site cold paired-PMU delta?
+## 3. The `->` thread as stage-0 residual (the Shared-directive edge)
 
-Two disjoint deltas, measured separately (unmeasured plausibility does not count
-— PROVE-09):
+**The discard.** `crates/passes/src/lib.rs:204`:
+`ExprKind::Project { body, .. } => self.infer_expr(*body)?` drops `target`/`ty`; lowering
+carries them verbatim into `BackendExpr::ValueProject` (`:1349`) but
+`DirectBuildField.target` is filled `None` on the offset-tape path (R6 §5d).
 
-- **Scan residual (CSS):** already measured — PROVE-12 ins/B −4.8…−6.8%,
-  cyc/B 0.80–0.91×. Re-pinned to `c43126422`, the prototype must re-run
-  `css_canon_bench` PMU to confirm the number holds on the current tree (the
-  base moved `d2b32f6e3`→`c43126422`).
-- **Type-plane residual (JSON first-byte dispatch):** the directive's specific
-  ask. The type-plane erasure produces a *typed* direct-to-struct parser vs the
-  structural `value_from_ref` classify-fold. The measurable is the JSON
-  first-byte dispatch (`grammars/json/generated.rs:105` `match byte`, R6 §3):
-  does a stage-0-erased typed emitter remove the runtime `value_from_ref` switch
-  (`value.rs:143-171`) at leaves it statically knows? Predicted delta is a
-  *removal of the classify branch* at typed leaves — but this is UNMEASURED and
-  is the prototype's PMU obligation on `json_canon_bench` cold per-parse (no warm
-  benches — Constitution iv). Report ins/B; if zero or negative, it is a named
-  negative result, not a claim.
+**The consumption contract (how 3D consumes a threaded node-type rather than
+re-deriving it).** The Static `ty` is read *once* by the direct-to-struct emitter as the
+specializing constant of a stage-0 residual: `ty` → `DirectBuildField.target` →
+`DirectTypeRef` → the emitted Rust `struct`/`enum` field type in
+`crates/codegen/src/json_typed_direct.rs:10` over `direct_schema.rs` (`DirectTypeKind`,
+Struct-only today at `:52`). The anti-pattern this retires is the **re-derivation** at
+`crates/codegen/src/emit/general_descent/view.rs:20-46` (`classify_projection` folding
+every arrow to `{Float,Bool,Tag,Span}`) — a stage-1-shaped re-classification of a
+stage-0 fact. Erasure means the fold dies and the type is consumed once, at stage-0.
+
+**The cross-tree caveat (R-C, sharp).** The Shared directive names the downstream
+consumer as `TypeAnalysis::from_ir`. That symbol exists **only in the legacy tree** —
+`crates/core/src/backend/driver/analysis.rs:16-31`, reading `ir.types` +
+`ir.type_map.scratch_types()` over a real `bbnf_ir::TypeDesc`. **Skinny has no `TypeDesc`
+and no `TypeAnalysis`** (R6 §5: `rg TypeDesc` → 0 hits on live). Therefore threading
+`:204`'s `ty` "into that consumer" is a *port-target* statement, not a skinny seam. On
+live skinny the honest stage-0 consumer is `direct_schema` + `json_typed_direct`, and
+the wire is: (1) stop discarding at `:204`; (2) fill `DirectBuildField.target` in
+`derive_materialization_plan` (`:1136-1391`, currently `None`); (3) emit as a
+`DirectTypeRef`. Claiming the `crates/core` consumer as the skinny thread would be a
+consumer-substitution error the family must not commit.
 
 ---
 
-## 5. Integration seams (path:line, live `c43126422`)
+## 4. Integration seams (path:line, live HEAD)
 
-| Seam | Site | Role in 3D |
-|---|---|---|
-| Type-fact drop (shared edge) | `crates/passes/src/lib.rs:204` | thread `ty` into `node_types` (`:212`) as Stage0 resolved type |
-| Type-fact carrier (survives) | `crates/passes/src/lib.rs:1349-1353` | `ValueProject{ty}` — already carries `ty` to backend |
-| Type-fact fold (lossy) | `general_descent/view.rs:20-46` `classify_projection` | the 4-arm collapse to replace with `node_types` read |
-| Stage-0 alphabet | `codegen/src/lower/css_scan.rs:38-102,487-565` | the grammar-harvested Stage0 fact; declared dependency |
-| Residualization transform | PROVE-12 `patch.diff` (`runtime_generator.rs` CSS template) | the proven erasure; generalize to a `residualize(Stage0)` pass |
-| Two-stage shape | `ir/src/cost.rs:131-136`; `passes/src/lib.rs:554-560` | `CollapsedStage` + policy triad = the stage-plane home |
-| Dead admission gate | `passes/src/lib.rs:959-961` (`avx512bw`) | RED: re-home off x86 onto binding-time fact |
-| Typed emitter (type consumer) | `codegen/src/lib.rs:130`; `direct_schema.rs:4-120`; `json_typed_direct.rs:10` | consumes threaded `ty` via derived `DirectSchemaSet` |
-| Hand schema (to retire) | `xtask/src/real_typed_schema.rs:7` | replaced by `derive_direct_schema` |
-| Decision CSP (stage choice) | `passes/src/decision_csp.rs:68-135` | where per-site staging is "solved by LOCK-2's engine" |
+- Stage fact home / producer: `crates/ir/src/lib.rs:357` (`ShapeFacts`); new pass beside
+  `crates/passes/src/lib.rs:398` (`derive_backend_shape`) and `:959`
+  (`admits_collapsed_stage`).
+- Stage-0 island evidence (declared dependency): `crates/codegen/src/lower/css_scan.rs:487`
+  (`derive_alphabet`); consts `crates/codegen/src/css_scan_direct/mod.rs:112-149`;
+  drivers `crates/codegen/src/css_scan_direct/drivers.rs:51-262`; JSON const
+  `crates/runtime/src/grammars/json/scan.rs:19`.
+- Residualizer seam (PROVE-12 corollary): the `const fn mask` + const-generic
+  monomorph pattern generalizes to any grammar-derived STOP/dispatch table; JSON
+  first-byte dispatch site at `crates/codegen/src/json_sink_direct/dispatch.rs`
+  (`derive_arms`, first-byte keys) — the NEW measurement site for Q3.
+- Type sub-plane thread: `crates/passes/src/lib.rs:204` (discard), `:1349`
+  (`ValueProject` carry), `:1136-1391` (`target` None-fill); `direct_schema.rs:52`
+  (`DirectTypeKind`, Sum gate); `json_typed_direct.rs:10` (emitter); fold to retire at
+  `emit/general_descent/view.rs:20-46`.
+- Dormant stage shape: `crates/ir/src/lib.rs:366`; `cost.rs:131,258,267`;
+  `passes/src/lib.rs:959`; `lower/collapsed_stage.rs`; `lower/tape_plan.rs:9-53`.
+- Port-target consumer (NOT a skinny seam): `crates/core/src/backend/driver/analysis.rs:16-31`.
 
-Boundary held (directive §Boundaries): LOCK-3 owns WHERE the stage fact attaches
-(the binding-time annotation over `BackendExpr`, and the fact contract at the
-L1→L2 lower edge `lib.rs:1349`); the *engine* that solves per-site staging is
-LOCK-2's `decision_csp` — 3D declares the variable ("stage-0 residual depth per
-site") and the objective (PMU cost), not the solver. `no-ts-ir` holds: the
-type-plane residual emits Rust *type declarations* at build time (the typed
-emitter), never a runtime IR (XL-D).
+## 5. Boundary compliance
+
+LOCK-3 owns **that** the BT fact exists and **where** it attaches (the fact contract at
+the IR edge); LOCK-2's engine owns the per-site *decision of which* Static frontier
+nodes to actually residualize (cost/CSP over monomorph-count vs ins/B — the
+generated-size-budget is the constraint). Declared as a dependency edge, not
+re-authored here. `no-ts-ir` holds: the staged split lives in the Rust generator; any
+TS face emits type declarations (stage-0 residuals), never a runtime IR (XL-D).
 
 ---
 
 ## 6. Prior art (citations)
 
-- **Two-level λ / binding-time analysis:** Nielson & Nielson, *Two-Level
-  Functional Languages* (1992) — the `Stage0/Stage1` type discipline is theirs.
-  Jones, Gomard, Sestoft, *Partial Evaluation and Automatic Program Generation*
-  (1993) — "residualization = specialize away static inputs" is the exact
-  operation PROVE-12 performs; the Futamura projections frame "generator eats a
-  grammar" as the first projection.
-- **Staged metaprogramming:** MetaML / MetaOCaml (Taha, Sheard) — `<e>`/`.~`
-  brackets = the binding-time annotation made syntactic; Rust `const generics` +
-  monomorphization are the host's staging primitive PROVE-12 rides
-  (`find_component_delim::<{delim_mask(..)}>`).
-- **Terra / Zig `comptime`:** the two-stage-program-in-the-types model 3D names
-  — Zig's `comptime` params are literally "this value is Stage0"; the
-  `CollapsedStage` shape is skinny's analogue.
-- **LLVM/rustc:** const-folding + GVN is the ad-hoc residualizer PROVE-12
-  refuses to trust ("not deferred to LLVM luck", REPORT §2) — the family's stance
-  is *explicit* staging in the generator, LLVM as backstop only.
-- **regex-automata:** prefilter/DFA tables are compile-time-derived stage-0
-  artifacts feeding a runtime scan — the same shape as `ScanAlphabet`→SIMD; the
-  isomorphism to LOCK-5's continuum is that both are grammar-derived Stage0
-  tables. (MLIR's progressive-lowering "one IR, many dialects" is the model 3B
-  carries; 3D adds the binding-time dimension orthogonally.)
+- **Jones, Gomard & Sestoft, *Partial Evaluation and Automatic Program Generation*
+  (1993)** — offline partial evaluation, binding-time analysis, the `mix` equation, the
+  Futamura projections. The generator specializing a scan loop to a grammar's STOP-set
+  is the *first* Futamura projection; PROVE-12 makes the residual branchless.
+- **Nielson & Nielson, *Two-Level Functional Languages* (1992)** — the two-level
+  λ-calculus and *type-theoretic* BTA that grounds §2c: the stage lives in the type.
+- **Taha & Sheard, MetaML / MSP (2000); MetaOCaml** — explicit staging annotations
+  (`.< >.`, `.~`, `.!`); the model for making the stage boundary syntactically visible.
+- **Rompf & Odersky, Lightweight Modular Staging (LMS, 2010) / Delite** — `Rep[T]` as
+  the binding-time marker inside a host type system; the direct analogue of threading
+  `ty` as a Static residual to a Rust type.
+- **Zig `comptime`** — the production exemplar of a comptime/runtime split encoded in
+  the types; residualization is automatic once a value is comptime-typed.
+- **Typed Template Haskell (`Code Q a`)** — a well-typed splice: stage-as-type in a
+  production compiler.
+- **Rust `const fn` + const generics + monomorphization** — the host's own staging
+  mechanism, already exploited by PROVE-12; monomorphization = specialization.
+- **LLVM SCCP / MLIR `-sccp` + `-canonicalize`** — sparse conditional constant
+  propagation is a binding-time-driven const fold; the BTA fixpoint is SCCP-shaped.
+- **`regex-automata` `ByteClasses` / alphabet compression** — separating a *static*
+  alphabet from *dynamic* input is the same stage split at the automata layer.
 
 ---
 
-## 7. Risks & counterexamples
+## 7. Named risks & counterexamples
 
-1. **The dead x86 gate (proven).** `admits_collapsed_stage` = `avx512bw && …`
-   (`lib.rs:960`) makes the stage shape unreachable on aarch64. Until re-homed,
-   `CollapsedStage` is consumer-less substrate — the strongest live evidence and
-   the family's first RED gate. Named risk: re-homing must not smuggle x86 back.
-2. **JSON has no scan-side stage-0 to residualize** (R6 §5, verified). 3D's JSON
-   win is *entirely* in the type sub-plane; if the type-plane PMU delta (§4) is
-   zero, JSON yields no scan residual and the family's JSON claim collapses to
-   "typed façade, same speed" — acceptable only if declared as such.
-3. **`ty` is `Option<String>`, not a resolved type** (`ir/src/lib.rs`
-   `ExprKind::Project`, R6 §5a). Threading it demands a *resolution* step
-   (string → `DirectTypeRef`), which risks re-deriving rather than consuming.
-   The contract in §3 forces consumption (read `node_types`), but the resolver
-   itself is new surface — must be minimal (KISS) and live in the schema-deriver,
-   not scattered.
-4. **CollapsedStage may double-home with LOCK-2/3B.** The stage *shape* is a
-   BackendShape (LOCK-2 cost territory) and the stage *annotation* is an IR fact
-   (3B territory). 3D must present as the binding-time *refinement* of 3B's
-   annotate-in-place tower, sharing `node_types`, not a fourth transposition.
-5. **Residualization generality is unproven beyond one site.** PROVE-12 is one
-   hand-found delimiter scan. "Any grammar-derived STOP-set scan" (REPORT §7) is
-   asserted, not measured on JSON structural scan or general-descent.
+- **R-A · Degenerate BTA.** Because the whole grammar is known at generation, a naive
+  BTA marks *everything* except the input bytes Static — the split is trivial and buys
+  nothing. The useful boundary is narrow: Static = grammar-derived constants (alphabets,
+  dispatch tables, type tags); Dynamic = the per-byte loop. The family must show the
+  *frontier* (Static nodes with Dynamic consumers — precisely the delimiter set PROVE-12
+  hit) is non-empty and that residualizing exactly it (not more) wins.
+- **R-B · Dormant `CollapsedStage`.** The one live "stage" surface is gated on
+  `avx512bw` (`passes/src/lib.rs:960`) and never fires on aarch64. "The stage fact
+  already lives on live" is false for the *shape*; it is true only for the *derived
+  consts*. The family must revive-or-retire CollapsedStage explicitly.
+- **R-C · No skinny consumer for `ty`.** `TypeAnalysis::from_ir`/`TypeDesc` exist only in
+  `crates/core` (§3). Threading `:204` to that symbol is cross-tree; the skinny consumer
+  is `direct_schema`. Consumer-less substrate is forbidden (Y.13 / Constitution viii):
+  the BT fact and the threaded `ty` must land with their emitter consumer *same-wave*.
+- **R-D · Monomorph explosion.** Over-residualizing (a distinct const-generic monomorph
+  per site per grammar) bloats generated code; PROVE-12 saw 3 monomorphs collapse to 1
+  by inlining — favorable, but not guaranteed. The generated-size-budget gate is the
+  teeth; LOCK-2's cost model owns the trade.
+- **R-E · Capacity hints are corpus facts, not grammar facts.** GN-3 R1: the hand schema
+  carries `875`/`184`/`10_800`/`5_759` from *counting documents*. A grammar-sourced BTA
+  cannot mark these Static — they are not derivable from grammar structure. Counterexample
+  to "all Static facts derive from the grammar"; such hints must enter as explicit
+  annotations or be excluded from the stage-0 set.
+- **R-F · Stale PROVE-12 base.** PROVE-12 measured at `d2b32f6e3` (sk-v22). On live the
+  CSS path already routes through `css_scan_direct` with const STOP arrays; the prototype
+  must confirm whether the const-generic `u128` mask residual is *already live* or must be
+  re-applied at the JSON dispatch site (XL-H: stale-base numbers are wrong-artifact).
 
 ---
 
-## 8. What a prototype must test to move the family
+## 8. What a prototype must test (the movers)
 
-1. **`binding_times(CssScanProgram)` on the real CSS IR** (not a mirror):
-   compute the Stage0/Stage1 partition, and prove it *equals* the set PROVE-12
-   residualized by re-running the PROVE-12 checksum (REPORT §5) with each Stage0
-   node's residualization toggled — parity byte-identical iff the partition is
-   correct. Re-pin to `c43126422`.
-2. **Re-home `admits_collapsed_stage` off `avx512bw`** onto a grammar-derived
-   binding-time predicate (Entry rule has a Stage0 residual island ≥ k), and
-   show `CollapsedStage` becomes *admissible on aarch64* via `decision_csp`
-   without a stub — RED→GREEN on `CollapsedStageNotViable` (`diagnostics.rs:13`).
-3. **Thread `:204` `ty` → `node_types` → `DirectFieldSchema.type_ref`**: one
-   grammar with `->` projections (Sheets already has them —
-   `grammar/google-sheets/google-sheets.bbnf:6,12,17-18`), derive a
-   `DirectSchemaSet` from the threaded fact (retiring the hand schema
-   `real_typed_schema.rs:7` for that grammar), emit via `json_typed_direct`, and
-   show the emitted parser is byte-identical plus a typed façade with **zero
-   runtime `ty` witness** (disasm: no `classify_projection` branch at typed
-   leaves).
-4. **Cold paired PMU** on both residuals: CSS (re-confirm PROVE-12 on new base)
-   and JSON first-byte dispatch (the §4 obligation) — `css_canon_bench` /
-   `json_canon_bench`, cold per-parse, ins/B deterministic floor + cyc/B, report
-   negatives honestly (PROVE-09 law).
-5. **Generalization probe:** apply the PROVE-12 `const fn mask` + const-generic
-   seam to one non-CSS grammar-derived STOP scan (the neutralized JSON
-   structural scanner, R6 §8a `grammars/json/scan.rs:34`) and measure — to move
-   "generalizes to any STOP-set" (REPORT §7) from assertion to a second data
-   point.
+1. **`binding_times` on the REAL IR (not a mirror).** Run the pass over the live
+   `css_l4_declaration_values` and `json` `BackendIr` (from `passes::compile`) and dump
+   the per-node label. **Pass iff** the alphabet/STOP-set frontier lands Static and the
+   per-byte scan loop lands Dynamic, with the `derive_alphabet` island provably a Static
+   node the live emit path exposes. Evidence: the executed label map, keyed to real
+   `NodeId`s.
+2. **Type-plane erasure, concrete on skinny.** Fill `DirectBuildField.target` from
+   `Project.ty` (kill the `None`), emit it as a `DirectTypeRef`, and show the type-plane
+   costs zero: `git diff --name-only <base>..HEAD | grep crates/runtime/` **empty**. The
+   consumption contract: the emitter specializes on the threaded type; the
+   `classify_projection` re-derivation (`general_descent/view.rs:20-46`) is deleted.
+3. **The JSON first-byte dispatch NEW site (Q3, PROVE-09 discipline).** Const-fold the
+   dispatch table at `json_sink_direct/dispatch.rs` and produce **cold paired-PMU ins/B**
+   on `json_parity` — the measured delta, re-pinned to `061c79fa7`. Unmeasured
+   plausibility does not count; the number is the deliverable.
+4. **PROVE-12 as corollary, re-pinned.** Show the delimiter-mask residual is exactly
+   stage-0 erasure of a node the BTA already labeled Static; regen byte-identical, parity
+   cksum unchanged, on live HEAD.

@@ -4,398 +4,494 @@
 conservative floor** unless a floor is named as erring. The lock is not four rival answers — it is **one
 mandatory behavioral FLOOR (6D) and three candidate structural CAPS (6A/6B/6C)** that conflict only where
 their surfaces overlap. The plane's central artifact is the §5 stratification table; the deliverable is the
-partition line, and that line is drawn by two reasonable-point NUMBERS — 6A's clean-map ratio (MEASURED
-47/61/0) and 6B's gen-LOC-vs-hand-LOC — plus the load-bearing claim beneath the whole stratification (6D is
-a **mandatory** floor: structural caps necessary-not-sufficient). Current state is **after pass 2**.*
+partition line, drawn by two reasonable-point NUMBERS — 6A's clean-map ratio (the linter's `cap`) and 6B's
+gen-vs-hand LOC on the tape-layout face — plus the load-bearing claim beneath the whole stratification (6D is
+a **mandatory** floor: structural caps necessary-not-sufficient). Current state is **after pass 3**.*
 
-**Pass-2 headline.** Both prior passes skipped the two decisive experiments; pass 2 finally RAN them.
-PROTO-1 (floor decider) and PROTO-2 (6B number) are both RAN_MEASURED — a real advance over pass-1's
-"crown with the least evidence." **But each probe measured a softer target than its family's sharpest
-uncertainty, and in both cases the softening is load-bearing:** PROTO-1 proved the floor with a **Rust↔Rust**
-divergence (never a Rust↔TS fold — the boundary 6D exists to gate was never crossed), and PROTO-2 measured
-the gen-vs-hand ratio on the **one face that was already built** (`emit_type_definitions_impl`, live),
-leaving 6B's three actual new faces (`emit_tape_layout`/`emit_tape_decoder_skeleton`/`emit_oracle` +
-`LayoutSpec`) at **0% built — re-verified absent tree-wide this session**. The probes moved the *feasibility*
-frontier; the *mechanism* frontier (6A's linter, 6B's three faces + AoS↔SoA spec, 6D's cross-language
-digest) is still entirely SPEC_ONLY.
+**Pass-3 headline.** Pass 3 is the pass where every crown MOVED SPEC_ONLY→RAN at some scale — the exact
+prototype-allocation defect the last two passes repeated is not repeated here. But the synthesis
+(`FAMILY-SPECS.md`, frozen **15:26**) is **STALE against its own on-disk prototypes** (mtime 15:47 / 15:57):
+it calls 6A's linter "STILL UNBUILT… the single largest remaining SPEC_ONLY crown" and 6C's comparator
+"scaffolded-but-unrun a fourth time" — **both FALSE**, both discharged this pass by artifacts sitting beside
+it. **This registry is the reconciliation** (both critics' M1/F-STALE mandate): it folds `PROTO-1.md` (6C)
+and `PROTO-2.md` (6A) and scores against the ACTUAL runs, not the stale prose. Two bookkeeping hazards are
+recorded as findings, not buried: **(M1)** the 6B `emit_classify` machine's *code* is on disk
+(`proto-1-code/`) but its *run-record* exists nowhere as a base-pinned artifact — it survives only as
+FAMILY-SPECS §0-P1 prose, a Constitution-vii / XL-H exposure; and its mono harness `gen_tape.mjs` is
+**absent from the deliverables** (verified), so the `%HaveSameMap` PASS is not reproducible from committed
+files. **(M2)** the families sit on **two substrates**: 6A/`PROTO-2` ran on **top-level `crates/{core,bbnf-path,bbnf-path-ts}`** (LEGACY, archives at GN-0 per XL-A; **`skinny/crates/bbnf-path` does not exist** — verified) while 6B/6C ground on **skinny@HEAD**. The plane's four families do not yet share a tree.
+
+**PROTO naming — canonical disambiguation (F-NUMBERING; the token collides three ways).**
+
+| canonical name | on-disk | family | disposition |
+|---|---|---|---|
+| **PROTO-6C-wasmscan** | `PROTO-1.md` (+ `PROTO-2/wasm-scan/`, `scan.wasm`, `harness.html`) | 6C | RAN — wasm-core-home FALSIFIED (JS-string source), TS-native-home holds |
+| **PROTO-6A-linter** | `PROTO-2.md` (+ `PROTO-2/mirror-lint-6A/`, `PROTO-2.patch`) | 6A | RAN — `cap==exemptions==13=4+2+1+2+4`, RED 2/2, real Node+wasm drive |
+| **PROTO-6B-emit** | `proto-1-code/emit_classify.rs` (+ `gen_{json,sheets}.{rs,ts}`, `mono_check.mjs`) | 6B | code present; **NO standalone run-record** (M1); `gen_tape.mjs` missing |
+
+*Base-pin `ce51c36fc` for all three (XL-H). PROTO-6C: `merge-base --is-ancestor` OK, HEAD==pin. PROTO-6A:
+DESCENDS-OK. The 6B code header self-labels "PROTO-1 / probe 1 (family 6B)" but `PROTO-1.md` on disk is the
+6C run — the source of the collision.*
 
 ---
 
-## STATUS TABLE (after pass 2)
+## STATUS TABLE (after pass 3)
 
 | Family | Status | Conv. | Δ | One-line |
 |---|---|---:|:--:|---|
-| **6A MIRROR-TREE** | **ADVANCED · dependent-on-6D · SPEC_ONLY core** | **66%** | +4 | Real design advances (Q2 Class-1/2/3 trichotomy dissolves the identity fork; the three-conjunct RED gate replaces the vacuous "warns as it grows" budget) — but the impedance cap `2·T+I` is **curve-fit to n=1 and arithmetically inconsistent** (I=2 claimed vs 3 idiom classes enumerated → 2·2+3=7≠6; Class-3 lists 6 concrete items), the linter is **still UNBUILT** (PROTO-1 ran a *bespoke* test, not the `mirror-map.toml` manifest linter), and the necessary-not-sufficient anchor is a **Rust↔Rust proxy on one latent bug**, never a Rust↔TS fold. |
-| **6B SPEC-GEN-SKELETON** | **ADVANCED · SPEC_ONLY** (schema-face BANKED-earned; combinator-type-algebra RETIRED) | **54%** | +6 | Anchor partially **rescued** (`classify_materialization`+`compute_payload_layouts` are genuine grammar→layout-fact derivations, verified live — phantom→partial); schema face generates tsc-strict-clean across 3 grammars. **But the decisive number was measured on the wrong face** (the pre-existing schema/type interface, ratio **tautological** — definitional for 2/3 grammars; only non-circular baseline goes the *other* way at 1.29/3.08), the **three faces that ARE the family are 0% built** (re-verified absent), the AoS↔SoA hard core is still parked "definitional," and `%HaveSameMap` never ran. |
-| **6C WASM-CORE** | **BANKED** (crossing-mechanism folded into the 6B/6D tape stratum, bbnf-side only) | **63%** | +3 | Best-converged *fate*: PROTO-1's R-A-negative (wasm SIMD128 0.34–0.47× native NEON, parity-exact) firmly earns BANKED; Q6 (Chrome-114 removed the 4KB sync-instantiation limit → one-time boot obligation, not per-parse tax) and Q7 (LOCK-9 interlock named) are sound sharpenings. **But the decision-relevant comparator — wasm-SIMD128 vs TS-native scalar scan — was skipped for a SECOND consecutive pass**; the surviving crossing role is PROVE-14-inherited, not re-measured; R-B memory-grow gate unbuilt; homing collision (real, verified) unpriced. |
-| **6D ORACLE-ISOMORPHISM** | **ADVANCED · the mandatory FLOOR · SPEC_ONLY** (pure-6D-as-whole-answer BLOCKED for the tape) | **61%** | +6 | Two genuine advances: the floor-**necessity** proof (PROTO-1's green-structural/red-behavioral PAIR) and the Q10 IEEE-754 **correction** (fold source-byte number *spans*/RFC-8785 canonical decimal, **NEVER** raw bits — reverses pass-1's own false-divergence-generating "8-byte bit-fold" insight). **But 6D's actual artifact — the cross-language differential digest fold — has NEVER RUN in any form** (PROVE-14's two arms are both JS; the Rust-side fold does not exist), the floor proof is the same Rust↔Rust proxy, both verdict numbers remain UNMEASURED, and the teeth (coverage-guided fuzzer) are unbuilt → gate-(a) exercises only the easy direction and cannot fail. |
+| **6A MIRROR-TREE** | **ADVANCED · dependent-on-6D · crown BUILT+RAN (legacy tree)** | **67%** | +1 | The #1 three-pass-undischarged directive is DISCHARGED: PROTO-6A-linter is a real `syn`-2 binary that reproduces `cap==exemptions==13` (grep-derived, not fit), REDs `BogusPayload`/`FooView` 2/2, and drives `ts/path.ts` through a REAL `serde-wasm-bindgen`/Node crossing (AGREE=2/DIVERGE=3, names-green-behavior-red confirmed+strengthened). Held near floor by four real defects: the running gate carries a `cap == 13` **fit-to-count clause** (REDs lawful growth); the DIVERGE=3 floor-necessity datum is **confounded (rust⊥rust**, not rust⊥ts); the pair is **legacy-only (M2**, no skinny equivalent); linter is **not landed in CI** and the LOCK-3 provenance seam is un-exercised. |
+| **6B SPEC-GEN-SKELETON** | **ADVANCED · crown BUILT at the classify FACE** (schema-face BANKED-earned; type-algebra RETIRED) | **70%** | +16 | The largest SPEC_ONLY→RAN conversion of the pass: one `emit_classify(spec, Backend)` machine emits the Rust JSON `FromSource`, Rust Sheets `FromFlagTag`, and TS classify faces **byte-identical** to the hand code at pin; a 1-line spec edit drives 3 sites across 2 backends; AoS↔SoA is DISSOLVED into a discriminator-provenance axis **by run**. But the crown is the **classify FACE (165→0)**, the R3-critical monomorphic *slice* — the **~598-LOC full decoder is ungenerated**, the mono gate passed on the **byte-identical (trivial) direction**, the **run-record is not a standalone artifact (M1)** and its harness (`gen_tape.mjs`) is missing, and xtask-landing / R2 / PayloadDecode / TS symmetric sink remain open. |
+| **6C WASM-CORE** | **BANKED** (crossing folds into the 6B/6D tape stratum; bbnf-side) · reinforced by a RUNNING falsification | **68%** | +5 | The thrice-deferred comparator RAN (PROTO-6C): v128 kernel parity-exact on all 12 docs, `scanOnly` beats TS 4.7–7.3×, but `TextEncoder` marshalling is **72–90% of `wasmFull`** and swamps the win below ~2 MB → **wasm-core-home FALSIFIED for JS-string sources, TS-native-home holds**. BANKED is now settled by a running number, not aspiration. The ONE surviving 6C win — the **wasm-resident-bytes lane** (bytes owned in wasm, no per-call marshal, `scanOnly` governs, wins at every size) — is **unmeasured**, and it is exactly where the §5 6B⊗6C spine is now measured-TENSE. |
+| **6D ORACLE-ISOMORPHISM** | **ADVANCED · the mandatory FLOOR** (pure-6D-as-whole-answer BLOCKED for the tape) | **66%** | +5 | The cross-language fold RAN (research-D): raw IEEE-754 **bits fold bit-identical `b99874e8` Rust↔V8**; native-decimal DIVERGES on 3 enumerable classes proven to live in the canonical-decimal *spec*, not the machinery; in/out partition is checked-in data. The never-run mechanism ran. Lowest of the four because its "frozen" `contract-6D.toml` commits `number_fold = "f64 LE-byte mix"` (**bits**) while pass-2's credited correction forbids bits and research-D's own recommendation picks decimal — a **live in-file contradiction**; the **R5 debuggability number that could defeat its null-hypothesis default is UNRUN**; the fuzzer "5/5" is a fixed table not a running generator; u32→u64 is spec text; and its agreement≠correctness hole was just made concrete by 6A's forked reference. |
 
-Net: **no family is converged; the stratification is a now-partly-evidenced hypothesis, not a verdict.** The
-plane's fate-decisions are firm (6C BANKED; 6B-type-algebra RETIRED; 6D-pure BLOCKED for the tape) but every
-crown *mechanism* is SPEC_ONLY. The two load-bearing reasonable-point numbers that draw the partition are one
-**measured-but-soft** (6A's ratio) and one **measured-on-the-wrong-face-and-tautological** (6B's 1.00). The
-single unresolved cross-lock item — **6B-as-layout-gen ⊗ LOCK-4C VM stream** — is now NAMED but deferred a
-second time. No family clears 70 on the conservative floor.
+Net: **the plane advanced materially and honestly — four crowns ran where pass-2 had zero — and is NOT
+converged.** No family clears the converged bar (zero enumerated gaps + fresh audit + two clean passes); the
+§5 partition line is now *drawable* (both anchor numbers have running evidence) but **un-drawn** and stale in
+the synthesis; and each family carries concrete internal defects. Per both critics the plane is a
+**rigorously-converged CORE (~67%) with exact gaps → advance to a RECONCILIATION pass, not to GESTALT.**
+Eligibility for a clean pass is **withheld** until M1 (give the 6B emit run a base-pinned writeup; commit
+`gen_tape.mjs`) and M2 (name/port the legacy-vs-skinny substrate split) are discharged.
 
 ---
 
-## 6A — MIRROR-TREE · ADVANCED · dependent-on-6D · SPEC_ONLY core · 66% (was 62)
+## 6A — MIRROR-TREE · ADVANCED · dependent-on-6D · crown BUILT+RAN · 67% (was 66)
 
-**Floor rationale.** CRIT-1 66 / CRIT-2 74. Take **66**. CRIT-2's +8 credits the trichotomy (dissolving the
-pass-1 identity fork) and the two falsifiable RED lines (0%-tolerance mapped-set; allow-list monotonicity) —
-both real design advances. But **CRIT-2 itself surfaced a fresh defect that undercuts the higher score**: the
-impedance cap `MAX_EXEMPTIONS = 2·T + I` is not merely curve-fit to the observed count (n=1) — it is
-*arithmetically inconsistent* with its own definition (the idiom set enumerates **three** classes → I=3 →
-`2·2+3 = 7`, not the claimed 6; and Class-3 lists **six** concrete exempt items). A cap that cannot even
-reproduce its own asserted value is not a principled impedance law. That plus CRIT-1's correct discounts —
-the linter is UNBUILT (bespoke test ≠ manifest linter), the necessary-not-sufficient anchor is a Rust↔Rust
-proxy on one latent bug — holds the floor at 66. No reason above 66; a case exists for slightly below (the
-cap is now known-broken, not merely un-validated), but the trichotomy is a genuine advance both critics
-credit, so 66 stands.
+**Floor rationale.** CRIT-1 72 / CRIT-2 66. Floor is **66**; take **67** (+1). Both critics fold PROTO-6A
+and both credit the crown as BUILT+RAN — the largest correction to the synthesis's own framing. The 6-point
+spread is entirely penalty-weighting: CRIT-2 holds 66 on M2 (legacy substrate) + the bifurcated Rust
+reference; CRIT-1 holds 72 crediting the mechanism. The +1 over CRIT-2's floor is the one nameable
+over-penalty: M2 makes the *specific 13-count* a fact about a doomed tree, but the linter **mechanism**
+(`syn`-extract + predicate-derived `cap` + RED-on-synthetic + real wasm/Node drive) is substrate-portable —
+a relocation, not a re-derivation — and a proven-transferable mechanism is a genuine de-risk over pass-2's
+"unbuilt." No lift above 67: CRIT-2's forked-reference and CRIT-1's fit-to-count-clause discounts are both
+real and unrebutted.
 
-**What is EARNED (do not re-litigate).** (1) The **Q2 trichotomy** — Class-1 grammar-derived names (→
-PROVENANCE check: both sides read one sidecar, anchored *and* non-tautological because the proposition is
-"single-source held"); Class-2 hand-authored-twice taxonomy (~19 items, → NAME-MAP check, the only
-non-tautological class, and where drift LIVES); Class-3 idiom residue (→ EXEMPTION BUDGET) — **routes each
-class to a different lawful check** rather than forcing one answer to the identity fork. Genuine design win.
-(2) The green-structural side is a real live TS-union parse (`include_str!("../ts/path.ts")`, 8 members,
-set-equal). (3) The clean-map ratio (47% strict / 61% mapped / 0% unmapped, 39% idiom allow-list) and the
-rustdoc-JSON feasibility (0.25s on parse-that's already-nightly pin) carry from pass 1.
+**What is EARNED (do not re-litigate).** (1) **The crown is BUILT and RAN (PROTO-6A).** A self-contained
+`syn`-2 linter syn-extracts Rust decl surfaces + `tsc`-emitted `path.d.ts` names, resolves each non-identity
+bridge decl to a spine pre-image, computes `cap` and `exemptions` **independently**, and reproduces
+`13 = 4+2+1+2+4` **without fitting** (one sums predicate-hits-with-valid-pre-image, the other counts all
+non-identity decls; they coincide only because the tree is disciplined). RED on `BogusPayload`
+(serde-predicate match, no canonical `Bogus` pre-image) and `FooView` (no predicate) — **2/2**. (2) **A REAL
+cross-language drive** — wasm cdylib (`wasm-pack --target nodejs`) + `serde-wasm-bindgen` + `node_drive.mjs`
+through the actual `makePathTag`/`PathError` of `ts/path.ts` — replaces the pass-2 intra-Rust
+`compile_path_native` proxy (that gap is discharged). (3) The **cap is re-derived defensibly** (D3): the
+arithmetically-inconsistent `2·T+I` is gone, replaced by `cap = Σ_{c∈I}|sites matching predicate[c] with a
+spine pre-image|` over I=5 relational idiom classes. (4) The **Q2 trichotomy** (Class-1 provenance / Class-2
+name-map / Class-3 exemption budget) routes each class to a lawful check.
 
 **Exact open gaps.**
-1. **[vacuous-convergence RE-EMERGENT, load-bearing] The impedance cap is fit-to-observation AND internally
-   inconsistent.** `2·T+I` was reverse-fit to reproduce today's count 6 (the multiplier and the idiom
-   enumeration are chosen to land there), and it does not even do that arithmetically (I=2 vs 3 enumerated
-   classes → 7). A cap set to today's number cannot fail on the surface it was measured on; its only teeth
-   are on growth, with no argument that growth should be forbidden at 7 rather than 9. **Pin T and I to a
-   grep-countable definition *independent of* the observed total; resolve the I-count; show the cap go RED on
-   a synthetic 7th exemption — or the RED line is the vacuous gate pass-1 rejected, repainted.**
-2. **[elegant-reduction, UNCHANGED] The mechanism that IS the family remains UNBUILT.** PROTO-1 produced the
-   green/red PAIR with a *bespoke inline `BTreeSet` equality test*, not the `mirror-map.toml` manifest linter,
-   not the `syn`-over-declarations extractor, not the `dist/*.d.ts` TS-side extractor, and it did not delete
-   the `schema.rs` prose. 6A's core deliverable is SPEC_ONLY exactly as pass 1; only the *principle* was
-   demonstrated, on a toy twin (the rustdoc run was a 12-line twin, self-labelled).
-3. **[proxy-substitution in the load-bearing evidence] The necessary-not-sufficient anchor is Rust↔Rust, not
-   Rust↔TS.** VERIFIED in `floor_probe.patch`: the RED compares `check_path_against_registry::<Json>` (host)
-   vs `compile_path_native(…,"Json")` (the cdylib, also a host call) — **both Rust**; the TS union is parsed
-   only for the *green* side and never behaviorally driven. The divergence is a single anecdote (and itself a
-   latent *bug* — canonical checker and cdylib *should* agree), not a demonstrated divergence *class*. The
-   a-fortiori generalization holds (same-language name-parity failing to guarantee behavior-parity implies
-   cross-language a fortiori), so this is not fatal — but 6A's whole framing rests on an intra-Rust proxy plus
-   one accidental bug.
-4. **[identity fork, FORMALLY UNRESOLVED] The Class-2 "only non-tautological" assignment is asserted, not
-   proven.** The trichotomy *routes* the fork but never *proves* the clean spine is hand-authored-twice rather
-   than grammar-derived; if any Class-2 item is in fact single-projected, 6A's genuine load shrinks again
-   toward the idiom residue. A plausible partition, not a verified one.
-5. **[cross-lock, carried] LOCK-3 name-map ownership + LOCK-5 ONE-HIR regex exemption.** Now *named* (credit)
-   but not adjudicated: who *owns* the linter that gates Class-1 provenance — LOCK-3 or LOCK-6 — is stated as
-   a "proposal"; the permanent Rust-DFA↔TS-`RegExp` exemption is routed to 6D as behavioral (defensible) but
-   is not a LOCK-5 verdict.
-6. **[open, carried] Cross-repo CI ownership under F6** (per-repo manifest fragments + vendored corpus):
-   proposed, unbuilt — the family's hardest logistics, unmoved.
+1. **[fit-to-count clause in the RUNNING gate — must be deleted]** The as-built gate is
+   `green = exemptions == cap && cap == expected` with `let expected = 13usize`
+   (`mirror-lint/src/main.rs:318,342`). The design is emphatic the cap is "never a tuned scalar"; PROTO-6A's
+   prose repeats "not fit to the count" — **the code contradicts both.** On *lawful* growth (add a spine type
+   + its identity/`r(t)` mirror), `cap` and `exemptions` both rise to 14, `exemptions == cap` stays GREEN, but
+   `cap == 13` fires **RED on a legitimate change**. The production gate must be `exemptions == cap` **alone**;
+   the `== 13` literal is a probe scaffold that must not survive into the tranche.
+2. **[the floor-necessity datum is CONFOUNDED — rust⊥rust, not rust⊥ts]** DIVERGE=3 has a single root cause:
+   canonical `check_path_against_registry` leaves `TypeDesc::Named(_)` intact (`UnregisteredRule`) while the
+   cdylib resolves `Named` eagerly via `registry.layout(id)` (`UnknownField`). That is a **Rust-vs-Rust
+   semantic fork** surfaced *through* wasm, not the Class-2 rust⊥ts routing drift the family advertised. The
+   thesis (names-green-while-behavior-red) holds regardless, but the *evidence* proves the floor catches
+   "which Rust semantics the cdylib exposes," a different hazard. A clean rust⊥ts drift example (e.g. a dropped
+   TS union variant) is owed before GESTALT credits 6A⊗6D on its intended axis.
+3. **[BIFURCATED RUST REFERENCE — the isomorphism target is ill-posed (new, routed cross-lock)]** The two Rust
+   frontends (offline checker vs eager proc-macro resolver) are **themselves not isomorphic.** "Rust↔TS
+   isomorphism" is undefined until an owner/LOCK names WHICH Rust behavior is canonical. This is a
+   substrate-red the linter cannot see and 6D cannot adjudicate (agreement≠correctness → LOCK-7 N+1, unrun).
+   **Routed to LOCK-1/LOCK-3/LOCK-7 + owner; unresolved.**
+4. **[legacy-tree substrate (M2)]** The pair lives ONLY at top-level `crates/{bbnf-path,bbnf-path-ts}`
+   (archives at GN-0); **`skinny/crates/bbnf-path` does not exist** (verified). The 13-exemption count is a
+   fact about a tree being deleted; the mechanism must be ported/re-homed to the measurement substrate.
+5. **[not landed in CI; LOCK-3 seam un-exercised]** The linter is a standalone detached-target-dir binary,
+   NOT wired into `xtask`/CI (same "ran-but-not-landed" status as 6B). And it **hardcodes T in `mirror.toml`**
+   and classifies decls by local predicate — it does NOT consume a LOCK-3 `cargo xtask regen` provenance
+   manifest (research-A Q3's LOCK-3-owns-manifest / LOCK-6-owns-linter split). The Class-1-PROVENANCE route is
+   un-exercised end-to-end — the tower-duplication research-A warned against.
+6. **[typed-`PathError` surface un-driven; incidental live bug]** `makePathTag`'s inner
+   `try{…throw new PathError}catch{throw raw}` **swallows the typed `PathError`** and rethrows the raw
+   `JsError`; the drive parses the payload out of `.message`, never through the typed presentation. The
+   error-PRESENTATION isomorphism (the third limb's surface) is behaviorally untested; the rebox is dead code.
+   A 6A-execution fix, correctly surfaced by the *behavioral* drive (a second, cleaner floor-necessity datum
+   than the confounded one).
+7. **[carried] CASE totality + injectivity** (`next`/`next_sibling`→one camelCase collision) unbuilt; **I=5
+   class-closure asserted, not stressed** (a sixth-idiom attempt not run); **cross-repo F6 CI ownership**
+   (per-repo manifest fragments + vendored corpus) proposed, unbuilt.
 
-**Pass-3 directives.**
-- *Prototype (mandatory — the actual mechanism, not a bespoke stand-in):* build the `mirror-map.toml`
-  manifest-driven T1/T2 linter on the ONE LIVE pair (`bbnf-path` ↔ `bbnf-path-ts`) — the `syn` declaration
-  extractor + the `dist/*.d.ts` TS-side extractor + delete the `schema.rs:1-15` prose — and **drive the TS
-  surface BEHAVIORALLY** against canonical Rust (not a Rust↔Rust cdylib proxy). Converts 6A's core from
-  SPEC_ONLY to built and closes gap 3.
-- *Research must answer:* the impedance cap defensibly — pin T and I to a definition independent of the
-  observed count, resolve the I=2-vs-3 arithmetic, and exhibit a RED on a synthetic overrun (gap 1); prove
-  the Class-2 "non-tautological" assignment by tracing a representative name to one-source-or-two (gap 4).
-- *Withheld from researchers:* do NOT seed "the trichotomy + impedance cap solved 6A's two pass-1 gaps." The
-  cap is arithmetically broken and curve-fit to n=1, and the linter is still unbuilt. Hand them the
-  cap-cannot-fail problem and the Rust↔Rust-proxy gap, not the design-advance win.
+**Pass-4 directives.**
+- *Build (the gate correction + landing):* delete the `cap == expected` clause — production gate is
+  `exemptions == cap` alone; prove it GREEN on lawful growth (add a spine type + mirror) and RED only on
+  unbudgeted names. Wire the linter into `xtask`/CI. Consume a LOCK-3 provenance manifest end-to-end (close
+  gap 5), not local predicates.
+- *Prototype (the clean floor datum + the port):* take a CLEAN rust⊥ts drift datum (drop a TS union variant;
+  observe names-green/behavior-red on the *intended* axis) to replace the confounded rust⊥rust example. Port
+  the linter onto skinny@HEAD / greenfield — or establish whether the `bbnf-path` pair must be recreated there
+  (M2). Drive the typed `PathError` presentation surface (fix the swallow, close gap 6).
+- *Research must answer:* WHICH Rust behavior is canonical (offline checker vs eager resolver) — the
+  bifurcated-reference ill-posedness (gap 3), owed to LOCK-1/LOCK-3/LOCK-7 + owner; is a sixth idiom class
+  reachable (I=5 closure stress).
+- *Withheld from researchers:* do NOT seed "the linter is built therefore 6A is converged." Hand them the
+  fit-to-count clause in the running gate, the legacy substrate, the forked Rust reference, and the confounded
+  floor-necessity example — not the crown-built win.
 
 ---
 
-## 6B — SPEC-GENERATED-SKELETON · ADVANCED · SPEC_ONLY · 54% (was 48)
+## 6B — SPEC-GENERATED-SKELETON · ADVANCED · crown BUILT at the classify FACE · 70% (was 54)
 
-**Floor rationale.** CRIT-1 54 / CRIT-2 60. Take **54**. CRIT-2's +6 credits the tsc-strict-clean schema-face
-generation (real, verified across json/sheets/css_l4) and the anchor rescue — both genuine. But CRIT-1 holds
-the family to its unbuilt *new work*, and both critics converge on the decisive finding: **PROTO-2 measured
-the gen-vs-hand number on the ONE face that was already live** (`emit_type_definitions_impl`, confirmed
-pre-existing this session), and the headline **1.00 ratio is tautological** — definitional for 2 of 3 grammars
-("faithful consumer type ≡ `parse()` return type ≡ emitted union," so hand==gen by construction; only JSON's
-9 lines were independently authored), while the only *non-circular* baseline (idiomatic) goes the **other
-way** (json 1.29, sheets 3.08). The three faces that ARE the family — `emit_tape_layout`,
-`emit_tape_decoder_skeleton`, `emit_oracle`, `LayoutSpec` — return **empty tree-wide (re-verified this
-session)**. The family's own verdict number is measured on the surface never in doubt and 0%-measured on the
-surface that is the work. 54 stands.
+**Floor rationale.** CRIT-1 70 / CRIT-2 70 — **converged; take 70**. Both critics fold the emit machine
+(`proto-1-code/`), both credit the classify-face byte-identity + monomorphism-by-construction as the pass's
+largest SPEC_ONLY→RAN conversion, and both hold the identical residual: the crown is a *face* (the
+R3-critical monomorphic slice), not the decoder; the mono gate passed on the trivially-true direction; the
+run-record is not a standalone artifact; the majority (full decoder + xtask + R2 + Face-I generation) is
+untested. +16 over pass-2's 54 is the correct magnitude for a 0%→BUILT machine, and 70 is the correct ceiling
+given the face-not-decoder scope.
 
-**What is EARNED (do not re-litigate).** (1) The **anchor is rescued from phantom to partial**:
-`classify_materialization` (`crates/ir/src/passes/materialization/classify.rs`, verified) derives a per-node
-`MaterializationClass` decode-*class*/tier from grammar shape + a monotone e-graph facts lattice + CSP
-refinement, and `compute_payload_layouts` (`…/payload/layout.rs`, verified) derives per-rule byte-offset slot
-layouts — genuine grammar→layout-fact derivations. **BUT `MaterializationClass` yields only a CLASS (a
-3-tier), not a raw flag-bit**; `STRING_NEEDS_DECODE`/`GRAMMAR_BIT0` are hand-authored per-grammar policy,
-absent from `crates/` (verified), live only in read-only `skinny/`. → **Face I is PARTIALLY generated:
-record-shape tier + payload byte-offsets GENERATED; fixed decode flag-bits LINTED** — the §5 partition line
-is now measurement-confirmed. (2) The **schema/type face is genuinely EARNED** — it generates tsc-strict-clean,
-scales ≈ one line per non-transparent rule (9→37→184 = rule count, NOT a fixed ~15-constant surface), so
-**R3's "linter is cheaper" premise is falsified for the schema face** (a linter cannot own a per-grammar
-grammar-shaped surface). *This half is BANKED-earned: generation wins on the schema face; redirect energy off
-re-measuring it.* (3) The combinator-**type**-algebra REFUTATION (ts-rs/typeshare flatten conditional types)
-carries — that surface is 6A+6D with no 6B option *for type-gen* (but see gap 5).
+**What is EARNED (do not re-litigate).** (1) **The machine exists and reproduces the hand faces
+byte-for-byte** (PROTO-6B code, PROTO-1.md-narrated run): `emit_classify(spec, Backend)` over a concrete
+backend-agnostic `LayoutSpec` emits the Rust JSON `FromSource`, Rust Sheets `FromFlagTag`, and TS classify
+faces at 0-diff to pin (after learning to defer the single `default:` arm — a real generation bug found and
+fixed in-probe). (2) **AoS↔SoA is DISSOLVED by run** into a discriminator-provenance axis (the tape is always
+SoA; the "hard core" was never a storage question) — the pass-2 "definitional" park is answered. (3) **A
+1-line spec edit (`+ "NamedRange"`) drove 3 emit sites across 2 backends** while JSON stayed invariant and the
+twitter fp `986912547` held. (4) The **schema/type face stays BANKED-earned** (generates tsc-strict-clean,
+scales one line per rule; R3's "linter is cheaper" falsified there — redirect energy off it). (5) The
+combinator-**type**-algebra REFUTATION (ts-rs flatten) carries — that surface is 6A+6D, no 6B type-gen.
 
 **Exact open gaps.**
-1. **[the whole verdict, 0%-measured on the load-bearing face] The decisive gen-vs-hand number was NOT
-   measured on the tape-layout face.** PROTO-2 measured the pre-existing schema face; Face I (layout — the
-   spec's own "where drift actually lives") and Face III (oracle — "highest-leverage") contributed *zero*
-   lines to the 1.00 ratio. The number that would decide 6B's crown — gen-vs-hand LOC for the tape/decoder
-   face — is still 0% measured. R3 is NOT excluded on the surface where 6B is contested.
-2. **[vacuous / tautological headline] The 1.00 ratio is definitional for 2/3 grammars.** hand==gen by the
-   "faithful ≡ parse()-output" framing; n≈1 independently authored (JSON). The non-tautological idiomatic
-   ratio is >1.0 (sheets 3.08 = generation emits 3× the idiomatic lines); the spec dismisses it as "a
-   faithfulness tax hand shares equally," which is the load-bearing *assumption*, not a finding — and the
-   adapter cost (idiomatic type + thin adapter vs faithful union) is UNMEASURED. R3 survives on the only
-   baseline that isn't circular.
-3. **[elegant-reduction, UNCHANGED] The AoS↔SoA reconciliation is still parked "GN-1 reconciles," dressed
-   "definitional."** No unified `LayoutSpec` exists (verified empty); `MaterializationClass` yields "only a
-   class," not a byte layout emitting BOTH the AoS-stored-discriminator dialect (`record.rs`) AND the
-   SoA-derived dialect (kind re-derived from `source[offset]`). The pass-2 directive — demonstrate
-   one-spec-two-dialects OR file it as a blocker — was discharged by **neither**. This is the load-bearing
-   unproven expressibility core, unmoved.
-4. **[SPEC_ONLY perf claim, UNCHANGED] `%HaveSameMap` V8 monomorphism gate never ran.** PROTO-2 ran `tsc`,
-   not `node --allow-natives-syntax`. The single-hidden-class shape-stability on which the 4.4× stop-early
-   depends is asserted, not measured (constitution vii).
-5. **[cross-lock, the sharpest live item] 6B-as-layout-gen ⊗ LOCK-4C VM is NAMED but explicitly
-   UNADJUDICATED.** The re-opening is *sound* (the ts-rs type-gen refutation does NOT bind a shared bytecode
-   instruction stream — pass-1's "no 6B on combinators" over-foreclosure is correctly repaired), but it opens
-   an undecided fork — does the combinator layout ride 6B (LOCK-4C VM stream) or hand-code? — owed jointly to
-   LOCK-4/LOCK-8, who cannot answer inside this lock. The one live unresolved cross-lock item in the plane.
-6. **[cross-lock, carried] `LayoutSpec` + `emit_*` faces annex LOCK-3's driver + a LOCK-1/2 CSP variable
-   (`MaterializationClass`).** Pass-2 says "name the ownership before building" (improvement over pass-1
-   silence) but the ownership is named-as-open, not assigned.
-7. **[open] Cross-repo regen gate (F6)** — the generated artifact ships inside the letter, regenerated
-   parse-that-side; the regen gate does not exist.
+1. **[M1 — NO standalone run-record; missing harness]** The 6B measured results (0-diff byte counts,
+   `%HaveSameMap` pre/post) have **no base-pinned PROTO writeup on disk** — they survive only as FAMILY-SPECS
+   §0-P1 prose (the `PROTO-1.md` slot holds the 6C run). And `mono_check.mjs` imports `./gen_tape.mjs`, which
+   is **absent from `proto-1-code/`** (verified) — the `%HaveSameMap` PASS is **not reproducible from the
+   committed artifacts.** Constitution-vii/XL-H exposure. Re-run, write it up, commit the harness before
+   crediting the number.
+2. **[CLASSIFY FACE ONLY — the load-bearing majority is ungenerated; low-information mono gate]** PROTO-6B
+   generated **27 TS classify LOC → 0** and **138 Rust LOC → 0**; the PROVE-14 decoder is **625 hand TS LOC**,
+   ~598 (walk/leaf/nav/pointer/load/verify) ungenerated. Worse, the mandated R3 mono gate spliced a
+   **byte-identical** generated classify into the hand harness — so "same V8 hidden class" is a near-tautology
+   (identical source ⇒ identical shape). The exact R3 risk research-B names (a generator emitting a
+   post-ctor field assignment or a V8-un-lowerable switch **at a face where no hand reference pins it**) is
+   precisely what a byte-identical reproduction **cannot** exercise. The mono gate becomes informative ONLY on
+   the **full generated decoder** where the output is NOT byte-identical to a known-good hand version. "Crown
+   BUILT" is true for the classify face; it is not true for the decoder.
+3. **[R3 PayloadDecode axis unmodeled (research-B, under-foregrounded)]** Sheets `as_f64`/`as_bool`/`as_tag`
+   are three payload decoders keyed on rule; a `LayoutSpec` carrying only discriminator recovery
+   **under-generates** — "skeleton generated" narrows to the discriminator only unless a `PayloadDecode` axis
+   lands. The sharper expressibility risk than R2.
+4. **[R2 flag-plane collision unbuilt]** One `u8` slot cannot carry a discriminator tag AND an escape bit; a
+   string-escape leaf inside an operator tower collides. Resolvable by a spec-declared bit-partition, unbuilt.
+5. **[not landed in `xtask regen`; no full real-tape fp]** Standalone `rustc` binary; the twitter fp held via
+   a **classify-independent** lane, NOT a full `doc.walk` (the SoA `tape_dump.rs` was not rebuilt). Lockstep
+   regen gate (a) is only PARTIALLY demonstrated — the `+ "NamedRange"` move was on a standalone binary, not
+   `xtask`; `regen∘regen` byte-identity + delete-the-hand-faces is owed.
+6. **[Face I is PARTIALLY generated]** record-shape + payload byte-offsets GENERATED; fixed flag-bit *VALUES*
+   (`GRAMMAR_BIT0`) are hand-authored policy → **LINTED not generated** (the §5 partition line; the "drift
+   impossible on the declarative half" claim narrows to the schema+tier+offsets sub-half).
+7. **[TS `emit_direct_sink` symmetric obligation unbuilt]** Q3's negative-cost fused-sink win is measured
+   **Rust-only**; the symmetric TS face is owed.
+8. **[cross-lock, correctly routed] Q4 VM instruction-stream** — the same `emit_classify` machine generalizes
+   to `OpcodeDecode` with no new machinery, but GO/NO-GO depends on VM-vs-closure (LOCK-4C) + interpreter
+   under V8 (LOCK-8C), both unmeasured. Asserted, not run; owed jointly to LOCK-4/8. Flagged so it is not read
+   as a within-lock 6B convergence item.
 
-**Pass-3 directives.**
-- *Prototype (the whole verdict — the RIGHT face this time):* author `LayoutSpec` and `emit_tape_layout`
-  (+ `emit_tape_decoder_skeleton`), and MEASURE gen-vs-hand LOC on the **tape-layout face**, across JSON +
-  CSS-L4/Sheets. Change one spec line, `xtask regen`, show the faces move while PROVE-14 byte-exact parity
-  holds. Add the `%HaveSameMap` V8 shape probe.
-- *Prototype (the hard core):* demonstrate one-spec-two-dialects (AoS-stored-discriminator ⊕ SoA-derived)
-  expressibility, or file it as the reconciliation blocker. Do not accept "definitional" a third time.
-- *Research must answer:* whether **6B-as-layout-generation** (a shared bytecode instruction stream à la
-  LOCK-4C) is a live option on the combinator plane that the type-gen refutation does not touch — the
-  sharpest cross-lock adjudication in the lock, owed jointly to LOCK-4/LOCK-8; and the LOCK-3/2 ownership
-  assignment (gap 6).
-- *Withheld from researchers:* do NOT seed "generation earns its cost, ratio 1.00." That number is
-  tautological (definitional for 2/3 grammars) and measured on the pre-existing schema face; the only
-  non-circular baseline (idiomatic) is >1.0. Hand them: the tape-layout face is 0% measured, R3 survives
-  there, and the AoS↔SoA core is unconverged.
-
----
-
-## 6C — WASM-CORE · BANKED · 63% (was 60)
-
-**Floor rationale.** CRIT-1 63 / CRIT-2 76. Take **63**. The 13-point spread is CRIT-2 over-crediting the
-*fate* (BANKED, well-converged) while the *surviving-role viability* is the open part. Both critics cite the
-same measured R-A (wasm 0.34–0.47× native NEON) and the same Q6/Q7 corrections; CRIT-2's +13 over-weights
-fate-convergence when the decision-relevant comparator (wasm-SIMD vs TS-native scalar) was skipped for a
-**second consecutive pass** and the crossing role rests entirely on inherited PROVE-14 evidence, not any
-pass-2 measurement. CRIT-1's floor is right — same over-credit dynamic pass-1 already flagged. 63 stands.
-
-**Why BANKED (confirmed, not re-litigated).** 6C-as-independent-primary is refuted on three flanks and its
-unblock condition **ran and FAILED**: (a) F1 full-walk ~0.9× + the field benchmark refute "one wasm impl" for
-value-materialization; (b) PROTO-1's R-A-negative is decisive — `simd-scan/wasm.rs` (13 `core::arch::wasm32`
-sites, verified LIVE) is a genuine second implementation on the hottest surface at 2.1–3.0× below native,
-re-instantiating the dual-maintenance the family exists to abolish; (c) R-E confines it below the parse-that
-combinator plane. **Q6 correctly de-escalates** (Chrome-114 removed the 4KB sync-instantiation limit → a
-one-time boot obligation, not a per-parse async tax) without disturbing the disposition.
-
-**What is BANKED (preserved, load-bearing).** The **zero-copy tape crossing** — 6B generates the tape byte
-contract, **6C crosses it once as typed-array views**, 6D digests both sides — confined to the bbnf side.
-This is the stratification's spine (graft 1). BANKED means: 6C does not advance as an independent primary; its
-crossing mechanism folds into the 6B/6D tape stratum. **Not RETIRED** — the crossing survives and the
-bbnf-side wasm-vs-TS-scalar decision is genuinely still open.
-
-**Residual open gaps (carried into the banked line).**
-1. **[sharpest-uncertainty-skipped, TWICE] The decision-relevant comparator was not run — for the second
-   consecutive pass.** Whether the bbnf parser should live in wasm turns on **wasm-SIMD128 vs a TS-native
-   scalar scan** (both browser-deployable); PROTO-1 measured wasm vs native aarch64 NEON — not a deployment
-   option. 6C-on-the-bbnf-side is **undecided**, and the pass did not attempt to decide it.
-2. **[inherited-not-remeasured] The surviving crossing role rests entirely on PROVE-14.** PROTO-1 measured the
-   scan kernel (source→tape), not the crossing (planes→typed-arrays); the 4.4×/0.9× facts are legitimate
-   prior evidence but inherited, not re-touched this pass.
-3. **[unbuilt gate that actually bites, UNCHANGED] R-B memory-grow view-invalidation.** A `memory.grow()`
-   detaches every outstanding view; the two-parses-through-one-instance corruption case — the one hazard that
-   bites the *residual* 6C — is still never exercised.
-4. **[F6-bound, UNCHANGED] R-E rests on the unverifiable "value.js has 59 sync `all()` sites"** — a
-   parse-that READ-ONLY datum the confinement hinges on, un-checkable in-tree; the gestalt carries it on faith.
-5. **[carried, verified real] Homing collision unpriced.** `crates/bbnf-wasm` absent (verified); `wasm/
-   Cargo.toml` already declares `name="bbnf-wasm"` (verified). The one-consolidated-cdylib vs two
-   cold-instantiation delta was asserted-better (Q6) but not measured, either pass.
-6. **[cross-lock, NAMED — credit] LOCK-9 kernel double-home.** `6C.wasm-scan ⇐ 9A.kernel-home; 9B is the
-   cost-bearing fallback`. If LOCK-9 unifies the kernel home, the dual-maintenance cost 6C cites
-   re-attributes to LOCK-9.
-
-**Pass-3 directives.**
-- *Prototype (the decision-relevant comparison — third time asked):* wasm-SIMD128 vs a **TS-native scalar
-  structural scan** over the same corpus, both browser-deployable. Do NOT re-run wasm-vs-native-NEON; that is
-  closed. This decides whether wasm-core is the right browser home for the bbnf batch parser.
-- *Prototype (the residual-6C gate):* exercise R-B — parse twitter, hold the view, parse citm (bigger)
-  through one instance, assert no silent corruption; quantify copy-out cost against the 4.4× stop-early margin.
-- *Research must answer:* re-confirm R-E in-tree where possible (or flag it as an F6-bound assumption); price
-  the homing collision (one consolidated cdylib vs two).
-- *Withheld from researchers:* do NOT seed "6C is dead" (BANKED-not-RETIRED) NOR "6C-on-bbnf-side is
-  settled-viable." Hand them the confinement (bbnf-side only) and the still-open bbnf-side wasm-vs-TS-scalar
-  decision.
+**Pass-4 directives.**
+- *Build (M1 discharge):* give the 6B emit run its own base-pinned standalone writeup (`PROTO-6B-emit.md`) and
+  commit `gen_tape.mjs` — the number cannot be credited from prose alone.
+- *Prototype (the informative gate):* scale `emit_classify` from the classify FACE to the FULL decoder
+  (~598 remaining hand TS LOC) and re-run the monomorphism gate on **NON-byte-identical** generated output —
+  the one condition under which the gate tests the crown's actual risk (research-B R2's boxed-union
+  counterexample). Model the **R3 PayloadDecode axis** (`as_f64`/`as_bool`/`as_tag`). Land `emit_*` into
+  `xtask regen`, delete the hand faces, prove `regen∘regen` byte-identity + a real-tape `doc.walk` fp
+  (rebuild `tape_dump.rs`). Author the TS `emit_direct_sink` symmetric face. Resolve R2 with a spec-declared
+  bit-partition.
+- *Research must answer:* nothing new blocking within-lock; carry the Q4 VM stream to LOCK-4C/8C.
+- *Withheld from researchers:* do NOT seed "monomorphism preserved by construction, gate PASSED." That gate is
+  low-information (byte-identical ⇒ shape-identical). Hand them the full-decoder scale where the gate becomes
+  real, the missing run-record + harness (M1), and the R3 PayloadDecode under-generation.
 
 ---
 
-## 6D — ORACLE-ISOMORPHISM · ADVANCED · the mandatory FLOOR · SPEC_ONLY · 61% (was 55)
+## 6C — WASM-CORE · BANKED · reinforced by a RUNNING falsification · 68% (was 63)
 
-**Floor rationale.** CRIT-1 61 / CRIT-2 66. Take **61**. Both credit the two genuine advances (the
-floor-necessity proof; the Q10 IEEE-754 correction) — but both hold the family the whole plane leans on to
-its thin evidence: **6D's actual artifact (the cross-language differential digest fold) has NEVER RUN in any
-form.** PROVE-14's two arms are both JS; the Rust-side fold does not exist; PROTO-1's behavioral red is
-Rust↔Rust. So "6D is a mandatory floor" is confirmed, but "6D's digest works cross-language" is exactly as
-SPEC_ONLY as pass 1. Add: both verdict numbers UNMEASURED, the teeth (fuzzer) unbuilt so gate-(a) cannot
-fail, and the digest design *flip-flopped across passes* (bit-fold → span-fold) without either variant being
-folded cross-language. 61 stands.
+**Floor rationale.** CRIT-1 78 / CRIT-2 66 (both BANKED). Floor is **66**; take **68** (+2). The 12-point
+spread is a genuine philosophical split: CRIT-1 scores 6C's *own* convergence high (its BANKED fate is now
+settled by a running, parity-verified, base-pinned falsification — not aspiration); CRIT-2 scores it low
+because PROTO-6C "undercuts the §5 spine the plane's stratification depends on." CRIT-2's concern is real but
+is a **§5-plane** issue imported into the **per-family** row — per-family convergence for a BANKED family
+measures disposition-settledness + gap-cleanliness, both of which PROTO-6C *improved*. The +2 over floor
+credits that; no lift toward CRIT-1's 78 because the **wasm-resident-bytes lane is unmeasured** (the ONE lane
+where 6C's kernel win survives) and the grow-hazard is unexercised — real residuals that keep even a settled
+BANKED family from converging.
 
-**What is EARNED (do not re-litigate).** (1) 6D is the **floor** — compatible with every cap and REQUIRED by
-each; PROTO-1's green-structural/red-behavioral PAIR is a sound floor-*existence* proof (name-set equality
-does not imply behavioral equality). (2) The **Q10 IEEE-754 correction is the pass's decisive advance and it
-*reverses* a pass-1 hazard**: pass-1's registry called the "8-byte IEEE-754-bit digest" 6D's "single most
-important sharpening"; that was a **false-divergence generator** (NaN payloads, ±0, endianness — the as-built
-fold is little-endian `to_le_bytes`, so pass-1's "big-endian" framing was itself a bug). Pass-2 correctly
-re-specs the fold over source-byte number *spans* / RFC-8785 canonical decimal, **never raw bits**, with a
-sound correctly-rounded-parse argument (Eisel-Lemire ↔ V8 StringToDouble). (3) The u32→u64 fp widening
-(collision at ~77k by the birthday bound) and the error-class-in-contract decision (gate the enum, not
-wording/offset) are correct, load-bearing. (4) **pure-6D-as-whole-answer is BLOCKED for the tape**: "layout
-free per language" negates the byte-identical SoA layout the zero-copy stop-early win requires — 6D wins as
-the verification substrate, loses as the whole answer for the tape.
+**Why BANKED (confirmed; now with a running number).** 6C-as-independent-primary was refuted in pass 2
+(wasm SIMD 0.34–0.47× native NEON; full-walk 0.9×; R-E sync-ESM confinement). **PROTO-6C reinforces BANKED
+with a browser-side falsification of wasm-core-home:** the v128 kernel is parity-exact on all 12 docs and
+beats TS-scalar **4.7–7.3× on `scanOnly`**, but `TextEncoder` UTF-16→UTF-8 marshalling is **72–90% of
+`wasmFull`** (twitter 88%, citm 90%, canada 72%) and swamps the win below ~2 MB. Gate (b): `wasmFull < ts` on
+canada is TRUE (2.25 MB, ASCII + branch-hostile → wasm 1.31×), but the net-win crossover (~2 MB, a
+**content** artifact not a size law) exceeds every realistic bbnf batch doc size (KB-scale grammars) → the
+falsifier's second clause fires. **wasm-core-home FAILS for JS-string sources; TS-native-home holds.** The
+research-C Q1 prediction ("wasm wins skip-heavy, loses dense") is **falsified by its own probe** — the axis
+is marshalling, not skip-heaviness; the kernel wins everywhere on `scanOnly`.
+
+**What is BANKED (preserved, load-bearing).** The **zero-copy tape crossing** — 6B generates the byte
+contract, 6C crosses it once as typed-array views, 6D digests both sides — confined to the bbnf side. BANKED,
+not RETIRED: the crossing survives and the bbnf-side home decision is genuinely still open (see gap 1).
 
 **Exact open gaps.**
-1. **[the family's own mechanism, 0% run] The cross-language fold has NEVER run.** 6D's central artifact — a
-   Rust fold of the digest spec compared against the TS fold — has zero running instance in any form. The
-   IEEE-754 correction is sound *reasoning*, but "V8 and Rust fold identically over the corpus" is unexercised
-   (the correction itself notes PROVE-14 never did it — both its arms parse with V8). The floor's transport
-   has no running instance.
-2. **[design flip-flop, empirically unsettled] The digest design reversed between passes** (bit-fold →
-   span-fold) and **neither variant has ever been folded cross-language.** The pass-2 reasoning is better, but
-   an internal supersession named in prose is not an empirically settled digest.
-3. **[proxy] The floor-is-mandatory proof is a Rust↔Rust proxy** (shared with 6A gap 3). 6D is specifically
-   "the floor for the rust/ts split," and structure-is-necessary-not-sufficient was demonstrated on a
-   *same-language* pair. Defensible a-fortiori, but the probe labeled "the mandatory-floor decider" never
-   crossed the boundary it gates.
-4. **[gate-cannot-fail] Gate-(a) "100% digest agreement" exercises only the EASY direction** — agreement
-   among correct impls. The coverage-guided fuzzer + delta-debug shrink (the teeth) are unbuilt, so the
-   passing gate has no adversary — the exact failure-mode the whole lock is supposed to police.
-5. **[substrate change unbuilt] u32→u64 fp widening — "the single most load-bearing substrate change" — is
-   spec text, not a diff.**
-6. **[carried] BOTH verdict numbers UNMEASURED** — drift-escape rate and marginal maintenance-cost-per-grammar
-   are 6D's entire disposition per its own §6.4. The floor's *necessity* is proven; its *cost/benefit as the
-   chosen floor* is 0%-measured.
-7. **[cross-lock] Freeze order + the in/out partition.** "Freeze strictly AFTER LOCK-1 (alphabet) + LOCK-7
-   (tie-breaker)" is now carried (credit); the in/out-of-contract partition (values+accept/reject in;
-   wording+span out; error-class toggle DECIDED-ON) is asserted-as-data but drawn in prose, not a checked-in
-   partition file. Regex exemption vs LOCK-5 unadjudicated (shared with 6A gap 5).
+1. **[the ONE surviving 6C win is UNMEASURED — the true home decision]** PROTO-6C's decisive caveat: if bytes
+   are **already resident in linear memory** (produced/owned in wasm, no per-call `TextEncoder`+copy), the
+   `scanOnly` column governs and v128 wins **4.7–7.3× at every size.** The 6B⊗6C graft decision is therefore
+   "**where do the bytes live?**": JS-string source → TS-native (MEASURED loss); wasm-resident bytes →
+   wasm-core (PREDICTED win, **unmeasured**). This residual is the only lane the kernel win survives, and it
+   is exactly where the §5 spine is now tense (below).
+2. **[grow-hazard two-parse case STILL unexercised]** `memory.grow()` detaches the backing `ArrayBuffer`;
+   PROTO-6C's static `bss` arena **side-steps** grow rather than exercising it. The
+   two-parses-through-one-growing-instance corruption + copy-out-recovery case is confirmed by spec, not by a
+   running crash. The ≥2× copy-out margin is inherited from PROVE-14, not re-measured under grow.
+3. **[homing collision unpriced]** `wasm/Cargo.toml` already claims `name="bbnf-wasm"`; the proposed
+   `crates/bbnf-wasm` does not exist. One consolidated cdylib vs two cold instances unpriced.
+4. **[value.js divorce owner/F6-bound (XL-G P1)]** value.js 4.0.0 (`tranche-u` WIP) imports zero parse-that;
+   the confinement oracle re-homes to latex-paper (still imports), unverified there. Pricing rests on an
+   unratified branch.
+5. **[cross-lock, routed to gestalt] LIVE x86 `avx2.rs`/`avx512.rs` in `simd-scan`** vs constitution-iv "x86
+   dead" — a LOCK-9 surface; `6C.wasm-scan ⇐ 9A.kernel-home` interlock unresolved.
 
-**Pass-3 directives.**
-- *Prototype (mandatory — 6D's actual mechanism, at last):* build the **Rust-side digest fold** of the
-  span/canonical-decimal spec and run it **cross-language** against the TS fold over even one corpus — verify
-  it folds bit-identically Rust↔V8. This is the artifact 6D IS, never once run.
-- *Prototype (the teeth + the deciders):* build the coverage-guided grammar fuzzer; inject N deliberate
-  divergences (off-by-one escape decode, dropped CSS token class, last-ULP number delta, astral-string
-  mishandle, the `nope` error-class flip); measure fraction caught by static corpus vs fuzz + cycles-to-
-  detection. AND the marginal-maintenance experiment (add TOML — none in-tree — reach parity under 6D alone).
-  Both numbers are the verdict. Land the u32→u64 widening as a diff.
-- *Research must answer:* draw the in/out-of-contract partition as a checked-in file (the error-class toggle
-  is decided; commit it as data); carry the DAG constraint (6D freezes after LOCK-1 + LOCK-7).
-- *Withheld from researchers:* do NOT seed "6D is the floor therefore installed everywhere, done." The floor's
-  necessity is proven on a PROXY; the cross-language fold is 0% exercised; the gate cannot fail. Hand them the
-  never-run fold and the toothless gate, not the mandatory-floor headline.
+**Pass-4 directives.**
+- *Prototype (the true home decision):* measure the **wasm-resident-bytes lane** — bytes produced/owned in
+  wasm, no per-call marshal, `scanOnly` governing. This is the ONLY regime where the v128 kernel win survives
+  and it decides whether the tape-crossing stratum can ever home in wasm (gap 1, and the §5 spine).
+- *Prototype (the residual gate):* exercise the grow-hazard — two parses through one growing instance,
+  `memory.grow` detach + copy-out recovery, assert no silent corruption; quantify copy-out against the 4.4×
+  stop-early margin. Price the homing collision (one consolidated cdylib vs two).
+- *Research must answer:* re-home the confinement oracle (value.js divorced; latex-paper) — flag F6/owner-bound;
+  carry the x86-in-tree + `9A.kernel-home` interlock to gestalt.
+- *Withheld from researchers:* do NOT seed "wasm-core is dead" (the wasm-resident lane is unmeasured and is
+  where the kernel wins) NOR "wasm-core-home is viable" (the JS-string lane is FALSIFIED). Hand them the
+  where-do-the-bytes-live question — the single unresolved sub-question of a settled BANKED verdict.
+
+---
+
+## 6D — ORACLE-ISOMORPHISM · ADVANCED · the mandatory FLOOR · 66% (was 61)
+
+**Floor rationale.** CRIT-1 68 / CRIT-2 66 — near-agreement; **take the floor 66**. Both critics credit the
+cross-language fold RAN as a genuine, large advance; both rate 6D lowest of the four for the identical
+reasons: its "frozen" contract holds a live representation contradiction, the one number that could defeat its
+null-hypothesis default (R5) is unrun, its gate teeth (fuzzer) are reasoned-not-run, and its agreement≠
+correctness hole was just demonstrated by a sibling probe (6A's forked reference). The 2-point spread is
+negligible; no nameable error → floor. 66.
+
+**What is EARNED (do not re-litigate).** (1) **The fold RAN cross-language** (research-D D1): raw IEEE-754
+bits fold **`b99874e8` bit-identical Rust↔V8**; `Math.imul == wrapping_mul(u32)` per lane makes the folds
+bit-exact; object = XOR-accumulate (key order OUT of contract, proven `baseline == keyperm`); native-decimal
+DIVERGES on 3 enumerable classes (exp threshold ≥1e21/<1e-6; `-0`; subnormal expansion) proven to live in the
+canonical-decimal **spec**, not the machinery. The pass-2 "never-run mechanism" is discharged at corpus scale.
+(2) The **in/out partition is checked-in data** (`contract-6D.toml`): values + accept/reject + error-class
+enum IN; wording + span + physical member order OUT; error-class toggle ON for class-equality, OFF for
+message+span. (3) **pure-6D-as-whole-answer stays BLOCKED for the tape** ("layout free per language" negates
+the byte-identical SoA layout the zero-copy stop-early win requires — 6D wins as verification substrate, loses
+as the whole answer for the tape).
+
+**Exact open gaps.**
+1. **[live in-file contract contradiction — the number lane]** `contract-6D.toml` commits
+   `number_fold = "f64 LE-byte mix"` (raw **BITS**, verified). Pass-2's registry-credited Q10 correction
+   forbids raw bits ("fold spans/canonical-decimal, **NEVER** raw bits"); research-D's **own** recommended
+   `oracle-contract.toml` picks a *contract-normalized decimal* (shortest-round-trip, positional-always, `+0`)
+   with `ieee754-bits` as an **escape hatch**. **Three positions float** (pass-2: decimal-never-bits /
+   research-D: decimal-with-bits-fallback / checked-in: bits) and the "frozen" artifact picks the one the
+   pass-2 correction forbids — the third representation flip in three passes (bit→span→bit). Routed to GESTALT
+   is acceptable; a mandatory floor whose **frozen contract contradicts itself within the checked-in file** is
+   not converged. It **cannot freeze** until a spec-probe (fold the residue + the `1e21` threshold both ways)
+   settles it.
+2. **[R5 debuggability UNRUN — the verdict-deciding number, elegant-reduction]** 6D "wins by default as the
+   null hypothesis, defeated only by measured drift/maintenance cost." The **single axis where 6D is
+   dominated** — time-to-root-cause under a bare digest mismatch ("something differs," not "escape decoder
+   off-by-one at line X") vs mirror-maintenance cost — is **unrun.** The pass measured only affirmative proxies
+   (added-grammar marginal ≈ 0 fold LOC; injected-divergence catch rates). The "reasonable point" verdict the
+   whole plane turns on is asserted on the easy direction; the number that could defeat the null hypothesis was
+   not taken.
+3. **[fuzzer teeth REASONED, not RUN; §0/§4 self-inconsistent]** FAMILY-SPECS §0-D1 headlines
+   "coverage-fuzzer 5/5"; §4 gap (v) says the generator "is unbuilt." Only static 4/5 + latency-1 ran; the
+   "5/5" is at best a fixed injected table over 5 hand-named classes, not a running coverage-guided generator.
+   gate-(a) still exercises mostly the agree-among-correct direction — a passing gate with a weak adversary.
+4. **[u32 FALSE-GREEN risk — a gate that silently passes]** The fold ran at u32; a u32 `fp` collides at ~77k
+   inputs (birthday). At fuzzer scale (10⁶+) two DIFFERENT value trees digest identically → gate-(a) passes on
+   divergent input. `digest="u64"` is spec text in the toml, **not a diff.**
+5. **[agreement≠correctness hole, now CONCRETE]** 6A/PROTO-6A's bifurcated Rust reference is exactly the
+   both-engines-disagree case 6D cannot adjudicate; LOCK-7's N+1 reference is unrun. The floor has a known,
+   now-demonstrated hole.
+6. **[affirmative economy case partly SPEC_ONLY]** "6D's added-grammar cost is O(new variants)" rests on
+   folding ≥1 non-JSON grammar's value tree; **no TOML/CSV grammar exists in-tree**, so the K=0 fleet-economy
+   claim is *reasoned*, not run. Acceptable as a design argument; must not be cited as measured.
+
+**Pass-4 directives.**
+- *Prototype (adjudicate the contract, at last):* run the spec-probe that settles the number lane — fold the
+  canonicalized residue + the `1e21` exponent threshold BOTH ways (bits vs contract-decimal), see which
+  diverges; the "frozen" `contract-6D.toml` cannot freeze until this resolves (gap 1, routed to GESTALT for
+  ratification).
+- *Prototype (the verdict-deciding number + the teeth):* RUN the **R5 debuggability comparison**
+  (time-to-root-cause under a bare digest mismatch vs mirror-maintenance cost) — the ONE number that decides
+  the null-hypothesis default (gap 2). BUILD the coverage-guided fuzzer (reconcile §0 "5/5" against §4
+  "unbuilt"); land **u32→u64 as a diff** (gap 4). Fold ≥1 non-JSON grammar's value tree cross-language (the
+  affirmative economy proof; add a grammar not yet in-tree).
+- *Research must answer:* the LOCK-7 N+1 reference for a *seeded* both-engines-wrong case (the oracle proves
+  agreement, not correctness — now concrete via 6A's forked reference, gap 5); carry the DAG (freeze strictly
+  AFTER LOCK-1 + LOCK-7).
+- *Withheld from researchers:* do NOT seed "the fold RAN therefore 6D is the settled floor." Hand them the
+  self-contradictory frozen contract, the unrun R5 decider, and the reasoned-not-run fuzzer — not the
+  fold-RAN headline.
 
 ---
 
 ## CROWDING & REDIRECT (this pass)
 
-The plane is a **stratification, not a bake-off.** Pass-2's measurements sharpen (do not overturn) the pass-1
-redirects.
+The plane is a **stratification, not a bake-off** — one floor (6D) + three caps (6A/6B/6C) partitioned by
+surface. No new banking is needed (6C is already BANKED, folded into the 6B/6D tape stratum; 6A⊥6B is
+resolved by the partition line, not by banking). Pass-3's runs *sharpen* the redirects and open one
+underexplored formulation whose measurement is now decision-relevant.
 
-- **6C stays BANKED (confirmed by the failed unblock).** PROTO-1's measured R-A-negative closes the family's
-  fate; the zero-copy crossing folds into the 6B-generated / 6D-verified tape stratum, bbnf-side. The
-  underexplored formulation opened in its place — the **wasm-SIMD vs TS-native-scalar** bbnf-side decision —
-  was skipped a second time; it stays the open item, re-issued as a pass-3 prototype.
-- **6B's schema face is now BANKED-earned (the within-family narrowing pass-2 forces).** PROTO-2 measured the
-  schema/type face at ratio 1.0 (faithful), tsc-strict-clean, scaling with grammar — R3 is *falsified there*
-  (a linter cannot own a grammar-shaped surface). **Redirect: stop re-measuring the schema face; it is
-  settled-generation.** The underexplored formulation opened in its place is the **tape-layout face (Face I +
-  AoS↔SoA)** — the greenfield the family is crowned to own, still 0% built and 0% measured — plus
-  **6B-as-layout-gen ⊗ LOCK-4C VM stream** (the shared-bytecode formulation the type-gen refutation does not
-  touch, correctly re-opened this pass). These are where 6B's crown is actually contested; the schema-face
-  win does not transfer to them.
-- **6A ⊥ 6B resolved by the Q2 trichotomy, not by a bank.** Class-1 grammar-derived names route to a
-  PROVENANCE check ("single-source held"), which is anchored *and* non-tautological — dissolving the pass-1
-  "a 6A linter checking grammar-derived names compares one generator against itself" tautology. So 6A and 6B
-  partition cleanly (declarative/schema → 6B generation; hand-authored taxonomy + idiom residue → 6A;
-  ~15 fixed constants → linter). Neither banks the other; the conflict was only ever on a single declarative
-  item, resolved by the partition.
-- **6D is the floor beneath all three caps (no bank).** 6D-pure-as-whole-answer BLOCKED for the tape;
-  6D-as-floor installed everywhere. PROTO-1 confirmed the floor is *necessary* (structural caps
-  necessary-not-sufficient) — the one load-bearing stratification claim that got measured this pass.
+- **The §5 PRIMARY graft (6B⊗6C zero-copy crossing) is now measured-TENSE — the sharpest redirect.** PROTO-6C
+  shows the crossing of a **JS-string source** into wasm is a **net loss <2 MB**, and bbnf browser source
+  arrives as a JS string (fetch/editor). The crossing only pays when bytes are **already resident in wasm
+  linear memory** — which requires the whole parse→tape pipeline in wasm, i.e. **6C-as-primary, REFUTED.** So
+  "6B generates the contract, 6C crosses it zero-copy" is economically self-tensioned: cheap crossing ⇒
+  6C-primary ⇒ refuted. **Redirect: open the wasm-resident-bytes lane as the underexplored formulation** — the
+  ONE regime where the kernel win survives (`scanOnly` 4.7–7.3×). Measuring it is what re-draws the spine (6C
+  pass-4 directive 1). Until then the stratification's spine is the *weakest-evidenced* row, not the firmest.
+- **6B's schema face stays BANKED-earned; the tape/classify face is now MEASURED-BUILT.** Redirect holds from
+  pass-2: stop re-measuring the schema face. The underexplored formulation opened in its place — the
+  tape-layout/decoder face — is now BUILT at the classify *slice*; the redirect **narrows** to the
+  full-decoder scale + the R3 PayloadDecode axis (where monomorphism actually risks deopt), plus
+  **6B-as-layout-gen ⊗ LOCK-4C VM stream** (the shared-bytecode formulation, strengthened by PROTO-6B's
+  machine generalizing to `OpcodeDecode`).
+- **6A ⊥ 6B stays resolved by the Q2 trichotomy.** The partition is now *drawable* (both anchor numbers have
+  running evidence: 6B's classify-face byte-identity + 6A's `cap==13` ratio) — but **un-drawn** in the stale
+  synthesis and one anchor (6A's) is on the legacy tree. The clean partition: 6B generates the declarative
+  half (schema + classify + tape byte-contract); 6A lints the hand-authored half (Class-2 taxonomy + Class-1
+  provenance + Class-3 idiom residue + the ~15 fixed flag-bit VALUES, Face-I LINTED-not-generated); 6D floors
+  both.
+- **6D is the floor beneath all three caps (no bank).** PROTO-6A made the floor's *necessity* concrete
+  (names-green/behavior-red, live through wasm) — but on a **confounded (rust⊥rust)** axis. **Redirect: the
+  clean rust⊥ts drift datum (drop a TS union variant) is the underexplored formulation owed** before GESTALT
+  credits 6A⊗6D on its intended axis.
 
 ## CROSS-POLLINATION (named grafts — both families developed enough, graft justified)
 
 1. **6B ⊗ 6C — the generated tape byte-contract crossed zero-copy (PRIMARY, the stratification's spine).**
-   Justified: both independently land on "one byte contract, generated once, crossed once" — 6B without a
-   crossing is a spec with no consumer; 6C without a generated contract is two hand-transcribed alphabets (the
-   AoS/SoA drift 6B exists to abolish). **Pass-2 caveat: the load-bearing half is SPEC_ONLY** — Face I
-   (`emit_tape_layout`) is 0% built (verified); the graft's spine is a hypothesis until pass-3 builds and
-   measures the tape-layout face.
-2. **6A ⊗ 6D — 6A's T3 tier IS 6D's differential corpus (PRIMARY).** Justified: 6A's manifest carries T1/T2
-   (structural) and delegates T3 entirely to 6D's shared corpus + digest — 6A *is* "6D plus a structural tax"
-   by construction; the graft makes it one corpus, not two. **Pass-2 caveat:** PROTO-1 proved the floor's
-   necessity but on a Rust↔Rust proxy; the shared T3 corpus + the cross-language digest fold are both unrun.
-3. **6B ⊗ 6D — the generated oracle table (SECONDARY).** 6B generates the digest comparator + structural-count
-   table (Face III) into BOTH a Rust fixture and a TS test, so GN-4.W5's self-stub (`get==get`) becomes
-   unwriteable. **Pass-2 caveat:** the 6B oracle face (`emit_oracle`) is 0% built (verified); this graft's 6B
-   leg is greenfield.
+   Both legs now developed (6B classify face BUILT; 6C comparator RAN). **Status: NARROWED to one open
+   sub-question, and measured-TENSE.** The 6B leg is BUILT at the classify face; the 6C crossing is
+   PROVE-14-anchored; PROTO-6C shows the crossing PAYS only for wasm-resident bytes (JS-string source is a net
+   loss). The graft is not resolved — it is narrowed to "where do the bytes live?" (6C gap 1). Progress,
+   correctly not over-claimed.
+2. **6A ⊗ 6D — 6A's Class-2/T3 corpus IS 6D's differential corpus (PRIMARY).** Both developed (6A linter
+   BUILT; 6D fold RAN). **Status: thesis PROVEN by run (names-green/behavior-red), evidence CONFOUNDED.**
+   PROTO-6A demonstrated the floor's necessity live through wasm+serde-wasm-bindgen — but the DIVERGE=3 datum
+   is rust⊥rust (offline checker vs eager resolver), not the rust⊥ts drift the graft's intended axis needs.
+   The graft holds; the evidence is owed a clean rust⊥ts re-take.
+3. **6B ⊗ 6D — the generated oracle table (SECONDARY).** **Status: 6B leg NOT yet developed on the oracle
+   face.** PROTO-6B built the classify face, not the oracle face (`emit_oracle` still 0% built); GN-4.W5's
+   self-stub (`get==get`) is not yet unwriteable-by-construction. Keep SECONDARY; the 6B oracle leg is
+   greenfield.
 
 ## CROSS-LOCK DAG ORDERING (for GESTALT)
 
-Pass-2 discharged **3 of 5** pass-1 cross-lock ties and NAMED the other 2.
+Pass-3 carries the two pass-2 NAMED items and surfaces **two NEW cross-lock items** from the runs.
 
-- **[NAMED, the one live unadjudicated item] LOCK-4C / LOCK-8C — combinator layout: 6B-VM-stream vs
-  hand-code.** §2 Claim B-full re-opens 6B for the LOCK-4C shared-VM instruction stream (correctly — the
-  ts-rs type-gen refutation does NOT bind a shared bytecode layout); the §5 table marks the row OPEN. **This
-  is the single unresolved cross-lock item in the plane — the seam GESTALT-P collides on first.** Must be
-  adjudicated jointly with LOCK-4/LOCK-8 before either gestalt consumes this lock.
-- **[NAMED, ownership unassigned] LOCK-3 / LOCK-2 — `LayoutSpec` + `emit_*` faces** home inside LOCK-3's
-  transposition-spine driver and consume a LOCK-1/2 CSP variable (`MaterializationClass`). Pass-2 says "name
-  the ownership before building"; the ownership is named-as-open. Who owns the derivation — LOCK-3 or LOCK-6?
-  (Also the 6A Class-1-provenance linter ownership.) The second seam GESTALT-P collides on.
-- **[CLOSED] LOCK-9 — wasm128 kernel double-home.** `6C.wasm-scan ⇐ 9A.kernel-home; 9B cost-bearing`. If
-  LOCK-9 unifies the kernel home, 6C's dual-maintenance cost re-attributes to LOCK-9.
-- **[CLOSED] LOCK-5 / constitution ii — Rust-DFA ↔ TS-`RegExp` exemption.** Named compatible (behavioral
-  routing to 6D, no layout mirror). Adjudicate the allow-list freeze against a LOCK-5 ONE-HIR verdict.
-- **[CLOSED] LOCK-1 / LOCK-7 — freeze order.** 6D's digest alphabet IS LOCK-1's grammar-derived Value ADT;
-  6D's reference-of-last-resort IS LOCK-7's meta-circular oracle. **LOCK-6 freezes strictly AFTER LOCK-1 and
-  LOCK-7** — carried into every family's freeze order.
+- **[NEW — the runs surfaced it] BIFURCATED RUST REFERENCE (6A gap 3).** PROTO-6A proved the two Rust
+  frontends (offline `check_path_against_registry` vs eager proc-macro `registry.layout`) are **not
+  isomorphic** — "Rust↔TS isomorphism" is undefined until an owner/LOCK names WHICH Rust behavior is canonical.
+  Routed to **LOCK-1/LOCK-3/LOCK-7 + owner.** 6D cannot adjudicate it (agreement≠correctness → LOCK-7 N+1,
+  unrun). The reference is forked, not just the routing.
+- **[NEW — XL-D tension unnamed] the tape-decoder-walk: fast-face or oracle?** PROTO-6C's `TS-native-home`
+  verdict sits on the PROVE-14 **runtime tape-decoder walk** — a runtime decoder. XL-D demotes *runtime
+  decoders* to oracles and crowns the build-time emitter as the fast face. Whether the tape-decoder-walk is
+  "the fast face" (6C) or "an oracle" (XL-D) is unreconciled; FAMILY-SPECS never distinguishes tape-decoder
+  from combinator-runtime-decoder. **Name it** before GESTALT consumes the lock.
+- **[NAMED, carried — the one live combinator fork] LOCK-4C / LOCK-8C — 6B-VM-stream vs hand-code.** The
+  ts-rs type-gen refutation does NOT bind a shared bytecode layout; PROTO-6B's machine generalizes to
+  `OpcodeDecode` with no new machinery (strengthened). GO/NO-GO depends on VM-vs-closure (LOCK-4C) +
+  interpreter-under-V8 (LOCK-8C), both unmeasured. The seam GESTALT-P collides on first; adjudicate jointly.
+- **[NAMED, carried] LOCK-3 / LOCK-2 — `LayoutSpec` + `emit_*` faces + `MaterializationClass`.** LOCK-3 owns
+  the emit spine + the provenance manifest (research-A/B Q3/Q5); LOCK-2 owns the `MaterializationClass` +
+  discriminator-provenance CHOICE (a cost decision). Named-as-open; assign before either gestalt.
+- **[NAMED, carried] 6D number-lane bits ⊥ decimal (6D gap 1)** — settled by a GESTALT spec-probe.
+- **[CLOSED, carried] LOCK-9 kernel double-home** (`6C.wasm-scan ⇐ 9A.kernel-home`) + **LIVE x86 in-tree**
+  (`avx2.rs`/`avx512.rs` vs constitution-iv, surfaced-not-buried); **LOCK-5 Rust-DFA↔TS-`RegExp`** exemption
+  (behavioral routing to 6D, compatible with XL-C's two-domain-fit verdict); **LOCK-1/LOCK-7 freeze order**
+  (6D's alphabet IS LOCK-1's `Value` ADT; the tie-breaker IS LOCK-7's meta-circular oracle — every family
+  freezes strictly AFTER LOCK-1 + LOCK-7).
 
 ## SEAM HYGIENE (within-lock)
 
-- **[substrate, clause viii] The T0 byte-identity tier three families lean on is ABSENT.** `crates/bbnf-wasm`
-  absent (verified); `value_parity.rs` absent tree-wide (verified). 6B gate-(c) and 6C both cite the GN-4.W4
-  born-RED wasm byte cross-check as their firmest gate; it has no home. The plane's most confident-sounding
-  gate is consumer-less until W4 lands.
-- **[homing collision, verified] `wasm/Cargo.toml` already declares `name="bbnf-wasm"`** while the proposed
-  `crates/bbnf-wasm` is absent — the collision 6C names is real; two cdylibs vs one consolidated is unpriced.
-- **[constitution iv, surfaced-not-buried] LIVE x86 `avx2.rs`/`avx512.rs` in `simd-scan`** (verified present)
-  against "x86 dead" — LOCK-9 surface, correctly routed to GESTALT, not buried.
-- **[stale tape path] research-C / research-priorart cite `crates/runtime/src/tape/mod.rs`;** the tree
-  consolidated under `crates/core/src/runtime/tape/mod.rs` — downstream readers will trip on the stale seam.
-- **[stale codegen seams] the 6B-cited seams `DirectSchemaSet` / `grammar_profile.rs` / `json_templates/
-  config.rs` / `JsonNodeKind::at_cursor` resolve to nothing under `crates/`** — the codegen/runtime tree
-  consolidated into `crates/core`; any 6B prototype needs a seam-relocation pass first.
+- **[M1 — the 6B run-record is not an artifact]** `PROTO-6B-emit.md` does not exist; `gen_tape.mjs` is missing
+  from `proto-1-code/` (verified). The `%HaveSameMap` PASS is synthesis prose, not a reproducible artifact.
+- **[M2 — the substrate is split]** 6A/PROTO-6A ran on legacy top-level `crates/{core,bbnf-path,bbnf-path-ts}`
+  (archives at GN-0); **`skinny/crates/bbnf-path` does not exist** (verified). The plane's four families do not
+  share a tree; 6A's 13-count is legacy-bound.
+- **[fit-to-count clause in a shipped gate]** `mirror-lint/src/main.rs:318,342` carries `cap == 13`
+  (`expected = 13usize`) — a probe scaffold that REDs lawful growth; must not survive into the tranche.
+- **[T0 byte-identity tier still consumer-less]** the born-RED wasm-plane byte cross-check (GN-4.W4 gate b)
+  that 6B gate-(c) and 6C both cite has no home; `crates/bbnf-wasm` absent while `wasm/Cargo.toml` claims
+  `name="bbnf-wasm"` — the homing collision is real and unpriced.
+- **[stale codegen/tape seams]** research-C/priorart cite `crates/runtime/src/tape/mod.rs`; the tree
+  consolidated under `crates/core/src/runtime/tape/mod.rs`. Any landing needs a seam-relocation pass first.
 
 ---
 
 ## PASS HISTORY
+
+### Pass 3 (2026-07-16) — agglomerated
+
+- **Artifacts folded:** FAMILY-SPECS (pass-3 synthesis, frozen 15:26 — **STALE against its own prototypes**);
+  research-{A,B,C,D,priorart}; DIRECTIVES-RESEARCH; `contract-6D.toml`; **PROTO-1.md = PROTO-6C-wasmscan**
+  (6C, RAN_MEASURED — wasm-core-home FALSIFIED); **PROTO-2.md = PROTO-6A-linter** (6A, RAN_MEASURED —
+  cap==13, RED 2/2, real Node+wasm drive); `proto-1-code/` = **PROTO-6B-emit** (6B machine, code present,
+  **no standalone run-record — M1**); CRIT-1 (within-lock: 6A 72 / 6B 70 / 6C 78 / 6D 68); CRIT-2 (cross-lock:
+  6A 66 / 6B 70 / 6C 66 / 6D 66; plane ~67).
+- **THE RECONCILIATION (both critics' M1/F-STALE mandate).** The synthesis calls 6A's linter "unbuilt
+  (Brief 2)" and 6C's comparator "unrun a fourth time" — both FALSE; both discharged this pass. This registry
+  scores against the runs. The three-way "PROTO-{1,2}" name collision is disambiguated (canonical table
+  above). 6B's emit run-record has NO base-pinned writeup and its mono harness `gen_tape.mjs` is missing (M1);
+  the substrate is split legacy-vs-skinny (M2). **Clean-pass eligibility WITHHELD until M1 + M2 discharge.**
+- **PROTO-6A-linter disposition (6A):** RAN_MEASURED. The #1 three-pass-undischarged directive is DISCHARGED
+  with a running mechanism. `cap==exemptions==13=4+2+1+2+4` grep-derived (not fit); RED on
+  `BogusPayload`/`FooView` 2/2; a REAL `serde-wasm-bindgen`/Node drive of `ts/path.ts` (AGREE=2/DIVERGE=3).
+  **Three defects surfaced:** the running gate carries a `cap == 13` fit-to-count clause; the DIVERGE=3
+  floor-necessity datum is confounded (rust⊥rust — offline checker vs eager resolver, not rust⊥ts); the pair
+  is legacy-only. Incidental live bug found (behaviorally): `makePathTag` swallows the typed `PathError`.
+- **PROTO-6C-wasmscan disposition (6C):** RAN_MEASURED. v128 kernel parity-exact on all 12 docs; `scanOnly`
+  beats TS 4.7–7.3×; marshalling 72–90% of `wasmFull`; net win only on canada (2.25 MB, content-dependent).
+  **wasm-core-home FALSIFIED for JS-string sources; TS-native-home holds.** research-C Q1 prediction falsified
+  by its own probe (axis is marshalling, not skip-heaviness). BANKED firmed by a running number; the ONE
+  surviving win (wasm-resident-bytes lane) is unmeasured and is where the §5 spine is now tense.
+- **PROTO-6B-emit disposition (6B):** code RAN (per synthesis prose) — one machine emits JSON/Sheets/TS
+  classify byte-identical, monomorphism preserved by construction, AoS↔SoA dissolved by run. **But M1:** no
+  standalone base-pinned writeup; `gen_tape.mjs` missing → `%HaveSameMap` PASS unreproducible from artifacts.
+  Scope: the classify FACE (165→0), the R3-critical *slice*; the ~598-LOC full decoder is ungenerated and the
+  mono gate passed on the byte-identical (trivial) direction.
+- **6D fold disposition (research-D):** RAN. Raw IEEE-754 bits fold `b99874e8` bit-identical Rust↔V8;
+  native-decimal diverges on 3 enumerable classes proven to live in the spec; in/out partition checked-in.
+  **But `contract-6D.toml` commits `number_fold="f64 LE-byte mix"` (bits)** while pass-2 forbids bits and
+  research-D recommends decimal — a live in-file contradiction (D2). The R5 debuggability number is unrun; the
+  fuzzer "5/5" is a fixed table; u32→u64 is spec text.
+- **The prototype-allocation defect is REVERSED (pass-2's headline weakness).** All four crowns moved
+  SPEC_ONLY→RAN at some scale: 6B hit the R3-critical classify face; PROTO-6C hit the exact 6C marshalling
+  decision; PROTO-6A hit the exact 6A crown + a real wasm crossing; 6D's fold ran cross-language. Residual
+  prototype-evidence weaknesses are now *second-order* (6B's mono gate on the easy direction; 6D's R5
+  untaken; 6A's fit-to-count clause; 6B's missing harness), not the "measured the wrong thing" defect of
+  pass 2.
+- **Dispositions set:** 6A ADVANCED·crown-BUILT+RAN(legacy tree) 67 (+1); 6B ADVANCED·crown-BUILT-at-classify-
+  face 70 (+16, schema-face BANKED-earned, type-algebra RETIRED); 6C BANKED 68 (+5, fate settled by a running
+  falsification, wasm-resident lane the one open sub-question); 6D ADVANCED·mandatory-FLOOR 66 (+5, fold RAN,
+  contract self-contradictory). §5 partition line now drawable, un-drawn.
+- **Cross-lock:** two NEW items surfaced by the runs (**bifurcated Rust reference** → LOCK-1/3/7+owner;
+  **tape-decoder-walk fast-face-vs-oracle** XL-D tension → name it); two NAMED carried (**LOCK-4C/8C VM
+  combinator fork** — strengthened by PROTO-6B's `OpcodeDecode` generalization; **LOCK-3/2 ownership**);
+  6D number-lane bits⊥decimal → GESTALT spec-probe; LOCK-9/x86, LOCK-5, LOCK-1/7 carried closed.
+- **Pass-4 non-negotiable minimum:** (M1) give the 6B emit run a base-pinned writeup + commit `gen_tape.mjs`;
+  (M2) name/port the legacy-vs-skinny substrate; (6A) delete the `cap == 13` clause, land the linter in CI,
+  take a clean rust⊥ts drift datum; (6B) scale the emit machine to the full decoder + re-run the mono gate on
+  non-byte-identical output; (6C) measure the wasm-resident-bytes lane (re-draw the §5 spine); (6D) adjudicate
+  the number-lane contract + RUN the R5 debuggability number + build the fuzzer + land u32→u64. Adjudicate the
+  bifurcated-Rust-reference and the LOCK-4C VM fork before GESTALT-P consumes the lock.
 
 ### Pass 2 (2026-07-16) — agglomerated
 

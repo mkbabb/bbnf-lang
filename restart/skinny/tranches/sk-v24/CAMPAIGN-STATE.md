@@ -30,7 +30,9 @@ resurrects the campaign from this file alone.
 
 | 5 | TRANCHE CODEX AUTHORSHIP (owner order 2026-07-16): 10 implementation-depth tranche docs at docs/tranches/sk-v24/ (GN-0..6 + PT-1..3, parse-that elevated to FULL IMPLEMENTATION; totality framing — THE implementation, not a skinny pass; prototype residue = defect) + 3-auditor precept sweep + fix stage + INDEX.md | RUNNING wf_6ae8f4f7-16c (restarted once at T+1min to bake the owner totality edict into all briefs) |
 
-## CAMPAIGN CLOSED 2026-07-16 (stages 0-4) — REOPENED for stage 5 (codex authorship)
+| 6 | THE LOCKS (owner order 2026-07-16, multi-day): the convergent multiagent design loop applied per core lock — LOCK-1 solver spine (type inference/solving), LOCK-2 graph engine (egraph+CSP global/local), LOCK-3 IR transposition spine, LOCK-4 combinator core, LOCK-5 regex continuum (grammar-driven, bootstrapped, HIR-isomorphic), LOCK-6 rust/ts isomorphism plane, LOCK-7 grammar totality & bootstrap — ≥3 passes each, then THE GESTALT (both repos) → the perfected tranche set with DAG ordering. GOAL SET (owner): perfected tranches pursuant to precepts from perfected designs — novel, no x86, built for our use case, perfected idiomatic Rust, grammar generality, deep CSP/egraph optimization, sophisticated typing inference and solving, parse-that PRIMACY. Round zero: locks/PORTFOLIO.md. Pass workflows in the ledger below; registries at locks/LOCK-N/REGISTRY.md. Pass-transition duty: the ORCHESTRATOR reviews registries on each pass-round completion and launches the next round with refined directives (researchers never see registries — withholding law); the heartbeat only resurrects. | PASS 1 LAUNCHING 2026-07-16 |
+
+## CAMPAIGN CLOSED 2026-07-16 (stages 0-4) — REOPENED: stage 5 (codex authorship, DONE pending final commit) + stage 6 (THE LOCKS, multi-day, RUNNING)
 
 The swath: 7 CONFIRMED + 3 CONFIRMED_DELTA performance-proven features; 3 measured
 refutations now law (02 latency inversion, 04 pipelining, 09 shim perf). The path: SPEC.md

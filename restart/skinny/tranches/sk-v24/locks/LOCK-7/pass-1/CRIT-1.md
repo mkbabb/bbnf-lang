@@ -1,232 +1,278 @@
 # LOCK-7 pass-1 — ADVERSARIAL CRITIC 1 (WITHIN-LOCK view): internal soundness + prototype sharpness
 
-Critic 1 of 2. Weighting: internal soundness of each family spec and whether the prototypes
-actually tested the sharpest uncertainty. Every load-bearing claim re-run on disk at HEAD
-(`d2b32f6e3`); where I contradict the record I did so with a compiled, reproducible probe, not a
-re-reading. Test artifacts written to run these were removed; nothing left in the tree.
+Critic 1 of 2. Weighting per charter: internal soundness of each family spec and whether the two
+prototypes tested the *sharpest* uncertainty. Every load-bearing claim re-verified on disk at skinny
+HEAD `8be944d8f4`; the one contested fact (the hand-parser wall) was settled by a compiled,
+reproducible probe (`parse_grammar` over three inputs, `ax-iter`, isolated `CARGO_TARGET_DIR`),
+written to `tests/`, run, and removed — the tree is clean. This critique reads the **04:51
+FAMILY-SPECS** (RECOGNIZE≠BUILD thesis) against the **05:01 prototypes** (PROTO-1-7B self-emit,
+PROTO-2 construction census), which are the newest artifacts and post-date the prior CRIT/REGISTRY
+round.
 
 ---
 
-## 0. The headline: the lock's single make-or-break gate is measured WRONG
+## 0. HEADLINE — the make-or-break was CIRCLED by both prototypes and LANDED by neither
 
-FAMILY-SPECS §0 makes 7A/7B/7D "three postures on ONE bootstrap ladder" sharing "ONE make-or-break
-gate … the identical missing primitive." PROTO-1 was the probe of that gate. **PROTO-1 does not
-reproduce at HEAD, its stated mechanism is contradicted by the source it ran against, and the §0
-governing finding mis-scopes the missing primitive by an order of magnitude.** This is the central
-within-lock defect and it contaminates the incompatibility map, 7A's whole feasibility question,
-7B Gap A, 7C's T6, and 7D's bbnf edge simultaneously.
+FAMILY-SPECS has correctly evolved past the byte-421 parse-wall confusion to a sharper thesis:
+**RECOGNIZE ≠ BUILD** (§0.5) — bbnf.bbnf projects its leaves `-> Span` and its structural rules
+carry no `->`, so a parser *emitted from it* recognizes bbnf and emits a span-tape; it does not
+*build* `GrammarIr`. This is the genuine lock pivot and it is more defensible than "the parser can't
+parse `->`." The two prototypes were dispatched to resolve it. **My finding: they advanced the
+frontier substantially but the single decisive experiment — author builder `->` projections on
+bbnf's structural rules, emit a parser, and show it reconstructs `GrammarIr` — remains UNRUN. Both
+prototypes stopped one step short of it, and one re-imports a corrected error.**
 
-### F1 — PROTO-1's numbers do not reproduce; its mechanism is source-false
+### Disk-verified facts (compiled, not quoted)
 
-I recompiled `grammar::parse_grammar` at HEAD and re-ran PROTO-1's exact three cases plus a
-seven-case primitive-pinning probe (`ax-iter`, isolated `CARGO_TARGET_DIR`):
+**FV-1 — there are TWO `->` ingestion paths; the hand parser handles `->`, the runtime-facts scanner
+rejects it. PROTO-1-7B's hand-parser cross-check row is source-false.**
+At HEAD, `grammar/src/lib.rs` has two distinct arrow handlers:
+- **Hand RD parser** `parse_grammar` (`:29`) → `parse_postfix` (`:1409` `starts_with("->")`) →
+  `parse_projection` (`:1481`) → `ExprKind::Project`. **My probe: `parse_grammar` on
+  `identifier = /…/ -> Span ;` returns `PARSE_OK`.** It parses `->` at byte 421 cleanly and walls at
+  **byte 662** — the first `?w` *immediately followed by* `->` in `big_comment` (line 17). This
+  reproduces the REGISTRY's fact-3 exactly.
+- **Runtime-facts scanner** `scan_runtime_source` (`:355`) → `:492` `rest.starts_with("->")` →
+  classifies `BBNF-UNSUPPORTED-PROJECTION` (inline test `w5a_…` at `:2140` pins the offset to the
+  first `->`). This is the path `parse_runtime_source_facts`/`emit_runtime_from_request` use.
 
-| case | PROTO-1 claim | HEAD measured |
-|---|---|---|
-| `bbnf.bbnf` verbatim | REJECT @ byte **421** (line 9, `identifier … -> Span`) | REJECT @ byte **662** (line 17, `big_comment = ( "/*" … "*/" ) ?w -> Span`) |
-| `bbnf.bbnf` imports-stripped | REJECT @ byte **323** (line 9, `->`) | REJECT @ byte **564** (line 15, same `?w ->`) |
-| `expressions.bbnf` standalone | REJECT @ byte **115** (`-> i64`) | **PARSES** — fails only `unresolved rule reference type_name` (a cross-file `resolve_refs`, not a parse wall) |
-| `types.bbnf` | PARSE OK | PARSE OK |
+PROTO-1-7B's **primary** result — the *generator* path walling at byte 421
+(`BBNF-UNSUPPORTED-PROJECTION`) — is CORRECT and reproduces (it is the runtime-facts scanner). But
+PROTO-1-7B's cross-check table (its lines 102–106) asserts the **t1 hand `parse_grammar`** *also*
+walls at 421 because "`parse_atom`/`parse_postfix` have no `->` production" and emits "unexpected
+token `-`". **This is false at HEAD and refuted by my execution** (`PARSE_OK` on the identifier
+line). The newest artifact in the lock re-imports the byte-421 hand-parser error that CRIT-1/REGISTRY
+already corrected — a regression in the record. *Weight:* the generator finding stands; only the
+hand-parser cross-check row is wrong; but it re-poisons the "both paths wall at 421" gestalt.
 
-Primitive-pin (fresh probe): `x = "a" -> Span` **OK**; `x = ( "a" ) -> Span` **OK**;
-`x = "a" ?w -> Span` **REJECT** `-`; `x = ( "a" ) ?w -> Span` **REJECT** `-`;
-`x = "a" ?w "b"` **OK**; `x = @{ "a" }` **REJECT** `@`; `x = |p| p` mis-parses `p` as a rule ref.
+**FV-2 — there is NO grammar-generic descent emitter in skinny. This is sharper than the brief's
+make-or-break and it is the real one.** PROTO-1-7B's decisive (and honestly self-flagged) finding:
+the only emit that returns `Ok` on bbnf produces a **byte-identical CSS-declaration-values recognizer
+template** — `runtime_generator.rs` emits fixed const strings (`JSON_PARSE_ONLY_PARSER_RS:339`,
+`CSS_PARSER_RS:401`, `CSS_SINK_RS:505`, …) and stamps only config-level facts; **the grammar's
+productions are never read for the recognizer body.** Verified: those consts exist; the RequestFacts
+emitter would emit the identical CSS recognizer for *any* input grammar. So the "998-LOC Ok / budget
+PASS" is a phantom — a mislabeled CSS copy, correctly rejected by the proto itself. **Consequence
+the FAMILY-SPECS understates:** the bbnf leg of 7A/7B/7D is blocked not on "a `->` lowering rule" nor
+even "three parser fixes," but on *the non-existence of a general-descent emitter* — a substantial
+architectural build. This revives, on measured evidence, the very BLOCKED-candidate framing the prior
+REGISTRY down-rated to "bounded parser work." The parse layer is bounded; the **emit** layer is
+architecturally absent.
 
-PROTO-1's verdict rests on the assertion *"There is no `->` token anywhere in the RD parser, so
-the arrow's `-` falls to the catch-all."* This is flatly false at HEAD: `parse_postfix`
-(`grammar/src/lib.rs:1409`) tests `starts_with("->")` and dispatches `parse_projection` (`:1481`)
-into `ExprKind::Project`; the handler was added by SK-V18 commit `9eb2aca1f7` on **2026-06-03**,
-predating the probe worktree. `?w` is handled in `parse_seq` (`:1366`) and `parse_postfix`
-(`:1449`); `<<`/`>>` at `:1414`. The parser is **not** "only the untyped JSON subset"; it parses
-`->`, `?w`, groups, and plain projections. PROTO-1's own probe-C claim that `-> i64` rejects is
-refuted by expressions.bbnf parsing cleanly.
+**FV-3 — OPEN-1's exact scoped path was NOT tested.** OPEN-1 (REGISTRY) asks whether
+`emit_from_source("bbnf", …)` / `passes::compile` lowers bbnf to a *working* parser. PROTO-1-7B ran
+`emit_runtime_from_request` (the two runtime-*template* emitters) — **not** `emit_from_source`
+(codegen `:101`) nor `passes::compile(&GrammarIr)` (passes `:32`, the leaf-inlining IR optimizer,
+grammar-generic by signature). The negative "no general emitter" is *proven* for the two
+runtime-template paths and *inferred* (not proven) for the structural `passes::compile` path. The
+sharpest residual uncertainty — is `passes::compile`+structural codegen a general descent emitter or
+also template-bound? — is still open. The prototype tested a *nearby* path and generalized.
 
-### F1-consequence — the real missing primitive is THREE narrow fixes, not a rewrite
+**FV-4 — PROTO-2's floor-0 verdict is an INFERENCE from the hand parser's SHAPE, not a demonstration
+that bbnf `->` expresses construction (elegant-reduction trap).** PROTO-2's probe
+(`proto2_construction_census`, 3 tests) genuinely establishes three properties of the **hand**
+parser: no structural interner (identical leaves → distinct ExprIds), post-order-synthesized ids,
+and cross-rule linking as a separable global pass. From these it *infers* "construction is a
+catamorphism ⇒ `->`-expressible ⇒ floor = 0." But the load-bearing step — that bbnf's **actual `->`
+projection language** can name a variant constructor (`Seq`/`Alt`/…), collect child results into an
+id-list, return an `ExprId` recursively, and thread the append-only arena — is **asserted, not run.**
+No builder grammar was emitted; no emitted parser was shown to reconstruct `GrammarIr`. So the RECOGNIZE≠BUILD
+gap that §0 raises is "resolved" by PROTO-2 only at the level of *the target shape is catamorphic*,
+not *bbnf `->` expresses it*. The "and-then-the-hard-part" (a working builder grammar) is exactly the
+unconverged step.
 
-The base case is genuinely RED (bbnf.bbnf does reject → the directional conclusion "the bbnf leg
-needs parser extension" survives). But the wall is precise and small:
-
-1. **`->` projection immediately after a standalone `?w` sequence element** (the *first* wall,
-   bbnf.bbnf line 17). Root cause: `parse_seq`'s `?w` branch (`:1366`) pushes a ws annotation and
-   `continue`s, so the trailing `->` is routed to `parse_postfix`→`parse_atom` as a *new* element
-   rather than attached as a projection over the accumulated sequence. This is a one-branch
-   attachment bug, not a missing feature.
-2. **`@{ }` host-capture atom** — genuinely unhandled in `parse_atom` (`:1498` has no `@` arm; the
-   `@` is only a directive prefix in `parse_rules`). PIN6 confirms a hard parse reject, distinct
-   from the runtime `BBNF-UNSUPPORTED-HOST-CAPTURE` classification 7C cites.
-3. **`|params|` closures** — mis-parsed (params silently treated as refs), a correctness gap.
-
-§0 frames the primitive as *"a general-descent emitter that lowers bbnf's own closure/`@import`/
-`@{}`/recursive-alternation surface"* and PROTO-1 re-scopes it to *"grow the front-end … cannot
-parse `->`, `?w`, `@{}`, or `|params|`."* Both are wrong about `->`/`?w`. The honest scope is:
-fix one `parse_seq` attachment bug, add one `parse_atom` arm, fix closure param binding — then the
-"emitter lowering" question §0 called *unreached-by-construction* becomes askable. Whether this is
-even a BLOCKED-candidate (a primitive "equal in difficulty to the original problem," per the
-CONSTITUTION parsimony test) is now in serious doubt; it looks like ordinary bounded parser work.
-
-### F2 — §0 fact 4 is factually wrong (PROTO-2 caught it; I verified)
-
-§0 fact 4: *"the public `parse_generated(pattern) -> bool` **discards** [the AST]"* — framing the
-regex edge as recognizer-only. Verified false: `parse-that/rust/parse_that/src/regex/mod.rs:34`
-is `pub fn parse_generated(pattern) -> Result<Hir, ParseError>`, a public producer via
-`host::lower`. `generated.rs:2288`'s bool is a *second* entry, not *the* public path. 7D's
-G-7D-3 "recognizer→producer gap" is **already closed**. Two of §0's four "governing facts" (fact
-4, and the base-case scope inside the finding) are wrong despite the header's assurance that all
-were *"confirmed by inspection, not quotation."* The §0 ground-truth that anchors the whole
-incompatibility map is not trustworthy at the resolution the map claims.
-
-### F4 — the evidence is inverted: the load-bearing gate has the broken prototype
-
-Only **7D's regex edge (PROTO-2)** carries a reproducing, well-caveated measured result. The
-**shared §0 gate** — on which 7A, 7B Gap A, 7C T6, and 7D's bbnf edge all rest — carries the
-prototype that does not reproduce. The prototypes tested the sharpest uncertainty for 7D but
-delivered broken evidence for the one gate every ladder posture shares. Per the CONSTITUTION
-concrete-artifacts clause, a non-reproducing running probe is worse than SPEC_ONLY: it launders
-false numbers as measured fact into §0 and the incompatibility map.
+**Net §0:** the two prototypes did real, non-trivial adversarial work — PROTO-1-7B inverted the
+expected result (the emitter is absent, not one-rule-short), PROTO-2 dismantled the "interned graph
+IR" fear for the construction arena. Both are legitimately RAN_MEASURED; neither is SPEC_ONLY. **But
+the one experiment that would resolve the lock — a bbnf builder grammar, emitted, reparsing its own
+corpus into equivalent `GrammarIr` — was run by neither.** That single un-run experiment is the lock's
+true convergence bottleneck, and it should be pass-2's OPEN-1 with FV-2/FV-3/FV-4 folded in.
 
 ---
 
-## 1. Family 7A — STAGED-BOOTSTRAP — convergence 45%
+## 1. Family 7A — STAGED-BOOTSTRAP — convergence 42%
 
-**Sound.** Rung-1 staleness reuses `regen.rs:37 check_target` verbatim — trivially ships. The
-mechanism shape (rustc `S₁==S₂` fixed-point, not `S₂==S₀`) is correctly specified (R1). Seed/
-provenance-ledger design is coherent.
+**Sound.** Rung-1 staleness reuses `regen.rs:37 check_target` verbatim; the fixpoint *mechanism*
+shape (rustc `S₁≡S₂`, not `S₂≡S₀`) is correct; the blake3 provenance-ledger design coheres.
+FAMILY-SPECS honestly concedes the fixpoint "is not achievable at HEAD" (§1 open-Q1).
 
 **Defects (within-lock).**
-- **G-7A-1 rests on the broken PROTO-1.** 7A's own §6 test 1 ("does `emit_from_source(bbnf)`
-  parse ≡ hand?") is the go/no-go, and the one probe of it is unreliable (F1). 7A's feasibility is
-  *less* blocked than stated (three narrow fixes) but *unproven* — the family cannot claim either
-  disposition on current evidence.
-- **Rung-1 is a gate that cannot distinguish self-hosting** (the "gates that cannot fail" failure
-  mode). §0/7A both concede Rung 1 == json's existing check; 7A's entire distinguishing value is
-  Rung 2, which is 100% gated on §0. So the *shippable* part of 7A is vacuous-adjacent and the
-  *non-vacuous* part is unproven.
-- **Build-budget reference is a cross-tree transplant** (F5): 7A/7B cite the legacy `crates/`
-  "~88s→~0.5s B6.W0" datum, but skinny's xtask has **zero** self-host targets (verified: grep
-  `regen-bbnf|regen-regex|fixpoint|BbnfBootstrap` in `skinny/xtask/src/main.rs` = 0). A legacy-tree
-  number is not a greenfield ceiling.
+- **G-7A-1 · the fixpoint is VACUOUS on the only artifact it can currently observe.** §1 asks the
+  right question — is the fixpoint over generated `.rs` bytes (proves only determinism) or over
+  `GrammarIr` equivalence (needs the builder grammar)? — but does not answer it. On FV-2, the ONLY
+  emittable artifact is the CSS phantom; a byte-identical `regen∘regen` over *that* certifies the
+  determinism of a template copy, i.e. **a gate that cannot distinguish self-hosting from a fixed
+  string.** The distinguishing rung (Rung 2) is blocked on the absent emitter (FV-2), not on "three
+  fixes."
+- **G-7A-2 · Rung 1 is a gate-that-cannot-fail** (json's staleness check re-pointed) — disclosed by
+  the family, but the shippable half is vacuous-adjacent and the non-vacuous half is unbuilt.
+- **G-7A-3 · S0 ≤ ~600 LOC is un-anchored and likely thesis-collapsing.** §1 open-Q2 already fears
+  "build not recognize inflates S0 toward the hand parser." On FV-4 (construction expressibility
+  unproven) the ~600-LOC number has no valid basis; the build-budget ~88s→~0.5s datum is a
+  legacy-tree transplant (skinny xtask self-hosts nothing — 0 targets).
 
-**Enumerated open gaps.** (a) §0 base case unproven + mis-scoped (F1) — 7A cannot mint a
-self-reparsing S₀ until the three parser fixes land and the emitter is then shown to lower.
-(b) Q1 seed disposition (frozen-forever vs retire-after-fixpoint) unresolved. (c) Q2 twin-ladder
-(one `fixpoint` xtask over bbnf+regex, or two) unresolved — bears on the "minimal surface" metric.
-(d) Q3 regex promote-or-oracle collapses into 7D given PROTO-2 (see §4). (e) build-budget ceiling
-has no valid skinny datum. (f) seed_LOC headline metric unmeasured.
+**Enumerated open gaps.** (a) no general-descent emitter exists (FV-2) — 7A cannot mint a
+self-reparsing S0 at all yet; this is worse than the "3 parser fixes" the record carries. (b) fixpoint
+*meaning* (bytes vs GrammarIr) unresolved and empty until a builder grammar exists (FV-4). (c) S0 LOC
+ceiling un-anchored; build-budget datum is legacy-transplant. (d) seed disposition (frozen R4-i =
+self-*verifying* not self-*hosting*; INC-3 admits 7A-default ⊆ 7D) unchosen. (e) Q2 twin-ladder
+(one fixpoint xtask over bbnf+regex or two) unresolved. (f) the GN-0/GN-1 rescue gate (the working
+legacy self-host is being archived) is not born-RED in 7A's gate list.
 
 ---
 
-## 2. Family 7B — TOTAL-SELF-HOST — convergence 35%
+## 2. Family 7B — TOTAL-SELF-HOST — convergence 33%
 
-**Sound.** The data/logic boundary (Gap B: generate IR *definitions* + serde + visitor; hand-write
-passes) is the correct ODS/TableGen discipline and needs no runtime parser — a genuine existence
-proof. Gap C's honest self-assessment as BLOCKED-candidate-absent-pure-structure-scoping is candid.
+**Sound.** Plane D (templates-as-data) is a real in-tree gradient (`runtime_generator.rs` consts
+→ shape-selected). PROTO-2 **de-risks the build-boundary fear** for Plane A construction: the "graph-
+shaped interned IR ⇒ as hard as the original problem" premise is empirically false *for the
+construction arena* (no interner; append-only; separable link). Plane C's own BLOCKED-candidate
+self-assessment is candid.
 
 **Defects (within-lock).**
-- **Gap A shares the mis-scoped §0 wall (F1)** and is the family's load-bearing "promote to
-  production" move; unproven either way.
-- **Gap B has zero in-tree prototype** — it rests on external prior art (ODS/IRDL/tree-sitter),
-  acceptable as SPEC_ONLY but must be *labeled* so; the family text presents it as "feasible" with
-  the confidence of a run that never happened. The claimed diff-gate ("generated type surface
-  byte-identical to a frozen snapshot; passes/codegen compile unchanged") is untested.
-- **Gap C is an unresolved BLOCKED-candidate** — a template DSL emitting *correct specialized*
-  Rust needs the type/borrow discipline it replaces (the R3 category error). No prototype scoped
-  it; the "if pure-structure holds it degrades to feasible" is a conditional, not a result.
-- **INC-1 (7A⊗7B) and INC-2 (7B⊗7D) are real and unadjudicated** — and INC-2 is now *decided
-  against 7B* on the one measurable edge (PROTO-2, §4). 7B's own R1 concession ("if diagnostics
-  unmet, Gap A demotes to oracle") is 7D; the family collapses toward 7D under measured pressure
-  and the spec admits it without resolving it.
+- **G-7B-1 · Plane A is blocked on FV-2 (no emitter), NOT on parser fixes, AND the floor-0 verdict
+  it leans on is inferred (FV-4).** PROTO-2 shows the target shape is catamorphic; it does *not* show
+  bbnf `->` expresses it or that any emitter lowers it. "Even a good budget yields only a *recognizer*
+  until Brief 2 resolves" (7B Plane A text) is right — but Brief 2 (PROTO-2) resolved only the *shape*
+  question, not the *expressibility/emission* question. Plane A remains unbuilt end-to-end.
+- **G-7B-2 · Plane B `ir.bbnf` is a consumer-less-substrate risk conditional on an un-named cross-lock
+  verdict.** Its gate ("generated type surface byte-identical to a frozen snapshot") means the grammar
+  produces *nothing a drift-gate-over-the-enums doesn't already give* — the only consumer is a gate
+  that needs no grammar. Double-homed with LOCK-3 3C (GRAMMAR-HOMOIOUSIA, verbatim the same
+  deliverable); if LOCK-3 picks 3A/3B/3D, `ir.bbnf` has no IR-spine consumer (clause viii / Y.13). Zero
+  in-tree prototype — presented as "feasible" with the confidence of a run that never happened; label
+  SPEC_ONLY.
+- **G-7B-3 · Plane C is an unresolved BLOCKED-candidate and an elegant-reduction trap.** "Structural
+  emission as grammar, kernels stay hand-Rust" reads clean, but the load-bearing "control-flow /
+  dispatch / tape-assembly expressible without a borrow checker" is the unconverged hard part
+  (R3 category error). No prototype scoped it. Note: PROTO-2's floor-0 finding is about the *parse-
+  construction* arena in `grammar/`; it does **not** touch the mid-IR/`BackendExpr` graph in `ir/`
+  that Plane C targets — Plane C stays correctly BLOCKED-candidate and PROTO-2 must not be read as
+  relieving it.
+- **G-7B-4 · INC-2 decided against 7B on the one measurable edge** (PROTO-2 regex: gen 1.77–1.81×
+  slower; neither promotion gate fires). 7B's own R1 concession ("if diagnostics unmet, Gap A demotes
+  to oracle") is 7D. The family collapses toward 7D under measured pressure — but note this collapse
+  is *proven only on the regex edge*; the bbnf edge is unbuilt (FV-2), so the collapse is an
+  **unverified gestalt** where it matters most.
 
-**Enumerated open gaps.** (a) Gap A blocked on §0 (F1). (b) Gap B unprototyped — the byte-identical
-IR-surface diff-gate is asserted, not run. (c) Gap C BLOCKED-candidate — no pure-structure-scoping
-prototype; the kernel-escape-hatch-into-control-flow failure signature untested. (d) Q1 diagnostics
-parity (generated parser emits spans as richly as 2142 LOC hand machinery?) unmeasured. (e) Q3
-regex-`->`-to-HIR is LOCK-5-dependent and, per PROTO-2, the current `host::lower` rejects all
-bounded quantifiers `{n,m}` — the regex projection is materially broken, not merely "recogniser".
-(f) build-budget datum is a legacy transplant (F5).
+**Enumerated open gaps.** (a) Plane A: no emitter (FV-2) + expressibility inferred not demonstrated
+(FV-4). (b) Plane B: consumer-less/LOCK-3-conditional + unprototyped diff-gate. (c) Plane C:
+BLOCKED-candidate, unscoped, category error. (d) diagnostics parity (generated parser emits spans as
+richly as 2142 LOC hand machinery?) unmeasured. (e) regex-`->`-to-HIR is LOCK-5-dependent and
+`host::lower` rejects all bounded `{n,m}` (materially broken, not merely "recognizer"). (f) four-plane
+build ceiling unmeasured (legacy transplant).
 
 ---
 
-## 3. Family 7C — HOST-FUNCTION-LATTICE — convergence 60%
+## 3. Family 7C — HOST-FUNCTION-LATTICE — convergence 58%
 
-**Sound and best-substantiated in-tree.** Every substrate claim verified on disk: the
-`passes/src/lib.rs:798` string heuristic (`name.contains("host") && (value.contains("decode") ||
-value.contains("parse"))`) exists verbatim; `bbnf.bbnf:73` typed `host_directive` exists and is
-zero-usage-dormant; `bbnf.bbnf:33` `@{}` exists; `grammar/src/lib.rs:222`
-`BBNF-UNSUPPORTED-HOST-CAPTURE` exists; `json/host.rs` is empty ("JSON is host-fn-free in the
-skinny compiler slice"). T1 (typed signature) and T2 (delete the heuristic, `check-json`
-bit-for-bit) are genuinely orthogonal, in-tree, and shippable without any parser work. The
-attribute-grammar framing (`&mut Ctx` = inherited attribute) is exact. This is the lock's most
-independently-viable family — the assessment is directionally right.
+**Sound and best-substantiated in-tree.** Every substrate claim verified: `passes/src/lib.rs:794-798`
+string heuristic; `bbnf.bbnf:73` typed `@host` directive (zero-usage dormant); `bbnf.bbnf:33` `@{}`;
+`grammar/src/lib.rs:222 BBNF-UNSUPPORTED-HOST-CAPTURE`; empty `json/host.rs`. T2 (delete the heuristic
+→ `check-json` bit-for-bit) and T4 (`@{}` lowering) are genuinely in-tree and shippable. **PROTO-2
+newly gives 7C a concrete, measured floor:** `resolve_refs` (whole-grammar name link) is a
+`TreeFold` host fn — floor = 1 for bbnf's *own* linking, floor = 1 CompileIO for `@import`. This is
+the family's first empirically-grounded host-fn instance and it is exactly the "typed, counted,
+floored" home 7C promises. The attribute-grammar framing (`&mut Ctx` = inherited attribute) is exact.
 
 **Defects (within-lock).**
-- **"Fully orthogonal / NOT blocked" is overstated.** T6 ("the typed `@host` directive survives
-  `regen∘regen` byte-identical on `bbnf.bbnf`") is **unachievable while bbnf.bbnf does not parse**
-  (F1) — T6 shares the §0 wall. The bbnf-subsystem totality% floor (bbnf `@import` + closure
-  β-reduction) likewise cannot be *counted* until the self-grammar parses. So 7C is orthogonal for
-  T1/T2/T3/T5 but **not** for T4/T6, contra INC-4's blanket "orthogonal to all three."
-- **T4 understates the work.** PIN6 shows `@{}` is a **hard parse reject** in the `parse_grammar`
-  RD path (`@` at `parse_atom`), not merely a runtime `BBNF-UNSUPPORTED` classification. "Lower
-  `RuntimeConstructKind::HostCapture`" is necessary but not sufficient; the RD front-end must also
-  *parse* `@{}`, tying T4 to F1's item 2.
-- **Zero prototype evidence.** Neither PROTO-1 nor PROTO-2 exercised 7C. Its "most
-  independently-viable" and "one-file cure" claims are SPEC_ONLY. For a family this cheap to probe
-  (delete one heuristic, run `check-json`), the absence of a T2 prototype is a gap, not a virtue.
-- **CONTEXT-tier zero-cost (Q2) unverified.** The `&mut Ctx` parse-time-only invariant
-  (`runtime/src/lib.rs:42-44` no-write assertion) is asserted-per-subsystem, run for none.
+- **G-7C-1 · "fully orthogonal / NOT blocked" is overstated (INC-4).** T6 (`@host` survives
+  `regen∘regen` on `bbnf.bbnf`) inherits the base-case wall — `bbnf.bbnf` does not fully parse (walls
+  662, FV-1) and there is no emitter (FV-2); the bbnf totality% floor cannot be *counted* until a
+  builder grammar exists. 7C is orthogonal for T1/T2/T3/T5, **not** for T4/T6.
+- **G-7C-2 · T4 understates the work.** `@{}` is a *hard parse reject* in the RD path (`parse_atom`
+  `:1495` has no `@` arm), not merely a runtime `BBNF-UNSUPPORTED` classification. T4 must both *parse*
+  `@{}` and lower `HostCapture` — the same wall the ladder needs (cross-pollinated fix).
+- **G-7C-3 · ZERO prototype exercised 7C.** For a family this cheap to probe (delete one heuristic,
+  run `check-json`) the absence of a T2 run makes "most independently viable / one-file cure"
+  SPEC_ONLY, not a result. This is the single most cost-effective missing prototype in the lock.
+- **G-7C-4 · the typed-lattice half is LOCK-1-coupled.** T1 (typed signature into inference) + T5
+  (tier off `&mut Ctx`, zero-cost re-verify) need LOCK-1's solver to admit a typed leaf; the
+  independence claim holds only for T2+T4. Split the claim.
+- **G-7C-5 · CONTEXT-tier zero-cost (clause v) unverified for the tier that most threatens it** — no
+  CONTEXT host fn exists (usage = 0); TOML `push_path` is designed, not run; and the floor-gate has
+  never tripped (a gate not yet proven able to fail).
 
-**Enumerated open gaps.** (a) T6 + bbnf-floor counting share the §0 wall — 7C is not
-unconditionally orthogonal. (b) T4 requires `@{}` *parsing* (F1-2) in addition to lowering. (c) no
-prototype for T1/T2/T5 despite trivial cost — SPEC_ONLY. (d) Q2 CONTEXT zero-cost unverified for
-any real host fn (TOML `push_path` is designed, not run). (e) totality% counter (leaves × branches)
-is specified but unbuilt; the published per-subsystem numbers are all projected, none measured.
+**Enumerated open gaps.** (a) T6 + bbnf-floor share the emitter wall (FV-2). (b) T4 needs `@{}`
+*parsing* + lowering. (c) no prototype for T1/T2/T5 despite trivial cost (SPEC_ONLY). (d) T1/T5 are
+LOCK-1 consumers. (e) CONTEXT zero-cost unverified; TOML `push_path` unbuilt. (f) totality% counter
+(leaves × branches) specified but unbuilt — every published per-subsystem number is projected, none
+measured. (g) CSS floor UNMET (`color.bbnf`/`values.bbnf` depend on the un-lowered `@{}`).
 
 ---
 
-## 4. Family 7D — META-CIRCULAR-ORACLE — convergence 62%
+## 4. Family 7D — META-CIRCULAR-ORACLE — convergence 58%
 
 **Sound and the only family with a reproducing measured result.** PROTO-2 ran a real paired cold
-oracle over 51 patterns: structural parity 0.7647, membership 0.8235, perf GEN/HAND 1.77–1.81×
-slower — **neither promotion gate fires → ORACLE-ONLY**, resolving INC-2 toward 7D on the one edge
-with committed producer code both sides. The ≡-sensitivity finding (`Empty ≡ Concat([])`
-normalization) concretely answers 7D-Q1. The 12-row divergence ledger (9× `{n,m}` reject, `.`
-metachar, `(?s)` inline flag) is exactly the "checkable spec of the hand parser" the family
-promises — value delivered independent of any cutover, as claimed. The §0-fact-4 correction (F2)
-is 7D's own researcher's catch and is verified true. ORACLE-ONLY as a lawful terminal is
-well-argued and Y.13-compliant (the oracle is CI-consumed).
+oracle over 51 patterns: structural parity 0.7647 (0.80 under `Empty ≡ Concat([])` normalization),
+membership 0.8235, perf gen/hand 1.77–1.81× slower — **neither promotion gate fires → ORACLE-ONLY**,
+resolving INC-2 toward 7D on the one edge with committed producer code both sides. The 12-row
+divergence ledger is exactly the "checkable spec of the hand parser" the family promises. The §0-fact-4
+correction (the regex producer public entry `regex/mod.rs:34` already ships) is 7D's own catch and is
+verified true. ORACLE-ONLY as a lawful terminal is well-argued and Y.13-compliant (CI-consumed) —
+this is the family that cures the consumer-less-substrate violation the instant a parser is emitted.
 
 **Defects (within-lock).**
-- **The bbnf edge shares the mis-scoped §0 wall (F1).** 7D's own §5 test 1 (base-case feasibility)
-  is the PROTO-1 that doesn't reproduce; the bbnf ledger row cannot be built on current evidence,
-  and the "reaches ORACLE-ONLY the instant the base case lowers" claim inherits F1's uncertainty.
-- **Regex parity 0.76 is LOW and the substrate is materially broken**, not "half-self-hosted".
-  `host::lower` rejecting *every* bounded quantifier is a large hole; PROTO-2 honestly flags that
-  grammar-fuzzing (G-7D-4) would only *lower* parity. This does not undermine the ORACLE-ONLY
-  verdict but it means the promotion ledger for regex is far from parity, and the "regex edge
-  ships now" framing should read "ships now as a red ledger row."
-- **Q3 two-regex-home is LOCK-5-dependent and unresolved** — the oracle's canonical `.bbnf` is
-  undefined (three divergent regex grammars exist per prior-art §1.2). Named, not closed.
+- **G-7D-1 · the bbnf edge shares the emitter wall (FV-2) and the NormalAst oracle is a *weak* oracle
+  until a builder grammar exists (FV-4).** 7D §4 open-Q1 concedes it: the generated side yields a
+  span-tape, so the differential compares only at *recognition/span granularity* — it misses
+  wrong-precedence and wrong-construction, the very defects an oracle exists to catch. Without the
+  builder grammar the bbnf ledger row is not just red, it is *low-resolution*.
+- **G-7D-2 · the regex parity headline is soft and double-homed.** 9 of 12 divergences are ONE
+  fixable `host::lower` bug class (bounded `{n,m}` reject) — 0.76 measures LOCK-5's incomplete fold,
+  not an oracle verdict. The stable verdict is perf (1.8×). Report "regex ships now *as a red ledger
+  row*"; the parity-moving fix lives entirely inside LOCK-5's `host.rs` (cross-lock, not 7D's).
+- **G-7D-3 · "7D subsumes 7A on promotion" is vacuous on current evidence** — nothing promotes
+  (parity < 1 AND perf > 1 on the one decidable edge), so the fixpoint corollary never activates. 7D
+  honestly names ORACLE-ONLY as terminal, so this is disclosed, but the subsumption framing oversells
+  a relation that never fires.
+- **G-7D-4 · ≡ needs codifying** (`Empty`-normalization + the `Hand = parse+resolve_refs+validate`
+  vs `Gen = pure parse` pivot must run shared semantic passes on both or neither) before any parity%
+  is quotable; stated, not implemented.
 
-**Enumerated open gaps.** (a) bbnf edge blocked on §0 (F1) — no bbnf ledger row. (b) regex ledger
-row is red (parity 0.76, perf 0.55×); promotion may never fire (Q4, honestly named). (c) ≡ needs
-`Empty`-normalization codified before parity% is quotable (from PROTO-2). (d) Q3 canonical regex
-`.bbnf` awaits LOCK-5. (e) grammar-driven corpus sampler (test 4) unbuilt — parity is over the
-committed 51 only, not saturated.
+**Enumerated open gaps.** (a) bbnf edge on the emitter wall (FV-2) + weak-oracle-until-builder (FV-4).
+(b) regex ledger red; promotion may never fire; the fixable rows are LOCK-5's (XL-2). (c) ≡
+uncodified. (d) canonical regex `.bbnf` LOCK-5-blocked (three divergent grammars). (e) grammar-driven
+corpus sampler unbuilt — parity over the committed 51 only, not saturated.
 
 ---
 
-## 5. The incompatibility map — directionally right, but resting on a mis-measured §0
+## 5. Incompatibility map + failure-mode checklist (within-lock)
 
-**INC-2 is now decided by measurement**: PROTO-2 resolves 7B-promote vs 7D-oracle **toward 7D** on
-the one real edge. The map should elevate this from "convergence note" to "measured resolution."
-**INC-1** (7A⊗7B scope contradiction over `ir/src/lib.rs`) is sound. **INC-3/INC-4** are sound in
-shape but INC-4's "7C orthogonal to all three" is **false for T4/T6** (F3). The map's foundational
-frame — "three postures on ONE ladder sharing the identical missing primitive" — is *directionally*
-true (all three bbnf legs hit the same base case) but *false in detail*: the "identical missing
-primitive" is three specific, small parser fixes (F1), not a general-descent emitter rewrite, and
-once they land the wall may fall cheaply enough that "BLOCKED-candidate" no longer applies. The
-lawful-gestalt-shape recommendation (7C ships regardless + one chosen ladder posture, 7D lowest-
-risk) survives all findings and is the correct pass-2 spine — but pass 2 must **re-measure the base
-case** before repeating §0's numbers.
+**Map.** The DAG framing (7A-determinism-floor ∧ 7D-oracle-trajectory ∧ 7C-typed-boundary →
+7B-per-plane) is directionally sound. **INC-2** is measured toward 7D on the regex edge — but that
+resolution is *proven only where cheap* (regex) and *unverified where it matters* (bbnf, unbuilt per
+FV-2): an **unverified gestalt**, to be labeled as such. **INC-1** (7A⊗7B scope) is sound; moot while
+7B is banked. **INC-3** (hand-parser fate) composable. **INC-4** ("7C orthogonal to all three") is
+**false for T4/T6** (G-7C-1/2).
+
+**Checklist hits.**
+- **Elegant-reduction trap:** PROTO-2 "catamorphism ⇒ `->`-expressible" (FV-4, the builder grammar is
+  the unconverged hard part); 7B Plane C "structure as grammar, kernels stay hand-Rust" (control-flow
+  without a borrow checker is the hard part).
+- **Gate-that-cannot-fail:** 7A Rung 1 (staleness re-pointed); a `regen∘regen` fixpoint over the CSS
+  phantom (G-7A-1).
+- **Vacuous convergence:** 7A fixpoint (empty until a builder grammar exists); 7D "subsumes 7A"
+  (never activates).
+- **Consumer-less substrate (viii/Y.13):** 7B Plane B `ir.bbnf` (byte-identical-to-snapshot;
+  LOCK-3-conditional). 7D cures the *reverse* violation (dormant `.bbnf` gets a consumer).
+- **Masked fallback / legacy alias:** 7A-default frozen seed = hand parser stays production forever
+  → self-*verifying* dressed as self-*hosting*.
+- **Prototype-evidence misuse:** PROTO-1-7B's 998-LOC "Ok" is a CSS phantom — *correctly self-flagged*
+  by the proto (good faith); but its t1 hand-parser cross-check row is source-false (FV-1), a re-quoted
+  corrected error in the newest artifact. PROTO-2's 0.76 parity over-weights one fold bug (9/12 rows,
+  LOCK-5). No SPEC_ONLY anchors a perf claim (both protos RAN_MEASURED) — but 7C's "most viable" and
+  7B Plane B's "feasible" ARE SPEC_ONLY and should be labeled.
+- **Unverified gestalt:** "families collapse toward 7D" — proven regex, unbuilt bbnf.
+
+**Constitution.** Clause (i) grammar-totality: PROTO-2 fixes bbnf's own honest **floor > 0** — even
+the self-host needs 1 TreeFold host fn (`resolve_refs`) + 1 CompileIO (`@import`); combined with FV-2
+(no general emitter), *front-end* totality is demonstrated by NO family. The lawful deliverable is to
+name front-end grammar-totality as a **counted floor, not 100%** (7C's counter is the instrument) —
+no family states this outright. Clause (v): 7C CONTEXT-tier zero-cost unverified. Clause (vii): both
+protos are concrete artifacts (good); the one breach is PROTO-1-7B's re-quoted t1 row. Clause (viii):
+7B Plane B at risk; 7D compliant. Clause (ix): 7A/7B/7D are net-new-vs-GN tranches (GN omits
+bootstrap) — lawful only if declared; 7C re-cuts GN-5 well.
 
 ---
 
@@ -234,15 +280,30 @@ case** before repeating §0's numbers.
 
 | family | conv % | disposition | the one gap that dominates |
 |---|---|---|---|
-| 7A | 45% | ADVANCE-with-caveat | §0 base case unproven + PROTO-1 non-reproducing; Rung-1 vacuous-adjacent |
-| 7B | 35% | ADVANCE-with-caveat | Gap C BLOCKED-candidate unresolved; Gap A on §0; Gap B unprototyped; INC-2 decided against it |
-| 7C | 60% | ADVANCE | strongest in-tree, but SPEC_ONLY (no probe) and not orthogonal for T4/T6 |
-| 7D | 62% | ADVANCE | only reproducing measured result (regex ORACLE-ONLY); bbnf edge on §0 |
+| 7A | 42% | ADVANCE-narrowed (fixpoint law only) | no general emitter (FV-2); fixpoint vacuous until a builder grammar exists |
+| 7B | 33% | BANK (posture measured-dominated) | Plane A blocked on FV-2 + inferred-not-demonstrated (FV-4); Plane B consumer-less; Plane C category error |
+| 7C | 58% | ADVANCE (the survivor) | strongest in-tree yet SPEC_ONLY (no T2 probe); not orthogonal for T4/T6; typed half LOCK-1-coupled |
+| 7D | 58% | ADVANCE (posture winner) | only reproducing result (regex ORACLE-ONLY); bbnf edge on FV-2 + weak-oracle-until-builder |
 
-**Mandatory pass-2 corrections before any convergence talk.** (1) Re-run the base-case probe at
-HEAD and replace PROTO-1's numbers (662/564, not 421/323) and mechanism (three named fixes, not
-"no `->` token"). (2) Correct §0 fact 4 (regex producer at `mod.rs:34` exists; recognizer→producer
-gap closed). (3) Down-rate the base-case from "primitive equal in difficulty to the original
-problem" to "bounded parser work," and re-test whether 7A/7B-A/7D-bbnf are BLOCKED-candidate at
-all after the three fixes. (4) Prototype 7C's T2 (trivial) so its "most viable" claim stops being
-SPEC_ONLY. (5) Label the ~88s build-budget datum as legacy-tree, not a skinny ceiling.
+**Delta vs the carried REGISTRY (45/35/60/60).** I hold all four slightly lower because the newest
+prototypes did not *improve* the vertical families' feasibility — PROTO-1-7B's phantom finding
+*worsened* it (the emitter is architecturally absent, not "three fixes"), and PROTO-2's de-risk is an
+*inference* (FV-4), not an end-to-end builder demonstration. 7C/7D lose 2 points each for the
+un-run cheapest probes (7C-T2) and the un-built builder edge; 7A/7B lose 3/2 for FV-2 hardening the
+emit wall.
+
+**Mandatory pass-2 corrections before any convergence talk.**
+1. **Reconcile the record:** strike PROTO-1-7B's t1 hand-parser cross-check row (byte-421 "no `->`
+   production" is source-false — `parse_grammar` returns `PARSE_OK` on the identifier line, walls at
+   662). Carry only the *generator-path* 421 result and the *hand-path* 662 result.
+2. **Restate the make-or-break with FV-2/FV-3/FV-4:** OPEN-1 is not "does the general-descent emitter
+   lower bbnf" (it presumes an emitter that PROTO-1-7B showed does not exist) but **"author builder
+   `->` projections on bbnf's structural rules, emit via `passes::compile`/`emit_from_source` (the
+   UNTESTED structural path, FV-3), and show the emitted parser reconstructs `GrammarIr` equivalent to
+   the hand parser."** This is the single un-run experiment the whole lock rests on.
+3. **Run 7C-T2** (delete `has_parse_time_host_decode` → registry lookup; `check-json` bit-for-bit) so
+   7C's "most viable" stops being SPEC_ONLY — the highest ROI probe in the lock.
+4. **Name front-end grammar-totality as a counted floor (> 0)**, per PROTO-2's `resolve_refs`/`@import`
+   floors and FV-2 — no family currently states the honest ceiling.
+5. **Label the ~88s build datum legacy-transplant** and the "collapse toward 7D" gestalt as
+   verified-regex / unverified-bbnf.

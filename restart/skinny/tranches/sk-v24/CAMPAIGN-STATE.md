@@ -134,3 +134,10 @@ green — no spam. If this session is gone, a fresh session executing task #55 I
   survived on disk (FAMILY-SPECS.md both locks). Resumed wf_50d1252c-5ea from journal cache.
   WATCH: the synth schema (proto_briefs exactly-2) may be brittle — if the resume dies on
   the same agents, relax minItems/maxItems to 1-3 and accept the cache loss for lock 4.
+- 2026-07-16 ~08:00-09:29 ET — THE SESSION-LIMIT WALL: pt pass-2 (wf_a6d7a39f-623) lost 30
+  agents at the wall (5 distillers survived); bbnf pass-1 resume (wf_63419230-36d) completed
+  new protos for locks 1/2/7 (RETIRE-1D parity proof; LOCK-2 §0 master gate PASS; LOCK-7
+  N_host_construction=0) but lost all three agglomerators at the wall. Reset 8:40am ET;
+  resumed BOTH at 09:29 per protocol (same runIds, args exactly as ledgered). Lesson: resume
+  observed to re-run some previously-folded stages (prefix-cache sensitivity to interleaving)
+  — treat re-folds as refinement, not waste; registries are cumulative.

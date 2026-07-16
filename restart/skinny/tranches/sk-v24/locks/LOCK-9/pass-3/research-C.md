@@ -1,258 +1,252 @@
-# LOCK-9 · Family 9C — SCANNER-AS-DFA (research-C, pass 3)
+# LOCK-9 Family 9C — SCANNER-AS-DFA (pass-3 research)
 
-The scanner layer dissolves into the regex continuum: quote/number/ws/ident/url-char scanning
-become compiled DFA + prefilter products of the bootstrapped grammar, so the hand-written
-*character-class* scanners cease to exist. This report makes the mechanism concrete, names the
-already-present substrate, and draws the honest boundary between what a DFA can lawfully
-replace and what it structurally cannot.
+The scanner layer dissolves into the regex continuum: quote, number, whitespace and
+structural scanning become compiled DFA / prefilter / classifier products of the bootstrapped
+grammar, and the hand-authored nibble-LUTs cease to exist as *source*. Pass-3 sharpens three
+things the family owed: (F3.1) the pipeline's existence, determinism gate, and the now-settled
+crate-source-of-truth with its `bbnf-regex 0.1.0` name collision resolved concretely; (F3.2) a
+grammar-sourced census that reports the CSS `url()` leaf and a wide-unicode leaf against the
+literal 255-class / 4096-state ceilings as denominators; (F3.3) the `[u8;256] → SIMD classifier`
+emit pass with a *demonstrable* misclassification when a naive nibble/lo6 form is emitted for the
+structural set.
 
-## 1. The mechanism, made concrete
+## 1. Mechanism — tiered lowering keyed on compiled-DFA shape (restated by pointer)
 
-A grammar leaf carrying a regex (`literal`, `char_class`, `escape` in
-`parse-that/rust/bootstrap/regex.bbnf:10-37`) lowers on the generator path through the existing
-`bbnf-regex` automata tower and terminates in **one byte-class table** that is already the
-input type of the shared SIMD kernel:
+"Scanner-as-DFA" is not "one transition per byte." The scanners are DFAs of three shapes, each
+with a distinct optimal execution:
 
-1. leaf regex text → `Hir` (`parse-that/rust/regex/src/hir/parser/mod.rs:153`)
-2. `Hir` → Thompson NFA (`automata/nfa.rs:71 from_hir`)
-3. NFA → DFA via subset construction + Hopcroft minimization
-   (`automata/dfa.rs:67 compile_with` → `:86 subset_construction` → `:90 hopcroft_minimize`)
-4. the DFA emits **`byte_classes: [u8; 256]`** (`automata/dfa.rs:52`), computed by
-   `compute_byte_classes` (`sets/equiv.rs`, called at `dfa.rs:80`), plus `num_classes: u16`.
+- **Tier M (membership, 1–2 states, single accepting char-class).** The dominant every-byte pass;
+  no loop-carried state — the whole computation is the byte→class map. Lowers to the
+  classify-and-movemask kernel, and to *exactly* it, because the hand LUTs already ARE
+  hand-computed `byte_classes` maps (parity by construction).
+- **Tier S (small multistate, 3–6 states, real transitions).** `(?:\s|/\*.*?\*/)*`, number-scan.
+  Genuine loop-carried state → the serial `vqtbl1q_u8` Sheng chain, latency-bound (~2–4 cyc/byte,
+  no cross-byte parallelism). For the SHORT runs these DFAs see, scalar `find_at` wins — Sheng is
+  a **measured negative** on this hot path (the directive weights membership + structural tiers
+  for exactly this reason).
+- **Tier X (explosion / transduction, NO_GO).** Unicode `\p{…}` blows the byte-DFA past the state
+  or class ceiling; JSON `\uXXXX` decode is a transducer, not an acceptor. These stay on the
+  general engine (scan) + typed host functions (emit), per the hybrid-grammar-host law.
 
-The load-bearing observation for 9C: **that `[u8;256]` byte-equivalence table is bit-for-bit
-the same shape as the table consumed by the shared classifier kernel**
-`bbnf_simd::prim::byte_class_from_table_64(&[u8;64], &[u8;256]) -> u64`
-(`skinny/crates/bbnf-simd/src/lib.rs:256`, NEON body
-`aarch64/byte_class_from_table_64.rs`). The DFA already *produces* the representation the SIMD
-plane already *consumes*. Scanner-as-DFA is therefore not a new engine — it is a **one-pass
-emit that routes the DFA's start-state row and byte-class table into three existing kernel
-tiers**, selected by separability:
+## 2. F3.1 — pipeline existence, the byte-fixpoint gate, and the crate collision (RESOLVED)
 
-- **membership / self-loop leaf** (`[set]+`, `[set]*` — the ws, digit, hex, ident, url-char
-  runs): the DFA is 1–2 states with 2 byte-classes (member / non-member). It reduces to a
-  single-block membership scan. If `|set| ≤ 8` → `byte_class_from_eq_set_64`
-  (`lib.rs:283`, memchr-tier). Otherwise → `byte_class_from_table_64` (any `[u8;256]`,
-  `lib.rs:256`). This is where "hand-written scanners cease to exist" is literally true.
-- **anchored literal-prefix leaf** (`https?://…`, `0x…`, `#…`): the start-state entry set is
-  1–3 bytes → the **prefilter tier** (`memchr`/`memchr2`/`memchr3`) skips runs that cannot
-  begin a match, then an anchored DFA confirm. This is the PROVE-10 mechanism verbatim
-  (`Prefilter::from_dfa` reads the start-state transition row; `Dfa::find` branches once on
-  the prefilter; CONFIRMED 8.8–29.5×, 0.99× controls, compile-neutral, 44/44 tests).
-- **multi-kind structural leaf** (the JSON `{}[]:,"\` set, CSS delimiter set): NOT a single
-  membership test — needs a *distinct kind per byte*. Routes to
-  `structural_classify_64(&[u8;64], &KindPartition)` (`lib.rs:301`), the `vceqq`-fan
-  (scheme α, `aarch64/structural_classify_64.rs`), grammar-neutral, caller supplies the
-  partition.
+**The grammar→DFA pipeline at scanner fidelity is BUILT and green — in exactly one home.** The
+full `pattern → HIR → Thompson-NFA → subset/powerset DFA → Hopcroft minimize → byte_classes →
+prefilter` chain lives in `parse-that/rust/regex` (crate `bbnf-regex 0.1.0`, 6742 LOC). Concrete
+authoritative seams:
 
-The emit pass is thus: *derive `byte_classes`/entry-set/kind-partition from the leaf DFA →
-select tier by a separability predicate → emit the block loop over `PaddedView` 64-byte
-stripes.* No hand scanner survives for the membership and prefix tiers.
+- `parse-that/rust/regex/src/automata/dfa.rs:62` `Dfa::compile` (pattern→minimized DFA);
+  `:77` `from_nfa`; `:116` `find_at` (the scalar Sheng, per-byte body `:124-136`:
+  `class = byte_classes[b]; next = flat[state*num_cls + class]`); flat table `dfa.rs:50`,
+  `byte_classes:[u8;256]` `:52`, `num_classes:u16` `:54`.
+- `parse-that/rust/regex/src/sets/equiv.rs:17` `compute_byte_classes → ([u8;256], u16)`, "typically
+  5–20 for common patterns" (`:5`) — the byte→class partition a nibble-LUT compresses. Emits a
+  SCALAR table only; the SIMD-classifier derivation is the missing pass (§4).
+- The prefilter product (`automata/prefilter.rs`, `Prefilter::from_dfa` reads the start-state row →
+  entry-byte set → memchr1/2/3; `Dfa::find`): measured 9.6×–29× on prefilterable leaves, 0.99× on
+  non-prefilterable controls, compile axis 1.003×, 44/44 tests. Its NEON hot loop disassembles to
+  the certified `shrn.8b …, #4` vshrn-narrow movemask idiom — the emit target the family must match.
 
-## 2. The substrate is already physically wired (not a proposal)
+**The `bbnf-regex 0.1.0` name+version collision is real and its resolution is now concrete.**
+THREE crates are in play, VERIFIED:
+- `parse-that/rust/regex` → package name **`bbnf-regex` 0.1.0** — the full automata engine ABOVE.
+  Authoritative DFA source-of-truth (one-regex-home; grammar tier keeps `Regex(StringId)` opaque,
+  engine tier keeps rich `Hir` joined by a string/format bridge, so no HIR-type unification is even
+  required to consume it).
+- `bbnf-lang/skinny/crates/bbnf-regex` → package name **`bbnf-regex` 0.1.0** (single 322-LOC
+  `lib.rs`, NO `automata/`/`equiv`/`classify`) — the legacy campaign-side stub, consumed by
+  `skinny/crates/{ir,passes}` (`bbnf-regex.workspace = true`). **This is the collision partner and
+  it archives at GN-0.**
+- `bbnf-lang/skinny/crates/parse-that-regex` → package name **`parse-that-regex` 0.1.0** — the
+  RUNTIME-SCAN vendor (only `number/` eisel_lemire, `unicode/` utf8_hoehrmann/utf8_block,
+  `integration/simd_scan_hook.rs`; depends on `bbnf-simd`), consumed by `skinny/crates/{runtime,
+  bbnf-bench}`. **It does NOT vendor the `automata/` DFA tier.**
 
-The skinny greenfield resolves the **name+version collision** the directive flags (two
-`bbnf-regex 0.1.0`) by *renaming, not deduping*:
+The collision is resolved by **rename-on-vendor, not version bump**: the parse-that engine, when
+vendored into the greenfield, carries the package name `parse-that-regex` (the pattern already
+established for the runtime-hook crate), so no two `bbnf-regex 0.1.0` packages ever coexist in one
+dependency graph; the legacy `skinny/crates/bbnf-regex` is deleted at GN-0. **The concrete
+substrate GAP the family must name: the `automata/` DFA tier is NOT yet inside the skinny/
+greenfield tree at all — `parse-that-regex` today is runtime scan hooks + number/utf8 decode
+only.** Scanner-as-DFA has no in-tree DFA source until the `automata/` + `sets/equiv.rs` +
+`classify.rs` tier is vendored under that rename (or the generator emits `dfa.find` against the
+parse-that home, per the SPEC's "generator inherits by emitting dfa.find"). Absent that vendoring
+the family is a design, not a scanner.
 
-- `skinny/crates/parse-that-regex/` (v0.1.0) — **the vendored engine, the DFA source of
-  truth** (`Cargo.toml` deps: `bbnf-simd`, `memchr`, `thiserror`; 3022 src LOC incl.
-  `unicode/`, `number/eisel_lemire/`, `integration/`). This is the substrate.
-- `skinny/crates/bbnf-regex/` (v0.1.0) — repurposed as the **facts/analysis** crate:
-  `RegexFacts { nullable, first: FirstSet, byte_classes: Vec<ByteClass>, hir, string }`
-  (`src/lib.rs:1`), the codegen-decision surface (first-sets, byte-classes, string facts).
-  This is *not* the engine; it is the grammar-tier `Regex(StringId)`-opaque analysis face.
-- The legacy top-level `crates/bbnf-regex` (6742 LOC, the original engine) is **already
-  absent** from `bbnf-lang/crates/` — it archives at GN-0; the `parse-that/rust/regex` tree
-  is its live twin and the vendoring source.
+**The byte-fixpoint gate (regen∘regen = regen, byte-identical) is SATISFIABLE by construction,
+with one checkable invariant.** The pipeline is deterministic at every stage that feeds output
+ordering: `compute_byte_classes` scans `byte_sets`/`signatures` in index order and dedups against a
+*Vec* `sig_to_class` in insertion order (`equiv.rs:48-60`) — class IDs are order-stable;
+`subset_construction` assigns DFA IDs by `dfa_states.len()` in **Vec-worklist LIFO** order
+(`dfa.rs:230,242,265`) — the `HashMap<BTreeSet,u32> set_to_id` is used only for *lookup*, never
+iterated to produce output, so its nondeterministic iteration order cannot leak into the emitted
+table; Hopcroft iterates `0..num_blocks` and filters deterministically (`dfa.rs:318-366`). The
+fixpoint gate therefore holds provided one lint is enforced: **no `HashMap`/`HashSet` iteration
+order may reach an emitted artifact** (`set_to_id` must stay lookup-only). This is the exact gate
+LOCK-5/LOCK-7 must certify at scanner fidelity; it is a debug_assert of `regen(regen(g)) ==
+regen(g)` over the generated classifier bytes, not a structural hash.
 
-The DFA↔kernel seam is a shipped trait, not a design:
-`skinny/crates/parse-that-regex/src/integration/simd_scan_hook.rs:3` —
-`trait SimdScannerHook { fn classify_chunk(&self,&[u8;64])->ClassifyResult; fn alphabet(&self)->&'static [u8;64]; }`
-with a blanket impl over `bbnf_simd::SimdClassifier`. The regex engine already calls
-`bbnf_simd::aarch64::string_block::scan_string_special_block`
-(`parse-that-regex/src/lib.rs:611`) and `memchr::memchr2` (`:687`). **The physical
-isomorphism the constitution asks for exists at the crate-dependency level today.**
+## 3. F3.2 — grammar-sourced census with over-ceiling denominators
 
-### 2a. The separability selector already exists — and is the crux of F3
+**Ceilings (literal, from the engine type surface):** class-id ceiling = **255** — `byte_classes`
+stores IDs as `u8` and `next_class:u8` uses `saturating_add` (`equiv.rs:49,57`), so a partition
+needing >255 classes silently saturates and CORRUPTS; state ceiling = **4096** — `DfaOptions.
+state_limit = 4096` and `subset_construction` returns `None` past it (`dfa.rs:36,262`). Both are the
+directive's named denominators.
 
-`bbnf_simd::dispatch::select_classifier(alphabet)` (`dispatch.rs:42`) picks the backend via
-`select_backend` → **`lo6_table_admissible(alphabet)`** (`dispatch.rs:101`): it walks the
-alphabet and rejects (falls to scalar) if any two members collide in their low 6 bits
-(`slot = byte & 0x3f; if seen[slot] return false`). This is exactly the "partition /
-separability selection" the directive asks a scanner-DFA emit pass to perform — it is
-**already implemented for the single-table `vqtbl4q` tier**. An emit pass would call the same
-predicate on the DFA-derived alphabet.
+**Row 1 — the rich-CSS `url()` unquoted body.** Grammar source
+`bbnf-lang/grammar/css/l4/{func-body.bbnf:55, values.bbnf:69}`:
+`urlFunction = "url" , "(" >> (string | /[^)"'\s]+/) << ")"` (the `values.bbnf` variant wraps it in
+`@{…}` span-capture for source maps). The scanner leaf is the negated char-class `/[^)"'\s]+/` —
+reject set = `)`(0x29) `"`(0x22) `'`(0x27) + whitespace `space`(0x20) `\t`(0x09) `\n`(0x0A)
+`\v`(0x0B) `\f`(0x0C) `\r`(0x0D), i.e. 9 reject bytes. Compiled: **2 states** (start → accepting
+self-loop), byte_classes partition = **2 classes** {reject, accept}. Ceiling usage: states 2/4096
+(0.05%), classes 2/255 (0.8%) — deep in Tier M. Separability: the reject set is two hi-nibble
+columns (0x0_ = the five C0 whitespace bytes; 0x2_ = `space " ' )`), which a shufti lo×hi two-LUT
+membership test resolves cleanly — so `url()` lowers to the simdjson two-LUT classifier, and is
+prefilter-eligible via its 9-byte terminator set folded to a stop-mask. **Tractable, membership.**
 
-## 3. F3 answer — "does a naive nibble-only emit misclassify the structural set?" YES, provably.
+**Row 2 — the wide-unicode leaf.** Grammar source `parse-that/rust/bootstrap/regex.bbnf:32` (the
+engine's own bootstrapped grammar): `escape = "\\" >> /[pP]/ >> "{" >> /[A-Za-z_]+/ << "}"` — the
+`\p{Name}` / `\P{Name}` general-category escape (companion `\u{…}` wide-codepoint at `:33`,
+`\uXXXX` at `:34`). Two sub-cases, both Tier X:
+  - `\p{L}` interpreted as a Unicode general category expands to a UTF-8 byte-DFA over ~130k
+    codepoints in disjoint ranges; the multibyte automaton needs **hundreds–thousands of states**
+    and a byte_classes partition of **>255 range-boundary classes** → hits BOTH ceilings →
+    `dfa.rs:262` returns `None` (and would have saturated `equiv.rs` first). Denominators: states →
+    over 4096; classes → over 255. **NO_GO, correctness bail.**
+  - `\u{XXXX}` a single wide codepoint → 1–4 UTF-8 bytes → a *bounded* ~4–10-state chain, classes
+    ≤ ~8; technically in-ceiling, but it is a fixed literal decode, not an every-byte scanner pass —
+    it belongs to the transducer/host tier, not the classifier surface.
 
-The tree documents the counterexample in-source. `classify_tbl4.rs:8 build_lo6_table` maps
-`byte & 0x3f → byte`; `structural_classify_64.rs:14` records the defect verbatim:
-**`;`=0x3B ≡ `{`=0x3B under low-6 mask — "neither a single `vqtbl1q_u8` low-nibble LUT NOR the
-`vqtbl4q_u8` lo6-table can assign a DISTINCT kind per byte."** The JSON structural set itself
-is low-6-separable (`{[]}:,"\` map to distinct low-6 slots), so the *single-membership*
-`vqtbl4q` tier is admissible for it — but the moment a CSS/other grammar's delimiter set
-includes any low-6-colliding pair (e.g. `;` with `{`), a naive nibble/low6 emit silently drops
-one member. The `classify_tbl4` guard `vandq(vceqq(class,chunk), vcgtq(class,0))`
-(`classify_tbl4.rs:32`) rescues only *member-vs-non-member* collisions (a non-member byte whose
-slot holds a member fails the equality); it CANNOT rescue *two colliding members*. Therefore:
+Note the grammar-vs-engine subtlety the census must state: in the bootstrap grammar `\p{L}` is
+lexed as literal tokens `\ p { L }`; the *explosion* only materializes if the engine's HIR
+interprets `\p` as a category class. The parse-that HIR parser (`hir/parser/{class,escape}.rs`)
+either interprets it (→ Tier-X explosion, bail) or rejects it (→ `classify.rs` `Unknown`, stays on
+the general engine). Either branch keeps `\p{…}` OFF the scanner surface — the census EXCLUDES it,
+it is never lowered.
 
-- a scanner-DFA emit **must** run `lo6_table_admissible` and **fall back** to either
-  `byte_class_from_table_64` (full `[u8;256]`, collision-free by construction) or the
-  `vceqq`-fan `structural_classify_64` (exact equality, collision-free, caps ~5 kinds).
-- The `vceqq`-fan is the safe multi-kind default; the `vqtbl4q` lo6-table is a *fast path*
-  gated on separability, not the general emit target.
+**Coverage.** Over the scanner-relevant `RegexClass` leaves
+(`parse-that/rust/regex/src/classify.rs` variants `Numeric{}` `:58`, `QuotedString{}` `:73`,
+`HexDigits` `:82`, `Identifier{}` `:87`, `WhitespaceWithBlockComment` `:98`, `CharClassQuantified`
+`:104`, `PrefixThenClass{}` `:109`, `AccelDriven(u8)` `:117`, `Unknown` `:120`) plus the CSS
+`url()` body and the structural set:
 
-So a `[u8;256]→SIMD classifier` **can** be emitted matching the hand classifier — the runtime
-kernel (`byte_class_from_table_64`) already IS grammar-neutral and takes the DFA's exact
-`[u8;256]` — and the naive nibble-only variant **does** misclassify unless the separability
-gate routes around it.
-
-## 4. F3 census — classes/states over the tractable ceilings
-
-Denominators: 255 byte-classes (a `[u8]` alphabet cannot exceed 256 classes; DFA
-`num_classes: u16`), and a scanner-tractable state ceiling (the `vqtbl1q` serial-chain tier is
-a measured negative on the short runs these scanners see, so the tractable state budget is
-≈ a handful, not thousands). Analytic census from `compute_byte_classes` semantics (bytes with
-identical transition behaviour merge); §10.3 owes the measured replacement:
-
-| Leaf | byte-classes / 255 | DFA states (tractable ≲ 8) | Tier | Coverage |
+| Leaf (grammar source) | states | classes | ceiling usage | tier |
 |---|---|---|---|---|
-| ws `[ \t\n\r]+` | 2 (0.8%) | 2 | eq_set (≤8) | membership ✅ |
-| digit `[0-9]+` | 2 (0.8%) | 2 | eq_set/prefilter | membership ✅ |
-| hex `[0-9a-fA-F]+` | 2 (0.8%) | 2 | table_64 (>8) | membership ✅ |
-| ident `[A-Za-z_][A-Za-z0-9_]*` | 3 (1.2%) | 2–3 | table_64 | membership ✅ |
-| **url() `[a-zA-Z0-9./-]+`** | **2 (0.8%)** | **2** | table_64 | membership ✅ |
-| `https?://[…]+` (prefix leaf) | ~8 (3%) | ~9 | prefilter(`h`)+confirm | prefix ✅ |
-| JSON structural `{}[]:,"\` | 9 (3.5%) | 1 (per-byte) | vceqq-fan | structural ✅ |
-| **wide-unicode `\p{L}` / `[-￿]`** | **30–60+ (12–24%)** | **hundreds** (UTF-8 range automaton, `regex/src/utf8.rs`) | **NO-GO** | scalar Höhrmann DFA ❌ |
+| structural `' " / ( ) [ ] { } ; :` | 1 (kind-partition) | ≤12 | 12/255, 1/4096 | **M (vceqq fan)** |
+| `url()` body `/[^)"'\s]+/` (css l4) | 2 | 2 | in-ceiling | **M (shufti)** |
+| WS\|`/` `(?:\s\|/)`, quote+backslash | 1–2 | 2–3 | in-ceiling | **M (nibble)** |
+| `HexDigits`, `Identifier`, `CharClassQuantified`, `PrefixThenClass`, `AccelDriven` | 2–4 | 3–10 | in-ceiling | **M + prefilter** |
+| `WhitespaceWithBlockComment` `(?:\s\|/\*.*?\*/)*` | 3–4 | 4–6 | in-ceiling | **S (short-run scalar; Sheng loses)** |
+| `Numeric` scan `0\|[1-9]\d*(\.\d+)?…` | 5–6 | 6–8 | in-ceiling | **S (scan only; f64 decode host)** |
+| JSON `\uXXXX` decode | — | — | transducer | **X (host emit)** |
+| `\u{XXXX}` wide codepoint (regex.bbnf:33) | ~4–10 | ≤8 | in-ceiling but literal | **X (host decode)** |
+| **`\p{…}` category (regex.bbnf:32)** | **>4096** | **>255** | **over BOTH** | **X (bail/Unknown)** |
 
-The tractable tiers (membership + prefix + structural) reach **~100% of the JSON/CSS-relevant
-leaf surface** — every character-class run and delimiter set the shipped grammars use collapses
-to ≤3 classes / ≤3 states. The **wide-unicode leaf is the sole NO-GO**: `\p{L}` over UTF-8
-bytes explodes to dozens of byte-classes (length-tagged lead bytes + `0x80–0xBF` continuations)
-and hundreds of states — over the tractable state ceiling; the serial `vqtbl1q` multistate
-chain is a measured loss on short runs. It stays on the scalar UTF-8 DFA already vendored:
-`parse-that-regex/src/unicode/utf8_hoehrmann.rs` (Höhrmann state machine) +
-`unicode/utf8_block.rs`. The census weighting the directive hints is confirmed: **weight
-membership + structural; the multistate `vqtbl1q` chain earns no leaf.**
+Tractable-tier coverage = **every dominant JSON+CSS every-byte leaf** (structural, WS, quote,
+number-scan, hex, ident, url-body) lands in Tier M or its prefilter — the whole productive surface.
+Tier S is two short-run recognizers where scalar wins. Tier X is bounded to exactly: string decode
+(transducer) + the two Unicode escapes. Only ONE census row (`\p{…}`) crosses either ceiling, and
+it is excluded by design. The over-ceiling denominators bound the residual; they do not gate the
+scanner tiers.
 
-## 5. The honest boundary — what a DFA CANNOT dissolve
+## 4. F3.3 — the `[u8;256] → SIMD classifier` emit pass, and why naive nibble misclassifies
 
-"Hand-written scanners cease to exist" is TRUE for the membership/character-class/prefix leaves.
-It is **FALSE** for the *carry-stateful transduction* kernels, which are not per-byte DFAs over
-a byte alphabet:
+**The emit pass is the family's core new code and it does not exist yet.** `equiv.rs` produces the
+scalar `([u8;256], num_classes)`; the derivation to a NEON classifier —
+`byte_classes → {shufti lo×hi two-LUT ∨ vqtbl4 lo6-table ∨ vceqq equality fan}` — is the missing
+lowering, homed in LOCK-2's cost model / LOCK-5's emit. The emitted forms already exist as HAND
+kernels to match instruction-for-instruction:
+- shufti / nibble two-LUT — `bbnf-simd/src/aarch64/structural_bitmap.rs` `classify_16` ancestor;
+- lo6 single-table — `bbnf-simd/src/aarch64/classify_tbl4.rs:22` `classify_chunk_from_table`
+  (`vqtbl4q_u8(build_lo6_table, low6)` then `structural = (class==chunk) & (class>0)`,
+  `classify_tbl4.rs:30-32`);
+- vceqq equality fan — `bbnf-simd/src/aarch64/structural_classify_64.rs`.
 
-- **quote-parity prefix-XOR** (`prefix_xor_64`, `lib.rs:169`) — a carry-propagating
-  prefix-scan, not a membership test.
-- **escape odd-parity** (`escape_mask_64`, `lib.rs:174`; the backslash-run parity) — inter-block
-  boolean carry.
-- **bracket-depth interior** (`bracket_depth_mask_64`, `lib.rs:336`) — a running i32 balance
-  (REDRESS-89: scalar running balance, NOT CTZ).
-- **comment-body** (`comment_body_mask_64`, `lib.rs:316`) — `open…close` carry state.
+The separability selector chooses among these on the partition; the parity oracle is the movemask
+producer `bbnf-simd/src/aarch64/movemask.rs` `movemask_u8x16` (single vshrn-narrow per 16-lane,
+NEVER double-`vaddv` — the standing refutation law).
 
-These are the simdjson stage-1 style bitmap transductions; they carry state *across* 64-byte
-blocks and are structurally outside a single-alphabet DFA. **9C's lawful scope is the
-character-class/membership/prefix leaves; the four carry-stateful kernels remain hand-authored
-and belong to LOCK-9's kernel plane (9A/9B), consumed by 9C via the same `byte_class`/mask
-vocabulary, never re-derived.** Claiming a DFA dissolves them would be a stub — forbidden.
+**A naive nibble/lo6-table emit DEMONSTRABLY misclassifies the CSS structural set — the collision
+is exact and airtight.** Take `;` = 0x3B and `{` = 0x7B, both structural:
+- low-6-bit hash (the `vqtbl4q_u8` lo6-table form): `0x3B & 0x3F = 0x3B`; `0x7B & 0x3F = 0x3B`.
+  **Both hash to slot 0x3B.** `build_lo6_table` (`classify_tbl4.rs:8-14`) writes `table[byte&0x3f]
+  = byte`, last-write-wins → `table[0x3B]` holds `;` OR `{` (whichever the alphabet iterates last),
+  never both. The test `structural = (vqtbl4(table,low6) == chunk)` then returns TRUE for exactly
+  ONE of `{`,`;` and FALSE for the other → the dropped byte is **misclassified as non-structural**.
+  A hard bug, not a rounding effect.
+- low-nibble also collides (`0x3B`→`0xB`, `0x7B`→`0xB`), so a lo-nibble single-table repeats it.
+- shufti two-LUT (lo×hi membership) does not drop members, but the 11-byte structural set is NOT
+  cleanly shufti-separable either: `[`(0x5B)/`{`(0x7B)/`;`(0x3B) all need `lo_lut[0xB]`, while
+  `' " / ( )` all need `hi_lut[0x2]` — so `+`(0x2B: lo=0xB, hi=0x2) satisfies both required buckets
+  and yields a **false-positive** structural hit though `+` is not structural.
 
-Scanner-file census (the ~8 files, R3 §2a), classified DFA-lowerable | kernel-tier | no-go:
-`ws_comment.rs`(16) → **DFA-lowerable** (ws run) + kernel (`comment_body_mask_64`);
-`decode.rs`(17) → kernel (`string_block`/`unescape_uxxxx`); `structural_bitmap.rs`(13) →
-kernel (`structural_classify_64`); `quoted_simd.rs`(7) → kernel (escape parity);
-`quote_parity.rs`(4) → kernel (prefix-XOR); `number_simd.rs` → **DFA-lowerable** digit run
-(scan only; float materialize is SPEC §0/02 NO_GO, stays scalar Eisel–Lemire);
-`scanners.rs`(22)/`span_parser/scan.rs`(7) → **DFA-lowerable** membership scans; `state.rs`(2)
-→ no-go (PaddedView machinery, not a scanner). **~3 files fully dissolve; ~4 stay as
-carry-stateful kernels; 1 is infrastructure.**
+Both nibble forms fail on the full structural set — which is precisely why the hand code chose the
+`vceqq_u8` equality FAN (11 independent `vceqq_u8(chunk, splat(byte))` compares OR-reduced: no
+hash, no false positive). The separability solver is therefore LOAD-BEARING: it routes the
+lo6-colliding structural set to the fan, while routing the genuinely nibble-separable leaves (WS|`/`,
+quote+backslash, `url()` body) to the cheaper shufti/lo6 form. A prototype that emits nibble-only
+for the structural set can be shown to drop `;` (or `{`) from `structural_mask` on any input
+containing both — the falsifier that proves the solver is not decorative.
 
-## 6. The mask-contract seam (a live inconsistency the DFA emit must respect)
+## 5. Prior art (citations)
 
-The tree carries **two movemask idioms** and the DFA-lowered classifier must not conflate them
-(the refutation law: vshrn narrow, never double-addv):
-- **LEAN nibble-`vshrn`**: `match_tiny_plain_string.rs:100` and `structural_classify_64.rs:147`
-  use `vshrn_n_u16::<4>` → a 4-bit-per-lane (nibble-strided) 64-bit mask; consumers bit-scan at
-  `tz >> 2`. This is the CONFIRMED idiom (SPEC §0/03).
-- **DENSE double-`vaddv`**: `byte_class_from_eq_set_64.rs:79-84` still uses
-  `vaddv_u8(lo)+vaddv_u8(hi)` → a dense 1-bit-per-lane u16 mask. This is the shape PROVE-09's
-  refutation flagged (2271 `addv.8b` vs 509). It is *legitimate here* only because eq_set
-  returns a 16-bit dense mask whose sole use is `trailing_zeros` for first-member (`lib.rs:217`)
-  — but a DFA emit that fed a `vshrn` producer into a dense consumer, or vice-versa, would
-  corrupt index arithmetic. **The emit pass must stamp the mask contract (LEAN vs DENSE) per
-  kernel and keep the bit-scan stride matched.** This is the concrete parity trap for the
-  differential oracle.
+- **simdjson** (Langdale & Lemire, *Parsing Gigabytes of JSON per Second*, VLDB J 28(6) 2019): the
+  two-stage structural pass is membership classification, deliberately NOT a per-byte state machine
+  — the empirical proof Tier M beats a DFA on the every-byte pass; the lo×hi nibble LUT is
+  `classify_16`'s ancestor; its structural set (`{ } [ ] : ,`) IS nibble-separable, unlike CSS's.
+- **Hyperscan / Sheng** (Wang et al., NSDI 2019): DFA-in-a-register via `pshufb`→`vqtbl1q_u8`; the
+  loop-carried transition is the documented ~1–2 GB/s ceiling — the Tier-S stall, named in the
+  literature; the reason Sheng is baseline-only here.
+- **regex-automata** (BurntSushi): `ByteClasses` ≡ `equiv.rs`; the memchr/rare-byte prefilter ladder
+  (the prefilter product's origin) + the Teddy `vqtbl` fingerprint tier above memchr3 (the named
+  future tier for >3-byte entry sets).
+- **Data-Parallel FSM** (Mytkowicz, Musuvathi, Schulte, ASPLOS 2014): transition-function
+  composition to break the serial DFA dependency — the theoretical answer to Tier-S, refuted here
+  by O(states²)/block for >~8 states (loses for the 3–6-state Tier-S DFAs).
+- **rustc / regex `byte_classes`**: identical equivalence-class compression validates `equiv.rs`.
 
-## 7. F4 seam (secondary to 9C, noted for completeness)
+## 6. Named risks and counterexamples
 
-The rewind surface exists: `parse-that/rust/parse_that/src/state.rs:38,211 furthest_offset`;
-restore logic at `:386-446`. A scanner-DFA is *forward-only within a leaf* (each `find`/`scan`
-is bounded by the leaf's DFA, no unbounded backtrack), so a windowed 64-byte stripe feed over
-`PaddedView` (trailing-64-NUL guard, `INPUT_PAD_BYTES=64`) is the natural streaming surface for
-the scanner tier — but whole-document tree ownership upstream means this does not reduce peak
-RSS. The rewind histogram (P50/P99/max of `furthest_offset − offset`) is the measurable artifact
-bounding whether a ring buffer suffices. 9C itself introduces no backtrack — its leaves are
-total DFAs.
+- **R1 (fatal).** Emitting Sheng for a Tier-M DFA → the ~12× regression (1000-byte `[a-z]+`: Sheng
+  ~3000 cyc serial `vqtbl1q_u8` vs membership ~250 cyc). *Guard:* detect single-accepting-class
+  shape, route to classifier; Sheng baseline-only.
+- **R2 (proven this pass).** `byte_classes` not nibble/lo6-separable → naive emit misclassifies.
+  *Counter:* `;`=0x3B ≡ `{`=0x7B low6/low-nibble collision drops a structural byte; `+`=0x2B shufti
+  false-positive. *Guard:* separability solver selects fan over nibble for the structural set.
+- **R3.** `\p{…}` explosion breaks the u8 class-id (`saturating_add` corrupts) AND the 4096 state
+  ceiling. *Guard:* `dfa.rs:262` bail → general engine; census EXCLUDES Tier X.
+- **R4 (substrate gap, sharpened).** The `automata/` DFA tier is NOT vendored into skinny —
+  `parse-that-regex` is runtime hooks only; `skinny/crates/bbnf-regex` is a 322-LOC stub that
+  archives at GN-0. *Guard:* vendor `automata/` + `equiv` + `classify` under the `parse-that-regex`
+  rename (collision-free), or emit `dfa.find` against the parse-that home; without it there is no
+  in-tree DFA source.
+- **R5.** Transducers mislabeled as acceptors: `\uXXXX` and number-*decode* emit values a DFA
+  cannot produce. *Guard:* split scan (DFA) from emit (typed host fn); number-scan is Tier S,
+  Eisel–Lemire f64 decode stays host (`parse-that-regex/src/number/eisel_lemire/`).
+- **R6.** Non-determinism leaking the fixpoint gate: `set_to_id: HashMap` in `subset_construction`.
+  *Guard:* lint that HashMap iteration order never reaches an emitted artifact (it is lookup-only
+  today); assert `regen∘regen` byte-identity over the generated classifier.
 
-## 8. Prior art (citations)
+## 7. What a prototype must test to move the family
 
-- **regex-automata (Rust, BurntSushi)** — the canonical byte-class DFA design: `ByteClasses`
-  (`[u8;256]` equivalence map) shrinks the transition alphabet; dense vs sparse DFA; the
-  memchr/rare-byte **Prefilter** ladder (PROVE-10 lifts this verbatim). Confirms the
-  `byte_classes` → shared-table route is SOTA, not novel risk.
-- **simdjson (Langdale & Lemire, VLDB 2019)** — stage-1 structural classification by NEON/AVX
-  `vceqq`/shuffle fans + prefix-XOR quote parity + odd-backslash parity. The four carry-stateful
-  kernels (§5) are exactly its transductions — evidence they are *not* single-DFA products.
-- **Hyperscan / Teddy & shufti/truffle (Wang et al.)** — multi-byte literal + small-charset
-  SIMD acceleration; the nibble-shuffle "shufti" is precisely the low-nibble LUT whose collision
-  hazard §3 documents. Teddy is the multi-byte tier beyond the 1/2/3-byte memchr prefilter
-  (PROVE-10 §5 names it future work).
-- **RE2 / Thompson NFA→lazy-DFA (Cox)** — subset construction + Hopcroft minimization
-  (`dfa.rs:291`) is textbook; lazy determinization is the alternative PROVE-10 deliberately did
-  NOT take (correctness-simpler prefilter chosen).
-- **Höhrmann UTF-8 DFA (2010) / ICU** — the branchless 9-state UTF-8 validator; vendored at
-  `parse-that-regex/src/unicode/utf8_hoehrmann.rs`; the correct home for the wide-unicode NO-GO
-  leaf (§4).
-- **tree-sitter lexer** — grammar-derived scanner precedent, but interpretive tables; bbnf's
-  differentiator is emitting *specialized SIMD* per leaf behind the separability gate, not an
-  interpretive automaton.
-
-## 9. Named risks & counterexamples
-
-- **R1 — nibble misclassification.** A `vqtbl4q`/`vqtbl1q` low-bits emit drops a colliding
-  structural member. *Counterexample:* `;`≡`{` at low6 0x3B (`structural_classify_64.rs:14`).
-  *Guard:* `lo6_table_admissible` gate → `vceqq`-fan or `byte_class_from_table_64` fallback.
-- **R2 — mask-contract mismatch.** A DFA emit pairs a `vshrn` producer (nibble stride) with a
-  dense-mask consumer (`tz` stride). *Counterexample:* PROVE-09's 2271-vs-509 addv census.
-  *Guard:* per-kernel LEAN/DENSE contract tag + differential parity oracle.
-- **R3 — wide-unicode state explosion.** Emitting a `\p{L}` DFA into a serial `vqtbl1q` chain
-  regresses on short runs (the measured negative). *Guard:* state-count ceiling → route to
-  scalar Höhrmann DFA; never SIMD-lower a >~8-state leaf.
-- **R4 — false "scanners cease to exist."** Claiming the DFA dissolves the carry-stateful
-  quote-parity/escape/bracket-depth/comment kernels. *Counterexample:* prefix-XOR is a scan, not
-  a membership test. *Guard:* §5 boundary — 9C scopes to character-class/prefix leaves only.
-- **R5 — DFA source ambiguity.** Two `bbnf-regex 0.1.0` crates. *Resolution:*
-  `parse-that-regex` is the engine/source-of-truth; `bbnf-regex` (skinny) is the facts face;
-  legacy top-level archives at GN-0. Version collision is resolved by *name*, not version bump.
-
-## 10. What a prototype must test to move 9C
-
-1. **Emit-parity oracle.** For each shipped grammar leaf (ws, digit, hex, ident, url-char,
-   JSON structural set), derive the DFA `byte_classes`/entry-set/kind-partition, feed the
-   existing kernel (`byte_class_from_table_64` / `byte_class_from_eq_set_64` /
-   `structural_classify_64` / PROVE-10 `Dfa::find`), and assert **bit-identical scan output vs
-   the hand scanner** over black-boxed random inputs + an alignment sweep, with an INJECT_BUG
-   rate confirming the oracle bites. Include the `;`≡`{` low6-collision case explicitly.
-2. **Separability-gate correctness.** Enumerate the grammar alphabets, run
-   `lo6_table_admissible`, and confirm every non-separable set routes off the `vqtbl4q` tier —
-   a fuzz that plants a colliding member and asserts NO silent drop.
-3. **Census reproduction.** Actually compile the eight leaves through
-   `parse-that/rust/regex Dfa::compile_with` and record real `num_classes` + state counts
-   against the 255/tractable ceilings (replace §4's analytics with measured numbers); confirm
-   `\p{L}` over-ceils and is excluded.
-4. **No-regression on the DFA scan path.** Paired cold divan (N≥200, two windows, opposite arm
-   order) of the emitted membership scan vs the hand scanner on the JSON/CSS corpora; `otool -tv`
-   reduction-insn count ≤ hand baseline; paired median ≥ 0.98×; base-pinned to a stated HEAD.
-   PROVE-10's controls (`0.99×`) are the floor.
-5. **Mask-contract audit.** `otool` the emitted kernels; assert every mask producer is the
-   `vshrn` narrow where its consumer bit-scans at nibble stride, and no double-`vaddv` feeds a
-   nibble consumer.
+1. **Membership parity + emit reduction-count (F3.3, falsifiable).** Compile `(?:\s|/)`, the CSS
+   `url()` body `/[^)"'\s]+/`, and the 11-byte structural set through `equiv.rs`; emit the
+   classifier via the separability solver; `otool -tv` the generated NEON against hand
+   `classify_ws_slash_16` / `classify_chunk_from_table` / `structural_classify_64` — reduction-op
+   count ≤ hand (single vshrn-narrow movemask per lane, never double-`vaddv`), and cold paired divan
+   on CSS ws-scan + JSON structural at ≥0.98×, two windows, N≥200, base-pinned to a stated HEAD.
+2. **Separability falsifier (F3.3, decisive).** Emit a nibble/lo6-only classifier for the structural
+   set and show it drops `;` (or `{`) from `structural_mask` on input containing both, and
+   false-positives `+`; then show the fan-routed emit is bit-parity with `structural_classify_64`.
+   Proves the solver is load-bearing.
+3. **Census + coverage % (F3.2).** For every `RegexClass` leaf sourced from the grammars, compile via
+   `dfa.rs` and record `{num_states, num_classes, tier, ceiling-bail}`; include `url()` body,
+   `\u{…}`, and `\p{L}` (expect the last → `None` over BOTH ceilings). Emit the Tier-M / Tier-S /
+   Tier-X split with 255-class / 4096-state denominators.
+4. **Byte-fixpoint gate (F3.1).** Run grammar→classifier emit twice; assert byte-identical output;
+   add the HashMap-order lint. Confirms the pipeline's determinism at scanner fidelity.
+5. **Vendoring seam (F3.1 / R4).** Prove the `automata/` + `equiv` + `classify` tier vendors under
+   the `parse-that-regex` package name with no `bbnf-regex 0.1.0` collision, and that
+   `skinny/crates/{ir,passes}` repoint off the legacy stub before its GN-0 deletion.

@@ -1,249 +1,321 @@
-# LOCK-4 · Family 4D — GRAMMAR-SUGAR (pass-3 research)
+# LOCK-4 · FAMILY 4D — GRAMMAR-SUGAR / SHARED-IR OWNERSHIP (pass-3 research)
 
-*Thesis: combinators are a construction API over the same IR the grammar plane already uses;
-parse-that keeps its public API and inherits the generator's optimizer; the combinator engine
-is the generator's runtime in disguise. Every measurement names its HEAD. HEAD = bbnf-lang
-`crates/ir` + `crates/core` at master `fe3e615d3`; parse-that `ef10d5b` (read-only).*
+**Charter.** parse-that's combinator surface (`.then()`, `.or()`, `.map()`, …) is a *construction
+API over the same `bbnf_ir` the generator plane uses* — `.then()` builds `IrNode`, not `Box<dyn Fn>`;
+the combinator engine is the generator's runtime in disguise; parse-that keeps its public API and
+inherits the IR optimizer, tape emitter, and serialization bus. Pass-3 sharpens the family with a
+*measured value-plane census* (the pass-2 GAP-1 named, now counted) and a mechanism trace of the
+runtime→comptime seam. The near-bijection substrate (`IrNode` 14 variants, `crates/ir/src/types/node.rs:30`;
+`Op` 30 opcodes, `vm/bytecode.rs`; msgpack bus, `vm/bytecode.rs` `Serialize`) is settled and carried
+forward from pass-2 §1 — not re-derived here.
 
-## 0. The mechanism, made concrete
+---
 
-The shared IR already exists and is a near-bijection of the combinator set. `bbnf_ir::IrNode`
-(`crates/ir/src/types/node.rs:30`) is a 14-variant serde-serializable enum (derive at
-`node.rs:29`): `Literal(StringId)`, `Regex(StringId)`, `Epsilon`, `Seq(Vec<IrNode>)`,
-`Alt(Vec<AltBranch>, Option<AltDispatch>)`, `Repeat{lo,hi}`, `Ref`, `Skip`, `Next`, `Minus`,
-`Negate`, `Map{inner:Box<IrNode>, fn_id:FnId}` (`node.rs:79`), `OptionalWhitespace`,
-`TokenDispatch` (`node.rs:90`). Every variant maps 1:1 from an `Expression` AST variant with
-sugar (Group, OptionalWhitespace) eliminated and strings interned. The
-combinator↔IrNode correspondence is direct and total for the recognizer plane:
+## Q1 — Runtime combinator graph → comptime monomorphization (mechanism trace)
 
-| parse-that combinator | IrNode variant |
-|---|---|
-| `string` / `str` | `Literal(StringId)` |
-| `regex` | `Regex(StringId)` |
-| `all` / `then` / `seq!` | `Seq(Vec)` |
-| `or` / `any` / `alt!` / `dispatch` | `Alt(_, AltDispatch)` / `TokenDispatch` |
-| `many` / `opt` / `sepBy` | `Repeat{inner,lo,hi}` |
-| `skip` (`<<`) / `next` (`>>`) | `Skip` / `Next` |
-| `minus` (EBNF `-`) | `Minus` |
-| `not` / `negate` / `peek` | `Negate` |
-| `map` (`->`) | `Map{inner,fn_id}` |
-| `trim` / `whitespace` | `OptionalWhitespace` |
-| `lazy` / rule reference | `Ref(RuleId)` |
+**The runtime combinator API does NOT reach comptime type-monomorphization — and cannot, absent a
+codegen step. It reaches it only as build-time codegen over a comptime-known graph.** The trace:
 
-`dispatch`'s `Int8Array(128)` table (TS `leaf.ts:100-151`) is *precisely* `AltDispatch.table`
-and the O(1) token-led fusion is `TokenDispatch` (`node.rs:90`) — the deliberate TS
-monomorphization and the IR's fusion node are the same object arrived at from two directions.
-This is the strongest concrete evidence for 4D: the combinator API's hot specializations *are
-already* IR nodes.
+1. The 4D `build/` sugar constructs a *runtime* `GrammarIR` (`crates/ir/src/types/grammar.rs:27`) — a
+   heap `Vec<IrNode>`/rule map materialized at run time. This is plain owned data, not a type.
+2. The only monomorphizing lowering in-tree is the AOT Rust emitter
+   (`crates/core/src/backend/rust/emitter/mod.rs`), which consumes `IrNode`/`FnDescriptor` and emits
+   *specialized Rust source* — a **build-time** `xtask`/`build.rs` step (`regen`), not a runtime call.
+   There is no runtime→comptime reflection: Rust has no `comptime` that reifies a runtime `Vec<IrNode>`
+   into monomorphized types. The interpret terminal (`vm/interpreter/mod.rs:144` `run`) is the only path
+   that consumes the runtime graph *at run time*, and it is a **dynamic dispatch loop, not
+   monomorphized** — one `match Op` (`mod.rs:168+`), zero type specialization per grammar.
+3. **Therefore the honest 4D answer:** a combinator graph reaches monomorphization *only* by being
+   emitted to the serializable `GrammarIR` and fed to the build-time emitter as a codegen input — the
+   identical route grammar-text→IR takes. A monomorphizing lowering demands of the API exactly that the
+   built `GrammarIR` be **const-serializable and total** (it is — `IrNode`/`FnDescriptor`/`MapExpr` are
+   all plain `Serialize` data), so a `const`/`build.rs` site can name it. What monomorphization does
+   *not* demand is any change to the runtime combinator surface; the surface stays a data builder, and
+   4B's comptime-fusion mechanism is a *consumer of 4D's serialized plan*, not a competitor to it.
 
-**The substrate 4D reuses (the "inherited optimizer"):** the whole `crates/ir/` pass tower
-operates on `IrNode` — passes (`crates/ir/src/passes/`: `lr, prefix, span, regex_info,
-metadata, profile, csp_domains, path_check`), rewrites (`crates/ir/src/rewrites/`: `tiering,
-base, path_seed, rank, schema`), the e-graph (`crates/ir/src/egraph/`, path-dep-consumed),
-the DAG interner (`crates/ir/src/dag/`), and the decision driver
-(`crates/core/src/backend/driver/`). Both emitters already read one `IrNode`: the Rust emitter
-(`crates/core/src/backend/rust/emitter/` — `grammar.rs, shapes/, precedence.rs,
-keyword_dispatch.rs`) and the TS emitter (`crates/core/src/backend/ts/emitter/` —
-`grammar.rs, value.rs, binary.rs, leaves.rs`). A combinator front-end that emits `IrNode`
-inherits every one of these for free — the entire claim of the family.
+The distinction that matters: 4B monomorphizes at the type level (a runtime graph must be lifted to
+const first); 4D says the lift is *serialization*, and the serialized plan is precisely what both the
+AOT emitter and the TS emitter eat (Q5). 4D neither claims nor needs runtime monomorphization.
 
-## 1. Q1 — runtime graph → comptime monomorphization
+---
 
-**The runtime combinator API does NOT reach comptime monomorphization today, and cannot absent
-a reification step.** parse-that's Rust `Parser<'a,O>` holds `parser_fn: SmallBox<dyn
-ParserFn+'a, S32>` (`parse-that/rust/parse_that/src/parse.rs:61`) — an opaque nested closure,
-not a graph; its manifest depends only on `bbnf-regex`, never `bbnf`/`bbnf-ir`
-(`parse-that/rust/parse_that/Cargo.toml:90`). The TS `Parser<T>` dispatches through a `.parser`
-function pointer (`parser.ts:53,82`; R4 §6c names it "THE megamorphic IC"). Neither builds an
-`IrNode`. The only comptime path that exists is `grammar-text → IrNode → codegen` (the emit
-spine): monomorphization is codegen-reflection over a *comptime-known* `IrNode` value, which
-the runtime closure graph never produces.
+## Q2 — Value plane through an arbitrary host closure (the census, counted)
 
-The mechanism 4D must add is the **reification seam**: combinator constructors that build an
-`IrNode` value (a data graph of analyzable nodes) instead of composing opaque closures. Once
-the combinator program is an `IrNode`, two terminals open from one value: (a) **runtime** — the
-bytecode VM (`crates/ir/src/vm/`) interprets it (an interpreter, no monomorphization); (b)
-**comptime** — the same `IrNode` is handed to the emitter for monomorphized Rust/TS. A
-monomorphizing lowering therefore *demands of the API* only that it produce a serializable
-`IrNode` rather than nested `SmallBox<dyn ParserFn>` — precisely the allocation/ownership
-redesign PT-2.W4 flags (the 6-vs-5390 alloc split, arena-or-refutation): if the parser is a
-data graph owned in one arena, the per-construction vtable box dissolves because there is no
-vtable, only nodes. The distinction from 4A: 4A stops at "analyzable graph"; 4D fixes that
-graph to *be* `bbnf_ir::IrNode` so the inheritance is literal, not merely structural.
+Pass-2 named GAP-1 (`FnDescriptor` has no closure variant). Pass-3 **counts** the non-projection
+surface across the three live consumers. The projection sites are the parser-level `.map()` calls
+(the `->` equivalent); `Array.prototype.map` in domain code is excluded.
 
-## 2. Q2 / Q3 — value plane through host closures; opaque-barrier surface (CENSUSED)
+**latex-paper (`/Users/mkbabb/Programming/latex-paper/src/grammar` + `src/bibtex`) — 97 parser `.map` sites:**
+- **32** are named-fn or nullary-constant projections — `.map(textNode)` (`src/grammar/text.ts:16`),
+  `.map(() => textNode("—"))` (`text.ts:60`), `.map(() => null)` (`text.ts:92`).
+  **MapExpr-expressible** as `FnCall{name, args:[Input|StringLit]}` *iff the name is registered*
+  (`crates/ir/src/types/map_expr.rs:31`).
+- **44** are **object-literal constructions** — `.map((value) => ({ … }))` (`src/grammar/math.ts:35,47,59`).
+  **NOT MapExpr-expressible**: `MapExpr` has literals, `Input`, `InputProp`, `FnCall`, `BinOp`,
+  `UnaryOp` (`map_expr.rs:17-39`) and **no record/object constructor and no array constructor**.
+- **1** ternary (`.map(([_, ch]) => textNode(ch === "&" ? … : …))`, `text.ts:97`) — needs a
+  conditional/`Select` op MapExpr also lacks.
+- Remainder (~20): tuple-destructuring + mixed. **≈47% (45 of 97) are not MapExpr-expressible today.**
 
-**There is no `Opaque(HostFnId)` variant in this IR — the value plane is a closed, transparent
-algebra.** `IrNode::Map` carries a `FnId` into `FnDescriptor` (`fn_descriptor.rs:18`), whose
-variants are `EnumWrap`, `BoxWrap`, `NumberConvert{allow_leading_dot}` (`:40`),
-`HexConvert{fn_path}` (`:45`), `SpanCapture`, and the sole user-facing `Expr{expr:MapExpr,
-return_type}`. `NumberConvert`/`HexConvert` are *documented* as internal specializations of
-`Expr{Input}`/`Expr{FnCall}` (`fn_descriptor.rs:30,43`) — proof the descriptor set is meant to
-grow by adding specialization variants. `MapExpr` (`map_expr.rs:17`) is a closed value algebra:
-`IntLit, FloatLit, BoolLit, StringLit, Input, InputProp{prop}, FnCall{name,args:Vec<MapExpr>},
-BinOp{op,…}, UnaryOp{op,inner}` — fully introspectable (carries `constant_fold`/`is_constant`).
-Nothing here is opaque *except the named callee of* `FnCall{name,args}`: the call site, arg
-expressions, and result type are all visible; only the leaf function body is a barrier. The
-true opaque surface is **the set of distinct `FnCall` names**, not whole map bodies.
+**value.js — the maximal wall: parse produces first-class CLOSURES.** The easing plane
+(`/Users/mkbabb/Programming/value.js/src/v4/easing.ts`) types its parse output as
+`EasingFunction = (progress: number) => number` (`easing.ts:4`); a cubic-bezier/steps parse yields a
+**closure that captures parsed control points** (`easing.ts:124` `return ok((progress) => {…})`,
+`:149` `stops.map(s => ({...s}))`). This is beyond *any* serializable descriptor: the produced value
+is itself a host function. `channelToken(part, 255)` (color, `src/v4/css/grammar.ts:189`) is the milder
+tier — a *registered* call, expressible if named; the easing closure is the hard tier — an *anonymous
+value-carrying function* with no name and no data shape.
 
-**The census the directive demands — run against the live consumer sources (values are
-map/chain/mapState call-site counts):**
+**keyframes.js** (`src/animation/compile`, 53 map/chain) consumes value.js transitively; its projections
+are the same two tiers, dominated by object construction of `ResolvedKeyframes`.
 
-| consumer | src | map/chain sites | expression-body (reifiable) | multi-stmt `=> {}` (arbitrary candidate) | constructor `=> new X` (FnCall leaf) | mapState (stateful) |
-|---|---|---:|---:|---:|---:|---:|
-| **latex-paper** | `latex-paper/src/grammar/*`,`/bibtex/*` | **86** | **86 (100%)** | **0** | (textNode/mathNode point-free) | 0 |
-| **value.js** | `value.js/…/src/parsing/*` (14 files) | **129** | 64 | **33 (~26%)** | 19 | **0** |
+**Implied typed shape for the descriptor.** Two new `FnDescriptor` tiers close the census, ranked:
+1. `FnDescriptor::Record { fields: Vec<(StringId, MapExpr)> }` + `MapExpr::Array(Vec<MapExpr>)` +
+   `MapExpr::Select{cond,then,els}` — covers all 45 latex-paper object/array/ternary sites **while
+   staying analyzable** (still pure data, still serializable, still fold-able by `constant_fold`,
+   `map_expr.rs:109`). This is the *large, cheap* win: ~47% of the barrier dissolves with three plain-data
+   nodes and no opacity.
+2. `FnDescriptor::Opaque(HostFnId)` — the irreducible residue (value.js easing closures, any
+   `.map(f)` whose `f` is neither a registered name nor a data expression). Carries **only** an
+   `FnId` into a host `fn_table: Vec<Box<dyn Fn(&[Value]) -> HostValue>>`; the `Value` union must gain a
+   `Host(HostHandle)` inhabitant so a parse can *carry* a closure it cannot introspect. This tier is
+   LOCK-7's lattice member (Q8) — 4D reports its shape and count, does not type it.
 
-(value.js's live source is in a worktree — its main checkout `src/parsing/{color,stylesheet,
-timeline}` is momentarily empty during worktree churn; the census is over the populated
-`.claude/worktrees/…/src/parsing`, 14 `.ts` files.) Sample bodies confirm the shapes: value.js
-`.map(([, val]) => val)` (tuple projection = `InputProp`), `.map(expr => new
-FunctionValue("calc",[expr]))` (`FnCall{name:"FunctionValue", args:[StringLit, Input]}`),
-`.map(([first, rest]) => { …fold… })` (Pratt left-fold over `rest`, `math.ts:77,89,131,167,176`
-— the genuinely arbitrary core; 41 `reduce/for/while` occurrences in `parsing/`). latex-paper
-`.map(() => textNode("—"))` (constant `FnCall`), `.map(([_,ch]) => textNode(ch==="&"?…:…))`
-(one conditional). **latex-paper is ~100% MapExpr-reifiable; value.js's ~26% multi-statement
-sites, concentrated in the Pratt binary-expression assembly, are the arbitrary-closure core.**
+**The load-bearing pass-3 finding:** the host-closure barrier is *not* monolithic. Split it and
+~half is recoverable as analyzable data (`Record`/`Array`/`Select`); the opaque residue is small and
+concentrated (value.js easing/timeline). 4D should not smuggle one `Box<dyn Fn>` per `->` (pass-2
+R-HOSTCLOSURE); it should add the three data nodes first and let `Opaque` carry only the true closures.
 
-**Reframing Q3 — the ≤2% floor is a NODE ratio, not a site ratio, and it holds.** A map SITE
-is one thin `Map{fn_id}` leaf over a *fat transparent recognizer subtree* (Seq/Alt/Repeat/
-Literal/Regex nodes). value.js's 33 opaque-closure leaves, over a recognizer graph of
-hundreds-to-thousands of `IrNode`s, sit **well under 2% at the node level** — the site count
-(26%) drastically overstates the barrier because each opaque leaf's recognizer children remain
-fully visible. What matters more than the count is the barrier's **LOCATION**: the opaque
-closures sit at the value-plane *root* of expression grammars, so **recognizer-plane analyses
-(fusion, `AltDispatch`/`TokenDispatch`, prefilter, span — every §0 perf win) are entirely
-unblocked**; only value-plane *shape/type* inference stops at each fold leaf. 4D's performance
-inheritance is intact unconditionally; 4D's type inheritance (LOCK-1) is total on latex-paper
-and stops precisely at value.js's ~5 Pratt folds. That is the honest boundary, and it is thin.
+---
 
-**The one new descriptor variant.** The non-reifiable sites need a serializable leaf:
-`FnDescriptor::HostClosure{fn_id:FnId, sig:TypeDesc→TypeDesc}` — an opaque VALUE with a visible
-TYPE and a stable id, sibling to the existing `NumberConvert`/`HexConvert` specializations. It
-keeps the closure API unchanged: structure/type analysis sees through the signature while
-evaluation dispatches to the host-fn lattice (LOCK-7). This is the whole of the "implied
-host-fn lattice" — one variant, typed, closed.
+## Q3 — Opaque-barrier surface size (counted ratio vs the ≤2% floor)
 
-## 3. Q5 — one serializable plan, two lowerings (the distinguishing observable)
+Barrier = fraction of parser-projection nodes an analysis cannot see through (an `Opaque` descriptor
+is a hard wall to type-inference, dispatch-synthesis, and fusion; a `Record`/`FnCall`/`MapExpr` is not).
 
-**The observable already half-exists and strongly favors the thesis.** `IrNode`,
-`FnDescriptor`, `MapExpr`, `AltDispatch`, and `BytecodeProgram` all derive
-`Serialize/Deserialize` (`node.rs:17,29`; `fn_descriptor.rs:17`; `bytecode.rs:13,24,35,44`).
-Two lowerings already consume one `IrNode` value — the Rust emitter and the TS emitter — both
-reading the same `IrNode` + `FnDescriptor` + `AltDispatch`/`TokenDispatch` as their shared
-plan. The distinguishing observable to certify 4D: **serialize one `IrNode`, lower it through
-the Rust emitter and the TS emitter, and assert byte-identical PARSES** (not identical code)
-across a conformance corpus. `TokenDispatch`/`AltDispatch` is the concrete carrier — one
-dispatch table, two emitters, one parse behavior. This is *one plan, two lowerings*; it is the
-isomorphism LOCK-6 measures, and 4D supplies the plan. Because both structs already serialize,
-the observable is a test to write, not a mechanism to invent.
+- **latex-paper:** with the tier-1 `Record`/`Array`/`Select` nodes, the opaque residue is the anonymous
+  closure sites — near **0 of 97**; latex-paper's projections are all data or named fns.
+  **Barrier ≈ 0%, under the 2% floor.**
+- **value.js:** the opaque tier is the easing/timeline closure-returning sites. Of ~43 domain `.map`
+  plus the parser projections, the *irreducibly opaque* set is the `EasingFunction`-producing parsers
+  and the color-model `toXYZ/fromXYZ` closures (`src/v4/color/anchors.ts:336-337`) —
+  a **single-digit count**, but concentrated on the value plane, not the recognizer. As a fraction of
+  *all* IR nodes in a value.js grammar (leaves + seq + alt + repeat dominate), the opaque nodes are
+  **well under 2%**; as a fraction of *projection* nodes they are the majority of value.js's hard tier.
+- The honest framing: the barrier **passes the ≤2%-of-all-nodes floor comfortably** on both corpora,
+  because opacity lives only at value-producing leaves, never in the recognizer spine. Analysis
+  (FIRST/FOLLOW, dispatch synth, fusion) runs on the spine and *never touches* an `Opaque` node —
+  the barrier does not obstruct the optimizer, only the value materializer.
 
-## 4. Q6 / Q7 — descriptor evaluator home; setup vs value vs recognizer cost
+---
 
-**The internal-descriptor evaluator is owned by LOCK-3 (IR→codegen lowering), NOT by the VM
-and NOT by host dispatch — today.** The bytecode `Op` enum (`bytecode.rs:45`) has
-`MatchString, MatchRegex, Epsilon, Jump, Call, Return, Save/Restore/DropState, TrimWs, Minus,
-Negate, Dispatch, DispatchToken, RepeatBegin/End, CaptureSpan, SaveValueDepth, …` — **no `Map`
-opcode**; and `crates/ir/src/vm/` has **zero** `FnDescriptor::`/`MapExpr::` references (grep =
-0). The VM is a pure recognizer plus *structural* value builder only: `exec_make_array` /
-`exec_make_tagged` (`interpreter/construct.rs:8,17`). `NumberConvert`/`HexConvert`/`EnumWrap`
-are evaluated only in codegen (`backend/driver/map.rs`, `backend/rust/emitter/`,
-`backend/ts/emitter/grammar.rs`). **Consequence for 4D:** the runtime `IrNode`+VM path
-currently *drops the `->` value plane entirely*. A runtime combinator core that wants the value
-plane must add a shared `MapExpr`/`FnDescriptor` evaluator — and it must be the *same*
-evaluator the codegen uses (DRY), not a fork: extract `driver/map.rs`'s descriptor semantics
-into a backend-agnostic `eval` consumed by both the VM (runtime) and the emitters (comptime).
-That single evaluator is the honest home of the Hex/Number/Enum question: **LOCK-3 lowering
-when comptime, host dispatch (LOCK-7) when the leaf is a `HostClosure`** — the descriptor kind
-decides, one evaluator routes.
+## Q4 — Fusion-policy / blowup budget (4D's disposition: inherited 1:1, not owned)
 
-**Setup tax (Q7).** `Interpreter::new` (`interpreter/mod.rs:114`) allocates, per parse, eight
-capacity-primed Vecs + one FxHashMap: `values(64), call_stack(32), checkpoints(32),
-repeats(16), memo_starts(8), value_depth_stack(8), rule_stack(16), diagnostics(0)` +
-`memo: FxHashMap::default()` (`mod.rs:122-130,84`) — ~176 preallocated slots plus a hashmap
-alloc on *every* `new`. On short inputs this is a large share of single-parse cost (the classic
-interpreter-startup tax; contrast the closure core's per-parse alloc, R4 §6e "nil on the steady
-path"). The clean three-way split: **recognizer cost** (the `run` loop over `code`) /
-**value-plane cost** (the absent Map evaluator, once added) / **setup cost** (the `new`
-allocations). Pooling eliminates the third: reuse one `Interpreter` across parses by
-`clear()`-ing the Vecs (retain capacity) and the memo map instead of reallocating — an object
-pool keyed to the `BytecodeProgram`. A prototype must plot the amortization curve: setup share
-at N=1, its decay as the pool is reused across a corpus, isolating the floor where
-recognizer+value dominate.
+4D does not own the cost-model caps (fuse-arity, dispatch-fanout, boxing-depth, `.rlib`/`dist`
+budget) — LOCK-2's engine and 4B's comptime fusion set them. **4D's contribution is a proof that the
+budget is identical to grammar-text's**: because the combinator front produces the *same* `GrammarIR`,
+a value.js grammar authored via combinators and the same grammar authored as `.bbnf` lower through the
+same passes to byte-identical `IrNode` (Q5's oracle), so their generated-size and compile-time growth
+curves are **the same function of fuse-arity** — there is no separate 4D budget to measure. The only
+4D-specific cap is on the value plane: an `Opaque` node is un-fusible (a hard boxing-depth-1 wall), so
+the fusion policy must treat `Opaque(FnId)` leaves as fixed points that terminate a fuse chain. That is
+one rule — `Opaque` is never inlined, never monomorphized, always dispatched — and it is the exact
+guard that keeps the msgpack bus and TS graft intact (an inlined closure would be unserializable).
 
-## 5. Q8 — predecessor shapes (report only, as inputs to 4D)
+---
 
-- **LOCK-5 (regex continuum)** is 4D's *substrate premise* — GRAMMAR-SUGAR builds "over the
-  same HIR the grammar plane uses (LOCK-5's continuum)." XL-C has already settled the shared-IR
-  question *against* ONE-HIR: two domain-fit types — opaque `Regex(StringId)` at the grammar
-  tier (exactly `IrNode::Regex`, `node.rs:36`) and the rich `Hir` engine tier — bridged cheaply;
-  the regex functor is retired; vendored parse-that-regex in skinny is the substrate. 4D
-  consumes this verbatim: `IrNode::Regex(StringId)` is the combinator `regex()` leaf, and the
-  engine tier stays behind the bridge. Open sub-question 4D inherits, does not settle: whether
-  the `HostClosure` bridge to LOCK-7 is a shared type or a lawful functor (LOCK-5's form for
-  regex informs but does not bind the value-plane's).
-- **LOCK-7 (host-fn lattice)** owns the semantics of `HostClosure` leaves — the typed interface
-  behind which context-dependent/recursive projections (value.js's Pratt folds) live. 4D's
-  input to LOCK-7: the census above (value.js ~5 fold cores + 19 constructor FnCalls;
-  latex-paper's textNode/mathNode point-free constructors) is the concrete lattice population,
-  and the required floor is a *node-ratio* ≤2%, not a site-ratio. 4D asserts neither lock's
-  disposition; it hands each the shape it needs.
+## Q5 — Serializable-plan observable (the distinguishing datum, and its precise limit)
 
-## 6. Prior art (citations)
+**Yes — a fused region IS derivable from one serializable plan, but the plan drives *two* of three
+lowerings byte-identically and the third by oracle.** The plan is `BytecodeProgram`
+(`vm/bytecode.rs`, `Serialize`/`Deserialize`; msgpack advertised for the WASM boundary; the only
+`#[serde(skip)]` is `compiled_regexes`, re-hydrated by `prepare_regexes`).
 
-- **Jonnalagedda et al., "Staged Parser Combinators for Efficient Data Processing" (OOPSLA
-  2014)** / **Béguet & Jonnalagedda** — LMS-staged combinators reify the graph then generate
-  specialized parsers, erasing per-combinator dispatch; the canonical "combinator engine is the
-  generator's runtime in disguise," matching hand-written parsers (4D's ceiling).
-- **Krishnaswami & Yallop, "A Typed Algebraic Approach to Parsing" (PLDI 2019)** and **Yallop
-  et al., "flap: A Deterministic Parser with Fusion" (PLDI 2023)** — typed combinator algebras
-  compiled through a normal form to fused table-driven code; `flap`'s PEG-algebra→automaton
-  fusion is exactly `Alt`+`AltDispatch`→`TokenDispatch` here.
-- **GHC Core + RULES / rustc HIR→MIR** — one analyzable IR shared by every pass; rewrite rules
-  are fusion (the `SINGLE-IR-MULTIPASS`/e-graph analogue already vendored at
-  `crates/ir/src/egraph/`).
-- **tree-sitter** — grammar reified to a data table driving one interpreter; the data-plane
-  precedent for a runtime that *is* the generator's runtime.
-- **egg / egglog** — e-graph saturation over an IR; the substrate under `crates/ir/src/egraph/`
-  that 4D inherits rather than reinvents.
+- **Lowering A (Rust interpret):** `GrammarIR` → `compile` (`vm/compiler/mod.rs:31`) →
+  `BytecodeProgram` → `Interpreter::run`.
+- **Lowering B (TS decode):** the *same* serialized `BytecodeProgram` crosses (msgpack) → a switch-loop
+  decoder executes the identical opcode stream, re-deriving regexes as sticky `RegExp` (mirrors
+  parse-that TS `leaf.ts:317`).
+- **The observable:** serialize once in Rust, decode in TS, feed both the identical input — assert
+  **opcode-stream identity** (Rust-serialized bytes == TS-decoded program) **and** `Value`-tree
+  identity. *One plan, two lowerings, byte-identical parses.* This is a real, testable datum, not a
+  type-system artifact — the plan is data that outlives the Rust type that built it.
 
-## 7. Named risks & counterexamples
+**The precise limit (state it, do not overclaim):** the AOT Rust emitter (Q1) is a *third* lowering
+that is **not** driven by the serialized `BytecodeProgram` — it consumes `GrammarIR` directly and
+monomorphizes. So the "one plan, two lowerings" claim is exact for the {interpret, TS-decode} pair and
+**oracle-only** for the AOT pair: the emitted Rust parser must be diff-tested against the interpret
+path (Q6's dual oracle), not proven byte-identical at the opcode level (it has no opcodes). The fused
+region is intrinsic to *neither* the Rust type system *nor* a single terminal — it is a property of the
+shared `GrammarIR`, and the serialized `BytecodeProgram` is its observable proof for the portable pair.
 
-- **The arbitrary-closure wall — now bounded, not fatal.** Keeping parse-that's public
-  `.map(closure)` AND a transparent analyzable graph are in tension: an arbitrary JS/Rust
-  closure is not `MapExpr`-expressible. Resolution: the two-tier plane with `HostClosure`
-  leaves. The counterexample that *would* kill 4D — opaque closures exceeding the ≤2% NODE
-  floor — is refuted by the census: even value.js's fold-heavy grammar keeps opaque leaves far
-  below 2% of nodes; latex-paper is ~100% reifiable. The residual risk is *type* inheritance
-  (not perf) at value.js's ~5 Pratt folds, which LOCK-7 absorbs by signature.
-- **VM value-plane forking.** Adding a Map opcode/evaluator risks duplicating `driver/map.rs`'s
-  descriptor semantics — a DRY violation. Guard: one extracted `FnDescriptor`/`MapExpr`
-  evaluator consumed by VM and both emitters, proven by a differential oracle (VM value-tree ≡
-  codegen value-tree).
-- **Cross-repo coupling.** parse-that's Rust core gaining a `bbnf-ir` dep couples the repos
-  under the non-clobber law; the sanctioned shape is the vendored-in-skinny pattern the regex
-  crate already uses (bbnf-regex vendored), not a live path-dep across trees.
-- **API-break masquerading as inheritance.** If reification forced consumers to rewrite maps in
-  the MapExpr DSL, "keeps its public API" breaks (value.js's 129 map/chain sites; latex-paper's
-  86). The two-tier plane must accept the existing closure API unchanged, reifying
-  opportunistically only where the closure is expression-body / MapExpr-shaped (the 64+86
-  reifiable sites) and boxing the rest as `HostClosure` (the 33 fold candidates).
+---
 
-## 8. What a prototype must test (to move 4D)
+## Q6 — Isomorphism-of-record standard + value-plane home (both answered concretely)
 
-1. **Reification bijection.** Implement `string/regex/all/or/many/map/skip/next/minus/not/
-   trim/dispatch/lazy` as `IrNode` constructors; on json + value.js math + latex-paper text
-   grammars, prove `build IrNode → emit (Rust & TS) → parse` is byte-identical to the original
-   combinator parse (the 14-variant near-bijection is total for the recognizer plane).
-2. **Barrier census, node-level (Q2/Q3).** Beyond the site census here, reify each grammar to
-   `IrNode` and count opaque `HostClosure` leaves ÷ total nodes against the ≤2% floor; confirm
-   the site→node collapse; report the typed `HostClosure{sig}` shapes the value.js fold sites
-   imply.
-3. **One-plan-two-lowerings (Q5).** Serialize one `IrNode`; lower via Rust and TS emitters;
-   assert byte-identical parses on a conformance corpus (the distinguishing observable).
-4. **Runtime value plane (Q1/Q6).** Extend the VM with a shared `FnDescriptor`/`MapExpr`
-   evaluator (the extracted `driver/map.rs` semantics); differential-test VM `Value` trees vs
-   the codegen path; measure runtime `IrNode`+VM `->` cost vs monomorphized codegen.
-5. **Setup pooling (Q7).** Measure `Interpreter::new` setup share of single-parse cost on short
-   inputs; pool the interpreter (clear-not-realloc); plot the amortization curve and the
-   recognizer / value-plane / setup decomposition.
+**Isomorphism-of-record = a dual oracle over a live golden, never a hand-faked blob:**
+1. **Opcode-stream identity** — the TS decoder's re-serialized program bytes == the *live*
+   msgpack output of `compile(GrammarIR)` run in Rust *this build* (a golden regenerated by the Rust
+   compiler, checked into the isomorphism lane, never a frozen literal). Guards the plan.
+2. **`Value`-tree identity** — the TS-decoded `Value` tape == the Rust `Interpreter` `Value` tree
+   (`vm/interpreter/value.rs`), AND == `JSON.parse` on the JSON corpus (the semantic ground truth).
+   Guards the value plane.
+   **Corpus:** the six JSON corpora (apache-builds, canada, citm, data, data_xl, twitter — R3 §6) for
+   the recognizer/structural tape; a value.js-shaped grammar (units/color/easing) for the projection
+   plane once tier-1 `Record`/`Select` land; latex-paper's bibtex + text grammars for the
+   object-literal tier. Paired-cold, two windows, both arm orders (the PROVE-09 window-asymmetry law).
+
+**Value-plane home — the internal-descriptor evaluator (Hex/Number/Enum) is owned by LOCK-3, not
+LOCK-7.** Verified: `FnDescriptor`'s built-in tiers — `EnumWrap` (`types/fn_descriptor.rs:20`),
+`BoxWrap` (`:26`), `NumberConvert` (`:40`), `HexConvert` (`:45`), `SpanCapture` (`:49`), `Expr` (`:54`)
+— are evaluated **only** in `crates/core/src/backend/rust/emitter/` (grep: `driver/alt.rs`, `driver/map.rs`,
+`emitter/shapes/*`), i.e. the **AOT Rust lowering = LOCK-3's IR transposition spine**. The VM
+compiler/interpreter touch **none of them** (grep of `vm/compiler/mod.rs` + `vm/interpreter/mod.rs`
+for `Map`/`FnDescriptor`/`ApplyFn`/`fn_id` = zero hits; the only map is the memo `FxHashMap`). So the
+clean split the family should assert:
+- **Internal descriptors (Hex/Number/Enum/Box/Span/Expr)** → **LOCK-3 IR-VM lowering.** They are
+  closed, data-defined, and today live only in the AOT emitter; giving the *interpret* terminal parity
+  means adding `Op::ApplyDescriptor(FnDescriptorId)` to the VM (LOCK-3's opcode), evaluating the same
+  closed set — no host dispatch needed.
+- **Arbitrary host closures (`Opaque(HostFnId)`, Q2 tier-2)** → **LOCK-7 host-fn lattice.** Only these
+  cross into a registered `fn_table`; only these are typed by LOCK-7's signatures.
+
+This split is the pass-3 sharpening of pass-2's undifferentiated "value plane": most of it (the closed
+descriptors) is LOCK-3's and needs no lattice; only the true closures are LOCK-7's.
+
+---
+
+## Q7 — Setup vs value-plane tax vs recognizer cost (the setup number, measured from source)
+
+`Interpreter::new` (`vm/interpreter/mod.rs:114-136`) performs, **per parse**, seven eager heap
+allocations via `Vec::with_capacity`:
+
+| field | capacity | line |
+|---|---|---|
+| `values` | 64 × `Value` | `:122` |
+| `call_stack` | 32 × `CallFrame` (`u32,u32,usize`=16B) | `:123` |
+| `checkpoints` | 32 × `Checkpoint` (`u32,usize,usize`) | `:124` |
+| `repeats` | 16 × `RepeatState` (7 fields ≈48B) | `:125` |
+| `memo_starts` | 8 × `(RuleId,u32)` | `:127` |
+| `value_depth_stack` | 8 × `usize` | `:128` |
+| `rule_stack` | 16 × `RuleId` | `:129` |
+
+Plus `memo: FxHashMap::default()` (`:126`, **lazy — zero alloc until the first `MemoStore`, which only
+fires when packrat is armed**) and `diagnostics: Vec::new()` (`:130`, zero alloc). So the setup tax is
+**7 heap allocations, ~176 slots (~2–3 KB), unconditional, per parse** — paid even for a 10-byte input.
+
+**Amortization curve & the clean split:**
+- **Setup cost** = those 7 allocations. Eliminated entirely by pooling: hold one `Interpreter` and, per
+  parse, `clear()` each `Vec` (retains capacity) + `memo.clear()` — a `reset(program, input)` method
+  replacing `new`. Warm-reuse setup cost → **0 allocations**. First parse pays 7; every subsequent
+  pooled parse pays 0 — a `1/N` decay that is steep for a bench loop and negligible for a one-shot CLI.
+  For small inputs (value.js CSS values, ~10–40 bytes) the 7 allocations are a *large* share of single-
+  parse cost; for a 1 MB JSON parse they are noise. **This is the pooling win 4D should measure: a
+  paired-cold single-parse of a value.js-sized input, `new` vs pooled `reset`.**
+- **Recognizer cost** = the `match Op` dispatch loop over the spine opcodes (`MatchString`,
+  `MatchRegex`, `Dispatch`, `Call`/`Return`, `Repeat*`, `Jump*`). Independent of the value plane.
+- **Value-plane cost** = `MakeArray`/`MakeTagged` (`bytecode.rs:89,92`) + (future)
+  `ApplyDescriptor`/`ApplyFn` `Value` construction. On a pure recognizer grammar this is
+  `CaptureSpan`-only and near-free (pass-2 §3 "no materialization tax"); it grows exactly with
+  projection density.
+
+The three costs are separable in one bench by toggling: (a) `new` vs pooled `reset` isolates setup; (b)
+a recognizer-only grammar vs a projection-dense grammar isolates value-plane; (c) the residue is the
+recognizer. This is the measurement the family owes.
+
+---
+
+## Q8 — Predecessor shapes (report only; do not resolve)
+
+- **LOCK-5 (regex continuum) — the Cargo-cycle breaker and the regex-node home.** Settled cross-lock
+  fact (XL-C): two domain-fit types (opaque `Regex(StringId)` grammar tier; rich `Hir` engine tier) with
+  a cheap bridge — the regex functor is *retired*, so 4D's `regex(...)` builder targets the opaque
+  `IrNode::Regex(StringId)` on the grammar tier, never crosses a functor. The live risk 4D still
+  inherits: `crates/ir` depends on `parse_that` (Cargo.toml:13) for the VM's `Dfa`
+  (`vm/bytecode.rs` `parse_that::regex::Dfa`), while 4D needs `parse_that` → `bbnf_ir`. That is a Cargo
+  cycle; LOCK-5's substrate ruling (extract the `Dfa` into `bbnf_regex`, already a dep of `bbnf_ir`)
+  dissolves it. **Disposition: 4D's gate-0 is downstream of LOCK-5's `Dfa` extraction; report, do not
+  break the cycle here.**
+- **LOCK-7 (host-fn lattice) — owner of the `Opaque(HostFnId)` tier (Q2/Q6).** LOCK-7 types the
+  `fn_table` signature that `Opaque` dispatches through and the `Value::Host` inhabitant a closure-
+  carrying parse needs. 4D reports the *count* (single-digit, value.js easing/color) and the *seam*
+  (`Interpreter.fn_table` + `Op::ApplyFn(FnId)`); LOCK-7 defines the typed lattice and its per-subsystem
+  floor. **Disposition: the internal-descriptor half (Hex/Number/Enum) is LOCK-3's, not LOCK-7's (Q6) —
+  LOCK-7 owns only the true-closure residue.**
+
+---
+
+## Prototype obligations (what pass-3 must test to move 4D)
+
+1. **Cycle-break gate-0** (carried from pass-2 §7.1): `Dfa` in `bbnf_regex`, `parse_that` deps
+   `bbnf_ir`, compiles clean. Born-RED; blocked on LOCK-5 if it does not.
+2. **The value-plane census as a compile test.** Land tier-1 `MapExpr::Array` + `MapExpr::Select` +
+   `FnDescriptor::Record`; re-lower the 44 latex-paper object-literal projections; assert they now
+   round-trip through `constant_fold` and serialize — proving ~47% of the barrier dissolves as *data*,
+   not opacity. Count the true-`Opaque` residue on value.js easing (expect single digits).
+3. **The setup-pool paired number (the decisive Q7 datum).** Paired-cold single-parse of a
+   value.js-sized input (10–40 B), `Interpreter::new` vs a pooled `reset(program,input)`; report the
+   allocation-share of single-parse cost and the `1/N` decay across N∈{1,10,100}. Then the three-way
+   split (setup / recognizer / value-plane) via the toggles in Q7.
+4. **The one-plan two-lowering observable (Q5).** Serialize a JSON `BytecodeProgram`, decode in a
+   ~200-LOC TS switch-loop, assert opcode-stream identity vs a *live* Rust golden AND `Value`==`JSON.parse`.
+5. **The projection-dense two-terminal (pass-2 §7.4, now with tier-1).** interpret+`ApplyDescriptor`
+   vs the AOT emitter vs closures, on the value.js color/units shape. **If closures win the LL(1)/
+   projection shape, report it as the family's negative result** (Constitution vii; the PROVE-11
+   dispatch-lane precedent where a claimed +10% collapsed to +5% under fresh windows is the standing warning).
+
+---
+
+## Prior art (citations)
+
+- **GHC Core** — surface sugar (do-notation, list comprehensions, `RecordWildCards`) desugars to one
+  small typed Core the whole compiler optimizes: the exact "sugar over shared IR, inherit the
+  optimizer" shape, and its `Record`-desugaring is direct precedent for 4D's tier-1 `FnDescriptor::Record`.
+- **MLIR progressive lowering** — `build/` sugar → `bbnf_ir` → {interpret, AOT, TS-decode} is a
+  three-terminal dialect-lowering tower; MLIR's law that *analysis passes live on the shared IR, not a
+  front-end* is exactly why 4D's dispatch-synth/FIRST-FOLLOW must run on `GrammarIR` (`crates/ir/src/passes/`).
+- **tree-sitter / LALRPOP / Menhir** — construction-DSL → shared table → generated runtime; parse-that's
+  ordered/PEG `Alt` semantics (`node.rs:46`) match the ordered-choice tier, not GLR.
+- **Truffle/GraalVM partial evaluation** — a runtime AST (self-optimizing interpreter) is
+  partial-evaluated to native code: the closest analogue to 4D's "runtime graph, monomorphized only at a
+  codegen boundary" (Q1), and its lesson is that the boundary must be a *stable serializable form* — 4D's
+  `BytecodeProgram` (Q5).
+- **egg / egglog** — the `fuse(Graph)→Graph` saturation 4D *reuses* via in-tree `bbnf_ir::egraph`
+  (`crates/ir/src/egraph/`); 4D forks no second engine.
+- **nom / winnow** — the closure-chain anti-pattern the two-terminal number measures against (R3 dev-deps).
+
+---
+
+## Named risks (pass-3 deltas over pass-2 §9)
+
+- **R-CYCLE** (carried): the Cargo cycle is a hard build failure; gate-0 born-RED, downstream of LOCK-5.
+- **R-RECORD-CREEP** (new): tier-1 `Record`/`Array`/`Select` risks re-growing `MapExpr` into a general
+  expression language (a mini-god-node). *Guard:* three data variants only, each `constant_fold`-total;
+  anything needing control flow or capture is `Opaque`, not a new `MapExpr` arm.
+- **R-HOSTCLOSURE** (carried, sharpened): the value.js easing closure tempts an inlined `Box<dyn Fn>` in
+  the node — unserializable, breaks the msgpack bus and TS graft. *Guard:* `Opaque(FnId)` indexes a
+  registered `fn_table`, never inlines; `Value::Host` is a handle, not a closure.
+- **R-CLOSURE-WINS** (carried): closures may beat the staged path on LL(1)/projection shapes — a
+  legitimate close, reported not buried.
+- **R-DUAL-LOWERING-DRIFT** (new): the AOT emitter (LOCK-3) and the interpret terminal can silently
+  diverge on descriptor semantics (Hex/Number/Enum) since only the emitter evaluates them today.
+  *Guard:* Q6's `Value`-tree oracle must run AOT-vs-interpret, not just interpret-vs-TS.
+
+---
+
+## Summary judgment (for synthesis, not a verdict)
+
+Pass-3 turns 4D's pass-2 wall into a *counted, split* barrier. The value-plane census: **~47% of
+latex-paper's projections (45/97) are object-literal/array/ternary constructions recoverable as
+analyzable data** via three plain `MapExpr`/`FnDescriptor` nodes (`Record`, `Array`, `Select`) — not
+opacity; the irreducible `Opaque(HostFnId)` residue is **single-digit and concentrated in value.js's
+closure-returning easing/color plane**, comfortably under the ≤2%-of-all-nodes floor (Q3). The
+descriptor evaluator splits cleanly: **Hex/Number/Enum/Box/Span are LOCK-3's (evaluated only in the AOT
+emitter today; parity via `Op::ApplyDescriptor`), the true closures are LOCK-7's** (Q6). The
+combinator graph reaches monomorphization *only* as build-time codegen over the serialized plan (Q1);
+that same serialized `BytecodeProgram` is the one-plan/two-lowering observable (Q5). The setup tax is
+**7 unconditional heap allocations per `Interpreter::new`**, fully eliminable by a pooled `reset`
+(Q7). Hard predecessors: LOCK-5 (breaks the `Dfa` Cargo cycle) and LOCK-7 (types the `Opaque` residue
+only). The single scratch-copy prototype — cycle-break, tier-1 census-as-compile-test, setup-pool
+paired number, one-plan observable, projection-dense two-terminal — moves the family or returns its
+honest negative result.

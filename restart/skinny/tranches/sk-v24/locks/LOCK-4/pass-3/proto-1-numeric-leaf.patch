@@ -1,0 +1,205 @@
+diff --git a/crates/core/src/backend/rust/emitter/shapes/number.rs b/crates/core/src/backend/rust/emitter/shapes/number.rs
+index 44772c068..d44ce884a 100644
+--- a/crates/core/src/backend/rust/emitter/shapes/number.rs
++++ b/crates/core/src/backend/rust/emitter/shapes/number.rs
+@@ -95,6 +95,15 @@ fn emit_parse_number_struct_direct(
+             let int_start = *p;
+             let mut mantissa: u64 = 0;
+             let mut many_digits = false;
++            // SWAR 8-digit chunking (bounds-guarded; input is unpadded).
++            while *p + 8 <= len {
++                let chunk = &input[*p..*p + 8];
++                if all_eight_are_ascii_digits(chunk) {
++                    mantissa = mantissa.wrapping_mul(100_000_000)
++                        .wrapping_add(parse_eight_digits_swar(chunk));
++                    *p += 8;
++                } else { break; }
++            }
+             while *p < len {
+                 let b = input[*p];
+                 if b.is_ascii_digit() {
+@@ -115,6 +124,15 @@ fn emit_parse_number_struct_direct(
+             if input.get(*p) == Some(&b'.') {
+                 *p += 1;
+                 let frac_start = *p;
++                // SWAR 8-digit chunking (bounds-guarded; input is unpadded).
++                while *p + 8 <= len {
++                    let chunk = &input[*p..*p + 8];
++                    if all_eight_are_ascii_digits(chunk) {
++                        mantissa = mantissa.wrapping_mul(100_000_000)
++                            .wrapping_add(parse_eight_digits_swar(chunk));
++                        *p += 8;
++                    } else { break; }
++                }
+                 while *p < len {
+                     let b = input[*p];
+                     if b.is_ascii_digit() {
+@@ -135,8 +153,10 @@ fn emit_parse_number_struct_direct(
+             }
+ 
+             let mut exponent: i64 = -fractional_digit_count;
++            let mut has_exp = false;
+             let exp_byte = input.get(*p).copied();
+             if exp_byte == Some(b'e') || exp_byte == Some(b'E') {
++                has_exp = true;
+                 *p += 1;
+                 let exp_negative = match input.get(*p) {
+                     Some(b'+') => { *p += 1; false }
+@@ -163,7 +183,14 @@ fn emit_parse_number_struct_direct(
+ 
+             let end = *p;
+             let bytes = &input[start..end];
+-            let value = if many_digits {
++            // Integer fast path (mirrors parse_that number_parts_to_f64):
++            // a pure integer of <= 18 digits is exactly representable, so
++            // cast u64->f64 directly and skip Eisel-Lemire entirely.
++            let is_pure_integer = fractional_digit_count == 0 && !has_exp;
++            let value = if is_pure_integer && int_digit_count <= 18 {
++                let v = mantissa as f64;
++                if negative { -v } else { v }
++            } else if many_digits {
+                 parse_number_fallback(bytes)
+             } else {
+                 match ::parse_that::parsers::eisel_lemire::compute_f64(
+@@ -187,6 +214,16 @@ fn emit_parse_number_struct_direct(
+ 
+ /// Fallback helper emitted alongside the number shape fns. One
+ /// instance per grammar; `#[cold]` + `#[inline(never)]`.
++///
++/// LOCK-4 pass-3 PROTO-1 (numeric-leaf election lever): also emits the
++/// SWAR 8-digit primitives ported from `parse_that::parsers::scan::
++/// number` (`parse_eight_digits` + `all_eight_are_ascii_digits`, itself
++/// from simdjson's `parse_eight_digits_unrolled`). The tuned incumbent
++/// `scan_number_strict_f64` accumulates the mantissa 8 digits at a time
++/// via these SWAR folds; the emitted leaf previously walked one byte per
++/// iteration, which is the entire canada (all-f64) regression. Reads are
++/// bounds-guarded (`*p + 8 <= len`) because the emitted parser's input
++/// is unpadded (`input.as_bytes()`), unlike parse_that's `PaddedView`.
+ pub fn emit_number_fallback_helper() -> TokenStream {
+     quote! {
+         #[inline(never)]
+@@ -196,5 +233,30 @@ pub fn emit_number_fallback_helper() -> TokenStream {
+             let s = unsafe { ::core::str::from_utf8_unchecked(bytes) };
+             s.parse::<f64>().unwrap_or(f64::NAN)
+         }
++
++        /// Convert 8 ASCII digit bytes to a u64 in ~3 multiply-shift ops.
++        /// Ported from simdjson's `parse_eight_digits_unrolled`
++        /// (parse_that::parsers::scan::number::parse_eight_digits).
++        /// Caller guarantees `s` has >= 8 ASCII digit bytes.
++        #[inline(always)]
++        #[allow(non_snake_case)]
++        fn parse_eight_digits_swar(s: &[u8]) -> u64 {
++            let mut val = u64::from_le_bytes(s[..8].try_into().unwrap());
++            val = val.wrapping_sub(0x3030_3030_3030_3030);
++            val = (val & 0x0F0F_0F0F_0F0F_0F0F).wrapping_mul(0x0A01) >> 8;
++            val = (val & 0x00FF_00FF_00FF_00FF).wrapping_mul(0x0064_0001) >> 16;
++            (val & 0x0000_FFFF_0000_FFFF).wrapping_mul(0x0000_2710_0000_0001) >> 32
++        }
++
++        /// SWAR classification: all 8 bytes are ASCII digits `[0x30,0x39]`.
++        /// (parse_that::parsers::scan::number::all_eight_are_ascii_digits.)
++        #[inline(always)]
++        #[allow(non_snake_case)]
++        fn all_eight_are_ascii_digits(chunk: &[u8]) -> bool {
++            let u = u64::from_le_bytes(chunk[..8].try_into().unwrap());
++            let lt_zero = u.wrapping_sub(0x3030_3030_3030_3030) & 0x8080_8080_8080_8080;
++            let gt_nine = u.wrapping_add(0x4646_4646_4646_4646) & 0x8080_8080_8080_8080;
++            (lt_zero | gt_nine) == 0
++        }
+     }
+ }
+diff --git a/crates/core/src/grammar/generated/json.rs b/crates/core/src/grammar/generated/json.rs
+index 5f29a63d9..9ea7daa2f 100644
+--- a/crates/core/src/grammar/generated/json.rs
++++ b/crates/core/src/grammar/generated/json.rs
+@@ -668,6 +668,29 @@ mod __jsonparser_emit_impl {
+         let s = unsafe { ::core::str::from_utf8_unchecked(bytes) };
+         s.parse::<f64>().unwrap_or(f64::NAN)
+     }
++    /// Convert 8 ASCII digit bytes to a u64 in ~3 multiply-shift ops.
++    /// Ported from simdjson's `parse_eight_digits_unrolled`
++    /// (parse_that::parsers::scan::number::parse_eight_digits).
++    /// Caller guarantees `s` has >= 8 ASCII digit bytes.
++    #[inline(always)]
++    #[allow(non_snake_case)]
++    fn parse_eight_digits_swar(s: &[u8]) -> u64 {
++        let mut val = u64::from_le_bytes(s[..8].try_into().unwrap());
++        val = val.wrapping_sub(0x3030_3030_3030_3030);
++        val = (val & 0x0F0F_0F0F_0F0F_0F0F).wrapping_mul(0x0A01) >> 8;
++        val = (val & 0x00FF_00FF_00FF_00FF).wrapping_mul(0x0064_0001) >> 16;
++        (val & 0x0000_FFFF_0000_FFFF).wrapping_mul(0x0000_2710_0000_0001) >> 32
++    }
++    /// SWAR classification: all 8 bytes are ASCII digits `[0x30,0x39]`.
++    /// (parse_that::parsers::scan::number::all_eight_are_ascii_digits.)
++    #[inline(always)]
++    #[allow(non_snake_case)]
++    fn all_eight_are_ascii_digits(chunk: &[u8]) -> bool {
++        let u = u64::from_le_bytes(chunk[..8].try_into().unwrap());
++        let lt_zero = u.wrapping_sub(0x3030_3030_3030_3030) & 0x8080_8080_8080_8080;
++        let gt_nine = u.wrapping_add(0x4646_4646_4646_4646) & 0x8080_8080_8080_8080;
++        (lt_zero | gt_nine) == 0
++    }
+     /// AW-V.W3.2 — per-grammar shape-dispatch support.
+     ///
+     /// Inlined by every `parse_<shape>_<grammar>_<rule>` emitted
+@@ -1275,6 +1298,17 @@ mod __jsonparser_emit_impl {
+         let int_start = *p;
+         let mut mantissa: u64 = 0;
+         let mut many_digits = false;
++        while *p + 8 <= len {
++            let chunk = &input[*p..*p + 8];
++            if all_eight_are_ascii_digits(chunk) {
++                mantissa = mantissa
++                    .wrapping_mul(100_000_000)
++                    .wrapping_add(parse_eight_digits_swar(chunk));
++                *p += 8;
++            } else {
++                break;
++            }
++        }
+         while *p < len {
+             let b = input[*p];
+             if b.is_ascii_digit() {
+@@ -1297,6 +1331,17 @@ mod __jsonparser_emit_impl {
+         if input.get(*p) == Some(&b'.') {
+             *p += 1;
+             let frac_start = *p;
++            while *p + 8 <= len {
++                let chunk = &input[*p..*p + 8];
++                if all_eight_are_ascii_digits(chunk) {
++                    mantissa = mantissa
++                        .wrapping_mul(100_000_000)
++                        .wrapping_add(parse_eight_digits_swar(chunk));
++                    *p += 8;
++                } else {
++                    break;
++                }
++            }
+             while *p < len {
+                 let b = input[*p];
+                 if b.is_ascii_digit() {
+@@ -1317,8 +1362,10 @@ mod __jsonparser_emit_impl {
+             }
+         }
+         let mut exponent: i64 = -fractional_digit_count;
++        let mut has_exp = false;
+         let exp_byte = input.get(*p).copied();
+         if exp_byte == Some(b'e') || exp_byte == Some(b'E') {
++            has_exp = true;
+             *p += 1;
+             let exp_negative = match input.get(*p) {
+                 Some(b'+') => {
+@@ -1353,7 +1400,11 @@ mod __jsonparser_emit_impl {
+         }
+         let end = *p;
+         let bytes = &input[start..end];
+-        let value = if many_digits {
++        let is_pure_integer = fractional_digit_count == 0 && !has_exp;
++        let value = if is_pure_integer && int_digit_count <= 18 {
++            let v = mantissa as f64;
++            if negative { -v } else { v }
++        } else if many_digits {
+             parse_number_fallback(bytes)
+         } else {
+             match ::parse_that::parsers::eisel_lemire::compute_f64(

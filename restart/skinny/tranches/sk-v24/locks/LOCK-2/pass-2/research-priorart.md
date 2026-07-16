@@ -227,6 +227,17 @@ env-source fenced?
   multiplicity 1 — direct in-tree evidence that extraction-as-search is not yet earned on the
   substrate; the fleet-wide multiplicity census (directive Q1) is the gating measurement before
   any extraction-solver family is built.
+- **The measured substrate-without-consumer pathology (Y.13, quantified):** GN-2's empirical
+  spine (`docs/tranches/sk-v24/GN-2.md` §4, §1.2) names the master defect this campaign hunts
+  as **substrate landed without a live consumer — 14 of 18 prototype levers dead by that
+  pathology.** GN-2's governing law is the *four-hop close in-wave* (IR fact → cost model →
+  emitter selection → real grammar-site bench). This is the strongest in-tree corroboration of
+  the constitution's clause viii/Y.13 as it applies to LOCK-2: a graph-engine island (e-graph
+  or CSP) is admissible ONLY when its extracted decision reaches a real emitter selection and
+  is benched at a real grammar site in the same wave — an island whose candidates no lowering
+  reads is one more of the 14. GN-2 also fixes the *shape* of a lawful cost lever: a named
+  cost-model const (`CSS_SHUFTI_MIN_SPAN`, `SimdMode::Prefilter`), pluggable, never a heuristic
+  literal buried in a loop — the `@cost`/`CostWeights` landing (`cost_config.rs`) inherits this.
 
 ---
 
@@ -237,7 +248,10 @@ env-source fenced?
    our B&B kernel, not raw ILP.
 2. **Greedy suboptimality is a shared-subexpression phenomenon only** — it does not bite at
    multiplicity 1. Building an extraction solver before measuring multiplicity is
-   consumer-less substrate (Y.13). Measure first (Q1).
+   consumer-less substrate (Y.13). Measure first (Q1). **Quantified in-tree:** GN-2 §4 measured
+   14/18 prototype levers dead precisely from substrate-without-consumer — the graph engine
+   must not become lever 15; every island closes the IR-fact→cost→emitter→bench four-hop
+   in-wave or it does not open (`docs/tranches/sk-v24/GN-2.md` §1.2).
 3. **EqSat divergence under widening/associativity** — terminating TRS ≠ terminating EqSat
    (EGRAPHS 2023). The only shipped guard is a node/iter cap (present in `scheduler.rs`), plus a
    parity oracle. No confluence proof is owed or achievable.
@@ -282,4 +296,5 @@ env-source fenced?
 - `crates/egraph/src/cost_config.rs` (shared CostConfig, `from_env` bench-only)
 - `crates/csp-solver/src/solver/search.rs` (unified B&B kernel), `solver/optimize.rs`, `domain/cost_finite.rs`, `builder/kuhn_munkres.rs`
 - `restart/skinny/tranches/sk-v24/prototypes/PROVE-12/REPORT.md` (residualization: const-fold + monomorphize, multiplicity 1, +18 gen LOC, byte-identical parity)
-- SPEC §0 refutation laws; PROVE-08 ~230 µs compile budget; R1 cartography `ir/src/cost.rs`, `ir/src/lib.rs:361` BackendShape, `passes/src/lib.rs:398` derive_backend_shape
+- SPEC §0 refutation laws; PROVE-08 ~230 µs compile budget; R1 cartography `ir/src/cost.rs:5` CostFacts, `:173` ActiveCostFacts, `ir/src/lib.rs:361` BackendShape (5 shapes), `passes/src/lib.rs:398` derive_backend_shape, `emit(backend)` fail-closed at `lib.rs:114`
+- `docs/tranches/sk-v24/GN-2.md` §1.2, §4 (the Y.13 governing law + measured master pathology: substrate-without-consumer, 14/18 prototype levers dead; four-hop in-wave close; named cost-model const not heuristic literal)

@@ -18,6 +18,10 @@ poles map cleanly onto four decades of settled middle-end debate (below).
 
 ## 1. HEAD baseline — we already run a 2-level tower
 
+*Base pin (XL-H): every `path:line` below re-verified against live `skinny@c43126422` (HEAD at
+sweep time; the directives' `b3cb8c16b` moved forward — line numbers hold). PROVE-12's own
+numbers stand on its worktree base `d2b32f6e3` (the R2 baseline tree), cited as-measured.*
+
 `GrammarIr` (`ir/src/lib.rs:33`) with `ExprKind` (`:234`, 11 variants incl.
 `Project{body,target,ty}` `:261`) → `BackendIr` (`:351`) with `BackendExpr` (`:376`),
 `BackendShape` (`:361`, a 5-variant *attribute enum* EagerTape/OffsetTape/EventTape/SinkOnly/
@@ -158,7 +162,7 @@ invention.
 | 3A CONTRACT-TOWER | nanopass (Chez, commercial) + translation validation | Won on checkability; **lost on compile-time** | small fixed tower only; generated-size-budget |
 | 3B SINGLE-IR-MULTIPASS | LLVM / sea-of-nodes / RVSDG; `BackendShape` at HEAD | Won as universal middle | one-codegen-path, no-orthogonal-codepaths |
 | 3C GRAMMAR-HOMOIOUSIA | nanopass `define-language`; LOCK-7 bootstrap | Real but niche | Y.13 in-wave consumer or SPEC-ONLY; no-ts-ir |
-| 3D STAGED-RESIDUAL | Futamura/MSP (LMS,MetaOCaml,Terra); **PROVE-12 (ours, CONFIRMED)** | Won as theory; proven in-point | stage-0 erasure total; zero-runtime-cost law |
+| 3D STAGED-RESIDUAL | Futamura/MSP (LMS,MetaOCaml,Terra); offline-PE **binding-time analysis** (J/G/S 1993); **PROVE-12 (ours, CONFIRMED)** | Won as theory; settled as offline-PE practice; proven in-point | stage-0 erasure total (BTA congruence); polyvariant-per-site; zero-runtime-cost law |
 
 ## 6. Pass-2 addenda — measured externals the sweep adds
 
@@ -204,6 +208,30 @@ Four anchors that sharpen §2, each with a number or a defect-name the earlier d
   result (LOCK-6's seat), the constitution's measured-not-asserted isomorphism. This rejects the
   maximalist LLVM/MLIR read (one common low IR → N backends) for our size and confirms 3B's
   attributes-travel / emission-per-backend posture over §5's shared-IR temptation.
+
+- **Binding-time analysis (BTA) is the exact prior-art name for the pass-2 `binding_times`
+  directive.** Offline partial evaluation runs a *pre-pass* that annotates every program point
+  static/dynamic (reducible/residual) BEFORE specialization — precisely 3D's "a stage fact
+  attaches to live IR nodes" and the directive's "`binding_times` run on the REAL CSS/JSON IR"
+  (Jones/Gomard/Sestoft, *Partial Evaluation and Automatic Program Generation*, Prentice Hall
+  1993 — the canonical offline-PE text
+  ([Google Books](https://books.google.com/books/about/Partial_Evaluation_and_Automatic_Program.html?id=ZoBQAAAAMAAJ))).
+  This *grounds 3D as engineering, not invention*: PROVE-12 is one hand-applied static
+  annotation (the CSS delimiter set is static; the input byte is dynamic → residualize to a
+  const mask); a `binding_times` pass generalizes it to a systematic static/dynamic labeling.
+  **Two named traps the literature already charted.** (1) *Well-annotatedness / congruence* —
+  a BTA must be sound: a static value flowing into a dynamic context must itself be dynamized
+  (J/G/S restrict static-in-dynamic to base types), which is the concrete form of 3D's
+  stage-0-erasure-must-be-total obligation. (2) *Monovariant vs polyvariant* — a single
+  binding-time per site is cheap but coarse; polyvariant BTA (constraint-based, decorating
+  subexpressions with numeric staging variables) recovers online-PE accuracy at analysis cost
+  ([polyvariant BTA, LOPSTR](https://link.springer.com/chapter/10.1007/BFb0053561);
+  [offline≈online, TOPLAS](https://dl.acm.org/doi/10.1145/963778.963784)). Our per-site
+  monomorphization (PROVE-12's 3 call-site masks) is *already* de-facto polyvariant on the
+  delimiter set — the win came from site-specialization, so a BTA formulation should be
+  polyvariant-per-`RuleId`/`ExprId`, matching the directive's per-RuleId-vs-per-ExprId question.
+  This is the strongest reason the staged-residual pole is *buildable now* rather than a
+  research bet: the annotate-then-residualize pipeline is 30-year-settled offline-PE practice.
 
 Additional sources: staged combinators — OOPSLA 2014
 (https://www.researchgate.net/publication/273188536_Staged_Parser_Combinators_for_Efficient_Data_Processing),

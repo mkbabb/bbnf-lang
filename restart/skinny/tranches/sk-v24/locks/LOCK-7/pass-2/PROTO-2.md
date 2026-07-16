@@ -1,147 +1,107 @@
-# PROTO-2 (pass 2) — regex Tier-S under a pinned ORACLE_REL_V1 (family 7D META-CIRCULAR-ORACLE)
+# LOCK-7 · Pass-2 · PROTO-2 — 7C-T2
 
-Probe 2 of LOCK-7 pass 2. A **real prototype**, RAN cold and paired against a pt-scratch copy
-of parse-that (origin READ-ONLY, verified byte-identical to HEAD `ef10d5b`, untouched after the
-run). The relation is **pinned and committed as code** (`ORACLE_REL_V1`), every number cites it,
-and all four planted mutations trip before any green is trusted. Deliverable code: `PROTO-2.patch`
-(one probe helper added to the copy's `regex/mod.rs`; one new example harness).
+**Probe:** 7C-T2 — delete the `has_parse_time_host_decode` string heuristic, regen the fleet bit-for-bit.
+**Family:** 7C (HOST-FUNCTION-LATTICE — the survivor).
+**BASE-PIN:** measured on HEAD `ce51c36fcbdf5108eb028005586672d9a6d2ca1b` (== pinned base `ce51c36fc`; `git merge-base --is-ancestor ce51c36fc HEAD` → YES, not stale). No wrong-artifact risk.
+**Verdict:** **RAN — PASS.** The string name-gate is NOT load-bearing; 7C's "one-file cure, ships now" is a RAN result.
 
 ---
 
-## Question
+## QUESTION
 
-Under a pinned `ORACLE_REL_V1`, what is regex **structure**-parity between the `parse_generated`
-PRODUCER (`regex/mod.rs:34`, → `Hir`) and the primary hand `parse()` (`regex/hir/parser`, → `Hir`),
-and is **every residual divergence** a **LOCK-5 `host.rs` OBLIGATION** (deterministic fold — fix in
-place) or an **oracle VERDICT** (genuine pre-fold parser/grammar divergence — bank in the ledger)?
-I.e. is regex the first **PROMOTABLE** subsystem, or **ORACLE-ONLY**?
+Is the `has_parse_time_host_decode` substring heuristic (`passes/src/lib.rs:794`, firing on
+`name.contains("host") && (value.contains("decode") || value.contains("parse"))`) load-bearing?
+Does replacing it with a structural predicate leave every committed grammar's generated `.rs`
+byte-identical — making 7C's one-file cure a RAN result rather than SPEC_ONLY?
 
-**Answer (measured): ORACLE-ONLY.** Not every residual is a `host.rs` obligation. Of 12
-divergences, **9 are LOCK-5 `host.rs` obligations** (one bug class, bounded `{n,m}`) and **3 are
-genuine oracle VERDICTS** rooted in `bootstrap/regex.bbnf` (the `.` metachar and the `(?s)`
-inline-flag syntax) — a locus **distinct from LOCK-5**. So even after LOCK-5's host fold is
-completed, regex stays ORACLE-ONLY pending grammar fixes, and it independently fails the perf gate
-(**GEN 1.77× slower**). This resolves XL-2 routing: **9 → LOCK-5 `host.rs`, 3 → oracle bank
-(`regex.bbnf`)**.
+This was the cheapest signal in the lock and had never run across two passes (highest-ROI missing probe).
 
-## Binding pin (anti-vacuity)
+## METHOD
 
-Tier-S is bound to the PRODUCER `parse_that::regex::parse_generated_with -> Result<Hir, _>`
-(generated combinator parser + `host::lower`), **never** the `generated.rs:2288`
-`parse_generated -> bool` twin. The bool twin is used ONLY as a pre-lower *recognizer witness* for
-classification; planted mutation **M3** proves that binding Tier-S to it is rejected as vacuous.
+1. Base-pin verified (above); loadavg recorded at every run.
+2. Isolated `CARGO_TARGET_DIR` inside the scratchpad (no cross-agent lock contention; parse-that untouched; no x86).
+3. **Baseline (control):** ran all four `check-*` targets on the unmodified `ce51c36fc` tree to prove
+   the committed generated trees are not already stale.
+4. **Change:** in `passes/src/lib.rs` replaced the `ExprKind::Annotation` arm of
+   `has_parse_time_host_decode` — deleting the `name`/`value` string sniff — with a **shape-derived
+   predicate** over the built node: `ExprKind::Annotation { value, .. } => value.is_some()`.
+   Rationale: the IR has no `ExprKind::Host`/registry node yet; the only annotation the grammar parser
+   ever constructs is the `?w` whitespace marker, which is structurally `{ name: "ws", value: None }`
+   (`grammar/src/lib.rs:1371`). A parse-time host directive is distinguished structurally by carrying a
+   payload in the `value` slot. The predicate inspects that slot's presence instead of sniffing string
+   contents. Both consumers left untouched: `:620 ShapeRationale::HostFnParseTime` and
+   `:764 requires_eager_tape` (now at shifted line numbers after the edit, same call sites).
+5. **Re-check:** ran all four `check-*` targets with the modified code. Each is a byte-identical
+   assertion — `codegen::EmittedSource::check_dir` (`codegen/src/lib.rs:74`) compares emitted-in-memory
+   bytes against the committed `.rs` via `actual != *source`; no writes, no self-comparison.
+6. **Freshness proof:** injected a syntax error into the edited arm and confirmed `cargo build -p xtask`
+   FAILS at that line — proving every run recompiles `passes` from source (no stale-binary confound).
+7. **Negative control:** inverted the predicate to `value.is_none()` (fires `true` on every `?w`
+   marker) and re-ran the fleet.
+8. **Mechanism probe:** temporary `eprintln` in `backend_candidates` recording, per rule,
+   `backend_rule.is_some()`, `has_parse_time_host_decode(...)`, `eager_forced`. Reverted after reading.
 
-## Method
+Commands (per xtask/src/main.rs & regen_css.rs): `cargo run -p xtask -- {check-json, check-sheets,
+check-real-typed, check-css-l4-declaration-values}`. The `check-*` (non-destructive) variant was used
+for CSS rather than `regen-css` so the assertion is against the *committed* tree, not a self-overwrite.
 
-- **Copy, not mutate** (R3 §8): `rsync` copy, external patch-deps repointed to originals,
-  `CARGO_TARGET_DIR` inside the copy, toolchain `nightly-2026-04-11` (repo pin). `git status` on the
-  origin after the run: regex-path / bootstrap trees clean vs `ef10d5b`.
-- **`ORACLE_REL_V1 = R1 ∘ R2 ∘ R3`, pinned as the function `norm(&Hir) -> Hir`** in the harness:
-  - **R1** — bottom-up unit-collapse to a fixpoint: `Concat([]) ≡ Empty ≡ Alt([])`,
-    `Concat([x]) ≡ x`, `Alt([x]) ≡ x` (both sides emit `Hir::Empty` at `host.rs:44,54,89`).
-    `norm` is verified **idempotent** (fixpoint sanity).
-  - **R2** — satisfied by construction: both sides terminate in `host::lower` / the hand parser at
-    the **same stage** (post-parse `Hir`, no linker pass) with a **shared** `ParseOptions::default()`
-    (`unicode:true`).
-  - **R3** — group / class / quantifier structure preserved **field-for-field**
-    (`Repetition{min,max,greedy}`, `Group` nesting, `Class` ranges/negated).
-- **Divergence partition** — the operative law: `host::lower` is a **deterministic, total function of
-  `(AST, src, opts)`**; both sides share `opts` (R2). Therefore
-  - a **both-accept, `N`-differs** row is impossible unless the generated parser committed to a
-    *different tree* → **pre-lower → oracle VERDICT** (the printed AST names which wrong decision);
-  - a **membership** row where the recognizer consumed all input (`pre_recognizer_full=true`) but the
-    fold **errored** is a fold *partiality* → **post-lower → `host.rs` OBLIGATION** (name the clause).
-- **Corpus**: the committed **51-pattern PROTO-2-7D set** + **7** `parse_that/tests/regex` patterns
-  (`(?s).`, `(?:abc)`, `[^abc]`, `[a-z]`, `\/`, `\d`, `\w`) = **58**.
-- **Perf**: cold, **paired, interleaved**, release `-O3`, **3000 reps**, per-corpus-pass median,
-  `black_box` vs DCE, 50-iter untimed prime (no result caching — every parse allocates a fresh
-  `Hir`, so every timed pass is cold). loadavg captured around each run. **3 runs** for stability.
+## WHAT RAN — THE NUMBERS
 
-## What ran
+Corpora: committed generated trees for json / sheets / css_l4 / real-typed.
 
-`cargo run --release --example oracle_7d -p regex-bootstrap` inside pt-scratch (harness =
-`bootstrap/examples/oracle_7d.rs`; probe helper `parse_generated_ast_debug` added to the copy's
-`regex/mod.rs`). Executed 3×; parity + classification deterministic across runs.
+| Run | Predicate | check-json | check-sheets | check-real-typed | check-css-l4-decl-values | loadavg |
+|-----|-----------|-----------|--------------|------------------|--------------------------|---------|
+| Baseline (control) | original string sniff | PASS (0) | PASS (0) | PASS (0) | PASS (0) | 5.51 4.05 4.31 |
+| **Change** | `value.is_some()` (structural) | **PASS (0)** | **PASS (0)** | **PASS (0)** | **PASS (0)** | 4.76 4.00 4.29 |
+| Negative control | `value.is_none()` (inverted) | PASS (0) | PASS (0) | PASS (0) | PASS (0) | 3.94 3.91 4.24 |
+| Final clean re-verify | `value.is_some()` | PASS (0) | PASS (0) | PASS (0) | PASS (0) | 3.39 3.75 4.11 |
 
-## The numbers
+- CSS `generated.rs`-tree emission hash constant across ALL runs: `886e55b80e0dd269868019808c884ca7ad35c4760899ed550dd57883bd87a5d8`.
+- Freshness proof: injected `FRESHNESS_PROBE_SYNTAX_ERROR` → `error: could not compile 'passes' (lib)` at `lib.rs:803`. Binary provably reflects source.
+- `cargo build -p passes` clean (exit 0, no warnings) with the final structural predicate.
 
-**Planted-mutation falsification (all four MUST trip — they did):**
+**Structural facts (from the parser + mechanism probe):**
+- The grammar parser constructs exactly ONE `ExprKind::Annotation` kind: the `?w` marker,
+  `{ name: "ws", value: None }` (`grammar/src/lib.rs:1371`). No host annotation is ever built.
+  Therefore the original heuristic — which *requires* `name.contains("host")` — can **never fire**
+  on any grammar through this parser (`"ws".contains("host")` is false).
+- `?w` annotation-node counts in the committed fleet: json **0**, sheets **13**, css_l4 **~92** across
+  9 source files. So sheets/css DO carry annotation nodes — the predicate is genuinely reached on them.
+- Mechanism probe (correct predicate): `host_decode=false` for **all 39 sheets rules and all 15 json
+  rules**; `backend_rule` is `Some` for every rule (predicate is consulted, not short-circuited). The 5
+  eager-forced sheets rules (range_end, primary, error_literal, compare_op, cell_or_range) derive
+  `eager_forced=true` from the OTHER `requires_eager_tape` disjuncts (recovery / layout / dispatch
+  overlap), NOT from host_decode.
 
-| mutation | what it perturbs | tripped |
-|---|---|---|
-| M1 quantifier greedy→lazy in a gen copy | `Repetition.greedy` field | **yes** — R3 flags |
-| M2 drop a `Group` wrapper | group nesting | **yes** — R3 flags |
-| M3 bind the `bool` twin where the producer is expected | twin returns `bool` (no `Hir`); it maps `(a)` and `a` to the SAME `true` while their `Hir`s differ → provably vacuous | **yes** — binding rejected |
-| M4 mis-associate an alt arm (`Alt([a,b,c])`→`Alt([Alt([a,b]),c])`) | alt associativity | **yes** — R1 collapses only singletons, does NOT mask it |
-| (`norm` idempotent / R1 fixpoint) | — | **yes** |
+## INTERPRETATION
 
-**Parity ledger under `ORACLE_REL_V1` (deterministic; 58 patterns):**
+Three independent lines of evidence converge:
 
-| metric | value |
-|---|---|
-| strict Hir-eq (pre-R1) | 45/58 = **0.7759** |
-| R1 delta (`Concat([]) ≡ Empty`, the `""` row) | +1 |
-| both accept + `N`-equal | 46 |
-| both accept + `N`-**diverge** | 3 |
-| membership disagree (HAND-OK / GEN-ERR) | 9 |
-| both reject | 0 |
-| **PARITY (Empty-normed, ORACLE_REL_V1)** | **46/58 = 0.7931** |
-| — committed-51 subset only | 40/51 = **0.7843** (reconciles pass-1's 40/51) |
+1. **Constant-false agreement.** The string heuristic returns false on the entire committed fleet
+   (no host annotation exists). The structural predicate `value.is_some()` also returns false on the
+   entire fleet (every annotation is `?w` → `value: None`). The two predicates are *pointwise identical*
+   across every rule of every committed grammar — so the emitted bytes cannot differ. Confirmed: all
+   four targets byte-identical.
 
-**Divergence ledger — 12 rows, 100% cleanly classified:**
+2. **Robustness (negative control).** Even the *inverted* predicate, which forces `host_decode=true`
+   on every `?w`-bearing rule in sheets/css, leaves all four targets byte-identical. The committed
+   fleet's generated `.rs` does not flow from this predicate at all — the eager-tape selection for
+   annotation-bearing rules is fixed by the other disjuncts. The deletion is therefore doubly safe.
 
-- **9 × `host.rs` OBLIGATION** — one bug class, **bounded `{n,m}`**. Every bounded quantifier
-  (`{n}`, `{n,m}`, `{n,}`) is HAND-OK / GEN-ERR `"invalid repetition bound"`, with
-  `pre_recognizer_full=true` (the combinator parser consumed the whole input and produced a full
-  `quantified((atom, quantifier(span)))` AST — the *same* structural decision as the hand parser).
-  The fold then fails: **`host.rs::parse_braced_quantifier` (via `lower_quantifier`) receives the
-  span WITH its braces (`{3,5}`) and never strips them**, so `num_part[..comma]` = `"{3"` fails
-  `u32::parse`. Hits: JSON `u[0-9a-fA-F]{4}`, `[0-9a-fA-F]{3,8}`, `a{3,5}`, `#…{3,6}`,
-  `\d{4}-\d{2}-\d{2}`, `\d{2}:\d{2}:\d{2}`, IPv4 `\d{1,3}…`, the UUID pattern, `(?:[a-z]{2,4})+`.
-  → **route to LOCK-5**; deterministic fold, fix in `host.rs`.
-- **3 × oracle VERDICT** — genuine pre-lower (`regex.bbnf`) divergences, witnessed by the AST:
-  - `.` → parser emits `atom(class_atom_0("."))` — the dot is parsed as a **class-literal node**,
-    never the `atom_0` dot-metachar. `host.rs::make_dot` is never reached; `N(gen)=Class([46])`
-    (literal dot) vs `N(hand)=Class([^\n])`.
-  - `(?s).` and `(?s)(?:\s|/\*.*?\*/)*` → `(?s)` emits **plain** `group(class_atom_0("s"))`, never
-    the bare-flag `group_1`. `host.rs::apply_flags` is never reached; the inline flag becomes a
-    literal capturing group and the dotall `.` stays a literal.
-  → **bank in the oracle ledger**; these need `regex.bbnf` grammar fixes, NOT `host.rs`.
+3. **No stale-artifact confound.** Freshness proof + base-pin at the exact pinned HEAD.
 
-**Perf — cold paired, per 58-pattern corpus-pass (3 runs):**
+The heuristic is a latent, dead name-gate. Deleting the string sniff and keying on node shape is a
+strictly-neutral, one-file change. 7C's "one-file cure, ships now" is proven RAN, not SPEC_ONLY.
 
-| run | HAND µs | GEN µs | ratio GEN/HAND | loadavg(1m) |
-|---|---|---|---|---|
-| A | 15.167 | 26.875 | **1.772×** | 8.90 |
-| B | 15.375 | 27.083 | **1.761×** | 7.47 |
-| C | 15.416 | 27.250 | **1.768×** | 7.47 |
+## PASS / FAIL
 
-GEN is **1.76–1.77× slower** (median 1.768×; range < 1%). Consistent with pass-1's 1.77–1.81×.
+**PASS** — ALL `check-*` targets pass bit-for-bit against the committed `.rs` with the string
+name-gate deleted. The `has_parse_time_host_decode` substring heuristic is **NOT load-bearing** and is
+deletable; the structural predicate reproduces the heuristic's decision (constant-false) exactly on
+every committed grammar. No grammar's eager-tape selection shifted.
 
-## Verdict
+## FILES
 
-**VERDICT: RAN (measured). regex Tier-S under `ORACLE_REL_V1` = parity 0.7931 Empty-normed
-(45→46/58 after R1), which is BELOW the 0.80 gate; classification 100% clean = 9 `host.rs`
-OBLIGATIONS (bounded `{n,m}` — LOCK-5's incomplete fold, `parse_braced_quantifier` brace-strip) + 3
-oracle VERDICTS (`regex.bbnf` dot-metachar + inline-flag). Perf GEN/HAND ≈ 1.77× slower. Disposition:
-ORACLE-ONLY. regex is NOT the first PROMOTABLE subsystem — it fails promotion on TWO independent
-counts: (i) 3 residual oracle verdicts that LOCK-5 cannot discharge (grammar locus), and (ii) the
-perf gate. state = BLOCKED with the row.**
-
-**Ledger row.** `rel_id=ORACLE_REL_V1 · binding=parse_generated_with(->Hir) · parity_pct=0.7931 ·
-perf_ratio=1.768× · state=BLOCKED (ORACLE-ONLY)`. `row_complete=false` by the strict conjunction
-(parity ≥ 0.80 FAILS at 0.7931; classification-clean HOLDS). It is nonetheless the **first fully
-partitioned** regex row: XL-2 routing is settled — **9 → LOCK-5 `host.rs`, 3 → oracle bank**.
-
-**Corrections to pass-1.** Pass-1 lumped `.` and `(?s)` as "genuine semantic bugs" while its
-headline implied only the `{n,m}` class was the non-verdict residue. The pinned oracle sharpens
-this: the `{n,m}` class is 9 `host.rs` obligations; the `.` / `(?s)` pair are **3 oracle verdicts
-in the grammar**, not host obligations. The deterministic-fold law makes the partition mechanical:
-both-accept-Hir-differ ⟹ pre-lower ⟹ verdict; recognizer-full + fold-error ⟹ post-lower ⟹ obligation.
-
-**Honesty caveats.** (1) release `-O3`, not the `bench` fat-LTO profile — immaterial to a
-same-binary ratio (both sides identical profile). (2) Machine under concurrent load (loadavg
-7.5–8.9); paired interleaving makes the ratio robust (spread < 1%). (3) The 7 added test patterns
-lower parity by one row (`(?s).`), a real surface, not a stack of the deck; committed-51-only parity
-is 0.7843, likewise < 0.80. None of these move the verdict: both promotion gates fail by wide
-margins, and the residual carries genuine oracle verdicts.
+- Patch: `7C-T2.patch` (single file, `skinny/crates/passes/src/lib.rs`, +8 / −4).
+- Instrumentation (eprintln mechanism probe, freshness syntax error) was temporary and fully reverted;
+  it is not in the patch.

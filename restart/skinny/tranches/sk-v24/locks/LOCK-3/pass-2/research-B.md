@@ -1,254 +1,258 @@
-# LOCK-3 · PASS-2 · FAMILY 3B — SINGLE-IR-MULTIPASS
+# LOCK-3 · FAMILY 3B — SINGLE-IR-MULTIPASS · PASS-2 RESEARCH
 
-Re-pinned to `skinny@c93fc4314` (the checked-out live tree; the pass directive names
-`b3cb8c16b`, which is not this HEAD — every `path:line` below is re-verified against
-`c93fc4314`, and any prototype must re-pin + re-cite before measuring). The R1/R6 seeds
-carry line drift (`ir/lib.rs` 678 lines, not 1020; `passes/lib.rs` 2096, not 2750); the
-pointers here are the drifted-correct ones. All paths under
-`/Users/mkbabb/Programming/bbnf-lang/skinny/`.
+One rich IR refined in place by annotating passes (the LLVM shape); `BackendShape` as
+attributes; the fewest transpositions that suffice. Base pinned to `skinny @ c43126422`
+(HEAD 2026-07-16 14:21), the sole living implementation substrate. The outer bbnf-lang tree
+`crates/` is cited as prior art only. Measurement claims are marked UNEXECUTED where they name
+a prototype obligation (mapped ≠ executed).
 
-## 0. Thesis
+---
 
-One rich IR — the existing `GrammarIr` (`ir/lib.rs:234` `ExprKind`, 10 arms) — refined in
-place by annotating passes; every derived plane is an attribute table keyed by
-`RuleId`/`ExprId` over that one tree; emission is a single generation-time fold
-`emit(&GrammarIr, &Attributes)`. The live pipeline is ALREADY three-quarters this shape and
-does not know it: `LayoutFacts` (`passes/lib.rs:91-99`) is already a bundle of eight
-per-`RuleId`/`ExprId` attribute maps annotating one `GrammarIr` — `rule_types`, `node_types`,
-`layout_policies`, `hot_call_graph`, `backend_shape`, `cost_facts`, `per_grammar_policy`,
-`same_substrate_union`. The charter's "BackendShape as attributes" is ALREADY literally true:
-`backend_shape: HashMap<RuleId, BackendShape>` (`:96`). What 3B removes is the *tower below
-the attributes* — the two structurally-redundant transposition IRs (`BackendExpr`,
-`SinkOnlyExpr`).
+## 0. The thesis, and why it is nearly already true
 
-This is a **generation-time** fold producing straight-line Rust, NOT a runtime lazy-cursor
-fold — SPEC §0's "fold-over-cursor dead" refutation governs the runtime and does not touch
-it.
+Skinny is not a five-transposition tower; it is **one attribute-annotated compile stage
+followed by a fractured emission stage**. `passes::compile` (`crates/passes/src/lib.rs:32`)
+already runs the LLVM shape: `layout::run` produces `LayoutFacts` (`:36`), then successive
+passes **mutate that one facts bundle in place** —
+`layout_facts.backend_shape = shape_plan.backend_shape` (`:54`), `.cost_facts` (`:55`),
+`.per_grammar_policy` (`:56`), `.same_substrate_union` (`:57`). `LayoutFacts` already carries
+`node_types: HashMap<ExprId, Type>` (`:91-93`). This is exactly an attribute plane keyed by
+node identity, refined by annotating passes — the family's own architecture, already load-
+bearing on live for shape/cost/policy.
 
-## 1. The enumerated edge-DAG on live (3 IR levels · 2 transpositions · 1 emit)
+The fracture is downstream, in emission alone: `runtime_generator::emit_sink_only`
+(`crates/codegen/src/runtime_generator.rs:88`) **re-dispatches** through a name-gate —
+`if !sink_only.has_rule("value") { return emit_general_descent(...) }` (`:99`) — into three
+orthogonal emitters (JSON `include_str!` templates + `json_sink_direct::render` at `:106`;
+`general_descent::render` for Sheets at `:159`; CSS via `css_scan::derive_program` at `:57`).
+Family 3B's entire surface area is therefore **emission**, not the tower: collapse the three
+name-gated emitters into one fold over the already-annotated IR, and thread the last dropped
+attribute (`Project.ty`) into the plane the fold consumes.
 
-| Level | Type (arms) | Home | Producer |
-|---|---|---|---|
-| L0 | `GrammarIr`/`ExprKind` (10) | `ir/lib.rs:234` | `grammar::parse_grammar` |
-| — attrs — | `LayoutFacts` (8 maps) | `passes/lib.rs:91` | `layout::run` (`:107`) + `derive_backend_shape` |
-| L1 | `BackendIr`/`BackendExpr` (13) | `ir/lib.rs:352,376` | passes `lower_expr` (`:1318`) + `materialize_rule` (`:1362`) |
-| L2 | `SinkOnlyProgram`/`SinkOnlyExpr` (13) | `lower/sink_only.rs:20,69` | `lower_program`→`lower_expr` (`:174`) |
-| emit | Rust text | `runtime_generator.rs:78,89` | `render`→`emit_sink_only` → 3 emitter families |
+The decisive prior-art witness that this converges: the outer `crates/` tree already completed
+this move for the mature grammar plane. `TypeAnalysis::from_ir`
+(`crates/core/src/backend/driver/analysis.rs:22`) is a **pure projection** of pre-annotated IR
+— `rule_types: ir.types.clone()`, `scratch_types: ir.type_map…scratch_types()` — with zero
+re-derivation. `analyze_grammar` (`:132`) is a linear pass pipeline each `&mut ir`-annotating
+one IR: `project_types(ir)` (`:136`, writes `ir.type_map`), `run_path_check` (`:146`),
+`compute_payload_layouts_with_resolver` (`:163`), `compute_push_fingerprint` (`:172`),
+`mine_dedup_eligible_rules` (`:181`). Every backend then eats one `PreparedGrammar{ir, prep}`
+(`:73`). Skinny's greenfield spine is this shape, minus the emission fracture.
 
-**Transposition-1** (passes `lower_expr`, `:1318-1360`): a **1:1** structural re-projection
-`ExprKind→BackendExpr` (Seq→Seq, Alt→Alt, Repeat→RepeatLoop, Literal→ByteLiteral,
-Regex→RegexProgram, Ref→CallRule, Discard→Seq, Project→ValueProject carrying `ty` verbatim
-at `:1349`) — then `materialize_rule` (`:1362`) splices the emit-order frame.
+---
 
-**Transposition-2** (`sink_only.rs:174-234`): `BackendExpr→SinkOnlyExpr`, again **near-1:1**;
-the only deltas are lossy — `TapeEmit{kind}` drops its kind to a bare `TapeEmit`
-(`:220`), `DirectBuild{shape,fields}` boxes into `DirectShape` (`:223`), `SpanMark` drops
-its `SpanMarkKind` (`:217`). It is the same 13-arm sum re-declared a third time.
+## 1. The single fold — mechanism made concrete
 
-**The four synthetic emit-order value levels** (SpanMark/TapeEmit/DirectBuild/Return — the
-framing the directive asks to reconcile) are NOT distinct IR tiers. They are five nodes
-injected by ONE function, `materialize_rule` (`:1362-1389`), as `Seq[SpanMark(Start), body,
-SpanMark(End), TapeEmit{kind}, DirectBuild{shape,fields}, Return]`, all sourced from one
-`MaterializationDescriptor` keyed by `RuleId` (`descriptors.get(&rule_id)`, `:1367`). They
-ride verbatim through transposition-2 into the emitter. So the true count of value levels
-is: **one AST sum (`ExprKind`), re-declared twice, with a five-node emit frame spliced at
-the first transposition** — reconciling `SinkOnlyProgram` (a copy) with the
-SpanMark/TapeEmit/DirectBuild/Return framing (a spliced template, not a level).
+**The fold.** Replace the three-way name-gate at `runtime_generator.rs:99` with one
+`emit(program: &SinkOnlyProgram, attrs: &EmitAttributes) -> EmittedSource` whose only dispatch
+is on **structural attributes already computed by `compile`**, never a rule name or file-family
+branch. `EmitAttributes` is not new IR; it is the existing `LayoutFacts` sub-planes surfaced to
+emission: `backend_shape` (per-RuleId `BackendShape`, `ir/src/lib.rs:361`, 5 variants),
+`MaterializationPlan.descriptors` (`passes/src/lib.rs:1128`), the grammar-derived `ScanAlphabet`
+(CSS stop-set, already a `const &[u8]` feeding `css_scan_direct` — the staged-residual
+dependency, declared not re-authored), and `node_types` (`:93`). The fold walks the
+`SinkOnlyProgram` rules once; for each rule it consults `attrs.backend_shape.get(rule_id)` and
+`attrs.materialization.descriptors.get(rule_id)` to select the emit strategy — JSON lazy-tape
+surface, eager sink, general-descent view, or CSS scan driver — as **data-driven arms of one
+match**, not three top-level entry functions.
 
-## 2. The mechanism made concrete — `emit(&GrammarIr, &Attributes)`
+**What retires vs relocates (directive Q3, answered exactly).**
+- `has_rule("value")` (`:99`) — the name-gate — is **RETIRED, not relocated**. Its structural
+  meaning ("this grammar has a recursive sum-typed value rule") is already computed by
+  `derive_materialization_roles` as `roles.value: Option<RuleId>` (the ≥4-value-ref heuristic,
+  `passes/src/lib.rs:1451-1465`). The fold branches on `roles.value.is_some()` — a fact carried
+  in `MaterializationPlan` — so the literal name `"value"` never appears in emission. Genuine
+  retirement: the string `"value"` becomes deletable from `runtime_generator.rs`, and the
+  declarative `RuntimeFrontendRequirements` (`grammar_provider.rs:38`) subsumes residual routing.
+- `derive_materialization_roles` (`:1403`), the **byte-literal role classifier** (`b"{"`/`b"}"`
+  → container `:1441`, `b"true"`&`b"false"` → bool `:1414`, `b"null"` → null `:1425`), is a
+  harder case. Inside the fold alone it is merely **relocated** (codegen name-gate → attribute
+  pass) — honest, but not retirement. Its true retirement is **born-RED on the type plane**:
+  once `Project.ty` threads (§2) and a sum-type schema node exists (`DirectTypeKind::Sum` —
+  today `direct_schema.rs:52` is `Struct`-only), the sum `value = object | array | string |
+  number | bool | null` is *declared*, and the heuristic is superseded by inference. 3B's
+  disposition: **relocate now (unblocked), retire on the GN-3 sum-node dependency edge** —
+  carried as a named RED gate owned by the type plane, never asserted retired absent that node.
 
-Delete L1 and L2. The attribute bundle already mostly exists:
+**Is `materialize_rule` recomputable inside the fold, byte-identically (directive Q2)?**
+YES, provably, and it carries **no data absent from `GrammarIr`**. `materialize_rule`
+(`passes/src/lib.rs:1361`) is a pure splice `Seq[ SpanMark(Start,label), body,
+SpanMark(End,label), TapeEmit{kind}, DirectBuild{shape,fields}, Return ]` whose every input is
+a field of `MaterializationDescriptor` (`label`, `kind`, `shape`, `fields`, `:1132`), and every
+descriptor field derives from `GrammarIr` alone (`derive_materialization_plan`, `:1136-1280`,
+reads only rules/literals/regex-kinds). Nothing in the splice consults input text, a cursor, or
+a name. So the emit-order framing is a **pure derivation over `(GrammarIr, MaterializationPlan)`**
+recomputable inside `emit` by a descriptor lookup. The prototype obligation is the byte-identity
+witness: reconstruct the splice from `attrs.materialization` inside the fold and diff the six
+regen outputs (regen×{json,css,sheets}) against HEAD — UNEXECUTED; the family's move-gate.
 
-```
-Attributes {
-    layout:          LayoutFacts,           // passes/lib.rs:91 — ALREADY EXISTS (8 maps)
-    materialization: MaterializationPlan,   // RuleId→descriptor, passes/lib.rs:1139
-    recognizers:     Vec<Recognizer>,       // ir/lib.rs:416 SimdScan
-    shape_facts:     ShapeFacts,            // ir/lib.rs:357 (in BackendIr today)
-    scan:            Option<ScanAttr>,      // the CSS stop-set island (§4)
-}
-```
+**Can emission become one fold with six byte-identical outputs (directive Q1)?** This is the
+terminal claim and is **UNEXECUTED — mapped, not executed**. The map is above; the executed
+result is the required evidence. Risk surface in §5.
 
-`emit` is one ENTRY generalizing `runtime_generator::render` (`:78`) — which today already
-dispatches on a COMPUTED artifact variant and reads NO `target.*` field (the firewall). The
-fold walks `GrammarIr` directly: at each rule it reads `attrs.layout.backend_shape[rule.id]`
-to pick the emit family and `attrs.materialization.descriptors.get(&rule.id)` to decide
-framing; at each `ExprKind` node it match-emits inline. `BackendExpr`/`SinkOnlyExpr` arms
-become **match arms in the fold visitor**, not heap-allocated trees.
+---
 
-**`materialize_rule` is a pure derivation, recomputable inside the fold byte-identically.**
-Data-flow trace: it reads only `body` and `materialization: &MaterializationPlan`, doing
-`descriptors.get(&rule_id)`; the plan is built solely from the grammar
-(`derive_materialization_plan(grammar)`, `:1139`, over roles from
-`derive_materialization_roles`, `:1403`); the splice is a fixed 6-node template
-parameterized by `(label, kind, shape, fields)`, all from the descriptor, all from
-`GrammarIr`. It carries NO datum absent from the grammar. So the fold, on entering a
-materialized rule, emits span-start, recurses the body, then emits span-end/tape-emit/
-direct-build/return — without ever allocating `BackendExpr::Seq[...]`. Byte-identity holds
-because the node ORDER is the same fixed template.
+## 2. Threading `Project.ty` — the shared `:204` question, for a single-fold consumer
 
-**The honest data-flow caveat.** `SinkOnlyProgram` collects five facts BY SIDE-EFFECT during
-the L2 walk (`SinkOnlyFacts`, `sink_only.rs:264`): `direct_shapes`, `span_kinds`, `literals`,
-`dispatch_alt_count`, `policy_summary`. `policy_summary` is pure attribute re-export
-(`RuntimePolicySummary{backend_shape,…}`, all already in `LayoutFacts`). The other four are
-TRAVERSAL ACCUMULATIONS — recomputable, but they prove the transposition currently carries
-*collection state*, not just shape. The single fold must accumulate them in its one pass
-(LLVM's one-walk-collects-all). Verified recomputable: none of the four reads anything
-outside `GrammarIr` + `backend_shape` + the descriptor map.
+**The drop.** `passes/src/lib.rs:204` — `ExprKind::Project { body, .. } => self.infer_expr(*body)?`
+— returns the *body's* structural type and discards `ty: Option<String>`. The next lines
+memoize: `self.facts.node_types.insert(expr_id, ty.clone())` (`:212`) — so skinny **already has
+a per-ExprId type plane**, and `:179` **already consumes it** (`if let Some(ty) =
+self.facts.node_types.get(&expr_id)` short-circuits re-inference). The consume-the-annotation
+plumbing is present; only the Project arm writes the wrong value.
 
-## 3. The directive questions, adjudicated on live
+**The end-to-end thread (single-fold form) — CONSUMES one node-type, does not re-derive.**
+1. **Carrier.** Skinny's `Type` (`passes/src/lib.rs:236-244`) has `Rule(RuleId)` but no
+   `Named` arm — it cannot name a projected type. Add `Type::Named(StringId)` mirroring the
+   outer tree's `TypeDesc::Named` (`backend-agnostic-types` law: the name resolves per backend,
+   not in the IR).
+2. **The write.** At `:204`, when `ty = Some(name)`, produce `Type::Named(name)` (unified
+   against the body's structural type for soundness); the existing `:212` insert records it at
+   the Project `ExprId`. Nothing else in infer changes.
+3. **The consumer contract.** `DirectBuildTarget.type_ref: DirectBuildTypeRef`
+   (`ir/src/lib.rs:485`) exists; `DirectBuildField.target` (`:470`) is `Option` and is **`None`
+   at every one of the ~9 descriptor sites** (`passes/src/lib.rs:1157,1177,1201,1208,1228,1246,
+   1262,1280`). The thread fills it: `derive_materialization_plan` reads
+   `facts.node_types[project_expr_id]` and lowers `Type::Named → DirectBuildTypeRef`. The fold
+   then **consumes** that annotation by map lookup, exactly as `TypeAnalysis::from_ir`
+   (`analysis.rs:22`) consumes `ir.type_map` without re-deriving — the precise contract the
+   directive demands: emission reads one threaded node-type, not a re-classified byte-literal.
+4. **The downstream wave that consumes it** (Constitution viii): the direct-to-struct emitter
+   `json_typed_direct::render` (`json_typed_direct.rs:10`, 1245 LOC) via
+   `schema_direct::lower_program` (`lower/schema_direct.rs:11`). Its only missing input is a
+   *grammar-derived* `DirectSchemaSet` — currently hand-authored at `xtask/src/real_typed_schema.rs:7`
+   (1014 LOC). The threaded `type_ref` is the wire that lets a `derive_direct_schema` pass replace
+   the hand file. Named, on-live, GN-3's charter — so no substrate without a consumer.
 
-**Are `has_rule("value")`@`:98` and `derive_materialization_roles`@`:1403` RETIRED or
-relocated?**
-- `has_rule("value")` (`runtime_generator.rs:98`; def `sink_only.rs:31`) is a literal-NAME
-  gate (constitution vi forbids name-gates). Under 3B the json-family-vs-general choice
-  becomes `attrs.layout.backend_shape[rule.id]` / an emit-strategy attribute — the name test
-  is RETIRED. BUT `derive_materialization_roles` (`:1403-1490`) itself elects the `value`
-  role by a ≥4-value-ref heuristic + byte-literals (`b"{"`,`b"["`,`b"true"`, `:1417-1462`;
-  R6 §5c). Retiring `:98` relocates the decision INTO that classifier, which is ALSO a
-  heuristic. TRUE retirement — strategy falling out of a SHAPE fact, not a heuristic —
-  requires the role to be a projection of the inferred SUM type (`value = object|array|
-  string|number|bool|null`), which `direct_schema.rs:52` cannot represent today (Struct-only)
-  and which is LOCK-1's `DirectTypeKind::Sum` (GN-3 W1). **Disposition: 3B retires the `:98`
-  name-gate into an attribute; the classifier heuristic is retired only under a BORN-RED
-  edge owned by LOCK-1 — carried, never hidden.**
+**Verifier predicate (RED→GREEN + zero emit footprint).** A per-pass `verify` over
+`ExprKind::Project@204`: `assert node_types[project_expr] carries the projected type, not the
+body type`. HEAD reads **RED** (arm inserts the body type). With the thread it reads **GREEN**.
+The **emit footprint is zero** until a schema consumer reads `type_ref`: the JSON path never
+reads `ty` (`json_sink_direct/first_set.rs:84` recurses into body); the Sheets path folds `ty`
+to a 4-way `ProjectionKind` (`general_descent/view.rs:20-46`) independent of `node_types`. So
+regen is **byte-identical with the predicate/thread on or off** — the born-RED gate flips GREEN
+without moving one emitted byte, the clean threading proof the directive asks for. UNEXECUTED —
+the RED→GREEN transition + byte-identity diff is the prototype's first deliverable.
 
-**Per-`RuleId` sufficiency vs per-`ExprId`.** The tape splice is intrinsically per-RULE on
-the live fleet (JSON/Sheets/CSS give every value-kind its own rule; `descriptors:
-HashMap<RuleId,_>`, consumed `materialize_rule(rule_id,…)`), so per-`RuleId` suffices for the
-SPLICE. But the TYPE fact is per-`ExprId`: `Project.ty` (`ir/lib.rs:264`) and `ValueProject`
-(`:407`) attach to an EXPRESSION; two inline projections `( a -> X | b -> Y )` can share a
-rule. No live fleet grammar does this — it is the exact counterexample a prototype must
-fabricate. The bundle already carries BOTH indices (`LayoutFacts.rule_types` and
-`node_types`), so no new machinery is needed.
+---
 
-**Net-LOC delta & extensibility 5→2.** Deleting `BackendExpr`+`BackendRule`
-(`ir/lib.rs:369-413`, ~45 LOC), passes `lower_expr` (`:1318-1360`, ~42 LOC), and
-`SinkOnlyExpr`+its `lower_expr` (`sink_only.rs:69-235`, ~166 LOC) against a bundle that
-mostly EXISTS (`LayoutFacts`) is a net removal in the low hundreds. Extensibility today:
-adding one emit construct edits its `ExprKind` arm, `BackendExpr` arm, passes `lower_expr`
-arm, `SinkOnlyExpr` arm, `sink_only::lower_expr` arm, then the emitter — five mirror-arms
-before the emitter. Under one fold: the `ExprKind` arm + the fold arm — **two**. Measured by
-adding one construct and counting edited sites.
+## 3. The edge-DAG and the materialization key (Q4 + edge enumeration)
 
-**One fold, all six regen/check outputs byte-identical?** Scope honestly. Four of six
-(regen/check × json/sheets) are the SinkOnly family; both already terminate in a walk
-(`json_sink_direct::render` / `general_descent::render`) that one attribute-dispatched fold
-reproduces — these collapse cleanly. CSS is a DIFFERENT artifact: `css_scan::derive_program`
-(`runtime_generator.rs:57`; `lower/css_scan.rs`, 712 LOC) is a whole-grammar STOP-set
-alphabet derivation (`ScanAlphabet::derive_alphabet` → `const &[u8]` → `css_scan_direct`),
-NOT a per-node re-encode; it stays a sibling emit strategy keyed by `attrs.scan` under the
-SAME `emit` entry (mirroring `render`'s variant dispatch at `:78`). "One fold" = one ENTRY
-with attribute-selected strategy, not one recursive walk over CSS's alphabet. The honest
-claim is deletion of the two SUM RE-ENCODINGS, not that CSS folds away.
+**Labeled transposition edges of the live spine.** From `compile` + emission:
+`GrammarIr` --(`layout::run`)--> `LayoutFacts{node_types}` --(`extract::single_plan`, `:40`)-->
+`BackendIr` --(`recognizers::derive_backend_shape`, `:48`)--> `LayoutFacts{backend_shape,
+cost_facts,policy}` --(`lower::lower_to_rust` → `emit_sink_only`)--> `EmittedSource`. **Distinct
+value levels: three** — the structural `Type` plane (`node_types`, ExprId-keyed), the
+`BackendExpr`/`SinkOnlyProgram` materialized plane (the `SpanMark/TapeEmit/DirectBuild/Return`
+splice), and emitted Rust text. `SpanMark/TapeEmit/DirectBuild/Return` is not a fourth level; it
+is the **instruction encoding of the one materialized plane**, and `SinkOnlyProgram` is that
+plane's container. So "fewest transpositions that suffice" is concrete: the tower is already 3
+levels; the ambition is not to add levels but to make level-2→3 (emission) one fold rather than
+three gated emitters. UNEXECUTED: emit the edge-DAG as a machine artifact; confirm no hidden
+fourth level inside `css_scan`.
 
-## 4. The staged-residual island as a stage-0 attribute (bridge, not re-author)
+**Per-RuleId vs per-ExprId (Q4).** Skinny keys materialization **per-RuleId**
+(`MaterializationPlan.descriptors: HashMap<RuleId, _>`, `:1128`; `materialize_rule(rule_id,…)`,
+`:1361`). Sufficient for JSON and Sheets, where each rule materializes one shape. The
+**counterexample class** is any rule whose body holds two distinct anonymous sub-productions
+that materialize different shapes — CSS L4's inline component-value alternatives are the live
+candidate. The prior-art tell is decisive: the outer tree keys attribute planes by **`NodeId`,
+not `RuleId`** — `TypeMap.node_types: HashMap<NodeId, TypeDesc>`
+(`crates/ir/src/passes/types/type_map.rs:33`), `alt_strategies`, `delim_scan_configs`,
+`key_dispatch_configs` all `HashMap<NodeId, _>` (`analysis.rs:57-68`) — because one rule holds
+many distinct Seq/Alt nodes each carrying its own decision. **Disposition:** per-RuleId is the
+JSON/Sheets special case; the general key is per-ExprId (the outer tree's `NodeId`). Skinny
+already keys `node_types` by `ExprId` (`:93`) — so the migration reuses skinny's existing node
+identity. UNEXECUTED: the fleet check (json/css/sheets + `grammar/misc/csv.bbnf`) must report
+whether any single rule needs two distinct descriptors — the pass/fail that decides the key.
 
-The grammar-derived stop-set already ships (`ScanAlphabet::derive_alphabet` → const → SIMD
-`css_scan_direct`); PROVE-12 residualized the CSS component-delimiter test to a const `u128`
-bitmask (REPORT: +18 LOC, ins/B −3.7…6.4%, cyc/B 0.81…0.98×, byte-identical). In 3B this is
-`attrs.scan: ScanAttr` — a stage-0 fact attached to the ONE IR that the fold reads to emit
-the const. It is the concrete precedent that an emit decision is an attribute over the one
-IR, computed once, consumed at the fold — not a separate lowering.
+**Net-LOC and extensibility (5→2).** Today adding a grammar family touches ≥3 emit entry points
+(`emit_sink_only` JSON arm, `emit_general_descent` `:145`, the CSS `css_scan` route `:57`) plus
+the 5-variant `BackendShape` selection. The single fold makes a new family an **attribute-pass
+edit + one fold arm** — the "5→2" extensibility target. Net-LOC is a deletion story: the name-
+gate branch and the duplicated roster/validation in `emit_general_descent` collapse into the
+shared fold; the `include_str!` template splices (`:100-133`) survive as leaf strategies.
+UNEXECUTED — measure the delta on the executed fold, not the mapped one.
 
-## 5. Shared question — threading `Project.ty`@`:204` into the ALREADY-EXISTING side-table
+---
 
-The home already exists. `Infer` already records per-node types into a side-table:
-`self.facts.node_types.insert(expr_id, ty.clone())` (`passes/lib.rs:212`), harvested into
-`LayoutFacts.node_types: HashMap<ExprId, Type>` (`:93`). The defect is narrow:
-`ExprKind::Project { body, .. } => self.infer_expr(*body)?` (`:204`) returns the BODY type
-and drops the DECLARED `ty` (`ir/lib.rs:264`, `Option<String>`). It is dropped a second time
-structurally: `ty` survives into `ValueProject{ty}` (`:1349`) and `SinkOnlyExpr::
-ValueProject{ty}` (`sink_only.rs:228`) but no JSON emitter reads it; on general-descent it is
-RE-DERIVED to a 4-way enum by `classify_projection` (string-matching `"f64"/"Span"/…`,
-`general_descent/view.rs:20-46`) — a re-derivation, not a consumption.
+## 4. Prior art — citations
 
-**Consumption contract (one threaded node-type, not re-derived).** At `:204`, resolve the
-declared `ty` (HM per PROVE-08's 221-LOC core, unifying the projection annotation against the
-body type) and RECORD it — into `node_types[expr_id]` or a companion `proj_types`. Then the
-LIVE consumer: `derive_materialization_plan` (`:1139`) fills `DirectBuildField.target`
-(`ir/lib.rs:470`, TODAY always `None`) → `DirectBuildTarget.type_ref` (`:485`) from that
-attribute; the fold, at a materialization node, READS it to emit the struct field type —
-directly replacing the `classify_projection` re-derivation with an attribute read. That is
-the directive's "consumes one threaded node-type rather than independently re-deriving it"
-contract. The greenfield `TypeAnalysis::from_ir` (XL-F) has ZERO live hits — it is a design
-consumer, not extant; the real same-wave consumer satisfying constitution viii is
-`json_typed_direct::render` (`codegen/src/json_typed_direct.rs:10`, 1245 LOC, already built),
-whose only missing wire is the derived type (R6 §8b).
+- **LLVM / rustc annotate-in-place.** LLVM's pass manager refines one `Module` by annotating
+  analyses (`AnalysisManager` caches `DominatorTree`/`AAResults` keyed by IR value/BB identity,
+  invalidated per pass). rustc's query system memoizes typeck keyed by `DefId`/`HirId` and
+  consumes it in MIR lowering without re-deriving — the exact shape skinny's `facts.node_types`
+  lookup at `:179` implements at micro-scale and the outer `ir.type_map` at macro-scale. The
+  family's claim (one IR, attributes keyed by stable node identity, passes annotate + consumers
+  read) is mainstream compiler architecture; its risk is discipline (invalidation, §5), not
+  novelty.
+- **MLIR attributes/interfaces.** MLIR carries lowering decisions as `Attribute`s on ops and
+  dispatches through `DialectConversion` patterns matched on op+attribute, never on an op-name
+  string — the precise anti-name-gate discipline directive Q3 demands. The single fold is MLIR's
+  "one conversion framework, pattern-matched on structure."
+- **The outer bbnf-lang `crates/` tree** is the closest witness: `analyze_grammar`
+  (`analysis.rs:132`) is the executed single-IR-multipass pipeline, `TypeAnalysis::from_ir`
+  (`:22`) the pure consumer, `TypeMap` (`type_map.rs:33`) the NodeId-keyed type plane. It proves
+  the shape converges on real JSON/CSS/Sheets grammars and names the key choice (NodeId).
+- **PROVE-12** (`prototypes/PROVE-12/REPORT.md`, verdict GO, base `d2b32f6e3`): CSS
+  `find_component_delim` delimiter test const-folded to a `u128` bitmask, measured 0.81–0.98×
+  cyc/B and 3.7–6.4% fewer ins/B on `css_canon_bench`, +18 gen LOC, byte-identical parity — a
+  stage-0 erasure done inside the emit path. Evidence the single fold and a staging attribute
+  coexist: the fold consults a `const`-eval'd grammar constant and residualizes it. 3B consumes
+  this as a leaf strategy, not a competing subsystem.
 
-**Verify predicate.** A per-fold `debug_assert` differential: fold output with `attrs` ON ==
-the frozen regen artifact (regen∘regen = regen, byte-for-byte). Reads RED on an injected
-mis-lowering, GREEN clean; zero emit footprint = generated bytes identical with the predicate
-on/off. Each attribute table is independently diffable against the tree, so an injected
-mis-lowering localizes to its edge. This generalizes the existing XOR-checksum + `json_parity`
-track1/track2 digests: the same differential runner over the six-output corpus reproduces
-those digests AND localizes the injected fault to the attribute it perturbed.
+---
 
-## 6. Prior art (SOTA, cited)
+## 5. Named risks and counterexamples
 
-- **GHC "Trees That Grow"** (Najd & Peyton Jones, IFL 2017) — the canonical solution to "one
-  AST refined in place by annotating passes": ONE `Expr<P>` parameterized by a phase index,
-  each phase decorating nodes with a type-family extension field (`XProject` = `()`
-  pre-inference, `ResolvedType` post). Strongest theoretical match to 3B's mechanism. Rust
-  lacks type families, so the faithful port is heavy (phantom phase + associated-type
-  extension trait); the pragmatic Rust form is the side-table below — which skinny already
-  has.
-- **rustc `TyCtxt`/`TypeckResults`** — HIR→THIR→MIR is a multi-IR tower (the anti-3B), but
-  rustc keeps TYPES as a `HirId`-keyed side-table (`TypeckResults`), never re-encoding them
-  into nodes. This is EXACTLY skinny's `LayoutFacts.node_types: HashMap<ExprId, Type>`
-  (`:93`) — the pragmatic Trees-That-Grow. 3B's directive is: stop dropping `Project.ty` at
-  `:204` and let the existing `node_types` table carry it, rustc-style.
-- **LLVM `PassManager`/`AnalysisManager`** — one Module mutated in place; analysis passes
-  attach results addressed by `Value*`, transform passes read via `getResult<T>()`; no
-  per-pass re-encode. `emit(&GrammarIr,&Attributes)` is the emit analogue: one IR, results as
-  attributes.
-- **MLIR** — attributes are first-class `DictionaryAttr` side-data on ops; progressive
-  lowering legalizes ONE op tree in place. MLIR's own guidance warns of "IR proliferation"
-  cost — direct support for minimizing transpositions. (Its multi-dialect model is the part
-  3B declines: skinny's `BackendExpr`/`SinkOnlyExpr` are exactly two proliferated dialects
-  that re-declare `ExprKind` with no new algebra.)
-- **egg / egglog e-class analysis** — a lattice attribute per e-class via monotone
-  `make`/`merge`. Relevant only if the materialization-role attribute must be
-  fixed-point-computed; the base 3B mechanism needs no saturation. (Shared engine with
-  LOCK-2 if roles ever become a saturated fact.)
+1. **Byte-identity is a hard oracle that may fail on incidental text, not semantics.** The three
+   emitters differ in header comments, roster order, `BTreeMap` key order
+   (`runtime_generator.rs:110`). A fold that reorders emission breaks byte-identity with no
+   semantic change. Mitigation: the fold preserves per-family roster order as a descriptor field;
+   the prototype attributes every non-identical byte incidental-vs-semantic. Likeliest reason Q1
+   reads amber on first execution.
+2. **Attribute invalidation.** Refining `LayoutFacts` in place already mutates after
+   `derive_backend_shape` (`:54-57`), coupled by `debug_assert` to `facts.chosen` (`:58-61`).
+   Widening the plane (threaded `type_ref`, ExprId-keyed materialization) widens the invariant
+   surface — a stale attribute is a silent mis-lowering. Mitigation: the `differential(edge,
+   corpus)` runner must localize an injected stale attribute to its edge.
+3. **CSS may hide a fourth level.** `css_scan::derive_program` (`:57`) + `lower/css_scan.rs`
+   (712 LOC) may carry emission state not in `GrammarIr` (grammar-name prefixes, entry-rule
+   threading). If so the fold cannot be a pure `emit(&GrammarIr,&Attributes)` for CSS without
+   first lifting that state into an attribute — the concrete threat to Q2's "no data absent from
+   `GrammarIr`," to trace before Q1 can be claimed.
+4. **The sum-node dependency is real and not owned by 3B.** Retiring the byte-literal role
+   classifier (Q3) is gated on `DirectTypeKind::Sum` (GN-3.W1). Absent it, 3B ships *relocation*,
+   not retirement — and must say so, never assert the name-gate census clean when only the
+   `"value"` string is gone.
+5. **Per-RuleId→per-ExprId migration touches every descriptor site.** The ~9 `descriptors.insert`
+   sites (`:1146-1269`) plus `materialize_rule`'s signature change with the key. A partial
+   migration leaving `RuleId` on JSON and `ExprId` on CSS is the orthogonal-codepath defect the
+   memory law forbids (`no-orthogonal-codepaths`). One key, fleet-wide, or the migration is
+   unsound.
 
-## 7. Named risks / counterexamples a prototype must break
+---
 
-1. **CSS resists the per-node fold.** `css_scan` is a whole-grammar alphabet derivation, not
-   a tree re-encode; it survives as an `attrs.scan`-keyed sibling strategy. "One recursive
-   fold over all six" is false — the honest claim is deletion of the two SUM re-encodings
-   under one emit ENTRY.
-2. **Static-template files are not folded.** 5 of 8 JSON files
-   (`value.rs`/`view.rs`/`visitor.rs`/`parser.rs`) are `include_str!` copies
-   (`runtime_generator.rs:107-131`), not emitted from any tree. The byte-identity target is
-   the GENERATED parser (`generated.rs`), never the templates.
-3. **Name-gate retirement is skin-deep without LOCK-1's sum.** Retiring `has_rule("value")`
-   relocates the heuristic into `derive_materialization_roles` unless the role is a projection
-   of the inferred sum type — a BORN-RED edge, owner LOCK-1.
-4. **Per-RuleId splice vs per-ExprId type.** Both indices exist in `LayoutFacts`, but a
-   fabricated one-rule/two-inline-projection grammar breaks any pure per-RuleId key — the
-   fold must key the type read by `ExprId`.
-5. **SinkOnlyFacts is collection state, not shape.** The four accumulated facts
-   (`direct_shapes`/`span_kinds`/`literals`/`dispatch_alt_count`) must be gathered in the
-   fold's single pass; if any turns out to read a datum not in `GrammarIr` + `backend_shape`
-   + descriptor, the transposition is NOT pure and the deletion fails.
+## 6. What a prototype must test to move this family
 
-## 8. What a prototype must test to move family 3B
-
-1. Build `Attributes` (reusing `LayoutFacts`) + one `emit(&GrammarIr,&Attributes)` fold;
-   delete `BackendExpr`+`SinkOnlyExpr`; regen json+sheets; assert regen/check × json/sheets
-   BYTE-IDENTICAL to committed generated files (4/6). Proves the two encodings are pure
-   re-projections with zero emit footprint.
-2. Include CSS: prove `attrs.scan` dispatch reproduces regen/check-css byte-identical (the
-   honest "all six").
-3. Thread `Project.ty`@`:204` into `node_types`/`proj_types`; fill
-   `DirectBuildField.target`; regen one typed grammar through `json_typed_direct`; assert the
-   struct equals the hand schema (`xtask/src/real_typed_schema.rs`) — the RED→GREEN of
-   node-type CONSUMPTION, replacing `classify_projection` re-derivation.
-4. Wire the per-fold verify `debug_assert`; show RED on an injected mis-lowering, GREEN clean,
-   zero byte-diff on/off; confirm it reproduces the XOR/json_parity digests and localizes an
-   injected fault to its attribute.
-5. Measure net-LOC delta (encodings deleted − bundle growth, near-zero since `LayoutFacts`
-   exists) and the emission-extensibility count (add one construct; count edited sites;
-   target 5→2).
-</content>
+1. **Execute the single fold** — one `emit(&SinkOnlyProgram,&EmitAttributes)` replacing the
+   `has_rule("value")` gate + `emit_general_descent` + CSS route — producing the **six regen
+   outputs byte-identical** to HEAD (regen×{json,css,sheets}). Executed, not mapped. The move-
+   gate; anything less is SPEC-ONLY (Constitution vii).
+2. **Execute the `:204` thread**: show the `verify` predicate flip **RED→GREEN with byte-
+   identical regen** (zero emit footprint); then fill `DirectBuildField.target` from
+   `node_types` and show the derived `DirectSchemaSet` reproduce the hand `real_typed_schema.rs`
+   emit byte-for-byte (GN-3's idempotence target) — proving the fold *consumes* the threaded type,
+   not re-derives it.
+3. **Run the fleet key-check**: does any rule in json/css/sheets/csv need two distinct
+   materialization descriptors? Report per-RuleId sufficiency or the per-ExprId requirement with
+   the exact counterexample rule.
+4. **Build the `differential(edge, corpus)` runner**: generalize the XOR-checksum + `json_parity`
+   track1/track2 digests so it (a) reproduces those digests and (b) localizes an **injected**
+   stale-attribute / mis-lowering to the edge it was injected on; report zero-witness constructs
+   as *unverified*, never *sound*.
+5. **Emit the edge-DAG artifact** and confirm no fourth value level hides inside `css_scan`
+   (risk 3) — the pure-derivation claim (Q2) stands or falls here.
+6. **Measure net-LOC delta and the 5→2 extensibility count** on the executed fold; and, if the
+   thread lands with a residual consumer, the cold paired-PMU JSON first-byte dispatch delta —
+   measured ins/B, per PROVE-09's law that unmeasured plausibility does not count.

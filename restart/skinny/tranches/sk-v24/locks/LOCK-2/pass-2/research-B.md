@@ -1,340 +1,335 @@
-# LOCK-2 · PASS-2 · FAMILY 2B — IR-IS-EGRAPH
+# LOCK-2 · Family 2B — IR-IS-EGRAPH — pass-2 research
 
-*The middle IR is an e-graph end to end; passes are rewrite groups; equality saturation under a
-schedule; extraction emits `BackendShape` directly. This report develops that thesis to its
-strongest form on the measurement substrate, names where the substrate refutes it, and states
-exactly what a prototype must prove to advance it.*
-
----
-
-## 1. The mechanism made concrete
-
-2B collapses the current three-stage decision spine — `derive_backend_shape` (priority cascade)
-→ `backend_egraph::select` (a degenerate per-rule e-graph) → `decision_csp` (a separate budget
-CSP) — into **one whole-grammar e-graph** in which the tower's middle IR *is* the e-graph.
-
-**The Language.** `BackendExpr` (`crates/ir/src/lib.rs:376`) is already a recursive sum with
-`Box`/`Vec`/`Self` children — `Entry(inner)`, `Seq(Vec)`, `Alt{branches}`, `RepeatLoop{body}`,
-`ValueProject{body}`, `OptionalBranch`, plus childless leaves (`ByteLiteral`, `RegexProgram`,
-`CallRule`, `SpanMark`, `TapeEmit`, `Return`). This is *exactly* the shape `egraph_derive`
-projects to `Id` (`crates/egraph/src/language.rs:16`, derive at `crates/egraph-derive/src/lib.rs`).
-2B derives `Language for BackendExpr` mechanically: the whole grammar interns into ONE
-`EGraph<BackendExpr, GrammarAnalysis>` where `CallRule` edges make rule references first-class
-e-class children (a cyclic e-graph — see §5 risk R3).
-
-**Passes as rewrite groups.** Each analysis/normalization pass becomes a `Rewrite`
-(`crates/egraph/src/rewrite.rs:34`): dedup-alt-branches, superset-absorb-alt, union-merge-alt,
-fuse-alt-regex, common-suffix-factor (the five today referenced at `cost_weights.rs:154-160`),
-plus the widening rules 2B must add (§2): self-loop-recognize (`SimdMode::Prefilter` /
-`SimdSite::SelfLoop`, GN-2.W1), residualize-const-fold (PROVE-12), and sink-vs-tape realization.
-Nullability (`ir/src/lib.rs:320`) and first-set become e-class `Analysis` lattices
-(`crates/egraph/src/analysis.rs`), computed by congruence during rebuild, not as standalone
-walks.
-
-**Saturation under a schedule.** `CspScheduler` (`crates/egraph/src/csp_scheduler.rs:175`)
-already drives saturation with an AC-3 dirty-frontier: each e-class is a CSP variable carrying a
-monotone `DirtyDomain`, each parent edge a `ParentDirtyProp` constraint, one `csp.propagate()`
-computes the transitive dirty closure, `run_on_dirty` re-probes only dirtied classes. Iteration
-caps and node caps come from `CostConfig` (`crates/egraph/src/cost_config.rs`,
-`egraph_iter_limit`/`egraph_node_limit`). This is the schedule; it needs no invention, only the
-richer rule set pointed at the whole IR.
-
-**Extraction emits `BackendShape` directly.** After saturation, `Extractor`
-(`crates/egraph/src/extract.rs:113`) computes per-class best-node bottom-up under a cost model
-whose `Cost` is a `Lattice` (`extract.rs:36`, already Pareto-ready via `Scalar<T>` and the
-multi-objective `join`/`dominated_by` surface). Each class's chosen e-node names its realization;
-walking `extract_tree` (`extract.rs:190`) reconstructs the `BackendIr` — and where the winning
-e-node is a shape-bearing variant, that IS the per-rule `BackendShape` (`ir/src/lib.rs:361`, the
-five: `EagerTape|OffsetTape|EventTape|SinkOnly|CollapsedStage`). No separate cascade, no separate
-select step.
-
-**The rebuild discipline** is egg's deferred-invariant rebuild (`egraph.rs:251`): unions push to
-a worklist, `rebuild()` re-canonicalizes parents and re-memos to a fixpoint — Willsey et al
-(egg, POPL 2021). Work-done is measured LLVM-`Changed`-style (`rewrite.rs:66-70,91`): the sum of
-`total_nodes` growth and `union_count` delta, not a structural hash — this is the correct
-saturation fixpoint and already implemented.
+*The middle IR is an e-graph end to end: `ExprKind`/`BackendExpr` nodes ARE e-nodes, the
+tower's passes ARE rewrite groups keyed to named decision points, equality holds under a
+schedule, and elaboration emits `BackendShape` + `BackendExpr` directly. Family developed to
+its strongest form, alone.*
 
 ---
 
-## 2. Q2 — widening rewrites (the load-bearing question for 2B)
+## 0. The thesis, sharpened against the binding frame
 
-2B lives or dies on whether the IR-as-e-graph manufactures genuine alternatives. The current
-rule set is *all narrowing* (dedup/absorb/merge/factor) — it can only shrink a class toward one
-form. The **sole widening precedent already in-tree** is `NormalizeDirectSinkCost`
-(`passes/src/backend_egraph.rs:191`): it *manufactures* a second e-node (`#direct-sink-normalized`
-with zeroed `static_size_cost`/`shape_rank`) and unions it in. Its properties establish the
-coexistence template 2B generalizes:
+The cross-lock frame (XL-B) fixes that graph-opt engines operate WITHIN the middle-IR tower at
+named decision points, not by redrawing the IR. 2B's strongest lawful reading is therefore NOT
+"replace the tower with a monolithic saturating soup" — that reading dies on the ~230 us
+per-parse compile budget and on XL-B itself. The strongest 2B is the **acyclic-e-graph (aegraph)
+tower**: the tower keeps its levels and its decision points, but each level's term forest is
+*represented as* an e-graph, congruence is maintained eagerly during construction, rewrite
+groups fire at their decision points, and a single scoped **elaboration** pass (not a
+saturate-then-extract fixpoint) lowers the graph to `BackendIr`. This is exactly the move
+Cranelift made in 2022 for its production mid-end (Fallin, *The acyclic e-graph*,
+cfallin.org/blog/2026/04/09/aegraph; Bytecode Alliance RFC-27 / `accepted/cranelift-egraph.md`;
+ægraphs, EGRAPHS 2023). 2B's claim: what Cranelift proved for SSA/CFG holds for the grammar
+tower, because the grammar tower is *more* amenable — its per-rule expression forest is already
+acyclic (the only back-edges are `Ref`/`CallRule`, which are opaque e-node leaves, §4).
 
-- **(b) termination.** The searcher skips any class already carrying the normalized variant
-  (`backend_egraph.rs:203-207`, `ends_with("#direct-sink-normalized")`) — a one-shot widening
-  guard. Generalized: every widening rule needs a *fuel* or *idempotence marker* so saturation
-  cannot loop. This is the standard egg discipline for expansive rules (Willsey §5.2 "rule
-  scheduling / bans").
-- **(c) semantics preservation.** The manufactured node is a re-costing of the *same*
-  `BackendShape::SinkOnly` — semantics-identical by construction. PROVE-12 residualization is the
-  same shape: const-folding the delimiter test (`REPORT §5`, byte-identical checksum) is a widening
-  rewrite whose two forms are provably equal for `byte < 128`. So widening-that-preserves-meaning
-  is already demonstrated twice on the substrate.
-- **(a) confluence with narrowing.** Confluence is NOT required for correctness in an e-graph —
-  both forms coexist in the class and extraction picks; this is precisely egg's argument that
-  equality saturation sidesteps phase-ordering (Tate et al, Peggy, POPL 2009). What IS required:
-  the widening rule must reach a fixpoint (guard above) and the narrowing rules must not *delete*
-  the widened alternative (they cannot — rewrites only `add`/`union`, never remove;
-  `rewrite.rs:5-6`).
-
-**Shipping precedent for widening+narrowing coexistence:** Cranelift's ægraph (Fallin, 2023) is
-the strongest — it manufactures algebraic alternatives (strength-reduction *expansions*, GVN
-*contractions*) in one saturating IR and lets scoped elaboration extract; egglog (Zhang et al,
-PLDI 2023) formalizes expansive + contractive rules under seminaive scheduling; GHC's simplifier
-runs INLINE (widening) beside case-of-case (narrowing) to a fixpoint. The precedent is settled;
-the open question is entirely empirical multiplicity (§3).
+The distinction from the extant island approach is precise and measurable. Today
+(`skinny/crates/passes/src/backend_egraph.rs:60`) an `EGraph<DecisionNode, NoAnalysis>` is built
+*per rule* over <=5 childless candidate nodes, saturated with one rewrite, extracted for one
+winner — an e-graph used as a ranked-choice ballot box, not as the IR. 2B makes the IR itself
+the graph: `ExprKind` (`ir/src/lib.rs:234`) and `BackendExpr` (`ir/src/lib.rs:376`) become the
+`Language`, their child `ExprId`/`Box<BackendExpr>` fields become `Id` children, and the tower's
+transformations (epsilon elimination, dispatch-table synthesis, recognizer derivation, direct-
+sink normalization, projection canon) become `Rewrite` groups over that one graph. Congruence
+closure then delivers CSE/GVN across the whole grammar for free — identical sub-rules interned
+once — which the current tree-of-`Expr` representation cannot express.
 
 ---
 
-## 3. Q1 — saturated multiplicity (the substrate's verdict, and it is adverse)
+## 1. The mechanism, made concrete
 
-**The certified counterexample lives in-tree.** `CALIBRATED_WEIGHTS`
-(`crates/egraph/src/cost_weights.rs:134-167`) records a grid sweep of 54 cost configurations over
-the 4-grammar corpus (JSON, BBNF, CSS L4, Sheets). The result is a **documented null**: DTA state
-counts were *identical* to baseline across every configuration —
+**1.1 The node language.** Two `Language` impls, both auto-derivable via the existing
+`egraph_derive::Language` macro (it already projects `Vec<Id>`/`Box<Id>`/`[Id;N]`/single `Id`
+fields — see `crates/egraph/tests/derive_language.rs:5-37`, and the `LanguageChildren` impls at
+`crates/egraph/src/language.rs:71-114`). The obstacle is that `ExprKind` today stores children
+as `ExprId`/`RuleId` newtypes, not `egraph::Id`, and carries owned payloads (`Vec<u8>`, `String`)
+inline. Two lawful shapes:
 
-| Grammar | states | sweep variance |
-|---|---:|---|
-| JSON | 51 | {51} |
-| BBNF | 476 | {476} |
-| CSS L4 | 2875 | {2875} |
-| Sheets | 191 | {191} |
+- **Flat e-node** (recommended): a `GExpr` enum isomorphic to `ExprKind` whose recursive fields
+  are `Id` and whose *payloads are interned* — `Literal{ bytes: StringId }`, `Regex{ pattern:
+  StringId }`, `Ref{ target: RuleId }`. Interning payloads is mandatory anyway for `Language:
+  Eq + Hash` to give structural equality the congruence closure needs; it also collapses the
+  `String` clone traffic the current `Expr` tree pays. `Seq(Box<[Id]>)`, `Alt{branches:
+  Box<[Id]>, mode}`, `Repeat{body:Id, min, max}`, `Optional(Id)`, `Project{body:Id, target:
+  StringId, ty}`, `Discard{left:Id, right:Id, keep_left}`. Note `AltMode`/`CaseSensitivity`
+  (`ir/src/lib.rs:274,280`) are `Copy` scalars, so they ride as non-child leaf fields, exactly
+  the `Pow{exp:u32}` pattern the derive already handles.
+- **Backend e-node**: a `GShape` enum isomorphic to `BackendExpr` (`ir/src/lib.rs:376`) with the
+  same Id-projection. Elaboration reads the extracted `GExpr` best-form and emits `GShape` — the
+  BackendShape choice becomes an *elaboration decision per class*, not a separate CSP over
+  candidate ballots.
 
-The doc's own diagnosis (`cost_weights.rs:154-161`): the current rewrite set "produces e-classes
-with **at most one semantically-distinct canonical form** for these grammars, so the cost model
-has no choice to exercise." **Multiplicity ≈ 1 across the fleet today.** Where multiplicity is 1,
-saturation is pure canonicalization and extraction is a no-op — the entire e-graph apparatus
-reduces to hash-cons + dedup, which the `memo` table (`egraph.rs:32`) already gives at a fraction
-of the build/teardown cost. The current `backend_egraph::select` confirms this concretely: it
-adds each candidate as a **childless** `DecisionNode` (`children: [Id; 0]`,
-`backend_egraph.rs:158,181`), unions them into one class, runs the single widening rule, and
-extracts the argmin — an `O(n log n)` sort dressed as equality saturation. There is no congruence
-because there are no children; the e-graph earns nothing over `candidates.min_by_key`.
+**1.2 Passes to rewrite groups at named decision points.** XL-B's "named decision point" maps
+one-to-one onto a `Rewrite` group name. The tower's existing passes re-express as:
 
-**What follows for 2B.** "IR IS an e-graph end to end" is only *architecturally* justified where
-extraction faces a real choice among ≥2 survivors **at child-bearing nodes**. The null result
-says: with today's narrowing-only rules, that never happens. 2B's burden is therefore precise —
-it must inject widening rules (§2) that create ≥2 semantically-distinct survivors *and* show they
-land at child-bearing IR nodes (`Alt`, `RepeatLoop`, `Seq`), not at costing leaves. The candidate
-sites are exactly the tranche's live decisions: scan-plan (`SelfLoop`-recognize vs scalar body,
-GN-2.W1), residualize-vs-interpret (PROVE-12), sink-vs-offset realization
-(`admits_sink_only`). If saturation with these rules still collapses to multiplicity 1, 2B is
-**refuted end-to-end** and the honest reduction is 2A-style islands (e-graph only at the proven
->1 sites) — a named negative result, not a silent pass.
+| decision point | rewrite group | form |
+|---|---|---|
+| epsilon / nullable normalization | `elim-epsilon` | `Seq[eps, x] => x`, `Alt[x, dead] => x` (narrowing) |
+| dispatch-table synthesis | `alt->dispatch` | `Alt{Speculative} => Alt{Dispatch}` when first-sets disjoint (`AltMode`, `:274`) |
+| recognizer / scan-plan | `self-loop->prefilter` | `Repeat{class}` with complement <=16 => `SimdScan{Prefilter,..}` (see §5, GN-2.W1) |
+| projection canon | `project-normalize` | `Project` fusion / hoist, the PROVE-12 residualization seam |
+| direct-sink | `sink-normalize` | the extant `NormalizeDirectSinkCost` (`backend_egraph.rs:191`) generalized to `GExpr` |
 
----
+Each group runs under the existing `CspScheduler` (`crates/egraph/src/csp_scheduler.rs:204`),
+whose AC-3 dirty-frontier closure already restricts re-probing to classes that grew — the right
+schedule primitive for "passes as rewrite groups" without re-scanning the whole grammar each
+iteration.
 
-## 4. Q4 — context-sensitive extraction (audited: no conflict in the current fleet)
-
-`admits_sink_only` (`passes/src/lib.rs:954`) is `contains_direct_build(expr) && (target
-.direct_only_output || target.direct_build_consumer)` — a function of the **rule body + the global
-`TargetFeatures`**, with *no caller-context argument*. `BackendShape` is stored per-`RuleId`
-(`passes/src/lib.rs:96`, `HashMap<RuleId, BackendShape>`): one rule, one shape, regardless of who
-calls it. Sink-only admission is therefore **context-free by construction** on the substrate — a
-sub-rule reached under both a sink-only caller and an offset-tape caller receives ONE shape; the
-model cannot express two. I found **no caller-context conflict** in the fleet: no per-class shape
-is asked to serve two incompatible callers, because the per-`RuleId` map forbids the question.
-
-What follows for 2B: context-free per-class extraction is *sound* on the current fleet — extraction
-may emit one `BackendShape` per rule-class and never faces the identity-preservation repair. This
-is a genuine simplification 2B inherits. The caveat is forward-looking: GN-2.W1's `SelfLoop`
-recognizer attaches to a scan site; a whitespace-skip rule shared across a sink-only and an
-offset-tape caller would get one recognizer — safe *only because* the recognizer is
-caller-invariant (a structural skip is identical to both consumers). Should any future decision
-become genuinely caller-dependent, 2B would need Cranelift-style **scoped elaboration** (Fallin
-2023: extraction parameterized by the enclosing region), whose identity-preserving cost is a class
-duplication per distinct caller-context — bounded, but no longer a plain per-class extraction. The
-prototype must confirm the recognizer-invariance assumption holds for every shared scan site.
+**1.3 Elaboration, not extraction (the budget-critical refinement).** The extant `Extractor`
+(`crates/egraph/src/extract.rs:115`) is egg's greedy bottom-up fixed-point over `classes()`.
+2B's strongest form runs elaboration in the aegraph style: because the per-rule graph is acyclic
+(§4), a *single* reverse-topological sweep assigns each class its best `GExpr` by monotone cost
+and simultaneously emits the `GShape`, subsuming GVN/LICM-analogues (shared sub-rule hoisting) in
+one pass — no `compute_best` fixpoint loop, no separate extract-tree recursion. This is the
+aegraph's core efficiency claim (RFC-27: "acyclicity + eager rule application => efficient
+single-pass optimization without fixpoints"). For the grammar fleet, whose multiplicity is
+~1 (§2, Q1), the elaboration sweep is O(nodes) and its teardown is the dominant cost — met by the
+existing `EGraph::with_capacity` right-sizing (`egraph.rs:78`, whose own doc-comment names the
+"1024-bucket table teardown dominates the compile profile" pathology).
 
 ---
 
-## 5. Q3 — organ port budget, determinism, teardown
+## 2. Q1 — saturated multiplicity, and what it implies for 2B
 
-**Budget.** The e-graph engine already carries an explicit teardown-cost design note
-(`egraph.rs:68-77`): without a capacity hint the `FxHashMap` memo settles at the next power of two,
-so a ~300-node grammar can leave a 1024-bucket table "whose teardown dominates the compile
-profile"; `with_capacity` (`egraph.rs:78`) sizes memo + classes to occupancy to keep dropped
-capacity proportional. This is the direct lever on the ~230 µs per-parse compile budget. The build
-is `add`-per-node (`egraph.rs:155`, one `A::make` + clones per child edge); saturation is
-`CspScheduler` bounded by `egraph_iter_limit`/`egraph_node_limit`; extraction is `compute_best`
-fixed-point (`extract.rs:134`). **Whether a WHOLE-grammar e-graph (CSS L4 = 2875 DTA states) holds
-the budget is unmeasured** — the current per-rule select builds a tiny graph (≤5 candidate nodes),
-so no fleet number bounds the end-to-end organ. This is the single most important open measurement
-(§7).
+**Prediction, to be measured (SPEC-ONLY until PROVE-B runs):** on the three live grammars (json,
+css_l4_declaration_values, sheets — `R1 §5`) the average e-class size after saturation is ~1 and
+the max is small (2-3), concentrated at childless leaves (`Literal`, `Regex`, `Ref`) where a
+narrowing rule offers an alternate form, essentially never at child-bearing `Seq`/`Alt`. Reason:
+the tower's rewrite set is overwhelmingly *narrowing* (epsilon-elim, dispatch specialization,
+sink-normalize all reduce or re-tag, they do not manufacture families of equivalents). The
+extant DecisionNode graph makes this vivid — its nodes are childless and its one rewrite adds
+exactly one alternative (`backend_egraph.rs:216`), so every class has <=2 nodes.
 
-**Determinism / `regen∘regen` byte-identity.** Extraction's total order must be content-derived,
-never HashMap-iteration-derived. Today it IS: `DecisionCost` (`backend_egraph.rs:239`) is
-`Ord`-derived with a trailing `candidate_hash: u64` (FNV-1a over the candidate id,
-`backend_egraph.rs:304`) as the terminal tie-break, so equal-cost ties resolve on content, not on
-`FxHashMap` order; `Extractor::compute_best` iterates `egraph.classes()` in `Vec` insertion order
-(`egraph.rs:138`, deterministic) and `improved = cost < *existing` is strict, so first-insertion
-wins only on a true tie the hash already broke. **The admissible tie-break for a richer 2B cost is
-the same: a content hash as the last lattice axis.** The risk is any `Analysis` that iterates an
-`FxHashMap` to fold data — that reintroduces HashMap-order nondeterminism and would break
-`regen∘regen`; 2B must keep all order-sensitive folds over `Vec`-ordered `classes()`.
-
----
-
-## 5b. Q5 — IR-modeled competing sites, and the leaf-vs-child-bearing distinction
-
-There ARE competing sites modeled (or about to be) in the IR, not merely in grammar source, with
-real binding costs — but they sit at **childless leaves**, which is precisely why they justify 2A
-islands more than end-to-end 2B. The extension that models them is GN-2.W1's:
-`SimdMode{Exact}→{Exact,Prefilter}` and `SimdSite{PreEntry}→{PreEntry,SelfLoop{terminators}}`
-(`ir/src/lib.rs:425-433`). Every self-loop scan site with complement-alphabet cardinality in
-`[1,16]` presents ≥2 lowerings in the IR — scalar loop vs `Recognizer::SimdScan{Prefilter,SelfLoop}`
-— with binding static-size (+~35 generated LOC/site) and cyc/B costs (0.115 floor vs ~1.0
-membership scan; certified §0 #01). Regex leaves add a third: `RegexProgram` scalar-descent vs
-`dfa.find` (§0 #10, 8.8–29.5×). **Which lock owns building it:** GN-2 (kernel plane) owns the
-`SimdMode`/`SimdSite` enum extension + `derive_recognizers` (`passes/src/lib.rs:338`); LOCK-2 owns
-the *extraction* that chooses among the survivors — and GN-2.W1's `codegen/src/lower/recognizer/`
-dispatch that "emits exactly one lowering per site (self-loop `find_member` XOR regex-leaf
-`dfa.find`, never both)" IS a per-class argmin expressed imperatively. The XL-F supersession
-relation is therefore **wraps**: 2B does not delete that dispatch, it re-expresses the per-site
-choice as a cost-model extraction so it composes with the shape + budget solve in one pass. The
-sharp consequence for §3: because these ≥2-survivor sites are *childless leaves*, they exhibit no
-congruence/sharing that a whole-IR e-graph could exploit over a flat per-site argmin — they are 2A's
-warrant, not 2B's. 2B's distinct warrant requires ≥2 survivors at CHILD-BEARING nodes; §3's null
-says the current rule set produces none.
+**Consequence for 2B:** where multiplicity ~1, "extraction-as-decision" collapses to
+"cost-ranked canonicalization," and the aegraph single-sweep elaboration is not merely adequate
+but *optimal* — the NP-hard DAG-extraction wall (SmoothE, ASPLOS 2025; e-boost, ICCAD 2025;
+Tensat's ILP, MLSys 2021; extraction is NP-hard via min-set-cover when sharing makes tree-cost
+non-compositional) is never approached, because there is no combinatorial choice frontier to
+solve. **This is 2B's decisive evidence obligation:** PROVE-B must instrument, per grammar,
+`max_eclass_size`, `count(classes with >=2 nodes)`, and *the node kind of each multi-node class*.
+If the histogram confirms multiplicity ~1 with choices only at childless leaves, 2B ships greedy
+elaboration and the CSP/ILP extraction machinery is provably unnecessary here (a named negative
+result that *strengthens* 2B by deleting a subsystem). If a child-bearing class ever carries >=2
+surviving forms with differing DAG cost, that single site is the counterexample that forces a
+bounded local extraction there — and only there.
 
 ---
 
-## 5c. Q6 — solver shape on this graph class (separable ⇒ greedy optimal; near-tree+coherence ⇒ PBQP)
+## 3. Q2 — widening rewrites coexisting with narrowing
 
-The per-site decision graph is: per-node discrete choice (≤5 `BackendShape`s or ≤3 lowerings) +
-pairwise coherence (caller/callee compatibility edges) + one global budget coupling. This is
-textbook PBQP (Scholz & Eckstein 2002; LLVM `RegAllocPBQP`): per-node cost vectors + per-edge cost
-matrices. The graph-class analysis Q6 asks for:
+A widening rewrite (one that manufactures an alternate/larger form — e.g. `alt->dispatch`
+introducing a dispatch scaffold, or a hypothetical `Repeat{x} => Seq[x, Repeat{x}]` unrolling)
+does **not** need confluence with the narrowing set, and this is the whole point of the e-graph
+representation: rewrites *add equalities, never replace* (`crates/egraph/src/lib.rs:3-5`;
+egg, Willsey et al., POPL 2021). Confluence is a property you need for *destructive* rewrite
+systems (GHC's RULES pragma is the cautionary precedent — un-confluent RULES silently pick an
+order-dependent normal form); an e-graph sidesteps it by keeping every form and deferring the
+choice to elaboration. Termination is bought not by a decreasing measure but by the two
+*operational* bounds already present: `egraph_iter_limit = 64` and `egraph_node_limit = 100_000`
+(`crates/egraph/src/cost_config.rs:66-67`), enforced by the scheduler's growth guard
+(`csp_scheduler.rs:280`). Semantics preservation is a *per-rule* obligation, discharged the way
+PROVE-12 discharged its transform (§5 there: a byte-level argument that the residual is
+extensionally equal) and asserted by a differential parity oracle at the tower's output —
+byte-identical generated parser behavior, the constitution's clause vii artifact standard.
 
-- **No coherence edges (the audited current fleet, §4).** The problem is *separable* — each node
-  minimizes independently and **greedy bottom-up extraction is provably optimal** (it *is* the
-  separable minimum). No solver needed; this is 2B's cheap common case and the reason the greedy
-  `Extractor` is the right default where the budget is non-binding.
-- **Coherence edges + near-tree call graph.** PBQP's reduction solver is **optimal** on trees and
-  series-parallel graphs (R0 removes independent nodes, R1/R2 reductions are exact; only R_N is a
-  heuristic on an irreducible core) and runs near-linear — a *structural optimality guarantee* on
-  exactly this graph class that generic branch-and-bound (exponential worst-case, no structural
-  guarantee) and sharing-aware e-graph extraction (NP-hard in general — the reason greedy is used)
-  do not provide. Solve-cost on a ~300-node near-tree with a handful of edges is microseconds; the
-  separator vs B&B is the guarantee, not the speed.
-
-So the honest solver layering is: e-graph saturation *generates* the menu; greedy extraction
-*decides* the separable case optimally; PBQP (hosted in the one csp-solver store, §6) handles only
-the residual coherence-coupled + budget-coupled core. This is §6's boundary made precise: 2B's
-final selection is a solver on the non-separable residual, converging with LOCK-2's CSP centre.
-
----
-
-## 6. Q6/Q7/Q8 seams as they bear on 2B (the CSP hand-off is forced, not optional)
-
-**The sharing-sensitive budget is 2B's hard boundary.** `extract.rs:9-11` states outright that the
-greedy bottom-up extractor "is not optimal for cost models that depend on sharing." The
-`generated_loc_budget` (GN-2 §5, per-wave `≤ +N` generated LOC) and the `bounded_sum` knapsack
-(Q7) are **global, sharing-sensitive** costs — the size of the emitted parser depends on which
-sites share a lowering, which greedy per-class extraction cannot see. Therefore "extraction emits
-`BackendShape` directly" **cannot** honor a global budget through the current extractor. 2B has
-exactly two lawful completions:
-
-1. **DAG-cost / ILP extraction** — replace greedy `compute_best` with an ILP or PBQP extraction
-   over the saturated graph (egg's `lp_extract`; Yang et al DAG-cost; PBQP per Scholz & Eckstein
-   2002; Denali's goal-directed extraction, Joshi/Nelson/Randall 2002). This keeps 2B
-   self-contained but concedes that extraction is a solver, converging with LOCK-2's CSP centre.
-2. **Hand off the budget to the one constraint store** — saturation generates candidates; a single
-   CSP (the `decision_csp` seam today at `passes/src/decision_csp.rs`, shareable with LOCK-1's
-   store) selects under the budget constraint. This is selection-equivalent to the priority
-   cascade only if the cascade's `PriorityStep` order (`ir/src/cost.rs:264`, 8-step, `SinkOnly` at
-   P2) is expressible as constraint precedence — checkable, and the prototype must check it.
-
-Either way, **2B end-to-end is not budget-complete alone**; the strongest honest 2B is
-"IR-is-e-graph for canonicalization + candidate generation, with a solver extraction (ILP/PBQP or
-CSP hand-off) for the budget-coupled final selection." Pretending the greedy extractor closes the
-budget would violate `extract.rs`'s own stated limitation.
-
-**Profile-fed cost (Q8).** The fitted-coefficient path exists but has **never flipped a decision**:
-`CALIBRATED_WEIGHTS` is a null (§3), precisely because multiplicity ≈ 1. `Measurement`
-(`ir/cost.rs:306`, `cycles_per_byte_x1000` at :311) and `EvidenceSource` (`:319`) are the fact-table
-slots; `ActiveCostFacts.selected_cost_freshness` + `candidate.stale`
-(`backend_egraph.rs:127,169`) are the freshness gate. PROVE-12's real cyc/B deltas (0.81–0.98×)
-came from residualization (a rewrite), *not* from a cost-fit flipping an extraction — the fit is
-inert until §3's multiplicity exists. For a coefficient to flip a real per-site decision (Q8a), the
-widening rules of §2 must first create the alternative for it to choose between. Attribution under
-whole-grammar cyc/B underdetermination (Q8) is an A/B-differential problem (measure two forms of
-one site, hold the rest fixed) — the `json_canon_bench`/`css_canon_bench` paired instruments
-(GN-2 gates) are the vehicle; env-source must be fenced from regen by committing the fit as a const
-fact table (the `CALIBRATED_WEIGHTS` single-slot pattern, `cost_weights.rs:169-174`), never read
-from the environment at generation time.
+**Precedent for widening+narrowing coexisting in shipping engines:** egg's own rebuilding
+tolerates rules in both directions (its exemplar `(* a 2) = (<< a 1)` mixes manufacture and,
+with `a*2/2 = a`, cancellation); Cranelift's mid-end runs both algebraic simplifications
+(narrowing) and forms that expand for later cancellation (RFC-27); Tensat deliberately widens the
+tensor-op graph then extracts. The lawful rule for 2B: **a widening rule is admissible iff it is
+(a) node-bounded — its RHS adds O(1) nodes per match — and (b) semantics-preserving per its own
+oracle.** No global confluence proof is owed; the graph *is* the confluence.
 
 ---
 
-## 7. What a prototype must test to move Family 2B
+## 4. Q3 — organ port budget, acyclicity, and `regen o regen` byte-identity
 
-One prototype, on CSS L4 (richest: 2875 DTA states), base-pinned, HEAD named, cold per-parse:
+**Acyclicity — the load-bearing structural fact.** A grammar rule body is a finite expression
+tree (`Expr` at `ir/src/lib.rs:227`, built via `add_expr` `:51` into a `Vec<Expr>` — an arena of
+`ExprId`, no self-reference within a body). The only cycles in a grammar are *rule-level*
+recursion, and those cross a `Ref{target: RuleId}` (`:253`) / `CallRule{callee}`
+(`ir/src/lib.rs:393`) boundary — which in the e-node language is an **opaque childless leaf**
+(the callee is a `RuleId` scalar, not an `Id` child). Therefore the per-rule e-graph is acyclic
+by construction, and the aegraph elaboration's "no cycle-breaking needed" property (Fallin,
+aegraph blog: "an enode cannot indirectly refer back to itself") holds. This is why the
+Cranelift model ports cleanly: the grammar tower is a family of small acyclic e-graphs joined at
+Ref leaves, precisely the aegraph's home turf.
 
-1. **Derive `Language for BackendExpr`** and intern one whole grammar into a single
-   `EGraph<BackendExpr, GrammarAnalysis>` (cyclic via `CallRule`). Prove `map_children`/rebuild
-   terminate on the recursive grammar (the R3 cyclic risk).
-2. **Add ≥2 widening rules** — self-loop-recognize (`SimdMode::Prefilter`), residualize-const-fold
-   (PROVE-12 as a rewrite), sink-vs-offset realization — with idempotence guards
-   (`NormalizeDirectSinkCost` template).
-3. **Measure saturated multiplicity** (Q1): average/max e-class size, and the COUNT of classes with
-   ≥2 semantically-distinct survivors **at child-bearing nodes** (`Alt`/`RepeatLoop`/`Seq`), not at
-   costing leaves. *This is the make-or-break number.* If it stays ≈1, 2B reduces to 2A islands —
-   report as a named negative result.
-4. **Show extraction flips ≥1 real `BackendShape`** vs the priority cascade on a site where the
-   cascade and the cost lattice disagree (else the e-graph is inert).
-5. **Time build+saturate+extract+teardown** against the ~230 µs/parse budget with and without
-   `with_capacity`, isolating teardown (`egraph.rs:68-77`).
-6. **Prove `regen∘regen` byte-identity** through cost-guided extraction — content-hash tie-break,
-   no `FxHashMap`-order fold.
-7. **Demonstrate the budget boundary** (Q6): run greedy extraction under the `generated_loc_budget`
-   and show it violates the cap on a sharing case, then show ILP/PBQP or the CSP hand-off restores
-   optimality — establishing that 2B's final selection is a solver, converging with LOCK-2's centre.
+**Budget.** Build+saturate+elaborate+teardown must hold the ~230 us order. The four costs:
+(1) build/intern — one `add` per IR node, hashcons hit on shared sub-rules (a *saving* vs the
+current tree); (2) saturate — with multiplicity ~1 and the AC-3 dirty frontier, <= a handful of
+iterations over a small dirty set; (3) elaborate — single O(nodes) topo sweep; (4) teardown —
+the named risk, mitigated by `with_capacity(node_count)` (`egraph.rs:78`) so the dropped `memo`
+capacity is proportional to occupancy, not the next power of two. PROVE-B must bench the whole
+organ cold-per-parse against the extant compile path and show it holds budget on all three
+grammars; this is a *falsifiable* gate, not a projection.
 
----
-
-## 8. Prior art (citations)
-
-- **egg** — Willsey, Nandi, Wang, Flatt, Tatlock, Panchekha, "egg: Fast and Extensible Equality
-  Saturation," POPL 2021. The deferred-rebuild + hashcons + e-class-analysis design the in-tree
-  engine implements (`egraph.rs:251` rebuild, `analysis.rs`, `extract.rs` greedy); rule scheduling
-  / bans for expansive rules (§2 termination). `lp_extract` = the ILP extraction for
-  sharing-sensitive cost (§6).
-- **Cranelift ægraph** — Chris Fallin, "ægraphs: acyclic e-graphs for the Cranelift mid-end" (2023).
-  The strongest *shipping* "IR IS the e-graph end-to-end" precedent: one saturating IR, elaboration
-  = scoped extraction emitting CLIF. Two load-bearing lessons for 2B: **acyclicity** keeps
-  extraction linear (contrast §5 R3 cyclic grammar IR), and **scoped elaboration** is the
-  identity-preserving repair if any decision becomes caller-dependent (§4).
-- **egglog** — Zhang, Wang, Willsey, Tatlock, "Better Together: Unifying Datalog and Equality
-  Saturation," PLDI 2023. Seminaive scheduling of expansive + contractive rules; analyses as
-  lattices — the model for passes-as-rewrite-groups + `Analysis` folds.
-- **Peggy / Equality Saturation** — Tate, Stepp, Tatlock, Lerner, POPL 2009. The original
-  "whole program as one e-graph, extraction via a global solver (ILP/PBQP)" — the direct ancestor
-  of 2B's end-to-end thesis AND its solver-extraction requirement.
-- **Extraction as a solver** — RegAllocPBQP (Scholz & Eckstein, 2002); Denali goal-directed
-  superoptimizer (Joshi, Nelson, Randall, PLDI 2002); DAG-cost / ILP extraction is NP-hard in
-  general — motivates §6's PBQP/CSP hand-off for the budget.
-- **GHC simplifier** — inline (widening) beside case-of-case (narrowing) to a fixpoint; and
-  **LLVM GVN/SCCP** as monotone rewrite — precedent that widening+narrowing coexist in production
-  optimizers (§2).
+**`regen o regen` byte-identity through cost-guided elaboration.** The determinism hazard the
+directive names (HashMap iteration inadmissible) is real and locatable: `Extractor::best` is an
+`FxHashMap` (`extract.rs:118`) but `compute_best` *iterates* `egraph.classes()`
+(`extract.rs:140`), which is `self.classes.iter()` — **Vec order, insertion-ordered,
+deterministic** (`egraph.rs:138`). So class *iteration* is already regen-stable provided IR
+construction is deterministic (it is: arena push order). The remaining hazard is **cost ties**:
+when two forms in a class tie on cost, the winner must break on a *total order*, not on map
+probe order. The extant `DecisionCost` already does this correctly — its final field is a
+`candidate_hash` (`backend_egraph.rs:246`, an FNV over the stable candidate id), making the
+`Ord` total and the pick deterministic. **2B's rule:** the elaboration cost type is a lattice
+whose `Ord` is total, with a final structural tie-break key = the interned-node canonical byte
+key (StringId-resolved), so `regen o regen` is byte-identical by construction. The idempotent-regen
+gate (precept 53; PROVE-12 §7 demonstrated it) is the artifact.
 
 ---
 
-## 9. Verdict (SPEC-honest)
+## 5. Q5 & the XL-F supersession — IR-modeled competing sites
 
-2B's **mechanism is real and mostly built**: the engine (`crates/egraph`, 3105 LOC), the derivable
-`Language` (`BackendExpr`), the AC-3 saturation scheduler, the lattice-ready extractor, and a
-working widening-rewrite template all exist. 2B's **weakness is empirical and certified**: the
-`CALIBRATED_WEIGHTS` null proves the current fleet has multiplicity ≈ 1, so "IR IS an e-graph
-end-to-end" is today an over-claim — the e-graph does dedup a hash-cons already does. 2B's **hard
-boundary is architectural**: the greedy extractor cannot honor the sharing-sensitive
-generated-size budget (`extract.rs:9-11`), so end-to-end 2B necessarily terminates in a solver
-extraction (ILP/PBQP or a CSP hand-off), converging toward LOCK-2's CSP centre rather than standing
-alone. The prototype in §7 is decisive: if widening rules produce ≥2 survivors at child-bearing
-nodes and extraction flips a real `BackendShape` within budget, 2B earns "end-to-end"; if
-multiplicity stays 1, the lawful reduction is 2A islands, reported as a named negative result — the
-substrate, not the author, deciding.
+2B is the family where a scan/self-loop site *lives in the IR as an e-node*, which is exactly
+what makes competing-site modeling first-class. Today `Recognizer::SimdScan{mode,alphabet,site}`
+(`ir/src/lib.rs:416`) with `SimdMode::Exact` only (`:425`) and `SimdSite::PreEntry` only (`:430`)
+is a *sidecar* `Vec<Recognizer>` on `BackendIr` (`:355`), derived by
+`passes::derive_recognizers` (`passes/src/lib.rs:338`) and stamped as a comment
+(`R1 §8`). Under 2B this is not a sidecar: a self-loop scan is a `GShape` e-node
+`SimdScan{mode, alphabet, site}` produced by the `self-loop->prefilter` rewrite, and its
+*alternative* form (the scalar membership loop it replaces) coexists in the same class until
+elaboration picks by cost. That is the IR-modeled competing site the question asks for.
+
+**GN-2.W1's predicate (the XL-F supersession).** GN-2.W1 (`docs/tranches/sk-v24/GN-2.md:181-233`)
+extends `SimdMode -> {Exact, Prefilter}` and `SimdSite -> {PreEntry, SelfLoop{terminators}}` and
+adds the detection arm to `derive_recognizers` — a grammar-*structural* predicate (Kleene over a
+char-class whose complement cardinality in [1,16]). **Relation to 2B (characterized with
+evidence): 2B *wraps* GN-2.W1's predicate, it does not replace it.** The predicate is the
+*guard* of the `self-loop->prefilter` rewrite's `search`; 2B changes *where the result lives*
+(an e-node alternative resolved by cost-guided elaboration) not *how the site is detected*
+(still the complement-cardinality test). Concretely: GN-2.W1 lands the detection + the
+`SimdMode::Prefilter`/`SelfLoop` variants and the `lower/recognizer/` dispatch as a directed
+pass; 2B, if it wins, re-homes that pass as a rewrite group whose match condition IS GN-2.W1's
+predicate and whose alternative-vs-scalar choice IS an elaboration cost decision. The predicate
+survives verbatim; only its consumer moves. This "waits-on" GN-2.W1 landing first (its dispatch
+skeleton is the home PT-1.W5 also lands into, GN-2.md §2.4) — so 2B's recognizer-as-rewrite is a
+*follow-on* to GN-2.W1, not a competitor. Binding static-size + cyc/B costs for the competing
+site come from the same `CostFacts`/`perf_cost`/`static_size_cost` the DecisionNode already
+carries (`backend_egraph.rs:170-173`); PROVE-01's certified 0.115 cyc/B skip floor
+(`GN-2.md:190`) is the real, binding number that flips the elaboration choice at a `SelfLoop`
+site.
+
+---
+
+## 6. Q8 — profile-fed cost into elaboration
+
+2B's cost model is `CostModel<GExpr>` / `CostModel<GShape>` (`extract.rs:85`), and the
+profile-fed coefficient enters as the *weights* it reads — `CostWeights`/`CALIBRATED_WEIGHTS`
+(`crates/egraph/src/cost_weights.rs`, already grid-sweep-calibrated per `cost_config.rs:59-65`)
+plus the per-shape `perf_cost` measured in cyc/B. For a coefficient to (a) flip a real per-site
+decision it must change which `GShape` a class elaborates to (e.g. push a `SelfLoop` site from
+scalar to `Prefilter` at PROVE-01's floor, or a rule from `EagerTape` to `SinkOnly`); the extant
+test `decision_egraph_rewrite_changes_selected_shape` (`passes/src/lib.rs:2014`) is the seed
+proving a cost change *can* flip the selected shape. Attribution when whole-grammar cyc/B
+underdetermines per-feature coefficients is solved by A/B-differential capture — the paired
+cold-per-parse protocol PROVE-12 §4 used (baseline vs modified binary interleaved back-to-back
+per window), which isolates a single feature's delta. **Env-source fencing from regen** is the
+determinism seam: `CostConfig::from_env` reads `BBNF_COST_*` (`cost_config.rs:83-118`), and any
+env override MUST be walled out of the regen path — regen consumes only the committed
+`CALIBRATED_WEIGHTS` fact table, never `from_env`, or `regen o regen` breaks. The freshness gate
+going RED on mutation is the `selected_cost_freshness`/`candidate_cost_stale_rate_bps` machinery
+already in `ActiveCostFacts` (`ir/src/cost.rs:187-189`, `backend_egraph.rs:127`) — 2B inherits
+it. Which knobs a fit supersedes: the hand-set `perf_cost`/`shape_rank` heuristics in the
+candidate builder (`passes/src/lib.rs:514-580`) become fitted coefficients; the `alt_per_branch`/
+`dispatch_bonus`/`structural` weights (`cost_config.rs:101-115`) are the fit's output.
+
+---
+
+## 7. Q4 — context-sensitive extraction (audit owed, prediction stated)
+
+The hazard: a sub-rule reached under two callers — one sink-only, one offset-tape — where one
+per-class elaborated shape cannot serve both. This is the classic e-graph *context-sensitivity*
+gap: greedy bottom-up extraction assigns one best form per class regardless of parent context.
+**Audit owed:** grep `admits_sink_only` (named in the directive) across `passes/`/`codegen/` and
+trace whether any grammar rule is `CallRule`'d from both a `SinkOnly` and an `OffsetTape`
+BackendShape context. **Prediction:** the fleet is context-free at the rule seam because the
+tower selects BackendShape *per grammar* (one shape per generated grammar — json is offset/lazy,
+css is scan, `R1 §5`), not per call site, so a rule cannot be reached under two conflicting
+whole-grammar shapes within one compile. If that holds, 2B's per-class elaboration is sound
+without repair. If a genuine dual-context sub-rule exists, the identity-preserving repair is
+**class duplication by context** (Cranelift handles this via scoped elaboration re-materializing
+a value in each scope; the aegraph blog's LICM/GVN subsumption is exactly context-aware
+re-placement) — cost is O(distinct contexts x class size), bounded and local. The prototype must
+report the `admits_sink_only` census; a null result closes Q4 as "context-free, no repair," a
+positive result scopes the repair to the enumerated sites.
+
+---
+
+## 8. Substrate inventory (what exists, what 2B must build)
+
+**Exists, reusable verbatim:** `EGraph<N,A>` with hashcons + rebuild + `with_capacity`
+(`crates/egraph/src/egraph.rs`); the `Language` trait + `egraph_derive` auto-projection
+(`language.rs`, `tests/derive_language.rs`); `Extractor` greedy bottom-up (`extract.rs`, to be
+narrowed to single-sweep elaboration for the acyclic case); `CspScheduler` dirty-frontier AC-3
+(`csp_scheduler.rs`); `CostModel`/`Lattice`/`Scalar` (`extract.rs:36-111`); `Rewrite`/`RewriteFn`
+(`rewrite.rs`); `CostConfig`/`CostWeights` (`cost_config.rs`, `cost_weights.rs`); the working
+DecisionNode precedent end-to-end (`backend_egraph.rs`).
+
+**2B must build:** (1) `GExpr`/`GShape` e-node enums isomorphic to `ExprKind`/`BackendExpr` with
+Id-projected children and StringId-interned payloads — the derive does the trait, the interning
+is new; (2) an intern pass `GrammarIr -> EGraph<GExpr>` (arena walk, one `add` per `Expr`); (3)
+the five rewrite groups (§1.2), each a `Rewrite` with a semantics-preservation oracle; (4) an
+`elaborate(&EGraph<GExpr>) -> BackendIr` single-topo-sweep that emits `GShape`/`BackendExpr` with a
+total-ordered cost tie-break; (5) the differential parity oracle (byte-identical generated-parser
+output vs the current tower) as the wave's born-RED gate.
+
+**Prior art, cited:** aegraph as production mid-end IR — Fallin, *The acyclic e-graph*
+(cfallin.org/blog/2026/04/09/aegraph), RFC-27 (`bytecodealliance/rfcs` `accepted/
+cranelift-egraph.md`), ægraphs (EGRAPHS 2023). Equality saturation + rebuilding — egg (Willsey,
+Nandi, Panchekha, et al., POPL 2021). Datalog/EqSat unification + seminaive schedule — egglog
+(Zhang et al., PLDI 2023). Non-destructive rewriting as an MLIR dialect — *eqsat: An Equality
+Saturation Dialect* (arXiv:2505.09363) — the direct precedent for "IR-level e-graph." Extraction
+NP-hardness + ILP + differentiable/heuristic escapes — Tensat (MLSys 2021), SmoothE (ASPLOS
+2025), e-boost (ICCAD 2025) — cited to justify *avoiding* general extraction here (multiplicity
+~1, §2). Rewrite-confluence cautionary — GHC RULES.
+
+---
+
+## 9. Named risks & counterexamples
+
+- **Multiplicity is NOT ~1.** If any live grammar produces child-bearing classes with >=2 costed
+  forms, greedy elaboration is sub-optimal at those sites and 2B owes a bounded local extraction
+  (the NP-hard wall in miniature). Mitigation: the PROVE-B histogram is the FIRST measurement;
+  the finding scopes any extraction to enumerated sites, never whole-graph.
+- **Teardown blows the budget.** The `memo`/`classes` drop can dominate on small grammars
+  (the pathology `egraph.rs:70-77` itself documents). Counterexample: a 300-node grammar whose
+  1024-bucket table teardown costs more than the whole current compile. Mitigation:
+  `with_capacity(exact)`; PROVE-B benches teardown as a separate line item.
+- **Payload interning changes hashing cost.** Moving `Vec<u8>`/`String` to `StringId` shifts work
+  to an intern table; if the intern table's own teardown is unbounded the saving is illusory.
+  Mitigation: shared StringId arena across the compile, measured.
+- **Cycle assumption violated by a pathological grammar.** A grammar that inlines a rule into
+  itself pre-tower (left-recursion elimination producing a self-referential body) would break
+  acyclicity. Counterexample to hunt: any grammar where an `Expr` body transitively references
+  its own `ExprId`. Mitigation: assert acyclicity per body at intern time; a violation routes to
+  the general (fixpoint) `Extractor`, documented, not silently mis-elaborated.
+- **XL-B overreach.** A 2B that dissolves the tower's levels violates XL-B and the ~230 us
+  budget. The aegraph framing (levels kept, each represented as a graph) is the guard; a
+  "one saturating soup" prototype is refused before it is benched.
+- **Determinism regression via cost ties.** If the elaboration tie-break is ever map-probe order
+  (not a total structural key), `regen o regen` diverges. The idempotent-regen gate catches it;
+  the total-ordered lattice `Ord` prevents it.
+
+---
+
+## 10. What PROVE-B must test to move this family
+
+1. **Multiplicity histogram** (decisive): per grammar, `max_eclass_size`, `#{classes >=2 nodes}`,
+   and the node-kind of every multi-node class, after running the five rewrite groups to
+   saturation. Confirms or refutes greedy-elaboration sufficiency (§2). Concrete artifact.
+2. **Organ budget**: cold-per-parse build+saturate+elaborate+teardown on all three grammars vs
+   the extant compile path; teardown as a separate line (§4). Falsifiable ~230 us gate.
+3. **Byte-identity**: the elaborated `BackendIr` drives codegen to a generated parser that is
+   *byte-identical* to today's on all three grammars (`cargo xtask check-*`), and `regen o regen`
+   is idempotent (§4, precept 53).
+4. **Cost-flip**: exhibit one real site where a fitted coefficient flips the elaborated `GShape`
+   (a `SelfLoop` scalar<->`Prefilter` at PROVE-01's 0.115 cyc/B floor, or a per-grammar
+   `EagerTape`<->`SinkOnly`), paired A/B-differential (§6). Seeds:
+   `decision_egraph_rewrite_changes_selected_shape` (`passes/src/lib.rs:2014`).
+5. **`admits_sink_only` census** (§7): report whether any sub-rule is dual-context; null => Q4
+   closed context-free, positive => scoped repair enumerated.
+6. **Widening coexistence**: land one widening rule (`alt->dispatch` or a bounded unroll) alongside
+   the narrowing set, show the graph keeps both forms and elaboration picks correctly with a
+   per-rule semantics oracle — no confluence proof owed (§3).

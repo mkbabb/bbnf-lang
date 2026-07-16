@@ -1,110 +1,163 @@
-# PROTO-1 — LOCK-1 · pass-2 · probe 1: The equality-carrier race (1A union-find re-seed vs 1B hardened running CSP)
+# PROTO-1 — LOCK-1 pass-2, probe 1 (family 1D / Open R, the structural axis)
 
-**Base-pin:** worktree HEAD arrived at `d2b32f6e3` (an *ancestor* of the pin). Fast-forwarded
-`git merge --ff-only ce51c36fc` → **HEAD measured on `ce51c36fcbdf5108eb028005586672d9a6d2ca1b`**
-(`git merge-base --is-ancestor ce51c36fc HEAD` → ANCESTOR_OK). No wrong-artifact-risk.
-**loadavg** during measurement: 6.3–8.9 (18 CPUs); paired timings interleaved to null out drift.
+**Question.** Does the engine-agnostic record widening (**Open R** = `TypeDesc::Row`
++ `LayoutKind::Row` + a pure-IR structural classifier) actually **close the masked
+List≠Row fallback** on the SHIPPING grammar `grammar/json/json.bbnf` — or is it
+**blocked** behind a LOCK-7 totality decision + the GN-3.W3 wrap gate?
+
+**Verdict — BLOCKED (1D BLOCKED-candidate → routes to GESTALT-B).**
+The structural axis is a **LOCK-7 ⊕ LOCK-3 blocker.** Open R lands in `crates/ir`
+(`bbnf-ir`); the mask lives in a **separate cargo workspace** (`skinny/`) whose
+codegen never consumes `bbnf-ir`'s type projection. The classifier cannot reach
+the mask without first unifying the two divorced codepaths — a totality decision.
+The GN-3.W3 wrap gate, notably, is **NOT** the blocker (see §4).
+
+- **BASE-PIN.** HEAD `ce51c36fcbdf5108eb028005586672d9a6d2ca1b` — exactly the pin
+  `ce51c36fc`. `git merge-base --is-ancestor ce51c36fc HEAD` ⇒ true. Not stale.
+  No wrong-artifact-risk. loadavg at launch 3.89; XL-H single-cargo discipline held.
+- **Numbers are RAN_MEASURED** on that HEAD (main-path type projection), except
+  the full Open-R landing, which was deliberately **not** attempted — see §5 (parsimony).
 
 ---
 
-## Question
+## 1. The decisive structural fact: two divorced `ir` crates, two workspaces
 
-Which equality carrier seats the HM(X) trunk on the greenfield root base — a union-find re-seed
-that DELETES running code (**1A**), or the running lattice-CSP hardened additively (**1B**, the
-equality-carrier seat)? Pass-1 tilted to 1A on the premise that the running CSP is "unsound as
-shipped"; that premise rested on `TypeDomain::join` (`constraint/domain.rs:66`).
+| | package | home of | consumed by the mask? |
+|---|---|---|---|
+| `crates/ir` | **`bbnf-ir`** | `TypeDesc`, `LayoutKind`, `StructRegistry`, the type-projection CSP, `passes/types/constraint/` (Open R's target + where `shape.rs` would live) | **no** |
+| `skinny/crates/ir` | **`ir`** | `BackendIr`, `BackendExpr`, `BackendShape`, `SinkOnlyProgram` (the mask's substrate) | yes |
 
-## Method
+Measured facts (HEAD ce51c36fc):
 
-Two carriers, one live corpus set (`grammar/json/json.bbnf`, `grammar/css/pretty.bbnf`,
-`grammar/google-sheets/google-sheets.bbnf`; regen runs all 9 in-tree grammars).
+- `skinny/Cargo.toml` declares its **own** `[workspace]`; the main `Cargo.toml`
+  `members` list does **not** include `skinny`. Two independent workspaces.
+- `skinny/crates/codegen` depends on `ir.workspace = true`, which resolves to
+  `skinny/crates/ir` (package `ir`), **not** `bbnf-ir`.
+- `grep -rn "TypeDesc\|StructRegistry\|LayoutKind\|struct_registry" skinny/crates/`
+  ⇒ **zero hits.** The skinny codegen references none of Open R's types.
+- The mask is a plain **rule-NAME predicate**: `runtime_generator.rs:98`
+  `if !sink_only.has_rule("value")` where `has_rule` (sink_only.rs:31) is
+  `self.rules.iter().any(|rule| rule.name == name)` — a `String` compare on
+  `BackendRule.name`. It reads no projected type, no layout, no key role.
+- `crates/runtime/` **does not exist** (the DISSOLVE clause's `git diff crates/runtime/`
+  targets a path absent at this base); the runtime lives at `skinny/crates/runtime`.
 
-- **Baseline** = fresh `cargo xtask regen` at HEAD. (Note: the *checked-in* generated tree at
-  ce51c36fc already drifts from a fresh regen — `bnf.rs`, `css_l4.rs`, `google_sheets.rs`,
-  233 ins / 172 del — a pre-existing repo condition. The authoritative parity baseline is
-  therefore the **freshly-regenerated** tree, hash `611d762c…`, snapshotted before any edit.)
-- **Instrumented probe:** counted every `Some(existing) != Some(ty)` disagreement inside the
-  live carrier `assign` (`constraint/revise.rs:27`) across a full regen.
-- **Option B built and RUN:** refinement-aware clash arm on the live `assign`; regen → hash;
-  `diff -rq` vs baseline; net LOC; paired cold timing; G-1B-5 corpus.
-- **Option A NOT built (cost-bounded, not stubbed):** sized from the actual PROVE-08 source and
-  the live delete/rewire census. A full structural-union-find port with byte-identical parity is
-  not reachable inside the 50-min cap and — per the measurements below — not reachable *at all*
-  without redefining 69 live sites; that impossibility is itself the finding.
+**Consequence.** Even a perfectly-landed `TypeDesc::Row` + `LayoutKind::Row` +
+`shape.rs` in `bbnf-ir`, yielding `class(object)==Row ∧ class(array)==List`, would
+be produced in a crate the skinny mask never links against. The classification
+**cannot cross the workspace boundary** to inform `has_rule("value")`. Closing the
+mask therefore requires first **unifying skinny's sink-only lowering with bbnf-ir's
+type-projection classifier** (or teaching `emit_general_descent` to consume a
+Row/List classification) — a LOCK-7 totality decision, entangled with LOCK-3
+(the codegen-path unification). This is exactly the BLOCKED disposition.
 
-## What ran (and the numbers)
+---
 
-| measurement | result |
-|---|---|
-| `TypeDomain::join` (`domain.rs:66`) call sites | **0** (`grep '\.join(' …/types/` empty; only doc-comment + other-domain refs) → **doubly dead** |
-| live-carrier disagreements on the 3 corpora (regen, 9 grammars) | **69**, and **69/69 have `existing == BoxedEnum`**; **0** concrete-vs-concrete clashes |
-| nature of every disagreement | coarse `BoxedEnum` placeholder **refined** to its structural type (`Tuple`/`Vec`/`Option`/`HeterogeneousAltJoin`) as the fixpoint resolves children — a lattice ascent, not an error |
-| **Option B — byte-identical?** | **YES.** regen hash `611d762c7d3f6937b604ae7f724d566605c7f800d493e8bedb577de946790e29` == baseline; `diff -rq` on `generated/`+`runtime/` = empty |
-| **Option B — runtime diff?** | **empty.** No `crates/runtime/` in the root tree (skinny-only path → trivially empty); generated runtime projections under `crates/core/src/runtime/` byte-for-byte unchanged |
-| **Option B — net LOC** | **+18** as delivered (23 add / 5 del, one file; comment-dominated). Functional guard compresses to **net-0** (a `match` of equal length replaces the `if/else`) |
-| **Option B — derive wall-time** (paired cold, 5 runs, warmup pair dropped) | **base median 1.43 s · optB median 1.42 s → parity** (pairs: 1.43/1.41, 1.42/1.53, 1.43/1.42, 1.44/1.41, 1.42/1.43; all within ±0.1 s noise) |
-| **G-1B-5** `types_heterogeneous_alt` under B | **GREEN — 2 passed, 0 failed** |
+## 2. The refusal, reproduced (class(object) vs class(array))
 
-### Net-0 functional form (the load-bearing half of B)
-```rust
-pub(super) fn assign(vars: &mut [Variable<TypeDomain>], var: TypeVarId, ty: TypeDesc) -> bool {
-    let slot = &mut vars[var as usize].domain.solved;
-    match slot.as_ref() {
-        Some(e) if *e == ty => false,
-        Some(e) if *e != TypeDesc::BoxedEnum => false, // B1: refuse concrete clash (dormant on corpora)
-        _ => { *slot = Some(ty); true }                // None or BoxedEnum refinement (the carrier)
-    }
-}
+On the **unchanged** shipping grammar the type projection already runs
+(`crates/core/tests/project_types_json.rs`, `compile_paths_request(Vm)` →
+`project_types` → `ir.struct_registry`). Its recorded invariants:
+
+- `array = "[" >> (( value << comma ? ) *)?w << "]"` → layout carries a
+  **`FieldSource::RepeatElement`** field ⇒ **List-shaped** (`Vec<value>`).
+- `object = "{" >> (( pair << comma ? ) *)?w << "}"` → structurally **also a
+  `Repeat`** (`Vec<pair>`); `pair` → `LayoutKind::Struct` (key + value).
+
+The registry's discriminator alphabet is `{Struct, TaggedEnum, UntaggedEnum,
+NewtypeWrapper}` — **there is no `Row`.** So `object` and `array` both collapse to
+the same repeat/list shape; `object` is **indistinguishable** from a List. That is
+the **clause-i defect** / "masked List≠Row fallback": the projection has no category
+in which a repeat-of-key-value-pairs is a *record*. `class(object) ≈ Unknown`
+(no Row category; masquerades as List), `class(array) = List`. **Refusal reproduced.**
+
+---
+
+## 3. Where the List/Row distinction is actually *baked* (the hand-authored mask)
+
+Because bbnf-ir cannot name a Row, JSON is special-cased in skinny: the
+`has_rule("value")` branch routes the JSON family to a **hand-authored template**
+(`json_templates/value.rs`) whose `enum JsonValue { Object(..), Array(..), .. }`
+hard-codes the Object(Row)/Array(List) split. A grammar *without* a `value` rule
+(Sheets) falls to `emit_general_descent`, which has **no Object/Array (Row/List)
+notion at all** (`grep Row\|List\|is_object\|is_array` over `general_descent/*.rs`
+⇒ nothing structural). So the List≠Row knowledge lives *only* in the hand-written
+JSON template — the mask — and nowhere in a derived classifier.
+
+---
+
+## 4. GN-3.W3 wrap gate — CLEARED (not the blocker) — RAN_MEASURED
+
+The brief's honest key-role form was authored on the real grammar and driven
+through the **main** lowering path (where `wrap.rs:242` fires):
+
+```diff
+ string = /".../"  -> decode_json_string_to_arena(input) : String ;
++keystr = /"[^"]*"/ -> input : key ;
+ array  = ... ;
+-pair = string, colon >> value ;
++pair = keystr, colon >> value ;
 ```
-Same line count as the incumbent `if/else` → **net-0 LOC**. The `TypeObligation::TypeClash`
-recording B1 also asks for is **parity-inert** (codegen consumes `ir.types` + `struct_registry`,
-never `type_obligations`) and **dormant** (arm never fires on these corpora), so wiring it through
-the existing `ObligationSink` (drain at `mod.rs:473`) adds only diagnostic LOC and cannot perturb
-the byte-identical result. The delivered patch keeps the arm explicit + documented (+18); the
-terse net-0 form is behaviorally identical.
 
-### Why literal-B1 as written would FAIL — and why that matters
-The brief's literal B1 ("on `Some(existing)!=Some(ty)` … refuse the overwrite") refuses **all**
-disagreements. Measured: that refuses all **69** `BoxedEnum→structural` refinements, freezes those
-vars at `BoxedEnum`, and regresses generated output → **not byte-identical**. The correct hardening
-is **refinement-aware**: `BoxedEnum` is the coarse placeholder and must still ascend; only a
-disagreement between two *concrete* types is a genuine clash to refuse+record. On json/css/sheets
-that concrete-clash arm is **dormant (0 firings)**, so B is byte-identical with a sound,
-raise-on-clash channel installed. **The running CSP's last-writer-wins is not the defect pass-1
-took it for; it is the load-bearing refinement carrier.**
+`cargo test -p bbnf --profile ax-iter --test project_types_json` (loadavg 3.89):
 
-### Option A cost (bounded from source, not built)
-- PROVE-08's proven seed is a **flat** unifier: `Ty = Var(u32) | Con(TyCon)` with a **closed
-  5-leaf** `TyCon` = {Bool, F64, U8Tag, StringDecoded, StringSpan}. It has **no** structural
-  constructor (Tuple/Vec/Option/Sum/Row/BoxedEnum) and **no** refinement notion — `unify` yields
-  `UnifyError` on any two distinct `Con`s.
-- Live `TypeDesc` has ~18 variants incl. recursive structural ones. Growing the seed with Sum/Row
-  **and** the structural arms means recursive unification + occurs-check — substantial **new** code
-  with **no** proven seed (PROVE-08 supplies only the leaf half; its patch = 563 added lines incl.
-  tests/lowering).
-- Displacing the live carrier (as 1A requires) **deletes working, corpus-tested code**: `assign`
-  (8 lines) + `join_types`/`effective_payload_type` (93 lines) and **rewires 11 `assign` call
-  sites + 80 `HeterogeneousAltJoin` references** across `ir` + `core`.
-- **Parity risk is concrete, not hypothetical:** union-find has no `BoxedEnum`-refinement analog,
-  so `unify(BoxedEnum, Tuple([…]))` at each of the **69** live sites is a distinct-`Con` clash. A
-  faithful port must *re-invent* the refinement lattice inside union-find — reproducing exactly
-  what the running CSP already does. Net-positive LOC + deletes tested code + must rebuild the
-  behavior it replaced.
+```
+test result: ok. 10 passed; 0 failed; 0 ignored; finished in 0.01s   (exit 0)
+```
 
-## Verdict
+The annotation `-> input : key` **lowered cleanly** — `wrap.rs:242`
+(`mapped_factor: … contains a -> arrow but structural detection found no value_expr
+head — typed-materialization invariant violated`) did **not** fire, and the full
+registry-closure gate (all 10 assertions incl. audit `Mapped`, zero Pending/Missing)
+still held with `pair` rebuilt on `keystr`. Static reading agrees: `input` surfaces
+as the `value_expr_head` (identical detection to the shipping `decode_json_string_to_arena(input)`),
+so `value_expr_head.is_none()` is false and the panic guard is skipped.
 
-**THE EQUALITY-CARRIER SEAT GOES TO 1B (the hardened running lattice-CSP).** Option B RAN:
-byte-identical generated output (hash-matched + `diff -rq` empty), empty runtime diff, parity
-derive wall-time (1.42 s vs 1.43 s), G-1B-5 green, and the load-bearing guard lands at **net-0 LOC**
-additively. Option A's sole pass-1 justification — "the running CSP is unsound as shipped" — is
-**void** (`TypeDomain::join` doubly dead; the live disagreement path is a sound
-`BoxedEnum→structural` refinement, and the live clash path is the already-sound Alt-join →
-`HeterogeneousAltJoin` obligation). 1A must now justify **deleting 101 lines of working,
-corpus-tested code + rewiring 91 call/consumer sites + re-deriving the refinement lattice inside
-union-find to re-clear 69 live sites** — for zero measured functional gain. On this evidence it
-cannot. **Seat 1B; hold 1A's union-find as the stratified-*architecture* trunk only (residue
-solver / let-generalization), never as the equality *carrier*.**
+**⇒ The second BLOCKED clause via GN-3.W3 does NOT hold. The annotation is
+admissible.** This narrows the blocker to the workspace divorce alone (§1) and
+discharges CRIT-2 directive 3 (the pass's largest blind spot) with a real run:
+the wrap trap is not what stops Open R.
 
-*Rules honored: Option B RUNS (not SPEC_ONLY). Perf is cold + paired + loadavg-recorded.
-parse-that untouched (read-only; PROVE-08 read from `restart/.../prototypes/`). No x86. Parsimony:
-the smallest probe — one instrumented regen + one carrier edit — settles the fork.*
+---
+
+## 5. Why the mask cannot delete without regressing (the operative BLOCKED clause)
+
+Deleting `has_rule("value")` routes JSON to `emit_general_descent`, which emits a
+**different 5-file roster** (general recursive descent + lazy tape view) in place of
+the 8-file hand-authored JSON template — a **regression** (JSON loses its
+Object/Array template and its specialized `value.rs`/`view.rs`/`visitor.rs`), and
+the general path has **no Row/List classifier to substitute**. Open R cannot supply
+the missing classification because it lives across the workspace boundary (§1).
+So: *the mask cannot delete without regressing* — the operative BLOCKED condition —
+**and** Open R cannot repair the regression from where it sits. Not attempted
+destructively; deletion's outcome is determined by structure, not worth a wrong-tree regen.
+
+**Parsimony note (why Open R was not fully landed).** `TypeDesc::` appears across
+**102 files** and `LayoutKind::` across ~30 source files + generated grammars + tests;
+adding a variant to each exhaustive match, then `cargo xtask regen` over all 9
+corpora, is a multi-hour landing. Crucially it would **not change the verdict**: the
+classification it produces lands in `bbnf-ir`, unreachable by the skinny mask. The
+smallest probe that answers the question is the divorce proof (§1) + the GN-3.W3
+run (§4). SPEC_ONLY was avoided — the dispositive claim (§1) and the gate (§4) both RAN.
+
+---
+
+## 6. Verdict line
+
+**BLOCKED — 1D BLOCKED-candidate → GESTALT-B.** Open R does **not** close the masked
+List≠Row fallback on the shipping grammar by itself. It is blocked behind a **LOCK-7
+totality decision** (unify skinny's sink-only/general-descent codegen — package `ir`,
+its own workspace — with bbnf-ir's `StructRegistry`/`TypeDesc` classifier), entangled
+with **LOCK-3** (codegen-path unification). The GN-3.W3 wrap gate is **cleared**, not
+the blocker: the honest `-> input : key` key role is admissible and closes projection
+on the real grammar. The structural axis moves decisively to a LOCK-7⊕LOCK-3 blocker.
+
+## Appendix — artifacts / cleanliness
+
+- Intentional change: `grammar/json/json.bbnf` (+`keystr`, `pair` rewired) — patch: `PROTO-1.patch`.
+- `git diff` also lists `crates/core/src/grammar/generated/{bnf,css_l4,google_sheets}.rs`
+  + `crates/ir/src/passes/types/constraint/revise.rs` — **pre-existing worktree
+  churn / build-manifest side-effects, NOT this probe** (no Row/json-annotation
+  content; revise.rs is `TypeObligation::TypeClash` comment churn).
+- `git diff skinny/` ⇒ **empty.** The mask path is pristine — a bbnf-ir-side
+  annotation touched nothing in the runtime, corroborating the divorce.

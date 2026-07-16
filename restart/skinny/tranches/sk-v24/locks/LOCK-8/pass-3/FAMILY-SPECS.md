@@ -1,471 +1,386 @@
-# LOCK-8 — THE TS BACKBONE PLANE (parse-that/typescript) — pass-3 FAMILY SPECIFICATIONS
+# LOCK-8 — THE TS BACKBONE PLANE — pass-3 FAMILY-SPECS (distiller of record, Fable-tier)
 
-*Synthesis of record, pass 3 (Fable-tier judgment). One cogent spec per family — architecture,
-mechanism, integration seams (path:line at HEAD `ef10d5b`, `@mkbabb/parse-that@1.0.0`), the gates
-it carries born-RED, and its exact open questions — then the incompatibility map. This doc folds
-pass-2 PROTO-1 (8B) and PROTO-2 (8C) that the pass-2 FAMILY-SPECS was frozen BEFORE (the
-cross-cutting defect both critics named); the gap ledger here is the corrected one, not the stale
-09:50 text. Standing constraints, conveyed as fact: parse-that/typescript is READ-ONLY (any landing
-rides letter BBNF-PT-G, owner or parse-that-side session; prototypes on scratch copies per the
-PROVE-11 recipe); two engines that must never be conflated — the V8 JIT (8A) and the TS checker
-(8B); every measurement names its HEAD and base-pins worktree prototypes (XL-H); the type plane
-costs zero at runtime by construction (Constitution v).*
+*One cogent specification per family while routes remain incompatible. Four orthogonal planes
+over one closure core: 8A runtime (V8 JIT), 8B type (TS checker), 8C correspondence, 8D API. Two
+engines govern and are never conflated (V8 JIT ≠ TS checker). parse-that/typescript is READ-ONLY
+to the bbnf campaign; every family lands only via letter BBNF-PT-G (owner or a parse-that-side
+session); prototypes run on scratch copies base-pinned to HEAD (`ef10d5b` / `@mkbabb/parse-that`
+1.0.0). This doc supersedes the pass-2 FAMILY-SPECS and folds pass-3 research-{A,B,C,D,priorart}.*
 
 ---
 
-## 0. THE LOAD-BEARING PASS-3 CORRECTION — value.js is BIFURCATED, not divorced
+## 0. THE PLANE-WIDE GOVERNING FACT — THE CENSUS RE-FLIPPED (value.js is DUAL-STATE)
 
-The pass-2 registry recorded value.js as fully "MIGRATED OFF" (HEAD `86a9a17`, branch `tranche-u`,
-0 imports). **Pass-3 refines this by a fresh per-tree census run three ways (research-A §4,
-research-B §6, research-D §1), which converge on a materially different graph:**
+**Pass-2's load-bearing fact ("value.js divorced parse-that; latex-paper is the sole surviving
+consumer") is SUPERSEDED. It was a BRANCH ARTIFACT.** research-D ran a per-tree *and per-branch*
+census; the distiller git-verified it this pass:
 
-| consumer | ref | version | parse-that dep | imports | posture |
-|---|---|---|--:|--:|---|
-| **value.js** | `master` (origin/HEAD, published) | **3.1.0** | `^1.0.0` (`^` → 1.1.0) | 9 symbols; **61 `all` / 96 `any` / 6 `dispatch`** (research-A §2) | **LIVE-published** |
-| **value.js** | `tranche-u` dev tip | **4.0.0** | absent / pruned | 0 | **SHED — PAUSED, unmerged** |
-| **latex-paper** | 0.2.1, pin `^0.7.1`, installed 0.7.1 | — | 5 symbols (`Parser ParserState regex string any`) | 8 sites; `any()`×3; methods `map/skip/trim/then/next/opt/chain/not` | **LIVE — sole undisputed external** |
-| **keyframes.js** | 6.0.0 | — | none (dep = value.js 4.0.0) | 0 | **DEAD — no path any hypothesis** |
+| repo · line | version | parse-that dep | surface | posture |
+|---|---|---|---|---|
+| **value.js · `master` (shipping)** | 3.1.0 | **`^1.0.0`** (git-verified) | **9 symbols** `{Parser,ParserState,all,any,dispatch,regex,string,whitespace,mergeErrorState}`, **59 `all()` sites** | **LIVE full consumer** |
+| value.js · `tranche-u` (137 ahead, checked out) | 4.0.0 | none | ∅ | **PAUSED at owner order**, unmerged, PT-free |
+| **latex-paper · master** | 0.2.1, pins `^0.7.1`→installs **0.7.1** | `^0.7.1` (pre-1.0.0) | **5 symbols** `{Parser,ParserState,regex,string,any}`, 8 sites, `.skip`×11 | LIVE, semi-dormant (2wk stale) |
+| keyframes.js · master | 6.0.0 | none (transitive via value.js only) | ∅ direct | PT-free (direct) |
 
-**The correction that reshapes the plane:** the divorce is confined to the `tranche-u` dev branch,
-which is **PAUSED** ("THE PAUSE — V campaign halted at owner order post-pass-4, thesis 78%",
-research-D §1) and **not merged to master**. **`master` retains the live `^1.0.0` dependency and the
-full 61-`all`/96-`any`/6-`dispatch` corpus** (the LIVENESS is hard git evidence; the exact per-arity
-buckets carry as **AST-re-extract-PENDING pinned to `6abef80`** — a naive line grep undercounts the
-multi-line/method-position call forms, research-A §2 census-integrity caveat). Researchers differ only on whether tranche-u's 4.0.0
-divest is *committed* (B, D) or *working-tree-staged* (A) — immaterial; all three agree master holds
-the live corpus. Therefore the pass-2 "the 59-`all()` live corpus no longer exists" is **struck**:
-it exists at value.js-master, and revives 8A's arity corpus and 8B's native instantiation-budget
-corpus **under H2, provided every gate pins `master` not the checked-out `tranche-u`** (measuring
-tranche-u falsely reports an empty consumer — research-A R-A, research-B R-C, research-D R1/R5).
+**INTER-REPORT INCOMPATIBILITY (the sharpest of the pass).** research-A §2B and research-B §4
+BOTH report value.js "divorced / REMOVED / `dependencies:{}`" — because both censused the
+*checked-out `tranche-u` working tree* and never `git show master:package.json`. research-D is the
+authoritative branch-aware census, corroborated by the distiller's git probe (`value.js` HEAD =
+`tranche-u`; `master:package.json` = `^1.0.0`). **The 59-`all()`-site corpus that pass-2 declared
+DEAD is LIVE on `master`.** Every pass-2 conclusion premised on the divorce is re-opened:
 
-**Two hypotheses, both carried (XL-G, non-blocking; consistent with CROSS-LOCK P1):**
-- **H1 (tranche-u lands):** value.js exits the consumer set; the arity/`all` specialization loses
-  its live external corpus, falling back to first-party bench grammars + latex's thin surface.
-- **H2 (master posture holds):** value.js-master @ 3.1.0 is a live `^1.0.0` consumer; the corpus is
-  real and native-measurable.
+- `mapState`-has-0-consumers (which dissolved the pass-1 8A defects) — was a `tranche-u` census;
+  **must be re-run against value.js-`master`** before it is re-banked.
+- 8A center-B's `all()`/`any()` justifying corpus — **not dead** under `master` (disposition A).
+- 8B's native instantiation budget — the 59 `all()` sites are the real TS2589 stress, LIVE again.
+- 8D's crater — `master` is a *second positive leg*, not a phantom.
 
-**P2 (the pass-2 symmetric gap — latex live-forward vs fossil):** unchanged and un-closed — latex
-is 2 weeks idle, 2 API cuts behind (0.7.1 vs 1.1.0). Both owner confirmations remain preconditions
-on banking any 8A/8B/8D *number*; the *mechanisms* proceed under both arms.
+**The owner question sharpens (XL-G P1/P2).** It is no longer "is value.js divorced" but: **will
+`tranche-u` merge — and until it does, `master` (^1.0.0, full surface) binds any 1.1.0 cut.** Two
+dispositions are carried through every family (research-D §2), owner-gated and mutually exclusive:
 
----
+- **Disposition A — `master` authoritative** (tranche-u stays paused/unmerged): the full 9-symbol
+  surface is LIVE; nothing prunes; the 59 `all()` sites are the tightening's blast radius.
+- **Disposition B — `tranche-u` is destiny** (owner confirms the merge): external contract shrinks
+  to latex-paper's 5 symbols; `all`/`dispatch`/`whitespace`/`mergeErrorState` become
+  first-party-consumed (the shipped gate `proof-no-dead-combinator.mjs` already enshrines the
+  `test/` tree as a lawful Y.13 consumer). **No combinator prunes under B either** — the algebra is
+  not amputated to fit one transiently-frozen downstream.
 
-## FAMILY 8A — THE SHAPE-STABLE CORE (the V8 runtime plane) — ADVANCED
-
-**Architecture.** Two physically distinct wins the directive requires be reported SEPARATELY;
-conflating them is the family's principal reporting hazard (research-A §1).
-
-- **STRUCTURAL leg (allocation + hidden-class; JIT-tier-INDEPENDENT).** `ParserState` is
-  fixed-from-birth: `expected?` and (post-lever) `suggestions?`/`secondarySpans?` are declared
-  native class fields initialized `undefined`, so the hidden class is stamped at construction and
-  never transitions when a diagnostic later seeds an array (`state.ts:36-53,43`). The certified
-  lever removes 6 eager `= []` alloc sites → 0 (ctor ×2, `mergeErrorState` ×2, `resetErrorState`
-  ×2), corroborated by fused alloc **−60.1% B/op** (exact, `--expose-gc`). This leg is REAL and
-  largely BANKED (PROVE-11). It is 8A's defensible claim.
-- **TEMPORAL leg (JIT inlining; tier-DEPENDENT).** The V8-discipline core and the family's
-  least-understood claim. The engine's governing surface is the single indirect call through the
-  `.parser` function-pointer field (`parser.ts:53,82,88,131,137`; `leaf.ts:44,49,62,140`) — **the
-  megamorphic IC of the engine** (many closure shapes through one indirect site). The arity unroll's
-  real temporal value is NOT loop removal — it is that a **per-site unrolled closure gives each
-  captured `p0.parser`/`p1.parser`/`p2.parser` call its OWN inline-cache slot** →
-  monomorphic-per-closure → inlinable; the shared general arm `parsers[i].parser(state)`
-  (`leaf.ts:62,261`) is ONE call site seeing every parser shape program-wide → megamorphic → never
-  inlined. **Confirmed at Node v26 default tier** via `--trace-turbo-inlining` on a scratch probe
-  (leaf `parser` SFI repeatedly inlined into the fused-closure SFI; per-site feedback vectors
-  distinct) — but NOT yet on real parse-that leaves at the shipping tier with legs separated (the
-  Brief-1 gap).
-
-**The honest scoping (prior-art §1/§5, binding).** 8A's MAXIMAL claim ("monomorphic-by-construction
-hot path") is **REFUTED** by the structural megamorphic-IC ceiling: the closure-per-combinator
-pattern hits V8's megamorphic threshold at alternation (5.9% CPU, no inlining, measured). The only
-measured cures are the **tagged-union/VM (LOCK-4C)** or the **build-time combinator emitter
-(LOCK-4B)** — both LOCK-4 territory, never double-homed here. 8A therefore scopes to (a) the
-allocation/hidden-class STRUCTURAL claim (achievable, banked) + (b) the per-site-IC TEMPORAL unroll
-win (tier-conditional; a cold one-shot `.parse()` collects only the structural leg), and routes the
-IC ceiling to LOCK-4.
-
-**Mechanism (the live within-8A move).** The arity histogram over the ACTUAL live corpus
-(value.js-master `src/parsing` + latex; research-A §2 — buckets AST-re-extract-PENDING at `6abef80`,
-robust to ±count for the arity-2/3 unroll justification) shows `all` unrolls arity-2 (16) + arity-3
-(24) = 40/52 fixed sites (77%), justified; but **`any` unrolls only arity-2 (`leaf.ts:39-57`) while
-arity-3 (22 sites, 23%) hits the general `for` arm (`leaf.ts:58-73`) — an unjustified 2-vs-3
-asymmetry with `all`.** The candidate: an `any` arity-3 unrolled arm symmetric with `fuseAll`. The
-big `any` alternations (arity 16/23/48) + the 19-key `dispatch` are **LUT candidates, not unroll
-candidates** — they belong on `dispatch`'s `Int8Array(128)` first-char table (`leaf.ts:100-151`,
-O(1)) above a ~3-way unroll ceiling. The 18 spread-form `all(...)`/`any(...)` sites are statically
-un-specializable at the combinator layer — only a build-time emitter that sees the spread's origin
-reaches them (= LOCK-4B).
-
-**center-B (the arbitrary-arity build-time specializer) — relationship to XL-D.** The runtime
-arity-N specializer and the XL-D build-time TS face are **two different mechanisms today**
-(research-A §3): the specializer is a *construction-time closure specializer* (runs per
-`new Parser(...)`, emits no source, invoked through the megamorphic IC); XL-D is the *offset-tape
-decoder* (imports no combinators, `JSON.parse` oracle) — complementary, not gating. **The
-constructible bridge that generalizes the unroll to arbitrary arity, resolves the 18 spread-form
-sites, AND is the ONLY route that attacks the megamorphic `.parser` IC itself (AOT-fused function,
-leaf calls inlined, no `.parser` indirection) is the LOCK-4B COMPTIME-FUSION TS face.** Center-B IS
-that emitter — homed at LOCK-4B, which its own REGISTRY evidence-banked ("terminal-role
-BANKED→compile-backend," "no V8 analog (T1)," "isomorphism half 0% built"). **Pass-3 disposition:
-center-B moves from pass-2's DOUBLE-block to a SINGLE-block** — its Y.13 consumer block is LIFTED by
-8D's KEEP-THE-ALGEBRA verdict (first-party JSON/CSS bench grammars are the corpus of record); the
-LOCK-4B mechanism block REMAINS. Routed to GESTALT-P as the shared arity-emitter-AND-IC-ceiling-fix.
-
-**Integration seams.** `any` arity-2 `leaf.ts:39-57`, general `:58-73`; `fuseAll` arity-2
-`:183-212`, arity-3 `:214-251`, general `:255-272`; `all` entry `:154-164` (arity-1 bypass `:161`).
-Megamorphic IC (the ceiling): `.parser(state)` `parser.ts:53,82,88,131,137`, `leaf.ts:44,49,62,140`.
-Shape substrate: `state.ts:36-53,43`, `unsafeSetValue`/`unsafeCall` `state.ts:87-99`. The one
-prototype-chain deopt risk: `mapState`'s `Object.create(state)` per-invocation `parser.ts:177-180`
-(the sole non-flat shape — probe, do not assume benign). `dispatch` LUT `leaf.ts:100-151`; `string`
-len-1 `leaf.ts:282-294`; `regex` sticky `leaf.ts:344-358`; first-party bench harnesses
-`test/benchmarks/pt-b3-fusion.bench.ts`, `json-comprehensive.bench.ts`.
-
-**Gates it carries (born-RED).** (1) **Two-leg per-arity trace at Node v26 DEFAULT (Maglev) tier**
-on real parse-that leaves: STRUCTURAL leg (alloc-B/op + `%HaveSameMap` shape stability,
-tier-independent) and TEMPORAL leg (leaf `parser` SFI inlined-or-not per site + `--trace-opt-status`
-tier residency) reported SEPARATELY, HEAD named (Brief 1). (2) `any` arity-3 unroll beats the
-general arm at arity-3 (22 live sites), cold-paired, no arity-2/≥4 regression. (3) `%HaveSameMap`
-TRUE for diagnostics-off vs diagnostics-populated `ParserState`; `mapState`'s `Object.create` view
-probed for deopt. (4) Every 8A perf table reports structural + temporal separately with tier
-residency (a single ratio is uninterpretable — R-B, the exact trap that halved the dispatch claim).
-
-**Open questions.** (i) Does the temporal leg actually inline at each arity at the SHIPPING tier
-(Maglev), not just the scratch-probe tier? — Brief 1, zero measured evidence for 2 passes. (ii) Does
-the `any` arity-3 unroll pay? (iii) Is `mapState`'s `Object.create` benign under real access
-patterns? (iv) **mapState-front parsimony:** the `ReadonlyState<T>` "ADVANCE front" exercises a
-combinator with 0 external consumers (`mapState` grep-CONFIRMED 0/0/0); it survives Y.13 pruning
-ONLY if a first-party test exercises it (unverified — see the incompatibility map). It is NOT banked
-ADVANCE. (v) Is `CEILING` (read from the surviving arity histogram) even worth reading if H1 voids
-the external corpus? (vi) center-B's LOCK-4B mechanism block — a GESTALT-P routing, not a within-8A
-build.
+**Two owner preconditions, both born-verified, gate every 8A/8B/8D number:** (P1) tranche-u merge
+intent; (P2) latex-paper is live-forward, not a fossil (2wk stale, gaps to March — a positive gate
+only if baseline-GREEN at 0.7.1). **No family is BLOCKED-candidate**: every central mechanism is
+constructible on current substrate, and the census re-flip *restores* consumers pass-2 thought
+gone. The one BLOCKED line (8A center-B) is a sub-deliverable whose consumer-half is now re-opened
+by the re-flip; its mechanism-half stays blocked on LOCK-4B.
 
 ---
 
-## FAMILY 8B — TYPE-LEVEL TOTALITY (the type plane) — ADVANCED
+## FAMILY 8A — THE SHAPE-STABLE V8 RUNTIME CORE
 
-**Architecture.** The TS checker carries the grammar: a homomorphic typed combinator algebra with no
-`Parser<any>` at any PUBLIC boundary, erasures either justified as lawful variance or removed,
-compile-time only (erased before emission — the zero-runtime-cost mirror). The plane is a **bounded,
-tractable** job (prior-art §5.3): enumerated leak sites, `infer`+DRY, no open-ended type-theory.
+**Architecture.** The V8-first formulation of the closure combinator core: every `ParserState` and
+combinator object shape-stable and monomorphic *by construction*, an allocation-zero hot path,
+diagnostics and packrat as shape-preserving optional planes — proven by IC/`%HaveSameMap` probes
+and cold *paired* harnesses (single-build-per-process, A,B,A,B interleaving; never `vitest bench`,
+which is load-confounded). 8A owns the runtime execution face (V8 JIT) and must NOT over-reach into
+the central dispatch, which is structurally megamorphic and LOCK-4 territory.
 
-**Key correction to the standing brief (research-B §0, decisive).** `ExtractValue` is **already
-tight** — a homomorphic mapped type `{[K in keyof T]: T[K] extends Parser<infer V> ? V : never}` over
-`T extends ReadonlyArray<Parser<unknown>>` (`parser.ts:9-11`), preserving tuple arity + labels. **The
-`Parser<any>` leaks are NOT in the mapped type — they are in the ENTRY GENERIC BOUNDS**
-(`any`/`all`/`fuseAll` all `<T extends Array<Parser<any>>>` at `leaf.ts:28,154,179`) + the
-`ParserFunction`/`restore` variance points. The mapped type is the MODEL the bounds are rewritten
-toward, not the defect. The pass-2/PT-E2 spec framing that located the leak in `ExtractValue` is
-**re-cut**: name the bounds. (A DRY defect remains: a byte-identical duplicate `ExtractValue` at
-`leaf.ts:155-157` — consolidate to one exported `types.ts` utility.)
+**Mechanism (three pillars, `path:line` in `typescript/src/parse/`).**
+- **P1 fixed-from-birth hidden class.** `ParserState<T>` declares five positional fields
+  (`src,value,offset,isError,furthest`, `state.ts:36-53`) + three diagnostic fields `undefined`
+  at construction (PROVE-11 lazy-field symmetry: eager `= []` sites **6→0**, fused alloc **1.84→
+  0.73 B/op, −60%**). `value:T` writes only through the single choke `unsafeSetValue`
+  (`state.ts:87-89`) — the sole by-design megamorphic-write site. **Substrate, landed-grade.**
+- **P2 the megamorphic dispatch spine is irreducible.** Every combinator threads `this.parser(state)`
+  through the `.parser` function-pointer field (`parser.ts:53,82,88`; measured 5.9% CPU,
+  `perf-optimization-ts.md:202-207`). 8A keeps every *object* monomorphic so the only polymorphism
+  V8 confronts is this deliberate indirection, then reduces what rides across it (alloc, tuple
+  materialization) — it does NOT pretend to monomorphize it (prior-art LAW: the runtime
+  tagged-union/`switch` escape was measured **−10–14%** and KILLED, B.W0/P-inv-28).
+- **P3 construction-time specialization.** Arity unrolls run their `if(n===2/3)` branch once at
+  `new Parser(...)` (`leaf.ts:154-273` `fuseAll`; `leaf.ts:28-79` `any`), yielding one
+  constant-folded closure per call site; `dispatch` builds its `Int8Array(128)` LUT once
+  (`leaf.ts:100-151`).
 
-**Mechanism (concrete signatures).** One shared `src/parse/types.ts` exporting the single
-`ExtractValue`; then the entry bounds move to the **`const`-tuple form** (TS 5.0 `const` type
-parameters; pkg pins `typescript ^5.8`):
-```ts
-export function all<const T extends ReadonlyArray<Parser<unknown>>>(...parsers: T): Parser<ExtractValue<T>>
-export function any<const T extends ReadonlyArray<Parser<unknown>>>(...parsers: T): Parser<T[number] extends Parser<infer V> ? V : never>
-function   fuseAll<const T extends ReadonlyArray<Parser<unknown>>>(parsers: T): ParserFunction<ExtractValue<T>>
+**THE PASS-3 ADVANCE — the arity unroll does NOT inline; the win is alloc-elimination, not
+inlining (research-A §2A, `--trace-maglev-inlining` on Node 26 default tier).** Fused `fuseAll`
+closures measure **169 bytecode @ arity-2, 234 @ arity-3** — both overflow V8 maglev's **100-byte**
+inline budget; `parseStateInner` (162) is likewise never inlined. **Structural leg (refuted): the
+unroll buys no call-site inlining at any arity.** Temporal leg (confirmed): the cold-paired win is
+real and reproduces adversarially (+10.1/+15.6% fused, alloc −60%) **because the lever is
+allocation elimination** (one flat array vs N−1 nested tuples), *not* inlining. **The two legs MUST
+be carried separately** — any PT-3/W4 claim attributing speed to inlining reasons on a false model
+(R-A1). Small leaves DO inline (`stringParser`,`unsafeSetValue`,`ok`, ctor); the *sequencing* layer
+is an inline boundary by construction, and only a build-time emitter can move it.
+
+**center-B (arity-N specializer) disposition — the double-block, restored and re-scored.**
+- **Mechanism half (stays blocked):** the *only* route under the 100-byte ceiling is a build-time
+  combinator→JS fuser emitting straight-line offset-threading per static-arity call site (the
+  4B-TS shape, research-A §2C). This is a **NEW subsystem** and a **different mechanism** from the
+  runtime unroll (a code-generator vs a construction-time closure-picker). LOCK-4B's own REGISTRY
+  banked its TS face: "terminal-role BANKED→compile-backend," win "no V8 analog (T1)," "isomorphism
+  half 0% built." center-B's inlining goal is mechanism-blocked there. **Named supersession
+  standing (Constitution ix); do not silently drop.**
+- **Consumer half (RE-OPENED by §0):** pass-2 blocked center-B partly as consumer-less (dead
+  value.js corpus). The census re-flip restores 59 LIVE `all()` sites on value.js-`master` under
+  disposition A → the runtime unroll's corpus is **not** dead. Under disposition B it re-anchors to
+  latex's `any()` arity-3/variadic + first-party bench.
+- **Verdict:** the runtime unroll SHIPS as alloc-elimination (real, measured, consumer-live under
+  A). The inlining ambition is a LOCK-4B build, un-run. center-B stays a BLOCKED *sub-deliverable*
+  on the mechanism axis only.
+
+**Integration seams.** shape core `state.ts:36-53/55-73/87-89`; dispatch `parser.ts:24-49/51-75`;
+specializers `leaf.ts:28-79/100-151/154-273`; `mapState` `parser.ts:177-180` (`Object.create(state)`
+— the one prototype-chain object; R-A3: a hot grammar routing through it can deopt callers);
+diagnostics latch `utils.ts:6`; packrat `packrat.ts:156,290` (unarmed no-op); bench floor
+`test/benchmarks/pt-b3-fusion.bench.ts`.
+
+**Gates it would carry (born-RED).**
+1. Per-arity inline verdict base-pinned (XL-H): confirm the 169/234 non-inline boundary at arities
+   1..6 on a fresh 1.0.0 scratch; record where the general arm crosses. *Structural, deterministic.*
+2. `%HaveSameMap(diagOn,diagOff)===true` (fixed-from-birth) under `--allow-natives-syntax`; assert
+   `mapState` is the ONLY prototype-chain object and its callers are not deopted.
+3. Alloc-zero certification on the default path (`--expose-gc` heapUsed B/op, packrat unarmed,
+   diagnostics off): the −60% holds, no per-parse alloc slips in.
+4. Maglev inlining trace at each arity (Node 26 default production tier — un-run 2 prior passes).
+
+**Exact open questions.**
+- **`mapState` consumer re-census on value.js-`master`.** Pass-2's "0 consumers" was a tranche-u
+  read; `master` is unchecked. If `master` routes a hot grammar through `mapState`, R-A3's deopt
+  risk is live and the pass-2 "8A defects dissolved" claim is contingent, not settled.
+- **The build-time-emitter counterfactual (the one experiment that could dissolve §2A's ceiling):**
+  does per-site straight-line `all(a,b,c)` emit <100 bytecode and INLINE where the runtime unroll
+  cannot? Un-run; LOCK-4B-homed.
+- `CEILING` read from the surviving corpus histogram (latex+self-use under B; +value.js-master 59
+  sites under A).
+
+---
+
+## FAMILY 8B — TYPE-LEVEL TOTALITY
+
+**Architecture.** The TS *checker* plane: a typed combinator algebra with no `any` in public return
+types, the instantiation budget within TS2589, and the byte-identical-`dist` (zero-runtime-cost)
+invariant proven by construction. This family types a *runtime* parser — it does NOT move parsing
+into types (the parsebox recursion-depth / checker-slowdown ceiling; the ts-parsec friction tax).
+
+**THE PASS-3 REVERSAL that re-founds the family (research-B §0).** The R4/PT-3 premise — *"the
+`Parser<any>` inference leak; combinators return `Parser<any>`"* — **does not reproduce at HEAD.** A
+tsc reveal-test at 1.0.0/tsc 5.9.3: `all(string,regex)`⇒`Parser<[string,string]>` (precise tuple),
+`any(a,b)`⇒`Parser<string>`, `.skip`/`.sepBy`/`.many` all precise. The `any` in
+`all<T extends Array<Parser<any>>>` is a **constraint BOUND, not a return-type leak** —
+variadic-tuple inference binds `T` to the actual argument tuple; the mapped `ExtractValue<T>`
+recovers per-position types. **8B is reframed: not "fix a soundness hole" but "delete a cosmetic
+`any` from the public `.d.ts` at proven zero cost, and prove the algebra was already total."**
+SPEC-fidelity divergence: PT-3 §3 / R4 §5 overstate the defect (MED→cosmetic).
+
+**8B-G-ASUNKNOWN RESOLVED — the PROTO-1 `all` cast is a LAWFUL PHANTOM ERASURE (research-B §1,
+discharges GRAFT A by classification).** `Parser<T>`'s `T` is a **phantom** parameter: its sole
+`T`-typed field is `parser: ParserFunction<T>`, and `ParserFunction<T> = (ParserState<any>) =>
+ParserState<any>` — `T` is *already* erased to `any` inside its own definition. No runtime value
+flows through a `T`-slot, so `parsers as unknown as Parser<unknown>[]` re-labels a phantom; it
+cannot make a value inhabit a type it lacks. This is the GHC `Coercible` law (coercion sound iff the
+parameter is representationally irrelevant — a phantom always is). **The pass-2 flagged flagship
+soundness leak is a documentable phantom erasure, not a leak.** The ONE load-bearing `any` is
+`ParserFunction`'s `ParserState<any>` argument (the central megamorphic IC threads heterogeneous
+states through one indirect call) — **KEEP + document** as an implementation-boundary variance
+requirement. The charter phrasing refines: "no `any` in *public return types*" (achieved), not "no
+`Parser<any>` anywhere."
+
+**Mechanism — the tightened signature, constructed and measured (research-B §2).**
 ```
-`const T` is the single enabling feature (freezes the literal tuple so the homomorphic map indexes
-positionally; without it rest-arg inference widens `all(a,b)` → `Parser<Vx[]>`). It is compile-time
-only, erased. **`ParserFunction<T>` STAYS `ParserState<any>`** at the implementation boundary — the
-deliberate variance seam through which every closure shape flows one indirect call (R4 §6c); it is
-documented as an implementation-boundary `any`, NOT counted as a public leak (prior-art R-E:
-over-tightening it re-monomorphizes the IC and perturbs 8A's pinned closures). `restore`
-(`state.ts:79`) retypes `value: any → T`.
+any<T extends ReadonlyArray<Parser<unknown>>>(...parsers: T)   // was Array<Parser<any>>
+all<T extends ReadonlyArray<Parser<unknown>>>(...parsers: T)   // was Array<Parser<any>>
+fuseAll(parsers: ReadonlyArray<Parser<unknown>>)              // was Array<Parser<any>>
+skip(parser: Parser<unknown>): Parser<T>                       // drop dead <S>, kill Parser<T|S>
+sepBy(sep: Parser<unknown>, …): Parser<T[]>                    // drop dead <S>
+```
+Inference preserved byte-identical (non-`const` mutable tuple); **no TS2589 at arity-12** (the
+homomorphic `{[K in keyof T]:…}` mapped type is O(arity), non-recursive). **`const`-variant is
+semver-visible** (narrows to `readonly` tuples — breaks mutate-the-result consumers) → ship
+non-`const`; `const` is a named future option. Consolidate the twin `ExtractValue`
+(`parser.ts:9-11` ≡ `leaf.ts:155-157`) into one `src/parse/types.ts` (DRY, closes the god-DRY item).
 
-**GRAFT A resolved — the `as unknown as` in `all` (8B-G-ASUNKNOWN, the pass-2 flagship
-thesis-violation).** research-B §1 partitions the erasures into three DISTINCT classes; only the
-first is the flagged cast, and it is REMOVED, not documented:
-- **(the flagged cast) — REMOVABLE, therefore DELETED, not documented.** The tightened prototype's
-  `all` body reads `fuseAll<Result>(parsers as unknown as Parser<unknown>[])` — a cast that exists
-  ONLY because the tightening stopped one call short: `all` got a `const`-tuple bound but `fuseAll`
-  still declared `Array<Parser<any>>`. Propagating the same bound into `fuseAll` (the
-  `<const T extends ReadonlyArray<Parser<unknown>>>(parsers: T)` signature in the mechanism block)
-  lets `all` call `fuseAll(parsers)` with **no cast** — SOUND because `fuseAll` only READS
-  `parsers[0..2]`/`parsers[i]`/`.length` (verified `leaf.ts:184-272`; the sole `.push` is `dispatch`'s
-  local intern array `leaf.ts:108`, a different variable), byte-empty `.js`, zero new TS2589.
-  **Documenting a removable cast as "lawful variance" would be the self-deception the plane forbids;
-  the prototype MUST show the cast GONE, not annotated (research-B §1a / R-A).**
-- **Lawful variance — DOCUMENT and keep (a DIFFERENT set).** `many`/`sepBy` (`parser.ts:556,629`),
-  `trim` (`parser.ts:481,520`), `state.ok/err/from` (`state.ts:59-72`) reuse the SAME mutable state
-  and retype its `.value` through `unsafeSetValue` (`state.ts:87-89`) — no fresh object, no field
-  transition, and NOT removable without allocating a fresh typed state per combinator (the exact alloc
-  the hot path forbids). Annotate each `// variance:` and leave — the same discipline that documents
-  `ParserFunction<T>`.
-- **The GENUINE type leak — the arity-1 fold, which the shipped RETURN cast CONCEALS.** `all()` special-cases
-  `parsers.length === 1 ? parsers[0].parser : fuseAll(...)` (`leaf.ts:160-163`): at arity-1 the
-  runtime returns the inner parser unchanged (yields bare `V`) while the declared type is
-  `ExtractValue<[Parser<V>]> = [V]`. `all(string("a"))` is typed `Parser<[string]>` and delivers
-  `"a"`. **Cure (ii) — type arity-1 as `Parser<V>` to match the runtime** (a TYPE change, byte-empty
-  dist/). Rejected: cure (i) (build a 1-array) is a RUNTIME change that breaks byte-identity and is a
-  separate semver-visible item. Cure (ii) is chosen precisely so 8B's tightening remains pure erasure.
+**8B-G4'-EMIT DISCHARGED — byte-identical `dist` PROVEN on the real toolchain (research-B §3).**
+Two scratch `typescript/` copies, `vite build` each, HEAD vs tightening: aggregate `shasum` over
+**all `dist/*.js`+`*.cjs` is IDENTICAL** (`ef2a829…` both trees); per-file `.js`/`.cjs` diff empty;
+only `leaf.d.ts`/`parser.d.ts` move, only in the four signatures. This is the constitution's
+clause-v (type plane costs zero at runtime) **proven for TS by construction** — `isolatedModules`
+erases types before rollup — on the package's own `vite build`, not an esbuild proxy. **The
+clause-v gate that "never fired" (pass-2) FIRED, GREEN.** Step-(i) toolchain-migration delta stays a
+separate attributable diff taken FIRST.
 
-**`skip`/`sepBy` input leaks (8B-G3-RESIDUE).** Both discard the passed parser's value yet constrain
-its type against `T`. Tighten `skip<S>(parser: Parser<T|S>)` → `skip(parser: Parser<unknown>):
-Parser<T>` and `sepBy<S>(sep: Parser<S|T>, …)` → `sepBy(sep: Parser<unknown>, …): Parser<T[]>` —
-input in a discarding position is contravariantly `unknown`; delete the phantom `S`. `next<S>` is the
-dual and is already correct — leave. **TS2589 risk: none** — deleting a generic + widening an input
-strictly REDUCES the instantiation graph.
+**Gates it would carry (born-RED).**
+1. **The generateTrace INSTANTIATION-COUNT budget on the NATIVE corpus** — the one figure deferred
+   THREE passes. `tsc --diagnostics --generateTrace` HEAD vs tightened; report `Instantiations`+
+   `Types` delta + TS2589 count. **Native corpus = value.js-`master`'s 59 `all()` sites** (the real
+   stress, LIVE again under §0) — NOT the synthetic latex-shape stress PROTO-1 used. Under
+   disposition B, record it un-runnable and take it on `.test-d.ts` + self-use. **This is Brief 1.**
+2. latex-paper 0.7→1.1 crater: pack a tightened tarball, `npm i`, `npm test` + full `tsc`/`vue-tsc`;
+   `.skip`/`any` sites stay green (expected; §2 non-breaking). Minor-step alone first (attribution).
+3. `restore(value:any)→value:T` (`state.ts:79`): no new error at internal call sites.
 
-**TS2589 discipline (the SOTA negative lesson).** The algebra is NON-RECURSIVE (single-level map,
-O(N) flat in arity) — structurally far under TS's ~50-depth / ~5M-instantiation budget. PROTO-1
-measured +124 instantiations (+2.9%), 0 new TS2589, precision both ways. **The one trap: do NOT fold
-nested `.then` 2-tuples type-side** (that IS the recursive form that trips TS2589); mirror the
-flattened runtime array.
-
-**Integration seams.** `parser.ts:9-11` (canonical `ExtractValue` → move to `types.ts`), `:14-16`
-(`ParserFunction`, keep-and-document), `:189` (`skip`), `:569` (`sepBy`), `:212` (`next`, correct);
-`leaf.ts:28,154,179` (entry bounds → `const`-tuple), `:155-157` (duplicate `ExtractValue`, delete),
-`:160-163` (arity-1 fold, cure ii); `state.ts:79` (`restore`).
-
-**Gates it carries (born-RED).** (1) Tightened algebra compiles + infers on `test/types/
-inference.test-d.ts`: `all(string("a"), regex(/\d/))` ⟹ `Parser<[string,string]>`; `any(...)` ⟹
-union; `@ts-expect-error` fires on a wrong shape; `skip`/`sepBy` accept any element type. (2) **No
-new TS2589** — `tsc --noEmit` clean on the type-test project AND on value.js-master's ~61 sites with
-the candidate 1.1.0 tarball. (3) **BYTE-IDENTICAL `.js`** — the two-step on the REAL vite+vite-plugin-
-dts toolchain (NOT an esbuild proxy): (i) version-migration delta recorded/attributed, (ii)
-tightening delta **byte-empty** on `dist/*.{js,cjs}` under cure (ii). `.d.ts` MUST change (that is
-the deliverable — fence the diff to `.js`, R-D). *This is the clause-v gate that has NEVER fired.* (4)
-Instantiation budget: `--extendedDiagnostics Instantiations` delta baseline-vs-tightened, disclosed
-with tsc version + exact signatures + corpus manifest; NATIVE leg on value.js-master @ 3.1.0 (H2, pin
-master) + self-use leg always available; assert linear-in-call-sites, not superlinear.
-
-**Open questions.** (i) The byte-empty step-ii on the real toolchain has never run (the zero-runtime-
-cost invariant — a non-empty `.js` delta halts). (ii) The native budget number is runnable only iff
-H2 holds AND value.js-master will adopt 1.1.0 (P2); else record un-runnable, take it on self-use
-under the exact tightened signature. (iii) Does `const T` redden value.js-master's `all(...someArray)`
-spread sites (R-B, caught only by full `tsc`, never unit tests)? (iv) result-union (`Parser<T,E>`
-labels) stays BANKED (keyframes' demand evaporated via divorced value.js; reopen only on a live named
-consumer).
+**Exact open questions.** The native instantiation count (the *count* delta — inference + byte-
+identity + no-TS2589 are proven; the count is not); whether disposition B makes the native number
+un-runnable; the `skip`/`sepBy` residue tightening's crater confirmation.
 
 ---
 
-## FAMILY 8C — THE ISOMORPHIC MIRROR (the correspondence plane) — ADVANCED
+## FAMILY 8C — THE ISOMORPHIC MIRROR (correspondence)
 
-**Architecture.** A **machine-generated divergence ledger** — one checked-in, CI-diffable row per
-combinator/leaf/subsystem across the Rust and TS parse-that surfaces, each classified
-`MIRRORED` / `LAWFUL-NON-MIRROR(reason)` / `DRIFT` — and, riding on it, the **two-engine regex
-reconciliation**. 8C is a *diff artifact*, not a rewrite: it never edits parse-that; it emits a
-ledger, a paired-triple corpus, and a scratch priority-DFA prototype (all evidence the isomorphism
-claim is measured, not asserted). After the pass-1 cession, 8C's SOLE residue is the ledger; the
-linter is LOCK-6A, the single-spec→two-artifact generator LOCK-6B, the behavioral differential oracle
-LOCK-6D. **WASM-CORE for the combinator hot path is REFUTED** (prior-art §3: OpenUI 2.2–4.6× faster
-in pure TS; PROVE-14 full-walk 0.91×) — the surviving isomorphism forms are 6A mirror-tree + 6D
-oracle; 8C consumes that verdict and claims no shared automata engine for the hot path.
+**Architecture.** The TS plane as the lawful mirror of the Rust parse-that core. 8C does NOT build
+the general machinery (linter→6A, single-spec generator→6B, differential harness→6D) — the pass-1
+triple double-home is RESOLVED by cession. 8C's SOLE residue is parse-that-specific DATA: the
+machine-checkable **DIVERGENCE LEDGER**, the regex **hazard-class enumeration + discriminating
+corpus**, and the routing of the regex-engine decision to LOCK-5. 8C supplies data; the three
+mechanisms are LOCK-6's (R-C4 — no duplicate harness).
 
-**Mechanism — the ledger (P1 tool).** An AST/grep census over `rust/parse_that/src` (`pub fn`/method
-names) and `typescript/src/parse` (class methods + `export function`), joined on a name-map, emitting
-a TSV with auto-classification: both-sides → MIRRORED-candidate (human confirms semantic parity);
-one-side → DRIFT until a reason promotes it to LNM; whitelisted → LNM. **DRIFT is a lint failure**
-(mirror the surface or write the reason). Regen-only: a hand-authored ledger drifts and is a
-workaround (R5); the §2-seed table (research-C, ~40 rows hand-verified) is the SEED, the shipped
-artifact is regenerated and CI-diffed against a checked-in copy. **Rust carries TWO combinator
-engines (closure-`Parser` + `SpanParser`/`span_parser/`, 10 files, no V8 analogue); TS carries ONE**
-(the `*Span` family excised at 1.0.0, guarded dead by `proof:no-span-surface`). The `SpanParser`
-engine is the largest single DRIFT → `LNM(rust-perf-engine)` as a **NAMED supersession** (Constitution
-forbids silent mirror-contradiction), not left silently divergent (R6). Each ledger row also carries
-a **FIRST-PARTY-ONLY** flag fed by 8D's tier adjudication (§8D) so the gestalt sees which surfaces are
-not externally load-bearing.
+**THE PASS-3 CENTRE OF GRAVITY — the regex row PARTITIONS by expressiveness, and the LIVE hazard is
+expressiveness, not selection (research-C §3, R-C7 "highest value").** The two engines diverge along
+TWO independent axes:
+- **Selection axis (H1-H4, H9):** Rust `nfa.rs:311-314` *builds* priority-ordered ε-edges (intending
+  leftmost-first to mirror JS) → `dfa.rs:189-201` subset construction **discards priority**
+  (`BTreeSet<StateId>`) → `find_at` returns **leftmost-LONGEST**. JS `RegExp /y` is
+  **leftmost-FIRST**. Today `DRIFT-RISK`. **The engine is internally self-contradictory** (priority
+  built then thrown away) — a real bbnf-regex/LOCK-5 defect (constitution ii), not merely a mirror
+  question.
+- **Expressiveness axis (H5-H7):** the Rust `Hir::Look` (`hir/mod.rs:170+`) is a **fixed** assertion
+  enum (Start/End/word-boundary) with **no** general `Look(Box<Hir>)` — **lookahead `(?=…)`,
+  lookbehind, backreference are INEXPRESSIBLE Rust-side.** `HARD LAWFUL-NON-MIRROR(inexpressible)`.
+- **THE DECISIVE FACT: the live corpus exercises EXPRESSIVENESS (H5), not selection.** latex-paper
+  ships `regex(/[\s\S]*?(?=\])/)` and `/[\s\S]*?(?=\))/ ` (`math.ts:45,57`) — lazy `*?` **plus
+  lookahead**. R-C1 is not a contrived `/a|ab/`; it is shipping consumer code, and the Rust HIR
+  cannot even hold the assertion.
 
-**Mechanism — the regex row (the one DRIFT that is a semantic ENGINE difference, not layout).** TS
-drives V8 Irregexp (backtracking, Perl **leftmost-first**) via a sticky `/y` clone at offset
-(`leaf.ts:344`); Rust drives bbnf-regex (HIR→Thompson-NFA→subset-DFA→Hopcroft-min), anchored via
-`Dfa::find_at`, recording `last_accept` on every accepting position = **leftmost-longest (POSIX)**
-(`dfa.rs:116,122-138`). The two engines disagree by construction on order-sensitive and non-regular
-fragments. **PROTO-2 (pass-2) resolved the classification = `MIRRORED-WITH-GUARD`** (not unconditional
-lawful-non-mirror): the 10 real parse-that leaves agree byte-for-byte (the two `|` sites have disjoint
-first bytes → longest ≡ first), 6 synthetic triples diverge; and found a SECOND hazard class
-(lazy-quantifier → greedy, `\d+?` on `123` → Rust 3 / JS 1). The FULL hazard enumeration (research-C
-§3a) is H1 alternation-order, H2 greedy-extent, H3 lazy/non-greedy, H4 backreferences (non-regular,
-HIR rejects), H5 lookaround (non-regular), H6 capture-submatch, H7 anchors/flags, H8 Unicode, H9
-empty-match, H10 catastrophic backtracking (V8 exponential vs bbnf linear — *the reason the two
-engines coexist*), H11 anchoring-mode. Many (H2,H7,H9,H11) may be LATENT-agreeing on the anchored-
-scanner usage parse-that actually exercises — measure before building (R3/R4).
+**The two routes and 8C's adjudication (routed to LOCK-5 as a DECISION).**
+- **Route A — priority-preserving determinization** (RE2 Perl-mode: ordered thread-list ε-closure,
+  highest-priority accept, Cox VM Part 2). **Dissolves H1-H4/H9** (the selection axis). Costs, named:
+  minimization weakens (a tagged/TDFA must partition on match-priority → fewer merges, larger
+  tables); state-blowup risk (DFA-size cap + PikeVM fallback, inherited). **It does NOT touch H5-H7.**
+- **Route B — build-time grammar constraint** (forbid/normalize ordered-alternation-shorter-first,
+  lazy quantifiers, lookaround). Cheaper engine, constrains the author, **and BREAKS the live latex
+  leaves** (forbid-without-rewrite cannot accept H5).
+- **8C's recommendation (parsimonious, constitution-fit):** since the LIVE divergence is
+  expressiveness (H5), which route A cannot fix, **HOIST context-sensitive assertions out of regex
+  leaves into the combinator layer** (`[\s\S]*?(?=\])` → a `take_until("]")` composition both
+  engines mirror), reserve route A only if a live *selection-axis* divergence appears, and mark
+  H5-H7 a permanent `LAWFUL-NON-MIRROR` with the rewrite as the migration. **This REFRAMES the
+  pass-2 "8C-guard ⟂ LOCK-5-route-A-fix" incompatibility:** neither the guard nor route A resolves
+  the live class; the assertion-hoist does. The engine choice is LOCK-5's; 8C supplies the corpus.
 
-**The LOCK-5 engine defect (routed as a DECISION; the pass-2 collision RE-CLASSIFIED).** PROTO-2 read
-the confirmed defect from source: the NFA carries priority (`EpsilonEdge{priority}`, nfa.rs:23,313 —
-leftmost-first intent) but `epsilon_closure`/`move_on_byte` compute over `BTreeSet<StateId>`
-(dfa.rs:189,205) — **priority is discarded at determinization**; the DFA then does leftmost-longest.
-The NFA's leftmost-first intent never reaches the matcher; the engine is internally self-
-contradictory. **Two routes, and pass-3 finds them COMPLEMENTARY, not competing** (research-C §3b —
-this DISSOLVES the pass-2 `8C-guard ⟂ LOCK-5-fix` collision):
-- **Route A — priority-preserving subset construction** (RE2 / regex-automata
-  `MatchKind::LeftmostFirst`): replace the set-based ε-closure with a priority-ordered thread-list
-  closure keyed on the ordered sequence; the DFA records its highest-priority accepting member; `find`
-  prunes threads reachable only after a higher-priority accept. **Dissolves the REGULAR fragment
-  {H1,H2,H3}** — engines agree.
-- **Route B — build-time classify-gate** (`classify.rs:55,157` extended to reject H4 backrefs, H5
-  lookaround at grammar-compile with a span-named diagnostic). Handles the **non-regular residue no
-  DFA can mirror**. B alone cannot fix H1 without forbidding overlapping alternations (draconian).
-- **Synthesis: A + B complementary.** Route A closes {H1,H2,H3}; Route B rejects {H4,H5}; H6 is a
-  separate output-contract decision (Laurikari TDFA iff capture parity is contracted, else document
-  `regex()` as span-yielding). **The engine question ships to LOCK-5** (bbnf-regex is its home, XL-C);
-  8C supplies the discriminating corpus + the scratch prototype (P3) as the decision's evidence. The
-  guard does NOT foreclose the fix — they cover disjoint fragments.
+**Deliverable — the DIVERGENCE LEDGER (still UN-BUILT; the family's whole residue).** One classified
+row per unit (`MIRRORED` / `LAWFUL-NON-MIRROR(reason)` / `DRIFT`), emitted `scratch/8c-ledger.tsv`
+(landed via BBNF-PT-G). **Zero DRIFT rows** — the mirror is *dense* (method surface near-1:1); the
+exceptions are four subsystem rows (SpanParser Rust-only zero-boxing; packrat TS-only; diagnostics
+feature-vs-scope; regex partition) plus the mandatory **`not↔minus` NAME-INVERSION** (`minus.rs`
+`not` = EBNF `-` = TS `minus`; TS also has a distinct `not`/`negate` — the linter mis-pairs without
+it). The regex corpus is H1-H10 paired triples `{id,regex,input,expect_a,expect_b,expect_c}` **plus
+the two live latex fixtures**, **PARSED not string-matched** (R-C8: `\*?` at `commands.ts:182,269`
+is optional *literal* asterisk, not lazy — a naive `grep '*?'` miscounts).
 
-**Integration seams.** `dfa.rs:116,122-138,189,205` (determinization discarding priority), `:294+`
-(Hopcroft — the R2 hazard: minimizes by Myhill-Nerode equivalence, not a leftmost-first-preserving
-relation — may re-erase priority); `nfa.rs:23,313,326-433` (priority-carrying NFA + greedy/lazy
-fragments); `classify.rs:55,157` (the Route-B gate); TS regex `leaf.ts:317,344` (native `RegExp`
-sticky). Ledger census surfaces: `combinators/methods/*`, `leaf.rs`, `span_parser/` vs `parser.ts`,
-`leaf.ts`.
+**Integration seams / cession.** 6A consumes MIRRORED rows as its name-map + LAWFUL-NON-MIRROR rows
+as its exemption whitelist; 6B consumes the class column (emit-eligible vs forbidden-to-mirror); 6D
+consumes the parity-floor column (span-triple, regex-triple, diagnostics-triple). GRAFT B: 8D's
+`state.diag` boolean mechanism populates 8C's diagnostics ledger row so 6D asserts the real scoped
+surface. **Tape-crossing 4.78× stays fenced pure-JS-decode** (wasm→JS boundary UNMEASURED; SPEC §0
+shim-perf law; home LOCK-6/6C).
 
-**Gates it carries (born-RED).** (1) The ledger is GENERATED (P1 tool) and CI-diffed against a
-checked-in copy with **zero unexplained DRIFT rows** — the un-built deliverable, 8C's whole residue.
-(2) The paired-triple corpus is tagged H1–H11, run on the CURRENT engines to establish the MEASURED
-divergence set (which classes are latent-agreeing on anchored usage); the 6D corpus carries BOTH
-confirmed hazard classes (alternation-order AND lazy-quantifier — Gate (3) as written pre-PROTO-2
-would have GREENed a corpus hiding the lazy divergence). (3) The regex row is classified
-`MIRRORED-WITH-GUARD` by measured evidence, not assumed. (4) The ledger↔6A whitelist handshake is
-wired (every LNM row a whitelisted exception with its reason string; single source of truth = the
-ledger TSV, the linter reads it). (5) Decode-speed numbers FENCE their measured path — pure-JS-decode
-(stop-early **4.78×**, CI [4.20,5.37]; full-walk 0.98× parity) vs wasm-boundary (UNMEASURED, must
-never migrate onto a wasm claim, SPEC §0 shim law). (6) The priority-DFA scratch (P3) reports, on the
-real 50-pattern bench corpus: (a) does it flip H1–H3 to JS-parity, (b) DFA state-count delta (R1
-blowup risk — priority-keyed determinization can be exponentially larger), (c) does Hopcroft still
-hold (R2).
+**Gates it would carry.** The ledger, mechanically generated (AST/grep census, the un-built
+deliverable); the H1-H10+2-live corpus parsed-not-matched; the priority-DFA scratch prototype's
+triple output (Brief 2) as LOCK-5's decision input.
 
-**Open questions.** (i) **Is Route A needed AT ALL, or is the divergence latent-only for the live
-corpus?** — the P4 consumer-regex census (value.js-master + latex grammar regex literals) decides;
-if the corpus never exercises H1/H4/H5, Route B alone suffices and Route A is retired (Brief 2). (ii)
-Does priority-keyed determinization blow up state-count (R1) and survive Hopcroft (R2)? (iii) `SpanParser`
-disposition — LNM(rust-perf-engine) named supersession vs mirror obligation (a ledger decision, GESTALT-P).
-(iv) **8C cannot converge to 100% independent of LOCK-6** (regen gate ceded to 6B, parity oracle to
-6D) — its ceiling is LOCK-6-bounded (flag for GESTALT-P). (v) tape-crossing artifact home
-(`crates/bbnf-bench/ts-tape/` vs LOCK-6B `ts/tape/`) — adjudicate with LOCK-6; out of scope for the
-combinator ledger (it is a generated skeleton, 6B).
+**Exact open questions.** Whether route A is worth its minimization cost given it doesn't fix the
+live class; whether the assertion-hoist rewrite is accepted by LOCK-5 as the migration; the ledger↔
+6A whitelist handshake wiring; the tape-crossing home (LOCK-6 adjudication, deferred). **8C's
+ceiling is LOCK-6-bounded** — it cannot reach 100% independent of LOCK-6 (flag for GESTALT-P).
 
 ---
 
-## FAMILY 8D — CONSUMER-CONTRACT-FIRST (the API plane) — ADVANCED
+## FAMILY 8D — CONSUMER-CONTRACT-FIRST
 
-**Architecture.** The TS backbone designed backward from its actual LIVE consumers: their usage
-patterns define the retained API, perf gates ride their suites, semver + migration are first-class
-deliverables. The pass-3 re-census (§0) rebuilds the family on the MEASURED graph, not the assumed
-one: **one certain external consumer (latex-paper) + one contingent (value.js-master under H2)**;
-keyframes struck.
+**Architecture.** The backbone designed backward from its LIVE consumers; the API/semver/migration
+contract toward 1.1.0 as a first-class deliverable. 8D forks the other three families via the Y.13
+consumer-set decision and now via the §0 census re-flip.
 
-**Mechanism — 8D-G-Y13 ADJUDICATED (the pass-2 central decision that forks 3 families; RESOLVED).**
-The question: for combinators with no external consumer, is the first-party test/bench suite a
-legitimate consumer (Y.13 satisfied), or should the surface prune to the live external contract?
-**The governing distinction (research-D §2): parse-that is a PUBLISHED STANDALONE LIBRARY, not an
-app-internal module.** For an app-internal module Y.13 bites hard (dead surface is deletion-bait); for
-a published combinator algebra the PRODUCT *is* the algebra, and its own conformance + bench suite (13
-`test/*.test.ts` + 4 `test/benchmarks/*.bench.ts`) is a **legitimate first-party consumer** — the
-latent external installer the suite stands in for. Pruning to latex's 5-symbol slice would gut the
-library to a regex+string+alternation front and destroy its reason to exist. **VERDICT:
-KEEP-THE-ALGEBRA (route a) + DROP only the diagnostics module-globals the scope rework already
-deletes.** "Prune to the live external contract" is REJECTED — the right rule for an app-internal
-module, the wrong rule for a published library. Tiering:
-- **TIER-A — KEEP (hard external floor, both hypotheses):** `Parser` (+ methods `map skip trim then
-  next opt chain not`), `ParserState`, `regex`, `string`, `any`. Signature changes here ride latex's
-  `vue-tsc` gate. Under H2 add `all`, `dispatch`, `whitespace`, `mergeErrorState` (value.js-master).
-- **TIER-B — KEEP as library algebra (first-party-legitimate), LABEL FIRST-PARTY-ONLY in the 8C
-  ledger:** `.or .many .sepBy .wrap .peek .lookAhead .minus .negate .mapState .recover .eof`, the
-  `lazy`/packrat families, span/context helpers — each exercised by a first-party test.
-- **TIER-C — DROP:** the module-global diagnostics quintet (`enableDiagnostics …`) that the per-parse
-  scope rework deletes (a real surface change, semver-visible). `jsonParser`/csv/`splitBalanced`:
-  RETAIN-BUT-LABEL, decide at the gestalt with the owner, not unilaterally.
+**Q1 consumer-set — NO combinator prunes under EITHER disposition (research-D §2).** parse-that's own
+`scripts/proof-no-dead-combinator.mjs` already enshrines the first-party `test/` tree as a lawful
+consumer (`:63-68`) — Y.13/constitution-viii is discharged for first-party combinators *by the
+shipped gate*, not a new assertion. Two gate flaws, both fixable: (a) it omits `latex-paper/src`
+from `consumerTrees`; (b) its vacuity guard hard-codes `dispatch` as known-live (`:49-58`), but
+`dispatch`'s only external consumer is value.js-`master` — the anchor dies if tranche-u merges.
+**Disposition A:** keep all 9 symbols (each externally consumed by master). **Disposition B:** keep
+all; reclassify `all/dispatch/whitespace/mergeErrorState` external→first-party-consumed; **pruning a
+coherent algebra to fit one transiently-frozen downstream is the wrong move.** The only forced edit
+is the gate fix (add latex; re-anchor the vacuity guard).
 
-**Consequence for the coupled family fates:** 8D route (a) LIFTS the Y.13 block on 8A center-B (the
-first-party bench grammars are its corpus of record) — center-B's remaining block is LOCK-4B
-mechanism only. For 8A's **mapState front**: mapState is Tier-B, kept IFF a first-party test exercises
-it — but its consumer count is grep-CONFIRMED 0/0/0 externally and a first-party test is UNVERIFIED;
-if none exists, mapState prunes even under route (a) and the `ReadonlyState` ADVANCE front is
-discarded. The `8A-mapState-front ⟂ Y.13-prune` collision therefore NARROWS to a single verification
-(does any `test/*.test.ts` call `mapState`?), not a design conflict.
+**Q3 per-parse diagnostics — `state.diag` boolean field (FAVORED, research-D §4).** The residue is a
+single module-global `let diagnosticsEnabled` (`utils.ts:6`); storage is ALREADY per-parse on
+`ParserState`. Mechanism = replace the global with a **primitive boolean field `state.diag`** on the
+already-per-parse state, threaded from a parse option. **Disabled cost = ONE boolean read in the
+monomorphic hidden class** — zero alloc, zero new object, zero transition (a boolean fixed at
+construction never transitions). REJECT the `DiagnosticScope` object (per-parse alloc on the off
+path — the R2 trap). Deletion-proof the global (`rg 'let diagnosticsEnabled'`→0). **GATED on the
+PROVE-11 lazy-field lever landing first** (`state.ts:45-46` `suggestions`/`secondarySpans` are STILL
+eager `= []` at HEAD — a Y.13 substrate-consumer pair that must land together).
 
-**Mechanism — per-parse diagnostic enablement (GRAFT B; refines pass-2's `state.diag` boolean).** The
-defect: enablement is a module-global mutable flag `diagnosticsEnabled` (`utils.ts:6`) feeding a
-module-global buffer (`utils.ts:138-146`) — nested/interleaved parses cross-contaminate.
-**Recommended mechanism (c) — a shape-stable NULLABLE per-parse scope field, read lazily**
-(research-D §4): enablement is a PARSE OPTION (`.parse(src, {diagnostics:true})` / `withDiagnostics(fn)`),
-never a module-global write; a `DiagnosticScope` opens/closes on the parse epoch (the `parser.ts:34-49`
-try/finally, the same seam that brackets `packratEnter`/`packratExit`) and threads onto the per-parse
-`ParserState` (already constructed per-parse in `parseStateInner`). The scope is NULL on the disabled
-path; the lazy `suggestions`/`secondarySpans` fields populate only under `scope !== null &&
-scope.enabled`. This carries the buffer PER-PARSE (fixing the module-global cross-contamination the
-pass-2 boolean latch did not address) at the same disabled-path cost. **Disabled-path cost: ZERO alloc
-(a null field read, no object) + `%HaveSameMap` TRUE** (undefined-vs-fresh-array at the same map). The
-one legitimate allocation is a single scope object per TOP-LEVEL `.parse()` when ON — never per inner
-combinator-parse (the R2 hazard).
+**Q4 inference tightening × consumer type-check.** The native blast radius is value.js-`master`'s 59
+`all()` sites (TS2589 risk), NOT latex's 5 (R5). latex's single highest-risk site is
+`document.ts:81 const inlineNode: Parser<LatexNode|null> = any(...)` (explicit annotation absorbing a
+currently-`any` union) — caught only by `tsup && vue-tsc`, never `vitest`. **Dual-instance hazard is
+LIVE, not hypothetical:** latex carries nested parse-that 0.6.0 via bbnf-lang; `compile.ts:19,81`
+drives 0.6.0-built `Parser`s via `.map()` while typing them as the direct 0.7.1 `Parser`. Resolution:
+**DOCUMENT (MIGRATION.md row) + runtime-gate; do NOT force-dedupe** (a 0.6.0→1.1.0 jump for
+bbnf-lang's internals could break bbnf-lang; the crossing is defensively `Parser<any>` so the
+tightening does not bite).
 
-**Mechanism — the migration crater (re-cut two-leg).** latex's `^0.7.1` pin PREDATES the 1.0.0
-breaking cut (`*Span` excision S.H2, `chain()` C-16), so a "1.0→1.1 minor step alone" is not directly
-runnable for latex. Two legs for attribution isolation: **Leg A (0.7→1.0, MAJOR)** — install a packed
-1.0.0 tarball into a latex scratch, `vitest run` + `vue-tsc -p tsconfig.vue.json`; expected GREEN
-(latex touches only stable symbols); any RED is a 1.0.0 break, labeled as such. **Leg B (1.0→1.1,
-MINOR, the actual PT-3 delta)** — from Leg A's green tree, install the 1.1.0 candidate, re-run both.
-value.js crater is hypothesis-dependent: H1 no crater; H2 a clean single minor leg (master already at
-`^1.0.0`). keyframes MOOT. **The re-cut close gate (named supersession of PT-3 W5's "three consumer
-suites green"): latex Leg-B green + Leg-A attribution recorded + value.js-master green IFF H2, keyframes
-struck.**
+**Q2 migration crater — 2 positive legs + 1 negative guard, UN-RUN but constructable.** Leg 1
+value.js-`master` (POSITIVE, resurrected — the 59-`all()` native stress); Leg 2 latex-paper
+(POSITIVE); Leg 3 keyframes (NEGATIVE tripwire). Mandatory reinstall (`npm i ../parse-that-<cand>.tgz`
+— the false-green tripwire). **Minor-step-alone attribution** (value.js 1.0→1.1 alone; latex 0.7→1.0
+alone). **Baseline-GREEN-first is a hard precondition** (a consumer red at its pin independent of the
+candidate makes the gate uninterpretable — halt).
 
-**Integration seams.** `utils.ts:6` (module-global flag → per-parse scope field), `:138-146`
-(module-global buffer → per-parse), `parser.ts:34-49` (the epoch try/finally seam),
-`parseStateInner`/`parser.ts:56-65` (the already-per-parse state carrying `furthest`+`getLineAndColumn`
-always-on), `state.ts:36-53` (lazy fields), `leaf.ts:28,154` (the `any`/`all` bounds latex's `vue-tsc`
-gate covers).
+**Gates it would carry (born-RED).** The 2-leg crater run green (or exact break enumerated); the
+minor-step-alone attribution; the TS2589 probe on the native corpus (shared with 8B Brief 1); the
+`state.diag` `%HaveSameMap` oracle (gated on the lazy-field lever); the negative-guard tripwire; the
+gate fix re-run green under both dispositions.
 
-**Gates it carries (born-RED).** (1) Two-leg latex crater GREEN (Leg-B) + Leg-A attribution — baseline
-latex GREEN at 0.7.1 first or the sole positive gate is uninterpretable. (2) The `any()`-tightening
-reddening test: tightened `leaf.ts:28`/`154` on a scratch 1.1.0 tarball, `vue-tsc -p
-tsconfig.vue.json` over latex's 3 `any()` sites, diagnostic-set diff vs baseline — expected CLEAN (a
-precise type is a superset for well-typed sites); a new TS2589 or rejected `any()` is a real semver
-signal minor→major, decided by measurement (caught only by `vue-tsc`, never `vitest`). (3) `%HaveSameMap`
-TRUE diagnostics-off vs -populated; off-path paired-cold harness holds the landed floors (then-chain
-≥ +11%, fused ≥ +13%; dispatch carried at the HONEST ~+5% no-regression lane, NOT a ≥10% gate). (4)
-Empty semantic `dist/` `.js` diff (shared with 8B-G4'). (5) The dual-instance hazard is DOCUMENTED
-not-present (no repo nests two parse-that instances in the live graph — value.js-master 1.0.0 and
-latex 0.7.1 are separate installs) with a gestalt watch-note.
-
-**Open questions.** (i) **P2 — is latex live-forward or a fossil?** (2 weeks idle, 2 API cuts behind) —
-the deepest cut; the entire 8D construction targets a possibly-frozen repo, and its `vue-tsc` gate
-tests a migration latex may never run. A born-verified precondition, symmetric to P1. (ii) P1 — does
-tranche-u land (H1, value.js exits) or does master hold (H2)? (iii) Does the first-party suite actually
-exercise every Tier-B combinator (the mapState verification above)? (iv) `jsonParser`/csv/`splitBalanced`
-prune-vs-label — a gestalt+owner decision.
+**Exact open questions.** Both owner preconditions (P1 tranche-u merge; P2 latex live-forward); the
+crater result (un-run); whether latex's baseline is GREEN at 0.7.1 (the fossil question).
 
 ---
 
-## THE INCOMPATIBILITY MAP (pass-3 — one collision DISSOLVED, one NARROWED, one block HALVED)
+## INCOMPATIBILITY MAP (pass-3 — the census re-flip re-opens two pass-2 "evaporated" collisions)
 
-| pair | pass-2 disposition | pass-3 disposition | precise reason |
+| pair | pass-2 state | pass-3 disposition | precise reason |
 |---|---|---|---|
-| **8A ⟂ 8D** (StateView drops the field triple) | EVAPORATED | **EVAPORATED (holds)** | `mapState` 0 consumers; the 8D field triple is read on the RETURNED failed state (`parseStateInner`), never through `mapState`. |
-| **8A ⟂ 8B** (`as unknown as` unsound cast) | RE-RESOLVED (ReadonlyState) | **NON-CONFLICT (refined)** | 8B's `all` cast is DELETED via the readonly-tuple `fuseAll` signature (removable, byte-empty, 0 new TS2589 — NOT documented-as-variance); the genuine arity-1 fold leak is cured by type-only cure (ii). No unsound cast survives; GRAFT A discharged (research-B §1). |
-| **8B ⟂ 8D** (result-union vs field-triple) | ADJUDICATED (field-triple) | **ADJUDICATED (holds)** | latex reads neither `.expected` nor a result-union (import oracle); result-union is Y.13-thin additive. |
-| **8C ⟂ 8D** (below-combinator seams) | SHRUNK to 5-symbol surface | **INTERLOCKED** | 8D's KEEP-THE-ALGEBRA verdict restores the full algebra to the mirror; each Tier-B row is labeled FIRST-PARTY-ONLY in the 8C ledger. The two families now SHARE the tiering, not collide. |
-| **8A-mapState-front ⟂ 8D-G-Y13-prune** | ADD (CRIT-2) | **NARROWED to one verification** | Y.13 resolved to KEEP-THE-ALGEBRA; mapState survives IFF a first-party test exercises it (unverified). Not a design conflict — a census question. The `ReadonlyState` front is contingent, NOT banked ADVANCE. |
-| **8A center-B ⟂ Y.13 ∧ LOCK-4B** | DOUBLE-block | **HALVED to LOCK-4B mechanism only** | Y.13 block LIFTED (8D route a: first-party bench grammars are center-B's corpus). LOCK-4B mechanism block REMAINS (4B banked its TS face, "no V8 analog, isomorphism half 0% built"). Routed to GESTALT-P. |
-| **8C regex-guard ⟂ LOCK-5-fix** | ROUTE to LOCK-5 (foreclosure feared) | **DISSOLVED — COMPLEMENTARY** | Route A (priority-DFA) closes the REGULAR fragment {H1,H2,H3}; Route B (classify-gate) rejects the NON-REGULAR residue {H4,H5} no DFA can mirror. Disjoint fragments; the guard does not foreclose the fix. LOCK-5 decides Route A's necessity, gated on the P4 consumer census (may be latent-only → Route A retired). |
-| **8A ⟂ 8C-ambitious** (runtime TS dispatch) | BANKED (−14% law) | **UNCHANGED — BANKED** | Any runtime tag/switch on V8 is dead; the only door is the build-time emitter (= LOCK-4B). |
+| **research-A/B census ⟂ research-D census** (INTER-REPORT) | — | **research-D AUTHORITATIVE** | A/B censused only the checked-out `tranche-u` tree ("divorced"); `master:package.json` = `^1.0.0` with 59 `all()` sites (git-verified). Branch-incomplete vs branch-aware. |
+| **disposition A ⟂ disposition B** (value.js master-full vs tranche-u-PT-free) | — | **owner-gated, mutually exclusive; carry both** | master ships the full 9-symbol surface; tranche-u is paused/unmerged. A 1.1.0 cut CANNOT assume value.js has left. The crater MUST name its branch. |
+| **8A center-B ⟂ Y.13 ∧ LOCK-4B** | COUPLED + mechanism-blocked | **consumer-half RE-OPENED (disp A restores 59 sites); mechanism-half UNCHANGED** | the unroll's `all()` corpus is LIVE on master; but the inlining goal is a NEW build-time emitter 4B banked "no V8 analog (T1), isomorphism 0% built." |
+| **8A runtime-unroll ⟂ 8A inlining-goal** | conflated as one deliverable | **SPLIT** | 169/234 > maglev 100-byte budget; the unroll ships as *alloc-elimination* only; inlining needs the 4B-TS code-generator (different mechanism). |
+| **8A-mapState-front ⟂ 8D-Y13-prune** | ADD (mapState dead) | **RE-OPENED — re-census mapState on value.js-`master`** | pass-2's "mapState 0 consumers" was a tranche-u read; master unchecked. The "8A defects dissolved" claim is contingent until re-run. |
+| **8B "Parser<any> leak" ⟂ HEAD reality** | open soundness hole | **EVAPORATED** | the leak does not reproduce; `any` is a constraint bound; the algebra was already total (research-B §0). |
+| **8B-G-ASUNKNOWN (PROTO-1 `all` cast) ⟂ 8B thesis** | flagship soundness leak | **RESOLVED — lawful phantom erasure** | `Parser<T>`'s `T` is phantom (erased in `ParserFunction<T>`); the cast re-labels a phantom, sound by the `Coercible` law (research-B §1, discharges GRAFT A). |
+| **8C regex-guard ⟂ LOCK-5-route-A-fix** | ROUTE to LOCK-5 (guard forecloses fix) | **REFRAMED — neither fixes the LIVE class (H5); the assertion-hoist does** | route A fixes selection (H1-H4); the live hazard is expressiveness (H5 lookahead, inexpressible in Hir). Hoist the assertion into combinators; reserve route A for a live selection divergence. |
+| **8B ⟂ 8D** (result-union vs field-triple) | ADJUDICATED field-triple | **UNCHANGED, reinforced** | neither latex nor value.js-master reads a result-union; it is 8B's additive typed wrapper, Y.13-thin. |
+| **8A ⟂ 8C-ambitious** (runtime TS dispatch) | BANKED | **UNCHANGED — BANKED** | −14% runtime-switch KILL is law; the only door is a build-time-generated dispatcher (= LOCK-4B). |
 
 ---
 
-## BLOCKED-CANDIDATE ADJUDICATION
+## PLANE-WIDE GAPS & CROSS-LOCK ROUTING
 
-**No family is BLOCKED-candidate.** Every central family mechanism is constructible on current
-substrate: 8A's structural leg is banked (PROVE-11) and its temporal per-site unroll + `any` arity-3
-gap are live within-8A moves; 8B's tightened algebra RAN (PROTO-1) and the residue is bounded; 8C's
-ledger + regex corpus are pure diff artifacts; 8D's crater + scope mechanism are constructible now.
-What the (partial) consumer picture removes under H1 is CONSUMERS and banked NUMBERS, not primitives —
-and pass-3's §0 correction shows master retains a live corpus under H2.
-
-**One sub-deliverable stays blocked (not a family): 8A center-B (the arbitrary-arity build-time
-combinator emitter).** Pass-3 HALVES it from double-block to single-block — Y.13 lifted, LOCK-4B
-mechanism block remaining. It is NOT a BLOCKED-candidate by the "missing primitive equal in difficulty
-to the original problem" test: the family 8A is fully constructible without it; center-B is the
-LOCK-4B-homed ceiling-breaker (the only route past the megamorphic `.parser` IC), routed to GESTALT-P,
-not a within-lock stall. 8A's MAXIMAL claim (monomorphic-by-construction hot path) is ceiling-refuted
-and honestly scoped down, not blocked.
+- **The census re-flip re-adjudicates the pass-2 registry's load-bearing fact.** Every pass-2
+  conclusion premised on "value.js divorced" (mapState-0-consumers, 8A defects dissolved, 59-tuple
+  corpus dead, crater=1-positive) is re-opened pending the branch-aware census + the owner answer.
+  The registry must record research-A/B as branch-incomplete and research-D as authoritative.
+- **Both owner preconditions restated and sharpened (gate every 8A/8B/8D number):** (P1) tranche-u
+  merge intent; (P2) latex live-forward. Until answered, value.js-`master` binds as a live gate.
+- **The LOCK-5 regex-engine self-contradiction (priority built then discarded) is routed to LOCK-5
+  as a DECISION, REFRAMED by H5:** route A (priority-DFA) is elegant for selection but does not fix
+  the live expressiveness class; the parsimonious resolution is the assertion-hoist. 8C supplies the
+  discriminating corpus; the engine choice is LOCK-5's (PROPAGATE / GRAFT C).
+- **UN-BUILT / UN-RUN deliverables:** the 8C divergence ledger (the family's whole residue); the 8D
+  2-leg crater; the 8B native-corpus instantiation budget (Brief 1); the priority-DFA + H5-gate
+  triple (Brief 2); the 8A center-B build-time-emitter counterfactual; the mapState master re-census.
+- **BANKED / SETTLED (do not re-litigate):** the −14% VM/runtime-switch refutation (C1); packrat
+  homed + CONVERGED (type `Parser<T>`, float64 key, `MemoCell.ans` cold-quarantined, UNARMED across
+  live consumers); `opt`-in-`all` discharged (ADOPT `DropUndefined` + documented widening); SFI
+  predicate answered/RETIRED; `Parser<T,E>` labels + 8C-ambitious runtime dispatch + `dispatch<const
+  K>` BANKED. NEW this pass: the byte-identical `dist` invariant PROVEN (8B-G4' discharged); the
+  `Parser<any> leak` reversal; the `as unknown as` lawful-phantom classification (8B-G-ASUNKNOWN
+  discharged).
+- **BLOCKED-candidate assessment:** NO family is BLOCKED-candidate — every central mechanism is
+  constructible on current substrate, and the census re-flip *restores* consumers pass-2 thought
+  gone. 8A center-B remains a BLOCKED sub-deliverable on the *mechanism* axis (4B-TS) only; its
+  consumer axis is re-opened favorably under disposition A.
 
 ---
 
-## THE TWO SHARPEST UNCERTAINTIES (prototype briefs) — see StructuredOutput
+## PASS-3 CONVERGENCE (directional; the registry/agglomerator sets the authoritative floor)
 
-Both are parse-that code probes (pt-scratch) on scratch copies, base-pinned, HEAD-named. Brief 1
-strikes 8A's least-understood, zero-measured-evidence-for-2-passes temporal thesis at the SHIPPING
-tier. Brief 2 strikes the 8C/LOCK-5 fork whose resolution most advances GESTALT-P: whether the
-priority-DFA engine investment (Route A) is warranted AT ALL, or the divergence is latent-only for the
-live consumer corpus (Route B alone).
+| family | plane | status | direction | one-line |
+|---|---|---|---|---|
+| **8A** | V8 runtime | ADVANCED | ↑ (inline verdict answered) / caution (mapState master re-census) | the arity unroll does NOT inline (169/234>100); win is alloc-elim; center-B split into shippable alloc-elim + blocked inlining-via-4B-TS |
+| **8B** | type | ADVANCED | ↑↑ (leak evaporated, dist proven, ASUNKNOWN resolved) | reframed to cosmetic-`any` deletion at proven-zero-cost; only the native instantiation *count* remains un-run |
+| **8C** | correspondence | ADVANCED | ↑ (partition + live-H5 finding) | regex partitions by expressiveness; the LIVE hazard is H5 lookahead (inexpressible), not selection; ledger still un-built |
+| **8D** | API | ADVANCED | caution (census DUAL-STATE) | "sole survivor" superseded; two owner-gated dispositions; no combinator prunes; crater un-run |
+| *8A center-B* | — | BLOCKED (sub-deliverable) | mechanism-blocked on 4B-TS; consumer-block RE-OPENED by census re-flip | |

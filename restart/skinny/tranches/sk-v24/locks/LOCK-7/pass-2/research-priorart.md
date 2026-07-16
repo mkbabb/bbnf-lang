@@ -8,6 +8,20 @@ never conclusions. Every codebase claim is `path:line`; external claims are hype
 
 ## 0. The measurement substrate as it actually stands (codebase truth)
 
+> **Re-verified at skinny HEAD 2026-07-16 (XL-H):** every `path:line` in this section was re-grepped
+> this pass. `xtask` dispatch still carries only `regen-{json,sheets,css,real-typed}` (no
+> `regen-bbnf`, no `fixpoint`); `general_descent/emit.rs:1` still reads "recursive-descent
+> **recognizer** emitter" with the DirectBuild no-op at `:385` and the `cursor: &mut usize` alias
+> at `:448`; `resolve_refs`/`add_expr`/`validate` still at `ir/src/lib.rs:{84,51,110}`;
+> `!has_rule("value")` shape-dispatch still at `runtime_generator.rs:98`; `parse_generated` still a
+> PRODUCER at `parse-that/rust/parse_that/src/regex/mod.rs:34` (`host::lower` at `:57`, over the
+> `rust/bootstrap/` crate — the seed crate is `rust/bootstrap`, NOT `rust/regex-bootstrap`). **The
+> concrete self-host subject exists in-tree:** `grammar/bbnf/bbnf.bbnf` (+ `expressions.bbnf`,
+> `types.bbnf`) and `grammar/ebnf/ebnf.bbnf` are present — bbnf-in-bbnf is a real file to route
+> through the emitter, not a hypothetical. Note `@{…}` has *partial* handling already
+> (`grammar/src/lib.rs:420` `rest.starts_with("@{")` + tests at `:1737,:1985,:2024`), so the "three
+> parser gaps" are the DIRECTIVE-given floor, one of which (`@{}` atom) is only partly open.
+
 - **No `regen-bbnf`, no fixpoint gate exists in skinny.** The xtask dispatch
   (`skinny/xtask/src/main.rs:39-52`) carries only `regen-{json,css,sheets,real-typed}`; a
   grep for `fixpoint|regen-bbnf|byte_identical` over `skinny/xtask` returns *nothing* (only two
@@ -187,6 +201,20 @@ grammar" by exactly this synthesized/inherited frontier. **This gives 7C a princ
 semantic is grammar-expressible iff it is synthesized; inherited semantics are the lawful host
 surface** (aligns with the `hybrid-grammar-host` memory law).
 
+**The frontier is a PERFORMANCE boundary, not an expressibility one — a load-bearing refinement.**
+The classical result (Knuth 1968; restated in the
+[attribute-grammar](https://en.wikipedia.org/wiki/Attribute_grammar) literature) is that
+**synthesized attributes are semantically complete: any inherited attribute can be re-expressed as
+a set of synthesized attributes reproducing the same information.** So the host-fn boundary at the
+inherited frontier is NOT a hard limit on totality — inherited context (table paths, scopes) can in
+principle be lifted into synthesized form, pushing totality % arbitrarily high. What forecloses the
+lift is COST: the standard construction pays *additional tree passes* (or thunked closures), which
+SPEC §0's single-pass, fold-over-cursor-dead, zero-runtime-cost discipline forbids on the hot path.
+This sharpens 7C's counter (§below): the denominator's "inherited" leaves are host-bound *by the
+performance law, not by expressibility* — and the totality floor-gate must be justified as "grammar
++ synthesized-only within one left-to-right pass", the exact frontier tree-sitter's external
+scanner draws for the same reason (state beyond one pass ⇒ host C).
+
 **The deployed reference implementation of a host-fn boundary is tree-sitter's external
 scanner.** tree-sitter draws the totality line at *lexical* rules a regex cannot express —
 Python's indentation, heredocs, contextual keywords — and hands them to hand-written C via a
@@ -315,6 +343,7 @@ Web: [rustc bootstrapping](https://rustc-dev-guide.rust-lang.org/building/bootst
 [kefir](https://sr.ht/~jprotopopov/kefir/) ·
 [shecc](https://github.com/sysprog21/shecc) ·
 [pegen (PEP 617)](https://we-like-parsers.github.io/pegen/) ·
+[PEP 617 — New PEG parser for CPython](https://peps.python.org/pep-0617/) ·
 [van Rossum, A Meta-Grammar for PEG Parsers](https://medium.com/@gvanrossum_83706/a-meta-grammar-for-peg-parsers-3d3d502ea332) ·
 [GNU Mes stage0](https://www.gnu.org/software/mes/manual/html_node/Stage0.html) ·
 [Mes reproducible bootstrap / diverse double-compilation](https://reproducible-builds.org/news/2019/12/21/reproducible-bootstrap-of-mes-c-compiler/) ·

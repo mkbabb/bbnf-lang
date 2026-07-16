@@ -86,6 +86,25 @@ https://medium.com/@yashschandra/hidden-v8-optimizations-hidden-classes-and-inli
   8A design that claims IC monomorphism at the dispatch site over-reaches into a problem the
   perf doc already named as out of closure-core reach.
 
+**The tagged-union / runtime-switch escape (LAW-refuted on V8 — the most binding
+adjudication).** The obvious answer to §2's structural megamorphic IC — replace closure
+dispatch with a discriminated union + `switch(tag)` (the Rust `enum`-beats-`Box<dyn>` move) —
+was *implemented, measured, falsified, and KILLED* in parse-that. The `SpanParser` tagged
+union with `callSpan()` switch-dispatch ran **~10–14% SLOWER** than the closure span lane on
+an 8-arm CSS-value alt-token scan, reproduced across three workloads with an independent
+adversarial re-run at −14% (`parse-that/docs/future-research.md:71-115`, Tranche A.W3
+falsified → B.W0 P-inv-28 KILLED, zero in-realm consumers). The verdict verbatim: *"V8's
+monomorphic-per-call-site closure dispatch with inlining beats the recursive switch — the
+OPPOSITE of the Rust enum-vs-Box<dyn> regime… The jump-table speedup premise does not
+transfer from Rust to V8/TS."* **Binding on every route:** any 8A/8C proposal to escape the
+IC via a runtime discriminant is dead by measured refutation; the one carve-out (verbatim,
+future-research.md:112-114) is a *build-time-generated specialized dispatcher* (a flat
+array-of-ops, NOT a recursive runtime switch) — i.e. LOCK-4B's build-time fuser, never a
+runtime VM loop. This directly constrains **LOCK-4C's TS face**: a bytecode VM interpreted by
+one `switch(op)` is the exact shape refuted; 4C survives on TS only if dispatch is
+generated-and-specialized per grammar. The win lives in the COMPILER (fewer/FIRST-set
+monomorphic call sites), never in a cleverer runtime tag.
+
 **Packrat + global mutable state (the named pitfall that IS PT-E1).** Packrat's core
 invariant: *a nonterminal invocation at a given position must always return the same
 result* — this is precisely what precludes context-sensitive / stateful parsing under
@@ -146,9 +165,11 @@ in the adjudication is semver-ts.org, not an internal assertion.
    windows; a +8% reading is not a pass to celebrate when the honest carry is ~+5%
    (`VERIFY.md:118-125`; PT-3 R1).
 2. **The megamorphic-IC-is-structural trap.** Shape stability (8A) does NOT monomorphize the
-   central `.parser(state)` dispatch; only a tagged-union/VM redesign does (LOCK-4). Claiming
-   otherwise contradicts parse-that's own measured 5.9%-CPU finding
-   (`perf-optimization-ts.md:202-207`).
+   central `.parser(state)` dispatch (measured 5.9% CPU, `perf-optimization-ts.md:202-207`) —
+   and neither does a runtime tagged-union/`switch`, which was measured **−10–14% SLOWER** and
+   KILLED (`future-research.md:71-115`, §2 above). Only a *build-time-generated specialized*
+   dispatcher (LOCK-4B's fuser) is a live escape; a runtime VM `switch(op)` inherits the
+   refutation.
 3. **The type-level-friction trap.** ts-parsec's author and parsebox's recursion-depth ceiling
    warn that type-hackery can cost more than the grammar and slow the type-checker; 8B must
    type a *runtime* parser, not move parsing into types.
@@ -182,7 +203,10 @@ module-global latch. The honest-number, paired-interleaving, and zero-runtime-co
 non-negotiable constraints, not design choices.
 
 ### Sources
-- Codebase: `parse-that/docs/perf-optimization-ts.md`; R4-parse-that-ts.md; PROVE-11 REPORT/VERIFY;
+- Codebase: `parse-that/docs/perf-optimization-ts.md` (megamorphic 5.9% CPU; Chevrotain fair-bench
+  law; regex `test()` alloc cure); `parse-that/docs/future-research.md:71-115` (SpanParser
+  tagged-union refutation −10–14%, KILLED B.W0/P-inv-28 — the binding LAW); R4-parse-that-ts.md;
+  PROVE-11 REPORT/VERIFY (dispatch ~+5% not +10.2%; then +13.6%/fused +15.6%/alloc −60.1%);
   PT-3.md; VALUEJS-PT-E-2026-07-05.md; SPEC §0.
 - Web: semver-ts.org; learningtypescript.com (TS 4.7 inference break); spakhm.com/ts-parsec;
   github.com/sinclairzx81/parsebox; github.com/GregRos/parjs; ohmjs SLE2017 incremental packrat;

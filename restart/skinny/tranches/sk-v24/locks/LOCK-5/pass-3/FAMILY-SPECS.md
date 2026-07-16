@@ -1,379 +1,412 @@
 # LOCK-5 — THE REGEX CONTINUUM — pass-3 SYNTHESIS (FAMILY-SPECS)
 
-Synthesis of pass-3 research-{A,B,C,D,priorart} against the pass-2 registry (both within-lock critic
-floors), every prior artifact (PROTO-2 5A merge census, PROTO-1 5B un-bank gate), the ratified
-cross-lock ground (XL-C, XL-A, XL-H), and the pass-3 research directives. One cogent specification
-per family; then the incompatibility map, the cross-lock double-homes named back, and the two
-sharpest cross-family uncertainties as runnable briefs.
+Synthesis of pass-3 research-{A,B,C,D,priorart} against the pass-2 registry, the ratified
+adjudications (XL-C, XL-A, XL-H), and every prior artifact — including the two prototypes that RAN
+this pass (PROTO-1, PROTO-2). One cogent specification per family while the routes remain
+incompatible; then the incompatibility map, the cross-lock double-homes LOCK-5 names back, and the
+two sharpest runnable briefs. Elegance earns nothing on its own — a family stalled at a missing
+primitive as hard as (or harder than) the original problem carries a BLOCKED marker.
 
-## 0. THE RATIFIED GROUND RE-CUTS THE FAMILIES (XL-C is a fact, not a horn)
-
-**XL-C (RATIFIED, binding):** two domain-fit types — the grammar tier keeps `Regex(StringId)`
-opaque; the engine tier keeps the rich `Hir` grown with `Class`/`Look`; a cheap `string`/`format!`
-bridge reusing the engine's `simplify_hir` joins them. The parse-that engine is the one-regex-home;
-the vendored skinny `parse-that-regex` is the MEASUREMENT SUBSTRATE (base-pin every number to HEAD,
-XL-H). **The Axis-1 type-plane contest is closed.** The pass-3 charter is *harden the ratified
-substrate with run evidence*, not re-argue which type-plane wins.
-
-Under that closure the four families are no longer competing type-planes — they are the four
-work-streams the ratified substrate decomposes into, and their *remaining* incompatibilities have
-migrated off the type axis and onto **the generator path** (5C-engine-on-path ⊥ 5D-no-engine) and
-**the tree fork** (Fork-A keep grammar-tier e-graph ⊥ Fork-B abrogate). The re-cut:
-
-| Family | Pass-2 identity | Pass-3 identity under XL-C | Status |
-|---|---|---|---|
-| 5A | ONE-HIR (identity merge) | **LEAF-GROWTH + CONSUMER RE-HOME** — grammar-side hardening: delete the shadow scanners, consume the engine's one classify/first, cache facts on the node | ADVANCED |
-| 5B | LAWFUL-FUNCTOR | **THE BRIDGE** — functor-as-architecture RETIRED (PROTO-1); live residual = the string bridge XL-C *mandates but which is unbuilt* (`Display for Hir` does not exist) | RETIRED-architecture / live-residual |
-| 5C | AUTOMATA-AS-EXTRACTION | **ENGINE-TIER OPTIMIZATION** — delete-the-restart (Null-A), Revuz acyclic dispatch, the LOCAL prefilter tier table; 2B-as-minimizer BLOCKED (Kozen) | ADVANCED / one BLOCKED horn |
-| 5D | GRAMMAR-FRAGMENT | **GENERATOR-PATH LOWERING POLICY** — direct class-scan into grammar IR on the FOLLOW-sound subset; the DFA engine is the total fallback | BANKED |
-
-**No family is a BLOCKED-candidate wholesale.** The one provably-impossible missing primitive in the
-lock is *internal* to 5C: 2B-as-a-minimizer (equality-saturation minimizes the DFA) is BLOCKED by
-Kozen 1994 — no finite ground rewrite set is complete for star-equivalence (ρ_max 1.667 measured) —
-but 2B-as-determinizer survives (ρ=1, 25/26) and 5C the family survives on classical minimization +
-acyclic dispatch + the tier table. Marked at 5C below, not at the family head.
-
-**Two preconditions still gate every earned convergence (unchanged, re-confirmed).**
-- **P1 — the tree fork is unpicked.** The grammar-tier regex e-graph (`crates/ir/src/egraph/rules/
-  regex.rs`, 434→184 LOC) exists ONLY in top-level `crates/ir`; skinny ships without one. Fork-A
-  folds it in; Fork-B deletes it for free. PROTO-1 found the surviving 184 LOC structurally inert on
-  `Map`-wrapped (projected) branches → the consumer-density number is unrun and may be ~0. This is
-  BRIEF 2. XL-A homes the fork at GESTALT; LOCK-5 owes it the number.
-- **P2 — grammar-driven is SPEC-ONLY lock-wide.** Zero grammar-driven regex artifacts after two
-  passes. Two `regex.bbnf` diverge; `parse_generated()` returns `bool` and discards its AST. Every
-  verdict line below carries the **SPEC-ONLY(grammar-driven)** label until LOCK-7/7A.
+**Settled ground (XL-C, RATIFIED — conveyed as fact, NOT re-opened here).** TWO domain-fit types:
+the grammar tier keeps the regex leaf **opaque** (`Regex(StringId)` top-level / `Regex{pattern:String}`
+skinny); the engine tier keeps the rich `Hir` grown with `Class`/`Look`; a cheap `string`/`format!`
+bridge reusing the engine's `simplify_hir` joins them. 5A-identity is refuted; 5B-functor is retired;
+the survivor — two types + cheap bridge — is the lock's Axis-1 verdict and is owned by neither
+family's original charter. Canonical engine home is parse-that (one-regex-home); the vendored
+parse-that-regex inside skinny is the MEASUREMENT SUBSTRATE (base-pin every number to HEAD, XL-H).
+**Charter this pass: HARDEN the survivor with run evidence — not re-argue which type-plane wins.**
+SPEC-ONLY(grammar-driven) rides on every finding until LOCK-7/7A.
 
 ---
 
-## FAMILY 5A — LEAF-GROWTH + CONSUMER RE-HOME — **ADVANCED — 48%** (maximal merge REFUTED; the narrowed re-home is the ratified substrate's grammar-side hardening)
+## THE PASS-3 HEADLINE — the survivor's LOWERING POLICY got a run; its automata centerpiece is unrun a THIRD pass
 
-**Architecture.** The regex leaf lives *twice* today: the grammar/bbnf tier re-derives regex facts
-from raw pattern bytes (skinny `bbnf-regex`, 322 LOC, a four-tag string-comparison classifier;
-`codegen/general_descent/regex_first.rs`, 230 LOC, a second leading-token parser; `json_sink_direct/
-first_set.rs`, ~40 LOC), while the engine tier already carries the one rich `Hir` with `Class`/`Look`
-already grown and already under test. 5A's narrowed, ratified-consistent claim: **delete the shadow,
-consume the engine.** The grammar tier stays opaque (`Regex(pattern)` unchanged, XL-C); every bbnf
-site that string-scans a pattern instead reads facts off the engine's `classify_regex(&str)` /
-`regex_first_chars(&str)` (each parses internally). One parser, one first-set, one classify — the
-engine's — consumed by both planes. This is the lawful reconciliation of "ONE-HIR" with the two-type
-ratification: the *duplicate* dies, not the type.
+Two prototypes ran, both base-pinned to `ce51c36fc` (clean fast-forward, ANCESTOR-OK, not
+wrong-artifact-risk):
 
-**Mechanism.** (1) **Consumer re-home — SHRINK, not relocate.** Delete `regex_first.rs` (230) + the
-skinny string-scanner (~200 of 322) + `json/first_set.rs::regex_first_bytes` (~40) ≈ **−470 bbnf-side
-LOC**, adding ~0 engine-side LOC (the classify/first machinery is not moved — it is already the
-canonical home). (2) **Compute-at-bridge, carry-on-node** to kill repeated parsing: extend
-`BackendExpr::RegexProgram{pattern, span_kind}` with a cached `class: RegexClass` (+ optional
-`first: CharSet128`, `nullable: bool`) computed ONCE at the `ExprKind::Regex → RegexProgram` lowering;
-downstream passes read the cached facts. (3) **Leaf-growth is engine-side and already complete** —
-`Class`/`Look` are grown in `hir/mod.rs`; `Look::` is consumed in exactly three files (`automata/
-nfa.rs`, `hir/parser/atom.rs`, `info/classify.rs`) — a narrow auditable surface; 5A adds nothing to it.
+- **PROTO-1 (5D, G-5D.4) — RAN. The survivor's generator-path lowering policy resolves toward
+  DIRECT-SCAN-DEFAULT.** Of 16 regex leaves across `json.bbnf` + `google-sheets.bbnf` + an injected
+  counterexample, only **3/16 are genuine give-back** (`word /[a-z]+/`, `sheets::string`,
+  `sheets::identifier`); ~12/16 are one-pass-safe (6 bounded-by-construction, 3 conservative
+  false-positives, 3 truly sound). The FOLLOW predicate lands the `word "and" word` counterexample
+  NON-disjoint (`overlap=[a]`) — **sound exactly where `check_one_pass_eligible` (`one_pass.rs:64`)
+  is UNSOUND** (its `Repetition` arm greenlights a straight-line lowering that rejects `"a and b"`).
+  **Verdict: the direct class-scan is the DEFAULT generator path gated by a FOLLOW-guard; the DFA
+  retreats to a narrow fallback for the genuine-give-back trio.** LOAD-BEARING CAVEAT: the fraction
+  ran on `analyze().first`, which **UNDER-approximates** alternations — the "sound" verdicts are not
+  yet reliably sound; a production predicate must draw `first(C)` from the DFA start-state class set
+  (over-approx). This is 5D's sharpest correctness obligation, still un-validated (Brief 1).
 
-**Integration seams (path:line, verified).** grammar leaf `ir/src/lib.rs:250`; backend node `:389`;
-nullability `ir/src/lib.rs:331`; passes routing `passes/src/lib.rs:225,349`, facts `:944`, match
-`:1665`; general first-set `codegen/general_descent/regex_first.rs` (the 230 to delete); json
-`json_sink_direct/first_set.rs:77`; skinny scanner `bbnf-regex/src/lib.rs:45,92` (the ~200 to delete).
-Engine one-home: `classify.rs:157` (`classify_regex(&str)`), `first.rs:13` (`regex_first_chars(&str)`).
+- **PROTO-2 (Fork-gating census, Q10) — RAN. Fork-B is AVAILABLE FOR FREE.** Over 33 Alt-of-regex
+  patterns in the only tree where the grammar-tier regex e-graph physically exists (top-level
+  `crates/ir/src/egraph/rules/regex.rs`): on **bare** `Alt([Regex,…])` the three regex-specific rules
+  fire (`superset-absorb`/`union-merge`/`fuse` = 11/19/30 work); on **projected**
+  `Alt([Map(Regex,Tag),…])` every rule applies **exactly 0** — `total_applied=0`, one iteration, no
+  unions. `class_regex(child)` finds no bare `Regex` inside a `Map` e-class and returns `None`;
+  `FuseAltRegexBranches` sets `all_fusable=false`. **Real BBNF alternations almost always carry
+  per-branch tags** (`a->A | b->B`), so the `Map` barrier is the common case → the grammar-tier regex
+  e-graph is a **consumer-less substrate under projection-domination** (Y.13) → **Fork-B (abrogate it)
+  is free, and 5B's LOC-death is definitively a fork artifact, not a family win.**
 
-**Gates (born-RED, falsifiable).**
-- **G-5A.re-home:** delete the three shadow derivers, route all consumers through
-  `bbnf_regex::{classify_regex, regex_first_chars}`; `cargo test -p passes -p codegen -p runtime`
-  GREEN; measured LOC delta ≤ −400 (SHRINK, not relocate). **FAIL if** any skinny call has no engine
-  cover, or LOC merely relocates.
-- **G-5A.classify-agreement:** over the live grammar corpus, `RegexClass` from the engine ≡ the
-  current `RegexKind` routing for every regex leaf **before** deletion — the named counterexample is
-  skinny's hardcoded `"-?(0|[1-9]"` numeric literal; if a live grammar's number regex differs by a
-  byte the two paths disagree. **FAIL if** any leaf's routing flips.
-- **G-5A.2 (Look-consumer, can FAIL):** compile `Dfa` for `/foo$/` and `/foo/`; assert
-  `find("foobar")` is `None` on the anchored pattern (end-anchor consulted in `from_hir`) and `0..3`
-  on the bare one. A stripped-anchor lowering or the byte-positional skinny scanner (which reads `$`
-  as `0x24`) FLIPS the first assertion. **FAIL if** it matches.
-- **G-5A.3 (automata parity, UNRUN two passes):** a grammar `ExprKind` fragment lowered to `Hir`
-  yields a minimized-DFA byte-identical to the engine parsing the twin regex, post-`simplify_hir`
-  (Group-elision + `Optional↔Repeat{0,1}` normalized). Compare at the **minimized-DFA** level, not
-  raw NFA state-ids (priority-tagged epsilons make raw equality fragile). Throughput freshly re-run,
-  NO inherited PROVE-10 band.
-
-**Exact open questions.** (Q2/LOCK-1) `Class`/`Look` type as a finite `Named` tag keyed on the class,
-NOT a byte set — byte-expansion (`to_positive_byte_ranges`, panics on `Unicode`) is confined to
-`automata/`; route the tag through LOCK-1's real HM, not skinny's stub `BuiltinTy`. (Q11) a named
-tier-disagreement LOCK-1 must reconcile: `->` is a `Map` barrier at *codegen* (`view.rs:35`
-`classify_projection`) but a *transparent pass-through* at inference (`passes/src/lib.rs:204`
-`Project{body,..} => infer_expr(body)` drops `target`/`ty`) — the narrowed leaf type never meets the
-declared `ty` in the type plane; LOCK-1 must make `->` a typed edge that unifies body-type against
-`ty` while keeping the codegen decode barrier. (Q1) leak *magnitude* soft (pass/fail robust; the
-count is not load-bearing). SPEC-ONLY(grammar-driven).
+**What did NOT run (a third pass in a row):** 5C's reference-Hopcroft control (the automata-as-extraction
+centerpiece) and 5A's automata-parity / Look-consumer tests. Under the settled two-types verdict, 5A's
+`from_expr≡from_hir` gate is **largely moot** — the string bridge routes to the engine's single existing
+`from_hir`, so there is no second NFA builder to keep in parity (a consequence research-B named directly).
+5C's centerpiece is the lock's one genuinely-unrun decisive number and is Brief 2.
 
 ---
 
-## FAMILY 5B — THE BRIDGE — **RETIRED-architecture / LIVE-residual — 40%** (functor retired PROTO-1; the residual is the bridge XL-C mandates and which is UNBUILT)
+## PRECONDITIONS (lock-wide, gate every family's earned convergence)
 
-**Architecture.** The functor-as-independent-architecture is RETIRED by measurement (PROTO-1: copy
-dies 250 LOC + 59/59 DFA-equivalence, but the projection-dropping-union soundness bug it was banked to
-fix is a **non-bug** under the `Map`-wrapper representation of `->` → the win reduces to a bare
-string-bridge merge). What survives, and is now load-bearing, is a fact pass-3 research-B surfaced:
-**XL-C ratified a "cheap `string`/`format!` bridge reusing `simplify_hir`" as if it existed — but its
-reverse leg does not.** `rg 'impl.*Display for Hir|fn to_pattern'` over `parse-that/rust/regex/src`
-returns **zero**. There is no `Hir → String`. The forward leg is a tautology (`Nfa::from_pattern` =
-`from_hir(parse(pattern))`, `automata/nfa.rs:63` — do NOT report as an oracle); the reverse leg —
-needed whenever a canonicalized `Hir` must be written back into a grammar-tier `Regex(String)` — is
-the bridge's unbuilt half. 5B's disposition: **the family is retired; its residual is the bridge
-XL-C obliges, and building it is a prerequisite for XL-C to hold, not a new architecture.**
+**P1 — the two-tree divergence, SHARPENED, with the gating number MEASURED.** The `->` representation
+differs by tree (verified this pass): skinny lowers `->` to `ExprKind::Project{body,target,ty}`
+(`skinny/crates/ir/src/lib.rs:261`) — a typed wrapping edge, with **no grammar-tier regex e-graph at
+all**; the top-level tree lowers it to `GrammarENode::Map{inner,fn_id}` (`crates/ir/src/egraph/node.rs:52`)
+— the `Map` e-node PROTO-2 proved makes the regex rules inert. PROTO-2 discharges registry directive #3:
+the grammar-tier regex e-graph's projected-branch consumer density is **0**. GESTALT still picks the fork,
+but the number now favors **Fork-B (abrogate)** decisively in the projection-dominated regime — subject
+only to GESTALT counting how often real grammars present the tier a **bare** `Alt`-of-regex (PROTO-2 did
+NOT count that frequency).
 
-**Mechanism.** Build `Display for Hir` (~80 LOC, colocated `parse-that/rust/regex/src/hir/`): all
-eight variants incl. `CharClass` negation-aware rendering (`negated` bit, never materialize the
-complement) and `Look → ^/$/`line-anchors. Reconcile with the rival partial reverse map
-`RegexClass::canonical_pattern()` (`classify.rs:132`, returns `None` on the data-carrying variants) —
-derive `canonical_pattern` *from* `Display` (class → representative `Hir` → display), never two truths.
-
-**Integration seams.** `hir/mod.rs:216` (the `Hir` enum), `:45` (`CharClass` + `negated`), `:172`
-(`Look`); `egraph/mod.rs:143` (`simplify_hir`, the canonicalizer the bridge must round-trip through);
-`classify.rs:132` (`canonical_pattern`, the rival to reconcile).
-
-**Gates (born-RED).**
-- **G-5B.reverse:** `simplify_hir(parse(display(h))) == simplify_hir(h)` GREEN over ≥50 patterns
-  (tagged acyclic/cyclic); each failure names an un-normalized non-isomorphism (start with
-  `Optional`/`Group`, §4). This certifies the `format!` bridge is *lawful*, not lossy.
-- **G-5B.forward:** `L(from_hir(h)) == L(from_hir(simplify_hir(h)))` by NFA match-set equality —
-  canonicalization is language-preserving (the bridge is sound). **FAIL** = canonicalization changes
-  the recognized language.
-- **G-5B.no-two-truths:** `canonical_pattern(class) ≡ display(representative_hir(class))`. FAIL if two
-  divergent engine→string paths persist.
-
-**Exact open questions.** The one live re-open trigger for the *functor* (not the bridge) is
-LOCK-1-owned: **if LOCK-1's real `->` typing represents projection as anything other than an
-inner-class `Map` barrier, the projection-dropping-union bug reappears and un-retires 5B** (G5B-a).
-The joint-coproduct variant dies undesigned (acceptable — its core value axis is now a proven
-non-bug). Bridge risk: `Display` after `simplify_hir` may reorder `Alternation` branches; if an
-`AltMode::Dispatch` consumer depends on branch order, re-embedding changes dispatch — the reverse
-oracle compares *languages*, and G fires only for `AltMode::Speculative` leaves or re-runs dispatch
-analysis after re-embed. SPEC-ONLY(grammar-driven).
+**P2 — grammar-driven is SPEC-ONLY (re-confirmed; ZERO grammar-driven artifacts after THREE passes).**
+Neither pass-3 prototype exercised a grammar-driven regex path. `parse-that/.../regex/generated.rs:2288`
+`parse_generated(&str)->bool` still **discards its AST**; two `regex.bbnf` still diverge
+(`bootstrap/regex.bbnf` 72 LOC L4-spec vs `grammar/misc/regex.bbnf` 27 LOC legacy EBNF). The namesake work
+is **promote + de-dup + break-the-discard**, gated LOCK-7/7A. **Every verdict line carries the
+SPEC-ONLY(grammar-driven) label.**
 
 ---
 
-## FAMILY 5C — ENGINE-TIER OPTIMIZATION — **ADVANCED — 42%** (2A wholesale NO-GO, acyclic sliver likely a NULL; 2B-minimizer BLOCKED; the shippable residual is the delete-restart fix + the LOCAL tier table)
+## FAMILY 5A — ONE-HIR — **ADVANCED — 45%** (maximal REFUTED pass-2; residual = the survivor's engine-tier leaf-growth + shadow-crate deletion; NO 5A prototype ran pass-3)
 
-**Architecture.** Push optimization *below* the HIR onto the automaton, orthogonal to the type plane
-(rides below whichever tier matches). Three mechanisms, honestly re-cut by pass-3 research-C:
-- **The incumbent minimizer is crippled by ONE global restart, not its algorithmic class.**
-  `dfa.rs:291 hopcroft_minimize` is misnamed naive Moore; on any block split it does `break; //
-  restart refinement from the beginning` (`:358`, under `if changed{break}` `:362-364`) — O(n²·k·B).
-  **The primary fix is delete ~3 lines (Null-A):** restores proper Moore O(n²·k) with alloc-light
-  constants intact. The automata are tiny (2–16 states, k≤~10) — the O(n·k·log n) crossover **never
-  activates**; the correct worklist Hopcroft (Null-B, Valmari 2012) ran **3.53× SLOWER** on
-  constants. So minimization-as-congruence is a wholesale perf NO-GO; the win is deleting the restart.
-- **2A acyclic-congruence (Revuz) is likely a NULL once the restart is gone.** The measured 0.80×
-  (20%) edge was taken against the *crippled* incumbent; most of it is the restart penalty, not a
-  congruence advantage. Against Null-A the acyclic subset converges in ~diameter (≤~4) passes with
-  zero alloc → near-tie unless the acyclic fraction (measured 4/26 = 15%) AND diameters are large.
-- **2B-as-minimizer BLOCKED (Kozen 1994):** star-equivalence needs the star-induction rule; no finite
-  ground rewrite set is complete → ρ>1 is a theorem, not a tuning gap. 2B-as-*determinizer* survives
-  (ρ=1, 25/26). **This is the lock's one provably-impossible missing primitive.**
-- **2C tier selection is LOCAL — a table, not a CSP.** Entry-set → tier
-  (`memchr1<memchr2<memchr3<shufti<Teddy<none`) is a local function of `(cardinality, literal-prefix,
-  byte-rarity)`; both candidate global witnesses (runtime L1-LUT coupling, codegen-size-budget
-  coupling) refuted concretely. A CSP with no binding constraint violates Y.13. **Home the table in
-  5C**; escalate to LOCK-2's scan-plan CSP only on an exhibited global codegen/LUT-budget witness.
+**Architecture (narrowed to the survivor).** The maximal "regex HIR IS a subset of the bbnf IR, nothing
+to map, classify dissolves" claim is dead (PROTO-2, pass-2). What 5A contributes to the settled winner: the
+`Class`/`Look` leaves the ENGINE-tier rich `Hir` must carry (they already exist in parse-that
+`hir/mod.rs:117`), plus the deletion of the **name-gate heuristic** that reconstructs structure the grown
+leaves already carry.
 
-**Integration seams.** `automata/dfa.rs:45` `Dfa`, `:14` `DfaState`, `:291` `hopcroft_minimize`
-(restart `:358`, `:362-364`), `:218` `subset_construction`; `is_acyclic` **absent** (new O(n·k)
-iterative DFS); `egraph/node.rs:44` (`HirENode` derives `Language`); `egraph/rules/mod.rs:64`
-`default_hir_rules` (5 rules, the completeness ceiling); PROVE-10 `from_dfa` (un-vendored scratch —
-must re-vendor + re-derive the 9.6–29× band in the tree of record). Minimizer becomes a directory
-module `automata/minimize/{moore,hopcroft,acyclic,congruence,mod}.rs` — no god module.
+**Mechanism (pass-3, source-anchored).** The strongest surviving argument for any single-home instinct is
+the name-gate: skinny's `bbnf_regex::classify` (`skinny/crates/bbnf-regex/src/lib.rs:92`) string-matches
+`pattern == r"[ \t\n\r]*"`, `starts_with("-?(0|[1-9]")`, `starts_with('"')` — a Constitution-vi violation
+reconstructing first-sets/nullability the `Class`/`Repeat` leaves carry by construction. Deleting the
+heuristic block (`classify`, `regex_is_nullable`, `first_from_prefix`, `parse_leading_class`, `class_byte`,
+~200 LOC) is a genuine skinny-side **SHRINK** (net negative LOC). research-A's honest correction: the
+1148-LOC engine `classify.rs` **RELOCATES, not shrinks** — its tier content (`AccelDriven`,
+`PrefixThenClass`, `CharClassQuantified`) is real information an IR pass keeps; the only deletion is the
+internal re-lex step. A global "1148-LOC collapse" would overclaim.
 
-**Gates (born-RED).**
-- **G-5C.null:** HEAD→Null-A delta on a GROWN corpus (≥50, tagged acyclic/cyclic) proves the restart
-  is the pathology. **PASS** = Null-A ≥ incumbent everywhere; the restart is the whole story.
-- **G-5C.acyclic:** Revuz-vs-Null-A and Revuz-vs-Null-B as a function of acyclic fraction, `is_acyclic`
-  DFS cost folded across ALL patterns. **Report a NULL as a NULL** — an acyclic near-tie vs Null-A is
-  the named negative result, not a banked win.
-- **G-5C.rebuild:** congruence-rebuild round-count instrumented — ONE round on acyclic (Revuz,
-  O(n·k)), O(n) rounds on cyclic (does NOT reach O(n·k·log n) generally). Confirms the general
-  e-graph minimizer is a named negative on cyclic patterns.
-- **G-5C.tier:** exhibit a grammar whose greedy per-site cost-sorted tiers overflow a stated
-  LUT/codegen budget AND whose reassignment strictly wins → CSP earns its keep; else the table
-  suffices. Bit-identical regen via fixed tier-ordinal + lexicographic tie-break.
+**Q1 dispatch census (built, 7 arms).** Under the settled verdict the grammar tier stays opaque, so the
+grown leaves live engine-side and the skinny arms consume the bridge output, not raw `Class`. The census
+(nullability `ir/lib.rs:331`, pretty `:171`, types `passes:194`, scalar_routing `:348`, first_sets `:911`,
+materialization `:1341`, trivial-false `:790/814/836/1108`) shows the survivor requires **no grammar-tier
+regex dispatch** — the bridge hands each arm scalar facts (`nullable`, first-set, `RegexClass`), never a
+byte-set. This is the survivor's Q2 confinement boundary: the 256-bit `ByteSet256` stays inside the engine
+leaf; the grammar-tier type carries no byte payload (Constitution v preserved; serialized `GrammarIr` does
+not bloat).
 
-**Exact open questions.** All decisive numbers UNRUN two passes: reference-Hopcroft control, the
-delete-`:358` null, a corpus grown past 26 and tagged, the acyclic crossover, ρ quality-debt
-`minimal(egraph)−minimal(Hopcroft)`, the 2C global-budget witness. SPEC-ONLY(grammar-driven) does not
-bind here (engine-tier), but the tree-of-record fork (P1) does — every number re-runs in the
-reconciled tree.
+**Q2 typing.** `Class → Span` carrying a width-var solved as a bounded post-solve over LOCK-1's numeric
+lattice; `Look → Unit`/zero-width (contributes `nullable=true`). Byte-expansion of `[α-ω]*` is CONFINED to
+automata (`to_positive_byte_ranges` at NFA build; `CharClass::Unicode` panics there, so it never reaches the
+type). Leak test the prototype owes: `[a-c]` and `[a-z]` infer **identical** `Span<width>`.
 
----
+**Q4 the Look-consumer gap (a real correctness bug in the substrate).** The skinny shadow crate has **no
+Look consumer** — `RegexKind` (`bbnf-regex/src/lib.rs:16`) has no anchor variant, so `/foo$/` and `/foo/`
+are indistinguishable today (both over-accept). This is the consumer-less-substrate hazard (Constitution
+viii) AND a live correctness defect the bridge fixes: re-pointing skinny's `analyze` through the engine's
+`RegexInfo` (which parses `$` to `Look::End`) makes `/foo$/` reject `"foobar"`. The failing/passing test is
+buildable and is part of the shadow-crate-deletion refactor residual.
 
-## FAMILY 5D — GENERATOR-PATH LOWERING POLICY — **BANKED — 36%** (re-homed onto the two-types survivor; three source-confirmed bugs, resolutions unbuilt; the decisive fraction unrun two passes)
+**Integration seams.** Engine leaves already exist (`hir/mod.rs:117`). Skinny shrink: delete the ~200-LOC
+heuristic block + the 322-LOC shadow crate; re-point `use bbnf_regex::analyze` (`ir/src/lib.rs:1`) to the
+engine's `RegexInfo::analyze_from_hir`. Break-the-discard + de-dup are LOCK-7-gated.
 
-**Architecture.** A grammar's regex literal lowers DIRECTLY into the grammar's own combinator IR
-(`ByteClass`/`Repeat`/`Seq`/`Optional`/`Project`), so **no automata engine sits on the generator path
-at all** — the full parse-that HIR→NFA→DFA engine survives only as the backing of the STANDALONE
-public regex API. This is ALREADY the status quo on the generator path (`emit.rs:365` maps
-`RegexProgram` to a `match_leaf` greedy delimiter-scan, no `Dfa::find`), but the current realization
-is (a) UNSOUND against grammar FOLLOW and (b) built on a masked-wildcard continuation and a duplicated
-first-byte deriver. 5D's work is to make the direct lowering *sound* and *single-sourced*. Prior art
-is shipped and load-bearing: re2c compiles regexes AOT to direct-coded DFA (powers PHP's lexer) and
-its lookahead-TDFA does capture with minimal overhead (the model for capture-leaf → `Project`); Ragel
-names the trap — one-pass direct lowering is correct ONLY on a FOLLOW-sound subset; the residue must
-fall to the compiled DFA. flap (PLDI'23) proves fused lexing wins **as staged codegen**, not as a
-shared interpreted IR — evidence FOR 5D-lowering, AGAINST a unified runtime engine.
+**Gates it carries.** (G-5A.2) the `/foo$/` Look-consumer test that FAILS on the shadow path, PASSES through
+the bridge — UNBUILT. (G-5A.shrink) skinny ΔLOC (heuristic + shadow deleted) measured, engine classify
+relocation measured separately — UNBUILT. (G-5A.leak) `[a-c]≡[a-z]` identical `Span` — UNBUILT.
+(G-5A.parser-cost) deleting the heuristic forces skinny to consume a REAL parser (parse-that `hir/parser/`
+~787 LOC) — the shrink is contingent on paying that import.
 
-**Mechanism.** (1) **FOLLOW-sound one-pass predicate** — a `C*`/`C+` leaf lowers to a straight-line
-greedy byte-run iff `first(C) ∩ FOLLOW(leaf) = ∅`; otherwise the greedy scan steals the next symbol's
-bytes (classical maximal-munch hazard). `first(C)` exists (`analyze().byte_classes`); FOLLOW is its
-dual and must be BUILT (fixed-point over the grammar, Changed-flag convergence, not a structural
-hash). Non-disjoint leaves take `Seq[Repeat(C), suffix]` with the `Repeat` bounded by grammar FOLLOW.
-(2) **A real `ByteClass` recognizer** — add `BackendExpr::ByteClass{set: ByteSet256, min, max}`
-lowered whenever `analyze()` yields a single-class quantified atom, emitting `while set.contains(byte)
-&& count<max { p+=1 }` bounded by `min` — replacing the fixed `[A-Za-z0-9_.$]` `is_text_byte` mask
-(`emit.rs:227`) that today makes `[0-9]+` over-consume letters. Reach the tape via the reused
-`push_offset` tail (`emit.rs:220`). (3) **Single-source** the two first-byte derivers into one.
+**Exact open questions.** (1) Does the shadow-crate deletion net-shrink after the parser import is paid?
+(2) Does re-pointing `analyze` change any `nullability` answer — are all deltas strict correctness
+improvements (the anchor-blind fix)? (3) Is `from_expr` needed at all under the settled verdict — research-B
+says NO (bridge uses `from_hir`); if so G-5A.3 is retired as moot.
 
-**Integration seams.** `ir/src/lib.rs:250` `Regex`, `:389` `RegexProgram`, `:440` `SpanKind`;
-`passes/src/lib.rs:1341` lower, `:1660` `backend_span_kind`, `:911` grammar `first_bytes` (FOLLOW's
-dual to build); `codegen/general_descent/emit.rs:365` emission, `:158` `match_leaf`, `:227`
-`is_text_byte` (the mask to replace), `:220` `push_offset`; the two derivers `regex_first.rs`
-(`:81,:18`) + `bbnf-regex/src/lib.rs:45`. `one_pass.rs:64` — the UNSOUND predicate (`Repetition` arm
-recurses into the sub, never checks the class against its own FOLLOW; `[a-z]+z` on `"abz"` returns
-`true`); `passes/lib.rs:353` — `derive_recognizers` `_ => {}` silently swallows a desugared
-`ByteClass`.
-
-**Gates (born-RED).**
-- **G-5D.4 (THE number, UNRUN two passes):** the FOLLOW-sound one-pass fraction over the engine
-  corpus with real leaves, under BOTH straight-line and `Seq[Repeat,FOLLOW]` lowering, with the
-  non-disjoint leaves NAMED. Decides delete-vs-rehome the DFA. This is BRIEF 1.
-- **G-5D.3:** cold-paired direct class-scan vs PROVE-10 prefiltered `Dfa::find` on a grown (≥50)
-  corpus — honest prior: tie on class-led, DFA wins on literal-prefix-led / skip-heavy. Expose the
-  crossover, don't assume it.
-- **G-5D.byteclass:** `ByteClass` recognizer actually FIRES (retire the masked wildcard); `[0-9]+` no
-  longer consumes trailing letters; `BackendExpr::ByteClass` reaches the tape.
-- **G-5D.capture:** `/(...)/ -> name` → `ByteClass + ValueProject` produces a tape BYTE-IDENTICAL to
-  hand-authored `name = [class]+ -> name` — rides on Q11/LOCK-1's `->` ratification.
-
-**Exact open questions.** G-5D.4 unmeasured (hand-evaluated ~92% under the *unsound* predicate; sound
-fraction lower, unrun). Standalone-API expressivity boundary: routing the public API through
-grammar-IR lowering would LOSE backrefs/lookaround — 5D keeps the FULL engine for the standalone API
-and routes only the class-restricted grammar-embedded subset; the boundary is the expressivity of
-`ExprKind`, and it must be stated. SPEC-ONLY(grammar-driven) on the outer bootstrap ring.
+**BLOCKED assessment: NOT BLOCKED** — the residual is a refactor (name-gate deletion + shadow deletion +
+bridge re-point), no missing primitive. But the family's *distinguishing* maximal mechanism is dead; what
+survives is the survivor's engine-tier hardening, largely already-existing. Convergence held at **45%**:
+analysis sharpened (classify-relocates-not-shrinks honestly conceded; parser-import cost surfaced), but no
+5A prototype ran a third pass and the residual is refactor-shaped, not architecture-shaped.
 
 ---
 
-## INCOMPATIBILITY MAP (which routes cannot coexist, and precisely why)
+## FAMILY 5B — LAWFUL-FUNCTOR — **RETIRED — 40%** (retire STRENGTHENED by PROTO-2; the one live residual is a refactor, not the functor)
 
-**I-1 (the deepest live incompatibility) — 5D-no-engine-on-path ⊥ 5C/5A-engine-on-path.** A regex
-leaf's generator-path matcher is EITHER a direct grammar-IR class-scan (5D `ByteClass` recognizer,
-zero automaton) OR the compiled DFA + PROVE-10 prefilter (5C's tier ladder, consumed via the engine).
-The same leaf cannot use both. They reconcile ONLY via a per-leaf SELECTION SEAM: the FOLLOW-sound
-fraction (G-5D.4) partitions leaves into the 5D-eligible set (FOLLOW-disjoint one-pass) and the
-DFA-fallback set, and the selection is 5C-2C's tier table extended with "direct class-scan" as tier 0.
-Unresolvable as stated; the measured partition (BRIEF 1) is the adjudicator. Ragel's nondeterminism
-wall bounds the 5D-eligible fraction; re2c proves the eligible slice ships at speed; flap proves the
-fusion must be *staged codegen*, not a runtime unified engine.
+**Status.** RETIRED (earned-conditional, pass-2). PROTO-2 this pass **strengthened** the retire: the
+grammar-tier regex e-graph — the functor's value target — applies **zero work** on projected branches (the
+common case), so the 250-LOC de-dup the functor claimed is deleted **for free under Fork-B**, attributable
+to no family. The functor as an architecture with independent value is dead; its soundness win (the
+projection-dropping-union bug) was already a non-bug under the whole-leaf wrapper (pass-2).
 
-**I-2 — 5A node-cached-tag ⊥ 5D structural `ByteClass` leaf.** 5A enriches `RegexProgram{pattern,
-span_kind}` with a cached opaque `RegexClass` tag (leaf stays opaque + facts carried). 5D REPLACES
-the opaque leaf with a structured `BackendExpr::ByteClass{set,min,max}` (no engine, structural). Two
-different backend-node designs for the same leaf. Compatible ONLY if layered (`ByteClass` for the
-FOLLOW-sound single-class case, `RegexProgram`+cached-tag for the rest) — but then who owns the
-leaf-shape decision is the unsettled seam, and it is the SAME seam as I-1 (leaf-shape follows
-path-selection). Incompatible if both claim the leaf as canonical.
+**What research-B surfaced that is NOT the functor (and is credited elsewhere).** research-B correctly
+distinguishes THREE homes: the opaque grammar leaf (keep), the canonical engine rich `Hir` (keep), and the
+**divergent shadow** — skinny's 322-LOC `bbnf-regex` with its own anchor-blind `classify`. Deleting the
+shadow and re-pointing skinny's `analyze` through the engine's `RegexInfo::analyze_from_hir` is a concrete,
+runnable, **correctness-improving** refactor (net −322, fixes the anchor-blind nullability bug). **This is
+the survivor's bridge-hardening work (homed in 5A's residual / the BANKED refactor residual), NOT a 5B
+functor win** — crediting it to 5B would launder a retired family's disposition. research-B's "total reverse
+functor" (`Hir->String` structural unparse fixing `canonical_pattern`'s 4-shape partiality) is real
+engineering, but it serves the string BRIDGE (the survivor), not a two-way adjunction — the bridge needs
+only forward parse + a total unparse for round-trip oracles, which is exactly the survivor's `simplify_hir`
+reuse, not the functor's independent value.
 
-**I-3 (a GESTALT fork, not a within-lock resolution) — Fork-A keep ⊥ Fork-B abrogate the grammar-tier
-regex e-graph.** The 434→184-LOC grammar-tier e-graph exists only in top-level `crates/ir`. Fork-A
-folds it into the tree of record → 5B's bridge and the grammar-tier rules gain a consumer; 5C's
-grammar-side saturation has a home. Fork-B deletes it for free (skinny ships without one) → 5B's
-bridge and the grammar-tier rules lose their only consumer (Y.13 on their own mechanism), and the
-250-LOC de-dup is a fork artifact attributable to no family. Mutually exclusive; swings whether 5B and
-the grammar-tier of 5C have consumers at all. Resolution = the fire census (BRIEF 2) feeds GESTALT,
-which picks the fork per XL-A. LOCK-5 owes the number, not the decision.
+**Un-retire gate (unchanged, LOCK-1-gated, now a two-tree question).** Only LOCK-1 abandoning the whole-leaf
+wrapper representation of `->` reopens 5B. skinny already uses `Project` (a typed edge, not a `Map`); the
+top-level tree uses `Map`. research-A argues `->` never binds sub-leaf captures (projection wraps the WHOLE
+regex, so the bridge round-trip is sound because nothing structural crosses the boundary). If LOCK-1
+ratifies a representation where a projection binds a *sub-leaf* capture (5D's capture-leaf ambition), the
+projection-dropping-union bug reappears and un-retires 5B. Sole re-open trigger; routed to LOCK-1 with the
+PROTO-2 evidence.
 
-**I-4 (internal to 5C, BLOCKED) — 2B-as-minimizer ⊥ correctness.** Equality-saturation minimizing the
-DFA cannot coexist with a correctness requirement: Kozen 1994 proves no finite ground rewrite set is
-complete for star-equivalence (ρ_max 1.667 measured, organic miss `\w+(?:[-_]\w+)*`). Classical
-minimization (Null-A / Hopcroft) stays; 2B survives only as a determinizer (ρ=1). The one
-provably-impossible missing primitive in the lock — a genuine BLOCKED horn, not a tuning gap.
-
-**I-5 (resolved toward the table; not a hard incompatibility) — 5C-2C tier-CSP ⊥ tier-table.** No
-binding global constraint exists (both witnesses refuted) → the CSP is a consumer-less substrate
-(Y.13). Single-home the table in 5C; the CSP horn is retired absent an exhibited global
-codegen/LUT-budget witness. Listed for completeness; the incompatibility collapses toward the table.
-
-**I-6 (a prerequisite gap, not a family conflict) — XL-C's "cheap bridge reusing simplify_hir" ⊥ the
-code.** XL-C ratified the bridge as available; `Display for Hir` (the reverse leg) does not exist.
-Not a family-vs-family incompatibility — a ratified assumption vs the codebase. The bridge is an ~80
-LOC prerequisite (5B's live residual, BRIEF-adjacent) that must be built for XL-C to hold.
+**BLOCKED assessment: N/A (RETIRED).** Convergence held at **40%** — disposition-certainty of a conditional
+retire, raised in confidence by PROTO-2 (fork-independence now measured, not estimated), but not a
+convergence-toward-shipping number.
 
 ---
 
-## CROSS-LOCK DOUBLE-HOMES (LOCK-5 proposals; GESTALT ratifies)
+## FAMILY 5C — AUTOMATA-AS-EXTRACTION — **ADVANCED — 45%** (centerpiece unrun a THIRD pass + prior-art-predicted loss; 2B-as-minimizer BLOCKED; honest survivor = 2C-as-table + delete-`:358`)
 
-1. **I-1's selection seam ⊗ LOCK-4-4D / LOCK-9-9C / LOCK-3-3C.** All three consumed "ONE-HIR"; the
-   ratified landing is two-types + a per-leaf generator-path selection. Re-cut them to consume the
-   selection seam (direct class-scan vs DFA), not a single lowering. 4D's "one HIR, not a second
-   engine" premise is specifically weakened — the engine survives for the standalone API.
-2. **5B re-open ⊗ LOCK-1 (RE-OPEN TRIGGER).** The functor retirement rests on `->` staying a
-   `Map`-barrier. LOCK-1 owns the real `->` typing. If it represents projection otherwise, the
-   projection-dropping-union bug reappears and un-retires the functor. Route the `Class`/`Look` typing
-   (Q2) AND the `->` representation (Q11) through LOCK-1's real HM — and note the inference/codegen
-   tier-disagreement 5A surfaced (`view.rs:35` barrier vs `passes/lib.rs:204` pass-through).
-3. **5C-2C ⊗ LOCK-2 scan-plan/tier CSP.** Single-home the table in 5C; escalate only on a global
-   codegen/LUT-budget witness. LOCK-2 has not deferred it — unadjudicated.
-4. **I-1/5D ⊗ LOCK-9-9C (SCANNER-AS-DFA).** Supersession: LOCK-5 owns the HIR→DFA→classify substrate
-   + the `ByteClass` chooser; 9C consumes it or retires. But PROTO-2 showed the classify re-home is
-   non-trivial (needs regex dispatch) — the substrate LOCK-5 offers 9C is itself unbuilt.
-5. **5A/5D ⊗ LOCK-7 bootstrap.** Two divergent `regex.bbnf` (one discards its AST). Re-scope from
-   "author regex.bbnf" to "promote + de-dup + break-the-discard"; SPEC-ONLY(bootstrap) until 7A.
-   `grammar/misc/regex.bbnf` maps 1:1 onto engine leaves (`char_class→Class`, `anchor→Look`,
-   `factor→Repetition`) — the promotion target when 7A opens.
-6. **rust/ts ⊗ LOCK-6.** The winner is TWO types → LOCK-6's mirror must carry BOTH (`Regex(StringId)`
-   grammar-side + rich `Hir`/`Class`/`Look`/`ByteClass` engine-side + automata crossing to TS,
-   PROVE-14 tape). The serde-derive ownership (who adds `CharClass: Serialize`) lands on the
-   parse-that READ-ONLY / LOCK-6 boundary.
+**Architecture.** Push the shared e-graph one level below the HIR, to the automaton: minimization as
+congruence closure, determinization as derivative-saturation, tier-selection as CSP extraction. Orthogonal
+to the Axis-1 verdict (rides below the survivor's engine `Hir`).
+
+**The load-bearing defect (research-C, verified).** `parse-that/.../automata/dfa.rs:291`
+`hopcroft_minimize` **is not Hopcroft** — it is Moore partition-refinement with a **full restart on every
+split** (`dfa.rs:358` `break; // restart refinement from the beginning`), worst case ~O(n³·k). **Every prior
+"acyclic fast path beats Hopcroft" claim was measured against this strawman.** The centerpiece cannot be
+adjudicated until a correct O(n log n) control exists — and it has NOT been built after three passes.
+
+**Three sub-verdicts.**
+- **2A minimization-as-congruence — EXACT (26/26 byte-identical), perf NO-GO wholesale (3.53× slower,
+  pass-2), a 15% acyclic sliver contingent on an unbuilt alloc-light rewrite.** research-C's honest framing:
+  the congruence framing is genuinely linear for the **acyclic** half (Revuz single reverse-topological
+  pass) and a **loss** for the cyclic half (iterated hashcons O(n²·k), same class as the strawman). The real
+  defensible win is **deleting the `:358` restart**, not the acyclic special case per se. The decisive
+  question — *does the acyclic path earn its detection cost against a CORRECT control, or does deleting
+  `:358` alone erase 2A's reason to exist?* — is UNRUN. Prior art (TRAP A, Remy Wang: e-graphs ARE tree
+  automata; the direction that works is automata→e-graph, NOT e-graph→automata; DAG-extraction is NP-hard
+  and dominates eqsat time) **predicts the centerpiece loses**.
+- **2B determinization-as-derivative-saturation — BLOCKED (as minimizer).** Kozen 1994: regular-language
+  star-equivalence needs the star-induction inference rule, not a finite ground rewrite → **no finite
+  e-graph rule set is complete** — a provably-impossible missing primitive (the lock's cleanest BLOCKED).
+  2B-as-*determinizer* survives (25/26 ρ=1); 2A/Hopcroft closes.
+- **2C prefilter/tier-selection — SETTLED toward TABLE, not CSP (research-C's clean pass-3 advance).** A
+  grep for any global codegen/LUT-budget coupling (`lut_budget`, `codegen_budget`, `shared_lut`,
+  `table_budget`) over `crates/ir/src/` returns **ZERO hits**. Each pattern's tier derives from its own
+  start-state row + own literal prefix — `Prefilter::from_dfa` is O(256) local; `derive_feasible_engines`
+  (`info/mod.rs:344`) reads only per-pattern fields. **No shared resource → tier selection is LOCAL → the
+  monotone `EngineSet` table wins; a CSP over it is a consumer-less substrate (Y.13).** The exact condition
+  that flips it to CSP: a bounded per-parser cap on distinct shufti nibble-LUTs (32 B each) or Teddy buckets
+  — which **does not exist today**. Named missing input: a **byte-rarity oracle** (regex-automata's static
+  ASCII-rank table), absent in-tree, without which accel-byte selection is guesswork.
+
+**Integration seams.** Minimize swap `dfa.rs:89-91`; partial-DFA `DEAD` handling `dfa.rs:330/340/423`
+(Valmari's partition-over-transitions replaces the `usize::MAX` block hack); byte-equiv classes done
+(`sets/equiv.rs`, `num_classes≤8` → signatures radix-sortable); tier table `info/mod.rs:344`; CSP consumer
+`crates/ir/src/passes/{csp_domains,decision_csp}.rs`.
+
+**Gates it carries.** (G-5C.1) reference O(n·k·log n) control — Valmari–Lehtinen (native partial-DFA) OR
+Hopcroft+predecessor-lists — + the delete-`:358` null, on a GROWN (≥50, tagged) corpus with `is_acyclic`
+dispatch folded across ALL patterns — UNRUN. (G-5C.2) congruence rebuild proven O(n·k·log n), not
+degenerate-Moore — UNPROVEN. (G-5C.ρ) quality-debt `minimal(egraph)−minimal(Hopcroft)` — UNMEASURED.
+(G-5C.tier) research-C demonstrated table-suffices (zero witness); the CSP downgrade is earned. Corpus still
+26 (`COMPILE_PATTERNS`); must grow to ≥50 tagged.
+
+**Exact open questions.** (1) Does the acyclic fast path beat a *correct* control, or does fixing `:358`
+alone erase its reason to exist? (2) Does the congruence rebuild hit O(n·k·log n)? (3) Is the 15% slice
+net-positive after `is_acyclic` dispatch on the other 85%?
+
+**BLOCKED assessment: FAMILY NOT BLOCKED; internal 2B-as-minimizer BLOCKED (Kozen).** The maximal claim
+(e-graph automata beats the classical pipeline at engine scale) is **effectively refuted by prior art +
+unrun three passes** — the honest surviving deliverable is **2C-as-table (settled) + the delete-`:358`
+correctness/perf fix**, neither of which needs the e-graph-over-automata mechanism. The family is narrowing
+hard toward "a tier table + a bug fix"; its distinguishing centerpiece is on the retire path. Convergence
+held at **45%** (2C settled toward table is a real advance; the centerpiece staying unrun a third pass is
+the ceiling). Brief 2 forces the number that ends it.
 
 ---
 
-## THE TWO SHARPEST CROSS-FAMILY UNCERTAINTIES (runnable briefs)
+## FAMILY 5D — GRAMMAR-FRAGMENT — **ADVANCING — 45%** (was BANKED; the survivor's generator-path lowering policy; PROTO-1 RAN the gating fraction; the cold-pair + over-approx guard remain)
 
-The two numbers unrun after two passes that most advance the next pass: **BRIEF 1** adjudicates I-1
-(the generator-path architecture); **BRIEF 2** adjudicates I-3 (the tree fork, and with it whether 5B
-and 5C's grammar-tier have any consumer). Both cross-family, both runnable, both flagged by the pass-3
-registry directives as most-downstream-gating.
+**Architecture.** A `/pat/` lowers DIRECTLY into native grammar IR — a straight-line class-scan
+(`Recognizer::ByteClass` membership over the tape, no automaton) when the leaf is FOLLOW-sound; a
+`Seq[Repeat, FOLLOW-guard]` or the DFA fallback when it is genuine give-back. This is the
+Glushkov/Berry-Sethi position automaton (FIRST/LAST/FOLLOW over a marked expression) done as an IR lowering.
+Under the settled verdict, 5D is **the generator-path lowering policy of the two-types survivor** — not of
+the dead identity-merge, and not a second type plane.
 
-### BRIEF 1 — bbnf-worktree — the FOLLOW-sound one-pass fraction (G-5D.4)
-**Question.** Of the regex leaves in the live grammar corpus, what fraction are FOLLOW-sound for
-straight-line one-pass lowering (`first(C) ∩ FOLLOW(leaf) = ∅`), and which specific leaves REQUIRE
-`Seq[Repeat,FOLLOW-guard]`? This partitions I-1: a high fraction means 5D's direct class-scan is the
-default generator path and the DFA retreats to fallback; a low fraction (the Ragel trap) means the
-DFA stays central. Unmeasured two passes.
-**Method.** In a skinny worktree base-pinned to HEAD: (1) build the grammar FOLLOW closure — a
-fixed-point over the grammar with a Changed-flag convergence (NOT a structural hash), dual to the
-existing `first_bytes` at `passes/src/lib.rs:911`. (2) For each `ExprKind::Regex` leaf at its actual
-grammar position, compute `first(C)` (`bbnf-regex analyze().byte_classes` → `ByteSet256`) and test
-disjointness against FOLLOW(leaf). (3) Report the disjoint fraction, and NAME every non-disjoint leaf.
-**Corpus.** The in-tree JSON + Sheets grammars, PLUS the injected counterexample
-`word = [a-z]+ ; sentence = word "and" word` (the greedy run must be shown to steal `"and"`).
-**Commands.** `cargo test -p passes follow_sound_fraction -- --nocapture` (new test module).
-**Pass/fail.** Emit `disjoint=N/M frac=X%` and a named list of non-disjoint leaves. PASS = the
-fraction is reported AND the `word/and` counterexample appears in the non-disjoint list (proving the
-predicate is SOUND, unlike `one_pass.rs:64` which returns `true` for `[a-z]+z` on `"abz"`). FAIL =
-the counterexample is classified disjoint (predicate still unsound) or FOLLOW does not converge.
+**Mechanism, with PROTO-1's run behind it.** PROTO-1 established the partition (3/16 genuine give-back,
+~12/16 one-pass-safe) → **direct-scan-default, DFA-narrow-fallback**. The FOLLOW predicate is a genuine
+Changed-flag fixed point (nullable→first→follow, per-`ExprId`, `Ref` sites bridging inter-rule) that DEFEATS
+the unsound `check_one_pass_eligible` (`one_pass.rs:64`, `Repetition` arm never checks its class against its
+FOLLOW). The elegant fix is exactly the desugar: `Seq[Repeat, suffix]` + grammar `AltMode::Dispatch` decides
+soundness in the one place the grammar already reasons about FOLLOW (priorart: regex-automata `dfa::onepass`
+uses build-and-bail, not a pre-deciding predicate — a hand-written predicate is itself the trap).
 
-### BRIEF 2 — bbnf-worktree — the Fork-gating grammar-tier e-graph fire census (I-3 / Q10)
-**Question.** Does the grammar-tier regex e-graph (`crates/ir/src/egraph/rules/regex.rs`, the
-surviving 184 LOC after the 250-LOC de-dup) FIRE on any real branch — specifically on `Map`-wrapped
-(projected, `x -> f`) branches? PROTO-1 found the rules resolve a branch's regex via
-`class_regex(child)` and return `None` on projection-wrapped children → structurally inert. If the
-per-rule fire count on projected branches is ~0, Fork-B (abrogate the grammar-tier e-graph for free)
-is available and 5B's bridge + 5C's grammar-tier rules lose their consumer (Y.13); if it fires,
-Fork-A must keep it. This is the ONE number gating the fork (registry directive #3).
-**Method.** In a top-level `crates/ir` worktree base-pinned to HEAD (the only tree where the
-grammar-tier regex e-graph physically exists, per P1): run the backend-egraph saturation over the
-corpus with the built-in reporter `BBNF_EGRAPH_REPORT=1`, once with BARE regex branches and once with
-the same branches under `-> f` projection wrappers; tabulate `per_rule.work` for
-`SupersetAbsorbAlt`/`UnionMergeAlt`/`FuseAltRegexBranches`/`DeduplicateAltBranches`.
-**Corpus.** ≥30 Alt-of-regex patterns (`(a|b|c)`, `([a-z]|[A-Z])`, overlapping-class unions), each in
-a bare form and a `-> tag` projected form.
-**Commands.** `BBNF_EGRAPH_REPORT=1 cargo test -p bbnf-ir backend_egraph_fire_census -- --nocapture`.
-**Pass/fail.** Emit `per_rule.work` for bare and projected variants. PASS (Fork-B available) = the
-four rules fire ≥1 on bare AND ~0 (≤ noise) on projected → the e-graph is inert exactly where
-projections dominate, consumer-density is near zero. FAIL/Fork-A = the rules fire materially on
-projected branches → the grammar-tier e-graph has a live consumer and must be folded in, not deleted.
+**Q8 the substrate gap (source-confirmed, UNBUILT).** There is NO direct class-scan and NO `ByteClass` node:
+`derive_recognizers` (`passes/src/lib.rs:338`) emits `Recognizer::SimdScan` ONLY for structural bytes
+`{}[],:"` or a `QuotedString`-keyed `Regex`; a general `[a-z]` falls to `_ => {}` — the **masked wildcard**.
+No `Recognizer::ByteClass` variant, no `BackendExpr::ByteClass` anywhere (grep: zero). The prototype must add
+`Recognizer::ByteClass{set,site}` (`ir/src/lib.rs:416`), gate `derive_recognizers` on the FOLLOW fixed point
+(replacing the `QuotedString` mask), and route `BackendExpr::ByteClass` to the tape
+(`codegen/src/lower/tape_plan.rs`).
+
+**THE load-bearing caveat (5D's sharpest correctness obligation).** PROTO-1's fraction ran on
+`analyze().first`, which **UNDER-approximates** alternations (for `/'…'!|[A-Za-z_]\w*!/` it returns
+`Exact{'\''}`, dropping the letter branch) and returns `UNKNOWN` for `sheets::number`. An UNDER-approximate
+first-set makes the FOLLOW-guard **unsound** — it could greenlight a direct scan that mishandles a dropped
+branch. A sound production predicate must draw `first(C)` from an **OVER-approximation** — the DFA
+start-state class set, which PROVE-10's prefilter already computes. Re-running the fraction under the
+over-approx source (and confirming the 3/16 genuine-give-back count holds, no leaf flips sound→unsound) is
+the un-validated correctness gate.
+
+**Q10 e-graph (measured, PROTO-2).** 5D's direct lowering does NOT route through the grammar-tier regex
+e-graph (0/0/0 on projected branches) — it lowers the leaf straight to `ByteClass`/`Seq[Repeat,guard]`. The
+census is **evidence FOR 5D**: the direct path needs no grammar-tier e-graph, and keeping one on the
+generator path is un-consumed substrate.
+
+**Gates it carries.** (G-5D.4) FOLLOW-sound fraction — RAN (3/16 genuine), but under the UNDER-approx source;
+re-run under over-approx. (G-5D.over-approx) the over-approx guard preserves the 3/16 partition — UNBUILT.
+(G-5D.3) cold-paired direct class-scan vs prefiltered `Dfa::find` (rare-class AND dense-class leaf, N≥200
+cold) — the ratio decides DFA reachability on the generator path — UNBUILT. (G-5D.tape) `ByteClass` reaches
+the tape non-inert — UNBUILT. (G-5D.capture) capture-leaf → `Project` byte-identical to a hand-authored
+grammar capture, under LOCK-1's ratified `->` — UNBUILT.
+
+**Exact open questions.** (1) Under an over-approx first-set, does the direct-scan-default verdict survive,
+or does the genuine-give-back count climb? (2) Does the direct scan tie-or-beat `Dfa::find` on both a
+rare-class and a dense-class leaf (→ DFA off the generator path), or lose on dense (→ DFA stays reachable)?
+(3) Does `->` bind sub-leaf captures — the LOCK-1 fact that also gates the 5B re-open trigger?
+
+**BLOCKED assessment: NOT BLOCKED** — a named narrowing (DFA stays PROVE-10-floor-reachable as fallback)
+plus concrete edits, no missing primitive. Convergence raised 35→**45**: the first decisive number landed
+(direct-scan-default verdict directionally established), but the over-approx soundness gate and the entire
+cold-pair remain unbuilt. Brief 1 completes both.
+
+---
+
+## INCOMPATIBILITY MAP (which families cannot coexist, and precisely why)
+
+The Axis-1 mutual exclusion (5A-identity ⊗ 5B-functor) is **CLOSED** — both horns ran and failed pass-2;
+the survivor (two types + bridge) is ratified (XL-C). What remains are the residual incompatibilities the
+survivor inherits:
+
+- **5A-residual ∧ 5D — COMPATIBLE, one family, differ only on generator-path lowering.** Both harden the
+  survivor: 5A deletes the name-gate + shadow crate and hardens the bridge; 5D adds the direct class-scan
+  lowering the bridge feeds. They share the `Class`/`Look` engine leaves and the `ByteClass` chooser. Their
+  only residual tension is the anchor/`Look` consumer — both answer the same Y.13 question (5A's `/foo$/`
+  test answers it for both). Not mutually exclusive; jointly the survivor's harden + lower policy.
+
+- **5B ⊗ 5D — the dead exclusion, now moot.** 5B bridged the opaque leaf with a functor; 5D dissolves the
+  leaf into native nodes at desugar. With 5B RETIRED and the survivor's bridge string-based, there is
+  nothing to reconcile — 5D lowers the leaf, the bridge serves the fallback DFA path.
+
+- **5C ∥ {5A-residual, 5D} — orthogonal, below the HIR.** 5C operates on the automaton, consuming whatever
+  the engine `Hir` produces. GRAFT-1 (2B-determinizer saturates over the engine's derived `Language`) and
+  GRAFT-2 (2A's byte-class partition consumes the `Class` byte-sets) hold engine-side. 5C's only exclusion is
+  internal: 2B-as-minimizer (BLOCKED, Kozen) cannot replace 2A/Hopcroft.
+
+- **The SURVIVING meta-tension (a fork, not a family exclusion): Fork-A vs Fork-B.** PROTO-2 made Fork-B
+  free in the projection-dominated regime. Fork-A (keep the grammar-tier regex e-graph) is required ONLY if
+  GESTALT finds real grammars route **bare** `Alt`-of-regex to the tier — a frequency PROTO-2 explicitly did
+  NOT count. The one open incompatibility above the families; GESTALT's to close; the number leans abrogate.
+
+- **The LOCK-1 re-open trigger (cross-lock, not intra-lock).** If LOCK-1 ratifies a `->` representation that
+  binds SUB-LEAF captures (5D's capture-leaf ambition, `(/[0-9]+/->Digits)` reaching inside the class), then
+  (a) 5D's `Project` byte-identity oracle must handle the Map-unwrap and (b) 5B's projection-dropping-union
+  bug reappears and un-retires 5B. Both hang on the same unratified LOCK-1 fact.
+
+---
+
+## CROSS-LOCK DOUBLE-HOMES (constitution ix — LOCK-5 is the hub; resolutions are LOCK-5 proposals GESTALT RATIFIES)
+
+1. **Axis-1 verdict ⊗ LOCK-4-4D / LOCK-9-9C / LOCK-3-3C — RE-CUT (carried forward, still owed).** All three
+   were written against "ONE-HIR." The verdict is **two domain-fit types + cheap bridge**. 4D's premise ("one
+   HIR, not a second engine") is weakened; 4D consumes the two-types landing or converges on a refuted
+   verdict. Re-cut owed at GESTALT; still nobody's charter this pass.
+2. **5B retirement ⊗ LOCK-1 (RE-OPEN TRIGGER).** The retire rests on `->` staying a whole-leaf wrapper
+   (`Project` skinny / `Map` top-level) that never binds sub-leaf captures. LOCK-1 owns the real `->` typing
+   and has not ratified it. Sub-leaf-capture representation un-retires 5B AND breaks 5D's capture oracle —
+   routed to LOCK-1 with the PROTO-2 evidence.
+3. **5C-2C ⊗ LOCK-2 scan-plan/tier CSP — SINGLE-HOME IN 5C (research-C discharged the witness search).**
+   Zero global-budget coupling exists (grep-confirmed) → the tier is a LOCAL table homed in 5C; escalate to
+   LOCK-2's CSP home ONLY on an exhibited shared-LUT/Teddy-bucket budget witness. LOCK-2 has not deferred it
+   — proposed single-home, GESTALT ratifies.
+4. **5A/5D ⊗ LOCK-9-9C (SCANNER-AS-DFA) — SUPERSESSION (proposed).** LOCK-5 owns the `Hir`→DFA→classify
+   substrate + the `ByteClass` chooser; 9C consumes it or retires. But the substrate LOCK-5 offers 9C is
+   itself UNBUILT (the `ByteClass` recognizer does not fire — masked wildcard). 9C's dependency is real but
+   un-delivered; Brief 1 begins delivering it.
+5. **5A ⊗ LOCK-7 bootstrap.** Two divergent `regex.bbnf` (one discards its AST). Re-scoped: "promote +
+   de-dup + break-the-discard"; SPEC-ONLY(bootstrap) until 7A. Zero artifacts after three passes.
+6. **Type-plane ⊗ LOCK-1.** `Class ⊢ Span`/`Look ⊢ Unit` + the width-var graded only against skinny's stub
+   `BuiltinTy`. Route through LOCK-1's real HM + row-poly + widths.
+7. **rust/ts ⊗ LOCK-6.** The mirror/skeleton carries BOTH types (`Regex(StringId)` grammar-side + rich
+   `Hir`/`Class`/`Look`/`ByteClass` engine-side + automata crossing to TS, PROVE-14 tape) — a larger
+   obligation than "carry the merged enum." Named gap for GESTALT-Ω; the serde-derive-ownership question
+   (who adds `CharClass: Serialize`) lands on the parse-that READ-ONLY / LOCK-6 boundary.
+
+---
+
+## THE TWO SHARPEST UNCERTAINTIES (prototype briefs for pass-4)
+
+Brief 1 completes the **survivor's generator-path lowering policy** (the highest-leverage residual — it
+gates LOCK-9-9C and LOCK-4-4D, and it is the family with run-momentum), closing both the over-approx
+soundness gate and the cold-pair arbiter PROTO-1 left open. Brief 2 forces the **one genuinely-decisive
+number unrun after three passes** — the reference control that either keeps or retires 5C's
+automata-as-extraction centerpiece, letting GESTALT dispose of the family cleanly. 5A's remaining tests
+(shadow-deletion, `/foo$/`) are refactor-shaped and lower-stakes; deferred.
+
+### Brief 1 — 5D: over-approx FOLLOW-guard + `ByteClass` direct path + cold-pair vs `Dfa::find` (`bbnf-worktree`)
+
+**Question.** Under a SOUND (over-approximating) first-set, does the direct-scan-default verdict survive,
+and does the direct class-scan tie-or-beat prefiltered `Dfa::find` — removing the DFA from the generator
+path — with byte-identical tape?
+
+**Tree/method.** Worktree off `bbnf-lang` master (base-pin, XL-H). (a) Replace `first(C)` in
+`skinny/crates/passes/tests/follow_sound_fraction.rs` with the **DFA start-state class set** (over-approx,
+from `Prefilter::from_dfa` / `Dfa` start row) instead of `analyze().first`; re-run
+`cargo test -p passes --test follow_sound_fraction -- --nocapture`; assert the genuine-give-back set is
+still exactly `{word, sheets::string, sheets::identifier}` and NO leaf flips sound→unsound. (b) Add
+`Recognizer::ByteClass{set,site}` at `skinny/crates/ir/src/lib.rs:416`; gate `derive_recognizers`
+(`passes/src/lib.rs:338`) on the FOLLOW fixed point (replacing the `QuotedString` mask); route
+`BackendExpr::ByteClass` to the tape (`codegen/src/lower/tape_plan.rs`). (c) Cold-pair (N≥200, paired
+same-binary, correctness assert at setup) the direct membership scan vs `Dfa::find` on a **rare-class**
+(`#[0-9a-fA-F]{6}`) and a **dense-class** (`[a-z]+`) leaf.
+
+**Pass/fail.** Genuine-give-back = **3/16 under over-approx** (no sound→unsound flip) AND emitted tape
+byte-identical between direct-scan and `Dfa::find` AND direct-scan ratio **≥ 0.98×** `Dfa::find` on BOTH
+leaves ⇒ DFA leaves the generator path; direct-scan-default RATIFIED, DFA→narrow fallback. Any sound→unsound
+flip, OR direct-scan **< 0.95×** on the dense leaf ⇒ DFA stays reachable on the generator path; the fallback
+is not "narrow" — re-home 5D's lowering policy accordingly.
+
+### Brief 2 — 5C: reference O(n·k·log n) control + delete-`:358` null on a grown tagged corpus (`pt-scratch`)
+
+**Question.** After the incumbent strawman is fixed, does minimization-as-congruence (acyclic Revuz
+fast-path) beat a CORRECT control, or does deleting the `:358` restart alone erase the e-graph centerpiece's
+reason to exist?
+
+**Tree/method.** Scratch in `parse-that/rust/regex` (base-pin, XL-H). (a) Grow
+`benches/regex_dfa_compile.rs COMPILE_PATTERNS` from 26 to **≥50**, each tagged acyclic/cyclic by a
+back-edge DFS. (b) Implement three minimizers alongside the incumbent restart-refiner: **Valmari–Lehtinen**
+(native partial-DFA, the honest control for this engine's `DEAD` transitions), **Revuz** acyclic single-pass,
+the **`DfaSig` congruence** engine on `crates/egraph`. (c) Correctness oracle FIRST: all four emit
+**byte-identical** minimal state-counts + transition tables on every pattern (a divergence is a bug, caught
+before timing). (d) Time minimize per pattern per tag; measure the congruence rebuild's passes-to-fixpoint
+against the O(n·k·log n) claim; fold `is_acyclic` dispatch cost across ALL patterns; run the **delete-`:358`
+null** (incumbent minus the restart) as a fourth timing lane. Command:
+`cargo bench -p bbnf-regex --bench regex_dfa_compile`.
+
+**Pass/fail.** Revuz-acyclic beats correct Valmari on the acyclic tag by **≥1.3×** AND the congruence
+rebuild is measured O(n·k·log n) (not degenerate-Moore) AND the 15% acyclic slice is net-positive after
+dispatch on the 85% ⇒ 2A acyclic fast-path SURVIVES against a correct control. Delete-`:358` alone recovers
+the acyclic-tag win (congruence/Revuz ties the fixed incumbent) OR the congruence rebuild degenerates to
+O(n²·k) ⇒ the e-graph-over-automata centerpiece RETIRES; 5C collapses to 2C-as-table + the `:358` bug fix
+(named negative result, the constitution's own disposition).

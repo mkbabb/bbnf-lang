@@ -1,196 +1,206 @@
-# LOCK-5 · Family 5A — ONE-HIR / LEAF-GROWTH — pass-3 research
+# LOCK-5 · Family 5A — ONE-HIR · pass-3 research
 
-## Thesis (the strongest form under the ratified two-type ground)
+**Thesis of the family.** The regex HIR is a sub-language of bbnf's own IR: regex leaves grow
+inside `ir::ExprKind`, automata build directly from that IR, and `classify` dissolves into an
+IR analysis pass. The settled two-type ground (grammar tier opaque `Regex(String)`, engine tier
+rich `Hir` with `Class`/`Look`, `string`/`simplify_hir` bridge) is FACT and is honored below;
+5A's job is to make concrete what the *single-home* variant costs and buys, measured against
+that bridge, and to carry it SPEC-ONLY until LOCK-7/7A ratifies grammar-totality. Everything is
+pointer-anchored.
 
-The regex leaf lives twice in the greenfield today, and the second copy is a brittle string
-scanner. The **grammar tier** carries it opaque — `ir::ExprKind::Regex { pattern: String }`
-(`skinny/crates/ir/src/lib.rs:250`) and `ir::BackendExpr::RegexProgram { pattern: String,
-span_kind: SpanKind }` (`:389`). The **engine tier** (parse-that `rust/regex`, 6742 LOC) carries
-the real rich `Hir` — `Empty | Literal(Vec<u8>) | Class(CharClass) | Look(Look) |
-Repetition | Group(Box<Hir>) | Concat | Alternation` (`rust/regex/src/hir/mod.rs:107`), with
-`Look` = `Start|End|StartLF|EndLF|StartCRLF|EndCRLF` (`:63`) and `CharClass::{Bytes,Unicode}`
-byte-range leaves (`:45`). These `Class`/`Look` leaves are the "grown leaves"; they are **already
-grown and already tested** in the engine. The vendored skinny `bbnf-regex` (322 LOC,
-`skinny/crates/bbnf-regex/src/lib.rs`) is NOT a HIR — its `RegexHir { kind: RegexKind }` holds a
-four-way tag (`Whitespace|QuotedString|Numeric|Unknown`) computed by literal string comparison:
-`classify()` does `pattern == r"[ \t\n\r]*"`, `pattern.starts_with('"')`,
-`pattern.starts_with("-?(0|[1-9]")` (`:92`). This is a shadow re-implementation of the engine's
-parser + `classify_regex`, drifting on raw bytes.
+## The substrate, as it actually stands (two homes, one heuristic seam)
 
-**ONE-HIR made concrete = delete the shadow, consume the engine.** The engine's parsed `Hir` is
-the single rich home for `Class`/`Look`; the bbnf passes stop re-deriving regex facts from raw
-pattern bytes and instead read them off the engine's analysis. The grammar tier stays opaque
-(`Regex(pattern)` unchanged, per ratified XL-C); the bridge is the engine's string-entry wrappers
-(`classify_regex(&str)` `rust/regex/src/classify.rs:157`, `regex_first_chars(&str)`
-`rust/regex/src/first.rs:13`), each of which parses the pattern internally. `classify` is not
-"re-homed onto the bbnf side" — the bbnf side's duplicate collapses **into** the engine's one
-classify. This is the lawful reconciliation of "ONE-HIR" with the two-type ratification: one
-parser, one first-set, one classify — the engine's — consumed by both planes.
+- **Grammar tier (opaque).** `ir::ExprKind::Regex { pattern: String }` —
+  `skinny/crates/ir/src/lib.rs:250`. The string is never structurally decomposed on the grammar
+  side; it is threaded to the bridge verbatim.
+- **The bridge.** `bbnf_regex::analyze(&str) -> RegexFacts` —
+  `skinny/crates/bbnf-regex/src/lib.rs:45`. 322 LOC total. `RegexFacts{nullable, first, byte_classes,
+  hir:RegexHir, string}` (:1). The "HIR" here is a **4-variant tag** `RegexKind{Whitespace,
+  QuotedString, Numeric, Unknown}` (:16), NOT a tree. Classification is **string name-gating**:
+  `classify` (:92) tests `pattern == r"[ \t\n\r]*"`, `pattern.starts_with("-?(0|[1-9]")`,
+  `starts_with('"')`. This violates the no-name-gates edict (Constitution vi) and is the single
+  strongest argument FOR 5A: the heuristic reconstructs structure a grown leaf already carries.
+- **Engine tier (rich, in parse-that).** `bbnf-regex` = 6742 LOC.
+  `parse-that/rust/regex/src/hir/mod.rs:117` `pub enum Hir { Empty, Literal(Vec<u8>),
+  Class(CharClass), Look(Look), Repetition, Group(Box<Hir>), Concat(Vec<Hir>), Alternation(Vec<Hir>) }`.
+  `CharClass` :45 (byte + codepoint ranges, "expanded to UTF-8 byte sequences **during NFA
+  construction**" :53), `Look` :73. This is the "rich `Hir` grown with `Class`/`Look`" the charter
+  names — the leaves already exist here.
+- **classify.** `parse-that/rust/regex/src/classify.rs:55` `RegexClass` — 10 variants (`Numeric`,
+  `QuotedString`, `HexDigits`, `Identifier`, `WhitespaceWithBlockComment`, `CharClassQuantified`,
+  `PrefixThenClass`, `AccelDriven(u8)`, `Unknown`), `canonical_pattern()` :132, 1148 LOC (the
+  single largest file). Re-lexes the pattern string internally.
 
 ## Q1 — the per-pass dispatch census (built, not estimated)
 
-The grown `Class`/`Look` add **zero** new match arms to the grammar/bbnf IR, because that tier
-keeps `Regex(pattern)` opaque. What the census actually enumerates is the set of bbnf-side sites
-that today re-derive regex facts by string-scanning and would instead read them off the engine.
-Every site verified by path:line:
+Every arm in the skinny pipeline that touches a regex leaf, today routing through the opaque
+string + `analyze`:
 
-| Pass site | current arm | LOC today | under ONE-HIR |
-|---|---|---|---|
-| `ir::nullability` | `ir/src/lib.rs:331` `ExprKind::Regex{pattern} => analyze(pattern).nullable` | 1 arm | `hir_is_nullable(&hir)` or `RegexInfo.nullable` |
-| passes routing (ws) | `passes/src/lib.rs:225` `analyze(pattern).hir.kind == RegexKind::Whitespace` | 1 | `RegexClass::WhitespaceWithBlockComment` |
-| passes routing (str) | `passes/src/lib.rs:349` `== RegexKind::QuotedString` | 1 | `RegexClass::QuotedString` |
-| passes facts | `passes/src/lib.rs:944` `analyze(pattern)` | 1 | `RegexInfo::analyze(&hir)` |
-| passes match | `passes/src/lib.rs:1665` `match analyze(pattern).hir.kind` | 1 | `match classify_regex_from_hir(&hir)` |
-| first-byte set (general) | `codegen/general_descent/regex_first.rs` (`first_bytes`, `head_bytes`, `class_bytes`, `closing_class_index`, `class_byte`, `split_top_level_alternation`, `is_nullable`, `leading_group_spans_all`) | **230** | `regex_first_chars_from_hir(&hir)` |
-| first-byte set (json) | `codegen/json_sink_direct/first_set.rs:77` `regex_first_bytes(span_kind,pattern)` | ~40 | same engine call |
-| span-kind dispatch | `codegen/json_sink_direct/dispatch.rs:86,165` | small | carried on the node (below) |
-| skinny analyzer | `bbnf-regex/src/lib.rs` `classify`/`first_set`/`first_from_prefix`/`parse_leading_class`/`class_bytes`/`closing_class_index`/`class_byte` | ~200 of 322 | DELETED |
+| # | Pass / role | Site | Current arm (opaque) | Under grown `Class`/`Look` |
+|---|---|---|---|---|
+| 1 | nullability | `ir/src/lib.rs:331` | `Regex{pattern} => analyze(pattern).nullable` | structural: `Repeat{min:0}`/`Optional`/`Class`(non-empty→false) |
+| 2 | pretty | `ir/src/lib.rs:171` | `Regex{pattern} => /.../ ` (format only) | recurse over leaf tree |
+| 3 | types / infer_expr | `passes/src/lib.rs:194` + helper `regex_type` :224 | `=> Type::Builtin(regex_type(pattern))` (Unit if Whitespace else Span) | `Class → Span<width>`, `Look → Unit` (Q2) |
+| 4 | scalar_routing / recognizers | `passes/src/lib.rs:348` | `Regex{pattern} if analyze(..).hir.kind==QuotedString => insert(b'"')` | match on `Class`/delimiter leaf directly |
+| 5 | first_sets / first_bytes | `passes/src/lib.rs:911` + helper `regex_first_bytes` :943 | `=> regex_first_bytes(pattern)` (reads `analyze().first`) | `Class`'s ByteSet256 **is** the first-set, zero re-parse |
+| 6 | materialization / materialize | `passes/src/lib.rs:1341` | `=> BackendExpr::RegexProgram{pattern, span_kind}` (→ `ir/lib.rs:389`) | `BackendExpr::ByteClass`/program from leaf tree |
+| 7 | trivial-false census arms | `passes/src/lib.rs:790, 814, 836, 1108` | `Regex{..} => false / {}` (recovery, host-decode, dispatch-overlap, span-classify) | unchanged (structure-agnostic) |
 
-**SHRINK, not RELOCATE — measured LOC delta.** The engine facilities that replace all of the above
-already exist and are already under test: `first.rs` (158 LOC), `classify.rs` (1148 LOC, 69 `Hir::`
-arms), `info/mod.rs` (`RegexInfo`). Re-homing deletes ≈ **230 (`regex_first.rs`) + ≈200 (skinny
-string-scanner) + ≈40 (`json/first_set.rs`) ≈ 470 bbnf-side LOC** and adds **~0 engine-side LOC**
-(the classify/first machinery is not moved, it is already the canonical home). So classify does not
-relocate to the bbnf side and it does not grow; the bbnf side's shadow re-implementations collapse
-into it. Net: −470, driven by DRY, with the engine's 6742 LOC untouched. This is the one-liner the
-directive forbade turned into a real ledger: the shrink is on the CONSUMER side, and it is large.
+**Shrink vs relocate — the honest split.** Two answers, because there are two homes:
+- **Skinny substrate: genuine SHRINK.** The grown leaves make the entire string-heuristic block
+  in `bbnf-regex/src/lib.rs` dead: `classify` (:92), `regex_is_nullable` (:107),
+  `first_from_prefix` (:142), `parse_leading_class` (:162), `class_byte` (:200), `is_single_atom`
+  (:220), `balanced_parenthesized` (:236) — ~200 LOC that re-parse the pattern string to recover
+  first-sets/nullability that `Class`/`Repeat` leaves carry by construction. Deleting them removes
+  the name-gate. Net skinny LOC: **negative**.
+- **Engine classify: RELOCATE, not shrink.** The 1148-LOC `classify.rs` carries genuine
+  information (tier selection: `AccelDriven`, `PrefixThenClass`, `CharClassQuantified`). As an IR
+  analysis pass it keeps that content; the ONLY deletion is the internal re-lex step (it currently
+  re-parses the pattern string it was already handed a tree for). Estimated re-lex delta ≈ the
+  `hir/parser/` re-entry, small. So classify **relocates** with a minor de-dup, NOT a collapse —
+  and this must be reported as a relocate to avoid overclaiming.
 
-**Engine-internal census (the arms that DO exist for `Class`/`Look`).** `Hir::` match sites, per
-file: `classify.rs` 69, `info/width.rs` 20, `info/classify.rs` 16, `first.rs` 16,
-`egraph/translate.rs` 16, `hir/parser/escape.rs` 16, `info/one_pass.rs` 11,
-`info/literal_prefix.rs` 10, `info/dfa_size.rs` 8, `automata/nfa.rs` 8, plus parser arms. `Look::`
-is consumed in exactly three files — `automata/nfa.rs`, `hir/parser/atom.rs`, `info/classify.rs` —
-a narrow, auditable surface. This is the leaf-growth surface, and it is already complete in the
-engine; 5A adds nothing to it.
+## Q2 — typing `Class`/`Look` through LOCK-1's HM, and the byte-expansion confinement
 
-**The one node-level addition worth making (kills repeated parsing).** `classify_regex(&str)`
-re-parses on every call. To avoid N parses across N passes, compute the facts ONCE at the
-`ExprKind::Regex → BackendExpr::RegexProgram` lowering boundary and cache them on the node: extend
-`RegexProgram { pattern, span_kind }` with a `class: RegexClass` (and optional `first: CharSet128`,
-`nullable: bool`). Downstream passes (`tape_plan.rs:117`, `sink_only.rs:82`, `emit.rs:365`,
-`lib.rs:1444`) read the cached facts. This is "compute at the bridge, carry on the node" — it
-removes both the duplicate scanners AND redundant parsing, and it is the concrete substrate 5A adds.
+`regex_type` (`passes/src/lib.rs:224`) is a stub returning `BuiltinTy::{Unit,Span}`. Routed through
+LOCK-1's real HM (row-poly + widths), a grown leaf types as:
+- `Class(bs)` → `Span` carrying a **width var** (cardinality/length), solved as a bounded
+  post-solve CSP over the numeric-width lattice (Constitution: unification for equality, CSP only
+  for widths/overloads). Nullable is a boolean fact, not a type.
+- `Look(_)` → the unit/zero-width type (consumes no input; contributes `nullable=true`).
 
-## Q2 — typing `Class`/`Look` through LOCK-1's HM, not a stub
+**Where `[α-ω]*` byte-expansion lives — the confinement boundary.** It lives CONFINED TO AUTOMATA.
+The parse-that Hir already states this: `CharClass` is "expanded to UTF-8 byte sequences **during
+NFA construction**" (`hir/mod.rs:53`). The shared *type* must see only the abstraction (`Span` +
+width + nullable bit) — never the 256-bit `ByteSet256`. Confinement boundary drawn concretely: the
+`ByteSet256` (`bbnf-regex/src/lib.rs:35`) stays inside the engine-tier leaf; the grammar-tier type
+carries no byte payload. This preserves Constitution v (type plane zero runtime cost) and keeps the
+serialized `GrammarIr` (serde-derived, `ir/lib.rs:33`) from bloating with 256-bit sets per class.
+Leak test the prototype must run: assert the `Type` produced for `[a-c]` and `[a-z]` is
+**identical** (both `Span<width=1>`), proving byte content did not enter the type.
 
-Byte-expansion (`[α-ω]* → ByteRange` sets) lives **entirely in automata** — `CharClass::Bytes`
-consumed by `Nfa::from_hir` (`automata/nfa.rs`), `sets/byteset.rs`, `sets/equiv.rs`
-(`compute_byte_classes`). It **never leaks** into a shared type: the bbnf type plane never sees a
-byte range. The grammar-plane "type" of a regex leaf is its `RegexClass`/`SpanKind` tag — a finite
-nominal value (`SpanKind::{String,Number,Whitespace}` `ir/src/lib.rs:440`; `RegexClass`'s
-`Numeric{…}/QuotedString{…}/Identifier{…}` flag-carrying but still finite). LOCK-1 types the leaf
-as a **`Named`/base type keyed on the class tag**, not a byte set; unification is over class
-identity, not over automaton alphabets. The confinement boundary is the funnel
-`classify_regex_from_hir(&Hir) → RegexClass → SpanKind` (`classify.rs:177`): byte-level detail is
-consumed by classify and discarded there; only the finite tag crosses into the shared type. This
-satisfies the zero-runtime-cost erasure invariant — the type is a compile-time tag, the byte set is
-an automaton detail. Derivation: `Γ ⊢ /p/ : Regex⟨classify(p)⟩`, and `->` on the leaf (Q11)
-narrows the result type by the projection's declared `ty`, never by the byte set.
+## Q3 — automata parity re-derived FROM the narrowed type
 
-## Q3 — automata parity re-derived from the narrowed type (`from_expr` ≡ `from_hir`)
+`from_expr` (NFA built from grammar IR grown leaves) must be transition-table byte-identical to the
+incumbent `from_hir` (`parse-that/rust/regex/src/automata/nfa.rs:71`, Thompson,
+`add_epsilon` priority-tagged :118). Two identity hazards, both nameable:
+- **Group-elision.** `Hir::Group(Box<Hir>)` (`hir/mod.rs:129`) elides to its inner during NFA
+  build; the grammar IR has no `Group` node (parens are structural in `ExprKind::Seq`/`Alt`), so
+  `from_expr` must NOT emit an epsilon that `from_hir` elides — else the tables diverge by one
+  state.
+- **`Optional ↔ Repeat{0,1}`.** `ir::ExprKind::Optional(body)` (`ir/lib.rs:245`) vs
+  `Repeat{min:0,max:Some(1)}` (:240) — the incumbent `Repetition` (`hir/mod.rs:95`) normalizes
+  these to one shape; `from_expr` must apply the same normalization pre-Thompson.
 
-The skinny side builds **no** NFA — `analyze` computes only first-set + nullable; `Nfa::from_hir`
-(`automata/nfa.rs:71`) is the sole automaton builder. So parity is: does a grammar `ExprKind`
-fragment, lowered to `Hir`, produce a byte-identical NFA to the engine parsing the equivalent
-regex? The functor: `Seq→Concat`, `Alt→Alternation`, `Repeat{min,max}→Repetition{min,max}`,
-`Optional(x)→Repetition{min:0,max:1,greedy}`, `Literal(bytes)→Literal(bytes)`, `Regex(p)→parse(p)`.
-Two normalizations the harness MUST apply before comparing (both already law in the engine):
-**Group-elision** — `Hir::Group` is transparent ("only the sub-expression matters",
-`hir/mod.rs:107` doc); and **`Optional ↔ Repeat{0,1}`** — the engine's `egraph/rules/repetition.rs`
-canonicalizes `?` and `{0,1}`. Compare post-`simplify_hir` (or compare the minimized DFA, which
-quotients both). **Prototype to build:** lower a grammar fragment and its regex twin to `Hir`, run
-`Nfa::from_hir` on each, assert identical state graphs (or identical minimized `Dfa`); throughput
-derived fresh from `regex_dfa_compile`, carrying NO inherited band. **Named risk:** priority-tagged
-epsilon edges (`add_epsilon`, `nfa.rs:118`) make raw NFA state-id equality fragile; compare at the
-minimized-DFA level (congruence-quotiented) to make the oracle robust, not at raw NFA state ids.
+Harness: for a corpus of grown leaves, build both NFAs and assert `transition_byte_sets`
+(`nfa.rs:90`) equality state-for-state; derive throughput fresh from the type-narrowed build (carry
+NO inherited band — the certified 8.8–29.5× prefilter figure (SPEC §0 feature 10) is a *match*-axis
+number and does not transfer to a *construction*-parity claim).
 
 ## Q4 — a `Look`-consumer test that can FAIL
 
-Today the bbnf plane has no `Look` — regex is opaque and the skinny `first_from_prefix` treats
-bytes positionally, never consulting `^`/`$`. `Look::Start`/`End` are consumed only in
-`automata/nfa.rs` (+ `atom.rs` parse, `info/classify.rs` analysis). **Buildable failing→passing
-oracle:** compile `Dfa` for `/foo$/` and `/foo/`; assert `dfa.find("foobar")` on the anchored
-pattern returns `None` (end-anchor rejects the trailing `bar`) while `/foo/` returns the `0..3`
-match — the assertion exercises `Look::End` in `from_hir`. A wrong lowering that dropped the anchor
-(or the skinny scanner, which would treat `$` as literal byte `0x24` and mis-seed the first-set)
-would FLIP the first assertion to a match — the test discriminates. On the bbnf path this is honored
-transitively (the generated parser calls the engine `Dfa`) **iff** the lowering does not strip
-anchors; the ONE-HIR route guarantees it because first-set comes from `regex_first_chars_from_hir`
-(zero-width-aware) rather than the byte-positional skinny scanner. This is the concrete correctness
-argument FOR the re-home: the string scanner cannot see `Look`; the engine can.
+The skinny substrate has **no Look consumer at all**: `RegexKind` (`bbnf-regex/src/lib.rs:16`) has
+no anchor variant and `analyze` ignores `^`/`$`. So `/foo$/` and `/foo/` are today
+indistinguishable (both → `Unknown`, both would over-accept). This is precisely the
+consumer-less-substrate hazard (Constitution viii): a `Look` leaf with no NFA-end consumer is
+forbidden. The failing/passing assertion the prototype must exercise:
+- Build NFA from the grown leaf for `/foo$/`; run against `"foobar"` → **reject** (Look::End
+  consulted at accept), and against `"foo"` → accept.
+- Build `/foo/`; run against `"foobar"` → accept.
+- Assert the first two differ. This test FAILS on the current substrate (proving the gap) and
+  passes only once `Look::{Start,End}` (`hir/mod.rs:73`) is threaded into the match loop.
 
-## Q9 / Q10 / Q11 — cross-lock (SPEC-ONLY where gated)
+## Q9 — one grammar-driven path: break the discard
 
-**Q9 (grammar-driven path, gated LOCK-7/7A).** No regex `.bbnf` exists *inside the greenfield*
-(`skinny/`), but the **extant tree carries a complete one**: `grammar/misc/regex.bbnf` (repo root,
-non-greenfield) is a full recognizer grammar — `expression = (term+, "|"?)+`, `term = factor - end`,
-`factor = sub_expression, ("*"|"+"|"?")?`, `char_class = "[", ["^"], char_set, {char_set}, "]"`,
-`range = character, "-", character`, `anchor = "^"|"$"|"\b"|"\B"`, `lookahead = "(?=" …`,
-`lookbehind`, `non_capturing_group`, `back_reference`, plus a `regex = "/" >> expression, end`
-entry. Two consequences for Q9: (i) it is a **port source**, not a pure from-scratch bootstrap — its
-`char_class`/`range`/`anchor`/`factor` rules map 1:1 onto the engine leaves `Hir::Class` / a
-`ByteRange` / `Hir::Look` / `Hir::Repetition`, so a projected version (`char_class -> Class`,
-`anchor -> Look`, `factor -> Repetition`) is where ONE-HIR becomes *literally one* HIR — the
-bootstrapped grammar's projected AST **is** the engine `Hir`; (ii) it has **zero `->`**
-(`grep -c '\->' = 0`), confirming break-the-discard concretely: the generated recognizer returns
-`bool`/unit and discards the parse precisely because no rule projects. The de-dup the directive
-mentions is a no-op in skinny (the dual copies live only in stale `.claude/worktrees/*`).
-Disposition: SPEC-ONLY, deferred to LOCK-7/7A; 5A's re-home does not depend on it and does not block
-it, but the extant `grammar/misc/regex.bbnf` is the concrete artifact to promote when the gate opens.
+Two `parse_generated` exist in parse-that (READ-ONLY, mapped):
+- `parse-that/rust/parse_that/src/regex/generated.rs:2288` `pub fn parse_generated(pattern:&str)
+  -> bool` — the **grammar-DRIVEN** parser generated from `rust/bootstrap/regex.bbnf`. It returns
+  `bool`: a recognizer that **discards its AST**. This is the discard to break.
+- `parse-that/rust/parse_that/src/regex/mod.rs:34` `pub fn parse_generated(pattern) ->
+  Result<Hir,ParseError>` — a wrapper that DOES yield `Hir`, but via the hand-written
+  `hir/parser/` (`mod.rs:153`), not the generated grammar path.
 
-**Q10 (e-graph rule fire census).** The engine's HIR rewrite library is five rules — `flatten`,
-`redundant`, `union`, `repetition`, `superset` (`rust/regex/src/egraph/rules/`), each an `apply`
-(`redundant.rs:60`, `flatten.rs:100`, `union.rs:92`, `repetition.rs:132`, `superset.rs:82`). The
-`rules/mod.rs` doc already draws the seam 5A needs: this tier does **intra-regex** rewrites; a
-**grammar-tier** Alt fusion is a distinct rewrite family. So the shared e-graph part (per the
-constitution) is these intra-regex rules; grammar Alt-fusion is not double-homed here. A fresh
-per-rule fire-count over the corpus (bare vs `Project`-wrapped branches) is the prototype the census
-demands; the harness is `regex_hir_egraph` bench + a saturation trace.
+Promotion: thread the `->` projections through the generated parser so `generated.rs:2288` returns
+`Hir` instead of `bool`, then differential-oracle it against the hand parser (the meta-circular
+oracle pattern). This exercises exactly one grammar-driven regex path end-to-end.
 
-**Q11 (representation of `->`).** In the extant code `->` is a **wrapping Map barrier**, not a typed
-edge that fuses into the leaf: grammar `ir::ExprKind::Project { body, target, ty }`
-(`ir/src/lib.rs:261`) → backend `ir::BackendExpr::ValueProject { body, target, ty }` (`:407`), and
-`classify_projection(target, ty)` (`codegen/general_descent/view.rs:35`) maps `ty` →
-`ProjectionKind::{Span,Float,Bool,Tag}`. A regex leaf under `->` is `ValueProject{ body:
-RegexProgram, target, ty }` — the projection wraps the leaf; the `RegexClass` is computed on the
-**bare** inner pattern and the projection's `ty` selects the decode (`span→Raw`, `f64→NumberScalar`,
-etc.). Binding on the bridge: classify the inner regex independently of the projection, then let the
-projection narrow the type — the inner-class Map barrier is the safe, extant representation. LOCK-1
-must ratify this (barrier vs typed edge); the code today is a barrier.
+**De-dup — two dialects, one canonical.** `parse-that/rust/bootstrap/regex.bbnf` (the "full L4
+spec for self-hosting", `>>`/`<<`/`,` dialect, leaf-first with recursive spine) vs bbnf-lang
+`grammar/misc/regex.bbnf` (27 lines, ISO-EBNF dialect: `{ }` repetition, `[ ]` optional, explicit
+`lookahead`/`lookbehind`/`back_reference`/`anchor`). These are *different grammars of the same
+language*. The bootstrap one is the self-hosting production spec; `grammar/misc/regex.bbnf` is a
+spec-reference. Convergence must pick the bootstrap grammar as canonical and either delete or
+demote the misc copy — carried SPEC-ONLY, gated on LOCK-7/7A per charter.
 
-**A named tier-disagreement LOCK-1 must reconcile.** The barrier is enforced only at *codegen*
-(`view.rs:35` `classify_projection(target, ty)`), NOT at *type inference*: the inferencer arm is
-`ExprKind::Project { body, .. } => self.infer_expr(*body)` (`passes/src/lib.rs:204`) — it returns
-the **body** type and drops `target`/`ty` outright. So inference treats `->` as a transparent
-pass-through (it does not even open a fresh type variable), while codegen treats `ty` as a decode
-barrier. For the bridge's projection soundness this is a live gap: the narrowed regex leaf type
-(Q2's `RegexClass`-derived tag) never meets the declared `ty` in the type plane, so the
-`string`/`format!` round-trip is decode-selected by codegen but **type-unchecked** by inference. 5A
-needs LOCK-1 to make `->` a typed edge that unifies `infer_expr(body)` against the declared `ty`
-(closing the gap), while keeping the codegen decode barrier — the two are not in tension, but today
-inference is silent where codegen is load-bearing.
+## Q10 — grammar-tier e-graph rewrite census
+
+The rewrite library is real and lives engine-side: `parse-that/rust/regex/src/egraph/` = 1253 LOC.
+Rules: `repetition.rs`(156), `union.rs`(108), `flatten.rs`(107), `superset.rs`(90),
+`redundant.rs`(68); driver `mod.rs`(200), `translate.rs`(132), `cost.rs`(102),
+`saturation_cache.rs`(68). Tests exist per rule (`regex/tests/egraph_rules_{flatten,repetition,
+redundant,superset,union}.rs`) but assert firing on *hand-picked* inputs, not corpus frequency. The
+prototype must instrument the saturation driver to emit **per-rule fire counts** over the ≥50
+tagged corpus, on both bare leaves and projection-wrapped (`ExprKind::Project` over regex) branches
+— because a rule that never fires on real branches is a consumer-less subsystem (viii).
+
+## Q11 — the `->` representation (binding on bridge soundness)
+
+Concretely, `->` is a **typed wrapping edge, not an inner-class Map barrier**. IR:
+`ExprKind::Project { body: ExprId, target: String, ty: Option<String> }` (`ir/lib.rs:261`), lowered
+to `BackendExpr::ValueProject { body, target, ty }` (`passes/lib.rs:1349` → `ir/lib.rs:407`). A
+projected regex leaf (`/.../  -> Name: Type`) wraps the WHOLE regex; the matched span is projected
+wholesale, and `infer_expr` passes the body type through transparently (`passes/lib.rs:204`
+`Project{body,..} => self.infer_expr(*body)`). Consequence for the bridge: projection sees the
+regex as one opaque span — there is **no inner-class projection** (you cannot `->` inside a
+`Class`), so the bridge's `string`/`format!` round-trip is sound because nothing structural crosses
+the Project boundary. LOCK-1 must ratify this (that `->` never needs to bind sub-leaf captures);
+5D's capture-leaf ambition (a `Class` that itself projects) would break this and is the divergence
+to watch.
+
+## Prior art (cited)
+
+- **rustc HIR/MIR + GHC Core**: the canonical "one typed IR, every pass is IR→IR, leaves are enum
+  variants passes dispatch on" — the shape 5A imposes on regex. GHC Core is the purest single-IR
+  precedent.
+- **MLIR dialects**: a sub-language embedded in one IR with lawful lowering between dialects — the
+  exact "regex HIR as a sub-language of bbnf HIR" isomorphism (Constitution ii); MLIR proves the
+  embed-as-dialect route scales without a second IR home.
+- **regex-syntax `Hir` vs regex-automata NFA** (BurntSushi): the type/automata split where the
+  class stays symbolic in the HIR and is byte-expanded only at NFA build — the precedent for Q2's
+  confinement boundary. regex-automata's memchr/Teddy prefilter ladder is the source PROVE-10 ported
+  (SPEC §0 feature 10).
+- **tree-sitter external scanners**: grammar-driven with a typed host-fn escape hatch — the
+  hybrid-grammar-host analogue bounding what stays grammar-expressible (LOCK-7C).
+- **egg / egglog**: equality saturation underpinning the `egraph/` rewrite rules (Q10).
+
+## Named risks & counterexamples
+
+1. **Contradicts the ratified two-type ground.** Growing `ExprKind` with `Class`/`Look` collapses
+   the grammar tier's opaque `Regex(String)` — which is RATIFIED (XL-C). 5A is therefore SPEC-ONLY
+   until LOCK-7/7A; the report does not re-open the adjudication, it prices the single-home variant.
+2. **"Shrink" is only true skinny-side.** Engine classify RELOCATES (1148 LOC of tier logic
+   survives). Claiming a global shrink would be dishonest; the win is name-gate deletion + re-lex
+   de-dup, not a 1148-LOC collapse.
+3. **The substrate deliberately lacks a real parser.** Deleting the heuristic `analyze` forces
+   skinny to consume a REAL regex parser (vendor parse-that's `hir/parser/`, ~787 LOC across
+   `class/escape/group/repetition/atom/cursor`). ONE-HIR's shrink is contingent on paying that
+   import — the tension the family must own.
+4. **Byte-expansion leak** into serialized `GrammarIr` if `ByteSet256` rides the grammar leaf —
+   defeated only by the Q2 confinement (byte set stays engine-side).
+5. **Consumer-less `Look`** — adding anchor leaves with no NFA-end consult is forbidden (viii); Q4
+   is the guard.
 
 ## What a prototype must test to move 5A
 
-1. **The re-home ledger, executed.** Delete `codegen/general_descent/regex_first.rs` (230) + the
-   skinny `bbnf-regex` string-scanner (~200) + `json_sink_direct/first_set.rs::regex_first_bytes`,
-   route all consumers through `bbnf_regex::regex_first_chars` / `classify_regex`, and measure the
-   real LOC delta + a green `cargo test` across `passes`/`codegen`/`runtime`. Confirms SHRINK, not
-   relocate; confirms the engine facilities cover every skinny call.
-2. **Node-cached facts.** Add `class: RegexClass` to `RegexProgram`; verify parse-once (no repeated
-   `classify_regex` across passes) and byte-identical generated output (regen idempotent).
-3. **`from_expr ≡ from_hir` at minimized-DFA level** (Q3 harness), over a ≥50-pattern corpus.
-4. **The `Look` discriminating oracle** (Q4) as a `tests/` subtest that fails on a stripped anchor.
-
-## Named risks / counterexamples
-
-- **Parse cost regression.** `classify_regex` parses per call; without the node-cache (item 2) the
-  re-home trades duplicate code for duplicate parsing. Counterexample: a grammar with many regex
-  leaves each hit by 4+ passes. Mitigation = compute-at-bridge, carry-on-node.
-- **Skinny scanner covers a case the engine's string entry rejects.** The skinny `classify`
-  hard-codes exact patterns (`"-?(0|[1-9]"`); if a live grammar's number regex differs by a byte,
-  the skinny path and `classify_regex_from_hir` may disagree. The re-home must diff `RegexClass`
-  outputs against the current `RegexKind` routing on the actual grammar corpus before deletion.
-- **NFA state-id equality is too strict** (Q3) — compare minimized DFAs, not raw NFAs.
-- **`->` fused instead of wrapped** would corrupt projection soundness (Q11); keep the barrier until
-  LOCK-1 ratifies.
+1. **Byte-identity**: `Nfa::from_expr(grown ExprKind::Class/Look/Repeat)` transition-table-identical
+   to `from_hir` on the incumbent `Hir`, with Group-elision + `Optional↔Repeat{0,1}` normalized
+   (Q3).
+2. **Look FAIL test**: `/foo$/` rejects `"foobar"` through the grown-leaf match loop; `/foo/`
+   accepts (Q4).
+3. **LOC-delta census**: actually re-home classify as an IR pass and diff LOC to settle
+   shrink-vs-relocate empirically (Q1) — measure the skinny deletion and the engine relocation
+   separately.
+4. **Type-leak assertion**: `[a-c]` and `[a-z]` infer identical `Span<width>` (Q2 confinement).
+5. **Discard-break**: `generated.rs`'s grammar-driven parser returns `Hir`, differential-equal to
+   the hand parser over the corpus (Q9).
+6. **Per-rule egraph fire counts** over the ≥50 tagged corpus, bare and projection-wrapped (Q10).

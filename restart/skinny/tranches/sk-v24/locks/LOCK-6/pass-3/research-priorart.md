@@ -1,308 +1,189 @@
-# LOCK-6 · THE ISOMORPHISM PLANE (rust/ts split) · Pass-3 · PRIOR-ART RESEARCH
+# LOCK-6 pass-3 — PRIOR-ART: THE ISOMORPHISM PLANE (rust/ts split)
 
-*Sweep of what exists / won / lost elsewhere for THIS problem class — cross-language
-layout mirroring, spec-generated skeletons, wasm-core-vs-native, and behavioral
-differential isomorphism. No family allegiance: each datum is filed to the family it
-constrains, favorable or hostile. Every external claim carries a citation; every
-internal constraint names its SPEC §0 / PROVE / seed source.*
+**Role.** Prior-art researcher, no family allegiance. Registry withheld by protocol.
+**Problem class.** "Proper isomorphism to a reasonable point, in layout and in code" between a
+Rust generator/runtime and a TypeScript backbone — what is *mirrored* (module tree, names,
+oracle tables, tape layout, bench protocol), what stays *idiomatic per language*, and where
+V8 laws diverge from LLVM laws. The four candidate mechanisms (PORTFOLIO LOCK-6): 6A
+mirror-tree + isomorphism linter, 6B spec-generated skeleton, 6C wasm-core, 6D
+oracle-isomorphism (the stated null hypothesis).
 
-*All five load-bearing external claims (tsgo structural-port-enforced-by-corpus; Arrow
-Archery SoA+differential; `memory.grow` ArrayBuffer detach; the WASM string-boundary tax;
-Kaitai per-language codegen + read-only/declarative limits) re-verified fresh against live
-sources 2026-07-16 — corroborated, and the 6C trap strengthened by a direct 2026 case
-(OpenUI's Rust-WASM→TS rewrite, below).*
+The industry has run this experiment many times. Below: what exists, who won and lost, the
+constraints our own evidence base already certifies, and the named traps.
 
 ---
 
-## 0. The problem class, framed
+## 1. The delivery-vehicle question (bears on 6C) — the SWC/Biome split is the settled verdict
 
-LOCK-6 asks how a Rust core and a TS face stay "isomorphic to a reasonable point" —
-in **layout** (module tree, tape bytes, oracle tables) and in **code**. This is not a
-novel problem; it is one the interchange-format and cross-language-compiler worlds have
-litigated for a decade. Four families map onto four settled industry patterns:
+The single most-cited data point for "one Rust core, consumed from TS" is **not** a binary
+wasm-vs-hand-port choice — it is a *two-vehicle* consensus:
 
-| Family | Industry pattern | Verdict in the wild |
+- **SWC** ships the Rust core to Node via **N-API / napi-rs** (native addon), explicitly for
+  "maximum performance" in build tools; wasm is the fallback for browsers only.
+  [deepwiki: swc node bindings](https://deepwiki.com/swc-project/swc/7.2-node.js-bindings)
+- **Biome** ships the Rust core as **WASM** (three env-specific builds + a TS `js-api`
+  wrapper) because its target includes the browser/portable surface.
+  [deepwiki: biome JS API and WASM](https://deepwiki.com/biomejs/biome/7.2-javascript-api-and-wasm)
+- Measured spread: native N-API ≈ **45–60% faster** than the same logic as WASM; WASM ≈ 45%
+  faster than JS but "not quite native," with pathological cases (Parcel) **10–20× slower** in
+  WASM than native.
+  [yieldcode: native rust vs wasm](https://yieldcode.blog/post/native-rust-wasm/),
+  [jetbrains: rust vs js/ts + wasm](https://blog.jetbrains.com/rust/2026/01/27/rust-vs-javascript-typescript/)
+
+**Prior-art verdict for 6C.** The winning shape is **one core, two bindings (napi for Node,
+wasm for browser)** — *not* "wasm is the one implementation." A literal single-wasm-core loses
+~45% on the Node/build-tool surface that is bbnf's actual consumer (the value.js / latex-paper /
+keyframes.js suites all run under Node/vitest — R4 §7). WASM-CORE-as-stated is a browser story;
+elevating it to "the one implementation" contradicts the measured native-binding win.
+
+## 2. The boundary tax (against a naive 6C, *for* PROVE-14's framing)
+
+The wasm↔JS boundary copies data. `wasm-bindgen` string handling copies UTF-16 across
+linear-memory via `TextDecoder`/`TextEncoder` — an unavoidable copy; the standing guidance is
+"minimize copying," use integer/fixed-size types, or hold a **`js_sys::JsString` handle** and
+never copy the bytes at all.
+[wasm-bindgen string guide](https://rustwasm.github.io/docs/wasm-bindgen/reference/types/string.html),
+[wasm-bindgen #2741 (minimize copying heap↔linear)](https://github.com/rustwasm/wasm-bindgen/issues/2741),
+[HN: breaking the WASM/JS comm barrier](https://news.ycombinator.com/item?id=44656516)
+
+This is **exactly** PROVE-14's measured result, independently arrived at: full-walk
+materialization across the boundary sits at *parity* (0.9–0.98×) because every leaf must cross,
+while stop-early "don't touch what you don't read" wins **4.4×** by crossing only offsets/handles.
+The wasm-bindgen `JsString`-handle discipline and PROVE-14's offset-tape are the same insight.
+**Constraint imposed:** the cross-language plane must be scoped to *offset/handle* traffic
+(the tape planes `offsets`/`flag_cursors`/`flag_values`/`source` as typed-array views), never
+full-value marshaling. GN-4.W4 already encodes this (full-walk = documented non-goal).
+
+## 3. The NEON-vs-wasm-SIMD wall (kills 6C for the hot path — reinforced by our own §0 law)
+
+bbnf's §0 differentiator is grammar-specialized **NEON** kernels: shufti/truffle prefilter
+(01), fused string scan **vshrn narrow** (03), CSS shufti (05), the movemask-narrow lever (04's
+finding). Compiling the Rust core to wasm **strips exactly these**:
+
+- WASM SIMD cleanly supports only 128-bit "q" NEON ops; non-`q` variants **scalarize**; many
+  NEON instructions are unavailable and emulated via slow multi-instruction or scalar paths —
+  "the WebAssembly SIMD specification does not expose access to all native x86/ARM SIMD
+  instructions."
+  [Emscripten: SIMD porting](https://emscripten.org/docs/porting/simd.html),
+  [V8: wasm SIMD](https://v8.dev/features/simd)
+
+Our own §0 already law-binds this from the other side: **"M-series is NEON-only … warm benches
+are disinformation," "x86 dead."** So the perf story cannot cross to wasm: napi keeps NEON (Node
+wins), wasm accepts the scalarized tax (browser loses the kernels). **6C cannot be "the one
+implementation" carrying the differentiator** — the differentiator is ISA-specific and dies at
+the wasm boundary. 6C survives only as the *structural/browser* delivery of the non-SIMD layer.
+
+## 4. 6B has the strongest, most-trodden prior art — FlatBuffers / Cap'n Proto / Kaitai
+
+The "one machine-readable spec generates typed accessors in both languages over **identical
+wire bytes**" pattern is a solved, industrial problem:
+
+- **FlatBuffers**: `flatc` compiles one schema to C++/Rust/**TypeScript**/… ; **zero-copy**
+  access (no deserialize step); all elements little-endian on every platform so bytes are
+  identical cross-language; "readable across languages and schema versions."
+  [FlatBuffers docs](https://flatbuffers.dev/), [flatc compiler](https://flatbuffers.dev/flatc/),
+  [FlatBuffers Rust](https://flatbuffers.dev/languages/rust/)
+- **Cap'n Proto**: same zero-copy promise, more complex encoding.
+  [FlatBuffers (Wikipedia, incl. Cap'n Proto compare)](https://en.wikipedia.org/wiki/FlatBuffers)
+- **Kaitai Struct**: a declarative `.ksy` (YAML) spec compiles to binary parsers in **Rust AND
+  JavaScript** (and 10+ more) from *one* description; "describe the structure, not how you read
+  it"; 200+ format library.
+  [kaitai.io](https://kaitai.io/), [kaitai_struct repo](https://github.com/kaitai-io/kaitai_struct)
+
+**Verdict for 6B.** This IS the proven route for the *layout/decoder* plane, and it is precisely
+what PROVE-14 already demonstrated by hand (byte-exact SoA tape decoded node-for-node in TS). A
+bbnf-grammar-driven tape-decoder skeleton generated into both Rust and TS is FlatBuffers/Kaitai
+applied to the offset-tape — well-founded, drift-proof-by-construction where generated.
+**Trap (named):** generated code is notoriously non-idiomatic (protobuf's reputation); the
+80%-generated / 20%-hand boundary must be a clean partial/extension seam, and the schema
+language's expressiveness ceiling bounds what can be generated vs hand-filled.
+
+## 5. 6C done *right* is tree-sitter — grammar→core→many bindings, not parallel hand-parsers
+
+The closest structural analog to bbnf's ambition (a grammar that yields a core consumed from
+many languages): **tree-sitter** keeps ONE C core + a parser-generator (grammar→C), then
+*binds* out — `binding_rust`, `binding_web` (emscripten→wasm, per-language `.wasm`), napi. It
+does **not** maintain hand-written parallel parsers.
+[tree-sitter using parsers](https://tree-sitter.github.io/tree-sitter/using-parsers/),
+[web-tree-sitter](https://www.npmjs.com/package/web-tree-sitter),
+[tree-sitter deepwiki](https://deepwiki.com/tree-sitter/tree-sitter)
+
+**Lesson.** The winning multi-language parser systems mirror by GENERATION or BINDING from a
+single source, never by hand-maintained twin implementations. **Trap:** the web path drags an
+emscripten/docker toolchain and ships heavier per-grammar `.wasm` — the browser story is not free.
+
+## 6. 6D is the industry default for *behavioral* isomorphism — and is insufficient alone
+
+Cross-implementation conformance via a shared corpus + differential tests is the standard:
+
+- **test262**: 50,000+ files, the ECMAScript conformance suite every JS engine differential-tests
+  against. [tc39/test262](https://github.com/tc39/test262)
+- **CommonMark**: 500+ embedded spec examples as `{markdown → expected HTML}` JSON — a portable
+  conformance corpus with reference impls in C *and* JS.
+  [commonmark-spec](https://github.com/commonmark/commonmark-spec)
+- Differential testing (COMFORT, etc.): "implementations should produce identical results";
+  divergence = bug.
+  [arxiv 2104.07460 (JS-engine conformance fuzzing)](https://arxiv.org/abs/2104.07460)
+
+**Verdict on the null hypothesis.** 6D *wins* on behavior — it is nearly free (bbnf already has
+per-corpus parity oracles; GN-4.W5 is a four-lane parity oracle) and maximally robust to
+idiomatic divergence. BUT a behavioral corpus proves *values*, not *layout* or *performance*:
+it would **not** have caught PROVE-14's full-walk regression (both lanes yield byte-identical
+values; they differ only in speed). So the maintenance/drift cost that "defeats" *pure* 6D is
+exactly the layout/perf divergence a value-only corpus is blind to. **The evidence forces
+6D-for-behavior PLUS 6B-for-layout, not 6D alone.**
+
+## 7. Why 6A (code-level mirror) is refuted at the hot path by our own recon
+
+R4 and PROVE-14 already draw the line the constitution demands ("measured, not asserted"):
+
+- **TS has NO bespoke regex engine** — it delegates to native `RegExp` (sticky-flag `test()`),
+  while the Rust side owns a bespoke HIR→NFA→DFA engine (R4 §3). Code-mirror of the regex plane
+  is *impossible*; the isomorphism there can only be behavioral (6D) or a functor (LOCK-5's
+  concern).
+- **V8 laws ≠ LLVM laws** (R4 §6): arity-unrolled combinators, the `Int8Array(128)` dispatch
+  table, the megamorphic `.parser` IC, hidden-class monomorphism, `Object.create` deopt risk —
+  none has an LLVM analog. A mirrored hot-path *shape* would fight both compilers.
+- **PROVE-14 full-walk parity** is the measured proof: cold-JIT JS cannot mirror NEON throughput
+  on full materialization; the two languages need *different* hot-path strategies.
+
+So 6A/mirror can bind only the **structural skeleton** (module tree, public API, names, oracle
+tables) — never the kernels. And the **isomorphism-linter** (CI verifying tree-correspondence +
+name-map) is largely *novel*: the industry analog is hand-maintained ports (Rust `simd-json` is a
+hand port of C++ `simdjson`, kept in parity manually), which are exactly the drift-prone
+maintenance burden 6B/6D exist to eliminate. A linter mitigates but does not remove that burden.
+
+---
+
+## 8. Synthesis — where "reasonable" ends (what the evidence base certifies)
+
+The measured line, drawn by our own §0 + R4 + PROVE-14 and corroborated by every comparable
+system above:
+
+| Plane | Isomorphic? | Mechanism the prior art supports |
 |---|---|---|
-| 6A MIRROR-TREE (hand-mirror + linter) | hand-ported cross-language codebases | RARE as a *checked* invariant; parity is enforced by tests, not tree-linters |
-| 6B SPEC-GEN-SKELETON (one spec → both) | FlatBuffers / Cap'n Proto / Arrow / Kaitai | DOMINANT for layout; the default winner |
-| 6C WASM-CORE (Rust→wasm, TS idiom edge) | SWC / oxc / lightningcss / biome | WINS on maintenance, LOSES at the string boundary |
-| 6D ORACLE-ISOMORPHISM (behavioral only) | Arrow Archery / test262 / WPT / tsgo | The empirically strongest — hard to defeat |
+| Tape **layout** (offsets/flags/source) | YES — byte-exact | 6B spec-generated decoder (FlatBuffers/Kaitai/PROVE-14 proven) |
+| **Behavior** (values, conformance) | YES | 6D shared corpus + differential oracle (test262/CommonMark; GN-4.W5) |
+| Public **API surface / types / oracle tables** | YES (skeleton) | 6B generation or 6A mirror of the *structural* skeleton only |
+| **Hot-path kernels** (NEON vs V8-monomorphic JS) | NO — measured to diverge | per-language, idiomatic; full-walk parity + wasm-SIMD wall forbid a shared strategy |
+| **Regex engine** | NO (functor only) | Rust bespoke HIR vs TS native `RegExp` (R4 §3) — LOCK-5's functor, not code-mirror |
+| **Delivery** | split | napi for Node (keeps NEON), wasm for browser (accepts scalar tax) — the SWC/Biome consensus |
 
-The through-line: **the biggest real cross-language systems enforce parity behaviorally
-(6D) and generate layout mechanically (6B); hand-mirroring (6A) is a means, not the
-checked contract, and per-node wasm crossing (6C naive) is a known wall.**
+**The forced conclusion.** No single family is the whole answer. The evidence composes them:
+**6B(layout) + 6D(behavior)** as the isomorphism *spine*; a **native-core / two-binding** delivery
+(not a literal single-wasm-core, which loses ~45% on the Node consumer surface and strips the
+NEON differentiator); and an **explicit non-mirror** of the hot path and regex engine (R4's
+V8-vs-LLVM laws + PROVE-14's full-walk are the named counterexamples that make code-mirror a
+measured loss, not a stylistic choice). 6C survives narrowed to *browser delivery of the
+non-SIMD structural layer*; 6A survives narrowed to *skeleton correspondence with a linter*,
+its kernel-mirror ambition refuted.
 
----
-
-## 6A — MIRROR-TREE: hand-maintained mirror + isomorphism linter
-
-**The flagship real-world hand-mirror is Microsoft's TypeScript→Go port (`tsgo`, Project
-Corsa, announced Mar 2025; TS 7.0 RC 2026).** It is a *port, not a rewrite* — the team
-transplanted the codebase **file-by-file, structurally identical**, to preserve exact
-type-checking semantics [VS Magazine 2025-03-11; DeepWiki microsoft/typescript-go;
-TS devblog "Progress on TypeScript 7", Dec 2025]. This is 6A's thesis executed at the
-largest possible scale — and the load-bearing lesson is **what enforced the parity**:
-not a tree/name-map linter, but the **decade-old conformance suite** — ~20,000 tests,
-~6,000 error-producing, matched in all but **74 cases**, plus internal fuzz rigs
-[TS devblog Dec 2025; corroborated fresh 2026-07-16: DeepWiki microsoft/typescript-go
-confirms the **file-by-file structural transplant** from Strada to preserve type-checking
-semantics, and the native compiler passing **>95% of the conformance suite** — the
-directional magnitude behind the 74-case figure]. The structural mirror was the *method*;
-the **behavioral oracle was the checked invariant**. No public account describes a
-cross-language *tree correspondence linter* catching drift; the tests did.
-
-**Implication for 6A (hostile):** the constitution's own 6A proposes an "isomorphism
-LINTER (CI verifies tree correspondence + a name map)." No prior art shows such a linter
-winning in the wild — intra-language API-surface guards exist (`cargo-public-api`,
-`api-extractor`) but stop at one language; a *cross-language name-map linter is
-unprecedented infrastructure*. The tsgo datum says the 6D null hypothesis (behavioral
-oracle) is what real hand-mirrors actually rely on — 6A must defeat 6D on measured
-maintenance cost, and the strongest comparable defeated *itself* toward 6D.
-
-- Pass-3 Q3 (name-map linter owner): prior art gives no external owner model; the honest
-  routing is to the LOCK-3 IR tower (grammar-derived names have a single source there),
-  with the linter as a thin consumer — but the tsgo evidence argues the *test corpus*
-  (6D) is the cheaper and proven enforcement seat.
-
-## 6B — SPEC-GEN-SKELETON: one machine-readable spec generates both
-
-**This is the industry's default and it wins decisively for layout.** Protocol Buffers,
-**FlatBuffers**, **Cap'n Proto**, Thrift, Bebop, and **Kaitai Struct** all consume one
-schema and emit decoders/types in N languages. Two are directly load-bearing here:
-
-**Apache Arrow is the strongest precedent — and it is the PROVE-14 shape.** Arrow is one
-**columnar (SoA) layout spec** with *independent* implementations in C++, C#, Go, Java,
-**JavaScript, Rust**, Swift, integration-tested cross-language via the **Archery** tool
-against a **JSON reference representation** + IPC / C-Data / Flight protocols
-[arrow.apache.org/docs/format/Integration.html; github.com/apache/arrow]. Arrow proves
-BOTH halves of LOCK-6 at once: a **SoA layout crosses byte-exactly across Rust↔JS**
-(exactly PROVE-14's claim) AND parity is held by a **differential integration test**
-(exactly 6D). If one project already unifies 6B+6D at production scale for a SoA
-cross-language buffer, that is the reference architecture to cite, not reinvent.
-
-**Kaitai Struct is the direct 6B analog and supplies the trap.** A `.ksy` YAML layout DSL
-compiles to parsers in **11 languages** [kaitai.io; github.com/kaitai-io/kaitai_struct].
-Its documented limitations are precisely LOCK-6's fault lines:
-- **Code-gen quality varies significantly per target language** [BigGo News 2025-10] —
-  this IS the "idiomatic per language" idiom-tax the constitution names (6B Q1/Q3): one
-  spec does not yield equally-good code everywhere.
-- **Serialization is experimental; read-only is the sweet spot** — matches PROVE-14
-  (decode crosses, the tape is a read view).
-- **Checksums / derived / conditional logic push against the declarative model** — this
-  is the **6B Q2 dialect blocker in the field**.
-
-**6B Q2 (one spec for AoS-stored-discriminator AND SoA-derived-from-source) — the
-precise reconciliation blocker, with citations.** FlatBuffers stores an explicit
-**vtable of offsets** (an AoS-with-stored-layout dialect: a Table is a pointer to a
-vtable of little-endian offsets to each element) [flatbuffers.dev; studyraid FlatBuffers
-comparison]. Cap'n Proto and rkyv likewise **store** pointers/offsets [rkyv.org
-feature-comparison; david.kolo.ski "rkyv is faster than…"]. **None of these express a
-derived-from-source dialect** where the discriminator is *not stored* but re-derived
-(PROVE-14: kind = `classify(source[offsets[cursor]])`, separators never emit an offset —
-REPORT §"the layout that crossed"). Kaitai's closest primitive is **`instances`**
-(computed/lazy derived fields) but those generate per-language *getters*, not a layout the
-peer language reads zero-copy. **Verdict for 6B Q2:** no existing schema DSL spans both
-dialects in one layout; the lawful move is to model the derived-from-source dialect as a
-**decode function over the SoA planes** (a projection), not a second stored-layout
-variant — file the union-of-dialects as the named blocker, exactly as Kaitai's own
-limitation predicts.
-
-**6B Q4 (shared bytecode VM as a generation target the type-refutation does not bind) —
-precedented, route to LOCK-4C.** Instruction streams are data and cross-language-portable
-by construction: LPeg compiles PEGs to a parsing-VM bytecode; Russ Cox's regex VM / RE2
-compile to one instruction set; **WebAssembly itself is the universal shared instruction
-stream**. A shared combinator bytecode (LOCK-4C VM-CORE) is therefore a live, precedented
-generation target distinct from *type* generation — a type-generation refutation does not
-bind an instruction-stream target. Routing owed jointly to LOCK-4/LOCK-8, as the directive
-states.
-
-## 6C — WASM-CORE: Rust→wasm is the one impl; TS idiom only where V8 wins
-
-**Every major JS-facing Rust tool ships this pattern** — SWC, **@oxc-parser/wasm**,
-**lightningcss-wasm**, biome, dprint [npmjs @oxc-parser/wasm; lightningcss.dev]. It wins
-on single-source maintenance. **But the decisive, well-documented trap is the boundary
-cost for string-heavy parsing** — and it matches PROVE-14 exactly:
-
-- A cited case study: a **TS JSON parser beat the Rust/WASM one by ~25%** — the Rust was
-  fast; the loss was **every key/value crossing the WASM↔JS boundary** [DEV.to "16
-  Patterns for Crossing the WebAssembly Boundary", 2025; medium/ThinkingLoop]. Strings
-  are UTF-16 GC objects in JS, byte arrays in linear memory: **every string crossing =
-  encode + copy + alloc on both sides** [same]. This is *precisely* PROVE-14's full-walk
-  parity finding (materialize every leaf → the crossing/walk cost cancels the
-  parse-avoidance) and *validates* 6C's "TS-native only where V8 measurably wins."
-- **The strongest, most recent corroboration (2026): OpenUI rewrote its `openui-lang`
-  Rust-WASM parser in pure TypeScript for a ~3× speedup** [openui.com/blog/rust-wasm-parser;
-  DEV.to "We Rewrote Our Rust WASM Parser in TypeScript…", 2026; kunalganglani.com
-  "Rust WASM vs TypeScript" 2026]. Named cause: the **"WASM Boundary Tax"** —
-  `serde-wasm-bindgen` must **recursively materialize** Rust data into real JS
-  arrays/objects (many fine-grained boundary crossings per `parse()`), whereas the
-  string-return path is one `memcpy` + V8's native C++ `JSON.parse`. This is the exact
-  mechanism of PROVE-14's full-walk loss, at production scale, in the current year — and
-  it names the specific anti-pattern LOCK-6 must never adopt: **do not vend a
-  materialized object graph across the boundary; vend the tape's four planes once and
-  decode/skip in JS** (the stop-early lane). The lesson cuts BOTH ways: it is why 6C's
-  wasm-core wins only when it crosses in batch, and why a naive "wasm returns the parsed
-  object" backend would *lose to plain TS*.
-- **The winning wasm pattern is BATCH, not per-node**: parse the whole doc in wasm, cross
-  once. This is why PROVE-14 stop-early wins **4.4×** (one crossing, the tape stays as a
-  view; skip 99% of the doc) and full-walk loses (~0.9×, native `JSON.parse` is a
-  hand-optimized C++ parser cold JS cannot beat) [PROVE-14 REPORT/VERIFY, SPEC §0 row 14].
-  The abrogation of full-walk (GN-4.W4 non-goal) is the *correct* industry-consistent call.
-
-**6C Q2 (memory.grow invalidating outstanding typed-array views) — CONFIRMED as a real
-wasm-bindgen trap, with citations and a priced mitigation.** Every wasm `memory.grow()`
-(any `malloc`) **vends a new `ArrayBuffer` and DETACHES the old one**; all outstanding
-JS typed-array views over wasm memory are invalidated (read empty / throw)
-[Awesome Badger "WebAssembly Memory Growth and the Detached ArrayBuffer Problem";
-wasm-bindgen issue #4395 "TypedArray::view may use detached arraybuffer", #1206, #1079].
-This **directly threatens the two-parses-through-one-instance path**: parse A hands back
-views; parse B allocates → grows → A's views silently detach. Mitigations in the field:
-(a) **recreate views after each call** (compare `.buffer` identity to detect a grow)
-[Awesome Badger]; (b) **copy-out eagerly** to stable JS buffers; (c) the TC39
-**Resizable/Growable ArrayBuffer** proposal (in-place grow, no detach) — but requires the
-memory be a resizable buffer and is not universal [proposals.es Resizable ArrayBuffers].
-**Priced against the stop-early margin:** PROVE-14 already **counts a copy of the 118 KB
-offset plane against the tape lane and still wins 4.4× on stop-early** — so copy-out is
-affordable for the stop-early lane; it erodes full-walk further (already abrogated).
-The safe design is copy-out-the-four-planes-once (stable views), which PROVE-14's own
-accounting proves survivable.
-
-- Q3 (confinement / one consolidated cdylib vs two cold instances): prior art favors
-  **one instance, batch-cross, copy-out planes** — the per-instance cold-start + the
-  detach hazard both argue against many live instances holding views concurrently.
-
-## 6D — ORACLE-ISOMORPHISM: behavioral only; shared corpus + differential tests
-
-**This is the empirically strongest family — the pattern the largest cross-language
-systems actually use, and it is hard to defeat.**
-
-- **Apache Arrow Archery** — C++/C#/Go/Java/JS/Rust/Swift differentially tested against a
-  JSON reference + IPC/C-Data/Flight [arrow.apache.org Integration.html]. The gold
-  standard: N independent impls, one corpus, differential — *layout free per language
-  above the shared buffer spec*.
-- **tsgo** held Go↔JS parity via the **20k-test conformance suite** (74 discrepancies),
-  not a layout mirror [TS devblog Dec 2025] — the largest recent hand-port, kept
-  isomorphic behaviorally.
-- **test262 (ECMAScript), Web Platform Tests, SQLite SQL Logic Test, ICU** — the "shared
-  conformance corpus + many implementations" governance model at scale.
-
-**6D Q1 (cross-language digest fold, running not spec) — ready-made corpora exist:**
-- **Nigel Tao's `parse-number-fxx-test-data`: ~5.3M float-string→exact-bits cases**, used
-  by fast_float / simdjson / Rust core [github.com/nigeltao/parse-number-fxx-test-data;
-  crates.io/fast-float]. This is the **last-ULP number oracle** for 6D Q2's injected
-  "last-ULP number delta." The exactness matters: RapidJSON's fast mode is off-by-1-ULP
-  and thus non-conformant; Eisel-Lemire is the exact algorithm [lemire.me 2020-03-10;
-  nigeltao.github.io eisel-lemire]. **The number fold must be exact-bits, not tolerant.**
-- **JSONTestSuite (nst, "Parsing JSON is a Minefield")**: 300+ **named accept/reject**
-  files (filename encodes expected accept/reject; handcrafted + AFL-fuzzed)
-  [seriot.ch/security/parsing_json.html; github.com/nst/JSONTestSuite]. This is the
-  ready **accept/reject partition** for 6D Q4 ("values + accept/reject IN; wording + span
-  OUT"). Seriot's central finding — **real parsers DIVERGE on edge cases (numbers,
-  Unicode, structure)** — is direct evidence the corpus is load-bearing, not decorative.
-
-**6D Q2 (static corpus vs coverage-guided fuzzer) — prior art says use BOTH:**
-JSONTestSuite itself mixes **handcrafted + American-Fuzzy-Lop** cases [github.com/nst];
-tsgo used its suite **plus fuzz rigs** [TS devblog]. The handcrafted corpus catches known
-edge classes cheaply; the coverage-guided fuzzer finds the unknown (off-by-one escape,
-astral strings) at a cycles-to-detection cost. Both numbers owed, as the directive asks.
-
-**6D DAG (freeze strictly after LOCK-1 alphabet + LOCK-7 tie-breaker) — corroborated:**
-JSONTestSuite's **`i_` (implementation-defined) files** demonstrate the accept/reject
-boundary is *spec-underdetermined* [nst/JSONTestSuite results]. That underdetermination is
-resolved only by the grammar's alphabet (LOCK-1) and the ambiguity tie-break (LOCK-7) —
-so 6D's corpus boundary genuinely depends on those locks freezing first. The DAG
-constraint is not bookkeeping; it is where the `i_` cases get adjudicated.
-
----
-
-## Constraints our own evidence base already imposes (binding, do not relitigate)
-
-From **SPEC §0** and the seeds — these bound every family:
-
-1. **Full-walk 2× is UNMET and abrogated** (native `JSON.parse` is near-optimal for full
-   materialization; cold JS cannot beat it) — SPEC §0 row 14, GN-4.W4 non-goal,
-   PROVE-14 VERIFY (~0.91×). The tape's value is **stop-early (4.4×)**, the
-   *not-touching-what-you-don't-read* edge. Any wasm design that reintroduces per-node
-   crossing re-loses full-walk — the oxc/25%-case trap confirms it externally.
-2. **The tape that crosses is SoA, offset-only, derived-from-source**: kind re-derived
-   from `source[offset]`, separators never emit, payload arena provably empty
-   (PROVE-14 REPORT). **AoS-vs-SoA is MOOT at HEAD — do not relitigate** (SPEC §0
-   refutations). This *is* the dialect 6B must express; FlatBuffers/Cap'n Proto's
-   stored-offset dialect is the *other* pole (6B Q2).
-3. **Warm benches are disinformation; paired cold interleaving is mandatory even for
-   "obvious" wins** (the row-09 self-deception lesson) — SPEC §0. Any 6C wasm-vs-native or
-   6D fold measurement is cold + paired + base-pinned, per the standing law.
-4. **Type plane costs zero at runtime** (constitution v; PT-3 W3 mirrors it for TS) — a
-   6B skeleton that generates *types* must erase; an instruction-stream target (6B Q4) is
-   the runtime-bearing exception, routed to LOCK-4C.
-5. **PROVE-14 counts the plane-copy against the tape and still wins stop-early** — the
-   pricing precedent that makes the 6C Q2 copy-out mitigation affordable.
-6. **Fast TS face = the BUILD-TIME EMITTER; runtime decoders survive only as
-   isomorphism/correctness oracles** (pass-3 binding frame, XL-D) — this is 6D's seat:
-   the decoder's job is to be the oracle, not the hot path.
-
----
-
-## Traps named in comparable systems (fold into critique)
-
-1. **Per-node WASM↔JS crossing is a wall for string-heavy parsing** (TS beat Rust/WASM by
-   ~25%) — 6C. Batch-cross or lose. [DEV.to boundary-patterns; medium/ThinkingLoop]
-2. **`memory.grow()` detaches all outstanding ArrayBuffer views** — 6C Q2, a silent
-   correctness bug in the two-parse path. [wasm-bindgen #4395; Awesome Badger]
-3. **Generated-code quality varies per target language; derived/conditional logic fights
-   the declarative model** — 6B idiom-tax + Q2 dialect blocker. [Kaitai limitations,
-   BigGo 2025-10]
-4. **No schema DSL spans stored-discriminator AND derived-from-source in one layout** —
-   FlatBuffers/Cap'n Proto/rkyv all *store* offsets; the union spec is genuinely novel,
-   model the derived dialect as a projection. [flatbuffers.dev; rkyv.org]
-5. **JSON parsers diverge on edge cases; the accept/reject boundary is
-   spec-underdetermined (`i_` files)** — 6D needs the LOCK-1/LOCK-7 DAG dependency, and
-   the corpus is load-bearing. [Seriot; nst/JSONTestSuite]
-6. **Last-ULP float parsing is a real cross-impl divergence** (RapidJSON fast-mode
-   non-conformant) — 6D number fold must be exact-bits, use the 5.3M-case corpus.
-   [lemire.me; nigeltao parse-number-fxx]
-7. **The flagship hand-mirror (tsgo) enforced parity by the test corpus, not a
-   tree/name-map linter** — 6A's linter is unprecedented; the 6D null hypothesis is
-   empirically the default. [TS devblog Dec 2025]
-
----
-
-## The synthesis handoff (one paragraph)
-
-The interchange-format world already settled this problem: **generate the layout from one
-spec (6B, Arrow/Kaitai), enforce parity by a shared differential corpus (6D,
-Archery/test262/JSONTestSuite), ship the core once and cross the wasm boundary in batch
-(6C, the oxc lesson), and treat the hand-mirror tree (6A) as a means whose checked
-invariant is the corpus, not a name-map linter (the tsgo lesson).** Arrow is the single
-reference that unifies 6B+6D for a SoA cross-language buffer — the exact PROVE-14 shape.
-The genuinely novel work our evidence base forces is narrow: a **layout spec that
-expresses the derived-from-source (no-stored-discriminator) tape dialect** (6B Q2, which
-no existing DSL does) and the **copy-out-vs-detach pricing** on the two-parse path (6C Q2,
-which PROVE-14's own accounting shows is survivable on stop-early).
-
----
-
-### Sources
-
-- TypeScript→Go port (tsgo): VS Magazine 2025-03-11; TS devblog "Announcing TypeScript
-  7.0 RC" + "Progress on TypeScript 7 (Dec 2025)"; DeepWiki microsoft/typescript-go.
-- Apache Arrow: arrow.apache.org/docs/format/Integration.html; github.com/apache/arrow;
-  arrow.apache.org/rust.
-- Kaitai Struct: kaitai.io; github.com/kaitai-io/kaitai_struct; BigGo News 2025-10-05.
-- FlatBuffers/Cap'n Proto/rkyv: flatbuffers.dev/benchmarks; rkyv.org/feature-comparison;
-  david.kolo.ski "rkyv is faster than…"; studyraid FlatBuffers comparison.
-- WASM boundary cost: DEV.to "16 Patterns for Crossing the WebAssembly Boundary" (2025);
-  medium/ThinkingLoop "WebAssembly for JS Full-Stack, Minus the Hype"; npmjs
-  @oxc-parser/wasm; lightningcss.dev. **OpenUI Rust-WASM→TS rewrite (2026):**
-  openui.com/blog/rust-wasm-parser; DEV.to "We Rewrote Our Rust WASM Parser in TypeScript
-  and It Got Faster"; kunalganglani.com "Rust WASM vs TypeScript: Why the Faster Language
-  Lost [2026]"; neugierig.org "Moving data from Rust to JS" (2024).
-- memory.grow detach: Awesome Badger "WebAssembly Memory Growth and the Detached
-  ArrayBuffer Problem"; wasm-bindgen issues #4395, #1206, #1079; proposals.es Resizable
-  and Growable ArrayBuffers.
-- Float parsing: github.com/nigeltao/parse-number-fxx-test-data; fastfloat/fast_float;
-  lemire.me 2020-03-10; nigeltao.github.io/blog/2020/eisel-lemire.
-- JSON conformance: seriot.ch/security/parsing_json.html ("Parsing JSON is a Minefield");
-  github.com/nst/JSONTestSuite.
-- Internal: SPEC §0 (rows 14, refutations); PROVE-14 REPORT+VERIFY; GN-4.md (W4);
-  R4-parse-that-ts.md; pass-3 DIRECTIVES-RESEARCH.md binding frame (XL-A..H).
+**Traps carried forward (named).** (1) single-wasm-core costs ~45% on Node — SWC's measured
+reason for napi; (2) wasm-bindgen full-value marshaling eats the win — cross only handles/offsets
+(PROVE-14); (3) wasm SIMD scalarizes non-`q` NEON — the differentiator dies at that boundary;
+(4) generated code is non-idiomatic (protobuf) — the generated/hand seam must be a clean
+partial/extension; (5) a behavioral corpus is blind to layout/perf drift — 6D alone
+under-constrains a performance product (PROVE-14 is the counterexample); (6) hand-maintained
+twin ports (simd-json) are the drift burden 6B/6D exist to kill — an isomorphism linter mitigates
+but never removes it; (7) two-arm window asymmetry (§0/09) — any cross-language bench is paired
+or it is disinformation.

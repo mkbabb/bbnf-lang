@@ -1,326 +1,333 @@
-# LOCK-1 · Family 1D — TYPES-AS-ECLASSES · pass-2 research
+# LOCK-1 · pass-2 · Family 1D — TYPES-AS-ECLASSES
 
-The type lattice lives in an e-graph. Unification is congruence closure; a fresh
-e-class *is* a type variable; recursive document shapes are cycles, not μ-binders;
-projections canonicalize by saturation; extraction picks the representative type by
-cost. The family's decisive thesis: the same e-graph substrate LOCK-2 runs is a *better*
-unification engine than a tree-walking Hindley–Milner core, precisely for the three
-things the grammar plane needs and HM struggles with — equirecursive document types,
-associative-commutative sum canonicalization, and cost-driven width defaulting.
-
----
-
-## 0. The substrate already exists and is proven in-tree
-
-A complete egg-style e-graph lives at `crates/egraph/` (1885 LOC) with every organ this
-family needs, already exercised by two live consumers:
-
-- **`Language` trait** + **auto-derive** — `crates/egraph/src/language.rs:16`,
-  `crates/egraph-derive/src/lib.rs:49`. The derive projects `Id`, `Box<[Id]>`,
-  `Vec<Id>`, `[Id; N]` fields into one `children() -> &[Id]` slice with zero per-field
-  attributes; non-`Id` fields auto-classify as leaf metadata; `#[language(skip)]` forces
-  metadata. A recursive type enum drops into this unchanged — the grammar tier already
-  does it at `crates/ir/src/egraph/node.rs:23` (`GrammarENode`, 15 variants, `Box<[Id]>`
-  and `[Id; 2]` children, `#[language(skip)]` on `TokenDispatch.arms`); the
-  backend-decision tier does a leaf-only version at
-  `skinny/crates/passes/src/backend_egraph.rs:181`.
-- **Congruence closure** = `EGraph::add` / `union` / `rebuild` —
-  `crates/egraph/src/egraph.rs:155,202,251`. `add` hashconses on canonicalized children
-  (`memo: FxHashMap<N, Id>`); `union` merges classes; `rebuild` re-canonicalizes parent
-  edges to a fixpoint. This *is* unification-with-congruence: two type e-nodes with the
-  same constructor whose children are already unified hashcons to one class
-  automatically. No separate occurs-check, no substitution map.
-- **Per-class lattice analysis** — `crates/egraph/src/analysis.rs:18`. `make` computes a
-  monotone value from children's classes; `merge` joins on `union`, returning a `changed`
-  bool feeding saturation detection. A `WidthBound` lattice (`min` join by `min`, `max`
-  join by `max`, unbounded = `None`) already lives at
-  `crates/ir/src/egraph/analysis/facts.rs` — the numeric-width defaulting Thread A/B treat
-  as a post-solve CSP *is already a monotone e-class analysis here*.
-- **Cost extraction** — `crates/egraph/src/extract.rs:85,115`. `Extractor` +
-  `CostModel<N>` + `Lattice`; greedy bottom-up fixpoint (`compute_best`). This is how
-  "extraction picks the representative type by cost" is realized — no new machinery.
-- **Scheduling** — `crates/egraph/src/csp_scheduler.rs:204` (`CspScheduler`) and
-  `scheduler.rs` (`BackoffScheduler`). The CSP scheduler models "which classes need
-  re-probing" as an AC-3 dirty-closure over parent edges; its doc-comment
-  (`csp_scheduler.rs:20-23`) asserts isomorphism to the grammar tier's `csp-solver`
-  usage. This is the shared-engine seam Thread D#2 asks about — already built.
-
-**Consequence.** Family 1D lands *no new engine*. It lands one new `Language` enum
-(`TypeENode`), a handful of rewrite rules, one cost model, and one sink-type widening
-(`TypeDesc::Row`). Everything else is a second consumer of a substrate that already has
-two.
+**The type-theoretic center.** The type lattice lives in an e-graph; unification is
+congruence closure over a type-node `Language`; projection canonicalization is
+saturation under rewrite groups; the winning representative type per rule is extraction
+by cost. This family does not carry its own solver — it consumes the production e-graph
+substrate (`crates/egraph/`, shared with LOCK-2) and adds exactly one net thing: a
+**type-node Language + a per-e-class type lattice**, so that record-vs-list, sum
+canonicalization, and width defaulting are all facts an Analysis computes, never facts a
+bracket heuristic matches.
 
 ---
 
-## 1. The mechanism made concrete — `TypeENode`
+## 1. The substrate is already production-grade (no new engine)
 
-```rust
-// crates/ir/src/egraph/type_node.rs (sibling of node.rs; colocation edict)
-#[derive(Clone, PartialEq, Eq, Hash, Debug, egraph_derive::Language)]
-pub enum TypeENode {
-    // ── leaves (mirror TypeDesc scalars, type_desc.rs:13) ──
-    Span, F64, Bool, U8, U16, U32, I8, I16, I32, I64, U64,
-    // ── unary / list ──
-    Option(::egraph::Id),
-    Vec(::egraph::Id),
-    // ── record: children = per-field PAYLOAD e-classes; keys are metadata ──
-    Row { fields: Box<[::egraph::Id]>, #[language(skip)] keys: Box<[StringId]> },
-    // ── variant / sum: children = per-arm payload e-classes ──
-    Sum { arms: Box<[::egraph::Id]>, #[language(skip)] tags: Box<[StringId]> },
-    // ── positional product (tuple); position is significant ──
-    Tuple(Box<[::egraph::Id]>),
+The e-graph the family needs exists and is live in the tree, not a research spike:
+
+- `Language` trait — `crates/egraph/src/language.rs:16` (`children()/children_mut()`
+  return contiguous `&[Id]` slices; `matches()` is the discriminant-equal congruence
+  test at `:30`).
+- `#[derive(Language)]` — `crates/egraph-derive/src/lib.rs:48`. It projects each
+  child-bearing variant to a slice; multi-`Id` variants must be a single `[Id; N]` /
+  `Box<[Id]>` field (`:183`). A **type-node** enum derives its `Language` impl
+  identically — the exact pattern `GrammarENode` already uses at
+  `crates/ir/src/egraph/node.rs:23` (`Seq(Box<[Id]>)`, `Alt(Box<[Id]>, Option<..>)`).
+- Congruence closure = `EGraph::union` + `rebuild` — `crates/egraph/src/egraph.rs:202,251`
+  over `crates/egraph/src/unionfind.rs`. `add` hash-conses e-nodes (`:155`);
+  `canonicalize` rewrites children to canonical ids (`:144`). **This is unification: two
+  type e-nodes with congruent children land in one class.**
+- Per-class lattice — `Analysis<N>` trait, `crates/egraph/src/analysis.rs:19`:
+  `make(egraph,node)->Data` computes a fact from a fresh e-node given its children's
+  facts; `merge(a,b)->bool` is the monotone join fired on every union, returning the
+  LLVM-style Changed flag the saturation loop reads for fixpoint. This is the machinery
+  that makes "Row" a *derived fact*, not a syntactic match.
+- Extraction by cost — `Extractor` + `CostModel::cost(node, child_cost)` + `Lattice`,
+  `crates/egraph/src/extract.rs:85,115` (`best_node`/`best_cost`/`extract_tree`). The
+  "representative type" the family promises is literally `Extractor::best_node`.
+- CSP-backed saturation schedule — `CspScheduler`, `crates/egraph/src/csp_scheduler.rs:175`
+  with `DirtyDomain`/`ParentDirtyProp` AC-3 dirty propagation (`:57,120`). This is the
+  `union` scheduling seam Thread D.2 targets.
+
+**Precedent that a real grammar already saturates through this:** `GrammarAnalysis`
+(a live `Analysis<GrammarENode>` lattice) is exercised on a compiled fixture in
+`crates/ir/tests/egraph/egraph_analysis.rs` (build+saturate → per-class `EClassFacts`
+via `egraph.class(id).data`). The type plane is the same shape one tier up.
+
+So family 1D lands **one type-node Language + one type Analysis**, not an engine.
+
+---
+
+## 2. The core mechanism — types as e-classes
+
+Define a type-node Language mirroring the schema IR's shape (the `DirectTypeKind` /
+`TypeDesc` vocabulary), child-bearing variants only:
+
+```
+#[derive(Clone, Eq, PartialEq, Hash, Language)]
+enum TyNode {
+    Var,                         // leaf — a fresh unification variable seeds a class
+    Leaf(LeafCon),               // Bool/F64/U8..U64/StringSpan/StringDecoded (leaf)
+    Row(Box<[Id]>),              // record: children are Field e-classes (key-tagged)
+    List(Id),                    // homogeneous sequence  → TypeDesc::Vec
+    Sum(Box<[Id]>),              // n-ary alternation of variant e-classes
+    Field { key: StringId, ty: [Id;1] },   // a keyed member (metadata key, one child)
+    Opt(Id),                     // TypeDesc::Option
 }
 ```
 
-There is **no `Var` node**. A type variable is a *fresh e-class* (`unionfind.make_set`,
-`egraph.rs:162`); unifying two variables is `egraph.union(a, b)`; unifying a variable
-with a constructor unions the var's class with the constructor's class. This is the
-union-find of a classical HM engine (rustc's `InferCtxt`/`ena`, GHC's `TcS`) with
-congruence added for free. The `keys`/`tags` metadata rides as `#[language(skip)]`
-exactly as `GrammarENode::TokenDispatch.arms` does (`node.rs:63`).
-
-**Recursion is a cycle, not a μ-binder.** JSON's `value = object | array | string |
-number | bool | null`, where `object`'s payload contains `value`, is a cyclic reference
-graph: the `Sum` class for `value` has a `Row`/`Vec` arm whose child *is the `value`
-class itself*. The e-graph stores children as `Id`s, so a self-referencing class is legal
-and terminating — `rebuild` canonicalizes and stops. Tree-based HM (PROVE-08's 221-LOC
-union-find core, `prototypes/PROVE-08/patch.diff:230-456`) cannot represent this without
-an explicit occurs-check-defeating μ-type; the e-graph gives **equirecursive
-(regular-tree) unification for free**. This is the family's single sharpest technical
-claim and the first thing a prototype must demonstrate.
+Unification of two rule types = `egraph.union(ty_a, ty_b)`; congruence `rebuild`
+propagates it. **The clash discipline** (SPEC §56 no-silent-epsilon; the
+`HeterogeneousAltJoin` obligation at `crates/ir/src/types/type_desc.rs`): a `merge` that
+would join two *incompatible constructors* (e.g. `Leaf(F64)` vs `Row`) does not silently
+pick one — the type Analysis records a **clash obligation** in the class `Data` (a
+lattice `⊤`/conflict element carrying both branch types), which extraction surfaces as a
+diagnostic and lowers to the existing `TypeDesc::HeterogeneousAltJoin(Vec<TypeDesc>)`
+sink — the join obligation the constraint plane already emits at
+`passes::types::constraint::revise::join_types` (per the `HeterogeneousAltJoin` doc). The
+e-graph does not need a bespoke error path; the obligation *is* a lattice value.
 
 ---
 
-## 2. Thread D#1 — the make-or-break: derive `Row` vs `Vec` by inference, no hint
+## 3. Thread D.1 (make-or-break) — Row derived by inference, no bracket hint
 
-**The hint to kill.** Today the record-vs-list decision is a byte-literal gate: the role
-classifier marks a rule as container iff its body contains the `{` and `}` literals,
-sequence iff `[` and `]` (`skinny/crates/passes/src/lib.rs`, role classifier at
-`:1403-1490`). Both `object` and `array` are the *same* `ExprKind::Repeat`
-(`array = "[" value* "]"`, `object = "{" pair* "}"`); only the bracket bytes distinguish
-them. That is the per-grammar hint the family must remove.
+**The wall today.** R6 §5c names the sin exactly: `derive_materialization_roles`
+(`skinny/crates/passes/src/lib.rs:1403-1490`) classifies rules **by byte-literal**:
+`{`+`}` → container (`:1433`), `[`+`]` → sequence (`:1441`). `TypeDesc`
+(`crates/ir/src/types/type_desc.rs:13`) has **no `Row` variant at all** — records and
+lists both collapse into `Vec`/`Tuple`/`Enum`, which is the masked `List ≠ Row` gap
+Open R names.
 
-**The e-graph classification is congruence over the element shape.** In `TypeENode`:
+**The e-graph route — classify by the repeated element's shape, not the delimiter.**
+The discriminant lives in the *body*, not the brackets: an `object` rule is
+`"{" pair* "}"` where `pair = key ":" value` — its `Repeat` element is a **Field**
+(a key-tagged binding). An `array` rule is `"[" value* "]"` — its `Repeat` element is a
+**bare value** with no key. So the rule is:
 
-- `array`'s repeat element unifies to the `value` class directly → the repeat's type is
-  `Vec(value)`.
-- `object`'s repeat element is `pair = string ":" value`, a two-leg product whose first
-  leg carries a **key projection**. Its element class is a keyed pair → a repeat of keyed
-  pairs canonicalizes to `Row`/map.
+> A `Repeat` (or `Seq` of alternating members) whose element e-class carries the
+> `keyed` fact canonicalizes to `Row`; whose element is un-keyed canonicalizes to `List`.
 
-The discriminator is **"does the repeated element carry a key leg?"** — a congruence fact
-about the element's e-class, *not* a read of `{`/`[` bytes. A rewrite rule
-`repeat-of-keyed-pair ⇒ Row` fires on the first; `repeat-of-bare ⇒ Vec` on the second.
+This is a `TyAnalysis::make` reading children facts, plus two rewrite rules under
+saturation:
 
-**Honest finding — the family's answer.** Record-vs-list *is* derivable without the
-bracket hint — **but only when the key-ness of the leg is a grammar fact**, i.e. a `->`
-projection marks which leg is the key (`string -> key`). The live JSON grammar has
-*zero* `->` projections (value/type recon: `json.bbnf` is pure structural EBNF), so a
-generic `json.bbnf` cannot distinguish a keyed map from a positional list-of-pairs
-because the information is not present — this is PROVE-08's **Wall 1** (`GN-3.md §1.2`)
-restated at the e-graph: *the e-graph removes the byte-literal hint but not the
-projection requirement*. The residual that genuinely cannot be inferred is **keyed-map vs
-positional-tuple for a 2-field product** — resolved by the projection *target* (named
-field ⇒ `Row`, positional ⇒ `Tuple`), never by a grammar-name gate. A prototype must
-build exactly this on bare `json.bbnf` + a typed variant with `string -> key` + a
-synthetic `array = "[" pair* "]"` (array-of-pairs) grammar, and report: (a) zero
-bracket-byte reads in the classifier; (b) whether keyed vs positional disambiguates from
-projection facts alone. Expected verdict: **hint-free for the Row/Vec split; the only
-irreducible input is the `->` projection, which is legitimate declared information, not a
-heuristic.**
+- `Repeat(x)` where `analysis(x).keyed == true` ⇒ union with `Row([x])`.
+- `Repeat(x)` where `analysis(x).keyed == false` ⇒ union with `List(x)`.
 
----
+`keyed` is set by `make` on a `Field` node (it carries a `key: StringId`) and propagated
+by `merge` up through the repeat. **No `{`/`}` literal is ever consulted** — the fact
+comes from whether the grammar's `pair` rule projects a key. This directly answers the
+directive: **a hint is NOT required** *iff* the grammar's pair/member structure is
+recoverable (the `key ":" value` shape, or a `-> key` projection on the member). The
+honest caveat: json.bbnf's `pair` (R6 §0: 18 lines, zero `->`) makes "keyed" recoverable
+structurally (a `Seq` whose first element is a string-typed leaf followed by a `:`
+literal); a fully anonymous `value*` body is genuinely a List and *should* classify as
+one. The prototype must confirm the structural `keyed` predicate fires on `pair` without
+a name-gate on the rule string `"object"` — that is the make-or-break assertion.
 
-## 3. Thread D#3 — AC-Sum + positional injectivity, co-resident, one saturation
-
-Two rules with opposite symmetry must live in the same e-graph under one `rebuild`
-fixpoint:
-
-- **AC-Sum canonicalization.** `object|array|string|number|bool|null` must equal every
-  reordering (the R5 order-sensitivity hazard, `GN-3.md §7`). Realized as a rewrite that
-  installs a canonically-ordered `Sum` (sort arms by a stable variant key) and `union`s
-  it with the source `Sum`; congruence then hashconses two `Sum`s with the same *set* of
-  arm classes into one class. Because rewrites are **additive** (`rewrite.rs:6-7` —
-  applying never removes the original), sorted and unsorted forms co-exist and collapse
-  by hashcons; no destructive loop.
-- **Positional injectivity.** `Tuple(A,B) ≠ Tuple(B,A)` and `Row` field order is
-  significant for lowering. Realized by *not* giving `Tuple`/`Row` an AC rule — their
-  `Box<[Id]>` positional slice is the hashcons key, so `Tuple(A,B)` and `Tuple(B,A)` are
-  two distinct memo keys and two distinct classes.
-
-**Confluence / soundness argument.** The AC rewrite is **constructor-scoped**: its
-`search` (the `Rewrite` trait, `rewrite.rs:34-71`) matches only `Sum` nodes, never
-`Tuple`/`Row`. Congruence closure is per-constructor (the memo key includes the
-discriminant), so no `Sum` rule can reorder a `Tuple`'s children. Termination follows
-from additivity + hashcons: each application either adds one canonical `Sum` (bounded by
-the number of distinct arm-sets) or is a no-op the `should_apply` guard (`rewrite.rs:58`)
-suppresses. Proof obligation for a prototype: one `EGraph<TypeENode>`, one
-`CspScheduler::run`, assert (i) two arm-reorderings of a 6-arm `Sum` land in **one**
-class; (ii) `Tuple(A,B)`/`Tuple(B,A)` stay in **two** classes; (iii) saturation
-terminates (`report.saturated`, not `iter_limit_hit`). Sharp counterexample to guard: a
-`Sum` with two *equal* arm classes (duplicate variant) — the AC-sort must dedup or the
-class count oscillates.
+**Why the e-graph specifically (vs. a plain fold).** The same `value` alternation is
+referenced from both object-value and array-element positions; congruence closure lets
+the *one* `value` e-class be classified once and shared, and lets a re-ordered
+alternation (`bool|null|...` vs `null|bool|...`) land in the same class by hash-consing —
+the property a linear role fold cannot give and R5 (GN-3 §7) flags as the equality risk.
 
 ---
 
-## 4. Thread D#2 — shared-engine union scheduling across the three tiers
+## 4. Thread D.2 — the `union` scheduling amendment, measured across three tiers
 
-The "union scheduling amendment" is: route the type tier through the **same**
-`CspScheduler` (`csp_scheduler.rs:204`) the grammar tier's e-graph already uses, rather
-than a bespoke type-solver loop, so grammar + regex + type saturation share one
-dirty-closure scheduler. The scheduler is generic over `<N: Language, A: Analysis<N>>`,
-so `TypeENode` plugs in with no change. Per-tier cost = iterations + `union`/`rebuild`
-cycles to saturation (`RunReport.iterations`, `total_applied`).
+**What the amendment is.** The `CspScheduler` seeds each next iteration's dirty set from
+**node-count growth** (`csp_scheduler.rs:293-306`). But a *pure union* (a congruence
+merge that adds no node — exactly what type unification does) grows no class, so the
+scheduler falls to the **conservative "everything dirty" reseed**
+(`csp_scheduler.rs:307-317`, verbatim: "If we applied work but no class is grown (pure
+unions that don't add nodes), fall back to the conservative everything dirty seed"). For
+a type tier that is almost entirely unions and almost no node growth, that fallback
+discards the whole point of dirty propagation — every iteration re-visits every class.
+The amendment: route `union_count()` deltas (`egraph.rs:109`) through `ParentDirtyProp`
+(`csp_scheduler.rs:120`) so a union seeds *only the merged class's parents* dirty, not
+the universe.
 
-**Predicted per-tier judgment (confirm or retire in-tree).** The dirty-closure pays off
-when the graph is large and the dirty frontier is a small subtree — true for the grammar
-tier (hundreds of nodes). The type tier's graphs are *tiny* (the live typed `json.bbnf`
-has 5 arrows; even CSS-L4 is a few dozen type nodes), so iteration-1 "everything dirty"
-dominates and the CSP build is pure overhead. Honest expected verdict: **land the shared
-scheduler for the grammar tier (already there), use `BackoffScheduler` — or a single
-`rebuild` — for the type tier, and report the node-count crossover** where CSP scheduling
-starts to win. A prototype must measure both schedulers on json/sheets/CSS-L4 type
-e-graphs and give the per-tier number; the amendment is *retired for the type tier* unless
-the measured crossover sits below CSS-L4's size.
+**The three-tier saturation measurement the directive demands** (land or retire in-tree):
 
----
+| tier | e-node population | union:node ratio | amendment expected to |
+|---|---|---|---|
+| grammar (`GrammarENode`, `crates/ir/src/egraph/node.rs`) | node-growth-heavy (inline/unroll rewrites *add* nodes) | low | ~no change — growth reseed already precise |
+| regex HIR (LOCK-5's tier) | mixed | medium | modest |
+| **type (`TyNode`, this family)** | union-heavy, node-growth near-zero | **high** | large — this is where "everything dirty" dominates |
 
-## 5. Open R — engine-agnostic record-widening (the sink)
-
-The LOCK-1→LOCK-3 handoff is `TypeAnalysis::from_ir` at
-`crates/core/src/backend/driver/analysis.rs:22`, which clones `ir.types:
-Vec<(RuleId, TypeDesc)>` (second `from_ir` at `rust/view/named_types.rs:100`); the TS
-mirror is `crates/core/src/backend/ts/projection.rs`. The sink type is `TypeDesc`
-(`crates/ir/src/types/type_desc.rs:13`): `Span, F64, Bool, I8..U64, Option, Vec, Tuple,
-BoxedEnum, Enum, Named`, plus a heterogeneous-alt join-obligation variant — **but no
-`Row`** (no record) and no first-class `Sum`. That absence is *why* `List ≠ Row` cannot
-be populated today and *why* the JSON path falls back to the `sink_only.has_rule("value")`
-name-gate (`runtime_generator.rs:99`).
-
-Family-1D position on Open R: add **`TypeDesc::Row { keys: Vec<StringId>, fields:
-Vec<TypeDesc> }`** (and promote the sum representation) at `type_desc.rs:13`. Then the
-e-graph `Extractor` extracts a `TypeENode::Row` into `TypeDesc::Row`, and the *running
-structural fold* can populate the same variant independently — **structural fidelity
-becomes orthogonal to engine choice**, exactly Open R's ask. The e-graph is the *producer*
-that decides Row-vs-Vec by inference (§2); `TypeDesc::Row` is the shared representation
-both the e-graph extraction and any other engine write into, and both lower through
-`from_ir`. Adding `Row` is the single edit that closes the masked `json_templates`
-fallback: once `List ≠ Row` is an inferred *type* fact reaching `from_ir`, the
-`has_rule("value")` string gate has an inference-derived replacement.
+The prototype instruments `RunReport` (`crates/egraph/src/scheduler.rs`, per-rule applied
+counts + `final_classes`) on the same fixture with/without the amendment and reports
+iterations-to-saturation and classes-visited per tier. **Retirement criterion:** if the
+type tier's saturation is already O(1) iterations (types are shallow — a JSON value
+lattice is ~7 nodes deep), the amendment is a no-op win and should be *retired as
+unnecessary*, not landed for its own sake — the honest negative result Thread D.2 invites.
+The measurement decides; it is cheap because the fixture already exists
+(`egraph_analysis.rs`).
 
 ---
 
-## 6. Open X — the width micro-fixture is an extraction cost, not a search
+## 5. Thread D.3 — AC-sum canonicalization + positional injectivity, one `Sum`, one saturation
 
-A `->` genuinely under-determined between `u8`/`u16`/`u32` (the value fits any) is the
-canonical residue Thread A#3 / Open X want resolved. Family 1D resolves it **by
-extraction cost, not by CSP search**: the numeric leaves `U8`/`U16`/`U32` sit in one
-e-class (all valid widths of the same literal), a `CostModel<TypeENode>`
-(`extract.rs:85`) assigns *narrowest-width-cheapest* (`U8 < U16 < U32`), and `Extractor`
-picks `U8`. Ordered-lattice defaulting is thus a monotone cost, and the pluggable seam
-Open X asks for is the `CostModel` swap: one implementation = narrowest-width lattice, the
-swappable second = a CSP search over a legality constraint. Evidence for the family: one
-micro-fixture, one e-class holding three width nodes, two cost models behind the same
-`Extractor::new(&graph, &cost_model)` call — the seam is the `&C: CostModel` parameter,
-already generic. The `WidthBound` analysis (`facts.rs`) supplies the legality bound; the
-cost model supplies the defaulting order; they are *already two orthogonal knobs* on this
-substrate.
+**The gap.** The e-graph has **no associative-commutative / multiset support** — a grep
+of `crates/egraph/src/` for `commut`/`multiset`/`assoc` returns nothing. So
+`Sum(bool|null|...)` and a re-ordered `Sum(null|bool|...)` are *distinct* e-nodes (the
+`Language::matches` congruence test is order-sensitive over the child slice). GN-3 R5
+(the order-sensitivity risk) and the directive's "AC-sum canonicalization" both live here.
+
+**Two routes, and why they must be co-resident on ONE `Sum`, not two e-graphs:**
+
+1. **AC via explicit commutativity rewrites** — the egg classical approach: add
+   `Sum([a,b]) = Sum([b,a])` rewrites. This is **combinatorially explosive** (n! orderings
+   materialize as e-nodes) and is the known egg failure mode for large sums. Reject for
+   any sum wider than ~4 arms.
+2. **AC via canonical-ordering in the builder** — a bespoke normalization: a `TyNode`-local
+   `canonical()` sorts a `Sum`'s child slice to a **sorted-by-canonical-id multiset**
+   *before* the hash-cons at `egraph.rs:155`. Then `Sum(bool|null)` and `Sum(null|bool)`
+   *hash-cons to the same node* with zero extra e-nodes. This is the tree-normalization
+   discipline (Hopcroft-style normal form), and it is what the family should land — it
+   makes AC a property of the node, not a rewrite.
+
+**Positional injectivity co-resident.** A `Sum` is also a *tagged* union: each variant
+carries a discriminant (the byte the runtime's `at_cursor` dispatches on,
+`skinny/crates/runtime/src/grammars/json/value.rs:28-47`). Injectivity = no two variants
+share a tag. This is a **second fact on the same `Sum` class**: the type Analysis's
+`make` for `Sum` computes both (a) the AC-canonical variant multiset and (b) the tag→variant
+injectivity map, and `merge` joins both under one saturation. Confluence/soundness to
+report: because AC-canonicalization is a *pre-hash-cons normal form* (not a rewrite that
+races other rewrites), it commutes with every other rule — the e-graph reaches the same
+fixpoint regardless of union order, which is the confluence claim. The counterexample to
+test: two variants that AC-canonicalize equal (same payload type) but carry *different*
+tags — the injectivity fact must keep them distinct (a `"px"->0u8 | "em"->1u8` split with
+identical `U8` payloads), proving the two facts are genuinely orthogonal on one class, not
+a single merged notion.
+
+---
+
+## 6. Open R (engine-agnostic Row-widening) — this family's lowering contract
+
+The family's output must lower through the real handoff. **The seam is
+`TypeAnalysis::from_ir`** (`crates/core/src/backend/driver/analysis.rs:22`) — it simply
+clones `ir.types: Vec<(RuleId, TypeDesc)>` + `ir.type_map` scratch types (the second
+`from_ir` is `crates/core/src/backend/rust/view/named_types.rs:100`). So the e-graph never
+reaches the backend directly — **extraction emits `TypeDesc`, and the backend is
+engine-blind.** That is the point: adding `TypeDesc::Row(Vec<(StringId, TypeDesc)>)` and
+`TypeDesc::Sum(Vec<TypeDesc>)` beside the existing variants
+(`crates/ir/src/types/type_desc.rs:13`) lets **any** engine — the e-graph here, the
+hardened constraint store, or the running fold — populate `List ≠ Row` and lower it
+identically. Structural fidelity becomes **orthogonal to engine choice** exactly because
+the e-graph's only export is `TypeDesc` via `Extractor::best_node`, cloned by `from_ir`,
+mirrored to TS by `type_desc_to_ts` (`crates/core/src/backend/ts/projection.rs:11`).
+
+This closes the masked `json_templates` fallback: today `object` and `array` both resolve
+to bracket-matched roles and the JSON lazy view is a static `include_str!` template (R6
+§0, `runtime_generator.rs:99` name-gate on rule `"value"`). Once `Row` is a `TypeDesc` the
+derived schema distinguishes record from list *structurally*, and the `has_rule("value")`
+gate loses its reason to exist — the family's contribution to Open R is: **the
+discriminant moves from the emitter's name-gate into the type lattice.**
 
 ---
 
 ## 7. Integration seams (path:line)
 
-| Concern | Reuse / extend | Location |
-|---|---|---|
-| e-node derive | `#[derive(Language)]` verbatim | `crates/egraph-derive/src/lib.rs:49`; pattern `crates/ir/src/egraph/node.rs:23` |
-| unification | `add`/`union`/`rebuild` (congruence) | `crates/egraph/src/egraph.rs:155,202,251` |
-| var = fresh class | union-find `make_set` | `crates/egraph/src/egraph.rs:162` |
-| width/decode analysis | `Analysis<TypeENode>` + `WidthBound` | `crates/egraph/src/analysis.rs:18`; `crates/ir/src/egraph/analysis/facts.rs` |
-| defaulting extraction | `Extractor` + `CostModel` + `Lattice` | `crates/egraph/src/extract.rs:85,115` |
-| shared scheduler | `CspScheduler` / `BackoffScheduler` | `crates/egraph/src/csp_scheduler.rs:204` |
-| rewrite rules (AC-Sum, Row-classify) | `Rewrite` + `should_apply` guard | `crates/egraph/src/rewrite.rs:34,58` |
-| **sink widening** | add `TypeDesc::Row` | `crates/ir/src/types/type_desc.rs:13` |
-| **LOCK-3 handoff** | `TypeAnalysis::from_ir` | `crates/core/src/backend/driver/analysis.rs:22`; `rust/view/named_types.rs:100` |
-| **TS mirror** | `projection.rs` | `crates/core/src/backend/ts/projection.rs` |
-| discard site reclaimed | `Project` arm drops `target,ty` | `skinny/crates/passes/src/lib.rs:204` |
-| byte-literal hint to delete | role classifier | `skinny/crates/passes/src/lib.rs:1403-1490` |
-| 4-way fold to delete | `ProjectionKind`/`classify_projection` | `crates/codegen/src/emit/general_descent/view.rs:20-46` |
-| name-gate closeable | `has_rule("value")` | `runtime_generator.rs:99` |
+- Type-node Language home: new `crates/ir/src/types/eclass/` (colocation edict; sibling
+  to `type_desc.rs`), deriving `Language` exactly as `crates/ir/src/egraph/node.rs:23`.
+- Congruence/union: `crates/egraph/src/egraph.rs:202` (`union`), `:251` (`rebuild`),
+  `:155` (`add`/hash-cons — the pre-cons canonicalization call site).
+- Type lattice: `crates/egraph/src/analysis.rs:19` (`Analysis::make/merge`); model on the
+  live `GrammarAnalysis` in `crates/ir/src/egraph/analysis/`.
+- Saturation schedule + D.2 amendment: `crates/egraph/src/csp_scheduler.rs:293-317` (the
+  growth-vs-everything reseed), `:120` (`ParentDirtyProp`), union deltas at
+  `crates/egraph/src/egraph.rs:109`.
+- Extraction of representative type: `crates/egraph/src/extract.rs:115,183`
+  (`Extractor::best_node`).
+- The clash/obligation sink already in `TypeDesc`:
+  `crates/ir/src/types/type_desc.rs` `HeterogeneousAltJoin(Vec<TypeDesc>)`.
+- Lowering handoff (Open R): `crates/core/src/backend/driver/analysis.rs:22`
+  (`TypeAnalysis::from_ir`) + `crates/core/src/backend/rust/view/named_types.rs:100`.
+- TS mirror: `crates/core/src/backend/ts/projection.rs:11` (`type_desc_to_ts`).
+- The heuristic this family displaces: `skinny/crates/passes/src/lib.rs:1403-1490`
+  (`derive_materialization_roles`, bracket-literal classification), the discard site
+  `skinny/crates/passes/src/lib.rs:203` (`Project` type thrown away), the 4-way fold
+  `skinny/crates/codegen/src/emit/general_descent/view.rs:20-46`.
+- Measurement substrate: `skinny` @ HEAD is the sole living tree (the running fold is the
+  baseline to race); the greenfield `crates/` is the port target. The e-graph prototype
+  builds against `crates/egraph` + `crates/ir` in the greenfield workspace.
 
 ---
 
 ## 8. Prior art (citations)
 
-- **egg** (Willsey, Nandi, Wang, Flatt, Tatlock, Panchekha, *POPL 2021, "egg: Fast and
-  Extensible Equality Saturation"*) — the e-graph + `Analysis` + cost-extraction design
-  this crate ports faithfully. E-class analyses as monotone lattices is egg's key idea,
-  reused directly for width/decode.
-- **Congruence-closure = unification** — Nelson & Oppen (1980), Downey–Sethi–Tarjan
-  congruence closure. Hashcons-on-canonical-children *is* congruence; `union` merges
-  equivalence classes as HM's `unify` merges variables. rustc's `InferCtxt` (the `ena`
-  union-find crate) and GHC's constraint solver are union-find engines — the e-graph is
-  their congruence-closed generalization.
-- **Equirecursive / regular-tree types** — Colmerauer's rational-tree unification
-  (Prolog II), Cardelli's Amber equirecursive subtyping, Pottier "recursive types and
-  unification." The e-graph's cyclic `Id` references give μ-free equirecursive unification
-  — the JSON `value` cycle is a rational tree, terminating without an occurs-check.
-- **Row polymorphism** — Rémy/Wand extensible records, Leijen "Extensible records with
-  scoped labels." `Row{fields, keys}` with saturation-canonicalized field order is the
-  e-graph realization; label scoping becomes a canonicalization rewrite.
-- **AC in e-graphs** — Bachmair–Ganzinger AC completion; egg's additive-rewrite +
-  hashcons handling of commutativity. The constructor-scoped AC-Sum rule is the standard
-  egg treatment.
-- **Scheduled multi-tier saturation** — egglog (Zhang et al. 2023, "Better Together:
-  Unifying Datalog and Equality Saturation") and MLIR/PDL, for the shared-scheduler
-  amendment across grammar/regex/type tiers.
+- **egg / egglog** (Willsey et al., *POPL 2021*, "egg: Fast and Extensible Equality
+  Saturation"): e-class analysis as a monotone lattice (`make`/`merge`/`modify`) is
+  lifted verbatim — the in-tree `Analysis` trait is this design. egg's known AC blow-up
+  (commutativity rewrites materialize orderings) is the reason §5 chooses canonical-order
+  normalization over rewrites; egglog's later work on *containers/multisets* is the
+  precedent for a first-class multiset e-node.
+- **Congruence-closure = unification**: Nelson–Oppen congruence closure and the
+  Downey–Sethi–Tarjan hash-cons underlie `EGraph::add`/`rebuild`; type unification as
+  congruence closure over a term e-graph is the standard type-e-graph construction.
+- **Row polymorphism** (Wand 1987; Rémy; Leijen's *Extensible records with scoped
+  labels*): the `Row([Field..])` node with keyed fields is a closed-row instance;
+  extension/restriction stay out of scope (grammars produce closed rows), but the
+  keyed-field discriminant that separates Row from List is exactly Leijen's label
+  discipline.
+- **rustc / HM**: let-generalization and the union-find-of-type-variables core (PROVE-08's
+  221-LOC `hm.rs`, `prototypes/PROVE-08/patch.diff:230-456`) is subsumed — the e-graph's
+  union-find (`crates/egraph/src/unionfind.rs`) *is* the HM store, with congruence added
+  for free.
+- **Hopcroft minimization as rewrite-to-normal-form** (mirrors LOCK-5's automata line):
+  the AC-canonicalization of `Sum` is the same "canonical normal form via ordered
+  partition" idea applied to variant sets.
+- **MLIR/PDL & e-graph extraction cost models**: `CostModel`/`Extractor` mirror MLIR's
+  greedy pattern-rewrite + cost-directed lowering; representative-type-by-cost is
+  cost-directed extraction.
 
 ---
 
 ## 9. Named risks & counterexamples
 
-- **R-D1 — extraction ≠ principality.** Greedy min-cost extraction (`extract.rs:134`) may
-  pick a *cheaper* type that is not the *principal* type (two structurally distinct rows
-  sharing a cost). Mitigation: the cost model must be structure-injective — principal-type
-  = extraction under a structure-preserving cost, not `AstSize`. A prototype must confirm
-  the extracted type equals the HM principal type on the PROVE-08 json fixture.
-- **R-D2 — the D#1 boundary (Wall 1 restated).** With zero `->` projections the e-graph
-  cannot separate keyed-map from list-of-pairs; the family removes the *bracket-byte*
-  hint, not the *projection* requirement. This is the honest scope, not a defect papered
-  over.
-- **R-D3 — AC-Sum non-termination.** A naive "sort children" rewrite re-fires every
-  iteration; must be guarded by a canonical-form `should_apply` check (`rewrite.rs:58`)
-  and arm-dedup, or saturation never converges.
-- **R-D4 — co-residence corruption.** The AC-Sum rule *must* be constructor-scoped in
-  `search`, or it reorders `Row`/`Tuple` children and destroys positional identity — the
-  D#3 soundness proof obligation.
-- **R-D5 — GN-3 supersession.** `GN-3.md §1.5` explicitly scopes CSP/e-graph **out** of
-  the extant type-plane tranche ("no CSP or e-graph consumer exists in this tranche").
-  Family 1D is a *named supersession* of that scoping (Constitution ix), justified only if
-  the e-graph's equirecursive + AC-canonicalization + cost-defaulting wins are measured to
-  beat the 221-LOC tree HM. The e-graph carries more build-time weight; the
-  zero-runtime-cost invariant (Constitution v, `GN-3.md §1.4`) holds by construction
-  (generation-time only), but the *build-time* cost must be measured, not assumed.
+- **R-D1 — the `keyed` predicate needs the pair structure, and json's pair is
+  brackets-and-colon, not a `->`.** If the only recoverable signal is the `:` literal
+  between key and value, then "structural, not a name-gate" is thin — a `:` scan is still
+  a literal match, just a different literal. Counterexample: a grammar whose members are
+  `key value` (space-separated, no colon) would misclassify. Mitigation: the `keyed` fact
+  keys on *a string-typed leaf in head position of the member*, colon-agnostic; the
+  prototype must show it fires without any single delimiter being load-bearing.
+- **R-D2 — types are shallow; the e-graph may be over-engineering.** A JSON value lattice
+  saturates in O(1) iterations over ~7 nodes. If the constraint-store or plain-fold
+  families reach `List ≠ Row` with less machinery, the e-graph's *marginal* value is only
+  the shared-`value` congruence (§3) and re-order-invariant sums (§5). The family must
+  win on **those two properties specifically**, or be honestly returned as
+  "engine-agnostic `TypeDesc::Row` (Open R) is the real deliverable; the e-graph is one of
+  several populators." This is the sharpest risk — the substrate is powerful but the
+  problem may be too small to need it.
+- **R-D3 — AC-canonical-order is a builder concern that must not leak into the shared
+  engine.** Reordering `Sum` children before hash-cons is a `TyNode`-specific concern that
+  must not touch `GrammarENode` hash-consing. Mitigation: canonicalization lives in a
+  `TyNode`-local `canonical()` called before `egraph.add`, never in `EGraph::add` itself —
+  the engine stays language-agnostic (general-infra-crate law).
+- **R-D4 — zero-runtime-cost invariant.** The type e-graph runs at generation time only
+  (GN-3 §1.4). Any wave must show `git diff` over `crates/runtime/` empty; the e-graph is
+  a schema *producer*, its product is `TypeDesc` erased before emission.
+- **R-D5 — clash obligation vs. congruence merge.** A `merge` that joins incompatible
+  constructors must produce a lattice conflict, not a union that silently picks a winner.
+  If `merge` returns `false` (no change) on a real clash, saturation terminates with a
+  wrong type. The `HeterogeneousAltJoin` sink must be wired as a `⊤` element that *always*
+  reports Changed on first conflict.
 
 ---
 
-## 10. What a prototype must test to move Family 1D
+## 10. What a prototype must test to move this family
 
-1. **Equirecursive proof.** Build `TypeENode`; unify `json.bbnf`'s recursive `value` as a
-   **cyclic** e-class; assert `rebuild` terminates and the class is well-formed — the
-   advantage over PROVE-08's tree HM that no other family can claim.
-2. **D#1 make-or-break.** On bare `json.bbnf` + typed (`string -> key`) + a synthetic
-   `array = "[" pair* "]"`: classify Row-vs-Vec with **zero bracket-byte reads**; report
-   whether keyed-vs-positional disambiguates from `->` projection targets alone.
-3. **D#3 co-residence.** One `EGraph<TypeENode>`, one `CspScheduler::run`: 6-arm `Sum`
-   reorderings collapse to one class; `Tuple(A,B)`/`Tuple(B,A)` stay distinct; saturates
-   (not `iter_limit_hit`); duplicate-arm `Sum` dedups.
-4. **D#2 per-tier scheduler cost.** Backoff vs Csp scheduler on json/sheets/CSS-L4 type
-   e-graphs; report iterations + wall; give the node-count crossover; land-or-retire per
-   tier.
-5. **Open R sink.** Add `TypeDesc::Row`; extract from the type e-graph into it; lower
-   through `TypeAnalysis::from_ir`; show `List ≠ Row` populated and the
-   `has_rule("value")` name-gate (`runtime_generator.rs:99`) closeable.
-6. **Open X width.** One e-class holding `U8`/`U16`/`U32`; two `CostModel`
-   implementations (narrowest-lattice vs legality search) behind the same `Extractor::new`;
-   head-to-head on a `->` micro-fixture — the pluggable seam is the `&C: CostModel`
-   parameter, already generic.
+1. **The make-or-break (D.1):** build `TyNode` + `TyAnalysis`; run it on json.bbnf's
+   `object`/`array` and assert `object → Row`, `array → List` with **zero** reference to
+   the rule name strings `"object"`/`"array"` and **zero** `{`/`[` literal branch in the
+   classifier — the `keyed` fact alone decides. Report the exact predicate that fires and
+   whether json's colon is load-bearing (R-D1).
+2. **Order-invariance (D.3):** construct `value = bool|null|number|...` and a shuffled
+   `value` and assert both hash-cons to one `Sum` e-class with identical canonical variant
+   order — no n! e-node blow-up (assert `total_nodes()` bounded).
+3. **Co-resident facts (D.3):** the `"px"->0u8 | "em"->1u8` tag-split with identical `U8`
+   payloads — assert injectivity keeps two same-payload variants distinct while
+   AC-canon treats their payloads equal.
+4. **Union schedule (D.2):** run the same fixture through `CspScheduler` with and without
+   the union-dirty amendment; report iterations-to-saturation + classes-visited per tier;
+   land iff the type tier shows a real reduction, retire (negative result) otherwise.
+5. **Open-R lowering:** add `TypeDesc::Row`/`Sum`, extract via `Extractor::best_node`,
+   push through `TypeAnalysis::from_ir`, and show the JSON schema now carries `Row ≠ List`
+   *and* the `has_rule("value")` name-gate (`runtime_generator.rs:99`) has no remaining
+   discriminating role — with `git diff` over `crates/runtime/` empty and the TS mirror
+   (`type_desc_to_ts`) producing the parallel type.
+6. **Head-to-head honesty (R-D2):** race the derive wall-time of the e-graph populator
+   against the running structural fold on JSON/Sheets/CSS-L4; if the e-graph is not at
+   equal-or-lower wall-time AND does not uniquely deliver the shared-`value` congruence or
+   order-invariant sum, report it as a populator-of-`TypeDesc::Row`, not the winner.

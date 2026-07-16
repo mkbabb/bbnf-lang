@@ -1,254 +1,235 @@
-# LOCK-9 · Family 9B — NATIVE-REBIRTH (parse-that keeps its own kernels)
+# LOCK-9 · Family 9B — NATIVE-REBIRTH (pass-3 research)
 
-Charter: parse-that's scan/kernel layer reborn in **idiomatic stable NEON, homed in
-parse-that**, each kernel carrying a scalar parity oracle and checkasm-liveness, no
-cross-repo rlib coupling; the gate is measured **no-regression** per the PROVE-09
-refutation. This report develops that route to its strongest concrete form. Host is
-aarch64-apple-darwin (Apple M, Darwin 25.4.0); x86 is dead (constitution iv). All
-parse-that paths are absolute-relative to `/Users/mkbabb/Programming/parse-that/`; bbnf-simd
-to `/Users/mkbabb/Programming/bbnf-lang/skinny/crates/bbnf-simd/`. parse-that is READ-ONLY;
-every landing rides a scratch copy (R3 §8).
+*parse-that keeps its own aarch64 kernels, rewritten in idiomatic stable NEON; each kernel
+carries a scalar parity oracle and checkasm-liveness; no cross-repo coupling; the gate is
+measured no-regression per the PROVE-09 refutation law.*
 
----
-
-## 1. The mechanism, made concrete: the two lawful movemask producers
-
-The PROVE-09 refutation is the load-bearing fact. The de-nightly shim's uniform
-`to_bitmask` (`simd128.rs:322-330` in PROVE-09 patch.diff) packs lane→bit with a
-bit-position `vandq` + **two `vaddv_u8` halves** — the *double-addv*. Adversarial rebuild
-disproved the 1.34-1.57× claim (parity ±15%) and showed the shim emits **2271 `addv.8b`
-vs 509 baseline** while `tbl` was 516≡516 — the shim does *more* reduction work, never
-less. LAW: **stable NEON must be measured no-regression; `vshrn` narrow, never the
-double-addv.** A census of parse-that today confirms the disease is systemic and the cure
-is entirely absent: `grep vshrn` over `parsers/scan/` + `scanners.rs` returns **zero**;
-every producer routes through the one refuted `to_bitmask`.
-
-Native-rebirth's mechanism is a **contract-split** of the movemask into two lawful
-producers, authored fresh into a parse-that-owned `simd/` module (colocated with the
-scanners, no sibling rlib), each keyed to what its *consumer* actually needs. The split is
-not aesthetic — it maps 1:1 to the consuming code (§2), and conflating them is precisely
-what the refuted shim did.
-
-**LEAN — nibble-`vshrn`** (for consumers that only want the first set position):
-`cmeq.16b` → `shrn.8b vd, vn, #4` reinterpreting the 16×`u8` compare result as 8×`u16` and
-narrowing each 16-bit lane to its high nibble → `fmov x, d` → a 64-bit word with **4 bits
-per input lane**. The consumer does `trailing_zeros() >> 2` for the first match index. This
-is the Langdale/Kutenin "beating SSE movemasks on AArch64" idiom and exactly what memchr's
-NEON backend emits — PROVE-10 already disassembled it live in-tree
-(`shrn.8b v0,v0,#4; fmov x8,d0; ands x8,#0x8888888888888888`, PROVE-10 REPORT §2c). One
-`shrn`, no `addv`, no per-lane gather.
-
-**DENSE — `vsli`/`vpaddq` tree** (for consumers that need an *exact* 1-bit-per-byte 64-bit
-bitmap): the simdjson arm64 `neon_movemask_bulk` construction — take the four 16-lane
-compare vectors of a 64-byte stripe, AND each against a repeating `[0x01,0x02,…,0x80]` bit
-vector, then reduce the four with a `vpaddq_u8` (add-pairwise) tree collapsing 64 lanes ×
-1 bit into one `u64`. Cost is ~1 `and` + `addp` chain per stripe, amortised over 64 bytes;
-no `addv`, no scalar packing loop.
-
-Both intrinsics — `vshrn_n_u16`, `vpaddq_u8`, `vsli_n_u8`, `vqtbl1q_u8`, `vld1q_u8`,
-`vceqq_u8` — are **stable `core::arch::aarch64` since Rust 1.61**; no `portable_simd`, no
-nightly. The reborn kernels are unsafe fns (NEON is aarch64 baseline) behind safe wrappers.
-
-Note bbnf-simd's extant `movemask_u8x16` (`src/aarch64/movemask.rs`) is **not** the
-canonical LEAN producer: it starts from `vshrn_n_u16::<4>` correctly but then runs a
-`vand`/`vsri`/`vzip1q` + **scalar `for pair in 0..8` packing loop** (lines 17-24) to emit a
-compact u16 — a gather tail no hot path wants. The directive's premise holds: the canonical
-producers are absent from *both* homes and must be authored once regardless of ownership.
+Host oracle base: aarch64-apple-darwin (Apple M, 18 CPU), Darwin 25.4.0. Substrate =
+parse-that@`ef10d5b` scratch copy (R3 §8 recipe), toolchain pin `nightly-2026-04-11`; the
+family's terminal claim is a `cargo +stable` build on that copy. bbnf-simd@HEAD
+(`skinny/crates/bbnf-simd`) is READ as prior-art reference only — 9B does NOT vendor it.
 
 ---
 
-## 2. Consumer census — the contract-split is dictated by call sites
+## 1. The load-bearing pass-3 refinement — the movemask producer is CONTRACT-SPLIT
 
-Every `to_bitmask` / movemask consumer in parse-that, classified by the contract it needs
-(verified by grep + Read):
+The extant PT-2.W1 plan (`docs/tranches/sk-v24/PT-2.md:173-184`) commits a single error: it fixes
+the movemask "at the `vshrn` narrow idiom" **uniformly** and migrates ~5 consumers to a
+`tz >> 2` nibble stride. That is correct for one class of site and **corrupts** the other. The
+producer surface is two contracts, and 9B must author both, each with its own oracle.
 
-**LEAN (tzcnt-only → nibble-vshrn is exact-enough):**
-- `span_parser/scan.rs:152` — `is_excluded.to_bitmask().trailing_zeros()`
-- `scanners.rs:208` — `(!mask).to_bitmask().trailing_zeros()` (first non-ws)
-- `scanners.rs:286` — `is_match.to_bitmask().trailing_zeros()` (`find_first_of_nibble_lut`)
+**LEAN producer — single 16-byte vector → true 16-bit movemask, CTZ-iterated.** Every site that
+builds a mask from one `u8x16` compare and consumes it only by `trailing_zeros()` (never
+OR-stitching into a wider word, never feeding a carryless multiply):
+- `structural_bitmap.rs:43` `classify_16` → `to_bitmask() as u16`, iterated at `:128`,`:188`,`:216`.
+- `quoted_simd.rs:45-46` `to_bitmask() as u32`; `ws_comment.rs:81`,`:150`,`:184-211` (CTZ).
+- `scanners.rs::find_first_of_nibble_lut` + `span_parser/scan.rs:123` (CTZ).
 
-**DENSE (exact bit positions fed downstream — a nibble mask CORRUPTS them):**
-- `parsers/scan/structural_bitmap.rs:43,57` — `classify_16` returns `to_bitmask() as u16`,
-  `classify_stripe` shifts four into a u64 (`mask |= m << (k*16)`). The canonical DENSE-64
-  site.
-- `parsers/scan/quote_parity.rs:81-82` — `q`/`b` = quote/backslash `to_bitmask() as u64`
-  over a STRIPE=64 window, consumed by `prefix_xor` (clmul, `:41`) and escape-parity.
-- `parsers/scan/quoted_simd.rs:45-46`, `parsers/scan/decode.rs:82-83,189-190` —
-  quote/backslash `to_bitmask() as u32`, feeding `odd_parity_backslashes` → in-string bitmap.
-- `parsers/scan/ws_comment.rs:81,150,247`, `scanners.rs:163` — comment `/` and ws bitmaps
-  assembled into u16/u64 words.
+Here the reference technique is bbnf-simd's `aarch64/movemask.rs:4` `movemask_u8x16`:
+`vshrn_n_u16::<4>(vreinterpretq_u16_u8(cmp))` narrows the 16×`0x00/0xFF` compare-mask to 8
+nibble-pairs, then reconstitutes a **true 1-bit-per-lane** `u16` (`vand 0x11` / `vsri` /
+`vzip1q` / scalar pack, `:6-24`). The nibble *narrow* is only an intermediate; the final
+contract is still one bit per byte. A LEAN consumer MAY instead skip the reconstitution and
+iterate the raw nibble stride at `tz >> 2` — legal *only* because CTZ never crosses a word
+boundary and never enters `prefix_xor`.
 
-**No-go / abrogate:** `parsers/scan/number_simd.rs` — see §3.
+**DENSE-64 producer — four 16-byte vectors → one true 64-bit mask, OR-stitched, fed to
+`prefix_xor` / structural bitmap.** Two sites:
+- `quote_parity.rs:72-87` `classify_stripe_64`: 4× `to_bitmask() as u64` OR-stitched
+  `q |= q_k << (k*16)`, then `:139` `prefix_xor(real_quotes)` — a carryless-multiply
+  (`vmull_p64`, `:54`) mod-2 prefix sum. **Every bit MUST map to exactly one byte in order** or
+  the in-string bitmap is silently wrong.
+- `structural_bitmap.rs:49-60` `classify_stripe`: 4× `to_bitmask() as u64` OR-stitched
+  `mask |= m << (k*16)`, CTZ-iterated over 64 bits.
 
-**Vector-tier (no movemask, pure lane ops):** `decode.rs store_chunk` (`u8x16`→unaligned
-16-B arena store, `:227`) — a straight `vst1q_u8`, ports with zero movemask concern.
+A nibble-stride form is **forbidden** at both dense sites: (i) a 4-bit-per-lane result from one
+16-byte vector cannot be `<< (k*16)` OR-stitched into 64 bits — four of them overlap; (ii)
+`prefix_xor` is bit-exact — a 4-bits-per-byte packing makes the carryless-multiply parity
+meaningless. **This is the concrete counterexample the differential oracle must exhibit (§4).**
 
-Count: **3 LEAN · 6 DENSE · 1 no-go · 1 pure-vector**. This answers F1's owed scanner-file
-census: of the 8 `portable_simd` files, one is the canonical DENSE-64 kernel
-(structural_bitmap), five are DENSE-16/64 (decode, quoted_simd, quote_parity, ws_comment,
-scanners-partial), three sites are LEAN (span_parser/scan, scanners-partial, number's dead
-site), `state.rs` (2 hits) is comments on `PaddedView` not a kernel, number_simd is no-go.
-Kernel-tier (movemask-bearing) vs vector-tier (lane-only) splits ~9:1 by site.
+The two lawful dense strategies (the prototype fork):
+- **(a) 4× LEAN-narrow + shift-OR** — what bbnf-simd actually ships:
+  `byte_class_from_eq_set_64.rs:66-69` calls `movemask_u8x16(m0..m3) as u64` then
+  `lo0 | lo1<<16 | lo2<<32 | lo3<<48`. Four vshrn narrows + a scalar stitch. No `addv` at all.
+- **(b) single `vpaddq` reduction tree** (simdjson `neonmovemask_bulk`, Lemire/Langdale): AND
+  the 4 compare-vectors with a bit-position constant `[0x01,0x02,…,0x80]×2`, then a
+  `vpaddq_u8` fold 64→32→16→8 bytes = 64 bits in one reduction tree. No per-16 narrow, no
+  scalar loop.
 
----
-
-## 3. `number_simd.rs` is triple-refuted — abrogate, do not rewrite
-
-`count_leading_digits_neon` (`number_simd.rs:29-61`) embodies **three** refutation-law
-violations at once: (a) it is **digit-scan SIMD** — SPEC §0 / constitution-iv law "no
-digit-scan SIMD"; (b) it uses the **double-`vaddv_u8`** movemask (`:54-55`,
-`lo_sum | (hi_sum<<8)`) — the PROVE-09 forbidden idiom verbatim; (c) it carries a live
-**x86 SSE4.2** path with runtime `is_x86_feature_detected!("sse4.2")` (`:145-235,:222`) —
-dead by constitution iv. Per abrogate-before-patch, native-rebirth **deletes** the entire
-SIMD surface of number_simd and keeps only the scalar SWAR fold (`parse_eight_digits`, three
-multiply-shift ops, called at `:76-81`) that already backs the 9..15-digit and short-run
-paths. This is the cleanest rebirth move in the plane: a deletion that removes ~200 LOC and
-two refuted patterns, the scalar SWAR retained as the sole path (its own parity oracle by
-construction). The `number_fastpath_test`/`number_simd_test` suites (33 tests, R3 §7) are
-the deletion's regression floor.
-
-`quote_parity::prefix_xor` (`:41-68`) is the *opposite* case: its aarch64 `vmull_p64`
-carry-less-multiply path (`:51-56`, gated `target_feature="aes"`) is a **legitimate keep** —
-polynomial-multiply prefix-XOR is the correct simdjson quote-parity kernel, not a movemask.
-Rebirth purges only its x86 `_mm_clmulepi64_si128` twin (`:42-49`) and keeps the 6-shift
-scalar fallback (`:58-68`) as the parity oracle.
+Both avoid the PROVE-09 refutation's forbidden idiom — the shim's **double-`vaddv` per
+`to_bitmask`** (VERIFY attack #2: 2271 `addv.8b` vs baseline 509). The gate is which of (a)/(b)
+emits fewer reduction ops on the dense site with bit-parity intact — measured, not asserted.
 
 ---
 
-## 4. F2 — stable toolchain + the correctness oracle
+## 2. F2 — stable-toolchain build & the exact blast radius
 
-**Stable build blast radius.** Three nightly blockers (R3 §2), all removable without a home
-change: `portable_simd` (8 files) dissolves the moment the scanners call the native `simd/`
-producers instead of `std::simd` — no shim, the producers *are* the vocabulary;
-`stmt_expr_attributes` is already dead (excised in PROVE-09); `smallbox` nightly →
-`smallbox!` macro is alloc- and codegen-neutral (`parse.rs:74`, PROVE-09 confirmed inline
-S32 identical). The **sole residual** stable blocker is `fmt_helpers_for_derive`, forced NOT
-by any kernel but by `src/regex/generated.rs` emitting the *expanded* `#[derive(Debug)]`
-(`debug_tuple_field1_finish`). Per clean-regen it is a generator fix (emit `#[derive(Debug)]`
-not its expansion + `scripts/bootstrap-regex.sh`), outside the kernel plane — 9B's kernel
-rebirth reaches full `core::arch` stable with that one generator regen as its only external
-dependency. Evidence that own-home native NEON already builds: `number_simd.rs:29-136` is a
-live `core::arch::aarch64` kernel today.
+**Kernel surface builds on stable `core::arch::aarch64`** once portable_simd is replaced by the
+`simd/` directory-module (PT-2.W1: `mod.rs` cfg-pivot + `neon.rs` + `scalar.rs`) exposing the
+u8x16/mask8x16 vocabulary the 8 scanners use (`splat/from_slice/from_array/to_array`,
+`& | >>`, `simd_eq/simd_ne`, `swizzle_dyn` = `vqtbl1q_u8`) **plus the two movemask entry
+points** — NOT one. PROVE-09 proved every scanner file compiles on stable `1.96.1` with a
+276-LOC flat shim and zero call-site churn (`patch.diff`); the only defect was that its single
+`to_bitmask` used the double-`vaddv` reduction. 9B's `simd/` keeps the zero-churn `use`-swap
+for the vocabulary but splits `to_bitmask` into `movemask_16` (LEAN) and `movemask_dense_64`
+(DENSE, folds the `<< k*16` OR-stitch into the producer).
 
-**The differential oracle.** Mirror bbnf-simd's checkasm harness, which parse-that wholly
-lacks (parse-that has ~400 functional tests but no asm-liveness or bit-parity oracle).
-bbnf-simd supplies the exact protocol to copy: `tests/checkasm_common.rs` — `Xorshift64`
-deterministic fill (`:3-31`), `with_stack_canary_xor_fold` (1024-B canary, pre/post xor-fold
-clobber check, `:50-72`), and `callee_saved_register_then` (writes sentinels into x19-x28
-via inline asm, asserts the NEON kernel preserves them, `:85-112`). Each reborn producer gets:
-1. a bit-exact parity assert against a `[u8;16]`/`[u8;64]` scalar reference over `black_box`
-   xorshift inputs across an **alignment sweep** (offset 0..64 within the padded view) —
-   bbnf-simd's `corpus_parity.rs`/`classifier_parity.rs` are the template;
-2. an **INJECT_BUG** perturbation (flip one lane's compare) that must make the parity assert
-   fail — proving the oracle has teeth;
-3. checkasm-liveness (canary + callee-saved) wrapping the call.
+**smallbox nightly→stable cut — blast radius = 3 edits, alloc-neutral, zero perf surface**
+(PROVE-09 §Alloc, `patch.diff:5-10,100-122`):
+- `parse_that/Cargo.toml:97` `smallbox {"0.8",features=["nightly"]}` → `smallbox = "0.8"`.
+- `parse.rs:1` `use smallbox::{SmallBox,space::S32}` gains `smallbox` (the macro).
+- `parse.rs:74` `SmallBox::new(parser_fn)` → `smallbox!(parser_fn)`. The nightly feature only
+  provided the `CoerceUnsized`/`coerce` `dyn`-unsizing; `smallbox!` does it on stable with the
+  identical S32 inline / heap-spill threshold. Counting-allocator probe: construct
+  `json_parser()` = 6 allocs/5960 B, parse twitter = 5390 allocs, **byte-identical** across the
+  cut (the vtable boxes are construction-time, never per-parse — why the cut is cyc/B-neutral).
 
-**The parity counterexample (F2's decisive test).** A naive nibble-stride form on a DENSE
-site is not merely slower — it is **wrong**. The DENSE quote/backslash bitmap feeds
-`prefix_xor` (clmul over the u64 quote mask) and `odd_parity_backslashes`; a nibble mask
-places each lane's bit at stride-4 instead of stride-1, so the carry-less multiply computes
-the in-string region over the wrong bit lattice → the escape-parity bitmap diverges → JSON
-string decode corrupts. The oracle must include a targeted case: feed the nibble producer
-into the quote-parity site and assert the emitted in-string bitmap **differs** from the DENSE
-reference on an input with an odd backslash run (e.g. `"\\\""`). This is the concrete "does a
-naive nibble-stride form on the dense-64 site corrupt parity? — **yes**" evidence F2 demands,
-and it is the architectural justification for the two-producer split being a correctness
-contract, not an optimisation.
+**Residual nightly gates:** `stmt_expr_attributes` is dead (delete). `portable_simd` falls when
+W1 lands. `fmt_helpers_for_derive` is the SOLE residual and is **not a kernel concern** —
+`regex/generated.rs` emits the *expanded* `#[derive(Debug)]` (an `automatically_derived impl`
+calling perma-unstable `Formatter::debug_tuple_field1_finish`); the fix is a cross-repo
+generator change (emit the attribute, regen via `scripts/bootstrap-regex.sh`), named here, owned
+by LOCK-7/GN-1, out of 9B's own-kernel scope. Blast radius of the kernel rebirth proper is
+therefore: 8 scanner `use` lines + `simd/` (3 files ~380 LOC) + 3 smallbox edits + 2 x86-arm
+excisions (§3) — nothing touches `Parser`/lifetime surface.
 
 ---
 
-## 5. F1 — the two-home residual (answered from the own-kernel side)
+## 3. Scanner-file mapping census (F1, owed) — kernel-tier / vector-tier / no-go
 
-9B's stance is **own-home, physical**: a parse-that `src/simd/` directory module (colocated
-with `parsers/scan/`), no bbnf-simd rlib dependency. After authoring the canonical LEAN/DENSE
-producers into a scratch shared home vs the parse-that home, the residual substrate
-divergence is small but real:
+| File | portable_simd hits | tier | producer contract |
+|---|---|---|---|
+| `parsers/scan/structural_bitmap.rs` | 13 | **kernel — LEAN** | `classify_16`→`u16`, CTZ; the LEAN producer home |
+| `parsers/scan/quote_parity.rs` | 4 (+clmul) | **kernel — DENSE** | `classify_stripe_64`→OR-stitch 64→`prefix_xor` (`vmull_p64`) |
+| `parsers/scan/number_simd.rs` | (x86+NEON) | **kernel — reduction** | `count_leading_digits_neon` (`vcgtq`+`vaddv`); NOT Mula/Lemire |
+| `parsers/scan/decode.rs` | 17 | vector-tier | `store_chunk` u8x16 unaligned store to arena; no movemask |
+| `parsers/scan/ws_comment.rs` | 16 | vector-tier (LEAN consumer) | consumes `classify_stripe`; CTZ |
+| `parsers/scan/quoted_simd.rs` | 7 | vector-tier | `odd_parity_backslashes` 16-bit chunk parity |
+| `scanners.rs` | 22 | vector-tier (LEAN) | inline ws scan + `find_first_of_nibble_lut` CTZ |
+| `span_parser/scan.rs` | 7 | vector-tier (LEAN) | `find_first_of_nibble_lut` mirror |
+| `state.rs` | 2 | **no-go** | comments only; `PaddedView`/`INPUT_PAD_BYTES:57` (feeds all) |
 
-- **padded-view / clamp convention.** parse-that: `INPUT_PAD_BYTES=64` trailing-NUL tail
-  (`state.rs:57`, `PaddedView` `:122`) lets every stripe load skip a tail guard — the NUL
-  region classifies as non-match. bbnf-simd: an explicit `eob_pad_clamp` kernel masks off-end
-  lanes. Unifying forces one convention on both; parse-that's is strictly cheaper for its hot
-  loop (no per-stripe clamp op) and is the reason its scanners are branch-free. A genuine
-  divergence cost against one-home.
-- **shuffle table arity.** parse-that classification is single-table nibble-LUT (`vqtbl1q_u8`,
-  hi/lo `[u8;16]` luts — `find_first_of_nibble_lut`, `structural_bitmap` classify_16).
-  bbnf-simd `classify_tbl4.rs` is a 4-table `tbl4` classifier. Different strategies → a shared
-  home must carry both or force a convergence.
-- **capacity constants.** parse-that `STRIPE=64`/`CHUNK=16`; bbnf-simd all `*_64`. Nominally
-  aligned, differently named.
+Split: **3 kernel-tier** (2 movemask producers + 1 reduction kernel), **5 vector-tier**, **1
+no-go**. The x86 arms to purge sit inside two kernel files and are single-strategy excisions,
+not rewrites: `number_simd.rs:145-235` (SSE4.2 `_mm_*` + `is_x86_feature_detected!`) — keep NEON
+`:29-136` + scalar `:239`; SPEC §0/02 **NO_GO** forbids pursuing in-vector digit accumulation
+(CPI inversion 0.13→0.30 regresses the lane) — the NEON path stays a plain
+`vcgtq`+`vaddv` count. `quote_parity.rs:42-49` (`pclmulqdq prefix_xor`) — keep aarch64
+`vmull_p64` `:51-56` + the 5-shift scalar fallback `:58-68`.
 
-**The non-inlinable boundary (F1 middle Q, precisely).** `#[inline]` crosses the rlib seam
-for `uint8x16_t`-taking movemask producers **only** when the callee carries an explicit
-`#[inline]`/`#[inline(always)]` attribute — Rust does **not** cross-crate MIR-inline a
-non-generic, non-`#[inline]` fn under the default `codegen-units>1` without workspace
-`lto`/`embed-bitcode`. bbnf-simd's `movemask_u8x16` is `#[inline(always)]` (crosses); but any
-producer authored without that attribute, consumed across the crate boundary under
-`[profile.dev]` (cgu=256, no LTO), becomes a real `bl` call passing a NEON register through
-the ABI — a measurable in-loop direct call. `[profile.bench]` (fat-LTO, cgu=1, R3 §6) masks
-it entirely. So the seam is real but attribute-gated: one-home is a robustness argument (the
-seam cannot regress if the boundary does not exist), not a bench-profile perf argument. The
-maintenance/drift basis: two homes means two checkasm harnesses + a manual sync-discipline;
-one home means one clamp convention forced on both consumers. 9B judges the own-home cost
-lower because the clamp/shuffle divergences above are load-bearing performance choices
-parse-that loses in a merge, and its scanners already ship a native `core::arch` kernel
-proving the own-home path builds.
+---
+
+## 4. F2 — the differential correctness oracle (the checkasm technique, own-homed)
+
+9B re-authors bbnf-simd's checkasm harness inside parse-that (`tests/simd_parity.rs`,
+`tests/checkasm_common.rs`) — the same technique, no shared crate. The reference machinery
+(`bbnf-simd/tests/checkasm_common.rs`):
+- `Xorshift64` deterministic PRNG (`:3-31`) fills random byte vectors — reproducible sweep.
+- `guarded_call` / `with_stack_canary_xor_fold` (`:33-72`): a 1024-byte canary, xor-folded
+  pre/post the candidate, panics on first clobbered byte — catches hand-NEON stack corruption.
+- `callee_saved_register_then` (`:83-112`): writes sentinels into x19–x28, runs the candidate,
+  asserts they survive — an ABI-liveness probe for the `unsafe` intrinsic bodies.
+- Test shape (`checkasm_bitmap_prefix_xor_64.rs`): boundary cases
+  `{0, u64::MAX, 0x5555…, 0xAAAA…, 1, 1<<63}` × `carry∈{false,true}`, then a 4096-iteration
+  random sweep, each asserting `candidate == scalar_reference`.
+
+9B's `simd_parity.rs` extends this to the movemask contract split:
+1. **Per-primitive parity:** `movemask_16`, `movemask_dense_64` (both strategies (a)/(b)),
+   `classify_16`, `classify_stripe_64`, `count_leading_digits_neon`, `swizzle_dyn`, `simd_ne`,
+   `>>` — each NEON result `== scalar` oracle over 10k random 16/64-byte vectors + the boundary
+   set, all `black_box`'d.
+2. **Alignment sweep:** run every kernel at input offset `0..64` inside a `PaddedView` (trailing
+   64 NUL, `state.rs:57`) — proves the padded-load contract and no OOB.
+3. **INJECT_BUG rate:** a `cfg(inject_bug)` mutant perturbs one lane of each producer; the
+   harness must fail — measuring the oracle's detection power (target 100% single-lane).
+4. **The nibble-stride corruption proof (the §1 counterexample, made concrete):** build a
+   deliberately-wrong dense-64 producer using the LEAN `tz>>2` nibble stride, feed its output
+   through `prefix_xor`, and assert the resulting in-string bitmap **diverges** from the scalar
+   `compute_in_string_bitmap` reference on inputs with `"`/`\\` past byte 16. This is the test
+   that ratifies the contract split — a naive uniform-vshrn migration fails it.
+
+Evidence to produce: `cargo +stable build` log (aarch64, portable_simd + smallbox[nightly]
+removed, only the generated.rs residual remaining); the parity-harness pass table (boundary +
+4096-sweep + alignment 0..64 + INJECT_BUG 100%); the nibble-stride divergence witness.
+
+---
+
+## 5. Own-kernel vs shared — the residual divergence that justifies 9B
+
+Even were vendoring adopted (9A), parse-that would still author kernels bbnf-simd does not
+have, because the two repos' dense-64 sites are **semantically different consumers**:
+- bbnf-simd's dense producer (`byte_class_from_eq_set_64.rs:61-76`) is 4× `movemask_u8x16` OR-
+  stitch coupled to its **grammar-classifier** surface (`alphabet:&[u8;64]`, `StructuralAlphabet`,
+  `select_classifier`). Its `bitmap_prefix_xor_64` is a *separate* kernel taking a
+  pre-built mask — there is **no quote-parity / `vmull_p64` prefix_xor producer** in bbnf-simd.
+- parse-that's dense-64 (`classify_stripe_64`→`prefix_xor`) is coupled to `PaddedView` /
+  `ParserState` and the simdjson quote-parity algorithm. No bbnf-simd analog exists.
+
+So the **residual LOC/substrate divergence** (F1) between one-home and two-home is bounded and
+concrete: 9B's own home re-authors ~2 movemask producers + the checkasm harness (~1 test module)
+— duplication of *technique*, not of *kernel*, since the dense producers, the padded-view clamp
+convention (`INPUT_PAD_BYTES=64` vs bbnf-simd's `eob_pad_clamp`), and the single-table
+`find_first_of_nibble_lut` shuffle (vs bbnf-simd's `classify_tbl4` multi-table) do not coincide.
+The maintenance/drift basis: 9B trades a sync-gate (and the capacity-constant/clamp reconciliation
+a shared home would force) for local, per-kernel enforcement of the PROVE-09 no-regression law —
+each kernel's gate lives beside it, no cross-repo cadence. `#[inline]` across the rlib seam is
+measured-live (0 in-loop indirect); a non-inlinable boundary would only appear under `cgu>1` +
+non-LTO with the kernel body in a *different* crate — which 9B avoids by construction (kernels
+are in-crate).
 
 ---
 
 ## 6. Prior art (citations)
 
-- **Geoff Langdale, "Fitting My Head Through The ARM Holes" / Danila Kutenin, "Bit twiddling
-  with Arm Neon: beating SSE movemasks"** — the `shrn #4` 64-bit-nibble movemask (LEAN
-  producer); tzcnt/4 to recover lane index.
-- **simdjson arm64 backend** (Lemire, Langdale, Keiser — "Parsing Gigabytes of JSON per
-  Second", VLDBJ 2019 + the arm64 port): `neon_movemask_bulk` — the `vand`+`vpaddq` bit-set
-  reduction over a 64-byte block (DENSE-64 producer); `vmull_p64` carry-less-multiply
-  prefix-XOR for quote parity (validates keeping `quote_parity.rs:51-56`).
-- **memchr / regex-automata** (Andrew Gallant): aarch64 NEON `shrn`-based movemask + the
-  memchr1/2/3 prefilter ladder (PROVE-10 productionised the latter into `bbnf-regex`).
-- **checkasm** (dav1d/x264): callee-saved-clobber + stack-canary liveness verification — the
-  pattern bbnf-simd's `checkasm_common.rs` already implements and 9B mirrors.
-- **Rust `core::arch::aarch64`**: `vshrn_n_u16`, `vpaddq_u8`, `vsli_n_u8`, `vqtbl1q_u8` stable
-  since 1.61.0; `is_aarch64_feature_detected!` for the `aes`/`pmull` gate on the clmul path.
+- **simdjson NEON `neonmovemask_bulk`** (Langdale & Lemire, *Parsing Gigabytes of JSON per
+  Second*, VLDBJ 2019; simdjson `arm64/simd` `to_bitmask`): the `vpaddq` reduction tree
+  = dense strategy (b); the canonical "NEON has no `pmovmskb`" workaround.
+- **Lemire, "Bit-shuffling / movemask on ARM NEON"** (2022) & Mula's writeup — the
+  vshrn-narrow (strategy (a)) vs shift-add-tree tradeoff; bbnf-simd cites Mula at
+  `byte_class_from_eq_set_64.rs:64`.
+- **`std::arch` `vshrn_n_u16` / `vqtbl1q_u8` / `vmull_p64`** — stable since Rust 1.61 aarch64
+  NEON stabilization (`stdarch`); the entire vocabulary PROVE-09 needs is stable.
+- **simdjson quote-parity / prefix-XOR via carryless multiply** (`_mm_clmulepi64` / `vmull_p64`)
+  — the algorithm `quote_parity.rs` implements; parity correctness depends on 1-bit-per-byte.
+- **dav1d / FFmpeg `checkasm`** — the stack-canary + callee-saved-register liveness harness
+  bbnf-simd's `checkasm_common.rs` mirrors; the model for 9B's own oracle.
+- **SPEC §0 laws**: 03 (vshrn narrow **CONFIRMED GO**, +35% mask-narrow), 04 (movemask
+  bit-stitch is the ALU-bound floor — narrow+compaction, NOT block scheduling), 02
+  (Mula/Lemire digit **NO_GO**), 09 (shim perf **REFUTED** — the no-regression gate is law).
+
+---
 
 ## 7. Named risks & counterexamples
 
-- **Window-asymmetry trap (PROVE-09's exact failure).** Any "faster" claim is presumed false.
-  Rebirth's gate is *no-regression* (ratio ≥ ~0.98× on the least-preempted min), not a
-  speedup; the DENSE-64 rewrite could plausibly be a hair slower than the shim's double-addv
-  on short stripes and still PASS. Two windows, opposite arm order, base-pinned to a stated
-  HEAD, mandatory.
-- **LEAN on a DENSE site = silent decode corruption** (§4). The split is a correctness
-  contract; a single mis-routed producer passes functional smoke tests on escape-free JSON and
-  fails only on odd backslash runs.
-- **`vpaddq` tree lane-order.** The DENSE-64 assembly must preserve lane→bit order across the
-  four 16-lane sub-vectors; an off-by-16 in the pairwise-add tree reverses stripe halves —
-  caught only by the bit-exact oracle, not by `any()`.
-- **Short-run reality (R3, PROVE-10).** These scanners see short windows; a small-multistate
-  `vqtbl1q` chain is a measured negative on short runs. Rebirth must not over-vectorise —
-  membership + structural tiers only; the number path *deletes* rather than re-vectorises.
-- **`aes`/`pmull` feature gate.** The clmul prefix-XOR requires `+aes`; the runtime-detect or
-  build-target must be explicit, else the scalar 6-shift fallback silently takes over (a perf,
-  not correctness, cliff).
+- **R-split — uniform-vshrn corrupts the dense site.** The PT-2.W1 "one movemask idiom" is
+  wrong. *Counterexample:* nibble-stride into `prefix_xor` → wrong in-string bitmap (§4.4).
+  *Guard:* the contract split + the divergence witness test.
+- **R-double-vaddv — the movemask regresses again.** *Counterexample:* PROVE-09's 2271 `addv.8b`
+  vs 509 (VERIFY attack #2). *Guard:* `otool -tv` reduction-insn census on both producers ≤
+  baseline, base-pinned.
+- **R-noise — a claimed neutral that is window asymmetry.** *Counterexample:* PROVE-09's phantom
+  1.34–1.57× (two-arm asymmetry, refuted). *Guard:* paired binaries, opposite arm order, two
+  windows, N≥200, min+median+best-min, per-block loadavg; ≥0.98× on EVERY corpus in BOTH windows.
+- **R-x86-residue — a `pclmulqdq`/SSE4.2 arm survives behind a `cfg`.** *Guard:* structural
+  token grep `rg -E '_mm_|x86_64::|is_x86_feature' rust/*/src` → 0.
+- **R-unsound-ABI — a hand-NEON body clobbers a callee-saved register.** *Guard:* the
+  `callee_saved_register_then` probe on every producer.
 
-## 8. What a prototype must test to move family 9B
+---
 
-1. Author `src/simd/{lean.rs,dense.rs}` in parse-that: LEAN `movemask_lean(uint8x16_t)->u64`
-   (`shrn #4`, tzcnt/4 contract) and DENSE `movemask_dense_64(&[uint8x16_t;4])->u64`
-   (`vand`+`vpaddq` tree). Convert the 3 LEAN + 6 DENSE consumers (§2) to the correct
-   producer. **Delete** `number_simd`'s SIMD + all x86 (§3).
-2. **Instruction census** (`otool -tv` / `cargo asm`): DENSE sites show `and`+`addp` tree,
-   LEAN sites show `shrn.8b …,#4`; **zero `addv.8b` in any movemask producer** (was 2271 in
-   the refuted shim). Base-pinned to a stated commit.
-3. **Paired cold divan, N≥200, two windows, opposite arm order**, `[profile.bench]` fat-LTO
-   identical both arms; gate = no-regression (min-col ratio ≥ ~0.98×) across the JSON+CSS
-   corpora — reproducing PROVE-09's *method* so no window-asymmetry win is claimed.
-4. **Differential parity oracle** per kernel: bit-exact vs `[u8;N]` scalar reference over
-   `black_box` xorshift + alignment sweep + INJECT_BUG; plus the decisive
-   nibble-on-DENSE-quote-parity case that **must** show a divergent in-string bitmap on an
-   odd-backslash input.
-5. **checkasm-liveness** mirrored from bbnf-simd (`checkasm_common.rs`): canary xor-fold +
-   callee-saved x19-x28 sentinels around each kernel.
-6. **Stable build log**: `cargo +stable build -p parse_that` with the `simd/` producers,
-   showing the *only* residual error is `regex/generated.rs` fmt_helpers_for_derive
-   (generator-regen scope, not kernel scope).
+## 8. What a prototype must test to move 9B
+
+1. Author `simd/` (`mod.rs`/`neon.rs`/`scalar.rs`) with the u8x16/mask8x16 vocabulary + **two**
+   producers: `movemask_16` (LEAN, vshrn-narrow→1-bit/lane `u16`) and `movemask_dense_64`
+   (DENSE) implemented **both** ways — (a) 4×narrow+shift-OR, (b) `vpaddq` reduction tree.
+2. `cargo +stable build` (aarch64) with portable_simd + smallbox[nightly] removed → capture the
+   log; confirm the sole residual is the cross-repo generated.rs Debug expansion.
+3. `tests/simd_parity.rs`: NEON==scalar over boundary + 10k random + alignment-sweep(0..64) +
+   black_box for every kernel; INJECT_BUG mutant → 100% caught; the nibble-stride→prefix_xor
+   divergence witness (ratifies the split).
+4. `otool -tv` reduction-insn census: LEAN `movemask_16` ≤ baseline `to_bitmask` (509);
+   DENSE (a) vs (b) head-to-head reduction-op count — pick the winner by insn count with parity.
+5. Paired cold divan no-regression (two windows, opposite arm order, N≥200, per corpus, ≥0.98×)
+   — the exact gate the PROVE-09 shim failed; base-pinned to `nightly-2026-04-11`, both HEADs named.
+6. `tests/no_x86.rs` structural token gate → 0; `callee_saved_register_then` ABI probe on each
+   producer.

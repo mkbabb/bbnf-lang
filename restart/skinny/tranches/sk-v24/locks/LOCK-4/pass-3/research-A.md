@@ -197,17 +197,48 @@ must carry, minimally: a stable **host-fn id** (into a per-backend registry), th
 positional typed shapes**, and a **return `TypeDesc`** — i.e. a `HostClosure{fn_id: FnId,
 sig: TypeDesc}` rung that is an *opaque* node (analyses cannot see through the body). The implied
 host-fn lattice: `MapExpr` (transparent, foldable) ⊐ the 5 internal specializations (transparent
-to codegen) ⊐ `HostClosure` (opaque barrier). **Prototype must census** value.js / latex-paper /
-keyframes `->`+`.map` sites: count MapExpr-expressible vs not, and record the non-projection
-typed shapes.
+to codegen) ⊐ `HostClosure` (opaque barrier).
+
+**First-order census run this-pass** (grep over the three consumers' grammar dirs, with the
+critical correction that `Array.prototype.map` — `points.map`, `args.map` — vastly outnumbers
+combinator `Parser.map` and must be excluded). latex-paper (`src/grammar/`, densest projection
+corpus): ~**27** pure record-builders `.map(([[_,cmd],inner]) => ({type:…}))` (MapExpr-shaped:
+tuple-index + record-build + const tags); ~**40** host-constructor calls dominated by `textNode`
+at **9 sites** (`text.ts:60,79,84,89,97,100,105,110,113`) + `deepString`, several carrying
+control flow (`ch === "&" ? … : …` `text.ts:97`); **8** `.map(() => null)` constants
+(`commands.ts:179,185,197,205,212`); free-var captures `.map(() => name)` (`commands.ts:21`)
+liftable to `Constant(name)` since `name` is the factory's construction-time parameter. value.js
+combinator-`.map` is thin — projection weight sits in structural `all()`/`dispatch` spines (R4
+§7: 59 `all()`), with host helpers (`channelToken`, `numberToken`) reached *inside array* `.map`
+downstream of the parse (post-parse host code, not a combinator node). keyframes.js consumes
+parse-that only transitively via value.js — near-zero direct combinator-map barrier.
+
+**The decisive shape:** the opaque surface is dominated by a **tiny set of distinct named host
+constructors** (`textNode`, `deepString`, `channelToken`, `numberToken`) reused across dozens of
+sites; the required descriptor is `HostClosure{ fn: HostFnId, captures: Vec<MapExpr>,
+sig: TypeDesc }` where `HostFnId` indexes a **registered table of cardinality ~2–4 per
+consumer**, not the ~40 call sites. The `() => null` / `() => capturedConst` tail is
+MapExpr-liftable and does not enter the barrier.
 
 **Q3 — opaque-barrier surface size.** The barrier is exactly the `HostClosure` (Q2) plus the
 `Regex(StringId)` leaf's engine internals (opaque by XL-C design — the grammar tier is opaque,
 the Hir engine tier is separate). An analysis "cannot see through" a Map iff its fn is not
-MapExpr. **Uncounted here** (requires building the graph over the real corpora, a prototype
-task); the target floor is ≤2% of nodes. Named risk: parse-that combinators are *more* closure-
-happy than grammar `->`, so the parse-that barrier ratio is expected **above** the grammar-side
-ratio — the census must be run on the parse-that combinator graph, not the .bbnf grammar graph.
+MapExpr. **Two measures diverge, and the divergence is the finding.** By combinator-map *site*:
+latex-paper's opaque fraction is high — ~40 of ~75 combinator `.map` sites (~53%) call a host
+constructor or carry control flow; as a fraction of *total graph nodes* (literals/seqs/alts/
+repeats/refs dominate, map nodes are a minority) opaque nodes are an estimated **~8–12%** for
+latex-paper, **~3–5%** for value.js's grammar tier — **above the ≤2% floor** on the projection-
+dense corpus. By distinct host *symbol*: **~2–4 functions per consumer** — well inside any
+registrable budget. So the ≤2% floor is blown if "barrier" means opaque *nodes* on the
+projection-dense grammar, and trivially met if it means distinct *host symbols*. The honest 4A
+claim: the opaque node surface is **not** ≤2%, but it is **registrable, not irreducible** — each
+opaque node references a small declared host-fn table, turning the closure core's *untyped* wall
+(a `Box<dyn Fn>` the analysis cannot even name) into a *typed* barrier (known signature, blocks
+fold-through, but still schedules around it and places packrat/type boundaries at it). The exact
+number a prototype must produce: opaque-nodes/total-nodes on the *lowered* (post-fuse,
+post-inline) graph per corpus, plus the distinct-`HostFnId` count. (parse-that combinators are
+*more* closure-happy than grammar `->`, so this parse-that-combinator-graph ratio is above the
+.bbnf-grammar ratio by construction.)
 
 **Q4 — fusion policy / blowup budget.** The pluggable {inline-monomorphize | enum-node |
 box-here} cost model has concrete anchors already: **Seq-collapse** (`macros.rs:2,80` collapses

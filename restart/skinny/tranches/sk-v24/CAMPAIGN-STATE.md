@@ -63,8 +63,10 @@ single-pass sink (fold-over-cursor refuted 2.3-4.9x).
 
 | 6-locks-p2-pt | wf_a6d7a39f-623 | same script (args: group pt, locks [4,5,6,8,9], pass 2, baseCommit 7cdbff4ef) | DONE 5/5 (post-wall resume; 6.8M tok) — LOCK-5 AXIS VERDICT rendered (two domain-fit types + cheap bridge; 5B RETIRED); LOCK-4 TS runtime decoders refuted as fast face; LOCK-8 62-68 all four; LOCK-9 9B 62 |
 | 6-locks-p1-bbnf-close | wf_63419230-36d (resume 3) | same script (args: group bbnf, locks [1,2,3,7], pass 1) | DONE — all four registries live (LOCK-3 re-fold died again at retry cap but run-1 registry stands; treated as folded) |
-| 6-locks-p2-bbnf | wf_fce2ec2b-53a | same script (args: group bbnf, locks [1,2,3,7], pass 2, baseCommit ce51c36fc) | RUNNING (CROSS-LOCK.md wired into all judgment stages) |
-| 6-locks-p3-pt | wf_acfc23d2-04b | same script (args: group pt, locks [4,5,6,8,9], pass 3, baseCommit ce51c36fc) | RUNNING (convergence talk permitted this pass per protocol) |
+| 6-locks-p2-bbnf | wf_fce2ec2b-53a | same script (args: group bbnf, locks [1,2,3,7], pass 2, baseCommit ce51c36fc) | DEAD-AT-WALL 10:50 ET (15/33 done; all research + distills on disk; L1 synth survived; L2/3/7 synths + all L1 protos/crits/agg lost) — RESUME INTENT below |
+| 6-locks-p3-pt | wf_acfc23d2-04b | same script (args: group pt, locks [4,5,6,8,9], pass 3, baseCommit ce51c36fc) | DEAD-AT-WALL 10:50 ET (27/35 done; all research + distills on disk; L9/L8 FAMILY-SPECS on disk; all 5 synth returns lost) — RESUME INTENT below |
+| 6-locks-p2-bbnf (resume) | wf_fce2ec2b-53a (task wf4ls5wqq) | same script, resumeFromRunId wf_fce2ec2b-53a, args EXACTLY as ledgered | RUNNING 10:59 ET (width-3 wall discipline; NOTE: TaskOutput lookups key on task ID, not runId — a runId miss is NOT proof of death; check the task ID + agent-JSONL mtimes before declaring a wall) |
+| 6-locks-p3-pt (resume) | wf_acfc23d2-04b (task w6d157m32) | same script, resumeFromRunId wf_acfc23d2-04b, args EXACTLY as ledgered | RUNNING 10:59 ET (width-3 wall discipline) |
 
 PASS-2 BINDING DIRECTIVES (from pass-1 agglomerators, orchestrator-ratified):
 - BASE-PIN RULE: every bbnf-worktree prototype must FIRST verify/fast-forward its tree to
@@ -144,3 +146,11 @@ green — no spam. If this session is gone, a fresh session executing task #55 I
   resumed BOTH at 09:29 per protocol (same runIds, args exactly as ledgered). Lesson: resume
   observed to re-run some previously-folded stages (prefix-cache sensitivity to interleaving)
   — treat re-folds as refinement, not waste; registries are cumulative.
+- 2026-07-16 ~10:50 ET — SECOND SESSION-LIMIT WALL (bbnf p2 lost 18/33 incl. all L1
+  protos/crits/agg + L2/3/7 synths; pt p3 lost 8/35 = all 5 synths + 3 retry-cap deaths;
+  stated reset 2:20pm ET but OWNER ORDER 10:57: limit fully reset, re-deploy ALL immediately,
+  batches of THREE agents in parallel). Cure baked into the pass script: gagent() width
+  semaphore (args.width, default 3) gating every stage — at most 3 live agents per run;
+  cached replays pass through free; prompts byte-identical so the journal cache holds. This
+  WIDTH discipline is standing law for all future pass launches. If another wall lands
+  despite width 3, next resume goes SEQUENTIAL (bbnf first, pt queued on its completion).

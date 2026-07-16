@@ -73,7 +73,7 @@ PASS-2 BINDING DIRECTIVES (from pass-1 agglomerators, orchestrator-ratified):
   TS number (constitution-iii is 0% built).
 - LOCK-7: land the three bounded parser fixes (verified on disk) as pass-2 probe openers.
 | 6-locks-p1-pt | wf_50d1252c-5ea | same script (args: group pt, locks [4,5,6], pass 1) | RESUMED after partial completion (LOCK-4 folded — registry excellent; LOCK-5/6 synths died at StructuredOutput retry cap AFTER writing FAMILY-SPECS.md to disk; resume replays cached researchers, re-runs synth onward) |
-| 6-locks-p1-pt-ext | wf_0c50c1bb-81e | same script (args: group pt-ext, locks [8,9], pass 1) | RUNNING (locks 8/9 added per owner amendment: parse-that lock set + three-tier gestalt) |
+| 6-locks-p1-pt-ext | wf_0c50c1bb-81e | same script (args: group pt-ext, locks [8,9], pass 1) | DONE 2/2 (39 min, 2.33M tok) — LOCK-8: 8A 58 / 8B 50 / 8C 45 / 8D 50 all ADVANCED (+2 frontier routes pre-BANKED; 8C re-scoped to LOCK-6 consumer); LOCK-9: 9A/9B 55 ADVANCED (axis decider = LOCK-6 verdict, unrun), 9C BLOCKED 44, 9D BLOCKED 30; live refutation-law violation found in number_simd.rs double-vaddv → pass-2 banks the vshrn fix first |
 
 AMENDMENT (owner, 2026-07-16): nine locks now — parse-that gets its own set of befitting
 size: LOCK-8 TS backbone plane, LOCK-9 scanner & kernel plane; sets = bbnf {1,2,3,7}, pt

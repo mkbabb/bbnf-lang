@@ -23,8 +23,8 @@ resurrects the campaign from this file alone.
 | Stage | What | Status |
 |-------|------|--------|
 | 0 | Setup: charter §1.5, ROUND-ZERO, state file, heartbeat cron, memory | DONE 2026-07-16 |
-| 1 | RECON: parallel cartography fleet (both repos, harnesses, reusable prototypes, SOTA sweep) → research/R1-R7 | PENDING LAUNCH |
-| 2 | PROVING: the PROVE-01..14 implementation fleet (worktree/scratch isolated, measured, cp-out) → prototypes/PROVE-XX/ | BLOCKED ON 1 |
+| 1 | RECON: parallel cartography fleet (both repos, harnesses, reusable prototypes, SOTA sweep) → research/R1-R7 | DONE 2026-07-16 (wf_954e831e-a1c, 7/7, 731K tok) |
+| 2 | PROVING: the PROVE-01..14 implementation fleet (worktree/scratch isolated, measured, cp-out) → prototypes/PROVE-XX/ | LAUNCH INTENT 2026-07-16 |
 | 3 | VERIFY: adversarial re-measure of every claimed win; unproven dies | BLOCKED ON 2 |
 | 4 | SPEC: the frozen codex (tranches/waves both repos, colocation edict normative, archival last, letter + checkboxes re-cut) + final report | BLOCKED ON 3 |
 
@@ -32,7 +32,19 @@ resurrects the campaign from this file alone.
 
 | Stage | runId | scriptPath | Status |
 |-------|-------|-----------|--------|
-| — | — | — | — |
+| 1-recon | wf_954e831e-a1c | ~/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/workflows/scripts/sk-v24-recon-wf_954e831e-a1c.js | DONE 7/7 |
+
+Recon deltas folded into the manifest: real workspace = repo-root skinny/ (restart/skinny is
+docs); json_canon_bench.rs rescued from worktree wf_e940452a-431-7 into
+skinny/crates/bbnf-bench/src/bin/ (was untracked, never committed); tape is SoA offset-style
+at HEAD (not AoS); shufti/truffle NEON source already vendored in legacy root
+crates/simd-scan/src/neon.rs — port, don't re-derive; M-series settled NEON-only (no
+SVE/SVE2/SME for byte work); JSON grammar has ZERO -> projections (PROVE-08 adds them);
+direct-to-struct emitter exists but schema is hand-authored (PROVE-08 derives it); all prior
+prototype CODE is wiped — re-author from report inline diffs; PROVE-07 must be the fused
+single-pass sink (fold-over-cursor refuted 2.3-4.9x).
+
+Heartbeat cron live: job fc81e24f, hourly at :23, session-scoped.
 
 ## Heartbeat cron
 

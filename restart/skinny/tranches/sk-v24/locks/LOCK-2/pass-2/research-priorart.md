@@ -1,203 +1,285 @@
-# LOCK-2 — THE GRAPH ENGINE — pass-2 prior-art research
+# LOCK-2 — THE GRAPH ENGINE — PASS-2 PRIOR-ART RESEARCH
 
-Researcher, no family allegiance. Sweep of web + codebase for the problem class: e-graph +
-CSP optimization governing a parser-**generator** pipeline (HIR canon, IR rewrite, kernel/
-backend selection, capacity/schedule, cost models, deterministic regen). Families under
-adjudication: 2A EGRAPH-ISLANDS, 2B IR-IS-EGRAPH, 2C CSP-CENTRAL, 2D PROFILE-CLOSED-LOOP.
+*Prior art for the problem class: e-graph canonicalization/extraction, CSP selection over
+per-site lowering choices, profile-fed cost calibration, deterministic regen. What exists in
+tree; what won and lost elsewhere; the constraints our own evidence base already imposes; the
+named traps. Sweep is web + codebase, no conclusion presumed — the families own the verdict.*
 
-Verdict up front: **the measured evidence in our own tree already refutes the strong forms of
-2B and 2C and confirms 2A's local-island posture.** The world's production precedent (Cranelift)
-converged independently on the same posture for the same reasons. Citations below.
+Evidence standard (CONSTITUTION vii, XL-H): every claim is a concrete artifact (in-tree file
+`path:line`, or a cited paper) or is labeled SPEC-ONLY. HEAD named on every measurement.
 
 ---
 
-## 1. What exists in-tree (the seeds, read `path:line`)
+## 0. What already exists IN TREE (the seed engines — measure before you build)
 
-- **`crates/egraph/`** (3105 LOC incl. tests): a working egg-shaped engine — union-find
-  (`unionfind.rs`), congruence closure + deferred `rebuild()` (`egraph.rs:270`), two schedulers
-  (`scheduler.rs` BackOff-shaped, `csp_scheduler.rs` CSP-backed), greedy bottom-up extraction
-  (`extract.rs`), a `Lattice`-valued `CostModel` trait (`extract.rs:36-94`), shared `CostWeights`
-  (`cost_weights.rs`), and `egraph-derive` deriving `Language` from enums.
-- **`crates/csp-solver/`** (vendored csc411): AC-3 (`solver/ac3.rs`), branch-and-bound
-  `optimize` with `DomainCostEval` (`solver/optimize.rs`), lattice/monotonic domains, Kuhn–
-  Munkres assignment, `all_different`. This is the "engine" LOCK-1B/2C both name.
-- **The two engines already interlock once** — `egraph/src/csp_scheduler.rs`: eqsat's dirty-set
-  is modelled as a CSP with a monotone `DirtyDomain` lattice + `ParentDirtyProp` (AC-3 through
-  parent edges) computing the transitive dirty closure. Header claims isomorphism to `bbnf-ir`'s
-  `passes/csp_domains.rs`.
-- **The decision-driver seams are LOCAL** (R1 §8): `Recognizer::SimdScan{SimdMode,SimdSite}`
-  (`ir/lib.rs:416`), `BackendShape` (5 variants, `ir/lib.rs:361`), `select_prefilter_backend`,
-  the `N*=3` kernel crossover, `CostFacts`/`ActiveCostFacts`/`DecisionCspFacts` (`ir/cost.rs`).
-  These are per-site cost-threshold detections in `passes::derive_recognizers` /
-  `derive_backend_shape`, not a global search.
+The graph engine is not a greenfield. Both crates are vendored, wired, and tuned:
 
-## 2. The two measured refutations our evidence base already imposes (BINDING)
+- **`crates/egraph/`** — a hand-rolled egg-shape engine (13 modules):
+  - `extract.rs:1-11` — **greedy bottom-up extraction, explicitly the "egg greedy bottom-up
+    algorithm."** Its own header states the limitation verbatim: *"not optimal for all cost
+    models (e.g., cost models that depend on sharing require a more sophisticated
+    extractor), but it works for the monotone cost models used by grammar/regex
+    optimization."* This is the crux fact for family 2A/2B: the in-tree extractor is
+    already the tree-cost greedy, and it already declares where it is optimal.
+  - `extract.rs:35+` `trait Lattice` — a **multi-objective / Pareto scaffold already
+    present** ("future multi-objective extraction can reason about dominance without
+    collapsing to a scalar first"). The scalar case is `Scalar<T>`; Pareto fronts are a
+    landing seam, not a research gap.
+  - `csp_scheduler.rs:1-24` — **the CSP-backed rewrite scheduler already exists**: e-classes
+    are CSP variables carrying a monotone `DirtyDomain` lattice, parent edges are
+    `ParentDirtyProp` constraints, one `csp.propagate()` computes the transitive dirty
+    closure. Explicitly *"isomorphic to the grammar tier's existing csp-solver usage."* The
+    "CSP drives saturation" idea (a face of 2C) is BUILT.
+  - `scheduler.rs:14-48` `RunReport` — iteration caps, per-rule match limits, **growth
+    limits on total e-graph size** (`growth_limit_hit`), saturation fixpoint detection. The
+    divergence guard the termination literature demands (§3 below) is already wired.
+  - `cost_config.rs` — one shared `CostConfig` per compile: cross-tier `CostWeights`,
+    scheduler caps, and a rayon parallelism threshold gated on grammar size (the
+    `LockLatch::wait_and_reset` overhead measured at ~25% of `compile_bbnf` on small
+    grammars). `@cost` grammar directive named as a future landing on the same struct.
+  - `analysis.rs` monotone-lattice `Analysis`; `rewrite.rs` imperative (non-pattern) rules;
+    `egraph.rs`/`unionfind.rs`/`eclass.rs` the union-find core.
+- **`crates/csp-solver/`** (vendored csc411 @02965a56) — `solver/search.rs` a **unified
+  monomorphized branch-and-bound kernel** (one `search` skeleton, ZST `SearchPolicy`:
+  `Feasibility` | `BranchBound`, optimistic-bound cutoff, cost-sorted value order, Trail-based
+  undo); `solver/optimize.rs` `DomainCostEval` cost abstraction; `domain/cost_finite.rs` +
+  `domain/lattice.rs` cost/lattice domains; `builder/kuhn_munkres.rs` Hungarian assignment;
+  `solver/gac/` GAC. **A discrete-choice cost-minimizing solver is present and tuned** — the
+  2C "decision driver IS a CSP" substrate is largely instantiated.
 
-**R-A — the cost model has no optionality to exercise (the CALIBRATED null).**
-`egraph/src/cost_weights.rs:134-191` documents a **54-configuration grid sweep** across
-{structural, alt_per_branch, dispatch_bonus, ref_cost} over the 4-grammar corpus (JSON 51,
-BBNF 476, CSS-L4 2875, Sheets 191 DTA states). **Result: every grammar's state count was
-identical across all 54 configs.** The current rewrite set (`DeduplicateAltBranches`,
-`SupersetAbsorbAlt`, `UnionMergeAlt`, `FuseAltRegexBranches`, `CommonSuffixFactor`) produces
-e-classes with **at most one semantically-distinct canonical form** — so the cost model, the
-CSP, and the extractor have nothing to choose between. This is the single most important
-constraint on LOCK-2: **2B (extract-by-cost) and 2C (CSP-selects-over-candidates) presuppose a
-candidate multiplicity our rewrite set does not currently produce.** Any family claiming
-cost/CSP centrality must FIRST show it manufactures real optionality (new rewrites that widen
-e-classes), or it is consumer-less substrate (constitution viii / Y.13).
+**Consequence for every family:** the pass-2 question is not "build an e-graph / build a CSP"
+— it is *at which named decision point does either engine earn its consumer* (XL-B, Y.13), and
+*does the tree-cost greedy already suffice where saturated multiplicity ≈ 1* (directive Q1).
 
-**R-B — the largest measured optimization win came from staging, not the graph.**
-PROVE-12 (SPEC §0 #12, CONFIRMED, cyc/B 0.81–0.98×, ins/B −4.8/−6.8%, regen bit-identical) is
-**const-fold + monomorphization** of a delimiter mask — partial evaluation / residualization,
-straight `const`-generics, zero e-graph, zero CSP. The graph engine is not where the certified
-wins live; residualization (LOCK-3D) and SIMD kernels (GN-2) are. LOCK-2 must justify its
-existence against this, not assert it.
+---
 
-These two facts must anchor every family judgment. They are not opinions; they are in-tree
-measurements.
+## 1. Extraction as optimization — the settled external landscape (Q1, Q3, Q6)
 
-## 3. Web prior art — what won and lost for THIS problem class
+**Extraction is NP-hard, and the reason is DAG sharing, not tree depth.** Greedy bottom-up
+gives the optimal tree cost, but "the presence of common subexpressions breaks this
+assumption" — local choices change the reusability/cost of shared subterms, so tree-cost
+intuition does not transfer to exact DAG extraction (egg / SPORES / EGRAPHS lineage). The
+in-tree `extract.rs` header states exactly this boundary. **The decisive question is therefore
+empirical (directive Q1): if after saturation the average e-class has multiplicity ≈ 1 and the
+few multi-survivor classes are childless (no shared-subexpr contention), greedy bottom-up IS
+optimal and extraction-as-decision (ILP/PBQP) is over-engineering** — this is measurable on the
+fleet and must be measured, per PROVE-12's own shape (below).
 
-### 3.1 Cranelift ægraph — the production precedent that converged on 2A, and REJECTED 2B's strong form
-Fallin, *ægraphs: Acyclic E-graphs for Efficient Optimization in a Production Compiler*
-(EGRAPHS 2023; blog cfallin.org/blog/2026/04/09/aegraph). The most load-bearing citation:
+The external toolbox, ranked by what shipped and what it cost:
 
-- Classical full e-graph **rebuild overhead measured at 23% minimum**, against a total mid-end
-  budget of ~10% — i.e. saturation's bookkeeping cost *exceeded the entire optimization budget*.
-  They therefore chose an **acyclic, single-pass** e-graph: rewrites applied **eagerly** at node
-  construction, **no fixpoint saturation**, extraction by bottom-up DP.
-- **Average eclass size = 1.13 enodes.** On already-canonical inputs, multi-representation buys
-  almost nothing — the exact phenomenon our R-A null measured from the other side.
-- Extraction **ignores shared substructure** (NP-hard if honored); the greedy/DP approximation
-  cost only **~0.1% execution-time penalty** on Sightglass. Our `extract.rs` makes the identical
-  greedy choice.
-- Named traps directly portable to a parser-generator IR: (1) **dominance/scope violations** when
-  union nodes merge values valid in different scopes → needs an "available block" analysis;
-  (2) **directional rewrites** — eager one-pass only sees forward implications, so a ruleset must
-  be designed for *simplification*, not *exploration* (only 2 bad picks in 4M nodes); (3)
-  **rematerialization blowup** (duplicating cheap consts enlarges code); (4) side-effect/CFG
-  skeleton left immutable.
+| Approach | Optimality | Cost / scaling | Cite |
+|---|---|---|---|
+| **Greedy bottom-up** (in-tree today) | optimal iff monotone tree cost, no shared-subexpr contention | fast, linear-ish; scales to large e-graphs | egg (arXiv 2004.03082); in-tree `extract.rs` |
+| **ILP** | exact/optimal | "scales poorly… prohibitively expensive," the classic bottleneck | egg §; e-boost |
+| **Treewidth-parameterized** (weighted-MaxSAT on acyclic monotone circuits) | exact | `2^O(w²)·poly(w,n)` — tractable only for low-treewidth e-graphs | *E-Graphs as Circuits, and Optimal Extraction via Treewidth*, arXiv 2408.17042 |
+| **ASP (Answer Set Programming)** | exact + nonmonotone choice/constraints | Datalog-fixpoint search space + ASP for the choice; competitive with ILP | arXiv 2606.10644 |
+| **SmoothE** (differentiable relaxation) | near-optimal, GPU | ASPLOS 2025; the prior SOTA on quality | csl.cornell.edu smoothe_asplos2025 |
+| **e-boost** (parallel heuristic + adaptive pruning + **warm-started ILP**) | near-exact | **558× over ILP, +19.04% over SmoothE**; ICCAD 2025 | arXiv 2508.13020 |
 
-Lesson for us: **2B "the middle IR is an e-graph end to end … equality saturation under a
-schedule" is precisely the design Cranelift measured to be too expensive and unnecessary for
-pre-canonical inputs.** The defensible 2B is the *acyclic, no-saturation* variant — which is
-essentially 2A with the e-graph as the in-place substrate. Full saturation-to-fixpoint over the
-whole IR is a named anti-pattern with production evidence against it.
+**What this says for us:** nobody at a **per-parse ~230 µs compile budget** (directive Q3, our
+PROVE-08 number) reaches for raw ILP — it is the named scaling cliff. The shipping-fast answers
+are (a) greedy where multiplicity is low, (b) e-boost's pattern (fast heuristic + *reduced*
+exact solve with warm start) only where a genuine multi-survivor contention exists, and (c)
+treewidth extraction only if the fleet e-graphs are provably low-treewidth. Our vendored B&B
+kernel is the natural "reduced exact solve" home; it does not need ILP.
 
-### 3.2 Extraction is NP-hard — and reaching for ILP is a trap given our cost lattice
-- *Fast and Optimal Extraction for Sparse Equality Graphs*, OOPSLA 2024 (HKUST TACO Lab):
-  extraction is NP-hard and **hard to approximate within any constant ratio**; ILP is slow; their
-  parameterized algorithm handles **treewidth ≤ 10** and was evaluated on **Cranelift** benchmarks.
-- *e-boost* (ICCAD 2025, Cornell CSL): heuristic + exact hybrid extraction for logic synthesis.
+**PROVE-12 is the in-tree ground truth on multiplicity.** The residualization prover
+(`prototypes/PROVE-12/REPORT.md`) did NOT do multi-survivor extraction: it const-folded the CSS
+delimiter set to a `u128` bitmask and **monomorphized** — one canonical folded form per site,
+multiplicity 1, byte-identical parity, +18 generated LOC. The win was *straight-line residual
+via const-eval + beta-reduction*, not *choosing among survivors*. This is direct evidence that
+at least one certified graph-opt win on this substrate lives at multiplicity 1, where greedy /
+canonicalization suffices and extraction-as-search buys nothing.
 
-Relevance: optimal extraction matters **only when the cost model is sharing-sensitive**. Our
-cost models (`AstSize`, `GrammarCostModel`, `tape_push`, `inline_body_size_penalty`) are
-**additive/monotone** — greedy bottom-up (`extract.rs`) is exact for them, exactly as Cranelift's
-DP is. **Trap: importing ILP/treewidth extraction machinery is over-engineering** against our
-lattice (violates kiss-perf-bias, extreme parsimony). Cite it as the reason NOT to, unless a
-family introduces a genuinely sharing-sensitive objective (e.g. code-size with CSE across sites —
-the generated-size budget is the one candidate, §3.4).
+---
 
-### 3.3 egglog — Datalog + eqsat unification (the LOCK-1 interlock, and 2D's honest form)
-*Better Together: Unifying Datalog and Equality Saturation*, Zhang et al., PLDI 2023. egglog =
-Datalog engine + built-in equality + **lattice-based analyses** + relational e-matching (e-matching
-as a relational query, far faster than naive). Two lessons:
+## 2. PBQP — the register-allocation lineage is the exact match for a near-tree decision graph (Q6)
 
-- It is the natural home for **LOCK-1D "types-as-eclasses"** and any analysis-as-lattice
-  (our `DirtyDomain`, `CostFacts` provenance) — a *single* congruence+lattice substrate serving
-  both the type plane and the optimizer. This is the strongest argument for **one e-graph home**
-  shared by LOCK-1/2 (the constitution's "one e-graph home?" gestalt question).
-- Its lattice-analysis story is how 2D's "cost coefficients as committed facts" stays
-  **deterministic**: facts are monotone lattice values in the DB, recomputed by fixpoint, not
-  floating PMU noise threaded through search.
+Directive Q6 asks whether **PBQP** (per-node discrete choice, pairwise cost matrices) is the
+right solver for a near-tree decision graph — independent per-site lowering choices + budget
+coupling + few coherence edges — vs generic B&B or e-graph extraction. The prior art is
+unusually clean here:
 
-### 3.4 Unison — CP for combinatorial codegen: the 2C precedent AND its scaling wall
-Lozano, Blindell, Castañeda Lozano et al., *Combinatorial Register Allocation and Instruction
-Scheduling*, ACM TOPLAS 2019 (unison-code.github.io). Integrated regalloc + scheduling as **one
-constraint program**, provably optimal — **up to ~946–1000 instructions**, trading compile time
-for code quality beyond -O3.
+- **PBQP = Partitioned Boolean Quadratic Problem**, a QAP specialization, introduced by
+  **Scholz & Eckstein 2002** for register allocation, then **instruction selection on SSA
+  graphs** (Eckstein/Scholz SCOPES 2003, `b-scholz.github.io/publications/scopes03.pdf`). The
+  model is *exactly* "multiple interdependent discrete choices, each with a per-choice cost
+  vector and pairwise (edge) cost matrices" — a per-site lowering choice with legality/coherence
+  edges is a textbook PBQP instance.
+- **NP-complete in general, but the solver runs a linear-time heuristic** via graph reduction
+  rules (R0/R1/R2 degree elimination); only irreducible nodes fall to enumeration. **Hames &
+  Scholz, *Nearly Optimal Register Allocation with PBQP* (2006)**: a B&B PBQP solver solved
+  **97.4% of SPEC2000 functions optimally**. **Buchwald & Zwinkau, *SSA-Based Register
+  Allocation with PBQP* (CC 2011)** productionized it (libFirm). LLVM ships a PBQP allocator.
+- **Fit to our graph class:** where sites are largely independent (the "near-tree" the
+  directive posits), most PBQP nodes are R0/R1-reducible → the solve is effectively linear, and
+  the "few coherence edges" are the only quadratic terms. This is the regime where PBQP
+  **dominates** both generic B&B (no structural reduction) and e-graph extraction (which models
+  equivalence, not pairwise choice-coupling). The budget knapsack (directive Q7) is a *global*
+  constraint, not pairwise — PBQP handles per-pair coupling but a cardinality/knapsack budget is
+  awkward as pairwise cost; that seam wants the CSP store, not PBQP edges. **The honest read:
+  PBQP for the per-site coherence, the csp-solver global store for the budget — and our
+  `solver/search.rs` B&B already spans both if the coherence graph is small.**
 
-Relevance to 2C: CP/CSP as the *central* decision driver is real and wins on *coupled*
-combinatorial subproblems (spill/coalesce/schedule interact). BUT: (1) it caps at medium function
-size and **buys compile-time-for-quality** — acceptable for a generator (compile-time), fatal for
-per-parse. (2) The decisive question for us: **are our per-site lowering choices actually
-coupled?** If kernel/capacity/prefilter/residualization-depth are independent per site, "the
-decision driver IS a CSP" collapses to *N independent arg-min* — no constraint network, no
-solver needed, and dressing it as a CSP is ceremony. **The one genuine global coupling is the
-generated-size budget** (a knapsack over per-site inline/dispatch choices) — that, and only that,
-is where a real CSP/B&B earns its seat (our `csp-solver` B&B `optimize.rs` is already the tool).
-2C is defensible *scoped to the size-budget knapsack*, indefensible as "everything is a CSP."
+**Trap named by this lineage:** PBQP's optimality guarantee is *per the cost model*; a
+mis-specified pairwise matrix silently ships a wrong-but-optimal solution. The RA literature
+pairs it with a spill-cost oracle; our analogue is the profile-fed cost (§4) — the solver is
+only as good as the calibrated coefficients.
 
-### 3.5 Scheduling & rebuild — the eqsat operational traps (Willsey thesis; effect.systems notes)
-- **Non-termination**: saturation may never terminate (assoc/comm rules); needs iter/node limits
-  — our `CspScheduler` already carries `iter_limit`/`node_limit` (`csp_scheduler.rs:178`).
-- **Rebuild is the dominant cost** (egg's deferred `rebuild()` is the headline optimization).
-  **Our `csp_scheduler.rs` rebuilds a *fresh CSP every iteration* (`build_csp` per iter,
-  `:229`)** — this re-pays graph-construction cost egg's native worklist avoids, and duplicates
-  the deferred-rebuild machinery already in `egraph.rs`. Whether CSP-over-dirty-set beats egg's
-  native worklist is **unmeasured** — a named gap and a candidate "orthogonal subsystem" to fold
-  (no-orthogonal-codepaths, system-cohesion). The BackOff scheduler is the baseline it must beat.
-- Scheduling ≠ extraction: both are hard and *separate* (effect.systems "schedule/extract notes").
-  A family conflating them is imprecise.
+**Counterpoint — the shipping alternative that is NOT a solver at all: Cranelift ISLE.**
+Cranelift lowers CLIF→MachInst with **ISLE, a statically-typed term-rewriting DSL** whose rules
+compile to a **single-pass match-tree decision** with **user-configurable per-rule priorities**
+— "as good as or better than hand-written," merging all rules, sharing work
+(cfallin.org/blog/2023/01/20). It deliberately chose **priority-ordered rewrite → decision
+tree, NOT equality saturation and NOT a cost solver**, for instruction selection. Cranelift's
+mid-end is an **acyclic e-graph (ægraph)** — a middle path: e-graph for the machine-independent
+rewrites, priority-tree for lowering. This is load-bearing for family adjudication: **a
+production compiler with our exact problem shape (per-site lowering choice) chose a compiled
+priority decision tree over a cost solver for lowering, reserving the e-graph for
+canonicalization only.** 2A (islands at named points) has a shipping precedent; 2B (IR-is-egraph
+end to end) does not, in this domain.
 
-### 3.6 Learned/profile cost models — 2D's determinism hazard
-MLGO / Ithemal-lineage learned cost models are known to trade **reproducibility and CI stability**
-for fit. SPEC §0 is explicit: **ratios certified, absolutes directional; warm benches are
-disinformation.** 2D's "cost coefficients fitted from PMU captures" collides head-on with the
-**bit-for-bit regen** law (PROVE-12 proved regen bit-identical) unless — as 2D itself states —
-the fitted coefficients are **frozen into committed static fact tables**. The determinism is
-preservable only if fitting is an *offline, committed* step, never a regen-time re-fit. And R-A
-says: with today's rewrite set, **no coefficient value changes any output** — a closed loop has
-nothing to close until the rewrite set first manufactures optionality (§3.2 caveat).
+---
 
-## 4. Family-by-family adjudication (evidence, not preference)
+## 3. Widening rewrites, termination, confluence (Q2)
 
-- **2A EGRAPH-ISLANDS — best-supported by measurement.** Matches the in-tree reality (local
-  detections + per-site cost, R1 §8), Cranelift's converged posture (§3.1), and the constitution's
-  Y.13 "island has a same-wave consumer + cost model." Risk it must still clear: R-A — each island
-  must produce real optionality or it is a consumer-less cost model (the CALIBRATED null is exactly
-  an island with no choice to make).
-- **2B IR-IS-EGRAPH — only the *acyclic, no-saturation* form survives.** Full equality saturation
-  end-to-end is refuted by Cranelift's 23%-rebuild-vs-10%-budget and 1.13-enode measurements and by
-  our own R-A. The lawful 2B is "e-graph as the in-place IR substrate, eager rewrite, greedy/DP
-  extract" — which converges onto 2A. Trap: proposing saturation-to-fixpoint over the whole IR.
-- **2C CSP-CENTRAL — defensible ONLY scoped to the generated-size-budget knapsack.** Unison proves
-  CP wins on *coupled* combinatorial codegen and warns of the scaling/compile-time wall. Our
-  per-site choices are largely *independent* → "central CSP" is ceremony except where the global
-  size budget genuinely couples inline/dispatch decisions. Name that scope or the family is
-  over-generalized. B&B (`optimize.rs`) is the right tool for the knapsack.
-- **2D PROFILE-CLOSED-LOOP — architecturally hazardous, salvageable only as offline-committed
-  facts.** The loop threatens determinism (regen bit-identical law) and has nothing to fit until
-  R-A is broken. Lawful form: fit offline → commit static fact table → regen reads facts (egglog
-  lattice-analysis discipline, §3.3). "The loop is the architecture" as stated risks the profiling
-  standing law; "the committed fact table is the architecture" is safe.
+Directive Q2 asks what establishes confluence + termination + semantics-preservation for a
+rewrite that *manufactures/widens* rather than narrows, coexisting with an all-narrowing set.
 
-## 5. Traps named in comparable systems (portable checklist)
+- **EqSat can diverge even for a terminating (even canonical) term-rewriting system** — the
+  associativity rule is the canonical counterexample. *Ensuring the Termination of Equality
+  Saturation for Terminating Term Rewriting Systems* (EGRAPHS 2023, effect.systems) is the
+  reference result: termination of the TRS does **not** imply termination of EqSat.
+- **egg's saturation itself terminates by construction only for rebuild**: the rebuild
+  invariant restores congruence and terminates because `(|I|,|W|)` decreases lexicographically
+  (egg, arXiv 2004.03082) — but that is congruence maintenance, not rule-set fixpoint. A
+  widening rule (e.g. `x → x+0`, distributivity expansion) has no such measure and **must be
+  bounded by the scheduler**, which is exactly what in-tree `scheduler.rs` `RunReport` does
+  (iter_limit, node growth limit). **The termination story for widening is: no confluence
+  proof, a saturation cap.** This is the shipped answer everywhere (egg, egglog, SPORES).
+- **Confluence of non-terminating TRS** is separately studiable — *A Reduction-Preserving
+  Completion for Proving Confluence of Non-Terminating Term Rewriting Systems* (LMCS #667) — but
+  it is a proof technique, not a runtime guarantee, and is overkill for a bounded-saturation
+  engine. Semantics-preservation is the tractable obligation: each rewrite is an equational
+  axiom sound w.r.t. the language's denotation (*Semantic Foundations of Equality Saturation*,
+  arXiv 2501.02413), verified by a parity oracle on extracted terms — which is exactly PROVE-12's
+  XOR-fold checksum method.
 
-1. Full saturation-to-fixpoint over a whole compiler IR — rebuild cost > opt budget (Cranelift 23%).
-2. Building the IR as an e-graph when avg eclass size ≈ 1 — no multi-representation to exploit
-   (Cranelift 1.13; our R-A null). Substrate without a choice to make = consumer-less (viii).
-3. Reaching for ILP/treewidth-optimal extraction when the cost lattice is monotone/additive —
-   greedy is already exact (over-engineering vs extreme parsimony).
-4. Dressing N independent per-site arg-mins as a "CSP" — no constraint network, no solver earned.
-5. Re-fitting cost coefficients at regen time from PMU noise — breaks bit-for-bit regen; commit
-   offline facts instead (2D's own escape clause).
-6. A fresh CSP rebuilt each saturation iteration (our `csp_scheduler.rs:229`) re-paying the
-   construction cost egg's deferred worklist avoids — measure it against BackOff or fold it.
-7. Directional eager rewrites picking suboptimal forms (Cranelift trap #2) — design rulesets for
-   simplification, not exploration.
-8. Dominance/scope violations from merging differently-scoped values (Cranelift trap #1) — a
-   parser IR with capture/materialization scopes has the analogue.
+**Verdict for families:** widening+narrowing coexist safely in shipping engines **only under a
+node/iteration cap + a post-hoc parity oracle**, never a confluence proof. Our engine already
+has the cap (`growth_limit_hit`) and the oracle pattern (PROVE-12 cksum). A family that proposes
+widening rules must (a) declare the cap, (b) declare the parity oracle, and (c) show the widening
+*earns* a narrowing that the all-narrowing set could not reach — else it is dead surface (Y.13).
 
-## 6. Sources
-- Fallin, ægraphs, EGRAPHS 2023 — https://pldi23.sigplan.org/details/egraphs-2023-papers/2/ ;
-  blog https://cfallin.org/blog/2026/04/09/aegraph/ ; RFC https://github.com/bytecodealliance/rfcs/blob/main/accepted/cranelift-egraph.md
-- Fast & Optimal Extraction for Sparse Equality Graphs, OOPSLA 2024 — https://cse.hkust.edu.hk/~parreaux/publication/oopsla24a/
-- e-boost, ICCAD 2025 — https://www.csl.cornell.edu/~zhiruz/pdfs/eboost-iccad2025.pdf
-- Zhang et al., Better Together: Datalog + Equality Saturation (egglog), PLDI 2023 — https://arxiv.org/abs/2304.04332
-- Lozano et al., Combinatorial Register Allocation & Instruction Scheduling (Unison), TOPLAS 2019 — https://dl.acm.org/doi/fullHtml/10.1145/3332373 ; https://unison-code.github.io/
-- Willsey et al., egg: Fast & Extensible Equality Saturation, POPL 2021 — https://arxiv.org/pdf/2004.03082 ; Willsey thesis — https://www.mwillsey.com/thesis/thesis.pdf
-- eqsat schedule/extract notes — https://effect.systems/blog/eqsat-schedule-extract-notes.html
-- In-tree: `crates/egraph/src/{cost_weights.rs:134,extract.rs,csp_scheduler.rs,egraph.rs}`,
-  `crates/csp-solver/src/solver/optimize.rs`, `ir/src/{lib.rs:361,cost.rs}`,
-  PROVE-12 REPORT, SPEC §0, GN-2, R1 §8.
+---
+
+## 4. Profile-fed cost calibration — the AutoFDO/SPGO pattern + our determinism law (Q8)
+
+Directive Q8: can a coefficient fitted from measured cyc/B flip a real per-site decision, win
+cold-paired, and drive a freshness gate RED on mutation — with regen determinism preserved and
+env-source fenced?
+
+- **The shipping pattern is Sample-PGO / AutoFDO**: profile a release binary via **PMU sample
+  counters** (no instrumented build), then feed the profile back as a committed input. Modern
+  PMUs sample HW events at low overhead; **"static sampling is deterministic, sampling points
+  known at compile time"**; **"profile data can be archived with version information for
+  reproducibility"** (survey + PGO literature). BOLT/Propeller do basic-block reordering off the
+  same PMU profiles. This is precisely our SPEC §0 protocol (per-process `ri_cycles`, cold
+  paired, N≥200) turned into a *committed fact table*.
+- **The determinism law is ours and it is strict** (directive Q3, XL-H, memory
+  `changed-flag-convergence` + `clean-regen-discipline`): `regen∘regen` must be byte-identical.
+  Therefore **(a) the fitted coefficients commit as a versioned fact table** (the AutoFDO
+  archived-profile pattern), **(b) the fit runs OUT of band and env-source is fenced from regen**
+  — a `BBNF_COST_*` env var may steer a *bench*, never a committed regen (cf. `cost_config.rs`
+  `from_env`, which is explicitly benchmarking-only), and **(c) extraction tie-break must be a
+  total order, NOT HashMap iteration.** This last is a **named in-tree trap**: `extract.rs` and
+  `csp_scheduler.rs` both use `FxHashMap`/`FxHashSet`; iteration order over those is
+  deterministic for a fixed insertion sequence but is NOT a semantic total order — any extraction
+  that breaks a cost tie by "first in map" risks a regen diff if insertion order shifts. Directive
+  Q3's "HashMap iteration inadmissible" is correct and the fix is a total-order tie-break (e.g.
+  by `Id` then structural key), the same discipline LLVM's PBQP uses (deterministic node order).
+- **A/B differential attribution** (directive Q8's underdetermination worry): whole-grammar cyc/B
+  cannot separate per-feature coefficients — the answer in the autotuning/PGO literature is
+  paired differential measurement (change one feature, hold the rest), which is exactly the
+  PROVE fleet's cold-paired interleave. The refutation law bites here: **warm/cached calibration
+  is disinformation (SPEC §0); a coefficient fitted from a warm bench is inadmissible.**
+
+---
+
+## 5. Constraints our own evidence base imposes (binding, measured)
+
+- **~230 µs per-parse compile budget** (PROVE-08 HM core) — the whole build+saturate+extract+
+  **teardown** organ must fit (directive Q3). This alone rules out raw ILP and bounds saturation
+  iterations; it is why the scheduler caps exist.
+- **`regen∘regen` byte-identity** (GN-1 gate, standing law) — extraction must be deterministic;
+  the FxHashMap tie-break trap above is real.
+- **XL-B (tower ownership):** engines operate *within* the middle-IR tower at *named decision
+  points*; the tower shape is not ours to redraw. This is measured pressure **against 2B
+  (IR-is-egraph end to end)** and **for 2A (islands)** — and Cranelift's ægraph choice (§2) is
+  the external corroboration.
+- **XL-C (regex axis):** grammar tier keeps `Regex(StringId)` opaque; rich `Hir` + cheap bridge
+  at the engine tier; canon home = parse-that. Any regex-HIR canonicalization island lives at the
+  engine tier, not the grammar tier.
+- **SPEC §0 refutation laws** — warm benches disinformation (cost calibration must be cold
+  paired); x86 dead; no stable-port perf claims; no fabricated numbers. A cost model calibrated
+  off anything but cold-paired PMU is void.
+- **Multiplicity ≈ 1 evidence:** PROVE-12's certified win was const-fold + monomorphization at
+  multiplicity 1 — direct in-tree evidence that extraction-as-search is not yet earned on the
+  substrate; the fleet-wide multiplicity census (directive Q1) is the gating measurement before
+  any extraction-solver family is built.
+
+---
+
+## 6. The traps, named (from comparable systems + our evidence)
+
+1. **ILP scaling cliff** — optimal but "prohibitively expensive" (egg, e-boost). Never at a
+   230 µs budget. If exact solving is needed, it is e-boost-style *reduced + warm-started*, on
+   our B&B kernel, not raw ILP.
+2. **Greedy suboptimality is a shared-subexpression phenomenon only** — it does not bite at
+   multiplicity 1. Building an extraction solver before measuring multiplicity is
+   consumer-less substrate (Y.13). Measure first (Q1).
+3. **EqSat divergence under widening/associativity** — terminating TRS ≠ terminating EqSat
+   (EGRAPHS 2023). The only shipped guard is a node/iter cap (present in `scheduler.rs`), plus a
+   parity oracle. No confluence proof is owed or achievable.
+4. **Non-deterministic extraction from hash iteration** — the in-tree `FxHashMap` tie-break is a
+   latent regen-diff hazard; a total-order tie-break is mandatory (Q3). LLVM PBQP's determinism
+   discipline is the reference.
+5. **Profile env-source leaking into regen** — a `BBNF_COST_*` env fit that reaches a committed
+   file breaks byte-identity. Fence env to benches; commit coefficients as a versioned fact table
+   (AutoFDO pattern).
+6. **PBQP with a mis-specified cost matrix** — optimal-but-wrong. The RA lineage pairs PBQP with
+   a spill-cost oracle; our analogue is the cold-paired profile fit — and a global budget knapsack
+   does NOT belong in pairwise PBQP edges (put it in the CSP store, Q7).
+7. **Over-reaching to "IR-is-egraph end to end" (2B)** — no shipping compiler in this domain does
+   it; Cranelift explicitly split canonicalization (ægraph) from lowering (ISLE priority tree).
+   XL-B independently forbids redrawing the tower. The precedent and the constitution agree.
+
+---
+
+## Sources
+
+- egg: Fast and Extensible Equality Saturation — https://arxiv.org/pdf/2004.03082 ; ACM https://dl.acm.org/doi/pdf/10.1145/3434304
+- e-boost: Boosted E-Graph Extraction with Adaptive Heuristics and Exact Solving (ICCAD 2025) — https://arxiv.org/abs/2508.13020 ; https://www.csl.cornell.edu/~zhiruz/pdfs/eboost-iccad2025.pdf
+- SmoothE: Differentiable E-Graph Extraction (ASPLOS 2025) — https://www.csl.cornell.edu/~yc2632/data/smoothe_asplos2025_final.pdf
+- Answer Set Programming for Egg Extraction — https://arxiv.org/pdf/2606.10644
+- E-Graphs as Circuits, and Optimal Extraction via Treewidth — https://arxiv.org/pdf/2408.17042
+- SPORES: Sum-Product Optimization via Relational Equality Saturation — https://arxiv.org/pdf/2002.07951
+- SSA-Based Register Allocation with PBQP (Buchwald & Zwinkau, CC 2011) — https://pp.ipd.kit.edu/uploads/publikationen/buchwald11cc.pdf
+- Nearly Optimal Register Allocation with PBQP (Hames & Scholz 2006) — https://link.springer.com/chapter/10.1007/11860990_21
+- Code Instruction Selection based on SSA-Graphs (Eckstein/Scholz, SCOPES 2003) — http://b-scholz.github.io/publications/scopes03.pdf
+- Survey on Instruction Selection — https://arxiv.org/pdf/1306.4898
+- Cranelift's Instruction Selector DSL, ISLE — https://cfallin.org/blog/2023/01/20/cranelift-isle/ ; language ref https://github.com/bytecodealliance/wasmtime/blob/main/cranelift/isle/docs/language-reference.md
+- Ensuring the Termination of Equality Saturation for Terminating TRS (EGRAPHS 2023) — https://effect.systems/doc/egraphs-2023-theory/paper.pdf
+- Semantic Foundations of Equality Saturation — https://arxiv.org/pdf/2501.02413
+- A Reduction-Preserving Completion for Confluence of Non-Terminating TRS (LMCS) — https://lmcs.episciences.org/667
+- Profile-Guided Optimization / Sample-PGO survey — https://arxiv.org/html/2507.16649v1 ; Improved Basic Block Reordering (BOLT) — https://arxiv.org/pdf/1809.04676
+- A Survey on Compiler Autotuning using Machine Learning — https://arxiv.org/pdf/1801.04405
+
+### In-tree artifacts cited
+- `crates/egraph/src/extract.rs:1-11,35+` (greedy bottom-up + Lattice/Pareto scaffold)
+- `crates/egraph/src/csp_scheduler.rs:1-24` (CSP-backed saturation scheduler)
+- `crates/egraph/src/scheduler.rs:14-48` (RunReport caps: iter/node/growth limits)
+- `crates/egraph/src/cost_config.rs` (shared CostConfig, `from_env` bench-only)
+- `crates/csp-solver/src/solver/search.rs` (unified B&B kernel), `solver/optimize.rs`, `domain/cost_finite.rs`, `builder/kuhn_munkres.rs`
+- `restart/skinny/tranches/sk-v24/prototypes/PROVE-12/REPORT.md` (residualization: const-fold + monomorphize, multiplicity 1, +18 gen LOC, byte-identical parity)
+- SPEC §0 refutation laws; PROVE-08 ~230 µs compile budget; R1 cartography `ir/src/cost.rs`, `ir/src/lib.rs:361` BackendShape, `passes/src/lib.rs:398` derive_backend_shape

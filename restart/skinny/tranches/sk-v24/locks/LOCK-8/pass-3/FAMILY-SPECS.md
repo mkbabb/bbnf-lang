@@ -29,7 +29,9 @@ research-B §6, research-D §1), which converge on a materially different graph:
 **The correction that reshapes the plane:** the divorce is confined to the `tranche-u` dev branch,
 which is **PAUSED** ("THE PAUSE — V campaign halted at owner order post-pass-4, thesis 78%",
 research-D §1) and **not merged to master**. **`master` retains the live `^1.0.0` dependency and the
-full 61-`all`/96-`any`/6-`dispatch` corpus.** Researchers differ only on whether tranche-u's 4.0.0
+full 61-`all`/96-`any`/6-`dispatch` corpus** (the LIVENESS is hard git evidence; the exact per-arity
+buckets carry as **AST-re-extract-PENDING pinned to `6abef80`** — a naive line grep undercounts the
+multi-line/method-position call forms, research-A §2 census-integrity caveat). Researchers differ only on whether tranche-u's 4.0.0
 divest is *committed* (B, D) or *working-tree-staged* (A) — immaterial; all three agree master holds
 the live corpus. Therefore the pass-2 "the 59-`all()` live corpus no longer exists" is **struck**:
 it exists at value.js-master, and revives 8A's arity corpus and 8B's native instantiation-budget
@@ -83,7 +85,8 @@ win (tier-conditional; a cold one-shot `.parse()` collects only the structural l
 IC ceiling to LOCK-4.
 
 **Mechanism (the live within-8A move).** The arity histogram over the ACTUAL live corpus
-(value.js-master `src/parsing` + latex; research-A §2) shows `all` unrolls arity-2 (16) + arity-3
+(value.js-master `src/parsing` + latex; research-A §2 — buckets AST-re-extract-PENDING at `6abef80`,
+robust to ±count for the arity-2/3 unroll justification) shows `all` unrolls arity-2 (16) + arity-3
 (24) = 40/52 fixed sites (77%), justified; but **`any` unrolls only arity-2 (`leaf.ts:39-57`) while
 arity-3 (22 sites, 23%) hits the general `for` arm (`leaf.ts:58-73`) — an unjustified 2-vs-3
 asymmetry with `all`.** The candidate: an `any` arity-3 unrolled arm symmetric with `fuseAll`. The
@@ -171,13 +174,25 @@ over-tightening it re-monomorphizes the IC and perturbs 8A's pinned closures). `
 (`state.ts:79`) retypes `value: any → T`.
 
 **GRAFT A resolved — the `as unknown as` in `all` (8B-G-ASUNKNOWN, the pass-2 flagship
-thesis-violation).** research-B §1 partitions the erasures:
-- **(a) Lawful variance — DOCUMENT and keep.** `many`/`sepBy` (`parser.ts:556,629`), `trim`
-  (`parser.ts:481,520`), `state.ok/err/from` (`state.ts:59-72`), and the `fuseAll(parsers as unknown
-  as …)` PARAM cast are value-reuse/value-discard variance on a single mutable state threading a
-  heterogeneous value column — runtime-sound, no fresh object, no field transition. Annotate each
-  `// variance:` and leave. This is the same discipline that documents `ParserFunction<T>`.
-- **(b) The GENUINE leak — the arity-1 fold, which the `as` cast CONCEALS.** `all()` special-cases
+thesis-violation).** research-B §1 partitions the erasures into three DISTINCT classes; only the
+first is the flagged cast, and it is REMOVED, not documented:
+- **(the flagged cast) — REMOVABLE, therefore DELETED, not documented.** The tightened prototype's
+  `all` body reads `fuseAll<Result>(parsers as unknown as Parser<unknown>[])` — a cast that exists
+  ONLY because the tightening stopped one call short: `all` got a `const`-tuple bound but `fuseAll`
+  still declared `Array<Parser<any>>`. Propagating the same bound into `fuseAll` (the
+  `<const T extends ReadonlyArray<Parser<unknown>>>(parsers: T)` signature in the mechanism block)
+  lets `all` call `fuseAll(parsers)` with **no cast** — SOUND because `fuseAll` only READS
+  `parsers[0..2]`/`parsers[i]`/`.length` (verified `leaf.ts:184-272`; the sole `.push` is `dispatch`'s
+  local intern array `leaf.ts:108`, a different variable), byte-empty `.js`, zero new TS2589.
+  **Documenting a removable cast as "lawful variance" would be the self-deception the plane forbids;
+  the prototype MUST show the cast GONE, not annotated (research-B §1a / R-A).**
+- **Lawful variance — DOCUMENT and keep (a DIFFERENT set).** `many`/`sepBy` (`parser.ts:556,629`),
+  `trim` (`parser.ts:481,520`), `state.ok/err/from` (`state.ts:59-72`) reuse the SAME mutable state
+  and retype its `.value` through `unsafeSetValue` (`state.ts:87-89`) — no fresh object, no field
+  transition, and NOT removable without allocating a fresh typed state per combinator (the exact alloc
+  the hot path forbids). Annotate each `// variance:` and leave — the same discipline that documents
+  `ParserFunction<T>`.
+- **The GENUINE type leak — the arity-1 fold, which the shipped RETURN cast CONCEALS.** `all()` special-cases
   `parsers.length === 1 ? parsers[0].parser : fuseAll(...)` (`leaf.ts:160-163`): at arity-1 the
   runtime returns the inner parser unchanged (yields bare `V`) while the declared type is
   `ExtractValue<[Parser<V>]> = [V]`. `all(string("a"))` is typed `Parser<[string]>` and delivers
@@ -418,7 +433,7 @@ prune-vs-label — a gestalt+owner decision.
 | pair | pass-2 disposition | pass-3 disposition | precise reason |
 |---|---|---|---|
 | **8A ⟂ 8D** (StateView drops the field triple) | EVAPORATED | **EVAPORATED (holds)** | `mapState` 0 consumers; the 8D field triple is read on the RETURNED failed state (`parseStateInner`), never through `mapState`. |
-| **8A ⟂ 8B** (`as unknown as` unsound cast) | RE-RESOLVED (ReadonlyState) | **NON-CONFLICT (refined)** | 8B's `all` cast is (a) a lawful `fuseAll` param variance (document) + (b) the arity-1 fold leak cured by type-only cure (ii). No unsound cast survives; GRAFT A discharged. |
+| **8A ⟂ 8B** (`as unknown as` unsound cast) | RE-RESOLVED (ReadonlyState) | **NON-CONFLICT (refined)** | 8B's `all` cast is DELETED via the readonly-tuple `fuseAll` signature (removable, byte-empty, 0 new TS2589 — NOT documented-as-variance); the genuine arity-1 fold leak is cured by type-only cure (ii). No unsound cast survives; GRAFT A discharged (research-B §1). |
 | **8B ⟂ 8D** (result-union vs field-triple) | ADJUDICATED (field-triple) | **ADJUDICATED (holds)** | latex reads neither `.expected` nor a result-union (import oracle); result-union is Y.13-thin additive. |
 | **8C ⟂ 8D** (below-combinator seams) | SHRUNK to 5-symbol surface | **INTERLOCKED** | 8D's KEEP-THE-ALGEBRA verdict restores the full algebra to the mirror; each Tier-B row is labeled FIRST-PARTY-ONLY in the 8C ledger. The two families now SHARE the tiering, not collide. |
 | **8A-mapState-front ⟂ 8D-G-Y13-prune** | ADD (CRIT-2) | **NARROWED to one verification** | Y.13 resolved to KEEP-THE-ALGEBRA; mapState survives IFF a first-party test exercises it (unverified). Not a design conflict — a census question. The `ReadonlyState` front is contingent, NOT banked ADVANCE. |

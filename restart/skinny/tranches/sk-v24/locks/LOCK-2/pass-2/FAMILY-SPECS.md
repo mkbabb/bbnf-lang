@@ -199,15 +199,21 @@ saturation scheduler, the `Lattice`-valued extractor, and a working widening-rew
 all exist. REFUTED: the distinctive thesis. The `CALIBRATED_WEIGHTS` null is a *certified*
 counterexample — multiplicity ≈ 1 across the fleet with today's rules, so "IR IS an e-graph
 end-to-end" today buys only the dedup a hash-cons already gives. The signature claim "extraction
-emits `BackendShape` directly" additionally rests on **context-free per-class shape**, and 2B's
-own audit answers the risk: `admits_sink_only` (`passes/src/lib.rs:954`) is a function of the rule
-body + the **grammar-global** `TargetFeatures`, and `BackendShape` is stored per-`RuleId` — so
-within one grammar there is **no caller-context conflict** (the per-`RuleId` map forbids the
-question), and context-free extraction is *sound on the current fleet*. The NP-hard
-context-sensitive-DAG-extraction objection is therefore **moot on the fleet as measured** (a
-genuine simplification 2B inherits), reactivating only if a future grammar demands two shapes for
-one shared sub-rule inside one grammar — whose identity-preserving repair is sub-rule
-duplication/specialization (distinct `RuleId`s), bounded and cheap, not the NP-hard primitive.
+emits `BackendShape` directly" additionally rests on **context-free per-class shape**, and the
+substrate's *structure* argues for it: `admits_sink_only` (`passes/src/lib.rs:954`, verified —
+signature `(rule_ir: &BackendRule, target: TargetFeatures)`, **no caller argument**) is a function
+of the rule body + the **grammar-global** `TargetFeatures`, and `BackendShape` is stored
+per-`RuleId` — so the model **cannot express** a caller-context conflict (the per-`RuleId` map
+forbids the question). But this is **inference from the data model, not a measured fleet walk**
+(research-A lists the CallRule audit as un-run): the map cannot *represent* a conflict, yet a
+sub-rule genuinely *reached* under a sink-only and an offset-tape caller would leave the current
+per-`RuleId` shape silently wrong for one caller. So context-free extraction is *structurally
+sound* and the NP-hard context-sensitive-DAG-extraction objection is **contingently moot** —
+confirmed by the cheap CallRule-conflict audit folded into Brief 1's fleet instrumentation.
+Crucially, even the adverse outcome does **not** reinstate the NP-hard primitive: a conflict's
+identity-preserving repair is sub-rule duplication/specialization (distinct `RuleId`s), bounded and
+cheap; the NP-hard wall bites only *optimal* context-sensitive extraction, which specialization
+sidesteps.
 
 **The hard architectural boundary (research-B §6, load-bearing).** The greedy bottom-up extractor
 "is not optimal for cost models that depend on sharing" (`extract.rs:9-11`). The generated-size
@@ -248,8 +254,10 @@ they disagree — else the e-graph is inert.
 XL-B (it seizes LOCK-3's driver seat); the lawful residual is the 2A island posture; the
 distinctive value is triple-refuted (multiplicity ≈ 1); and the budget boundary forces it to
 terminate in a solver, dissolving its independence into 2A's CSP spine. It is not BLOCKED on a
-missing primitive of equal difficulty (the NP-hard objection is moot on the fleet) — it is BLOCKED
-on *earning distinct existence over 2A*, which the master gate alone can grant and has not.
+missing primitive of equal difficulty — the pass-1 NP-hard objection is **contingently removed**
+(context-freedom is structurally sound, confirmed by Brief 1's cheap CallRule rider; even a found
+conflict is repaired by bounded specialization, not the NP-hard primitive). It is BLOCKED on
+*earning distinct existence over 2A*, which the master gate (Brief 1) alone can grant and has not.
 
 ---
 
@@ -468,6 +476,14 @@ NOT deleted; (c) termination: assert fixpoint under `node_limit`/`iter_limit` wi
 under W1 (favor table) / W2 (favor sequential from `CALIBRATED_WEIGHTS`, not a synthetic sign-flip),
 assert extracted nodes differ. Lower each pick; cold-paired PMU (N≥200, ≥3 windows, ins/B
 load-invariant, structural parity before timing) at **value-start positions only** (post ws-skip).
+**Context-conflict rider (cheap, same fleet pass — settles 2B's context-freedom).** On the same
+instrumented run, walk the `CallRule` graph per fleet grammar; for each `RuleId`, collect its
+callers' substrate contexts (`TargetFeatures`-derived: `direct_only_output`/`direct_build_consumer`
+vs offset-tape) and flag any rule reached under ≥2 contexts for which `admits_sink_only` would
+verdict differently. Report the conflict count + smallest witness. Zero → context-free per-class
+extraction confirmed (2B's structural inference ratified). ≥1 → the repair is bounded sub-rule
+specialization (not the NP-hard primitive), and the current per-`RuleId` shape is silently wrong
+there — name it.
 **Commands.** `cargo test -p passes widen_confluent`; `cargo bench -p bbnf-bench --bench
 css_canon_bench` (CSS-L4, richest); `xtask check-json` twice for `regen∘regen`.
 **Pass/fail.** PASS = a *registered* widening rewrite yields ≥2 confluent, terminating survivors at

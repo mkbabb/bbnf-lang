@@ -121,12 +121,22 @@ argument FOR the re-home: the string scanner cannot see `Look`; the engine can.
 
 ## Q9 / Q10 / Q11 — cross-lock (SPEC-ONLY where gated)
 
-**Q9 (grammar-driven path, gated LOCK-7/7A).** Neither `bootstrap/regex.bbnf` nor
-`grammar/misc/regex.bbnf` exists in the greenfield (`find … -name '*regex*.bbnf'` = ∅) — promoting
-a bootstrapped regex grammar is a from-scratch bootstrap, not a de-dup. The break-the-discard target
-(`parse_generated()` returning its AST rather than `bool`) has no extant regex-grammar generator to
-thread; the engine's hand parser (`hir/parser/mod.rs`) is the only regex front today. Disposition:
-SPEC-ONLY, deferred to LOCK-7/7A; 5A's re-home does not depend on it and does not block it.
+**Q9 (grammar-driven path, gated LOCK-7/7A).** No regex `.bbnf` exists *inside the greenfield*
+(`skinny/`), but the **extant tree carries a complete one**: `grammar/misc/regex.bbnf` (repo root,
+non-greenfield) is a full recognizer grammar — `expression = (term+, "|"?)+`, `term = factor - end`,
+`factor = sub_expression, ("*"|"+"|"?")?`, `char_class = "[", ["^"], char_set, {char_set}, "]"`,
+`range = character, "-", character`, `anchor = "^"|"$"|"\b"|"\B"`, `lookahead = "(?=" …`,
+`lookbehind`, `non_capturing_group`, `back_reference`, plus a `regex = "/" >> expression, end`
+entry. Two consequences for Q9: (i) it is a **port source**, not a pure from-scratch bootstrap — its
+`char_class`/`range`/`anchor`/`factor` rules map 1:1 onto the engine leaves `Hir::Class` / a
+`ByteRange` / `Hir::Look` / `Hir::Repetition`, so a projected version (`char_class -> Class`,
+`anchor -> Look`, `factor -> Repetition`) is where ONE-HIR becomes *literally one* HIR — the
+bootstrapped grammar's projected AST **is** the engine `Hir`; (ii) it has **zero `->`**
+(`grep -c '\->' = 0`), confirming break-the-discard concretely: the generated recognizer returns
+`bool`/unit and discards the parse precisely because no rule projects. The de-dup the directive
+mentions is a no-op in skinny (the dual copies live only in stale `.claude/worktrees/*`).
+Disposition: SPEC-ONLY, deferred to LOCK-7/7A; 5A's re-home does not depend on it and does not block
+it, but the extant `grammar/misc/regex.bbnf` is the concrete artifact to promote when the gate opens.
 
 **Q10 (e-graph rule fire census).** The engine's HIR rewrite library is five rules — `flatten`,
 `redundant`, `union`, `repetition`, `superset` (`rust/regex/src/egraph/rules/`), each an `apply`
@@ -147,6 +157,18 @@ RegexProgram, target, ty }` — the projection wraps the leaf; the `RegexClass` 
 etc.). Binding on the bridge: classify the inner regex independently of the projection, then let the
 projection narrow the type — the inner-class Map barrier is the safe, extant representation. LOCK-1
 must ratify this (barrier vs typed edge); the code today is a barrier.
+
+**A named tier-disagreement LOCK-1 must reconcile.** The barrier is enforced only at *codegen*
+(`view.rs:35` `classify_projection(target, ty)`), NOT at *type inference*: the inferencer arm is
+`ExprKind::Project { body, .. } => self.infer_expr(*body)` (`passes/src/lib.rs:204`) — it returns
+the **body** type and drops `target`/`ty` outright. So inference treats `->` as a transparent
+pass-through (it does not even open a fresh type variable), while codegen treats `ty` as a decode
+barrier. For the bridge's projection soundness this is a live gap: the narrowed regex leaf type
+(Q2's `RegexClass`-derived tag) never meets the declared `ty` in the type plane, so the
+`string`/`format!` round-trip is decode-selected by codegen but **type-unchecked** by inference. 5A
+needs LOCK-1 to make `->` a typed edge that unifies `infer_expr(body)` against the declared `ty`
+(closing the gap), while keeping the codegen decode barrier — the two are not in tension, but today
+inference is silent where codegen is load-bearing.
 
 ## What a prototype must test to move 5A
 

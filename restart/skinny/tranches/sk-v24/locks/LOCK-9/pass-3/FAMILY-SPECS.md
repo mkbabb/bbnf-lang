@@ -4,417 +4,423 @@
 remain incompatible, then the incompatibility map. Elegance earns nothing on its own; a family
 stalled at a missing primitive equal in difficulty to the original problem is marked
 BLOCKED-candidate. Folds research-{A,B,C,D,priorart} pass-3 against the pass-2 registry (52/62/43/30;
-PROTO-1 live cross-crate inline; PROTO-2 LEAN/DENSE rebirth) and the six reconciliations the
-registry owed. Substrate paths:lines re-anchored against the live trees. CROSS-LOCK ledger
-(XL-C, XL-H) conveyed as binding fact.*
+PROTO-1 live cross-crate inline; PROTO-2 LEAN/DENSE rebirth) and the six reconciliations the registry
+owed. Substrate paths:lines re-anchored against the live trees THIS session. CROSS-LOCK ledger XL-A..H
+conveyed as fact.*
 
 The lock is **four dispositions of one aarch64 scanner/kernel plane on three orthogonal axes**:
-**kernel-home** (9A shared crate ⊗ 9B own — the central adjudication), **scanner-provenance** (9C
-DFA-derived vs {9A,9B} authored), **input-surface** (9D windowed vs whole-input — orthogonal, and
-its streaming half contradicts the eager `PaddedView` invariant all three silently share).
 
-## THE PASS-2 RECONCILIATION, ABSORBED (the six stale claims the FAMILY-SPECS carried and must now retract)
+- **Kernel-home** — *who owns the byte kernels.* 9A (one shared crate `bbnf-simd`) ⊗ 9B (parse-that
+  keeps its own). Direct opposites; **the lock's central adjudication**, now a **pure LOCK-6
+  maintenance-cost call** (the perf daylight washed at pass 2 and pass-3 research concurs).
+- **Scanner-provenance** — *are the character-class scanners authored or derived.* 9C (derived from
+  the bootstrapped grammar's DFA; hand membership/prefix scanners cease to exist) vs {9A,9B} (authored,
+  thinned to consumers or hand-rebirthed).
+- **Input-surface** — *whole-input vs windowed.* 9D (streaming `Window` witness) — orthogonal, but
+  contradicts the eager `PaddedView` invariant the other three silently share.
 
-The lock's single most consequential result — **the 9A⊗9B axis is a PERFORMANCE WASH** — is now
-folded into every spec below. Its six components, settled by the pass-2 probes and re-confirmed by
-pass-3 research, are conveyed here as facts, not re-litigated:
+## THE SIX RECONCILIATIONS THE REGISTRY OWED (absorbed; the pass-2 FAMILY-SPECS was stale against its own protos)
 
-1. **The axis is a performance wash.** Both routes converge on the identical movemask contract-split
-   and checkasm discipline; the decider is no longer "which is faster" but a pure **LOCK-6
-   maintenance-cost call** ("one crate or two for identical new code").
-2. **The OnceLock facade is free at production `codegen-units=1`.** PROTO-1's CONTROL emitted
-   byte-identical, `blr`-free code; LLVM devirtualized the facade entirely; the standalone object
-   carried no `OnceLock`/`primitive_kernels` symbol. The pass-1 "0.92× barrier" was a
-   probe-crate/multi-CGU artifact. **De-facing buys inline-PARITY, not a win.**
-3. **The "free `vshrn` movemask" is refuted.** The two *lawful* producers (LEAN nibble-`vshrn`,
-   DENSE `vpaddq` tree) exist in bbnf-simd **nowhere** (`vpaddq` in zero files); a **refuted**
-   producer (double-`vaddv`) lives there in triplicate. Adopting 9A is "**author** the canonical
-   producers into bbnf-simd and **purge** the refuted idiom," never "inherit good kernels for free."
-4. **9B does NOT inherit the OnceLock constraint.** parse-that's scan files carry zero
-   `OnceLock`/`primitive_kernels`; the facade is bbnf-simd-internal (`dispatch.rs:58-60`). **The
-   de-face is a 9A-ONLY cost** — it counts *against* 9A on the axis.
-5. **The regex-crate collision path is `skinny/crates/bbnf-regex`** (pass-1's `crates/bbnf-regex` was
-   wrong and does not exist). It and parse-that's `rust/regex` fork are **both `bbnf-regex 0.1.0`** —
-   a name+version collision resolving to two sources per build graph.
-6. **Tier-M "parity by construction (Q1 answered)" downgrades to SPEC-ONLY** — the emit pass and the
-   separability solver whose output that parity is asserted of **do not exist**.
+1. **The 9A⊗9B axis is a PERFORMANCE WASH → a maintenance-cost call.** Not "which is faster." The
+   decider is LOCK-6's "reasonable point of rust↔rust isomorphism" resolved by "null hypothesis
+   defeated by measured drift/maintenance cost" (LOCK-6D verbatim).
+2. **The OnceLock facade is FREE at production cgu=1** (PROTO-1 CONTROL: byte-identical `blr`-free
+   code; the standalone object carried no `OnceLock` symbol — LLVM devirtualised it). Delete every
+   "indirect branch survives fat-LTO in-loop" framing. research-A F1b refines: the `cfg`-direct
+   `#[inline]` producers cross the rlib seam regardless of cgu/LTO (MIR in rlib metadata); the only
+   non-inlinable boundaries are (i) the *intentional* OnceLock runtime-dispatch pointer, present in
+   **either** home, and (ii) a producer left un-`#[inline]` under cgu>1 + lto=false — a trivial
+   attribute guard.
+3. **The "free `vshrn` movemask" is REFUTED.** The two lawful producers are ABSENT from bbnf-simd
+   (`vpaddq` in **zero** files — re-verified this session) and must be authored **once into any home
+   regardless of ownership.** Adopting 9A is not "inherit good kernels for free" — it is "author the
+   canonical producers *and* purge the refuted double-`vaddv` first."
+4. **"9B inherits the identical OnceLock constraint" is FALSE.** parse-that's scan files carry zero
+   `OnceLock`/`primitive_kernels`; the facade is bbnf-simd-internal (`dispatch.rs`). **The de-face is a
+   9A-only hygiene cost** — it counts *against* 9A on the axis, not neutral.
+5. **The `bbnf-regex` path is corrected AND its blocker DISSOLVED (the pass-3 keystone finding, verified
+   this session).** The greenfield resolves the `bbnf-regex 0.1.0` name+version collision by **renaming,
+   not deduping**: `skinny/crates/parse-that-regex` (v0.1.0, the vendored engine + DFA source-of-truth,
+   3022 LOC incl. `unicode/`, `integration/`) and `skinny/crates/bbnf-regex` (v0.1.0, repurposed as the
+   `RegexFacts` analysis face — `nullable/first/byte_classes/hir/string`). **Distinct names, no
+   collision.** Legacy top-level `crates/bbnf-regex` archives at GN-0. VERIFIED: both `Cargo.toml`s, the
+   `RegexFacts` struct (`bbnf-regex/src/lib.rs:2`), and the shipped seam trait
+   `SimdScannerHook` (`parse-that-regex/src/integration/simd_scan_hook.rs`) exist live. **This retires
+   9C's hard cross-lock blocker** (§9C).
+6. **Tier-M "parity by construction (Q1 answered)" downgrades to SPEC-ONLY** — the `[u8;256]→SIMD`
+   emit pass does not exist (`equiv.rs` emits scalar only); parity is asserted between a hand table and
+   a not-yet-emitted classifier. Now build-testable *because* reconciliation 5 unblocked the substrate.
 
-**Binding laws carried by every family's gates (SPEC §0).** No stable-port perf claim — de-nightly
-is STABILITY only; the no-regression gate may FAIL (the shim failed window A 0.81–0.98×); "faster"
-appears in no gate. `vshrn` narrow, never double-`vaddv` (the 2271-vs-509 `addv.8b` counterexample,
-live at `number_simd.rs:54-55`). No digit-scan SIMD (§0/02). No block-scheduling (§0/04). x86 dead.
-Cold, paired, N≥200, two windows, opposite arm order; PMU cyc/B unavailable in macOS userspace →
-divan wall-clock ratio is the only certified metric; static disasm insn-count is host-noise-immune.
-Consumer-less substrate forbidden (Y.13). parse-that READ-ONLY to the bbnf campaign (P23) — every
-mutation is a **named** cross-lock supersession, base-pinned (XL-H).
+**Binding laws every gate carries (SPEC §0).** No stable-port perf claim — de-nightly is STABILITY
+only, the no-regression gate may FAIL. `vshrn` narrow, never double-`vaddv` (the 2271-vs-509 `addv.8b`
+counterexample; live at `number_simd.rs:54-55`). No digit-scan SIMD (§0/02). No block-scheduling
+(§0/04). x86 dead. Cold, paired, N≥200, two windows, opposite arm order; PMU cyc/B unavailable in macOS
+userspace → divan wall-clock ratio is the sole certified metric. Consumer-less substrate forbidden
+(Y.13). parse-that is READ-ONLY (P23) — every mutation is a **named** supersession, never presumed.
 
----
+## THE SHARED CONVERGENCE (common to 9A/9B/9C — the canonical producer is BOTH a perf idiom AND a correctness contract)
 
-## 9A — ONE-KERNEL-LIBRARY · **ADVANCED · born-RED · 52%**
+All three kernel families independently reach the **same contract-split movemask**, and pass-3 research
+(A §7, B §4, C §3/§6) elevates it from optimisation to **correctness contract**:
 
-**Architecture.** Collapse parse-that's eight `portable_simd` scanners onto the stable-clean,
-checkasm-gated `skinny/crates/bbnf-simd`; isomorphism is *physical* — one source, drift impossible by
-construction. **The physical seam already exists**: `crates/parse-that-regex/Cargo.toml:10` already
-consumes bbnf-simd under the skinny→parse-that vendor edge — a shared kernel need not be a new crate.
-The value proposition, honestly restated after the wash: **maintenance/drift-avoidance ONLY, not a
-perf win.** The drift it avoids is *already realized* — bbnf-simd today carries **three divergent
-`movemask_u8x16` definitions, no two alike, two of them the refuted double-`vaddv`**
-(`movemask.rs:19-24` scalar-tail repack; `byte_class_from_eq_set_64.rs:79-86`;
-`comment_body_mask_64.rs:68-74`) — the drift-cost 9A pays down and 9B would compound across two homes.
+- **LEAN — nibble `vshrn_n_u16::<4>`** for consumers that want only the first set position
+  (`trailing_zeros() >> 2`, 4 bits/lane, one `shrn`, no reduction). Sites: `span_parser/scan.rs:152`,
+  `scanners.rs:208/286`, the LEAN half of `number_simd`.
+- **DENSE — `vpaddq_u8` bit-weight tree** (simdjson `neon_movemask_bulk`) for consumers needing an
+  *exact* 1-bit-per-byte 64-bit bitmap. Sites: `structural_bitmap.rs:43/57`, `quote_parity.rs:81-82`,
+  `quoted_simd.rs:45-46`, `decode.rs:82-83/189-190`, `ws_comment.rs:81/150/247`. LLVM lowers the
+  disjoint-bit tree to `uzp/orr` (measured 50 vs 64 insns, zero reduction ops).
+- **The DENSE↔LEAN split is a CORRECTNESS contract, not a preference.** A naive nibble mask on a DENSE
+  site places each lane's bit at stride-4 instead of stride-1 → `prefix_xor` (clmul over the u64 quote
+  mask) computes the in-string region over the WRONG bit lattice → escape-parity diverges → JSON string
+  decode corrupts on an odd-backslash run (`"\\\""`). This is the decisive differential-oracle case
+  every kernel family must ship (B §4, A R2, C R2).
+- **NEVER** the 16-byte full-repack (`bbnf-simd/aarch64/movemask.rs` degrades to a scalar `for pair in
+  0..8`), **NEVER** the double-`vaddv` (the four built producers `byte_class_from_eq_set_64.rs:83-84`,
+  `structural_classify_64.rs:151-152`, `comment_body_mask_64.rs:72-73`, `bracket_depth_mask_64.rs:78-79`
+  — all four re-verified live this session).
 
-**Mechanism — author the canonical producer once, purge the refuted idioms, then the residual is
-small.** The load-bearing act is one authored contract-split producer pair, TYPE-DISTINCT so a
-consumer cannot cross wires:
-- **LEAN** `movemask_nibble_64(x0..x3) -> NibbleMask64`: per 16-byte lane
-  `vshrn_n_u16::<4>(vreinterpretq_u16_u8(cmp))` → 8 bytes at 4-bit stride; four lanes → one 64-bit
-  word; presence/first-match reads `tz >> 2`. 1 `vshrn` per 16 lanes, zero horizontal reduction.
-- **DENSE** `movemask_dense_64(x0..x3) -> u64`: true 1-bit-per-byte for CTZ-*iterating* consumers,
-  via `vandq` bit-position + a **`vpaddq_u8` log-reduction tree**, NEVER a per-half `vaddv`.
-
-Purge the three divergent movemasks; author real NEON bodies for the four **scalar-stub "NEON"
-primitives** (`byte_class_from_table_64.rs:2-4` delegates to scalar; likewise
-`bitmap_next_set_bit`, `bitmap_prefix_xor_64`, `bulk_emit_positions_64`, `eob_pad_clamp`) — an
-existing Y.13 hazard (advertised-but-dormant vector surface) the shared home must not perpetuate.
-**Remove the `OnceLock` fn-ptr table** (`dispatch.rs:58-87`): since parse-that is aarch64-only
-post-purge it is unnecessary; `#[cfg]`-static keeps the producers inline-clean into both consumers.
-This is a concrete one-home simplification, not merely hygiene.
-
-**Scanner-file census (F1, owed — delivered).** **4 kernel-tier** (`structural_bitmap`,
-`ws_comment`, `quoted_simd`, `quote_parity`) · **3 vector-tier** (`scanners`, `decode` — `store_chunk`
-stays domain-local, `span_parser/scan`) · **1 no-go** (`number_simd` — digit-scan SIMD, §0/02
-refuted; purge its x86 arm, never enters the shared home). `state.rs` is substrate (PaddedView),
-not a scanner.
-
-**#[inline] across the seam (F1).** Cross-crate `#[inline]` across the rlib boundary is measured-live
-(0 in-loop indirect). The only place a non-inlinable boundary *actually* appears is the `OnceLock`
-fn-ptr table — a deliberate runtime-select indirect, uninlinable at any cgu/LTO. Guard: the LEAN/DENSE
-producers are tiny and `#[inline]` → they always cross. Removing the table (aarch64-only) deletes the
-one real seam-inline failure.
-
-**Gates it carries (born-RED).** (1) **[BLOCKING] R-A3 purge** — the refuted double-`vaddv` in the
-shared home is a §0/iv violation 9A imports unless purged; the no-regression proof is a *blocking*
-born-RED gate, not advisory. (2) **Evolved-home producer insn-count** — LEAN `shrn` ≤ the 509-`addv`
-portable baseline; DENSE a log2 `vpaddq` tree, zero double-`vaddv`, base-pinned. (3) **Live path-dep
-inline + no-regress on the CORRECT surface** — `parse_that_css → scan_ws_block_comments →
-classify_stripe` (JSON is a null: `parsers/json.rs` has zero `classify` refs), paired cold N≥200 two
-windows ≥0.98×, reached through the **one-line `[patch]` path-dep** (not the vendor fallback PROTO-1
-tested). (4) checkasm parity over the merged surface (bbnf-simd's 14-test suite is the ready home).
-(5) Evolved-home divergence LOC delta.
-
-**Exact open questions.** (Q1) The perf half remains zero-measured for a 2nd pass and was mis-surfaced
-on CSS-only `classify_stripe` while the JSON corpus never ran it. (Q2) The one-line path-dep seam is
-untested — the heavier vendor route was exercised. (Q3, cross-lock) P23 supersession named-not-granted;
-the axis close is LOCK-6's. (Q4, SPEC-ONLY) the `vector/{mod,neon,scalar}.rs` module does not exist.
-
-**Why not BLOCKED.** The physical inline promise is measured-GREEN live; no missing primitive of equal
-difficulty — authoring the producers and removing the table are known refactors. The value is now
-maintenance-only; 9A must first *evolve + clean* the shared crate before it inherits anything.
+**Consequence:** the canonical-producer *form* is SETTLED (measured, pass 2). What is still owed is the
+axis-deciding measurement of §9A/§9B — the residual divergence against an **evolved** shared home.
 
 ---
 
-## 9B — NATIVE-REBIRTH · **ADVANCED · incumbent · 62%** (the only family off SPEC-ONLY)
+## 9A — ONE-KERNEL-LIBRARY · **ADVANCED · born-RED · ~52%**
 
-**Architecture.** parse-that keeps its own kernels in a colocated `parse_that/src/simd/` directory
-module — `mod.rs (~40)` public `u8x16`/`mask8x16` vocabulary + `#[cfg]` pivot; `neon.rs (~210)`
-`core::arch::aarch64`; `scalar.rs (~130)` the `[u8;16]` parity oracle that IS the executable
-specification. No physical code shared with bbnf-simd; the isomorphism is **behavioral, by
-discipline** — same `vshrn` idiom, same checkasm protocol, same scalar-oracle law. Central bet: the
-"reasonable point" of rust↔rust kernel iso (Constitution iii) is design-level, and duplicated-small-
-kernel drift is cheaper to carry than a shared crate's LCD API + sync-gate tax. **That bet is a null
-hypothesis to defeat by measurement.**
+**Architecture.** Collapse parse-that's eight `portable_simd` scanners onto the extant stable-clean
+checkasm-gated `skinny/crates/bbnf-simd` (pure `core::arch::aarch64`, no nightly; dav1d-style checkasm
+oracle: stack-canary XOR-fold + callee-saved x19–x28 sentinels + per-primitive scalar-reference
+bit-parity, `checkasm_common.rs`). The isomorphism is **physical**: one source, drift impossible by
+construction. The shared home is not hypothetical — it already carries a near-superset of parse-that's
+scan surface and the scalar-parity oracle parse-that wholly lacks; the work is *finishing* it (author
+the absent producers, purge the refuted idiom) and adding a consumer edge.
 
-**Mechanism — movemask-by-downstream-contract IS the family (banked).** PROTO-2 banked both producers:
-LEAN `number_simd.rs:54-55` double-`vaddv` → `vshrn_n_u16::<4>` (`shrn.8b`, **zero `vaddv`, 14 vs 19
-insns**); DENSE `classify_stripe_64` → `vpaddq` bit-weight tree (**50 vs 64 insns, zero reduction
-ops**, LLVM lowering the disjoint-bit tree to `uzp1/uzp2/orr`); both paired ≥0.98× (15/16). Iterating
-consumers migrate `tz → tz >> 2`; presence-only lowers to `vmaxvq_u8`. This is bounded call-site churn
-(~+80/−40 at the ~5 CTZ sites) — the honest cost the zero-churn shim traded away for a regressing tree.
+**Mechanism.** Two consumer tiers, from research-A's owed scanner-file census (§5): **~6 kernel-1:1**
+files (`structural_bitmap`→`byte_class_from_table_64`/`structural_classify_64`; `ws_comment`→
+`comment_body_mask_64`; `quoted_simd`+`quote_parity`→`escape_mask_64`+`bitmap_prefix_xor_64`;
+`scanners`→`byte_class_from_eq_set_64`); **~2–3 vector-tier** files (`span_parser/scan`, `decode`
+`store_chunk`) wanting a ~60-LOC shared `u8x16`/`mask8x16` vocabulary (the LEAN movemask + splat/cmp/
+store) homed in bbnf-simd beside `prim`; **1 no-go** (`number_simd` — digit-scan SIMD is refutation-
+barred, stays per-repo). Kernel-tier is where the win concentrates; vector-tier is the small shared
+vocabulary; no-go is explicitly excluded.
 
-**The x86 purge and the digit-scan guard.** Two live x86 arms excised: `number_simd.rs:145-235` (SSE4.2,
-−~90) and `quote_parity.rs:42-49` (`pclmulqdq`, −~30); `decode.rs` x86 tokens are doc comments — scrub.
-`number_simd` is **ported, never optimized** (§0/02 NO_GO): its `vaddv_u8` masked-half digit-sum
-(`:54-55`) is a *legitimate horizontal-sum accumulate*, distinct from the movemask double-`addv`
-anti-pattern — do not pursue Mula/Lemire in-vector accumulation (CPI 0.13→0.30 inversion).
+**Integration seams.** Physical seam is **one line**: `parse-that/rust/.cargo/config.toml
+[patch.crates-io]` gains `bbnf-simd = { path = "…/skinny/crates/bbnf-simd" }` — the memchr model, and
+the patch table already cross-links 7 sibling crates (`bbnf`, `bbnf-ir`, `csp-solver`…). The vendor
+alternative mirrors the **live in-tree precedent**: `crates/csp-solver` is re-vendored from sibling
+`csc411` under a `chore(csp-solver/canonical-diff): re-vendor …@<sha>` beat + a `*_canonical_parity`
+byte-identity test (the HEAD commit ledger shows exactly this). A `bbnf_simd_canonical_parity` beat
+gates drift identically. De-face: `dispatch.rs:50-61` → the direct-`cfg` form (9A-only hygiene, not a
+perf lever). Producer purge: the four double-`vaddv` sites → the contract-split producers.
 
-**The stable cutover — the sole cross-repo residual is at the generator, not parse-that source.** Four
-nightly enablers: `portable_simd` (→ `simd/`), `smallbox[nightly]` (one field + one construct site,
-alloc-neutral: 6 construct / 5390 twitter unchanged), `stmt_expr_attributes` (dead — delete), and
-**`fmt_helpers_for_derive`** — forced NOT by parse-that but by `@generated regex/generated.rs` emitting
-the *expanded* `#[derive(Debug)]`. Fix at the **generator** (emit the attribute, not its expansion) +
-regen; generated.rs net shrinks. On stable, all ~20 errors localize to generated.rs; the hand-ported
-files carry zero.
+**Gates it carries (born-RED).** (1) **R-A3 purge as a BLOCKING gate** — a shared home that ships the
+double-`vaddv` violates §0 iv; `rg 'vaddv_u8|vaddvq_u8' skinny/crates/bbnf-simd/src/aarch64` must return
+ONLY the digit-MAC site, every mask producer must show `shrn`/`vpaddq` in disasm. (2) **Perf half on the
+CORRECT surface** — paired cold `parse_that_css → scan_ws_block_comments → classify_stripe` (CSS-only;
+the JSON corpus is a null for `classify_stripe`), N≥200, two windows, ≥0.98×. (3) **One-line path-dep
+seam under fat-LTO cgu=1** (NOT the vendor fallback PROTO-1 tested): `otool -tv` a wired scanner, zero
+`bl _…byte_class…` in-loop, the only indirect the intentional OnceLock pointer. (4) **Evolved-home
+gate-5** — author the canonical producers into a scratch bbnf-simd + purge, THEN measure residual
+divergence (erasing the manufactured divergence PROTO-2 measured against the un-evolved crate). (5)
+checkasm full-64-bit parity over the merged surface incl. the nibble-on-DENSE corruption case. (6) LOC
+ledger: ~+60 one-home vs ~+380 two-home (PT-2 W1's private `simd/`), audit surface `rg vaddv` over one
+crate vs two.
 
-**The differential oracle (transliterated from bbnf-simd checkasm, ~190 LOC, self-contained).**
-`Xorshift64` + `guarded_call` (1 KiB stack canary, `black_box`-fenced), `callee_saved_register_then`
-(x19–x28 sentinels via `asm!`), and the per-kernel differential test: density sweep
-`[0,1,2,4,8,16,32,64,128,255,256]` × alignment sweep `for align in 0..64` × random fills, each
-asserting `guarded_call(neon) == scalar_reference`. **INJECT_BUG**: a committed `#[should_panic]`
-lane-flip fixture proving the sweep is not vacuous.
+**Exact open questions.** (Q1) The evolved-home residual divergence — the LOCK-6 datum neither pass
+produced (§Incompatibility). (Q2) The perf half on CSS + the path-dep (not vendor) seam — zero-measured
+for two passes on a mis-targeted surface. (Q3, cross-lock) P23 supersession named-not-granted — 9A's one
+line mutates parse-that's read-only tree. (Q4, SPEC-ONLY) the `vector/{mod,neon,scalar}.rs` module does
+not exist; promoting refuted-code demands its own no-regression artifact.
 
-**Two-home basis (the maintenance argument, answered as data).** Even after authoring both producers
-into a scratch shared home, the residual divergence is irreducible: **block width** (PT `u8x16`→u16
-masks vs bbnf-simd fixed `[u8;64]`→u64), **pad/clamp** (`PaddedView` zero-copy vs `eob_pad_clamp`
-copy), **shuffle model** (two-table nibble-LUT vs single `vqtbl4q_u8` lo6), **emit capacity** (u16 CTZ
-vs `bulk_emit_positions_64` 64-base bulk store). Plus **toolchain decoupling**: PT goes to **stable**
-(off the ICE-pinned nightly-2026-04-11, 93 recorded `on_disk_cache` ICEs) while bbnf-simd rides
-skinny's nightly + `blake3`; a shared rlib forces a common MSRV floor + sync gate, coupling PT's stable
-cutover to skinny's cadence. And sharing bbnf-simd *today* imports its scalar-stub dense classifier — a
-consumer-less/perf-less share (Constitution viii).
-
-**Exact open gaps.** (1) **[axis-decider, SEEDED not closed, WRONG baseline]** gate-5 divergence was
-measured against **un-evolved** bbnf-simd (which lacks the `vpaddq` producer) → overstates 9B's case;
-the corrected datum is **merged-surface divergence across ALL LEAN/DENSE sites vs the EVOLVED home**.
-(2) **DENSE correctness is "parsed without panic," not a bit-parity oracle** — the checkasm harness is
-a plan, not an artifact. (3) **The stable cutover is untested** — rebirthed *on* the nightly it claims
-to shed. (4) The Q2 negative (naive nibble-stride corrupts the dense-64 site — silent `tz>>2` vs `tz`
-misindex) used idiom (b) correctly but never *demonstrated* the negative as the load-bearing guard.
-(5) The DENSE-win causal claim is not isolated — read the gate as **PASS only**, no speed claim.
-
-**Why not BLOCKED.** Every intrinsic is stable since 1.59; the harness exists to port; the taxonomy is
-settled art. The only failure mode is *losing to 9A on gate 5*, not a missing primitive.
+**Why born-RED, not BLOCKED.** No missing primitive of equal difficulty: live cross-crate inline is
+measured-GREEN (PROTO-1), the de-face is a known refactor (three sibling kernels already direct-`cfg`),
+the vendor gate has a live in-tree precedent. 9A's value is now **honestly maintenance/drift-avoidance +
+the refuted-idiom purge, NOT a speedup** — the port is cyc/B-neutral by law; the only perf obligation is
+a measured no-regression floor.
 
 ---
 
-## 9C — SCANNER-AS-DFA · **BLOCKED · 43%** (cross-lock, sequenceable — NOT BLOCKED-candidate)
+## 9B — NATIVE-REBIRTH · **ADVANCED · incumbent · ~62%** (the only family off SPEC-ONLY)
 
-**Architecture.** The hand scanner corpus dissolves: scanners become compiled DFA products of the
-bootstrapped grammar. **The DFA is the scanner's PLANNER, never its RUNTIME** — it contributes exactly
-two artifacts per scan site: the byte-equivalence **PARTITION** (`[u8;256] → byte_class_from_table_64`
-or `_eq_set_64`) and the **ENTRY-BYTE SET** (→ PROVE-10 `Dfa::find` prefilter). Both are stateless
-one-shot SIMD passes already resident in bbnf-simd; 9C is the emit pass that selects among them by
-partition shape and deletes the hand nibble-LUT scanners they subsume.
+**Architecture.** parse-that keeps its own kernels, each rebirthed in idiomatic stable
+`core::arch::aarch64` NEON (stable since 1.59 — no nightly), one scalar twin per kernel as ground truth,
+a natively-ported checkasm harness proving each NEON body is *reached* (liveness) and *bit-parity*. No
+physical code shared with bbnf-simd; the isomorphism is **behavioural, by discipline** — same movemask
+idiom, same checkasm protocol, same scalar-oracle law. Central bet: the "reasonable point" of rust↔rust
+iso (Constitution iii) is design-level, and duplicated-small-kernel drift is cheaper than a shared
+crate's LCD API + sync-gate tax. **That bet is a null hypothesis to defeat by measurement** — if
+post-rebirth the kernels measure near-identical against the *evolved* home, 9B loses to 9A on merit.
 
-**The substrate already exists, split across the two repos.** Producer half (bbnf-lang generator):
-`crates/core/src/generate/regex/emit/dfa/mod.rs:128` already writes `static __BYTE_CLASSES:[u8;256]`
-verbatim from the compiled DFA; `byte_class.rs:106 emit_byte_class_lut`; `regex_scan_adapter.rs:598`
-gates it (`is_dispatchable && len>=4`, `MAX_DISPATCHED=32`). Consumer half (bbnf-simd kernels):
-`byte_class_from_table_64` (its signature IS the DFA `byte_classes`), `byte_class_from_eq_set_64`
-(≤8-member shufti), `classify_tbl4` (lo6-separable `vqtbl`). **The JOIN is the deliverable**: read
-`dfa.byte_classes` + the non-dead entry set, SELECT the kernel by partition shape — entry ≤3 → memchr
-prefilter (8.8–29×); ≤8 members → eq_set_64; lo6-separable → tbl4; general → byte_class_from_table_64.
+**Mechanism — movemask-by-downstream-contract IS the family.** The consumer census (B §2, verified):
+**3 LEAN · 6 DENSE · 1 no-go · 1 pure-vector**. A thin `parse_that/src/simd/{lean,dense}.rs`
+directory-module exposing exactly two lawful producers (`movemask_lean(uint8x16_t)->u64`,
+`movemask_dense_64(&[uint8x16_t;4])->u64`) — colocated with `parsers/scan/`, no sibling rlib. **BANKED
+(PROTO-2, do not re-litigate):** LEAN `number_simd.rs:54-55` double-`vaddv`→`shrn.8b #4` (0 `vaddv`,
+14 vs 19 insns); DENSE `classify_stripe_64` `vpaddq` tree (50 vs 64, 0 reduction ops); paired ≥0.98×
+(15/16).
 
-**Census (F3, delivered — with over-ceiling denominators).** Rich-CSS `url()`
-(`/[^)"'\s]+/`) collapses to **~2/255 classes, ~3/4096 states** — TIER-2 (eq_set membership over the
-≤8-byte STOP set), the ideal case; a negated class is the paradigm scanner leaf. **Wide-unicode**
-(`\p{L}`, `\u{...}` via `utf8.rs` byte-splitting) fans past 255 classes / 4096 states → `Dfa::compile`
-returns `Err(state_limit)`: **0% coverage, the honest floor — falls back to scalar `char`-decode, not
-a scanner.** Every leaf the scanners actually see (JSON structural, quote, ws, CSS STOP sets, `[0-9]`
-membership) lands ≤~4 classes / ≤~5 states.
+**`number_simd` is triple-refuted → ABROGATE (research-B §3, the cleanest rebirth move).** It embodies
+three §0 violations at once: (a) digit-scan SIMD, (b) double-`vaddv` movemask (`:54-55`), (c) a live x86
+SSE4.2 path (`:145-235`). Per abrogate-before-patch: **delete** the entire SIMD surface (~200 LOC + two
+refuted patterns), retain only the scalar SWAR fold (`parse_eight_digits`, already backs the 9..15-digit
+path, its own parity oracle by construction). `quote_parity::prefix_xor`'s aarch64 `vmull_p64` clmul is
+the *opposite* case — a legitimate keep (correct simdjson quote-parity kernel); purge only its x86 twin.
 
-**Two confirmed-by-construction facts.** (a) **Naive nibble-only misclassifies the structural set**:
-`{`=0x7B and `[`=0x5B share low-nibble 0xB, `}`=0x7D and `]`=0x5D share 0xD → a lo-only classifier
-collapses brace↔bracket, corrupting depth. Immune: two-table shufti (`lo_r & hi_r`) or the full
-256-table; INJECT_BUG gate must flip to lo-only and FAIL. (b) **The DFA cannot subsume the quote-parity
-prefix-XOR** (carry-less `vmull_p64` in-string toggle) — an irreducible bit-parallel kernel 9C must
-**carry**, never DFA-ify (dissolving it regresses the JSON hot path). Sheng (pass-1's novum) is
-**retired to a measured negative** — the serial `vqtbl1q` chain loses to scalar `find_at` on the short
-runs these DFAs see; the classify pass never walks state.
+**Gates it carries.** (1) Disasm liveness (`shrn`/`vpaddq`/`tbl` present). (2) Insn-count no-regress
+(2271-vs-509 must not reproduce). (3) **Native checkasm bit-parity oracle** (the owed artifact) —
+alignment sweep 0..63, black_box xorshift + JSON-alphabet vectors, INJECT_BUG flagging ≥90%, plus the
+decisive nibble-on-DENSE-quote-parity divergence case; DENSE correctness is currently only "parsed
+without panic," NOT bit-parity. (4) Paired divan ≥0.98× every corpus both windows. (5) **Gate 5 the
+axis-decider** — the merged-surface LOC/substrate divergence table against the **EVOLVED** home
+(`PaddedView`-64 vs `eob_pad_clamp`; single-`vqtbl1q` vs `vqtbl4q`; capacity constants). (6) **`cargo
++stable build`** — the headline (off nightly) is UNVERIFIED; the rebirths were authored *on* the nightly
+they claim to shed. research-B §4: the sole residual stable blocker is `regex/generated.rs`
+`fmt_helpers_for_derive` (a generator-regen fix, outside the kernel plane); `portable_simd` dissolves the
+moment scanners call native producers; `smallbox` nightly→`smallbox!` is codegen-neutral.
 
-**Why BLOCKED (and why not BLOCKED-candidate).** Quad-homed on unbuilt cross-lock substrate: **LOCK-5**
-owns the grammar→DFA source-of-truth (unbuilt at scanner fidelity) and must resolve the **`bbnf-regex
-0.1.0` name+version collision** — authoritative source is the **parse-that-vendored `rust/regex`**
-(XL-C one-regex-home; SPEC §1); GN-0 archives the legacy `skinny/crates/bbnf-regex` (a `[patch]`
-`bbnf-regex→regex` makes the vendored copy win — collision dissolved by archival, no version bump).
-**LOCK-2** owns tier-selection (scan-plan e-graph island). The codegen home
-`crates/codegen/src/emit/regex/` is a **named GN-codex supersession** (Constitution ix), not a
-land-grab. Q1 dense-classification is **at-best parity** with hand simdjson — value is deletion +
-grammar-specialization + stable-by-construction + free `vshrn`, real but modest; Tier-M "parity by
-construction" is **SPEC-ONLY** until the emit pass + separability solver exist. **The separability
-solver is a bounded CSP over a 256-entry partition selecting among three known forms (nibble-pair ∨
-lo6-table ∨ `vceqq`-fan) — tractable, NOT a primitive of equal difficulty to the original problem.**
-So 9C is **cross-lock-BLOCKED and sequenceable behind LOCK-5+LOCK-2**, not BLOCKED-candidate; it cannot
-converge as an independent LOCK-9 family and is carried into the gestalt as a phased consumer of the
-kernel-home verdict (9C ◐ 9A).
+**Exact open questions.** (Q1) Gate 5 against the evolved home — SEEDED not closed; PROTO-2's divergence
+was measured against the un-evolved crate (overstates 9B's case: the producers must be authored once
+regardless of home). (Q2) DENSE bit-parity oracle unbuilt. (Q3) stable cutover never run. (Q4)
+self-regression guard (naive-nibble-corrupts) used correctly but never demonstrated as the load-bearing
+negative.
+
+**Why not BLOCKED.** Every intrinsic is stable since 1.61; the harness exists to port; the taxonomy is
+settled. Its only failure mode is *losing to 9A on gate 5*, not a missing primitive.
 
 ---
 
-## 9D — LAZY-SURFACE · **BLOCKED · 30%** (streaming center BLOCKED-candidate; RETIRE-or-run this pass)
+## 9C — SCANNER-AS-DFA · **BLOCKED-LIFTING → born-RED candidate (~50–55%, up from 43)**
 
-**The family has two separable halves; only one survives.** research-D develops both to their
-strongest form and finds the **streaming half SPEC-ONLY-negative** and the **cost-model half** the
-durable, consumer-backed contribution.
+**The pass-3 disposition move.** The registry BLOCKED 9C on **Q2 cross-lock to LOCK-5** — the
+`bbnf-regex 0.1.0` name+version collision + an unbuilt grammar→DFA pipeline. **Both are now dissolved,
+verified against the live tree** (reconciliation 5): the engine is renamed `parse-that-regex` (the
+unambiguous DFA source-of-truth); the seam is a shipped trait; the DFA already *produces* the exact
+`[u8;256]` byte-class table the shared kernel already *consumes*. The hard cross-lock blocker retires.
+What remains is **family-internal and NOT a missing primitive of equal difficulty** — hence
+BLOCKED-LIFTING toward born-RED, the largest disposition move available this pass (the agglomerator
+should re-rate; conservatism warranted only on the unbuilt emit pass).
 
-**Streaming half — refuted at the substrate + a declared non-goal.** A grep census
-(`feed|push_bytes|Decoder|BufRead|from_reader|document_stream|incremental`) returns **zero streaming
-consumers**; `docs/future-research.md:201` lists "token streams, incremental parsing" as the
-*deliberate non-goals of the 1.0.0 cut*. Every grammar builds a whole owned tree over a whole owned
-input (`ParserState::new` → `allocate_padded_buf` single `copy_nonoverlapping`). Three structural
-counterexamples a streaming redesign must defeat and cannot: **C1** the `PaddedView` over-read
-invariant (`INPUT_PAD_BYTES=64`, branch-free tail stripe) — a bounded window has no valid tail padding
-at a non-final chunk boundary, forcing either unsound over-read or the reintroduction of the per-stripe
-bounds guard the padded design deletes; **C2** the zero-copy borrow tape (`StringPayload::Borrowed`) —
-an evicted window invalidates every outstanding borrow, forcing every string to the `Owned` arena
-copy; **C3** nested-checkpoint backtrack reaches arbitrarily far into resident bytes, so the retention
-window degenerates to the whole in-flight subtree. **Per the constitution, whole-document-granularity
-streaming does not reduce peak tree RSS** — the one streaming shape that *could* be bolted on buys
-nothing on the metric streaming exists to improve.
+**Architecture.** A grammar leaf carrying a regex (`bootstrap/regex.bbnf:10-37`) lowers through the
+existing tower — `Hir` → Thompson NFA (`automata/nfa.rs:71`) → DFA via subset construction + Hopcroft
+(`automata/dfa.rs:67`) → `byte_classes:[u8;256]` + `num_classes:u16` (`equiv.rs`) — and terminates in
+**one byte-class table routed into three existing kernel tiers by separability.** "Scanner" becomes a
+codegen tier, not a source file — for the membership/prefix/structural leaves only.
 
-**The missing primitive (the BLOCKED-candidate signature).** The memory center survives ONLY if
-backtrack is bounded — but parse-that is a backtracking PEG, and PEG gives **no bounded-backtrack
-guarantee** (Ford 2004). A semantic bound "may simply not be a property PEG provides — equal in
-difficulty to redesigning the backtracking discipline itself." **The streaming/memory center is
-BLOCKED-candidate.** research-D reasons the bound is *empirically* small (JSON is LL(1), first-byte
-`dispatch_byte_multi` → wrong-branch rewind ≤1 byte; CSS `recover` is forward-resync with a
-bounded rewind-to-frame-entry) — a *corpus-conditional* bound, not a semantic one. **P3 is the cheap,
-deterministic decider that has now been skipped for three consecutive passes** while all four probes
-went to the central axis: it either salvages a corpus-conditional ring buffer or files the measured
-refutation.
+**Mechanism — the tiered lowering (M/S/X, keyed on DFA structure):**
+- **Tier M (membership; 1–2 states):** the dominant every-byte pass; the DFA's whole computation is the
+  byte→class map. `|set|≤8` → `byte_class_from_eq_set_64` (memchr-tier); else → `byte_class_from_table_64`
+  (any `[u8;256]`). Covers ws/digit/hex/ident/url-char.
+- **Tier prefix (anchored literal, 1–3 entry bytes):** the PROVE-10 memchr/2/3 prefilter + anchored
+  confirm (CONFIRMED 8.8–29.5×, 0.99× controls).
+- **Tier structural (multi-kind, per-byte distinct):** `structural_classify_64` `vceqq`-fan (JSON
+  `{}[]:,"\`, CSS delimiters), collision-free by exact equality.
+- **Tier S (small multistate) — MEASURED NEGATIVE:** `state[i]=tbl(T,class[i],state[i-1])` is a
+  loop-carried serial `vqtbl1q` chain (~2–4 cyc/byte unhidable), loses to scalar `find_at` on the short
+  runs these DFAs see (`ws_comment` 84–100% of WS runs ≤4 bytes). Sheng earns no leaf.
+- **Tier X (explosion) — NO-GO:** `\p{L}`/wide-unicode over UTF-8 explodes to 30–60+ byte-classes +
+  hundreds of states (`dfa.rs:262` returns `None`); stays on the vendored scalar Höhrmann DFA
+  (`unicode/utf8_hoehrmann.rs`). A correctness floor, excluded — but the census must still report Tier-X
+  denominators so coverage is a measured %, not a fit-chosen sample.
 
-**Cost-model half — the surviving design center, but a LOCK-2 CONSUMER, not an independent family.**
-"Kernels selected by a cost model at combinator-compile time" survives intact. Substrate: **Seed A**
-bbnf-simd `select_classifier(alphabet:&'static [u8;64])` — a compile-time-const choice; **Seed B**
-`bbnf-regex::RegexInfo` (`first_chars`, `literal_prefix`, `negated_class`, `min/max_match_len`,
-`dfa_size_estimate`) — the cost model's feature vector; **Seed C** `ws_comment.rs`'s runtime Tier1/2/3
-branch (scalar reject / 16-byte classify / `#[cold]` 64-byte stripe) to *lift* to a compile-time
-selection when a leaf's run-length distribution is known. The mechanism: each scan leaf carries its
-grammar-derived `RegexInfo`; a pluggable **KernelCostTable** (fitted from paired PMU captures) scores
-each legal kernel and bakes one specialized scanner. **This satisfies the no-consumerless-substrate law
-by *being* the seam where LOCK-5's `RegexInfo` and LOCK-2's KernelCostTable cash out on the scan plane
-— it is a consumer of LOCK-2's decision driver, the same island 9C's tier-selection needs, not a new
-LOCK-9 subsystem.** The "lazy plane over windows" honestly reframed is the simdjson two-stage
-structural-index over a *fully resident* buffer — needs no streaming.
+**The separability crux — already half-built.** `bbnf_simd::dispatch::lo6_table_admissible`
+(`dispatch.rs:101`) ALREADY implements the partition/separability predicate for the single-table tier
+(walks the alphabet, rejects on any low-6 collision). An emit pass calls the *same* predicate on the
+DFA-derived alphabet. **F3 answered YES, provably (research-C §3):** `structural_classify_64.rs:14`
+records `;`≡`{` under low-6 mask (both 0x3B) — a naive nibble/low6 emit silently drops one colliding
+member; the gate routes non-separable sets to `byte_class_from_table_64` (full `[u8;256]`, collision-free
+by construction) or the `vceqq`-fan. (Registry note: the load-bearing byte is `{`=**0x7B**; the collision
+is lo6(0x3B)=lo6(0x7B)=0x3B — the pass-2 spec mis-stated it; corrected here.)
 
-**Disposition.** Marked **BLOCKED · 30%**, on its **last pass at a live %**: pass-3 runs P3 or 9D
-converts to **RETIRED**, its residue (the cost-model kernel-selection as a LOCK-2 consumer; the
-carry-threading into the gestalt-Ω compiled resumable scanner) surviving as inputs to other objects,
-not as a live family. Zero throughput claim in any gate (the straddle guard is neutral-to-slower);
-latency/TTFS is the only survivable streaming value and is itself consumer-gated.
+**The honest boundary (research-C §5) — what a DFA CANNOT dissolve.** "Hand scanners cease to exist" is
+TRUE for character-class/membership/prefix leaves; **FALSE** for the four **carry-stateful transductions**
+— prefix-XOR quote-parity, escape odd-parity, bracket-depth balance, comment-body carry. These thread
+state *across* 64-byte blocks and are structurally outside a single-alphabet DFA; they **remain
+hand-authored and belong to the 9A/9B kernel plane**, consumed by 9C via the same `byte_class`/mask
+vocabulary, never re-derived. Claiming otherwise would be a stub — forbidden. Scanner-file census: **~3
+files fully dissolve** (ws-run, membership scanners, number digit-run-scan), **~4 stay carry-stateful
+kernels**, 1 is infrastructure (`state.rs` PaddedView).
+
+**Gates it carries (born-RED).** (1) **Emit-parity oracle** — for each shipped leaf derive
+`byte_classes`, emit through the separability selector, assert **bit-identical scan vs the hand scanner**
+over black_box random + alignment sweep, INJECT_BUG confirming teeth, INCLUDING the `;`/`{` low6-collision
+case. (2) **Separability-gate correctness** — fuzz plants a colliding member, asserts NO silent drop off
+the `vqtbl4q` tier (gate 4, the load-bearing proof, unrun). (3) **Census reproduction** — compile the
+eight leaves through `Dfa::compile_with`, record real `num_classes`+states against the 255/tractable
+ceilings incl. `\p{L}` over-ceiling rows as denominators. (4) No-regression: `otool` reduction-insn ≤
+hand + paired ≥0.98×.
+
+**Exact open questions & why still RED.** (Q1, downgraded to SPEC-ONLY) dense-classification is at-best
+parity with hand simdjson — value is deletion + grammar-specialization + stable-by-construction + free
+`vshrn`, real but modest. (Q2, **the residual gap**) the `[u8;256]→SIMD` emit pass + the
+bounded-CSP separability solver are the family's **new code and unbuilt** (`equiv.rs` emits scalar only);
+`lo6_table_admissible` + the shipped `byte_class_from_table_64` seam mean it is **NOT equal-difficulty to
+the original problem** — hence born-RED, not BLOCKED. (Q3, cross-lock, residual) tier-selection is a
+LOCK-2 scan-plan island; the codegen home `crates/codegen/src/emit/regex/` is a **named GN-codex
+supersession** (constitution ix), not an implicit land-grab. 9C is now **dual-homed** (LOCK-2 tier island
++ GN-codex codegen), no longer quad-homed — LOCK-5's leg cleared.
+
+---
+
+## 9D — LAZY-SURFACE · **RETIRE (memory center refuted; residue folds to gestalt-Ω) — was BLOCKED 30%**
+
+**Disposition.** The registry set the terminus explicitly: "pass-3 runs P3 or converts 9D to RETIRED."
+research-D delivered the P3 instrumentation **spec a third time, not the histogram** — so P3 is unrun for
+a third consecutive pass, and per directive **9D RETIRES.** research-D itself endorses this as the honest
+close: the streaming/memory center is refuted (by analysis + grep, below); the defensible residue is a
+LOCK-2 consumer, not a live LOCK-9 family. This synthesis does NOT brief P3 as a prototype — running it
+would only upgrade the refutation from by-argument to by-measurement, a lower gestalt-advance than the two
+uncertainties chosen (§Briefs); the RETIRE path is the directive-sanctioned outcome.
+
+**Why the memory center is refuted (research-D, measured-by-argument + grep).** (1) **Consumer absent
+(Y.13 tripped, grep-confirmed):** `feed|push_bytes|Decoder|BufRead|document_stream|from_reader` → zero
+real consumers; every grammar builds a whole owned tree over `&'a str`; `ParserState::new` immediately
+materializes a full padded second copy (`state.rs:285-305`). (2) **Span-dangle soundness wall:**
+`Span<'a>` borrows one buffer; a chunked `feed` that frees consumed chunks dangles every earlier span;
+retaining all chunks = no RSS win; copying spans to owned `String` reintroduces the 5390-alloc mass
+(twitter) streaming was meant to avoid — a hard wall, not a knob. (3) **PaddedView is anti-chunking:** the
+64-NUL trailing guard breaks at every chunk boundary → re-pad (copy tax) or reinstate the per-stripe tail
+guard (surrendering the exact SIMD win). simdjson's `document_stream` is NDJSON (whole docs), never
+single-doc chunking. (4) **Dead-by-law:** §0/51 fold-over-lazy-cursor is 2.3–4.9× behind; a lazy-input
+cursor resurrects the refuted architecture. (5) **Backtrack:** structurally unbounded (PEG, Ford 2004),
+empirically small (`dispatch_byte` is an O(1) 256-LUT peek with zero speculative advance → P50≈0
+expected) — but the histogram was never measured; a window sized to a measured max is corpus-conditional,
+not semantic.
+
+**The surviving residue (two, both re-homed).** (a) **Cost-model kernel-selection at combinator-compile
+time** — 9D's only consumer-bearing surface: at `Parser::new` select `TakeUntilScan::Lut(Box<[bool;256]>)`
+(`leaf.rs:182`, today always-LUT, no model) vs a SIMD shufti by a static delimiter-set predicate ported
+from `lo6_table_admissible`; the GENERATOR-side precedent is measured (SPEC §1 features 05 CSS shufti
+−23.6%, 12 emit-spine residualization). **This is a LOCK-2 decision-driver consumer** (`KernelPlan`, the
+same island 9C's tier-selection needs) — not a new LOCK-9 subsystem. (b) **Carry-threading** for the
+9C⊗9D gestalt-Ω "compiled resumable scanner" — since Sheng is a measured negative, 9D threads carries
+through the **Tier-3/structural kernels** (`prefix_xor`/comment/bracket-depth carries bbnf-simd already
+exports), not a saved Sheng state. This is where 9D's residue survives.
 
 ---
 
 ## THE INCOMPATIBILITY MAP — which families cannot coexist, and precisely why
 
-**9A ⊗ 9B — HARD-INCOMPATIBLE (kernel-home axis). THE central adjudication, now a PURE LOCK-6
-MAINTENANCE CALL.** A kernel is either shared-source or own-source; it cannot be both. Both routes
-reach the identical movemask contract-split (LEAN `vshrn` / DENSE `vpaddq` tree, purge the repack and
-the double-`vaddv`) and the identical checkasm discipline — they differ only in whether one file or two
-carry them. **The crowding-redirect rule (bank the redundant one) does NOT apply**: pass-2's two biases
-point *opposite* ways (charge 9A the 9A-only de-face cost → tilts to 9B; re-measure gate-5 against the
-*evolved* home → tilts to 9A), so banking either now picks the axis without the corrected evidence. The
-verdict rests on **maintenance cost alone** (LOCK-6D: "null hypothesis defeated by measured
-drift/maintenance cost"). LOCK-9 produces the two *corrected* measurements — 9A charged the de-face
-cost + perf-half-on-CSS + evolved-home gate-5; 9B's merged-surface divergence vs the evolved home —
-LOCK-6 renders the verdict. **Neither banked; 9B holds as incumbent-default (PT-2 frozen codex, the
-only family off SPEC-ONLY); 9A's physical promise is proven live but its value is maintenance-only.**
+**9A ⊗ 9B — HARD-INCOMPATIBLE (kernel-home axis). THE central adjudication → a PURE LOCK-6
+MAINTENANCE-COST CALL.** A kernel is either shared-source (9A) or own-source (9B); it cannot be both.
+Both routes reach the **identical** contract-split producers and checkasm discipline — they differ only
+in whether one file or two carry them. The crowding-redirect rule (bank the redundant one) does **not**
+apply: the perf axis WASHES (OnceLock free at cgu=1; canonical producers author-once regardless of home),
+so the decider is LOCK-6's "null hypothesis defeated by measured drift/maintenance cost" — a verdict
+LOCK-9 cannot render. The two pass-2 biases point **opposite** ways (charge 9A the 9A-only de-face →
+tilts 9B; re-measure gate-5 against the *evolved* home → tilts 9A), so banking either now picks the axis
+without the corrected evidence. **The keystone measurement neither pass produced — the evolved-home
+gate-5 — is still owed** (§Brief 1). 9B holds as incumbent-default (PT-2 frozen codex, off SPEC-ONLY);
+9A's physical promise is proven live but its value is maintenance-only; neither banked.
 
-**9C ⊗ 9B — INCOMPATIBLE (scanner-provenance axis).** 9C deletes parse-that's hand kernels and emits
-them as compiled DFA products; 9B's thesis is that parse-that *authors and hand-rebirths* them. A
-scanner cannot be simultaneously hand-authored-in-`core::arch` and non-existent-because-generated (they
-co-occur only in the degenerate sense of a 9C Tier-miss leaf falling back to a hand kernel — 9C
-conceding coverage, not 9B being adopted).
+**9C ⊗ 9B — INCOMPATIBLE (scanner-provenance axis).** 9C deletes parse-that's hand membership/prefix
+scanners and emits them as compiled DFA products; 9B's thesis is that parse-that *authors and rebirths*
+its kernels. A scanner cannot be simultaneously hand-authored-in-`core::arch` and
+non-existent-because-generated. They co-occur only degenerately (a 9C Tier-miss leaf falling back to a
+hand kernel — 9C conceding coverage, not 9B being adopted).
 
-**9C ◐ 9A — PARTIALLY COMPATIBLE / SEQUENCEABLE (agree kernel home, differ provenance) → a DAG, not a
-contradiction.** Both converge on bbnf-simd as the kernel backend: 9A by extraction, 9C by
-lowering-to-it through the DFA. A gestalt holds both as ordered phases (kernel-home unification →
-scanner-derivation). The prefilter double-home the gestalt must collapse:
-`bbnf-simd::find_ascii_set_member64` ⟷ `bbnf-regex::Dfa::find` are two entry points to one prefilter
-idea (GN-2/PT-1 dispatch law: one lowering per scan site, never both).
+**9C ◐ 9A — PARTIALLY COMPATIBLE / SEQUENCEABLE (a DAG, not a contradiction) — STRENGTHENED this pass.**
+Both converge on `bbnf-simd` as the kernel backend: 9A by extraction, 9C by lowering-to-it through the
+DFA. research-C makes this **literal**: 9C's emit routes the DFA's `[u8;256]` straight into
+`bbnf_simd::byte_class_from_table_64` — 9C IS a consumer of the 9A-shared home. The gestalt holds both as
+ordered phases: **(kernel-home verdict: 9A vs 9B) → (scanner-provenance: 9C emits the membership/prefix/
+structural leaves into that home; the four carry-stateful kernels stay hand-authored per 9C §5).** The
+prefilter double-home the gestalt must collapse: `bbnf_simd::find_ascii_set_member64` ⟷ `Dfa::find` — one
+lowering per scan site, never both (GN-2/PT-1 dispatch law).
 
-**9D ∥ {9A, 9B, 9C} — ORTHOGONAL AXIS (input surface).** 9D's *cost-model* half changes *what feeds*
-the kernels and *which* kernel is selected, not *who owns* them — it threads into whichever kernel-home
-verdict wins. Its *streaming* half is refuted and contradicts the eager `PaddedView` witness all three
-share; it is a later, conditional overlay admissible only if P3 measures a bounded backtrack.
+**9D ∥ {9A,9B,9C} — was ORTHOGONAL, now RETIRED.** 9D's residue (cost-model selection) changes *what
+feeds* the kernels, not *who owns* or *how derived* them — a later, conditional LOCK-2 overlay admissible
+only if a streaming consumer ever appears (it does not). Its carry-threading folds into the 9C⊗9D
+gestalt-Ω object. No live-family incompatibility remains.
 
-**9C ⊗ 9D — POSITIVE AFFINITY, re-homed onto structural carries.** Ragel/re2c lineage: a streaming
-scanner IS a resumable DFA. Sheng being a measured negative, 9C collapses to a *stateless* Tier-M
-membership classify + Tier-3 structural — 9D threads carries through the **Tier-3/structural kernels**
-(`prefix_xor`/comment/bracket-depth carries bbnf-simd already exports), not a saved Sheng state.
-Neither is independently converge-able; the **gestalt-Ω "compiled resumable scanner"** carries both as
-inputs to ONE object. **If 9D RETIRES in pass-3, this graft is where its carry-threading residue
-survives.**
+**Summary matrix** (⊗ hard-incompatible · ◐ partial/sequenceable · ∥ orthogonal · † retired):
 
-**Summary matrix** (⊗ hard-incompatible · ◐ partial/sequenceable · ∥ orthogonal-composable):
-
-|        | 9A            | 9B            | 9C            | 9D            |
-|--------|---------------|---------------|---------------|---------------|
-| **9A** | —             | ⊗ (kernel home)| ◐ (agree home, differ provenance; DAG) | ∥ (cost-model overlay; streaming needs PaddedView generalized) |
-| **9B** | ⊗             | —             | ⊗ (provenance)| ∥ (same)      |
-| **9C** | ◐             | ⊗             | —             | ⊗→gestalt-Ω (stateless classify + structural carries = resumable scanner) |
-| **9D** | ∥             | ∥             | ⊗→gestalt-Ω   | —             |
+|        | 9A            | 9B            | 9C            | 9D           |
+|--------|---------------|---------------|---------------|--------------|
+| **9A** | —             | ⊗ (kernel home → LOCK-6) | ◐ (agree home, differ provenance; DAG, 9C consumes 9A) | ∥† |
+| **9B** | ⊗             | —             | ⊗ (provenance)| ∥† |
+| **9C** | ◐             | ⊗             | —             | ◐† (carries thread structural kernels → gestalt-Ω) |
+| **9D** | ∥†            | ∥†            | ◐†            | — (RETIRED) |
 
 ---
 
 ## CROSS-LOCK DAG ORDERING (blockers LOCK-9 CANNOT retire alone)
 
-- **9A ⊗ 9B → LOCK-6 (a maintenance-cost call, not a perf call).** LOCK-9 produces the corrected
-  measurements (9A: perf-half-on-CSS + evolved-home gate-5 + the 9A-only de-face charge; 9B:
-  merged-surface divergence vs the evolved home); LOCK-6 renders the home verdict. Co-converge at
-  GESTALT; neither closes the axis alone.
-- **Canonical movemask form → RESOLVED (measured); home-collapse → LOCK-9 ∩ LOCK-5.** The form is
-  settled (contract-split, measured). Four producers must collapse to ONE lawful home (bbnf-simd
-  repack + bbnf-simd refuted double-`vaddv` + PROVE-10 lean + parse-that `to_bitmask`); memchr's lean
-  form lives in bbnf-regex's prefilter. The gestalt collapses the home.
-- **Prefilter double-home → GN-2/PT-1 dispatch law.** One lowering per scan site, never both. 9C
-  deepens this.
-- **9C grammar→DFA source-of-truth → LOCK-5** (name+version collision resolved by GN-0 archival +
-  `[patch]`; authoritative = vendored `rust/regex`); **9C tier-selection → LOCK-2** (scan-plan
-  island); **9C codegen home → a named GN-codex supersession**. 9C is quad-homed; cannot be *selected*
-  until LOCK-5 + LOCK-2 land.
-- **9D cost-model `KernelPlan` → LOCK-2** (compile-time decision driver, the same island 9C needs) —
-  a consumer, not a new subsystem.
-- **Un-homed consumer edge → LOCK-4 / LOCK-8.** The reborn scanner surface feeds the combinator core
-  (LOCK-4) and, via LOCK-6, the TS backbone (LOCK-8); no 9-family names how it presents to LOCK-4's
-  parser graph or whether LOCK-8 mirrors 9C's compiled-DFA products. An un-homed edge the gestalt-P
-  weave must close.
+- **9A ⊗ 9B → LOCK-6 (maintenance-cost call, perf washes).** LOCK-9 produces the *corrected*
+  measurements (9A: perf half on CSS + evolved-home gate-5 + the 9A-only de-face charge; 9B:
+  merged-surface divergence vs the evolved home); LOCK-6 renders the verdict. Co-converge in GESTALT-P;
+  neither closes the axis alone.
+- **Canonical movemask form → RESOLVED (measured); home-collapse → LOCK-9 ∩ LOCK-5.** Four producers
+  (bbnf-simd repack + bbnf-simd refuted double-`vaddv` + PROVE-10 lean + parse-that `to_bitmask`) collapse
+  to ONE lawful home; memchr's lean form lives in the regex prefilter. The gestalt collapses the home.
+- **9C grammar→DFA source-of-truth → RESOLVED by rename (LOCK-5 leg CLEARED).** `parse-that-regex` is the
+  DFA source-of-truth; `bbnf-regex` (skinny) is the facts face; legacy top-level archives at GN-0. **9C
+  tier-selection → LOCK-2** (scan-plan island); **9C codegen home → a named GN-codex supersession.** 9C is
+  now dual-homed (LOCK-2 + GN-codex), selectable once those land — no longer LOCK-5-blocked.
+- **Prefilter double-home → GN-2/PT-1 dispatch law.** One lowering per scan site. 9C deepens this.
+- **9C/9D resumable-scanner collapse → gestalt-Ω** (re-based onto structural carries; Sheng negative).
+- **9D residue (cost-model `KernelPlan`) → LOCK-2** (compile-time decision driver).
+- **Un-homed consumer edge → LOCK-4/LOCK-8.** The reborn scanner surface feeds the combinator core
+  (LOCK-4) and, via LOCK-6, the TS backbone (LOCK-8); no 9-family names how it presents to LOCK-4's parser
+  graph or whether LOCK-8 mirrors 9C's compiled-DFA products. The gestalt-P weave closes it.
 
 ---
 
-## Disposition roll-up for the REGISTRY
+## DISPOSITION ROLL-UP FOR THE REGISTRY
 
-- **9A ONE-KERNEL-LIBRARY — ADVANCED, born-RED (52%).** Physical inline measured-GREEN live; value
-  reconciled to maintenance-only (axis washes). Convergence blockers: perf half on the CORRECT CSS
-  surface + one-line path-dep seam (both un-run); R-A3 purge must become a blocking gate; evolved-home
-  divergence owed. No missing primitive of equal difficulty.
-- **9B NATIVE-REBIRTH — ADVANCED, incumbent (62%).** Only family off SPEC-ONLY; LEAN+DENSE banked with
-  insn counts. Close is the null-hypothesis gate-5 against the *evolved* home (concede or defeat 9A) +
-  the bit-parity oracle + the stable-toolchain cutover (untested — rebirthed on nightly).
-- **9C SCANNER-AS-DFA — BLOCKED (43%), sequenceable (NOT BLOCKED-candidate).** Cross-lock-coupled to
-  LOCK-5 (grammar→DFA + name collision) + LOCK-2 (tier island) + a GN-codex supersession; dominant
-  pass is parity + deletion, not speed; Sheng is a measured negative; the separability solver is a
-  bounded CSP (tractable), unbuilt. Carried into the gestalt as a phased 9A consumer.
-- **9D LAZY-SURFACE — BLOCKED (30%), streaming center BLOCKED-candidate.** Memory raison d'être
-  refuted-by-default (consumer grep-absent, Y.13; bounded-backtrack a semantic primitive PEG may not
-  provide); P3 unrun for a 3rd pass. **Pass-3 runs P3 or converts to RETIRED** (cost-model residue → a
-  LOCK-2 consumer; carry-threading → the gestalt-Ω resumable scanner).
+- **9A ONE-KERNEL-LIBRARY — ADVANCED, born-RED (~52%).** Value is now honestly maintenance/drift-
+  avoidance + the refuted-idiom purge, NOT a speedup. Convergence blockers: the evolved-home gate-5 (Q1)
+  and the perf half on the CSS surface + path-dep seam (Q2), both zero-measured for two passes. The R-A3
+  purge must become a BLOCKING gate.
+- **9B NATIVE-REBIRTH — ADVANCED, incumbent (~62%).** The only family off SPEC-ONLY; LEAN+DENSE wins
+  banked. Close is the null-hypothesis gate-5 against the *evolved* home (concedes honestly if divergence
+  measures small) + the DENSE bit-parity oracle + the stable cutover (headline unverified — never left
+  nightly).
+- **9C SCANNER-AS-DFA — BLOCKED-LIFTING → born-RED candidate (~50–55%, up from 43).** The pass-3 mover:
+  the LOCK-5 name-collision blocker is DISSOLVED (verified — rename to `parse-that-regex`; shipped seam;
+  DFA `[u8;256]` = kernel input). Residual gap is family-internal (emit pass + separability solver
+  unbuilt), NOT equal-difficulty (`lo6_table_admissible` + the `byte_class_from_table_64` seam both
+  shipped). Now dual-homed (LOCK-2 + GN-codex), not quad-homed.
+- **9D LAZY-SURFACE — RETIRE.** Memory center refuted (consumer grep-absent, span-dangle wall, PaddedView
+  anti-chunking, §0/51); P3 unrun a third time per directive → RETIRED. Residue: the cost-model
+  selection plane (a LOCK-2 consumer) + carry-threading for the 9C⊗9D gestalt-Ω. Latency-only, consumer-
+  gated.
 
 ---
 
-## THE TWO SHARPEST UNCERTAINTIES → pass-3 prototype briefs
+## THE TWO SHARPEST UNCERTAINTIES → pass-4 prototype briefs
 
-The four prior probes all hit the central axis against the *wrong (un-evolved) baseline*; the two
-BLOCKED families have never been probed. The two highest-advance uncertainties are therefore (1) the
-**corrected** axis-decider — the evolved-home datum LOCK-6 actually needs, which no pass produced — and
-(2) the cheapest, most-overdue family-disposition decider (9D-P3), which closes-or-retires a family
-carried in limbo for three passes. Together they leave only 9C blocked on genuinely-cross-lock
-substrate — the honest converged-core end state.
+The two highest-advance uncertainties for the NEXT pass (GESTALT-P). Brief 1 finally delivers the
+axis-deciding LOCK-6 datum neither pass produced; Brief 2 exploits the newly-cleared LOCK-5 leg to convert
+9C's largest gap from cross-lock-blocked to measured-feasible. (P3/9D is deliberately NOT briefed — 9D
+retires per directive; running P3 would only upgrade a refutation, a lower gestalt-advance.)
 
-**BRIEF 1 — the evolved-home axis decider (bbnf-worktree).** Author the two canonical producers into a
-scratch `skinny/crates/bbnf-simd` and re-measure the axis LOCK-6 needs. (1) In a scratch bbnf-simd,
-add `movemask_nibble_64` (LEAN `vshrn_n_u16::<4>`) + `movemask_dense_64` (DENSE `vpaddq_u8` tree),
-`#[inline]` `#[cfg(target_arch="aarch64")]`. (2) **Purge** the three refuted movemasks
-(`movemask.rs:19-24`, `byte_class_from_eq_set_64.rs:79-86`, `comment_body_mask_64.rs:68-74`) and delete
-the `OnceLock` table (`dispatch.rs:58-87`), re-pointing callers at direct `#[cfg]`-static. (3) Build
-base-pinned to skinny@HEAD; `otool -tv` each producer. (4) Count merged-surface LOC across all
-LEAN/DENSE sites (this evolved home) vs the two-home duplication; tabulate the residual substrate
-divergence (padded-view/clamp, single- vs multi-table shuffle, capacity caps). **PASS/FAIL:** LEAN
-emits `shrn.8b …,#4` with **zero `vaddv`** and ≤ the 509-`addv` portable baseline; DENSE is a log2
-`vpaddq` tree with **zero reduction ops**; `rg 'vaddv|addv' bbnf-simd/src` over the purged crate
-returns **zero** refuted double-`vaddv`; and the merged-surface-vs-duplicated LOC delta is emitted as a
-number. FAIL if any producer shows a per-half `vaddv`, if the purge leaves a live double-`vaddv`, or if
-the divergence table is not produced. Deliverable: the corrected LOCK-6 input (host-noise-immune static
-disasm + LOC count), erasing the manufactured un-evolved divergence.
+**BRIEF 1 — the evolved-home axis re-measurement + 9A's perf half on CSS (pt-scratch).** The keystone
+neither pass produced. In a scratch copy of parse-that (P23: scratch-only) + a scratch bbnf-simd: (1)
+Author the two canonical producers into scratch bbnf-simd — LEAN `vshrn_n_u16::<4>`, DENSE-64 `vpaddq`
+tree — and PURGE the four double-`vaddv` sites (`byte_class_from_eq_set_64.rs:83`, `structural_classify_64
+.rs:151`, `comment_body_mask_64.rs:72`, `bracket_depth_mask_64.rs:78`). Gate: `rg 'vaddv_u8|vaddvq_u8'
+skinny/crates/bbnf-simd/src/aarch64` returns only the digit-MAC site. (2) De-face the five OnceLock
+`prim::` kernels to direct-`cfg`. (3) Add the one-line `[patch]` path-dep (NOT vendor) to
+`parse-that/rust/.cargo/config.toml`, rewire CSS `scan_ws_block_comments → classify_stripe`. (4)
+`[profile.bench]` fat-LTO cgu=1: `otool -tv` the wired `classify_stripe` loop; PROVE-09 paired cold divan
+`parse_that_css` N≥200, two windows opposite order over the CSS corpora (tailwind + 2 more). (5) Measure
+residual LOC/substrate divergence (9B's kernels vs the evolved home) + charge 9A the de-face cost.
+**PASS/FAIL:** zero `bl`/`blr` to the primitive in-loop AND CSS ratio ≥0.98× every corpus both windows
+AND the divergence table emitted as data (LOC + `PaddedView`/clamp + `vqtbl1q`/`vqtbl4q` deltas). FAIL if
+any in-loop indirect survives, or any CSS corpus <0.98×. Delivers LOCK-6's real input.
 
-**BRIEF 2 — 9D-P3, the rewind histogram (pt-scratch).** The cheap deterministic decider skipped three
-passes; it closes-or-retires 9D. In a scratch copy of `/Users/mkbabb/Programming/parse-that` (P23:
-scratch-only): (1) add a `--features diagnostics`-gated thread-local counter at every
-`state.offset = checkpoint` restore site (`leaf.rs:301-306` `one_of`, `combinators/macros.rs:91-297`,
-`span_parser/assertions.rs:16-90`, `combinators/methods/recover.rs:37`, `span_parser/sep_by.rs:29-41`)
-recording `checkpoint − offset_at_fail` and, separately, `furthest_offset − offset`. (2) Run over all
-six JSON corpora (`data/json/{apache-builds,canada,citm_catalog,data,data_xl,twitter}.json`) + the CSS
-corpora (bootstrap, normalize, tailwind-output), base-pinned; emit P50/P99/max per corpus, diagnostics
-on vs off (to bound the probe's own cost). **PASS/FAIL:** if **P99 rewind distance < 64 bytes (one
-stripe) on every corpus**, backtrack is bounded → a bounded ring buffer is sound and the 9D memory
-center holds (survives as a conditional overlay). If **any corpus shows P99 in the kilobytes**,
-backtrack is unbounded → file the measured refutation and **convert 9D to RETIRED** (memory center
-defeated; cost-model residue folds into LOCK-2, carry-threading into gestalt-Ω). Either outcome is a
-clean close with an artifact. Deliverable: 9D's disposition, settled after three deferrals.
+**BRIEF 2 — the 9C `[u8;256]→SIMD` emit-pass feasibility (bbnf-worktree).** Exploits the cleared LOCK-5
+leg. In a bbnf-lang worktree over `skinny/crates/{parse-that-regex,bbnf-simd}`: (1) For three leaves — ws
+`[ \t\n\r]+`, the JSON structural set `{}[]:,"\`, and a lo6-COLLIDING CSS delimiter set incl. `;`+`{` —
+compile each via `parse-that-regex Dfa::compile_with` and extract `byte_classes:[u8;256]` +
+`num_classes`. (2) Build the minimal emit: run `bbnf_simd::dispatch::lo6_table_admissible` on the derived
+alphabet; separable→`vqtbl4q` lo6-table path, non-separable→`byte_class_from_table_64` (full table) or the
+`vceqq`-fan. (3) Assert **bit-identical scan output** vs a scalar reference classifier over black_box
+xorshift + an alignment sweep 0..63, with an INJECT_BUG (flip one class entry) that MUST break parity. (4)
+Gate 4: assert a naive nibble/low6-only emit **misclassifies** the `;`+`{` set (drops a member), and the
+separability gate routes it off `vqtbl4q`. (5) Record real `num_classes`/state counts vs the 255/tractable
+ceilings. **PASS/FAIL:** all three leaves emit a bit-identical classifier via the correct tier; the
+colliding set is provably rejected off the nibble tier with NO silent drop; INJECT_BUG bites ≥90%. FAIL if
+the emit cannot reproduce the hand classifier, or the naive form passes the colliding set silently.
+Converts 9C's residual gap from cross-lock-blocked to measured-feasible — the largest disposition move in
+the lock.

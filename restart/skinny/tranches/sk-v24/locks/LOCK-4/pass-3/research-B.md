@@ -279,3 +279,69 @@ and the IC-elimination benefit is lost to a non-inlined call. The armed/unarmed 
   requirement are the same constraint viewed from two locks. Open: which lock owns the internal-
   descriptor evaluator (Hex/Number/Enum) — LOCK-3 IR-VM lowering vs LOCK-7 host dispatch — is
   unresolved here and reported, not settled.
+
+---
+
+## 11. bbnf-side substrate corroboration (the graduated-skinny tree, verified pointers)
+
+The parse-that findings above are mirrored — and made countable — in the graduated bbnf-lang tree
+(the `crates/` tree of record; `crates/ir`, `crates/core`, `crates/runtime`). These pointers
+sharpen the same answers with the build-time-graph substrate the closure core does not carry.
+
+**Q1 / the 14-variant plan.** `bbnf_ir::IrNode` is exactly `crates/ir/src/types/node.rs:30` — the
+serde-serializable 14-variant near-bijection (`Literal, Regex, Epsilon, Seq, Alt, Repeat, Ref,
+Skip, Next, Minus, Negate, Map, OptionalWhitespace, TokenDispatch`), born as data from grammar
+text, not from the runtime API. It IS the comptime-known handle §1 demands; the Rust emitter lives
+at `crates/core/src/backend/` and already monomorphizes it (the `generated.rs` shape, generalized
+beyond regex).
+
+**Q4 / the fusion firing numbers, live in-tree.** Three fusion passes already fire and their guards
+ARE the caps: (a) `fuse_single_use` (`crates/ir/src/passes/transform/fuse.rs:44`) inlines
+size-unbounded but is gated by `is_composite_seq` (`:201`, aggregate Seq≥2), `body_has_map`
+(`:249`, the typed `->` invariant), and `is_consumer_pinned` (`:220`, `@pretty`/`@debug`) — the
+legality caps a size cap must be added beside; (b) token-dispatch fusion `try_factor_alt`
+(`crates/ir/src/passes/transform/fuse_token/factor.rs:23`) fires at **`branches.len() >= 4`** — the
+concrete dispatch-fanout crossover, materialized as `IrNode::TokenDispatch`; (c) map fusion
+`compile_map` (`crates/core/src/backend/driver/map.rs:16`) folds `Map(Map(x))` via
+`emit_fused_map`. The pluggable cost model these feed: `crates/ir/src/cost.rs`,
+`crates/ir/src/egraph/cost.rs`, and the CSP driver `crates/ir/src/passes/csp_strategy/mod.rs`.
+
+**Q2 / Q3 / the value language and its barrier.** `FnDescriptor`
+(`crates/ir/src/types/fn_descriptor.rs:18`) has **no `HostClosure`/`Opaque` variant** — variants
+are `EnumWrap, BoxWrap, NumberConvert{allow_leading_dot}, HexConvert{fn_path}, SpanCapture,
+Expr{MapExpr, return_type}`. `Expr` is the sole user-facing variant; its transparent language
+`MapExpr` (`crates/ir/src/types/map_expr.rs:17`) is `IntLit/FloatLit/BoolLit/StringLit/Input/
+InputProp/FnCall{name,args}/BinOp/UnaryOp`, constant-folded at `:109`. The barrier is precisely
+`MapExpr::FnCall{name}` (named host fn, signature-visible, body-opaque) and true closures (not
+`MapExpr`-expressible at all). The proposed serializable shape for the latter — for LOCK-7 to
+ratify — is `HostClosure{ fn: HostFnId, sig: FnSig{inputs:[TypeDesc], output:TypeDesc}, purity }`,
+carrying a typed boundary + effect flag so the fuser can type-check and box-vs-enum the seam while
+still fusing the recognizer around it. `NumberConvert`/`HexConvert` are the sanctioned regex-scan +
+conversion fusions (the LOCK-5 opaque-`Regex(StringId)`-tier seam).
+
+**Q7 / the setup tax, named exactly.** The VM the report frames as the correctness oracle is
+`crates/ir/src/vm/interpreter/mod.rs`; `Interpreter::new` allocates, per parse, **8 Vecs + one
+FxHashMap** — `values`(cap 64), `call_stack`(32), `checkpoints`(32), `repeats`(16),
+`memo_starts`(8), `value_depth_stack`(8), `rule_stack`(16), `diagnostics`(0), and `memo:
+FxHashMap`. This is the Q7 "8 Vecs + FxHashMap" surface. Against PROVE-09's 5 390 per-parse allocs
+it is a fixed ~9-alloc tax — negligible on large inputs, a large fraction on tiny ones (the
+amortization curve rises as input → 0). Pooling the VM (`.clear()` keeping capacity) zeroes it for
+the oracle; the generated fast face pays none of it (§5). Clean split to report: recognizer /
+value-plane / setup — the generated face zeroes the setup column and attacks the value-plane
+column at its `many`/`sep_by` Vec-growth source.
+
+**Q6 / the internal-descriptor evaluator's home.** `NumberConvert/HexConvert/EnumWrap/BoxWrap/
+SpanCapture` are **compiler-produced during lowering/specialization** (stated at
+`fn_descriptor.rs:14-16`) — lowering artifacts, not user host functions. Disposition: the
+internal-descriptor evaluator belongs to **LOCK-3 IR-VM lowering** (emitted by the driver
+`map.rs` on the compiled face and by the VM leaves `crates/ir/src/vm/interpreter/leaves.rs` on the
+oracle face); **LOCK-7 host dispatch owns only the user surface** (the `MapExpr::FnCall{name}`
+targets + the future `HostClosure`). This split is the exact seam 4B relies on: everything internal
+is fusible; only the LOCK-7 surface is the barrier. (Reported as the resolving evidence for the
+sub-question §10 left open.)
+
+**Q6 corpus.** The dual oracle runs over the three structural grammars already carried at
+`crates/runtime/src/grammars/` — json (twitter/canada/citm), css_l4_declaration_values
+(bootstrap/normalize/tailwind), sheets — with the emitted tape at `crates/runtime/src/tape/` as the
+byte-diff surface against the VM `Value` tree. The live Rust golden (never a hand-faked blob) is
+that emitter's own captured tape.

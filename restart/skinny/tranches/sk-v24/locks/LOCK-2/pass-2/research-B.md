@@ -180,6 +180,56 @@ the same: a content hash as the last lattice axis.** The risk is any `Analysis` 
 
 ---
 
+## 5b. Q5 — IR-modeled competing sites, and the leaf-vs-child-bearing distinction
+
+There ARE competing sites modeled (or about to be) in the IR, not merely in grammar source, with
+real binding costs — but they sit at **childless leaves**, which is precisely why they justify 2A
+islands more than end-to-end 2B. The extension that models them is GN-2.W1's:
+`SimdMode{Exact}→{Exact,Prefilter}` and `SimdSite{PreEntry}→{PreEntry,SelfLoop{terminators}}`
+(`ir/src/lib.rs:425-433`). Every self-loop scan site with complement-alphabet cardinality in
+`[1,16]` presents ≥2 lowerings in the IR — scalar loop vs `Recognizer::SimdScan{Prefilter,SelfLoop}`
+— with binding static-size (+~35 generated LOC/site) and cyc/B costs (0.115 floor vs ~1.0
+membership scan; certified §0 #01). Regex leaves add a third: `RegexProgram` scalar-descent vs
+`dfa.find` (§0 #10, 8.8–29.5×). **Which lock owns building it:** GN-2 (kernel plane) owns the
+`SimdMode`/`SimdSite` enum extension + `derive_recognizers` (`passes/src/lib.rs:338`); LOCK-2 owns
+the *extraction* that chooses among the survivors — and GN-2.W1's `codegen/src/lower/recognizer/`
+dispatch that "emits exactly one lowering per site (self-loop `find_member` XOR regex-leaf
+`dfa.find`, never both)" IS a per-class argmin expressed imperatively. The XL-F supersession
+relation is therefore **wraps**: 2B does not delete that dispatch, it re-expresses the per-site
+choice as a cost-model extraction so it composes with the shape + budget solve in one pass. The
+sharp consequence for §3: because these ≥2-survivor sites are *childless leaves*, they exhibit no
+congruence/sharing that a whole-IR e-graph could exploit over a flat per-site argmin — they are 2A's
+warrant, not 2B's. 2B's distinct warrant requires ≥2 survivors at CHILD-BEARING nodes; §3's null
+says the current rule set produces none.
+
+---
+
+## 5c. Q6 — solver shape on this graph class (separable ⇒ greedy optimal; near-tree+coherence ⇒ PBQP)
+
+The per-site decision graph is: per-node discrete choice (≤5 `BackendShape`s or ≤3 lowerings) +
+pairwise coherence (caller/callee compatibility edges) + one global budget coupling. This is
+textbook PBQP (Scholz & Eckstein 2002; LLVM `RegAllocPBQP`): per-node cost vectors + per-edge cost
+matrices. The graph-class analysis Q6 asks for:
+
+- **No coherence edges (the audited current fleet, §4).** The problem is *separable* — each node
+  minimizes independently and **greedy bottom-up extraction is provably optimal** (it *is* the
+  separable minimum). No solver needed; this is 2B's cheap common case and the reason the greedy
+  `Extractor` is the right default where the budget is non-binding.
+- **Coherence edges + near-tree call graph.** PBQP's reduction solver is **optimal** on trees and
+  series-parallel graphs (R0 removes independent nodes, R1/R2 reductions are exact; only R_N is a
+  heuristic on an irreducible core) and runs near-linear — a *structural optimality guarantee* on
+  exactly this graph class that generic branch-and-bound (exponential worst-case, no structural
+  guarantee) and sharing-aware e-graph extraction (NP-hard in general — the reason greedy is used)
+  do not provide. Solve-cost on a ~300-node near-tree with a handful of edges is microseconds; the
+  separator vs B&B is the guarantee, not the speed.
+
+So the honest solver layering is: e-graph saturation *generates* the menu; greedy extraction
+*decides* the separable case optimally; PBQP (hosted in the one csp-solver store, §6) handles only
+the residual coherence-coupled + budget-coupled core. This is §6's boundary made precise: 2B's
+final selection is a solver on the non-separable residual, converging with LOCK-2's CSP centre.
+
+---
+
 ## 6. Q6/Q7/Q8 seams as they bear on 2B (the CSP hand-off is forced, not optional)
 
 **The sharing-sensitive budget is 2B's hard boundary.** `extract.rs:9-11` states outright that the

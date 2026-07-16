@@ -1,346 +1,275 @@
-# LOCK-1 · pass-2 · research-C — FAMILY 1C: BIDIRECTIONAL-LOCAL
+# LOCK-1 pass-2 · family 1C — BIDIRECTIONAL-LOCAL, diagnostics-first
 
-Family thesis. Type checking for the grammar plane is **rule-local bidirectional**:
-each `->` projection is a *check boundary* — when a rule carries a declared type the
-body is **checked against** it; when it does not, the body **synthesizes** a type;
-global (cross-rule) solving is confined to the seams where a `Ref` or an `Alt` forces
-two rule-local judgments to meet. The design center is not the solver — it is the
-*diagnostic*: every failure names a grammar span, and the span it names is the `->`
-the author wrote, not a synthesized interior the author never sees. The rest of this
-report shows the mechanism made concrete against the greenfield tree, the three seams
-where extant code already serves, and exactly what a prototype must prove.
-
----
-
-## 1. The mechanism: check vs. synthesize, localized at the arrow
-
-Bidirectional typing (Pierce & Turner, *Local Type Inference*, TOPLAS 2000;
-Dunfield & Krishnaswami, *Bidirectional Typing*, ACM CSUR 2021) splits one judgment
-into two mutually-recursive modes: **synthesis** `Γ ⊢ e ⇒ A` (the term *produces* a
-type) and **checking** `Γ ⊢ e ⇐ A` (the term is *verified against* an expected type
-pushed down from context). The rule that makes it diagnostic-precise is the mode
-switch: `(e : A)` ascription enters checking; a bare term stays in synthesis. The
-localization win is structural — a checking failure is reported at the **subterm that
-was checked against the expected type**, because that is where the two types first
-disagree, whereas a pure-synthesis (Hindley–Milner / Algorithm W) failure surfaces at
-whatever unification variable happened to be grounded last, which is frequently a
-*synthesized interior node* far from the author's annotation (this is the classic
-"error reported in the wrong place" pathology of unification-only inference, and the
-motivation rustc gives for its `Expectation` machinery — see §6).
-
-Mapped onto the grammar plane, the `->` arrow IS the ascription boundary. A rule
-`unit = "px" -> 0u8` synthesizes `U8` from the literal `0u8`. A rule
-`length = digits -> f64 | fraction -> f64` **checks** each branch's projection against
-the shared declared leaf `f64`; if one branch synthesized `Span` and the other `f64`,
-the disagreement is localized **at the branch arrow whose synthesized type failed the
-check**, not at the `Alt` join that HM would blame. The proven bidirectional leaf
-already exists: PROVE-08's `classify_arrow(target_text, type_text)`
-(`prototypes/PROVE-08/patch.diff:374`) is exactly the mode switch — `type_text = Some(T)`
-is the **checking** path (an ascription `: T` checks against the named type), a bare
-`target_text` is the **synthesis** path (leaf inferred from literal shape:
-`true`/`false`→Bool, `Nu8`→U8Tag, `f64`→F64). That 33-line function is the reusable
-kernel of family 1C; the family's work is to (a) give the check path a *span* to blame
-and (b) route the blame into a diagnostic stream a consumer reads.
+The type system for the grammar plane, formulated as **bidirectional checking**: every
+rule is checked rule-locally against the type its `->` projections *declare*, synthesis is
+used only where nothing is declared, and the sole global step is a fixed-point over the
+cross-rule reference graph. The design center is *where a failure is reported*: a declared
+projection that the body cannot satisfy must name the `->` span, never a synthesized
+interior. This family grows no new engine — it re-plumbs the extant type pass into two
+modes (synthesize / check) and lands a span on the obligation record that is presently
+span-less.
 
 ---
 
-## 2. The substrate at HEAD — what already serves
+## 1. The mechanism
 
-The greenfield already implements a projection type system as a **CSP over rule-output
-types**, and it already distinguishes the two bidirectional modes *structurally* — it
-simply never exploits the distinction for localization. The seams:
+### 1.1 Two judgments over the existing IR
 
-- **The check annotation.** `FnDescriptor::Expr { expr: MapExpr, return_type: Option<TypeDesc> }`
-  (`crates/ir/src/types/fn_descriptor.rs:54`) is the lowered `->`. `return_type = Some(T)`
-  is precisely an ascription (checking mode); `return_type = None` is synthesis. This is
-  the whole bidirectional bit, already present in the IR.
-- **The synthesis→bind site.** `crates/ir/src/passes/types/generate.rs:370` reads the
-  `Expr` arm: `return_type.clone().unwrap_or(TypeDesc::Span)`, then
-  `self.csp.add_constraint(MapConstraint::new(var, map_type))`. This is a **ground**, not
-  a *check* — the declared type is asserted as the Map var's value; if the body's
-  synthesized type disagrees, there is no comparison, no localized error: the annotation
-  silently wins (or the CSP later clashes at a distant Ref/Alt). `fn_descriptor_return_type`
-  (`crates/ir/src/passes/types/registry.rs:458`) is the projection reader for the same
-  annotation. **This is where CHECK mode must be installed** — compare synthesized body
-  type against `return_type` and, on mismatch, emit a localized obligation rather than
-  overwrite.
-- **The synthesized-interior blame site (the counter-example, live).**
-  `join_types(branch_types)` (`crates/ir/src/passes/types/constraint/revise.rs:116`) is
-  the `Alt`-branch LUB. When branches disagree and no homogeneity reduction fires
-  (`:141`), it lifts to `TypeDesc::HeterogeneousAltJoin(...)` and records a
-  `TypeObligation::HeterogeneousAltJoin { rule: Option<RuleId>, node: Option<NodeId>, branches }`
-  (`crates/ir/src/passes/types/obligation.rs:92`). **This is synthesis-first localization
-  in the wild**: the blame carries a *synthesized Alt-node* `NodeId`, not the arrow the
-  author wrote — and it carries no span at all. It is the exact artifact Thread C #1 must
-  put side-by-side against a checking-mode report.
-- **The diagnostic stream, and its missing consumer.** `GrammarIR::type_obligations:
-  Vec<TypeObligation>` (`crates/ir/src/types/grammar.rs:428`), drained at
-  `crates/ir/src/passes/types/mod.rs:486`. `TypeObligation::diagnostic()`
-  (`obligation.rs:113`) already renders human strings — but they name `node N` / `rule R`,
-  never a source span, and **nothing in the `crates/analysis` LSP crate consumes
-  `type_obligations`** (grep: zero hits in `crates/analysis/src`). The stream is a
-  *consumer-less substrate* (Constitution viii / Y.13) — the diagnostics-first family's
-  single largest standing debt.
-- **The one span that exists.** `IrRule.source_span: Option<GrammarSpan>`
-  (`crates/ir/src/types/rule.rs:29`; `GrammarSpan { start: u32, end: u32 }` at
-  `crates/ir/src/types/node.rs:18`) is the **only** source span in the type-relevant IR.
-  `IrNode` carries none (`node.rs:30-98`); `IrNode::Map { inner, fn_id }` (`node.rs:79`) —
-  the lowered arrow — has no span; `FnDescriptor::Expr` has no span; `MapExpr`
-  (`crates/ir/src/types/map_expr.rs:17`) has none. **Rule granularity is the current
-  localization floor.** A grammar with three `->` on one rule can only ever blame the
-  whole rule.
+Bidirectional typing (Pierce & Turner, *Local Type Inference*, TOPLAS 2000; Dunfield &
+Krishnaswami, *Complete and Easy Bidirectional Typechecking*, ICFP 2013; *Bidirectional
+Typing*, ACM Comput. Surv. 2021) splits one inference relation into two:
 
-Net: the greenfield is a *synthesis-first* projection CSP with a rule-granular span
-floor and a consumer-less obligation stream. Family 1C's mechanism — bidirectional
-checking with arrow-localized, span-carrying, LSP-consumed diagnostics — is an
-**additive enrichment of exactly these five seams**, not a new engine.
+- **synth** `e ⇒ τ` — the node *produces* a type (used where no annotation constrains it).
+- **check** `e ⇐ τ` — the node is *verified against* an expected type (used at every
+  annotation / declared-projection boundary).
 
----
+The mode-switch rule is the whole discipline: at an ascription the checker enters **check**
+mode with the declared type, recurses into the body under that expectation, and the
+annotation itself is where a mismatch localizes. This is the shape a grammar `->` wants. A
+projection `body -> Target : Ty` is an ascription: it *declares* the result type, so the
+body is *checked against* `Ty` and the projection node *synthesizes* `Ty` outward.
+PROVE-08's `classify_arrow` already encodes exactly this split — "ascription `: T` checks,
+bare target synthesizes" (`PROVE-08/REPORT.md §1`; core in `type_plane/hm.rs`, 221 LOC,
+VERIFY-certified perf-neutral). 1C promotes that leaf lexer from a one-shot classifier into
+the pass's control mode.
 
-## 3. Thread C #1 — the micro-fixture: synthesis-first vs. checking, side by side
+### 1.2 Rule-local, cross-rule-global
 
-**Build the fixture first** (a genuinely under-determined `->` where the two modes blame
-different spans). Author `crates/ir/tests/fixtures/bidir_width.bbnf`:
+The charter's spine ("bidirectional checking, rule-local; global solving only at cross-rule
+seams") maps onto the greenfield structure with no new tower:
 
-```
-value = tag | measure ;
-tag     = "row"    -> 0u8
-        | "col"    -> 1u8 ;
-measure = digits   -> f64
-        | fraction -> f64 : Span ;      // (†) deliberate clash: body synthesizes f64,
-                                        //     ascription checks against Span
-digits   = /[0-9]+/ ;
-fraction = /[0-9]+\.[0-9]+/ ;
-```
+- **Rule-local (check/synth):** each rule body is walked once. Structural nodes
+  (`Seq/Alt/Repeat/Optional/Literal/Regex`) synthesize as today. A `Map`/`Project` node
+  with a declared return type switches its body to check mode against that type. All of this
+  is intra-rule and terminates in one post-order walk — no propagation needed for the
+  declared fragment.
+- **Cross-rule-global (fixed-point):** a `Ref` to another rule is the only place a
+  rule-local walk cannot conclude, because the target's type may be undetermined (mutual
+  recursion). That is precisely the seam the greenfield already treats specially:
+  `RefConstraint` "suspends propagation while the target rule is unsolved" and rule-to-rule
+  cycles are cycle-broken by grounding + a named `UnresolvedCompoundRef { cyclic: true }`
+  obligation (`crates/ir/src/passes/types/mod.rs:68-80` doc; `generate.rs`). 1C keeps that
+  fixed-point but re-frames it as the inherited/synthesized-attribute boundary (§4): a
+  declared rule type is a **synthesized attribute** available to every referrer without
+  iteration; only *undeclared* mutually-recursive rules need the bounded fixpoint. The
+  declared surface drives the SCC iteration count to zero for any ascribed rule.
 
-Line (†) is the probe: the branch's bare target `f64` synthesizes `TypeDesc::F64`; the
-ascription `: Span` checks against `TypeDesc::Span`. They disagree.
+### 1.3 The localization property (the family's thesis)
 
-**Synthesis-first output (HEAD behavior, reconstructed from the live seams).** With no
-checking arm, `generate.rs:370` grounds the Map var to the *annotation* (`Span`) via
-`MapConstraint`, discarding the synthesized `F64`; the disagreement does not surface at
-(†). It surfaces later, at the `measure` `Alt` join, where branch-1 `= F64` and
-branch-2 `= Span` disagree → `join_types` (`revise.rs:116`) lifts
-`HeterogeneousAltJoin([F64, Span])` and records
-`TypeObligation::HeterogeneousAltJoin { rule: Some(measure), node: Some(<Alt NodeId>), branches: [F64, Span] }`.
-`diagnostic()` renders:
-
-```
-heterogeneous Alt join: node 41 in rule 6 :: branches [F64, Span]
-  (lifted to TypeDesc::HeterogeneousAltJoin; lowers to Box<Enum>)
-```
-
-Blame = a **synthesized Alt node** (`node 41`), no span, and it fingers the *join*, not
-the arrow — the author reading this cannot see that the `: Span` on `fraction` is the
-fault. Worse, it is not even an *error*: it degrades to a `Box<Enum>` layout silently.
-
-**Checking-first output (family 1C).** CHECK mode at the arrow (`generate.rs:370` arm,
-enriched): synthesize the branch body (`F64`), compare against the ascription (`Span`),
-mismatch → emit a new obligation localized at the **arrow span**:
-
-```
-type mismatch at fraction:4:22..4:31  (`-> f64 : Span`)
-  projection synthesizes F64 but is ascribed Span
-  note: the surrounding `measure` alternation requires all branches to agree
-```
-
-`4:22..4:31` is the byte span of the `-> f64 : Span` arrow, carried from the frontend.
-The side-by-side is the deliverable: **same fixture, same clash, two blame sites** —
-synthesis blames `node 41` (an interior the author never wrote, span-less); checking
-blames `fraction:4:22` (the arrow the author wrote). This is the family's central
-evidence and it is fully constructible from the seams above.
+Synthesis-first inference reports a clash *where the clash is discovered*, which for a
+grammar is deep inside a rule body — a `Ref`, an `Alt` branch join, a fused-number node —
+far from the `->` the author wrote. The extant pass makes this concrete: heterogeneous
+`Alt` branches that disagree are surfaced as a `HetJoin`/`UnresolvedCompoundRef` obligation
+at the **downstream** `Alt`/`Ref` `NodeId` (`crates/ir/src/types/type_desc.rs:52-60` doc,
+`crates/ir/src/passes/types/obligation.rs:56-74`), not at the projection that demanded the
+shape. Check mode inverts this: the expected type is *pushed down* from the `->`, so the
+failure surfaces at the first body node that cannot meet it and — because the expectation
+was introduced *by the projection* — the diagnostic's primary span is the `->` operator's
+span, with the offending interior node as a secondary note. This is the rustc
+obligation-cause model (a `FulfillmentError` carries an `ObligationCause` whose span is the
+obligation's *introduction* site, not merely its failure site) and the Elm/Roc
+"diagnostics-first" stance (name the annotation the author wrote; show expected-vs-actual
+side by side).
 
 ---
 
-## 4. Thread C #2 — the additive diff: span-carrying diagnostics + `Project` sub-span
+## 2. The substrate — what must exist
 
-Two enrichments, both additive, both naming their LOCK-3 sink and TS mirror per the
-evidence bar.
+### 2.1 A span on the obligation record (the one net-new datum)
 
-**(a) A span on the diagnostic.** `TypeObligation` (`obligation.rs:56`) gains an optional
-`span: Option<GrammarSpan>` on each variant (default `None`, so every existing
-constructor and the `W3a-types-obligations.txt` archive stays byte-stable), plus a
-third variant `ProjectionMismatch { rule, node, arrow_span: GrammarSpan, synthesized:
-TypeDesc, ascribed: TypeDesc }` — the CHECK-mode failure. `diagnostic()` (`:113`) renders
-the span when present. Additive: `+1 field`, `+1 variant`, `+~15 render LOC`; the drain
-at `mod.rs:486` is unchanged.
+The blocking gap is small and exact. The greenfield obligation is **span-less**: `enum
+TypeObligation` carries `ref_node: Option<NodeId>`, `target_rule: RuleId`,
+`structural_type: TypeDesc` — but no source offset
+(`crates/ir/src/passes/types/obligation.rs:56-74`). It is collected into
+`GrammarIR::type_obligations: Vec<TypeObligation>` (`crates/ir/src/types/grammar.rs:428`).
+Spans exist one level up — `RuleMeta.source_span: Option<GrammarSpan>`
+(`crates/ir/src/types/rule.rs:29`) — but do not reach the node that failed. Meanwhile
+**skinny already declares the target record and leaves it empty**: `TypeObligation { span:
+SourceSpan, expected_from: String, actual_from: String, solver_stage: &'static str }` at
+`skinny/crates/passes/src/lib.rs:138-144`, held in `TypeFacts.obligations` (`:130`) and
+populated *by nothing* — a consumer-less substrate (Constitution viii / Y.13 violation
+standing open). 1C's substrate is the union of the two: give the greenfield obligation a
+span field, sourced by threading the failing `IrNode`'s `NodeId → GrammarSpan` (the DAG
+keys every node by stable `NodeId`; `RuleMeta.source_span` is the anchor, refined per-node
+where the front-end retains offsets).
 
-**(b) The `Project` sub-span — carrying the arrow byte-range down.** The blocker is that
-`IrNode::Map` / `FnDescriptor::Expr` carry no span. The minimal, colocation-clean carrier
-is a **side table** on `GrammarIR`, isomorphic to the existing `node_facts:
-HashMap<NodeId, NodeFacts>` (`grammar.rs:86`): add `map_spans: HashMap<NodeId,
-GrammarSpan>` populated at lowering (`crates/core/src/lower/mod.rs`, beside the
-`type_obligations: Vec::new()` init at `lower/mod.rs:243`) from the frontend AST's arrow
-token range. This keeps `IrNode` serialization-stable (no per-node span bloat across the
-WASM boundary) and gives CHECK mode a `NodeId → arrow-span` lookup at `generate.rs:370`.
-The **frontend must capture the arrow span**: the bootstrap parser records the byte range
-of each `->` (and its optional `: T`) as it produces the `Map`; today `dump_ir.rs:72`
-shows the Map reaches IR with only `{inner, fn_id}`, so the span capture is a new
-frontend field threaded through lowering — the one non-additive touch, isolated to the
-parser→lower seam.
+### 2.2 A check-mode arm at the projection node
 
-**LOCK-3 sink (XL-F, mandatory).** The enriched obligation must lower through
-`TypeAnalysis::from_ir` (`crates/core/src/backend/driver/analysis.rs:22`) and the second
-`from_ir` at `crates/core/src/backend/rust/view/named_types.rs:100`. `TypeAnalysis`
-carries `rule_types: Vec<(RuleId, TypeDesc)>` and `scratch_types`; the obligation stream
-rides alongside on `GrammarIR` and is already visible to both `from_ir` sites via `ir`.
-The record design adds no runtime instruction (Constitution v — the type plane costs zero
-at runtime): obligations are compile-time-only, drained before emission, consumed by the
-LSP/analysis surface and CI, never by generated parser code. The `git diff` over
-`crates/core/src/backend/rust/emitter` stays empty; the record touches only analysis +
-diagnostics.
+The declared-vs-synthesized comparison *is* the check judgment, and it is absent today. The
+greenfield `->` return type is taken **without verification**: "Map nodes with
+`FnDescriptor::Expr` use the return type from the MapExpr, falling back to Span"
+(`crates/ir/src/passes/types/mod.rs:44-47` doc; `generate.rs:369-399`). Nothing confirms
+the body can *produce* that return type — a `-> Foo` over a body that synthesizes `Bar` is
+silently accepted and grounded. 1C adds the check: at a `Map`/`Project` node with declared
+type `τ`, unify the body's synthesized type against `τ`; on clash, emit a
+`ProjectionMismatch { span: <-> span>, declared: τ, synthesized: body_ty }` obligation
+rather than silently overwriting. In skinny the same arm replaces the discard at
+`skinny/crates/passes/src/lib.rs:204` (`ExprKind::Project { body, .. } =>
+self.infer_expr(*body)?` throws away `target` and `ty`) — the exact site R6 flags
+(`R6 §5a`).
 
-**TS mirror (mandatory).** `crates/core/src/backend/ts/projection.rs:40` already handles
-`HeterogeneousAltJoin` identically to `BoxedEnum` and defers its evidence to
-`ir.type_obligations` — so the TS backend is *already* an obligation-stream consumer by
-reference. The span enrichment is mirror-symmetric: `type_desc_to_ts` needs no change
-(spans are diagnostic metadata, not projected types), and the TS diagnostic surface reads
-the same `ProjectionMismatch { arrow_span }` — the mirror is the *absence* of divergence,
-which is the strongest form (LOCK-6 "reasonable point": diagnostics are behavioral, shared
-by construction).
+### 2.3 Reuse, not rebuild
 
-**Corpus green.** JSON (`grammars/json.bbnf`, zero `->`) produces zero obligations — the
-enrichment is inert there. Sheets and CSS L4 (the `->`-bearing grammars) must regen
-byte-identical: the obligation stream is compile-time metadata, so the generated parser is
-untouched; the gate is `git diff` over generated output empty + the existing
-`type_obligations` archive unchanged for the `None`-span default.
+No CSP or e-graph substrate is added for the declared fragment: leaf/sum
+check-then-synthesize is decidable and covered by the proven 221-LOC union-find core. The
+greenfield CSP (`project_types`, AC-3 `propagate()` over `TypeDomain`) stays as the
+**global** solver for the undeclared cross-rule residue; 1C inserts only the check arm and
+the span, leaving propagation untouched. This keeps the family inside Constitution vi
+(extreme parsimony) and the KISS-perf bias — the delta is one arm, one field, one
+population site.
 
 ---
 
-## 5. Open S — the cross-rule seam as an attribute grammar
+## 3. Integration seams (path:line)
 
-The charter confines global solving to cross-rule seams; Open S asks whether those seams
-are one **attribute-grammar** discipline rather than a fifth engine. They are, and the
-bidirectional modes ARE the attribute directions (Knuth, *Semantics of Context-Free
-Languages*, 1968; the synthesized/inherited split is original to it):
+Greenfield (tree-of-record target):
 
-- **Synthesized attribute** = SYNTH mode. A rule's output type is computed *bottom-up*
-  from its body — exactly `project_seq_type` (`revise.rs:46`) and `join_types` (`:116`)
-  composing child types into the parent. No annotation, information flows up.
-- **Inherited attribute** = CHECK mode. An *expected* type flows *top-down* from context
-  into a subterm — the `return_type` ascription pushed into the branch bodies, the shared
-  `Alt` leaf pushed into each arm. This is the direction HEAD lacks; installing it at
-  `generate.rs:370` is literally adding the inherited-attribute edge.
-- **Circular attribute** = the cross-rule fixpoint. Mutually recursive rules
-  (`value → object → pair → value`) form an attribute cycle; the projection CSP already
-  resolves it by fixpoint with a cycle-break ground (`obligation.rs` `cyclic == true`,
-  `mod.rs` post-propagation path). This is a **bounded circular attribute grammar** in the
-  Jones/Farrow sense (Farrow, *Automatic generation of fixed-point-finding evaluators for
-  circular attribute grammars*, PLDI 1986; Magnusson & Hedin, *Circular Reference
-  Attributed Grammars*, JVLC 2007 — the JastAdd basis).
+- **Type pass entry / synthesis:** `crates/ir/src/passes/types/mod.rs:35`
+  (`project_types`) — the check arm inserts inside constraint generation.
+- **`->` return-type synthesis (no check today):**
+  `crates/ir/src/passes/types/generate.rs:369-399` (`FnDescriptor::Expr` return-type read,
+  "falling back to Span").
+- **Obligation record (add `span`):** `crates/ir/src/passes/types/obligation.rs:56-74`;
+  sink `GrammarIR::type_obligations` at `crates/ir/src/types/grammar.rs:428`.
+- **Span anchor:** `crates/ir/src/types/rule.rs:29` (`RuleMeta.source_span:
+  Option<GrammarSpan>`), keyed per-node by `crates/ir/src/dag` `NodeId`.
+- **Cross-rule fixpoint seam:** `ProjectConstraint`/`RefConstraint` + cycle-break in
+  `crates/ir/src/passes/types/mod.rs:68-80` (the SCC boundary, §4 / Open S).
+- **LOCK-3 sink (the handoff the verdict must lower through):**
+  `crates/core/src/backend/driver/analysis.rs:22` — `TypeAnalysis::from_ir` reads
+  `ir.types: Vec<(RuleId, TypeDesc)>` + `ir.type_map`; second sink
+  `crates/core/src/backend/rust/view/named_types.rs`.
+- **TS mirror (every record design names it):** `crates/core/src/backend/ts/projection.rs`
+  (`type_desc_to_ts` / MapExpr→JS). The verdict projects through `TypeDesc`, already
+  backend-agnostic, so the TS face inherits the check for free.
 
-The **termination lattice** is the discipline that makes the circular case total. The
-type lattice is finite-height by construction: `TypeDesc` (`type_desc.rs:13`) has a fixed
-scalar floor (Span, F64, Bool, I8..U64) and monotone constructors (Option/Vec/Tuple)
-bounded by grammar nesting depth; the LUB (`join_types`) is monotone and idempotent; the
-cycle-break grounds any unresolved var to the top of the lattice
-(`HeterogeneousAltJoin`/`BoxedEnum`). The three whole-system phenomena the charter names
-collapse onto one lattice discipline:
+Skinny (measurement substrate):
 
-- **SCC-generalize** = compute each strongly-connected rule component's attributes to a
-  local fixpoint before generalizing (let-generalization over the SCC, GHC-style).
-- **federation-sequencing** = the topological order over the condensed rule-dependency
-  DAG is the attribute-evaluation schedule; acyclic segments are one bottom-up pass,
-  SCCs are the bounded-fixpoint islands.
-- **bounded-fixpoint** = the finite-height lattice + monotone revise gives a guaranteed
-  ascending-chain termination bound = lattice height × variable count.
-
-Evidence claim: this is **not a fifth engine** — it is a *reading* of the existing
-projection CSP (`passes/types/`) as an attribute evaluator, where SYNTH/CHECK are the two
-attribute directions and the cycle-break is the circular evaluator. The prototype
-obligation is to show the reading is faithful, not to build a new solver.
+- **Discard site (the check arm's home):** `skinny/crates/passes/src/lib.rs:204`.
+- **Unpopulated span record (Y.13 open):** `skinny/crates/passes/src/lib.rs:138-144` +
+  `:130`.
+- **Error path today (stringly-typed, span-less):** `skinny/crates/passes/src/lib.rs:197`
+  (`PassError::Type(String)`) and `skinny/crates/passes/src/diagnostics.rs` — `PassDiagnostic`
+  carries `rule: Option<RuleId>` + `message: String`, **no span** (Thread C.2's target).
+- **Front-end span source:** every `Expr` is created with a `SourceSpan { start, end }`
+  (`skinny/crates/ir/src/lib.rs:22-35`; `add_expr`/`add_rule` take a span); the `->` node's
+  own span is live at lowering (`:1349`, `ExprKind::Project { body, target, ty } =>
+  BackendExpr::ValueProject`).
+- **Reused bidirectional lexer:** PROVE-08 `type_plane/hm.rs` `classify_arrow`
+  (ascription-checks / bare-synthesizes).
 
 ---
 
-## 6. Prior art, with citations
+## 4. Open S — the cross-rule seam as one attribute-grammar discipline
 
-- **Bidirectional typing** — Pierce & Turner, *Local Type Inference* (TOPLAS 22(1), 2000);
-  Dunfield & Krishnaswami, *Bidirectional Typing* (ACM Computing Surveys 54(5), 2021, the
-  canonical survey). The check/synth mode split and its localization property are their
-  contribution; family 1C is a direct application to grammar projections.
-- **rustc's `Expectation`** — `rustc_hir_typeck::expectation::Expectation`
-  (`ExpectHasType` / `NoExpectation`) is production bidirectional checking: an expected
-  type flows down into expression checking so errors localize at the expression, not at a
-  distant inference variable. This is the exact model for CHECK mode at `generate.rs:370`,
-  and rustc's own diagnostics literature cites wrong-place-blame as the motivation.
-- **Attribute grammars** — Knuth 1968 (synth/inherited); Farrow PLDI 1986 and
-  Magnusson & Hedin JVLC 2007 (circular AGs with fixpoint termination, the JastAdd
-  reference attribute grammar system) — the Open S model.
-- **Span-carrying diagnostics as first-class IR** — MLIR's `Location` attribute (every op
-  carries a source location, diagnostics reference it; `mlir::Diagnostic` +
-  `emitError(loc)`) and rust-analyzer's `TextRange`-anchored `Diagnostic` are the pattern
-  for the `map_spans` side table: source location is metadata attached to IR nodes, never
-  lost across lowering. The greenfield's `GrammarSpan` (owned `u32` pair, WASM-safe) is the
-  right primitive; it is simply not yet attached below rule level.
-- **Elm / Roc error localization** — the industry standard for "point at exactly the token
-  the author wrote"; the design target for the §3 side-by-side.
+Open S asks whether the cross-rule dependency is one *seam discipline* rather than a fifth
+engine. Bidirectional-local answers it natively. Cast the type pass as an attribute grammar
+(Knuth 1968; circular/conditional attribute grammars with a monotone lattice — Farrow 1986,
+Boyland 1996 — terminating by ascending chain on the finite `TypeDesc` lattice):
 
----
+- **Synthesized attribute** = a rule's declared result type (from its `->`). Available to
+  every referrer with zero iteration — this is what makes declared rules SCC-free.
+- **Inherited attribute** = the *expected* type pushed down in check mode (the `->`'s
+  declared `τ` flowing into the body). This is the engine of §1.3's localization.
+- **Circular attribute (bounded fixpoint)** = only the undeclared mutually-recursive
+  residue, solved by the existing AC-3 `propagate()` + cycle-break grounding, its
+  termination lattice the finite `TypeDesc` height (`Span ⊑ … ⊑ BoxedEnum`).
 
-## 7. Named risks and counterexamples
-
-- **R1 — checking silently narrowing a legal synthesis.** If CHECK mode is installed as a
-  hard equality (`synth == ascribed`), a legitimately-widening ascription
-  (`digits -> f64` where the body synthesizes an integer scalar that *should* coerce to
-  `f64`) becomes a false-positive error. **Counterexample:** `int -> f64` — body
-  synthesizes `U32`, ascription `f64`, a lawful numeric widening. **Resolution:** CHECK is
-  *subsumption*, not equality — the compare at `generate.rs:370` must run through a
-  subtype/coercion lattice (the same numeric-width lattice LOCK-1's width sub-problem
-  owns), and only emit `ProjectionMismatch` when no coercion exists. The check leaf must be
-  the lattice `⊑`, not `==`. This is the sharpest risk: it decides whether CHECK mode is
-  *sound* or merely *strict*.
-- **R2 — no arrow span in the frontend.** If the bootstrap parser does not record the
-  `->` byte range, the whole localization story reduces back to rule granularity. **The
-  frontend span-capture is the one hard prerequisite** — verified absent at HEAD
-  (`dump_ir.rs:72` shows `Map { inner, fn_id }` only). Prototype must land it or the
-  §3 checking-mode span is unreachable.
-- **R3 — the obligation stream has no LSP consumer.** Enriching `TypeObligation` with a
-  span is inert if nothing renders it. **Constitution viii forbids the consumer-less
-  substrate**: the diff MUST include an `analysis`-crate bridge
-  (`type_obligations → lsp_types::Diagnostic` with `range` from the span). Without it the
-  wave is a substrate-only landing and fails the bar.
-- **R4 — CHECK mode changes projected types → regen not byte-identical.** If CHECK mode
-  *alters* the resolved `TypeDesc` (e.g. rejecting a join that HEAD silently boxed), the
-  generated parser moves and the "compile-time only / zero runtime" invariant breaks.
-  **Resolution:** CHECK mode emits a *diagnostic* and leaves the projected type exactly as
-  synthesis-first produced it (the obligation augments, never overrides — the same
-  contract `HeterogeneousAltJoin` already honors: it records evidence but still lowers to
-  `Box<Enum>`). Diagnostics-first ≠ type-changing.
-- **R5 — cross-rule cycle non-termination under CHECK.** Adding the inherited (top-down)
-  attribute edge can, naively, break the fixpoint's monotonicity. **Counterexample:** a
-  recursive rule whose inherited expected type depends on its own synthesized type.
-  **Resolution:** the termination lattice (§5) — inherited edges only *narrow* toward the
-  lattice bottom and the cycle-break grounds to top; the ascending-chain bound holds
-  because CHECK never re-widens. Prototype must exhibit a recursive `->` grammar and show
-  the fixpoint still converges.
+The three items Open S names as one discipline — SCC-generalize, federation-sequencing,
+bounded-fixpoint — are then the three attribute classes, not three subsystems: the SCC is
+the circular class, federation-sequencing is the synthesized class' topological
+availability, and the bounded fixpoint is the lattice height. GHC's `OutsideIn(X)`
+(Vytiniotis, Peyton Jones, Schrijvers, Sulzmann, JFP 2011) is the load-bearing prior art
+for the local-vs-global split done right: local constraints solved eagerly in place, only
+the genuinely-cross-scope residue deferred to a global solver — exactly declared-rule-local
+check vs undeclared-cross-rule fixpoint.
 
 ---
 
-## 8. What a prototype must test to move this family
+## 5. Prior art (citations)
 
-1. **The side-by-side (Thread C #1, primary).** On `bidir_width.bbnf` (§3), produce BOTH
-   the synthesis-first obligation (`HeterogeneousAltJoin { node: <Alt NodeId>, [F64, Span] }`,
-   span-less, blaming the join) AND the checking-mode obligation
-   (`ProjectionMismatch { arrow_span: fraction:4:22..4:31, F64, Span }`, blaming the
-   arrow). Diff the two blame locations. **Pass = the two modes name different spans and
-   the checking span is the author's arrow.** This is the family's make-or-break.
-2. **The additive span landing (Thread C #2).** Land `TypeObligation.span` +
-   `ProjectionMismatch` + `GrammarIR.map_spans` + the frontend arrow-span capture + the
-   `analysis`-crate LSP bridge. Gate: additive `git diff` (no `IrNode` variant reshaping),
-   corpus regen byte-identical (JSON zero obligations; Sheets/CSS L4 generated output
-   unchanged), and the LSP bridge renders a `Diagnostic` with the arrow `range`.
-3. **Subsumption not equality (R1).** A fixture with a lawful widening ascription
-   (`int -> f64`) must produce **zero** `ProjectionMismatch` — proving CHECK runs through
-   the coercion lattice, not `==`.
-4. **Circular termination (R5).** A recursive `->` grammar (`value → array → value`, each
-   arm projected) must reach the projection fixpoint with CHECK edges installed, in bounded
-   iterations (≤ lattice-height × var-count). Report the iteration count.
-5. **Zero-runtime invariant (Constitution v).** `git diff` over
-   `crates/core/src/backend/rust/emitter` and generated parser output = empty across all of
-   1–4. The type plane's win is localization, never a runtime instruction.
+- **Bidirectional typing:** Pierce & Turner, *Local Type Inference* (TOPLAS 2000); Dunfield
+  & Krishnaswami, *Complete and Easy Bidirectional Typechecking* (ICFP 2013) and
+  *Bidirectional Typing* survey (ACM CSUR 2021). The check/synth split and the
+  ascription-drives-check rule are taken verbatim.
+- **Diagnostic-cause model:** rustc `ObligationCause`/`FulfillmentError` — the reported
+  span is the obligation's *introduction* site; rustc's primary-span + secondary-note
+  `Diagnostic` structure. Elm and Roc error philosophy (name the author's annotation; show
+  expected-vs-actual side by side).
+- **Local-vs-global boundary:** GHC `OutsideIn(X)` (JFP 2011) — eager local solving,
+  deferred cross-scope residue.
+- **Attribute grammars:** Knuth (1968); circular/conditional attribute grammars with
+  monotone-lattice fixpoints (Farrow 1986; Boyland 1996) — the Open S framing.
+- **In-tree seeds:** PROVE-08 (`type_plane/hm.rs`, `classify_arrow`, VERIFY CONFIRMED_DELTA
+  perf-neutral); GN-3 (the sum node + `->`-through-`infer` waves); R6 (`R6 §5a-5d`, the
+  discard-and-fold census).
 
-The measurement substrate is skinny@HEAD for wall-time neutrality (the projection CSP runs
-at generation time; the family adds compile-time diagnostic work only, which must not
-regress derive wall-time beyond noise). The designs target greenfield structure —
-`crates/ir/src/passes/types/` is the home, `TypeAnalysis::from_ir` the handoff, the
-`analysis` crate the diagnostic consumer.
+---
+
+## 6. Named risks & counterexamples
+
+- **R-C1 — per-node spans may not survive to the IR.** `RuleMeta.source_span` is
+  rule-granular; if the front-end discards per-node offsets, the finest localizable span is
+  the whole rule, not the `->`. **Counterexample:** two `->` in one rule — a rule-span
+  diagnostic cannot say *which*. **Test:** confirm the front-end retains an offset on the
+  `Project`/`Map` node (skinny's `Expr` does — `SourceSpan` per `add_expr`); if greenfield
+  dropped it, the additive-span wave must re-thread it, a named cost.
+- **R-C2 — check mode changes accepted programs.** Today `-> Foo` over a `Bar`-producing
+  body is silently grounded to Span; adding a check turns that into an error. **Risk:** the
+  corpus contains latent mismatches and the checker reddens green grammars.
+  **Test:** run the check arm in *record-only* mode first (emit the obligation, do not fail
+  the build) and count clashes across JSON / Sheets / CSS L4 before flipping to fail-closed
+  — the honest migration, not a flag-day (§7.3).
+- **R-C3 — the localization claim is unfalsifiable without a paired output.** The family
+  rests on "check localizes at the `->`, synthesis reports at a synthesized interior." That
+  must be *shown*, not asserted (§7.1).
+- **R-C4 — TS-side divergence.** If the checker records anything richer than `TypeDesc`,
+  the TS mirror cannot lower it. **Guard:** the obligation payload is `TypeDesc` + span
+  only; `type_desc_to_ts` already covers every `TypeDesc` variant, so the verdict is
+  TS-lowerable by construction.
+- **R-C5 — cross-rule check ordering.** Check mode needs a referrer to know the target
+  rule's declared type; a forward reference to an as-yet-unwalked declared rule must read
+  the *declaration*, not wait for the walk. **Guard:** declared types are a synthesized
+  attribute pre-seeded from the `->` before the body walk (mirrors skinny's
+  `seed_rule_types`, `skinny/crates/passes/src/lib.rs:172-176`), so declaration
+  availability is order-independent; only undeclared rules enter the fixpoint.
+
+---
+
+## 7. What a prototype must test (to move family 1C)
+
+### 7.1 Thread C.1 — the side-by-side localization proof (make-or-break)
+
+Author a typed `->` micro-fixture with a *genuine* declared/synthesized mismatch — e.g.
+`frac = digits "." digits -> Ratio` whose body synthesizes a two-`Span` `Seq` while `Ratio`
+is declared scalar, the mismatch reachable only through the projection. Run it twice:
+
+1. **synthesis-first (baseline = the extant pass):** record the `NodeId`/span the failure
+   (or the `HetJoin`/`UnresolvedCompoundRef` obligation) actually lands on.
+2. **bidirectional check:** record the span the `ProjectionMismatch` obligation lands on.
+
+**Pass criterion:** baseline reports at a *synthesized interior* (a body `Seq`/`Ref`/`Alt`
+`NodeId`); check reports at the **`->` span**; the two outputs are printed side by side with
+expected-vs-actual. If check does not move the span to the `->`, the thesis is refuted and
+the family retires to synthesis-first. This single experiment decides 1C.
+
+### 7.2 Thread C.2 — the additive span landing (the substrate proof)
+
+Against the greenfield base: add `span` to the type obligation (`obligation.rs:56-74`),
+source it from the failing node's `NodeId → RuleMeta.source_span`, and specify the
+`Project`/`Map` sub-span enrichment (primary = `->` span; secondary = offending interior
+node). **Gate:** the diff is purely additive (a new field + its population; no behavior
+change when no clash exists), the full corpus stays green (JSON / Sheets / CSS L4 regen
+byte-identical), and the runtime-surface `git diff` is empty (Constitution v — the type
+plane costs zero at runtime; the obligation is generation-time only). Skinny mirror:
+populate the already-declared-but-empty `TypeObligation.span`
+(`skinny/crates/passes/src/lib.rs:138-144`) from the same source, closing the standing Y.13
+consumer-less-substrate violation.
+
+### 7.3 The record-only census (de-risks R-C2)
+
+Before any fail-closed flip, run the check arm in record-only mode and report, per corpus,
+how many declared `->` sites currently mismatch their body's synthesized type — the count
+that says whether check mode is a clean addition or a corpus-reddening one. Pre-register the
+expected count (ideally zero on honestly-authored grammars); treat any nonzero as a named
+residual, not a silent regression.

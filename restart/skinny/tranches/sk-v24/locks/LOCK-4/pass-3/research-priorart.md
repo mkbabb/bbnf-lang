@@ -1,282 +1,294 @@
-# LOCK-4 (THE COMBINATOR CORE) — pass-3 PRIOR-ART RESEARCH
+# LOCK-4 · THE COMBINATOR CORE — PASS-3 PRIOR-ART RESEARCH
 
-*Prior-art researcher, pass 3. No family allegiance. Registry withheld by protocol.
-Scope: the combinator algebra at beyond-SOTA — allocation model, fusion, packrat,
-diagnostics, rust/ts semantic parity — across parse-that (Rust + TS).*
-
-Task statement: PORTFOLIO.md LOCK-4 (lines 97-117). Families 4A CLOSURE-TO-GRAPH,
-4B COMPTIME-FUSION, 4C VM-CORE, 4D GRAMMAR-SUGAR. Constitution binds every judgment
-(PORTFOLIO.md §18-34). Evidence seeds R3, R4, PROVE-11 (+VERIFY), PROVE-09 (+VERIFY,
-the refuted perf lesson), PT-2, PT-3.
+*parse-that Rust + TS combinator algebra, beyond-SOTA. No family allegiance — a sweep of what
+exists, what won and lost elsewhere, which constraints our evidence base already imposes, and the
+traps named in comparable systems. Pass-3 tilt: the directives (Q1–Q8) pivot the search toward the
+runtime-graph→comptime bridge, the arbitrary-host-closure / opaque-barrier boundary, the
+monomorphization blowup budget, the one-plan-two-lowerings isomorphism oracle, and the
+interpreter-setup tax. Every claim is an external URL or a verified local `path:line`. No builds run.*
 
 ---
 
-## 1. THE PROBLEM CLASS — what "beyond-SOTA combinators" means in the field
+## 0. THE PROBLEM CLASS (restated at the pass-3 seams)
 
-The combinator-performance literature has one settled thesis: **naive combinators are
-slow because abstraction (nested closures) is opaque to the compiler; the cure is to make
-the combinator a DATA STRUCTURE you can analyze and specialize, then partially-evaluate it
-against the grammar (First Futamura Projection).** Every winning system in the field does
-exactly this. The four LOCK-4 families are the field's four settled answers, and the
-external record already tells us which won, which lost, and where each breaks.
+A combinator core is hand-written primitives + a composition algebra. The universal seam, named in
+every source: **combinators are ergonomic but the composition machinery is opaque — closures hide the
+static grammar, and every SOTA answer recovers it, then stages / lowers / analyses it.** The pass-3
+directives sharpen this into five *mechanism* questions the literature has already partly adjudicated:
 
-### The canonical wins (external, measured)
+- **Q1 runtime-graph → comptime**: how (if at all) a value-level combinator graph reaches
+  monomorphized code.
+- **Q2/Q3 the opaque barrier**: the `->` value plane vs the arbitrary host closure — how large the
+  un-analyzable surface is, and what a serializable descriptor must carry.
+- **Q4 fusion / blowup budget**: named caps on inlining before code-size / compile-time explode.
+- **Q5/Q6 one plan, two lowerings + the isomorphism-of-record oracle**.
+- **Q7 setup vs value-plane vs recognizer cost**: interpreter/VM state allocation and pooling.
 
-- **flap (Yallop/Dolan/Kammar/Krishnaswami, PLDI/OOPSLA 2023)** — typed parser combinators
-  + derivative lexers, normalized into a *deterministic Greibach Normal Form* (single-char
-  lookahead, no backtracking), then **fused** so lexing and parsing become one pass that
-  "branches only on individual characters, not intermediate structures" and never
-  materializes tokens. **~1.4 GB/s on JSON = a little over 2.3 cyc/B**, 3-9× ocamlyacc.
-  This is the strongest external number for the exact problem class and the direct
-  ancestor of family 4B. [flap]
-- **Parsley / staged selective parser combinators (Willis, Wu, Pickering, ICFP 2020)** —
-  combinators are an *analyzable lazily-constructed AST*; static passes do **left-factoring**
-  and **first-set dispatch**; **packrat memoization is placed SELECTIVELY by static analysis,
-  not uniformly**; final compilation is a staged interpreter emitting a **stack-based bytecode
-  VM** or specialized JVM code. Approaches hand-written speed. This is the direct ancestor of
-  families 4A (analyzable graph) and 4C (VM). [parsley]
-- **Scala-3 staged combinators (Moleike; and Béguet/Jonnalagedda "Accelerating Parser
-  Combinators with Macros")** — a staged combinator via CPS + macros runs **~50% faster than
-  a hand-written recursive-descent parser and >25× faster than the non-staged version**;
-  control flow made explicit, continuations fully evaluated at compile time. Ancestor of 4B. [staged-scala]
-- **"Obliteratingly Fast Parser Combinators" (Krishnaswami, 2021)** — defunctionalize the
-  combinator into a first-order normal form + first/follow-set analysis so the dispatch is a
-  character switch, not a closure chain; the simpler 2021 IR made "optimization invariants
-  lexically apparent," dropping the complex staging pipeline. [oblit]
-
-The through-line: **the analyzable representation is the enabling substrate (4A); fusion/
-staging is the payoff (4B); the VM is one lowering target among two, measured against staged
-codegen (4C); the public combinator API is preserved as sugar over the analyzed core (4D).**
-These are not four rival architectures — the literature runs them as ONE pipeline
-(construct → analyze → specialize → lower), which is a strong signal for the gestalt.
-
-### The Rust field (parse-that's actual competitors)
-
-- **winnow** (nom fork) — measured **the fastest Rust combinator library, <½ nom's parse
-  time**; "toolbox" model, batteries-included, `&mut Input` cursor (not closure-returning).
-  [winnow]
-- **chumsky** — "framework" model; uses **GATs so the caller communicates to sub-parsers that
-  a produced value can be DISCARDED** (the check-vs-emit split) — a compile-time fusion of the
-  "do I need the value?" question directly relevant to 4B and to bbnf's own no-value-discard
-  law. [winnow, lib.rs]
-- **nom** — small core, function-combinators (`Fn(I)->IResult`), leans on external crates.
-
-parse-that's Rust core (`SmallBox<dyn ParserFn+'a, S32>`, R3 §5) is the **closure/vtable**
-model that ALL of winnow/chumsky/flap have moved away from — winnow to a cursor, flap/Parsley
-to an analyzed graph. That is the pass-relevant tension: parse-that keeps the vtable core
-(constitution i: "lawful hand-written primitives"), so beyond-SOTA here means *compiling*
-those primitives (4A/4B/4C), not abandoning them.
+The four LOCK-4 families (4A closure-to-graph, 4B comptime-fusion, 4C VM-core, 4D grammar-sugar) are
+the four historical answers; the literature has priced most of their trade-offs.
 
 ---
 
-## 2. FAMILY-BY-FAMILY: what won, what lost, what our evidence already fixes
+## 1. Q1 — RUNTIME GRAPH → COMPTIME: THE BRIDGE IS *STAGING*, NOT A FREE LOWERING
 
-### 4A CLOSURE-TO-GRAPH — analyzable nodes, not opaque nested closures
+The decisive prior-art fact for Q1: **a value-level combinator graph never reaches monomorphized code
+"for free."** Monomorphization is driven by *static types*; a runtime `IrNode` carries no type
+information the compiler can specialize on. The only two bridges the literature knows are:
 
-**External verdict: WON, and it is the prerequisite for everything else.** Parsley and
-"obliteratingly fast" both make the combinator a reified AST; only then can first-set dispatch,
-left-factoring, and *selective* packrat placement be graph analyses. chumsky's GAT
-discardability is the same idea in the Rust type system.
+1. **Build-time codegen over a statically-known graph** — the *First Futamura Projection*. The
+   combinator library is an interpreter of the grammar; specialization (staging / macro / quotation)
+   produces direct code for that grammar. This is the *only* path from a grammar *value* to
+   monomorphized output, and it requires the graph be known at generation time (grammar-text → IR →
+   emit), not merely at runtime.
+   - **Jonnalagedda et al., "Staged Parser Combinators for Efficient Data Processing"** (OOPSLA 2014,
+     Scala LMS) — staging "dissociates input parsing from parser composition and eliminates the
+     intermediate data structures and computations associated with parser composition at staging
+     time" — explicitly "closely mirroring the First Futamura Projection."
+     <https://2014.splashcon.org/details/oopsla2014/17/Staged-Parser-Combinators-for-Efficient-Data-Processing>
+   - **Moleike, "Staged Parser Combinators in Scala: Have Your Cake and Eat It (Too)"** — Scala-3
+     quotation CPS: "continuations are fully evaluated at compile time," splicing the next parser's
+     AST directly, fusing the whole grammar. Reported: **~50% faster than hand-written recursive
+     descent, >25× faster than the unstaged Cats implementation, and allocates *less* than the
+     hand-written parser** (the composition-boundary closures are gone).
+     <https://moleike.github.io/blog/staged-parser-combinators/>
+   - **flap (Yallop, Xie, Krishnaswami, PLDI 2023)** — staged, deterministic-GNF combinators generate
+     "specialized token-free code that runs **two to six times faster**" and hit **~1.4 GB/s (~2.3
+     cyc/B) on JSON**, beating ocamlyacc/asp. Fusion is "strikingly simple" *because* the normal form
+     is deterministic. <https://arxiv.org/abs/2304.05276>, <https://github.com/yallop/ocaml-flap>
 
-**Our evidence base already has the seam.** R4 §6c names the TS engine's central megamorphic
-IC — `this.parser(state)` flowing many closure shapes through one indirect call
-(parser.ts:53,82,…; leaf.ts:44,49,62,140). R3 §5 names the Rust equivalent —
-`SmallBox<dyn ParserFn>` vtable dispatch, plus the `span_parser/` sub-tree which is *already*
-enum-dispatched, vtable-free (R3 §5 last ¶). **The `span_parser/` enum dispatch is a
-half-built 4A inside parse-that's own tree** — a graph of tagged nodes rather than boxed
-closures. That is the concrete anchor 4A must weave, not a greenfield.
+2. **Defunctionalization** — Reynolds's 1972 transform that replaces higher-order closures with a
+   first-order data tag + one `apply`. **A reified combinator IR (`bbnf_ir::IrNode`, the 14-variant
+   near-bijection — R3/Hand-forward) IS a defunctionalized parser**; the CPS-to-abstract-machine route
+   (defunctionalize the continuation → a first-order transition function) is exactly the closure-graph
+   → VM lowering of 4C. <https://en.wikipedia.org/wiki/Defunctionalization>,
+   <https://dl.acm.org/doi/10.1145/773184.773202> (Danvy & Nielsen, "Defunctionalization at work").
 
-**Constraint our base imposes:** constitution iii demands the graph shape be *isomorphic across
-rust/ts* (4A says so explicitly), and LOCK-6 owns "reasonable point." An analyzable node enum
-is trivially mirrorable (unlike closures); this is 4A's strongest cross-language argument.
-
-### 4B COMPTIME-FUSION — the payoff lever (Rust monomorphized chains; TS build-time fuser)
-
-**External verdict: WON, biggest measured wins in the class** (flap 2.3 cyc/B JSON; Scala
-staged 25× over non-staged, 1.5× over hand-RD). This is First Futamura Projection applied to
-parsing. It is also where the constitution bites hardest.
-
-**Traps our evidence base already names — this is the load-bearing section:**
-
-1. **The stable-port perf-claim refutation (SPEC §0/09, PROVE-09 VERIFY — LAW).** PROVE-09
-   claimed 1.34-1.57× from the `portable_simd`→NEON shim; adversarial paired re-measure got
-   **neutral-to-slower**; the 1.34× was two-arm **window asymmetry**. `otool -tv` disproved the
-   *mechanism* (patched emitted **2271 `addv.8b` vs baseline 509** — the shim did MORE reduction
-   work). **Lesson for 4B: no fusion/monomorphization perf claim survives without cold, paired-
-   interleaved, N≥200, two-window measurement — and the mechanism must be verified at the
-   instruction level, not asserted.** PT-2 §1.1 makes "faster" appear in *zero* gates; a 4B that
-   claims speed must gate it exactly as PT-2.W1 does (insn-count ≤ baseline + paired ≥0.98×).
-2. **Code-size / compile-time explosion (Parsley, Scala staged — named in the field).**
-   "If a parser nests a few `|` and `~`, generated code grows exponentially until the JVM refuses
-   to compile it." Our analogue: the **generated-size budget** + **extreme parsimony** edicts
-   (constitution vi, MEMORY generated-size-budget), and rustc/LLVM compile time. R4 §6d shows
-   parse-that already does *bounded* arity-unrolling (`any`/`fuseAll` arity-2/3 only, general
-   `for`-arm beyond) — the field's warning is exactly why the unroll is capped at 3. **4B must
-   inherit that cap discipline; a "fuse everything" chain is the named trap.**
-3. **The Rust arena reward ceiling (PROVE-09 §Arena, PT-2.W4 — measured).** 4B says "ownership
-   redesigned so the vtable/SmallBox question dissolves." The evidence: parse-that construction =
-   **6 allocs / 5960 B**; parse twitter = **5390 allocs** (Vec growth in `many`/`sep_by` + string
-   arena). **An arena over the 86 `Parser::new` vtable boxes moves only the 6, never the 5390 —
-   high-risk (the `'a` input-lifetime unsoundness trap: a `'static` arena holding `'a` closures is
-   unsound), low-reward.** PT-2.W4 is explicitly "sound OR refuted." So 4B's "dissolve the vtable"
-   is *real work with a known-small payoff*; the actual alloc mass lives in the per-parse Vec
-   growth, which is a `many`/`sep_by` codegen problem (pre-size + reuse), NOT a vtable problem.
-   4B should target the 5390, not fixate on the 6.
-
-**TS side of 4B (build-time fuser).** R4 §6d: arity-unroll already applied (value.js's 59
-`all()` + hot 3-tuples). This IS a hand-written build-time fuse. Generalizing it = a code
-generator emitting specialized `all`/`any` arms — the Scala-macro approach. The V8 constraint
-(§below) is that the emitted arms must stay monomorphic.
-
-### 4C VM-CORE — one bytecode instruction set shared rust/ts
-
-**External verdict: WON on the JVM (Parsley), but with a NAMED, DECISIVE trap, and Parsley
-itself moved PAST pure-VM to staged codegen.** Parsley compiles to a stack-based bytecode VM;
-but the **JVM 64KB per-method bytecode limit** and code-size explosion forced strategic method
-decomposition, and the *final* Parsley pipeline is a **staged interpreter** — i.e. the field's
-own leading VM system uses staging (4B) as the terminal stage and the VM (4C) as the analyzable
-middle. **This is direct evidence that 4C and 4B are not rivals but sequential: the VM is the
-IR, staged codegen is the emit.** That collapses toward 4A (the graph) + 4B (the emit).
-
-**Constraint our base imposes:** 4C's headline promise is "**layout isomorphism by
-construction**" across rust/ts — a genuine, unique advantage under constitution iii/LOCK-6
-(a bytecode buffer is trivially byte-identical across languages; PROVE-14's byte-exact tape
-crossing is the existence proof that this works). **But** 4C explicitly says "measured against
-the closure core, not assumed," and our own laws forbid warm/unpaired benches. The V8 cost of
-a bytecode *interpreter loop* (a megamorphic switch over opcodes) is precisely the megamorphic-
-dispatch trap V8 punishes at ~3.5× (§below) — a TS bytecode VM could REGRESS the very IC that
-arity-unrolling was built to protect (R4 §6d). **4C on the TS side is the highest-variance
-family; its win is isomorphism, its risk is re-megamorphizing the V8 hot loop.**
-
-### 4D GRAMMAR-SUGAR — combinators as construction API over the shared HIR
-
-**External verdict: this is the "toolbox vs framework" axis (winnow vs chumsky), and it is
-where LOCK-4 meets LOCK-5.** 4D says combinators are a construction API over "the same HIR the
-grammar plane uses (LOCK-5's continuum)" — "the combinator engine is the generator's runtime in
-disguise." The field analogue: flap's typed combinators normalize into the *same* deterministic
-NF the generated parser uses; there is one core, two front-ends (combinator API + grammar).
-
-**Constraint our base imposes — the sharpest one:** constitution i says "**everything is
-grammar-driven … save primitives and combinators**" — combinators are explicitly carved OUT of
-the grammar-totality mandate as "lawful hand-written primitives." 4D's "combinators inherit the
-optimizer / are the generator's runtime" must therefore preserve the **public parse-that API
-unmodified** (SPEC §1: "consumed not duplicated"; PT-3 §1.1: "bbnf grows no combinator surface
-and consumes this backbone unmodified"). value.js (3.1.0, 9 import sites), latex-paper (0.7.1
-SKEW), keyframes.js are the do-not-break gates (R4 §7). **4D is an internal re-homing (combinator
-API → shared HIR) that must be API-invisible to three consumers — a semver + isomorphism problem,
-not a rewrite.** LOCK-6 adjudicates how far the HIR-sharing goes (6C WASM-core would make the
-Rust HIR the one truth and TS a binding; 6A/6D keep TS idiomatic).
+**Verdict for Q1 (report, not resolve):** the runtime combinator API cannot reach comptime
+monomorphization absent a codegen-reflection step; the only mechanism trace the literature supports is
+*grammar-known-at-generation → staged emit*. A monomorphizing lowering therefore *demands* the graph be
+a serializable plan the emitter consumes (this is why Q1 and Q5 are the same question wearing two hats).
 
 ---
 
-## 3. THE V8 / RUST DISPATCH TRAP (governs 4A/4B/4C on both sides)
+## 2. Q2/Q3 — THE OPAQUE BARRIER IS THE APPLICATIVE/SELECTIVE vs MONADIC BOUNDARY
 
-External confirmation of R4's V8 census, and the single most-cited trap for TS combinators:
+This is the most load-bearing pass-3 prior-art result. The literature has a *precise* name for "which
+`->` sites an analysis can see through": the **applicative/selective vs monadic** split.
 
-- **Megamorphic dispatch is a cliff, not a slope.** A 4-way (polymorphic) IC is ~1.4× slower
-  than monomorphic; **>4 shapes (megamorphic) falls to a ~3.5× slower cache and TurboFan
-  ABANDONS optimization for that site.** [v8-ic, ic-design-paper] parse-that's `this.parser(state)`
-  is exactly a megamorphic site (R4 §6c: "many distinct closure shapes flowing through one
-  indirect call"). **This is the governing constraint for the whole TS lock:** any family that
-  ADDS shapes to that call (a richer node graph 4A, a VM opcode switch 4C) risks the cliff;
-  4B's arity-unrolling exists to *remove* shapes from it.
-- **The canonical fix is on record: monomorphic AST nodes.** The TypeScript compiler itself
-  (microsoft/TypeScript #59198) made `Node` monomorphic — one shape with `kind/pos/end`, other
-  data hung off a side object — precisely to cure megamorphic property access. [ts-mono] This is
-  the template for a TS 4A: a **single node shape with a `kind` tag** (an enum-dispatched graph,
-  mirroring parse-that's own vtable-free `span_parser/`), NOT a class-per-combinator hierarchy.
-- **PROVE-11 CONFIRMED_DELTA is the honesty calibration.** The lazy-diagnostic-alloc lever is
-  real (then-chain **+13.6%**, fused **+15.6%**, fused alloc **−60.1% exact**) — but the prover's
-  **dispatch +10.2% did NOT reproduce; it lands ~+5%** across 24 rounds in two windows. **Trap:
-  light-op lanes (20 ns ctor-dominated) sit in a wide/noisy ratio band; a single favorable
-  window reads high.** PT-3 §1.3 carries dispatch at ~+5% everywhere and refuses to gate it ≥10%.
-  Any 4B/4C TS number must be paired-in-one-process (PROVE-11's certified method), never a
-  `vitest bench` cross-run (load-confounded: pristine loadavg 12 vs modified 27, PROVE-11 §3.1).
+- **Applicative / selective** effects declare their structure *statically*: all arguments are known at
+  construction, only the *choice among a finite set of branches* is deferred to runtime. Fully
+  analyzable. **Mokhov et al., "Selective Applicative Functors"** (ICFP 2019) inserted `Selective`
+  between `Applicative` and `Monad` precisely so that "all effects are declared statically but which
+  to execute is chosen dynamically." <https://dl.acm.org/doi/10.1145/3341694>
+- **Monadic bind (`>>=` / `flat_map`)** is the *opaque barrier*: the continuation is an arbitrary
+  function, so "static analyzers treat all functions as black boxes and are unable to analyze anything
+  that happens past a monadic bind" (Morpheus, arXiv:2305.07901 — carried from pass-1).
+- **Willis, Wu, Pickering, "Staged Selective Parser Combinators"** (ICFP 2020 → the **Parsley**
+  library) is the direct application: it compiles combinators to hand-written quality *by leveraging
+  the static grammar tree*, and it **deliberately restricts to selective (not monadic) combinators** so
+  the tree survives to be optimized and staged. Monadic `flatMap` in Parsley is the escape hatch that
+  *forfeits* the static analysis. <https://mpickering.github.io/papers/parsley-icfp.pdf>
 
-**Rust dispatch:** the mirror trap is `SmallBox<dyn ParserFn>` vtable indirection. flap/Parsley/
-winnow all removed it (graph/cursor). 4A/4C would remove it for Rust too (enum tag → match, or
-opcode → jump-table); 4B keeps closures but monomorphizes chains. All three are measured against
-the current vtable core, cold/paired (PT-2.W1 protocol), or they do not land.
+The Rust ecosystem confirms the same boundary *as an allocation fact*: chumsky's `flat_map` closure
+"returns different parser types, so type erasure via `Box<dyn Parser>` is required, incurring heap
+allocation and dynamic dispatch," whereas the applicative `zip` combinator "is built on the stack as a
+concrete type … allowing monomorphization → inlining → LLVM optimization end-to-end."
+<https://docs.rs/chumsky/latest/chumsky/trait.Parser.html> (via search synthesis).
 
----
-
-## 4. PACKRAT & DIAGNOSTICS (the two remaining charter clauses)
-
-- **Packrat: selective placement WON (Parsley); blanket memoization LOST.** Parsley memoizes
-  only nodes a static analysis shows benefit. parse-that already matches this: R4 §6g — packrat
-  is **OFF by default, arms permanently at first `memoize()`** (`PACKRAT_ARMED`, packrat.ts:156/
-  290), default LL(1) pays nothing; the Rust side has a packrat epoch too (R4 head: "934b2fa S.H1
-  packrat epoch"). **The 4A analyzable graph is the natural home for "which nodes to memoize" —
-  it becomes a graph analysis exactly as in Parsley, rather than the user hand-calling
-  `memoize()`.** Warth left-recursion (the standard citation) adds real per-call overhead and its
-  indirect-LR form is complex; experiments show super-linear blowup is rare in practice but the
-  cost is genuine — so selective, analysis-driven placement (not blanket packrat) is the settled
-  answer. [warth, parsley]
-- **Diagnostics: per-parse scope is the field norm; global latches are the anti-pattern.**
-  R4 §5 + PT-3.W2: parse-that's diagnostics are gated behind a **module-global** `diagnosticsEnabled`
-  (utils.ts:6) + a module-global collected buffer (utils.ts:138-146) — two concurrent/nested
-  parses cross-contaminate. PT-E1 makes it per-parse scoped (hung off the parse epoch, like the
-  packrat epoch). PROVE-11 already made `suggestions`/`secondarySpans` **lazy** (undefined at
-  birth, fixed hidden class) — the substrate PT-E1 consumes. **The diagnostics-point placement
-  is a 4A graph property** (every alternative/label node is a diagnostic site), unifying with the
-  first-set analysis — chumsky's error-recovery framework is the comparable system, and its lesson
-  is that recovery *strategies* must be first-class graph nodes, not bolted-on.
+**Mapping to Q2/Q3 (report):** a `->` that is a *pure finite projection* (MapExpr-expressible) is an
+applicative/selective node — analyzable, fusable, monomorphizable. An *arbitrary host closure* is a
+monadic bind — the `Opaque(HostFnId)` / needed `HostClosure` descriptor. The prior art's counsel is
+uniform: **count and cap the monadic sites; they are the ceiling on every downstream analysis.** The
+`≤2% barrier floor` the directive names is exactly the "keep the grammar selective" discipline Parsley
+enforces. A serializable descriptor must carry, for a monadic site: the input-type it consumes, the
+output-type it produces, and an *opaque identity* (host-fn id) — because its body is by construction
+not reifiable. Selective encoding is the tool to *shrink* that set (turn "closure that picks among N
+parsers" into a static branch node), not to eliminate it.
 
 ---
 
-## 5. CONSTRAINTS THE EVIDENCE BASE IMPOSES (the binding set for every LOCK-4 pass)
+## 3. Q4 — THE FUSION / BLOWUP BUDGET IS A *MEASURED* CAP IN EVERY MONOMORPHIZING SYSTEM
 
-1. **No stable-port / fusion perf claim without cold-paired-N≥200-two-window + instruction-level
-   mechanism proof** (SPEC §0/09, PROVE-09 VERIFY; the 2271-vs-509 counterexample). Window
-   asymmetry is the classic self-deception.
-2. **Light-op lanes over-read; carry the honest number** (PROVE-11 VERIFY: dispatch +10.2%→~+5%).
-   Paired-in-one-process, never `vitest bench` cross-run.
-3. **Megamorphic-dispatch cliff (>4 shapes ≈ 3.5×, TurboFan bails)** governs every TS family;
-   monomorphic tagged-node graph (TS-compiler #59198 template) is the on-record cure; do not
-   regress the arity-unroll (R4 §6d).
-4. **Arena reward ceiling: 6 construction allocs, not the 5390 per-parse** (PROVE-09 §Arena).
-   The `'a`-input-lifetime unsoundness trap; sound-or-refuted (PT-2.W4). Real alloc mass is
-   `many`/`sep_by` Vec growth + string arena — a codegen target, not a vtable target.
-5. **Generated-size / compile-time budget + extreme parsimony** (constitution vi; the field's
-   code-size-explosion trap, Parsley/Scala). Bounded unrolling (cap ≈3) is deliberate.
-6. **Combinators are carved OUT of grammar-totality** (constitution i) — they stay lawful
-   hand-written primitives; 4D re-homes them over the HIR but keeps the public API invisible to
-   value.js / latex-paper (0.7.1 SKEW) / keyframes.js (R4 §7; PT-3 W0/W5 consumer gates).
-7. **rust/ts isomorphism to a reasonable point, MEASURED** (constitution iii; LOCK-6 decides).
-   4A's tagged-node graph and 4C's bytecode buffer are the two families whose layout is trivially
-   mirrorable; closures (current core) are not. PROVE-14 proves byte-exact crossing is achievable.
-8. **Non-clobber / placement law**: parse-that is READ-ONLY to bbnf agents; work is scratch-copy
-   only (R3 §8 recipe), lands via letter BBNF-PT-G by owner/parse-that-side session (PT-2/PT-3 §1.4).
-9. **x86 dead, warm benches disinformation, type plane zero runtime cost** (constitution iv/v).
+Every system that fuses/monomorphizes hits the same wall and installs the same kind of cap; the
+directive's pluggable {inline | enum-node | box} cost model has direct precedent.
 
----
+- **Staged code duplication (the exponential trap).** The Moleike staging blog names it exactly: "if
+  `k.succ` is a massive block of generated code, the compiler literally duplicates that code into your
+  bytecode" — exponential growth across branches. **The fix is *join points*: extract the duplicated
+  continuation into a local function.** That is the concrete blowup-budget mechanism — box/share at the
+  point where inline duplication would explode. <https://moleike.github.io/blog/staged-parser-combinators/>
+- **Rust monomorphization, measured in practice.** chumsky's own docs warn that "long chains of
+  `Parser::or` … tend to produce exponential behaviour in Rust's trait solver," and prescribe the
+  `choice()` combinator (identical behaviour, flat type) as the cap — a *named fanout threshold* past
+  which you switch encoding. Chumsky also breaks the recursive-type knot with **boxed recursion**:
+  `Box<dyn Parser>` *only* at the recursion point, concrete everywhere else.
+  <https://docs.rs/chumsky/latest/chumsky/guide/_00_getting_started/index.html>,
+  <https://github.com/zesterer/chumsky>
+- **nom / winnow** monomorphize fully → fastest on the JSON micro-benchmarks (winnow leads, nom next,
+  both clearly ahead of chumsky/pom — carried pass-1) *but* the type complexity "leaks into client
+  code … not too dissimilar to early C++ template metaprogramming," and deep nesting explodes both
+  types and compile time. The trade is measured, not asserted.
+- **Parsley / FastParse** cap by *lowering to a VM / bytecode* instead of unbounded inline — a bounded
+  instruction array cannot exponentially duplicate. This is the structural alternative to a fuse-arity
+  cap: fuse to a ceiling, then emit ops.
 
-## 6. THE FIELD'S GESTALT SIGNAL (for the eventual weave)
-
-The single most important external finding: **flap, Parsley, and the Scala staged line all run
-ONE pipeline — reify (4A) → analyze/normalize → specialize/stage (4B) → optionally via a VM IR
-(4C) — under one public combinator API (4D).** They are not four architectures to choose among;
-they are four *stages* of the one architecture the field converged on. Parsley's own evolution
-(pure VM → staged final interpreter) is the proof that 4C is the analyzable middle and 4B the
-terminal emit. **The pass-relevant question for LOCK-4 is therefore not "which family wins" but
-"where does parse-that's existing seam (`span_parser/` enum dispatch, arity-unroll, packrat/
-diagnostics epochs) already sit on that pipeline, and how far along it does the constitution let
-us push before the API/consumer/isomorphism gates bind."** flap's 2.3 cyc/B JSON is the external
-ceiling the fused path aims at; parse-that's own JSON tape already claims 2.2× sonic (SPEC §1) on
-the *generated* side — the combinator side is the gap flap shows is closable.
+**Verdict for Q4 (report):** the caps the directive asks for (fuse-arity, dispatch-fanout,
+boxing-depth) are *the* levers real systems tune. The pluggable cost model is well-precedented; the
+firing numbers must be *measured* on CSS **and** value.js (the directive's own requirement), because
+the blowup is grammar-shape-dependent (or-chain fanout, recursion depth) — no universal constant
+exists. The three encodings map cleanly: inline-monomorphize (nom/winnow, staged CPS) below the cap →
+enum-node (chumsky `choice`, a flat dispatch) at fanout → box/join-point (chumsky boxed recursion,
+Moleike join points) at recursion / duplication.
 
 ---
 
-## Sources
+## 4. Q5/Q6 — ONE PLAN, TWO LOWERINGS + THE ISOMORPHISM ORACLE
 
-- [flap] flap: A Deterministic Parser with Fused Lexing, Yallop/Dolan/Kammar/Krishnaswami, PLDI/OOPSLA 2023. https://arxiv.org/abs/2304.05276 · https://www.cl.cam.ac.uk/~nk480/flap.pdf
-- [parsley] Staged Selective Parser Combinators, Willis/Wu/Pickering, ICFP 2020. https://mpickering.github.io/papers/parsley-icfp.pdf · https://dl.acm.org/doi/10.1145/3409002 · https://github.com/j-mie6/parsley
-- [staged-scala] Staged Parser Combinators in Scala. https://moleike.github.io/blog/staged-parser-combinators/ · Accelerating Parser Combinators with Macros (Béguet/Jonnalagedda), https://dl.acm.org/doi/10.1145/2714064.2660241
-- [oblit] Obliteratingly Fast Parser Combinators, Krishnaswami, 2021. https://semantic-domain.blogspot.com/2021/12/obliteratingly-fast-parser-combinators.html
-- [winnow] Winnow 0.5: The Fastest Rust Parser-Combinator Library? https://epage.github.io/blog/2023/07/winnow-0-5-the-fastest-rust-parser-combinator-library/ · https://docs.rs/winnow/latest/winnow/_topic/why/index.html
-- [lib.rs] Parser tooling — Rust crates. https://lib.rs/parsing
-- [v8-ic] The V8 Engine: Inline Caching. https://braineanear.medium.com/the-v8-engine-series-iii-inline-caching-unlocking-javascript-performance-51cf09a64cc3
-- [ic-design-paper] An Inline Caching Design for TypeScript Performance, OOPSLA 2020. https://dl.acm.org/doi/pdf/10.1145/3428242
-- [ts-mono] Performance: Monomorphic AST Nodes, microsoft/TypeScript #59198. https://github.com/microsoft/TypeScript/issues/59198
-- [warth] Packrat Parsers Can Support Left Recursion, Warth/Douglass/Millstein, PEPM 2008. https://web.cs.ucla.edu/~todd/research/pepm08.pdf
-- Internal: SPEC.md §0-§1, PORTFOLIO.md §18-34 (Constitution), R3-parse-that-rust.md, R4-parse-that-ts.md, PROVE-09 REPORT+VERIFY, PROVE-11 REPORT+VERIFY, PT-2.md, PT-3.md.
+**One plan → two lowerings** is the staging/LMS model generalized: one combinator AST, staged to
+target A or target B. The *serializable* form of that plan already exists in the VM family — **a
+bytecode program is a portable artifact both a Rust and a TS decoder can execute** (4C's isomorphism
+dividend). The canonical instruction set:
+
+- **LPeg parsing machine (Medeiros & Ierusalimschy, "A Parsing Machine for PEGs")** — PEGs compile to
+  a VM with `Char/Jump/Call/Return/Choice/Commit/Fail/…` over a PC register, a subject register, and a
+  single stack of call/backtrack frames; **the transformation PEG→machine is formally proven
+  semantics-preserving.** <https://www.inf.puc-rio.br/~roberto/docs/ry08-4.pdf> This proof is the
+  template for "one plan, two lowerings, byte-identical parses": if both faces decode the same proven
+  ISA, identity is by construction, not by luck. GPeg (Yedidia, SLE 2021) extends the same machine to
+  incremental parsing. <https://people.seas.harvard.edu/~chong/pubs/gpeg_sle21.pdf>
+
+**The isomorphism-of-record oracle** (Q6) is **differential testing** — the settled method:
+
+- "Two or more independent implementations of a specification are exercised on identical inputs, and
+  discrepancies are automatically flagged." <https://en.wikipedia.org/wiki/Differential_testing>
+- **Cross-Language Differential Testing of JSON Parsers** (ACM AsiaCCS 2024) is the exact shape of the
+  dual oracle: same input, N language implementations, flagged divergence.
+  <https://dl.acm.org/doi/10.1145/3634737.3657003>
+- **Ali et al., "A Survey of Parser Differential Anti-Patterns"** (LangSec 2023) escalates the stakes:
+  parser differentials are a *security* class, not a cosmetic one. <https://langsec.org/spw23/papers/Ali_LangSec23.pdf>
+  → the Rust/TS byte-identity contract is a correctness/safety obligation, and the directive's insistence
+  on a **live Rust golden (not a hand-faked blob)** is precisely the anti-pattern this literature warns
+  against — a fabricated oracle hides exactly the divergences differential testing exists to catch.
+
+**Verdict for Q5/Q6 (report):** the two-level oracle the directive specifies — *opcode-stream identity*
+(the serialized plan decodes identically) **and** *Value-tree identity* (against the live Rust
+interpreter) — is the standard differential-testing dual: structural equivalence of the plan + semantic
+equivalence of the output. A bytecode/VM plan makes the first level *free* (bit-compare the op array);
+the second must run both faces on a shared conformance corpus (JSON/CSS/value.js grammars). Note the
+XL-D fact: the fast TS face is the build-time emitter — so the *fast* lowering need not decode the plan
+at runtime at all; the runtime decoder survives as the isomorphism/correctness oracle, which is exactly
+where opcode-stream identity earns its keep.
+
+---
+
+## 5. Q7 — SETUP vs VALUE-PLANE vs RECOGNIZER: POOL THE MACHINE, BOUND THE MEMO
+
+The parsing-VM literature is precise about the three-way cost split the directive asks for.
+
+- **Recognizer cost = the VM loop.** LPeg's machine is a tight PC/stack loop; the recognizer state is a
+  *reusable* stack, not a per-parse allocation. This is the answer to `Interpreter::new`'s 8-Vec +
+  FxHashMap setup: **the machine state is set up once and reset, not reallocated.** LPeg, Parsley
+  (reusable instruction array + operand stack), and every production VM pool their state.
+  <https://www.inf.puc-rio.br/~roberto/docs/ry08-4.pdf>
+- **Setup tax is amortizable to ~0 by pooling.** The staged/hand-written comparison (Moleike) shows the
+  win is *allocation elimination* at composition boundaries — the same principle applied to the
+  interpreter itself: a pooled / `clear()`-reused scratch (the LPeg model) removes setup from per-parse
+  cost. This mirrors PROVE-11's own certified TS result: making `ParserState` arrays lazy (`undefined`
+  at construction, `??=` under a guard) cut alloc **−60.5%** and won +10–13% on light lanes precisely
+  because the *setup* allocation was a large fraction of a small op (PROVE-11 REPORT §3). The lesson
+  ports to Rust: the setup share dominates *single-parse* cost and vanishes under amortization.
+- **Value-plane cost = the semantic actions / captures**, and its mass is the Vec growth in
+  `many`/`sep_by` + the string arena — **5390 per-parse allocs vs only 6 construction allocs on
+  twitter** (PROVE-09 REPORT, cited in PT-2 W4). This is the decisive measured split: the vtable/box
+  question is 6 allocs; the value plane is 5390. **Pooling the setup and the machine state attacks the
+  right mass; the arena-over-vtable-boxes does not** (PT-2 W4 is high-risk/low-reward *by measurement*
+  — its reward ceiling is those 6 allocs, and its named trap is the unsound `'static` arena holding
+  `'a`-closures).
+- **The memo table is the other mass, and it must stay bounded + opt-in.** Packrat is O(n) space and
+  "the cost of memoization can outweigh its benefits." The settled mitigations:
+  **elastic sliding-window packrat** (Kuramitsu, IPSJ 2015 — heap upper-bounded by a runtime-sized
+  window) <https://www.jstage.jst.go.jp/article/ipsjjip/23/4/23_505/_pdf>; **cut operators** that
+  deallocate memo storage when an alternative is committed
+  <https://www.researchgate.net/publication/221292729> (Redziejowski, "mostly constant space"). parse-that
+  already obeys the strongest form: **packrat is OFF by default and arms only at first `memoize()`**
+  (`PACKRAT_ARMED`, R4 §6g / packrat.ts:290) — the default LL(1) path pays nothing, which the
+  literature endorses as the correct default.
+
+**Verdict for Q7 (report):** the clean split is *recognizer (VM loop, cheap) / value-plane (captures +
+Vec/arena growth, the 5390-alloc mass) / setup (the machine state, pool it to ~0)*. Prior art says pool
+the setup, bound/opt-in the memo, and do **not** chase the 6-alloc vtable arena as the lever.
+
+---
+
+## 6. TRAPS NAMED IN COMPARABLE SYSTEMS (pass-3 checklist)
+
+1. **Runtime-switch VM is dead on V8 — MEASURED.** parse-that's own A.W3 `SpanParser` tagged-union
+   `switch` dispatcher ran **10–14% SLOWER** than monomorphic closure dispatch, re-run adversarially at
+   −14%, then killed (`parse-that/docs/future-research.md:71-109`, carried pass-2). The recorded escape
+   is *not* a recursive runtime switch but a **flat array-of-ops with a generated specialized
+   dispatcher** — i.e. LPeg-style, not enum-recursion. Any 4C VM-core on the TS face must obey this;
+   Chevrotain confirms the mechanism — its speed comes from shape-stable monomorphic objects and IC
+   hits, not from a dispatch loop <https://chevrotain.io/docs/guide/performance.html>.
+2. **Monomorphization exponential trait-solve blowup** (chumsky `.or` chains → use `choice()`); deep
+   concrete nesting explodes compile time (nom/winnow). Cap fanout; box recursion.
+3. **Staged code duplication** — massive continuations duplicate per branch; extract *join points*.
+4. **Monadic bind = analysis barrier** — every un-selective `->` blinds fusion/prefetch/diagnostics;
+   count them (Q3) and prefer selective encodings.
+5. **Unsound `'static` arena holding `'a`-parameterized closures** (PT-2 W4's named trap) — the sound
+   arena must be `'a`-bounded and threaded, never smuggled; MIRI-clean or refuted.
+6. **Packrat O(n) memory** — keep opt-in; bound with sliding window / cut if ever default.
+7. **Two-arm window asymmetry in benches** — PROVE-09's 1.34–1.57× was a *measurement artifact*
+   refuted by paired interleaving; paired interleaving is mandatory even for "obvious" wins (SPEC §0/09,
+   now law).
+8. **Fabricated oracle blobs** — a hand-faked golden hides the very parser differentials differential
+   testing exists to catch (LangSec anti-patterns); the golden must be a *live* Rust run (Q6).
+
+---
+
+## 7. Q8 — PREDECESSOR SHAPES (report only, per directive; not resolved here)
+
+- **LOCK-5 (regex continuum).** XL-C already **retired the ONE-HIR functor**: the settled shape is
+  *two domain-fit types* — an opaque `Regex(StringId)` grammar tier and a rich `Hir` engine tier — with
+  a *cheap bridge*, not a lawful functor between two HIRs. The shared-substrate question no longer
+  hinges on a single HIR. Open sub-question for LOCK-4: whether the combinator IR and the regex `Hir`
+  share the e-graph rewrite *library* (they can) without sharing the *type* (they need not). This is an
+  input; LOCK-4 does not settle it.
+- **LOCK-7 (grammar totality & host-fn lattice).** The unresolved shape is the **typed host-function
+  interface** that bounds totality — context-dependent / recursive semantics behind declared
+  signatures, with a measured "% of surface behind grammars" and a named floor per subsystem. This is
+  the *exact* home of the Q2 monadic-bind / arbitrary-host-closure descriptor: a `HostClosure` /
+  `Opaque(HostFnId)` is a LOCK-7 host-fn-lattice entry, and *which* lock owns the internal-descriptor
+  evaluator (Hex/Number/Enum) — LOCK-3 IR-VM lowering vs LOCK-7 host dispatch — is a genuine open seam
+  the directive flags (Q6), reported here as unsettled.
+
+---
+
+## 8. SOURCES
+
+- Mokhov et al., *Selective Applicative Functors*, ICFP 2019 — <https://dl.acm.org/doi/10.1145/3341694>
+- Willis, Wu, Pickering, *Staged Selective Parser Combinators* (Parsley), ICFP 2020 —
+  <https://mpickering.github.io/papers/parsley-icfp.pdf>
+- Jonnalagedda et al., *Staged Parser Combinators for Efficient Data Processing*, OOPSLA 2014 —
+  <https://2014.splashcon.org/details/oopsla2014/17/Staged-Parser-Combinators-for-Efficient-Data-Processing>
+- Moleike, *Staged Parser Combinators in Scala* — <https://moleike.github.io/blog/staged-parser-combinators/>
+- Yallop, Xie, Krishnaswami, *flap: A Deterministic Parser with Fused Lexing*, PLDI 2023 —
+  <https://arxiv.org/abs/2304.05276>, <https://github.com/yallop/ocaml-flap>
+- Reynolds defunctionalization — <https://en.wikipedia.org/wiki/Defunctionalization>; Danvy & Nielsen,
+  *Defunctionalization at work* — <https://dl.acm.org/doi/10.1145/773184.773202>
+- Medeiros & Ierusalimschy, *A Parsing Machine for PEGs* (LPeg) —
+  <https://www.inf.puc-rio.br/~roberto/docs/ry08-4.pdf>; GPeg (Yedidia, SLE 2021) —
+  <https://people.seas.harvard.edu/~chong/pubs/gpeg_sle21.pdf>
+- chumsky docs (trait-solver blowup, `choice`, boxed recursion) —
+  <https://docs.rs/chumsky/latest/chumsky/guide/_00_getting_started/index.html>,
+  <https://github.com/zesterer/chumsky>
+- Chevrotain runtime-performance guide (V8 monomorphism / hidden classes) —
+  <https://chevrotain.io/docs/guide/performance.html>
+- Differential testing — <https://en.wikipedia.org/wiki/Differential_testing>; *Cross-Language
+  Differential Testing of JSON Parsers*, AsiaCCS 2024 — <https://dl.acm.org/doi/10.1145/3634737.3657003>;
+  Ali et al., *Parser Differential Anti-Patterns*, LangSec 2023 —
+  <https://langsec.org/spw23/papers/Ali_LangSec23.pdf>
+- Kuramitsu, *Packrat Parsing with Elastic Sliding Window*, IPSJ 2015 —
+  <https://www.jstage.jst.go.jp/article/ipsjjip/23/4/23_505/_pdf>; Redziejowski, *mostly constant
+  space* — <https://www.researchgate.net/publication/221292729>
+- Local: R3 (`.../sk-v24/research/R3-parse-that-rust.md`), R4 (`R4-parse-that-ts.md`), PT-2.md,
+  PROVE-09/11 REPORT+VERIFY, DIRECTIVES-RESEARCH.md (pass-3), SPEC §0 (refutation laws).

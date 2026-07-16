@@ -85,7 +85,20 @@ AST, then `host::lower` folds it into `Hir`." Its generated builder is
 **`regex/generated.rs` = 2293 LOC** plus **`regex/host.rs` = 524 LOC**, from a regex.bbnf
 source (`parse-that/rust/bootstrap/regex.bbnf`). Regex is a *strictly smaller* language
 than bbnf. So a building self-host of bbnf will generate a parser **≥ the 2142-LOC hand
-parser it replaces** — the seed does not shrink; it inflates past its own target. This is
+parser it replaces** — the seed does not shrink; it inflates past its own target.
+
+Two corroborating data points bracket the thesis. **(a) The legacy building bbnf runtime**
+(`crates/core/src/runtime/bbnf/*`, the GN-0 archive artifact) is **1198 generated LOC** —
+`builder.rs` 176 + `document.rs` 305 + `serialize.rs` 287 + `arena.rs` 152 + `view.rs` 162
++ `value.rs` 17 + `parse_with.rs` 85 — of which 930 LOC (builder/document/serialize/arena/
+value) is pure *construction* machinery a recognizer omits; that is ~56% of the 2142-LOC
+hand parser even without skinny's richer node set, and the parse-that-regex 2293 anchor
+shows it clears the hand-parser line once the leaf types are non-`Span`. **(b) A
+recognizer seed is larger yet useless:** the sheets general-descent output
+(`skinny/crates/runtime/src/grammars/sheets/{generated,view}.rs` = 1591 + 279 = **1870
+gen LOC** for a 39-branch operator tower with ONE leaf shape) is bigger in raw bytes than
+the legacy building seed and produces ZERO `GrammarIr`. The seed_LOC axis is therefore not
+recognizer-cheap-vs-building-dear; it is **recognizer-USELESS-vs-building-adequate**. This is
 the trade to state plainly: **staged-bootstrap on skinny buys auditability and a
 committed fixpoint, not LOC reduction.** The "seed" is the *emitter + grammar source*
 (1206 + 133 ≈ 1340 LOC of hand surface behind the whole grammar plane), while the
@@ -150,6 +163,23 @@ mechanism depends on a legacy `--output <dir>` flag on the legacy `Regen` comman
 (`xtask/src/main.rs:34-60`) that **does not exist in skinny's xtask** (skinny's regen
 writes to the fixed `RuntimeTarget` dir, `main.rs:177-206`; there is no tempdir-output
 flag).
+
+**Two distinct legacy fixpoint mechanisms exist — rescue the cheaper, grammar-neutral one.**
+Besides the ~150-LOC reproducibility *test*, the legacy tree carries the *operational*
+fixpoint as a ~4-line content-equality write-skip inside the generator:
+`xtask/src/regen.rs:473-474` — `let on_disk = std::fs::read(target_path).ok(); let unchanged
+= matches!(&on_disk, Some(existing) if existing.as_slice() == output.as_bytes());` — skip the
+write (preserve mtime) when the emitted byte-buffer equals the on-disk bytes. This is the
+mechanism that actually bought the 88s→0.5s build-cache win (`regen.rs:448-470`: mtime
+stability → cargo rmeta reuse; the number is a *build* figure, never a parse figure). It is
+grammar-NEUTRAL — every skinny grammar inherits it for free — so it is a ~10-LOC rescue into
+`skinny/xtask/src/regen.rs`'s `write_targets` (`regen.rs:19`) that stands INDEPENDENT of any
+bbnf self-host. Rescue this verbatim as a general regen improvement; it is not bbnf-specific
+and carries no vacuity risk. **The mutation non-vacuity witness** the directive demands rides
+on top of it: mutate `bbnf.bbnf` by one rule → the write-skip MUST fire a write (bytes
+differ) → then regen∘regen on the mutant MUST re-stabilize to skip. A fixpoint that skips even
+after an input mutation is a fixed-const path and is REJECTED — plant the mutation and assert
+the byte-buffer changed before trusting any triple-identical.
 
 - **RESCUE-and-port cost.** The test body is portable prose (workspace-root walk, two
   regen shells, unified-diff on mismatch) — ~150 LOC that ports with light edits. **But

@@ -65,8 +65,10 @@ single-pass sink (fold-over-cursor refuted 2.3-4.9x).
 | 6-locks-p1-bbnf-close | wf_63419230-36d (resume 3) | same script (args: group bbnf, locks [1,2,3,7], pass 1) | DONE — all four registries live (LOCK-3 re-fold died again at retry cap but run-1 registry stands; treated as folded) |
 | 6-locks-p2-bbnf | wf_fce2ec2b-53a | same script (args: group bbnf, locks [1,2,3,7], pass 2, baseCommit ce51c36fc) | DEAD-AT-WALL 10:50 ET (15/33 done; all research + distills on disk; L1 synth survived; L2/3/7 synths + all L1 protos/crits/agg lost) — RESUME INTENT below |
 | 6-locks-p3-pt | wf_acfc23d2-04b | same script (args: group pt, locks [4,5,6,8,9], pass 3, baseCommit ce51c36fc) | DEAD-AT-WALL 10:50 ET (27/35 done; all research + distills on disk; L9/L8 FAMILY-SPECS on disk; all 5 synth returns lost) — RESUME INTENT below |
-| 6-locks-p2-bbnf (resume) | wf_fce2ec2b-53a (task wf4ls5wqq) | same script, resumeFromRunId wf_fce2ec2b-53a, args EXACTLY as ledgered | RUNNING 10:59 ET (width-3 wall discipline; NOTE: TaskOutput lookups key on task ID, not runId — a runId miss is NOT proof of death; check the task ID + agent-JSONL mtimes before declaring a wall) |
-| 6-locks-p3-pt (resume) | wf_acfc23d2-04b (task w6d157m32) | same script, resumeFromRunId wf_acfc23d2-04b, args EXACTLY as ledgered | RUNNING 10:59 ET (width-3 wall discipline) |
+| 6-locks-p2-bbnf (resume) | wf_fce2ec2b-53a (task wf4ls5wqq) | same script, resumeFromRunId wf_fce2ec2b-53a, args EXACTLY as ledgered | DEAD 14:05 ET at the process-exit wall (44 journal results banked) |
+| 6-locks-p3-pt (resume) | wf_acfc23d2-04b (task w6d157m32) | same script, resumeFromRunId wf_acfc23d2-04b, args EXACTLY as ledgered | DEAD 14:05 ET at the process-exit wall (58 journal results banked) |
+| 6-locks-p2-bbnf (resume 2) | wf_fce2ec2b-53a (task w2ac3wlqt) | same script, resumeFromRunId wf_fce2ec2b-53a, args EXACTLY as ledgered | RUNNING 14:22 ET (width-3; 44 cached replay; NOTE: TaskOutput keys on task ID, not runId — a runId miss is NOT proof of death; check task ID + agent-JSONL mtimes before declaring a wall) |
+| 6-locks-p3-pt (resume 2) | wf_acfc23d2-04b (task wtjdi7mfm) | same script, resumeFromRunId wf_acfc23d2-04b, args EXACTLY as ledgered | RUNNING 14:22 ET (width-3; 58 cached replay) |
 
 PASS-2 BINDING DIRECTIVES (from pass-1 agglomerators, orchestrator-ratified):
 - BASE-PIN RULE: every bbnf-worktree prototype must FIRST verify/fast-forward its tree to
@@ -90,9 +92,10 @@ GESTALT-B (bbnf locks + GN codex) ∥ GESTALT-P (parse-that locks + PT codex + n
 set with DAG ordering). Pass-transition procedure applies to all three groups; from pass 2
 the groups are bbnf [1,2,3,7] and pt [4,5,6,8,9] (fold pt-ext into pt).
 
-Heartbeat cron live: job 2fd2e8d7 (upgraded: resurrect + pass-transition duty), hourly at
-:23, session-scoped, 7-day auto-expiry — re-arm as resurrection step one (prior jobs
-fc81e24f, 20e19341 retired). Current prompt text: reconcile ledger vs live tasks; resume dead
+Heartbeat cron live: job db26fdc3 (resurrect + pass-transition duty), hourly at :23,
+session-scoped, 7-day auto-expiry — re-arm as resurrection step one; a PROCESS EXIT wipes
+crons silently, so every resurrection MUST CronList first (prior jobs fc81e24f, 20e19341,
+2fd2e8d7 died with their processes). Current prompt text: reconcile ledger vs live tasks; resume dead
 runs via Workflow({scriptPath, resumeFromRunId, args-as-ledgered}) after TaskStop-ing
 zombies + walls-log entry; if both pass-K workflows DONE and pass-(K+1) unledgered, execute
 the stage-6 pass-transition procedure; never duplicate-launch; silent single-line green
@@ -154,3 +157,9 @@ green — no spam. If this session is gone, a fresh session executing task #55 I
   cached replays pass through free; prompts byte-identical so the journal cache holds. This
   WIDTH discipline is standing law for all future pass launches. If another wall lands
   despite width 3, next resume goes SEQUENTIAL (bbnf first, pt queued on its completion).
+- 2026-07-16 ~14:05 ET — PROCESS-EXIT WALL: the Claude Code process exited (not a rate
+  limit); both width-3 resumes killed mid-flight (bbnf p2 at 44 journal results, pt p3 at
+  58 — strong progress, all cached) AND the session-scoped heartbeat cron was wiped with it.
+  Detected at 14:20 via stopped-task notifications. Cure: cron re-armed FIRST (hourly :23),
+  then both runs resumed with args exactly as ledgered. Lesson ruled: a process exit kills
+  crons silently — every resurrection MUST CronList and re-arm before resuming workflows.

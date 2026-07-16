@@ -6,6 +6,12 @@ differential isomorphism. No family allegiance: each datum is filed to the famil
 constrains, favorable or hostile. Every external claim carries a citation; every
 internal constraint names its SPEC §0 / PROVE / seed source.*
 
+*All five load-bearing external claims (tsgo structural-port-enforced-by-corpus; Arrow
+Archery SoA+differential; `memory.grow` ArrayBuffer detach; the WASM string-boundary tax;
+Kaitai per-language codegen + read-only/declarative limits) re-verified fresh against live
+sources 2026-07-16 — corroborated, and the 6C trap strengthened by a direct 2026 case
+(OpenUI's Rust-WASM→TS rewrite, below).*
+
 ---
 
 ## 0. The problem class, framed
@@ -38,9 +44,12 @@ TS devblog "Progress on TypeScript 7", Dec 2025]. This is 6A's thesis executed a
 largest possible scale — and the load-bearing lesson is **what enforced the parity**:
 not a tree/name-map linter, but the **decade-old conformance suite** — ~20,000 tests,
 ~6,000 error-producing, matched in all but **74 cases**, plus internal fuzz rigs
-[TS devblog Dec 2025]. The structural mirror was the *method*; the **behavioral oracle
-was the checked invariant**. No public account describes a cross-language *tree
-correspondence linter* catching drift; the tests did.
+[TS devblog Dec 2025; corroborated fresh 2026-07-16: DeepWiki microsoft/typescript-go
+confirms the **file-by-file structural transplant** from Strada to preserve type-checking
+semantics, and the native compiler passing **>95% of the conformance suite** — the
+directional magnitude behind the 74-case figure]. The structural mirror was the *method*;
+the **behavioral oracle was the checked invariant**. No public account describes a
+cross-language *tree correspondence linter* catching drift; the tests did.
 
 **Implication for 6A (hostile):** the constitution's own 6A proposes an "isomorphism
 LINTER (CI verifies tree correspondence + a name map)." No prior art shows such a linter
@@ -121,6 +130,19 @@ cost for string-heavy parsing** — and it matches PROVE-14 exactly:
   encode + copy + alloc on both sides** [same]. This is *precisely* PROVE-14's full-walk
   parity finding (materialize every leaf → the crossing/walk cost cancels the
   parse-avoidance) and *validates* 6C's "TS-native only where V8 measurably wins."
+- **The strongest, most recent corroboration (2026): OpenUI rewrote its `openui-lang`
+  Rust-WASM parser in pure TypeScript for a ~3× speedup** [openui.com/blog/rust-wasm-parser;
+  DEV.to "We Rewrote Our Rust WASM Parser in TypeScript…", 2026; kunalganglani.com
+  "Rust WASM vs TypeScript" 2026]. Named cause: the **"WASM Boundary Tax"** —
+  `serde-wasm-bindgen` must **recursively materialize** Rust data into real JS
+  arrays/objects (many fine-grained boundary crossings per `parse()`), whereas the
+  string-return path is one `memcpy` + V8's native C++ `JSON.parse`. This is the exact
+  mechanism of PROVE-14's full-walk loss, at production scale, in the current year — and
+  it names the specific anti-pattern LOCK-6 must never adopt: **do not vend a
+  materialized object graph across the boundary; vend the tape's four planes once and
+  decode/skip in JS** (the stop-early lane). The lesson cuts BOTH ways: it is why 6C's
+  wasm-core wins only when it crosses in batch, and why a naive "wasm returns the parsed
+  object" backend would *lose to plain TS*.
 - **The winning wasm pattern is BATCH, not per-node**: parse the whole doc in wasm, cross
   once. This is why PROVE-14 stop-early wins **4.4×** (one crossing, the tape stays as a
   view; skip 99% of the doc) and full-walk loses (~0.9×, native `JSON.parse` is a
@@ -271,7 +293,10 @@ which PROVE-14's own accounting shows is survivable on stop-early).
   david.kolo.ski "rkyv is faster than…"; studyraid FlatBuffers comparison.
 - WASM boundary cost: DEV.to "16 Patterns for Crossing the WebAssembly Boundary" (2025);
   medium/ThinkingLoop "WebAssembly for JS Full-Stack, Minus the Hype"; npmjs
-  @oxc-parser/wasm; lightningcss.dev.
+  @oxc-parser/wasm; lightningcss.dev. **OpenUI Rust-WASM→TS rewrite (2026):**
+  openui.com/blog/rust-wasm-parser; DEV.to "We Rewrote Our Rust WASM Parser in TypeScript
+  and It Got Faster"; kunalganglani.com "Rust WASM vs TypeScript: Why the Faster Language
+  Lost [2026]"; neugierig.org "Moving data from Rust to JS" (2024).
 - memory.grow detach: Awesome Badger "WebAssembly Memory Growth and the Detached
   ArrayBuffer Problem"; wasm-bindgen issues #4395, #1206, #1079; proposals.es Resizable
   and Growable ArrayBuffers.

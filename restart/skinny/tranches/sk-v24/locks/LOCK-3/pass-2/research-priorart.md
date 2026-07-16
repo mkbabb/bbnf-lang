@@ -159,3 +159,57 @@ invention.
 | 3B SINGLE-IR-MULTIPASS | LLVM / sea-of-nodes / RVSDG; `BackendShape` at HEAD | Won as universal middle | one-codegen-path, no-orthogonal-codepaths |
 | 3C GRAMMAR-HOMOIOUSIA | nanopass `define-language`; LOCK-7 bootstrap | Real but niche | Y.13 in-wave consumer or SPEC-ONLY; no-ts-ir |
 | 3D STAGED-RESIDUAL | Futamura/MSP (LMS,MetaOCaml,Terra); **PROVE-12 (ours, CONFIRMED)** | Won as theory; proven in-point | stage-0 erasure total; zero-runtime-cost law |
+
+## 6. Pass-2 addenda — measured externals the sweep adds
+
+Four anchors that sharpen §2, each with a number or a defect-name the earlier draft lacked:
+
+- **Staged parser combinators are the *measured* validation of the whole thesis (3D + the
+  SK-V24 differentiator).** Jonnalagedda et al. (OOPSLA 2014, LMS) staged a combinator
+  library so composition overhead residualizes at stage 0, leaving a specialized RD parser:
+  **≈50% faster than a hand-written recursive-descent parser and >25× faster than the
+  un-staged combinators**, on HTTP-header and JSON
+  ([ResearchGate](https://www.researchgate.net/publication/273188536_Staged_Parser_Combinators_for_Efficient_Data_Processing);
+  [moleike](https://moleike.github.io/blog/staged-parser-combinators/)). Willis/Wu/Pickering
+  *Staged Selective Parser Combinators* (ICFP 2020, Parsley) staged the **analysis** (first-sets,
+  joins), not just emission ([ACM](https://dl.acm.org/doi/abs/10.1145/3409002)) — the exact
+  shape of our decision driver running at stage 0 (`passes::derive_backend_shape`) with only
+  its *decisions* surviving. This is the strongest external evidence that "grammar → residualized
+  specialized parser" is a winning architecture, and it is why 3D is the deepest-validated pole.
+
+- **MLIR's "lowering cliff" is the external name for our value-discard defect.** The named MLIR
+  discipline is *progressive* lowering — never drop structure a later pass needs one level early
+  ([MLIR Toy Ch-5](https://mlir.llvm.org/docs/Tutorials/Toy/Ch-5/)). The `Project.ty` discard
+  (`passes/src/lib.rs:203`) and the 4-way `ProjectionKind` fold (`general_descent/view.rs:20-46`,
+  R6 §5b) are lowering cliffs by this definition — structure destroyed too early. Our
+  no-value-discard / preserve-rich-ast laws are the local statement of MLIR's cliff discipline;
+  the external precedent means the fix (thread the arrow, GN-3.W2) is settled practice, not novel.
+
+- **The projection plane IS an attribute grammar's synthesized-attribute layer.** `ExprKind::Project
+  { body, target, ty }` producing a typed value is Silver's "single synthesized attribute
+  constructs the AST," and Silver's *forwarding* is the auto-AST-synthesis machinery
+  ([Silver, Van Wyk et al.](https://www.researchgate.net/publication/222668003_Silver_an_Extensible_Attribute_Grammar_System)).
+  The AG literature's known trap — circular attribute dependencies / evaluation-order scheduling —
+  is *absent* here: the projection flow is one-directional leaf→root synthesis, so the decidable
+  HM core (PROVE-08, 221 LOC) suffices and GN-3 §1.5 correctly scopes out CSP/e-graph. AG prior
+  art is the caution against reaching for circular machinery the grammar's flow does not need.
+
+- **Multi-backend is decided by measurement, and the winning middle is the tape, not a shared low
+  IR.** Memory laws `no-ts-ir` ("the AST IS the combinator; no IR layer for TS") and
+  `backend-agnostic-types` (`TypeDesc::Named`, each backend resolves natively) already forbid a
+  second lowered IR — and PROVE-14 (SPEC §0 row 14) *measured* the boundary: the **offset tape**
+  crosses byte-exact node-for-node (320 cold children), stop-early get 4.4-4.6× in TS, but
+  **full-walk 2× is honestly unmet** (native parse near-optimal). So the backend-agnostic middle
+  that WON is *tape layout + decision facts*, not a shared instruction IR — a named negative
+  result (LOCK-6's seat), the constitution's measured-not-asserted isomorphism. This rejects the
+  maximalist LLVM/MLIR read (one common low IR → N backends) for our size and confirms 3B's
+  attributes-travel / emission-per-backend posture over §5's shared-IR temptation.
+
+Additional sources: staged combinators — OOPSLA 2014
+(https://www.researchgate.net/publication/273188536_Staged_Parser_Combinators_for_Efficient_Data_Processing),
+ICFP 2020 (https://dl.acm.org/doi/abs/10.1145/3409002); Futamura projections diagrammatic
+(https://arxiv.org/pdf/1611.09906); Truffle first-Futamura realized
+(https://www.graalvm.org/latest/graalvm-as-a-platform/language-implementation-framework/HostOptimization/);
+Silver AG (https://www.researchgate.net/publication/222668003_Silver_an_Extensible_Attribute_Grammar_System);
+Alive2 bounded translation validation, PLDI 2021 (https://users.cs.utah.edu/~regehr/alive2-pldi21.pdf);
+internal: SPEC §0 rows 07/08/12/14, PROVE-12/14, GN-3, R6.

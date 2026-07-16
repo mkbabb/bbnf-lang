@@ -1,266 +1,285 @@
-# LOCK-3 · Family 3A — CONTRACT-TOWER (pass-2 research)
+# LOCK-3 · PASS-2 · FAMILY 3A — THE CONTRACT TOWER
 
-Re-pinned to live `skinny@7790134675c6` (branch master; skinny is its own repo — R6's
-`7f3be27c2` and the directive's `b3cb8c16b` are stale ancestors, and `passes/src/lib.rs`
-is now 2096 LOC, not 2750). Every `path:line` below opened on this HEAD. Paths absolute
-under `/Users/mkbabb/Programming/bbnf-lang/`.
-
-The family thesis: a **small fixed three-level tower**, each edge a **total function**
-carrying a **checkable per-level contract** (parity / round-trip oracle), CI-enforced. The
-family's product is NOT new IR levels — it is a verifier lattice welded onto the spine
-edges that already exist, plus the **one typed table** the L1→L2 contract obliges the
-emitter to CONSUME instead of re-derive.
+*A small fixed IR tower whose every level is a total lowering with a machine-checked
+contract, verified per-pass and localized per-edge by one differential runner over the
+regen corpus. Pinned to live HEAD `c93fc43143` (the directive's `b3cb8c16b` and R6's
+`7f3be27c2` are stale ancestors; every `path:line` below re-verified on c93fc43).*
 
 ---
 
-## 1. The enumerated edge-DAG of the live spine (directive Q3)
+## 0. The mechanism, in one paragraph
 
-Five labelled transposition edges carry the value plane:
-
-- **E0** `.bbnf` → `GrammarIr`: `grammar::parse_grammar`. AST-IR; `ExprKind` 10-arm; rules
-  index `ExprId` (`skinny/crates/ir/src/lib.rs`, `ExprKind::Project { body, target, ty }`).
-- **E1 ANALYSIS** `GrammarIr` → typed facts + layout: `passes::compile`
-  (`skinny/crates/passes/src/lib.rs:32`). Produces `type_facts.node_types:
-  HashMap<ExprId,Type>` (`:93`, written `:212`) and `layout_facts` (backend_shape / cost /
-  CSP / egraph). **The `->` `ty` is dropped here at `:204`.**
-- **E2 MATERIALIZE** `GrammarIr` → `BackendExpr` (13-arm) = `backend_ir`:
-  `passes::extract::single_plan`. `lower_expr` maps `ExprKind::Project → BackendExpr::
-  ValueProject { body, target, ty }` at `:1349` (the *raw* `Option<String>` `ty` survives,
-  never the inferred type); `materialize_rule` (`:1362`) splices the value-node quintet.
-- **E3 SINK** `BackendExpr` → `SinkOnlyProgram`/`SinkOnlyExpr`:
-  `codegen::lower::lower_to_rust` (`skinny/crates/codegen/src/lower/sink_only.rs:20,69`).
-- **E4 EMIT** `SinkOnlyProgram` → Rust source: `runtime_generator::emit_sink_only`
-  (`skinny/crates/codegen/src/runtime_generator.rs:89`); five emitter faces (JSON
-  templates / `json_sink_direct` / `general_descent` / `css_scan_direct` /
-  `json_typed_direct`).
-
-**How many distinct value levels actually exist — reconciling the framing.**
-`materialize_rule` (`passes/src/lib.rs:1362-1391`) emits, per materialized rule, ONE
-`BackendExpr::Seq` of six nodes that braid **three** value-abstraction strata:
-
-1. `SpanMark{Start,label}` — **SPAN stratum**: byte-offset open event, no type.
-2. `body` — the recognizer subtree.
-3. `SpanMark{End,label}` — SPAN stratum close event.
-4. `TapeEmit{kind: TapeKind}` — **TAPE stratum**: the coarse structural discriminator (9
-   `TapeKind` tags: Container/Sequence/KeyValuePair/StringValue/NumberValue/BoolValue/
-   NullValue/Member/Element). This is the level that actually reaches the offset-tape.
-5. `DirectBuild{shape, fields: Vec<DirectBuildField>}` — **STRUCT stratum**: the rich
-   per-field typed schema (the `DirectBuildTarget` lattice in `ir/src/lib.rs`). Populated
-   ONLY on the typed path; on the offset-tape path every field's `target` is `None`
-   (R6 §5c — verified `derive_materialization_plan` builds `target: None` throughout).
-6. `Return` — control marker.
-
-So the answer is **three braided materialization strata (span / tape / struct)** over one
-`BackendExpr`, exposed on the offset path as span+tape (struct present-but-empty), on the
-typed path as all three. `SinkOnlyProgram` is the E3 flattening of that `BackendExpr` into
-emit-order form the generator walks. **The "small fixed tower (three levels)" is not an
-invention — it is this latent stratification, made into total functions with contracts.**
-The stratum primitives already exist as walk helpers (`contains_direct_build` `:973`,
-`contains_tape_kind` `:993`, `alt_branch_count` `:1015`) — the contract layer reuses them.
+The live spine already IS a tower of typed transpositions with `derive(Serialize)` on every
+mid node — what it lacks is a *contract per edge* and a *verifier that reads them*. 3A adds
+exactly two organs and nothing structural: (1) a per-pass `verify(level)` predicate, run after
+each lowering, asserting that level's well-formedness invariant (the rustc `-Zvalidate-mir` /
+GHC `-dcore-lint` shape); (2) one `differential(edge, corpus)` runner that digests each
+level's artifact and, on an injected mis-lowering, names the edge whose digest first diverged.
+The contracts are *consumers* (Constitution viii, Y.13): the L0→L1 contract's whole content is
+"the `->` node-type threaded at `passes/src/lib.rs:204` reaches its consumer" — so 3A's answer
+to the Shared question is that threading is not a feature added for its own sake, it is the
+payload the tower's first contract exists to witness.
 
 ---
 
-## 2. The three-level contract tower (mechanism made concrete)
+## 1. The labeled edge-DAG on live (the enumeration the directive asks for)
 
-Each level Lₖ is a total function already on the spine; the family ADDS a checkable
-contract Cₖ (an oracle predicate) and CI-enforces it.
+Traced by opening every hop. **Five** transposition edges, **four** distinct value nodes,
+plus a schema side-branch and a name-gated 3-way emit fan. "Three levels" is achievable only
+by collapsing E4 into E5 as a proven pure projection.
 
-- **L1 = ANALYSIS** `GrammarIr → TypedIr`. Total fn: `infer` (`passes:187`). **C1**: every
-  `ExprId` reachable from an entry rule has a `facts.node_types` entry, and every
-  `Project` ExprId's node-type is the RESOLVED projected type, not the bare body type
-  (no-value-discard, no-silent-epsilon). Oracle = §4's `verify_project_types`.
-- **L2 = MATERIALIZE** `TypedIr → BackendExpr`. Total fn: `lower_expr` + `materialize_rule`
-  (`:1349,:1362`). **C2** (stratum consistency + CONSUME): every `DirectBuild.shape` has a
-  sibling `TapeEmit.kind` in its `Seq`, and `DirectBuild.fields[*].target == Some(t)` **iff**
-  L1 recorded node-type `t` for that ExprId — i.e. the struct stratum is READ from L1, never
-  re-derived by `derive_materialization_roles` (`:1403`, the byte-literal classifier). C2 is
-  a checkable equality: re-derivation is a RED (see §3).
-- **L3 = EMIT** `BackendExpr → SinkOnlyProgram → Rust`. Total fn: `lower_to_rust` +
-  `emit_sink_only`. **C3** (parity): the emitted parser's tape columns are byte-identical to
-  the independent track2 oracle and canonical-string equal. This oracle EXISTS and CI already
-  runs it: `parity::assert_parity` (`skinny/crates/bbnf-bench/src/parity.rs:23`).
+```
+ SOURCE .bbnf
+   │  E1  grammar::parse_grammar                       (crate grammar)
+   ▼
+ GrammarIr  { ExprKind 10-arm: Seq Alt Repeat Optional Literal Regex Ref
+   │          Annotation Project Discard }              ir/src/lib.rs:185 (Project eval)
+   │
+   ├─ E2  Infer::infer_expr → facts.node_types: HashMap<ExprId,Type>
+   │        passes/src/lib.rs:184-213  Type 7-arm (:234)  BuiltinTy 7-arm (:245)
+   │        ***Project@204 returns infer_expr(body); the declared ty is dropped via `..`***
+   │        node_types is a SIDE table — today NO value-shaping consumer reads it
+   │
+   ▼  E3  passes lower_expr (:1340) + materialize_rule (:1362)
+ BackendIr { BackendExpr 13-arm (ir:376): …ValueProject{body,target,ty}(:407),
+   │          SpanMark(:396) TapeEmit{TapeKind 9-arm}(:400/:453) DirectBuild(:403) Return
+   │          BackendShape 5-arm (ir:361) }
+   │        materialize_rule splices  Seq[ SpanMark(Start), body, SpanMark(End),
+   │          TapeEmit{kind}, DirectBuild{shape,fields}, Return ]  — the emit-order framing
+   │        fed by MaterializationPlan (:1139); DirectBuildTarget = None @:1157 (ALWAYS)
+   │
+   ▼  E4  codegen lower/sink_only.rs:126 lower_program
+ SinkOnlyProgram { entry_rule, rules:SinkOnlyExpr, direct_shapes:BTreeSet,
+   │                dispatch_alt_count, span_kinds, literals, policy_summary }  (:20)
+   │        re-walks BackendExpr → SinkOnlyExpr; recomputes shapes it already had
+   │
+   ▼  E5  codegen runtime_generator::emit_sink_only  (lib.rs:210)
+ RUST SOURCE ── name-gate has_rule("value") @runtime_generator.rs:98 fans to:
+      • JSON offset-tape templates (include_str! json_templates/*)   [value rule]
+      • json_sink_direct::render (eager sink)                        [value rule]
+      • general_descent::render (Sheets/CSV lazy)                    [no value rule]
+   plus SCHEMA BRANCH:  emit_typed_from_source (lib.rs:130) →
+      schema_direct::lower_program(BackendIr, DirectSchemaSet) → json_typed_direct::render
+      — DirectSchemaSet is HAND-authored (xtask/real_typed_schema.rs), not derived.
+```
 
-The tower is FIXED at three levels, each lowering total, each contract an executable
-predicate run at regen. This IS the 3A charter, expressed over the live spine rather than a
-greenfield rewrite.
+**Reconciliation (materialize_rule vs SinkOnlyProgram).** The SpanMark/TapeEmit/DirectBuild/
+Return quintuple is *not new data* — it is an emit-order encoding of the `MaterializationPlan`
+descriptor (label, kind, shape, fields) laid inline into a `BackendExpr::Seq` so E5 can walk
+it linearly. `SinkOnlyProgram` (E4) then re-extracts `direct_shapes`/`dispatch_alt_count` from
+that Seq — a **recomputation**, not a new fact. E4 is therefore a collapse candidate: it
+carries nothing absent from `BackendIr`, which makes the honest tower **three value levels** —
+L0 Grammar(+types), L1 Backend(shaped), L2 Emit — with E4 folded into L2 as a derivation. 3A
+does not *require* the fold; it requires E4 satisfy a "pure projection of L1" contract, the
+checkable form of the same claim (§7.3).
 
----
-
-## 3. Threading the `:204` `ty` — the CONSUME contract (Shared Q)
-
-**Current state (live).** Infer at `:204` does `ExprKind::Project { body, .. } =>
-self.infer_expr(*body)?` — drops `ty`; `node_types[project_expr]` = the body's structural
-`Type`. Lower at `:1349` DOES carry the raw `ty: Option<String>` into
-`BackendExpr::ValueProject`, but that is the syntactic annotation string, never a
-resolved/composed type, and on the JSON path nothing reads it (`json_sink_direct/
-first_set.rs` recurses body). The struct taxonomy is instead RE-DERIVED by
-`derive_materialization_roles` (`:1403`) — a byte-literal heuristic (`{`/`}`→container,
-regex `SpanKind::String`→string, `true`/`false`→bool, ≥4 value-refs→`value`) that never
-consults `node_types`. That re-derivation is exactly what the CONSUME contract retires.
-
-**The thread, end-to-end, minimal, on live:**
-1. `:204` — compose instead of drop: resolve `ty` to a `Type` (e.g. `Type::Named(name)` /
-   projected) and insert THAT as `node_types[project_expr]`. One resolved node-type per
-   `Project` ExprId. Totality: unknown `ty` name → `PassError`, never silent Epsilon.
-2. Carry `type_facts.node_types` forward. Today `compile` (`:32`) hands codegen only
-   `backend_ir` + `layout_facts`; `node_types` is consumed by `layout::run`/`extract` and
-   dropped (**verified**: no `node_types` reference anywhere in `crates/codegen/src`). Add a
-   projected `Vec<(RuleId, ResolvedType)>` to the facts codegen receives — the exact shape
-   the legacy driver `TypeAnalysis::from_ir` reads (`crates/core/src/backend/driver/
-   analysis.rs:22`: `rule_types: ir.types.clone()` — it READS a pre-populated table, never
-   re-derives; that is the consume-pattern to mirror).
-3. `derive_materialization_plan` (`:1136`) populates `DirectBuildField.target` (today always
-   `None`) by READING `node_types[field_expr]`. The byte classifier is retired for the typed
-   path (it may survive ONLY as the JSON structural-recovery fallback, since `json.bbnf` has
-   zero `->` — R6 §0).
-4. `emit_typed_from_source` (`codegen/src/lib.rs:130`) then no longer needs a hand-authored
-   `DirectSchemaSet`: a `derive_direct_schema` reads `node_types → DirectSchemaSet`, and the
-   already-full-fidelity `json_typed_direct::render` consumes it (R6 §8b).
-
-**How the CONTRACT-TOWER CONSUMES one threaded node-type (not re-derives).** C2's oracle
-asserts, per `Project` ExprId, `DirectBuild.field.target == node_types[expr]`. If the
-emitter ever re-derived via the byte classifier, the two diverge on any grammar whose `->`
-disagrees with the byte heuristic — the oracle flags RED. The contract therefore *forces*
-consumption: re-derivation is definitionally a contract violation, not a stylistic choice.
-This is the family's answer to "consume vs independently re-derive" — the equality IS the
-edge.
+**"How many distinct value levels actually exist": 4 nodes / 5 edges, reducible to 3** by
+proving E4 ≡ projection(L1). `TapeKind` carries 9 variants but the live JSON corpus exercises
+7 (`Member`, `Element` unused — R6 §5c) → two born-zero-witness constructs the runner flags.
 
 ---
 
-## 4. The `verify` predicate over `Project@204` (directive Q1)
+## 2. The Shared question: threading `->` from :204 to its consumer, and 3A's *consumption*
 
-`verify_project_types(grammar, facts) -> Result<(), Vec<ExprId>>`: for each ExprId `e` with
-`grammar.expr(e).kind == ExprKind::Project{ ty: Some(name), .. }`, assert `facts.node_types[e]`
-is the resolved projected type (`Type::Named(name)`-equivalent), NOT identical to
-`facts.node_types[body]`.
+**HEAD state (RED).** `passes/src/lib.rs:204` `Project { body, .. } => self.infer_expr(*body)`
+stores the *body's* structural `Type` into `node_types` (:212). The declared projection tag
+`ExprKind::Project.ty: Option<String>` (`ir/src/lib.rs:185`) never enters `node_types`. It
+*does* survive syntactically to `BackendExpr::ValueProject.ty` (`passes:1349-1352`, verbatim
+clone) — but the type plane never sees it, and the *value-shaping* consumer
+`derive_materialization_plan` sets `DirectBuildTarget = None` unconditionally (`:1157`),
+re-deriving shape from byte-literal heuristics (`derive_materialization_roles` :1403).
 
-- **RED on HEAD**: for every projected ExprId, `:204` makes `node_types[project] ==
-  node_types[body]`, so the assertion fails. Executable witness = the Sheets grammar, the
-  only live grammar exercising `->` (`grammar/google-sheets/google-sheets.bbnf:6,12,17-18,
-  34-42,97`). (JSON exercises none — R6 §0.)
-- **GREEN once §3.1 threads `ty`**: the projected node-type differs from the body type.
-- **Zero emit footprint**: the predicate is read-only over `facts` and emits nothing. Proof
-  = the regen content-hash: `xtask` `check_target` (`skinny/xtask/src/regen.rs:37`) hashes
-  rel-path + bytes (`:177-184`); `generated.rs` digest is byte-identical with the predicate
-  compiled IN vs OUT. (Caveat, stated: threading `ty` in §3.1 *does* change typed-direct
-  output where the byte-heuristic and the true `->` disagree; the **predicate alone** does
-  not — that is what the zero-footprint claim covers.)
+**The named live consumer.** The directive's `TypeAnalysis::from_ir` (`backend/driver/
+analysis.rs`, XL-F) **does not exist in the live skinny tree** (`grep -rn TypeAnalysis` → 0;
+`grep 'fn from_ir'` → 0). It is a term from a pre-restart/greenfield surface. On live the
+*actual* downstream type consumers are `passes::shapes::derive_shape_facts`
+(`passes:259-299`, today consuming only `MaterializationPlan.descriptors.kind`, never
+`node_types`) and `passes::extract::derive_materialization_plan` (`:1139`, the
+`DirectBuildTarget` populator). **3A binds its L0→L1 contract to these two and names
+`TypeAnalysis::from_ir` a greenfield rename to reconcile at GN-3, not a live seam** (else the
+contract would bind a phantom — Constitution vii).
 
----
+**3A CONSUMES, it does not re-derive (the directive's demand).** End-to-end thread:
+1. Give `Type` a projection carrier — a `facts.projection_types: HashMap<ExprId,ProjectionTy>`
+   side-table (safest: zero effect on the existing 7-arm `Type` and its users) or a new
+   `Type::Projected` arm (`passes:234`). Populate it at :204 instead of discarding.
+2. `derive_materialization_plan` (:1139) reads `facts.projection_types[expr]` and fills
+   `DirectBuildField.target = Some(DirectBuildTarget{ type_ref, presence, cardinality,
+   representation, decode })` (`ir:482`) — the schema struct that already exists and is today
+   fed by hand. `type_ref` from the *threaded* `ty`; `cardinality` from `Repeat`/`Optional`
+   already in `node_types`; `decode` from `SpanKind`. This single site turns the discarded tag
+   into a consumed fact.
+3. `derive_direct_schema(grammar, plan) -> DirectSchemaSet` (R6 §8b) reads those targets and
+   *replaces* the hand file `xtask/real_typed_schema.rs`; proof of consumption is
+   `derived == hand` byte-for-byte (§8, T3).
 
-## 5. The `differential(edge, corpus)` runner (directive Q2)
-
-Three digest families exist and must fold into one runner:
-- **Structural (JSON)** `parity::assert_parity` (`parity.rs:23`): compares track1 tape
-  columns `{offsets, flag_cursors, flag_values}` (`:27-33`), asserts zero payload
-  writes/allocs (`:34-49`, the lazy invariant), and `to_canonical_string()` equality
-  (`:52-58`). track1 = generated tape path; **track2 = an independent hand-written parser**
-  (`bbnf-bench/src/track2/json.rs:12`) — a genuine two-implementation differential (McKeeman
-  1998; Csmith), not a self-check.
-- **Value-plane (CSS)** the `CSS_CANON_PROFILE` XOR-fold checksum (PROVE-12 §5): XOR every
-  parse result across corpora → one integer; byte-identical output ⇒ identical checksum.
-- **SIMD (scalar↔NEON)** `gate.rs` `parity_ok` / `simd_parity_ok` /
-  `scalar_parity_hash_twitter` (`gate.rs:34-35,201,414`) — the checkasm-style kernel
-  parity, gated before throughput (`classify` `:214`).
-
-**One runner** `differential(edge: EdgeId, corpus) -> DiffReport`, `EdgeId ∈ {E0..E4}` of
-§1. (a) It reproduces the existing digests by selecting the oracle apt to the edge —
-tape-column eq + canonical-string at E4, XOR-fold for CSS, node-type coverage at E1, stratum
-consistency at E2. (b) It localizes an INJECTED mis-lowering: inject a fault at a chosen edge
-(swap a `TapeKind` at E2, drop a `SpanMark`, mis-populate a `target`), run the fleet, and
-report the LOWEST edge whose contract Cₖ breaks — that is the localization. Because each edge
-carries its own oracle, a single fault lights the specific edge, not a global "output wrong".
-
-**Corpus-coverage metric** = per-edge CONSTRUCT COVERAGE: `covered_arms / total_arms` of the
-edge's sum type (`ExprKind` 10-arm at E0/E1, `BackendExpr` 13-arm at E2, `TapeKind` 9-tag at
-E2's tape stratum, emitter faces at E4), witnessed by the fleet `{json, css_l4, sheets}`. An
-arm with zero witnesses is reported **UNVERIFIED (sound-unknown)** — distinct from
-VERIFIED-SOUND — and NAMED (e.g. `TapeKind::Member`/`Element` if no fleet grammar emits
-them). Zero-witness constructs are never silently passed; the coverage bound is disclosed.
-
-**Injected-fault evidence to run**: mutate `materialize_rule` to emit `TapeKind::Element`
-where `Sequence` is due → `assert_parity` RED on JSON at E4, C2 stratum-consistency RED at E2
-(`TapeEmit.kind` ≠ `DirectBuild.shape`), C1 GREEN → localizes to **E2**.
+The contract "L0→L1 is sound" is *exactly* "`DirectBuildTarget.is_some()` ⟺ the Project
+carried `ty` at :204, and its `type_ref` equals the threaded tag" — unsatisfiable by the
+heuristic re-derivation, which never sees `ty`. That is how 3A's contract *forces* consumption
+over re-derivation.
 
 ---
 
-## 6. Prior art (citations)
+## 3. The per-pass `verify` predicate over Project@204 (RED→GREEN, zero emit footprint)
 
-- **rustc MIR `Validator`** (`rustc_const_eval::transform::validate`) runs after *every* MIR
-  pass under `-Zvalidate-mir`; `-Zverify-llvm-ir` verifies each stage. The literal "each
-  lowering total + a checkable contract, CI-enforced" precedent — L1/L2/L3 = validator-per-
-  pass.
-- **LLVM `-verify-each` / the `Verifier` pass**: module verifier after each pass; `lit` +
-  FileCheck = the corpus-runner analogue.
-- **MLIR dialect conversion** (`ConversionTarget` + `TypeConverter`, `-verify-diagnostics`):
-  each transposition edge is a **total legalization** that is legal-or-error; the type
-  *materialization hooks* are the exact analogue of `DirectBuild.target` consumption. The
-  strongest structural match to the CONTRACT-TOWER thesis.
-- **Translation validation / CompCert** (Pnueli–Siegel–Singerman 1998; Necula 2000): validate
-  each *run's* output against its input by a checker rather than proving the compiler.
-  `differential(edge, corpus)` is translation validation localized per edge.
-- **Differential testing**: McKeeman 1998; Csmith (Yang et al. 2011) — the track1/track2 two-
-  implementation differential.
+`verify_L0(grammar, facts) -> Result<(), Vec<Span>>`:
 
----
+```
+for expr in grammar.exprs_reachable_from_entry():
+    facts.node_types.contains_key(expr)                     // totality (no silent Epsilon)
+    if let ExprKind::Project { ty: Some(_), .. } = expr.kind:
+        facts.projection_types.get(expr)                    // ← the gated clause
+            .is_some_and(|p| p.declared == expr.ty)         // consumed, equal to source tag
+```
 
-## 7. Named risks / counterexamples
-
-- **R1 — JSON has no `->`.** `json.bbnf` contains zero projections (R6 §0); the whole `ty`
-  thread + C1 RED→GREEN is exercised ONLY by Sheets on live. The certified JSON hot lane sees
-  NO change from §3. The family must NOT claim JSON perf from type-threading — the JSON
-  contribution is C3 (parity, already CI) and retiring the `has_rule("value")` name-gate
-  (`runtime_generator.rs:99`).
-- **R2 — three-level tower must not re-introduce IR levels** (no-ts-ir; single-IR bias). The
-  three levels ARE the already-braided span/tape/struct strata inside `materialize_rule`; the
-  tower adds *contracts*, not *types*. If a downstream reads "three IR structs," that is the
-  failure mode. It is three CONTRACTS over one `BackendExpr`.
-- **R3 — vacuous CONSUME.** If `derive_materialization_roles` is kept as a "fallback" the
-  CONSUME contract passes trivially (relocation, not retirement). C2 must make the node-type
-  the SOLE producer on the typed path; the byte classifier is deleted there (survives only as
-  the JSON no-`->` structural-recovery fallback).
-- **R4 — L1 totality under recursion.** A projected type may reference a rule that itself
-  projects (`a -> b`, `b -> c`); node-types must compose to a fixpoint, never silent Epsilon.
-  Guard with a transitive-resolution test on a synthetic Sheets-style chain.
-- **R5 — zero-witness `TapeKind`s** (Member/Element/KeyValuePair may be unreachable on the
-  fleet) → C2 coverage < 100%; reported UNVERIFIED. A disclosed bound, not a defect.
+- **RED on HEAD**: the gated clause fails for every Sheets `->` node (Sheets is the sole
+  grammar exercising projections — R6 §0; `json.bbnf` has zero `->`). It *cannot* pass because
+  `node_types` provably never stored the tag. Evidence = the predicate returning
+  `Err(span_of_each_project)` on the Sheets IR.
+- **GREEN once ty threads**: after §2 step 1 the clause reads the populated carrier; same
+  predicate returns `Ok(())` on the same IR.
+- **Zero emit footprint**: the thread populates a *new* field; E3/E5 still read the old
+  `ValueProject.ty` path until GN-3 wires the consumer. So `cargo xtask
+  {regen,check}-{json,css-l4-declaration-values,sheets}` is **byte-identical** with the
+  predicate compiled in vs out — the third RED→GREEN leg and the discriminator between
+  "threaded a fact" (footprint 0) and "changed behavior" (footprint ≠ 0). The byte-identity
+  gate already exists (`xtask/src/regen.rs:36` `check_target`); 3A reuses it as the no-side-
+  effect witness. This is the LLVM `-verify-each` / MIR-validate discipline: a pure observer,
+  RED before the obligation is met, GREEN after, with a determinism gate proving nothing moved.
 
 ---
 
-## 8. What a prototype must test to move this family
+## 4. The `differential(edge, corpus)` runner (generalizing the two live oracles)
 
-Single minimal prototype, on live:
-1. Thread `:204` `ty` into `node_types` (compose `Type::Named`); carry `node_types` into
-   `PipelineOutput` → codegen; populate `DirectBuildField.target` from `node_types` at
-   `derive_materialization_plan` (`:1136`).
-2. Wire `verify_project_types` as a regen-time predicate; capture RED (HEAD) → GREEN
-   (post-thread) on the Sheets grammar — EXECUTED, not mapped.
-3. Prove zero emit footprint of the PREDICATE ALONE: `regen.rs` content hash byte-identical
-   with predicate on/off.
-4. Build `differential(edge, corpus)`: reproduce `assert_parity`'s tape-column digest AND
-   PROVE-12's XOR-fold; inject one mis-lowered `TapeKind` and show localization to E2 (C1
-   green / C2 red / C3 red).
-5. Report per-edge construct coverage over `{json, css_l4, sheets}`; NAME every zero-witness
-   arm.
+**The two live oracles it subsumes.**
+- `bbnf-bench/src/parity.rs:23` `assert_parity`: track1 vs track2 by (a) offset-stream
+  equality (`tape().offsets()/flag_cursors()/flag_values()`), (b) payload-counter == 0 (lazy-
+  projection invariant), (c) canonical-string equality. — the **E5/runtime** edge oracle.
+- `bbnf-bench/src/direct_struct.rs:41` `JsonDirectDigest` 4-way `{track1, track2, serde,
+  sonic}` `Mismatch`: a commutative fingerprint (`mix`/`hash_bytes`) plus counters
+  `{max_depth, strings, string_bytes, numbers, bools}`. — the **direct-to-struct** oracle.
 
-**GO gate**: RED→GREEN executed; predicate-only regen digest byte-identical; injected fault
-localized to its edge; coverage table with named unverified arms. NO perf claim is owed (the
-family is correctness infrastructure) — but the schema-derived typed-direct output must remain
-parity-equal to the hand-authored `DirectSchemaSet` baseline (`xtask/src/real_typed_schema.rs`)
-by regen byte-diff, closing the loop that R6 §8b left open.
+**The generalization.** One runner: `differential(edge: EdgeId, corpus) -> EdgeReport`, with a
+`digest(artifact)` per level:
+- **L0** `digest(GrammarIr, facts)` — the IR's `derive(Serialize)` canonical form + an order-
+  stable BTree fold over `node_types`/`projection_types`.
+- **L1** `digest(BackendIr)` — `BackendIr` already derives `Serialize/Deserialize` (`ir:369`);
+  hash the canonical serde form **plus** a per-variant histogram over `BackendExpr`/`TapeKind`
+  (a dropped `DirectBuild` moves the histogram, not just an opaque hash).
+- **L2** `digest(EmittedSource)` — the existing regen byte-diff (`check_target`) **and** the
+  runtime `JsonDirectDigest` + `assert_parity` triple. L2 *is* the two live oracles; the runner
+  reproduces their digests bit-for-bit by *calling the same functions* (the directive's
+  "reproduce those digests").
 
-### Integration seams (path:line, live)
-- Infer edge: `skinny/crates/passes/src/lib.rs:204` (drop), `:212` (insert), `:93`
-  (`node_types` field).
-- Lower/materialize: `:1349` (Project→ValueProject, raw `ty`), `:1362` (`materialize_rule`),
-  `:1403` (`derive_materialization_roles` — retire on typed path), `:1136`
-  (`derive_materialization_plan` — populate `target`).
-- Pipeline export → codegen: `passes/src/lib.rs:32` (`compile`); `codegen/src/lib.rs:101,
-  106-109` (entry, facts consumed).
-- Sink/emit: `codegen/src/lower/sink_only.rs:20,69`; `codegen/src/runtime_generator.rs:89`.
-- Oracles: `bbnf-bench/src/parity.rs:23`; `bbnf-bench/src/track2/json.rs:12`;
-  `bbnf-bench/src/gate.rs:34,214`; PROVE-12 XOR-fold (`CSS_CANON_PROFILE`).
-- Regen digest gate: `skinny/xtask/src/regen.rs:37` (`check_target`), `:177-184` (hash).
-- Legacy consume-pattern reference: `crates/core/src/backend/driver/analysis.rs:22`
-  (`TypeAnalysis::from_ir` reads `ir.types`, does not re-derive) — the shape the live L1→L2
-  contract mirrors.
+**Localizing an injected mis-lowering** — report the first edge whose digest diverges:
+- drop the `DirectBuild` node in `materialize_rule` → L0 identical, **L1 histogram diverges**
+  (DirectBuild −1) → E3.
+- corrupt a hunk in `json_templates/view.rs` → L0,L1 identical, **L2 regen byte-diff + runtime
+  digest diverge** → E5.
+- drop `ty` at :204 (the RED state) → L0 `projection_types` histogram diverges, L1/L2 unchanged
+  → E2, *and* proves E2's fact is currently unconsumed (a diagnostic the tower surfaces).
+
+**Coverage metric & zero-witness.** Coverage = per-edge construct coverage: fraction of each
+level's variant alphabet (`ExprKind` 10, `BackendExpr` 13, `TapeKind` 9, `BackendShape` 5)
+instantiated by the corpus. A variant with **no** witness (`TapeKind::Member/Element`, `SimdMode`
+≠ `Exact`, `BackendShape::EventTape`) is reported **UNVERIFIED**, categorically distinct from
+**SOUND** — the runner never certifies a construct it never saw (the translation-validation
+honesty line: validate the runs you have, name the ones you don't). Soundness-claim strength =
+Σ verified-variant-weight; the report ships the unverified set as named debt.
+
+---
+
+## 5. Substrate & integration seams (path:line, all live c93fc43)
+
+| Organ | Live seam | 3A use |
+|---|---|---|
+| L0 carrier | `passes/src/lib.rs:204` (drop), `:212` (`node_types.insert`), `Type` `:234` | add `projection_types` side-table / `Type::Projected` |
+| L0 verify | `passes` infer module (new `verify_L0`) | per-pass predicate §3 |
+| L1 node | `ir/src/lib.rs:376` `BackendExpr` (Serialize), `:453` `TapeKind`, `:482` `DirectBuildTarget`, `:492` `DirectBuildTypeRef` | L1 digest + target populate |
+| L1 splice | `passes:1349` (`ValueProject`), `:1362` `materialize_rule`, `:1139` `derive_materialization_plan`, `:1157` (`target:None`) | consume threaded ty here |
+| heuristic to retire | `passes:1403` `derive_materialization_roles`, `:277-291` shape fallbacks, `general_descent/view.rs:20-46` `classify_projection` | replaced by consumed types (contract forbids re-derive) |
+| E4 fold candidate | `codegen/src/lower/sink_only.rs:20/:126` `SinkOnlyProgram`/`lower_program` | prove ≡ projection(L1) |
+| name-gate | `codegen/src/runtime_generator.rs:98` `has_rule("value")` | **blocks L1→L2 totality** (§7.1) |
+| schema branch | `codegen/src/lib.rs:130` `emit_typed_from_source`, `schema_direct::lower_program`, `direct_schema.rs`, hand `xtask/real_typed_schema.rs` | `derive_direct_schema` replaces hand file |
+| L2 / runtime oracle | `bbnf-bench/src/parity.rs:23`, `direct_struct.rs:41` | terminal-edge digest, reproduced verbatim |
+| regen byte-gate | `xtask/src/regen.rs:36` `check_target`; targets `main.rs:39-52` | zero-footprint witness + L2 divergence |
+
+---
+
+## 6. Prior art (the contract-tower is a settled discipline; the citations)
+
+- **Nanopass framework** (Sarkar-Waddell-Dybvig, ICFP'04; Keep-Dybvig, ICFP'13): many tiny
+  passes, **each with a formally specified source/target language**, and the framework
+  *auto-generates* a checker that a pass's output inhabits its declared language — 3A's exact
+  thesis (per-edge language contract, machine-verified), validated at production scale (Chez).
+- **rustc MIR validator** (`rustc_mir_transform::validate`, `-Zvalidate-mir`): a `MirPass` run
+  *after each MIR pass* asserting well-formedness — §3's per-pass predicate in a production
+  tower (HIR→THIR→MIR→LLVM).
+- **GHC Core Lint** (`-dcore-lint`): re-type-checks Core after every Core-to-Core pass — the
+  canonical cheap total verifier; models "RED before the invariant holds."
+- **LLVM `verifyModule` + `-verify-each`**: the IR verifier runnable after every pass; the
+  "zero emit footprint" analogue is that the verifier mutates nothing.
+- **MLIR op/region verifiers + dialect-conversion legality** (`ConversionTarget` legal/illegal
+  ops): per-op contracts, *legality as a checkable relation* — the model for the L1 shape-legal
+  contract (every `->` reaches a lawful `DirectBuild`).
+- **Translation validation** (Pnueli-Siegel-Singerman'98; Necula'00; CompCert per-pass
+  simulation): validate *this run* rather than prove the pass — `differential(edge, corpus)` is
+  translation validation specialized to the regen corpus, coverage metric as its honesty bound.
+- **egg/egglog explanations** (Willsey et al., POPL'21): proof-producing rewrites — the optional
+  witness form if an edge is ever an e-graph rewrite (LOCK-2 boundary), not required by 3A.
+
+---
+
+## 7. Named risks & counterexamples
+
+1. **The name-gate breaks the L1→L2 total-function contract.** `has_rule("value")@98` makes
+   emission a function of *the rule name*, not of `BackendIr` alone. Counterexample: two
+   grammars whose `value`-named rules differ in shape both route to JSON templates; a third
+   with identical shape but a rule named `document` routes to general-descent — so `emit` is not
+   determined by L1. **3A's L2 contract is FALSE on HEAD until the name-gate is retired (not
+   relocated).** PROVE-13's structural predicate `dispatch_alt_count > 0 && direct_shapes.len()
+   >= 2` (both fields already on `SinkOnlyProgram`, `sink_only.rs:23/:26`) is the cure and is a
+   **GN-1.W4 landing, absent on c93fc43**. 3A carries this as a born-RED dependency edge owned
+   by GN-1.W4; L2 goes GREEN only after the gate dies.
+2. **Digest coarseness masks reorderings.** `JsonDirectDigest` counters are commutative;
+   swapping two sibling members can leave counters (and, on some inputs, the mix-fingerprint)
+   invariant. The L1 histogram inherits this. Mitigation: the L1 digest must include a
+   *position-sensitive* canonical serde byte-hash — histogram localizes *which variant*, byte-
+   hash localizes *whether at all*. A digest that can't distinguish sibling swaps is a coverage
+   hole the metric must not score SOUND.
+3. **E4 is not provably a pure projection until measured.** If `SinkOnlyProgram` reads a
+   `LowerCtx` policy fact absent from `BackendIr` (`policy_summary`, `same_substrate_union`),
+   the "three-level" collapse fails and the honest tower is four. The prototype must trace E4's
+   input set (T2) before any "three levels" claim ships.
+4. **Zero-witness overclaim.** Sheets is the *only* projection witness; JSON exercises no `->`.
+   Proving L0→L1 soundness on the JSON corpus proves nothing about the type thread. The runner
+   must refuse to certify the projection contract off a corpus with zero Project witnesses.
+5. **Phantom-seam binding.** Binding a contract to `TypeAnalysis::from_ir` (nonexistent on live)
+   would be a spec-only substrate. 3A binds the real `derive_shape_facts`/
+   `derive_materialization_plan` and names the rename as a GN-3 reconcile.
+
+---
+
+## 8. What a prototype must test to move 3A (the falsifiable set)
+
+- **T1 — RED→GREEN verify + zero footprint.** Thread `ty` at `passes:204` into
+  `projection_types`; implement `verify_L0`. Show `Err` on the Sheets IR at HEAD, `Ok` after
+  the thread, **and** `regen/check` of json+css+sheets byte-identical with the predicate in vs
+  out. *Pass = executed RED→GREEN + 3 byte-identical regens.* (§3)
+- **T2 — the differential runner localizes.** Implement `digest(L0/L1/L2)` reusing the IR serde
+  + `parity.rs`/`direct_struct.rs`. Inject three mis-lowerings (drop DirectBuild @E3; corrupt
+  template @E5; drop ty @E2) and show the runner names the correct edge each; emit the coverage
+  report flagging `TapeKind::Member/Element` and `SimdMode`≠`Exact` UNVERIFIED; reproduce the
+  live track1/track2/serde/sonic digests as the L2 instance bit-for-bit; trace E4's input set to
+  adjudicate 3-vs-4 levels. *Pass = 3×3 localization matrix + reproduced digests + coverage
+  table.* (§4, §7.3)
+- **T3 — consumption, not re-derivation.** Wire `projection_types` into
+  `derive_materialization_plan` (`:1157` `target: Some(...)`), author `derive_direct_schema`,
+  show the derived `DirectSchemaSet` equals hand `xtask/real_typed_schema.rs` byte-for-byte,
+  then delete the hand file. *Pass = derived ≡ hand + hand file removed + typed emit regen
+  byte-identical.* The single proof the tower's first contract is a *consumer* (Y.13),
+  discharging the path toward GN-3.W2. (§2)
+
+Run against a corpus of Sheets (projection witnesses) + JSON + CSS, these three move 3A from
+"the tower is drawn" to "its contracts are executed, its verifier reads RED then GREEN, and its
+runner names the edge."

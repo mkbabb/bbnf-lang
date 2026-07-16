@@ -1,322 +1,245 @@
-# LOCK-4 pass-3 · research-C — Family 4C: THE VM-CORE
+# LOCK-4 · Family 4C — THE VM-CORE · pass-3 research
 
-*Combinators lower to a compact bytecode VM — ONE instruction set shared by Rust and
-TS, layout-isomorphic by construction; packrat and diagnostics are VM facilities;
-measured against the closure core, not assumed.*
+*Combinators lower to a compact bytecode VM: one instruction set shared by Rust and TS
+(layout isomorphism by construction); packrat and diagnostics are VM facilities; the design
+is measured against the closure core, never assumed to beat it.*
 
 ---
 
-## 0. The decisive fact: the VM-CORE already exists (grammar-side), fully
+## 0. The thesis in one paragraph
 
-Family 4C is **not** speculative. A complete, production-grade parsing-machine VM is
-live in bbnf-lang at `crates/ir/src/vm/` (1772 src LOC across `bytecode.rs`,
-`compiler/{mod,emit,node,rule,compound}.rs`, `interpreter/{mod,leaves,control,repeat,
-construct,memo,value}.rs`, `debug.rs`). It compiles the combinator-isomorphic
-`bbnf_ir::IrNode` (`crates/ir/src/types/node.rs:30`) to a serializable
-`BytecodeProgram` and executes it in a tight explicit-stack loop. It is already
-benched cold per-parse over the shared corpora at `crates/core/benches/{json,css,
-google_sheets}/vm.rs`. The family's question is therefore **not "can a shared VM
-exist" but "does parse-that's combinator core lower to THIS VM at a cost that beats
-its closure core, and is the VM byte-identical across Rust and TS?"** — a measurement,
-per the charter.
-
-The three planes of the near-bijection this family rests on:
-
-| Combinator (parse-that) | IrNode (`node.rs`) | VM Op (`bytecode.rs:45`) |
-|---|---|---|
-| `string` / `leaf.ts:string` | `Literal(StringId)` :33 | `MatchString(StringId)` |
-| `regex` | `Regex(StringId)` :36 | `MatchRegex(StringId)` + DFA |
-| `then`/`all`/`seq!` | `Seq(Vec<IrNode>)` :43 | inline sequence |
-| `or`/`alt!` | `Alt(Vec, Option<AltDispatch>)` :48 | `SaveState`/`JumpIfFail`/`RestoreState`/`DropState` |
-| `dispatch` (O(1) first-char) | `Alt` + `AltDispatch{table}` :128 | `Dispatch(u16)` + `dispatch_tables` |
-| `many`/`sepBy`/`opt` | `Repeat{inner,lo,hi}` :54 | `RepeatBegin{lo,hi,body_end}`/`RepeatEnd` |
-| `skip`(`<<`)/`next`(`>>`) | `Skip`/`Next` :65,68 | `SaveValueDepth`/`DiscardRight`/`DiscardLeft` |
-| `minus`(EBNF `-`) | `Minus` :71 | `Minus` |
-| `not`/`negate` | `Negate` :75 | `Negate` |
-| rule reference / `lazy` | `Ref(RuleId)` :61 | `Call(RuleId)`/`Return` |
-| `trim`/`@ws` | `OptionalWhitespace` :84 | `TrimWs`/`TrimWsPattern(StringId)` |
-| token-led alt fusion | `TokenDispatch{token,arms,fallback}` :90 | `DispatchToken(u16)` |
-| `map`/`->` projection | `Map{inner,fn_id}` :79 | **NONE — dropped at compile** (§4) |
-| `memoize`/packrat | (rule attr) | `MemoCheck`/`MemoStore` :138 |
-| `@debug`/diagnostics | (rule attr) | `DebugBreak`/furthest-offset (§3) |
-
-The Op set (~33 instructions) is a direct descendant of the LPeg parsing machine
-(§5). The combinator↔IrNode leg is the LOCK-4 hand-forward's "14-variant
-near-bijection"; the IrNode↔Op leg is this VM's compiler. 4C's thesis is that the
-**Op set is the shared terminal ISA** for both repos — Rust interprets it today; a TS
-interpreter over the *same serialized `BytecodeProgram`* is the missing half.
+A working grammar VM already exists and ships — `crates/ir/src/vm/` (~2090 LOC): a
+33-variant `Op` instruction set (`bytecode.rs:45`), an `IrNode`→bytecode compiler
+(`compiler/`, ~668 LOC), and a stack-machine interpreter (`interpreter/`, ~786 LOC). Both
+`Op` and `BytecodeProgram` derive `Serialize`/`Deserialize`, so the **serializable-plan
+observable is structural, not aspirational**. The VM is *recognizer-only today*: its `Value`
+is `Span|Tagged|Array|Nil` and `IrNode::Map { inner, .. } => compile_node(inner)`
+(`compiler/node.rs:31`) **discards the projection FnId** — the value plane the `->` grammar
+authors is silently dropped. Family 4C's mechanism is (a) close that value-plane gap with a
+serializable `Op::ApplyFn(FnId)` + a small descriptor evaluator, making the plan a *complete*
+recognizer+projection program; (b) mirror the flat `Op` stream into a TS decoder so one plan
+drives two lowerings to byte-identical parses; (c) home packrat and diagnostics — already
+present as VM facilities — as the reference design. The honest framing (constitution vii, the
+charter): the interpreted VM is **not** the throughput champion — SPEC §0 shows the
+codegen/monomorphized path at JSON-tape 2.2× sonic — so 4C is measured as the **shared-ISA
+correctness spine, the portable cross-language substrate, and the code-size-budget escape
+hatch** when comptime-monomorphization would blow the `.rlib`/`dist` budget.
 
 ---
 
 ## 1. The mechanism made concrete
 
-**Rust side (exists).** `bbnf_ir::compiler::compile(&GrammarIR) -> BytecodeProgram`
-(`compiler/mod.rs:32`); `Interpreter::new(&program, &input).run()`
-(`interpreter/mod.rs:113,152`). The run loop (`mod.rs:152+`) is a `match
-self.program.code[pc]` direct-dispatch over `Op`, borrowing the op by ref and copying
-small payloads (comment at the match: "avoids cloning Arc/Vec for Dispatch ops").
-This is a classic switch-threaded bytecode interpreter (Ertl & Gregg §5).
+### 1.1 The instruction set (the shared ISA)
 
-**The parse-that lowering (the family's build).** parse-that's public API constructs a
-*runtime* combinator graph (`Parser<'a,O>{parser_fn: SmallBox<dyn ParserFn, S32>}`,
-`rust/parse_that/src/parse.rs:61`; TS `Parser<T>{parser: ParserFunction}`,
-`typescript/src/parse/parser.ts:24`). 4C interposes a reification step: the combinator
-graph is built as an `IrNode` (not an opaque closure), then `compile()`'d to a
-`BytecodeProgram`, then interpreted. Two admissible timings:
-- **Runtime compile** (the distinctive 4C claim): `compile()` is a pure function of a
-  runtime-built `IrNode`; nothing binds it to comptime. First `.parse()` triggers
-  compile-once (amortized exactly as packrat arms on first `memoize()`,
-  `packrat.ts:290`), then all parses interpret. Preserves parse-that's runtime API.
-- **Build-time compile** (the 4B overlap): grammar-text→IrNode→BytecodeProgram at
-  build, ship the program. This is what the bbnf benches do (`json/vm.rs:19-21`:
-  `compile_grammar` → `compile_bytecode`). 4C's differentiator vs 4B is that the
-  *terminal is a runnable shared VM*, not monomorphized native — so the same
-  `BytecodeProgram` bytes drive both languages (§2).
+The extant `Op` enum (`crates/ir/src/vm/bytecode.rs:45`) is the ISA, and it is already
+LPeg-shaped. Grouped:
 
-**TS side (the missing half).** A hand-written `switch(op.tag)` interpreter over a
-`BytecodeProgram` deserialized from Rust JSON/MessagePack. Because `BytecodeProgram`
-derives `Serialize/Deserialize` (`bytecode.rs:145`) and `Op` is a plain tagged union
-(`bytecode.rs:45`), the program crosses as data. The TS interpreter mirrors
-`interpreter/{leaves,control,repeat,construct,memo}.rs` arm-for-arm. Layout
-isomorphism is *by construction*: there is one instruction set, defined once.
+- **Leaves** — `MatchString(StringId)`, `MatchRegex(StringId)`, `Epsilon`.
+- **Control** — `Jump/JumpIfFail/JumpIfOk(u32)`, `Call(RuleId)`, `Return`, `Halt`, `Nop`.
+- **Backtrack state** — `SaveState`, `RestoreState`, `DropState` (≅ LPeg `IChoice`/`IFail`/
+  `ICommit`; ≅ parse-that closure `.or`/`.opt` checkpoint save/restore, R4 §2).
+- **Whitespace** — `TrimWs`, `TrimWsPattern(StringId)`.
+- **EBNF exceptions** — `Minus`, `Negate`.
+- **Dispatch** — `Dispatch(u16)` (128-entry byte→branch side table `DispatchData`; interpreter
+  hot arm `mod.rs:233`) and `DispatchToken(u16)`. This is the *same* O(1) first-byte dispatch
+  parse-that TS builds as an `Int8Array(128)` table (`leaf.ts:100-151`) — a direct isomorphism
+  anchor, already realized on both sides in different substrates.
+- **Repetition** — `RepeatBegin{lo,hi,body_end}`, `RepeatEnd`.
+- **Value construction** — `CaptureSpan`, `SaveValueDepth`, `DiscardRight`/`DiscardLeft`
+  (the `<<`/`>>` value selection), `MakeArray(u32)`, `MakeTagged(StringId)`.
+- **Packrat** — `MemoCheck{rule_id,hit_offset}`, `MemoStore(rule_id)` (`bytecode.rs:137`).
+- **Diagnostics/debug** — `DebugBreak{rule_id,is_entry}` + `source_map` + `follow_sets`.
 
----
+The single missing arm is the value-plane fold. 4C adds exactly one opcode:
 
-## 2. Q5 / Q6 — the serializable plan and isomorphism-of-record
+    ApplyFn(FnId)   // pop the recognizer Value, evaluate fns[FnId] over its span, push the typed result
 
-**Q5 (serializable plan → one plan, two lowerings, byte-identical parses): YES, and
-the observable already has a physical carrier.** The `BytecodeProgram`
-(`bytecode.rs:145-200`) IS the serializable plan: `code: Vec<Op>`, `entries`,
-`strings`, `dispatch_tables: Vec<DispatchData>`, `token_dispatch_tables`,
-`follow_sets`, `rule_names`, `source_map` — all `#[derive(Serialize)]` /
-`#[serde(default)]`. It is not intrinsic to the Rust type system (contrast 4B, whose
-fused region *is* a monomorphized Rust type with no serializable residue). The
-distinguishing observable the charter asks for: **serialize one `BytecodeProgram`,
-run the Rust interpreter and a TS interpreter over it, assert identical
-(offset, Value-tree)** — one plan, two lowerings, byte-identical parse.
+plus a `BytecodeProgram.fns: Vec<FnDescriptor>` side table cloned from `GrammarIR::fns`. This
+is not speculative: a prototype patch already implements it (§4). The value-discard site
+becomes `IrNode::Map { inner, fn_id } => { compile_node(inner); emit(Op::ApplyFn(fn_id)) }`.
 
-**The one serialization seam (a named risk, not a blocker):** `compiled_regexes:
-Vec<Option<parse_that::regex::Dfa>>` is `#[serde(skip)]` (`bytecode.rs:180`). The
-DFA products do not cross; the TS side must recompile regexes from the interned
-`strings` table (or run native `RegExp`, as the TS closure core does today —
-`leaf.ts:317`). This is the exact XL-C two-tier bridge: opaque `Regex(StringId)`
-crosses as a string; the rich engine tier is re-derived per side. It does not break
-opcode-stream identity (the `MatchRegex(sid)` op is identical), only the cached
-automaton is side-local.
+### 1.2 The descriptor evaluator (Q6's Hex/Number/Enum home)
 
-**Q6 (isomorphism-of-record dual oracle): the VM makes both halves cheap and *live*.**
-- *Opcode-stream identity* — the **live Rust golden** is `compile()`'s
-  `program.code` (a `Vec<Op>`), serialized. Not a hand-faked blob: it is emitted by
-  the same compiler the Rust interpreter runs. TS decodes and asserts equality.
-- *Value-tree identity* — the VM's `Value` enum (`value.rs:52`) is small and total:
-  `Span(u32,u32)`, `Tagged{tag,span,children}`, `Array(ValueSlice)`, `Nil`. The
-  oracle is `Value`-tree equality between the Rust `Interpreter` and the TS
-  interpreter over the same program+input. `ParseResult{success,offset,value,
-  diagnostics}` is the record.
-- *Corpus set*: the three already-benched grammars — `grammar/json/json.bbnf`,
-  the CSS L4 grammar, `google_sheets` — plus parse-that's own JSON/CSV/CSS domain
-  parsers as the combinator-side corpus.
+The internal descriptors `FnDescriptor::{HexConvert, NumberConvert, EnumWrap, BoxWrap,
+Expr(MapExpr)…}` (`crates/ir/src/types/fn_descriptor.rs`) are today evaluated only on the
+**codegen** path (`passes/payload/`, `passes/recognizers/grammar_facts.rs`). 4C homes their
+*runtime* evaluation in the VM as `eval_descriptor(desc, matched_text, orig) -> Value`: a
+small tree-walk over `MapExpr`/`MapBinOp`/`MapUnaryOp` — hex parse, `f64` parse, enum-tag
+wrap. This is a **LOCK-3 IR-VM lowering**, not LOCK-7 host dispatch, because these descriptors
+are MapExpr-expressible internal projections, not arbitrary host closures. LOCK-7's lattice
+owns only the `Opaque(HostFnId)` residue (Q2/Q3) — those cannot serialize and need a TS-side
+registry keyed by the same `FnId` to cross the language boundary.
 
-**Q6 tail (who owns the Hex/Number/Enum internal-descriptor evaluator):** the VM
-cleaves the plane exactly. The **structural** value plane (`Span/Tagged/Array`
-construction via `CaptureSpan`/`MakeTagged`/`MakeArray`, `bytecode.rs`;
-`construct.rs`) is **LOCK-3 IR→VM lowering** — it lives inside the interpreter. The
-**descriptor** plane (Hex/Number/Enum decode from a captured `Span`) is *not in the
-VM today* (§4) and is therefore **LOCK-7 host dispatch** unless promoted to a VM op.
-4C reports this seam; it does not resolve it — but note that promoting it (an
-`Op::Apply(FnId)`) is what would let the VM be the *terminal* rather than a recognizer
-feeding a separate evaluator.
+### 1.3 Layout isomorphism by construction (Q5/Q6)
+
+Because the plan is a flat `Vec<Op>` + typed side tables (all `Serialize`), a TS decoder
+mirrors the `Op` tags 1:1 — structural drift is impossible where the bytes are shared. This is
+LOCK-6's `6B` spec-generated-skeleton applied to the `Op` enum: generate the TS `Op` union and
+the decoder switch from the Rust enum. The one non-serialized field, `compiled_regexes:
+Vec<Option<Dfa>>` (`#[serde(skip)]`, `bytecode.rs:183`), is rebuilt on the decode side by
+`prepare_regexes()` (`bytecode.rs:220`) — the clean cross-language seam: the plan carries regex
+*patterns* (StringIds); each side compiles its own matcher (Rust bbnf-regex DFA; TS native
+`RegExp`, R4 §3). **Bound (XL-D):** the fast TS face is the build-time emitter; a TS
+*interpreter* over the Op stream is an isomorphism/correctness ORACLE, not the throughput face.
+So "one plan, two lowerings, byte-identical parses" holds for the **opcode plane and
+Value-tree** (correctness), while production TS throughput stays with the emitter.
+
+### 1.4 Packrat & diagnostics as VM facilities (already realized)
+
+Packrat is in the ISA: `MemoCheck`/`MemoStore` + `Interpreter.memo:
+FxHashMap<(RuleId,u32),…>` + the `memo_enabled` program flag, set only when a rule has direct
+left recursion (`compiler/mod.rs:99`). This is the same opt-in discipline parse-that TS uses
+(packrat OFF by default, arms at first `memoize()`, `packrat.ts:290`) — the VM's `memo_enabled`
+is the Rust mirror. Diagnostics are *already per-parse scoped* in the VM: `diagnostics: Vec` on
+the `Interpreter` (not a module-global flag), furthest-offset tracking (`track_furthest`,
+`mod.rs:327`), FOLLOW-set expected-token emission (`emit_furthest_diagnostic`, `mod.rs:335`).
+This is the reference design PT-E1 asks parse-that TS to become (R4 §5: TS diagnostics gated
+behind the module-global `diagnosticsEnabled`, `utils.ts:6`) — 4C's VM demonstrates the scoped
+form the TS backbone should converge to.
 
 ---
 
-## 3. Packrat & diagnostics as VM facilities (charter clause — confirmed live)
+## 2. The substrate & integration seams (path:line)
 
-- **Packrat** is `Op::MemoCheck{rule_id,hit_offset}` / `Op::MemoStore(rule_id)`
-  (`bytecode.rs`), interpreted in `interpreter/memo.rs`, keyed
-  `memo: FxHashMap<(RuleId,u32),(u32,Value,bool)>` (`mod.rs:84`). It is emitted only
-  when `grammar_needs_memo(ir)` (`compiler/mod.rs:45`, direct-left-recursion
-  detection) — i.e. **off by default, armed by analysis**, exactly matching
-  parse-that's opt-in packrat law (`packrat.ts:156/290`; PACKRAT_ARMED a no-op until
-  first `memoize()`). Isomorphic semantics for free.
-- **Diagnostics** are VM state, not a global latch: `furthest_offset`/`furthest_rule`
-  (`mod.rs`), `diagnostics: Vec<ParseDiagnostic>` with FOLLOW-set `expected` bytes
-  (`value.rs:68`, `follow_sets` in the program). This is structurally the *cure*
-  PT-E1 asks of the TS closure core (make diagnostics per-parse, not a module-global
-  `diagnosticsEnabled` — `utils.ts:6`): in the VM, diagnostics are per-`Interpreter`
-  by construction, since the interpreter IS the per-parse object.
-- **Debug** is `Op::DebugBreak{rule_id,is_entry}` + `SourceMapEntry{pc,rule_id,span}`
-  (`bytecode.rs:203`) — a no-op when `debug_state: None`. Source maps and breakpoints
-  are VM facilities, isomorphic across backends because they are data in the program.
-
----
-
-## 4. Q2 / Q3 — the value-plane barrier (a real, counted finding)
-
-**The VM discards host projections.** `compiler/node.rs:31`:
-`IrNode::Map{inner,..} => self.compile_node(inner, ir)` — the `fn_id` is **thrown
-away**; there is no `Op` for host application. The VM therefore produces a purely
-*structural* `Value` tree (spans + tags + arrays); every `->` projection, and every
-arbitrary host closure, is applied by a **separate downstream pass over that tree**,
-outside the VM.
-
-Consequences for the directive questions:
-- **Q3 (opaque-barrier size):** today the barrier is *100% of Map sites* to the VM —
-  it sees through none of them (it deletes them). This is worse than the ≤2% floor
-  *as an in-VM property*, but it is not an analysis-blindness in the classical sense:
-  the VM simply doesn't carry the plane. The honest number a prototype must produce is
-  the Map-site fraction per corpus (value.js, latex-paper, keyframes) — the count of
-  `->` sites that would need an in-VM `Op::Apply` for the VM to be the terminal.
-- **Q2 (arbitrary host closures):** the VM's `Value` set (Span/Tagged/Array/Nil) can
-  express any *structural* projection but no *computed* one (Hex→u32, Number→f64,
-  Enum→variant). To make the VM the value-plane home, add `Op::Apply(FnId)` calling a
-  **host-fn table indexed by FnId, present identically on both sides** (the LOCK-7
-  host-fn lattice). MapExpr-expressible projections could instead lower to a tiny
-  arithmetic sub-ISA (`Op::DecodeHex`, `Op::DecodeF64`, `Op::MakeEnum(u16)`) that
-  stays byte-identical across repos; only genuinely opaque closures need the FnId
-  escape hatch (and only those constitute a true isomorphism barrier — the TS side
-  must ship the same closure). A serializable `HostClosure` descriptor does not exist
-  today (`FnDescriptor` has no such variant); the prototype must census which `->`
-  sites are non-MapExpr and thus force the FnId barrier vs. the sub-ISA.
-
-This is the central architectural fork for 4C: **VM-as-recognizer** (value plane
-stays a post-pass, LOCK-7 owns it) vs **VM-as-terminal** (promote projections into the
-ISA, LOCK-3 owns the MapExpr subset, LOCK-7 owns only the opaque residue). The family
-should carry both and let the barrier census decide.
+- `crates/ir/src/vm/bytecode.rs:45` — `Op` enum (the ISA); `:155` `BytecodeProgram`
+  (Serialize/Deserialize; `entries`, `strings`, `dispatch_tables`, `follow_sets`,
+  `source_map`); `:183` `compiled_regexes` `#[serde(skip)]`; `:220` `prepare_regexes` (the
+  decode-side regex rebuild seam).
+- `crates/ir/src/vm/interpreter/mod.rs:114` — `Interpreter::new`: **8 Vecs + FxHashMap** (Q7 —
+  `values`.cap 64, `call_stack` 32, `checkpoints` 32, `repeats` 16, `memo_starts` 8,
+  `value_depth_stack` 8, `rule_stack` 16, `diagnostics` lazy, `memo` lazy). `:144` `run` (the
+  33-arm match dispatch loop). `:319` `collect_values_from` (value-stack→slice). `:335`
+  per-parse diagnostic.
+- `crates/ir/src/vm/compiler/node.rs:31` — `IrNode::Map { inner, .. } => compile_node(inner)`:
+  **the value-discard defect** (violates the typed-materialization invariant); the site
+  `Op::ApplyFn` repairs.
+- `crates/ir/src/vm/interpreter/value.rs:52` — `Value` enum (Span/Tagged/Array/Nil):
+  recognizer-only; the value plane needs typed scalar/variant arms (`U32`, `F64`, `Enum`).
+- `crates/ir/src/vm/compiler/mod.rs:31` — `compile(ir) -> BytecodeProgram`; `:99`
+  `grammar_needs_memo` (packrat trigger).
+- `crates/ir/src/types/fn_descriptor.rs` — `FnDescriptor` (the descriptor set the VM evaluator
+  consumes); `crates/ir/src/types/node.rs` — `IrNode` (the near-bijection the compiler eats).
+- **Live consumers (constitution viii satisfied):** `crates/lsp/src/dap/adapter.rs:150` (the
+  DAP debugger runs `Interpreter` over `BytecodeProgram` — the VM's raison d'être is the
+  debug/interpret path); `crates/core/benches/json/vm.rs` (cold per-parse VM bench across
+  data/twitter/citm/canada/data_xl). The VM is NOT dead surface — but it is the *interpret*
+  path, distinct from the codegen fast path.
+- **Cross-language:** parse-that TS `typescript/src/parse/leaf.ts:100-151` (`dispatch`
+  Int8Array(128) ≅ `Op::Dispatch` `DispatchData`); `parser.ts` `.then/.or/.opt` checkpoint
+  logic ≅ `SaveState`/`RestoreState`; `packrat.ts:290` (opt-in arming ≅ `memo_enabled`). TS has
+  NO bytecode/VM today — the shared-ISA claim requires a new TS decoder, oracle-bounded (XL-D).
+- **Reusable prototype seed:** `locks/LOCK-2/pass-1/proto-2-wf30.patch` already adds
+  `Op::ApplyFn(FnId)`, `BytecodeProgram.fns: Vec<FnDescriptor>`, `interpreter/apply_fn.rs`
+  (`eval_descriptor` MapExpr tree-walk), and `tests/lock4_value_plane_probe.rs` (VM vs closure
+  on hex-color→U32 and recognizer-only, cold paired N=400, two windows, both orders). It also
+  repoints `compiled_regexes` from `parse_that::regex::Dfa` → `bbnf_regex::Dfa` — aligning the
+  VM onto the XL-C vendored regex substrate.
 
 ---
 
-## 5. Q7 — setup vs value-plane vs recognizer cost (the VM's own tax)
+## 3. The steering questions, answered for 4C
 
-`Interpreter::new` (`mod.rs:113-140`) allocates **eight Vecs + one FxHashMap** per
-parse: `values(cap 64)`, `call_stack(32)`, `checkpoints(32)`, `repeats(16)`,
-`memo(FxHashMap)`, `memo_starts(8)`, `value_depth_stack(8)`, `rule_stack(16)`,
-`diagnostics(Vec::new)`. This is a fixed per-parse setup tax that the bench's
-`bench_values(|input| { Interpreter::new(...).run() })` (`json/vm.rs:44`) pays on
-every sample — it is *in* the cold per-parse number. The clean split the charter
-wants:
-- **recognizer cost** = the run-loop instruction dispatch + `MatchString`/`Dispatch`
-  work;
-- **value-plane cost** = `values`/`value_depth_stack` pushes + `MakeArray`/
-  `MakeTagged` (`construct.rs`) — larger than the closure core's direct-return model,
-  which never stages values on a heap Vec;
-- **setup cost** = the nine allocations above, amortizable to ~zero by **pooling the
-  `Interpreter`** (reset the Vecs' `len` to 0 and `memo.clear()` in place, reuse
-  across parses) or bump-arena'ing the value stack. This is the single cleanest VM win
-  and a required prototype measurement (setup-alloc share + the amortization curve as
-  the interpreter is pooled). Pooling is trivially sound here (the interpreter borrows
-  `&'prog program`, `&'prog input` — a reset-and-reuse needs only re-`new`ing the two
-  borrows), unlike the parse-that closure-arena trap (`'a`-parameterized `ParserFn`
-  cannot live in a `'static` pool).
-
----
-
-## 6. Prior art (citations)
-
-- **LPeg parsing machine** — R. Ierusalimschy, *"A Text Pattern-Matching Tool based
-  on Parsing Expression Grammars"*, Software: Practice & Experience 39(3), 2009. THE
-  canonical combinator/PEG bytecode VM. Its ISA (Char, Any, Set, TestChar, Choice,
-  Jump, Call, Return, **Commit/PartialCommit/BackCommit**, Fail/FailTwice) maps
-  one-to-one onto the bbnf Op set: Choice≈`SaveState`, Commit≈`DropState`+`Jump`,
-  Fail≈`RestoreState`, Call/Return identical, TestChar≈`Dispatch`. The bbnf VM is a
-  value-producing superset (LPeg captures ≈ `CaptureSpan`/`MakeTagged`). This is the
-  direct precedent that a combinator core lowers to a compact VM *at competitive
-  speed* — LPeg beats hand-written Lua parsers.
-- **Rosie Pattern Language** (J. Jennings et al.) — LPeg-VM at production scale over
-  log data; evidence the VM model holds under real corpora, not just microbenches.
-- **Ertl & Gregg**, *"The Structure and Performance of Efficient Interpreters"*,
-  JILP 2003 — the switch-vs-threaded-dispatch cost model. Governs the Rust run-loop
-  (match-threaded today; direct/indirect-threaded via computed-goto is a Rust-side
-  option) and warns the TS side: V8 cannot do computed-goto, and a >~30-arm `switch`
-  in a hot loop risks a jump-table→linear deopt — the named TS risk (§7).
-- **pest** (Rust PEG, `pest.rs`) — the CONTRAST: pest compiles to Rust *code* via a
-  derive macro (no runtime VM), closer to family 4B. Cite as the "why not just
-  codegen" foil: codegen wins single-language speed but forfeits the one-plan-two-
-  lowerings isomorphism 4C buys.
-- **tree-sitter** — table-driven GLR automaton serialized as data and interpreted by a
-  shared C core with per-language bindings. Precedent that "the parser is data + one
-  interpreter, many language faces" is a shipping architecture; its `parser.c` tables
-  are the moral equivalent of `BytecodeProgram`.
-- **CPython `sre` / Rust `regex` NFA-bytecode** — regex-as-bytecode-VM, the
-  sub-language precedent (ties XL-C: the VM already holds `compiled_regexes` DFAs).
-- **egg / egglog** (Willsey et al., POPL 2021) — the IrNode carries a
-  path-dep-consumed e-graph; bytecode is a *superoptimization* target (peephole over
-  `Op` sequences: fuse `SaveState`…`DropState` around a non-backtracking branch, elide
-  `Dispatch` fallthrough). MLIR-style multi-level lowering (combinator dialect → IR
-  dialect → bytecode dialect) is the framing for the compile pipeline.
+- **Q5 (serializable-plan observable) — YES, structural.** `BytecodeProgram` is `Serialize`;
+  the distinguishing observable is: bincode/JSON a program, decode in TS, run both, assert
+  opcode-stream + Value-tree identity. `compiled_regexes` `#[serde(skip)]` + `prepare_regexes`
+  is the clean seam. Bound by XL-D: the TS lowering is an oracle, not the fast face.
+- **Q6 (isomorphism-of-record + evaluator home).** Dual oracle: (1) *opcode-stream identity* —
+  serialize the Rust `BytecodeProgram`; the `Vec<Op>` is the live golden (not a hand-faked
+  blob); the TS decoder must reproduce it byte-for-byte. (2) *Value-tree identity* — vs the
+  live Rust `Interpreter::run().value` over json/css/value.js-hex corpora. The Hex/Number/Enum
+  descriptor evaluator is a **LOCK-3 IR-VM lowering** (`Op::ApplyFn` + `eval_descriptor`), not
+  LOCK-7 host dispatch.
+- **Q7 (setup vs value-plane vs recognizer cost).** `Interpreter::new` is 7 eager
+  `Vec::with_capacity` heap allocs (memo/diagnostics lazy). On a small parse this setup
+  dominates and makes the VM look artificially slow. Elimination: a pooled `Interpreter` with
+  `reset()` (truncate Vecs, `memo.clear()`, keep capacity) or a thread-local pool amortizes
+  setup to ≈0 across parses. The extant `lock4_value_plane_probe` already measures
+  recognizer-only vs projection-dense cold per-parse — extend it with the pooled/`new` arm to
+  produce the amortization curve and the clean recognizer / `ApplyFn` / setup split.
+- **Q4 (fusion policy / blowup budget).** The VM is the `{enum-node}` / `{box-here}` arm of the
+  pluggable cost model: one `Op` enum, one dispatch loop, **O(program) code size, zero
+  monomorphization blowup**. Named contribution: when `fuse-arity × dispatch-fanout` on a site
+  would push 4B's monomorphized chains past the generated-size / incremental-compile budget on
+  CSS or value.js, lower that region to bytecode (constant code size) instead. The measured cap
+  is the crossover point; the ~33-arm `match` branch-predictor cost is the price for that
+  ceiling.
+- **Q2/Q3 (value plane / opaque barrier) — for 4C's serializability.** MapExpr-expressible
+  descriptors cross the plan boundary (they serialize as `FnDescriptor`); `Opaque(HostFnId)`
+  closures do not — they mark the barrier the VM plan cannot see through and the TS decoder
+  cannot execute without a host-fn registry (LOCK-7). 4C's serializable-plan claim is exactly
+  bounded by the non-opaque fraction of `->` sites.
+- **Q1 (runtime graph → comptime).** Orthogonal to 4C: the VM *is* the runtime-plan answer — it
+  interprets a comptime-compiled `BytecodeProgram`; it does not monomorphize. 4C is the route
+  that *declines* comptime type-monomorphization in favour of a shared interpreted ISA.
 
 ---
 
-## 7. Named risks & counterexamples
+## 4. Prior art (citations)
 
-1. **The refutation risk (central).** A bytecode VM adds one instruction-dispatch
-   indirection *per op* that a monomorphized/fused closure chain (4B) avoids. If the
-   VM's per-op dispatch exceeds the closure core's per-combinator vtable/IC dispatch,
-   4C loses on speed. Counterexample to *assuming* the win: PROVE-11's dispatch lane
-   claimed +10.2%, re-measured **~+5%** — over-claiming is the house disease. 4C must
-   be measured paired cold per-parse against the closure core, never asserted. The
-   fair comparison is *VM-switch-dispatch vs vtable/IC-dispatch* (both indirect), NOT
-   VM vs inlined native — parse-that's closure core also pays a megamorphic
-   `this.parser(state)` IC (`parser.ts` §6c of R4) and a `SmallBox<dyn ParserFn>`
-   virtual call (`parse.rs:61`) per combinator, so the VM may consolidate N
-   megamorphic sites into ONE hot switch.
-2. **TS switch deopt.** A ~33-arm `switch` on `op.tag` in V8's hot loop can fall off
-   the jump-table fast path. Mitigation: split cold arms (Debug/Memo/Trim) behind a
-   rare-guard, keep the hot arms (Match/Seq/Alt/Dispatch/Repeat) in a dense
-   small-integer switch; measure IC state. This is the TS-specific make-or-break.
-3. **Value-stack allocation.** The VM stages values on a heap `Vec<Value>`
-   (`MakeArray`/`MakeTagged`) where the closure core returns them directly. Without
-   pooling (Q7) the VM can be *more* allocation-heavy per parse (the 5390 per-parse
-   allocs the closure core already carries are Vec growth in `many`/`sep_by` — the VM
-   would add its own value stack on top). The pooled-interpreter measurement is
-   load-bearing.
-4. **Value-plane amputation (§4).** If projections stay a post-pass, 4C is a
-   recognizer, not the terminal — and the "one plan, two lowerings" claim only covers
-   recognition, not the value plane. The `Op::Apply`/sub-ISA promotion is what closes
-   this, at the cost of dragging the LOCK-7 host-fn table into the isomorphism
-   contract.
-5. **Regex non-crossing (§2).** `compiled_regexes` is `#[serde(skip)]`; a TS side that
-   forgets to re-derive will silently `MatchRegex`-fail. The oracle must exercise a
-   regex-heavy grammar (CSS) to catch it.
-6. **Left-recursion / memo divergence.** `grammar_needs_memo` heuristic
-   (`compiler/mod.rs`) must fire identically on both sides or the packrat facility
-   desynchronizes the opcode stream — a Q6 isomorphism trap. Emit memo decisions into
-   the serialized program (they already are: `memo_enabled` field, `bytecode.rs:167`),
-   never recompute TS-side.
+- **LPeg** (Ierusalimschy, *"A Text Pattern-Matching Tool based on PEGs"*, Softw. Pract.
+  Exper. 2009) — the canonical parsing VM: PEG → bytecode → tight C interpreter with a
+  backtrack stack. Its `IChar/ITestChar/IChoice/ICommit/ICall/IReturn/IFail` map almost 1:1 to
+  the VM's `MatchString/Dispatch/SaveState/DropState/Call/Return/RestoreState`. LPeg is the
+  existence proof that a PEG bytecode VM is competitive with hand-written parsers — the
+  strongest anchor for 4C, and the standard it must be measured against.
+- **Rust `regex-automata`** — the `PikeVM` and bounded-backtracker are parsing VMs over an
+  `Inst` set; the `Op` enum echoes them. Relevant for the `MatchRegex` sub-VM and thread-state
+  stacks.
+- **CPython `ceval`** (stack machine) and **Lua 5** (register machine) — the stack-vs-register
+  tradeoff; a register variant could cut `Op` count on the value-construction ops (named future
+  probe).
+- **Crafting Interpreters** (Nystrom), computed-goto/threaded dispatch — Rust lacks computed
+  goto; a jump table or guaranteed tail-call dispatch is the equivalent. Named risk below.
+- **tree-sitter** — serialized parse tables as a portable artifact; validates the "one
+  serialized plan, many hosts" idiom (though LR, not PEG-VM).
 
 ---
 
-## 8. What a prototype must test (the family-mover)
+## 5. Named risks & counterexamples
 
-Two paired measurements settle 4C; both use the existing scratch-copy recipe (R3 §8)
-and the cold per-parse paired-interleaving law (no warm benches; PROVE-11 discipline).
+1. **The VM is the slow path by construction.** An interpreted `Op` loop cannot beat the
+   codegen'd monomorphized parser (SPEC §0: JSON tape 2.2× sonic, CSS 2.4–4.2× lightningcss).
+   Claiming the VM out-throughputs the closure/codegen core would be the two-arm self-deception
+   the constitution forbids (SPEC §0/09 refutation). 4C's *honest* value = shared ISA +
+   portability + debug + code-size ceiling; measured against the closure core per the charter,
+   its expected verdict on raw throughput is a *deficit* paired with a *code-size/isomorphism
+   credit*. The prototype must report the deficit, not bury it.
+2. **Value-discard law violation is live today.** `compiler/node.rs:31` drops every `->`
+   projection — a standing invariant breach (every `->` must reach materialization). The
+   `Op::ApplyFn` repair must be proven to reach EVERY Map site with value-tree parity vs the
+   codegen path, or the VM produces a structurally-correct but semantically-empty tree.
+3. **Rust match-loop dispatch vs LPeg computed-goto.** The 33-arm `match` in `run` may lose
+   branch-prediction to LPeg's threaded C loop. Counter-probe: measure `match` vs a
+   jump-table/tail-call dispatch before concluding the VM's interpret cost.
+4. **Setup tax poisons micro-benchmarks (Q7).** Unpooled `Interpreter::new` (7 allocs) makes
+   small-input parses look 2–5× worse than they are. A fair measurement REQUIRES the pooled
+   arm; the `vm.rs` bench currently constructs a fresh `Interpreter` per parse and must gain a
+   pooled variant.
+5. **Opaque host closures break the serializable plan.** Any `->` that lowers to
+   `Opaque(HostFnId)` cannot cross to TS; the byte-identical-parse claim is void on those sites
+   unless a shared host-fn registry (LOCK-7) exists. Census the opaque fraction first (Q3's
+   ≤2% floor) — above it, the cross-language plan is partial.
+6. **`follow_sets: HashMap<RuleId,CharSet128>` and `source_map` bloat the serialized plan.**
+   These are diagnostics/debug side tables; a production cross-language plan should gate them
+   (`#[serde(skip_serializing_if)]`) so the recognizer plan stays compact.
 
-1. **Rust: VM vs closure core, same JSON grammar, paired.** The bbnf VM bench
-   (`crates/core/benches/json/vm.rs`) already gives the VM arm; add the parse-that
-   closure-core arm (`rust/parse_that/benches/parse_that/combinator.rs`) over the
-   *same* `data/json/*.json`. Report cyc/B for {VM cold-with-`new`, VM pooled,
-   closure core} per corpus, two windows, N≥200. Decompose the VM number into
-   recognizer / value-plane / setup (Q7). **Pass = VM (pooled) within noise of, or
-   ahead of, the closure core on ≥3 of 5 corpora**; a loss is a *named negative
-   result*, not a hidden one.
-2. **TS: cross-repo isomorphism + speed.** Serialize the JSON `BytecodeProgram` from
-   Rust; hand-write the ~33-arm TS switch interpreter; assert (a) opcode-stream
-   identity vs the live Rust golden, (b) `Value`-tree + offset identity over
-   `data/json`, (c) paired cold-per-op ns vs the TS closure core (`parser.ts`), IC
-   state probed (`--allow-natives-syntax` `%HaveSameMap` on the hot state object).
-   **Pass = byte-identical parses + the TS switch not deopting** (arms 2–3 are the
-   real question; speed parity is the stretch).
-3. **Barrier census (Q2/Q3).** Count `->`/`Map` sites across value.js, latex-paper,
-   keyframes; classify MapExpr-expressible (→ arithmetic sub-ISA) vs opaque (→ FnId
-   host-table barrier). Output the per-corpus barrier fraction that decides
-   VM-as-recognizer vs VM-as-terminal.
+---
 
-**Q1 answer, stated for the registry:** the runtime combinator API reaches the VM
-**only through a `compile()` step over a reified `IrNode` graph** — there is no
-type-level monomorphization path from a runtime closure graph (that is 4B's mechanism,
-and it needs a comptime-known graph or codegen-reflection). 4C's `compile()` is a
-runtime function, so parse-that *can* keep its runtime API and still reach the VM
-(compile-once-on-first-parse); what a monomorphizing lowering would demand of the API —
-comptime-known arities and const grammar — is exactly what 4C does **not** require,
-which is the family's distinguishing virtue and its speed liability (interpretation,
-not native codegen). The prototype's Rust arm quantifies that liability against the
-closure core.
+## 6. What a prototype must test to move family 4C
+
+1. **Land `Op::ApplyFn` + `fns` table + `eval_descriptor`** (seed: the LOCK-2 proto patch);
+   prove Value-tree parity VM-vs-codegen on value.js hex/number/enum `->` shapes AND json/css
+   corpora. Gate: every `->` site materializes (no value discard).
+2. **Cross-language byte-identity:** bincode a `BytecodeProgram`, decode in a new TS
+   interpreter over a generated `Op` union; run both on the conformance corpus; assert
+   opcode-stream identity + Value-tree identity. Frame the TS interpreter as oracle (XL-D).
+3. **Pooled interpreter (Q7):** add `Interpreter::reset()`; measure setup-alloc share of a
+   single small parse, the amortization curve (`new` vs pooled across N parses), and the
+   recognizer / `ApplyFn` / setup three-way split. Extend `lock4_value_plane_probe`.
+4. **Head-to-head vs closure core (charter mandate):** recognizer-only + projection-dense, cold
+   paired N≥200, two windows, both arm orders (the probe's method). Report the VM's throughput
+   deficit honestly and its code-size/portability credit.
+5. **Cost-model crossover (Q4):** measure constant VM code size vs 4B's monomorphized-chain
+   size as fuse-arity grows on CSS + value.js; locate the fuse-arity/dispatch-fanout threshold
+   where the enum-node VM undercuts the monomorphization `.rlib`/`dist` budget. That threshold
+   is the pluggable cap 4C contributes to the shared cost model.

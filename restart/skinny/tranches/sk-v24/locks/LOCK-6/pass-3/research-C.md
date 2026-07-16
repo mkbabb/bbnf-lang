@@ -34,13 +34,21 @@ byte loop — and **where the linear-memory boundary forces copy-out**.
 **Framing.** The batch parser's inner loop is the classify step: scan `source` bytes
 into structural offsets. Two browser-deployable options:
 
-- **(A) wasm-SIMD128 classify.** The NEON shufti/truffle kernel recompiled to the
-  fixed-width 128-bit `v128` type (`-C target-feature=+simd128`). WASM SIMD is
-  *exactly* 128-bit, 236 instructions over packed lanes; browsers lower `v128` to SSE
-  on x86 and NEON on aarch64 at near-native speed — the width matches M-series NEON
-  (128-bit, no SVE for byte work per SPEC §0), so this is a **like-for-like port of
-  the certified kernel**, not a down-clock. simdjson's own portability rests on the
-  same 128-bit floor.
+- **(A) wasm-SIMD128 classify.** Crucially, this is **not** the NEON kernel recompiled
+  — the certified NEON shufti/truffle intrinsics (`skinny/crates/bbnf-simd`, aarch64
+  `tbl`/`vshrn`) do *not* cross to wasm. The wasm kernel is the **portable
+  `std::simd::u8x16` nibble-LUT arm that the generator ALREADY emits for wasm32**:
+  `crates/core/src/generate/regex/emit/simd.rs:85-135` (`emit_structural_bitmap_kernel`)
+  gates on `target_feature` and states verbatim (simd.rs:93-95) that "**otherwise
+  (aarch64, wasm32, non-AVX2 x86_64) the emitted scan routes through
+  `parse_that::find_next_structural_from` — one `std::simd::u8x16` nibble-LUT
+  classification per 16 bytes**." `std::simd::u8x16` lowers to WASM `v128`
+  (`v128.load` / `i8x16.swizzle` / `i8x16.eq` / `i8x16.bitmask`) under
+  `-C target-feature=+simd128`. WASM SIMD is *exactly* 128-bit; the width matches
+  M-series NEON (128-bit, no SVE for byte work per SPEC §0). So the Q1 kernel is an
+  **existing, cross-arch-parity-tested portable scanner** (`simd-scan::tests::correctness`,
+  cited simd.rs:118-121) built to a `+simd128` target — the AVX2/NEON arms just drop
+  out at the `#[cfg]`. No new emitter; only a wasm build.
 - **(B) TS-native scalar scan.** A hand-tuned monomorphic byte loop in TS over a
   `Uint8Array`, V8-JITted. No boundary crossing, no wasm instantiation, no
   string-marshalling; but scalar, ~1 byte/iteration, and cold-JIT for the first
@@ -76,6 +84,17 @@ degrades 2–3× on Unicode keys / heterogeneous values — that degradation is 
 where a tape/SIMD lane can win on *real* (non-ASCII, escape-laden) corpora like the
 twitter Japanese-text fields. tree-sitter ships a wasm build and is the reference for
 "one Rust/C core, browser via wasm, thin JS bindings" as a shipped architecture.
+
+**A wired Q1 harness already exists (needs cold-paired re-cast).**
+`parse-that/typescript/test/benchmarks/wasm-json.bench.ts` runs the exact shared-corpus
+comparison — five lanes (JSON.parse, parse-that hand TS, BBNF→TS combinator, BBNF→WASM-VM
+full-tree, BBNF→WASM-VM check-only) over data.json/apache-builds/**twitter (617 KB)**/citm
+(1.7 MB)/canada (2.1 MB), instantiating the existing `bbnf-lang/wasm` cdylib
+(`wasm/Cargo.toml`: `crate-type=["cdylib"]`, `wasm-opt=["-O3","--enable-simd"]`,
+Cargo.toml:28). Two caveats before it can serve Q1: (1) its WASM lane is a *tree-walking
+bytecode interpreter* (`wasm/src/vm.rs`, `parse_with_grammar`), NOT the tape+SIMD128 scan
+— the Q1 kernel lane must replace it; (2) it uses `vitest bench` warmup=50/time=2000 —
+**warm**, which the standing law forbids; re-cast as cold paired per PROVE-14 `bench.mjs`.
 
 **Q1 verdict owed by prototype (not assertable now):** both lanes, cold, paired,
 base-pinned, *in a real browser engine* (not node alone), with the string-marshalling
@@ -166,6 +185,14 @@ instantiation at module load, synchronous `parse()` thereafter, views copied out
 
 ## Integration seams (path:line, where extant code serves)
 
+- **The wasm-SIMD128 scan kernel, already gated:** `crates/core/src/generate/regex/
+  emit/simd.rs:85-135` — the `#[cfg]` wasm32 arm routes to
+  `parse_that::find_next_structural_from` (portable u8x16). This IS the Q1 kernel; a
+  `+simd128` build is the only new work.
+- **Existing cdylib precedent + wired Q1 corpus:** `bbnf-lang/wasm/` (Cargo.toml
+  crate-type/wasm-opt simd; `src/vm.rs` handle-store + `parse_with_grammar`) and
+  `parse-that/typescript/test/benchmarks/wasm-json.bench.ts` (five lanes, five corpora)
+  — the working wasm-bindgen shape and the corpus loader to reuse.
 - Plane accessors, the export shape: `Tape::{source, offsets, flag_cursors,
   flag_values}` at `crates/runtime/src/tape/mod.rs:126-137` — the four public slices a
   `#[wasm_bindgen]` export hands to JS unchanged.

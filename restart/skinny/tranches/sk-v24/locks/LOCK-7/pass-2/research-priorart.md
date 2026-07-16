@@ -63,6 +63,19 @@ identical), and thagore (Stage2 reproduces an identical Stage2'). The recurring 
 fixpoint is over the SELF-APPLIED transform, and only the second self-application certifies** —
 the first stage inherits the seed's toolchain and is expected to differ.
 
+**The on-the-nose precedent is a parser GENERATOR, not a compiler.** CPython's
+[pegen](https://we-like-parsers.github.io/pegen/) (PEP 617, the production parser generator) is
+exactly bbnf's problem class: a PEG meta-grammar `metagrammar.gram` with actions generates the
+grammar-file parser, "meaning there are no manually-written parsers"
+([van Rossum, A Meta-Grammar for PEG Parsers](https://medium.com/@gvanrossum_83706/a-meta-grammar-for-peg-parsers-3d3d502ea332)).
+Its fixpoint is stated verbatim: the bootstrap meta-parser turns the meta-grammar into a new
+meta-parser; **the new meta-parser reparses the same meta-grammar and the emitted output is the
+same** — that identity is the correctness proof. This is (a) the *bytes-of-generated-parser*
+fixpoint subject (matches skinny's `check_dir`), and (b) a working demonstration that a
+seed-parser + actions is sufficient to bootstrap — the seed need not be a full hand parser. It is
+a closer analogue than rustc (a whole compiler) and its fixpoint subject is precisely the DIRECTIVE
+7A choice-(a).
+
 **Constraint our evidence imposes.** The extant `check_dir` byte-gate (§0) is the *right subject
 form* (generated `.rs` bytes) but is applied to a fixed generator, not to bbnf-generating-bbnf.
 For a non-vacuous 7A the fixpoint must be: `emit(bbnf.bbnf)` produces a parser P; P re-parses
@@ -87,7 +100,16 @@ loop must route grammar *content* through the generated parser, else it certifie
   surface toward the hand-parser's own LOC, dissolving the auditability the bootstrap is for. The
   `seed_LOC` headline must be re-derived on skinny and traded against a total self-host: if the
   seed grows to emit builders it approaches the 2142-LOC hand grammar frontend (`R1 §1`), and the
-  win evaporates.
+  win evaporates. Concrete proof the byte-identical fixpoint is *achievable across divergent seed
+  toolchains*: at the 2023 Reproducible Builds Summit, GNU Guix, Nix, and Debian each built the
+  initial Mes compiler with a **different major GCC version** yet produced a bit-for-bit identical
+  Mes binary
+  ([reproducible-builds.org](https://reproducible-builds.org/news/2022/05/18/jan-nieuwenhuizen-on-bootrappable-builds-gnu-mes-and-gnu-guix/)) —
+  the [diverse double-compilation](https://reproducible-builds.org/news/2019/12/21/reproducible-bootstrap-of-mes-c-compiler/)
+  technique that operationalizes Thompson's trusting-trust countermeasure. The lesson for 7A: the
+  fixpoint's *value* is that it holds independent of the seed that produced the first stage — so the
+  gate must route grammar content through the generated parser (not a fixed emit path) for that
+  independence to mean anything.
 - **The uplift illusion.** Do not gate on stage1=stage2 (P built by the *hand* generator vs P
   built by P) — rustc proves these legitimately differ; only stage2=stage3 is the fixpoint.
 - **Vacuous determinism.** §0's fixed-const trap: any triple-identical claim over an emit path
@@ -108,6 +130,18 @@ loop must route grammar *content* through the generated parser, else it certifie
 (no `value` rule) shape-dispatches there. The general path is grammar-NEUTRAL by construction
 (`general_descent/mod.rs:11-14`). This is the lawful spine a total self-host must ride — NOT a
 bespoke `emit_typed_bbnf_*` cohort (the refuted legacy, §0).
+
+**The recognizer-then-builder split has a validated architectural precedent: Ohm.**
+[Ohm](https://ohmjs.org/docs/syntax-reference) (successor to
+[OMeta](https://en.wikipedia.org/wiki/OMeta), Warth) *separates* the grammar — "purely about
+recognition, no semantic actions" — from the action layer bolted on afterward. This is exactly
+the general emitter's shape: a `parse_<rule>` **recognizer** (recognition-only, §0) that a `-> T`
+**builder** augment would decorate. Ohm demonstrates the two layers *can* be authored and evolved
+independently over one grammar — but it does NOT settle the skinny-specific open question (does the
+builder augment reparse the corpus into GrammarIr-equivalent structure while `regen∘regen` holds
+byte-identical?): Ohm builds an in-memory CST via generic semantics, whereas skinny's builder must
+emit `add_expr`/`resolve_refs` calls that reconstruct the *same arena IR* the hand parser builds.
+The precedent legitimizes the split as an architecture; the round-trip remains RED-unknown (§5).
 
 **Scope axis (the LOCK-3 join).** SPEC LOCK-3C ("GRAMMAR-HOMOIOUSIA: the IR is itself
 grammar-specified ... transpositions are grammar-to-grammar maps; the generator eats itself —
@@ -152,6 +186,21 @@ the [Silver/MELT](https://melt.cs.umn.edu/silver/tutorial/4_attribute_grammars/)
 grammar" by exactly this synthesized/inherited frontier. **This gives 7C a principled floor: a
 semantic is grammar-expressible iff it is synthesized; inherited semantics are the lawful host
 surface** (aligns with the `hybrid-grammar-host` memory law).
+
+**The deployed reference implementation of a host-fn boundary is tree-sitter's external
+scanner.** tree-sitter draws the totality line at *lexical* rules a regex cannot express —
+Python's indentation, heredocs, contextual keywords — and hands them to hand-written C via a
+declared 5-function contract:
+[`create`, `destroy`, `serialize`, `deserialize`, `scan`](https://tree-sitter.github.io/tree-sitter/creating-parsers/4-external-scanners.html),
+with the external token set named in the grammar's `externals` array (the typed signature at the
+grammar/host seam — the `@host` analogue). Two lessons bind 7C: (i) the boundary is drawn at
+*regex-inexpressibility*, matching the synthesized/inherited frontier — a leaf that needs state
+beyond one left-to-right pass crosses to a host fn; (ii) **the scanner's `serialize`/`deserialize`
+must capture its ENTIRE state** — tree-sitter's own warning — which is the concrete form of the
+CONTEXT-tier zero-cost/serialization trap: an inherited-context host fn (TOML `push_path`,
+GN-5.W2) carries mutable state whose cost and round-trip must be *measured*, not assumed
+zero (§0 "type plane costs zero at runtime" is a claim the CONTEXT tier must re-earn, not
+inherit).
 
 **Independence split (from the census).** LOCK-free items: kill the `passes/src/lib.rs`
 heuristic (`has_parse_time_host_decode` at `:798`, a `name.contains("host") &&
@@ -265,9 +314,16 @@ Codebase (`path:line`): `skinny/xtask/src/{main.rs,regen.rs,regen_css.rs}`;
 Web: [rustc bootstrapping](https://rustc-dev-guide.rust-lang.org/building/bootstrapping/what-bootstrapping-does.html) ·
 [kefir](https://sr.ht/~jprotopopov/kefir/) ·
 [shecc](https://github.com/sysprog21/shecc) ·
+[pegen (PEP 617)](https://we-like-parsers.github.io/pegen/) ·
+[van Rossum, A Meta-Grammar for PEG Parsers](https://medium.com/@gvanrossum_83706/a-meta-grammar-for-peg-parsers-3d3d502ea332) ·
 [GNU Mes stage0](https://www.gnu.org/software/mes/manual/html_node/Stage0.html) ·
+[Mes reproducible bootstrap / diverse double-compilation](https://reproducible-builds.org/news/2019/12/21/reproducible-bootstrap-of-mes-c-compiler/) ·
+[Nieuwenhuizen on bootstrappable builds (3-distro bit-identical Mes)](https://reproducible-builds.org/news/2022/05/18/jan-nieuwenhuizen-on-bootrappable-builds-gnu-mes-and-gnu-guix/) ·
 [Bootstrappable Builds](https://bootstrappable.org/) ·
 [Thompson, Reflections on Trusting Trust](https://www.cs.cmu.edu/~rdriley/487/papers/Thompson_1984_ReflectionsonTrustingTrust.pdf) ·
+[Ohm syntax reference](https://ohmjs.org/docs/syntax-reference) ·
+[OMeta (Wikipedia)](https://en.wikipedia.org/wiki/OMeta) ·
+[tree-sitter external scanners](https://tree-sitter.github.io/tree-sitter/creating-parsers/4-external-scanners.html) ·
 [Attribute grammar (Wikipedia)](https://en.wikipedia.org/wiki/Attribute_grammar) ·
 [Silver/MELT attribute grammars](https://melt.cs.umn.edu/silver/tutorial/4_attribute_grammars/) ·
 [Tahr generative attribute grammar](https://arxiv.org/html/2512.01872v1) ·

@@ -1,11 +1,47 @@
-# LOCK-6 · Family 6A — MIRROR-TREE · Pass-3 Research (research-A)
+# LOCK-6 · 6A MIRROR-TREE · pass-3 research-A
 
-The strongest form of 6A: a **scoped** mirror-tree. A checked-in name-map plus a **typed
+Family 6A is the hand-maintained-mirror route made **scoped**: two idiomatic module trees
+(parse-that's `rust/parse_that/src` and `typescript/src/parse`, plus the bbnf tape face) kept
+in correspondence by a CI **isomorphism linter** — a tree-correspondence check, a total name
+map, and a bounded idiom-exemption budget. A checked-in name-map plus a **fixed-enum
 exemption budget** governs the faces that carry a byte-layout or oracle-table contract; a
 behavioral oracle backstops the names that must be authored on both sides; and engine
 internals are conceded, by construction, to behavioral-only isomorphism (6D territory).
 "Isomorphism to a reasonable point" (Constitution iii) is made concrete: the *reasonable
-point* is the layout/oracle face, and it is drawn, not asserted.
+point* is the layout/oracle face, and it is drawn (grep-countable), not asserted. This report
+makes the mechanism concrete against the live census, answers the exemption budget
+fit-independently, traces representative names to origin, and assigns linter ownership.
+
+---
+
+## Census — the substrate the linter reads (grep ground truth)
+
+Concept-normalized basename sets (dirs collapsed to concept; `parse`↔`parser`,
+`combinators/methods/*`↔the `Parser` methods, `lib`↔`index`):
+
+**Present on BOTH sides — the structural mirror T:** `state`, `leaf`, `lazy`, `debug`,
+`split`, `utils`, the combinator core (`parse.rs`/`parser.ts`), `parsers/json`,
+`parsers/csv`, `parsers/utils`, module-root (`lib.rs`/`index.ts`). **T = 11 mirrored
+concepts.**
+
+**Rust-only (13.5 KLOC src vs TS 2.65 KLOC — a 5.1× asymmetry):** `bump_slab.rs`,
+`span_trait.rs`, `span_parser/{mod,leaves,methods,constructors,combinators,assertions,scan,
+sep_by,wrap,span_scanner}.rs`, `scanners.rs`, `parsers/scan/{balanced,decode,digits,ident,
+number,number_f64,number_simd,quote_parity,quoted,quoted_simd,structural_bitmap,ws_comment,
+mod}.rs`, `regex/{generated,host,mod}.rs`, `parsers/eisel_lemire/{algorithm,table,mod}.rs`,
+`parsers/css/{declaration,media,selector,specificity,types,value,mod}.rs`,
+`combinators/macros.rs`.
+
+**TS-only:** `packrat.ts`, `ansi.ts`, and barrels `{core,index,diagnostics,packrat-entry,
+utils-entry}.ts` + `parsers/index.ts`.
+
+Rust splits combinator methods into eight files
+(`combinators/methods/{alternation,sequence,sep_by,repetition,map,minus,recover,mod}.rs`); TS
+carries all 34 methods inline in one 711-LOC `parser.ts` (`parser.ts:81-707`). **File
+granularity does not match; concept granularity does** — the linter operates on a declared
+concept↔{paths} map, not raw paths. No isomorphism/name-map linter exists in either tree
+today (verified: the only `isomorph` hits are unrelated e-graph code); 6A is greenfield
+tooling.
 
 ---
 

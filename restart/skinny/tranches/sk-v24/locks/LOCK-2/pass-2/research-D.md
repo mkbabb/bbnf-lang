@@ -123,7 +123,11 @@ A naive profile fit reintroduces non-determinism two ways, both with concrete fe
    convention already in `cost.rs:311`), keep the cost tuple integer, keep the `candidate_hash`
    suffix. Order stays total; `regen∘regen` byte-identity holds because the coefficient is a
    frozen `u64` const, not a re-measured float.
-2. **Greedy-extraction non-monotonicity.** `extract.rs` is explicitly the egg greedy bottom-up
+2. **Greedy-extraction non-monotonicity.** Note first the reassuring HEAD fact: the decision
+   nodes are *childless* (`DecisionNode { children: [Id; 0] }`, `backend_egraph.rs:158`), so on
+   the backend-selection graph greedy bottom-up degenerates to a plain argmin and **is optimal** —
+   the extractor's warning does not bite the decision the loop feeds today. The hazard is latent,
+   for a *future* coupled cost. `extract.rs` is explicitly the egg greedy bottom-up
    extractor and its docstring warns it is *not optimal for sharing-dependent cost models*
    (`extract.rs:9-11`). A profile coefficient that depends on *shared subterm reuse* (e.g., "this
    kernel is cheaper the second time it's inlined") is non-monotone and silently breaks greedy
@@ -131,6 +135,15 @@ A naive profile fit reintroduces non-determinism two ways, both with concrete fe
    upward, `AstSize` shape, `extract.rs:104`); a sharing-dependent coefficient is out of scope
    for greedy extraction and would demand ILP extraction (egg/egglog open problem — cite §6). Keep
    the loop monotone or it is not this extractor's to feed.
+
+Make the *asserted* replay real, cheaply. `determinism_replay_status`,
+`rewrite_order_replay_count: 2`, `rewrite_order_variance_pct: 0` are hardcoded string/integer
+literals today (`backend_egraph.rs:139-141`). The decision graph is ≤5 childless nodes, so the
+gate can actually *compute* replay: run the argmin twice under two candidate-insertion orders
+(forward and reversed) and assert the two `selection_trace_hash` values (`backend_egraph.rs:142`,
+which already sorts its rows before hashing) are equal. Equality → the literal `"pass"` becomes a
+computed result; inequality → RED, proving a fitted coefficient did not smuggle order-dependence
+in. This is the concrete artifact behind Q3's determinism claim, not a promise.
 
 Determinism budget on the fit itself: the freshness gate compares **ins/B** (deterministic to
 <0.2% per PROVE-12 §4), never cyc/B (load-noisy). cyc/B is the ratio-certified directional check;
@@ -155,6 +168,19 @@ residual) is where absolute coefficients get their final stamp.
   offset-tape-vs-sink choice — introduced by the candidate-generating families (widening
   rewrites, IR-modeled sites). The loop's architecture is sound; its *bite* is downstream of
   candidate multiplicity. Shipping the fit harness without a live decision violates Y.13.
+  - **XL-F characterization (evidence, not assumption).** The GN-2.W1 scan-lowering predicate
+    (`passes::derive_recognizers` emitting `SimdMode::Prefilter`, `passes/src/lib.rs:338`,
+    `SPEC.md §2 GN-2.W1`) stands to the profile loop in a **wraps** relation, not *replaces* and
+    not *waits-on*. Evidence: the predicate is *candidate generation / legality* — it decides
+    whether a self-loop scan over a member set is eligible to emit a second `SimdMode` variant
+    (`ir/src/lib.rs:425`, today only `Exact`); the profile loop is *objective / selection* — the
+    fitted `perf_cost` ranks `Exact` vs `Prefilter` at the N* crossover (`backend_egraph.rs:170`
+    reads the slot; `decision_csp.rs:247` shows it vacant at `0`). Neither subsumes the other: the
+    predicate cannot pick (it only manufactures the second survivor that RISK-1 requires), and the
+    loop cannot generate (a coefficient over one candidate flips nothing). So the loop *wraps* the
+    predicate's output — it is precisely the consumer that turns the predicate's new-found
+    multiplicity into a measured selection. This is also why the two must co-land: the predicate is
+    RISK-1's cure and the loop is the predicate's objective.
 - **RISK-2 — attribution underdetermination (Q8).** N coefficients cannot be fit from one
   whole-grammar cyc/B. Mitigation is structural, not statistical: the A/B-differential isolates
   one lever per paired arm (§1 Phase A). The ceiling on fittable coefficients = the count of

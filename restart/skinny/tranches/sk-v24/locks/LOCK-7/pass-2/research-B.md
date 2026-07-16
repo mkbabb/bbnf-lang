@@ -1,294 +1,271 @@
 # LOCK-7 · Family 7B — TOTAL-SELF-HOST (pass-2 research)
 
-**Charter.** Every syntactic plane of the generator carried as *data* — bbnf grammar self-parses,
-regex grammar self-parses, the middle IR is grammar-defined, Rust-emission templates are
-grammar-specified — with hand code shrunk to kernels/primitives, measured against build-time and
-debuggability budgets. Pass-2 sharpens two structural questions (IR-plane scope; codegen-as-data
-ratio) and settles the shared empirical question (does a builder-projection augment over the
-recognizer emitter round-trip to GrammarIr while `regen∘regen` holds byte-identical).
-
-The pass-2 substrate is exact: the general shape-dispatched descent emitter
-(`crates/codegen/src/general_descent/`, ~1206 LOC) emits ONE `parse_<rule>` **recognizer** per
-rule — recognizers over an offset tape, **not** GrammarIr builders. The decisive pass-2 finding is
-that this archetype gap — recognizer-tape-view vs eager typed builder — is what 7B lives or dies
-on, and it is orthogonal to the three bounded parser gaps.
+The constitution's clause (i) taken to its maximal reading: bbnf grammar, regex grammar, IR, and
+emitter templates *all* grammar-specified, the generator reduced to data plus a small kernel of
+primitives. This report develops that route alone — its mechanism made concrete, its irreducible
+floor, the substrate seams, prior art, and the two named counterexamples that bound it. The
+verdict is a research answer, not a route.
 
 ---
 
-## 1. Q1 — Scope axis: does LOCK-3 adopt grammar-homoiousia? The joint IR-plane family
+## 1. The two axes and the frame
 
-### 1.1 The IR shape splits cleanly into a `->`-expressible data plane and a host-bound build floor
+Total self-host of the bbnf-lang generator decomposes into two independent axes:
 
-`GrammarIr` (`crates/ir/src/lib.rs:34-39`) is a flat arena — `rules: Vec<Rule>` + `exprs: Vec<Expr>`,
-`ExprId`/`RuleId` indices — over a **10-variant sum** `ExprKind` (`ir/src/lib.rs:234-271`):
-`Seq(Vec<ExprId>)`, `Alt{branches,mode}`, `Repeat{body,min,max}`, `Optional`, `Literal{bytes,case}`,
-`Regex{pattern}`, `Ref{name,target}`, `Annotation`, `Project{body,target,ty}`, `Discard{left,right,
-keep_left}`. The mid-IR is a second sum tower: `BackendShape`/`BackendExpr`/`Recognizer`/`SimdMode`/
-`SpanKind`/`DirectBuild{Source,TypeRef,Scalar,Presence,Cardinality,Representation,Decode}`
-(`ir/src/lib.rs:361-530`).
+- **The FRONT** — bbnf-in-bbnf (`bbnf.bbnf` parsing its own source) and regex-in-bbnf. A
+  recognizer/builder question over one grammar plane.
+- **The BACK** — the middle IR (`BackendExpr`) and the IR→Rust emitter (`general_descent`)
+  expressed as grammar data. This is the *structure-scoping* question and the hard one; it is
+  where the family's floor lives.
 
-Every one of these variants is a **labeled product** — precisely the labeled-BNF shape BNFC turns
-into an algebraic datatype, and precisely the shape parse-that's `RegexParserEnum` is *derived*
-into (`parse-that/rust/parse_that/src/regex/generated.rs`, variants `char_class`/`alternation`/
-`quantified` with synthetic `class_atom_0`/`group_0`). So the census datum "node values are pure
-`->`" is confirmed structurally: an `ir.bbnf` grammar authors each variant as
-`expr_kind = seq | alt | repeat | ... ; seq = "Seq" , "(" , expr_id * , ")" -> Seq : Seq ;` — the
-`->` projection names the constructor exactly as the recognizer view already classifies `-> f64` /
-`-> Nu8` (`general_descent/view.rs:35-47`).
-
-But the **build mechanisms** are NOT `->`-expressible; they are the irreducible host floor:
-
-- `add_expr` (`ir/src/lib.rs:51-55`) — arena append returning a fresh `ExprId`. A *mutation with
-  identity allocation*, not a value projection. A `->` names a shape; it cannot mint an index into
-  a growing `Vec` and hand back the handle.
-- `resolve_refs` (`ir/src/lib.rs:84-108`) — the cross-rule TreeFold: build a `name→RuleId` HashMap
-  over all rules, then a `&mut self.exprs` back-patch pass that fills `Ref{target: Some(rule_id)}`.
-  This is an **inherited/synthesized attribute over the whole tree** (a name environment threaded
-  down, a target id synthesized up) — an attribute-grammar propagator, not a local projection.
-
-### 1.2 The joint LOCK-3⊗LOCK-7 IR-plane family (drafted)
-
-**Data plane (7B owns, `->`-expressible, LOCK-3C aligned).** `grammar/ir/ir.bbnf` grammar-defines
-`ExprKind` + the `BackendShape` tower as a labeled sum; the variant structs are *derived* (the
-`RegexParserEnum` mechanism generalized). Transpositions AST→HIR→mid-IR→BackendShape become
-grammar-to-grammar maps expressed as `->` projections over `ir.bbnf`-derived nodes.
-
-**Build floor (typed host functions, hybrid-grammar-host law).** `add_expr` and `resolve_refs` are
-declared **typed host-fn signatures** — `add_expr : ExprKind -> ExprId` (an allocator primitive)
-and `resolve_refs : Grammar -> Grammar` (a cross-rule attribute pass). This is the exact
-`@host`-directive hybrid the bbnf grammar already reserves (`bbnf.bbnf:73` `host_directive =
-"@host" ?w , identifier , ( ":" , type_name ) ?`). Whether `resolve_refs` is *scheduled inside the
-solver* as an attribute-grammar propagator or *stays a hand TreeFold* is the LOCK-1
-inherited-attribute verdict this family defers to — the census says so explicitly and pass-2
-confirms the dependency is real (the back-patch reads a global name environment).
-
-**`ir.bbnf`'s consumer (Y.13, same-wave).** The lowering passes at `crates/passes/src/lib.rs`
-(`derive_recognizers`, `derive_backend_shape`; ~2096 LOC) — they consume GrammarIr and produce
-BackendShape today, and would consume `ir.bbnf`-derived nodes as grammar-to-grammar maps. Naming
-this consumer is not optional: an `ir.bbnf` authored without the passes rewritten to eat it is
-consumer-less substrate (constitution viii).
-
-### 1.3 If LOCK-3 does NOT adopt: what remains
-
-`ExprKind`/`BackendShape` stay hand Rust enums. 7B's Plane 3 degrades to a **7D-oracle-only**
-`ir.bbnf`: a differential grammar checked *equivalent* to the hand enum (the derived-variant set
-must match `ExprKind`'s variants) but never the production definition — because there is no
-same-wave consumer, so promotion to production is forbidden by Y.13. The honest residue is: the
-data-plane derivation is provably feasible (RegexParserEnum is the in-repo proof), but without
-LOCK-3 rewriting `passes/` to consume it, the plane is a verifier, not a generator organ.
+The measurement substrate for both is the single grammar-NEUTRAL descent emitter,
+`skinny/crates/codegen/src/general_descent/` (452+431+230+93 = 1206 LOC across
+`emit.rs`/`view.rs`/`regex_first.rs`/`mod.rs`), reached for any `value`-less program via the shape
+gate at `runtime_generator.rs:98` (`if !sink_only.has_rule("value")`). `bbnf.bbnf` has no `value`
+rule, so it shape-dispatches here — the same branch Sheets travels. Every literal, dispatch key,
+leaf first-byte set, kind tag, and stop-set the emitter uses is already DERIVED from the program's
+`ByteLiteral`/`RegexProgram`/`ValueProject` nodes (`emit.rs:88-94` derives `LEAF_STOP` from
+`program.literals`; `view.rs:103` derives kind tags from rule order; `view.rs:35` classifies `->`
+projections from projection text). The emitter is thus *already "mostly data" in the derivation
+sense* — it hard-codes no grammar-specific byte. What it is NOT is data in the *homoiousia* sense:
+the WALK that consumes the IR (`emit_expr`, `emit_alt`) is imperative Rust. That distinction is
+the whole of 7B.
 
 ---
 
-## 2. Q2 — Structure-scoping: the data-vs-escape ratio and the named kernel-escape signature
+## 2. Axis A — the IR plane (the joint LOCK-3 ⊗ LOCK-7 family)
 
-Measured on ONE emitter blob — `general_descent/emit.rs` (453 LOC, 428 non-blank): the descent
-recognizer emitter, the most grammar-generic emission surface in skinny.
+**Scope question: does the middle-IR tower become bbnf-defined?** The IR is `BackendExpr`
+(`ir/src/lib.rs:376`), a 13-variant sum: `Entry, Seq, Alt{mode,branches}, RepeatLoop{body,min},
+OptionalBranch, ByteLiteral, RegexProgram{pattern,span_kind}, CallRule{callee}, SpanMark{kind,
+label}, TapeEmit{kind}, DirectBuild{shape,fields}, ValueProject{body,target,ty}, Return`. Its
+lowered twin `SinkOnlyExpr` (`lower/sink_only.rs:69`, isomorphic minus the erased
+`SpanMark`/`TapeEmit` payloads) is what the emitter matches on. This sum is a *regular tree
+grammar* — every variant is either a leaf (`ByteLiteral`, `RegexProgram`, `CallRule`, `Return`) or
+a fixed-arity/starred product over itself. It is exactly the shape `bbnf.bbnf` already expresses
+for its own `term`/`factor`/`rhs` tower (lines 29-52).
 
-### 2.1 The ratio, honestly decomposed
+**`ir.bbnf` is therefore writable**, concretely: a grammar whose rules are the 13 variants, each a
+concatenation of a discriminating literal and its typed children — e.g. `alt = "Alt" , "{" ,
+alt_mode , "[" , ( backend_expr , "," ? ) * , "]" , "}" -> Alt`. This is LOCK-3 route 3C
+GRAMMAR-HOMOIOUSIA made concrete for the IR node type.
 
-Raw grep is misleading (61 `writeln!/write!/push_str` "emission" lines vs 96 `match`/control-flow/
-fn-sig lines). The honest decomposition is by *role*:
+**`ir.bbnf`'s consumer** (clause viii forbids consumer-less substrate): the `general_descent`
+emitter walk itself. Under homoiousia, the transposition `BackendExpr → Rust` is a
+grammar-to-grammar map — a *tree transducer* from `ir.bbnf`-parsed IR into the emitted recognizer
+text. `emit_expr` (`emit.rs:288-393`) is the executable form of that transducer. So the joint
+family is: **LOCK-3 supplies `ir.bbnf` (the IR as a bbnf grammar plus print/parse round-trip);
+LOCK-7 supplies the emitter-as-transducer over it plus the named emit-kernel primitive (§3).** The
+two locks share the transducer seam; that shared mechanism is what makes them one family.
 
-- **FIXED template (100% data).** `render_header` + `render_prelude` (~230 LOC of `r#"..."#` raw
-  strings: `ParseError`, `parse_into_tape`, `skip_ws`, `match_literal`, `match_leaf`,
-  `consume_quoted`, `is_text_byte`, `mark`) are byte-identical for *every* grammar — pure template
-  leaves a template grammar carries verbatim. Only `LEAF_STOP` (the structural-boundary alphabet)
-  and `{prefix}` are substituted, and both are grammar-DERIVED data (`emit.rs:88-94`).
-- **Shape→template map (data).** In `emit_expr` (`emit.rs:288-393`): `ByteLiteral→match_literal`,
-  `RegexProgram→match_leaf` (with derived first-set + nullable flag), `CallRule→parse_X`,
-  `Seq→ws-interleaved children`, `ValueProject→emit body` — a flat shape-keyed substitution, fully
-  expressible as `IR-shape -> Rust-fragment` projections.
-- **The escape.** The speculative-backtrack combinators — `RepeatLoop`, `OptionalBranch`, `Alt`
-  (`emit.rs:311-355`, `400-433`) — each emit a `let _r: Result<...> = (|| { let cursor = &mut
-  _probe; ... })();` closure over a **fresh mutable alias of the cursor**, commit on `Ok`
-  (`*cursor = _probe`), restore-by-not-committing on `Err`, plus the RepeatLoop progress guard
-  `if _probe == _before { break }` (`emit.rs:329`).
+**The subtlety that bounds it (the census floor).** Node *values* in `ir.bbnf` are pure `->` (each
+variant projects to its constructor), but *build mechanisms* are host-bound: a `Seq(Vec<..>)`
+needs an append (`add_expr`) and a `CallRule{callee}` needs a cross-rule link resolved after the
+fact (`resolve_refs`, a TreeFold). `ir.bbnf` can DESCRIBE and PARSE the IR (the front); BUILDING an
+IR value from a parse re-enters the host-function floor whose tier depends on the LOCK-1
+inherited-attribute verdict. So the joint family is real but *gated*: a grammar-specified IR
+*shape* lands immediately; a grammar-*built* IR lands only once the host floor (append +
+cross-rule resolve) is priced by LOCK-1.
 
-Verdict (a research answer, not a route): ~**60-70% of emit.rs is data** (fixed prelude + the flat
-shape→template map covering leaf/seq/call), but **100% of the control-combinator emission is
-escape**. "Mostly data" *survives* for leaf/sequence/call recognition; it *fails* at the PEG
-backtracking core.
-
-### 2.2 The NAMED kernel-escape failure signature — the PROBE-CURSOR ESCAPE
-
-The signature is: *bind a fresh `&mut` alias of the cursor (`let cursor = &mut _probe`,
-`emit.rs:450`), run the sub-walk against it inside a `(|| {...})()` closure that threads `?`
-early-returns, then conditionally commit the alias back to the real cursor.* A template grammar
-cannot express this — it is Rust **borrow/ownership control flow**: the `&mut _probe` liveness, the
-closure capture of `_probe`, the `Result` early-return threading, and the RepeatLoop
-non-progress break. Substituting a template fragment cannot introduce a scoped mutable borrow whose
-liveness the borrow checker tracks; the backtrack *is* the ownership dance, not text.
-
-Call it the **PROBE-CURSOR ESCAPE** (equivalently the backtrack-alias escape). It is exactly R3's
-predicted degeneration (emitter-template-as-grammar is a mirage where context — borrow structure —
-lives) made concrete and measured. It is the same bound BNFC and MLIR ODS hit: declarative plane
-is data, the *combinator semantics* stay hand-code. The family-deciding question this reframes:
-whether the PROBE-CURSOR ESCAPE is ONE fixed hand-written meta-combinator (a `speculate(shape)`
-kernel the emitter *calls*, parametrized by the sub-shape) or N per-site escapes. If one kernel
-absorbs all three combinators, 7B's "mostly data" holds with a named ~3-function backtrack floor;
-if the escapes proliferate per grammar, 7C (bounded totality) is the honest form.
+**If LOCK-3 does NOT adopt homoiousia — what remains hand-code.** The IR stays the Rust enum
+`BackendExpr`; 7B's self-host is bounded to the FRONT (`bbnf.bbnf`/`regex.bbnf` parsing themselves
+into a tape/view). The irreducible remainder is named exactly: (a) the emit-kernel walk
+`general_descent/emit.rs` (§3), and (b) the lower pipeline `lower/sink_only.rs:174` `lower_expr`
+(BackendExpr construction, 12 arms) plus `passes` shape/cost derivation — ~700 LOC of hand Rust a
+front-only self-host does not touch.
 
 ---
 
-## 3. The shared empirical question — DECIDED: the archetype gap, not a parser gap
+## 3. Axis B — structure-scoping: the data-vs-escape ratio on one emitter blob
 
-**Question.** Authoring `-> Span`/`-> T` builder projections on bbnf's structural rules over the
-recognizer emitter: does the emitted parser reparse the corpus into GrammarIr-equivalent structure
-(within the `add_expr`+`resolve_refs` host budget) while `regen∘regen` holds byte-identical — or
-does it cascade, and at which construct? Drive the `!has_rule("value")` branch
-(`runtime_generator.rs:98`), never `json_sink_direct`.
+**Question: can codegen control-flow / dispatch / tape-assembly be expressed as grammar-plane data
+without a borrow-checker escape?** Measured on the one blob `emit.rs` (452 LOC), classified region
+by region into three strata:
 
-**Finding — it CASCADES, at the `ValueProject`→builder boundary, for an ARCHITECTURAL (not
-lowering-rule) reason.**
+| Stratum | Regions (`emit.rs`) | LOC | Nature |
+|---|---|---:|---|
+| **DATA (fixed kernel template)** | `render_header` 28-78; `render_prelude` 82-257 (`match_leaf`, `consume_quoted`, `skip_ws`, `match_literal`, `mark`, `parse_into_tape`, `structural_reserve`) | ~225 | Constant emitted text parameterized only by derived `stops`/`entry`/`prefix`. This IS the committable stage-0 kernel. |
+| **WALK-FOLD (structural map)** | leaf arms of `emit_expr` — `CallRule` 357-360, `ByteLiteral` 361-364, `RegexProgram` 365-375, `ValueProject` 376-380, `Seq` 300-307, marker arms 381-391 | ~90 | A pure catamorphism over the IR sum; `->`-expressible IF a tree-fold combinator over `ir.bbnf` existed. |
+| **IRREDUCIBLE ESCAPE (backtracking control)** | `RepeatLoop` 311-343; `OptionalBranch` 344-356; `emit_alt` 400-433; `emit_expr_probe` 438-452 | ~95 | Imperative, stateful, partial control. Not grammar-plane data. |
 
-The general descent emitter is a **recognizer + lazy tape view**, not a builder. The `->`
-projection is **DROPPED by the recognizer**: `SinkOnlyExpr::ValueProject { body, .. }` emits only
-its body so the leaf is matched and tape-marked — "the projection (target/ty) is consumed by the
-VIEW, not the recognizer" (`emit.rs:376-380`). It resurfaces ONLY as *shallow lazy typed
-accessors* in the view: `classify_projection` maps `-> f64`→`as_f64`, `-> true/false`→`as_bool`,
-`-> Nu8`→`as_tag`, everything else→`span()` (`view.rs:35-47`, `118-184`). The product of a parse is
-a `{Prefix}Document` wrapping an offset `Tape` + a `{Prefix}Kind`-per-node lazy decode
-(`view.rs:255-431`) — NOT a typed sum-of-products AST.
+Ratio: **DATA ≈ 50%, WALK-FOLD ≈ 20%, ESCAPE ≈ 21%** (rest is boilerplate). The DATA half is
+*already* grammar-derived and would commit verbatim as the seed kernel. The WALK-FOLD is
+mechanically a fold and could ride a grammar transducer. The **21% escape is the semantic core,
+not incidental** — the recognizer's whole correctness rests on it.
 
-So a `-> Span`/`-> T` builder projection over THIS emitter does not reparse into
-GrammarIr-equivalent structure; it yields tape offsets + a lazy kind view. GrammarIr-equivalence
-requires **eager materialization** into a typed AST — the `RegexParserEnum` archetype
-(`parse-that/.../regex/generated.rs`), produced by the ORPHANED `bbnf_derive`→`cargo expand`+Python
-path, which the skinny general_descent emitter architecturally lacks. The cascade is therefore not
-a missing lowering rule and not one of the three bounded parser gaps (`?w`→`->` attach at
-`grammar/src/lib.rs:1361 parse_seq`; `@{}` atom at `parse_atom`; `|params|` closures — all upstream
-and bounded, and the hand parser already builds `ExprKind::Project` via
-`grammar/src/lib.rs:1404 parse_postfix → 1481 parse_projection`). It is an **EMITTER-ARCHETYPE
-gap**: the recognizer emits a tape offset where a builder must construct-and-return a typed node.
+**The NAMED kernel-escape failure signature.** Every backtracking site emits the same idiom
+(`emit_alt`, `emit.rs:414-424`, and its probe helper `emit_expr_probe:450`):
 
-**The two archetypes, named.**
-1. *Recognizer-tape-view* (skinny `general_descent`): `parse_<rule>(bytes,cursor,tape) ->
-   Result<(),ParseError>`; product is an offset tape + lazy `{Prefix}Kind` view; `->` is a view
-   accessor classifier. NO GrammarIr.
-2. *Eager typed builder* (parse-that `regex/generated.rs`): `parse_<rule> -> Result<TypedNode>`;
-   product is a sum-of-products AST; `->` is the constructor. GrammarIr-equivalent by construction.
-   Its public producer face is `regex::parse_generated` (`parse-that/.../regex/mod.rs:34`) — parse
-   to typed AST, then `host::lower` folds to `Hir` (`mod.rs:31,57`); a PRODUCER, not a recognizer.
+```
+let mut _probe = _alt_start;
+let _r: Result<(), ParseError<'i>> = (|| {
+    let cursor = &mut _probe;          // emit.rs:450 — mutable shadow of the outer cursor
+    ... body ...
+    Ok(())
+})();
+if _r.is_ok() { *cursor = _probe; _matched = true; }   // commit-or-rollback
+```
 
-**The byte-determinism caveat surfaces here.** The recognizer path IS deterministic (3× byte-
-identical, the fixpoint precondition holds). But a fixpoint over *recognizer bytes* is the WRONG
-subject for a GrammarIr round-trip: a recognizer that never reads `->` for structure stamps
-identical bytes whether or not a builder would round-trip. `regen∘regen` byte-identity on archetype
-1 certifies tape-recognizer reproduction, NOT builder equivalence — a non-vacuous fixpoint on 7B's
-plane must be over archetype 2's *typed-AST* output (or over GrammarIr equivalence directly), never
-the recognizer text.
+The signature is **commit-or-rollback over a mutable shadow cursor** — PEG ordered-choice
+semantics. It resists grammar-plane expression on two concrete counts:
 
----
+1. **Value-algebra mismatch.** A bbnf `->` projection is a *pure, total* map (matched span →
+   value). This idiom is *stateful* (a `_matched` flag, a `_probe` cursor) and *partial* (early
+   return through `?` on `ParseError`). There is no `->` form for "try; on failure consume nothing;
+   set a mutable success bit."
+2. **The borrow-checker bite is exact.** The escape exists specifically because the outer
+   `cursor: &mut usize` and the inner `&mut _probe` are two live mutable paths to position state,
+   kept disjoint ONLY by the IIFE closure scope (`emit.rs:448-451` documents this: "bind a local
+   alias"). Flatten the closure and you get `E0499` — cannot borrow the cursor mutably twice. The
+   IIFE is a borrow-checker *escape hatch*, not a stylistic choice.
 
-## 4. The mechanism made concrete (pass-2, sharpened) — three archetypes, one meta-combinator floor
-
-- **Plane 1 (bbnf self-parse) needs archetype 2, not archetype 1.** The general descent emitter
-  cannot self-host bbnf into GrammarIr; a THIRD emitter must be authored: an eager typed-builder
-  descent over `SinkOnlyProgram`, gated on a *shape predicate* (rules carrying `->` projections
-  that demand materialization), never a grammar name (the zero-name-gate law; the last name-gate
-  residue is already a GN-5.W3 CI grep-gate target). The builder emitter shares the PROBE-CURSOR
-  ESCAPE kernel with the recognizer (builders backtrack too) — so the ~3-function backtrack floor
-  is common to both archetypes and is the surviving hand-code kernel.
-- **Plane 2 (regex self-parse).** Re-home the parse-that `RegexParserEnum` bootstrap
-  (`regex/generated.rs`, the orphaned `bbnf_derive`+`cargo expand`+Python path) onto
-  `cargo xtask regen-regex` emitting via archetype 2, deleting the sed/Python post-processor.
-  Regex substrate is settled: grammar-tier `Regex(StringId)` opaque, engine-tier rich `Hir`,
-  bridged by `simplify_hir`; the self-host obligation is the PARSER (regex.bbnf → typed AST),
-  while engine-tier divergences (char-class canonicalization, quantifier normalization) are
-  `host.rs` `lower` obligations, NOT oracle verdicts.
-- **Plane 3 (IR grammar).** §1.2 — `ir.bbnf` data plane + `add_expr`/`resolve_refs` host floor;
-  consumer = `passes/`.
-- **Plane 4 (emitter templates).** §2 — ~2/3 data, with the PROBE-CURSOR ESCAPE meta-combinator as
-  the irreducible kernel. The three per-grammar emitters (`json_sink_direct`, `css_scan_direct`,
-  `general_descent`) collapse toward one template-driven lowering keyed on IR *shape*.
-- **Regen/fixpoint infra.** `skinny/xtask/src/main.rs:40-48` dispatches `regen-json`/`check-json`,
-  `regen-sheets`/`check-sheets`, `regen-css`, `regen-real-typed`; `xtask/src/regen.rs:20
-  write_targets`, `:37 check_target` is the bit-for-bit staleness gate (blake-hashes rel-path +
-  bytes, `regen.rs:177-184`). No `regen-bbnf`/`regen-regex`/`regen-ir` exists; these are the
-  self-host targets to add. The fixpoint SUBJECT for 7B is archetype-2 typed-AST bytes or GrammarIr
-  equivalence — never recognizer bytes (§3 caveat).
+**Conclusion for the axis.** Codegen dispatch and tape-assembly *marks* (the `mark`/`match_leaf`
+calls, the kind-tag dispatch in `view.rs`) ARE expressible as grammar-plane data — they already
+are, derived. Codegen *control flow* (ordered-choice backtracking, nullable-repeat progress
+guards) is NOT: it is an irreducible hand-kernel primitive whose home is the combinator core
+(LOCK-4) or a bytecode VM (LOCK-4C). A "total" self-host that claimed to erase this 21% would be
+re-implementing a combinator/VM runtime under another name — the escape does not vanish, it
+relocates. The honest total-self-host target is: **commit the DATA half + WALK-FOLD as
+grammar/transducer; declare the ESCAPE a named primitive (the "emit backtrack kernel"), exactly as
+production compilers do (§5).**
 
 ---
 
-## 5. Prior art (with citations)
+## 4. Substrate — what is already in place, what must be built
 
-- **BNFC (Forsberg & Ranta)** — the thesis realized: one labeled-BNF grammar generates lexer,
-  parser, AST datatypes, pretty-printer, skeleton transformer, multi-backend. Its labeled-BNF
-  variants ARE §1.1's `ir.bbnf` shape; its known bound — generated parsers large/hard-to-debug,
-  context-sensitive constructs escape to hand code — is precisely the PROBE-CURSOR ESCAPE and the
-  build floor. Encouragement and cautionary bound in one.
-- **MLIR ODS / LLVM TableGen** — industrial "IR + emitter as data": `.td` files declare ops, a
-  fixed generator emits C++ op classes/verifiers/printers (Planes 3+4 in production). Lesson: the
-  declarative plane is data; folding/canonicalization semantics stay hand-written — the totality is
-  bounded exactly at §2's combinator kernel.
-- **Spoofax / SDF3 + Stratego (Visser)** — SOTA workbench: syntax, transformation, static
-  semantics declaratively specified; JSGLR origin-tracking is the debuggability-budget reference.
-- **tree-sitter** — `grammar.js`→generated C tables; metagrammar NOT self-hosted, tables
-  near-unsteppable — argues for 7B's typed-AST archetype-2 over tables.
-- **META-II (Schorre 1964)** — the meta-circular fixpoint root; establishes that a committed
-  stage-0 IS the whole game (the R4 chicken-and-egg mitigation).
-- **egg / egglog** — rules-as-data; the rewrite plane Plane-3 transpositions consume (shared with
-  LOCK-2's e-graph home) — relevant if `resolve_refs` becomes a scheduled attribute pass.
-- **Attribute grammars (Knuth 1968; Kastens' Ordered AGs; JastAdd)** — the exact theory for
-  `resolve_refs`: `Ref.target` is a synthesized attribute over an inherited name environment. The
-  LOCK-1 verdict decides whether this is solver-scheduled (JastAdd-style demand evaluation) or a
-  hand TreeFold.
-
----
-
-## 6. Named risks and counterexamples
-
-- **R1 — Archetype-2 does not exist in skinny.** The GrammarIr-equivalence claim requires an eager
-  builder emitter that is unwritten; the only builder proof is parse-that's `RegexParserEnum` via
-  an orphaned hack. *Counterexample:* until archetype 2 is authored and proven byte-equivalent to
-  the hand parser's GrammarIr on the corpus, Plane 1's round-trip is UNPROVEN, and the fixpoint on
-  archetype 1 (recognizer bytes) is vacuous for this claim (§3 caveat).
-- **R2 — PROBE-CURSOR ESCAPE proliferation.** If the backtrack kernel cannot be factored into ONE
-  parametrized meta-combinator (call `speculate(shape)`) shared by Alt/Repeat/Optional across both
-  archetypes, the escapes multiply per grammar and "mostly data" degrades to 7C bounded totality
-  with the combinator core named as the floor. *Counterexample:* measure whether one meta-combinator
-  absorbs all three; failure names the exact combinator that resists.
-- **R3 — No LOCK-3 adoption ⇒ dead `ir.bbnf`.** §1.3: without `passes/` rewritten to consume it,
-  `ir.bbnf` is consumer-less (constitution viii) and demotes to 7D oracle-only.
-- **R4 — `resolve_refs` depends on the LOCK-1 attribute verdict.** The cross-rule back-patch is an
-  inherited/synthesized attribute; if LOCK-1 does not host attribute propagation, `resolve_refs`
-  stays a hand TreeFold in the host floor — a permanent, named non-grammar organ.
-- **R5 — Debuggability (charter budget).** archetype-2 generated parsers carry synthetic
-  `class_atom_0`/`group_0` variants and `#![allow(...)]`; unsteppable without origin tracking. The
-  `@debug`/source-map tower (`bbnf.bbnf:72 debug_directive`) must map generated frames→grammar
-  spans before promotion; absent that, the hand parser survives as the debug build (7D oracle).
-- **R6 — Build-time (charter budget).** The orphaned bootstrap proves proc-macro+`cargo expand` is a
-  build hazard; archetype 2 must emit DIRECTLY through `xtask regen`. Measure `regen-bbnf`/
-  `regen-regex` wall-time vs the hand parser's zero cost; overflow past a named budget keeps that
-  plane 7D-only.
+- **Emitter blob (measured):** `general_descent/emit.rs:288` (`emit_expr`), `:400` (`emit_alt`),
+  `:438` (`emit_expr_probe`), prelude `:82`.
+- **Shape gate that routes here:** `runtime_generator.rs:98`. Drive THIS branch; never
+  `json_sink_direct`.
+- **The IR sum to grammar-specify:** `ir/src/lib.rs:376` (`BackendExpr`, 13 variants),
+  `lower/sink_only.rs:69` (`SinkOnlyExpr`), `lower/sink_only.rs:174` (`lower_expr`, the
+  construction a grammar-built IR would replace).
+- **Projection classification (the `->` value plane already present):** `view.rs:35`
+  (`classify_projection` → Float/Bool/Tag/Span), `view.rs:52` (`collect_projection_kinds` walk),
+  `view.rs:190` (`build_tag_table`). This proves `-> T` projections already thread through the
+  VIEW emitter — but as view accessors, not as recognizer builders (see §6).
+- **`bbnf.bbnf` self-source:** `grammar/bbnf/bbnf.bbnf` (89 lines, `@import`s
+  `expressions`/`types`). It USES all three parser-gap constructs the FRONT self-host must first
+  admit into the emitter route: `@{` atom (`term`, line 33), `|params|` closure (`closure`, line
+  51), and `?w`→`->` attachment (`mapped_factor`, line 42; `identifier … -> Span`, line 9). Until
+  the hand parser's atom/seq/closure gaps close, `bbnf.bbnf` cannot be routed through the emitter.
+- **Regen host:** `xtask/src/regen.rs:19` (`write_targets`), dispatch `xtask/src/main.rs:39-52`.
+  There is **no `regen-bbnf` and no `fixpoint` target in skinny xtask** (grep returns empty) — a
+  self-host regen arm is net-new substrate, not a legacy transplant.
+- **Host floor (the LOCK-1-gated seam):** `add_expr` (append) and `resolve_refs` (cross-rule
+  TreeFold) are the build mechanisms `ir.bbnf`-driven construction re-enters.
+- **Seed-inflation reference:** the skinny `grammar` crate hand parser is 2142 LOC. A *recognizer*
+  seed is small (~305 LOC = the ~225 DATA prelude + the ~80 escape); a *builder* seed inflates
+  toward that 2142.
 
 ---
 
-## 7. What a prototype must test to move family 7B
+## 5. Prior art (the "structure as data + kernel primitive" pattern is universal)
 
-1. **Archetype-2 builder emitter (the decider).** Author an eager typed-builder descent over
-   `SinkOnlyProgram`, keyed on a shape predicate for materializing `->` projections (never a
-   grammar name). Prove ONE grammar — bbnf's `identifier`/`literal`/`regex` leaf rules, or JSON —
-   emits a builder whose reparse is a typed AST byte-equivalent to the hand parser's GrammarIr on
-   the json/css/sheets/csv corpus (differential oracle), AND `regen∘regen` byte-identical over the
-   *typed-AST* output (the correct fixpoint subject, §3). This fork decides 7B (builder exists,
-   mostly-data holds) vs 7C (recognizer+host only, bounded totality).
-2. **PROBE-CURSOR ESCAPE factoring.** Attempt to reduce Alt/Repeat/Optional emission across BOTH
-   archetypes to ONE `speculate(shape)` meta-combinator. Report whether one function absorbs all
-   three or the escapes proliferate — the §2.2 / R2 metric that sets the data-vs-escape verdict.
-3. **`ir.bbnf` minimal transposition.** Grammar-define `ExprKind` (the 10-variant sum); prove one
-   grammar-to-grammar map (AST→HIR) matches the hand lowering on JSON, with `add_expr`/`resolve_refs`
-   declared as the two typed host fns and `passes/` named as the same-wave consumer.
-4. **Plane-2 re-home.** Move the parse-that `RegexParserEnum` bootstrap off `cargo expand`+Python
-   onto `cargo xtask regen-regex` via archetype 2; prove byte-identical-or-improved vs current
-   `generated.rs`; delete the post-processor; measure build-time delta.
-5. **Budget verdict.** Aggregate `regen-bbnf`/`regen-regex` wall-time vs a named build-time budget;
-   run a source-mapped panic/breakpoint probe in a generated archetype-2 parser vs a named
-   debuggability budget. The maximal four-plane claim is earned only if both budgets hold AND the
-   archetype-2 round-trip (test 1) is byte-clean; otherwise the honest disposition is bounded
-   totality (7C) with the failed plane named.
+- **LLVM TableGen** is the canonical witness that the §3 split is SOTA, not a bbnf limitation.
+  Target `.td` files declaratively describe registers, instructions, and *selection patterns* as
+  data; `tablegen` emits C++ tables; the SelectionDAG/GlobalISel *matcher kernel* and emission
+  control flow stay hand-written C++, compiled alongside. TableGen's docs state its purpose is
+  generating "complex output files … coded in a declarative style" because "specifying it all
+  manually would be unmaintainable" — the DATA is lifted, the KERNEL is not. bbnf's
+  DATA-half/ESCAPE-half split mirrors the `.td`/hand-C++ split exactly.
+  (https://llvm.org/docs/TableGen/, https://llvm.org/docs/TableGen/BackGuide.html)
+- **MLIR ODS** rides TableGen to declare ops/traits/verifiers as records; generated C++ builders +
+  a hand-written rewrite/verification kernel. Same split.
+- **tree-sitter** commits `grammar.json` and `node-types.json` (generated tables) as data in the
+  repo, generable "without requiring node/npm," paired with a hand-written C parse *runtime* plus
+  optional hand-written C *external scanners* for constructs the grammar cannot express — the
+  direct analogue of bbnf's "grammar expresses leaf semantics; host handles context-dependence"
+  law. Its generator "propagates optionality upward via a fixpoint loop," the same fixpoint shape a
+  bbnf staged bootstrap would use.
+  (https://tree-sitter.github.io/tree-sitter/, https://en.wikipedia.org/wiki/Tree-sitter_(parser_generator))
+- **rustc / GHC self-host** establish the seed-inflation law empirically: a *building* front-end
+  (one that constructs a typed AST/IR, not merely recognizes) is large — the parser is thousands
+  of LOC — because construction + name resolution is the bulk. Direct evidence for §6's inflation
+  risk.
+- **Menhir/ANTLR** self-describe their grammar syntax in their own notation but ship a hand-written
+  bootstrap parser and a committed generated stage — the staged-bootstrap pattern — never a
+  from-nothing meta-circular build.
 
-**The move that decides the family:** test 1 (archetype-2 round-trip) gated on test 2 (does the
-PROBE-CURSOR ESCAPE factor into one meta-combinator). Planes 1-3 have prior art proving feasibility
-(RegexParserEnum in-repo, BNFC, MLIR ODS, attribute grammars); the recognizer-vs-builder archetype
-gap and the backtrack-alias kernel are where "mostly data" is won or demoted to "bounded totality."
+The uniform lesson: **no production system erases the emitter kernel into data.** Total self-host
+means maximal DATA lift + a *named, minimal, committed* kernel primitive. A 7B claim of "the
+generator becomes mostly data" is defensible for the ~70% DATA+WALK-FOLD strata and false for the
+~21% ESCAPE.
+
+---
+
+## 6. The shared open empirical question — RED-unknown, with the analysis that bounds it
+
+*Does authoring `-> Span`/`-> T` builder projections on bbnf's structural rules over the
+recognizer emitter reparse the corpus into GrammarIr-equivalent structure (within the
+`add_expr`+`resolve_refs` host budget) while `regen∘regen` holds byte-identical — or does it
+cascade, and at which construct?*
+
+**RED-unknown; no verdict is seeded from the emitter's existence.** But the code fixes the shape
+of the answer:
+
+- **The emitter emits RECOGNIZERS, not GrammarIr builders.** `emit_expr` for `ValueProject`
+  (`emit.rs:376-380`) emits *only the body* — "The projection … is consumed by the VIEW, not the
+  recognizer." `DirectBuild` (`emit.rs:387`) emits a single `mark(tape, _node_start, kind)`. The
+  product of a parse is a flat offset **tape + lazy view** (`view.rs` `{Prefix}Document`), NOT a
+  `GrammarIr`. So a `-> Span`/`-> T` projection over `bbnf.bbnf` yields, through this path, a *tape
+  whose nodes carry span/tag accessors* (`view.rs:118` `as_f64`/`as_bool`/`as_tag`), not an IR
+  tree. **GrammarIr-equivalence is NOT native to the recognizer path** — it requires a second pass:
+  `add_expr`+`resolve_refs` host functions walking the tape/view to rebuild the tree. Whether that
+  host budget round-trips `bbnf.bbnf` is the actual open prototype, and it is the host floor LOCK-1
+  must price.
+- **`regen∘regen` byte-identity is structurally likely but near-vacuous here.** The emitter walk
+  is deterministic over a `BTreeSet`-ordered program (`sink_only.rs:25` `literals: BTreeSet`,
+  `emit.rs:88` `stops: BTreeSet` — sorted), so identical IR emits identical bytes. That certifies
+  the *emit function is a function*, not that the *builder round-trips*. A fixed-const walk stamps
+  identical bytes for any fixed input; triple-identical proves nothing about GrammarIr equivalence.
+  The non-vacuous fixpoint subject must be **GrammarIr equivalence of the reparse**, not
+  generated-`.rs` bytes.
+- **The likely cascade point, named.** If a builder projection is authored, the first construct to
+  break is the one the emitter *discards*: `CallRule{callee}` (`emit.rs:357`) emits a bare
+  `parse_callee(...)?` with no captured child value — a cross-rule *reference*, not a built child.
+  Rebuilding `Seq`/`Alt` children as GrammarIr from a tape that recorded only *offsets* (no
+  parent/child edges) forces the host to re-derive nesting from offset order — exactly the
+  `resolve_refs` TreeFold. The cascade, if it happens, begins at nested `Alt`-inside-`Seq` (`term`,
+  `bbnf.bbnf:29-36`) where offset order alone underdetermines the tree.
+
+**What the prototype must test (the family-moving experiment):**
+
+1. Close the three parser gaps (`@{`, `|params|`, `?w`→`->`) so `bbnf.bbnf` routes through the
+   `!has_rule("value")` branch. Precondition, not the experiment.
+2. Author `-> Span`/`-> T` builder projections on `bbnf.bbnf`'s structural rules; drive
+   `general_descent`, never `json_sink_direct`.
+3. Add `add_expr`+`resolve_refs` host functions that walk the emitted tape/view into a `GrammarIr`.
+   **Measure host LOC + reparse equivalence** against the hand parser's `GrammarIr` on the
+   bbnf-source corpus.
+4. Certify `regen∘regen` with subject = **GrammarIr equivalence** (`Empty ≡ Concat([])`
+   normalized), not `.rs` bytes; plant a mutation (reorder one `Alt` arm) and confirm the fixpoint
+   trips — a fixpoint that cannot fail certifies nothing.
+
+The move that advances 7B is the pair (host-budget LOC, cascade construct). Small host budget + no
+cascade ⇒ total self-host of the FRONT is real; inflation toward 2142 LOC (§5 law) ⇒ 7B's FRONT
+collapses into a staged-bootstrap and only the emitter's DATA half is genuinely lifted.
+
+---
+
+## 7. Named risks and counterexamples
+
+- **R-B1 — The escape relocates, it does not vanish.** Any claim to grammar-express the ~21%
+  backtracking control is a disguised re-import of a combinator/VM runtime (LOCK-4C). Counter-test:
+  flatten one `emit_alt` site into a non-closure form; observe `E0499`. The borrow error IS the
+  proof the escape is irreducible on the current cursor model.
+- **R-B2 — Builder seed inflation.** A GrammarIr-*building* seed inflates toward the 2142-LOC hand
+  parser (rustc/GHC evidence, §5). Counter-guard: the prototype reports host-builder LOC as a hard
+  number; if it exceeds ~½ the hand parser, "total self-host" is demoted to "front recognizer
+  self-host + committed builder kernel."
+- **R-B3 — `ir.bbnf` with no builder is consumer-less.** A grammar that only *parses* an IR text
+  no one produces violates clause viii. Counter-guard: `ir.bbnf`'s consumer must be the live
+  emitter transducer over real `passes`-produced IR, with a print∘parse round-trip oracle — never a
+  synthetic IR-text corpus.
+- **R-B4 — Byte-determinism theater.** `regen∘regen` byte-identity over a fixed-const walk is
+  near-vacuous. Counter-guard: fixpoint subject = GrammarIr equivalence + planted-mutation
+  falsification (§6.4).
+- **R-B5 — Homoiousia gated on LOCK-1.** The joint LOCK-3⊗LOCK-7 IR family cannot land its *built*
+  half until the inherited-attribute host tier (`add_expr`/`resolve_refs` signature) is priced by
+  LOCK-1. Counter-guard: draft the family in two stages — grammar-specified IR *shape* (unblocked)
+  and grammar-*built* IR (LOCK-1-gated) — never as one monolith.

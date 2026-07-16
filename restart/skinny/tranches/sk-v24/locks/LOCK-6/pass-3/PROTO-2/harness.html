@@ -1,0 +1,134 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>PROTO-2 6C wasm-SIMD128 vs TS-native scalar</title>
+<pre id="log">running…</pre>
+<script type="module">
+const log = (m) => { document.getElementById('log').textContent += "\n" + m; };
+const median = (a) => { const s=[...a].sort((x,y)=>x-y); const n=s.length; return n%2?s[(n-1)/2]:(s[n/2-1]+s[n/2])/2; };
+const MS2NS = 1e6;
+
+// ---- structural byte set: { } [ ] : ,
+const STRUCT = [0x2C,0x3A,0x5B,0x5D,0x7B,0x7D];
+
+// ---- synthetic JSON generator (~target bytes, structural-rich, ASCII)
+function makeDoc(target, seed){
+  let s = '{"id":'+seed+',"items":[';
+  let i=0;
+  while(s.length < target-24){
+    if(i) s+=',';
+    s+='{"k":'+((seed*31+i)%1000)+',"v":"x'+i+'","f":'+((i%2)?'true':'false')+'}';
+    i++;
+  }
+  s+=']}';
+  return s;
+}
+
+async function main(){
+  const wasmBytes = await (await fetch('scan.wasm')).arrayBuffer();
+  const { instance } = await WebAssembly.instantiate(wasmBytes, {});
+  const ex = instance.exports;
+  const inPtr = ex.input_ptr();
+  const CAP = ex.input_cap();
+  const enc = new TextEncoder();
+  const heap = new Uint8Array(ex.memory.buffer);   // static bss preallocated; never grows
+
+  // TS scalar lane: monomorphic byte loop over Uint8Array
+  const LUT = new Uint8Array(256);
+  for (const c of STRUCT) LUT[c] = 1;
+  const TSOUT = new Int32Array(3_000_000);
+  function tsLane(u8){
+    let m=0; const L=LUT, O=TSOUT, n=u8.length;
+    for (let i=0;i<n;i++){ const b=u8[i]; if (L[b]) O[m++]=i; }
+    return m;
+  }
+  // wasm lane pieces
+  function marshal(str){ const b=enc.encode(str); heap.set(b, inPtr); return b.length; }
+  function wasmFull(str){ const L=marshal(str); return ex.scan(L); }
+
+  // measure one size class over a batch of pre-built docs.
+  // Byte-budgeted timed regions: each region processes ~targetBytes so
+  // duration >> performance.now() clamp (~0.1ms). ns/byte = steady
+  // throughput INCLUDING per-call marshalling overhead (the tax that
+  // dominates at small doc size). Cold single-shot captured separately
+  // for large docs (where one scan is already ms-scale, measurable).
+  function measure(strs, targetBytes, reps){
+    const N=strs.length;
+    const u8s = strs.map(s=>enc.encode(s));          // pre-encode for TS lane (encode charged to wasm)
+    let batchBytes=0; for(const u of u8s) batchBytes+=u.length;
+    const inner = Math.max(1, Math.round(targetBytes/batchBytes));
+    const procBytes = inner*batchBytes;
+
+    // COLD single-shot (first-ever execution of each lane, one doc).
+    // Meaningful only when one doc is ms-scale; noisy otherwise.
+    const cold_ts_t0=performance.now(); tsLane(u8s[0]); const cold_ts=performance.now()-cold_ts_t0;
+    const cold_wf_t0=performance.now(); wasmFull(strs[0]); const cold_wf=performance.now()-cold_wf_t0;
+
+    // correctness parity (all docs)
+    let parity=true;
+    for(let k=0;k<N;k++){ if(wasmFull(strs[k])!==tsLane(u8s[k])){ parity=false; break; } }
+
+    const tsT=[], fullT=[], marT=[];
+    for(let r=0;r<reps;r++){
+      let t0=performance.now();
+      for(let it=0;it<inner;it++) for(let k=0;k<N;k++) tsLane(u8s[k]);
+      tsT.push(performance.now()-t0);
+
+      t0=performance.now();
+      for(let it=0;it<inner;it++) for(let k=0;k<N;k++) wasmFull(strs[k]);
+      fullT.push(performance.now()-t0);
+
+      t0=performance.now();
+      for(let it=0;it<inner;it++) for(let k=0;k<N;k++) marshal(strs[k]);
+      marT.push(performance.now()-t0);
+    }
+    const perByte = (ms, bytes)=> (ms*MS2NS)/bytes;
+    const medFull=median(fullT), medMar=median(marT);
+    return {
+      N, docBytes: Math.round(batchBytes/N), inner, procBytes, parity,
+      ts_nspb:        perByte(median(tsT), procBytes),
+      wasmFull_nspb:  perByte(medFull, procBytes),
+      marshal_nspb:   perByte(medMar, procBytes),
+      wasmScan_nspb:  perByte(Math.max(0, medFull-medMar), procBytes),
+      cold_ts_nspb:   perByte(cold_ts, u8s[0].length),
+      cold_wasmFull_nspb: perByte(cold_wf, u8s[0].length),
+    };
+  }
+
+  const results = { synthetic:[], real:[], loadNote:"" };
+
+  // ---- synthetic size sweep (the crossover regime + transition)
+  const plan = [
+    {size:64,   N:200, reps:25},
+    {size:128,  N:200, reps:25},
+    {size:256,  N:200, reps:25},
+    {size:512,  N:200, reps:25},
+    {size:1024, N:200, reps:25},
+    {size:2048, N:200, reps:25},
+    {size:4096, N:100, reps:25},
+    {size:16384,N:50,  reps:25},
+    {size:65536,N:20,  reps:20},
+  ];
+  const TARGET = 24e6; // ~24 MB processed per timed region
+  for(const p of plan){
+    const strs=[]; for(let i=0;i<p.N;i++) strs.push(makeDoc(p.size, i*2654435761>>>0));
+    const r = measure(strs, TARGET, p.reps);
+    results.synthetic.push({target:p.size, ...r});
+    log(`syn ~${r.docBytes}B N=${r.N} inner=${r.inner} parity=${r.parity} | ts=${r.ts_nspb.toFixed(3)} wasmFull=${r.wasmFull_nspb.toFixed(3)} marshal=${r.marshal_nspb.toFixed(3)} scanOnly=${r.wasmScan_nspb.toFixed(3)} ns/B  WIN=${r.wasmFull_nspb<r.ts_nspb?'WASM':'TS'}`);
+  }
+
+  // ---- real large single docs
+  for(const name of ['twitter','citm','canada']){
+    const str = await (await fetch(name+'.json')).text();
+    const r = measure([str], TARGET, 9);
+    results.real.push({name, ...r});
+    log(`real ${name} ${r.docBytes}B parity=${r.parity} | ts=${r.ts_nspb.toFixed(3)} wasmFull=${r.wasmFull_nspb.toFixed(3)} scanOnly=${r.wasmScan_nspb.toFixed(3)} marshal=${r.marshal_nspb.toFixed(3)} ns/B  WIN=${r.wasmFull_nspb<r.ts_nspb?'WASM':'TS'}  | COLD ts=${r.cold_ts_nspb.toFixed(3)} wasmFull=${r.cold_wasmFull_nspb.toFixed(3)}`);
+  }
+
+  results.ua = navigator.userAgent;
+  results.hw = navigator.hardwareConcurrency;
+  window.__RESULTS__ = results;
+  window.__DONE__ = true;
+  log("DONE");
+}
+main().catch(e=>{ log("ERROR "+e+"\n"+e.stack); window.__ERR__=String(e); window.__DONE__=true; });
+</script>

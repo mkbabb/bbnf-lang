@@ -141,6 +141,22 @@ is the sharpest constraint on store shape and directly motivates `TypeDesc::Sum`
 per-variant payload cells (aligns with GN-3 W1's `DirectTypeKind::Sum { variants:
 Vec<DirectSumVariant> }`, `skinny/crates/codegen/src/direct_schema.rs:52`).
 
+There is a second, orthogonal reading of "per-revise tag dispatch vs single store" that the
+directive names, and it is a *scheduling* hazard rather than a *representability* one. Even
+granting the per-variant cells, one could resolve each variant's decode class **at revise
+time** by reading the discriminant currently in the arm's slot — a per-revise dispatch. This
+is unsound whenever the discriminant is not yet a fixpoint value: `revise` ordering does not
+guarantee the arm-resolution constraint runs before the decode constraint, so decode can
+dispatch on an under-narrowed tag and commit a class that a later sweep cannot retract
+(structural equality narrows monotonically; a grounded cell does not un-ground). The
+single-store cure is to express the dependency as an `ImplicationConstraint(arm = k ⇒ decode ∈
+S_k)` (`crates/csp-solver/src/constraint/implication.rs`) living in the *same* worklist: it
+re-fires whenever the arm narrows, so the decode class is a pure function of the converged
+fixpoint, computed once at the end, never mid-sweep. So B4 has two teeth — the store must be
+product-shaped per variant (representability) **and** the variant→decode dependency must be a
+worklist constraint, not a revise-time read (scheduling). Both are the changed-flag-
+convergence discipline: read values at the fixpoint, not during it.
+
 ---
 
 ## 4. Open R / X / S through the store lens
@@ -210,6 +226,23 @@ Vec<DirectSumVariant> }`, `skinny/crates/codegen/src/direct_schema.rs:52`).
   extra constraint forms over the same store — the exact 1B decomposition (equality
   propagation + bounded post-solve). Odersky/Sulzmann/Wehr HM(X) formalizes the pluggable-X
   seam (Open X).
+- **Generate-then-solve** — GHC's **OutsideIn(X)** (Vytiniotis, Peyton Jones, Schrijvers,
+  Sulzmann 2011): a wanted-constraint set is *emitted* by a syntax-directed walk, then
+  *solved* by a separate engine; residue (GADTs, type families) is what the equality theory
+  leaves. This is precisely the store's two halves — emit constraints while walking the typed
+  IR, solve to fixpoint afterward — and the justification for not resolving eagerly in the
+  `Project` arm.
+- **The obligation channel as prior art** — rustc's `InferCtxt` runs unification over an
+  `ena`-style union-find table (in-place with snapshot/rollback) and defers residual bounds to
+  an `ObligationForest` re-driven to fixpoint. The store's `ObligationSink`
+  (`obligation.rs:182`) is the same construct: equality grounds in the lattice, everything
+  undischargeable is a first-class obligation drained at `mod.rs:473`. The B1 clash arm is an
+  obligation in exactly rustc's sense, not an error thrown mid-solve.
+- **Theory combination** — Nelson–Oppen combines EUF (equality via congruence closure —
+  Downey–Sethi–Tarjan, Nieuwenhuis–Oliveras) with disjoint theories (linear arithmetic for
+  widths/capacities). 1B is this decomposition at grammar scale: the structural axis is the
+  equality theory, the width/decode/legality axes are the combined theories over one shared
+  set of variables — Z3's architecture minus the fragments the grammar plane never reaches.
 - **Row polymorphism** — Rémy / Leijen (*scoped labels*): `Row` as a first-class type node
   with a lacks-constraint; motivates `TypeDesc::Row` deriving record-ness structurally
   (Open R) rather than by brace-matching.

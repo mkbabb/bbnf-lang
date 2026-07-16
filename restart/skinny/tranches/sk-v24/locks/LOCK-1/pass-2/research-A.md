@@ -1,240 +1,217 @@
-# LOCK-1 · Family 1A — UNIFICATION-FIRST · pass-2 research
+# LOCK-1 · FAMILY 1A — UNIFICATION-FIRST · pass-2 research (A)
 
 ## Thesis
 
-The type plane is a Hindley–Milner unification engine whose single carrier of
-*equality* is a union-find over type variables. The engine grows to the full
-grammar surface — algebraic sums for `value = object | array | …`, row
-polymorphism for document shapes, let-generalization so a rule referenced from
-two sites is not falsely fused — and it is *complete on its own* for every
-judgment that is a decidable equality. Constraint search (the vendored
-`csp-solver`, `crates/csp-solver/`) does not carry equality at all; it is
-demoted to a **bounded post-solve** invoked only where unification is genuinely
-undecidable: numeric-width defaulting under an ordered lattice, and overload /
-decode-class resolution where a leaf is under-determined between admissible
-constructors. The union-find is the spine; the CSP is a leaf oracle the spine
-calls after the equality skeleton is fixed.
+The type plane is a single directed unifier over one union-find store. The Hindley–Milner
+core grows three principled axes — nominal-recursive constructors, row polymorphism for
+document shapes, let-generalization over rules — and stays a *decidable* equality engine.
+CSP is not the spine; it is a bounded post-solve invoked only where unification is genuinely
+undecidable (numeric widths, decode/overload classes). Equality is carried by the store, not
+by a monotone fold and not by a saturating e-graph: two rule types are equal iff their
+variables union; disagreement raises an honest clash obligation rather than overwriting. This
+is the "equality carrier via union-find re-seed" of Thread A, generalized from PROVE-08's
+leaf-only prototype to the full document-shape lattice.
 
-This is a deliberate inversion of the running greenfield pass, which is
-CSP-first: `project_types` (`crates/ir/src/passes/types/mod.rs`) drives *all*
-type inference through AC-3 over a lattice domain, and equality is carried by
-that lattice's `join`. That `join` is the family's central counterexample
-(below): it is not an equality carrier, it is a last-writer-wins overwrite.
+## 1. The mechanism, made concrete
 
-## The substrate — one type language, one carrier
+### 1.1 The store and its monotypes
 
-The engine's monotype language is a strict superset of PROVE-08's proven core
-(`prototypes/PROVE-08/patch.diff:230-456`, the 221-LOC union-find `hm.rs`
-certified perf-neutral and clash-honest by `PROVE-08/VERIFY.md`). That core
-ships: `Ty::{Var(u32), Con(TyCon)}`, path-halving `find`, constructor-binding
-`unify` with an honest `UnifyError{lhs,rhs}` clash, and `resolve`/zonk. Family
-1A grows exactly four constructors onto it, each with a decidable `unify` arm:
-
-- **`Con` leaves** — the existing closed vocabulary, widened to mirror the sink
-  lattice `TypeDesc` (`crates/ir/src/types/type_desc.rs:13-64`):
-  `Span, F64, Bool, I8..U64, Str`. Widths are leaves, not variables (see §Width).
-- **`Sum(Vec<Ty>)`** — an N-arm alternation as one composite. `unify(Sum a,
-  Sum b)` is *set-equal variant unification*: order-insensitive, canonicalized
-  by a total order on constructors, so `object|array|string|number|bool|null`
-  and any re-ordering unify to one canonical sum (the R5 order-sensitivity
-  hazard, `GN-3.md:501-506`, is dissolved at the `unify` arm, not patched in a
-  bridge). This is the recursive node the schema IR cannot represent today
-  (`DirectTypeKind` = one `Struct` variant; PROVE-08 Wall 2).
-- **`Row{fields: Vec<(Label, Ty)>, tail: RowVar}`** — a record with an open
-  tail variable (Rémy/Wand row polymorphism). A grammar `object = "{" pair* "}"`
-  with statically-known keys unifies its fields by label; an unknown-key object
-  (`pair*` over runtime string keys) closes to `Row{[], tail}` with `tail`
-  free — which is *structurally* a map, and is precisely what distinguishes
-  `List ≠ Row` (Open R) at the type level with no `{ }`-vs-`[ ]` syntactic gate.
-- **`Vec(Ty)`, `Option(Ty)`** — cardinality from `Repeat`/`Optional`, congruent
-  unification on the element.
-
-Equality is carried by *one* mechanism: `unify` mutating the union-find. There
-is no second equality path. A rule referenced twice does not get "joined"; its
-scheme is *instantiated* fresh at each `Ref` (let-generalization, §Generalize),
-so two independent uses never alias unless a real constraint forces it — the
-soundness property the running overwrite lattice lacks.
-
-## The equality counterexample the family fixes (path:line)
-
-`crates/ir/src/passes/types/constraint/domain.rs:66-80` — `TypeDomain::join`:
+The proven substrate is PROVE-08's `Unifier` (`prototypes/PROVE-08/patch.diff:288-372`):
+`parent: Vec<u32>` union-find with path-halving `find` (`:300`), `unify` that lets variables
+absorb constructors and clashes two distinct constructors as `UnifyError` (`:311`), `bind`
+(`:347`), and `resolve`/zonk (`:359`). Today its monotype is only `Ty::{Var, Con(TyCon)}`
+with a closed five-leaf `TyCon` (`:254-265`). Family 1A grows `Ty` to a full term algebra
+while keeping the store and its `find`/`unify`/`bind` verbatim:
 
 ```
-(Some(existing), Some(ty)) if existing != ty => { self.solved = Some(ty.clone()); true }
+Ty ::= Var(u32)                    -- unification variable (union-find node)
+     | Con(TyCon)                  -- scalar leaf: Bool F64 U8Tag StringDecoded StringSpan …
+     | App(Nom, Vec<Ty>)          -- NOMINAL constructor: one Nom per RuleId (recursion boundary)
+     | Row(RowVar)                 -- record shape: fields + open/closed tail (§1.3)
+     | Sum(Vec<(Tag, Ty)>)        -- tagged alternation (§1.4)
+     | Width(WVar)                 -- residual numeric-width var, deferred to the CSP post-solve (§1.5)
 ```
 
-On disagreement the lattice **silently overwrites** the earlier type and reports
-`changed = true`, so AC-3 keeps iterating and the *last* writer in propagation
-order wins. This is not equality: it is neither a fixpoint (two constraints that
-disagree oscillate until iteration order settles them) nor a clash (a genuine
-type error is masked as "refinement"). The comment concedes it — "Re-assignment
-to a different type: allow it." The Alt join downstream
-(`constraint/revise.rs:116` `join_types`) papers over the residue by lifting
-disagreeing branches into `TypeDesc::HeterogeneousAltJoin`
-(`type_desc.rs:48-63`) — a boxed-enum obligation — rather than deciding whether
-the branches are a lawful `Sum`. Family 1A replaces both: `unify` either
-succeeds (the types are equal, or one is a variable that absorbs the other) or
-raises a located `UnifyError`; a real N-arm alternation becomes a `Sum` by
-variant unification, never a "join obligation." The refutation the family must
-survive: does union-find *terminate and match at equal-or-lower derive wall-time*
-than this running AC-3 loop on JSON / Sheets / CSS L4? Union-find with
-path-halving is near-linear `O(nα(n))`; AC-3 is `O(ed³)` in the worst case and
-here re-fires on every overwrite. The wall-time claim is credible but MUST be
-measured head-to-head against the running pass, not a strawman.
+Unification extends by structural recursion over `App`/`Sum` and by row unification over
+`Row`; `Con`/`Con` stays the honest clash. This is Robinson unification with an occurs-check
+relaxed by nominal folding (§1.2).
 
-## Let-generalization over rules (the correctness lever, not a nicety)
+### 1.2 Nominal-fold recursion (the termination mechanism — Thread A #1)
 
-Each grammar rule is a `let`-bound scheme. `infer` (the whole-grammar driver,
-PROVE-08 `hm.rs` `infer`, generalized) computes each rule's monotype, then
-**generalizes** its free variables into a `Scheme(Vec<Var>, Ty)`; every `Ref`
-to that rule `instantiate`s a fresh copy. Without this, a polymorphic helper
-rule (e.g. a generic `list<T> = "[" T ("," T)* "]"` once grammar closures land,
-`project_grammar_closures`) unifies its element variable across *all* call
-sites and collapses `list<Number>` and `list<String>` into one clash — the
-false-fusion bug. Skinny's live inference has no generalization at all: it is a
-monotone structural fold (`skinny/crates/passes/src/lib.rs:178-214`
-`Infer::infer_expr`), every node typed once by shape, `Project` discarded at
-`:204` (`self.infer_expr(*body)?` throws away `target`+`ty`). The greenfield CSP
-has no generalization either (variables are per-`NodeId`, monomorphic). Family
-1A is the *only* center that carries polymorphism, and it is the load-bearing
-reason to be unification-first: generalization is a natural HM operation
-(quantify over free vars not free in the environment) and is awkward-to-absurd
-to express as a CSP over a fixed variable set.
+Grammars are mutually recursive (`value → object → pair → value`). Structural unification of
+such a system either loops or fails occurs-check. The cure is nominal folding: each rule
+`RuleId` is its own constructor `Nom(RuleId)`; a `Ref{target}` unifies against
+`App(Nom(target), args)` — the rule's *name*, not its expansion. Recursion is folded at the
+nominal boundary (iso-recursive discipline: rules are the `data` boundary of ML/Haskell).
+Termination is guaranteed because descent never crosses a `Nom` node — the store has one
+variable per rule, seeded up front. This generalizes skinny's `seed_rule_types`
+(`crates/passes/src/lib.rs:172`) from an opaque `Type::Rule(id)` leaf into a real union-find
+node that can *carry* a resolved row/sum/scalar. "Re-seed" = seed nominals, then run arrows
+and refs as unification constraints and resolve by `find`; this displaces the monotone fold
+(§2). An equirecursive fallback (Cardelli's Amber rule / OCaml `-rectypes`; Huet cyclic-term
+unification) is available where two differently-named rules must be structurally equal, but
+nominal is the correct default — a grammar rule *is* a nominal type.
 
-## Numeric width & overload — the bounded post-solve (Thread A #3)
+### 1.3 Row polymorphism for document shapes (the `List ≠ Row` mechanism — Open R)
 
-Widths are where unification is legitimately *under-determined*: a `->` on a
-digit run genuinely admits `U8 ⊑ U16 ⊑ U32 ⊑ U64` (and signed siblings). Family
-1A resolves the equality skeleton first (unify pins every non-numeric leaf and
-every structural node), leaving a residue of numeric variables each carrying an
-**ordered-lattice domain** rather than a single `Con`. The post-solve is a
-defaulting walk over the width lattice — the smallest constructor consistent
-with all observed literals and any ascription — which is `O(residue)` and needs
-no search when the lattice is a chain. The CSP (`csp-solver`) is invoked *only*
-when the residue is genuinely a search: mutually-constraining overloads, or a
-decode-class that depends on a sum variant (Thread B #4's counterexample). The
-family's testable claim: author a `->` micro-fixture under-determined between
-u8/u16/u32 and measure **ordered-lattice defaulting vs CSP search** on it — the
-prediction is defaulting wins decisively (no backtracking, no arc queue) and is
-the honest KISS choice; search is reserved for the non-chain case. This is the
-"CSP appears only where unification is undecidable, as a bounded post-solve"
-charter made concrete, and it is *pluggable* (Open X): the defaulting order and
-the decode-class registry are data behind one seam, with defaulting-lattice and
-csp-search as the two swappable implementations.
+A record type is `Row { fields: BTreeMap<Label, Ty>, tail: RowTail }` where
+`RowTail ::= Closed | Open(RowVar)` (Rémy/Leijen scoped labels). The classifier Open R and
+Thread D #1 demand — *record vs list without a `{ }`/`[ ]` hint* — falls straight out of
+unification structure, no e-graph, no per-grammar predicate:
 
-## Integration seams (path:line — where extant code serves)
+- `object = pair*`, each `pair` unifying to `(label, value)` with a **static literal label**
+  → the repeat accumulates a **closed `Row`** (one field per distinct literal). This is the
+  per-document typed-grammar case (`twitter_search.bbnf`: `statuses -> Vec<Tweet>` becomes a
+  closed row field).
+- `pair*` with **runtime string keys** (generic `json.bbnf`, keys are `/"…"/` spans) → no
+  static labels → `Row` with `Open` tail + a single value-typed field: a **Map**, distinct
+  from struct and list. This is the shape the running pass masks as the `json_templates`
+  fallback; row polymorphism represents it as a first-class `Row{Open}`.
+- `element*` whose repeat body is a **single value type** (no label) → **`List`**.
 
-- **Seed the carrier**: PROVE-08 `hm.rs` union-find lands verbatim
-  (`prototypes/PROVE-08/patch.diff:230-456`); `TyCon`/`Ty`/`unify` grow the
-  `Sum`/`Row`/`Vec`/`Option` arms. Certified additive, aarch64-clean,
-  no name-gates (`PROVE-08/VERIFY.md` attacks 2–5 HELD).
-- **Displace the equality lattice**: `constraint/domain.rs:66` `TypeDomain::join`
-  and `constraint/revise.rs:116` `join_types` are the two sites the union-find
-  supersedes. The `csp-solver` invocation in `project_types`
-  (`crates/ir/src/passes/types/mod.rs`) narrows to the width/overload residue.
-- **LOCK-3 sink (mandatory, XL-F)**: whatever record wins lowers through
-  `TypeAnalysis::from_ir` (`crates/core/src/backend/driver/analysis.rs:22`,
-  reading `ir.types: Vec<(RuleId, TypeDesc)>` + `type_map.scratch_types()`,
-  `type_map.rs:95`) and the second `from_ir` at
-  `crates/core/src/backend/rust/view/named_types.rs:100`
-  (`RustNamedTypes`, admits `TypeDesc::Named`). The union-find's zonked monotypes
-  must serialize to `TypeDesc`.
-- **Open R widening**: `TypeDesc` (`type_desc.rs:13`) gains `Sum` and `Row`
-  beside `HeterogeneousAltJoin`/`Vec`; `StructRegistry`/`LayoutKind`
-  (`crates/ir/src/registry/struct.rs:58`, variants
-  `Struct/TaggedEnum/UntaggedEnum/NewtypeWrapper`) gains a `Row` layout so
-  `List ≠ Row` populates and lowers — closing the masked `json_templates`
-  fallback (R6 §5, `research/R6-value-type-plane.md`).
-- **TS mirror (mandatory, evidence bar)**: `type_desc_to_ts`
-  (`crates/core/src/backend/ts/projection.rs:11`) is the isomorphic sink; a `Row`
-  lowers to a TS object/`Record` type, a `Sum` to a discriminated union. Both
-  backends consume the SAME `TypeDesc` — the record is backend-agnostic by
-  construction (Constitution iii, `backend-agnostic-types`).
-- **Measurement substrate (XL-A)**: skinny@HEAD `Infer::infer_expr`
-  (`skinny/crates/passes/src/lib.rs:178`) is the running fold to race against for
-  the derive-wall baseline; its `Project`-discard at `:204` is the exact wire the
-  family re-threads.
+`List ≠ Row ≠ Map` is thus a consequence of *what the repeat body unifies to*, decided by
+inference. Mixed grammars (known fields + arbitrary extras) unify to a partial row with an
+open tail — the case ad-hoc struct-detection cannot express and Rémy rows can.
 
-## Prior art (citations)
+### 1.4 Sums and let-generalization
 
-- **Algorithm W / union-find HM**: the path-halving `find` + constructor-binding
-  `unify` is textbook Damas–Milner; rustc's HM-adjacent inference uses a
-  union-find `InferCtxt`/`TypeVariableTable` (rust-lang/rust
-  `compiler/rustc_infer`) — the reference for *let-generalization over a
-  recursion graph* and for canonicalization of inference vars at region/scope
-  boundaries.
-- **Row polymorphism**: Rémy "Type inference for records in a natural extension
-  of ML" and Wand's row-variable formulation; Leijen's *Extensible records with
-  scoped labels* (Koka) is the cleanest `unify`-over-rows with an open tail — the
-  exact mechanism for `Row{fields, tail}` and for distinguishing a closed record
-  from an open map. This is what makes `List ≠ Row` a *type* fact, not a syntax
-  gate.
-- **Recursive sums by set-equal unification**: GHC's `TcUnify`/`unifyType` and
-  its treatment of data constructors; the order-insensitive variant reconcile is
-  the standard nominal-sum unification.
-- **Ordered-lattice numeric defaulting**: Haskell's defaulting rules
-  (Report §4.3.4) and rustc's integer-literal fallback (`ty::IntVar` →
-  default `i32`) are the precedent for *lattice defaulting over search* — a
-  post-solve chain walk, not a CSP.
-- **When to reach for CSP/e-graph**: egg/egglog and MiniZinc/Z3 are the
-  precedent for the *bounded* case only — genuine search over non-chain overload
-  sets. The family's stance (unify first, search the residue) mirrors rustc's
-  own architecture: HM carries equality; trait selection (a bounded search) runs
-  after, not instead.
+The six-arm `value = object|array|string|number|bool|null` unifies to one canonical `Sum` by
+set-equal variant unification (GN-3.W1's requirement, order-insensitive; canonical variant
+ordering). Each grammar rule is a `let`-bound scheme; generalize its inferred type to
+`∀ᾱ. τ` at the rule boundary and instantiate fresh at every `Ref`, so a reused helper
+(`list<T> = T (',' T)*`) is polymorphic, not monomorphized-to-first-use. Generalization runs
+per **SCC of the rule dependency graph** (OCaml `let rec` groups): fix the recursive group's
+point *before* generalizing, or sharing is lost. Level/rank-based generalization (Rémy 1992;
+Kiselyov "Efficient generalization with levels") avoids the whole-environment free-variable
+scan — O(1) amortized per binding — which the derive-wall-time gate needs. This SCC-generalize
+discipline is 1A's answer to Open S's cross-rule seam: the synthesized attribute is the rule's
+scheme, the termination lattice is the SCC fixpoint — no fifth engine.
 
-## Named risks & counterexamples
+### 1.5 The bounded CSP post-solve (widths & overloads — Thread A #3)
 
-- **R-A1 · derive-wall regression.** If union-find + generalization is *slower*
-  than the running AC-3 fold on real corpora, the family loses its headline
-  claim. Must be measured on JSON / Sheets / CSS L4 against the live pass, HEAD-
-  pinned (XL-H). Counter-hypothesis: generalization's fresh instantiation per
-  `Ref` could blow up on a deeply-shared rule graph — bound it with scheme
-  memoization.
-- **R-A2 · Row for map-shaped objects.** A generic JSON object is `pair*` over
-  *runtime* keys; its row has an empty known-field set and a free tail. If the
-  sink (`StructRegistry`) cannot represent "open row = map," the widening does
-  not close the `json_templates` fallback and Open R fails at the lowering seam,
-  not the inference seam. The prototype must lower a free-tail `Row` all the way
-  through `TypeAnalysis::from_ir` to emitted output.
-- **R-A3 · decode-class depends on sum variant.** A leaf whose decode class is a
-  function of which `Sum` arm was taken (Thread B #4) is NOT a pure equality —
-  it is exactly the residue the bounded post-solve must own. If the family tries
-  to carry it in union-find it either over-constrains (false clash) or needs a
-  second store — which would concede the CSP-first critique. The clean answer:
-  the sum-variant is unified; the decode-class is a post-solve dispatch keyed by
-  the resolved variant. Prove it resolves soundly as a post-solve.
-- **R-A4 · width under an ascription that conflicts with a literal.** `-> u8`
-  ascribed on a rule whose literal is `256` must be a *located* clash, not a
-  silent widen. The defaulting walk must fail explicitly (no silent epsilon,
-  `no-silent-epsilon`).
-- **R-A5 · zonk-to-TypeDesc lossiness.** If the union-find's richer monotype
-  (open rows, quantified schemes) cannot round-trip to the flatter `TypeDesc`
-  sink without loss, the two backends diverge. The serialization must be total
-  and both sinks (`analysis.rs:22`, `projection.rs:11`) must agree.
+After HM fixes the structural skeleton, residual `Width(WVar)` and decode-class variables
+form a small finite-domain problem: an integer-literal magnitude under-determined between
+`u8/u16/u32` (the A3 fixture: `"px" -> 0u8 | … -> 300`), or a `->` target that could decode
+multiple ways. Two settlements, measured head-to-head:
 
-## What a prototype must test to move this family
+- **Ordered-lattice defaulting** — `u8 ⊑ u16 ⊑ u32 ⊑ u64`; assign the least upper bound of
+  observed literal magnitudes. Deterministic, O(constraints), mirrors Rust's integer-literal
+  fallback and Haskell's `Num` defaulting. Zero CSP invocation for the common case.
+- **Bounded search** — hand the residual variables + domains to the vendored csp-solver
+  (`crates/csp-solver/`) as a finite-domain CSP with a cost objective. Needed only when width
+  choice interacts with a legality/cost constraint the lattice cannot express.
 
-1. **Union-find equality vs the running lattice, head-to-head.** Race the
-   union-find carrier (with `Sum` + generalization) against the live
-   `project_types` AC-3 pass on JSON / Sheets / CSS L4: prove it *terminates*,
-   *matches* the resolved types, and does so at *equal-or-lower derive wall-time*.
-   Baseline is the running pass at a named HEAD, not a strawman. Report LOC-deleted
-   (`domain.rs:66` join + `revise.rs:116` join_types displaced) and empty
-   runtime-surface `git diff` (Constitution v — the plane costs zero at runtime).
-2. **`List ≠ Row` populates and lowers (Open R).** Build a free-tail `Row` for a
-   generic `pair*` object, add `LayoutKind::Row` + `TypeDesc::Row`, and show it
-   lowers through `TypeAnalysis::from_ir` AND `type_desc_to_ts` — closing the
-   masked `json_templates` fallback. Make structural fidelity orthogonal to
-   engine choice.
-3. **The width micro-fixture (Thread A #3 / Open X).** Author a `->` fixture
-   genuinely under-determined between u8/u16/u32; implement BOTH ordered-lattice
-   defaulting and csp-search behind one seam; measure and decide independently of
-   the equality carrier. Evidence = one pluggable seam, two swappable impls.
-4. **Generalization prevents false fusion.** A grammar with a rule referenced at
-   two sites requiring incompatible instantiations must type without a spurious
-   clash under the family's `instantiate`-per-`Ref`, and MUST clash (located)
-   under a naive monomorphic carrier — proving generalization is load-bearing,
-   not decorative.
-5. **Sum canonicalization is order-insensitive.** Two differently-ordered
-   `value` alternations unify to the identical canonical `Sum` (R5 dissolved at
-   the `unify` arm).
+A3's prototype authors the genuinely under-determined fixture and measures lattice-defaulting
+vs search on it; the expectation is defaulting wins on the fixture, search reserved for the
+interaction case. This is the pluggable residue seam Open X asks for: one interface, two
+swappable implementations (lattice / search) behind it.
+
+## 2. Substrate & integration seams (path:line)
+
+**Measurement substrate to displace (skinny @HEAD):**
+- `skinny/crates/passes/src/lib.rs:149` `infer` — entry; `:178-214` `infer_expr` is the
+  monotone structural fold (`Type::Seq/Alt/List/Option/Rule`) — no unification anywhere.
+- `:204` `ExprKind::Project { body, .. } => self.infer_expr(*body)?` — the equality carrier's
+  target: the projected `target`/`ty` is discarded here. Re-seed replaces this arm with
+  `classify_arrow` (`PROVE-08/patch.diff:374`) + `unify` into the rule's nominal var.
+- `:133-136` `Substitution { vars: HashMap<TypeVarId, Type> }` — vestigial today (the fold
+  never substitutes); becomes the store's zonk map.
+- `:234-243` `enum Type`, `:245-254` `BuiltinTy` — grow to the `Ty` algebra of §1.1.
+
+**Proven core to seed from:** `PROVE-08/patch.diff:288-372` (`Unifier`, `find`/`unify`/`bind`/
+`resolve`), `:374-406` (`classify_arrow`, the bidirectional leaf lexer), `:254-265` (`TyCon`).
+
+**Greenfield carrier & LOCK-3 sink (XL-F):**
+- `crates/ir/src/types/type_desc.rs:13` `enum TypeDesc` — already rich: `Named(StringId)`,
+  `Enum`, `BoxedEnum`, and a **heterogeneous-alt join obligation** variant (AZ-III.W3a.3)
+  "produced by the type projection CSP when an Alt's branch types disagree." 1A adds
+  `Row`/`Sum` here (Open R's `DirectTypeKind::{Sum,Row}` / `LayoutKind::Row`,
+  `crates/ir/src/registry/struct.rs:58`) so unification's output has an IR home. The Join
+  obligation is exactly what row/sum unification should *subsume*: an Alt of records unifies
+  to a `Sum` or a widened `Row`, not a deferred CSP obligation.
+- `crates/core/src/backend/driver/analysis.rs:22` `TypeAnalysis::from_ir` reads
+  `ir.types: Vec<(RuleId, TypeDesc)>` + `ir.type_map` — the record 1A must populate and lower
+  through. Second sink: `crates/core/src/backend/rust/view/named_types.rs:100`
+  `RustNamedTypes::from_ir`.
+- `crates/ir/src/passes/types/mod.rs` `project_types` (called `analysis.rs:136`) is the
+  running greenfield type pass a re-seed reconciles-with or displaces.
+- **Existing greenfield union-find (do not conflate):**
+  `crates/ir/src/passes/csp_strategy/components.rs:75-293` `UnionFind` +
+  `partition_by_call_graph` + `collect_ref_unions` unions **`RuleId`s for SCC/call-graph
+  partitioning** — the SCC substrate §1.4 needs is *already here*. The type unifier is a
+  distinct union-find over *type variables*; the re-seed reuses the SCC partitioner to order
+  let-generalization and adds a type-variable store beside it.
+- Type-projection CSP already present: `crates/ir/src/passes/csp_strategy/constraints/engine.rs:18`,
+  `crates/ir/src/passes/materialization/lattice.rs:46` (the `Map` class). 1A's claim: most of
+  this CSP surface is subsumed by unification; the CSP shrinks to the width/overload
+  post-solve of §1.5.
+
+**TS mirror:** `crates/core/src/backend/ts/projection.rs:11` `type_desc_to_ts` — every new
+`TypeDesc` arm (`Row`/`Sum`) needs its TS projection here (Row → object type / `Record<…>`,
+Sum → discriminated union). Every record design names this mirror per the evidence bar.
+
+## 3. Prior art (citations)
+
+- **Row polymorphism:** Leijen, *Extensible records with scoped labels* (TFP 2005); Rémy,
+  *Type inference for records in a natural extension of ML* (1994). The principled
+  record-shape mechanism; scoped labels handle partial/open rows.
+- **Level-based generalization:** Rémy, *Extension of ML type system with a sorted equational
+  theory on types* (INRIA RR-1766, 1992); Kiselyov, *Efficient generalization with levels*.
+  O(1)-amortized `let`-generalization — the derive-wall-time enabler.
+- **Recursive-type unification:** Cardelli's *Amber* rule for recursive equality; Huet's
+  cyclic-term unification; OCaml `-rectypes`. Nominal folding = iso-recursive `data` boundary
+  (SML/Haskell). Grounds the termination claim of §1.2.
+- **Integer-literal defaulting:** Rust's `i32` fallback for unconstrained integer literals;
+  Haskell Report §4.3.4 `default` for `Num`. Grounds the ordered-lattice width settlement.
+- **HM Algorithm W:** Damas–Milner (1982); Pierce *TAPL* ch. 22. The spine. rustc's
+  level/rank inference and its integer-literal fallback are the closest production analogue.
+- **CSP post-solve engine:** vendored `crates/csp-solver/` (csc411) — finite-domain solver for
+  the width/overload residue only; the inversion of LOCK-1B's framing (unification *first*,
+  CSP bounded).
+
+## 4. Named risks & counterexamples
+
+- **Nominal under-unification.** Two structurally-equal, differently-named rules (`point=x y`
+  vs `pair=x y`) will not unify nominally. Counterexample: a grammar inlining one shape under
+  two names diverges from a structural oracle. *Resolution:* nominal is correct for grammars
+  (rules are the nominal boundary); equirecursive structural equality is opt-in via the Amber
+  fallback, measured only if a corpus needs it.
+- **Infinite type without folding.** `value = object | …`, `object` contains `value`: pure
+  structural unification loops / fails occurs-check. This is the A1 *termination* gate — the
+  prototype must prove the nominal unifier terminates on mutually-recursive JSON/Sheets/CSS L4.
+- **Runtime-key row mis-derivation.** Generic JSON's open row must NOT collapse to a closed
+  struct (that reintroduces the masked `json_templates` fallback). *Resolution:* static-literal
+  keys → `Closed`; any runtime-key path → `Open(RowVar)` = Map. The classifier is the label's
+  *staticness*, decided by unifying the key's type to a literal vs a span.
+- **Premature generalization across a `let rec` group.** Generalizing a mutually-recursive
+  rule before its SCC fixpoint loses sharing / is unsound. *Resolution:* generalize per SCC
+  using the existing `partition_by_call_graph` (`components.rs:256`).
+- **Width non-confluence.** Two arrows constraining one width var to different magnitudes: the
+  lattice LUB is deterministic; search must be deterministic-ordered or derived schemas differ
+  run-to-run (breaks GN-3's byte-identity gate). A3 measures both for determinism.
+- **Join-obligation regression.** If `Row`/`Sum` unification does *not* subsume the existing
+  AZ-III Join obligation, the heterogeneous-alt corpus could still emit a deferred CSP
+  obligation — two carriers for one fact. The port must show the Join variant becomes
+  unreachable (or is retired) once Alt-of-records unifies to Sum/widened-Row.
+
+## 5. What a prototype must test to move family 1A
+
+1. **Termination + parity (A1).** Nominal-recursive union-find unifier terminates on
+   mutually-recursive JSON, Sheets, CSS L4; produces types matching the skinny monotone fold
+   where the fold is defined; derive wall-time ≤ the running pass (baseline = the running
+   fold, not a strawman). Gate: no occurs-loop, structural match, ≤ wall-time.
+2. **Row-without-hint (Open R / D#1 by unification).** twitter typed grammar → **closed Row**;
+   generic `json.bbnf` object → **Map (Open row)**; array → **List** — all by inference, zero
+   `{ }`/`[ ]` predicate. Assert `List ≠ Row ≠ Map` on one run.
+3. **let-generalization sharing (Open S).** A shared `sepBy`-style helper reused at two
+   element types instantiates to two distinct monotypes; SCC-grouped generalization; measured
+   against monomorphize-to-first-use.
+4. **Width post-solve (A3 / Open X).** Author the u8/u16/u32-under-determined `->` fixture;
+   resolve via ordered-lattice defaulting AND via csp-solver bounded search; report
+   determinism + wall-time; the residue seam carries two swappable impls.
+5. **Lower through the sink (XL-F).** Resolved `Row`/`Sum` populate `ir.types` and lower
+   through `TypeAnalysis::from_ir` + `named_types.rs` with the TS mirror `type_desc_to_ts`
+   populated — proving the carrier reaches LOCK-3 and closing the `json_templates` mask.
+6. **Port cost (A2).** Seed equality from the PROVE-08 leaf core into greenfield, then
+   reconcile-with / displace `project_types`; report derive wall-time + LOC-deleted +
+   runtime-diff (must be empty — the type plane costs zero at runtime, Constitution v).

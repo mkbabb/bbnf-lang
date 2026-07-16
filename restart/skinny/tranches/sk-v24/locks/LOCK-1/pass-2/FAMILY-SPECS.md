@@ -344,6 +344,18 @@ attribute, CHECK = inherited attribute, the cycle-break = a bounded circular AG 
 termination lattice (Knuth/Farrow/JastAdd). A *seam discipline*, not a fifth engine — a reading of the
 running CSP, to be shown faithful, not built.
 
+### 5.7 The cross-lock hook — Open R's Map-barrier decision is a LOCK-5 input (XL-C)
+
+The Open R widening has a downstream face XL-C flags: LOCK-5's 5B functor is **conditionally
+re-opened *only if* LOCK-1 abandons Map-barrier typing.** Making `List ≠ Row ≠ Map` a first-class
+typed record (`TypeDesc::Row`, §5.4) *is* the "abandon Map-barrier" branch — it types *through* what
+XL-C's regex axis currently keeps as an opaque `Regex(StringId)` / Map boundary. Keeping the Map
+opaque (no first-class `Row`, the running masked fallback) is the "hold Map-barrier" branch, under
+which 5B stays retired. **This is not LOCK-1's call to settle** — flag it to LOCK-5 / GESTALT-B as a
+named dependency: whichever way Brief 2 resolves the Open-R widening, its verdict conditions 5B's
+re-open. A first-class `Row` here is a lawful supersession input there, not a silent contradiction
+(Constitution ix).
+
 ---
 
 ## 6. BLOCKED-CANDIDATE REGISTER + SYNTHESIS FLOOR

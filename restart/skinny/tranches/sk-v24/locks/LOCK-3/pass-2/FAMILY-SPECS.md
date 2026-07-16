@@ -12,10 +12,13 @@ CROSS-LOCK ledger (XL-A…H) as settled fact.*
 ## 0. The settled baseline (pass-2, re-anchored to live; base-pin reconciled)
 
 **Base-pin (XL-H).** The directive's re-pin token `b3cb8c16b` is a **stale ancestor meta-commit**
-(the lock-set amendment), not a source snapshot. Live master HEAD is **`skinny@7790134675c6`**
-(confirmed: `git rev-parse HEAD` = `7790134675c6…`; `passes/src/lib.rs` is now **2096 LOC**, not
-2750). All four pass-2 researchers correctly pinned to `7790134675c` and named it; this synthesis is
-anchored there and re-verified the three crux facts by hand this pass:
+(the lock-set amendment), 9 commits behind live (`git rev-list --count b3cb8c16b..HEAD` = 9). Live
+master HEAD is **`bbnf-lang@c93fc43143`** (confirmed this session: `git rev-parse HEAD` =
+`c93fc43143743…`; skinny is a subtree sharing that git, no separate `.git`; `passes/src/lib.rs` is
+**2096 LOC**, not the R6-seed 2750). All four pass-2 researchers pinned correctly to `c93fc43143`
+and named it; the earlier draft of this synthesis anchored one ancestor back at `7790134675c6` (an
+ancestor of HEAD — `git merge-base --is-ancestor` true — across which the cited anchors are
+byte-stable). The three crux facts were **re-greped by hand on live `c93fc43143` this pass**:
 
 - `passes/src/lib.rs:204` — `ExprKind::Project { body, .. } => self.infer_expr(*body)?` (the `->`
   ty-drop); `:203` — `ExprKind::Annotation { .. } => Type::Builtin(BuiltinTy::Unit)` (a **non-defect**,

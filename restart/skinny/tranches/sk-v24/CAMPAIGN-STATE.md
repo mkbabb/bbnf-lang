@@ -28,7 +28,9 @@ resurrects the campaign from this file alone.
 | 3 | VERIFY: adversarial re-measure of every claimed win; unproven dies | DONE 2026-07-16 (wf_a4c300b0-b54, 12/12: 7 CONFIRMED, 3 CONFIRMED_DELTA, 1 REFUTED [09 perf], 1 UNVERIFIABLE-perf [13, generality verified]) |
 | 4 | SPEC: the frozen codex + final report | DONE 2026-07-16 — SPEC.md FROZEN (GN-0..6 + PT-N1-3 + BBNF-PT-G letter + 3 re-cut checkboxes + forward prompt) |
 
-## CAMPAIGN CLOSED 2026-07-16
+| 5 | TRANCHE CODEX AUTHORSHIP (owner order 2026-07-16): 10 implementation-depth tranche docs at docs/tranches/sk-v24/ (GN-0..6 + PT-1..3, parse-that elevated to FULL IMPLEMENTATION; totality framing — THE implementation, not a skinny pass; prototype residue = defect) + 3-auditor precept sweep + fix stage + INDEX.md | RUNNING wf_6ae8f4f7-16c (restarted once at T+1min to bake the owner totality edict into all briefs) |
+
+## CAMPAIGN CLOSED 2026-07-16 (stages 0-4) — REOPENED for stage 5 (codex authorship)
 
 The swath: 7 CONFIRMED + 3 CONFIRMED_DELTA performance-proven features; 3 measured
 refutations now law (02 latency inversion, 04 pipelining, 09 shim perf). The path: SPEC.md
@@ -54,7 +56,10 @@ single-pass sink (fold-over-cursor refuted 2.3-4.9x).
 | 2-proving | wf_386900ed-462 | ~/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/workflows/scripts/sk-v24-proving-fleet-wf_386900ed-462.js | DONE 14/14 (36 min, 2.84M tok); prover worktrees preserved at .claude/worktrees/wf_386900ed-462-N |
 | 3-verify | wf_a4c300b0-b54 | ~/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/workflows/scripts/sk-v24-verify-fleet-wf_a4c300b0-b54.js | DONE 12/12 (14 min, 1.06M tok) |
 
-Heartbeat cron live: job fc81e24f, hourly at :23, session-scoped.
+| 5-codex | wf_6ae8f4f7-16c | ~/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/workflows/scripts/sk-v24-codex-authorship-wf_6ae8f4f7-16c.js | RUNNING (Author 10 → Audit 3 → Fix; 60/30/25-min caps) |
+
+Heartbeat cron live: job 20e19341 (re-armed for stage 5), hourly at :23, session-scoped
+(fc81e24f retired at stage-4 close).
 
 ## Heartbeat cron
 

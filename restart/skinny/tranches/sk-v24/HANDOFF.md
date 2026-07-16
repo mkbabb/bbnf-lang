@@ -56,6 +56,31 @@ What is NOT superseded: the x86 abrogation (normative, both repos), the non-clob
 letter-placement law (§6), the precept codex (sk-v23 research/07), the profiling standing law,
 the settled empirical spine (§4), and the SK-V22 archive mechanics as mechanics.
 
+## 1.5 The execution amendments (owner dispatch, 2026-07-16 — binding, sworn)
+
+The owner dispatched the campaign with amendments that bind over any conflicting clause below:
+
+1. **DISPATCHED — maximal parallelism.** The batch-of-three rate discipline is relaxed to
+   the workflow concurrency cap; fleets go wide, resumable-by-design.
+2. **The return condition**: a swath of GENUINELY PERFORMANCE-PROVEN features — implemented
+   and measured, not specified — plus a concrete, well-defined path forward to uplift this
+   repo AND parse-that into a perfected union of a parser-generator in Rust, with derivative
+   novelties suffused into parse-that's TS variant (a TS backend hereof comes eventually).
+3. **Implementation-majority process**: little time on contrived gates or process; the
+   majority on direct code implementation — always through agent orchestration — and visual
+   verification (inspect expanded/compiled output; cargo expand, cargo asm, real bench
+   tables). Adhere to the wave spec exactly once cut.
+4. **The colocation grand edict — ALL file directories, frontend AND backend, recursively.**
+   Components colocate with their sub-components, composables, skeletons, constants, styles —
+   recursively for nested components. Only truly module- or global-level items live in a
+   composables/-style dir therein. Long-running dirs must always be broken into common
+   modules and encapsulated. For backend languages the edict abstracts befittingly: directory
+   modules that own their submodules, constants, and kernels; no flat sibling sprawl; no
+   god modules at any level.
+5. **Extreme parsimony, fastidious care, every implementation**: KISS-forward solutions that
+   reduce complexity and suffuse fewer lines of code; always consider the greater library and
+   component picture.
+
 ## 2. The mission (the original gestalt charge, melded current)
 
 Our aim is a **fully generalized parser generator that bests every SOTA parser for our
